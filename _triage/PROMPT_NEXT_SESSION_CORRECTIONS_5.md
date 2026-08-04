@@ -124,6 +124,24 @@ MEMBERS** — editing either changes the digest and costs the owner a signature.
 **`ORDER-1266`** — part 3 §3 has the full brief; the `EXECUTION_KEY_FIELDS` half still arrives with
 a store migration into `factory/**`.
 
+### 🔴 FOUND WHILE WRITING THIS FILE, AND IT IS THE SAME DISEASE AS `ORDER-1310` #7 — no order opened
+
+**`check_handoff_contract.ps1` does not see the files this project actually uses as handoffs.** Its
+trigger is `_triage/HANDOFF*.md` or `_triage/SESSION_HANDOFF*.md` (its own §22). Every handoff in
+this chain is `_triage/PROMPT_NEXT_SESSION_*.md`. **Measured:** committing this file printed
+`[handoff-contract] no added/modified handoff staged -- pass (no-op)`. The routing block at the
+bottom of this file was written to the contract and **nothing validated it**.
+
+That is `ORDER-1310` #7 one directory over: a guard that is not on the commit path of the thing it
+governs. It is *not* a one-line fix — widening the pattern subjects parts 1-4 to the contract, and
+none of them carries a routing block, so the next commit touching any of them would go red. **The
+repair has to add the pattern AND either back-fill routing blocks or scope the trigger to
+newly-ADDED files, and it needs a measurement of which existing files would redden first.**
+
+**No order was opened for it**, deliberately: this lane's ledger row declares *"expects to open no
+new order"*, and quietly opening one out of a block reserved on that declaration is the kind of
+scope drift the ledger exists to prevent. **Open it from your own block.**
+
 **Raised by the review and deliberately NOT closed:** `SP16` asserts the split-value gap is OPEN, so
 closing that gap turns the suite red. The reviewer is right that it is the wrong shape for a passing
 security test. Relabelling it as an expected-gap tripwire changes what the case CLAIMS, not what it
@@ -174,6 +192,7 @@ measures, and belongs with the work that closes the gap.
 | the two bundle-member repairs and the front guard | `ORDER-1269` |
 | the `EXECUTION_KEY_FIELDS` half and its store migration | `ORDER-1266` |
 | the full-tier number, the cages added, and the disclosed provenance error | `DONE` |
+| the handoff-contract guard not seeing `PROMPT_NEXT_SESSION_*.md` — open it from your own block | `DONE` |
 
 ---
 
