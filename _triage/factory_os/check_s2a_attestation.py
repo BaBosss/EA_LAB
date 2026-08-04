@@ -518,8 +518,25 @@ def note_for_owner(stale, ref_paths, owner):
     return None
 
 
-def executed_transfer_destinations(d1_rows):
-    """Paths whose pin aims at the DESTINATION of a transfer that has already been executed.
+def executed_transfer_destinations(d1_rows, owner):
+    """Paths THIS OWNER's own D1 rows pin as the DESTINATION of an already-executed transfer.
+
+    🔴 ORDER-1310 #3 -- `owner` IS REQUIRED, AND THAT IS THE WHOLE REPAIR. This function used to
+    take only `d1_rows` and return a set of paths gathered from EVERY row, which the comment below
+    described as an exemption "for that row only". It was not: it was PATH-scoped. Any owner whose
+    note happened to name a path some OTHER row had donated to the set inherited the exemption --
+    reproduced by the independent review with a synthetic `KEEP` row pinning the same path as the
+    real executed transfer, whose stale pin was exempted and whose decision stayed APPROVED.
+    Today's D1 has no such pair, so it was latent rather than live; a positional argument with no
+    default is what stops it being reintroduced by a caller that simply forgets.
+
+    ⚠️ DECLARED LIMIT, raised by the same review and NOT closed here. This predicate reads
+    `disposition == TRANSFER` plus path equality as proof that the transfer was EXECUTED, while
+    `S2A_ATTESTATION_POLICY.md:154` states D1 has no executed-state vocabulary at all. The
+    inference is therefore structural, not recorded: it holds because a row only re-points its pin
+    at `proposed_owner` once the move has happened. Giving D1 a real executed-state field would
+    close it properly and is a BUNDLE MEMBER change -- a policy edit and an owner signature -- so
+    it is stated here rather than done quietly under a different order.
 
     ORDER-1269 #1, owner-ratified as ORDER-1257 option (b) -- "change the instrument, not the
     record". This is the predicate that instrument turns on, and it is DERIVED from the row rather
@@ -553,7 +570,9 @@ def executed_transfer_destinations(d1_rows):
     """
     out = set()
     for r in d1_rows or ():
-        ref = r.get('owner_ref') or {}
+        if r.get('current_owner') != owner:
+            continue                     # ORDER-1310 #3: another owner's transfer is not this
+        ref = r.get('owner_ref') or {}   # owner's licence to stop being asked about its own pin
         if (r.get('disposition') == 'TRANSFER' and ref.get('path')
                 and ref['path'] == r.get('proposed_owner')):
             out.add(ref['path'])
@@ -605,7 +624,8 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
     # through string identity on current_owner. See owner_ref_paths for why, and for the one
     # property that makes this a no-op everywhere else in the table.
     ref_paths = owner_ref_paths(_D1_ROWS)
-    transfer_destinations = executed_transfer_destinations(_D1_ROWS)
+    # ORDER-1310 #3: the destination set is now derived PER ROW, inside the loop, because it is
+    # scoped to the row's own owner. Hoisting it back out here is the defect.
     del PIN_NOTES[:]        # per run, not per process: the suites call check() many times in one
     IN_FORCE_FAILED.clear()
     # ORDER-613 D1, in TWO PASSES. /scrutinize found the one-pass version had a real hole and a
@@ -794,8 +814,10 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         #                        MASTER_BACKLOG.md -- the generated projection a reader actually
         #                        sees. `problems_before` is what proves it raised nothing.
         #
-        # DELIBERATELY NARROW, four ways, because an exemption that is wider than its justification
-        # is how a guard stops guarding:
+        # DELIBERATELY NARROW, FIVE ways, because an exemption that is wider than its justification
+        # is how a guard stops guarding. It said "four" and was one short: the fifth was CLAIMED in
+        # prose ("for that row only") and not implemented, which the independent review reproduced
+        # as ORDER-1310 #3. A condition that exists only in a comment is not a condition:
         #   1. SECTION form only. A whole-file post-state claim is the granularity ORDER-731 C1
         #      measured at ~2 owner signatures a day; accepting it here would swap one coarse
         #      instrument for another.
@@ -815,7 +837,11 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         # forms, F7 binding a foreign path, F9 the path absent at HEAD, F10 a directory) reddened
         # for this row either. A record that is broken in any of those ways has not earned an
         # exemption from a different check.
-        _exempt = pin_exemption_reason(note, eps, transfer_destinations, digest)
+        #   5. (ORDER-1310 #3) the executed transfer must be THIS OWNER'S OWN. The destination set
+        #      is derived from `r['current_owner']` here rather than from all of D1, so a row
+        #      cannot inherit an exemption from a path some other row donated.
+        _exempt = pin_exemption_reason(
+            note, eps, executed_transfer_destinations(_D1_ROWS, r['current_owner']), digest)
         if _exempt and len(problems) == problems_before:
             PIN_NOTES.append('line %s: %s' % (n, _exempt))
             note = None
@@ -928,7 +954,7 @@ def main(argv):
         # hand the owner a skeleton for a pin that is no longer enforced -- asking for a signature
         # nothing demands, which is #2 of this order pointing the other way.
         if note_t and pin_exemption_reason(note_t, eps_prev,
-                                           executed_transfer_destinations(d1), digest):
+                                           executed_transfer_destinations(d1, owner), digest):
             note_t = None
         if note_t:
             pinned_t = next((row['owner_ref']['blob_oid'] for row in d1

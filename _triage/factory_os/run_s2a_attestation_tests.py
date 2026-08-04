@@ -25,8 +25,10 @@ import check_s2a_migration as chk      # noqa: E402
 import check_s2a_attestation as att    # noqa: E402
 import evidence                        # noqa: E402
 
-def _coverage_pin_path():
-    """The path the Coverage owner's D1 row PINS -- DERIVED, never hardcoded.
+def _coverage_row():
+    """The Coverage owner's D1 row. Both the path it PINS and the owner it decides for are
+    DERIVED from it, never hardcoded -- ORDER-1310 #3 made the OWNER load-bearing too, and a
+    hardcoded owner is the same drift hazard the path already paid for once below.
 
     It was `'MASTER_BACKLOG.md'` here, which was the same string as the row's `current_owner` and
     so looked like one fact when it was two. ORDER-731 option 2 moved the pin to
@@ -39,16 +41,24 @@ def _coverage_pin_path():
     rows = [json.loads(l) for l in io.open(chk.MIGRATION_PATH, encoding='utf-8') if l.strip()]
     for r in rows:
         if r.get('entity') == 'CoverageCell' and (r.get('owner_ref') or {}).get('path'):
-            return r['owner_ref']['path']
+            return r
     raise SystemExit('CoverageCell has no owner_ref path in D1 -- this suite cannot build its '
                      'stale-pin fixtures against nothing')
 
 
-PIN_PATH = _coverage_pin_path()
+_COV_ROW = _coverage_row()
+PIN_PATH = _COV_ROW['owner_ref']['path']
+COV_OWNER = _COV_ROW['current_owner']
 STALE_NOTE = {'entity': 'CoverageCell', 'path': PIN_PATH, 'kind': 'STALE', 'text': 'stale'}
 
 
-def run_with(lines, vintage=()):
+def run_with(lines, vintage=(), d1_override=None):
+    """Drive `check()` over a TEMPORARY attestation log.
+
+    `d1_override` (ORDER-1310 #3) injects a D1 the real file does not contain, so the end-to-end
+    case for a defect that is LATENT in today's data can still be driven. `None` means "read the
+    real D1", which is what every pre-existing caller gets.
+    """
     saved = att.ATTESTATION_PATH
     fd, tmp = tempfile.mkstemp(suffix='.jsonl')
     try:
@@ -57,7 +67,8 @@ def run_with(lines, vintage=()):
                 fh.write(json.dumps(obj, sort_keys=True) + '\n')
         att.ATTESTATION_PATH = tmp
         rows, problems = att.load_records()
-        d1 = [json.loads(l) for l in io.open(chk.MIGRATION_PATH, encoding='utf-8') if l.strip()]
+        d1 = (list(d1_override) if d1_override is not None else
+              [json.loads(l) for l in io.open(chk.MIGRATION_PATH, encoding='utf-8') if l.strip()])
         att._D1_ROWS[:] = d1
         owners = sorted({r['current_owner'] for r in d1})
         current = att.check(rows, problems, att.bundle_digest(), owners, vintage)
@@ -321,24 +332,71 @@ def main():
 
     # The predicate on its own. The end-to-end cases above cannot separate "KEEP rows are excluded"
     # from "that KEEP row had no usable section anyway", so the conjunct is held here instead.
-    real_dests = att.executed_transfer_destinations(d1_rows)
+    real_dests = att.executed_transfer_destinations(d1_rows, COV_OWNER)
     ok = real_dests == {PIN_PATH}
     print('  [%s] against the REAL D1 the predicate selects exactly the one executed transfer'
           % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> selected %r, wanted {%r}' % (sorted(real_dests), PIN_PATH))
         bad += 1
-    synth = att.executed_transfer_destinations([
-        {'disposition': 'TRANSFER', 'proposed_owner': 'a', 'owner_ref': {'path': 'a'}},   # in
-        {'disposition': 'KEEP', 'proposed_owner': 'b', 'owner_ref': {'path': 'b'}},       # out
-        {'disposition': 'TRANSFER', 'proposed_owner': 'c2', 'owner_ref': {'path': 'c1'}}, # out
-        {'disposition': 'TRANSFER', 'proposed_owner': 'd', 'owner_ref': None},            # out
-    ])
+    _synth_rows = [
+        {'current_owner': 'o1', 'disposition': 'TRANSFER',
+         'proposed_owner': 'a', 'owner_ref': {'path': 'a'}},                              # in
+        {'current_owner': 'o1', 'disposition': 'KEEP',
+         'proposed_owner': 'b', 'owner_ref': {'path': 'b'}},                              # out
+        {'current_owner': 'o1', 'disposition': 'TRANSFER',
+         'proposed_owner': 'c2', 'owner_ref': {'path': 'c1'}},                            # out
+        {'current_owner': 'o1', 'disposition': 'TRANSFER',
+         'proposed_owner': 'd', 'owner_ref': None},                                       # out
+    ]
+    synth = att.executed_transfer_destinations(_synth_rows, 'o1')
     ok = synth == {'a'}
     print('  [%s] and on synthetic rows only TRANSFER-with-path==proposed_owner is selected'
           % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> %r' % sorted(synth))
+        bad += 1
+
+    print('\n=== ORDER-1310 #3: the exemption is ROW-scoped, and it used to be PATH-scoped ===')
+    # REPRODUCED by the independent review and again here. `executed_transfer_destinations` used
+    # to return a set of paths gathered from EVERY D1 row, so any owner whose note named a path
+    # some OTHER row had donated inherited the exemption -- while the comment beside it called it
+    # "for that row only". Today's D1 has no such pair, which is why nothing was red.
+    _donor_recipient = _synth_rows[:1] + [
+        # a DIFFERENT owner, KEEP, pinning the very path o1's executed transfer donated
+        {'current_owner': 'o2', 'disposition': 'KEEP',
+         'proposed_owner': 'a', 'owner_ref': {'path': 'a'}},
+    ]
+    ok = att.executed_transfer_destinations(_donor_recipient, 'o2') == set()
+    print('  [%s] a KEEP row pinning ANOTHER owner\'s executed destination inherits nothing'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> selected %r for o2, which owns no executed transfer'
+              % sorted(att.executed_transfer_destinations(_donor_recipient, 'o2')))
+        bad += 1
+    # CONTROL, in the same fixture: the owner that DOES own the transfer still gets it. Without
+    # this the negative above is satisfiable by a predicate that returns the empty set forever.
+    ok = att.executed_transfer_destinations(_donor_recipient, 'o1') == {'a'}
+    print('  [%s] CONTROL ...and the owner whose OWN row it is still gets the exemption'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        bad += 1
+    # END TO END, because the predicate-level case cannot prove `check()` actually asks it per
+    # row -- the destination set used to be computed ONCE outside the loop, which is a place the
+    # scoping can be lost again without this failing. A real second owner, a real reproducing
+    # section claim, and a D1 injected with one extra KEEP row pinning the Coverage destination.
+    _borrowed = [dict(r) for r in d1_rows] + [
+        {'entity': 'BorrowedPin', 'current_owner': 'AGENT_TASKBOARD.md', 'disposition': 'KEEP',
+         'proposed_owner': PIN_PATH, 'owner_ref': {'path': PIN_PATH, 'blob_oid': 'b' * 40}},
+    ]
+    _, _bp = run_with([good(current_owner='AGENT_TASKBOARD.md',
+                            expected_post_state=_derived_section_eps('AGENT_TASKBOARD.md'))],
+                      [STALE_NOTE], d1_override=_borrowed)
+    ok = 'pin is STALE' in _bp
+    print('  [%s] END TO END a second owner borrowing the Coverage destination is still asked'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % (_bp.split('\n')[0] if _bp else 'NOTHING AT ALL -- exempted'))
         bad += 1
 
     print('\n=== G5-G8 append-only, enforced against HEAD rather than asserted in prose ===')
@@ -797,7 +855,7 @@ def main():
     # never exempt (deleting the destination is not the approval succeeding), so an acknowledgement
     # is genuinely owed here and the mapping is exercised exactly as before. The exempt direction is
     # not lost: it is asserted two cases below, against BOTH surfaces at once.
-    pin_path = _coverage_pin_path()
+    pin_path = PIN_PATH
     saved_notes = chk.pin_vintage_notes
     try:
         chk.pin_vintage_notes = lambda rows: [{'path': pin_path, 'kind': 'MISSING'}]
