@@ -1104,9 +1104,58 @@ this is cheap to re-measure — do that first.)*
 
 ---
 
-## ORDER-1267 — [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no recognizer at all — `#1 + Part 2 DONE 2026-08-04` (lane `S-2026-08-04-CORRECT3`, `446f7539`) · **#2 HALF DONE 2026-08-04** (lane `S-2026-08-04-CORRECT4`, `35508ce3`) — **the remaining half needs one owner decision, see below** · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1267 — [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no recognizer at all — ✅ **DONE 2026-08-04** — `#1 + Part 2` (lane `S-2026-08-04-CORRECT3`, `446f7539`) · `#2` half one (lane `S-2026-08-04-CORRECT4`, `35508ce3`) · **`#2` half two, owner-ratified answer (a), lane `S-2026-08-04-CORRECT5B`, `d59cdc2e`** · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
 
-### ⚠️ #2 — half closed, and the open half is a LIVE disagreement needing the owner (2026-08-04)
+### ✅ #2 CLOSED 2026-08-04 — the owner ratified (a), and the measurement moved two live rows
+
+**👤 OWNER DECISION, taken 2026-08-04: (a).** `CONFLICT` is added to the `SafeProjection`
+`sensor_state` enum and `control_center`'s rule is mirrored. The reason (a) beat (b) was *one rule
+in one place*, so the rule is **imported, not restated**: `control_center.sensors_disagree()` is the
+extracted predicate and `build_live()` and `safe_projection.build()` are its two callers.
+
+**Measured at HEAD before anything was written**, on the real snapshot at `467612b3`:
+
+| account | `system_health` | `floating_risk` | projection BEFORE | projection AFTER | `control_center` |
+|---|---|---|---|---|---|
+| `***900` | `STALE` | `FRESH` | `STALE` | **`CONFLICT`** | `CONFLICT` (both) |
+| `***711` | `STALE` | `FRESH` | `STALE` | **`CONFLICT`** | `CONFLICT` (both) |
+| the other four | `FRESH` | `FRESH` | `FRESH` | `FRESH` | not an exception |
+
+The two surfaces now say the same thing about the same rows. **The wire-shape cost the owner
+accepted was measured, not predicted:** `notifier.render_morning_brief()` tallies `sensor_state`
+generically, so the Morning Brief line moved from `sensor: FRESH 4 · STALE 2` to
+**`sensor: CONFLICT 2 · FRESH 4`**. The direction that was actually dangerous is the reverse one and
+it is what this closes — `system_health=FRESH` beside a `BLIND` risk row used to project `FRESH`.
+
+🎯 **THIS ROW'S OWN PREDICTION DID NOT SURVIVE THE MEASUREMENT.** It said *"`SP14`'s `sensor_state`
+assertion would then be FLIPPED in the same commit as the fix"*. It did not need flipping and was
+not touched: SP14's two accounts are *both detectors FRESH* and *risk-only BLIND*, and neither is a
+disagreement between two speaking detectors. It ran unchanged and green. **Mirroring a rule means
+mirroring its SCOPE** — an account only one detector knows about still projects `UNKNOWN`, because
+`control_center` treats a silent detector as its own finding rather than as a conflict. That is
+recorded as a deliberate residual in `build()`'s docstring, not as an oversight.
+
+**Three cages, each carrying the control a lookalike implementation would fail** (`run_s11_tests.py`):
+- **`SP24`** — the rule is `control_center`'s: a spy on `sensors_disagree` that fails if `build()`
+  ever stops calling it. The `run_s12_tests.py` `V04` shape, which exists for the same reason.
+- **`SP25`** — `STALE/FRESH → CONFLICT` and `FRESH/BLIND → CONFLICT`, against three controls:
+  agreement stays `FRESH` (a rule that always fired would fail); **`STALE` beside `BLIND` stays
+  `STALE`** — two unhealthy detectors are AGREEING, and an implementation written `health != risk`
+  passes every assertion above that line and fails there; and a risk row with no `state` casts no vote.
+- **`SP26`** — the vocabularies cannot drift: `SENSOR_STATE_MAP`'s keys are `control_center`'s
+  `SENSOR_KNOWN` exactly, the map preserves `SENSOR_HEALTHY` membership **in both directions**
+  (`build()` hands the rule its MAPPED states, which is only safe while that holds), and every value
+  the module can project is declared in the schema.
+
+⚠️ **`P01` failed on the first run and it was right to** — a new public callable in the shadow-mode
+shell must be declared in `PUBLIC_API`. Declared with its reason rather than excused: it is a
+predicate, it touches nothing, and it carries no forbidden verb. `CONTRACTS.md` is **regenerated**
+by `gen_design_contracts.py`, never hand-edited. **No BUNDLE MEMBER touched, so no signature owed.**
+
+**Measured after:** S11 **85/0** (was 82/0) · S12 67/0 · S10 · S13 · `run_schema_cages` ·
+`run_s2a_cages` — all through the `.ps1` wrappers, all exit 0.
+
+### ⚠️ #2 — the state before this was closed, kept for the record (2026-08-04)
 
 **Closed (`35508ce3`).** `floating_risk[].state` now goes through the module's closed map, so an
 unrecognised value REFUSES the build. `_mapped`'s own docstring names this hazard — *"an
