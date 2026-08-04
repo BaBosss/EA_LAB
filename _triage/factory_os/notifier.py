@@ -114,6 +114,15 @@ KINDS = ('ALERT', 'RECOVERY', 'MORNING_BRIEF', 'DELIVERY_PROBE')
 # See plan() for why HEALTHY_1_OF_2 is here - it is the difference between meeting design 7.3's
 # letter and meeting its point.
 SILENT_STATES = ('HEALTHY_1_OF_2',)
+
+# ORDER-1261 #1. The states that mean THE FINDING IS BACK -- i.e. the ones that end a recovery
+# and start a new incident. Not a list of names someone liked: it is one half of a partition of
+# every state `control_center.fold_finding` can emit, and `run_s12_tests.py` asserts the two
+# halves cover that set exactly, so a FIFTH state is a decision someone takes rather than a
+# silent default. The other half is "the finding is absent or was declared over"
+# (`HEALTHY_1_OF_2`, `RESOLVED`), and neither of those reopens anything.
+REOPENING_STATES = ('OPEN', 'FLAPPING')
+NON_REOPENING_STATES = ('HEALTHY_1_OF_2', 'RESOLVED')
 OUTCOMES = ('DELIVERED', 'SUPPRESSED_DUPLICATE', 'UNCONFIGURED', 'FAILED')
 
 # Reason code -> finding class, so control_center.fold_finding can apply design 7.1's lifecycle.
@@ -413,6 +422,10 @@ def observe(previous, current, now):
             'severity': severity,
             'class': cls,
             'state': folded['state'],
+            # ORDER-1261 #1: which incident this is, counted from the journal's own recovery
+            # declarations. Computed here rather than in dedupe_key() because `history` is the
+            # only place it exists, and the key function is pure over its arguments.
+            'incident_seq': incident_seq(history.get(fid, []), folded['state']),
             'recovery_emitted': bool(folded.get('recovery_emitted')),
             'material_revision': revision,
             'healthy_streak': streak,
@@ -429,7 +442,41 @@ def observe(previous, current, now):
     return records, lines
 
 
-def dedupe_key(public_id, state, severity, material_revision, now=None):
+def incident_seq(history, current_state):
+    """How many times this finding has ALREADY recovered and come back. ORDER-1261 #1.
+
+    THE DESIGN QUESTION THE ORDER REFUSES TO LET ANYONE SKIP: what is a DISTINCT INCIDENT? The
+    row is explicit that a 24h window would only move the boundary, and it is right -- a window
+    is a guess about how long an incident lasts, and this system already knows the answer to a
+    better question.
+
+    IT IS NOT A TIME WINDOW. It is the system's own recovery declaration. A finding that reaches
+    `RESOLVED` has been declared over BY THIS MODULE -- a recovery message was emitted and the
+    operator was told it was finished. When it comes back, that is a NEW incident by the system's
+    own account, not a repeat of the one it just closed. Anything else asks the operator to
+    believe both "this is over" and "this is the same one" about the same finding.
+
+    Counted over the journal, which is the only thing that remembers: one increment per
+    RESOLVED-then-reopened cycle. Deliberately NOT one per RESOLVED line -- `RESOLVED` persists
+    for as long as the finding stays absent, and incrementing on each of those would give the two
+    RESOLVED observations different keys and send the recovery message twice. Measured that way
+    round before this was written.
+    """
+    seq = 0
+    resolved = False
+    for line in history:
+        st = line.get('state')
+        if st == 'RESOLVED':
+            resolved = True
+        elif resolved and st in REOPENING_STATES:
+            seq += 1
+            resolved = False
+    if resolved and current_state in REOPENING_STATES:
+        seq += 1
+    return seq
+
+
+def dedupe_key(public_id, state, severity, material_revision, now=None, incident=0):
     """
     design 7.3, verbatim: `finding_id` + `state` + `severity` + `material_revision`.
 
@@ -455,6 +502,12 @@ def dedupe_key(public_id, state, severity, material_revision, now=None):
     creates no competing threshold).
     """
     key = '%s|%s|%s|%d' % (public_id, state, severity, int(material_revision))
+    # ORDER-1261 #1. APPENDED ONLY WHEN IT IS NON-ZERO, and that is not cosmetic: every key
+    # already in `factory/alert_ledger.jsonl` was written without it, so adding the component
+    # unconditionally would fail to match every one of them and re-alert the whole open set once.
+    # A first incident keeps the key it has always had. Same bargain the FLAPPING suffix strikes.
+    if int(incident):
+        key = '%s|I%d' % (key, int(incident))
     if state != 'FLAPPING':
         return key
     if not now:
@@ -629,7 +682,8 @@ def _event(kind, channel, record, text, projection, now=None):
         'class': record['class'],
         'material_revision': record['material_revision'],
         'dedupe_key': dedupe_key(record['public_id'], record['state'], record['severity'],
-                                 record['material_revision'], now),
+                                 record['material_revision'], now,
+                                 record.get('incident_seq') or 0),
         'build_id': str((projection or {}).get('build_id', '')),
         'text': text,
     }
@@ -800,6 +854,43 @@ class TelegramTransport(object):
         return ','.join(receipts)
 
 
+def read_jsonl(path):
+    """-> (rows, torn). ORDER-1261 #5, and the shape of the answer is the whole finding.
+
+    WHAT IT WAS. Both runtime readers called `json.loads` unguarded, so ONE torn line raised
+    before any delivery decision was taken -- nothing planned, nothing sent, and nothing recorded
+    about why. Measured at HEAD: a ledger whose last line is cut mid-string raised
+    `JSONDecodeError` out of `Ledger.load`, i.e. the alerting system stops because its own log is
+    incomplete. These are append-only files written by a scheduled job on a workstation that
+    hibernates, so a half-written last line is an ordinary Tuesday.
+
+    WHY NOT JUST SKIP IT. Because that is the failure this repo has paid for repeatedly: an
+    unreadable input that reads as an empty one. A torn LEDGER line means a delivery nobody can
+    see, which can cause a re-alert; a torn JOURNAL line means lost history, which can reset an
+    incident count. Neither may be silent.
+
+    So: the readable rows are returned, the torn ones are returned SEPARATELY AND COUNTED, and
+    `main()` turns them into a problem that shows up in the exit code. Continuing is what keeps
+    an alert flowing on the morning it matters; the count is what stops that being a shrug.
+    """
+    rows, torn = [], []
+    if not os.path.exists(path):
+        return rows, torn
+    with io.open(path, 'r', encoding='utf-8-sig') as fh:
+        for n, line in enumerate(fh, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except ValueError as exc:
+                torn.append('%s line %d is not JSON (%s) -- the line is NOT skipped silently: '
+                            'it is counted here and reported by the CLI, because a delivery '
+                            'nobody can read is a delivery nobody can dedupe against'
+                            % (path, n, exc))
+    return rows, torn
+
+
 class Ledger(object):
     """
     (dedupe_key, channel, outcome, receipt). Append-only.
@@ -812,17 +903,14 @@ class Ledger(object):
 
     def __init__(self, rows=()):
         self.rows = list(rows)
+        self.torn = []
 
     @classmethod
     def load(cls, path):
-        rows = []
-        if os.path.exists(path):
-            with io.open(path, 'r', encoding='utf-8-sig') as fh:
-                for line in fh:
-                    line = line.strip()
-                    if line:
-                        rows.append(json.loads(line))
-        return cls(rows)
+        rows, torn = read_jsonl(path)
+        led = cls(rows)
+        led.torn = torn
+        return led
 
     def delivered(self):
         return set((r.get('dedupe_key'), r.get('channel'))
@@ -838,7 +926,7 @@ class Ledger(object):
         self.rows.extend(lines)
 
 
-def safe_detail(text):
+def safe_detail(text, known_secrets=safe_projection.NO_KNOWN_SECRETS_AVAILABLE):
     """
     A failure detail, scanned before it is written down.
 
@@ -854,13 +942,21 @@ def safe_detail(text):
     sees `TELEGRAM_BOT_TOKEN` knows both what was withheld and why, which a bare `[redacted]`
     does not tell them.
     """
-    # ORDER-1267 #1: DECLARED. This helper scrubs an arbitrary error string and has no source
-    # document to derive recognizers from, so the KNOWN_SECRET layer structurally cannot run here
-    # -- VALUE_SHAPE is the whole of what redacts. Passing the sentinel says that out loud; an
-    # empty list is now refused precisely because it used to mean this AND "I forgot", with the
-    # same return value for both.
-    hits = safe_projection.scan_forbidden([str(text)],
-                                          safe_projection.NO_KNOWN_SECRETS_AVAILABLE)
+    # ORDER-1267 #1: DECLARED, so "I have nothing to derive recognizers from" and "I forgot" stop
+    # sharing a return value.
+    #
+    # 🔴 ORDER-1261 #3 -- AND THE DECLARATION WAS DOING THE PROHIBITION'S WORK. The sentinel was
+    # passed UNCONDITIONALLY, so the KNOWN_SECRET layer never ran at the one boundary that writes
+    # the ledger file. Measured at HEAD: `safe_detail('connect failed for account <a real account
+    # number>')` returned the string UNCHANGED, while the token control was caught -- so the
+    # value-shape layer was live and the literal layer had simply been switched off by the
+    # argument. That is `prohibition-disarms-its-own-check`: a declaration that a layer cannot run
+    # became the reason it did not.
+    #
+    # The secrets DO exist -- `main()` reads them out of the verified snapshot for
+    # `assert_sendable` -- so they are threaded to here through `deliver()`. The sentinel stays as
+    # the DEFAULT, because a caller that genuinely has none must still say so out loud.
+    hits = safe_projection.scan_forbidden([str(text)], known_secrets)
     if not hits:
         return str(text)
     rules = sorted(set(h[1] for h in hits))
@@ -868,7 +964,8 @@ def safe_detail(text):
             'ดูได้จากเครื่องที่รัน' % ', '.join(rules))
 
 
-def deliver(events, delivered, transports, now, openclaw='UNKNOWN'):
+def deliver(events, delivered, transports, now, openclaw='UNKNOWN',
+            known_secrets=safe_projection.NO_KNOWN_SECRETS_AVAILABLE, previously_delivered=()):
     """
     -> (ledger lines, problems). Every event produces EXACTLY ONE line, whatever happened.
 
@@ -876,10 +973,32 @@ def deliver(events, delivered, transports, now, openclaw='UNKNOWN'):
     unconfigured channel, an unreachable API and an already-delivered key are three different
     stated outcomes, and two of them are problems that make the CLI exit non-zero. "A sender
     that cannot send and reports nothing is indistinguishable from a quiet fleet."
+
+    🔴 ORDER-1261 #4 -- THE SEAM WAS A CALL-ORDER CONVENTION AND THIS FUNCTION IS PUBLIC.
+    `assert_sendable` is documented as THE seam, and it is -- for callers that call it. This
+    function is in `PUBLIC_API`, called neither of the two guards, and put `ev['text']` on the
+    wire directly. Measured at HEAD by structure and by driving it: a caller that skips the seam
+    sends whatever text it was handed. `imports_of()` cannot notice, because `io`, `os`,
+    `subprocess` and `snapshot_validator` are all already allowed to it.
+    So the LITERAL half of the seam is re-run HERE, at the boundary that actually sends. Not the
+    shape half: that is a schema read, it is genuinely expensive per event, and `assert_sendable`
+    is where an event is BUILT wrong. What this stops is the one thing a second caller can get
+    wrong on its own -- putting a literal from the snapshot onto the wire.
+
+    `previously_delivered` is the set of channels the ledger has EVER delivered on. ORDER-1261 #6:
+    it is what separates "not provisioned yet" from "the credential that was working is gone".
     """
     lines = []
     problems = 0
     for ev in events:
+        # The literal half of the seam, structurally, for every event this function sends.
+        leak = safe_projection.scan_forbidden([ev.get('text', '')], known_secrets)
+        if leak:
+            raise safe_projection.ProjectionLeak(
+                'deliver() was handed an event whose text carries %d forbidden item(s): %s -- '
+                'the seam is enforced HERE as well as in assert_sendable, because this function '
+                'is public and a caller that skips the seam would otherwise send it'
+                % (len(leak), '; '.join('%s [%s] %s' % h for h in leak)))
         key = (ev['dedupe_key'], ev['channel'])
         base = {'entity': ENTITY_DELIVERY, 'dedupe_key': ev['dedupe_key'],
                 'channel': ev['channel'], 'kind': ev['kind'], 'at': now,
@@ -891,9 +1010,26 @@ def deliver(events, delivered, transports, now, openclaw='UNKNOWN'):
             continue
         transport = transports.get(ev['channel'])
         if transport is None:
-            base.update({'outcome': 'UNCONFIGURED', 'receipt': None,
-                         'detail': 'ช่อง %s ยังไม่มี credential ใน %s — นี่คือความล้มเหลวที่ประกาศ '
-                                   'ไม่ใช่การข้ามเงียบๆ' % (ev['channel'], CONFIG_REL)})
+            # 🔴 ORDER-1261 #6: ONE OUTCOME WAS CARRYING TWO SITUATIONS. "The owner has not made
+            # the bot yet" and "the credential that was delivering yesterday is gone" both came
+            # out as UNCONFIGURED -> exit 4, and exit 4 is deliberately MUTED in the daily chain
+            # (ORDER-219: a report that goes red every morning gets muted within a week). So the
+            # second one -- a real regression on a channel that includes EMERGENCY -- was being
+            # muted by a rationale written for the first.
+            #
+            # The ledger already knows which is which, and it needs no new field to say so: a
+            # channel that has EVER delivered was configured. Measured at HEAD: a channel with a
+            # past DELIVERED row, now absent from `transports`, produced the identical outcome
+            # and the identical detail as one that never existed.
+            regression = ev['channel'] in set(previously_delivered)
+            base.update({
+                'outcome': 'UNCONFIGURED_REGRESSION' if regression else 'UNCONFIGURED',
+                'receipt': None,
+                'detail': ('ช่อง %s เคยส่งสำเร็จมาแล้วตาม ledger แต่ตอนนี้ไม่มี credential ใน %s — '
+                           'นี่คือของที่เคยใช้ได้แล้วหายไป ไม่ใช่ของที่ยังไม่ได้ตั้ง'
+                           % (ev['channel'], CONFIG_REL)) if regression else
+                          ('ช่อง %s ยังไม่มี credential ใน %s — นี่คือความล้มเหลวที่ประกาศ '
+                           'ไม่ใช่การข้ามเงียบๆ' % (ev['channel'], CONFIG_REL))})
             lines.append(base)
             problems += 1
             continue
@@ -901,7 +1037,8 @@ def deliver(events, delivered, transports, now, openclaw='UNKNOWN'):
             receipt = transport.send(ev['channel'], ev['text'])
         except Exception as exc:                            # noqa: BLE001 - reported, not swallowed
             base.update({'outcome': 'FAILED', 'receipt': None,
-                         'detail': safe_detail('%s: %s' % (type(exc).__name__, exc))})
+                         'detail': safe_detail('%s: %s' % (type(exc).__name__, exc),
+                                               known_secrets)})
             lines.append(base)
             problems += 1
             continue
@@ -1016,13 +1153,9 @@ def main(argv):
 
     journal_path = os.path.join(repo_root, JOURNAL_REL)
     ledger_path = os.path.join(repo_root, LEDGER_REL)
-    previous = []
-    if os.path.exists(journal_path):
-        with io.open(journal_path, 'r', encoding='utf-8-sig') as fh:
-            for line in fh:
-                line = line.strip()
-                if line:
-                    previous.append(json.loads(line))
+    # ORDER-1261 #5: the second of the two unguarded readers. A torn journal line used to raise
+    # here, before a single delivery decision was taken.
+    previous, torn = read_jsonl(journal_path)
 
     try:
         if verb == 'probe':
@@ -1074,7 +1207,12 @@ def main(argv):
             transports[channel] = TelegramTransport(creds) if creds else None
 
     oc = openclaw_state()
-    lines, problems = deliver(events, delivered, transports, now, oc)
+    # ORDER-1261 #3 + #4 + #6: the real secret list reaches the boundary that WRITES the ledger
+    # and the one that SENDS, and the set of channels the ledger has ever delivered on reaches
+    # the branch that has to tell "never provisioned" from "the credential is gone".
+    lines, problems = deliver(events, delivered, transports, now, oc,
+                              known_secrets=secrets,
+                              previously_delivered=set(c for (_k, c) in delivered))
     ledger.append(ledger_path, lines)
     if journal_lines:
         d = os.path.dirname(journal_path)
@@ -1101,9 +1239,21 @@ def main(argv):
     # DIFFERENT non-zero, so a caller can tell "you have not set this up" from "it broke".
     failed = len([l for l in lines if l['outcome'] == 'FAILED'])
     unconfigured = len([l for l in lines if l['outcome'] == 'UNCONFIGURED'])
-    print('notifier: %d event(s), %d failed, %d unconfigured, OpenClaw=%s'
-          % (len(lines), failed, unconfigured, oc))
-    if failed:
+    # ORDER-1261 #6: a channel that WAS delivering and now has no credential is not "not set up
+    # yet". It joins `failed` on purpose, so it exits 1 and turns the daily chain red -- ORDER-219
+    # muted exit 4 for a situation that is true every day until the owner acts, and this is the
+    # opposite: something that was working stopped.
+    regressed = [l for l in lines if l['outcome'] == 'UNCONFIGURED_REGRESSION']
+    # ORDER-1261 #5: torn lines are counted, not swallowed. `problems` already makes them visible
+    # in the exit code via `failed`; they are printed by name so the operator can find the file.
+    torn_all = list(torn) + list(getattr(ledger, 'torn', []))
+    for t in torn_all:
+        print('TORN LINE: %s' % t)
+    print('notifier: %d event(s), %d failed, %d unconfigured, %d regressed, %d torn line(s), '
+          'OpenClaw=%s' % (len(lines), failed, unconfigured, len(regressed), len(torn_all), oc))
+    if failed or regressed or torn_all:
+        for l in regressed:
+            print('REGRESSION: %s' % l['detail'])
         return 1
     if unconfigured:
         # STDOUT, not stderr, and that is not cosmetic. A caller that redirects a native
@@ -1124,6 +1274,12 @@ def main(argv):
 PUBLIC_API = (
     'NotifyRefusal', 'Credentials', 'Ledger', 'RecordingTransport', 'TelegramTransport',
     'assert_reason_maps_agree', 'assert_sendable', 'dedupe_key', 'deliver', 'findings_of',
+    # ORDER-1261. Both are public because a case has to be able to drive them directly:
+    # `incident_seq` answers "what is a distinct incident" from the journal and is the whole of
+    # #1's design decision, and `read_jsonl` is the ONE reader both runtime stores now go
+    # through, so a second unguarded `json.loads` would be visible as a second reader rather
+    # than as a line. P01 caught both the moment they appeared, which is the cage working.
+    'incident_seq', 'read_jsonl',
     'imports_of', 'internal_id', 'load_local', 'main', 'observe', 'openclaw_state',
     'parse_at', 'parse_config', 'payload_digest', 'plan', 'render_alert',
     'render_morning_brief', 'render_recovery', 'resolve_channels', 'safe_detail', 'scrub',

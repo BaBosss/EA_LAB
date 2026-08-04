@@ -1132,6 +1132,211 @@ def _c08():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+# =======================================================================================
+# ORDER-1261. Five defects on the alerting path, each REPRODUCED at HEAD before it was
+# repaired, each repair carrying the control that a rule which simply refuses more would fail.
+# #2 of the six is NOT here: it was measured at HEAD and found ALREADY CLOSED by ORDER-1267's
+# `_secret_detail` work -- the leak message names the rule and the length and does not restate
+# the value. Recorded as closed-by rather than as a fix, because nothing was written for it.
+# =======================================================================================
+
+@case('N01', 'ORDER-1261 #1 a finding that RECOVERED and came BACK is alerted again, not silenced')
+def _n01():
+    """
+    Measured at HEAD: OPEN -> RESOLVED (recovery delivered) -> OPEN at unchanged severity and
+    revision produced SUPPRESSED_DUPLICATE with problems=0, so the recurrence was invisible in
+    the ledger AND in the exit code. `Ledger.delivered()` is the whole history with no bound.
+
+    The repair is NOT a time window -- the order forbids that explicitly and it is right, a
+    window is a guess about how long an incident lasts. It is the system's OWN recovery
+    declaration: a finding it told the operator was over, that comes back, is a new incident.
+    """
+    ALL = dict((c, notifier.RecordingTransport()) for c in set(notifier.ROUTING.values()))
+    recs = _walk_states([True, False, False, False, True, True])
+    eq([r['state'] for r in recs],
+       ['OPEN', 'HEALTHY_1_OF_2', 'RESOLVED', 'RESOLVED', 'OPEN', 'OPEN'],
+       'the fixture no longer walks a recovery-then-recurrence')
+    delivered, seen = set(), []
+    for i, r in enumerate(recs):
+        evs = notifier.plan([r], projection=None, now=at(i, 2))
+        lines, _ = notifier.deliver(evs, delivered, ALL, at(i, 2))
+        for l in lines:
+            seen.append((r['state'], l['kind'], l['outcome']))
+        delivered |= set((l['dedupe_key'], l['channel'])
+                         for l in lines if l['outcome'] == 'DELIVERED')
+    # THE DEFECT: the third message -- the recurrence -- used to be SUPPRESSED_DUPLICATE.
+    eq(seen[2], ('OPEN', 'ALERT', 'DELIVERED'),
+       'the recurrence after a delivered recovery was silenced: %s' % (seen,))
+    # CONTROL 1: the REPEAT of that same incident is still suppressed. Without this, the repair
+    # is satisfied by a key that never dedupes anything, which is alert spam wearing a fix.
+    eq(seen[3], ('OPEN', 'ALERT', 'SUPPRESSED_DUPLICATE'),
+       'the same incident now re-alerts on every run: %s' % (seen,))
+    # CONTROL 2: the recovery itself is sent ONCE, across both RESOLVED observations. RESOLVED
+    # persists while the finding stays absent, so a counter that incremented per RESOLVED line
+    # would send two recovery messages -- measured that way round before the counter was written.
+    eq(len([s for s in seen if s[1] == 'RECOVERY']), 1,
+       'the recovery was emitted more than once: %s' % (seen,))
+
+
+@case('N02', 'ORDER-1261 #1 the incident counter is derived from recovery, not from a clock')
+def _n02():
+    # The unit under the case above, driven directly so the boundary is attributable.
+    hist = lambda states: [{'state': s} for s in states]
+    eq(notifier.incident_seq(hist([]), 'OPEN'), 0, 'a first OPEN is incident 0')
+    eq(notifier.incident_seq(hist(['OPEN', 'HEALTHY_1_OF_2']), 'RESOLVED'), 0,
+       'reaching RESOLVED does not itself start a new incident')
+    eq(notifier.incident_seq(hist(['OPEN', 'RESOLVED']), 'RESOLVED'), 0,
+       'a SECOND RESOLVED observation is the same recovery, not a new incident')
+    eq(notifier.incident_seq(hist(['OPEN', 'RESOLVED']), 'OPEN'), 1, 'coming back is incident 1')
+    eq(notifier.incident_seq(hist(['OPEN', 'RESOLVED', 'OPEN']), 'OPEN'), 1,
+       'staying open is still the same incident')
+    eq(notifier.incident_seq(hist(['OPEN', 'RESOLVED', 'OPEN', 'RESOLVED']), 'OPEN'), 2,
+       'a second recovery-and-return is incident 2')
+    # BACKWARD COMPATIBILITY, and it is the reason the component is conditional: every key
+    # already in the live ledger was written without it. Incident 0 must keep the key it has.
+    k0 = notifier.dedupe_key('FP-x', 'OPEN', 'WARN', 0)
+    eq(notifier.dedupe_key('FP-x', 'OPEN', 'WARN', 0, None, 0), k0,
+       'incident 0 changed the key, which would re-alert every open finding once')
+    if notifier.dedupe_key('FP-x', 'OPEN', 'WARN', 0, None, 1) == k0:
+        raise AssertionError('incident 1 shares a key with incident 0')
+    # ...and the state vocabulary is PARTITIONED, so a fifth state is a decision someone takes.
+    states = set(notifier.REOPENING_STATES) | set(notifier.NON_REOPENING_STATES)
+    produced = set()
+    for streak in (0, 1, 2, 3):
+        for occ in (0, 9):
+            produced.add(control_center.fold_finding(
+                {'id': 'F', 'class': 'RUNTIME', 'healthy_streak': streak,
+                 'occurrences_24h': occ, 'previous_state': 'OPEN'})['state'])
+    if not produced <= states:
+        raise AssertionError('fold_finding can emit %s, which this module classifies as neither '
+                             'reopening nor non-reopening' % sorted(produced - states))
+    if set(notifier.REOPENING_STATES) & set(notifier.NON_REOPENING_STATES):
+        raise AssertionError('a state is in both halves of the partition')
+
+
+@case('N03', 'ORDER-1261 #3 the literal layer RUNS at the boundary that writes the ledger file')
+def _n03():
+    """
+    Measured at HEAD: `safe_detail` passed `NO_KNOWN_SECRETS_AVAILABLE` unconditionally, so a
+    bare account number in an error string was written to the ledger verbatim while the token
+    control was caught. The declaration meant to make a missing input HONEST had become the
+    reason the layer never ran -- `prohibition-disarms-its-own-check`.
+    """
+    secret = '900112233'
+    err = 'connect failed for account %s' % secret
+    # THE DEFECT: with the real list, as deliver() now passes it, the literal does not survive.
+    out = notifier.safe_detail(err, [secret])
+    if secret in out:
+        raise AssertionError('the literal is still written into the ledger detail: %r' % out)
+    if 'KNOWN_SECRET' not in out:
+        raise AssertionError('the detail does not name the rule that withheld it: %r' % out)
+    # CONTROL 1: the value-shape layer, which never needed a list, still fires on its own.
+    if 'TELEGRAM_BOT_TOKEN' not in notifier.safe_detail(
+            'bot token 7712345678:AAH9xQwErTyUiOpAsDfGhJkLzXcVbNm0'):
+        raise AssertionError('the value-shape layer stopped firing')
+    # CONTROL 2: safe_detail is NOT a blanket redactor -- an ordinary failure is untouched.
+    eq(notifier.safe_detail('connection reset by peer', [secret]), 'connection reset by peer', '')
+    # CONTROL 3: the DEFAULT still declares rather than pretending. A caller with nothing to
+    # derive from must not silently get a scan that cannot run.
+    eq(notifier.safe_detail(err), err, 'the default stopped being the declared no-op')
+    # END TO END through deliver(), which is the boundary that actually writes the line.
+    class Boom2(object):
+        def send(self, channel, text):
+            raise RuntimeError('socket to account %s died' % secret)
+    evs = notifier.plan([rec(severity='CRITICAL', state='OPEN', pid='FP-1111111111')],
+                        projection=None, now=at(1, 2))
+    lines, _ = notifier.deliver(evs, set(), {'EMERGENCY': Boom2()}, at(1, 2),
+                                known_secrets=[secret])
+    if secret in json.dumps(lines[0], ensure_ascii=False):
+        raise AssertionError('the ledger LINE carries the literal: %s' % lines[0])
+
+
+@case('N04', 'ORDER-1261 #4 the seam is enforced by deliver() itself, not by call order')
+def _n04():
+    """
+    Measured at HEAD: `deliver()` is in PUBLIC_API, called neither `assert_sendable` nor
+    `scan_forbidden`, and put `ev['text']` on the wire directly. `imports_of()` cannot cover it,
+    because everything it would need is already allowed to it.
+    """
+    secret = '900112233'
+    ev = notifier.plan([rec(severity='CRITICAL', state='OPEN', pid='FP-3333333333')],
+                       projection=None, now=at(1, 2))[0]
+    ev['text'] = 'account %s is unwell' % secret
+    try:
+        notifier.deliver([ev], set(), {ev['channel']: notifier.RecordingTransport()}, at(1, 2),
+                         known_secrets=[secret])
+        raise AssertionError('a caller that skipped assert_sendable still delivered a literal')
+    except safe_projection.ProjectionLeak as exc:
+        if secret in str(exc):
+            raise AssertionError('the refusal restates the value it caught: %s' % exc)
+    # CONTROL: a clean event still goes through. A seam that refuses everything is an outage.
+    clean = notifier.plan([rec(severity='CRITICAL', state='OPEN', pid='FP-4444444444')],
+                          projection=None, now=at(1, 2))
+    lines, _ = notifier.deliver(clean, set(), {'EMERGENCY': notifier.RecordingTransport()},
+                                at(1, 2), known_secrets=[secret])
+    eq(lines[0]['outcome'], 'DELIVERED', 'the seam refused a clean event')
+
+
+@case('N05', 'ORDER-1261 #5 one torn line does not stop every later alert, and is not silent')
+def _n05():
+    """
+    Measured at HEAD: an unguarded `json.loads` in both runtime readers raised BEFORE any
+    delivery decision, so nothing was planned, sent, or recorded about why. These are
+    append-only files written by a scheduled job on a machine that hibernates.
+    """
+    tmp = tempfile.mkdtemp(prefix='s12_torn_')
+    try:
+        p = os.path.join(tmp, 'alert_ledger.jsonl')
+        io.open(p, 'w', encoding='utf-8').write(
+            '{"entity":"AlertDelivery","dedupe_key":"a","channel":"EMERGENCY",'
+            '"outcome":"DELIVERED"}\n'
+            '{"entity":"AlertDelivery","dedupe_key":"b","chan\n')
+        led = notifier.Ledger.load(p)
+        # THE DEFECT: this used to raise JSONDecodeError.
+        eq(len(led.rows), 1, 'the readable row was lost with the torn one')
+        # ...and the torn line is COUNTED, never skipped in silence. `unreadable-input-must-
+        # refuse-not-skip` is satisfied by REPORTING, not by stopping the alert path.
+        eq(len(led.torn), 1, 'the torn line was skipped silently, which is the other failure')
+        if 'line 2' not in led.torn[0]:
+            raise AssertionError('the report does not say WHICH line: %s' % led.torn[0])
+        # ...and the delivery it could still see is still deduped against.
+        eq(led.delivered(), set([('a', 'EMERGENCY')]), 'the readable delivery was not usable')
+        # CONTROL: a clean file reports nothing torn.
+        io.open(p, 'w', encoding='utf-8').write(
+            '{"entity":"AlertDelivery","dedupe_key":"a","channel":"EMERGENCY",'
+            '"outcome":"DELIVERED"}\n')
+        clean = notifier.Ledger.load(p)
+        eq((len(clean.rows), len(clean.torn)), (1, 0), 'a clean file reported a torn line')
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+@case('N06', 'ORDER-1261 #6 a credential that WAS working and is gone stops sharing a code with '
+             '"not set up yet"')
+def _n06():
+    """
+    Measured at HEAD: a channel with a past DELIVERED row, now absent from `transports`,
+    produced the IDENTICAL outcome and the IDENTICAL detail as a channel that never existed --
+    and that outcome routes to exit 4, which ORDER-219 deliberately mutes in the daily chain.
+    The muting rationale is real and stays; what could not stay is the two situations sharing it.
+    """
+    led = notifier.Ledger([{'entity': 'AlertDelivery', 'dedupe_key': 'old|OPEN|CRITICAL|0',
+                            'channel': 'EMERGENCY', 'outcome': 'DELIVERED', 'receipt': '1'}])
+    evs = notifier.plan([rec(severity='REAL_MONEY', state='OPEN', pid='FP-9999999999')],
+                        projection=None, now=at(1, 2))
+    prev = set(c for (_k, c) in led.delivered())
+    lines, _ = notifier.deliver(evs, led.delivered(), {}, at(1, 2), previously_delivered=prev)
+    eq(lines[0]['outcome'], 'UNCONFIGURED_REGRESSION',
+       'a channel that was delivering yesterday still reads as never-provisioned')
+    # CONTROL: the never-provisioned case is UNCHANGED, because ORDER-219's rationale still holds
+    # for it -- it is true every day until the owner makes the bot, and it must not go red daily.
+    lines2, _ = notifier.deliver(evs, set(), {}, at(1, 2), previously_delivered=set())
+    eq(lines2[0]['outcome'], 'UNCONFIGURED', 'the expected case stopped being the expected case')
+    # ...and the two say different things to a human, not just to a switch statement.
+    if lines[0]['detail'] == lines2[0]['detail']:
+        raise AssertionError('the two situations still print the same sentence')
+
+
 @case('C06', 'ACROSS TWO PROCESSES a probe is delivered ONCE and suppressed the second time')
 def _c06():
     tmp = fixture_repo()
