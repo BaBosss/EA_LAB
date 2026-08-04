@@ -236,7 +236,10 @@ def main():
     # ---- The whole-store pin on an already-executed transfer's DESTINATION stops being enforced.
     # ---- Every case below exists to bound that exemption, because an exemption is only as good as
     # ---- the list of things it still refuses.
-    print('\n=== ORDER-1269 #1: the pin instrument, and the six things the exemption still refuses ===')
+    # The count used to be typed into this heading ("the six things"). It is DERIVED from the list
+    # below now, because ORDER-1310 #1 added one and a hand-typed tally is a number that rots into
+    # a claim nobody re-checks -- memory `measurement-table-needs-its-harness`, one size down.
+    print('\n=== ORDER-1269 #1: the pin instrument, and what the exemption still refuses ===')
 
     def _real_eps(owner):
         """The in-force record's own expected_post_state -- DERIVED from the live log, never typed.
@@ -261,22 +264,28 @@ def main():
                         found = rec['expected_post_state']
         return found
 
-    def _derived_section_eps(path):
+    def _derived_section_eps(path, exclude=None):
         """A section post-state claim for `path` that REALLY reproduces at HEAD, built at run time.
 
         The anchor is the first `## ` heading that occurs exactly once, so this cannot rot as the
         file changes -- which for AGENT_TASKBOARD.md is every few minutes.
+
+        `exclude` (ORDER-1310 #1) skips a heading, so the attack fixture can be "a DIFFERENT
+        section of the SAME file, correctly hashed" -- derived at run time for the same reason the
+        rest is: a hand-typed heading is a fixture of filler values that would go green the day
+        the file is reorganised.
         """
         text = att._head_text(path)
         lines = [l.rstrip() for l in text.replace('\r\n', '\n').split('\n')]
         heads = [l for l in lines if l.startswith('## ')]
         for h in heads:
-            if heads.count(h) == 1:
+            if h != exclude and heads.count(h) == 1:
                 sha, err = att.section_digest(text, h)
                 if not err:
                     return {'path': path, 'section': h, 'section_sha256': sha}
-        raise SystemExit('no uniquely-occurring "## " heading in %s -- this suite cannot build a '
-                         'reproducing section claim against nothing' % path)
+        raise SystemExit('no uniquely-occurring "## " heading in %s (excluding %r) -- this suite '
+                         'cannot build a reproducing section claim against nothing'
+                         % (path, exclude))
 
     COV_EPS = _real_eps('MASTER_BACKLOG.md')
     MISSING_NOTE = {'entity': 'CoverageCell', 'path': PIN_PATH, 'kind': 'MISSING', 'text': 'gone'}
@@ -320,7 +329,18 @@ def main():
                    expected_post_state=_derived_section_eps('AGENT_TASKBOARD.md'))],
              [{'entity': 'Hypothesis', 'path': 'AGENT_TASKBOARD.md', 'kind': 'STALE',
                'text': 'stale'}]),
+            # ORDER-1310 #1, REPRODUCED by the independent review before it was written here: a
+            # CORRECTLY HASHED claim on a DIFFERENT section of the SAME owner file bought the
+            # exemption. F7 forced the right FILE and F13/F14 forced the claim to reproduce, and
+            # both were satisfied -- nothing asked WHICH section. The heading is derived at run
+            # time, excluding the one the destination store declares.
+            ('ORDER-1310 #1 a correctly-hashed claim on an UNRELATED section of the owner file',
+             [good(expected_post_state=_derived_section_eps(
+                 'MASTER_BACKLOG.md', exclude=att.declared_owner_section(PIN_PATH)))],
+             [STALE_NOTE]),
         ]
+        print('  (%d refusals below, counted from the list, not from this sentence)'
+              % len(exemption_attacks))
         for label, lines, vintage in exemption_attacks:
             _, _ap = run_with(lines, vintage)
             ok = 'pin is STALE' in _ap
@@ -355,6 +375,39 @@ def main():
           % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> %r' % sorted(synth))
+        bad += 1
+
+    print('\n=== ORDER-1310 #1: WHICH section is "the approved one", asked of the store ===')
+    # The end-to-end attack is in `exemption_attacks` above. These hold the resolver itself,
+    # because the attack case alone cannot separate "it named the wrong section" from
+    # "declared_owner_section returns None for everything", which would also make THE POINT red
+    # -- but only if somebody is still running THE POINT.
+    _declared = att.declared_owner_section(PIN_PATH)
+    ok = bool(_declared) and _declared.startswith('## ')
+    print('  [%s] the destination store DECLARES the owner section it projects into'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %r' % _declared)
+        bad += 1
+    # ...and it is the SAME string the in-force record binds. This is the assertion that makes
+    # the exemption an agreement between two independently-written artifacts rather than a name
+    # this checker knows: neither side is typed here.
+    ok = COV_EPS is not None and _declared == COV_EPS.get('section')
+    print('  [%s] and it is the section the in-force record binds -- nothing is hardcoded here'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> store=%r record=%r' % (_declared, (COV_EPS or {}).get('section')))
+        bad += 1
+    # FAIL CLOSED. A destination that is not a store declaring a section declares nothing, and
+    # "nothing" must not read as "any section will do".
+    ok = att.declared_owner_section('MASTER_BACKLOG.md') is None
+    print('  [%s] a destination that is not a JSONL store declares NOTHING, not anything'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        bad += 1
+    ok = att.declared_owner_section('no/such/path/at/head.jsonl') is None
+    print('  [%s] and neither does a path that is not at HEAD' % ('OK ' if ok else 'BAD'))
+    if not ok:
         bad += 1
 
     print('\n=== ORDER-1310 #3: the exemption is ROW-scoped, and it used to be PATH-scoped ===')

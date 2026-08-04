@@ -45,6 +45,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check_s2a_migration as chk  # noqa: E402
 import evidence  # noqa: E402
+import registry  # noqa: E402  -- ORDER-1310 #1, for classify_record ONLY: THE metadata rule
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _SRC = [None]
@@ -579,6 +580,64 @@ def executed_transfer_destinations(d1_rows, owner):
     return out
 
 
+def declared_owner_section(destination_path):
+    """The heading of the OWNER file that this destination store DECLARES it projects into.
+
+    🔴 ORDER-1310 #1 -- THE EXEMPTION USED TO ACCEPT ANY REPRODUCIBLE SECTION OF THE OWNER FILE.
+    `pin_exemption_reason` required a section claim that RESOLVES and F7 required it to bind
+    `current_owner`; nothing anywhere asked WHICH section. The independent review bought the
+    exemption with a correctly-hashed claim on `## 1. ความจริงสั้น ๆ (อ่านก่อน)` -- an unrelated
+    stable heading that has nothing to do with the approved transfer. Reproduced.
+
+    THE ANSWER MUST NOT BE A HARDCODED HEADING, and this is why it does not have to be. The
+    transfer being exempted moved a fact OUT of a section of the owner file and INTO a store; the
+    store then projects that section back. Which section that is is DATA the store itself carries
+    -- the `_section` metadata record, a repo-wide convention declared in `registry.META_KEYS`,
+    written by `gen_coverage.py` and read by `check_coverage_transfer.py`. So the approved section
+    is not a name this checker knows: it is the name the DESTINATION declares, re-read from HEAD
+    on the run that grants the exemption, exactly like the digest beside it. A destination that
+    declares nothing gets no exemption (memories `rule-names-categories-not-enum-members` and
+    `citation-guard-satisfied-by-a-universal-file` -- an enum of headings would be the first, and
+    "any section that happens to resolve" was the second).
+
+    FAIL CLOSED at every branch: not at HEAD, undecodable, unparseable, a record that is both a
+    note and a row, no `_section` at all, or MORE THAN ONE -- all return None, which costs the
+    owner a signature instead of granting an exemption on an ambiguous reading.
+
+    `registry.classify_record` is IMPORTED rather than copied, because that is the one metadata
+    rule in this repo and the second copy is always the one nobody fixes. The line-splitting is
+    local because the bytes come from `_head_text`, the seam the conformance runner replaces --
+    `registry.read_store` reads the worktree or an EvidenceSource, neither of which is what F13,
+    F14 and this exemption are judging.
+    """
+    try:
+        text = _head_text(destination_path)
+    except (UnicodeDecodeError, ValueError):
+        return None
+    if not text:
+        return None
+    headings = []
+    for line in text.replace('\r\n', '\n').split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            return None
+        if not isinstance(rec, dict):
+            return None
+        try:
+            kind = registry.classify_record(rec, '%s (pin exemption)' % destination_path)
+        except Exception:
+            return None
+        if kind == 'META' and isinstance(rec.get('_section'), dict):
+            headings.append(rec['_section'].get('heading'))
+    if len(headings) != 1 or not headings[0]:
+        return None
+    return headings[0]
+
+
 def pin_exemption_reason(note, eps, destinations, digest):
     """Why this vintage note is NOT enforced, or None. ONE rule, TWO readers.
 
@@ -609,13 +668,21 @@ def pin_exemption_reason(note, eps, destinations, digest):
     got, err = section_digest(text, eps['section'])
     if err or got != eps['section_sha256']:
         return None
-    return ('the pin on %r is NOT enforced -- %r is the destination of a transfer D1 records as '
-            'already executed, so its bytes changing is the approved outcome, not the record going '
-            'stale. What binds this decision instead: the migration (bundle %s) and the generated '
-            'section %r of %s (sha %s), both re-resolved on this run. A MISSING note, a section '
-            'claim that did not reproduce, or no claim at all would all still demand the owner.'
+    # ORDER-1310 #1: WHICH section. Everything above proves the claim RESOLVES; this proves it is
+    # the section the transfer was about, by asking the destination store what it projects.
+    declared = declared_owner_section(note['path'])
+    if not declared or eps['section'] != declared:
+        return None
+    return ('the pin on %r is NOT enforced -- %r is the destination of a transfer THIS OWNER\'S '
+            'own D1 row records as already executed, so its bytes changing is the approved '
+            'outcome, not the record going stale. What binds this decision instead: the migration '
+            '(bundle %s) and the generated section %r of %s (sha %s), both re-resolved on this '
+            'run -- and that section is the one %s DECLARES it projects, not merely one that '
+            'happens to resolve. A MISSING note, a section claim that did not reproduce, a claim '
+            'naming a DIFFERENT section, an exemption borrowed from another owner\'s transfer, or '
+            'no claim at all would all still demand the owner.'
             % (note['path'], note['path'], str(digest)[:12], eps['section'], eps['path'],
-               str(eps['section_sha256'])[:12]))
+               str(eps['section_sha256'])[:12], note['path']))
 
 
 def check(rows, problems, digest, d1_owners, vintage_notes):
@@ -814,10 +881,10 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         #                        MASTER_BACKLOG.md -- the generated projection a reader actually
         #                        sees. `problems_before` is what proves it raised nothing.
         #
-        # DELIBERATELY NARROW, FIVE ways, because an exemption that is wider than its justification
-        # is how a guard stops guarding. It said "four" and was one short: the fifth was CLAIMED in
-        # prose ("for that row only") and not implemented, which the independent review reproduced
-        # as ORDER-1310 #3. A condition that exists only in a comment is not a condition:
+        # DELIBERATELY NARROW, SIX ways, because an exemption that is wider than its justification
+        # is how a guard stops guarding. IT SAID "FOUR" AND WAS TWO SHORT, and both missing ones
+        # were reproduced by the independent review -- 5 was CLAIMED in prose and not implemented,
+        # 6 was not thought of at all. A condition that exists only in a comment is not a condition:
         #   1. SECTION form only. A whole-file post-state claim is the granularity ORDER-731 C1
         #      measured at ~2 owner signatures a day; accepting it here would swap one coarse
         #      instrument for another.
@@ -828,6 +895,14 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         #   4. no claim at all = no exemption. That is also the defect this order lists as #4
         #      ("an APPROVED record may carry no expected_post_state, so the front guard pins
         #      nothing"), and it must not be reachable through this door.
+        #   5. (ORDER-1310 #3) the executed transfer must be THIS OWNER'S OWN. The destination set
+        #      is derived from `r['current_owner']` here rather than from all of D1, so a row
+        #      cannot inherit an exemption from a path some other row donated.
+        #   6. (ORDER-1310 #1) the claim must name THE APPROVED SECTION, not any section that
+        #      resolves. F7 forces the right FILE and F13/F14 force the claim to reproduce; both
+        #      were satisfied by a correctly-hashed claim on an unrelated stable heading. Which
+        #      section is the approved one is asked of the DESTINATION STORE
+        #      (`declared_owner_section`), never of a list of headings in here.
         #
         # PRINTED, never silent. A pin that is not enforced and says nothing is exactly
         # memory `guard-disarmed-by-prose-reported-as-note`, which is the shape this same order
@@ -837,9 +912,6 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         # forms, F7 binding a foreign path, F9 the path absent at HEAD, F10 a directory) reddened
         # for this row either. A record that is broken in any of those ways has not earned an
         # exemption from a different check.
-        #   5. (ORDER-1310 #3) the executed transfer must be THIS OWNER'S OWN. The destination set
-        #      is derived from `r['current_owner']` here rather than from all of D1, so a row
-        #      cannot inherit an exemption from a path some other row donated.
         _exempt = pin_exemption_reason(
             note, eps, executed_transfer_destinations(_D1_ROWS, r['current_owner']), digest)
         if _exempt and len(problems) == problems_before:

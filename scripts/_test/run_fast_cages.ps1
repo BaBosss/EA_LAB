@@ -927,9 +927,16 @@ $SUITE_GUARDS = @{
                                           #   evidence.py           <- run_s2a_attestation_tests
                                           #   gen_coverage.py       <- check_coverage_transfer
                                           #   gen_design_contracts  <- check_s2a_migration
+                                          #   registry.py           <- check_s2a_attestation
+                                          #     (ORDER-1310 #1: classify_record decides which
+                                          #      record of a destination store DECLARES the owner
+                                          #      section, and that decision now gates the pin
+                                          #      exemption -- so a change to THE metadata rule
+                                          #      changes what the exemption accepts)
                                           '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/gen_coverage.py',
-                                          '_triage/factory_os/gen_design_contracts.py'
+                                          '_triage/factory_os/gen_design_contracts.py',
+                                          '_triage/factory_os/registry.py'
                                         )
     'run_schema_cages.ps1'            = @(
                                           # ORDER-702: DERIVED by the import sweep in
