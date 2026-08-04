@@ -1192,6 +1192,106 @@ def sp23():
     sp.build(quiet)
 
 
+@case('SP24', 'ORDER-1267 #2', 'the CONFLICT rule comes from control_center, not from a copy in here')
+def sp24():
+    """
+    The owner's ratified answer was (a) -- "one rule in one place" -- and (b) was rejected for
+    needing a second copy of `control_center.SENSOR_HEALTHY`. A projection that recomputed the
+    same answer locally would satisfy SP25 and lose exactly what was ratified, so this case
+    tests the WIRING and not the answer. Same shape as `run_s12_tests.py` V04.
+    """
+    doc = snapshot()
+    doc['system_health'][0]['state'] = 'STALE'
+    doc['floating_risk'][0]['state'] = 'FRESH'
+
+    saved = cc.sensors_disagree
+    calls = []
+
+    def spy(states):
+        calls.append(dict(states))
+        return saved(states)
+
+    cc.sensors_disagree = spy
+    try:
+        projection = sp.build(doc)
+    finally:
+        cc.sensors_disagree = saved
+
+    if not calls:
+        raise AssertionError('build() did not call control_center.sensors_disagree, which means a '
+                             'second copy of the CONFLICT rule exists here and the two will drift')
+    assert calls[0] == {'system_health': 'STALE', 'floating_risk': 'FRESH'}, calls
+    assert projection['accounts'][0]['sensor_state'] == 'CONFLICT', projection['accounts']
+
+
+@case('SP25', 'ORDER-1267 #2', 'two detectors that disagree render CONFLICT; two that agree do not')
+def sp25():
+    """
+    Measured at HEAD before the repair, on the REAL snapshot: 6 accounts known to both detectors,
+    TWO of them `system_health=STALE` beside `floating_risk=FRESH` (ending 900 and 711). The
+    projection said STALE; `control_center` said CONFLICT for the same two rows.
+
+    Every positive below carries its control, because "render CONFLICT more often" is trivially
+    satisfied by a rule that renders it always -- SP20's lesson, one order earlier.
+    """
+    def state_of(health, risk):
+        doc = snapshot()
+        doc['system_health'][0]['state'] = health
+        doc['floating_risk'][0]['state'] = risk
+        return sp.build(doc)['accounts'][0]['sensor_state']
+
+    # THE DEFECT, in the direction that is live today.
+    assert state_of('STALE', 'FRESH') == 'CONFLICT', state_of('STALE', 'FRESH')
+    # THE DEFECT, in the direction that was the actual hazard: the projection used to say FRESH
+    # over a blind risk sensor, because it read the system_health row and nothing else.
+    assert state_of('FRESH', 'BLIND') == 'CONFLICT', state_of('FRESH', 'BLIND')
+
+    # CONTROL 1 -- agreement is not a conflict. A rule that always fired would fail here.
+    assert state_of('FRESH', 'FRESH') == 'FRESH', state_of('FRESH', 'FRESH')
+
+    # CONTROL 2, THE DISCRIMINATING ONE -- two detectors both reporting something UNHEALTHY are
+    # AGREEING, and the account's own state still travels. An implementation written as
+    # `health != risk` passes every assertion above this line and fails here, which is the
+    # difference between mirroring control_center's rule and inventing a lookalike.
+    assert state_of('STALE', 'BLIND') == 'STALE', state_of('STALE', 'BLIND')
+    assert state_of('BLIND', 'MISSING') == 'BLIND', state_of('BLIND', 'MISSING')
+
+    # CONTROL 3 -- scope. One detector silent is not a disagreement, and SP14 still owns that.
+    quiet = snapshot()
+    quiet['system_health'][0]['state'] = 'FRESH'
+    del quiet['floating_risk'][0]['state']
+    assert sp.build(quiet)['accounts'][0]['sensor_state'] == 'FRESH', 'a row with no state voted'
+
+
+@case('SP26', 'ORDER-1267 #2', 'the projection vocabulary and the CONFLICT rule cannot drift apart')
+def sp26():
+    """
+    `build()` hands control_center's rule this module's MAPPED states, not the raw ones. That is
+    only safe while the map preserves membership of `SENSOR_HEALTHY`, and nothing said so until
+    this case: an entry mapping some future unhealthy state onto `FRESH` would turn a real
+    disagreement into agreement, silently, in the module whose first stated rule is that an
+    unrecognised input must never become a benign default.
+
+    SP15 is the same shape for `REASON_SEVERITY` against the schema's reason-code enum.
+    """
+    assert set(sp.SENSOR_STATE_MAP) == set(cc.SENSOR_KNOWN), \
+        'map-only=%s  page-only=%s' % (sorted(set(sp.SENSOR_STATE_MAP) - set(cc.SENSOR_KNOWN)),
+                                       sorted(set(cc.SENSOR_KNOWN) - set(sp.SENSOR_STATE_MAP)))
+    for raw, projected in sorted(sp.SENSOR_STATE_MAP.items()):
+        assert (raw in cc.SENSOR_HEALTHY) == (projected in cc.SENSOR_HEALTHY), \
+            '%r maps to %r and the two disagree about health' % (raw, projected)
+
+    # and every value this module can project is a value the schema declares - including
+    # CONFLICT, which no detector emits and which therefore appears in no map.
+    with io.open(os.path.join(REPO, sv.SCHEMA_PATH), encoding='utf-8-sig') as fh:
+        schema = json.load(fh)
+    enum = set(schema['$defs']['SafeProjection']['properties']['accounts']['items']
+               ['properties']['sensor_state']['enum'])
+    produced = set(sp.SENSOR_STATE_MAP.values()) | set(['UNKNOWN', 'CONFLICT'])
+    assert produced <= enum, 'produced but not declared: %s' % sorted(produced - enum)
+    assert 'CONFLICT' in enum, 'the ratified answer (a) is not in the wire vocabulary'
+
+
 @case('SP13', '7.3 dedupe', 'public ids are opaque, stable across builds, and differ per finding')
 def sp13():
     a = sp.public_id('MANDATORY_SOURCE_STALE|attestation_map')

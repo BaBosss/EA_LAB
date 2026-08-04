@@ -763,7 +763,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `generated_at` | `string` | **yes** | pattern `^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$` · ORDER-1267 Part 2, same reasoning and same route as build_id. Shape DERIVED -- control_room_snapshot.ps1 writes $now.ToString('s'): yyyy-MM-ddTHH:mm:ss, no fraction, no zone. |
 | `accounts` | array of object *(fields below)* | **yes** | items closed · items require `account_masked`, `sensor_state`, `dd_pct_band` |
 | `accounts[].account_masked` | `string` | **yes** | pattern `^\*{3}[0-9]{3}$` |
-| `accounts[].sensor_state` | `FRESH` \| `STALE` \| `BLIND` \| `MISSING` \| `UNKNOWN` | **yes** |  |
+| `accounts[].sensor_state` | `FRESH` \| `STALE` \| `BLIND` \| `MISSING` \| `UNKNOWN` \| `CONFLICT` | **yes** | CONFLICT (ORDER-1267 #2, owner-ratified 2026-08-04) is what the two detectors DISAGREEING renders - control_center.sensors_disagree() owns the rule and safe_projection.build() calls it. It is not a state any detector emits, so it is absent from SENSOR_STATE_MAP's keys and present in its target vocabulary |
 | `accounts[].dd_pct_band` | `OK` \| `WATCH` \| `BREACH` \| `UNKNOWN` | **yes** | a BAND, not a number - a percentage plus a known base equity reconstructs the money amount |
 | `findings` | array of object *(fields below)* | **yes** | items closed · items require `public_id`, `severity`, `state` |
 | `findings[].public_id` | `string` | **yes** | pattern `^FP-[0-9a-f]{10}$` |

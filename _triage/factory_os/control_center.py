@@ -524,6 +524,28 @@ SENSOR_HEALTHY = ('FRESH',)
 SENSOR_KNOWN = ('FRESH', 'STALE', 'BLIND', 'MISSING', 'NO_SENSOR', 'UNKNOWN')
 
 
+def sensors_disagree(states):
+    """design 7.1: "disagreement between detectors renders CONFLICT". THE rule, in ONE place.
+
+    ORDER-1267 #2, half two. `safe_projection.build()` renders the same CONFLICT and calls THIS
+    function to decide it, because the owner's ratified answer was "one rule in one place" and
+    the rejected alternative (b) was rejected precisely for needing a second copy of
+    `SENSOR_HEALTHY`. `run_s11_tests.py` SP24 spies on this function and fails if the projection
+    ever stops calling it, which is the `run_s12_tests.py` V04 shape.
+
+    `states` maps detector name -> that detector's state. The test is disagreement about
+    HEALTHINESS, not about spelling: two detectors that both say something unhealthy
+    (`STALE` beside `BLIND`) are agreeing, and rendering CONFLICT there would be a false alarm
+    on top of a real one. A `!=` on the two strings cannot tell those apart -- SP25 carries that
+    exact pair as its discriminating control.
+
+    A `states` with fewer than two entries is not a disagreement: a detector that is SILENT about
+    an account is a different finding, handled by the caller (build_live gives it its own SENSOR
+    row; the projection gives it `UNKNOWN`).
+    """
+    return len(set(v in SENSOR_HEALTHY for v in states.values())) > 1
+
+
 def build_live(read):
     bands = collections.OrderedDict((bid, {'id': bid, 'label': label, 'rows': []})
                                     for bid, label in LIVE_BANDS)
@@ -570,8 +592,7 @@ def build_live(read):
                        % (' + '.join(missing),
                           ', '.join('%s=%s' % kv for kv in sorted(states.items())) or 'ไม่มีเลย')})
             continue
-        healthy = set(states[s] in SENSOR_HEALTHY for s in states)
-        if len(healthy) > 1:
+        if sensors_disagree(states):
             bands['SENSOR']['rows'].append({
                 'account': acct, 'state': 'CONFLICT',
                 'why': 'system_health=%s แต่ floating_risk=%s — ตัวตรวจสองตัวไม่ตรงกัน '
@@ -737,6 +758,11 @@ PUBLIC_API = (
     'SnapshotRead', 'ShellRefusal',
     'project', 'build_today', 'build_work', 'build_live', 'build_system',
     'normalise_row', 'place', 'fold_finding', 'render_html', 'read_work_rows',
+    # ORDER-1267 #2. A PREDICATE, not a verb: it answers a question about two states and
+    # touches nothing. It is public because `safe_projection.build()` calls it rather than
+    # keeping a second copy of the rule -- which is exactly what the owner ratified -- and P01
+    # caught it the moment it stopped being private, which is the cage working.
+    'sensors_disagree',
     # `main` is the CLI that renders the local page. It is the ONE name here that writes
     # anything, and what it writes is build/control_center.html - a rendering, never a
     # dispatch, a claim or a closure. It is declared rather than excused: the cage asserts this

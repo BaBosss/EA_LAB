@@ -55,6 +55,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import snapshot_validator  # noqa: E402  - the ONE reader boundary for the full snapshot
+import control_center      # noqa: E402  - sensors_disagree() lives there, once (ORDER-1267 #2)
 
 # The full snapshot is named here ONCE, and only so that build() can obtain a VERIFIED copy
 # through snapshot_validator.load_verified(). read_for_sender() does not use it: see
@@ -535,28 +536,30 @@ def build(snapshot):
     SafeProjection from a VERIFIED ControlRoomSnapshotV5. Never from an unverified one -
     callers get the document from snapshot_validator.load_verified().
 
-    ⚠️ ORDER-1267 #2 IS HALF CLOSED, AND THE OPEN HALF IS A LIVE DISAGREEMENT, NOT A HYPOTHETICAL.
-    An unrecognised `floating_risk[].state` now REFUSES (see the loop below). What `sensor_state`
-    should SAY when the two detectors both speak and disagree is NOT decided here, because it is
-    a change to what a live alerting surface tells the owner and it is measurable today:
+    ✅ ORDER-1267 #2 IS CLOSED. THE OWNER RATIFIED ANSWER (a) ON 2026-08-04: when the two
+    detectors both speak and DISAGREE, `sensor_state` is `CONFLICT`, decided by
+    `control_center.sensors_disagree()` rather than by a copy of the rule living here.
 
-        the real snapshot, 2026-08-04: 6 accounts, all known to BOTH detectors.
-        TWO of them disagree -- `floating_risk=FRESH` while `system_health=STALE`
-        (accounts ending 900 and 711). `control_center` renders those two CONFLICT
-        (its rule: disagreement about SENSOR_HEALTHY membership); this projection
-        renders `STALE`, because it reads the system_health row and nothing else.
+    It was measured before it was changed, on the real snapshot at `467612b3`:
 
-    In that direction the projection is the LESS reassuring of the two, so nothing is being
-    hidden today. The reverse direction is the hazard: `system_health=FRESH` with a BLIND risk
-    row would project FRESH. And an account only the RISK detector knows about projects UNKNOWN
-    even when that detector said BLIND -- `SP14` pins that behaviour today.
+        6 accounts, all known to BOTH detectors. TWO disagree -- `floating_risk=FRESH`
+        while `system_health=STALE`, accounts ending 900 and 711. `control_center`
+        rendered those two CONFLICT; this projection rendered STALE, because it read
+        the system_health row and nothing else. After: both render CONFLICT.
 
-    The three candidate answers, none of them free: (a) add CONFLICT to the SafeProjection enum in
-    `schemas.json` and mirror control_center's rule -- one rule, but a wire-shape change;
-    (b) project the UN-healthy state, which needs a healthiness set this module does not own and
-    would be a second copy of `control_center.SENSOR_HEALTHY`; (c) project UNKNOWN on
-    disagreement, which is safe in one direction and an UPGRADE from BLIND in the other.
-    That is the owner's call, and it is written up rather than guessed.
+    That direction was the LESS reassuring of the two, so nothing was hidden. The direction that
+    WAS a hazard is the reverse -- `system_health=FRESH` beside a `BLIND` risk row projected
+    `FRESH` -- and it is the one this closes. The wire-shape cost the owner accepted: `CONFLICT`
+    is a new value in the SafeProjection enum, and `notifier.render_brief()` tallies
+    `sensor_state` generically, so the Morning Brief now reads `sensor: CONFLICT 2 · FRESH 4`
+    where it read `FRESH 4 · STALE 2`.
+
+    WHAT THIS DELIBERATELY DOES NOT CHANGE, because mirroring the rule means mirroring its
+    scope: an account only ONE detector knows about still projects `UNKNOWN`, even when that
+    detector said `BLIND`. `control_center` treats a silent detector as its own finding rather
+    than as a disagreement, and `SP14` still pins that -- measured, not assumed: SP14 was run
+    unchanged after this repair and both of its assertions held. A `floating_risk` row carrying
+    no `state` at all is likewise not a disagreement (`SP23`'s specificity case).
     """
     if not isinstance(snapshot, dict):
         _refuse('the snapshot is %s, not an object' % type(snapshot).__name__)
@@ -569,6 +572,7 @@ def build(snapshot):
     # publishes one. Joined on account so a health row and a risk row for one account produce
     # ONE projected row.
     bands = {}
+    risk_states = {}
     for row in snapshot.get('floating_risk', []) or []:
         acct = row.get('account')
         if 'dd_band' in row:
@@ -581,12 +585,13 @@ def build(snapshot):
         # declares `floating_risk` as `{"type": "object"}` with no properties at all, so the
         # validator does not constrain it either. Nothing anywhere refused an unknown value.
         #
-        # The call is made for its REFUSAL, and the result is deliberately not stored: what the
-        # projection should SAY when the two detectors disagree is a live design question, not a
-        # tidy-up, and it is NOT answered here (see build()'s docstring).
+        # HALF TWO (owner ratified (a), 2026-08-04): the mapped value is now KEPT, because the
+        # answer to "what should sensor_state say when the two detectors disagree" is CONFLICT
+        # and that cannot be decided without this detector's opinion. A row with no `state` key
+        # stays un-refused and contributes no opinion, exactly as half one left it.
         if 'state' in row:
-            _mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
-                    'floating_risk[%s]' % acct)
+            risk_states[acct] = _mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
+                                        'floating_risk[%s]' % acct)
 
     # ROUND-1 BLOCKER FIX. This walked system_health ALONE and joined the rest onto it, so an
     # account the health detector had never seen was absent from the masked list entirely -
@@ -605,11 +610,23 @@ def build(snapshot):
     accounts = []
     for acct in order:
         row = health.get(acct)
+        if row is None:
+            # One detector silent about this account. NOT a disagreement - see the docstring.
+            sensor_state = 'UNKNOWN'
+        else:
+            sensor_state = _mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
+                                   'system_health[%s]' % acct)
+            # ORDER-1267 #2 half two. The rule is IMPORTED, not restated: the values handed to
+            # it are this module's MAPPED ones, which is safe because SENSOR_STATE_MAP preserves
+            # membership of control_center.SENSOR_HEALTHY in both directions - asserted by SP26,
+            # so a future map entry that broke it reddens a case instead of silently turning a
+            # CONFLICT into agreement.
+            if acct in risk_states and control_center.sensors_disagree(
+                    {'system_health': sensor_state, 'floating_risk': risk_states[acct]}):
+                sensor_state = 'CONFLICT'
         accounts.append({
             'account_masked': mask_account(acct),
-            'sensor_state': (_mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
-                                     'system_health[%s]' % acct)
-                             if row is not None else 'UNKNOWN'),
+            'sensor_state': sensor_state,
             # No detector in this document publishes a drawdown band today, so this is UNKNOWN
             # for every account - and it is UNKNOWN by MEASUREMENT (the dict lookup above),
             # not by a constant, which is why a supplied band travels.

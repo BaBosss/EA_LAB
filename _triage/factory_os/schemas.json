@@ -2607,8 +2607,10 @@
                   "STALE",
                   "BLIND",
                   "MISSING",
-                  "UNKNOWN"
-                ]
+                  "UNKNOWN",
+                  "CONFLICT"
+                ],
+                "description": "CONFLICT (ORDER-1267 #2, owner-ratified 2026-08-04) is what the two detectors DISAGREEING renders - control_center.sensors_disagree() owns the rule and safe_projection.build() calls it. It is not a state any detector emits, so it is absent from SENSOR_STATE_MAP's keys and present in its target vocabulary"
               },
               "dd_pct_band": {
                 "enum": [
