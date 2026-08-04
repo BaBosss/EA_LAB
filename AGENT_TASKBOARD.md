@@ -7683,6 +7683,53 @@ written. **No point in that grid forms a plateau** (best `1.25` at `S7/Sl3.0` on
 contiguous ≥1.20 neighbourhood) ⇒ `SPIKE — not promoted`, which is the correct outcome regardless.
 **Re-run CELL 2 with `SlAtrMult` × `AtrPeriod`** — the top two axes that actually have five values.
 
+#### ✅ CELL 2 RE-RUN — the corrected grid (`_02_SlAtrMult` × `_01_AtrPeriod`), 2026-08-04
+
+25 cells, Model 1, MAIN, lane `D:\Meta 5c`. **Every cell verified against its own report's Inputs
+page** — all 25 loaded exactly the pair their filename claims.
+
+| | Atr 7 | Atr 10 | Atr 14 | Atr 20 | Atr 28 |
+|---|---|---|---|---|---|
+| **Sl 1.0** | 1.06 (352) | 0.97 (360) | 1.07 (344) | 1.04 (342) | 1.00 (352) |
+| **Sl 1.5** | 1.01 (206) | **1.20** (212) | 1.17 (211) | 0.96 (225) | 0.92 (233) |
+| **Sl 2.0** | **1.20** (109) | 1.00 (119) | 0.83 (145) | 0.94 (129) | 0.78 (156) |
+| **Sl 2.5** | 1.17 (70) | 1.00 (84) | 0.99 (92) | 0.90 (97) | 1.09 (100) |
+| **Sl 3.0** | 0.91 (65) | 0.85 (60) | 1.12 (56) | 1.04 (67) | 1.05 (78) |
+
+**Only two cells reach 1.20 and both are isolated** — no three contiguous points ≥ 1.20 exists in any
+row or column ⇒ **`SPIKE — not promoted`**, by the rule pre-registered in `cfd46dc4`. Additionally
+`Sl2.0/Atr7` sits on the **first** value of the ATR axis ⇒ **`BOUNDARY(_01_AtrPeriod, first)`**, so it
+could not have been selected even had it plateaued. **CELL 2 does not advance to STAGE 3.**
+
+Note the shape rather than the winner: the high-participation row (`Sl 1.0`, 340-360 trades) sits flat
+at ~1.0-1.07, and everything reaching 1.17-1.20 outside it does so at **56-109 trades**. The one
+exception is `Sl1.5/Atr10` at **1.20 on 212 trades** — isolated, so not selectable, but it is the only
+cell here that is both above the bar and actually in the market.
+
+#### 🔴 SILENT-FAILURE FINDING — 15 reports that look like grid cells and are the baseline
+
+Before the 25 valid cells, the runner produced **15 reports named `O1411_PVT2_Sl<1|2|3>_Atr<n>`**.
+Read back from their own Inputs pages: **every one ran `_01_AtrPeriod=14` and `_02_SlAtrMult=1.5`** —
+the untouched deploy set — and every one returns the identical baseline `PF 1.17 / 211 / net 149.01`,
+**regardless of what its filename claims**. The `.set` edit silently did not land, MT5 ran the base
+config, and a complete, plausible-looking report was written for each.
+
+**Why this matters more than the grid does:** had those files been the ones read, the conclusion would
+have been *"both axes are inert"* — the exact opposite of the truth, supported by 15 consistent
+reports. **Nothing caught this. It was avoided by an accident of filename parsing**, because the
+lookup keys happened to be `1.0` rather than `1`. ⇒ **A report with a plausible number is not evidence
+that the intended configuration ran. Only the Inputs read-back is.** My CELL 2 brief required that
+read-back only for STAGE 3, which is the gap.
+
+They are **quarantined, not deleted** — moved to `_mt5_auto/reports/_VOID_o1411_pvt2_baseline/` with
+a README stating what they are. 🚫 Never glob `O1411_PVT2_*` across that directory and its parent
+together.
+⚠️ **That quarantine is NOT durable and this block is the real record.** `_mt5_auto/reports/` is
+gitignored (`.gitignore:70`), so neither the moved reports nor the README they carry is tracked —
+they exist on this machine only and do not survive a clean checkout. Everything needed to identify
+them is therefore written out here: **15 files named `O1411_PVT2_Sl<1|2|3>_Atr<7|10|14|20|28>`, all
+reporting `PF 1.17 / 211 trades / net 149.01`, all having actually run `_01_AtrPeriod=14` and
+`_02_SlAtrMult=1.5`.** If the directory is gone, that fingerprint still identifies them.
 #### ✅ STAGE 3 — Model 4, both windows, run 2026-08-04
 
 Run **directly by the lead seat, not through a worker** — the delegated attempt exited `0` while the
