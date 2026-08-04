@@ -1,0 +1,4 @@
+row_type,login,server_time,currency,equity,balance,margin,free_margin,margin_level_pct,stopout_mode,stopout_level,magic,symbols,float_pl,open_lots,open_positions,oldest_open_hours,pending_orders
+ACCOUNT,415573666,2026.08.04 00:36:23,USD,58528.44,58465.76,9.06,58519.38,646009.3,PERCENT,0.0,,,,,,,
+MAGIC,415573666,2026.08.04 00:36:23,,,,,,,,,990204,AUDCADm,62.68,0.13,1,363.5,0
+SYMBOL,415573666,2026.08.04 00:36:23,,,,,,,,,,AUDCADm,62.68,0.13,1,,
