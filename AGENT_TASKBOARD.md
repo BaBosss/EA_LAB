@@ -7683,7 +7683,48 @@ written. **No point in that grid forms a plateau** (best `1.25` at `S7/Sl3.0` on
 contiguous ≥1.20 neighbourhood) ⇒ `SPIKE — not promoted`, which is the correct outcome regardless.
 **Re-run CELL 2 with `SlAtrMult` × `AtrPeriod`** — the top two axes that actually have five values.
 
-#### STAGE 3 — dispatched, result not in this block
+#### ✅ STAGE 3 — Model 4, both windows, run 2026-08-04
+
+Run **directly by the lead seat, not through a worker** — the delegated attempt exited `0` while the
+tester was still running, producing no report. Model 4 on three years of H4 is slower than that tier
+will wait, which is now a known property of the lane, not a one-off.
+
+| window | Model 1 | **Model 4** | trades | DD% | net | quality |
+|---|---|---|---|---|---|---|
+| MAIN | 1.46 | **1.27** | 160 | 0.55 | **+68.86** | 99% real ticks |
+| BWD | — | **0.65** | **204** | 1.85 | −140.56 | 99% real ticks |
+
+**Set actually loaded, read back from each report's own Inputs page:** `_01_SwingRadius=4` ·
+`_03_BufferAtrMult=0.15` on **both** runs. The centre selected in STAGE 2 is the centre that ran.
+
+### 🚦 The pre-registered bar decides this, and it was committed in `cfd46dc4` before any of it existed
+
+> *MAIN ≥ 1.20 AND BWD < 1.00 ⇒ **PARKED-VERIFY(user)** — the route to real money closes automatically.*
+
+**MAIN 1.27 clears. BWD 0.65 fails. ⇒ `PARKED-VERIFY(user)`.** Nobody exercised judgement to get here.
+
+**Three things that matter for whoever reads this next:**
+
+1. **The BWD failure is real, not a participation artifact.** 204 trades across the three stress years
+   — this host was in the market and lost. Contrast the hosts `ORDER-430` qualified on 52 and 62
+   trades; that comparison is the participation argument again, in the other direction.
+2. **Model 1 was optimistic but not fabricating.** `1.46 → 1.27` is a 13% haircut on an identical
+   **160 trades** — same trades, different fills. It does **not** meet this order's own definition of a
+   fill artifact (that required MAIN < 1.20 under Model 4), so it must not be called one.
+3. 🔴 **The money is almost nothing.** `PF 1.27` on MAIN is **+$68.86 over three years** at `0.01` lot.
+   A profit factor can look healthy while the edge is too small to survive costs, and this row should
+   never be quoted as `1.27` without the `+68.86` beside it.
+
+⚠️ **Still unresolved and now more pointed:** `MacdDiv_Naked` has no SL and no TP input, and Model 4
+gives DD `0.55%` / `1.85%`. That an EA with no stop shows sub-2% drawdown across a stress window it
+*loses money in* is the part nobody has explained.
+
+**🚫 THE VERDICT IS NOT FILED.** This block records the measurement and the label the pre-registered
+bar produces. The Row-X write-checklist — scorecard verdict + `EA_MASTER_INDEX` in the same commit +
+`EDGE_CATALOG` + a `B1_DATASET.csv` row + the 3-line PARKED-VERIFY brief to the owner — is **owed and
+not done**; this lane declares most of those files as 🚫 NOT and has no allowance left. Whoever files
+it must do the whole checklist in one commit.
+#### STAGE 3 (original note, superseded by the block above)
 Two Model-4 runs on the CELL 1 centre (MAIN + BWD) are running; the brief requires the report's own
 Inputs page to be read back to prove the intended `.set` was loaded. 🚫 **Nothing here is a verdict.**
 `1.46` is a **Model 1** number and the bars say Model 1 is never final evidence.
