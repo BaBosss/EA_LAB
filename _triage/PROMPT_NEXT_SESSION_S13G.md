@@ -1,5 +1,10 @@
 # OPENING PROMPT — the two cells are fully measured, and the measurement moved four orders of magnitude
 
+> ⚠️ **SUPERSEDED ON TWO POINTS by `_triage/PROMPT_NEXT_SESSION_S13H.md`** — the order of work (start
+> at `ORDER-1256`/`1255`, which need no tester) and **`ORDER-1302`, whose premise in this file and on
+> the board is WRONG**: `safe_range` is a pre-registered *starting grid*, not a safety declaration,
+> and design §6.3 + decision 19 already require expand-and-re-run. Everything else here stands.
+>
 > Written 2026-08-04 by lane `S-2026-08-04-S13F` (block `1330-1339`).
 > `ORDER-1273` **DONE end to end** · `ORDER-1254` **DONE for the two verified cells** ·
 > `ORDER-1330` **opened** · nothing else touched.
