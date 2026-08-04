@@ -1154,6 +1154,44 @@ def sp22():
     del sp.LAST_SCAN_LAYERS_NOT_RUN[:]
 
 
+@case('SP23', 'ORDER-1267 #2', 'an unrecognised floating_risk state REFUSES, as every other state does')
+def sp23():
+    """
+    `_mapped`'s own docstring names this hazard -- "a future state that means BREACH renders as
+    OK" -- and `floating_risk[].state` was the one state in the document that never went through
+    a closed map. `schemas.json` declares `floating_risk` items as a bare `{"type": "object"}`, so
+    the validator did not constrain it either: an invented state was accepted by everything.
+
+    SP11 holds the same rule for `system_health[].state` and `dd_band`. This is its missing third.
+    """
+    # CONTROL first: the real states in this document still build. A refusal that fires on
+    # everything is not a guard, it is an outage.
+    ok = snapshot()
+    ok['floating_risk'][0]['state'] = 'FRESH'
+    sp.build(ok)
+    ok['floating_risk'][0]['state'] = 'BLIND'
+    sp.build(ok)
+
+    # THE DEFECT: an unrecognised state used to be ignored entirely.
+    for invented in ('BREACHED', 'ok', ''):
+        doc = snapshot()
+        doc['floating_risk'][0]['state'] = invented
+        try:
+            sp.build(doc)
+        except sp.ProjectionRefusal as exc:
+            assert 'floating_risk' in str(exc), \
+                'the refusal does not say WHICH row it was: %s' % exc
+        else:
+            raise AssertionError('floating_risk state %r was accepted' % invented)
+
+    # SPECIFICITY: a row that carries NO state at all is not invented into one. The other
+    # detector's silence is already UNKNOWN, and turning absence into a refusal would take the
+    # projection down for a document that says nothing wrong.
+    quiet = snapshot()
+    del quiet['floating_risk'][0]['state']
+    sp.build(quiet)
+
+
 @case('SP13', '7.3 dedupe', 'public ids are opaque, stable across builds, and differ per finding')
 def sp13():
     a = sp.public_id('MANDATORY_SOURCE_STALE|attestation_map')

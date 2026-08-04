@@ -534,6 +534,29 @@ def build(snapshot):
     """
     SafeProjection from a VERIFIED ControlRoomSnapshotV5. Never from an unverified one -
     callers get the document from snapshot_validator.load_verified().
+
+    ⚠️ ORDER-1267 #2 IS HALF CLOSED, AND THE OPEN HALF IS A LIVE DISAGREEMENT, NOT A HYPOTHETICAL.
+    An unrecognised `floating_risk[].state` now REFUSES (see the loop below). What `sensor_state`
+    should SAY when the two detectors both speak and disagree is NOT decided here, because it is
+    a change to what a live alerting surface tells the owner and it is measurable today:
+
+        the real snapshot, 2026-08-04: 6 accounts, all known to BOTH detectors.
+        TWO of them disagree -- `floating_risk=FRESH` while `system_health=STALE`
+        (accounts ending 900 and 711). `control_center` renders those two CONFLICT
+        (its rule: disagreement about SENSOR_HEALTHY membership); this projection
+        renders `STALE`, because it reads the system_health row and nothing else.
+
+    In that direction the projection is the LESS reassuring of the two, so nothing is being
+    hidden today. The reverse direction is the hazard: `system_health=FRESH` with a BLIND risk
+    row would project FRESH. And an account only the RISK detector knows about projects UNKNOWN
+    even when that detector said BLIND -- `SP14` pins that behaviour today.
+
+    The three candidate answers, none of them free: (a) add CONFLICT to the SafeProjection enum in
+    `schemas.json` and mirror control_center's rule -- one rule, but a wire-shape change;
+    (b) project the UN-healthy state, which needs a healthiness set this module does not own and
+    would be a second copy of `control_center.SENSOR_HEALTHY`; (c) project UNKNOWN on
+    disagreement, which is safe in one direction and an UPGRADE from BLIND in the other.
+    That is the owner's call, and it is written up rather than guessed.
     """
     if not isinstance(snapshot, dict):
         _refuse('the snapshot is %s, not an object' % type(snapshot).__name__)
@@ -551,6 +574,19 @@ def build(snapshot):
         if 'dd_band' in row:
             bands[acct] = _mapped(DD_BAND_MAP, row.get('dd_band'), 'dd_band',
                                   'floating_risk[%s]' % acct)
+        # 🔴 ORDER-1267 #2, half one of two. `_mapped`'s own docstring names this exact hazard --
+        # "an unrecognised state mapped onto a safe-looking value is how a future state that means
+        # BREACH renders as OK" -- and `floating_risk[].state` was the one state in this document
+        # the module never put through a closed map. It is not merely unmapped: `schemas.json`
+        # declares `floating_risk` as `{"type": "object"}` with no properties at all, so the
+        # validator does not constrain it either. Nothing anywhere refused an unknown value.
+        #
+        # The call is made for its REFUSAL, and the result is deliberately not stored: what the
+        # projection should SAY when the two detectors disagree is a live design question, not a
+        # tidy-up, and it is NOT answered here (see build()'s docstring).
+        if 'state' in row:
+            _mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
+                    'floating_risk[%s]' % acct)
 
     # ROUND-1 BLOCKER FIX. This walked system_health ALONE and joined the rest onto it, so an
     # account the health detector had never seen was absent from the masked list entirely -
