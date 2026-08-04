@@ -198,7 +198,15 @@ foreach ($s in $selected) {
   }
   Write-Host ("   .set     : " + (Split-Path -Leaf $set.path) + "  hash " + $set.hash.Substring(0, 12) + " (every selected value read back and confirmed)") -ForegroundColor DarkGray
 
-  $reportName = 'S13VERIFY_' + $slug + '_' + $symbol + '_' + $period + '_' + $Window + $ctx.LotTag
+  # 🔴 THE MODEL IS IN THE NAME, and it was not until ORDER-1254 was about to run Model 4 over the
+  # same window. Without it the Model-4 MAIN run overwrites the Model-1 MAIN report of the same
+  # cell, the two become indistinguishable on disk, and the committed Model-1 record then points at
+  # a Model-4 artefact -- destroying the evidence whose whole purpose is that nothing produced under
+  # Model 1 can later be quoted as if it had been produced under Model 4. Exactly the trap the lot
+  # tag already exists to prevent, one variable along.
+  # Records written before this line existed keep their old paths and stay checkable: the checker
+  # reads the report path out of the record, never rebuilds it.
+  $reportName = 'S13VERIFY_' + $slug + '_' + $symbol + '_' + $period + '_' + $Window + $ctx.LotTag + '_m' + $Model
   $t0 = Get-Date
   $htm = Invoke-PilotCell -Ctx $ctx -Expert $wrapper -Symbol $symbol -Period $period -SetPath $set.path -ReportName $reportName
   $elapsed = [math]::Round(((Get-Date) - $t0).TotalSeconds, 1)
