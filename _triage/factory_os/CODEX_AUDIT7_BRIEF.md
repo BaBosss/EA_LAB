@@ -10,6 +10,12 @@
 > phrasing, and do not quote it here either** â€” the first revision of this note reproduced the offending
 > phrases verbatim in order to explain them, which put them back on lines 3-4, i.e. the first thing a
 > filter reads. That is why this note now describes them instead of quoting them.
+> ⚠️ **Correction 2026-08-04, same day, by the seat that wrote the line above.** That was stated as if
+> it were a demonstrated hazard. It is not: the version of this brief **containing** the quoted phrases
+> was dispatched at 20:16 on 2026-07-30 (`f9a430ba`) and the audit **returned successfully at 21:06**
+> (`caf9f18c`), and a second dispatch on 2026-08-04 also completed. So the note has never been shown to
+> re-trigger anything. The rewrite above is kept because describing beats quoting either way — but it is
+> a precaution, not a fix, and it closed no observed failure.
 
 **Scope of write permission, stated once so it cannot contradict itself:** you may create or overwrite
 **exactly one file**, `_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`, which is your report. **Everything

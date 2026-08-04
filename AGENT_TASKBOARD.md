@@ -7023,7 +7023,7 @@ It cannot prove two programs compute the same thing — the same impossibility `
 
 ---
 
-## ORDER-616 — [factory/discipline] The four defect SHAPES behind 24 audit findings — lint where mechanical, checklist where not — `DONE — the awaited audit RETURNED 2026-07-30 (caf9f18c) and AGAIN 2026-08-04; UNROUTED to this row either time` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-616 — [factory/discipline] The four defect SHAPES behind 24 audit findings — lint where mechanical, checklist where not — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` ⚠️ **CORRECTED 2026-08-04: audit 7 is NOT the audit this row is waiting for.** A previous edit in this session marked this row answered by audit 7. Measured after the fact and reverted: neither `CODEX_AUDIT7_2026-07-30.md` nor `CODEX_AUDIT7B_2026-08-04.md` nor the brief mentions this order **even once** — both reports name only `ORDER-600` and `ORDER-601`. The likely candidate for what this row awaits is `ca228686` *"Codex S4+S5 audit brief, written now and standing until quota returns"*, which is **still standing**. Verify that before marking this row answered · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Owner directive 2026-07-31:** *"ทำ 616 ให้จบ จบไปเลยจริง"* — after the seat proposed it as the highest-value item in the set.
 >
@@ -7070,7 +7070,7 @@ It cannot prove two programs compute the same thing — the same impossibility `
 
 ---
 
-## ORDER-615 — [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance — `DONE — the awaited audit RETURNED 2026-07-30 (caf9f18c) and AGAIN 2026-08-04; UNROUTED to this row either time` (12 of 13 fixed; F3 = `ORDER-614` rev 2, written not built) · ⛔ **re-opens `ORDER-610` and `ORDER-613`; both were closed on evidence this refutes** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-615 — [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` ⚠️ **CORRECTED 2026-08-04: audit 7 is NOT the audit this row is waiting for.** A previous edit in this session marked this row answered by audit 7. Measured after the fact and reverted: neither `CODEX_AUDIT7_2026-07-30.md` nor `CODEX_AUDIT7B_2026-08-04.md` nor the brief mentions this order **even once** — both reports name only `ORDER-600` and `ORDER-601`. The likely candidate for what this row awaits is `ca228686` *"Codex S4+S5 audit brief, written now and standing until quota returns"*, which is **still standing**. Verify that before marking this row answered (12 of 13 fixed; F3 = `ORDER-614` rev 2, written not built) · ⛔ **re-opens `ORDER-610` and `ORDER-613`; both were closed on evidence this refutes** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Round 2 is sharper than round 1.** Every command in the brief passed — S2a 7/7 · schema 89/89 · fast cages 12/12 · `check_state` CLEAN — **and every attack below still got through.** That is the whole thesis of the brief working against the person who wrote it.
 >
@@ -7306,7 +7306,7 @@ The fixture output has been carrying *"reconciling `path` with `name` needs a de
 
 ---
 
-## ORDER-611 — [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attribution — `DONE — the awaited audit RETURNED 2026-07-30 (caf9f18c) and AGAIN 2026-08-04; UNROUTED to this row either time` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-611 — [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attribution — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` ⚠️ **CORRECTED 2026-08-04: audit 7 is NOT the audit this row is waiting for.** A previous edit in this session marked this row answered by audit 7. Measured after the fact and reverted: neither `CODEX_AUDIT7_2026-07-30.md` nor `CODEX_AUDIT7B_2026-08-04.md` nor the brief mentions this order **even once** — both reports name only `ORDER-600` and `ORDER-601`. The likely candidate for what this row awaits is `ca228686` *"Codex S4+S5 audit brief, written now and standing until quota returns"*, which is **still standing**. Verify that before marking this row answered · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — **27/27 entities now reject a crafted bad instance, and 27/27 have a positive one delta away**
 >
@@ -7559,6 +7559,41 @@ Advisory is correct **while drafting** (a frequently-edited owner like `AGENT_TA
 
 ---
 
+## ORDER-1410 — [factory/S2a] Audit 7 refused `ORDER-600` and `ORDER-601` **twice**, and nothing has been repaired — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+**bars:** N-A (repair driven by a named report) · **flat-lot probe:** N-A
+
+**Why this exists as its own row:** audit 7 returned on **2026-07-30** (`caf9f18c`) and again independently
+on **2026-08-04** at a later HEAD. Both refused both orders. For five days the two rows read *awaiting an
+independent re-check* while the answer sat in the repository — **the audit was never the missing thing; an
+owner for its findings was.** This row is that owner.
+
+**Reports (read both — the second audited a later HEAD, it is not a copy):**
+`_triage/factory_os/CODEX_AUDIT7_2026-07-30.md` · `_triage/factory_os/CODEX_AUDIT7B_2026-08-04.md`
+
+**🔴 The finding that controls everything else — it is not a lint, it is the acceptance being empty:**
+a deliberately useless 27-row D1 — **26 false `UNOWNED` rows** plus the one real Coverage edge, every row
+`REFUSED`, all 32 non-LIVE coverage cells replaced with the bare string `"junk"`, one-character
+human-review fields — **passed all nine criteria and the checker exited 0.** `C4` separately accepted a
+valid hash belonging to the **wrong owner file**. 🚫 **Do not answer this by making the checkers green:**
+all four S2a commands already exit 0 at HEAD *while that input still passes*. Green is the symptom.
+
+**`ORDER-600` closure conditions, per the reports:** reject the combined useless-D1/`C8` construction ·
+separate owner sign-off from D1/checker/generator edits · implement `C6` as an owner-level decision ·
+replace the broad `UNOWNED` escape with owner-state semantics · correct or replace the four unsupported
+TRANSFER rationales.
+**`ORDER-601` closure conditions:** correct the three stale `all_clear` design statements · replace the
+seven false `x-enforced-by` claims with planned/built/wired enforcement status.
+
+**Codex's own read of the common mechanism, worth keeping:** *evidence is adjacent to the claim but not
+bound to the exact claim.* The next repair should make that binding explicit rather than adding prose
+around the existing fields.
+
+**ห้าม:** ปิดใบนี้ด้วยการทำให้ checker เขียว (เขียวอยู่แล้ว) · แตะ `s2a_attestations.jsonl` หรือสมาชิก
+`check_s2a_attestation.py:BUNDLE` โดยไม่มีลายเซ็นเจ้าของ · archive `ORDER-600`/`601` — ทั้งคู่ถูกหักล้าง
+ไปแล้ว 2 ครั้ง และ archive เป็น append-only · เชื่อว่า `611`/`615`/`616` ถูกตอบโดย audit 7 (ไม่ใช่ — ดูแถวนั้น)
+
+**ที่ใบนี้ยังไม่ได้ทำ และพูดตรงๆ:** เซสชันที่เปิดใบนี้ (`S-2026-08-04-QUOTA4`) เหลือ quota ~0 จึง**ไม่ได้ซ่อม
+อะไรเลย** — มันแค่ให้เจ้าของกับผลที่ค้างมา 5 วัน การซ่อมจริงต้องมีเลนที่ถือ `_triage/factory_os/**` ได้
 ## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `RE-OPENED 2026-08-04 by audit 7 — NOT DONE` (**owner APPROVED the Coverage edge 2026-07-31**; the independent re-check it was awaiting **RAN TWICE and returned NOT DONE BOTH TIMES**: first on 2026-07-30 (`caf9f18c`, report `_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`) and again independently on 2026-08-04 at a later HEAD (report `_triage/factory_os/CODEX_AUDIT7B_2026-08-04.md`). 🔴 **This row was never AWAITING — the first answer arrived on 07-30 and nobody routed it here.** A written, useless 27-row D1 — 26 false `UNOWNED` rows plus the one real Coverage edge — **passed all nine criteria**, and `C4` accepted a valid hash belonging to the wrong owner file. 🚫 Not archivable, and green checkers are not an answer: all four S2a commands exit 0 at HEAD while the reproduced input still passes) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — **THE DECISION IS RECORDED. `APPROVED`, conditionally.**
@@ -9283,6 +9318,8 @@ by assuming.** All four Inputs pages were read back out of the generated reports
 Four distinct configurations were actually loaded. So the identical rows below are **not** two runs of the
 same thing.
 
+✅ **VERIFIED 2026-08-04: every figure below was re-parsed from the reports by the lead seat** with the repo-pinned `tools\python312\python.exe` and compared field by field to what the worker reported. **8 of 8 agree**; the only textual difference is `6.9` vs `6.90` on one drawdown, which is string formatting, not a value. This check was added because these numbers were originally taken on the worker's word while only the Inputs pages were verified independently — and a worker of the same class died mid-run on the next batch.
+
 **Results — XAUUSD H1 · Model 4 · lane `D:\Meta 5b` · leverage `1:100` verified on every run**
 (reports `_mt5_auto/reports/O236_XAU_*.htm`, raw parse output `_mt5_auto/O236_XAU_RESULTS.md`):
 
@@ -9499,6 +9536,37 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "<EXPERT>" -Symbol <SYM> 
 | 10 | PivotBreakout_XAU | GBPUSD | H4 | `_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set` | GEN_PVT_GBPUSD_H4 | |
 | 11 | MacdDiv_Naked | NZDUSD | H4 | `_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set` | GEN_MDX_NZDUSD_H4 | |
 | 12 | PivotBreakout_XAU | AUDUSD | H4 | `_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set` | GEN_PVT_AUDUSD_H4 | |
+
+### ✅ RESULT 2026-08-04 — all 12 cells run (lane `S-2026-08-04-QUOTA4`, delegated batch). **Screening only; no verdict.**
+
+Model 1, MAIN `2023.01.01–2025.12.31`, lane `D:\Meta 5c`, per this row''s own template. The worker
+completed every run and then died on an API error before writing its summary, so these were parsed
+by the lead seat from the reports with the repo-pinned `tools\python312\python.exe`.
+
+| # | EXPERT | SYM | TF | PF | trades | DD% |
+|---|---|---|---|---|---|---|
+| 1 | MacdDiv_Naked | AUDJPY | H4 | **1.18** | 173 | 0.84 |
+| 2 | MacdDiv_Naked | XAUUSD | D1 | 0.67 | 82 | 7.03 |
+| 3 | MacdDiv_Naked | GBPJPY | D1 | 0.91 | 49 | 1.98 |
+| 4 | PivotBreakout_XAU | XAUUSD | D1 | — | **0** | — |
+| 5 | PivotBreakout_XAU | USDJPY | H4 | **1.17** | 211 | 1.14 |
+| 6 | PivotBreakout_XAU | EURUSD | H4 | 0.82 | 238 | 1.92 |
+| 7 | MacdDiv_Naked | USDCAD | H4 | 0.89 | 246 | 0.82 |
+| 8 | MacdDiv_Naked | AUDUSD | H4 | 0.96 | 278 | 0.77 |
+| 9 | PivotBreakout_XAU | XAGUSD | D1 | — | **0** | — |
+| 10 | PivotBreakout_XAU | GBPUSD | H4 | 0.91 | 228 | 2.17 |
+| 11 | MacdDiv_Naked | NZDUSD | H4 | 0.97 | 272 | 0.74 |
+| 12 | PivotBreakout_XAU | AUDUSD | H4 | 0.69 | 193 | 2.20 |
+
+Against this row''s pre-registered bars (pass ≥1.2 · dead <1.0 · WATCH 1.0–1.2): **nothing reaches
+1.2.** Two land in the WATCH band (#1 `1.18`, #5 `1.17`); the rest are below 1.0.
+
+🔴 **Cells 4 and 9 placed ZERO trades, and that is a finding about the instrument, not a result.**
+`PivotBreakout_XAU` on **its own symbol** (`XAUUSD`) at D1 opened nothing across three years, and the
+same on `XAGUSD`. Their two report files are **byte-length identical (29,524 each)**, which is what
+first drew attention. A zero-trade cell means the run proves nothing about the strategy — it proves
+the EA did not evaluate, or its entry cannot express itself on D1. **Do not read these as "no edge".**
+Per `AGENTS.md` the 0-trade artifact must be re-run before it is interpreted at all.
 
 **TREE (ทุก cell ใช้เหมือนกัน):**
   - ได้ผล (PF เท่าไหร่ก็ตาม) → เติมช่อง PF + append ผลดิบ + commit → **cell ถัดไป**
