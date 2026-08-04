@@ -421,6 +421,24 @@ and call the result a selection: that is `ORDER-1220` again.
 
 ## ORDER-1302 — [factory/S13] 14 of 16 cells are BOUNDARY, and "expand the grid" here means editing a `safe_range` — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
+> 👤 **OWNER RULING 2026-08-04 (lane `S-2026-08-04-QUOTA4`) — recorded verbatim, and the number the owner did NOT give is named as owed.**
+> Shown three options, the owner chose: **"ขยายทุกแกนลงล่าง ตั้งพื้นเป็นตัวเลขทีละแกน"** — widen **every**
+> boundary axis downward, and pre-register a **numeric floor per axis** rather than one blanket policy.
+> Explicitly NOT chosen: locking `_9_StepATRmult` and `_2_BasketTP_BalPct` at their current low value, and
+> deferring the re-runs behind a store change. Read the PREMISE CORRECTION below first — it is what makes
+> this a re-run question rather than a finding.
+>
+> 🔴 **What this ruling does NOT contain, and no sweep may start without it: the floors themselves.** The
+> owner ratified the *shape* of the answer (a number per axis), not the numbers. **Seven axes are owed one
+> floor each:** `_14_DistAtrMult` · `_9_StepATRmult` · `_2_BasketTP_BalPct` · `_0_ATR_Period` ·
+> `_22_TP_ATRmult` · `_14_MinDistPips` · `_H_Ratio` — and `_H_Ratio`'s declared range is `None`, so there is
+> no grid to widen there at all; that is a **different question** and must be answered separately, not folded
+> into the seven. **Pre-register all of them in writing BEFORE the first cell re-runs**, or the expansion
+> becomes a search for leverage on an ENGINE-EDGE class — which is exactly what the two dangerous axes were
+> flagged for (memory `pyramid-depth-is-leverage-not-edge`).
+> 🚫 Unchanged: do not widen only the dimensions that are cheap to widen.
+> **Cost unchanged: 3–12 h of tester wall-clock on the pinned lane `D:\Meta 5` for fourteen cells.**
+
 > 🔴 **PREMISE CORRECTION 2026-08-04 (lane `S-2026-08-04-S13F`) — read this before planning any work
 > from this row.** The title and the framing below say that expanding the grid means **editing a
 > `safe_range`**, i.e. widening a safety declaration. **That is wrong**, and a recommendation was
@@ -2557,6 +2575,24 @@ reads. Options:
   the checker-in-its-own-bundle version of the same loop;
 - **(c)** accept the red and leave both checkers hand-run.
 
+> 👤 **OWNER RULING 2026-08-04 (lane `S-2026-08-04-QUOTA4`) — option (b).**
+> Shown (a) acknowledge the stale pin, (b) replace the instrument, (c) accept the red, the owner chose
+> **"(b) เปลี่ยนเครื่องมือ — เลิก pin byte ของไฟล์ที่ต้องโตอยู่แล้ว"**: a pin on the bytes of a file the
+> approved work is *expected* to keep changing is the wrong instrument, and it is replaced rather than
+> re-signed.
+> ⇒ 🚫 **(a) is NOT to be taken.** Do not append a `stale_pin_acknowledgement` for `factory/coverage.jsonl` —
+> that is the loop this ruling exists to end, at its sixth occurrence
+> (memory `approval-pinning-self-invalidates`).
+>
+> 🔴 **The two prohibitions above are unchanged and they bind the build:** D1 is inside its own attestation
+> bundle, so `gen_s2a_migration.py` may not repair a signature with a signature (`ORDER-614` rev 2), and the
+> 16 owner-ratified rows are not reverted.
+> ⚠️ **The headroom number below is stale — check it at HEAD, do not quote this row.** The tier measured
+> `103.5s` of the pinned `120.0s` at `499f3c0b` (29 suites, 0 failed), i.e. **16.5s** of headroom, not 24.9s.
+> The two checkers total 6.7s, so they still fit — but measure before adding, because added while red they
+> block every commit in the repository.
+> **Not designed here.** This lane recorded the decision only. The replacement instrument is the build, and it
+> needs a lane that can hold `_triage/factory_os/**` and re-measure the tier.
 ### And one thing to land WITH whichever is chosen
 
 Put `run_s2a_gate.py` (5.4s) and `check_coverage_transfer.py` (1.3s) back on the commit path. There
