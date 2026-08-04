@@ -1,9 +1,21 @@
-# OPENING PROMPT — the corrections lane, part 4. Five of the nine are repaired; `ORDER-1260`, `1261`, `1265` have never been touched.
+# OPENING PROMPT — the corrections lane, part 4. Two orders were repaired and then INDEPENDENTLY REVIEWED, and the review found nine defects in the repairs.
 
-> Written 2026-08-04 by lane `S-2026-08-04-CORRECT3`, which closed **`ORDER-1269` (#1 + #3, plus the
-> tier wiring the order required)** and **`ORDER-1267` (#1 + Part 2)**. `_triage/PROMPT_NEXT_SESSION_CORRECTIONS.md`
-> is still the map. Parts 2 and 3 are still worth reading for the cage trap and the budget. This file
-> records what moved, and the four things it learned that change how you should approach the rest.
+> Written 2026-08-04 by lane `S-2026-08-04-CORRECT3`, which repaired **`ORDER-1269` (#1 + #3, plus
+> the tier wiring the order required)** and **`ORDER-1267` (#1 + Part 2)** — and then, at the owner's
+> request, commissioned an independent review **of its own work**. That review found **nine defects,
+> six of them regressions this lane introduced**, filed as **`ORDER-1310`**.
+> `_triage/PROMPT_NEXT_SESSION_CORRECTIONS.md` is still the map. Parts 2 and 3 are still worth
+> reading for the cage trap and the budget.
+
+> ## 🔴 START HERE: `ORDER-1310`, not `ORDER-1260`
+>
+> The two repairs below are real and their suites are green, **but the guard this lane NARROWED is
+> reachable by documents that should not get the exemption — reproduced, twice, by two different
+> mechanisms.** There is also a latent data-dependent breaker of the daily build, and one of this
+> lane's own new test cases cannot discriminate. **§5 has the summary; the `ORDER-1310` row has the
+> table; `_triage/factory_os/CODEX_AUDIT_CORRECT3_2026-08-04.md` is the verbatim review.**
+>
+> Fixing that damage comes before starting anything new, because it is damage this lane did.
 
 ---
 
@@ -37,8 +49,9 @@ Third occurrence in this chain after `eda48dd8` and `99c73bd9`.
 | **`ORDER-1264`** | ✅ DONE `14276944` | a lost `x-enforced-by` reddens instead of vanishing |
 | **`ORDER-1263`** | ✅ DONE `007e9f65` | `OwnerRef` resolves — R1 blob · R2 identity · R3 sha256 · R4 anchor |
 | **`ORDER-1268`** | ✅ DONE `e5d81804` + `b14c7b84` | a partial surface is refused on the evidence path |
-| **`ORDER-1269`** | ✅ **#1 + #3 DONE** `e272a34b` · `ddf3153f` · `929f3b18` | the pin instrument changed; **#2 and #4 still OPEN** |
-| **`ORDER-1267`** | ✅ **#1 + Part 2 DONE** `446f7539` | the leak scanner can tell CLEAN from BLIND; **#2 still OPEN** |
+| **`ORDER-1269`** | ⚠️ **#1 + #3 repaired, then REVIEWED** `e272a34b` · `ddf3153f` · `929f3b18` | the pin instrument changed — **and the narrowing is too wide: `ORDER-1310` #1 and #3.** #2 and #4 were never started |
+| **`ORDER-1267`** | ⚠️ **#1 + Part 2 repaired, then REVIEWED** `446f7539` | the recognizer layer can tell CLEAN from BLIND — **and introduced a latent false-refusal and two reporting leaks: `ORDER-1310` #6, #5, #8.** #2 was never started |
+| **`ORDER-1310`** | 🔴 **OPEN — the review findings** | nine defects, six of them regressions from the two rows above. **Do this first.** |
 | **`ORDER-1266`** | ⏳ **2 of 7** `26746f04` | **#1 is analysed, not done — part 3's §3 is still the right brief** |
 
 ### 🎯 Four findings that should change how you open the next one
@@ -212,4 +225,4 @@ proven by a surviving mutation. Evidence = `_triage/factory_os/CODEX_AUDIT_CORRE
 
 ---
 
-Open with: **"`_triage/PROMPT_NEXT_SESSION_CORRECTIONS_4.md` ทำต่อเลย — จองบล็อกใหม่ก่อน · เริ่มที่ ORDER-1267 #2 แล้ว 1260"**
+Open with: **"`_triage/PROMPT_NEXT_SESSION_CORRECTIONS_4.md` ทำต่อเลย — จองบล็อกใหม่ก่อน · เริ่มที่ ORDER-1310 (#6 → #3 → #1 → #9 → #5 → #8) แล้วค่อย 1267 #2 / 1260 · ห้ามรีบลดกรงซ้ำ"**
