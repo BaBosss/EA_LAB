@@ -24,7 +24,7 @@ powershell -NoProfile -File scripts/_test/run_selection_tests.ps1
 ```
 
 1. **`ORDER-1273` is EXECUTED, verbatim, as `scripts/pilot_probe_select.py`.** The record is
-   `factory/runs/pilot/selection/selection_20260804_051809.jsonl` — one row per cell, carrying the
+   `factory/runs/pilot/selection/selection_20260804_064906.jsonl` — one row per cell, carrying the
    floor, the plateau size, the rounding rules, and the boundary dimensions by name.
 2. **The answer is `SELECTED` 2 · `BOUNDARY` 14 · `NO_ADMISSIBLE_PASS` 0.** Only
    `B14-H01-r1/BTCUSD/H4` and `B14-H02-r1/BTCUSD/H4` produced a configuration.
@@ -81,7 +81,7 @@ prohibited from touching that file, so it goes to whoever owns the design next.
    it; that is a deliberate stop, not an oversight. A per-dimension median need not correspond to
    any row that was evaluated, so without this the number handed to `ORDER-1254` is interpolated
    rather than measured. Two cells only: `B14-H01-r1/BTCUSD/H4` and `B14-H02-r1/BTCUSD/H4`; the
-   selected values are in `factory/runs/pilot/selection/selection_20260804_051809.jsonl`.
+   selected values are in `factory/runs/pilot/selection/selection_20260804_064906.jsonl`.
    **The design decision to make first, because it is the only reason this was not done here:**
    `pilot_cells.ps1` already has the three pieces — `Get-EffectiveSet` (pinned hypothesis config +
    overrides → `gen_default_preset.py`), `Invoke-Cell` (`mt5_run.ps1` + the freshness check), and

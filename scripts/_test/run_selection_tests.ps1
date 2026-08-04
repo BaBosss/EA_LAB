@@ -10,10 +10,20 @@ Two halves, and the second is the one that catches drift the fixtures cannot see
           artefact-vs-store count check is removed, the missing-dimension refusal is removed --
           each redden EXACTLY ONE case and name which end broke.
 
-  PART 2  drive the real module over the real repository in --dry-run. A cage that only ever sees
+  PART 2  drive the real module over the real repository with --check. A cage that only ever sees
           its own fixtures proves only the half it can reach (memory
           `pure-cage-proves-only-the-pure-half`), and the impure half here is real: the coverage
           store, the registry subprocess, and sixteen 3-4 MB artefacts on disk.
+
+  🔴 PART 2 IS OPPORTUNISTIC AND SAYS SO, and that was a defect found by audit rather than by
+  design. `_mt5_auto/optimizations/` is GITIGNORED (.gitignore:74) and each surface is 3-4 MB, so a
+  clone legitimately does not carry them -- while this suite sits on the PRE-COMMIT PATH. Measured
+  by hiding one artefact: the suite exited 1, which blocks every commit touching
+  `factory/coverage.jsonl`, and it did so via a PowerShell `NativeCommandError` -- so none of the
+  named failure messages below ever printed. Two bugs in one line: a machine-dependent assertion on
+  the commit path, and `$ErrorActionPreference = 'Stop'` plus a child writing to stderr, which is
+  trap #5 in this slice's own handoff. Exit 2 from the module now means "the surfaces are not on
+  this machine", which is REPORTED and skipped -- never silently, and never as a pass.
 
 🚫 This suite asserts NOTHING about which configuration comes out. The selection is evidence for a
 human; asserting a value here would freeze one reading of a surface into a test, and re-running a
@@ -59,17 +69,43 @@ try {
     }
 
     # PART 2 -- the real repository, read-only.
-    $real = & $python (Join-Path $RepoRoot 'scripts\pilot_probe_select.py') '--dry-run' 2>&1
+    # EAP=Continue around the child: under 'Stop', a native command writing ANYTHING to stderr
+    # raises NativeCommandError and this script dies before it can diagnose anything. That is how
+    # the machine-dependence above stayed invisible -- the failure never reached a message.
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $global:LASTEXITCODE = 0
+    $real = & $python (Join-Path $RepoRoot 'scripts\pilot_probe_select.py') '--check' 2>&1
     $realRc = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
     $realText = ($real | Out-String)
-    if ($realRc -ne 0) {
-        Write-Host '[selection] FAIL: pilot_probe_select REFUSED against the real repository --' -ForegroundColor Red
-        Write-Host '       an artefact, the coverage store or the registry disagrees with the others.' -ForegroundColor Red
+
+    # 2 = the probe surfaces are not on this machine. Reported and skipped: a clone does not carry
+    # gitignored 3-4 MB artefacts, and blocking its commits over that would be this suite lying
+    # about what it found. PART 1 above still ran and is the half that guards the RULE.
+    if ($realRc -eq 2) {
+        Write-Host '[selection] PART 2 SKIPPED -- the probe surfaces are not on this machine:' -ForegroundColor Yellow
+        Write-Host ($realText.TrimEnd() -split "`n" | Select-Object -Last 1) -ForegroundColor Yellow
+        Write-Host '[selection] the 16 fixture cases above DID run; only the real-repository'
+        Write-Host '            re-derivation was skipped, and it says so rather than passing quietly.'
+        exit 0
+    }
+    if ($realRc -eq 1) {
+        Write-Host '[selection] FAIL: the committed selection record does not match what the' -ForegroundColor Red
+        Write-Host '       surfaces now generate. The record is GENERATED -- re-run' -ForegroundColor Red
+        Write-Host '       scripts/pilot_probe_select.py, or explain the row it cannot derive.' -ForegroundColor Red
+        Write-Host '       Do not hand-edit a selection record.' -ForegroundColor Red
         Write-Host $realText.TrimEnd()
         exit 1
     }
-    if ($realText -notmatch '\d+ cell\(s\):') {
-        Write-Host '[selection] FAIL: the real run produced no per-cell roll-up' -ForegroundColor Red
+    if ($realRc -ne 0) {
+        Write-Host "[selection] FAIL: pilot_probe_select returned an undeclared exit code $realRc" -ForegroundColor Red
+        Write-Host $realText.TrimEnd()
+        exit 1
+    }
+    if ($realText -notmatch 'holds exactly the \d+ row\(s\)') {
+        Write-Host '[selection] FAIL: the real run exited 0 without stating what it checked' -ForegroundColor Red
+        Write-Host $realText.TrimEnd()
         exit 1
     }
     # 🚫 no verdict vocabulary leaves this path. design section 10 stops the slice at

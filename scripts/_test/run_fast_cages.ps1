@@ -534,6 +534,11 @@ $FAST_SUITES = @(
     # scripts/_test/run_fast_cages.ps1 -Hook` on a lane with no MT5 run in flight. The two
     # before/after pairs overlap, which is the honest reading -- 1.2s is inside this box's noise,
     # so the claim is "it costs about a second", not "it made the tier faster".
+    # 🔴 RE-MEASURED after the audit round, and the number to act on is the TOTAL, not this suite's:
+    # 105.0 / 105.9 / 105.5s of 120.0s at 29 suites -- roughly 14s of headroom, not the ~26s the
+    # 28-suite figure implied. This suite is still 1.2s; most of the jump is `run_s2a_cages.ps1`
+    # (8.1s), added by a concurrent lane. Anyone adding a suite must re-measure rather than reading
+    # any single line here, because the budget is shared and two lanes spend it independently.
     # PROVEN ABLE TO FAIL: six one-line mutations of pilot_probe_select.py (plateau -> top-1, the
     # H1 floor 100 -> 99, the grid snap dropped, BOUNDARY never firing, the artefact-vs-store count
     # check removed, the missing-dimension refusal removed) each redden exactly one named case.
@@ -1187,6 +1192,9 @@ $SUITE_GUARDS = @{
     # 4.2s and the full tier 91.2/95.5s -> 93.6/94.0s of 120.0s, all under
     # `powershell -NoProfile -File scripts/_test/run_fast_cages.ps1 -Hook` on a quiet lane. The
     # budget stays PINNED at 120.0s.
+    # Re-measured after the audit round: run_s13_tests 4.2 / 4.3s, tier 105.0 / 105.9 / 105.5s of
+    # 120.0s at 29 suites. The tier total moved because a concurrent lane added a suite, not because
+    # this one grew -- see the note on run_selection_tests above.
     # ORDER-1272 added the last four entries. The first three are what `gen_pilot_cells.py --check`
     # RE-DERIVES FROM -- the store was already declared, but its pinned source run record and the
     # probe directory were not, so editing either moved the generator's answer without running it.
@@ -1226,9 +1234,18 @@ $SUITE_GUARDS = @{
     #   factory/parameter_bindings.jsonl    the safe_range IS the declared grid, so an edit here
     #   _triage/factory_os/registry.py      or to its resolver moves a BOUNDARY without touching
     #                                       one line of the selection code
+    #   factory/runs/pilot/selection/*.jsonl  added by audit. The selection record is GENERATED
+    #                                       evidence and nothing re-derived it -- the same defect
+    #                                       ORDER-1272 had just closed for the coverage store,
+    #                                       recreated one directory away in the same session.
+    #                                       `--check` re-derives it; this makes a hand edit run that.
+    #   factory/runs/pilot/probe/*.jsonl    the back-fill records now RESOLVE which artefact each
+    #                                       cell was probed from, so moving one moves what is read.
     'run_selection_tests.ps1'         = @('scripts/pilot_probe_select.py',
                                           'scripts/_test/run_selection_tests.py',
                                           'factory/coverage.jsonl',
+                                          'factory/runs/pilot/selection/*.jsonl',
+                                          'factory/runs/pilot/probe/*.jsonl',
                                           'factory/parameter_bindings.jsonl',
                                           '_triage/factory_os/registry.py')
     # ORDER-1130 RE-REGISTERED both blocks together, 2026-08-03, once the room was bought.

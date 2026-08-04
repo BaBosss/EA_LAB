@@ -30,19 +30,38 @@ WHAT THIS DOES NOT DO. It reads no profit factor, no profit, no drawdown, and it
 `Result` and `Trades` are the only two result-bearing columns it touches, and the order names both
 in advance. Design section 10 stops this slice at EVIDENCE_COMPLETE.
 
-TWO ROUNDING RULES THE ORDER DID NOT PIN, STATED HERE RATHER THAN LEFT TO A READER:
+THREE ROUNDING RULES THE ORDER DID NOT PIN, STATED HERE RATHER THAN LEFT TO A READER:
   * |P| = ceil(0.10 * |A|). Ceiling, because floor would make `P` EMPTY for any `A` smaller than
     ten and turn "few admissible passes" into "no selection" through arithmetic rather than through
     the pre-registered rule.
   * ties at the 10 % cut are broken by ascending `Pass` number, so the plateau set is a function of
     the surface and not of dict ordering.
-Both are recorded in every output row so a reader never has to infer them.
+  * 🔴 a median landing EXACTLY BETWEEN two declared grid values snaps to the LOWER one. This was
+    the third rule and it was undocumented until an audit measured it: **7 of the 136 dimension
+    medians in the committed selection are exact ties**, and on `B14-H01-r1/EURUSD/H1` and
+    `B14-H02-r1/EURUSD/H4` the direction decides whether `_14_DistAtrMult` is reported as sitting on
+    a grid edge -- which is what `ORDER-1302` widens a `safe_range` for. Neither cell's overall
+    status changes (both are `BOUNDARY` either way), so nothing already committed is wrong; but an
+    unstated rule was choosing which ranges get widened. The direction is NOT changed here --
+    changing it now would be choosing a rule after seeing the surfaces, which is `ORDER-1220` --
+    it is documented, recorded in every row as `snap_tie_break`, and asserted by the cage.
+All three are recorded in every output row so a reader never has to infer them.
+
+EXIT CODES, and the third one is not an error condition:
+  0  the selection was derived (and, under --check, matches the committed record)
+  1  --check found DRIFT between the committed record and what the surfaces now generate
+  2  CANNOT ANSWER -- the probe XMLs are not on this machine. `_mt5_auto/optimizations/` is
+     GITIGNORED (.gitignore:74) and each surface is 3-4 MB, so a clone legitimately does not carry
+     them. That is a different thing from "the store is wrong" and must never be reported as one,
+     and it must never be reported as a pass either.
 
 USAGE
   tools\\python312\\python.exe scripts/pilot_probe_select.py            # write the selection record
   tools\\python312\\python.exe scripts/pilot_probe_select.py --dry-run  # print, write nothing
+  tools\\python312\\python.exe scripts/pilot_probe_select.py --check    # re-derive, diff, write nothing
 """
 
+import glob
 import io
 import json
 import math
@@ -58,8 +77,16 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 PY = os.path.join(ROOT, 'tools', 'python312', 'python.exe')
 RESOLVER = os.path.join(ROOT, '_triage', 'factory_os', 'registry.py')
 COVERAGE = os.path.join(ROOT, 'factory', 'coverage.jsonl')
+PROBE_DIR = os.path.join(ROOT, 'factory', 'runs', 'pilot', 'probe')
 OUT_DIR = os.path.join(ROOT, 'factory', 'runs', 'pilot', 'selection')
 ENTITY = 'PilotProbeSelection'
+
+# The exit codes the docstring pins. Named so a caller reads intent instead of an integer.
+EXIT_OK, EXIT_DRIFT, EXIT_CANNOT_ANSWER = 0, 1, 2
+
+
+class CannotAnswer(Exception):
+    """The surfaces are not on THIS machine. Not a violation -- see the exit-code block."""
 
 # ORDER-1273 item 1, quoted. Not a default and not tunable from the command line: a floor that can
 # be passed as an argument is a floor that can be lowered to produce a selection.
@@ -184,6 +211,14 @@ def select_one(cell, dims):
                          % (os.path.basename(xml), ', '.join(sorted(missing)), cell['revision']))
 
     i_res, i_tr, i_pass = header.index(CRITERION_COLUMN), header.index(FLOOR_COLUMN), header.index('Pass')
+    if cell['tf'] not in TRADE_FLOOR:
+        # A REFUSAL, not a KeyError. ORDER-1273 pins a floor per timeframe and names two; a cell on
+        # a third has no pre-registered floor, and inventing one here -- or dying with a traceback
+        # that a caller reads as "the tool is broken" -- are both worse than saying so.
+        raise SystemExit('pilot_probe_select: %s is on timeframe %r and ORDER-1273 pins a trade '
+                         'floor only for %s. A cell on a timeframe the criterion does not name has '
+                         'no floor, and this will not invent one.'
+                         % (cell['cell_id'], cell['tf'], ', '.join(sorted(TRADE_FLOOR))))
     floor = TRADE_FLOOR[cell['tf']]
 
     admissible = []
@@ -202,12 +237,17 @@ def select_one(cell, dims):
         'logical_symbol': cell['symbol'],
         'tf': cell['tf'],
         'xml': xml.replace(os.sep, '/'),
+        'artefact_resolved_by': cell.get('artefact_resolved_by', 'recorded path'),
         'criterion_order': 'ORDER-1273',
         'criterion_column': CRITERION_COLUMN,
         'floor_column': FLOOR_COLUMN,
         'trade_floor': floor,
         'plateau_fraction': PLATEAU_FRACTION,
         'plateau_size_rule': 'ceil(0.10 * |A|); ties at the cut broken by ascending Pass',
+        # RECORDED, because it is a rule the order did not pin and it decides which dimensions
+        # ORDER-1302 widens a safe_range for. See the module docstring: 7 of 136 medians here are
+        # exact ties.
+        'snap_tie_break': 'a median exactly between two declared grid values snaps to the LOWER',
         'scored_configurations': len(rows),
         'admissible_count': len(admissible),
         'dimensions': sorted(dims),
@@ -264,45 +304,167 @@ def select_one(cell, dims):
     return rec
 
 
-def cells_from_coverage():
-    """-> the pilot cells, from the coverage store, with the XML path each probe produced.
+def artefact_by_cell(probe_dir=None):
+    """-> {cell_id: xml path} from the COMMITTED back-fill records, not from a naming rule.
+
+    🔴 THIS USED TO REBUILD THE PATH: `'S13PROBE_%s.xml' % slug`, which is a SECOND implementation
+    of `pilot_probe.ps1`'s report-naming rule living four directories away from the first. Two
+    copies of a naming convention drift, and the failure is silent in the bad direction -- rename
+    the convention on the producer side and this reads a stale file whose name still matches.
+    `factory/runs/pilot/probe/xml_backfill_*.jsonl` already records, per cell, WHICH artefact was
+    measured; that is committed evidence and it is what `gen_pilot_cells` counts passes from. Read
+    it instead of re-deriving it.
+
+    The recorded path is absolute and machine-specific (`D:\\EA_LAB\\...`), so a clone elsewhere is
+    also tried at `<this repo>/_mt5_auto/optimizations/<basename>` -- stated rather than silent, and
+    the row records which of the two answered.
+    """
+    out = {}
+    for path in sorted(glob.glob(os.path.join(probe_dir or PROBE_DIR, 'xml_backfill_*.jsonl'))):
+        with io.open(path, encoding='utf-8') as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                rec = json.loads(line)
+                if rec.get('cell_id') and rec.get('xml') and rec.get('passes') is not None:
+                    out[rec['cell_id']] = rec['xml']
+    return out
+
+
+def cells_from_coverage(coverage=None, probe_dir=None):
+    """-> the pilot cells, from the coverage store, joined to the artefact each probe produced.
+
+    `coverage` / `probe_dir` are for the cage: without them the absent-artefact path could only be
+    exercised by hiding files from the real repository, which is not a repeatable test.
 
     The cell list is READ, never typed: `factory/coverage.jsonl` is the canonical store and a cell
-    that is not in it has no probe to select out of. The XML path is rebuilt from the same naming
-    rule `pilot_probe.ps1` writes with, and its existence is checked -- a selection made against a
-    missing artefact would be a selection out of nothing.
+    that is not in it has no probe to select out of.
+
+    An artefact that is ABSENT raises `CannotAnswer`, not `SystemExit`. `_mt5_auto/optimizations/`
+    is gitignored (.gitignore:74) and the surfaces are 3-4 MB each, so a clone legitimately does not
+    carry them -- and this module is driven by a suite on the pre-commit path. Conflating "not on
+    this machine" with "the store is wrong" would block every commit in a fresh clone with a message
+    blaming the coverage store. An artefact whose PATH is not recorded at all is a different thing
+    and stays a refusal: that means the store says PROBE_RUN while no back-fill row names what it
+    was probed from.
     """
-    cells = []
-    with io.open(COVERAGE, encoding='utf-8') as fh:
+    known = artefact_by_cell(probe_dir)
+    cells, absent = [], []
+    with io.open(coverage or COVERAGE, encoding='utf-8') as fh:
         for line in fh:
             if not line.strip():
                 continue
             row = json.loads(line)
             if row.get('entity') != 'CoverageCell' or row.get('state') != 'PROBE_RUN':
                 continue
-            rev, symbol, tf = row['hypothesis_revision'], row['logical_symbol'], row['tf']
-            slug = '%s_%s_%s' % (rev.replace('-', '_'), symbol, tf)
-            xml = os.path.join(ROOT, '_mt5_auto', 'optimizations', 'S13PROBE_%s.xml' % slug)
-            if not os.path.isfile(xml):
-                raise SystemExit('pilot_probe_select: %s is at PROBE_RUN but %s does not exist. A '
-                                 'cell cannot be selected out of an artefact that is not there.'
-                                 % (row['cell_id'], os.path.relpath(xml, ROOT)))
+            cid = row['cell_id']
+            if cid not in known:
+                raise SystemExit('pilot_probe_select: %s is at PROBE_RUN but no back-fill record '
+                                 'names the artefact it was probed from. The store claims a probe '
+                                 'that nothing identifies; refusing to guess the filename.' % cid)
             if not isinstance(row.get('trial_count'), int) or row['trial_count'] <= 0:
                 raise SystemExit('pilot_probe_select: %s is at PROBE_RUN with trial_count=%r. A '
                                  'cell that scored nothing is not a probe, and the artefact check '
-                                 'below has nothing to compare against.'
-                                 % (row['cell_id'], row.get('trial_count')))
-            cells.append({'cell_id': row['cell_id'], 'revision': rev, 'symbol': symbol,
-                          'tf': tf, 'xml': xml, 'trial_count': row['trial_count']})
+                                 'has nothing to compare against.'
+                                 % (cid, row.get('trial_count')))
+            xml, how = known[cid], 'recorded path'
+            if not os.path.isfile(xml):
+                alt = os.path.join(ROOT, '_mt5_auto', 'optimizations', os.path.basename(xml))
+                if os.path.isfile(alt):
+                    xml, how = alt, 'this repo, by basename (the recorded path is another machine)'
+                else:
+                    absent.append('%s -> %s' % (cid, os.path.basename(xml)))
+                    continue
+            cells.append({'cell_id': cid, 'revision': row['hypothesis_revision'],
+                          'symbol': row['logical_symbol'], 'tf': row['tf'],
+                          'xml': xml, 'artefact_resolved_by': how,
+                          'trial_count': row['trial_count']})
+    if absent:
+        raise CannotAnswer(
+            '%d probe surface(s) are not on this machine: %s. `_mt5_auto/optimizations/` is '
+            'gitignored and each file is 3-4 MB, so a clone does not carry them. This is NOT a '
+            'statement that the coverage store or the selection record is wrong -- it is this '
+            'reader saying it cannot see what it would have to read.'
+            % (len(absent), '; '.join(absent)))
     return sorted(cells, key=lambda c: c['cell_id'])
+
+
+def _rel(path):
+    """-> `path` relative to the repo, or the path itself when that is not expressible.
+
+    `os.path.relpath` RAISES on Windows when the two are on different drives -- it does not fall
+    back. Found by the cage, whose temp root is on C: while the repo is on D:; the same throw would
+    hit anyone whose repo and record live on different mounts, and it would arrive as a ValueError
+    traceback out of a function whose job is to print a filename.
+    """
+    try:
+        return os.path.relpath(path, ROOT).replace(os.sep, '/')
+    except ValueError:
+        return path.replace(os.sep, '/')
+
+
+def committed_record(out_dir=None):
+    """-> (path, [rows]) for the CURRENT selection record, or (None, []) if none exists.
+
+    SUPERSESSION IS STATED, not left to a reader. Each run writes a new timestamped file, so the
+    directory accumulates; the CURRENT record is the newest by filename (the stamp is
+    `%Y%m%d_%H%M%S`, so lexical order is chronological order). Without this rule a reader facing two
+    files has to guess which one the repo means, and `--check` would have to guess the same thing.
+    """
+    hits = sorted(glob.glob(os.path.join(out_dir or OUT_DIR, 'selection_*.jsonl')))
+    if not hits:
+        return None, []
+    rows = []
+    with io.open(hits[-1], encoding='utf-8') as fh:
+        for line in fh:
+            if line.strip():
+                rows.append(json.loads(line))
+    return hits[-1], rows
+
+
+# Fields that are provenance rather than result: a re-derivation on another day or another clone
+# legitimately differs on these, and diffing them would make --check permanently red for reasons
+# that say nothing about the selection.
+VOLATILE = ('selected_utc', 'xml', 'artefact_resolved_by')
+
+
+def check_against_record(records, out_dir=None):
+    """-> exit code. Re-derived selections vs the committed record, field by field."""
+    path, committed = committed_record(out_dir)
+    if path is None:
+        print('[selection] no committed selection record exists yet; nothing to check against')
+        return EXIT_DRIFT
+    want = {r['cell_id']: {k: v for k, v in r.items() if k not in VOLATILE} for r in records}
+    got = {r['cell_id']: {k: v for k, v in r.items() if k not in VOLATILE} for r in committed}
+    problems = []
+    for cid in sorted(set(want) | set(got)):
+        if cid not in got:
+            problems.append('MISSING %s -- derivable from the surfaces, not in the record' % cid)
+        elif cid not in want:
+            problems.append('UNDERIVABLE %s -- in the record, not derivable from the surfaces' % cid)
+        else:
+            for k in sorted(set(want[cid]) | set(got[cid])):
+                if want[cid].get(k) != got[cid].get(k):
+                    problems.append('%s.%s committed=%r generated=%r'
+                                    % (cid, k, got[cid].get(k), want[cid].get(k)))
+    rel = _rel(path)
+    if problems:
+        print('[selection] DRIFT: %s does not match what the surfaces now generate' % rel)
+        for p in problems:
+            print('  %s' % p)
+        return EXIT_DRIFT
+    print('[selection] %s holds exactly the %d row(s) the surfaces generate'
+          % (rel, len(committed)))
+    return EXIT_OK
 
 
 def main(argv):
     dry = '--dry-run' in argv
+    check = '--check' in argv
     cells = cells_from_coverage()
     if not cells:
         print('no cell is at PROBE_RUN; nothing to select')
-        return 1
+        return EXIT_DRIFT
     dim_cache, records = {}, []
     for c in cells:
         if c['revision'] not in dim_cache:
@@ -324,18 +486,27 @@ def main(argv):
     print('')
     print('%d cell(s): %s' % (len(records),
                               ' | '.join('%s %d' % (k, counts[k]) for k in sorted(counts))))
+    if check:
+        return check_against_record(records)
     if dry:
         print('--dry-run: nothing written')
-        return 0
+        return EXIT_OK
     if not os.path.isdir(OUT_DIR):
         os.makedirs(OUT_DIR)
     out = os.path.join(OUT_DIR, 'selection_%s.jsonl' % time.strftime('%Y%m%d_%H%M%S'))
     with io.open(out, 'w', encoding='utf-8', newline='\n') as fh:
         for r in records:
             fh.write(json.dumps(r, sort_keys=True) + '\n')
-    print('wrote %d row(s) -> %s' % (len(records), os.path.relpath(out, ROOT).replace(os.sep, '/')))
-    return 0
+    print('wrote %d row(s) -> %s' % (len(records), _rel(out)))
+    return EXIT_OK
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    # EXIT 2 IS NOT EXIT 1. "The surfaces are not on this machine" and "the record disagrees with
+    # the surfaces" send a reader to two different places, and the first is a legitimate state of
+    # any clone because `_mt5_auto/optimizations/` is gitignored.
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except CannotAnswer as exc:
+        print('[selection] CANNOT ANSWER: %s' % exc)
+        sys.exit(EXIT_CANNOT_ANSWER)

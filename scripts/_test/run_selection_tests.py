@@ -18,6 +18,7 @@ USAGE  tools\\python312\\python.exe scripts/_test/run_selection_tests.py
 """
 
 import io
+import json as _json
 import os
 import shutil
 import sys
@@ -92,6 +93,12 @@ def refuses(fn):
 def main():
     tmp = tempfile.mkdtemp(prefix='selcage_')
     try:
+      # 🔴 THE NET. Anything this suite raises becomes a named FAIL with a roll-up line, never a
+      # bare traceback -- the tier surfaces an uncaught exception as `exit -1 SUITE THREW` with the
+      # cause truncated. Its twin in run_pilot_cells_tests.py got this and this one did not, and an
+      # audit case immediately died here on a cross-drive `os.path.relpath`: twenty passing cases
+      # printed, then a stack trace and no roll-up.
+      try:
         # ---- PART 1a: the trade floor is applied, and it is the exact pre-registered number ------
         # ATTACK: every row sits ONE trade below the H1 floor of 100.
         p = os.path.join(tmp, 'floor_under.xml')
@@ -216,16 +223,117 @@ def main():
         ok, _ = refuses(lambda: sel.select_one(cell_for(p, n), DIMS))
         check('trial_count control: the same surface at the registered count is NOT refused', not ok)
 
+        # ---- PART 1g2: the snap tie-break has a DIRECTION, and it is load-bearing ------------------
+        # Added by audit. A median exactly between two grid values snaps LOW, and that was an
+        # undocumented third rounding rule: 7 of the 136 medians in the real selection are exact
+        # ties, and on two cells the direction decides whether a dimension is reported as sitting on
+        # a grid edge -- which is what ORDER-1302 widens a safe_range for. The direction is asserted
+        # here so it cannot drift silently, NOT because it is obviously the right one.
+        # 🔴 THE FIRST VERSION OF THIS CASE DID NOT DISCRIMINATE, and the mutation probe is the only
+        # reason anyone knows. It put 20 rows at d2=0.5 then 20 at d2=0.75, all tied on Result --
+        # so the cut broke on ascending Pass and |P| was FOUR ROWS OF 0.5. The median was 0.5, not a
+        # tie at all, and flipping the snap direction in the module left the case green. Memory
+        # `discriminating-test-must-be-able-to-discriminate`.
+        # d2 ALTERNATES down a strictly decreasing Result, so the top 4 are 0.5, 0.75, 0.5, 0.75 and
+        # the median is exactly 0.625 -- equidistant from both, which is the thing under test.
+        rows = [(i, 1000 - i, 150, 3.0, 0.5 if i % 2 else 0.75) for i in range(1, 41)]
+        p = os.path.join(tmp, 'tie.xml')
+        n = write_surface(p, rows)
+        r = sel.select_one(cell_for(p, n), DIMS)
+        check('an exactly-halfway median snaps to the LOWER declared grid value',
+              r['selected']['d2'] == 0.5, 'selected d2=%r' % r['selected']['d2'])
+        check('the record STATES the tie-break rule rather than leaving it implicit',
+              'LOWER' in (r.get('snap_tie_break') or ''), repr(r.get('snap_tie_break')))
+        # The case above only means anything if the median really is equidistant, so the fixture's
+        # own raw median is read back out of the record and checked. d2=0.5 is the first grid value,
+        # so the cell is flagged BOUNDARY and `raw_median` is right there -- no second computation.
+        raw = [b['raw_median'] for b in r['boundary_dimensions'] if b['dimension'] == 'd2']
+        check('tie-case precondition: the plateau median is EXACTLY between two grid values',
+              len(raw) == 1 and abs(abs(raw[0] - 0.5) - abs(raw[0] - 0.75)) < 1e-12, str(raw))
+
+        # A timeframe ORDER-1273 does not pin a floor for is REFUSED, not a KeyError. Without this
+        # case the refusal is an unexercised mechanism -- the mutation probe proved it by deleting
+        # the branch and watching every case stay green.
+        ok, msg = refuses(lambda: sel.select_one(dict(cell_for(p, n), tf='M15'), DIMS))
+        check('a timeframe the criterion pins no floor for is REFUSED, not a KeyError',
+              ok and 'no floor' in msg, msg[:140])
+
+        # ---- PART 1i: --check re-derives, and an absent surface is CANNOT ANSWER -------------------
+        # Both added by audit. The second is the one that mattered: this suite is on the pre-commit
+        # path and `_mt5_auto/optimizations/` is gitignored, so on a clone every commit touching
+        # factory/coverage.jsonl was blocked -- via a NativeCommandError that never reached a
+        # message. Measured by hiding all 16 surfaces; kept here so it stays measured.
+        store = os.path.join(tmp, 'store'); os.makedirs(store)
+        probe = os.path.join(tmp, 'probe'); os.makedirs(probe)
+        cov = os.path.join(store, 'coverage.jsonl')
+        surface = os.path.join(tmp, 'REAL_SURFACE.xml')
+        n = write_surface(surface, [(i, 1000 - i, 150, 3.0, 1.0) for i in range(1, 41)])
+        io.open(cov, 'w', encoding='utf-8', newline='\n').write(_json.dumps(
+            {'entity': 'CoverageCell', 'cell_id': 'FIX-r1/EURUSD/H1', 'hypothesis_revision': 'FIX-r1',
+             'logical_symbol': 'EURUSD', 'tf': 'H1', 'state': 'PROBE_RUN', 'trial_count': n}) + '\n')
+        io.open(os.path.join(probe, 'xml_backfill_1.jsonl'), 'w', encoding='utf-8',
+                newline='\n').write(_json.dumps(
+                    {'entity': 'PilotProbeXmlBackfill', 'cell_id': 'FIX-r1/EURUSD/H1',
+                     'xml': surface, 'passes': n}) + '\n')
+        got = sel.cells_from_coverage(coverage=cov, probe_dir=probe)
+        check('CONTROL: with the surface present the cell resolves from the COMMITTED path',
+              len(got) == 1 and got[0]['xml'] == surface, repr(got))
+        os.rename(surface, surface + '.hidden')
+        try:
+            sel.cells_from_coverage(coverage=cov, probe_dir=probe)
+            raised = 'nothing'
+        except sel.CannotAnswer as e:
+            raised = 'CannotAnswer'
+        except BaseException as e:  # noqa: BLE001
+            raised = '%s: %s' % (type(e).__name__, e)
+        os.rename(surface + '.hidden', surface)
+        check('an ABSENT surface raises CannotAnswer (exit 2), not a refusal and not a pass',
+              raised == 'CannotAnswer', raised)
+
+        # ...and a cell the store calls PROBE_RUN with NO recorded artefact stays a refusal, because
+        # that is the store claiming a probe nothing identifies -- a different fault entirely.
+        io.open(os.path.join(probe, 'xml_backfill_1.jsonl'), 'w', encoding='utf-8',
+                newline='\n').write('')
+        ok, msg = refuses(lambda: sel.cells_from_coverage(coverage=cov, probe_dir=probe))
+        check('a PROBE_RUN cell whose artefact is not RECORDED is REFUSED, not "cannot answer"',
+              ok and 'refusing to guess the filename' in msg, msg[:140])
+
+        # --check: a committed record that MATCHES is 0, one with a changed value is 1.
+        # The selection record is generated evidence, and before this audit NOTHING re-derived it --
+        # the same defect ORDER-1272 had just closed for the coverage store, recreated one directory
+        # away in the same session.
+        recs = [sel.select_one(cell_for(surface, n), DIMS)]
+        recs[0]['cell_id'] = 'FIX-r1/EURUSD/H1'
+        seldir = os.path.join(tmp, 'sel'); os.makedirs(seldir)
+        rec_path = os.path.join(seldir, 'selection_20260101_000000.jsonl')
+        io.open(rec_path, 'w', encoding='utf-8', newline='\n').write(
+            _json.dumps(recs[0], sort_keys=True) + '\n')
+        check('--check CONTROL: a record matching the surfaces is exit 0',
+              sel.check_against_record(recs, out_dir=seldir) == sel.EXIT_OK)
+        blob = _json.loads(io.open(rec_path, encoding='utf-8').read())
+        blob['selected']['d1'] = blob['selected']['d1'] + 1
+        io.open(rec_path, 'w', encoding='utf-8', newline='\n').write(
+            _json.dumps(blob, sort_keys=True) + '\n')
+        check('--check ATTACK: one changed selected value is DRIFT (exit 1)',
+              sel.check_against_record(recs, out_dir=seldir) == sel.EXIT_DRIFT)
+        # ...and the newest file wins, so a superseded record cannot resurrect an old answer.
+        io.open(os.path.join(seldir, 'selection_20260102_000000.jsonl'), 'w',
+                encoding='utf-8', newline='\n').write(_json.dumps(recs[0], sort_keys=True) + '\n')
+        check('--check reads the NEWEST record; a superseded one does not resurrect an old answer',
+              sel.check_against_record(recs, out_dir=seldir) == sel.EXIT_OK)
+
         # ---- PART 1h: no verdict vocabulary leaves this module ------------------------------------
         # design section 10 stops the slice at EVIDENCE_COMPLETE. The canonical words are the ones
         # CLAUDE.md's VERDICT GATE names, and the record is where they would leak.
         p = os.path.join(tmp, 'verdict.xml')
         n = write_surface(p, [(i, 1000 - i, 150, 3.0, 1.0) for i in range(1, 41)])
-        import json as _json
         text = _json.dumps(sel.select_one(cell_for(p, n), DIMS))
         banned = [w for w in ('DEAD-STRUCTURAL', 'DEAD-OPTIMIZED', 'CANDIDATE', 'VALIDATED',
                               'PARKED-VERIFY', 'BUILD-ON') if w in text]
         check('the selection record carries no verdict vocabulary', not banned, str(banned))
+      except BaseException as exc:  # noqa: BLE001 -- see THE NET above
+        check('the cage ran to the end without throwing', False,
+              '%s: %s' % (type(exc).__name__, exc))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

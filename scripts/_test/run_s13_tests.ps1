@@ -107,8 +107,17 @@ try {
     #
     # Its cage runs FIRST and the real re-derivation second, in that order on purpose: if the
     # checker is broken, "the store matches" is not information.
+    # EAP=Continue around both children. Under 'Stop' a native command writing to stderr can raise
+    # NativeCommandError and kill this script before it reaches its own diagnosis -- measured on the
+    # sibling suite `run_selection_tests.ps1`, where exactly that hid a real defect behind a
+    # PowerShell stack trace. Forcing a traceback out of gen_pilot_cells here did NOT reproduce it,
+    # which is precisely why the guard goes in: the two suites should not differ on a mechanism
+    # nobody can explain.
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     $cage = & $python (Join-Path $RepoRoot '_triage\factory_os\run_pilot_cells_tests.py') 2>&1
     $cageRc = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
     if ($cageRc -ne 0) {
         Write-Host '[s13] FAIL: the gen_pilot_cells cage went red -- the drift detector itself is' -ForegroundColor Red
         Write-Host '       broken, so nothing it says about the store can be believed.' -ForegroundColor Red
@@ -117,8 +126,10 @@ try {
     }
     Write-Host (($cage | Out-String).TrimEnd() -split "`n" | Select-Object -Last 1)
 
+    $ErrorActionPreference = 'Continue'
     $gen = & $python (Join-Path $RepoRoot '_triage\factory_os\gen_pilot_cells.py') '--check' 2>&1
     $genRc = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
     $genText = ($gen | Out-String)
     # Exit codes are THREE, not two: 0 the store re-derives, 1 DRIFT, 2 the reader could not
     # answer. 2 must not be reported as drift -- telling a committer their store is wrong when

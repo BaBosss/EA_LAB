@@ -90,6 +90,7 @@ factory/optimize_decisions.jsonl
 factory/parameter_bindings.jsonl
 factory/runs/pilot/pilot_cells_MAIN_lot0p03_*.jsonl
 factory/runs/pilot/probe/*.jsonl
+factory/runs/pilot/selection/*.jsonl
 factory/work_receipts.jsonl
 MASTER_BACKLOG.md
 portfolio/control_room_snapshot.json
