@@ -363,6 +363,36 @@ Two further facts measured while reading these 16 records, both cheap and both b
   probe.** 🚫 No schema edit was made — `_triage/factory_os/schemas.json` is declared by the other
   ACTIVE lane in `docs/SESSION_LEDGER.md` (rule 4), so the store change waits for a lane that owns it.
 
+### ✅ First deliverable — the choice, decided 2026-08-04 by lane `S-2026-08-04-S13G`
+
+**They are two different things, and the store must carry both.** Reasons, in the order they were
+measured: (a) `docs/PARAM_REGISTRY.csv` defines `safe_range` as a permanent semantic that may not be
+guessed and must cite an order, a scorecard row, a doc, or an explicit code clamp — that is a safety
+declaration; (b) the design document never binds decision 19's "grid" to it, and never mentions
+`safe_range` at all; (c) `schemas.json` gives the field no meaning to appeal to. A field with no
+stated meaning was read two ways by two consumers, so **the fix is to state the meanings, not to pick
+the more convenient one.**
+
+1. `safe_range` keeps its registry meaning: **the envelope inside which this parameter is permitted
+   to be run at all**, citable, per hypothesis revision.
+2. The probe/search grid becomes its **own declaration** on `ParameterBinding`, and it is
+   **REFUSED unless it is a subset of `safe_range`** — the check belongs with the resolver, so the
+   two cannot drift apart silently. Until that field exists, `pilot_probe.ps1` reading `safe_range`
+   stays as-is; it is not wrong, it is under-specified, and quietly widening it would be the defect.
+3. **Decision 19's "expand the range and re-run" applies only while the expansion stays inside
+   `safe_range`.** For the four edges that cannot move in the direction the median points —
+   `_2_BasketTP_BalPct` 0.5, `_14_MinDistPips` 5, `_H_Ratio` 0.5, `_0_ATR_Period` 7 — the cell does
+   not get a re-run; it gets a **finding**: *the criterion's optimum lies at or outside the permitted
+   envelope.* Widening a safety envelope is a bar change, and a bar change needs the owner
+   (`ORDER-235` precedent, stated in `CLAUDE.md`). 🚫 Not decided from this seat and not decided here.
+4. Consequence for the 14 cells: **none of them may be scheduled for a re-run on the strength of a
+   boundary alone** until (2) exists and the surfaces are reproducible (`ORDER-1330`). The 3–12 hours
+   stay unspent, which is the point of settling this first.
+
+**Not implemented in this lane, and named so it is not mistaken for done:** the `ParameterBinding`
+field in `_triage/factory_os/schemas.json`, its resolver check, and the `pilot_probe.ps1` switch-over
+are owed. They are a store migration and the file is declared by another ACTIVE lane today.
+
 ---
 
 ## ORDER-1280 — [factory/S3] Twelve contracts still carry no enforcement declaration, and the inventory that now names them is not a substitute for writing them — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
