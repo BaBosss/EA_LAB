@@ -698,7 +698,40 @@ building before the question is asked.
 
 ---
 
-## ORDER-1310 — [factory/S2·S11] 🔴 The independent review of `ORDER-1269`+`ORDER-1267` found nine defects, and six of them are regressions the repairing lane introduced — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1310 — [factory/S2·S11] 🔴 The independent review of `ORDER-1269`+`ORDER-1267` found nine defects, and six of them are regressions the repairing lane introduced — `6 of 9 DONE 2026-08-04` (lane `S-2026-08-04-CORRECT4`: `8c1be0b8` #6 · `a6f41b89` #3 · `24a754f0` #1 · `328a3d18` #9 · `3cc8d4b4` #5 + #8) · **#4 · #7 · #2 still OPEN** · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+### ✅ 2026-08-04 — the six the row ordered first, each measured at HEAD before it was touched
+
+Every one was driven against BOTH revisions before and after the fix, with HEAD's copy extracted
+by `git show` into a scratchpad — the working tree was never moved to compare revisions
+(memory `never-stash-to-compare-revisions`).
+
+| # | what the measurement said BEFORE | what it says AFTER |
+|---|---|---|
+| **#6** | `SP20 -> RED`: `$.generated_at` KNOWN_SECRET, 4 chars ends `'.05'` | `GREEN`. The secret is normalised, the TEXT is not: `[^0-9A-Za-z]*` between the secret's characters plus a SAME-CLASS boundary at each end. Mutation probe: layer-off / boundary-widened / boundary-removed all KILLED |
+| **#3** | predicate takes NO owner argument and returns `['a']` for every owner · end-to-end `GREEN` — a borrowed pin was EXEMPTED | `owner` is a REQUIRED positional and the set is derived INSIDE `check()`'s loop. Predicate `[]` for the borrowing owner · end-to-end `RED` (still asked) |
+| **#1** | a correctly-hashed claim on `## 1. ความจริงสั้น ๆ (อ่านก่อน)` was EXEMPTED — the reviewer's exact heading | `RED`. Which section is "approved" is asked of the DESTINATION STORE (`_section.heading`, `registry.META_KEYS`), re-read from HEAD, fail-closed. **No hardcoded heading**, per the row's own instruction |
+| **#9** | with F14 mutated off, the case LABELLED F14 passed — it always died at F13 | the section is derived so it resolves and only the DIGEST is wrong; the assertion names F14 and requires F13 ABSENT. F14-off and F13-off mutations both KILLED, F14-labelled case first |
+| **#5** | `SP21 -> RED`: `the PATH restates the secret: [KNOWN_SECRET] $.findings[0].900112233` | `GREEN`. `_redacted_path`, applied once after the walk to EVERY rule's hits |
+| **#8** | sentinel-then-real scan reported a FALSE "layer skipped"; five identical sentinel scans grew the history 1 → 6 | two names: `LAST_SCAN_LAYERS_NOT_RUN` (reset per scan) and `LAYERS_NOT_RUN` (deduped on append). The earlier document's warning is NOT thrown away |
+
+⚠️ **ONE CORRECTION TO THE REVIEW, kept rather than tidied away.** #9's finding is exact about the
+CASE — it could not discriminate — and wider than the truth about the SUITE: `F14 a SECTION
+post-state naming a digest that never arrived is REFUSED`, in the controls block, does kill the
+same mutation. F14 was covered; the case advertising that it covered F14 was not the thing
+covering it. Measured on the pre-repair revision.
+
+🎯 **Also closed on the way, and stated so it is not read as scope creep:** `registry.py` was
+added to `run_s2a_cages.ps1`'s declarations (it is reached by import and is load-bearing for #1);
+the "six things the exemption refuses" tally in the suite heading is now derived from the list
+instead of typed into prose; and `scan_forbidden`'s docstring stopped claiming the skipped-layer
+notice goes "on stderr", which was left over from the version the fast tier killed.
+
+No BUNDLE MEMBER was touched by any of the six, so **no owner signature is owed** —
+`run_s2a_conformance.py` 68/0 canonical vectors after each S2a commit.
+
+**What is left on this row: #4 · #7 · #2** — all three are in the "not re-run" half of the table
+below, so the next seat must MEASURE THEM AT HEAD before treating them as real.
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_CORRECT3_2026-08-04.md` (verbatim) · brief =
 `CODEX_AUDIT_CORRECT3_BRIEF.md`. Raised by lane `S-2026-08-04-CORRECT3` **against its own work**,
@@ -735,7 +768,8 @@ must not be a hardcoded heading (`rule-names-categories-not-enum-members`,
 `citation-guard-satisfied-by-a-universal-file`).
 
 **Suggested order:** #6 (latent build breaker, and the cheapest real risk) → #3 → #1 → #9 → #5 → #8
-→ #4 · #7 · #2.
+→ #4 · #7 · #2. **The first six are DONE (see the block at the top of this row); #4, #7 and #2
+remain, and none of them has been reproduced yet — measure at HEAD before repairing.**
 
 <sub>Review sandbox limits, stated so the coverage is not overread: the reviewer's environment had no
 writable temp dir, so S11 ran 70/78, S12 55/66, and conformance + schema cages did not reach their
