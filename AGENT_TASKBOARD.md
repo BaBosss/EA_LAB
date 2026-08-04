@@ -2476,7 +2476,79 @@ the comparison in the checker · deleting an `UNIMPLEMENTED` entry without imple
 
 ---
 
-## ORDER-1256 — [factory/S13] Teach the last four stubs to read what will exist — `OPEN` (blocked on 1253/1254/1255) · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1256 — [factory/S13] Teach the last four stubs to read what will exist — `OPEN — items 10 and 11 DONE 2026-08-04 (lane S-2026-08-04-S13H, 52854c9f); items 12 and 14 still stubs, and item 10 now renders FAIL → ORDER-1370` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+### ✅ Items 10 and 11 — 2026-08-04, lane `S-2026-08-04-S13H`. No tester run.
+
+Both were hardcoded `BLOCKED` returns that read nothing; both now read the committed evidence and
+**both can return `PASS` with no further edit to the module**, which is the condition for deleting a
+name from `UNIMPLEMENTED`. 12 new cage cases in `run_s13_tests` (88 total, 0 failed).
+
+🔴 **The report is no longer `0 FAIL`, and the finding is not the one this order expected.** Item 10
+was described in the S13H handoff as *"the evidence already exists — checker only"*. It does exist,
+and reading it turns up a contradiction: **the financing statement splits by ARM, not at random.**
+
+| arm | records with a financing statement | without |
+|---|---|---|
+| `baseline` | **12** | 0 |
+| `selected-verification` | **10** | 0 |
+| `flat-lot-probe` | 0 | **10** |
+| `probe-escalated` | 0 | **6** |
+
+So the flat-lot falsifier — the whole point of the probe arm — **compares an adjusted number against
+an unadjusted one**. 🚫 Which arm is the one to repair is deliberately left open: `ORDER-1350`
+measured that the tester may already be charging the cost, in which case the **baseline** is the
+wrong side. Owner of the defect: **`ORDER-1370`** below.
+
+**The `ORDER-1350` gate is read from fields, not hardcoded** — `financing_deducted.tester_swap_charged`
+and `financing_deducted.swap_mode_probe`. A handler that returned `BLOCKED` on a constant because of
+a known open defect would be a stub wearing a reader, i.e. the exact shape `UNIMPLEMENTED` exists to
+stop; case `F1` proves the same handler returns `PASS` the moment a record carries them.
+
+**Item 11 separates two work items the old sentence collapsed.** A killed-and-resumed journal **does
+exist** (`factory/runs/RUN-20260802-001.jsonl`), on cell id `B14-H01-r1/XAUUSD/H1/S9WIRE`, which is
+not one of the 16 registered pilot cells. *"Observed, but not on a pilot batch"* is a different debt
+from *"never observed"*. ⚠️ Its first version took the **latest** kill, so a run killed on every
+attempt read as never resumed — three resumes rendering as none. Case `S2` is that regression, and it
+was written after the live corpus produced the wrong answer, not before.
+
+**Still stubs, and why they were not done here:** item 12 is compound on every other item being able
+to pass (its honest state), and item 14 needs an end-of-pilot marker plus a `tpl_regression` run on
+the declared lane — **an MT5 run this lane was told not to make**, and inventing the artefact's path
+from the seat would be guessing at a contract rather than reading one.
+
+**Correction to the S13H handoff's own arithmetic, so nobody plans from it:** §8.6 did **not** move
+`8/14 → ~12/14`. It moved **6 checker-not-implemented → 4**, and `8 PASS · 0 FAIL · 6 BLOCKED` →
+**`8 PASS · 1 FAIL · 5 BLOCKED`**. The PASS count is unchanged, and that is the correct outcome: the
+two items now read real evidence and neither one's evidence is clean.
+
+---
+
+## ORDER-1370 — [factory/S13] 🔴 Two arms of every crypto cell disagree about whether financing was deducted, and the falsifier compares across them — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> Opened 2026-08-04 by lane `S-2026-08-04-S13H` while implementing `ORDER-1256` item 10. It is the
+> **owner of the `FAIL`** that item now renders — a red checklist item with no order behind it is
+> how a red item becomes background noise.
+
+**Measured, from the committed records alone:** every `BTCUSD` `baseline` and `selected-verification`
+record carries `financing_deducted` (12 and 10 of them); **every `flat-lot-probe` (10) and
+`probe-escalated` (6) record carries none.** The split is total and by arm.
+
+**Why it is not bookkeeping.** `B14-H01`'s pre-registered falsifier is *"flat-lot variant PF ≥
+escalated PF"*. On `BTCUSD/H4` that comparison has been quoted as **flat-lot 1.82 vs escalated 1.18**
+— an unadjusted number against an adjusted one, on a symbol whose financing is large enough to move a
+gross loss from −92.69 to −11.06 on a neighbouring cell (`ORDER-1330`). **Adjusting neither arm would
+be defensible; adjusting one is not.**
+
+🚫 **Do not fix it by adding the deduction to the probe arms.** The direction is unknown until
+`ORDER-1350` settles whether the tester already charges the cost — if it does, the arms that carry
+**no** post-hoc deduction are the correct ones and the twelve baselines are the rows to repair.
+**Settle `ORDER-1350` first; this order is what applies the answer to every arm.**
+
+**Acceptance:** every crypto run record in `factory/runs/pilot/**` treats financing the same way, and
+each states `financing_deducted.tester_swap_charged` and a dated `swap_mode_probe` so the two charges
+can never be confused again — at which point `check_pilot_acceptance` item 10 goes green by reading,
+with no edit to the checker (case `F1` already proves that path).
 
 After `ORDER-1250` the report is **6 PASS · 0 FAIL · 8 BLOCKED (1 awaiting evidence, 7
 checker-not-implemented)**. `ORDER-1253` and `ORDER-1255` remove four of the seven stubs. These are
