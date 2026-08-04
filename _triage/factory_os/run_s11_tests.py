@@ -1061,6 +1061,99 @@ def sp20():
     sp.assert_safe(sp.build(poisoned), sp.secrets_of(poisoned))
 
 
+@case('SP21', 'ORDER-1310 #5', 'a secret used as a dict KEY is masked in the PATH, not only in the detail')
+def sp21():
+    """
+    🔴 ONLY THE DETAIL WAS HARDENED. `_secret_detail` was written so a refusal names the rule
+    without restating what it caught -- and then `_walk` builds every path out of key names, so a
+    secret used as a KEY came back as `$.findings[0].900112233`: the account number, in the
+    exception text, in the log line, in whatever ships them. SP17 proves the key is DETECTED and
+    SP07 proves the value is absent from the message for a VALUE-placed literal; neither covers
+    this shape, which is why the review found it and not the suite.
+    """
+    doc = {'entity': 'SafeProjection', 'build_id': 'b0000000000000ff',
+           'generated_at': '2026-08-02T00:00:00', 'accounts': [],
+           'findings': [{PLANTED_ACCOUNT: 'anything'}]}
+
+    # CONTROL -- it is still DETECTED. Without this every assertion below is satisfied by a scan
+    # that stopped looking, which is the cheapest possible way to make a leak "not printed".
+    hits = fired(sp.scan_forbidden(doc, [PLANTED_ACCOUNT]))
+    assert any(h[1] == 'KNOWN_SECRET' for h in hits), 'CONTROL: the key-placed secret is not caught'
+
+    for path, rule, detail in hits:
+        assert PLANTED_ACCOUNT not in path, 'the PATH restates the secret: [%s] %s' % (rule, path)
+        assert PLANTED_ACCOUNT not in detail, 'the DETAIL restates the secret: %s' % detail
+    # ...and it still says WHERE and WHICH RULE, or the redaction has bought silence rather than
+    # safety -- the same bargain SP07 holds for the detail.
+    assert any('findings' in h[0] and h[1] == 'KNOWN_SECRET' for h in hits), hits
+
+    # Through assert_safe, because THAT is the string that reaches an exception and a log line.
+    try:
+        sp.assert_safe(doc, [PLANTED_ACCOUNT])
+    except sp.ProjectionLeak as exc:
+        assert PLANTED_ACCOUNT not in str(exc), 'the refusal RESTATES the secret: %s' % exc
+        assert 'KNOWN_SECRET' in str(exc), 'the rule must still be named: %s' % exc
+    else:
+        raise AssertionError('a leaking document was accepted')
+
+    # NESTED, and it is why the redaction is applied to EVERY rule's hits rather than only
+    # KNOWN_SECRET's: a forbidden KEY sitting UNDER a secret key produces a FORBIDDEN_KEY hit
+    # whose path carries the secret all the same.
+    nested = dict(doc, findings=[{PLANTED_ACCOUNT: {'finding_id': 'RAW-1'}}])
+    nested_hits = fired(sp.scan_forbidden(nested, [PLANTED_ACCOUNT]))
+    assert any(h[1] == 'FORBIDDEN_KEY' for h in nested_hits), \
+        'CONTROL: the nested forbidden key is not caught: %s' % nested_hits
+    for path, rule, _detail in nested_hits:
+        assert PLANTED_ACCOUNT not in path, \
+            'a %s hit carries the secret in its path: %s' % (rule, path)
+
+
+@case('SP22', 'ORDER-1310 #8', 'the skipped-layer record answers about THIS scan, not the process')
+def sp22():
+    """
+    ONE list was answering two questions. `LAYERS_NOT_RUN` is process history, so a sentinel scan
+    followed by a real one left the "cleared without the KNOWN_SECRET layer" notice sitting there
+    and the CLI reported a skipped layer that had actually run. Repeated sentinel calls also grew
+    it without bound.
+
+    Deleting the history would have been the wrong repair and this case says so in assertions:
+    "an EARLIER document in this process was cleared without a layer" is the warning most worth
+    keeping. Two questions, two names, and both are checked here.
+    """
+    clean = {'entity': 'SafeProjection', 'build_id': 'b0000000000000ff',
+             'generated_at': '2026-08-02T00:00:00', 'accounts': [], 'findings': []}
+    del sp.LAYERS_NOT_RUN[:]
+    del sp.LAST_SCAN_LAYERS_NOT_RUN[:]
+
+    # CONTROL -- the sentinel still declares, on both records. Every negative below is satisfied
+    # by a module that simply stopped recording.
+    sp.scan_forbidden(clean, sp.NO_KNOWN_SECRETS_AVAILABLE)
+    assert any('KNOWN_SECRET' in r for r in sp.LAST_SCAN_LAYERS_NOT_RUN), \
+        'CONTROL: the sentinel scan recorded nothing about itself'
+    assert any('KNOWN_SECRET' in r for r in sp.LAYERS_NOT_RUN), \
+        'CONTROL: the sentinel scan recorded nothing in the process history'
+
+    # THE DEFECT -- a REAL scan afterwards must not still report the layer as skipped.
+    sp.scan_forbidden(clean, [PLANTED_ACCOUNT])
+    assert sp.LAST_SCAN_LAYERS_NOT_RUN == [], \
+        'a scan that RAN the layer still reports it skipped: %r' % sp.LAST_SCAN_LAYERS_NOT_RUN
+    # ...and the earlier document's warning is NOT erased along with it.
+    assert any('KNOWN_SECRET' in r for r in sp.LAYERS_NOT_RUN), \
+        'the process history was thrown away -- an earlier document really was cleared without ' \
+        'the layer and nothing now says so'
+
+    # The second half of the same finding: repeated sentinel calls grew the list forever.
+    before = len(sp.LAYERS_NOT_RUN)
+    for _ in range(5):
+        sp.scan_forbidden(clean, sp.NO_KNOWN_SECRETS_AVAILABLE)
+    assert len(sp.LAYERS_NOT_RUN) == before, \
+        'five identical sentinel scans grew the process history %d -> %d' \
+        % (before, len(sp.LAYERS_NOT_RUN))
+    assert len(sp.LAST_SCAN_LAYERS_NOT_RUN) == 1, sp.LAST_SCAN_LAYERS_NOT_RUN
+    del sp.LAYERS_NOT_RUN[:]
+    del sp.LAST_SCAN_LAYERS_NOT_RUN[:]
+
+
 @case('SP13', '7.3 dedupe', 'public ids are opaque, stable across builds, and differ per finding')
 def sp13():
     a = sp.public_id('MANDATORY_SOURCE_STALE|attestation_map')

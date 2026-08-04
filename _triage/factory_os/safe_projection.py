@@ -188,6 +188,18 @@ FORBIDDEN_VALUE_RULES = (
 )
 
 
+def _layer_not_run(notice):
+    """Record one skipped layer against BOTH questions -- this scan, and this process.
+
+    ORDER-1310 #8. The process list is deduplicated ON APPEND: repeated sentinel scans used to
+    append the identical sentence every time and the only thing keeping the CLI readable was a
+    `set()` at the print, which does nothing for a long-running process's memory.
+    """
+    LAST_SCAN_LAYERS_NOT_RUN.append(notice)
+    if notice not in LAYERS_NOT_RUN:
+        LAYERS_NOT_RUN.append(notice)
+
+
 def _walk(node, path='$'):
     """Yield (path, key_or_None, value) for every node, at every depth. Keys AND leaves."""
     if isinstance(node, dict):
@@ -210,9 +222,6 @@ def _walk(node, path='$'):
 # empty tuple, and an empty result is indistinguishable from a clean document.
 NO_KNOWN_SECRETS_AVAILABLE = 'NO_KNOWN_SECRETS_AVAILABLE'
 
-# Every scan in this process that ran with a layer switched off, appended as it happens. The CLI's
-# `check` verb prints it; the suites assert on it.
-#
 # 🔴 IT IS NOT stderr, AND THAT IS NOT A STYLE CHOICE. The first version wrote the notice to
 # stderr. run_s11_tests.py and run_s12_tests.py were green when hand-run and the FAST TIER caught
 # it: `.ps1` wrappers run under $ErrorActionPreference='Stop', where ANY stderr from a native
@@ -220,7 +229,23 @@ NO_KNOWN_SECRETS_AVAILABLE = 'NO_KNOWN_SECRETS_AVAILABLE'
 # exited 0. Same shape as memory `thai-output-kills-a-suite-inside-the-hook`, one channel over.
 # stdout is no better: a library that prints into a caller's stdout can corrupt whatever parses it.
 # So the record is DATA, and the surfaces that want to say it out loud read it.
+#
+# 🔴 ORDER-1310 #8 -- THERE ARE TWO QUESTIONS HERE AND ONE LIST WAS ANSWERING BOTH.
+# `LAYERS_NOT_RUN` is PROCESS HISTORY. A reader that asks it "was THIS document cleared by every
+# layer?" gets the wrong answer whenever an earlier scan in the same process used the sentinel:
+# the notice is still sitting there, so the CLI reported a skipped layer that had actually run.
+# Deleting the history instead would lose the opposite thing -- that some earlier document really
+# was cleared without the layer -- which is the warning worth keeping most. So the two questions
+# get two names:
+#
+#   LAST_SCAN_LAYERS_NOT_RUN   the scan that just finished. RESET at the top of every
+#                              scan_forbidden call, so it is never about somebody else's document.
+#   LAYERS_NOT_RUN             every DISTINCT notice raised in this process. Deduplicated ON
+#                              APPEND rather than only at the print, which is also what stops
+#                              repeated sentinel calls growing it without bound (the second half
+#                              of the same finding).
 LAYERS_NOT_RUN = []
+LAST_SCAN_LAYERS_NOT_RUN = []
 
 
 def _normalised(text):
@@ -308,9 +333,11 @@ def scan_forbidden(doc, known_secrets=()):
 
       a non-empty list                 scan with it
       NO_KNOWN_SECRETS_AVAILABLE       the caller has DECLARED it cannot derive recognizers. The
-                                       layer is announced as NOT RUN on stderr, so a reader is
-                                       never told a document was cleared by a layer that did not
-                                       execute.
+                                       layer is announced as NOT RUN -- in DATA, not on stderr
+                                       (see LAYERS_NOT_RUN; the sentence that said "on stderr"
+                                       was left over from the version the fast tier killed) --
+                                       so a reader is never told a document was cleared by a
+                                       layer that did not execute.
       anything else that is empty      REFUSED. This is the forgot-to-pass case and it must not
                                        silently degrade into "clean".
 
@@ -323,9 +350,12 @@ def scan_forbidden(doc, known_secrets=()):
     means by it: REAL hits, and nothing else.
     """
     hits = []
+    # ORDER-1310 #8: this list is about THE SCAN THAT IS STARTING NOW, so it starts empty. The
+    # process history below is what accumulates.
+    del LAST_SCAN_LAYERS_NOT_RUN[:]
     if known_secrets == NO_KNOWN_SECRETS_AVAILABLE:
         secrets = []
-        LAYERS_NOT_RUN.append(
+        _layer_not_run(
             'KNOWN_SECRET: the caller declared it cannot derive recognizers, so this document was '
             'cleared by FORBIDDEN_KEY, VALUE_SHAPE and the declared SHAPE only. A literal from the '
             'source snapshot typed into a permitted field would not have been caught.')
@@ -362,7 +392,10 @@ def scan_forbidden(doc, known_secrets=()):
             for name, rx, why in FORBIDDEN_VALUE_RULES:
                 if rx.search(as_written):
                     hits.append((path, name, why))
-    return hits
+    # ORDER-1310 #5: the PATH is printed too, and a secret used as a dict KEY is IN it. Redacted
+    # in ONE place, after the walk, so every rule's hits are covered and no caller can format a
+    # raw path by accident -- see `_redacted_path`.
+    return [(_redacted_path(p, recognizers), rule, detail) for p, rule, detail in hits]
 
 
 # ORDER-1267: the refusal message must not restate the secret. A leak detector that prints the
@@ -374,6 +407,41 @@ def _secret_detail(secret):
     s = str(secret)
     return ('carries a literal taken from the full snapshot (%d chars, ends %r) -- the value is '
             'deliberately NOT restated here' % (len(s), s[-3:] if len(s) >= 3 else '?'))
+
+
+def _redacted_token(secret):
+    """What a secret is REPLACED BY wherever it would otherwise be printed."""
+    s = str(secret)
+    return '<redacted %d chars ends %r>' % (len(s), s[-3:] if len(s) >= 3 else '?')
+
+
+def _redacted_path(path, recognizers):
+    """The JSON path, with any secret that appears IN it masked.
+
+    🔴 ORDER-1310 #5 -- ONLY THE DETAIL WAS HARDENED, AND THE PATH CARRIED THE VALUE ANYWAY.
+    `_secret_detail` above was written so the refusal names the rule without restating what it
+    caught. But a secret can be a dict KEY, and `_walk` builds every path out of key names, so
+    `{"findings": [{"900112233": "anything"}]}` produced `$.findings[0].900112233` -- the account
+    number, in the exception text, in the log line, in whatever ships them. The leak the detail
+    was careful about walked out through the field beside it. `SP17` proved the KEY is DETECTED
+    and `SP07` proved the value is absent from the message for a VALUE-placed literal, so nothing
+    covered this shape.
+
+    Every hit's path goes through here, not only KNOWN_SECRET hits: a FORBIDDEN_KEY or a
+    VALUE_SHAPE hit on a node NESTED UNDER a secret key carries that key in its path too.
+
+    When the caller declared NO_KNOWN_SECRETS_AVAILABLE, `recognizers` is empty and nothing can
+    be masked -- which is honest rather than silent: that run has already announced in
+    LAYERS_NOT_RUN that it cannot tell a secret from any other string.
+    """
+    out = str(path)
+    for secret, spelling in recognizers:
+        token = _redacted_token(secret)
+        if secret in out:
+            out = out.replace(secret, token)
+        if spelling is not None:
+            out = spelling.sub(token, out)
+    return out
 
 
 def assert_safe(doc, known_secrets=()):
@@ -763,9 +831,19 @@ def main(argv):
               % (PROJECTION_REL, len(projection['accounts']), len(projection['findings'])))
         # ORDER-1267 #1: a human running `check` is told which layers did NOT run. "This document
         # is clean" must never be silently shorthand for "clean according to the layers that could
-        # execute". Deduplicated because read_for_sender declares on every call.
-        for line in sorted(set(LAYERS_NOT_RUN)):
-            print('safe_projection: LAYER NOT RUN -- %s' % line)
+        # execute".
+        #
+        # ORDER-1310 #8: the two records are printed as two different sentences, because they are
+        # two different claims. `build()` above ends in the scan this line reports on, so the
+        # first list really is about the document just checked; the second is about any OTHER
+        # document this process cleared without a layer, and it is not dropped -- dropping it
+        # would be a silence worse than the false report this finding was about.
+        for line in LAST_SCAN_LAYERS_NOT_RUN:
+            print('safe_projection: LAYER NOT RUN on THIS document -- %s' % line)
+        for line in LAYERS_NOT_RUN:
+            if line not in LAST_SCAN_LAYERS_NOT_RUN:
+                print('safe_projection: LAYER NOT RUN on an EARLIER document in this process '
+                      '-- %s' % line)
         return 0
     d = os.path.dirname(out)
     if d and not os.path.isdir(d):
