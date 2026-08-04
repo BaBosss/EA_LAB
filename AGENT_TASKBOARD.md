@@ -1104,7 +1104,43 @@ this is cheap to re-measure — do that first.)*
 
 ---
 
-## ORDER-1267 — [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no recognizer at all — `#1 + Part 2 DONE 2026-08-04` (lane `S-2026-08-04-CORRECT3`, `446f7539`) · **#2 still OPEN, untouched** · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1267 — [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no recognizer at all — `#1 + Part 2 DONE 2026-08-04` (lane `S-2026-08-04-CORRECT3`, `446f7539`) · **#2 HALF DONE 2026-08-04** (lane `S-2026-08-04-CORRECT4`, `35508ce3`) — **the remaining half needs one owner decision, see below** · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+### ⚠️ #2 — half closed, and the open half is a LIVE disagreement needing the owner (2026-08-04)
+
+**Closed (`35508ce3`).** `floating_risk[].state` now goes through the module's closed map, so an
+unrecognised value REFUSES the build. `_mapped`'s own docstring names this hazard — *"an
+unrecognised state mapped onto a safe-looking value is how a future state that means BREACH
+renders as OK"* — and this was the one state in the document that never went through it.
+`schemas.json` declares `floating_risk` items as a bare `{"type": "object"}`, so the validator did
+not constrain it either. Measured before landing, because a new refusal on the daily build is the
+ORDER-1310 #6 shape: all six real rows are `FRESH`, which is in the map, so nothing that exists
+today is refused. Cage = `run_s11_tests.py` SP23 (control · three invented states · a specificity
+case for a row carrying no state at all).
+
+**🔴 OPEN, and it is measured rather than hypothetical.** The real snapshot today: 6 accounts, all
+known to BOTH detectors, and **TWO of them disagree** — `floating_risk=FRESH` while
+`system_health=STALE` (accounts ending `900` and `711`). `control_center` renders those two
+**CONFLICT**; the SafeProjection renders **STALE**, because it reads the `system_health` row and
+nothing else. In that direction the projection is the LESS reassuring of the two, so nothing is
+hidden today. The reverse direction is the hazard: `system_health=FRESH` beside a `BLIND` risk row
+would project `FRESH`, and an account only the RISK detector knows about projects `UNKNOWN` even
+when that detector said `BLIND` — `SP14` pins that behaviour today.
+
+**❓ USER DECISION — what should `sensor_state` say when the two detectors disagree?** None of the
+three is free, which is why it is not being guessed:
+- **(a)** add `CONFLICT` to the `SafeProjection` enum in `schemas.json` and mirror
+  `control_center`'s rule. ONE rule in one place — but it is a **wire-shape change** to what the
+  Telegram surface may emit.
+- **(b)** project the **UN-healthy** state. Needs a healthiness set this module does not own, so it
+  would be a second copy of `control_center.SENSOR_HEALTHY` — the duplication this repo has paid
+  for repeatedly.
+- **(c)** project `UNKNOWN` on disagreement. No schema change, safe in the `FRESH`-vs-`STALE`
+  direction, and an **UPGRADE from `BLIND`** in the other — which is the direction that matters.
+
+Recommendation if the owner has no preference: **(a)**. It keeps one rule in one place, and the
+cost is a schema enum value rather than a second vocabulary. `SP14`'s `sensor_state` assertion
+would then be FLIPPED in the same commit as the fix, not quietly edited.
 
 ### ✅ CLOSED 2026-08-04 — #1 and Part 2. #2 is untouched and still true
 
