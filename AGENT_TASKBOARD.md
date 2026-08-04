@@ -1985,12 +1985,54 @@ the back door · any EA verdict (design §10 stops this slice at `EVIDENCE_COMPL
 > * ⚠️ **100 % LONG in both windows** (49/0 and 57/0). BWD 2020–2022 contains the 2022 bear, so a
 >   long-only book surviving it is the one genuinely interesting fact here — and it is one cell.
 >
-> 🚫 **No verdict yet, and none may be issued from automation.** Model 4 is mandatory for the
-> ENGINE-EDGE class and is the remaining half of this order.
+> ### ✅ MODEL 4 RUN THE SAME DAY — and Model 1 was not measuring the same thing
+>
+> Records `verification_MAIN_lot0p03_20260804_084332.jsonl` and
+> `verification_BWD_lot0p03_20260804_084716.jsonl`. Four runs per cell now exist.
+>
+> | `B14-H01-r1/BTCUSD/H4` | MAIN M1 | **MAIN M4** | BWD M1 | **BWD M4** |
+> |---|---|---|---|---|
+> | PF | 15,408.74 | **2.09** | 0.76 | **0.95** |
+> | PF, financing deducted | — | **1.63** | — | **0.84** |
+> | trades · DD % | 94 · 7.90 | 75 · 14.85 | 49 · 16.01 | 51 · 15.12 |
+>
+> | `B14-H02-r1/BTCUSD/H4` | MAIN M1 | **MAIN M4** | BWD M1 | **BWD M4** |
+> |---|---|---|---|---|
+> | PF | UNDEF | 1,126.56 | 1.61 | **1.44** |
+> | PF, financing deducted | — | **4.63** | 1.31 | **1.20** |
+> | trades · DD % | 78 · 12.38 | 82 · 10.49 | 57 · 15.63 | 49 · 15.22 |
+>
+> 🔴 **`B14-H01-r1`'s MAIN PF falls from 15,408.74 to 2.09 — four orders of magnitude.** Under
+> 1-minute OHLC the basket realises a gross loss of **38 cents** across three years; under 143.6 M
+> real ticks it realises **2,188.32**. The Model-4 number is the credible one and the Model-1 number
+> was a fill fiction. This is the clearest evidence yet for why `CLAUDE.md` makes Model 4 mandatory
+> for this class — and a standing warning that **no Model-1 number in this corpus may be quoted as
+> a quality figure**.
+>
+> 🔴 **`B14-H02-r1` does not come back to earth.** Even under real ticks its MAIN gross loss is
+> **5.38** against 6,060.88 of gross profit, while the crypto financing the tester never charges on
+> that same run is **1,304.25 — 242× the entire realised gross loss.** `ORDER-1301` at its sharpest:
+> the PF is measuring how long a loss can be deferred, not edge.
+>
+> **Against the bars — evidence, not a verdict** (§10 stops here; 🚫 no verdict from automation):
+> * **`B14-H01-r1` misses the BWD gate, which is HARD for ENGINE-EDGE (cage condition 2), under
+>   BOTH models** — 0.76 and 0.95, and **0.84** with financing deducted. Consistent across models,
+>   so it is a robust miss rather than a modelling artefact. Its MAIN M4 of 2.09 clears its own bar;
+>   it is the both-window requirement it does not meet.
+> * **`B14-H02-r1` clears every numeric bar** — MAIN 4.63 · BWD 1.20 after financing · both-window
+>   PF ≥ 1.0 retained across the model switch with no cliff. ⚠️ And every caveat travels with it:
+>   **49 trades on BWD M4 across three years**, DD **15.22 %** against `RC_AcctDDLimitPct=12.0`,
+>   BWD history quality 99 %, **100 % LONG in all four runs**, and a BWD margin of 1.20 close enough
+>   to the 1.0 hard gate that `ORDER-1330`'s measured cross-session variation belongs beside it.
+>
+> 👤 **The trade count needs the owner, not this seat.** A BWD pass resting on **49 trades over a
+> three-year window** is exactly the case `CLAUDE.md`'s un-numbered `PENDING-RATIFY(user)` note
+> describes — a bar cleared by not participating rather than by surviving. **No verdict is issued
+> for either cell here.**
 >
 > ⚠️ Cross-session comparison caveat: **`ORDER-1330`** measured ±2.3 % on net profit for an
-> identical configuration run on two different days. Both PFs above are far enough from 1.0 that the
-> ordering does not change; that is luck, not margin.
+> identical configuration run on two different days. `B14-H01-r1`'s BWD miss is far enough from 1.0
+> that the ordering does not change; **`B14-H02-r1`'s 1.20 is not.**
 
 > 🔴 **Re-blocked 2026-08-04 by executing `ORDER-1273`.** BWD judges *the configuration the probe
 > selected*, and **fourteen of sixteen cells do not have one** — they are `BOUNDARY` and item 5
