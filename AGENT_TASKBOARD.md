@@ -7023,7 +7023,7 @@ It cannot prove two programs compute the same thing — the same impossibility `
 
 ---
 
-## ORDER-616 — [factory/discipline] The four defect SHAPES behind 24 audit findings — lint where mechanical, checklist where not — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-616 — [factory/discipline] The four defect SHAPES behind 24 audit findings — lint where mechanical, checklist where not — `DONE — the awaited audit RETURNED 2026-07-30 (caf9f18c) and AGAIN 2026-08-04; UNROUTED to this row either time` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Owner directive 2026-07-31:** *"ทำ 616 ให้จบ จบไปเลยจริง"* — after the seat proposed it as the highest-value item in the set.
 >
@@ -7070,7 +7070,7 @@ It cannot prove two programs compute the same thing — the same impossibility `
 
 ---
 
-## ORDER-615 — [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` (12 of 13 fixed; F3 = `ORDER-614` rev 2, written not built) · ⛔ **re-opens `ORDER-610` and `ORDER-613`; both were closed on evidence this refutes** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-615 — [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance — `DONE — the awaited audit RETURNED 2026-07-30 (caf9f18c) and AGAIN 2026-08-04; UNROUTED to this row either time` (12 of 13 fixed; F3 = `ORDER-614` rev 2, written not built) · ⛔ **re-opens `ORDER-610` and `ORDER-613`; both were closed on evidence this refutes** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Round 2 is sharper than round 1.** Every command in the brief passed — S2a 7/7 · schema 89/89 · fast cages 12/12 · `check_state` CLEAN — **and every attack below still got through.** That is the whole thesis of the brief working against the person who wrote it.
 >
@@ -7306,7 +7306,7 @@ The fixture output has been carrying *"reconciling `path` with `name` needs a de
 
 ---
 
-## ORDER-611 — [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attribution — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-611 — [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attribution — `DONE — the awaited audit RETURNED 2026-07-30 (caf9f18c) and AGAIN 2026-08-04; UNROUTED to this row either time` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — **27/27 entities now reject a crafted bad instance, and 27/27 have a positive one delta away**
 >
@@ -7559,7 +7559,7 @@ Advisory is correct **while drafting** (a frequently-edited owner like `AGENT_TA
 
 ---
 
-## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `DONE` (**owner APPROVED the Coverage edge 2026-07-31**; awaiting an independent re-check before `REVIEWED`) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `RE-OPENED 2026-08-04 by audit 7 — NOT DONE` (**owner APPROVED the Coverage edge 2026-07-31**; the independent re-check it was awaiting **RAN TWICE and returned NOT DONE BOTH TIMES**: first on 2026-07-30 (`caf9f18c`, report `_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`) and again independently on 2026-08-04 at a later HEAD (report `_triage/factory_os/CODEX_AUDIT7B_2026-08-04.md`). 🔴 **This row was never AWAITING — the first answer arrived on 07-30 and nobody routed it here.** A written, useless 27-row D1 — 26 false `UNOWNED` rows plus the one real Coverage edge — **passed all nine criteria**, and `C4` accepted a valid hash belonging to the wrong owner file. 🚫 Not archivable, and green checkers are not an answer: all four S2a commands exit 0 at HEAD while the reproduced input still passes) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — **THE DECISION IS RECORDED. `APPROVED`, conditionally.**
 > `_triage/factory_os/s2a_attestations.jsonl` line 2 · bundle `aaa5998d7128238a` · verified by `check_s2a_attestation.py` (exit 0)
@@ -7701,7 +7701,7 @@ revert the commit" satisfies any mechanical form of it. Reviewer checklist, per 
 >
 > 🔻 Still owed for `REVIEWED`: the independent re-check itself. The *conditions* are cleared; the *re-check* is not the same act.
 
-## ORDER-601 — [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is owed — `DONE(Claude/Opus 2026-07-30) — audit-7 closure conditions MET 2026-07-31 (54e82c81); awaiting an independent re-check before REVIEWED` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-601 — [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is owed — `RE-OPENED 2026-08-04 by audit 7 — NOT REVIEWED-able` (was `DONE(Claude/Opus 2026-07-30) — audit-7 closure conditions MET 2026-07-31 (54e82c81)`; the re-check it was awaiting **RAN on 2026-07-30 (`caf9f18c`) and refused it, and a second independent run on 2026-08-04 refused it again** — reports `_triage/factory_os/CODEX_AUDIT7_2026-07-30.md` and `_triage/factory_os/CODEX_AUDIT7B_2026-08-04.md`, which name stale `all_clear` design statements and false `x-enforced-by` claims as the conditions still owed. ⚠️ This row is ALSO the live instance of the classifier defect: its status said *before REVIEWED*, and `Get-StatusClass` matched the word and rated it Terminal/REVIEWED, i.e. archivable. It was not) · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 **⚠️ READ THIS BEFORE TOUCHING THE SPEC BELOW — the work is already built.** The spec is kept verbatim as the record of what was asked. What exists:
 - **part 1** `c8d03d4b` — evidence/verdict entity split, so a supplied answer has nowhere to sit; ajv 17→28
