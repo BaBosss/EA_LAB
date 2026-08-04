@@ -82,16 +82,21 @@ editor, not a rewriter** — is smaller and true, and both limits are now passin
 
 ## §2 — Cage state and tier budget
 
-**Last CLEAN full tier: 29 suites, 0 failed, `98.5s` of the PINNED `120.0s`** (at `995ef52a`).
-🚫 **Do not quote a later number as clean.** Two runs after it were contaminated — one by my own
-concurrent commit rewriting `.git/index` under the suite, one by `HEAD MOVED DURING THIS RUN`, and
-the last showed a standing failure that is **not this lane's** (below). **Do not run the full tier
-concurrently with anything that stages.**
+**✅ CLEAN full tier at THIS lane's final HEAD (`499f3c0b`): 29 suites, 0 failed, `103.5s` of the
+PINNED `120.0s` — `16.5s` headroom.** One measurement, on a quiet worktree with nothing staging.
 
-⚠️ **A standing tier failure that belongs to lane `S13H`/`S13K`, not here:**
-`run_guard_trigger_tests.ps1` PART 4 reports that `run_s13_tests.ps1` reaches
-`_triage/factory_os/scheduler.py` through `check_pilot_acceptance.py`'s imports and declares
-neither. It reddens the commit path for anything touching `scripts/_test/**`. Left for that lane.
+⚠️ **The headroom shrank from 21.5s to 16.5s and the cause is this session's cages, not drift:**
+S10 gained PART 6 + PART 7 and S12 went 67 → 77 cases. `$FullTierBudgetSeconds` is **not** raised
+and must not be. **Do not run the full tier concurrently with anything that stages** — the first
+three attempts today were contaminated, one by my own concurrent commit rewriting `.git/index`
+under the suite and one by `HEAD MOVED DURING THIS RUN`.
+
+✅ **The standing `run_guard_trigger_tests` PART 4b failure is CLEARED** (`2e2af151`). It had been
+red since lane `S13H`'s `cbf2c98a` added `import scheduler` to `check_pilot_acceptance.py` without
+declaring it — blocking every commit touching `scripts/_test/**` or that module, which is what an
+`ORDER-1370` lane touches first. Fixed by declaring the path (one line, the same transitive-import
+case as `check_param_surface.py`). Done by this lane rather than handed on because every lane in
+the ledger reads CLOSED, so there was no writer left to coordinate with.
 
 **Suites after this session:** S10 (+PART 6 +PART 7) · **S12 77/0** (was 67) · S11 85/0.
 
