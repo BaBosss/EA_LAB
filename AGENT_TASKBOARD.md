@@ -9315,6 +9315,46 @@ deal count **rises** 53 → 57 when it is switched on. Blocking an add changes t
 by itself a defect — but it is unexplained, and an unexplained sign flip in the direction of the mechanism
 is what `ORDER-1220` is about.
 
+### ✅ STEP 2 REPLICATION on the second host (AUDCAD H1) — 8 of 8 runs. **No verdict here.**
+
+Run 2026-08-04 by lane `S-2026-08-04-QUOTA4` on the second host this row itself names as qualified.
+Same binary, same lane `D:\Meta 5b`, same four `.set` files, Model 4, leverage `1:100` on every run.
+The delegated worker completed all eight runs and then **died on an API error before writing its
+summary**, so the numbers below were parsed by the lead seat from the reports on disk with the
+repo-pinned `tools\python312\python.exe`.
+
+**Inputs proof, read back out of the four MAIN reports** — four distinct configurations again:
+`CTRL` StackConfirm=0/gate=false/mode=0 · `A` 0/true/1 · `B` 4/false/0 · `AB` 4/true/1.
+
+| cell | MAIN PF | trades | DD% | net | BWD PF | trades | DD% | net |
+|---|---|---|---|---|---|---|---|---|
+| **CTRL** `B14_AB_off` | 0.93 | 213 | 10.59% | −241.87 | **1.44** | 146 | 5.35% | 818.13 |
+| **A** `B14_AB_on` | 0.81 | 134 | 10.07% | −418.21 | 0.71 | 92 | 17.97% | −626.48 |
+| **B** `B14_PAon` | 0.86 | **92** | 8.02% | −182.94 | 1.54 | 27 | 2.61% | 272.27 |
+| **AB** `AB_both` | **0.39** | 50 | 8.51% | −768.12 | 1.88 | 27 | 2.24% | 376.02 |
+
+**🔴 THIS REFUTES THE GENERAL READING OF THE XAUUSD RESULT, AND CONFIRMS THE NARROW ONE.** On XAUUSD,
+`B` equalled `CTRL` in every digit. Here `B` cuts entries **213 → 92**, a 57% reduction, and `AB`
+cuts them to 50. So `CONF_PA_ENGULF` is **not an inert lever** — on XAUUSD it simply **never fired**.
+That is precisely the alternative the XAUUSD block said could not be told apart from inertness
+without a fire counter, and it is now the surviving explanation on the evidence. ⚠️ The XAUUSD block
+above is **not** withdrawn: its claim was scoped to that host and it stays true as written. What
+changes is what may be inferred from it — **nothing about the lever in general.**
+
+**Delta against this row's pre-registered bar** (better on BOTH windows = pass · worse on either =
+dead · better on one = do not accept): **A is worse on both ⇒ `dead`. B and AB are better on BWD and
+worse on MAIN ⇒ `กลาง`, the lever is not accepted.** 🚫 And the same n objection applies harder here
+than on XAUUSD: B and AB reach BWD on **27 trades**. A delta measured on 27 trades over a three-year
+window is not interpretable, and this row already forbids reading one that fine.
+
+**🔴 A NUMBER THAT DOES NOT RECONCILE, RECORDED RATHER THAN AVERAGED.** `ORDER-430` qualified this
+host at **BWD PF 2.20 on 62 trades**. This run measures **1.44 on 146 trades** with the `.set` this
+row names (`B14_AB_off.set`), on the lane this row names. Both PF and trade count differ by more
+than sampling can explain — that is a different configuration or a different lane, not noise.
+**Whoever picks this up next must reconcile it BEFORE quoting either figure**, because `ORDER-430`'s
+2.20 is what un-parked this order in the first place. Do not average them and do not pick the
+friendlier one.
+
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
