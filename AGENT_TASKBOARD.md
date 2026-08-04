@@ -376,7 +376,11 @@ probe is used for anything beyond *"the charge is non-zero"*.
 
 **Consequence for the figures already quoted, stated but NOT recomputed here:** a tester-reported
 profit factor already contains the swap the tester charged, so deducting the post-hoc bill on top
-produced the *"financing-adjusted"* numbers in circulation. `B14-H02-r1/BTCUSD/H4` BWD Model 4 is
+produced the *"financing-adjusted"* numbers in circulation. ✅ **That premise is measured, not
+assumed** (`/scrutinize` round 2 asked for it): on `H02/BTCUSD/H4` the deal `Profit` column is
+identical to the cent across the two days while `Swap` moves `+15.28` — and MT5's aggregates move
+with it, `gross_profit +4.18` and `gross_loss +11.10`, **summing to exactly +15.28**. The gross
+figures a profit factor is built from therefore include swap. `B14-H02-r1/BTCUSD/H4` BWD Model 4 is
 reported by the tester at **1.44** and was quoted as **1.20** after that second deduction. 🚫 No
 number is restated on this row: applying the answer to every arm at once is `ORDER-1370`, and doing
 it here for one cell is how a corpus ends up half-migrated.
@@ -1907,7 +1911,72 @@ sentence.
 
 ---
 
-## ORDER-1261 — [factory/S12] Five verified defects from the first independent audit: a reopened incident is silenced forever, and the secret guard prints what it catches — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1261 — [factory/S12] Five verified defects from the first independent audit: a reopened incident is silenced forever, and the secret guard prints what it catches — ✅ **DONE 2026-08-04** (lane `S-2026-08-04-CORRECT6`, `5ac83527`) — **five closed; the sixth was already dead when it was measured** · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+### ✅ CLOSED 2026-08-04 — the before/after, measured on the pre-repair revision
+
+| # | at HEAD | its control at HEAD | after |
+|---|---|---|---|
+| **1** | `OPEN → RESOLVED → OPEN` → **`SUPPRESSED_DUPLICATE`**, `problems=0` | the `CRITICAL → REAL_MONEY` escalation still delivered | **DELIVERED**; the *repeat* of that incident is still suppressed |
+| **2** | — | — | 🎯 **ALREADY CLOSED** by `ORDER-1267` #1 — see below |
+| **3** | a bare account number in an error string → written to the ledger **unchanged** | the token control **was** caught | **withheld**, naming the rule; the ledger line carries no literal end-to-end |
+| **4** | `deliver()` calls neither guard, is public, sends `ev['text']` directly | — | **refuses it itself**; a clean event still delivers |
+| **5** | one torn line → `JSONDecodeError` before any delivery decision | a clean file loads | **tolerated, counted, and reported by line number** |
+| **6** | a channel with a past `DELIVERED`, now unconfigured → **identical** outcome and sentence as never-provisioned | — | `UNCONFIGURED_REGRESSION`, exit **1** |
+
+🎯 **`#2` DID NOT SURVIVE THE MEASUREMENT, AND THAT IS WHY IT IS TAKEN FIRST.** This row says the
+guard *"prints what it catches"*. It does not, and has not since `ORDER-1267` #1 rewrote
+`_secret_detail`: the refusal names the **rule**, the **length** and the **last three characters**
+and does not restate the value, and `_redacted_path` covers the path half. **Recorded as
+closed-by rather than as a fix, because nothing was written for it** — the second time in this
+chain that a finding was dead before the lane reached it (`ORDER-1310` #4 was the first).
+
+**#1 — the design question IS the fix, and the order was right to forbid the shortcut.** A time
+window is a guess about how long an incident lasts. This system already knows something better:
+a finding it reached `RESOLVED` on **was declared over by this module**, and a recovery message
+was sent saying so. When it comes back, that is a **new incident by the system's own account**.
+`incident_seq()` counts those recovery-and-return cycles out of the journal.
+⚠️ **Two things were measured the other way round first:** the component is appended **only when
+non-zero**, because every key already in the live ledger was written without it and adding it
+unconditionally would re-alert the whole open set once; and it increments **per cycle, not per
+`RESOLVED` line**, because `RESOLVED` persists while a finding stays absent and a per-line counter
+would have sent the recovery message **twice**.
+
+**#3 — the declaration had become the reason the layer never ran.** `prohibition-disarms-its-own-
+check`, exactly. The secret list **exists** — `main()` reads it for `assert_sendable` — and it is
+now threaded through `deliver()` to the boundary that writes the file. The sentinel stays as the
+**default**, so a caller that genuinely has nothing to derive from still says so.
+
+**#4 — the literal half of the seam now runs inside `deliver()`.** Not the shape half: that is a
+schema read, genuinely expensive per event, and `assert_sendable` is where an event is *built*
+wrong. What this stops is the one thing a second caller can get wrong on its own.
+
+**#5 — it does NOT skip silently**, which would be the opposite failure. Both runtime readers go
+through one `read_jsonl()`; torn lines come back **separately, counted, with their line number**,
+and they make the run exit non-zero. `unreadable-input-must-refuse-not-skip` is satisfied by
+**reporting**, not by stopping the alert path on the morning it matters.
+
+**#6 — the ledger already knew, and needed no new field:** a channel that has **ever** delivered
+was configured. `ORDER-219`'s muting rationale is real and **stays for the case it was written
+for**. `daily_monitor.ps1` needs no change — it already treats non-4 as red, and the `REGRESSION:`
+line reaches the log through the notifier's own stdout, which it already captures.
+
+⚠️ **`P01` failed on the first run and was right to** — two new public callables must be declared.
+Declared with reasons rather than excused: a case has to be able to drive `incident_seq` directly,
+and `read_jsonl` being public is what makes a second unguarded reader visible **as a reader**
+rather than as a line.
+
+**Six new cases `N01`-`N06`**, each against the specific mutation that exposed the defect and each
+carrying its specificity control: the repeat of the same incident is **still** suppressed, the
+recovery is sent **exactly once**, `safe_detail` is **still not** a blanket redactor, the seam
+still passes clean events, a clean file reports **nothing** torn, and never-provisioned is **still**
+the muted case.
+
+**Measured after:** S12 **73/0** (was 67) · S11 85/0 · S10 · S13 · `run_schema_cages` ·
+`run_monitor_integrity_tests` — all through the `.ps1` wrappers, all exit 0. `check_state.ps1`
+**CLEAN**.
+
+### The audit's original table, kept for the record
 
 Full evidence + controls = `_triage/factory_os/CODEX_AUDIT_S12_2026-08-03.md`. Brief =
 `CODEX_S12_AUDIT_BRIEF.md`, committed **before** the audit ran. Every item below was **re-measured by
@@ -2635,8 +2704,10 @@ be defensible; adjusting one is not.**
 **Settle `ORDER-1350` first; this order is what applies the answer to every arm.**
 
 **Acceptance:** every crypto run record in `factory/runs/pilot/**` treats financing the same way, and
-each states `financing_deducted.tester_swap_charged` and a dated `swap_mode_probe` so the two charges
-can never be confused again — at which point `check_pilot_acceptance` item 10 goes green by reading,
+each states `financing_deducted.tester_swap_charged` and a `swap_mode_probe` that is a **reference to
+a dated probe record** (`factory/runs/pilot/swap_probe/*.jsonl`), **not a copy of its contents** — a
+rate copied into every run record is a second store of the same fact and drifts, which is the debt
+`ORDER-1330` is already made of — so the two charges can never be confused again — at which point `check_pilot_acceptance` item 10 goes green by reading,
 with no edit to the checker (case `F1` already proves that path).
 
 After `ORDER-1250` the report is **6 PASS · 0 FAIL · 8 BLOCKED (1 awaiting evidence, 7
