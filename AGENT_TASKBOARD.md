@@ -244,6 +244,59 @@ from 0.5 % to a PF crossing 1.0, not ±2–3 %.
 
 ---
 
+## ORDER-1360 — [guards] The handoff contract cannot see a single handoff this project actually writes — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Opened 2026-08-04 by lane `S-2026-08-04-CORRECT5B`, out of its own reserved block. The previous
+> lane found it while writing its handoff and deliberately did **not** open it: its ledger row
+> declared *"expects to open no new order"*, and quietly opening one out of a block reserved on
+> that declaration is the scope drift the ledger exists to prevent. The finding is theirs; the
+> measurement below and the number are this lane's.
+
+**`check_handoff_contract.ps1` triggers on `_triage/HANDOFF*.md` and `_triage/SESSION_HANDOFF*.md`
+(`$HandoffPathRegex`, its own §22). Every handoff this project has written for months is
+`_triage/PROMPT_NEXT_SESSION_*.md`.** Measured: committing `PROMPT_NEXT_SESSION_CORRECTIONS_5.md`
+printed `[handoff-contract] no added/modified handoff staged -- pass (no-op)`. The routing block at
+the bottom of that file was written **to the contract** and nothing validated it.
+
+This is `ORDER-1310` #7 one directory over: **a guard that is not on the commit path of the thing
+it governs.** It is the more dangerous half of that shape, because the guard is not silent — it
+prints a PASS.
+
+### 🔴 It is NOT a one-line fix, and here is the number that says so
+
+Widening the pattern subjects every existing `PROMPT_NEXT_SESSION_*.md` to the contract.
+**Measured at `df8d3ffc` over the tracked set:**
+
+| tracked `_triage/PROMPT_NEXT_SESSION*.md` | carry a `<!-- HANDOFF-ROUTING -->` block | do not |
+|---|---|---|
+| **27** | **8** | **19** |
+
+The 19 include **`PROMPT_NEXT_SESSION_S13H.md`, written this morning**, and all four earlier
+`CORRECTIONS` files. So a naive widening reddens the next commit that touches any of nineteen
+files, most of which nobody is going to edit again — which is how a guard teaches people to reach
+for `--no-verify` (`feedback-audit-rule-rationale-not-compliance`).
+
+### What the repair has to decide (and it is a real choice, not a detail)
+
+1. **Scope the trigger to newly-ADDED files.** The guard already reads the status letter, so `A`
+   vs `M` is available. New handoffs are held to the contract; the 19 legacy ones are not, and are
+   never touched again. Cheapest, and it leaves the existing 19 unvalidated forever.
+2. **Widen, and back-fill routing blocks into the 19.** Honest, and it is 19 files of invented
+   routing — a routing block written after the fact, by someone who did not run the session, is a
+   fabricated record of where work went. **This one is worse than it looks.**
+3. **Widen, with the 19 as a CLOSED declared exemption list** (not a date rule, not a glob):
+   `citation-guard-satisfied-by-a-universal-file`'s lesson is that an exemption must be a closed
+   declaration. The list shrinks only as files are archived.
+
+**Acceptance:** the guard must FIRE on a `PROMPT_NEXT_SESSION_*.md` with no routing block and a
+`PROMPT_NEXT_SESSION_*.md` whose routing points at an order that does not exist (the two things it
+already checks for `HANDOFF*.md`), **and** the commit that lands it must be green over the whole
+repo without any file being edited to make it so. Whichever option is taken, the cage
+(`run_handoff_contract_tests.ps1`) gets a case per branch, and the 🚫 that matters: **do not fix
+this by narrowing what the contract requires.**
+
+---
+
 ## ORDER-1350 — [factory/S13] 🔴 The tester IS charging BTCUSD swap, so every crypto record deducts the financing a second time — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Opened 2026-08-04 by lane `S-2026-08-04-S13G`, found while executing `ORDER-1330` item 3 — the
@@ -1823,7 +1876,93 @@ that is the design question underneath it, and a 24h window would only move the 
 
 ---
 
-## ORDER-1260 — [factory/S10] Five verified defects from the first independent audit of the money path: a candidate can be built on another strategy's evidence — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1260 — [factory/S10] Five verified defects from the first independent audit of the money path: a candidate can be built on another strategy's evidence — ✅ **DONE 2026-08-04** (lane `S-2026-08-04-CORRECT5B`, `df8d3ffc`) — **all six closed, each reproduced at HEAD first and each carrying its control** · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+### ✅ CLOSED 2026-08-04 — the before/after, measured on the pre-repair revision
+
+Reproduction harness = five probes with their controls, driven against `df8d3ffc~1` before a line
+was written. 🎯 **Two of the six probes were WRONG on the first run and said so loudly** — `#1`
+fired `C8` because the probe mutated a payload without recomputing its digest, `#3` fired `A1`
+because it used an `attest_state` the enum does not have. **A probe that fails for the wrong
+reason is not evidence either way**, and both were rebuilt before anything was believed.
+
+| # | at HEAD | its control at HEAD | after |
+|---|---|---|---|
+| **1** | EURUSD/M15 manifest citing XAUUSD/H4 runs on another expert → **`[]`** | a mismatched **lane** IS caught, so C9 was live | **REFUSED** on `tf`, `ex5_hash`, `effective_config_hash`, each attributable on its own |
+| **2** | `ATTEST_STATE_CHANGED` · `FROZEN` · `RETIRED` each moved the candidate → **`[]`** | `OBSERVED` moving it was refused | all three **REFUSED**, enumerated over every non-assignment type |
+| **3** | a `candidate_id` **edited in place** → `verify_log() == []`, `fold()` returned the new candidate | the untouched log replays clean | **REFUSED** at the line after the edit |
+| **4** | a **fourth** legacy row reusing the cutover oid passed all three checks against the real 60-row store | the same row at a **different** commit was refused | **REFUSED** by `M7`; the real store still passes |
+| **5** | 3 ACTIVE rows in → **1 out**, no refusal, no count | — | **REFUSED**; non-running rows still dropped in silence; the real file still reads 63 rows |
+| **6** | one `allocate()` row failed `--check` **twice over** | the store as committed passed | `--check` **accepts** it, and still refuses all four drift shapes |
+
+**#1 — the binding was on the wrong noun.** `C9` bound `lane`, `data_fingerprint` and `model`:
+everything a `MetricRef` **carries**, which are facts about the METRIC and say nothing about
+whether the run was a run of THIS candidate. `C9b` now binds **payload → ExecutionKey** through a
+named pair table, *written as pairs rather than matched by field name* — the two vocabularies
+spell three of them differently (`ex5_sha256`/`ex5_hash`), so a name-matching loop would have
+bound `tf` and silently skipped **the binary**, which is the field that distinguishes one strategy
+from another. `C9c` adds cross-run agreement on `symbol` and `expert`, which catches evidence
+**stitched** from two instruments.
+🔴 **STATED LIMIT, pinned as a passing case rather than left in a comment:** `logical_symbol` is
+**not** bound to the key's `symbol`. Resolving one to the other needs `LogicalSymbol.broker_map`
+keyed by lane and **no such store exists in this repo** — only schema fixtures. A prefix heuristic
+would be a rule wearing an exemption's clothes. So evidence **uniformly** from the wrong
+instrument is still accepted, `ex5_hash` narrows it to *the same binary on another symbol*, and
+the case saying so is where the resolver's author will find a failing assertion instead of nothing.
+
+**#2 — a rule written on one value of an axis the docstring describes correctly.** The severity is
+**semantic, not unauthorized**: `A3` still demanded a human ref, so a human signed something — a
+freeze, or a retirement — and what happened was a reassignment. `RETIRED` is the sharpest, because
+`A7` then refuses every event that could correct it. Now on `CANDIDATE_MOVING_EVENT_TYPES`, with
+the **partition asserted**, so a seventh event type is a decision someone takes rather than a
+default. Controls: an authorized `CANDIDATE_REASSIGNED` still moves it, and an event that
+**repeats** the current candidate is not a move.
+
+**#3 — replay cannot see a content edit, and nothing in the file made the docstring true.** An
+edited event is still a well-formed event in a well-ordered log, so `A1`-`A7` are as satisfied by
+the forgery as by the original. `A8` chains events on `prev_hash` over the previous line's
+canonical bytes — the same bytes `append_event` writes.
+🔴 **The limit is stated and pinned**, because a tamper-evidence claim is the kind that gets
+over-read: the chain protects every event that **has a successor**. Editing the **last** line
+breaks no link, and nothing inside a file can notice a change to its own end — that needs the head
+pinned elsewhere. `append_event` **stamps** the link when the caller omits it and **refuses** one
+the caller got wrong rather than silently correcting it.
+
+**#4 — M6 binds WHEN, and reusing an oid costs nothing: it is copied out of the file being
+attacked.** `M7` binds **WHICH**, against a declaration. The three magics were named in **prose in
+four places and derived in none**, so the set is read from the one that is machine-readable and
+already carries the user decision — `MagicAllocation.x-legacy-exception-set` in `schemas.json`.
+Retyping them in `magic.py` would have been a fifth copy, and **a case asserts `M7`'s own body
+names none of them**. With no declaration supplied the criterion **says it was skipped**.
+
+**#5 — a docstring that described the file on one day, inside the module that owns global
+uniqueness for a real-money magic.** *"This drops exactly the rows with no magic and nothing
+else"* was never a property the filter enforced. A row is now dropped only when its status says
+nothing is running. ⚠️ **`INVENTORY_RUNNING_STATUSES` was measured against the real file BEFORE it
+was armed**, because a new refusal on the commit path is the `ORDER-1310` #6 shape: 64 rows —
+ACTIVE 58 / REMOVED 5 / UNVERIFIED 1 — and **the single non-numeric magic sits on the UNVERIFIED
+row**. It arms on 58 rows and refuses none today. `UNVERIFIED` is the declared exemption, and
+`check_state.ps1` already gives the word that meaning one check along. The PowerShell half is
+repaired too: an ACTIVE row with an unreadable magic is now its own named check.
+
+**#6 — a guard whose only compliant paths were lying or editing around it**
+(`feedback-audit-rule-rationale-not-compliance`). `--check` now compares what the inventory
+**determines**, row by row, with one declared exemption: a GLOBAL row for a magic on no account is
+a **reservation**, which is what an allocator is for. The "one commit" rule stays where it belongs
+— on the LEGACY rows, in `M6`. **The success line was rewritten too**: it claimed a byte-identical
+regeneration that no longer happens, and a success message describing a comparison nobody performs
+is exactly how #5's docstring got where it did.
+
+🎯 **The suite's criterion roll-up was three hand-written counts** (`C` 10, `A` 7, `M` 6), so `A8`
+and `M7` would have been reported as ids *"the modules do not have"* while the modules were
+emitting them. It now derives the universe from the three modules' sources.
+
+**Measured after:** S10 green with the new PART 6 · S11 · S12 · S13 · `run_schema_cages` ·
+`run_s2a_cages` · `run_registry_tests` — all through the `.ps1` wrappers, all exit 0.
+`check_state.ps1` **CLEAN**. `run_s2a_conformance` **68/0**, so no BUNDLE member moved and **no
+owner signature is owed**.
+
+### The audit's original table, kept for the record
 
 Full evidence + controls = `_triage/factory_os/CODEX_AUDIT_S10_2026-08-03.md`. Brief =
 `CODEX_S10_AUDIT_BRIEF.md`, committed **before** the audit ran. Reproduction harness =
