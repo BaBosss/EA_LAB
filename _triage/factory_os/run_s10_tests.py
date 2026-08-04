@@ -50,6 +50,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import attestation as A                                                    # noqa: E402
 import candidate as C                                                      # noqa: E402
+import gen_magic_allocations as G                                          # noqa: E402
 import magic as M                                                          # noqa: E402
 import preset as P                                                         # noqa: E402
 import scheduler as S                                                      # noqa: E402
@@ -1056,6 +1057,26 @@ def part5_the_other_half():
 # documented allocation path unusable. EVERY ONE WAS REPRODUCED AT HEAD BEFORE IT WAS TOUCHED,
 # and every repair below carries the control that a rule which simply refuses MORE would fail.
 # =============================================================================================
+def _quiet_check(argv):
+    """Drive gen_magic_allocations.main in-process with BOTH streams captured, and return its
+    exit code.
+
+    STDERR IS CAPTURED TOO, AND THAT IS NOT TIDINESS. The `.ps1` wrappers run under
+    `$ErrorActionPreference='Stop'`, where ANY stderr from a native command is a thrown error --
+    so a case that lets a refusal reach stderr turns the whole suite red while python exits 0.
+    Caught exactly that way here: the first version of the exit-2 case below was green under
+    `python run_s10_tests.py` and red under `run_s10_tests.ps1`. Same shape as ORDER-1267's
+    backed-out stderr notice, and the reason the standing rule says to run the wrapper.
+    """
+    out, err = io.StringIO(), io.StringIO()
+    saved_out, saved_err = sys.stdout, sys.stderr
+    sys.stdout, sys.stderr = out, err
+    try:
+        return G.main(argv)
+    finally:
+        sys.stdout, sys.stderr = saved_out, saved_err
+
+
 def part6_order_1260():
     sys.stdout.write('\nPART 6 -- ORDER-1260: the money path, each repair with its control\n')
 
@@ -1185,6 +1206,15 @@ def part6_order_1260():
         A.append_event(p, second)
         accepts('append_event STAMPS the link, and what it wrote replays clean',
                 A.verify_log(A.read_log(p)))
+        # /scrutinize of this order's own work: the chain must survive the ONE round trip this
+        # repo is known to do to JSON numbers. `pair_key` documents it a screen above A8 --
+        # PowerShell hands back 991001.0 where 991001 went in -- and without normalisation the
+        # hash moves and A8 says "a line before it was EDITED" about a file nobody touched.
+        as_float = copy.deepcopy(A.read_log(p))
+        for row in as_float:
+            row['magic'] = float(row['magic'])
+        accepts('the chain survives a magic round-tripped to 991001.0 (PowerShell\'s spelling)',
+                A.verify_log(as_float))
         bad = _event('OBSERVED', 'automation', event_id='ATT-20260802-003',
                      at='2026-08-02T03:00:00Z', attest_state='HASHED',
                      prev_hash=A.GENESIS_PREV_HASH)
@@ -1269,19 +1299,13 @@ def part6_order_1260():
     #    Measured at HEAD: appending ONE allocate() row to the real store failed --check twice
     #    over -- on "the store records 2 cutover commits" and on byte-identical regeneration --
     #    so the only compliant paths left were a hand-edit or a false cutover provenance.
-    import gen_magic_allocations as G
     real_inv = M.read_inventory(M.inventory_path(ROOT))
     tmp = tempfile.mkdtemp(prefix='s10_alloc_')
     try:
         def check_over(rows):
             p = os.path.join(tmp, 'store-%d.jsonl' % len(os.listdir(tmp)))
             io.open(p, 'w', encoding='utf-8', newline='\n').write(G.render(rows))
-            out = io.StringIO()
-            saved, sys.stdout = sys.stdout, out
-            try:
-                return G.main(['--check', '--root=' + ROOT, '--store=' + p])
-            finally:
-                sys.stdout = saved
+            return _quiet_check(['--check', '--root=' + ROOT, '--store=' + p])
         allocated = M.allocate(real, real_inv, 'd' * 40)
         check('--check accepts a GLOBAL reservation made by allocate() at TODAY\'s commit',
               check_over(real + [allocated]) == 0,
@@ -1303,6 +1327,46 @@ def part6_order_1260():
                       legacy_accounts=['1', '2'], imported_in_cutover=True)
         check('CONTROL: --check still refuses a non-GLOBAL row for a magic on no account',
               check_over(real + [orphan]) == 1)
+
+        # /scrutinize of this order's own work. Replacing a BYTE-IDENTICAL comparison with a
+        # field list narrows what is checked, and the first version of that list omitted
+        # `status`: a deployed magic flipped to RETIRED in the store passed --check, measured.
+        # design 4.6 cares about that one specifically -- a RETIRED magic is never re-issued, so
+        # a RETIRED row for a magic on a live account is the store disagreeing with reality.
+        retired = copy.deepcopy(real)
+        for r in retired:
+            if S.normalize_numbers(r['magic']) == 991001:
+                r['status'] = 'RETIRED'
+        check('--check refuses a DEPLOYED magic whose store row says RETIRED',
+              check_over(retired) == 1,
+              'the field list narrowed the comparison and nobody wrote down which fields it lost')
+        # ...and the specificity half of that narrowing: `allocated_to` is deliberately NOT
+        # compared, because a live allocation may be bound to a candidate the inventory knows
+        # nothing about. This case is what makes that a DECLARED exemption rather than a gap.
+        bound = copy.deepcopy(real)
+        for r in bound:
+            if S.normalize_numbers(r['magic']) == 992017:
+                r['allocated_to'] = 'CAND-' + '0' * 12
+        check('CONTROL: --check accepts a candidate binding, which the inventory cannot know about',
+              check_over(bound) == 0)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # -- the CLI contract for unreadable input. /scrutinize of this order's own work: #5 turned
+    #    `read_inventory` into a function that REFUSES, and gen_magic_allocations caught only the
+    #    two IO errors -- so an ACTIVE row with an unreadable magic came out as a traceback with
+    #    python's default exit 1, which that tool's header reserves for DRIFT. It blamed the store
+    #    for a defect in the inventory. Reproduced before the fix.
+    tmp = tempfile.mkdtemp(prefix='s10_exit_')
+    try:
+        inv = os.path.join(tmp, 'DEPLOYMENTS.csv')
+        io.open(inv, 'w', encoding='utf-8').write(
+            'account,ea_name,magic,symbol,status,judge_date\n'
+            '159503454,X,991001,XAUUSD,ACTIVE,2026-10-09\n'
+            '159503454,Y,,XAUUSD,ACTIVE,2026-10-09\n')
+        code = _quiet_check(['--check', '--root=' + ROOT, '--inventory=' + inv])
+        check('an unreadable INVENTORY exits 2 (cannot read), never 1 (drift in the store)',
+              code == 2, 'got %r -- exit 1 names the wrong file' % code)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

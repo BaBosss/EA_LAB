@@ -70,6 +70,15 @@ def main(argv):
     except (IOError, OSError) as exc:
         sys.stderr.write('cannot read %s: %s\n' % (inv, exc))
         return 2
+    except M.Refused as exc:
+        # ORDER-1260 #5 made `read_inventory` a function that can REFUSE, and this caller caught
+        # only the two IO errors -- so an ACTIVE row with an unreadable magic came out of here as
+        # an unhandled traceback with python's default exit 1, which this tool's own header
+        # reserves for DRIFT. Reproduced before this line was written: `--check` over such an
+        # inventory printed a traceback and returned 1, i.e. it blamed the STORE for a defect in
+        # the INVENTORY. 2 is the code the header declares for input that cannot be read.
+        sys.stderr.write('REFUSED %s: %s\n' % (inv, exc))
+        return 2
 
     if 'apply' in flags:
         if os.path.exists(store):
@@ -131,10 +140,21 @@ def main(argv):
         if got_row is None:
             drift.append('magic %s is in %s and the store does not know it' % (m, M.INVENTORY_REL))
             continue
-        # Compare everything the inventory determines. `allocated_at_commit` is deliberately NOT
-        # compared: it is the historical read-point, which is exactly what must not follow HEAD
-        # (memory `drift-guard-regenerating-against-head`).
-        for f in ('scope', 'legacy_exception', 'legacy_accounts', 'imported_in_cutover'):
+        # Compare everything the inventory determines -- AND SAY WHICH TWO FIELDS IT DOES NOT,
+        # because replacing a byte-identical comparison with a field list narrows what is checked
+        # and a narrowing nobody wrote down is indistinguishable from an oversight. Found by
+        # scrutinising this very change: the first version of this list omitted `status`, and a
+        # deployed magic flipped to `RETIRED` in the store passed --check. That is a contradiction
+        # design 4.6 cares about specifically -- a RETIRED magic is never re-issued, so a RETIRED
+        # row for a magic that is on a live account today is the store disagreeing with reality.
+        #
+        # THE TWO THAT ARE DELIBERATELY NOT COMPARED, each with its reason:
+        #   allocated_at_commit -- the historical read-point. Comparing it would demand the store
+        #       follow HEAD, which is memory `drift-guard-regenerating-against-head` exactly.
+        #   allocated_to        -- a live allocation may be bound to a candidate the inventory
+        #       knows nothing about; `cutover_import` always writes None, so comparing it would
+        #       refuse every candidate binding this system exists to record.
+        for f in ('scope', 'status', 'legacy_exception', 'legacy_accounts', 'imported_in_cutover'):
             if want_row.get(f) != got_row.get(f):
                 drift.append('magic %s: the store says %s=%r, the inventory implies %r'
                              % (m, f, got_row.get(f), want_row.get(f)))

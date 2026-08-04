@@ -93,8 +93,15 @@ def event_hash(event):
     Hashing the canonical serialization rather than a chosen subset of fields is the point: a
     chain that covered only the fields someone thought were important would be silent about the
     ones they did not, which is the defect this exists to close, one level up.
+
+    `normalize_numbers` FIRST, for the reason `pair_key` gives one screen up: JSON round-tripped
+    through PowerShell comes back with `991001.0` where `991001` went in. Without this, that trip
+    changes the hash and A8 reports "a line before it was EDITED" about a file nobody touched --
+    a FALSE POSITIVE, which is the safe direction to fail but the wrong thing to tell someone
+    hunting a forgery. Measured before adding it: the two spellings hashed differently.
     """
-    return hashlib.sha256(S.canonical(event).encode('utf-8')).hexdigest()
+    return hashlib.sha256(
+        S.canonical(S.normalize_numbers(event)).encode('utf-8')).hexdigest()
 
 
 def chain_head(events):
