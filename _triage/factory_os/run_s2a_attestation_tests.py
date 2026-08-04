@@ -988,6 +988,46 @@ def main():
             print('        -> template_asks=%s checker_demands=%s' % (template_asks, checker_demands))
             bad += 1
 
+        # ORDER-1310 #4: THE AGREEMENT MUST HOLD IN THE OTHER DIRECTION TOO, and the case above
+        # only ever exercised "neither asks". MEASURED on the pre-ORDER-1310-#1 revision with this
+        # exact fixture: check() emitted F7 and F2 while `--template` exited 0 with NO
+        # acknowledgement -- the owner handed a skeleton that would not satisfy the checker, which
+        # is the deadlock of ORDER-1269 #2 pointing the other way. It is CLOSED BY #1 rather than
+        # by a repair of its own: a section claim binding a foreign file no longer names the
+        # section the destination store declares, so the exemption is not granted on either
+        # surface. This case exists so that stays true -- a later narrowing of
+        # `declared_owner_section` reopens it silently otherwise.
+        _foreign = good(expected_post_state=_derived_section_eps('AGENT_TASKBOARD.md'))
+        _saved_path, _saved_notes4 = att.ATTESTATION_PATH, chk.pin_vintage_notes
+        _fd4, _tmp4 = tempfile.mkstemp(suffix='.jsonl')
+        try:
+            with os.fdopen(_fd4, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(json.dumps(_foreign, sort_keys=True) + '\n')
+            att.ATTESTATION_PATH = _tmp4
+            chk.pin_vintage_notes = lambda rows: [{'path': pin_path, 'kind': 'STALE'}]
+            _buf4 = io.StringIO()
+            with contextlib.redirect_stdout(_buf4):
+                _rc4 = att.main(['--template'])
+            _tline4 = json.loads([l for l in _buf4.getvalue().splitlines() if l.startswith('{')][0])
+        finally:
+            att.ATTESTATION_PATH = _saved_path
+            chk.pin_vintage_notes = _saved_notes4
+            try:
+                os.unlink(_tmp4)
+            except OSError:
+                pass
+        _, _probs4 = run_with([_foreign], [STALE_NOTE])
+        _asks4 = _tline4.get('stale_pin_acknowledged') is True
+        _demands4 = 'pin is STALE' in _probs4
+        ok = _rc4 == 0 and _asks4 and _demands4
+        print('  [%s] AGREEMENT (other direction) with a post-state binding a FOREIGN file, BOTH '
+              'surfaces ask' % ('OK ' if ok else 'BAD'))
+        if not ok:
+            print('        -> rc=%s template_asks=%s checker_demands=%s (%s)'
+                  % (_rc4, _asks4, _demands4,
+                     _probs4.split('\n')[0] if _probs4 else 'NO PROBLEM AT ALL'))
+            bad += 1
+
     after = (io.open(att.ATTESTATION_PATH, encoding='utf-8').read()
              if os.path.exists(att.ATTESTATION_PATH) else None)
     if after != before:
