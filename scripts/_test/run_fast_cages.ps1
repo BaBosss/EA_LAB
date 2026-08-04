@@ -1256,6 +1256,17 @@ $SUITE_GUARDS = @{
                                           'scripts/_test/run_fast_cages.ps1',
                                           '_triage/factory_os/check_wrapper_gen.py',
                                           '_triage/factory_os/check_param_surface.py',
+                                          # ORDER-1256 (lane S13H) added `import scheduler` to
+                                          # check_pilot_acceptance.py and did not declare it, so
+                                          # PART 4b went red and stayed red -- a commit touching
+                                          # only scheduler.py would have run no cage at all. The
+                                          # guard is right and this is the whole fix: it is the
+                                          # same transitive-import case as check_param_surface
+                                          # three lines up. Declared here by lane CORRECT6, which
+                                          # did not write the import, because every lane in the
+                                          # ledger reads CLOSED and a red gate blocks whoever
+                                          # opens next.
+                                          '_triage/factory_os/scheduler.py',
                                           '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/preset.py',
                                           '_triage/factory_os/registry.py',
