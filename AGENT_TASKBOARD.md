@@ -9462,6 +9462,53 @@ than sampling can explain — that is a different configuration or a different l
 2.20 is what un-parked this order in the first place. Do not average them and do not pick the
 friendlier one.
 
+### ✅ HOST SEARCH — this row''s own named next step, executed 2026-08-04 (lane `S-2026-08-04-QUOTA4`)
+
+CTRL only: `B14_AB_off.set` unchanged on every symbol, `Boss_14_GridLog` H4→H1, **Model 4**, lane
+`D:\Meta 5b`, leverage `1:100` on every run. Ten runs; the worker completed all ten and then blew its
+own context window writing the summary, so every row was already on disk — it was told to append each
+row the moment it parsed, after a worker died holding results the previous batch. Parsed by the lead
+seat with the repo-pinned interpreter.
+
+| symbol | MAIN PF | trades | DD% | BWD PF | trades | DD% |
+|---|---|---|---|---|---|---|
+| **EURJPY** | **1.82** | 184 | 7.13 | **1.06** | **498** | 16.79 |
+| GBPJPY | 1.35 | 334 | 12.00 | **0.15** | **40** | 24.97 |
+| CADJPY | 1.14 | 408 | 16.94 | 1.12 | 364 | 17.02 |
+| USDJPY | 0.97 | 274 | 13.18 | 1.28 | 316 | 10.14 |
+| EURUSD | 0.95 | 327 | 21.44 | 0.87 | 188 | 13.92 |
+| AUDCAD† | 0.93 | 213 | 10.59 | 1.44 | 146 | 5.35 |
+| XAUUSD† | 0.95 | 237 | 6.90 | 2.28 | 53 | 2.78 |
+
+<sub>† measured the same evening, same set, same lane, in the ORDER-236 STEP 2 blocks above.</sub>
+
+**🔴 READ NOTHING IN THIS TABLE BEFORE READING THIS: every row is LONG-ONLY.** Measured, not assumed —
+`short_trades = 0` on all four reports checked (`USDJPY` 274/0, `EURJPY` 184/0, `CADJPY` 408/0,
+`GBPJPY` BWD 40/0), and `B14_AB_off.set` carries `TradeDir=60`. So this is a long-only screen, and on
+JPY crosses across both windows that is substantially a **bet on yen weakness**, not a demonstration
+of a symmetric edge. ⚠️ **The same caveat applies retroactively to `ORDER-430`'s seven-symbol screen
+and to both STEP 2 blocks above** — they all ran this set. Nobody has yet measured what this chassis
+does with shorts enabled on any of these symbols.
+
+**🎯 EURJPY is the only host clearing MAIN ≥ 1.20 AND BWD ≥ 1.00 with real participation** — and it
+does so on an untouched control set that has never been optimized on this symbol.
+
+**🔴 AND IT IS CONCRETE EVIDENCE FOR THE `PENDING-RATIFY(user)` NOTE IN `CLAUDE.md`.** `ORDER-430`
+qualified `XAUUSD` (BWD **2.29 on 52 trades**) and `AUDCAD` (**2.20 on 62**), and this order was
+re-pointed at XAUUSD on that basis. `EURJPY` clears the same gate on **498 trades**. The two hosts
+`430` selected were the ones **barely in the market during the stress window**; the host that traded
+through it was not selected, because `n ≥ 30` cannot tell those apart. This is the participation-floor
+argument with numbers attached, and it is a second, independent instance after the one that produced
+the note. 🚫 It does not retroactively unqualify `430` — its bar was pre-registered and met.
+
+**⚠️ `GBPJPY` BWD `0.15` on 40 trades at 24.97% DD is NOT a statement about the live leg.**
+`B14_AB_off.set` is the `ORDER-006` ISpick parity set (`_41_FixedLot=0.10`), **not** the deployed
+GBPJPY configuration. Anyone wanting to say something about the live leg must run the config that is
+actually deployed. Same caveat as the AUDNZD reading in this row's earlier block, for the same reason.
+
+**Not done here:** no verdict, no selection, no re-point of this order. The long-only finding has to
+be settled first — a host chosen from a long-only screen is a host chosen on half the evidence.
+
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
