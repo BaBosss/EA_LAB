@@ -1555,8 +1555,62 @@ the code, not a flag. Both are the stronger shape. The failure is in **recognisi
 
 ---
 
+## ORDER-1380 — [factory/S10+S12] Two review findings with no home: an assignment with no lifecycle rule, and "ever delivered" inferred from a recording transport — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Opened 2026-08-04 by lane `S-2026-08-04-CORRECT6` out of its own block, for the two findings of
+> the independent review that are **real, reproduced, and not inside any existing order's subject**.
+> The other ten were fixed in `fec31b69` or handed to `ORDER-1266`.
+
+**1 · 🟠 `CANDIDATE_ASSIGNED` and `CANDIDATE_REASSIGNED` have no invariants that distinguish them.**
+`ORDER-1260` #2 established WHICH event types may move a candidate. It did not establish what each
+of the two means. Measured: an authorized `CANDIDATE_REASSIGNED(B)` on an **empty history**
+validates (a reassignment of nothing), a `CANDIDATE_ASSIGNED(B)` **after** the pair is already on
+candidate A validates (a first assignment onto something already assigned), and either event with
+`candidate_id: null` validates (a move to nowhere). The actor matrix is otherwise correct —
+automation can write neither. `attestation.py:247`.
+**The shape of the answer, so it is not re-derived:** the fold already knows the current
+`candidate_id`, so ASSIGNED means *current is None* and REASSIGNED means *current is not None and
+differs*. That is two lines and no new state. What it needs first is a decision on whether a
+re-`ASSIGNED` to the SAME candidate is an error or a harmless restatement.
+
+**2 · 🟡 `UNCONFIGURED_REGRESSION` infers "was configured" from any past `DELIVERED`, including a
+`RecordingTransport` one.** `ORDER-1261` #6 splits *"the owner has not made the bot yet"* from
+*"the credential that was working is gone"* by asking whether the channel has ever delivered. A
+`--record` run writes `DELIVERED` through `RecordingTransport` **without any credential existing**,
+so a later real run reports a regression that never happened. And the converse: a torn or archived
+historical delivery gives a false `UNCONFIGURED`, which is the muted one. `notifier.py:1020` ·
+`:1200`.
+**Why it was still worth landing:** both directions are strictly better than the single value they
+replaced, and the false-positive direction is the loud one. But the inference is on the wrong fact
+— *"a credential existed"* is not *"a message was recorded"*. The ledger line would have to record
+the transport kind, which is a wire-contract change and therefore its own decision.
+
+🚫 Do not fix #2 by dropping the split back to one outcome. 🚫 Do not fix #1 by adding a state to
+the event enum — the fold already carries what both rules need.
+
+---
+
 ## ORDER-1266 — [factory/S6] The effective-config fingerprint is broken in both directions, and one of them is asserted by its own cage — `OPEN — 2 of 7 REPAIRED, 5 MEASURED and left OPEN with reasons` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
 
+> ### 🆕 AN EIGHTH, HANDED HERE 2026-08-04 BY AN INDEPENDENT REVIEW — measured, not repaired
+>
+> An independent review of `ORDER-1260`'s work (lane `S-2026-08-04-CORRECT6`) landed a finding
+> whose subject is **this order**, not that one, so it is recorded here rather than fixed there.
+>
+> **A candidate's `parameters` can change VALUE while its `effective_config_hash` stays put, and
+> everything validates.** Reproduced: take a valid manifest, change one parameter's value, keep
+> the old `effective_config_hash` and the same cited runs, recompute `candidate_digest` and
+> `candidate_id` — `validate_manifest` returns **`[]`**. `C10` checks the parameter **key set**
+> against the build's declared surface and never its **values**; `C9b` compares the payload's
+> `effective_config_hash` against the run's, and both sides of that comparison are the number the
+> manifest supplied. **Nothing anywhere recomputes the hash from the parameters it names.**
+>
+> That is this row's own subject — *"broken in both directions"* — reached from the candidate side
+> instead of the preset side. 🚫 **Not repaired by that lane deliberately:** closing it means
+> defining the hash recipe, and #1/#3/#5 on this row are already about what belongs in the
+> preimage and in what order. Fixing it from the candidate end first would pin a recipe this order
+> has not decided yet.
+>
 > ### 📋 PROGRESS 2026-08-03, lane `S-2026-08-03-CORRECT2`. Every one of the seven was re-measured at HEAD FIRST, as this order's own closing line asks.
 >
 > | # | measured at HEAD | state |
