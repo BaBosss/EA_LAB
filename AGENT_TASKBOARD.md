@@ -9613,6 +9613,47 @@ actually deployed. Same caveat as the AUDNZD reading in this row's earlier block
 **Not done here:** no verdict, no selection, no re-point of this order. The long-only finding has to
 be settled first — a host chosen from a long-only screen is a host chosen on half the evidence.
 
+### ✅ STEP 2 on EURJPY — the host that actually qualified. **All three lever cells fail.** (2026-08-04)
+
+Run directly by the lead seat (Model 4 outlasts the delegated tier), lane `D:\Meta 5b`, `Boss_14_GridLog`
+H1, `1:100`, the same four unmodified `.set` files. Inputs read back from all four MAIN reports:
+`CTRL` 0/false/0 · `A` 0/true/1 · `B` 4/false/0 · `AB` 4/true/1 — four distinct configurations.
+
+| cell | MAIN PF | trades | DD% | net | BWD PF | trades | DD% | net |
+|---|---|---|---|---|---|---|---|---|
+| **CTRL** | 1.82 | 184 | 7.13 | +2344.20 | **1.06** | 498 | 16.79 | **+567.24** |
+| **A** regime gate | 1.56 | 156 | 5.28 | +1467.12 | **0.76** | 221 | **24.28** | −1450.19 |
+| **B** PA engulf | 1.80 | 117 | 6.18 | +1835.42 | **0.90** | 170 | 12.57 | −530.28 |
+| **AB** | **2.51** | **70** | 3.54 | +1483.58 | **0.96** | 78 | 6.28 | −77.76 |
+
+**Against this row's pre-registered bar** (delta vs a CTRL re-run in the same lane · *dead* = worse on
+either window): **A worse on both · B worse on both · AB better on MAIN, worse on BWD ⇒ all three land
+in `dead`.** Measured on the host with the strongest qualification in the whole family.
+
+**🔴 The finding is larger than "they failed": every lever converts a surviving BWD into a loss.**
+CTRL earns `+567` through the stress window. `A` → `−1450`, `B` → `−530`, `AB` → `−78`. And the
+**regime gate makes stress-window drawdown WORSE, 16.79% → 24.28%** — the opposite of the thing a
+regime gate exists to do. That is a statement about the lever, not about this symbol.
+
+**🔴 `AB` MAIN `2.51` is the third participation trap of the same evening, and the most seductive.**
+It is not trading better; it is **trading 62% less** — 184 trades → 70. Read `2.51` and `70` together
+or not at all. Its BWD sits on 78 trades.
+
+**Also settled by this run:** `B` is **not inert on EURJPY** (117 trades vs CTRL's 184), exactly as on
+AUDCAD and unlike XAUUSD. Three hosts now agree: `CONF_PA_ENGULF` fires normally, and the XAUUSD
+result was a gate that **never triggered** — not an inert lever.
+
+**⚠️ What this run cannot say.** All four `.set` files carry `TradeDir=60` and every row is
+`short_trades = 0`. These are long-only measurements on a long-only host qualification. Nobody has
+measured this chassis with shorts enabled, and until someone does, every conclusion here is about
+half of the system.
+
+**🚫 Not declared DEAD-OPTIMIZED, and deliberately.** The lever pair has now been measured on **three
+hosts** (XAUUSD: never fired · AUDCAD: `dead`/`กลาง` · EURJPY: `dead` ×3) and has never once passed.
+That is the shape of a terminal state — but `DEAD-OPTIMIZED` must be **earned**: a full ladder plus
+the mandatory last-optimize on a lever not yet touched, and the levers themselves have never been
+swept (`_50_RegimeMode`, `_9_PA_MinBodyRatio`, `StackConfirm`'s other values are all untried). The
+honest status is: **three hosts, no pass, and the levers' own parameters never optimized.**
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
