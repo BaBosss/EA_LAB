@@ -311,6 +311,31 @@ and call the result a selection: that is `ORDER-1220` again.
 
 ## ORDER-1302 — [factory/S13] 14 of 16 cells are BOUNDARY, and "expand the grid" here means editing a `safe_range` — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
+> 🔴 **PREMISE CORRECTION 2026-08-04 (lane `S-2026-08-04-S13F`) — read this before planning any work
+> from this row.** The title and the framing below say that expanding the grid means **editing a
+> `safe_range`**, i.e. widening a safety declaration. **That is wrong**, and a recommendation was
+> made to the owner on that basis to treat a boundary as a *finding* rather than a re-run. It was
+> withdrawn before anything was ratified.
+> `_triage/factory_os/hypothesis_b14.py:151` states it in its own words: a `safe_range` is the
+> **PRE-REGISTERED STARTING GRID** for a sweep — *"not a measured optimum and not a claim that the
+> answer is inside it … a bound here is the start of that procedure, never the end of it."*
+> Ratifying "boundary = finding" would have contradicted **four** places at once: design §6.3,
+> decision 19, the `backtest-optimize-rigor` skill, and memory `grid-answer-outside-the-grid` — and
+> would have created the same design-text debt `ORDER-1300` still carries. The ranges also live in
+> `hypothesis_b14.py`, scoped to the B14 pilot: **widening them loosens nothing for any other EA.**
+>
+> **The real question, measured rather than argued.** 14 cells · **32 boundary hits** ·
+> **23 at the LOW edge (`first`), 9 at the high edge (`last`)**:
+> `_14_DistAtrMult` ×8 · `_9_StepATRmult` ×7 · `_2_BasketTP_BalPct` ×6 · `_0_ATR_Period` ×5 ·
+> `_22_TP_ATRmult` ×4 · `_14_MinDistPips` ×1 · `_H_Ratio` ×1 (**declared range is `None` — there is
+> no grid to widen there at all**).
+> 👤 **So what the owner has to settle is not *whether* to re-run, but HOW FAR DOWN to widen** —
+> because for `_9_StepATRmult` and `_2_BasketTP_BalPct` "further down" means a **tighter grid and a
+> faster take-profit, i.e. more positions and deeper martingale exposure** on an ENGINE-EDGE class.
+> **A floor must be pre-registered before the sweep**, or the expansion becomes a search for
+> leverage (memory `pyramid-depth-is-leverage-not-edge`). 🚫 Still forbidden: widening only the
+> dimensions that are cheap to widen.
+
 `ORDER-1273` item 5 / design §6.3 (decision 19): a median on the first or last grid value ⇒ **expand
 the range and re-run**, and the cell is **not closed** on it. Executed, that lands on **14 of 16
 cells** — the full per-cell list with the dimension and edge named is committed in
