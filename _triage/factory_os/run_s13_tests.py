@@ -883,6 +883,15 @@ state, detail = PA.item_scheduler_resume(journal_source(None))
 check('S6 no journal committed at all -> BLOCKED (a fixture cage is not the observation)',
       state == PA.BLOCKED and 'no resume to observe' in detail, '%s: %s' % (state, detail))
 
+# 🔴 Found by /scrutinize round 2, and S3 could not have found it: S3's journal happens to contain
+# a KILLED, and the prohibition check sat BELOW the `if not killed: continue` filter -- so it could
+# only ever fire on a journal that had already been killed, while the comment beside it said it ran
+# on every journal. Re-running completed work is a defect whether anything was killed or not.
+state, detail = PA.item_scheduler_resume(journal_source([
+    trans(1, 'QUEUED'), trans(1, 'LEASED'), trans(1, 'COMPLETED'), trans(2, 'LEASED')]))
+check('S7 SPECIFICITY an attempt after COMPLETED is caught with NO kill anywhere in the journal',
+      state == PA.FAIL and 'already COMPLETED' in detail, '%s: %s' % (state, detail))
+
 
 # =================================================================================================
 print('')

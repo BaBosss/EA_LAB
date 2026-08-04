@@ -796,6 +796,19 @@ def item_scheduler_resume(src):
         # A kill is a FAILED transition whose failure_class says so -- not any failure. The
         # distinction is the whole item: an ordinary FAILED retry is not evidence a KILLED batch
         # can be resumed.
+        # THE PROHIBITION HALF RUNS FIRST, AND ON EVERY JOURNAL. 🔴 /scrutinize round 2 caught this
+        # sitting BELOW the `if not killed: continue` filter, where it could only ever fire on a
+        # journal that had already been killed -- while the comment beside it claimed it ran on
+        # every journal. "Re-running a completed attempt" is a defect whether or not anything was
+        # ever killed, and a guard that cannot fire on the case it names is the shape this repo
+        # keeps paying for.
+        completed = [a.get('attempt') or 0 for a in attempts if a.get('transition') == 'COMPLETED']
+        if completed and any((a.get('attempt') or 0) > min(completed) for a in attempts):
+            violations.append('%s (%s) starts an attempt after attempt %d reached COMPLETED'
+                              % (rel, cell, min(completed)))
+        # A kill is a FAILED transition whose failure_class says so -- not any failure. The
+        # distinction is the whole item: an ordinary FAILED retry is not evidence a KILLED batch
+        # can be resumed.
         killed = [a for a in attempts
                   if a.get('transition') == 'FAILED' and a.get('failure_class') == 'KILLED']
         if not killed:
@@ -806,13 +819,6 @@ def item_scheduler_resume(src):
         # and the fixture below is the one that catches it.
         first_kill = min(a.get('attempt') or 0 for a in killed)
         resumed = [a for a in attempts if (a.get('attempt') or 0) > first_kill]
-        completed = [a.get('attempt') or 0 for a in attempts if a.get('transition') == 'COMPLETED']
-        # The prohibition half, and it is checked on every journal rather than only on the ones
-        # that would otherwise pass: an attempt started AFTER some attempt reached COMPLETED is
-        # exactly "re-running a completed attempt", and it is a defect wherever it appears.
-        if completed and any((a.get('attempt') or 0) > min(completed) for a in attempts):
-            violations.append('%s (%s) starts an attempt after attempt %d reached COMPLETED'
-                              % (rel, cell, min(completed)))
         if not resumed:
             continue
         if cell in pilot_ids:
