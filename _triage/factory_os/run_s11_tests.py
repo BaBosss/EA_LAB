@@ -999,6 +999,68 @@ def sp19():
             assert 'SHAPE' in str(exc), exc
 
 
+@case('SP20', 'ORDER-1310 #6', 'the spelling layer normalises the SECRET, never the text it is scanning')
+def sp20():
+    """
+    🔴 REPRODUCED AT HEAD BEFORE THIS CASE WAS WRITTEN, and this case reproduces it again.
+    ORDER-1267 #1's repair compared `_normalised(secret) in _normalised(text)`, which deletes the
+    separators inside the TEXT as well as inside the secret. The text's separators are not noise:
+    they are what keeps `00:05:00` three numbers instead of one. `open_lots=0.05` is a
+    4-character literal so `secrets_of` admits it, it normalises to `005`, and
+    `2026-08-04T00:05:00` normalises to `20260804t000500`, which contains it -- so the whole
+    projection build was refused with KNOWN_SECRET on its own timestamp. The live snapshot happens
+    not to carry that lot size, which makes it a data-dependent breaker of the daily build rather
+    than a live outage; that is a worse thing to leave than an outage, not a better one.
+
+    The three CONTROLS come first on purpose. A precision repair is the easiest kind of repair to
+    fake -- switching the layer off passes every negative in this case -- so each control asserts
+    that a form which MUST still fire still does, and two of them are chosen to fire through the
+    spelling comparison specifically rather than through the literal one.
+    """
+    lot = '0.05'
+    stamp = '2026-08-04T00:05:00'
+    doc = {'entity': 'SafeProjection', 'build_id': 'b0000000000000ff',
+           'generated_at': '2026-08-02T00:00:00', 'accounts': [], 'findings': []}
+
+    # CONTROL 1 -- every spelling ORDER-1267 #1 measured still fires. Without this the negatives
+    # below are green because the layer is dead, not because it became precise.
+    for spelling in ('9001-12233', '900 112 233', 'acct#900-11-2233', '900.112.233'):
+        assert any(h[1] == 'KNOWN_SECRET' for h in
+                   fired(sp.scan_forbidden(dict(doc, build_id=spelling), [PLANTED_ACCOUNT]))), \
+            'CONTROL: spelling %r stopped firing' % spelling
+
+    # CONTROL 2 -- the boundary is SAME-CLASS, not "not alphanumeric". A letter run abutting a
+    # digit run does not extend the number, so this must still fire; a boundary wide enough to
+    # buy the timestamp case by throwing this away would be paying with real coverage.
+    # `acct900-11-2233` and NOT `acct900112233`: the second one fires through the LITERAL
+    # comparison whatever the boundary rule is, so it could not tell a correct boundary from a
+    # too-wide one. That is exactly the non-discriminating shape ORDER-1310 #9 is about.
+    assert PLANTED_ACCOUNT not in 'acct900-11-2233'     # the literal path is blind here
+    assert any(h[1] == 'KNOWN_SECRET' for h in
+               fired(sp.scan_forbidden(dict(doc, build_id='acct900-11-2233'),
+                                       [PLANTED_ACCOUNT]))), \
+        'CONTROL: a letter-adjacent account stopped firing -- the boundary is too wide'
+
+    # CONTROL 3 -- a SHORT secret is still caught by its spelling. `0,05` is chosen because the
+    # literal comparison cannot see it, so only the spelling layer can make this pass.
+    assert lot not in '0,05'                    # the literal path is genuinely blind here
+    assert any(h[1] == 'KNOWN_SECRET' for h in
+               fired(sp.scan_forbidden(dict(doc, build_id='0,05'), [lot]))), \
+        'CONTROL: a short secret stopped being caught by its own spelling'
+
+    # THE DEFECT -- `005` inside `...000500` is a fragment of an unrelated digit run.
+    leaked = [h for h in sp.scan_forbidden(dict(doc, generated_at=stamp), [lot])
+              if h[1] == 'KNOWN_SECRET']
+    assert leaked == [], 'a normalised timestamp was read as open_lots=0.05: %s' % leaked
+
+    # ...and end to end, which is the form that actually refuses the daily build. `secrets_of`
+    # supplies `0.05` from the fixture's own magics row, so nothing here is planted by hand.
+    poisoned = snapshot()
+    poisoned['meta']['generated_at'] = stamp
+    assert lot in sp.secrets_of(poisoned), 'the fixture stopped supplying the short literal'
+    sp.assert_safe(sp.build(poisoned), sp.secrets_of(poisoned))
+
+
 @case('SP13', '7.3 dedupe', 'public ids are opaque, stable across builds, and differ per finding')
 def sp13():
     a = sp.public_id('MANDATORY_SOURCE_STALE|attestation_map')

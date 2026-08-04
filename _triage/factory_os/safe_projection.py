@@ -224,16 +224,65 @@ LAYERS_NOT_RUN = []
 
 
 def _normalised(text):
-    """Lowercased, with every non-alphanumeric removed.
+    """Lowercased, with every non-alphanumeric removed. Used to derive the SECRET's spelling,
+    never to rewrite the text being scanned -- see `_spelling_pattern` for why that distinction
+    is the whole of ORDER-1310 #6.
 
     ORDER-1267 #1: the KNOWN_SECRET layer was a bare `secret in text`, so the exact literal was
     DETECTED while `5123-4567`, `51 234 567` and `acct#5123-4567` were all CLEAN -- measured, one
     synthetic literal, at HEAD. Formatting is the cheapest possible evasion and it is the one a
-    human doing the leaking would reach for by accident, not by malice. Comparing normalised
-    forms answers every spelling at once instead of chasing separators one at a time, which is the
-    lesson ORDER-1266 #2 paid for with `OverflowError` and then `ValueError`.
+    human doing the leaking would reach for by accident, not by malice.
     """
     return re.sub(r'[^0-9a-z]', '', str(text).lower())
+
+
+# ORDER-1310 #6. One compiled pattern per DISTINCT secret, not one per (secret, node) pair. The
+# repaired layer used to rebuild `_normalised(secret)` inside the walk loop, once for every node.
+_SPELLING_CACHE = {}
+
+
+def _spelling_pattern(secret):
+    """Every SPELLING of one secret, as a pattern matched against the text AS WRITTEN.
+
+    🔴 ORDER-1310 #6 -- THE FIRST REPAIR NORMALISED BOTH SIDES, AND THAT IS A FALSE-POSITIVE
+    ENGINE. It compared `_normalised(secret) in _normalised(text)`, which deletes the separators
+    inside the TEXT as well as inside the secret. The text's separators are not noise: they are
+    what keeps `00:05:00` three numbers instead of one. Measured at HEAD before this repair, with
+    the real recognizer list: `open_lots=0.05` is a 4-character literal so `secrets_of` admits it,
+    it normalises to `005`, and `generated_at="2026-08-04T00:05:00"` normalises to
+    `20260804t000500`, which CONTAINS `005`. The whole projection build was refused with
+    KNOWN_SECRET. The live snapshot happens not to carry that lot size, so it is a data-dependent
+    breaker of the daily build rather than a live outage -- which is worse to leave, not better.
+
+    So the secret is normalised and the text is NOT. Between the secret's characters goes
+    `[^0-9A-Za-z]*`, which is exactly the evasion ORDER-1267 #1 measured (`9001-12233`,
+    `900 112 233`, `acct#900-11-2233`, `900.112.233` all still fire). At each END goes a
+    SAME-CLASS boundary: a secret that begins with a digit may not be preceded by a digit, one
+    that begins with a letter may not be preceded by a letter. Same class rather than "not
+    alphanumeric" on purpose -- `acct900112233` must still fire, because a letter run abutting a
+    digit run does not extend the number, and requiring a non-alphanumeric neighbour would have
+    thrown that case away to buy the timestamp case.
+
+    ⚠️ DECLARED LIMIT, stated rather than discovered. This layer no longer fires when a FORMATTED
+    secret sits inside a longer run of its own class -- `900-11-22335` for secret `900112233`.
+    That is the same shape as the timestamp false positive and cannot be told apart from it by a
+    boundary rule. It is not a hole in the scan, because the literal comparison in
+    `scan_forbidden` is kept and unbounded: the verbatim form inside a longer run
+    (`9001122335`, `EA_BREAKOUT_XAUUSD`) still fires there. Two comparisons, each covering what
+    the other structurally cannot -- which is the same bargain the three LAYERS strike.
+
+    Returns None for a secret with no alphanumeric characters at all, because an empty body would
+    compile to a pattern that matches every string.
+    """
+    norm = _normalised(secret)
+    if not norm:
+        return None
+    if norm not in _SPELLING_CACHE:
+        lead = r'(?<![0-9])' if norm[0].isdigit() else r'(?<![A-Za-z])'
+        tail = r'(?![0-9])' if norm[-1].isdigit() else r'(?![A-Za-z])'
+        body = r'[^0-9A-Za-z]*'.join(re.escape(c) for c in norm)
+        _SPELLING_CACHE[norm] = re.compile(lead + body + tail, re.IGNORECASE)
+    return _SPELLING_CACHE[norm]
 
 
 def scan_forbidden(doc, known_secrets=()):
@@ -288,6 +337,8 @@ def scan_forbidden(doc, known_secrets=()):
                     'state that this caller structurally cannot derive them. An empty list is '
                     'refused because its result is identical to a clean scan, which is how a '
                     'document gets credited to a layer that never ran.')
+    # ORDER-1310 #6: one compiled spelling pattern per secret, built once for the whole walk.
+    recognizers = [(s, _spelling_pattern(s)) for s in secrets]
     for path, key, value in _walk(doc):
         if key is not None and key in FORBIDDEN_KEYS:
             hits.append((path, 'FORBIDDEN_KEY', '%s: %s' % (key, FORBIDDEN_KEYS[key])))
@@ -299,13 +350,17 @@ def scan_forbidden(doc, known_secrets=()):
                 [] if isinstance(value, (dict, list, tuple)) or value is None
                 or isinstance(value, bool)
                 else [value if isinstance(value, str) else repr(value)]):
-            norm = _normalised(text)
-            for secret in secrets:
-                secret_norm = _normalised(secret)
-                if secret in str(text) or (secret_norm and secret_norm in norm):
+            as_written = str(text)
+            # TWO comparisons, and each covers what the other structurally cannot. The literal
+            # one is unbounded, so a verbatim secret inside a longer run still fires. The
+            # spelling one tolerates separators inside the secret's own span but not a
+            # same-class neighbour at either end -- ORDER-1310 #6, `_spelling_pattern`.
+            for secret, spelling in recognizers:
+                if secret in as_written or (spelling is not None
+                                            and spelling.search(as_written)):
                     hits.append((path, 'KNOWN_SECRET', _secret_detail(secret)))
             for name, rx, why in FORBIDDEN_VALUE_RULES:
-                if rx.search(str(text)):
+                if rx.search(as_written):
                     hits.append((path, name, why))
     return hits
 
