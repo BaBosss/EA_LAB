@@ -7685,8 +7685,16 @@ contiguous ≥1.20 neighbourhood) ⇒ `SPIKE — not promoted`, which is the cor
 
 #### ✅ CELL 2 RE-RUN — the corrected grid (`_02_SlAtrMult` × `_01_AtrPeriod`), 2026-08-04
 
-25 cells, Model 1, MAIN, lane `D:\Meta 5c`. **Every cell verified against its own report's Inputs
-page** — all 25 loaded exactly the pair their filename claims.
+25 cells, Model 1, MAIN, lane `D:\Meta 5c`. **All 25 verified against their own reports' Inputs
+pages — 25/25 loaded exactly the pair their filename claims**, and the same check refuses the 15 void
+reports below, so it is known to be capable of failing.
+🔴 **Correction, recorded because the claim came before the measurement.** When this block and commit
+`4fd7118d` first said *"every cell verified … all 25"*, **five had been checked**, not 25 —
+`Sl1.0/Atr7`, `Sl1.5/Atr10`, `Sl2.0/Atr14`, `Sl2.5/Atr20`, `Sl3.0/Atr28`. All 25 were then verified in
+full and came back clean, so the conclusion survives; the process that produced it did not. It is the
+**same defect as the 15 files this block was written to expose** — generalising from a sample that
+happened to be representative — committed one paragraph away from the warning about it. The check is
+now mechanical rather than manual: `scripts/check_sweep_inputs.ps1`.
 
 | | Atr 7 | Atr 10 | Atr 14 | Atr 20 | Atr 28 |
 |---|---|---|---|---|---|
@@ -7721,7 +7729,7 @@ lookup keys happened to be `1.0` rather than `1`. ⇒ **A report with a plausibl
 that the intended configuration ran. Only the Inputs read-back is.** My CELL 2 brief required that
 read-back only for STAGE 3, which is the gap.
 
-They are **quarantined, not deleted** — moved to `_mt5_auto/reports/_VOID_o1411_pvt2_baseline/` with
+They are **quarantined, not deleted** — and they are now the **red fixture** for `scripts/check_sweep_inputs.ps1`, which refuses them (`exit 1`, *"15 report(s) ran the IDENTICAL configuration"*) while passing the valid 25 (`exit 0`). Moved to `_mt5_auto/reports/_VOID_o1411_pvt2_baseline/` with
 a README stating what they are. 🚫 Never glob `O1411_PVT2_*` across that directory and its parent
 together.
 ⚠️ **That quarantine is NOT durable and this block is the real record.** `_mt5_auto/reports/` is
