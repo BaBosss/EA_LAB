@@ -91,6 +91,15 @@ if (-not $OutDir) { $OutDir = Join-Path $root 'factory\runs\pilot' }
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 
 . (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
+# ORDER-1273 step 6: the run mechanics moved to scripts\lib\pilot_run.ps1 so the verification of the
+# SELECTED configurations calls the same code this matrix did, rather than a second copy of it. The
+# functions below are FORWARDERS with no logic of their own -- they bind the context and change
+# nothing else, which is why every call site in this file is untouched.
+#
+# ONE STATED BEHAVIOUR CHANGE: the library `throw`s where these functions used to call Fail(). Both
+# end the script with exit 1 and the same message text; the throw prints as a PowerShell error with
+# a position, instead of a `[FAIL] ` line on stdout. A library must not `exit` out of its caller.
+. (Join-Path $PSScriptRoot 'lib\pilot_run.ps1')
 
 function Fail([string]$msg) { Write-Host ("[FAIL] " + $msg) -ForegroundColor Red; exit 1 }
 
@@ -108,143 +117,32 @@ if (-not (Test-Path $Terminal)) { Fail ("terminal not found on the pinned lane: 
 # The first lot goes into every generated name. Without it a 0.03 run silently overwrites the 0.01
 # run's .set files and reports, and the two sizings become indistinguishable on disk -- which is the
 # one thing this whole ORDER-1240 comparison depends on being able to tell apart.
-$lotTag = if ($FirstLot) { '_lot' + ($FirstLot -replace '\.', 'p') } else { '' }
+$ctx = New-PilotRunContext -RepoRoot $root -Terminal $Terminal -DataDir $DataDir -OutDir $OutDir `
+         -FromDate $FromDate -ToDate $ToDate -Model $Model -FirstLot $FirstLot `
+         -CryptoRateLong $CryptoRateLong -CryptoRateShort $CryptoRateShort
+# The naming rule lives in the context now, so the verifier cannot name its artefacts by a different
+# convention than this matrix did. Read back rather than recomputed here, deliberately.
+$lotTag = $ctx.LotTag
 
+# --- forwarders -------------------------------------------------------------------------------------
+# Every one of these is a single call into scripts\lib\pilot_run.ps1 with the context bound. They
+# carry NO logic: the composition rule, the UNDEF-not-zero rule, the carried-at-end refusals, the
+# fingerprint recipe and the exit-code-before-report ordering all live in the library and exist once.
 function Get-EffectiveSet([string]$rev, [string]$tag, [string[]]$overrides) {
-  $setFile = Join-Path $OutDir ('effective_' + ($rev -replace '-', '_') + '_' + $tag + $lotTag + '.set')
-  $pins = & $py -c @"
-import sys, os, io
-sys.path.insert(0, r'$root\_triage\factory_os')
-import hypothesis_b14 as HB
-hyp = HB.HYPOTHESES['$rev'.rsplit('-r', 1)[0]]
-for k, v in sorted(hyp['config'].items()):
-    sys.stdout.write('%s=%s\n' % (k, v))
-"@
-  if ($LASTEXITCODE -ne 0) { Fail ("could not read the pinned config for " + $rev + ": " + ($pins -join ' ')) }
-  $eff = [ordered]@{}
-  foreach ($p in $pins) { if ($p.Trim()) { $kv = $p.Trim() -split '=', 2; $eff[$kv[0]] = $kv[1] } }
-  # Applied to BOTH arms, before the per-case overrides, so it moves the sizing under test and
-  # never the escalated-vs-flat comparison itself.
-  if ($FirstLot) { $eff['_41_FixedLot'] = $FirstLot }
-  # Merged into ONE map before the compiler sees it, override winning. Appending both lists makes a
-  # key appear twice in the same layer and compile_preset refuses it by name -- correctly, because
-  # rank exists BETWEEN layers, not inside one (the same trap parity_run.ps1 records).
-  foreach ($o in $overrides) { $kv = $o -split '=', 2; $eff[$kv[0]] = $kv[1] }
-  $genArgs = @((Join-Path $root '_triage\factory_os\gen_default_preset.py'), '--build', 'LAB_ENTRY_14', '--out', $setFile)
-  foreach ($k in $eff.Keys) { $genArgs += @('--override', ($k + '=' + $eff[$k])) }
-  $out = & $py $genArgs
-  if ($LASTEXITCODE -ne 0) { Fail ("gen_default_preset.py refused for " + $rev + "/" + $tag + ": " + ($out -join ' ')) }
-  # @() around the filter: `(... | Where-Object {...})[0]` returns a [char] when exactly one line
-  # matches, because it indexes into the string instead of the collection. It fails EVERY time,
-  # not intermittently (memory powershell-pipeline-count-null-on-single-result).
-  $hashLine = @($out | Where-Object { $_ -like 'expected_hash=*' })
-  if ($hashLine.Count -ne 1) { Fail ("gen_default_preset.py printed " + $hashLine.Count + " expected_hash lines for " + $rev + "/" + $tag + "; exactly one is required to identify the config") }
-  return @{ path = $setFile; hash = ($hashLine[0] -replace 'expected_hash=', '') }
+  Get-PilotEffectiveSet -Ctx $ctx -Revision $rev -Tag $tag -Overrides $overrides
 }
-
-# --- report -> metrics ----------------------------------------------------------------------------
-# Parsed by scripts/parse_mt5_report.py, which already owns this format. A second parser here would
-# be a second reader of the same artifact, free to drift from the first
-# (memory guard-checks-the-wrong-surface).
-function Get-ReportMetrics([string]$htm) {
-  $lines = & $py (Join-Path $root 'scripts\parse_mt5_report.py') $htm
-  if ($LASTEXITCODE -ne 0) { Fail ("parse_mt5_report.py failed on " + $htm) }
-  $m = @{}
-  foreach ($l in $lines) {
-    if ($l -match '^\s*([a-z_0-9]+):\s*(.*)$') { $m[$Matches[1]] = $Matches[2].Trim() }
-  }
-  return $m
-}
-
-function As-Num($v) {
-  if ($null -eq $v -or "$v" -eq '') { return $null }
-  $d = 0.0
-  if ([double]::TryParse(("$v" -replace '[^0-9\.\-]', ''), [ref]$d)) { return $d }
-  return $null
-}
-
-# 🔴 PF IS UNDEFINED, NOT ZERO, WHEN THERE ARE NO LOSING TRADES, and the first run of this matrix
-# printed `PF 0.00` for USDJPY H1 -- a cell with 99 trades, 99 winners and gross_loss = 0. MT5
-# leaves the field empty/zero because gross_profit/gross_loss divides by zero; rendering that as
-# 0.00 reports the single best win rate in the matrix as the single worst result in it. Exactly
-# inverted, and it would have been quoted from the table by anyone who did not open the report.
-# So the undefined case is recorded as $null with its reason, never as a number.
-function Resolve-PF([hashtable]$m) {
-  $gl = As-Num $m['gross_loss']
-  $pf = As-Num $m['profit_factor']
-  $tr = As-Num $m['total_trades']
-  if ($null -ne $gl -and $gl -eq 0 -and $null -ne $tr -and $tr -gt 0) {
-    return @{ pf = $null; undefined = $true
-              why = ('PF is UNDEFINED, not 0: gross_loss is 0 across ' + $tr + ' trade(s), so the ' +
-                     'ratio has no denominator. The tester prints 0 here and that reads as the ' +
-                     'exact opposite of what happened.') }
-  }
-  return @{ pf = $pf; undefined = $false; why = $null }
-}
-
-# Positions the tester force-closed when the window ended. Under SL_NONE + a money-denominated
-# basket TP a basket closes only in profit, so an unresolved one is simply carried -- and its loss
-# is NOT part of the closed-trade statistics the report's PF is computed from. Measured on the
-# first matrix run: XAUUSD H1 carried -433.34 that its PF of 3.05 does not see. Reporting PF
-# without this number beside it overstates every cell that carries one.
-function Get-CarriedAtEnd([string]$htm) {
-  $out = & $py (Join-Path $root 'scripts\pilot_carried.py') $htm
-  if ($LASTEXITCODE -ne 0) { Fail ("pilot_carried.py failed on " + $htm) }
-  $c = ($out -join "`n") | ConvertFrom-Json
-  # /scrutinize round 2: the tool COUNTS rows it could not parse and the caller was discarding the
-  # count. A carried figure that silently dropped rows understates exactly the loss it exists to
-  # reveal -- and it understates it in the flattering direction, which is the direction nobody
-  # audits. Two ways it must not pass quietly:
-  if (-not $c.readable) {
-    Fail ("pilot_carried.py could not read the Deals table of " + $htm + " -- 'no carried positions' and 'I could not look' are different facts and this cell must not be recorded as if they were the same.")
-  }
-  if ($c.unparsed_rows -gt 0) {
-    Fail ("pilot_carried.py could not parse the profit of " + $c.unparsed_rows + " force-closed row(s) in " + $htm + ". The carried total would be understated by an unknown amount, so it is refused rather than reported.")
-  }
-  return $c
-}
-
-# design 6.4: data_fingerprint = hash(lane . symbol . tf . from . to . model . bars . ticks .
-# server . Bases\ state marker). The Bases\ marker is NOT included and that is stated rather than
-# quietly dropped: nothing in this repo computes it yet, and a fingerprint that silently omits a
-# declared component would claim more identity than it has. bars/ticks/company come from the report
-# itself, so two runs over different history produce different fingerprints, which is the property
-# the cross-install rule actually needs.
+function Get-ReportMetrics([string]$htm) { Get-PilotReportMetrics -Ctx $ctx -Htm $htm }
+function As-Num($v) { ConvertTo-PilotNumber $v }
+function Resolve-PF([hashtable]$m) { Resolve-PilotPF -Metrics $m }
+function Get-CarriedAtEnd([string]$htm) { Get-PilotCarriedAtEnd -Ctx $ctx -Htm $htm }
 function Get-DataFingerprint([hashtable]$m, [string]$symbol, [string]$period) {
-  $parts = @($Terminal, $symbol, $period, $FromDate, $ToDate, "model=$Model",
-             ("bars=" + $m['bars']), ("ticks=" + $m['ticks']), ("server=" + $m['company']))
-  $joined = ($parts -join '|')
-  $sha = [System.Security.Cryptography.SHA256]::Create()
-  $bytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($joined))
-  $sha.Dispose()
-  return (($bytes | ForEach-Object { $_.ToString('x2') }) -join '')
+  Get-PilotDataFingerprint -Ctx $ctx -Metrics $m -Symbol $symbol -Period $period
 }
-
-function Get-CryptoFinancing([string]$htm) {
-  $out = & $py (Join-Path $root 'scripts\swap_adjust_crypto.py') `
-            '--rate-long' $CryptoRateLong '--rate-short' $CryptoRateShort $htm
-  if ($LASTEXITCODE -ne 0) { Fail ("swap_adjust_crypto.py failed on " + $htm + ": " + ($out -join ' ')) }
-  return ($out -join "`n")
-}
-
-# --- one tester pass ------------------------------------------------------------------------------
+function Get-CryptoFinancing([string]$htm) { Get-PilotCryptoFinancing -Ctx $ctx -Htm $htm }
 function Invoke-Cell([string]$expert, [string]$symbol, [string]$period, [string]$setPath,
                      [string]$reportName) {
-  $runStart = Get-Date
-  & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $expert -Symbol $symbol -Period $period `
-      -FromDate $FromDate -ToDate $ToDate -SetFile $setPath -Model $Model `
-      -ReportName $reportName -Terminal $Terminal -DataDir $DataDir | Out-Null
-  $rc = $LASTEXITCODE
-  # THE EXIT CODE IS CHECKED BEFORE THE REPORT. An aborted run (mt5_run refuses while the GUI holds
-  # the install, exit 2) leaves the PREVIOUS report in place, and "the .htm exists" would then read
-  # last week's numbers as this cell's. "I could not run it" and "it produced this" must never
-  # share an exit path.
-  if ($rc -ne 0) { Fail ("cell " + $symbol + " " + $period + " (" + $expert + "): mt5_run.ps1 exited " + $rc + " -- the tester did not produce this run, so NOTHING is known about this cell.") }
-  $htm = Join-Path $root ('_mt5_auto\reports\' + $reportName + '.htm')
-  if (-not (Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $rc -Label $reportName)) {
-    Fail ("cell " + $symbol + " " + $period + ": the report at " + $htm + " is not evidence from THIS run (absent, or written before it started).")
-  }
-  return $htm
+  Invoke-PilotCell -Ctx $ctx -Expert $expert -Symbol $symbol -Period $period `
+                   -SetPath $setPath -ReportName $reportName
 }
 
 # --- the matrix -----------------------------------------------------------------------------------
