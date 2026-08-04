@@ -1639,6 +1639,37 @@ report path, a forged `run_start`, and `runner_exit=3`) is **purely in-process a
 This seat's probe `CANNOT-BUILD` on an input-shape error, which is a failed probe and not a
 refutation. Settle it first.
 
+> ### ✅ SETTLED 2026-08-04, lane `S-2026-08-04-CORRECT5B`/`CORRECT6` — claim 2.7 is **CONFIRMED**, and #1/#2 re-measured
+>
+> The earlier probe's `CANNOT-BUILD` was an input-shape error in the probe, exactly as this row
+> suspected. Rebuilt against the real `EXECUTION_KEY_FIELDS` and driven in-process — no lane, no
+> tester, nothing written to the repo. **Claim 2.7 moves out of the audit's Part 2 and into this
+> order as a measured defect.**
+>
+> **`S6` checks the proof's INTERNAL SELF-CONSISTENCY and never checks it against the disk.** A
+> `COMPLETED` whose `report_fresh_proof` is entirely caller-asserted validates **CLEAN**:
+> `fresh: true`, `runner_exit: 0` **or `3`**, a `report_path` pointing at a file **that does not
+> exist on this machine** (measured: `os.path.exists(...) == False`), and a `run_start` the caller
+> chose one second before its own `report_mtime`.
+>
+> **Five controls, all REFUSED, so `S6` is live rather than absent** — `fresh=false` ·
+> `runner_exit=1` · an empty `report_path` · `report_mtime` before `run_start` · no proof at all.
+> That is what makes this a gap in *what is verified* rather than a rule that was never wired up.
+>
+> **#1 re-measured and it holds in both halves:** `currency` **is** in `EXECUTION_KEY_FIELDS`;
+> `scripts/scheduler_run.ps1` mentions it **0 times**; `scripts/mt5_run.ps1:134` hardcodes
+> `"Currency=USD"` and `:31` declares `[int]$Deposit`. And the digests **do** separate: USD vs EUR
+> and `10000` vs `10000.5` each produce a distinct `execution_key_digest`, so a later request for
+> either is a cache MISS answered by evidence produced under USD at a rounded deposit.
+>
+> **#2 re-measured:** `terminal_build`/`build_number` appear **0 times** in `scheduler.py`.
+>
+> 🚫 **Nothing repaired here, deliberately.** This lane measured; it did not touch the S9 slice.
+> The row's own sequencing still stands — **fix the cage's expressiveness before judging the three
+> critical hypotheses**, because a kill matrix that can only stop *at* states and never *between*
+> them cannot represent the state they live in. Whoever takes that starts with these numbers
+> instead of re-deriving them.
+
 ---
 
 ## ORDER-1264 — [factory/S3] A contract can lose its enforcement declaration and vanish from the check instead of reddening it — `DONE 2026-08-03 (S-2026-08-03-CORRECT, commit 14276944)` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
@@ -2482,7 +2513,68 @@ the back door · any EA verdict (design §10 stops this slice at `EVIDENCE_COMPL
 
 ---
 
-## ORDER-1254 — [factory/S13] BWD 2020-22 as a HARD gate, then Model 4 — `OPEN` (blocked on `ORDER-1253` ✅, and now on `ORDER-1300` + `ORDER-1302`) · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+## ORDER-1254 — [factory/S13] BWD 2020-22 as a HARD gate, then Model 4 — `OPEN` (blocked on `ORDER-1253` ✅, and now on `ORDER-1300` + `ORDER-1302`) · 👤 **the 49-trade question is RULED by the owner 2026-08-04 — see below** · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+### 👤 OWNER RULING 2026-08-04 — no participation floor. Recorded verbatim, not paraphrased.
+
+The question put was: `B14-H02-r1/BTCUSD/H4` clears every numeric bar but its BWD rests on **49
+trades over three years**, DD **15.22 %** against a 12 % limit, **100 % LONG in all four runs** —
+does it pass the BWD hard gate, or does a participation floor get set first (`CLAUDE.md`'s
+un-numbered `PENDING-RATIFY(user)` note, memory `bar-cleared-by-non-participation`)?
+
+> **TH verbatim:** *"ผมอยากให้ทำตามข้อ 2 ถ้าไปข้อ 1 เหมือนตัดโอกาส EA ไป มันสามารถเพิ่ม ต่อยอดได้ทำเป็น
+> multi symbol หรือว่าเอา EA ที่มัน thin สัก 3-4 ตัวรวมเป็นตัวเดียวกันได้"*
+
+**The ruling:** 49 BWD trades **counts as clearing the BWD hard gate**; the price is paid in size —
+`engine-edge`, **permanently small lot, never sized up on PF** (the NuiIndy treatment already in
+`CLAUDE.md`). 🚫 **No participation floor is set**, and the reason given is not that the statistic is
+strong: it is that a floor **removes the EA's option** when the thin sample is fixable by
+*building* — multi-symbol, or consolidating 3-4 thin EAs into one. That reasoning is the ruling's
+substance and it points at `ORDER-1400`.
+
+⚠️ **What the owner ruled on has since moved in the cell's favour, and they were told so before
+ruling:** the tester reports BWD Model 4 at **1.44**; the **1.20** in circulation is that same
+figure with financing deducted a second time (`ORDER-1350` · `ORDER-1370`). 🚫 Still not restated
+here — `ORDER-1370` applies the correction to every arm at once.
+
+🔴 **Owed, and deliberately NOT written at the tail of the session that took the ruling:** this is a
+**bar decision**, so it belongs in `CLAUDE.md`'s bar table (replacing the un-numbered
+`PENDING-RATIFY(user)` note) and in `PROJECT_STATE.md` §3. Both are single-writer files and both are
+untouched. **A ruling recorded only on a work order is a ruling the next reader will not find.**
+
+---
+
+## ORDER-1400 — [factory/portfolio] The thin-sample answer the owner gave is a BUILD, not a bar: multi-symbol, or 3-4 thin EAs consolidated into one — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> Opened 2026-08-04 by lane `S-2026-08-04-RATIFY`, out of the owner's own reasoning while declining a
+> participation floor (`ORDER-1254` above). It is filed as an order because a rationale that is only
+> in a ruling's quote is a rationale nobody executes.
+
+**The problem it answers.** Four EAs are already `thin` by the `ORDER-235` definition — under 0.5
+closed trades/week (`991001` **real money** · `991004` · `990205` · `990303`) — and reach 30 closed
+trades in **2028-2029**. `B14-H02-r1/BTCUSD/H4` is the same shape from the other end: 49 BWD trades
+over a three-year window. The bar was **not** moved to accommodate them, so the sample has to come
+from somewhere else.
+
+**The two routes the owner named, and what each would have to prove:**
+1. **Multi-symbol.** One logical strategy across N symbols accumulates N× the sample per unit of
+   calendar time. ⚠️ It only works if the legs are not the same trade wearing different tickers —
+   `CLAUDE.md` already requires pairwise **corr < 0.8** for exactly this, and memory
+   `unmeasured-corr-costs-more-than-real-risk` says measure it before sizing anything on it.
+2. **Consolidating 3-4 thin EAs into one.** ⚠️ Sharper hazard: a basket that pools thin legs pools
+   their **drawdowns** too, and the `engine-edge` sizing rule is per-EA today. What a consolidated
+   unit's worst case is — and whether it is still computable, which is cage condition (1) — is the
+   first question, not the last.
+
+🚫 **Do not treat this as a licence to size up.** The ruling that made it necessary is the same
+ruling that fixed these at permanently small lot. 🚫 And do not start it while `ORDER-1370` is open:
+a crypto leg's contribution cannot be weighed while its financing is charged twice.
+
+**First deliverable (desk work, no tester):** the correlation matrix across the existing thin cohort
+plus `B14-H02-r1`, on the windows already measured — because whichever route is taken, a set of legs
+that turn out to be correlated is the answer to neither.
+
+---
 
 > ### ✅ BWD 2020–2022 RUN 2026-08-04 (lane `S-2026-08-04-S13F`) — the two verified cells, and they split
 >
