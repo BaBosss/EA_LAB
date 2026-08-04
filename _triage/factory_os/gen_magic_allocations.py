@@ -79,7 +79,8 @@ def main(argv):
             return 1
         commit = args.get('commit') or head_oid(root)
         rows = M.cutover_import(inventory, commit)
-        problems = M.store_problems(rows) + M.inventory_problems(inventory, rows)
+        problems = (M.store_problems(rows, M.declared_legacy_magics(root))
+                    + M.inventory_problems(inventory, rows))
         if problems:
             sys.stdout.write('REFUSED: the generated store does not validate:\n  %s\n'
                              % '\n  '.join(problems))
@@ -101,32 +102,66 @@ def main(argv):
                          'before the global magic rule can be enforced.\n' % store)
         return 1
     existing = M.read_store(store)
-    problems = M.store_problems(existing) + M.inventory_problems(inventory, existing)
+    problems = (M.store_problems(existing, M.declared_legacy_magics(root))
+                + M.inventory_problems(inventory, existing))
     if problems:
         sys.stdout.write('DRIFT: the store does not validate:\n  %s\n' % '\n  '.join(problems))
         return 1
-    commits = sorted(set(r['allocated_at_commit'] for r in existing))
-    if len(commits) != 1:
-        sys.stdout.write('DRIFT: the store records %d cutover commits (%s); the import is one '
-                         'event\n' % (len(commits), [c[:12] for c in commits]))
-        return 1
-    want = render(M.cutover_import(inventory, commits[0]))
-    with io.open(store, 'r', encoding='utf-8-sig', newline='') as fh:
-        got = fh.read()
-    if got != want:
-        sys.stdout.write('DRIFT: %s is not what the inventory regenerates to at commit %s.\n'
-                         % (store, commits[0][:12]))
-        wl, gl = want.splitlines(), got.splitlines()
-        for i in range(max(len(wl), len(gl))):
-            w = wl[i] if i < len(wl) else '<missing>'
-            g = gl[i] if i < len(gl) else '<missing>'
-            if w != g:
-                sys.stdout.write('  line %d\n    store    %s\n    inventory %s\n' % (i + 1, g, w))
+    # 🟡 ORDER-1260 #6. THE DOCUMENTED ALLOCATION PATH COULD NOT STAY GREEN, AND THIS IS WHERE.
+    #
+    # `magic.allocate()` stamps the CURRENT commit -- correctly: a reservation made today is a
+    # historical statement about today. This check then required the WHOLE store to carry ONE
+    # commit, and required the whole file to regenerate byte-identically from DEPLOYMENTS.csv.
+    # Measured at HEAD: one `allocate()` row appended to the real 60-row store fails BOTH, in two
+    # independent ways -- so the two workarounds it left were a hand-edit of the store or a false
+    # cutover provenance on the new row. A guard whose only compliant paths are lying or editing
+    # around it is the shape memory `feedback-audit-rule-rationale-not-compliance` names, and it
+    # is why the repair is here rather than in the allocator.
+    #
+    # WHAT THE TWO RULES WERE ACTUALLY FOR, kept: the CUTOVER is one event (that is M6, and it is
+    # about LEGACY rows -- which is where the "one commit" claim belongs and where `magic.py` now
+    # enforces it), and the inventory must not have grown a magic the store does not know (that is
+    # the subset comparison below, which is the half that catches real drift).
+    cutover_rows = M.cutover_import(inventory, '0' * 40)
+    by_magic = dict((S.normalize_numbers(r['magic']), r) for r in existing)
+    drift = []
+    for want_row in cutover_rows:
+        m = S.normalize_numbers(want_row['magic'])
+        got_row = by_magic.get(m)
+        if got_row is None:
+            drift.append('magic %s is in %s and the store does not know it' % (m, M.INVENTORY_REL))
+            continue
+        # Compare everything the inventory determines. `allocated_at_commit` is deliberately NOT
+        # compared: it is the historical read-point, which is exactly what must not follow HEAD
+        # (memory `drift-guard-regenerating-against-head`).
+        for f in ('scope', 'legacy_exception', 'legacy_accounts', 'imported_in_cutover'):
+            if want_row.get(f) != got_row.get(f):
+                drift.append('magic %s: the store says %s=%r, the inventory implies %r'
+                             % (m, f, got_row.get(f), want_row.get(f)))
+    # And the other direction, with ONE declared exemption: a GLOBAL row for a magic that is not
+    # deployed yet is a RESERVATION, which is the whole point of having an allocator.
+    for m, got_row in sorted(by_magic.items()):
+        if m in set(S.normalize_numbers(r['magic']) for r in cutover_rows):
+            continue
+        if got_row['scope'] != 'GLOBAL':
+            drift.append('magic %s is in the store as %s but is on no account in %s -- only a '
+                         'GLOBAL reservation may exist ahead of a deployment'
+                         % (m, got_row['scope'], M.INVENTORY_REL))
+    if drift:
+        sys.stdout.write('DRIFT: %s and %s disagree:\n  %s\n'
+                         % (store, M.INVENTORY_REL, '\n  '.join(drift)))
         return 1
     legacy = [r for r in existing if r['scope'] == 'LEGACY_ACCOUNT_SCOPED']
-    sys.stdout.write('magic allocations CLEAN: %d allocation(s) regenerate byte-identically from '
-                     '%s; %d legacy exception(s) %s, frozen at cutover %s\n'
-                     % (len(existing), M.INVENTORY_REL, len(legacy),
+    commits = sorted(set(r['allocated_at_commit'] for r in legacy)) or ['(no legacy rows)']
+    # The wording is the check. It used to say "regenerate byte-identically", which stopped being
+    # true in the same edit that let an allocation exist -- and a success line that describes a
+    # comparison nobody performs is how ORDER-1260 #5's docstring got where it did.
+    reserved = len(existing) - len(cutover_rows)
+    sys.stdout.write('magic allocations CLEAN: %d allocation(s); every one of the %d magic(s) '
+                     'deployed in %s is present and matches what the inventory implies; %d GLOBAL '
+                     'reservation(s) ahead of deployment; %d legacy exception(s) %s, all imported '
+                     'at cutover %s\n'
+                     % (len(existing), len(cutover_rows), M.INVENTORY_REL, reserved, len(legacy),
                         sorted(S.normalize_numbers(r['magic']) for r in legacy), commits[0][:12]))
     return 0
 

@@ -78,7 +78,12 @@ def refuses(label, problems, expect_id):
     the shape check on every one of these inputs, so matching on emptiness would let a case pass
     on an unrelated defect and then stop noticing the one it was written for."""
     NAMED.add(expect_id)
-    hit = [p for p in problems if p.startswith(expect_id + ' ')]
+    # `verify_log` prefixes each problem with the line it came from, and the criterion id is what
+    # this helper matches on. Stripping a leading `line N: ` keeps that match exact rather than
+    # loosening it to a substring search, which would let `A8` be satisfied by the word appearing
+    # anywhere in an unrelated message.
+    hit = [p for p in problems
+           if re.sub(r'^line [0-9]+: ', '', p).startswith(expect_id + ' ')]
     return check('%-3s %s' % (expect_id, label), bool(hit),
                  'expected a %s finding, got %s' % (expect_id, problems or 'nothing'))
 
@@ -215,9 +220,19 @@ PAYLOAD = {
 
 def _journal(run_id, lane='lane1', fingerprint='df1', model=1, terminal='EVIDENCE_REGISTERED'):
     """A folded RunJournal of the shape `scheduler.fold` produces -- built through the real key
-    field list so a fifteenth ExecutionKey field would break this fixture rather than be ignored."""
+    field list so a fifteenth ExecutionKey field would break this fixture rather than be ignored.
+
+    ORDER-1260 #1: the identity fields are DERIVED FROM THE PAYLOAD rather than left at the 'x'
+    filler, because this fixture now has to be a run that could actually have produced the
+    candidate that cites it. Filler here would have made every C9b comparison fail for a reason
+    that has nothing to do with the rule (`fixture-of-filler-values-cannot-test-resolution`), and
+    every attack below is this journal with one thing wrong.
+    """
     key = dict((f, 'x') for f in S.EXECUTION_KEY_FIELDS)
-    key.update({'lane': lane, 'data_fingerprint': fingerprint, 'model': model})
+    key.update({'lane': lane, 'data_fingerprint': fingerprint, 'model': model,
+                'tf': PAYLOAD['tf'], 'ex5_hash': PAYLOAD['ex5_sha256'],
+                'effective_config_hash': PAYLOAD['effective_config_hash'],
+                'symbol': PAYLOAD['logical_symbol'], 'expert': 'LAB_ENTRY_14.ex5'})
     return {'entity': 'RunJournal', 'run_id': run_id, 'cell_id': 'cell',
             'execution_key': key,
             'attempts': [{'attempt': 1, 'transition': 'COMPLETED', 'at': '2026-08-02T00:00:00Z'},
@@ -566,10 +581,13 @@ def part1c_reader():
 # PART 2 -- ATTESTATION. Criterion 2 of the S10 row, enumerated over (event_type x actor).
 # =============================================================================================
 def _event(event_type, actor, **kw):
+    """ORDER-1260 #3: `prev_hash` defaults to GENESIS -- the right value for the first line of a
+    log, which is what most cases here build. A case that appends to a prior log passes
+    `prev_hash=A.chain_head(prior)`, and the cases that attack the chain pass a wrong one."""
     ev = {'entity': 'DeploymentAttestationEvent', 'event_id': 'ATT-20260802-001',
           'account': '159503454', 'magic': 991001, 'event_type': event_type,
           'at': '2026-08-02T00:00:00Z', 'actor': actor,
-          'deployment_ref': DEPLOY_REF}
+          'deployment_ref': DEPLOY_REF, 'prev_hash': A.GENESIS_PREV_HASH}
     ev.update(kw)
     return ev
 
@@ -717,15 +735,20 @@ def part2_attestation():
     accepts('an OBSERVED event that reports attest_state and names no candidate',
             A.validate_event(_event('OBSERVED', 'automation', event_id='ATT-20260802-002',
                                     attest_state='FILE_MISSING'), []))
+    # ORDER-1260 #3: these two APPEND to `prior`, so they carry the chain link. The refusal cases
+    # above deliberately do not -- `refuses()` asserts the criterion it names actually fired, and
+    # an A8 alongside an A6 does not weaken that; here, where the assertion is that NOTHING is
+    # reported, the event has to be a legal append in every respect.
     accepts('...but an OBSERVED event that REPEATS the current candidate is fine -- that is what '
             'an observation is',
             A.validate_event(_event('OBSERVED', 'automation', event_id='ATT-20260802-002',
-                                    candidate_id='CAND-' + '1' * 12,
-                                    attest_state='HASHED'), prior))
+                                    candidate_id='CAND-' + '1' * 12, attest_state='HASHED',
+                                    prev_hash=A.chain_head(prior)), prior))
     accepts('...and an authorized REASSIGNMENT is exactly how the candidate is meant to move',
             A.validate_event(_event('CANDIDATE_REASSIGNED', 'user', event_id='ATT-20260802-002',
                                     candidate_id='CAND-' + '2' * 12,
-                                    authorization_ref=copy.deepcopy(AUTH)), prior))
+                                    authorization_ref=copy.deepcopy(AUTH),
+                                    prev_hash=A.chain_head(prior)), prior))
 
     # -- A1: the shape rule, attacked so the PART 5 roll-up has nothing to report as unfired.
     refuses('an event carrying an undeclared field',
@@ -781,8 +804,12 @@ INV = [{'account': '159503454', 'magic': 990103, 'status': 'REMOVED', 'judge_dat
 def part3_magic():
     sys.stdout.write('\nPART 3 -- magic: the exception list, both directions, and no renumber\n')
     rows = M.cutover_import(INV, H40)
+    # ORDER-1260 #4: this fixture inventory has its OWN two collisions, so it declares its own
+    # closed set. Passing the repository's would be asserting that a fixture must look like
+    # production, which is a different claim and a false one.
+    FIXTURE_LEGACY = (990103, 991001)
     accepts('the cutover import of a fixture inventory validates',
-            M.store_problems(rows) + M.inventory_problems(INV, rows))
+            M.store_problems(rows, FIXTURE_LEGACY) + M.inventory_problems(INV, rows))
     legacy = sorted(r['magic'] for r in rows if r['scope'] == 'LEGACY_ACCOUNT_SCOPED')
     check('the import declares exactly the colliding magics as exceptions',
           legacy == [990103, 991001], legacy)
@@ -875,7 +902,8 @@ def part4_real():
         return
     rows = M.read_store(store)
     inventory = M.read_inventory(M.inventory_path(ROOT))
-    problems = M.store_problems(rows) + M.inventory_problems(inventory, rows)
+    problems = (M.store_problems(rows, M.declared_legacy_magics(ROOT))
+                + M.inventory_problems(inventory, rows))
     accepts('the committed store validates against the committed inventory', problems)
     legacy = sorted(S.normalize_numbers(r['magic']) for r in rows
                     if r['scope'] == 'LEGACY_ACCOUNT_SCOPED')
@@ -997,10 +1025,19 @@ def part5_the_other_half():
     # (f) THE CAGE CAN FAIL. Every criterion id this suite names must correspond to a real
     #     refusal in the module -- and the roll-up below is what stops a criterion being deleted
     #     from a module and quietly disappearing from the report.
+    # ORDER-1260: the criterion ids are DERIVED from each module's source, not counted by hand.
+    # This list used to be three hand-written counts (C 10, A 7, M 6), so `A8` and `M7` -- added by
+    # this order -- would have been reported as ids "the modules do not have" while the modules
+    # were emitting them. A roll-up whose universe is typed out is a roll-up that goes stale in the
+    # same edit that makes it matter. (memory: measurement-table-needs-its-harness)
     expected = set()
-    for mod, prefix, n in ((C, 'C', 10), (A, 'A', 7), (M, 'M', 6)):
-        for i in range(1, n + 1):
-            expected.add('%s%d' % (prefix, i))
+    for mod, prefix in ((C, 'C'), (A, 'A'), (M, 'M')):
+        src = io.open(os.path.join(HERE, mod.__name__ + '.py'), encoding='utf-8').read()
+        for n in re.findall(r"'%s([0-9]+) " % prefix, src):
+            expected.add('%s%s' % (prefix, n))
+    check('the criterion universe was derived from the three modules, not typed out (%d ids)'
+          % len(expected), len(expected) >= 23,
+          'derived %s -- too few to be the real set, so the regex stopped matching' % sorted(expected))
     unnamed = sorted(expected - NAMED)
     invented = sorted(NAMED - expected)
     sys.stdout.write('       attacked: %s\n' % ' '.join(sorted(NAMED)))
@@ -1014,6 +1051,262 @@ def part5_the_other_half():
           'named but not declared anywhere: %s' % invented)
 
 
+# =============================================================================================
+# PART 6 -- ORDER-1260. Five verified defects on the money path plus the one that made the
+# documented allocation path unusable. EVERY ONE WAS REPRODUCED AT HEAD BEFORE IT WAS TOUCHED,
+# and every repair below carries the control that a rule which simply refuses MORE would fail.
+# =============================================================================================
+def part6_order_1260():
+    sys.stdout.write('\nPART 6 -- ORDER-1260: the money path, each repair with its control\n')
+
+    # -- #1 A CANDIDATE MAY NOT CITE ANOTHER STRATEGY'S RUN. -----------------------------------
+    #    Measured at HEAD: a manifest declaring EURUSD/M15 whose cited runs recorded XAUUSD/H4 on
+    #    another expert with another binary returned []. C9 bound `lane`, `data_fingerprint` and
+    #    `model` -- everything a MetricRef carries -- and nothing about the candidate itself.
+    foreign = copy.deepcopy(RUNS)
+    for j in foreign.values():
+        j['execution_key'].update({'symbol': 'EURUSD', 'tf': 'M15', 'expert': 'OtherEA.ex5',
+                                   'ex5_hash': 'a' * 64, 'effective_config_hash': 'b' * 64})
+    refuses('a manifest citing runs of a DIFFERENT strategy (other tf, binary and config)',
+            C.validate_manifest(manifest(), foreign), 'C9')
+    # ONE FIELD AT A TIME, so the refusal is attributable to the binding and not to the bundle.
+    for pf, kf, bad in (('tf', 'tf', 'M15'),
+                        ('ex5_sha256', 'ex5_hash', 'a' * 64),
+                        ('effective_config_hash', 'effective_config_hash', 'b' * 64)):
+        one = copy.deepcopy(RUNS)
+        for j in one.values():
+            j['execution_key'][kf] = bad
+        refuses('...and with ONLY %s wrong, which is the binding under test' % pf,
+                C.validate_manifest(manifest(), one), 'C9')
+    # A KEY THAT IS SILENT about a bound field cannot license the claim either -- the same rule
+    # C9 already applies to `lane`, one field down.
+    silent = copy.deepcopy(RUNS)
+    for j in silent.values():
+        del j['execution_key']['ex5_hash']
+    refuses('...and a run whose ExecutionKey records no ex5_hash at all',
+            C.validate_manifest(manifest(), silent), 'C9')
+    # CONTROL: the honest manifest over its own runs is still accepted. Without this line every
+    # refusal above is satisfied by a C9 that refuses everything.
+    accepts('CONTROL: the honest manifest over the runs that produced it',
+            C.validate_manifest(manifest(), copy.deepcopy(RUNS)))
+    # C9c: evidence STITCHED from two instruments, which the payload/key bindings cannot see
+    # because each cited run agrees with the payload on everything the payload declares.
+    stitched = copy.deepcopy(RUNS)
+    stitched['RUN-20260802-002']['execution_key']['symbol'] = 'EURUSD'
+    refuses('evidence assembled from runs on two different symbols',
+            C.validate_manifest(manifest(), stitched), 'C9')
+    stitched2 = copy.deepcopy(RUNS)
+    stitched2['RUN-20260802-002']['execution_key']['expert'] = 'OtherEA.ex5'
+    refuses('...and from two different experts',
+            C.validate_manifest(manifest(), stitched2), 'C9')
+    # THE STATED LIMIT, PINNED AS A CASE RATHER THAN LEFT IN A COMMENT: `logical_symbol` is not
+    # bound to `symbol`, because resolving one to the other needs LogicalSymbol.broker_map keyed
+    # by lane and no such store exists in this repo. A candidate whose evidence is UNIFORMLY from
+    # the wrong instrument is therefore still accepted. This case exists so that whoever builds
+    # the resolver finds a failing assertion here instead of nothing.
+    wrong_symbol = copy.deepcopy(RUNS)
+    for j in wrong_symbol.values():
+        j['execution_key']['symbol'] = 'EURUSD'          # payload says XAUUSD
+    accepts('KNOWN LIMIT: evidence uniformly from another SYMBOL is still accepted -- no '
+            'LogicalSymbol store exists to resolve logical->broker, and this is not guessed',
+            C.validate_manifest(manifest(), wrong_symbol))
+
+    # -- #2 ONLY AN ASSIGNMENT EVENT MAY MOVE THE CANDIDATE. ------------------------------------
+    #    Measured at HEAD: ATTEST_STATE_CHANGED, FROZEN and RETIRED each moved a pair to a
+    #    different candidate and validate_event returned []. A3 still demanded a human ref, so a
+    #    human had signed something -- a freeze, or a retirement -- and what happened was a
+    #    reassignment.
+    assigned = [_event('CANDIDATE_ASSIGNED', 'user', candidate_id='CAND-' + '1' * 12,
+                       authorization_ref=copy.deepcopy(AUTH))]
+    moved = 0
+    for etype in A.EVENT_TYPES:
+        if etype in A.CANDIDATE_MOVING_EVENT_TYPES:
+            continue
+        ev = _event(etype, 'user', event_id='ATT-20260802-002', at='2026-08-02T01:00:00Z',
+                    candidate_id='CAND-' + '2' * 12, authorization_ref=copy.deepcopy(AUTH),
+                    prev_hash=A.chain_head(assigned))
+        if refuses('a %-20s event may not move the candidate' % etype,
+                   A.validate_event(ev, assigned), 'A6'):
+            moved += 1
+    non_moving = [t for t in A.EVENT_TYPES if t not in A.CANDIDATE_MOVING_EVENT_TYPES]
+    check('ROLL-UP every one of the %d non-assignment event types was refused (%d of %d)'
+          % (len(non_moving), moved, len(non_moving)), moved == len(non_moving),
+          'the axis is the rule, so a type nobody attacked is a type nobody knows about')
+    # SPECIFICITY, both halves. A rule that refused every candidate_id would pass everything above.
+    accepts('CONTROL: CANDIDATE_REASSIGNED with a human ref still moves it -- that is the door',
+            A.validate_event(_event('CANDIDATE_REASSIGNED', 'user', event_id='ATT-20260802-002',
+                                    at='2026-08-02T01:00:00Z', candidate_id='CAND-' + '2' * 12,
+                                    authorization_ref=copy.deepcopy(AUTH),
+                                    prev_hash=A.chain_head(assigned)), assigned))
+    accepts('CONTROL: a FROZEN event that REPEATS the current candidate is not a move',
+            A.validate_event(_event('FROZEN', 'user', event_id='ATT-20260802-002',
+                                    at='2026-08-02T01:00:00Z', candidate_id='CAND-' + '1' * 12,
+                                    authorization_ref=copy.deepcopy(AUTH),
+                                    prev_hash=A.chain_head(assigned)), assigned))
+    # AND THE PARTITION, so a SEVENTH event type is a decision rather than a default.
+    overlap = set(A.CANDIDATE_MOVING_EVENT_TYPES) - set(A.EVENT_TYPES)
+    check('every event type is classified as candidate-moving or not, with no invented member',
+          not overlap and len(non_moving) + len(A.CANDIDATE_MOVING_EVENT_TYPES) == len(A.EVENT_TYPES),
+          'moving=%s all=%s' % (list(A.CANDIDATE_MOVING_EVENT_TYPES), list(A.EVENT_TYPES)))
+
+    # -- #3 AN EDITED LOG DOES NOT REPLAY CLEAN. ------------------------------------------------
+    #    Measured at HEAD: editing a CANDIDATE_ASSIGNED's candidate_id in place gave
+    #    verify_log() == [] and fold() returned the NEW candidate. The docstring said otherwise.
+    log = list(assigned)
+    log.append(_event('OBSERVED', 'automation', event_id='ATT-20260802-002',
+                      at='2026-08-02T02:00:00Z', attest_state='HASHED',
+                      prev_hash=A.chain_head(log)))
+    accepts('CONTROL: an untouched log replays clean', A.verify_log(log))
+    edited = copy.deepcopy(log)
+    edited[0]['candidate_id'] = 'CAND-' + '2' * 12
+    refuses('a log whose FIRST line was edited in place after it was written',
+            A.verify_log(edited), 'A8')
+    # any field, not just the one this order happened to probe
+    edited2 = copy.deepcopy(log)
+    edited2[0]['actor'] = 'automation'
+    refuses('...and one whose first line had its ACTOR rewritten', A.verify_log(edited2), 'A8')
+    # 🔴 THE LIMIT, MEASURED AND PINNED: the chain protects events that have a SUCCESSOR. Editing
+    # the LAST line breaks no link, and nothing inside a file can notice a change to its own end.
+    tail = copy.deepcopy(log)
+    tail[-1]['attest_state'] = 'FILE_MISSING'
+    accepts('KNOWN LIMIT: editing the LAST line breaks no link -- the head needs an external pin',
+            A.verify_log(tail))
+    # and the writer stamps the link rather than making every caller compute it
+    tmp = tempfile.mkdtemp(prefix='s10_chain_')
+    try:
+        p = os.path.join(tmp, 'attestations.jsonl')
+        first = _event('CANDIDATE_ASSIGNED', 'user', candidate_id='CAND-' + '1' * 12,
+                       authorization_ref=copy.deepcopy(AUTH))
+        del first['prev_hash']
+        A.append_event(p, first)
+        second = _event('OBSERVED', 'automation', event_id='ATT-20260802-002',
+                        at='2026-08-02T02:00:00Z', attest_state='HASHED')
+        del second['prev_hash']
+        A.append_event(p, second)
+        accepts('append_event STAMPS the link, and what it wrote replays clean',
+                A.verify_log(A.read_log(p)))
+        bad = _event('OBSERVED', 'automation', event_id='ATT-20260802-003',
+                     at='2026-08-02T03:00:00Z', attest_state='HASHED',
+                     prev_hash=A.GENESIS_PREV_HASH)
+        try:
+            A.append_event(p, bad)
+            check('...and a caller-supplied WRONG link is refused rather than overwritten', False,
+                  'append_event silently corrected a link the caller got wrong')
+        except A.Refused as exc:
+            check('...and a caller-supplied WRONG link is refused rather than overwritten',
+                  'A8' in str(exc), str(exc))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # -- #4 THE CLOSED LEGACY SET IS CLOSED BY MEMBERSHIP. --------------------------------------
+    #    Measured at HEAD against the real 60-row store: a FOURTH legacy row reusing the cutover
+    #    oid passed validate_allocation, store_problems AND inventory_problems.
+    declared = M.declared_legacy_magics(ROOT)
+    real = M.read_store(M.store_path(ROOT))
+    fourth = {'entity': 'MagicAllocation', 'magic': 999999, 'scope': 'LEGACY_ACCOUNT_SCOPED',
+              'legacy_exception': True, 'legacy_accounts': ['111111111', '222222222'],
+              'imported_in_cutover': True, 'allocated_to': None, 'status': 'ASSIGNED',
+              'allocated_at_commit': [r for r in real
+                                      if r['scope'] == 'LEGACY_ACCOUNT_SCOPED'][0]['allocated_at_commit']}
+    refuses('a FOURTH legacy row that reuses the cutover oid out of the file it is attacking',
+            M.store_problems(real + [fourth], declared), 'M7')
+    dropped = [r for r in real if S.normalize_numbers(r['magic']) != 990103]
+    refuses('...and a store that QUIETLY DROPS one of the three',
+            M.store_problems(dropped, declared), 'M7')
+    accepts('CONTROL: the real store still passes M7 against the declaration',
+            M.store_problems(real, declared))
+    # the SKIP is reported, never silent -- the half that makes the injection honest
+    skipped = M.store_problems(real, None)
+    check('...and store_problems with NO declaration SAYS so rather than passing',
+          any(p.startswith('M7 SKIPPED') for p in skipped), skipped)
+    # and the declaration is READ, not retyped: break the file, the module refuses
+    # ...and the set is DERIVED, not retyped. The sequencing note on the ORDER-1260 row is
+    # explicit that hardcoding the three magics here would trade a loose rule for a copy, so the
+    # rule's own body is what this inspects -- not the file, which legitimately names them in
+    # prose while explaining the collisions they describe.
+    magic_src = io.open(os.path.join(HERE, 'magic.py'), encoding='utf-8').read()
+    rule_body = magic_src.split('def store_problems')[1].split('\ndef ')[0]
+    copied = [str(m) for m in declared if str(m) in rule_body]
+    check('the declared set is READ from schemas.json (%s), and M7\'s body names none of it'
+          % (list(declared),),
+          'x-legacy-exception-set' in io.open(os.path.join(HERE, 'schemas.json'),
+                                              encoding='utf-8-sig').read() and not copied,
+          'store_problems hardcodes %s -- that is the copy the order forbade' % copied)
+
+    # -- #5 A RUNNING DEPLOYMENT WITH NO READABLE MAGIC REFUSES. --------------------------------
+    #    Measured at HEAD: 3 ACTIVE rows in, 1 out, no refusal and no count.
+    tmp = tempfile.mkdtemp(prefix='s10_inv_')
+    try:
+        def inv_file(lines):
+            p = os.path.join(tmp, 'DEPLOYMENTS-%d.csv' % len(os.listdir(tmp)))
+            io.open(p, 'w', encoding='utf-8').write(
+                'account,magic,status,judge_date\n' + '\n'.join(lines) + '\n')
+            return p
+        for bad in ('', '99x001', ' '):
+            try:
+                M.read_inventory(inv_file(['159503454,991001,ACTIVE,2026-10-09',
+                                           '159503454,%s,ACTIVE,2026-10-09' % bad]))
+                check('an ACTIVE row with magic %r is refused, not dropped' % bad, False,
+                      'it vanished from every uniqueness check in the system')
+            except M.Refused as exc:
+                check('an ACTIVE row with magic %r is refused, not dropped' % bad,
+                      'ACTIVE' in str(exc) and '159503454' in str(exc), str(exc))
+        # SPECIFICITY: the filter that exists for a reason still works. A row that is not running
+        # and has no magic is ordinary, and refusing it would be an outage, not a guard.
+        quiet = M.read_inventory(inv_file(['159503454,991001,ACTIVE,2026-10-09',
+                                           '159503454,,REMOVED,2026-10-09',
+                                           '159503454,,UNVERIFIED,']))
+        check('CONTROL: non-running rows with no magic are still dropped in silence',
+              len(quiet) == 1, quiet)
+        # and the REAL file, which is what makes this a repair rather than a new outage
+        real_inv = M.read_inventory(M.inventory_path(ROOT))
+        check('CONTROL: the REAL DEPLOYMENTS.csv still reads (%d rows with a magic)'
+              % len(real_inv), len(real_inv) > 50)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # -- #6 THE DOCUMENTED ALLOCATION PATH CAN STAY GREEN. --------------------------------------
+    #    Measured at HEAD: appending ONE allocate() row to the real store failed --check twice
+    #    over -- on "the store records 2 cutover commits" and on byte-identical regeneration --
+    #    so the only compliant paths left were a hand-edit or a false cutover provenance.
+    import gen_magic_allocations as G
+    real_inv = M.read_inventory(M.inventory_path(ROOT))
+    tmp = tempfile.mkdtemp(prefix='s10_alloc_')
+    try:
+        def check_over(rows):
+            p = os.path.join(tmp, 'store-%d.jsonl' % len(os.listdir(tmp)))
+            io.open(p, 'w', encoding='utf-8', newline='\n').write(G.render(rows))
+            out = io.StringIO()
+            saved, sys.stdout = sys.stdout, out
+            try:
+                return G.main(['--check', '--root=' + ROOT, '--store=' + p])
+            finally:
+                sys.stdout = saved
+        allocated = M.allocate(real, real_inv, 'd' * 40)
+        check('--check accepts a GLOBAL reservation made by allocate() at TODAY\'s commit',
+              check_over(real + [allocated]) == 0,
+              'the documented path still cannot stay green')
+        check('CONTROL: --check accepts the store as committed', check_over(real) == 0)
+        # ...and it still catches the drift it was built for, in BOTH directions
+        check('CONTROL: --check still refuses a store missing a DEPLOYED magic',
+              check_over([r for r in real if S.normalize_numbers(r['magic']) != 991001]) == 1)
+        moved_scope = copy.deepcopy(real)
+        for r in moved_scope:
+            if S.normalize_numbers(r['magic']) == 990103:
+                r['scope'] = 'GLOBAL'
+                r['legacy_exception'] = False
+                r.pop('legacy_accounts', None)
+                r.pop('imported_in_cutover', None)
+        check('CONTROL: --check still refuses an exception removed by hand',
+              check_over(moved_scope) == 1)
+        orphan = dict(allocated, scope='LEGACY_ACCOUNT_SCOPED', legacy_exception=True,
+                      legacy_accounts=['1', '2'], imported_in_cutover=True)
+        check('CONTROL: --check still refuses a non-GLOBAL row for a magic on no account',
+              check_over(real + [orphan]) == 1)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     part1_identity()
     part1b_serializer()
@@ -1021,6 +1314,7 @@ def main():
     part2_attestation()
     part3_magic()
     part4_real()
+    part6_order_1260()          # before part5: its roll-up compares against every id NAMED so far
     part5_the_other_half()
     sys.stdout.write('\n')
     if FAILS:

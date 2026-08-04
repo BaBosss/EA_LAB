@@ -1537,6 +1537,12 @@
       "x-owner-file": "factory/magic_allocations.jsonl",
       "x-writer": "automation allocates; claude approves; user ratifies scope changes",
       "x-enforced-by": "allocator: global uniqueness for NEW allocations; check_state.ps1 remains the account|magic backstop",
+      "x-legacy-exception-set": [
+        990103,
+        991001,
+        991002
+      ],
+      "x-legacy-exception-set-note": "ORDER-1260 #4: THE closed set, in the one place that is both machine-readable and already carries the user decision below. magic.declared_legacy_magics() reads it and store_problems M7 compares the store against it. Before this, membership was bound only to 'one allocated_at_commit' (M6) - and a fourth legacy row that copied the cutover oid out of the file it was attacking passed validate_allocation, store_problems and inventory_problems against the real 60-row store. Adding a member here is a USER DECISION about holding account-scoped uniqueness open forever; it is deliberately not a code change, and it is deliberately not a fourth prose copy",
       "description": "USER DECISION 2026-07-30: uniqueness scope moves to GLOBAL, per Grill decision 56. This CONTRADICTS the account|magic invariant currently in PROJECT_STATE.md section 3, so that invariant must be amended by the user in the Decision log before this is built. The audit is correct that the current fleet violates global uniqueness: magics 990103, 991001 and 991002 each appear on two accounts, and 991001 is on real money. Those are recorded as legacy_exception and FROZEN until their judge date - the live fleet is never renumbered as a side effect of adopting this scope. Renumbering, if ever done, is a separate user-approved order.",
       "required": [
         "entity",
@@ -1658,12 +1664,18 @@
         "event_type",
         "at",
         "actor",
-        "deployment_ref"
+        "deployment_ref",
+        "prev_hash"
       ],
       "unevaluatedProperties": false,
       "properties": {
         "entity": {
           "const": "DeploymentAttestationEvent"
+        },
+        "prev_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "ORDER-1260 #3: sha256 of the canonical bytes of the PREVIOUS line, or 64 zeros for the first. Replay alone could not tell an appended log from an edited one - an edited event is still a well-formed event in a well-ordered log - so attestation.validate_event A8 chains them. It protects every event that has a successor; the LAST line is only protected by pinning the head elsewhere"
         },
         "event_id": {
           "type": "string"

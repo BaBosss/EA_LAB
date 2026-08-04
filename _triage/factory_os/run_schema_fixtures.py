@@ -300,7 +300,7 @@ CASES = [
     case("attestation-reassigned-by-automation", "audit-1 #13 deployment auto-advanced", "fail",
          {"entity": "DeploymentAttestationEvent", "event_id": "e1", "account": "159503454",
           "magic": 991001, "event_type": "CANDIDATE_REASSIGNED", "at": "t", "actor": "automation",
-          "deployment_ref": OWNER}),
+          "deployment_ref": OWNER, "prev_hash": "0" * 64}),
 
     # ---- coverage: a reason is not optional -------------------------------------
     case("not-applicable-without-reason", "design 3.4 NOT_APPLICABLE needs a written reason", "fail",
@@ -688,7 +688,7 @@ epair('SystemFinding', SYSFIND_OK, with_(SYSFIND_OK, severity="NOISY"),
 
 DEPEV_OK = {"entity": "DeploymentAttestationEvent", "event_id": "e1", "account": "159503454",
             "magic": 991001, "event_type": "OBSERVED", "at": "2026-07-31T00:00:00Z",
-            "actor": "automation", "deployment_ref": OWNER}
+            "actor": "automation", "deployment_ref": OWNER, "prev_hash": "0" * 64}
 epair('DeploymentAttestationEvent', DEPEV_OK, with_(DEPEV_OK, actor="cron"),
       'ORDER-611: the actor decides whether a human authorization is required. An actor outside '
       'the closed list escapes that conditional entirely',

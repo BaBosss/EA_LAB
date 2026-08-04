@@ -33,6 +33,7 @@ USAGE  tools\\python312\\python.exe _triage/factory_os/attestation.py <command> 
 EXIT   0 = ok  -  1 = a REFUSAL (the reasons are on stdout as JSON)  -  2 = unreadable input
 """
 
+import hashlib
 import io
 import json
 import os
@@ -48,7 +49,7 @@ ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 LOG_REL = 'factory/attestations.jsonl'
 
 EVENT_FIELDS = ('entity', 'event_id', 'account', 'magic', 'event_type', 'at', 'actor',
-                'deployment_ref')
+                'deployment_ref', 'prev_hash')
 OPTIONAL_FIELDS = ('authorization_ref', 'candidate_id', 'attest_state', 'core_revision')
 EVENT_TYPES = ('OBSERVED', 'CANDIDATE_ASSIGNED', 'CANDIDATE_REASSIGNED', 'ATTEST_STATE_CHANGED',
                'FROZEN', 'RETIRED')
@@ -63,7 +64,42 @@ AUTOMATION_EVENT_TYPES = ('OBSERVED',)
 # After this, the pair's history is closed.
 TERMINAL_EVENT_TYPES = ('RETIRED',)
 
+# ORDER-1260 #2. THE EVENT TYPES THAT MAY DECIDE WHICH CANDIDATE A DEPLOYMENT IS ATTESTED TO.
+#
+# A6 used to be written on ONE member of this axis -- `event_type == 'OBSERVED'` -- and the
+# module docstring above explains the axis correctly while the code implemented a single value
+# of it. Measured at HEAD before this was changed: `ATTEST_STATE_CHANGED`, `FROZEN` and
+# `RETIRED` each moved a pair from one candidate to another and `validate_event` returned []. The
+# severity is SEMANTIC rather than unauthorized -- A3 still demanded an `authorization_ref`, so a
+# human did sign something. They signed a freeze, or a retirement, and what happened was a
+# reassignment. `RETIRED` is the sharpest: the event that closes a pair forever could move it on
+# the way out, and A7 then refuses every event that could correct it.
+#
+# Declared as a SET rather than as a second `!=` so that the axis is a thing the cage can check:
+# `run_s10_tests.py` asserts this set and its complement partition EVENT_TYPES exactly, which is
+# what makes a SEVENTH event type a decision someone has to take rather than a silent default.
+CANDIDATE_MOVING_EVENT_TYPES = ('CANDIDATE_ASSIGNED', 'CANDIDATE_REASSIGNED')
+
+# ORDER-1260 #3. The chain anchor for the first line of a log.
+GENESIS_PREV_HASH = '0' * 64
+
 EVENT_ID_RE = re.compile(r'^ATT-[0-9]{8}-[0-9]{3,}$')
+HEX64_RE = re.compile(r'^[0-9a-f]{64}$')
+
+
+def event_hash(event):
+    """sha256 over the event's canonical bytes -- the SAME bytes `append_event` writes.
+
+    Hashing the canonical serialization rather than a chosen subset of fields is the point: a
+    chain that covered only the fields someone thought were important would be silent about the
+    ones they did not, which is the defect this exists to close, one level up.
+    """
+    return hashlib.sha256(S.canonical(event).encode('utf-8')).hexdigest()
+
+
+def chain_head(events):
+    """What the NEXT event's `prev_hash` must be. GENESIS for an empty log."""
+    return GENESIS_PREV_HASH if not events else event_hash(events[-1])
 
 
 class Refused(Exception):
@@ -201,16 +237,26 @@ def validate_event(event, prior_events):
 
     state = fold(prior_events).get(pair_key(event))
 
-    # -- A6 AN OBSERVATION MAY NOT MOVE THE CANDIDATE. See the module docstring: without this,
-    #    A3 is an enum check and automation reassigns deployments through the field the entity was
-    #    rewritten to protect.
-    if event['event_type'] == 'OBSERVED' and event.get('candidate_id') is not None:
+    # -- A6 ONLY AN ASSIGNMENT EVENT MAY MOVE THE CANDIDATE. See the module docstring: without
+    #    this, A3 is an enum check and automation reassigns deployments through the field the
+    #    entity was rewritten to protect.
+    #
+    #    🔴 ORDER-1260 #2: THIS WAS WRITTEN ON ONE VALUE OF THE AXIS AND THE AXIS IS THE RULE.
+    #    The test was `event_type == 'OBSERVED'`, so the other three non-assignment types walked
+    #    straight past it -- measured at HEAD: ATTEST_STATE_CHANGED, FROZEN and RETIRED each moved
+    #    a pair to a different candidate and returned []. It is now written on
+    #    CANDIDATE_MOVING_EVENT_TYPES, and the message names the event type it actually refused
+    #    rather than saying OBSERVED about a FROZEN.
+    if (event['event_type'] not in CANDIDATE_MOVING_EVENT_TYPES
+            and event.get('candidate_id') is not None):
         current = (state or {}).get('candidate_id')
         if current is not None and event['candidate_id'] != current:
-            problems.append('A6 an OBSERVED event may not move %s|%s from %s to %s -- changing '
-                            'which candidate a magic is attested to is CANDIDATE_REASSIGNED, and '
-                            'that needs a human authorization_ref'
-                            % (event['account'], magic, current, event['candidate_id']))
+            problems.append('A6 a %s event may not move %s|%s from %s to %s -- changing which '
+                            'candidate a magic is attested to is CANDIDATE_REASSIGNED, and that '
+                            'needs a human authorization_ref for THAT decision. An authorization '
+                            'to %s is not an authorization to reassign.'
+                            % (event['event_type'], event['account'], magic, current,
+                               event['candidate_id'], event['event_type']))
         elif current is None:
             # 🔴 /scrutinize round 2: THIS BRANCH USED TO READ `and event['actor'] ==
             # 'automation'`, and the asymmetry ran the wrong way. `user` and `claude` could make
@@ -224,11 +270,11 @@ def validate_event(event, prior_events):
             # candidate on a chart the ledger never assigned is a DISCREPANCY -- it can still be
             # recorded, with `candidate_id: null` and an `attest_state`, which is the honest shape
             # for "I saw something nobody authorized".
-            problems.append('A6 an OBSERVED event may not be the first thing to name a candidate '
+            problems.append('A6 a %s event may not be the first thing to name a candidate '
                             'for %s|%s -- the FIRST assignment is CANDIDATE_ASSIGNED and needs a '
                             'human authorization_ref. An unauthorized first write is an '
                             'unauthorized write, whoever makes it.'
-                            % (event['account'], magic))
+                            % (event['event_type'], event['account'], magic))
 
     # -- A7 RETIRED closes the pair. A magic is never re-issued once retired (design 4.6: a reused
     #    magic silently re-attributes historical deals), so an attestation after it is either a
@@ -236,6 +282,34 @@ def validate_event(event, prior_events):
     if state and state.get('retired'):
         problems.append('A7 %s|%s was RETIRED -- its attestation history is closed and a magic is '
                         'never re-issued' % (event['account'], magic))
+
+    # -- A8 THE CHAIN. ORDER-1260 #3. `prev_hash` must be the hash of the line before it, so an
+    #    event's bytes are covered by every event that follows it.
+    #
+    #    WHAT THIS REPLACED. `verify_log`'s docstring said "a store that was appended to correctly
+    #    re-validates; one that was EDITED does not", and the second half was not true of anything
+    #    in the file. Measured at HEAD: editing a CANDIDATE_ASSIGNED's `candidate_id` in place gave
+    #    `verify_log() == []` and `fold()` returned the new candidate. Replay cannot see it -- an
+    #    edited event is still a well-formed event in a well-ordered log, so every rule A1-A7 is as
+    #    satisfied by the forgery as by the original. The module's "there is no rewrite function
+    #    here" argument is sound about THIS MODULE and says nothing about a text editor or a merge.
+    #
+    #    🔴 WHAT IT DOES NOT DO, said out loud because a tamper-evidence claim is exactly the kind
+    #    that gets over-read: the chain protects every event that HAS A SUCCESSOR. Editing the LAST
+    #    line of a log -- the head -- breaks no link, and nothing inside a file can notice a change
+    #    to its own end. That needs the head pinned somewhere else (the `attested-pin` mechanism is
+    #    the repo's answer for this shape). `run_s10_tests.py` carries that limit as a case rather
+    #    than leaving it to be discovered. (memory: name-it-honestly-when-you-cannot-prove-it)
+    if 'prev_hash' in event:
+        if not HEX64_RE.match(str(event['prev_hash'])):
+            problems.append('A8 prev_hash %r is not a sha256' % (event['prev_hash'],))
+        else:
+            expected = chain_head(prior_events)
+            if str(event['prev_hash']) != expected:
+                problems.append('A8 prev_hash %s does not chain onto the log it is being appended '
+                                'to (expected %s) -- either this event was written against a '
+                                'different history, or a line before it was EDITED after it was '
+                                'written' % (str(event['prev_hash'])[:12], expected[:12]))
     return problems
 
 
@@ -267,8 +341,16 @@ def append_event(path, event):
 
     Re-reading rather than trusting a list the caller passed in is the point: the caller's copy is
     a snapshot, and A2's uniqueness and A5's ordering are both claims about the file.
+
+    ORDER-1260 #3: `prev_hash` is STAMPED here when the caller left it out, and CHECKED when the
+    caller supplied it. Stamping is right because only this function knows the file's real head --
+    a caller computing it from its own snapshot would be computing it from the thing that might be
+    stale. Silently overwriting a supplied value would be wrong for the same reason A2 re-reads:
+    a caller that thought it knew the head and was wrong has made a mistake worth refusing.
     """
     prior = read_log(path)
+    if 'prev_hash' not in event:
+        event = dict(event, prev_hash=chain_head(prior))
     problems = validate_event(event, prior)
     if problems:
         raise Refused('; '.join(problems))
@@ -282,7 +364,15 @@ def append_event(path, event):
 
 def verify_log(events):
     """Re-drive the whole log through the validator, one event at a time, exactly as it was
-    written. A store that was appended to correctly re-validates; one that was EDITED does not.
+    written. A store that was appended to correctly re-validates.
+
+    ORDER-1260 #3 -- WHAT THE SECOND HALF OF THIS SENTENCE USED TO CLAIM, AND WHAT IT NOW MEANS.
+    It read "one that was EDITED does not", and nothing in the file made that true: replay alone
+    cannot see a content edit, because an edited event is still a well-formed event in a
+    well-ordered log. A8 is what makes it true, and only as far as a chain can: an edit to any
+    event that HAS A SUCCESSOR breaks the link and is reported at the line after it. An edit to
+    the LAST line breaks no link. That limit is stated in A8 and pinned by a case, rather than
+    left inside the word "EDITED" for a reader to over-trust.
 
     This is the log's answer to `candidate.read_manifest`: the integrity of an append-only file is
     not a property of any single line, so it is checked by replay rather than by inspection.

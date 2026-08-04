@@ -107,6 +107,20 @@ if ($null -ne $rows -and $rows.Count -gt 0) {
   $dups = @($withMagic | Group-Object { "$($_.account)|$($_.magic)" } | Where-Object Count -gt 1)
   Check ($dups.Count -eq 0) "no duplicate account|magic in inventory" ("duplicate account|magic: " + (($dups | ForEach-Object Name) -join ', '))
 
+  # ORDER-1260 #5, the PowerShell half. The filter above drops every row whose magic is not a
+  # number, and until now it dropped them SILENTLY -- so an ACTIVE deployment with a blank or
+  # malformed magic was absent from this duplicate check, from the global rule, and from the
+  # cohort-map check, with nothing anywhere reporting a count. magic.py refuses the same shape now
+  # (INVENTORY_RUNNING_STATUSES) and check 2b below would surface it, but that check reads the
+  # STAGED bytes through the judged reader, and this one reads the same $rows the line above does.
+  # The two are kept separate deliberately: a row that this loop can see and 2b cannot is exactly
+  # the case worth naming out loud.
+  #
+  # UNVERIFIED is the declared exemption and it is the same one magic.py declares -- the word
+  # already means "the lab has not established what this row is" three checks further down.
+  $unreadable = @($rows | Where-Object { $_.magic -notmatch '^\d+$' -and $_.status -eq 'ACTIVE' })
+  Check ($unreadable.Count -eq 0) "every ACTIVE inventory row has a readable magic" ("ACTIVE row(s) whose magic is not a number, and which are therefore invisible to every uniqueness check: " + (($unreadable | ForEach-Object { "$($_.account)/$($_.ea_name)" }) -join ', '))
+
   # 2b. THE GLOBAL MAGIC RULE. ORDER-1100 (slice S10).
   #
   # PROJECT_STATE section 0.5, owner-ratified 2026-08-01: uniqueness scope is GLOBAL -- one magic

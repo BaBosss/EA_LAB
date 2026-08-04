@@ -57,8 +57,55 @@ OPTIONAL_FIELDS = ('legacy_exception', 'legacy_accounts', 'allocated_to', 'deplo
 SCOPES = ('GLOBAL', 'LEGACY_ACCOUNT_SCOPED')
 STATUSES = ('RESERVED', 'ASSIGNED', 'RETIRED')
 
+# ORDER-1260 #5. The DEPLOYMENTS.csv statuses that mean something is running on a chart, and for
+# which "I could not read the magic" is therefore a refusal rather than a skip. Measured on the
+# real file before this was armed, because a new refusal on the commit path is the ORDER-1310 #6
+# shape: 64 rows, statuses ACTIVE 58 / REMOVED 5 / UNVERIFIED 1, and exactly ONE row carries a
+# non-numeric magic -- `ClevrFX_EA` on account 69424711, status UNVERIFIED. So this set arms the
+# refusal on 58 rows and refuses none of them today.
+#
+# UNVERIFIED IS THE DECLARED EXEMPTION, not an oversight, and `check_state.ps1` already gives the
+# word the same meaning one check along ("every inventory row with a magic (status not
+# UNVERIFIED) has a dashboard cohort map entry"). It means the lab has not established what that
+# row is. Refusing it would take the commit path down over the one row whose whole point is that
+# it is not yet described -- and the honest fix for that row is to describe it, which is an
+# owner action and not something a validator can perform. It is named here so that tightening the
+# boundary is a decision someone takes rather than a line nobody notices.
+INVENTORY_RUNNING_STATUSES = ('ACTIVE',)
+
 HEX40_RE = re.compile(r'^[0-9a-f]{40}$')
 CAND_ID_RE = re.compile(r'^CAND-[0-9a-f]{12}$')
+
+# ORDER-1260 #4. WHERE THE CLOSED SET IS DECLARED, AND WHY IT IS NOT DECLARED HERE.
+#
+# M6 bound membership of the legacy set to "one `allocated_at_commit`" and never to WHICH magics
+# are in it. Measured at HEAD against the real 60-row store: a FOURTH legacy row reusing the
+# cutover oid passed `validate_allocation`, `store_problems` AND `inventory_problems`. The control
+# -- the same row at a different commit -- was refused, so M6 was live and simply answering a
+# different question. Reusing an oid costs nothing: it is copied out of the file being attacked.
+#
+# The three magics were named in PROSE in four places (this module's docstring, schemas.json's
+# user decision, PROJECT_STATE section 0.5, the S10 cage) and DERIVED in none. Retyping them here
+# would have made a fifth copy, so the set is READ from the one of the four that is already
+# machine-readable and already carries the user's decision: `MagicAllocation.x-legacy-exception-
+# set` in schemas.json. Adding a member is then an edit to a user-decision field, which is what
+# "closed set" was supposed to mean, rather than an edit to a rule.
+LEGACY_SET_KEY = 'x-legacy-exception-set'
+
+
+def declared_legacy_magics(root=None):
+    """The closed legacy set, READ from schemas.json. Raises rather than returning a default:
+    a missing declaration is not an empty declaration, and treating it as one would turn the
+    closed set into "no exceptions are legal", which reads as strict and is simply wrong."""
+    path = os.path.join(root or ROOT, '_triage', 'factory_os', 'schemas.json')
+    with io.open(path, 'r', encoding='utf-8-sig') as fh:
+        schema = json.load(fh)
+    d = schema['$defs']['MagicAllocation']
+    if LEGACY_SET_KEY not in d:
+        raise Refused('schemas.json MagicAllocation declares no %s -- the closed legacy set has '
+                      'no declaration to derive from, and this module will not invent one'
+                      % LEGACY_SET_KEY)
+    return tuple(S.normalize_numbers(m) for m in d[LEGACY_SET_KEY])
 
 
 class Refused(Exception):
@@ -74,19 +121,42 @@ def read_inventory(path):
     """[(account, magic, status, judge_date)] for every row whose magic is a number.
 
     THE NON-NUMERIC FILTER IS LOAD-BEARING and it is the same one check_precommit_staged had to
-    have spelled correctly: three rows carry a blank magic, and reading blanks as equal would
-    report them as a collision with each other. Measured on the real file, this drops exactly the
-    rows with no magic and nothing else -- the count is printed by `verify`, not asserted here.
+    have spelled correctly: some rows carry a blank magic, and reading blanks as equal would
+    report them as a collision with each other.
+
+    🔴 ORDER-1260 #5 -- WHAT THE OLD SENTENCE HERE GOT WRONG, AND IT IS A CLASS OF ERROR THIS
+    REPO HAS A NAME FOR. It read "measured on the real file, this drops exactly the rows with no
+    magic and nothing else". That is a statement about the FILE ON ONE DAY, not a property the
+    filter enforces -- and it was written inside the module that owns global uniqueness for a
+    real-money magic. Measured at HEAD: three ACTIVE rows in (one good, one blank, one `99x001`),
+    ONE row out, no refusal and no count. An ACTIVE deployment whose magic is malformed vanishes
+    from every uniqueness check in the system, silently.
+    (memory: unreadable-input-must-refuse-not-skip)
+
+    The filter stays -- a blank magic on a row that is not deployed is ordinary -- but it is now
+    a DECLARED exemption with a boundary rather than a silent drop: a row is only dropped when
+    its status says nothing is running. A row that says something IS running and does not say
+    what magic it is running under is unreadable input, and unreadable input refuses.
     """
     out = []
+    unreadable = []
     with io.open(path, 'r', encoding='utf-8-sig', newline='') as fh:
-        for row in csv.DictReader(fh):
+        for n, row in enumerate(csv.DictReader(fh), 2):     # 2 = the first data line, 1 is header
             raw = (row.get('magic') or '').strip()
             if not raw.isdigit():
+                status = (row.get('status') or '').strip().upper()
+                if status in INVENTORY_RUNNING_STATUSES:
+                    unreadable.append('line %d: account %r has status %s and magic %r, which is '
+                                      'not a number -- a running deployment with no readable '
+                                      'magic is invisible to every uniqueness check, which is the '
+                                      'one thing this file exists to make impossible'
+                                      % (n, (row.get('account') or '').strip(), status, raw))
                 continue
             out.append({'account': (row.get('account') or '').strip(), 'magic': int(raw),
                         'status': (row.get('status') or '').strip(),
                         'judge_date': (row.get('judge_date') or '').strip()})
+    if unreadable:
+        raise Refused('%s: %s' % (path, '; '.join(unreadable)))
     return out
 
 
@@ -158,9 +228,17 @@ def validate_allocation(row):
     return problems
 
 
-def store_problems(rows):
+def store_problems(rows, declared_legacy=None):
     """Every problem with the store AS A WHOLE. Per-row rules are `validate_allocation`; these are
-    the ones no single row can answer."""
+    the ones no single row can answer.
+
+    `declared_legacy` is INJECTED rather than read from disk so this function stays pure -- the
+    same reason `candidate.validate_manifest` takes `run_lookup`. When it is None the membership
+    criterion (M7) is SKIPPED and SAYS SO in the returned list, because a check that passes
+    silently when its input is absent is the shape this repo keeps paying for
+    (memory `guard-disarmed-by-prose-reported-as-note`). Every real caller passes
+    `declared_legacy_magics()`.
+    """
     problems = []
     for i, row in enumerate(rows):
         problems.extend('line %d: %s' % (i + 1, p) for p in validate_allocation(row))
@@ -184,6 +262,26 @@ def store_problems(rows):
                         'set is imported ONCE, at the cutover, and a second import commit is how '
                         'an open category grows back'
                         % (len(commits), [c[:12] for c in commits]))
+
+    # -- M7 THE CLOSED SET IS CLOSED BY MEMBERSHIP, NOT BY TIMESTAMP. ORDER-1260 #4.
+    #    M6 above asks WHEN, which a forged row answers by copying the oid out of the file it is
+    #    attacking. This asks WHICH, against the declaration.
+    present = sorted(S.normalize_numbers(r['magic']) for r in legacy)
+    if declared_legacy is None:
+        problems.append('M7 SKIPPED: no declared legacy set was supplied, so the MEMBERSHIP of the '
+                        'closed exception set was not checked -- only that its rows agree on one '
+                        'import commit (M6). The store has been checked for CONSISTENCY, not for '
+                        'the set being the one the owner declared.')
+    else:
+        want = sorted(S.normalize_numbers(m) for m in declared_legacy)
+        if present != want:
+            problems.append('M7 the legacy exceptions in this store are %s but schemas.json '
+                            'declares the closed set as %s. Extra %s / missing %s -- a legacy '
+                            'exception is account-scoped uniqueness held open forever, so the set '
+                            'grows by a user decision recorded in the declaration, never by a row '
+                            'appearing in the store'
+                            % (present, want, sorted(set(present) - set(want)),
+                               sorted(set(want) - set(present))))
     return problems
 
 
@@ -330,15 +428,19 @@ def read_store(path):
     return out
 
 
-def append_allocation(path, row, inventory):
+def append_allocation(path, row, inventory, root=None):
     """Append one row after re-reading the store from disk, for the reason `attestation` does:
-    uniqueness is a claim about the file, not about the caller's snapshot."""
+    uniqueness is a claim about the file, not about the caller's snapshot.
+
+    This is at the impure edge, so it READS the declared legacy set rather than taking it: a
+    writer that could be handed a set is a writer that could be handed the wrong one.
+    """
     rows = read_store(path)
     if row['scope'] == 'LEGACY_ACCOUNT_SCOPED':
         raise Refused('M6 a legacy exception may only be created by the cutover import -- the set '
                       'is closed (schemas.json RE-AUDIT P1)')
     problems = validate_allocation(row)
-    problems.extend(store_problems(rows + [row]))
+    problems.extend(store_problems(rows + [row], declared_legacy_magics(root)))
     problems.extend(inventory_problems(inventory, rows + [row]))
     if problems:
         raise Refused('; '.join(problems))
@@ -402,9 +504,16 @@ def main(argv):
     except (IOError, OSError, ValueError) as exc:
         sys.stderr.write('%s\n' % exc)
         return 2
+    except Refused as exc:
+        # ORDER-1260 #5: an inventory row that says something is RUNNING and does not say under
+        # which magic. Exit 2 (unreadable input), not 1 (a refusal about the store's contents) --
+        # the store was never reached, and saying "the magic rule failed" would name the wrong file.
+        sys.stderr.write('%s\n' % exc)
+        return 2
 
     if cmd == 'verify':
-        problems = store_problems(rows) + inventory_problems(inventory, rows)
+        problems = store_problems(rows, declared_legacy_magics(root)) \
+            + inventory_problems(inventory, rows)
         if problems:
             return _emit({'action': 'REFUSE', 'why': problems}, 1)
         return _emit({'action': 'VERIFIED', 'allocations': len(rows),

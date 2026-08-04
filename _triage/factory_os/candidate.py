@@ -120,6 +120,26 @@ BUILD_TAG_RE = re.compile(r'^LAB_ENTRY_[0-9A-Za-z_]+$')
 # input." The second half of that sentence is what `C2` below enforces.
 ID_HEX_LEN = 12
 
+# ORDER-1260 #1. (CandidatePayload field, ExecutionKey field) -- the identity a cited run must
+# share with the candidate it is offered as evidence for. C9 used to bind only the three fields a
+# MetricRef carries (`lane`, `data_fingerprint`, `model`), which are facts about the METRIC and
+# say nothing about whether the run was a run of THIS candidate.
+#
+# WRITTEN AS PAIRS, NOT MATCHED BY NAME: three of the four spell the same fact differently in the
+# two vocabularies (`ex5_sha256`/`ex5_hash`, `logical_symbol`/`symbol`), so a loop over the
+# intersection of the two field sets would have bound `tf` and `effective_config_hash` and
+# silently skipped the binary -- which is the field that actually distinguishes one strategy from
+# another. `logical_symbol`/`symbol` is deliberately ABSENT: see C9c for why, and for what covers
+# it instead.
+#
+# The cage asserts every pair here exists in both schemas, so a renamed field breaks a case
+# instead of quietly binding nothing.
+PAYLOAD_KEY_BINDINGS = (
+    ('tf', 'tf'),
+    ('ex5_sha256', 'ex5_hash'),
+    ('effective_config_hash', 'effective_config_hash'),
+)
+
 
 class DigestMismatch(Exception):
     """Raised by `read_manifest`. A TYPE, not a return code, because the acceptance is that a
@@ -398,6 +418,7 @@ def validate_manifest(manifest, run_lookup=None):
         problems.append('C9 SKIPPED: no run store was supplied, so no metric was resolved to its '
                         'run. This manifest has been checked for INTEGRITY, not for PROVENANCE.')
     elif isinstance(manifest['payload'], dict) and isinstance(manifest['payload'].get('evidence'), list):
+        payload = manifest['payload']
         for i, m in enumerate(manifest['payload']['evidence']):
             if not isinstance(m, dict) or 'run_id' not in m:
                 continue
@@ -435,6 +456,51 @@ def validate_manifest(manifest, run_lookup=None):
                 elif S.normalize_numbers(key[f]) != S.normalize_numbers(m.get(f)):
                     problems.append('C9 evidence[%d] claims %s=%r but run %s recorded %r'
                                     % (i, f, m.get(f), m['run_id'], key[f]))
+
+            # -- C9b THE RUN MUST BE A RUN OF THIS CANDIDATE. ORDER-1260 #1.
+            #
+            #    The three fields above are everything a MetricRef CARRIES, and binding only
+            #    those binds only the metric's own provenance -- never the identity of the thing
+            #    the metric is offered as evidence FOR. Measured at HEAD: a manifest declaring
+            #    EURUSD/M15 citing runs whose ExecutionKey said XAUUSD/H4 on a different expert
+            #    with a different binary returned []. The digest protected that false provenance
+            #    statement faithfully, which is the point -- C2 proves the payload was not
+            #    altered, and says nothing about whether it is true.
+            #
+            #    The comparison is PAYLOAD -> ExecutionKey, and it names the pairs rather than
+            #    matching by field name, because the two vocabularies spell three of them
+            #    differently and a name-matching loop would silently cover only `tf`.
+            for pf, kf in PAYLOAD_KEY_BINDINGS:
+                if kf not in key:
+                    problems.append('C9 evidence[%d] cites %s, whose ExecutionKey records no %s -- '
+                                    'there is nothing to compare this candidate\'s %s against'
+                                    % (i, m['run_id'], kf, pf))
+                elif S.normalize_numbers(key[kf]) != S.normalize_numbers(payload.get(pf)):
+                    problems.append('C9 evidence[%d] cites %s, but this candidate\'s %s is %r and '
+                                    'that run recorded %s=%r -- a metric from a run of something '
+                                    'else is not evidence for this candidate'
+                                    % (i, m['run_id'], pf, payload.get(pf), kf, key[kf]))
+
+        # -- C9c ONE CANDIDATE, ONE INSTRUMENT, ONE EXPERT. The bindings above cannot reach
+        #    `symbol`: the payload carries a LOGICAL symbol and the key carries the BROKER one,
+        #    and resolving between them needs `LogicalSymbol.broker_map` keyed by lane -- of which
+        #    no store exists in this repository today (only schema fixtures). Rather than invent a
+        #    resolver, or write a prefix heuristic and call it an exemption, this binds what can be
+        #    established without one: every cited run must agree with every other on `symbol` and
+        #    on `expert`. That catches evidence STITCHED from two instruments or two experts, and
+        #    it does NOT catch a candidate whose evidence is uniformly from the wrong symbol -- a
+        #    hole that `ex5_hash` narrows to "the same binary run on another instrument" and that
+        #    is closed only by the resolver. Stated here and on the ORDER-1260 row rather than
+        #    left as a silent limit. (memory: name-it-honestly-when-you-cannot-prove-it)
+        cited = [run_lookup.get(m['run_id']) for m in manifest['payload']['evidence']
+                 if isinstance(m, dict) and m.get('run_id') in run_lookup]
+        for kf in ('symbol', 'expert'):
+            seen = sorted(set(str((j.get('execution_key') or {}).get(kf)) for j in cited
+                              if (j.get('execution_key') or {}).get(kf) is not None))
+            if len(seen) > 1:
+                problems.append('C9 the cited runs disagree about %s (%s) -- one candidate is one '
+                                'binary on one instrument, so evidence assembled from more than '
+                                'one is evidence for no single thing' % (kf, seen))
     return problems
 
 

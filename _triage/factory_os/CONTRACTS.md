@@ -510,6 +510,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | field | type | required | rule |
 |---|---|---|---|
 | `entity` | const `DeploymentAttestationEvent` | **yes** |  |
+| `prev_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` · ORDER-1260 #3: sha256 of the canonical bytes of the PREVIOUS line, or 64 zeros for the first. Replay alone could not tell an appended log from an edited one - an edited event is still a well-formed event in a well-ordered log - so attestation.validate_event A8 chains them. It protects every event that has a successor; the LAST line is only protected by pinning the head elsewhere |
 | `event_id` | `string` | **yes** |  |
 | `account` | `string` | **yes** |  |
 | `magic` | `integer` | **yes** |  |
