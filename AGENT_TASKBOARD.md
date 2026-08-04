@@ -2474,6 +2474,16 @@ failing.
 **Prohibited:** wiring the checker to re-read `_mt5_auto/reports/**` · a second implementation of
 the comparison in the checker · deleting an `UNIMPLEMENTED` entry without implementing it.
 
+⚠️ **Not started 2026-08-04 by lane `S-2026-08-04-S13H`, and the reason is a lane conflict, not
+time.** Acceptance (1) is *"the manifest has a schema entity and a negative fixture"*, which is an
+edit to `_triage/factory_os/schemas.json` — declared in `docs/SESSION_LEDGER.md` by
+`S-2026-08-04-CORRECT5`, which is `ACTIVE`. Rule 4 is one writer per shared file per period. Building
+the `parity.py` half and leaving the entity for later would put the store in a state where the
+manifest exists and nothing describes it, which is the shape `ORDER-1280` is already paying for
+twelve times over. **The next lane that owns `schemas.json` should take this whole order at once.**
+🚫 The `_mt5_auto/reports/**` obstacle above is unchanged and is still the reason a re-reading
+checker is not the shortcut it looks like.
+
 ---
 
 ## ORDER-1256 — [factory/S13] Teach the last four stubs to read what will exist — `OPEN — items 10 and 11 DONE 2026-08-04 (lane S-2026-08-04-S13H, 52854c9f); items 12 and 14 still stubs, and item 10 now renders FAIL → ORDER-1370` · ทำได้: Claude/Opus · 👉 แนะ: Claude
