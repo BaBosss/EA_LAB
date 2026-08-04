@@ -7629,6 +7629,69 @@ STAGE 2 ≈ **25 runs per EA** (top-2 LIVE axes, full 5×5 cross). STAGE 3 = **2
 **ห้าม:** ออก verdict · เปลี่ยนบาร์หลังเห็นเลข · เลือกจุดยอด (peak) แทนกลาง plateau · sweep แกนที่ไม่ได้
 ระบุ · แตะหน้าต่าง 2026 · รายงาน Model 1 เป็นหลักฐานขั้นสุดท้าย · แตะ `.mq5` · `ea_template\core\` ·
 `.set` ต้นฉบับใน `_vps_deploy\` (ให้ copy ออกมาแก้) · board/scorecard/state ไฟล์ใดๆ · git commit
+### ✅ ORDER-1411 STAGES 1-2 — 70 runs (2026-08-04). Judged against bars committed in `cfd46dc4` **before** the batch ran.
+
+Model 1, MAIN, lane `D:\Meta 5c`. The worker completed 70 runs and then exceeded its own 99,073-token
+context window — the third time tonight, and the same fixed ceiling each time, so it is a property of
+that tier, not a fault. Every report survived; parsed by the lead seat with the pinned interpreter.
+
+#### CELL 1 `MacdDiv_Naked` / AUDJPY H4 — STAGE 1 CLASSIFICATION (baseline PF 1.18 / 173 trades)
+
+| axis | max |Δ PF| | class |
+|---|---|---|
+| `_01_SwingRadius` | 0.28 | **LIVE** |
+| `_03_BufferAtrMult` | 0.22 | **LIVE** |
+| `_03_AtrPeriod` | 0.05 | **LIVE** — exactly at the pre-registered threshold, marginal by construction |
+| `_01_LookbackBars` | **0.00** | **INERT** — 1.18 / 173 trades / 0.84% DD identical at 30, 45 and 90 |
+| `_01_MinBarsApart` | **0.00** | **INERT** — identical at 1 and 4 |
+| `_07_UseRsiGate` | **0.00** | **INERT(gate)** |
+| `_08_UseMacdCross` | **0.00** | **INERT(gate)** |
+
+🔴 **Four of seven axes do not move even the trade count.** Had the grid been run across all axes
+without this probe, those four would have manufactured a plateau out of nothing — which is the whole
+reason the probe was pre-registered (memory `inert-axis-fake-plateau`). ⚠️ **The two gates are INERT,
+which is NOT the same as safe**, and this batch **cannot** separate *never triggered* from *triggered
+and changed nothing*: neither EA emits a fire counter. Stated as required by the bar table, not chosen.
+
+#### CELL 1 — STAGE 2 GRID (`_01_SwingRadius` × `_03_BufferAtrMult`), MAIN PF
+
+| | B 0.05 | B 0.10 | B 0.15 | B 0.25 | B 0.40 |
+|---|---|---|---|---|---|
+| **S1** | 0.96 | 0.96 | 0.93 | 1.01 | 0.91 |
+| **S2** | 0.96 | 0.94 | 1.01 | 0.92 | 0.96 |
+| **S3** *(base)* | 0.96 | 1.01 | **1.18** | 0.97 | 0.99 |
+| **S4** | **1.42** | **1.44** | **1.46** | **1.39** | **1.24** |
+| **S5** | 1.33 | 1.17 | 1.20 | 1.22 | 1.10 |
+
+**PLATEAU — rule met.** Row `S4` holds **five contiguous points all ≥ 1.20**, against a pre-registered
+requirement of three. **BOUNDARY — rule passed:** the best point `S4/B0.15` is interior on *both* axes
+(`S` grid is 1-5, `B` grid is 0.05-0.40), so the answer is not outside the grid.
+**Selected = the plateau CENTRE `_01_SwingRadius=4`, `_03_BufferAtrMult=0.15` → MAIN Model-1 PF 1.46,
+160 trades, DD 0.51%.** Here the centre and the peak happen to be the same cell; both are named so the
+coincidence is visible rather than assumed.
+⚠️ **Honest shape: this is a RIDGE, not a 2-D plateau.** It is broad along `BufferAtrMult` and narrow
+along `SwingRadius` — `S3` is 1.18 and `S5` is patchy. A ridge satisfies the written rule; it is
+thinner evidence than the word *plateau* suggests, and the next reader should know that.
+
+#### CELL 2 `PivotBreakout_XAU` / USDJPY H4 — STAGE 1 (baseline 1.17 / 211)
+All four axes LIVE: session **0.36** · `_02_SlAtrMult` **0.34** · `_01_AtrPeriod` **0.25** ·
+`_02_TpRR` **0.24**.
+🔴 **The STAGE 2 grid here is INVALID, and the fault is in my spec, not the runner's execution.** The
+rule said *"top two LIVE axes, five values each"*. The top axis by delta was **session, which only has
+three variants** — so the cross product came out **2 × 5**, not 5 × 5. The runner followed the rule as
+written. **No point in that grid forms a plateau** (best `1.25` at `S7/Sl3.0` on **55 trades**, with no
+contiguous ≥1.20 neighbourhood) ⇒ `SPIKE — not promoted`, which is the correct outcome regardless.
+**Re-run CELL 2 with `SlAtrMult` × `AtrPeriod`** — the top two axes that actually have five values.
+
+#### STAGE 3 — dispatched, result not in this block
+Two Model-4 runs on the CELL 1 centre (MAIN + BWD) are running; the brief requires the report's own
+Inputs page to be read back to prove the intended `.set` was loaded. 🚫 **Nothing here is a verdict.**
+`1.46` is a **Model 1** number and the bars say Model 1 is never final evidence.
+
+⚠️ **Carried forward, unresolved:** `MacdDiv_Naked` exposes no SL and no TP input, and every cell in
+this sweep reports DD between **0.46% and 1.08%** on 91-379 trades. Drawdown that small with no stop
+is the kind of number that is usually explained by something other than skill. It is not this order's
+job to answer, and it must not be quietly enjoyed.
 ## ORDER-1410 — [factory/S2a] Audit 7 refused `ORDER-600` and `ORDER-601` **twice**, and nothing has been repaired — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 **bars:** N-A (repair driven by a named report) · **flat-lot probe:** N-A
 
