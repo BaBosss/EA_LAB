@@ -332,6 +332,44 @@ all, and if not, what happens to every record already carrying `financing_deduct
 ⚠️ Coupled to `ORDER-1330`: if the swap rate is an unrecorded input that moves, then *when* the probe
 ran is part of its result, and a single dated probe is not a permanent answer.
 
+### ✅ Step 1 DONE — 2026-08-04, lane `S-2026-08-04-SWAPPROBE`. Both probes run on the pinned lane.
+
+Record: `factory/runs/pilot/swap_probe/swap_probe_20260804.jsonl` (dated, both probes, journal path
+and report path carried).
+
+| probe | result |
+|---|---|
+| `(TST)_SymbolSwapProbe` — reads the spec, places no orders | `BTCUSD` mode is **still `INTEREST_CURRENT`**; `swap_long` **−14.31 %/yr**, `swap_short` −0.49; contract 1.0 |
+| `(TST)_SwapChargeProbe` — one 0.01-lot BUY held **70 days**, 2025.10.01 → 2025.12.09 | tester charged **`Swap = −20.21`** beside a price-only profit of −220.43 |
+
+🔴 **The premise is refuted at its own source, by its own probe.** `swap_adjust_crypto.py`'s docstring
+records, from 2026-07-26: *"BTCUSD `SYMBOL_SWAP_MODE_INTEREST_CURRENT` -> swap is NOT charged (net ==
+price-only P&L to the cent)"*. On this dated run the two are **not** equal and the charge is **not**
+zero. The **mode** half of that measurement is still correct; the **charged** half is not. So the
+repair is not "the broker changed the symbol to POINTS" — it is that an INTEREST-mode symbol on this
+build **is** charged, and every `financing_deducted` figure sits on top of that.
+
+**−20.21 vs a naive ~29** from the annual rate over the same hold: the gap is rollover-day counting
+and the price each daily charge is valued at. It is **not** the difference between charged and not
+charged, and quoting it as "the tester only charges part of it, so the top-up is fine" would be the
+same error one size smaller — the post-hoc tool deducts the **whole** bill, not the remainder.
+
+🔴 **And the rate itself moved.** The same probe read **−14.67 %/yr** on 2026-07-26 and **−14.31 %/yr**
+today, with the mode unchanged. That is a **second, independent confirmation of `ORDER-1330`**, from a
+different instrument than the deal-list diff: the symbol specification is an input to every backtest
+and no record carries it.
+
+**Consequence for the figures already quoted, stated but NOT recomputed here:** a tester-reported
+profit factor already contains the swap the tester charged, so deducting the post-hoc bill on top
+produced the *"financing-adjusted"* numbers in circulation. `B14-H02-r1/BTCUSD/H4` BWD Model 4 is
+reported by the tester at **1.44** and was quoted as **1.20** after that second deduction. 🚫 No
+number is restated on this row: applying the answer to every arm at once is `ORDER-1370`, and doing
+it here for one cell is how a corpus ends up half-migrated.
+
+**Still owed:** (2) and (3) above — what happens to every record already carrying
+`financing_deducted.applied = true`, and the same question for ETHUSD and any other INTEREST-mode
+symbol. ⚠️ And the coupling stands: this probe is dated because the next one need not agree.
+
 ---
 
 ## ORDER-1301 — [factory/S13] Every configuration in the PF-max plateau has essentially no realized loss, which is what a basket martingale looks like when it is measured on PF — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
