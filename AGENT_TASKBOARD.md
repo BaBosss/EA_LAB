@@ -546,6 +546,17 @@ unchanged**, store byte-identical to HEAD throughout.
 
 Cost, measured before placement: `run_s13_tests` **1.9s → 4.1 / 4.2s**, full tier **93.6 / 94.0s of
 120.0s** under `run_fast_cages.ps1 -Hook` on a quiet lane. The 120.0s budget stays **pinned**.
+⚠️ **Re-measured after the audit round: 105.0 / 105.9 / 105.5s at 29 suites (~14s headroom), and
+113.7s on a loaded box.** The rise is mostly a concurrent lane's `run_s2a_cages.ps1` (8.1s), not
+this. Anyone adding a suite must re-measure — the budget is shared.
+
+🔎 **Audited afterwards (`/scrutinize`, 3 rounds) and repaired in `907aaa20`.** The blocker was in
+the SIBLING suite this order added alongside: `run_selection_tests.ps1` PART 2 read sixteen
+gitignored 3-4 MB probe surfaces, so on a clone without them every commit touching
+`factory/coverage.jsonl` was blocked — via a `NativeCommandError` that printed none of the suite's
+own messages. Exit 2 = *"not on this machine"*, reported and skipped, verified by hiding all
+sixteen. Four majors alongside it, including one that is this order's own defect class recreated:
+the selection record was generated evidence with nothing re-deriving it and no guard naming it.
 Guards added: the generator, its cage, the **pinned source run record** and the **probe directory** —
 a generated store whose *inputs* are unguarded is guarded against hand edits only.
 

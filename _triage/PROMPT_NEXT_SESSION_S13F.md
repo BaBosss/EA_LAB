@@ -41,9 +41,23 @@ powershell -NoProfile -File scripts/_test/run_selection_tests.ps1
    never moved, and the store was byte-identical to HEAD before and after. It took three attempts
    and the first two failed for reasons that were mine — see the traps.
 
-**Tier:** 27 → 28 suites. `93.2 / 93.6 / 94.0s of 120.0s` under
-`powershell -NoProfile -File scripts/_test/run_fast_cages.ps1 -Hook` on a quiet lane
-(≈26s headroom). The budget stays **pinned at 120.0s**.
+6. 🔎 **An audit pass (`/scrutinize`, 3 rounds) ran over this lane's own work afterwards and found a
+   blocker plus four majors. All are fixed and measured** — commit `907aaa20` (whose message is a
+   placeholder; the reasoning is in the commit that follows it). The blocker is the one to know
+   about: `run_selection_tests.ps1` went on the pre-commit path with a PART 2 that reads sixteen
+   3-4 MB probe surfaces out of `_mt5_auto/optimizations/`, **which is gitignored** — so on any
+   clone that lacks them, every commit touching `factory/coverage.jsonl` was blocked, and by a
+   PowerShell `NativeCommandError` that printed none of the suite's own messages. Exit 2 now means
+   *"the surfaces are not on this machine"* and is reported-and-skipped. **Verify it yourself:**
+   move `_mt5_auto/optimizations/S13PROBE_*.xml` aside and run the suite — 16 fixture cases still
+   run, it exits 0, and it names what it skipped.
+
+⚠️ **Tier headroom is ~14s, not the ~26s an earlier draft of this file claimed.**
+`105.0 / 105.9 / 105.5s of 120.0s` at **29 suites** under
+`powershell -NoProfile -File scripts/_test/run_fast_cages.ps1 -Hook` on a quiet lane, and one
+sample on a loaded box read **113.7s**. Most of the rise is a concurrent lane's
+`run_s2a_cages.ps1` (8.1s), not this one (1.2s). The budget stays **pinned at 120.0s** —
+**re-measure before adding any suite; the budget is shared and two lanes spend it independently.**
 **`check_pilot_acceptance` is unchanged at `8 PASS · 0 FAIL · 6 BLOCKED (0 awaiting evidence, 6
 checker-not-implemented)`** — this lane produced no new acceptance evidence, deliberately.
 
@@ -118,8 +132,8 @@ Everything measured is **Model 1 on MAIN**, so nothing produced so far is verdic
 
 ## Baseline before you touch anything
 
-- `run_fast_cages.ps1 -Hook` **on a quiet lane** (28 suites) · `run_s13_tests.ps1` (76 cases + the
-  pilot-cells cage + the real `--check`) · `run_selection_tests.ps1` (16) ·
+- `run_fast_cages.ps1 -Hook` **on a quiet lane** (29 suites) · `run_s13_tests.ps1` (76 cases + the
+  11-case pilot-cells cage + the real `--check`) · `run_selection_tests.ps1` (26) ·
   `run_optimize_guard_tests.ps1` (32) · `run_schema_cages.ps1` · `check_state.ps1` ·
   `_triage/factory_os/run_s2a_gate.py`.
 - ⚠️ **`run_contract_binding_tests.ps1` is RED and it is not yours.** It was red at this lane's
@@ -133,6 +147,26 @@ Everything measured is **Model 1 on MAIN**, so nothing produced so far is verdic
 - `git log --oneline -15`, and read `docs/SESSION_LEDGER.md` for lanes still `ACTIVE`.
 
 ## Traps this lane paid for (the new ones)
+
+- 🔴 **A suite on the commit path must not assert against gitignored artefacts.**
+  `_mt5_auto/optimizations/` is 3-4 MB per file and gitignored by design; a cage that reads it
+  blocks commits on every machine that legitimately does not have it. "Not on this machine" needs
+  its own exit code (2), reported and skipped — never merged with "the evidence is wrong" (1), and
+  never with a pass (0).
+- 🔴 **An undocumented rounding rule is a rule.** The snap had a third one — exact ties go to the
+  LOWER grid value — and it decides which dimensions `ORDER-1302` widens a `safe_range` for.
+  7 of 136 medians here are exact ties. If a constant can change an output, it is pinned or it is a
+  bug waiting to be discovered by whoever disagrees with it.
+- 🔴 **Closing a "nothing re-derives this store" defect while creating another one.** `ORDER-1272`
+  closed exactly that for `factory/coverage.jsonl`, and the same session wrote a *new* generated
+  store (`factory/runs/pilot/selection/`) with no `--check` and no guard naming it. Ask, of every
+  generated artefact: *what re-derives it, and what runs that?*
+- 🔴 **The mutation probe is not optional, and it caught two cases that read fine.** The first
+  tie-break case put twenty rows of one value then twenty of another, all tied on `Result` — so the
+  cut took four rows of the SAME value and there was no tie to break; flipping the module's snap
+  direction left it green. And a refusal was added with no case at all. Both were invisible to
+  reading and obvious to a one-line mutation (memory
+  `discriminating-test-must-be-able-to-discriminate`).
 
 - 🔴 **A cage whose fixture quotes the live repository goes red on the exact change it exists to
   describe.** `run_pilot_cells_tests` pinned `'"dd_pct": 15.72'`; the moment the real store was
