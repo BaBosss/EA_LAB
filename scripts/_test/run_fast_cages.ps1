@@ -920,6 +920,26 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/run_s2a_migration_tests.py',
                                           'factory/coverage.jsonl',
                                           'MASTER_BACKLOG.md',
+                                          # ORDER-1310 #7, REPRODUCED before it was added: the
+                                          # list above stopped at the files these checkers OWN
+                                          # and missed two they JUDGE. Measured at HEAD with
+                                          # `-ExportSelection`: staging schemas.json selected 6
+                                          # suites and staging the design doc selected 2, and
+                                          # this one was in NEITHER set.
+                                          #   schemas.json      check_coverage_transfer reads it
+                                          #                     for A3's native-row allowlist
+                                          #                     (SCHEMAS_PATH), and C3 cites it
+                                          #                     as the evidence for RunJournal
+                                          #                     and AlertEvent being TRANSIENT.
+                                          #   the DESIGN doc    C3 io.open()s it and requires the
+                                          #                     quoted claim sentence to still be
+                                          #                     present -- so a design-only edit
+                                          #                     deleting one UNOWNABLE sentence
+                                          #                     invalidates C3 with this cage
+                                          #                     never running. Not a mention: a
+                                          #                     read, verified at the call site.
+                                          '_triage/factory_os/schemas.json',
+                                          '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
                                           # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first run
                                           # after this suite was registered, not remembered. Each
                                           # is reached through an `import`, which the wrapper's

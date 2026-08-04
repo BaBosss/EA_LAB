@@ -288,6 +288,65 @@ try {
     if ($fail -eq $before) { Good 'the import sweep can still fire, and does not fire on the standard library' }
 
     # -------------------------------------------------------------------------------------
+    # PART 4c -- ORDER-1310 #7. THE SWEEPS ABOVE READ THE WRAPPER AND ITS IMPORTS. NEITHER CAN
+    # SEE A PATH A CHECKER JUDGES THROUGH A MODULE CONSTANT. Both S2a checkers do exactly that,
+    # and the independent review found both: check_coverage_transfer reads `SCHEMAS_PATH` for
+    # A3's native-row allowlist, and check_s2a_migration's C3 io.open()s each `UNOWNABLE`
+    # evidence file and requires the quoted claim sentence to still be there. Measured at HEAD
+    # before this part was written: staging schemas.json selected 6 suites and staging the design
+    # doc selected 2, and run_s2a_cages.ps1 was in NEITHER -- so a design-only edit deleting one
+    # UNOWNABLE sentence invalidated C3 with the cage never running.
+    #
+    # The required set is DERIVED from the checkers' own constants, so a checker that starts
+    # judging a NEW file declares it here by construction rather than by somebody remembering.
+    $before = $fail
+    $pyExe = Join-Path $RepoRoot 'tools\python312\python.exe'
+    if (-not (Test-Path -LiteralPath $pyExe)) {
+        Bad "PART 4c cannot run: no interpreter at $pyExe (this is a TOOL failure, not a pass)"
+    } else {
+        $probe = @'
+import os, sys
+sys.path.insert(0, os.path.join('_triage', 'factory_os'))
+import check_coverage_transfer as cct
+import check_s2a_migration as csm
+judged = set([cct.SCHEMAS_PATH])
+for _state, _path, _anchor in csm.UNOWNABLE.values():
+    judged.add(_path)
+for p in sorted(judged):
+    print(p)
+'@
+        $probeFile = Join-Path ([System.IO.Path]::GetTempPath()) ("gt1310_" + [guid]::NewGuid().ToString('N') + '.py')
+        try {
+            Set-Content -LiteralPath $probeFile -Encoding UTF8 -Value $probe
+            Push-Location $RepoRoot
+            $judged = @(& $pyExe $probeFile) | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+            Pop-Location
+            if ($judged.Count -lt 2) {
+                Bad ("PART 4c derived $($judged.Count) judged input(s) from the S2a checkers' own " +
+                     'constants. It should be at least 2 -- an empty derivation makes the check below ' +
+                     'vacuous, which is the failure mode it exists to prevent')
+            }
+            foreach ($j in $judged) {
+                if ($declaredFor['run_s2a_cages.ps1'] -notcontains $j) {
+                    Bad ("run_s2a_cages.ps1 JUDGES '$j' (derived from the checkers' own constants) " +
+                         'but does not declare it, so a commit touching only that file runs no S2a ' +
+                         'cage at all')
+                }
+            }
+            # CONTROL: the membership test can say NO. Without it, a `$declaredFor` lookup that
+            # silently returned everything would print green above.
+            if ($declaredFor['run_s2a_cages.ps1'] -contains 'no/such/judged/input.json') {
+                Bad 'PART 4c CONTROL the declaration lookup matches a path that does not exist'
+            }
+        } finally {
+            Remove-Item -LiteralPath $probeFile -Force -ErrorAction SilentlyContinue
+        }
+    }
+    if ($fail -eq $before) {
+        Good 'PART 4c every path the S2a checkers JUDGE through a module constant is declared'
+    }
+
+    # -------------------------------------------------------------------------------------
     Write-Host ''
     Phase '[guard-trigger] PART 5 -- BACKLOG-D32 per-path suite SELECTION'
     # This part exists because the repo's own memory says a path-filter must not land without a
