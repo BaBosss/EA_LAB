@@ -1962,6 +1962,32 @@ emitting them. It now derives the universe from the three modules' sources.
 `check_state.ps1` **CLEAN**. `run_s2a_conformance` **68/0**, so no BUNDLE member moved and **no
 owner signature is owed**.
 
+### 🔎 `/scrutinize` of the above, same lane, owner-requested — three defects IN THE REPAIRS (`97b01538`)
+
+All three reproduced before being fixed, and all three are one family: **a repair that was right
+about the rule it changed and careless about the seam it changed it at.**
+
+| # | sev | defect, measured | fix |
+|---|---|---|---|
+| a | 🟠 | **`--check` blamed the wrong file.** #5 made `read_inventory` able to REFUSE; `gen_magic_allocations` caught only `(IOError, OSError)`, so an ACTIVE row with an unreadable magic came out as a **traceback with python's default exit 1** — the code that tool's own header reserves for **DRIFT IN THE STORE** | returns **2** (cannot read the inputs), as the header declares |
+| b | 🟠 | **Replacing a byte-identical comparison with a field list narrowed the check silently.** Measured against the real store: a **deployed magic flipped to `status: RETIRED` passed `--check`**, and so did an invented `allocated_to`. The byte comparison had caught both | `status` is compared; the two fields deliberately **not** compared (`allocated_at_commit`, `allocated_to`) each carry their reason in the code |
+| c | 🟡 | **The A8 chain would have cried forgery over a round trip this repo is known to do.** `991001` and `991001.0` hashed differently, and `pair_key` — one screen above A8 — documents that PowerShell hands JSON numbers back in the second spelling. Safe direction to fail, but the message would say *"a line before it was EDITED"* about a file nobody touched | hashes through `normalize_numbers`, the function `pair_key` already uses for this trip |
+
+🎯 **`(b)` is the one worth remembering: a narrowing nobody writes down is indistinguishable from
+an oversight.** `RETIRED` is the case design 4.6 cares about specifically — a retired magic is
+never re-issued, so a RETIRED row for a magic sitting on a live account is the store contradicting
+reality.
+
+⚠️ **And `(a)`'s case was caught by the standing rule, not by me:** the first version of it was
+**green under `python run_s10_tests.py` and RED under `run_s10_tests.ps1`** — the refusal reaches
+**stderr**, and the wrappers run under `$ErrorActionPreference='Stop'` where any stderr from a
+native command is a thrown error. Same shape as the stderr notice `ORDER-1267` had to back out.
+
+**Also measured while scrutinising, and it belongs on this row:** minting a fourth legacy exception
+now takes **three files** — `schemas.json` (the declaration), the store, **and** `DEPLOYMENTS.csv`
+(because `M5`'s specificity check refuses a declared exception that is not a real collision). It
+took **one** before. Five new cases cover all of the above.
+
 ### The audit's original table, kept for the record
 
 Full evidence + controls = `_triage/factory_os/CODEX_AUDIT_S10_2026-08-03.md`. Brief =
