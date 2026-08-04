@@ -61,6 +61,10 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
 import evidence  # noqa: E402
+# The RunJournal fold belongs to scheduler.py and is imported rather than re-derived here. A
+# second fold would be a second reader of the same append-only store, which is the defect
+# ORDER-1255 names for parity and which applies identically to the journal.
+import scheduler  # noqa: E402
 
 # 🔴 THE FIRST RUN OF THIS MODULE DIED HERE, and it is the trap this repo has now paid for twice
 # (memory `thai-output-kills-a-suite-inside-the-hook`). Design 8.6's own wording contains `§`, `≤`
@@ -624,21 +628,218 @@ def item_lane_and_fingerprint(src):
                len(fingerprints)))
 
 
+def _crypto_run_records(src):
+    """-> [(rel, line_no, record)] for every committed pilot run record on a crypto symbol.
+
+    Reads the verification directory as well as the matrix directory. `list_committed`'s `*` does
+    not cross `/`, and the BWD + Model-4 runs -- the ones a bar is actually read off -- live one
+    level down in `verification/`. A financing rule that only saw the matrix would report on the
+    third of the runs nobody judges anything from.
+    """
+    out = []
+    for pattern in ('factory/runs/pilot/*.jsonl', 'factory/runs/pilot/verification/*.jsonl'):
+        try:
+            paths = src.list_committed(pattern)
+        except evidence.ToolFailure:
+            continue
+        for rel in sorted(paths):
+            for n, line in enumerate(_read(src, rel).split('\n'), 1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except ValueError as exc:
+                    raise Refusal('%s line %d is unparseable: %s' % (rel, n, exc))
+                if rec.get('logical_symbol') in CRYPTO_SYMBOLS:
+                    out.append((rel, n, rec))
+    return out
+
+
 def item_crypto_financing(src):
     """8.6.10 -- crypto cells have financing deducted post-hoc, and say so."""
-    return (BLOCKED,
-            'no %s cell has been run. The tester charges POINTS-mode swap but NOT '
-            'INTEREST_CURRENT (memory `tester-charges-points-swap-not-interest-swap`), so every '
-            'crypto number is optimistic by a known, large amount until deducted.'
-            % '/'.join(CRYPTO_SYMBOLS))
+    recs = _crypto_run_records(src)
+    if not recs:
+        return (BLOCKED,
+                'no %s run record is committed under factory/runs/pilot/, so there is no crypto '
+                'number for a financing cost to be deducted from.' % '/'.join(CRYPTO_SYMBOLS))
+
+    # HALF ONE -- "and say so". Structural, and it is the half that can be judged from the records.
+    problems = []
+    for rel, n, rec in recs:
+        where = '%s:%d %s [%s]' % (rel, n, rec.get('cell_id'), rec.get('arm') or rec.get('window'))
+        fin = rec.get('financing_deducted')
+        if not isinstance(fin, dict):
+            problems.append('%s carries no financing_deducted block' % where)
+            continue
+        for f in ('applied', 'tool', 'rate_long_pct_yr', 'rate_short_pct_yr', 'detail'):
+            if fin.get(f) in (None, ''):
+                problems.append('%s financing_deducted has no %s' % (where, f))
+        if fin.get('applied') is not True:
+            problems.append('%s records financing_deducted.applied=%r; an unapplied deduction '
+                            'leaves the number exactly as optimistic as no deduction at all'
+                            % (where, fin.get('applied')))
+    if problems:
+        # WHY THIS IS A CONTRADICTION AND NOT A GAP. The records do not merely omit something --
+        # they disagree with each other: within one crypto cell, the baseline arm carries a
+        # financing statement and the probe arms carry none, so the falsifier comparison the arms
+        # exist for puts an adjusted number beside an unadjusted one. Which side is the repair is
+        # NOT decided here and cannot be until ORDER-1350 settles whether the tester already
+        # charges the cost (in which case the baseline is the arm that is wrong). Either way the
+        # evidence contradicts this item as written.
+        by_arm = {}
+        for rel, n, rec in recs:
+            has = isinstance(rec.get('financing_deducted'), dict)
+            slot = by_arm.setdefault(str(rec.get('arm')), [0, 0])
+            slot[0 if has else 1] += 1
+        shape = '; '.join('%s %d with / %d without' % (a, v[0], v[1])
+                          for a, v in sorted(by_arm.items()))
+        return (FAIL,
+                '%d %s run record(s) carry no complete financing statement, and the split is by '
+                'ARM rather than random -- %s. Two arms of one cell, same symbol and window, one '
+                'adjusted and one not, is the comparison the flat-lot falsifier rests on. Which '
+                'arm is the one to repair is open (ORDER-1350: the tester may already be charging '
+                'the cost, which would make the baseline the wrong side). First %d: %s'
+                % (len(problems), '/'.join(CRYPTO_SYMBOLS), shape, min(3, len(problems)),
+                   '; '.join(problems[:3])))
+
+    # HALF TWO -- "deducted", which is not the same as "a deduction is recorded". ORDER-1350
+    # measured that the tester itself charges swap on BTCUSD in these very runs (a non-zero Swap
+    # column; implied annual mean 14.3% against the broker's stated 14.67%), while
+    # swap_adjust_crypto.py applies the cost a SECOND time on top -- its docstring's premise, a
+    # probe run 2026-07-26, no longer holds. A number carrying the cost twice does not satisfy
+    # this item any more than a number carrying it zero times: the item exists so that crypto
+    # figures carry their financing CORRECTLY.
+    #
+    # 🔴 THE GATE IS READ FROM THE RECORD, NOT HARDCODED, and that is deliberate. A handler that
+    # returned BLOCKED on a constant because of ORDER-1350 would be a stub wearing a reader --
+    # exactly the shape the UNIMPLEMENTED block above exists to stop. So the two facts that would
+    # settle it are named as FIELDS, and the moment a writer records them this item goes green on
+    # its own:
+    #   financing_deducted.tester_swap_charged  the tester's OWN swap total for this report, so a
+    #                                           second charge cannot be mistaken for the first
+    #   financing_deducted.swap_mode_probe      a DATED probe of the symbol's swap mode; the
+    #                                           premise in swap_adjust_crypto.py is a 2026-07-26
+    #                                           measurement and broker state moves under it
+    ungated = []
+    for rel, n, rec in recs:
+        fin = rec['financing_deducted']
+        where = '%s:%d %s' % (rel, n, rec.get('cell_id'))
+        if not isinstance(fin.get('tester_swap_charged'), (int, float)):
+            ungated.append('%s has no numeric financing_deducted.tester_swap_charged' % where)
+        if not fin.get('swap_mode_probe'):
+            ungated.append('%s has no financing_deducted.swap_mode_probe' % where)
+    if ungated:
+        return (BLOCKED,
+                'all %d %s run record(s) carry a complete financing statement (tool, both rates, '
+                'amount, applied=true), so the "say so" half is satisfied. The "deducted" half is '
+                'not evidenced: ORDER-1350 measured that the tester CHARGES swap on these same '
+                'runs (implied annual mean 14.3%% vs the broker-stated 14.67%%), so the post-hoc '
+                'cost is applied on top of a charge that already happened, and no record says '
+                'otherwise. %d missing field(s); first: %s'
+                % (len(recs), '/'.join(CRYPTO_SYMBOLS), len(ungated), ungated[0]))
+    return (PASS,
+            'all %d %s run record(s) carry a complete financing statement AND state the tester s '
+            'own swap charge beside the post-hoc one with a dated swap-mode probe, so the cost is '
+            'deducted once and the record shows which side charged what.'
+            % (len(recs), '/'.join(CRYPTO_SYMBOLS)))
+
+
+def _run_journals(src):
+    """-> [(rel, journal)] for every committed RunTransition manifest under factory/runs/.
+
+    `factory/runs/*.jsonl` does not cross `/`, so the pilot matrix records one level down are not
+    swept up here -- they are not RunTransition lines and folding them would be a category error.
+    """
+    out = []
+    try:
+        paths = src.list_committed('factory/runs/*.jsonl')
+    except evidence.ToolFailure:
+        return out
+    for rel in sorted(paths):
+        lines = []
+        for n, line in enumerate(_read(src, rel).split('\n'), 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except ValueError as exc:
+                raise Refusal('%s line %d is unparseable: %s' % (rel, n, exc))
+            if obj.get('entity') == 'RunTransition':
+                lines.append(obj)
+        if lines:
+            out.append((rel, scheduler.fold(lines)))
+    return out
 
 
 def item_scheduler_resume(src):
     """8.6.11 -- the scheduler resumes a killed batch without re-running a completed attempt."""
+    journals = _run_journals(src)
+    if not journals:
+        return (BLOCKED,
+                'no RunTransition manifest is committed under factory/runs/, so there is no '
+                'resume to observe. scripts/_test/run_scheduler_tests.ps1 proves the contract '
+                'against fixtures and is in the fast tier, but 8.6 asks for it on a PILOT batch '
+                'and a cage over fixtures is not that observation.')
+
+    pilot_ids = set(str(c.get('cell_id')) for c in _pilot_cells(src) if c.get('cell_id'))
+    qualifying, killed_but_not_pilot, violations = [], [], []
+    for rel, j in journals:
+        cell = str(j.get('cell_id') or '')
+        attempts = j.get('attempts') or []
+        # A kill is a FAILED transition whose failure_class says so -- not any failure. The
+        # distinction is the whole item: an ordinary FAILED retry is not evidence a KILLED batch
+        # can be resumed.
+        killed = [a for a in attempts
+                  if a.get('transition') == 'FAILED' and a.get('failure_class') == 'KILLED']
+        if not killed:
+            continue
+        # The EARLIEST kill, not the latest. A run killed three times in a row has its last kill
+        # at the final attempt with nothing after it -- taking the max would read "no resume" off
+        # a journal that resumed twice. This is what the first version of this handler got wrong,
+        # and the fixture below is the one that catches it.
+        first_kill = min(a.get('attempt') or 0 for a in killed)
+        resumed = [a for a in attempts if (a.get('attempt') or 0) > first_kill]
+        completed = [a.get('attempt') or 0 for a in attempts if a.get('transition') == 'COMPLETED']
+        # The prohibition half, and it is checked on every journal rather than only on the ones
+        # that would otherwise pass: an attempt started AFTER some attempt reached COMPLETED is
+        # exactly "re-running a completed attempt", and it is a defect wherever it appears.
+        if completed and any((a.get('attempt') or 0) > min(completed) for a in attempts):
+            violations.append('%s (%s) starts an attempt after attempt %d reached COMPLETED'
+                              % (rel, cell, min(completed)))
+        if not resumed:
+            continue
+        if cell in pilot_ids:
+            qualifying.append('%s (%s): killed at attempt %d, resumed at attempt %d'
+                              % (rel, cell, first_kill,
+                                 min(a.get('attempt') or 0 for a in resumed)))
+        else:
+            killed_but_not_pilot.append('%s (%s)' % (rel, cell))
+
+    if violations:
+        return (FAIL,
+                'a committed journal re-runs work that was already COMPLETED, which is the half '
+                'of this item stated as a prohibition: %s' % '; '.join(sorted(violations)))
+    if qualifying:
+        return (PASS,
+                '%d committed journal(s) show a KILLED attempt followed by a resume on a '
+                'registered pilot cell, and no journal starts an attempt after one reached '
+                'COMPLETED: %s' % (len(qualifying), '; '.join(sorted(qualifying))))
+    if killed_but_not_pilot:
+        return (BLOCKED,
+                '%d RunTransition manifest(s) are committed and %d of them DO show a KILLED '
+                'attempt followed by a resume -- but on cell id(s) that are not among the %d '
+                'registered pilot cells: %s. The resume contract is therefore observed, just not '
+                'on a PILOT batch, which is what 8.6 asks for. Missing: one killed-and-resumed '
+                'run whose cell_id is a registered pilot cell.'
+                % (len(journals), len(killed_but_not_pilot), len(pilot_ids),
+                   ', '.join(sorted(killed_but_not_pilot))))
     return (BLOCKED,
-            'scripts/_test/run_scheduler_tests.ps1 proves the resume contract against fixtures and '
-            'is in the fast tier, but 8.6 asks for it on a killed PILOT batch. No pilot batch has '
-            'been run, so this is BLOCKED rather than borrowed from the cage.')
+            '%d RunTransition manifest(s) are committed and NONE shows a KILLED attempt followed '
+            'by a later attempt, so no resume has been observed at all -- on a pilot cell or '
+            'anywhere else. %d pilot cell(s) are registered. Missing: one killed-and-resumed run '
+            'whose cell_id is one of them.' % (len(journals), len(pilot_ids)))
 
 
 def item_evidence_complete_no_verdict(src):
@@ -717,11 +918,6 @@ UNIMPLEMENTED = {
     'item_parity_directions':
         'same manifest as item_parity_all_points; the DIRECTIONS (must-trade actually traded, '
         'refusal actually refused) come from parity.verdict_for_case, not from a re-read.',
-    'item_crypto_financing':
-        'needs a crypto cell result AND the post-hoc financing deduction recorded beside it.',
-    'item_scheduler_resume':
-        'needs a killed-and-resumed PILOT batch; the scheduler journal exists and is cage-tested, '
-        'but nothing ties a journal to a pilot batch id yet.',
     'item_evidence_complete_no_verdict':
         'the compound claim can only be evaluated once every other item can PASS; the half that '
         'is testable today (no verdict vocabulary) IS implemented and driven.',

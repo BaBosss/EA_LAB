@@ -728,6 +728,152 @@ check('L5 SPECIFICITY a RUN record with no lane is caught even when every metric
       state == PA.FAIL and 'fixture.jsonl' in detail, '%s: %s' % (state, detail))
 
 
+# item 10 (ORDER-1256) ----------------------------------------------------------------------------
+# The handler judges TWO halves and they fail differently: "say so" is structural and its failure
+# is a CONTRADICTION between arms of one cell; "deducted" is gated on two fields that do not exist
+# in any record yet, and the gate is read rather than hardcoded so the item can go green without
+# another edit to this file.
+
+def fin(**over):
+    f = {'applied': True, 'tool': 'scripts/swap_adjust_crypto.py',
+         'rate_long_pct_yr': 14.67, 'rate_short_pct_yr': 0.49,
+         'detail': 'positions: 55 / swap charged: -625.70',
+         'tester_swap_charged': -382.75, 'swap_mode_probe': '2026-08-04 INTEREST_CURRENT'}
+    f.update(over)
+    return f
+
+
+def crypto_run(arm='baseline', symbol='BTCUSD', financing='default', **over):
+    r = {'entity': 'PilotCellRun', 'cell_id': 'B14-H01-r1/%s/H4' % symbol, 'arm': arm,
+         'logical_symbol': symbol, 'window': 'MAIN',
+         'lane': r'D:\Meta 5\terminal64.exe', 'data_fingerprint': 'df1'}
+    if financing == 'default':
+        r['financing_deducted'] = fin()
+    elif financing is not None:
+        r['financing_deducted'] = financing
+    r.update(over)
+    return r
+
+
+def crypto_source(runs, verification=None):
+    files = {PA.DESIGN_REL: REAL_DESIGN,
+             PA.COVERAGE_REL: '\n'.join(json.dumps(c) for c in [cell('c1')])}
+    if runs is not None:
+        files['factory/runs/pilot/fixture.jsonl'] = '\n'.join(json.dumps(r) for r in runs)
+    if verification is not None:
+        files['factory/runs/pilot/verification/v.jsonl'] = '\n'.join(
+            json.dumps(r) for r in verification)
+    return FakeSource(files)
+
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline'), crypto_run('flat-lot-probe')]))
+check('F1 POSITIVE every crypto arm states the deduction AND what the tester itself charged -> PASS',
+      state == PA.PASS, '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source([crypto_run(symbol='XAUUSD')]))
+check('F2 no crypto run at all -> BLOCKED (absent evidence is not a clean deduction)',
+      state == PA.BLOCKED and 'no BTCUSD run record' in detail, '%s: %s' % (state, detail))
+
+# 🔴 THE CASE THIS HANDLER EXISTS FOR, and the one the real corpus is in today: the baseline arm
+# carries a financing statement and the probe arm carries none, so the flat-lot falsifier compares
+# an adjusted number with an unadjusted one. Reported as a contradiction, with the ARM split named
+# -- "12 with / 10 without" scattered at random would be a different defect than one whole arm.
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline'), crypto_run('flat-lot-probe', financing=None)]))
+check('F3 ATTACK one arm adjusted, the other not -> FAIL and it names the ARM split',
+      state == PA.FAIL and 'flat-lot-probe 0 with / 1 without' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=fin(applied=False))]))
+check('F4 ATTACK applied=false -> FAIL (an unapplied deduction leaves the number optimistic)',
+      state == PA.FAIL and 'applied=False' in detail, '%s: %s' % (state, detail))
+
+# The ORDER-1350 gate, and the reason it is a FIELD and not a constant: with the two fields absent
+# the item is BLOCKED; F1 above proves the same handler returns PASS once they are present. A
+# hardcoded gate would make this item unreachable, which is the defect UNIMPLEMENTED exists for.
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=fin(tester_swap_charged=None, swap_mode_probe=None))]))
+check('F5 ATTACK a deduction with no tester-side charge recorded -> BLOCKED, naming ORDER-1350',
+      state == PA.BLOCKED and 'ORDER-1350' in detail and 'tester_swap_charged' in detail,
+      '%s: %s' % (state, detail))
+
+# SPECIFICITY: `*` does not cross `/` in list_committed, and the BWD + Model-4 runs live one level
+# down in verification/. A handler that only globbed the matrix directory would pass while the
+# runs a bar is actually read off carried nothing.
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline')], verification=[crypto_run('selected-verification', financing=None)]))
+check('F6 SPECIFICITY a record under verification/ is read too, not just the matrix directory',
+      state == PA.FAIL and 'verification/v.jsonl' in detail, '%s: %s' % (state, detail))
+
+
+# item 11 (ORDER-1256) ----------------------------------------------------------------------------
+
+def trans(attempt, transition, cell_id='B14-H01-r1/S0/H1', **rec):
+    r = {'attempt': attempt, 'transition': transition, 'at': '2026-08-04T00:00:00Z'}
+    r.update(rec)
+    return {'entity': 'RunTransition', 'run_id': 'RUN-X', 'cell_id': cell_id,
+            'attempt': attempt, 'transition': transition, 'record': r}
+
+
+def journal_source(lines, cells=None):
+    files = {PA.DESIGN_REL: REAL_DESIGN,
+             PA.COVERAGE_REL: '\n'.join(json.dumps(c) for c in (
+                 cells if cells is not None else [cell('B14-H01-r1/S0/H1')]))}
+    if lines is not None:
+        files['factory/runs/RUN-X.jsonl'] = '\n'.join(json.dumps(l) for l in lines)
+    return FakeSource(files)
+
+
+KILLED_THEN_RESUMED = [
+    trans(1, 'QUEUED'), trans(1, 'LEASED'), trans(1, 'FAILED', failure_class='KILLED'),
+    trans(2, 'LEASED'), trans(2, 'COMPLETED'),
+]
+state, detail = PA.item_scheduler_resume(journal_source(KILLED_THEN_RESUMED))
+check('S1 POSITIVE a pilot cell killed at attempt 1 and resumed at attempt 2 -> PASS',
+      state == PA.PASS and 'killed at attempt 1, resumed at attempt 2' in detail,
+      '%s: %s' % (state, detail))
+
+# 🔴 THE BUG THIS FIXTURE CAUGHT. The first version of the handler took the LATEST kill, so a run
+# killed on every attempt read as "never resumed" -- three resumes rendered as none. The earliest
+# kill is the one that has anything after it.
+state, detail = PA.item_scheduler_resume(journal_source([
+    trans(1, 'QUEUED'), trans(1, 'FAILED', failure_class='KILLED'),
+    trans(2, 'LEASED'), trans(2, 'FAILED', failure_class='KILLED'),
+    trans(3, 'LEASED'), trans(3, 'FAILED', failure_class='KILLED'),
+]))
+check('S2 REGRESSION killed on every attempt still shows the resumes after the FIRST kill -> PASS',
+      state == PA.PASS and 'killed at attempt 1, resumed at attempt 2' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_scheduler_resume(journal_source([
+    trans(1, 'QUEUED'), trans(1, 'FAILED', failure_class='KILLED'),
+    trans(2, 'LEASED'), trans(2, 'COMPLETED'), trans(3, 'LEASED'),
+]))
+check('S3 ATTACK an attempt started after one reached COMPLETED -> FAIL (the prohibition half)',
+      state == PA.FAIL and 'already COMPLETED' in detail, '%s: %s' % (state, detail))
+
+# The real corpus is in exactly this state: a killed-and-resumed journal exists, on a WIRING cell
+# id that is not a registered pilot cell. "Observed, but not on a pilot batch" is a different work
+# item from "never observed", and the two must not render as the same sentence.
+state, detail = PA.item_scheduler_resume(journal_source(
+    [trans(1, 'FAILED', cell_id='B14-H01-r1/S0/H1/S9WIRE', failure_class='KILLED'),
+     trans(2, 'LEASED', cell_id='B14-H01-r1/S0/H1/S9WIRE')]))
+check('S4 a resume on a NON-pilot cell id -> BLOCKED, and it says the contract was observed',
+      state == PA.BLOCKED and 'not among the' in detail and 'S9WIRE' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_scheduler_resume(journal_source([
+    trans(1, 'QUEUED'), trans(1, 'FAILED', failure_class='TESTER_ERROR'), trans(2, 'LEASED')]))
+check('S5 SPECIFICITY an ordinary FAILED retry is not a KILL, so it does not satisfy this item',
+      state == PA.BLOCKED and 'NONE shows a KILLED' in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_scheduler_resume(journal_source(None))
+check('S6 no journal committed at all -> BLOCKED (a fixture cage is not the observation)',
+      state == PA.BLOCKED and 'no resume to observe' in detail, '%s: %s' % (state, detail))
+
+
 # =================================================================================================
 print('')
 print('[s13] PART 6 -- the output cannot kill its own process (the -1 SUITE THREW shape)')
