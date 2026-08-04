@@ -813,7 +813,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `dedupe_key` | `string` | **yes** |  |
 | `channel` | `EMERGENCY` \| `CONTROL_ROOM` | **yes** |  |
 | `kind` | `ALERT` \| `RECOVERY` \| `MORNING_BRIEF` \| `DELIVERY_PROBE` | **yes** |  |
-| `outcome` | `DELIVERED` \| `SUPPRESSED_DUPLICATE` \| `UNCONFIGURED` \| `FAILED` | **yes** | UNCONFIGURED and FAILED are STATED failures that make the CLI exit non-zero. A sender that cannot send and reports nothing is indistinguishable from a quiet fleet. |
+| `outcome` | `DELIVERED` \| `SUPPRESSED_DUPLICATE` \| `UNCONFIGURED` \| `UNCONFIGURED_REGRESSION` \| `FAILED` | **yes** | UNCONFIGURED and FAILED are STATED failures that make the CLI exit non-zero. A sender that cannot send and reports nothing is indistinguishable from a quiet fleet. UNCONFIGURED_REGRESSION (ORDER-1261 #6) is the third: a channel that HAS delivered before and now has no credential. It is split from UNCONFIGURED because that one routes to exit 4, which ORDER-219 deliberately mutes in the daily chain - correct for 'the owner has not made the bot yet', wrong for 'the credential that was working is gone' |
 | `receipt` | `string` \| `null` | **yes** | The provider's message id, which is what makes 'did this arrive' answerable. Null for every outcome that is not DELIVERED. |
 | `at` | `string` | **yes** |  |
 | `openclaw` | `RUNNING` \| `NOT_RUNNING` \| `UNKNOWN` | **yes** | design 10 requires alerts to work with OpenClaw stopped. Recording the OBSERVED gateway state beside the receipt turns that from a claim in a handoff into a measurement stored next to the evidence. UNKNOWN is a real third answer and is never collapsed onto NOT_RUNNING. |

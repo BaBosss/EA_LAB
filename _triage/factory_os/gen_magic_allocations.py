@@ -110,8 +110,21 @@ def main(argv):
         sys.stdout.write('DRIFT: %s does not exist. check_state.ps1 needs this exception list '
                          'before the global magic rule can be enforced.\n' % store)
         return 1
-    existing = M.read_store(store)
-    problems = (M.store_problems(existing, M.declared_legacy_magics(root))
+    # ORDER-1261-era review of this change: BOTH of these are unreadable-input paths and both
+    # escaped as uncaught exceptions with python's default exit 1 -- the code this header reserves
+    # for DRIFT. `{bad` in the store raised ValueError out of read_store; a malformed
+    # `x-legacy-exception-set` raised TypeError out of the declaration reader. Same defect this
+    # tool already had once for the inventory, in the two places it was not yet fixed.
+    try:
+        existing = M.read_store(store)
+        declared = M.declared_legacy_magics(root)
+    except (IOError, OSError, ValueError, TypeError, KeyError) as exc:
+        sys.stderr.write('cannot read the inputs: %s: %s\n' % (type(exc).__name__, exc))
+        return 2
+    except M.Refused as exc:
+        sys.stderr.write('REFUSED: %s\n' % exc)
+        return 2
+    problems = (M.store_problems(existing, declared)
                 + M.inventory_problems(inventory, existing))
     if problems:
         sys.stdout.write('DRIFT: the store does not validate:\n  %s\n' % '\n  '.join(problems))
@@ -154,7 +167,15 @@ def main(argv):
         #   allocated_to        -- a live allocation may be bound to a candidate the inventory
         #       knows nothing about; `cutover_import` always writes None, so comparing it would
         #       refuse every candidate binding this system exists to record.
-        for f in ('scope', 'status', 'legacy_exception', 'legacy_accounts', 'imported_in_cutover'):
+        # `deployment_ref` is in this list because an independent review measured that it was not:
+        # `cutover_import` deliberately never populates it (a pin to a DEPLOYMENTS.csv blob would
+        # go stale 60 rows at a time), so the inventory implies ABSENT -- and a forged value in
+        # the store passed every check the narrowed comparison performed. The byte comparison had
+        # caught it. That is twice now that this field list has been the defect; it is the price
+        # of replacing a total comparison with an enumerated one, and it is why the two exclusions
+        # below are written down rather than merely intended.
+        for f in ('scope', 'status', 'legacy_exception', 'legacy_accounts', 'imported_in_cutover',
+                  'deployment_ref'):
             if want_row.get(f) != got_row.get(f):
                 drift.append('magic %s: the store says %s=%r, the inventory implies %r'
                              % (m, f, got_row.get(f), want_row.get(f)))

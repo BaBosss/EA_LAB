@@ -2804,9 +2804,10 @@
             "DELIVERED",
             "SUPPRESSED_DUPLICATE",
             "UNCONFIGURED",
+            "UNCONFIGURED_REGRESSION",
             "FAILED"
           ],
-          "description": "UNCONFIGURED and FAILED are STATED failures that make the CLI exit non-zero. A sender that cannot send and reports nothing is indistinguishable from a quiet fleet."
+          "description": "UNCONFIGURED and FAILED are STATED failures that make the CLI exit non-zero. A sender that cannot send and reports nothing is indistinguishable from a quiet fleet. UNCONFIGURED_REGRESSION (ORDER-1261 #6) is the third: a channel that HAS delivered before and now has no credential. It is split from UNCONFIGURED because that one routes to exit 4, which ORDER-219 deliberately mutes in the daily chain - correct for 'the owner has not made the bot yet', wrong for 'the credential that was working is gone'"
         },
         "receipt": {
           "type": [

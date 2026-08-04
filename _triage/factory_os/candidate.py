@@ -495,8 +495,19 @@ def validate_manifest(manifest, run_lookup=None):
         cited = [run_lookup.get(m['run_id']) for m in manifest['payload']['evidence']
                  if isinstance(m, dict) and m.get('run_id') in run_lookup]
         for kf in ('symbol', 'expert'):
-            seen = sorted(set(str((j.get('execution_key') or {}).get(kf)) for j in cited
-                              if (j.get('execution_key') or {}).get(kf) is not None))
+            # 🔴 FILTERING OUT THE ABSENT ONES TURNED "I CANNOT COMPARE" INTO "THEY AGREE", which
+            # is the same defect C9's blanket ExecutionKey check exists to stop, one loop down.
+            # An independent review measured it: deleting `symbol` and `expert` from EVERY cited
+            # run validated clean. A key that is silent about a field cannot license a claim that
+            # the runs agree about it.
+            silent = [j.get('run_id') for j in cited
+                      if (j.get('execution_key') or {}).get(kf) is None]
+            if silent:
+                problems.append('C9 run(s) %s record no %s, so this candidate\'s evidence cannot '
+                                'be shown to come from one %s at all'
+                                % (sorted(str(s) for s in silent), kf, kf))
+                continue
+            seen = sorted(set(str((j.get('execution_key') or {}).get(kf)) for j in cited))
             if len(seen) > 1:
                 problems.append('C9 the cited runs disagree about %s (%s) -- one candidate is one '
                                 'binary on one instrument, so evidence assembled from more than '

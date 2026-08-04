@@ -105,7 +105,22 @@ def declared_legacy_magics(root=None):
         raise Refused('schemas.json MagicAllocation declares no %s -- the closed legacy set has '
                       'no declaration to derive from, and this module will not invent one'
                       % LEGACY_SET_KEY)
-    return tuple(S.normalize_numbers(m) for m in d[LEGACY_SET_KEY])
+    declared = d[LEGACY_SET_KEY]
+    # PRESENT BUT UNREADABLE IS NOT THE SAME AS ABSENT, and the first version of this function
+    # only checked absence -- so `null` raised an uncaught TypeError out of the comprehension, and
+    # a string would have iterated per character into a set of magics that are single digits.
+    # Either way M7 would then compare the real store against nonsense. Found by an independent
+    # review. The refusal is the same one the missing case gets, for the same reason.
+    if not isinstance(declared, (list, tuple)):
+        raise Refused('schemas.json MagicAllocation declares %s as %s, not a list. A declaration '
+                      'that cannot be read is not an empty declaration -- reading it as one would '
+                      'make M7 demand that the store hold NO legacy exceptions at all'
+                      % (LEGACY_SET_KEY, type(declared).__name__))
+    bad = [m for m in declared if not isinstance(S.normalize_numbers(m), int)]
+    if bad:
+        raise Refused('schemas.json MagicAllocation declares %r in %s, which is not a magic'
+                      % (bad[0], LEGACY_SET_KEY))
+    return tuple(S.normalize_numbers(m) for m in declared)
 
 
 class Refused(Exception):
@@ -145,7 +160,26 @@ def read_inventory(path):
             raw = (row.get('magic') or '').strip()
             if not raw.isdigit():
                 status = (row.get('status') or '').strip().upper()
-                if status in INVENTORY_RUNNING_STATUSES:
+                # 🔴 THE STATUS AXIS WAS THE WRONG ONE FOR HALF OF THIS, and an independent
+                # review of this change measured why. `accounts_by_magic` computes uniqueness
+                # over EVERY row regardless of status -- its own docstring says so, because
+                # `990103` and `991002` each have one side already REMOVED and the historical
+                # deals a reused magic re-attributes are still in the account history. So a
+                # REMOVED row carrying `+777777` was dropped in silence and the collision with
+                # an ACTIVE `777777` disappeared with it. Measured: 2 rows in, 1 out, no refusal.
+                #
+                # The real distinction is not "is it running" but "did someone WRITE something
+                # here that cannot be read". A BLANK magic is a declared absence and is ordinary
+                # on a row that deploys nothing. A NON-EMPTY value that is not a number is
+                # unreadable input at any status, and unreadable input refuses.
+                if raw:
+                    unreadable.append('line %d: account %r has magic %r, which is not a number. A '
+                                      'value someone wrote and nothing can read is not the same '
+                                      'as a blank -- and uniqueness is computed over every row, '
+                                      'including %s ones, so dropping it hides a collision'
+                                      % (n, (row.get('account') or '').strip(), raw,
+                                         status or 'statusless'))
+                elif status in INVENTORY_RUNNING_STATUSES:
                     unreadable.append('line %d: account %r has status %s and magic %r, which is '
                                       'not a number -- a running deployment with no readable '
                                       'magic is invisible to every uniqueness check, which is the '

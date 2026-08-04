@@ -123,7 +123,13 @@ SILENT_STATES = ('HEALTHY_1_OF_2',)
 # (`HEALTHY_1_OF_2`, `RESOLVED`), and neither of those reopens anything.
 REOPENING_STATES = ('OPEN', 'FLAPPING')
 NON_REOPENING_STATES = ('HEALTHY_1_OF_2', 'RESOLVED')
-OUTCOMES = ('DELIVERED', 'SUPPRESSED_DUPLICATE', 'UNCONFIGURED', 'FAILED')
+# ORDER-1261 #6 added UNCONFIGURED_REGRESSION and the first version of that repair did NOT add it
+# here or to schemas.json's AlertDelivery enum -- so `deliver()` was appending a ledger row that
+# its own module vocabulary and the wire contract both refused to declare, and every suite stayed
+# green. Found by an independent review of the change. A new outcome is a change to a CONTRACT,
+# not a new string literal.
+OUTCOMES = ('DELIVERED', 'SUPPRESSED_DUPLICATE', 'UNCONFIGURED', 'UNCONFIGURED_REGRESSION',
+            'FAILED')
 
 # Reason code -> finding class, so control_center.fold_finding can apply design 7.1's lifecycle.
 # Only RUNTIME auto-resolves, which is why the split matters: a stale mandatory source really
@@ -473,7 +479,18 @@ def incident_seq(history, current_state):
             resolved = False
     if resolved and current_state in REOPENING_STATES:
         seq += 1
-    return seq
+    # 🔴 IT MUST NEVER GO BACKWARDS, AND THE FIRST VERSION COULD.
+    # An independent review of this change measured it: recomputing purely from the readable
+    # transitions means a journal MISSING its `RESOLVED` line -- which is exactly what ORDER-1261
+    # #5 now lets happen, since a torn line is tolerated rather than fatal -- recounts to 0,
+    # rebuilds the ORIGINAL dedupe key, and suppresses the very reopen this function exists to
+    # let through. The two repairs undid each other, and the suites were green because no case
+    # drove a partial journal.
+    # The count is already WRITTEN on every journal line, so the highest one the journal still
+    # remembers is a floor the recomputation may raise and may not lower.
+    stored = [line.get('incident_seq') for line in history
+              if isinstance(line.get('incident_seq'), int)]
+    return max([seq] + stored) if stored else seq
 
 
 def dedupe_key(public_id, state, severity, material_revision, now=None, incident=0):
@@ -882,12 +899,25 @@ def read_jsonl(path):
             if not line:
                 continue
             try:
-                rows.append(json.loads(line))
+                row = json.loads(line)
             except ValueError as exc:
                 torn.append('%s line %d is not JSON (%s) -- the line is NOT skipped silently: '
                             'it is counted here and reported by the CLI, because a delivery '
                             'nobody can read is a delivery nobody can dedupe against'
                             % (path, n, exc))
+                continue
+            # ...and PARSING is not the same as READABLE. `null`, `[]` and `3` are all valid JSON
+            # and none of them is a record. The first version of this reader counted only the
+            # JSONDecodeError, so a `null` line was reported CLEAN and then took `.get` with it
+            # into `Ledger.delivered()` -- an unreadable input that read as a readable one, which
+            # is the exact failure this function was written to stop, one type down. Found by an
+            # independent review of this change.
+            if not isinstance(row, dict):
+                torn.append('%s line %d parses as %s, not an object -- valid JSON is not the '
+                            'same as a record, and a non-object here reaches every consumer '
+                            'that expects one' % (path, n, type(row).__name__))
+                continue
+            rows.append(row)
     return rows, torn
 
 
@@ -964,8 +994,8 @@ def safe_detail(text, known_secrets=safe_projection.NO_KNOWN_SECRETS_AVAILABLE):
             'ดูได้จากเครื่องที่รัน' % ', '.join(rules))
 
 
-def deliver(events, delivered, transports, now, openclaw='UNKNOWN',
-            known_secrets=safe_projection.NO_KNOWN_SECRETS_AVAILABLE, previously_delivered=()):
+def deliver(events, delivered, transports, now, known_secrets, openclaw='UNKNOWN',
+            previously_delivered=()):
     """
     -> (ledger lines, problems). Every event produces EXACTLY ONE line, whatever happened.
 
@@ -984,6 +1014,16 @@ def deliver(events, delivered, transports, now, openclaw='UNKNOWN',
     shape half: that is a schema read, it is genuinely expensive per event, and `assert_sendable`
     is where an event is BUILT wrong. What this stops is the one thing a second caller can get
     wrong on its own -- putting a literal from the snapshot onto the wire.
+
+    🔴 `known_secrets` HAS NO DEFAULT, AND THE FIRST VERSION OF THIS REPAIR GAVE IT ONE.
+    An independent review of this very change measured the consequence: with the argument
+    defaulted to the sentinel, a public caller that omitted it got a scan whose KNOWN_SECRET layer
+    could not fire, so `deliver()` delivered the literal -- on exactly the path the repair claimed
+    to close. The cage did not catch it because the case I wrote PASSED the list, i.e. it drove
+    the repaired path and never the defaulted one (`falsifier-satisfied-by-unexercised-mechanism`).
+    A required argument is the fix that has no such hole: a caller cannot reach the wire without
+    answering the question, and `NO_KNOWN_SECRETS_AVAILABLE` remains the honest answer for a
+    caller that genuinely has nothing -- it just has to be given on purpose.
 
     `previously_delivered` is the set of channels the ledger has EVER delivered on. ORDER-1261 #6:
     it is what separates "not provisioned yet" from "the credential that was working is gone".
@@ -1194,8 +1234,16 @@ def main(argv):
             print('%-13s %-14s %-8s %-4s %s [%s]'
                   % (ev['channel'], ev['kind'], ev['severity'], ev['state'], ev['dedupe_key'],
                      mark))
-        print('notifier: %d event(s) planned, nothing sent (`plan` never sends)' % len(events))
-        return 0
+        # ORDER-1261 #5, second half, found by an independent review: this branch returned before
+        # the torn-line report below, so `plan` over a partial journal or ledger exited 0 in
+        # silence -- and `plan` is the verb a human runs to ask "what is about to happen". The
+        # count belongs to every verb that READ those files, not only to the one that sends.
+        plan_torn = list(torn) + list(getattr(ledger, 'torn', []))
+        for t in plan_torn:
+            print('TORN LINE: %s' % t)
+        print('notifier: %d event(s) planned, %d torn line(s), nothing sent (`plan` never sends)'
+              % (len(events), len(plan_torn)))
+        return 1 if plan_torn else 0
 
     if record_path:
         transport = RecordingTransport(record_path)
@@ -1210,8 +1258,7 @@ def main(argv):
     # ORDER-1261 #3 + #4 + #6: the real secret list reaches the boundary that WRITES the ledger
     # and the one that SENDS, and the set of channels the ledger has ever delivered on reaches
     # the branch that has to tell "never provisioned" from "the credential is gone".
-    lines, problems = deliver(events, delivered, transports, now, oc,
-                              known_secrets=secrets,
+    lines, problems = deliver(events, delivered, transports, now, secrets, oc,
                               previously_delivered=set(c for (_k, c) in delivered))
     ledger.append(ledger_path, lines)
     if journal_lines:

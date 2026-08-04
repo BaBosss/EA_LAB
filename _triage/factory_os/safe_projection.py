@@ -360,6 +360,18 @@ def scan_forbidden(doc, known_secrets=()):
             'KNOWN_SECRET: the caller declared it cannot derive recognizers, so this document was '
             'cleared by FORBIDDEN_KEY, VALUE_SHAPE and the declared SHAPE only. A literal from the '
             'source snapshot typed into a permitted field would not have been caught.')
+    elif isinstance(known_secrets, str):
+        # A BARE STRING THAT IS NOT THE SENTINEL IS A CALLER MISTAKE, AND THE SILENT VERSION OF IT
+        # IS CATASTROPHIC RATHER THAN WRONG. Iterating a string yields its CHARACTERS, so a
+        # misplaced positional argument like 'NOT_RUNNING' would install eleven single-character
+        # recognizers and match essentially every document -- a guard that refuses everything,
+        # which reads as a broken system rather than as a bad call. Made explicit when
+        # `deliver()`'s `known_secrets` became a required positional and every existing caller's
+        # `openclaw` argument shifted onto it.
+        _refuse('scan_forbidden was given the bare string %r as its recognizer list. A string is '
+                'iterable, so this would have installed one recognizer PER CHARACTER and matched '
+                'nearly everything. Pass a list of literals, or %s to declare that this caller '
+                'cannot derive them.' % (known_secrets[:40], NO_KNOWN_SECRETS_AVAILABLE))
     else:
         secrets = [str(s) for s in known_secrets if str(s) != '']
         if not secrets:

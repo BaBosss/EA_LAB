@@ -301,12 +301,23 @@ def validate_event(event, prior_events):
     #    satisfied by the forgery as by the original. The module's "there is no rewrite function
     #    here" argument is sound about THIS MODULE and says nothing about a text editor or a merge.
     #
-    #    🔴 WHAT IT DOES NOT DO, said out loud because a tamper-evidence claim is exactly the kind
-    #    that gets over-read: the chain protects every event that HAS A SUCCESSOR. Editing the LAST
-    #    line of a log -- the head -- breaks no link, and nothing inside a file can notice a change
-    #    to its own end. That needs the head pinned somewhere else (the `attested-pin` mechanism is
-    #    the repo's answer for this shape). `run_s10_tests.py` carries that limit as a case rather
-    #    than leaving it to be discovered. (memory: name-it-honestly-when-you-cannot-prove-it)
+    #    🔴 WHAT IT DOES NOT DO, AND THE FIRST VERSION OF THIS PARAGRAPH OVERCLAIMED IT.
+    #    It said "the chain protects every event that HAS A SUCCESSOR". An independent review
+    #    measured the two ways that is wrong, and both are inherent to an UNAUTHENTICATED chain:
+    #
+    #      RECOMPUTATION  `prev_hash` is public and every link is derivable from the file itself.
+    #                     Edit line 1, recompute line 2's link, and replay returns []. Measured.
+    #      TRUNCATION     removing a terminal suffix -- or the whole file -- breaks no link,
+    #                     because what is gone leaves nothing behind to disagree with. Measured.
+    #
+    #    So the honest claim is narrower and worth having anyway: A8 detects the edits a writer
+    #    makes WITHOUT rewriting the chain -- an in-place change by a text editor, a merge
+    #    resolution, a reordering, an exact duplicate, an interior deletion. It does NOT resist a
+    #    writer that runs this module's own helpers over the file afterwards.
+    #    Closing that needs the HEAD authenticated outside the file (`attested-pin` is the repo's
+    #    mechanism for exactly this shape). Until it is, `run_s10_tests.py` carries BOTH limits as
+    #    passing cases, so nobody reads "chained" as "tamper-proof".
+    #    (memory: name-it-honestly-when-you-cannot-prove-it)
     if 'prev_hash' in event:
         if not HEX64_RE.match(str(event['prev_hash'])):
             problems.append('A8 prev_hash %r is not a sha256' % (event['prev_hash'],))
@@ -376,10 +387,10 @@ def verify_log(events):
     ORDER-1260 #3 -- WHAT THE SECOND HALF OF THIS SENTENCE USED TO CLAIM, AND WHAT IT NOW MEANS.
     It read "one that was EDITED does not", and nothing in the file made that true: replay alone
     cannot see a content edit, because an edited event is still a well-formed event in a
-    well-ordered log. A8 is what makes it true, and only as far as a chain can: an edit to any
-    event that HAS A SUCCESSOR breaks the link and is reported at the line after it. An edit to
-    the LAST line breaks no link. That limit is stated in A8 and pinned by a case, rather than
-    left inside the word "EDITED" for a reader to over-trust.
+    well-ordered log. A8 makes it true for the edits a writer makes WITHOUT rewriting the chain
+    -- a text editor, a merge resolution, a reordering, a duplicate, an interior deletion -- and
+    NOT for a writer that recomputes the links, nor for a truncation. Both limits are measured and
+    both are pinned by cases; A8 states why. The word "EDITED" is not left to carry more than that.
 
     This is the log's answer to `candidate.read_manifest`: the integrity of an append-only file is
     not a property of any single line, so it is checked by replay rather than by inspection.

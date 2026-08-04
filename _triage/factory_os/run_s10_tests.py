@@ -1371,6 +1371,128 @@ def part6_order_1260():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+# =============================================================================================
+# PART 7 -- the independent review of PART 6's own repairs. Every case is a defect that was IN
+# THE REPAIR, reproduced before it was fixed.
+# =============================================================================================
+def part7_review():
+    sys.stdout.write('\nPART 7 -- the review of this order\'s own repairs\n')
+
+    # -- a NON-EMPTY unreadable magic hides a collision at ANY status, not only ACTIVE. ---------
+    #    ORDER-1260 #5 armed the refusal on the STATUS axis, and the status axis is wrong for
+    #    half of it: `accounts_by_magic` computes uniqueness over EVERY row regardless of status
+    #    -- its own docstring says so, because two of the three legacy exceptions have one side
+    #    already REMOVED. Measured: an ACTIVE `777777` beside a REMOVED `+777777` gave 2 rows in,
+    #    1 out, no refusal, and the collision disappeared with the dropped row.
+    tmp = tempfile.mkdtemp(prefix='s10_rev_')
+    try:
+        def inv_file(lines):
+            p = os.path.join(tmp, 'DEPLOYMENTS-%d.csv' % len(os.listdir(tmp)))
+            io.open(p, 'w', encoding='utf-8').write(
+                'account,ea_name,magic,symbol,status,judge_date\n' + '\n'.join(lines) + '\n')
+            return p
+        for status in ('REMOVED', 'UNVERIFIED', 'ACTIVE', ''):
+            try:
+                M.read_inventory(inv_file(['A,X,777777,XAUUSD,ACTIVE,2026-10-09',
+                                           'B,Y,+777777,XAUUSD,%s,2026-10-09' % status]))
+                check('a NON-EMPTY unreadable magic on a %-10s row is refused'
+                      % (status or '(blank)'), False,
+                      'it was dropped, and the collision with the ACTIVE row went with it')
+            except M.Refused as exc:
+                check('a NON-EMPTY unreadable magic on a %-10s row is refused'
+                      % (status or '(blank)'), '+777777' in str(exc), str(exc))
+        # CONTROL: a BLANK magic on a non-running row is still ordinary and still dropped in
+        # silence -- that is the declared exemption, and the real file depends on it.
+        quiet = M.read_inventory(inv_file(['A,X,991001,XAUUSD,ACTIVE,2026-10-09',
+                                           'B,Y,,XAUUSD,UNVERIFIED,']))
+        check('CONTROL: a BLANK magic on a non-running row is still dropped in silence',
+              len(quiet) == 1, quiet)
+        check('CONTROL: the REAL DEPLOYMENTS.csv still reads under the widened rule',
+              len(M.read_inventory(M.inventory_path(ROOT))) > 50)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # -- `deployment_ref` is compared. The narrowed field list lost it, and the byte comparison
+    #    it replaced had caught it. Second time that list has been the defect.
+    real = M.read_store(M.store_path(ROOT))
+    tmp = tempfile.mkdtemp(prefix='s10_dref_')
+    try:
+        def check_over(rows):
+            p = os.path.join(tmp, 'store-%d.jsonl' % len(os.listdir(tmp)))
+            io.open(p, 'w', encoding='utf-8', newline='\n').write(G.render(rows))
+            return _quiet_check(['--check', '--root=' + ROOT, '--store=' + p])
+        forged = copy.deepcopy(real)
+        forged[0]['deployment_ref'] = 'forged'
+        check('--check refuses a forged deployment_ref on a deployed row', check_over(forged) == 1,
+              'the enumerated field list still omits a field the byte comparison covered')
+        check('CONTROL: the store as committed still passes', check_over(real) == 0)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # -- unreadable STORE and unreadable DECLARATION are exit 2, like the inventory before them.
+    tmp = tempfile.mkdtemp(prefix='s10_exit2_')
+    try:
+        bad = os.path.join(tmp, 'store.jsonl')
+        io.open(bad, 'w', encoding='utf-8').write('{bad\n')
+        check('a malformed STORE line exits 2 (cannot read), not 1 (drift)',
+              _quiet_check(['--check', '--root=' + ROOT, '--store=' + bad]) == 2,
+              'an uncaught ValueError gives python exit 1, which this tool reserves for DRIFT')
+        # a declaration that is present but not a list is unreadable too, not "no exceptions"
+        fake_root = os.path.join(tmp, 'root')
+        os.makedirs(os.path.join(fake_root, '_triage', 'factory_os'))
+        schema = json.load(io.open(os.path.join(HERE, 'schemas.json'), encoding='utf-8-sig'))
+        schema['$defs']['MagicAllocation'][M.LEGACY_SET_KEY] = None
+        io.open(os.path.join(fake_root, '_triage', 'factory_os', 'schemas.json'), 'w',
+                encoding='utf-8').write(json.dumps(schema))
+        try:
+            M.declared_legacy_magics(fake_root)
+            check('a malformed legacy declaration is REFUSED, not read as empty', False,
+                  'null was accepted, which would make M7 demand an empty exception set')
+        except (M.Refused, TypeError) as exc:
+            check('a malformed legacy declaration is REFUSED, not read as empty',
+                  isinstance(exc, M.Refused), 'it raised %s instead of Refused' % type(exc).__name__)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # -- C9c: an ABSENT identity field may not read as agreement.
+    silent = copy.deepcopy(RUNS)
+    for j in silent.values():
+        del j['execution_key']['symbol']
+        del j['execution_key']['expert']
+    refuses('cited runs that record NO symbol and NO expert cannot show agreement',
+            C.validate_manifest(manifest(), silent), 'C9')
+    accepts('CONTROL: runs that DO record them, and agree, are still accepted',
+            C.validate_manifest(manifest(), copy.deepcopy(RUNS)))
+
+    # -- A8: the two limits are MEASURED, and named as limits rather than left to be discovered.
+    log = [_event('CANDIDATE_ASSIGNED', 'user', candidate_id='CAND-' + '1' * 12,
+                  authorization_ref=copy.deepcopy(AUTH))]
+    log.append(_event('OBSERVED', 'automation', event_id='ATT-20260802-002',
+                      at='2026-08-02T02:00:00Z', attest_state='HASHED',
+                      prev_hash=A.chain_head(log)))
+    forged = copy.deepcopy(log)
+    forged[0]['candidate_id'] = 'CAND-' + '2' * 12
+    forged[1]['prev_hash'] = A.chain_head([forged[0]])
+    accepts('KNOWN LIMIT: a writer that RECOMPUTES every link replays clean -- prev_hash is '
+            'public and unauthenticated, so the chain stops an editor and not a rewriter',
+            A.verify_log(forged))
+    accepts('KNOWN LIMIT: truncating the log to its first line replays clean -- what is gone '
+            'leaves nothing behind to disagree with',
+            A.verify_log(log[:1]))
+    # ...and the thing it DOES stop is still stopped, or the two lines above are just an excuse.
+    naive = copy.deepcopy(log)
+    naive[0]['candidate_id'] = 'CAND-' + '3' * 12
+    refuses('CONTROL: an edit WITHOUT recomputing the link is still caught',
+            A.verify_log(naive), 'A8')
+    three = list(log)
+    three.append(_event('OBSERVED', 'automation', event_id='ATT-20260802-003',
+                        at='2026-08-02T03:00:00Z', attest_state='HASHED',
+                        prev_hash=A.chain_head(three)))
+    accepts('CONTROL: the three-line log this is built from replays clean', A.verify_log(three))
+    refuses('CONTROL: removing the MIDDLE line is still caught',
+            A.verify_log([three[0], three[2]]), 'A8')
+
+
 def main():
     part1_identity()
     part1b_serializer()
@@ -1379,6 +1501,7 @@ def main():
     part3_magic()
     part4_real()
     part6_order_1260()          # before part5: its roll-up compares against every id NAMED so far
+    part7_review()
     part5_the_other_half()
     sys.stdout.write('\n')
     if FAILS:

@@ -48,6 +48,13 @@ import snapshot_validator                                    # noqa: E402
 
 PY = sys.executable
 
+# `deliver()`'s `known_secrets` is a REQUIRED positional as of the ORDER-1261 review: an
+# independent read of that repair measured that a default made the new scan inert for exactly the
+# public caller it claimed to protect. Cases that are not ABOUT the literal layer declare the
+# sentinel here rather than passing a list, which is the same statement they were making before
+# by omission -- except that now it is a statement.
+SENT = safe_projection.NO_KNOWN_SECRETS_AVAILABLE
+
 # Pin this suite's own output, for the reason notifier._pin_utf8 documents at length: a child of
 # the pre-commit hook gets an ANSI-codepage pipe, the first Thai character raises
 # UnicodeEncodeError, and the wrapper reports `exit -1 SUITE THREW` with the cause invisible.
@@ -339,7 +346,7 @@ def _v05():
         recs, new = notifier.observe(lines, f if present else [], now)
         lines += new
         out, _ = notifier.deliver(notifier.plan(recs, PROJECTION, now=now), delivered,
-                                  {'CONTROL_ROOM': t}, now, 'NOT_RUNNING')
+                                  {'CONTROL_ROOM': t}, now, SENT, 'NOT_RUNNING')
         seen.append(recs[0]['state'])
     eq(seen, ['OPEN', 'HEALTHY_1_OF_2', 'OPEN', 'HEALTHY_1_OF_2', 'FLAPPING'], '')
     eq(len(t.sent), 2,
@@ -489,7 +496,7 @@ class Boom(object):
 def _l01():
     t = notifier.RecordingTransport()
     lines, problems = notifier.deliver(notifier.plan([rec(severity='WARN')], PROJECTION),
-                                       set(), {'CONTROL_ROOM': t}, 't', 'NOT_RUNNING')
+                                       set(), {'CONTROL_ROOM': t}, 't', SENT, 'NOT_RUNNING')
     eq([l['outcome'] for l in lines], ['DELIVERED'], '')
     eq(problems, 0, '')
     eq(len(t.sent), 1, '')
@@ -504,8 +511,8 @@ def _l02():
     t = notifier.RecordingTransport()
     events = notifier.plan([rec(severity='WARN')], PROJECTION)
     delivered = set()
-    notifier.deliver(events, delivered, {'CONTROL_ROOM': t}, 't', 'NOT_RUNNING')
-    lines, problems = notifier.deliver(events, delivered, {'CONTROL_ROOM': t}, 't', 'NOT_RUNNING')
+    notifier.deliver(events, delivered, {'CONTROL_ROOM': t}, 't', SENT, 'NOT_RUNNING')
+    lines, problems = notifier.deliver(events, delivered, {'CONTROL_ROOM': t}, 't', SENT, 'NOT_RUNNING')
     eq([l['outcome'] for l in lines], ['SUPPRESSED_DUPLICATE'], '')
     eq(len(t.sent), 1, 'the transport must not have been touched a second time')
     eq(problems, 0, 'a correctly suppressed duplicate is not a problem')
@@ -518,9 +525,9 @@ def _l03():
     other = dict(ev, channel='EMERGENCY')
     t = notifier.RecordingTransport()
     delivered = set()
-    notifier.deliver([ev], delivered, {'CONTROL_ROOM': t, 'EMERGENCY': t}, 't', 'NOT_RUNNING')
+    notifier.deliver([ev], delivered, {'CONTROL_ROOM': t, 'EMERGENCY': t}, 't', SENT, 'NOT_RUNNING')
     lines, _ = notifier.deliver([other], delivered, {'CONTROL_ROOM': t, 'EMERGENCY': t},
-                                't', 'NOT_RUNNING')
+                                't', SENT, 'NOT_RUNNING')
     eq([l['outcome'] for l in lines], ['DELIVERED'],
        'a per-channel ledger keyed only on the event would silence the second bot')
 
@@ -529,11 +536,11 @@ def _l03():
 def _l04():
     ev = notifier.plan([rec(severity='WARN')], PROJECTION)
     delivered = set()
-    lines, problems = notifier.deliver(ev, delivered, {'CONTROL_ROOM': Boom()}, 't', 'UNKNOWN')
+    lines, problems = notifier.deliver(ev, delivered, {'CONTROL_ROOM': Boom()}, 't', SENT, 'UNKNOWN')
     eq([l['outcome'] for l in lines], ['FAILED'], '')
     eq(problems, 1, 'a failure that does not raise the problem count is a silent no-send')
     t = notifier.RecordingTransport()
-    lines2, _ = notifier.deliver(ev, delivered, {'CONTROL_ROOM': t}, 't', 'NOT_RUNNING')
+    lines2, _ = notifier.deliver(ev, delivered, {'CONTROL_ROOM': t}, 't', SENT, 'NOT_RUNNING')
     eq([l['outcome'] for l in lines2], ['DELIVERED'],
        'suppressing a retry after a failure loses the alert entirely')
     hit('outcome:FAILED')
@@ -543,7 +550,7 @@ def _l04():
 @case('L05', 'an UNCONFIGURED channel is a STATED failure with a non-zero problem count')
 def _l05():
     ev = notifier.plan([rec(severity='WARN')], PROJECTION)
-    lines, problems = notifier.deliver(ev, set(), {'CONTROL_ROOM': None}, 't', 'NOT_RUNNING')
+    lines, problems = notifier.deliver(ev, set(), {'CONTROL_ROOM': None}, 't', SENT, 'NOT_RUNNING')
     eq([l['outcome'] for l in lines], ['UNCONFIGURED'], '')
     eq(problems, 1, '')
     if not lines[0]['detail']:
@@ -559,7 +566,7 @@ def _l06():
     # The URL of a Telegram send request CONTAINS the token, so a transport wrapping any
     # library that reports the URL would have written it to disk. Boom() is that transport.
     ev = notifier.plan([rec(severity='WARN')], PROJECTION)
-    lines, problems = notifier.deliver(ev, set(), {'CONTROL_ROOM': Boom()}, 't', 'NOT_RUNNING')
+    lines, problems = notifier.deliver(ev, set(), {'CONTROL_ROOM': Boom()}, 't', SENT, 'NOT_RUNNING')
     blob = json.dumps(lines, ensure_ascii=False)
     eq(problems, 1, 'a redacted failure is still a failure')
     if FAKE_TOKEN in blob:
@@ -606,13 +613,13 @@ def _l07():
         ev = notifier.plan([rec(severity='WARN')], PROJECTION)
         lines, _ = notifier.deliver(ev, ledger.delivered(),
                                     {'CONTROL_ROOM': notifier.RecordingTransport()},
-                                    't', 'NOT_RUNNING')
+                                    't', SENT, 'NOT_RUNNING')
         ledger.append(path, lines)
         again = notifier.Ledger.load(path)
         eq(len(again.delivered()), 1, 'a ledger that does not survive a reload is a sent-set')
         lines2, _ = notifier.deliver(ev, again.delivered(),
                                      {'CONTROL_ROOM': notifier.RecordingTransport()},
-                                     't', 'NOT_RUNNING')
+                                     't', SENT, 'NOT_RUNNING')
         eq([l['outcome'] for l in lines2], ['SUPPRESSED_DUPLICATE'], '')
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -635,7 +642,7 @@ def _l10():
         ev = notifier.plan([rec(severity='WARN')], PROJECTION)
         ledger = notifier.Ledger.load(path)
         lines, _ = notifier.deliver(ev, ledger.delivered(), {'CONTROL_ROOM': Boom()},
-                                    at(0), 'NOT_RUNNING')
+                                    at(0), SENT, 'NOT_RUNNING')
         eq([l['outcome'] for l in lines], ['FAILED'], '')
         ledger.append(path, lines)
 
@@ -645,7 +652,7 @@ def _l10():
            'alert that never arrived')
         t = notifier.RecordingTransport()
         lines2, _ = notifier.deliver(ev, reloaded.delivered(), {'CONTROL_ROOM': t},
-                                     at(1), 'NOT_RUNNING')
+                                     at(1), SENT, 'NOT_RUNNING')
         eq([l['outcome'] for l in lines2], ['DELIVERED'], '')
         eq(len(t.sent), 1, '')
     finally:
@@ -660,7 +667,7 @@ def _l11():
         ev = notifier.plan([rec(severity='WARN')], PROJECTION)
         ledger = notifier.Ledger.load(path)
         lines, _ = notifier.deliver(ev, ledger.delivered(), {'CONTROL_ROOM': None},
-                                    at(0), 'NOT_RUNNING')
+                                    at(0), SENT, 'NOT_RUNNING')
         ledger.append(path, lines)
         eq(notifier.Ledger.load(path).delivered(), set(),
            'the Control Room bot does not exist yet, so every alert to it is UNCONFIGURED - '
@@ -867,7 +874,7 @@ def _o04():
     out = []
     for state in ('RUNNING', 'NOT_RUNNING', 'UNKNOWN'):
         t = notifier.RecordingTransport()
-        lines, problems = notifier.deliver(ev, set(), {'EMERGENCY': t}, 't', state)
+        lines, problems = notifier.deliver(ev, set(), {'EMERGENCY': t}, 't', SENT, state)
         out.append(([l['outcome'] for l in lines], problems, list(t.sent)))
         eq(lines[0]['openclaw'], state, 'the OBSERVED state is recorded beside the receipt')
     eq(out[0], out[1], 'delivery must not depend on the gateway being down...')
@@ -1159,7 +1166,7 @@ def _n01():
     delivered, seen = set(), []
     for i, r in enumerate(recs):
         evs = notifier.plan([r], projection=None, now=at(i, 2))
-        lines, _ = notifier.deliver(evs, delivered, ALL, at(i, 2))
+        lines, _ = notifier.deliver(evs, delivered, ALL, at(i, 2), SENT)
         for l in lines:
             seen.append((r['state'], l['kind'], l['outcome']))
         delivered |= set((l['dedupe_key'], l['channel'])
@@ -1325,16 +1332,135 @@ def _n06():
     evs = notifier.plan([rec(severity='REAL_MONEY', state='OPEN', pid='FP-9999999999')],
                         projection=None, now=at(1, 2))
     prev = set(c for (_k, c) in led.delivered())
-    lines, _ = notifier.deliver(evs, led.delivered(), {}, at(1, 2), previously_delivered=prev)
+    lines, _ = notifier.deliver(evs, led.delivered(), {}, at(1, 2), SENT, previously_delivered=prev)
     eq(lines[0]['outcome'], 'UNCONFIGURED_REGRESSION',
        'a channel that was delivering yesterday still reads as never-provisioned')
     # CONTROL: the never-provisioned case is UNCHANGED, because ORDER-219's rationale still holds
     # for it -- it is true every day until the owner makes the bot, and it must not go red daily.
-    lines2, _ = notifier.deliver(evs, set(), {}, at(1, 2), previously_delivered=set())
+    lines2, _ = notifier.deliver(evs, set(), {}, at(1, 2), SENT, previously_delivered=set())
     eq(lines2[0]['outcome'], 'UNCONFIGURED', 'the expected case stopped being the expected case')
     # ...and the two say different things to a human, not just to a switch statement.
     if lines[0]['detail'] == lines2[0]['detail']:
         raise AssertionError('the two situations still print the same sentence')
+
+
+# =======================================================================================
+# The independent review of ORDER-1261's own repairs. Every case below is a defect that WAS
+# IN THE REPAIR, reproduced before it was fixed. Three of the four are the same shape: a
+# guard whose new argument, new value or new tolerance was not carried through to the place
+# that consumes it.
+# =======================================================================================
+
+@case('N07', 'REVIEW deliver() cannot be called without answering the known_secrets question')
+def _n07():
+    """
+    THE REPAIR HAD A HOLE AND MY OWN CASE WALKED AROUND IT. `deliver()` gained the literal scan
+    for ORDER-1261 #4, with `known_secrets` DEFAULTED to the sentinel -- so a public caller that
+    omitted it got a scan whose KNOWN_SECRET layer could not fire and the literal went out.
+    Measured: `deliver()` with no list DELIVERED `account 900112233 is unwell`. N04 passed the
+    list, i.e. it drove the repaired path and never the defaulted one
+    (`falsifier-satisfied-by-unexercised-mechanism`).
+    """
+    secret = '900112233'
+    ev = notifier.plan([rec(severity='CRITICAL', state='OPEN', pid='FP-bbbbbbbbbb')],
+                       projection=None, now=at(1, 2))[0]
+    ev['text'] = 'account %s is unwell' % secret
+    # THE DEFECT: this call is now impossible to write. A missing argument is a TypeError, which
+    # is the strongest form of "you may not reach the wire without deciding".
+    try:
+        notifier.deliver([ev], set(), {ev['channel']: notifier.RecordingTransport()}, at(1, 2))
+        raise AssertionError('deliver() still has a default for known_secrets, so a caller can '
+                             'reach the wire without answering the question')
+    except TypeError:
+        pass
+    # CONTROL: the sentinel is still a legal answer -- declaring is not the same as forgetting.
+    lines, _ = notifier.deliver(
+        notifier.plan([rec(severity='CRITICAL', state='OPEN', pid='FP-cccccccccc')],
+                      projection=None, now=at(1, 2)),
+        set(), {'EMERGENCY': notifier.RecordingTransport()}, at(1, 2), SENT)
+    eq(lines[0]['outcome'], 'DELIVERED', 'the sentinel stopped being a legal declaration')
+    # ...and a BARE STRING that is not the sentinel is refused rather than iterated per character,
+    # which is what a misplaced positional argument would otherwise become.
+    refuses(lambda: safe_projection.scan_forbidden(['x'], 'NOT_RUNNING'), 'per CHARACTER')
+
+
+@case('N08', 'REVIEW a torn journal may not lower the incident counter')
+def _n08():
+    """
+    ORDER-1261 #5 made a torn line survivable; #1 recomputed the incident count from the readable
+    lines. TOGETHER they undid each other: a journal missing its RESOLVED line recounts to 0,
+    rebuilds the ORIGINAL dedupe key, and suppresses the reopen #1 exists to let through.
+    Measured on the pre-repair revision: seq 1 with the line present, seq 0 with it torn.
+    """
+    full = [{'state': 'OPEN', 'incident_seq': 0}, {'state': 'RESOLVED', 'incident_seq': 0}]
+    eq(notifier.incident_seq(full, 'OPEN'), 1, 'the baseline stopped counting')
+    # THE DEFECT: the RESOLVED line is gone, but the count it produced was written down.
+    torn_journal = [{'state': 'OPEN', 'incident_seq': 0}, {'state': 'OPEN', 'incident_seq': 1}]
+    eq(notifier.incident_seq(torn_journal, 'OPEN'), 1,
+       'a torn RESOLVED line reset the counter and re-suppressed the reopen')
+    eq(notifier.incident_seq([{'state': 'OPEN', 'incident_seq': 5}], 'OPEN'), 5,
+       'a stored count higher than the recomputed one was ignored')
+    # CONTROL 1: it is a FLOOR, not a replacement -- a genuine second cycle still increments past
+    # whatever was stored.
+    two = [{'state': 'OPEN', 'incident_seq': 0}, {'state': 'RESOLVED', 'incident_seq': 0},
+           {'state': 'OPEN', 'incident_seq': 1}, {'state': 'RESOLVED', 'incident_seq': 1}]
+    eq(notifier.incident_seq(two, 'OPEN'), 2, 'the recomputation can no longer raise the floor')
+    # CONTROL 2: a first incident is still 0, so the key of every open finding is unchanged.
+    eq(notifier.incident_seq([], 'OPEN'), 0, 'a first OPEN stopped being incident 0')
+    eq(notifier.incident_seq([{'state': 'OPEN'}], 'OPEN'), 0, 'a journal with no count moved')
+
+
+@case('N09', 'REVIEW UNCONFIGURED_REGRESSION is in the closed vocabulary AND in the wire contract')
+def _n09():
+    """
+    ORDER-1261 #6 invented an outcome and told neither the module's own closed tuple nor
+    schemas.json's AlertDelivery enum. `deliver()` was appending a ledger row that both contracts
+    refused to declare, and all 73 cases stayed green -- nothing crossed the two.
+    """
+    if 'UNCONFIGURED_REGRESSION' not in notifier.OUTCOMES:
+        raise AssertionError('the module vocabulary does not declare it: %s'
+                             % (notifier.OUTCOMES,))
+    with io.open(os.path.join(ROOT, '_triage/factory_os/schemas.json'),
+                 encoding='utf-8-sig') as fh:
+        enum = json.load(fh)['$defs']['AlertDelivery']['properties']['outcome']['enum']
+    eq(tuple(notifier.OUTCOMES), tuple(enum),
+       'the module tuple and the wire enum disagree, which is how one of them goes stale')
+    # ...and every outcome the module can actually WRITE is in it. Derived from the source, so a
+    # seventh invented string is caught by this case rather than by a reader.
+    import re as _re
+    body = io.open(os.path.join(ROOT, '_triage/factory_os/notifier.py'),
+                   encoding='utf-8').read().split('def deliver(')[1].split('\ndef ')[0]
+    written = set(_re.findall(r"'outcome': '([A-Z_]+)'", body))
+    if not written <= set(notifier.OUTCOMES):
+        raise AssertionError('deliver() writes %s, which OUTCOMES does not declare'
+                             % sorted(written - set(notifier.OUTCOMES)))
+
+
+@case('N10', 'REVIEW valid JSON that is not a record is torn, not clean')
+def _n10():
+    """
+    `read_jsonl` counted only the JSONDecodeError, so a `null` line PARSED, was reported clean,
+    and took `.get` with it into `Ledger.delivered()`. An unreadable input that read as a
+    readable one -- the exact failure the function was written to stop, one type down.
+    """
+    tmp = tempfile.mkdtemp(prefix='s12_null_')
+    try:
+        p = os.path.join(tmp, 'alert_ledger.jsonl')
+        for bad, what in (('null', 'NoneType'), ('[1,2]', 'list'), ('3', 'int'),
+                          ('"a string"', 'str')):
+            io.open(p, 'w', encoding='utf-8').write(bad + '\n')
+            led = notifier.Ledger.load(p)
+            eq((len(led.rows), len(led.torn)), (0, 1), 'a %s line was accepted as a record' % what)
+            led.delivered()          # must not raise
+        # CONTROL: a real record still loads and is still usable for dedupe.
+        io.open(p, 'w', encoding='utf-8').write(
+            '{"entity":"AlertDelivery","dedupe_key":"a","channel":"EMERGENCY",'
+            '"outcome":"DELIVERED"}\n')
+        good = notifier.Ledger.load(p)
+        eq((len(good.rows), len(good.torn)), (1, 0), 'a real record was called torn')
+        eq(good.delivered(), set([('a', 'EMERGENCY')]), '')
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 @case('C06', 'ACROSS TWO PROCESSES a probe is delivered ONCE and suppressed the second time')
