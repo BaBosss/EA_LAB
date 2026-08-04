@@ -184,7 +184,7 @@ and call the result a selection: that is `ORDER-1220` again.
 `ORDER-1273` item 5 / design §6.3 (decision 19): a median on the first or last grid value ⇒ **expand
 the range and re-run**, and the cell is **not closed** on it. Executed, that lands on **14 of 16
 cells** — the full per-cell list with the dimension and edge named is committed in
-`factory/runs/pilot/selection/selection_20260804_051809.jsonl`. Only `B14-H01-r1/BTCUSD/H4` and
+`factory/runs/pilot/selection/selection_20260804_064906.jsonl`. Only `B14-H01-r1/BTCUSD/H4` and
 `B14-H02-r1/BTCUSD/H4` came out clean.
 
 🔴 **The conflict to settle BEFORE any range moves.** The "declared grid" is
@@ -425,7 +425,7 @@ the honest response is to wait for the machine, never `--no-verify`.
 ### ✅ EXECUTED 2026-08-04 — what the criterion returned
 
 Rendered as `scripts/pilot_probe_select.py` and run over all sixteen surfaces; the record is
-`factory/runs/pilot/selection/selection_20260804_051809.jsonl`, the cage is
+`factory/runs/pilot/selection/selection_20260804_064906.jsonl`, the cage is
 `scripts/_test/run_selection_tests.ps1` (16 cases, every attack paired with a control, proven able
 to fail on six one-line mutations of the module).
 
@@ -684,6 +684,53 @@ state whether a decision record is produced; and for the ones that produce none,
 acceptable or a gap to close. A count of selection paths and a count of recorded ones, both derived.
 🚫 Do not answer it by adding a record-writer to each loop before the enumeration exists — that is
 building before the question is asked.
+
+---
+
+## ORDER-1310 — [factory/S2·S11] 🔴 The independent review of `ORDER-1269`+`ORDER-1267` found nine defects, and six of them are regressions the repairing lane introduced — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+Evidence = `_triage/factory_os/CODEX_AUDIT_CORRECT3_2026-08-04.md` (verbatim) · brief =
+`CODEX_AUDIT_CORRECT3_BRIEF.md`. Raised by lane `S-2026-08-04-CORRECT3` **against its own work**,
+after the owner asked for the review.
+
+🎯 **The review earned its keep on the one thing it was pointed at.** The brief ranked *"a guard was
+deliberately NARROWED — try to construct a document that gets the exemption without deserving it"*
+as finding #1 to hunt, and it did exactly that, twice, by two different mechanisms (#1 and #3 below).
+
+**Five of nine were REPRODUCED by this lane before the row was written.** The other four are recorded
+as the reviewer stated them and are **not yet independently confirmed** — that distinction is kept
+deliberately, because a Part-2 claim is not promoted by being repeated.
+
+| # | sev | defect | reproduced? |
+|---|---|---|---|
+| 1 | 🔴 | **The exemption accepts ANY reproducible section of the owner file, not the APPROVED one.** `pin_exemption_reason` requires a section claim that resolves; it never checks *which* section, and F7 only forces `eps.path == current_owner`. So a post-state claim naming an unrelated stable heading buys the exemption. | ✅ **YES** — granted on `## 1. ความจริงสั้น ๆ (อ่านก่อน)` |
+| 3 | 🔴 | **"For that row only" is false — the exemption is PATH-scoped, not row-scoped.** `executed_transfer_destinations` returns a set of *paths*, so any owner whose note names a path some *other* row donated is exempted too. A `KEEP` row sharing the destination path inherits it. Today's D1 has no such pair, so this is LATENT, not live. | ✅ **YES** — synthetic `KEEP` row exempted |
+| 6 | 🟠 | **The normalisation introduced for formatted values causes real false REFUSALS.** `open_lots=0.05` is a 4-char literal, so `secrets_of` admits it; normalised it is `005`, which occurs inside a normalised timestamp. ⚠️ **Severity corrected from the report:** the reviewer called this a build refusal, and it is — **but the REAL snapshot still builds**, verified. It is a latent, data-dependent breaker of the daily build, not a live outage. | ✅ **YES** — and the real build re-checked OK |
+| 5 | 🟠 | **The refusal PATH restates a key-placed value even though the DETAIL redacts it.** `_secret_detail` was the only thing hardened; `$.findings[0].900112233` carries it in the path. `SP17` proves detection and `SP07` proves absence only for a value-placed literal, so nothing covered this. | ✅ **YES** |
+| 8 | 🟡 | **`LAYERS_NOT_RUN` records process history, not the current scan** — a sentinel scan followed by a real scan leaves the stale "not run" notice, and repeated calls grow it without bound. The CLI can therefore report a skipped layer that ran. | ✅ **YES** |
+| 2 | 🟠 | Caller-chosen probe ids reach notification text while the recognizer layer is declared absent. **NOT a regression** — the probe branch passed an empty tuple before, which scanned nothing either; this repair made the gap *visible* rather than creating it. Still real. | ⬜ not re-run |
+| 4 | 🟠 | `--template` can OMIT an acknowledgement `check()` still demands — the reverse direction of the agreement case that was written. The checker also requires no other row problem; the template does not. | ⬜ not re-run |
+| 7 | 🟠 | The new `run_s2a_cages.ps1` trigger list omits judged inputs: `check_coverage_transfer` reads `schemas.json`, and `check_s2a_migration` reads design claims, but neither path selects the suite. | ⬜ not re-run |
+| 9 | 🟡 | **A new case that cannot discriminate.** The case labelled for F14 always dies at F13 — its section heading does not exist, so the hash comparison is never reached. Proven by mutation: `elif got != eps['section_sha256']` → `elif False` SURVIVES it, and the other wrong-hash case is masked by F2 and asserts only `pin is STALE`. | ⬜ not re-run |
+
+**Also raised, and it is a fair hit:** `SP16` asserts the split-field gap is still open, so **closing
+that gap turns the suite red**. It is an expected-gap tripwire and must be labelled as one, not
+counted as evidence that the boundary passes.
+
+🚫 **Do not "fix" #1 or #3 by narrowing further in a hurry.** A rushed narrowing is what produced
+them. #3 is contained (key the exemption on `current_owner` → its own row's destination, not on a
+path set). #1 is a genuine design question — *which* section is "the approved one", and the answer
+must not be a hardcoded heading (`rule-names-categories-not-enum-members`,
+`citation-guard-satisfied-by-a-universal-file`).
+
+**Suggested order:** #6 (latent build breaker, and the cheapest real risk) → #3 → #1 → #9 → #5 → #8
+→ #4 · #7 · #2.
+
+<sub>Review sandbox limits, stated so the coverage is not overread: the reviewer's environment had no
+writable temp dir, so S11 ran 70/78, S12 55/66, and conformance + schema cages did not reach their
+assertions. Those suites are all green when run normally by this lane. The findings above do not
+depend on the suites — every one is a code-path argument, and the five marked ✅ were reproduced
+directly.</sub>
 
 ---
 

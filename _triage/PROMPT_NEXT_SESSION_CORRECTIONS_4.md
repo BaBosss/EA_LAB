@@ -151,14 +151,41 @@ invalidate the transfer acceptance.
 
 ---
 
-## §5 — Suggested order
+## §5 — 🔴 ADDED AFTER THE FACT: the independent review found NINE defects in this lane's own work
 
-1. **`ORDER-1267` #2** — small, self-contained, and the module's own contract already says what the
-   right behaviour is. The cheapest real win left.
-2. **`ORDER-1260`** — five defects on the **money path**, and the largest untouched 🔴.
-3. **`ORDER-1261`** — a reopened incident silenced forever.
-4. **`ORDER-1269` #2** — read finding 1 first; it is two bundle members.
-5. **`ORDER-1266` #1** — only the `EXECUTION_KEY_FIELDS` half, only after checking whether `S13E` has
+**Read `ORDER-1310` before anything else in this file.** After the handoff below was written, the
+owner asked for an independent review of these two repairs. It found **nine** defects; **six are
+regressions this lane introduced**, and **five were reproduced by me before the row was written**.
+
+The two that matter most are both in the guard I **narrowed**, and the brief had ranked exactly that
+as the thing to hunt:
+
+- **the exemption accepts ANY reproducible section of the owner file, not the approved one** — a
+  post-state claim naming an unrelated stable heading buys it. Reproduced.
+- **"for that row only" is false — it is PATH-scoped, not row-scoped.** Latent today (no such pair
+  exists in D1), real tomorrow. Reproduced.
+
+Plus a **latent daily-build breaker**: the normalisation added for formatted values makes
+`open_lots=0.05` normalise to `005`, which occurs inside a normalised timestamp. The real snapshot
+still builds — verified — so it is data-dependent, not a live outage.
+
+And one of my own new cases **cannot discriminate**: the case labelled for F14 always dies at F13,
+proven by a surviving mutation. Evidence = `_triage/factory_os/CODEX_AUDIT_CORRECT3_2026-08-04.md`.
+
+> 🚫 **Do not fix #1 or #3 by narrowing further in a hurry — a rushed narrowing is what produced
+> them.** #3 is contained. #1 is a real design question and its answer must not be a hardcoded
+> section heading.
+
+## §6 — Suggested order
+
+1. **`ORDER-1310`** — the review findings, and they take precedence because six of them are damage
+   this lane did. Within it: **#6 first** (latent build breaker, cheapest real risk), then #3, #1, #9.
+2. **`ORDER-1267` #2** — small, self-contained, and the module's own contract already says what the
+   right behaviour is.
+3. **`ORDER-1260`** — five defects on the **money path**, and the largest untouched 🔴.
+4. **`ORDER-1261`** — a reopened incident silenced forever.
+5. **`ORDER-1269` #2** — read finding 1 in §1 first; it is two bundle members.
+6. **`ORDER-1266` #1** — only the `EXECUTION_KEY_FIELDS` half, only after checking whether `S13E` has
    released `factory/**`, and only with the store migration planned rather than discovered.
 
 ---
@@ -178,9 +205,9 @@ invalidate the transfer acceptance.
 - 🚫 **`git commit --amend` without a pathspec.** See §0.
 - **Reserve your order block and commit the reservation before using a number. Re-derive from BOTH
   tests** — every `## ORDER-<n>` across all four board files **and** every reserved block in the
-  ledger. At this file's writing the highest in use is **`ORDER-1302`** and **`1310-1319` was held by
-  this lane**, so the next free block is **`1320-1329`** — **derive it yourself rather than trusting
-  that sentence.** It has been hand-repaired nine times and was stale by twenty-one blocks once.
+  ledger. At this file's writing the highest in use is **`ORDER-1310`** (opened by this lane out of
+  its own block for the review findings) and **`1310-1319` was held by this lane**, so the next free
+  block is **`1320-1329`** — **derive it yourself rather than trusting that sentence.** It has been hand-repaired nine times and was stale by twenty-one blocks once.
 - **A criterion is committed in its own commit, before the run that resolves it.**
 
 ---
