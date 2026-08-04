@@ -151,6 +151,66 @@ cells alive — that is the failure this order is about.
 
 ---
 
+## ORDER-1330 — [factory/S13] The same configuration produced different money on two different days, and both identity fields the pipeline records said it was the same run — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> Opened 2026-08-04 by lane `S-2026-08-04-S13F` while auditing its own `ORDER-1273` step-6 work.
+> **Nothing was adjusted to fit and no verdict follows from it** — this is a measurement about the
+> evidence pipeline, not about either hypothesis.
+
+**The measurement.** `B14-H01-r1/BTCUSD/H4`, baseline arm, re-run through `scripts/pilot_cells.ps1`:
+
+| field | 2026-08-03 | 2026-08-04 (twice) |
+|---|---|---|
+| `pf` | 1.18 | 1.18 |
+| `trades` / long / short | 55 / 55 / 0 | 55 / 55 / 0 |
+| `net_profit` | **332.50** | **324.75** (−2.3 %) |
+| `gross_loss` | **−1838.85** | **−1850.78** |
+| `dd_pct` | **15.12** | **15.22** |
+
+**Everything that is supposed to identify a run was identical**, and each was checked rather than
+assumed: `effective_config_hash` `833394aa…`, `data_fingerprint` `c69ca500…`, the tracked `.set`
+unmodified since `080de7c0`, the wrapper `.ex5` mtime `2026-08-02 13:59`, `terminal64.exe` and
+`metatester64.exe` both `2026-07-25`, `bars`/`ticks` `6417`/`6035574`, and no commit touching
+`ea_template/` since `2026-08-03`.
+
+🔴 **It is NOT run-to-run noise, and that is the part that makes it actionable.** The two 2026-08-04
+runs are **byte-identical to each other** on every numeric field, and the two `ORDER-1273` step-6
+verification runs likewise reproduced exactly when re-run the same session. **Same session
+reproducible; across sessions not.** So a re-run inside one session is a copy, not an independent
+sample — and the usual "just run it again" does not measure this.
+
+**The design already named the missing piece.** §6.4 defines `data_fingerprint` as
+`hash(lane · symbol · tf · from · to · model · bars · ticks · server · Bases\ state marker)`, and
+`Get-PilotDataFingerprint` in `scripts/lib/pilot_run.ps1` says in its own comment that the `Bases\`
+marker **is not computed by anything in this repo**. This is the first measured case where that
+omission is the only thing that could have told two differently-numbered runs apart.
+
+**Why it is not fixed in the lane that found it.** Changing the fingerprint recipe invalidates every
+fingerprint already recorded across the whole pilot corpus, so it is a design decision with a
+migration attached, not a repair. 🚫 Do not quietly start hashing the `Bases\` marker into
+`Get-PilotDataFingerprint` — that silently reclassifies every existing record as un-comparable.
+
+**What it costs, concretely, right now:** `ORDER-1254` runs BWD on one day and compares it against
+MAIN measured on another. At ±2.3 % on net profit, **a marginal both-window comparison is inside the
+noise and nothing in the record says so.** The BWD numbers this lane produced (H01 `PF 0.76`,
+H02 `PF 1.61`) are far enough from `1.0` that the ordering does not change — but that is luck, and
+the next cell need not be.
+
+**Owed:**
+1. Decide whether `data_fingerprint` gains the `Bases\` marker (and what happens to existing rows),
+   or whether the design text drops a component nothing computes. **The two texts must stop
+   disagreeing** — same shape of debt as `ORDER-1300` owes §6.2.
+2. Until then, every record that carries a cross-session comparison should say that ±2–3 % on money
+   is inside measured session-to-session variation for this engine.
+3. Reproduce it on a second cell before generalising: **one cell, one pair of days** is what has
+   actually been measured (memory `phantom-regression-from-two-single-samples` — the two 08-04
+   samples are what stop this being that mistake, but the 08-03 side is still a single sample).
+
+Evidence: `factory/runs/pilot/pilot_cells_MAIN_lot0p03_20260803_123147.jsonl` (08-03) vs
+`…_20260804_081932.jsonl` and `…_20260804_082029.jsonl` (08-04, both committed).
+
+---
+
 ## ORDER-1301 — [factory/S13] Every configuration in the PF-max plateau has essentially no realized loss, which is what a basket martingale looks like when it is measured on PF — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 **An observation about the surfaces, made while executing `ORDER-1273`. It is not a verdict, it does
@@ -450,6 +510,36 @@ to fail on six one-line mutations of the module).
   correspond to any row that was evaluated, so without this the number handed to `ORDER-1254` would
   be interpolated rather than measured.
 
+### ✅ STEP 6 EXECUTED 2026-08-04 (lane `S-2026-08-04-S13F`) — and the worry it was written for was real
+
+Runner: `scripts/pilot_verify_selected.ps1` (`8dd112b0`), record
+`factory/runs/pilot/verification/verification_MAIN_lot0p03_20260804_082519.jsonl`, one Model-1 MAIN
+backtest per cell on the pinned lane at `_41_FixedLot=0.03`. **No verdict** — §10 stops here.
+
+| cell | PF | trades | DD % | gross loss | on the surface? |
+|---|---|---|---|---|---|
+| `B14-H01-r1/BTCUSD/H4` | 15,408.74 | 94 | 7.90 | **−0.38** | ❌ **never evaluated** |
+| `B14-H02-r1/BTCUSD/H4` | **UNDEF** (no losing trade) | 78 | 12.38 | **0.00** | ✅ pass 3069 |
+
+🔵 **The question was answered offline before any tester time was spent**, by
+`scripts/pilot_selected_surface_row.py` reading the surface through
+`pilot_probe_select.read_surface` (no second parser): **`B14-H01-r1`'s selected point appears in
+0 of 3,991 rows** — the nearest four differ in exactly one dimension — so the per-dimension median
+really is a point the optimizer never visited, and **this run is the only measured number that
+exists for it.** Controlled before the negative was believed: three rows taken off that same
+surface are all found by the same lookup.
+
+⚠️ **`B14-H02-r1` reproduced its reference row's participation exactly (78 trades vs 78) but not its
+money**: the surface row carries `Profit 6153.51` / `Equity DD % 12.3970`, the re-run measured
+`6171.73` / `12.38`. See **`ORDER-1330`** — the same configuration produces different money on
+different days while every recorded identity field says it is the same run.
+
+🔴 **Both cells are what `ORDER-1301` describes, now measured rather than argued:** a PF of 15,408
+is a gross loss of **thirty-eight cents** across three years and `UNDEF` is a gross loss of zero,
+while the crypto financing the tester does not charge is **−872.77** and **−1225.87** on the same
+two runs. Neither PF is a quality number. Both cells are also **100 % LONG** (94/0 and 78/0) on
+BTCUSD across a 2023–2025 bull window.
+
 🔴 **THIS ORDER EXISTS BECAUSE THE EVIDENCE ALREADY EXISTS.** Ten optimizer XMLs are on disk and
 six more are coming. `ORDER-1220` established the rule this repo pays for: a criterion chosen after
 seeing the result is not a criterion. Every hour these surfaces sit unread with no committed rule
@@ -698,9 +788,9 @@ building before the question is asked.
 
 ---
 
-## ORDER-1310 — [factory/S2·S11] 🔴 The independent review of `ORDER-1269`+`ORDER-1267` found nine defects, and six of them are regressions the repairing lane introduced — `6 of 9 DONE 2026-08-04` (lane `S-2026-08-04-CORRECT4`: `8c1be0b8` #6 · `a6f41b89` #3 · `24a754f0` #1 · `328a3d18` #9 · `3cc8d4b4` #5 + #8) · **#4 · #7 · #2 still OPEN** · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1310 — [factory/S2·S11] 🔴 The independent review of `ORDER-1269`+`ORDER-1267` found nine defects, and six of them are regressions the repairing lane introduced — `ALL 9 DONE 2026-08-04` (lane `S-2026-08-04-CORRECT4`: `8c1be0b8` #6 · `a6f41b89` #3 · `24a754f0` #1 · `328a3d18` #9 · `3cc8d4b4` #5 + #8 · `f542636e` #7 · `26788440` #4 · `c732a6e8` #2) · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
-### ✅ 2026-08-04 — the six the row ordered first, each measured at HEAD before it was touched
+### ✅ 2026-08-04 — all nine, each measured at HEAD before it was touched
 
 Every one was driven against BOTH revisions before and after the fix, with HEAD's copy extracted
 by `git show` into a scratchpad — the working tree was never moved to compare revisions
@@ -714,6 +804,9 @@ by `git show` into a scratchpad — the working tree was never moved to compare 
 | **#9** | with F14 mutated off, the case LABELLED F14 passed — it always died at F13 | the section is derived so it resolves and only the DIGEST is wrong; the assertion names F14 and requires F13 ABSENT. F14-off and F13-off mutations both KILLED, F14-labelled case first |
 | **#5** | `SP21 -> RED`: `the PATH restates the secret: [KNOWN_SECRET] $.findings[0].900112233` | `GREEN`. `_redacted_path`, applied once after the walk to EVERY rule's hits |
 | **#8** | sentinel-then-real scan reported a FALSE "layer skipped"; five identical sentinel scans grew the history 1 → 6 | two names: `LAST_SCAN_LAYERS_NOT_RUN` (reset per scan) and `LAYERS_NOT_RUN` (deduped on append). The earlier document's warning is NOT thrown away |
+| **#7** | `-ExportSelection`: staging `schemas.json` selected 6 suites and the design doc selected 2 — `run_s2a_cages.ps1` in NEITHER, while both files are genuinely READ (`SCHEMAS_PATH`; C3 `io.open()`s each `UNOWNABLE` evidence file and fails if the quoted sentence is gone) | both declared. Cost measured, not assumed: a `schemas.json` commit is now 7 suites / **29.5s of the 90.0s per-path budget**. **PART 4c** derives the required set from the checkers' OWN constants — the existing sweeps read the wrapper and follow its imports, and neither can see a path judged through a module constant |
+| **#4** | on the pre-#1 revision, the same fixture gave `check()` → F7+F2 while `--template` exited 0 with NO acknowledgement — **DISAGREE** | **closed by #1, not by a repair of its own** — a foreign-file section claim no longer names the section the store declares, so neither surface grants the exemption. Recorded as closed-by, and pinned with an AGREEMENT case in the OTHER direction (the old one only ever exercised "neither asks") |
+| **#2** | `[EA LAB] delivery probe 159503454 → EMERGENCY`, accepted by `assert_sendable` — the reviewer's exact string | `[EA LAB] delivery probe FP-7e36f52f73 → EMERGENCY`. The CHANNEL is removed rather than filtered (a blacklist of value shapes has no end): the wire carries `public_id(probe_id)`, the raw id stays in the LOCAL ledger key, and `main()` prints the mapping locally |
 
 ⚠️ **ONE CORRECTION TO THE REVIEW, kept rather than tidied away.** #9's finding is exact about the
 CASE — it could not discriminate — and wider than the truth about the SUITE: `F14 a SECTION
@@ -730,8 +823,16 @@ notice goes "on stderr", which was left over from the version the fast tier kill
 No BUNDLE MEMBER was touched by any of the six, so **no owner signature is owed** —
 `run_s2a_conformance.py` 68/0 canonical vectors after each S2a commit.
 
-**What is left on this row: #4 · #7 · #2** — all three are in the "not re-run" half of the table
-below, so the next seat must MEASURE THEM AT HEAD before treating them as real.
+**Nothing is left on this row.** The three the reviewer had not had reproduced (#4 · #7 · #2) were
+each MEASURED AT HEAD before anything was touched, rather than promoted by being repaired: **#7 and
+#2 reproduced exactly as stated**, and **#4 reproduced on the pre-#1 revision and was already closed
+by #1** — which is recorded as closed-by rather than as a fix, because nothing was written for it.
+
+⚠️ **One thing the reviewer raised that is NOT closed, and it is deliberate:** `SP16` still asserts
+the split-value gap is OPEN, so closing that gap turns the suite red. It is an expected-gap
+tripwire and the review is right that it is the wrong shape for a passing security test. Relabelling
+it is a change to what the case CLAIMS, not to what it measures, and it belongs with the work that
+closes the gap (`ORDER-1267` #2's neighbourhood) rather than as a drive-by rename here.
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_CORRECT3_2026-08-04.md` (verbatim) · brief =
 `CODEX_AUDIT_CORRECT3_BRIEF.md`. Raised by lane `S-2026-08-04-CORRECT3` **against its own work**,
@@ -768,8 +869,7 @@ must not be a hardcoded heading (`rule-names-categories-not-enum-members`,
 `citation-guard-satisfied-by-a-universal-file`).
 
 **Suggested order:** #6 (latent build breaker, and the cheapest real risk) → #3 → #1 → #9 → #5 → #8
-→ #4 · #7 · #2. **The first six are DONE (see the block at the top of this row); #4, #7 and #2
-remain, and none of them has been reproduced yet — measure at HEAD before repairing.**
+→ #4 · #7 · #2. **All nine are DONE — see the measurement table at the top of this row.**
 
 <sub>Review sandbox limits, stated so the coverage is not overread: the reviewer's environment had no
 writable temp dir, so S11 ran 70/78, S12 55/66, and conformance + schema cages did not reach their
@@ -1858,6 +1958,39 @@ the back door · any EA verdict (design §10 stops this slice at `EVIDENCE_COMPL
 ---
 
 ## ORDER-1254 — [factory/S13] BWD 2020-22 as a HARD gate, then Model 4 — `OPEN` (blocked on `ORDER-1253` ✅, and now on `ORDER-1300` + `ORDER-1302`) · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> ### ✅ BWD 2020–2022 RUN 2026-08-04 (lane `S-2026-08-04-S13F`) — the two verified cells, and they split
+>
+> Record `factory/runs/pilot/verification/verification_BWD_lot0p03_20260804_083832.jsonl`, same
+> lane, same `.set` hashes as the MAIN runs, Model 1, `_41_FixedLot=0.03`. **BWD was NOT searched on**
+> (§6.2) — the configuration came from the MAIN surface and BWD only judges it.
+>
+> | cell | PF | trades | DD % | net | financing not yet deducted | history quality |
+> |---|---|---|---|---|---|---|
+> | `B14-H01-r1/BTCUSD/H4` | **0.76** | 49 | 16.01 | **−403.35** | −249.90 | 85 % |
+> | `B14-H02-r1/BTCUSD/H4` | **1.61** | 57 | 15.63 | +1244.60 | −467.52 | 85 % |
+>
+> **`B14-H01-r1` fails the hard gate** (ENGINE-EDGE cage condition 2 — for this class BWD is HARD,
+> not the usual soft gate) and it is negative, not merely under the bar.
+> **`B14-H02-r1` clears it on the number**, and every caveat has to be read with it:
+> * ⚠️ **57 trades over a three-year window.** `CLAUDE.md`'s un-numbered `PENDING-RATIFY(user)` note
+>   applies exactly here — a BWD pass resting on well under ~100 trades must be quoted with its
+>   trade count and drawdown beside the PF, so a reader can see whether the bar was cleared by
+>   resilience or by absence (memory `bar-cleared-by-non-participation`).
+> * ⚠️ **Financing is NOT in that PF.** Deducted post-hoc it is `3292.55 / (2047.95 + 467.52)` ≈
+>   **1.31**, still ≥ 1.0. 🚫 The 1.61 must not be quoted as a crypto number.
+> * ⚠️ **`history_quality` is 85 % on BWD** against 100 % on MAIN. A hard gate decided on 85 % history
+>   is weaker evidence than the same number on MAIN, and that is stated rather than left in the file.
+> * ⚠️ **DD 15.63 % / 16.01 %**, both well over `RC_AcctDDLimitPct=12.0`.
+> * ⚠️ **100 % LONG in both windows** (49/0 and 57/0). BWD 2020–2022 contains the 2022 bear, so a
+>   long-only book surviving it is the one genuinely interesting fact here — and it is one cell.
+>
+> 🚫 **No verdict yet, and none may be issued from automation.** Model 4 is mandatory for the
+> ENGINE-EDGE class and is the remaining half of this order.
+>
+> ⚠️ Cross-session comparison caveat: **`ORDER-1330`** measured ±2.3 % on net profit for an
+> identical configuration run on two different days. Both PFs above are far enough from 1.0 that the
+> ordering does not change; that is luck, not margin.
 
 > 🔴 **Re-blocked 2026-08-04 by executing `ORDER-1273`.** BWD judges *the configuration the probe
 > selected*, and **fourteen of sixteen cells do not have one** — they are `BOUNDARY` and item 5
