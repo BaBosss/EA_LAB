@@ -7559,6 +7559,76 @@ Advisory is correct **while drafting** (a frequently-edited owner like `AGENT_TA
 
 ---
 
+## ORDER-1411 — [optimize] The two WATCH cells from tonight's screen, neither ever optimized — `OPEN` · ทำได้: **oc-qwen/ZCode (run)** · design = Claude (done) · 👉 แนะ: oc-qwen
+**bars:** written below and **pre-registered 2026-08-04 19:40, BEFORE any sweep result exists — this row is committed before the batch is dispatched. Do not edit a bar after seeing a number.**
+**flat-lot probe:** N-A — both EAs are single-order, flat `_0*_LotSize`, no escalation engine.
+
+**Where these came from:** `ORDER-GEN-STANDING` ran 12 screening cells on 2026-08-04. Nothing reached
+the 1.2 bar; exactly two landed in the WATCH band and **neither has ever been optimized on its cell**:
+
+| EA | cell | screen PF | trades | DD% |
+|---|---|---|---|---|
+| `MacdDiv_Naked` | AUDJPY H4 | 1.18 | 173 | 0.84 |
+| `PivotBreakout_XAU` | USDJPY H4 | 1.17 | 211 | 1.14 |
+
+Per the VERDICT GATE, `PF>1` under the bar is **BUILD-ON, the default** — not a discard.
+
+**Input surface — read out of the Inputs page of the actual screening reports, not from source.**
+This is the `ORDER-143`/`ORDER-236` failure mode closed before it can happen: an order that sweeps a
+parameter the binary does not expose.
+- `MacdDiv_Naked`: `_01_LookbackBars=60` `_01_SwingRadius=3` `_01_MinBarsApart=2` `_02_MacdFast=12`
+  `_02_MacdSlow=44` `_02_MacdSignal=13` `_03_BufferAtrMult=0.15` `_03_AtrPeriod=18`
+  `_07_UseRsiGate=false` `_08_UseMacdCross=false`
+- `PivotBreakout_XAU`: `_01_AtrPeriod=14` `_02_SlAtrMult=1.5` `_02_TpRR=3.0` `_03_StartGmt=0`
+  `_03_EndGmt=24` `_03_ServerGmtOffset=3`
+
+🔴 **Two facts that shape the design and must not be lost:**
+1. `PivotBreakout_XAU` on USDJPY is running `PivotBreakout_XAU_deploy.set` — **parameters calibrated
+   for GOLD**. `1.17` is what a foreign parameter set scores. The upside here is not tuning noise, it
+   is that the cell has never had its own numbers.
+2. `MacdDiv_Naked` exposes **no stop-loss and no take-profit input at all**. `DD 0.84%` over 173
+   trades is very low for an EA with no SL. That is a question for whoever reads the result — where
+   does a losing trade exit? — **not a conclusion, and not this order's job to answer.**
+
+### PRE-REGISTERED BARS — locked before the first run
+
+- **STAGE 1 (inert-axis probe).** An axis is **LIVE** if any probe point moves MAIN PF by **≥ 0.05**
+  against the cell's baseline. An axis whose entire probe range moves PF by **< 0.05** is declared
+  **INERT**, is excluded from STAGE 2, and **must be listed by name in the report** — an inert axis
+  silently dropped is how a fake plateau is built (memory `inert-axis-fake-plateau`).
+- **STAGE 2 → STAGE 3 requires a PLATEAU, not a peak.** Promote only if **≥ 3 contiguous grid points
+  are all ≥ 1.20** on MAIN. A single point ≥ 1.20 whose immediate neighbours are < 1.20 is a
+  **SPIKE — do not promote it**, report it as a spike.
+- **GRID-EDGE RULE.** If the best point sits on the **first or last** value of any axis, the answer is
+  **outside the grid**: do NOT select it, report `BOUNDARY(<axis>, <edge>)` and stop that axis
+  (memory `grid-answer-outside-the-grid`).
+- **STAGE 3 (Model 4, plateau CENTRE — never the peak).**
+  - MAIN ≥ **1.20** AND BWD ≥ **1.00** ⇒ report as clearing both; the verdict is still Claude's.
+  - MAIN ≥ 1.20 AND BWD < 1.00 ⇒ **PARKED-VERIFY(user)** — the route to real money closes automatically.
+  - MAIN < 1.20 under Model 4 while Model 1 said otherwise ⇒ the Model-1 number was a **fill artifact**;
+    report it in exactly those words.
+- **PARTICIPATION.** Report `trades` and `DD%` on **every** row, next to PF, always. If any BWD row
+  clears its bar on **fewer than 100 trades** over the 3-year window, that row must carry the trade
+  count and drawdown in the same sentence as the PF — a bar cleared by not being in the market is not
+  a bar cleared (memory `bar-cleared-by-non-participation`).
+- **BOOLEAN GATES are filters, and a filter is judged differently.** `_07_UseRsiGate` and
+  `_08_UseMacdCross` are OFF today. When flipped ON, if **every number is identical to the control in
+  every digit**, that is evidence the gate is **INERT — not evidence it is safe**, and it must be
+  reported as `INERT(<gate>)`. ⚠️ Neither EA emits a fire counter, so "never triggered" and "triggered
+  and changed nothing" **cannot be separated by this batch** — say so rather than choosing one.
+
+### Windows and models
+MAIN = `2023.01.01–2025.12.31` · BWD = `2020.01.01–2022.12.31` · 🚫 **2026 is never touched.**
+STAGE 1 and 2 = **Model 1** (cheap, and these are single-order EAs, not grids). STAGE 3 = **Model 4**.
+Lane: `D:\Meta 5c`. One lane for the whole order.
+
+### Cost, so it is scheduled and not discovered
+STAGE 1 ≈ **40 Model-1 runs** (22 MacdDiv + 18 PivotBreakout), one axis at a time from baseline.
+STAGE 2 ≈ **25 runs per EA** (top-2 LIVE axes, full 5×5 cross). STAGE 3 = **2 runs per EA**.
+
+**ห้าม:** ออก verdict · เปลี่ยนบาร์หลังเห็นเลข · เลือกจุดยอด (peak) แทนกลาง plateau · sweep แกนที่ไม่ได้
+ระบุ · แตะหน้าต่าง 2026 · รายงาน Model 1 เป็นหลักฐานขั้นสุดท้าย · แตะ `.mq5` · `ea_template\core\` ·
+`.set` ต้นฉบับใน `_vps_deploy\` (ให้ copy ออกมาแก้) · board/scorecard/state ไฟล์ใดๆ · git commit
 ## ORDER-1410 — [factory/S2a] Audit 7 refused `ORDER-600` and `ORDER-601` **twice**, and nothing has been repaired — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 **bars:** N-A (repair driven by a named report) · **flat-lot probe:** N-A
 
