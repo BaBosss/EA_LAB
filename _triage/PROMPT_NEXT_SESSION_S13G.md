@@ -114,7 +114,11 @@ does not close that today, but the next cell need not be so far from the line.
 
 ## Baseline before you touch anything
 
-`run_fast_cages.ps1 -Hook` (**29 suites, 0 failed, 99.9s of the pinned 120.0s**) · `run_s13_tests.ps1`
+`run_fast_cages.ps1 -Hook` (**29 suites, 0 failed, 97.9s of the pinned 120.0s — 22.1s headroom**) ·
+⚠️ two intermediate readings of `100.5s / 2 failed` and `98.6s / 1 failed` were taken while the
+concurrent lane was committing (`.git/index was rewritten during this run`); **the 1 real failure
+was `run_guard_trigger_tests` and it is fixed** — see the traps. Do not quote a tier number from a
+run whose transcript says the index moved. · `run_s13_tests.ps1`
 (now also runs the 16-case pilot-verify cage + `pilot_verify_check.py`; 1.67/1.68/1.69s) ·
 `run_selection_tests.ps1` · `run_optimize_guard_tests.ps1` · `run_schema_cages.ps1` ·
 `check_state.ps1` · `_triage/factory_os/run_s2a_gate.py`.
@@ -127,6 +131,13 @@ reservation before using a number.**
 
 ## Traps this lane paid for (the new ones)
 
+- 🔴 **Committing a tool is what arms the trigger guard on its CALLER.** `run_s13_tests` called two
+  new scripts for a whole session with `run_guard_trigger_tests` green, because that guard's question
+  is about **tracked** paths — it went red only after the tools were committed, i.e. after the tier
+  had already been measured and written into a handoff as green. **A green tier measured before your
+  new files are tracked is not a measurement of the tier you are shipping.** (And declaring an input
+  without re-running `scripts/gen_fast_tier_pathspec.ps1` leaves it declared and unselected — a
+  second, separate failure the guard names by hand.)
 - 🔴 **An equivalence proof that never runs the migrated caller proves the library, not the
   migration.** 4,904 comparisons said the extraction was clean; the forwarders in `pilot_cells.ps1`
   had still never executed. Running them once is what surfaced `ORDER-1330`.
