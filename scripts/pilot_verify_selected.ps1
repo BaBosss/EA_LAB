@@ -176,13 +176,24 @@ foreach ($s in $selected) {
   foreach ($l in (Get-Content -LiteralPath $set.path)) {
     if ($l -match '^([A-Za-z_0-9]+)=([^|]*)') { $onDisk[$Matches[1]] = $Matches[2].Trim() }
   }
+  # A non-numeric or empty value is REFUSED BY NAME rather than thrown at by the cast. `[double]''`
+  # raises a bare conversion error whose message says nothing about which key or which cell, and an
+  # unreadable value must never share an exit path with a value that disagrees.
+  function Get-SetNumber([hashtable]$map, [string]$key, [string]$where) {
+    if (-not $map.ContainsKey($key)) { Fail ("the generated .set " + $where + " has no line for " + $key) }
+    $raw = $map[$key]
+    $d = 0.0
+    if (-not [double]::TryParse($raw, [ref]$d)) {
+      Fail ("the generated .set " + $where + " carries " + $key + "=" + $raw + ", which is not a number. 'I could not read it' is not 'it matches'.")
+    }
+    return $d
+  }
   foreach ($k in $s.selected.PSObject.Properties.Name) {
-    if (-not $onDisk.ContainsKey($k)) { Fail ("the generated .set " + $set.path + " has no line for " + $k) }
-    if ([double]$onDisk[$k] -ne [double]$s.selected.$k) {
+    if ((Get-SetNumber $onDisk $k $set.path) -ne [double]$s.selected.$k) {
       Fail ("the generated .set carries " + $k + "=" + $onDisk[$k] + " but the selection says " + $s.selected.$k + ". The run would be of a configuration nobody chose.")
     }
   }
-  if ([double]$onDisk['_41_FixedLot'] -ne [double]$FirstLot) {
+  if ((Get-SetNumber $onDisk '_41_FixedLot' $set.path) -ne [double]$FirstLot) {
     Fail ("the generated .set carries _41_FixedLot=" + $onDisk['_41_FixedLot'] + ", not " + $FirstLot)
   }
   Write-Host ("   .set     : " + (Split-Path -Leaf $set.path) + "  hash " + $set.hash.Substring(0, 12) + " (every selected value read back and confirmed)") -ForegroundColor DarkGray

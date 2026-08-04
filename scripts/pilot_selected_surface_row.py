@@ -64,8 +64,17 @@ def find_row(xml_path, selected):
                          'evaluated" is not a question this pair can answer.'
                          % (os.path.basename(xml_path), ', '.join(sorted(missing))))
     idx = {d: header.index(d) for d in selected}
-    result_i = header.index('Result') if 'Result' in header else None
-    trades_i = header.index('Trades') if 'Trades' in header else None
+    # EVERY COLUMN THE VERIFICATION RUN ALSO MEASURES IS CARRIED, not just the two the criterion
+    # used. Reporting only Result and Trades made a reference row look reproduced when it was not:
+    # on B14-H02-r1 pass 3069 the trade count matched exactly (78 vs 78) while Profit differed by
+    # 18.22 and Equity DD by 0.02 -- and with only Result and Trades in the record, the natural
+    # reading of "78 against 78" is that the row reproduced. A comparison that drops the columns
+    # which disagree is not a comparison.
+    carry = {'result': 'Result', 'profit': 'Profit', 'profit_factor': 'Profit Factor',
+             'equity_dd_pct': 'Equity DD %', 'trades': 'Trades'}
+    ci = {}
+    for key, col in carry.items():
+        ci[key] = header.index(col) if col in header else None
     hits = []
     for row in rows:
         ok = True
@@ -75,12 +84,15 @@ def find_row(xml_path, selected):
                 ok = False
                 break
         if ok:
-            hits.append({
-                'pass': row[0],
-                'result': _num(row[result_i]) if result_i is not None else None,
-                'trades': _num(row[trades_i]) if trades_i is not None else None,
-            })
-    return len(rows), hits
+            hit = {'pass': row[0]}
+            for key, col_i in ci.items():
+                # A column the surface does not carry is None WITH its name recorded below, never
+                # silently absent -- "the optimizer did not report this" and "nobody looked" are
+                # different facts.
+                hit[key] = _num(row[col_i]) if col_i is not None else None
+            hits.append(hit)
+    absent = sorted(col for key, col in carry.items() if ci[key] is None)
+    return len(rows), hits, absent
 
 
 def main(argv):
@@ -90,7 +102,13 @@ def main(argv):
     want_cell = None
     if '--cell' in argv:
         want_cell = argv[argv.index('--cell') + 1]
-    out = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', newline='\n')
+    # RECONFIGURE, DO NOT WRAP: io.TextIOWrapper(sys.stdout.buffer, ...) closes that buffer when it
+    # is collected, so an in-process caller that runs main() twice loses stdout after the first.
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', newline='\n')
+    except (AttributeError, ValueError):
+        pass
+    out = sys.stdout
     n = 0
     for line in io.open(record, encoding='utf-8'):
         line = line.strip()
@@ -101,7 +119,7 @@ def main(argv):
             continue
         if want_cell and rec.get('cell_id') != want_cell:
             continue
-        total, hits = find_row(rec['xml'], rec['selected'])
+        total, hits, absent = find_row(rec['xml'], rec['selected'])
         n += 1
         out.write(json.dumps({
             'cell_id': rec['cell_id'],
@@ -110,6 +128,7 @@ def main(argv):
             'selected': rec['selected'],
             'evaluated_on_surface': len(hits) > 0,
             'matching_rows': hits,
+            'columns_absent_from_surface': absent,
             'why': ('the selected point IS a row the optimizer evaluated; the verification run has '
                     'something to be checked against'
                     if hits else

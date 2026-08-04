@@ -156,6 +156,51 @@ try {
     }
     Write-Host (($genText.TrimEnd() -split "`n" | Select-Object -Last 1))
 
+    # --- ORDER-1273 step 6 ------------------------------------------------------------------
+    # Same question as the block above, asked of the store one directory away:
+    # `factory/runs/pilot/verification/` is generated evidence and nothing re-derived it either.
+    # ORDER-1272 closed this for `factory/coverage.jsonl`, the next lane recreated it for
+    # `selection/`, and this store was the third instance. It is wired HERE rather than as a new
+    # tier entry deliberately: registering a suite means editing `$FAST_SUITES` and
+    # `.githooks/fast_tier_pathspec`, which a concurrently ACTIVE lane declares in the ledger, and
+    # this suite is 0.1s (measured 97/98/99 ms) against a full-tier headroom of ~19s that the two
+    # lanes spend independently.
+    $prevEap2 = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $vcage = & $python (Join-Path $RepoRoot 'scripts\_test\run_pilot_verify_tests.py') 2>&1
+    $vcageRc = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap2
+    if ($vcageRc -ne 0) {
+        Write-Host '[s13] FAIL: the pilot-verify cage went red -- the surface lookup and the' -ForegroundColor Red
+        Write-Host '       verification-store checker cannot be believed while it is.' -ForegroundColor Red
+        Write-Host ($vcage | Out-String).TrimEnd()
+        exit 1
+    }
+    Write-Host (($vcage | Out-String).TrimEnd() -split "`n" | Select-Object -Last 1)
+
+    $ErrorActionPreference = 'Continue'
+    $vc = & $python (Join-Path $RepoRoot 'scripts\pilot_verify_check.py') 2>&1
+    $vcRc = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap2
+    $vcText = ($vc | Out-String)
+    # THREE exit codes again, and 2 is the one that must not block a commit. The reports live under
+    # `_mt5_auto/reports/`, which is gitignored by design at 3-4 MB per file -- so on any clone that
+    # legitimately lacks them this is "not on this machine", reported and skipped, never merged with
+    # "the evidence is wrong" and never with a pass. A suite on the commit path that asserted
+    # against those artefacts blocked every such commit once already, this month.
+    if ($vcRc -eq 2) {
+        Write-Host ('[s13] pilot_verify_check: SKIPPED -- ' + ($vcText.TrimEnd() -split "`n" | Select-Object -Last 1)) -ForegroundColor DarkYellow
+    } elseif ($vcRc -ne 0) {
+        # The remedy line comes from the checker's own output below, not from prose here: naming the
+        # runner's path in this file makes the trigger-map guard read it as an undeclared
+        # dependency, and it cannot tell a path that is read from one that is mentioned.
+        Write-Host '[s13] FAIL: a verification record no longer matches the report it names.' -ForegroundColor Red
+        Write-Host $vcText.TrimEnd()
+        exit 1
+    } else {
+        Write-Host ($vcText.TrimEnd() -split "`n" | Select-Object -Last 1)
+    }
+
     Write-Host '[s13] S13 cage green; the 8.6 checklist is derived from the design, not restated here'
     exit 0
 } finally {
