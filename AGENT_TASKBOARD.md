@@ -497,6 +497,41 @@ Two further facts measured while reading these 16 records, both cheap and both b
   `_triage/factory_os/schemas.json` is declared by another ACTIVE lane (`docs/SESSION_LEDGER.md`
   rule 4).
 
+### 👤 OWNER RULING 2026-08-04 — widen downward, past half a step, and accept a little more risk.
+
+The question put was: 23 of the 32 boundary hits sit at the **low** edge, and low on
+`_9_StepATRmult` / `_2_BasketTP_BalPct` means a tighter grid and a faster take-profit — more
+positions and deeper martingale exposure on an `ENGINE-EDGE` class. **How far down do we widen?**
+
+> **TH verbatim:** *"อยากให้เหมือนข้อ2 ขยายได้มากกว่าครึ่งขั้น ทำตามข้อ 1 ขยาย period ค่อนข้างไม่มีประโยชน์
+> ถ้าขยาย ATR ก็ใช้ multi เพิ่มไป เพิ่มความเสี่ยงก็นิดหน่อยลองดูก็รู้"*
+
+**The ruling:** widen the **low** edges — not only the safe ones — and the widening may go **further
+than half a declared step**. Widening `_0_ATR_Period` alone (the option that touches no risk
+envelope) is rejected as *"ค่อนข้างไม่มีประโยชน์"*; if the ATR axis is widened it should come with the
+multi-symbol route (`ORDER-1400`) rather than instead of it. The extra risk is accepted explicitly:
+*"เพิ่มความเสี่ยงก็นิดหน่อยลองดูก็รู้"*.
+
+🔴 **The floor is NOT a number the owner gave, and it must not be invented quietly.** *"มากกว่าครึ่งขั้น"*
+sets a **direction and a minimum**, not a value. The reading this lane would pre-register — **one
+full declared step below the current start, except where that reaches zero or below**, i.e.
+
+| dimension | start · step | proposed new start | note |
+|---|---|---|---|
+| `_9_StepATRmult` | 0.5 · 0.25 | **0.25** | one full step |
+| `_14_DistAtrMult` | 0.5 · 0.25 | **0.25** | one full step |
+| `_22_TP_ATRmult` | 1.0 · 0.5 | **0.5** | one full step |
+| `_H_Ratio` | 0.5 · 0.25 | **0.25** | one full step |
+| `_2_BasketTP_BalPct` | 0.5 · 0.5 | **0.25** | a full step reaches 0.0, which is not a take-profit |
+| `_14_MinDistPips` | 5 · 5 | **2** | a full step reaches 0, which is no minimum distance at all |
+
+— is **written here to be confirmed or corrected before the sweep runs**, not treated as ratified.
+Two of the six cannot take a full step without becoming meaningless, and that is exactly the kind of
+detail a ruling given in words does not carry. 🚫 Do not run the sweep until the table above is
+confirmed. 🚫 And `ORDER-1330` still applies: these surfaces do not reproduce across days yet.
+
+---
+
 ### 🔴 WITHDRAWN — the "first deliverable" this lane wrote at `69283002` was wrong. Do not act on it.
 
 Lane `S-2026-08-04-S13G` recorded a decision that `safe_range` is a safety envelope and that a
