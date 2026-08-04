@@ -589,6 +589,22 @@ def plan(records, projection=None, brief=None, probe=None, now=None):
         probe_id, channel = probe
         if channel not in CHANNELS:
             _refuse('probe channel %r is not one of %s' % (channel, ', '.join(CHANNELS)))
+        # 🔴 ORDER-1310 #2: THE PROBE ID IS CALLER-CHOSEN TEXT ON THE ONE PATH THAT CANNOT SCAN IT.
+        # `--id` is whatever the operator typed, it went into the message VERBATIM, and the probe
+        # branch declares NO_KNOWN_SECRETS_AVAILABLE by design -- a probe exists to run when the
+        # snapshot is broken, so there is no document to derive recognizers from. The independent
+        # review sent `probe --id 159503454` and got `[EA LAB] delivery probe 159503454 →
+        # EMERGENCY` past `assert_sendable`. An operator reaching for their account number as a
+        # convenient unique id would have posted it to Telegram. (NOT a regression: the branch
+        # passed an empty tuple before, which scanned nothing either.)
+        #
+        # FILTERING IT WOULD BE THE WRONG REPAIR -- a blacklist of value shapes has no end, which
+        # is the argument `safe_projection._check_shape` already makes for field names. The
+        # channel is removed instead: the WIRE carries an opaque token derived from the id, and
+        # the raw id stays in `dedupe_key`, which is local (the ledger lives under gitignored
+        # `ops/`) and never sent. Correlation is preserved -- `public_id` is stable across runs --
+        # and `main()` prints the mapping locally so the operator can still match what they typed
+        # to what arrived.
         events.append({
             'entity': ENTITY_EVENT, 'kind': 'DELIVERY_PROBE', 'channel': channel,
             'public_id': 'FP-0000000000', 'severity': 'INFO', 'state': 'OPEN',
@@ -597,7 +613,7 @@ def plan(records, projection=None, brief=None, probe=None, now=None):
             'build_id': str((projection or {}).get('build_id', '')),
             'text': ('[EA LAB] delivery probe %s → %s\n'
                      'พิสูจน์เส้นทางแจ้งเตือนตรง (ไม่ผ่าน OpenClaw) — ไม่ใช่เหตุการณ์ของฟลีต'
-                     % (probe_id, channel)),
+                     % (safe_projection.public_id(probe_id), channel)),
         })
     return events
 
@@ -1019,6 +1035,11 @@ def main(argv):
             # forgot", with the same result. Saying which one it is costs nothing and is the whole
             # repair. (S12 C06 and C07 are the cases that drive this branch.)
             secrets = safe_projection.NO_KNOWN_SECRETS_AVAILABLE
+            # ORDER-1310 #2: the wire carries an opaque token, so the operator is told LOCALLY
+            # which token their id became. Printed here rather than sent, which is the whole
+            # point of the change.
+            print('notifier: probe id %r travels as %s (the raw id stays local, in the ledger '
+                  'key only)' % (probe_id, safe_projection.public_id(probe_id)))
         else:
             records, journal_lines = observe(previous, findings_of(snapshot), now)
             brief = _brief_scalars(repo_root, snapshot) if '--brief' in argv else None

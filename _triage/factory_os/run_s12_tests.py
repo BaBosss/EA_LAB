@@ -714,6 +714,47 @@ def _s03():
     hit('scan:KNOWN_SECRET')
 
 
+@case('S12', 'ORDER-1310 #2 a caller-chosen probe id does NOT travel in the message text')
+def _s12():
+    """
+    THE ONE PATH THAT CANNOT SCAN ITS OWN TEXT, carrying text the caller typed. `--id` went into
+    the message verbatim while the probe branch declares NO_KNOWN_SECRETS_AVAILABLE -- by design,
+    because a probe exists to run when the snapshot is broken and there is nothing to derive
+    recognizers from. The independent review sent `probe --id 159503454` and got
+    `[EA LAB] delivery probe 159503454 → EMERGENCY` past assert_sendable. An operator reaching
+    for their account number as a convenient unique id would have posted it to Telegram.
+
+    Filtering it would be the wrong repair -- a blacklist of value shapes has no end. The channel
+    is removed: an opaque derived token goes on the wire and the raw id stays in the LOCAL ledger
+    key. So this case asserts BOTH halves, or "the id does not travel" would also be satisfied by
+    a probe that stopped being unique.
+    """
+    account_shaped = '159503454'
+    ev = notifier.plan([], None, None, (account_shaped, 'EMERGENCY'))
+    probes = [e for e in ev if e['kind'] == 'DELIVERY_PROBE']
+    eq(len(probes), 1, 'CONTROL: the probe event is no longer planned at all: %s' % ev)
+    text = probes[0]['text']
+    if account_shaped in text:
+        raise AssertionError('the caller-chosen probe id travels in the message text: %r' % text)
+    # ...and it is still CORRELATABLE: a stable opaque token derived from the id.
+    if safe_projection.public_id(account_shaped) not in text:
+        raise AssertionError('the probe text carries no token for the id, so an operator cannot '
+                             'match what they typed to what arrived: %r' % text)
+    # The raw id is kept exactly where it must be -- the dedupe key, which lives in the LOCAL
+    # ledger under gitignored ops/ and is never sent. Without it a second probe is a suppressed
+    # duplicate forever, which is what --id exists to prevent.
+    if account_shaped not in probes[0]['dedupe_key']:
+        raise AssertionError('the raw id was dropped from the ledger key too: %s' % probes[0])
+    # SPECIFICITY: two different ids must still produce two different messages.
+    other = [e for e in notifier.plan([], None, None, ('S12-OTHER', 'EMERGENCY'))
+             if e['kind'] == 'DELIVERY_PROBE']
+    if other[0]['text'] == text:
+        raise AssertionError('two different probe ids produce the same message text')
+    # ...and the whole event still crosses the boundary on the path that cannot scan it.
+    notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT)
+    hit('kind:DELIVERY_PROBE')
+
+
 @case('S04', 'a local filesystem path in the text is caught wherever it appears')
 def _s04():
     ev = notifier.plan([rec()], PROJECTION)
