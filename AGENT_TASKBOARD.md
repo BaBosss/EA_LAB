@@ -216,8 +216,12 @@ Full write-up `_triage/ORDER-1330_reproduction_result_S13G.md`; predictions
 started); records `factory/runs/pilot/pilot_cells_MAIN_lot0p03_20260804_11{0950,1101,1301,1509}.jsonl`.
 Eight H4 cells re-run on the identical invocation — MAIN · Model 1 · lot 0.03 · same lane.
 
-🔴 **All 8 differ from their 08-03 records, and in the 5 whose deal lists are otherwise identical the
-ENTIRE difference is the `Swap` column.** `H02/BTCUSD/H4`: swap **+15.28**, profit column identical
+🔴 **All 8 differ from their 08-03 records, and in 3 of them the ENTIRE difference is the `Swap`
+column** (`/scrutinize` corrected this line from "5" — the per-cell recount is **3 swap-only** ·
+**3 with deal time/price/comment also moved** · **2 with a changed deal count**; the swap mechanism
+is proven on the first group and is not the whole story. ⚠️ `_2_BasketTP_BalPct` closes on a
+percentage of BALANCE, so a changed swap moves the exit tick — the second group is *consistent with*
+the same cause and is **not** demonstrated to be it). `H02/BTCUSD/H4`: swap **+15.28**, profit column identical
 to the cent, and +15.28 is exactly the change in net profit. `H01/EURUSD/H4`: swap **+204.78**,
 profit identical, **PF 0.62 → 1.06**. `H01/USDJPY/H4`: swap **+163.31**, profit identical, gross loss
 **−92.69 → −11.06**, **PF 12.46 → 111.77**. Three cells cross or move around a PF bar with **no
@@ -349,15 +353,26 @@ zero. The **mode** half of that measurement is still correct; the **charged** ha
 repair is not "the broker changed the symbol to POINTS" — it is that an INTEREST-mode symbol on this
 build **is** charged, and every `financing_deducted` figure sits on top of that.
 
-**−20.21 vs a naive ~29** from the annual rate over the same hold: the gap is rollover-day counting
-and the price each daily charge is valued at. It is **not** the difference between charged and not
-charged, and quoting it as "the tester only charges part of it, so the top-up is fine" would be the
-same error one size smaller — the post-hoc tool deducts the **whole** bill, not the remainder.
+**−20.21 vs a naive ~29** from the annual rate over the same hold: **the gap is not explained here.**
+Rollover-day counting and the price each daily charge is valued at are the obvious candidates and
+**neither was measured**, so no cause is asserted. What is established is the only thing the probe was
+run to establish — the charge is **not zero**. 🚫 And the gap does not license the top-up: the
+post-hoc tool deducts the **whole** bill, not the remainder.
 
-🔴 **And the rate itself moved.** The same probe read **−14.67 %/yr** on 2026-07-26 and **−14.31 %/yr**
-today, with the mode unchanged. That is a **second, independent confirmation of `ORDER-1330`**, from a
-different instrument than the deal-list diff: the symbol specification is an input to every backtest
-and no record carries it.
+⚠️ **The rate reads differently, and that is NOT a second confirmation of `ORDER-1330` — corrected by
+`/scrutinize` before it was quoted anywhere.** The same probe reads **−14.67 %/yr** in the 2026-07-26
+record and **−14.31 %/yr** today. But **the earlier reading does not name the install it was taken
+on**, and this repo already knows BTC data differs across installs
+(memory `btc-tick-data-differs-per-mt5-install`), so the difference is equally consistent with two
+lanes as with a rate that moved. **The deal-list diff remains the only demonstrated confirmation.**
+Settling it costs one run of this probe on the second install — deliberately not made here, because
+it would put a `BTCUSD` run on a lane §8.3 pins away from it.
+
+⚠️ **Both probes ran without a `-SetFile`** and `mt5_run.ps1` printed its `NOSETFILE` warning. For the
+spec probe that reads only symbol properties this changes nothing; for the charge probe the report
+confirms what actually ran (BUY 0.01), so the observation stands, but **`ORDER-165` says a run
+without a full `.set` is not reproducible** and the record now carries that. Pin a `.set` before this
+probe is used for anything beyond *"the charge is non-zero"*.
 
 **Consequence for the figures already quoted, stated but NOT recomputed here:** a tester-reported
 profit factor already contains the swap the tester charged, so deducting the post-hoc bill on top

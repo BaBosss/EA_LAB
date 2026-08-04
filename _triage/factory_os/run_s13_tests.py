@@ -807,6 +807,16 @@ state, detail = PA.item_crypto_financing(crypto_source(
 check('F6 SPECIFICITY a record under verification/ is read too, not just the matrix directory',
       state == PA.FAIL and 'verification/v.jsonl' in detail, '%s: %s' % (state, detail))
 
+# 🔴 Found by /scrutinize on this same change. The first version selected on `logical_symbol`
+# alone, so ANY future record filed under these directories carrying a crypto symbol -- a swap
+# probe result, a closeout marker -- would be demanded to hold a financing block and would turn
+# the item red for being the wrong shape. ORDER-1350's probe record is literally that object.
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline'),
+     {'entity': 'SwapProbe', 'logical_symbol': 'BTCUSD', 'swap_mode': 'INTEREST_CURRENT'}]))
+check('F7 ATTACK a non-run record carrying a crypto symbol is not demanded to hold financing',
+      state == PA.PASS, '%s: %s' % (state, detail))
+
 
 # item 11 (ORDER-1256) ----------------------------------------------------------------------------
 

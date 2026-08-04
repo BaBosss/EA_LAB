@@ -13,9 +13,12 @@
 
 Eight H4 cells re-run on the **identical** invocation that produced the 2026-08-03 matrix — MAIN ·
 Model 1 · lot 0.03 · same lane, same `.set`, same `effective_config_hash`, same `data_fingerprint`.
-**All eight moved.** In the five whose deal lists are otherwise identical, **the entire difference is
-the `Swap` column**: the profit column matches to the cent and net profit moves by exactly the swap
-delta.
+**All eight moved.** In **three** of them, **the entire difference is the `Swap` column**: the profit
+column matches to the cent and net profit moves by exactly the swap delta. 🔴 *Corrected by
+`/scrutinize` from "five" — the per-cell recount is 3 swap-only, 3 where deal time/price also moved,
+2 where the deal count changed. The swap mechanism is proven on the first group and is not the whole
+story; ⚠️ `_2_BasketTP_BalPct` closes on a percentage of BALANCE, so a changed swap moves the exit
+tick, which makes the second group consistent with the same cause without demonstrating it.*
 
 | cell (baseline) | 08-03 | today | what moved |
 |---|---|---|---|

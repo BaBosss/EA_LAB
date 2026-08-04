@@ -651,7 +651,12 @@ def _crypto_run_records(src):
                     rec = json.loads(line)
                 except ValueError as exc:
                     raise Refusal('%s line %d is unparseable: %s' % (rel, n, exc))
-                if rec.get('logical_symbol') in CRYPTO_SYMBOLS:
+                # ENTITY-GATED on purpose. `logical_symbol` alone would sweep in any future record
+                # type filed under these directories -- a probe result, a selection row, a
+                # closeout marker -- and then demand a financing block of something that is not a
+                # run. The swap probe record ORDER-1350 writes is exactly that shape.
+                if (rec.get('entity') == 'PilotCellRun'
+                        and rec.get('logical_symbol') in CRYPTO_SYMBOLS):
                     out.append((rel, n, rec))
     return out
 

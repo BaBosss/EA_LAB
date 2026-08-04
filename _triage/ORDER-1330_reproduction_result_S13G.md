@@ -8,10 +8,25 @@
 
 ## Result in one line
 
-**All 8 re-run cells differ from their 2026-08-03 records, and in the 5 cells whose deal lists are
-otherwise identical the ENTIRE difference is the `Swap` column.** The tester charges swap from the
-broker's **current** symbol specification, which is not in the `.set`, not in
+**All 8 re-run cells differ from their 2026-08-03 records, and in 3 of them the ENTIRE difference is
+the `Swap` column** — profit identical to the cent, net moving by exactly the swap delta. The tester
+charges swap from the broker's **current** symbol specification, which is not in the `.set`, not in
 `effective_config_hash`, not in `data_fingerprint`, not in the price history, and not in any record.
+
+🔴 **Corrected 2026-08-04 by `/scrutinize` on this same document, which first said "5 of 8".** The
+per-deal column diff, recounted per cell over both real arms:
+
+| what moved | cells |
+|---|---|
+| **`Swap` only** (profit identical to the cent) | **3** — `H01/EURUSD/H4` · `H01/USDJPY/H4` · `H02/BTCUSD/H4` |
+| `Swap` **and** deal time / price / comment | **3** — `H01/BTCUSD/H4` (flat-lot arm) · `H02/USDJPY/H4` · `H02/XAUUSD/H4` |
+| deal **count** changed | **2** — `H01/XAUUSD/H4` (flat-lot arm) · `H02/EURUSD/H4` |
+
+The swap mechanism is **proven** on the first group and is **not the whole story**. ⚠️ Note the trap
+in reading the second group as "so the price series changed too": `_2_BasketTP_BalPct` closes a basket
+on a **percentage of balance**, so a changed swap moves equity and the basket exits on a different
+tick — different times and prices with the same price series. That is *consistent with* one cause and
+is **not demonstrated**; nothing here separates the two, and this document does not claim it does.
 
 ## The eight cells (MAIN · Model 1 · lot 0.03 · lane `D:\Meta 5`, identical to the 08-03 invocation)
 
@@ -42,7 +57,7 @@ it today with no configuration change of any kind.
   generalises well past one cell.
 - **P3 — symbol scope. CONFIRMED, and wider than predicted.** Not BTC-specific and nothing to do
   with crypto: EURUSD, USDJPY and XAUUSD all moved.
-- **P4 — trade-count invariance. CONFIRMED in 5 of 8, refuted in 2.** Where the deal count held, the
+- **P4 — trade-count invariance. CONFIRMED in 6 of 8 cells, refuted in 2.** Where the deal count held, the
   cause is purely a cost field. `H02/EURUSD/H4` (33 → 45 deals) and the `H01/XAUUSD/H4` flat-lot arm
   (45 → 103) genuinely changed behaviour — both on symbols whose price history the live terminal
   rewrote (`XAUUSD` cache 08-03 16:36, `EURUSD 2026.hcc` 08-03 20:32). **Two mechanisms, not one.**
