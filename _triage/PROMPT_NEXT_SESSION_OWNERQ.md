@@ -2,7 +2,15 @@
 
 > Written 2026-08-05 by lane `S-2026-08-05-OWNERQ` (block `1420-1429`). It opened on *"give 1411/236
 > to qwen, then do 1132, then the decisions"* and found the first two had been executed overnight.
-> ⚠️ **Read `docs/SESSION_LEDGER.md` first.** At this writing **no lane is ACTIVE**.
+> ⚠️ **Read `docs/SESSION_LEDGER.md` first.** At this writing **no lane is ACTIVE** (verified: zero
+> rows carry `ACTIVE`).
+>
+> 🔁 **A concurrent lane ran for part of this session: `S-2026-08-05-QUOTA4FIX` (block `1430-1439`,
+> now CLOSED).** It opened to do work this lane had already done, and closed having corrected its
+> predecessor instead — it put the **SUPERSEDED banner** on `_triage/PROMPT_NEXT_SESSION_QUOTA4.md`
+> (which points here) and corrected the `TradeDir` mechanism inside the `ORDER-236` blocks. **That
+> correction and §2 below are the same finding reached independently, and they agree**; both are left
+> in place because they sit on different rows and each is where its own reader will look.
 
 ---
 
@@ -139,8 +147,12 @@ pipeline-specific.
 - 🚫 No EA verdict from automation. 🚫 `$FullTierBudgetSeconds` stays pinned at 120.0s.
 - 🚫 `AGENTS.md` · `MASTER_BACKLOG.md` §2 · `s2a_attestations.jsonl` · any `.set` migration · any magic
   allocate/renumber/retire · any history rewrite.
-- **Derive your block yourself immediately before staging.** Highest `## ORDER-<n>` is **`1420`**;
-  highest block held by a lane row is **`1420-1429`**. That sentence is stale the moment it is written.
+- **Derive your block yourself immediately before staging.** At 08:34 this read *"highest block held by
+  a lane row is `1420-1429`"*. 🔴 **It was already false when it was written** — a concurrent lane,
+  `S-2026-08-05-QUOTA4FIX`, had taken `1430-1439` during this session. Corrected to: highest
+  `## ORDER-<n>` = **`1420`**, highest block held by a lane row = **`1430-1439`**, next free =
+  **`1440-1449`**. <br>**Do not trust the corrected version either.** This is the point of the rule, and
+  this file just demonstrated it on itself, one paragraph below where it warns about it.
 - **The delegated tier died twice more** on the identical `input_tokens = 99073`, once after finishing
   all 12 runs and once before producing anything. `docs/WORKER_BRIEF_RULES.md` §3b records both, and
   records that neither run count nor number-of-files-to-build explains them. **A batch that dies having
