@@ -10173,6 +10173,69 @@ parameters — an enum and a two-valued filter — and not a shortcut taken to s
 
 🚫 Do not add values back to make a plateau possible. 🚫 Do not select on MAIN alone. 🚫 Do not compare
 any STAGE 2 Model-4 number to a STAGE 1 Model-1 number.
+
+#### ✅ STAGE 2 EXECUTED — 12 of 12, Model 4, both windows, 2026-08-05
+
+**Run directly by the lead seat.** The delegated tier died twice on the same `input_tokens = 99073`
+ceiling and the second time produced **no report at all** — see `docs/WORKER_BRIEF_RULES.md` §3b, where
+both instances are recorded along with the fact that neither run-count nor files-to-build explains them.
+
+| cell | `StackConfirm` | `MinBodyRatio` | MAIN PF | trades | eqDD% | net | BWD PF | trades | eqDD% | net |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **CTRL** | 0 | 1.0 | **1.82** | 184 | 7.12 | +2353.69 | **1.06** | 498 | 16.68 | +599.32 |
+| | 1 | 1.0 | 1.47 | **84** | 4.87 | +988.84 | 1.16 | 106 | 7.07 | +442.22 |
+| | 4 | 1.0 | 1.80 | 117 | 6.18 | +1843.87 | 0.90 | 170 | 12.54 | −515.64 |
+| | 0 | 1.5 | 1.82 | 184 | 7.12 | +2353.69 | 1.06 | 498 | 16.68 | +599.32 |
+| | 1 | 1.5 | 1.47 | **84** | 4.87 | +988.84 | 1.16 | 106 | 7.07 | +442.22 |
+| | 4 | 1.5 | 1.37 | 112 | 6.17 | +1097.18 | 1.10 | 150 | 7.39 | +375.73 |
+
+##### ✅ The pre-registered prediction HELD, on every digit
+
+The brief predicted that `MinBodyRatio` would be inert wherever `StackConfirm ≠ 4`, because only the
+engulf confirm reads it. **`(0, 1.5)` is identical to `(0, 1.0)` and `(1, 1.5)` is identical to
+`(1, 1.0)` — PF, trades, drawdown and net to the cent, on both windows.** That is a falsifiable claim
+about the code, committed before the runs, and it survived. It also means the honest grid is **4 cells,
+not 6**; the two duplicates were run deliberately as the falsifier and are kept for that reason.
+
+##### 🚦 Against the delta bar — CTRL `1.82 / 1.06`, `pass` = better on BOTH windows
+
+| cell | MAIN | BWD | participation | label |
+|---|---|---|---|---|
+| `SC1` | 1.47 ▼ | **1.16 ▲** | 🔴 MAIN **84 trades — below the 100 floor** | `กลาง` → **not accepted** |
+| `SC4 / BR1.0` | 1.80 ▼ | 0.90 ▼ | ok (117 / 170) | **`dead`** |
+| `SC4 / BR1.5` | 1.37 ▼ | **1.10 ▲** | ok (112 / 150) | `กลาง` → **not accepted** |
+
+**No cell passes. Not one improves MAIN — every lever setting is below `1.82`.**
+
+##### 🎯 What the shape says, and it is a mechanism finding rather than a result
+
+**Two of the three settings genuinely improve the stress window** — `1.06 → 1.16` and `1.06 → 1.10` —
+and both pay for it in the good window (`1.82 → 1.47` / `1.37`) and in participation
+(`184 → 84 / 112`). ⇒ **These confirms behave exactly like defensive filters: they cut exposure, which
+helps where exposure hurts and costs where it pays.** That is a coherent, reusable reading of what
+`StackConfirm` does, and it is the first time this row has had evidence for it rather than a label.
+🔴 It is **not** a route to acceptance: the bar is *better on both*, and a filter that buys BWD with
+MAIN is the trade this row's bar was written to refuse.
+
+##### 🔬 Reproduction, and a fresh instance of `ORDER-1330` found by accident
+
+`SC4 / BR1.0` **is** the `B` cell of the earlier EURJPY block, and it reproduces it exactly: MAIN
+`1.80 / 117`, BWD `0.90 / 170` against that block's `1.80 / 117` and `0.90 / 170`. Independent
+re-measurement, different day, same numbers.
+🔴 **Except the money.** CTRL MAIN net is **+2353.69** here against **+2344.20** there, and CTRL BWD is
+**+599.32** against **+567.24** — same PF, same trade count, same `.set`, same lane, **different net by
+$9.49 and $32.08**. That is the `ORDER-1330` signature reproduced on a symbol and an order it was not
+looking at, which strengthens `ORDER-1350`'s reading (the tester charges the broker's *current*
+financing, which no record carries). Recorded here and cross-referenced; not diagnosed here.
+
+##### 🚫 `DEAD-OPTIMIZED` is NOT earned by this, and the reason is specific
+
+The last-optimize is **incomplete**: STAGE 1 classified **four** axes LIVE, and STAGE 2 crossed only
+the top two. `_50_RegimeMode` (Δ 0.14) and `_50_AllowTrendDown` (Δ 0.15 against its own base) have
+**never been run under Model 4 on this host** — they were measured once each under Model 1, which this
+row's own bar says is not evidence. Declaring the concept dead now would close it on a ladder that
+stops one rung short, which is the failure `ORDER-1220` and the VERDICT GATE both exist to prevent.
+**Honest status: four hosts, no pass, and two LIVE axes still unmeasured under Model 4.**
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
