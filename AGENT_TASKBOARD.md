@@ -9957,11 +9957,21 @@ seat with the repo-pinned interpreter.
 
 **🔴 READ NOTHING IN THIS TABLE BEFORE READING THIS: every row is LONG-ONLY.** Measured, not assumed —
 `short_trades = 0` on all four reports checked (`USDJPY` 274/0, `EURJPY` 184/0, `CADJPY` 408/0,
-`GBPJPY` BWD 40/0), and `B14_AB_off.set` carries `TradeDir=60`. So this is a long-only screen, and on
+`GBPJPY` BWD 40/0). So this is a long-only screen, and on
 JPY crosses across both windows that is substantially a **bet on yen weakness**, not a demonstration
 of a symmetric edge. ⚠️ **The same caveat applies retroactively to `ORDER-430`'s seven-symbol screen
 and to both STEP 2 blocks above** — they all ran this set. Nobody has yet measured what this chassis
 does with shorts enabled on any of these symbols.
+
+🔴 **MECHANISM CORRECTED 2026-08-05 (lane `S-2026-08-05-QUOTA4FIX`), by the lane that got it wrong.**
+The two blocks above originally named **`TradeDir=60`** as the cause of the long-only evidence. **The
+observation is right — `short_trades = 0` everywhere — and the mechanism is wrong.** `TRADEDIR_BOTH = 60`,
+so shorts were *already permitted*. Direction is pinned by **`_14_Direction`**, and
+**`Entry_GridLog.mqh:70` cannot run both directions in one instance by construction** — deliberately,
+to hold parity with the standalone it was ported from, and the comment on that line says so.
+⇒ **This is not a flag to flip. It is a second screen to run.** Owned by **`ORDER-1420`**, and the
+correct diagnosis is `cbe22ff6`'s, not this lane's. The `TradeDir=60` sentences are deleted above
+rather than struck through, because a wrong mechanism left in place gets quoted.
 
 **🎯 EURJPY is the only host clearing MAIN ≥ 1.20 AND BWD ≥ 1.00 with real participation** — and it
 does so on an untouched control set that has never been optimized on this symbol.
@@ -10012,7 +10022,7 @@ or not at all. Its BWD sits on 78 trades.
 AUDCAD and unlike XAUUSD. Three hosts now agree: `CONF_PA_ENGULF` fires normally, and the XAUUSD
 result was a gate that **never triggered** — not an inert lever.
 
-**⚠️ What this run cannot say.** All four `.set` files carry `TradeDir=60` and every row is
+**⚠️ What this run cannot say.** Every row is
 `short_trades = 0`. These are long-only measurements on a long-only host qualification. Nobody has
 measured this chassis with shorts enabled, and until someone does, every conclusion here is about
 half of the system.

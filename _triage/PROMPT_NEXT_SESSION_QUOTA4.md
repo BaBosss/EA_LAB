@@ -1,3 +1,21 @@
+> # ⛔ SUPERSEDED 2026-08-05 — do not open a session from this file.
+> Everything §2 and §3 list as pending or owed was done by the lane holding block `1420-1429`,
+> within hours of this being written. **Open from `_triage/PROMPT_NEXT_SESSION_OWNERQ.md` instead.**
+> What changed, so this file cannot mislead:
+> - **`ORDER-1411`'s verdict IS filed** — `ff80245f`, full Row-X in one commit (board, `EA_MASTER_INDEX.csv`,
+>   `EA_SCORECARD_AND_REGISTRY.md`, `EDGE_CATALOG.md`, `B1_DATASET.csv`). §3's first bullet is void.
+> - **All three owner questions in §2 are answered.** The participation floor is **100 closed trades per
+>   window, hard, alongside `n ≥ 30`** (`390e2700`) — and it reaches backwards: `ORDER-430`'s two
+>   qualifications at **52 and 62 trades are VOID**, which is what `ORDER-236`'s un-parking rested on.
+> - **§1.3's mechanism is WRONG.** `TRADEDIR_BOTH = 60`, so shorts were already permitted. Direction is
+>   pinned by `_14_Direction` and `Entry_GridLog.mqh:70` cannot run both directions in one instance by
+>   construction. The long-only *observation* stands; it is a **second screen to run**, not a flag to
+>   flip (`cbe22ff6`, owned by `ORDER-1420`).
+> - **§5's block numbers are stale.** Highest `## ORDER-<n>` is **1420**, not 1411.
+>
+> Left otherwise intact: §0 and §1.1/1.2/1.4/1.5/1.6 are still the useful part, and §0's lesson —
+> *measure at HEAD before building a repair* — is exactly what this banner exists because of. The lane
+> that wrote this file came back to file a verdict that already existed.
 # OPENING PROMPT — a quota-constrained session that turned into sixteen commits, two owner rulings, and a guard
 
 > Written 2026-08-05 by lane `S-2026-08-04-QUOTA4` (block `1410-1419`). It opened to answer *"4% quota
