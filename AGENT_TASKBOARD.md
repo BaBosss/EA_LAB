@@ -10033,6 +10033,38 @@ owner's to ratify, not mine to execute** — it is recorded here and NOT run.
    as this order pre-registered. Nobody may compare a STAGE 1 number to a Model 4 number.
 3. **Every row is `short_trades = 0`.** The long-only finding holds throughout this stage, and
    `ORDER-1420` is measuring the other side concurrently.
+
+#### 👤 STAGE 2 AMENDED AND RE-REGISTERED — owner ratified the 3×2 grid, 2026-08-05
+
+**Ruling:** run the **6 distinct-outcome cells**, not the 25-value cross (TH: *"รันกริด 3×2 = 6 ช่องจริง"*).
+`StackConfirm ∈ {0, 1, 4}` × `_9_PA_MinBodyRatio ∈ {1.0, 1.5}`, both windows, Model 4 = **12 runs**.
+`{1}` stands for the class `{1,2,3}` and `{1.0}` for the class `{0.5, 0.75, 1.0}`; a representative is
+legitimate here **only because STAGE 1 measured the members identical to the cent**, and that
+measurement is the evidence for it rather than an assumption about it.
+
+🔴 **The plateau rule is WITHDRAWN for this grid, and not because the grid got smaller.** It does not
+apply to either axis, and saying so before the run is the point:
+- **`StackConfirm` is an `ENUM_STACK_CONFIRM`, not a magnitude.** `0`=Distance-only(blind),
+  `1`=Distance+signal-still-valid, `4`=Distance+engulfing-candle. Those are three *different
+  mechanisms*. "Adjacent settings behave similarly" — the entire content of a plateau argument — is
+  meaningless on an axis where adjacency is an enum ordinal. A plateau across it would have been a
+  number with no claim attached.
+- **`_9_PA_MinBodyRatio` has exactly 2 distinct outcomes across the five values probed**, so it cannot
+  express contiguity either.
+
+⇒ **Promotion rests on this row's ORIGINAL delta bar, unchanged and unweakened:** better than a CTRL
+re-run **in the same lane** on **both** MAIN and BWD ⇒ `pass` · worse on either ⇒ `dead` · better on
+one ⇒ `กลาง`, lever not accepted. **Plus the `≥100 trades per window` floor the owner ratified this
+morning**, which is not optional and which `SC1`'s 85-trade STAGE 1 result already fails.
+
+⚠️ **Stated plainly rather than buried: this makes the evidence THINNER than a plateau would have
+been, and no robustness claim may be made from it.** A pass here says *this configuration beat
+control on both windows*, not *a neighbourhood of configurations does*. That is a property of the
+parameters — an enum and a two-valued filter — and not a shortcut taken to save runs. Anyone reading a
+`pass` from STAGE 2 must not describe it as a plateau, a ridge, or robust.
+
+🚫 Do not add values back to make a plateau possible. 🚫 Do not select on MAIN alone. 🚫 Do not compare
+any STAGE 2 Model-4 number to a STAGE 1 Model-1 number.
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
