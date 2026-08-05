@@ -36,3 +36,10 @@ if (Test-Path (Split-Path $oneDrive)) {
 # STATUS.html - single-file visual dashboard (same data, same OneDrive drop)
 & (Join-Path $PSScriptRoot "make_status_html.ps1")
 
+# EA_LAB_MAP.html - visual canvas map of every EA in EA_MASTER_INDEX.csv
+. (Join-Path $PSScriptRoot "use_python.ps1")
+& python (Join-Path $PSScriptRoot "make_ea_map.py")
+if (Test-Path "C:\Users\patip\OneDrive") {
+  Copy-Item (Join-Path $repo "EA_LAB_MAP.html") "C:\Users\patip\OneDrive\EA_LAB_MAP.html" -Force
+}
+
