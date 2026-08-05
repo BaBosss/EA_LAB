@@ -272,6 +272,25 @@ MC reshuffle ruin 0%, DD worst 4.76%. **เหลือ:** Model-4 real-tick ×3
 **บทเรียนคู่กัน:** EUR H4 สวยทั้ง MAIN 1.71 + BWD 1.15 แต่ **holdout 0.35 = selection-fit** — ยืนยันคุณค่า
 holdout ที่ไม่เคยใช้ select (gate #6) ว่าจับของปลอมที่ 2-window gate จับไม่ได้.
 
+## ANTI-EDGE: MACD-divergence's INERT AXES are a property of the EA, not of a cell (ORDER-1411, 2026-08-05) ⬛ REPLICATED
+
+**ทำไมรายการนี้อยู่ที่นี่แทนที่จะเป็นแค่ verdict:** ORDER-216 (2026-07-25) พบว่า `_01_LookbackBars` และ
+`_01_MinBarsApart` **ไม่มีผลใดๆ** ที่ค่าที่ deploy บน **XAUUSD** H4 และตอนนั้นตีความได้แค่ว่าเป็นเรื่องของ cell.
+ORDER-1411 รัน inert-axis probe บน **AUDJPY** H4 ซึ่งเป็นคนละ symbol คนละ config **และได้แกนเดียวกันกลับมา** —
+`_01_LookbackBars` เท่ากันเป๊ะที่ 30/45/90 (1.18 / 173 ไม้ / 0.84% DD) · `_01_MinBarsApart` เท่ากันที่ 1 กับ 4 ·
+บวก `_07_UseRsiGate` และ `_08_UseMacdCross` ที่ไม่ขยับอะไรเลย ⇒ **4 ใน 7 แกน**.
+
+**บทเรียนที่เอาไปใช้ต่อได้ (นี่คือเหตุผลที่บันทึก):**
+1. **แกนตายเป็นสมบัติของโค้ด ไม่ใช่ของหน้าต่างที่ทดสอบ** — ถ้าเจอแกน inert ที่ home หนึ่ง ให้ถือว่าน่าจะ inert
+   ที่ home อื่นด้วย จนกว่าจะวัดค้าน และ**อย่ากวาดมันซ้ำ** การกวาดแกนตายไม่ได้ให้ข้อมูล มันผลิต plateau ปลอม
+2. **probe แกนทีละตัวก่อนลงกริดเสมอ** — ที่ ORDER-098-B เคยอ้างว่า *"plateau, 9 neighbour ไม่มีตัวขาดทุน"*
+   คือการนับบนแกนที่ตาย ซึ่งผลเท่ากันโดยอัตโนมัติ. ต้นทุนของ probe = ~20 run · ต้นทุนของการไม่ทำ = verdict ที่ผิด
+3. ⚠️ **`INERT` ไม่ใช่ `safe`** — EA นี้ไม่ปล่อย fire counter จึงแยก *ไม่เคยติด* จาก *ติดแล้วไม่เปลี่ยนอะไร* ไม่ได้
+   ด้วย batch แบบนี้ (ประเด็นเดียวกับที่ `CONF_PA_ENGULF` ต้องใช้ host ที่สามถึงจะแยกออก — ดูรายการ LEVER ด้านล่าง)
+
+**คำถามที่ยังเปิดและไม่มีใครตอบ:** EA นี้ไม่มี input SL และไม่มี TP เลย แต่รายงาน DD 0.46-1.85% ทุกเซลล์
+รวมถึงหน้าต่างที่มันขาดทุน — **ไม้ที่แพ้ออกทางไหน** ต้องอ่าน `.mq5` ไม่ใช่เดาจากตัวเลข
+
 ## LEVER: break-and-retest split entry (market + pending-limit) on breakout EAs (ORDER-108, user idea 2026-07-16) 🟩 VALIDATED-LEVER
 
 **กลไก:** breakout ยิง → **market leg** ที่ราคาทันที (จับ runner ที่ไม่ retest) + **pending buy-limit** ที่แนวที่ทะลุ

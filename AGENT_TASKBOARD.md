@@ -7740,7 +7740,59 @@ Advisory is correct **while drafting** (a frequently-edited owner like `AGENT_TA
 
 ---
 
-## ORDER-1411 — [optimize] The two WATCH cells from tonight's screen, neither ever optimized — `OPEN` · ทำได้: **oc-qwen/ZCode (run)** · design = Claude (done) · 👉 แนะ: oc-qwen
+## ORDER-1411 — [optimize] The two WATCH cells from tonight's screen, neither ever optimized — `DONE (verdict FILED Claude/Opus 2026-08-05, lane S-2026-08-05-OWNERQ) — CELL 1 = PARKED-VERIFY(user), CELL 2 = SPIKE not promoted; Row-X checklist complete in one commit` · ทำได้: **oc-qwen/ZCode (run)** · design = Claude (done) · 👉 แนะ: oc-qwen
+
+### ✅ VERDICT FILED 2026-08-05 — the Row-X checklist that was owed since 06:50
+
+The measurement was complete before this lane opened; what was missing was the filing, and the handoff
+said so. All five lines done in **one commit**, as the checklist requires:
+
+| line | where | what was written |
+|---|---|---|
+| scorecard | `EA_SCORECARD_AND_REGISTRY.md` | two new rows in the fxDreema-lineage block — `MacdDiv_Naked AUDJPY H4` = **PARKED-VERIFY(user)**, `PivotBreakout_XAU USDJPY H4` = **BUILD-ON / SPIKE not promoted**. Both marked **not deployed**, so neither disturbs the demo `999094` row above them |
+| index | `EA_MASTER_INDEX.csv` | the `MacdDiv` and `PivotBreakout` rows updated in the same commit (this is the hook-enforced pairing) |
+| catalog | `EDGE_CATALOG.md` | ⬛ **ANTI-EDGE entry** — see below; this is the part that is reusable |
+| B1 | `docs/memory_control/B1_DATASET.csv` | one row, with **five metrics written `NOT_RECORDED` rather than reconstructed** |
+| owner brief | here, 3 lines | below |
+
+#### 🎯 The catalog entry is the reason this filing was worth more than a status flip
+
+`ORDER-216` found `_01_LookbackBars` and `_01_MinBarsApart` inert on **XAUUSD** H4 on 2026-07-25, and
+that read as a fact about a cell. This order's probe found **the same two axes inert on AUDJPY H4** —
+different symbol, different config, three weeks apart — plus both boolean gates, **4 of 7 axes**. Two
+independent measurements make them a property of **the EA**, not of a cell, and that converts into a
+rule anyone can use: *do not re-sweep a known-dead axis; sweeping it manufactures plateaux.* It is
+filed as an **anti-edge**, because the thing worth keeping is the failure mode, not the EA.
+⚠️ And the limit is filed with it: `INERT` is **not** `safe`. Neither EA emits a fire counter, so
+*never fired* and *fired and changed nothing* remain indistinguishable here.
+
+#### 📌 On the B1 row, and why five fields say `NOT_RECORDED`
+
+`B1_COHORT.md` §1: *"A row is owed by the session that did the work and watched it happen — not by
+whoever happens to type the closing verb."* **This lane typed the closing verb.** It did not run the
+sweep, so `onboarding_time`, `context_incident`, `context_rework`, `wrong_order_file_scope` and
+`lead_attention_hours` are unobservable to it and are written `NOT_RECORDED`, which that section
+explicitly prefers to a reconstruction. Five invented zeros would have been easy, indistinguishable
+from data, and would have degraded the only signal the dataset exists to carry.
+
+### 👤 PARKED-VERIFY(user) BRIEF — 3 lines, as the checklist requires
+
+1. **What it is:** `MacdDiv_Naked` on **AUDJPY H4** — MACD-divergence reversion, flat 0.01 lot, no
+   escalation — tuned to `_01_SwingRadius=4` / `_03_BufferAtrMult=0.15`, the centre of the only
+   plateau the sweep found.
+2. **Which gate killed it:** the **BWD soft-gate**. MAIN Model-4 **1.27** clears; BWD **0.65** fails,
+   and it fails on **204 trades across the three stress years**, so it lost money while genuinely in
+   the market — not the participation illusion the `≥100` floor was ratified this morning to catch.
+   Per the bar table that closes the route to real money **automatically**; demo-isolate is still
+   yours to approve.
+3. **Why it is still interesting:** it is the first cell whose plateau survived an inert-axis probe
+   *and* a Model-4 re-run with the same `.set` proven loaded from the reports' own Inputs pages — and
+   the haircut was only `1.46 → 1.27` on an identical 160 trades. 🔴 **But read it with the money
+   attached: `PF 1.27` is `+$68.86` over three years at 0.01 lot.** The honest question is not whether
+   the edge is real, it is whether an edge this small survives costs at any size worth trading.
+
+🚫 **Not spent, and stated so it cannot be assumed:** the **2026H1 holdout was never touched** by this
+order. It remains available.
 **bars:** written below and **pre-registered 2026-08-04 19:40, BEFORE any sweep result exists — this row is committed before the batch is dispatched. Do not edit a bar after seeing a number.**
 **flat-lot probe:** N-A — both EAs are single-order, flat `_0*_LotSize`, no escalation engine.
 
