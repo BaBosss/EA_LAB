@@ -68,6 +68,32 @@ The variable is not "Model 4" — three earlier batches ran 8, 8 and 10 Model-4 
 successfully. It is that a job with **very few, very long steps** gives the worker nothing to do but
 wait, and it stops waiting. Run those from the orchestrator directly.
 
+## 3b. 2026-08-05: two more instances, and the second one produced NOTHING
+
+Both `ORDER-236 STEP 3` batches hit the identical `input_tokens = 99073`. Recorded because the second
+one is the first instance the rules above did **not** help with, and saying so is more useful than
+adding a rule that has not been measured.
+
+| batch | brief followed §1 and §2? | sets it had to BUILD | runs completed | rows saved |
+|---|---|---|---|---|
+| STAGE 1 (probe, Model 1) | yes | **11** | **12 of 12** | 11 — the 12th recovered from disk |
+| STAGE 2 (grid, Model 4) | yes | **2** | **0** | **0** |
+
+**So none of the obvious variables explains it.** Not run count (§1 already established that). Not the
+number of files built — the batch that built **eleven** finished every run and the batch that built
+**two** finished none. Not Model 4 by itself (§3), and not the brief's structure, which was the same
+shape in both.
+
+What is left, and it is stated as an open question rather than a rule: **the ceiling is the same
+number every time, and where a batch dies inside it is not predictable from the brief.** §2 (append on
+parse) is what decides the *cost* of a death — it turned one death into the loss of a single row and
+the other into the loss of nothing at all, because nothing had been produced yet.
+
+⇒ Practical consequence, and it is the one thing this instance does justify: **when a batch dies
+having produced zero artefacts, do not re-dispatch it unchanged.** Run it from the orchestrator. The
+12 Model-4 runs STAGE 2 needed were run directly by the lead seat afterwards, which is what §3 already
+says for jobs that are mostly waiting.
+
 ## 4. When qwen is genuinely the wrong size, escalate one step
 
 Per `CLAUDE.md`'s cost ladder (qwen ≈ free < Sonnet < Codex ≈ Opus), the fallback for a batch that
