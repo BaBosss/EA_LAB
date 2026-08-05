@@ -29,6 +29,7 @@ param(
   [switch]$Portable
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $runner = Join-Path $PSScriptRoot "mt5_run.ps1"
@@ -127,18 +128,26 @@ $runnerCommonArgs = @{
 }
 if ($Portable) { $runnerCommonArgs.Portable = $true }
 
+# ORDER-372: an A/B is the worst place for a stale report - if one arm aborts and its previous
+# report is still on disk, the comparison silently becomes "this run vs some earlier run", and the
+# delta is reported as though both arms were measured together. Both arms are gated on the runner's
+# exit code AND on the report being newer than that arm's own start time.
 Write-Host ">> base run" -ForegroundColor Cyan
+$baseStart = Get-Date
 $baseOut = & $runner @runnerCommonArgs -SetFile $baseSetPath -ReportName $baseReport 2>&1 | Out-String
+$baseExit = $LASTEXITCODE
 $baseHtm = Join-Path $root "_mt5_auto\reports\$baseReport.htm"
-if (-not (Test-Path $baseHtm)) {
-  throw "Base report not produced. Raw launcher output:`n$baseOut"
+if (-not (Test-ReportIsFresh -Htm $baseHtm -RunStart $baseStart -RunnerExit $baseExit -Label $baseReport)) {
+  throw "Base report not produced by this run. Raw launcher output:`n$baseOut"
 }
 
 Write-Host ">> variant run ($Overrides)" -ForegroundColor Cyan
+$variantStart = Get-Date
 $variantOut = & $runner @runnerCommonArgs -SetFile $variantSetPath -ReportName $variantReport 2>&1 | Out-String
+$variantExit = $LASTEXITCODE
 $variantHtm = Join-Path $root "_mt5_auto\reports\$variantReport.htm"
-if (-not (Test-Path $variantHtm)) {
-  throw "Variant report not produced. Raw launcher output:`n$variantOut"
+if (-not (Test-ReportIsFresh -Htm $variantHtm -RunStart $variantStart -RunnerExit $variantExit -Label $variantReport)) {
+  throw "Variant report not produced by this run. Raw launcher output:`n$variantOut"
 }
 
 $baseStats = Parse-Report $baseHtm

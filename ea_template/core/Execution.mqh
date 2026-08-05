@@ -32,12 +32,72 @@ double Exec_NormalizeLot(double lot)
    double minv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    double maxv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
-   if(step <= 0.0) step = 0.01;
+   // ORDER-432 finding 5 (Codex blind audit 2026-07-27). This used to invent 0.01 when
+   // the property read failed. That is a guess about the broker's contract and it is
+   // wrong in both directions: with a real step of 0.001 an intended 0.015 floors to
+   // 0.01 and the broker ACCEPTS it, so the position is 33% small and nothing says so;
+   // with a real step of 0.1 the same guess leaves 0.15 unrounded and the broker
+   // REJECTS it. One fallback, two silent failures.
+   //
+   // Return 0.0 -- the same "caller skips this order" contract this function already
+   // uses for a lot below the broker minimum, and the same rule MM_FirstLot follows:
+   // a runtime data failure costs a missed trade, never a differently-sized one.
+   //
+   // NOTE the sibling Exec_NormalizeCloseLot is deliberately NOT changed the same way;
+   // see the comment there. Codex cited only this site, and applying one rule to both
+   // would have been wrong.
+   if(step <= 0.0)
+   {
+      static datetime step_log = 0;
+      datetime now_step = TimeCurrent();
+      if(now_step - step_log >= 60)
+      {
+         step_log = now_step;
+         Print("[EXEC] SYMBOL_VOLUME_STEP unreadable - OPEN skipped rather than sized against a guessed step (ORDER-432 finding 5)");
+      }
+      return 0.0;
+   }
    if(RC_MaxLot > 0.0 && lot > RC_MaxLot) lot = RC_MaxLot;   // final hard ceiling
    if(lot > maxv) lot = maxv;
-   if(lot < minv) lot = minv;
    lot = MathFloor(lot / step + 0.0000001) * step;
-   return NormalizeDouble(lot, 2);
+   // ORDER-129 (ORDER-125 RiskLot pattern): digits follow the broker's volume step —
+   // NormalizeDouble(,2) corrupted 0.001-step symbols. Below-minimum after caps/rounding
+   // returns 0 (callers skip): the old floor-to-minimum could send MORE than the RC_MaxLot
+   // ceiling claimed to allow.
+   int stepDigits = 0;
+   double s = step;
+   while(stepDigits < 8 && MathAbs(s - MathRound(s)) > 1e-9) { s *= 10.0; stepDigits++; }
+   lot = NormalizeDouble(lot, stepDigits);
+   if(lot < minv)
+   {
+      static datetime last_log = 0;
+      datetime now = TimeCurrent();
+      if(now - last_log >= 60)
+      {
+         last_log = now;
+         PrintFormat("[EXEC] lot %.4f below broker min %.4f after caps - order skipped (not floored up)", lot, minv);
+      }
+      return 0.0;
+   }
+   return lot;
+}
+
+// ORDER-129: _0_MaxSpread was a declared-but-never-read input (operator sets it believing
+// entries are blocked, EA opens through news/rollover widening anyway). One predicate,
+// checked in BOTH open paths (market + pending). 0 keeps the historical no-op default.
+bool Exec_SpreadOK()
+{
+   if(_0_MaxSpread <= 0) return true;
+   long spr = SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);   // points
+   if(spr <= (long)_0_MaxSpread) return true;
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      PrintFormat("[EXEC] spread %d > max %d - new order blocked", (int)spr, _0_MaxSpread);
+   }
+   return false;
 }
 
 // ---- NewsGuard bridge (ORDER-083, additive) ------------------------------
@@ -111,6 +171,7 @@ double Exec_MacroLotMult()
 bool Exec_Open(const int direction, double lot, const double sl, const double tp, const string comment)
 {
    if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;   // news + macro veto (new orders only)
+   if(!Exec_SpreadOK()) return false;                            // ORDER-129: enforce _0_MaxSpread
    lot = Exec_NormalizeLot(lot * Exec_MacroLotMult());           // macro reduce-lot (open path only)
    if(lot <= 0.0) return false;
    g_exec_open_intents++;
@@ -214,8 +275,39 @@ int Exec_CountPending()
    return n;
 }
 
-void Exec_CancelAllPending()
+// ORDER-132 (Codex system-review SEV-1 #5): projected margin of every resting
+// pending ON THE ACCOUNT if it filled at its order price. A GTC ladder consumes
+// margin at FILL time, when the deposit-load cage can no longer refuse it -
+// Stack's budget gate (Stack_MarginBudgetOK) reserves this ahead of placement.
+// ORDER-132b (Codex E4): deliberately NOT filtered to own symbol/magic - the
+// deposit-load cap is an ACCOUNT-level cage, so a sibling EA's resting ladder
+// must count against the same budget (double-reserving across EAs errs safe).
+// Unpriceable orders contribute 0 here; the per-leg gate is the fail-closed side.
+double Exec_PendingMarginProjection()
 {
+   double sum = 0.0;
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      ulong tk = OrderGetTicket(i);
+      if(tk == 0) continue;
+      string sym   = OrderGetString(ORDER_SYMBOL);
+      double lot   = OrderGetDouble(ORDER_VOLUME_CURRENT);
+      double price = OrderGetDouble(ORDER_PRICE_OPEN);
+      long   type  = OrderGetInteger(ORDER_TYPE);
+      bool   isBuy = (type == ORDER_TYPE_BUY_STOP || type == ORDER_TYPE_BUY_LIMIT ||
+                      type == ORDER_TYPE_BUY_STOP_LIMIT);
+      double m = 0.0;
+      if(OrderCalcMargin(isBuy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, sym, lot, price, m))
+         sum += m;
+   }
+   return sum;
+}
+
+// ORDER-129: reports completion — a failed delete used to vanish silently, leaving a live
+// GTC order behind an EA that believed itself flat (Codex system review SEV-1).
+bool Exec_CancelAllPending()
+{
+   bool allOk = true;
    for(int i = OrdersTotal() - 1; i >= 0; i--)
    {
       if(!Exec_OrdIsMine(i)) continue;
@@ -223,7 +315,13 @@ void Exec_CancelAllPending()
       if(DryRun) { PrintFormat("[DRYRUN] cancel pending %I64u", tk); continue; }
       if(g_trade.OrderDelete(tk))
          PrintFormat("[EXEC] pending cancelled %I64u", tk);
+      else
+      {
+         allOk = false;
+         PrintFormat("[EXEC] pending cancel FAILED %I64u retcode=%d", tk, (int)g_trade.ResultRetcode());
+      }
    }
+   return allOk;
 }
 
 // place one resting leg. isStop: true=STOP (pyramid, with-trend fill),
@@ -233,6 +331,7 @@ bool Exec_PlacePending(const int direction, const bool isStop, double lot,
                        double price, const double sl, const string comment)
 {
    if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;   // news + macro veto (new orders only)
+   if(!Exec_SpreadOK()) return false;                            // ORDER-129: enforce _0_MaxSpread
    lot = Exec_NormalizeLot(lot * Exec_MacroLotMult());           // macro reduce-lot (open path only)
    if(lot <= 0.0) return false;
    price = NormalizeDouble(price, _Digits);
@@ -247,6 +346,13 @@ bool Exec_PlacePending(const int direction, const bool isStop, double lot,
                                    : g_trade.BuyLimit(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment));
    else               ok = (isStop ? g_trade.SellStop(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment)
                                    : g_trade.SellLimit(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment));
+   // ORDER-132b (Codex E3): the CTrade boolean alone proves only the client-side
+   // structure check - require a server-accepted retcode before reporting success.
+   if(ok)
+   {
+      uint rc = g_trade.ResultRetcode();
+      if(rc != TRADE_RETCODE_DONE && rc != TRADE_RETCODE_PLACED) ok = false;
+   }
    if(ok) PrintFormat("[EXEC] pending placed dir=%d stop=%d lot=%.2f at %.5f (%s)",
                       direction, (isStop ? 1 : 0), lot, price, comment);
    else   PrintFormat("[EXEC] pending FAILED dir=%d at %.5f retcode=%d",
@@ -254,16 +360,26 @@ bool Exec_PlacePending(const int direction, const bool isStop, double lot,
    return ok;
 }
 
-void Exec_CloseAll()
+// ORDER-129: close-all now PROVES flatness instead of assuming it. Returns true only when,
+// after issuing every close/cancel, a broker-state re-scan finds zero own positions AND zero
+// own pendings. The hard-kill persists HALT only on a true return (reconciliation loop in
+// RiskControl retries every tick otherwise) — previously every PositionClose result was
+// discarded and HALT latched with residual exposure still live (Codex system review SEV-1).
+bool Exec_CloseAll()
 {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
       if(!Exec_PosIsMine(i)) continue;
       ulong tk = PositionGetInteger(POSITION_TICKET);
-      if(!DryRun) g_trade.PositionClose(tk);
+      if(DryRun) continue;
+      if(!g_trade.PositionClose(tk))
+         PrintFormat("[EXEC] close FAILED %I64u retcode=%d", tk, (int)g_trade.ResultRetcode());
    }
    // basket gone = ladder leftovers must go too (no-op when no pendings exist)
    Exec_CancelAllPending();
+   if(DryRun) return true;   // intent mode: nothing real to verify
+   // broker-state confirmation - never trust the per-call results alone
+   return (Exec_CountAll() == 0 && Exec_CountPending() == 0);
 }
 
 // additive (ORDER-072, Kangaroo/16 overlap pair-close): close ONE own position
@@ -284,27 +400,99 @@ bool Exec_ModifyPosition(const ulong ticket, const double sl, const double tp)
    return g_trade.PositionModify(ticket, sl, tp);
 }
 
+// ORDER-129b (Codex audit): close-volume normalizer. Same broker min/step/max arithmetic
+// as Exec_NormalizeLot but WITHOUT the RC_MaxLot cage clamp - RC_MaxLot is a ceiling on
+// new RISK, and capping a partial CLOSE with it would silently shrink risk REDUCTION
+// (e.g. 50% of a 1.0-lot legacy position "closed" as 0.10 with the milestone marked done).
+double Exec_NormalizeCloseLot(double lot)
+{
+   double minv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double maxv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   if(lot > maxv) lot = maxv;
+   // ORDER-432 finding 5, the OTHER half -- and the direction is deliberately opposite
+   // to Exec_NormalizeLot above. This normalizes a partial CLOSE. Returning 0.0 here
+   // would mean "do not close", so applying the open path's fail-closed rule would make
+   // an unreadable broker property REFUSE TO REDUCE RISK -- the worst possible reading
+   // of "fail safe". Codex cited only the open site; one rule for both would have been
+   // wrong.
+   //
+   // So: never invent a step, but never refuse to close either. Skip the flooring and
+   // send the requested volume, letting the broker validate it. The close is attempted,
+   // and it is not silently shrunk against a guess.
+   if(step <= 0.0)
+   {
+      static datetime cstep_log = 0;
+      datetime now_cstep = TimeCurrent();
+      if(now_cstep - cstep_log >= 60)
+      {
+         cstep_log = now_cstep;
+         Print("[EXEC] SYMBOL_VOLUME_STEP unreadable on a CLOSE - sending the requested volume unrounded (refusing to close would be worse than an unrounded close)");
+      }
+      return (lot < minv ? 0.0 : lot);
+   }
+   lot = MathFloor(lot / step + 0.0000001) * step;
+   int stepDigits = 0;
+   double s = step;
+   while(stepDigits < 8 && MathAbs(s - MathRound(s)) > 1e-9) { s *= 10.0; stepDigits++; }
+   lot = NormalizeDouble(lot, stepDigits);
+   if(lot < minv) return 0.0;
+   return lot;
+}
+
 // additive: partial-close every own position by `frac` of its current volume
 // (skips legs where the resulting close volume would be <=0 or >= full volume,
 // i.e. below broker min-lot step after normalize). Used by ExitManager's
 // milestone partial-close (_2_PartialPct1/2) - Zeus GridLog port (14).
-void Exec_ClosePartialFraction(const double frac)
+// ORDER-132 (Codex F3): returns whether every ATTEMPTED close was accepted by
+// the broker - a rejected partial used to vanish silently while the caller
+// marked its milestone done. Skipped (unrepresentable-volume) legs do not fail
+// the call: they can never become executable at this volume, so retrying them
+// is noise, not risk reduction.
+// ORDER-132b (Codex E1+E2): success now requires a server-accepted retcode (the
+// CTrade boolean alone proves only the structure check), and `doneTickets`
+// carries per-ticket completion across retries - without it, a milestone retry
+// re-fractioned legs that already succeeded, repeatedly draining the cushion
+// leg while the broker kept rejecting its sibling (unbounded over-close).
+bool Exec_TicketInList(const ulong tk, const ulong &list[])
 {
-   if(frac <= 0.0) return;
+   for(int i = ArraySize(list) - 1; i >= 0; i--)
+      if(list[i] == tk) return true;
+   return false;
+}
+
+bool Exec_ClosePartialFraction(const double frac, ulong &doneTickets[])
+{
+   if(frac <= 0.0) return true;   // nothing requested = vacuous success
+   bool allOk = true;
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
       if(!Exec_PosIsMine(i)) continue;
       ulong  tk  = PositionGetInteger(POSITION_TICKET);
+      if(Exec_TicketInList(tk, doneTickets)) continue;   // already reduced in this milestone
       double vol = PositionGetDouble(POSITION_VOLUME);
-      double closeVol = Exec_NormalizeLot(vol * frac);
+      double closeVol = Exec_NormalizeCloseLot(vol * frac);
       if(closeVol <= 0.0 || closeVol >= vol) continue;   // skip if it would close the whole leg
       if(DryRun)
       {
          PrintFormat("[DRYRUN] partial-close ticket=%I64u vol=%.2f frac=%.2f -> %.2f", tk, vol, frac, closeVol);
          continue;
       }
-      g_trade.PositionClosePartial(tk, closeVol);
+      bool sent = g_trade.PositionClosePartial(tk, closeVol);
+      uint rc   = g_trade.ResultRetcode();
+      if(sent && (rc == TRADE_RETCODE_DONE || rc == TRADE_RETCODE_DONE_PARTIAL || rc == TRADE_RETCODE_PLACED))
+      {
+         int n = ArraySize(doneTickets);
+         ArrayResize(doneTickets, n + 1);
+         doneTickets[n] = tk;
+      }
+      else
+      {
+         allOk = false;
+         PrintFormat("[EXEC] partial-close FAILED %I64u vol=%.2f sent=%d retcode=%d", tk, closeVol, (sent ? 1 : 0), (int)rc);
+      }
    }
+   return allOk;
 }
 
 #endif // BOSS_LAB_EXECUTION_MQH

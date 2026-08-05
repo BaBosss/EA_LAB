@@ -17,9 +17,9 @@ small additive non-fxDreema SL-heuristic fallback added there for this order.
 Outputs:
   _triage/FXDREEMA_XRAY.csv         -- new-unique source rows appended (old rows untouched)
   _triage/FXDREEMA_XRAY.md          -- new-unique source cards appended in a marked section
-  _triage/ORDER091A_BINARIES.csv    -- binary (.ex4/.ex5) hash inventory for the 8 folders
-  _triage/ORDER091A_REPORTS.csv     -- attached report/set inventory (BOT MOGUL + .Final EA)
-  _triage/ORDER091A_COVERAGE.md     -- per-folder coverage table + headline counts
+  _triage/_archive/campaigns_closed/ORDER091A_BINARIES.csv    -- binary (.ex4/.ex5) hash inventory for the 8 folders
+  _triage/_archive/campaigns_closed/ORDER091A_REPORTS.csv     -- attached report/set inventory (BOT MOGUL + .Final EA)
+  _triage/_archive/campaigns_closed/ORDER091A_COVERAGE.md     -- per-folder coverage table + headline counts
 
 Usage:
   tools\\python312\\python.exe scripts\\order091a_intake.py
@@ -315,8 +315,8 @@ def main():
     lines.append("- Existing (pre-091A): **%d** unique EAs (`_triage/FXDREEMA_XRAY.csv`, ORDER-074/077)" % len(existing_rows))
     lines.append("- New-unique from Wave 0: **%d**" % len(new_entries))
     lines.append("- **Merged total: %d unique EAs**" % (len(existing_rows) + len(new_entries)))
-    lines.append("- Binary inventory rows written: **%d** (`_triage/ORDER091A_BINARIES.csv`)" % len(bin_rows))
-    lines.append("- Attached report/set inventory rows written: **%d** (`_triage/ORDER091A_REPORTS.csv`)" % len(report_rows))
+    lines.append("- Binary inventory rows written: **%d** (`_triage/_archive/campaigns_closed/ORDER091A_BINARIES.csv`)" % len(bin_rows))
+    lines.append("- Attached report/set inventory rows written: **%d** (`_triage/_archive/campaigns_closed/ORDER091A_REPORTS.csv`)" % len(report_rows))
 
     lines.append("\n## Top new-EA clusters by folder (all 8 -- fewer than 10 folders exist)\n")
     lines.append("| rank | folder | new-unique EAs |")

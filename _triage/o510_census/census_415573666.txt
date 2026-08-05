@@ -1,0 +1,12 @@
+# ORDER-510 STEP 2 census - account 415573666 (DEMO "Demo Mt5-2", VPS 66.212.22.7)
+# Taken 2026-08-02 by the owner from Tools -> Global Variables (F3). Read-only; nothing deleted.
+#
+# PROVENANCE, stated because it changes how much this file is worth: the owner supplied a
+# SCREENSHOT of the F3 window and these lines were TRANSCRIBED from it by the seat. They are not
+# a machine export. The window showed exactly three variables and no scrollbar, so the list is
+# complete as displayed - but a transcription is a place a digit can be lost, and the value below
+# is the one the adopt-once procedure will compare a journal line against (section 6 step 3).
+# Re-read it off the screen before consenting to migrate.
+Boss_990208_rc_peak_eq	60027.15	2026.07.28 13:08
+Rebalance V6 by[NVF] MoneyTarget	11529.83	2026.04.21 03:56
+Rebalance V6 by[NVF] PercentTarget	0.0	2026.04.18 09:24

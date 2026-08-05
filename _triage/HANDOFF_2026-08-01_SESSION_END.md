@@ -1,0 +1,191 @@
+# HANDOFF — end of 2026-08-01, consolidated. START HERE for the next session.
+
+> ⚠️ canonical entry is still **`PROJECT_STATE.md`** — it was corrected at the end of this session
+> and is trustworthy again. This file is the **shift-change note for the whole day**: seven lanes
+> ran in sequence, all CLOSED, and the individual handoffs are listed at the bottom if you need the
+> long version. Read this one first; open the others only for a specific lane.
+
+## 1. State of the repo — verified at HEAD, not remembered
+
+| | |
+|---|---|
+| S2a gates (`check_s2a_attestation` · `check_coverage_transfer` · `run_s2a_gate`) | **all exit 0** |
+| attestation record in force | **line 9**, bundle **`d88f795b`**, owner-signed 2026-08-01 |
+| `scripts/check_state.ps1` | **CLEAN** |
+| full tier | **87.8 s of 90.0 s** on the last sample — but see §4, it is intermittent |
+| lanes `ACTIVE` in `docs/SESSION_LEDGER.md` | **0** |
+| `--no-verify` used today | **once, at 11:01 — `b0637b8a`, owner-approved**, BEFORE this session's window. 🔴 This row first said *"none"*: an independent audit caught it, and it sat inside a table headed *"verified at HEAD, not remembered"*. **None was used after 12:00**, which is the true claim and the one that should have been written. |
+| working tree | clean **of this session's work**, plus pre-existing unrelated dirt (`.obsidian/**`, `STATUS.html`, some `_mt5_auto` CSVs, `portfolio/mris/**`). 🔴 When this row was first written it also said "clean" while a **parallel lane** held ~138 uncommitted lines of `AGENT_TASKBOARD.md`; that work has since landed as `074901c0` (`ORDER-830`). **Check `git status` yourself before trusting any such row — this repo has concurrent writers.** |
+| owed to the owner | **nothing** — no pending signature, no pending decision |
+
+**Probed at HEAD, both directions** (do not re-derive, it is done):
+an append to `MASTER_BACKLOG.md` **outside §2 passes** the front guard (`rc=0`); an edit **inside
+§2 is refused** with `P1` naming both digests (`rc=1`).
+
+> ✅ **APPENDED at session close — the four owner decisions were answered and `S14` shipped.**
+> All five items in `_triage/USER_DECISIONS_PENDING.md` are now resolved (**0 pending**), so
+> **`S10` · `S13` · `S14` · `S15` are no longer blocked from your side.** Item 1 = a pilot Core
+> Universe (`XAUUSD`/`EURUSD`/`GBPUSD` × H1/M15, pinned for correction) with the remaining 12 fleet
+> underlyings queued for **idle/overnight batches** · item 2 = a **narrow append-only** Work Receipt
+> writer, landed with the guard that makes it narrow (`W0-W5`, 21-case cage) · item 3 = **global**
+> magic uniqueness, `PROJECT_STATE.md` amended, only `991001` is a true live collision · item 4 =
+> **advisory**, revisited after the first real `S13` round.
+> 🔴 **Two defects in that new guard were found by probing it the same evening and fixed:** it
+> permitted **deleting the whole log** (`W0`'s early return fired on a staged deletion), and `W4`
+> was a deny-list that a **nested `verdict`** and **`pf`** both walked straight through. Both now
+> refused, with cases that were red first.
+> 📐 **Seventh tier sample: 100.0 s** — the worst measured, `contract_binding` at 34.8 s vs 24.9 s
+> at best. The swing of that single suite is now **24.9-34.8 s**, which is `ORDER-830` C1's subject.
+> 🔴 **The S14 guard was scrutinized twice more and took SEVEN fixes in total** — it permitted deleting the
+> whole log · `W4` was a deny-list a nested `verdict` and `pf` both walked through · it emitted no evidence
+> marker (so it judged the disk, not the index) · one bad row at HEAD froze the log forever · the mutation
+> killed every criterion so it discriminated nothing · a broken git silently disabled append-only · and a
+> `_comment` row at any position was an unchecked free-text channel. All closed, cage **16 → 25 cases**.
+> ✅ **M6 is now CLOSED (`S-2026-08-01-WRFIX3`).** It was the last one: `AGENTS.md` was declared in
+> `SUITE_GUARDS`, so editing it RAN this suite, and no code READ it — a guard firing on the exact
+> commit that widened the permission row, with no question to ask about it. **`W6`** pins the §2 row
+> by sha256 and requires it to appear **exactly once** (a second row is the evasion a digest alone
+> cannot see); **`W7`** refuses any other line of `AGENTS.md` that speaks about the receipts file
+> unless it is in the closed `ALLOWED_EXTRA_MENTIONS` declaration — a permission widens just as
+> easily in a sentence beside the row as inside it. Both run **first and always**, before the `W0`
+> early returns, because the grant is the premise of `W1-W5` and is checkable while the log is still
+> empty, which is the state it spends most of its life in. Cage **25 → 34 cases**.
+> 🔴 **STATED LIMIT, not claimed away:** the pin lives in a file agents may edit, so a commit that
+> widens the row *and* moves the pin together still passes. What is removed is the **silent**
+> widening. Putting the digest on an owner-signed surface costs a signature → **queued onto §4 item 2**.
+> 📐 Evidence, both directions and none of it from fixtures alone: the `WIRING` case is red-first
+> (with `check_grant` neutralised `main()` returns **0** on a widened grant, **1** with it consulted)
+> · appending a real widening to the real `AGENTS.md` on disk gives **`W7` at line 314 in worktree
+> mode and a PASS in index mode**, i.e. the read is snapshot-bound the way `M3` required (the file
+> was restored byte-exactly, digest compared) · cost measured 3 samples each: **0.3-0.8 ms** worktree,
+> **34-37 ms** under the hook, wrapper **0.60-0.62 s**.
+> ⚠️ Adding `W6` also produced a **false green inside this suite**: `main()`'s stub answered the
+> receipts header for `AGENTS.md` too, so the `W2`-deletion case returned 1 for a reason that had
+> nothing to do with `W2`. One stub now answers for both files. A rule added to a checker changes
+> what its existing cases are testing — check them, do not assume they still mean what they meant.
+>
+> ⚠️ **One honest limit to carry forward:** `AGENTS.md` §2 says a row may cite *only the writing
+> agent's own order id*. **Nothing enforces that** — every agent commits under one git identity.
+> The shape is enforced; the attribution is not. Written into the checker's docstring and item 2.
+
+## 2. What actually changed today, in one paragraph
+
+`MASTER_BACKLOG.md` carried **two** whole-file byte-pins from one owner approval, and between them
+they froze the busiest board in the repo: any edit either cost a signature or deadlocked the gate,
+and the gate blocked its own repair. Both are gone. The post-state pin was narrowed to **§2 only**
+(a new SECTION form, `F12`/`F13`/`F14`/`P4`, fail-closed), and the second pin — the stale-pin
+acknowledgement, which the first fix did **not** touch — was removed by re-pointing D1's
+`owner_ref` at `factory/coverage.jsonl`, the file that has actually held the canonical Coverage
+bytes since the transfer executed. Two owner signatures, both shown as a full line with recomputed
+digests before they were taken.
+
+## 3. The three things worth carrying forward as knowledge
+
+1. **Narrowing one pin does nothing if the file carries two.** Option A was a large, correct,
+   well-caged change that removed **none** of the measured toll, because `F5` still compared the
+   whole file. *If you re-derive this problem later: the cheap path was option 2 alone (~60 lines,
+   one signature). Option A is load-bearing now only as protection for §2's generated content —
+   a real goal, but a smaller and different one than the toll it was bought to fix.*
+2. **A guard that reports and cannot refuse is worse than no guard.** Splitting `current_owner`
+   from `owner_ref.path` left notes being derived on one and matched on the other: printed every
+   run, enforceable never. Caught before landing. Any time two identity fields diverge, go find
+   every consumer of the one you moved.
+3. **Instrument what the guard actually reads.** The tier transcript first stamped `HEAD` and
+   `.git/index` while the abort also hashes four working-tree files — it would have reported
+   *"nothing moved"* against an abort saying the opposite. And under the hook it stamped
+   `.git/index` while git was using a `next-index-*.lock`. Both fixed; both are the
+   read-the-wrong-snapshot family appearing inside the instrument built to diagnose it.
+
+## 4. Open work, in the order it is worth doing
+
+1. 🔴 **`ORDER-830` is now `DONE` and it REFUTED the paragraph that used to live here.** The text below is
+   kept struck-through because the next reader will meet the old claim elsewhere and needs to know it
+   was measured and dropped, not forgotten.
+   > ~~Six samples `91.8 · 91.5 · 91.7 · 91.1 · 93.6 · 87.8 s` against an enforced `90.0 s`; the breach is
+   > **intermittent** and one suite swings **24.9-32.1 s**; C1 = *"why does this suite vary by 7 s"*.~~
+
+   **What replaced it (`ORDER-830` RESULT, lanes `TIERATTR` → `SCRUT830` → `FABLEFIX`):** the suite does not
+   *vary* — it has **populations**, and none of the six samples above recorded which one it was in.
+   Two variables were found and measured: **`EA_LAB_EVIDENCE=index`** (set by `run_fast_cages.ps1` **only
+   under `-Hook`**) is worth **+8.5 s**, and **which `git.exe` the launching shell puts on PATH** is worth
+   another **5-9 s** (`cmd\git.exe` is a 45 KB shim; **+9.1..9.2 ms per spawn** interleaved, and this
+   suite spawns ~142). Measured the way `.githooks/pre-commit:220` actually invokes it, six full-tier
+   samples span **83.3 - 90.1 s against 90.0 s — ON THE LINE, one over**. The suite grew **+0.7 s** between
+   `ddbaec95` and HEAD, not +8.7 s. **✅ Nothing here is blocked — do not re-run any of it.**
+
+   📌 **`ORDER-830` owes an INDEPENDENT (non-author) audit before anyone writes `REVIEWED`, and it is
+   NOT urgent.** Codex quota was out at close (owner's call: wait rather than burn a second Fable pass).
+   Nothing gates on it — the acceptance is met, the status is terminal, and `REVIEWED` is needed only to
+   archive the row. **The audit brief — exactly what to check and what NOT to re-measure — is §6 of
+   `_triage/HANDOFF_2026-08-01_TIERATTR.md`.** A Fable pass already ran this session and its seven
+   findings are fixed; what is missing is a *different vendor's* eyes, which is Codex's whole value.
+
+1b. **`ORDER-820` — next session's work, and its premise has to be rebuilt before anything is spent.**
+   C1 is closed by `ORDER-830`. **C2** (make it faster / displace / raise) now has a named candidate — one
+   `git cat-file --batch` in `evidence.py` instead of ~128 per-path `git show` spawns in `check_r4`'s
+   sweep — **but do not spend it yet**: the tier may not need it. **First re-measure the full tier through
+   `.githooks/pre-commit`'s own line, three samples, stating shell + suite count + commit beside each
+   number.** **C3** must be restated the same way. 🚫 Do not raise the budget (unchanged). 🚫 Do not default
+   `index` mode away — judging the commit is the whole content of `ORDER-670`.
+2. **The next S2a signature — batch these onto it.** All are inside bundle members, so they cost
+   nothing extra if they ride the same line: **I1** (make the abort print *which* fingerprint
+   component moved) · policy `§7` row 5 *"19 green"* (is 21) · `§9` *"35 assertions"* (46) · `§1`
+   *"five signatures"* (eight, history ends `d88f795b`) · `G4`'s text *"F1–F11"* (the in-force set
+   is F1–F14) · `§4.2`'s *"7 records"* (8 since line 9) · the corpus file's own line-1 header still
+   says *"DRAFT: not yet bound"* and cites a file that does not exist · and **state in `§4.5`** that
+   once a drift is acked, the ack becomes a whole-file front-guard pin on `factory/coverage.jsonl`
+   until re-acked. **Added 2026-08-01 by `WRFIX3`:** a candidate rider, not a commitment — move
+   `GRANT_ROW_SHA256` (the S14 §2 grant pin, `check_work_receipts.py`) onto an owner-signed surface,
+   which is the only thing that turns "an agent cannot widen the grant **silently**" into "an agent
+   cannot widen it". Judge it against what it costs: the pin would then need a signature to follow
+   any typo fix in that row.
+3. **`ORDER-731` item 2** stays OPEN, waiting for the abort to recur — but it is now *armed*:
+   `_triage/tier_runs/` holds a per-suite transcript, and the reading procedure is in
+   `_triage/HANDOFF_2026-08-01_TIERINSTR.md`.
+4. **`ORDER-761`** (a module should declare the paths it reads) and **`ORDER-730`** (the
+   locked-constant half of design §5.6) are untouched and unchanged by today.
+
+## 5. Traps this session paid for — do not re-enter them
+
+- ❌ **Do not copy a `stale_pin_acknowledgement` from an older record.** For a path no D1 row pins,
+  the checker never validates it and the front guard would have enforced it — reinstating the
+  whole-file toll. The guard now ignores such an ack loudly; the trap is copying the shape.
+- ❌ **Do not take the next attestation line from `--template` and then delete fields.** It now
+  carries the in-force `expected_post_state` forward on purpose; dropping it silently unpins §2.
+- ❌ **Do not "fix" a stale count by editing `S2A_ATTESTATION_POLICY.md` casually** — it is a bundle
+  member; every byte costs a signature. That is why item 2 above is a batch.
+- ❌ **Do not suppress the tier transcript on "a synthetic staged set"** — the hook itself passes
+  `-StagedPathsFile`, so that heuristic silences the instrument exactly where it matters. `-Hook`
+  does not discriminate either.
+- ❌ **Do not put a raw `|` in a ledger cell**, and do not cite another lane's block number there —
+  the cell is parser input as well as prose.
+- ❌ **Do not run a full-tier timing measurement while another lane is open**, and do not conclude
+  "no lane is running" from `git log` plus a ledger row: a lane committed 45 minutes after its own
+  row said CLOSED.
+
+## 6. Routing
+
+<!-- HANDOFF-ROUTING -->
+
+| item | destination |
+|---|---|
+| both whole-file pins removed; §2 protection landed; two signatures spent and none pending | DONE |
+| ~~the intermittent tier budget breach~~ — **MEASURED and REFUTED: populations, not variance; suite grew +0.7 s; tier is ON THE LINE (83.3-90.1 s of 90.0 s) through the hook's own invocation** | ORDER-830 |
+| `ORDER-830`'s independent (non-author) audit — **NOT urgent, nothing gates on it**; Codex when quota returns; brief = §6 of `_triage/HANDOFF_2026-08-01_TIERATTR.md` | ORDER-830 |
+| `ORDER-820` C2/C3 — rebuild the premise FIRST (three full-tier samples through `.githooks/pre-commit`'s own line, shell + suite count + commit stated), then decide whether the `git cat-file --batch` candidate is even needed | ORDER-820 |
+| the S14 grant row is pinned and the pin is read (`W6`/`W7`) — M6, the last of the seven | DONE |
+| moving that pin onto an owner-signed surface, so a widening cannot be self-approved at all | ORDER-731 (batched onto the next signature, §4 item 2) |
+| the tier abort itself — armed with a transcript, waiting to recur | ORDER-731 |
+| I1 + the policy stale-count batch, to ride the next signature together | ORDER-731 |
+| a module should DECLARE the paths it reads | ORDER-761 |
+| the locked-constant half of design §5.6 | ORDER-730 |
+
+## 7. The day's lanes, if you need the long version
+
+`PINFIX2` (ORDER-760, the ledger-cell parser) → `PINFIX3` (option A) → `PINFIX3B` (the review that
+found option A was half a fix and the gate was red) → `OPT2` (the pin follows the canonical bytes)
+→ `OPT2FIX` (M1-M4) → `TIERINSTR` (the abort instrumentation) → `TIERBUDGET` (owner-stopped,
+committed nothing) → `INSTRREV` (five review findings on the instrumentation) → `STATEFIX` (this
+file, plus the `PROJECT_STATE` correction). Handoffs: `_triage/HANDOFF_2026-08-01_PINFIX2.md` ·
+`_PINFIX3.md` (carries a correction box — the body is deliberately unedited) · `_PINFIX3B.md` ·
+`_OPT2.md` · `_TIERINSTR.md`. **37 commits, every one through the real hook.**

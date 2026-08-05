@@ -198,18 +198,25 @@ void OnTick()
    const bool allow = _06_AllowLive || (bool)MQLInfoInteger(MQL_TESTER);
    if(!allow) return;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if(_05_Lot < minLot){ if(!g_suppress_log) PrintFormat("PA_Probe: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_Lot,minLot); return; }
+
    const double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    const double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    if(sig > 0)
    {
       double sl = NormalizeDouble(ask - slDist, digits);
       double tp = NormalizeDouble(ask + tpDist, digits);
-      g_trade.Buy(_05_Lot, _Symbol, ask, sl, tp, "PA_PROBE");
+      if(!g_trade.Buy(_05_Lot, _Symbol, ask, sl, tp, "PA_PROBE") && !g_suppress_log)
+         PrintFormat("PA_PROBE-BUY FAILED retcode=%d",g_trade.ResultRetcode());
    }
    else
    {
       double sl = NormalizeDouble(bid + slDist, digits);
       double tp = NormalizeDouble(bid - tpDist, digits);
-      g_trade.Sell(_05_Lot, _Symbol, bid, sl, tp, "PA_PROBE");
+      if(!g_trade.Sell(_05_Lot, _Symbol, bid, sl, tp, "PA_PROBE") && !g_suppress_log)
+         PrintFormat("PA_PROBE-SELL FAILED retcode=%d",g_trade.ResultRetcode());
    }
 }

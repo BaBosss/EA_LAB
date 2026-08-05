@@ -1,0 +1,46 @@
+; STF_BRENT_H4_locked.set -- plateau-centre pick (ORDER-542 cell #20 BRENT H4)
+; fine NOEMA grid GEN2_BRENT_H4_MAIN_fineNOEMA.xml: passes=315 survivors=88 (27.9%) plateau=GOOD
+;   ORIGINAL centre pick (SUPERSEDED 2026-07-30, session S-2026-07-30-SENSFAN):
+;   AtrPeriod=20 Mult=3.0 ExitMode=2(locked) TpAtrMult=2 SlAtrMult=2.5 UseEma=false
+;   PF 1.253 / 126 trades / neighbours=34 (M1, not the number that goes in the table)
+; NOEMA chosen over EMA: EMA centre PF 1.269/113t neighbours=27 survivors 6.7% -- PF near-identical,
+;   plateau much thinner than NOEMA (34 neighbours/27.9% vs 27/6.7%) -- same pattern as cell #15 XAU control
+; no axis landed on a grid edge (AtrPeriod 20 of [8..32], Mult 3.0 of [2.5..3.5], TpAtrMult 2 of [1..3],
+;   SlAtrMult 2.5 of [2.0..4.0]) -- no further widening required
+;
+; ⚠️ CORRECTED 2026-07-30 (session S-2026-07-30-SENSFAN, user-directed fix after sensitivity fan found a
+; cliff): the ORIGINAL centre's M4 sensitivity fan found `_02_TpAtrMult` stepping 2.0->3.0 (one fine-grid
+; step) collapsed MAIN M4 PF 1.24->0.95, net flipping positive->negative (-5.50) -- a real cliff, not a
+; soft edge (memory `grid-answer-outside-the-grid` family / ORDER-353 precedent). Re-examined the M1 fine
+; grid's own TpAtrMult marginal at the locked centre's other params (AtrPeriod=20,Mult=3.0,Sl=2.5): TP is
+; a coarse 3-point axis {1,2,3} with NO interior value between 1 and 2, so a same-axis fix isn't available;
+; TP=1.0 alone was tested by the fan too but ALSO fails MAIN>=1.2 (PF 1.11), so it is not a safe fallback
+; despite being "stable" in isolation. Instead moved `_01_AtrPeriod` 20->16 (Mult/TP/Sl unchanged) -- the
+; only nearby M1 grid point that both (a) keeps MAIN M4 PF above the 1.2 bar and (b) flattens the TP-axis
+; M1 marginal from a 26% drop (TP2->TP3) to just 4% (TP1=1.155 TP2=1.257 TP3=1.207, all in a tight band).
+; M4-confirmed both windows AND its own 8-neighbour fan (AtrPeriod/Mult/TpAtrMult/SlAtrMult x2 directions):
+;   MAIN 1.32/127t (was 1.24/126t) · BWD 1.58/118t (was 1.48/120t) -- BOTH windows improved, not just fixed
+;   worst neighbour PF 1.06 (SlAtrMult=2.0), no neighbour flips net-negative, TP=3 (the axis that broke
+;   the original centre) now reads 1.24 -- same level the OLD centre sat at, not a crash.
+; AtrPeriod=16 is fully interior on every axis (8..32 range) -- not a grid-edge pick.
+; raw evidence = AGENT_TASKBOARD.md ORDER-542 sensitivity-fan subsection, session S-2026-07-30-SENSFAN
+
+_00_OptimizeMode=false
+_01_AtrPeriod=16
+_01_Mult=3.0
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=2
+_02_TpAtrMult=2.0
+_02_SlAtrMult=2.5
+_03_UseEma=false
+_03_EmaPeriod=200
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false

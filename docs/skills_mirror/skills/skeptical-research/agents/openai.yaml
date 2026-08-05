@@ -1,0 +1,8 @@
+interface:
+  display_name: "Skeptical Research"
+  short_description: "Evidence-driven research for practical decisions"
+  default_prompt: "Use $skeptical-research to compare options, verify current claims, and recommend a practical choice."
+
+policy:
+  allow_implicit_invocation: true
+

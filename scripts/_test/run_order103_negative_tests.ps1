@@ -100,6 +100,28 @@ function Write-CommitFile {
     return (Get-GitObjectId -RepoRoot $Dir -Spec 'HEAD')
 }
 
+function Get-HookReferencedScripts {
+    <#
+        ORDER-270. The fixture used to hardcode which scripts the pre-commit hook
+        needs. Twice in one day (2026-07-26) the hook grew a new call --
+        check_order_collision.ps1, then check_handoff_contract.ps1 -- and the
+        fixture silently rotted: cases failed on "the argument to -File does not
+        exist" rather than on anything they were written to test, which reads as
+        a real regression and wastes the reader's time.
+
+        So the list is now derived from the hook itself. Add a call to the hook
+        and the fixture picks it up on the next run.
+    #>
+    param([string]$RepoRoot)
+    $hookPath = Join-Path $RepoRoot '.githooks\pre-commit'
+    $text = Get-Content -LiteralPath $hookPath -Raw -Encoding UTF8
+    $names = New-Object System.Collections.Generic.List[string]
+    foreach ($m in [regex]::Matches($text, '(?i)scripts[\\/](?<n>[A-Za-z0-9_\-]+\.ps1)')) {
+        $n = $m.Groups['n'].Value
+        if (-not $names.Contains($n)) { $names.Add($n) | Out-Null }
+    }
+    return $names.ToArray()
+}
 function Invoke-PowerShellFile {
     param(
         [string]$Dir,
@@ -150,6 +172,16 @@ function New-RealWorkingTreeFixture {
         $parent = Split-Path -Parent $dest
         if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
         Copy-Item -LiteralPath (Join-Path $RepoRoot $rel) -Destination $dest -Force
+    }
+    # ORDER-270: this fixture is a real clone, so hook-referenced guards get the
+    # REAL script rather than a stub -- they have the repo state they need. The
+    # list comes from the hook so it cannot rot behind it.
+    foreach ($n in (Get-HookReferencedScripts -RepoRoot $RepoRoot)) {
+        $src = Join-Path $RepoRoot "scripts\$n"
+        $dest = Join-Path $dir "scripts\$n"
+        if ((Test-Path -LiteralPath $src) -and -not (Test-Path -LiteralPath $dest)) {
+            Copy-Item -LiteralPath $src -Destination $dest -Force
+        }
     }
     [System.IO.File]::WriteAllText((Join-Path $dir 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
     return $dir
@@ -547,6 +579,17 @@ function New-TempHookRepo {
     # anti-drift guard.
     'exit 0' | Set-Content -Path (Join-Path $dir 'scripts\check_state.ps1') -Encoding UTF8
     [System.IO.File]::WriteAllText((Join-Path $dir 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
+    # ORDER-270: anything else the hook calls gets a pass-through stub. These
+    # cases isolate ORDER-103 Fix 2; the other guards are repo-specific (they read
+    # SESSION_LEDGER, handoff files, EA_LAB docs) and have their own suites. A
+    # stub keeps them from failing on a bare temp repo, and deriving the list from
+    # the hook means a newly-added guard can no longer break these cases silently.
+    foreach ($n in (Get-HookReferencedScripts -RepoRoot $RepoRoot)) {
+        $dest = Join-Path $dir "scripts\$n"
+        if (-not (Test-Path -LiteralPath $dest)) {
+            [System.IO.File]::WriteAllText($dest, 'exit 0', (New-Object System.Text.UTF8Encoding($false)))
+        }
+    }
     # NOTE: hooksPath deliberately NOT set here -- callers seed their checkpoint/setup
     # commits first (which may themselves touch protected files) and only call
     # Enable-TempHook right before the commit actually under test, so setup commits
@@ -851,6 +894,14 @@ foreach ($rel in @('.githooks/pre-commit','scripts/check_taskboard_archive.ps1',
     $parent = Split-Path -Parent $dest
     if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
     Copy-Item -LiteralPath (Join-Path $RepoRoot $rel) -Destination $dest -Force
+}
+# ORDER-270: same derived top-up as the other real-clone fixture (see comment there).
+foreach ($n in (Get-HookReferencedScripts -RepoRoot $RepoRoot)) {
+    $src = Join-Path $RepoRoot "scripts\$n"
+    $dest = Join-Path $hookRepoBinding "scripts\$n"
+    if ((Test-Path -LiteralPath $src) -and -not (Test-Path -LiteralPath $dest)) {
+        Copy-Item -LiteralPath $src -Destination $dest -Force
+    }
 }
 [System.IO.File]::WriteAllText((Join-Path $hookRepoBinding 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
 foreach ($rel in @('ARCHIVE_TASKBOARD_2026-07A.md','docs/memory_control/ARCHIVE_MANIFEST.csv','docs/memory_control/ARCHIVE_INDEX.md','docs/memory_control/RECONCILE_EXCEPTIONS.md')) {

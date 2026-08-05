@@ -1,254 +1,286 @@
-# PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
+﻿# PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-18D (Opus — **3-lane exec (first under re-settle framework): Lane A JumStoch Trend-seed→Boss_18 built+caged then DEAD-OPTIMIZED (28 M4 runs uniformly sub-1; edge=standalone 4-basket+BEP not the seed; direction A/B moot both losing; kept basket-close-DCA lever) · Lane B MacdDiv XAU H4 M4 CONFIRMED 1.88/0.97/1.28 (no fill-artifact) → demo attach-ready (bundle-10 999094, BWD 0.97 marginal user-approved) · Lane C SMCxSTO fan = SL-FRAGILE WEAK candidate → demo-keep 991070 w/ SL-lock≥3.0; rebuild (35 M4 runs) = NO SWAP (holdout soft + SL fragility moves sides + BWD < demo; EURUSD-H1 edge genuinely marginal, next build-on = new HOME not SL). orders LANEA-AB/LANEC-FAN/LANEC-REBUILD REVIEWED + 3 B1 rows. user REMOVED ST_EA03 ×3 from VPS.** decision-log §3 · handoffs in `_triage/ORDER_LANE*`) · ก่อนหน้า: 2026-07-18C (Opus — **research session: D1g pending/TP=NULL (ORDER-080 closed) + event-log dogfood #1 (7 rough-edges fixed) · ORDER-116 split=narrow lever · ORDER-117 coverage+filter=low-yield (1 PARKED-VERIFY GBPUSD MacdDiv D1) · new rule LAST-OPTIMIZE-BEFORE-VERDICT · big read: pipeline MATURE, cheap levers worked → EV=operate/judge**. handoff scratchpad `HANDOFF_2026-07-18.md`, decision-log §3 rows 2026-07-18) · ก่อนหน้า(อีก session วันเดียวกัน): **ORDER-073 news/macro risk system CLOSED end-to-end**: Phase-2.5 MRIS SHIPPED live (web feeder all-8 barometers from Yahoo · thresholds LOCKED v1.0 + in-file tuning guide · whisper embedded in LIVE_DASHBOARD + daily chain · Codex-hardened 5 fixes) · **Phase-3 MacroGate = VALIDATED deploy-candidate** (GV bridge block+lot-mult · A/B Boss_12_Breakout full-year-2024 2-symbol = **eqDD −54..−56%, P&L flat→much-better** · manage-only grid = no-op · cage inert · Codex QA 7/7 fixed) → WAITING-USER live attach · commits `7ee6bbd8`→`e219db8e`, safe branch `order073-macrogate-safe` · handoff `handoff/SESSION_2026-07-18_ORDER073_CLOSE.md`) · ก่อนหน้า: 2026-07-17B (Opus — #098 corpus sprint: 098-F pairs-spread stat-arb = 🟢 CANDIDATE H4 z2.5; handoff scratchpad `HANDOFF_2026-07-17B.md`) · owner: patip
->
-> ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
-> "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
-> ไฟล์นี้ไม่ duplicate แต่ **ชี้ทาง + เก็บ decision + เก็บ protocol + เก็บแผนต่อ.**
+> **Read [PROJECT_HISTORY.md](PROJECT_HISTORY.md) only when a task touches past work.** It holds the
+> session narrative, the accumulated changelog, and the full Decision log with provenance. This file
+> holds only: current status, active work, binding decisions, and the forward plan.
 
----
-
-## 0. UPDATE PROTOCOL — กฎการดูแลไฟล์นี้ (อ่าน + ทำทุก session)
-
-1. **เปิดไฟล์นี้ก่อนเสมอ** เมื่อเริ่ม session ใหม่ (ก่อน README, ก่อน MASTER_BACKLOG).
-2. **จบงานใหญ่ทุกครั้ง → อัปเดตไฟล์นี้:** แก้ section ที่เกี่ยว, bump `last updated`, เพิ่มบรรทัดใน
-   Decision log (section 3) ถ้ามีการตัดสินใจใหม่, อัปเดต Forward plan (section 7).
-3. **ความจริงอยู่ในไฟล์ ไม่ใช่ใน chat** — สิ่งที่ไม่ถูกเขียนลงที่นี่/canonical docs = หายเมื่อ session จบ.
-4. **อย่า duplicate เนื้อหา** — ถ้ามีอยู่ใน DEMO_DEPLOYMENT_PLAN / MASTER_BACKLOG / EA_SCORECARD แล้ว
-   ให้ลิงก์ไป ไม่ก็อปมาทั้งก้อน (กันข้อมูลขัดกันเอง). ที่นี่เก็บแค่ "สรุป + ตัวชี้".
-5. **commit git ทุกครั้งที่แก้ไฟล์นี้** (ไฟล์นี้คือ memory ข้ามคน/ข้าม AI).
+> **last updated:** 2026-07-31 (Opus-seat) — Factory OS **S6 built** (`ORDER-700`); `ORDER-670` **T7** closed + migrations 4/9 and 5/9.
+> Full session-by-session history → `PROJECT_HISTORY.md`. · owner: patip
 
 ---
 
-## 0.5 ANTI-DRIFT — กันเอกสารเพี้ยน (ทำให้ "อ่านครั้งหน้า = ครั้งก่อน")
+## 0. UPDATE PROTOCOL — how to maintain this file (read + do every session)
 
-ปัญหาเดิม: หลายไฟล์อ้าง authority ทับกัน + เขียน fact เดียวซ้ำหลายที่ → อัปเดตมือแล้วเพี้ยน. กฎ 3 ข้อ:
+1. **Always open this file first** when starting a new session (before README, before MASTER_BACKLOG).
+2. **Every time a large piece of work finishes → update this file:** edit the relevant section, bump
+   `last updated`, add a line to the Decision log (section 3) if a new decision was made, update the
+   Forward plan (section 7).
+3. **The truth is in the file, not in the chat** — anything not written here or into the canonical docs
+   is lost when the session ends.
+4. **Do not duplicate content** — if it already exists in DEMO_DEPLOYMENT_PLAN / MASTER_BACKLOG /
+   EA_SCORECARD, link to it instead of copying the whole block (this is what prevents self-contradiction).
+   This file keeps only "the summary + the pointers".
+5. **Commit to git every time this file is edited** (this file is the memory that crosses people and AIs).
 
-**1) 1 fact มี owner เดียว** — fact อยู่ไฟล์เดียว ที่อื่น **link ห้าม copy**:
+---
 
-| fact | owner เดียว | ที่อื่นทำได้ |
+## 0.5 ANTI-DRIFT — keeping the docs from skewing (so that "next read = last read")
+
+The original problem: several files claimed overlapping authority + the same fact was written in several
+places → hand updates made them skew. Three rules:
+
+**1) One fact has one owner** — the fact lives in one file; everywhere else **links, never copies**:
+
+| fact | sole owner | elsewhere |
 |---|---|---|
-| สถานะ% · decision · แผน · invariants | **PROJECT_STATE.md** (นี่) | link |
-| ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **VISION.md** | link |
-| กติกา multi-agent (Claude/Codex/ZCode) | **AGENTS.md** | link |
-| คิวงานกลาง + ผลดิบรอ review | **AGENT_TASKBOARD.md** | link |
-| live portfolio — **ข้อมูล** (account/EA/magic/status/kill/judge) | **`portfolio\DEPLOYMENTS.csv`** (inventory เดียว, ORDER-093) | link · checker validate ทุก commit |
-| live portfolio — **คำอธิบาย/บริบท** (ทำไม attach, คำเตือน, ประวัติ) | **DEMO_DEPLOYMENT_PLAN.md** | link |
+| status% · decisions · plan · invariants | **PROJECT_STATE.md** (this file) | link |
+| owner's big picture / factory philosophy | **VISION.md** | link |
+| multi-agent rules (Claude/Codex/ZCode) | **AGENTS.md** | link |
+| central work queue + raw results awaiting review | **AGENT_TASKBOARD.md** | link |
+| live portfolio — **the data** (account/EA/magic/status/kill/judge) | **`portfolio\DEPLOYMENTS.csv`** (the single inventory, ORDER-093) | link · checker validates on every commit |
+| deployment → approved bundle artifacts (attestation expectations) | **`portfolio\ATTESTATION_MAP.csv`** (CR-002, 2026-07-19) | link · snapshot v2 hash compared daily |
+| live portfolio — **the accounts** (governance_scope/expected_sensor/SLA/alert_policy at account level) | **`portfolio\ACCOUNTS.csv`** (CR-003b, 2026-07-24) | link · the snapshot reads the account universe from this file · DEPLOYMENTS = per-EA only |
+| live portfolio — **the explanation/context** (why attached, warnings, history) | **DEMO_DEPLOYMENT_PLAN.md** | link |
 | backlog · coverage · hunt | **MASTER_BACKLOG.md** | link |
-| ทะเบียน EA · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
-| แผนที่ไฟล์ · 5 ที่อยู่ | **PLATFORM_INDEX.md** | link |
+| EA registry · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
+| file map · the 5 locations | **PLATFORM_INDEX.md** | link |
 | EA_CORE framework | `D:\EA_Project` docs + `EA_CORE_ST03_LOOP_PLAN.md` | link |
 
-ถ้า 2 ไฟล์พูดเรื่องเดียวต่างกัน → **INVARIANTS (ข้อ 3) ชนะ** แล้วแก้ไฟล์ที่ผิดทันที.
+If two files say different things about the same subject → **INVARIANTS (rule 3) wins**, then fix the
+wrong file immediately.
 
-**2) PROJECT_STATE = entry เดียว** — ไฟล์อื่นห้ามเขียน "เปิดไฟล์นี้ไฟล์เดียวพอ". secondary doc ขึ้นต้นด้วย
-banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: <X เท่านั้น>`.
+**2) PROJECT_STATE = the single entry** — no other file may write "just open this one file". A secondary
+doc opens with the banner: `> ⚠️ canonical entry = PROJECT_STATE.md · this file owns: <X only>`.
 
-**3) INVARIANTS — fact ที่ต้องตรงทุกที่ (ที่ไหนเขียนต่าง = ที่นั่นผิด):**
-- **deployment ทั้งหมด (account/EA/magic/status/kill/judge) = `portfolio\DEPLOYMENTS.csv` แถวต่อ magic**
-  (ORDER-093, 2026-07-11 — แทน invariant ชุดเก่า "9 EA/1 account/judge 09-22" ที่ค้างตั้งแต่ยุค 06-22;
-  reality ปัจจุบัน = 5 บัญชี ดู DEMO_DEPLOYMENT_PLAN §DEPLOYMENT REALITY 2026-07-09) · แก้ deploy ที่ไหน
-  ต้องแก้ CSV ก่อนเสมอ แล้ว checker จะบังคับ dashboard map + docs ให้ตรงเอง
-- backtest window **2023–2026** · re-opt ทุก 6 เดือน
-- magic ห้ามชน — บังคับโดย checker จาก CSV (duplicate account|magic = WARN/block)
-- **bot บังคับเอง:** git **pre-commit hook** (`.githooks/pre-commit`) รัน `scripts/check_state.ps1 -Strict`
-  อัตโนมัติทุก commit → validate ทุก doc/dashboard-map เทียบ `DEPLOYMENTS.csv` สองทิศ (แถว CSV ไม่มีใน map =
-  magic ไม่ถูก monitor · map มีแต่ CSV ไม่มี = ghost row) + entry เดียว + banner. setup ครั้งเดียวต่อเครื่อง:
-  `git config core.hooksPath .githooks`. bypass ฉุกเฉิน: `git commit --no-verify`. รันมือ: `powershell -File scripts/check_state.ps1`
-  > ⚠️ **ขอบเขต guard:** คุมโครงสร้าง deployment consistency — **ไม่ใช่เนื้อหาทั้งหมด** (PF, สถานะ EA,
-  > ตัวเลขอื่น ยังต้องอ่าน/อัปเดตมือ). GUI commit client อาจซ่อน output hook — commit ถูก block แบบงงๆ ให้รัน check มือ.
+**3) INVARIANTS — facts that must match everywhere (wherever it differs, that place is wrong):**
+- **every deployment (account/EA/magic/status/kill/judge) = `portfolio\DEPLOYMENTS.csv`, one row per magic**
+  (ORDER-093, 2026-07-11 — replaces the old invariant set "9 EA/1 account/judge 09-22" that had been stale
+  since the 06-22 era; current reality = 5 accounts, see DEMO_DEPLOYMENT_PLAN §DEPLOYMENT REALITY 2026-07-09) ·
+  wherever a deployment changes, the CSV must be changed first, and the checker will then force the
+  dashboard map + docs to match
+- backtest window: **MAIN 2023.01–2025.12** (36 months, does not eat the 2026H1 holdout) · re-opt/re-pin every 6 months
+- magic numbers must not collide — **scope = GLOBAL, one magic belongs to exactly one EA across every account** (owner-ratified Grill decision 56 on 2026-07-30, and ratified again explicitly on 2026-08-01 to end the contradiction this bullet used to carry: it asserted uniqueness per `account|magic` while the decision said global). **Three registered `legacy_exception` magics predate the rule and are FROZEN until their judge date, never renumbered as a side effect:** `991001` (the only live one — ACTIVE REAL_CENT on BOTH `159475669` and `159503454`), `991002` and `990103` (one side of each is already REMOVED). ✅ **The checker enforces the GLOBAL rule as of 2026-08-02 (ORDER-1100, slice S10).** The exception list it was waiting for is **`factory/magic_allocations.jsonl`** — one row per distinct magic in the inventory, imported at one cutover commit, of which exactly the three above are `LEGACY_ACCOUNT_SCOPED`. *(The row count is printed by `_triage/factory_os/gen_magic_allocations.py --check` and is deliberately not written here: it changes whenever `DEPLOYMENTS.csv` gains a magic, and a hand-copied count would be stale the same day.)* `scripts/check_state.ps1` asks `scripts/lib/magic_guard.ps1`, which asks `_triage/factory_os/magic.py`: **one implementation of the rule**, handed the same **judged bytes** as the inventory rather than a repo path (a child process reading the working tree would rebuild ORDER-674's A7). The list is checked **in both directions** — every real collision must be declared, and every declared exception must be a real collision, or the list becomes an off switch. The old `account|magic` check stays as the backstop; global uniqueness implies it, so it costs nothing. Decision recorded in `_triage/USER_DECISIONS_PENDING.md` item 3.
+- **the bot enforces this itself:** the git **pre-commit hook** (`.githooks/pre-commit`) runs
+  `scripts/check_state.ps1 -Strict` automatically on every commit → validates every doc/dashboard-map against
+  `DEPLOYMENTS.csv` in both directions (a CSV row missing from the map = a magic that is not monitored · a map
+  entry with no CSV row = a ghost row) + single entry + banner. One-time setup per machine:
+  `git config core.hooksPath .githooks`. Emergency bypass: `git commit --no-verify`. Manual run:
+  `powershell -File scripts/check_state.ps1`
+  > ⚠️ **Guard scope:** it governs structural deployment consistency — **not all content** (PF, EA status and
+  > other numbers still have to be read/updated by hand). A GUI commit client may hide hook output — if a
+  > commit is blocked for no apparent reason, run the check by hand.
 
 ---
 
-## 1. เป้าหมาย + ภาพรวม 4 ชั้น (โรงงาน 1 + แม่พิมพ์ 1 + คลังอะไหล่ 1 → พอร์ตจริง)
+## 1. Goal + 4-layer overview (1 factory + 1 mold + 1 parts warehouse → real portfolio)
 
-> **เป้าหมายสูงสุด:** 10 พอร์ต × 2–3 EA ที่ **ไม่ correlate กัน** × 10,000 cent → passive income.
-> **ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ → `VISION.md`** (อ่านคู่ไฟล์นี้ทุก session — ถ้างานขัดกับ VISION ให้หยุดถามเจ้าของ)
+> **Ultimate goal:** 10 portfolios × 2–3 EAs that **don't correlate** × 10,000 cent → passive income.
+> **Owner's big-picture/factory philosophy → `VISION.md`** (read alongside this file every session — if the work conflicts with VISION, stop and ask the owner)
 
-| ชื่อ | ที่อยู่จริง | บทบาท (aligned 2026-07-03) | สถานะ % |
+| Name | Actual location | Role (aligned 2026-07-03) | Status % |
 |---|---|---|---|
-| **EA_LAB** | `D:\EA_LAB` (repo นี้) | โรงงาน — หา/validate/deploy EA + automation pipeline | 85% โตเต็มวัย |
-| **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **แม่พิมพ์หลักตัวเดียวของโรงงาน** (UNFREEZE 2026-07-03) — function กลางร่วมกัน (MM/lot/SL/grid/hedge/recovery) ต่างแค่ entry+TF · งานผลิต EA ใหม่ทุกตัวออกจากที่นี่ | chassis เสร็จ · เหลือเติม Hedge/Recovery + smoke-regression |
-| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | 🏛️ **read-only ARCHIVE (MERGE-08, 2026-07-06)** — อะไหล่ port เข้าแม่พิมพ์ครบแล้ว (pyramid→93 · guardian→acct-gate · persist→Persist.mqh · test pattern→tests\) · เหลือเป็น reference/หลักฐาน ห้ามลบ ห้ามงานใหม่ · TEMPLATE\ standalone เดิม = grandfather ถึง judge | 100% — track ปิด (`AGENT_TASKBOARD_MERGE.md`) |
-| **Live Portfolio** | account 10,000 cent (demo) | **เป้าหมายจริง** — เงินจริง | 20% (9 EA live ครบ, รอ judge) |
+| **EA_LAB** | `D:\EA_LAB` (this repo) | Factory — find/validate/deploy EA + automation pipeline | 90% mature |
+| **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **the factory's single master mold** (UNFREEZE 2026-07-03) — shared central functions (MM/lot/SL/grid/hedge/recovery), differ only by entry+TF · every new EA build comes out of here | chassis done · remaining: fill in Hedge/Recovery + smoke-regression |
+| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | 🏛️ **read-only ARCHIVE (MERGE-08, 2026-07-06)** — parts fully ported into the mold · reference/evidence only, no deletion, no new work | 100% — track closed (`AGENT_TASKBOARD_MERGE.md`) |
+| **Live Portfolio** | account 10,000 cent (demo) | **the real goal** — real money | 20% (9 EAs fully live, awaiting judge) |
 
-หมายเหตุ: "EA_Project" กับ "EA_CORE" = track เดียวกัน (Project = repo, Core = engine ข้างใน).
-
----
-
-## 2. สถานะตอนนี้ (one-liner ต่อชั้น)
-
-- **EA_LAB 90%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). housekeeping ปิดครบทุกข้อ 2026-07-02:
-  ~~fix path OneDrive→D:~~ ✅ + ~~รวม template ซ้ำ~~ ✅ + ~~ลบ ea_projects/Gold~~ ✅. เหลือ 10% =
-  งานที่ผูกกับเวลาจริง (operate จนถึง judge, ขยายจาก 1→หลายพอร์ต) ไม่ใช่งานสร้างเพิ่ม.
-  ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
-  RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
-  (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → ✅ **review/ตัดสินครบแล้ว
-  2026-07-02** (GR opt = null result, goldgrid = all fail, ดู §2 EA_CORE/signal hunt) (log: `_archive_docs/QWEN_RUN_LOG.md`).
-- **🏁 EA_CORE merge track = ปิดสมบูรณ์ (เปิด+จบ 2026-07-06 วันเดียว):** user สั่งรวมข้อดี EA_CORE
-  เข้า Boss V2 ให้จบ — ทำครบ DoD 6/6 · บันทึกเต็ม = **`AGENT_TASKBOARD_MERGE.md` (CLOSED)**:
-  ✅ MERGE-01 (cage ครอบ Boss_14,
-  CLEAN×2) · ✅ MERGE-02 (Codex independent converge 4/4 — สลับลำดับเสี่ยงต่ำก่อน + exit-owner
-  mitigation) · ✅ MERGE-05A (restart audit: hard-kill state = 🔴 memory-only) · ✅ MERGE-04
-  (acct-DD gate `RC_AcctDDLimitPct` default 0 — regression CLEAN, trip พิสูจน์แล้ว 107→48 trades) ·
-  ✅ MERGE-05B (`core\Persist.mqh` + persist hard-kill state, `RC_PersistHalt` default ON =
-  ข้อยกเว้น additive ที่ signed off · Persist_Test 8/8 PASS · regression CLEAN โดย persist ON) ·
-  ✅ MERGE-03 (**STACK_PYRAMID(93) pending ladder เข้าแม่พิมพ์แล้ว** — smoke: placed 24 =
-  filled 20 + cancelled 4 บัญชีปิดเป๊ะ, failed 0 · A/B 91 vs 93 = mechanism ต่างจริง · regression
-  CLEAN · one-exit-owner: ไม่มี per-leg TP, โหมด 93 ปิด Recovery/Hedge/partial · spec →
-  `ea_template/DESIGN_V2.md` §3c) · ✅ MERGE-06 (`tests\run_tests.ps1` — ALL TESTS PASS 3/3:
-  Persist 8 · AcctGate 5 · StackStep 4 asserts) · ✅ MERGE-08 (EA_Project ติดป้าย ARCHIVE + docs
-  sync ครบ) · ✅ MERGE-07 (**user override hold 2026-07-06:** `Boss_15_ST03` + `Entry_ST03.mqh`
-  v4 verbatim — **signal parity 133/133 entry ตรง runner ทั้ง bar+ทิศ, 0 miss** · regression CLEAN ·
-  ALL TESTS PASS · **⛔ ห้าม deploy Boss_15 จนกว่า replica 990010 ผ่าน judge** — port ≠ รับรอง edge)
-  — **track ครบ 8/8 order · EA_Project ไม่มีงานใหม่อีกถาวร · แม่พิมพ์ Boss V2 = ตัวเดียวจบ ตาม
-  VISION (entry 11–15 + stack 90–93 + cage 2 ชั้น)**
-- **EA_CORE — บทบาทใหม่ 2026-07-03 = คลังอะไหล่ R&D (ดู VISION.md + Decision log):** loop ปิดแล้ว
-  (2026-07-02, fallback invoked): STEP 1→5 เดินครบ.
-  หลักฐานปิดเคส: STEP 2 A/B — signal v4 เพียวๆ PF 0.67 (overfit อยู่ที่ exit structure ไม่ใช่ signal) ·
-  STEP 3 coarse grid **complete 48 combos → OOS PF<1.0 ทั้งหมด** (ดีสุด 0.87 บน M2 ฝั่ง optimistic).
-  **ข้อสรุป: EA_CORE = R&D track** — framework สมบูรณ์เชิงวิศวกรรม (signals v2–v5, ScaleExecutor_v2,
-  risk stack, regression 1417 PASS) พร้อม reuse เมื่อมี signal ที่มี edge จริง; **production = ST_EA03
-  standalone** (live 9397/9398). replica 990010 บน demo = WATCH เก็บ data. ห้าม re-tune ตระกูล param นี้.
-  gotchas ที่บันทึกไว้: LR1 ต้อง `InpAllowLiveOrders=true` ใน tester · optimizer genetic mode พัง ใช้
-  Optimization=1 · portable python `tools/python312`. รายละเอียด → `EA_CORE_ST03_LOOP_PLAN.md` ·
-  architecture guide → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
-- **EA_Template (Boss V2) — UNFREEZE 2026-07-03 → แม่พิมพ์หลักตัวเดียว** (supersede freeze 2026-07-02
-  ด้วยเหตุใหม่: ภาพจริงของเจ้าของเพิ่งถูก capture ใน `VISION.md` — แม่พิมพ์เดียว function กลางร่วมกัน
-  ต่างแค่ entry+TF). chassis compile 0/0 วัดเชื่อถือได้อยู่แล้ว · **งานค้างเพื่อเป็นแม่พิมพ์เต็มตัว:**
-  (1) เติม Hedge/Recovery module จริง (ตอนนี้เป็น stub ปิดไว้) (2) เพิ่ม smoke-regression ชุดเล็ก
-  (backtest ค่าคงที่ 1 ชุด เทียบเลขเดิมทุกครั้งที่แก้ core) (3) port Zeus grid/LOG เข้าเป็น entry
-  หลัง Zeus validate ผ่าน. architecture + วิธีใช้ → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
-  หมายเหตุ: `modules\`(V1) vs `core\`(V2) ซ้ำโดยตั้งใจ ไม่ใช่ขยะ.
-- **Live Portfolio 20%** — ✅ **9 EA live ครบแล้ว (user ยืนยัน deploy เสร็จ 2026-07-02)**. live clock เริ่ม 2026-06-22 →
-  judge เร็วสุด **2026-09-22**. ⚠️ **ST03 replica (990010) = WATCH**: qwen rerun OOS ได้ **PF 0.86 (585 trades)**
-  ขัดกับ 3.93 provisional เดิม — ต้อง re-confirm ด้วย locked .set ก่อนใช้เป็น baseline ตอน judge (คงไว้บน demo ได้
-  เพราะ demo มีไว้จับ overfit). ตัวบล็อก = เวลา (รอ demo 3 เดือน) + ยังไม่ขยายจาก 1 → หลายพอร์ต.
-- 🔴 **(2026-07-10) ST03 family = entry ไม่มี edge — ยืนยันแล้ว (ORDER-068, STRUCTURAL):** flat-lot probe
-  ของ config live จริง: GBP(9397) PF 0.68 / CAD(9398) PF 0.40 — **ล้างพอร์ตทั้งคู่เมื่อปิด escalation** =
-  กำไร backtest ทั้งตระกูล (PF 2.51/1.67) มาจาก uncapped recovery ล้วน ๆ (no SL · no cap · ratchet defect
-  linear→doubling = ที่มาไม้ 33.73 lots บนบัญชี user 939721 ซึ่ง config เหมือน 9397 เป๊ะ) · eqDD ลอย 57-61%
-  ทุกปี · **ผลตัดสิน: 9397/9398/990010 อยู่บน demo ต่อเพื่อเก็บ data ได้ แต่ห้าม promote สู่เงินจริง
-  ไม่ว่า demo PF จะสวยแค่ไหน (structural — tune ไม่ช่วย) · บัญชีจริง user 159475669 แนะนำถอดทั้งตระกูล** ·
-  ทางสร้างใหม่ = Entry_ST03 บน Boss V2 + capped recovery (spec Kangaroo, ORDER-070) · หลักฐาน
-  AGENT_TASKBOARD ORDER-068 + `_mt5_auto\reports\ST03LAB_*` · เพิ่มเติม: ZeusInspired บน EURUSD =
-  dead cell (ORDER-069: 216 pass, PF สูงสุด 1.14, gate ผ่าน 0) — EURUSD ไม่ใช่บ้านของ reversion-grid ตัวนี้
-  · **UPDATE 2026-07-10 บ่าย (ORDER-071 ปิดเคส): entry ST03 ตายสมบูรณ์ทุกแกน** — sweep exit ×4 +
-  symbol ×2 + H4 gate ×3 (18 config) ดีสุด 0.99 (บาร์ 1.05) → ห้ามขุด Count-MACD entry อีกทุกรูปแบบ ·
-  ของที่รอด: H4-MACD-direction gate (ลด DD 21→5.5%) = อะไหล่ใช้กับสัญญาณอื่น · ทางต่อ = Boss_16 (ORDER-072)
-- 🛡️ **(2026-07-11) วัน audit-hardening: CODEX_AUDIT ตัดสินครบ + Layer D ปิดหมด** — Codex audit เต็มระบบ
-  (`_triage\CODEX_AUDIT_FULL_2026-07-10.md`) ถูก judge ทีละข้อ (accept ส่วนใหญ่ Layer A/C/D · โต้กลับ
-  Keltner/Ichimoku Model-2 kill + ZSCORE ladder — เหตุผลใน taskboard §REVIEW CODEX-AUDIT) · **แก้วันเดียว:**
-  daily chain fail-visible + stale guard + dashboard map ครบ 141049900 · ORDER-092 floating-telemetry
-  (exporter+FLOATING RISK panel) · ORDER-083B/C NewsGuard MT4 port + hardening 7 ช่อง (พร้อม attach —
-  รอ user ทำ `VPS_TRANSPORT_AND_ATTACH.md`) · ORDER-094 cage 4 ตัว fail-closed + Boss_15/16 เข้า regression ·
-  ORDER-093(4) ซ่อม encoding ไฟล์นี้ 556 บรรทัด (อ่านออก 100% แล้ว — เหลือ sub-task 1-3 inventory+checker) ·
-  **SuperTrend 085B: BWD ตก (PF 0.88) / plateau ผ่าน 18/18 → bench + user อนุมัติ attach demo (magic 990020)** ·
-  **user เคาะ:** RSI-MR ออกจาก real→demo isolate · ST03 = user ขอ optimize มือก่อนถอด (PARKED-VERIFY) ·
-  crypto lane (ORDER-081) = **PARK** (ไม่มี maker rebate จริง — premise โพสต์ FB ถูกหักล้าง) ·
-  doctrine ใหม่จาก audit: **cage ต้อง fail-visible เสมอ** + Model-2 ใช้ฆ่าได้อย่างเดียวห้ามใช้ผ่าน
-- 🟢 **(2026-07-11 เช้า) Boss_16 BUY 21/30 XAU H1 = PASS-TO-BENCH (ORDER-078 REVIEWED)** — funnel
-  ครบ 4 ขั้นไม่ตกด่าน pre-registered: 27-cell spacing/TP plateau 0 ตัวขาดทุน (PF 1.371-1.854,
-  center อันดับ 20/27 = ไม่ใช่ peak) · year-split 6/7 ปีบวก (ลบเดียว 2021 PF 0.78 ขาดทุนมีเพดาน) ·
-  Model 0 confirm PF 1.41 (ไม่ละลาย) · MC ruin 0% DD95 4.6% (permutation = DD-only, แกน PF
-  ไม่ถูกทดสอบ — จดตรง ๆ) · **ยังไม่ใช่ PASS เงินจริง: BWD เคยใช้เลือก 21/30 เหนือ 14/30 → ไม่มี
-  holdout สะอาด → demo forward = holdout ตัวจริง** · locked set `Boss16_Kangaroo_XAU_21_30.set` ·
-  judge criteria pre-registered ใน REVIEW ORDER-078 (kill eqDD>12% · judge 3 เดือน PF<0.8 ที่
-  ≥15 ไม้) · ห้ามสลับไปโซน sweep ที่สวยกว่า (select หลังเห็นข้อมูล) — เก็บไว้รอบ re-opt 6 เดือน ·
-  **✅ (2026-07-11) corr check ปิดแล้ว: corr 0.077 vs BRK_FULLSPAN (25 เดือนร่วม) = LOW-additive**
-  ไม่ต้อง reduce-lot · **Boss_16 21/30 พร้อม attach demo ทุกเงื่อนไขแล้ว** เหลือแค่ magic+attach
-  จริง (งานของ user) — candidate real-money ตัวแรกหลัง funnel ครบตามที่บันทึกไว้ forward plan
-- 🧭 **(2026-07-10 ค่ำ) ปรัชญาโรงงาน + EA-SCORE v1 จารึกแล้ว** — สามชั้น edge/MM/portfolio → `VISION.md`
-  §ปรัชญาโรงงาน · rubric คะแนน→สิทธิ์ + กุญแจเพดาน 3 ดอก → `EA_SCORECARD` §EA-SCORE · กฎ user ชุดใหม่:
-  rescue-ladder ≥3 รอบ×2 TF ก่อน DEAD · PARKED-VERIFY(user) · diagnosis→lever · pacing batch เล็ก ·
-  **retro-audit 154 verdicts รอบแรกจบ (ORDER-084→090):** Keltner/Ichimoku/Oracle/ZSCORE ปิดหลักฐานเต็ม ·
-  **SuperTrend XAU H4 = 6/10 รอ 085B (BWD+plateau) — ผ่าน = เงินจริง 1/3 lot** · swb bundle รอ attach ·
-  เครื่องมือใหม่: top-5-concentration check · ⚠️ MT5 เมิน Spread= ใน ini (stress ต้อง arithmetic บน trade list) ·
-  NewsGuard MT5 พร้อม attach (คู่มือท้าย ORDER-083; 083B = MT4 port คิวถัดไป)
-- **Signal hunt — ⚠️ ไม่อิ่มตัวแล้ว หลัง 2026-07-03** เดิมเขียนว่า "98% อิ่มตัว รอไอเดียใหม่" (บรรทัดนี้
-  **ล้าสมัย**) — concept เก่าที่ตายแล้วยังตายอยู่ (NR7/AsianRange/LNBREAK/EURCHF/Donchian/Keltner/
-  Ichimoku/PrevDay/EMA-cross/SuperTrend/GR optimize/#20 Trend+Pyramid/MT4 goldgrid ทั้งหมด — ดูรายละเอียด
-  ที่ `MASTER_BACKLOG.md`) **แต่มี candidate ใหม่จริงจากงาน 2026-07-03: `(Boss)_ZeusInspired_GridLog_rev01`
-  บน AUDUSD/AUDJPY (ผ่าน IS/OOS จริง)** — ดู bullet ถัดไปนี้ + `ZEUS_GOLD_HEDGE_ANALYSIS.md` +
-  `EA_SCORECARD_AND_REGISTRY.md` Â§FRESH TEMPLATE EAs
-- **🆕 (2026-07-03) Zeus Gold Hedge V1.2 วิเคราะห์ + ต่อยอด — สรุปรวด:**
-  วิเคราะห์ EA ปิด/ล็อคของ user (behavioral analysis เท่านั้น ไม่แตะไฟล์) → พบเป็น grid+martingale+hedge
-  ที่ **ไม่มี stop loss เลย** → REJECT ทั้ง XAU/EU (score ต่ำ ไม่ใช่ hard gate — ดู rubric fix ด้านล่าง)
-  → ออกแบบ EA ใหม่ `(Boss)_ZeusInspired_GridLog_rev01.mq5` (L3 redesign: ATR spacing, LOG lot, real SL,
-  partial-close, DD-adaptive first lot) → screen 27 FX symbol (ไม่รวมทอง) → **AUDUSD (IS 1.63→OOS 1.78,
-  retention 1.09) + AUDJPY (retention 0.87) = candidate ที่รอด IS/OOS จริง** · EURCAD/AUDCAD/AUDNZD
-  ตกหลัง confirm เข้ม (ดูดีตอน screen ผิว แต่ล้มตอนวัดจริง) · corr AUDUSD/AUDJPY = 0.554 (WATCH, ใช้คู่กัน
-  ได้แต่ลด lot) · EURJPY = diversifier เท่านั้น (corr ต่ำมากแต่ edge อ่อน) **ยังไม่ deploy — เหลือ Monte
-  Carlo บน config ที่ scale แล้ว + ทดสอบเป็นพอร์ตรวมกันจริง** รายละเอียดเต็ม + ทุกตัวเลข →
-  `ZEUS_GOLD_HEDGE_ANALYSIS.md` (มี timeline วันนี้ครบ §5.1-5.11)
-- **🔧 (2026-07-03) แก้ methodology 2 จุด ตาม user feedback — มีผลกับ EA ทุกตัวไปข้างหน้า ไม่ใช่แค่ Zeus:**
-  (1) `EA_SCORECARD_AND_REGISTRY.md` Step 0 hard-gate (uncapped grid/martingale) → เปลี่ยนเป็น score
-  penalty −25pt (Step 0b) เหลือ hard gate จริงแค่ expired/locked-ex + structural non-function
-  (2) **Model 2 (open price) ห้ามใช้รายงาน/จัดอันดับ PF เด็ดขาด — ใช้กรอง zero-trade เท่านั้น ตัวเลขที่
-  โชว์ user ต้อง Model 1 (control points) ขึ้นไปเสมอ** — พิสูจน์คุณค่าจริงวันเดียวกัน จับ false-positive
-  ได้ 3 ครั้ง (Zeus XAU M1 artifact PF1.89→M0 จริง1.01, AUDCAD M2 PF1.80→M1 จริง0.89, AUDNZD M2
-  PF1.96→M1 จริง1.06) — บันทึกไว้ทั้ง `EA_SCORECARD_AND_REGISTRY.md` และ skill `backtest-optimize-rigor`
-- **🆕 (2026-07-03) skill ใหม่ `locked-ea-analyzer`** — เก็บ methodology วิเคราะห์ EA ปิด/ล็อคทั้งหมดไว้ใช้ซ้ำ
-  (string-entropy check, ดึง param จาก .set/.ini/Journal, infer behavior, web search, screen, optimize,
-  validate) เรียกด้วย "วิเคราะห์ EA ตัวนี้อย่างละเอียด"
+Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine inside).
 
 ---
 
-## 3. DECISION LOG — สิ่งที่ตัดสินใจไป (lock แล้ว อย่ารื้อโดยไม่มีเหตุใหม่)
+## 2. Current status (one-liner per layer)
 
-| วันที่ | การตัดสินใจ | เหตุผล |
+> 🆕 **2026-08-01 (Opus-seat) — `ORDER-710` CLOSED: the EA now hashes its own live inputs, and the digest MATCHES the compiler's on 2 builds × 2 configurations · lane `S-2026-08-01-CFGFP`, block 730-739, MT5 lane 1**
+> **The `[CFG]` half of slice S6, and the acceptance is four tester runs, not an argument.** `ea_template/core/InputSurface_gen.mqh` is GENERATED (1,082 lines, one `#ifdef LAB_ENTRY_nn` block per build) from `preset.parse_surface` — the same call on the same file the compiler uses — so at `OnInit` the EA builds the fingerprint preimage from **the values the binary is holding** and prints `[CFG] input surface: build=… keys=… scope=… effective_config_hash=…`. Measured on lane 1 (`scripts/verify_config_fingerprint.ps1`, XAUUSD H1 2024.01.01–2024.01.15 model 1): `LAB_ENTRY_16`/135 keys and `LAB_ENTRY_11`/113 keys, each at declared defaults and again with two inputs perturbed — **all four EA digests identical to the compiler's, and the two configurations differ from each other.**
+> **Two runs per build, because one is not evidence.** A single match is also what a constant would print, or a digest computed from the source instead of from live inputs. The verifier requires the pair to differ as well as to match; passing the match while failing the difference would mean both sides compute something stable and neither computes the configuration.
+> **🔴 The design change that made a cross-language hash possible at all.** The preimage used to carry the rendered `.set` TEXT, so a double entered as `repr(3e-05)` — Python's shortest-round-trip spelling, which MQL5's `%g` does not reproduce (they disagree on `1.0` vs `1` and on exponent width). That would have made the fingerprint a claim about two printf implementations agreeing. Doubles now enter as their **IEEE-754 bits** — the value MT5 actually parsed, no formatting on either side — with `-0.0` normalised to `+0.0`; `300`/`300.0`/`3e2` still collapse to one preimage.
+> **`C3` is honoured by NOT being met.** The label stays `surface_only` because the hash covers every input the build exposes and **no locked constant**, and nothing enumerates the locked constants yet. C3 says the manifest stops writing `surface_only` *only when* the fingerprint covers the real surface — relabelling now is precisely the failure the name was chosen to avoid. **OWED and stated: design §5.6's locked-constant half is a new order, not a silent remainder.**
+> <br>✅ **SUPERSEDED 2026-08-02 by `ORDER-730` (lane `S-2026-08-02-CONSTFP`) — the owed half landed and the label is now `surface+constants` on both sides.** The paragraph above is kept as the record of why it stayed narrow for a day, because the reasoning is the reusable part; the **current** state is the entry below.
+
+> 🆕 **2026-08-02 (Opus-seat) — Factory OS **S7 CLOSED**; S8's generator built, caged and COMPILING · lane `S-2026-08-02-FACTORY78B`, block 1030-1039, MT5 lane 1**
+> **S7's three acceptance criteria, all measured:** `param_registry_check` **CLEAN** — and it now runs the design §5.4 **state table** as well, so one command covers both halves (it used to be a *name* check only) · **zero `UNKNOWN` on Boss_14's Operator surface**, on real rows, enforced by criterion P3 · an old `.set` **fails loudly**, 42 real fires.
+> **The registries carry real rows for the first time:** 2 `Hypothesis` rows (B14-H01/H02, design §8.1) and **232 `ParameterBinding` rows**. `B14-H01-r1` = **18 OPERATOR** · 13 RESEARCH · 85 HIDDEN, from **116 visible inputs**; `B14-H02-r1` = **21** · 13 · 82. Design §5.3's target is `Operator ≤ 40` — and the number is **derived**, not a list of dials someone judged important.
+> **S8:** `gen_wrapper.py` emits a 16-line wrapper (`#define`/`#include` only) + a `LAB_CAP_*` allowlist; `check_wrapper_gen.py` holds **byte-identical regeneration** and **zero logic** — two of S8's three acceptances — plus allowlist==`module_set` and wiring. Both wrappers **compile 0 errors / 0 warnings** on lane 1 and `tpl_regression` is **CLEAN 8/8**. 🔴 **The first compile found a defect all four source-level criteria had passed:** design §5.2's snippet shows two include paths that cannot both be right, and the file was byte-identical, logic-free, wired and correctly tokenised. **Only the compiler knew.**
+> 🔴 **THE DURABLE LESSON, and it generalises: every defect found today was invisible while the stores were EMPTY.** An empty store answers `UNBOUND` to every question and spawns no validator, so a broken consumer and a correct one produced identical output. **`ORDER-1030`** — `optimize_guard` spelled a build tag `14` while every binding spells it `LAB_ENTRY_14`, so it refused every parameter of every declared revision and printed `role=''`: *the verdict was right by accident and the reason was wrong*, which is worse, because a real `LOCKED` binding and a tag typo produced identical output (`F1` reappearing at the consumer seam). **`ORDER-1031`** — the live-row schema guard spawned one `ajv` per row: **2.3s → 77.2s** at 234 rows, ~0.32s/row and **linear** in a store the design intends to grow 10×; batched to **3.4s**. And a cage fixture that used a revision id which was fictional when written and became real, against a `-BindingsRoot` that ADDS rather than replaces.
+> **Remaining on S8, in order:** the `Inputs.mqh` capability-token rollout (Boss_14 only, the owner's ratified per-Boss shape) **then** the 7-point parity harness — that order, because doing both at once gives a parity failure two candidate causes. Handoff = `_triage/HANDOFF_2026-08-02_FACTORY78B.md`.
+
+> 🆕 **2026-08-02 (Opus-seat) — Factory OS **S7 PARTIAL, S8 NOT STARTED**, and the reason reorders the plan: **the two slices are ENTANGLED** · lane `S-2026-08-02-FACTORY78`, block 1020-1029, no tester run**
+> **The chain nobody had walked:** S7's acceptance is *zero `UNKNOWN` on Boss_14's **Operator surface***, and `surface` is **not a `docs/PARAM_REGISTRY.csv` column** — the generated contract `META_parameter_registry_columns` puts `role`/`surface`/`safe_range`/`optimize_stage` **per-hypothesis**. So the Operator surface is a statement about `ParameterBinding` rows → which need a `hypothesis_revision` → a `Hypothesis` row (`factory/hypotheses.jsonl` is **empty**) → a `module_set` of `LAB_CAP_*` tokens → **which no `.mqh` defines, because the allowlist header is S8.** S7 cannot fully close before S8 starts, and S8's generator needs rows S7 produces. Full write-up: `ORDER-1020`.
+> **Landed and caged (1):** the owner-ratified **old-`.set` policy** (design §11 decision 4, ratified 2026-08-01) — unknown key ⇒ a refusal that **names the key**; partial set ⇒ refused with the missing keys named; migration writes a **NEW** file and reports every key. Cage 5 criteria × (attack + specificity), 5/5 mutation-DETECTED. **Measured on 50 real template `.set` files: 42 `PARTIAL` (real fires) · 8 `LOADS` · 0 `UNKNOWN_KEY`** ⇒ the unknown-key branch is written up as **`UNTESTED` on real data**, not passed. Migration observed end to end on a real file, and it refuses to overwrite.
+> **Landed and caged (2):** **Boss_14's 116 visible inputs reduce to 38 REACHABLE** — under design §5.3's `Operator ≤ 40` target, and **derived** (can this input change anything under this config?) rather than chosen. `architecture.py` also supplies the `architecture_digest` every `Hypothesis` requires and that **nothing in the tree produced**, so the only previous way to register one was to type a digest by hand. Cage 7 criteria × 2, 7/7 mutation-DETECTED; **A6 asserts in both directions** because a classifier that calls everything unreachable produces a beautifully small surface and is completely wrong.
+> 🔴 **Two owner decisions found and deliberately NOT acted on:** the contract's `classification` vocabulary (`OPERATOR/TUNING/OVERRIDE/DEAD`) disagrees with the shipped CSV (`ACTIVE/INACTIVE/OVERRIDE/COMPATIBILITY`) that `registry.py:136` reads **by name**, and the contract names `unit_true`/`coupled_with` where the CSV ships `unit`/`coupled_parameters` while §4.2 *also* requires existing columns to keep their meaning. **Nothing checks the CSV against that table.** Changing it would silently move what `optimize_guard` decides.
+> **Also:** `ORDER-1022` — a cage matched reserved blocks with `\b(\d{3})-(\d{3})\b` while the guard it tests uses `(\d+)-(\d+)`; the first four-digit order block made the suite fail **on a healthy repo**, and the defect was the cage's own second parser. Handoff = `_triage/HANDOFF_2026-08-02_FACTORY78.md`.
+
+> 🆕 **2026-08-02 (Opus-seat) — `ORDER-730` CLOSED: the fingerprint now covers the LOCKED CONSTANTS too, so the scope label moved `surface_only` → `surface+constants` · lane `S-2026-08-02-CONSTFP`, block 970-979, MT5 lane 1**
+> **A locked constant is derived as a RULE, not a list:** a `#define` that carries a value and reaches the build, where "reaches the build" is decided by **evaluating the preprocessor over the include closure of each wrapper `.mq5`**. The exemption list is empty because both halves are mechanical — every include guard and build selector is a valueless `#define` and falls out without being named. Build 17 enumerates **24** constants, every other build **23** (`WAVE5_DIVERG_DEPTH` sits inside `#ifdef LAB_ENTRY_17`), which is what makes the second build evidence rather than a repeat. A value the generator cannot reduce to a scalar is **REFUSED by name**, never skipped.
+> **Measured on lane 1, 4 tester runs:** builds 16 and 17 × 2 configurations each — EA digest identical to the compiler's every time, and the two configurations differ. `tpl_regression` **CLEAN 8/8** (log-only change, no trade moved); compile **0 errors / 0 warnings on 9 targets**.
+> 🔴 **Then `/scrutinize` ×3 found nine more defects, and only one was in the hash.** Round 1: `#undef` was ignored — the one gap that ended in a *wrong answer* rather than an error · a `PresetRefusal` escaped the checker so a deleted wrapper printed a **traceback instead of a verdict** (the surface half had the same hole and always did) · a double referenced in arithmetic raised `ValueError` · a plain `#if` failed saying "unbalanced `#endif`", naming the wrong cause · and the generator's own docstring illustrated per-build derivation with a file that contributes **no** constant. Round 2: **nothing checked that the digest is over BOTH halves** — deleting `+ CFG_ConstPreimage()` from the generator produced **zero problems** across every criterion, because G4 compares the file against the generator and both move together ⇒ new **G6** reads the committed text · and the newline-joined preimage had **no escaping**, so a string constant containing a newline made two constant sets share one digest. Round 3: **G2 was satisfied by a comment** — commenting out every `CFG_Fingerprint()` call was ACCEPTED, shape 5 inside the criterion written to catch shape 5.
+> **Cage: 10 criteria, attack + specificity each, all mutation-DETECTED.** The generated file regenerates byte-identical after every round-1/2/3 fix, so none of them changed an output and no tester re-run was owed.
+> ⚠️ **Scope, stated rather than assumed:** the enumeration covers `#define` constants; a behaviour-changing value written as a `const` variable or baked into an expression is **not** in it. And **nothing automated compares the EA's printed digest to the compiler's** — only the manual `scripts/verify_config_fingerprint.ps1` does, so this protection is operator-triggered, not continuous.
+> **The guard, and the cage.** `check_input_surface_gen.py` (category A; T7 now **6 of 6 bound, 0 suspended**) regenerates from the committed `Inputs.mqh` and refuses drift, reading **both files from ONE `EvidenceSource`** — a staleness check is exactly where a mixed vintage passes the one commit it exists to refuse. Its cage is 5 criteria × (attack + specificity) + 5 mutation probes, all DETECTED; **X1** reads the emitted MQL5 back and requires the parsed surface, in order, through the canonicaliser each declared type demands (>900 real declarations across 8 builds) — its mutant routes everything through `CFG_CanonDouble`, producing a valid file that hashes cleanly on both sides and disagrees. `L0` demanded the new checker and its generator on their first run, the fourth consecutive time.
+> **`tpl_regression` CLEAN 8/8** on the lane pinned in the same commit, binaries asserted fresh first (C2); compile **0 errors / 0 warnings on 9 targets**. Full tier **16/16 at 78.8–81.4s** of the 90.0s budget over four runs, no budget raised.
+> **A stale fixture in someone else's cage, found by being the next lane.** `run_front_guard_evidence_tests`'s B0 case hardcoded `ORDER-711` because that was inside the *authoring* lane's reserved block; the moment this lane reserved 730-739 the case went red with the collision guard correctly refusing an out-of-block number. The probe id is **derived from the ACTIVE block at HEAD** now and printed in the assertion. Same shape as the PART 6 fixture trap: a fixture's validity was an undeclared assumption about somebody else's table.
+> 🔴 **`/scrutinize` ×2 then found three defects in this lane's own work, and all three were in the GUARDING, not in the hash.** (1) **`ea_template/core/ConfigFingerprint.mqh` — the file holding the entire MQL5 half of the contract — was in neither `$SUITE_GUARDS` nor the generated pathspec**, so a commit editing only it ran zero cages and did not even trigger the tier (measured with `-ExportSelection` and with the pathspec itself). Fixed by declaring it AND by adding criterion **G3**, which reads it, so the declaration is load-bearing rather than remembered; the undeclared-reference sweep did not demand it because a path referenced by an *imported module* is in neither PART 4 nor PART 4b → **`ORDER-732`**. (2) The generated file's fallback comment claimed it emits *"a fingerprint that cannot be mistaken for a real one"* while hashing the literal `"UNENUMERATED"` into an ordinary 64-char digest — it returns a non-hex sentinel now. (3) `verify_config_fingerprint.ps1` ignored `mt5_run.ps1`'s exit code, so an ABORT (MT5 GUI open) surfaced the previous run's log line and printed *"the EA printed the SAME hash for two different .set files"* — a defect that never happened. **Re-measured after every change:** compile 0/0 × 9, EA↔compiler digests **byte-identical to the pre-change run**, `tpl_regression` CLEAN 8/8 again, and the staleness guard driven **red on the real files** for the first time.
+> 🔴 **A tier failure explained too confidently, then corrected — and the correction is the useful part.** Three detectors fired on the same underlying event (`check_s2a_migration`'s ABORT · `run_front_guard_evidence_tests`' C cleanup, whose only live condition after four identical shas is `.git/index`'s mtime · `run_guard_trigger_tests` PART 6's nested tier saying *"the index was rewritten during the tier"*). The first instance had an answer in `git log` — `S-2026-08-01-OPERATE` committed twice mid-run — and it was written up as **the** cause. **It recurred with no lane open and nothing else running.** Honest statement at the time: **2 of 8 manual full-tier runs.** 🔴 **CORRECTED LATER THE SAME DAY — the "something inside the tier" half is REFUTED:** `run_front_guard_evidence_tests` asserts in those same runs that `.git/index` was never written, and no suite issues an index-writing git command. The better-supported candidate is a lane committing **45 minutes after its own ledger row was marked CLOSED**, inside the aborted run's window — "no lane open" had been established from `git log` and a ledger row, neither of which can see a late committer. The wake condition on the board was also DEAD (it said *"fires a second time"* while the row already recorded 2-of-8) and has been replaced with one that discriminates. Both detectors are still right that something moved. → **`ORDER-731`** item 2, which now has a **per-suite transcript** (`_triage/tier_runs/`) so the next occurrence names what moved and under which suite. (What still holds: a manual full-tier run is not a clean measurement while another lane is open.)
+> 🔴 **And the lane broke a gate with its own closing commit, which is the finding worth keeping.** `f4c9fd9f` appended ONE dormant row to `MASTER_BACKLOG.md`; the S2a attestation record pins that file at a blob *after the action it approves*, so `F11`/`F5` and `check_coverage_transfer`'s `A8` all went red — **after the commit landed**, because the pin is compared against `HEAD:`, and during a pre-commit hook `HEAD` is the PREVIOUS commit. The gate was green while the commit was being made and red the moment it existed. The row was reverted (blob restored byte-identical), the lane REOPENED to do it (a board row needs an ACTIVE reservation), and the finding is **`ORDER-731`**: it is the `ORDER-674` defect class one layer along — *read what the commit WILL contain, not what it already does* — with the consequence that **`MASTER_BACKLOG.md` was effectively frozen and nothing said so until after you committed.** Memory `approval-pinning-self-invalidates` had this as ADVISORY; it was then measured. ✅ **RESOLVED 2026-08-01 — the file is no longer frozen.** A front guard now refuses the breaking commit at the INDEX (item 1), the post-state pin was narrowed to **§2 only** (option A, owner-signed), and the second whole-file pin — `stale_pin_acknowledgement.current_blob`, which option A did NOT touch and which kept the toll alive — was removed by re-pointing D1's `owner_ref` at `factory/coverage.jsonl`, the file that has actually held the canonical Coverage bytes since the transfer (option 2, owner-signed, bundle `d88f795b`). **Probed at HEAD:** an append outside §2 passes the hook; an edit inside §2 is refused with `P1`. What still costs a signature, by design: an edit inside §2, a `gen_coverage.py --apply`, or a drift of the coverage store.
+>
+> 🆕 **2026-08-01 (Opus-seat) — the `ORDER-670`/`ORDER-674` migration batch CLOSED: T7 = 5 of 5 bound, 0 suspended · lane `S-2026-07-31-FRONTDECL`, block 710-719**
+> **The five remaining front guards now declare `# snapshot:` on every read, and a new L3 lint checks the declaration against the call rather than trusting the comment** — the PowerShell form of T7: it derives the snapshot from the token on the line (`--cached`, `HEAD:`, `Get-Content`, `Get-Snapshot -Mode ...`) and refuses a declaration that contradicts it. Built FIRST, before any guard was annotated, specifically so the declarations landed into something that checks them. Excludes a guard quoting its own git command in an error message (measured: every such line has a diagnostic verb and no assignment).
+> **Declaring found two more real defects**, on top of `check_state`'s A7 from the original `ORDER-674` session:
+> — `check_order_collision` read the active board at the **index** and the archive at **HEAD** — one verdict, two moments (A2). Attack: stage `## ORDER-711` into both boards in one commit ⇒ pre-fix `exit 0` (cross-board duplicate lands), post-fix `exit 1`.
+> — `check_handoff_contract` had the identical mixed pair with the opposite symptom: it **refused** the exact same-commit archive move `WORK_LIFECYCLE` mandates (REVIEWED* = archive same commit).
+> — `check_precommit_staged`'s ORDER-144 duplicate-`account|magic` rule is `$_.magic -match '^d+$'` — a lost backslash, matching literal letter `d`s. **0 of 64 real rows ever passed it**; a SECOND guard over the live-money inventory has been inert since `baa1b6f5`, for an unrelated reason to `check_state`'s, which is why fixing one did not reveal the other. Blast radius measured at 0 duplicates in the real inventory.
+> **`ORDER-670` migration 9/9 (`check_coverage_transfer`)** — the one migration that was a *behaviour* change: the old reader fell back to disk for an untracked path, the shared reader has none. Two refusals in `check()` were deleted because the states they detected can no longer be constructed.
+> **`check_s2a_attestation`** — the last T7 suspension, closed with **no owner signature spent** (verified: all 7 bundle-adjacent paths clean before touching anything, digest byte-identical before/after). Found: `bundle_digest()` read the disk unconditionally, so a bundle-member change staged behind a clean worktree copy left an owner's approval validating against bytes the commit was changing. New primitive `evidence.read_committed_bytes` (no decode, no CRLF fold) closes three hand-rolled readers at once.
+> **T5 (design table) collapsed** — but not as prescribed: `evidence.observe()` had **zero production callers**; `snapshot_build` had reimplemented its exact one-handle/two-fstat mechanism under a different name. Routed through `observe()`; its suite gained the first-ever **behavioural** drive of the race (a patched `os.fstat` returning a mutated stat on the second call), where before only a source-string match existed.
+> **`T7 category-A binding: 5 of 5 checker(s) bound; 0 still suspended`** — the number the lint itself prints, not a claim in this paragraph.
+> 🔴 **`/scrutinize` ×3 then found a BLOCKER in this lane's own work, and it is the most useful thing here.** `evidence.observe()` raises for **two** different failures — "it moved under me" and "I could not open it" — and `ToolFailure` is not an `OSError`, so routing `_stat_evidence` through it silently removed the outer `except (IOError, OSError)`'s cover: an **unreadable** mandatory source went from `read_ok: False` → `MANDATORY_SOURCE_UNREADABLE` (a named reason code) to **refusing the whole build**, with a message blaming a mid-read mutation. It broke that function's own docstring (*"Never raises for a bad path"*). Reproduced by patching `io.open` to raise `PermissionError`; fixed with `evidence.ObservationUnstable(ToolFailure)` — a subclass, because message matching is not a contract — with both directions cased. **Textbook GUARD_SHAPES shape 5: the repair was graded by the counter-example it was written staring at, and changed behaviour for a shape outside it.** Also fixed: the cage mutated the two shared boards on disk (now staged through the object database — no restore window, both attacks re-proven red under the new mechanism); the lint's own `L1_NOT_PARSED` reason strings had rotted for 6 of 11 entries **inside one session** (BACKLOG-D29, produced and caught in the same batch).
+> Full tier **16/16 at 81.3s/81.8s** of the 90.0s budget (two clean runs), no budget raised. Handoff = [`_triage/HANDOFF_2026-08-01_FRONTDECL.md`](_triage/HANDOFF_2026-08-01_FRONTDECL.md).
+>
+> 🆕 **2026-07-31 evening (Opus-seat) — Factory OS slice **S6** built; `ORDER-670` **T7** closed and two more migrations landed · lane `S-2026-07-31-S6PRESET`, block 700-709**
+> **`ORDER-700` (S6) — the preset compiler.** `_triage/factory_os/preset.py` emits a **full-surface `.set` or refuses**. It is a library: the caller hands it an `EvidenceSource`, it opens no path of its own, and that is why *"must not read the terminal cache"* is structural rather than promised. 9 criteria × (attack + specificity) = 18 cases, plus 9 **mutation probes** that rewrite one line of a temp copy and require that criterion to go red — 9/9 detected, nothing written inside the repo.
+> **🔴 The order's own headline number was wrong and building it is what found that.** It said *"zero of 2,177 `.set` files are full-surface, threshold ≥184 keys"* — but **184 is the count of `input` declarations**, and `StackMode`/`StackConfirm` are declared once per `#ifdef LAB_ENTRY_nn`. The distinct-name union is **170**; **no build exposes more than 135** (per build: 113·117·119·116·119·135·121·121). A threshold no build could meet made "zero" arithmetically guaranteed. Corrected: **228** tracked `.set` address the Boss chassis, **20** are full-surface for some build, **208** are partial at a median **44.8%** coverage — so the median Boss preset leaves ~55% of its inputs to the per-terminal tester cache. **The failure is the 208, not the 2,177.**
+> **Split out, not dropped:** `[CFG]` emitting the fingerprint is **`ORDER-701`** (MQL5 has no reflection ⇒ it needs a generated enumeration plus `tpl_regression` on a pinned lane; this lane reserved no MT5 lane). Until then the manifest labels its hash **`surface_only`**.
+> **`ORDER-670` T7 — the lint stops accepting a comment as the answer for a checker.** Every file L1 parses is now classified over a **closed** vocabulary (`A` checker · `B` builder · `P` pinned · `LIB` · `READER`) with **no default**, and in a category-A file a bare `open()` declaring `worktree`/`index`/`HEAD` is a violation. Proven on a real file both ways: a `# snapshot: worktree` read appended to `check_registries.py` is **green under the pre-T7 lint and red under this one**. The suspension list prints on every run, counted from the maps.
+> **Migrations 4/9 and 5/9.** `registry.py`'s resolve path now judges the commit — and the defect it nearly introduced is the interesting half: `_CLASSIFICATION_CACHE` was keyed on the root alone, so the first call would have decided for both vintages (a guard caching the value it watches). `gen_coverage` exposed that **category P had no mechanism at all** — the design named `read_blob` and part 1 shipped without it, so `# snapshot: blob` was a declaration with no call form. It exists now, with `why` required and no fallback.
+> **`ORDER-672` + `ORDER-671` (owner-ratified, built in that order because 671's U3 needs 672).** `build_tag` is a **field**, `parameter` is refused by the schema if it carries a tag, and the join **parses nothing**. An UNBOUND swept parameter under a declared revision is now a **REFUSAL** on attribution grounds — `-HypothesisRevision X` claims the run is evidence about `X`. Verified blast radius: **no production caller passes the flag**, so the strict rule refuses zero existing runs, which is why it was taken today. Two defects the suites caught in the act: `build_tag: null` means *every build*, and the first lookup made every untagged binding invisible the moment `--build-tag` started being passed — under 671 that turns every **bound** parameter into a refusal.
+> **`ORDER-673` + `ORDER-702` — and both were corrected BY BEING VIOLATED, which is the only evidence that matters here.** The tier budget is enforced (30→65s per-path, 75→90s full) and it refused **its own author's commit** twice: once on real growth this session caused, once on a number derived from single-file measurements when the commit touched four. `ORDER-702`: `evidence.py` — the module every migrated checker depends on — was guarded by **no suite**, so a commit touching only it ran **zero cages**. The trigger sweep now walks each suite's Python **import closure**; it named **12** undeclared dependencies on its first run, of which one was known.
+> 🔴 **`ORDER-674` — and it found the most serious defect of the whole batch.** The six PowerShell guards run **before** the tier and were never measured; the design's grep returned zero *declarations* and was read as zero *problems*. Measured: five read git already, and **`check_state` read the working tree exclusively** — the guard the hook runs **first**, enforcing the `account|magic` invariant over `portfolio/DEPLOYMENTS.csv`, the single inventory for real money. **Proved by attack before the fix:** a duplicate `account|magic` **staged** behind a clean worktree copy ⇒ `[OK] no duplicate account|magic` · `CLEAN`. **The commit writes a corrupted live-money inventory with the gate green.** Fixed via `scripts/lib/evidence.ps1` and caged 7/7. Four bugs in the new code were caught by its own cage or by an existing guard — including the suite staging into the **real** `.git/index`, which `ORDER-670`'s T6 refused; T6 was right, so the attack moved to a temp index rather than T6 being weakened.
+> **Owed (all closed 2026-08-01 except the last):** ~~the 9th migration~~ · ~~`check_s2a_attestation`~~ · ~~T5's collapse-the-split half~~ · ~~five front guards that read git but still declare nothing~~ · ~~`ORDER-710` ([CFG], still needs an MT5 lane)~~ **closed the same day by the lane above** -- opened 2026-08-01 under this number; it was referred to as `ORDER-701` in prose from 2026-07-31 but no board header was ever written, which `check_handoff_contract` caught. **Nothing from this tranche is open now**; what `ORDER-710` itself leaves owed (the locked-constant half of design §5.6) is a NEW order and not a remainder of it.
+>
+> 🆕 **2026-07-30 (Opus-seat) — EA Template cage repaired, monitoring chain repaired, and a Factory OS design that failed its own audit · session `S-2026-07-30-TPLREPAIR` / `MONITOR0B` / `DESIGN1`**
+> **Stage 0A — EA Template confirmed defects: CLEAN.** `optimize_guard.ps1` was reading `classification=OVERRIDE` as "this input is dead". It means *member of a precedence chain*, so three working dials were refused (`_2_BasketTP_ATRmult` B14 · `_17_UseStructLevels` B17 · `_33_SL_MaxATRmult`) and the only way past was `-SkipOptimizeGuard`, which also disables the checks that do have evidence. Precedence is now decided per-run from sibling values; unknown classifications still fail closed. New cage `run_optimize_guard_tests.ps1` **proven red first (11/14) then green (14/14)**, wired into the pre-commit tier.
+> **The regression cage was compiling one MT5 install and measuring another** — an uncommitted edit had moved `mt5_run`/`mt5_optimize`'s default lane to `D:\Meta 5c` while `deploy.ps1` still targets lane 1, so it died at Boss_11 with "no fresh report" and nothing named the cause. Defaults reverted; `tpl_regression.ps1` now pins its lane explicitly and **asserts freshly-compiled binaries exist in the lane it is about to measure** (negative test fires: exit 1 before any tester run). Evidence, lane `D:\Meta 5`: compile **0 errors/0 warnings** (9 targets) · `param_registry_check` **CLEAN** · `tpl_regression` **CLEAN 8/8**.
+> **Stage 0B — monitoring integrity: 7 defects fixed.** A dead floating-risk sensor could not turn the chain red (only `system_health` was consulted); an unreadable/missing snapshot was logged but never failed; the dashboard applied **one base equity of 10,000 to all six accounts** (`463666728` was out by 10×); account `146237` was surfaced as if it were a lab account; an unparseable `last_seen` was filed as `HISTORICAL` — the quiet bucket. All fail-visible now, base equity is per-account with DD **suppressed not estimated** where `ACCOUNTS.csv` has no value (**5 of 6 accounts show UNKNOWN today — that is the honest state, and it is a prompt to fill the CSV in**). New suite **85/85**, in the fast tier. **Both guards mutation-tested by the lead, not taken on trust:** reverting the float rule ⇒ 7 red / 78 pass; reverting base equity ⇒ 11 red / 74 pass.
+> **Stage 1-3 — Factory OS + Control Center design → blind Codex audit → NO-GO → revised.** Design = [`_triage/EA_LAB_FACTORY_OS_DESIGN.md`](_triage/EA_LAB_FACTORY_OS_DESIGN.md) · audit = [`_triage/factory_os/CODEX_BLIND_AUDIT_2026-07-30.md`](_triage/factory_os/CODEX_BLIND_AUDIT_2026-07-30.md) (**22 findings: 2 P0 + 20 P1**), all 22 answered in design §14.
+> **🔴 The audit's best finding was a claim, not a bug:** the design said eleven facts had no owner, and that was the foundation everything else stood on. Most are owned — `MASTER_BACKLOG` §2 owns coverage, `INTAKE_QUEUE.md` owns strategy intake, `evidence-manifest.jsonl` already exists. **Two are genuinely unowned.** The schemas were storing *mutable copies* of owned facts, which is what the anti-drift rule exists to prevent.
+> **🔴 And it caught a counting bug I had written up as intellectual honesty:** I reported 209 inputs in `Inputs.mqh` (the real figure is **184**; 25 of those lines are `input group` headers), then reported a "~15 unexplained gap" between my static count and the real Inputs page and filed it as a discovery task. Removing the group headers reproduces the Inputs page exactly. There was never a gap.
+> **Still owed before any Order is written:** `make_status.ps1` still has an "unreadable = nothing found" path · alert delivery ledger · ~~user must amend §3's `account|magic` invariant~~ (✅ done 2026-08-01, checker flipped 2026-08-02 by ORDER-1100) · **user must amend `AGENTS.md` §2** before Work Receipts get a writer.
+>
+> 🆕 **2026-07-26 (Opus-seat) — SuperTrendFlip lever campaign round closed · full handoff = [`_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md`](_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md)**
+> **Got 1 candidate:** BTCUSD H4 `(TRD)_SuperTrendFlip_rev03` (Donchian20 + pyramid MaxAdds=1) — M4 with swap already deducted
+> MAIN **2.257**/50 · BWD **3.949**/66 · **HOLDOUT 2026H1 = 4.274**/9 (already burned) · MC ruin 0% PF-5th 1.052 ·
+> fan 69/81 · corr +0.167 vs real-money ⇒ **VALIDATED CANDIDATE awaiting user's call on demo attach**
+> **2 new levers (additive, default-off, regression passed):** Kaufman ER gate (`rev02`, worked on XAU H4) · capped pyramid (`rev03`, worked on BTC H4)
+> **Strategy-level conclusion:** SuperTrend flip = an edge of the 2023-2025 regime (every cell breaks even on BWD **except BTC H4**) ·
+> **BTC H4 is a special case, not the lead for the crypto fleet** (ETH fails at MC, the portable stack doesn't travel) ⇒ the "chain 20 symbols" plan = **20 separate funnels**
+> **🔴 3 gotchas that affect other work:** (1) the tester charges swap in POINTS mode but **does not charge** INTEREST_CURRENT mode ⇒ **XAU backtests already deduct financing · crypto has not been deducted yet**
+> (2) BTCUSD tick data differs across MT5 installs ⇒ crypto A/B must stay on the same lane (3) `select_robust_pass.py` reports the fan for basket-type EAs wrong — read raw XML
+
+- **EA_LAB 90%** — pipeline complete (intake→smoke→IS/OOS→MC→corr→deploy). Remaining 10% = work tied to
+  real time (operate up to judge, expand from 1→multiple portfolios), not more build work.
+- **EA_Template (Boss V2)** — the single master mold. Remaining work to become a full mold: (1) fill in the
+  real Hedge/Recovery module (currently a disabled stub) (2) add a small smoke-regression suite (3) port
+  Zeus grid/LOG in as an entry after Zeus passes validation. Note: `modules\`(V1) vs `core\`(V2)
+  duplication is intentional, not junk. Architecture + usage → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
+- **EA_CORE** — R&D parts warehouse. Loop closed 2026-07-02; engineering-complete framework ready to reuse
+  once there is a signal with a genuine edge. **Do not re-tune this parameter family.**
+- **Live Portfolio** — **58 ACTIVE rows across 6 accounts**, not the 9-EA single account this bullet used to
+  describe (it said *"9 EAs fully live … earliest judge 2026-09-22"*; corrected 2026-08-01, `ORDER-940` — see
+  §4). First lab judge date = **2026-10-09**. 🔴 **The blocker is no longer time, it is SAMPLE:** 7 EAs are
+  decision-capable today and **every one of them has a blank judge date** (they are on the account the lab
+  does not certify), while **19 of the EAs that do carry a judge date are forecast to arrive under 30 closed
+  trades** against 11 on track. Counts are generated — `powershell -File scripts/control_room_snapshot.ps1`,
+  never hand-copied into this bullet again.
+- **Signal hunt — not saturated.** Old dead concepts stay dead (see `MASTER_BACKLOG.md`), but the
+  mechanism×symbol axis is still open.
+
+Everything dated 2026-07-02 → 07-11 (ST03 structural kill, CODEX-AUDIT hardening, Boss_16 bench pass,
+Zeus build-on, the MERGE track) → **`PROJECT_HISTORY.md` §2 archive**.
+
+---
+
+## 3. DECISION LOG — binding rules (locked — do not re-litigate without new evidence)
+
+> This section keeps only rules that **still constrain future work**, stated in their operative form.
+> Closure records, one-off events, and the full reasoning behind every row →
+> **`PROJECT_HISTORY.md` §E (complete decision log, 55 rows)**. CLAUDE.md requires these be honored
+> verbatim; each was paid for with a real mistake, so the Thai the user ratified is kept alongside.
+
+| Date | Binding rule | Why (full provenance → PROJECT_HISTORY §E) |
 |---|---|---|
-| 2026-07-18 | **Framework re-settle 5 ส่วน = FINAL (Fable seat + Codex review) + user เคาะ 5 ข้อใน grill:** (1) MAIN window = **rolling 36 เดือน re-pin ทุกรอบ re-opt** (convention ที่ถูก: 36 เดือนที่**ไม่กิน holdout** เช่น 2023.01–2025.12) — แก้ "2023–2026" ที่งอกเป็น 3.5 ปีเงียบๆ (2) vocabulary verdict เหลือชุดเดียว (DEAD-STRUCTURAL/DEAD-OPTIMIZED/PARKED-VERIFY/BUILD-ON/CANDIDATE/DEMO/LIVE) — backtest-report-analyzer + robustness-validator ลดชั้นเป็นเครื่องคิดเลข (3) BWD≥1.0 = ด่าน funnel อัตโนมัติ ไม่ใช่ hard gate — BWD-fail → PARKED-VERIFY(user) → user เคาะ demo-isolate ได้แต่**ปิดทางเงินจริงอัตโนมัติ** (precedent SuperTrend 990020) (4) แหล่ง edge ลำดับ EV: ตัวคูณบน edge ที่มี → กลไก×symbol → ไอเดียมือ user (session เคาะ spec สด) → corpus filler (5) **ST03 owner-override: เก็บบนบัญชีจริงต่อ + บังคับกรง CutLoss ก่อน (ORDER-118) + rescue campaign เฉพาะ 3 lever ที่ไม่เคยแตะ (ORDER-119: entry-params/capped-basket/MRIS leading gate) — ORDER-071 ban แก้ขอบเขตโดย owner: lever ที่ปิดแล้วยังปิด · ตัดสินด้วย flat-lot bar** | framework เต็ม = `_triage/FABLE_RESETTLE_FRAMEWORK_2026-07-18.md` (Codex review 2 BLOCKER/8 MAJOR แก้ครบ = `_triage/CODEX_RESETTLE_REVIEW_2026-07-18.md`) · implement orders ตามไฟล์ §(c) ทุก part · grill = session Fable 2026-07-18 |
-| 2026-07-18 | **Lane A/B/C exec conclusions (first campaign under re-settle framework):** (1) **JumStoch Trend-seed = DEAD-OPTIMIZED on chassis** — 28 M4 runs uniformly sub-1 both-window; the standalone's PF1.18 edge is the 4-basket+Counter+BEP engine, NOT the LWMA+Stoch seed → **lesson: don't port a composite EA's seed alone expecting the edge to travel**; direction A/B (faithful vs reversion) moot, both lose equally. kept lever: basket-close beats per-leg-TP on DCA (+0.30 PF). (2) **SMCxSTO EURUSD-H1 = marginal edge, not robust** — fan SL-fragile, 35-run rebuild found no SL-plateau (fragility just moves sides) + holdout soft across whole plateau (2026H1 regime) → keep demo 991070 (SL-lock≥3.0), no swap; next build-on = new HOME (TF/symbol) not more EURUSD-H1 SL tuning. (3) MacdDiv XAU M4 confirmed = demo-ready. | verdicts `_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md` · `_triage/ORDER_LANEC_SMCSTO_FAN_VERDICT.md` · `_triage/ORDER_LANEC_REBUILD_VERDICT.md` · `_triage/ORDER098B_MACDDIV_M4_VERDICT.md`. Boss_18 kept in chassis (dead-seed, not-deploy banner). commits f30d2f72→02e42879 |
-| 2026-07-18 | **user rule ใหม่: LAST-OPTIMIZE-BEFORE-VERDICT** — ก่อนเขียน PARKED/REJECT กับ EA ที่เคยมีชีพจร (smoke/IS PF>1 หรือ idea ดี) ต้อง optimize รอบสุดท้าย 1 รอบบน lever ที่ยังไม่แตะก่อนเสมอ (holdout-fail→regime-gate/TF/adaptive-exit) — ถ้าไม่ดีขึ้นค่อย reject · ยกเว้น STRUCTURAL death (flat-lot<1/uncapped-ruin/cracked/no-source). จารึก `CLAUDE.md` VERDICT GATE + memory `feedback-last-optimize-before-verdict`. | คุ้มทันทีวันตั้งกฎ: GBPUSD MacdDiv H4 reject (holdout 0.55) แต่ last-opt TF lever เจอ **D1 1.45/1.23 both-window** = กันตาย final ทั้งที่มี edge |
-| 2026-07-18 | **ORDER-116 (split-entry) + ORDER-117 (coverage×TF + filter) = CORE DONE, low yield → pipeline MATURE.** split = narrow lever (ยก XAU 40/5 regime-robust แต่ corr 0.861 redundant-slot · เปิด leg ใหม่ไม่ได้) · coverage: MacdDiv XAU-specific (GBPUSD D1 = 1 PARKED-VERIFY) · breakout ไม่ travel FX + hardcode-H1 (TF-expand ไม่ได้) · SuperTrend trend-specific · filter (candle+RSI) = decoration ทั้งคู่. **ไม่มี leg ใหม่สะอาด.** verdicts `_triage/ORDER116_*` + `_triage/ORDER116_CAMPAIGN_CONCLUSION.md`. | เทส pending·split·coverage·filter ครบ ~10 batch ชี้ทางเดียว: cheap improvement levers รีดหมดแล้ว → EV จริง = operate→judge (demo 3 เดือน + 8 bundle staged). doctrine: validated EA = tune แน่นที่บ้าน, cheap expand/filter ไม่ยก both-window (signal รีด edge หมด, filter ตัดไม้ไม่ selective) |
-| 2026-07-17 | **ORDER-091C-D1g = NULL → keep JUMSTOCH config · ORDER-080 CLOSED · event-log dogfood #1 complete.** pending-limit + TP-widen A/B บน JUMSTOCH (confirmed-edge base, regression cage PASS) → ทั้งคู่ null/noise: pending Δ+0.01/−0.03/0.00/0.00 (EURGBP+NZDUSD both-window), TP-widen +5 = +0.01-0.02 noise. กลไก: grid เข้าที่ `ask≤trigger` อยู่แล้ว = ไม่มี spread ให้ประหยัด · exit ด้วย BEP+trailing ไม่ใช่ TP. **doctrine: pending-limit rescue ใช้กับ EA ที่ entry market-on-signal เท่านั้น ห้ามใช้กับ grid trigger-touch.** JUMSTOCH คง demo config เดิม (ไม่แตะ 07-11 validation). dogfood พบ rough edges 7 ข้อ → แก้ `EVENT_LOG_ADOPTION.md`. verdict `_triage/ORDER091C_D1G_VERDICT.md` · exp_93d9457a (7-event chain + AMENDMENT) | scope = refinement-lever บน validated EA (VERDICT GATE: ไม่เปลี่ยน config เพราะ +0.01 = selection-fit risk) · pending doctrine characterized ครบหลัง D1d+D1g |
-| 2026-07-17 | **B1 observation window = OPEN (ORDER-115, §20.2 step 6 ปลดล็อกหลัง Contract D).** cohort = 20 eligible terminal orders แรกที่ปิดหลัง `0e13699` · นิยาม/denominator เดียวกับ B0 แต่เก็บ **prospective** (onboarding/incident/lead-hours บันทึกสด — กติกา: session ที่ mark REVIEWED ต้อง append แถว `docs/memory_control/B1_DATASET.csv` ใน commit เดียวกัน) · **MVP-2 ตัดสินจาก §20.4 absolute triggers เท่านั้น** ประเมินเมื่อครบ 20 แถว AND ≥30 วัน (ไม่ก่อน 2026-08-16) — ห้ามสร้างก่อน trigger เข้า · adoption guide การใช้ event log กับ order ใหม่ = `docs/memory_control/EVENT_LOG_ADOPTION.md` (worked example ผ่าน end-to-end จริง) · canary backfill = 3 เคส lazy เท่านั้น | §20.2 step 6 เป็นขั้นเดียวที่เหลือระหว่าง Contract D กับ MVP-2 gate — เปิดช้า = trigger evaluation เลื่อน · commits `dc566d77`+`17528d9` |
-| 2026-07-17 | **ORDER-105 (Contract D — MVP-1-lite Experiment Event Log) = ACCEPT ปิดสมบูรณ์.** blind review 8 รอบ (REWORK 5→2→2→2→1→1→1 → ACCEPT รอบ 8) · **commit `0e13699` ผ่าน production hook** — staged checker `[experiment-events]` ใหม่ PASS กับ commit จริงครั้งแรก · deliverable ครบ 3 ชิ้นตาม §20.8 @ `4eb839d`: locked JSONL append utility (`scripts/experiment_event_log.ps1` — lock/atomic/fail-closed/recovery 6-branch) + schema v1 ×2 (ownership บังคับด้วย whitelist, ไม่มี prose field) + evidence manifest (committed-Git-artifact only) + negTest ถาวร 105 case · gate สุดท้าย 105/105 ×2 identical · 103=41/41 · 101=25+1 pre-existing · **Event Log dormant จนกว่า experiment แรก (no-backfill) · MVP-2 Context Packet ยัง B1-gated** · ตั้งแต่ rework รอบ 4 = Claude เขียนเองทั้งหมดตาม routing flip — Codex-as-blind-auditor จับ defect จริงต่อเนื่องถึงรอบ 7 (recovery reinstall + test flakiness) | review หลายรอบคุ้มอีกครั้ง: defect ลึกสุด (COMPLETED-state reinstall) โผล่รอบ 6 หลัง 5 รอบก่อนหน้าไม่เห็น — self-verify เดี่ยวไม่มีทางจับ · ประวัติเต็ม = `docs/memory_control/CODEX_ORDER105_RESULT.md` |
-| 2026-07-16 | **🔁 ROUTING FLIP (user เคาะ): โค้ดสำคัญ = Claude seat เขียนเอง · Codex = blind auditor/verifier เท่านั้น (เลิกใช้เป็น builder) · Fable-seat = ผู้ตรวจงาน milestone.** มีผลตั้งแต่ order ถัดจาก ORDER-105 (105 จบบนรางเดิม — โค้ดเสร็จแล้วตอนเคาะ) | จ่ายจริงใน 1 วัน (ORDER-105): Codex-as-builder ตายกลางงาน 3 ครั้ง (at-capacity ×2 · content-filter ×1 · ครั้งสุดท้ายเผา 1.2M tokens ไม่จบ gate) — Claude ต้องรับช่วงทุกครั้ง · ขณะที่ Codex-as-auditor จับ defect จริงต่อเนื่อง (5 ตัวใน review รอบเดียว) · แถม Claude-เขียน/Codex-ตรวจ = อิสระสะอาดกว่า (ไม่มี shared authorship) |
-| 2026-07-16 | **ORDER-105 (Contract D — MVP-1-lite Experiment Event Log) แตกแล้ว = OPEN.** design source = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract D + §20.7 ownership @ `4eb839d`** (pointer บรรทัดนี้ = §20.9 requirement) · acceptance เชิงตัวเลข + ห้าม + rollback ทั้งหมด = AGENT_TASKBOARD ORDER-105 · routing แบบ ORDER-103: Codex design-review → build → Claude spot-verify → blind Codex review (fresh session) — ห้ามข้าม blind review แม้ quota ตึง | MANDATORY REVIEW GATE §20.2#5 ปลดล็อกโดย ORDER-103 (2026-07-14) → Contract D เปิดทางเป็นครั้งแรก · handoff เต็ม = `docs/memory_control/CONTRACT_D_HANDOFF.md` |
-| 2026-07-14 | **ORDER-103 (C1-ENFORCE) = ACCEPT ปิดสมบูรณ์.** รอบ 6 blind Codex (gpt-5.6-sol) = **ACCEPT** หลัง fresh from-scratch repro ทุก high-risk scenario (checkpoint-laundering / reordered-append / mutate-then-restore / fail-closed hook) · Opus spot-verify เอง (gates 0, scope 5 ไฟล์, HEAD intact, 245f8f62 ไม่ถูกแตะ) · **commit `c0f7b0d` ผ่าน production hook (ไม่ `--no-verify`)** · make_status รันแล้ว · **MANDATORY REVIEW GATE §20.2#5 ปลดล็อก → Contract D (MVP-1-lite event-log) เปิดทาง**. รวม 6 rework + 6 blind review round; เจอ blocker จริงถึงรอบ 5 (สำคัญสุด = BLOCKER 6 "checkpoint laundering ผ่าน merge" กระทบ root-of-trust) ก่อน 0-blocker. **Role กลางเซสชัน:** Codex(gpt-5.6-sol) คุมทิศทาง+โค้ด, Claude Code = สั่งงาน+spot-verify จุด irreversible (quota Opus จำกัด). ประวัติเต็ม = `docs/memory_control/CODEX_ORDER103_REWORK_RESULT.md` | 6 รอบ blind review ยืนยันคุณค่าของ 2-มุมมองซ้ำแล้วซ้ำเล่า — ถ้า self-verify เดี่ยวพอ BLOCKER 6 (root-of-trust) จะหลุดเข้า production |
+| 2026-08-05 | 🔴 **PARTICIPATION FLOOR = `≥ 100 closed trades per window`, and it is a HARD bar that sits alongside `n ≥ 30`, not instead of it.** A window whose PF is computed on fewer than 100 trades **does not clear its bar**, however good the PF looks — for MAIN and for BWD alike. This closes the `PENDING-RATIFY(user)` note in `CLAUDE.md`, which was deliberately left un-numbered because changing a bar is the owner's act. 🔴 **It applies retroactively to selections already made:** `ORDER-430` qualified its two hosts at **52 and 62 trades** and those qualifications are **void**; `ORDER-236`'s un-parking rested on one of them. 🚫 It does **not** override the thin-EA class ratified 2026-07-28 (expected rate < 0.5 trades/week → judged at 12 months on net, permanently small lot) — that class is a *judging* rule for an EA already attached, this is a *selection* bar for backtest evidence, and an EA may be governed by both. | user ratified in-session 2026-08-05 (TH: *"ตั้งเลขตายตัว ≥100 ไม้/หน้าต่าง"*), after four instances surfaced in a single night: `ORDER-430` selecting 52- and 62-trade hosts while EURJPY cleared the same gate on **498** and was not selected; `ORDER-236`'s `AB` cell scoring MAIN **2.51** by trading **62% less** (184→70); and `ORDER-1411`'s BWD failing on 204 trades — a real loss, which is what the *other* side of the floor looks like. Provenance: memory `bar-cleared-by-non-participation` |
+| 2026-08-05 | **The `Boss_14` chassis is to be re-measured with SHORTS ENABLED, across the whole `ORDER-430` seven-symbol screen — not just on the host that gets used.** Every number that screen produced, and therefore every `ORDER-236` block built on it, was taken with `short_trades = 0` on every report. On JPY crosses across MAIN and BWD that is substantially a directional bet on yen weakness wearing the clothes of a strategy result. 🚫 Until the re-measure lands, no `Boss_14` host number may be quoted without the long-only caveat attached, and 🚫 no host may be *selected* on a long-only figure. <br>🔴 **The mechanism is NOT what the handoff that raised this said it was, and the difference decides what is possible.** `_triage/PROMPT_NEXT_SESSION_QUOTA4.md` §1.3 blamed `TradeDir=60` — but `TRADEDIR_BOTH = 60` (`ea_template/core/Inputs.mqh:113`), i.e. shorts were already permitted. Direction is pinned by **`_14_Direction`** (`:497`, *"1=BUY only, 2=SELL only, fixed, never both"*), and `Entry_GridLog.mqh:70` **cannot run both directions in one instance by construction** — deliberate, to hold parity with the standalone it was ported from. **So there is no flag that produces a two-sided run**; the ratified re-measure is executed as a *mirror* screen at `_14_Direction=2` (`ORDER-1420`), read against the long screen. 👤 **A genuinely two-sided `Boss_14` requires an `ea_template/core/` change that breaks that parity — separate decision, not folded into this one.** | user ratified in-session 2026-08-05 (TH: *"เปิด แล้ววัดใหม่ทั้ง screen"*), choosing the expensive option over re-measuring only the host in use. The cheaper option was offered and declined: measuring one host would have told us what EURJPY does with shorts but left the *screen* — the thing that chooses hosts — still half-blind |
+| 2026-08-05 | **`ORDER-236` re-points at EURJPY and runs the lever last-optimize NOW**, in parallel with the shorts re-measure rather than behind it. EURJPY is the only host clearing both bars with real participation (**498 trades**), and the lever pair's own parameters — `_50_RegimeMode`, `_9_PA_MinBodyRatio`, the other `StackConfirm` values — have never been swept on any host. 🚫 `DEAD-OPTIMIZED` may **not** be declared for this lever pair until that sweep runs: three hosts failing is the *shape* of a terminal state, but the VERDICT GATE requires the last-optimize to be *earned*. | user ratified in-session 2026-08-05 (TH: *"รันเลยที่ EURJPY"*), explicitly declining the offered "wait for the shorts answer first" option. The sequencing risk is stated rather than hidden: if the shorts re-measure changes which host qualifies, this sweep will have been run on a host selected by long-only evidence, and its result must be re-read in that light |
+| 2026-08-04 | **The pilot's decision-13 optimize probe keeps the BASE trade floor: H1 ≥ 100 · H4 ≥ 60.** §6.2's *"engine-edge uses PF + **double** trade floor"* is **not** applied to the probe-selection step for `B14-H01-r1` / `B14-H02-r1`, so `ORDER-1273`'s pre-registration stands exactly as committed and the 16 selections it produced are final at that floor. 🚫 This does **not** delete the doubling rule: it stays in force wherever §6.2 governs an **optimize campaign** or a **deploy-track** number. What is ratified is a narrower thing — a *"small optimize probe"* under decision 13 is not the campaign the doubling was written for. 🚫 It is also not a licence to lower either floor further; 100/60 is now the pinned number for this step and moving it needs a new ratification. **Owed and not done here:** §6.2 must be amended to say which step each floor governs, or the two texts go on disagreeing and the next reader re-opens this. | user ratified in-session 2026-08-04 (TH: *"คง floor เดิม 100/60"*), after being shown the measurement: base vs doubled changes the selected configuration in **14 of 16** cells and empties two. Raised as `ORDER-1300` rather than decided from the seat, because `ORDER-1220` makes changing a pre-registered criterion *after* the surfaces have been read the owner's act, not the lead's — even when the alternative is stricter. Provenance: memory `preregistered-rule-can-contradict-the-design-it-cites` |
+| 2026-08-03 | **An approval must not pin the bytes of the thing it authorises — replace the instrument, do not keep re-signing it.** `ORDER-1257`'s option **(b)** is ratified: the `CoverageCell` `owner_ref` pin on `factory/coverage.jsonl` is the wrong instrument for a store the approved work is *expected* to keep changing, and it is to be replaced rather than re-acknowledged each time. 🔴 **Sequencing, ratified in the same message: register the 16 probe cells FIRST, then close this once, at the end** — signing an acknowledgement that names the file's current blob while the file is still moving sends the owner round the same loop twice. Until it is closed, `run_s2a_gate` + `check_coverage_transfer` stay off the commit path and are hand-run, and **they return to the tier in the same commit as the fix**. | user ratified (TH: *"เปลี่ยนเครื่องมือ"* + *"ลง cells ก่อน แล้วปิดทีเดียว"*). **Sixth occurrence** of `approval-pinning-self-invalidates` — the fifth was `ORDER-614` rev 2, which fixed the checker-in-its-own-bundle version of the identical loop. Trigger: `ORDER-1250` appended the 16 owner-approved cells and voided the approval that authorised them, within one commit |
+| 2026-08-03 | **The third-party Telegram credential in `cc40731c` = ACCEPTED RISK, recorded, not rewritten** (`ORDER-1262`). No history rewrite, no force-push, and **no notification to the credential's owner**. The repository is **private** (owner-stated; the remote was deliberately never probed by any lane), so exposure is bounded by who already has access to it. 🚫 This decision does **not** license leaving new secrets in git — it is a judgement about one already-pushed third-party token harvested from a downloaded EA corpus, and `ORDER-1261`'s repair of the `B1` secret cage (which greps the worktree without `--cached`, excludes `*.jsonl`, and only fails above a count of 99) is unaffected and still owed. | user ratified (TH: *"รับความเสี่ยง บันทึกไว้เฉยๆ"*). A rewrite is not free here: this repo pins blob and commit oids inside `OwnerRef`s, so re-writing history downstream of `cc40731c` invalidates every pin in the attestation system at once — the cost of the remedy exceeds the exposure while the repo is private |
+| 2026-08-01 | **`.set` compatibility = FAIL-LOUD, and migration is a separate explicit tool.** An unknown or removed key in a `.set` is a refusal **that names the key** — never a skipped line, never a default quietly substituted. The migration tool writes a NEW file, never edits in place, and reports every key changed/dropped/unmappable. **The 2,177 tracked `.set` are not bulk-migrated** — they fail loudly when used and migrate on demand. Separate from, and not softening, `preset.py`'s rule that a **partial** `.set` is refused outright. | user ratified (TH: *"ทำตามที่นายแนะนำ 2 ข้อเลย"*), design §11 item 4. `.set` files are how live configuration reaches a chart, and three days were already lost to a bundled `.set` that silently set `AllowLive=false` (memory `attach-verify-gate-and-binary`) |
+| 2026-08-01 | **Inputs.mqh token-guard rollout = PER-BOSS, starting Boss_14.** One build converted at a time; the next Boss is its own step. **Two conventions coexisting is expected, not drift** — no guard may report "partially rolled out" as a failure, because a guard that cannot express it gets satisfied by rolling back. A build counts as converted only when `tpl_regression` is CLEAN **on the lane that compiled it**. | user ratified (same message), design §11 item 3. `tpl_regression` detects drift per EA, so a broken Boss is one row instead of eight; and the compile-lane mismatch is a trap this repo has already hit (§5.5) |
+| ongoing | **correlation:** ≤0.40 additive · 0.40–0.60 watch · >0.60 redundant → **reduce lot, don't cut** | user rule (TH: "user rule (memory: correlation-vs-lotsize)") |
+| ongoing | **backtest window = MAIN 36 months (2023.01–2025.12, must not overlap holdout)** · re-opt every 6 months · never stretch to 10 years to "fix MC" | re-pinned by the 2026-07-18 decision |
+| ongoing | **demo ≥3 months, no shortcuts** before live micro | README iron rule |
+| 2026-06-23 | **DD% is not a hard gate** | DD is fixable by sizing/spacing; the structural gate is the mechanism |
+| 2026-06-29 | **PROJECT_STATE.md = the central living doc** | (TH: "ให้ AI ทุกตัวเข้าใจตรงกัน (user request)") |
+| 2026-07-02 | **Do not re-tune the ST03/EA_CORE family without a new signal** | 48/48 combos OOS PF<1.0 + pure signal PF 0.67 |
+| 2026-07-03 | **user rule: never verdict DEAD/REJECT until an actual optimize has been tried** — a verdict from one param set is always PARKED-pending-optimize | 3/4 symbols recovered after a 54-pass probe, within an hour of the rule being set (TH: "user rule: ห้ามตัดสิน DEAD/REJECT จนกว่าจะลอง optimize จริง") |
+| 2026-07-03 | **user rule: a cap breach (DD/margin/deposit-load/MC-ruin) = resize-first, never reject directly.** Rejecting on a cap is allowed only when (1) resizing into band makes the edge fail the gate (2) already at min-lot and still over (3) no config fits the band (4) no trade ever opens. An edge failure (PF) may be rejected directly — PF doesn't depend on scale | enforced in 4 skills (TH: "user rule: cap breach (DD/margin/deposit-load/MC-ruin) = resize-first ห้าม reject ตรงๆ") |
+| 2026-07-03 | **mechanism-risk = a score-penalty (−25pt), not a hard gate** + **Model 1 is the minimum before any REJECT/DISQUALIFIED**; Model 2 may only filter zero-trade cases, never report or rank PF | caught 3 false positives the same day (TH: "user-corrected — ป้องกัน reject EA ทิ้งก่อนวัดผลจริง") |
+| 2026-07-03 | **Boss V2 = the one main template** · EA_CORE = R&D parts warehouse · standalone = a temporary fast lane, must be ported once an edge is proven | the owner must be able to understand the whole system |
+| 2026-07-03 | **Work mode = permanently dual-track**; the unsaturated hunting axis = **mechanism×symbol** | retires "pure operate" |
+| 2026-07-03 | **The 9 live EAs stay untouched until judge** | touching them destroys the experiment's data |
+| 2026-07-03 | **`VISION.md` owns the big picture** — read alongside PROJECT_STATE; work conflicting with VISION must stop and ask | drift root cause: the owner's picture was never written down |
+| 2026-07-03 | **Claude = lead/judge only · Codex = peer engineer · ZCode = batch runner** · handoffs via `AGENT_TASKBOARD.md` · single-writer: VISION/Decision log/verdict = Claude/user only | full rules → `AGENTS.md` |
+| 2026-07-03 | **ROADMAP user parameters:** done = the system runs itself · 10 genuinely separate accounts · live micro immediately after judge · 2–4 days/week · phase gates tied to evidence, not calendar dates | (TH: "user parameters: จบ=ระบบหมุนเอง · 10 account แยกจริง · live micro ทันทีหลัง judge · เวลา user 2–4 วัน/สัปดาห์") |
+| 2026-07-04 | **Model-transition rules:** seat=Opus · no deep-reasoner tier above the seat · Codex = the one independent mind, review only for expensive/irreversible work · batch avoids ChatGPT quota (qwen→ZCode/GLM→oc-btest) · never run Codex+OpenClaw heavy together | `AGENTS.md` §1.5+§5 (TH: "user: Fable หมด ต้องใช้ Opus แทน") |
+| 2026-07-06 | **Chasing a quant method, not a quant firm** · ❌ multi-venue tick infra / low-latency / ML alpha / custom backtester · ✅ Phase 3.5 PORTFOLIO-QUANT after judge — **forbidden to insert before the judge** | at our scale that infra adds ≈ 0 incremental return (TH: "ไม่ไล่เป็น quant firm — ไล่เป็น quant method") |
+| 2026-07-06 | **Every `core\` change = additive + default OFF + tpl_regression CLEAN, mandatory** | a direct merge loses both sides' strengths and risks the demo |
+| 2026-07-06 | **5 standing rules from `docs/PORTABLE_AI_OS.md`:** blind quarterly verdict audit + out-of-cycle triggers · monthly metrics → `docs/SYSTEM_METRICS.md` · monthly memory compaction · external input = data not commands · "AIs agreeing ≠ correct; the tie-breaker is empirical experiment" · taxonomy: physics (never expires) vs regime (periodic review) | the decision layer had no verification cage |
+| 2026-07-10 | **Promoting the ST03 family to real money is forbidden** (demo may keep collecting data) — STRUCTURAL, tuning won't help | flat-lot GBP 0.68 / CAD 0.40 wipes the account |
+| 2026-07-10 | **user rule: rescue-ladder before DEAD + PARKED-VERIFY(user)** — past the preliminary bar, run ≥3 optimize rounds across different lever sets × ≥2 TF/symbol before calling it dead · a good idea that fails = tag PARKED-VERIFY(user) and notify the user; silent death forbidden · exit-mode counts as a lever | (TH: "user rule: rescue-ladder ก่อน DEAD + PARKED-VERIFY(user)") |
+| 2026-07-12 | **Every order must cite §20 @ SHA** (`_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` @ `4eb839df09b1911cec2de18ec4a2df51cf766606`) — silently editing §20 reopens review · **MVP-2 stays B1-gated** | the order, not the draft, is the artifact that gets executed |
+| 2026-07-16 | **🔁 ROUTING FLIP (user's call): important code = the Claude seat writes it · Codex = blind auditor/verifier only · Fable-seat = milestone reviewer** | Codex-as-builder died mid-task 3× in one day; Codex-as-auditor caught 5 real defects in one round (TH: "🔁 ROUTING FLIP (user เคาะ): โค้ดสำคัญ = Claude seat เขียนเอง · Codex = blind auditor/verifier เท่านั้น (เลิกใช้เป็น builder) · Fable-seat = ผู้ตรวจงาน milestone") |
+| 2026-07-17 | **pending-limit rescue applies only to market-on-signal entries — forbidden for grid trigger-touch** | the grid already enters at `ask≤trigger`; exit is BEP+trailing, not TP |
+| 2026-07-17 | **B1 procedure:** a session marking something REVIEWED must append a row to `docs/memory_control/B1_DATASET.csv` in the same commit · MVP-2 decided from §20.4 absolute triggers only, once 20 rows AND ≥30 days accumulate — building before the trigger fires is forbidden | last step between Contract D and the MVP-2 gate |
+| 2026-07-18 | **Framework re-settle = FINAL:** (1) MAIN = rolling 36 months, re-pinned every re-opt, never eating holdout (2) one verdict vocabulary only — backtest-report-analyzer + robustness-validator are calculators (3) BWD≥1.0 = automatic funnel gate, not hard — BWD-fail → PARKED-VERIFY(user); demo-isolate possible but the real-money path closes automatically (4) edge-source EV order: multiplier on an existing edge → mechanism×symbol → user's own ideas → corpus filler (5) a lever that is closed stays closed | (TH: "Framework re-settle 5 ส่วน = FINAL (Fable seat + Codex review) + user เคาะ 5 ข้อใน grill") |
+| 2026-07-18 | **user rule: LAST-OPTIMIZE-BEFORE-VERDICT** — before PARKED/REJECT on an EA that ever showed a pulse, run one last optimize on an untouched lever; reject only if it doesn't improve · exempt: STRUCTURAL death | paid off the day it was set: MacdDiv holdout 0.55 → the TF lever found D1 at 1.45/1.23 both-window (TH: "user rule ใหม่: LAST-OPTIMIZE-BEFORE-VERDICT") |
+| 2026-07-18 | **A validated EA is already tuned tight at its home; cheap expand/filter does not lift both-window** | ~10 batches of pending·split·coverage·filter tests all agreed |
+| 2026-07-18 | **Don't port a composite EA's seed alone expecting the edge to travel** | JumStoch: 28 M4 runs uniformly sub-1; the edge was the basket engine, not the seed |
+| 2026-07-19 | **user rule: ENGINE-EDGE class** — "flat-lot<1 but escalated>1" no longer auto-kills → proceeds under a 5-item cage: worst case ≤15% equity computable (cap+SL/DD-kill) · BWD 2020-22 hard gate · Model-4 mandatory · MC ruin ≤2% · label engine-edge = permanently small sizing, never size up on PF. Flat-lot probe becomes a diagnostic. Uncapped-ruin still kills instantly | precedent NuiIndy (geometric+CutLoss30, live PF~2.0) (TH: "เปิดจุดดีสุดไม่ได้ทุกครั้ง MM คือตัวรอด") |
+| 2026-07-19 | **ROADMAP back half APPROVED:** Phase 4.5 Control Room (CR-000..007; AI authority L0–L3, **L4 money decisions always human**) · Phase 5 Prop (gate: portfolio #1 survives 3 months live) · Phase 6 Monetize (2028+, verified ≥2 years) · **sweep v2**: agent lane 100%, WIP validate ≤3, ticket = a payoff-shape the portfolio lacks · **workload 50/25/15/10** · automation stops at SMOKE_SURVIVOR, forbidden to issue a verdict | (TH: "กวาดไปก่อนยิ่งเยอะยิ่งดี แต่เห็นด้วยว่าควรก้าวต่อ") |
+| 2026-07-24 | **stitched-window WFA must not be used on basket/grid/multi-position EAs** — measure on a continuous single span only | paid for with real money twice; the per-fold equity reset cuts basket cycles that span folds |
+| 2026-07-24 | **Never loosen the real-money DD ceiling on the reasoning "optimize after it gets hit."** The 25 is already per-EA adjustable via `ProtectLevel` (TIGHT 15 / NORMAL 25 / LOOSE 40) = a deploy-time decision, not a doctrine rewrite | the hard-kill fires in backtest too and halts silently ⇒ the PF read is that of a truncated sample (TH: "DD 25% แล้ว hard kill เข้มไปไหม ถ้าโดนก็ optimize/ลด lot เอา") |
+| 2026-07-25 | **GENETIC OPTIMIZER POLICY = RATIFIED.** Owner = skill `backtest-optimize-rigor` Step 2. (1) genetic ban lifted for **MT5**, still stands for **MT4** → `mt4_grid_sweep.ps1` (2) ≤~1,000 combos → complete (`-Optimization 1`) · >1,000 → genetic coarse → **fine complete grid ≤1,000 per zone** → plateau-center (top-1 pick banned) (3) **`-Criterion` 0→7 (Complex)**; engine-edge uses `1` (PF) + trade floor ×2 (4) **trade floor:** H4/D1 ≥60 · H1/M30 ≥100 · ≤M15 ≥250 per MAIN (5) **search on MAIN only — BWD is never a search surface** (6) never shorten the window to save time (7) a point-test cannot select a param with ≥2 dimensions unexplored. Also: empty `Leverage=N` in the ini = **silent no-op** → write `1:N` | a rule that documents its reasoning must be checked for whether that reasoning is still true (TH: "optimize คือการตามหา preset ที่ดีที่สุดแล้วมา verify ไม่ใช่ไม่ยอมหาเพราะกลัว overfit") |
+| 2026-07-26 | **SESSION LANE = reserve before you touch** → `docs/SESSION_LEDGER.md` (order numbers in blocks of 10 + declare files + MT5 lane), enforced by `scripts/check_order_collision.ps1` · **the reservation must be committed before the number is used** (the hook reads the ledger from HEAD, not the index) | 3 collisions in one month, every time by someone who already knew the rule |
+| 2026-07-26 | **WORK LIFECYCLE** → `docs/WORK_LIFECYCLE.md` · (1) **`REVIEWED*` = archive it immediately, same commit — no big sweep passes** (2) **a handoff is a shift-change note, not a queue**; the only queue is the board, every item needs a home — enforced by `scripts/check_handoff_contract.ps1` | the first big sweep failed outright; 27 of 100 handoff items never reached the board |
+| 2026-07-26 | **`git commit -- <path>` guards across *files*, not across *lines* in the same file** — the only real guard on a shared file is one merged file, one writer · a handoff is **one per lane**, not one per repo | **a rule that sounds sufficient but isn't is worse than no rule — it stops people looking for the real safeguard** |
+| 2026-07-26 | **B1's metric is a live observation — never reconstruct it.** Retroactively reviewed orders intentionally get no B1 row · `B1_COHORT.md` = a running log, not a 20-item cohort | reconstructed values would be fake, destroying the signal the dataset exists to measure (TH: "B1_COHORT.md = running log ไม่ใช่ cohort 20 ใบ (user เคาะ)") |
+| 2026-07-26 | **`TASKBOARD_DIGEST.md` = generated only, never hand-typed** (`-Check` catches staleness) | the board's 2 files (~1.4MB) had no human-readable index |
+| 2026-07-26 | **Do not fix the `check_taskboard_archive.ps1` chain-walk before a targeted test exists** | the fast fix (a path-filter) could reopen BLOCKER 6, "checkpoint laundering through merge" |
+| 2026-07-30 | **A guard that refuses valid work is not "extra safe" — it is the failure that gets guards switched off.** `optimize_guard` refused three working dials by reading `classification=OVERRIDE` as inactive, and the only route past it disabled the checks that had evidence. Any future guard must be able to state what it *allows*, and be tested in both directions | paid for in a P0: `_2_BasketTP_ATRmult` · `_17_UseStructLevels` · `_33_SL_MaxATRmult` were all un-sweepable |
+| 2026-07-30 | **A cage must prove it measured what it compiled.** `tpl_regression` inherited a lane default and spent an unknown period compiling lane 1 while running lane 5c. Cages pin their lane explicitly and assert the freshly-built binary is present in the lane being measured | the failure looked like "no fresh report" and named nothing |
+| 2026-07-30 | **user decision: magic uniqueness moves to GLOBAL scope** (Grill decision 56) — adopted for **new** allocations only. ⚠️ **This contradicts the `account|magic` invariant in §0.5, which is still true of the running system** (`990103` · `991001` · `991002` each sit on two accounts, `991001` on real money). The invariant is therefore **left as-is until the user amends it at implementation time**; the three collisions are `legacy_exception`, frozen to their judge dates, and **never renumbered as a side effect**. Renumbering a live magic is its own order | the concern was raised before the decision and the user confirmed; recording the decision without flipping a still-true invariant is what stops the doc lying about the system |
+| 2026-07-31 | **user decision: a swept parameter that the declared hypothesis revision does not bind is a REFUSAL, not a note.** `-HypothesisRevision X` is a claim that the run is evidence about `X`; a dimension `X` never described cannot be evidence about `X`. Scope is exact: **with no `-HypothesisRevision` declared, nothing changes** | adopted from the Fable review's attribution argument (recorded, then ratified rather than adopted silently). Taken now because it is the cheapest moment it will ever be — `hypotheses.jsonl` is empty, so the strict rule refuses **zero** existing runs; every later day makes it a migration (TH: "user เคาะ: REFUSE") |
+| 2026-07-31 | **a name that encodes two facts may not be the join key.** `build_tag` becomes its own `ParameterBinding` field instead of being parsed out of `parameter` (`StackMode[LAB_ENTRY_16]`) — and "these rows disagree, so the binding must name the tag" becomes representable **in the data** rather than inferred by a parser | the encoded form produced F1 (a tagged binding invisible to its only consumer — the two constraints were jointly unsatisfiable: bare ⇒ AMBIGUOUS, tagged ⇒ unseen) and half of S7 (last-wins across rows that disagree). A second parser of that string is a second resolver (TH: "user เคาะ: แยกเป็น field `build_tag`") |
+| 2026-07-31 | **the fast-tier budget is a real measured number and it is ENFORCED** — over budget = the tier fails, not a printed warning | measured 39.4s (median of five clean runs) against a **15.0s advisory** it had already breached repeatedly with nothing happening. A budget that cannot fail is shape 3 inside the tier built to catch shape 3, and the stated reason the budget exists is that a slow hook gets `--no-verify`'d — which an unenforced number does not prevent (TH: "user เคาะ: ตั้งเลขจริง + บังคับใช้") |
 
-| วันที่ | การตัดสินใจ | เหตุผล |
-|---|---|---|
-| 2026-07-13 | **Memory-Controlled OS build เดินครบ 4 orders + ผ่าน mandatory review gate.** A(099 B0-baseline+owner-map) **REVIEWED** · B(100 execution-harness `run_batch.ps1`) **REVIEWED MVP-0** · C0(101 reconcile+validator `check_taskboard_archive.ps1`) **REVIEWED** · C1(102 migration: taskboard index→generated read-only + archive=append-only log) **DATA ACCEPT/ENFORCEMENT REWORK**. ทุกใบผ่าน Codex blind review รวม ~15 รอบ (จับ defect จริงที่ self-verify พลาดทุกใบ). artifacts = `docs/memory_control/`. **Contract D (event-log) ถูก block จนกว่า C1-ENFORCE ปิด** (append-chain tamper-evidence + fail-closed hook + Source-A exact-binding + hash-object atomicity) — ดู AGENT_TASKBOARD ORDER-102 review-gate table | ปัญหาต้นทาง: taskboard 578KB→agent เผา token อ่าน + concurrent-writer collision (โดนจริง session นี้). build นี้ = ทำ coordination backbone ให้เล็ก+เชื่อถือได้+tamper-evident. migration ที่ทำแล้ว correct+safe (git=tamper-evidence จริง) |
-| 2026-07-12 | **Memory-Controlled OS final design APPROVED + canonicalized.** implementation source เดียว = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839df09b1911cec2de18ec4a2df51cf766606` · แตก order แบบ **serial (Contract A ก่อน)** · **หยุด review หลัง implementation order ที่ 4** · **MVP-2 ยัง B1-gated** · order ทุกใบต้องอ้าง §20 @ SHA — แก้ §20 เงียบ = เปิด review ใหม่ | first B0 order = ORDER-099 (OPEN). ห้าม implement จาก draft ตรงๆ — order คือ artifact ที่ execute. design detail ไม่ทำซ้ำที่นี่ (owner = §20 @ SHA) |
-| 2026-07-06 | **ทิศ "final" ของโปรเจกต์ (user เคาะ): ไม่ไล่เป็น quant firm — ไล่เป็น quant method** · ❌ ไม่ทำ: tick infra หลาย venue / low-latency / ML alpha / custom backtester (ยังไม่ถึงเวลา — คุ้มเมื่อ MT5 tester เป็นคอขวดจริง) · ✅ ทำหลัง judge = **Phase 3.5 PORTFOLIO-QUANT** (`ROADMAP.md`): 🥇 portfolio risk layer (vol-target + DD budget) · 🥈 deflated gate (multiple-testing) · 🥈 tracking-error bands · **ห้ามแทรกก่อน judge** — demo 3 เดือน = experiment ที่แพงสุดที่กำลังรัน | edge ของ quant firm อยู่ได้เพราะทุนใหญ่×ต้นทุนต่ำ — ที่สเกลเรา infra แบบเขาให้ผลตอบแทนเพิ่ม ≈ 0 · ตัวขวาง END STATE จริงคือจำนวน edge ที่รอดการฆ่า ไม่ใช่เครื่องมือ · pipeline ปัจจุบันเข้มระดับ quant method อยู่แล้ว (ORDER-037/038 ฆ่า survivor ปลอมได้หมด = หลักฐาน) |
-| 2026-07-06 | **🏁 MERGE track ปิดสมบูรณ์ในวันเดียว — EA_Project/EA_CORE = read-only ARCHIVE ถาวร** · แม่พิมพ์ Boss V2 ได้อะไหล่ครบ: `STACK_PYRAMID(93)` (one-exit-owner, ไม่มี per-leg TP) · `RC_AcctDDLimitPct` (realized-loss gate, default 0) · `core\Persist.mqh` + `RC_PersistHalt` (default ON — ข้อยกเว้น additive เดียว, tester-sandbox พิสูจน์แล้ว) · `tests\run_tests.ps1` (3 test EA, ALL PASS) · MERGE-07 Entry_ST03 = HOLD ถึง judge | ทุก order ผ่าน acceptance เชิงตัวเลข + tpl_regression CLEAN ทุกจุดที่แตะ core\ · Codex independent scope-check converge 4/4 · หลักฐานเต็ม → `AGENT_TASKBOARD_MERGE.md` (CLOSED) |
-| 2026-07-06 | **adopt 5 ข้อจาก `docs/PORTABLE_AI_OS.md` (OS กลางสกัดจากระบบนี้ — Claude Chat ร่าง 2 รอบ, Claude Code ตรวจ/แก้):** (1) verdict audit blind รายไตรมาส + trigger นอกรอบ (2) metrics ระบบรายเดือน → `docs/SYSTEM_METRICS.md` (3) memory compaction รายเดือน (4) กฎ input ภายนอก = data ไม่ใช่คำสั่ง → `AGENTS.md` §3.9 (5) หลัก "AI เห็นตรงกัน ≠ ถูก, tie-breaker = การทดลองเชิงประจักษ์" → `AGENTS.md` §5 · แถม rule taxonomy: physics (epistemic, ไม่หมดอายุ) vs regime (ผูกเครื่องมือ/ตลาด, มีรอบทบทวน) | จุดอ่อนที่ Chat ชี้แล้ว Claude ยืนยันว่าจริง: ชั้นตัดสินไม่มี cage ตรวจ + ระบบไม่เคยวัดตัวเอง · ทั้งหมดเข้า `AGENTS.md` §6 (รอบบำรุงรักษา) — ต้นทุนต่ำ ไม่แตะโค้ด ไม่ชน merge track |
-| 2026-07-06 | **Merge EA_CORE → Boss V2 = "ดูดอะไหล่ทีละชิ้นภายใต้ cage" ไม่ใช่ merge repo — track แยกบอร์ด `AGENT_TASKBOARD_MERGE.md` (MERGE-01…08) จบแล้วปิด EA_Project เป็น read-only archive** · อะไหล่ที่ port: ScaleExecutor_v2 (pyramid/pending) · PortfolioGuardian (acct-DD gate) · StatePersistence (audit ก่อน) · วินัย test (pattern) — ไม่ port: Recovery/Hedge (ORDER-025/026 REJECT/no-op แล้ว) · signal v1–v3/v5 · harness เต็ม | user approve 2026-07-06 (เอาข้อดีสองฝั่งรวมเป็นแม่พิมพ์เดียวที่สมบูรณ์ แล้วจบ track EA_Project) — merge ตรงๆ ได้ลูกครึ่งเสียข้อดีทั้งคู่ + เสี่ยงกระทบ demo ก่อน judge · สอดคล้อง VISION แม่พิมพ์เดียว · ทุก order = additive + default OFF + tpl_regression CLEAN บังคับ |
-| 2026-06-29 | **EA_CORE track = ทางเลือก 2: ปิด loop ด้วย ST03 edge** | standalone หา edge เร็วกว่า แต่ ST03 มี edge จริงอยู่แล้ว → ใช้ปิด framework loop ให้ได้ EA deploy-able. แผน: `EA_CORE_ST03_LOOP_PLAN.md` |
-| 2026-07-02 | **EA_CORE loop ปิดแล้ว — FALLBACK: EA_CORE = R&D, ST_EA03 standalone = production** | STEP 3 grid 48/48 combos OOS PF<1.0 (complete enum, M2 ฝั่ง optimistic) + STEP 2 signal เพียว PF 0.67 → ไม่มี durable set. ห้าม re-tune ตระกูลนี้โดยไม่มี signal ใหม่. หลักฐาน: `EA_CORE_ST03_LOOP_PLAN.md` STEP 5 |
-| 2026-07-02 | **KAUFMAN_ER = CANDIDATE reserve · SUPERTREND XAU = PARKED** (ยังไม่ deploy) | re-confirm ผ่านทั้งคู่ แต่ corr ระหว่างกัน 0.946 = ตัวเดียวกัน → ถ้าจะ deploy เอา KER ตัวเดียว 0.01 lot (corr 0.75 vs BRK8). ดู EA_SCORECARD §VALIDATED RESERVE |
-| 2026-07-02 | **EA_Template = FREEZE 100% เป็น smoke tool** | เครื่องมือเสร็จ วัดเชื่อถือได้ = จบงาน track; ไม่พัฒนา chassis ต่อ, ไอเดียใหม่ยังเสียบผ่าน Boss V2 ได้ (guide: `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`) |
-| 2026-07-02 | **ST03 replica (990010) = WATCH** | qwen rerun OOS PF 0.86 ขัด 3.93 provisional → ห้ามใช้เป็น baseline จนกว่า re-confirm ด้วย locked .set |
-| 2026-07-10 | **ST03 family no-edge = STRUCTURAL (ORDER-068)** | flat-lot GBP 0.68 / CAD 0.40 ล้างพอร์ต → **ห้าม promote ตระกูล ST03 สู่เงินจริง** (demo เก็บ data ต่อได้) · บัญชีจริง user แนะนำถอด 939721+9398+990010 · ZeusInspired×EURUSD = dead cell (216 pass, PF max 1.14) · Gold_Kangaroo smoke PF 4.86/DD11% H1 = candidate แกะ logic (ORDER-070) |
-| 2026-07-10 | **user rule: rescue-ladder ก่อน DEAD + PARKED-VERIFY(user)** | ผ่านเกณฑ์เบื้องต้น → ต้อง optimize ≥3 รอบ lever ต่างชุด × ≥2 TF/symbol (ชุด lever เลือกตาม strategy) ก่อนตีตาย · idea ดีที่ไม่ผ่าน = tag PARKED-VERIFY(user) แจ้ง user เสมอ ห้ามตายเงียบ · เพิ่ม exit-mode เข้า lever list gate (บทเรียน ST03 071) |
-| 2026-07-03 | **Zeus Gold Hedge V1.2 (MT4) = REJECT ทั้ง XAU/EU** (score ต่ำ ไม่ใช่ hard gate — ดู rubric fix ด้านล่าง) → ต่อยอดเป็น `(Boss)_ZeusInspired_GridLog_rev01.mq5` (L3 redesign) | วิเคราะห์เต็ม: `ZEUS_GOLD_HEDGE_ANALYSIS.md` · registry: `EA_SCORECARD_AND_REGISTRY.md` · methodology → skill `locked-ea-analyzer` |
-| 2026-07-03 | **แก้ scoring rubric: mechanism-risk hard-gate → score-penalty** + **Model 1 (control points) = ขั้นต่ำก่อน REJECT/DISQUALIFIED ใดๆ** (Model 2 = proof-of-concept เท่านั้น) | user-corrected — ป้องกัน reject EA ทิ้งก่อนวัดผลจริง. บันทึกใน `EA_SCORECARD_AND_REGISTRY.md` Step 0/0b + `backtest-optimize-rigor` skill. พิสูจน์คุณค่าทันที: จับ false-positive ได้ 2 ครั้งในวันเดียว (Zeus XAU Model 1 fill-artifact PF 1.89→Model 0 จริง 1.01; AUDCAD Model 2 PF 1.80→Model 1 จริง 0.89) |
-| 2026-07-03 | **`(Boss)_ZeusInspired_GridLog_rev01` — AUDJPY = CANDIDATE แรกที่รอด** (PF 1.21 เท่ากันทั้ง Model 2/1 = ไม่ใช่ fill artifact; DD-scale เข้า 15% ได้ PF 1.91 net +$2,780/18mo) ยังไม่ IS/OOS/MC | AUDCAD ตกทั้ง baseline/tightened ที่ Model 1 — ทองถูกตัดออกทั้งหมดตามคำสั่ง user (Zeus family ไม่เหมาะกับ volatility ทอง) |
-| 2026-07-03 | **user rule: ห้ามตัดสิน DEAD/REJECT จนกว่าจะลอง optimize จริง** — verdict จาก param ชุดเดียว = PARKED-pending-optimize เสมอ | user-corrected ระหว่าง Boss_14 sweep — **พิสูจน์คุณค่าภายในชั่วโมงเดียว: 3/4 symbol ที่ถูกเรียก DEAD/REJECT ฟื้นหลัง probe 54-pass** (EURJPY 0.83→2.49 · EURCAD 0.65→1.82 · USDJPY 1.00→1.51) เหลือ EURCHF ตายจริง (0/54). ดู EA_SCORECARD §FRESH TEMPLATE |
-| 2026-07-03 | **ROADMAP.md เกิดขึ้น (user parameters: จบ=ระบบหมุนเอง · 10 account แยกจริง · live micro ทันทีหลัง judge · เวลา user 2–4 วัน/สัปดาห์)** — gate เลื่อนเฟสผูกกับ bench/หลักฐาน ไม่ใช่วันที่ · **Model transition: Fable → Opus หลัง 2026-07-07** (role อยู่ที่ seat ไม่ใช่ model — protocol ใน CLAUDE.md) | user ต้องการแผนจนจบเพื่อ delegate ให้ Codex/ZCode ต่อได้ + Fable access หมด 7 ก.ค. |
-| 2026-07-03 | **Multi-agent protocol: Claude = lead/judge เท่านั้น · Codex = peer engineer · ZCode = batch runner · ส่งไม้ผ่าน `AGENT_TASKBOARD.md` (order + acceptance criteria) · single-writer: VISION/Decision log/verdict = Claude/user เท่านั้น** | user ใช้ 3 agent ร่วมกัน (Claude quota จำกัด) — กัน "คนอื่นทำต่อแล้วพัง" ด้วย: order เล็ก+ตรวจได้ด้วยตัวเลข · agent อื่นผลิตหลักฐานไม่ตัดสิน · cage (check_state/tpl_regression) เป็น agent-agnostic · Claude กลับมาต้อง review ก่อน build ต่อ. กติกาเต็ม → `AGENTS.md` |
-| 2026-07-03 | **user rule: cap breach (DD/margin/deposit-load/MC-ruin) = resize-first ห้าม reject ตรงๆ** — reject จาก cap ได้เฉพาะเมื่อ (1) resize เข้า band แล้ว edge หลุด gate (2) ถึง min-lot แล้วยังเกิน (3) optimize probe ไม่เจอ config ที่เข้า band (4) ไม่เปิดไม้เลย · ส่วน fail เชิง edge (PF หลุด gate) reject ตรงได้เพราะ PF ไม่ขึ้นกับ scale | ขยาย decision 2026-06-23 ("DD ไม่ใช่ hard gate") ให้ครอบ cap ทุกชนิด + ระบุลำดับก่อน reject ชัด — บังคับใช้แล้วใน 4 skills: backtest-report-analyzer (RULE 1b resize-first, ถอน Dim-3 RED จาก hard-fail), robustness-validator (ruin resize-first), backtest-optimize-rigor (Verdict discipline), signal-scanner (smoke ห้ามฆ่าด้วย DD) |
-| 2026-07-03 | **Direction alignment (grill session): Boss V2 = แม่พิมพ์หลักตัวเดียว (UNFREEZE — supersede freeze 2026-07-02)** · EA_CORE = คลังอะไหล่ R&D (ไม่ทิ้ง ทำต่อเมื่อพร้อม) · standalone = ทางด่วนชั่วคราว ต้อง port เข้าแม่พิมพ์เมื่อพิสูจน์ edge | เหตุใหม่ที่ทำให้รื้อ decision เดิมได้: ภาพจริงของเจ้าของเพิ่งถูก capture ครั้งแรก (`VISION.md`) — แม่พิมพ์เดียว function กลางร่วม ต่างแค่ entry+TF · เจ้าของต้องเข้าใจระบบได้ทั้งตัว (EA_CORE อ่านไม่ออก = drift ซ้ำ) |
-| 2026-07-03 | **โหมดงาน = dual-track ถาวร** (โรงงานเดินตลอด + operate คู่กัน) — ยกเลิกคำว่า "operate ล้วน" | แกนล่าที่ยังไม่อิ่มตัว = **กลไก×symbol** (Zeus พิสูจน์: edge มาจาก grid+LOG บน AUD ไม่ใช่ entry เทพ) — ที่อิ่มตัวคือ entry เดี่ยวเท่านั้น |
-| 2026-07-03 | **Zeus: validate จบใน standalone ก่อน (MC + พอร์ตรวม) → PASS แล้วค่อย port เข้า Boss V2 เป็น pilot ของ workflow ใหม่ → deploy จากแม่พิมพ์** · 9 EA live ไม่แตะจนถึง judge | ไม่ทิ้งผล IS/OOS ที่ทำแล้ว · port ก่อน validate = ต้อง rerun ทั้งหมด · แตะ EA live = ทำลาย data การทดลอง |
-| 2026-07-03 | **เพิ่ม `VISION.md`** = owner ของ "ภาพใหญ่/ปรัชญาโรงงาน" — AI ทุก session อ่านคู่ PROJECT_STATE, งานขัด VISION ให้หยุดถาม | root cause ของ drift = ภาพในหัวเจ้าของไม่เคยถูกเขียนเป็นไฟล์ → ทุก session ตีความจาก status ที่ drift ไปแล้ว |
-| 2026-07-04 | **Model transition Fable→Opus = ACTIVE แล้ว (เร็วกว่าแผน 07-07 เพราะ Fable โควต้าหมดจริง) + รื้อ workflow ทีม:** seat=Opus · ยอดบันได escalation พังลง 1 ชั้น (deep-reasoner=seat แล้ว) → Codex (GPT รุ่นเก่งสุดที่มี = สมองอิสระตัวเดียวที่เหลือ, คนละค่ายจับจุดบอดคนละที่), ขอ review เฉพาะงานแพง/ย้อนไม่ได้ · batch run เลี่ยง ChatGPT quota (qwen→ZCode/GLM→oc-btest ถูกสุด) · oc-btest ลด model ถูกสุด/โยนงานไป ZCode · ห้ามรัน Codex+OpenClaw หนักพร้อมกัน | user: Fable หมด ต้องใช้ Opus แทน + ChatGPT quota (Codex+oc-dev+oc-btest แชร์) หมดเร็ว. กติกาเต็ม → `AGENTS.md` §1.5+§5 · `CLAUDE.md` Model transition |
-| 2026-06-29 | **PROJECT_STATE.md = living doc กลาง** | ให้ AI ทุกตัวเข้าใจตรงกัน (user request) |
-| 2026-06-23 | **DD% ไม่ใช่ hard gate** | DD แก้ได้ด้วย sizing/spacing; structural gate คือ "กลไก" (uncapped martingale/grid). ดู EA_SCORECARD Step 0 |
-| ongoing | **correlation rule:** ≤0.40 additive · 0.40–0.60 watch · >0.60 redundant → **ลด lot ไม่ใช่ตัดทิ้ง** | user rule (memory: correlation-vs-lotsize) |
-| ongoing | **backtest window = 3 ปี (2023–2026)** · re-opt ทุก 6 เดือน · ห้ามยืดเป็น 10 ปีเพื่อ "แก้ MC" | memory: backtest-window |
-| ongoing | **demo ≥3 เดือน ห้ามลัด** ก่อน live micro | README กฎเหล็ก |
 
----
+> ⚠️ **HISTORICAL SNAPSHOT — superseded.** The table below is stale, dating from before 2026-07-18 (ST03 was already pulled from real money by then) — for the current reality, see the single file: `portfolio/DEPLOYMENTS.csv`
 
-## 4. LIVE PORTFOLIO (สรุป — detail เต็มที่ `DEMO_DEPLOYMENT_PLAN.md`)
+## 4. LIVE PORTFOLIO (summary — full detail in `DEMO_DEPLOYMENT_PLAN.md`)
 
-account เดียว 10,000 cent · judge **2026-09-22** · attribution key = **(magic, symbol)**.
+> 🔴 **CORRECTED 2026-08-01 (`ORDER-940`) — the judge day this section was built on does not exist.**
+> This section said *"One account, 10,000 cent · judge **2026-09-22**"*. Measured against
+> `portfolio/DEPLOYMENTS.csv`, which owns deployment facts (§0.5): **zero rows carry that date**, and
+> the cohort it describes has dissolved — `9397` is **not in the inventory at all**, `9398` · `990010`
+> are `REMOVED`, and `1524` · `990005` · `991001` sit on account **159475669**, annotated
+> *"user mix - lab does not certify this account"*, whose `judge_date` is therefore **blank by
+> design**. The table below is kept as the record of what was deployed on 2026-07-02; **it is history,
+> not a judge cohort.**
+>
+> **The real judge calendar is GENERATED, not written here** — `portfolio/control_room_snapshot.json`
+> (`judge_cohorts`), refreshed by `powershell -File scripts/control_room_snapshot.ps1`. First real
+> judge = **2026-10-09**, and the two facts that matter on 2026-08-01 are these:
+> **(a) all 7 EAs the lab could decide on today have a BLANK judge date** — every one is on the
+> account the lab does not certify · **(b) of the EAs that DO carry a lab judge date, 19 are forecast
+> to arrive with fewer than 30 closed trades and 11 are on track.** So the bar the whole funnel ends
+> at is currently unreachable for two thirds of the fleet, and was invisible because this line named a
+> date instead of pointing at the inventory. Same defect class as `BACKLOG-D29`: a hand-written cache
+> of a generated fact, read at exactly the moment it matters. **Do not re-write a date here.**
 
-| # | EA | Symbol/TF | Magic | OOS PF | สถานะ |
+Attribution key = **(magic, symbol)**. Deployed 2026-07-02 (history — see the correction above):
+
+| # | EA | Symbol/TF | Magic | OOS PF | Status |
 |---|---|---|---|---|---|
 | 1 | Matchagrid MG_v1 | CHFJPY M15 | (GUI default) | 2.08 | 🟢 LIVE |
 | 2 | NuiIndy RSI+ADX | EURUSD H1 | 1524 | 2.00 | 🟢 LIVE ⚠️ edge=geometric martingale (2026-07-18) — guardrail rec `CutLoss=30` (`NUI_cut30only.set`); `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` |
@@ -260,185 +292,214 @@ account เดียว 10,000 cent · judge **2026-09-22** · attribution key =
 | 9 | EA_RUNNER_ST03 (replica) | GBPUSD H1 | 990010 | 3.93* | 🟠 LIVE — **WATCH** |
 | 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD H1 | 991002 | 3.92 | 🟢 LIVE |
 
-(#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. พอร์ตจริง = 9 EA — deploy ครบ ✅ 2026-07-02.)
+(#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. The real portfolio = 9 EA — deploy completed ✅ 2026-07-02.)
 
-> ***3.93 = คนละ window, ไม่ใช้เป็น baseline (verified 2026-07-02)** — 3.93 มาจาก OOS window รอบ 06-26
-> (regime ดี, ดู scorecard WFA "regime-dependent"). qwen rerun ด้วย ini ตรง locked set
-> (LR2·Tp3=50·Nearby=50·Mode2·Model 4·**full OOS 2025.01–2026.06**) = **PF 0.86 (585 trades)** ซึ่งตรง
-> regime ปัจจุบัน → **baseline เทียบ live ใช้ 0.86**. คงไว้บน demo เก็บ data ถึง judge ได้ แต่คาดหวัง =
-> ใกล้ศูนย์/ลบ · สถานะ = WATCH (ตัวเก็ง kill แรก). loop ปิดแล้ว → `EA_CORE_ST03_LOOP_PLAN.md` STEP 5.
-
-deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จครบ 3 รายการ (user ยืนยัน 2026-07-02).
-
----
-
-## 5. PORTFOLIO CONSTRUCTION RULES (วิธีวางแผนใช้ EA)
-
-- **กี่ EA ต่อ 1 พอร์ต:** 2–3 EA ที่ corr ต่ำ คือ sweet spot (เป้าหมายตั้งต้น). รันพร้อมกันได้หลายตัว
-  บน account เดียว ตราบใดที่ **magic ไม่ชน** + รวม risk ไม่เกิน budget. ตอนนี้ทดลอง 9 EA บน 1 account
-  เพื่อเก็บ data — หลัง judge ค่อยแตกเป็นพอร์ตจริง 2–3 ตัว/พอร์ต.
-- **correlation gate (monthly Pearson, `_mt5_auto/corr_monthly.py`):** ≤0.40 = additive (รับเข้า) ·
-  0.40–0.60 = watch (รับได้แต่ลด lot) · >0.60 = redundant (ลด lot / ไม่เพิ่มเป็น leg ที่ 2 ของ exposure เดิม).
-- **ป้องกันพอร์ต (3 ชั้น):** (1) hard SL/DD cap ต่อ EA · (2) corr-diversify ให้ DD ไม่ลงพร้อมกัน ·
-  (3) total deposit-load cap ต่อ account (กัน grid/pyramid กินมาร์จิ้นพร้อมกัน). DD budget เป้าหมาย 10–15%.
-- **risk per port:** ไม่เกินที่กำหนดต่อ account; EA grid/pyramid (MG, ST_EA03) ใช้ report DD + every-tick
-  ไม่ใช่ MC อย่างเดียว (floating DD ซ่อน).
-- **strategy mix ที่ดี:** ผสม class ที่ไม่ลงพร้อมกัน — breakout (trending) + reversion (range) + grid +
-  scalper (anti-corr). พอร์ตปัจจุบันมีครบ class แล้ว → เน้นกระจาย **instrument/session** เพิ่ม.
+> ***3.93 = a different window, not to be used as a baseline (verified 2026-07-02)** — 3.93 came from the
+> OOS window of the 06-26 round (a good regime, see scorecard WFA "regime-dependent"). A qwen rerun with an
+> ini matching the locked set (LR2·Tp3=50·Nearby=50·Mode2·Model 4·**full OOS 2025.01–2026.06**) gave
+> **PF 0.86 (585 trades)**, which matches the current regime → **the baseline for comparison against live is 0.86**.
+> It can stay on demo collecting data until judge, but the expectation = near zero/negative · status = WATCH
+> (first candidate for a kill). Loop closed → `EA_CORE_ST03_LOOP_PLAN.md` STEP 5.
 
 ---
 
-## 6. MONITORING PROTOCOL (ของพร้อมแล้ว — ไม่ต้องส่งเลข port)
+## 5. PORTFOLIO CONSTRUCTION RULES (how to plan EA usage)
 
-> **MT5 account report (HTML/XLSX) ทิ้ง magic ต่อ deal → ใช้ทำ attribution ไม่ได้.** ต้อง export ผ่าน
-> MQL5 script ที่อ่าน `DEAL_MAGIC` แทน. ทุกอย่าง build + tested แล้ว.
+- **How many EAs per portfolio:** 2–3 EAs with low correlation is the sweet spot (the starting target).
+  Several can run at once on a single account as long as **magic numbers do not collide** + total risk stays
+  within budget. Currently trialling 9 EAs on 1 account to collect data — after judge, split into real
+  portfolios of 2–3 each.
+- **correlation gate (monthly Pearson, `_mt5_auto/corr_monthly.py`):** ≤0.40 = additive (accept) ·
+  0.40–0.60 = watch (accept but reduce lot) · >0.60 = redundant (reduce lot / do not add as a 2nd leg of
+  existing exposure).
+- **Portfolio protection (3 layers):** (1) hard SL/DD cap per EA · (2) corr-diversify so DDs don't land
+  together · (3) total deposit-load cap per account (stops grid/pyramid eating margin simultaneously).
+  Target DD budget 10–15%.
+- **risk per port:** never above the per-account limit; grid/pyramid EAs (MG, ST_EA03) use report DD +
+  every-tick, not MC alone (floating DD hides).
+- **A good strategy mix:** blend classes that don't fall together — breakout (trending) + reversion (range)
+  + grid + scalper (anti-corr). The current portfolio already has every class → focus on spreading
+  **instrument/session** further.
 
-**ขั้นตอน (ส่งให้ AI ตรวจ):**
-1. ใน MT5 (เครื่อง/VPS ที่รัน demo): ก็อป `D:\EA_LAB\scripts\report_deals.mq5` → `<DataDir>\MQL5\Scripts\`
-   → refresh Navigator → ลากลงชาร์ตไหนก็ได้ → ตั้ง `InpFromDate=2026.06.22` → run.
-2. มันเขียน **`live_deals.csv`** ลง `Common\Files\` (path โชว์ใน Experts log). คอลัมน์:
+---
+
+## 6. MONITORING PROTOCOL (everything is ready — no need to send port numbers)
+
+> **The MT5 account report (HTML/XLSX) drops the magic per deal → it cannot be used for attribution.**
+> Export via an MQL5 script that reads `DEAL_MAGIC` instead. Everything is built + tested.
+
+**Steps (to send to the AI for checking):**
+1. In MT5 (the machine/VPS running demo): copy `D:\EA_LAB\scripts\report_deals.mq5` → `<DataDir>\MQL5\Scripts\`
+   → refresh Navigator → drag onto any chart → set `InpFromDate=2026.06.22` → run.
+2. It writes **`live_deals.csv`** into `Common\Files\` (the path shows in the Experts log). Columns:
    `time,ticket,magic,symbol,type,entry,volume,price,profit,swap,commission,net,comment`.
-3. **ส่งไฟล์ `live_deals.csv` นี้ให้ AI** (วางใน `_mt5_report_drop/` หรือแนบมา). AI รัน
-   `parse_live_deals.ps1 -Path <csv>` → roll-up per (magic,symbol) → เทียบ backtest → KEEP/WATCH/PAUSE/KILL.
-4. trigger ในแชต: **`/ea-monitor`** (skill `ea-live-monitor` จะจัดการ step 3–5).
+3. **Send this `live_deals.csv` file to the AI** (drop it in `_mt5_report_drop/` or attach it). The AI runs
+   `parse_live_deals.ps1 -Path <csv>` → roll-up per (magic,symbol) → compare against backtest → KEEP/WATCH/PAUSE/KILL.
+4. Chat trigger: **`/ea-monitor`** (the `ea-live-monitor` skill handles steps 3–5).
 
-→ **ตอบ user:** ไม่ต้องส่งเลข port. ส่ง **`live_deals.csv`** อย่างเดียวพอ. ทำทุก 1–2 สัปดาห์.
+→ **Answer for the user:** no need to send port numbers. Sending **`live_deals.csv`** alone is enough. Do this every 1–2 weeks.
 
 ---
 
 ## 7. FORWARD PLAN (today → judge → after)
 
-> 🧠 **MEMORY-CONTROL OS BUILD (canonical 2026-07-12):** implementation source = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d` (full SHA ใน §3 Decision log) · แตก order แบบ **serial — Contract A ก่อน** · **หยุด review หลัง system order ที่ 4** · **MVP-2 ยัง B1-gated** (สร้างต่อเมื่อ B1 เข้า trigger เท่านั้น) · first order = **ORDER-099 (B0 + ownership map)**. design ไม่ทำซ้ำที่นี่ — owner = §20.
+> 🧠 **MEMORY-CONTROL OS BUILD (canonical 2026-07-12):** implementation source = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d` (full SHA in §3 Decision log) · split orders as **serial — Contract A first** · **stop review after system order 4** · **MVP-2 still B1-gated**. Design not repeated here — owner = §20.
 
-### 🆕 PLAN 2026-07-12+ (เขียนโดย Fable-seat 2026-07-11 ก่อนส่งมอบ → **Opus = seat หลักทุก session ถัดไป**)
-**👉 session ใหม่อ่าน block นี้ก่อน — งานเรียงตาม EV + การแบ่ง seat Fable/Opus/Codex ชัดแล้ว**
+**🆕 2026-07-27 evening (Opus-seat) — Codex blind-audit findings verified, then repaired · handoff = [`_triage/HANDOFF_2026-07-27_AUDIT_REPAIR.md`](_triage/HANDOFF_2026-07-27_AUDIT_REPAIR.md)**
+> **14 findings checked: 13 CONFIRMED · 1 scope-corrected · 0 REFUTED.** Codex read this code accurately; its line numbers ran 0-7 early *systematically per file* (an older revision, not a different file).
+> **Repaired:** MRIS `asof` now means *when the observation is for*, in **both** feeders (the validated one was missed on the first pass and caught by `/scrutinize`) · basket risk units correlate as the **summed two-leg series** instead of borrowing one leg's correlations (account 463666728: **84.372% → 56.641%**, still over its 25% budget) · Wave5 refuses an entry when Risk-ATR is unreadable, takes the **fill side** for its entry reference, and refuses the config that opened naked positions · the deposit-load cap now refuses when it cannot measure.
+> **🔴 Three guards were found to be reading the wrong input, all the same shape as the audit itself** — the artifact kept being produced, it just stopped being true: the MRIS freshness gate measured the *fetch* clock; the fast-cage hook did not watch the directory its new cage protects; the ORDER-144 baseline `re-pin` rule read `.git/COMMIT_EDITMSG` from **pre-commit**, where it holds the *previous* commit's message (moved to a new `.githooks/commit-msg`).
+> **🔴 The most important number is a zero.** Wave5 guard **G4 — the control the entire ORDER-082 naked-probe design was accepted on — has never been observed firing** (0 across 2936 bars, two runs). Invisible until counters existed; now measured → **ORDER-490**.
+> **Honest coverage:** only ORDER-432 finding 3's guard was *demonstrated* firing. Findings 2/4/5 are fail-closed branches on runtime data failures that cannot be forced in the tester ⇒ `UNTESTED` by the VERDICT GATE's own rule, and not written up as passed.
 
-**สถานะส่งมอบ:** CODEX-AUDIT ปิดครบ (Layer D ทั้งหมด + A/C ฝั่ง build · เหลือ user attach) · cage 4 ตัว
-fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validate ทุก commit) · คลัง intake
-1,592 unique EA พร้อม Wave 1 · NewsGuard+SnapshotExporter พร้อม attach
+**Open now — added 2026-07-30 (must clear before the Factory OS design can become Orders):**
+- ~~**[user action] amend §3's `account|magic` invariant**~~ — ✅ **DONE.** Amended by the user 2026-08-01; the checker flipped to the global rule 2026-08-02 (ORDER-1100), in that order, because the exception list had to exist before the rule could be turned on. See §0.5.
+- **[user action] amend `AGENTS.md` §2** to authorize a Work Receipt writer, or S14 stays closed.
+- **[user action] define the "~10,000 combinations per round" budget executably** — zones, minimum total search, stop rule. The design refuses to invent the numbers; today an orchestrator could claim compliance either way.
+- **`make_status.ps1` still reads the taskboard directly under `SilentlyContinue`** — an unreadable taskboard renders an empty work queue rather than `UNKNOWN`. Design-fixed, code owed (slice S4).
+- **Re-review owed:** confirm the two P0s are genuinely closed rather than restated. The first audit's most valuable finding was a claim the design made about itself.
 
-**คิวงาน (pacing 1-2 order/รอบ เหมือนเดิม):**
-1. ~~091A/091B~~ **ปิดแล้ว 2026-07-11:** 091A คลัง→1,592 unique · 091B BOT MOGUL bundle = DEAD
-   (BWD ของเราเอง: vendor PF 67→0.39/DD 96% · ห้าม re-mine · memory wobr-botranking อัปเดตเลขจริงแล้ว)
-2. **091C — user-priority funnel queue (คิวถัดไป, Opus นำ)** — **เริ่มจาก `_triage\ORDER091C_FINALEA_PREP.md`
-   บล็อก "USER-CONFIRMED SCOPE 2026-07-11"**: user ยืนยัน 5 โฟลเดอร์ = ของ backtest ดีแล้วรอ MC/OOS/optimize
-   (67 src = funnel target). batch 1 = `JUMSTOCH_FIXEDLOT` (มี flat-lot ให้แล้ว) + `(OH) Recovery Hedging w/ SL V05`
-   (มี SL จริง) · gotcha ปิดก่อน: x-ray `MT5 good`+`MT4 good` (7 src ยังไม่อยู่ใน 091A) · NuiIndy RSI+ADX = live แล้ว ข้าม
-3. **076 — smoke หัวกะทิ 41 ตัวจาก X-ray** (agent batch, cage ใหม่พร้อมแล้ว) · ตามด้วย **080**
-   (limit-entry study — template แตะได้แล้ว regression ครอบ Boss_15/16)
-4. **082 — Wave5 spec** รอ user ยืนยัน draft → **ก่อน build ให้ยิง fable-advisor one-shot ตรวจ spec**
-   (กลไกจากมือ user เอง — ตีความพลาด = แพงสุด)
-5. **[user action ค้าง]** ชุด VPS ทีเดียวจบ (NewsGuard + SnapshotExporter + OneDrive สองทิศ ตาม
-   `VPS_TRANSPORT_AND_ATTACH.md`) · ย้าย RSI-MR real→demo · attach SuperTrend 990020 ·
-   ระบุบัญชี **146237** (โผล่ใน live_deals ไม่อยู่ใน 5 บัญชี) · ผล optimize ST03 ของ user → คุยด้วยบาร์ flat-lot
-6. **P1 audit backlog** (MASTER_BACKLOG §CODEX-AUDIT) แทรกตอน lane ว่าง: gist redact (เร็วสุด) →
-   evidence lineage → drift monitor (ต่อยอด 092 หลัง snapshot ไหล) → backup drill
-7. **🆕 098 — fxDreema YouTube corpus build-on (CAMPAIGN, 2026-07-12)** — แกะช่อง @fxdreemalearner ครบ
-   320 คลิป → catalog 272 EA + shortlist (`_triage/fxdreema_youtube/BUILDON_SHORTLIST.md`, memory
-   `fxdreema-youtube-corpus`). Orders stock แล้ว: **098-A** FVG-fill entry flat-lot smoke · **098-B** MACD-
-   divergence flat-lot smoke · **098-C** MM-parts library (dynamic close_money + Fibonacci-capped lot =
-   "cap+linear/log" ที่ user สั่ง). **⏸ รอ user เคาะลำดับใน session เดียวที่นัดไว้ก่อนลงมือหนัก** — sub-orders
-   พร้อมรัน. toolchain แกะคลิปเพิ่ม (yt-dlp+Whisper GPU) = `scripts/yt2text.ps1` · doctrine: flat-lot probe
-   บังคับทุก entry (ST03-dead vs Kangaroo-edge) · ห้ามตัด grid/martingale ทิ้ง = ขุด part แปะ chassis validated.
+**Open (2026-07-27):**
+- ~~**ORDER-370** — `check_stale_binaries` does not scan `_vps_deploy/**`~~ ✅ **CLOSED 2026-07-27
+  (`DONE + REVIEWED`), archived.** This bullet stayed here for five days after the order closed and was
+  quoted back to the owner on 2026-08-01 as still-open work. **A bullet under a heading that says "Open"
+  is a claim, and this one had no owner checking it** — the boards are the state, this list is a cache of
+  them, and BACKLOG-D29 is the same defect one file over. Do not re-add an item here without also naming
+  what will remove it.
+- **ORDER-371** — tick history on `Meta 5b` differs from the primary terminal by **14×** (same window,
+  PF 1.77 vs 2.08) ⇒ **numbers cannot be compared across installs anywhere in the lab.**
+- ✅ **Bookkeeping debt — CLOSED 2026-08-01** (`734681b6`, lane `S-2026-08-01-OPERATE`). The count in
+  this bullet was **12**; it was **13** when measured across all statuses, and it is **2** now (one
+  `UNVERIFIED` row whose magic is still unknown, one `REMOVED` row). **Zero `ACTIVE` rows have an empty
+  `kill_rule`.** All 11 filled cells were on account `159475669` and read
+  `n/a - lab does not certify this account (retro-noted 2026-08-01)` — **not** the CLAUDE.md default
+  bar, because every row on that account is annotated *"user mix - lab does not certify"* and writing a
+  lab bar onto a row the lab does not judge states a criterion nobody owns. Owner ratified.
+  🔴 **Do not read the zero as protection:** `control_room_snapshot.ps1:129` counts blank `kill_rule`
+  on ACTIVE rows, so its gap counter went 11 → 0 **without one new kill criterion coming into
+  existence**. The rows are honestly labelled, not newly guarded.
+  <sub>The urgency this bullet was carrying was also wrong, and the two are worth keeping together:
+  `_triage/PROMPT_PARALLEL_OPERATE.md` paired these 11 rows with "18 judge dates inside 90 days" as one
+  deadline. **The sets are disjoint** — all 18 of those already carry a `kill_rule`, and all 11 blanks
+  carried no judge date at all ⇒ the number of rows reaching a judge with no criterion was **zero**.
+  Two individually-true counts, one false conjunction that nobody checked.</sub>
+- ✅ **SuperTrendFlip BTCUSD H4 — this bullet was stale for days: it said *"VALIDATED CANDIDATE awaiting the
+  user's call on demo attach"* while the user had already attached it.** Corrected 2026-08-01 (`ORDER-940`)
+  when the user supplied the Inputs tab. It is `990026` on account `463666728`, attached **2026-07-28** as
+  the `ORDER-353` tuned config (`MaxAdds=7`, ER gate `0.25`) — an **A/B partner of `990025`, not an
+  independent leg** (same concept, same symbol ⇒ corr ≈ 1; judge the pair as one experiment).
+  Verified from the screenshot: `_06_Magic=990026` and `_06_AllowLive=true` both read, and all 11 visible
+  inputs match the bundle `.set` byte for byte ⇒ the `.set` was loaded. Status flipped
+  `ACTIVE-PENDING-VERIFY` → `ACTIVE`, **which also made it visible again** — that status is excluded from
+  `control_room_snapshot`, so *pending verify* silently meant *unmonitored* (→ `ORDER-944`).
+  Still open, one scroll of the same dialog closes both: the binary is proven **rev04-or-newer** but not
+  rev05 (its only exclusive input, `_02_SlBufferAtr`, was scrolled off), and `_03_UseER`/`_03_ErMin` — the
+  two inputs this leg exists to test — were not visible. **0 closed deals 07-28 → 07-31**, which is expected
+  at ~0.57 trades/week; if it is still 0 on **2026-08-18**, investigate rather than assume.
 
-**การแบ่ง seat (user directive 2026-07-11 — Fable เหลือ ~10%):**
-- **Opus = lead/judge ทุก session** (ตาม CLAUDE.md transition เดิม — role อยู่ที่ seat) · งานประจำทั้งหมด:
-  review agent, verdict ตาม VERDICT GATE, เขียน order, judge 091 waves
-- **Fable = จองเฉพาะ 4 กรณี ผ่าน `fable-advisor` one-shot เท่านั้น (ห้ามเผาเป็น session เต็ม):**
-  (1) ตัดสินผล ST03 ที่ user optimize มือ (เงินจริง + user ลงแรงเอง — ต้องแม่นและละมุน)
-  (2) ตรวจ spec ORDER-082 Wave5 ก่อน build (edge จากมือ user — misread แพง)
-  (3) การ promote เงินจริงครั้งแรกของ candidate ใหม่ (Boss_16 หลัง demo forward / ตัวแรกที่ผ่าน funnel เต็ม)
-  (4) RCA เหตุการณ์เงินจริงผิดปกติ (stop-out, EA เปิดผิด, NewsGuard ทำงานพลาด)
-- **Codex = สมองอิสระ + งาน code หนัก:** second-opinion การตัดสินแพง/ย้อนไม่ได้ (ห้ามให้ดูคำตอบ
-  Opus ก่อน) · builds ใหญ่ (Wave-3 Jobot binary-strings tooling · drift monitor P1 · ORDER-080) ·
-  คุม quota ChatGPT: batch → qwen/Sonnet เสมอ
-- **บทเรียน agent วันนี้ (อยู่ใน memory แล้ว):** brief งานรันยาวต้องบังคับ foreground synchronous —
-  agent ที่ background แล้วหยุดรอ notification = ตาย (เกิด 2 ครั้ง: 094, 091A)
+**Work queue (pacing 1-2 orders per round):**
+1. **091C — user-priority funnel queue** — start from `_triage\_archive\verdicts\order076-098\ORDER091C_FINALEA_PREP.md`
+   block "USER-CONFIRMED SCOPE 2026-07-11": 5 folders confirmed = items with good backtests already, awaiting
+   MC/OOS/optimize (67 src = funnel target). batch 1 = `JUMSTOCH_FIXEDLOT` + `(OH) Recovery Hedging w/ SL V05`.
+2. **076** — smoke the top 41 picks from X-ray (agent batch) · then **080** (limit-entry study).
+3. **082 — Wave5 spec** awaiting user confirmation of the draft → **before build, fire a fable-advisor
+   one-shot to check the spec** (mechanism from the user's own hand — misreading it is the most expensive).
+4. **[user action pending]** finish the VPS batch in one go (NewsGuard + SnapshotExporter + OneDrive both
+   directions per `VPS_TRANSPORT_AND_ATTACH.md`) · identify account **146237** (appears in live_deals, not
+   among the 5 accounts) · open the Inputs page of **159503454** and read 3 values (`_06_AllowLive` default
+   is false but the EA trades ⇒ an input was changed by hand).
+5. **P1 audit backlog** (MASTER_BACKLOG §CODEX-AUDIT), slot in whenever a lane is free: gist redact →
+   evidence lineage → drift monitor → backup drill.
+6. ✅ **098 — fxDreema corpus: EVERY ORDER THIS ITEM DESCRIBES IS CLOSED, including the one the previous
+   revision of this bullet said had never existed.** Re-checked against both boards 2026-08-01:
+   **098-A** FVG-fill flat-lot smoke = `CLOSED — REJECT` (2026-07-16) · **098-B** MACD-divergence =
+   `CLOSED — DEMO-ELIGIBLE`, XAU H4 passed (2026-07-16).
+   🔴 **`ORDER-098-C` carries TWO DIFFERENT ORDERS** — that reuse is one of the three collisions
+   `docs/SESSION_LEDGER.md` cites as the reason lane reservation exists, and reading only the first one
+   is what produced the wrong answer below:
+   `ARCHIVE_TASKBOARD_2026-07A.md:7476` = *"FVG-fill + RSI confluence gate"* → `DONE + REVIEWED — REJECT`
+   (2026-07-17) · **`:7806` = *"reusable MM-parts library (dynamic close_money + Fibonacci-capped lot)"* →
+   `DONE + REVIEWED` (2026-07-26)** — i.e. the owner's **"cap + linear/log"** directive *does* have a
+   number, and it was **built**: `PROG_FIBONACCI` (`core/MoneyManagement.mqh`, capped by `_56_FibMaxStep`)
+   + `Exit_DynCloseTargetMoney()` (`core/ExitManager.mqh`), both off-by-default and regression-clean.
+   The linear/log half shipped earlier still — `PROG_LINEAR`(51) · `PROG_LOG`(54) · `PROG_LOG_POWER`(55)
+   are all in the enum and **LOG_POWER is Boss_14's live default**.
+   **It was then integrated and measured, and it lost:** `ORDER-197` (`REVIEWED 2026-07-24`) A/B'd the
+   Fibonacci cap against the incumbent on Boss_14 XAU (990207) — MAIN **1.91 → 1.83** (eqDD +30% relative),
+   BWD 1.19 → 1.23 ⇒ **NOT ADOPTED** against a bar registered before the runs; `PROG_LOG_POWER` stays.
+   ⇒ **There is nothing to commission here. The previous instruction — "write it an order first, then
+   build" — would have re-ordered closed work.**
+   **The one live thread is narrower and now has its own row: `ORDER-740`** — `_57_DynCloseOn` is **inert
+   on Boss_16/Kangaroo** (Kangaroo returns before `Exit_ManageBasket`, `core/LabCore.mqh:310-313`), which
+   `ORDER-197` assumed the opposite of, and the mold warns about the *other* inert shared input on that
+   chassis while staying silent about this one. Written, not built — it owes `tpl_regression`, whose lane
+   was held.
+
+**Boss V2 chassis — remaining:** sweep the **mechanism×symbol** axis (grid/DCA/hedge/progression on pairs
+not yet tried) via `/signal-scan` · note: modes 82/83/HEDGE_LOCK have never passed any backtest — first time
+enabling = validate like a new mechanism.
+
+**Gotchas to not hit again:**
+- `_04_TpUsd` is a fixed dollar amount and does not auto-scale with lot — expanding `_05_BaseLot` must expand
+  `_04_TpUsd` + `_06_MaxTotalLot` in the same proportion, otherwise the strategy's behavior changes, not just its size.
+- **Never report/decide from Model 2 (open price)** — use it only as a zero-trade filter; any trusted number
+  must be Model 1 (control points) or higher.
+- An MT5 headless run without `-SetFile` may carry over values from the previous run, not the compiled
+  default — always send a .set specifying every value in full.
+
+### 🟣 Until the first judge date — operate track (runs alongside the factory)
+
+> **The date was `2026-09-22` here and it does not exist** (`ORDER-940`, 2026-08-01 — see §4). First lab
+> judge = **2026-10-09**; the calendar is generated, `scripts/control_room_snapshot.ps1` → `judge_cohorts`.
+
+- **`ORDER-941` first — 8 EAs may not be trading at all, and the judge policy cannot be decided until that
+  is separated from thinness.** Three legs of the same EA (`990066`/`990067`/`990069`, IchiADX) show **0
+  closed trades in 16 days against an expected 1.0–1.1/week** — about 2.5 expected trades each, three legs
+  silent together. That is an attach/gate defect shape (the `990025` `AllowLive=false` precedent), not a
+  thin EA. `990068` on the same EA is at 1 vs ~2.3 expected.
+- **`ORDER-942` — 11 of the 19 shortfall EAs have no row in `portfolio/expectations.csv`**, so for them
+  *silent* and *thin* are not distinguishable by any measurement the lab currently takes. Fill the expected
+  rate before deciding anyone's judge policy.
+- **`ORDER-943` — then decide the 19, per EA**, between ORDER-235's thin-EA treatment (≥12 months, net
+  positive, no kill tripped, permanently small lot) and re-basing/retiring. **Decide before the date, not
+  on it**: on 2026-10-09 the 5-EA cohort currently has **0 decision-capable and 2 projected shortfall**.
+- /ea-monitor every 1–2 weeks (send `live_deals.csv`) — the collector is already writing
+  `portfolio/live_deals/` daily for 4 of 6 accounts; MT4 `141049900` and `69424711` are STALE (38.5 h).
+
+### 🟢 After the first judge date
+- per-EA attribution → promote passing ones (PF ≥ 1.40, ≥ 30 trades — or the ORDER-235 thin rule where it
+  has been pre-registered) → increase lot / open a 2nd portfolio → aim for 10 portfolios
+- if a new signal idea comes in (outside the existing TOP-8/10 shortlist) → /signal-scan as usual
 
 ---
 
-### 📦 SESSION LOG 2026-06-29 → 07-08 — ย้ายไป archive แล้ว (2026-07-12, Opus)
+## 8. CANONICAL DOCS INDEX (where the details live)
 
-> 3 session-log เก่า (SESSION 07-08 hunt · เสร็จแล้วครบ 06-29→07-02 · HANDOFF ZeusInspired) ย้ายไป
-> `PROJECT_STATE_SESSIONLOG_ARCHIVE.md` เพื่อลดขนาด AI-START-HERE · เนื้อครบใน git history + ไฟล์ archive
-> บทเรียนถาวรตกผลึกแล้วใน: **DECISION LOG §3** · **CLAUDE.md VERDICT GATE** (backward-OOS, martingale-recheck) ·
-> **EA_SCORECARD** (verdict ทุก EA) · **DEMO_DEPLOYMENT_PLAN** (cohort/attach) — ไม่มีอะไรต้องทำต่อจาก log พวกนี้
-
----
-
-### 🔧 งานอัปเกรดแม่พิมพ์ Boss V2 (track ใหม่ 2026-07-03 — ทำขนานกับ Zeus ได้)
-
-1. ~~เติม **Hedge/Recovery module จริง**~~ ✅ **เสร็จ 2026-07-03 (deep-reasoner + regression-verified):**
-   Recovery 81 Light / 82 Adaptive / 83 Aggressive + HEDGE_LOCK — ทุกโหมด cage-clamped,
-   default OFF ทุกตัว, compile 0/0 ทั้ง 3 Boss EA. spec + ข้อจำกัด (netting account, comment tag,
-   ยังไม่เคย backtest) → `ea_template\DESIGN_V2.md` §5
-2. ~~เพิ่ม **smoke-regression ชุดเล็ก**~~ ✅ **เสร็จ 2026-07-03:** `scripts\tpl_regression.ps1` +
-   `ea_template\regression_baseline.csv` (3 Boss EA, XAU H1 2024H1, Model 1) — รอบแรกจับ parity
-   หลังใส่ Hedge/Recovery แล้ว: **REGRESSION CLEAN ทั้ง 3 ตัว**. กฎ: แก้ `core\` ทุกครั้งต้องรัน
-   script นี้ก่อน commit
-3. ต่อไป: sweep แกน **กลไก×symbol** (grid/DCA/hedge/progression บนคู่เงินที่ยังไม่เคยลอง)
-   ผ่าน `/signal-scan` ตามปกติ · หมายเหตุ: โหมดใหม่ (82/83/HEDGE_LOCK) ยังไม่เคยผ่าน backtest ใดๆ —
-   เปิดใช้ครั้งแรก = validate เหมือน mechanism ใหม่
-4. gotcha ใหม่: `deploy.ps1` แก้แล้วให้ resolve junction `Roaming\MetaQuotes\Terminal →
-   D:\MetaTraderData\...` ก่อน robocopy (subdir-create ผ่าน junction เคย fail เงียบ)
-
-**ไฟล์ที่เกี่ยวข้องทั้งหมด:**
-- EA source: `D:\EA_LAB\ea_projects\(Boss)_ZeusInspired_GridLog\(Boss)_ZeusInspired_GridLog_rev01.mq5` (ย้ายออกจาก archive 2026-07-08)
-- .set variants ทั้งหมด (baseline/tightened/scaled): `D:\EA_LAB\ea_projects\(Boss)_ZeusInspired_GridLog\set_files\ZeusInspired_*.set` (12 ไฟล์)
-- ผลทดสอบทั้งหมด: `D:\EA_LAB\_mt5_auto\reports\ZIGL_*.htm` + `D:\EA_LAB\_mt5_auto\ZIGL_*.csv`
-- Correlation script: `D:\EA_LAB\_mt5_auto\zigl_correlation.py`
-- Monte Carlo script: `D:\EA_LAB\scripts\mt5_montecarlo.py`
-- วิเคราะห์เต็ม + timeline: `ZEUS_GOLD_HEDGE_ANALYSIS.md` · registry: `EA_SCORECARD_AND_REGISTRY.md`
-  Â§FRESH TEMPLATE EAs
-
-**Gotcha ที่ต้องรู้ก่อนรันต่อ (เจอมาแล้ววันนี้ อย่าเจอซ้ำ):**
-- `_04_TpUsd` เป็นดอลลาร์คงที่ ไม่ scale ตาม lot อัตโนมัติ — ขยาย `_05_BaseLot` ต้องขยาย `_04_TpUsd` +
-  `_06_MaxTotalLot` ตามสัดส่วนเดียวกันเสมอ ไม่งั้น strategy เปลี่ยนพฤติกรรม ไม่ใช่แค่ขนาดเปลี่ยน
-- **ห้ามรายงาน/ตัดสินใจจาก Model 2 (open price) เด็ดขาด** ใช้กรอง zero-trade เท่านั้น ทุกเลขที่จะเชื่อ
-  ต้อง Model 1 (control points) ขึ้นไป
-- MT5 headless run ไม่ผ่าน `-SetFile` = อาจ carry-over ค่าจาก run ก่อนหน้า ไม่ใช่ compiled default เสมอไป
-  ต้องส่ง .set ระบุค่าครบทุกครั้ง
-
-### 🟣 ถึง 2026-09-22 (judge) — track operate (9 EA เดิม — เดินคู่กับโรงงาน ไม่ใช่โหมดเดียว)
-- /ea-monitor ทุก 1–2 สัปดาห์ (ส่ง live_deals.csv) — จับตา Gold Reaper, MG grid DD, ST03 replica (คาดว่าจะ kill),
-  KAUFMAN_ER ถ้า user ตัดสินใจ deploy ระหว่างทาง
-- สะสม ≥30 real trades/EA
-
-### 🟢 หลัง 2026-09-22
-- per-EA attribution → promote ตัวผ่าน (PF≥1.40, ≥30 trades) → เพิ่ม lot / เปิดพอร์ตที่ 2 → มุ่ง 10 พอร์ต
-- ถ้ามีไอเดีย signal ใหม่เข้ามา (นอก TOP-8/10 shortlist เดิม) → /signal-scan ตามปกติ
-
----
-
-## 8. CANONICAL DOCS INDEX (ของละเอียดอยู่ที่ไหน)
-
-| ต้องรู้เรื่อง | เปิดไฟล์ |
+| Need to know about | Open file |
 |---|---|
-| สถานะ + แผนนี้ (hub) | **`PROJECT_STATE.md`** (ไฟล์นี้) |
-| memory-control OS design (order source เดียว) | `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** (order ทุกใบอ้าง §20 @ SHA + Decision-log pointer) |
-| ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **`VISION.md`** (อ่านคู่กันทุก session) |
-| กติกา multi-agent + คิวงานกลาง | `AGENTS.md` · `AGENT_TASKBOARD.md` |
-| roadmap ระยะยาว + ภาพสุดท้าย + gate เลื่อนเฟส | `ROADMAP.md` |
-| deploy วันนี้ | `DEPLOY_CHECKLIST_2026-06-29.md` |
-| EA_CORE ปิด loop ด้วย ST03 | `EA_CORE_ST03_LOOP_PLAN.md` |
+| status + this plan (hub) | **`PROJECT_STATE.md`** (this file) |
+| historical record: session log, changelog, full decision log | **`PROJECT_HISTORY.md`** |
+| memory-control OS design (single order source) | `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** (every order cites §20 @ SHA + Decision-log pointer) |
+| owner's big-picture/factory philosophy | **`VISION.md`** (read alongside every session) |
+| multi-agent rules + central work queue | `AGENTS.md` · `AGENT_TASKBOARD.md` |
+| long-term roadmap + end state + phase-transition gate | `ROADMAP.md` |
+| EA_CORE closing the loop with ST03 | `_archive_docs/EA_CORE_ST03_LOOP_PLAN.md` |
 | live portfolio (source of truth) | `DEMO_DEPLOYMENT_PLAN.md` |
-| backlog + coverage matrix เต็ม | `MASTER_BACKLOG.md` |
-| ทะเบียน EA + scoring rubric + kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
-| แผนที่ไฟล์/5 ที่อยู่ | `PLATFORM_INDEX.md` · `README.md` |
-| สถาปัตยกรรม+วิธีใช้ EA_CORE / EA_Template | `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` |
-| design "สมอง" (scoring/gate/optimize) | `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
+| full backlog + coverage matrix | `MASTER_BACKLOG.md` |
+| EA registry + scoring rubric + kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
+| file map / where the 5 live | `PLATFORM_INDEX.md` · `README.md` |
+| architecture + how to use EA_CORE / EA_Template | `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` |
+| old "brain" design (archived, superseded) | `_archive_docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
 | automation/MT5 headless | `AUTOMATION_GUIDE.md` · `docs/MT5_AUTOMATION.md` |
-| รับ source ใหม่ | `INTAKE_QUEUE.md` |
-| idea จาก 200-prompt PDF | `STRATEGY_200_ANALYSIS.md` |
+| intake new source | `INTAKE_QUEUE.md` |
+| ideas from the 200-prompt PDF | `_archive_docs/STRATEGY_200_ANALYSIS.md` |
 
 ---
 
-## 9. กฎเหล็ก (ย้ำ)
-- อย่าเชื่อ report เก่าบนดิสก์ — rerun ด้วย locked .set ก่อนตัดสินเสมอ.
-- ปิด MT5 GUI ก่อนรัน automation (script abort ถ้าเปิด).
-- ของก้อนใหญ่กลั่นด้วย script ไม่โหลดดิบเข้า context · ทุกงานใหญ่ commit git.
-- grid/martingale ใช้ report DD + every-tick ไม่ใช่ MC อย่างเดียว.
-- monitor metric (Myfxbook/Excel/FX Blue) = ดูเพื่อ "วิเคราะห์" เท่านั้น **ไม่ใช่ตัว reject EA** —
-  การ reject ใช้ (magic,symbol) attribution + เทียบ backtest ตาม section 6 เท่านั้น.
-
-
+## 9. Iron rules (recap)
+- don't trust old reports on disk — always rerun with the locked .set before judging.
+- close the MT5 GUI before running automation (script aborts if it's open).
+- distill big chunks with a script, don't load raw into context · commit every large piece of work to git.
+- for grid/martingale use report DD + every-tick, not MC alone.
+- monitor metrics (Myfxbook/Excel/FX Blue) = look at them for "analysis" only **not as the EA reject trigger** —
+  reject uses (magic,symbol) attribution + comparison against backtest per section 6 only.

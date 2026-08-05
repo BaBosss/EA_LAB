@@ -1,0 +1,24 @@
+﻿{
+    "state":  "NEUTRAL",
+    "ri":  -0.192,
+    "models":  {
+                   "CREDIT_STRESS":  {
+                                         "score":  1.8,
+                                         "label":  "dormant"
+                                     },
+                   "INFLATION_OIL":  {
+                                         "score":  2.9,
+                                         "label":  "dormant"
+                                     },
+                   "YIELD_SHOCK":  {
+                                       "score":  20.4,
+                                       "label":  "dormant"
+                                   }
+               },
+    "flags":  [
+                  "TRIPWIRE_NEAR: AUDJPY 111.12 only 1.01% above pin 110"
+              ],
+    "flag_keys":  [
+                      "TRIPWIRE_NEAR:AUDJPY"
+                  ]
+}

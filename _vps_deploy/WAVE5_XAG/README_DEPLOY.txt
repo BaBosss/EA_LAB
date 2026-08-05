@@ -2,6 +2,17 @@
 ORDER-082 Wave5 (LAB_ENTRY_17) — DEMO DEPLOY BUNDLE — XAGUSD H1
 ========================================================================
 Status:   DEMO-ELIGIBLE (lead-engineer PASS to demo, 2026-07-14). NOT live-certified.
+
+!!! CONTAMINATED SELECTION -- added 2026-07-26 (audit AUDIT_BUNDLE_EVIDENCE_G2.md) !!!
+          The "all 6 cells pass" mini-grid (XAGMG_*) scored every MAIN cell on
+          2023.01.01 -> 2026.07.01, six months inside the declared 2026H1 holdout. Optimization=0
+          on those .ini only means a PowerShell loop drove the grid rather than the tester's
+          optimiser -- a ranked grid is selection either way.
+          Also: the ORDER-166 re-run of the deployed .set gives 1.33 / 1.24, against the
+          1.35 / 1.29 advertised below.
+          => the MAIN figure here is not a clean-window number. Demo only (463666728, judge
+          2026-10-16); no real money exposed. Do not promote on these numbers.
+          Settle it with: the deployed cell on 2023.01.01 -> 2025.12.31, Model 4, full pinned .set.
 EA:       Boss_17_Wave5.ex5  (same binary as WAVE5_XAU — Boss V2 template, Entry_17, both directions)
 Source:   D:\EA_LAB\ea_template\Boss_17_Wave5.mq5  (+ core/entries/{Entry_Wave5,Wave5Swings}.mqh)
 Build:    ex5 from commit bfa048f ; verdict/gates commit 0b4acdbc

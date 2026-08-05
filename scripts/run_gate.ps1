@@ -1,3 +1,19 @@
+# =============================== HOLDOUT-BURNED ===============================
+# ORDER-238 (2026-07-27). One or more test windows in this file end after
+# 2025.12.31 -- that is, inside the 2026H1 holdout. They are deliberately LEFT
+# AS-IS: they record what past runs actually did, and rewriting them would
+# misrepresent that history.
+#
+# Therefore: do NOT re-run this script to produce selection evidence, and do NOT
+# copy its window into new work. A holdout is spent the first time it is touched.
+# The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
+#
+# THIS FILE: the 2026.06.01-2026.06.02 window is a one-day RUNTIME harness for the
+#   EA_CORE unit-test EAs -- it counts PASS/FAIL assertions in the tester journal
+#   and produces no edge or selection evidence. It does not spend the holdout in
+#   the sense that matters, but it does run inside it, so it is labelled openly
+#   rather than quietly special-cased.
+# ==============================================================================
 <#
 run_gate.ps1 — EA_CORE_V1 Phase 4 runtime gate.
 Runs each test EA in MT5 Strategy Tester (headless), then parses the Tester

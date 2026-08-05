@@ -109,7 +109,14 @@ foreach ($m in $allMonths) {
 $n    = $combinedPnl.Count
 $mean = ($combinedPnl | Measure-Object -Average).Average
 $std  = [Math]::Sqrt( ($combinedPnl | ForEach-Object { ($_ - $mean)*($_ - $mean) } | Measure-Object -Sum).Sum / [Math]::Max($n-1,1) )
-$wins = ($combinedPnl | Where-Object { $_ -gt 0 }).Count
+# @() here is DEFENSIVE, not a bug fix, and an earlier version of this comment claimed otherwise.
+# CORRECTED 2026-07-28 after a blind audit: the "single match yields $null .Count" trap is real for
+# pipelines that emit OBJECTS (PSCustomObject from Where-Object returns $null on exactly one match -
+# measured), but $combinedPnl holds NUMBERS, and in PS 5.1 a scalar Int32/Double exposes a synthetic
+# .Count of 1. So the 0%-win-rate failure the previous comment described could not have happened
+# here. The wrapper stays because it costs nothing and makes the count correct for either shape;
+# the claim that it repaired a live defect was wrong and is withdrawn.
+$wins = @($combinedPnl | Where-Object { $_ -gt 0 }).Count
 $wr   = $wins / $n * 100
 $sharpe = if ($std -gt 0) { $mean / $std * [Math]::Sqrt(12) } else { 0.0 }
 $total = ($combinedPnl | Measure-Object -Sum).Sum

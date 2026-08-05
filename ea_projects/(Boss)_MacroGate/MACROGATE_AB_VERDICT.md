@@ -1,6 +1,36 @@
 # MacroGate A/B verdict — ORDER-073 Phase-3 (2026-07-18)
 
-## Bottom line
+> # 🔴 SUPERSEDED 2026-07-25 (ORDER-211) — the benefit table below was measured through a broken classifier
+>
+> Every number in this document was produced with a regime CSV from the MRIS core classifier
+> **before** the `AUDJPY user_pin` bug was fixed (ORDER-203, commit `265de0e3`). That bug made the
+> classifier call **82 days of 2024 risk-off; the corrected classifier calls 47** — the gate was
+> shutting the door about 75% more often than it should, and in the wrong places (after the fix,
+> the first risk-off day of 2024 is 17 July, so the whole first half of the year was falsely gated).
+>
+> **Re-run on the corrected timeline (gate liveness proven from the tester log: 262 rows loaded,
+> 0 skipped, 25,105 block events; OFF runs never open the regime file at all):**
+>
+> | cell | recorded here (OFF→ON) | corrected (OFF→ON) |
+> |---|---|---|
+> | AUDJPY event net | +5.36 | **−30.24** |
+> | USDJPY event net | +37.02 | **−18.40** |
+> | AUDJPY full-2024 net | +0.40 (flat) | **−15.39** |
+> | USDJPY full-2024 net | +61.16 (loss→breakeven) | **−20.75** |
+> | **PF, all four cells** | **up or flat** | **DOWN in all four** (−0.20 / −0.24 / −0.05 / −0.07) |
+> | USDJPY full-2024 eqDD | −55.7% | **−7.1%** |
+>
+> **Standing withdrawn: "VALIDATED deploy-candidate" → ADVISORY-ONLY.** The headline claim of this
+> document — *P&L flat-to-much-better while DD halves* — does not survive. What is left is the
+> ordinary cost of any filter: fewer trades, lower drawdown, worse profit factor.
+>
+> What *does* survive: drawdown control on **AUDJPY** is real timing, not just trading less —
+> it blocked 19-32% of entries and cut eqDD 44-53%. **USDJPY is the opposite** (blocked 16-35%,
+> eqDD down only 7-21%), and USDJPY is the symbol the live-attached leg 990120 runs.
+>
+> Full judgement + the numbers behind this: `AGENT_TASKBOARD.md` ORDER-211.
+
+## Bottom line — ⛔ as recorded 2026-07-18, now superseded (read the banner above first)
 **Mechanism VALIDATED + hardened. Benefit DEMONSTRATED and generalizing on breakout-style
 carry legs (equity DD cut ~54-56% over a full year, 2 symbols, P&L flat-to-much-better).**
 Verdict: **VALIDATED deploy-candidate** for carry EAs that ENTER during risk-off. Live attach

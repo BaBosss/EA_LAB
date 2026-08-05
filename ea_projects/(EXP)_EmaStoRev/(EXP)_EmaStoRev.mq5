@@ -31,6 +31,10 @@ input double _02_BEatLevel        = 50.0;   // move SL to breakeven when STO rea
 input double _03_SlAtrMult        = 2.0;
 input int    _03_AtrPeriod        = 14;
 input double _03_TpAtrMult        = 0.0;    // 0 = no fixed TP (exit is STO-reverse). >0 = ATR TP cap
+//--- [09] round-number SL avoidance (ORDER-126, default 0 = OFF = byte-identical). Push SL clear of the
+//         stop-hunt cluster that sits at round levels, to fix the SMCxSTO SL-fragility (SL-20% flips).
+input double _09_RoundAvoidPips   = 0.0;    // if SL lands within this many pips of a round level, widen it past by this much (0=off)
+input double _09_RoundStepPips    = 50.0;   // round-level grid in pips (50 = the 00/50 big-figure/half levels)
 
 //--- [08] ADX regime filter (user idea — cut counter-trend losers; additive, default OFF)
 input bool   _08_UseAdxFilter     = false;  // true = only enter reversion when trend is weak (ADX < max)
@@ -208,6 +212,11 @@ void OnTick()
    const bool allow = _06_AllowLive || (bool)MQLInfoInteger(MQL_TESTER);
    if(!allow) return;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("EmaStoRev: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+
    const int digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
    const double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    const double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -217,13 +226,27 @@ void OnTick()
    if(buy_sig)
    {
       double sl = NormalizeDouble(ask - sl_dist, digits);
+      if(_09_RoundAvoidPips > 0.0) {
+         double pip = (digits==5||digits==3) ? SymbolInfoDouble(_Symbol,SYMBOL_POINT)*10.0 : SymbolInfoDouble(_Symbol,SYMBOL_POINT);
+         double step = _09_RoundStepPips*pip, avoid = _09_RoundAvoidPips*pip;
+         double nr = MathRound(sl/step)*step;
+         if(step > 0.0 && MathAbs(sl-nr) < avoid) sl = NormalizeDouble(nr - avoid, digits); // widen SL below the round level (further from entry)
+      }
       double tp = (tp_dist > 0.0) ? NormalizeDouble(ask + tp_dist, digits) : 0.0;
-      g_trade.Buy(_05_LotSize, _Symbol, ask, sl, tp, "EMASTO_BUY");
+      if(!g_trade.Buy(_05_LotSize, _Symbol, ask, sl, tp, "EMASTO_BUY") && !g_suppress_log)
+         PrintFormat("EMASTO-BUY FAILED retcode=%d",g_trade.ResultRetcode());
    }
    else
    {
       double sl = NormalizeDouble(bid + sl_dist, digits);
+      if(_09_RoundAvoidPips > 0.0) {
+         double pip = (digits==5||digits==3) ? SymbolInfoDouble(_Symbol,SYMBOL_POINT)*10.0 : SymbolInfoDouble(_Symbol,SYMBOL_POINT);
+         double step = _09_RoundStepPips*pip, avoid = _09_RoundAvoidPips*pip;
+         double nr = MathRound(sl/step)*step;
+         if(step > 0.0 && MathAbs(sl-nr) < avoid) sl = NormalizeDouble(nr + avoid, digits); // widen SL above the round level (further from entry)
+      }
       double tp = (tp_dist > 0.0) ? NormalizeDouble(bid - tp_dist, digits) : 0.0;
-      g_trade.Sell(_05_LotSize, _Symbol, bid, sl, tp, "EMASTO_SELL");
+      if(!g_trade.Sell(_05_LotSize, _Symbol, bid, sl, tp, "EMASTO_SELL") && !g_suppress_log)
+         PrintFormat("EMASTO-SELL FAILED retcode=%d",g_trade.ResultRetcode());
    }
 }

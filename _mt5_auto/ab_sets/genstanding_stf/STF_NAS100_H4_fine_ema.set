@@ -1,0 +1,30 @@
+; STF_NAS100_H4_fine_ema.set -- FINE COMPLETE grid #1 (ORDER-542 cell #21 NAS100 H4)
+; coarse genetic GEN2_NAS100_H4_MAIN.xml: passes=780 survivors=61 (7.8%) plateau=GOOD
+;   filtered PF>=1.2 & trades>=30 (n=448): _02_ExitMode=1 dominant (218/448), _03_UseEma=true dominant (404/448)
+;   restricted to ExitMode=1 (n=218): UseEma=true 208/218 (95%) -- fine grid centres on ExitMode=1 + UseEma=true
+;   top passes: AtrPeriod=12 Mult=3.0 TpAtrMult=7 EmaPeriod=250-300 (PF 2.1-2.3); AtrPeriod=18 Mult=4.5 TpAtrMult=3 EmaPeriod=150
+; ⚠️ top passes cluster at EmaPeriod=300 = the coarse search space's UPPER edge (range was 50-300) --
+;   per memory grid-answer-outside-the-grid, widened EmaPeriod past 300 here to 400
+; ⚠️ INERT-AXIS (memory inert-axis-fake-plateau): _02_SlAtrMult uses only ExitMode==2 (mq5 L193/200)
+;   -> dead at ExitMode=1, locked out of this grid entirely (not even opened)
+; combos = AtrPeriod(5) x Mult(5) x TpAtrMult(5) x EmaPeriod(5) = 625 -> Optimization=1 (complete)
+
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=6||6||4||22||Y
+_01_Mult=2.5||2.5||0.5||4.5||Y
+_01_Lookback=400||400||0||400||N
+_01_UseDonchian=false||false||0||false||N
+_01_DonBars=60||60||0||60||N
+_02_ExitMode=1||1||0||1||N
+_02_TpAtrMult=2||2||1.5||9||Y
+_02_SlAtrMult=1.0||1.0||0||1.0||N
+_03_UseEma=true||true||0||true||N
+_03_EmaPeriod=200||200||50||400||Y
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

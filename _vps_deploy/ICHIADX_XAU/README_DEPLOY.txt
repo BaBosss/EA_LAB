@@ -74,6 +74,6 @@ KILL-SWITCH + NEXT
   Judge +3 months from attach.
 - Attach LEG A (XAUUSD H1) + LEG B (XAUUSD H4), load each .set, confirm periods + magics + first
   signals arm. Tell Claude the attach date -> register 990068 + 990069 in DEPLOYMENTS.csv + judge.
-- Evidence: _triage/ORDER112_ICHIMOKU_RESCUE_VERDICT.md (ORDER-112C/D/E/F sections)
+- Evidence: _triage/_archive/verdicts/order104-126/ORDER112_ICHIMOKU_RESCUE_VERDICT.md (ORDER-112C/D/E/F sections)
   Merge+MC: _mt5_auto/xau_basket_merge_mc.ps1 | Corr: _mt5_auto/ichi_xau_corr.ps1
   Corr script: _mt5_auto/ichi_xau_corr.ps1 | Reports: _mt5_auto/reports/CORR_*_XAU.htm

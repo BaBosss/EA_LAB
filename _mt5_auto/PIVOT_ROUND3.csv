@@ -1,0 +1,8 @@
+﻿test,cellname,model,window,pf,trades,net,largest_loss
+fan,sl1p5_tp2p5,1,MAIN,1.24,267,951.92,-96.68
+fan,sl1p5_tp2p5,1,BWD,1.13,227,310.89,-56.69
+fan,sl1p5_tp3p5,1,MAIN,1.5,184,1426.91,-96.68
+fan,sl1p5_tp3p5,1,BWD,1.08,185,194.27,-56.69
+model4,sl1p5_tp3,4,MAIN,1.16,231,646.99,-96.90
+model4,sl1p5_tp3,4,BWD,1.22,200,509.51,-56.74
+model4,sl1p5_tp3,4,HOLD,1.33,35,643.29,-213.65

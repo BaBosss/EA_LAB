@@ -1,0 +1,6 @@
+; Hedge_Test requires HEDGE_LOCK fixed at known cage values
+HedgeMode=1
+_H_TriggerDDPct=8.0
+_H_ReleaseDDPct=3.0
+_H_Ratio=1.0
+_H_MaxLot=0.0

@@ -3,5 +3,5 @@
 - รันทั้งชุด: `powershell -File ea_template\tests\run_tests.ps1` (ปิด MT5 GUI ก่อน) → ตาราง PASS/FAIL, exit 0 = เขียวหมด
 - เพิ่ม test: วาง `<ชื่อ>.mq5` ที่ print `[PASS] <ชื่อ>: ...` หรือ `[FAIL] <ชื่อ>...` ใน OnInit/tick แรก · ต้องการ input พิเศษ → วาง `<ชื่อ>.set` ชื่อเดียวกัน
 - pattern มาจาก EA_CORE `<Module>_v1_Test.mq5` — เอาแค่แนวคิด assert ไม่ลาก harness/dependency มา
-- ตัวที่มี: `Persist_Test` (GV helper 8 asserts) · `AcctGate_Test` (acct-DD boundary 5 asserts) · `StackStep_Test` (pip/step math 4 asserts)
+- ตัวที่มี: `Persist_Test` (GV helper 8 asserts) · `AcctGate_Test` (acct-DD boundary 5 asserts) · `StackStep_Test` (pip/step math 4 asserts) · `RecoveryOff_Test`/`Recovery81_Test`/`Recovery82_Test`/`Recovery83_Test` (Recovery.mqh 80/81/82/83 math + cage, ORDER-158 - 81 is the flat-lot twin `scripts\hedge_recovery_sweep.ps1` pairs against 82/83) · `HedgeOff_Test`/`Hedge_Test` (Hedge.mqh 0/1 flat-basket accessors, ORDER-158)
 - cage ระดับ EA (เลข backtest) = `scripts\tpl_regression.ps1` — คนละชั้นกัน ใช้คู่กัน

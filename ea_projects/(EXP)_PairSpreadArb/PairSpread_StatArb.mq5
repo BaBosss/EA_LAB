@@ -140,6 +140,16 @@ void OpenBasket(const int dir)
    double bidB = SymbolInfoDouble(_01_SymbolB, SYMBOL_BID);
    if(askA <= 0 || bidA <= 0 || askB <= 0 || bidB <= 0) return;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLotA = SymbolInfoDouble(_01_SymbolA, SYMBOL_VOLUME_MIN);
+   const double minLotB = SymbolInfoDouble(_01_SymbolB, SYMBOL_VOLUME_MIN);
+   if(_05_LotA < minLotA || _05_LotB < minLotB)
+   {
+      if(!g_suppress_log) PrintFormat("PairSpreadArb: LotA %.3f/min %.3f or LotB %.3f/min %.3f -- every order would silently reject, refusing to trade",_05_LotA,minLotA,_05_LotB,minLotB);
+      return;
+   }
+
    bool ok = true;
    if(dir == 1)   // BUY A / SELL B
    {

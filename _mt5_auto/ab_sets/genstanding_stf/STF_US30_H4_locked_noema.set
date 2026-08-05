@@ -1,0 +1,25 @@
+﻿; STF_US30_H4_locked_noema.set — US30 H4 plateau-centre (ORDER-GEN-STANDING cell #17)
+; 2026-07-26 · NOEMA grid: survivors 5/16 (31%) neighbours 3 · M1 PF 1.583/159t/DD 0.45%
+; ExitMode=0 -> Tp/Sl เป็นแกนตาย (ค่าที่เขียนไว้ไม่มีผล) · AllowLive=false
+_00_OptimizeMode=false
+_01_AtrPeriod=8
+_01_Mult=2.5
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=0
+_02_TpAtrMult=9.0
+_02_SlAtrMult=1.5
+_03_UseEma=false
+_03_EmaPeriod=200
+_03_UseER=false
+_03_ErPeriod=8
+_03_ErMin=0.30
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false

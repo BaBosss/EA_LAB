@@ -2,6 +2,22 @@
 Boss_17_Wave5 — USDJPY H1 — DEMO (optimize-rescued, all-years-positive)
 ========================================================================
 Status:   DEMO-ELIGIBLE. Same EA as the deployed Wave5 XAU/XAG legs — just another chart.
+
+!!! CONTAMINATED SELECTION -- added 2026-07-26 (audit AUDIT_BUNDLE_EVIDENCE_G2.md) !!!
+          The word "optimize" in this README refers to run_wave5_uj_opt.ps1: 9 MAIN cells
+          (W5OPT_f*_m*_MAIN.ini), the winner f382/m1618 read off WAVE5_UJ_OPT.csv. EVERY one of
+          those cells was scored on 2023.01.01 -> 2026.07.01 -- six months of the declared
+          2026H1 holdout inside the ranking window. Optimization=0 on each file only records
+          that a PowerShell loop drove the grid instead of the tester's optimiser; a ranked grid
+          is selection regardless.
+          => "MAIN 1.56" below is not a clean-window number, and this leg was RESCUED by that
+          selection (the compiled default fails BWD), so the selection is load-bearing here in a
+          way it is not for a config that was already good.
+          The year-split ("all 6 years positive") IS clean -- W5YS_USDJPY_2025 stops at
+          2026.01.01 -- but it was run after the cell was chosen. It confirms the winner; it did
+          not select it. That distinction is the whole point.
+          Demo only (463666728 USDJPYm, judge 2026-10-16); no real money exposed.
+          Settle it with: f382/m1618 on 2023.01.01 -> 2025.12.31, Model 4, full pinned .set.
           Found thin in the overnight multi-home (1.12/1.50), then optimize lifted it to a
           clean all-years-positive candidate. Pending user attach.
 EA:       Boss_17_Wave5.ex5 (bundled; same as WAVE5_XAU/XAG)

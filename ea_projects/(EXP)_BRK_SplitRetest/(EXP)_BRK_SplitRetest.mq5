@@ -257,13 +257,21 @@ void OnTick()
       return;
    }
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+
    //--- SPLIT-RETEST path (BUY breakout only) ---
    if(_07_UseSplitEntry && dir == 1)
    {
       bool any = false;
 
       // market leg — catches the runaway breakouts that never retest (adverse-selection guard)
-      if(_07_MarketLot > 0.0)
+      if(_07_MarketLot > 0.0 && _07_MarketLot < minLot)
+      {
+         if(!g_suppress_log) PrintFormat("BRK_SplitRetest: MarketLot %.3f < broker min %.3f -- skipping market leg",_07_MarketLot,minLot);
+      }
+      else if(_07_MarketLot > 0.0)
       {
          if(g_trade.Buy(_07_MarketLot, _Symbol, ask, sl_price, tp_price, "BRK_MKT"))
             any = true;
@@ -272,7 +280,11 @@ void OnTick()
       }
 
       // pending buy-limit leg at the broken level (retest) — maker fill, no spread, tighter SL
-      if(_07_PendingLot > 0.0)
+      if(_07_PendingLot > 0.0 && _07_PendingLot < minLot)
+      {
+         if(!g_suppress_log) PrintFormat("BRK_SplitRetest: PendingLot %.3f < broker min %.3f -- skipping pending leg",_07_PendingLot,minLot);
+      }
+      else if(_07_PendingLot > 0.0)
       {
          const double minstop = (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * _Point;
          double limit_price = NormalizeDouble(g_channel_high + _07_RetestOffsetAtr * atr_now, digits);
@@ -296,6 +308,7 @@ void OnTick()
    }
 
    //--- BASELINE path (market-only; identical to base EA) ---
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("BRK_SplitRetest: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
    bool ok = (dir == 1)
       ? g_trade.Buy (_05_LotSize, _Symbol, ask, sl_price, tp_price, "BRKOUT_BUY")
       : g_trade.Sell(_05_LotSize, _Symbol, bid, sl_price, tp_price, "BRKOUT_SELL");

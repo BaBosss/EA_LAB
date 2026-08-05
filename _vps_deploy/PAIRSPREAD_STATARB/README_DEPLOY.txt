@@ -41,7 +41,7 @@ Locked ExitZ0.3 config (edge-thickened from the original ExitZ0.5 candidate):
                    -> CANDIDATE_WEAK, small size, watch. NOT live-approved.
   corr-check     : additive vs cohort (hedges MACD/MG_v1); watch-item =
                    DD-timing overlap 69% with ST03_replica (both GBP mean-rev).
-Full verdict: _triage/ORDER098F_PAIRSPREAD_STATARB_VERDICT.md
+Full verdict: _triage/_archive/verdicts/order076-098/ORDER098F_PAIRSPREAD_STATARB_VERDICT.md
 
 ------------------------------------------------------------------------
 SILENT-STOP PRE-ATTACH CHECKLIST  (clear ALL before it will trade)

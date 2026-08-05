@@ -184,16 +184,23 @@ void OnTick()
    }
    if(!bull && !bear) return;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("SuperTrendFlip: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(bull){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       double sl=(_02_ExitMode==2)?NormalizeDouble(ask-_02_SlAtrMult*atr,digits):NormalizeDouble(lineNow,digits);
       double tp=(_02_ExitMode>=1)?NormalizeDouble(ask+_02_TpAtrMult*atr,digits):0.0;
       if(sl>=ask) return;                                              // SL must be below price
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN ST-BUY @%.2f sl=%.2f",ask,sl); return; }
-      g_trade.Buy(_04_LotSize,_Symbol,ask,sl,tp,"ST_BUY"); }
+      if(!g_trade.Buy(_04_LotSize,_Symbol,ask,sl,tp,"ST_BUY") && !g_suppress_log)
+         PrintFormat("ST-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       double sl=(_02_ExitMode==2)?NormalizeDouble(bid+_02_SlAtrMult*atr,digits):NormalizeDouble(lineNow,digits);
       double tp=(_02_ExitMode>=1)?NormalizeDouble(bid-_02_TpAtrMult*atr,digits):0.0;
       if(sl<=bid) return;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN ST-SELL @%.2f sl=%.2f",bid,sl); return; }
-      g_trade.Sell(_04_LotSize,_Symbol,bid,sl,tp,"ST_SELL"); }
+      if(!g_trade.Sell(_04_LotSize,_Symbol,bid,sl,tp,"ST_SELL") && !g_suppress_log)
+         PrintFormat("ST-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

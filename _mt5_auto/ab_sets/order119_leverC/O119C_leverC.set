@@ -1,0 +1,10 @@
+; ORDER-119 lever C — MACD entry-signal sweep, flat-lot (chassis Boss_15_ST03)
+; sweep: _15_MacdFast{8,12,16} x _15_MacdSlow{26,34} x _15_MacdSignal{9} x _15_CountBars{2,3,4} = 18 combos
+; flat-lot pins: FirstLotMode=FIRSTLOT_FIXED(41) LotProg=PROG_NONE(50) _41_FixedLot=0.01 (all = chassis default)
+_15_MacdFast=12||8||4||16||Y
+_15_MacdSlow=26||26||8||34||Y
+_15_MacdSignal=9||9||0||9||N
+_15_CountBars=2||2||1||4||Y
+FirstLotMode=41||41||0||41||N
+LotProg=50||50||0||50||N
+_41_FixedLot=0.01||0.01||0||0.01||N

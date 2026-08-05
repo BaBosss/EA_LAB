@@ -1,0 +1,57 @@
+{
+    "entity":  "PilotSizingSweep",
+    "order":  "ORDER-1240",
+    "criterion":  "the smallest first lot at which the flat-lot probe returns EXERCISED on the declared reference cell",
+    "criterion_reads_pf":  false,
+    "reference_cell":  "XAUUSD H1 2023.01.01..2025.12.31 model 1",
+    "lane":  "D:\\Meta 5\\terminal64.exe",
+    "revision":  "B14-H01-r1",
+    "grid":  [
+                 0.01,
+                 0.02,
+                 0.03,
+                 0.04,
+                 0.05,
+                 0.1
+             ],
+    "results":  [
+                    {
+                        "first_lot":  0.01,
+                        "state":  "UNTESTED-INERT",
+                        "volumes":  "0.01",
+                        "deepest":  2
+                    },
+                    {
+                        "first_lot":  0.02,
+                        "state":  "UNTESTED-INERT",
+                        "volumes":  "0.02",
+                        "deepest":  2
+                    },
+                    {
+                        "first_lot":  0.03,
+                        "state":  "EXERCISED",
+                        "volumes":  "0.03/0.04",
+                        "deepest":  2
+                    },
+                    {
+                        "first_lot":  0.04,
+                        "state":  "EXERCISED",
+                        "volumes":  "0.04/0.05",
+                        "deepest":  2
+                    },
+                    {
+                        "first_lot":  0.05,
+                        "state":  "EXERCISED",
+                        "volumes":  "0.05/0.06",
+                        "deepest":  2
+                    },
+                    {
+                        "first_lot":  0.1,
+                        "state":  "EXERCISED",
+                        "volumes":  "0.1/0.11/0.13",
+                        "deepest":  2
+                    }
+                ],
+    "negative_control_0p01":  "UNTESTED-INERT",
+    "chosen_first_lot":  0.03
+}

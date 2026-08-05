@@ -1,4 +1,5 @@
-# ROADMAP — จากวันนี้ถึง "ระบบหมุนเอง" (เขียน 2026-07-03, Claude Fable ก่อนส่งไม้ Opus)
+# ROADMAP — จากวันนี้ถึง "ระบบหมุนเอง" (เขียน 2026-07-03, Claude Fable ก่อนส่งไม้ Opus ·
+# ครึ่งหลัง 5 ปี + Control Room + Prop/Monetize เพิ่ม 2026-07-19 โดย Opus+Codex, user approve)
 
 > ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: **ภาพสุดท้าย + เฟสงานระยะยาว + เงื่อนไขเลื่อนเฟส
 > เท่านั้น** — สถานะปัจจุบัน/แผนรายสัปดาห์อยู่ PROJECT_STATE §7 · คิวงานจริงอยู่ AGENT_TASKBOARD.md
@@ -22,9 +23,32 @@
 
 **ตัวชี้วัดว่า "ถึงแล้ว":** เปิดพอร์ตใหม่ 1 พอร์ตใช้แรง user แค่ "อนุมัติ + โอนเงิน" — ที่เหลือระบบ+AI ทำ
 
+### 1.5 ภาพ 5 ปี (2031) — Final product เหนือ END STATE (เคาะ 2026-07-19: user + Opus + Codex)
+
+**Final product ≠ คลัง EA — คือ "EA Portfolio OS + track record ที่ตรวจสอบได้"** โรงงาน/แม่พิมพ์เป็นแค่
+ห้องเครื่อง เงินเข้า 3 ท่อตาม North Star ใน VISION.md:
+
+| ท่อ | เพดาน | เงื่อนไขเปิด |
+|---|---|---|
+| 1. พอร์ตทุนตัวเอง (END STATE ข้างบน) | ทุนตัวเอง — เล็กสุด | กำลังทำ = ปีแรกของแผน |
+| 2. **Prop firm** (edge เดิม ทุน ×50–100) | กติกา firm + จำนวน account | **gate: พอร์ต #1 live รอด 3 เดือน (~ม.ค. 2027)** → Phase 5 |
+| 3. Copy-trading / signals | distribution | verified track ≥2 ปี → Phase 6 |
+
+- **Control Room (Phase 4.5) ทำหน้าที่คู่:** ห้องควบคุมของเรา + **evidence pack ที่ prop/copier จ่ายเงินซื้อ**
+  (attestation · วินัย kill ตรวจสอบได้ · drift log) — สร้างครั้งเดียวได้สองหน้าที่
+- **North-star metric:** "จำนวนสัปดาห์ที่ระบบเดินถูกต้อง โดยใช้เวลา user น้อย และ risk รวมอยู่ในกรอบ"
+  — ไม่ใช่จำนวน EA
+- **สัดส่วนงาน (ยาแก้ตัน "ใส่ไอเดีย EA ไม่จบ"):** 50% operate/observe · 25% evidence/promotion integrity ·
+  15% portfolio construction · 10% EA idea ใหม่ (เลน intake = งาน agent — ดูกติกากวาด v2 ใน §2.5) ·
+  **denominator = lead-attention hours (rolling 4 สัปดาห์) — compute/agent runtime ไม่นับในสัดส่วนนี้**
+- ที่มา: `_triage/_archive/codex_reviews/system_and_roadmap/CODEX_5YR_OS_VISION_2026-07-19.md` + `_triage/_archive/codex_reviews/system_and_roadmap/CODEX_CONTROLROOM_DESIGN_2026-07-19.md`
+  (Opus สังเคราะห์ — ส่วนที่เพิ่มจาก Codex: ท่อ 2/3 ฝั่งรายได้ ซึ่งแผน Codex จบแค่ OS บนทุน cent)
+
 ---
 
 ## 2. เฟสงาน (เงื่อนไขเลื่อนเฟส = gate จริง ไม่ใช่วันที่)
+
+> ⚠️ **HISTORICAL SNAPSHOT — superseded.** Phase 0/1 ด้านล่างเขียนไว้ 2026-07-03 และค้างสถานะ "operate 9 EA" — สถานะปัจจุบันจริงดู `PROJECT_STATE.md` (รวม decision log + forward plan §7).
 
 ### Phase 0 — ปิด Fable window (ตอนนี้ → 7 ก.ค.) ✅ เกือบครบ
 - [x] VISION / AGENTS / TASKBOARD / regression cage / Boss_14 + candidates / กฎ verdict ครบ 3 ข้อ
@@ -46,8 +70,17 @@
 - **Operate 9 EA:** `/ea-monitor` ทุก 2 สัปดาห์ (user ส่ง live_deals.csv) — จับตา ST03 replica (คาด kill), MG grid DD, Gold Reaper
 - **Gate → Phase 3:** ถึงวัน judge + มี candidate bench ≥3 ตัวที่ demo อยู่
 
-### Phase 3 — Judge + พอร์ตจริงแรก (22 ก.ย. → ต.ค.)
-- attribution per (magic,symbol) → kill/keep 9 EA เดิม · ตัวผ่าน (PF≥1.40, ≥30 trades) = promote pool
+### Phase 3 — Judge + พอร์ตจริงแรก (~ต.ค. 2026 — **วันจริงมาจาก generated calendar ไม่ใช่บรรทัดนี้**)
+
+> 🔴 **แก้ 2026-08-01 (`ORDER-940`): หัวข้อนี้เคยเขียน "22 ก.ย. → ต.ค." — `2026-09-22` ไม่มีแถวไหนใน
+> `portfolio/DEPLOYMENTS.csv` ถืออยู่เลย** (cohort 9 EA เดิมสลายแล้ว — ดู `PROJECT_STATE.md` §4)
+> ⇒ วัน judge แรกจริง = **2026-10-09** · ปฏิทิน = `scripts/control_room_snapshot.ps1` → `judge_cohorts`
+> 🔴 **และ gate ของเฟสนี้ไม่ใช่ "ถึงวัน" แต่เป็น "มี sample พอ":** วันนี้ EA ที่ตัดสินได้ 7 ตัว
+> **มี judge_date ว่างทั้งหมด** (อยู่บัญชีที่แล็บไม่รับรอง) ส่วนตัวที่มี judge_date **19 ตัวคาดว่าไม้ไม่ถึง 30**
+> ต่อ 11 ตัวที่ถึง ⇒ ต้องเคลียร์ `ORDER-941`/`942`/`943` ก่อน ไม่งั้นถึงวันแล้วไม่มีอะไรให้ตัดสิน
+
+- attribution per (magic,symbol) → kill/keep · ตัวผ่าน (PF≥1.40, ≥30 trades — หรือกติกา thin `ORDER-235`
+  ถ้า pre-register ไว้ตอน attach) = promote pool
 - **ประกอบพอร์ต #1:** 2–3 EA ดีสุดที่ corr ≤0.40 (`portfolio-selector`) → **live micro account จริงทันที** (ตาม user decision) → `live-deployment-controller` + `vps-deploy-ops` เต็มรูป
 - demo account เดิม = โรงเพาะ cohort ถัดไป (EA ใหม่ทุกตัวยังต้อง demo ≥3 เดือนก่อน live — กฎเหล็กไม่เปลี่ยน)
 - ตั้ง **ปฏิทิน re-opt ทุก 6 เดือน** ของทุก EA live (เริ่มนับจากวัน live ของแต่ละตัว) — ใส่ MASTER_BACKLOG
@@ -67,14 +100,69 @@
    1,521 ตัว = ตัวอย่างจริง) → ปรับเกณฑ์ผ่านให้โหดขึ้นตามจำนวนที่ลอง · เข้า `SYSTEM_METRICS.md`
 3. 🥈 **Live tracking-error bands** — ต่อ EA: live เพี้ยนจาก backtest expectation เกินเกณฑ์ตัวเลข =
    probation/kill (เสริม `/ea-monitor` ที่มีอยู่ ให้เกณฑ์เป็นเลขไม่ใช่ดุลยพินิจ)
-- **เงื่อนไขเริ่ม:** หลัง judge 2026-09-22 + พอร์ต #1 live แล้ว (อย่าแทรกก่อน — demo 3 เดือน =
+- **เงื่อนไขเริ่ม:** หลัง judge รอบแรก (**2026-10-09** — `2026-09-22` ถูกเพิกถอน `ORDER-940`) + พอร์ต #1 live แล้ว (อย่าแทรกก่อน — demo 3 เดือน =
   experiment ที่แพงสุดที่กำลังรัน ห้ามรบกวน)
 
+### Phase 4.5 — CONTROL ROOM (เลนขนาน · CR-001+ เริ่มได้ก่อน judge — เป็นงาน ops/evidence ตรงกับ FIX-THEN-SCALE)
+
+> design เต็ม = `_triage/_archive/codex_reviews/system_and_roadmap/CODEX_CONTROLROOM_DESIGN_2026-07-19.md` (Codex เขียน · Opus adopt · user approve
+> 2026-07-19) · หลักการ: **EA = เซนเซอร์/ผู้ปฏิบัติ · Control Room = ความจริงกลาง (`ControlRoomSnapshot`
+> ก้อนเดียว) · AI = ที่ปรึกษา · user = ผู้อนุมัติเงิน** · อำนาจ AI ไต่ทีละขั้น L0 observe → L1 recommend →
+> L2 safe-ops → L3 pre-approved risk-reduction · **L4 (money decision) = human approval เสมอ แม้ปีที่ 5**
+
+| ขั้น | ของ | ระยะ | gate ผ่าน |
+|---|---|---|---|
+| **CR-000** | ปิด ORDER-138 #1–3 ก่อนทุกอย่าง (= blocker เดิมที่มีอยู่แล้ว) | — | **code-ready** (blocker ฝั่ง code ปลด) — rollout จริงยังต้องรอ user เดิน `ea_template/PERSIST_MIGRATION_ORDER132.md` แยกอีกขั้น |
+| **CR-001** | `ControlRoomSnapshot` schema + generate cohort map จาก `DEPLOYMENTS.csv` (ถอด `$cohort` hardcode ใน live_dashboard.ps1) — ยังไม่มี AI | 1–2 สัปดาห์ | คำสั่งเดียวได้ภาพระบบครบก้อนเดียว + โชว์ field ที่ missing/UNVERIFIED |
+| **CR-002** | Attestation + sensor coverage: exporter ครบทุก account · binary/set hash · hedging/netting mode · server-side SL จริงไหม · unknown-magic detection · judge rule/date ครบทุก deployment · backup/restore drill จริง 1 รอบ | 2–4 สัปดาห์ | ของที่รันจริงตรงทะเบียน 100% · UNVERIFIED = 0 · กู้ระบบกลับได้ · **+ promotion-evidence reconstruction พิสูจน์จริง 1 candidate** (reuse evidence-manifest จาก Contract D: source/report/window/hypothesis lineage) |
+| **CR-003** | Deterministic health engine: สถานะ NORMAL/WATCH/PROBATION/QUARANTINE/DATA_INSUFFICIENT/CONFIG_DRIFT (**แยกจาก verdict** — DEMO ที่ health=WATCH ได้โดยไม่แตะ verdict) + action queue + replay test จาก snapshot เก่า — กฎล้วน ยังไม่ใช้ AI ตัดสิน · **ขอบเขต = system/config/stale drift เท่านั้น** (behavioral drift → CR-005) | 3–5 สัปดาห์ | จับ injected/replay fixture ได้ 100% · จับ drift จริง ≥1 เคส · false-alarm ≤1 ครั้ง/สัปดาห์ ช่วง shadow 30 วัน |
+| **CR-004** | TODAY screen + AI advisor V1: อ่าน Snapshot+Findings เท่านั้น (เลิกให้ AI ประกอบภาพจากไฟล์กระจัดกระจายเอง) · ทุกคำแนะนำ format เดียว FACT/INTERPRET/ACTION/EVIDENCE/CONFIDENCE/APPROVAL · AI ร่าง order ได้ ห้ามเขียน verdict | 2–3 สัปดาห์ | user เปิดใช้เป็นผู้ช่วยงานเช้าจริง |
+| **CR-005** | Drift & judge-readiness engine: locked expected profile ต่อ EA (trade-rate/PF band/holding/slippage/MAE-MFE) + **decision-capable vs data-collection forecast** — ปิด blind spot "judge-date ≠ sample พอตัดสิน" (Codex จับ 2026-07-19) · shadow alert 30 วัน · **บทบาท = เตือน/เลื่อน/probation เท่านั้น — promotion bar ใน CLAUDE.md VERDICT GATE (demo ≥3 เดือน · PF≥1.40 · ≥30 trades) ไม่เปลี่ยน** | 1–2 เดือน | รู้ก่อนครบ 3 เดือนว่า EA ไหนกำลังเพี้ยน (แต่ตัดสิน promote ตาม bar เดิมเสมอ) |
+| **CR-006** | Portfolio control (**ควบ Phase 3.5 เดิม** — ไม่ทำซ้ำ): risk contribution · DD-overlap ช่วง stress · currency/mechanism exposure · what-if shock sim · allocation recommendation · circuit breaker แบบ shadow | หลัง CR-001–005 นิ่ง **AND หลัง judge + พอร์ต #1 live** (คง lock ตาม decision 2026-07-06 — ห้ามแทรกก่อน) | จาก "กอง EA" เป็นพอร์ตจริง · crosswalk Phase 3.5: tracking bands→CR-005 · portfolio risk→CR-006 · deflated gate→CR-005 |
+| **CR-007** | Semi-autonomous ops (ปี 2+): retry/repair exporter · incident timeline อัตโนมัติ · Telegram action queue · pre-approved risk-reduction (L3) · governance report ราย เดือน/ไตรมาส · **dependency จริงต้องปิดก่อน:** credential-expiry alarm (บทเรียน gh token ORDER-128) · reboot/restore recovery · expired-token simulation | ปี 2 | **14-day unattended soak test ผ่าน** (ไม่มี manual intervention + zero unapproved money action) |
+
+**tech (local-first — ห้ามสร้าง cloud platform):** CSV เดิม = raw evidence · SQLite 1 ไฟล์ =
+**rebuildable read-model/cache** (สร้างใหม่จาก raw ได้เสมอ — ไม่ใช่ owner ใหม่) · Snapshot JSON =
+**read-only projection** (มี source-hash + as-of timestamp) · **ห้าม write-back เข้า owner จริง** —
+`DEPLOYMENTS.csv`/scorecard/PROJECT_STATE/event-log ยังเป็น owner ตาม anti-drift PROJECT_STATE §0.5 ·
+**ห้ามสร้าง script สิบตัวต่างคนต่างอ่าน CSV — ทุกอย่างเรียก `Control Room Core` interface เดียว**
+(`Refresh→Evaluate→Propose→Execute(approved)`)
+
+**จังหวะจริง (Codex จับ: CR-001..005 serial = 12–22 สัปดาห์ → เสร็จ ~ต.ค.–ธ.ค. 2026 ชน judge
+2026-10-09/16 พอดี):** ทำ **vertical slice ก่อน** — CR-001 → CR-002 เฉพาะ cohort ที่จะ judge →
+minimal judge-readiness (ชิ้นเล็กของ CR-005: trade-count forecast + decision-capable flag) ให้ทัน
+judge ต.ค. · CR-003/004 เต็มรูปตามหลัง — ห้ามไล่ทำ CR ครบสวยงามแล้วพลาดวัน judge
+
 ### Phase 4 — Scale ทีละพอร์ต (Q4 2026 → 2027+)
-- **กฎเปิดพอร์ตใหม่:** เปิดได้เมื่อ bench มี 2–3 EA validated + demo-proven + corr ≤0.40 กับ*ทุกพอร์ตที่ live อยู่* — ห้ามเปิดเพราะ "อยากครบ 10" (พอร์ตคุณภาพต่ำ = ลาก DD รวม)
+- **กฎเปิดพอร์ตใหม่:** เปิดได้เมื่อ bench มี 2–3 EA validated + demo-proven + corr ≤0.40 กับ*ทุกพอร์ตที่ live อยู่* — ห้ามเปิดเพราะ "อยากครบ 10" (พอร์ตคุณภาพต่ำ = ลาก DD รวม) · **hard prerequisite เพิ่ม 2026-07-19 (Codex BLOCKER — บังคับ FIX-THEN-SCALE จริง): account ใหม่ทุกใบต้องผ่าน CR-002 attestation + restore drill + telemetry ครบก่อนเติมเงิน**
 - จังหวะที่คาดหวัง: พอร์ตใหม่ ~ทุก 1–2 เดือนถ้าโรงงานผลิต candidate ทัน → 10 พอร์ตราว กลาง–ปลาย 2027 (ขึ้นกับ edge จริง ไม่ใช่ความขยัน — อย่า force)
 - ทุนต่อพอร์ต = user เติม 10,000 cent ต่อ account ตอนเปิด · risk รวมทุกพอร์ต = ไม่มี EA ซ้ำ symbol+กลไกข้ามพอร์ตแบบ corr สูง
 - automation เพิ่มตามจำเป็น: monthly report รวมทุก account, MT5 instance ที่ 2 (D:\Meta 5b) เมื่อคิว backtest แน่น
+
+### Phase 5 — PROP TRACK: ตัวคูณทุน (gate เปิด: พอร์ต #1 live รอด 3 เดือน ~ม.ค. 2027 — VISION North Star ข้อ 2)
+
+- **นิยาม gate (ตัวเลข — Codex จับว่า "รอด 3 เดือน" เดิมกำกวม):** นับจากวัน live จริงของพอร์ต #1
+  +90 วัน · ≥30 trades รวมพอร์ต · ไม่มี pre-registered kill trip · CR-002 evidence bundle ครบ —
+  ครบทั้ง 4 ข้อ = gate เปิด
+- **ก่อน gate (Q4 2026):** research prop firm ที่กติกาเข้ากับ DD profile ของ EA เรา (daily-DD/max-DD
+  limit · news rule · EA/grid อนุญาตไหม · payout structure) — **ข้อยกเว้นแบบจำกัดต่อ VISION
+  "ห้ามเบี่ยงงานก่อน gate": ≤4 ชม./เดือน · delegate ให้ agent/skill `skeptical-research` ทำ ไม่ใช่งานมือ
+  user · ห้ามจ่ายเงินทุกกรณี — เกินกรอบนี้ = รอ gate** (user approve exception 2026-07-19)
+- **หลัง gate:** เลือก 1 firm → เช็คกติกา firm รอบสุดท้ายก่อนจ่ายเงินเสมอ (กติกา prop เปลี่ยนบ่อย) →
+  challenge ด้วย cohort ที่**พิสูจน์บนเงินจริงแล้ว + telemetry CR ≥30 วันเท่านั้น** (ห้ามเอา demo-tier
+  ไปเสี่ยงค่า challenge) → payout แรก = พิสูจน์ท่อ 2 → ขยายทีละ firm แบบเดียวกับขยายพอร์ต (bench-gated
+  ไม่ใช่ตามวันที่/ความอยาก)
+- **Control Room evidence pack = ใบเบิกทาง** — สิ่งที่ prop challenge ต้องการ (คุม DD เชิงโครงสร้าง +
+  วินัยพิสูจน์ได้) คือสิ่งที่ระบบนี้สร้างอยู่แล้ว · CR-002 attestation + CR-005 drift log = หลักฐานพร้อมโชว์
+
+### Phase 6 — MONETIZE TRACK RECORD (2028+ · เงื่อนไข: verified track ≥2 ปี)
+
+- **นิยาม "verified track ≥2 ปี" (เกณฑ์ตั้งต้น — ปรับได้ตอนเปิดเฟสโดย user):** ต่อเนื่อง ไม่มี gap
+  >2 สัปดาห์ · บัญชี live จริง (demo ไม่นับ) · ≥300 trades รวม · verified โดย platform ภายนอก
+  (Myfxbook/MQL5) ไม่ใช่ report ตัวเอง
+- Myfxbook/MQL5 signal สะสมต่อเนื่อง (เริ่มแล้ว 2026-07) → เปิด copy-trading/signal เมื่อ track ครบเงื่อนไข
+- ของที่ขายจริงคือ **วินัย + หลักฐานตรวจสอบได้** ไม่ใช่คำโฆษณา PF — governance report จาก CR-007 = ของโชว์
+- ห้ามเบี่ยงเวลา operate ไปทำ marketing ก่อนเงื่อนไขครบ — ท่อ 3 เป็นผลพลอยได้ของการทำท่อ 1–2 ให้ดี ไม่ใช่โปรเจกต์แยก
 
 ### Cruise state (ตลอดไป)
 รอบเดือน: monitor ทุกพอร์ต → kill/promote → re-opt ตามปฏิทิน → โรงงานหา edge เติม bench ต่อเนื่อง (dual-track ตาม VISION) · user ≤1 วัน/สัปดาห์
@@ -91,9 +179,27 @@
 | 3 | **PDF strategy books** | 49 เล่ม (worth_deep_read 67 จาก `_triage/pdf_catalog.csv`) + STRATEGY_200 ที่เหลือ (#94 Turtle ฯลฯ) | อ่านสกัดกฎ → เขียน entry ใหม่ในแม่พิมพ์ |
 | 4 | **ของใหม่จากกลุ่ม LINE/Telegram** | user โยนไฟล์ลง `D:\Forex\10_EA_PROJECTS\2. wait for test` ได้เรื่อยๆ | รัน `ea_inventory.py` ซ้ำ → เข้าคิว triage อัตโนมัติ |
 
-**กติกาจังหวะ (กัน pipeline บวม):** คอขวดจริงคือกำลัง validate ไม่ใช่ไอเดีย — ป้อนเข้า smoke
-**~1 concept ใหม่/สัปดาห์พอ** · funnel จริงจากข้อมูลเรา: 21 symbols → 6 demo · 50 MT4 EA → 0 ·
-คาดหวังจากเหมือง = "กลไก" ไม่ใช่ "EA สำเร็จรูป" · ทุก concept ตายให้บันทึกใน scorecard เสมอ (กัน re-hunt)
+**กติกากวาด v2 (2026-07-19 — user ยืนยัน "กวาดไปก่อน ยิ่งเยอะยิ่งมีเวลาพิสูจน์" + Opus/Codex reconcile —
+supersede กติกา ~1 concept/สัปดาห์เดิม):**
+- **backlog ไม่จำกัด แต่ execution มี cap:** ขนาดคิว/คลังไอเดีย = ไม่จำกัด · การรันจริงเคารพ pacing rule
+  เดิม (**1–2 order/รอบ กระจายหลายวัน** — memory `feedback-pacing-batch-small`) + tester ต้องว่าง
+  (กัน 0-trade artifact จาก sweep ชนกัน) · เลนรัน = agent ถูก (qwen / corpus-intake / ea-screener)
+- **ขอบเขตเลน agent (กฎ AGENTS.md §3.9 external-input ยังคุม):** agent ทำได้เฉพาะ mechanical
+  screening ของ artifact ที่เข้าคลัง/ผ่าน filter แล้ว — **ของใหม่จากแหล่งภายนอก (ไฟล์กลุ่ม LINE/TG ·
+  PDF · EA แปลกหน้า) ต้องผ่าน Claude/Codex filter ก่อนเข้าเลน agent เสมอ**
+- **เวลา lead:** จ่ายเฉพาะตอนเขียน order + review ผลตามรอบ (อยู่ในโควตา 10% ของสัดส่วนงาน §1.5) —
+  ระหว่างรันไม่มี discretionary lead time
+- **บันไดสถานะ (automation ห้ามออก verdict):** `INTAKE_RAW → SMOKE_SURVIVOR → VALIDATION_WIP →
+  VALIDATED_BENCH` — automation เลื่อนได้ถึง SMOKE_SURVIVOR เท่านั้น · verdict ทุกชนิด (รวม DEAD)
+  = Claude/user ตาม VERDICT GATE ใน CLAUDE.md เสมอ
+- **WIP limit ย้ายไปคุมชั้นแพงแทน:** validate พร้อมกัน ≤3 concept · เข้า validation ≤1 concept/สัปดาห์ ·
+  demo slot จำกัดตามปฏิทิน judge (คอขวดจริง = ปฏิทิน ไม่ใช่ไอเดีย — demo 3 เดือน/ตัว เร่งไม่ได้)
+- **บัตรผ่านเข้า validation:** ต้องตอบก่อนว่า "เติม payoff shape อะไรที่พอร์ตยังไม่มี" — ตอบได้แค่
+  "PF อาจสูง" = อยู่ bench ต่อ · **payoff-shape = เกณฑ์จัดลำดับที่ซ้อนบน bar ปกติของ VERDICT GATE
+  (smoke PF≥1.2 ฯลฯ) ไม่ใช่แทน** · หลัง bench แน่น (≥2 validated ต่อ slot-type) เปลี่ยนเป็นกวาดตาม
+  ช่องว่างพอร์ต (เช่น พอร์ต XAU-trend หนัก ขาด relative-value → pairs/stat-arb มาก่อน breakout ตัวใหม่)
+- funnel จริงจากข้อมูลเรา: 21 symbols → 6 demo · 50 MT4 EA → 0 · 1,318 sweep → 1 finding —
+  คาดหวังจากเหมือง = "กลไก" ไม่ใช่ "EA สำเร็จรูป" · ทุก concept ตายบันทึกใน scorecard เสมอ (กัน re-hunt)
 
 ## 3. Development backlog ของระบบ (delegate ได้ — Claude เขียนเป็น order เมื่อถึงคิว)
 

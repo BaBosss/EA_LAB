@@ -3,7 +3,7 @@
   "version": "1.0",
   "_locked": "Thresholds LOCKED as user-sanctioned defaults 2026-07-17. Every value below is still a plain tunable number - change it and re-run mris_run.ps1; nothing is hardcoded in the scripts. See _tuning_guide for what each knob does and the sweep-derived alternatives.",
   "_tuning_guide": {
-    "AUDJPY.user_pin": "110 = the AUD/JPY north-star line (article). null = pure relative (SMA200/ATR) mode with no pin flag.",
+    "AUDJPY.user_pin": "110 = the AUD/JPY north-star line (article). ADVISORY ONLY since ORDER-203 (2026-07-25): the pin drives the TRIPWIRE_NEAR flag and nothing else. It used to also force signal=-2, which broke every pre-2026 replay (AUDJPY traded below 110 for a decade, so the pin test was always true). Confirmed unwind (-2) is now two RELATIVE conditions: below SMA200 AND a fast drop beyond the ATR band. null = no pin flag.",
     "AUDJPY.pin_warn_band_pct": "3.0 = early-warn band above the pin. NOTE: at spot ~113.3 the flag flickers on/off right at the 3% edge; set 4.0-5.0 for a steadier whisper that survives a single up-day.",
     "VIX.calm_below/elevated_above/stress_above": "15/20/30 standard. Looser 17/22/32 would read ~16-18 VIX as calm (risk-on); tighter 13/18/28 warns earlier. stress_above also drives the STRESS override.",
     "US10Y_JP10Y.narrowing_5d_bps": "15 ~= 1 ATR of the 10Y yield's 5d move. 10 = more sensitive to carry-fuel change, 20 = only large rate moves trip it.",

@@ -104,6 +104,15 @@ void PlaceMakerBasket(const int dir)
    double askA=SymbolInfoDouble(_01_SymbolA,SYMBOL_ASK), bidA=SymbolInfoDouble(_01_SymbolA,SYMBOL_BID);
    double askB=SymbolInfoDouble(_01_SymbolB,SYMBOL_ASK), bidB=SymbolInfoDouble(_01_SymbolB,SYMBOL_BID);
    if(askA<=0||bidA<=0||askB<=0||bidB<=0) return;
+
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLotA=SymbolInfoDouble(_01_SymbolA,SYMBOL_VOLUME_MIN), minLotB=SymbolInfoDouble(_01_SymbolB,SYMBOL_VOLUME_MIN);
+   if(_05_LotA<minLotA || _05_LotB<minLotB)
+   {
+      if(!g_suppress_log) PrintFormat("PairSpreadArbMaker: LotA %.3f/min %.3f or LotB %.3f/min %.3f -- every order would silently reject, refusing to trade",_05_LotA,minLotA,_05_LotB,minLotB);
+      return;
+   }
    int dA=(int)SymbolInfoInteger(_01_SymbolA,SYMBOL_DIGITS), dB=(int)SymbolInfoInteger(_01_SymbolB,SYMBOL_DIGITS);
    if(dir==1){ // BUY A @ bid (maker), SELL B @ ask (maker)
       g_trade.BuyLimit (_05_LotA,NormalizeDouble(bidA,dA),_01_SymbolA,0,0,ORDER_TIME_GTC,0,"PSK_LA");

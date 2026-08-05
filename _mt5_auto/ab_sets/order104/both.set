@@ -1,0 +1,6 @@
+_02_UseHPFilter=true
+_02_HP_Window=120
+_02_HP_Lambda=14400
+_03_UseTanhVol=true
+_05_LotSize=0.01
+_07_AllowLive=false

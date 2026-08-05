@@ -22,11 +22,11 @@
 9. **SMC×STO idea (user) triaged** → ORDER-107 staged (cheap 2-stage smoke plan)
 11. **⬛ ORDER-107 SMC×STO (user idea) = DEAD SKELETON** — build `(EXP)_EmaStoRev` (EMA-gate + STO reversion,
    no OB) + smoke 6 cell = ทุกตัว PF<1.0 (0.63-0.89, win% 58-67% = mean-reversion trap). แกนไม่มี edge → OB
-   ไม่ช่วย → concept parked. cheap-death สำเร็จ. verdict = `_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`
+   ไม่ช่วย → concept parked. cheap-death สำเร็จ. verdict = `_triage/_archive/verdicts/order104-126/ORDER107_SMCxSTO_STAGE0_VERDICT.md`
 10. **🟩 ORDER-108 break-retest split (user idea) = BUILT + VALIDATED** — `(EXP)_BRK_SplitRetest` (market leg +
    pending buy-limit at retest). A/B Model-4: fill-rate ~90%, adverse-selection real, split regime-robust on
    Bars40 (1.93/1.97). **BUT retrofit on LIVE Bars55/TP8 = ไม่ยก** (config-conditional) → ห้าม retrofit ตัว live.
-   lever banked (EDGE_CATALOG). verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`
+   lever banked (EDGE_CATALOG). verdict = `_triage/_archive/verdicts/order104-126/ORDER108_SPLIT_RETEST_VERDICT.md`
 
 ## รอบ 2 (afternoon, user เคาะ 4 ทิศ + ทำต่อ)
 12. **MacdDiv Exness XAUUSDc set** = `_vps_deploy/MACDDIV_XAU/MacdDiv_XAUc_exness3d_v1.set` (Deviation 300 สำหรับ
@@ -34,7 +34,7 @@
 13. **ORDER-106 GBPJPY finer sweep** → plateau ยกไป d1.5 (tp150 = 1.40/1.32, trades 93/51 = แก้ปม thin) =
    candidate leg-8 แข็งขึ้น · d1.5 Model-4 confirm ยังค้าง (ห้ามรันคู่ Model-4 อื่น)
 14. **🟩 ORDER-091C-D1d pending-limit MT5 (Thread A) = BUILT + tested** `(EXP)_LwmaRev_Pending` · pending +0.05 PF/ไม้
-   แต่ base reversion no-edge · **สรุปรวม pending 2 ฝั่ง = `_triage/PENDING_LIMIT_SYNTHESIS.md`** (pending = refinement
+   แต่ base reversion no-edge · **สรุปรวม pending 2 ฝั่ง = `_triage/_archive/one_off_analyses/PENDING_LIMIT_SYNTHESIS.md`** (pending = refinement
    ไม่ใช่ resurrector; split = form ที่ adoptable; spread-death revival คุ้มเฉพาะ post-spread PF≥0.95)
 
 ## 👉 คิวถัดไป (เรียง EV — pace 1-2/รอบ)
@@ -62,10 +62,10 @@
    ANTI-RATIONALIZATION block (b) signal-scanner Step 4 ลบ loophole "reversion-at-1.0=dead" (c) **warn-hook
    `scripts/check_verdict_kill.ps1` + `.githooks/pre-commit`** เตือนตอน commit kill-verdict ที่ไม่มี optimize
    evidence (warn-only exit 0) (d) memory `feedback-optimize-before-killing-reversion`.
-17. **EA death review** = `_triage/EA_DEATH_TAXONOMY_AND_IMPROVEMENT.md` — 107 dead-pile: ~25 ตายจริง vs ~50+ กู้ได้.
+17. **EA death review** = `_triage/_archive/one_off_analyses/EA_DEATH_TAXONOMY_AND_IMPROVEMENT.md` — 107 dead-pile: ~25 ตายจริง vs ~50+ กู้ได้.
 
 ## 🚀 START HERE — คิว session หน้า (เรียง EV, user เคาะให้ทำต่อ)
-1. **🥇 ORDER ใหม่: regime-rescue pipeline** — เอา 29 EA regime-parked (`RETRO_AUDIT_VERDICTS.csv` class regime)
+1. **🥇 ORDER ใหม่: regime-rescue pipeline** — เอา 29 EA regime-parked (`_triage/_archive/audits_and_investigations/RETRO_AUDIT_VERDICTS.csv` class regime)
    รันผ่าน `Regime.mqh` (ORDER-057) both-window. กองใหญ่สุด+เทคนิคพร้อม. user เลือก #1 นี้ให้ทำก่อน. **แตกเป็น
    order + ปล่อย agent (Boss_14 chassis มี _50_ regime lever อยู่แล้ว).**
 2. attach 6 bundle (Wave5×2/Breakout×2/MacdDiv/SMCSTO-EUR) + MacdDiv cent-test คืนนี้ (Exness XAUUSDc set พร้อม)

@@ -1,0 +1,112 @@
+########## BTCUSD
+=== ORDER-1230 pilot matrix, design 8.3 -- MAIN 2023.01.01..2025.12.31 model 1 ===
+  LANE: D:\Meta 5\terminal64.exe
+        every record carries this lane; design 8.3 pins BTCUSD to it for its whole life
+  NO VERDICT IS ISSUED HERE -- design section 10 stops this slice at EVIDENCE_COMPLETE
+
+>> cell B14-H01-r1/BTCUSD/H4
+
+>> cell B14-H02-r1/BTCUSD/H4
+
+=== 6 run(s) over 2 cell(s) -- lane D:\Meta 5\terminal64.exe ===
+
+  cell                         arm                    PF  trades      DD%    carried  probe
+  B14-H01-r1/BTCUSD/H4         baseline             1.18      55    15.22             
+  B14-H01-r1/BTCUSD/H4         probe-escalated       1.18      55    15.22             
+  B14-H01-r1/BTCUSD/H4         flat-lot             1.83      84    15.83             EXERCISED
+  B14-H02-r1/BTCUSD/H4         baseline             1.17      58    15.30             
+  B14-H02-r1/BTCUSD/H4         probe-escalated       1.17      58    15.30             
+  B14-H02-r1/BTCUSD/H4         flat-lot             1.48      76    15.96             EXERCISED
+
+  PF 'UNDEF' = no losing trades at all, so the ratio has no denominator. It is NOT 0.00,
+  and the tester printing 0 there is the single most invertible number in this table.
+  'carried' = positions the tester force-closed at the window end. Under SL_NONE a basket
+  closes only in profit, so a carried loss NEVER enters the PF beside it.
+
+  records -> D:\EA_LAB\factory\runs\pilot\pilot_cells_MAIN_lot0p03_20260804_110950.jsonl
+  A PF here is a MEASUREMENT, not a verdict, and not a pass against any bar.
+  Read every PF with the trade count beside it: a bar can be cleared by not trading.
+########## XAUUSD
+=== ORDER-1230 pilot matrix, design 8.3 -- MAIN 2023.01.01..2025.12.31 model 1 ===
+  LANE: D:\Meta 5\terminal64.exe
+        every record carries this lane; design 8.3 pins BTCUSD to it for its whole life
+  NO VERDICT IS ISSUED HERE -- design section 10 stops this slice at EVIDENCE_COMPLETE
+
+>> cell B14-H01-r1/XAUUSD/H4
+
+>> cell B14-H02-r1/XAUUSD/H4
+
+=== 6 run(s) over 2 cell(s) -- lane D:\Meta 5\terminal64.exe ===
+
+  cell                         arm                    PF  trades      DD%    carried  probe
+  B14-H01-r1/XAUUSD/H4         baseline             0.25      11    15.08             
+  B14-H01-r1/XAUUSD/H4         probe-escalated       0.25      11    15.08             
+  B14-H01-r1/XAUUSD/H4         flat-lot             1.41      51    15.35             EXERCISED
+  B14-H02-r1/XAUUSD/H4         baseline             0.44      16    13.81             
+  B14-H02-r1/XAUUSD/H4         probe-escalated       0.44      16    13.81             
+  B14-H02-r1/XAUUSD/H4         flat-lot             0.41      16    13.18             EXERCISED
+
+  PF 'UNDEF' = no losing trades at all, so the ratio has no denominator. It is NOT 0.00,
+  and the tester printing 0 there is the single most invertible number in this table.
+  'carried' = positions the tester force-closed at the window end. Under SL_NONE a basket
+  closes only in profit, so a carried loss NEVER enters the PF beside it.
+
+  records -> D:\EA_LAB\factory\runs\pilot\pilot_cells_MAIN_lot0p03_20260804_111101.jsonl
+  A PF here is a MEASUREMENT, not a verdict, and not a pass against any bar.
+  Read every PF with the trade count beside it: a bar can be cleared by not trading.
+########## EURUSD
+=== ORDER-1230 pilot matrix, design 8.3 -- MAIN 2023.01.01..2025.12.31 model 1 ===
+  LANE: D:\Meta 5\terminal64.exe
+        every record carries this lane; design 8.3 pins BTCUSD to it for its whole life
+  NO VERDICT IS ISSUED HERE -- design section 10 stops this slice at EVIDENCE_COMPLETE
+
+>> cell B14-H01-r1/EURUSD/H4
+
+>> cell B14-H02-r1/EURUSD/H4
+
+=== 6 run(s) over 2 cell(s) -- lane D:\Meta 5\terminal64.exe ===
+
+  cell                         arm                    PF  trades      DD%    carried  probe
+  B14-H01-r1/EURUSD/H4         baseline             1.06      15    13.49             
+  B14-H01-r1/EURUSD/H4         probe-escalated       1.06      15    13.49             
+  B14-H01-r1/EURUSD/H4         flat-lot             1.08      15    12.21             EXERCISED
+  B14-H02-r1/EURUSD/H4         baseline             0.90      22    12.72             
+  B14-H02-r1/EURUSD/H4         probe-escalated       0.90      22    12.72             
+  B14-H02-r1/EURUSD/H4         flat-lot             0.18      16    16.21             EXERCISED
+
+  PF 'UNDEF' = no losing trades at all, so the ratio has no denominator. It is NOT 0.00,
+  and the tester printing 0 there is the single most invertible number in this table.
+  'carried' = positions the tester force-closed at the window end. Under SL_NONE a basket
+  closes only in profit, so a carried loss NEVER enters the PF beside it.
+
+  records -> D:\EA_LAB\factory\runs\pilot\pilot_cells_MAIN_lot0p03_20260804_111301.jsonl
+  A PF here is a MEASUREMENT, not a verdict, and not a pass against any bar.
+  Read every PF with the trade count beside it: a bar can be cleared by not trading.
+########## USDJPY
+=== ORDER-1230 pilot matrix, design 8.3 -- MAIN 2023.01.01..2025.12.31 model 1 ===
+  LANE: D:\Meta 5\terminal64.exe
+        every record carries this lane; design 8.3 pins BTCUSD to it for its whole life
+  NO VERDICT IS ISSUED HERE -- design section 10 stops this slice at EVIDENCE_COMPLETE
+
+>> cell B14-H01-r1/USDJPY/H4
+
+>> cell B14-H02-r1/USDJPY/H4
+
+=== 6 run(s) over 2 cell(s) -- lane D:\Meta 5\terminal64.exe ===
+
+  cell                         arm                    PF  trades      DD%    carried  probe
+  B14-H01-r1/USDJPY/H4         baseline           111.77      47    13.08    -251.39  
+  B14-H01-r1/USDJPY/H4         probe-escalated     111.77      47    13.08    -251.39  
+  B14-H01-r1/USDJPY/H4         flat-lot           102.15      47    11.95    -231.86  EXERCISED
+  B14-H02-r1/USDJPY/H4         baseline             1.10      48    10.08    -862.60  
+  B14-H02-r1/USDJPY/H4         probe-escalated       1.10      48    10.08    -862.60  
+  B14-H02-r1/USDJPY/H4         flat-lot             1.05      48     9.81    -844.55  EXERCISED
+
+  PF 'UNDEF' = no losing trades at all, so the ratio has no denominator. It is NOT 0.00,
+  and the tester printing 0 there is the single most invertible number in this table.
+  'carried' = positions the tester force-closed at the window end. Under SL_NONE a basket
+  closes only in profit, so a carried loss NEVER enters the PF beside it.
+
+  records -> D:\EA_LAB\factory\runs\pilot\pilot_cells_MAIN_lot0p03_20260804_111509.jsonl
+  A PF here is a MEASUREMENT, not a verdict, and not a pass against any bar.
+  Read every PF with the trade count beside it: a bar can be cleared by not trading.

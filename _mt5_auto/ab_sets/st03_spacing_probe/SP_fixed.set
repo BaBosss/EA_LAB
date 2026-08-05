@@ -1,0 +1,18 @@
+; ST03 spacing probe (MASTER_BACKLOG P1, 2026-07-20) - close "spacing UNSWEPT" record
+; cell = GBPUSD H1 MACD 12/26/9 cnt3 (ORDER-135 near-miss), DCA 92 L4, trail exit 23
+; probe 1/3: FIXED points spacing (300 pts default)
+_15_MacdFast=12
+_15_MacdSlow=26
+_15_MacdSignal=9
+_15_CountBars=3
+ExitMode=23
+StackMode=92
+StackConfirm=0
+FirstLotMode=41
+_41_FixedLot=0.01
+LotProg=50
+ProtectLevel=2
+RC_MaxLevelsOverride=8
+_9_MaxLevels=4
+_9_StepUseATR=false
+_9_StepPoints=300

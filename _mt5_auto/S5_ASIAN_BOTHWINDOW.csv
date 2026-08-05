@@ -1,0 +1,7 @@
+﻿maxrange,sellok,main_pf,main_tr,main_net,bwd_pf,bwd_tr,bwd_net,candidate
+0.3,true,,,,,,,no
+0.3,false,,,,,,,no
+0.2,true,,,,1.52,26,33.57,no
+0.2,false,1.4,16,16.16,1.43,18,20.97,YES
+0.15,true,1.57,8,9.77,0.67,5,-8.30,no
+0.15,false,2.47,5,12.36,0.95,3,-0.76,no

@@ -1,0 +1,13 @@
+﻿thread,cellname,window,pf,trades,net
+A_GapLoosen,mg0p15,MAIN,20,31,703.32
+A_GapLoosen,mg0p15,BWD,0.52,32,-144.43
+A_GapLoosen,mg0p2,MAIN,10.29,23,343.77
+A_GapLoosen,mg0p2,BWD,0.52,22,-110.03
+B_PivotOptimize,sl1p5_tp1p5,MAIN,1.06,370,315.33
+B_PivotOptimize,sl1p5_tp1p5,BWD,1.28,326,764.15
+B_PivotOptimize,sl1p5_tp3,MAIN,1.18,231,680.87
+B_PivotOptimize,sl1p5_tp3,BWD,1.26,201,578.17
+B_PivotOptimize,sl2p5_tp1p5,MAIN,1.05,169,216.17
+B_PivotOptimize,sl2p5_tp1p5,BWD,1.13,144,287.76
+B_PivotOptimize,sl2p5_tp3,MAIN,0.83,99,-518.63
+B_PivotOptimize,sl2p5_tp3,BWD,1.07,87,133.32

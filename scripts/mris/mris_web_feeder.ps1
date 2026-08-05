@@ -57,6 +57,32 @@ function Fetch-Web {
   return $raw
 }
 
+# ORDER-434 finding 1, second pass (found by /scrutinize 2026-07-27 -- the first pass
+# fixed mris_macro_feeder.ps1 and missed this file, which is the higher-stakes of the
+# two). `asof` was (Get-Date): the time of the FETCH, not the time the observation is
+# for. mris_classify.ps1 age-gates rows by this field to build the Risk Index, and
+# mris_crisis_models.ps1 reads US10Y and VIX out of the snapshot this feeder writes --
+# so the gate was comparing the feeder's clock against itself here too, and could never
+# fire however old the underlying bar was.
+#
+# Deliberately a DUPLICATE of New-AsOfStamp in mris_macro_feeder.ps1 rather than a
+# shared dot-sourced module: both feeders are standalone by design (this one's header
+# and the macro feeder's "zero blast radius" note), and adding a load-time dependency
+# between them to save ten lines would trade a real risk for a cosmetic one. The
+# anti-drift guarantee is in the CAGE instead -- scripts/_test/run_mris_asof_tests.ps1
+# runs the same battery against BOTH files' functions, so the two copies cannot diverge
+# in behaviour without going red.
+function New-AsOfStamp {
+  param($ObsDate)
+  if ($null -eq $ObsDate -or $ObsDate -eq [datetime]::MinValue) {
+    return [pscustomobject]@{
+      Stamp = (Get-Date).ToString('yyyy-MM-dd HH:mm')
+      Note  = ' [WARN asof=fetch-time: payload carried no observation date]'
+    }
+  }
+  return [pscustomobject]@{ Stamp = ([datetime]$ObsDate).ToString('yyyy-MM-dd HH:mm'); Note = '' }
+}
+
 function Compute-Row {
   param([string]$Symbol, [string]$Note, [string]$RawJson, [bool]$FromCache)
   $j = $RawJson | ConvertFrom-Json
@@ -69,11 +95,24 @@ function Compute-Row {
   $closesRaw = $q.close
   $highsRaw  = $q.high
   $lowsRaw   = $q.low
-  # keep only bars where close/high/low are all present (holidays give nulls)
-  $Closes = @(); $Highs = @(); $Lows = @()
+  # keep only bars where close/high/low are all present (holidays give nulls).
+  # $Dates rides the SAME filter so index i is one bar in all four arrays. This matters
+  # more than it looks: ^MOVE was observed returning bars dated to 2026-07-24 whose
+  # closes were all null after 2026-07-17, so "last bar in the payload" and "last bar
+  # with a usable value" were SEVEN DAYS apart. The filtered array is the correct one --
+  # it is the bar `spot` actually came from.
+  $ts = $res.timestamp
+  $Closes = @(); $Highs = @(); $Lows = @(); $Dates = @()
   for ($i = 0; $i -lt $closesRaw.Count; $i++) {
     $c = $closesRaw[$i]; $h = $highsRaw[$i]; $l = $lowsRaw[$i]
-    if ($null -ne $c -and $null -ne $h -and $null -ne $l) { $Closes += [double]$c; $Highs += [double]$h; $Lows += [double]$l }
+    if ($null -ne $c -and $null -ne $h -and $null -ne $l) {
+      $Closes += [double]$c; $Highs += [double]$h; $Lows += [double]$l
+      $d = [datetime]::MinValue
+      if ($null -ne $ts -and $i -lt $ts.Count -and $null -ne $ts[$i]) {
+        $d = [DateTimeOffset]::FromUnixTimeSeconds([long]$ts[$i]).UtcDateTime.Date
+      }
+      $Dates += $d
+    }
   }
   $n = $Closes.Count
   if ($n -lt 6) { throw "too few bars ($n)" }
@@ -102,7 +141,7 @@ function Compute-Row {
   $chg5d = if ($c5 -ne 0) { [math]::Round((($Closes[$n - 1] / $c5) - 1.0) * 100.0, 3) } else { 0 }
 
   $status = if ($FromCache) { "STALE" } else { "OK" }
-  $stamp  = (Get-Date).ToString('yyyy-MM-dd HH:mm')
+  $a = New-AsOfStamp -ObsDate $Dates[$n - 1]
   return [pscustomobject]@{
     symbol      = $Symbol
     spot        = $spot
@@ -110,8 +149,8 @@ function Compute-Row {
     atr20       = $atr20
     chg5d_pct   = $chg5d
     data_status = $status
-    asof        = $stamp
-    source_note = "$Note$smaNote"
+    asof        = $a.Stamp
+    source_note = "$Note$smaNote$($a.Note)"
   }
 }
 

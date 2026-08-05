@@ -1,0 +1,522 @@
+﻿CS	0	10:39:36.590	Startup	MetaTester 5 build 6061, 24 Jul 2026
+CS	0	10:39:36.591	Startup	Windows 11 build 26200, 20 x 13th Gen Intel Core i5-13500, AVX2, 16 / 31 Gb memory, 84 / 465 Gb disk, UAC, GMT+7
+CS	0	10:39:36.593	Server	MetaTester 5 started on 127.0.0.1:3000
+CS	0	10:39:36.594	Startup	cloud network mode is off
+CS	0	10:39:36.594	Startup	initialization finished
+CS	0	10:39:36.906	127.0.0.1	login (build 6061)
+CS	0	10:39:36.913	Network	16516 bytes of account info loaded
+CS	0	10:39:36.913	Network	1478 bytes of tester parameters loaded
+CS	0	10:39:36.913	Network	67268 bytes of input parameters loaded
+CS	0	10:39:36.914	Network	10386 bytes of symbols list loaded (1402 symbols)
+CS	0	10:39:36.915	Tester	expert file added: Experts\EALabTpl\Boss_14_GridLog.ex5. 178340 bytes loaded
+CS	0	10:39:36.917	Tester	16677 Mb available, 208 blocks set for ticks generating
+CS	0	10:39:36.917	Tester	initial deposit 10000.00 USD, leverage 1:100
+CS	0	10:39:36.917	Tester	successfully initialized
+CS	0	10:39:36.917	Network	186 Kb of total initialization data received
+CS	0	10:39:36.917	Tester	13th Gen Intel Core i5-13500, 32535 MB
+CS	0	10:39:36.924	Symbols	XAUUSD: symbol to be synchronized
+CS	0	10:39:36.924	Symbols	XAUUSD: symbol synchronized, 3720 bytes of symbol info received
+CS	0	10:39:36.927	History	XAUUSD: load 27 bytes of history data to synchronize in 0:00:00.001
+CS	0	10:39:36.927	History	XAUUSD: history synchronized from 2016.01.04 to 2026.07.31
+CS	0	10:39:36.945	History	XAUUSD,H1: history cache allocated for 9049 bars and contains 5894 bars from 2023.01.03 01:00 to 2023.12.29 23:00
+CS	0	10:39:36.945	History	XAUUSD,H1: history begins from 2023.01.03 01:00
+CS	0	10:39:36.945	Tester	XAUUSD,H1 (ThinkMarkets-Live): 1 minutes OHLC ticks generating
+CS	0	10:39:36.945	Tester	XAUUSD,H1: testing of Experts\EALabTpl\Boss_14_GridLog.ex5 from 2024.01.01 00:00 to 2024.07.01 00:00 started with inputs:
+CS	0	10:39:36.945	Tester	  === Mode selectors (code = value) ====
+CS	0	10:39:36.945	Tester	  ExitMode=22
+CS	0	10:39:36.945	Tester	  SLMode=30
+CS	0	10:39:36.945	Tester	  FirstLotMode=41
+CS	0	10:39:36.945	Tester	  LotProg=55
+CS	0	10:39:36.945	Tester	  TradeDir=60
+CS	0	10:39:36.945	Tester	  TrendFilter=70
+CS	0	10:39:36.945	Tester	  RecoveryMode=80
+CS	0	10:39:36.945	Tester	  HedgeMode=0
+CS	0	10:39:36.945	Tester	  DryRun=false
+CS	0	10:39:36.945	Tester	  _0_BarOpenOnly=false
+CS	0	10:39:36.945	Tester	  === 9x Stack (how orders stack) ====
+CS	0	10:39:36.945	Tester	  StackMode=92
+CS	0	10:39:36.945	Tester	  StackConfirm=0
+CS	0	10:39:36.945	Tester	  _9_StepUseATR=true
+CS	0	10:39:36.945	Tester	  _9_StepATRmult=1.0
+CS	0	10:39:36.945	Tester	  _9_StepPoints=300.0
+CS	0	10:39:36.945	Tester	  _9_StepMinPips=0.0
+CS	0	10:39:36.945	Tester	  _9_StepATRShift=0
+CS	0	10:39:36.945	Tester	  _9_MaxLevels=5
+CS	0	10:39:36.945	Tester	  _9_RegimeGateAdds=false
+CS	0	10:39:36.945	Tester	  _9_PA_MinBodyRatio=1.0
+CS	0	10:39:36.945	Tester	  _9_PendingMode=0
+CS	0	10:39:36.945	Tester	  _9_PendingLegs=0
+CS	0	10:39:36.945	Tester	  === 14 Entry: GridLog (Zeus-inspired breakout-arm) ====
+CS	0	10:39:36.945	Tester	  _14_Direction=1
+CS	0	10:39:36.945	Tester	  _14_DistAtrMult=1.5
+CS	0	10:39:36.945	Tester	  _14_MinDistPips=20.0
+CS	0	10:39:36.945	Tester	  === Trend MA (shared) ====
+CS	0	10:39:36.945	Tester	  _0_FastMA=20
+CS	0	10:39:36.945	Tester	  _0_SlowMA=50
+CS	0	10:39:36.945	Tester	  _0_MAMethod=1
+CS	0	10:39:36.945	Tester	  _0_MA_TF=0
+CS	0	10:39:36.945	Tester	  === 7x Filter params ====
+CS	0	10:39:36.945	Tester	  _71_ATRMA=20
+CS	0	10:39:36.945	Tester	  _71_ATRRatio=1.0
+CS	0	10:39:36.945	Tester	  _72_SlopeBar=3
+CS	0	10:39:36.945	Tester	  === 50x Regime (market-state gate) ====
+CS	0	10:39:36.945	Tester	  _50_RegimeMode=0
+CS	0	10:39:36.945	Tester	  _50_AllowTrendUp=true
+CS	0	10:39:36.945	Tester	  _50_AllowTrendDown=true
+CS	0	10:39:36.945	Tester	  _50_AllowRange=true
+CS	0	10:39:36.945	Tester	  _50_Regime_TF=16388
+CS	0	10:39:36.945	Tester	  _50_ADX_Period=14
+CS	0	10:39:36.945	Tester	  _50_ADX_TrendMin=25.0
+CS	0	10:39:36.945	Tester	  _50_StormATRmult=2.0
+CS	0	10:39:36.945	Tester	  _50_StormLookback=100
+CS	0	10:39:36.945	Tester	  === 2x Exit / TP params ====
+CS	0	10:39:36.945	Tester	  _21_TP_Pip=500.0
+CS	0	10:39:36.945	Tester	  _22_TP_ATRmult=3.0
+CS	0	10:39:36.945	Tester	  _2_BasketTP_Money=0.0
+CS	0	10:39:36.945	Tester	  _2_BasketTP_ATRmult=0.0
+CS	0	10:39:36.945	Tester	  _2_BasketTP_BalPct=1.0
+CS	0	10:39:36.945	Tester	  _23_TrailStart=300.0
+CS	0	10:39:36.945	Tester	  _23_TrailStep=100.0
+CS	0	10:39:36.945	Tester	  _2_PartialPct1=0.0
+CS	0	10:39:36.945	Tester	  _2_PartialFrac1=0.3
+CS	0	10:39:36.945	Tester	  _2_PartialPct2=0.0
+CS	0	10:39:36.945	Tester	  _2_PartialFrac2=0.3
+CS	0	10:39:36.945	Tester	  _2_SuppressLegTP=false
+CS	0	10:39:36.945	Tester	  _2_MaxHoldBars=5
+CS	0	10:39:36.945	Tester	  _57_DynCloseOn=false
+CS	0	10:39:36.945	Tester	  _57_DynCloseBase=10.0
+CS	0	10:39:36.945	Tester	  _57_DynCloseBalPct=0.0
+CS	0	10:39:36.945	Tester	  _57_DynCloseDivisor=4.0
+CS	0	10:39:36.945	Tester	  === 3x Stop loss params ====
+CS	0	10:39:36.945	Tester	  _31_SL_Pip=1000.0
+CS	0	10:39:36.945	Tester	  _33_SL_ATRmult=2.0
+CS	0	10:39:36.945	Tester	  _33_SL_MaxPips=0.0
+CS	0	10:39:36.945	Tester	  _33_SL_MaxATRmult=0.0
+CS	0	10:39:36.945	Tester	  _33_AdaptiveON=false
+CS	0	10:39:36.945	Tester	  _33_AdaptiveN=50
+CS	0	10:39:36.945	Tester	  _32_SL_Money=0.0
+CS	0	10:39:36.945	Tester	  _32_SL_BalPct=15.0
+CS	0	10:39:36.945	Tester	  _34_DonchianBars=50
+CS	0	10:39:36.945	Tester	  _35_SRBars=20
+CS	0	10:39:36.945	Tester	  _36_SD_Mult=2.0
+CS	0	10:39:36.945	Tester	  _36_SD_Period=20
+CS	0	10:39:36.945	Tester	  === ATR (2 contexts) ====
+CS	0	10:39:36.945	Tester	  _0_ATR_Period=14
+CS	0	10:39:36.945	Tester	  _0_ATR_TF=0
+CS	0	10:39:36.945	Tester	  _3_RiskATR_Period=14
+CS	0	10:39:36.945	Tester	  _3_RiskATR_TF=0
+CS	0	10:39:36.945	Tester	  === 4x/5x Money management ====
+CS	0	10:39:36.945	Tester	  _41_FixedLot=0.01
+CS	0	10:39:36.945	Tester	  _42_RiskPct=1.0
+CS	0	10:39:36.945	Tester	  _43_LotPerAnchor=0.01
+CS	0	10:39:36.945	Tester	  _43_BalanceAnchor=1000.0
+CS	0	10:39:36.945	Tester	  _51_ProgFactor=0.5
+CS	0	10:39:36.945	Tester	  _52_ProgMult=1.3
+CS	0	10:39:36.945	Tester	  _53_PlusLot=0.01
+CS	0	10:39:36.945	Tester	  _55_LogPowerFactor=1.3
+CS	0	10:39:36.945	Tester	  _55_UseLnNotLog10=true
+CS	0	10:39:36.945	Tester	  _56_FibMaxStep=5
+CS	0	10:39:36.945	Tester	  _4_DdAdaptiveOn=false
+CS	0	10:39:36.945	Tester	  _4_DdTier1Pct=10.0
+CS	0	10:39:36.945	Tester	  _4_DdTier1Mult=1.2
+CS	0	10:39:36.945	Tester	  _4_DdTier2Pct=20.0
+CS	0	10:39:36.945	Tester	  _4_DdTier2Mult=1.5
+CS	0	10:39:36.945	Tester	  _4_DdHardCapMult=1.5
+CS	0	10:39:36.945	Tester	  === 0x Protection (cage - always on) ====
+CS	0	10:39:36.945	Tester	  ProtectLevel=2
+CS	0	10:39:36.945	Tester	  RC_MaxLot=0.2
+CS	0	10:39:36.945	Tester	  RC_RecMultMax=1.3
+CS	0	10:39:36.945	Tester	  RC_MaxLevelsOverride=0
+CS	0	10:39:36.945	Tester	  RC_AcctDDLimitPct=12.0
+CS	0	10:39:36.945	Tester	  RC_PersistHalt=true
+CS	0	10:39:36.945	Tester	  RC_AdoptLegacyHalt=false
+CS	0	10:39:36.945	Tester	  === 8x Recovery (cage-capped) ====
+CS	0	10:39:36.945	Tester	  _8_TriggerATR=1.5
+CS	0	10:39:36.945	Tester	  _8_StepATR=1.0
+CS	0	10:39:36.945	Tester	  _8_RecMult=1.3
+CS	0	10:39:36.945	Tester	  _8_DDRefMoney=100.0
+CS	0	10:39:36.945	Tester	  _8_DDRefBalPct=0.0
+CS	0	10:39:36.945	Tester	  === Hedge (defensive lock) ====
+CS	0	10:39:36.945	Tester	  _H_TriggerDDPct=8.0
+CS	0	10:39:36.945	Tester	  _H_ReleaseDDPct=3.0
+CS	0	10:39:36.945	Tester	  _H_Ratio=1.0
+CS	0	10:39:36.945	Tester	  _H_MaxLot=0.0
+CS	0	10:39:36.945	Tester	  === MacroGate self-gate (backtest A/B only) ====
+CS	0	10:39:36.945	Tester	  _MG_SelfGate=false
+CS	0	10:39:36.945	Tester	  _MG_RegimeFile=EA_LAB_mris_regime.csv
+CS	0	10:39:36.945	Tester	  _MG_InCommon=true
+CS	0	10:39:36.945	Tester	  _MG_LotMult=0.5
+CS	0	10:39:36.945	Tester	  _MG_BlockNew=true
+CS	0	10:39:36.945	Tester	  _MG_TriggerRiskOff=true
+CS	0	10:39:36.945	Tester	  _MG_OffsetHours=0
+CS	0	10:39:36.945	Tester	  === General ====
+CS	0	10:39:36.945	Tester	  _0_Magic=990001
+CS	0	10:39:36.945	Tester	  _0_Slippage=20
+CS	0	10:39:36.945	Tester	  _0_MaxSpread=0
+CS	0	10:39:36.953	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [INIT] Boss_14_GridLog | exit=22 sl=30 stack=92 conf=0 firstLot=41 prog=55 protect=2 dry=N
+CS	0	10:39:36.953	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] ---- effective configuration (what actually wins at runtime) ----
+CS	0	10:39:36.953	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] input surface: build=LAB_ENTRY_14 keys=116 scope=surface+constants effective_config_hash=166e34754543c140d6ae54ad8177964d74e50184b1145e527499c42d1b331087
+CS	0	10:39:36.953	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] sizing: 41 FIXED -> first lot 0.0100
+CS	0	10:39:36.953	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] caps: RC_MaxLot 0.20 | ProtectLevel 2 (killDD 25% / depositLoad 30% / recSteps 3) | maxLevels 3
+CS	0	10:39:36.953	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] basket TP: _2_BasketTP_BalPct 1.000% = 100.00 money -- IGNORING _2_BasketTP_ATRmult 0.00 and _2_BasketTP_Money 0.00
+CS	0	10:39:36.953	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] basket STOP: _32_SL_BalPct 15.000% = 1500.00 money -- IGNORING _32_SL_Money 0.00
+CS	0	10:39:36.953	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] ---- end effective configuration ----
+CS	0	10:39:36.974	Trade	2024.01.02 07:36:20   market buy 0.01 XAUUSD tp: 2083.48 (2072.05 / 2072.25 / 2072.05)
+CS	0	10:39:36.974	Trades	2024.01.02 07:36:20   deal #2 buy 0.01 XAUUSD at 2072.25 done (based on order #2)
+CS	0	10:39:36.974	Trade	2024.01.02 07:36:20   deal performed [#2 buy 0.01 XAUUSD at 2072.25]
+CS	0	10:39:36.974	Trade	2024.01.02 07:36:20   order performed buy 0.01 at 2072.25 [#2 buy 0.01 XAUUSD at 2072.25]
+CS	0	10:39:36.975	Boss_14_GridLog (XAUUSD,H1)	2024.01.02 12:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:36.975	Trade	2024.01.02 12:00:00   market sell 0.01 XAUUSD, close #2 (2077.16 / 2077.36 / 2077.16)
+CS	0	10:39:36.975	Trades	2024.01.02 12:00:00   deal #3 sell 0.01 XAUUSD at 2077.16 done (based on order #3)
+CS	0	10:39:36.975	Trade	2024.01.02 12:00:00   deal performed [#3 sell 0.01 XAUUSD at 2077.16]
+CS	0	10:39:36.975	Trade	2024.01.02 12:00:00   order performed sell 0.01 at 2077.16 [#3 sell 0.01 XAUUSD at 2077.16]
+CS	0	10:39:37.009	Trade	2024.03.01 19:03:40   market buy 0.01 XAUUSD tp: 2104.51 (2082.88 / 2083.08 / 2082.88)
+CS	0	10:39:37.009	Trades	2024.03.01 19:03:40   deal #4 buy 0.01 XAUUSD at 2083.08 done (based on order #4)
+CS	0	10:39:37.009	Trade	2024.03.01 19:03:40   deal performed [#4 buy 0.01 XAUUSD at 2083.08]
+CS	0	10:39:37.009	Trade	2024.03.01 19:03:40   order performed buy 0.01 at 2083.08 [#4 buy 0.01 XAUUSD at 2083.08]
+CS	0	10:39:37.010	Boss_14_GridLog (XAUUSD,H1)	2024.03.04 01:05:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.010	Trade	2024.03.04 01:05:00   market sell 0.01 XAUUSD, close #4 (2082.74 / 2082.93 / 2082.74)
+CS	0	10:39:37.010	Trades	2024.03.04 01:05:00   deal #5 sell 0.01 XAUUSD at 2082.74 done (based on order #5)
+CS	0	10:39:37.010	Trade	2024.03.04 01:05:00   deal performed [#5 sell 0.01 XAUUSD at 2082.74]
+CS	0	10:39:37.010	Trade	2024.03.04 01:05:00   order performed sell 0.01 at 2082.74 [#5 sell 0.01 XAUUSD at 2082.74]
+CS	0	10:39:37.011	Trade	2024.03.04 16:16:40   market buy 0.01 XAUUSD tp: 2106.80 (2095.40 / 2095.60 / 2095.40)
+CS	0	10:39:37.011	Trades	2024.03.04 16:16:40   deal #6 buy 0.01 XAUUSD at 2095.60 done (based on order #6)
+CS	0	10:39:37.011	Trade	2024.03.04 16:16:40   deal performed [#6 buy 0.01 XAUUSD at 2095.60]
+CS	0	10:39:37.011	Trade	2024.03.04 16:16:40   order performed buy 0.01 at 2095.60 [#6 buy 0.01 XAUUSD at 2095.60]
+CS	0	10:39:37.011	Trade	2024.03.04 17:55:40   take profit triggered #6 buy 0.01 XAUUSD 2095.60 tp: 2106.80 [#7 sell 0.01 XAUUSD at 2106.80]
+CS	0	10:39:37.011	Trades	2024.03.04 17:55:40   deal #7 sell 0.01 XAUUSD at 2106.80 done (based on order #7)
+CS	0	10:39:37.011	Trade	2024.03.04 17:55:40   deal performed [#7 sell 0.01 XAUUSD at 2106.80]
+CS	0	10:39:37.011	Trade	2024.03.04 17:55:40   order performed sell 0.01 at 2106.80 [#7 sell 0.01 XAUUSD at 2106.80]
+CS	0	10:39:37.011	Trade	2024.03.04 18:12:40   market buy 0.01 XAUUSD tp: 2129.12 (2114.07 / 2114.27 / 2114.07)
+CS	0	10:39:37.011	Trades	2024.03.04 18:12:40   deal #8 buy 0.01 XAUUSD at 2114.27 done (based on order #8)
+CS	0	10:39:37.011	Trade	2024.03.04 18:12:40   deal performed [#8 buy 0.01 XAUUSD at 2114.27]
+CS	0	10:39:37.011	Trade	2024.03.04 18:12:40   order performed buy 0.01 at 2114.27 [#8 buy 0.01 XAUUSD at 2114.27]
+CS	0	10:39:37.011	Trade	2024.03.04 18:23:40   market buy 0.01 XAUUSD tp: 2123.50 (2107.94 / 2108.14 / 2107.94)
+CS	0	10:39:37.011	Trades	2024.03.04 18:23:40   deal #9 buy 0.01 XAUUSD at 2108.14 done (based on order #9)
+CS	0	10:39:37.011	Trade	2024.03.04 18:23:40   deal performed [#9 buy 0.01 XAUUSD at 2108.14]
+CS	0	10:39:37.011	Trade	2024.03.04 18:23:40   order performed buy 0.01 at 2108.14 [#9 buy 0.01 XAUUSD at 2108.14]
+CS	0	10:39:37.013	Boss_14_GridLog (XAUUSD,H1)	2024.03.04 23:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.013	Trade	2024.03.04 23:00:00   market sell 0.01 XAUUSD, close #9 (2116.58 / 2116.78 / 2116.58)
+CS	0	10:39:37.013	Trades	2024.03.04 23:00:00   deal #10 sell 0.01 XAUUSD at 2116.58 done (based on order #10)
+CS	0	10:39:37.013	Trade	2024.03.04 23:00:00   deal performed [#10 sell 0.01 XAUUSD at 2116.58]
+CS	0	10:39:37.013	Trade	2024.03.04 23:00:00   order performed sell 0.01 at 2116.58 [#10 sell 0.01 XAUUSD at 2116.58]
+CS	0	10:39:37.013	Trade	2024.03.04 23:00:00   market sell 0.01 XAUUSD, close #8 (2116.58 / 2116.78 / 2116.58)
+CS	0	10:39:37.013	Trades	2024.03.04 23:00:00   deal #11 sell 0.01 XAUUSD at 2116.58 done (based on order #11)
+CS	0	10:39:37.013	Trade	2024.03.04 23:00:00   deal performed [#11 sell 0.01 XAUUSD at 2116.58]
+CS	0	10:39:37.013	Trade	2024.03.04 23:00:00   order performed sell 0.01 at 2116.58 [#11 sell 0.01 XAUUSD at 2116.58]
+CS	0	10:39:37.013	Trade	2024.03.05 12:10:40   market buy 0.01 XAUUSD tp: 2138.61 (2126.45 / 2126.65 / 2126.45)
+CS	0	10:39:37.013	Trades	2024.03.05 12:10:40   deal #12 buy 0.01 XAUUSD at 2126.65 done (based on order #12)
+CS	0	10:39:37.013	Trade	2024.03.05 12:10:40   deal performed [#12 buy 0.01 XAUUSD at 2126.65]
+CS	0	10:39:37.013	Trade	2024.03.05 12:10:40   order performed buy 0.01 at 2126.65 [#12 buy 0.01 XAUUSD at 2126.65]
+CS	0	10:39:37.014	Trade	2024.03.05 14:28:40   market buy 0.01 XAUUSD tp: 2134.39 (2121.53 / 2121.73 / 2121.53)
+CS	0	10:39:37.014	Trades	2024.03.05 14:28:40   deal #13 buy 0.01 XAUUSD at 2121.73 done (based on order #13)
+CS	0	10:39:37.014	Trade	2024.03.05 14:28:40   deal performed [#13 buy 0.01 XAUUSD at 2121.73]
+CS	0	10:39:37.014	Trade	2024.03.05 14:28:40   order performed buy 0.01 at 2121.73 [#13 buy 0.01 XAUUSD at 2121.73]
+CS	0	10:39:37.015	Trade	2024.03.05 15:30:40   take profit triggered #13 buy 0.01 XAUUSD 2121.73 tp: 2134.39 [#14 sell 0.01 XAUUSD at 2134.39]
+CS	0	10:39:37.015	Trades	2024.03.05 15:30:40   deal #14 sell 0.01 XAUUSD at 2134.39 done (based on order #14)
+CS	0	10:39:37.015	Trade	2024.03.05 15:30:40   deal performed [#14 sell 0.01 XAUUSD at 2134.39]
+CS	0	10:39:37.015	Trade	2024.03.05 15:30:40   order performed sell 0.01 at 2134.39 [#14 sell 0.01 XAUUSD at 2134.39]
+CS	0	10:39:37.015	Trade	2024.03.05 15:33:40   take profit triggered #12 buy 0.01 XAUUSD 2126.65 tp: 2138.61 [#15 sell 0.01 XAUUSD at 2138.61]
+CS	0	10:39:37.015	Trades	2024.03.05 15:33:40   deal #15 sell 0.01 XAUUSD at 2138.61 done (based on order #15)
+CS	0	10:39:37.015	Trade	2024.03.05 15:33:40   deal performed [#15 sell 0.01 XAUUSD at 2138.61]
+CS	0	10:39:37.015	Trade	2024.03.05 15:33:40   order performed sell 0.01 at 2138.61 [#15 sell 0.01 XAUUSD at 2138.61]
+CS	0	10:39:37.016	Trade	2024.03.06 16:46:40   market buy 0.01 XAUUSD tp: 2159.81 (2145.96 / 2146.16 / 2145.96)
+CS	0	10:39:37.016	Trades	2024.03.06 16:46:40   deal #16 buy 0.01 XAUUSD at 2146.16 done (based on order #16)
+CS	0	10:39:37.016	Trade	2024.03.06 16:46:40   deal performed [#16 buy 0.01 XAUUSD at 2146.16]
+CS	0	10:39:37.016	Trade	2024.03.06 16:46:40   order performed buy 0.01 at 2146.16 [#16 buy 0.01 XAUUSD at 2146.16]
+CS	0	10:39:37.016	Trade	2024.03.06 17:04:40   market buy 0.01 XAUUSD tp: 2148.85 (2131.96 / 2132.16 / 2131.96)
+CS	0	10:39:37.016	Trades	2024.03.06 17:04:40   deal #17 buy 0.01 XAUUSD at 2132.16 done (based on order #17)
+CS	0	10:39:37.016	Trade	2024.03.06 17:04:40   deal performed [#17 buy 0.01 XAUUSD at 2132.16]
+CS	0	10:39:37.016	Trade	2024.03.06 17:04:40   order performed buy 0.01 at 2132.16 [#17 buy 0.01 XAUUSD at 2132.16]
+CS	0	10:39:37.017	Trade	2024.03.06 18:57:40   take profit triggered #17 buy 0.01 XAUUSD 2132.16 tp: 2148.85 [#18 sell 0.01 XAUUSD at 2148.85]
+CS	0	10:39:37.017	Trades	2024.03.06 18:57:40   deal #18 sell 0.01 XAUUSD at 2148.85 done (based on order #18)
+CS	0	10:39:37.017	Trade	2024.03.06 18:57:40   deal performed [#18 sell 0.01 XAUUSD at 2148.85]
+CS	0	10:39:37.017	Trade	2024.03.06 18:57:40   order performed sell 0.01 at 2148.85 [#18 sell 0.01 XAUUSD at 2148.85]
+CS	0	10:39:37.017	Boss_14_GridLog (XAUUSD,H1)	2024.03.06 21:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.017	Trade	2024.03.06 21:00:00   market sell 0.01 XAUUSD, close #16 (2147.05 / 2147.25 / 2147.05)
+CS	0	10:39:37.017	Trades	2024.03.06 21:00:00   deal #19 sell 0.01 XAUUSD at 2147.05 done (based on order #19)
+CS	0	10:39:37.017	Trade	2024.03.06 21:00:00   deal performed [#19 sell 0.01 XAUUSD at 2147.05]
+CS	0	10:39:37.017	Trade	2024.03.06 21:00:00   order performed sell 0.01 at 2147.05 [#19 sell 0.01 XAUUSD at 2147.05]
+CS	0	10:39:37.018	Trade	2024.03.07 06:03:40   market buy 0.01 XAUUSD tp: 2180.14 (2158.66 / 2158.86 / 2158.66)
+CS	0	10:39:37.018	Trades	2024.03.07 06:03:40   deal #20 buy 0.01 XAUUSD at 2158.86 done (based on order #20)
+CS	0	10:39:37.018	Trade	2024.03.07 06:03:40   deal performed [#20 buy 0.01 XAUUSD at 2158.86]
+CS	0	10:39:37.018	Trade	2024.03.07 06:03:40   order performed buy 0.01 at 2158.86 [#20 buy 0.01 XAUUSD at 2158.86]
+CS	0	10:39:37.018	Trade	2024.03.07 08:01:40   market buy 0.01 XAUUSD tp: 2169.91 (2152.34 / 2152.54 / 2152.34)
+CS	0	10:39:37.018	Trades	2024.03.07 08:01:40   deal #21 buy 0.01 XAUUSD at 2152.54 done (based on order #21)
+CS	0	10:39:37.018	Trade	2024.03.07 08:01:40   deal performed [#21 buy 0.01 XAUUSD at 2152.54]
+CS	0	10:39:37.018	Trade	2024.03.07 08:01:40   order performed buy 0.01 at 2152.54 [#21 buy 0.01 XAUUSD at 2152.54]
+CS	0	10:39:37.019	Boss_14_GridLog (XAUUSD,H1)	2024.03.07 11:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.019	Trade	2024.03.07 11:00:00   market sell 0.01 XAUUSD, close #21 (2155.27 / 2155.47 / 2155.27)
+CS	0	10:39:37.019	Trades	2024.03.07 11:00:00   deal #22 sell 0.01 XAUUSD at 2155.27 done (based on order #22)
+CS	0	10:39:37.019	Trade	2024.03.07 11:00:00   deal performed [#22 sell 0.01 XAUUSD at 2155.27]
+CS	0	10:39:37.019	Trade	2024.03.07 11:00:00   order performed sell 0.01 at 2155.27 [#22 sell 0.01 XAUUSD at 2155.27]
+CS	0	10:39:37.019	Trade	2024.03.07 11:00:00   market sell 0.01 XAUUSD, close #20 (2155.27 / 2155.47 / 2155.27)
+CS	0	10:39:37.019	Trades	2024.03.07 11:00:00   deal #23 sell 0.01 XAUUSD at 2155.27 done (based on order #23)
+CS	0	10:39:37.019	Trade	2024.03.07 11:00:00   deal performed [#23 sell 0.01 XAUUSD at 2155.27]
+CS	0	10:39:37.019	Trade	2024.03.07 11:00:00   order performed sell 0.01 at 2155.27 [#23 sell 0.01 XAUUSD at 2155.27]
+CS	0	10:39:37.019	Trade	2024.03.07 15:05:40   market buy 0.01 XAUUSD tp: 2178.71 (2163.76 / 2163.96 / 2163.76)
+CS	0	10:39:37.019	Trades	2024.03.07 15:05:40   deal #24 buy 0.01 XAUUSD at 2163.96 done (based on order #24)
+CS	0	10:39:37.019	Trade	2024.03.07 15:05:40   deal performed [#24 buy 0.01 XAUUSD at 2163.96]
+CS	0	10:39:37.019	Trade	2024.03.07 15:05:40   order performed buy 0.01 at 2163.96 [#24 buy 0.01 XAUUSD at 2163.96]
+CS	0	10:39:37.019	Trade	2024.03.07 15:08:40   market buy 0.01 XAUUSD tp: 2173.48 (2158.33 / 2158.53 / 2158.33)
+CS	0	10:39:37.019	Trades	2024.03.07 15:08:40   deal #25 buy 0.01 XAUUSD at 2158.53 done (based on order #25)
+CS	0	10:39:37.019	Trade	2024.03.07 15:08:40   deal performed [#25 buy 0.01 XAUUSD at 2158.53]
+CS	0	10:39:37.019	Trade	2024.03.07 15:08:40   order performed buy 0.01 at 2158.53 [#25 buy 0.01 XAUUSD at 2158.53]
+CS	0	10:39:37.020	Trade	2024.03.07 16:31:40   market buy 0.01 XAUUSD tp: 2169.07 (2152.95 / 2153.15 / 2152.95)
+CS	0	10:39:37.020	Trades	2024.03.07 16:31:40   deal #26 buy 0.01 XAUUSD at 2153.15 done (based on order #26)
+CS	0	10:39:37.020	Trade	2024.03.07 16:31:40   deal performed [#26 buy 0.01 XAUUSD at 2153.15]
+CS	0	10:39:37.020	Trade	2024.03.07 16:31:40   order performed buy 0.01 at 2153.15 [#26 buy 0.01 XAUUSD at 2153.15]
+CS	0	10:39:37.022	Boss_14_GridLog (XAUUSD,H1)	2024.03.07 20:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   market sell 0.01 XAUUSD, close #26 (2158.19 / 2158.39 / 2158.19)
+CS	0	10:39:37.022	Trades	2024.03.07 20:00:00   deal #27 sell 0.01 XAUUSD at 2158.19 done (based on order #27)
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   deal performed [#27 sell 0.01 XAUUSD at 2158.19]
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   order performed sell 0.01 at 2158.19 [#27 sell 0.01 XAUUSD at 2158.19]
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   market sell 0.01 XAUUSD, close #25 (2158.19 / 2158.39 / 2158.19)
+CS	0	10:39:37.022	Trades	2024.03.07 20:00:00   deal #28 sell 0.01 XAUUSD at 2158.19 done (based on order #28)
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   deal performed [#28 sell 0.01 XAUUSD at 2158.19]
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   order performed sell 0.01 at 2158.19 [#28 sell 0.01 XAUUSD at 2158.19]
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   market sell 0.01 XAUUSD, close #24 (2158.19 / 2158.39 / 2158.19)
+CS	0	10:39:37.022	Trades	2024.03.07 20:00:00   deal #29 sell 0.01 XAUUSD at 2158.19 done (based on order #29)
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   deal performed [#29 sell 0.01 XAUUSD at 2158.19]
+CS	0	10:39:37.022	Trade	2024.03.07 20:00:00   order performed sell 0.01 at 2158.19 [#29 sell 0.01 XAUUSD at 2158.19]
+CS	0	10:39:37.022	Trade	2024.03.08 10:30:40   market buy 0.01 XAUUSD tp: 2180.28 (2168.70 / 2168.90 / 2168.70)
+CS	0	10:39:37.022	Trades	2024.03.08 10:30:40   deal #30 buy 0.01 XAUUSD at 2168.90 done (based on order #30)
+CS	0	10:39:37.022	Trade	2024.03.08 10:30:40   deal performed [#30 buy 0.01 XAUUSD at 2168.90]
+CS	0	10:39:37.022	Trade	2024.03.08 10:30:40   order performed buy 0.01 at 2168.90 [#30 buy 0.01 XAUUSD at 2168.90]
+CS	0	10:39:37.022	Trade	2024.03.08 10:32:40   market buy 0.01 XAUUSD tp: 2176.32 (2164.74 / 2164.94 / 2164.74)
+CS	0	10:39:37.023	Trades	2024.03.08 10:32:40   deal #31 buy 0.01 XAUUSD at 2164.94 done (based on order #31)
+CS	0	10:39:37.023	Trade	2024.03.08 10:32:40   deal performed [#31 buy 0.01 XAUUSD at 2164.94]
+CS	0	10:39:37.023	Trade	2024.03.08 10:32:40   order performed buy 0.01 at 2164.94 [#31 buy 0.01 XAUUSD at 2164.94]
+CS	0	10:39:37.024	Boss_14_GridLog (XAUUSD,H1)	2024.03.08 15:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.024	Trade	2024.03.08 15:00:00   market sell 0.01 XAUUSD, close #31 (2165.75 / 2165.95 / 2165.75)
+CS	0	10:39:37.024	Trades	2024.03.08 15:00:00   deal #32 sell 0.01 XAUUSD at 2165.75 done (based on order #32)
+CS	0	10:39:37.024	Trade	2024.03.08 15:00:00   deal performed [#32 sell 0.01 XAUUSD at 2165.75]
+CS	0	10:39:37.024	Trade	2024.03.08 15:00:00   order performed sell 0.01 at 2165.75 [#32 sell 0.01 XAUUSD at 2165.75]
+CS	0	10:39:37.024	Trade	2024.03.08 15:00:00   market sell 0.01 XAUUSD, close #30 (2165.75 / 2165.95 / 2165.75)
+CS	0	10:39:37.024	Trades	2024.03.08 15:00:00   deal #33 sell 0.01 XAUUSD at 2165.75 done (based on order #33)
+CS	0	10:39:37.024	Trade	2024.03.08 15:00:00   deal performed [#33 sell 0.01 XAUUSD at 2165.75]
+CS	0	10:39:37.024	Trade	2024.03.08 15:00:00   order performed sell 0.01 at 2165.75 [#33 sell 0.01 XAUUSD at 2165.75]
+CS	0	10:39:37.024	Trade	2024.03.08 15:31:00   market buy 0.01 XAUUSD tp: 2188.62 (2173.16 / 2173.36 / 2173.16)
+CS	0	10:39:37.024	Trades	2024.03.08 15:31:00   deal #34 buy 0.01 XAUUSD at 2173.36 done (based on order #34)
+CS	0	10:39:37.024	Trade	2024.03.08 15:31:00   deal performed [#34 buy 0.01 XAUUSD at 2173.36]
+CS	0	10:39:37.024	Trade	2024.03.08 15:31:00   order performed buy 0.01 at 2173.36 [#34 buy 0.01 XAUUSD at 2173.36]
+CS	0	10:39:37.024	Trade	2024.03.08 16:07:40   market buy 0.01 XAUUSD tp: 2185.60 (2166.54 / 2166.74 / 2166.54)
+CS	0	10:39:37.024	Trades	2024.03.08 16:07:40   deal #35 buy 0.01 XAUUSD at 2166.74 done (based on order #35)
+CS	0	10:39:37.024	Trade	2024.03.08 16:07:40   deal performed [#35 buy 0.01 XAUUSD at 2166.74]
+CS	0	10:39:37.024	Trade	2024.03.08 16:07:40   order performed buy 0.01 at 2166.74 [#35 buy 0.01 XAUUSD at 2166.74]
+CS	0	10:39:37.026	Trade	2024.03.08 19:04:40   take profit triggered #35 buy 0.01 XAUUSD 2166.74 tp: 2185.60 [#36 sell 0.01 XAUUSD at 2185.60]
+CS	0	10:39:37.026	Trades	2024.03.08 19:04:40   deal #36 sell 0.01 XAUUSD at 2185.60 done (based on order #36)
+CS	0	10:39:37.026	Trade	2024.03.08 19:04:40   deal performed [#36 sell 0.01 XAUUSD at 2185.60]
+CS	0	10:39:37.026	Trade	2024.03.08 19:04:40   order performed sell 0.01 at 2185.60 [#36 sell 0.01 XAUUSD at 2185.60]
+CS	0	10:39:37.026	Trade	2024.03.08 19:05:40   take profit triggered #34 buy 0.01 XAUUSD 2173.36 tp: 2188.62 [#37 sell 0.01 XAUUSD at 2188.62]
+CS	0	10:39:37.026	Trades	2024.03.08 19:05:40   deal #37 sell 0.01 XAUUSD at 2188.62 done (based on order #37)
+CS	0	10:39:37.026	Trade	2024.03.08 19:05:40   deal performed [#37 sell 0.01 XAUUSD at 2188.62]
+CS	0	10:39:37.026	Trade	2024.03.08 19:05:40   order performed sell 0.01 at 2188.62 [#37 sell 0.01 XAUUSD at 2188.62]
+CS	0	10:39:37.032	Trade	2024.03.21 01:16:40   market buy 0.01 XAUUSD tp: 2249.24 (2222.33 / 2222.53 / 2222.33)
+CS	0	10:39:37.032	Trades	2024.03.21 01:16:40   deal #38 buy 0.01 XAUUSD at 2222.53 done (based on order #38)
+CS	0	10:39:37.032	Trade	2024.03.21 01:16:40   deal performed [#38 buy 0.01 XAUUSD at 2222.53]
+CS	0	10:39:37.032	Trade	2024.03.21 01:16:40   order performed buy 0.01 at 2222.53 [#38 buy 0.01 XAUUSD at 2222.53]
+CS	0	10:39:37.032	Trade	2024.03.21 01:16:59   market buy 0.01 XAUUSD tp: 2238.95 (2212.04 / 2212.24 / 2212.04)
+CS	0	10:39:37.032	Trades	2024.03.21 01:16:59   deal #39 buy 0.01 XAUUSD at 2212.24 done (based on order #39)
+CS	0	10:39:37.032	Trade	2024.03.21 01:16:59   deal performed [#39 buy 0.01 XAUUSD at 2212.24]
+CS	0	10:39:37.032	Trade	2024.03.21 01:16:59   order performed buy 0.01 at 2212.24 [#39 buy 0.01 XAUUSD at 2212.24]
+CS	0	10:39:37.032	Trade	2024.03.21 01:33:40   market buy 0.01 XAUUSD tp: 2228.31 (2201.40 / 2201.60 / 2201.40)
+CS	0	10:39:37.032	Trades	2024.03.21 01:33:40   deal #40 buy 0.01 XAUUSD at 2201.60 done (based on order #40)
+CS	0	10:39:37.032	Trade	2024.03.21 01:33:40   deal performed [#40 buy 0.01 XAUUSD at 2201.60]
+CS	0	10:39:37.032	Trade	2024.03.21 01:33:40   order performed buy 0.01 at 2201.60 [#40 buy 0.01 XAUUSD at 2201.60]
+CS	0	10:39:37.034	Boss_14_GridLog (XAUUSD,H1)	2024.03.21 06:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   market sell 0.01 XAUUSD, close #40 (2203.41 / 2203.61 / 2203.41)
+CS	0	10:39:37.034	Trades	2024.03.21 06:00:00   deal #41 sell 0.01 XAUUSD at 2203.41 done (based on order #41)
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   deal performed [#41 sell 0.01 XAUUSD at 2203.41]
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   order performed sell 0.01 at 2203.41 [#41 sell 0.01 XAUUSD at 2203.41]
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   market sell 0.01 XAUUSD, close #39 (2203.41 / 2203.61 / 2203.41)
+CS	0	10:39:37.034	Trades	2024.03.21 06:00:00   deal #42 sell 0.01 XAUUSD at 2203.41 done (based on order #42)
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   deal performed [#42 sell 0.01 XAUUSD at 2203.41]
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   order performed sell 0.01 at 2203.41 [#42 sell 0.01 XAUUSD at 2203.41]
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   market sell 0.01 XAUUSD, close #38 (2203.41 / 2203.61 / 2203.41)
+CS	0	10:39:37.034	Trades	2024.03.21 06:00:00   deal #43 sell 0.01 XAUUSD at 2203.41 done (based on order #43)
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   deal performed [#43 sell 0.01 XAUUSD at 2203.41]
+CS	0	10:39:37.034	Trade	2024.03.21 06:00:00   order performed sell 0.01 at 2203.41 [#43 sell 0.01 XAUUSD at 2203.41]
+CS	0	10:39:37.039	Trade	2024.03.28 19:30:40   market buy 0.01 XAUUSD tp: 2242.79 (2220.00 / 2220.20 / 2220.00)
+CS	0	10:39:37.039	Trades	2024.03.28 19:30:40   deal #44 buy 0.01 XAUUSD at 2220.20 done (based on order #44)
+CS	0	10:39:37.039	Trade	2024.03.28 19:30:40   deal performed [#44 buy 0.01 XAUUSD at 2220.20]
+CS	0	10:39:37.039	Trade	2024.03.28 19:30:40   order performed buy 0.01 at 2220.20 [#44 buy 0.01 XAUUSD at 2220.20]
+CS	0	10:39:37.040	Boss_14_GridLog (XAUUSD,H1)	2024.04.01 01:05:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.040	Trade	2024.04.01 01:05:00   market sell 0.01 XAUUSD, close #44 (2239.76 / 2239.96 / 2239.76)
+CS	0	10:39:37.040	Trades	2024.04.01 01:05:00   deal #45 sell 0.01 XAUUSD at 2239.76 done (based on order #45)
+CS	0	10:39:37.040	Trade	2024.04.01 01:05:00   deal performed [#45 sell 0.01 XAUUSD at 2239.76]
+CS	0	10:39:37.040	Trade	2024.04.01 01:05:00   order performed sell 0.01 at 2239.76 [#45 sell 0.01 XAUUSD at 2239.76]
+CS	0	10:39:37.040	Trade	2024.04.01 03:32:40   market buy 0.01 XAUUSD tp: 2283.47 (2253.37 / 2253.57 / 2253.37)
+CS	0	10:39:37.040	Trades	2024.04.01 03:32:40   deal #46 buy 0.01 XAUUSD at 2253.57 done (based on order #46)
+CS	0	10:39:37.040	Trade	2024.04.01 03:32:40   deal performed [#46 buy 0.01 XAUUSD at 2253.57]
+CS	0	10:39:37.040	Trade	2024.04.01 03:32:40   order performed buy 0.01 at 2253.57 [#46 buy 0.01 XAUUSD at 2253.57]
+CS	0	10:39:37.040	Boss_14_GridLog (XAUUSD,H1)	2024.04.01 08:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.040	Trade	2024.04.01 08:00:00   market sell 0.01 XAUUSD, close #46 (2260.13 / 2260.33 / 2260.13)
+CS	0	10:39:37.040	Trades	2024.04.01 08:00:00   deal #47 sell 0.01 XAUUSD at 2260.13 done (based on order #47)
+CS	0	10:39:37.040	Trade	2024.04.01 08:00:00   deal performed [#47 sell 0.01 XAUUSD at 2260.13]
+CS	0	10:39:37.040	Trade	2024.04.01 08:00:00   order performed sell 0.01 at 2260.13 [#47 sell 0.01 XAUUSD at 2260.13]
+CS	0	10:39:37.042	Trade	2024.04.02 17:03:40   market buy 0.01 XAUUSD tp: 2295.22 (2273.86 / 2274.06 / 2273.86)
+CS	0	10:39:37.042	Trades	2024.04.02 17:03:40   deal #48 buy 0.01 XAUUSD at 2274.06 done (based on order #48)
+CS	0	10:39:37.042	Trade	2024.04.02 17:03:40   deal performed [#48 buy 0.01 XAUUSD at 2274.06]
+CS	0	10:39:37.042	Trade	2024.04.02 17:03:40   order performed buy 0.01 at 2274.06 [#48 buy 0.01 XAUUSD at 2274.06]
+CS	0	10:39:37.042	Trade	2024.04.02 17:41:40   market buy 0.01 XAUUSD tp: 2288.53 (2266.53 / 2266.73 / 2266.53)
+CS	0	10:39:37.042	Trades	2024.04.02 17:41:40   deal #49 buy 0.01 XAUUSD at 2266.73 done (based on order #49)
+CS	0	10:39:37.042	Trade	2024.04.02 17:41:40   deal performed [#49 buy 0.01 XAUUSD at 2266.73]
+CS	0	10:39:37.042	Trade	2024.04.02 17:41:40   order performed buy 0.01 at 2266.73 [#49 buy 0.01 XAUUSD at 2266.73]
+CS	0	10:39:37.042	Trade	2024.04.02 17:56:40   market buy 0.01 XAUUSD tp: 2280.86 (2257.63 / 2257.83 / 2257.63)
+CS	0	10:39:37.042	Trades	2024.04.02 17:56:40   deal #50 buy 0.01 XAUUSD at 2257.83 done (based on order #50)
+CS	0	10:39:37.042	Trade	2024.04.02 17:56:40   deal performed [#50 buy 0.01 XAUUSD at 2257.83]
+CS	0	10:39:37.042	Trade	2024.04.02 17:56:40   order performed buy 0.01 at 2257.83 [#50 buy 0.01 XAUUSD at 2257.83]
+CS	0	10:39:37.044	Boss_14_GridLog (XAUUSD,H1)	2024.04.02 22:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   market sell 0.01 XAUUSD, close #50 (2271.45 / 2271.65 / 2271.45)
+CS	0	10:39:37.044	Trades	2024.04.02 22:00:00   deal #51 sell 0.01 XAUUSD at 2271.45 done (based on order #51)
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   deal performed [#51 sell 0.01 XAUUSD at 2271.45]
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   order performed sell 0.01 at 2271.45 [#51 sell 0.01 XAUUSD at 2271.45]
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   market sell 0.01 XAUUSD, close #49 (2271.45 / 2271.65 / 2271.45)
+CS	0	10:39:37.044	Trades	2024.04.02 22:00:00   deal #52 sell 0.01 XAUUSD at 2271.45 done (based on order #52)
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   deal performed [#52 sell 0.01 XAUUSD at 2271.45]
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   order performed sell 0.01 at 2271.45 [#52 sell 0.01 XAUUSD at 2271.45]
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   market sell 0.01 XAUUSD, close #48 (2271.45 / 2271.65 / 2271.45)
+CS	0	10:39:37.044	Trades	2024.04.02 22:00:00   deal #53 sell 0.01 XAUUSD at 2271.45 done (based on order #53)
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   deal performed [#53 sell 0.01 XAUUSD at 2271.45]
+CS	0	10:39:37.044	Trade	2024.04.02 22:00:00   order performed sell 0.01 at 2271.45 [#53 sell 0.01 XAUUSD at 2271.45]
+CS	0	10:39:37.044	Trade	2024.04.03 01:17:20   market buy 0.01 XAUUSD tp: 2310.49 (2284.45 / 2284.65 / 2284.45)
+CS	0	10:39:37.044	Trades	2024.04.03 01:17:20   deal #54 buy 0.01 XAUUSD at 2284.65 done (based on order #54)
+CS	0	10:39:37.044	Trade	2024.04.03 01:17:20   deal performed [#54 buy 0.01 XAUUSD at 2284.65]
+CS	0	10:39:37.044	Trade	2024.04.03 01:17:20   order performed buy 0.01 at 2284.65 [#54 buy 0.01 XAUUSD at 2284.65]
+CS	0	10:39:37.045	Boss_14_GridLog (XAUUSD,H1)	2024.04.03 06:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.045	Trade	2024.04.03 06:00:00   market sell 0.01 XAUUSD, close #54 (2283.23 / 2283.43 / 2283.23)
+CS	0	10:39:37.045	Trades	2024.04.03 06:00:00   deal #55 sell 0.01 XAUUSD at 2283.23 done (based on order #55)
+CS	0	10:39:37.045	Trade	2024.04.03 06:00:00   deal performed [#55 sell 0.01 XAUUSD at 2283.23]
+CS	0	10:39:37.045	Trade	2024.04.03 06:00:00   order performed sell 0.01 at 2283.23 [#55 sell 0.01 XAUUSD at 2283.23]
+CS	0	10:39:37.046	Trade	2024.04.03 21:34:40   market buy 0.01 XAUUSD tp: 2318.71 (2296.07 / 2296.27 / 2296.07)
+CS	0	10:39:37.046	Trades	2024.04.03 21:34:40   deal #56 buy 0.01 XAUUSD at 2296.27 done (based on order #56)
+CS	0	10:39:37.046	Trade	2024.04.03 21:34:40   deal performed [#56 buy 0.01 XAUUSD at 2296.27]
+CS	0	10:39:37.046	Trade	2024.04.03 21:34:40   order performed buy 0.01 at 2296.27 [#56 buy 0.01 XAUUSD at 2296.27]
+CS	0	10:39:37.047	Boss_14_GridLog (XAUUSD,H1)	2024.04.04 03:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.047	Trade	2024.04.04 03:00:00   market sell 0.01 XAUUSD, close #56 (2297.57 / 2297.77 / 2297.57)
+CS	0	10:39:37.047	Trades	2024.04.04 03:00:00   deal #57 sell 0.01 XAUUSD at 2297.57 done (based on order #57)
+CS	0	10:39:37.047	Trade	2024.04.04 03:00:00   deal performed [#57 sell 0.01 XAUUSD at 2297.57]
+CS	0	10:39:37.047	Trade	2024.04.04 03:00:00   order performed sell 0.01 at 2297.57 [#57 sell 0.01 XAUUSD at 2297.57]
+CS	0	10:39:37.049	Trade	2024.04.05 17:24:40   market buy 0.01 XAUUSD tp: 2333.94 (2307.86 / 2308.06 / 2307.86)
+CS	0	10:39:37.049	Trades	2024.04.05 17:24:40   deal #58 buy 0.01 XAUUSD at 2308.06 done (based on order #58)
+CS	0	10:39:37.049	Trade	2024.04.05 17:24:40   deal performed [#58 buy 0.01 XAUUSD at 2308.06]
+CS	0	10:39:37.049	Trade	2024.04.05 17:24:40   order performed buy 0.01 at 2308.06 [#58 buy 0.01 XAUUSD at 2308.06]
+CS	0	10:39:37.050	Boss_14_GridLog (XAUUSD,H1)	2024.04.05 22:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.050	Trade	2024.04.05 22:00:00   market sell 0.01 XAUUSD, close #58 (2325.13 / 2325.33 / 2325.13)
+CS	0	10:39:37.050	Trades	2024.04.05 22:00:00   deal #59 sell 0.01 XAUUSD at 2325.13 done (based on order #59)
+CS	0	10:39:37.050	Trade	2024.04.05 22:00:00   deal performed [#59 sell 0.01 XAUUSD at 2325.13]
+CS	0	10:39:37.050	Trade	2024.04.05 22:00:00   order performed sell 0.01 at 2325.13 [#59 sell 0.01 XAUUSD at 2325.13]
+CS	0	10:39:37.050	Trade	2024.04.08 05:36:40   market buy 0.01 XAUUSD tp: 2381.67 (2341.45 / 2341.65 / 2341.45)
+CS	0	10:39:37.050	Trades	2024.04.08 05:36:40   deal #60 buy 0.01 XAUUSD at 2341.65 done (based on order #60)
+CS	0	10:39:37.050	Trade	2024.04.08 05:36:40   deal performed [#60 buy 0.01 XAUUSD at 2341.65]
+CS	0	10:39:37.050	Trade	2024.04.08 05:36:40   order performed buy 0.01 at 2341.65 [#60 buy 0.01 XAUUSD at 2341.65]
+CS	0	10:39:37.051	Boss_14_GridLog (XAUUSD,H1)	2024.04.08 10:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.051	Trade	2024.04.08 10:00:00   market sell 0.01 XAUUSD, close #60 (2336.55 / 2336.75 / 2336.55)
+CS	0	10:39:37.051	Trades	2024.04.08 10:00:00   deal #61 sell 0.01 XAUUSD at 2336.55 done (based on order #61)
+CS	0	10:39:37.051	Trade	2024.04.08 10:00:00   deal performed [#61 sell 0.01 XAUUSD at 2336.55]
+CS	0	10:39:37.051	Trade	2024.04.08 10:00:00   order performed sell 0.01 at 2336.55 [#61 sell 0.01 XAUUSD at 2336.55]
+CS	0	10:39:37.052	Trade	2024.04.09 10:14:40   market buy 0.01 XAUUSD tp: 2370.83 (2354.93 / 2355.13 / 2354.93)
+CS	0	10:39:37.052	Trades	2024.04.09 10:14:40   deal #62 buy 0.01 XAUUSD at 2355.13 done (based on order #62)
+CS	0	10:39:37.052	Trade	2024.04.09 10:14:40   deal performed [#62 buy 0.01 XAUUSD at 2355.13]
+CS	0	10:39:37.052	Trade	2024.04.09 10:14:40   order performed buy 0.01 at 2355.13 [#62 buy 0.01 XAUUSD at 2355.13]
+CS	0	10:39:37.053	Boss_14_GridLog (XAUUSD,H1)	2024.04.09 15:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.053	Trade	2024.04.09 15:00:00   market sell 0.01 XAUUSD, close #62 (2354.23 / 2354.43 / 2354.23)
+CS	0	10:39:37.053	Trades	2024.04.09 15:00:00   deal #63 sell 0.01 XAUUSD at 2354.23 done (based on order #63)
+CS	0	10:39:37.053	Trade	2024.04.09 15:00:00   deal performed [#63 sell 0.01 XAUUSD at 2354.23]
+CS	0	10:39:37.053	Trade	2024.04.09 15:00:00   order performed sell 0.01 at 2354.23 [#63 sell 0.01 XAUUSD at 2354.23]
+CS	0	10:39:37.053	Trade	2024.04.09 17:33:40   market buy 0.01 XAUUSD tp: 2388.31 (2364.45 / 2364.65 / 2364.45)
+CS	0	10:39:37.053	Trades	2024.04.09 17:33:40   deal #64 buy 0.01 XAUUSD at 2364.65 done (based on order #64)
+CS	0	10:39:37.053	Trade	2024.04.09 17:33:40   deal performed [#64 buy 0.01 XAUUSD at 2364.65]
+CS	0	10:39:37.053	Trade	2024.04.09 17:33:40   order performed buy 0.01 at 2364.65 [#64 buy 0.01 XAUUSD at 2364.65]
+CS	0	10:39:37.053	Trade	2024.04.09 17:37:40   market buy 0.01 XAUUSD tp: 2379.69 (2355.83 / 2356.03 / 2355.83)
+CS	0	10:39:37.053	Trades	2024.04.09 17:37:40   deal #65 buy 0.01 XAUUSD at 2356.03 done (based on order #65)
+CS	0	10:39:37.053	Trade	2024.04.09 17:37:40   deal performed [#65 buy 0.01 XAUUSD at 2356.03]
+CS	0	10:39:37.053	Trade	2024.04.09 17:37:40   order performed buy 0.01 at 2356.03 [#65 buy 0.01 XAUUSD at 2356.03]
+CS	0	10:39:37.053	Trade	2024.04.09 17:42:20   market buy 0.01 XAUUSD tp: 2372.08 (2346.34 / 2346.54 / 2346.34)
+CS	0	10:39:37.053	Trades	2024.04.09 17:42:20   deal #66 buy 0.01 XAUUSD at 2346.54 done (based on order #66)
+CS	0	10:39:37.053	Trade	2024.04.09 17:42:20   deal performed [#66 buy 0.01 XAUUSD at 2346.54]
+CS	0	10:39:37.053	Trade	2024.04.09 17:42:20   order performed buy 0.01 at 2346.54 [#66 buy 0.01 XAUUSD at 2346.54]
+CS	0	10:39:37.055	Boss_14_GridLog (XAUUSD,H1)	2024.04.09 22:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   market sell 0.01 XAUUSD, close #66 (2349.55 / 2349.75 / 2349.55)
+CS	0	10:39:37.055	Trades	2024.04.09 22:00:00   deal #67 sell 0.01 XAUUSD at 2349.55 done (based on order #67)
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   deal performed [#67 sell 0.01 XAUUSD at 2349.55]
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   order performed sell 0.01 at 2349.55 [#67 sell 0.01 XAUUSD at 2349.55]
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   market sell 0.01 XAUUSD, close #65 (2349.55 / 2349.75 / 2349.55)
+CS	0	10:39:37.055	Trades	2024.04.09 22:00:00   deal #68 sell 0.01 XAUUSD at 2349.55 done (based on order #68)
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   deal performed [#68 sell 0.01 XAUUSD at 2349.55]
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   order performed sell 0.01 at 2349.55 [#68 sell 0.01 XAUUSD at 2349.55]
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   market sell 0.01 XAUUSD, close #64 (2349.55 / 2349.75 / 2349.55)
+CS	0	10:39:37.055	Trades	2024.04.09 22:00:00   deal #69 sell 0.01 XAUUSD at 2349.55 done (based on order #69)
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   deal performed [#69 sell 0.01 XAUUSD at 2349.55]
+CS	0	10:39:37.055	Trade	2024.04.09 22:00:00   order performed sell 0.01 at 2349.55 [#69 sell 0.01 XAUUSD at 2349.55]
+CS	0	10:39:37.057	Trade	2024.04.11 21:36:20   market buy 0.01 XAUUSD tp: 2390.26 (2363.66 / 2363.86 / 2363.66)
+CS	0	10:39:37.057	Trades	2024.04.11 21:36:20   deal #70 buy 0.01 XAUUSD at 2363.86 done (based on order #70)
+CS	0	10:39:37.057	Trade	2024.04.11 21:36:20   deal performed [#70 buy 0.01 XAUUSD at 2363.86]
+CS	0	10:39:37.057	Trade	2024.04.11 21:36:20   order performed buy 0.01 at 2363.86 [#70 buy 0.01 XAUUSD at 2363.86]
+CS	0	10:39:37.058	Boss_14_GridLog (XAUUSD,H1)	2024.04.12 03:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.058	Trade	2024.04.12 03:00:00   market sell 0.01 XAUUSD, close #70 (2377.05 / 2377.25 / 2377.05)
+CS	0	10:39:37.058	Trades	2024.04.12 03:00:00   deal #71 sell 0.01 XAUUSD at 2377.05 done (based on order #71)
+CS	0	10:39:37.058	Trade	2024.04.12 03:00:00   deal performed [#71 sell 0.01 XAUUSD at 2377.05]
+CS	0	10:39:37.058	Trade	2024.04.12 03:00:00   order performed sell 0.01 at 2377.05 [#71 sell 0.01 XAUUSD at 2377.05]
+CS	0	10:39:37.058	Trade	2024.04.12 04:50:20   market buy 0.01 XAUUSD tp: 2417.00 (2390.26 / 2390.46 / 2390.26)
+CS	0	10:39:37.058	Trades	2024.04.12 04:50:20   deal #72 buy 0.01 XAUUSD at 2390.46 done (based on order #72)
+CS	0	10:39:37.058	Trade	2024.04.12 04:50:20   deal performed [#72 buy 0.01 XAUUSD at 2390.46]
+CS	0	10:39:37.058	Trade	2024.04.12 04:50:20   order performed buy 0.01 at 2390.46 [#72 buy 0.01 XAUUSD at 2390.46]
+CS	0	10:39:37.059	Boss_14_GridLog (XAUUSD,H1)	2024.04.12 09:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.059	Trade	2024.04.12 09:00:00   market sell 0.01 XAUUSD, close #72 (2387.33 / 2387.53 / 2387.33)
+CS	0	10:39:37.059	Trades	2024.04.12 09:00:00   deal #73 sell 0.01 XAUUSD at 2387.33 done (based on order #73)
+CS	0	10:39:37.059	Trade	2024.04.12 09:00:00   deal performed [#73 sell 0.01 XAUUSD at 2387.33]
+CS	0	10:39:37.059	Trade	2024.04.12 09:00:00   order performed sell 0.01 at 2387.33 [#73 sell 0.01 XAUUSD at 2387.33]
+CS	0	10:39:37.059	Trade	2024.04.12 10:14:40   market buy 0.01 XAUUSD tp: 2421.99 (2398.26 / 2398.46 / 2398.26)
+CS	0	10:39:37.059	Trades	2024.04.12 10:14:40   deal #74 buy 0.01 XAUUSD at 2398.46 done (based on order #74)
+CS	0	10:39:37.059	Trade	2024.04.12 10:14:40   deal performed [#74 buy 0.01 XAUUSD at 2398.46]
+CS	0	10:39:37.059	Trade	2024.04.12 10:14:40   order performed buy 0.01 at 2398.46 [#74 buy 0.01 XAUUSD at 2398.46]
+CS	0	10:39:37.060	Trade	2024.04.12 14:32:40   market buy 0.01 XAUUSD tp: 2412.27 (2390.75 / 2390.95 / 2390.75)
+CS	0	10:39:37.060	Trades	2024.04.12 14:32:40   deal #75 buy 0.01 XAUUSD at 2390.95 done (based on order #75)
+CS	0	10:39:37.060	Trade	2024.04.12 14:32:40   deal performed [#75 buy 0.01 XAUUSD at 2390.95]
+CS	0	10:39:37.060	Trade	2024.04.12 14:32:40   order performed buy 0.01 at 2390.95 [#75 buy 0.01 XAUUSD at 2390.95]
+CS	0	10:39:37.060	Boss_14_GridLog (XAUUSD,H1)	2024.04.12 15:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.060	Trade	2024.04.12 15:00:00   market sell 0.01 XAUUSD, close #75 (2395.55 / 2395.75 / 2395.55)
+CS	0	10:39:37.060	Trades	2024.04.12 15:00:00   deal #76 sell 0.01 XAUUSD at 2395.55 done (based on order #76)
+CS	0	10:39:37.060	Trade	2024.04.12 15:00:00   deal performed [#76 sell 0.01 XAUUSD at 2395.55]
+CS	0	10:39:37.060	Trade	2024.04.12 15:00:00   order performed sell 0.01 at 2395.55 [#76 sell 0.01 XAUUSD at 2395.55]
+CS	0	10:39:37.060	Trade	2024.04.12 15:00:00   market sell 0.01 XAUUSD, close #74 (2395.55 / 2395.75 / 2395.55)
+CS	0	10:39:37.060	Trades	2024.04.12 15:00:00   deal #77 sell 0.01 XAUUSD at 2395.55 done (based on order #77)
+CS	0	10:39:37.060	Trade	2024.04.12 15:00:00   deal performed [#77 sell 0.01 XAUUSD at 2395.55]
+CS	0	10:39:37.060	Trade	2024.04.12 15:00:00   order performed sell 0.01 at 2395.55 [#77 sell 0.01 XAUUSD at 2395.55]
+CS	0	10:39:37.060	Trade	2024.04.12 16:52:40   market buy 0.01 XAUUSD tp: 2429.79 (2406.45 / 2406.65 / 2406.45)
+CS	0	10:39:37.060	Trades	2024.04.12 16:52:40   deal #78 buy 0.01 XAUUSD at 2406.65 done (based on order #78)
+CS	0	10:39:37.060	Trade	2024.04.12 16:52:40   deal performed [#78 buy 0.01 XAUUSD at 2406.65]
+CS	0	10:39:37.060	Trade	2024.04.12 16:52:40   order performed buy 0.01 at 2406.65 [#78 buy 0.01 XAUUSD at 2406.65]
+CS	0	10:39:37.060	Trade	2024.04.12 18:01:20   take profit triggered #78 buy 0.01 XAUUSD 2406.65 tp: 2429.79 [#79 sell 0.01 XAUUSD at 2429.79]
+CS	0	10:39:37.060	Trades	2024.04.12 18:01:20   deal #79 sell 0.01 XAUUSD at 2429.79 done (based on order #79)
+CS	0	10:39:37.060	Trade	2024.04.12 18:01:20   deal performed [#79 sell 0.01 XAUUSD at 2429.79]
+CS	0	10:39:37.060	Trade	2024.04.12 18:01:20   order performed sell 0.01 at 2429.79 [#79 sell 0.01 XAUUSD at 2429.79]
+CS	0	10:39:37.079	Trade	2024.05.20 08:34:40   market buy 0.01 XAUUSD tp: 2472.71 (2445.97 / 2446.17 / 2445.97)
+CS	0	10:39:37.079	Trades	2024.05.20 08:34:40   deal #80 buy 0.01 XAUUSD at 2446.17 done (based on order #80)
+CS	0	10:39:37.079	Trade	2024.05.20 08:34:40   deal performed [#80 buy 0.01 XAUUSD at 2446.17]
+CS	0	10:39:37.079	Trade	2024.05.20 08:34:40   order performed buy 0.01 at 2446.17 [#80 buy 0.01 XAUUSD at 2446.17]
+CS	0	10:39:37.080	Trade	2024.05.20 09:33:40   market buy 0.01 XAUUSD tp: 2462.07 (2434.64 / 2434.84 / 2434.64)
+CS	0	10:39:37.080	Trades	2024.05.20 09:33:40   deal #81 buy 0.01 XAUUSD at 2434.84 done (based on order #81)
+CS	0	10:39:37.080	Trade	2024.05.20 09:33:40   deal performed [#81 buy 0.01 XAUUSD at 2434.84]
+CS	0	10:39:37.080	Trade	2024.05.20 09:33:40   order performed buy 0.01 at 2434.84 [#81 buy 0.01 XAUUSD at 2434.84]
+CS	0	10:39:37.081	Boss_14_GridLog (XAUUSD,H1)	2024.05.20 13:00:00   [EXIT] vertical barrier: basket held 5 bars >= _2_MaxHoldBars=5 -> close all
+CS	0	10:39:37.081	Trade	2024.05.20 13:00:00   market sell 0.01 XAUUSD, close #81 (2441.71 / 2441.91 / 2441.71)
+CS	0	10:39:37.081	Trades	2024.05.20 13:00:00   deal #82 sell 0.01 XAUUSD at 2441.71 done (based on order #82)
+CS	0	10:39:37.081	Trade	2024.05.20 13:00:00   deal performed [#82 sell 0.01 XAUUSD at 2441.71]
+CS	0	10:39:37.081	Trade	2024.05.20 13:00:00   order performed sell 0.01 at 2441.71 [#82 sell 0.01 XAUUSD at 2441.71]
+CS	0	10:39:37.081	Trade	2024.05.20 13:00:00   market sell 0.01 XAUUSD, close #80 (2441.71 / 2441.91 / 2441.71)
+CS	0	10:39:37.081	Trades	2024.05.20 13:00:00   deal #83 sell 0.01 XAUUSD at 2441.71 done (based on order #83)
+CS	0	10:39:37.081	Trade	2024.05.20 13:00:00   deal performed [#83 sell 0.01 XAUUSD at 2441.71]
+CS	0	10:39:37.081	Trade	2024.05.20 13:00:00   order performed sell 0.01 at 2441.71 [#83 sell 0.01 XAUUSD at 2441.71]
+CS	0	10:39:37.103	Tester	final balance 10136.90 USD
+CS	0	10:39:37.106	Tester	XAUUSD,H1: 702163 ticks, 2936 bars generated. Test passed in 0:00:00.187 (including ticks preprocessing 0:00:00.016).
+CS	0	10:39:37.106	Tester	59 Mb memory used including 0.94 Mb of history data, 64 Mb of tick data
+CS	0	10:39:37.106	Tester	log file "C:\Users\patip\AppData\Roaming\MetaQuotes\Tester\9CA16B8382AE4CF692710FB36B9DA355\Agent-127.0.0.1-3000\logs\20260803.log" written
+CS	0	10:39:37.107	Tester	test Experts\EALabTpl\Boss_14_GridLog.ex5 on XAUUSD,H1 thread finished
+CS	0	10:39:37.175	127.0.0.1	tester forced to close
+CS	0	10:39:37.175	127.0.0.1	prepare for shutdown
+CS	0	10:39:37.175	127.0.0.1	stop immediately
+CS	0	10:39:37.175	127.0.0.1	shutdown finished
+CS	0	10:39:37.395	Server	MetaTester 5 stopped

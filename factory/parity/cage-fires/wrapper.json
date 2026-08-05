@@ -1,0 +1,18 @@
+﻿{
+    "label":  "wrapper",
+    "case":  "cage-fires",
+    "kind":  "must-trade",
+    "expert":  "EALabTpl\\generated\\B14_H01_r1",
+    "binary":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\generated\\B14_H01_r1.ex5",
+    "binary_mtime":  "2026-08-02 13:59:19",
+    "report":  "D:\\EA_LAB\\_mt5_auto\\reports\\PARITY_B14_H01_r1_cagefires_wrapper.htm",
+    "log":  "D:\\EA_LAB\\factory\\parity\\cage-fires\\wrapper.log.txt",
+    "lane":  "D:\\Meta 5\\terminal64.exe",
+    "symbol":  "XAUUSD",
+    "period":  "H1",
+    "from":  "2024.01.01",
+    "to":  "2024.07.01",
+    "model":  1,
+    "set":  "D:\\EA_LAB\\factory\\parity\\cage-fires\\effective.set",
+    "expected_hash":  "cb15cdf18327ec3dd9da3e244537d2da35f15219aa92c2e6735c9ee8f3a2ecba"
+}

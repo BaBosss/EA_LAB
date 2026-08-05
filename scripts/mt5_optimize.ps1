@@ -12,7 +12,11 @@ but should be confirmed on first real run (MT5 must be CLOSED).
 
 Example:
   & .\mt5_optimize.ps1 -Expert "Boss - 2 Adaptive Smart Grid" -Symbol EURCAD `
-        -SetFile "...\EURCAD.set" -FromDate 2023.06.01 -ToDate 2026.06.01 -ReportName OPT_EURCAD
+        -SetFile "...\EURCAD.set" -FromDate 2023.01.01 -ToDate 2025.12.31 -ReportName OPT_EURCAD
+
+  The example window IS MAIN (2023.01.01-2025.12.31). Optimizing past it selects parameters on
+  the 2026H1 holdout, which spends it - the exact leak found on 2026-07-25. Enforced by the
+  holdout guard in check_state.ps1; HOLDOUT-OK on a line opts out when that is intended.
 #>
 param(
   [Parameter(Mandatory)][string]$Expert,
@@ -23,7 +27,7 @@ param(
   [Parameter(Mandatory)][string]$SetFile,       # base .set WITH optimize ranges (||...||Y)
   [int]$Model = 1,                              # 1 = 1-min OHLC (fast) for optimization
   [int]$Optimization = 2,                       # 2 = fast genetic, 1 = slow complete
-  [int]$Criterion = 0,                          # 0 = max balance
+  [int]$Criterion = 7,                          # 7 = Complex Criterion (policy 2026-07-25; 0=balance max drives the genetic population into spikes) - engine-edge-class EAs pass -Criterion 1 (PF max)
   [int]$Deposit = 10000,
   [int]$Leverage = 100,                         # tester account leverage (1:N)
   [Parameter(Mandatory)][string]$ReportName,
@@ -31,7 +35,19 @@ param(
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
   [int]$TimeoutSec = 7200,
   [switch]$Portable,   # 2nd portable install (D:\Meta 5b): pass -Terminal/-DataDir there too
-  [switch]$Force
+  [switch]$Force,
+  [switch]$SkipOptimizeGuard,  # override: proceed even if optimize_guard.ps1 refuses a swept dimension
+  # ORDER-1253. Both are passed straight through to optimize_guard.ps1 and both default to the
+  # behaviour every existing call site already gets.
+  #
+  # WHY THEY HAD TO EXIST. The pilot's own probe .ini names a GENERATED WRAPPER as its Expert, so
+  # the guard resolves no Boss build and prints "build-inertness NOT checked" for every dimension
+  # -- and with no revision declared, the per-hypothesis ParameterBinding layer (design 5.4, the
+  # one resolver) never runs either. The two checks with the most evidence behind them were both
+  # silently inactive on exactly the sweeps the Factory OS pilot exists to judge, and the decision
+  # record's `binding` field was null on every real submission as a result.
+  [string]$HypothesisRevision = '',
+  [Nullable[int]]$GuardBuild = $null
 )
 $ErrorActionPreference = "Stop"
 # guard scoped by exe PATH (same convention as mt5_run.ps1) so the two installs
@@ -57,21 +73,79 @@ if (Test-Path $testerCache) {
   Get-ChildItem $testerCache -Filter "*.opt" -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 }
 
+# ORDER-1268: the same REFUSE-OR-RECORD gate mt5_run.ps1 applies, and this launcher needed it
+# MORE. mt5_run at least warned when no .set was supplied; this one read whatever it was handed
+# and said nothing at all. An optimize pass launched off a partial file explores a grid whose
+# UNSWEPT axes come from the per-terminal tester cache, so the winning row names a configuration
+# that cannot be reproduced -- and an optimize result is exactly the artifact this lab then locks
+# a .set from. The judging lives in scripts\lib\setfile_surface.ps1; one owner, three launchers (mt5_run · mt5_optimize · run_backtest).
+. (Join-Path $PSScriptRoot 'lib\setfile_surface.ps1')
+$surface = Get-SetSurfaceState -Path $SetFile
+if ($surface.Refuse) {
+  Write-Output "ABORT: $($surface.Message)"
+  exit 2
+}
+Write-Output "surface: $($surface.State) -- $($surface.Message)"
+
 $inputs = @()
-foreach ($l in Get-Content $SetFile) {
-  $t = $l.Trim()
-  if ($t -and -not $t.StartsWith(";") -and $t.Contains("=")) { $inputs += $t }
+if ($surface.State -ne 'NOSETFILE') {
+  foreach ($l in Get-Content $SetFile) {
+    $t = $l.Trim()
+    if ($t -and -not $t.StartsWith(";") -and $t.Contains("=")) { $inputs += $t }
+  }
 }
 
 $lines = @(
   "[Tester]", "Expert=$Expert", "Symbol=$Symbol", "Period=$Period", "Model=$Model",
   "Optimization=$Optimization", "OptimizationCriterion=$Criterion",
   "FromDate=$FromDate", "ToDate=$ToDate", "ForwardMode=0",
-  "Deposit=$Deposit", "Currency=USD", "Leverage=$Leverage", "ExecutionMode=0", "Visual=0",
+  "Deposit=$Deposit", "Currency=USD", "Leverage=1:$Leverage", "ExecutionMode=0", "Visual=0",
+  # Leverage MUST be written as 1:N - a bare "Leverage=100" is silently ignored and the
+  # tester falls back to the server default (observed: OPT_MDX_GBP ran at 1:2000).
   "Report=$ReportName", "ReplaceReport=1", "ShutdownTerminal=1", "[TesterInputs]"
 ) + $inputs
 $ini = "$auto\ini\$ReportName.ini"
 [IO.File]::WriteAllLines($ini, $lines)
+
+# ORDER-198 follow-up (user 2026-07-24: "บังคับแบบ warn + override ได้"): pre-flight every
+# optimize pass through optimize_guard.ps1 (ORDER-192b) BEFORE burning tester wall-clock on
+# a sweep that provably can't do anything (dead/overridden/inactive dimension) or that
+# optimizes away a safety cap (RC_*/ProtectLevel/_9_MaxLevels). Default = blocks on REFUSE;
+# -SkipOptimizeGuard proceeds anyway (still prints the REFUSE lines via -WarnOnly, never silent).
+$guardScript = Join-Path $PSScriptRoot "optimize_guard.ps1"
+# ORDER-1253 (design 8.6 item 6). The guard's verdicts used to be printed and lost, so "the guard
+# has been observed refusing a real case" was unanswerable from anything committed. Every pass
+# through here now leaves ONE record.
+#
+# SCOPE, STATED HONESTLY: this is the only MT5 OPTIMIZER launcher in the repo (mt5_run.ps1 and
+# run_backtest.ps1 both write `Optimization=0`), so every optimizer sweep is recorded. It is NOT
+# "every parameter selection is recorded" -- a PowerShell grid loop over single tests selects a
+# config with the optimizer flag at 0 and this guard never sees it (memory
+# `optimization-flag-launders-hand-rolled-selection`). That hole is unchanged by this record.
+#
+# The repo root is derived, not typed: a hardcoded D:\EA_LAB defeats the worktree cage (memory
+# `hardcoded-repo-path-defeats-worktree-cage`, and the `$auto` line above is an instance of it).
+$decisionLog = Join-Path (Split-Path -Parent $PSScriptRoot) "factory\optimize_decisions.jsonl"
+$guardExtra = @{ DecisionLog = $decisionLog; Lane = $Terminal }
+if ($HypothesisRevision -ne '') { $guardExtra['HypothesisRevision'] = $HypothesisRevision }
+if ($null -ne $GuardBuild)      { $guardExtra['Build'] = $GuardBuild }
+if (Test-Path $guardScript) {
+  if ($SkipOptimizeGuard) {
+    Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
+    & $guardScript -IniPath $ini -WarnOnly @guardExtra | Write-Output
+  }
+  else {
+    & $guardScript -IniPath $ini @guardExtra | Write-Output
+    if ($LASTEXITCODE -ne 0) {
+      Write-Output "ABORT: optimize_guard.ps1 refused at least one swept dimension in $ini (see REFUSE lines above)."
+      Write-Output "        Re-run with -SkipOptimizeGuard to proceed anyway (e.g. a confirmed false positive)."
+      exit 3
+    }
+  }
+}
+else {
+  Write-Output "optimize_guard: scripts\optimize_guard.ps1 not found, skipping pre-flight check"
+}
 
 Write-Output "OPTIMIZE: $Expert | $Symbol $Period | $FromDate..$ToDate | mode=$Optimization"
 $mtArgs = @("/config:`"$ini`""); if ($Portable) { $mtArgs += "/portable" }
@@ -89,4 +163,16 @@ if (Test-Path $srcXml) {
 }
 else {
   Write-Output "NO XML (exited=$($proc.HasExited)). If the test ran but produced no .xml, the optimization report may export differently on this build. Check the $ReportName files in $DataDir and the Tester logs."
+  # ORDER-1253: EXIT 4, not 0. This printed the line above and then fell off the end of the
+  # script, which PowerShell exits 0 for -- so a launcher whose ONLY product is an optimizer XML
+  # reported SUCCESS when that XML did not exist. Measured, not theorised: a pilot probe
+  # submission with a malformed symbol ran 14.4s, produced nothing, and was written into
+  # factory/runs/pilot/probe/ as `launcher_exit_code: 0`, indistinguishable from the 675.5s run
+  # beside it that produced a real surface.
+  #
+  # BLAST RADIUS, stated rather than discovered: every caller of this script that checks the exit
+  # code now sees a failure where it previously saw success -- scripts/optimize_loop.ps1,
+  # scripts/run_batch.ps1, scripts/qwen_batch_runner.ps1. That is the correction, not a
+  # side effect: each of them was accepting "no optimization happened" as a completed pass.
+  exit 4
 }

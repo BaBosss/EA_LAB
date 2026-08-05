@@ -12,6 +12,6 @@ $log = "D:\EA_LAB\_mt5_auto\lane1_post_chain_070707.log"
 powershell -File D:\EA_LAB\_mt5_auto\ab_sets\bwdoos_mt4_sweep_resurrect.ps1 | Tee-Object $log -Append
 
 "[$(Get-Date -Format s)] step 2: re-smoke batch-22R (7 EAs)" | Tee-Object $log -Append
-powershell -File D:\EA_LAB\scripts\mass_smoke_mt4.ps1 -Batch 22 -WorklistCsv D:\EA_LAB\_triage\mass_smoke_mt4_batch22R.csv | Tee-Object $log -Append
+powershell -File D:\EA_LAB\scripts\mass_smoke_mt4.ps1 -Batch 22 -WorklistCsv D:\EA_LAB\_triage\_archive\campaigns_closed\mass_smoke_mt4_batch22R.csv | Tee-Object $log -Append
 
 "[$(Get-Date -Format s)] post-chain DONE" | Tee-Object $log -Append

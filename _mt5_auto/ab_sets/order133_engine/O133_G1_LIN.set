@@ -1,0 +1,14 @@
+; ORDER-133 engine test — cell GBPUSD H1 (MACD 12/26/9 cnt3) — DCA 92, LotProg LINEAR(51) f=0.5
+_15_MacdFast=12||12||0||12||N
+_15_MacdSlow=26||26||0||26||N
+_15_MacdSignal=9||9||0||9||N
+_15_CountBars=3||3||0||3||N
+StackMode=92||92||0||92||N
+StackConfirm=0||0||0||0||N
+FirstLotMode=41||41||0||41||N
+_41_FixedLot=0.01||0.01||0||0.01||N
+LotProg=51||51||0||51||N
+_51_ProgFactor=0.5||0.5||0||0.5||N
+ProtectLevel=2||2||0||2||N
+RC_MaxLevelsOverride=8||8||0||8||N
+_9_MaxLevels=4||4||2||8||Y

@@ -1,0 +1,1 @@
+{"_comment": "S14 Work Receipts. APPEND ONLY -- one row per order, never edit or delete a line. Writer permission and its limits: AGENTS.md section 2. Enforced by _triage/factory_os/check_work_receipts.py. A row may cite only its own order id and may NOT carry a verdict, an order status, or any field that feeds a decision."}

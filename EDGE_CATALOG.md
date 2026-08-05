@@ -1,4 +1,4 @@
-# EDGE CATALOG — why each EA makes money (and what that teaches)
+﻿# EDGE CATALOG — why each EA makes money (and what that teaches)
 
 Companion to `EA_SCORECARD_AND_REGISTRY.md`. The registry says *whether* an EA is good;
 this catalog says *why* it has edge, *when* it fails, and what new ideas the pattern seeds.
@@ -24,6 +24,8 @@ What has NEVER worked here (anti-edges):
 ## LIVE / CANDIDATE EAs — edge mechanism
 
 ### ST_EA03 MACD — GBPUSD/USDCAD H1 (CORE) · replica = EA_RUNNER_ST03 ✅
+> ⚠️ **ENTRY-SIGNAL VERDICT (ORDER-119, 2026-07-19): flat-lot MACD-state entry = NO robust both-window edge.** chassis Boss_15 lever-C sweep (MACD Fast/Slow/Signal × CountBars, 18 combo × GBPUSD/EURUSD/EURGBP × H1/H4 × MAIN+BWD) = **0/6 cells flat-lot PF≥1.0 both-window** (best EURUSD H4 MAIN 1.15 / BWD 0.98 same combo). The historical "edge" lives in the **no-SL averaging engine (escalation), not the MACD entry** — so escalation on this entry = martingale-is-the-edge (DEAD-STRUCTURAL). MACD-state-run as a naked reversal trigger on rangers = dead. Reusable only as a *state gate* feeding a different entry, never as the edge itself. **ENGINE ALSO DEAD (ORDER-135, 2026-07-19, under new ENGINE-EDGE cage): capped-basket DCA (MaxLevels×LotProg × 2 best cells × 2 window) = 0/9 both-window. DCA engaged (n +2.2×) but escalation only LEVERAGES regime-dependence — winner-window net +88→+140, loser-window −111→−177; it does not manufacture edge. the GENERIC chassis MM can't rescue the MACD signal. **⚠️ chassis-cell dead ≠ concept dead: chassis MM ≠ standalone's tuned LOT_Repeat/tp3/near/spacing/vol-gate machine (signal parity, MM not) → standalone = PARKED-VERIFY(user).** Lesson for the dead pile: a *generic* averaging engine amplifies a regime-dependent signal's asymmetry, it cannot create a symmetric edge from a signal that has none — but a purpose-tuned engine on the same signal is a separate empirical question.**
+
 **Mechanism:** enter once per MACD-state run (2-bar count) → market leg + LIMIT leg 5pip below
 (scale into dip) → **NO stop-loss** → close the whole OCO group when combined P/L hits +5pip →
 80-bar time-stop backstop. Tiny lots.
@@ -41,11 +43,46 @@ losers). **So you cannot size this up safely.**
 **Idea seeds:** more profit comes from DIVERSIFICATION not leverage — run the engine small on other
 liquid rangers (EURUSD/EURGBP) per-symbol tuned, and combine uncorrelated legs in a portfolio.
 
-### MG_v1 MatchaGrid — CHFJPY M15 (CORE) 🟨
-**Mechanism (hypothesis):** bounded grid with hard SL on a range-bound cross.
-**Why edge:** CHFJPY oscillates in a range; the grid harvests the back-and-forth, the **bounded
-steps + SL cap the breakout tail** (this is why it passed deep-val where naked grids DQ).
-**Failure mode:** a sustained CHFJPY trend that blows past the grid bounds (SL caps it, not ruin).
+### MG_v1 MatchaGrid — CHFJPY M15 (PARKED-VERIFY(user) since 2026-07-25) 🟥
+> ⚠️ **This entry said `CORE` until 2026-07-26 — it was stale by a day against the scorecard and
+> EA_MASTER_INDEX, which both moved to `PARKED-VERIFY(user)` in ORDER-215 part 1.** Corrected here
+> rather than banner-patched, per the ORDER-214 lesson: if the row still reads CORE, people read CORE.
+**Mechanism:** ~~bounded grid with hard SL~~ **grid with a linear-add lot ladder and NO confirmed
+stop-loss** on a range-bound cross (see 2026-07-26 finding below — the "hard SL" half of this claim is
+withdrawn, not just unverified).
+**Why edge:** CHFJPY oscillates in a range; the grid harvests the back-and-forth. ~~the **bounded
+steps + SL cap the breakout tail**~~ **the SL half of this sentence is false for the deployed config —
+see below.** (this is why it passed deep-val where naked grids DQ, but deep-val never tested the
+switch either).
+**🔴 The load-bearing part of that claim is unverified (ORDER-215 recon, 2026-07-26):** MatchaGrid is
+**closed source** — `.ex5` only, no `.mq5` anywhere. The "bounded + SL" property that keeps it out of
+the uncapped-ruin bin rests entirely on `InpCutLossMode=0`, an input found only by reading rendered
+report headers, **whose meaning is documented nowhere in this repo**. Every archived run also sits at
+`Model=1`; there has never been a Model-4 run of this EA, and doctrine treats a grid measured below
+Model-4 as not evidence at all. So the safety claim is a hypothesis wearing a verdict's clothes.
+**Follow-up same day:** re-read the 5 cited reports directly. 2 of 5 (`QWEN_MG_IS`/`QWEN_MG_OOS`) are
+degenerate-tick artefacts (3.9 ticks/bar vs 59 on the trustworthy pair — same failure class as
+`mt5-no-disk-space-is-memory-ceiling`) and their PF numbers (0.17 and 2.15) are both discarded. On the
+**3.4 years of trustworthy data that remain**, grouping every simultaneous-close cluster found **zero
+events resembling a percentage-of-balance cut** — only ordinary grid churn and one forced end-of-test
+close. Whether `InpCutLossMode=0` means "disabled" or "a mode whose trigger this data never reached" is
+**not yet distinguished** — that needs the same deliberately-raise-the-risk probe ORDER-222 used on
+NuiIndy. Interim writeup: `_triage/ORDER215_MATCHAGRID_CUTLOSS_FINDING.md`.
+**🔴 RESOLVED 2026-07-26 (same day, probe run):** deliberately tightened `InpGridPoints` 350→200 on the
+same clean window — 66 simultaneous open positions, equity DD **63.94%** (2.5x the calm-data ceiling).
+**No cut-candidate cluster appeared anywhere** (largest was −0.63% of balance, ordinary churn). Then
+held that stress fixed and changed **only** the thresholds, live (`Percent=10/Fixed=50`) vs absurdly
+tight (`Percent=1/Fixed=1`): **the two runs are identical down to the decimal** — same 2,961 trades,
+same net, same DD, same four clusters at the same timestamps. Changing the trigger by 50x changed
+nothing. **`InpCutLossMode=0` does not respond to its own threshold inputs at all** — this is the
+disabled reading, not "untriggered." "Bounded grid + hard SL" is **withdrawn** as a property of the
+config that runs on real money (magic 20240001). What actually limits exposure is the **linear**
+`InpStepAddLot` ladder (arithmetic, not geometric — materially safer than a martingale per
+`rsi-from-pips-mechanism`, but not a stop). Live sizing has never produced anything like this DD in
+3.4 years of calm history — no forced live change, owner's call, same as NuiIndy (ORDER-222). Full
+verdict: `_triage/ORDER215_MATCHAGRID_CUTLOSS_VERDICT.md`.
+**Failure mode:** a sustained CHFJPY trend that blows past the grid bounds — ~~SL caps it~~ **nothing
+confirmed caps it except the slow linear lot-add and eventual profit-target exits.**
 **Idea seeds:** "bounded + SL" is the safe way to run a range harvester — the template for taming
 any grid/martingale that screened well but DQ'd on uncapped tail.
 
@@ -57,8 +94,21 @@ any grid/martingale that screened well but DQ'd on uncapped tail.
 single-order PF **0.90**, flat-lot grid PF **0.72**, only escalated PF **2.20**. Entry has no standalone
 directional edge. As-shipped `MAX_Order=99999`/`CutLoss=100` = uncapped-ruin.
 **Do NOT mold-expand** (ORDER-095 rejected — no entry edge to replicate; expanding a no-edge geometric
-martingale multiplies correlated tail-risk). **LIVE guardrail (magic 1524):** `CutLoss_Percent=30` = free
-tail-insurance (both-window profitable 1.19/2.20, DD bounded ~15%). Verdict: `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md`.
+martingale multiplies correlated tail-risk).
+**🔴 LIVE guardrail (magic 1524) — "free tail-insurance / DD bounded ~15%" WITHDRAWN 2026-07-26 (ORDER-222).**
+The switch was tested at a drawdown that actually reaches it, and it cuts **30% of the balance it has at
+that moment**, then re-arms against the reduced balance. Measured ladder over one year at 4× live sizing:
+`10,521 → 7,363 → 5,214 → 4,025 → 3,125 → 2,735 → 2,145 → 1,599 → 1,326` (8 cuts, each −30.0..−30.6%,
+first one proven to the decimal at −30.02% on 2022.01.27). **A percentage cut against a shrinking balance
+is a ratchet, not a floor** — the same year ended **+51% with the cut off and −86% with it on**, and
+equity DD reached **87%** while a "30" threshold was active. The old "DD bounded ~15%" was an artefact of
+the switch **never engaging** at live sizing, not evidence of a bound.
+**Reusable lesson (the transferable part):** a %-of-current-equity kill cannot bound an account — only an
+**absolute equity floor that fires once and stays off** can. Cost is non-linear and inverted: nearly free
+where DD grazes the line (×2: −12% of profit, DD unchanged), catastrophic where it fires repeatedly. A
+guardrail is cheapest exactly where it is useless. Do NOT remove the mechanism (nothing at all is worse on
+an uncapped martingale) — replace the *shape*. Verdict: `_triage/ORDER222_NUIINDY_CUTLOSS_VERDICT.md`
+(+ ORDER-095: `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md`).
 
 ### Gold Reaper 4.3 — XAUUSD H1 (CORE ⚠️ ruin 1.9%) 🟨
 **Why edge:** gold = trender → momentum/continuation edge. Watch flag = thin ruin margin.
@@ -103,10 +153,17 @@ Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD
 |---|---|---|
 | Naked MACD crossover | GBP+7 majors/crosses | structural ceiling ~1.1 — crossovers carry no edge on FX |
 | BB+RSI naked reversion | EUR/XAU | same ~1.1 ceiling — reversion needs an *engine* (no-SL wait, or bounds), not a bare signal |
+| RSI-momentum naked (RSI/SMA cross · RSI-50 break · RSI breakout) | XAU+GBP (both momentum homes) | 2026-07-18: no plateau both-window anywhere, all 3 modes entry-swept ×2 TF — flat ~1.0 breakeven, lone winners are isolated spikes. RSI carries no standalone momentum edge; usable only as a confirm-FILTER, never a primary signal |
 | TrendRegression (reversion) | XAU | reversion-on-a-trender = no edge (confirms momentum>reversion for gold) |
+| Multi-tap count at S/R (Stoch OB/OS "รอบ" before entry) on a TRENDER (XAU) | XAU M15 + EURUSD/EURGBP/AUDNZD | 2026-07-19 ORDER-135 = **PARKED-VERIFY, MAIN-only (NOT dead, NOT redundant).** Multi-tap DOES lift XAU-M15 (K17: 0.91/1039t → 1.45/27t; ZoneTol-tuned zt40 = MAIN 1.51/64t = real structure). But BWD-fails every variant (best zt60 0.90) → MAIN edge is XAU 2023-25 chop-regime; fade dies in 2020-22 gold-trend. **Lesson: reversion-fade on a trender = regime-bound, not both-window robust.** ⚠️ correction: an earlier pass mislabeled the lever "dead" — that was frequency-starvation from MTF+ADX filters (tap2 → 0-3 trades), NOT no-edge; and it is NOT redundant with SMCxSTO 991070 (measured monthly corr −0.10). Prove frequency-adequacy + measure corr before killing a filter-lever |
+| DCA overlay (StackMode 92) on a validated single-position EA whose BWD is marginal (~1.0) | Boss_17 Wave5 XAU H4 (ORDER-136 W1) + Boss_15 ST03 (ORDER-135) | 2026-07-19: escalation-MM overlay = **regime-dependence amplifier, not an edge source** — confirmed on TWO hosts. Wave5: base MAIN 1.60/BWD 1.00 → overlay MAIN lifts (1.82-1.85, payoff +14-29%) but BWD drops 0.94→0.91 monotonically with lot-curve aggressiveness (NONE→LINEAR) + eqDD 3.6-4.4×base; depth axis INERT (L6=L4 identical — adds never reach 5+). Rule of thumb: **BWD≈1.0 base = DCA overlay auto-fails the both-window bar; don't burn the full grid — 3 cells + axis-inertness proof = earned close** |
 | SessionBreakout | XAU | 1,200-pass ceiling 1.20, forward 0.91 — breakout needs a real range to break |
 | Grid/martingale (Golden Elephant, BuRengNong, Setka…) | XAU mostly | "martingale WAS the edge" — strip the doubling, signal is breakeven; DD 60–125% |
 | Tight-TP (Game Changer/GMGS) | XAU | Model-2 open-price artifact; TP×10 collapses PF |
+| Deepening a pyramid ladder (more adds, tighter ATR spacing) to raise return on a trend EA | SuperTrendFlip rev05 on the VALIDATED BTCUSD H4 host, `_07_AddAtAtr` × `_07_MaxAdds` grid, both windows (ORDER-352, 2026-07-28, user-requested) | **Pyramid depth on this cell is a regime-exposure dial, not a free parameter — and the two windows move in exactly opposite directions.** Deeper/tighter: MAIN 2023-25 rises monotonically 2.33 → 2.59 → 2.97 → **3.28**, while BWD 2020-22 falls monotonically 4.29 → 2.14 → 2.05 → **1.88**. The MAIN-best config is the BWD-worst one, and on BWD return-per-unit-DD collapses from 2.98 to 0.93. **No config beat baseline on both windows; the host's original `MaxAdds=1` is the both-window optimum of the entire grid** — a shallow setting that looks like an untuned default is actually the regime-robust choice. The MAIN surface also has no interior optimum: at 2.0 ATR spacing PF keeps climbing with depth to the edge of the grid, which is the signature of a parameter buying exposure rather than locating an edge. Model-4 deliberately not spent — BWD already settled it. **Two reusable rules. (1) When a lever's MAIN response is monotone to the grid edge, check the opposite-regime window BEFORE widening the grid; the ridge is usually a regime bet. (2) Layering overlay-on-overlay requires a control run of the lower layer alone: adding re-entry on top of this MM read as "2.47 beats baseline 2.33 so re-entry works", but the `ReMode=0` control returned 2.59 — re-entry was eating 0.12 of the MM's gain, and without the control the upper layer would have claimed the lower layer's profit** |
+| Re-entering inside a live trend leg after a stop-out, gated on "price retraced N×ATR from the leg extreme" | SuperTrendFlip rev04/05 `_08_ReMode` 1/2/3, 19 arms on the VALIDATED BTCUSD H4 pyramid host (ORDER-280, 2026-07-27) | **The depth gate is structurally pre-satisfied and therefore measures nothing.** Re-entry is only evaluated while FLAT INSIDE a live leg, and the only way to be there is to have been stopped out at the SuperTrend line — which already guarantees a retrace of at least the band width (`_01_Mult`×ATR = 2.5). So every threshold below 2.5 ATR is always true: `PbAtrMult` {0.5,1.0,1.5,2.0} returned **identical results to the last decimal** (67 trades, PF 1.80, net 535.96), with `.set` files and the report's own Inputs page confirming the values really differed. Forcing the axis above the band width (3.0 → 66 trades, 4.0 → 58) makes it bind, still losing to baseline 2.33 and converging toward it monotonically. **Reusable rule: a "did price retrace N×ATR?" filter evaluated after a line-stop exit is pre-satisfied by the stop itself — the exit and the filter are measuring the same distance. Any threshold must exceed the stop distance before the axis can discriminate at all; check that BEFORE gridding.** Best genuinely-responsive arm was the stochastic re-cross (2.20 < 2.33), so the honest verdict is: the STO anchor was tested and lost; the depth and S-R anchors were never tested, only a degenerate "re-enter on the first bar that closes in trend direction". **Read with the SL-buffer row below: two mechanically unrelated levers — hold longer, and enter more often — both degrade MAIN monotonically, which says the edge on this cell is narrow and specific rather than that these two levers were unlucky. Grow this cell by finding a low-correlation second leg, not by increasing its participation** |
+| Widening a trailing stop OFF the indicator line it rides, to restore the "exit on confirmed flip" the EA was designed around | SuperTrendFlip rev05 `_02_SlBufferAtr` {0.25, 0.5, 1.0} on the VALIDATED BTCUSD H4 pyramid host (ORDER-350, 2026-07-27) | **The advertised exit mechanism was never running, and switching it on made things worse.** Stop sat exactly ON the SuperTrend line ⇒ price cannot close beyond the line without first touching the stop ⇒ `CloseAllOwn("flip")` is unreachable: **116/116 exits over 6 years were stop-hits, zero flip-closes.** Adding an ATR buffer works exactly as designed (buffer 1.0 converts 18/50 MAIN exits into real flip-closes) and MAIN PF falls monotonically **2.33 → 2.19 → 2.15 → 1.82**, while BWD *rises* (4.29 → 5.09/4.33/4.38). ⇒ this EA's validated edge comes from the **accidental** "leave on the first intrabar touch" behaviour, not from the trail-the-line thesis its own header calls "the edge being tested". **Two reusable lessons:** (1) when a stop is placed at the same price as a signal boundary, the stop always wins and the signal-exit branch is dead code — verify which exit actually fires **before** attributing an edge to exit timing; (2) exit-speed preference is **regime-bound** in the same direction as [[supertrend-is-a-2023-2025-regime-edge]] — long-trend 2020-22 pays you to sit through wicks, 2023-25 pays you to leave. A both-window bar correctly refuses the lever; a MAIN-only or BWD-only bar would have accepted opposite conclusions |
+| Static (one-time, never re-based) MC-derived price zone as grid bounds | BTC/ETH CFD, AdaptGridMC (ORDER-142, 2026-07-23) | MAIN-window PF 500-1200+ looked like a huge edge — was a **realized-path artifact**: zone computed once from pre-2023 data, BTC's 2023-25 rally exited it permanently after one pass, proven by a 2026H1 holdout on the same zone producing **zero trades**. Not a fill artifact (M4 confirmed M1) — a *dormancy* artifact: the strategy silently stops trading once price leaves its one-time-computed range, and a great-looking backtest hides that it already "died" partway through the window. Lesson: any zone/band/level computed once from historical data (P10/P90, support/resistance, volatility bands) needs a walk-forward re-basing cadence before it can be trusted on trending instruments — check trade-count-over-time within the window, not just aggregate PF, for exactly this signature (front-loaded trades, then nothing) |
 
 ---
 
@@ -139,6 +196,23 @@ Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD
 
 Full idea sweep (15 items ranked, incl. Granger-causality indicator pre-filter, risk-parity
 portfolio weighting, multi-EMA stacked entry filter) → `_triage/QUANTCORNER_FINDYOUR8_IDEA_CATALOG.md`.
+
+9. **Volatility/statistics-scaled grid zone+spacing+sizing** (source: FINDYOUR8 free-book PDFs,
+   Wongsakon, 2026-07-19 — logged-in deep dive of 9 strategy decks). The recurring edge across all
+   his systems = derive grid geometry from volatility + statistics instead of fixed naive steps.
+   Reusable levers (each = build-on candidate, ALL crypto-spot homes → mind swap when porting to CFD):
+   - **⭐ Monte-Carlo block-bootstrap grid zone** — 10k paths × 60d, 24d blocks → P10/P90 = grid
+     bounds; spacing = 0.3·ATR(RMA30); flat lot + capped band + hard −20% kill (SAFE, not martingale).
+     THIS is the "MC+bootstrap+ATR grid zone" flagged "ยังไม่แตะ" in the 07-18 sweep — now fully spec'd.
+   - **geometric constant-% spacing** `ratio=(hi/lo)^(1/N)` (replaces fixed-step grids)
+   - **inverse-ATR anti-martingale lot** `lot = base×baseATR/curATR`
+   - **Lower-BB(EMA30−1σ)-as-trailing-VolStop** + **vol-normalized sizing `size% = RPT%/band-dist%`**
+     — directly addresses the Lane C SMCxSTO SL-fragility (seed #7 sibling)
+   - **KAMA continuous adaptive-MA block** (ER→SC²→recursive MA) — a continuous adaptive filter ≠ our
+     discrete `_50_Regime.mqh` on/off gate
+   - **fee/swap cost-model as first-class backtest input** (notional taker + crypto funding drag)
+   Full writeup + red flags + per-deck spec → `_triage/FINDYOUR8_STRATEGY_PDF_CATALOG.md`.
+   Recommended first probe = Adaptive Grid MC-zone on BTC/ETH CFD (crypto lane, TrendRider precedent).
 
 ---
 
@@ -198,6 +272,25 @@ MC reshuffle ruin 0%, DD worst 4.76%. **เหลือ:** Model-4 real-tick ×3
 **บทเรียนคู่กัน:** EUR H4 สวยทั้ง MAIN 1.71 + BWD 1.15 แต่ **holdout 0.35 = selection-fit** — ยืนยันคุณค่า
 holdout ที่ไม่เคยใช้ select (gate #6) ว่าจับของปลอมที่ 2-window gate จับไม่ได้.
 
+## ANTI-EDGE: MACD-divergence's INERT AXES are a property of the EA, not of a cell (ORDER-1411, 2026-08-05) ⬛ REPLICATED
+
+**ทำไมรายการนี้อยู่ที่นี่แทนที่จะเป็นแค่ verdict:** ORDER-216 (2026-07-25) พบว่า `_01_LookbackBars` และ
+`_01_MinBarsApart` **ไม่มีผลใดๆ** ที่ค่าที่ deploy บน **XAUUSD** H4 และตอนนั้นตีความได้แค่ว่าเป็นเรื่องของ cell.
+ORDER-1411 รัน inert-axis probe บน **AUDJPY** H4 ซึ่งเป็นคนละ symbol คนละ config **และได้แกนเดียวกันกลับมา** —
+`_01_LookbackBars` เท่ากันเป๊ะที่ 30/45/90 (1.18 / 173 ไม้ / 0.84% DD) · `_01_MinBarsApart` เท่ากันที่ 1 กับ 4 ·
+บวก `_07_UseRsiGate` และ `_08_UseMacdCross` ที่ไม่ขยับอะไรเลย ⇒ **4 ใน 7 แกน**.
+
+**บทเรียนที่เอาไปใช้ต่อได้ (นี่คือเหตุผลที่บันทึก):**
+1. **แกนตายเป็นสมบัติของโค้ด ไม่ใช่ของหน้าต่างที่ทดสอบ** — ถ้าเจอแกน inert ที่ home หนึ่ง ให้ถือว่าน่าจะ inert
+   ที่ home อื่นด้วย จนกว่าจะวัดค้าน และ**อย่ากวาดมันซ้ำ** การกวาดแกนตายไม่ได้ให้ข้อมูล มันผลิต plateau ปลอม
+2. **probe แกนทีละตัวก่อนลงกริดเสมอ** — ที่ ORDER-098-B เคยอ้างว่า *"plateau, 9 neighbour ไม่มีตัวขาดทุน"*
+   คือการนับบนแกนที่ตาย ซึ่งผลเท่ากันโดยอัตโนมัติ. ต้นทุนของ probe = ~20 run · ต้นทุนของการไม่ทำ = verdict ที่ผิด
+3. ⚠️ **`INERT` ไม่ใช่ `safe`** — EA นี้ไม่ปล่อย fire counter จึงแยก *ไม่เคยติด* จาก *ติดแล้วไม่เปลี่ยนอะไร* ไม่ได้
+   ด้วย batch แบบนี้ (ประเด็นเดียวกับที่ `CONF_PA_ENGULF` ต้องใช้ host ที่สามถึงจะแยกออก — ดูรายการ LEVER ด้านล่าง)
+
+**คำถามที่ยังเปิดและไม่มีใครตอบ:** EA นี้ไม่มี input SL และไม่มี TP เลย แต่รายงาน DD 0.46-1.85% ทุกเซลล์
+รวมถึงหน้าต่างที่มันขาดทุน — **ไม้ที่แพ้ออกทางไหน** ต้องอ่าน `.mq5` ไม่ใช่เดาจากตัวเลข
+
 ## LEVER: break-and-retest split entry (market + pending-limit) on breakout EAs (ORDER-108, user idea 2026-07-16) 🟩 VALIDATED-LEVER
 
 **กลไก:** breakout ยิง → **market leg** ที่ราคาทันที (จับ runner ที่ไม่ retest) + **pending buy-limit** ที่แนวที่ทะลุ
@@ -208,7 +301,7 @@ holdout ที่ไม่เคยใช้ select (gate #6) ว่าจับ
 spread เพิ่มบน ~90% ของไม้ retest = edge ที่ tester ประเมินต่ำ. **ใช้ได้กับ breakout EA ที่มี edge เท่านั้น**
 (ห้ามแปะ EA ที่ปัญหาคือ regime เช่น XAU_NY). **config-conditional:** ช่วยเฉพาะเมื่อขา retest มี edge ในหน้าต่างที่ market
 อ่อน — Bars40/TP5 ช่วย (regime-robust) แต่ **live Bars55/TP8 ไม่ช่วย** (retest อ่อน BWD, TP กว้างต้องการ move ใหญ่)
-→ **ห้าม retrofit ตัว live**, ใช้กับ build ใหม่ที่ config สมดุล. verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`.
+→ **ห้าม retrofit ตัว live**, ใช้กับ build ใหม่ที่ config สมดุล. verdict = `_triage/_archive/verdicts/order104-126/ORDER108_SPLIT_RETEST_VERDICT.md`.
 
 ## SMC × STO multi-TF reversion (user idea, 2026-07-16) 🟩 BUILD-ON candidate (optimized, ranger-home)
 
@@ -218,7 +311,7 @@ pass ยืน both-window** (1.30/1.13 · 1.22/1.02). survivor = **StoK17** (�
 = edge **เฉพาะ EURUSD H1** (ไม่ travel: AUDNZD/EURGBP/XAU ล่ม BWD). **ADX filter (user idea) ยกดีขึ้น:** best =
 StoK13/OS30/AdxMax30/EMA50/SL3/TP1 = **MAIN 1.50 / BWD 1.24, 130 ไม้** (จาก no-filter 1.30/1.13). filter ต่อยอด
 edge ที่มี ไม่สร้าง edge (AUDNZD กู้ไม่ได้). = **EURUSD-specific candidate** (plateau+Model-4 ก่อน demo). verdict =
-`_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
+`_triage/_archive/verdicts/order104-126/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
 **บทเรียนถาวร: default-smoke ≠ concept-kill — optimize + right-home + filter ก่อนตีตาย reversion (user push ถูก 2 เรื่อง).**
 
 ## LEVER: HP-denoise (Hodrick-Prescott causal) @ λ1600 on trend-cross (ORDER-104C, 2026-07-16) 🟩 REUSABLE
@@ -233,7 +326,7 @@ present-but-untested in ORDER-079 corpus) and the exit is fully mechanical (test
 **Cheap 2-stage smoke plan (build when a lane frees):** Stage 0 = strip the SMC/OB (expensive) → naked
 EMA100-gated STO-cross reversion probe on M15 (skip M1 for triage), EURUSD/GBPUSD/XAU, Model 1 — if core PF<1
 everywhere, OB won't save it → DEAD. Stage 1 (only if pulse) = add M5 OB-zone gate (ring-buffer state like
-ORDER-098-A) → should raise win%. Full plan + hard-parts = `_triage/SMCxSTO_SIGNAL_TRIAGE.md`.
+ORDER-098-A) → should raise win%. Full plan + hard-parts = `_triage/_archive/one_off_analyses/SMCxSTO_SIGNAL_TRIAGE.md`.
 **Verdict: worth a cheap Stage-0 smoke (~1-2h), NOT a build campaign on hope.** Sibling of the MACD-gate S/D
 concept above (both = untested reversion-at-zone).
 
@@ -244,14 +337,21 @@ EA testbed = `(TRD)_Probe_MAHP_TanhVol_rev01` (`_02_UseHPFilter`/`_02_HP_Lambda`
 บน XAU H4:** fast16/slow32/λ1600 = MAIN 1.59 / BWD 1.33 · เพื่อนบ้าน MA 4 ทิศผ่าน · SL {1.5,2.0,3.0} ผ่านทั้งหมด ·
 λ1600 = center (λ800 MAIN พัง, λ3200 เสื่อม). **HP ช่วยเฉพาะ XAU ไม่ช่วย EUR** (Stage A/B). chassis 2-MA เปล่า
 ไม่ใช่ keeper — คุณค่า = lever ไปแปะ production trend chassis (BREAKOUT/SuperTrend) เป็น axis ใหม่ใน funnel.
-verdict = `_triage/ORDER104C_HP_PLATEAU_VERDICT.md` · gate ที่ทำให้ valid = HP one-sided causal (reviewer ยืนยันไม่มี look-ahead).
+verdict = `_triage/_archive/verdicts/order104-126/ORDER104C_HP_PLATEAU_VERDICT.md` · gate ที่ทำให้ valid = HP one-sided causal (reviewer ยืนยันไม่มี look-ahead).
+
+## LEVER: vertical-barrier time exit `_2_MaxHoldBars` (ORDER-125, 2026-07-19) 🟨 BUILT — DEAD-ON-GRID, untested elsewhere
+
+- **What:** basket-level force-close after N chart-TF bars from basket inception (QuantCorner Triple Barrier time leg). In chassis, default 0=off byte-identical, Codex-hardened (inception latch กัน clock-reset เมื่อ leg ปิดเอง · iBarShift −1 guard · Boss_16 no-op warn · partial-milestone leak fix).
+- **A/B host Boss_14 GBPJPY H4 (locked leg8 set): DEAD ทุกค่าที่ M4** — MH130 ตาย M1 (BWD 0.73; MAIN lift 2.16 = regime-fit ห้ามไล่) · MH390 ผ่าน M1 แต่ **M4 พลิก** (BWD 1.11→0.85, net +210→−368). verdict `_triage/_archive/verdicts/order104-126/ORDER125_VERTBARRIER_VERDICT.md`.
+- **Mechanism lesson (จ่ายแล้ว):** (1) **recovery tail ของ grid คือเครื่องยนต์** — basket 203 วันใน BWD สุดท้าย recover; time-cut = realize tail loss = ตัด edge ตัวเอง. ห้าม enable lever นี้บน grid/DCA family. (2) **M1→M4 flip บน exit lever** — M1 มองไม่เห็น path ใต้น้ำ; exit/time lever บน grid = M4-deciding เสมอ (ยืนยันซ้ำ precedent ORDER-126 SL-fan).
+- **Open home (ยังไม่ทดสอบ):** single-position trend-following (SuperTrend/TrendRider) ที่ time-stop เป็น convention — ถ้าจะใช้ ต้อง A/B บน host นั้นก่อน.
 
 ## DEAD CELL: naked FVG-fill entry @ EUR/XAU H1+H4 (ORDER-098-A, 2026-07-16) ⬛
 
 EX009 geometry (3-bar gap retrace + engulfing confirm) **ไม่มี edge ที่ exit geometry ใดๆ**: 22 runs,
 RR sweep TP{15→60}@SL20, both regimes — PF peak 0.98 แล้วหักลง (cost-dilution ไม่ใช่ edge), ไม่เคย >1
 ใน 26 cells. **ปิดเฉพาะ naked-entry** — FVG-as-confluence-filter ให้ entry อื่นยังไม่เคยเทส (เปิดอยู่).
-verdict = `_triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md`
+verdict = `_triage/_archive/verdicts/order076-098/ORDER098A_FVGFILL_SMOKE_VERDICT.md`
 
 ## LEVER: add-gating a grid (gate the ADDS, not just the seed) — from AdaptiveGrid_Oil (2026-07-17) 🟩 REUSABLE
 
@@ -308,7 +408,7 @@ and both lose** → the seed is directionless; the brief-vs-source direction dis
 edge lives in the standalone's combined 4-basket (Trend+Counter) + BEP-shift + trailing engine, NOT the seed
 signal** — stripping the seed onto a generic DCA chassis removes the edge source. Matches the standing lesson:
 MM/exit layers multiply an existing edge, they don't manufacture one. Standalone `(EXP)_JUMSTOCH_MT5` untouched.
-Boss_18 code kept + caged (documented dead-seed, not deploy). verdict = `_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
+Boss_18 code kept + caged (documented dead-seed, not deploy). verdict = `_triage/_archive/verdicts/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
 
 ## LEVER: basket-close beats per-leg-TP on flat-lot DCA (JumStoch exit sweep, 2026-07-18) 🟩 REUSABLE
 
@@ -317,3 +417,444 @@ pay for the occasional multi-leg SL. Swapping to a **basket-level ATR-TP** (`_2_
 `_2_BasketTP_ATRmult`, the proven Boss_14 pattern) lifted the SAME entry ~0.30 PF (0.65→0.94) across every cell.
 Basket-close (all legs exit together near basket-BEP+) is structurally right for DCA; per-leg TP fragments the
 basket. Confirms the Boss_14 GridLog exit design; use basket-TP (not per-leg fixed-TP) as the default DCA exit.
+
+## EDGE: XAU H4 trend pullback-continuation (TrendRider, ORDER-139, 2026-07-20) 🟩 VALIDATED CANDIDATE
+Entry = established trend (EMA50>200 + ADX≥20 + EMA separation ≥0.5×ATR) + pullback ที่แตะ EMA21 แล้วปิดกลับ
+ทิศ trend · SL 2×ATR · **Chandelier trail (HH10 − 2.5×ATR) ไม่มี fixed TP**. Funnel เต็มผ่านหมด (plateau 6-cell /
+holdout 1.33 / M4 retained / MC ruin 0 / corr ≤0.32). **Insight สำคัญ: AdxMin 20 (หลวม) ชนะ 25/30 ทั้ง BWD —
+EMA-separation ทำหน้าที่กรองแทน; ADX floor สูง = ตัด early-trend entries ที่เป็นกำไร BWD.** และ ChAtr กว้าง (3.0)
+ช่วย BWD เสมอ (trail แน่น = โดน whipsaw เขย่าออก). Reusable levers: Chandelier-trail exit + separation-gate.
+⚠️ BWD ~1.0 borderline → ห้ามใช้เป็น host DCA overlay (กฎ ORDER-136: BWD~1.0 base = overlay auto-fail).
+
+## DEAD-CELL: XAU M15 sweep-and-reject reversion (SweepReversal, ORDER-139, 2026-07-20) 🟨 PARKED-VERIFY(user)
+Sweep prior-day H/L + $25 grid ≥0.3ATR แล้วปิดกลับ + RSI confirm + ADX(H4) stand-down = **MAIN 1.31–1.85 จริง
+แต่ BWD <1 ทุก cell ที่ n สุขภาพดี** (2020-22 trend years: sweep ไม่ reject มัน continue) · ladder ครบ 4 lever × 2 TF.
+กลไก sweep-detect (wick beyond structural level + close-back) = อะไหล่ reversion ที่ reusable บน ranger home
+(EURUSD/EURGBP/AUDNZD ยังไม่เทส — ถ้าจะฟื้นให้ไปบ้านนั้น ไม่ใช่ tune XAU ต่อ).
+
+## NULL: LondonORB symbol expansion (ORDER-140, 2026-07-20)
+ORB plateau XAU M15 (1.17/1.07) ขยาย: GBP MAIN 0.79 ตาย · EUR ตายทั้งคู่ · USDJPY M15 1.14/1.10 + XAU M30
+1.13/1.08 @n~700 = **edge จริงแต่บางใต้ bar ทุกบ้าน** — ORB-with-ATR-band เป็น broad thin edge ไม่ใช่ deploy edge.
+
+## LEVER: PROG_FIBONACCI lot-cap vs PROG_LOG_POWER on Boss_14 GridLog XAU (ORDER-197, 2026-07-24) ⬛ NOT ADOPTED
+
+fxDreema-corpus MM-part (`PROG_FIBONACCI`, corpus EX191, built off-by-default in ORDER-098-C) tested as a
+drop-in swap for the live XAU leg's (990207) existing `PROG_LOG_POWER` progression — isolate ONE variable
+(`LotProg` 55→56 + `_56_FibMaxStep=5`), everything else byte-identical. **Result: mixed, and the pre-registered
+bar (must beat-or-tie on BOTH windows) fails.** MAIN 2023-2025: 1.91→1.83 (worse, −0.08 PF) with eqDD
+4.06%→5.27% (~+30% relative, real not noise). BWD 2020-2022: 1.19→1.23 (better, +0.04 PF), but that window's
+last 80% of days traded zero for both configs (quiet tail, not a hard-kill truncation — verified via
+`check_truncated_run.ps1`), so the BWD comparison itself is thin/low-power even though it's apples-to-apples.
+**Reading:** PROG_LOG_POWER's smoother, more continuous curve fits this basket's actual DD dynamics on the
+window that matters most (MAIN, the pinned re-opt window) better than Fibonacci's step-function jumps —
+losing on the harder/larger/more-recent window rules it out per doctrine even though it won the smaller one.
+Boss_14 XAU leg's live `.set` (`Boss14_GridLog_XAU_DEMO.set`) untouched, still `LotProg=55`. Raw reports:
+`_mt5_auto/reports/ORDER197_{BASELINE,FIB}_{MAIN,BWD}.htm`. **Do not re-test this exact swap on Boss_14 XAU
+again without new evidence** — `_56_FibMaxStep` sweep or a different chassis/leg would be new evidence,
+re-running the same two configs would not.
+
+## LEVER: LOG-power escalation beats flat-lot on a grid in the STRESS regime (Boss_14 GBPJPY, ORDER-136 Wave 2, 2026-07-24) 🟩 CONFIRMED (regime-conditional)
+
+First positive result of the escalation-MM overlay campaign (ORDER-136) after Wave 1 lost. On Boss_14 GridLog
+GBPJPY H4 (live leg-8, magic 990208, the ORDER-166-revalidated `dist=2.0` config), **LOG13 escalation
+(`LotProg=55`, LogPower factor 1.3) beats flat lot (`LotProg=50`) on the BWD stress window under real-tick
+Model-4: PF 1.32 vs 1.07, ~4× net profit, AND lower eqDD (8.08% vs 10.71%) despite the escalating lot size.**
+On MAIN (calmer 2023-2025 regime) the two are effectively tied — the grid rarely stacks past level 1 there, so
+the lever never engages (Model-1 identical 1.57/40t; proxy 2.7yr Model-4 near-identical 3.51 vs 3.57). Reading:
+a bounded log-power lot ramp adds real edge specifically where the grid actually deepens (volatile/trending
+stress years pull price through more grid levels), and costs nothing where it doesn't — the opposite failure
+mode from Wave 1, where a DCA overlay on a BWD≈1.0 host amplified regime-dependence and lost. **The
+differentiator is the host's BWD strength: escalation overlay is worth it on a host whose BWD is comfortably
+>1.0 (GBPJPY leg-8 = 1.32 flat-ish base), harmful on a host teetering at ~1.0.** Practical: keep the live
+GBPJPY leg-8 on `LotProg=55`, do not revert to flat. Contrast with ORDER-197 (Fibonacci step-function lot on
+Boss_14 XAU) which LOST — bounded ≠ automatically good; the progression *shape* and the host regime both matter.
+Raw: `_mt5_auto/reports/O136_W2RETEST_*`. ⚠️ paid-for tooling gotcha from this order: MT5's error
+`"no disk space in ticks generating function"` is a generic allocation-failure message — it fired here from a
+memory/pagefile commit ceiling (RAM ~4GB free of 32, pagefile+TEMP on the tight C: drive) while both disks had
+ample free space; do not chase it as a literal disk problem. Model-4 pre-generates the whole window's tick
+array upfront, so a big window can hit the commit ceiling and abort ~10s in with zero trades.
+
+## LEVER: MACD-vs-signal-line cross as a timing confirm on a divergence entry (MacdDiv, ORDER-217, 2026-07-25) 🟨 BUILT — REGIME-CONDITIONAL, NOT DEPLOYED
+
+**Where it came from.** ORDER-216 found `_02_MacdSignal` was fed to `iMACD()` but buffer 1 (the
+signal line) was never read anywhere in `(EXP)_MacdDiv_Naked` — the entry was pure divergence with
+no timing confirmation at all. Rather than delete the dead input, wire the mechanism it implies.
+
+**The lever.** `_08_UseMacdCross` (default false) + `_08_CrossWithinBars`: take the divergence
+entry only if MACD has crossed its own signal line in the same direction within the last N closed
+bars. Additive, default-OFF, proven byte-identical when off (MAIN 1.82 / 280 / 1506.02 before and
+after, same binary path). N=1 is the best setting; longer windows monotonically decay
+(MAIN PF 2.98 → 2.83 → 2.73 → 2.48 at N = 1, 2, 3, 5).
+
+**What it does — the honest version.** It removes roughly **88% of trades** and lifts MAIN PF at
+every SwingRadius. At the deployed `_01_SwingRadius=3` it takes MAIN 1.82 → 2.98 (280 → 34
+trades) but takes **BWD 0.98 → 0.81**. At SR2 and SR4 it clears both windows (2.52/1.42 and
+2.30/1.13) — which the ungated EA cannot do at any SwingRadius.
+
+**Why it is not deployed.** Three reasons, and the third is the one that matters:
+
+1. **n collapses to 16–34 trades per window over three years.** PF 1.42 on 16 trades is not a
+   measurement. Any filter that keeps 12% of trades will raise PF on the survivors; that is
+   arithmetic before it is edge.
+2. **The knife-edge did not flatten — it inverted.** Gate OFF, MAIN peaks at SR3 and BWD at SR4.
+   Gate ON, MAIN still peaks at SR3 but BWD now peaks at SR2. Still regime-split, just differently.
+3. **In the stress regime the filter selects WORSE trades.** If the 88% it discards were dropped
+   at random, PF would hold near baseline. On MAIN it rises (selection value); on BWD at the same
+   setting it falls, 0.98 → 0.81. So the filter's ability to pick is itself regime-dependent —
+   the same disease as the host it was meant to cure.
+
+**Reusable claim (narrow, on purpose):** an independent timing confirm CAN lift a divergence
+entry's in-sample PF hard, and can move a both-window failure into a both-window pass at some
+parameter settings. It does **not** buy regime-robustness, and the trade-count cost is severe
+enough that thin-sample EAs cannot afford it. Try it where the host already has trades to spare
+and a *symmetric* weakness — not where the host is already regime-split.
+
+Source: `ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5` (`[08]` block) · sets
+`_mt5_auto/ab_sets/order217/` · reports `_mt5_auto/reports/O217_*`.
+
+### REPLICATED on a second symbol (USDJPY H4, ORDER-431, 2026-07-28) — and it fails this entry's own advice
+
+The paragraph above closes with *"try it where the host already has trades to spare."* **USDJPY H4 is
+exactly that host — 250 trades over three years against XAU's 280 — and the gate still left 28 (11%).**
+
+| | trades | PF | expected payoff | Sharpe |
+|---|---|---|---|---|
+| BASE (`_08_UseMacdCross=false`) | 250 | 1.08 | 0.15 | 0.38 |
+| gate ON | **28** | 1.53 | 1.88 | 1.46 |
+
+So the trade-count cost is **a property of the gate, not of the host's sample size** — having trades to
+spare does not buy you a usable sample on the other side of it. The surviving 28 look excellent on every
+ratio, which is precisely the arithmetic this entry already warns about, and the pre-registered
+`THIN(n<60)` rule discarded the arm without anyone having to argue with a PF of 1.53.
+
+**Narrowing the reusable claim accordingly:** the advice "use it where the host has trades to spare"
+should be read as *necessary but nowhere near sufficient* — at ~11% retention you need a host with
+roughly **600+ trades per window** before the gated arm is even measurable. Nothing in this portfolio's
+divergence family is near that. Treat the lever as parked until such a host exists rather than as
+something waiting for the right symbol.
+
+<sub>Also confirmed here without setting out to: the `[08]` block is genuinely additive when off. The
+ORDER-431 BASE re-run used the **new** binary (with the block) and a `.set` pinning both gates false, and
+reproduced ORDER-205's USDJPY figure **1.08 at 250 trades to the digit**. ORDER-217 proved inertness on
+XAU by construction; this is an accidental second-symbol confirmation. Same run also shows the tester is
+exactly repeatable **within one lane**, which supports ORDER-371's problem being cross-install
+specifically rather than general nondeterminism.</sub>
+
+---
+
+## LEVER: RSI-extreme confirmation on a divergence entry (MacdDiv `_07_UseRsiGate`, ORDER-117 Track B / measured ORDER-431, 2026-07-28) 🟥 REJECTED on the one host where it has been measured properly
+
+**Why this entry exists at all.** The lever was built in ORDER-117 Track B and default-off, and then
+never characterised — it had no catalogue entry until now. ORDER-431 is the first run that pinned it
+explicitly and measured what it does.
+
+**The lever.** `_07_UseRsiGate` (default false) + `_07_RsiPeriod` / `_07_RsiBuyMax=45` /
+`_07_RsiSellMin=55`: take the divergence entry only if RSI(1) confirms the reversal direction
+(oversold for a long, overbought for a short).
+
+**What it actually does — and the number that makes it interesting is the one that did NOT move.**
+USDJPY H4, MAIN 2023-2025, Model 1, same lane:
+
+| | trades | long/short | gross profit | gross loss | PF | expected payoff | Sharpe |
+|---|---|---|---|---|---|---|---|
+| gate OFF | 250 | 79 / 171 | +520.10 | −482.86 | 1.08 | 0.15 | 0.38 |
+| gate ON | **250** | **66 / 184** | +327.83 | −357.79 | 0.92 | **−0.12** | **−0.73** |
+
+**The trade count is identical. Everything else moved.** Thirteen longs are gone and thirteen shorts have
+appeared, and *both* gross legs shrank by about 30%. So this filter does not reduce participation the way
+the MACD-cross gate does — **it re-selects it**, with a directional tilt away from the long side, and the
+replacements are worse **on net**. Stated precisely, because the first version of this line was wrong: gross
+profit fell 37% (520.10 → 327.83) while gross loss fell only 26% in magnitude (482.86 → 357.79). **Losses got
+smaller too** — the winning side just shrank faster than the losing side, which is enough to flip +37.24 into
+−29.96. A profitable arm becomes a losing one with no change in how often it trades.
+
+**Reusable claim — corrected 2026-07-28 after `/scrutinize`, because the first version of this paragraph
+over-read its own headline number.** The claim is right; the reason first given for it was incomplete.
+
+**Why 250 = 250 is not the coincidence it looks like.** `MacdDiv_Naked.mq5:110` opens with
+`if(HasOpenPosition()) return;` — **the EA holds at most one position at a time.** So the entry rate is
+throttled by *occupancy*, not by how many signals survive the gate: while a trade is open, every signal is
+discarded regardless of any filter. A gate that **delays** entries rather than removing them therefore
+tends toward a similar three-year total **by construction**. The equal count is closer to expected than to
+surprising, and the first write-up of this entry led with it as though it were a fluke.
+
+**The claim that survives, and is stronger for the correction:**
+**On a single-position EA, trade count is a weak inertness signal by construction — it measures occupancy,
+not selection.** Here the count held at 250 while the long/short split moved 79/171 → 66/184 and both gross
+legs fell ~30%, turning +37.24 into −29.96. Anyone reading only the trades column would have filed this gate
+as a no-op. **Check the long/short split and both gross legs before concluding a lever did nothing.**
+
+Two neighbours worth keeping apart: the inert-axis probe (memory `inert-axis-fake-plateau`) is about
+identical *results*, which is a strong and easily-tested signal; identical *counts* are much weaker and, on
+a single-position EA, close to uninformative. **And this cuts the other way too** — it makes the MACD-cross
+arm's collapse to 28 trades *more* striking, not less, because that gate reduced participation hard enough
+to overcome the occupancy floor.
+
+**Status:** not adopted. It has been measured on one symbol and one timeframe; that is enough to reject it
+there, not enough to call the mechanism dead everywhere. The residual caveat from ORDER-431 applies —
+`_07_RsiPeriod` / `RsiBuyMax` / `RsiSellMin` were **not pinned** in that order and came from source
+defaults on a clean cache, so a re-run must pin all three before its numbers can be compared to these.
+
+Source: `ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5` (`[07]` block, line 113) · sets
+`_mt5_auto/ab_sets/order431/` · reports `_mt5_auto/reports/O431_USDJPY_H4_MAIN_*` · raw
+`_mt5_auto/O431_RESULTS.md`.
+
+## LEVER: Kaufman ER regime gate ported onto SuperTrendFlip (rev02, 2026-07-26) 🟩 CONFIRMED both-window (XAU H4)
+
+**Where it came from.** Cells #13/#14/#15 of ORDER-GEN-STANDING all showed the same failure shape —
+the SuperTrend flip fires in chop (BTC H1 has *no* plateau without a trend filter; XAU BWD is
+break-even). This catalog already recorded the fix for this exact family: `EA_KAUFMAN_ER` (ER>0.30
+gate + SuperTrend signal) scored PF 2.34/50t on XAUUSD H4 where naked `EA_SUPERTREND` scored
+1.92/33t at corr 0.946 — same edge, ER version dormant in ranging periods. So: port the gate as a
+lever instead of keeping two EAs.
+
+**The lever.** `_03_UseER` (default false) + `_03_ErPeriod` + `_03_ErMin` in
+`(TRD)_SuperTrendFlip_rev02`. ER = |close[1]−close[1+N]| / Σ|close[i]−close[i+1]| over closed bars,
+in [0..1]: 1 = straight move, ~0 = chop. Blocks **entry only**; open-position management untouched.
+Unmeasurable ER (data hole / zero path length) = gate closed, never "pass". `OnInit` refuses
+`ErMin>=1.0` or `ErPeriod<2` loudly — a gate that can never open would otherwise emit 0-trade
+passes that read as "no signal" instead of "impossible setting".
+
+**Regression cage passed byte-exact:** rev02 with the gate off = rev01 on XAUUSD H4 MAIN M4
+(PF 1.51 / 211t / +1372.94 / eqDD 2.96 / bars 4637), confirmed across two different terminal lanes.
+
+**Result — Model-4, XAUUSD H4, ErPeriod=8 / ErMin=0.20:**
+
+| window | baseline (rev01) | ER 8/0.20 |
+|---|---|---|
+| MAIN 2023.01–2025.12 | 1.51 / 211t / +1372.94 / DD 2.96% | **1.62 / 156t / +1142.32 / DD 2.11%** |
+| BWD 2020.01–2022.12 | 1.03 / 206t / +58.91 / DD 4.60% | **1.09 / 163t / +134.18 / DD 4.50%** |
+
+PF up on both windows, MAIN drawdown down a third, BWD net 2.3×. Per-trade edge: MAIN 6.51 → 7.32,
+BWD 0.29 → 0.82. **Cost: 26% of trades and 17% of MAIN absolute net.** The gate buys quality, not
+more money — on a fixed lot it is a *risk-adjusted* win, and its value is realized only if the freed
+capacity is spent elsewhere (or the lot is raised, which is a separate decision with its own gate).
+
+**The finding that matters more than the numbers — how the sweep tried to fool us.** Over 20 combos
+(ErPeriod 8/12/16/20 × ErMin 0.20–0.40) the pattern is monotone and it is a trap:
+- **Long ER window (12–20) fits MAIN and kills BWD.** Best MAIN of the whole sweep is
+  ErPeriod=12/ErMin=0.20 at **PF 2.405 / 105t / +1488.66** — better MAIN than baseline on half the
+  trades. Its **BWD is 0.838, net −165.61**. Selecting on MAIN alone adopts a losing config.
+- **Short ER window (8) improves both windows modestly.** That is the only both-window family.
+- Every row showing PF 2.5–3.8 has **n = 6–30 trades**. Arithmetic, not edge.
+
+**Rule this earns:** a chop filter must be judged on the window it was *not* tuned on, and its
+window-length parameter is the axis that decides whether it is a filter or a curve-fit. Pre-register
+"must improve both windows" *before* reading the sweep — the same trap caught the Donchian lever on
+XAU the same afternoon (below).
+
+Source: `ea_projects/(TRD)_SuperTrendFlip/(TRD)_SuperTrendFlip_rev02.mq5` (`[03b]` block) ·
+sets `_mt5_auto/ab_sets/genstanding_stf/STF_XAU_H4_er*.set` · reports `ER8_XAU_H4_*_M4`,
+optimizations `ER_XAU_H4_{MAIN,BWD}.xml`.
+
+## LEVER: Donchian-break confluence on a SuperTrend flip (2026-07-26) 🟨 SYMBOL-SPECIFIC — adopt on BTC H4, reject on XAU H4
+
+**The lever** (already coded in rev01, never tested until now): `_01_UseDonchian` + `_01_DonBars` —
+the flip only counts as an entry if the signal bar also breaks the prior N-bar Donchian range.
+
+**It splits by symbol, in opposite directions, on the same afternoon and the same EA:**
+
+| | MAIN | BWD | read |
+|---|---|---|---|
+| XAUUSD H4 baseline | 1.51 / 211t | 1.03 / 206t | — |
+| XAUUSD H4 + Don(20) | **2.37 / 30t** (M1) | **0.48 / −230.53** (M1) | ⬛ **reject** — every DonBars value 20/40/60/80/100 is net-negative on BWD (PF 0.31–0.67) |
+| BTCUSD H4 baseline | 1.591 / 100t | 1.35 / 91t | — |
+| BTCUSD H4 + Don(20) | 1.510 / 34t | **3.510 / 40t / +451.74** | 🟩 **adopt (build-on)** — BWD PF 2.6×, net 2×, on 44% of the trades |
+
+BTC per-trade net over both windows: **4.1 → 9.1**. DonBars 40–100 keep only 6–10 trades per window
+on both symbols — discard the whole tail, it is noise wearing a PF of 5–8.
+
+**Why the split is believable rather than luck.** Requiring a range break demands *expansion*
+confirming the flip. Crypto's trends start with expansion, so the filter keeps the real ones; gold's
+H4 flips more often begin inside the prior range and expand later, so the same filter cuts the
+entries that would have worked and keeps the late ones — which is exactly what a BWD collapse from
+1.03 to 0.48 looks like.
+
+**Caveat carried with the BTC number:** n = 34/40 · MAIN's two 2025 half-years are **0.24 and 0.36**
+(the aggregate 1.51 hides a hostile recent regime) · `swap-unadjusted` (BTC long −14.67%/yr real vs
+0 in the tester, and ExitMode=0 holds for long stretches). BUILD-ON, not deploy-ready.
+
+Source: sets `_mt5_auto/ab_sets/genstanding_stf/STF_{XAU,BTC}_H4_don*.set` · reports
+`DON20_BTC_H4_*` · optimizations `DON_{XAU,BTC}_H4_{MAIN,BWD}.xml`.
+
+## LEVER: capped pyramid into winners on a Donchian-gated SuperTrend (rev03, BTCUSD H4, 2026-07-26) 🟩 BUILD-ON — best both-window result of the campaign, with a hostile-recent-regime caveat
+
+**The lever.** `(TRD)_SuperTrendFlip_rev03` `[07]` block, default-off. Adds a leg only while the basket
+is **in profit** and only after price advances `_07_AddAtAtr`×ATR beyond the **last fill** (not the
+first — one large candle cannot collapse the spacing and stack several legs at once). Every leg
+trails the same SuperTrend line; a flip or a floating-loss breach closes the **whole** basket.
+Not martingale — adds require profit, never a loss.
+
+**Bounded by construction, not by hope:** legs ≤ 1+`_07_MaxAdds` (init-refused above 10) · lot per leg
+flat or **decreasing** (`_07_AddLotFactor>1` refused at init) · basket floating loss ≥
+`_07_BasketMaxLossPct` of balance → flat · `_07_BasketMaxLossPct` must be ≤ `_05_EmergencyDdPct` ·
+leg count derived from live positions every bar (state-free: a restart mid-basket cannot desync it) ·
+pyramid + `ExitMode=2` refused at init (mode 2 never trails, so adds would be unmanaged).
+
+**Regression cage: rev01 = rev02 = rev03-with-pyramid-off, identical to the cent** on the same lane
+and window (PF 0.96 / 13t / net −1.83 / gross 49.71/−51.54 / 14,498,245 ticks).
+
+**Result — Model-4, BTCUSD H4, all three variants on the SAME terminal lane** (see the gotcha below
+for why that sentence is load-bearing), MAIN chunked into 6 half-years:
+
+| variant | MAIN | BWD |
+|---|---|---|
+| baseline (plateau centre) | 1.644 / 100 legs / +607.59 / DD 1.83% | 1.348 / 91 / +219.78 / DD 2.31% |
+| + Donchian(20) gate | 1.510 / 34 / +218.74 / DD 2.16% | 3.510 / 40 / +451.74 / DD 1.55% |
+| **+ Donchian(20) + pyramid MaxAdds=1 / AddAtAtr=1.0** | **2.379 / 50 / +700.28 / DD 2.16%** | **4.044 / 66 / +773.55 / DD 2.43%** |
+
+Beats the baseline on **both** windows and beats the Donchian-only host on both, at essentially
+unchanged drawdown. M1 predicted 2.400 / 4.363 and M4 delivered 2.379 / 4.044 — close enough that
+the M1 surface can be trusted for *this* config family (contrast with the ER gate, where M1 was
+optimistic on crypto BWD: 1.443 → 1.295).
+
+**Config choice was pre-registered, and deliberately not the best number.** The 12-combo surface is
+monotone — more adds → more profit → more DD (MaxAdds=3 reaches MAIN PF 3.103 / +1363 at DD 5.15%).
+A monotone surface in the depth axis is the signature of **measuring leverage, not edge**, so the
+confirmed config is the *least*-leveraged point that clears both windows.
+
+**What must be said next to those numbers:**
+1. **Legs are not independent samples.** ~34 MAIN and ~40 BWD *signals* produce 50 and 66 *legs*.
+   Never quote n=50 as a sample size; the statistical width is still ~34.
+2. **The recent regime is hostile and pyramiding does not fix it — it amplifies whatever the regime
+   gives.** Per-half-year MAIN: 2.56 / 4.55 / 2.95 / 11.75 / **0.40 / 0.44** — both halves of 2025
+   lose, exactly as the ungated baseline did (0.24 / 0.36). The aggregate is carried by a few large
+   winners (an 11.75 on six legs; BWD has an 11.34 and a 7.18).
+3. **`swap-unadjusted`, and the gap is now WORSE than for a single-leg EA.** BTC long costs ~−14.67%/yr
+   in reality and 0 in the tester; holding two legs doubles that bill while `ExitMode=0` holds for
+   long stretches. This is the largest unmodelled cost in the table above.
+4. **Cage items still owed before this can be called a candidate:** Monte-Carlo (ruin ≤2%, PF-5th
+   ≥1.0) at the real sizing, a written worst-case-single-loss figure, sensitivity fan, and
+   correlation against the live cohort.
+
+Source: `ea_projects/(TRD)_SuperTrendFlip/(TRD)_SuperTrendFlip_rev03.mq5` (`[07]`) · sets
+`_mt5_auto/ab_sets/genstanding_stf/STF_BTC_H4_{pyr,pyr1,don20,rev03_off}.set` · reports
+`{BASE5B,DON5B,PYR1}_BTC_H4_*` · optimizations `PYR_BTC_H4_{MAIN,BWD}.xml`.
+
+## GOTCHA: BTCUSD tick history differs between MT5 installs — crypto A/B across lanes is invalid (2026-07-26)
+
+Same EA, same .set, same window, same broker login, **different terminal install** → same 13 entries
+but different exits: `D:\Meta 5` gave PF 0.92 / net −4.26, `D:\Meta 5b` gave PF 0.96 / net −1.83.
+XAUUSD matched to the cent across the same two lanes, so this is not a general lane problem — it is
+per-symbol downloaded tick history, and crypto is where it bites.
+
+**Rule:** every variant in a crypto A/B must run on ONE lane, and the lane belongs in the note beside
+the numbers. This caught a real error mid-session: the first "BWD 1.35 → 3.51" claim compared a
+main-terminal baseline against a 5b Donchian run. Re-running the baseline on 5b (1.348) happened to
+preserve the conclusion — that was luck, not method.
+
+### PYR1 cage completion (2026-07-26) — all four items cleared, holdout untouched
+
+**Monte Carlo** (2,000 shuffles + bootstrap, deposit 10,000, 0.01 lot/leg): MAIN ruin **0%**, PF-5th
+**1.114**, PF-median 2.358, DD-95th 2.24% · BWD ruin **0%**, PF-5th **2.209**, PF-median 4.087. Both
+bars (ruin ≤2%, PF-5th ≥1.0) pass. Read MAIN's 1.114 honestly: at the 5th percentile of resampling the
+edge nearly disappears — the expected consequence of ~34 signals, and the reason sizing stays small.
+
+**Worst case at the real sizing** (0.01/leg, ≤2 legs = 0.02 BTC): worst single leg **−$69.50 = 0.70%**
+of a 10k account (25H1) · worst realised equity DD **−$247.05 = 2.47%** (21H1) · cage ceiling
+(`_07_BasketMaxLossPct=8`) = −$800 · doctrine bar 15%. Five-fold margin between realised worst and the
+cage. **The one path that can still breach it is a weekend/overnight BTC gap through both legs' trail
+stops at once, which the tester does not simulate** — that is a stated residual, not a closed risk.
+
+**Sensitivity fan** (81 neighbours: AtrPeriod × Mult × DonBars × AddAtAtr, both windows, MaxAdds locked
+because depth is the leverage axis, not a robustness axis): **69/81 = 85.2% clear both windows** ·
+**BWD PF minimum across all 81 cells = 1.71** (nothing below 1.0 anywhere) · MAIN PF min 0.63 / median
+1.69 / max 4.01, the 12 failures all sit at DonBars=25 or Mult=3.0 · the confirmed centre reproduces to
+the digit (2.400 / 4.363) · chosen `DonBars=20` and `AddAtAtr=1.0` are per-axis interior optima on both
+windows. Caveat carried forward, same as ORDER-210: when 85% of the space passes, the bar is not
+discriminating — this proves "not a spike", it does not prove "big edge".
+
+**`select_robust_pass.py` mis-reported this fan** as `survivors=0 (0.0%) plateau=NONE` while the raw
+rows were profitable almost everywhere (PF 1.59–2.79 at 68–81 legs). Its survivor filter cannot be
+trusted on multi-leg/pyramid result sets — read the raw XML rows for any basket EA.
+
+**Correlation vs the deployed cohort** (monthly P&L, MAIN window): BRK_XAU 991001 (real money)
+**+0.167** (16 mo) · MacdDiv XAU H4 +0.134 (22 mo) · O108_S H1 +0.176 (16 mo) — all far inside the
+≤0.40 additive band. Against its own sibling (SuperTrend ER-gated on XAU) **+0.444**, which is exactly
+what a shared signal engine should look like: usable together, but not both at full size.
+
+**Config choice was decided by a pre-registered tie-break, and it cost us the prettier number.** The fan
+suggested `Mult=2.0`; M4 on both windows gave MAIN **3.542** / +901.96 (vs 2.379 / +700.28) but BWD
+**3.307** (vs **4.044**). Rule set before the run — *win on the window we did not tune* — so `Mult=2.5`
+stays. MAIN alone would have picked the other one.
+
+**Funnel position:** MAIN 2.379 · BWD 4.044 · MC pass · M4 throughout · fan 85% · corr additive.
+The only remaining gate is the **2026H1 holdout, which is still clean for this EA** (no STF run has ever
+crossed 2025.12.31). One shot, and it must be spent with no further tuning afterwards.
+
+### Holdout spent + swap measured (2026-07-26, closing the PYR1 file)
+
+**The swap question was lore; now it is a measurement, and it splits the lab in two.** A probe EA that
+holds one long for 30 days and reports the tester's own numbers:
+
+| symbol | swap mode | spec | tester behaviour |
+|---|---|---|---|
+| BTCUSD | `INTEREST_CURRENT` | long −14.67 %/yr · short −0.49 %/yr | **charges NOTHING** — 30-day hold returned +8.99, exactly the price-only P&L, where the spec implies −12.84 |
+| XAUUSD | `POINTS` | long −100.66 pts · short +23.82 | **charges correctly** — measured −29.25 against −29.19 expected |
+
+So the repo's `-14.67%/yr (backtest คิด 0)` note was right about crypto and, more importantly, **every
+XAU backtest in the lab already carries its financing cost.** The −14.67 figure is not an external
+estimate — it is literally `SYMBOL_SWAP_LONG` on this broker's BTCUSD.
+
+**Swap charged post-hoc from real per-leg holding time** (conservative: worse of entry/exit price, and
+weekend triple-charge ignored, which if anything understates it). Mean holding turned out to be **4.59
+days**, not the long stretches the ExitMode=0 design made me expect:
+
+| window | swap bill | PF before → after | net before → after |
+|---|---|---|---|
+| MAIN | −$51.79 (7.4% of net) | 2.379 → **2.257** | +700.28 → **+648.49** |
+| BWD | −$16.12 (2.1%) | 4.044 → **3.949** | +773.55 → **+757.43** |
+| MC MAIN | — | PF-5th 1.114 → **1.052** · ruin **0%** | — |
+
+BWD's bill is a third of MAIN's for the same holding time because BTC traded at a fraction of the price
+in 2020-2022 — the cost scales with notional, so this drag grows as BTC does.
+
+**Then the 2026H1 holdout was spent, once, with no tuning afterwards:**
+**PF 4.32 (swap-adjusted 4.274) · 9 legs · +250.52 · eqDD 2.52% · 29.4M ticks · traded through to
+2026.06.30**, ending on a profitable short basket (BTC 62k → 58.6k), so the edge is not long-only.
+Bar was PF ≥1.2 — cleared wide. **But n=9 over six months (the expected rate for ~11 signals/yr) can
+only say "does not contradict the candidate"; it cannot size the edge.**
+
+**Verdict: VALIDATED CANDIDATE.** 2026H1 is now spent for this EA — the forward record from the day of
+any demo attach becomes the next holdout (Boss_16 precedent). Demo-attach decision is the user's.
+
+## CELL: SuperTrendFlip on ETHUSD H4 (cell #19, 2026-07-26) 🟨 BUILD-ON — the mechanism does not travel from BTC, and MC is what stops it
+
+The obvious next step after BTC H4 cleared every gate was a second crypto leg. ETH was chosen because
+this catalog already records a validated crypto pyramid lane (BTC SuperTrend + ETH Donchian pyramid).
+It does not survive its own funnel, and *how* it fails is the useful part.
+
+| test | MAIN | BWD | verdict |
+|---|---|---|---|
+| **Portability**: the exact BTC-winning stack, nothing retuned | 1.293 / 64 legs | **0.858 / −41.34** | ⬛ mechanism does **not** travel |
+| ETH's own plateau centre (swap-adjusted −21.40 / −14.96) | **1.310** / 163t | **1.099** / 139t | clears the headline bars |
+| ↳ Monte Carlo on that centre | **PF-5th 0.857** | **PF-5th 0.657** | ❌ **fails** (bar ≥1.0); ruin 0% both |
+| ↳ last-optimize: + Donchian(20) + pyramid | **1.010** / 48 legs / net **+2.22** | 1.272 / 47 | ❌ the overlay kills MAIN |
+
+Ladder completed: coarse genetic 831 passes (99 survivors = 11.9%) → fine complete, split by UseEma
+(NOEMA 1/12 with neighbours 0 · **EMA 14/36 = 38.9%, neighbours 9**) → M4 both windows → portability
+test → overlay last-optimize → MC. **BUILD-ON, not DEAD** — PF>1 on both windows is real — but the
+blocker has a name: **the per-trade edge is too thin relative to its variance**, so resampling puts the
+5th percentile below break-even. PF at the top of the table cannot see that; MC can.
+
+**Correlation vs BTC PYR1 = +0.123** (and −0.089 vs the live BRK_XAU leg). If ETH had cleared MC it
+would have been an unusually good diversifier. It did not, and a leg that cannot survive resampling is
+not admitted because its correlation is attractive.
+
+**The finding that outranks the cell verdict.** Across the three crypto cells measured, **BTC H4 is the
+only one whose raw signal walks unaided**: it prefers `UseEma=false`, while BTC H1 and ETH H4 both
+collapse to *neighbours = 0* with the EMA filter off. BTC H4 is also the only cell with a genuinely
+strong BWD. Those two facts are almost certainly the same fact. **So BTC H4 is a special case, not the
+head of a crypto family** — which reprices any "attach 20 symbols" plan as *20 separate funnels*
+(coarse → fine → M4 ×2 → swap → MC → corr), not as extra attachments. Two symbols consumed half a day
+here and produced one pass.
+
+**⚠️ Symbol-spec gotcha that nearly inverted the whole cell: `ETHUSD min_lot = 0.1`, not 0.01.** A .set
+carrying `LotSize=0.01` makes the EA's own below-minimum guard refuse every order, producing a 0-trade
+report that reads exactly like "this symbol has no signal". The first run hit this (the 30-day probe
+returned net=0.0) and it was caught only because the swap probe had already printed `min_lot`. **Probe
+a new symbol's spec before believing any result on it**, and fix the lot in the *optimize* .set too — a
+155k-combo genetic sweep with a sub-minimum lot is 155k empty passes wearing the costume of a result.
+
+ETH swap is the same mode as BTC (`INTEREST_CURRENT`, long −9.86 %/yr, short −3.95 %) and is likewise
+**not charged by the tester** — see the swap-mode table above.

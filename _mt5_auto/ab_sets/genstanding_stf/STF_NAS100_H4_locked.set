@@ -1,0 +1,29 @@
+; STF_NAS100_H4_locked.set -- plateau-centre pick (ORDER-542 cell #21 NAS100 H4)
+; fine EMA grid GEN2_NAS100_H4_MAIN_fineEMA.xml: survivors=0/750 (0.0%) plateau=NONE -- profit-max PF 2.18/77t
+;   is an isolated spike, not a plateau (single-order EA, select_robust_pass.py result is trustworthy per
+;   ORDER-542 caveat #4) -- EMA=true REJECTED despite dominating the coarse genetic population (95% of
+;   ExitMode=1 survivors there had UseEma=true) -- coarse popularity != fine-grid plateau
+; fine NOEMA grid GEN2_NAS100_H4_MAIN_fineNOEMA.xml: survivors=16/150 (10.7%) plateau=WEAK
+;   centre pick: AtrPeriod=18 Mult=3.0 ExitMode=1(locked) TpAtrMult=3.5 UseEma=false
+;   PF 1.465 / 137 trades / neighbours=10 (M1, not the number that goes in the table)
+; no axis on a grid edge (AtrPeriod 18 of [6..22], Mult 3.0 of [2.5..4.5], TpAtrMult 3.5 of [2..8])
+
+_00_OptimizeMode=false
+_01_AtrPeriod=18
+_01_Mult=3.0
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=1
+_02_TpAtrMult=3.5
+_02_SlAtrMult=1.0
+_03_UseEma=false
+_03_EmaPeriod=200
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false

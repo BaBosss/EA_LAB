@@ -18,6 +18,7 @@ param(
   [int]$Model=2
 )
 $ErrorActionPreference="Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $DataDir="C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"
 $auto="D:\EA_LAB\_mt5_auto"
 New-Item -ItemType Directory -Force "$auto\sweeps\_sets" | Out-Null
@@ -42,10 +43,14 @@ for($ci=0;$ci -lt $combos.Count;$ci++){ $combo=$combos[$ci]
     Write-Output "[$n/$total] c$ci $tagS $($w.l)"
     Get-Process terminal64 -EA SilentlyContinue | Stop-Process -Force -EA SilentlyContinue
     $g=[Diagnostics.Stopwatch]::StartNew(); while((Get-Process terminal64 -EA SilentlyContinue) -and $g.Elapsed.TotalSeconds -lt 20){Start-Sleep 2}
+    # ORDER-372: report existence != this run produced it (mt5_run.ps1 clears a stale report only
+    # AFTER its abort checks). Gate on the exit code and on the file being newer than this run.
+    $runStart = Get-Date
     & "$PSScriptRoot\mt5_run.ps1" -Expert $Expert -Symbol $Symbol -Period H1 -Model $Model -FromDate $w.f -ToDate $w.t -SetFile $sp -ReportName $rep -Force 2>&1 | Out-Null
+    $runnerExit = $LASTEXITCODE
     Start-Sleep 2
     $htm="$auto\reports\$rep.htm"; if(-not(Test-Path $htm)){$htm="$DataDir\$rep.htm"}
-    if(Test-Path $htm){ $r=Parse $htm; "$ci,$tagS,$($w.l),$($r.PF),$($r.Net),$($r.Trades),$($r.DDpct),$($r.Win),$($r.Sharpe),OK"|Add-Content $OutCsv; Write-Output "    -> PF=$($r.PF) t=$($r.Trades) eqDD%=$($r.DDpct)" }
+    if(Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $runnerExit -Label $rep){ $r=Parse $htm; "$ci,$tagS,$($w.l),$($r.PF),$($r.Net),$($r.Trades),$($r.DDpct),$($r.Win),$($r.Sharpe),OK"|Add-Content $OutCsv; Write-Output "    -> PF=$($r.PF) t=$($r.Trades) eqDD%=$($r.DDpct)" }
     else { "$ci,$tagS,$($w.l),,,,,,,NO_REPORT"|Add-Content $OutCsv; Write-Output "    -> NO REPORT" }
   }
 }

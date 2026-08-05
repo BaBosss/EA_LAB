@@ -9,6 +9,9 @@
 #include "Inputs.mqh"
 #include "Indicators.mqh"
 #include "Execution.mqh"
+#include "Persist.mqh"   // ORDER-138 #3: full-basket close intent survives restart
+#include "MoneyManagement.mqh"   // 2026-07-23: MM_BalancePct for the _*_BalPct targets
+                                 // (no cycle: MM -> Inputs/RiskControl only, never ExitManager)
 
 double Exit_Point() { return Indi_Point(); }
 
@@ -153,6 +156,36 @@ double Exit_InitialSL(const int dir, const double entryPrice)
       default:
          return 0.0;  // NONE, MONEY
    }
+}
+
+// MM-SAFETY-001 (Codex review 2026-07-24): fail-closed seam for the structural-SL
+// promise. Exit_InitialSL returns 0.0 for two very different reasons: "this config
+// wants no per-order SL" (SL_NONE / SL_MONEY - legitimate, basket owns the stop) and
+// "this order's promised structural SL just failed re-validation" (Wave5 defense-in-
+// depth check at line ~134). The open paths could not tell them apart and treated
+// both as "no SL wanted", so a Wave5 order whose SL went invalid between signal and
+// fill was opened NAKED - the exact failure the entry-seam guard G4 exists to prevent.
+//
+// Call this right after Exit_InitialSL in every open path: true = skip the order.
+// Returns false in every non-17 build (the #ifdef makes it a compile-time constant),
+// so Boss_11..16/18 behavior is byte-identical.
+bool Exit_StructSLMissing(const double sl)
+{
+   if(sl > 0.0) return false;
+#ifdef LAB_ENTRY_17
+   if(_17_UseStructLevels && g_wave5_sl_price > 0.0)
+   {
+      static datetime w5_last_log = 0;
+      datetime now = TimeCurrent();
+      if(now - w5_last_log >= 60)
+      {
+         w5_last_log = now;
+         Print("[17] structural SL failed re-validation at order-open (price moved / stops-level) - entry SKIPPED rather than opened naked");
+      }
+      return true;
+   }
+#endif
+   return false;
 }
 
 // initial TP price (0 = managed dynamically)
@@ -352,6 +385,113 @@ void Wave5_DivergenceTightenHook()
 // approach to target within the same basket).
 bool g_exit_partial1_done = false;
 bool g_exit_partial2_done = false;
+// ORDER-132b (Codex E2): tickets already reduced within the CURRENT milestone
+// arming - a retry after a mixed success must only touch the legs that failed.
+ulong g_exit_partial1_tk[];
+ulong g_exit_partial2_tk[];
+// ORDER-132b (Codex X2): full-basket close intent latch. Once an exit predicate
+// fires, the close is owned until broker-flat proof - previously a partially
+// failed Exec_CloseAll() was forgotten whenever the predicate (profit/trend)
+// stopped being true on the next tick, leaving residual exposure managed as a
+// normal basket.
+// ORDER-138 #3 (Codex roadmap SEV-1): no longer memory-only - the intent is
+// persisted+flushed BEFORE the first close and cleared only on broker-flat
+// proof, so a restart after a partial liquidation resumes it instead of
+// returning the residual legs to ordinary management.
+bool g_exit_closeall_pending = false;
+// ORDER-125 (Codex MAJOR-1): basket-inception timestamp for the vertical
+// barrier, latched on the flat->non-flat transition and cleared only on
+// broker-flat proof. In-memory only: after a restart it re-derives from the
+// oldest OPEN leg (can fire later than true inception, never earlier).
+datetime g_exit_basket_inception = 0;
+
+// reset chassis exit state + restore a persisted close intent (LabCore OnInit).
+// Explicit init matters: an account switch reloads the EA WITHOUT resetting
+// program globals (Persist.mqh header), so file-scope initializers are not
+// enough to guarantee a clean start.
+// ORDER-125 (Codex MINOR-5): one basket-cycle reset used by EVERY flat path.
+// Pre-existing leak the new time-exit made reachable: partial milestones only
+// re-armed when profit dipped <= 0, so a basket closed while profitable left
+// done-flags latched and the NEXT basket could inherit them and skip its
+// partial close. Reset cycle state on broker-flat instead.
+void Exit_ResetBasketCycleState()
+{
+   g_exit_partial1_done = false;
+   g_exit_partial2_done = false;
+   ArrayResize(g_exit_partial1_tk, 0);
+   ArrayResize(g_exit_partial2_tk, 0);
+   g_exit_basket_inception = 0;
+}
+
+void ExitManager_Init()
+{
+   Exit_ResetBasketCycleState();
+   g_exit_closeall_pending = false;
+   // ORDER-138c (Codex NEW-2): an existing scoped intent is restored regardless
+   // of RC_PersistHalt - the manual-unhalt route (RC_PersistHalt=false +
+   // reattach) must never silently ignore a persisted in-flight liquidation.
+   // Only DryRun (observation instance) skips real intent handling.
+   if(!DryRun && Persist_Get("exit_closeall", 0.0) > 0.5)
+   {
+      g_exit_closeall_pending = true;
+      Print("[EXIT] full-basket close intent restored from persist - resuming liquidation");
+   }
+}
+
+// ORDER-138c (Codex F2 contested-accepted): `safety` splits the degraded-mode
+// policy at this shared helper. Safety exits (basket money-stop / resume of an
+// armed intent) close even when the arm write fails - flattening a losing
+// basket beats durability. Discretionary exits (basket TP / dynamic target /
+// run-trend flip) ABORT when the arm is not durable: they must not start a
+// liquidation they cannot resume after a restart; their predicate re-fires.
+bool Exit_CloseBasket(const bool safety = true)
+{
+   // ORDER-138 #3: arm durable BEFORE the first close attempt.
+   if(!g_exit_closeall_pending)
+   {
+      bool armed = true;
+      if(RC_PersistHalt && !DryRun)
+      {
+         armed = Persist_Set("exit_closeall", 1.0);
+         Persist_Flush();
+      }
+      if(!armed && !safety)
+      {
+         Print("[EXIT] close-all intent not durable - discretionary exit deferred (predicate will re-fire)");
+         return false;
+      }
+      if(!armed)
+         Print("[EXIT] WARN: close-all intent persist failed - a restart mid-liquidation would forget it (safety exit: closing anyway)");
+      g_exit_closeall_pending = true;
+   }
+   if(Exec_CloseAll())
+   {
+      // ORDER-138b (Codex F4): never release the latch while intent=1 could
+      // survive on disk - a stale intent + restart would liquidate a future,
+      // unrelated basket. Keep owning the tick and retry the delete.
+      // 138c (NEW-2): existing-key cleanup is NOT gated on RC_PersistHalt.
+      if(!DryRun)
+      {
+         if(!Persist_DelChecked("exit_closeall")) return true;
+         Persist_Flush();
+      }
+      g_exit_closeall_pending = false;
+      Exit_ResetBasketCycleState();   // ORDER-125 (Codex MINOR-5): broker-flat proof = new cycle
+      return true;
+   }
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      Print("[EXIT] basket close incomplete - residual position/pending remains, retrying every tick");
+      // ORDER-138b (Codex F9): re-touch the armed intent so MT5's ~4-week GV TTL
+      // cannot expire it while a liquidation stays unresolved (no-tick symbols
+      // get no retouch, but they get no retries either - documented limitation)
+      if(RC_PersistHalt && !DryRun) Persist_Set("exit_closeall", 1.0);
+   }
+   return true;   // the close intent owns this tick either way (blocks adds/management)
+}
 
 // Effective basket target in account currency. ATR mode scales the target by
 // current Risk-ATR and aggregate open volume, so it remains portable across
@@ -359,6 +499,13 @@ bool g_exit_partial2_done = false;
 // preserves the legacy fixed-money target exactly.
 double Exit_BasketTargetMoney()
 {
+   // additive (2026-07-23): percent-of-balance target takes precedence when set. Highest
+   // priority of the three because it is the most portable form (unitless across cent/USD
+   // accounts + auto-scaling with account size). 0 = off -> falls through to the legacy
+   // ATRmult/Money precedence exactly as before.
+   double balPctTarget = MM_BalancePct(_2_BasketTP_BalPct);
+   if(balPctTarget > 0.0) return balPctTarget;
+
    if(_2_BasketTP_ATRmult <= 0.0) return _2_BasketTP_Money;
 
    double atr       = Indi_RiskATR(0);
@@ -370,6 +517,17 @@ double Exit_BasketTargetMoney()
    return atr * _2_BasketTP_ATRmult * (tickValue / tickSize) * lots;
 }
 
+// additive (2026-07-23): effective basket money-STOP in account currency. Percent-of-balance
+// (_32_SL_BalPct) wins when set, else the legacy absolute _32_SL_Money. Single resolver so the
+// two call sites (intrabar safety stop + per-tick basket management) can never disagree about
+// what the stop is - a split-brain there would mean one path halts and the other does not.
+double Exit_BasketStopMoney()
+{
+   double balPctStop = MM_BalancePct(_32_SL_BalPct);
+   if(balPctStop > 0.0) return balPctStop;
+   return _32_SL_Money;
+}
+
 // additive: dynamic close-money target (corpus EX183/EX078). close_target =
 // base + (open_order_count / C) * base - grows with how many orders are open
 // in the basket. Evaluated as an ADDITIONAL/alternative target check in
@@ -379,9 +537,13 @@ double Exit_BasketTargetMoney()
 double Exit_DynCloseTargetMoney()
 {
    if(!_57_DynCloseOn) return 0.0;
-   if(_57_DynCloseDivisor <= 0.0) return _57_DynCloseBase;
+   // additive (2026-07-23): resolve the BASE from % of balance when set (portable), else
+   // the legacy absolute base. The growth term is already unitless so it is untouched.
+   double base = MM_BalancePct(_57_DynCloseBalPct);
+   if(base <= 0.0) base = _57_DynCloseBase;
+   if(_57_DynCloseDivisor <= 0.0) return base;
    int openCount = Exec_CountAll();
-   return _57_DynCloseBase + ((double)openCount / _57_DynCloseDivisor) * _57_DynCloseBase;
+   return base + ((double)openCount / _57_DynCloseDivisor) * base;
 }
 
 void Exit_ManagePartialClose()
@@ -394,43 +556,148 @@ void Exit_ManagePartialClose()
    if(_2_PartialPct1 <= 0.0 && _2_PartialPct2 <= 0.0) return;   // both off
 
    double profit = Exec_BasketProfit();
-   if(profit <= 0.0) { g_exit_partial1_done = false; g_exit_partial2_done = false; return; }
+   if(profit <= 0.0)
+   {
+      g_exit_partial1_done = false; g_exit_partial2_done = false;
+      ArrayResize(g_exit_partial1_tk, 0); ArrayResize(g_exit_partial2_tk, 0);
+      return;
+   }
 
    double pctOfTarget = profit / targetMoney * 100.0;
 
+   // ORDER-132 (Codex F3): a milestone latches DONE only when the broker accepted
+   // every attempted partial close - a rejected close now leaves the milestone
+   // armed and it retries next tick while the profit predicate still holds.
+   // ORDER-132b (Codex E2): retries skip tickets already reduced (per-ticket
+   // done list), so a stubbornly rejected leg can no longer drain its siblings.
    if(!g_exit_partial1_done && _2_PartialPct1 > 0.0 && pctOfTarget >= _2_PartialPct1)
    {
-      Exec_ClosePartialFraction(_2_PartialFrac1);
-      g_exit_partial1_done = true;
+      if(Exec_ClosePartialFraction(_2_PartialFrac1, g_exit_partial1_tk))
+         g_exit_partial1_done = true;
    }
    if(!g_exit_partial2_done && _2_PartialPct2 > 0.0 && pctOfTarget >= _2_PartialPct2)
    {
-      Exec_ClosePartialFraction(_2_PartialFrac2);
-      g_exit_partial2_done = true;
+      if(Exec_ClosePartialFraction(_2_PartialFrac2, g_exit_partial2_tk))
+         g_exit_partial2_done = true;
    }
 }
 
+// ORDER-129b (Codex audit F1): the basket money-STOP is a safety exit, not management
+// cadence - it must run every tick even when _0_BarOpenOnly gates the rest of the
+// pipeline. Only the LOSS leg lives here; profit targets/trailing stay bar-gateable in
+// Exit_ManageBasket (they can only leave money on the table, not compound a loss).
+// Returns true if it flattened the basket this tick.
+bool Exit_SafetyMoneyStop()
+{
+   // ORDER-138 #3: with an armed intent, CountAll()==0 is NOT proof of flat -
+   // own pendings can remain and the persisted intent must be cleaned up. Route
+   // through Exit_CloseBasket for the real broker-flat proof.
+   if(Exec_CountAll() <= 0)
+   {
+      if(g_exit_closeall_pending) return Exit_CloseBasket();
+      Exit_ResetBasketCycleState();   // ORDER-125: natural flat (broker SL/TP) = new cycle
+      return false;
+   }
+   // ORDER-132b (Codex X2): an armed close (from here or any basket exit) is
+   // finished FIRST, pre-bar-gate - a partial CloseAll must never be forgotten
+   // just because the money predicate stopped being true.
+   if(g_exit_closeall_pending) return Exit_CloseBasket();
+   double stopMoney = Exit_BasketStopMoney();
+   if(stopMoney <= 0.0) return false;
+   double profit = Exec_BasketProfit();
+   if(profit <= -stopMoney)
+   {
+      PrintFormat("[EXIT] basket money-stop (safety, intrabar): net %.2f <= -%.2f -> close all",
+                  profit, stopMoney);
+      return Exit_CloseBasket();
+   }
+   return false;
+}
+
 // per-tick basket management; returns true if it closed the whole basket
+// (or while an armed close is still reconciling - either way the basket owns
+// no further management/adds this tick)
 bool Exit_ManageBasket()
 {
-   if(Exec_CountAll() <= 0) return false;
+   if(Exec_CountAll() <= 0)
+   {
+      // ORDER-138 #3: basket positions gone, but an armed intent still needs
+      // broker-flat proof (pendings) + persisted-intent cleanup before release
+      if(g_exit_closeall_pending) return Exit_CloseBasket();
+      Exit_ResetBasketCycleState();   // ORDER-125: natural flat = new cycle
+      return false;
+   }
+   if(g_exit_closeall_pending) return Exit_CloseBasket();   // ORDER-132b (Codex X2): finish first
 
    Exit_ManagePartialClose();   // no-op unless _2_PartialPct1/2 set
 
    double profit = Exec_BasketProfit();
    double targetMoney = Exit_BasketTargetMoney();
-   if(targetMoney > 0.0 && profit >= targetMoney) { Exec_CloseAll(); return true; }
+   // 138c (F2): profit/trend exits = discretionary (abort on non-durable arm);
+   // the money-STOP leg = safety (always closes)
+   if(targetMoney > 0.0 && profit >= targetMoney) return Exit_CloseBasket(false);
    double dynTargetMoney = Exit_DynCloseTargetMoney();   // no-op (0.0) unless _57_DynCloseOn
-   if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) { Exec_CloseAll(); return true; }
-   if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)          { Exec_CloseAll(); return true; }
+   if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) return Exit_CloseBasket(false);
+   double stopMoney = Exit_BasketStopMoney();            // _32_SL_BalPct if set, else _32_SL_Money
+   if(stopMoney > 0.0 && profit <= -stopMoney)          return Exit_CloseBasket(true);
+
+   // ORDER-125: vertical barrier - force-close once the basket has been alive
+   // >= _2_MaxHoldBars closed bars on the chart TF (0 = off). Codex review
+   // (2026-07-19) MAJOR-1: the clock is the BASKET-INCEPTION time latched on
+   // the flat->non-flat transition (g_exit_basket_inception), NOT the oldest
+   // still-open leg - a per-leg SL closing leg 0 must not reset the barrier.
+   // Restart limitation (documented): the in-memory latch re-derives from the
+   // oldest OPEN leg after a terminal restart, which can only fire LATER than
+   // the true inception, never earlier - degraded, not dangerous.
+   // Codex MINOR-6: the horizon is chart-TF bars by design; reattaching on a
+   // different TF rescales it. Discretionary close policy (138c): with a
+   // latched inception the predicate is monotonic while the basket lives, so
+   // deferring on a non-durable arm re-fires next bar.
+   if(_2_MaxHoldBars > 0)
+   {
+      if(g_exit_basket_inception == 0)
+      {
+         datetime firstOpen = 0;
+         for(int i = PositionsTotal() - 1; i >= 0; i--)
+         {
+            if(!Exec_PosIsMine(i)) continue;
+            datetime ot = (datetime)PositionGetInteger(POSITION_TIME);
+            if(firstOpen == 0 || ot < firstOpen) firstOpen = ot;
+         }
+         g_exit_basket_inception = firstOpen;
+      }
+      if(g_exit_basket_inception > 0)
+      {
+         // Codex MAJOR-2: iBarShift returns -1 when the inception bar is not in
+         // loaded history / series not ready. Never treat that as "0 bars held"
+         // and never fall back to wall-clock (weekends would over-count and
+         // fire EARLIER than N market bars). Log and retry next tick.
+         int heldBars = iBarShift(_Symbol, _Period, g_exit_basket_inception);
+         if(heldBars < 0)
+         {
+            static datetime mh_last_log = 0;
+            if(TimeCurrent() - mh_last_log >= 3600)
+            {
+               mh_last_log = TimeCurrent();
+               Print("[EXIT] vertical barrier: iBarShift failed (history not ready) - retrying");
+            }
+         }
+         else if(heldBars >= _2_MaxHoldBars)
+         {
+            PrintFormat("[EXIT] vertical barrier: basket held %d bars >= _2_MaxHoldBars=%d -> close all",
+                        heldBars, _2_MaxHoldBars);
+            return Exit_CloseBasket(false);
+         }
+      }
+   }
 
    if(ExitMode == EXIT_RUN_TREND)
    {
       double f = Indi_FastMA(0), s = Indi_SlowMA(0);
       if(f > 0.0 && s > 0.0)
       {
-         if(Exec_CountDir(1) > 0 && f < s) { Exec_CloseAll(); return true; }
-         if(Exec_CountDir(2) > 0 && f > s) { Exec_CloseAll(); return true; }
+         if(Exec_CountDir(1) > 0 && f < s) return Exit_CloseBasket(false);
+         if(Exec_CountDir(2) > 0 && f > s) return Exit_CloseBasket(false);
       }
    }
 

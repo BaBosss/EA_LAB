@@ -1,0 +1,163 @@
+﻿CS	0	10:38:45.205	Startup	MetaTester 5 build 6061, 24 Jul 2026
+CS	0	10:38:45.206	Startup	Windows 11 build 26200, 20 x 13th Gen Intel Core i5-13500, AVX2, 16 / 31 Gb memory, 84 / 465 Gb disk, UAC, GMT+7
+CS	0	10:38:45.207	Server	MetaTester 5 started on 127.0.0.1:3000
+CS	0	10:38:45.208	Startup	cloud network mode is off
+CS	0	10:38:45.209	Startup	initialization finished
+CS	0	10:38:45.526	127.0.0.1	login (build 6061)
+CS	0	10:38:45.546	Network	16516 bytes of account info loaded
+CS	0	10:38:45.546	Network	1478 bytes of tester parameters loaded
+CS	0	10:38:45.546	Network	67268 bytes of input parameters loaded
+CS	0	10:38:45.548	Network	10386 bytes of symbols list loaded (1402 symbols)
+CS	0	10:38:45.548	Tester	expert file added: Experts\EALabTpl\Boss_14_GridLog.ex5. 178340 bytes loaded
+CS	0	10:38:45.551	Tester	16780 Mb available, 209 blocks set for ticks generating
+CS	0	10:38:45.551	Tester	initial deposit 10000.00 USD, leverage 1:100
+CS	0	10:38:45.551	Tester	successfully initialized
+CS	0	10:38:45.551	Network	186 Kb of total initialization data received
+CS	0	10:38:45.551	Tester	13th Gen Intel Core i5-13500, 32535 MB
+CS	0	10:38:45.555	Symbols	XAUUSD: symbol to be synchronized
+CS	0	10:38:45.556	Symbols	XAUUSD: symbol synchronized, 3720 bytes of symbol info received
+CS	0	10:38:45.558	History	XAUUSD: load 27 bytes of history data to synchronize in 0:00:00.001
+CS	0	10:38:45.558	History	XAUUSD: history synchronized from 2016.01.04 to 2026.07.31
+CS	0	10:38:45.577	History	XAUUSD,H1: history cache allocated for 9049 bars and contains 5894 bars from 2023.01.03 01:00 to 2023.12.29 23:00
+CS	0	10:38:45.577	History	XAUUSD,H1: history begins from 2023.01.03 01:00
+CS	0	10:38:45.578	Tester	XAUUSD,H1 (ThinkMarkets-Live): 1 minutes OHLC ticks generating
+CS	0	10:38:45.578	Tester	XAUUSD,H1: testing of Experts\EALabTpl\Boss_14_GridLog.ex5 from 2024.01.01 00:00 to 2024.07.01 00:00 started with inputs:
+CS	0	10:38:45.578	Tester	  === Mode selectors (code = value) ====
+CS	0	10:38:45.578	Tester	  ExitMode=22
+CS	0	10:38:45.578	Tester	  SLMode=30
+CS	0	10:38:45.578	Tester	  FirstLotMode=41
+CS	0	10:38:45.578	Tester	  LotProg=55
+CS	0	10:38:45.578	Tester	  TradeDir=60
+CS	0	10:38:45.578	Tester	  TrendFilter=70
+CS	0	10:38:45.578	Tester	  RecoveryMode=80
+CS	0	10:38:45.578	Tester	  HedgeMode=0
+CS	0	10:38:45.578	Tester	  DryRun=false
+CS	0	10:38:45.578	Tester	  _0_BarOpenOnly=false
+CS	0	10:38:45.578	Tester	  === 9x Stack (how orders stack) ====
+CS	0	10:38:45.578	Tester	  StackMode=92
+CS	0	10:38:45.578	Tester	  StackConfirm=0
+CS	0	10:38:45.578	Tester	  _9_StepUseATR=true
+CS	0	10:38:45.578	Tester	  _9_StepATRmult=1.0
+CS	0	10:38:45.578	Tester	  _9_StepPoints=300.0
+CS	0	10:38:45.578	Tester	  _9_StepMinPips=0.0
+CS	0	10:38:45.578	Tester	  _9_StepATRShift=0
+CS	0	10:38:45.578	Tester	  _9_MaxLevels=5
+CS	0	10:38:45.578	Tester	  _9_RegimeGateAdds=false
+CS	0	10:38:45.578	Tester	  _9_PA_MinBodyRatio=1.0
+CS	0	10:38:45.578	Tester	  _9_PendingMode=0
+CS	0	10:38:45.578	Tester	  _9_PendingLegs=0
+CS	0	10:38:45.578	Tester	  === 14 Entry: GridLog (Zeus-inspired breakout-arm) ====
+CS	0	10:38:45.578	Tester	  _14_Direction=1
+CS	0	10:38:45.578	Tester	  _14_DistAtrMult=1.5
+CS	0	10:38:45.578	Tester	  _14_MinDistPips=20.0
+CS	0	10:38:45.578	Tester	  === Trend MA (shared) ====
+CS	0	10:38:45.578	Tester	  _0_FastMA=20
+CS	0	10:38:45.578	Tester	  _0_SlowMA=50
+CS	0	10:38:45.578	Tester	  _0_MAMethod=1
+CS	0	10:38:45.578	Tester	  _0_MA_TF=0
+CS	0	10:38:45.578	Tester	  === 7x Filter params ====
+CS	0	10:38:45.578	Tester	  _71_ATRMA=20
+CS	0	10:38:45.578	Tester	  _71_ATRRatio=1.0
+CS	0	10:38:45.578	Tester	  _72_SlopeBar=3
+CS	0	10:38:45.578	Tester	  === 50x Regime (market-state gate) ====
+CS	0	10:38:45.578	Tester	  _50_RegimeMode=0
+CS	0	10:38:45.578	Tester	  _50_AllowTrendUp=true
+CS	0	10:38:45.578	Tester	  _50_AllowTrendDown=true
+CS	0	10:38:45.578	Tester	  _50_AllowRange=true
+CS	0	10:38:45.578	Tester	  _50_Regime_TF=16388
+CS	0	10:38:45.578	Tester	  _50_ADX_Period=14
+CS	0	10:38:45.578	Tester	  _50_ADX_TrendMin=25.0
+CS	0	10:38:45.578	Tester	  _50_StormATRmult=2.0
+CS	0	10:38:45.578	Tester	  _50_StormLookback=100
+CS	0	10:38:45.578	Tester	  === 2x Exit / TP params ====
+CS	0	10:38:45.578	Tester	  _21_TP_Pip=500.0
+CS	0	10:38:45.578	Tester	  _22_TP_ATRmult=3.0
+CS	0	10:38:45.578	Tester	  _2_BasketTP_Money=0.0
+CS	0	10:38:45.578	Tester	  _2_BasketTP_ATRmult=0.0
+CS	0	10:38:45.578	Tester	  _2_BasketTP_BalPct=1.0
+CS	0	10:38:45.578	Tester	  _23_TrailStart=300.0
+CS	0	10:38:45.578	Tester	  _23_TrailStep=100.0
+CS	0	10:38:45.578	Tester	  _2_PartialPct1=0.0
+CS	0	10:38:45.578	Tester	  _2_PartialFrac1=0.3
+CS	0	10:38:45.578	Tester	  _2_PartialPct2=0.0
+CS	0	10:38:45.578	Tester	  _2_PartialFrac2=0.3
+CS	0	10:38:45.578	Tester	  _2_SuppressLegTP=false
+CS	0	10:38:45.578	Tester	  _2_MaxHoldBars=0
+CS	0	10:38:45.578	Tester	  _57_DynCloseOn=false
+CS	0	10:38:45.578	Tester	  _57_DynCloseBase=10.0
+CS	0	10:38:45.578	Tester	  _57_DynCloseBalPct=0.0
+CS	0	10:38:45.578	Tester	  _57_DynCloseDivisor=4.0
+CS	0	10:38:45.578	Tester	  === 3x Stop loss params ====
+CS	0	10:38:45.578	Tester	  _31_SL_Pip=1000.0
+CS	0	10:38:45.578	Tester	  _33_SL_ATRmult=2.0
+CS	0	10:38:45.578	Tester	  _33_SL_MaxPips=0.0
+CS	0	10:38:45.578	Tester	  _33_SL_MaxATRmult=0.0
+CS	0	10:38:45.578	Tester	  _33_AdaptiveON=false
+CS	0	10:38:45.578	Tester	  _33_AdaptiveN=50
+CS	0	10:38:45.578	Tester	  _32_SL_Money=0.0
+CS	0	10:38:45.578	Tester	  _32_SL_BalPct=15.0
+CS	0	10:38:45.578	Tester	  _34_DonchianBars=50
+CS	0	10:38:45.578	Tester	  _35_SRBars=20
+CS	0	10:38:45.578	Tester	  _36_SD_Mult=2.0
+CS	0	10:38:45.578	Tester	  _36_SD_Period=20
+CS	0	10:38:45.578	Tester	  === ATR (2 contexts) ====
+CS	0	10:38:45.578	Tester	  _0_ATR_Period=14
+CS	0	10:38:45.578	Tester	  _0_ATR_TF=0
+CS	0	10:38:45.578	Tester	  _3_RiskATR_Period=14
+CS	0	10:38:45.578	Tester	  _3_RiskATR_TF=0
+CS	0	10:38:45.578	Tester	  === 4x/5x Money management ====
+CS	0	10:38:45.578	Tester	  _41_FixedLot=0.0
+CS	0	10:38:45.578	Tester	  _42_RiskPct=1.0
+CS	0	10:38:45.578	Tester	  _43_LotPerAnchor=0.01
+CS	0	10:38:45.578	Tester	  _43_BalanceAnchor=1000.0
+CS	0	10:38:45.578	Tester	  _51_ProgFactor=0.5
+CS	0	10:38:45.578	Tester	  _52_ProgMult=1.3
+CS	0	10:38:45.578	Tester	  _53_PlusLot=0.01
+CS	0	10:38:45.578	Tester	  _55_LogPowerFactor=1.3
+CS	0	10:38:45.578	Tester	  _55_UseLnNotLog10=true
+CS	0	10:38:45.578	Tester	  _56_FibMaxStep=5
+CS	0	10:38:45.578	Tester	  _4_DdAdaptiveOn=false
+CS	0	10:38:45.578	Tester	  _4_DdTier1Pct=10.0
+CS	0	10:38:45.578	Tester	  _4_DdTier1Mult=1.2
+CS	0	10:38:45.578	Tester	  _4_DdTier2Pct=20.0
+CS	0	10:38:45.578	Tester	  _4_DdTier2Mult=1.5
+CS	0	10:38:45.578	Tester	  _4_DdHardCapMult=1.5
+CS	0	10:38:45.578	Tester	  === 0x Protection (cage - always on) ====
+CS	0	10:38:45.578	Tester	  ProtectLevel=2
+CS	0	10:38:45.578	Tester	  RC_MaxLot=0.2
+CS	0	10:38:45.578	Tester	  RC_RecMultMax=1.3
+CS	0	10:38:45.578	Tester	  RC_MaxLevelsOverride=0
+CS	0	10:38:45.578	Tester	  RC_AcctDDLimitPct=12.0
+CS	0	10:38:45.578	Tester	  RC_PersistHalt=true
+CS	0	10:38:45.578	Tester	  RC_AdoptLegacyHalt=false
+CS	0	10:38:45.578	Tester	  === 8x Recovery (cage-capped) ====
+CS	0	10:38:45.578	Tester	  _8_TriggerATR=1.5
+CS	0	10:38:45.578	Tester	  _8_StepATR=1.0
+CS	0	10:38:45.578	Tester	  _8_RecMult=1.3
+CS	0	10:38:45.578	Tester	  _8_DDRefMoney=100.0
+CS	0	10:38:45.578	Tester	  _8_DDRefBalPct=0.0
+CS	0	10:38:45.578	Tester	  === Hedge (defensive lock) ====
+CS	0	10:38:45.578	Tester	  _H_TriggerDDPct=8.0
+CS	0	10:38:45.578	Tester	  _H_ReleaseDDPct=3.0
+CS	0	10:38:45.578	Tester	  _H_Ratio=1.0
+CS	0	10:38:45.578	Tester	  _H_MaxLot=0.0
+CS	0	10:38:45.578	Tester	  === MacroGate self-gate (backtest A/B only) ====
+CS	0	10:38:45.578	Tester	  _MG_SelfGate=false
+CS	0	10:38:45.578	Tester	  _MG_RegimeFile=EA_LAB_mris_regime.csv
+CS	0	10:38:45.578	Tester	  _MG_InCommon=true
+CS	0	10:38:45.578	Tester	  _MG_LotMult=0.5
+CS	0	10:38:45.578	Tester	  _MG_BlockNew=true
+CS	0	10:38:45.578	Tester	  _MG_TriggerRiskOff=true
+CS	0	10:38:45.578	Tester	  _MG_OffsetHours=0
+CS	0	10:38:45.578	Tester	  === General ====
+CS	0	10:38:45.578	Tester	  _0_Magic=990001
+CS	0	10:38:45.578	Tester	  _0_Slippage=20
+CS	0	10:38:45.578	Tester	  _0_MaxSpread=0
+CS	0	10:38:45.586	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [INIT] FATAL: FirstLotMode=41 with _41_FixedLot=0.0000 - no lot to trade
+CS	2	10:38:45.586	Tester	tester stopped because OnInit returns non-zero code 1
+CS	0	10:38:45.586	Tester	test Experts\EALabTpl\Boss_14_GridLog.ex5 on XAUUSD,H1 thread finished
+CS	0	10:38:45.611	127.0.0.1	tester forced to close
+CS	0	10:38:45.611	127.0.0.1	prepare for shutdown
+CS	0	10:38:45.611	127.0.0.1	stop immediately
+CS	0	10:38:45.611	127.0.0.1	shutdown finished
+CS	0	10:38:45.910	Server	MetaTester 5 stopped

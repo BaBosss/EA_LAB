@@ -1,0 +1,8 @@
+row_type,login,server_time,currency,equity,balance,margin,free_margin,margin_level_pct,stopout_mode,stopout_level,magic,symbols,float_pl,open_lots,open_positions,oldest_open_hours,pending_orders
+ACCOUNT,141049900,2026.08.04 00:36:20,USC,12691.34,12828.65,56.75,12634.59,22362.8,PERCENT,0.0,,,,,,,
+MAGIC,141049900,2026.08.04 00:36:20,,,,,,,,,1115,XAUUSDc,-1.72,0.02,2,5.6,0
+MAGIC,141049900,2026.08.04 00:36:20,,,,,,,,,1113,XAUUSDc,-2.30,0.02,2,5.6,0
+MAGIC,141049900,2026.08.04 00:36:20,,,,,,,,,1114,XAUUSDc,-83.40,0.03,3,97.4,0
+MAGIC,141049900,2026.08.04 00:36:20,,,,,,,,,7777,EURUSDc,-49.89,1.95,8,23.3,0
+SYMBOL,141049900,2026.08.04 00:36:20,,,,,,,,,,XAUUSDc,-87.42,0.07,7,,
+SYMBOL,141049900,2026.08.04 00:36:20,,,,,,,,,,EURUSDc,-49.89,1.95,8,,

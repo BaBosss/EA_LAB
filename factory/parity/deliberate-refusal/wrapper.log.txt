@@ -1,0 +1,76 @@
+﻿CS	0	10:38:32.857	Startup	MetaTester 5 build 6061, 24 Jul 2026
+CS	0	10:38:32.858	Startup	Windows 11 build 26200, 20 x 13th Gen Intel Core i5-13500, AVX2, 16 / 31 Gb memory, 84 / 465 Gb disk, UAC, GMT+7
+CS	0	10:38:32.860	Server	MetaTester 5 started on 127.0.0.1:3000
+CS	0	10:38:32.861	Startup	cloud network mode is off
+CS	0	10:38:32.861	Startup	initialization finished
+CS	0	10:38:33.143	127.0.0.1	login (build 6061)
+CS	0	10:38:33.155	Network	16516 bytes of account info loaded
+CS	0	10:38:33.155	Network	1478 bytes of tester parameters loaded
+CS	0	10:38:33.155	Network	22724 bytes of input parameters loaded
+CS	0	10:38:33.156	Network	10386 bytes of symbols list loaded (1402 symbols)
+CS	0	10:38:33.157	Tester	expert file added: Experts\EALabTpl\generated\B14_H01_r1.ex5. 110397 bytes loaded
+CS	0	10:38:33.159	Tester	16539 Mb available, 206 blocks set for ticks generating
+CS	0	10:38:33.159	Tester	initial deposit 10000.00 USD, leverage 1:100
+CS	0	10:38:33.159	Tester	successfully initialized
+CS	0	10:38:33.159	Network	121 Kb of total initialization data received
+CS	0	10:38:33.160	Tester	13th Gen Intel Core i5-13500, 32535 MB
+CS	0	10:38:33.164	Symbols	XAUUSD: symbol to be synchronized
+CS	0	10:38:33.164	Symbols	XAUUSD: symbol synchronized, 3720 bytes of symbol info received
+CS	0	10:38:33.166	History	XAUUSD: load 27 bytes of history data to synchronize in 0:00:00.001
+CS	0	10:38:33.166	History	XAUUSD: history synchronized from 2016.01.04 to 2026.07.31
+CS	0	10:38:33.185	History	XAUUSD,H1: history cache allocated for 9049 bars and contains 5894 bars from 2023.01.03 01:00 to 2023.12.29 23:00
+CS	0	10:38:33.185	History	XAUUSD,H1: history begins from 2023.01.03 01:00
+CS	0	10:38:33.186	Tester	XAUUSD,H1 (ThinkMarkets-Live): 1 minutes OHLC ticks generating
+CS	0	10:38:33.186	Tester	XAUUSD,H1: testing of Experts\EALabTpl\generated\B14_H01_r1.ex5 from 2024.01.01 00:00 to 2024.07.01 00:00 started with inputs:
+CS	0	10:38:33.186	Tester	  === Mode selectors (code = value) ====
+CS	0	10:38:33.186	Tester	  DryRun=false
+CS	0	10:38:33.186	Tester	  _0_BarOpenOnly=false
+CS	0	10:38:33.186	Tester	  === 9x Stack (how orders stack) ====
+CS	0	10:38:33.186	Tester	  _9_StepUseATR=true
+CS	0	10:38:33.186	Tester	  _9_StepATRmult=1.0
+CS	0	10:38:33.186	Tester	  _9_StepPoints=300.0
+CS	0	10:38:33.186	Tester	  _9_StepATRShift=0
+CS	0	10:38:33.186	Tester	  _9_MaxLevels=5
+CS	0	10:38:33.186	Tester	  === 14 Entry: GridLog (Zeus-inspired breakout-arm) ====
+CS	0	10:38:33.186	Tester	  _14_Direction=1
+CS	0	10:38:33.186	Tester	  _14_DistAtrMult=1.5
+CS	0	10:38:33.186	Tester	  _14_MinDistPips=20.0
+CS	0	10:38:33.186	Tester	  === Trend MA (shared) ====
+CS	0	10:38:33.186	Tester	  === 7x Filter params ====
+CS	0	10:38:33.186	Tester	  === 50x Regime (market-state gate) ====
+CS	0	10:38:33.186	Tester	  === 2x Exit / TP params ====
+CS	0	10:38:33.186	Tester	  _22_TP_ATRmult=3.0
+CS	0	10:38:33.186	Tester	  _2_BasketTP_Money=0.0
+CS	0	10:38:33.186	Tester	  _2_BasketTP_BalPct=1.0
+CS	0	10:38:33.186	Tester	  _2_SuppressLegTP=false
+CS	0	10:38:33.186	Tester	  === 3x Stop loss params ====
+CS	0	10:38:33.186	Tester	  _32_SL_BalPct=15.0
+CS	0	10:38:33.186	Tester	  === ATR (2 contexts) ====
+CS	0	10:38:33.186	Tester	  _0_ATR_Period=14
+CS	0	10:38:33.186	Tester	  _0_ATR_TF=0
+CS	0	10:38:33.186	Tester	  _3_RiskATR_Period=14
+CS	0	10:38:33.186	Tester	  _3_RiskATR_TF=0
+CS	0	10:38:33.186	Tester	  === 4x/5x Money management ====
+CS	0	10:38:33.186	Tester	  _41_FixedLot=0.0
+CS	0	10:38:33.186	Tester	  _55_LogPowerFactor=1.3
+CS	0	10:38:33.186	Tester	  _55_UseLnNotLog10=true
+CS	0	10:38:33.186	Tester	  === 0x Protection (cage - always on) ====
+CS	0	10:38:33.186	Tester	  ProtectLevel=2
+CS	0	10:38:33.186	Tester	  RC_MaxLot=0.2
+CS	0	10:38:33.186	Tester	  RC_AcctDDLimitPct=12.0
+CS	0	10:38:33.186	Tester	  RC_PersistHalt=true
+CS	0	10:38:33.186	Tester	  RC_AdoptLegacyHalt=false
+CS	0	10:38:33.186	Tester	  === 8x Recovery (cage-capped) ====
+CS	0	10:38:33.186	Tester	  === Hedge (defensive lock) ====
+CS	0	10:38:33.186	Tester	  === MacroGate self-gate (backtest A/B only) ====
+CS	0	10:38:33.186	Tester	  === General ====
+CS	0	10:38:33.186	Tester	  _0_Magic=990001
+CS	0	10:38:33.186	Tester	  _0_Slippage=20
+CS	0	10:38:33.193	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [INIT] FATAL: FirstLotMode=41 with _41_FixedLot=0.0000 - no lot to trade
+CS	2	10:38:33.193	Tester	tester stopped because OnInit returns non-zero code 1
+CS	0	10:38:33.194	Tester	test Experts\EALabTpl\generated\B14_H01_r1.ex5 on XAUUSD,H1 thread finished
+CS	0	10:38:33.216	127.0.0.1	tester forced to close
+CS	0	10:38:33.216	127.0.0.1	prepare for shutdown
+CS	0	10:38:33.216	127.0.0.1	stop immediately
+CS	0	10:38:33.216	127.0.0.1	shutdown finished
+CS	0	10:38:33.462	Server	MetaTester 5 stopped

@@ -1,5 +1,15 @@
+# =============================== HOLDOUT-BURNED ===============================
+# ORDER-238 (2026-07-27). One or more test windows in this file end after
+# 2025.12.31 -- that is, inside the 2026H1 holdout. They are deliberately LEFT
+# AS-IS: they record what past runs actually did, and rewriting them would
+# misrepresent that history.
+#
+# Therefore: do NOT re-run this script to produce selection evidence, and do NOT
+# copy its window into new work. A holdout is spent the first time it is touched.
+# The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
+# ==============================================================================
 param(
-  [string]$WorklistCsv = "D:\EA_LAB\_triage\mass_smoke_worklist.csv",
+  [string]$WorklistCsv = "D:\EA_LAB\_triage\_archive\campaigns_closed\mass_smoke_worklist.csv",
   [string]$RootDir = "D:\Forex\10_EA_PROJECTS\2. wait for test",
   [string]$OutCsv = "D:\EA_LAB\_mt5_auto\mass_smoke_mt5.csv",
   [string]$SmokeDir = "D:\Meta 5b\MQL5\Experts\_smoke",
@@ -14,6 +24,7 @@ $ErrorActionPreference = "Stop"
 
 . "D:\EA_LAB\scripts\use_python.ps1"
 
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $runScript = "D:\EA_LAB\scripts\mt5_run.ps1"
 $parseScript = "D:\EA_LAB\scripts\parse_mt5_report.py"
 $reportsDir = "D:\EA_LAB\_mt5_auto\reports"
@@ -89,6 +100,9 @@ function Invoke-TestRun {
     [string]$ReportName
   )
 
+  # ORDER-372: an aborted run leaves the previous smoke's report for this same ReportName in place,
+  # so Test-Path alone would hand a stale file back to the screener as this run's result.
+  $runStart = Get-Date
   & powershell -File $runScript `
     -Expert $Expert `
     -Symbol $Symbol `
@@ -101,9 +115,10 @@ function Invoke-TestRun {
     -DataDir $DataDir `
     -Portable `
     -TimeoutSec $TimeoutSec | Out-Host
+  $runnerExit = $LASTEXITCODE
 
   $reportPath = Join-Path $reportsDir "$ReportName.htm"
-  if (-not (Test-Path $reportPath)) { return $null }
+  if (-not (Test-ReportIsFresh -Htm $reportPath -RunStart $runStart -RunnerExit $runnerExit -Label $ReportName)) { return $null }
   return $reportPath
 }
 

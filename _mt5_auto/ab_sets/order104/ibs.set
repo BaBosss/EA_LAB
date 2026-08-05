@@ -1,0 +1,4 @@
+_01_BuyBelow=0.20
+_01_SellAbove=0.80
+_03_LotSize=0.01
+_05_AllowLive=false

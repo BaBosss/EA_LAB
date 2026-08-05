@@ -1,0 +1,21 @@
+; ORDER-205 — EA_BREAKOUT_XAU clean re-optimize, locked plateau-centre config.
+; Coarse genetic (150 passes, MAIN 2023-2025) -> fine complete (875 passes) -> centre
+; picked from the widest tied plateau (80 surviving hypercube-neighbours, PF>=1.20/DD<=20/
+; RF>=1.50/trades>=25 gate), interior point (not a range-boundary spike):
+;   Bars=30 Sl=1.25 Tp=4 Ema=200 -> fine-grid MAIN: PF=2.087 DD=0.68% RF=3.77 T=45 net=258.46
+; Magic 991001 (real-money EA) -- this file is NOT the live .set, do not attach without
+; a separate deliberate copy+review step.
+_00_OptimizeMode=false||false||0||true||N
+_01_BreakoutBars=30||25||5||60||N
+_02_SlAtrMult=1.25||1.0||0.5||3.5||N
+_02_TpAtrMult=4.0||3.0||1.0||9.0||N
+_03_AtrPeriod=14||14||1||14||N
+_03_AtrMaPeriod=20||20||1||20||N
+_03_AtrExpandRatio=1.0||1.0||0.1||1.0||N
+_04_UseDailyEma=true||false||0||true||N
+_04_EmaPeriod=200||50||50||250||N
+_05_BuyOnly=true||false||0||true||N
+_05_LotSize=0.01||0.01||0.01||0.01||N
+_06_Magic=991001||991001||1||991001||N
+_06_Deviation=20||20||1||20||N
+_06_AllowLive=false||false||0||true||N

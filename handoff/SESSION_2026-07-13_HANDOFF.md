@@ -65,7 +65,7 @@
 
 2. **ORDER-076 — smoke 41 หัวกะทิจาก X-ray** (OPEN, ยังไม่แตะ) — worklist + วิธีรันอยู่ใน taskboard ORDER-076. รันด้วย mass-smoke pattern (`scripts/mass_smoke_mt5.ps1` หรือ `mt5_run.ps1` loop). **criteria ใหม่ (VERDICT GATE + flat-lot doctrine):** ห้ามตัดตายจาก 1 symbol×1 TF×default · flat-lot probe บังคับ (grid/martingale = ปิด escalation ก่อน วัด edge จริง) · PF>1 แม้ครั้งเดียว = build-on ไม่ bench.
 
-3. **(optional) re-smoke ORDER-084 rescue candidates** — under-swept EAs (sweep <3 lever หรือ 1 TF) ใน `_triage/RETRO_AUDIT_VERDICTS.csv` กอง (ข). re-smoke ด้วย rescue-ladder (≥3 lever × ≥2 TF, both-regime). = judgment-heavy กว่า 1+2 → ทำหลัง.
+3. **(optional) re-smoke ORDER-084 rescue candidates** — under-swept EAs (sweep <3 lever หรือ 1 TF) ใน `_triage/_archive/audits_and_investigations/RETRO_AUDIT_VERDICTS.csv` กอง (ข). re-smoke ด้วย rescue-ladder (≥3 lever × ≥2 TF, both-regime). = judgment-heavy กว่า 1+2 → ทำหลัง.
 
 **routing:** batch = qwen/agent ได้ (verifiable by numbers) · judge = Opus lead. **pace:** 1+2 ก่อน, ผลออกค่อย judge เขียน verdict (ห้าม burst จน context เต็ม).
 

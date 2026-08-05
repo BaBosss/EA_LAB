@@ -1,0 +1,8 @@
+interface:
+  display_name: "Codex Sandbox Git"
+  short_description: "Git workflow patterns for Codex sandboxes"
+  default_prompt: "Use $codex-sandbox-git to run git operations in a Codex sandbox without repeated permission or network failures."
+
+policy:
+  allow_implicit_invocation: true
+

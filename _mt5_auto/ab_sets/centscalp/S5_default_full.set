@@ -1,0 +1,16 @@
+_00_OptimizeMode=false
+_01_AtrPeriod=14
+_01_SpikeBarAtrMult=3.0
+_01_DelayBars=3
+_02_EmaPeriod=20
+_02_ExtendPts=250
+_03_TpPoints=120
+_03_SlPoints=150
+_04_BuyOk=true
+_04_SellOk=true
+_04_LotSize=0.01
+_05_DailyLossPct=3.0
+_05_EmergencyDdPct=25.0
+_06_Magic=992015
+_06_Deviation=20
+_06_AllowLive=true

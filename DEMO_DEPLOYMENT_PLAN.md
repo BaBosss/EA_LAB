@@ -16,13 +16,228 @@ Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื
 
 | บัญชี | ประเภท | รันอะไร (magic) | สถานะแล็บ |
 |---|---|---|---|
-| **159503454** Blazing Arrow | REAL cent MT5 | **กองหลัก validated 5 ตัว:** Zeus(990101) · BRK-XAU(991001) · Squeeze(991004) · Trendline(991002 exp) · RSI-MR(990103→**REMOVED 2026-07-18**) | ✅ monitor เข้ม |
-| **159475669** Boss-Trend Swing | REAL cent MT5 | user mix: NuiIndy(1524) · CB_GBP(990005) + **ST03 family 9398/939721/990010 = REMOVED 2026-07-18** (uncapped-ruin/no-edge; rescue ต่อใน backtest = ORDER-119) + unenumerated | ⚠️ user mix — แล็บไม่รับรอง |
+| **159503454** Blazing Arrow | REAL cent MT5 | **กองหลัก validated 5 ตัว:** Zeus(990101) · BRK-XAU(991001) · Squeeze(991004) · Trendline(991002 exp) · RSI-MR(990103→**REMOVED 2026-07-18**) | ✅ monitor เข้ม · **991001 อ่าน Inputs สด 2026-07-26 ยืนยัน v2 (Bars40/Sl1.5/Tp5.0/Ema200/AllowLive=true) = ตรงตามที่ต้องคง ไม่ต้องแตะ** |
+| **159475669** Boss-Trend Swing | REAL cent MT5 | user mix: NuiIndy(1524) · CB_GBP(990005) + **ST03 family 9398/939721/990010 = REMOVED 2026-07-18** (uncapped-ruin/no-edge; rescue ต่อใน backtest = ORDER-119) + unenumerated · **BRK-XAU ×2 อ่านสด 2026-07-26: 991001 = v2 Bars40 (ACTIVE) · 991002 = Bars8 ซึ่ง bundle ระบุ DEMO แต่ไปอยู่บนเงินจริง + ถูกเลือกบนหน้าต่างที่กิน holdout 2026H1 (โรคเดียวกับ Bars55/v3) → user ถอดออก 2026-07-26** | ⚠️ user mix — แล็บไม่รับรอง |
 | **141049900** Celestial Woodfire | REAL cent MT4 | user exp: Zeus Gold Hedge(7777, no-SL) · Gold_Kangaroo L1-4(1112-1115) | ⚠️ user exp · kill floating DD 40% |
-| **415573666** Demo Mt5-2 (Exness Trial14) | DEMO MT5 | **Boss_14_GridLog ×7** (990201-207) **+ Zeus AUDJPY(990110) + GBPJPY leg8(990208)** · AccountSnapshotExporter | ✅ Boss V2 bench + 2 grid legs (attached 2026-07-16, judge 2026-10-16) |
-| **463666728** Demo bundle 10 (Exness Trial17) | DEMO MT5 | **11 single-position (attached 2026-07-16, judge 2026-10-16):** Wave5 XAU/XAG(990301-2) · BRK USDJPY/US30(991003/5) · MacdDiv(999094) · SMCSTO/EmaStoRev(991070) · IchiADX USDJPY×2(990066-7) · IchiADX XAU×2(990068-9) · SuperTrend(990020) | 🆕 ⚠️ **ยังไม่มี exporter** → ดู §monitoring |
+| **415573666** Demo Mt5-2 (Exness Trial14) | DEMO MT5 | **Boss_14_GridLog ×7** (990201-207) **+ Zeus AUDJPY(990110) + GBPJPY leg8(990208) + TrendRider_XAU/W2 S1(992004)** · AccountSnapshotExporter | ✅ Boss V2 bench + 2 grid legs (attached 2026-07-16, judge 2026-10-16) · TrendRider_XAU attached 2026-07-23, judge 2026-10-23 (ORDER-139; attached here per user override, not the originally-planned 463666728 bundle account) |
+| **463666728** Demo bundle 10 (Exness Trial17) | DEMO MT5 | **11 single-position (attached 2026-07-16, judge 2026-10-16):** Wave5 XAU/XAG(990301-2) · BRK USDJPY/US30(991003/5) · MacdDiv(999094) · SMCSTO/EmaStoRev(991070) · IchiADX USDJPY×2(990066-7) · IchiADX XAU×2(990068-9) · SuperTrend(990020) · **➕ RSI-MR(990103) EURUSDm attached 2026-07-24, judge 2026-10-24** (demo-isolate re-attach after real-account removal 2026-07-18 for DD25% kill; re-validated ORDER-182→186, both-window strong but holdout 2026H1 fails outright — accepted as BUILD-ON exception per user) · **➕ Boss_16_KangarooGrid(990016) XAUUSDm H1 attached 2026-07-26, judge 2027-01-11** (flat preset, lot 0.01 คงที่; +5.5 เดือนไม่ใช่ +3 เพราะ 5.7 เทรด/เดือน) | 🆕 **มี exporter แล้ว** — `AccountSnapshotExporter - GBPJPYm,H1` เห็นใน Navigator 2026-07-26 (ข้อความเดิม "ยังไม่มี exporter" ล้าสมัย; ถ้า sensor ยัง STALE แปลว่าปัญหาอยู่ฝั่งรับไฟล์ ไม่ใช่ฝั่ง attach) |
 | **69424711** Demo EA3 | DEMO MT4 | UnNomGuai(1/2) · RSI-orig(5888) · swb(990) · ClevrFX(unverified) | monitor deferred (Trial8 login) |
 | **146237** Exness demo (user) | DEMO MT5 | user's own pool ~10 EA — magic ยังไม่ enumerate (บัญชีนี้เคยโผล่ใน live_deals) | 🆕 registered 2026-07-18 (user ยืนยัน: demo Exness, ขอให้เฝ้า) → enumerate magics จาก live_deals รอบ `/ea-monitor` ถัดไป |
+
+### 🔴 CRYPTO LEGS — นาฬิกาตัดสินรีเซ็ตเป็น **2027-01-26** (2026-07-26)
+
+ขา crypto ทั้งคู่บน **415573666** — BTC `EA_SUPERTREND`(990025) และ ETH `EA_DONCHIAN`(990030) — attach
+ไปเมื่อ 2026-07-23 แต่ `.set` ที่แถมมาตั้ง **`_06_AllowLive=false`** ทั้งสองไฟล์ ⇒ EA รันแต่ไม่ยิงไม้เลย
+3 วัน (ศูนย์ดีล). user เปิดแท็บ Inputs อ่านเจอเองแล้วแก้เป็น `true` ทั้งคู่ **2026-07-26**.
+
+- **start_date + judge_date re-base ไปที่ 2026-07-26 → judge 2027-01-26** (+3 เดือนของจริง; ช่วง 07-23→07-26 ไม่นับเป็นหลักฐาน)
+- บทเรียนกลับเข้า bundle: `README_ATTACH.md` ต้องมีบรรทัด "verify `_06_AllowLive=true` หลัง load .set"
+  เป็น step บังคับ ไม่ใช่หมายเหตุ — แท็บ Common ติ๊ก Allow live trading แล้วยัง**ไม่พอ** เพราะ EA กั้นสองชั้น
+
+### 🧪 A/B PAIR — `990026` จับคู่กับ `990025` · judge **2027-01-28** (ชั่วคราว) · เปิด 2026-07-28 (ORDER-353)
+
+`990026` = `(TRD)_SuperTrendFlip_rev05` config ที่ optimize แล้ว (pyramid 1→**7 ชั้นที่ 1.0 ATR** + **ER gate 0.25**)
+symbol **BTCUSDm H4** lot **0.01** · bundle = `_vps_deploy/STF_BTC_H4_ORDER353/`
+
+**🔴 attach จริงลงบัญชี `463666728` (Demo bundle 10 / Trial17) — ไม่ใช่ `415573666` ที่แผนเขียนไว้**
+ยืนยันจากภาพหน้าจอ VPS 2026-07-28: title bar `463666728 - Exness-MT5Trial17` · Navigator แสดง
+`(TRD)_SuperTrendFlip_rev05 - BTCUSDm,H4` ใต้ **463666728: Demo - bundle 10** · แก้ `DEPLOYMENTS.csv` ตามจริงแล้ว
+<sub>บันทึกไว้เป็นข้อเท็จจริง ไม่ใช่ข้อผิดพลาดของใคร — แต่ **แผนกับของจริงต่างกันได้เสมอ ⇒ record ต้องตามของจริง
+ไม่ใช่ให้ของจริงตามแผน** (เคสเดียวกับ TrendRider_XAU ที่ user override บัญชีปลายทางเมื่อ 07-23)</sub>
+
+**⚠️ ไม่ใช่ขาที่สองของพอร์ต — เป็นคู่ A/B ของ `990025`** สัญญาณเดียวกัน สินค้าเดียวกัน ⇒ corr เกือบ 1
+⇒ **ตัดสินเป็นการทดลองเดียว ห้ามนับกำไรรวมกันเป็นการกระจายความเสี่ยง**
+
+**🔴 ผลของการอยู่คนละบัญชี — ต้องอ่านก่อนเทียบตัวเลขทั้งสองขา:**
+`990025` อยู่ **415573666 (Trial14)** · `990026` อยู่ **463666728 (Trial17)** ⇒ **คนละ terminal คนละ server**
+· กฎที่ ratify วันนี้เอง (ORDER-371 → `AGENTS.md` §3) **ห้ามเทียบตัวเลขข้าม install**
+⇒ **เทียบ PF/net ระหว่างสองขานี้ตรงๆ ไม่ได้** feed/spread ต่างกันได้
+⇒ **แต่คำถามที่ขานี้มีไว้ตอบยังตอบได้** เพราะมันเป็นสัญญาณเชิงพฤติกรรมหยาบๆ ไม่ใช่การเทียบ PF ละเอียด:
+**"ระบอบสับมาถึงแล้ว `990026` หยุดเทรดขณะที่ `990025` ยังเทรดอยู่ไหม"** — จำนวนไม้ต่างกันเป็นเท่าตัว
+ไม่ใช่สิ่งที่ spread อธิบายได้ · **สิ่งที่ห้ามทำคือสรุปว่า "config ไหนกำไรดีกว่า" จากสองบัญชีนี้**
+
+**คำถามที่ขานี้มีไว้ตอบ (backtest ตอบไม่ได้):** **ER gate ยืนหยัดถูกไหมเมื่อระบอบไม่ใช่เทรนด์**
+หลักฐานว่า gate ช่วยได้ **อยู่ในหน้าต่างที่ใช้จูนค่าของมันเองทั้งหมด** — ตัด 6-9 ไม้บน BWD (ที่เลือก `ErMin`),
+2 จาก 91 บน MAIN, และ **0 ไม้บน holdout 2026H1**
+⇒ เมื่อระบอบสับมาถึงจริง **`990026` ควรเงียบ ขณะที่ `990025` ยังเทรด** · **ถ้าทั้งคู่เทรดเหมือนกัน = gate เฉื่อย
+และธีสิส regime-conditional ไม่มีหลักฐานรองรับ ไม่ว่ากำไรจะออกมาเท่าไหร่**
+
+**หลักฐาน (Model 4 tick จริงทั้งหมด):** BWD 121 ไม้ PF 1.89 · MAIN 89 ไม้ PF 3.99 · holdout 2026H1 16 ไม้ PF 4.02
+· MC bootstrap 2,000 รอบ PF-5th **2.12** ruin **0.00%** · M1 vs M4 ต่างกัน <1% ไม้เท่ากันเป๊ะ = ไม่มี model-switch cliff
+
+**สิ่งที่ตัวเลขพาดหัวกลบไว้ — ต้องอ่านก่อน size up:**
+- **ปีขาดทุน 2 ใน 6 (2021, 2025)** ขณะที่ host เดิมมีปีเดียว · กำไรกระจุกใน 2022 + 2024
+- **นี่คือ leverage บน edge เดิม ไม่ใช่ edge ใหม่** — บน holdout กำไร ~2 เท่าของ host เดิม (+406 vs +219)
+  แต่ **DD 3 เท่า (7.61% vs 2.53%)** ⇒ ที่ความเสี่ยงเท่ากัน host เดิมชนะหน้าต่างนั้น (user รับ DD แล้ว บันทึกไว้กันลืม)
+- **ใช้ DD = 7.61% ที่วัดได้จริง ไม่ใช่ 2.89% จาก MC** — order-resampling ทำลาย serial correlation
+  ที่เป็นตัวสร้าง drawdown จริง ⇒ MC ประเมินต่ำกว่าความจริงในทิศนี้
+- **`ErMin` ถูกเลือกโดยดู BWD** ⇒ BWD ไม่ใช่หลักฐาน out-of-sample ของค่านี้อีกต่อไป
+
+**judge_date = ชั่วคราว** — นาฬิกาเริ่มที่ **ไม้แรกที่เทรดจริง** ไม่ใช่วัน attach (บทเรียนจาก `990025` ที่ต้อง re-base)
+**lot เล็กถาวร ห้าม size up ตาม PF**
+
+**⏳ ยังค้าง 2 ข้อ — สถานะใน CSV = `ACTIVE-PENDING-VERIFY` จนกว่าจะเคลียร์:**
+1. **อ่านแท็บ Inputs ของชาร์ตแล้วยืนยัน 2 ค่า: `_06_AllowLive = true` และ `_06_Magic = 990026`**
+   · ภาพหน้าจอที่ได้มาแสดง Navigator + ชาร์ตเท่านั้น **มองไม่เห็นค่า input** ⇒ **ยังไม่ถือว่าตรวจแล้ว**
+   · ทำไมต้องยืนยันทั้งที่ bundle แก้ให้แล้ว: `990025` เคย attach สำเร็จ ดูปกติทุกอย่าง แล้วนิ่ง 3 วัน
+   เพราะค่านี้ค่าเดียว · และถ้า `.set` ไม่ได้ถูกโหลด magic จะเป็น **991006** (ค่าทดสอบ) ⇒ ดีลจะไป
+   ผูกกับ magic ที่ไม่มีใครเฝ้า **และ `DEPLOYMENTS.csv` จะชี้ไปที่ magic ที่ไม่มีไม้ตลอดกาลโดยไม่มีอะไรฟ้อง**
+2. **บันทึกวันที่ของไม้แรกจริง** แล้ว re-base `start_date`/`judge_date` (2027-01-28 ตอนนี้คือค่าชั่วคราว)
+
+### ⏳ JUDGE DATE EXTENDED (user decision 2026-07-25: "เลื่อนวัน")
+
+เดิม EA ชุดนี้ถูกตั้ง judge ที่ +3 เดือน แต่ **ไม่มีทางเก็บครบ 30 ไม้ทัน** — บาร์ promote คือ
+PF ≥ 1.40 ที่ **≥ 30 trades** ตัดสินตอนไม้ยังไม่ถึงคือตัดสินบน noise.
+
+**ฐานที่ใช้คำนวณ:** อัตราไม้ที่**คาดจาก backtest** (`expectations.csv` → `trades_per_month_expected`)
+ไม่ใช่อัตราที่สังเกตได้ตอนนี้ — ตอนคำนวณ EA พวกนี้เพิ่ง active 7-19 วัน ซึ่งสั้นเกินกว่าจะ forecast
+(ORDER-198 เคยสรุปแล้วว่าเลข "18 ตัวขาด" ส่วนใหญ่เป็น artifact ของสูตร ไม่ใช่ EA พัง).
+สูตร: `judge = start_date + (30 ÷ อัตราคาดต่อสัปดาห์) × 7 วัน`
+
+| magic | EA | คาด/สัปดาห์ | judge เดิม | **judge ใหม่** |
+|---|---|---|---|---|
+| 999094 | MacdDiv_Naked XAUUSDm | 1.8 | 2026-10-16 | **2026-11-10** |
+| 991002 | (BRK)_TrendlineBreakout XAUUSD | 1.1 | 2026-10-09 | **2027-01-16** |
+| 990066 · 990067 | IchiADX USDJPYm (basket) | 1.1 | 2026-10-16 | **2027-01-23** |
+| 990068 · 990069 | IchiADX XAUUSDm (basket) | 1.0 | 2026-10-16 | **2027-02-11** |
+| 990202 | Boss_14_GridLog AUDNZDm | 0.9 | 2026-10-09 | **2027-02-24** |
+| 991070 | EmaStoRev EURUSDm | 0.9 | 2026-10-16 | **2027-03-06** |
+| 990203 | Boss_14_GridLog size-light EURJPYm | 0.8 | 2026-10-09 | **2027-03-25** |
+| 992017 | PivotBreakout_XAU XAUUSDm | 1.5 | 2026-10-24 | **2026-12-17** |
+| 990016 | Boss_16_KangarooGrid XAUUSDm | 1.3 | 2027-01-11 | **2027-01-13** |
+
+> ➕ **2 แถวล่างเพิ่ม 2026-07-28 (ORDER-530)** — ไม่ใช่การเลื่อนเพราะอัตราไม้ แต่เพราะ **start_date ย้าย**:
+> `992017` เพิ่ง attach จริงวันที่ **2026-07-28** (ก่อนหน้านั้นชาร์ตนั้นเป็น EA คนละตัวสวม magic อยู่) และ
+> `990016` ถูก attach ใหม่วันเดียวกันหลังหายไปจาก terminal · วันใหม่คำนวณด้วยสูตรเดิมของตาราง
+> (`992017` = start + 142 วัน ที่ 6.42 ไม้/เดือน) และกฎที่แถวนั้น pre-register ไว้เอง
+> (`990016` = attach + 5.5 เดือน) · ทั้งคู่เป็น demo — user override ได้
+
+**✅ 4 ตัวที่เลื่อนไม่ช่วย — RATIFIED (user 2026-07-28, ORDER-235) = ทางเลือก (ก):**
+ที่อัตราไม้ของมัน กว่าจะครบ 30 ไม้ต้องรอถึงปี 2028-2029 การเลื่อนวันจึงไม่ใช่คำตอบ —
+บาร์ 30 ไม้ต่างหากที่ผิดกับ EA ที่เทรดปีละไม่กี่ครั้ง:
+
+| magic | EA | คาด/สัปดาห์ | ต้องรอถึง (บาร์ 30 ไม้เดิม) | **judge ใหม่ = start + 12 เดือน** |
+|---|---|---|---|---|
+| 991001 | EA_BREAKOUT_XAU XAUUSD (**เงินจริง** 159503454) | 0.2 | 2029-05 | ✅ **2027-07-09** (ORDER-520, user เคาะ 2026-07-28) |
+| 991004 | (BRK)_SqueezeBreakout XAUUSD (**เงินจริง** 159503454 REAL_CENT) | 0.3 | 2028-06 | ✅ **2027-07-09** (ORDER-520, user เคาะ 2026-07-28) |
+| 990205 | Boss_14_GridLog size-light thin CADJPYm (DEMO 415573666) | 0.3 | 2028-06 | ✅ **2027-07-06** (ORDER-520, แก้แล้ว 2026-07-28) |
+| 990303 | Boss_17_Wave5 USDJPYm (DEMO 463666728) | 0.3 | 2028-06 | ✅ **2027-07-28** (ORDER-511, แก้แล้ว 2026-07-28) |
+
+### ✅ ORDER-943 — RATIFIED 2026-08-02: ทั้งฟลีตถูกตัดสินทีเดียว หลัง `ORDER-942` เติม expected rate ครบ 36 แถว
+
+**ทำไมรอบนี้ต่างจากรอบก่อน:** ตารางข้างบนเลื่อนวันได้เฉพาะแถวที่**บังเอิญมี** `trades_per_month_expected`
+· `ORDER-942` (2026-08-02) ปิดช่องว่าง **17 → 0** ⇒ ครั้งนี้ทุกแถวที่มี judge date ถูกฉายภาพด้วยสูตรเดียวกัน
+`projected = ไม้ที่ได้ + คาด/สัปดาห์ × สัปดาห์ที่เหลือ` เทียบบาร์ 30 ไม้ · ผลคือ **14 thin · 12 เลื่อนวัน ·
+7 ตามแผน · 3 กันออก**
+
+**① 14 แถว = thin → `ORDER-235`** (judge = `start_date` + 12 เดือน · net บวก · ไม่มี kill ทริป ·
+**lot เล็กถาวร ห้าม size-up ตาม PF**) — pre-register **ตอนนี้ ก่อนวันตัดสินตัวแรกมาถึง** ซึ่งเป็นเงื่อนไข
+ของ `ORDER-235` เอง:
+🔴 **แก้ 2026-08-02 (`/scrutinize` รอบ 1) — ครั้งแรกคำนวณจาก `start_date` + 365 ซึ่ง*ขัดกับกฎที่เขียนอยู่ในเอกสารฉบับนี้เอง*
+(บรรทัด "นาฬิกาเริ่มที่ **ไม้แรกที่เทรดจริง** ไม่ใช่วัน attach" — บทเรียนที่จ่ายไปแล้วกับ `990025` และ `990303`).
+วัดแล้ว **13 จาก 14 แถวผิด**: 8 แถวตัดสิน**เร็วไป 1-13 วัน** (รวม `991001` ที่เป็น**เงินจริง** เร็วไป 13 วัน) และ
+5 แถว**ยังไม่มีไม้แรกเลย** ⇒ นาฬิกายังไม่เริ่ม วันของมันจึงเป็น *placeholder* ไม่ใช่กำหนดการ · ตารางข้างล่างคือค่าที่แก้แล้ว**
+
+| magic | EA | คาด/สัปดาห์ | ไม้แรกจริง | **judge = ไม้แรก + 12 เดือน** |
+|---|---|---|---|---|
+| `991001`🔴 | EA_BREAKOUT_XAU XAUUSD (**เงินจริง**) | 0.25 | 2026-07-22 | **2027-07-22** (เดิม 07-09 = เร็วไป 13 วัน) |
+| `990205` | Boss_14_GridLog size-light CADJPYm | 0.29 | 2026-07-14 | **2027-07-14** (เร็วไป 8 วัน) |
+| `990303` | Boss_17_Wave5 USDJPYm | 0.27 | 2026-07-31 | **2027-07-31** (เร็วไป 3 วัน) |
+| `991003` | EA_BREAKOUT_XAU USDJPYm | 0.42 | 2026-07-23 | **2027-07-23** (เร็วไป 7 วัน) |
+| `990020` | EA_SUPERTREND XAUUSDm | 0.31 | 2026-07-27 | **2027-07-27** (เร็วไป 11 วัน) |
+| **`990984`** | PairSpread_StatArb EURUSDm | 0.64 | 2026-07-31 | **2027-07-31** (เร็วไป 13 วัน) |
+| `992001` | TsMom_XAU (S2) XAUUSDm | 0.17 | 2026-07-24 | **2027-07-24** (เร็วไป 1 วัน) |
+| ~~`990204`~~ | Boss_14_GridLog AUDCADm | 0.60 | — | 🔻 **ออกจากถัง thin 2026-08-02** → judge **2027-05-10** |
+| ~~`990206`~~ | Boss_14_GridLog SELL EURUSDm | 0.51 | — | 🔻 **ออกจากถัง thin 2026-08-02** → judge **2027-05-31** |
+| `991005` | EA_BREAKOUT_XAU US30m | 0.21 | **ยังไม่มี** | 2027-07-16 = **PROVISIONAL** |
+| **`990208`** | Boss_14_GridLog GBPJPYm | 0.51 | **ยังไม่มี** | 2027-07-16 = **PROVISIONAL** |
+| `992004` | TrendRider_XAU (W2 S1) XAUUSD | 0.46 | **ยังไม่มี** | 2027-07-23 = **PROVISIONAL** |
+| `990025` | EA_SUPERTREND crypto ST-BTC BTCUSDm | 0.49 | **ยังไม่มี** | 2027-07-26 = **PROVISIONAL** |
+| `990026` | (TRD)_SuperTrendFlip_rev05 BTCUSDm | 0.45 | **ยังไม่มี** | 2027-07-28 = **PROVISIONAL** |
+
+> 🔻 **`990204` · `990206` ถูกดึงออกจากถัง thin 2026-08-02 (user เคาะ หลัง `/scrutinize` รอบ 2).**
+> ทั้งคู่วิ่งจริงที่ **2.61× / 4.05×** ของอัตราคาด ⇒ สมมติฐานของ `ORDER-235` ("30 ไม้เอื้อมไม่ถึง") **ผิด**
+> สำหรับสองตัวนี้ — ที่อัตราจริง ณ วัน thin เดิมมันจะมี ~81 และ ~107 ไม้ คือ **~3.5 เท่า**ของบาร์ที่กฎมีไว้แทน
+> ⇒ กลับไปใช้**บาร์จริง (PF ≥ 1.40 @ ≥30 ไม้)** และ **ไม่มี lot cap ถาวร** · วันใหม่คำนวณจากอัตรา **คาด**
+> ไม่ใช่อัตราจริง โดยตั้งใจ: หน้าต่างสังเกตแค่ 3.9 สัปดาห์ จึงไม่เดิมพันกับมัน (ที่อัตราจริงจะครบ 30 ไม้
+> ราว ต.ค.-พ.ย. 2026 คือก่อนวันตัดสิน ~6 เดือน) · ⚠️ **ประตูทางเดียว:** `ORDER-235` ห้ามเลือก thin
+> หลังเห็นตัวเลข ⇒ ถ้ามันช้าลงต่ำกว่าอัตรา*คาด* จะถึงวันตัดสินโดยไม่มีคำตัดสิน และใส่ thin กลับไม่ได้
+
+> 🎯 **ทิศทางของ owner สำหรับ thin ทั้งคลาส (2026-08-02) → `ORDER-1170`.**
+> *"พวก thin ทั้งหมดผมจะเอามารวมๆ กันแล้ว trade แบบ multi symbol ใน EA ตัวเดียว ไม่ก็ optimize ให้ถี่ขึ้น
+> หรือเอาอะไรมาช่วยให้ออกถี่ขึ้น หรือเอาไปรวมกับพวกไม้ถี่ที่มัน corr ต่ำ"* — กรอบนี้ถูก: `ORDER-235`
+> **บริหาร**ตัวอย่างที่บาง มัน**ไม่ได้ซ่อม** · การรอ 12 เดือนเพื่อตัดสินขาที่เทรดปีละ 13 ไม้ คือการจ่าย
+> wall-clock หนึ่งปีเพื่อสถิติที่ซื้อได้ใน 3 เดือนถ้าเปลี่ยนวิธี deploy · **บาร์ไม่ขยับ สิ่งที่เปลี่ยนคือสิ่งที่เอาไป attach**
+> · roster 12 ขา + ต้นทุนของแต่ละเส้นทาง อยู่ในแถว `ORDER-1170`
+
+> 🔴 **5 แถว PROVISIONAL ไม่ใช่ "กำหนดการ" — มันคือ placeholder.** นาฬิกา 12 เดือนยังไม่เริ่ม เพราะยังไม่มีไม้แรก
+> ⇒ ต้อง re-base เป็น *ไม้แรก + 12 เดือน* ทันทีที่ดีลแรกลง · และระหว่างนี้มันคือคำถามของ `ORDER-941` ย่อส่วน:
+> ขาที่ไม่มีไม้เลย **ไม่ได้อยู่ในตาราง มันคือเรื่องที่ยังอธิบายไม่ได้**
+
+> 🔴 **4 แถวตัวหนาถูก user ย้ายเข้ากลุ่ม thin 2026-08-02 ทั้งที่คาด 0.51-0.64 ไม้/สัปดาห์ = *เหนือ* เส้น 0.5.**
+> เหตุผลคือเส้นนั้นคาบเกินไป: ที่อัตราของมัน วันตัดสินที่คำนวณได้อยู่ห่างออกไป **215-341 วัน** —
+> คือการรอ 12 เดือนเท่ากับกลุ่ม thin อยู่แล้ว แต่มาทางที่**ไม่มี lot cap ติดมาด้วย** ⇒ รอเท่ากัน
+> และคราวนี้กรงมาด้วย · เส้น 0.5 ยังไม่ถูกแก้ใน `CLAUDE.md` — ถ้าจะแก้ ต้องเป็น order ของตัวเอง
+
+**② 12 แถวเลื่อนวันตามเลข** (`(30 − ไม้ที่ได้) ÷ คาด/สัปดาห์`) — วันเดิมถูกตั้งไว้ตอนที่**ยังไม่มี**
+อัตราคาด นี่คือการ *บังคับใช้* บาร์ ไม่ใช่การเลื่อนให้ cohort ดูพร้อม · เลขคณิตต่อแถวอยู่ในช่อง `notes`
+ของ `DEPLOYMENTS.csv` แถวนั้นเอง ไม่ได้ทำสำเนามาไว้ที่นี่:
+`991070` **2027-03-07** · `999094` **2026-11-20** · `990068` **2027-02-22** · `990069` **2027-03-01** ·
+`990201` **2026-11-02** · `990066`/`990067` **2027-02-17** · `990103` **2026-11-20** · `990030`
+**2027-03-01** · `990301` **2026-12-12** · `990302` **2026-12-28** · `990110` **2027-02-20**
+
+**③ 3 แถวกันออก → `ORDER-941`, `judge_date` ไม่ถูกแตะ:** `991004`🔴 · `991002`🔴 · `990202`
+> 🔴 ทั้งสามอยู่ใต้อัตราคาดจริง (`ORDER-942` B3) และ **2 ใน 3 เป็นเงินจริง** · การฉายภาพด้วยอัตรา*คาด*
+> จึงมองโลกสวยเกินไปสำหรับกลุ่มนี้: ที่อัตรา*ที่สังเกตได้* `991002` ต้องรอ **100 สัปดาห์** และ `991004`
+> ซึ่งยังไม่มีไม้เลย **ไม่มีวันถึง** · การให้ `991004` วันตัดสิน 2027-07-09 จะทำให้ขาที่ไม่ได้เทรดดูเหมือน
+> "มีกำหนดการ" 11 เดือน — คำถามว่า *เงียบหรือบาง* ต้อง instrument ก่อน แล้วค่อยตัดสิน
+
+> 🔴 **ORDER-520 2026-07-28 — `991004` เป็นเงินจริงด้วย ไม่ใช่แค่ `991001`.** handoff ของเลน MAGIC511
+> เขียนกลุ่มนี้ว่า "`991001` (real money) · `991004` · `990205`" ซึ่งอ่านได้เหมือนว่ามีแถวเงินจริงใบเดียว
+> แต่ `991004` อยู่บนบัญชี **159503454 ซึ่ง `DEPLOYMENTS.csv` ระบุ type = `REAL_CENT`** — บัญชีเดียวกับ
+> `991001` เป๊ะ ⇒ **2 ใน 3 แถวที่เหลือเป็นเงินจริง** จึงแก้ให้ไม่ได้โดยไม่มี user เคาะ
+> ✅ **user เคาะแล้ว 2026-07-28 ("แก้เลย") ⇒ ทั้ง 4 แถวของกลุ่ม thin เข้าที่ครบ · ORDER-520 ปิด**
+> แก้ **ช่อง `judge_date` ช่องเดียวต่อแถว** — `kill_rule` (`closedDD 10%`) · `status` · `start_date` ·
+> `magic` · lot และทุกอย่างบน VPS **ไม่ถูกแตะ** · แถว 22 (`159475669` ใช้ magic `991001` ซ้ำ,
+> `judge_date` ว่าง, lab ไม่รับรอง) ไม่ถูกแตะเช่นกัน
+
+> 🔴 **990303 clock re-based 2026-07-28 → judge_date `2027-07-28` (ORDER-511 option A, user ratified).**
+> That chart had been running since 07-18 **without its `.set` ever being loaded** — unpinned on the
+> compiled default magic `990001`, with a looser entry and a much tighter trail than the config its
+> evidence came from. `start_date` moved to the re-pin date (2026-07-28) and `judge_date` is start
+> **+12 months** per the ORDER-235 thin-EA bar.
+> 🔴 **CORRECTION (ORDER-530, 2026-07-28): "the leg opened zero trades, confirmed by the deals export"
+> was wrong, and the deals export is the file that refutes it.**
+> `portfolio/live_deals/EA_LAB_deals_463666728_20260728.csv` holds **two** deals on magic `990001`:
+> a sell 0.01 `USDJPYm` @163.535 on 2026.07.27 10:00 (`17_Wave5 L0`) closed on the stop @163.696 at
+> 12:16 for **−0.98**. So the re-base discarded **one closed trade worth −0.98**, not nothing. The
+> option-A decision is unchanged — one trade against a 12-month horizon is immaterial, and the leg was
+> flat from 07-27 12:16 so the re-pin was still safe — but **"zero" must not be re-quoted**, and the
+> leg is now confirmed to have been *actively trading* on the un-validated looser entry.
+> ⚠️ **`990205` re-based to `2027-07-06` (ORDER-520). `991001` and `991004` still carry the old +3mo
+> `judge_date` and are BOTH on REAL_CENT 159503454 → they need the user, see the table above.**
+
+ทางเลือกที่เสนอไว้ = (ก) ลดบาร์จำนวนไม้เฉพาะกลุ่ม thin แล้วชดเชยด้วยหลักฐาน backtest
+both-window + ขนาด lot เล็กถาวร · (ข) ตัดสินเป็น "ยังไม่พอตัดสิน" ไปเรื่อยๆ แล้วปล่อยรัน
+· (ค) ถอดออกเพราะไม่คุ้มช่องพอร์ต
+
+**เคาะแล้ว = (ก)** — บาร์ใหม่ของกลุ่ม thin (คาด **< 0.5 ไม้/สัปดาห์**) เขียนลง `CLAUDE.md` VERDICT GATE
+bar table แล้ว **แทนที่**การนับ 30 ไม้ ไม่ใช่การยกเว้น:
+
+| เงื่อนไข | ค่า |
+|---|---|
+| ระยะเวลา live | **≥ 12 เดือน** |
+| ผลลัพธ์ | **net บวก** ตลอดหน้าต่างนั้น |
+| kill | **ไม่มี pre-registered kill ทริป** |
+| หลักฐานก่อน attach | backtest both-window ต้องผ่านชัดอยู่แล้ว |
+| ราคาที่จ่าย | **lot เล็กถาวร · ห้าม size-up ตาม PF ไม่ว่าผลจะดีแค่ไหน** (ท่าเดียวกับ NuiIndy `engine-edge`) |
+
+**เหตุผลที่ต้องตัดที่บาร์ ไม่ใช่ที่วันที่:** ที่ 0.2-0.3 ไม้/สัปดาห์ การเลื่อน judge date ออกไป
+แปลว่า 4 ตัวนี้ — **หนึ่งในนั้นอยู่บนเงินจริง** — จะไม่มีเกณฑ์ตัดสินเลยจนถึงปี 2029 ซึ่งไม่ใช่บาร์
+แต่คือการไม่มีบาร์ · **สถิติที่อ่อนลงถูกชดเชยด้วยขนาด ไม่ใช่ด้วยการหลับตา**
+
+⚠️ **ตัวที่ต้องดูเป็นพิเศษ: `991001` อยู่บนเงินจริง** — บาร์นี้เปิดทางให้ *ตัดสิน* ได้ ไม่ได้เปิดทางให้
+*เพิ่มขนาด* · เส้น "ห้าม size-up ตาม PF" ผูกกับตัวนี้แน่นที่สุดเพราะเป็นตัวเดียวที่เพิ่มขนาดแล้วเจ็บจริง
 
 **🟢 APPROVED (user 2026-07-16B "เอาเข้าทั้งหมด") — bundle พร้อม, user จะ attach ตอนว่าง (ยังไม่อยู่ใน DEPLOYMENTS.csv จนกว่า attach จริง):**
 | EA | Symbol/TF | Magic | Bundle | หลักฐาน |
@@ -64,7 +279,7 @@ Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื
 | 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 🟢 LIVE | Lots_divided แก้ → 100,000 (0.1 lot/leg) ✅ |
 | 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 🟢 LIVE | เหมือน EA 3 ✅ |
 | 5 | Gold Reaper 4.3 | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 2.07 | 🟢 LIVE | StartLots=0.01 ✅ |
-| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v3.set` | 2.94-4.87 | 🟡 RELOAD | **v3 upgrade** Bars=55, TP×8, EMA150. Reload EA in MT5 GUI (F7→load v3.set→OK). IS PF=2.10/Sharpe=3.47, Neighbors=12. |
+| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v2.set` | 1.98 MAIN / 1.66 BWD | 🟢 LIVE — ห้าม reload | ⛔ **v3 RELOAD ยกเลิกถาวร 2026-07-26**: v3 จูนบนหน้าต่างที่กิน holdout 2026H1, แพ้ v2 ทั้ง BWD (1.01 vs 1.66) และ MAIN (1.86 vs 1.98) — ชนะเฉพาะช่องที่ไหม้. เลข 2.94-4.87 เดิม = contaminated, ห้ามอ้าง. คง Bars40/Tp5.0/Ema200 |
 | 7 | LondonConsoBreakout | GBPUSD | H1 | `_vps_deploy\CB_GBP\CB_GBP_H1_live_v1.set` | 2.08 | 🟢 LIVE | 0.01 lot ✅ |
 | 8 | LondonConsoBreakout | EURUSD | H1 | `_vps_deploy\CB_EUR\CB_EUR_H1_live_v1.set` | 1.25 | ❌ DROP (2026-06-25) | Q2 rescue sweep พบ no durable edge (OOS ทั้งคู่ <1.0) → ถอดออกจาก demo. Portfolio จริง = 7 ตัว |
 | 9 | EA_RUNNER_ST03 (LR2 replica) | GBPUSD | H1 | `_vps_deploy\ST03_GBPUSD\ST03_GBPUSD_live_v1.set` | 3.93 | 🟡 DEPLOY MON 2026-06-29 (DEMO) | bundle staged + verified 2026-06-26. magic 990010, AllowLiveOrders=true. corr −0.24 vs live ST_EA03 = LOW. |
@@ -264,8 +479,8 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 |---|---|
 | 2026-06-22 | **ทั้ง 8 EA deploy แล้ว** บน 10,000 cent account เดียว |
 | 2026-06-22 | ST_EA03 lot fix — Lots_divided แก้ → 100,000 ✅ |
-| 2026-06-28 | EA #6 v3 set ready — reload EA_BREAKOUT_XAU with BRK_XAU_live_v3.set (Bars=55, TP×8, EMA150) |
-| 2026-09-22 | ครบ 3 เดือน → judge ทุก EA พร้อมกัน |
+| 2026-06-28 | EA #6 v3 set ready — reload EA_BREAKOUT_XAU with BRK_XAU_live_v3.set (Bars=55, TP×8, EMA150) — ⛔ **เพิกถอน 2026-07-26 ไม่เคยทำและห้ามทำ** (v3 = selection-into-the-leak, ORDER-201/210) |
+| ~~2026-09-22~~ | ~~ครบ 3 เดือน → judge ทุก EA พร้อมกัน~~ 🔴 **เพิกถอน 2026-08-01 (`ORDER-940`): ไม่มีแถวไหนใน `DEPLOYMENTS.csv` ถือวันนี้** — cohort สลายแล้ว (`9397` หายจากทะเบียน · `9398`/`990010` REMOVED · ที่เหลืออยู่บัญชีที่แล็บไม่รับรอง ⇒ judge_date ว่างโดยตั้งใจ) · วัน judge แรกจริง = **2026-10-09** · ปฏิทินจริง = generated (`scripts/control_room_snapshot.ps1` → `judge_cohorts`) ห้ามเขียนวันด้วยมืออีก |
 | หลัง judge | EA ที่ผ่าน (PF ≥ 1.40, ≥30 trades) → เพิ่ม port หรือเพิ่ม lot |
 
 ---

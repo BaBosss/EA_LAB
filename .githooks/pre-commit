@@ -20,6 +20,20 @@ if [ -z "$ps" ]; then
   exit 1
 fi
 
+# ORDER-674: THE FRONT GUARDS JUDGE THE COMMIT TOO, and until now they judged the working
+# tree. Proved before the fix: a duplicate account|magic STAGED into portfolio/DEPLOYMENTS.csv
+# with a clean worktree copy left check_state printing "[OK] no duplicate account|magic" and
+# "CLEAN" -- so the commit would write a corrupted LIVE-MONEY inventory with the gate green.
+#
+# Set ONCE, here, for every guard below AND for the tier (which re-sets the same value for its
+# own children). ORDER-670's design prefers an ARGUMENT over an env var because an argument
+# cannot fail to arrive -- that reasoning was about a hook -> tier -> suite -> python chain
+# four hops long. These guards are ONE hop from this line, and `Get-EvidenceMode` REFUSES any
+# value that is neither 'index' nor 'worktree', so a mangled variable fails loudly instead of
+# silently meaning worktree. Each migrated guard prints its ##EVIDENCE-MODE## marker so a
+# reader can see which bytes were judged rather than trusting this comment.
+export EA_LAB_EVIDENCE=index
+
 "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_state.ps1 -Strict
 rc=$?
 if [ "$rc" -ne 0 ]; then
@@ -36,6 +50,66 @@ if [ "$rc" -ne 0 ]; then
   exit $rc
 fi
 
+# Order-number collision guard (2026-07-26). Fast no-op unless AGENT_TASKBOARD.md is
+# staged. BLOCKS a duplicate order id (within the active board, or active-vs-archive)
+# and a new order number outside the committing lane's reserved block in
+# docs/SESSION_LEDGER.md; WARNS when a staged path belongs to another ACTIVE lane.
+# Three renumber-after-the-fact collisions in one month (fd5264f8, 30598b55, and the
+# still-unfixed ORDER-098-C double-use) is what a memory-only rule buys you.
+"$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_order_collision.ps1
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] order-number collision check failed (above)."
+  echo "[pre-commit] If you need a number outside your block, claim one in docs/SESSION_LEDGER.md first."
+  exit $rc
+fi
+
+# Handoff routing contract (2026-07-26). Fast no-op unless an added/modified handoff
+# under _triage/ is staged (archived ones are exempt). BLOCKS a handoff with no
+# <!-- HANDOFF-ROUTING --> table, or one whose ORDER-/BACKLOG- destinations do not
+# resolve against the real boards. A sweep found 27 forward-looking items that had
+# been written into handoffs and never reached AGENT_TASKBOARD.md at all.
+"$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_handoff_contract.ps1
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] handoff routing contract failed (above)."
+  echo "[pre-commit] Every forward-looking item needs a home: an ORDER on the board, a MASTER_BACKLOG row, or DONE."
+  echo "[pre-commit] Format: docs/WORK_LIFECYCLE.md section 2."
+  exit $rc
+fi
+
+# ORDER-731 (2026-08-01). The attestation gate compares an owner-pinned blob against HEAD:, and
+# during a pre-commit hook HEAD is the PREVIOUS commit -- so it was structurally incapable of
+# refusing the commit that breaks the pin, AND of accepting the commit that repairs it. Measured
+# twice in one afternoon: f4c9fd9f and 78a93129 both passed this hook and turned the gate red the
+# moment they landed; restoring MASTER_BACKLOG.md then needed an owner-approved --no-verify,
+# because HEAD held the wrong blob and every repairing commit was refused by the same rule.
+#
+# This guard asks the same question one snapshot earlier, at the INDEX. F5/F11 keep their HEAD
+# semantics on purpose: S2A_ATTESTATION_POLICY.md states them and that policy is inside
+# bundle_sha256, so moving them there would void the owner's record and cost a signature for a
+# repair that changes no rule -- the loop ORDER-614 rev 2 exists to end.
+#
+# FAIL-CLOSED on a missing interpreter, same rule as the PowerShell block at the top: a guard
+# that cannot run must block, never silently skip. Fast no-op when nothing it pins is staged.
+py="tools/python312/python.exe"
+if [ ! -x "$py" ] && [ ! -f "$py" ]; then
+  echo "PRECOMMIT-FAIL-CLOSED: $py not found -- cannot run check_attested_pin_staged.py, blocking commit"
+  exit 1
+fi
+"$py" _triage/factory_os/check_attested_pin_staged.py
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] this commit would move a blob an owner attestation pins (above) -- ORDER-731."
+  echo "[pre-commit] Refused HERE because F5/F11 read HEAD: once it lands, the gate is red and the"
+  echo "[pre-commit] commit that would repair it is refused too. Restore the pinned bytes, or land"
+  echo "[pre-commit] the owner's re-attestation in the SAME commit."
+  exit $rc
+fi
+
 event_staged=$(git diff --cached --name-only -- 'docs/memory_control/experiment_events')
 if [ -n "$event_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_experiment_events.ps1
@@ -43,6 +117,115 @@ if [ -n "$event_staged" ]; then
   if [ "$rc" -ne 0 ]; then
     echo ""
     echo "[pre-commit] experiment-event staged-snapshot check failed (above) -- ORDER-105 Contract D."
+    exit $rc
+  fi
+fi
+
+# ORDER-420 (2026-07-27). The guards above run on every commit. Until now the TESTS for those
+# guards ran on nothing -- every suite in scripts/_test/ was manual-only, which is the ORDER-270
+# finding ("a cage that never runs protects nothing") applied to a whole directory. Four defects
+# in eight days had the same shape: a guard kept running and quietly stopped reporting
+# (ORDER-260 substring, ORDER-341 label ranking, ORDER-390 nested backticks, ORDER-370 a
+# pipeline .Count that is null for exactly one result). All four were found by a human looking.
+#
+# Scoped to when a guard or a cage is actually being edited, because that is how you break one.
+# Fast no-op on every other commit -- same idiom as the experiment-events block above.
+#
+# The FAST tier only: 3.8s measured for 4 suites. The slow suites (chainwalk 74s, order101 ~120s,
+# order103 ~760s, order105 521s) stay out on purpose. A hook that costs ten minutes gets
+# --no-verify'd, and a bypassed hook protects nothing while looking like it protects everything.
+# scripts/_test/run_fast_cages.ps1 names what it does not cover.
+# ORDER-434 (2026-07-27) added 'scripts/mris/*'. The fast tier now includes a suite that
+# guards mris_macro_feeder.ps1, which lives in neither of the two original globs -- so
+# without this the cage would have fired only when something OTHER than the file it
+# protects was edited. Same class as the finding it was written for: the artifact keeps
+# being produced, it just stops being connected to the thing it is about.
+# ORDER-500 (2026-07-28) added 'scripts/lib/*' for exactly the reason the ORDER-434
+# AUDIT-5 (2026-07-30) measured the pathspec against every input the fast suites actually
+# read, and found four more misses BEYOND the _triage ones added the same day:
+#   .githooks/pre-commit itself   -- narrowing or deleting this very line triggers no cage
+#   docs/PARAM_REGISTRY.csv       -- read by optimize_guard.ps1, which run_optimize_guard_tests exercises
+#   docs/PARAM_LINKAGE.md         -- same; a malformed override pair changes guarded behaviour silently
+#   _triage/PARAM_INACTIVE_AUDIT.md -- same
+# tools/python312/python.exe is a fifth (the binding suite's interpreter) and is deliberately
+# NOT added: staging a binary interpreter is not a normal edit, and the suite already fails
+# closed when it is missing. Added the other four. This is the FIFTH widening, which is the
+# argument for BACKLOG-D32 and not a substitute for it.
+# ORDER-500 paragraph, for the record, describes exactly this: b1_guard.ps1 holds the rules that
+# check_precommit_staged.ps1 and .githooks/commit-msg both dot-source, and it matched
+# none of the three existing globs -- verified by pathspec before widening, not assumed.
+# Two consecutive additions have now needed this, which says the glob list is the wrong
+# shape: it enumerates directories that happen to hold guarded files, so every new
+# location is a silent miss until somebody notices. Recorded rather than fixed here --
+# changing the trigger to "any file a fast suite depends on" needs its own cage.
+# ORDER-372: THIRD consecutive addition to need this, exactly as the note above predicted.
+# run_report_freshness_tests.ps1 guards scripts/lib/report_freshness.ps1 (covered by scripts/lib/*)
+# but its PART 5 sweep is over EVERY scripts/*.ps1 -- it exists to catch a caller reintroducing
+# "the .htm exists, so this run wrote it". Without scripts/*.ps1 on this list that sweep would only
+# run when something else happened to be staged, i.e. it would look enforced and not be. Widened
+# rather than enumerated again; the fast tier is 3.7s, which is inside the budget that makes a hook
+# survivable. The real fix named above -- deriving this list from what the suites depend on --
+# is still owed and still needs its own cage.
+# BACKLOG-D31 (2026-07-30): FOURTH addition, and this one was found by staging a design-only
+# edit and counting the hook's output lines -- zero. run_contract_binding_tests.ps1 guards
+# _triage/EA_LAB_FACTORY_OS_DESIGN.md and _triage/factory_os/schemas.json, neither of which
+# matched any glob here, so the cage fired only when a scripts/ file happened to be staged
+# alongside. It looked enforced for four commits and was not. The prediction in the ORDER-500
+# paragraph above has now come true three times in three days; deriving this list from the
+# suites' own declared dependencies is the fix, and it is now BACKLOG-D32, not a comment.
+# BACKLOG-D32 (2026-07-30): the hand-enumerated glob above is GONE. The pathspec is now
+# generated from what each suite declares it guards ($SUITE_GUARDS in run_fast_cages.ps1)
+# by scripts/gen_fast_tier_pathspec.ps1, and run_guard_trigger_tests.ps1 fails when a suite
+# has no declaration, when a declared path does not exist, or when this file is stale.
+# The five widenings this replaced are kept in the paragraphs above as the reason it exists.
+#
+# FAIL-CLOSED: if the generated file is missing or empty, RUN the tier. The failure mode
+# this whole line exists to prevent is a trigger that silently matches nothing, so an
+# unreadable trigger must mean "run everything", never "run nothing".
+spec_file=".githooks/fast_tier_pathspec"
+if [ -s "$spec_file" ]; then
+  cage_spec=()
+  while IFS= read -r line || [ -n "$line" ]; do
+    [ -n "$line" ] && cage_spec+=("$line")
+  done < "$spec_file"
+  cage_staged=$(git diff --cached --name-only -- "${cage_spec[@]}")
+else
+  echo "[pre-commit] $spec_file missing or empty -- running the fast tier unconditionally (fail-closed)."
+  cage_staged="FORCED"
+fi
+if [ -n "$cage_staged" ]; then
+  # BACKLOG-D32: hand the tier the staged paths so it runs only the suites that guard them.
+  # MEASURED 2026-07-31: the whole tier is 18.1s against a 15.0s advisory budget; a schema edit
+  # now costs 3.9s and an optimize_guard.ps1 edit 7.3s.
+  # FAIL-OPEN BY CONSTRUCTION: run_fast_cages.ps1 runs EVERYTHING when -StagedPaths is empty, and
+  # runs any suite whose guards are undeclared. So "FORCED", an empty list, or a list this hook
+  # computed wrongly all run MORE than necessary, never less. run_guard_trigger_tests.ps1 PART 5
+  # asserts that, plus that every suite is still reachable by its own declarations.
+  # Paths go through a FILE, one per line -- not a comma-joined argument. `powershell -File` bound
+  # a comma string as one literal for three paths while splitting it correctly for two, and the
+  # commit that introduced this feature ran ZERO suites as a result. A temp file has no quoting,
+  # separator or array-binding ambiguity.
+  cage_file=""
+  if [ "$cage_staged" != "FORCED" ]; then
+    cage_file=$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/ea_cage_$$")
+    printf '%s\n' "$cage_staged" > "$cage_file"
+  fi
+  # ORDER-670: -Hook at BOTH call sites, including this fail-closed else-branch -- hook-ness
+  # is an ARGUMENT precisely because an argument cannot fail to arrive from a caller that is
+  # one file with two lines. Given -Hook the tier sets EA_LAB_EVIDENCE=index for its children
+  # and verifies per-suite markers that the mode actually arrived.
+  if [ -n "$cage_file" ] && [ -s "$cage_file" ]; then
+    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -Hook -StagedPathsFile "$(cygpath -w "$cage_file" 2>/dev/null || echo "$cage_file")"
+  else
+    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -Hook
+  fi
+  rc=$?
+  [ -n "$cage_file" ] && rm -f "$cage_file"
+  if [ "$rc" -ne 0 ]; then
+    echo ""
+    echo "[pre-commit] a guard's own test suite failed (above) -- ORDER-420."
+    echo "[pre-commit] You are editing scripts/check_*.ps1 or scripts/_test/*, and its cage went red."
+    echo "[pre-commit] Slow suites are NOT covered here: run_chainwalk_tests (74s), run_order101/103/105."
     exit $rc
   fi
 fi

@@ -295,6 +295,11 @@ void OnTick()
       return;
    }
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("EA_BREAKOUT_XAU: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+
    bool ok = (dir == 1)
       ? g_trade.Buy (_05_LotSize, _Symbol, ask, sl_price, tp_price, "BRKOUT_BUY")
       : g_trade.Sell(_05_LotSize, _Symbol, bid, sl_price, tp_price, "BRKOUT_SELL");

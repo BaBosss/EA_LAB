@@ -3,22 +3,42 @@ live_dashboard.ps1 - ORDER-058: per-EA live-monitor dashboard (ต่อยอ�
 
 Reads the newest EA_LAB_deals_*.csv snapshot in portfolio\live_deals\ (collected by
 collect_live_deals.ps1 from DealsExporter.mq5), groups deals by magic number, joins EA
-name/symbol/kill-switch DD% from the cohort table below (source: DEMO_DEPLOYMENT_PLAN.md
-"treasure-hunt survivors" + _demo_deploy\README_DEPLOY.md kill-switch section), and
-writes a single self-contained HTML file: portfolio\LIVE_DASHBOARD.html
+name/symbol/kill-switch DD% from the cohort map generated from portfolio\DEPLOYMENTS.csv
+(single inventory owner, ORDER-093; generation replaced the hardcoded table per CR-001
+2026-07-19), and writes a single self-contained HTML file: portfolio\LIVE_DASHBOARD.html
 
   powershell -File scripts\live_dashboard.ps1
   powershell -File scripts\live_dashboard.ps1 -LiveDealsDir <dir> -OutFile <path>   (testing)
 
 Columns per EA row: name, magic, symbol, trades, net P&L, profit factor, max drawdown %
-(computed from the cumulative per-magic P&L curve vs a fixed $10,000 starting-equity
-assumption - both treasure-hunt demo accounts are documented as $10k), days since last
-trade, and a status flag:
+(computed from the cumulative per-magic P&L curve against THAT ACCOUNT'S base equity from
+portfolio\ACCOUNTS.csv), days since last trade, and a status flag:
   red    = maxDD% >= that EA's kill-switch DD%
   yellow = maxDD% >= declared warn level (MT4 25% / MT5 15%; EA-specific kill: 80% of kill)
   green  = below that
   white  = 0 trades for this magic yet (no data)
   grey ? = magic present in the CSV but not in the cohort table (unmapped, no criteria)
+  blue ? = the account has no base_equity recorded, so DD% is not computable and is
+           SUPPRESSED rather than guessed (see the base-equity note below)
+
+BASE EQUITY (2026-07-30, Stage 0B D3). This script used to apply one hardcoded
+$BaseEquity = 10000 to every account, on the strength of a comment saying "both
+treasure-hunt demo accounts are documented as $10k". There are six accounts, they are not
+all demo, they are not all in the same currency, and portfolio\ACCOUNTS.csv - the owner of
+that field - records a base_equity for exactly ONE of them (463666728 = 100000). Every
+DD% and every kill-DD-equivalent on the other five was therefore a real-looking number
+divided by a denominator nobody had ever recorded, and 463666728's were out by 10x in the
+direction that makes risk look larger than it is. Base equity is now resolved PER ACCOUNT
+from ACCOUNTS.csv, and an account with no recorded value renders UNKNOWN with its derived
+numbers suppressed. Expect most accounts to read UNKNOWN today: that is the honest state
+of the owner file, and it is the point - a suppressed number asks to be fixed, a wrong one
+does not.
+
+ACCOUNT UNIVERSE (Stage 0B D4). The account list comes from portfolio\ACCOUNTS.csv. A
+login that appears in collected data but is not registered there - e.g. 146237, a Strategy
+Tester login that monitor_rotation.ps1 authenticates - is rendered as UNREGISTERED with the
+file it came from, never silently dropped and never counted as a lab account. Hiding it is
+how work disappears; classifying it is the requirement.
 Colors are flags against the DECLARED kill-switch numbers only - no keep/kill verdict
 logic here (that judgment stays with Claude/user per ORDER-058 "ห้าม").
 
@@ -35,9 +55,13 @@ Shows "no snapshot data yet" when no snapshot CSVs exist; all prior behavior unc
 param(
   [string]$LiveDealsDir = "D:\EA_LAB\portfolio\live_deals",
   [string]$OutFile      = "D:\EA_LAB\portfolio\LIVE_DASHBOARD.html",
-  [double]$BaseEquity   = 10000.0   # documented starting balance, both treasure-hunt demo accounts ($10k)
+  # Owner of governance_scope and base_equity. There is deliberately NO -BaseEquity
+  # parameter and no global default any more: a single number applied to six accounts is
+  # the defect (see the header). If a value is missing here, the answer is UNKNOWN.
+  [string]$AccountsCsv  = ""
 )
 $ErrorActionPreference = "Stop"
+if (-not $AccountsCsv) { $AccountsCsv = Join-Path (Split-Path $LiveDealsDir -Parent) 'ACCOUNTS.csv' }
 
 # ---------------------------------------------------------------------------
 # 0. per-account analysis window (user directive 2026-07-10): deals BEFORE the
@@ -95,65 +119,117 @@ $acctLogin = ($acctLabels -join ' + ')
 $fileDateDisplay = ""   # folded into acctLabels per file
 
 # ---------------------------------------------------------------------------
-# 3. cohort static map: magic -> EA meta + declared kill-switch DD%
-#    Source: DEMO_DEPLOYMENT_PLAN.md (treasure-hunt table) +
-#            _demo_deploy\README_DEPLOY.md "Kill-switch" section
-#    KillDD: EA-specific number where README states one, else platform
-#            default (MT4 kill 35% / MT5 kill 25%, per README general rule).
-#    WarnDD: README's declared เตือน level (MT4 25% / MT5 15%) for platform-
-#            default rows; EA-specific kills have no declared warn -> 80% of kill.
+# 3. cohort map: magic -> EA meta + declared kill-switch DD%
+#    CR-001 (ROADMAP Phase 4.5, 2026-07-19): GENERATED from portfolio\DEPLOYMENTS.csv
+#    (the single deployment inventory owner, ORDER-093) - the old hardcoded table is
+#    gone, so a new CSV row is monitored automatically and a removed row can never
+#    linger as a ghost. check_state.ps1 checks 4/5 now verify this generation link
+#    instead of literal map entries.
+#    KillDD: parsed from kill_rule ("closedDD N%" / "DD N%"). Rules that are not a
+#            closed-DD number (e.g. "manual kill floating DD 40%") and empty rules
+#            fall back to the platform default (MT4 35% / MT4 warn 25% · MT5 25% /
+#            warn 15%) and keep the raw rule text in the display name.
+#    WarnDD: platform warn for platform-default kills; else uniformly 80% of kill.
+#            NOTE this changed a few advisory warn thresholds vs the old hand table
+#            (old table was ad-hoc: e.g. kill15 -> warn10; now kill15 -> warn12).
+#            Kill thresholds (the red flag + DEPLOYMENTS.csv) are unchanged.
+#    Rows with non-numeric magic (UNVERIFIED) are skipped; non-ACTIVE rows are kept
+#    (their closed-deal history still renders) with the status tagged in the name.
 # ---------------------------------------------------------------------------
-$cohort = [ordered]@{
-  "69424711|1"      = @{ Name = "UnNomGuaiV1.132";                                 Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "69424711|2"      = @{ Name = "UnNomGuaiV1.132";                                 Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "69424711|5888"   = @{ Name = "RSI from pips_EA (RSI-orig)";                     Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "69424711|990"    = @{ Name = "swb grid 4.1.0.3_h";                              Symbol = "AUDCAD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "159503454|990103" = @{ Name = "(Boss)_RSI_MR_GridLog (RSI-MR)";                  Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159503454|990101" = @{ Name = "(Boss)_ZeusInspired_GridLog (Zeus)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 12.0 }
-  "159503454|991001" = @{ Name = "EA_BREAKOUT_XAU (BRK-XAU)";                       Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
-  "159503454|991004" = @{ Name = "(BRK)_SqueezeBreakout (SqueezeBRK)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
-  "159503454|991002" = @{ Name = "(BRK)_TrendlineBreakout (Trendline, EXPERIMENTAL)"; Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 8.0;  WarnDD = 6.4 }
-  # Boss_14 GridLog demo bench on 415573666 (DEMO_DEPLOYMENT_PLAN cohort-1 table; MT5 platform default kill/warn)
-  "415573666|990201" = @{ Name = "Boss_14_GridLog USDJPY";                           Symbol = "USDJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990202" = @{ Name = "Boss_14_GridLog AUDNZD";                           Symbol = "AUDNZD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990203" = @{ Name = "Boss_14_GridLog EURJPY (size-light)";              Symbol = "EURJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990204" = @{ Name = "Boss_14_GridLog AUDCAD";                           Symbol = "AUDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990205" = @{ Name = "Boss_14_GridLog CADJPY (size-light, thin)";        Symbol = "CADJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990206" = @{ Name = "Boss_14_GridLog EURUSD SELL";                      Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990207" = @{ Name = "Boss_14_GridLog XAUUSD";                           Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990110" = @{ Name = "Zeus regime AUDJPY (deploy-small, 2023 down)";     Symbol = "AUDJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990208" = @{ Name = "Boss_14_GridLog GBPJPY leg8";                      Symbol = "GBPJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  # 463666728 "Demo bundle 10" — 11 single-position + SuperTrend, attached 2026-07-16 (judge 2026-10-16)
-  "463666728|990301" = @{ Name = "Boss_17_Wave5 XAU";                                Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990302" = @{ Name = "Boss_17_Wave5 XAG";                                Symbol = "XAGUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990303" = @{ Name = "Boss_17_Wave5 USDJPY";                             Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990984" = @{ Name = "PairSpread_StatArb EURUSD-GBPUSD";                 Symbol = "EURUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990120" = @{ Name = "Boss_12_Breakout MacroGate-leg";                   Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|991003" = @{ Name = "EA_BREAKOUT_XAU USDJPY (expand)";                  Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|991005" = @{ Name = "EA_BREAKOUT_XAU US30 (expand, WATCH-thin)";        Symbol = "US30";   Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|999094" = @{ Name = "MacdDiv_Naked XAU";                                Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|991070" = @{ Name = "EmaStoRev EURUSD (SMCSTO)";                        Symbol = "EURUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990066" = @{ Name = "IchiADX USDJPY basket A H4 med";                   Symbol = "USDJPY"; Platform = "MT5"; KillDD = 12.0; WarnDD = 9.0 }
-  "463666728|990067" = @{ Name = "IchiADX USDJPY basket B H1 slow";                  Symbol = "USDJPY"; Platform = "MT5"; KillDD = 12.0; WarnDD = 9.0 }
-  "463666728|990069" = @{ Name = "IchiADX XAU basket B H4 med";                      Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 18.0; WarnDD = 12.0 }
-  "463666728|990068" = @{ Name = "IchiADX XAU basket A H1 slow";                     Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 18.0; WarnDD = 12.0 }
-  "463666728|990020" = @{ Name = "EA_SUPERTREND XAU H4 (validated; EA-SCORE #7)";    Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 8.0;  WarnDD = 6.0 }
-  # 141049900 REAL MT4 user-experiment cohort (CODEX-AUDIT A5 2026-07-11: was unmapped = the
-  # highest-risk no-SL magics had no dashboard row at all). MT4 platform default kill/warn.
-  # NOTE: closed-deal DD only - Zeus/Kangaroo real risk is FLOATING basket loss (Zeus floating
-  # kill guidance = 40% MANUAL per DEMO_DEPLOYMENT_PLAN); dashboard cannot see it until the
-  # floating-telemetry exporter (ORDER-092) ships.
-  "141049900|7777"   = @{ Name = "Zeus Gold Hedge V1.2 EURUSDc (no-SL grid ⚠️ manual kill float 40%)"; Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "141049900|1112"   = @{ Name = "Gold_Kangaroo XAUUSDc L1 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "141049900|1113"   = @{ Name = "Gold_Kangaroo XAUUSDc L2 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "141049900|1114"   = @{ Name = "Gold_Kangaroo XAUUSDc L3 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "141049900|1115"   = @{ Name = "Gold_Kangaroo XAUUSDc L4 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  # 159475669 user-mix magics we can name (no lab-declared kill for this account -> MT5 platform defaults)
-  "159475669|1524"   = @{ Name = "NuiIndy Dynamic RSI+ADX";                          Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159475669|9398"   = @{ Name = "ST_EA03 Count-MACD USDCAD (lab live)";             Symbol = "USDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159475669|939721" = @{ Name = "ST_EA03 Count-MACD GBP (user config, recovery-lot ⚠️)"; Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159475669|990005" = @{ Name = "CB_GBP ConsoBreakout";                             Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159475669|990010" = @{ Name = "ST03 replica (WATCH: OOS 0.86)";                   Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+# ---------------------------------------------------------------------------
+# 2b. account registry: portfolio\ACCOUNTS.csv is the owner of governance_scope
+#     and base_equity (Stage 0B D3/D4).
+#
+#     Two lookups come out of it and they answer two different questions:
+#       $acctRegistered  is this login a lab account at all?  (D4)
+#       $acctBase        what do we divide by to get a DD%?   (D3)
+#
+#     $acctBase[$a] is $null - NOT a fallback number - whenever base_equity is
+#     blank, non-numeric, or <= 0. Every consumer below must branch on that null
+#     and render UNKNOWN. The one thing it must never do is substitute a value:
+#     the whole defect was a plausible number standing in for a missing one.
+# ---------------------------------------------------------------------------
+$acctRegistered = @{}
+$acctBase = @{}
+$acctScope = @{}
+$acctCsvName = @{}
+$acctCcy = @{}
+if (Test-Path $AccountsCsv) {
+  foreach ($ar in @(Import-Csv $AccountsCsv)) {
+    $a = "$($ar.account)".Trim()
+    if (-not $a) { continue }
+    $acctRegistered[$a] = $true
+    $acctScope[$a] = "$($ar.governance_scope)".Trim()
+    $acctCsvName[$a] = "$($ar.account_name)".Trim()
+    $acctCcy[$a] = "$($ar.currency)".Trim()
+    $be = 0.0
+    if ("$($ar.base_equity)".Trim() -and [double]::TryParse("$($ar.base_equity)".Trim(),
+          [System.Globalization.NumberStyles]::Any,
+          [System.Globalization.CultureInfo]::InvariantCulture, [ref]$be) -and $be -gt 0) {
+      $acctBase[$a] = $be
+    } else {
+      $acctBase[$a] = $null
+    }
+  }
+} else {
+  # No registry = no account is registered and no base equity is known. Rendering the
+  # whole board as UNKNOWN/UNREGISTERED is the correct answer to "the owner file is
+  # gone"; quietly reverting to a hardcoded 10000 is the behaviour being removed.
+  Write-Host "WARNING: no ACCOUNTS.csv at $AccountsCsv - every account will render UNREGISTERED and every DD% UNKNOWN"
+}
+function Get-AcctBase([string]$acct) {
+  if ($acctBase.ContainsKey($acct)) { return $acctBase[$acct] }
+  return $null
+}
+# Plain text (callers HtmlEnc it). Every account header on the page goes through this, so
+# an unregistered login is labelled as one everywhere it appears rather than in one place.
+function Get-AcctLabel([string]$acct) {
+  $label = "account $acct"
+  if ($acctMeta.Contains($acct)) { $label = $acctMeta[$acct].Label }
+  elseif ($acctCsvName.ContainsKey($acct) -and $acctCsvName[$acct]) { $label = $acctCsvName[$acct] }
+  if (-not $acctRegistered.ContainsKey($acct)) {
+    return "$label [UNREGISTERED / not a lab account - no row in ACCOUNTS.csv]"
+  }
+  $scope = $acctScope[$acct]
+  if ($scope) { $label += " [$scope]" }
+  return $label
+}
+# Plain text. Says either the number or, loudly, that there is not one.
+function Get-AcctBaseText([string]$acct) {
+  $b = Get-AcctBase $acct
+  $ccy = ''
+  if ($acctCcy.ContainsKey($acct) -and $acctCcy[$acct]) { $ccy = ' ' + $acctCcy[$acct] }
+  if ($null -eq $b) { return "base equity UNKNOWN - no base_equity for $acct in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated" }
+  return ("base equity {0:N0}{1} (ACCOUNTS.csv)" -f [double]$b, $ccy)
+}
+
+$deploymentsCsv = Join-Path (Split-Path $LiveDealsDir -Parent) 'DEPLOYMENTS.csv'
+$cohort = [ordered]@{}
+foreach ($dep in @(Import-Csv $deploymentsCsv)) {
+  if ($dep.magic -notmatch '^\d+$') { continue }
+  $key = "$($dep.account)|$($dep.magic)"
+  if ($cohort.Contains($key)) { continue }   # checker guards duplicates; first row wins
+  $plat = 'MT5'; if ($dep.platform -match 'MT4') { $plat = 'MT4' }
+  $defKill = 25.0; $defWarn = 15.0
+  if ($plat -eq 'MT4') { $defKill = 35.0; $defWarn = 25.0 }
+  $killDD = $null
+  $rule = "$($dep.kill_rule)".Trim()
+  if ($rule -notmatch 'floating' -and $rule -match '(?:closedDD|DD)\s*([0-9]+(?:\.[0-9]+)?)\s*%') {
+    $killDD = [double]$Matches[1]
+  }
+  $name = $dep.ea_name
+  if ($null -eq $killDD) {
+    $killDD = $defKill; $warnDD = $defWarn
+    if ($rule) { $name += " (kill: $rule)" }   # non-closedDD rule stays visible
+  } elseif ($killDD -eq $defKill) {
+    $warnDD = $defWarn
+  } else {
+    $warnDD = [math]::Round($killDD * 0.8, 1)
+  }
+  if ($dep.status -ne 'ACTIVE') { $name += " [$($dep.status)]" }
+  # deals CSV symbol (broker-suffixed) overrides this; strip common m/c suffix for the fallback
+  $sym = "$($dep.symbol)" -replace '[mc]$',''
+  $cohort[$key] = @{ Name = $name; Symbol = $sym; Platform = $plat; KillDD = $killDD; WarnDD = $warnDD }
 }
 
 # ---------------------------------------------------------------------------
@@ -242,8 +318,13 @@ foreach ($file in $selected) {
 # 5. per-magic metrics
 # ---------------------------------------------------------------------------
 function Compute-MagicMetrics {
-  param($deals, [double]$baseEquity)
+  # $baseEquity is deliberately UNTYPED so it can be $null. A [double] parameter would
+  # coerce $null to 0.0 and hand every account a divide-by-zero-shaped denominator, which
+  # is the same class of silent wrongness this change exists to remove. When it is $null
+  # the returned MaxDDPct is $null too: not 0, which reads as "no drawdown".
+  param($deals, $baseEquity)
 
+  $haveBase = ($null -ne $baseEquity -and [double]$baseEquity -gt 0)
   $sorted = $deals | Sort-Object Time
 
   $trades = 0
@@ -253,18 +334,21 @@ function Compute-MagicMetrics {
   $lastTradeTime = $null
   $symbol = ""
 
-  $running = $baseEquity
-  $peak = $baseEquity
-  $maxDDPct = 0.0
+  $running = 0.0; $peak = 0.0
+  if ($haveBase) { $running = [double]$baseEquity; $peak = [double]$baseEquity }
+  $maxDDPct = $null
+  if ($haveBase) { $maxDDPct = 0.0 }
 
   foreach ($row in $sorted) {
     if ([string]::IsNullOrWhiteSpace($symbol)) { $symbol = $row.Symbol }
     $netPL += $row.RowNet
-    $running += $row.RowNet
-    if ($running -gt $peak) { $peak = $running }
-    if ($peak -gt 0) {
-      $ddPct = (($peak - $running) / $peak) * 100.0
-      if ($ddPct -gt $maxDDPct) { $maxDDPct = $ddPct }
+    if ($haveBase) {
+      $running += $row.RowNet
+      if ($running -gt $peak) { $peak = $running }
+      if ($peak -gt 0) {
+        $ddPct = (($peak - $running) / $peak) * 100.0
+        if ($ddPct -gt $maxDDPct) { $maxDDPct = $ddPct }
+      }
     }
     # DEAL_ENTRY: 0=IN 1=OUT 2=INOUT 3=OUT_BY -> count closes as "a trade"
     if ($row.Entry -eq 1 -or $row.Entry -eq 2 -or $row.Entry -eq 3) {
@@ -314,7 +398,7 @@ foreach ($key in $allKeys) {
   $deals = New-Object System.Collections.Generic.List[object]
   if ($byMagic.ContainsKey($key)) { $deals = $byMagic[$key] }
 
-  $m = Compute-MagicMetrics -deals $deals -baseEquity $BaseEquity
+  $m = Compute-MagicMetrics -deals $deals -baseEquity (Get-AcctBase $acc)
 
   $symbol = $m.CsvSymbol
   if ([string]::IsNullOrWhiteSpace($symbol) -and $inCohort) { $symbol = $meta.Symbol }
@@ -331,18 +415,27 @@ foreach ($key in $allKeys) {
   $rank = 3
 
   if ($m.Trades -eq 0) {
-    $statusIcon = "white"; $statusLabel = "no data yet"; $rank = 3
+    $statusIcon = "white"; $statusLabel = "no data yet"; $rank = 4
   } elseif (-not $inCohort) {
-    $statusIcon = "grey"; $statusLabel = "unmapped magic - no declared criteria"; $rank = 4
+    $statusIcon = "grey"; $statusLabel = "unmapped magic - no declared criteria"; $rank = 5
+  } elseif ($null -eq $m.MaxDDPct) {
+    # D3: the account has traded and has declared criteria, but base_equity is not
+    # recorded, so there is nothing to express the drawdown as a percentage OF. This
+    # is its own status, ranked above green on purpose - an unmeasurable EA is a more
+    # urgent thing to look at than a measured healthy one, and burying it in green is
+    # how it stays unfixed. The DD and kill columns render UNKNOWN, not a number.
+    $statusIcon = "nobase"
+    $statusLabel = "DD% NOT COMPUTABLE - account $acc has no base_equity in ACCOUNTS.csv (kill $($meta.KillDD)% cannot be evaluated)"
+    $rank = 1
   } else {
     $killDD = $meta.KillDD
     $warnDD = $meta.WarnDD
     if ($m.MaxDDPct -ge $killDD) {
       $statusIcon = "red"; $statusLabel = "DD $([Math]::Round($m.MaxDDPct,1))% >= kill $killDD%"; $rank = 0
     } elseif ($m.MaxDDPct -ge $warnDD) {
-      $statusIcon = "yellow"; $statusLabel = "DD $([Math]::Round($m.MaxDDPct,1))% >= warn $warnDD% (kill $killDD%)"; $rank = 1
+      $statusIcon = "yellow"; $statusLabel = "DD $([Math]::Round($m.MaxDDPct,1))% >= warn $warnDD% (kill $killDD%)"; $rank = 2
     } else {
-      $statusIcon = "green"; $statusLabel = "DD $([Math]::Round($m.MaxDDPct,1))% normal (kill $killDD%)"; $rank = 2
+      $statusIcon = "green"; $statusLabel = "DD $([Math]::Round($m.MaxDDPct,1))% normal (kill $killDD%)"; $rank = 3
     }
   }
 
@@ -429,8 +522,7 @@ if ($snapByLogin.Count -eq 0) {
         'SYMBOL'  { $symbolRows += $r }
       }
     }
-    $label = "account $login"
-    if ($acctMeta.Contains($login)) { $label = $acctMeta[$login].Label }
+    $label = Get-AcctLabel $login
 
     $cardClass = 'card acct-card'
     if ($isStale) { $cardClass = 'card acct-card snap-stale' }
@@ -481,7 +573,7 @@ if ($snapByLogin.Count -eq 0) {
       }
     }
 
-    [void]$fh.AppendLine("<div class=`"acct-head`"><b>$(HtmlEnc $login)</b> &middot; $(HtmlEnc $label) &middot; snapshot $(HtmlEnc $acctRow.server_time)</div>")
+    [void]$fh.AppendLine("<div class=`"acct-head`"><b>$(HtmlEnc $login)</b> &middot; $(HtmlEnc $label) &middot; snapshot $(HtmlEnc $acctRow.server_time) &middot; $(HtmlEnc (Get-AcctBaseText $login))</div>")
     [void]$fh.AppendLine("<div class=`"acct-head`">equity <b>$('{0:N2}' -f $eq)</b> vs balance <b>$('{0:N2}' -f $bal)</b> $(HtmlEnc $ccy) &middot; floating <span class=`"$floatClass`">$('{0:N2}' -f $floatTotal)</span> &middot; margin level <span class=`"$mlClass`">$mlTxt</span> &middot; distance to stop-out: $distTxt</div>")
 
     if ($magicRows.Count -eq 0) {
@@ -497,12 +589,22 @@ if ($snapByLogin.Count -eq 0) {
         $rowCls = ''
         if ($cohort.Contains($key)) {
           $name = HtmlEnc $cohort[$key].Name
-          $killAbs = $cohort[$key].KillDD / 100.0 * $BaseEquity
-          if ((ToDbl $mr.float_pl) -le (-1.0 * $killAbs)) {
-            $flag = "float loss &ge; kill-DD equivalent ($($cohort[$key].KillDD)% of $('{0:N0}' -f $BaseEquity))"
-            $rowCls = ' class="st-red"'
+          # D3: the kill-DD equivalent is a CURRENCY amount, so it needs this account's
+          # base equity. With none recorded there is no equivalent to compute, and the
+          # old code computed one anyway from a global 10000 - producing a red flag, or
+          # the absence of one, on an account whose real base was never known.
+          $panelBase = Get-AcctBase $login
+          if ($null -eq $panelBase) {
+            $flag = "kill $($cohort[$key].KillDD)% ref &mdash; <b>UNKNOWN</b>: no base_equity for account $(HtmlEnc $login) in ACCOUNTS.csv, so no currency equivalent can be computed"
+            $rowCls = ' class="st-nobase"'
           } else {
-            $flag = "kill $($cohort[$key].KillDD)% ref"
+            $killAbs = $cohort[$key].KillDD / 100.0 * [double]$panelBase
+            if ((ToDbl $mr.float_pl) -le (-1.0 * $killAbs)) {
+              $flag = "float loss &ge; kill-DD equivalent ($($cohort[$key].KillDD)% of $('{0:N0}' -f [double]$panelBase))"
+              $rowCls = ' class="st-red"'
+            } else {
+              $flag = "kill $($cohort[$key].KillDD)% ref ($('{0:N0}' -f $killAbs))"
+            }
           }
         } elseif ($magic -eq '0') {
           $name = 'manual trades (magic 0)'
@@ -564,6 +666,7 @@ $iconMap = @{
   green  = "&#128994;"  # green circle
   white  = "&#9898;"    # white circle
   grey   = "&#10067;"   # question mark
+  nobase = "&#128309;"  # blue circle - measurable-in-principle, not measurable today
 }
 $rowClassMap = @{
   red    = "st-red"
@@ -571,6 +674,14 @@ $rowClassMap = @{
   green  = "st-green"
   white  = "st-white"
   grey   = "st-grey"
+  nobase = "st-nobase"
+}
+# D3: a DD cell with no base equity behind it prints the word, never a number. "0.0%"
+# would be indistinguishable from a real, healthy measurement.
+function Fmt-DD {
+  param($ddPct)
+  if ($null -eq $ddPct) { return "UNKNOWN" }
+  return "$([Math]::Round([double]$ddPct,1))%"
 }
 
 # --- one <section> per account: header (label + window + subtotal) + its own table ---
@@ -583,8 +694,7 @@ $sectionsHtml = New-Object System.Text.StringBuilder
 $accGroups = $rowsSorted | Group-Object Acc | Sort-Object { if ($accOrder.ContainsKey($_.Name)) { $accOrder[$_.Name] } else { 99 } }, Name
 foreach ($ag in $accGroups) {
   $accId = $ag.Name
-  $label = "account $accId"
-  if ($acctMeta.Contains($accId)) { $label = $acctMeta[$accId].Label }
+  $label = Get-AcctLabel $accId
   $winTxt = "all history"
   if ($acctStart.ContainsKey($accId)) { $winTxt = "from $($acctStart[$accId].ToString('yyyy-MM-dd'))" }
   $subNet = ($ag.Group | Measure-Object NetPL -Sum).Sum
@@ -592,7 +702,7 @@ foreach ($ag in $accGroups) {
   $subClass = "neu"; if ($subNet -gt 0) { $subClass = "pos" }; if ($subNet -lt 0) { $subClass = "neg" }
 
   [void]$sectionsHtml.AppendLine("<div class=`"card acct-card`">")
-  [void]$sectionsHtml.AppendLine("<div class=`"acct-head`"><b>$(HtmlEnc $accId)</b> &middot; $(HtmlEnc $label) &middot; window: $winTxt &middot; net <span class=`"$subClass`">$(Fmt-Money $subNet)</span> USC &middot; $subTrades trades</div>")
+  [void]$sectionsHtml.AppendLine("<div class=`"acct-head`"><b>$(HtmlEnc $accId)</b> &middot; $(HtmlEnc $label) &middot; window: $winTxt &middot; net <span class=`"$subClass`">$(Fmt-Money $subNet)</span> &middot; $subTrades trades &middot; $(HtmlEnc (Get-AcctBaseText $accId))</div>")
   [void]$sectionsHtml.AppendLine("<table>")
   [void]$sectionsHtml.AppendLine($theadHtml)
   foreach ($r in $ag.Group) {
@@ -610,7 +720,7 @@ foreach ($ag in $accGroups) {
     [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$($r.Trades)</td>")
     [void]$sectionsHtml.AppendLine("<td class=`"num-cell $netClass`">$(Fmt-Money $r.NetPL)</td>")
     [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(Fmt-PF $r.PF)</td>")
-    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$([Math]::Round($r.MaxDDPct,1))%</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(Fmt-DD $r.MaxDDPct)</td>")
     [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.KillDD)</td>")
     [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(Fmt-Days $r.DaysSince)</td>")
     [void]$sectionsHtml.AppendLine("<td class=`"label-cell`">$(HtmlEnc $r.StatusLabel)</td>")
@@ -618,6 +728,56 @@ foreach ($ag in $accGroups) {
   }
   [void]$sectionsHtml.AppendLine("</table>")
   [void]$sectionsHtml.AppendLine("</div>")
+}
+
+# ---------------------------------------------------------------------------
+# 6c. Stage 0B D4: account-universe banner.
+#
+#     The canonical account universe is portfolio\ACCOUNTS.csv. The dashboard, however,
+#     reads whatever CSVs happen to be sitting in live_deals\, and monitor_rotation.ps1
+#     authenticates logins that are not lab accounts at all - 146237 is a Strategy Tester
+#     login, stale since 2026-07-06, and it has been appearing in the "Accounts:" line of
+#     this page ever since, indistinguishable from a real one.
+#
+#     The fix is NOT to filter it out. A login that showed up in collected data is a fact
+#     about the machine, and a filter would delete the fact while leaving the cause. It is
+#     classified instead: named, with the file it came from, under a heading that says it
+#     is not a lab account. Two accounts are also called out the other way - registered in
+#     ACCOUNTS.csv but with no collected data at all - because a missing sensor is exactly
+#     as interesting as an unexpected one, and only one of the two was ever visible.
+# ---------------------------------------------------------------------------
+$seenLogins = @{}
+foreach ($f in $selected) {
+  if ($f.BaseName -match '^(?:EA_LAB_deals|EA_LAB_mt4_orders)_(\d+)') {
+    $lg = $Matches[1]
+    if (-not $seenLogins.ContainsKey($lg)) { $seenLogins[$lg] = New-Object System.Collections.Generic.List[string] }
+    $seenLogins[$lg].Add($f.Name)
+  }
+}
+foreach ($lg in $snapByLogin.Keys) {
+  if (-not $seenLogins.ContainsKey($lg)) { $seenLogins[$lg] = New-Object System.Collections.Generic.List[string] }
+  $seenLogins[$lg].Add($snapByLogin[$lg].Name)
+}
+$unregLogins = @($seenLogins.Keys | Where-Object { -not $acctRegistered.ContainsKey($_) } | Sort-Object)
+$noDataLogins = @($acctRegistered.Keys | Where-Object { -not $seenLogins.ContainsKey($_) } | Sort-Object)
+
+$universeHtml = ""
+if ($unregLogins.Count -gt 0 -or $noDataLogins.Count -gt 0) {
+  $ub = New-Object System.Text.StringBuilder
+  [void]$ub.AppendLine('<div class="card">')
+  [void]$ub.AppendLine('<h2 style="font-size:16px;margin:0 0 8px 0;">&#9888;&#65039; ACCOUNT UNIVERSE &mdash; collected data vs portfolio\ACCOUNTS.csv</h2>')
+  [void]$ub.AppendLine('<table>')
+  [void]$ub.AppendLine('<tr><th>Login</th><th>Classification</th><th>Provenance</th></tr>')
+  foreach ($lg in $unregLogins) {
+    [void]$ub.AppendLine("<tr class=`"st-grey`"><td class=`"num-cell`"><b>$(HtmlEnc $lg)</b></td><td class=`"label-cell`">UNREGISTERED &mdash; not a lab account (no row in ACCOUNTS.csv). Its rows below, if any, are shown but must not be read as lab evidence.</td><td class=`"label-cell`">$(HtmlEnc (($seenLogins[$lg] | Sort-Object) -join ', '))</td></tr>")
+  }
+  foreach ($lg in $noDataLogins) {
+    $sc = $acctScope[$lg]; if (-not $sc) { $sc = 'unknown scope' }
+    [void]$ub.AppendLine("<tr class=`"st-white`"><td class=`"num-cell`"><b>$(HtmlEnc $lg)</b></td><td class=`"label-cell`">REGISTERED ($(HtmlEnc $sc)) but NO collected data in this run &mdash; the sensor produced nothing to render.</td><td class=`"label-cell`">$(HtmlEnc (Get-AcctLabel $lg))</td></tr>")
+  }
+  [void]$ub.AppendLine('</table>')
+  [void]$ub.AppendLine('</div>')
+  $universeHtml = $ub.ToString()
 }
 
 $acctWindowsDisplay = HtmlEnc (($acctStart.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Key) from $($_.Value.ToString('yyyy-MM-dd'))" }) -join ' | ')
@@ -636,7 +796,13 @@ if (Test-Path $mrisFrag) {
 $grandTotalDisplay = Fmt-Money $grandTotalNet
 $generatedAt = $now.ToString("yyyy-MM-dd HH:mm:ss")
 $srcCsvName = HtmlEnc (($selected | ForEach-Object { $_.Name }) -join ', ')
-$baseEquityStr = "{0:N0}" -f $BaseEquity
+# D3: one line per account, so the reader can see WHICH denominator produced the DD%
+# column next to it - and how many of them do not exist.
+$baseEquityStr = HtmlEnc ((@($acctRegistered.Keys | Sort-Object | ForEach-Object {
+    $b = Get-AcctBase $_
+    if ($null -eq $b) { "$_ = UNKNOWN" } else { ("{0} = {1:N0}" -f $_, [double]$b) }
+  })) -join ' | ')
+$unknownBaseCount = @($acctRegistered.Keys | Where-Object { $null -eq (Get-AcctBase $_) }).Count
 
 $html = @"
 <!doctype html>
@@ -663,6 +829,7 @@ $html = @"
     tr.st-green  { background: #123a1a !important; }
     tr.st-white  { background: #22252b !important; }
     tr.st-grey   { background: #24242a !important; }
+    tr.st-nobase { background: #14243a !important; }
     .pos { color: #6fe08a !important; }
     .neg { color: #ff8a80 !important; }
     .legend { background: #1d2026 !important; border-color: #33373f !important; }
@@ -704,6 +871,7 @@ $html = @"
   tr.st-green  { background: #eaf7ee; }
   tr.st-white  { background: #fafafa; }
   tr.st-grey   { background: #f1f1f1; }
+  tr.st-nobase { background: #e8f0fb; }
   .footer { color: #888; font-size: 12px; margin-top: 16px; }
   /* ORDER-092 floating-risk panel */
   .ml-green  { color: #17792f; font-weight: 700; }
@@ -739,15 +907,23 @@ $html = @"
   <span>&#128994; green = normal, below warn band</span>
   <span>&#9898; white = 0 trades yet (no data)</span>
   <span>&#10067; unmapped magic (present in CSV, not in the declared cohort table)</span>
+  <span>&#128309; base equity UNKNOWN &mdash; DD% suppressed, not estimated</span>
   <br><br>
-  Colors are flags against the declared kill-switch DD% from <code>_demo_deploy\README_DEPLOY.md</code>
+  Colors are flags against the declared kill-switch DD% from <code>portfolio\DEPLOYMENTS.csv</code>
   only - not a keep/kill verdict. Max DD% is computed from the cumulative per-magic P&amp;L curve
-  (profit+swap+commission per deal, time-ordered) against an assumed $baseEquityStr USD starting equity
-  (both treasure-hunt demo accounts are documented at 10,000 USD). Sorted red &rarr; yellow &rarr; green &rarr; white &rarr; unmapped.
+  (profit+swap+commission per deal, time-ordered) against <b>that account's own base equity</b>
+  from <code>portfolio\ACCOUNTS.csv</code>:
+  <code>$baseEquityStr</code>.
+  <b>$unknownBaseCount registered account(s) have no base_equity recorded</b>; their DD% and
+  kill-DD-equivalent cells read UNKNOWN and no number is computed for them. Until 2026-07-30 this
+  page divided every account by a hardcoded 10,000 instead, which is why those cells used to show
+  a number - fill the <code>base_equity</code> column in ACCOUNTS.csv to get them back honestly.
+  Sorted red &rarr; unknown-base &rarr; yellow &rarr; green &rarr; white &rarr; unmapped.
 </div>
 
 $mrisHtml
 $newsHtml
+$universeHtml
 $floatingRiskHtml
 $($sectionsHtml.ToString())
 

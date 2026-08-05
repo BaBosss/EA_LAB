@@ -46,10 +46,16 @@ double Recovery_AddLot(const double baseLot, const int rstep, const double baske
       case REC_ADAPTIVE:
       {
          // 82: size scales with current basket DD, hard-clamped by RC_RecMultMax.
-         // deeper DD (relative to _8_DDRefMoney) -> larger add, capped at mult.
+         // deeper DD (relative to the reference) -> larger add, capped at mult.
+         // additive (2026-07-23): _8_DDRefBalPct (% of balance) wins over the absolute
+         // _8_DDRefMoney when set - portable across cent/USD accounts and scales with
+         // account size, so the escalation curve does not silently steepen after a
+         // deposit (a fixed $100 reference is a much deeper DD on a small account).
+         double ddRef = MM_BalancePct(_8_DDRefBalPct);
+         if(ddRef <= 0.0) ddRef = _8_DDRefMoney;
          double mult = 1.0;
-         if(_8_DDRefMoney > 0.0 && basketDD > 0.0)
-            mult = 1.0 + (basketDD / _8_DDRefMoney);
+         if(ddRef > 0.0 && basketDD > 0.0)
+            mult = 1.0 + (basketDD / ddRef);
          double cap = (RC_RecMultMax > 0.0 ? RC_RecMultMax : 1.0);
          if(mult > cap) mult = cap;
          if(mult < 1.0) mult = 1.0;
@@ -82,6 +88,7 @@ void Recovery_OpenAdd(const int dir, const int level, const double lot)
    if(!SymbolInfoTick(_Symbol, t)) return;
    double entry = (dir == 1 ? t.ask : t.bid);
    double sl    = Exit_InitialSL(dir, entry);
+   if(Exit_StructSLMissing(sl)) return;   // MM-SAFETY-001: same fail-closed rule as the flat entry
    double tp    = Exit_InitialTP(dir, entry);
    Exec_Open(dir, lot, sl, tp, LAB_ENTRY_TAG + " R" + IntegerToString(level));
 }

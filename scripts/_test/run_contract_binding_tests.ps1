@@ -1,0 +1,378 @@
+<#
+    run_contract_binding_tests.ps1 -- BACKLOG-D31 cage.
+
+    Guards the seam that produced every regression across three blind audits of the Factory
+    OS design: the normative contract written by hand in TWO places -- the design prose and
+    _triage/factory_os/schemas.json -- with nothing binding them. Audit 3 measured the first
+    attempt at a cure (check_schema_structure.py) against the 7 REGRESSED findings: it would
+    have caught 0 of 7, and it printed STRUCTURE OK on a commit where the design described
+    `attempts[]`, a lease with `pid`, and `launched_at` while the schema said the opposite.
+
+    Three things run here, and the second and third are the ones that matter:
+      1. gen_design_contracts.py --check   -- _triage/factory_os/CONTRACTS.md still matches the
+                                              schema, AND the design still links every contract
+                                              in it (the tables moved out of the design; the
+                                              link check is what replaced "states it by being it")
+      2. run_contract_binding_tests.py     -- the binding still CATCHES all seven regressions,
+                                              re-applied as schema mutations, with three controls
+                                              proving the harness is not simply always red
+      3. run_snapshot_validator_tests.py   -- ORDER-601 part 2. The schema can prove `all_clear`
+                                              is a well-typed boolean; it cannot prove who wrote
+                                              it. This asserts the verdict is the CORRECT verdict,
+                                              and mutation-tests its own predicates: each of the
+                                              13 is disabled in turn and only that predicate's
+                                              own fixtures may go red.
+
+    A cage that has never been shown to fail is untested by this repo's own rule, so (2) and the
+    mutation half of (3) are not optional decoration -- they are the only evidence (1) and the
+    rest of (3) are worth running.
+
+    Interpreter: tools\python312\python.exe, committed in-repo. No script here needs ajv or any
+    network access.
+
+    run_schema_fixtures.py (35 ajv cases) is deliberately NOT here, and as of 2026-07-30 the reason
+    CHANGED: it was 11.5s (one ajv spawn per case) and is now 1.8s (batched into one). So it is no
+    longer excluded for cost -- it is excluded because this tier has no headroom at all, measuring
+    14.1-15.2s against a 15.0s advisory budget. Codex audit 6 named the consequence: the 35 cases
+    are enforced by nothing automatic, so a schema edit can trigger this tier, run the computation
+    suite with NO_SCHEMA_CHECK, and never reach the closed-object and nonnegative checks. The fix is
+    per-path suite selection from $SUITE_GUARDS, not squeezing 1.8s into a tier already over budget.
+
+    WHY (3) LIVES HERE RATHER THAN IN A SUITE OF ITS OWN -- this is the budget decision the
+    ORDER-601 handoff demanded be made deliberately, with numbers rather than assumption.
+    MEASURED 2026-07-30 before touching anything: the fast tier was 14.7s against a 15.0s
+    budget, NOT the 14.0s carried in the handoff. So the headroom was 0.3s and a new
+    run_snapshot_validator_tests.ps1 would have breached the budget on its own -- roughly 0.3s
+    of a ~0.4s suite is PowerShell process startup, paid before a single assertion runs.
+    The three options were: displace run_optimize_guard_tests.ps1 (5.8s), raise the budget, or
+    fold these tests into an existing suite. Displacing a real 14-case guard to make room for
+    one python script is a bad trade at any budget, and raising the ceiling to fit an addition
+    that had a cheaper home would spend the one thing keeping this tier from being --no-verify'd.
+    Folding it in here costs ONE python interpreter start instead of a PowerShell process plus
+    an interpreter, and it is the honest home besides: this suite already guards the
+    design<->schema seam, and the validator is the third corner of it.
+
+    MEASURED 0.4s for the first two scripts. See the re-measured tier total in run_fast_cages.ps1.
+
+    ⚠️ BUDGET: ORDER-600 (S2a) PUSHED THIS TIER FURTHER OVER AN ALREADY-BREACHED CEILING, and the
+    number is stated here rather than discovered by the next session.
+    MEASURED 2026-07-30, medians of 3 runs each (never one number -- the handoff that carried "14.0s"
+    forward was quoting a lucky single run):
+      this suite   0.6s -> 3.6s        (+3.0s: the five S2a checks, in ONE interpreter)
+      fast tier   15.4s -> 17.3s       (17.3 / 17.2 / 17.3) against a 15.0s ADVISORY budget
+    RE-MEASURED 2026-07-31 after ORDER-601's closure added run_enforcement_status_tests.py:
+      fast tier   17.3s -> 18.1s       (18.0 / 18.1 / 18.3) -- now 3.1s over the advisory line.
+    That suite is worth its ~0.8s -- RE-MEASURED 2026-08-01 (ORDER-830) at 0.38s worktree /
+    0.41s index, so this line was pessimistic by 2x rather than optimistic -- (it is the only thing stopping PLANNED/BUILT/WIRED from becoming
+    the same unchecked label x-enforced-by already was), but the tier is now over by more than any
+    single addition, which is the definition of the drift BACKLOG-D32 exists to end. Nothing further
+    goes in this tier before per-path selection is built.
+    (2.8s / 16.5s before /scrutinize; +0.8s bought coverage of five loader rules, two criterion
+     bypasses and a pin-vintage advisory that were all enforced by nothing at all. Re-measured after
+     each addition rather than carried forward -- an earlier line here said 2.9s and 16.5s and was
+     stale within two commits.)
+    ...but measured AGAIN from inside the real pre-commit hook, the same tier runs 15.1-15.2s with
+    this suite at 1.8s, because git's index and objects are already warm there. BOTH numbers are
+    real and they answer different questions: 16.5s is what a cold standalone run costs, 15.1s is
+    what a committer actually waits. Quote the in-situ figure when deciding whether the tier hurts,
+    and the standalone figure when deciding whether there is headroom to spend -- and re-measure
+    rather than citing either, which is the mistake that put "14.0s" in two handoffs.
+    The tier was ALREADY over budget at 15.4s before this order touched it, so S2a is not the cause
+    of the breach -- but it is 1.5s of it now, and that must not be left implicit.
+    Everything cheaper was done first: five separate script entries measured 4.57s, one interpreter
+    3.45s, and 2.57s after memoizing `git ls-files` and the schema $ref graph inside
+    check_s2a_migration.py -- the mutation suite was re-paying both 25 times in a single run, which
+    is ORDER-270's spawn pathology at small scale. A further 11x is available only by dropping the
+    24-mutation half, which is the one half that proves the checker can still fail against the file
+    it just passed. That is not a trade worth making.
+    ✅ BACKLOG-D32 IS NOW BUILT (2026-07-31). This suite still costs 3.6s, but a commit only pays it
+    when it stages something this suite guards -- measured 3.9s total for a schema edit against
+    18.1s for the full tier. The paragraph below described the fix while it was still pending; it is
+    kept because the reasoning is why the feature exists.
+    THE REAL FIX WAS BACKLOG-D32, per-path suite selection from $SUITE_GUARDS: a commit touching
+    only scripts/*.ps1 should not pay 2.9s of S2a, and a commit touching s2a_migration.jsonl should
+    not pay 5.8s of optimize-guard. The declarations needed for that are now in place for S2a -- all
+    eight of its paths are in the $SUITE_GUARDS map and selected by the generated pathspec, verified
+    by run_guard_trigger_tests.ps1.
+#>
+[CmdletBinding()]
+param(
+    [string]$RepoRoot,
+    # ORDER-1130 T1. The per-entry table in the comment block below was measured by a harness
+    # that lived in a scratchpad and was thrown away, so the table can only be re-derived by
+    # rebuilding the harness -- which is why it is now a year of vintages deep and two of its
+    # lines were wrong by 4x and 42x when ORDER-830 finally re-measured. Attribution that lives
+    # only in a comment goes stale in exactly the way this repo keeps paying for.
+    # -Timing measures every entry and prints the table. It costs one Stopwatch per entry.
+    [switch]$Timing
+)
+
+$ErrorActionPreference = 'Stop'
+
+# Captured at START, not at report time -- a sibling suite's instrumentation printed the mode
+# AFTER a part had unset the variable, labelling an index run `worktree`. Same trap, closed here
+# before it can be sprung.
+$evidenceMode = if ($env:EA_LAB_EVIDENCE) { $env:EA_LAB_EVIDENCE } else { 'worktree (default)' }
+
+if (-not $RepoRoot) {
+    $here = $PSScriptRoot
+    if (-not $here -and $MyInvocation.MyCommand.Path) { $here = Split-Path -Parent $MyInvocation.MyCommand.Path }
+    if (-not $here) { throw 'cannot resolve script directory; pass -RepoRoot explicitly' }
+    $RepoRoot = Split-Path -Parent (Split-Path -Parent $here)
+}
+
+$python = Join-Path $RepoRoot 'tools\python312\python.exe'
+if (-not (Test-Path -LiteralPath $python)) {
+    # A missing interpreter is a failure, not a skip. A cage that silently opts out when its
+    # tool is absent is the exact defect class this repo has hit five times: the artifact
+    # keeps being produced and quietly stops being true.
+    Write-Host "[contract-binding] FAIL: interpreter not found at $python" -ForegroundColor Red
+    exit 1
+}
+
+# ⚠️ EVERY PER-ENTRY NUMBER BELOW IS MEANINGLESS WITHOUT ITS EVIDENCE MODE. Read this first.
+# ORDER-830, MEASURED 2026-08-01, medians of 3 runs each, machine idle, every entry launched
+# with the same interpreter/args/cwd this file uses. The entry list was PARSED OUT OF THIS FILE
+# by the harness rather than retyped, so the table cannot drift from the list below it.
+#
+# TWO variables, and BOTH must be stated with any number from this file:
+#   1. EVIDENCE MODE. The tier sets EA_LAB_EVIDENCE=index for its children ONLY under -Hook
+#      (run_fast_cages.ps1 line ~789). Worth +8.5s on this wrapper. The table below is per-mode
+#      for exactly this reason. ORDER-820's "+8.7s regression" was this delta: the suite grew
+#      +0.7s between ddbaec95 and HEAD, measured with mode and shell held constant at both.
+#   2. WHICH git.exe IS ON PATH, which is decided by the SHELL that launched the run.
+#      C:\Program Files\Git\cmd\git.exe is a 45 KB SHIM; mingw64\bin\git.exe is the real 4.3 MB
+#      binary. Benchmarked from one shell so the shell is held constant, and INTERLEAVED in both
+#      orders across 3 rounds so a warm-cache ordering effect cannot hide in it: the shim costs
+#      +9.1 to +9.2 ms per spawn, stable to 0.1 ms. QUOTE THE DELTA, NOT THE ABSOLUTES (32.7 vs
+#      23.6 ms interleaved, 35.3 vs 25.3 ms in the first one-order run -- they drift with load).
+#      PowerShell resolves the shim, sh resolves the real binary, and it is NOT PATH length
+#      (PowerShell 15 entries, bash 31). This wrapper spawns ~142 git children, so the shell
+#      alone moves it 5-9s. The table below was taken from PowerShell -- the EXPENSIVE side.
+#      From sh the same wrapper is 19.9-20.3s worktree / 25.6-27.2s index, and inside a REAL
+#      pre-commit hook it is 20.3s.
+# A tier number with no stated invocation is not evidence. ORDER-820 spent six samples proving
+# that. Measured the way .githooks/pre-commit:220 actually invokes it, the full tier is
+# 83.3 / 86.4 / 87.2s at 7e4d8361 and 87.1 / 87.2 / 90.1s at 60a6eb12 (17 suites) -- ON the
+# 90.0s line, one sample over it, NOT comfortably inside. The controlled pair is those 17-suite
+# sh runs against 95.1 / 97.6 / 97.6s for the same 17 suites from PowerShell: ~9s of shell.
+# STATE THE COMMIT with any tier number -- HEAD moved twice under these measurements.
+#
+#   entry                                 worktree   index    delta
+#   check_registries.py                       0.07    4.96    +4.89   <- R4's 129-path sweep
+#   run_coverage_transfer_tests.py            3.67    5.25    +1.58
+#   run_guard_shape_lint.py                   0.14    1.48    +1.34
+#   run_s2a_gate.py                           4.94    5.45    +0.51
+#   check_schema_structure.py                 0.05    0.53    +0.48
+#   check_coverage_transfer.py                0.84    1.28    +0.44
+#   run_schema_fixtures.py                    2.35    2.68    +0.33
+#   check_input_surface_gen.py                0.07    0.21    +0.14
+#   run_enforcement_status_tests.py           0.38    0.41    +0.03
+#   run_guard_shape_lint.py --self-test       0.07    0.11    +0.03
+#   run_registry_tests.py                     8.48    8.49    +0.02   <- pays index mode itself
+#   run_attested_pin_staged_tests.py          0.27    0.27     0.00
+#   run_input_surface_tests.py --mutate       0.18    0.18     0.00
+#   run_contract_binding_tests.py             0.08    0.08     0.00
+#   gen_design_contracts.py --check           0.04    0.04     0.00
+#   run_snapshot_validator_tests.py           0.16    0.16     0.00
+#   run_s2a_conformance.py --mutate           0.12    0.12     0.00
+#   run_snapshot_s4_tests.py                  1.38    1.27    -0.11
+#   SUM OF ENTRIES                           23.29   32.97    +9.68
+#   THIS WRAPPER, measured by the tier        25.4    34.1     +8.7
+#
+# The ~1-2s between the sum and the wrapper is 18 process starts plus this file's loop; it is
+# stated here because ORDER-830 A3 asked for it and "unattributed" is how 8.7s became a mystery.
+#
+# WHERE THE INDEX-MODE COST IS: check_registries.py's R4 sweep enumerates
+# _triage/factory_os/*.py + scripts/*.ps1 + scripts/lib/*.ps1 and reads each swept path through
+# its own `git show :path` -- ~142 git child processes per run, 99% of main(), at 24-35 ms per
+# spawn. THE COUNTS GROW WITH THE REPOSITORY, so re-count rather than quoting: 129 enumerated
+# when first measured, 131 four commits later, of which RESOLVER_SWEEP_EXEMPT skips 6, giving
+# 128 `git show` calls inside check_r4. ORDER-270's spawn pathology, in a new place. Do NOT "fix"
+# it by defaulting index mode away: judging the commit instead of the worktree is the whole
+# content of ORDER-670. A `git cat-file --batch` reader is the route, and it belongs to
+# ORDER-820 C2, not here.
+# 🔴 ORDER-1252 (BOX 1b, owner-ratified 2026-08-03). THIS SUITE IS NO LONGER IN THE FAST TIER,
+# and three of its entries are no longer here at all.
+#
+# What moved to scripts\_test\run_schema_cages.ps1, which IS in the tier:
+#     run_schema_fixtures.py  ·  check_schema_structure.py  ·  gen_design_contracts.py --check
+# Those three are 4.47s of the 41.56s measured under -Hook, and they are the ones that must stay
+# on the commit path: run_schema_fixtures ajv-validates every LIVE row of every factory/*.jsonl
+# store, which is exactly what case E of run_registry_tests.ps1 protects. Displacing this whole
+# wrapper (the owner's first instruction) was attempted by the ORDER-1240 lane and REVERTED
+# because that case refused it and was right to.
+#
+# What stays here, and is now HAND-RUN rather than run at commit time:
+#     powershell -File scripts\_test\run_contract_binding_tests.ps1
+# Same status as run_chainwalk_tests and run_order101/103/105, which .githooks/pre-commit already
+# names in its closing lines. Run it at every session boundary. The guard declarations this suite
+# used to carry are kept as a comment in run_fast_cages.ps1 next to the $SUITE_GUARDS table.
+$scripts = @(
+    @{ Path = '_triage\factory_os\run_contract_binding_tests.py'; Args = @() },
+    @{ Path = '_triage\factory_os\run_snapshot_validator_tests.py'; Args = @() },
+    # ORDER-612 (S4). The python half of the S4 acceptance -- C2 (N discovered => exactly N
+    # categorized or an explicit reason), C4 (evidence DERIVED from disk, a contradicting builder
+    # claim REFUSED), C5 (atomic build->validate->replace, previous file byte-unchanged on
+    # failure), C7 (version 5, and 4 refused by the schema). MEASURED 1.38s worktree / 1.27s index
+    # (ORDER-830, 2026-08-01; this line read 0.35s, wrong by 4x), which is why it is
+    # here rather than in a suite of its own: this wrapper's own note says the expensive part of a
+    # cage in this tier is the process, not the assertions. C1 stays in run_schema_fixtures.py
+    # (it IS that file's real-snapshot line, now asserted rather than printed); C3 and C6 are the
+    # PowerShell readers and live in scripts\_test\run_snapshot_s4_tests.ps1.
+    @{ Path = '_triage\factory_os\run_snapshot_s4_tests.py'; Args = @() },
+    # ORDER-630 (S5). The resolver's answers, and each of check_registries' five criteria observed
+    # going red for its own reason. MEASURED 8.48s worktree / 8.49s index (ORDER-830, 2026-08-01;
+    # this line read 0.2s, wrong by 42x and the largest single item in the wrapper). It is mode-
+    # INDIFFERENT because it pins both modes itself: its last two cases run check_registries.py's
+    # real CLI once per mode, and the index one alone costs 5.0s of the 8.5s -- to assert that the
+    # marker line names the mode. Same trade as the line above: a python cage belongs in an
+    # existing python wrapper unless it needs its own lifecycle.
+    @{ Path = '_triage\factory_os\run_registry_tests.py'; Args = @() },
+    # ...and the guard itself, run over the REAL stores. The suite above drives it against
+    # synthetic roots; this is the run that would notice a committed registry going wrong.
+    # MEASURED 0.07s worktree / 4.96s index (ORDER-830, 2026-08-01) -- a 70x mode spread, and the
+    # single biggest reason the tier costs 8.7s more under the hook than standing alone. The cost
+    # is R4's sweep: 129 enumerated paths, one `git show` child process each.
+    @{ Path = '_triage\factory_os\check_registries.py'; Args = @() },
+    # 4. check_schema_structure.py -- the SUPERSEDED lint, wired in by /scrutinize 2026-07-30.
+    #    It is not the binding (that is item 1) and its own header says so. It is kept for two
+    #    checks nothing else covers: discriminator consistency (add an entity, forget its oneOf
+    #    branch) and the closed-object inventory across all 27 entities.
+    #    WHY IT IS HERE NOW: it had been CRASHING since `c8d03d4b` -- part 1 made
+    #    meta.reconciliation a $ref and the script indexed ['required'] on it -- so its whole
+    #    design-binding section had not executed for four commits, and it still printed
+    #    "all routed entities except ['ControlRoomSnapshotV5']" after that root was closed. A lint
+    #    in no suite and no hook is a lint that can die without anyone learning it died, which is
+    #    ORDER-270's finding applied to a file rather than to a runtime.
+    #    ORDER-1252: MOVED to run_schema_cages.ps1, which is in the tier this suite left.
+    # 5. run_s2a_gate.py -- ORDER-600 (S2a), wired in the same commit that landed D1, which is what
+    #    check_s2a_migration.py's own header says to do: it exits 2 while D1 is absent, so wiring it
+    #    any earlier would have made this tier permanently red.
+    #    It is ONE entry running FIVE checks in ONE interpreter (D1-vs-generator drift, D2-vs-D1
+    #    drift, the nine machine criteria, the 18-assertion self-test, and 24 mutations of the real
+    #    D1). MEASURED: as five separate entries it cost 4.57s; in one process 3.45s; and 2.57s after
+    #    memoizing `git ls-files` and the schema $ref graph, which the mutation suite was otherwise
+    #    re-paying 25 times in a single run -- the ORDER-270 spawn pathology at small scale.
+    #    RE-MEASURED 2026-08-01 (ORDER-830): 4.94s worktree / 5.45s index. The 2.57s was true when
+    #    it was written and is not true now, and the memoization is still in place -- so something
+    #    else grew here and nobody has attributed it. Second-largest entry in the wrapper.
+    #    The mutation half is the part that matters: the other four can all be green while the
+    #    checker is incapable of failing against the file it just passed.
+    @{ Path = '_triage\factory_os\run_s2a_gate.py'; Args = @() },
+    # 5b. run_s2a_conformance.py -- ORDER-614 rev 2. The implementation left the attestation
+    # bundle; THIS is what holds it to the bound policy instead. --mutate is the permanent E1
+    # fixture: every conforming vector must go red when its own criterion is neutralised. A
+    # repair to check_s2a_attestation.py that keeps this green owes the owner NO signature,
+    # which is the entire point of the order.
+    @{ Path = '_triage\factory_os\run_s2a_conformance.py'; Args = @('--mutate') },
+    # 6. ORDER-601 closure: proves the PLANNED/BUILT/WIRED labels are checked and the check can fail.
+    #    x-enforced-by asserted enforcement for 7 constraints nothing enforced; relabelling only
+    #    helps if the labels are verified, so this mutates the schema 5 ways and requires each to be
+    #    refused by name.
+    @{ Path = '_triage\factory_os\run_enforcement_status_tests.py'; Args = @() },
+    # 7. ORDER-610 (S2). The Coverage transfer acceptance, in two entries because they answer two
+    #    different questions and one cannot substitute for the other:
+    #      run_coverage_transfer_tests.py  -- can the checker fail? 18 mutations, 2 controls, and
+    #                                         an inertness probe showing the self-referential
+    #                                         baseline accepts a deletion the pinned one catches.
+    #      check_coverage_transfer.py      -- does the REAL repository still satisfy both owner
+    #                                         conditions right now? The mutation suite injects its
+    #                                         inputs, so it would stay green if the real
+    #                                         MASTER_BACKLOG.md were hand-edited tomorrow.
+    #    MEASURED 2026-08-01 (ORDER-830) -- no number had EVER been recorded for either, and
+    #    together they are 4.5s worktree / 6.5s index, the third-largest item here:
+    #      run_coverage_transfer_tests.py  3.67s worktree / 5.25s index
+    #      check_coverage_transfer.py      0.84s worktree / 1.28s index
+    @{ Path = '_triage\factory_os\run_coverage_transfer_tests.py'; Args = @() },
+    @{ Path = '_triage\factory_os\check_coverage_transfer.py'; Args = @() },
+    # 8. ORDER-611 (S3). The REAL JSON Schema validation, wired at last. It was excluded for two
+    #    reasons in sequence, both since removed: it cost 11.5s (fixed by batching, 1.8s), and then
+    #    the tier ran all 12 suites on any staged path (fixed by BACKLOG-D32's per-path selection).
+    #    A schema edit now pays this suite and not 5.8s of optimize-guard cases.
+    #    MEASURED 2026-07-31: 2.2s, 89 cases (35 root + 54 per-entity) + 3 harness probes.
+    #    RE-MEASURED 2026-08-01 (ORDER-830): 2.35s worktree / 2.68s index -- this one held.
+    #    REQUIRES ajv-cli on PATH. If ajv is missing the suite reports ERROR, not "rejected" --
+    #    that distinction is the whole reason its three-state discipline exists.
+    #    ORDER-1252: MOVED to run_schema_cages.ps1. It is the reason that suite exists -- the
+    #    live-row half must stay on the commit path of the stores it validates (case E).
+    # 9. ORDER-616. The four defect SHAPES behind 24 audit findings, made mechanical where they
+    #    can be. TWO entries because "the lint passes" and "the lint can fail" are different
+    #    claims, and the second is the one this repo keeps needing: L1 and L2 are guards, and a
+    #    guard with no proof it can fire is shape 3 -- the very thing L2 exists to catch.
+    @{ Path = '_triage\factory_os\run_guard_shape_lint.py'; Args = @('--self-test') },
+    @{ Path = '_triage\factory_os\run_guard_shape_lint.py'; Args = @() },
+    # 10. ORDER-710. The generated input-surface enumeration, in the same two entries as item 7
+    #     and for the same reason -- they answer two different questions:
+    #       run_input_surface_tests.py --mutate -- can the guard fail? Every criterion gets an
+    #                                              attack, a specificity half and a mutation,
+    #                                              over FIXTURE sources it injects, so it stays
+    #                                              green no matter what the real repo does.
+    #                                              (The count is printed by the run and is not
+    #                                              repeated here -- it went 5 -> 6 in one
+    #                                              /scrutinize round, which is the argument.)
+    #       check_input_surface_gen.py         -- is the REAL enumeration current and wired in
+    #                                              RIGHT NOW, judged at the commit's snapshot?
+    #     MEASURED 0.22s + 0.11s (re-measured after G3 joined). RE-MEASURED 2026-08-01 (ORDER-830):
+    #     0.18s + 0.07s worktree, 0.18s + 0.21s index -- both held. Both belong in this wrapper
+    #     rather than a 17th PowerShell suite, per this file's own rule that the expensive part
+    #     of a small cage is the process.
+    @{ Path = '_triage\factory_os\run_input_surface_tests.py'; Args = @('--mutate') },
+    @{ Path = '_triage\factory_os\check_input_surface_gen.py'; Args = @() },
+    # 11. ORDER-731. The cage for the attested-pin FRONT guard. Only the cage runs here -- the
+    #     guard itself runs in .githooks/pre-commit, one snapshot before this tier, because its
+    #     whole job is to refuse a commit and a suite cannot do that. Same trade this file states
+    #     for items 7 and 10: a python cage belongs in an existing python wrapper rather than a
+    #     17th PowerShell suite, and the tier has ~7-9s of headroom, not a process to spare.
+    #     RE-MEASURED 2026-08-01 (ORDER-830) and the headroom is ON THE LINE, not real-but-thin:
+    #     reproducing .githooks/pre-commit:220 exactly (sh -> powershell -File run_fast_cages.ps1
+    #     -Hook), six full-tier samples span 83.3-90.1s against 90.0s -- ONE OF THEM OVER --
+    #     on SEVENTEEN suites (83.3/86.4/87.2 at 7e4d8361, 87.1/87.2/90.1 at 60a6eb12). The same
+    #     script launched from PowerShell reads 95.1-98.6s, which is the shim above, not the tier.
+    #     Nothing further goes in this wrapper without re-measuring THROUGH THE HOOK'S OWN LINE.
+    @{ Path = '_triage\factory_os\run_attested_pin_staged_tests.py'; Args = @() }
+)
+
+$failed = 0
+$timings = @()
+foreach ($s in $scripts) {
+    $full = Join-Path $RepoRoot $s.Path
+    if (-not (Test-Path -LiteralPath $full)) {
+        Write-Host ("[contract-binding] FAIL: missing {0}" -f $s.Path) -ForegroundColor Red
+        $failed++
+        continue
+    }
+    $sw = if ($Timing) { [System.Diagnostics.Stopwatch]::StartNew() } else { $null }
+    $out = & $python $full @($s.Args) 2>&1
+    if ($sw) {
+        $sw.Stop()
+        # The label is DERIVED from the entry, never retyped -- the comment table above drifted
+        # because it was a hand copy of this list, and a hand copy is a second source of truth.
+        $timings += [pscustomobject]@{
+            Entry   = (Split-Path -Leaf $s.Path) + $(if ($s.Args.Count) { ' ' + ($s.Args -join ' ') } else { '' })
+            Seconds = [math]::Round($sw.Elapsed.TotalSeconds, 2)
+        }
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ("[contract-binding] FAIL {0}" -f $s.Path) -ForegroundColor Red
+        Write-Host ($out | Out-String)
+        $failed++
+    }
+}
+
+if ($Timing) {
+    # The mode is printed WITH the numbers, because a number from this file without its evidence
+    # mode and its shell is not evidence -- the comment block above spends 25 lines on why.
+    Write-Host ''
+    Write-Host ("[contract-binding] TIMING -- evidence mode: {0}" -f $evidenceMode)
+    foreach ($t in ($timings | Sort-Object -Property Seconds -Descending)) {
+        Write-Host ('    {0,-42} {1,6:N2}s' -f $t.Entry, $t.Seconds)
+    }
+    Write-Host ('    {0,-42} {1,6:N2}s' -f 'SUM OF ENTRIES',
+                ($timings | Measure-Object -Property Seconds -Sum).Sum)
+}
+
+if ($failed -gt 0) { exit 1 }
+Write-Host ('[contract-binding] design tables match the schema, all 7 regressions are still ' +
+            'caught, and the snapshot verdict is recomputed rather than trusted')
+exit 0

@@ -1,6 +1,13 @@
 ============================================================
 EA_RUNNER_ST03  —  GBPUSD H1  —  LR2 winner @ 1x
 Deploy bundle  (built 2026-06-26)
+
+!!! SUPERSEDED -- DO NOT DEPLOY ON THIS EVIDENCE (added 2026-07-26) !!!
+    Audit AUDIT_BUNDLE_EVIDENCE_G1.md sec.3. The windows here are CLEAN (2024 only), so
+    nothing was fitted -- but the headline "IS 8.31 / OOS 3.93 -> DEPLOY SMALL" was replaced
+    in the registry by PF 0.86 over 585 trades, the loop was closed, and this EA was PULLED
+    OFF the real account on 2026-07-18. This README is the only place still selling it.
+    Treat as historical. A new deploy decision starts from the registry, not from here.
 ============================================================
 
 WHAT THIS IS

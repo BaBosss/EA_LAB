@@ -4,6 +4,30 @@
 //|   Pluggable entry (signal-only) + shared MM/Exit/Risk modules.  |
 //|   Phase 3a: Strategy-Tester only. Entry = Grid Trend MA.        |
 //+------------------------------------------------------------------+
+//| *** DEPRECATED - V1 CHASSIS, DO NOT USE FOR NEW WORK ***         |
+//|                                                                   |
+//| Superseded by Boss V2 (ea_template/core/ + Boss_11..18_*.mq5).   |
+//| Not maintained: 0 rows in the deployments inventory, 0 backtest  |
+//| reports, 0 .set files reference this file or ea_template/modules/|
+//| (unmodified since 2026-06-18). Boss V2 has no dependency on this |
+//| file or on modules/ - the two trees are parallel, not layered.  |
+//|                                                                   |
+//| Known live defects, neither fixed here (would change behavior,  |
+//| this is a comment-only banner):                                 |
+//|  1. Silent lot-mode fallback: MM_FirstLot() (modules/            |
+//|     MoneyManagement.mqh) defaults to InpFixedLot whenever RISK   |
+//|     mode can't produce a distance, with no warning/failure - the |
+//|     exact silent-fallback defect Boss V2 removed in MM-SAFETY-001|
+//|     (2026-07-24: V2 now fails the attach / skips the order        |
+//|     instead of borrowing another mode's value).                 |
+//|  2. Lot normalizer rounds a below-minimum lot UP to the broker   |
+//|     minimum; Boss V2's normalizer returns 0 (skip the order)     |
+//|     instead of silently sizing up past what was requested.       |
+//|                                                                   |
+//| Do not deploy this chassis. Do not build new work on it. See     |
+//| docs/EA_CORE_AND_TEMPLATE_GUIDE.md section 3.1 (V1 vs V2) and    |
+//| ea_template/DESIGN_V2.md for the full V1->V2 rationale.          |
+//+------------------------------------------------------------------+
 #property copyright "EA_LAB"
 #property version   "1.00"
 #property description "Dropdown-mode chassis (Grid Trend MA / Breakout). Strategy-Tester phase; built-in indicators only."

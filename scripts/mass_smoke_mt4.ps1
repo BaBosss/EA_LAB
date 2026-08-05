@@ -1,3 +1,13 @@
+# =============================== HOLDOUT-BURNED ===============================
+# ORDER-238 (2026-07-27). One or more test windows in this file end after
+# 2025.12.31 -- that is, inside the 2026H1 holdout. They are deliberately LEFT
+# AS-IS: they record what past runs actually did, and rewriting them would
+# misrepresent that history.
+#
+# Therefore: do NOT re-run this script to produce selection evidence, and do NOT
+# copy its window into new work. A holdout is spent the first time it is touched.
+# The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
+# ==============================================================================
 param(
   [string]$Batch = "01",
   [string]$WorklistCsv = "D:\EA_LAB\_triage\mass_smoke_mt4_batches.csv",
@@ -16,6 +26,7 @@ $ErrorActionPreference = "Stop"
 
 . "D:\EA_LAB\scripts\use_python.ps1"
 
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $runScript = "D:\EA_LAB\scripts\mt4_run.ps1"
 $parseScript = "D:\EA_LAB\scripts\parse_mt4_report.py"
 $reportsDir = "D:\EA_LAB\_mt4_auto\reports"
@@ -113,6 +124,10 @@ function Invoke-TestRun {
   # splat appends the bare flag token, which -File parses correctly.
   $extra = @()
   if ($Portable) { $extra = @('-Portable') }
+  # ORDER-372: same stale-report hazard as the MT5 twin. mt4_run.ps1 also gained explicit exit
+  # codes in the same change - before that it never set one on success, so a caller reading
+  # $LASTEXITCODE after a good run got whatever the previous command left behind.
+  $runStart = Get-Date
   & powershell -File $runScript `
     -Expert $Expert `
     -Symbol $Symbol `
@@ -125,9 +140,10 @@ function Invoke-TestRun {
     -InstallDir $InstallDir `
     -DataDir $DataDir `
     -TimeoutSec $TimeoutSec @extra | Out-Host
+  $runnerExit = $LASTEXITCODE
 
   $reportPath = Join-Path $reportsDir "$ReportName.htm"
-  if (-not (Test-Path $reportPath)) { return $null }
+  if (-not (Test-ReportIsFresh -Htm $reportPath -RunStart $runStart -RunnerExit $runnerExit -Label $ReportName)) { return $null }
   return $reportPath
 }
 

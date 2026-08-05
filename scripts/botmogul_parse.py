@@ -8,7 +8,7 @@ PARSE + RANK + SHORTLIST ONLY. No backtests. No verdicts. Every extracted number
 vendor CLAIM, not a validated result (memory wobr-botranking: BotMogul rank = adverse-
 selected overfit corpus).
 
-Input rows come from _triage\\ORDER091A_REPORTS.csv, filtered to:
+Input rows come from _triage\\_archive\\campaigns_closed\\ORDER091A_REPORTS.csv, filtered to:
     type == 'html' AND scan_folder == 'BOT MOGUL Bundles'
 
 Report HTML anatomy (identical across the MT4(ex4) and MT5(ex5) subtrees, spot-checked):
@@ -25,10 +25,10 @@ Report HTML anatomy (identical across the MT4(ex4) and MT5(ex5) subtrees, spot-c
 
 Usage:
   tools\\python312\\python.exe scripts\\botmogul_parse.py
-      [--csv _triage\\ORDER091A_REPORTS.csv]
-      [--out _triage\\BOTMOGUL_CLAIMS.csv]
+      [--csv _triage\\_archive\\campaigns_closed\\ORDER091A_REPORTS.csv]
+      [--out _triage\\_archive\\corpora_cold\\botmogul\\BOTMOGUL_CLAIMS.csv]
       [--xray _triage\\FXDREEMA_XRAY.csv]
-      [--shortlist _triage\\BOTMOGUL_SHORTLIST.md]
+      [--shortlist _triage\\_archive\\corpora_cold\\botmogul\\BOTMOGUL_SHORTLIST.md]
       [--limit N]   (debug: only process first N filtered rows)
 """
 import argparse
@@ -302,10 +302,10 @@ def load_xray(xray_path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--csv", default=r"_triage\ORDER091A_REPORTS.csv")
-    ap.add_argument("--out", default=r"_triage\BOTMOGUL_CLAIMS.csv")
+    ap.add_argument("--csv", default=r"_triage\_archive\campaigns_closed\ORDER091A_REPORTS.csv")
+    ap.add_argument("--out", default=r"_triage\_archive\corpora_cold\botmogul\BOTMOGUL_CLAIMS.csv")
     ap.add_argument("--xray", default=r"_triage\FXDREEMA_XRAY.csv")
-    ap.add_argument("--shortlist", default=r"_triage\BOTMOGUL_SHORTLIST.md")
+    ap.add_argument("--shortlist", default=r"_triage\_archive\corpora_cold\botmogul\BOTMOGUL_SHORTLIST.md")
     ap.add_argument("--limit", type=int, default=0)
     args = ap.parse_args()
 
@@ -416,7 +416,7 @@ def write_shortlist(path, rows, total_filtered, n_ok, n_partial, n_fail, n_joine
     lines = []
     lines.append("# BOTMOGUL_SHORTLIST — ORDER-091B phase 1 (parse+rank, no backtests, no verdicts)")
     lines.append("")
-    lines.append("Source: `_triage\\BOTMOGUL_CLAIMS.csv`, %d BOT MOGUL Bundles html reports "
+    lines.append("Source: `_triage\\_archive\\corpora_cold\\botmogul\\BOTMOGUL_CLAIMS.csv`, %d BOT MOGUL Bundles html reports "
                   "(type=html, scan_folder='BOT MOGUL Bundles')." % total_filtered)
     lines.append("Parse status: ok=%d, partial=%d, fail=%d (of %d)." % (n_ok, n_partial, n_fail, total))
     lines.append("X-ray join hits (ea_id/expert_name vs FXDREEMA_XRAY.csv name): %d/%d "

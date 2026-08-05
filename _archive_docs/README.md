@@ -6,7 +6,9 @@
 | ไฟล์ | คือ | แทนที่ด้วย |
 |---|---|---|
 | `INDEX.md` | EA registry เก่า (06-12, idea-bank candidates) | `../EA_SCORECARD_AND_REGISTRY.md` |
-| `EA_LAB_MASTER_SPEC.md` | scaffold spec ("schema headers / no parser") | `../docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
+| `EA_LAB_MASTER_SPEC.md` | scaffold spec ("schema headers / no parser") | `RECOVERED_PLATFORM_DESIGN_20260614.md` (นี่ก็ archived แล้ว — ดูแถวถัดไป) |
 | `PROJECT_STATUS.md` | สถานะ 06-22 (section 4 = log เก่า GSMC) | `../_RESUME_HERE.md` + `../DEMO_DEPLOYMENT_PLAN.md` |
 | `MT4_SCREENING_PLAN.md`, `QWEN_MT4_SCREEN_PLAN.md` | MT4 screen 63 EA (จบ: 0/63 pass) | memory `mt4-screening` |
 | `SWEEP_RESULTS_SESSION1/3.md`, `QWEN_SWEEP_SESSION1/2/3.md`, `QWEN_SYMBOL_SWEEP_PLAN.md` | qwen symbol sweep logs (จบ: negative, index ไม่มี history) | memory `signal-landscape` |
+| `RECOVERED_PLATFORM_DESIGN_20260614.md` (moved from `docs/`, 2026-07-23) | old scoring v1 / gate chain / Pass 0-1-2-4 framework — superseded per its own banner | `../docs/PIPELINE.md` + `../CLAUDE.md` VERDICT GATE + skill `backtest-optimize-rigor` |
+| `OPTIMIZE_PROCEDURE_AND_AUDIT.md` (moved from root, 2026-07-23) | old optimize procedure + honest self-audit, already bannered SUPERSEDED 2026-07-18 | skill `backtest-optimize-rigor` |

@@ -63,7 +63,11 @@ $cVals = $shared | ForEach-Object { $gsmc[$_] + $mg[$_] }
 $n     = $shared.Count
 $cMean = ($cVals | Measure-Object -Sum).Sum / $n
 $cStd  = [Math]::Sqrt((($cVals | ForEach-Object { ($_-$cMean)*($_-$cMean) }) | Measure-Object -Sum).Sum / ($n-1))
-$cPos  = ($cVals | Where-Object { $_ -gt 0 }).Count
+# @() here is DEFENSIVE, not a bug fix - see the corrected note in basket_earun_gsmc_corr.ps1.
+# $cVals holds numbers, and a scalar Double in PS 5.1 exposes a synthetic .Count of 1, so the
+# "single positive month reports as none" failure an earlier version of this comment described
+# could not occur here. The $null-on-one-match trap is real, but only for object pipelines.
+$cPos  = @($cVals | Where-Object { $_ -gt 0 }).Count
 
 Write-Host ""
 Write-Host "=== COMBINED OOS PORTFOLIO ===" -ForegroundColor Yellow

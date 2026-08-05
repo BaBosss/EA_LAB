@@ -30,7 +30,7 @@
 |---|---|
 | root *.md | canonical = `PROJECT_STATE`(entry) · `DEMO_DEPLOYMENT_PLAN` · `MASTER_BACKLOG` · `EA_SCORECARD_AND_REGISTRY` · `INTAKE_QUEUE` · `README` · `PLATFORM_INDEX`(นี่). เก่า/deprecated → `_archive_docs/` (2026-06-29: _RESUME_HERE, QWEN_WORK_PLAN). RUN_REGISTRY.* = gitignored (auto-gen, deprecated) |
 | `ea_projects/` | งานจริงต่อ EA — ดูข้อ 3 |
-| `docs/` | เอกสารดีไซน์ทั้งหมด · **`RECOVERED_PLATFORM_DESIGN_20260614.md` = สมองที่กู้มา (อ่านอันนี้)** · `EA_CORE_AND_TEMPLATE_GUIDE.md` = สถาปัตยกรรม+วิธีใช้ EA_CORE/EA_Template (2026-07-02) · `_legacy_manual/` = doc เก่าตกยุค |
+| `docs/` | เอกสารดีไซน์ทั้งหมด · `EA_CORE_AND_TEMPLATE_GUIDE.md` = สถาปัตยกรรม+วิธีใช้ EA_CORE/EA_Template (2026-07-02) · `_legacy_manual/` = doc เก่าตกยุค |
 | `scripts/` | automation (collect_mt5_reports, export_reports, import_manual_run...) ⚠️ **path ยังชี้ OneDrive ต้องแก้** |
 | `skills/` | สำเนา .md ของ skill (ตัวจริงอยู่ที่ `.claude\skills`) |
 | `portfolio/` | candidate/portfolio (EA_CANDIDATE_MASTER.xlsx) — ✅ รวม central_results เข้ามาแล้ว 2026-06-29 |
@@ -58,14 +58,15 @@
 
 ---
 
-## 4. Workflow โดยย่อ (รายละเอียดเต็มใน `docs/RECOVERED_PLATFORM_DESIGN_20260614.md`)
+## 4. Workflow โดยย่อ (รายละเอียดเต็มใน `docs/PIPELINE.md` + `CLAUDE.md` VERDICT GATE)
 
 ```
-ไอเดีย → build EA (จาก template) → backtest → optimize (Pass 0/1/2) → Single Test ยืนยัน
-       → OOS (เปลี่ยนแค่ช่วงวันที่ freeze .set) → robustness (Monte Carlo)
-       → candidate → portfolio (correlation 2-3 EA/port) → demo ≥3 เดือน → live micro
+ไอเดีย → build EA (จาก template) → backtest → optimize (backtest-optimize-rigor LADDER)
+       → both-window → holdout → Monte Carlo → Model-4 (ถ้า fill-sensitive)
+       → verdict (VERDICT GATE) → portfolio (correlation 2-3 EA/port) → demo ≥3 เดือน → live micro
 ```
-- **ระบบคะแนน canonical** = BacktestScore v1 (EA_Monitor) · `DeployScore = BT × Robust × RiskControl`
+- **verdict canonical** = `CLAUDE.md` VERDICT GATE (`DEAD-STRUCTURAL/DEAD-OPTIMIZED/PARKED-VERIFY/BUILD-ON/CANDIDATE/DEMO/LIVE`)
+  — เก่ากว่านั้น (BacktestScore v1, PASS/WATCH/REJECT ใน `_archive_docs/RECOVERED_PLATFORM_DESIGN_20260614.md`) = **retired**
 - **เป้า:** 10 port × 10,000 cent × 2-3 EA ที่ไม่ correlate กัน
 
 ---

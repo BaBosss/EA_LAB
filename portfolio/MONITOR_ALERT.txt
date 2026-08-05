@@ -1,0 +1,1 @@
+﻿2026-08-05 07:37 monitoring chain UNHEALTHY: snapshot, notify-projection, sensor-141049900, sensor-69424711 (newest data 0h old; 4/6 LAB_MANAGED deal-sensor fresh; deal-sensor missing: 141049900, 69424711 | 6/6 LAB_MANAGED float-sensor fresh)

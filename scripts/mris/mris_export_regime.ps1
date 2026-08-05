@@ -13,12 +13,22 @@
 # CSV-time -> broker-server-time; for a daily-granularity file 0 is fine (the as-of logic
 # just picks the latest row <= now, and states persist for days). Set InpOffsetHours only
 # if you later export intraday.
+#
+# ORDER-200 Phase D: -EnableCrisisFold (DEFAULT OFF) lets the advisory crisis models nudge
+# the exported state. OFF = this file behaves exactly as before, byte-for-byte, so real
+# accounts are untouched until the switch is deliberately flipped.
 [CmdletBinding()]
 param(
   [string]$StateJson = "D:\EA_LAB\portfolio\mris\regime_state.json",
   [string]$OutCsv    = "D:\EA_LAB\portfolio\EA_LAB_mris_regime.csv",
   [string]$CommonDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files",
-  [int]   $KeepRows  = 400
+  [int]   $KeepRows  = 400,
+  # DEFAULT OFF. When on, a crisis model at 'active' downgrades the exported state ONE notch.
+  [switch]$EnableCrisisFold,
+  [string]$CrisisJson = "D:\EA_LAB\portfolio\mris\crisis_models_state.json",
+  # fold policy (ladder / min_coverage / max_age_hours) lives in the crisis config so the
+  # cost estimator reads the SAME numbers this exporter acts on
+  [string]$FoldPolicyJson = "D:\EA_LAB\scripts\mris\crisis_models.json"
 )
 $ErrorActionPreference = 'Stop'
 $ci = [System.Globalization.CultureInfo]::InvariantCulture
@@ -54,6 +64,80 @@ $riStr = $ri.ToString('0.###', $ci)
 $flags = ""
 if ($st.flags) { $flags = (($st.flags | ForEach-Object { ("" + $_) -replace '"','' -replace ',',';' }) -join ' | ') }
 
+# --- ORDER-200 Phase D: optional crisis fold (DEFAULT OFF) --------------------
+# IRON RULE: this may only ever make us MORE cautious, and only by ONE notch.
+#   * downgrade ladder: RISK_ON -> NEUTRAL -> RISK_OFF. Stops there.
+#   * it can NEVER manufacture STRESS. STRESS is the most drastic action MacroGate takes and
+#     stays owned by the VALIDATED 8-barometer layer (VIX override / RI collapse). Nothing is
+#     lost by capping: a genuinely covid-like tape already trips the core VIX stress override,
+#     so the core would say STRESS on its own.
+#   * it can NEVER upgrade a state. A false positive therefore costs missed profit, never
+#     overexposure - the correct direction for the cheap mistake (user ratified 2026-07-25).
+# Only 'active' (>=60) folds; 'forming' stays brief/alert-only, so noise cannot throttle lots.
+if ($EnableCrisisFold) {
+  if (!(Test-Path $CrisisJson)) {
+    Write-Host "[export-regime] crisis fold ON but $CrisisJson missing - exporting core state unchanged (fail-safe)"
+  } else {
+    try {
+      $cm = Get-Content -Raw -LiteralPath $CrisisJson -Encoding UTF8 | ConvertFrom-Json
+      # policy (ladder / min_coverage / max_age_hours) is read from crisis_models.json so the
+      # cost estimator cannot drift from what actually runs. Defaults keep old files working.
+      $fp = $null
+      try { $fp = (Get-Content -Raw -LiteralPath $FoldPolicyJson -Encoding UTF8 | ConvertFrom-Json).fold_policy } catch { $fp = $null }
+      $minCov  = if ($fp -and $null -ne $fp.min_coverage)   { [double]$fp.min_coverage }   else { 0.5 }
+      $maxAge  = if ($fp -and $null -ne $fp.max_age_hours)  { [double]$fp.max_age_hours }  else { 30 }
+      $ladder = @{}
+      if ($fp -and $fp.ladder) { foreach ($p in $fp.ladder.PSObject.Properties) { $ladder[$p.Name] = "$($p.Value)" } }
+      else { $ladder = @{ 'RISK_ON' = 'NEUTRAL'; 'NEUTRAL' = 'RISK_OFF' } }
+
+      # FRESHNESS GATE: the CSV is rewritten daily, so MacroGate's own file-age check always
+      # sees a fresh file - it cannot detect that the crisis SCORES inside are days old (the
+      # crisis stage is non-fatal in mris_run.ps1, so a broken feed leaves the old json in
+      # place). Age-gate here, mirroring mris_classify.ps1's EffStatus discipline.
+      $ageOk = $true; $ageTxt = "unknown"
+      if ($cm.generated_utc) {
+        $gd = [datetime]::MinValue
+        if ([datetime]::TryParse("$($cm.generated_utc)", $ci, [System.Globalization.DateTimeStyles]::AdjustToUniversal -bor [System.Globalization.DateTimeStyles]::AssumeUniversal, [ref]$gd)) {
+          $ageH = ((Get-Date).ToUniversalTime() - $gd).TotalHours
+          $ageTxt = ("{0:N1}h" -f $ageH)
+          if ($ageH -gt $maxAge) { $ageOk = $false }
+        } else { $ageOk = $false; $ageTxt = "unparseable" }
+      } else { $ageOk = $false; $ageTxt = "absent" }
+
+      $activeModels = @()
+      if (-not $ageOk) {
+        Write-Host "[export-regime] crisis fold SKIPPED - crisis state age $ageTxt exceeds ${maxAge}h (fail-safe: core state kept)"
+      } else {
+        foreach ($m in $cm.models) {
+          # require a real score AND enough evidence behind it - a score computed from a
+          # fraction of its components must not throttle live lots
+          if ($null -ne $m.score -and "$($m.label)" -eq 'active' -and [double]$m.coverage -ge $minCov) {
+            $activeModels += ("{0}={1}" -f $m.name, ([double]$m.score).ToString('0.#', $ci))
+          }
+        }
+      }
+      if ($activeModels.Count -gt 0) {
+        if ($ladder.ContainsKey($state)) {
+          $before = $state
+          $state = $ladder[$state]
+          # sanitize exactly like the core flags above (commas -> ';', quotes stripped). The
+          # MQL reader IS quote-aware, but the original author stripped commas deliberately and
+          # appending after that step would have quietly bypassed the guard.
+          $note = ("CRISIS_FOLD: $before -> $state (" + ($activeModels -join '; ') + ")") -replace '"','' -replace ',',';'
+          $flags = if ($flags) { "$flags | $note" } else { $note }
+          Write-Host "[export-regime] crisis fold applied: $note"
+        } else {
+          Write-Host "[export-regime] crisis fold: state already $state - no downgrade available (fold never manufactures STRESS)"
+        }
+      } elseif ($ageOk) {
+        Write-Host "[export-regime] crisis fold ON, no model active at coverage>=$minCov - core state kept"
+      }
+    } catch {
+      Write-Host "[export-regime] crisis fold read failed - exporting core state unchanged (fail-safe): $($_.Exception.Message)"
+    }
+  }
+}
+
 # --- load existing rows (skip header), key by day, drop today's if re-run ------
 $rows = @()   # each: [pscustomobject]@{ day=; line= }
 if (Test-Path $OutCsv) {
@@ -72,8 +156,10 @@ if (Test-Path $OutCsv) {
 # --- append today, sort ascending by day, trim ------------------------------
 $newLine = '{0},{1},{2},"{3}"' -f $stamp, $state, $riStr, $flags
 $rows += [pscustomobject]@{ day = $dayKey; line = $newLine }
-$rows = $rows | Sort-Object { [datetime]::ParseExact($_.day, 'yyyy.MM.dd', $ci) }
-if ($rows.Count -gt $KeepRows) { $rows = $rows | Select-Object -Last $KeepRows }
+# @() wrap: Sort-Object returns a SCALAR for a single row, whose .Count is empty in PS 5.1
+# (printed "wrote  row(s)" on a fresh file and would break the KeepRows compare).
+$rows = @($rows | Sort-Object { [datetime]::ParseExact($_.day, 'yyyy.MM.dd', $ci) })
+if ($rows.Count -gt $KeepRows) { $rows = @($rows | Select-Object -Last $KeepRows) }
 
 # --- write atomically (header + ascending rows) ------------------------------
 $outLines = @('datetime,state,ri,flags') + ($rows | ForEach-Object { $_.line })

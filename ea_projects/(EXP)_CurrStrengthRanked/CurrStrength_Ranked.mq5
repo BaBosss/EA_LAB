@@ -251,6 +251,12 @@ void OpenLeg(const string pair, const int dir)
       return;
    }
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   // (multi-symbol EA -- minlot must be checked per traded pair, not per _Symbol)
+   const double minLot = SymbolInfoDouble(pair, SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("CurrStrengthRanked: LotSize %.3f < %s broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,pair,minLot); return; }
+
    bool ok = (dir == 1)
       ? g_trade.Buy (_05_LotSize, pair, ask, sl_price, tp_price, "CSTRK")
       : g_trade.Sell(_05_LotSize, pair, bid, sl_price, tp_price, "CSTRK");

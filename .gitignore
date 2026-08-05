@@ -10,6 +10,11 @@ terminalmt5.ini
 # Staging drop folder for manual MT5 reports (transient)
 _inbox/
 
+# ORDER-731 item 2: per-run tier transcripts. Diagnostic breadcrumbs for the concurrency
+# ABORT that fired in 2 of 8 full-tier runs on 2026-08-01 and could not be diagnosed because
+# no run left a trace. Local evidence, never history -- the finding goes on the board, not here.
+_triage/tier_runs/
+
 # Runtime logs and generated outputs
 logs/*
 # RUN_REGISTRY.* = DEPRECATED auto-output of run_pipeline.py (regenerated at root).
@@ -90,4 +95,43 @@ ARCHIVE/
 *.fxt
 *.hcc
 
+# FINDYOUR8 free-book PDF library (887MB, study material — catalog .md is tracked, blobs are not)
+_triage/findyour8_pdfs/
+
 STATUS.md
+
+# Codex/agent raw run transcripts parked in the triage archive (~16MB, untracked by
+# intent — the PROMPT/RESULT pairs beside them are the readable record). Ignored so a
+# stray `git add -A` cannot commit them into history permanently.
+_triage/_archive/**/*.log
+
+# ORDER-1080 (S9). The scheduler's per-attempt RECOVERY STATE, not evidence: the spawn marker
+# (written before the spawn, so its absence proves no spawn happened), the worker's exit sidecar,
+# and the worker transcripts. They must survive THIS MACHINE'S crash, which is why they are on
+# disk; they must not survive into history, because they describe one machine's attempt and the
+# committed record is factory/runs/<run_id>.jsonl beside them.
+factory/runs/*.spawn.json
+factory/runs/*.exit.json
+factory/runs/*.worker.*.log
+# The lane lease is live state for one install (an expiry, an owner). Committing it would let a
+# clone claim a lane it has never seen.
+factory/leases/
+
+# ORDER-1131 (S11). DERIVED renderings of the control-room snapshot: the local Control Center
+# page and the SafeProjection DTO. Both are a pure function of a snapshot that is itself
+# rebuilt by the daily chain, so committing them would create a file that goes stale on
+# somebody else's commit -- and a --check guard comparing them against HEAD would then be red
+# for a reason no author caused (memory: drift-guard-regenerating-against-head). The cage
+# builds both IN MEMORY from the real snapshot instead, so nothing here is unverified.
+build/
+
+# ORDER-1180 (S12). PER-MACHINE RUNTIME STATE of the alert path: the delivery ledger
+# (ops/delivery_ledger.jsonl) and the finding journal (ops/finding_journal.jsonl). Both are
+# append-only records of what THIS machine observed and sent, so committing them would put a
+# scheduled writer on the master branch -- a lane the commit guards cannot see (memory:
+# negative-claims-over-a-commit-range) -- and would grow by a line per event forever. They are
+# evidence for the operator at the machine, which is where the operator is. The SHAPE of both
+# is committed and checked: schemas.json declares AlertDelivery, and run_s12_tests.py drives
+# the ledger through a real file in a temp repo.
+ops/
+

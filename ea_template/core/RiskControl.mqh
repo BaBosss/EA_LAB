@@ -11,6 +11,16 @@
 #include "Persist.mqh"
 
 bool   g_rc_halted      = false;
+bool   g_rc_kill_pending = false;   // ORDER-129: kill fired, broker flatness not yet verified
+
+// ORDER-132 (Codex F6): ONE persisted state value ("rc_state") replaces the old
+// rc_halted + rc_kill_pending flag pair - two independent writes could crash
+// into the contradictory HALTED&&KILL_PENDING combination, and a manual reset
+// that deleted only one flag immediately re-derived the other.
+#define RC_STATE_RUNNING      0.0
+#define RC_STATE_KILL_PENDING 1.0
+#define RC_STATE_HALTED       2.0
+bool   g_rc_persist_dirty = false;   // ORDER-194b: a HALT persist write failed and needs retrying
 double g_rc_peak_equity = 0.0;
 double g_rc_max_dd_pct  = 0.0;
 int    g_rc_cap_blocks  = 0;
@@ -59,7 +69,7 @@ void RiskControl_AcctHwmUpdate()
    if(eq > g_rc_acct_hwm)
    {
       g_rc_acct_hwm = eq;
-      Persist_Set("acct_hwm", g_rc_acct_hwm);
+      if(!DryRun) Persist_Set("acct_hwm", g_rc_acct_hwm);   // ORDER-132b (Codex R2): observation instances never write terminal GVs
    }
 }
 
@@ -68,6 +78,7 @@ void RiskControl_AcctGateInit()
    g_rc_acct_trip = false;
    g_rc_acct_hwm  = 0.0;
    if(RC_AcctDDLimitPct <= 0.0) return;
+   Persist_MigrateLegacy("acct_hwm");   // ORDER-132: magic-only -> scoped key (one-shot, no-op in tester)
    if(Persist_Has("acct_hwm"))
    {
       g_rc_acct_hwm = Persist_Get("acct_hwm", 0.0);
@@ -94,25 +105,103 @@ bool RiskControl_AcctGateOK()
    return !blocked;
 }
 
-void RiskControl_Init()
+// ORDER-138 #1 + 138b (Codex roadmap SEV-1 + audit F1): legacy pre-132 keys are
+// magic-only - no server/login identity. Adopting ANY of them can act against
+// the WRONG account: an active kill/halt executes an irreversible close-all,
+// and a foreign higher-equity rc_peak_eq makes KillDD liquidate this account on
+// the first tick. Every legacy key this init would read therefore needs
+// explicit operator consent via the RC_AdoptLegacyHalt input. Returns false =
+// caller must INIT_FAILED (nothing was migrated or deleted). Split into
+// _Ex(flag) so PersistMigrate_Test can exercise BOTH consent paths in one
+// tester pass; production callers use RiskControl_Init().
+bool RiskControl_InitEx(const bool adoptLegacyHalt)
 {
    g_rc_halted      = false;
+   // ORDER-194c (Codex review 2): globals survive an OnInit cycle triggered by a symbol,
+   // timeframe or input change, so a dirty flag left over from a previous chart state
+   // would drive a pointless write under the newly restored scope. Reset with the rest.
+   g_rc_persist_dirty = false;
    g_rc_peak_equity = AccountInfoDouble(ACCOUNT_EQUITY);
    g_rc_max_dd_pct  = 0.0;
    g_rc_cap_blocks  = 0;
    // MERGE-05B: restore hard-kill state so restart/recompile cannot resurrect
    // a killed EA. Tester passes start with a clean GV sandbox -> no-op there.
+   g_rc_kill_pending = false;
+   // ORDER-138 #1 + 138b (Codex F1): fail-closed BEFORE any migration/cleanup
+   // while any legacy key THIS init would read exists without consent. The gate
+   // covers more than active kill/halt: a foreign (higher-equity) legacy
+   // rc_peak_eq would migrate in, KillDD would measure DD from the wrong
+   // account's peak and could liquidate THIS account on the first tick; a
+   // foreign acct_hwm false-trips the entry gate the same way. Inactive 0.0
+   // kill/halt leftovers are benign residue - normal cleanup below handles them.
+   {
+      bool legacyKill = RC_PersistHalt && (Persist_GetLegacy("rc_kill_pending", 0.0) > 0.5);
+      bool legacyHalt = RC_PersistHalt && (Persist_GetLegacy("rc_halted", 0.0) > 0.5);
+      bool legacyPeak = RC_PersistHalt && Persist_HasLegacy("rc_peak_eq");
+      bool legacyHwm  = (RC_AcctDDLimitPct > 0.0) && Persist_HasLegacy("acct_hwm");
+      if((legacyKill || legacyHalt || legacyPeak || legacyHwm) && !adoptLegacyHalt)
+      {
+         string which = "";
+         if(legacyKill) which += Persist_LegacyKey("rc_kill_pending") + " ";
+         if(legacyHalt) which += Persist_LegacyKey("rc_halted") + " ";
+         if(legacyPeak) which += Persist_LegacyKey("rc_peak_eq") + " ";
+         if(legacyHwm)  which += Persist_LegacyKey("acct_hwm");
+         PrintFormat("[RISK] FATAL: legacy pre-132 state found (%s- magic-only keys, account identity unknown) and RC_AdoptLegacyHalt=false. "
+                     "Upgrading THIS account's own pre-132 state: set RC_AdoptLegacyHalt=true for one attach, verify the migration journal lines, then set it back to false. "
+                     "State imported from ANOTHER account (terminal switched login): delete the Boss_%I64d_* GlobalVariables via Tools->Global Variables (F3) instead. "
+                     "Nothing was migrated or deleted.",
+                     which, _0_Magic);
+         return false;
+      }
+   }
    if(RC_PersistHalt)
    {
-      if(Persist_Get("rc_halted", 0.0) > 0.5)
+      // ORDER-132 (Codex F4): migrate pre-132 magic-only keys to the scoped
+      // format ONCE (Persist_MigrateLegacy deletes the legacy key after a
+      // confirmed copy; DryRun never writes). Must run BEFORE any scoped read.
+      Persist_MigrateLegacy("rc_peak_eq");
+
+      // ORDER-132 (Codex F6): single persisted state enum. Read scoped rc_state;
+      // when absent, derive once from the legacy two-flag format and persist it.
+      double st = RC_STATE_RUNNING;
+      if(Persist_Has("rc_state"))
+         st = Persist_Get("rc_state", RC_STATE_RUNNING);
+      else
+      {
+         if(Persist_GetLegacy("rc_kill_pending", 0.0) > 0.5)   st = RC_STATE_KILL_PENDING;
+         else if(Persist_GetLegacy("rc_halted", 0.0) > 0.5)    st = RC_STATE_HALTED;
+         if(st != RC_STATE_RUNNING && !DryRun)
+         {
+            if(Persist_Set("rc_state", st))
+               PrintFormat("[RISK] migrated legacy halt/kill flags -> %s=%.0f", Persist_Key("rc_state"), st);
+         }
+      }
+      // consume legacy flags once superseded - stale leftovers must never be
+      // re-imported by a later account switch (F4) or resurrect a manually
+      // cleared halt. Never delete on a failed migration write or from DryRun.
+      if(!DryRun && (Persist_Has("rc_state") || st == RC_STATE_RUNNING))
+      {
+         Persist_DelLegacy("rc_kill_pending");
+         Persist_DelLegacy("rc_halted");
+      }
+      if(!DryRun) Persist_Flush();
+
+      if(st == RC_STATE_KILL_PENDING)
+      {
+         // ORDER-129: a restart/crash in the middle of an unconfirmed kill must resume the
+         // kill, even if equity has bounced back above the threshold by the time we return.
+         g_rc_kill_pending = true;
+         Print("[RISK] KILL-PENDING restored from persist - resuming close-all reconciliation");
+      }
+      else if(st == RC_STATE_HALTED)
       {
          g_rc_halted = true;
          double p = Persist_Get("rc_peak_eq", g_rc_peak_equity);
          if(p > g_rc_peak_equity) g_rc_peak_equity = p;
          PrintFormat("[RISK] HALT restored from persist (peak %.2f) - manual un-halt: delete GV %s or set RC_PersistHalt=false",
-                     g_rc_peak_equity, Persist_Key("rc_halted"));
+                     g_rc_peak_equity, Persist_Key("rc_state"));
       }
-      else if(Persist_Has("rc_peak_eq"))
+      if(!g_rc_halted && Persist_Has("rc_peak_eq"))
       {
          // not halted, but keep the pre-restart equity peak so KillDD keeps
          // measuring from the true high-water mark (anti slow-bleed reset)
@@ -121,15 +210,33 @@ void RiskControl_Init()
       }
    }
    RiskControl_AcctGateInit();
+   return true;
 }
 
+bool RiskControl_Init() { return RiskControl_InitEx(RC_AdoptLegacyHalt); }
+
 bool RiskControl_IsHalted() { return g_rc_halted; }
+
+// ORDER-432 finding 4 (Codex blind audit 2026-07-27; scope corrected in the 2026-07-27
+// verification pass -- of the two things that audit filed together, only THIS half is a
+// real fail-open. The DD-adaptive multiplier's 1.0 fallback returns the CONFIGURED lot
+// and, with the shipped tier multipliers of 1.2/1.5, can only ever be smaller than what
+// the feature would have produced; it cannot oversize, so it is not fixed here.)
+//
+// This returned 0.0 when the balance could not be read, and 0.0 means "no margin in
+// use" to the only caller that matters -- so a cap whose entire job is to block when
+// margin usage is high PERMITTED THE ORDER precisely when it could not measure. That is
+// the inverse of every other cap in this file.
+//
+// -1.0 = "unmeasurable", distinct from a real 0.0 (a genuinely flat account). Callers
+// must treat it as a refusal.
+#define RC_DEPOSIT_LOAD_UNKNOWN (-1.0)
 
 double RiskControl_DepositLoadPct()
 {
    double bal = AccountInfoDouble(ACCOUNT_BALANCE);
    double mar = AccountInfoDouble(ACCOUNT_MARGIN);
-   if(bal <= 0.0) return 0.0;
+   if(bal <= 0.0) return RC_DEPOSIT_LOAD_UNKNOWN;
    return 100.0 * mar / bal;
 }
 
@@ -139,7 +246,7 @@ double RiskControl_CurrentDDPct()
    if(eq > g_rc_peak_equity)
    {
       g_rc_peak_equity = eq;
-      if(RC_PersistHalt) Persist_Set("rc_peak_eq", g_rc_peak_equity);
+      if(RC_PersistHalt && !DryRun) Persist_Set("rc_peak_eq", g_rc_peak_equity);   // ORDER-132b (Codex R2)
    }
    if(g_rc_peak_equity <= 0.0) return 0.0;
    double dd = 100.0 * (g_rc_peak_equity - eq) / g_rc_peak_equity;
@@ -147,23 +254,141 @@ double RiskControl_CurrentDDPct()
    return dd;
 }
 
-// HARD KILL - returns true if it fired this tick
+// ORDER-129 kill reconciliation: KILL_PENDING -> (broker verified flat) -> HALTED.
+// Exec_CloseAll() now returns proof-of-flat; HALT (and its persist) only latch on that
+// proof. While pending, this retries EVERY tick regardless of current DD — previously a
+// single failed close during a liquidity gap left residual exposure unmanaged forever
+// once DD drifted back under the threshold (Codex system review SEV-1).
+bool RiskControl_KillReconcile()
+{
+   if(Exec_CloseAll())
+   {
+      g_rc_kill_pending = false;
+      g_rc_halted       = true;
+      // ORDER-129b (Codex audit): DryRun performs no real closes, so its "flat" is
+      // simulated - never let an observation instance persist HALT into the terminal
+      // GVs that a later REAL attach on this magic would inherit.
+      bool persisted = false;
+      if(RC_PersistHalt && !DryRun)
+      {
+         // ORDER-132 (F6): checked writes + durable flush - a crash right after an
+         // unflushed HALT write must not come back RUNNING with the kill forgotten.
+         bool ok = Persist_Set("rc_state", RC_STATE_HALTED);
+         ok = Persist_Set("rc_peak_eq", g_rc_peak_equity) && ok;
+         Persist_Flush();
+         if(!ok) Print("[RISK] ERROR: HALT persist incomplete - halt state may not survive a restart");
+         persisted = ok;
+         // ORDER-194b (Codex audit SEV-1): remember a FAILED write so the halted path can
+         // retry it. Before the halted guard existed, the still-breached DD branch re-ran
+         // this whole function every tick and retried the write as a side effect of that
+         // bug; removing the re-fire removed the accidental retry with it. Without this
+         // flag a transient GlobalVariableSet failure plus a terminal crash before the
+         // daily refresh brings the EA back RUNNING with the kill forgotten - the exact
+         // resurrection ORDER-132/138 exist to prevent.
+         g_rc_persist_dirty = !ok;
+      }
+      // ORDER-132b (Codex R1): the log must state what actually happened - never
+      // claim "(persisted)" off the config flag while the write failed.
+      PrintFormat("[RISK] HARD KILL complete: broker flat verified -> halt%s",
+                  (persisted ? " (persisted)" : ""));
+      return true;
+   }
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      Print("[RISK] kill reconciliation: residual position/pending remains - retrying close-all");
+   }
+   return false;
+}
+
+// ORDER-132b (Codex R3): MT5 deletes terminal GlobalVariables ~4 weeks after
+// their last use. A HALTED EA returns every tick without touching rc_state, and
+// a long-flat EA touches rc_peak_eq only on new highs - both could silently
+// expire and resurrect a killed EA as RUNNING after a much-later restart.
+// Re-touch every critical key daily. Live/demo only: the tester sandbox has no
+// TTL and stays byte-identical without this churn.
+void RiskControl_PersistRefresh()
+{
+   if(!RC_PersistHalt || DryRun) return;
+   if(MQLInfoInteger(MQL_TESTER)) return;
+   static datetime last = 0;
+   datetime now = TimeCurrent();
+   if(last != 0 && now - last < 86400) return;
+   last = now;
+   // ORDER-194c (Codex review 2): a failed refresh write used to be discarded silently.
+   // This is the keep-alive that stops MT5's ~4-week GlobalVariable TTL from expiring a
+   // halt, so losing it is exactly as bad as losing the original write - mark it dirty so
+   // the halted path retries instead of waiting another 24h.
+   if(g_rc_halted)
+   {
+      if(!Persist_Set("rc_state", RC_STATE_HALTED)) g_rc_persist_dirty = true;
+   }
+   else if(g_rc_kill_pending) Persist_Set("rc_state", RC_STATE_KILL_PENDING);
+   if(g_rc_peak_equity > 0.0 && Persist_Has("rc_peak_eq")) Persist_Set("rc_peak_eq", g_rc_peak_equity);
+   if(RC_AcctDDLimitPct > 0.0 && g_rc_acct_hwm > 0.0)      Persist_Set("acct_hwm", g_rc_acct_hwm);
+}
+
+// HARD KILL - returns true while the kill state owns this tick
 bool RiskControl_CheckDD()
 {
+   RiskControl_PersistRefresh();  // TTL keep-alive (no-op in tester/DryRun/off)
    RiskControl_AcctHwmUpdate();   // no-op unless RC_AcctDDLimitPct > 0
+   if(g_rc_kill_pending)          // reconcile first, independent of current DD
+   {
+      RiskControl_KillReconcile();
+      return true;
+   }
+   // ORDER-194: HALTED is terminal - never re-evaluate DD from here. g_rc_peak_equity is
+   // frozen at the pre-kill peak and equity is (by definition) below the kill line, so the
+   // breach below stays permanently true: without this guard the whole kill path re-ran
+   // EVERY TICK for the rest of the run. Measured 2026-07-24: 14.4M / 11.8M / 3.5M
+   // "[RISK] HARD KILL" lines in single tester logs, one log file 777 MB. On live it also
+   // meant a GlobalVariablesFlush() (disk write) per tick forever via KillReconcile's
+   // persist block - a halted EA quietly hammering the terminal's gvariables.dat.
+   // Still sweep anything that appears on this magic AFTER the halt (halted must stay
+   // flat), but only when something actually exists - the idle path must cost nothing.
+   if(g_rc_halted)
+   {
+      if(Exec_CountAll() > 0 || Exec_CountPending() > 0) RiskControl_KillReconcile();
+      // ORDER-194b (Codex audit SEV-1): retry ONLY the failed persist write - not the
+      // whole close-all path. Cheap (two GV writes + a flush) and it stops as soon as it
+      // succeeds, so the idle halted path still costs nothing in the normal case.
+      // ORDER-194c (Codex review 2): this was an `else if` on the sweep above, which meant
+      // that if same-magic exposure kept reappearing - a broker rejection loop, a pending
+      // fill race, another instance - the sweep branch won every tick and the persist retry
+      // NEVER ran. That is precisely the long-running, messy scenario where a crash is most
+      // likely and durable halt state matters most. Both must be able to run on one tick.
+      if(g_rc_persist_dirty && RC_PersistHalt && !DryRun)
+      {
+         bool ok = Persist_Set("rc_state", RC_STATE_HALTED);
+         ok = Persist_Set("rc_peak_eq", g_rc_peak_equity) && ok;
+         Persist_Flush();
+         if(ok)
+         {
+            g_rc_persist_dirty = false;
+            Print("[RISK] HALT persist retry succeeded - kill state is now durable");
+         }
+      }
+      return true;
+   }
    double kill = RC_KillDDPct();
    double dd   = RiskControl_CurrentDDPct();
    if(kill > 0.0 && dd >= kill)
    {
-      Exec_CloseAll();
-      g_rc_halted = true;
-      if(RC_PersistHalt)
+      PrintFormat("[RISK] HARD KILL: DD %.2f%% >= %.2f%% (profile %d) -> closing all",
+                  dd, kill, ProtectLevel);
+      g_rc_kill_pending = true;
+      if(RC_PersistHalt && !DryRun)
       {
-         Persist_Set("rc_halted", 1.0);
-         Persist_Set("rc_peak_eq", g_rc_peak_equity);
+         // ORDER-132 (F6): persist KILL_PENDING checked + flushed BEFORE the first
+         // close attempt - a crash mid-close must resume the kill on restart
+         if(!Persist_Set("rc_state", RC_STATE_KILL_PENDING))
+            Print("[RISK] ERROR: kill-pending persist failed - a restart mid-kill would forget the kill");
+         Persist_Flush();
       }
-      PrintFormat("[RISK] HARD KILL: DD %.2f%% >= %.2f%% (profile %d) -> closed all + halt%s",
-                  dd, kill, ProtectLevel, (RC_PersistHalt ? " (persisted)" : ""));
+      RiskControl_KillReconcile();
       return true;
    }
    return false;
@@ -173,10 +398,30 @@ bool RiskControl_AllowNewOrder()
 {
    if(g_rc_halted) return false;
    double maxLoad = RC_MaxDepositLoadPct();
-   if(maxLoad > 0.0 && RiskControl_DepositLoadPct() >= maxLoad)
+   if(maxLoad > 0.0)
    {
-      g_rc_cap_blocks++;
-      return false;
+      double load = RiskControl_DepositLoadPct();
+      // ORDER-432 finding 4: an unreadable balance now REFUSES instead of reading as
+      // zero load. A cap that cannot measure must not permit -- that is the whole
+      // difference between a cap and a decoration. Throttled log so a persistent
+      // terminal fault is visible rather than silently costing every entry.
+      if(load == RC_DEPOSIT_LOAD_UNKNOWN)
+      {
+         g_rc_cap_blocks++;
+         static datetime rc_load_log = 0;
+         datetime now_load = TimeCurrent();
+         if(now_load - rc_load_log >= 60)
+         {
+            rc_load_log = now_load;
+            Print("[RISK] deposit-load cap is ON but account balance is unreadable - new order BLOCKED (cannot verify the cap; ORDER-432 finding 4)");
+         }
+         return false;
+      }
+      if(load >= maxLoad)
+      {
+         g_rc_cap_blocks++;
+         return false;
+      }
    }
    return true;
 }

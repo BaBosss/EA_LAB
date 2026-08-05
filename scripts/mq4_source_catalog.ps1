@@ -5,7 +5,7 @@
 $ErrorActionPreference='Continue'
 $root='D:\Forex'
 $outCsv='D:\EA_LAB\_triage\ORDER111_mq4_source_catalog.csv'
-$log='D:\EA_LAB\_triage\ORDER111_mq4_catalog.log'
+$log='D:\EA_LAB\_triage\_archive\campaigns_closed\ORDER111_mq4_catalog.log'
 $mq5cat='D:\EA_LAB\_triage\ORDER111_mq5_source_catalog.csv'
 "[$(Get-Date -f o)] START mq4 catalog scan of $root" | Set-Content $log
 

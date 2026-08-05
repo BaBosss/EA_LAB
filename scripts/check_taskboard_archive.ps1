@@ -191,6 +191,16 @@ $script:NonTerminalPatternsOrdered = @(
     'OPEN'
 )
 
+# ORDER-260: the same vocabulary anchored to the start of a backtick status span, used
+# when a header HAS backticks (the normal case). Precomputed once rather than rebuilt on
+# every Get-StatusClass call -- .NET's Regex cache is 15 entries by default and this file
+# already exceeds that, so per-call string construction risked recompiling on every block.
+# See Get-StatusClass for why anchoring is the correct rule and why the no-backtick
+# fallback deliberately stays unanchored.
+$script:NonTerminalPatternsAnchored = @(
+    $script:NonTerminalPatternsOrdered | ForEach-Object { '^[^A-Za-z]*' + $_ + '\b' }
+)
+
 # Pending/partial-stage markers (ORDER-101 fix 4). A block whose backtick status verb
 # is terminal (e.g. `STAGE2-DONE(...)`) can still carry a pending-stage marker OUTSIDE
 # the backtick span (e.g. ORDER-071: "`STAGE2-DONE(...)` -- Stage 3 = รอ main session
@@ -552,6 +562,161 @@ function Get-GitCommitParents {
     return @($parts[1..($parts.Count - 1)])
 }
 
+function Get-GitBlobOidMap {
+    <#
+        ORDER-270. Resolves <ref>:<path> to a blob OID for MANY refs in a single
+        `git cat-file --batch-check` process, instead of one `git show` per ref.
+
+        Why an OID map is enough: git blob OIDs are content addresses, so
+        oid(a) -eq oid(b) is byte-equality of the archive at those two commits.
+        That lets the walk prove "unchanged at this step" without reading the
+        blob at all, and fall back to real bytes only where it actually changed.
+        It changes nothing about WHICH commits are visited -- every commit in the
+        first-parent chain is still inspected, so the merge rule below is
+        untouched. That distinction is the whole point: path-filtering the
+        rev-list would have skipped commits, this does not.
+
+        Returns a hashtable ref -> OID string, or ref -> $null when the path does
+        not exist at that ref (caller decides how to fail).
+    #>
+    param([string]$RepoRoot, [string[]]$Refs, [string]$Path)
+
+    # ORDER-412. The sacrificial first stdin line (see the note at Process.Start below).
+    # Contains '?' deliberately: it is invalid in a git refname, so this can never collide
+    # with a real object in this or any repo, and git always answers it "missing".
+    $BOM_ABSORBER = 'ORDER412-bom-absorber?not-a-real-ref'
+
+    $map = @{}
+    if (-not $Refs -or $Refs.Count -eq 0) { return $map }
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = 'git'
+    $psi.Arguments = 'cat-file --batch-check'
+    $psi.WorkingDirectory = $RepoRoot
+    $psi.RedirectStandardInput = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+
+    # ORDER-411 (2026-07-27). Process.StandardInput is a StreamWriter that .NET Framework
+    # builds from [Console]::InputEncoding with AutoFlush=true, and AutoFlush=true emits
+    # that encoding's PREAMBLE at construction. When the session's console input encoding
+    # is UTF-8 the preamble is EF BB BF, so git's FIRST request arrives as
+    # "<BOM><sha>:<path>", does not resolve, and comes back "missing". The chain walk then
+    # aborted with "archive path not readable at <sha> (renamed/deleted mid-chain?)" naming
+    # a commit where `git ls-tree` plainly shows the file - the error blamed history for an
+    # encoding bug, and cost most of an afternoon.
+    #
+    # Four things measured rather than assumed, each of which sent me the wrong way once:
+    #   - POSITIONAL, not commit-specific: only the first request carries the BOM, so
+    #     reordering the refs moves the failure onto a different, equally innocent commit.
+    #   - SESSION-DEPENDENT: a console on the OEM codepage has no preamble, so identical code
+    #     passes for one lane and blocks another on the same commit ("it worked for them").
+    #   - Writing to $proc.StandardInput.BaseStream with a BOM-less writer does NOT help:
+    #     merely READING the .StandardInput property constructs the AutoFlush writer, so the
+    #     preamble is in the pipe before your first byte. Dumped the child's received bytes
+    #     to see this (239 187 191 65 65 ...).
+    #   - It is [Console]::InputEncoding, NOT OutputEncoding. Pinning OutputEncoding changes
+    #     nothing; the byte dump is identical with and without it.
+    #
+    # ORDER-412 (2026-07-27, from /scrutinize of ORDER-411). The first fix pinned
+    # [Console]::InputEncoding around Process.Start and kept this absorber only as a
+    # fallback. That was the wrong shape and is now deleted:
+    #   - [Console]::InputEncoding's setter calls SetConsoleCP, a PROCESS-WIDE console
+    #     mutation, to solve a problem local to one pipe.
+    #   - It leaked. If the GETTER threw (no attached console input) but the setter
+    #     succeeded, the saved value stayed $null and the restore was skipped by its own
+    #     guard - leaving the console codepage changed for the rest of the process.
+    #   - The fallback branch was therefore never exercised by the cage, so the code that
+    #     ran only in the environment I could not reproduce was the untested code. Same
+    #     anti-pattern as ORDER-270's cage that nobody could run.
+    # Measured: sending the absorber UNCONDITIONALLY returns identical, correct blob OIDs
+    # under both a preamble-bearing and a preamble-free console encoding. So there is one
+    # path, it touches no global state, and it is the path the cage tests.
+    $proc = [System.Diagnostics.Process]::Start($psi)
+
+    # Start draining stdout BEFORE writing stdin: on a long chain the reply
+    # stream can exceed the pipe buffer, and a write-then-read order deadlocks.
+    $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+    $stderrTask = $proc.StandardError.ReadToEndAsync()
+
+    # ORDER-412: the sacrificial first line. Whatever preamble the StandardInput writer
+    # emits lands on THIS request, not on a real ref. git answers "<input> missing" for it
+    # and we drop that reply below. Unconditional on purpose - a conditional here would be
+    # a branch that only runs on machines where the bug reproduces, i.e. untestable where
+    # it matters.
+    $proc.StandardInput.WriteLine($BOM_ABSORBER)
+    foreach ($ref in $Refs) {
+        $proc.StandardInput.WriteLine(('{0}:{1}' -f $ref, $Path))
+    }
+    $proc.StandardInput.Close()
+
+    $stdout = $stdoutTask.GetAwaiter().GetResult()
+    $stderrText = $stderrTask.GetAwaiter().GetResult()
+    $proc.WaitForExit()
+    if ($proc.ExitCode -ne 0) {
+        throw ('git cat-file --batch-check failed (exit {0}): {1}' -f $proc.ExitCode, $stderrText)
+    }
+
+    $lines = @($stdout -split "`r?`n" | Where-Object { $_ -ne '' })
+
+    # ORDER-412: drop the absorber's reply BEFORE the alignment check, and VERIFY it was
+    # actually sacrificed. If the token ever resolved to a real object, silently shifting
+    # by one would misalign every ref by one position - the exact failure the count check
+    # below exists to prevent - so this fails closed instead.
+    #
+    # Do NOT write this as $lines[1..($lines.Count-1)]: PowerShell's `1..0` is a DESCENDING
+    # range (1,0), so on a single-line reply that expression returns the absorber row it was
+    # supposed to remove. Measured. Select-Object -Skip handles 0 and 1 rows correctly.
+    # .Contains, NOT -like: the token contains '?', which -like treats as a single-character
+    # WILDCARD, so "*...absorber?not-a-real-ref*" would also match ...absorberXnot-a-real-ref.
+    # Harmless for the token we send, but it makes a fail-closed guard quietly fuzzy, and it
+    # would break outright if anyone put a '*' in the token. .Contains is ordinal.
+    $absorberReply = if ($lines.Count -gt 0) { $lines[0] } else { '' }
+    if (-not $absorberReply.Contains($BOM_ABSORBER)) {
+        throw ("stdin preamble absorber did not come back as the first reply (got '{0}') -- refusing to guess the alignment" -f $absorberReply)
+    }
+    $lines = @($lines | Select-Object -Skip 1)
+
+    if ($lines.Count -ne $Refs.Count) {
+        throw ('git cat-file --batch-check returned {0} rows for {1} inputs -- refusing to guess the alignment' -f $lines.Count, $Refs.Count)
+    }
+    for ($i = 0; $i -lt $Refs.Count; $i++) {
+        $parts = @($lines[$i] -split '\s+' | Where-Object { $_ })
+        # "<oid> blob <size>" on success; "<input> missing" (or "... ambiguous") otherwise.
+        if ($parts.Count -ge 3 -and $parts[1] -eq 'blob') {
+            $map[$Refs[$i]] = $parts[0]
+        } else {
+            $map[$Refs[$i]] = $null
+        }
+    }
+    return $map
+}
+
+function Get-GitFirstParentParentsMap {
+    <#
+        ORDER-270. One `git rev-list --first-parent --parents` process yields the
+        parent list of every commit on the walked chain, replacing one
+        `Get-GitCommitParents` spawn per commit. Merge detection and the
+        first-parent identity check are computed from this map and are therefore
+        unchanged in strength -- see run_chainwalk_tests.ps1, which fails closed
+        on both laundering shapes.
+    #>
+    param([string]$RepoRoot, [string]$FromSha, [string]$ToRef)
+
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('rev-list --first-parent --parents "{0}..{1}"' -f $FromSha, $ToRef)
+    if ($r.ExitCode -ne 0) { throw "git rev-list --first-parent --parents $FromSha..$ToRef failed (exit $($r.ExitCode)): $($r.StdErr)" }
+
+    $map = @{}
+    foreach ($line in ($r.StdOut -split "`r?`n")) {
+        $parts = @($line.Trim() -split '\s+' | Where-Object { $_ })
+        if ($parts.Count -eq 0) { continue }
+        $map[$parts[0]] = if ($parts.Count -le 1) { @() } else { @($parts[1..($parts.Count - 1)]) }
+    }
+    return $map
+}
+
 function Invoke-ArchiveChainIntegrityCheck {
     <#
         ORDER-103 Fix 1. Walks the FIRST-PARENT commit chain from the TRUSTED
@@ -623,26 +788,75 @@ function Invoke-ArchiveChainIntegrityCheck {
 
     $steps = New-Object System.Collections.Generic.List[object]
 
+    # ORDER-270: two batched lookups replace ~3 git spawns per commit. The chain
+    # walked below is still the FULL first-parent chain -- nothing is filtered
+    # out -- so every rule keeps seeing every commit it used to see.
+    $oidMap = @{}
+    $parentsMap = @{}
+    try {
+        $commitRefs = @($chain | Where-Object { $_ -ne 'STAGED' })
+        $oidMap = Get-GitBlobOidMap -RepoRoot $RepoRoot -Refs $commitRefs -Path $ArchiveRelPath
+        $parentsMap = Get-GitFirstParentParentsMap -RepoRoot $RepoRoot -FromSha $CheckpointSha -ToRef $HeadRef
+    } catch {
+        return [pscustomobject]@{ IsClean = $false; Reason = "batched chain lookup failed: $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+    }
+
+    # Cheap identity for a step's archive content. STAGED has no commit OID, so it
+    # always falls through to a real byte read.
+    function Get-StepOid {
+        param([string]$Sha)
+        if ($Sha -eq 'STAGED') { return $null }
+        if (-not $oidMap.ContainsKey($Sha)) { return $null }
+        return $oidMap[$Sha]
+    }
+
     for ($i = 1; $i -lt $chain.Count; $i++) {
         $prevSha = $chain[$i - 1]
         $curSha  = $chain[$i]
 
-        try {
-            $prevBytes = if ($prevSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $prevSha -Path $ArchiveRelPath }
-        } catch {
-            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $prevSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        $prevOid = Get-StepOid -Sha $prevSha
+        $curOid  = Get-StepOid -Sha $curSha
+
+        # A missing blob is still fail-closed, exactly as before -- the difference
+        # is that we learn it from the batch-check instead of a failed `git show`.
+        if ($prevSha -ne 'STAGED' -and $null -eq $prevOid) {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $prevSha (renamed/deleted mid-chain?): path missing at this commit"; Steps = $steps.ToArray(); IsShallow = $isShallow }
         }
-        try {
-            $curBytes = if ($curSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $curSha -Path $ArchiveRelPath }
-        } catch {
-            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $curSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        if ($curSha -ne 'STAGED' -and $null -eq $curOid) {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $curSha (renamed/deleted mid-chain?): path missing at this commit"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        }
+
+        # Byte-equality proven by content address: skip both blob reads. This is
+        # the ~99% case (502 commits on the chain, 5 of them touch the archive).
+        $unchangedByOid = ($null -ne $prevOid) -and ($null -ne $curOid) -and ($prevOid -eq $curOid)
+
+        $prevBytes = $null
+        $curBytes = $null
+        if (-not $unchangedByOid) {
+            try {
+                $prevBytes = if ($prevSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $prevSha -Path $ArchiveRelPath }
+            } catch {
+                return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $prevSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+            }
+            try {
+                $curBytes = if ($curSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $curSha -Path $ArchiveRelPath }
+            } catch {
+                return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $curSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+            }
         }
 
         if ($curSha -ne 'STAGED') {
-            try {
-                $parents = @(Get-GitCommitParents -RepoRoot $RepoRoot -CommitSha $curSha)
-            } catch {
-                return [pscustomobject]@{ IsClean = $false; Reason = "merge-parent inspection failed at ${curSha}: $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+            if ($parentsMap.ContainsKey($curSha)) {
+                $parents = @($parentsMap[$curSha])
+            } else {
+                # Not on the batched map (e.g. the synthetic STAGED neighbour, or a
+                # git version that formats the row unexpectedly): fall back to the
+                # original per-commit lookup rather than skipping the merge rule.
+                try {
+                    $parents = @(Get-GitCommitParents -RepoRoot $RepoRoot -CommitSha $curSha)
+                } catch {
+                    return [pscustomobject]@{ IsClean = $false; Reason = "merge-parent inspection failed at ${curSha}: $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+                }
             }
             if ($parents.Count -gt 1) {
                 if ($parents[0] -ne $prevSha) {
@@ -766,9 +980,60 @@ function Get-StatusClass {
         $searchSpaces.Add($Header)
     }
 
+    # ORDER-260 fix. The non-terminal vocabulary is matched ANCHORED to the start of a
+    # backtick status span, not as a bare substring anywhere inside it.
+    #
+    # Unanchored and case-insensitive, 'HOLD' matched inside "holdout" and 'OPEN' inside
+    # "open question". So a status of
+    #     `REVIEWED(Claude/Opus 2026-07-23) -- 4/5 cells died at holdout`
+    # classified NonTerminal, label "hold". Measured 2026-07-26: of ~45 headers whose
+    # status verb genuinely is REVIEWED, only 22 were Terminal; 17 were lost to this
+    # exactly. Those orders were unarchivable for describing their own results, and
+    # because StatusClass feeds the whole exception scan, the validator's picture of the
+    # board was wrong in the same direction.
+    #
+    # Anchoring is the correct rule, not a patch: by the board's own convention the
+    # status verb is the FIRST token of the backtick span. Leading non-letters are
+    # skipped so an emoji-prefixed status still matches. \b at the end keeps
+    # OPEN-STANDING and WAITING-USER matching while rejecting "holdout".
+    #
+    # The no-backtick fallback stays UNANCHORED on purpose: there the search space is
+    # the entire header, where the verb never sits at position 0 (the header starts
+    # "ORDER-091C-D1e -- ..."), so anchoring would silently stop classifying it.
+    # Anchored variants are precomputed ONCE at script scope
+    # ($script:NonTerminalPatternsAnchored), not rebuilt per call. .NET's Regex cache
+    # holds only 15 patterns by default; this file already uses more than that, so
+    # constructing 6 fresh pattern strings on every Get-StatusClass call risked
+    # thrashing the cache into recompiling regexes for every block.
+    $anchorNonTerminal = ($backtickMatches.Count -gt 0)
+    if ($anchorNonTerminal) { $ntPatterns = $script:NonTerminalPatternsAnchored }
+    else                    { $ntPatterns = $script:NonTerminalPatternsOrdered }
     foreach ($s in $searchSpaces) {
-        foreach ($pat in $script:NonTerminalPatternsOrdered) {
-            if ($s -match $pat) { return [pscustomobject]@{ Class = 'NonTerminal'; Label = $Matches[0] } }
+        foreach ($pat in $ntPatterns) {
+            if ($s -match $pat) { return [pscustomobject]@{ Class = 'NonTerminal'; Label = $Matches[0].Trim() } }
+        }
+    }
+    # ORDER-390 fix: a SELF-ATTESTING review verb anywhere in the status wins over an
+    # execution-only verb, regardless of which backtick span it landed in.
+    #
+    # Markdown single-backticks do not nest, so a status that quotes a commit sha or a
+    # script name --
+    #     `DONE(Claude/Opus 2026-07-27, `3a2cee7e`) ... + REVIEWED(Claude/Opus 2026-07-27)`
+    # -- parses as SEVERAL spans, and the first one carries only DONE. The per-span scan
+    # below returns on that first hit, so the REVIEWED never gets seen. Measured
+    # 2026-07-27: 6 orders on the active board were marked REVIEWED in their header yet
+    # classified DONE for exactly this reason, and therefore sat on the board looking like
+    # open work. Quoting a sha or a filename inside a status is completely natural, so this
+    # recurs until the parser accounts for it -- same shape as the ORDER-260 substring bug:
+    # the parser's model of a header not matching how headers are actually written.
+    #
+    # Deliberately narrow. It requires the ATTRIBUTED verb form (`REVIEWED(` or
+    # `REVIEWED/`), not the bare word, so prose like "รอ REVIEWED" cannot promote a block.
+    # It runs AFTER the non-terminal scan, so an OPEN/WAITING/CLAIMED status still wins --
+    # a reviewed-but-reopened order must not become archivable.
+    foreach ($s in $searchSpaces) {
+        if ($s -match 'REVIEWED\s*[(/]') {
+            return [pscustomobject]@{ Class = 'Terminal'; Label = 'REVIEWED' }
         }
     }
     foreach ($s in $searchSpaces) {

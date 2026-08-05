@@ -1,0 +1,15 @@
+﻿  case must-trade           kind=must-trade          PARTIAL (2 point(s) vacuous here -- for the set to resolve)
+  case deliberate-refusal   kind=deliberate-refusal  PASS
+  case cage-fires           kind=must-trade          PARTIAL (2 point(s) vacuous here -- for the set to resolve)
+  case locked-absent        EXCLUDED from the contract -- it is expected to DIFFER (it proves a const is applied)
+
+  point                exercised in            differs in
+  init          must-trade, deliberate-refusal, cage-fires  -
+  cfg           must-trade, cage-fires  -
+  orders        must-trade, cage-fires  -
+  deals         must-trade, cage-fires  -
+  end_state     must-trade              -
+  side_effects  cage-fires              -
+  alerts        deliberate-refusal      -
+
+=== THE CASE SET SATISFIES design 5.5: every point exercised by a real observation in at least one case, and none differs ===

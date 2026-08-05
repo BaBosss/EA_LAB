@@ -28,8 +28,10 @@ Write-Host "deployed -> $dst" -ForegroundColor Cyan
 
 $compileFailed = $false
 if ($Compile) {
-  # V2 = six Boss wrappers; V1 EA_LabTemplate kept for reference
-  $targets = @("Boss_11_GridTrend.mq5","Boss_12_Breakout.mq5","Boss_13_MeanRev.mq5","Boss_14_GridLog.mq5","Boss_15_ST03.mq5","Boss_16_KangarooGrid.mq5","Boss_18_JumStoch.mq5","EA_LabTemplate.mq5")
+  # ORDER-129: dynamic discovery — the old static list silently omitted Boss_17_Wave5
+  # (Codex system review 2026-07-18), leaving a stale binary deployable. Every Boss_*.mq5
+  # in the template root now compiles; V1 EA_LabTemplate kept for reference.
+  $targets = @(Get-ChildItem (Join-Path $src "Boss_*.mq5") | Sort-Object Name | ForEach-Object { $_.Name }) + @("EA_LabTemplate.mq5")
   foreach($t in $targets){
     $mq5 = Join-Path $dst $t
     if(-not (Test-Path $mq5)){ Write-Host "skip (missing): $t" -ForegroundColor DarkGray; continue }
@@ -49,9 +51,11 @@ if ($Compile) {
       # exits 0 regardless of compile errors, and a failed compile does not always skip writing an
       # .ex5 (stale one could remain pre-fix) - the Result line is the only reliable pass/fail signal.
       $resultLine = $txt -split "`r?`n" | Where-Object { $_ -match "Result:\s*\d+\s+errors?" } | Select-Object -Last 1
-      if ($resultLine -and ($resultLine -match "Result:\s*(\d+)\s+errors?")) {
-        if ([int]$Matches[1] -gt 0) {
-          Write-Host "  ** COMPILE FAIL: $t ($([int]$Matches[1]) errors) **" -ForegroundColor Red
+      if ($resultLine -and ($resultLine -match "Result:\s*(\d+)\s+errors?(?:,\s*(\d+)\s+warnings?)?")) {
+        # ORDER-129b (Codex audit): enforce the 0/0 policy - warnings used to pass silently
+        $warn = if ($Matches[2]) { [int]$Matches[2] } else { 0 }
+        if ([int]$Matches[1] -gt 0 -or $warn -gt 0) {
+          Write-Host "  ** COMPILE FAIL: $t ($([int]$Matches[1]) errors, $warn warnings - 0/0 required) **" -ForegroundColor Red
           $compileFailed = $true
         }
       } else {

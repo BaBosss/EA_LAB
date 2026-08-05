@@ -1,0 +1,2 @@
+﻿"timestamp","expert","symbol","period","from","to","base_set","terminal","data_dir","portable","ab_results_csv"
+"2026-07-23 08:46:25","EALabTpl\Boss_14_GridLog","AUDNZD","H1","2023.01.01","2025.12.31","D:\EA_LAB\_mt5_auto\ab_sets\ORDER158_HRS_base.set","D:\Meta 5b\terminal64.exe","D:\Meta 5b","True","D:\EA_LAB\_mt5_auto\ab_results.csv"

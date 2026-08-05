@@ -4,6 +4,32 @@
 //|  progression : NONE / LINEAR / MULTIPLIER / PLUS / LOG           |
 //| All results clamped by RiskControl (MaxLot) + Exec normalize.    |
 //+------------------------------------------------------------------+
+//| *** DEPRECATED - V1 MODULE, DO NOT USE FOR NEW WORK ***          |
+//|                                                                   |
+//| Part of the V1 chassis (ea_template/EA_LabTemplate.mq5 +          |
+//| ea_template/modules/). Superseded by Boss V2's own                |
+//| ea_template/core/MoneyManagement.mqh. Not maintained: 0 rows in   |
+//| the deployments inventory, 0 backtest reports, 0 .set files       |
+//| reference this file (unmodified since 2026-06-18).                |
+//|                                                                   |
+//| Two known live defects this file still has, uncorrected (this is |
+//| a comment-only banner - no logic below was touched):             |
+//|  1. Silent lot-mode fallback: MM_FirstLot() below defaults to     |
+//|     InpFixedLot whenever RISK mode can't produce a slDistance,    |
+//|     with no warning/failure. core/MoneyManagement.mqh removed    |
+//|     this exact fallback in MM-SAFETY-001 (2026-07-24) - an        |
+//|     unusable config now fails the attach / skips the order        |
+//|     instead of silently borrowing another mode's value.           |
+//|  2. The lot this module sizes is normalized downstream by         |
+//|     Exec_NormalizeLot() (ea_template/modules/Execution.mqh),      |
+//|     which rounds a below-minimum lot UP to the broker minimum;    |
+//|     Boss V2's normalizer returns 0 (skip the order) instead of    |
+//|     silently sizing up past what was requested.                   |
+//|                                                                   |
+//| Do not deploy anything using this module. See                    |
+//| docs/EA_CORE_AND_TEMPLATE_GUIDE.md section 3.1 (V1 vs V2) and     |
+//| ea_template/DESIGN_V2.md for the full V1->V2 rationale.           |
+//+------------------------------------------------------------------+
 #ifndef EA_LAB_MM_MQH
 #define EA_LAB_MM_MQH
 #include "Inputs.mqh"

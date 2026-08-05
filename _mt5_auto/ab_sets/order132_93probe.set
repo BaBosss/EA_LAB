@@ -1,0 +1,7 @@
+; ORDER-132 mode-93 neutrality probe (Boss_11 GridTrend, XAUUSD H1 2024.01-2024.07 M1).
+; The cage has NO StackMode=93 cell, so the Stack.mqh transactional-ladder rewrite is
+; A/B'd here: run on pre-change HEAD (O132_93probe_pre) vs post-change (O132_93probe_post),
+; numbers must be identical. Compiled defaults + the three overrides below only.
+StackMode=93
+_9_PendingMode=3
+_9_PendingLegs=3

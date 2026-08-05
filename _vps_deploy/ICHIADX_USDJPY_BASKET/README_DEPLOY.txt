@@ -69,6 +69,6 @@ KILL-SWITCH + NEXT
   (MC DD_95th was 10.77%). Judge +3 months from attach.
 - Attach both legs, load both .sets, confirm periods + magics stuck + first signals arm.
   Tell Claude the attach date -> register 990066 + 990067 in DEPLOYMENTS.csv + judge date.
-- Verdict / evidence: _triage/ORDER112_ICHIMOKU_RESCUE_VERDICT.md
+- Verdict / evidence: _triage/_archive/verdicts/order104-126/ORDER112_ICHIMOKU_RESCUE_VERDICT.md
   Merged-equity + MC script: _mt5_auto/ichi_basket_merge_mc.ps1
   Reports: _mt5_auto/reports/BASKET_medH4_FULL.htm , BASKET_slowH1_FULL.htm

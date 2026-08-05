@@ -1,12 +1,23 @@
 # EA_LabTemplate V2 — Design Blueprint
 > เขียน 2026-06-18 · สถานะ: DESIGN (ยังไม่ลงมือ) · คุยแผนก่อน build
 
+> **⚠️ UPDATE (post-hoc, this doc's V1 status is now stale): V1 (`EA_LabTemplate.mq5` +
+> `modules/`) is now DEPRECATED, not merely "kept archived" as §"ผลที่ตามมาจากการเคาะ" below
+> still says.** Finding: 0 rows in the deployments inventory, 0 backtest reports, 0 `.set`
+> files reference it, `modules/` unmodified since 2026-06-18 (this doc's own write date).
+> V1 still carries the silent lot-mode fallback (`MM_FirstLot`) and the round-up-to-minlot
+> normalizer (`Exec_NormalizeLot`) that V2 fixed (MM-SAFETY-001, 2026-07-24). Do not build new
+> work on V1; do not deploy it. See `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` §3.1 for the current
+> V1 vs V2 statement. This is a documentation-only correction — nothing below was re-derived
+> or changed beyond this note and the two below it.
+
 V2 = รื้อ usability ของ chassis เดิม 3 เรื่องหลัก:
 1. **เลขกำกับทุก dropdown** (enum value = โค้ด) → ไล่ optimize/report ง่าย
 2. **1 EA = 1 entry** (compile-time variant) + entry เป็นชื่อ EA
 3. **แยก StackMode** ออกจาก OnTick (เลิกบังคับ grid กับทุก entry)
 
 โครงเดิม (V1) อยู่ที่ `EA_LabTemplate.mq5` + `modules/` — V2 ไม่ทับ ของเดิม build ได้ตลอด
+(**V1 ตอนนี้ DEPRECATED แล้ว — ดู banner ด้านบน**)
 
 ---
 
@@ -20,7 +31,7 @@ V2 = รื้อ usability ของ chassis เดิม 3 เรื่อง�
 | **1x Entry** | (compile-time, เป็นชื่อ EA) | `11` GridTrendMA · `12` Breakout · `13` MeanReversion · `14` GridLog (Zeus port) | per-build |
 | **2x Exit/TP** | InpExitMode | `21` FixTP(pip) · `22` TP_ATR · `23` Trail · `24` RunTrend | 22 |
 | **3x SL** | InpSLMode | `30` None · `31` FixPip · `32` Money · `33` ATR · `34` Donchian · `35` SR | 33 |
-| **4x FirstLot** | InpFirstLotMode | `41` Fixed · `42` Risk% | 41 |
+| **4x FirstLot** | InpFirstLotMode | `41` Fixed · `42` Risk%(ต้องมี SL) · `43` Balance-scaled (2026-07-23, ไม่ต้องมี SL — `lot = _43_LotPerAnchor × balance/_43_BalanceAnchor`) | 41 |
 | **5x Progression** | InpLotProgression | `50` None · `51` Linear · `52` Multiplier · `53` Plus · `54` Log · `55` LogPower (Zeus `factor^ln(N)`) | 50 |
 | **6x Direction** | InpTradeDir | `60` Both · `61` LongOnly · `62` ShortOnly | 60 |
 | **7x Filter** | InpTrendFilter | `70` None · `71` ATR_Expand · `72` MA_Slope | 70 |
@@ -189,6 +200,17 @@ filled/pending จาก broker ก่อนเสมอ)
 `Execution.mqh` (pending infra: place/count/cancel) · `Stack.mqh` (`Stack_ManagePyramid`) ·
 `LabCore.mqh` (wire + WARN เมื่อ 93 แต่ PendingMode ว่าง) · `ExitManager.mqh` (guard partial-close)
 
+### Legal exit-owner combos (ORDER-124 chore 3 — OnInit assert อ้างตารางนี้)
+
+| StackMode | Recovery (8x) | Hedge | partial-close (_2_PartialPct*) | exit owner | หมายเหตุ |
+|---|---|---|---|---|---|
+| 90 single / 91 / 92 | ✅ ได้ | ✅ ได้ | ✅ ได้ | ExitManager (basket TP/SL/trail) | Recovery/Hedge = add/lock path ไม่ใช่ close owner ที่สอง — close ทุกทางรวมที่ ExitManager + cage |
+| **93 PYRAMID** | ❌ IGNORED | ❌ IGNORED | ❌ IGNORED | ExitManager basket TP/SL เท่านั้น (pendings มีแค่ per-leg SL) | runtime skip ใน LabCore.OnTick + `Exit_ManagePartialClose`; .set ที่เปิดไว้ = declared-but-ignored → OnInit **hard-WARN** (ไม่ fail — ไม่มี close path ชนจริง) · ⚠️ ช่องจริงที่ยังชน (Codex 445a1b7 SEV-2): ExitMode 21/22 + `_2_SuppressLegTP=false` → **leg0 มี broker TP จริง** = close path ที่สอง → WARN แนะ `_2_SuppressLegTP=true` (ไม่ fail เพราะ probe set 93 ที่ pin cage ไว้รัน combo นี้เอง) |
+| entry 16 (Kangaroo) | n/a (short-circuit) | n/a | n/a | Kangaroo.mqh ทั้ง pipeline | `Kangaroo_OnTick()` return ก่อน ExitManager ทั้งหมด = dormant โดยโครงสร้าง — assert **ห้าม trip** เคสนี้ (Codex catch) · `_2_MaxHoldBars>0` มี WARN เฉพาะของมันอยู่แล้ว (ORDER-125) |
+
+กติกา: combo ใหม่ใดๆ ที่เพิ่ม close path ที่สอง (รันพร้อม ExitManager ได้จริง) = ต้องเพิ่มแถวที่นี่ +
+assert ใน OnInit ก่อน merge — "one mode, one exit owner" (MERGE-02 synthesis).
+
 ---
 
 ## 4) Module Map (อ้างอิงเร็ว)
@@ -230,6 +252,7 @@ filled/pending จาก broker ก่อนเสมอ)
 7. อัปเดต .set ชุดใหม่ (ชื่อ key เปลี่ยน)
 
 ของเดิม V1 คงไว้จน V2 ผ่าน smoke แล้วค่อย deprecate
+(**V2 ผ่านสถานะนั้นแล้ว — V1 DEPRECATED จริงแล้ว ณ วันที่มี banner นี้, ดูหมายเหตุต้นไฟล์**)
 
 ---
 
@@ -314,6 +337,12 @@ _32_BasketSL_Money  = ปิดทั้งตะกร้าเมื่อข�
 ```
 > grid/recovery **ต้อง** มี `_32_BasketSL_Money` เสมอ = เพดานขาดทุนตะกร้า (กันทบไม่จบ)
 
+> ⚠️ **2026-07-23 — เลขเงินแบบ absolute ข้างบนไม่ portable ข้าม cent/USD account** (`25` = $25 บน USD
+> แต่ = $0.25 บน cent = ต่างกัน 100 เท่าโดยเงียบ). ใช้ฝาแฝดแบบ % of balance แทน (default 0 = ปิด,
+> ของเดิมไม่เปลี่ยน): `_2_BasketTP_BalPct` · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct`
+> — precedence = BalPct > ATRmult > Money. ratio ไม่มีหน่วย → ความหมายเท่ากันทุก account type +
+> scale ตามพอร์ตเอง. รายละเอียด + ตาราง pip ต่อ instrument = `ea_template/INSTRUMENT_SCALE_REFERENCE.md`
+
 ### 8x Recovery (⚔️ offensive — build แล้ว 2026-07-03, เปิดได้แต่ cap แข็ง)
 ```
 80 None      ← default ทุก plan ที่ไม่ใช่ grid (early-return — พฤติกรรม = stub เดิมเป๊ะ)
@@ -390,10 +419,10 @@ set อ้างอิง: `sets\Boss14_GridLog_AUDJPY_20x.set`.
 - [x] **ชื่อ EA:** `Boss_11_GridTrend` / `Boss_12_Breakout` / `Boss_13_MeanRev` (prefix Boss_ + เลขหมวด + ชื่อสั้น)
 - [x] **Deploy:** ทับโฟลเดอร์ `EALabTpl` เดิม → expert name = `EALabTpl\Boss_11_GridTrend` ฯลฯ
 - [x] **MR (13) default stack:** `92` DCA (ถัวสวน bounce)
-- [x] **V1:** เก็บถาวร (`EA_LabTemplate.mq5` + `modules/` คงไว้คู่ `core/`)
+- [x] **V1:** เก็บถาวร (`EA_LabTemplate.mq5` + `modules/` คงไว้คู่ `core/`) — **DEPRECATED แล้ว, ดูหมายเหตุต้นไฟล์**
 
 ### ผลที่ตามมาจากการเคาะ
 - ชื่อ build ใน wrapper: `#property description "Boss V2 — 11 Grid Trend MA"` ฯลฯ
 - deploy.ps1 robocopy 3 .ex5 เข้า `…\MQL5\Experts\EALabTpl\` (ทับเฉพาะ Boss_* ไม่แตะ EA_LabTemplate.ex5 เดิม)
 - Stack default: 11→91, 12→90, 13→**92** (ตั้งใน Inputs.mqh ผ่าน #if LAB_ENTRY)
-- V1 ไม่ deprecate — `core/` เป็นชุดใหม่แยก ไม่ทับ `modules/` เดิม
+- V1 ไม่ deprecate ตอนนั้น — `core/` เป็นชุดใหม่แยก ไม่ทับ `modules/` เดิม (**ตอนนี้ deprecate แล้ว, ดูหมายเหตุต้นไฟล์**)

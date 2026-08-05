@@ -89,8 +89,13 @@ foreach ($b in $cfg.barometers) {
       } elseif ($b.move_5d_pct -and $null -ne $chg5d) {
         if ($chg5d -le -[double]$b.move_5d_pct) { $fastDrop = $true }
       }
-      if ($null -ne $pin -and $spot -lt $pin -and $belowTrend) {
-        $signal = -2; $reasons += "below user pin $pin AND below SMA200 -> carry-unwind confirmed"
+      # -2 = confirmed unwind. ORDER-203: this used to read "below user_pin AND below SMA200",
+      # but user_pin is an ABSOLUTE 2026 price (AUDJPY 110) -- on any pre-2026 date the pin test
+      # is always true, so every below-SMA200 day scored -2 instead of -1 and the weight-3
+      # AUDJPY leg alone pushed RI past the RISK_OFF band. The pin is now advisory only
+      # (TRIPWIRE_NEAR below); confirmation comes from two RELATIVE conditions agreeing.
+      if ($belowTrend -and $fastDrop) {
+        $signal = -2; $reasons += "below SMA200 AND fast drop beyond ATR band -> carry-unwind confirmed"
       } elseif ($fastDrop) {
         $signal = -1.5; $reasons += "fast drop (5d $chg5d`%) beyond ATR band -> unwind starting"
       } elseif ($belowTrend) {

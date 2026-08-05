@@ -1,0 +1,42 @@
+﻿; STF_BTC_H4_re3_sr40a0p5.set - ORDER-280 re-entry sweep (SlBufferAtr=0, host=pyr1)
+; Identical to STF_BTC_H4_pyr1.set with BOTH new levers off: [08] re-entry off AND SlBufferAtr=0.
+; rev05 run with this set MUST reproduce rev03/pyr1 TRADE FOR TRADE (not merely PF).
+; One cage covers two revisions: passing it proves rev03 == rev04 == rev05 on the off path.
+; FULL set on purpose: any input left out is filled from the per-terminal tester cache (ORDER-165).
+_00_OptimizeMode=false
+_01_AtrPeriod=14
+_01_Mult=2.5
+_01_Lookback=400
+_01_UseDonchian=true
+_01_DonBars=20
+_02_ExitMode=0
+_02_TpAtrMult=4.0
+_02_SlAtrMult=1.0
+_02_SlBufferAtr=0.0
+_03_UseEma=true
+_03_EmaPeriod=250
+_03_UseER=false
+_03_ErPeriod=8
+_03_ErMin=0.30
+_07_UsePyramid=true
+_07_MaxAdds=1
+_07_AddAtAtr=1.0
+_07_AddLotFactor=1.0
+_07_BasketMaxLossPct=8.0
+_08_ReMode=3
+_08_MaxReEntries=1
+_08_PbAtrMult=1.0
+_08_StoK=14
+_08_StoD=3
+_08_StoSlow=3
+_08_StoLevel=25.0
+_08_SrBars=40
+_08_SrAtrMult=0.5
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false

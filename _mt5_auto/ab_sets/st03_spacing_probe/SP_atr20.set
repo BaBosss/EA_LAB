@@ -1,0 +1,17 @@
+; ST03 spacing probe 3/3: ATR spacing x2.0 (wide; chassis has NO per-level
+; progressive step input - this closes the axis as fixed/ATR1.0/ATR2.0)
+_15_MacdFast=12
+_15_MacdSlow=26
+_15_MacdSignal=9
+_15_CountBars=3
+ExitMode=23
+StackMode=92
+StackConfirm=0
+FirstLotMode=41
+_41_FixedLot=0.01
+LotProg=50
+ProtectLevel=2
+RC_MaxLevelsOverride=8
+_9_MaxLevels=4
+_9_StepUseATR=true
+_9_StepATRmult=2.0

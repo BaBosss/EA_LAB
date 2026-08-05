@@ -27,6 +27,10 @@ input int    _07_RsiPeriod    = 14;
 input double _07_RsiBuyMax     = 45.0; // buy (bullish div) only if RSI(1) <= this (oversold confirms the reversal)
 input double _07_RsiSellMin    = 55.0; // sell (bearish div) only if RSI(1) >= this (overbought confirms)
 
+//--- [08] MACD-cross timing filter (ORDER-217 - independent confirmation, reads buffer 1 which the EA never otherwise touches)
+input bool   _08_UseMacdCross    = false; // false = byte-identical baseline. true = require MACD main/signal cross in the divergence direction within N bars
+input int    _08_CrossWithinBars = 3;     // lookback window (closed bars) to find a same-direction MACD/signal crossover
+
 static bool g_suppress_log=false;
 static datetime g_last_bar_time=0;
 static bool g_bar_checked=false;
@@ -43,6 +47,22 @@ bool HasOpenPosition()
 bool MacdAt(const int shift,double &value)
 {
    double b[1]; if(CopyBuffer(g_macd,0,shift,1,b)<1) return false; value=b[0]; return true;
+}
+
+// [08] MACD main (buffer 0) vs signal (buffer 1) crossover in `dir`'s direction, found within the
+// last `within_bars` closed bars. Only called when _08_UseMacdCross==true.
+bool MacdCrossedRecently(const int dir,const int within_bars)
+{
+   const int need=within_bars+1;
+   double macd[],sig[]; ArraySetAsSeries(macd,true); ArraySetAsSeries(sig,true);
+   if(CopyBuffer(g_macd,0,1,need,macd)<need) return false;
+   if(CopyBuffer(g_macd,1,1,need,sig)<need) return false;
+   for(int i=0;i<within_bars;i++) {
+      const double m_now=macd[i],s_now=sig[i],m_prev=macd[i+1],s_prev=sig[i+1];
+      if(dir==1 && m_prev<=s_prev && m_now>s_now) return true;
+      if(dir==-1 && m_prev>=s_prev && m_now<s_now) return true;
+   }
+   return false;
 }
 
 bool IsLow(const int shift,const double &lows[])
@@ -91,6 +111,9 @@ void OnTick()
    double p,m; int dir=Divergence(p,m); if(dir==0) return;
    // [07] RSI-timing gate (default OFF = identical): only take the divergence entry when RSI confirms the reversal
    if(_07_UseRsiGate) { double rb[1]; if(CopyBuffer(g_rsi,0,1,1,rb)<1) return; if(dir==1 && rb[0]>_07_RsiBuyMax) return; if(dir==-1 && rb[0]<_07_RsiSellMin) return; }
+   // [08] MACD-cross timing gate (default OFF = identical): only take the divergence entry when MACD
+   // has crossed its own signal line in the same direction within the last N bars.
+   if(_08_UseMacdCross) { if(!MacdCrossedRecently(dir,_08_CrossWithinBars)) return; }
    double atr[1]; if(CopyBuffer(g_atr,0,1,1,atr)<1 || atr[0]<=0) return;
    int d=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS); double point=SymbolInfoDouble(_Symbol,SYMBOL_POINT); double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK),bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
    double ext=(dir==1?iLow(_Symbol,PERIOD_CURRENT,1):iHigh(_Symbol,PERIOD_CURRENT,1));
@@ -98,5 +121,9 @@ void OnTick()
    double entry=dir==1?ask:bid, buffer=MathMax(atr[0]*_03_BufferAtrMult,point); double sl=dir==1?ext-buffer:ext+buffer; double dist=MathAbs(entry-sl); if(dist<=point) return; double tp=dir==1?entry+2.0*dist:entry-2.0*dist;
    sl=NormalizeDouble(sl,d); tp=NormalizeDouble(tp,d);
    const bool allow=_06_AllowLive || (bool)MQLInfoInteger(MQL_TESTER); if(!allow) return;
-   if(dir==1) g_trade.Buy(_05_LotSize,_Symbol,ask,sl,tp,"MACDDIV_BUY"); else g_trade.Sell(_05_LotSize,_Symbol,bid,sl,tp,"MACDDIV_SELL");
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("MacdDiv: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+   bool ok;
+   if(dir==1) ok=g_trade.Buy(_05_LotSize,_Symbol,ask,sl,tp,"MACDDIV_BUY"); else ok=g_trade.Sell(_05_LotSize,_Symbol,bid,sl,tp,"MACDDIV_SELL");
+   if(!ok && !g_suppress_log) PrintFormat("MACDDIV FAILED retcode=%d",g_trade.ResultRetcode());
 }

@@ -11,6 +11,8 @@
 - **Generated consumers** = read-only surfaces that derive from it and must never write back.
 - **Freshness check** = the mechanism that catches the owner going stale.
 
+> ⚠️ historical B0 snapshot (2026-07-1x) — C/D สร้างเสร็จแล้ว; แถวนี้คงไว้เป็น baseline record, สถานะจริง = docs/memory_control/README.md
+
 ## Map
 
 | # | Fact / artifact | Canonical owner + write path | Permitted writers | Generated consumers (read-only) | Freshness check |

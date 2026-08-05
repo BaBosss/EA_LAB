@@ -1,0 +1,2 @@
+; Recovery81_Test requires REC_LIGHT (flat-lot twin mode used by hedge_recovery_sweep.ps1)
+RecoveryMode=81

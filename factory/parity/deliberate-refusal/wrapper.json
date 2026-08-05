@@ -1,0 +1,18 @@
+﻿{
+    "label":  "wrapper",
+    "case":  "deliberate-refusal",
+    "kind":  "deliberate-refusal",
+    "expert":  "EALabTpl\\generated\\B14_H01_r1",
+    "binary":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\generated\\B14_H01_r1.ex5",
+    "binary_mtime":  "2026-08-02 13:59:19",
+    "report":  "D:\\EA_LAB\\_mt5_auto\\reports\\PARITY_B14_H01_r1_deliberaterefusal_wrapper.htm",
+    "log":  "D:\\EA_LAB\\factory\\parity\\deliberate-refusal\\wrapper.log.txt",
+    "lane":  "D:\\Meta 5\\terminal64.exe",
+    "symbol":  "XAUUSD",
+    "period":  "H1",
+    "from":  "2024.01.01",
+    "to":  "2024.07.01",
+    "model":  1,
+    "set":  "D:\\EA_LAB\\factory\\parity\\deliberate-refusal\\effective.set",
+    "expected_hash":  "822df5f70650be838ac4202b9edca0c0afe3380b54b2b18e29a6e1844f2f53ba"
+}

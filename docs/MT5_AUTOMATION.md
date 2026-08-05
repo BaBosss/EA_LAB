@@ -34,6 +34,28 @@
 ```
 ขั้น single-test เป็นต้นไป **อัตโนมัติครบแล้ว**
 
+## ⚠️ UPDATE 2026-07-26 — swap: tester คิดโหมด POINTS แต่ **ไม่คิด** โหมด INTEREST_CURRENT
+
+**วัดแล้วไม่ใช่เดา** (probe ถือ position เดียว 30 วันแล้วอ่านเลขของ tester เอง —
+`ea_projects\(TST)_SymbolSwapProbe\` มี 2 ตัว: `_SymbolSwapProbe` อ่านสเปก · `_SwapChargeProbe` วัดว่าคิดจริงไหม):
+
+| symbol | swap mode | tester คิดไหม |
+|---|---|---|
+| XAUUSD | `POINTS` | **คิด** — วัดได้ −29.25 vs สเปก −29.19 ⇒ **backtest XAU หัก financing แล้ว ห้ามหักซ้ำ** |
+| BTCUSD | `INTEREST_CURRENT` (−14.67%/ปี long) | **ไม่คิดเลย** — ถือ 30 วันได้ net = ราคาเปล่าเป๊ะ |
+| ETHUSD | `INTEREST_CURRENT` (−9.86%/ปี long) | **ไม่คิดเลย** |
+
+⇒ ผล crypto ต้องหัก swap เองด้วย **`scripts\swap_adjust_crypto.py`** (คำนวณจากเวลาถือจริงต่อไม้ · ใช้ราคาที่แย่กว่าของ
+entry/exit เพื่อไม่ให้ต่ำกว่าจริง · เขียน trades CSV ที่หักแล้วให้ `monte_carlo.py` ต่อได้):
+
+```powershell
+python D:\EA_LAB\scripts\swap_adjust_crypto.py --rate-long 14.67 --rate-short 0.49 `
+  --deals trades.csv --out trades_swapadj.csv D:\EA_LAB\_mt5_auto\reports\RUN_*.htm
+```
+**ก่อนเชื่อผลของ symbol ที่ยังไม่เคยแตะ ให้รัน probe ก่อนเสมอ** — โหมด swap ต่างกันต่อ symbol และ probe
+ยังบอก `min_lot` ด้วย (เคส `ETHUSD min_lot=0.1`: `.set` ที่ใช้ 0.01 ทำให้ EA ปฏิเสธทุกออเดอร์ → รายงาน 0 ไม้
+ที่หน้าตาเหมือน "ไม่มีสัญญาณ").
+
 ## ✅ UPDATE 2026-07-25 — headless OPTIMIZATION ทำได้แล้ว (หัวข้อ "v2 ยังไม่ทำ" ข้างล่าง = ล้าสมัย)
 
 `scripts/mt5_optimize.ps1` รัน genetic headless แล้ว export XML ได้จริง → `scripts/parse_opt_xml.ps1` →

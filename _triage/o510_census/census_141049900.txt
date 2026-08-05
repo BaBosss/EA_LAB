@@ -1,0 +1,15 @@
+# ORDER-510 STEP 2 census - account 141049900 (REAL_CENT, VPS 66.212.22.7)
+# Taken 2026-08-02 by the owner: Tools -> Global Variables (F3). Read-only; nothing deleted.
+#
+# THE WINDOW WAS EMPTY - and this account was never in the gate's scope to begin with.
+#
+# 141049900 IS AN **MT4** TERMINAL (platform=MT4 in DEPLOYMENTS.csv; the screenshot's title bar
+# reads Exness-Real35 with the MT4 UI, and the chart carries (Boss)_NewsGuard_MT4). The
+# Boss_<magic>_* GlobalVariables this gate looks for are written by ea_template/core/Persist.mqh,
+# which is MQL5. They cannot exist on MT4 under any circumstances.
+#
+# So the empty list here is TRUE BUT UNINFORMATIVE: it confirms a state that was structurally
+# impossible either way. ORDER-510's SECOND BLOCKER table listed this account as UNCHECKED beside
+# the MT5 ones, which sent the owner to inspect a terminal where the thing being looked for cannot
+# occur. Same shape as the ORDER-941 request to read inputs that do not exist on that EA - see
+# memory reproduce-in-tester-before-tasking-the-owner.

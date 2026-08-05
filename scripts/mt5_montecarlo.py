@@ -13,8 +13,22 @@ losing legs cluster (correlated), so this is an OPTIMISTIC lower bound on tail
 risk — a real adverse trend can be worse than any reshuffle of these trades.
 Treat the 95/99th-percentile DD as "at least this bad", not a ceiling.
 
+⚠️ WHAT THE DEFAULT MODE CAN AND CANNOT TELL YOU (measured 2026-07-27, ORDER-350)
+Default mode PERMUTES the trades (rng.shuffle). A permutation preserves the
+multiset of per-trade P/L, so gross_profit and gross_loss — and therefore NET
+PROFIT and PROFIT FACTOR — are IDENTICAL in every iteration. Their "5th
+percentile" equals their median equals the point estimate, exactly. Verified by
+running this tool on a report of known PF 2.33: every PF column printed 2.33.
+  => A bar of the form "MC PF-5th >= 1.0" CANNOT FAIL in this mode. It is not a
+     robustness test, it is the backtest PF written down a second time.
+  => In default mode read ONLY the drawdown row and the ruin figure.
+Pass --bootstrap to resample WITH REPLACEMENT. That changes the multiset, so PF
+and net actually vary and a PF percentile becomes a real (if still optimistic)
+robustness statement. Use it whenever a decision leans on a PF percentile.
+
 Usage:
   python mt5_montecarlo.py <report.htm> [--deposit 10000] [--iters 5000]
+                                        [--bootstrap]
 """
 import re
 import sys
@@ -50,12 +64,18 @@ def extract_trades(path):
     return profits
 
 
-def simulate(profits, deposit, iters, rng):
+def simulate(profits, deposit, iters, rng, bootstrap=False):
     n = len(profits)
     finals, maxdds, pfs = [], [], []
     for _ in range(iters):
-        order = profits[:]
-        rng.shuffle(order)
+        if bootstrap:
+            # WITH replacement: the multiset changes, so gross_profit/gross_loss —
+            # and therefore net and PF — actually vary across iterations.
+            order = [profits[rng.randrange(n)] for _ in range(n)]
+        else:
+            # Permutation only: multiset preserved => net and PF are constants.
+            order = profits[:]
+            rng.shuffle(order)
         equity = deposit
         peak = deposit
         maxdd = 0.0
@@ -89,6 +109,9 @@ def main():
     ap.add_argument("--deposit", type=float, default=10000.0)
     ap.add_argument("--iters", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--bootstrap", action="store_true",
+                    help="resample WITH replacement so net/PF actually vary "
+                         "(default permutes, which holds net and PF constant)")
     a = ap.parse_args()
 
     profits = extract_trades(a.report)
@@ -98,7 +121,7 @@ def main():
         sys.exit(1)
 
     rng = random.Random(a.seed)
-    finals, maxdds, pfs = simulate(profits, a.deposit, a.iters, rng)
+    finals, maxdds, pfs = simulate(profits, a.deposit, a.iters, rng, a.bootstrap)
     finals.sort()
     maxdds.sort()
     finite_pfs = sorted(p for p in pfs if p != float("inf"))
@@ -107,6 +130,11 @@ def main():
     print(f"report: {a.report}")
     print(f"trades: {n} | deposit: {a.deposit} | iterations: {a.iters}")
     print(f"actual net (real trade order): {net_actual:.2f}")
+    if a.bootstrap:
+        print("mode: BOOTSTRAP (with replacement) -- net and PF vary; their percentiles are real")
+    else:
+        print("mode: PERMUTATION (default) -- net and PF are CONSTANT by construction; "
+              "read the drawdown row and ruin only. Pass --bootstrap for a PF bar that can fail.")
     print()
     print(f"{'metric':<28} {'5th pct':>10} {'median':>10} {'95th pct':>10} {'worst':>10}")
     print(f"{'Net profit':<28} {pct(finals,5):>10.2f} {pct(finals,50):>10.2f} {pct(finals,95):>10.2f} {finals[0]:>10.2f}")

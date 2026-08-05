@@ -1,0 +1,31 @@
+; STF_XAU_H4_er8_20.set — ผู้ชนะของ ER A/B บน XAU H4: ErPeriod=8 ErMin=0.20 (รอ M4 ยืนยัน)
+; 2026-07-26 · เลือกด้วยเกณฑ์ที่ตั้งไว้ก่อนเห็นผล = **ต้องดีขึ้นทั้งสองหน้าต่าง**
+;   M1 MAIN: baseline 1.525/211t -> 1.636/156t (+1156.81)
+;   M1 BWD : baseline (M4) 1.03/206t -> 1.124/164t (+183.31)
+; ⚠️ config ที่ชนะ MAIN แรงที่สุดคือ ErPeriod=12/ErMin=0.20 (PF 2.405/105t/+1488) แต่ **BWD = 0.838
+;    ติดลบ −165** -> ทิ้ง เพราะเป็นรอยเดียวกับ Donchian-on-XAU (MAIN สวย BWD พัง = selection-fit)
+; ⚠️ แถวที่ PF 2.5-3.8 ทั้งหมดมี n = 6-30 ไม้ -> noise ไม่ใช่ผล ห้ามเลือก
+; AllowLive=false
+
+_00_OptimizeMode=false
+_01_AtrPeriod=18
+_01_Mult=2.0
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=1
+_02_TpAtrMult=5.0
+_02_SlAtrMult=1.0
+_03_UseEma=false
+_03_EmaPeriod=150
+_03_UseER=true
+_03_ErPeriod=8
+_03_ErMin=0.20
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false

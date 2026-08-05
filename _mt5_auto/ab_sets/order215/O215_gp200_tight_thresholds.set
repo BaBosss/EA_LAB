@@ -1,0 +1,15 @@
+InpCutLossFixed=1
+InpCutLossBuySide=true
+InpCutLossPercent=1
+InpCutLossTotal=false
+InpMagicNumber=20240001
+InpLotStart=0.01
+InpGridPoints=200
+InpStepEveryOrders=5
+InpEnableTrading=true
+InpMagicPrefix=MG
+InpCutLossSellSide=true
+InpStepAddLot=0.01
+InpSlippage=10
+InpCutLossMode=0
+InpProfitTarget=14

@@ -1,0 +1,16 @@
+; EA_SUPERTREND — XAUUSD H4 live deploy (demo account)
+; IS PF=1.54 / OOS PF=4.49 / Corr vs BRK=0.724 → deploy at 0.01 lot (both-direction)
+; Magic=990020. Different magic from EA_KAUFMAN_ER (990127) — safe to coexist on same H4 chart.
+_01_ATRperiod=10
+_01_Multiplier=3.0
+_02_SL_ATR_mult=2.0
+_02_TP_ATR_mult=0.0
+_03_UseEmaFilter=true
+_03_EMAperiod=200
+_03_UseAdxFilter=true
+_03_ADXperiod=14
+_03_ADXthreshold=20.0
+_05_FixedLot=0.01
+_05_MaxSpreadPts=0
+_06_AllowLive=true
+_06_Magic=990020

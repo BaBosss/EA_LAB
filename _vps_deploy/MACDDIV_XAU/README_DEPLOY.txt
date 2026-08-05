@@ -15,10 +15,44 @@ Mechanism: bullish divergence = price lower-low + MACD main higher-low (mirror b
            Single flat-lot order 0.01, SL = 3-bar extremum, TP = 200% SL. NO grid/martingale.
 
 ------------------------------------------------------------------------
-WHY DEPLOY (evidence — full funnel cleared)
+!!! STATUS DOWNGRADED 2026-07-25 (ORDER-216) — READ BEFORE CITING THE EVIDENCE BELOW !!!
+------------------------------------------------------------------------
+"Full funnel cleared" NO LONGER HOLDS. Verdict is now PARKED-VERIFY(user):
+stays on DEMO, but DO NOT size up and DO NOT promote to real money.
+
+1) The "plateau, ZERO losing neighbor" claim below is a FAKE PLATEAU. It was counted on
+   axes that cannot affect the EA at all:
+     - `_02_MacdSignal` is passed to iMACD() but the EA only ever reads buffer 0 (the MACD
+       main line). Buffer 1 -- the signal line, the ONLY thing this parameter controls -- is
+       never read anywhere in the EA. Confirmed by reading the source, not just statistics.
+       Values 10/11/13/15/16 return identical results to every digit on MAIN and BWD.
+     - `_01_LookbackBars` is inert for every value >=48; the deployed 60 sits mid-dead-zone.
+     - `_01_MinBarsApart` is inert at 1-4; the deployed 2 sits in the dead zone.
+   Neighbors on a dead axis are identical by construction, so "no losing neighbor" was true
+   automatically and measured nothing.
+
+2) The deployed cell is a KNIFE EDGE on the one axis that does matter, `_01_SwingRadius`:
+       SwingRadius    2        3 (deployed)     4
+       MAIN PF        0.96     1.82             1.04
+       BWD  PF        0.87     0.98             1.44
+   One step either way and MAIN PF falls below 1.0. Of 405 fine-grid combos, 146 pass -- but
+   135 of those 146 are SwingRadius=3. That is a single on/off switch, not width.
+
+3) Worse than knife-edge: the axis REVERSES between regimes. MAIN prefers 3, BWD prefers 4,
+   and NO value clears both windows at once. That is a regime-fit signature, not a durable
+   mechanism.
+
+Also corrected: BWD measured 0.98, not the 1.04 printed below.
+
+What still stands: the EA is naked flat-lot with a real SL, no grid/martingale, and the
+Model-4 numbers are not a fill artifact. It is safe to leave running on demo as-is.
+See AGENT_TASKBOARD ORDER-216 for the full working.
+------------------------------------------------------------------------
+
+WHY DEPLOY (evidence as written 2026-07-16 — SUPERSEDED, see the block above)
 ------------------------------------------------------------------------
 - Plateau (not spike): XAU H4 MAIN (2023-26) PF 1.91, 9 one-param neighbors 1.33-1.90 with
-    ZERO losing neighbor on Slow/Fast/Buffer/ATR-period axes.
+    ZERO losing neighbor on Slow/Fast/Buffer/ATR-period axes.   <-- FAKE, see (1) above
 - Both-regime: BWD (2020-22) PF 1.04 (survives the opposite regime, DD 3.4%).
 - Holdout (never used to select): 2026 H1 PF 1.30.
 - Model-4 real ticks (the honest test): MAIN 1.89 / BWD 0.97 / HOLDOUT 1.28 — virtually

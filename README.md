@@ -10,14 +10,13 @@
 | ไฟล์ | คือ |
 |---|---|
 | **`PROJECT_STATE.md`** | 👉 **AI START HERE** — living state กลาง (ภาพรวม/สถานะ%/decision/monitor/แผนต่อ) เปิดก่อนเสมอ |
-| `DEPLOY_CHECKLIST_2026-06-29.md` | checklist deploy วันนี้ (ephemeral — ลบได้หลัง deploy เสร็จ) |
-| `EA_CORE_ST03_LOOP_PLAN.md` | แผนปิด framework loop ด้วย ST03 edge (EA_CORE ทางเลือก 2) |
+| `_archive_docs/EA_CORE_ST03_LOOP_PLAN.md` | แผนปิด framework loop ด้วย ST03 edge (EA_CORE ทางเลือก 2) — archived, loop closed |
 | **`DEMO_DEPLOYMENT_PLAN.md`** | พอร์ต live ที่ deploy จริง (source of truth) + .set + magic + monitoring rule |
 | **`EA_SCORECARD_AND_REGISTRY.md`** | ทะเบียน EA ทุกตัว + scoring rubric + kill-reason |
 | **`EA_LAB_MAP.html`** | 🗺️ **เห็นภาพทั้งแล็บในหน้าเดียว** — เปิดด้วย browser: การ์ด EA ทุกตัวเรียงตามสายพาน verdict + ผังตัดสิน (generated, ห้ามแก้มือ — `scripts/make_ea_map.py`) |
 | **`INTAKE_QUEUE.md`** | funnel รับ source/strategy ใหม่ (drop ลง `_intake_drop/`) |
 | **`PLATFORM_INDEX.md`** | แผนที่ไฟล์/โฟลเดอร์ทั้งหมด |
-| **`docs/RECOVERED_PLATFORM_DESIGN_20260614.md`** | design "สมอง" — scoring v1, gate chain, optimize Pass 0/1/2/4 |
+| `_archive_docs/RECOVERED_PLATFORM_DESIGN_20260614.md` | design "สมอง" เดิม (scoring v1, gate chain, optimize Pass 0/1/2/4) — archived, superseded by `docs/PIPELINE.md` + `CLAUDE.md` VERDICT GATE |
 | **`AUTOMATION_GUIDE.md`** + `docs/MT5_AUTOMATION.md` | pipeline funnel + MT5 headless mechanics |
 | **`EA_STRATEGY_GUIDE.md`** | reference strategy ทุกตัวที่เคย screen |
 

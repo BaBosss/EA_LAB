@@ -16,7 +16,9 @@ first, or pass -Force.
 
 Example:
   & .\mt4_run.ps1 -Expert "AI Gold Sniper EA" -Symbol XAUUSD `
-       -FromDate 2025.05.22 -ToDate 2026.05.22 -ReportName AIGOLD_XAU_1y
+       -FromDate 2025.01.01 -ToDate 2025.12.31 -ReportName AIGOLD_XAU_1y
+  (ORDER-238: the example used to end 2026.05.22, inside the 2026H1 holdout.
+   Examples get copied, so the example is now a window that is safe to copy.)
 #>
 param(
   [Parameter(Mandatory)][string]$Expert,
@@ -114,6 +116,14 @@ if ($found) {
       Move-Item -Destination "$auto\reports\" -Force
   }
   Write-Output "OK REPORT: $destHtm"
+  # ORDER-372: this script used to END here with no `exit`, so on success it never set an exit
+  # code at all - PowerShell leaves $LASTEXITCODE holding whatever the PREVIOUS command left. Any
+  # caller that read it after a successful run therefore read a stale value, which is worse than
+  # reading nothing: a sweep whose previous cell aborted with 2 would see 2 again on the next cell
+  # that genuinely succeeded, and reject a good report. run_batch.ps1 already compensates for this
+  # at its own layer (its "exit-unreliable basename" set names this script), but every other caller
+  # was on its own. Exit codes now match mt5_run.ps1's contract: 0 ok, 1 no report.
+  exit 0
 }
 else {
   # MT4 does NOT honor shutdown on a hung test (EA spamming iCustom "cannot open
@@ -125,4 +135,5 @@ else {
   } else {
     Write-Output "NO REPORT (exited=$($proc.HasExited)). Check EA name / symbol history / login."
   }
+  exit 1
 }

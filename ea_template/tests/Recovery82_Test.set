@@ -1,0 +1,6 @@
+; Recovery82_Test requires REC_ADAPTIVE fixed at known cage values
+RecoveryMode=82
+RC_RecMultMax=1.8
+_8_DDRefMoney=100.0
+_8_DDRefBalPct=0
+RC_MaxLot=0.50

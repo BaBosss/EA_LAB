@@ -2,6 +2,14 @@
 ORDER-095 CAMPAIGN — EA_BREAKOUT_XAU expansion — DEMO DEPLOY — USDJPY H4
 ========================================================================
 Status:   DEMO-ELIGIBLE (lead-engineer PASS to demo, 2026-07-14). NOT live-certified.
+
+!!! HOLDOUT SPENT (mild) -- added 2026-07-26 (audit AUDIT_BUNDLE_EVIDENCE_G2.md) !!!
+          O095_BRK_USDJPY_H4_MAIN.ini runs 2023.01.01 -> 2026.07.01, so the ship/no-ship decision
+          consumed six months of the 2026H1 holdout. No parameter was tuned (53-byte .set,
+          compiled defaults), so nothing was selected into the leak.
+          Direction of the error is favourable here: the clean re-run is BETTER (1.41 / 65t) than
+          the 1.28 / 102t quoted below, so nothing is inflated. Recorded for completeness --
+          2026H1 is spent for this leg, its forward evidence starts at attach.
 EA:       EA_BREAKOUT_XAU.ex5  (same binary as the live XAU leg magic 991001 — breakout40 /
           ATR1.5-5 SLTP / daily-EMA200 filter / buy-only / fixed lot 0.01)
 Source:   D:\EA_LAB\ea_projects\EA_BREAKOUT_XAU\EA_BREAKOUT_XAU.mq5

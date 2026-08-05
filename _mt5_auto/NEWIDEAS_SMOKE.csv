@@ -1,0 +1,4 @@
+﻿idea,ea,sym,tf,pf,trades,net
+A_VwapSnapback,c091c\VwapSnapback_EUR,EURUSD,M15,0.69,977,-112.60
+B_AsianDrift,c091c\AsianDriftCarry_XAU,XAUUSD,M15,1.06,614,116.88
+C_VolRegime,c091c\VolRegimeBreakout_XAU,XAUUSD,H1,0.9,277,-337.76

@@ -1,0 +1,925 @@
+"""
+safe_projection.py - ORDER-1131 (slice S11). The ONLY document an online or Telegram surface
+may read, and the scanner that proves it carries nothing it must not.
+
+WHY THIS EXISTS
+  design 7.1 says the online projection is "safe by construction: masked accounts, no
+  credentials, no strategy logic, no exact lots, percentages instead of money amounts".
+  The Codex blind audit measured that no construction existed - the phrase was a promise, and
+  the real snapshot carries `account`, `balance`, `equity`, `floating_pl`, `margin_level`,
+  per-magic `open_lots` and EA names two fields away from the sentence promising it did not.
+  schemas.json answered with an ALLOWLIST-ONLY DTO. This file is that allowlist made real,
+  plus the two things an allowlist alone cannot do:
+
+    scan_forbidden()   a RECURSIVE scan - keys at any depth, values at any depth. An allowlist
+                       stops a new FIELD; it does not stop an account number typed into a field
+                       that is allowed. Both leaks have to be closed by different mechanisms.
+    read_for_sender()  the sender boundary. design 7.1 (rev 3): "Telegram and the online page
+                       read only the SafeProjection, and the sender has no path to the full
+                       snapshot at all." A sentence is not a boundary; a function that refuses
+                       every path except the pinned one is.
+
+WHAT "THE SENDER HAS NO PATH" MEANS HERE, EXACTLY
+  It means: the only reader this module offers refuses to open anything but PROJECTION_REL, and
+  refuses a document that is not entity=SafeProjection, and re-scans what it is about to hand
+  back. It does NOT mean the operating system has been stopped from opening the snapshot file -
+  no python module can claim that. The claim is scoped to what is driven:
+  run_s11_tests.py hands read_for_sender() the real snapshot path and requires a refusal.
+  (memory: name-it-honestly-when-you-cannot-prove-it)
+
+THREE RULES THIS FILE IS WRITTEN AGAINST, each paid for elsewhere in this repo
+  1. An unreadable or UNRECOGNISED input REFUSES. It never becomes a benign default. A
+     `floating_risk.state` this module does not know is a ProjectionRefusal, not `UNKNOWN` -
+     "map what you do not recognise onto the safe-looking value" is how a future state that
+     means BREACH renders as OK. (memory: unreadable-input-must-refuse-not-skip)
+  2. An exemption is a CLOSED DECLARATION, never a rule. There is no "skip fields that look
+     like timestamps" here. (memory: citation-guard-satisfied-by-a-universal-file)
+  3. This module computes NO threshold. design 7.1: "Risk authority stays with the existing
+     detectors. The dashboard creates no competing threshold." A drawdown band is therefore
+     PASSED THROUGH from a detector or it is UNKNOWN - deriving one from `equity` and `balance`
+     would be a second risk opinion wearing a dashboard's clothes. Today no detector in
+     control_room_snapshot.json publishes one, so every band is UNKNOWN and the local page says
+     so out loud. run_s11_tests.py drives a detector-supplied band through as well, so the
+     UNKNOWN is a measurement rather than a constant.
+
+USAGE   tools\\python312\\python.exe _triage/factory_os/safe_projection.py build
+        tools\\python312\\python.exe _triage/factory_os/safe_projection.py check
+TESTS   tools\\python312\\python.exe _triage/factory_os/run_s11_tests.py
+"""
+import hashlib
+import io
+import json
+import os
+import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import snapshot_validator  # noqa: E402  - the ONE reader boundary for the full snapshot
+import control_center      # noqa: E402  - sensors_disagree() lives there, once (ORDER-1267 #2)
+
+# The full snapshot is named here ONCE, and only so that build() can obtain a VERIFIED copy
+# through snapshot_validator.load_verified(). read_for_sender() does not use it: see
+# SENDER_ALLOWED_PATHS below, which is the closed declaration that boundary is built from.
+SNAPSHOT_REL = 'portfolio/control_room_snapshot.json'
+PROJECTION_REL = 'build/safe_projection.json'
+
+ENTITY = 'SafeProjection'
+
+# A stable salt, NOT a secret and not sold as one. Its job is opacity, not resistance: it keeps
+# the internal finding id - which may embed an account, a magic or an EA name - off the wire,
+# while keeping the public id STABLE across builds, which design 7.3 requires so Telegram dedupe
+# and the dashboard can be pinned to the same ids. A per-build salt would break that; a longer
+# salt would not make a 6-digit magic un-guessable. Say what it does and no more.
+PUBLIC_ID_SALT = 'ea-lab-safe-projection-v1'
+
+
+class ProjectionRefusal(Exception):
+    """The projection could not be built, or the document handed over is not one."""
+
+
+class ProjectionLeak(ProjectionRefusal):
+    """The scan found something that must never reach an online or Telegram surface."""
+
+
+def _refuse(msg):
+    raise ProjectionRefusal(msg)
+
+
+# ---------------------------------------------------------------------------------------
+# The closed maps. Every one of them refuses an unrecognised input rather than defaulting it.
+# ---------------------------------------------------------------------------------------
+
+# system_health[].state -> SafeProjection.accounts[].sensor_state. Identity for the states the
+# snapshot builder can emit; the schema's enum is the closed target vocabulary.
+SENSOR_STATE_MAP = {
+    'FRESH': 'FRESH',
+    'STALE': 'STALE',
+    'BLIND': 'BLIND',
+    'MISSING': 'MISSING',
+    'NO_SENSOR': 'MISSING',
+    'UNKNOWN': 'UNKNOWN',
+}
+
+# A detector-supplied drawdown BAND, passed through. There is deliberately no arithmetic here.
+DD_BAND_MAP = {
+    'OK': 'OK',
+    'WATCH': 'WATCH',
+    'BREACH': 'BREACH',
+    'UNKNOWN': 'UNKNOWN',
+}
+
+# snapshot verdict reason code -> the severity the projection publishes. This is a ROUTING
+# table, not a threshold: every code below is already a refusal the validator computed, and this
+# map only says how loudly it travels. A code that is not here REFUSES the build - a new reason
+# code that silently routed as INFO is exactly the escalation-swallowing shape design 7.3
+# rejects for the dedupe key.
+REASON_SEVERITY = {
+    'MANDATORY_SOURCE_MISSING': 'CRITICAL',
+    'MANDATORY_SOURCE_UNREADABLE': 'CRITICAL',
+    'MANDATORY_SOURCE_STALE': 'WARN',
+    'SOURCE_REGISTRY_MISMATCH': 'WARN',
+    'DUPLICATE_SOURCE_NAME': 'WARN',
+    'SOURCE_MANDATORY_FLAG_CONTRADICTS_REGISTRY': 'WARN',
+    'DISCOVERED_CATEGORIZED_MISMATCH': 'WARN',
+    'CATEGORY_SUM_MISMATCH': 'WARN',
+    'COVERAGE_SUM_MISMATCH': 'WARN',
+    'DUPLICATES_PRESENT': 'INFO',
+    'CONFLICTS_PRESENT': 'WARN',
+    'UNCLASSIFIED_PRESENT': 'WARN',
+    'ACTIONABLE_PRESENT': 'INFO',
+}
+
+
+# ---------------------------------------------------------------------------------------
+# The scan. Recursive on purpose, and the recursion is what run_s11_tests.py drives: a
+# top-level-only scan passes a document whose account number is three levels down, which is
+# the exact attack the acceptance names.
+# ---------------------------------------------------------------------------------------
+
+# Keys that may never appear at ANY depth of a projected document. Matched EXACTLY, never as a
+# substring: `account_masked` is the field the schema requires, and a substring rule would make
+# the safe field indistinguishable from the unsafe one it replaces.
+FORBIDDEN_KEYS = {
+    'account': 'the raw account number is the thing masking exists to remove',
+    'account_name': 'names the broker account',
+    'accounts_total': 'a fleet size is not in the allowlist; it is here to keep the map closed',
+    'balance': 'money amount',
+    'equity': 'money amount',
+    'floating_pl': 'money amount',
+    'margin_level': 'a margin level plus a known deposit reconstructs the money',
+    'open_lots': 'exact lot size',
+    'lots': 'exact lot size',
+    'volume': 'exact lot size',
+    'magic': 'a magic identifies a strategy on an account',
+    'magics': 'a magic identifies a strategy on an account',
+    'ea': 'strategy identity',
+    'ea_name': 'strategy identity',
+    'symbol': 'strategy identity',
+    'symbols': 'strategy identity',
+    'set': 'a .set name leaks the configuration',
+    'ex5': 'a binary name leaks the strategy',
+    'host': 'infrastructure identity',
+    'latest_file': 'a local path leaks the machine layout',
+    'path': 'a local path leaks the machine layout',
+    'finding_id': 'the internal id may embed an account, a magic or a strategy name',
+    'token': 'credential',
+    'bot_token': 'credential',
+    'api_key': 'credential',
+    'apikey': 'credential',
+    'password': 'credential',
+    'secret': 'credential',
+    'chat_id': 'a chat id is a delivery credential',
+}
+
+# Value shapes that are a leak wherever they appear. Deliberately NOT a bare long-digit rule:
+# `build_id` and `generated_at` legitimately carry long digit runs, and a rule that had to be
+# exempted for them would be an exemption large enough to hide an account. Raw account numbers
+# are caught by the known-secret layer below instead, which cannot false-positive.
+FORBIDDEN_VALUE_RULES = (
+    ('TELEGRAM_BOT_TOKEN', re.compile(r'\d{6,}:[A-Za-z0-9_\-]{30,}'),
+     'a Telegram bot token'),
+    ('WINDOWS_ABSOLUTE_PATH', re.compile(r'(?i)[a-z]:[\\/]'),
+     'a local filesystem path'),
+    ('UNC_PATH', re.compile(r'\\\\[A-Za-z0-9._-]+\\'),
+     'a network path'),
+    ('PEM_BLOCK', re.compile(r'-----BEGIN [A-Z ]*(KEY|CERTIFICATE)'),
+     'an embedded key or certificate'),
+    ('CREDENTIAL_ASSIGNMENT', re.compile(r'(?i)\b(api[_-]?key|password|secret|bearer)\b\s*[:=]'),
+     'a credential written into a value'),
+)
+
+
+def _layer_not_run(notice):
+    """Record one skipped layer against BOTH questions -- this scan, and this process.
+
+    ORDER-1310 #8. The process list is deduplicated ON APPEND: repeated sentinel scans used to
+    append the identical sentence every time and the only thing keeping the CLI readable was a
+    `set()` at the print, which does nothing for a long-running process's memory.
+    """
+    LAST_SCAN_LAYERS_NOT_RUN.append(notice)
+    if notice not in LAYERS_NOT_RUN:
+        LAYERS_NOT_RUN.append(notice)
+
+
+def _walk(node, path='$'):
+    """Yield (path, key_or_None, value) for every node, at every depth. Keys AND leaves."""
+    if isinstance(node, dict):
+        for k in node:
+            child = '%s.%s' % (path, k)
+            yield child, k, node[k]
+            for item in _walk(node[k], child):
+                yield item
+    elif isinstance(node, (list, tuple)):
+        for i, v in enumerate(node):
+            child = '%s[%d]' % (path, i)
+            yield child, None, v
+            for item in _walk(v, child):
+                yield item
+
+
+# ORDER-1267 #1. A caller that structurally CANNOT supply recognizers says so with this, and
+# nothing else may. It is a sentinel and not a default, because the whole defect is that
+# "I have no snapshot to derive recognizers from" and "I forgot to pass them" produced the same
+# empty tuple, and an empty result is indistinguishable from a clean document.
+NO_KNOWN_SECRETS_AVAILABLE = 'NO_KNOWN_SECRETS_AVAILABLE'
+
+# 🔴 IT IS NOT stderr, AND THAT IS NOT A STYLE CHOICE. The first version wrote the notice to
+# stderr. run_s11_tests.py and run_s12_tests.py were green when hand-run and the FAST TIER caught
+# it: `.ps1` wrappers run under $ErrorActionPreference='Stop', where ANY stderr from a native
+# command is a thrown error, so both suites came back `exit -1 SUITE THREW` while their python
+# exited 0. Same shape as memory `thai-output-kills-a-suite-inside-the-hook`, one channel over.
+# stdout is no better: a library that prints into a caller's stdout can corrupt whatever parses it.
+# So the record is DATA, and the surfaces that want to say it out loud read it.
+#
+# 🔴 ORDER-1310 #8 -- THERE ARE TWO QUESTIONS HERE AND ONE LIST WAS ANSWERING BOTH.
+# `LAYERS_NOT_RUN` is PROCESS HISTORY. A reader that asks it "was THIS document cleared by every
+# layer?" gets the wrong answer whenever an earlier scan in the same process used the sentinel:
+# the notice is still sitting there, so the CLI reported a skipped layer that had actually run.
+# Deleting the history instead would lose the opposite thing -- that some earlier document really
+# was cleared without the layer -- which is the warning worth keeping most. So the two questions
+# get two names:
+#
+#   LAST_SCAN_LAYERS_NOT_RUN   the scan that just finished. RESET at the top of every
+#                              scan_forbidden call, so it is never about somebody else's document.
+#   LAYERS_NOT_RUN             every DISTINCT notice raised in this process. Deduplicated ON
+#                              APPEND rather than only at the print, which is also what stops
+#                              repeated sentinel calls growing it without bound (the second half
+#                              of the same finding).
+LAYERS_NOT_RUN = []
+LAST_SCAN_LAYERS_NOT_RUN = []
+
+
+def _normalised(text):
+    """Lowercased, with every non-alphanumeric removed. Used to derive the SECRET's spelling,
+    never to rewrite the text being scanned -- see `_spelling_pattern` for why that distinction
+    is the whole of ORDER-1310 #6.
+
+    ORDER-1267 #1: the KNOWN_SECRET layer was a bare `secret in text`, so the exact literal was
+    DETECTED while `5123-4567`, `51 234 567` and `acct#5123-4567` were all CLEAN -- measured, one
+    synthetic literal, at HEAD. Formatting is the cheapest possible evasion and it is the one a
+    human doing the leaking would reach for by accident, not by malice.
+    """
+    return re.sub(r'[^0-9a-z]', '', str(text).lower())
+
+
+# ORDER-1310 #6. One compiled pattern per DISTINCT secret, not one per (secret, node) pair. The
+# repaired layer used to rebuild `_normalised(secret)` inside the walk loop, once for every node.
+_SPELLING_CACHE = {}
+
+
+def _spelling_pattern(secret):
+    """Every SPELLING of one secret, as a pattern matched against the text AS WRITTEN.
+
+    🔴 ORDER-1310 #6 -- THE FIRST REPAIR NORMALISED BOTH SIDES, AND THAT IS A FALSE-POSITIVE
+    ENGINE. It compared `_normalised(secret) in _normalised(text)`, which deletes the separators
+    inside the TEXT as well as inside the secret. The text's separators are not noise: they are
+    what keeps `00:05:00` three numbers instead of one. Measured at HEAD before this repair, with
+    the real recognizer list: `open_lots=0.05` is a 4-character literal so `secrets_of` admits it,
+    it normalises to `005`, and `generated_at="2026-08-04T00:05:00"` normalises to
+    `20260804t000500`, which CONTAINS `005`. The whole projection build was refused with
+    KNOWN_SECRET. The live snapshot happens not to carry that lot size, so it is a data-dependent
+    breaker of the daily build rather than a live outage -- which is worse to leave, not better.
+
+    So the secret is normalised and the text is NOT. Between the secret's characters goes
+    `[^0-9A-Za-z]*`, which is exactly the evasion ORDER-1267 #1 measured (`9001-12233`,
+    `900 112 233`, `acct#900-11-2233`, `900.112.233` all still fire). At each END goes a
+    SAME-CLASS boundary: a secret that begins with a digit may not be preceded by a digit, one
+    that begins with a letter may not be preceded by a letter. Same class rather than "not
+    alphanumeric" on purpose -- `acct900112233` must still fire, because a letter run abutting a
+    digit run does not extend the number, and requiring a non-alphanumeric neighbour would have
+    thrown that case away to buy the timestamp case.
+
+    ⚠️ DECLARED LIMIT, stated rather than discovered. This layer no longer fires when a FORMATTED
+    secret sits inside a longer run of its own class -- `900-11-22335` for secret `900112233`.
+    That is the same shape as the timestamp false positive and cannot be told apart from it by a
+    boundary rule. It is not a hole in the scan, because the literal comparison in
+    `scan_forbidden` is kept and unbounded: the verbatim form inside a longer run
+    (`9001122335`, `EA_BREAKOUT_XAUUSD`) still fires there. Two comparisons, each covering what
+    the other structurally cannot -- which is the same bargain the three LAYERS strike.
+
+    Returns None for a secret with no alphanumeric characters at all, because an empty body would
+    compile to a pattern that matches every string.
+    """
+    norm = _normalised(secret)
+    if not norm:
+        return None
+    if norm not in _SPELLING_CACHE:
+        lead = r'(?<![0-9])' if norm[0].isdigit() else r'(?<![A-Za-z])'
+        tail = r'(?![0-9])' if norm[-1].isdigit() else r'(?![A-Za-z])'
+        body = r'[^0-9A-Za-z]*'.join(re.escape(c) for c in norm)
+        _SPELLING_CACHE[norm] = re.compile(lead + body + tail, re.IGNORECASE)
+    return _SPELLING_CACHE[norm]
+
+
+def scan_forbidden(doc, known_secrets=()):
+    """
+    Return a list of (path, rule, detail) - EVERY hit, not the first.
+
+    Three layers, because each catches what the others cannot:
+      FORBIDDEN_KEY     a field that must not exist at any depth.
+      KNOWN_SECRET      a literal that came out of the source snapshot (an account number, an
+                        EA name, a planted test token). This is the layer that catches an
+                        account number typed into a field the allowlist permits, and it cannot
+                        false-positive on a timestamp because it only looks for values that
+                        actually are secrets in this document.
+      VALUE_SHAPE       a shape that is a leak wherever it appears.
+
+    Reporting every hit rather than raising on the first is deliberate: a fixture that plants
+    three leaks and is told about one teaches the author to fix one.
+
+    ORDER-1267 #1 -- `known_secrets` HAS THREE STATES, NOT TWO. Measured at HEAD: this function
+    returned `[]` for a clean document AND `[]` for the exact planted account scanned with an
+    empty recognizer list. That is `unreadable-input-must-refuse-not-skip` exactly -- a scan that
+    could not run reported the same thing as a scan that found nothing.
+
+      a non-empty list                 scan with it
+      NO_KNOWN_SECRETS_AVAILABLE       the caller has DECLARED it cannot derive recognizers. The
+                                       layer is announced as NOT RUN -- in DATA, not on stderr
+                                       (see LAYERS_NOT_RUN; the sentence that said "on stderr"
+                                       was left over from the version the fast tier killed) --
+                                       so a reader is never told a document was cleared by a
+                                       layer that did not execute.
+      anything else that is empty      REFUSED. This is the forgot-to-pass case and it must not
+                                       silently degrade into "clean".
+
+    THE NOTICE IS NOT A HIT, and that is deliberate rather than tidy. The first version of this
+    repair appended a `KNOWN_SECRET_LAYER_NOT_RUN` pseudo-hit to the returned list, which reads
+    well and breaks both real callers: `notifier.assert_sendable` raises ProjectionLeak on any
+    non-empty result, and `notifier.redact_for_log` treats any non-empty result as "redact this
+    text" -- so every error string would have been replaced by a redaction notice, on the error
+    path, where it is hardest to notice. The return value stays exactly what every caller already
+    means by it: REAL hits, and nothing else.
+    """
+    hits = []
+    # ORDER-1310 #8: this list is about THE SCAN THAT IS STARTING NOW, so it starts empty. The
+    # process history below is what accumulates.
+    del LAST_SCAN_LAYERS_NOT_RUN[:]
+    if known_secrets == NO_KNOWN_SECRETS_AVAILABLE:
+        secrets = []
+        _layer_not_run(
+            'KNOWN_SECRET: the caller declared it cannot derive recognizers, so this document was '
+            'cleared by FORBIDDEN_KEY, VALUE_SHAPE and the declared SHAPE only. A literal from the '
+            'source snapshot typed into a permitted field would not have been caught.')
+    elif isinstance(known_secrets, str):
+        # A BARE STRING THAT IS NOT THE SENTINEL IS A CALLER MISTAKE, AND THE SILENT VERSION OF IT
+        # IS CATASTROPHIC RATHER THAN WRONG. Iterating a string yields its CHARACTERS, so a
+        # misplaced positional argument like 'NOT_RUNNING' would install eleven single-character
+        # recognizers and match essentially every document -- a guard that refuses everything,
+        # which reads as a broken system rather than as a bad call. Made explicit when
+        # `deliver()`'s `known_secrets` became a required positional and every existing caller's
+        # `openclaw` argument shifted onto it.
+        _refuse('scan_forbidden was given the bare string %r as its recognizer list. A string is '
+                'iterable, so this would have installed one recognizer PER CHARACTER and matched '
+                'nearly everything. Pass a list of literals, or %s to declare that this caller '
+                'cannot derive them.' % (known_secrets[:40], NO_KNOWN_SECRETS_AVAILABLE))
+    else:
+        secrets = [str(s) for s in known_secrets if str(s) != '']
+        if not secrets:
+            _refuse('scan_forbidden was given no recognizers and did not declare why. Pass the '
+                    'literals from the source document, or pass NO_KNOWN_SECRETS_AVAILABLE to '
+                    'state that this caller structurally cannot derive them. An empty list is '
+                    'refused because its result is identical to a clean scan, which is how a '
+                    'document gets credited to a layer that never ran.')
+    # ORDER-1310 #6: one compiled spelling pattern per secret, built once for the whole walk.
+    recognizers = [(s, _spelling_pattern(s)) for s in secrets]
+    for path, key, value in _walk(doc):
+        if key is not None and key in FORBIDDEN_KEYS:
+            hits.append((path, 'FORBIDDEN_KEY', '%s: %s' % (key, FORBIDDEN_KEYS[key])))
+        # ORDER-1267 #1: a KEY is scanned as TEXT as well as against FORBIDDEN_KEYS. `_walk`
+        # always yielded keys, but only their NAMES were tested, so an account number used as a
+        # dict key was never scanned at all -- measured CLEAN at HEAD. Both the key and the value
+        # are text somebody can read off the wire; only one of them was being read here.
+        for text in ([key] if key is not None else []) + (
+                [] if isinstance(value, (dict, list, tuple)) or value is None
+                or isinstance(value, bool)
+                else [value if isinstance(value, str) else repr(value)]):
+            as_written = str(text)
+            # TWO comparisons, and each covers what the other structurally cannot. The literal
+            # one is unbounded, so a verbatim secret inside a longer run still fires. The
+            # spelling one tolerates separators inside the secret's own span but not a
+            # same-class neighbour at either end -- ORDER-1310 #6, `_spelling_pattern`.
+            for secret, spelling in recognizers:
+                if secret in as_written or (spelling is not None
+                                            and spelling.search(as_written)):
+                    hits.append((path, 'KNOWN_SECRET', _secret_detail(secret)))
+            for name, rx, why in FORBIDDEN_VALUE_RULES:
+                if rx.search(as_written):
+                    hits.append((path, name, why))
+    # ORDER-1310 #5: the PATH is printed too, and a secret used as a dict KEY is IN it. Redacted
+    # in ONE place, after the walk, so every rule's hits are covered and no caller can format a
+    # raw path by accident -- see `_redacted_path`.
+    return [(_redacted_path(p, recognizers), rule, detail) for p, rule, detail in hits]
+
+
+# ORDER-1267: the refusal message must not restate the secret. A leak detector that prints the
+# value it caught has MOVED the leak into the exception text, the log line and whatever ships
+# them -- and `assert_safe`'s message is built from these details. The path already says WHERE and
+# the length and last three digits are enough to identify WHICH literal without reproducing it,
+# which is the same bargain `mask_account` already strikes for the wire.
+def _secret_detail(secret):
+    s = str(secret)
+    return ('carries a literal taken from the full snapshot (%d chars, ends %r) -- the value is '
+            'deliberately NOT restated here' % (len(s), s[-3:] if len(s) >= 3 else '?'))
+
+
+def _redacted_token(secret):
+    """What a secret is REPLACED BY wherever it would otherwise be printed."""
+    s = str(secret)
+    return '<redacted %d chars ends %r>' % (len(s), s[-3:] if len(s) >= 3 else '?')
+
+
+def _redacted_path(path, recognizers):
+    """The JSON path, with any secret that appears IN it masked.
+
+    🔴 ORDER-1310 #5 -- ONLY THE DETAIL WAS HARDENED, AND THE PATH CARRIED THE VALUE ANYWAY.
+    `_secret_detail` above was written so the refusal names the rule without restating what it
+    caught. But a secret can be a dict KEY, and `_walk` builds every path out of key names, so
+    `{"findings": [{"900112233": "anything"}]}` produced `$.findings[0].900112233` -- the account
+    number, in the exception text, in the log line, in whatever ships them. The leak the detail
+    was careful about walked out through the field beside it. `SP17` proved the KEY is DETECTED
+    and `SP07` proved the value is absent from the message for a VALUE-placed literal, so nothing
+    covered this shape.
+
+    Every hit's path goes through here, not only KNOWN_SECRET hits: a FORBIDDEN_KEY or a
+    VALUE_SHAPE hit on a node NESTED UNDER a secret key carries that key in its path too.
+
+    When the caller declared NO_KNOWN_SECRETS_AVAILABLE, `recognizers` is empty and nothing can
+    be masked -- which is honest rather than silent: that run has already announced in
+    LAYERS_NOT_RUN that it cannot tell a secret from any other string.
+    """
+    out = str(path)
+    for secret, spelling in recognizers:
+        token = _redacted_token(secret)
+        if secret in out:
+            out = out.replace(secret, token)
+        if spelling is not None:
+            out = spelling.sub(token, out)
+    return out
+
+
+def assert_safe(doc, known_secrets=()):
+    """Raise ProjectionLeak naming every hit. The scan is useless if callers may ignore it."""
+    hits = scan_forbidden(doc, known_secrets)
+    if hits:
+        raise ProjectionLeak(
+            'the projection carries %d forbidden item(s): %s'
+            % (len(hits), '; '.join('%s [%s] %s' % h for h in hits)))
+    return doc
+
+
+def secrets_of(snapshot):
+    """
+    Every literal in the full snapshot that must never reach the projection, as strings.
+
+    This is what makes the KNOWN_SECRET layer a measurement instead of a guess: the list is
+    read out of the document being projected, so a fixture that plants a secret automatically
+    plants the thing the scan looks for.
+    """
+    out = set()
+
+    def add(v):
+        if v is None or isinstance(v, bool):
+            return
+        s = str(v)
+        # One-character and two-character literals are not secrets; they are substrings of
+        # everything and would make the scan fire on its own output.
+        if len(s) >= 4:
+            out.add(s)
+
+    for row in snapshot.get('system_health', []) or []:
+        add(row.get('account'))
+        add(row.get('latest_file'))
+    for row in snapshot.get('floating_risk', []) or []:
+        add(row.get('account'))
+        for m in ('balance', 'equity', 'floating_pl', 'margin_level'):
+            add(row.get(m))
+        for mg in row.get('magics', []) or []:
+            add(mg.get('magic'))
+            add(mg.get('open_lots'))
+    for row in (snapshot.get('deployments', {}) or {}).get('rows', []) or []:
+        for k in ('account', 'account_name', 'ea_name', 'magic', 'symbol', 'host'):
+            add(row.get(k))
+    for row in snapshot.get('attestation', []) or []:
+        for k in ('account', 'ea', 'magic', 'set', 'ex5'):
+            add(row.get(k))
+    for row in snapshot.get('judge_readiness', []) or []:
+        for k in ('account', 'ea', 'magic', 'symbol'):
+            add(row.get(k))
+    for row in snapshot.get('unknown_magics', []) or []:
+        add(row.get('account'))
+        add(row.get('magic'))
+    return sorted(out)
+
+
+# ---------------------------------------------------------------------------------------
+# The build. ALLOWLIST-ONLY: every field of the output is written by a line below, so a field
+# added to the snapshot cannot appear here by being copied.
+# ---------------------------------------------------------------------------------------
+
+def mask_account(account):
+    """`***123` - the last three digits and nothing else. Refuses anything it cannot mask."""
+    if account is None:
+        _refuse('an account row carries no account, so it cannot be masked '
+                '(an unmaskable account is a refusal, never an omitted row)')
+    digits = re.sub(r'\D', '', str(account))
+    if len(digits) < 3:
+        _refuse('account %r has fewer than three digits, so `***NNN` cannot be produced' % account)
+    return '***' + digits[-3:]
+
+
+def public_id(internal_id):
+    """`FP-` + 10 hex, stable across builds. See PUBLIC_ID_SALT for what this does and does not."""
+    if internal_id is None or str(internal_id) == '':
+        _refuse('a finding with no internal id cannot be given a stable public id')
+    digest = hashlib.sha256((PUBLIC_ID_SALT + '|' + str(internal_id)).encode('utf-8')).hexdigest()
+    return 'FP-' + digest[:10]
+
+
+def _mapped(table, value, what, where):
+    if value in table:
+        return table[value]
+    _refuse('%s %r at %s is not in this module\'s closed %s map. Refusing rather than '
+            'defaulting it: an unrecognised state mapped onto a safe-looking value is how a '
+            'future state that means BREACH renders as OK.' % (what, value, where, what))
+
+
+def build(snapshot):
+    """
+    SafeProjection from a VERIFIED ControlRoomSnapshotV5. Never from an unverified one -
+    callers get the document from snapshot_validator.load_verified().
+
+    ✅ ORDER-1267 #2 IS CLOSED. THE OWNER RATIFIED ANSWER (a) ON 2026-08-04: when the two
+    detectors both speak and DISAGREE, `sensor_state` is `CONFLICT`, decided by
+    `control_center.sensors_disagree()` rather than by a copy of the rule living here.
+
+    It was measured before it was changed, on the real snapshot at `467612b3`:
+
+        6 accounts, all known to BOTH detectors. TWO disagree -- `floating_risk=FRESH`
+        while `system_health=STALE`, accounts ending 900 and 711. `control_center`
+        rendered those two CONFLICT; this projection rendered STALE, because it read
+        the system_health row and nothing else. After: both render CONFLICT.
+
+    That direction was the LESS reassuring of the two, so nothing was hidden. The direction that
+    WAS a hazard is the reverse -- `system_health=FRESH` beside a `BLIND` risk row projected
+    `FRESH` -- and it is the one this closes. The wire-shape cost the owner accepted: `CONFLICT`
+    is a new value in the SafeProjection enum, and `notifier.render_brief()` tallies
+    `sensor_state` generically, so the Morning Brief now reads `sensor: CONFLICT 2 · FRESH 4`
+    where it read `FRESH 4 · STALE 2`.
+
+    WHAT THIS DELIBERATELY DOES NOT CHANGE, because mirroring the rule means mirroring its
+    scope: an account only ONE detector knows about still projects `UNKNOWN`, even when that
+    detector said `BLIND`. `control_center` treats a silent detector as its own finding rather
+    than as a disagreement, and `SP14` still pins that -- measured, not assumed: SP14 was run
+    unchanged after this repair and both of its assertions held. A `floating_risk` row carrying
+    no `state` at all is likewise not a disagreement (`SP23`'s specificity case).
+    """
+    if not isinstance(snapshot, dict):
+        _refuse('the snapshot is %s, not an object' % type(snapshot).__name__)
+    if snapshot.get('entity') != snapshot_validator.OUTPUT_ENTITY:
+        _refuse('build() was handed entity=%r, not %s'
+                % (snapshot.get('entity'), snapshot_validator.OUTPUT_ENTITY))
+    meta = snapshot.get('meta') or {}
+
+    # accounts: sensor state from the health detector, drawdown band from a detector that
+    # publishes one. Joined on account so a health row and a risk row for one account produce
+    # ONE projected row.
+    bands = {}
+    risk_states = {}
+    for row in snapshot.get('floating_risk', []) or []:
+        acct = row.get('account')
+        if 'dd_band' in row:
+            bands[acct] = _mapped(DD_BAND_MAP, row.get('dd_band'), 'dd_band',
+                                  'floating_risk[%s]' % acct)
+        # 🔴 ORDER-1267 #2, half one of two. `_mapped`'s own docstring names this exact hazard --
+        # "an unrecognised state mapped onto a safe-looking value is how a future state that means
+        # BREACH renders as OK" -- and `floating_risk[].state` was the one state in this document
+        # the module never put through a closed map. It is not merely unmapped: `schemas.json`
+        # declares `floating_risk` as `{"type": "object"}` with no properties at all, so the
+        # validator does not constrain it either. Nothing anywhere refused an unknown value.
+        #
+        # HALF TWO (owner ratified (a), 2026-08-04): the mapped value is now KEPT, because the
+        # answer to "what should sensor_state say when the two detectors disagree" is CONFLICT
+        # and that cannot be decided without this detector's opinion. A row with no `state` key
+        # stays un-refused and contributes no opinion, exactly as half one left it.
+        if 'state' in row:
+            risk_states[acct] = _mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
+                                        'floating_risk[%s]' % acct)
+
+    # ROUND-1 BLOCKER FIX. This walked system_health ALONE and joined the rest onto it, so an
+    # account the health detector had never seen was absent from the masked list entirely -
+    # not UNKNOWN, ABSENT. The probe used an account with a BLIND sensor and 9.9 open lots and
+    # it produced no row at all, on either surface. The account set is now the UNION of every
+    # detector that speaks about accounts, and a detector that is silent about one produces
+    # UNKNOWN rather than an omission. (memory: instrument-what-the-guard-actually-reads)
+    health = {}
+    for row in snapshot.get('system_health', []) or []:
+        health[row.get('account')] = row
+    order = []
+    for source in ('system_health', 'floating_risk'):
+        for row in snapshot.get(source, []) or []:
+            if row.get('account') not in order:
+                order.append(row.get('account'))
+    accounts = []
+    for acct in order:
+        row = health.get(acct)
+        if row is None:
+            # One detector silent about this account. NOT a disagreement - see the docstring.
+            sensor_state = 'UNKNOWN'
+        else:
+            sensor_state = _mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
+                                   'system_health[%s]' % acct)
+            # ORDER-1267 #2 half two. The rule is IMPORTED, not restated: the values handed to
+            # it are this module's MAPPED ones, which is safe because SENSOR_STATE_MAP preserves
+            # membership of control_center.SENSOR_HEALTHY in both directions - asserted by SP26,
+            # so a future map entry that broke it reddens a case instead of silently turning a
+            # CONFLICT into agreement.
+            if acct in risk_states and control_center.sensors_disagree(
+                    {'system_health': sensor_state, 'floating_risk': risk_states[acct]}):
+                sensor_state = 'CONFLICT'
+        accounts.append({
+            'account_masked': mask_account(acct),
+            'sensor_state': sensor_state,
+            # No detector in this document publishes a drawdown band today, so this is UNKNOWN
+            # for every account - and it is UNKNOWN by MEASUREMENT (the dict lookup above),
+            # not by a constant, which is why a supplied band travels.
+            'dd_pct_band': bands.get(acct, 'UNKNOWN'),
+        })
+
+    # findings: the verdict's own refusal reasons, as opaque public ids. The internal id is
+    # built from the code and detail and then hashed away; the detail itself never travels,
+    # because a detail like `attestation_map` is fine and a detail carrying an account is not,
+    # and the projection is not the place to start telling those apart.
+    findings = []
+    for reason in (snapshot.get('verdict') or {}).get('reasons', []) or []:
+        code = reason.get('code')
+        severity = _mapped(REASON_SEVERITY, code, 'reason code', 'verdict.reasons')
+        findings.append({
+            'public_id': public_id('%s|%s' % (code, reason.get('detail'))),
+            'severity': severity,
+            'state': 'OPEN',
+        })
+
+    projection = {
+        'entity': ENTITY,
+        'build_id': str(meta.get('build_id') or ''),
+        'generated_at': str(meta.get('generated_at') or ''),
+        'accounts': accounts,
+        'findings': findings,
+    }
+    # Scan our own output before anybody sees it. The allowlist above should make this
+    # impossible to fail - which is the point: if it ever fails, the allowlist was edited.
+    return assert_safe(projection, secrets_of(snapshot))
+
+
+# ---------------------------------------------------------------------------------------
+# The sender boundary.
+# ---------------------------------------------------------------------------------------
+
+# CLOSED DECLARATION, and the whole boundary. Not a prefix rule, not a directory rule: a
+# one-element set of the repo-relative paths a sender may read. Widening it is an edit here.
+SENDER_ALLOWED_PATHS = (PROJECTION_REL,)
+
+
+def _rel(path, repo_root):
+    try:
+        rel = os.path.relpath(os.path.abspath(path), os.path.abspath(repo_root))
+    except ValueError:
+        return None
+    return rel.replace('\\', '/')
+
+
+def _schema_of(entity, repo_root='.'):
+    """The declared shape, READ FROM schemas.json. Never a hand-copied mirror of it."""
+    path = os.path.join(repo_root, snapshot_validator.SCHEMA_PATH)
+    try:
+        with io.open(path, 'r', encoding='utf-8-sig') as fh:
+            schema = json.load(fh)
+    except (IOError, OSError, ValueError) as exc:
+        # The instrument, not the document. A sender that cannot check the shape sends nothing.
+        _refuse('the shape of %s could not be read from %s, so nothing can be checked against '
+                'it: %s' % (entity, path, exc))
+    try:
+        return schema['$defs'][entity]
+    except KeyError:
+        _refuse('%s is not declared in %s' % (entity, path))
+
+
+def _check_shape(node, schema, path, hits):
+    """
+    ALLOWLIST structural check against the schema's own declaration. Not a blacklist.
+
+    FOUND BY THE CAGE (case SB03, red on the first run): read_for_sender used to hand back
+    anything that carried entity=SafeProjection and survived scan_forbidden(). That scan cannot
+    see a raw account number on the sender's side, BECAUSE THE SENDER HAS NO SNAPSHOT to derive
+    the known-secret list from - which is the prohibition working exactly as designed and
+    disarming the check at the same time. Adding `source_account` to FORBIDDEN_KEYS would have
+    made that one fixture pass and taught nothing: a blacklist of field names has no end.
+    The shape is the thing that can be closed, so the shape is what is checked.
+    """
+    if 'const' in schema:
+        if node != schema['const']:
+            hits.append((path, 'SHAPE', 'must be %r' % (schema['const'],)))
+        return
+    if 'enum' in schema:
+        if node not in schema['enum']:
+            hits.append((path, 'SHAPE', 'must be one of %s' % (schema['enum'],)))
+        return
+    stype = schema.get('type')
+    if stype == 'array':
+        if not isinstance(node, list):
+            hits.append((path, 'SHAPE', 'must be an array'))
+            return
+        for i, item in enumerate(node):
+            _check_shape(item, schema.get('items', {}), '%s[%d]' % (path, i), hits)
+        return
+    if stype == 'object' or 'properties' in schema:
+        if not isinstance(node, dict):
+            hits.append((path, 'SHAPE', 'must be an object'))
+            return
+        props = schema.get('properties', {})
+        for key in schema.get('required', []):
+            if key not in node:
+                hits.append(('%s.%s' % (path, key), 'SHAPE', 'is required and missing'))
+        closed = schema.get('unevaluatedProperties') is False or \
+            schema.get('additionalProperties') is False
+        for key in node:
+            if key in props:
+                _check_shape(node[key], props[key], '%s.%s' % (path, key), hits)
+            elif closed:
+                hits.append(('%s.%s' % (path, key), 'SHAPE',
+                             'is not declared, and this object is closed - an undeclared field '
+                             'is exactly where a nested account number travels'))
+        return
+    if stype == 'string':
+        if not isinstance(node, str):
+            hits.append((path, 'SHAPE', 'must be a string'))
+            return
+        pattern = schema.get('pattern')
+        if pattern and not re.match(pattern, node):
+            hits.append((path, 'SHAPE', 'does not match %s' % pattern))
+        return
+    # S12 (ORDER-1180). `AlertEvent.material_revision` is the first `type: integer` in this
+    # schema, and the ROUND-3 refusal below is what forced this branch to be written rather
+    # than the field to go unchecked -- which is the mechanism working, so it is extended here
+    # rather than routed around. `minimum` is honoured in the same breath: implementing the
+    # type and ignoring its constraint would put a keyword back into the silently-accepted
+    # bucket the refusal exists to empty.
+    if stype in ('integer', 'number'):
+        ok = isinstance(node, int) if stype == 'integer' else isinstance(node, (int, float))
+        # bool IS an int in python, so `True` would satisfy `type: integer` unless it is
+        # excluded here. A boolean where a revision counter belongs is a defect, not a 1.
+        if isinstance(node, bool) or not ok:
+            hits.append((path, 'SHAPE', 'must be %s' % stype))
+            return
+        if 'minimum' in schema and node < schema['minimum']:
+            hits.append((path, 'SHAPE', 'must be >= %s' % schema['minimum']))
+        return
+    if stype == 'boolean':
+        if not isinstance(node, bool):
+            hits.append((path, 'SHAPE', 'must be a boolean'))
+        return
+    if isinstance(stype, list):
+        # `type: [string, null]` - AlertDelivery.receipt. Satisfied if the node matches ANY of
+        # the listed types; the per-type constraints are checked by recursing into the branch
+        # that matched, so a `pattern` beside a list type is not lost.
+        for alt in stype:
+            probe = []
+            child = dict(schema)
+            child['type'] = alt
+            if alt == 'null':
+                if node is None:
+                    return
+                continue
+            _check_shape(node, child, path, probe)
+            if not probe:
+                return
+        hits.append((path, 'SHAPE', 'must be one of the declared types %s' % (stype,)))
+        return
+    # ROUND-3 FIX. Everything above is a construct this checker implements; anything else used
+    # to fall off the end and produce NO HITS -- `type: integer`, `type: boolean`, `$ref` and
+    # `oneOf` were all silently accepted, whatever the value was. SafeProjection's schema uses
+    # none of them TODAY, which is precisely why nobody would have noticed: the first field
+    # added with an integer type would have been unchecked, inside the function whose entire
+    # job is checking. An unimplemented construct is now a REFUSAL naming itself, so extending
+    # the schema forces extending the checker instead of quietly losing coverage.
+    hits.append((path, 'SHAPE_UNCHECKED',
+                 'this checker does not implement the schema construct %r, so it cannot verify '
+                 'this node - refusing rather than passing it'
+                 % sorted(k for k in schema if not k.startswith('x-') and k != 'description')))
+
+
+def assert_shape(doc, repo_root='.'):
+    """Raise ProjectionLeak unless `doc` is exactly the shape schemas.json declares."""
+    hits = []
+    _check_shape(doc, _schema_of(ENTITY, repo_root), '$', hits)
+    if hits:
+        raise ProjectionLeak(
+            'the document is not the declared %s shape (%d problem(s)): %s'
+            % (ENTITY, len(hits), '; '.join('%s [%s] %s' % h for h in hits)))
+    return doc
+
+
+def read_for_sender(path, repo_root='.'):
+    """
+    The ONLY reader offered to a notification sender. Refuses:
+      - any path that is not SENDER_ALLOWED_PATHS (so the full snapshot is refused by PATH,
+        before its bytes are opened),
+      - a document that is not entity=SafeProjection,
+      - a document that is not the declared SHAPE (the allowlist - see _check_shape),
+      - a document that does not survive the scan (defence in depth, on top of the shape).
+    """
+    rel = _rel(path, repo_root)
+    if rel not in SENDER_ALLOWED_PATHS:
+        _refuse('a sender may read only %s; %r is refused. This is the design 7.1 prohibition '
+                '("the sender has no path to the full snapshot") as a code path rather than a '
+                'sentence.' % (', '.join(SENDER_ALLOWED_PATHS), rel if rel else path))
+    if not os.path.exists(path):
+        _refuse('no projection at %s - the sender has nothing to send, which is a refusal and '
+                'not an empty message' % path)
+    with io.open(path, 'r', encoding='utf-8-sig') as fh:
+        try:
+            doc = json.load(fh)
+        except ValueError as exc:
+            _refuse('the projection at %s does not parse: %s' % (path, exc))
+    if not isinstance(doc, dict) or doc.get('entity') != ENTITY:
+        _refuse('the document at %s is not a %s (entity=%r)'
+                % (path, ENTITY, doc.get('entity') if isinstance(doc, dict) else None))
+    assert_shape(doc, repo_root)
+    # ORDER-1267 #1: DECLARED, not defaulted. This function reads a projection FILE and has no
+    # snapshot, so it has nothing to derive recognizers from -- the honest repair named in the
+    # order. Saying so out loud is what makes the difference: before this, `assert_safe(doc)`
+    # passed an empty tuple and the KNOWN_SECRET layer was structurally inert on the ONE path
+    # that matters, while returning a result indistinguishable from three layers agreeing.
+    # What carries the weight here instead is the declared SHAPE (assert_shape, above -- and
+    # ORDER-1267 Part 2 constrained `build_id` and `generated_at` precisely because they were
+    # unconstrained strings on this path), plus FORBIDDEN_KEY and VALUE_SHAPE.
+    return assert_safe(doc, NO_KNOWN_SECRETS_AVAILABLE)
+
+
+# ---------------------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------------------
+
+def _load_snapshot(repo_root):
+    return snapshot_validator.load_verified(os.path.join(repo_root, SNAPSHOT_REL))
+
+
+def main(argv):
+    if len(argv) < 2 or argv[1] not in ('build', 'check'):
+        sys.stderr.write('usage: safe_projection.py build|check [--repo-root DIR]\n')
+        return 2
+    repo_root = '.'
+    if '--repo-root' in argv:
+        repo_root = argv[argv.index('--repo-root') + 1]
+    try:
+        snapshot = _load_snapshot(repo_root)
+    except Exception as exc:                                   # noqa: BLE001 - reported, not swallowed
+        sys.stderr.write('the full snapshot could not be verified, so no projection was built: '
+                         '%s: %s\n' % (type(exc).__name__, exc))
+        return 3
+    try:
+        projection = build(snapshot)
+    except ProjectionRefusal as exc:
+        sys.stderr.write('REFUSED: %s\n' % exc)
+        return 1
+    out = os.path.join(repo_root, PROJECTION_REL)
+    if argv[1] == 'check':
+        if not os.path.exists(out):
+            sys.stderr.write('no projection at %s (run `build`)\n' % out)
+            return 1
+        with io.open(out, 'r', encoding='utf-8-sig') as fh:
+            on_disk = json.load(fh)
+        if on_disk != projection:
+            sys.stderr.write('the projection on disk is not what this snapshot produces\n')
+            return 1
+        print('safe_projection: %s matches the snapshot (%d account(s), %d finding(s))'
+              % (PROJECTION_REL, len(projection['accounts']), len(projection['findings'])))
+        # ORDER-1267 #1: a human running `check` is told which layers did NOT run. "This document
+        # is clean" must never be silently shorthand for "clean according to the layers that could
+        # execute".
+        #
+        # ORDER-1310 #8: the two records are printed as two different sentences, because they are
+        # two different claims. `build()` above ends in the scan this line reports on, so the
+        # first list really is about the document just checked; the second is about any OTHER
+        # document this process cleared without a layer, and it is not dropped -- dropping it
+        # would be a silence worse than the false report this finding was about.
+        for line in LAST_SCAN_LAYERS_NOT_RUN:
+            print('safe_projection: LAYER NOT RUN on THIS document -- %s' % line)
+        for line in LAYERS_NOT_RUN:
+            if line not in LAST_SCAN_LAYERS_NOT_RUN:
+                print('safe_projection: LAYER NOT RUN on an EARLIER document in this process '
+                      '-- %s' % line)
+        return 0
+    d = os.path.dirname(out)
+    if d and not os.path.isdir(d):
+        os.makedirs(d)
+    with io.open(out, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(json.dumps(projection, indent=2, sort_keys=True, ensure_ascii=False))
+        fh.write('\n')
+    print('safe_projection: wrote %s (%d account(s), %d finding(s))'
+          % (PROJECTION_REL, len(projection['accounts']), len(projection['findings'])))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))

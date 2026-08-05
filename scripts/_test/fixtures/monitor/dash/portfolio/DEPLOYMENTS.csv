@@ -1,0 +1,4 @@
+account,account_name,type,platform,host,ea_name,magic,symbol,status,kill_rule,judge_date,start_date,notes
+100000001,FIXTURE small-base,DEMO,MT5,fixture,FIXTURE_EA_A,900001,EURUSD,ACTIVE,closedDD 20%,2026-10-09,2026-07-01,fixture row
+100000002,FIXTURE large-base,DEMO,MT5,fixture,FIXTURE_EA_B,900002,EURUSD,ACTIVE,closedDD 20%,2026-10-09,2026-07-01,fixture row
+100000003,FIXTURE no-base,DEMO,MT5,fixture,FIXTURE_EA_C,900003,EURUSD,ACTIVE,closedDD 20%,2026-10-09,2026-07-01,fixture row
