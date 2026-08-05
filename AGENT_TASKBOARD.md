@@ -12439,6 +12439,60 @@ since the recompute passed `unit='usd'` for every money input by assumption.
 "fix" it by changing what the EA hashes — the EA is the side reading real loaded values, and if the
 two disagree the compiler is the suspect.
 
+### ✅ DIAGNOSED 2026-08-05 (lane `S-2026-08-05-OWNERQ`) — the recompute path, exactly as this row guessed
+
+**It is not the `.set`, not the binary, and not `CryptEncode` vs `hashlib`. The recompute was called
+without `locked_constants`, and that changes the FIRST LINE of the preimage.**
+
+`preset._fingerprint()` builds `['scope=<scope>', 'build=<tag>', …]`, and the scope comes from
+`_constant_scope(locked_constants)` — which returns `surface_only` when it is handed nothing. The EA
+does not derive its label at all: `ea_template/core/ConfigFingerprint.mqh:35` is
+`#define CFG_FP_SCOPE "surface+constants"`. Measured just now:
+
+| | first preimage line |
+|---|---|
+| `preset._constant_scope(None)` | `scope=surface_only` |
+| `preset._constant_scope({...})` | `scope=surface+constants` |
+| EA, `ConfigFingerprint.mqh:35` | `scope=surface+constants` |
+
+**Control, on an otherwise byte-identical body** (`build=LAB_ENTRY_14`, one input):
+`scope=surface_only` → `fa403f671fa6…` · `scope=surface+constants` → `f3142969df02…`.
+One line, and every digest downstream of it is unrelated. The mismatch is therefore **total and
+unconditional** — it was never going to match for *any* `.set`, which is why **both** files
+disagreed rather than one.
+
+**And the second half compounds it:** omitting `locked_constants` does not only relabel, it also
+drops every `const:<name>=<value>` line from the tail of the preimage while the EA hashes
+`CFG_SurfacePreimage() + CFG_ConstPreimage()` (guard `G6`). So the two strings differ at the top
+*and* are different lengths.
+
+**Why the four ORDER-710/730 tester runs agreed and this did not — the two callers are not the same
+caller.** `_triage/factory_os/gen_default_preset.py:66-73` resolves the constants and passes
+`locked_constants=consts`, with a comment saying in as many words that this *"is what moves the scope
+from `surface_only` to `surface+constants`"*. The ORDER-1050 recompute called `compile_preset` directly
+and did not. **So the agreement demonstrated in the tester is real and does generalise** — the second
+and worse reading this row raised (*"the fingerprint is useless for the job design §5.6 gives it"*) is
+**refuted**. The contract holds; one caller did not honour it.
+
+**The guards were right, and that is worth stating rather than glossing.** `check_input_surface_gen.py`
+`G3`/`G5` derive the expected label from *whether a constant enumeration is compiled in* and compare
+it to the `#define` — they pass because both sides genuinely are in the `surface+constants` state.
+They are source-side checks over the EA and the generator, and **nothing in that contract can see a
+third-party Python caller that skips an argument.** That is the actual hole: the contract is enforced
+between two files and violated from outside them.
+
+**What this row still owes** — the diagnosis is not the fix:
+1. `compile_preset` should **refuse**, not silently relabel, when it is asked for a fingerprint while
+   a constant enumeration exists in the tree and it was handed no constants. A default that produces a
+   valid-looking hash nobody can match is the `unreadable-input-must-refuse-not-skip` shape.
+2. The **numeric** reproduction is owed: re-run the two `415573666` `.set` files through the corrected
+   call and show they land on `cb45e0e68…` / `3334c996b…`. 🔴 **This lane did NOT do that** — it
+   demonstrated the mechanism and its control, which is a different and weaker claim, and the row must
+   not be closed on it. The two `.set` files were not located in this session.
+3. The `keys=116` in the live log matches `CFG_SurfaceKeys()` for `LAB_ENTRY_14` (line 403 of the
+   generated file), so the surface halves were the same size — one more reason the scope line is the
+   whole story.
+
 
 ---
 
