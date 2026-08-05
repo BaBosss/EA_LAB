@@ -105,6 +105,113 @@
 
 ---
 
+## ORDER-1420 — [host search] The `Boss_14` chassis cannot trade both directions at all, so the shorts question is a second screen and not a flag — `OPEN` · ทำได้: **oc-qwen/ZCode (run)** · design = Claude (done) · 👉 แนะ: oc-qwen
+**bars:** written below and **pre-registered 2026-08-05, BEFORE any run exists — this row is committed before the batch is dispatched. Do not edit a bar after seeing a number.**
+**flat-lot probe:** N-A — this screens a host's base config; no escalation lever is switched on anywhere in it.
+
+### 🔴 Why this order exists, and the correction it carries
+
+`_triage/PROMPT_NEXT_SESSION_QUOTA4.md` §1.3 reported the whole `Boss_14` evidence base as long-only
+and named `TradeDir=60` as the cause. **The conclusion is right and the mechanism is wrong**, and the
+difference decides what work is even possible:
+
+```
+ea_template/core/Inputs.mqh:113      TRADEDIR_BOTH = 60          <- 60 is BOTH, not long-only
+ea_template/core/Inputs.mqh:497      _14_Direction = 1           // 1=BUY only, 2=SELL only (fixed, never both)
+ea_template/core/entries/Entry_GridLog.mqh:70   int dir = (_14_Direction == 1 ? 1 : 2);
+```
+
+`TradeDir` was already permitting shorts. The input that pins direction is **`_14_Direction`**, and
+`Entry_GridLog` **cannot ever run both directions in one instance** — that is deliberate, inherited
+from the standalone it was ported to parity with, and the comment says so.
+
+**So "enable shorts and re-measure" cannot be executed as written.** There is no flag that yields a
+two-sided run. What can be measured — and what this order measures — is the **mirror image**: the
+identical screen at `_14_Direction=2`. Read against `ORDER-430`'s long screen, that answers the
+owner's actual question (*what does this chassis do on the short side?*) without touching `core/`.
+👤 **A genuinely two-sided `Boss_14` needs an `ea_template/core/` change and is NOT in this order** —
+it breaks the standalone parity the module was built to hold, so it is the owner's call and is
+carried to them separately.
+
+### PRE-REGISTERED BARS — locked before the first run
+
+- **A symbol QUALIFIES only if BWD PF ≥ 1.00 AND BWD trades ≥ 100.** The trade floor is the one the
+  owner ratified 2026-08-05 and it is not negotiable here: `ORDER-430` qualified two hosts at **52 and
+  62 trades** and those passes are void under it. A symbol clearing PF on fewer than 100 trades is
+  reported as `BELOW-FLOOR(<n> trades)`, **not** as a pass.
+- **Report `trades` and `DD%` on every row, next to PF, always** — including for symbols that fail.
+- **A symbol that places ZERO trades is `NO-TRADE`, not a failure** — it is uninterpretable and must be
+  reported as its own label. Two `GEN-STANDING` cells did exactly this on 2026-08-04 and were nearly
+  read as results.
+- **Model 4 only.** Model 1 and Model 2 numbers may not be produced or reported by this order. The
+  precedent is this exact chassis: 2026-07-17, Model 2 manufactured a grid plateau at PF 3-4 on
+  AUDNZD that Model 4 reduced to **0.61**.
+- 🚫 **No comparison to `ORDER-430`'s figures is to be drawn by the runner.** Those numbers are under
+  audit — `ORDER-430` recorded AUDCAD at BWD `2.20 / 62` and a later run of the same `.set` on the
+  same lane measured `1.44 / 146`. The reconciliation is owed on that row and is not this batch's job.
+
+### STEP 0 — build the one `.set`, and prove it differs by exactly one line
+
+Copy `_mt5_auto\ab_sets\order430\CTRL.set` to `_mt5_auto\ab_sets\order1420\CTRL_SHORT.set` and change
+**only** `_14_Direction=1` to `_14_Direction=2`. Then prove it:
+
+```powershell
+Compare-Object (Get-Content D:\EA_LAB\_mt5_auto\ab_sets\order430\CTRL.set) (Get-Content D:\EA_LAB\_mt5_auto\ab_sets\order1420\CTRL_SHORT.set)
+```
+
+**Exactly two lines must differ (the old and new `_14_Direction`). If anything else differs, STOP and
+report `BLOCKED`.** 🚫 Never edit `order430\CTRL.set` itself — `ORDER-430`'s evidence points at it.
+
+### STEP 1 — 7 runs, BWD only, lane `D:\Meta 5c`
+
+Only `-Symbol` and `-ReportName` change between runs. Everything else is identical, and `-Period H1`
+is deliberate: a mirror screen is only readable if it is measured under the conditions the long
+screen used.
+
+```
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "Boss_14_GridLog" -Symbol USDJPY -Period H1 -FromDate 2020.01.01 -ToDate 2022.12.31 -SetFile "D:\EA_LAB\_mt5_auto\ab_sets\order1420\CTRL_SHORT.set" -ReportName O1420_USDJPY_H1_BWD_SHORT -Model 4 -Terminal "D:\Meta 5c\terminal64.exe" -DataDir "D:\Meta 5c" -Portable
+```
+
+| # | symbol | report name |
+|---|---|---|
+| 1 | USDJPY | `O1420_USDJPY_H1_BWD_SHORT` |
+| 2 | EURJPY | `O1420_EURJPY_H1_BWD_SHORT` |
+| 3 | AUDCAD | `O1420_AUDCAD_H1_BWD_SHORT` |
+| 4 | CADJPY | `O1420_CADJPY_H1_BWD_SHORT` |
+| 5 | EURUSD | `O1420_EURUSD_H1_BWD_SHORT` |
+| 6 | XAUUSD | `O1420_XAUUSD_H1_BWD_SHORT` |
+| 7 | GBPJPY | `O1420_GBPJPY_H1_BWD_SHORT` |
+
+**After all 7, before reading a single number, run the sweep-inputs checker** — it is what stands
+between this batch and the 15-identical-reports failure of 2026-08-04:
+
+```powershell
+powershell -File D:\EA_LAB\scripts\check_sweep_inputs.ps1 -ReportGlob 'D:\EA_LAB\_mt5_auto\reports\O1420_*_BWD_SHORT.htm' -Parameter _14_Direction
+```
+⚠️ Here every report legitimately carries the **same** `_14_Direction=2` — so `exit 1` on
+*"identical configuration"* is EXPECTED and is **not** a defect. What is being checked is that the
+value is **2 and not 1**. Read the checker's per-file output, and if any file reports `_14_Direction=1`
+that run is void: it silently ran the long set. Report the value seen for all 7 either way.
+
+### TREE
+- **BWD PF ≥ 1.00 AND trades ≥ 100** → **STEP 2** for that symbol only: one more run, identical except
+  `-FromDate 2023.01.01 -ToDate 2025.12.31` and `-ReportName O1420_<SYM>_H1_MAIN_SHORT`.
+- **BWD PF ≥ 1.00 AND trades < 100** → record `BELOW-FLOOR(<n>)`, **do not** run MAIN for it.
+- **BWD PF < 1.00** → record and stop that symbol. 🚫 Do not call it dead — the verdict is Claude's.
+- **0 trades** → record `NO-TRADE`. 🚫 Do not retry with different parameters to "get it trading".
+- **Any run fails twice** → `BLOCKED(<what failed + the exact command>)`, move to the next symbol.
+
+**Output format — one compact row per run, appended to `_mt5_auto/O1420_SHORT_SCREEN.csv` the moment
+each parses.** `symbol,window,PF,trades,DD_pct,net,short_trades,long_trades,report_path`
+🚫 **Do not paste raw report text or raw parser output into your reply** — that is what killed four of
+six batches on 2026-08-04 (`docs/WORKER_BRIEF_RULES.md` §1). One row per run, nothing else.
+📌 Include `short_trades` and `long_trades` explicitly: this whole order exists because nobody read
+those two fields for a year.
+
+**ห้าม:** ออก verdict หรือใช้คำว่า pass/dead/good/bad/best/edge · แก้บาร์หลังเห็นเลข · แตะหน้าต่าง 2026 ·
+รัน Model 1/2 · แตะ `order430\CTRL.set` · แตะ `.mq5` · `ea_template\core\` · `_vps_deploy\` · ไฟล์ board/
+scorecard/state ใดๆ · `git commit` หรือ `git push` · recompile · แตะเลน `D:\Meta 5b` (อีก batch ถืออยู่)
+
 ## ORDER-1300 — [factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions are engine-edge — which §6.2 says doubles it — `DONE (user ratified in-session 2026-08-04, lane S-2026-08-04-S13E) — KEEP the base floor 100/60 for the decision-13 probe; recorded in PROJECT_STATE.md §3; ORDER-1273's selection stands as committed` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
 
 > ✅ **RATIFIED 2026-08-04 — `H1 ≥ 100 · H4 ≥ 60` stands.** (TH: *"คง floor เดิม 100/60"*.) The rule
@@ -9709,6 +9816,70 @@ That is the shape of a terminal state — but `DEAD-OPTIMIZED` must be **earned*
 the mandatory last-optimize on a lever not yet touched, and the levers themselves have never been
 swept (`_50_RegimeMode`, `_9_PA_MinBodyRatio`, `StackConfirm`'s other values are all untried). The
 honest status is: **three hosts, no pass, and the levers' own parameters never optimized.**
+
+### ▶️ STEP 3 — THE LAST-OPTIMIZE, pre-registered 2026-08-05 before any run exists
+
+👤 **Owner ruled 2026-08-05: re-point at EURJPY and run this now**, in parallel with the shorts work
+rather than behind it (TH: *"รันเลยที่ EURJPY"*). This is the step the VERDICT GATE requires before
+`DEAD-OPTIMIZED` may be written, and the row above says in its own words that it has never been run.
+
+**Host = `Boss_14_GridLog` @ EURJPY H1**, the only host clearing both bars with real participation
+(CTRL BWD **1.06 on 498 trades**). ⚠️ **Two caveats that are how to read the result, not reasons to
+delay it — both were stated to the owner before the ruling.** (1) EURJPY qualified on the **long-only**
+screen; if `ORDER-1420` changes which host qualifies, this sweep will have been run on a host selected
+by half the evidence, and its result must be re-read in that light. (2) The `≥100 trades` floor now
+applies to every row — `AB`'s BWD sat on **78 trades** and could not clear it even at a good PF.
+
+**Baseline = the CTRL numbers already on this row, same lane, same four files:** MAIN `1.82 / 184 /
+DD 7.13` · BWD `1.06 / 498 / DD 16.79`. 🚫 Do not re-derive the baseline from a different run.
+
+#### STAGE 1 — inert-axis probe, Model 1, one axis at a time from CTRL, MAIN only
+
+The probe is mandatory and it is not a formality: on 2026-08-04 it found **four of seven** `MacdDiv`
+axes moving nothing at all — not PF, not drawdown, not the trade count — which a full grid would have
+turned into a plateau made of inert axes (memory `inert-axis-fake-plateau`).
+
+| axis | probe values (base first) | note |
+|---|---|---|
+| `StackConfirm` | **0** · 1 · 2 · 3 · 4 | `0`=Distance(base) `1`=SigValid `2`=Retrigger `3`=PriceAction `4`=PA_Engulf. Only `4` has ever been run. |
+| `_9_PA_MinBodyRatio` | 0.5 · 0.75 · **1.0** · 1.5 · 2.0 | ⚠️ **probe these AT `StackConfirm=4`** — the input is read only by the engulf confirm, so probing it at base is guaranteed to look inert and would be a false INERT. |
+| `_50_RegimeMode` | **0** · 1 · 2 | `0`=off(base) `1`=filter `2`=direction. Run each with `_9_RegimeGateAdds=true`, otherwise the gate reaches only the flat seed and never the grid adds. |
+| `_50_AllowTrendDown` | **true** · false | at `_50_RegimeMode=1` + `_9_RegimeGateAdds=true` only. `false` is what cell `A` used. |
+
+≈ **13 Model-1 runs.** 🔴 **Model 1 is used here to CLASSIFY AXES ONLY and may never be reported as a
+result** — this row's own pre-registered rule that Model 4 is the only evidence is unchanged. The
+precedent for splitting it this way is `ORDER-1411`, which ran STAGE 1-2 on Model 1 and STAGE 3 on
+Model 4 in the same order.
+
+**LIVE if any probe point moves MAIN PF by ≥ 0.05 against the 1.82 baseline. Otherwise INERT, and an
+INERT axis MUST be listed by name in the report** — a silently dropped axis is how a fake plateau gets
+built. ⚠️ **`INERT` is not `safe`.** Neither lever emits a fire counter, so *never fired* and *fired and
+changed nothing* cannot be separated by this batch. Say which one it is only if you can prove it;
+otherwise report `INERT(<axis>) — fire count unknown`. On XAUUSD this exact ambiguity was resolved only
+by a second host showing the entry count move.
+
+#### STAGE 2 — Model 4, both windows, on the TOP TWO LIVE axes only
+
+Cross the two highest-|Δ| LIVE axes. 🔴 **If the top axis has fewer than 5 values the cross is not
+5×5 — say so and report the real shape.** That exact spec bug produced an invalid `2×5` grid in
+`ORDER-1411` CELL 2 and the runner was right to follow the rule as written; the fault was the spec's.
+- **Promote only on a PLATEAU: ≥3 contiguous points ≥ the CTRL baseline on MAIN.** A single point above
+  it with neighbours below is a **`SPIKE` — report it, do not promote it.**
+- **GRID-EDGE:** best point on the first or last value of any axis ⇒ `BOUNDARY(<axis>,<edge>)`, stop
+  that axis, do not select it (memory `grid-answer-outside-the-grid`).
+- **The bar is this row's existing one and it is unchanged:** delta vs the CTRL above · **pass** = better
+  on MAIN **and** BWD · **dead** = worse on either · **กลาง** = better on one ⇒ lever not accepted.
+  **Plus the floor: any window under 100 trades does not clear, whatever its PF.**
+
+**Lane `D:\Meta 5b`** for the whole step. 🚫 Do not touch `D:\Meta 5c` — `ORDER-1420` holds it.
+**Run `scripts\check_sweep_inputs.ps1` over each stage's reports before reading any number.**
+**Output: one compact row per run**, appended to `_mt5_auto/O236_STEP3.csv` the moment it parses —
+`stage,axis,value,window,model,PF,trades,DD_pct,net,report_path`. 🚫 No raw report or parser output in
+the reply (`docs/WORKER_BRIEF_RULES.md` §1).
+
+**ห้าม:** ออก verdict หรือใช้คำว่า pass/dead/good/bad/best/edge · แก้บาร์หลังเห็นเลข · เลือกจุดยอดแทนกลาง plateau ·
+รายงาน Model 1 เป็นหลักฐานผล · กวาดแกนที่ไม่ได้ระบุ · แตะหน้าต่าง 2026 · แก้ `.set` ต้นฉบับในที่ (ให้ copy ออกมา) ·
+แตะ `.mq5` · `ea_template\core\` · `_vps_deploy\` · ไฟล์ board/scorecard/state ใดๆ · `git commit`/`push` · recompile
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
