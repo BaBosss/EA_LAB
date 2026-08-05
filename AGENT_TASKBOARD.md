@@ -212,6 +212,62 @@ those two fields for a year.
 รัน Model 1/2 · แตะ `order430\CTRL.set` · แตะ `.mq5` · `ea_template\core\` · `_vps_deploy\` · ไฟล์ board/
 scorecard/state ใดๆ · `git commit` หรือ `git push` · recompile · แตะเลน `D:\Meta 5b` (อีก batch ถืออยู่)
 
+### ✅ RESULT — 7 of 7, 2026-08-05. **Nothing qualifies, and the shape of the failure is the finding.**
+
+Delegated batch ran 6; `GBPJPY` came back `BLOCKED (2 failures, NO REPORT)` and **ran first try from the
+lead seat with the identical command** — recorded as a lane/invocation flake, not a property of the
+symbol. STEP 0 verified independently: `Compare-Object` against `order430\CTRL.set` shows **exactly one
+line changed, `_14_Direction=1` → `2`** (line 36). All six worker reports read back `_14_Direction=2`.
+
+Every row below was **re-parsed from the reports by the lead seat**, not taken from the worker's table.
+
+| symbol | PF | trades | eqDD% | balDD% | net | qualifies? |
+|---|---|---|---|---|---|---|
+| USDJPY | 0.71 | **111** | 10.57 | 9.56 | −845.20 | ✗ PF |
+| EURJPY | 0.70 | **254** | 22.88 | 22.08 | −1879.48 | ✗ PF |
+| EURUSD | 0.56 | **192** | 24.98 | 24.29 | −2226.56 | ✗ PF |
+| CADJPY | **1.07** | 84 | 9.52 | 8.26 | +127.15 | ✗ floor |
+| GBPJPY | **5.17** | 30 | 3.48 | 1.03 | +1070.04 | ✗ floor |
+| XAUUSD | **16.74** | 4 | 0.82 | 0.16 | +251.85 | ✗ floor |
+| AUDCAD | **UNDEFINED** | 5 | 1.53 | 0.00 | +296.71 | ✗ floor |
+
+**🎯 The relationship is monotone and it is inverse. Every symbol that made money on the short side
+was barely in the market; every symbol that was genuinely in the market lost.** The three above the PF
+bar hold **4, 30 and 84** trades. The three with real participation — **111, 192, 254** — return
+`0.71`, `0.56`, `0.70`. There is no symbol in between.
+
+⇒ **Under the floor the owner ratified this morning, 0 of 7 qualify.** Without it, this screen would
+have handed back `XAUUSD PF 16.74` and `GBPJPY 5.17` as the short side's two best hosts — on four and
+thirty trades across three years. That is the same construction `ORDER-430` used when it qualified two
+hosts at 52 and 62 trades, reproduced on the mirror side within hours of the bar being written, and it
+is the strongest evidence the floor will get.
+
+**🔴 Two corrections to the delegated numbers, both found by re-parsing rather than by any check:**
+1. **The worker reported BALANCE drawdown where the brief asked for EQUITY drawdown** — all six rows,
+   understating by 0.8-1.5 points (`USDJPY` 9.56 vs **10.57**, `XAUUSD` 0.16 vs **0.82**). For a grid
+   that carries floating losses the balance figure only moves when a basket closes, so it is the wrong
+   one to read. The CSV now carries **both**, named.
+2. **`AUDCAD` `PF 0.00` was wrong and wrong in the dangerous direction.** Its `gross_loss` is exactly
+   `0` over 5 trades, so PF is **UNDEFINED**, not zero — `0.00` reads as *catastrophic* when the run
+   actually had no losing trade at all. Recorded as `UNDEFINED`.
+
+**⚠️ A caveat that reaches back into `ORDER-430`, surfaced by `mt5_run.ps1`'s own launch banner:**
+> *"surface: UNDECLARED — this .set carries 55 assignment(s) and NO surface declaration … Any input it
+> omits is filled from this terminal's tester cache (ORDER-165)."*
+
+`order430\CTRL.set` is a legacy 55-key file. **Inputs it does not name are supplied by the terminal's
+tester cache**, so neither screen is fully pinned (memory `mt5-tester-cache-nondeterminism`). The
+long-vs-short comparison is still like-for-like — same file, same lane, one changed line — but neither
+screen's absolute numbers are reproducible on another machine, and `ORDER-430`'s are subject to the
+same limitation. 🚫 Do not quote either screen as a pinned measurement.
+
+**👤 What this answers, and what it does not.** The owner asked for the short side to be measured
+before `Boss_14` numbers are trusted. It is measured: **the short side of this chassis does not work
+on any of the seven symbols.** That does **not** rescue the long screen — it removes the possibility
+that the long results were half of a two-sided edge, and leaves them as what they are, a long-only
+screen whose two selections are void under the new floor. `ORDER-430` needs re-reading against the
+floor, which is why it is in this lane's owns-paths; that re-read is **not** done here.
+
 ## ORDER-1300 — [factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions are engine-edge — which §6.2 says doubles it — `DONE (user ratified in-session 2026-08-04, lane S-2026-08-04-S13E) — KEEP the base floor 100/60 for the decision-13 probe; recorded in PROJECT_STATE.md §3; ORDER-1273's selection stands as committed` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
 
 > ✅ **RATIFIED 2026-08-04 — `H1 ≥ 100 · H4 ≥ 60` stands.** (TH: *"คง floor เดิม 100/60"*.) The rule
