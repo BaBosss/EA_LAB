@@ -1,0 +1,9 @@
+﻿D:\EA_LAB\_triage\fxdreema_youtube\transcripts\Portable_Mode_MT4_MT5__wEOBDqL0iPc.txt
+D:\EA_LAB\_triage\fxdreema_youtube\transcripts\Problem001_MT4_EA_Backtesting___c-y2A6-DLxE.txt
+D:\EA_LAB\_triage\fxdreema_youtube\transcripts\QuantDataManager_History_Data___Aqt68wljAwM.txt
+D:\EA_LAB\_triage\fxdreema_youtube\transcripts\QuantDataManager125_M1_Data_an__KhyIUDRkWn0.txt
+D:\EA_LAB\_triage\fxdreema_youtube\transcripts\Robot_Forex__Dao0nH7Affs.txt
+D:\EA_LAB\_triage\fxdreema_youtube\transcripts\Solving_the_problem_of_outstan__X_d0gdq83H8.txt
+D:\EA_LAB\_triage\fxdreema_youtube\transcripts\The_basic_knowledge_of_FxDreem__TzoMnkdXLfo.txt
+D:\EA_LAB\_triage\fxdreema_youtube\transcripts\TREND_FOLLOWING_By_Michael_W_C__QYTunQvpmkI.txt
+D:\EA_LAB\_triage\fxdreema_youtube\transcripts\Why_Running_the_Same_EA_on_Two__Tm_eydJgHlM.txt

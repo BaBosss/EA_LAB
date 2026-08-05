@@ -1,0 +1,6 @@
+_02_MinOrAtrH1=0.5
+_02_MaxOrAtrH1=2.5
+_03_TpRR=3.5
+_04_LotSize=0.01
+_07_UseTrendFilter=true
+_07_TrendEmaPeriod=200

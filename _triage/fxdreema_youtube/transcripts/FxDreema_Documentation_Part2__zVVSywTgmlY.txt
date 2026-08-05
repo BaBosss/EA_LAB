@@ -1,0 +1,643 @@
+﻿สวัสดีครับวันนี้ก็มาพบกันกับ FX  DMA
+documentation  part ที่ 2 นะครับวันนี้
+เราจะมาต่อกันในเกี่ยวกับ working  with
+the  Builder นะครับการทำงานกับ Builder
+Builder ในที่นี้ก็คือตัวนี้นะครับเมนู
+Builder ถ้าเราคลิกเข้าไปนะ
+ครับมันก็
+คือหน้า Windows นะครับที่ใช้ในการเขียน
+EA นะครับซึ่งเราก็จะมาเรียนกันภายหลัง
+เนาะตอนนี้เรามาดูกันก่อนนะครับว่าราย
+ละเอียดเกี่ยวกับการทำงานกับ Builder
+เนี่ยมีเนื้อหาอะไรบ้างที่เราจะทำการ
+ศึกษานะครับหัวข้อแรกคือ prepare  Meta
+Trader การเตรียม Meta  Trader นะครับ
+หัวข้อแรกคือ Download  and  Install
+Meta  Trader การดาวน์โหลดและการติดตั้ง
+Meta  Trader นะครับ Meta  Trader  is
+develop  by  Meta  Host  and  you
+proper  already  have  it  Install  on
+your  PC  Meta  Trader นะครับถูกพัฒนา
+จาก Meta  Host ใครต้องการรู้เกี่ยวกับ
+Meta  Code บริษัทนี้นะครับก็กดลิงก์
+เข้าไปดูได้เลยนะครับและคุณอาจจะมี
+โปรแกรมนี้อยู่แล้วในตัว PC ของคุณนะถ้า
+คุณใช้งาน EA มาก่อนนะครับ if  you  don't
+have  it  you  should  be  Able  To
+Download  it  from  the  website  of
+your  broker นะครับถ้าคุณไม่มีมันนะ
+ครับคุณควรที่จะดาวน์โหลดมันจากจาก
+เว็บไซต์โกอของคุณนะจากโบรกเกอรของคุณ
+ทำไมต้องดาวน์โหลดจากเว็บไซต์โกอยกตัว
+อย่างเช่นนะครับถ้าตอนนี้ผมใช้รกอของ GX
+ใช่ไหมมครับผมก็จะเข้าไปใน www.g  ofx
+docomo ของ xm ของ xnet เองก็จะมีลิงก์
+ให้
+ดาวน์โหลดแพลตฟอร์ม mt4 แพตฟอร์ม mt5 นะ
+ครับอย่างในตัว broker  gox เนี่ยเราก็
+เข้ามาใน Partner ใช่มั้ยครับเสร็จแล้ว
+เลื่อนมาล่างสุดเห็นมั้ยครับมี mt4
+สำหรับ PC  mt4 สำหรับ iOS  mtc สำหรับ
+Android นะครับเมื่อเรากดลิงก์เข้าไปนะ
+ครับมันก็จะมีนะครับลิงก์ดาวน์โหลดให้นะ
+ครับลิงก์ดาวน์โหลดแพลตฟอร์ม mtc ให้เรา
+สามารถดาวน์โหลดแล้วก็ติดตั้งลงไปใน
+คอมพิวเตอร์หรือในโทรศัพท์ของท่านได้เลย
+นะครับข้อดีนะครับถ้าคุณดาวน์โหลดจาก
+เว็บไซต์โบรกเกอร์ของคุณเนี่ยสิ่งแรกที่
+คุณได้ก็คือโลโก้นะครับโลโก้ที่มันจะแสดง
+โชว์นะครับบนหน้าไอคอนของ Meta  Trader  2
+นะครับการอ่า login เข้าสู่ mt4  ID ที่
+คุณเป็นสมาชิกเนี่ยมันก็จะง่ายเพราะมันจะ
+ล็อ Server ไว้ให้นะ
+ครับต่อมานะครับมาดูต่อนะ just  in  Case
+here  is  where  you  can  Also  Find
+it แต่ถ้าคุณหาไม่เจอเจอนะก็มาเอาที่นี่
+นะเค้าก็จะมีลิงก์ให้นะครับใน FX  DMA
+เป็นลิงก์วโหลด Meta  Trader  4 และก็
+ลิงก์วโหลด Meta  Trader  5 มาดูเนื้อหา
+ในวงเล็บนิดนึงนะครับ Meta  Trader  4
+ตอนนี้ Stop  Development แล้วนะครับหยุด
+การพัฒนาไปแล้วนะครับแต่ใช้งานได้นะครับห
+หัวข้อถัดมา Meta  Trader  Data  Folder
+นะครับ Folder ข้อมูลของ Meta  Trader นะ
+ครับ Because  The  End  product  of  FX
+dima  is  a  Trading  Robot นะครับ
+เพราะว่าครับสิ่งที่ FX  DMA จะให้คุณก็
+คือ Trading  Robot หรือ EA หรือ script
+ใช่ไหมมครับ which  is  a  file  you
+need  to  Know  Where  to  put  it มัน
+ก็คือ file นะครับมันก็คือ file มันก็คือ
+โปรแกรมดังนั้นคุณจะต้องรู้ว่าโปรแกรมตัว
+เมันจะอยู่ที่ไหนนะครับใน PC ของคุณนะ
+your  Trader  your  Trading  Robot  as
+well  as  other  User  file  are
+locate  some  Where  in  your  Hard
+dve นะครับไอ้ตัว EA ของคุณหรือตัว
+Trading  robot ของคุณมันก็จะเหมือนกับ
+ไฟล์นะครับไฟล์อื่นๆนะที่จะต้องถูกติด
+ตั้งในฮาร์ด Drive นะครับดังนั้นถ้าคุณ
+อยากจะรู้ว่าไฟลตัวอะไรครับไฟล์ของ EA
+ของคุณเนี่ยติดตั้งที่ไหนนะครับคุณสามารถ
+หาได้จาก to  file  Out  ware  go  to
+file  Open  Data  Folder เห็นมั้ครับไป
+ที่เมนูไลแล้วก็ไปที่โปรเมนู Open  Data
+Folder ของโปรแกรม mtc นั่นเองนะครับมัน
+จะมันจะซ่อนอยู่ในนี้
+นะ by  default  your  Data  Folder  Is
+separate  From  The  installation
+Folder โดยพื้นฐานแล้วนะครับ Data
+Folder จะถูกแยกออกจาก installation
+Folder นะครับเวลาที่คุณติดตั้ง
+แพลตฟอร์ม mt4 อยู่ในคอมพิวเตอรของคุณ
+เนี่ยมันจะแบ่งออกเป็น 2  Folder ใหญ่นะ
+Folder แรกก็คือ Data  Folder  F ที่ 2
+ก็คือ installation  Folder นะครับในตัว
+installation  Folder ที่ผมเสริมเข้าไป
+ให้นะมันจะมีตัวอ่าเเรียก
+ว่า Link  Application อยู่นะครับมีตัว
+Link แอพลิเคชันอยู่สำหรับใช้ในการเปิด
+ปิดโปรแกรมนะครับส่วน Data  Folder จะ
+เป็น Folder ที่ใช้ในการเก็บ Robot
+Trading เก็บพวก EA  indicator  script
+รวมไปถึงไอ้ตัว Data ที่ใช้ในการ Back
+Test ด้วยนะครับ
+ทำไมถึงต้องแยกครับ for  Security  Reason
+and  Is  locate  In  A  location  That
+Look  similar  to  this นะครับทำไมถึง
+ต้องแยกก็เพราะว่าเหตุผลทางด้านความปลอด
+ภัยนั่นเองนะครับและตำแหน่งที่มันติดตั้ง
+อยู่เนี่ยมันจะอยู่ในฟลอร์นี้นะครับ di  C
+User  John  Smith นี่คืออะไรครับคอมพิว
+name นะครับ App  Data  raming  Meta
+Code  Terminal แล้วก็ตัว Folder ตัวตัว
+Folder ที่มีตัวเลขตัวอักษรเยอะๆอย่าง
+เงี้นะครับมันจะไปอยู่ใน Folder นี้นะ
+ครับต่อมา Inside  this  Folder  you
+have  Another  Folder ภายใน Data
+Folder เนี่ยมันก็จะมี Folder ที่เป็น
+Folder ย่อยอีกก็คือ mql5  or  mql4
+ขึ้นอยู่กับ platform ของคุณนะครับ depend
+on  the  Meta  Trader
+Version  in  which  you  will  Find
+the  most  Important  Folder  that  you
+will  use นะครับเมื่อคุณพบไอ้ฟลอร์ที่
+มีความสัมพันธ์ตัวเนี้ยคุณก็จะใช้มันใช้
+มันทำอะไรครับยกตัวอย่างเช่นตัว Folder
+expert ก็คือ Folder ที่ใช้ในการเก็บ EA
+ใช่ไหมมครับในตัวแพลตฟอร์ม mt4 เองเนี่ย
+มันก็จะมีตัวที่เรียกว่า Navigator  Bar
+นะครับข้อมูลใน expert มันก็จะมาโชว์ใน
+expert  advisor ก็จะมาโชว์ EA ที่คุณ
+เก็บไว้นั่นเองนะครับอย่าง Folder
+indicator นะครับมันก็จะมาโชว์ใน ind เ
+ของ Navigator  bar ในแพลตฟอร์ม mt4 นั่น
+เองนะครับพร้อมให้เราลากนำไปใช้เลยนะครับ
+ส่วน script เองก็เช่นเดียวกันนะครับก็จะ
+ถูกปรากฏอยู่ในแพลตฟอร์ม mt4 นะครับใน
+Navigator นะครับ script นะครับซึ่งก็จะ
+พร้อมที่จะให้เรานำไปใช้ได้ทันทีนั่นเอง
+นะครับนี่คือ output ของอะไรครับของ FX
+dima นะครับที่ออกมาในรูปของ EA ในรูป
+ของอินดิเคเตอร์ในรูปของ script นะครับก็
+จะมาปรากฏอยู่ในโฟลเดอร์ดังต่อไปนี้นะ
+ครับอ้าผมอธิบายไปเรียบร้อยแล้วนะครับ You
+can  Put  Your  Robot  In  This  Folder
+นะครับคุณสามารถที่จะเอาอะไรครับตัว EA
+หรือตัว robot ของคุณที่คุณสร้างขึ้นมานะ
+ครับในโฟลเดอร์นี้นะครับใน Folder เหล่า
+นี้เนี่ยคุณสามารถใส่ลงไปใน Folder เหล่า
+นี้นะครับ when  you  do  that  Why  Meta
+Trader  is  Running ถ้าคุณทำคุณเอามัน
+ใส่ลงไปแล้วนะครับเมื่อ Meta  Trader
+กำลังทำงาน you  should  Also  ref  The
+in  the  Navigator  as  show  in  the
+Picture  below นะครับเมื่อคุณเอาไอ้ตัว
+ข้อมูล EA ใส่ลงไปใน Folder ขณะที่อะไร
+ครับ Meta  Trader กำลังทำงานนะครับคุณ
+ควรที่จะทำการ Refresh นะครับกดคลิกขวา
+แล้วก็กด Refresh เห็นมั้ครับตามรูปนะใน
+แพลตฟอร์ม mtc นะครับที่โชว์ในรูปนะครับ
+as  show  in  the  Picture  below  the
+ut  way  is  of  course  to  Restart
+แต่ถ้ากรณีแล้ว ref แล้วตัว EA ยังไม่ทำ
+งานหรือยังไม่ปรากฏก็อีกหนทางนึงก็คือการ
+รีสตาร์ทเครื่องนั่นเองนะ
+ครับต่อมานะครับเราจะมาดูหัวข้อที่สำคัญ
+อีกหัวข้อนึงเลยนะครับก็คือ Meta  Trader
+port  Table
+Mode  Meta  Trader  port  Table  Mode
+เนี่ย port  port  Table  Mode เนี่ยหมาย
+ความว่าเวลาที่คุณต้องการที่จะอ่ายกตัว
+อย่างเช่นต้องการที่จะติดตั้งโปรแกรม mt4
+ลงไปใน dri  D ใช่มั้ยครับเพราะว่าได C
+ของคุณมันเหลือพื้นที่น้อยใช่ไหมมครับ
+หรือติดตั้งลงไปใน USB  D หรือติดตั้งลง
+ไปใน External  Hard  D ใช่ไหมมครับคุณ
+สามารถใช้ฟังก์ชันที่เรียกว่า Portable
+ได้นะครับซึ่งวิธีการติดตั้งทำต่อไปนี้นะ
+ครับ If  you  prefer  your  Meta  Trader
+To  Be  outside
+Program ถ้าคุณอยากจะเอาตัวอะไรครับ Meta
+Trader ไปอยู่นอกโปรแกรมไลใช่มั้ครับ
+with  All  Robot  locate  in  it
+Folder ที่ซึ่งมันควรจะเป็นตำแหน่งที่
+อะไรครับ EA ของคุณจะต้องอยู่ใช่ไหมมครับ
+then  You  can  for  it  to  Run  in
+Portable  Mode คุณก็เพียงแค่ Run มันใน
+ฟังก์ชัน Portable นั่นเองฟังคุณก็เพียง
+แค่ใช้งานมันใน Mode  Portable นะครับ to
+do  this  Edit  The  port  Table  of
+your  Shortcut  LINE  in  the  Picture
+below นะครับคุณเพียงแค่คุณอะไรครับทำ
+ตามในรูปนะทำทำตามในรูปตรง Shortcut นะ
+ครับเพียงเพิ่มอะไรครับ Forward  SL นะ
+ครับ SL แล้วก็ port  Table ลงไปนะครับใน
+Property ของ Shortcut นะครับ /
+Portable นะครับ Forward  slf  by  the
+word  Portable  At  The  End  of  the
+target  Property  Don't  Forget  to
+rename  your  Shortcut  as  well นะ
+ครับเมื่อคุณทำไปแล้วคุณอย่าลืมเปลี่ยน
+ชื่อนะครับ Don't  Forget  to  rename
+your  Shortcut อย่าลืมเปลี่ยนชื่อตรง
+Short  Cut ให้รู้ว่านี่คืออ่า Short
+Cut ที่ลิงก์เข้าไปหา M  T  4 นะที่ไม่
+ได้อยู่ในได C นั่นเองนะครับเราจะได้มี
+เราจะได้รู้ว่ามันลิงก์ไปที่
+อ่าตัว destination ไหนนะ
+ครับ NOW  THE  Open  Data  Folder
+Option  View  Sense  you2  D  Meta
+Trader  file อันนี้อ้างอิงจากในรูปนะ
+ครับในรูปเนี่ยก็จะเอาตัว Meta  Trader
+ไปติดตั้งไว้ใน Night  D เห็นมั้ยครับ
+Night  D ดังนั้นตัวลิ์แอปพลิเคชันตัว
+เนี้ยมันก็จะกระโดดไปหานะครับ destination
+ที่อยู่ใน D  D เห็นมั้ครับกระโดดไปหา
+Terminal  64.exe ใน D  D ให้เรานั่นเอง
+นะครับ where  you  can  find  your  mql
+file  Folder  with  All  the  Important
+subfolder นะครับซึ่งใน DD นี่เองนี้ที่
+คุณจะไปเจอตัว Folder  mql  f นะครับซึ่ง
+ภายใน mql  f มันก็จะมีอะไรครับมี sub
+Folder ที่มีความสำคัญนะครับเช่นเช่น
+อะไรครับ indicator  expert ใช่ไหมยครับ
+Script อเป็นต้นนะครับเดี๋ยวผมจะทำให้ดู
+เป็นตัวอย่างนะครับว่าการติดตั้งตัว
+แพลตฟอร์ม mtc ใน USB  Drive นะครับหรือ
+เอาไปติดตั้งใน drive  D เนี่ยเพื่อหลีก
+เลี่ยงปัญหาที่ว่า Drive  C เหลือพื้นที่
+น้อยๆเนี่ยทำอย่างไรนะครับเดี๋ยวผมจะทำ
+ให้ดูนะครับ Portable  Mode นะครับต่อมา
+ดูหัวข้อต่อมานะครับ create  a  Demo
+account นะครับการสร้างบัญชี Demo นะ
+ครับ now  you  can  create  a  new  Demo
+account  in  Meta  Trader ตอนเนี้ยคุณ
+สามารถสร้างตัว Demo  account นะครับตัว
+ใหม่ในแพลตฟอร์ม M อ่า TC ได้นะครับ It's
+very  good  idea  to  always  Test
+Your  Robot  On  A  Demo  account
+First  Because  you  don't  want  to
+accidentally  Lost  Money  in  your
+Real  account นะครับหมายความว่ายังไง
+ครับมันเป็นไอเดียที่ดีนะเป็นสิ่งที่ดี
+เลยที่คุณจะทำการ Test  EA หรือ Test ตัว
+robot ของคุณเนี่ยใน Demo  account ก่อ
+นะครับเพราะว่ามันจะทำให้คุณไม่เกิดเอ่อ
+ปัญหาแบบว่าเสียเงินนะครับหรือว่า
+พลาดสูญเสียเงินไปแต่ถ้าคุณไปใช้ใน Real
+account เนี่ยแล้วมันเกิดพลาดขึ้นมาคุณ
+จะเสียเงินได้นะครับ mistake  happen  All
+The  Time  while  developing  a
+Program นะครับผู้พัฒนาเบอกว่าความผิด
+พลาดมันเกิดขึ้นได้ตลอดเวลานะระหว่างการ
+พัฒนาโปรแกรมนะครับวิธีการตัวอ่า create
+a  new  Demo ก็ไปที่เมนูไลนะครับของ
+แพลตฟอร์ม mt4 หรือ mt5 นะครับไปที่ Open
+and  account เห็นมครับเราก็สามารถเลือก
+เปิดโปรแกรมบัญชี Demo ได้จากตรงนี้เลยนะ
+ครับต่อมานะครับ Test  in  Visual  Mode
+in  metatrader  file  you  will  find
+this  checkbox  Call  visualization  in
+Meta  Trader  4  the  Same  Option  is
+Call  Visual  Mode  It  is  the  Same
+Thing นะ
+ครับการทดสอบใน Visual  Mode นะครับใน
+แพลตฟอร์ม mt5 นะครับตัว Visual  Mode จะ
+มีชื่อว่า visualization นดูในรูปนะครับ
+แต่ถ้าในแพตฟอร์ม mtc นะครับตัวฟังก์ชัน
+นี้จะเรียกว่า Visual  Mode นะครับการทำ
+งานเหมือนกันน่ะนะครับ In  This  Mode
+You  can  Back  Test  Your  strategy
+while  watching  it  evolving  on  a
+separate
+chart ในการใช้งานโหมดเนี้ยคุณสามารถทำ
+การ Back  Test นะครับในขณะเดียวกันคุณก็
+สามารถมองเห็นการทำงานของกราฟได้นะครับบน
+ชาร์จได้ด้วยนะครับ The  Speed  is
+Faster  than  Real  time  but  slow
+enough  to  see  any  Detail  of  the
+strategy  you  are  trying ความเร็วของ
+การ Back  Test เนี่ยนะครับ speed เนี่ย
+มันก็จะไวกว่า Real  Time นะมันก็จะไว
+กว่า Real  Time แต่มันก็จะช้าพอที่จะทำ
+ให้เราเห็นถึงรายละเอียดในการทำงานของ EA
+ของเรานะครับ easily  download ไฟลนะครับ
+หัวข้อต่อไปก็คือการดาวน์โหลดไฟล์แบบง่าย
+ๆนะ there  is  a  special  Extension
+for  Chrome  Design  to  automatically
+download  and  write  The  Output  file
+In  The  target  Local  Folder มีมีตัว
+Extension พิเศษอยู่อันนึงนะครับแต่มัน
+เป็นของ Chrome เท่านั้นน่ะนะครับถูกออก
+แบบให้คุณสามารถดาวน์โหลดข้อมูลได้
+อัตโนมัติเลยนะเพียงแค่คุณเขียนนะครับ
+เขียนไฟล์โดยใช้ชื่อเดิมนะครับและระบุ
+ตำแหน่งที่จะเก็บไฟล์ไว้ในตำแหน่งเดิมแค่
+นั้นเองนะครับคุณก็จะสามารถกำหนดเช่น
+สามารถกำหนดไปได้เลยครับว่าคุณจะเก็บไฟล์
+ไว้ใน Data  Folder ของ mt4 ใช่ไหมมครับ
+คุณจะได้ไม่ต้องไปเสียเวลา Copy ไฟล์ไป
+วางใช่ไมั้ยครับแต่ตรงนี้เนี่ยมันทำได้
+เฉพาะใน Chrome  OS เท่านั้นนะครับ Chrome
+OS คืออะไรนะครับลองเข้าไปคลิกดูในลิงก์
+ได้นะครับคลิกขวาเข้าไปในลิงก์ดูนะ
+ครับ
+เห็นมั้ยครับ Extension ตัวเนี้ยมัน
+support เฉพาะ Chrome  OS เท่านั้นนะ
+ครับเมื่อคุณติดตั้ง Extension ตัวนี้ลง
+ไปคุณจะเห็นมั้ยครับมีนะครับไอคอน save
+โผล่ขึ้นมานะครับเมื่อคุณเขียน EA เสร็จ
+แล้วปุ๊บคุณกดไอคอ save  as ใช่ไหมมครับ
+มันก็จะสามารถเฟลงไปใน
+destination ล่าสุดที่คุณเคยเซฟไฟล์ตัว
+นี้ไว้นั่นเองเราก็จะสามารถกำหนด
+destination ให้มันแบบง่ายๆนะครับเหมือน
+ใช้งานโปรแกรมบน Windows เลยนะครับมันก็
+จะสะดวกมากขึ้นนั่นเองนะ
+ครับ here  is  how  it  work นะครับมาดู
+นะครับว่ามันทำงานอย่างไร when  you
+Download  a  file  For  The  First
+Time เมเมื่อคุณดาวน์โหลดไลครั้งแรกเลย
+นะครับ The  Browser  use  save  as  to
+download  it นะตัวอะไรครับ Browser มัน
+ก็จะรู้ว่าคุณน่ะดึงข้อมูลนะครับมาจากที่
+ไหนใช่มั้ยครับ One  The  file  IS โหดนะ
+ครับเมื่อไฟล์มันดาวน์โหลดเสร็จแล้ว The
+Extension  Remember  is  name  and
+destination ตัว Extension ตัวเนี้ยมัน
+ก็จะจดจำไว้ว่าไฟล์เนี่ยชื่อนี้นะและเอา
+มาจาก destination นี้นะ After  That
+Every  Time  You  Try  To  Download
+File  with  the  Same  name นะครับต่อ
+ไปนะครับทุกครั้งที่คุณจะ save  as ใช่
+ไหมมครับไฟล์ตัวเนี้ยมันก็จะเก็บลงไปใน
+destination นนั่นเองนะครับ The
+Extension  View  automatically  put
+Into  the  target  destination เห็น
+มั้ยครับตัว Extension ก็จะใส่ไฟล์ตรง
+เนี้ยลงไปในตำแหน่ง
+destination ที่มันเคยจดจำไว้นะครับ and
+you  will  not  Be  asked  To  Download
+it  Again นะครับก็ไม่จำเป็นจะต้องมาคอย
+ถามซ้ำอีกครับว่าจะอ่าเก็บไว้ที่ไหนอะไร
+ยังไงนะครับ but  First  in  FX  DMA  you
+need  to  set  up  The  Data  Folder
+as  Show  on  the  Picture  below นะ
+ครับครั้งแรกเลยนะครับใน FX  DMA คุณจะ
+ต้อง set  up  Data ที่จะใช้เก็บข้อมูล
+ก่อนนะนะครับตรง Global  Option ตัวเนี้ย
+มันจะมาใช้งานตรงนี้นะครับบางคนบอกว่ามา
+ถามผมว่าตัว Global  Option เนี่ยครับจะ
+ใช้ยังไงนะครับทำไมเซตแล้วมันไม่ทำงานคุณ
+จะต้องไปติดตั้ง Extension ตัวนี้ก่อนนะ
+ครับแล้วคุณถึงจะสามารถมาใช้งานตัว Global
+Option ใน FX  DMA ได้นั่นเองนะ
+ครับ get  this  Part  form  file  Open
+Data  Folder  in  Meta  Trader เห็น
+ไหมมครับดังนั้นถ้าคุณกำหนดเป็นอะไรครับ
+DD  Meta  Trader  4 นะครับตัวไฟล์ที่
+เข้าไปมันก็จะอยู่ในตัวนี้ครับ Open  Data
+Folder ก็คืออยู่ใน Part นี้เลย
+อัตโนมัติเลยนั่นเองนะครับ NOW  THE
+Extension  View  Remember  and
+automatically  Download  rely  each
+file  that  you  initially  Download
+in  the  Data  Folder นะครับหลังจากที่
+คุณเซตค่าใน Global  Option เสร็จเรียบ
+ร้อยแล้วใช่ไหมมครับตอนนี้ Extension มัน
+จะจดจำนะครับแล้วก็ก็จะทำการอะไรครับทุก
+ครั้งที่คุณมีการปรับปรุงตัว EA นะครับ
+ชื่อนี้นะครับที่เคยดาวน์โหลดมาจาก
+destination นี้นะครับมันก็จะอัตโนมัติ
+ในการดาวน์โหลดหรือทับข้อมูลนะครับลงไปใน
+ตำแหน่งเดิมทันทีเลยนะครับ If  you
+Download  a  file  in  Another  If  you
+Download  a  file  in  Order  Folder
+นะครับ for  example  on  the  Desktop
+แต่ถ้าคุณไปดาวน์โหลดไฟล์เนี่ยลงไปใน
+Folder อื่นที่แตกต่างจากเดิมนะเช่นลงไป
+ใน Desktop เนี่ยนะครับ it  will  not  be
+Remember มันจะไม่จำนะครับ it  Also
+mean  That  If  you  change  the  Data
+Folder  you  will  have  to  save  Add
+each  file  Once  Again นั่นย่อมหมาย
+ความว่าถ้าคุณเอาไปวางใน Folder อื่นที่
+แตกต่างนะครับจาก Data  Folder ของคุณมัน
+จะให้คุณทำการยืนยันการ save  as ทุก
+ครั้งออนะครับ If  the  Extension  Stop
+working  reinstall  it นะครับถ้าตัว
+Extension ไม่ทำงานก็ก็ติดตั้งมันใหม่นะ
+ครับ this  will  Reset  is  memmory
+this  problem  very  rare  but  it
+happen นะครับมันจะ Reset ความหน่วยความ
+จำของมันนะครับปัญหาเนี่ยมันไม่ค่อยเกิด
+ง่ายๆนะครับแต่มันก็เกิดขึ้นได้นะครับตาม
+ผู้พัฒนาบอกนะ
+ครับต่อมาดูหัวข้อ basic นะครับหัวข้อแรก
+ของ basic เลยก็คือ create  a  new
+Project นะครับการสร้างโปรเจคใหม่ in
+the  Builder  go  to  F  New  Project
+นะครับในหน้า Builder เครับไปที่เมนู
+Project นะครับไปที่ New  Project นะ
+ครับ select  The  type  and  programming
+Language  of  the  Project  Give  It  a
+name  and  Click  create นะครับเมื่อ
+คุณไปในเมนู New  Project แล้วนะครับคุณ
+ก็ไปเลือกนะครับว่าชนิดคุณจะเอาเป็น EA
+หรือเป็น script นะครับและคุณต้องการภาษา
+เป็น mql4 หรือ mql5 นะครับถ้าคุณใช้กับ
+แพลตฟอร์ม metatrader  4 คุณก็เลือกตัว
+metatrader  4  mql4 นะครับแต่ถ้าคุณใช้
+กับแพลตฟอร์ม Meta  Trader  5 คุณก็เลือก
+Meta  Trader  5 ที่เป็นภาษา mql5 นั่น
+เองนะครับหัวข้อต่อมานะครับ create  New
+blx นะครับสร้าง blx ใหม่นะครับ in  the
+Builder  there  is  a  List  Of  Box
+that  you  can  create  and  a  Big
+empty  Field นะครับในหน้า Builder
+เนี่ยนะครับจะมี List ของ Block ให้คุณ
+ใช้งานเนี่ยจะอยู่ฝั่งซ้ายนะครับและก็จะ
+มีอะไรครับพื้นที่กว้างขนาดใหญ่อยู่นะ
+ครับ pick  The  Box  From  The  List
+Drag  it  and  Drop  It  Somewhere
+Over  the  empty  Field นะครับเวลาคุณ
+จะใช้งานคุณก็แค่ลากนะครับ Block มาวางใน
+พื้นที่ว่างของ empty  Field นั่นเองนะ
+ครับ connecting  Box นะครับการเชื่อมต่อ
+blx  if  You  Have  a  Box  that  is
+not  connect  to  Another  Box  it  is
+not  include  in  the  final  Stage
+นะครับถ้าคุณมีบล็อกที่ไม่ได้เชื่อมต่อ
+กับบล็อกตัวอื่นนั่นหมายความว่ามันจะไม่
+มีผลอะไรกับกลยุทธ์ที่คุณสร้างนั่นเองนะ
+ครับ lif  Box  Alone  Only  If  You
+Want  To  keep  them  for  Later  use
+นะครับคุณสามารถทิ้งบล็อกมันไว้ตัวเดี่ยว
+ๆได้นะครับถ้าคุณคิดว่าจะกลับมาเอามันมา
+ใช้ใหม่ภายหลังอนะครับบัตร้น forget  That
+they  Are  Not  Used  in  the  strategy
+แต่คุณอย่าลืมนะว่า Block เดียวๆที่คุณ
+เอาวางไว้น่ะมันจะไม่ก่อให้เกิดผลใดๆกับ
+กลยุทธ์ของคุณนะครับ each  Box  has  One
+input  and  one  or  Two  output  1
+Block เนี่ยจะมี 1  input นะและจะมี 1
+หรือ 2  output นะครับ The  Output  is
+the  white  semicircle  At  The  Top
+and  The  Output  are  At  The  Bottom
+นะครับตัว input จะอยู่ด้านบนเห็นมั้ครับ
+เป็นครึ่งวงกลมนะครับส่วน output จะอยู่
+ด้านล่างตอนนี้เรารู้แล้วใช่ไหมมครับว่า
+In  input เรียกว่ายังไงนะครับ output
+สีส้มคือ Normal  output  output สี
+เหลืองคือ inverse  output ส่วน output
+สีเทาคือ Error  output นะครับ The
+Meaning  Of  The  Output  is  as
+Follow นะครับความหมายของ output มีดัง
+ต่อไปนี้ output สีส้มนะครับ Normal
+output นะครับหรือที่เราเรียกว่า Normal
+output  Become  Active  After  The
+Block  Run  and  does  it  Job
+successfully นะครับจะทำงานก็ต่อเมื่อ
+Block ทำงานเสร็จแล้วนะครับทำในงานของ
+มันสำเร็จุร่วงไปเรียบร้อยแล้วนะครับ
+output สีเหลืองนะครับหรือที่เรียกว่า
+invert  output นะครับ is  Active  When
+Normal  output  is  not  but  There
+Are  exception นะครับมันจะทำงานก็ต่อ
+เมื่อ output สีส้มไม่ทำงานนะครับแต่มัน
+มีข้อยกเว้นอยู่นะครับเดี๋ยวเราจะมาเรียน
+เรื่องข้อยกเว้นภายหลังนะครับ Error
+output นะครับหรือ output สีเทานะครับ
+use  in  Trading  and  Action  Box
+Where  The  outcome  is  either
+success  or  failure นะครับไอ้ตัว
+output สีเทาหรือ Error  output ตัวนี้
+จะถูกใช้งานในบล็อกที่เป็นบล็อกซื้อบล็อก
+ขายนะครับที่เรียกว่า Trading  blx หรือ
+Action  Block นะครับที่มีการปิดออเดอร์
+มีการปิดออเดอร์ซื้อมีการปิดออเดอร์ขาย
+เป็นต้นนะครับมันจะทำงานไม่ว่านะครับ
+เอ่อผลของมันจะสำเร็จหรือไม่สำเร็จนะครับ
+แต่อะไรครับ The  Output  became  Active
+When  there  is  and  Error  And  The
+Box  fail  to  do  Its  Job  properly
+นะครับมันจะทำงานก็ต่อเมื่อนะครับมี Error
+เกิดขึ้นใน Block นะครับและหรือนะครับและ
+มันเป็นการทำงานที่ไม่เหมาะสมนั่นเองนะ
+ครับ The  Connect  One  Block  with
+Another  Drag  The  Output  of  the
+first  Block  And  Drop  It  Over  the
+input  of  the  Order นะครับการเชื่อม
+ต่อบล็อกไปสู่บล็อกตัวอื่นนะครับก็คือการ
+ลาก output จาก Block แรกนะครับไปยัง
+input  blx ตัวต่อไปนั่นเองนะครับ Now
+when  the  first  blx  Run  and  does
+it  Job  Through  The  connecting  to
+the  Connection  it  will  make  the
+ut  Block  Run นะครับถ้าบล็อกตัวแรกมัน
+ทำงานเสร็จเรียบร้อยแล้วนะครับผ่านเส้น
+เชื่อมโยงนะครับเส้นเชื่อมโยงมันจะทำงาน
+บล็อกต่อไปนะครับ disconnecting  Box
+Don't  work นะครับถ้าไม่มีการเชื่อมต่อ
+นะครับระหว่าง Block ก็คือไม่มีการทำงาน
+นั่นเองนะครับ If  you  want  Block  to
+do  Something  it  Must  be  connect
+to  Another  Box ถ้าคุณต้องการให้ blx
+ทำบางสิ่งบางอย่างคุณต้องเชื่อมต่อมันกับ
+็อกอีก blx นึงนะครับ disconnect  blx
+Don't  participate  in  the  final
+strategy นี่ย้ำนะครับว่าการไม่ได้
+เชื่อมต่อ็ก็จะไม่มีผลต่อกลยุทธ์ที่เรา
+สร้างนะครับ You  can  have  them  allow
+in  Case  you  want  to  connect  and
+use  name  L
+but  otherwise  they  are  useless นะ
+ครับถ้าคุณทิ้งมันไว้เป็นบล็อกเดี่ยวๆนะ
+ครับก็มีความหมายว่าคุณจะนำมันมาใช้ที
+หลังหรือมันอีกความหมายหนึ่งก็คือมันไม่
+มีประโยชน์ใดๆนนั่นเองนะครับ If  you
+Still  want  to  Run  Only  One  blx
+Connect  it  with  a  Past  Box แต่ถ้า
+คุณยืนยันนะครับว่าคุณจะใช้ blx ตัวนี้
+ลอกเดียวๆให้คุณนำ pass  Box มาเชื่อมต่อ
+กับมันนะครับ pass  is  just  and  empty
+Box  and  does  not  have  Side  effect
+ไอ้ตัว pass  Box นี่นะครับมันเป็น blx
+เปล่าๆนะครับไม่มีผลกระทบอะไรกับกลยุทธ์
+ของเรานะครับ You  can  Like  Click  and
+Double  Click นะครับคุณสามารถที่จะ Like
+Click หรือ Double  cick นะครับบน Block
+ได้นะครับ Right  Click  On  A  Block  to
+open  a  Contact  menu  with  Option
+ถ้าคุณคลิกขวานะครับคุณก็จะเห็นเมนูดัง
+รูปเห็นมั้ยครับที่เราเรียกว่า Contact
+เมนูแต่ถ้าคุณ Double  Click  On  A
+Block  to  open  the  Window  with  it
+specific  Property แต่ถ้าคุณ Double
+cick บนตัว Block นะครับมันจะเกิดอะไร
+ครับเกิดหน้าต่างขึ้นมาให้คุณกรอกพตออะไร
+ลงไปนะครับที่เราเรียกว่า specific
+Property นะครับของมันนะ
+ครับ You  can  have  multiple  Brand  Of
+Block คุณสามารถมีหลากหลายสาขาของ Block
+นะครับไม่จำเป็นต้องมีสาขาเดียวนะครับ it
+is  not  mandatory  to  start  with  a
+Single  Block  And  Connect  Everything
+Else  below  That  Box นะครับมันไม่ใช่
+สิ่งจำเป็นที่ควรจะเริ่มต้นนะครับมีเพียง
+แค่บล็อกเดียวและเชื่อมต่อบล็อกอื่นๆกับ
+ตัวกับตัวแรกนะครับ You  can  have
+multiple  Band นะครับ You  can  have
+multiple  branch  of  Block  And  each
+One  of  them  would  work  Its  Job
+คุณสามารถมีหลายสาขานะครับของ Block ดูใน
+รูปนะครับและมันก็จะทำงานตามหน้าที่ของ
+มันนะครับ in  the  Picture  below  Use
+C2  bran  of  ob  Box เห็นมยครับในรูป
+เนี่ยคุณก็จะเห็นอะไรครับมี 2 มี 2 สาขา
+ของกลุ่ม Block เห็นมครับ One นะครับ that
+start  with  Block  Number  One  And
+Another  One  that  start  with  Block
+Number  4 นะครับสาขาที่ 1 เริ่มต้นด้วย
+บล็อกหมายเลข 1 สาขาที่ 2 เริ่มต้นด้วย
+บล็อกหมายเลข 4 นะครับ Because  both
+branch  are  in  the  on  tick  Event
+นะครับทั้ง 2 สาขาเนี่ยทำการภายใต้ Event
+ontick ใช่มั้ยครับทุกการขยับของราคา
+both  of  them  would  be  exc  on
+Every  thick นะครับดังนั้นทั้ง 2 สาขา
+ก็จะทำงานทุกๆการขยับของราคานะครับ Just
+Imagine  That  on  tick  button  is  a
+Block  And  is  connect  to  block
+Number  One  and  number  4 ให้เรา
+จินตนาการนะครับว่าไอ้ตัว ontick เนี่ย
+มันก็คือ Block  blx นึงนะครับที่มันมี
+การเชื่อมโยงระหว่างบล็อกสาขาที่ 1 แล้ว
+ก็บล็อกสาขาที่ 2 นั่นเองนะครับ Block
+Number  when  they  matter นะครับหมาย
+เลขบน Block จะมีความหมายเมื่อไหร่นะครับ
+when  you  have  Two  or  More  Block
+parallel  to  each  other นะครับถ้าคุณ
+มีมากกว่า 1 นะครับมี 2 หรือมากกว่านะ
+ครับลอกที่ทำงานคู่ขนานกันนะครับ not
+visually  but  logically นะครับอ่าแต่
+มันมันเป็นตรรกะนะครับ there  is  an
+order  in  which  they  Run นะครับจะมี
+ลำดับการทำงานเกิดขึ้นนะครับ The  Ru  is
+the  Block  vi  Lower  Number  Run
+First บล็อกที่มีลำดับมีหมายเลขต่ำกว่า
+จะทำงานก่อนนะครับถ้าการทำงานผมเสริมนะ
+ครับถ้าการทำงานของทั้ง 2 สาขานี้ไม่ได้
+ไม่ได้สอดคล้องกันไม่ได้ต่อเนื่องกันนะ
+ครับมันก็จะไม่มีผลกระทบกันนะครับแต่ถ้า
+มันมีความสัมพันธ์กันในเรื่องของเวลานะ
+ครับบล็อกภายใต้หมายเลข 1 จะทำงานก่อนนะ
+ครับและบล็อกภายใต้หมายเลข 4 จะทำงานต่อ
+ไปนั่นเองนะครับ Block  Number  could  be
+TCH นะครับ You  can  replace  any
+Block  Number  with  text  and  use  it
+as  a  label นะครับ Block  Number
+เนี่ยสามารถเขียนเป็นข้อความแทนได้นะครับ
+ดูในรูปนะครับบล็อกหมายเลข 1 ก็เขียนคำ
+ว่า First บล็อกหมายเลข 2 ก็เขียนคำว่า
+Second ลงไปนะ
+ครับ Note  Better  use  Early  latin
+character  and  number นะครับผู้พัฒนา
+ก็บอกว่าแนะนำให้ใช้เป็นอะไรครับภาษา
+ลาตินนะครับและเป็นตัวเลขจะดีที่สุดนะ
+ครับ Copy  and  Cut  Block นะครับคุณ
+สามารถทำการ copy หรือทำการ Cut  Block
+ได้นะครับ You  can  Cut  or  Copy  One
+or  More  Box  Within  the  Same
+Project คุณสามารถ Cut หรือ Copy นะ 1
+Block หรือมากกว่า 1  Block ภายใน 1  ect
+ได้นะครับ All  form  One  Project  to
+Another หรือจาก ect นี้ไปให้อีก ect  1
+ก็ได้นะครับ select  The  Box  with  the
+mouse  Right  Click  on  any  of  the
+นะครับคุณสามารถเลือกล็อกที่คุณต้องการ
+Cut หรือ Copy นะครับโดยการใช้เมาส์นะ
+ครับ crop แล้วก็ไ cick นะครับคลิกขวานะ
+ครับ cick  Copy  or  Cut นะครับเลือกว่า
+จะคลิก Copy หรือ Cut นะครับไ Click  On
+A  empty  Space  where  you  want  to
+Place  them แล้วคุณก็เอาเมาส์ไปวางใน
+พื้นที่ว่างๆนะครับที่ที่คุณต้องการจะวาง
+ไอ้ตัว Block ที่คุณ Copy หรือ Cut มา
+นั่นเองนะครับ and  Click  pass นะครับ
+for  Single  Block  You  can  Just
+Right  Click  On  It  without
+selecting แต่ถ้าคุณจะ Copy หรือ Cut
+Block  Block เดียวนะครับคุณไม่จำเป็นจะ
+ต้องใช้เมาส์เมาส์ลากครอบก็ได้นะครับแค่
+เอาเมาส์ไปวางบนบล็อกแล้วก็คลิกขวาก็ทำ
+งานแล้วนะครับ Note  avoid  Having  the
+Same  Group  of  blx  Copy  many  time
+in  the  Same  Project หลีกเลี่ยงที่จะ
+ทำการ copy นะครับอ่าทำการ copy บล็อก
+เนี่ยหลายๆหลายๆชุดนะครับในโปรเจคเดียวนะ
+ครับนั่นเป็นเพราะว่ามันอาจจะเกิดการทำ
+งานที่ซ้ำซ้อนกันนั่นเองนะ
+[เพลง]
+ครับ

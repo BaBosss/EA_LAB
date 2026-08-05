@@ -1,0 +1,13 @@
+; ORDER-133 engine test — cell EURUSD H4 (MACD 16/34/9 cnt3) — DCA 92, LotProg NONE(50)
+_15_MacdFast=16||16||0||16||N
+_15_MacdSlow=34||34||0||34||N
+_15_MacdSignal=9||9||0||9||N
+_15_CountBars=3||3||0||3||N
+StackMode=92||92||0||92||N
+StackConfirm=0||0||0||0||N
+FirstLotMode=41||41||0||41||N
+_41_FixedLot=0.01||0.01||0||0.01||N
+LotProg=50||50||0||50||N
+ProtectLevel=2||2||0||2||N
+RC_MaxLevelsOverride=8||8||0||8||N
+_9_MaxLevels=4||4||2||8||Y

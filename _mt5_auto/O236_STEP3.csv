@@ -1,0 +1,13 @@
+label,setfile,PF,trades,DD_pct,net,short_trades,long_trades,report_path
+O236S3_BASE,B14_AB_off.set,1.57,254,8.98,2532.45,0,254,D:\EA_LAB\_mt5_auto\reports\O236S3_BASE.htm
+O236S3_SC1,P_SC1.set,1.46,85,5.92,960.57,0,85,D:\EA_LAB\_mt5_auto\reports\O236S3_SC1.htm
+O236S3_SC2,P_SC2.set,1.46,85,5.92,960.57,0,85,D:\EA_LAB\_mt5_auto\reports\O236S3_SC2.htm
+O236S3_SC3,P_SC3.set,1.46,85,5.92,960.57,0,85,D:\EA_LAB\_mt5_auto\reports\O236S3_SC3.htm
+O236S3_SC4,P_SC4.set,1.79,116,4.54,1799.54,0,116,D:\EA_LAB\_mt5_auto\reports\O236S3_SC4.htm
+O236S3_SC4_BR0p50,P_SC4_BR0p50.set,1.79,116,4.54,1799.54,0,116,D:\EA_LAB\_mt5_auto\reports\O236S3_SC4_BR0p50.htm
+O236S3_SC4_BR0p75,P_SC4_BR0p75.set,1.79,116,4.54,1799.54,0,116,D:\EA_LAB\_mt5_auto\reports\O236S3_SC4_BR0p75.htm
+O236S3_SC4_BR1p50,P_SC4_BR1p50.set,1.47,112,6.19,1245.00,0,112,D:\EA_LAB\_mt5_auto\reports\O236S3_SC4_BR1p50.htm
+O236S3_SC4_BR2p00,P_SC4_BR2p00.set,1.47,112,6.19,1245.00,0,112,D:\EA_LAB\_mt5_auto\reports\O236S3_SC4_BR2p00.htm
+O236S3_RM1,P_RM1.set,1.53,236,10.26,2223.51,0,236,D:\EA_LAB\_mt5_auto\reports\O236S3_RM1.htm
+O236S3_RM2,P_RM2.set,1.43,132,6.11,952.32,0,132,D:\EA_LAB\_mt5_auto\reports\O236S3_RM2.htm
+O236S3_RM1_NoDown,P_RM1_NoDown.set,1.38,173,5.36,1203.96,0,173,D:\EA_LAB\_mt5_auto\reports\O236S3_RM1_NoDown.htm

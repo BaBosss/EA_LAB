@@ -1,0 +1,11 @@
+﻿thread,cellname,window,pf,trades,net
+A_S2regime,gateon,MAIN,6.11,6,14.56
+A_S2regime,gateon,BWD,0.02,8,-4.47
+B_S3fan,bd1p5_sl30,MAIN,1.03,502,3.05
+B_S3fan,bd1p5_sl30,BWD,1.25,494,24.69
+B_S3fan,bd1p5_sl50,MAIN,0.9,502,-16.88
+B_S3fan,bd1p5_sl50,BWD,1.31,500,42.82
+B_S3fan,bd2p5_sl30,MAIN,1.06,105,1.35
+B_S3fan,bd2p5_sl30,BWD,1.98,115,19.94
+B_S3fan,bd2p5_sl50,MAIN,0.97,105,-0.92
+B_S3fan,bd2p5_sl50,BWD,2.07,116,27.85

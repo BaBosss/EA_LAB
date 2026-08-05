@@ -1,0 +1,507 @@
+﻿สวัสดีครับวันนี้เราจะมาเรียนรู้เกี่ยว
+กับ FX  DMA  documentation นะครับมีผู้
+เรียนหลายคนนะครับที่ต้องการจะศึกษาเนื้อ
+หาเกี่ยวกับ FX  drea ที่เผยแพร่อยู่ใน FX
+dema  documentation แต่ติดปัญหาเกี่ยว
+กับเรื่องของภาษาวันนี้นะครับผมก็จะมา
+ช่วยในการแปลนะครับแปลและทำความเข้าใจ
+พร้อมกับเสริมเนื้อหาเพิ่มเติมเข้าไปให้
+นะครับบางส่วนสำหรับผู้ที่ติดปัญหาเกี่ยว
+กับภาษานะครับสำหรับท่านใดก็ตามที่สามารถ
+อ่านและทำความเข้าใจเองได้ก็สามารถข้าม
+คลิปนี้ไปได้นะครับเมื่อคุณเข้ามาใน fxd
+macom นะครับให้กดคลิกมาที่
+documentation นะครับใน documentation
+ก็จะมีหมวดให้เราศึกษาอยู่หลายหมวดเลยนะ
+ครับไม่ว่าจะเป็น introduction  FX  drea
+feature นะครับ working  with  the
+Builder นะครับ prepare  metatrader
+basic  expert  advisor  script
+indicator  Charge  object  Data  type
+constant  and  variable  crossover
+looping  Trade  and  Order  Group  and
+Magic  Number  Money  management
+telling  Stop  testing  And
+optimization  Limit  think  Not  to  do
+นะครับ think  not  Not  to  do วันนี้
+เราจะมาเรียนหัวข้อแรกกันก่อนเลยนะครับ
+เกี่ยวกับ introduction นะครับกดเข้าไปใน
+หัวข้อ introduction นะครับท่านก็จะเห็น
+is  FX  dima  for  me นะครับ FX  dima
+นี่เหมาะสำหรับฉันหรือเปล่านะครับยกตัว
+อย่างเช่นอย่างตัวผมเองนะครับพิ่งศึกษา FX
+dima มาได้ประมาณ 3 เดือนนะครับและเป็น
+คนที่ไม่มีความรู้พื้นฐานเกี่ยวกับการ
+เขียนโปรแกรมเลยนะครับโดยเฉพาะ specific
+นะครับ Special  programming  Code นะ
+ครับโปรแกรมที่ใช้ในการเขียนโคดพวก mql4
+mql5 เนี่ยไม่เคยเขียนมาก่อนเลยนะครับ FX
+dima จะเหมาะกับผมมนะครับมาดูกัน FX
+dima  is  a  Software  Tool  That  help
+you  to  create  Program  expert
+advisor  and  script  FX  dima คือ
+เครื่องมือที่เป็นโปรแกรม่ะนะครับที่จะ
+ช่วยให้คุณช่วยให้คุณใช้ในการสร้าง EA นะ
+ครับหรือที่เราเรียกว่า Robot  Trading
+และ script  for  Meta  Trader  4  and
+Meta  Trader  5 สำหรับนะครับ Meta
+Trader  4 และ Meta  Trader  file ซึ่ง
+นะครับถูกพัฒนามาจากบริษัท Meta  Code
+Software  Corporation นะครับ The
+Normal  way  of  creating  sub  Program
+is  to  manually  Code  them  using
+spatial  programming  Language  Su  as
+mql4  or  M
+mql5 โดยปกติแล้วนะครับการที่เราจะสร้าง
+โปรแกรมสัก 1 โปรแกรมเนี่ยเราก็จะใช้อะไร
+ครับ Special  programming  Language ใช่
+ไหมย
+ครับซึ่งก็คือภาษาเฉพาะนะครับภาษาโปรแกรม
+เนี่ยเฉพาะของมันเช่น mql4  mql5 นะครับ
+เราก็จะในในตัว meade  Meta  Trader  4
+Meta  Trader  5 นะครับเราก็ใช้ mql  C
+ในการเขียนโปรแกรมใช่ไมั้ยครับ Meta
+Trader  5 เราก็ใช้ mql  5 ในการเขียน
+โปรแกรมนะ
+ครับ of  course  not  everyone  is  a
+programmer แน่นอนนะครับทุกๆคนเนี่ยไม่
+ใช่ programmer  So  If  you  only  want
+to  Tie  some  Trading  strategy
+without  cling นะฮะ without  cling
+them  form  Cat  you  are  in  the
+right  Page นะครับดังนั้นเนี่ยถ้าคุณ
+ต้องการที่จะทดสอบกลยุทธ์ในการเทดโดยโดย
+การที่คุณจะไม่ใช้โค้ดนะครับโดยการที่คุณ
+จะไม่ต้องการเขียนโค้ดนะครับไม่ต้องการ
+ที่จะเข้ารหัสโค้ดเนี่ยนะครับคุณมาเนี่ย
+ถูกทางแล้วนะครับการที่คุณมาใช้ FX  DMA
+เนี่ยถูกทางแล้วนะครับ Mod  That มากไป
+กว่านั้นแล้วนะครับ FX  DMA  is  Also
+suitable  for  programmer ตัว FX  DMA
+เองก็ยังเหมาะกับ programmer ด้วยนะครับ
+Because  it's  So  Easy  to  make
+Small  or  big  change  in  the
+Program เพราะว่ามันมันเนี่ยง่ายในการ
+ที่จะทำสิ่งที่มีความแตกต่างเล็กๆน้อยๆจน
+ไปถึงสิ่งที่มีความแตกต่างใหญ่ๆนะครับแบบ
+ง่ายๆครับดังนั้นโปรแกรมเมอรท่านใดที่
+ต้องการจะมาใช้สิ่งที่ง่ายๆแบบเนี้ยสร้าง
+การเปลี่ยนแปลงในโปรแกรมของคุณเนี่ยคุณก็
+มาเรียนรู้ FX  DMA ได้นะครับ How  does
+it  work มันทำงานอย่างไรนะครับ FX  dima
+allow  you  to  connect  Block  in  a
+Logic  TE นะครับ FX ่าเนี่ยจะให้คุณ
+เนี่ยใช้การเชื่อมต่อบล็อกเนี่ยโดยการใช้
+อาศัยตรรกะต้นไม้ตรรกะต้นไม้คืออะไรนะ
+ครับ Logic  T เนี่ยหรือตรรกะต้นไม้เนี่ย
+ก็คือแนวความคิดที่เราคิดอยู่ 3 สิ่งด้วย
+กันก็คือทำไมอะไรอย่างไรนะครับซึ่งมันมี
+ทฤษฎีของมันนะก็หมายความว่าเราทำไมต้อง
+ใช้ใช้อย่างไรแล้วก็ใช้อะไรนะสิ่งเหล่า
+เนี้ยที่เราต้องใช้นะครับอ Box  some
+Complex  Action นะครับแต่ L  Box เนี่ย
+ก็จะทำก็จะมีมีมีสิ่งที่มันสามารถทำได้
+แบบซับซ้อนเลยนะครับ and  you  can  f
+Tune  it  by  you  and  you  can  f
+Tune  it  by  editing  is  parameter
+คุณสามารถปรับจูนมันได้โดยการปรับค่าพมต
+ในตัว Block นั่นเองนะครับ The  End  Go
+is  to  generate  a  Program  The
+Output  product  of  FX  DMA สุดท้าย
+แล้วสิ่งที่เราจะได้คืออะไรครับก็คือ
+โปรแกรมก็คือ EA ก็คือ Robot  Trading
+ซึ่งมันก็คือ output ของ FX  DMA นั่นเอง
+นะครับ here  is  how  FX  DMA  Look
+Like นะครับเรามาดูรูปข้างล่างเนะครับ
+มันก็คือสิ่งที่ FX  DMA ทำนะครับบล็อก
+หมายเลข 9 บล็อกหมายเลข 10 เห็นมั้ยครับ
+บล็อกหมายเลข 9  do  Something นะครับถ้า
+บล็อกหมายเลข 9 ทำบางสิ่งบางอย่างเสร็จ
+สิ้นแล้วบล็อกหมายเลข 10 ก็จะทำต่อนะครับ
+มาดูบล็อกหมายเลข 1 นะครับบล็อกหมายเลข 5
+บล็อกหมายเลข 2 บล็อกหมายเลข 4 ก็จะเป็น
+ลักษณะของการเชื่อมโยงที่มีความแตกต่าง
+กันเาเรียกว่ามี infrastructure ที่ต่าง
+กันเชื่อมโยงได้หลากหลายนะครับหมายเลข 1
+do  Something นะทำอะไรทำบางสิ่งบาง
+อย่างเสร็จแล้วหมายเลข 5 หมายเลข 2 หมาย
+เลข 4 ก็จะทำบางสิ่งบางอย่างพร้อมๆกันนะ
+ครับเห็นมั้ยครับเมื่อหมายเลข 2 ทำบาง
+สิ่งบางอย่างเสร็จแล้ว do  Something
+เสร็จแล้วหมายเลข 3 ก็จะด Something ต่อ
+นะครับมันก็จะส่งต่อกันเป็นท่อๆนั่นเองนะ
+ครับหมายเลข 6  do  Something เสร็จหมาย
+เลข 7 ก็ do  Something ต่อหมายเลข 7  do
+Something เสร็จหมายเลข 8 ก็ do
+Something ต่อใช่ไหมมครับในขณะที่หมาย
+เลข 11 นะครับ I  cannot  Do  Nothing ก็
+คือถ้าเป็นล็อกเดียวๆมันก็จะทำอะไรไม่ได้
+เลยดังนั้น FX  DMA จะทำงานได้ก็ต่อเมื่อ
+มีบล็อกตั้งแต่ 2 บล็อกเชื่อมต่อกันนั่น
+เองนะครับต่อมานะครับเรามาดู You  can
+Imagine  that  Every  Box  is  a
+module  a  Black  Box นะครับคุณลอง
+จินตนาการนะว่าใน Box เนี่ยมันคือ Black
+Box คือกล่องดำคือ ule นะครับมันคือ
+Controller ที่มันสามารถสั่งการทำงาน
+อะไรได้แบบประมาณแบบเนะครับ Design  to
+do  Something นะครับมันออกแบบมาให้ทำ
+บางสิ่งบางอย่าง either  to  check
+certain  condition  or  do  some
+Action นะครับเพื่อที่จะใช้ในการเช็ค
+สถานะเช็คเงื่อนไขหรือทำอะไรบบางสิ่งบาง
+อย่าง each  Box  has  One  input  and
+at  least  One  output แต่ล Box จะต้อง
+มีอะไรครับ 1  input และอย่างน้อย 1
+output อย่างน้อย 1  output ก็คือมีมาก
+กว่า 1  output ได้ถูกไหมครับ When  The
+Box  does เมื่อ blx มันทำงาน What  is
+has  to  do  When  The  Box  does  What
+is  has  to  do เมื่อบล็อกมันได้ทำใน
+สิ่งที่มันจะต้องทำนะครับในสิ่งที่มันจะ
+ต้องทำสิ่งที่มันถูกออกแบบให้กระทำไป
+เรียบร้อยแล้ว is  Active  is  it
+Activate  it  output มันก็จะ activate
+ก็คือสั่งให้ output ทำงานนั่นเองนะครับ
+Which  means  That  If  There  Are
+Auto  Block  connect  to  it  they
+Will  Be  The  Next  to  Run  The  rt
+type  of  output ซึ่งก็หมายความว่านะ
+ครับถ้ามี Block มาเชื่อมต่อกับมันอยู่นะ
+ครับหลังจากที่มันทำงานเสร็จแล้วมัน
+activate  output นะครับให้ทำงานแล้วนะ
+ครับถ้ามีบล็อกมาเชื่อมต่อกับมันอยู่นะ
+ครับมันก็จะถูกสั่งให้ทำงานต่อไปนั่นเอง
+นะครับซึ่งนะครับ output เนี่ยมีอยู่ 3
+แบบด้วยกันนะครับ output แบบที่ 1 นะจริง
+ๆมันมีชื่อเรียกของมันนะแต่ตอนนี้เรายัง
+ไม่ได้เรียนนะครับผมจะเรียกว่า output สี
+ส้มก่อนนะครับ output สีส้ม became
+Active  When  The  Box  succeed  to  do
+what  is  is  designed  to  do นะครับ
+output สีส้มจะ Active เมื่อนะครับตัว
+บล็อกมันน่ะประสบความสำเร็จนะครับในสิ่ง
+ที่มันถูกออกแบบให้กระทำนะครับคือถ้าคุณ
+สร้างมันขึ้นมาเพื่อให้มันทำอะไรเนี่ย
+ครับมันดู Something เสร็จเรียบร้อยแล้ว
+เนี่ยมันถึงจะ Activate  output สีส้มอนะ
+ครับ output สีเหลือง is  normally
+Active  When  output สีส้ม is  not
+หมายความว่า output สีเหลืองเนี่ยปกติ
+แล้วมันจะทำงานเมื่อ output สีส้ม
+ไม่ทำงานนั่นเองนะครับ but  There  Are
+some  exception แต่มันก็มีข้อยกเว้นนะ
+ข้อยกเว้นอะไรบ้างเดี๋ยวเรามาเรียนรู้กัน
+ทีหลังนะครับ output สีเทานะครับ is  Used
+in  Trading  Block  is  Used  in
+Trading  Block ก็หมายความว่า output สี
+เซา Out  output สีสีเทาเนี่ยครับสีเย
+เนี่ยนะจะถูกใช้ในบล็อกที่เป็น Trading
+blx ก็คือบล็อกที่มีการซื้อซื้อการขายนะ
+ครับมีการปิดการซื้อมีการปิดการขายเป็น
+ต้นนะครับ it  Become  activate  When
+There  was  an  Error  happen  Inside
+The  Block มันจะ Activate ก็ต่อเมื่อ
+มันพบว่ามี Error มีปัญหาเกิดขึ้นภายใน
+บล็อกนี่ output สีเทาจะทำงานนั่นเองใช่
+ไหมมครับ by  selecting  the  proper
+Block ถ้าเราจะเลือก Block ที่เหมาะสม
+and  Connect  ting  The  output  With
+The  Output  of  ut  Block นะครับและ
+เชื่อมต่อ output ของมันเนี่ยกับ input
+ของบอกตัวอื่นเนี่ย You  can  create
+many  different  Trading  Structure
+เราสามารถสร้างรูปแบบการเชื่อมโยงได้หลาย
+รูปแบบนั่นเองนะ
+ครับ when  you  are  done นะครับถ้าคุณ
+ทำอะไรเสร็จเรียบร้อยแล้วเนี่ย You  can
+Export  Export นะครับ or  save  the
+actual  Program คุณสส่งออกไลเนี่ยหรือ
+save รแกรมเนี่ย and  use  it  in  your
+Trading  Terminal และนำมันไปใช้กับ
+แฟร์มซื้อขายของคุณได้เลยนะครับไม่ว่าจะ
+เป็น mt4  mt5 นะครับ It  is  strongly
+recommend  to  back  Test  it  First
+ผู้พัฒนาก็ย้ำเลยนะ strongly  recom เลย
+นะครับว่าคุณจะต้อง Back  Test มันก่อนทด
+สอบมันก่อนที่คุณจะไปใช้งานจริงนะครับหัว
+ข้อต่อมานะครับ FX  DMA  feature
+คุณสมบัติของ FX  dima  overall  feature
+นะครับภาพรวมของคุณสมบัตินะครับ FX  dima
+has  been  Online  since  November
+2011  FX  dima เนี่ยออนไลน์มาตั้งแต่ปี
+2011 เดือนพฤศจิกายนใช่ไหมครับถึง
+ปัจจุบันก็ประมาณ 13 ปีแล้วนะครับ FX
+dima  use  graphic  Block  to  build  a
+strategy  each  Box  has  input
+parameter  to  change  Its  Behavior
+นะครับ FX  dima ใช้ลอกนะครับที่เป็น
+กราฟิ Block นะครับในการสร้างกลยุทธ์แต่
+ละบอกเครับสามารถใส่พารามิเตอร์เพื่อจะ
+เปลี่ยนพฤติกรรมนะครับของการทำงานได้นะ
+ครับ The  Output  product  of  FX  dima
+is  a  file  with  One  of  the
+following
+Extension  mq4  ax4  mq5  All  ex5 นะ
+ครับ output ของ FX  dima คือผลลัพของ FX
+dima ก็คือ Robot  Trading ก็คือ EA ใช่
+ไหมมครับก็คือ script ใช่ไหมมครับซึ่งมี
+นามสกุล dmq  4.  ex4 ที่นำไปใช้กับ
+แพลตฟอร์ม Meta  Trader  4 ใช่ครับและ D
+mq5 หรือ ex5 ซึ่งสามารถนำไปใช้กับ
+แพลตฟอร์ม metatrader  5 นั่นเองนะครับ
+compatible  with  Meta  Trader  4  and
+Meta  Trader  5 ก็คือคือมันสามารถใช้
+งานได้กับ Meta  Trader  4 และ Meta
+Trader  5 นั่นเองนะครับ No  it  cann
+be  Used  To  Build  Custom
+indicator  for  Now ตอนนี้นะครับมันยัง
+ไม่สามารถที่จะใช้ในการสร้าง indicator
+ได้นะครับ it  can  be  Used  for  Free
+It  Stop  exporting  file  When
+certain  Number  of  Connection
+Between  Box  is  List มันสามารถใช้งาน
+ฟรีได้แต่มันจะส่งออกไฟล์ไม่ได้ถ้าจำนวน
+ของการเชื่อมโยงมากกว่าเกณฑ์ที่กำหนดนนะ
+ครับ is  a  web  Application  But  It's
+Also  Available  as  Windows  Program
+and  In  This  Case  it  can  work
+Offline นะครับมันเป็นเว็บ Application
+นะครับแต่มันก็ใช้งานเหมือนกับตัวโปรแกรม
+Windows นั่นแหละครับนะครับและ
+มันก็สามารถทำงานอไลน์ได้ด้วยซึ่งซึ่งตรง
+นี้ผมยังไม่มีความรู้นะครับว่ามันทำงาน
+อไลน์ในรูปแบบไหนนะครับเดี๋ยวจะศึกษาหา
+ความรู้และหาคำตอบมาให้นะครับ support  by
+Now  Almost  All  question  God  and
+Answer นะครับการช่วยเหลือการสนับสนุน
+ตอนนี้นะครับทุกคำถามหรือเกือบทุกคำถามจะ
+ได้รับคำตอบ You  can  ask  something  on
+email  or  in  forum นะครับคุณสามารถ
+ถามคำถามน่ะส่งไปยังอีเมลได้เลยนะครับ
+หรือส่งคำถามไปใน forum นะครับมันก็คือ
+community เดี๋ยวผมจะเปิดให้ดูนะสำหรับ
+พูดคุยกันนะครับ preferable  Because  The
+information  Stay  here  and  other
+People  can  use  IT คือทางผู้พัฒนาเขา
+อยากให้เราถามไปใน forum มากกว่าเพราะ
+อะไรครับเพราะว่าข้อมูลมันจะอยู่ใน forum
+และคนอื่นสามารถเข้าไปดูข้อมูลเหล่านั้น
+ได้แต่ถ้าคุณส่งอีเมลไปไม่ใช่มมครับเค้า
+ส่งอีเมลกลับมาก็จะมีเพียงแค่คุณเท่านั้น
+ที่รู้คำตอบนะ
+ครับต่อมานะครับ Main  feature  of  the
+Builder นะครับคุณสมบัติหลักเลยนะของนัก
+เขียน EA นะครับของ Builder นะ work  with
+Event  Light นะครับ work  with  Event
+Light  in  it  Timer  tick  Trade
+Chart  all  in  it นะถ้าใครเคยเรียน fxd
+Ma กับผมมาแล้วก็จะรู้จักนะครับว่ามัน
+สามารถทำงานในเหตุการต่างๆได้ไม่ว่าจะ
+เป็น in  it ก็คือก่อนที่ EA จะทำงานนะ
+ครับ Timer นะครับกำหนดช่วงเวลาได้กำหนด
+อ่าระยะเวลาการส่งผ่านข้อมูลได้ใช่ไหม
+ครับติ๊กก็คือทุกการขยับของราคาใช่ไมม
+ครับเทรดนะครับหลังจากที่มีการซื้อการขาย
+การปิดออเดอร์ซื้อการปิดออเดอร์ขายนะนะ
+ครับชารจการทำงานบนชารจหรือ D  in  it ก็
+ทำงานหลังจากที่ EA ปิดการทำงานไปแล้วนะ
+ครับต่อมานะครับ Main  feature  of  the
+Builder นะ
+ครับคุณสมบัติหลักโต่อมานะครับ telling
+Stop  You  can  Also  tell  profit  you
+can  Also  tell  Take  profit  pending
+Order  or  Group  of  Trade  in  mt4
+นะครับ in  in  mt4 นะตัว telling  Stop
+เนี่ยคุณสามารถที่จะเลื่อนนะครับจุดทำ
+กำไรเนี่ยตามได้นะครับเลื่อน pending
+Order ได้หรือเลื่อนกรุ๊ปของการเทรดได้
+นะครับใน mtc นะครับ GLX  constant นะ
+ครับวงเล็บ input  of  the  Project  and
+variable  can  be  Used นะครับตัว GLX
+constant นะครับหรือ Global  variable
+เนี่ยครับเดี๋ยวจะอธิบายเพิ่มเติมให้นะ
+ครับซึ่งก็จะเป็นค่าของที่และตัวแปรนะ
+ครับที่เป็นมาตรฐานนะที่ใช้งานกันทั่วโลก
+นั่นเองนะครับต่อมานะครับ Break  Event
+นะครับการใช้ในการหาจุดคุ้มทุนนะครับ
+Money  management นะครับการบริหารจัด
+การทางการเงิน Rich  per นะครับ Fibonacci
+นะครับ full  Fully  customizable  Martin
+gale  Custom  sequence  and  Mall นะ
+ครับการใช้ในการคำนวณเปอร์เซ็นต์ความ
+เสี่ยงการใช้กับ Fibonacci นะครับครับการ
+ใช้กลยุทธ์ Martin  gale นะครับการใช้
+กลยุทธ์ Custom  sequence นะครับในตัว
+อย่างที่เพิ่ง Lunch ไปใน YouTube เนาะก็
+เข้าไปดูได้นะครับ check  Dynamic  Value
+easily นะ for
+indicator  for  example นะครับ
+สามารถใช้เช็คนะครับค่าที่มีการเปลี่ยน
+แปลงนะจากอินดิเคเตอร์เป็นต้นนะตัวอย่าง
+เช่นจากอินดิเคเตอร์ค่าของมันก็จะเปลี่ยน
+แแไปนะครับตามจุดที่ indicator ชี้นั่น
+เองถูกมครับ draw  and  Control
+graphical  object  on  the  main  char
+Windows  all  in  sub  Window
+นะสามารถวาดนะครับไม่ว่าจะเป็นอ่าวัตถุ
+ที่เป็นกราฟฟิกนะบนชาร์จหน้าหน้าๆหน้าจอ
+ได้นะครับเช่นการวาดลูกศรนะครับ Arrow
+LINE  text  Fibonacci  and  ut ก็คือ
+object เหล่านั้นหรือวัตถุเหล่านั้นก็
+เช่นลูกศร LINE ก็คือเส้น text ก็คือข้อ
+ความใช่ไหมมครับ Fibonacci นะครับรูปกราฟ
+Fibonacci ก็สามารถวาดได้เช่นเดียวกันนะ
+ครับ send  message  to  email  website
+or  Smartphone ส่งข้อความไปยังอีเมลยัง
+เว็บไซต์หรือ smartone ได้นะครับ write
+Data  to  file นะครับเขียนข้อมูลลงไปใน
+ไฟลได้นะครับ Terminal  variable นะครับ
+อันนี้นะครับเดี๋ยวนต้องไปดูกันนะถ้าคุณ
+ลองเปิดแพลตฟอร์ม mt4 นะเดี๋ยวผมเปิดให้
+ดูนะ
+มันจะมีนะ
+ครับ Global  variable อยู่ใช่ไหมมครับผม
+เปิดให้ดูเลยนะครับใน Tool เนี่ยนะครับจะ
+มี Global  variable อยู่นะครับซึ่งตัว
+Global  variable นี่เองนะครับเราสามารถ
+ใช้ Bo  Terminal  variable ใน FX  dema
+สร้างขึ้นมาแล้วส่งข้อมูลไปยัง Global
+variable ในแพลตฟอร์ม mtc ได้เดี๋ยววิธี
+การทำงานวิธีการใช้งานยังไงเดี๋ยวผมจะลอง
+ทำเป็นคลิปสอนให้ดูนะครับต่อมา Custom
+Box  can  be  create  and  Used  Within
+Project นะ Custom  Box สามารถสร้างนะ
+ครับและใช้ภายในตัว EA ของเราได้นะครับใน
+โครงการของเราได้มีฟังก์ชัน Cut  Copy
+pass นะครับมีทั้ง Cut มี Copy มี Fast
+History  of
+Action  so  you  can  undo  f  Action
+at  anytime มันก็คล้ายๆกับโปรแกรม
+Microsoft  Windows นะครับที่มีฟังก์ชัน
+undo ใช่่มยนะซึ่งตัวโปรแกรมเองจะทำการ
+บันทึกเหตุการณ์นะครับย้อนในอดีตให้เรา
+เก็บไว้ใช้นะครับก็เรียกว่า history  of
+Action นะครับดูตรงไหนครับใน FX  DMA
+เนาะผมจะเข้าให้ดูนะ FX  DMA นะครับแล้ว
+มันจะ mina  Builder นะครับมันจะมี
+history อยู่เห็นมั้ครับตัว history ตัว
+นี้เองนะครับมันจะเก็บเหตุการอ่าก่อนหน้า
+นั้นไว้นะครับเช่นวันนี้คุณไปทำการเชื่อม
+โยงบล็อกแล้วมันวุ่นวายสับสนใช่มั้ยครับ
+คุณก็ย้อนไปเหตุการณ์ก่อนหน้าที่อาจจะมี
+บล็อกน้อยกว่าตอนนี้นะครับแต่มีการเชื่อม
+โยงที่ปกติอยู่นั่นเองนะครับ no  need  to
+save  Project  Just  Mark  the  current
+Point  in  the  Action  history  and
+it  will  not  be  delete นะครับก็คือ
+ไม่จำเป็นจะต้อง save นะครับเพราะว่า FX
+dima มันจะจดจำนะครับทุกขณะของการกระทำ
+ไว้นะครับในอ่า history  of  Action นั่น
+เองนะครับคุณสามารถโหลดมันออกมานะครับยก
+ตัวอย่างเช่นผมจะโหลดข้อมูลเก่าๆที่เคย
+สร้างไว้ออกมาซึ่งผมไม่เคยเซฟเลยนะครับ
+มันจะเก็บบันทึกไว้นั่นเองนะครับมันก็จะ
+เก็บบันทึกไว้นั่น
+เอง a  Copy  of  the  Project  is  Store
+In  The  sour  code  file  that  you
+Export นะครับอ่าการ copy นะครับเราจะทำ
+ในรูปแบบไหนก็คือเรา Export ไลนั่นเองนะ
+เช่นเรา Export พไฟลออกไปเป็น
+D  mq4 ใช่ไหมมครับ mq4 นะครับนั่นก็คือ
+การ copy ไฟล์แล้วล่ะเดี๋ยวเราเอาไปเก็บ
+ไว้ที่ไหนใน destination ไหนใน Folder
+ไหนก็แล้วแต่เรานะ
+ครับ source  Code  file นะวงเล็บ Build
+with  FX  dima ก็คือไฟล์ที่ถูกสร้างจาก
+FX  dima  can  be  Import  back  into
+FX  dima  Which  create  a  new
+Project ไฟล์ที่ถูกสร้างจาก FX  dima
+เช่นเราเราส่งออกเป็น mq4 ใช่มั้ยครับเรา
+สามารถ Import  Back ก็คือนำมันกลับมา
+เปิดใน FX  DMA และสร้างเป็นโปรเจคใหม่
+ได้แก้ไขเปลี่ยนแปลงได้นั่นเองนะครับต่อ
+มาดูในส่วนของ Technical  specification
+นะครับคุณสมบัติทางเทคนิคนะครับ FX  dima
+work  Bas  with  Chrome ตัวนี้สำคัญนะ
+ครับ FX  dima ทำงานได้ดีที่สุดใน Chrome
+นะครับ and  there  is  a  Plug  in  for
+Easy  Download  for  Chrome  as
+และการดาวน์โหลด plugin นะครับการอัปเดต
+นะครับก็จะทำได้ง่ายนะครับถ้าเราใช้งานใน
+Chrome นะครับ Firefox  and  Opera  are
+Also โนะครับถ้าคุณจะใช้ Firefox หรือ
+คุณจะใช้ Opera ก็ยังพอใช้ได้นะครับ Early
+got  know  about  internet  explorer
+ก็คือเขาไม่แนะนำให้ใช้กับ internet
+explorer นั่นเองนะครับ Almost  All
+Java  skp  code  for  the  Browser  IS
+manly  written
+นะครับ java  script ทั้งหมดเนี่ยเกือบ
+ทั้งหมดเนี่ยครับสำหรับอ่าในตัว Browser
+เนี่ยถูกเขียนขึ้นมา The  Connection
+Between  blx  R  svg  Element นะครับ
+ไอ้ตรงนี้นะครับผมไม่เข้าใจความหมายนะ
+ครับแต่แปลไปก็หมายความว่านะครับบล็อกการ
+เชื่อมโยงระหว่างบล็อกเนี่ยมันเป็น svg
+Element เดี๋ยวถ้าผมมีเวลาจะไปหาข้อมูล
+เกี่ยวกับ svg  Element มาอธิบายให้ผู้
+เรียนได้เพิ่มเติมนะครับ Cookie  are
+Used  To  Store  section  information
+And  Local  Storage  is  Used  To
+Store  Javascript  script  and  html
+template นะครับก็คือ Cookie เนี่ยก็จะ
+ถูกใช้เก็บข้อมูลของของการของ section
+เนี่ยนะครับและอ่าพื้นที่ในการบันทึกตัว
+คุกี้เหล่าเนี้ยนะครับก็จะถูกใช้เป็นที่
+เดียวกับการเก็บพวก Javascript พวกเก็บ
+html  template นั่นเองนะครับ The
+Output  Code  that  the  Builder
+create  The  Output  clod  that  the
+Builder  create  is  Hard  to  read
+and  not  so  Fast ก็คืออะไรครับ Code
+ที่เราที่เราอ่าสร้างขึ้นมาเนี่ย FX  DMA
+ที่เราใช้บ็อกในการเขียนขึ้นมาเนี่ยถ้า
+เราแปลงเป็น Code แล้วเนี่ยเราอ่านโคด
+เนี่ยมันจะยากนะครับยากในการทำความเข้าใจ
+but  This  Is  always  The  second
+When  We  make  coding  easily นะแต่
+ยังไงมันก็ง่ายสำหรับการที่เราจะสร้าง EA
+ขึ้นมาโดยใช้ FX  bma นั่นเองนะครับ node
+BB  is  Used  for  the  forum  and
+Also  to  manage  User  account  node
+BB จะถูกใช้ในสำหรับ forum นะครับซึ่งจะ
+ใช้ในการบริหารจัดการ User  account  node
+BB คืออะไรนะครับลองมาดูที่ forum นะผม
+จะเข้าไปใน FX  DMA นะครับ FX  DMA นะ
+ครับแล้วไปใน forum นะครับเลื่อนมาล่าง
+สุดเห็นมั้ครับคุณจะเห็น node  BB  forum
+เห็นมั้ครับถ้าคุณเข้าไปตรงนี้เนี่ยมันก็
+จะไปในอีกหน้าเว็บเพจหนึเลยนะครับเข้าใจ
+ว่ามันเป็นที่สำกับเก็บข้อมูลเกี่ยวกับ
+account นะครับ User  account ต่างๆนะ
+ครับซึ่งผมก็ยังไม่รู้ดีเทลละเอียดมากนัก
+เท่าไหร่นะครับต่อมานะครับ FX  dima  is
+H  On  A  vps  by  verger นะครับ FX
+dima ใช้ Host นะครับหรือใช้ vps จากตัว
+บริษัทเจอนะครับถ้าคุณอยากรู้จักเจอร์ก็
+กดลิงก์เข้าไปดูได้เลยนะ
+ครับนี่นะครับอ่ามันเป็นพื้นที่สำหรับ
+เช่านะครับผมอาจจะโฆษณาประชาสัมพันธ์เจอ
+นะครับผมอาจจะออกเสียงผิดนะครับอ่านอ่าน
+อาจจะออกเสียงผิดก็ต้องขออภัยด้วยนะครับ
+และวันนี้นะครับผมก็จะอธิบายเพียงเท่านี้
+ก่อนนะครับและใน FX  DMA
+documentation  Part  2 เราก็จะเจาะลงไป
+ในหัวขข้ออื่นๆต่อไปนะครับจนจบนะ
+ครับหากใครฟังแล้วมีคำถามสงสัยตรงไหนก็
+สามารถส่งคำถามมาถามผมได้ในคอมเมนต์นะ
+ครับและใครต้องการที่จะลงเรียนคอร์ส
+ออนไลน์กับผมก็ทำการสมัครสมาชิกให้เรียบ
+ร้อยแล้วก็แจ้งผมมาใน LINE  official
+account นะครับฝากกดไลค์กดติดตามแล้วก็
+แชร์ความรู้ให้กับเพื่อนๆด้วยนะครับพบกัน
+ใหม่ในตัวอย่างต่อไปสวัสดี
+ครับ
+[เพลง]
+'

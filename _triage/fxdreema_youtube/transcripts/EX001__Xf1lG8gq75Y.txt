@@ -1,0 +1,297 @@
+﻿Hello  This  is  the  first  time  for
+me  to  present  in
+english  To  Be  honest  I  am  not
+good  in  english  but  I  want  to
+share  my  knowledge  to  everybody  in
+the
+world  Today  We  will  Learn  How  to
+create  an  expert  advisor  without
+coding  example  One  ema  Cross  Over
+Auto  lot  or  martingale
+In  This  EA  We  have  to  strategy
+We  can  select  by  bullen  Switch
+The  First  strategy  We  Call  aut
+lot  and  Another  strategy  We  Call
+Martin
+gale  The  EA  will  Open  Order  Sell
+When  ema  Fast  cost  below  ema  slow
+and  the  EA  will  Open  Order  buy
+When  ema  Fast  cost  Above  ema
+slow  Auto  lot  mean  when  you  have
+Balance  10,000  US
+C  The  Lost  SI  of  Order  buy  The
+Lost  size  of  Order  Sell  is
+0.1
+Whenever  your  Balance  increase  to
+20,000
+USD  The  Lost  SI  of  Order  by  the
+lot  side  of  Order  Sell  will
+increase  to  0.2
+automatically  this  We  Call  Auto
+lot  strategy  and  when  you  Use
+martingale
+is  that  means  The  indent  Volume
+size  Order  lot  buy  Order  lot  Sell
+is  0.1  when  you
+win  The  lot  size  Still  be
+0.1  Whenever  you  lost  the  next
+loss  size  will  increase  Two  Time
+0.1  Change  to
+0.2  If  you  Lose  Again  The  lot
+size  will  increase  to  0.4  If  you
+Lose  Again  The  lot  size  will
+increase  to  0.8  If  you  Lose  Again
+The  lot  size  will  increase  to
+1.6  and  then  you  win  the  l  Side
+You  Come  Back  to
+0.1  I  really  hope  That  this  video
+will  be  benefit  for  people  who
+are  interested  about  FX  DM  Okay
+Let's  start  example
+One  start  with  constant  In  This
+EA  We  Have  10
+constant  The  First  EA  name  Keep
+the  name  of  EA  lot  is  0.1  ema
+Fast  is  10  ema  slow  is  50  ema
+Train  is  200  SL  is  40  SL  means
+stop  loss  TP  is  40  TP  means  Take
+profit  Mode  Auto  lot  is  2  The
+Value  is  100000  lot  x  is  2  and
+We  Have  Only  One  variable  lot  BS
+The  default  Value  of  lot  BS  is
+Zero  Don't  Forget  to  Click  Update
+Every  Time  when  you  Change
+constant  or  you  Change
+variable  After  set  up  constant  and
+variable  finish  go  to  on  in  it
+Event  on  in  it  Event  We  will
+Modify  Charge  Property  and  modify
+Charge  Color  Modify  Charge  Property
+and  Modify  Charge  Color
+comform  Charge  and  object  in
+Modify  Charge
+Property  We  select  Charge  Mode  To
+Be  candlestick  We  select  Show
+Period  separator  To  Be  No  We
+select  Show  Kid  To  Be  No  Update
+Modify  Charge  Color  We  select  Blue
+candle  IS  Green  We  select  B
+candle  is
+Red  This  Is  The  Color  I  prefer
+If  You  Want  To  Change  It  Up  To
+You  Update  Every  Time  when  you
+finish  setting  on  tick
+Event  start  with  the  box  condition
+We  will  make  bullen  Switch  we  set
+the  left  Side  Value  bullen  Mode
+Auto  lot  equal  Value  numeric  1
+Mode  Auto  lot  default  Value  IS
+True  is  that  means  you  select  to
+use  the  auto  lot
+strategy  The  Output  Normal  output
+Active  the  next  Block  noted  start
+checking  in  noted  Block  filter  buy
+typ  either  buy  or  Sell  If  Now  No
+order  buy  Now  No  order  Sell  The
+Output  Normal  output  will  be
+Active โ We  will  Check  the
+condition
+for  Open  Order  buy  First  If  you
+want  to  open  Order  buy  ema  Fast
+have  to  Above  ema  Train  ema  Fast
+have  to  coss  Above  ema  slow  EM  a
+Fast  Above  EM  a  10  how  to  set
+up  we  use  the  condition  Block
+indicator  Moving  average  Ma  Period
+We  Push  EM  a  Fast  EM  Fast
+is  10  10  Period  Ma  method
+exponential  candle  id1  Above
+indicator  Moving  average  m  a  10
+exponential  candle
+id1  M  A  Fast  cost  Above  EM  slow
+indicator  Moving  average  EM  Fast
+cost  Above  indicator  Moving  average
+ema  slow  consideration  Point  candle
+ID
+One  we  use  the  on  per  Bar  form
+Time  filter  to  Control  Maximum  One
+Order  per  One
+candlestick  We  Use  Formula
+to  Set  the  relative  Between
+Balance  with  Auto  loss
+size  If  account  Balance  left  Side
+account  Balance
+div  numeric  Value  div  Value  The  Y
+Value  is  10  The  Y  Value  is
+100000  for  example  If  Balance  is
+100000  div  100000  The  res  is  0.1
+Right  We  put  the  res  into  this
+variable  lot  BS  Now  lot  BS  is
+0.1  in  Block  by  Now  we  use  lot
+BS  Push  in  How  Much  stop  loss  40
+pip  Take  profit  40  pip  Don't
+Forget  to  Push  EA  name  in  comment
+Also  right
+side  Under  the  condition  ema  Fast
+below  ema  10  Under  the  condition
+ema  Fast  cost  below  ema
+slow  indicator  Moving  average  ema
+Fast  below  ema
+Trend
+ema  Fast  cost  below  EM  a  slow
+consideration  Point  is  candle  id1
+We  Use  Once  per  Bar  from  Time
+filter  to  Control  Maximum  One
+Order  per  One  candle  Stick
+in  the  Formula  account  Balance  div
+div
+Value  put  the  res  result  into
+this  variable  if  your  Balance
+10,000  di
+100000  lot  BS  is  0.1  is  that
+means  if  You  Have  Balance  100000
+USD  The  indican  Volume  lot  size
+The  initial  Volume  lot  size  is
+0.1  stop  loss  4  Take  profit  40
+Don't  Forget  to  Push  EA  name  in
+the  comment  Also  If  you  Change
+Mode  aut  lot  in  metatrader
+platform  In  This  expert  Property
+input  Mode  aut  lot  When  We  change
+the  default  Value  is  true  We
+Change  from  Two  to  4
+Right  what  do  is
+mean  is  mean  you  select  to  use
+the  Mat
+strategy  The  Output  in  output  is
+will  be  Active  the  next  Box  noted
+Box  will  Check  the  condition
+futter  buy  typ  E  buy  or
+Sell  If  There  Are  No  order  buy
+No  order
+Sell  The  Output  will  Check  the
+condition  for  buy  will  Check  the
+condition  for  Sell  We  will  buy
+When  ema  Fast  Above  EM  Train  We
+will  buy  When  ema  Fast  cost  Above
+ema
+slow  ema  Fast  Above  ema
+Train  ema  Fast  cost  Above  ema
+slow  consideration  Point  is  candle
+id1  We  Use  Once  per  Bar  form
+Time  filter  to  Control  The  Maximum
+Order  Only  One  Order  per  One
+candlestick  inbox  by  Now  we  select
+Money  management  To  Be  betting
+martingale  pari  initial  Volume
+0.1  lot  multiply  on  loss  lot  x
+is  2  is  that  means  when  you  lost
+the  next  lot  size  will  increase
+Two
+Time  start  with  0.1  when  you  lost
+the  next  lot  is  0.2  If  you  Lost
+Again  the  next  lot  is  0.4  If  you
+lost  Again  the  next  lot  is  0.8
+multiply  on  profit  is  one  is  that
+mean  Whenever  you  win  The  lot
+size  will  come  back  to  be  zero
+point
+one  stop  loss  Mode  is  40  pip
+Take  profit  Mode  is  40
+pip  Don't  Forget  to  Push  EA  name
+in  the  comment  also  So  Click
+Update  After  You  set  up  finish
+the  condition  for  Open  Order  Cell
+ema  Fast  below  ema  Train  Set  like
+this  ema  Fast  cost  below  ema  slow
+Set  like  this  use  Once  per  Bar
+from  Time  filter  to  Control  Only
+One  Order  per  One  candlestick  Sell
+Now  Money  Management
+martingale  poori  indan  Volume  lot
+0.1  multiply  on  loss  lot  S  is
+Two  multiply  on  profit  is  one
+stop  loss  Mode  in  pip  40  pip
+Take  profit  Mode  in  pip  40  pip
+we  use  the  constant  SL  and  TP
+Don't  Forget  to  Push  EA  name  in
+comment  Also  and  then  What
+information  you  want  to  Push
+on  chart  you  want  to  Show  on
+chart  use  the  box  pass  and  Box
+comment  Box  pass  Come  From  More
+Box  comment  Come  From  output  and
+Communication  in  box  comment  we
+set  like  this  Titan  EA  name
+Corner  LINE  Apple  label  Balance
+information  conf  account
+Balance  If  numeric  Value  We  set
+to  decimal  Place  label  We  put
+equity  the  information  to  Show
+Come  From  acc  account
+equity  Set  If  numeric  Value  L  is
+To  To  decimal  Page  Click
+Update  Before  Back  testing  We  have
+to  check  The  information  in  expert
+Property
+First
+testing  In  This  testing  We  Use
+initial  deposit  One  Hand  USD  input
+parameter  EA  name  Keep  the  name
+of  EA  lot  0.1  ema  Fast  10  ema
+slow  50  ema  Train  200  stop  loss
+40  Take  profit  TP  40  Mode  Auto
+lot  True  is  that  means  We  Use
+Auto  lot  strategy  Right  D  Value
+100000  L  x2  Click  OK  When
+everything
+Complete  I  will  check  without
+Visual  Mode  in  Order  Not  to  Waste
+Our  Time
+start  testing  One  Year  Period  Time
+Frame
+H1  We  will  Check  the  profit  from
+graph  After  Back  Test  finish  Click
+on  the  Report  we  use
+the  Data  modelling  Quality  99%
+from  quant  Data  Manager  Right  Miss
+Match  chart  ear  is
+Zero อ After  testing  We  see  the
+maximal  draw  Down
+17.9  It's  Okay  It's  Good  Max
+DD
+profit
+39% โอเ Next  Step  I  will  change
+the  strategy  to  Martin  gale  by
+Changing  Mode  Auto  lot  form  To  To
+Be  When  We  select  Mode  Auto  lot
+to  bef  is  that  means  you  use
+martingale  strategy  testing  indent
+deposit อ I  will  Change  To  Be  1000
+USD  for  martingale  strategy  Click
+OK  After  That  in  Order  not
+Waste  Our  Time  We  will  Back  Test
+without  Visual  Mode  cick  start  and
+Check  the  profit  form
+graph  After  finish  testing  see  the
+Report  We  Get  The  profit  more
+than
+100%  In  This  testing  We  Get  The
+profit  100  and
+21%  maximal  D  Down
+22%  is
+Okay  If  you  have  any  question
+Please  do  not  hesitate  to  Contact
+US  send  your  question  to  me  I
+will  Answer  you  Every  question  for
+Thai  people  who  want  to
+participate  free  Course
+Online  in  Thai  Language  Just
+register  Add  LINE  official  account
+and  me  you  register
+Complete  Don't  Forget  to  Click
+like  and  Subscribe  and  Share  The
+Video  KP  to  your  friend  see  you
+again  next
+[เพลง]
+example

@@ -1,0 +1,187 @@
+﻿{
+    "generated_utc":  "2026-08-05T00:37:27Z",
+    "source_note":  "ADVISORY-ONLY crisis models (ORDER-200). Does NOT feed the MacroGate RI/state on real accounts.",
+    "top_model":  {
+                      "name":  "YIELD_SHOCK",
+                      "score":  20.4,
+                      "label":  "dormant"
+                  },
+    "models":  [
+                   {
+                       "name":  "YIELD_SHOCK",
+                       "title_th":  "Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง)",
+                       "score":  20.4,
+                       "label":  "dormant",
+                       "status":  "OK",
+                       "coverage":  1,
+                       "top_driver":  "rate_level",
+                       "components":  [
+                                          {
+                                              "key":  "rate_level",
+                                              "desc":  "US 10Y yield level",
+                                              "input":  "US10Y.spot",
+                                              "unit":  "%",
+                                              "value":  4.627,
+                                              "score":  75.1,
+                                              "weight":  0.2,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          },
+                                          {
+                                              "key":  "rate_momentum",
+                                              "desc":  "US 10Y 5d change (bps)",
+                                              "input":  "US10Y.bps5d",
+                                              "unit":  "bps",
+                                              "value":  2.302,
+                                              "score":  9.2,
+                                              "weight":  0.35,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          },
+                                          {
+                                              "key":  "equity_breakdown",
+                                              "desc":  "S\u0026P500 5d momentum (falling = shock)",
+                                              "input":  "SP500.chg5d_pct",
+                                              "unit":  "%",
+                                              "value":  4.143,
+                                              "score":  0,
+                                              "weight":  0.25,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          },
+                                          {
+                                              "key":  "bond_vol",
+                                              "desc":  "MOVE bond-volatility index",
+                                              "input":  "MOVE.spot",
+                                              "unit":  "idx",
+                                              "value":  77.556,
+                                              "score":  10.8,
+                                              "weight":  0.2,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          }
+                                      ]
+                   },
+                   {
+                       "name":  "CREDIT_STRESS",
+                       "title_th":  "ความเครียดสินเชื่อ (สเปรด HY กว้าง)",
+                       "score":  1.8,
+                       "label":  "dormant",
+                       "status":  "OK",
+                       "coverage":  1,
+                       "top_driver":  "bond_vol",
+                       "components":  [
+                                          {
+                                              "key":  "hy_level",
+                                              "desc":  "HY option-adjusted spread level",
+                                              "input":  "HY_OAS.spot",
+                                              "unit":  "%",
+                                              "value":  2.78,
+                                              "score":  0,
+                                              "weight":  0.2,
+                                              "available":  true,
+                                              "age_h":  55.6
+                                          },
+                                          {
+                                              "key":  "hy_widening",
+                                              "desc":  "HY spread 5d widening (%)",
+                                              "input":  "HY_OAS.chg5d_pct",
+                                              "unit":  "%",
+                                              "value":  -1.068,
+                                              "score":  0,
+                                              "weight":  0.15,
+                                              "available":  true,
+                                              "age_h":  55.6
+                                          },
+                                          {
+                                              "key":  "credit_trend",
+                                              "desc":  "HYG/IEF credit ratio vs its SMA200 (falling = stress)",
+                                              "input":  "CREDITPX.pct_vs_sma200",
+                                              "unit":  "%",
+                                              "value":  1.572,
+                                              "score":  0,
+                                              "weight":  0.25,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          },
+                                          {
+                                              "key":  "credit_drop",
+                                              "desc":  "HYG/IEF credit ratio 5d drop",
+                                              "input":  "CREDITPX.chg5d_pct",
+                                              "unit":  "%",
+                                              "value":  0.497,
+                                              "score":  0,
+                                              "weight":  0.2,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          },
+                                          {
+                                              "key":  "bond_vol",
+                                              "desc":  "MOVE bond-volatility index",
+                                              "input":  "MOVE.spot",
+                                              "unit":  "idx",
+                                              "value":  77.556,
+                                              "score":  10.8,
+                                              "weight":  0.1,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          },
+                                          {
+                                              "key":  "equity_confirm",
+                                              "desc":  "VIX fear confirmation",
+                                              "input":  "VIX.spot",
+                                              "unit":  "idx",
+                                              "value":  16.5,
+                                              "score":  7.5,
+                                              "weight":  0.1,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          }
+                                      ]
+                   },
+                   {
+                       "name":  "INFLATION_OIL",
+                       "title_th":  "เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น)",
+                       "score":  2.9,
+                       "label":  "dormant",
+                       "status":  "OK",
+                       "coverage":  1,
+                       "top_driver":  "rate_confirm",
+                       "components":  [
+                                          {
+                                              "key":  "oil_vs_trend",
+                                              "desc":  "WTI % above its SMA200",
+                                              "input":  "WTI.pct_vs_sma200",
+                                              "unit":  "%",
+                                              "value":  -0.813,
+                                              "score":  0,
+                                              "weight":  0.4,
+                                              "available":  true,
+                                              "age_h":  7.6
+                                          },
+                                          {
+                                              "key":  "oil_momentum",
+                                              "desc":  "WTI 5d momentum (%)",
+                                              "input":  "WTI.chg5d_pct",
+                                              "unit":  "%",
+                                              "value":  -4.908,
+                                              "score":  0,
+                                              "weight":  0.35,
+                                              "available":  true,
+                                              "age_h":  7.6
+                                          },
+                                          {
+                                              "key":  "rate_confirm",
+                                              "desc":  "US 10Y 5d rise confirming inflation",
+                                              "input":  "US10Y.bps5d",
+                                              "unit":  "bps",
+                                              "value":  2.302,
+                                              "score":  11.5,
+                                              "weight":  0.25,
+                                              "available":  true,
+                                              "age_h":  31.6
+                                          }
+                                      ]
+                   }
+               ]
+}

@@ -1,0 +1,8 @@
+symbol,spot,sma200,atr20,chg5d_pct,data_status,asof,source_note
+US2Y,4.15,3.653,0.0275,2.166,OK,2026-08-03 00:00,Yahoo 2YY=F (2Y UST yield future)
+WTI,75.37,75.9877,4.803,-4.908,OK,2026-08-05 00:00,Yahoo CL=F (WTI crude front future)
+SP500,7736.52,7034.215,87.8275,4.143,OK,2026-08-04 00:00,Yahoo ^GSPC (S&P 500 index)
+MOVE,77.5565,72.1492,6.1385,-0.275,OK,2026-08-04 00:00,Yahoo ^MOVE (ICE BofA MOVE bond-vol index)
+HY_OAS,2.78,2.886,0.025,-1.068,OK,2026-08-03 00:00,"FRED BAMLH0A0HYM2 (ICE BofA US High Yield OAS, %)"
+YCURVE,0.43,0.5291,0.0235,22.857,OK,2026-08-04 00:00,"FRED T10Y2Y (10Y-2Y UST spread, %)"
+CREDITPX,0.853083,0.839879,0.00131,0.497,OK,2026-08-04 00:00,Yahoo HYG/IEF price ratio (credit risk appetite; falling = credit stress)
