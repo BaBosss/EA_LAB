@@ -9954,6 +9954,85 @@ the reply (`docs/WORKER_BRIEF_RULES.md` §1).
 **ห้าม:** ออก verdict หรือใช้คำว่า pass/dead/good/bad/best/edge · แก้บาร์หลังเห็นเลข · เลือกจุดยอดแทนกลาง plateau ·
 รายงาน Model 1 เป็นหลักฐานผล · กวาดแกนที่ไม่ได้ระบุ · แตะหน้าต่าง 2026 · แก้ `.set` ต้นฉบับในที่ (ให้ copy ออกมา) ·
 แตะ `.mq5` · `ea_template\core\` · `_vps_deploy\` · ไฟล์ board/scorecard/state ใดๆ · `git commit`/`push` · recompile
+
+#### ✅ STAGE 1 EXECUTED — 12 of 12 runs, 2026-08-05, lane `D:\Meta 5b`
+
+Delegated to `claude-9arm`, which completed all 12 runs and then died at **`input_tokens = 99073`** —
+the identical ceiling that killed four batches on 2026-08-04, now the fifth. It had written **11 of 12
+rows before dying**, because the brief required appending on parse; the 12th was recovered by the lead
+seat from the report on disk. **The rule in `docs/WORKER_BRIEF_RULES.md` §2 is what made the loss one
+row instead of the batch.**
+
+🔬 **Both integrity checks were run by the lead seat, not taken on the worker's word.**
+- **Inputs read-back:** `check_sweep_inputs.ps1` over all four probe axes ⇒ **11 reports, 11 distinct
+  configurations, PASS.** Every `.set` edit landed. This mattered more than usual here, because the
+  raw numbers below contain three sets of byte-identical results and the first reading of those is
+  always *"the edits did not land"* — the failure that produced 15 void reports on 2026-08-04.
+  ⚠️ Run first with only two of the four axes, the checker **REFUSED** and named `BASE`/`RM1` as
+  identical. That was a defect in the invocation, not the data: those two differ on the regime inputs,
+  which were not in the parameter list. Recorded because a checker's refusal is only as scoped as its
+  arguments, and a narrow invocation produces a confident wrong answer.
+- **Independent re-parse:** all 12 reports re-parsed with `tools\python312\python.exe scripts\parse_mt5_report.py`
+  and compared field by field to the worker's rows ⇒ **12 of 12 agree, 0 mismatches.**
+
+| label | changed from CTRL | PF | trades | DD% | net |
+|---|---|---|---|---|---|
+| `BASE` | — | **1.57** | 254 | 8.98 | +2532.45 |
+| `SC1` | `StackConfirm=1` | 1.46 | **85** | 5.92 | +960.57 |
+| `SC2` | `StackConfirm=2` | 1.46 | **85** | 5.92 | +960.57 |
+| `SC3` | `StackConfirm=3` | 1.46 | **85** | 5.92 | +960.57 |
+| `SC4` | `StackConfirm=4` | **1.79** | 116 | 4.54 | +1799.54 |
+| `SC4_BR0p50` | `+ _9_PA_MinBodyRatio=0.5` | 1.79 | 116 | 4.54 | +1799.54 |
+| `SC4_BR0p75` | `+ _9_PA_MinBodyRatio=0.75` | 1.79 | 116 | 4.54 | +1799.54 |
+| `SC4_BR1p50` | `+ _9_PA_MinBodyRatio=1.5` | 1.47 | 112 | 6.19 | +1245.00 |
+| `SC4_BR2p00` | `+ _9_PA_MinBodyRatio=2.0` | 1.47 | 112 | 6.19 | +1245.00 |
+| `RM1` | `_9_RegimeGateAdds=true, _50_RegimeMode=1` | 1.53 | 236 | 10.26 | +2223.51 |
+| `RM2` | `_9_RegimeGateAdds=true, _50_RegimeMode=2` | 1.43 | 132 | 6.11 | +952.32 |
+| `RM1_NoDown` | `RM1 + _50_AllowTrendDown=false` | 1.38 | 173 | 5.36 | +1203.96 |
+
+**AXIS CLASSIFICATION against the pre-registered `|ΔPF| ≥ 0.05` rule.** All four are **LIVE** —
+`_9_PA_MinBodyRatio` **0.32** · `StackConfirm` **0.22** · `_50_AllowTrendDown` **0.15** (vs its own
+`RM1` base) · `_50_RegimeMode` **0.14**. No axis is INERT, so none is dropped and the list is complete.
+
+##### 🔴 But the axes COLLAPSE, and that is a bigger finding than the classification
+
+*Live* was the wrong question. Measured over the values themselves, these five-valued axes have far
+fewer distinct **outcomes** than values:
+
+| axis | values probed | distinct outcomes | collapses into |
+|---|---|---|---|
+| `StackConfirm` | 0 · 1 · 2 · 3 · 4 | **3** | `{0}` · `{1,2,3}` identical to the cent · `{4}` |
+| `_9_PA_MinBodyRatio` | 0.5 · 0.75 · 1.0 · 1.5 · 2.0 | **2** | `{0.5, 0.75, 1.0}` identical · `{1.5, 2.0}` identical |
+
+`SigValid`, `Retrigger` and `PriceAction` — three confirms with different names and different code —
+return **1.46 / 85 trades / 5.92% DD / +960.57 on every digit**. And the body-ratio filter does not
+bite at all below `1.0`.
+
+🔴 **This voids STAGE 2 as this order pre-registered it, and the fault is the spec's, not the runner's.**
+A `5×5` cross of the top two axes would produce **25 cells containing 6 distinct results and 19
+duplicates** — and duplicates sitting next to each other is exactly what the plateau rule reads as a
+plateau. *"≥3 contiguous points ≥ baseline"* would have been satisfied by an axis that has two settings
+wearing five labels. **This is the same failure the STAGE 1 probe exists to prevent** (memory
+`inert-axis-fake-plateau`), one level down: not an axis that does nothing, but an axis whose *values*
+do nothing while the axis itself moves. The probe caught it only because it was run one value at a
+time; a grid would have buried it.
+⇒ **STAGE 2 must cross DISTINCT OUTCOMES, not values: `StackConfirm ∈ {0, 1, 4}` × `_9_PA_MinBodyRatio
+∈ {1.0, 1.5}` = 6 real cells**, and the plateau rule cannot be applied to a 3×2 grid as written. 👤 That
+is a change to a pre-registered rule made after seeing a surface, so by `ORDER-1220` it is **the
+owner's to ratify, not mine to execute** — it is recorded here and NOT run.
+
+##### Two things in the numbers that must not be quoted alone
+
+1. 🔴 **`SC4`'s `1.79` against base `1.57` is not an improvement, it is 54% less trading.** 254 → 116
+   trades. This is the **fifth** participation instance in two days and the first one measured *after*
+   the owner ratified the `≥100 trades` floor on 2026-08-05 — which `116` clears, narrowly, and which
+   **`SC1/2/3` at 85 trades do not clear at all.** Read `1.79` and `116` together or not at all.
+2. ⚠️ **`BASE` here is `1.57 / 254`; this row's own CTRL for the same file, symbol and window records
+   `1.82 / 184`.** The difference is Model 1 here versus Model 4 there, and it is stated rather than
+   reconciled: **Model 1 is used in STAGE 1 to classify axes and is not evidence of a result**, exactly
+   as this order pre-registered. Nobody may compare a STAGE 1 number to a Model 4 number.
+3. **Every row is `short_trades = 0`.** The long-only finding holds throughout this stage, and
+   `ORDER-1420` is measuring the other side concurrently.
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
