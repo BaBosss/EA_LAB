@@ -320,6 +320,31 @@ cells alive — that is the failure this order is about.
 > **Nothing was adjusted to fit and no verdict follows from it** — this is a measurement about the
 > evidence pipeline, not about either hypothesis.
 
+### 🔬 UNSOUGHT REPRODUCTION 2026-08-05 — a different symbol, a different order, not looking for this
+
+Found by `ORDER-236 STEP 3 STAGE 2`, which re-ran the `B14_AB_off.set` CTRL on **EURJPY H1** and
+compared it to the same file's run on the same lane the previous day. **PF, trade count and the
+`.set` are identical; the money is not:**
+
+| window | PF | trades | net 2026-08-04 | net 2026-08-05 | Δ |
+|---|---|---|---|---|---|
+| MAIN | 1.82 | 184 | +2344.20 | **+2353.69** | **+9.49** |
+| BWD | 1.06 | 498 | +567.24 | **+599.32** | **+32.08** |
+
+**Why this is worth adding rather than noting in passing.** Every prior instance was on **BTCUSD H4**
+under `pilot_cells.ps1`, which left open the reading that it was a crypto-financing artefact of one
+pipeline. This is **EURJPY H1**, driven by `mt5_run.ps1` from a completely different order, by a lane
+that did not know it was going to find it. ⇒ the effect is **not** confined to crypto and **not**
+confined to the pilot pipeline — which is consistent with the swap mechanism `item 3` named, and
+inconsistent with the narrower explanations.
+
+⚠️ Also note the direction: **both windows moved UP over one day**, and the larger move is on the
+window with 2.7× the trades. Nothing here establishes proportionality — two windows is not a
+measurement — but if a later lane tests the swap hypothesis, *net drift scaling with position-days
+held* is the shape to test against.
+🚫 Items 1 and 2 of this row remain owed and this does not touch them. `ORDER-236`'s conclusions do
+not depend on the nets, only on PF and trade counts, both of which reproduced exactly.
+
 **The measurement.** `B14-H01-r1/BTCUSD/H4`, baseline arm, re-run through `scripts/pilot_cells.ps1`:
 
 | field | 2026-08-03 | 2026-08-04 (twice) |
