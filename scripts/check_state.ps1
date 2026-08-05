@@ -97,6 +97,35 @@ $rows = $null
 $invText = if (Test-CommittedPath -RelPath $INV -RepoRoot $Root) { ReadJudged $INV } else { $null }
 if ($null -ne $invText) { try { $rows = @($invText | ConvertFrom-Csv) } catch { $rows = $null } }
 Check ($null -ne $rows -and $rows.Count -gt 0) "DEPLOYMENTS.csv parses ($(if($rows){$rows.Count}else{0}) rows)" "portfolio\DEPLOYMENTS.csv missing or unparseable"
+
+# ORDER-1132 D3. "Parses" is not "parses FAITHFULLY", and the difference is the whole defect.
+# ConvertFrom-Csv does not fail on a row carrying more fields than the header -- it SILENTLY
+# DISCARDS the overflow. So the check above passed for months while 13 rows had unquoted commas
+# inside `notes`, and every one of them was being read with its tail missing. The truncation that
+# exposed it (65 lines -> 9, 2026-08-02) was the symptom; this is the defect.
+#
+# The arity test re-parses the SAME text with more headers than the file has columns, so a row
+# with extra fields lands values in the surplus ones. Same reader, same vintage -- deliberately
+# not a subprocess reading the disk, which would reach past ReadJudged and re-introduce the
+# two-vintage shape the comment above says was already fixed here once.
+$arityBad = @()
+if ($null -ne $invText -and $null -ne $rows -and $rows.Count -gt 0) {
+  $invLines = @($invText -split "`r?`n" | Where-Object { $_.Trim().Length -gt 0 })
+  if ($invLines.Count -gt 1) {
+    $nCols   = @($rows[0].PSObject.Properties.Name).Count
+    $probe   = 1..($nCols + 12) | ForEach-Object { "C$_" }
+    $surplus = ($nCols + 1)..($nCols + 12) | ForEach-Object { "C$_" }
+    # Skip(1) drops the real header; the probe supplies its own.
+    $wide = @(($invLines | Select-Object -Skip 1) | ConvertFrom-Csv -Header $probe)
+    for ($i = 0; $i -lt $wide.Count; $i++) {
+      $over = @($surplus | Where-Object { $null -ne $wide[$i].$_ -and "$($wide[$i].$_)".Length -gt 0 })
+      # +2 = one for the header line, one to make it 1-based, so the number is the FILE line.
+      if ($over.Count -gt 0) { $arityBad += ($i + 2) }
+    }
+  }
+}
+Check ($arityBad.Count -eq 0) "every inventory row has exactly the header's field count (no silent overflow)" ("portfolio\DEPLOYMENTS.csv has row(s) with MORE fields than the header, so their trailing content is being discarded on read -- quote the offending field. Line(s): " + ($arityBad -join ', '))
+
 if ($null -ne $rows -and $rows.Count -gt 0) {
   $required = @('account','ea_name','magic','symbol','status','judge_date')
   $cols = $rows[0].PSObject.Properties.Name

@@ -3724,7 +3724,81 @@ composition decision wearing a judging rule.</sub>
 
 ---
 
-## ORDER-1132 — [🔴 data integrity] `portfolio/DEPLOYMENTS.csv` does not round-trip through a CSV parser, and it is the single inventory for real money — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1132 — [🔴 data integrity] `portfolio/DEPLOYMENTS.csv` does not round-trip through a CSV parser, and it is the single inventory for real money — `DONE (Claude/Opus 2026-08-05, lane S-2026-08-05-OWNERQ) — all four deliverables; 13 rows re-quoted with 0 non-notes fields changed, and the guard was observed firing on a re-introduced defect before being trusted` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+### ✅ CLOSED 2026-08-05 — measured at HEAD first, and the defect was still there
+
+**D1 — round-trip, driven as a cage.** `scripts/check_csv_roundtrip.py` (new) runs two checks that
+are deliberately not the same check: **ARITY** (every row has exactly the header's field count) and
+**ROUNDTRIP** (`read(write(read(f))) == read(f)`, compared field by field). A file can pass the first
+and fail the second, so both run even when the first has already failed. Exit codes keep three
+outcomes apart — `0` clean · `1` a real defect · `2` **could not check** (no match, unreadable,
+undecodable), never conflated with `0`, because an empty glob reported as clean is how a guard stops
+guarding anything.
+
+**Proven red before it was proven green:** on the unrepaired file it exited **1** and named all 13
+lines with the overflow text quoted, e.g.
+`portfolio\DEPLOYMENTS.csv:10: 15 fields, header has 13 -- overflow begins: ' not GBPUSD (registry symbol was wrong, name was informal "CB_GBP")'`
+
+**D2 — a re-quote, not an edit, and this is the proof rather than the claim.** The repair is one line
+of logic (`notes = ','.join(fields[12:])`, valid because `notes` is the last column and every field
+before it was structurally validated first — account and magic numeric, both dates ISO-or-blank, on
+all 13 rows). The script **refuses to write** unless, comparing parsed field against parsed field
+across all 65 rows, **every column except `notes` is byte-identical**, and unless each repaired note
+*starts with* the truncated one it replaces. Result: **13 rows repaired, 0 non-notes fields changed.**
+
+| line | magic | note ended at | tail that was being discarded |
+|---|---|---|---|
+| 10 | `990005` | `...is actually the EURUSDc chart` | `, not GBPUSD (registry symbol was wrong, name was informal "CB_GBP")` |
+| 12 | `20240001` | `...CR-002 2026-07-19 (deals collector)` | `, name confirmed by user 2026-07-24` |
+| 13-20 | `8001` `8002` `8005` `8008` `8009` `8012` `8014` `8015` | `...enumerated CR-002 2026-07-19` | `, name confirmed by user 2026-07-24` |
+| 21 | `99000512` | `...previously fully untracked` | `, no closed trades in CR-002 window yet so it never showed up in the deals-based ...` |
+| 22 | `991001` | `...on account 159503454 -- no conflict` | `, magics only need to be unique within an account, but flagging the reuse for cla...` |
+| 39 | *(blank)* | `...2026-07-24 - magic still unknown` | `, enumerate at next collector/sensor pass` |
+
+<sub>🔴 Worth noticing rather than passing over: row 22 is **`991001`, the real-money EA**, and the
+sentence being discarded was the one explaining why its magic is reused across accounts.</sub>
+
+**D3 — the guard is on the commit path, and it was WATCHED FIRING.** The home is
+`scripts/check_state.ps1`, not a new suite, because that script already reads this file on every
+commit and the order's own text says so. 🔴 **The reason the defect survived: `ConvertFrom-Csv` does
+not fail on a row with more fields than the header — it silently discards the overflow.** So
+`[OK] DEPLOYMENTS.csv parses` had been true and meaningless for months. The new check re-parses the
+**same `ReadJudged` text** with 12 surplus headers and fails on any row that populates one —
+deliberately not a subprocess reading the disk, which would reach past the reader and re-introduce
+the two-vintage shape that block was already fixed for once.
+**Control, run and restored:** appending one row with an unquoted comma in `notes` produced
+`[WARN] ... has row(s) with MORE fields than the header, so their trailing content is being discarded
+on read -- quote the offending field. Line(s): 66` → `=== 2 WARNING(s) ===`, and the file went back to
+`=== CLEAN ===` on restore. The line number it names is the **file** line, checked against the
+injected row.
+
+**D4 — applied, and it returned a measurement rather than an assumption.** `--default` covers
+`DEPLOYMENTS.csv` + `expectations.csv` + `live_deals/*.csv`: **174 files, 0 failing.** Only the
+inventory was ever broken — `expectations.csv` (54 rows) and all **172** deal/order/snapshot exports
+were already clean. That is worth recording because the order said *"nothing suggests this file is
+special"*, and the measurement says it was.
+
+```bash
+tools/python312/python.exe scripts/check_csv_roundtrip.py --default
+```
+
+🔴 **A defect IN THE REPAIR, caught by reading the staged diff rather than by any guard.** The repair
+script read with `utf-8-sig` and wrote with `utf-8`, which **silently stripped the file's BOM** — the
+first staged diff showed `-﻿account,...` / `+account,...` on line 1. Neither new check saw it:
+both compare *parsed fields*, and a BOM is not a field. It matters because the file carries **44
+non-ASCII bytes**, and under PowerShell 5.1 a UTF-8 file with no BOM is read as CP1252, so those
+bytes would have become garbage in whatever next read them. BOM restored; the diff is now **exactly
+13 changed lines and the header is byte-identical**. <sub>This is the third time this repo has paid
+for the PS 5.1 no-BOM trap (memory `session-lanes-ledger-and-hook`, which records it for `.ps1`
+files) — the new part is that it reached a **data** file, through a Python writer, and that the
+verification built for this very order could not see it. What caught it was `git diff --cached`,
+which is why the standing rule is stage, read the diff, then commit as three separate steps.</sub>
+
+⚠️ **Not done, and named rather than left implicit:** `check_csv_roundtrip.py` is **not** registered
+in the fast tier. It reads 174 files, the tier sits at ~107s of its pinned 120.0s, and buying that
+room is `ORDER-1282`'s job, not this one's. The commit-path protection for the money file is the
+`check_state.ps1` check above; the Python checker is the on-demand sweep for the wider set.
 
 > **Found by breaking it, 2026-08-02 (`ORDER-943` C3).** The first write used `csv.DictWriter` and
 > **truncated the file from 65 lines to 9.** Restored from git immediately, byte-clean, before
