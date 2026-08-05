@@ -328,6 +328,9 @@ td b{font-family:Consolas,monospace}
 .vocab{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
 .vocab .pill{font-size:11.5px;padding:3px 11px}
 
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+
 .hide{display:none!important}
 @media(max-width:1100px){ .inspect{width:264px} .rail{width:196px} }
 @media(max-width:820px){
@@ -585,7 +588,8 @@ function cardHTML(r){
   if (r.tf !== "-") pills.push(`<span class="pill p-tf">${esc(r.tf)}</span>`);
   if (r.strategy !== "ไม่ระบุ") pills.push(`<span class="pill p-str">${esc(r.strategy)}</span>`);
   pills.push(`<span class="pill p-risk-${r.riskTone}">${esc(r.riskLabel)}</span>`);
-  return `<div class="card tone-${r.riskTone} ${state.sel===r.id?"sel":""}" data-id="${r.id}">
+  return `<div class="card tone-${r.riskTone} ${state.sel===r.id?"sel":""}" data-id="${r.id}"
+      tabindex="0" role="button" aria-label="${esc(r.name)}">
     ${pf}<div class="nm" style="${r.pf!=null?"padding-right:34px":""}">${esc(r.name)}</div>
     <div class="row">${pills.join("")}</div>
     ${r.best !== "-" ? `<div class="best">${esc(r.best)}</div>` : ""}
@@ -598,7 +602,8 @@ function render(){
     // a search always wins over a folded lane - otherwise hits vanish silently
     const folded = state.collapsed.has(l.key) && !state.q && l.items.length > 0;
     return `<div class="lane ${l.items.length?"":"empty"} ${folded?"folded":""}">
-      <div class="lanehead" data-lane="${esc(l.key)}">
+      <div class="lanehead" data-lane="${esc(l.key)}" tabindex="0" role="button"
+           aria-expanded="${folded?"false":"true"}">
         <span class="dot" style="background:var(--${l.tone})"></span>
         <span class="t">${esc(l.title)}</span>
         <span class="n">${l.items.length}${l.items.length?" "+(folded?"▸":"▾"):""}</span>
@@ -622,6 +627,12 @@ $("#board").addEventListener("click", e => {
   }
   const c = e.target.closest(".card");
   if (c) select(Number(c.dataset.id));
+});
+$("#board").addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  if (!e.target.closest(".card,[data-lane]")) return;
+  e.preventDefault();
+  e.target.click();
 });
 
 function select(id){
