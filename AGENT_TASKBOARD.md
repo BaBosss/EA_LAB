@@ -5910,7 +5910,7 @@ and nobody has attributed it.**
 
 ---
 
-## ORDER-1000 — [🔴 instrumentation] `(EXP)_IchiADX_Naked_rev00` cannot say whether it is evaluating — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+## ORDER-1000 — [🔴 instrumentation] `(EXP)_IchiADX_Naked_rev00` cannot say whether it is evaluating — `INSTRUMENTED 2026-08-06 (Claude/Opus) — [INIT] + per-reason counters + the unaccounted self-check are built, compiled on DEV only per the owner's ruling, and proved non-zero in the tester with the invariant closing (3096 = 411+35+1976+609+22+43). 🔴 A1's two named inputs DO NOT EXIST in this EA, so ORDER-941's leading cause cannot apply to these legs — A1 amended. STILL OPEN: A2/A3 need the build actually on the four charts, which is 👤 the owner's call.` · runnable by: **Claude/Opus** · 👉 recommended: Claude
 **bars:** N-A (instrumentation, not an EA measurement) · **flat-lot probe:** N-A
 
 Split out of `ORDER-941` (2026-08-02) once the owner's evidence refuted all three of its suspected
@@ -5966,6 +5966,93 @@ is also under. The known failure mode with exactly this signature is `AllowLive=
   gets the observed rate if the expected one is refuted.
 - 🚫 Do not re-base these four judge dates until A1/A2 answer which problem this is. A thin-EA
   re-base applied to a silent EA buys 12 months of measuring nothing.
+
+---
+
+### ✅ INSTRUMENTED 2026-08-06 (lane `S-2026-08-06-CLEARALL`) — 👤 owner ruled DEV-COMPILE ONLY, nothing shipped
+
+#### 🔴 First, a correction to this row's own acceptance criteria: **A1 names two inputs this EA does not have**
+
+A1 says *"`_06_AllowLive` and `_06_Magic` first, they are the two that fail silently."* Read from the
+source rather than from the chassis convention:
+
+| claim | reality |
+|---|---|
+| `_06_AllowLive` | **does not exist in this EA.** Its header says so in as many words: *"tester-gate-safe (no AllowLive block needed — this EA never gates on live/demo)"*. There is no `MQL_TESTER` gate anywhere in the file |
+| `_06_Magic` | **does not exist either.** The input is `MagicNo` |
+
+Checked against the deployed `.set` too, not just the source: `_mt5_auto/ab_sets/ichi_kumo/KUMO_slow_H1.set`
+carries `MagicNo=990066` and **no AllowLive line at all**. The two `.set` files in this repo that *do*
+carry `_06_AllowLive` (`rescue1_sets/ICHIMOKU_default.set`, `sweeps/_sets/ICHIMOKU_smoke_default.set`)
+use `_01_Tenkan` / `_02_ATRPeriod` — **a different, chassis-based EA that merely shares the word
+"Ichimoku" in its name.**
+
+⇒ 🔴 **`ORDER-941`'s leading suspected cause — an `AllowLive=false` shipped in a `.set`, which silenced
+`990025` for three days in July — CANNOT apply to these four legs by construction.** And sending the
+owner to read `_06_AllowLive` on four charts would have had them hunting for something that is not
+there. **A1 is amended: read `MagicNo` and the Ichimoku/ADX periods.** The `[INIT]` line below now
+prints all of them, so the next attach answers A1 without a properties dialog at all.
+
+#### What was added — instrumentation only, no signal / exit / sizing change
+
+- **`[INIT]`** on `OnInit` success — the first success-path output this EA has ever had. Carries
+  **build date+time**, symbol, timeframe, `MagicNo`, the three Ichimoku periods, ADX period and
+  threshold, cloud requirement, exit mode and all four ATR multipliers, lot, slippage, and
+  `MQL_TESTER` / `MQL_OPTIMIZATION`.
+- **`[COUNTERS]`** at `OnDeinit`, printed **before** the handles are released and **unconditionally** —
+  a run that evaluated nothing must say so as loudly as one that traded. `Signal()` gained an
+  **out-parameter only**; every `return` carries the value it carried before.
+- **The `unaccounted` self-check**, which is why the numbers can be used as evidence at all: the
+  `switch` on the reason code has **no `default`**, deliberately, so an unmapped path stays
+  *uncounted* and the invariant reports it instead of a default bucket absorbing it silently.
+  `entry_bail` is a **subset** of `signalled`, so it gets its own containment check rather than being
+  folded into the sum.
+
+#### ✅ Proved non-zero in the tester, and the invariant closes
+
+`USDJPY H1, 2024.01.01-2024.06.30, Model 2` — a probe to exercise the counters, **not** a result:
+
+```
+[INIT] build=2026.08.06 12:38 | USDJPY PERIOD_H1 | magic=999092 | ichi=9/26/52
+       | adx=14>20.00 cloud=req | exit=2 ... | tester=1 optimization=0
+[COUNTERS] evaluated=3096 already_open=411 signalled=35 order_sent=35 entry_bail=0
+           | no_cross=1976 adx_below=609 di_wrong=22 cloud_wrong=43 buf_fail=0
+[COUNTERS][OK] unaccounted=0 (evaluated=3096) -- every bar-open path is counted.
+```
+`411 + 35 + 1976 + 609 + 22 + 43 = 3096` ✅ — checked by hand as well as by the EA. Every counter
+except `entry_bail` and `buf_fail` was seen **non-zero**, which is what the VERDICT GATE requires
+before a counter may be quoted (*a counter never seen non-zero is `UNTESTED`, not "working"*).
+<sub>⚠️ `entry_bail=0` and `buf_fail=0` are therefore **`UNTESTED`** and must not be described as
+"never happens".</sub>
+
+#### 🔬 Behaviour-neutrality, measured rather than asserted
+
+The first build (12:24) printed `build=(non-string passed)` — `__DATE__` is a `datetime` in MQL5, not
+a string. Fixed to `TimeToString(__DATETIME__, …)` and rebuilt. **The two builds returned byte-identical
+counters** (`3096 / 411 / 35 / 1976 / 609 / 22 / 43`) on the same window. That is the neutrality
+evidence: the only difference between them was the format string, and nothing moved.
+<sub>🎯 Caught only because the probe log was **read** rather than assumed to have worked — and
+`build=` is the single most load-bearing field here, being exactly what `ORDER-1050` needs to pin
+which source a running binary came from.</sub>
+
+#### ⚠️ A tooling trap worth more than the fix, for the next person who compiles
+
+**`terminal64.exe /compile` on `D:\Meta 5b` silently stopped compiling after that terminal was
+force-killed** — no `.ex5`, **no entry in `metaeditor.log` at all**, and `metaeditor64.exe /compile`
+returned **exit code 0** while producing nothing. Deleting the `.ex5` to force a rebuild did not help.
+🔴 **A zero exit code from the MQL5 compiler is not evidence that a compile happened.** The only
+reliable check is the `.ex5` mtime plus a fresh line in `logs\metaeditor.log`.
+Resolved by compiling on **lane 1 (`D:\Meta 5`)** — which built in 5 seconds — and copying the `.ex5`
+across. **Both lanes now hold the same binary, `2026-08-06 12:38:38, 46,440 bytes`**, so this order
+does not leave behind the stale-binary trap it was next door to.
+
+#### Status
+
+**A1 answered from source and amended · instrumentation built, compiled on DEV, and proved.
+🚫 NOT deployed — the owner ruled dev-compile-only and no `.ex5` went near the VPS.**
+**Still owed:** 👤 the owner's decision on whether to swap the four legs' binaries, and A2/A3, which
+**cannot be answered until the instrumented build is actually on those charts** — fresh counters
+answer the *next* 16 days, not the last ones, exactly as this row already warned.
 
 ## ORDER-942 — [judge policy · blocker] 11 of the 19 shortfall EAs have no expected trade rate, so silent and thin cannot be told apart — `DONE (Claude/Opus 2026-08-02) — B1/B2/B3 all measured: the gap is 17 → 0, all 36 ACTIVE judge-dated rows carry a derived rate, and three live EAs are UNDER_RATE (two on the real-money account). The BRIEF ITSELF was corrected first: the count was right, the cause was three causes, and three rows had to NOT be derived` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 

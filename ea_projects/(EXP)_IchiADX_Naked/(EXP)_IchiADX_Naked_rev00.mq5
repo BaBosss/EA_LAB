@@ -52,6 +52,33 @@ int      g_hADX  = INVALID_HANDLE;
 int      g_hATR  = INVALID_HANDLE;
 datetime g_lastBar = 0;             // bar-open gate
 
+//---- ORDER-1000 instrumentation. NO behaviour changes ride along with this.
+// The gap it closes: this EA had four Print() calls and all four were failure paths, so an EA
+// running perfectly and an EA not running at all produced BYTE-IDENTICAL logs -- and four legs were
+// argued about for weeks on the strength of that silence (ORDER-941).
+//
+// Every path out of a bar-open evaluation increments exactly ONE counter, and OnDeinit asserts
+// evaluated == the sum. That assert is the point: ORDER-432 recorded counters whose arithmetic
+// closed BY LUCK with an uncounted return path, and the closing sum was then presented as proof the
+// counters were right. An invariant used as evidence has to be ENFORCED, not observed.
+#define R_SIGNAL       0   // Signal() returned a direction
+#define R_BUF_FAIL     1   // an indicator buffer was unreadable
+#define R_ADX_BELOW    2   // adx <= AdxMin
+#define R_NO_CROSS     3   // no fresh Tenkan/Kijun cross
+#define R_DI_WRONG     4   // cross, but DI disagreed with it
+#define R_CLOUD_WRONG  5   // cross + DI aligned, but price was on the wrong side of the Kumo
+
+long g_cEvaluated  = 0;   // bar opens reaching a decision
+long g_cAlreadyOpen= 0;   // held a position, so no evaluation happened
+long g_cSignal     = 0;
+long g_cBufFail    = 0;
+long g_cAdxBelow   = 0;
+long g_cNoCross    = 0;
+long g_cDiWrong    = 0;
+long g_cCloudWrong = 0;
+long g_cEntryBail  = 0;   // signalled, then TryEnter refused (atr/px/lot) -- a SUBSET of g_cSignal
+long g_cOrderSent  = 0;   // a Buy/Sell call was actually issued
+
 // iIchimoku buffer indices
 #define ICHI_TENKAN   0
 #define ICHI_KIJUN    1
@@ -111,7 +138,10 @@ ulong OwnPositionTicket()
 //==================== Signal ========================================
 // returns 1=BUY  2=SELL  0=none. Fresh Tenkan/Kijun cross aligned
 // with cloud + ADX strength + DI direction. All reads on closed bars.
-int Signal()
+// `reason` is an OUT parameter only. Every `return` below carries the same value it carried before
+// ORDER-1000 -- the direction logic is untouched, and the counters hang off the existing exits
+// rather than replacing them.
+int Signal(int &reason)
 {
    double t1 = Buf(g_hIchi, ICHI_TENKAN, 1);
    double t2 = Buf(g_hIchi, ICHI_TENKAN, 2);
@@ -119,14 +149,14 @@ int Signal()
    double k2 = Buf(g_hIchi, ICHI_KIJUN,  2);
    double sa = Buf(g_hIchi, ICHI_SENKOUA, 1);
    double sb = Buf(g_hIchi, ICHI_SENKOUB, 1);
-   if(t1==EMPTY_VALUE || t2==EMPTY_VALUE || k1==EMPTY_VALUE || k2==EMPTY_VALUE) return 0;
-   if(RequireCloud && (sa==EMPTY_VALUE || sb==EMPTY_VALUE)) return 0;
+   if(t1==EMPTY_VALUE || t2==EMPTY_VALUE || k1==EMPTY_VALUE || k2==EMPTY_VALUE) { reason = R_BUF_FAIL; return 0; }
+   if(RequireCloud && (sa==EMPTY_VALUE || sb==EMPTY_VALUE)) { reason = R_BUF_FAIL; return 0; }
 
    double adx = Buf(g_hADX, ADX_MAIN,    1);
    double dip = Buf(g_hADX, ADX_PLUSDI,  1);
    double dim = Buf(g_hADX, ADX_MINUSDI, 1);
-   if(adx==EMPTY_VALUE || dip==EMPTY_VALUE || dim==EMPTY_VALUE) return 0;
-   if(adx <= AdxMin) return 0;
+   if(adx==EMPTY_VALUE || dip==EMPTY_VALUE || dim==EMPTY_VALUE) { reason = R_BUF_FAIL; return 0; }
+   if(adx <= AdxMin) { reason = R_ADX_BELOW; return 0; }
 
    double c1 = iClose(_Symbol, _Period, 1);
    double cloudTop = MathMax(sa, sb);
@@ -136,8 +166,16 @@ int Signal()
    bool bullCross = (t2 <= k2) && (t1 > k1);
    bool bearCross = (t2 >= k2) && (t1 < k1);
 
-   if(bullCross && dip > dim && (!RequireCloud || c1 > cloudTop)) return 1;
-   if(bearCross && dim > dip && (!RequireCloud || c1 < cloudBot)) return 2;
+   if(bullCross && dip > dim && (!RequireCloud || c1 > cloudTop)) { reason = R_SIGNAL; return 1; }
+   if(bearCross && dim > dip && (!RequireCloud || c1 < cloudBot)) { reason = R_SIGNAL; return 2; }
+
+   // Exactly one of these holds. bullCross and bearCross are mutually exclusive by construction
+   // (the first needs t1 > k1, the second t1 < k1), so the chain cannot fall through: if a cross
+   // happened and DI agreed with it, the only remaining blocker is the cloud.
+   if(!bullCross && !bearCross)            reason = R_NO_CROSS;
+   else if(bullCross && dip <= dim)        reason = R_DI_WRONG;
+   else if(bearCross && dim <= dip)        reason = R_DI_WRONG;
+   else                                    reason = R_CLOUD_WRONG;
    return 0;
 }
 
@@ -165,10 +203,10 @@ void TryEnter(const int dir)
 {
    if(dir == 0) return;
    double atr = Atr1();
-   if(atr <= 0.0) return;
+   if(atr <= 0.0) { g_cEntryBail++; return; }
    const bool isBuy = (dir == 1);
    double px = SymbolInfoDouble(_Symbol, isBuy ? SYMBOL_ASK : SYMBOL_BID);
-   if(px <= 0.0) return;
+   if(px <= 0.0) { g_cEntryBail++; return; }
 
    double sl = NormPrice(isBuy ? px - SlAtrMult * atr : px + SlAtrMult * atr);
    double tp = 0.0;
@@ -183,8 +221,9 @@ void TryEnter(const int dir)
    }
 
    double lot = NormLot(FixedLot);
-   if(lot <= 0.0) return;
+   if(lot <= 0.0) { g_cEntryBail++; return; }
 
+   g_cOrderSent++;
    if(isBuy) g_trade.Buy(lot, _Symbol, 0.0, sl, tp, "IchiADX");
    else      g_trade.Sell(lot, _Symbol, 0.0, sl, tp, "IchiADX");
 }
@@ -206,11 +245,63 @@ int OnInit()
    g_lastBar = 0;
    g_trade.SetExpertMagicNumber(MagicNo);
    g_trade.SetDeviationInPoints(SlippagePts);
+
+   // ORDER-1000: the FIRST success-path output this EA has ever had. An attach is now visible, and
+   // a .set mismatch is visible, without opening a properties dialog on the VPS.
+   // __DATE__ is a datetime in MQL5, not a string -- passing it to %s prints "(non-string passed)",
+   // which is what the first probe run did. Caught only because the probe was READ rather than
+   // assumed to have worked, and the build field is the single most load-bearing one here: it is
+   // what would let ORDER-1050 pin which source a running binary was compiled from.
+   PrintFormat("[INIT] (EXP)_IchiADX_Naked_rev00 build=%s | %s %s | magic=%I64d | ichi=%d/%d/%d "
+               "| adx=%d>%.2f cloud=%s | exit=%d sl=%.2fATR tp=%.2fATR trail=%.2fATR atr=%d "
+               "| lot=%.2f slip=%d | tester=%d optimization=%d",
+               TimeToString(__DATETIME__, TIME_DATE | TIME_MINUTES),
+               _Symbol, EnumToString((ENUM_TIMEFRAMES)_Period), MagicNo,
+               TenkanPeriod, KijunPeriod, SenkouPeriod,
+               AdxPeriod, AdxMin, (RequireCloud ? "req" : "off"),
+               ExitMode, SlAtrMult, TpAtrMult, TrailAtrMult, AtrPeriod,
+               FixedLot, SlippagePts,
+               (int)MQLInfoInteger(MQL_TESTER), (int)MQLInfoInteger(MQL_OPTIMIZATION));
    return INIT_SUCCEEDED;
 }
 
 void OnDeinit(const int reason)
 {
+   // ORDER-1000. Printed BEFORE the handles are released, and printed unconditionally: a run that
+   // evaluated nothing must say so as loudly as a run that traded.
+   const long counted = g_cAlreadyOpen + g_cSignal + g_cBufFail + g_cAdxBelow
+                      + g_cNoCross + g_cDiWrong + g_cCloudWrong;
+   const long unaccounted = g_cEvaluated - counted;
+
+   PrintFormat("[COUNTERS] %s %s magic=%I64d deinit_reason=%d | evaluated=%I64d already_open=%I64d "
+               "signalled=%I64d order_sent=%I64d entry_bail=%I64d | no_cross=%I64d adx_below=%I64d "
+               "di_wrong=%I64d cloud_wrong=%I64d buf_fail=%I64d",
+               _Symbol, EnumToString((ENUM_TIMEFRAMES)_Period), MagicNo, reason,
+               g_cEvaluated, g_cAlreadyOpen, g_cSignal, g_cOrderSent, g_cEntryBail,
+               g_cNoCross, g_cAdxBelow, g_cDiWrong, g_cCloudWrong, g_cBufFail);
+
+   // The self-check is the reason the counters can be used as evidence at all. ORDER-432's closed
+   // by luck with an uncounted path, and the closing sum was then quoted as proof they were right.
+   if(unaccounted != 0)
+      PrintFormat("[COUNTERS][WARN] unaccounted=%I64d (evaluated=%I64d counted=%I64d) -- a bar-open "
+                  "path is not counted, so NO number on the line above may be quoted as evidence.",
+                  unaccounted, g_cEvaluated, counted);
+   else
+      PrintFormat("[COUNTERS][OK] unaccounted=0 (evaluated=%I64d) -- every bar-open path is counted.",
+                  g_cEvaluated);
+
+   // entry_bail is a SUBSET of signalled, not a sibling, so it gets its own containment check
+   // rather than being folded into the sum above.
+   if(g_cEntryBail + g_cOrderSent != g_cSignal)
+      PrintFormat("[COUNTERS][WARN] entry accounting broken: signalled=%I64d but order_sent=%I64d + "
+                  "entry_bail=%I64d = %I64d", g_cSignal, g_cOrderSent, g_cEntryBail,
+                  g_cOrderSent + g_cEntryBail);
+
+   if(g_cEvaluated == 0)
+      Print("[COUNTERS][WARN] evaluated=0 -- OnTick never reached a bar-open decision. This EA was "
+            "attached and did nothing, which is the case ORDER-941 could not previously distinguish "
+            "from 'attached and correctly silent'.");
+
    if(g_hIchi != INVALID_HANDLE) IndicatorRelease(g_hIchi);
    if(g_hADX  != INVALID_HANDLE) IndicatorRelease(g_hADX);
    if(g_hATR  != INVALID_HANDLE) IndicatorRelease(g_hATR);
@@ -226,10 +317,27 @@ void OnTick()
    ulong ticket = OwnPositionTicket();
    if(ticket != 0)
    {
+      g_cEvaluated++;
+      g_cAlreadyOpen++;
       ManagePosition(ticket);
       return;                        // single-position mode: never add while holding
    }
-   TryEnter(Signal());
+
+   g_cEvaluated++;
+   int reason = -1;
+   int dir = Signal(reason);
+   switch(reason)
+   {
+      case R_SIGNAL:      g_cSignal++;     break;
+      case R_BUF_FAIL:    g_cBufFail++;    break;
+      case R_ADX_BELOW:   g_cAdxBelow++;   break;
+      case R_NO_CROSS:    g_cNoCross++;    break;
+      case R_DI_WRONG:    g_cDiWrong++;    break;
+      case R_CLOUD_WRONG: g_cCloudWrong++; break;
+      // no default: an unmapped reason is left UNCOUNTED on purpose, so the OnDeinit
+      // invariant reports it instead of a default bucket absorbing it silently.
+   }
+   TryEnter(dir);
 }
 
 double OnTester()
