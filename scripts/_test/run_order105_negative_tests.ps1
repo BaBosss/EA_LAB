@@ -179,10 +179,45 @@ function Wait-Child {
     return [pscustomobject]@{ExitCode=$code;StdOut=$stdout;StdErr=$stderr;Json=$json}
 }
 
+function Add-HookPrereqs {
+    # The real pre-commit hook fails closed when its interpreter is missing, which is the
+    # correct behaviour for the repo and fatal for a fixture clone. The interpreter is
+    # git-ignored in the seed (22 MB of binary must not travel through git objects into
+    # fifty clones), so every fixture worktree gets it here instead.
+    #
+    # ONE real copy per suite run, under $Scratch, and HARD LINKS from each fixture. The
+    # first version copied 22 MB per fixture and left 1,101 MB in TEMP -- measured -- which
+    # this suite cannot afford, because it gets interrupted often and an interrupted run
+    # never reaches Remove-Scratch. Hard links are safe to delete (unlink, never follow) and
+    # both ends are always under $env:TEMP, so they are always on one volume. A junction to
+    # the repo's real tools/ directory would be cheaper still and is deliberately NOT used:
+    # that would put a delete-through-reparse-point hazard between Remove-Scratch and the
+    # only interpreter the commit path has.
+    param([string]$Root)
+    $src=Join-Path $SourceRoot ($script:HookPythonDirRel -replace '/','\')
+    if(-not (Test-Path -LiteralPath $src)){ throw "hook prereq: '$src' does not exist, but .githooks/pre-commit fails closed without it -- every fixture commit would die at PRECOMMIT-FAIL-CLOSED" }
+    if(-not $script:HookPyCache){
+        $script:HookPyCache=Join-Path $Scratch '_hook_interpreter'
+        Copy-Item -LiteralPath $src -Destination $script:HookPyCache -Recurse -Force
+    }
+    $dst=Join-Path $Root ($script:HookPythonDirRel -replace '/','\')
+    if(Test-Path -LiteralPath $dst){ return }
+    New-Item -ItemType Directory -Force $dst|Out-Null
+    foreach($f in (Get-ChildItem -LiteralPath $script:HookPyCache -File -Recurse)){
+        $rel=$f.FullName.Substring($script:HookPyCache.Length).TrimStart('\')
+        $target=Join-Path $dst $rel
+        $targetDir=Split-Path -Parent $target
+        if(-not (Test-Path -LiteralPath $targetDir)){ New-Item -ItemType Directory -Force $targetDir|Out-Null }
+        try{ New-Item -ItemType HardLink -Path $target -Value $f.FullName -ErrorAction Stop|Out-Null }
+        catch{ Copy-Item -LiteralPath $f.FullName -Destination $target -Force }
+    }
+}
+
 function New-Fixture {
     param([string]$Name)
     $root=Join-Path $Scratch $Name
     $clone=Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$Seed,$root)
+    Add-HookPrereqs -Root $root
     Invoke-TestGit -Root $root -GitArgs @('config','user.name','ORDER105 Test')|Out-Null
     Invoke-TestGit -Root $root -GitArgs @('config','user.email','order105@example.invalid')|Out-Null
     Invoke-TestGit -Root $root -GitArgs @('config','core.hooksPath','.githooks')|Out-Null
@@ -193,6 +228,7 @@ function New-ZeroManifestFixture {
     param([string]$Name)
     $root=Join-Path $Scratch $Name
     Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$Seed,$root)|Out-Null
+    Add-HookPrereqs -Root $root
     Invoke-TestGit -Root $root -GitArgs @('checkout','--quiet',$script:ZeroManifestCommit)|Out-Null
     Invoke-TestGit -Root $root -GitArgs @('config','user.name','ORDER105 Zero Test')|Out-Null
     Invoke-TestGit -Root $root -GitArgs @('config','user.email','order105-zero@example.invalid')|Out-Null
@@ -331,6 +367,29 @@ function Initialize-Seed {
         New-Item -ItemType Directory -Force (Split-Path -Parent $stub)|Out-Null
         Write-Utf8 $stub "exit 0`n"
     }
+    # The hook's PYTHON leg needs the same treatment and the derivation above does not reach
+    # it: the pattern matches '-File scripts/....ps1', and fefce8fd (2026-08-01) added a leg
+    # that runs a .py through an interpreter instead. The fixture repos have neither, so the
+    # hook took its FAIL-CLOSED branch on every synthetic commit and this suite aborted at
+    # case 15 of 105 -- for five days, exactly the way the -File list broke before it
+    # (ORDER-1460). Two things are derived here, both from the hook's own text:
+    #   * the interpreter PATH, from the hook's own assignment -- copied per fixture by
+    #     Add-HookPrereqs, because a 22 MB binary must not travel through the seed's git
+    #     objects into fifty clones;
+    #   * the .py checkers it runs -- stubbed to exit 0 and COMMITTED, exactly like the
+    #     PowerShell stubs above, because they are not the guard under test either.
+    $pyAssign=[regex]::Match($hookText,'(?m)^\s*py="([^"]+)"')
+    if(-not $pyAssign.Success){ throw "seed: no py=`"...`" interpreter assignment in .githooks/pre-commit -- the hook format changed and the interpreter path is no longer derived from anything" }
+    $script:HookPythonRel=$pyAssign.Groups[1].Value
+    $script:HookPythonDirRel=($script:HookPythonRel -replace '/[^/]+$','')
+    if($script:HookPythonDirRel -eq $script:HookPythonRel){ throw "seed: interpreter path '$($script:HookPythonRel)' has no directory component -- cannot stage it per fixture" }
+    $pyNeeded=@([regex]::Matches($hookText,'"\$py"\s+([A-Za-z0-9_/.\-]+\.py)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+    if($pyNeeded.Count -lt 1){ throw "seed: parsed 0 python checker(s) out of .githooks/pre-commit while it does assign an interpreter -- the hook format changed and this stub list is no longer derived from anything" }
+    foreach($rel in $pyNeeded){
+        $stub=Join-Path $Seed ($rel -replace '/','\')
+        New-Item -ItemType Directory -Force (Split-Path -Parent $stub)|Out-Null
+        Write-Utf8 $stub "raise SystemExit(0)`n"
+    }
     Write-Utf8 (Join-Path $Seed 'AGENT_TASKBOARD.md') "ANCHOR_IDEA`nANCHOR_HYP`nANCHOR_RUN`nANCHOR_RESULT`nANCHOR_RECOVERY`n"
     Write-Utf8 (Join-Path $Seed 'ARCHIVE_TASKBOARD_2026-07A.md') "ANCHOR_REVIEW`n"
     Write-Utf8 (Join-Path $Seed 'EA_SCORECARD_AND_REGISTRY.md') "ANCHOR_SCORECARD`n"
@@ -338,13 +397,18 @@ function Initialize-Seed {
     Write-Utf8 (Join-Path $Seed 'portfolio\DEPLOYMENTS.csv') "ANCHOR_DEPLOYMENT`n"
     Write-Utf8 (Join-Path $Seed 'docs\preregistration.md') "ANCHOR_PREREG`n"
     Write-Utf8 (Join-Path $Seed 'artifact.bin') 'seed-evidence-bytes'
-    Write-Utf8 (Join-Path $Seed '.gitignore') "transient/`n*.tmp-ignore`n"
+    Write-Utf8 (Join-Path $Seed '.gitignore') "transient/`n*.tmp-ignore`n$($script:HookPythonDirRel)/`n"
     Invoke-TestGit -Root $Seed -GitArgs @('add','.')|Out-Null;Invoke-TestGit -Root $Seed -GitArgs @('commit','--quiet','-m','seed canonical owners')|Out-Null
     $script:ZeroManifestCommit=Get-HeadCommit $Seed
     $reg=Invoke-Utility -Root $Seed -UtilityArgs @('-Command','RegisterEvidence','-ArtifactPath','artifact.bin','-CommitOid',(Get-HeadCommit $Seed),'-MediaType','application/octet-stream')
     if($reg.ExitCode -ne 0){throw "seed evidence registration failed: $($reg.Output)"}
     Invoke-TestGit -Root $Seed -GitArgs @('add','docs/memory_control/experiment_events/evidence-manifest.jsonl')|Out-Null;Invoke-TestGit -Root $Seed -GitArgs @('commit','--quiet','-m','seed evidence manifest')|Out-Null
     Invoke-TestGit -Root $Seed -GitArgs @('config','core.hooksPath','.githooks')|Out-Null
+    # The seed is a hooked repository too. It is never committed to after this line, but the
+    # coverage case below enumerates hooked repositories rather than trusting a list, and a
+    # repository that is exempt "because we know it never commits" is the assumption that
+    # produced this whole order.
+    Add-HookPrereqs -Root $Seed
 }
 
 $SharedBefore=Get-SharedIdentity
@@ -378,23 +442,54 @@ $ErrorActionPreference='Stop';$env:EA_LAB_EVENT_TEST_MODE='1';$env:EA_LAB_EVENT_
 . (Join-Path $Root 'scripts\experiment_event_log.ps1') -RepoRoot $Root
 [IO.File]::WriteAllText($Ready,'ready',$utf8)
 $deadline=[datetime]::UtcNow.AddSeconds(30);while(-not(Test-Path $Gate)){if([datetime]::UtcNow -gt $deadline){exit 90};Start-Sleep -Milliseconds 20}
-[IO.File]::WriteAllText($Attempt,'attempt',$utf8);$failed=0;$lines=New-Object Collections.Generic.List[string]
+[IO.File]::WriteAllText($Attempt,'attempt',$utf8);$failed=0;$processed=0;$lines=New-Object Collections.Generic.List[string]
 foreach($request in Get-ChildItem -LiteralPath $RequestDir -Filter '*.json'|Sort-Object Name){
-  $requestFailed=$true
-  foreach($boundedAttempt in 1..3){
+  # ORDER-501 STEP 2. The bounded 3-attempt x 100ms budget is GONE. STEP 1 measured nine runs
+  # and found `events < 150` if and only if a child exited non-zero -- every shortfall was a
+  # WRITER GIVING UP, never the log dropping a write it had accepted. The budget was 3 tries
+  # while three writers pushed 50 requests each through one lock, so it was deterministically
+  # too small whenever the run was slow, and what predicted slow was WALL-CLOCK, not load
+  # (mean lost 7.67 / 1.67 / 15.33 at 0 / 10 / 20 busy cores; the gap 687s..861s is empty).
+  #
+  # 🔴 IT IS NOT ENOUGH TO DELETE THE LOOP, and that is worth stating because it is the obvious
+  # reading of this order. Three attempts each passing $LockTimeoutSeconds=30 is up to NINETY
+  # seconds of waiting per request; one bare call is THIRTY. Deleting the loop and stopping
+  # there would have cut the total wait to a third on exactly the slow runs the shortfalls came
+  # from -- fixing the shape of the defect while making its incidence worse. STEP 1 never
+  # captured WHICH status the failing attempts returned (the scratch tree is deleted at the end
+  # of every run), so "30s is plenty" was never measured; it was assumed.
+  #
+  # So the wait is UNBOUNDED IN TRIES and bounded by WHAT THE WRITE SAYS, which is the
+  # difference between waiting for a lock and retrying an error:
+  #   * `lock_timeout` means the lock was busy and nothing was decided -> keep waiting.
+  #   * any other non-zero status is the log REFUSING this event (conflict, schema, clock
+  #     skew). Retrying cannot change it, so it stops immediately and reports what was said.
+  # No new number is introduced. The outer bound is the parent's existing
+  # `WaitForExit(600000)`: a writer that cannot land one request in ten minutes of pure
+  # contention is killed there, `childOk` goes False, and the case fails loudly -- which is a
+  # true statement about the log and not a test running out of patience.
+  $lastStatus=''
+  while($true){
     $Command='Append';$RepoRoot=$Root;$EventJsonPath=$request.FullName;$TestUtcNow='2026-03-01T00:00:00.000Z';$LockTimeoutSeconds=30;$RegisterEvidencePath='';$TestFaultPoint=''
     $rc=Invoke-EventUtilityMain
-    if($rc -eq 0){$requestFailed=$false;break}
+    if($rc -eq 0){break}
+    # The utility writes one status JSON per call to EA_LAB_EVENT_STATUS_FILE, which is $Log.
+    $lastStatus='<unreadable>'
+    foreach($sl in @(Get-Content -LiteralPath $Log -ErrorAction SilentlyContinue)){
+      try{$sj=$sl|ConvertFrom-Json;if($sj.status){$lastStatus=[string]$sj.status}}catch{}
+    }
+    if($lastStatus -ne 'lock_timeout'){break}
     Start-Sleep -Milliseconds 100
   }
-  if($requestFailed){$failed++}
+  $processed++
+  if($rc -ne 0){$failed++;$lines.Add(("refused {0} rc={1} status={2}" -f $request.Name,$rc,$lastStatus))}
   # Yield after every completed attempt so one process cannot immediately
   # reacquire the production lock for all 50 requests while peers exhaust the
   # pinned 30-second lock timeout.  The held-lock barrier above still proves
   # actual contention and positive retry telemetry for all three writers.
   Start-Sleep -Milliseconds 100
 }
-[IO.File]::AppendAllText($Log,"completed=50 failed=$failed`n",$utf8);exit $(if($failed){1}else{0})
+[IO.File]::AppendAllText($Log,("completed={0} failed={1}{2}`n" -f $processed,$failed,$(if($lines.Count){' :: '+($lines -join '; ')}else{''})),$utf8);exit $(if($failed){1}else{0})
 '@
     $held=$null;$children=@()
     try {
@@ -415,6 +510,22 @@ foreach($request in Get-ChildItem -LiteralPath $RequestDir -Filter '*.json'|Sort
         $waitCounts=@();foreach($child in $children){foreach($line in ((Get-Content -LiteralPath $child.Log -ErrorAction SilentlyContinue)-split "`r?`n")){try{$j=$line|ConvertFrom-Json;if($j.status){$waitCounts+=[int]$j.lock_wait_count}}catch{}}}
         $eventCount=if($scan.Json){[int]$scan.Json.details.event_count}else{-1}
         Add-Case 'locking-barrier-held-lock-three-writers-observe-retry' ($childOk -and @($waitCounts|Where-Object{$_ -gt 0}).Count -ge 3) "positive_waits=$(@($waitCounts|Where-Object{$_ -gt 0}).Count)"
+        # ORDER-501 STEP 2, the reporting half. The event-count case below cannot tell "the log
+        # dropped a write it accepted" from "a writer gave up before writing" -- it reports
+        # `events=147 expected=150` for both, and the first reading is a Contract D data-loss
+        # defect while the second is a test that ran out of patience. STEP 1 needed NINE runs to
+        # establish which one was happening. That discriminator is recorded here instead of
+        # re-derived: the writers' own completion lines are read, so the next short run says
+        # which of the two it was in its own detail. The scratch tree is deleted in `finally`,
+        # so this has to be lifted into a case detail or it is gone with it.
+        $abandoned=0;$writerLines=@()
+        foreach($child in $children){
+            $txt=(@(Get-Content -LiteralPath $child.Log -ErrorAction SilentlyContinue) -join "`n")
+            $m=[regex]::Match($txt,'completed=(\d+) failed=(\d+)([^\r\n]*)')
+            if($m.Success){$abandoned+=[int]$m.Groups[2].Value;$writerLines+=("{0}/{1}{2}" -f $m.Groups[2].Value,$m.Groups[1].Value,$m.Groups[3].Value)}
+            else{$writerLines+='<no completion line>'}
+        }
+        Add-Case 'concurrent-write-no-writer-abandoned-a-request' ($abandoned -eq 0) "abandoned=$abandoned per-writer(failed/completed)=$($writerLines -join ' | ')"
         $expectedConcurrent=3*$eventsPerWriter
         Add-Case 'concurrent-write-3x50-parseable-150-unique-events' ($childOk -and $scan.ExitCode -eq 0 -and $eventCount -eq $expectedConcurrent -and @($scan.Json.details.good_event_ids|Select-Object -Unique).Count -eq $expectedConcurrent) "events=$eventCount expected=$expectedConcurrent childOk=$childOk"
     } finally {
@@ -779,7 +890,7 @@ exit (Invoke-EventUtilityMain)
     # ------------------------------------------------------------------
     $hookBase=New-Fixture 'hook_base';[void](Add-CoreChain -Root $hookBase);Invoke-TestGit -Root $hookBase -GitArgs @('add','docs/memory_control/experiment_events')|Out-Null;$commitOut=Invoke-TestGit -Root $hookBase -GitArgs @('commit','-m','valid utility chain') -AllowFailure
     Add-Case 'real-hook-valid-utility-produced-chain-commit-passes' ($commitOut.ExitCode -eq 0) $commitOut.Text
-    function Clone-HookBase([string]$Name){$r=Join-Path $Scratch $Name;Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$hookBase,$r)|Out-Null;Invoke-TestGit -Root $r -GitArgs @('config','user.name','Hook Test')|Out-Null;Invoke-TestGit -Root $r -GitArgs @('config','user.email','hook@example.invalid')|Out-Null;Invoke-TestGit -Root $r -GitArgs @('config','core.hooksPath','.githooks')|Out-Null;return $r}
+    function Clone-HookBase([string]$Name){$r=Join-Path $Scratch $Name;Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$hookBase,$r)|Out-Null;Add-HookPrereqs -Root $r;Invoke-TestGit -Root $r -GitArgs @('config','user.name','Hook Test')|Out-Null;Invoke-TestGit -Root $r -GitArgs @('config','user.email','hook@example.invalid')|Out-Null;Invoke-TestGit -Root $r -GitArgs @('config','core.hooksPath','.githooks')|Out-Null;return $r}
     $closed=Clone-HookBase 'hook_closed_edit';$p=Join-Path $closed 'docs\memory_control\experiment_events\events-2026-01.jsonl';$text=[IO.File]::ReadAllText($p,$Utf8NoBom).Replace('experiment_initiated','experiment_initiated ');Write-Utf8 $p $text;Invoke-TestGit -Root $closed -GitArgs @('add',$p)|Out-Null;$c=Invoke-TestGit -Root $closed -GitArgs @('commit','-m','edit closed month') -AllowFailure
     Add-Case 'real-hook-blocks-hand-edited-closed-month' ($c.ExitCode -ne 0 -and $c.Text -match 'closed month|invalid') $c.Text
     $deleted=Clone-HookBase 'hook_delete';Remove-Item (Join-Path $deleted 'docs\memory_control\experiment_events\events-2026-01.jsonl');Invoke-TestGit -Root $deleted -GitArgs @('add','--update','--','docs/memory_control/experiment_events/events-2026-01.jsonl')|Out-Null;$c=Invoke-TestGit -Root $deleted -GitArgs @('commit','-m','delete month') -AllowFailure
@@ -825,7 +936,7 @@ exit (Invoke-EventUtilityMain)
     # A recovery transaction may rebuild one damaged target month only.  Make
     # an otherwise-valid candidate that also rewrites February's last event;
     # the staged checker must reject the two-month rewrite explicitly.
-    $twoTouch=Join-Path $Scratch 'recovery_two_months';Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$recovery,$twoTouch)|Out-Null;Invoke-TestGit -Root $twoTouch -GitArgs @('config','user.name','Recovery Two Touch')|Out-Null;Invoke-TestGit -Root $twoTouch -GitArgs @('config','user.email','recovery-two@example.invalid')|Out-Null;Invoke-TestGit -Root $twoTouch -GitArgs @('config','core.hooksPath','.githooks')|Out-Null;$twoQreg=Invoke-Utility -Root $twoTouch -UtilityArgs @('-Command','RegisterEvidence','-ArtifactPath','quarantine.bin','-CommitOid',(Get-HeadCommit $twoTouch),'-MediaType','application/octet-stream');$twoQid=$twoQreg.Json.details.evidence_id;$twoSchemas=Get-SchemaObjects -Root $twoTouch;$twoAuth=New-OwnerRef -Root $twoTouch -OwnerType recovery_authorization -Path 'AGENT_TASKBOARD.md' -Anchor 'ANCHOR_RECOVERY';$febSplit=Split-JsonlBytes -Bytes $cleanFeb -Path 'clean-feb' -MaxLineBytes 32768;$changedTail=ConvertFrom-StrictJsonBytes -Bytes $febSplit.Lines[$febSplit.Lines.Count-1].Bytes -Context 'february tail';$changedTail.timestamp_utc='2026-02-01T00:00:00.005Z';$changedTailBytes=ConvertTo-CanonicalJsonBytes -Object $changedTail -Schema $twoSchemas.Event;$changedFeb=New-Object Collections.Generic.List[byte];foreach($lineRecord in @($febSplit.Lines|Select-Object -First ($febSplit.Lines.Count-1))){foreach($byte in $lineRecord.Bytes){$changedFeb.Add($byte)};$changedFeb.Add(0x0A)};foreach($byte in $changedTailBytes){$changedFeb.Add($byte)};$changedFeb.Add(0x0A);$twoRecovery=[pscustomobject][ordered]@{schema_version=1;event_id=('evt_'+[guid]::NewGuid().ToString());experiment_id=$changedTail.experiment_id;event_type='AMENDMENT_ADDED';actor='claude';role='lead_judge';prior_event_id=$changedTail.event_id;prior_event_sha256=(Get-Sha256Hex $changedTailBytes);artifact_hashes=[pscustomobject][ordered]@{ea=$null;source=$null;set=$null;data=$null;tester=$null};trial_family=$null;trial_count=$null;evidence_ids=@($twoQid);owner_refs=@($twoAuth);reason_code='physical_recovery';reason_ref='ORDER-105-RECOVERY';target_event_id=$target.Object.event_id;target_event_sha256=$target.Sha256;recovery_target_month='2026-01'};$twoRecoveryEvent=Add-TimestampToRequest -Request $twoRecovery -Timestamp '2026-02-02T00:00:00.000Z' -EventSchema $twoSchemas.Event;$twoRecoveryBytes=ConvertTo-CanonicalJsonBytes -Object $twoRecoveryEvent -Schema $twoSchemas.Event;$changedFebWithRecovery=Join-LineToFileBytes -Existing $changedFeb.ToArray() -Line $twoRecoveryBytes;Write-Bytes (Join-Path $twoTouch 'docs\memory_control\experiment_events\events-2026-01.jsonl') $cleanJan;Write-Bytes (Join-Path $twoTouch 'docs\memory_control\experiment_events\events-2026-02.jsonl') $changedFebWithRecovery;$twoTouchCheck=Stage-And-Check -Root $twoTouch -Paths @('docs/memory_control/experiment_events/evidence-manifest.jsonl','docs/memory_control/experiment_events/events-2026-01.jsonl','docs/memory_control/experiment_events/events-2026-02.jsonl')
+    $twoTouch=Join-Path $Scratch 'recovery_two_months';Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$recovery,$twoTouch)|Out-Null;Add-HookPrereqs -Root $twoTouch;Invoke-TestGit -Root $twoTouch -GitArgs @('config','user.name','Recovery Two Touch')|Out-Null;Invoke-TestGit -Root $twoTouch -GitArgs @('config','user.email','recovery-two@example.invalid')|Out-Null;Invoke-TestGit -Root $twoTouch -GitArgs @('config','core.hooksPath','.githooks')|Out-Null;$twoQreg=Invoke-Utility -Root $twoTouch -UtilityArgs @('-Command','RegisterEvidence','-ArtifactPath','quarantine.bin','-CommitOid',(Get-HeadCommit $twoTouch),'-MediaType','application/octet-stream');$twoQid=$twoQreg.Json.details.evidence_id;$twoSchemas=Get-SchemaObjects -Root $twoTouch;$twoAuth=New-OwnerRef -Root $twoTouch -OwnerType recovery_authorization -Path 'AGENT_TASKBOARD.md' -Anchor 'ANCHOR_RECOVERY';$febSplit=Split-JsonlBytes -Bytes $cleanFeb -Path 'clean-feb' -MaxLineBytes 32768;$changedTail=ConvertFrom-StrictJsonBytes -Bytes $febSplit.Lines[$febSplit.Lines.Count-1].Bytes -Context 'february tail';$changedTail.timestamp_utc='2026-02-01T00:00:00.005Z';$changedTailBytes=ConvertTo-CanonicalJsonBytes -Object $changedTail -Schema $twoSchemas.Event;$changedFeb=New-Object Collections.Generic.List[byte];foreach($lineRecord in @($febSplit.Lines|Select-Object -First ($febSplit.Lines.Count-1))){foreach($byte in $lineRecord.Bytes){$changedFeb.Add($byte)};$changedFeb.Add(0x0A)};foreach($byte in $changedTailBytes){$changedFeb.Add($byte)};$changedFeb.Add(0x0A);$twoRecovery=[pscustomobject][ordered]@{schema_version=1;event_id=('evt_'+[guid]::NewGuid().ToString());experiment_id=$changedTail.experiment_id;event_type='AMENDMENT_ADDED';actor='claude';role='lead_judge';prior_event_id=$changedTail.event_id;prior_event_sha256=(Get-Sha256Hex $changedTailBytes);artifact_hashes=[pscustomobject][ordered]@{ea=$null;source=$null;set=$null;data=$null;tester=$null};trial_family=$null;trial_count=$null;evidence_ids=@($twoQid);owner_refs=@($twoAuth);reason_code='physical_recovery';reason_ref='ORDER-105-RECOVERY';target_event_id=$target.Object.event_id;target_event_sha256=$target.Sha256;recovery_target_month='2026-01'};$twoRecoveryEvent=Add-TimestampToRequest -Request $twoRecovery -Timestamp '2026-02-02T00:00:00.000Z' -EventSchema $twoSchemas.Event;$twoRecoveryBytes=ConvertTo-CanonicalJsonBytes -Object $twoRecoveryEvent -Schema $twoSchemas.Event;$changedFebWithRecovery=Join-LineToFileBytes -Existing $changedFeb.ToArray() -Line $twoRecoveryBytes;Write-Bytes (Join-Path $twoTouch 'docs\memory_control\experiment_events\events-2026-01.jsonl') $cleanJan;Write-Bytes (Join-Path $twoTouch 'docs\memory_control\experiment_events\events-2026-02.jsonl') $changedFebWithRecovery;$twoTouchCheck=Stage-And-Check -Root $twoTouch -Paths @('docs/memory_control/experiment_events/evidence-manifest.jsonl','docs/memory_control/experiment_events/events-2026-01.jsonl','docs/memory_control/experiment_events/events-2026-02.jsonl')
     Add-Case 'staged-recovery-rewriting-two-month-files-rejected' ($twoTouchCheck.ExitCode -ne 0 -and $twoTouchCheck.Output -match 'more than one monthly file') $twoTouchCheck.Output
     $badAuth=$auth|ConvertTo-Json -Depth 10|ConvertFrom-Json;$badAuth.raw_sha256='0'*64;$badAuthPath=Join-Path $recovery 'bad-auth.json';Write-Utf8 $badAuthPath ($badAuth|ConvertTo-Json -Compress -Depth 10);$unauthorizedRecovery=Invoke-Utility -Root $recovery -UtilityArgs @('-Command','Recover','-Actor','claude','-Role','lead_judge','-AuthorizationRefJsonPath',$badAuthPath,'-QuarantineEvidenceId',$qid,'-RecoveryMonth','2026-01','-RecoveryFilePath',$cleanPath,'-EventJsonPath',$recoverReqPath,'-TestUtcNow','2026-02-02T00:00:00.000Z')
     Add-Case 'closed-month-physical-recovery-requires-valid-authorization-and-quarantine-reference' ($unauthorizedRecovery.ExitCode -ne 0 -and $unauthorizedRecovery.Json.status -eq 'reference_invalid') $unauthorizedRecovery.Output
@@ -843,7 +954,7 @@ exit (Invoke-EventUtilityMain)
     # is durable but before the target rewrite must leave a resumable state, and a
     # re-run must COMPLETE it (not duplicate the record or dead-end). Uses a fresh
     # clone of the still-corrupt fixture so the live $recovery is untouched.
-    $resumeFx=Join-Path $Scratch 'recovery_resume';Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$recovery,$resumeFx)|Out-Null;Invoke-TestGit -Root $resumeFx -GitArgs @('config','user.name','Recovery Resume')|Out-Null;Invoke-TestGit -Root $resumeFx -GitArgs @('config','user.email','resume@example.invalid')|Out-Null;Invoke-TestGit -Root $resumeFx -GitArgs @('config','core.hooksPath','.githooks')|Out-Null
+    $resumeFx=Join-Path $Scratch 'recovery_resume';Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$recovery,$resumeFx)|Out-Null;Add-HookPrereqs -Root $resumeFx;Invoke-TestGit -Root $resumeFx -GitArgs @('config','user.name','Recovery Resume')|Out-Null;Invoke-TestGit -Root $resumeFx -GitArgs @('config','user.email','resume@example.invalid')|Out-Null;Invoke-TestGit -Root $resumeFx -GitArgs @('config','core.hooksPath','.githooks')|Out-Null
     $resumeQreg=Invoke-Utility -Root $resumeFx -UtilityArgs @('-Command','RegisterEvidence','-ArtifactPath','quarantine.bin','-CommitOid',(Get-HeadCommit $resumeFx),'-MediaType','application/octet-stream');$resumeQid=$resumeQreg.Json.details.evidence_id
     $resumeAuth=New-OwnerRef -Root $resumeFx -OwnerType recovery_authorization -Path 'AGENT_TASKBOARD.md' -Anchor 'ANCHOR_RECOVERY';$resumeAuthPath=Join-Path $resumeFx 'auth.json';Write-Utf8 $resumeAuthPath ($resumeAuth|ConvertTo-Json -Compress -Depth 10)
     $resumeSchemas=Get-SchemaObjects -Root $resumeFx;$resumeCleanMap=@{'docs/memory_control/experiment_events/events-2026-01.jsonl'=$cleanJan;'docs/memory_control/experiment_events/events-2026-02.jsonl'=$cleanFeb};$resumeManifest=[IO.File]::ReadAllBytes((Join-Path $resumeFx 'docs\memory_control\experiment_events\evidence-manifest.jsonl'));$resumeSnap=Invoke-ValidateEventSnapshot -EventFiles $resumeCleanMap -ManifestBytes $resumeManifest -EventSchema $resumeSchemas.Event -EvidenceSchema $resumeSchemas.Evidence -Root $resumeFx -ResolveReferences;$resumeTarget=$resumeSnap.Events[0];$resumeTail=$resumeSnap.Events[$resumeSnap.Events.Count-1]
@@ -878,11 +989,11 @@ exit (Invoke-EventUtilityMain)
     $resumeEnable=Invoke-Utility -Root $resumeFx -UtilityArgs @('-Command','Enable','-Actor','claude','-Role','lead_judge','-AuthorizationRefJsonPath',$resumeAuthPath)
     $resumeJanFinal=[IO.File]::ReadAllBytes((Join-Path $resumeFx 'docs\memory_control\experiment_events\events-2026-01.jsonl'));$resumeJanClean=(Test-ByteArrayEqual $cleanJan $resumeJanFinal)
     Invoke-TestGit -Root $resumeFx -GitArgs @('add','docs/memory_control/experiment_events')|Out-Null;$resumeCommit=Invoke-TestGit -Root $resumeFx -GitArgs @('commit','-m','resumed physical recovery') -AllowFailure
-    Add-Case 'fault-interrupted-two-file-recovery-record-durable-then-resume-completes' ($resumeFault.ExitCode -ne 0 -and $recordDurable -and $targetStillCorrupt -and $resumeFinish.ExitCode -eq 0 -and $resumeFinish.Json.details.resumed -eq $true -and $resumeJanClean -and $resumeEnable.ExitCode -eq 0 -and $resumeCommit.ExitCode -eq 0) "fault=$($resumeFault.ExitCode) recordDurable=$recordDurable targetCorrupt=$targetStillCorrupt finish=$($resumeFinish.ExitCode) resumed=$($resumeFinish.Json.details.resumed) janClean=$resumeJanClean commit=$($resumeCommit.ExitCode)"
+    Add-Case 'fault-interrupted-two-file-recovery-record-durable-then-resume-completes' ($resumeFault.ExitCode -ne 0 -and $recordDurable -and $targetStillCorrupt -and $resumeFinish.ExitCode -eq 0 -and $resumeFinish.Json.details.resumed -eq $true -and $resumeJanClean -and $resumeEnable.ExitCode -eq 0 -and $resumeCommit.ExitCode -eq 0) "fault=$($resumeFault.ExitCode) recordDurable=$recordDurable targetCorrupt=$targetStillCorrupt finish=$($resumeFinish.ExitCode) resumed=$($resumeFinish.Json.details.resumed) janClean=$resumeJanClean commit=$($resumeCommit.ExitCode) commitOut=$($resumeCommit.Text -replace '\s+',' ')"
     # after_replace fault leaves recovery COMPLETE (target restored + occurrence recorded);
     # a byte-identical retry must be idempotent (already_appended, no mutation), not
     # reference_invalid (review round 5 finding 1).
-    $replFx=Join-Path $Scratch 'recovery_replace';Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$recovery,$replFx)|Out-Null;Invoke-TestGit -Root $replFx -GitArgs @('config','user.name','Recovery Replace')|Out-Null;Invoke-TestGit -Root $replFx -GitArgs @('config','user.email','replace@example.invalid')|Out-Null;Invoke-TestGit -Root $replFx -GitArgs @('config','core.hooksPath','.githooks')|Out-Null
+    $replFx=Join-Path $Scratch 'recovery_replace';Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$recovery,$replFx)|Out-Null;Add-HookPrereqs -Root $replFx;Invoke-TestGit -Root $replFx -GitArgs @('config','user.name','Recovery Replace')|Out-Null;Invoke-TestGit -Root $replFx -GitArgs @('config','user.email','replace@example.invalid')|Out-Null;Invoke-TestGit -Root $replFx -GitArgs @('config','core.hooksPath','.githooks')|Out-Null
     $replQreg=Invoke-Utility -Root $replFx -UtilityArgs @('-Command','RegisterEvidence','-ArtifactPath','quarantine.bin','-CommitOid',(Get-HeadCommit $replFx),'-MediaType','application/octet-stream');$replQid=$replQreg.Json.details.evidence_id
     $replAuth=New-OwnerRef -Root $replFx -OwnerType recovery_authorization -Path 'AGENT_TASKBOARD.md' -Anchor 'ANCHOR_RECOVERY';$replAuthPath=Join-Path $replFx 'auth.json';Write-Utf8 $replAuthPath ($replAuth|ConvertTo-Json -Compress -Depth 10)
     $replSchemas=Get-SchemaObjects -Root $replFx;$replMap=@{'docs/memory_control/experiment_events/events-2026-01.jsonl'=$cleanJan;'docs/memory_control/experiment_events/events-2026-02.jsonl'=$cleanFeb};$replManifest=[IO.File]::ReadAllBytes((Join-Path $replFx 'docs\memory_control\experiment_events\evidence-manifest.jsonl'));$replSnap=Invoke-ValidateEventSnapshot -EventFiles $replMap -ManifestBytes $replManifest -EventSchema $replSchemas.Event -EvidenceSchema $replSchemas.Evidence -Root $replFx -ResolveReferences;$replTarget=$replSnap.Events[0];$replTail=$replSnap.Events[$replSnap.Events.Count-1]
@@ -927,7 +1038,7 @@ exit (Invoke-EventUtilityMain)
     foreach($replayType in @('HYPOTHESIS_REGISTERED','BAR_PREREGISTERED')){$replayRequest=New-NextRequest -Root $replayBase -Type $replayType -ExperimentId $replayIdea.experiment_id;$replayRequestPath=Write-Request -Root $replayBase -Request $replayRequest;[void](Invoke-Utility -Root $replayBase -UtilityArgs @('-Command','Append','-EventJsonPath',$replayRequestPath,'-TestUtcNow',$(if($replayType -eq 'HYPOTHESIS_REGISTERED'){'2026-06-10T00:00:01.000Z'}else{'2026-06-10T00:00:02.000Z'})));$replayIds.Add($replayRequest.event_id)}
     $independentIdea=New-IdeaRequest -Root $replayBase;$independentPath=Write-Request -Root $replayBase -Request $independentIdea;[void](Invoke-Utility -Root $replayBase -UtilityArgs @('-Command','Append','-EventJsonPath',$independentPath,'-TestUtcNow','2026-06-10T00:00:03.000Z'));$replayEventPath=Join-Path $replayBase 'docs\memory_control\experiment_events\events-2026-06.jsonl';$replayClean=[IO.File]::ReadAllBytes($replayEventPath);$replaySchemas=Get-SchemaObjects -Root $replayBase;$replayLive=Get-LiveSnapshotBytes -Root $replayBase;$replaySnapshot=Invoke-ValidateEventSnapshot -EventFiles $replayLive.EventFiles -ManifestBytes $replayLive.ManifestBytes -EventSchema $replaySchemas.Event -EvidenceSchema $replaySchemas.Evidence -Root $replayBase -ResolveReferences;$replayTarget=$replaySnapshot.EventById[$replayIdea.event_id];$replayTail=$replaySnapshot.TailByExperiment[$replayIdea.experiment_id]
     $replayCorrupt=New-Object byte[] ($replayClean.Length+9);[array]::Copy($replayClean,$replayCorrupt,$replayClean.Length);[array]::Copy($Utf8NoBom.GetBytes("{garbage`n"),0,$replayCorrupt,$replayClean.Length,9);Write-Bytes (Join-Path $replayBase 'replay-quarantine.bin') $replayCorrupt;Write-Bytes $replayEventPath $replayCorrupt;Invoke-TestGit -Root $replayBase -GitArgs @('config','core.hooksPath','.no-hooks')|Out-Null;Invoke-TestGit -Root $replayBase -GitArgs @('add','replay-quarantine.bin','docs/memory_control/experiment_events/events-2026-06.jsonl')|Out-Null;Invoke-TestGit -Root $replayBase -GitArgs @('commit','--quiet','-m','corrupt nonterminal replay fixture')|Out-Null;$replayCorruptCommit=Get-HeadCommit $replayBase;$replayQreg=Invoke-Utility -Root $replayBase -UtilityArgs @('-Command','RegisterEvidence','-ArtifactPath','replay-quarantine.bin','-CommitOid',$replayCorruptCommit,'-MediaType','application/octet-stream');$replayQid=$replayQreg.Json.details.evidence_id;Invoke-TestGit -Root $replayBase -GitArgs @('add','docs/memory_control/experiment_events/evidence-manifest.jsonl')|Out-Null;Invoke-TestGit -Root $replayBase -GitArgs @('commit','--quiet','-m','register replay quarantine evidence')|Out-Null;Invoke-TestGit -Root $replayBase -GitArgs @('config','core.hooksPath','.githooks')|Out-Null
-    function New-ReplayClone([string]$Name){$cloneRoot=Join-Path $Scratch $Name;Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$replayBase,$cloneRoot)|Out-Null;Invoke-TestGit -Root $cloneRoot -GitArgs @('config','user.name','Replay Test')|Out-Null;Invoke-TestGit -Root $cloneRoot -GitArgs @('config','user.email','replay@example.invalid')|Out-Null;Invoke-TestGit -Root $cloneRoot -GitArgs @('config','core.hooksPath','.githooks')|Out-Null;return $cloneRoot}
+    function New-ReplayClone([string]$Name){$cloneRoot=Join-Path $Scratch $Name;Invoke-TestGit -Root $Scratch -GitArgs @('clone','--quiet','--no-hardlinks',$replayBase,$cloneRoot)|Out-Null;Add-HookPrereqs -Root $cloneRoot;Invoke-TestGit -Root $cloneRoot -GitArgs @('config','user.name','Replay Test')|Out-Null;Invoke-TestGit -Root $cloneRoot -GitArgs @('config','user.email','replay@example.invalid')|Out-Null;Invoke-TestGit -Root $cloneRoot -GitArgs @('config','core.hooksPath','.githooks')|Out-Null;return $cloneRoot}
     function Invoke-ReplayRecovery([string]$Root,[byte[]]$Candidate,[string]$EventId){
         $authorization=New-OwnerRef -Root $Root -OwnerType recovery_authorization -Path 'AGENT_TASKBOARD.md' -Anchor 'ANCHOR_RECOVERY';$authorizationPath=Join-Path $Root 'replay-authorization.json';Write-Utf8 $authorizationPath ($authorization|ConvertTo-Json -Compress -Depth 10);$candidatePath=Join-Path $Root 'replay-candidate.jsonl';Write-Bytes $candidatePath $Candidate;$recoveryRequest=[pscustomobject][ordered]@{schema_version=1;event_id=$EventId;experiment_id=$replayIdea.experiment_id;event_type='AMENDMENT_ADDED';actor='claude';role='lead_judge';prior_event_id=$replayTail.Object.event_id;prior_event_sha256=$replayTail.Sha256;artifact_hashes=[pscustomobject][ordered]@{ea=$null;source=$null;set=$null;data=$null;tester=$null};trial_family=$null;trial_count=$null;evidence_ids=@($replayQid);owner_refs=@($authorization);reason_code='physical_recovery';reason_ref='ORDER-105-RECOVERY';target_event_id=$replayTarget.Object.event_id;target_event_sha256=$replayTarget.Sha256;recovery_target_month='2026-06'};$requestPath=Write-Request -Root $Root -Request $recoveryRequest -Name 'replay-recovery-request.json';$disabled=Invoke-Utility -Root $Root -UtilityArgs @('-Command','Disable','-Actor','claude','-Role','lead_judge','-AuthorizationRefJsonPath',$authorizationPath);$recovered=Invoke-Utility -Root $Root -UtilityArgs @('-Command','Recover','-Actor','claude','-Role','lead_judge','-AuthorizationRefJsonPath',$authorizationPath,'-QuarantineEvidenceId',$replayQid,'-RecoveryMonth','2026-06','-RecoveryFilePath',$candidatePath,'-EventJsonPath',$requestPath,'-TestUtcNow','2026-06-10T00:00:04.000Z');$enabled=if($recovered.ExitCode -eq 0){Invoke-Utility -Root $Root -UtilityArgs @('-Command','Enable','-Actor','claude','-Role','lead_judge','-AuthorizationRefJsonPath',$authorizationPath)}else{$null};return [pscustomobject]@{Disable=$disabled;Recover=$recovered;Enable=$enabled;AuthorizationPath=$authorizationPath}
     }
@@ -959,6 +1070,23 @@ exit (Invoke-EventUtilityMain)
     $sharedClean=($headSafe -and $indexChanges.Count -eq 0 -and $worktreeChanges.Count -eq 0 -and $configSame)
     $sharedDetail="head_scope_safe=$headSafe head_scope_changes=$($headScopeChanges -join ',') index_changes=$($indexChanges -join ',') worktree_changes=$($worktreeChanges -join ',') config=$configSame"
     Add-Case 'shared-repo-head-index-worktree-config-unchanged' $sharedClean $sharedDetail
+
+    # DERIVED, not remembered. Every fixture that commits through the real hook needs the
+    # interpreter, and this suite has SEVEN clone sites: four helpers and three written
+    # inline. The first fix wired four of them, and the suite still failed -- on a case that
+    # had not run since 2026-08-01, with the same PRECOMMIT-FAIL-CLOSED line, because a
+    # hand-followed list missed three. That is the same defect the seed's stub list was made
+    # derived to end (see Initialize-Seed), one layer out. So the list is not trusted here:
+    # every repository under the scratch root whose core.hooksPath is .githooks is
+    # enumerated, and each one must carry the interpreter the hook refuses to run without.
+    $hookedMissing=@()
+    foreach($d in @(Get-ChildItem -LiteralPath $Scratch -Directory -ErrorAction SilentlyContinue)){
+        if(-not (Test-Path -LiteralPath (Join-Path $d.FullName '.git'))){ continue }
+        $hp=Invoke-TestGit -Root $d.FullName -GitArgs @('config','--get','core.hooksPath') -AllowFailure
+        if($hp.Text -ne '.githooks'){ continue }
+        if(-not (Test-Path -LiteralPath (Join-Path $d.FullName ($script:HookPythonRel -replace '/','\')))){ $hookedMissing+=$d.Name }
+    }
+    Add-Case 'every-hooked-fixture-carries-the-hook-interpreter' ($hookedMissing.Count -eq 0) "missing=$($hookedMissing -join ',')"
 }catch{
     $Fatal=$_.Exception.Message+' | '+$_.InvocationInfo.PositionMessage+' | '+$_.ScriptStackTrace
     Write-Host ('FATAL-BRIEF: '+$Fatal)
@@ -969,6 +1097,16 @@ exit (Invoke-EventUtilityMain)
 
 $leftovers=@(Get-ChildItem -LiteralPath $env:TEMP -Directory -Filter ('ea_lab_order105_'+$RunId) -ErrorAction SilentlyContinue)
 Add-Case 'guid-scratch-leftovers-zero' ($leftovers.Count -eq 0) "leftovers=$($leftovers.Count)"
+
+# A truncated run must not read like a short run. ORDER-1460: this suite aborted at case 15
+# of 105 for five days, and every line it printed was true -- fifteen honest results, thirteen
+# of them PASS. What it could not say was that ninety cases had not been ASKED. The floor is a
+# case like any other, so it fails loudly in the same list and takes the exit code with it.
+# It is a FLOOR (-ge), not an equality: adding cases must never turn this red. Raise it when
+# the suite genuinely grows; never lower it to make a run go green.
+$MinimumCaseCount=105
+$countBeforeFloor=$Results.Count
+Add-Case 'case-count-at-or-above-floor' ($countBeforeFloor -ge $MinimumCaseCount) "reached=$countBeforeFloor floor=$MinimumCaseCount$(if($countBeforeFloor -lt $MinimumCaseCount){' -- TRUNCATED RUN: '+($MinimumCaseCount-$countBeforeFloor)+' case(s) were never asked; the results above are not a pass'})"
 
 $allPass=$true
 foreach($result in $Results){$label=if($result.Pass){'PASS'}else{$allPass=$false;'FAIL'};Write-Host ("[$label] $($result.Name)$(if($result.Detail){' :: '+$result.Detail}else{''})")}
