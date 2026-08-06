@@ -105,7 +105,7 @@
 
 ---
 
-## ORDER-1420 — [host search] The `Boss_14` chassis cannot trade both directions at all, so the shorts question is a second screen and not a flag — `OPEN` · ทำได้: **oc-qwen/ZCode (run)** · design = Claude (done) · 👉 แนะ: oc-qwen
+## ORDER-1420 — [host search] The `Boss_14` chassis cannot trade both directions at all, so the shorts question is a second screen and not a flag — `CLOSED (Claude/Opus 2026-08-06) — short screen 7/7, nothing qualifies under the ≥100 floor; the two-sided core/ parity break was put to the owner and REFUSED. Nothing owed.` · ทำได้: **oc-qwen/ZCode (run)** · design = Claude (done) · 👉 แนะ: oc-qwen
 **bars:** written below and **pre-registered 2026-08-05, BEFORE any run exists — this row is committed before the batch is dispatched. Do not edit a bar after seeing a number.**
 **flat-lot probe:** N-A — this screens a host's base config; no escalation lever is switched on anywhere in it.
 
@@ -267,6 +267,29 @@ on any of the seven symbols.** That does **not** rescue the long screen — it r
 that the long results were half of a two-sided edge, and leaves them as what they are, a long-only
 screen whose two selections are void under the new floor. `ORDER-430` needs re-reading against the
 floor, which is why it is in this lane's owns-paths; that re-read is **not** done here.
+
+---
+
+### 👤 OWNER RULING 2026-08-06 — the `core/` parity break is REFUSED, and this order closes
+
+The one question this row left open was the one it could not decide: `Entry_GridLog.mqh:70` pins
+direction by construction, so a genuinely two-sided `Boss_14` needs an `ea_template/core/` change that
+breaks parity with the standalone it was ported from. **Put to the owner and declined.**
+
+> **Ruling (TH verbatim): "ไม่แก้ — ใช้ mirror screen พอ"**
+
+**The reasoning recorded with it, so a later lane does not re-open it on the same grounds:** the change
+would touch the chassis shared by all eight of `Boss_11..18`, which makes **every historical baseline
+measured on that chassis non-comparable** — and it would buy that at the price of a mirror screen that
+already came back **7 of 7, nothing qualifying**. There is no result waiting on the other side of the
+parity break; the mirror screen measured the short side and the short side does not work.
+
+⇒ **`ORDER-1420` = CLOSED.** The short side of the `Boss_14` chassis is measured, the two-sided
+variant is refused by the owner, and nothing on this row is owed.
+
+🚫 **Do not read this as "shorts don't work on grids".** It is one chassis, one config lineage
+(`B14_AB_off`), seven symbols, one timeframe, on a `.set` that is not fully pinned (see the caveat
+above). It closes *this* question, not the class.
 
 ## ORDER-1300 — [factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions are engine-edge — which §6.2 says doubles it — `DONE (user ratified in-session 2026-08-04, lane S-2026-08-04-S13E) — KEEP the base floor 100/60 for the decision-13 probe; recorded in PROJECT_STATE.md §3; ORDER-1273's selection stands as committed` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
 
@@ -11640,7 +11663,7 @@ terminal แชร์กัน — ซึ่งเป็นเหตุผลท
 
 ---
 
-## ORDER-430 — [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged levers finally have somewhere to be tested — `REVIEWED(Claude/Opus 2026-07-28, verdict AMENDED same day after a blind Codex audit) — 2 hosts cleared the pre-registered bar and the pre-registration is honoured: ORDER-236 proceeds on XAUUSD (BWD 2.29, highest). The sample-size concern is a READING caveat + a bar change for the NEXT order, not grounds to void a pass after seeing the numbers.` · run by: worker/Sonnet, lane 5b, Model 4 · verdict: Claude
+## ORDER-430 — [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged levers finally have somewhere to be tested — `REVIEWED(Claude/Opus 2026-07-28) · 🔴 RE-READ 2026-08-06 UNDER THE RATIFIED ≥100-TRADE FLOOR: BOTH QUALIFICATIONS VOID, ZERO HOSTS QUALIFY — see the RE-READ block at the end of this row. The order does NOT close: the "nothing qualifies" branch it wrote for itself is now the live one (Boss_16 Kangaroo / Boss_11 GridTrend, sets to be built).` · run by: worker/Sonnet, lane 5b, Model 4 · verdict: Claude
 **bars:** qualified host = BWD PF ≥ **1.20** at ≥ **30 trades** · borderline = **1.00–1.19** (record, must not be selected) · fail = **< 1.00** · **flat-lot probe:** N-A (this order measures a host; it changes no money management)
 
 **Why this order exists:** ORDER-236 is `BLOCKED` at its own pre-registered gate. The lever pair `_9_RegimeGateAdds` + `CONF_PA_ENGULF` is built, caged, byte-identical when off, and its A/B sets are ready — but the host it was aimed at (Boss_14 GridLog @ AUDNZD H1, `B14_AB_off.set`) measured **MAIN 1.09 / BWD 0.84** under Model 4, and the gate says a host that cannot clear BWD 1.0 comfortably is not worth six more Model-4 runs. The lever has no home. This order goes and finds one — **or proves none exists, which is equally an answer** (memory `escalation-overlay-needs-strong-bwd-host`: an overlay only pays on a host whose BWD is genuinely strong).
@@ -11778,6 +11801,66 @@ AUDNZD 1.09/0.84 (ORDER-236) · AUDCAD 0.93/2.20 · XAU 0.95/2.29 · ที่�
 <sub>🔴 **บทเรียนที่แพงที่สุดของ session นี้ และเป็นของผมเอง:** สัญญาณอยู่ตรงหน้าแล้วผมอ่านกลับทาง — grep หา `GBPJPY` ใน log ของ run GBPJPY แล้วได้ **0** ผมบันทึกว่านั่นคือหลักฐานสนับสนุนข้อสรุป ทั้งที่มันคือหลักฐานว่า**เครื่องมืออ่านของผมพัง** · memory `guard-disarmed-by-prose-reported-as-note` เขียนกฎนี้ไว้ตรงๆ ว่า **"อ่าน input ไม่ออก" ต้องแยกจาก "ไม่มีอะไรอยู่"** — ผมละเมิดกฎที่ตัวเองบันทึก แล้วเอาไปกล่าวหาว่า worker อ้างลอย · **กฎใหม่: ก่อนจะปฏิเสธ citation ต้องพิสูจน์ก่อนว่าเครื่องมืออ่านไฟล์นั้นได้จริง — หา token ที่ต้องเจอแน่ๆ สักตัวก่อน (ชื่อ symbol/EA) ถ้ามันก็ไม่เจอ = เครื่องมือผิด ไม่ใช่หลักฐานผิด**</sub>
 
 **ข้อสังเกตเรื่องกระบวนการ — เขียนใหม่ 2026-07-28:** worker เดิน TREE ถูกทุกข้อ ไม่เคยเปิด lever สักครั้ง ไม่เขียน verdict ไม่แตะบอร์ด รายงาน anomaly เองทั้งที่ทำให้ตัวเองดูแย่ลง **และ citation ที่มันให้มาก็ถูกต้องทุกตัวอักษร** ⇒ งานของมันไม่มีที่ติเลยสักจุด · **คนที่พลาดคือผม** — ปฏิเสธ citation ที่ถูกต้องด้วยเครื่องมืออ่านที่พังเงียบ แล้วเขียนความผิดนั้นลงบอร์ด · commit message · แถว B1 · handoff และรายงานให้ user สองรอบ · **บทเรียนที่ควรเข้าใบสั่งครั้งหน้า: สั่งให้ runner ใช้เครื่องมือที่ผลิตไฟล์หลักฐาน (`check_truncated_run.ps1 -TesterLog <path>`) ไม่ใช่เพราะ 'ไปอ่าน log' เชื่อไม่ได้ — แต่เพราะ artifact ที่สคริปต์ผลิตจะถูก parse ด้วย encoding ที่ถูกเสมอ ส่วนคนที่มาตรวจทีหลังอาจใช้เครื่องมือที่ผิด**
+
+---
+
+## 🔴 RE-READ UNDER THE `≥100 CLOSED TRADES PER WINDOW` FLOOR — 2026-08-06, lane `S-2026-08-06-CLEARALL`
+
+**No new runs. This re-reads the seven rows already on this page against the floor the owner ratified
+2026-08-05, which `CLAUDE.md` states is retroactive and which names this order by number.**
+
+| symbol | BWD PF | BWD trades | ≥100? | ≥1.20? | 2026-07-28 label | label under the floor |
+|---|---|---|---|---|---|---|
+| USDJPY | 1.15 | 343 | ✅ | ❌ | BORDERLINE | **BORDERLINE** (unchanged) |
+| EURJPY | 1.08 | 473 | ✅ | ❌ | BORDERLINE | **BORDERLINE** (unchanged) |
+| **AUDCAD** | 2.20 | **62** | 🔴 **no** | ✅ | **QUALIFIED** | 🔴 **VOID — below the floor** |
+| CADJPY | 1.12 | 363 | ✅ | ❌ | BORDERLINE | **BORDERLINE** (unchanged) |
+| EURUSD | 0.84 | 163 | ✅ | ❌ | fail | **fail** (unchanged) |
+| **XAUUSD** | 2.29 | **52** | 🔴 **no** | ✅ | **QUALIFIED** | 🔴 **VOID — below the floor** |
+| GBPJPY | *(0.15)* | *(30 entry deals)* | 🔴 no | — | TRUNCATED | **TRUNCATED** — below the floor as well, so it fails on two independent grounds |
+
+### ⇒ **ZERO hosts qualify. The lever pair `_9_RegimeGateAdds` + `CONF_PA_ENGULF` has no host that clears this order's own bar.**
+
+**The exact-inverse relation the 07-28 verdict named is what the floor now acts on.** Both qualifying
+hosts bought their BWD with 52-62 trades at DD under 2%; every host that was genuinely in the market
+(343-473 trades) came back 1.08-1.15. **Nothing in the middle.** The floor does not add a new finding —
+it makes the finding that was already written into the verdict decide the outcome instead of sitting
+beside it as a caveat.
+
+### 🎯 What is actually being corrected here, stated precisely, because two earlier versions of this verdict were wrong in opposite directions
+
+1. **The first verdict (07-28, morning) concluded "no host usable ⇒ PARKED".** Codex called it
+   goalpost-moving and **Codex was right**: the bar said `PF ≥ 1.20 at ≥ 30 trades`, two hosts cleared
+   it, and I withdrew the pass after seeing the numbers.
+2. **The amended verdict (07-28, same day) honoured the pre-registration and proceeded.** That was the
+   correct procedure given the bar that existed.
+3. **This re-read reaches the first version's conclusion — and it is legitimate this time for a reason
+   that has nothing to do with the numbers being the same.** The bar itself was changed by **the
+   owner**, in writing, before this re-read, and declared retroactive by the same ruling. A bar the
+   lead moves after seeing the surface is goalpost-moving; a bar the owner moves and declares
+   retroactive is a rule change. **The distinction is who moved it and when — not whether the answer
+   feels right.** (`ORDER-1220`; memory `bar-cleared-by-non-participation`.)
+
+🚫 **What this does NOT do:** it does not make the 07-28 amendment retrospectively dishonest, and it
+does not touch the GBPJPY hard-kill finding, which is an observation about a guard firing on real
+ticks and is independent of any participation bar.
+
+### 📌 Consequences that other rows must carry
+
+- **`ORDER-236`'s XAUUSD re-point is void at the root.** It was selected as *"BWD 2.29 = highest,
+  qualified"*, and that qualification no longer exists. This matters less than it reads only because
+  the owner re-pointed `ORDER-236` at **EURJPY** on 2026-08-05 by direct ruling, so the live host does
+  not depend on the void selection.
+- 🔴 **But state it plainly rather than let it pass:** EURJPY's own BWD is **1.08 at 473 trades** on
+  this screen — it clears the participation floor and **does not clear this order's `≥1.20` host bar**.
+  `ORDER-236` is therefore running its lever ladder on a host that **no version of this screen ever
+  qualified**. That is the owner's call to make and they made it explicitly; it is recorded here so
+  that no later reader mistakes the EURJPY work for evidence that a qualified host was found.
+- **The search is not finished, and this order does not close.** `Boss_16 Kangaroo` / `Boss_11
+  GridTrend` were named on this row as the next tranche precisely for the "nothing qualifies" branch,
+  and that branch is now the live one. They need sets built first.
+
+**Status → `REVIEWED(Claude/Opus 2026-07-28) + RE-READ VOID (Claude/Opus 2026-08-06)` — 0 qualified hosts under the ratified floor.**
 
 ---
 
