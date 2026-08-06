@@ -98,9 +98,22 @@ function Get-StaleCheckLine {
             # binary was built from. Caught by this function's own cage, which puts its fixture
             # source outside D:\EA_LAB and got NO_SOURCE until this line existed.
             $repoRoot = if ($RepoRoot) { $RepoRoot } else { Split-Path -Parent $ScriptRoot }
+            # -IncludeForeign. Without it, check_stale_binaries.ps1's own NO_SOURCE suppression
+            # (line ~398: "counted, not listed - 709 of them would bury the 10 that matter") drops
+            # the record BEFORE it reaches the JSON, and this function fell back to the line
+            # below reading "produced no record" -- which is true of the JSON and false of the
+            # file: check_stale_binaries.ps1 DID find it, hash it, and look for its source; it
+            # just decided the finding was not ours to judge and said nothing. "I could not see
+            # this file" and "I saw it and decided it was not mine to judge" are different facts
+            # (memory `name-it-honestly-when-you-cannot-prove-it`). ORDER-1461 item 2 found this
+            # live: our own renamed `Boss_14_GridLog_OLD`/`_OLD2` have no `.mq5` of that name in
+            # this repo, so they were filed as somebody else's EA and the banner went permanently
+            # UNKNOWN over binaries that exist. The "bury 10 in 709" concern that motivated the
+            # suppression does not apply here: -OnlyName already narrows the sweep to ONE name
+            # group, so -IncludeForeign can only ever surface that one record.
             & powershell -NoProfile -ExecutionPolicy Bypass -File $staleScript `
                 -OnlyName ([IO.Path]::GetFileNameWithoutExtension($expertEx5)) `
-                -Roots $ExpertsDir -RepoRoot $repoRoot -JsonOut $staleJson 6>&1 | Out-Null
+                -Roots $ExpertsDir -RepoRoot $repoRoot -JsonOut $staleJson -IncludeForeign 6>&1 | Out-Null
             # The detector exits 2 on STALE. That is ITS verdict, not this launch's, and the
             # caller's own exit code must not inherit it -- mt5_run.ps1 already learned this
             # lesson once for the truncation check ("the check is advisory; do not let its code
@@ -126,7 +139,11 @@ function Get-StaleCheckLine {
             Remove-Item -LiteralPath $staleJson -Force -ErrorAction SilentlyContinue
         }
         if ($null -eq $rec) {
-            return "stale-check: UNKNOWN -- check_stale_binaries.ps1 produced no record for '$expertEx5'"
+            # With -IncludeForeign above, a NO_SOURCE binary now DOES produce a record -- so
+            # reaching here means the detector's own file scan did not find this exact path
+            # (e.g. a race between the Test-Path above and the detector's Get-ChildItem), a
+            # genuinely different fact from "found it, could not judge it". Worded to match.
+            return "stale-check: UNKNOWN -- check_stale_binaries.ps1's own scan did not find a record for '$expertEx5' (not the same as NO_SOURCE, which now reports)"
         }
         # Lead with the STALENESS segment, not the first one. The detail opens with the
         # hash-differs advisory whenever a second copy exists, which is almost always (the MQL5

@@ -132,6 +132,20 @@ try {
     Assert-True 'a missing binary is UNKNOWN and names the path it looked for' `
         ($lMissing -like 'stale-check: UNKNOWN*' -and $lMissing -match 'NoSuchEa\.ex5') $lMissing
 
+    # ORDER-1461 item 2, the honest-naming half. A binary that EXISTS but has no matching .mq5
+    # anywhere in the fake repo used to be filed by check_stale_binaries.ps1 as NO_SOURCE and then
+    # SUPPRESSED (its own "709 foreign binaries would bury the 10 that matter" rule) before ever
+    # reaching the JSON -- so this function fell back to "produced no record", which reads as
+    # "could not see this file" when the fact is "saw it, decided it was not ours to judge".
+    # Reachable in production: our own renamed Boss_14_GridLog_OLD/_OLD2 have no matching .mq5 and
+    # went permanently UNKNOWN this way. The fixture is a binary with genuinely nobody's .mq5.
+    Set-Content -LiteralPath (Join-Path $fixExp 'EaOrphan.ex5') -Value 'binary3' -Encoding ASCII
+    $lOrphan = Get-StaleCheckLine -Expert 'EaOrphan' -ExpertsDir $fixExp -ScriptRoot $scriptRoot -RepoRoot $fixRepo
+    Assert-True 'a binary with NO matching .mq5 anywhere reads NO_SOURCE, not a bare UNKNOWN' `
+        ((Get-Status $lOrphan) -eq 'NO_SOURCE') ("status={0} :: {1}" -f (Get-Status $lOrphan), $lOrphan)
+    Assert-True 'and it says it COULD NOT VERIFY, not that it found no record' `
+        ($lOrphan -match 'cannot verify staleness' -and $lOrphan -notmatch 'produced no record') $lOrphan
+
     $lNoDet = Get-StaleCheckLine -Expert 'EaOld' -ExpertsDir $fixExp -ScriptRoot (Join-Path $tmp 'nowhere')
     Assert-True 'a missing DETECTOR is UNKNOWN, not silently absent' `
         ($lNoDet -like 'stale-check: UNKNOWN*' -and $lNoDet -match 'detector not found') $lNoDet
