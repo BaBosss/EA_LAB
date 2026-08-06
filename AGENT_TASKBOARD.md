@@ -289,7 +289,7 @@ rewritten from memory, and the full header set now differs from that commit by e
 
 ---
 
-## ORDER-1500 — [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows prove it — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1500 — [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows prove it — `OPEN — all three owed items DECIDED AND MEASURED 2026-08-06 (lane S-2026-08-06-S1500), and the measurement changed two answers: the store IS declared unvalidated (x-enforcement-status PLANNED) so this order's "third state" was half wrong; the three rows break the contract TWICE, the second break (ini_hash) being live at HEAD and unrelated to the fingerprint; and the risk direction is fail-OPEN (a re-run), measured, not a false cache hit. Decision: validate against the existing RunTransition contract, NOT via STORES, with a closed 3-row exemption — proven by 5 checks, one of which deleted half the proposed design as inert. 🔴 The code cannot be written: both target files are in the ORDER-1462-blocked pile. One question (the retention window vs. the only three manifests the repo has) is the owner's` · ทำได้: Claude/Opus (the code, once `ORDER-1462` clears) · 👉 แนะ: Claude
 **bars:** N-A (a contract gap) · **flat-lot probe:** N-A
 
 Opened 2026-08-06 by `/scrutinize` (lane `S-2026-08-06-SCRUT2`) while checking whether `ORDER-1330`'s
@@ -336,6 +336,136 @@ whose preimages happen to match can be treated as the same execution.
 **Prohibitions:** ❌ do not relax `^(v[0-9]+:)?[0-9a-f]{64}$` to accommodate these rows — the rows are
 the defect, the pattern is not · ❌ do not add the store to `STORES` without an entity contract, which
 would make it validated-in-name against nothing.
+
+#### ✅ ALL THREE OWED ITEMS ANSWERED 2026-08-06 (lane `S-2026-08-06-S1500`) — decided and MEASURED, and the measurement moved two of the three answers
+
+Everything below was driven against the **committed** corpus (`git show HEAD:`, never the disk) with
+the same `ajv` harness `run_schema_fixtures.py` uses. **Nothing in the `ORDER-1462`-blocked pile was
+edited** — the patterned schema was read where it lies and copied to a scratchpad; no suite was
+registered, per §1 decision 5 of `_triage/PROMPT_NEXT_SESSION_1500.md`.
+
+🔴 **First, a correction to this order's own framing — written earlier the same day, by the previous lane in this seat.** It says the store
+sits in a *"third state — not validated and not declared unvalidated"*. **The second half is false.**
+`RunTransition` in `schemas.json` carries `x-enforcement-status: "PLANNED"` — one of five entities
+that do — and `check_schema_structure.py:321` already reads that field and demands it be a valid
+member. So the store **is** declared unvalidated, in machine-readable form. What is missing is a
+**caller**, not a contract and not a declaration: `RunTransition.x-owner-file` already reads
+`factory/runs/<run_id>.jsonl`, i.e. the contract has named this exact path the whole time. Same
+family as memory `correct-check-exists-only-its-cage-calls-it`. The *substance* of the order stands
+— nothing validates the store — but "undeclared" was one word wider than the evidence, which is the
+**identical error** the same lane had just retracted in `ORDER-1330` (handoff `§3.1`: *"the corpus"*
+for *"the validated corpus"*) **in the act of opening this order.**
+
+##### 🎯 The three rows break the contract TWICE, and only one break was known
+
+| | refused by | present at | cause |
+|---|---|---|---|
+| **`execution_key.ini_hash`** | `unevaluatedProperties: false` on `ExecutionKey` | **HEAD, today** | USER DECISION 2026-08-02 moved `ini_hash` onto `RunAttempt`. `scheduler.py` got `LEGACY_DROPPED_KEY_FIELDS` to keep reading the stored 15-field keys; **`schemas.json` got no counterpart**, so the writer and the contract have disagreed about the same corpus for four days |
+| **`data_fingerprint` preimage** | `^(v[0-9]+:)?[0-9a-f]{64}$` | only once `ORDER-1330` lands | the row this order was opened on |
+
+⚠️ **The `ini_hash` break needed a control to see at all.** Against the schema's real root — a
+`oneOf` over 19 entities — all three rows come back `required must have required property
+'owner_type'`, a property `RunTransition` does not have and never mentions. That is `ajv` reporting
+the first error from whichever branch it tried first, exactly as `run_schema_fixtures.py`'s own
+header warns at lines 92-104. **Reading it as a verdict would have named a wrong defect with
+real-looking evidence.** Pinning the root to `#/$defs/RunTransition` is what produced the two rows
+of the table above.
+
+##### 👉 DECISION on owed item 1 — validated, and NOT via `STORES`
+
+**`factory/runs/*.jsonl` is validated against the `RunTransition` contract that already names it. It
+does not join `registry.STORES`.** Three reasons, none of them stylistic:
+
+1. `STORES` is a `{one file: one entity}` map and every consumer (`registry.load_all`,
+   `check_registries` R5, the `run_schema_fixtures.py` live pass) **enumerates a fixed file list**.
+   `factory/runs/` is an unbounded glob of per-run append-only journals. Forcing it in means growing
+   `load_all` a glob mode and letting R5's "required-key floor" claim coverage over a set it cannot
+   enumerate — which is the order's own prohibition (*validated-in-name against nothing*) arriving by
+   the other door.
+2. The rows are not registry rows. One store row is one entity; one journal is **N transition lines
+   folded into a derived `RunJournal`** that `schemas.json` marks `x-derived` and *never persisted*.
+3. The contract exists and the store is declared. The whole gap is the caller.
+
+⇒ the caller belongs **beside the live-store pass in `run_schema_fixtures.py`**, where `ajv` is
+already spawned and the node budget is already paid, and `RunTransition.x-enforcement-status` goes
+`PLANNED` → `WIRED` in the same act.
+
+##### 👉 DECISION on owed item 2 — a closed exemption of exactly three `(file, line)` pairs
+
+Not rewritten (a fingerprint never computed cannot be reconstructed), not deleted (see the retention
+note below), pattern not relaxed. The three are **named with their reason** and everything else is
+validated. Closed as a literal set, not as a rule like *"any fingerprint that is not a hash"* — that
+would exempt the next one too (memory `citation-guard-satisfied-by-a-universal-file`).
+
+🔴 **And the proof killed half the design.** The first version had **two** mechanisms: strip
+`LEGACY_DROPPED_KEY_FIELDS` before validating *and* exempt the three rows. Five checks, run against
+the real corpus:
+
+| # | check | want | got |
+|---|---|---|---|
+| 1 | the design green | 0 refused | **0** (22 validated, 3 exempt) |
+| 2 | exemption REMOVED — it must fire | 3 refused | **3** |
+| 3 | a 4th bad row it does not name | 1 refused | **1** |
+| 4 | **strip OFF, exemption kept** | red, if the strip does anything | **GREEN — 0 refused** |
+| 5 | bare contract, nothing accommodated | 3 refused | **3**, and the rows carrying `ini_hash` are **exactly** the exempt set |
+
+**Check 4 is the finding.** `execution_key` is written **once, on the `QUEUED` line**, so the only
+rows that carry `ini_hash` are the three the exemption already covers — the strip is **inert on this
+corpus** and would have shipped as a mechanism nobody could ever watch fire (memory
+`falsifier-satisfied-by-unexercised-mechanism`). It is dropped, and not because it is merely
+harmless: **a validator that silently migrates its input is lying about the corpus.** The scheduler
+needs the migration because it must *read* these keys to decide whether a cell has run; the
+validator must not, because a future 15-field key would be a **new** defect and the strip would
+launder it. ⇒ **exemption alone.**
+
+🚫 **Not deletion, and the reason is not sentiment.** The S2a migration row for `RunTransition`
+(`gen_s2a_migration.py:348`) sets a retention window — *"safe to prune after the occurrence is
+written to the event log, and MUST be pruned or it becomes a second, stale copy of the timeline"* —
+and by that rule these three are four days overdue. **Pruning them would break a live reader:**
+`check_pilot_acceptance.item_scheduler_resume` returns `BLOCKED` with *no* journals, so deleting the
+store replaces a named, honest BLOCKED with an unnamed one. 👤 **The retention window vs. the only
+three manifests the repo has is a genuine conflict and is handed up, not resolved here.**
+
+##### ✅ Owed item 3 — ANSWERED BY MEASUREMENT: two readers, and neither took a wrong decision
+
+| reader | what it did with the three rows |
+|---|---|
+| `scheduler.find_cached` | reads all three (via the `LEGACY_DROPPED_KEY_FIELDS` migration, which fired and **reported itself** on all 3). Re-queueing `RUN-20260802-002` verbatim → **`hit=RUN-20260802-002 / EVIDENCE`**, criterion 3 firing correctly. **Control:** the same key with `symbol=EURUSD` → `hit=None`, so the instrument can tell things apart. |
+| `check_pilot_acceptance` 8.6.11 | folds all three and returns **`BLOCKED`** — *"1 of them DO show a KILLED attempt followed by a resume … not among the 16 registered pilot cells"*. It reaches that **without reading `data_fingerprint` at all.** |
+
+🎯 **The direction is fail-OPEN, and this narrows the order's own risk sentence.** Measured: the same
+run with a *well-formed* fingerprint → **`hit=None`**. So for any writer that actually hashes — which
+is every live writer, `Get-PilotDataFingerprint` — **the store joins to nothing**, and the cost is a
+**re-run paid in MT5 hours**, never another run's evidence served as this one's.
+
+- The order's *"a cell that HAS run can be re-run"* → **confirmed.**
+- The order's *"two runs whose preimages happen to match can be treated as the same execution"* →
+  **not demonstrated, and it needs a sharper statement to be true.** `001` and `002` do share a
+  digest, but they *are* the same configuration (`001` died KILLED×3, `002` completed) — that is
+  correct behaviour, not a collision. The real channel is the part count: the stored preimage is
+  **6 parts** (`lane|symbol|tf|from|to|model`) against the v1 recipe's **9** (`+bars +ticks
+  +server`). ⇒ **two runs over differently-backfilled history are indistinguishable to these three
+  rows.** That is a false-identity channel; it is just not the one the sentence described.
+- 🟢 **Nothing has yet taken a decision off the bad field.** That lowers the urgency and changes
+  nothing about the fix.
+
+##### 🔴 OWED, and why none of it could land today
+
+**Both blockers are the owner's, and neither is this lane's to route around.**
+
+1. **`run_schema_fixtures.py` and `schemas.json` are in the `ORDER-1462`-blocked pile.** Every commit
+   touching them is refused until the s2a attestation is re-made. The work is *specified and proven*
+   above; it is ~30 lines beside the existing live-store pass.
+2. **`x-enforcement-status` `PLANNED` → `WIRED`** must move in the *same* commit as the caller.
+   Flipping it first is the exact defect this repo keeps paying for.
+3. **No suite was registered** — §1 decision 5 puts the fast tier at 6.2s of headroom inside a
+   recorded 6.3s load spread. The pass costs nothing new: it rides the `ajv` batch already spawned.
+4. 👤 **The retention-window conflict** above.
+
+**Reproduce any number here:** `…\scratchpad\measure_run_journal_contract.py` (the two-schema
+control) · `measure_run_journal_readers.py` (the two readers) · `prove_run_journal_pass.py` (the five
+checks). ⚠️ **A scratchpad is not storage** — these are re-runnable in ten seconds and are not
+evidence anyone should go looking for later.
 
 ---
 
