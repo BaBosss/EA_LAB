@@ -289,7 +289,57 @@ rewritten from memory, and the full header set now differs from that commit by e
 
 ---
 
-## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN — item 1 DONE 2026-08-06 (on the run path, visible not refusing, 18/18 caged); item 2 owed; item 3 is the owner's` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1500 — [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows prove it — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+**bars:** N-A (a contract gap) · **flat-lot probe:** N-A
+
+Opened 2026-08-06 by `/scrutinize` (lane `S-2026-08-06-SCRUT2`) while checking whether `ORDER-1330`'s
+new `data_fingerprint` pattern could break a live writer. It cannot — but the question surfaced
+something the pattern was written for and nobody had found.
+
+**Three committed rows carry the UNHASHED PREIMAGE where a digest belongs:**
+
+```
+factory/runs/RUN-20260802-001.jsonl
+factory/runs/RUN-20260802-002.jsonl
+factory/runs/RUN-20260802-004.jsonl
+  "data_fingerprint":"D:\\Meta 5|XAUUSD|H1|2024.01.02|2024.01.16|M1"
+```
+
+45 characters, pipe-delimited, containing an absolute machine path. Every other committed value in
+`factory/` is 64 hex characters (132 of them, counted). These three are what
+`^(v[0-9]+:)?[0-9a-f]{64}$` exists to refuse, and they are **real evidence, not a fixture.**
+
+### 🎯 The finding is the store, not the three rows
+
+`registry.STORES` names **five** files — `universe` · `instrument_profiles` · `hypotheses` ·
+`parameter_bindings` · `coverage`. **`factory/runs/*.jsonl` is not among them**, so
+`run_schema_fixtures.py`'s live-store pass never reads it, and neither does `check_registries.py`.
+⇒ **the store that records what actually ran has no contract enforcement at all.** A row can carry
+any shape and nothing objects.
+
+⚠️ **And it is load-bearing:** `data_fingerprint` is a member of `scheduler.py:83`'s
+`EXECUTION_KEY_FIELDS`, which feeds `find_cached`. A row whose fingerprint is a path string joins to
+nothing, so a cell that HAS run can be re-run — paid in MT5 hours — or, worse, two different runs
+whose preimages happen to match can be treated as the same execution.
+
+### Owed
+1. **Decide whether `factory/runs/*.jsonl` gets an entity contract and joins `STORES`**, or is
+   explicitly declared out of scope with the reason written down. 🚫 Do not leave it in the current
+   third state — *not validated and not declared unvalidated* — which is what let this sit.
+2. **Judge the three rows.** 🚫 Do not rewrite them silently: they are committed evidence of runs
+   that happened, and a fingerprint that was never computed cannot be reconstructed after the fact.
+   Marking them `UNVERIFIED_IMPORT`-style is the honest shape, and that is a schema question, not an
+   edit.
+3. **Ask whether anything READ them.** If a `find_cached` decision was ever taken against one of
+   these three, that decision was taken on a key that identifies nothing.
+
+**Prohibitions:** ❌ do not relax `^(v[0-9]+:)?[0-9a-f]{64}$` to accommodate these rows — the rows are
+the defect, the pattern is not · ❌ do not add the store to `STORES` without an entity contract, which
+would make it validated-in-name against nothing.
+
+---
+
+## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN — item 1 DONE 2026-08-06 and CORRECTED the same day by /scrutinize: it had shipped on 1 of the 3 tester entry points, and the one it missed was the OPTIMIZER. Now shared in scripts/lib/binary_staleness.ps1, called from mt5_run + mt5_optimize + run_backtest, 17/17 caged and registered in the fast tier; item 2 owed; item 3 is the owner's` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 **bars:** N-A (a wiring gap) · **flat-lot probe:** N-A
 
 Opened 2026-08-06 from the audit `PROMPT_NEXT_SESSION_CLEARALL.md` §5 owed.
@@ -389,6 +439,45 @@ STALE today for a reason that is not staleness**, so the line will be noisy befo
 strengthens item 1's *visible-before-refusing*: a refusal wired to this signal today would have
 blocked the whole fleet. The 2026-07-27 root-copy finding is unaffected — it is **eight days** older
 than its sources and was measured before this stamp existed.
+
+#### 🔴 CORRECTED AND COMPLETED 2026-08-06 by `/scrutinize` — it was on ONE of THREE run-path entry points
+
+**Three scripts write `Expert=` into a tester `.ini` and load a compiled binary:** `mt5_run.ps1`,
+**`mt5_optimize.ps1`**, `run_backtest.ps1`. All three already print the `surface:` line. Item 1 landed
+in the first only. ⇒ **the same defect this order is about, one layer over** — and the optimizer is
+the worse omission, because a stale binary there does not produce one wrong number, it **selects the
+parameters everything downstream is built on.**
+
+Now extracted to **`scripts/lib/binary_staleness.ps1`** and called from all three, following the
+`scripts/lib/setfile_surface.ps1` precedent they already share. **Three defects the new cage found,
+none of which the inline version could have surfaced:**
+
+| defect | why it mattered |
+|---|---|
+| `-RepoRoot` inherited `check_stale_binaries.ps1`'s hardcoded `D:\EA_LAB` | inside a git worktree it searches the MAIN checkout for the `.mq5` — memory `hardcoded-repo-path-defeats-worktree-cage`, already recorded against `mt5_run.ps1` and now not inherited |
+| `run_backtest.ps1` passes `"$Project.ex5"`, the other two pass a bare name | appending gives `X.ex5.ex5` ⇒ a **permanent UNKNOWN wearing the shape of an honest answer** |
+| the detector's `exit 2` on STALE was left standing | `mt5_run.ps1` already carries a comment about this hazard for the truncation check; now cleared once, for every caller |
+
+**Cage: `scripts/_test/run_binary_staleness_tests.ps1`, 17/17, registered in the fast tier.** Its
+load-bearing part is **PART C**, which **derives** the set of scripts writing `Expert=` into a
+`[Tester]` ini and demands each print the line — so the next runner cannot be forgotten the way these
+two were. Its first draft matched five more scripts: two delegate to `mt5_run` and already get the
+line, one launches no tester, and **the MT4 pair is excluded BY NAME** (it loads `.ex4` from a
+different tree) rather than filtered away quietly.
+
+<sub>Two assertion bugs of my own are kept in the cage as comments because both are reusable:
+`-like '*STALE*'` is **case-insensitive** and the line begins with the literal prefix `stale-check:`,
+so that test is TRUE for every line the function can return, **including OK** — read the status
+field, never the whole line. And a fresh binary that has a sibling copy reads **`HASH_DIFFERS`, not
+`OK`**; that is the detector's contract (compilation is not byte-reproducible) and on this machine it
+is the **common** reading of a healthy binary. ⚠️ Anyone reading the new banner must not treat
+`HASH_DIFFERS` as stale.</sub>
+
+⚠️ **Tier cost, stated because it is close:** registering this suite took the fast tier from a median
+**110.1s to 113.8s** of the pinned **120.0s** (three `-Hook` samples each, no MT5 in flight). Two
+suites were added in one session and **6.2s of headroom is inside the 6.3s same-commit load spread
+`run_fast_cages.ps1` already records.** The next addition must displace something. 👤 Worth the
+owner's eye.
 
 ---
 
@@ -916,7 +1005,21 @@ which the `says` harness caught and a bare pass/fail would not have.
 
 `run_schema_fixtures.py` **112/112** (41 root + 71 per-entity), `HEADER_COUNTS` moved with it, and
 `CONTRACTS.md` regenerated so the schema cages stay green. 📌 **The 250 LIVE registry rows validated
-without a single change** — the real corpus already conformed; only the test corpus did not.
+without a single change.**
+
+🔴 **CORRECTION 2026-08-06 (`/scrutinize`, lane `S-2026-08-06-SCRUT2`) — the sentence that stood here
+said "the real corpus already conformed; only the test corpus did not", and that is FALSE.** What was
+measured is that the **five stores `registry.STORES` names** conformed. `factory/runs/*.jsonl` is not
+one of them, and **three committed rows there carry a `data_fingerprint` that is not a hash at all**:
+
+```
+"data_fingerprint":"D:\\Meta 5|XAUUSD|H1|2024.01.02|2024.01.16|M1"
+```
+
+— the **unhashed preimage**, 45 characters, in `RUN-20260802-001` / `-002` / `-004`. ⇒ **The strongest
+evidence for this item's own thesis was sitting in committed evidence the whole time**, and it took a
+review to look. **Generalising "the validated corpus passed" to "the corpus passed" is the error
+here**; the store was never validated by anything. → **`ORDER-1500`.**
 
 #### 🔬 A new observation from today that changes the shape of the claim — the drift is not per-day
 
