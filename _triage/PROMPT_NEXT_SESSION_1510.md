@@ -83,6 +83,40 @@ permanent-UNKNOWN**: both `_OLD` names return *"produced no record"* because
 report, wrong at the banner** — *"I could not see this file"* vs *"I saw it and decided it was not
 mine to judge."* Reachable, and already reached by one ini config each.
 
+### 3.3 🔴 ADDENDUM, found BY the commit that closed this lane: the handoff guard cannot see this file
+
+The closing commit staged **this handoff** and `check_handoff_contract.ps1` printed:
+
+```
+[handoff-contract] no added/modified handoff staged -- pass (no-op)
+```
+
+**It matches on the filename.** `check_handoff_contract.ps1:111`:
+
+```
+$HandoffPathRegex = '(?i)^_triage/(?:[^/]+/)*(?:SESSION_)?HANDOFF[^/]*\.md$'
+```
+
+`_triage/PROMPT_NEXT_SESSION_1510.md` does not match it — **and `PROMPT_NEXT_SESSION_*` is the family
+every recent lane actually writes.** Counted over tracked files:
+
+| family | files | carrying `<!-- HANDOFF-ROUTING -->` | seen by the guard |
+|---|---|---|---|
+| `_triage/[SESSION_]HANDOFF*.md` | 66 | **48** | ✅ |
+| `_triage/PROMPT_NEXT_SESSION_*.md` | 38 | **20** | 🔴 **no** |
+
+⇒ **20 committed handoffs carry the exact marker this guard exists to validate, and the guard has
+never read one of them.** It is not broken and it has never failed — it reports `pass (no-op)`,
+which is indistinguishable from *"a handoff was checked and was fine"* unless you know a handoff was
+staged. Every handoff this repo has produced for at least the last five lanes went unchecked, and
+the checkpoint said `pass` each time.
+
+Same family as memory `declared-as-trigger-but-never-read` and `guard-checks-the-wrong-surface`, and
+it is the third instance found today — after `ORDER-1500`'s uncalled contract (§3.1) and
+`ORDER-1461`'s `NO_SOURCE` banner (§3.2). 🚫 **Not fixed here:** widening the regex makes 20 files
+newly subject to a contract nobody has checked them against, so it is a change that must be measured
+before it is made, not a one-line edit — and this lane was closed when it surfaced.
+
 ---
 
 ## §4 — ⚠️ Mistakes. All three are mine and all three were caught by an instrument, not by reading.
@@ -125,6 +159,11 @@ mine to judge."* Reachable, and already reached by one ini config each.
 4. **§1 decision 5** — the tier budget. Nothing more should be registered until it is answered.
 5. **`ORDER-1461` item 2** — §1 decision 7. The banner wording fix is small, is **not** in the
    blocked pile, and is the honest-naming half of item 1 rather than new work.
+6. 🆕 **The handoff guard's blind spot — §3.3.** ⚠️ **Measure before widening the regex:** run the
+   contract over all 20 `PROMPT_NEXT_SESSION_*` files carrying the marker **first** and see what it
+   says, because widening it makes 20 files retroactively subject to a check none has faced. If most
+   pass, widen. If most fail, the finding is that the contract and the family disagree about what a
+   handoff is, and that is a decision, not a regex. 🚫 Do not widen and repair in one commit.
 6. **`ORDER-236` Row-X** — pending §1 decision 4. Still untouched by any lane.
 7. **`ORDER-501`, the honest remainder** — STEP 2 verified on two FAST runs; the failure mode lives
    above ~861s of wall-clock and was not reproduced. 🚫 Do not close it by re-running until one is
@@ -165,5 +204,6 @@ mine to judge."* Reachable, and already reached by one ini config each.
 | the Experts-root copies, now five not two | `ORDER-1461` · 👤 the owner |
 | the banner's `NO_SOURCE` wording | `ORDER-1461` |
 | the slow-run status the concurrency case will name | `ORDER-501` |
+| the handoff guard that cannot see the handoffs in use | `ORDER-1461`-adjacent · unfiled |
 | the lever park | `ORDER-236` |
 | deploying the instrumented IchiADX build | 👤 the owner |
