@@ -204,6 +204,6 @@ before it is made, not a one-line edit — and this lane was closed when it surf
 | the Experts-root copies, now five not two | `ORDER-1461` · 👤 the owner |
 | the banner's `NO_SOURCE` wording | `ORDER-1461` |
 | the slow-run status the concurrency case will name | `ORDER-501` |
-| the handoff guard that cannot see the handoffs in use | `ORDER-1461`-adjacent · unfiled |
+| the handoff guard that cannot see the handoffs in use | `ORDER-1461` (adjacent, unfiled as its own order) |
 | the lever park | `ORDER-236` |
 | deploying the instrumented IchiADX build | 👤 the owner |
