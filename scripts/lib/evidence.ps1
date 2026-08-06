@@ -158,7 +158,13 @@ function Get-CommittedPaths {
     if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
     $pat = $Pattern.Replace('\', '/')
     if ((Get-EvidenceMode) -eq 'index') {
-        $r = Invoke-EvidenceGitBytes -Arguments ('ls-files --cached -- ":(glob){0}"' -f $pat) -RepoRoot $RepoRoot
+        # core.quotePath=false, or a non-ASCII path (Thai, emoji, ...) comes back C-quoted --
+        # '"\360\237\227\272..."', literal backslashes and quotes -- and every caller here treats
+        # the line as a ready-to-use relative path, so it gets Join-Path'd verbatim into garbage
+        # ("Illegal characters in path", 2026-08-06). This is the only call in the file that reads
+        # PATHS out of git output; show/rev-parse calls elsewhere take an already-known path in, so
+        # quoting never touches them.
+        $r = Invoke-EvidenceGitBytes -Arguments ('-c core.quotePath=false ls-files --cached -- ":(glob){0}"' -f $pat) -RepoRoot $RepoRoot
         if ($r.ExitCode -ne 0) { throw ("ls-files failed for '{0}': {1}" -f $pat, $r.StdErr.Trim()) }
         return @((ConvertFrom-EvidenceUtf8 -Bytes $r.Bytes) -split "`n" | Where-Object { $_ })
     }

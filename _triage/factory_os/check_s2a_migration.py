@@ -161,7 +161,11 @@ def fail(problems, msg):
 
 
 def _git(*args):
-    p = subprocess.run(('git',) + args, capture_output=True, text=True)
+    # encoding='utf-8', not text=True: text=True decodes with locale.getpreferredencoding(),
+    # which is cp1252 on this machine and throws UnicodeDecodeError on any non-ASCII path byte
+    # git writes to stdout (Thai/emoji filenames) -- crashing every caller of this function, not
+    # just the one that hit a non-ASCII path (2026-08-06). git's own output is UTF-8.
+    p = subprocess.run(('git',) + args, capture_output=True, encoding='utf-8')
     return p.returncode, p.stdout.strip(), p.stderr.strip()
 
 
