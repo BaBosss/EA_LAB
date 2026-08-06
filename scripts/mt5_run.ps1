@@ -118,6 +118,70 @@ if ($surface.Refuse) {
 }
 Write-Output "surface: $($surface.State) -- $($surface.Message)"
 
+# ORDER-1461: IS THE BINARY THIS RUN IS ABOUT TO LOAD OLDER THAN ITS SOURCE?
+# scripts\check_stale_binaries.ps1 has flagged the Experts-root copy of Boss_14_GridLog
+# correctly and unprompted since 2026-07-27, and NOTHING on the run path ever called it. Two
+# screens (ORDER-430's 7-host sweep, ORDER-1420's short mirror) were therefore measured on a
+# chassis that no longer existed, and the order they feed rests on those numbers.
+#
+# VISIBLE BEFORE REFUSING, deliberately. 53 ini configs resolve -Expert to the Experts root,
+# and a refusal here would break all 53 in one commit -- which is how a correct detector gets
+# switched off (the ORDER-700 reasoning this repo has already paid for once). This block
+# cannot change the exit code, and it cannot abort: any failure inside it prints UNKNOWN with
+# the reason and the launch proceeds.
+#
+# It asks about the ONE FILE this launch resolves to, not the name group, because that IS the
+# finding: `-Expert Boss_14_GridLog` loads the Experts-root copy while
+# `-Expert EALabTpl\Boss_14_GridLog` loads a different, newer one, and the two disagree by
+# eight days. The verdict is produced by check_stale_binaries.ps1 itself (-OnlyName, 0.7s
+# against 107s for the full sweep, measured) rather than by a second copy of the staleness
+# rule living here, which would drift from it the first time either changed.
+$expertsDir = if ($Portable) { Join-Path (Split-Path -Parent $TermPath) 'MQL5\Experts' } else { Join-Path $DataDir 'MQL5\Experts' }
+$expertEx5  = Join-Path $expertsDir ($Expert + '.ex5')
+try {
+  if (-not (Test-Path -LiteralPath $expertEx5)) {
+    Write-Output "stale-check: UNKNOWN -- no binary at '$expertEx5' (the tester resolves -Expert against this folder)"
+  } else {
+    $staleJson = Join-Path $env:TEMP ("mt5run_stale_{0}.json" -f [guid]::NewGuid().ToString('N'))
+    $staleScript = Join-Path $PSScriptRoot 'check_stale_binaries.ps1'
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $staleScript `
+        -OnlyName ([IO.Path]::GetFileNameWithoutExtension($expertEx5)) `
+        -Roots $expertsDir -JsonOut $staleJson 6>&1 | Out-Null
+    $rec = $null
+    if (Test-Path -LiteralPath $staleJson) {
+      # ASSIGN, THEN ITERATE -- do NOT write @(Get-Content ... | ConvertFrom-Json). In
+      # PowerShell 5.1 ConvertFrom-Json emits the whole array as ONE pipeline item, so the
+      # @() wrapper yields Count=1 whose .path is every path joined by spaces (member
+      # enumeration). That silently matched nothing and the banner printed UNKNOWN with a
+      # GetFullPath format error -- caught here, 2026-08-06, same family as the
+      # `($pipeline).Count is $null on one result` trap already recorded for this repo.
+      $parsed = Get-Content -LiteralPath $staleJson -Raw | ConvertFrom-Json
+      $wanted = [IO.Path]::GetFullPath($expertEx5)
+      foreach ($r in $parsed) {
+        if ($r.path -and ([IO.Path]::GetFullPath([string]$r.path) -ieq $wanted)) { $rec = $r; break }
+      }
+      Remove-Item -LiteralPath $staleJson -Force -ErrorAction SilentlyContinue
+    }
+    if ($null -eq $rec) {
+      Write-Output "stale-check: UNKNOWN -- check_stale_binaries.ps1 produced no record for '$expertEx5'"
+    } else {
+      # Lead with the STALENESS segment, not the first segment. The detail begins with the
+      # hash-differs advisory whenever a second copy exists, which is almost always (the MQL5
+      # compiler is not byte-reproducible), so a naive truncation spends its whole budget on
+      # the one part that is explicitly advisory and cuts off the part that names the newer
+      # source files -- a bare "STALE" line, which is exactly what check_stale_binaries.ps1
+      # refuses to emit and what got ignored in the 2026-07-25 Boss_16 case.
+      $segments = @(($rec.detail -replace '\s+', ' ') -split ' \| ')
+      $stalePart = $segments | Where-Object { $_ -like 'binary mtime*' } | Select-Object -First 1
+      $why = if ($stalePart) { $stalePart } else { $segments -join ' | ' }
+      if ($why.Length -gt 300) { $why = $why.Substring(0, 300) + ' ...' }
+      Write-Output "stale-check: $($rec.status) -- $($rec.path) mtime=$($rec.mtime) :: $why"
+    }
+  }
+} catch {
+  Write-Output "stale-check: UNKNOWN -- $($_.Exception.Message)"
+}
+
 $inputs = @()
 if ($surface.State -ne 'NOSETFILE') {
   foreach ($l in Get-Content $SetFile) {

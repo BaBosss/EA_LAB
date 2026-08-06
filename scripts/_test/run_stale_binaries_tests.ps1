@@ -165,6 +165,51 @@ try {
     Assert-True 'bundle with no .mq5 anywhere is NO_SOURCE (not STALE)' `
         ($rOrphan -and $rOrphan.status -eq 'NO_SOURCE') `
         ("status was '{0}'" -f $(if ($rOrphan) { $rOrphan.status } else { '<missing>' }))
+
+    # -----------------------------------------------------------------------
+    # C. -OnlyName, the run-path entry point (ORDER-1461).
+    #    mt5_run.ps1 prints this script's verdict in its launch banner, and can only
+    #    afford to do that because -OnlyName narrows the scan to one name (0.7s against
+    #    107s for the full sweep). Two things have to hold or the banner lies:
+    #    narrowing must not change the VERDICT, in either direction, and it must not
+    #    overwrite the full sweep's sidecar with its one name group.
+    # -----------------------------------------------------------------------
+    $oneJson = Join-Path $tmp 'one.json'
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $target `
+        -Roots $fixDeploy -RepoRoot $fixRepo -JsonOut $oneJson -OnlyName 'EaStale' *> $null
+    $oneExit = $LASTEXITCODE
+    $oneRows = @()
+    if (Test-Path -LiteralPath $oneJson) { $oneParsed = Get-Content -LiteralPath $oneJson -Raw | ConvertFrom-Json; $oneRows = @($oneParsed) }
+    Assert-True '-OnlyName scans exactly the one name group' ($oneRows.Count -eq 1 -and $oneRows[0].name -eq 'EaStale') `
+        ("got {0} row(s): {1}" -f $oneRows.Count, (($oneRows | ForEach-Object { $_.name }) -join ','))
+    Assert-True '-OnlyName keeps the STALE verdict and the exit code' `
+        ($oneExit -eq 2 -and $oneRows.Count -eq 1 -and $oneRows[0].status -eq 'STALE') `
+        ("exit={0} status='{1}'" -f $oneExit, $(if ($oneRows.Count) { $oneRows[0].status } else { '<none>' }))
+
+    # Specificity: narrowing must not manufacture staleness. A guard that only ever says
+    # STALE is not a detector, and the run path prints this on EVERY launch.
+    $okJson = Join-Path $tmp 'one_ok.json'
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $target `
+        -Roots $fixDeploy -RepoRoot $fixRepo -JsonOut $okJson -OnlyName 'EaFresh' *> $null
+    $okExit = $LASTEXITCODE
+    $okRows = @()
+    if (Test-Path -LiteralPath $okJson) { $okParsed = Get-Content -LiteralPath $okJson -Raw | ConvertFrom-Json; $okRows = @($okParsed) }
+    Assert-True '-OnlyName on a fresh binary is OK and exits 0' `
+        ($okExit -eq 0 -and $okRows.Count -eq 1 -and $okRows[0].status -eq 'OK') `
+        ("exit={0} rows={1} status='{2}'" -f $okExit, $okRows.Count, $(if ($okRows.Count) { $okRows[0].status } else { '<none>' }))
+
+    # The sidecar hazard. Without -JsonOut, a narrowed run would write ONE name group over
+    # the full sweep's stale_binaries_check.json, leaving a file that still looks like the
+    # audit and answers "nothing found" for every binary it silently stopped containing.
+    # Asserted against the REAL default path, read-only, in both directions: if it exists it
+    # must be byte-identical afterward; if it does not, it must not be created.
+    $defaultSidecar = 'D:\EA_LAB\_mt5_auto\reports\stale_binaries_check.json'
+    $sidecarBefore = if (Test-Path -LiteralPath $defaultSidecar) { (Get-FileHash -LiteralPath $defaultSidecar -Algorithm SHA256).Hash } else { '<absent>' }
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $target `
+        -Roots $fixDeploy -RepoRoot $fixRepo -OnlyName 'EaStale' *> $null
+    $sidecarAfter = if (Test-Path -LiteralPath $defaultSidecar) { (Get-FileHash -LiteralPath $defaultSidecar -Algorithm SHA256).Hash } else { '<absent>' }
+    Assert-True '-OnlyName without -JsonOut leaves the full sweep sidecar untouched' `
+        ($sidecarBefore -eq $sidecarAfter) ("before={0} after={1}" -f $sidecarBefore, $sidecarAfter)
 }
 finally {
     if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue }

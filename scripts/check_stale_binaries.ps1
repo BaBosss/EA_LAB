@@ -78,6 +78,12 @@ param(
     "D:\Meta 5b\MQL5\Experts",
     "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\MQL5\Experts"
   ),
+  # ORDER-1461: a launch asks about ONE binary, and a full sweep costs 107 seconds (measured
+  # 2026-08-06). A check that expensive on the run path gets switched off within a day, and a
+  # second implementation of the staleness rule inside mt5_run.ps1 would drift from this one.
+  # So the run path calls THIS script, narrowed to one name group. Everything downstream --
+  # the include walk, the mtime comparison, the wording of the verdict -- is unchanged.
+  [string]$OnlyName = "",       # limit the scan to one .ex5 base name (the run-path entry point)
   [switch]$AllTerminals,        # expand to every roaming terminal-id folder (audit mode)
   [switch]$IncludeForeign,      # emit a record per no-source binary instead of one summary line
   [string]$RepoRoot = "D:\EA_LAB",
@@ -121,10 +127,11 @@ if ($resolvedRoots.Count -eq 0) {
 # 2. Collect every .ex5 under the resolved roots.
 # ---------------------------------------------------------------------------
 $ex5Files = New-Object System.Collections.Generic.List[System.IO.FileSystemInfo]
+$scanFilter = if ($OnlyName) { "$OnlyName.ex5" } else { "*.ex5" }
 foreach ($r in $resolvedRoots) {
   $found = @()
   try {
-    $found = Get-ChildItem -LiteralPath $r -Filter "*.ex5" -Recurse -File -ErrorAction SilentlyContinue
+    $found = Get-ChildItem -LiteralPath $r -Filter $scanFilter -Recurse -File -ErrorAction SilentlyContinue
   } catch {
     Write-Host "[WARN] could not scan $r : $($_.Exception.Message)" -ForegroundColor Yellow
   }
@@ -420,12 +427,22 @@ foreach ($g in $groups) {
 # ---------------------------------------------------------------------------
 # 6. JSON sidecar.
 # ---------------------------------------------------------------------------
-$jsonDir = [System.IO.Path]::GetDirectoryName($JsonOut)
-if (-not (Test-Path -LiteralPath $jsonDir)) {
-  New-Item -ItemType Directory -Path $jsonDir -Force | Out-Null
+# A NARROWED run must never overwrite the sweep's sidecar. -OnlyName produces one name
+# group; writing that over stale_binaries_check.json would leave a file that still looks
+# like the full audit and silently answers "no findings" for every binary it no longer
+# contains -- the exact shape of a detector that reports a clean board because it stopped
+# looking. So the sidecar is written only when the caller named a destination, and the
+# run-path caller (mt5_run.ps1) names a temp file of its own.
+if ($OnlyName -and -not $PSBoundParameters.ContainsKey('JsonOut')) {
+  Write-Host "[INFO] -OnlyName run: sidecar NOT written (it would overwrite the full sweep's $JsonOut with one name group). Pass -JsonOut to write one."
+} else {
+  $jsonDir = [System.IO.Path]::GetDirectoryName($JsonOut)
+  if (-not (Test-Path -LiteralPath $jsonDir)) {
+    New-Item -ItemType Directory -Path $jsonDir -Force | Out-Null
+  }
+  $results | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $JsonOut -Encoding UTF8
+  Write-Host "Wrote $($results.Count) record(s) to $JsonOut"
 }
-$results | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $JsonOut -Encoding UTF8
-Write-Host "Wrote $($results.Count) record(s) to $JsonOut"
 if ($foreignCount -gt 0) {
   Write-Host ("({0} binary(ies) with no .mq5 in this repo were counted but not listed - they are not ours to judge. -IncludeForeign lists them.)" -f $foreignCount) -ForegroundColor DarkGray
 }
