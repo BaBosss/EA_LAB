@@ -128,6 +128,12 @@ def full_layers(mod, **over):
 def compile_ok(mod, src=None, layers=None, unit='usd', **kw):
     src = src or fake()
     surface = mod.load_surface(src, 'LAB_ENTRY_11')
+    # ORDER-1050: `locked_constants` is no longer optional -- omitting it is a REFUSAL, because a
+    # `surface_only` preimage cannot match any binary (ConfigFingerprint.mqh hardcodes
+    # `surface+constants`). The fixture build genuinely declares no locked constants, so it says
+    # so with `{}` rather than by staying silent. A case that wants the refusal calls
+    # `compile_preset` directly; a case that wants real constants passes its own.
+    kw.setdefault('locked_constants', {})
     return mod.compile_preset(
         surface, layers if layers is not None else full_layers(mod), unit,
         unit_classes=mod.load_unit_classes(src), enums=mod.load_enums(src), **kw)
@@ -298,9 +304,28 @@ def p4_specificity(mod):
                       layers=full_layers(mod, _4_TpUsd={'value': 50, 'unit': 'cent'}))
     if cent.effective_config_hash != base.effective_config_hash:
         return 'the account unit moved the fingerprint'
-    # and the incomplete claim carries its own name
-    if base.fingerprint_scope != 'surface_only':
-        return 'scope is %r; nothing enumerates locked constants yet' % base.fingerprint_scope
+    # ORDER-1050. The scope label is the FIRST line of the preimage, and the EA does not derive
+    # it -- `ConfigFingerprint.mqh:35` hardcodes `surface+constants`. So a compile that produces
+    # `surface_only` produces a digest that cannot match ANY binary, for any `.set`, ever. That
+    # is what the live mismatch was: two hand-built `.set` files disagreeing totally rather than
+    # subtly, because the recompute was called without `locked_constants` and relabelled instead
+    # of refusing.
+    #
+    # A caller SAYING there are no constants (`{}`) and a caller SAYING NOTHING (`None`) are
+    # different claims and must not collapse into one branch. The fixture build has none, and
+    # says so, so it still hashes under the label the EA emits:
+    if base.fingerprint_scope != 'surface+constants':
+        return ('scope is %r; a preimage the EA can never reproduce is not a fingerprint'
+                % base.fingerprint_scope)
+    # and silence is refused BY NAME -- the message has to say which argument was missing, or the
+    # next caller debugs a hash instead of reading a sentence
+    src = fake()
+    surface = mod.load_surface(src, 'LAB_ENTRY_11')
+    bad = refuses(lambda: mod.compile_preset(
+        surface, full_layers(mod), 'usd', unit_classes=mod.load_unit_classes(src),
+        enums=mod.load_enums(src)), 'locked_constants', 'surface+constants')
+    if bad:
+        return bad
     withc = compile_ok(mod, locked_constants={'MAX_SLIPPAGE': 3})
     if withc.fingerprint_scope != 'surface+constants' or \
             withc.effective_config_hash == base.effective_config_hash:

@@ -12649,7 +12649,7 @@ are the money-unit handling in the recompute path, or MT5 not applying every lin
 
 ---
 
-## ORDER-1050 — [🔴 factory/S6] The live `[CFG]` digest does not match the compiler's for a hand-built `.set` — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+## ORDER-1050 — [🔴 factory/S6] The live `[CFG]` digest does not match the compiler's for a hand-built `.set` — `OPEN — item 1 (the refusal) DONE 2026-08-06 red-before-green; item 2 (the numeric reproduction) DONE and it REFUTES the scope-label diagnosis: the corrected call yields the identical d1335d39…/1de384c8…. Cause NARROWED (preimage lines 1-2 and the 116-input shape all agree) but UNKNOWN, and blocked on pinning the running binary's vintage + an EA that can emit its preimage.` · runnable by: **Claude/Opus** · 👉 recommended: Claude
 **bars:** N-A (cross-language contract) · **flat-lot probe:** N-A
 
 Opened 2026-08-02 (`S-2026-08-02-ADOPTDONE`) from the first live use of the fingerprint.
@@ -12732,6 +12732,84 @@ between two files and violated from outside them.
 
 
 ---
+
+### 2026-08-06 (lane `S-2026-08-06-CLEARALL`) — item 1 DONE · **item 2 done and it REFUTES the diagnosis above**
+
+#### ✅ Item 1 — `compile_preset` now REFUSES
+
+`_constant_scope` no longer collapses two different claims into one branch:
+
+| caller | before | now |
+|---|---|---|
+| `locked_constants=None` (said nothing) | `surface_only`, digest issued | 🔴 **`PresetRefusal`**, naming the argument and `ConfigFingerprint.mqh:35` |
+| `locked_constants={}` (said "none") | `surface_only`, digest issued | `surface+constants`, zero `const:` lines |
+| non-empty | `surface+constants` | unchanged |
+
+Silence and *"this build has none"* are different statements and the old `if not locked_constants`
+could not tell them apart — which is precisely how a digest nobody can match got issued without
+complaint. **Red before green:** the new assertion was run against the unfixed module first and
+failed with `scope is 'surface_only'; a preimage the EA can never reproduce is not a fingerprint`.
+Green after: `run_preset_tests.ps1` passes **with `--mutate`** (every criterion seen red for its own
+reason), `run_fast_cages.ps1` **29 suites / 0 failed / 100.3s**, and G3 —
+`check_input_surface_gen.py`, which is the only thing tying `CFG_FP_SCOPE` to `_constant_scope` —
+reports `scope label : surface+constants (both sides; enumerated=True)`.
+<sub>`SCOPE_SURFACE_ONLY` is kept rather than deleted: G3 reads both names off the module, and the
+older digests carrying it are real records. The `{}` branch is **reasoned, not measured** — no build
+here declares zero locked constants, so nothing has exercised it against a binary. Said in the
+docstring too, rather than left for a reader to assume.</sub>
+
+#### 🔴 Item 2 — the reproduction was done, and **the scope label is NOT the cause of this row's mismatch**
+
+Both `.set` files were located: **`_vps_deploy/BOSS14_GBPJPY/O510_990208_STEP2_ADOPT.set`** and
+**`…_STEP3_NORMAL.set`** (read only; nothing under `_vps_deploy/` was modified). Driven through the
+caller shape `gen_default_preset.py` uses — constants supplied, scope now `surface+constants`:
+
+| `.set` | EA printed | recompute **with** constants | 2026-08-02 recompute |
+|---|---|---|---|
+| STEP2 ADOPT | `cb45e0e68…` | `d1335d3922daf448…` | `d1335d39…` |
+| STEP3 NORMAL | `3334c996b…` | `1de384c876c743cb…` | `1de384c8…` |
+
+**The corrected call produces the identical digests the broken call produced.** The block above
+states the mismatch is *"total and unconditional — it was never going to match for any `.set`"*;
+that is true of a `surface_only` digest and it is **not what produced these two numbers**. Item 1
+was a real defect and is worth having fixed; **it was not this defect.**
+
+**What the reproduction positively rules out**, so the next attempt does not re-walk it:
+- preimage **line 1** (`scope=`) — now `surface+constants` on both sides;
+- preimage **line 2** (`build=`) — `InputSurface_gen.mqh:407` emits `build=LAB_ENTRY_14`, which is
+  the tag the recompute used;
+- **which inputs are hashed** — the `.set` maps **116 of 116** onto the surface with **nothing
+  missing and nothing extra**, matching the live log's `keys=116`.
+
+⇒ the disagreement is in the **values or the constants**, not in the shape or the labels.
+
+#### 🔴 A second finding, and it is worth more than this row: the deploy bundle does not hold the binary that produced the evidence
+
+| | |
+|---|---|
+| `_vps_deploy/BOSS14_GBPJPY/Boss_14_GridLog.ex5` mtime | **2026-08-02 11:05:35** |
+| `1825bebc` — *"the `Inputs.mqh` capability-token rollout, Boss_14 only — 78 inputs compiled away"* | **2026-08-02 13:00:51** |
+| the owner's two chart runs | **13:08 and 13:10** |
+
+`#ifndef LAB_CONST__` guards in `ea_template/core/Inputs.mqh`: **0 at `1825bebc~1`, 152 today.**
+Locked constants for Boss_14 **did not exist** before that commit. **So a binary built at 11:05:35
+could not print `scope=surface+constants`, and the one on the chart did.** The `.ex5` in the bundle
+is therefore not the binary that ran, and the bundle cannot be used to reconstruct that evidence.
+Same family as memory `attach-verify-gate-and-binary` and `live-fleet-runs-pre-132-binaries`, found
+from the other end: not a stale binary shipped to the fleet, but a **stale binary left in the
+bundle that is supposed to document what was shipped.**
+
+#### What is still owed — narrower than before, and one item is an instrumentation ask
+
+1. **Pin the running binary's vintage.** Every remaining candidate (constant *values*, canonical
+   form of some input) is a statement about *which source the chart's binary was compiled from*, and
+   that is currently unknown. Nothing can be concluded until it is.
+2. **Diff the preimage, not the digest** — this row's own "first move (2)", still not done and now
+   the only move left. 🔴 **It cannot be done today: the EA prints the digest and not the preimage.**
+   `CFG_SurfacePreimage()` exists and is never emitted. This is the same shape as `ORDER-1000` — a
+   thing that cannot say what it did — and it needs one `Print()` behind a debug input.
+3. 🚫 **The prohibition at the top of this row stands and is now load-bearing:** the live digest must
+   not be quoted as a validation check until this closes. Item 1 did not close it.
 
 ## ORDER-511 — [🔴 ops/integrity] มี template EA รันอยู่บน 463666728 โดยไม่ได้ pin magic — ใช้ค่า default `990001` — `REVIEWED(Claude/Opus 2026-07-28)` — user อ่าน Inputs ครบ 4 ช่องที่เหลือ ตรงกับ `.set` ทั้งหมด ⇒ `.set` ถูกโหลดจริง ไม่ใช่พิมพ์มือ · runnable by: **Claude/Opus** (user อ่าน chart) · 👉 recommended: Claude
 **bars:** N-A (ops) · **flat-lot probe:** N-A

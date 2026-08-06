@@ -650,25 +650,55 @@ def _nearest(key, surface, limit=3):
 
 
 # The two scope labels, named so the MQL5 side has something to be checked AGAINST rather than a
-# string buried in a function body. `ea_template/core/ConfigFingerprint.mqh` must `#define
-# CFG_FP_SCOPE` to SCOPE_SURFACE_ONLY -- it is the first line of the hashed preimage on both
-# sides, so a rename here with no rename there makes every future comparison fail, silently and
+# string buried in a function body. It is the first line of the hashed preimage on both sides, so
+# a rename here with no rename there makes every future comparison fail, silently and
 # permanently. `check_input_surface_gen.py` G3 is what holds the two together.
+#
+# `ea_template/core/ConfigFingerprint.mqh:35` `#define CFG_FP_SCOPE "surface+constants"` -- it is
+# a CONSTANT on that side, not a derivation, since ORDER-730 enumerated the constants. So
+# SCOPE_SURFACE_ONLY is no longer a label this compiler can legitimately emit: a digest carrying
+# it cannot match any binary, for any `.set`, ever. The name is KEPT rather than deleted because
+# G3 reads both names off this module to check the `.mqh` against them, and because the older
+# digests that carry it are real historical records that must stay readable.
 SCOPE_SURFACE_ONLY = 'surface_only'
 SCOPE_WITH_CONSTANTS = 'surface+constants'
 
 
 def _constant_scope(locked_constants):
-    """The fingerprint's honest name.
+    """The fingerprint's honest name -- and a refusal when the caller did not supply one.
 
-    Design section 5.6 wants a hash over every exposed input PLUS every locked constant. Nothing
-    enumerates the locked constants yet -- that needs the generated enumeration ORDER-701 owes.
-    Until then the scope is `surface_only`, and it SAYS so, both in the manifest and inside the
-    hash's own preimage. An incomplete claim gets an incomplete name (memory
-    `name-it-honestly-when-you-cannot-prove-it`); silently calling it complete is the failure.
+    ORDER-710 introduced `surface_only` as an honest incomplete claim, because nothing enumerated
+    the locked constants yet. ORDER-730 enumerated them and moved the EA to `surface+constants`.
+    That closed the gap on the EA side and left this side able to emit a label the EA can never
+    reproduce -- which ORDER-1050 then measured live: two hand-built `.set` files whose recomputed
+    digests disagreed with the binary TOTALLY rather than subtly, because the recompute was called
+    without `locked_constants` and this function relabelled instead of refusing. One preimage line,
+    and every digest downstream of it unrelated.
+
+    So the two things that used to share a branch are separated, because they are different claims:
+
+      * `locked_constants=None`  -- the caller said NOTHING. Refuse. Silence is not a statement
+        that a build has no constants, and guessing which one it meant is how the live mismatch
+        was produced.
+      * `locked_constants={}`    -- the caller said THERE ARE NONE. Honour it: scope is
+        `surface+constants` with zero `const:` lines, which is exactly what the EA emits for such
+        a build (`CFG_SurfacePreimage() + CFG_ConstPreimage()`, guard G6).
+
+    (memory `name-it-honestly-when-you-cannot-prove-it`, and its converse: a name nothing can
+    match is not honest either, it is just unfalsifiable.)
+
+    <sub>The `{}` branch is REASONED, not measured -- no build in this repo currently declares
+    zero locked constants, so nothing has exercised it end-to-end against a binary. Stated here
+    rather than left for a reader to assume it was tested.</sub>
     """
-    if not locked_constants:
-        return SCOPE_SURFACE_ONLY, {}
+    if locked_constants is None:
+        raise PresetRefusal(
+            'compile_preset was called without locked_constants, so the fingerprint scope would '
+            'be %r -- and ConfigFingerprint.mqh:35 pins the EA to %r, which means the digest '
+            'could not match ANY binary for ANY .set. This is a refusal rather than a relabel '
+            '(ORDER-1050). Pass locked_constants={} if the build genuinely declares none; pass '
+            'the resolved constants otherwise, as gen_default_preset.py does.'
+            % (SCOPE_SURFACE_ONLY, SCOPE_WITH_CONSTANTS))
     constants = dict(locked_constants)
     for k, v in constants.items():
         if not isinstance(k, str) or isinstance(v, (dict, list)):
