@@ -58,7 +58,13 @@ param(
     # independently -- otherwise the one case that matters (a commit that REPAIRS a malformed
     # row must land) cannot be expressed at all.
     [AllowEmptyString()][string]$StagedLedgerContent,
-    [AllowEmptyCollection()][string[]]$StagedFileList
+    [AllowEmptyCollection()][string[]]$StagedFileList,
+    # ORDER-1460 (2026-08-06). RULE 2's restoration answer, supplied by the cage. Offline mode
+    # spawns no git at all, so the "did this file ever carry this header?" question -- which is
+    # a question about HISTORY, not about any content this script is handed -- has no other way
+    # to be expressed. A single element 'NONE' means "the empty list", the spelled-sentinel
+    # convention this repo already uses because `powershell -File` cannot pass @().
+    [AllowEmptyCollection()][string[]]$RestorableIdsOverride
 )
 
 $ErrorActionPreference = 'Stop'
@@ -127,6 +133,32 @@ function Get-GitBlobText {
     $r = Invoke-GitBytes -Arguments ('show "{0}"' -f $Spec)
     if ($r.ExitCode -ne 0) { return $null }
     return (ConvertFrom-Utf8Bytes -Bytes $r.Bytes)
+}
+
+function Test-IsRestoredId {
+    <# ORDER-1460. Did the active board EVER carry `## ORDER-<id>` and lose it?
+
+       This is a question about HISTORY, which is why it cannot be answered from any content
+       this script is handed: RULE 2 compares STAGED headers against HEAD's, and both vintages
+       agree that a restored id is absent. Only the log knows it was there.
+
+       Offline mode spawns no git at all, so the cage supplies the answer through
+       -RestorableIdsOverride and the git call below is never reached from a test. That split is
+       deliberate and is the same one every other input in this file uses.
+
+       `git log -G` matches commits whose diff ADDS OR REMOVES a line matching the pattern. It is
+       anchored at column 0 and demands the trailing space, so `## ORDER-1460` cannot be
+       satisfied by a mention of ORDER-14600 or by prose quoting the id mid-sentence. `-1` stops
+       at the first hit. It runs ONLY for an id that would otherwise be refused, so the ordinary
+       commit pays nothing for it. #>
+    param([string]$Id)
+    if ($null -ne $script:RestorableIds) { return $script:RestorableIds.ContainsKey($Id) }
+    $r = Invoke-GitBytes -Arguments ('log -1 --format=%H -G "^## ORDER-{0} " -- "{1}"' -f $Id, $ActivePath)
+    # A git failure must NOT read as "not a restoration" -- that would be the same silent
+    # downgrade this file refuses everywhere else. An unreadable log leaves the violation
+    # standing, which is the conservative direction: the commit is refused and says why.
+    if ($r.ExitCode -ne 0) { return $false }
+    return ((ConvertFrom-Utf8Bytes -Bytes $r.Bytes).Trim().Length -gt 0)
 }
 
 function Get-StagedPathsFromGit {
@@ -407,9 +439,24 @@ function Test-PathOwned {
 # input acquisition -- offline (test overrides) or git
 # ===========================================================================
 
-$overrideNames = @('StagedActiveContent', 'ArchiveContent', 'HeadActiveContent', 'LedgerContent', 'StagedLedgerContent', 'StagedFileList')
+$overrideNames = @('StagedActiveContent', 'ArchiveContent', 'HeadActiveContent', 'LedgerContent', 'StagedLedgerContent', 'StagedFileList', 'RestorableIdsOverride')
 $offline = $false
 foreach ($n in $overrideNames) { if ($PSBoundParameters.ContainsKey($n)) { $offline = $true } }
+
+# ORDER-1460. $null means "ask git"; a hashtable (possibly empty) means the cage answered.
+$script:RestorableIds = $null
+if ($PSBoundParameters.ContainsKey('RestorableIdsOverride')) {
+    $script:RestorableIds = @{}
+    foreach ($rid in @($RestorableIdsOverride)) {
+        $t = "$rid".Trim()
+        if ($t -and $t -ne 'NONE') { $script:RestorableIds[$t] = $true }
+    }
+} elseif ($offline) {
+    # An offline run that did not answer the question must not silently fall through to git --
+    # offline means no git process at all. The empty answer is the strict one: nothing is a
+    # restoration, so every existing offline case keeps the verdict it had before this change.
+    $script:RestorableIds = @{}
+}
 
 # ORDER-674 owed half: EVERY READ BELOW DECLARES ITS SNAPSHOT, and one of them was wrong.
 # The file's own .DESCRIPTION said "read from the git INDEX or from committed refs -- NEVER from
@@ -683,6 +730,27 @@ if ($ledgerUsable) {
             $n = [int]$id
             $inside = $false
             foreach ($r in $ranges) { if ($n -ge $r.Low -and $n -le $r.High) { $inside = $true; break } }
+            if (-not $inside -and (Test-IsRestoredId -Id $id)) {
+                # ORDER-1460 (2026-08-06). A header this file ONCE CARRIED and lost is a REPAIR,
+                # not a new number, and this rule could not tell the two apart -- it compares the
+                # staged headers against HEAD's and calls anything absent from HEAD "new".
+                #
+                # MEASURED, not hypothesised: `## ORDER-1460`'s header line was consumed by the
+                # edit that inserted ORDER-1462, leaving the row's body behind with no header and
+                # invisible to every `^## ORDER-<n>` sweep -- including the block-derivation test
+                # every lane runs before reserving. The commit restoring it verbatim from
+                # 70c00840 was REFUSED here, because 1460 is not in the restoring lane's block
+                # and never can be: it belongs to a lane that closed. So the guard blocked the
+                # commit that FIXED the state it was complaining about, which is the same
+                # FALSE BLOCK shape this file's un-archiving note already describes one case over.
+                #
+                # It cannot be laundered into a collision: an id this file previously carried is
+                # BY DEFINITION already issued, so re-adding it creates no fresh claim on a
+                # number. An actual duplicate is still caught -- by the duplicate-id rule above,
+                # which is a different rule and is untouched.
+                Write-Host ('{0} NOTE: ORDER-{1} is a RESTORATION -- {2} carried this header in an earlier commit and no longer does at HEAD, so it is not a new number and the reserved-block rule does not apply' -f $Tag, $id, $ActivePath)
+                continue
+            }
             if (-not $inside) {
                 $violations.Add(('new order ORDER-{0} is outside every ACTIVE reserved block ({1}) declared in {2} -- reserve a block before using the number' -f $id, $rangeText, $LedgerPath))
             }

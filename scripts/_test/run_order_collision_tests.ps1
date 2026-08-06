@@ -385,6 +385,42 @@ try {
         LedgerContent       = $ledgerActiveTwoBlocks
     } -MustContain @('BLOCK', 'ORDER-635 is outside every ACTIVE reserved block (610-619, 660-669)')
 
+    # ORDER-1460. RULE 2 compares STAGED headers against HEAD's and calls anything absent from
+    # HEAD "new" -- so a header the board ONCE CARRIED and LOST reads as a fresh number, and the
+    # commit that restores it is refused for being outside a block it can never be inside (the
+    # id belongs to a lane that closed). Measured on the real board: `## ORDER-1460`'s header
+    # line was consumed by the edit inserting ORDER-1462, and the repair commit was BLOCKED.
+    #
+    # Both directions, because a restoration escape that swallows genuine new ids would be worse
+    # than the false block it removes. The pair below is ONE id at ONE out-of-block number: the
+    # ONLY difference is whether the file previously carried it.
+    Test-Case -Name 'RULE2/1460 a RESTORED header is not a new number -> 245 passes' -ExpectCode 0 -Params @{
+        StagedActiveContent    = $activeNewOutside
+        HeadActiveContent      = $headActive100
+        ArchiveContent         = ''
+        LedgerContent          = $ledgerActiveFilename
+        RestorableIdsOverride  = @('245')
+    } -MustContain @('PASS', 'ORDER-245 is a RESTORATION') -MustNotContain @('BLOCK')
+
+    Test-Case -Name 'RULE2/1460 SPECIFICITY an id the board never carried still BLOCKs -> 245' -ExpectCode 1 -Params @{
+        StagedActiveContent    = $activeNewOutside
+        HeadActiveContent      = $headActive100
+        ArchiveContent         = ''
+        LedgerContent          = $ledgerActiveFilename
+        RestorableIdsOverride  = @('NONE')
+    } -MustContain @('BLOCK', 'ORDER-245 is outside every ACTIVE reserved block (230-239)') -MustNotContain @('RESTORATION')
+
+    # And the escape must not become a way to sit outside a block forever: a restored id is
+    # still subject to every OTHER rule, including the duplicate-id rule that is the actual
+    # defence against two lanes claiming one number.
+    Test-Case -Name 'RULE2/1460 SPECIFICITY a RESTORED id that is also duplicated is still refused' -ExpectCode 1 -Params @{
+        StagedActiveContent    = ($activeNewOutside + "`n## ORDER-245 - the same id a second time`n")
+        HeadActiveContent      = $headActive100
+        ArchiveContent         = ''
+        LedgerContent          = $ledgerActiveFilename
+        RestorableIdsOverride  = @('245')
+    } -MustContain @('BLOCK')
+
     # A descending pair is not a range. Swapping it invents a declaration nobody wrote --
     # and the swap is what made the filename defect fatal rather than merely wrong.
     Test-Case -Name 'RULE2/675 descending pair is reported, not silently swapped' -ExpectCode 0 -Params @{
