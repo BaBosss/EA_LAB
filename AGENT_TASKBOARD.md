@@ -469,7 +469,7 @@ evidence anyone should go looking for later.
 
 ---
 
-## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN — item 1 DONE 2026-08-06 and CORRECTED the same day by /scrutinize: it had shipped on 1 of the 3 tester entry points, and the one it missed was the OPTIMIZER. Now shared in scripts/lib/binary_staleness.ps1, called from mt5_run + mt5_optimize + run_backtest, 17/17 caged and registered in the fast tier; item 2 owed; item 3 is the owner's` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN — item 1 DONE 2026-08-06 and CORRECTED the same day by /scrutinize: it had shipped on 1 of the 3 tester entry points, and the one it missed was the OPTIMIZER. Now shared in scripts/lib/binary_staleness.ps1, called from mt5_run + mt5_optimize + run_backtest, 17/17 caged and registered in the fast tier; item 2 MEASURED 2026-08-06 (§ITEM-2-FACTS) and its two-way question restated — the 53/657 counts reproduce, but there are FIVE spellings of the EA not two, the 53 configs are gitignored so the durable objects are the 11 writer scripts and the 3 TRACKED board templates, and a SECOND live permanent-UNKNOWN was found where the banner reports our own renamed copies as "no record"; the decision itself is still owed and is the owner's; item 3 is the owner's` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 **bars:** N-A (a wiring gap) · **flat-lot probe:** N-A
 
 Opened 2026-08-06 from the audit `PROMPT_NEXT_SESSION_CLEARALL.md` §5 owed.
