@@ -1,3 +1,8 @@
+> ⛔ **SUPERSEDED 2026-08-06 by `_triage/PROMPT_NEXT_SESSION_1480.md`.** Two further lanes ran after
+> this file was written (`CLEARALL2`, `SCRUT`): both remaining §5 items are now done, three new
+> orders exist (`ORDER-1460` · `1461` · `1462`), and one defect in this session's own work was found
+> and repaired. **Open the newer file.** This one is kept because §0-§4 are still accurate history.
+
 # OPENING PROMPT — the session sent to clear six owed items, which cleared four and refuted two of its own claims
 
 > Written 2026-08-06 by lane `S-2026-08-06-CLEARALL` (block `1440-1449`). Opened on
