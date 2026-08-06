@@ -19,11 +19,21 @@
         enforced.
 
     TRIGGER
-        Any staged path matching _triage/HANDOFF*.md or _triage/SESSION_HANDOFF*.md
-        (at any depth under _triage/) whose staged status is A or M. Paths under
-        _triage/_archive/** are ignored entirely -- an already-closed handoff must
-        never be re-validated. Deletions (and renames/copies, which are how a
-        handoff gets archived) are ignored. Nothing matching -> fast no-op pass.
+        Any staged path matching _triage/HANDOFF*.md, _triage/SESSION_HANDOFF*.md, or
+        _triage/PROMPT_NEXT_SESSION*.md (at any depth under _triage/) whose staged
+        status is A or M. Paths under _triage/_archive/** are ignored entirely -- an
+        already-closed handoff must never be re-validated. Deletions (and
+        renames/copies, which are how a handoff gets archived) are ignored. Nothing
+        matching -> fast no-op pass.
+
+        WIDENED 2026-08-06 (measured, not assumed): PROMPT_NEXT_SESSION_* is the
+        family every recent lane actually writes; this guard covered only the older
+        HANDOFF*/SESSION_HANDOFF* names and silently no-op'd on every one of them.
+        19 committed files in the new family carry the routing marker; driven
+        offline against real current board content before this line changed, 18
+        passed clean and 1 (this repo's own in-flight handoff) had a genuine
+        compound-token defect, fixed separately. See _triage/PROMPT_NEXT_SESSION_1510.md
+        section 3.3 for the measurement.
 
     THE CONTRACT
         Each triggering handoff must carry a routing section opened by the literal
@@ -108,7 +118,7 @@ $MarkerLiteral    = '<!-- HANDOFF-ROUTING -->'
 # Thai -- that text only ever arrives as decoded UTF-8 DATA, never as source.
 $MarkerRegex      = '^\s*<!--\s*HANDOFF-ROUTING\s*-->\s*$'
 $SectionEndRegex  = '^##\s'
-$HandoffPathRegex = '(?i)^_triage/(?:[^/]+/)*(?:SESSION_)?HANDOFF[^/]*\.md$'
+$HandoffPathRegex = '(?i)^_triage/(?:[^/]+/)*(?:(?:SESSION_)?HANDOFF|PROMPT_NEXT_SESSION)[^/]*\.md$'
 $ArchiveDirRegex  = '(?i)^_triage/_archive/'
 
 # One id shape everywhere: alnum groups joined by '-' or '_'.

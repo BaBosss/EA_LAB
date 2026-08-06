@@ -372,6 +372,33 @@ try {
         ArchiveBoardContent = $archiveBoard
     } -MustContain @('BLOCK', '_triage/SESSION_HANDOFF_2026-07-26.md has no')
 
+    # WIDENED 2026-08-06: PROMPT_NEXT_SESSION_*.md is the family every recent lane actually
+    # writes, and the guard used to no-op on all of them (measured: 19 committed files carried
+    # the routing marker and were never read). Same two cases as the SESSION_HANDOFF pair above,
+    # over the new family -- a missing marker still blocks, and a real routing table still
+    # resolves.
+    Test-Case -Name 'PROMPT_NEXT_SESSION_*.md triggers too' -ExpectCode 1 -Params @{
+        HandoffContentMap   = @{ '_triage/PROMPT_NEXT_SESSION_9999.md' = $hfNoMarker }
+        ActiveBoardContent  = $activeBoard
+        ArchiveBoardContent = $archiveBoard
+    } -MustContain @('BLOCK', '_triage/PROMPT_NEXT_SESSION_9999.md has no')
+
+    Test-Case -Name 'PROMPT_NEXT_SESSION_*.md with a real routing table resolves -> pass' -ExpectCode 0 -Params @{
+        HandoffContentMap   = @{ '_triage/PROMPT_NEXT_SESSION_9999.md' = $hfGood }
+        ActiveBoardContent  = $activeBoard
+        ArchiveBoardContent = $archiveBoard
+        BacklogContent      = $backlog
+    } -MustContain @('PASS')
+
+    # SPECIFICITY. The widened pattern is PROMPT_NEXT_SESSION*, not PROMPT*: a bare PROMPT_ file
+    # for something unrelated (this repo has other PROMPT_-prefixed triage files) must stay a
+    # no-op, or the guard starts demanding a routing table from documents that are not handoffs.
+    Test-Case -Name 'a differently-named PROMPT_*.md that is NOT the handoff family stays a no-op' -ExpectCode 0 -Params @{
+        StagedFileList      = @("M`t_triage/PROMPT_UNRELATED_TOOL_BRIEF.md")
+        ActiveBoardContent  = $activeBoard
+        ArchiveBoardContent = $archiveBoard
+    } -MustContain @('pass (no-op)') -MustNotContain @('BLOCK')
+
     Test-Case -Name 'handoff under _triage/_archive/ -> ignored, pass' -ExpectCode 0 -Params @{
         StagedFileList      = @("M`t_triage/_archive/handoffs_closed/HANDOFF_2026-07-24C.md")
         ActiveBoardContent  = $activeBoard

@@ -117,6 +117,42 @@ it is the third instance found today — after `ORDER-1500`'s uncalled contract 
 newly subject to a contract nobody has checked them against, so it is a change that must be measured
 before it is made, not a one-line edit — and this lane was closed when it surfaced.
 
+#### ✅ MEASURED 2026-08-06 (lane `S-2026-08-06-S1510`) — widened, and the count above was one too high
+
+Per the instruction two lines above: ran the widened contract, in a **scratchpad-only copy** of
+`check_handoff_contract.ps1` (one line changed, the real file untouched), against every committed
+`PROMPT_NEXT_SESSION_*.md`, in **offline mode** (`-StagedFileList`/`-HandoffContentMap`) with the
+**real current** `AGENT_TASKBOARD.md` / `MASTER_BACKLOG.md` content supplied so tokens resolve
+against what actually exists today.
+
+🔴 **The 20 above was one too high, and the loose `grep -l "HANDOFF-ROUTING"` used to get it is the
+exact defect §3.3 of this same handoff describes one section up — a citation guard that cannot tell
+"this string is present" from "the thing this string names is present."** `_triage/
+PROMPT_NEXT_SESSION_OPERATOR.md` matches the grep because it **mentions** the marker in prose
+(*"handoff written in `_triage/` with its `<!-- HANDOFF-ROUTING -->` table"*) — it does not carry one.
+Recounted against the guard's own `$MarkerRegex` (the literal line, not a substring): **19**.
+
+| | count |
+|---|---|
+| grep substring match (the count this handoff opened with) | 20 |
+| the guard's own marker regex, matched line-for-line | **19** |
+| of those 19, PASS under the widened contract with real board content | **18** |
+| of those 19, BLOCK | **1** — and it was **this handoff's own routing table**, below |
+
+**The one failure is a real defect, not a false negative from the family being a bad fit.** This
+handoff's own row read `` `ORDER-1461`-adjacent · unfiled `` — backticks stripped, that is the
+literal string `ORDER-1461-adjacent`, and the contract's `IdPattern` joins alnum groups across
+hyphens **on purpose** (so `ORDER-098-C` is matched whole, not truncated at the first hyphen) — so it
+parsed as ONE compound id, `ORDER-1461-adjacent`, and correctly reported no such header exists.
+Fixed in this lane's own commit to `` `ORDER-1461` (adjacent, unfiled as its own order) `` — the
+parenthesis breaks the token at a space, which the id pattern cannot cross — and reverified: 6/6
+tokens resolve.
+
+⇒ **18/19 is a strong result, and the one failure was worth finding on its own merits.** The regex
+was widened in the real `scripts/check_handoff_contract.ps1` — in its own commit, separate from that
+repair, per the instruction above not to combine them — with a cage case added asserting a
+`PROMPT_NEXT_SESSION_*.md` path now triggers.
+
 ---
 
 ## §4 — ⚠️ Mistakes. All three are mine and all three were caught by an instrument, not by reading.
