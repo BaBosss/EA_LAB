@@ -398,6 +398,52 @@ PA-on +8.7 exp in 23-26 but −1.8 in 19-22; EURGBP-rev negative both) — PA do
 Its value is as a CONFIRM on an existing basket's adds. Matches the session lesson: confirm/MM layers multiply
 or protect an existing edge, they don't manufacture one. Probe + evidence: `ea_projects/(TRD)_PA_Probe/`.
 
+### 🔁 CONFIRMED on a second host, and the trade-off is now a NUMBER (ORDER-236, 2026-08-05/06, EURJPY H1, Model 4)
+
+The 2026-07-18 reading above — *risk-trimmer, not profit-maximiser* — replicated on a different symbol
+against a control re-run in the same lane (`CTRL 1.82 MAIN / 1.06 BWD`):
+
+| `StackConfirm` | MAIN PF | MAIN trades | BWD PF | BWD trades |
+|---|---|---|---|---|
+| `0` distance-only (CTRL) | **1.82** | 184 | **1.06** | 498 |
+| `1` signal-still-valid | 1.47 | 84 | **1.16** ▲ | 106 |
+| `4` PA-engulf, `MinBodyRatio 1.5` | 1.37 | 112 | **1.10** ▲ | 150 |
+
+**Both confirms improve the stress window and both pay for it in the good one and in participation.**
+That is the same exchange rate as AUDNZD, now measured twice on two symbols — which is what makes it a
+lever rather than one host's accident.
+
+🎯 **How to use it, stated as a rule:** reach for `StackConfirm` when a host's problem is **BWD**, never
+when its problem is MAIN. On a host that is already strong in the good window it is a straight loss —
+`ORDER-236` is the worked example, and the lever pair ended `PARKED-VERIFY(user)` there precisely
+because the bar was *better on both* and a defensive filter cannot clear that on a host whose stress
+window is already positive.
+
+⚠️ **Two cautions the numbers above carry:** `StackConfirm=1` reaches its `1.16` on **84 MAIN trades**,
+which **fails the ≥100-per-window participation floor** — quote the trade count with the PF or not at
+all. And `_9_PA_MinBodyRatio` is **read only when `StackConfirm=4`**: at any other setting it is inert,
+measured identical to the cent, so a grid that sweeps it at base is sweeping nothing.
+
+🚫 **Not established:** that the sibling `_9_RegimeGateAdds` behaves the same way. It does not — see the
+next entry.
+
+## LEVER: `_9_RegimeGateAdds` (ADX regime gate on grid adds) — ⬛ **NOT AN INDEPENDENT LEVER** (ORDER-236, 2026-08-06)
+
+`Stack.mqh:280-285` calls exactly one function, `Regime_AllowsEntryDirection`, whose first line is
+`if(!Regime_Enabled()) return true;` — and `Regime_Enabled()` is `_50_RegimeMode == 1 || == 2`.
+⇒ **at `_50_RegimeMode = 0` the input does nothing at all.** Predicted from the source before the run
+and then measured: `C1 ≡ C0` on PF, trades, drawdown **and net**, both windows, EURJPY H1 Model 4.
+
+**So it cannot be A/B'd on its own** — switching it on is really switching on the regime module, and on
+`Boss_14 GridLog` that module is a loss on both windows (`mode 1` 1.30/1.06 · `mode 1` + no-trend-down
+1.49/**0.77** · `mode 2` 1.68/0.84, all against CTRL 1.82/1.06). `_50_AllowTrendDown` is likewise inert
+at `mode 0` and `mode 2` (`Regime.mqh:107-108` never reads it; measured `C5 ≡ C4`).
+
+🎯 **The reusable part is the shape, not the result:** *an input whose only call site is guarded by
+another input's enable-check is not a lever — it is a rider.* Probing it one-axis-at-a-time from a base
+where the enabler is off reports it INERT and hides that it is load-bearing when the enabler is on.
+Check the call site before putting an axis on a grid (memory `inert-axis-fake-plateau`, one level down).
+
 ## DEAD CELL: JumStoch Trend-seed (LWMA-displacement + Stoch) on Boss V2 DCA chassis (Boss_18, 2026-07-18) ⬛
 
 Ported the JUMSTOCH "Trend" block (LWMA(25) displacement + Stoch(32,12,12) filter) as a chassis SEED signal

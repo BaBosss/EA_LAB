@@ -9868,6 +9868,8 @@ user เปิด **Tools → Global Variables (F3)** บน terminal ของ 
 ผูกกับ `991001` แน่นที่สุดเพราะเป็นตัวเดียวในสี่ที่การเพิ่มขนาดแล้วผิดจะเจ็บด้วยเงินจริง
 
 ## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `OPEN — STEP 2 พร้อมรัน บน host = XAUUSD H1 (ORDER-430: BWD 2.29 = สูงสุด, qualified ตามบาร์ที่ pre-register)` · ทำได้: **oc-qwen/ZCode** · 👉 แนะ: oc-qwen · เดิม: `OPEN — STEP 1 (design, Claude) ปิดแล้ว 2026-07-27: host = RSI-MR GridLog EURUSD H1 @ RSIMR_CENTER.set · บาร์เดิมถูกถอนเพราะวัด host ไม่ได้วัด lever · B14_AB_on.set ครอบแค่ lever เดียวและผิด chassis · STEP 2 = 4 cell พร้อมรัน` · ทำได้: **oc-qwen/ZCode (รัน STEP 2)** · 👉 แนะ: oc-qwen
+🏁 **VERDICT 2026-08-06 = `PARKED-VERIFY(user)`** — STAGE 3 ran 12/12 under Model 4 and **closed the ladder**: all four LIVE axes are now measured, **no cell beats control on both windows**, and `_9_RegimeGateAdds` is empirically inert at `_50_RegimeMode=0`. 🚫 **Not `DEAD-OPTIMIZED`** — `ORDER-430`'s re-read under the ratified ≥100 floor leaves **zero qualified hosts**, so the right-home ceiling was never proven. Next tranche = `Boss_16 Kangaroo` / `Boss_11 GridTrend` (sets to be built). Full verdict + owner brief at the end of this row.
+
 **bars:** ~~pass = MAIN ≥1.2 AND BWD ≥1.0 · dead = ทั้งคู่ <1.0 · กลาง = ผ่านอย่างใดอย่างหนึ่ง~~ **← ถอนแล้ว 2026-07-27: บาร์นี้วัด host ไม่ได้วัด lever (ดู STEP 1 ด้านล่าง) · บาร์ที่ใช้จริง = delta vs control ในเลนเดียวกัน** · **flat-lot probe:** N-A (lever ไม่ใช่ MM escalation)
 **ของที่มีอยู่แล้ว:** `_9_RegimeGateAdds` + `CONF_PA_ENGULF` — build เสร็จ (`1aeafc06`, `f65bf2ce`) · cage ผ่าน · byte-identical เมื่อปิด ·
 Model-4 A/B บน AUDNZD ได้ **DD 12.3%→5.4%, net −286→+98** · **มี `ea_template/sets/B14_AB_on.set` รออยู่แล้ว**
@@ -10410,14 +10412,136 @@ $9.49 and $32.08**. That is the `ORDER-1330` signature reproduced on a symbol an
 looking at, which strengthens `ORDER-1350`'s reading (the tester charges the broker's *current*
 financing, which no record carries). Recorded here and cross-referenced; not diagnosed here.
 
-##### 🚫 `DEAD-OPTIMIZED` is NOT earned by this, and the reason is specific
+#### ✅ STAGE 3 EXECUTED — 12 of 12, Model 4, both windows, 2026-08-06 (lane `S-2026-08-06-CLEARALL`)
 
-The last-optimize is **incomplete**: STAGE 1 classified **four** axes LIVE, and STAGE 2 crossed only
-the top two. `_50_RegimeMode` (Δ 0.14) and `_50_AllowTrendDown` (Δ 0.15 against its own base) have
-**never been run under Model 4 on this host** — they were measured once each under Model 1, which this
-row's own bar says is not evidence. Declaring the concept dead now would close it on a ladder that
-stops one rung short, which is the failure `ORDER-1220` and the VERDICT GATE both exist to prevent.
-**Honest status: four hosts, no pass, and two LIVE axes still unmeasured under Model 4.**
+Pre-registration committed **before any run existed** at `_triage/ORDER-236_STAGE3_prereg.md`
+(`d3151575`), verifiable from the commit graph. Cells, bar and both falsifier predictions were fixed
+there and are not restated to fit what came back.
+
+🔴 **Run on a DIFFERENT BINARY from STAGE 2, deliberately, and this is the first thing to read.**
+`-Expert "Boss_14_GridLog"` resolves to `D:\Meta 5b\MQL5\Experts\Boss_14_GridLog.ex5` — **2026-07-27,
+152,178 bytes** — and **seven commits touched `ea_template/core/` after it was built, including
+`Execution.mqh` and `RiskControl.mqh`**, which is behaviour, not fingerprint plumbing. A current
+build had sat at `…\Experts\EALabTpl\Boss_14_GridLog.ex5` (**2026-08-02 13:59, 178,300 bytes**) since
+08-02 and was never copied to the root. STAGE 3 targets it by path
+(`-Expert 'EALabTpl\Boss_14_GridLog'`); **nothing on disk was renamed or overwritten**, so the stale
+binary stays where STAGE 2's evidence refers to it.
+⇒ **STAGE 2 ran on a chassis 10 days stale.** STAGE 3 does not inherit that, only because the bar was
+pre-registered against an **in-lane `C0` re-run** instead of against STAGE 2's numbers.
+
+| cell | `RegimeMode` | `AllowTrendDown` | `RegimeGateAdds` | MAIN PF | trades | eqDD% | net | BWD PF | trades | eqDD% | net |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **C0** CTRL | 0 | true | false | **1.82** | 184 | 7.12 | +2353.69 | **1.06** | 498 | 16.68 | +599.32 |
+| **C1** 🔬 | 0 | true | **true** | 1.82 | 184 | 7.12 | +2353.69 | 1.06 | 498 | 16.68 | +599.32 |
+| **C2** | **1** | true | true | 1.30 | 285 | 10.76 | +1669.17 | 1.06 | 498 | 16.68 | +599.32 |
+| **C3** | **1** | **false** | true | 1.49 | 166 | 5.30 | +1414.95 | **0.77** | 221 | 24.12 | **−1433.37** |
+| **C4** | **2** | true | true | 1.68 | 117 | 5.51 | +1227.28 | 0.84 | 125 | 12.04 | −555.82 |
+| **C5** 🔬 | **2** | **false** | true | 1.68 | 117 | 5.51 | +1227.28 | 0.84 | 125 | 12.04 | −555.82 |
+
+<sub>All 12 runs: EURJPY H1, Model 4, 100% real ticks, 125,539,367 ticks / 18,624 bars on MAIN,
+leverage 1:100, lane `D:\Meta 5b`. `short_trades = 0` on every row — the long-only finding holds, as
+`ORDER-1420` established it must.</sub>
+
+##### ✅ Both pre-registered falsifiers HELD, on every digit — including the money
+
+- **`C1` ≡ `C0`** — PF, trades, drawdown **and net**, both windows. ⇒ `_9_RegimeGateAdds` is
+  **empirically inert at `_50_RegimeMode = 0`**, confirming what was read out of `Stack.mqh:280-285`
+  → `Regime.mqh:114` (`if(!Regime_Enabled()) return true;`) before the run.
+  🎯 **This is what makes STAGE 3 readable at all.** Every regime cell moves *two* inputs away from
+  the CTRL, and `C1` is the measurement proving the second contributes nothing alone — so the deltas
+  below belong to the regime axes and are not a confound. That was `C1`'s stated job, and it did it.
+- **`C5` ≡ `C4`** — likewise. ⇒ `_50_AllowTrendDown` is **inert at `_50_RegimeMode = 2`**, confirming
+  `Regime.mqh:107-108` never reads it.
+- <sub>The nets matching to the cent matters for `ORDER-1330`: a third consecutive day of this CTRL
+  returns `+2353.69`, identical to 08-05, against a `+9.49` move from 08-04. Filed there as `§ITEM-2`.</sub>
+
+##### 🚦 Against the delta bar — `pass` = better than `C0` on BOTH windows, plus ≥100 trades per window
+
+| cell | MAIN | BWD | participation | label |
+|---|---|---|---|---|
+| `C1` | 1.82 **=** | 1.06 **=** | 184 / 498 ✅ | **inert** — not a lever setting at all |
+| `C2` | 1.30 ▼ | 1.06 **=** | 285 / 498 ✅ | **`dead`** (worse on MAIN) |
+| `C3` | 1.49 ▼ | **0.77 ▼** | 166 / 221 ✅ | **`dead`** — the worst BWD in the whole order |
+| `C4` = `C5` | 1.68 ▼ | 0.84 ▼ | 117 / 125 ✅ | **`dead`** |
+
+**No cell passes. Not one improves MAIN — every regime setting is below `1.82` — and every setting
+that moves BWD makes it worse.** Participation clears the ≥100 floor everywhere, so for once nothing
+here is decided by a thin sample.
+
+##### 🎯 The shape, and it is the opposite of STAGE 2's
+
+STAGE 2's two confirms **bought BWD with MAIN** (`1.06 → 1.16` costing `1.82 → 1.47`), which reads as
+a defensive filter. **The regime axes do not even do that.** `C3` and `C4` cost MAIN *and* BWD; `C3`
+turns a `+599.32` stress window into **`−1433.37` at 24.12% drawdown** — worse than control on every
+axis at once. ⇒ **on this host the regime module is not a filter with a price, it is a loss.** The
+one reusable reading: `_50_RegimeMode=2` is the least damaging at `1.68`, and it gets there by
+cutting participation from 184 to 117.
+
+##### 🔴 `C2`'s BWD is byte-identical to control across 498 trades — report it as UNTESTED, not as "no effect"
+
+`C2` differs from `C0` in **MAIN** (`1.82 → 1.30`, 184 → 285 trades) and is **identical in BWD** —
+PF, trades, drawdown and net. So the gate is wired and *does* fire; the MAIN difference proves it.
+**What it did not do is fire once in 2020-2022** — an ADX regime module with a `REGIME_STORM` state,
+across COVID.
+
+By the VERDICT GATE's guard clause this is **`UNTESTED`**: *numbers identical to base in every digit
+are evidence a thing is inert, not evidence it is safe*, and **no fire counter exists on this module,
+so "never fired" and "fired and changed nothing" cannot be separated here.** 🚫 Nobody may write that
+the regime gate is harmless in the stress window. It is unmeasured there.
+<sub>Worth its own note: the MAIN trade count went **up** under a gate (184 → 285). A blocked flat
+seed reshuffles every basket after it, so trade count is not monotone in a filter — a reader who
+expects a filter only to subtract will misread this row.</sub>
+
+##### 🚫 `DEAD-OPTIMIZED` was NOT earned by STAGE 2 — and after STAGE 3 the ladder IS complete
+
+*(as written after STAGE 2, and correct then)* The last-optimize was **incomplete**: STAGE 1
+classified **four** axes LIVE and STAGE 2 crossed only the top two. `_50_RegimeMode` and
+`_50_AllowTrendDown` had **never been run under Model 4 on this host**. Declaring the concept dead
+then would have closed it on a ladder that stops one rung short.
+
+**✅ STAGE 3 closed that gap. All four LIVE axes are now measured under Model 4, both windows, on the
+current chassis. The ladder is complete and the last-optimize is done.**
+
+---
+
+## 🏁 VERDICT ORDER-236 (Claude/Opus 2026-08-06) — `PARKED-VERIFY(user)`: no setting, and no host
+
+**What is now known, across four hosts and all four LIVE axes:**
+- **No cell in any stage has ever beaten control on both windows.** STAGE 2's confirms bought BWD
+  with MAIN; STAGE 3's regime axes cost both.
+- **`_9_RegimeGateAdds` cannot act alone** — measured inert at `_50_RegimeMode=0` (`C1 ≡ C0`, every
+  digit). It is not an independent lever, it is a rider on the regime module, and that module loses
+  money on this host.
+- 🔴 **And there is no qualified host to move to.** `ORDER-430`'s re-read under the ratified ≥100
+  floor (same session) leaves **zero of seven** qualified — the two that had cleared did so on 52 and
+  62 trades and are void. The short side is measured too: `ORDER-1420`, 7 of 7, nothing.
+
+⇒ **`PARKED-VERIFY(user)`, exactly as `ORDER-430` pre-wrote for this branch** (*"if nothing
+qualifies, ORDER-236 closes as 'the lever has no host' → PARKED, not dead"*). **Not
+`DEAD-OPTIMIZED`:** the ladder is complete, but a concept may only die once the **right-home** ceiling
+is proven, and the right home was never found. `Boss_16 Kangaroo` / `Boss_11 GridTrend` are the named
+next tranche and need sets built first.
+
+**👤 3-line brief for the owner** *(required by the VERDICT GATE for `PARKED-VERIFY`)*:
+1. **What it is** — a pair of grid-add gates (`_9_RegimeGateAdds` + `CONF_PA_ENGULF`), built, caged
+   and byte-identical when off, plus the two regime axes they turn out to depend on.
+2. **Which gate killed it** — the delta bar (better on *both* windows). Across 4 hosts and 4 axes
+   nothing cleared it, and `ORDER-430`'s participation-floor re-read removed the last host that could
+   have hosted a fair test.
+3. **Why it is still interesting** — `StackConfirm`'s two confirms are a **measured, reusable
+   defensive-filter mechanism**: they reliably trade MAIN for BWD (`1.06 → 1.16` / `1.10` at
+   `1.82 → 1.47` / `1.37`). That is a real lever for a host whose problem is the *stress window* —
+   the opposite of this host's problem. → `EDGE_CATALOG` as a lever, not as an EA.
+
+🚫 **Two things this verdict does not say.** It does not say the regime module is harmless in a stress
+window — `C2`'s BWD is `UNTESTED` there and no fire counter exists. It does not say grids cannot use
+regime gating; it says **this chassis, this config lineage, these four hosts.**
+
+<sub>📋 Row-X status, stated rather than assumed complete: scorecard/`EA_MASTER_INDEX`/`B1_DATASET`
+rows are **owed** — this is a LEVER verdict on an existing chassis rather than a new EA verdict, and
+the checklist's EA-shaped rows need the owner's call on whether a lever park takes a scorecard row at
+all. The `EDGE_CATALOG` entry and the 3-line brief, which are the two that carry the reusable content,
+are done here.</sub>
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
