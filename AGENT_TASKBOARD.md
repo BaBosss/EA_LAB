@@ -105,7 +105,58 @@
 
 ---
 
-## ORDER-1460 — [🔴 tooling/integrity] The ORDER-105 negative suite has been ABORTING at case 15 since 2026-08-01, and every exit code read from it since is a fail-closed abort wearing a test result — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1462 — [🔴 factory/S2a] 👤 The s2a attestation gate is RED at HEAD: a lane changed a bundle member and closed without re-making the record — `OPEN (needs the owner — an attestation is a signature)` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
+**bars:** N-A (an owner signature) · **flat-lot probe:** N-A
+
+Found 2026-08-06 by `/scrutinize`, which ran the fast tier after a change to an unrelated file.
+
+**The failure, verbatim from `run_s2a_gate.py`:**
+```
+F1 line 10 attests bundle e28c5c9d68bb but the current bundle is 2ce1ea874449 -- the bound policy,
+corpus, D1, D2 or the reconciliation changed after this record, so it no longer describes what is
+on disk. Re-make it against the current bytes.
+=== S2a GATE FAILED: the attestation log is valid ===
+```
+
+### 🎯 Attributed by recomputing the digest, not by inference
+
+`BUNDLE` is six paths (`check_s2a_attestation.py:100-107`). Recomputing `bundle_digest()`'s recipe at
+three revisions:
+
+| revision | bundle digest |
+|---|---|
+| `511d0f76~1` | **`e28c5c9d68bb`** — exactly what line 10 of the attestation pins |
+| **`511d0f76`** | **`2ce1ea874449`** — what the gate now reports as current |
+| `HEAD` (`70c00840`) | `2ce1ea874449` |
+
+⇒ **The gate was green immediately before `511d0f76` and red at it.** That commit — *"[claude] Fix two
+non-ASCII-path crashes in the index-mode evidence readers"*, lane `S-2026-08-06-MAPFIX` — changed
+`_triage/factory_os/check_s2a_migration.py`, a bundle member, and **the lane closed without re-making
+the attestation.**
+
+⚠️ **The code change itself looks fine and is not being questioned here** — it fixes real crashes.
+What is missing is the record that binds an owner's approval to the new bytes.
+
+### 🔴 The guard that should have caught it at commit time did not, and that is a second finding
+
+`check_s2a_migration.py` is **in `.githooks/fast_tier_pathspec:17`** *and* **a declared guard of
+`run_s2a_cages.ps1`** (`run_fast_cages.ps1:913`). So staging it should have run the s2a suite and the
+suite should have failed. **It landed anyway.** Either the hook was bypassed or the tier did not
+select the suite; **that is not established here and must not be guessed at.** Whichever it is, a
+`$SUITE_GUARDS` entry that can be present and still not fire is worth more than this one incident.
+
+### 👤 Why this row is the owner's and not a lane's
+
+**An attestation is a signature.** Re-making it means asserting that an owner has reviewed the new
+bundle bytes and approves them. No agent may produce that, and `s2a_attestations.jsonl` is on every
+recent lane's prohibition list for exactly this reason.
+
+**What is needed:** the owner reviews `511d0f76`'s change to `check_s2a_migration.py` and re-makes the
+line-10 record against bundle `2ce1ea874449`. `run_s2a_gate.py --template` produces the record shape.
+
+🚫 **Until then:** the fast tier is **red for anyone who stages an s2a-guarded path**, and they did not
+cause it. 🚫 Do not "fix" this by weakening `F1`, by exempting the path, or by re-making the record
+without the owner reading the diff — the pin exists to make exactly this change visible. and every exit code read from it since is a fail-closed abort wearing a test result — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 **bars:** N-A (a cage repair) · **flat-lot probe:** N-A
 
 Split out of `ORDER-501` 2026-08-06, which found it while measuring something else.
@@ -563,9 +614,29 @@ written once here so it cannot drift into several differently-wrong paraphrases.
 
 | value | means |
 |---|---|
-| `v1:<sha>` | the nine existing parts. **The symbol spec is not in it, and the tag says so.** |
+| `<sha>` bare | **v1** — the nine existing parts, **byte-for-byte what the function returned before this change.** The 135 committed rows are v1 and stay valid untouched |
 | `v2:<sha>` | the nine parts **plus** `swap_long`, `swap_short`, `swap_mode` |
-| `<sha>` bare | a **legacy** row, written before 2026-08-06 |
+
+#### 🔴 CORRECTED 2026-08-06 by `/scrutinize`, before anything ran on it — the first version changed the digest it claimed only to label
+
+The first attempt emitted **`v1:<sha>`** and folded `fpver=v1` into the preimage. **That made the v1
+digest of an unchanged run differ from the digest the same run had always produced** — measured
+directly: `10a7f939…` became `6bdf17b5…` for identical inputs.
+
+**Why that is a defect and not a cosmetic choice:** `data_fingerprint` is a member of
+`scheduler.py:83`'s `EXECUTION_KEY_FIELDS`, which feeds `find_cached`. **All 135 committed rows would
+have stopped matching, and the pilot would have silently re-run cells it already had** — paid in MT5
+hours, bought for nothing, because no `v2` can be produced until `ORDER-1350` wires a per-run probe.
+The commit message for `db13175a` claimed the change "fails toward re-running, which is the safe
+direction"; **that was true and beside the point — the re-running had no upside to pay for it.**
+
+⇒ **v1 is now the status quo and says so by being it.** A version tag must not change the thing it
+labels. The invented third state `legacy` is gone too: a bare digest *is* v1, since the recipe is
+identical, and calling it something else would have made every committed row look incomparable to
+new rows computed the same way.
+<sub>The cage now carries this as a **regression guard**: it recomputes the nine-part digest
+independently of the function and asserts equality, so the mistake cannot return silently. Plus a
+specificity case — a committed bare row vs a new v1 row must still be **comparable**. 15/15.</sub>
 
 - `Get-PilotDataFingerprint -SymbolSpec` is optional; **a PARTIAL spec is refused by name** rather
   than hashed, because a missing field folded in as empty is indistinguishable from a broker
@@ -580,10 +651,13 @@ written once here so it cannot drift into several differently-wrong paraphrases.
 the digest (or the change is decoration), a partial spec must refuse, a legacy-vs-v2 comparison must
 refuse, **and a same-version comparison must still be ALLOWED**. A guard that refuses everything
 discriminates nothing.
-🔴 **Not wired into the fast tier.** Adding a `$SUITE_GUARDS` key requires `fast_tier_pathspec` and
-`run_guard_trigger_tests.ps1` to agree, and a half-done wiring reddens the trigger cage. **Until it
-is wired this cage runs only by hand, which is memory `correct-check-exists-only-its-cage-calls-it`
-with the roles reversed — owed, and named rather than left to be discovered.**
+🔴 **Not wired into the fast tier — and `/scrutinize` found the gap is older and wider than "my new
+cage isn't registered yet".** Measured: **`scripts/lib/pilot_run.ps1` appears in neither
+`.githooks/fast_tier_pathspec` nor any `$SUITE_GUARDS` entry in `run_fast_cages.ps1`.** So the file
+that computes every pilot fingerprint **has had no cage on the commit path at all**, before this
+change and after it. Adding a `$SUITE_GUARDS` key requires the pathspec and
+`run_guard_trigger_tests.ps1` to move together, so it is owed rather than half-done here — but the
+thing to fix is the *file's* coverage, not just this cage's registration.
 
 #### 🔴 Blocker A — nothing captures the swap spec, so no `v2` fingerprint can actually be produced yet
 

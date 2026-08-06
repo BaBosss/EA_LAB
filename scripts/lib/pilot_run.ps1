@@ -213,19 +213,25 @@ function Get-PilotCarriedAtEnd {
 # different money while every identity field said "same run" -- the tester charges the broker's
 # CURRENT financing and no record carried it (ORDER-1350).
 #
-# The value is now VERSION-TAGGED, and that is the load-bearing part:
-#   v1:<sha>  the nine parts above. The symbol spec is NOT in it, and the tag says so.
+# The value is VERSION-TAGGED, and the asymmetry below is deliberate:
+#   <sha>     NO PREFIX = v1 = the nine parts above, byte-for-byte what this function returned
+#             before 2026-08-06. The 135 committed rows are v1 and remain valid without being
+#             touched -- which is why nothing had to be re-stamped under an s2a attestation.
 #   v2:<sha>  the nine parts PLUS swap_long, swap_short and swap_mode.
-#   <sha>     no prefix at all = a LEGACY row written before this change. 135 of them are
-#             committed. They are NOT rewritten -- `factory/coverage.jsonl` is under an
-#             s2a attestation, so re-stamping them is a separate authorised step (see the order).
 #
-# Why a tag rather than a longer hash: a v1 and a v2 digest of the same run are DIFFERENT STRINGS
-# that describe DIFFERENT CLAIMS, and an equality test between them must not quietly answer "not
-# equal, therefore different data". Callers compare versions first (Assert-PilotFingerprintComparable)
-# so the failure is a refusal that names the reason, not a false negative that reads like a result.
-# The one existing cross-run consumer -- scheduler.find_cached -- fails toward RE-RUNNING when the
-# strings differ, which is the safe direction, and this keeps it that way deliberately.
+# 🔴 WHY v1 IS NOT `v1:<sha>`, corrected 2026-08-06 after /scrutinize caught the first version:
+# the first attempt prefixed v1 AND folded `fpver=v1` into the preimage, so the v1 digest of an
+# unchanged run came out DIFFERENT from the legacy digest of the same run (measured:
+# 10a7f939... became 6bdf17b5...). `data_fingerprint` is a member of scheduler.py's
+# EXECUTION_KEY_FIELDS, so every one of the 135 committed rows would have stopped matching
+# find_cached and the pilot would have silently re-run cells it already had -- paid in MT5 hours,
+# bought for nothing, since no v2 can be produced until ORDER-1350 wires a per-run swap probe.
+# A version tag must not change the thing it labels. v1 is the status quo and says so by being it.
+#
+# Why a tag at all: a v1 and a v2 digest of the same run are DIFFERENT STRINGS describing
+# DIFFERENT CLAIMS, and an equality test between them must not quietly answer "not equal,
+# therefore different data". Callers compare versions first (Assert-PilotFingerprintComparable) so
+# the failure is a refusal naming the reason, not a false negative that reads like a result.
 function Get-PilotDataFingerprint {
   param(
     [Parameter(Mandatory)][hashtable]$Ctx,
@@ -240,7 +246,7 @@ function Get-PilotDataFingerprint {
   $parts = @($Ctx.Terminal, $Symbol, $Period, $Ctx.FromDate, $Ctx.ToDate, ("model=" + $Ctx.Model),
              ("bars=" + $Metrics['bars']), ("ticks=" + $Metrics['ticks']), ("server=" + $Metrics['company']))
 
-  $version = 'v1'
+  $prefix = ''
   if ($null -ne $SymbolSpec) {
     $required = @('swap_long', 'swap_short', 'swap_mode')
     $absent = @($required | Where-Object { -not $SymbolSpec.ContainsKey($_) })
@@ -249,28 +255,34 @@ function Get-PilotDataFingerprint {
              ". A partial spec is refused rather than hashed: the missing field would be folded in " +
              "as an empty value, which is indistinguishable from a broker genuinely reporting one, " +
              "and that is the exact confusion ORDER-1330 exists to remove. Supply all of " +
-             ($required -join ', ') + ", or omit -SymbolSpec entirely and take the honest v1 tag.")
+             ($required -join ', ') + ", or omit -SymbolSpec entirely and stay on v1.")
     }
-    $version = 'v2'
-    $parts += @(("swap_long=" + $SymbolSpec['swap_long']),
-                ("swap_short=" + $SymbolSpec['swap_short']),
-                ("swap_mode=" + $SymbolSpec['swap_mode']))
+    # `fpver=v2` goes in the PREIMAGE as well as the prefix, so a v2 digest cannot collide with a
+    # v1 one even if the tag is later stripped. v1's preimage is left exactly as it was -- adding
+    # this line to it would have changed every existing digest, which is the defect this replaces.
+    $prefix = 'v2:'
+    $parts = @('fpver=v2') + $parts + @(("swap_long=" + $SymbolSpec['swap_long']),
+                                        ("swap_short=" + $SymbolSpec['swap_short']),
+                                        ("swap_mode=" + $SymbolSpec['swap_mode']))
   }
 
-  # The version is inside the preimage as well as on the front of the value, so a v1 digest and a
-  # v2 digest of an otherwise identical run cannot collide even if the tag is later stripped.
-  $joined = (@("fpver=$version") + $parts) -join '|'
+  $joined = ($parts -join '|')
   $sha = [System.Security.Cryptography.SHA256]::Create()
   $bytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($joined))
   $sha.Dispose()
-  return ($version + ':' + (($bytes | ForEach-Object { $_.ToString('x2') }) -join ''))
+  return ($prefix + (($bytes | ForEach-Object { $_.ToString('x2') }) -join ''))
 }
 
 function Get-PilotFingerprintVersion {
-  <# 'v1' / 'v2' / 'legacy' for a bare pre-2026-08-06 digest. Never guesses. #>
+  <# 'v1' for a bare digest, 'v<N>' for a tagged one. Never guesses.
+
+     A bare digest is v1 rather than a third 'legacy' state, because it IS v1: the nine-part
+     recipe is unchanged and the bytes are identical. Inventing a separate label for the same
+     recipe would make the 135 committed rows look incomparable to new ones that are, in fact,
+     computed identically. #>
   param([Parameter(Mandatory)][AllowEmptyString()][string]$Fingerprint)
   if ($Fingerprint -match '^(v[0-9]+):') { return $Matches[1] }
-  if ($Fingerprint -match '^[0-9a-f]{64}$') { return 'legacy' }
+  if ($Fingerprint -match '^[0-9a-f]{64}$') { return 'v1' }
   throw ("data_fingerprint " + ($Fingerprint | ConvertTo-Json) + " is neither a versioned value " +
          "(v<N>:<sha256>) nor a legacy bare sha256. It is REFUSED rather than classified: an " +
          "unreadable identity field must not be treated as an absent one.")
