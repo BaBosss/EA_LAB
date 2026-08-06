@@ -103,14 +103,39 @@ def strategy_of(strategy):
     return s
 
 
+def bucket_status(raw):
+    """Free-text status -> funnel bucket, by verdict-word prefix.
+
+    EA_MASTER_INDEX carries long annotated statuses ("DEMO — attached ...",
+    "ACTIVE (magic 992017 ...)", "DEAD-OPTIMIZED(cell)"). An exact-match lookup
+    silently bucketed ~30 of them as UNTESTED, showing live/demo EAs as never
+    touched. The verbatim string is kept separately (statusRaw) and shown in the
+    inspector, so bucketing here is display grouping, never a rewrite.
+    """
+    s = clean(raw).upper()
+    if not s:
+        return "UNTESTED"
+    if s in STATUS_ORDER:
+        return s
+    for prefix, bucket in (
+        ("DEAD", "DEAD"), ("REJECT", "REJECT"), ("PARKED", "PARKED"),
+        ("BUILD-ON", "WATCH"), ("WATCH", "WATCH"), ("WEAK", "WATCH"),
+        ("CANDIDATE", "CANDIDATE"), ("VALIDATED", "CANDIDATE"),
+        ("DEMO", "DEMO"), ("ACTIVE", "DEMO"),
+        ("LIVE", "LIVE"), ("CORE", "LIVE"),
+    ):
+        if s.startswith(prefix):
+            return bucket
+    return "UNTESTED"
+
+
 def load_rows():
     with io.open(SRC, encoding="utf-8-sig") as fh:
         raw = list(csv.DictReader(fh))
     out = []
     for i, r in enumerate(raw):
-        status = clean(r.get("status")) or "UNTESTED"
-        if status not in STATUS_ORDER:
-            status = "UNTESTED"
+        status_raw = clean(r.get("status")) or "UNTESTED"
+        status = bucket_status(status_raw)
         risk_label, risk_tone = risk_tier(r.get("risk_mech"))
         home = clean(r.get("home_cell"))
         out.append({
@@ -118,6 +143,7 @@ def load_rows():
             "name": short_name(r.get("name")),
             "full": clean(r.get("name")),
             "status": status,
+            "statusRaw": status_raw if status_raw.upper() != status else "",
             "origin": clean(r.get("origin")) or "-",
             "path": clean(r.get("file_path")) or "-",
             "lang": clean(r.get("lang")) or "-",
@@ -651,6 +677,7 @@ function select(id){
       <span class="pill p-risk-${r.riskTone}">${esc(r.riskLabel)}</span>
     </div>
     <div class="field"><div class="k">สถานะนี้แปลว่า</div><div class="v" style="color:var(--dim)">${esc(m.desc)}</div></div>
+    ${f("สถานะดิบใน index (จัดกลุ่มจากคำแรก)", r.statusRaw)}
     ${f("บ้าน (symbol × TF)", r.home)}
     ${f("กลยุทธ์", r.strategy)}
     ${f("กลไกความเสี่ยง", r.risk)}
