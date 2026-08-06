@@ -12783,7 +12783,7 @@ was a real defect and is worth having fixed; **it was not this defect.**
 
 ⇒ the disagreement is in the **values or the constants**, not in the shape or the labels.
 
-#### 🔴 A second finding, and it is worth more than this row: the deploy bundle does not hold the binary that produced the evidence
+#### A second finding, ⚠️ **half of which the author retracted an hour later — read the retraction block below before quoting any of it**
 
 | | |
 |---|---|
@@ -12792,12 +12792,41 @@ was a real defect and is worth having fixed; **it was not this defect.**
 | the owner's two chart runs | **13:08 and 13:10** |
 
 `#ifndef LAB_CONST__` guards in `ea_template/core/Inputs.mqh`: **0 at `1825bebc~1`, 152 today.**
-Locked constants for Boss_14 **did not exist** before that commit. **So a binary built at 11:05:35
-could not print `scope=surface+constants`, and the one on the chart did.** The `.ex5` in the bundle
-is therefore not the binary that ran, and the bundle cannot be used to reconstruct that evidence.
-Same family as memory `attach-verify-gate-and-binary` and `live-fleet-runs-pre-132-binaries`, found
-from the other end: not a stale binary shipped to the fleet, but a **stale binary left in the
-bundle that is supposed to document what was shipped.**
+Locked constants for Boss_14 **did not exist** before that commit.
+
+#### 🔴 RETRACTED within the hour, by the author, before anyone read it
+
+~~So a binary built at 11:05:35 could not print `scope=surface+constants`, and the one on the chart
+did. The `.ex5` in the bundle is therefore not the binary that ran.~~ — **the inference is unsound
+and the conclusion is probably false.**
+
+**A commit timestamp records when source was COMMITTED, not when it existed on disk.** `1825bebc`
+landing at 13:00:51 says nothing about whether its source was already in the worktree at 11:05, and
+the ordinary way of working is to build, test, then commit. One `Length` check settles what the
+timestamp could not:
+
+| binary | mtime | bytes |
+|---|---|---|
+| `_vps_deploy/BOSS14_GBPJPY/Boss_14_GridLog.ex5` | 2026-08-02 11:05 | **178,182** |
+| `D:\Meta 5b\…\EALabTpl\Boss_14_GridLog.ex5` (post-rollout, current) | 2026-08-02 13:59 | **178,300** |
+| `D:\Meta 5b\MQL5\Experts\Boss_14_GridLog.ex5` (pre-rollout) | 2026-07-27 08:55 | **152,178** |
+| `…_PRE132_2026-07-16.ex5.old` | 2026-07-16 | 103,616 |
+
+**The bundle's binary is in the ~178 KB post-rollout size class, not the 152 KB pre-rollout one.**
+So it is entirely consistent with being the binary that printed `scope=surface+constants`, and the
+bundle-is-stale claim is withdrawn.
+
+🎯 **The lesson is the one this repo keeps paying for, and it is mine:** I asserted a negative from
+a timestamp when a stronger instrument — the file's own size — was one command away, and I did it
+inside a write-up whose entire subject is *a digest that was trusted without being checked*. Memory
+`prove-the-instrument-can-see-the-file` and `pin-the-magnitude-before-calling-it-urgent` both say
+this; `parent-cpu-and-path-limit-both-mislead` is the same shape. **A commit timestamp is not a
+build timestamp, and mtime is not provenance.** What would actually settle it is the build tag or a
+hash of the running binary, and neither is recorded anywhere.
+
+⇒ Item 2's finding is unchanged and does not depend on any of this: **the corrected call reproduces
+`d1335d39…`/`1de384c8…`, so the scope label was not the cause.** The vintage of the running binary
+remains **unknown**, which is still the thing blocking the row — it just is not knowably *wrong*.
 
 #### What is still owed — narrower than before, and one item is an instrumentation ask
 
