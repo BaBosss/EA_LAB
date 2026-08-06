@@ -519,6 +519,9 @@ divergence *between copies* still is a sound signal.</sub>
    visible, not by refusing:** refusing outright breaks 53 existing ini configs in one step.
 2. **Decide what the root copies are.** They are not wrong to exist; they are hand-managed copies
    nobody refreshes. Either repoint the 53 configs at `EALabTpl\` or make the root a build output.
+   <br>📊 **MEASURED 2026-08-06 (lane `S-2026-08-06-S1500`) — see `§ITEM-2-FACTS` below. The two-way
+   choice as written is answerable, but it is stated over the wrong objects: there are FIVE
+   spellings, not two, and the 53 configs are gitignored.**
 3. 👤 **Owner's call: re-run `ORDER-430` / `ORDER-1420` on the current chassis?** 🚫 **Not obviously
    yes.** Under the ratified ≥100 floor both already conclude *nothing qualifies*, and staleness
    changes how far the individual numbers can be leaned on rather than the conclusion. A re-run is
@@ -529,6 +532,76 @@ is provenance, not impact. The cheap discriminator is **one** cell re-run on bot
 same `.set` — one pair, not sixteen. `ORDER-236` STAGE 3's `C0` is suggestive (it matched STAGE 2's
 stale-binary CTRL to the cent) but it is **one configuration and not a parity test**, and that row
 says so.
+
+### 📊 `§ITEM-2-FACTS` — measured 2026-08-06 (lane `S-2026-08-06-S1500`), read-only, no file changed
+
+Item 2 asks the owner to pick between two options over two spellings. **Both objects in that sentence
+are wrong, and the counts that produced it are right.**
+
+**First, the good news: this order's `53` / `657` reproduce exactly.** Counted again over on-disk
+`.ini` files with `.claude/worktrees/` excluded: `Expert=EALabTpl\Boss_14_GridLog` = **657**,
+`Expert=Boss_14_GridLog` = **53**. The original count stands.
+
+<sub>⚠️ My first recount did not, and the instrument was mine: `grep -oE "^Expert=[^\r]*"` under GNU
+grep reads `\r` inside a bracket expression as *backslash or the letter r*, so every value truncated
+at its first `r` — `Expert=PivotB`, `Expert=(Boss)_LondonConsoB`. It produced a plausible-looking
+frequency table of names that do not exist. Same family as memory
+`prove-the-instrument-can-see-the-file`, one layer up: the file was readable, the *pattern* was not.
+The `.ini` files are UTF-8-with-BOM, checked with `od -c`, so the UTF-16 hazard did not apply here.</sub>
+
+**#1 — there are FIVE spellings of this one EA in the ini corpus, not two, and all five resolve to a
+real binary with a distinct hash:**
+
+| `Expert=` value | binary | mtime | sha256 |
+|---|---|---|---|
+| `Boss_14_GridLog` (53) | `…\Experts\Boss_14_GridLog.ex5` | 2026-07-27 08:55:43 | `3221003b33cd…` |
+| `EALabTpl\Boss_14_GridLog` (657) | `…\Experts\EALabTpl\…` | 2026-08-02 13:59:03 | `d3971f62a7e9…` |
+| `Boss_14_GridLog_OLD` (1) | `…\Experts\…_OLD.ex5` | 2026-07-18 09:25:14 | `dd6abe24ccff…` |
+| `Boss_14_GridLog_OLD2` (1) | `…\Experts\…_OLD2.ex5` | 2026-07-18 11:14:39 | `ff9be8399559…` |
+| `D:\EA_LAB\ea_template\Boss_14_GridLog.ex5` (1) | exists at that path | 2026-07-23 08:10:46 | `1070f732f59c…` |
+
+**Five hashes, five mtimes spanning 2026-07-18 → 2026-08-02, one EA name.** "Repoint the 53 at
+`EALabTpl\`" leaves three of them standing.
+
+**#2 — the 53 configs are GITIGNORED.** `.gitignore:72` excludes `_mt5_auto/ini/`; `git ls-files
+'*.ini'` returns **2** files out of **10,777** on disk. So *"repoint the 53 configs"* means editing
+files git does not track and that regenerate on the next run. 🎯 **The durable objects are the
+writers, not the configs** — eleven scripts write `Expert=` into an ini (`mt5_run` · `mt5_optimize` ·
+`run_backtest` · `walkforward` · `gridsweep_robust` · `hedge_recovery_sweep` · `optimize_guard` ·
+`monitor_rotation` · the two mt4 pair · the cage) — plus this order's own **3 board command
+templates**, which ARE tracked and are where a human copies the name from.
+
+**#3 — 🔴 a SECOND permanent-UNKNOWN, still live, and this one is over files that exist.** Driving
+`Get-StaleCheckLine` over all five:
+
+| launched as | banner |
+|---|---|
+| `Boss_14_GridLog` | `STALE — …mtime=2026-07-27T08:55:43 …` |
+| `EALabTpl\Boss_14_GridLog` | `STALE — …mtime=2026-08-02T13:59:03 …` |
+| `Boss_14_GridLog_OLD` | 🔴 **`UNKNOWN — check_stale_binaries.ps1 produced no record`** |
+| `Boss_14_GridLog_OLD2` | 🔴 **`UNKNOWN — …produced no record`** |
+| `D:\EA_LAB\ea_template\…ex5` | `UNKNOWN — no binary at 'D:\Meta 5b\MQL5\Experts\D:\EA_LAB\…'` — ✅ **correct, not a defect:** MT5 resolves `-Expert` against the Experts folder and so does the banner. The concatenated path is what the tester would also do. |
+
+**Mechanism, read rather than guessed** (`check_stale_binaries.ps1:396-400`): a binary with no
+matching `.mq5` in the repo is classified `NO_SOURCE` and *counted, not listed* — *"somebody else's
+EA (bought, downloaded, a course file) … Listing 709 of them buries the 10 that matter."* **That rule
+is right for the report and wrong at the banner.** There is no `Boss_14_GridLog_OLD.mq5`, so our own
+renamed copy is filed as a third party's, and the launch banner renders that as *"produced no
+record"* — which reads as **"I could not see this file"** when the truth is **"I saw it and decided
+it was not mine to judge."** Two different facts (memory `name-it-honestly-when-you-cannot-prove-it`,
+`unreadable-input-must-refuse-not-skip`). **Reachable and already reached:** one ini config launches
+each of the two `_OLD` names.
+
+⇒ **Recommendation, for the owner to accept or reject** (🚫 not taken here — item 2 is a
+run-path/ops decision and `_OLD` deletion touches binaries):
+1. **Make the Experts root a build output**, not a hand-managed copy — that is the only option of the
+   two that also disposes of `_OLD`/`_OLD2`, which repointing does not touch.
+2. **Fix the banner's `NO_SOURCE` wording** before anything is made to refuse: it must say *"a
+   binary is present and has no `.mq5` in this repo"*, not *"no record"*. This is small, in
+   `binary_staleness.ps1` (**not** in the `ORDER-1462`-blocked pile), and is the honest-naming half
+   of item 1 rather than new work.
+3. Only then consider repointing, and repoint the **3 tracked board templates**, not the 53
+   gitignored artifacts.
 
 ### ✅ Item 1 DONE 2026-08-06 (lane `S-2026-08-06-OWED`) — visible, not refusing, and about the exact file
 
