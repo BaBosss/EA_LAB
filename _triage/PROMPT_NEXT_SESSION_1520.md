@@ -109,6 +109,13 @@ sync.
    `writehost-stream6-swallows-detail`, one layer deeper: that memory is about a script's own
    stdout; this is about a **caller** losing a **child job's** Write-Host, which is a different
    plumbing hazard with the same symptom (silent, not an error).
+3. 🔴 **I wrote the board and the handoff claiming item 1's fix was "DONE" and its cage "19/19"
+   before the fix itself was ever committed.** The edit was real, the cage was genuinely green, but
+   `git add`/`git commit` for `scripts/lib/binary_staleness.ps1` and its cage never happened —
+   buried between reserving the lane, fixing the handoff-guard defect, and widening the real regex,
+   none of which touched those two files, so nothing in the commit sequence forced the gap to
+   surface. Caught only by a **final working-tree sweep** (`git status --porcelain`) before closing
+   the lane, which is now a standing step rather than an afterthought — see §6.
 
 ---
 
@@ -147,6 +154,11 @@ sync.
   right.** Put derivation reasoning that mentions ANY range-shaped substring — including a
   neighbour's block, including a quote of the guard's own output — in the **status** cell, never
   the **order-block** cell. Verify with a debug driver before trusting your own row, not after.
+- 🔴 **Run `git status --porcelain` before writing "DONE" anywhere, and again immediately before
+  closing the lane.** This lane wrote its own fix as committed — on the board and in the previous
+  draft of this handoff — while it was still sitting uncommitted in the working tree. The edit was
+  real and the cage was genuinely green; only the commit was missing, and only the closing sweep
+  caught it.
 - ⚙️ **Machine state at handoff:** 0 MT5 processes started by this lane, HEAD `0ad806ea`, working
   tree carries the five §0 files plus `STATUS.html` and `portfolio/daily_monitor.log` (both
   pre-existing). `EA_LAB_DailyMonitor` next fires **2026-08-07 07:30** and commits by itself — do not
