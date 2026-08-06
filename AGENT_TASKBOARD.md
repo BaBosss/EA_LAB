@@ -156,7 +156,43 @@ line-10 record against bundle `2ce1ea874449`. `run_s2a_gate.py --template` produ
 
 🚫 **Until then:** the fast tier is **red for anyone who stages an s2a-guarded path**, and they did not
 cause it. 🚫 Do not "fix" this by weakening `F1`, by exempting the path, or by re-making the record
-without the owner reading the diff — the pin exists to make exactly this change visible. and every exit code read from it since is a fail-closed abort wearing a test result — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+without the owner reading the diff — the pin exists to make exactly this change visible.
+
+### 🔴 2026-08-06 — this stopped being hypothetical: it has now blocked a completed, verified change
+
+Lane `S-2026-08-06-OWED` finished `ORDER-1330`'s two owed items (schema pattern 112/112, the fast-tier
+wiring measured 109.1s → 110.1s with `run_guard_trigger_tests` green) and **cannot commit them.**
+Staging those five files selects `run_s2a_cages.ps1`; every criterion, all 32 mutations, every
+negative and every control in it pass, and the run ends `REJECTED` on this one line alone:
+
+```
+F1 line 10 attests bundle e28c5c9d68bb but the current bundle is 2ce1ea874449
+```
+
+**None of the five files is a bundle member** — they only select the suite. The work is parked in the
+working tree with a patch copy in the lane's scratchpad; details and the one-command way to land it
+are on `ORDER-1330`.
+
+<sub>⚠️ Two corrections to this row's own instructions, both found by trying to follow them.
+**(1) `run_s2a_gate.py --template` does not exist** — that script has no `--template` flag at all
+(`grep` returns nothing) and running it just re-runs the whole gate. The template comes from
+**`check_s2a_attestation.py --template`**. **(2) The line it emits is below**, generated 2026-08-06
+against the current bundle, so the owner does not have to reconstruct it:
+
+```
+{"bundle_sha256": "2ce1ea8744496342170033a6fbb5a26cc60f90e671e20f281bb5c2bd9d9f124b", "current_owner": "MASTER_BACKLOG.md", "decided_at": "<YYYY-MM-DDTHH:MM>", "decision": "APPROVED", "expected_post_state": {"path": "MASTER_BACKLOG.md", "section": "## 2. COVERAGE MATRIX — EA × symbol × TF × optimize", "section_sha256": "8f5aa2e6c1150658a9acc4ab83cd1ca0ec0eb35018aa8222ddf3b9fa7fb927c3"}, "reason": "<why - required for REFUSED, good practice for APPROVED>", "signer": "user (Boss)"}
+```
+
+**What the owner is being asked to have read** is `511d0f76`'s change to `check_s2a_migration.py`: a
+one-line change of `subprocess.run(..., text=True)` to `encoding='utf-8'`, because `text=True` decodes
+with `locale.getpreferredencoding()` (cp1252 here) and threw `UnicodeDecodeError` on any non-ASCII
+path byte git wrote — crashing every caller of that helper, not just the one that hit a Thai filename.
+Git's output is UTF-8. Behaviour for ASCII-only output is unchanged. **Reviewed and found sound by
+this lane; the signature is still not ours to give.**</sub>
+
+---
+
+## ORDER-1460 — [🔴 tooling/integrity] The ORDER-105 negative suite has been ABORTING at case 15 since 2026-08-01, and every exit code read from it since is a fail-closed abort wearing a test result — `DONE 2026-08-06 (lane S-2026-08-06-OWED) — 107/107, all three items` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 **bars:** N-A (a cage repair) · **flat-lot probe:** N-A
 
 Split out of `ORDER-501` 2026-08-06, which found it while measuring something else.
@@ -203,9 +239,57 @@ abort into a quiet 15-case pass, which is strictly worse · ❌ do not weaken th
 fail-closed check to make fixtures work · ❌ do not quote any post-2026-08-01 run of this suite as
 coverage evidence until item 3 lands.
 
+### ✅ DONE 2026-08-06 (lane `S-2026-08-06-OWED`) — all three items, and the third one is the number
+
+**`CASE COUNT: 107` · `ALL CASES PASSED`.** The 90 cases that had not run since 2026-08-01 run again,
+and they pass. 105 original + the two added below. The exception was **not** caught: the abort is
+still an abort, it just no longer happens.
+
+**Item 1 — the fixtures.** Two things were derived out of `.githooks/pre-commit`, both the same way
+the PowerShell stub list already was, because the stub list is derived precisely because a
+hand-maintained one broke this suite once before:
+- the interpreter path, from the hook's own `py="..."` assignment;
+- the `.py` checkers it runs, stubbed to `exit 0` and committed into the seed — they are no more the
+  guard under test than the PowerShell checkers beside them.
+
+The interpreter itself cannot be committed (22 MB of binary through the seed's git objects into
+fifty clones), so each fixture worktree gets it and the seed git-ignores it. **The first version
+copied it per fixture and left `1,101 MB` in `TEMP` — measured, not estimated** — which this suite
+cannot afford, because it is interrupted often and an interrupted run never reaches `Remove-Scratch`.
+It now makes **one** copy under the scratch root and **hard-links** it into each fixture: 18 fixtures
+read as 388 MB apparent while free space moved 30.51 → 30.51 GB, and `fsutil hardlink list` shows the
+links. A junction into the repo's real `tools/` was deliberately rejected — that would put a
+delete-through-reparse-point hazard between `Remove-Scratch` and the only interpreter on the commit
+path.
+
+🎯 **And the wiring had to stop being a list.** The first fix wired the four clone HELPERS and the
+suite still failed — one case, on `recovery_resume`, with the identical `PRECOMMIT-FAIL-CLOSED`
+line — because three more clones are written **inline**. Seven clone sites, four remembered. So the
+list is not trusted: a case now enumerates **every repository under the scratch root whose
+`core.hooksPath` is `.githooks`** and fails naming any that lacks the interpreter. That is the same
+correction the seed's stub list already carries, one layer out.
+
+**Item 2 — the floor.** `case-count-at-or-above-floor` asserts `>= 105` and is a case like any other,
+so a truncated run fails in the same list and takes the exit code with it. It is a **floor**, not an
+equality: adding cases must never turn it red, and lowering it to make a run go green is the defect
+it exists to catch. 📌 What the fifteen-case runs got wrong was never that a line was false — all
+fifteen results were true. What no line could say was that **ninety cases had not been asked.**
+
+**Item 3 — the state, recorded separately.** This run is a **full-suite** run and is the only one in
+this order that may be quoted as one. `ORDER-501`'s nine runs remain what they were: measurements of
+the truncated suite.
+
+<sub>🔴 Also repaired here, and it is not cosmetic: **this row's own `## ORDER-1460` header line had
+been consumed** by the edit that inserted `ORDER-1462` — the body survived from `**bars:**` down while
+the header's first half was gone and its tail was glued to the end of `ORDER-1462`'s prohibition
+paragraph. The row was therefore invisible to every `^## ORDER-<n>` sweep, **including the block
+derivation test both lanes today ran.** The header is restored **verbatim from `70c00840`**, not
+rewritten from memory, and the full header set now differs from that commit by exactly the one row
+`ORDER-1462` legitimately added. Same family as §4's `io.open(path,'w')` truncation.</sub>
+
 ---
 
-## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN — item 1 DONE 2026-08-06 (on the run path, visible not refusing, 18/18 caged); item 2 owed; item 3 is the owner's` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 **bars:** N-A (a wiring gap) · **flat-lot probe:** N-A
 
 Opened 2026-08-06 from the audit `PROMPT_NEXT_SESSION_CLEARALL.md` §5 owed.
@@ -265,6 +349,46 @@ is provenance, not impact. The cheap discriminator is **one** cell re-run on bot
 same `.set` — one pair, not sixteen. `ORDER-236` STAGE 3's `C0` is suggestive (it matched STAGE 2's
 stale-binary CTRL to the cent) but it is **one configuration and not a parity test**, and that row
 says so.
+
+### ✅ Item 1 DONE 2026-08-06 (lane `S-2026-08-06-OWED`) — visible, not refusing, and about the exact file
+
+`mt5_run.ps1` now prints a `stale-check:` line beside `surface:` on every launch. It **cannot change
+the exit code and cannot abort**: any failure inside it prints `UNKNOWN` with the reason and the run
+proceeds. Item 2 is untouched and item 3 is still the owner's.
+
+**It asks about the ONE FILE the launch resolves to, not the name group, because that is the whole
+finding.** `-Expert Boss_14_GridLog` loads the Experts-root copy and `-Expert EALabTpl\Boss_14_GridLog`
+loads a different one; the banner separates them by full path. Both directions were driven:
+
+| launched as | banner |
+|---|---|
+| `Boss_14_GridLog` | `STALE -- ...\Experts\Boss_14_GridLog.ex5 mtime=2026-07-27T08:55:43 :: binary mtime is OLDER than: ...LabCore.mqh (2026-08-06 06:49:53); ...` |
+| `EALabTpl\Boss_14_GridLog` | `STALE -- ...\Experts\EALabTpl\Boss_14_GridLog.ex5 mtime=2026-08-02T13:59:03 :: ...` |
+| `(Boss)_RSI_MR_GridLog_rev01` | **`OK`** — the specificity case. A line that only ever says STALE is not a detector |
+| `NoSuchEA_zzz` | `UNKNOWN -- no binary at '...\NoSuchEA_zzz.ex5'` |
+
+**The verdict is produced by `check_stale_binaries.ps1` itself, not by a second copy of the staleness
+rule living in the runner** — that copy would drift from this one the first time either changed
+(memory `correct-check-exists-only-its-cage-calls-it`). It is affordable because that script gained
+**`-OnlyName`**: **0.70s** narrowed against **107.1s** for the full sweep, both measured here. A
+107-second check on the run path is a check somebody switches off within a day.
+
+⚠️ **A narrowed run must never write the sweep's sidecar.** Without `-JsonOut` it now writes none and
+says so: one name group over `stale_binaries_check.json` would leave a file that still looks like the
+full audit and answers *"nothing found"* for every binary it silently stopped containing. Caged in
+both directions — `scripts/_test/run_stale_binaries_tests.ps1` **18 passed, 0 failed** (14 before),
+with `-OnlyName` asserted to keep the STALE verdict AND the exit code, to report `OK`/exit 0 on a
+fresh binary, and to leave the real sidecar byte-identical (`Get-FileHash` either side).
+
+🔴 **Read this before acting on the banner's first days: today's `STALE` verdicts are mostly a git
+artifact, and that is measured, not suspected.** Fourteen `ea_template/core/*.mqh` files carry the
+identical mtime `2026-08-06 06:49:53` while the last commit touching `LabCore.mqh` is `ec085d69`
+(**2026-08-02**) — a checkout stamp from the branch switch §0 of the handoff describes, not edits.
+`check_stale_binaries.ps1`'s own header warns about exactly this. ⇒ **Nearly every Boss binary reads
+STALE today for a reason that is not staleness**, so the line will be noisy before it is useful. That
+strengthens item 1's *visible-before-refusing*: a refusal wired to this signal today would have
+blocked the whole fleet. The 2026-07-27 root-copy finding is unaffected — it is **eight days** older
+than its sources and was measured before this stamp existed.
 
 ---
 
@@ -500,7 +624,7 @@ cells alive — that is the failure this order is about.
 
 ---
 
-## ORDER-1330 — [factory/S13] The same configuration produced different money on two different days, and both identity fields the pipeline records said it was the same run — `OPEN (item 3 DONE 2026-08-04 · item 2 DONE 2026-08-06 = §ITEM-2, range corrected to 0.5%-to-a-PF-crossing-1.0 and a third consecutive day now shows the drift is NOT per-session · item 1 PARTIAL 2026-08-06 = §ITEM-1, the version tag + cross-version REFUSAL are in and caged 13/13, but no v2 can be produced until ORDER-1350 wires a per-run swap probe, and the re-stamp is blocked on an s2a attestation and turns out not to be needed)` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+## ORDER-1330 — [factory/S13] The same configuration produced different money on two different days, and both identity fields the pipeline records said it was the same run — `OPEN (item 3 DONE 2026-08-04 · item 2 DONE 2026-08-06 = §ITEM-2, range corrected to 0.5%-to-a-PF-crossing-1.0 and a third consecutive day now shows the drift is NOT per-session · item 1 PARTIAL 2026-08-06 = §ITEM-1, the version tag + cross-version REFUSAL are in and caged 13/13, but no v2 can be produced until ORDER-1350 wires a per-run swap probe, and the re-stamp is blocked on an s2a attestation and turns out not to be needed · §ITEM-1 owed-1 and owed-2 both DONE 2026-08-06 by lane S-2026-08-06-OWED: the cage is wired into the fast tier with the pathspec regenerated and guard-trigger green, tier 109.1s → 110.1s of the pinned 120.0s, and data_fingerprint now carries pattern ^(v[0-9]+:)?[0-9a-f]{64}$ at both schema sites with the 10 filler fixtures fixed rather than the rule relaxed, 112/112 · §ITEM-1 owed-3 still blocked on Blocker A)` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Opened 2026-08-04 by lane `S-2026-08-04-S13F` while auditing its own `ORDER-1273` step-6 work.
 > **Nothing was adjusted to fit and no verdict follows from it** — this is a measurement about the
@@ -658,6 +782,8 @@ that computes every pilot fingerprint **has had no cage on the commit path at al
 change and after it. Adding a `$SUITE_GUARDS` key requires the pathspec and
 `run_guard_trigger_tests.ps1` to move together, so it is owed rather than half-done here — but the
 thing to fix is the *file's* coverage, not just this cage's registration.
+<sub>✅ **Closed 2026-08-06** — see `§ITEM-1` **Owed item 1** below. The paragraph above is kept
+because its measurement is the reason the fix is scoped to the FILE and not to the cage.</sub>
 
 #### 🔴 Blocker A — nothing captures the swap spec, so no `v2` fingerprint can actually be produced yet
 
@@ -700,6 +826,97 @@ remaining value of an explicit re-stamp is that `legacy` would stop being inferr
    work; relaxing the pattern to fit them would be the mistake.
 3. The `$Ctx`/`$Metrics` plumbing to pass a spec through `pilot_cells.ps1` and
    `pilot_verify_selected.ps1` — trivial once Blocker A has something to pass.
+
+#### 🔴 BOTH ITEMS BELOW ARE DONE AND **UNCOMMITTED** — the commit is REFUSED by `ORDER-1462`
+
+**This work exists only in the working tree.** Five files: `_triage/factory_os/schemas.json` ·
+`_triage/factory_os/run_schema_fixtures.py` · `_triage/factory_os/CONTRACTS.md` ·
+`scripts/_test/run_fast_cages.ps1` · `.githooks/fast_tier_pathspec`. A copy of the diff is at
+`…\scratchpad\ORDER-1330_blocked_by_1462.patch` so nothing is lost if the tree is swept.
+
+**The reproduction, since `ORDER-1462` describes this consequence but nobody had hit it yet.** Staging
+those five selects **10 of 30** suites, one of which is `run_s2a_cages.ps1`, which fails on the
+unmade attestation. Everything else in that suite is green — all nine machine criteria, 32/32
+mutations, every negative and every control — and the one failure is:
+
+```
+F1 line 10 attests bundle e28c5c9d68bb but the current bundle is 2ce1ea874449
+```
+
+⇒ `[pre-commit] REJECTED`. **None of the five files is an s2a bundle member** (`BUNDLE` is six paths
+and `schemas.json` is not among them); they merely *select* the suite. 🚫 Not landed with
+`--no-verify`: bypassing is the owner's call, and the ledger row for this lane forbids it.
+
+📌 **Splitting the commit does not help, and that was checked rather than assumed:** every suite
+implicitly guards `run_fast_cages.ps1` and the hooks, so the wiring half selects everything including
+`run_s2a_cages.ps1`, and the schema half selects it directly. **The board and ledger commits are
+unaffected** (`AGENT_TASKBOARD.md` selects `run_front_guard_evidence_tests.ps1` only), which is why
+this record could land while the work it describes could not.
+
+**To land it after the attestation:** `git add` those five paths and commit — nothing else is needed,
+and the tier was already measured green apart from the s2a suite.
+
+#### ✅ `§ITEM-1` **Owed item 1** DONE 2026-08-06 (lane `S-2026-08-06-OWED`) — the FILE's coverage, not just this cage's registration
+
+<sub>📌 Numbering, because this row has two lists that both start at 1: these two headings close
+**"Owed, precisely" items 1 and 2 inside `§ITEM-1`** (wire the cage · the schema pattern). They are
+NOT `§ITEM-1` and `§ITEM-2` of the row itself. `§ITEM-1` stays **PARTIAL** — its owed item 3, the
+`$Ctx`/`$Metrics` plumbing, is still blocked on Blocker A, and no `v2` can be produced until
+`ORDER-1350` wires a per-run swap probe.</sub>
+
+All three moved together, which is what this item said was required: `$SUITE_GUARDS` gained
+`'run_pilot_fingerprint_tests.ps1' = @('scripts/lib/pilot_run.ps1')`, `$FAST_SUITES` gained the suite,
+and `.githooks/fast_tier_pathspec` was **regenerated** by `scripts/gen_fast_tier_pathspec.ps1` (it is
+derived from the table, not hand-edited) — one line added, `scripts/lib/pilot_run.ps1`.
+`run_guard_trigger_tests.ps1` **all parts green**, including PART 4's undeclared-reference sweep.
+
+**Proven by selection, not by inspection.** Staging `scripts/lib/pilot_run.ps1` now selects
+**`run_pilot_fingerprint_tests.ps1`** (with `run_report_freshness_tests.ps1`, which declares
+`scripts/*.ps1`), against a control of `docs/SESSION_LEDGER.md` selecting exactly **1**. At HEAD the
+same file appeared **0 times** in the pathspec and **0 times** anywhere in `run_fast_cages.ps1` — so
+the hook did not merely pick the wrong suites for it, it **never ran the tier at all**.
+
+**The tier, measured with `-Hook` on a lane with no MT5 run in flight** (quote the invocation —
+memory `tier-number-needs-its-invocation`):
+
+| | samples | suites | median | headroom of the pinned 120.0s |
+|---|---|---|---|---|
+| before | 109.2 / 109.1 / 109.0 | 29 | **109.1s** | 10.9s |
+| after | 110.1 / 110.1 / 110.0 | 30 | **110.1s** | 9.9s |
+
+The suite's own line reads **0.3s** and the tier moved **1.0s**; the difference is process startup and
+is stated rather than glossed, because both spreads are 0.2s so 1.0s is outside the noise.
+⚠️ **The tier is RED in all six samples and it is not this suite** — `run_s2a_cages.ps1` fails on
+`ORDER-1462`, which only the owner can clear. The comparison is still sound (the same one suite fails
+either side, in 6.7s, without short-circuiting the run) but **no green tier is claimed here.**
+
+#### ✅ `§ITEM-1` **Owed item 2** DONE 2026-08-06 (lane `S-2026-08-06-OWED`) — the pattern is in, and the fixtures were fixed rather than the rule
+
+`^(v[0-9]+:)?[0-9a-f]{64}$` is now on `data_fingerprint` at **both** sites in `schemas.json` —
+`MetricRef` and `ExecutionKey`. **The pattern was not relaxed to fit the fixtures; the fixtures were
+made to carry fingerprints.** `"df1"` / `"f1"` / `"f"` became `DF64`, a real 64-hex constant kept
+deliberately distinct from `H64` so a swap shows up in a diff instead of two identical strings
+agreeing with each other.
+
+🎯 **The finding held up exactly as this row predicted it would:** the field had no pattern *because*
+nothing in the test corpus ever had to produce a real one, so the contract could not tell a
+fingerprint from a label. Ten fixture cases went red the moment the rule was real — and one of them,
+`metricref-core-negative`, was a NEGATIVE that still failed while failing **for the wrong reason**,
+which the `says` harness caught and a bare pass/fail would not have.
+
+**Three cases added, because a pattern with no negative is decoration:**
+- `metricref-data-fingerprint-must-be-a-fingerprint` — `"df1"`, the value every fixture here carried
+  until today, is now REFUSED with `keyword: pattern` at the field.
+- `executionkey-data-fingerprint-must-be-a-fingerprint` — the same rule at the other site, and the
+  costlier one: `data_fingerprint` is in `scheduler.py`'s `EXECUTION_KEY_FIELDS`, so a placeholder
+  there does not merely fail to identify a run, it decides what `find_cached` calls already-executed.
+- `metricref-data-fingerprint-versioned-form-is-accepted` — **the specificity case.** `v1` is a bare
+  digest and `vN:` prefixes the recipe version, so a pattern taking only the bare form would refuse
+  every fingerprint the versioning above was added to make possible.
+
+`run_schema_fixtures.py` **112/112** (41 root + 71 per-entity), `HEADER_COUNTS` moved with it, and
+`CONTRACTS.md` regenerated so the schema cages stay green. 📌 **The 250 LIVE registry rows validated
+without a single change** — the real corpus already conformed; only the test corpus did not.
 
 #### 🔬 A new observation from today that changes the shape of the claim — the drift is not per-day
 
@@ -9657,7 +9874,7 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 
 ---
 
-## ORDER-501 — [🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load — flaky test หรือ event หายจริงตอน contention — `STEP 1 DONE 2026-08-06 (9 runs, 3x3 controlled load) — 🔴 HYPOTHESIS 2 REFUTED: events<150 ⟺ childOk=False on all 9 runs, so the log never lost an accepted write; the worker exhausts a 3-attempt retry and reports it. NOT a Contract D defect. Load is NOT the driver (mean lost: load0=7.67, load10=1.67, load20=15.33) — WALL-CLOCK duration is, with an empty gap between 687s and 861s. Also NOT "flaky": the budget is deterministically too small whenever the machine is slow. STEP 2 (wait-until-done, never a bigger timeout) is owed and deliberately not done here. Spun off ORDER-1460: the suite ABORTS at case 15 since fefce8fd, so ORDER-421's 105-case baseline is unreproducible.` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+## ORDER-501 — [🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load — flaky test หรือ event หายจริงตอน contention — `STEP 1 DONE 2026-08-06 (9 runs, 3x3 controlled load) — 🔴 HYPOTHESIS 2 REFUTED: events<150 ⟺ childOk=False on all 9 runs, so the log never lost an accepted write; the worker exhausts a 3-attempt retry and reports it. NOT a Contract D defect. Load is NOT the driver (mean lost: load0=7.67, load10=1.67, load20=15.33) — WALL-CLOCK duration is, with an empty gap between 687s and 861s. Also NOT "flaky": the budget is deterministically too small whenever the machine is slow. STEP 2 DONE 2026-08-06 (lane S-2026-08-06-OWED) — the retry is now unbounded in tries and bounded by the STATUS (wait on lock_timeout, stop on a refusal), because merely deleting the loop would have cut the per-request wait from 90s to 30s and made the slow-run incidence WORSE; no new number, the parent's existing WaitForExit(600000) is the outer bound; 108/108 on one fast run, and the slow-run case is now self-naming. Spun off ORDER-1460: the suite ABORTS at case 15 since fefce8fd, so ORDER-421's 105-case baseline is unreproducible.` · runnable by: **Claude/Opus** · 👉 recommended: Claude
 **bars:** N-A (diagnosis) · **flat-lot probe:** N-A
 
 **ที่มา:** ORDER-421 รัน `run_order105_negative_tests.ps1` สองรอบในวันเดียวกันด้วยโค้ดชุดเดียวกันเป๊ะ — **เครื่องยุ่ง 103/105 · เครื่องว่าง 105/105** · เคสที่ต่างคือ concurrency 2 ตัว:
@@ -9751,6 +9968,47 @@ passes is the real budget; the 3-attempt loop wrapped around it is the artificia
 🚫 **Do not "fix" this by raising the attempt count** — that is the *"เพิ่ม timeout แล้วเรียกว่าแก้แล้ว"*
 this row forbids, and it would only move the slowness threshold rather than remove it.
 **STEP 2 is NOT executed here**: it changes a cage, and this lane measured rather than repaired.
+
+### ✅ STEP 2 DONE 2026-08-06 (lane `S-2026-08-06-OWED`) — and the obvious version of it was wrong
+
+The bounded `3 x 100ms` budget is gone. **But deleting the loop and stopping there would have been a
+regression, and it is worth writing down because it is the reading STEP 1's own sentence invites:**
+
+> *"The 30-second lock timeout the worker already passes is the real budget; the 3-attempt loop
+> wrapped around it is the artificial one."*
+
+Three attempts each passing `$LockTimeoutSeconds=30` is **up to ninety seconds** of waiting per
+request. One bare call is **thirty**. So the naive fix cuts the total wait to a third **on exactly the
+slow runs the shortfalls came from** — it fixes the SHAPE of the defect and makes its INCIDENCE
+worse. And "30s is plenty" was never measured: STEP 1 could not say which status the failing attempts
+returned, because the scratch tree is deleted at the end of every run.
+
+**What shipped instead — unbounded in tries, bounded by what the write says:**
+- `lock_timeout` means the lock was busy and **nothing was decided** ⇒ keep waiting. That is waiting
+  for a lock, and it is what "wait until the write is done" means.
+- any other non-zero status is the log **refusing** the event (conflict, schema, clock skew).
+  Retrying cannot change it ⇒ stop at once and report what was said.
+
+🚫 **No new number was introduced** — the prohibition on this row is honoured literally. The outer
+bound is the parent's existing `WaitForExit(600000)`: a writer that cannot land one request in ten
+minutes of pure contention is killed there, `childOk` goes False, and the case fails. That failure is
+a true statement about the log rather than a test running out of patience.
+
+🎯 **The discriminator STEP 1 needed nine runs to establish is now recorded in the suite instead of
+re-derived.** `concurrent-write-no-writer-abandoned-a-request` reads the writers' own completion lines
+and reports per-writer `failed/completed` plus the refusing status. The existing event-count case
+cannot tell *"the log dropped a write it accepted"* from *"a writer gave up before writing"* — it
+prints `events=147 expected=150` for both, and the first reading is a Contract D data-loss defect
+while the second is not. The scratch tree is deleted in `finally`, so this had to be lifted into a
+case detail or it would vanish with it — the exact gap STEP 1 flagged in its own footnote.
+
+**Measured, and stated with its limit:** `CASE COUNT: 108 · ALL CASES PASSED`, with
+`abandoned=0 per-writer(failed/completed)=0/50 | 0/50 | 0/50` and `positive_waits=149`. So contention
+was real and **not one request needed a second attempt** — which is direct evidence the 3-attempt
+budget was doing no useful work on a healthy run. ⚠️ **This is one FAST run.** The failure mode lives
+above ~861s of wall-clock and was not reproduced here; the claim that removing the budget removes the
+failure rests on the mechanism, not on a slow-run observation. **The next slow run will name its own
+status** — that is what the new case is for, and it is the cheapest way to close this properly.
 
 ### 🔴 A second defect found on the way, and it is bigger than this order — `ORDER-1460`
 
