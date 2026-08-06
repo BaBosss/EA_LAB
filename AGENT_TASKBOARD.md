@@ -469,7 +469,7 @@ evidence anyone should go looking for later.
 
 ---
 
-## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN — item 1 DONE 2026-08-06 and CORRECTED the same day by /scrutinize: it had shipped on 1 of the 3 tester entry points, and the one it missed was the OPTIMIZER. Now shared in scripts/lib/binary_staleness.ps1, called from mt5_run + mt5_optimize + run_backtest, 17/17 caged and registered in the fast tier; item 2 MEASURED 2026-08-06 (§ITEM-2-FACTS) and its two-way question restated — the 53/657 counts reproduce, but there are FIVE spellings of the EA not two, the 53 configs are gitignored so the durable objects are the 11 writer scripts and the 3 TRACKED board templates, and a SECOND live permanent-UNKNOWN was found where the banner reports our own renamed copies as "no record"; the decision itself is still owed and is the owner's; item 3 is the owner's` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN — item 1 DONE 2026-08-06 and CORRECTED the same day by /scrutinize: it had shipped on 1 of the 3 tester entry points, and the one it missed was the OPTIMIZER. Now shared in scripts/lib/binary_staleness.ps1, called from mt5_run + mt5_optimize + run_backtest, 17/17 caged and registered in the fast tier; item 1's honest-naming half FIXED 2026-08-06 (§ITEM-1-WORDING) — the banner passes -IncludeForeign now, so a binary with no matching .mq5 reads NO_SOURCE with the real reason instead of a bare UNKNOWN "produced no record", 19/19 caged including the new fixture; item 2 MEASURED 2026-08-06 (§ITEM-2-FACTS) and its two-way question restated — the 53/657 counts reproduce, but there are FIVE spellings of the EA not two, the 53 configs are gitignored so the durable objects are the 11 writer scripts and the 3 TRACKED board templates; the decision itself is still owed and is the owner's; item 3 is the owner's` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 **bars:** N-A (a wiring gap) · **flat-lot probe:** N-A
 
 Opened 2026-08-06 from the audit `PROMPT_NEXT_SESSION_CLEARALL.md` §5 owed.
@@ -596,10 +596,13 @@ each of the two `_OLD` names.
 run-path/ops decision and `_OLD` deletion touches binaries):
 1. **Make the Experts root a build output**, not a hand-managed copy — that is the only option of the
    two that also disposes of `_OLD`/`_OLD2`, which repointing does not touch.
-2. **Fix the banner's `NO_SOURCE` wording** before anything is made to refuse: it must say *"a
-   binary is present and has no `.mq5` in this repo"*, not *"no record"*. This is small, in
-   `binary_staleness.ps1` (**not** in the `ORDER-1462`-blocked pile), and is the honest-naming half
-   of item 1 rather than new work.
+2. ✅ **DONE 2026-08-06 (lane `S-2026-08-06-S1510`).** `Get-StaleCheckLine` now calls the detector
+   with `-IncludeForeign` (safe here because `-OnlyName` already narrows to one name group, so the
+   "bury 10 in 709" concern the flag exists for cannot apply). Verified on the real machine: both
+   `Boss_14_GridLog_OLD` and `_OLD2` now read `NO_SOURCE -- ... no .mq5 named '...' found anywhere
+   under D:\EA_LAB - cannot verify staleness` instead of the old `UNKNOWN -- ... produced no
+   record`. Cage gained a fixture (a binary with genuinely no matching `.mq5`) and asserts both the
+   status and the wording; 19/19.
 3. Only then consider repointing, and repoint the **3 tracked board templates**, not the 53
    gitignored artifacts.
 
