@@ -100,14 +100,28 @@ and is load-bearing when it is on. `inert-axis-fake-plateau`, one level down. In
 
 ## §5 — What is OWED
 
-- **`ORDER-501` — still not measured, blocked by the same cause twice today.** It measures behaviour
-  under controlled load and its suite asserts the shared repo is unchanged. **It needs a machine with
-  exactly one lane on it.** The driver is written and works:
-  `scratchpad/o501_driver.ps1` (3 reps × 3 load levels, ~6.6 min per suite run).
-  <sub>⚠️ A single idle run reported **`CASE COUNT: 15`** where `ORDER-421` recorded **105**, and did
-  not print `ALL CASES PASSED`. Unexplained — possibly the same contamination, possibly not. Check it
-  before trusting any count from this suite.</sub>
-- **`ORDER-1000`** — not started. Owner has ruled dev-compile-only, so it is unblocked.
+> 🔁 **UPDATED 2026-08-06 by the continuation lane `S-2026-08-06-CLEARALL2`**, which ran after
+> `MAPFIX` closed and freed the machine. **`ORDER-501` and `ORDER-1000` are both DONE** — struck
+> through below, with what they found. Two new orders came out of them: **`ORDER-1460`** and
+> **`ORDER-1461`**.
+
+- ~~**`ORDER-501`**~~ ✅ **STEP 1 DONE** (9 runs, 3 reps × 3 load levels, `355e7d3d`).
+  🔴 **Hypothesis 2 REFUTED:** `events < 150` ⟺ `childOk = False` on **all nine** runs, so the log
+  never lost a write it accepted — the worker exhausts a 3-attempt retry and says so. **Not a
+  Contract D defect.** Load is not the driver (mean lost `7.67 / 1.67 / 15.33` at 0/10/20 busy cores);
+  **wall-clock duration is**, with an empty gap between 687s and 861s. **STEP 2 still owed** — wait
+  until the write is done, never a bigger timeout, which this row already forbids.
+  <sub>The `CASE COUNT: 15` anomaly flagged here was real and is now explained → `ORDER-1460`.</sub>
+- ~~**`ORDER-1000`**~~ ✅ **INSTRUMENTED** (`386593bc`), dev-compile only per the owner.
+  🔴 **A1 named two inputs this EA does not have** (`_06_AllowLive`, `_06_Magic`) — verified against
+  the deployed `.set` too — so `ORDER-941`'s leading cause **cannot apply to these four legs**.
+  Counters proved non-zero with the invariant closing. **A2/A3 need the build on the charts = 👤 owner.**
+- 🆕 **`ORDER-1460`** — the ORDER-105 suite **aborts at case 15** since `fefce8fd` (2026-08-01), so
+  90 of 105 cases have not run and `ORDER-421`'s baseline is unreproducible. **Do not quote any
+  post-08-01 run of that suite as coverage.**
+- 🆕 **`ORDER-1461`** — the stale-binary detector is **correct and on nobody's path**. `ORDER-430`
+  and `ORDER-1420` both measured on a chassis that had already changed. 👤 Re-running them is the
+  owner's call: 16 Model-4 runs to re-confirm a negative the participation floor already reached.
 - **`ORDER-1330` item 1** — the cage is **not wired into the fast tier** (needs `fast_tier_pathspec`
   + `$SUITE_GUARDS` + `run_guard_trigger_tests.ps1` to move together), and the `schemas.json` pattern
   was **attempted and reverted**: `^(v[0-9]+:)?[0-9a-f]{64}$` reddens **11 fixtures using filler
@@ -151,4 +165,24 @@ and is load-bearing when it is on. `inert-axis-fake-plateau`, one level down. In
 
 ---
 
-Open with: **"`_triage/PROMPT_NEXT_SESSION_CLEARALL.md` — จองบล็อกใหม่ก่อน (derive เอง · MAPFIX ถือ 1450-1459) · §5 มีของค้าง 5 ข้อ · เริ่มที่ ORDER-1000 (owner เคาะแล้ว dev-compile only) แล้ว ORDER-501 ต้องรอเครื่องเลนเดียว"**
+## §7 — 🆕 What the continuation lane adds, that the sections above do not say
+
+1. 🎯 **Three separate times today, a measurement was voided by something moving underneath it** — a
+   branch-switching writer, then a hashing job I started myself during an idle baseline, then nothing
+   (the third run held). **The environment does not hold still by default, and the only reason the
+   final `ORDER-501` numbers are usable is that HEAD was checked before and after.** Any future run
+   that asserts repo stability should record HEAD at both ends *in its own output*, not rely on the
+   operator remembering.
+2. 🔴 **A zero exit code from the MQL5 compiler is not evidence that a compile happened.**
+   `terminal64.exe /compile` on `D:\Meta 5b` silently stopped compiling after that terminal was
+   force-killed — no `.ex5`, no line in `metaeditor.log` — and `metaeditor64.exe /compile` returned
+   **0** while producing nothing. Check the `.ex5` mtime **and** a fresh `metaeditor.log` line. Lane 1
+   (`D:\Meta 5`) built the same source in 5 seconds.
+3. **Two orders were closed by reading the source before running anything** — `ORDER-1000`'s A1 named
+   inputs that do not exist, and `ORDER-501`'s framing rested on a baseline the suite can no longer
+   produce. **In both cases the cheap read came first and saved the expensive work**, which is §0 of
+   the previous handoff arriving from a third direction.
+
+---
+
+Open with: **"`_triage/PROMPT_NEXT_SESSION_CLEARALL.md` — จองบล็อกใหม่ก่อน (derive เอง · สูงสุดที่ lane row ถือ = 1460-1469) · อ่าน §5 ที่อัปเดตแล้ว + §7 · ของค้าง: ORDER-1330 item 1 (wire กรง + แก้ fixture 11 จุด) · ORDER-1460 · ORDER-1461 · และ 3 ข้อที่รอ owner เคาะ"**
