@@ -105,6 +105,118 @@
 
 ---
 
+## ORDER-1460 — [🔴 tooling/integrity] The ORDER-105 negative suite has been ABORTING at case 15 since 2026-08-01, and every exit code read from it since is a fail-closed abort wearing a test result — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+**bars:** N-A (a cage repair) · **flat-lot probe:** N-A
+
+Split out of `ORDER-501` 2026-08-06, which found it while measuring something else.
+
+**The measurement.** All **nine** runs of `scripts/_test/run_order105_negative_tests.ps1` this session
+returned `CASE COUNT: 15`, ending on:
+```
+[FAIL] suite-unhandled-exception :: PRECOMMIT-FAIL-CLOSED: tools/python312/python.exe not found
+       -- cannot run check_attested_pin_staged.py, blocking commit
+```
+`ORDER-421` recorded **105** cases on 2026-07-28. **The suite is not smaller; it throws and stops.**
+
+**Cause, from the commit that introduced it.** `fefce8fd` (**2026-08-01 11:24**, ORDER-731 item 1)
+added `check_attested_pin_staged.py` to `.githooks/pre-commit` behind a **fail-closed** check for
+`tools/python312/python.exe`. The suite builds fixture repos under `$env:TEMP\ea_lab_order105_<guid>`
+and points their `core.hooksPath` at the real `.githooks`. **A fixture repo has no `tools/python312/`,
+so the hook correctly refuses — inside a fixture, where refusing is wrong.**
+⚠️ The hook is not at fault. **Fail-closed is the right behaviour**; the fixture is what is
+under-provisioned, and the suite is what fails to notice.
+
+**Why this is worse than a broken test.** Two things read this suite's exit code:
+1. **anyone judging Contract D's negative coverage** — 90 of 105 cases have not run since 08-01, and
+   nobody was told;
+2. **`ORDER-421`'s comparison, which `ORDER-501` was built on**, is now unreproducible at any load.
+   `ORDER-501` reached its answer another way, but it could just as easily have spent the session
+   chasing a difference that no longer exists.
+
+⇒ Same family as memory `stale-detector-masked-by-advisory-label` and
+`falsifier-satisfied-by-unexercised-mechanism`: **the artifact kept being produced; it just stopped
+being true.**
+
+### Owed
+1. **Give the fixture repos what the hook needs, or give the hook a documented fixture mode.** Prefer
+   the first — a fixture whose hooks cannot run is not exercising the hook path it claims to test.
+2. 🔴 **Make a truncated run impossible to mistake for a pass.** The suite already prints
+   `CASE COUNT`, and nine runs printed `15` while nobody noticed. **Assert a MINIMUM case count and
+   fail loudly below it** — a suite that silently runs 14% of itself is the shape this repo keeps
+   paying for.
+3. Re-run the full 105 afterwards and record the real current state, **separately from `ORDER-501`'s
+   numbers** — those were taken on the truncated suite and must not be relabelled as full-suite runs.
+
+**Prohibitions:** ❌ do not "fix" this by catching the exception and continuing — that converts a loud
+abort into a quiet 15-case pass, which is strictly worse · ❌ do not weaken the pre-commit hook's
+fail-closed check to make fixtures work · ❌ do not quote any post-2026-08-01 run of this suite as
+coverage evidence until item 3 lands.
+
+---
+
+## ORDER-1461 — [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it — two Boss_14 screens were measured on a chassis that no longer existed — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+**bars:** N-A (a wiring gap) · **flat-lot probe:** N-A
+
+Opened 2026-08-06 from the audit `PROMPT_NEXT_SESSION_CLEARALL.md` §5 owed.
+
+**Timeline — the root binary went stale thirteen hours after it was built.**
+
+| when | what |
+|---|---|
+| **2026-07-27 08:55:43** | `D:\Meta 5b\MQL5\Experts\Boss_14_GridLog.ex5` built (152,178 bytes) |
+| 2026-07-27 **21:36** | `c44ca743` — `core/LabCore.mqh` (refuse a zero SL buffer) |
+| 2026-07-27 **22:29** | `e3edd614` — **`core/Execution.mqh` + `core/RiskControl.mqh`** + `LabCore.mqh` |
+| 2026-08-02 13:00 | `1825bebc` — `core/Inputs.mqh` capability-token rollout |
+| 2026-08-02 **13:59:03** | `EALabTpl\Boss_14_GridLog.ex5` built (178,300) — **never copied to the Experts root** |
+
+`-Expert "Boss_14_GridLog"` resolves to the **root** copy. Counted across the repo: **53** ini configs
+and 3 board command templates use it; **657** ini configs and 2 templates use `EALabTpl\…`.
+
+**Two screens ran on the stale copy, and they are the two `ORDER-236`'s host question rests on:**
+
+| screen | reports written | after staleness onset |
+|---|---|---|
+| **`ORDER-430`** 7-host BWD/MAIN | 2026-07-28 07:10–07:31 | ~10 hours |
+| **`ORDER-1420`** 7-symbol short mirror | 2026-08-05 07:33– | 8 days |
+
+### 🎯 The finding is the wiring, not the staleness
+
+`scripts/check_stale_binaries.ps1` **already detects this correctly**, unprompted:
+```
+{"name":"Boss_14_GridLog","path":"D:\\Meta 5b\\MQL5\\Experts\\Boss_14_GridLog.ex5",
+ "mtime":"2026-07-27T08:55:43","status":"STALE","hash_differs":true}
+```
+All four copies of that name on this machine come back `STALE / hash_differs:true` — four SHA256s
+under one name. ⇒ **This is not a missing guard. It is a correct guard that sits on neither the
+commit path nor the run path of the thing it governs** — `mt5_run.ps1` never calls it, so a run
+proceeds on a stale binary in silence (memory `correct-check-exists-only-its-cage-calls-it`,
+`declared-as-trigger-but-never-read`).
+
+<sub>Note its semantics: it compares **hashes across copies of one name**, not source-mtime vs
+binary-mtime. That deliberately sidesteps memory `mql5-compile-not-byte-reproducible` — recompiling
+the same source gives different bytes, so "equal to source" cannot be proven by hash, while
+divergence *between copies* still is a sound signal.</sub>
+
+### Owed
+1. **Put it on the run path.** `mt5_run.ps1` should call the detector scoped to the expert it is about
+   to launch and **print the verdict in the launch banner**, next to the existing
+   `surface: UNDECLARED` warning — which is already where a runner looks. **Start by making it
+   visible, not by refusing:** refusing outright breaks 53 existing ini configs in one step.
+2. **Decide what the root copies are.** They are not wrong to exist; they are hand-managed copies
+   nobody refreshes. Either repoint the 53 configs at `EALabTpl\` or make the root a build output.
+3. 👤 **Owner's call: re-run `ORDER-430` / `ORDER-1420` on the current chassis?** 🚫 **Not obviously
+   yes.** Under the ratified ≥100 floor both already conclude *nothing qualifies*, and staleness
+   changes how far the individual numbers can be leaned on rather than the conclusion. A re-run is
+   **16 Model-4 runs to re-confirm a negative.**
+
+⚠️ **Open and honest: the effect size is UNMEASURED.** *"The binary predates `Execution.mqh` changes"*
+is provenance, not impact. The cheap discriminator is **one** cell re-run on both binaries, same day,
+same `.set` — one pair, not sixteen. `ORDER-236` STAGE 3's `C0` is suggestive (it matched STAGE 2's
+stale-binary CTRL to the cent) but it is **one configuration and not a parity test**, and that row
+says so.
+
+---
+
 ## ORDER-1420 — [host search] The `Boss_14` chassis cannot trade both directions at all, so the shorts question is a second screen and not a flag — `CLOSED (Claude/Opus 2026-08-06) — short screen 7/7, nothing qualifies under the ≥100 floor; the two-sided core/ parity break was put to the owner and REFUSED. Nothing owed.` · ทำได้: **oc-qwen/ZCode (run)** · design = Claude (done) · 👉 แนะ: oc-qwen
 **bars:** written below and **pre-registered 2026-08-05, BEFORE any run exists — this row is committed before the batch is dispatched. Do not edit a bar after seeing a number.**
 **flat-lot probe:** N-A — this screens a host's base config; no escalation lever is switched on anywhere in it.
@@ -9471,7 +9583,7 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 
 ---
 
-## ORDER-501 — [🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load — flaky test หรือ event หายจริงตอน contention — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+## ORDER-501 — [🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load — flaky test หรือ event หายจริงตอน contention — `STEP 1 DONE 2026-08-06 (9 runs, 3x3 controlled load) — 🔴 HYPOTHESIS 2 REFUTED: events<150 ⟺ childOk=False on all 9 runs, so the log never lost an accepted write; the worker exhausts a 3-attempt retry and reports it. NOT a Contract D defect. Load is NOT the driver (mean lost: load0=7.67, load10=1.67, load20=15.33) — WALL-CLOCK duration is, with an empty gap between 687s and 861s. Also NOT "flaky": the budget is deterministically too small whenever the machine is slow. STEP 2 (wait-until-done, never a bigger timeout) is owed and deliberately not done here. Spun off ORDER-1460: the suite ABORTS at case 15 since fefce8fd, so ORDER-421's 105-case baseline is unreproducible.` · runnable by: **Claude/Opus** · 👉 recommended: Claude
 **bars:** N-A (diagnosis) · **flat-lot probe:** N-A
 
 **ที่มา:** ORDER-421 รัน `run_order105_negative_tests.ps1` สองรอบในวันเดียวกันด้วยโค้ดชุดเดียวกันเป๊ะ — **เครื่องยุ่ง 103/105 · เครื่องว่าง 105/105** · เคสที่ต่างคือ concurrency 2 ตัว:
@@ -9487,6 +9599,99 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 **STEP 1 (discriminating):** รัน**เฉพาะ 2 เคสนี้** ซ้ำ N รอบใต้ load ที่ควบคุมได้ (เช่น busy-loop ที่รู้จำนวน core) แล้วดูว่า **6 ที่หายเป็นค่าคงที่ · แปรตามระดับ load · หรือเป็นศูนย์เมื่อไม่มี load** · ถ้าจำนวนที่หายแปรตาม load ⇒ เข้าข้อ 2 ต้องไล่ต่อที่ lock/retry ของ `experiment_event_log.ps1`
 **STEP 2:** ถ้าเป็นข้อ 1 → ทำให้เทส deterministic (รอจนครบแทนการรอตามเวลา) **ห้ามแก้ด้วยการเพิ่ม timeout เฉยๆ** — นั่นคือซ่อนอาการ
 **ห้าม:** ปิดหรือ skip 2 เคสนี้ · เพิ่ม timeout แล้วเรียกว่าแก้แล้ว · สรุปว่า "flaky" โดยไม่วัด · ปล่อยไว้โดยไม่บันทึกว่ากรงชุดนี้แดงได้ตอนเครื่องยุ่ง
+
+---
+
+## ✅ STEP 1 EXECUTED 2026-08-06 (lane `S-2026-08-06-CLEARALL2`) — 9 runs, 3 reps × 3 controlled load levels
+
+🔴 **Two earlier attempts the same day were VOID** and the reason belongs on this row, because it is
+the same failure this order is about: the suite's final case asserts the shared repo's HEAD, index and
+worktree are unchanged, and (1) a concurrent writer branch-switched and staged 2,838 files mid-run,
+then (2) I started a binary-hashing job during the idle baseline myself. **This third run held: HEAD
+was `386593bc` before and after, and the two modified working-tree files did not change.**
+
+| load (busy cores of 20) | rep | elapsed | events | lost | `childOk` |
+|---|---|---|---|---|---|
+| 0 | 1 | 895.4s | 141 | 9 | ✗ |
+| 0 | 2 | 861.5s | 136 | 14 | ✗ |
+| 0 | 3 | **432.0s** | **150** | **0** | ✓ |
+| 10 | 1 | 664.7s | 146 | 4 | ✗ |
+| 10 | 2 | 675.5s | 149 | 1 | ✗ |
+| 10 | 3 | **686.9s** | **150** | **0** | ✓ |
+| 20 | 1 | 1150.8s | 132 | 18 | ✗ |
+| 20 | 2 | 1203.8s | 135 | 15 | ✗ |
+| 20 | 3 | 1221.2s | 137 | 13 | ✗ |
+
+### The three-way question this order posed, answered
+
+- **"เป็นค่าคงที่?"** — **No.** The loss ranges 0 to 18.
+- **"เป็นศูนย์เมื่อเครื่องว่าง?"** — **No, and this is the finding that breaks the original framing.**
+  **Two of three idle runs lost events** (9 and 14). `ORDER-421` read *"เครื่องว่าง 105/105"* as
+  evidence the machine's state was the variable; one idle sample cannot support that.
+- **"แปรตามระดับ load?"** — **Not monotonically, so load is NOT the driver.**
+  mean lost: **load 0 = 7.67 · load 10 = 1.67 · load 20 = 15.33.** Ten busy cores were *better* than
+  an idle machine.
+
+### 🎯 The covariate that does separate it cleanly is WALL-CLOCK DURATION, not declared load
+
+| elapsed | lost |
+|---|---|
+| 432.0 · 664.7 · 675.5 · 686.9 | **0 · 4 · 1 · 0** — mean **1.25** |
+| 861.5 · 895.4 · 1150.8 · 1203.8 · 1221.2 | **14 · 9 · 18 · 15 · 13** — mean **13.80** |
+
+**Nothing lands between 687s and 861s** — the gap is empty, so the split is not a chosen cut-point.
+Twenty saturated cores make the run slow; so did the first two idle runs, for another reason (cold
+caches — the third idle run, after two warm-ups, was the fastest of all nine at 432s and lost
+nothing). **What predicts the loss is how long a lock acquisition takes, whatever is making it slow.**
+
+### 🔴 THE DISCRIMINATOR — hypothesis 2 is REFUTED, and it is the important half
+
+`events < 150` **⟺** `childOk = False`, **on all nine runs without exception.** Every run that came up
+short also had a child process exit non-zero; both runs that reached 150 had all children exit clean.
+
+The worker exits 1 **iff** its `$failed` counter is non-zero, and `$failed` counts requests that
+exhausted a **bounded 3-attempt × 100 ms retry** without `Invoke-EventUtilityMain` returning 0. So a
+short event count with `childOk = True` would be the signature of the log dropping a write it had
+accepted — **and that combination never occurred.**
+
+⇒ **The event log is not losing data under contention.** The writer is giving up, and it says so.
+That is `ORDER-501`'s hypothesis **1**, not **2**, and it means **this is not a Contract D data-integrity
+defect.** 🚫 The `#### 2` branch of this row (*"event log ทำของหายจริงตอนมี contention"*) is closed as
+unsupported.
+
+<sub>⚠️ Stated as the code-level argument it is: the scratch fixtures are deleted at the end of each
+suite run, so the per-writer `completed=50 failed=N` lines are gone and the shortfall was not matched
+to `N` directly. The ⟺ across nine runs is the measured part; the mechanism linking it to the retry
+budget is read from `run_order105_negative_tests.ps1`'s worker body.</sub>
+
+### 🎯 And it is not "flaky" either — the word this order forbade using without measuring
+
+The retry budget is **fixed at 3 attempts × 100 ms** while three writers push **50 requests each**
+through one lock. That is not a timing-sensitive test that fails randomly; it is a budget that is
+**deterministically too small whenever the machine is slow for any reason.** `positive_waits` was
+132-149 in every run — the contention is always there; only whether the budget covers it varies.
+
+⇒ **STEP 2 applies, and the order's own prohibition is the right one:** make the test wait until the
+write is done rather than for a fixed number of tries. The 30-second lock timeout the worker already
+passes is the real budget; the 3-attempt loop wrapped around it is the artificial one.
+🚫 **Do not "fix" this by raising the attempt count** — that is the *"เพิ่ม timeout แล้วเรียกว่าแก้แล้ว"*
+this row forbids, and it would only move the slowness threshold rather than remove it.
+**STEP 2 is NOT executed here**: it changes a cage, and this lane measured rather than repaired.
+
+### 🔴 A second defect found on the way, and it is bigger than this order — `ORDER-1460`
+
+**The suite does not run 105 cases any more. It ABORTS at 15.**
+```
+[FAIL] suite-unhandled-exception :: PRECOMMIT-FAIL-CLOSED: tools/python312/python.exe not found
+       -- cannot run check_attested_pin_staged.py, blocking commit
+CASE COUNT: 15
+```
+All nine runs: `case_count = 15`. ⇒ **`ORDER-421`'s `103/105` vs `105/105` cannot be reproduced at all
+today, and the comparison this order was built on is void** — not because of load, but because the
+suite has not been the same suite since **`fefce8fd` (2026-08-01 11:24)**, which put
+`check_attested_pin_staged.py` behind a fail-closed interpreter check in `.githooks/pre-commit`. The
+fixture repos are created under `$env:TEMP` and have no `tools/python312/`, so the hook fails closed
+inside them. `ORDER-421` measured on 2026-07-28, before it. Split out as **`ORDER-1460`**.
 
 <sub>บริบทที่ทำให้ใบนี้คุ้มเปิด: ORDER-420 เพิ่ง wire fast-cage 4 ชุดเข้า pre-commit โดยตั้งอยู่บนสมมติฐานว่า **exit code ของ runner แปลว่าอะไรบางอย่าง** · ชุด 105 ไม่ได้อยู่ใน fast tier (มันกิน 521 วินาที) แต่ถ้าวันหนึ่งมันถูกเสียบเข้า CI/hook โดยที่มันแดงเฉพาะตอนเครื่องยุ่ง มันจะแดงตอนที่คนกำลังรีบที่สุดพอดี</sub>
 
