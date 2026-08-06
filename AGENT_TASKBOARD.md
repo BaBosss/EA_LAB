@@ -337,7 +337,7 @@ cells alive — that is the failure this order is about.
 
 ---
 
-## ORDER-1330 — [factory/S13] The same configuration produced different money on two different days, and both identity fields the pipeline records said it was the same run — `OPEN (item 3 DONE 2026-08-04, lane S-2026-08-04-S13G: reproduced on 7 more cells and the mechanism is named — the tester charges the broker's CURRENT swap rates, which no record carries. Items 1 and 2 still owed)` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+## ORDER-1330 — [factory/S13] The same configuration produced different money on two different days, and both identity fields the pipeline records said it was the same run — `OPEN (item 3 DONE 2026-08-04 · item 2 DONE 2026-08-06 = §ITEM-2, range corrected to 0.5%-to-a-PF-crossing-1.0 and a third consecutive day now shows the drift is NOT per-session · item 1 PARTIAL 2026-08-06 = §ITEM-1, the version tag + cross-version REFUSAL are in and caged 13/13, but no v2 can be produced until ORDER-1350 wires a per-run swap probe, and the re-stamp is blocked on an s2a attestation and turns out not to be needed)` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Opened 2026-08-04 by lane `S-2026-08-04-S13F` while auditing its own `ORDER-1273` step-6 work.
 > **Nothing was adjusted to fit and no verdict follows from it** — this is a measurement about the
@@ -411,14 +411,138 @@ the next cell need not be.
 1. Decide whether `data_fingerprint` gains the `Bases\` marker (and what happens to existing rows),
    or whether the design text drops a component nothing computes. **The two texts must stop
    disagreeing** — same shape of debt as `ORDER-1300` owes §6.2.
+   👤 **RULED 2026-08-06** (TH: *"เพิ่ม symbol-spec เข้าสูตร + migrate"*) — **and the ruling
+   supersedes the question as asked.** `item 3` had already found that the missing component is not
+   a `Bases\` marker but the **symbol specification in force at run time**; a `Bases\` marker would
+   have separated nothing. 🟡 **PARTIALLY EXECUTED — see `§ITEM-1` below. The mechanism is in and
+   proved; the content it needs is blocked, and the migration is blocked on an attestation.**
 2. Until then, every record that carries a cross-session comparison should say that ±2–3 % on money
    is inside measured session-to-session variation for this engine.
+   ✅ **DONE 2026-08-06** — the sentence is written below as `§ITEM-2`, with the range corrected
+   from the ±2–3 % first estimate to what was actually measured, and with a new observation that
+   changes what it should say.
 3. Reproduce it on a second cell before generalising: **one cell, one pair of days** is what has
    actually been measured (memory `phantom-regression-from-two-single-samples` — the two 08-04
    samples are what stop this being that mistake, but the 08-03 side is still a single sample).
 
 Evidence: `factory/runs/pilot/pilot_cells_MAIN_lot0p03_20260803_123147.jsonl` (08-03) vs
 `…_20260804_081932.jsonl` and `…_20260804_082029.jsonl` (08-04, both committed).
+
+---
+
+### ✅ `§ITEM-2` — the sentence every cross-session comparison must carry (2026-08-06, lane `S-2026-08-06-CLEARALL`)
+
+> 🔴 **Money is not a comparison surface across sessions on this engine.** A byte-identical
+> configuration re-run on a different day has been measured returning a different `net_profit`,
+> `gross_loss` and `dd_pct` while `pf` and `trades` reproduced exactly. **The measured spread is
+> `0.5 %` to a PF crossing `1.0`** — not the `±2–3 %` this row first estimated from its opening pair.
+> **Compare `pf`, `trades` and drawdown; state the nets, do not conclude from them.** The mechanism
+> is named (`ORDER-1350`: the tester charges the broker's *current* financing, which no record
+> carries) and nothing in `data_fingerprint` can currently tell two such runs apart.
+
+**Copy that block verbatim into any record that puts two sessions' money side by side.** It is
+written once here so it cannot drift into several differently-wrong paraphrases.
+
+---
+
+### 🟡 `§ITEM-1` — the versioning and the refusal are IN; the swap values are NOT, and the difference is the point
+
+**What landed** (`scripts/lib/pilot_run.ps1`, cage `scripts/_test/run_pilot_fingerprint_tests.ps1`):
+
+| value | means |
+|---|---|
+| `v1:<sha>` | the nine existing parts. **The symbol spec is not in it, and the tag says so.** |
+| `v2:<sha>` | the nine parts **plus** `swap_long`, `swap_short`, `swap_mode` |
+| `<sha>` bare | a **legacy** row, written before 2026-08-06 |
+
+- `Get-PilotDataFingerprint -SymbolSpec` is optional; **a PARTIAL spec is refused by name** rather
+  than hashed, because a missing field folded in as empty is indistinguishable from a broker
+  genuinely reporting one — the exact confusion this row exists to remove.
+- `Get-PilotFingerprintVersion` **refuses** an unreadable value instead of classifying it
+  (memory `unreadable-input-must-refuse-not-skip`).
+- `Assert-PilotFingerprintComparable` **refuses** a cross-version comparison — the owner's ruling —
+  because *"not equal"* between a v1 and a v2 digest means *different recipe*, not *different data*.
+- The version is inside the **preimage** as well as the prefix, so a stripped tag cannot collide.
+
+**Cage: 13 cases, all green, and it includes its own specificity** — a changed swap rate must move
+the digest (or the change is decoration), a partial spec must refuse, a legacy-vs-v2 comparison must
+refuse, **and a same-version comparison must still be ALLOWED**. A guard that refuses everything
+discriminates nothing.
+🔴 **Not wired into the fast tier.** Adding a `$SUITE_GUARDS` key requires `fast_tier_pathspec` and
+`run_guard_trigger_tests.ps1` to agree, and a half-done wiring reddens the trigger cage. **Until it
+is wired this cage runs only by hand, which is memory `correct-check-exists-only-its-cage-calls-it`
+with the roles reversed — owed, and named rather than left to be discovered.**
+
+#### 🔴 Blocker A — nothing captures the swap spec, so no `v2` fingerprint can actually be produced yet
+
+`Get-PilotDataFingerprint` builds from `$Ctx` and `$Metrics`, and **`$Metrics` comes from the MT5
+report, which does not carry swap.** The only thing in this repo that reads the real properties is
+`ea_projects/(TST)_SymbolSwapProbe`, whose single output
+(`factory/runs/pilot/swap_probe/swap_probe_20260804.jsonl`) is **one dated probe with no `run_id`
+and no `data_fingerprint`**, so it joins to nothing.
+⚠️ **The pipeline's `financing_deducted` is NOT a substitute** — it is built from the hardcoded
+`$CryptoRateLong = 14.67` / `$CryptoRateShort = 0.49` in `pilot_cells.ps1:78-80`, i.e. **our
+assumption, not the broker's rate.** Hashing those would fingerprint what we believed, which is
+precisely the failure that produced this row.
+⇒ Every run today emits **`v1`**, honestly. **Wiring the probe per-run is `ORDER-1350`'s to own**,
+and this row now has a slot ready for its output the moment it exists.
+<sub>Deliberately NOT done: emitting `v2` from the hardcoded constants to make the field look
+populated. That would satisfy the ruling's letter and reintroduce its cause.</sub>
+
+#### 🔴 Blocker B — the migration of the 135 committed rows touches an attestation-pinned file
+
+The owner's ruling says re-stamp existing rows as `legacy-v1` (not delete, not re-run). **135 rows
+carry a `data_fingerprint`**, and **16 of them are in `factory/coverage.jsonl`, which is named in
+`_triage/factory_os/s2a_attestations.jsonl`** — a file this lane is prohibited from touching and
+whose approval pins content. Rewriting those rows without the owner is not available.
+
+**⇒ It also turns out not to be needed, and that is a better outcome than the migration.** Bare
+digests are classified `legacy` and every comparison against one **refuses**, so the guarantee the
+re-stamp was for is already in force **without rewriting a byte of committed evidence.** The
+remaining value of an explicit re-stamp is that `legacy` would stop being inferred from a value's
+*shape* — which is a real objection (`ledger-cell-is-prose-and-parser-input`), just not an urgent one.
+👤 **Owner's to schedule, not this lane's to force.**
+
+#### Owed, precisely
+
+1. Wire the cage into the fast tier (`fast_tier_pathspec` + `$SUITE_GUARDS` + trigger tests together).
+2. **A `pattern` on `data_fingerprint` in `schemas.json` — attempted and REVERTED this session.**
+   `^(v[0-9]+:)?[0-9a-f]{64}$` reddens **11 fixtures** that use filler values (`"f1"`, `"df1"`,
+   `"f"`). 🎯 **That is the finding, not the obstacle:** the field has no pattern *because* nothing
+   ever had to produce a real one, so the schema cannot currently reject a fingerprint that is not a
+   fingerprint (memory `fixture-of-filler-values-cannot-test-resolution`). Fixing the fixtures is the
+   work; relaxing the pattern to fit them would be the mistake.
+3. The `$Ctx`/`$Metrics` plumbing to pass a spec through `pilot_cells.ps1` and
+   `pilot_verify_selected.ps1` — trivial once Blocker A has something to pass.
+
+#### 🔬 A new observation from today that changes the shape of the claim — the drift is not per-day
+
+`ORDER-236 STAGE 3` re-ran the same EURJPY H1 CTRL again on **2026-08-06**, a third consecutive day,
+on the **fresh `EALabTpl` binary** rather than the stale lane-root one:
+
+| date | PF | trades | eqDD% | net | Δ net vs previous day |
+|---|---|---|---|---|---|
+| 2026-08-04 | 1.82 | 184 | 7.12 | +2344.20 | — |
+| 2026-08-05 | 1.82 | 184 | 7.12 | +2353.69 | **+9.49** |
+| **2026-08-06** | **1.82** | **184** | **7.12** | **+2353.69** | **0.00 — exact** |
+
+⇒ **The drift is not a per-session tax.** Two runs a day apart reproduced to the cent, so "across
+sessions not reproducible" is too strong as a general statement: runs reproduce exactly **while the
+external state holds**, and the state moved once between 08-04 and 08-05 and has held for two days
+since. That matches the restatement `item 3` already made after the eight-cell reproduction, and it
+is now confirmed on a **different symbol, timeframe and pipeline** (`EURJPY H1` under `mt5_run.ps1`,
+not `BTCUSD H4` under `pilot_cells.ps1`).
+
+🎯 **The practical consequence, and it is the useful part:** an unexplained net difference is
+therefore **evidence that something external moved**, not noise to be averaged away. Averaging
+repeated runs would destroy exactly the signal worth having. **A record that cannot say which
+financing was in force cannot distinguish the two** — which is what `item 1` exists to fix.
+
+<sub>⚠️ Not claimed: that the binary swap (stale 152,178-byte lane-root build → fresh 178,300-byte
+`EALabTpl` build) is *irrelevant*. It is one run; the numbers landing identically is consistent with
+the chassis changes being behaviour-neutral for this configuration, and consistent with several other
+things. It is recorded as an observation, not as a parity result — a real parity claim needs the
+comparison run deliberately, both binaries, same day.</sub>
 
 ### ✅ Item 3 executed — 2026-08-04, lane `S-2026-08-04-S13G`. Predictions committed before the run.
 

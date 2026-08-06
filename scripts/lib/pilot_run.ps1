@@ -207,20 +207,90 @@ function Get-PilotCarriedAtEnd {
 # declared component would claim more identity than it has. bars/ticks/company come from the report
 # itself, so two runs over different history produce different fingerprints, which is the property
 # the cross-install rule actually needs.
+#
+# ORDER-1330, owner ruling 2026-08-06: the fingerprint GAINS the symbol specification in force at
+# run time, because the measured defect is two runs of a byte-identical configuration returning
+# different money while every identity field said "same run" -- the tester charges the broker's
+# CURRENT financing and no record carried it (ORDER-1350).
+#
+# The value is now VERSION-TAGGED, and that is the load-bearing part:
+#   v1:<sha>  the nine parts above. The symbol spec is NOT in it, and the tag says so.
+#   v2:<sha>  the nine parts PLUS swap_long, swap_short and swap_mode.
+#   <sha>     no prefix at all = a LEGACY row written before this change. 135 of them are
+#             committed. They are NOT rewritten -- `factory/coverage.jsonl` is under an
+#             s2a attestation, so re-stamping them is a separate authorised step (see the order).
+#
+# Why a tag rather than a longer hash: a v1 and a v2 digest of the same run are DIFFERENT STRINGS
+# that describe DIFFERENT CLAIMS, and an equality test between them must not quietly answer "not
+# equal, therefore different data". Callers compare versions first (Assert-PilotFingerprintComparable)
+# so the failure is a refusal that names the reason, not a false negative that reads like a result.
+# The one existing cross-run consumer -- scheduler.find_cached -- fails toward RE-RUNNING when the
+# strings differ, which is the safe direction, and this keeps it that way deliberately.
 function Get-PilotDataFingerprint {
   param(
     [Parameter(Mandatory)][hashtable]$Ctx,
     [Parameter(Mandatory)][hashtable]$Metrics,
     [Parameter(Mandatory)][string]$Symbol,
-    [Parameter(Mandatory)][string]$Period
+    [Parameter(Mandatory)][string]$Period,
+    # swap_long / swap_short / swap_mode as the BROKER reported them for this run. Omit it and the
+    # result is honestly tagged v1; supply a PARTIAL one and it is refused, because a spec missing
+    # a field would be hashed as if that field had no value rather than as unknown.
+    [hashtable]$SymbolSpec
   )
   $parts = @($Ctx.Terminal, $Symbol, $Period, $Ctx.FromDate, $Ctx.ToDate, ("model=" + $Ctx.Model),
              ("bars=" + $Metrics['bars']), ("ticks=" + $Metrics['ticks']), ("server=" + $Metrics['company']))
-  $joined = ($parts -join '|')
+
+  $version = 'v1'
+  if ($null -ne $SymbolSpec) {
+    $required = @('swap_long', 'swap_short', 'swap_mode')
+    $absent = @($required | Where-Object { -not $SymbolSpec.ContainsKey($_) })
+    if ($absent.Count) {
+      throw ("Get-PilotDataFingerprint was given a SymbolSpec missing " + ($absent -join ', ') +
+             ". A partial spec is refused rather than hashed: the missing field would be folded in " +
+             "as an empty value, which is indistinguishable from a broker genuinely reporting one, " +
+             "and that is the exact confusion ORDER-1330 exists to remove. Supply all of " +
+             ($required -join ', ') + ", or omit -SymbolSpec entirely and take the honest v1 tag.")
+    }
+    $version = 'v2'
+    $parts += @(("swap_long=" + $SymbolSpec['swap_long']),
+                ("swap_short=" + $SymbolSpec['swap_short']),
+                ("swap_mode=" + $SymbolSpec['swap_mode']))
+  }
+
+  # The version is inside the preimage as well as on the front of the value, so a v1 digest and a
+  # v2 digest of an otherwise identical run cannot collide even if the tag is later stripped.
+  $joined = (@("fpver=$version") + $parts) -join '|'
   $sha = [System.Security.Cryptography.SHA256]::Create()
   $bytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($joined))
   $sha.Dispose()
-  return (($bytes | ForEach-Object { $_.ToString('x2') }) -join '')
+  return ($version + ':' + (($bytes | ForEach-Object { $_.ToString('x2') }) -join ''))
+}
+
+function Get-PilotFingerprintVersion {
+  <# 'v1' / 'v2' / 'legacy' for a bare pre-2026-08-06 digest. Never guesses. #>
+  param([Parameter(Mandatory)][AllowEmptyString()][string]$Fingerprint)
+  if ($Fingerprint -match '^(v[0-9]+):') { return $Matches[1] }
+  if ($Fingerprint -match '^[0-9a-f]{64}$') { return 'legacy' }
+  throw ("data_fingerprint " + ($Fingerprint | ConvertTo-Json) + " is neither a versioned value " +
+         "(v<N>:<sha256>) nor a legacy bare sha256. It is REFUSED rather than classified: an " +
+         "unreadable identity field must not be treated as an absent one.")
+}
+
+function Assert-PilotFingerprintComparable {
+  <# Two fingerprints may only be compared when they make the SAME claim about what was hashed. #>
+  param(
+    [Parameter(Mandatory)][AllowEmptyString()][string]$A,
+    [Parameter(Mandatory)][AllowEmptyString()][string]$B,
+    [string]$Context = 'comparison'
+  )
+  $va = Get-PilotFingerprintVersion -Fingerprint $A
+  $vb = Get-PilotFingerprintVersion -Fingerprint $B
+  if ($va -ne $vb) {
+    throw ("REFUSED ($Context): data_fingerprint versions differ -- '$va' vs '$vb'. These hash " +
+           "different component lists, so 'not equal' would mean 'different recipe', not " +
+           "'different data'. Comparing them at all is the error (ORDER-1330, owner 2026-08-06).")
+  }
+  return $va
 }
 
 function Get-PilotCryptoFinancing {
