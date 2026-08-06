@@ -87,6 +87,14 @@ if ($surface.Refuse) {
 }
 Write-Output "surface: $($surface.State) -- $($surface.Message)"
 
+# ORDER-1461, and this is the entry point that mattered most. An OPTIMIZATION run does not
+# merely report a wrong number off a stale binary -- it SELECTS the parameters everything
+# downstream is built on. The rule and its measurements live in scripts\lib\binary_staleness.ps1,
+# shared with mt5_run.ps1 and run_backtest.ps1. Advisory: it cannot abort and cannot change an
+# exit code.
+. (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
+Write-Output (Get-StaleCheckLine -Expert $Expert -ExpertsDir (Get-TesterExpertsDir -TerminalPath $Terminal -DataDir $DataDir -Portable:$Portable))
+
 $inputs = @()
 if ($surface.State -ne 'NOSETFILE') {
   foreach ($l in Get-Content $SetFile) {

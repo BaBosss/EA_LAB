@@ -1,5 +1,5 @@
-<#
-mt5_run.ps1 — headless MT5 single backtest.
+﻿<#
+mt5_run.ps1 â€” headless MT5 single backtest.
 
 Generates a Strategy Tester .ini (inputs from a .set), launches terminal64.exe
 /config, waits for the HTML report, MOVES it (MT5 writes Report=<name> to the
@@ -25,11 +25,11 @@ param(
   [string]$SetFile = "",
   [int]$Model = 4,                              # 4 = every tick based on real ticks
   # NOTE: no -Spread param on purpose. MT5 (verified build 5836, ORDER-085 2026-07-10) IGNORES both
-  # "Spread=" and "TestSpread=" in the /config [Tester] section — tester spread always comes from
+  # "Spread=" and "TestSpread=" in the /config [Tester] section â€” tester spread always comes from
   # recorded history/ticks. Spread stress must be done arithmetically on the trade list (or via a
   # custom symbol). Do NOT re-add the param without re-verifying: a silent no-op here fakes a "pass".
   [int]$Deposit = 10000,
-  # ⚠️ ORDER-165 (2026-07-23, corrected same day): leverage ini format matters.
+  # âš ï¸ ORDER-165 (2026-07-23, corrected same day): leverage ini format matters.
   #   - numeric form ("Leverage=100")   -> SILENTLY IGNORED; tester uses its own cached
   #     last-used leverage setting (mutated by any GUI session) = non-reproducible.
   #   - "1:N" form   ("Leverage=1:100") -> WORKS - sets the real simulation leverage
@@ -38,7 +38,7 @@ param(
   # This script wrote the numeric form since inception -> every historical run used whatever
   # leverage the terminal's tester cache happened to hold. Now writes 1:N AND asserts the
   # report's leverage post-run (exit 3 on mismatch) - belt and suspenders.
-  # ⚠️ SAME CLASS, BIGGER BUG - INPUT CACHE: [TesterInputs] only overrides the inputs you list;
+  # âš ï¸ SAME CLASS, BIGGER BUG - INPUT CACHE: [TesterInputs] only overrides the inputs you list;
   # every UNLISTED input comes from the per-terminal cache MQL5\Profiles\Tester\<Expert>.set
   # (last-used values, rewritten by ANY run/GUI session). A run without a FULL -SetFile is
   # therefore non-reproducible. Proven 2026-07-23: identical Boss_11 binary + identical ticks
@@ -63,7 +63,7 @@ function Get-SameInstall {
   Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $TermPath }
 }
 if (-not $Force) {
-  # a previous headless run of THIS install may still be closing — wait up to 25s before deciding
+  # a previous headless run of THIS install may still be closing â€” wait up to 25s before deciding
   $g = [Diagnostics.Stopwatch]::StartNew()
   while ((Get-SameInstall) -and $g.Elapsed.TotalSeconds -lt 25) {
     Start-Sleep -Seconds 2
@@ -82,14 +82,14 @@ $destHtm = "$auto\reports\$ReportName.htm"
 # that produces NO fresh report - otherwise every downstream reader (tpl_regression, run_tests,
 # any caller that just checks "does the .htm exist") sees old evidence and calls it a pass.
 # Clear both source-side (tester DataDir) and destination-side (_mt5_auto\reports) before launch.
-# ⚠️ ORDER-372 (2026-07-28) - THE HOLE THIS CLEAR DOES NOT COVER, READ BEFORE RELYING ON IT:
+# âš ï¸ ORDER-372 (2026-07-28) - THE HOLE THIS CLEAR DOES NOT COVER, READ BEFORE RELYING ON IT:
 # the two `exit 2` aborts above (GUI/lane busy at ~L72, terminal-not-found at ~L75) return BEFORE
 # this line runs, so on the abort path a previous run's report is left exactly where it was. That
 # is deliberate - an abort must not delete files belonging to whichever lane is currently running -
 # but it means "the .htm exists" is NOT evidence that THIS invocation produced it. Demonstrated
 # live: order215_matchagrid_cutloss_probe.ps1 pointed at a bogus -Terminal aborted with exit 2 and
 # then reported PF=1.77 off a leftover report as though it were a fresh measurement.
-# ⇒ CALLERS MUST CHECK THE EXIT CODE (0 ok / 1 no report / 2 abort / 3 leverage mismatch), and
+# â‡’ CALLERS MUST CHECK THE EXIT CODE (0 ok / 1 no report / 2 abort / 3 leverage mismatch), and
 #   ideally also that the report's mtime is newer than the moment they started the run. Both probe
 #   scripts now do exactly that; copy that gate rather than inferring freshness from existence.
 #   ORDER-1268 added a THIRD abort (exit 2): a -SetFile that cannot be read, or that declares a
@@ -119,68 +119,13 @@ if ($surface.Refuse) {
 Write-Output "surface: $($surface.State) -- $($surface.Message)"
 
 # ORDER-1461: IS THE BINARY THIS RUN IS ABOUT TO LOAD OLDER THAN ITS SOURCE?
-# scripts\check_stale_binaries.ps1 has flagged the Experts-root copy of Boss_14_GridLog
-# correctly and unprompted since 2026-07-27, and NOTHING on the run path ever called it. Two
-# screens (ORDER-430's 7-host sweep, ORDER-1420's short mirror) were therefore measured on a
-# chassis that no longer existed, and the order they feed rests on those numbers.
-#
-# VISIBLE BEFORE REFUSING, deliberately. 53 ini configs resolve -Expert to the Experts root,
-# and a refusal here would break all 53 in one commit -- which is how a correct detector gets
-# switched off (the ORDER-700 reasoning this repo has already paid for once). This block
-# cannot change the exit code, and it cannot abort: any failure inside it prints UNKNOWN with
-# the reason and the launch proceeds.
-#
-# It asks about the ONE FILE this launch resolves to, not the name group, because that IS the
-# finding: `-Expert Boss_14_GridLog` loads the Experts-root copy while
-# `-Expert EALabTpl\Boss_14_GridLog` loads a different, newer one, and the two disagree by
-# eight days. The verdict is produced by check_stale_binaries.ps1 itself (-OnlyName, 0.7s
-# against 107s for the full sweep, measured) rather than by a second copy of the staleness
-# rule living here, which would drift from it the first time either changed.
-$expertsDir = if ($Portable) { Join-Path (Split-Path -Parent $TermPath) 'MQL5\Experts' } else { Join-Path $DataDir 'MQL5\Experts' }
-$expertEx5  = Join-Path $expertsDir ($Expert + '.ex5')
-try {
-  if (-not (Test-Path -LiteralPath $expertEx5)) {
-    Write-Output "stale-check: UNKNOWN -- no binary at '$expertEx5' (the tester resolves -Expert against this folder)"
-  } else {
-    $staleJson = Join-Path $env:TEMP ("mt5run_stale_{0}.json" -f [guid]::NewGuid().ToString('N'))
-    $staleScript = Join-Path $PSScriptRoot 'check_stale_binaries.ps1'
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $staleScript `
-        -OnlyName ([IO.Path]::GetFileNameWithoutExtension($expertEx5)) `
-        -Roots $expertsDir -JsonOut $staleJson 6>&1 | Out-Null
-    $rec = $null
-    if (Test-Path -LiteralPath $staleJson) {
-      # ASSIGN, THEN ITERATE -- do NOT write @(Get-Content ... | ConvertFrom-Json). In
-      # PowerShell 5.1 ConvertFrom-Json emits the whole array as ONE pipeline item, so the
-      # @() wrapper yields Count=1 whose .path is every path joined by spaces (member
-      # enumeration). That silently matched nothing and the banner printed UNKNOWN with a
-      # GetFullPath format error -- caught here, 2026-08-06, same family as the
-      # `($pipeline).Count is $null on one result` trap already recorded for this repo.
-      $parsed = Get-Content -LiteralPath $staleJson -Raw | ConvertFrom-Json
-      $wanted = [IO.Path]::GetFullPath($expertEx5)
-      foreach ($r in $parsed) {
-        if ($r.path -and ([IO.Path]::GetFullPath([string]$r.path) -ieq $wanted)) { $rec = $r; break }
-      }
-      Remove-Item -LiteralPath $staleJson -Force -ErrorAction SilentlyContinue
-    }
-    if ($null -eq $rec) {
-      Write-Output "stale-check: UNKNOWN -- check_stale_binaries.ps1 produced no record for '$expertEx5'"
-    } else {
-      # Lead with the STALENESS segment, not the first segment. The detail begins with the
-      # hash-differs advisory whenever a second copy exists, which is almost always (the MQL5
-      # compiler is not byte-reproducible), so a naive truncation spends its whole budget on
-      # the one part that is explicitly advisory and cuts off the part that names the newer
-      # source files -- a bare "STALE" line, which is exactly what check_stale_binaries.ps1
-      # refuses to emit and what got ignored in the 2026-07-25 Boss_16 case.
-      $segments = @(($rec.detail -replace '\s+', ' ') -split ' \| ')
-      $stalePart = $segments | Where-Object { $_ -like 'binary mtime*' } | Select-Object -First 1
-      $why = if ($stalePart) { $stalePart } else { $segments -join ' | ' }
-      if ($why.Length -gt 300) { $why = $why.Substring(0, 300) + ' ...' }
-      Write-Output "stale-check: $($rec.status) -- $($rec.path) mtime=$($rec.mtime) :: $why"
-    }
-  }
-} catch {
-  Write-Output "stale-check: UNKNOWN -- $($_.Exception.Message)"
-}
+# The rule, its measurements and the visible-before-refusing reasoning all live in
+# scripts\lib\binary_staleness.ps1 -- SHARED, because mt5_optimize.ps1 and run_backtest.ps1
+# write Expert= into a tester .ini exactly like this file does, and covering only this one
+# left the detector off two thirds of the run path (the optimizer being the worse omission:
+# a stale binary there SELECTS the parameters everything downstream is built on).
+. (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
+Write-Output (Get-StaleCheckLine -Expert $Expert -ExpertsDir (Get-TesterExpertsDir -TerminalPath $TermPath -DataDir $DataDir -Portable:$Portable))
 
 $inputs = @()
 if ($surface.State -ne 'NOSETFILE') {
@@ -270,11 +215,11 @@ if (Test-Path $srcHtm) {
   # Mismatch = ini didn't take (format regression / future build change) -> fail loudly
   # (exit 3, distinct from no-report exit 1) instead of letting a silently-wrong margin
   # context poison downstream verdicts.
-  # Sidecar JSON (ORDER-165, added because a real caller — tpl_regression.ps1 — never checks
+  # Sidecar JSON (ORDER-165, added because a real caller â€” tpl_regression.ps1 â€” never checks
   # mt5_run.ps1's exit code at all; a printed warning + exit 3 alone would pass through it
   # silently). Written every time so callers have one stable path to check instead of each
   # re-implementing the report regex. requested/actual are null when the report has no usable
-  # leverage line (0-trade / degenerate report) — that's "unknown", not "match" or "mismatch".
+  # leverage line (0-trade / degenerate report) â€” that's "unknown", not "match" or "mismatch".
   $rpt = [IO.File]::ReadAllText($destHtm, [Text.Encoding]::Unicode)
   $lm = [regex]::Match(($rpt -replace '<[^>]+>', ' '), 'Leverage:\s*1:(\d+)')
   $sidecar = "$auto\reports\$ReportName.leverage_check.json"

@@ -150,15 +150,23 @@ function Test-IsRestoredId {
        anchored at column 0 and demands the trailing space, so `## ORDER-1460` cannot be
        satisfied by a mention of ORDER-14600 or by prose quoting the id mid-sentence. `-1` stops
        at the first hit. It runs ONLY for an id that would otherwise be refused, so the ordinary
-       commit pays nothing for it. #>
+       commit pays nothing for it.
+
+       Returns the COMMIT that last added or removed the header, or '' for "never carried it".
+       Returning the evidence rather than a boolean is deliberate: this rule permits an id that
+       every other reading calls out-of-block, so it has to be able to say WHICH commit entitles
+       it. "Trust me" printed by a guard is the thing this repo keeps paying to remove. #>
     param([string]$Id)
-    if ($null -ne $script:RestorableIds) { return $script:RestorableIds.ContainsKey($Id) }
+    if ($null -ne $script:RestorableIds) {
+        if ($script:RestorableIds.ContainsKey($Id)) { return '<supplied by -RestorableIdsOverride>' }
+        return ''
+    }
     $r = Invoke-GitBytes -Arguments ('log -1 --format=%H -G "^## ORDER-{0} " -- "{1}"' -f $Id, $ActivePath)
     # A git failure must NOT read as "not a restoration" -- that would be the same silent
     # downgrade this file refuses everywhere else. An unreadable log leaves the violation
     # standing, which is the conservative direction: the commit is refused and says why.
-    if ($r.ExitCode -ne 0) { return $false }
-    return ((ConvertFrom-Utf8Bytes -Bytes $r.Bytes).Trim().Length -gt 0)
+    if ($r.ExitCode -ne 0) { return '' }
+    return (ConvertFrom-Utf8Bytes -Bytes $r.Bytes).Trim()
 }
 
 function Get-StagedPathsFromGit {
@@ -730,7 +738,8 @@ if ($ledgerUsable) {
             $n = [int]$id
             $inside = $false
             foreach ($r in $ranges) { if ($n -ge $r.Low -and $n -le $r.High) { $inside = $true; break } }
-            if (-not $inside -and (Test-IsRestoredId -Id $id)) {
+            $restoredBy = if ($inside) { '' } else { Test-IsRestoredId -Id $id }
+            if (-not $inside -and $restoredBy) {
                 # ORDER-1460 (2026-08-06). A header this file ONCE CARRIED and lost is a REPAIR,
                 # not a new number, and this rule could not tell the two apart -- it compares the
                 # staged headers against HEAD's and calls anything absent from HEAD "new".
@@ -748,7 +757,14 @@ if ($ledgerUsable) {
                 # BY DEFINITION already issued, so re-adding it creates no fresh claim on a
                 # number. An actual duplicate is still caught -- by the duplicate-id rule above,
                 # which is a different rule and is untouched.
-                Write-Host ('{0} NOTE: ORDER-{1} is a RESTORATION -- {2} carried this header in an earlier commit and no longer does at HEAD, so it is not a new number and the reserved-block rule does not apply' -f $Tag, $id, $ActivePath)
+                # 🔴 STATE THE NARROWING OUT LOUD. This rule used to refuse every out-of-block id
+                # unconditionally, which incidentally also refused RETIRED numbers -- and the
+                # ledger's "never re-issue" list (207-209, 223-229, 1340-1349, ...) is exactly a
+                # list of ids this file once carried. So a retired number is now reachable
+                # without a block, and the honest thing is to print the commit that entitles it
+                # rather than to imply the guard verified more than it did. What still holds: an
+                # actual duplicate is caught by the duplicate-id rule above, which is untouched.
+                Write-Host ('{0} NOTE: ORDER-{1} is a RESTORATION -- {2} carried this header at commit {3} and no longer does at HEAD, so it is not a new number and the reserved-block rule does not apply. If this is a RETIRED id being re-issued rather than a lost header being repaired, that is a different act and this rule cannot tell them apart -- check the ledger.' -f $Tag, $id, $ActivePath, $restoredBy)
                 continue
             }
             if (-not $inside) {

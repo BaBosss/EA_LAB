@@ -154,6 +154,14 @@ if ($surface.Refuse) {
     exit 2
 }
 Write-Host "surface: $($surface.State) -- $($surface.Message)"
+
+# ORDER-1461. Same advisory line as mt5_run.ps1 and mt5_optimize.ps1, from the one shared
+# implementation -- this file writes Expert= into a tester .ini exactly like they do, so a stale
+# binary here is the same exposure. $ExpertName may already carry `.ex5` (it defaults to
+# "$Project.ex5" above); Get-StaleCheckLine normalises that rather than each caller remembering.
+. (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
+Write-Host (Get-StaleCheckLine -Expert $ExpertName -ExpertsDir (Get-TesterExpertsDir -TerminalPath $TerminalPath -DataDir $ConfiguredDataPath -Portable:$UsePortable))
+
 $SetInputs = Get-SetInputs -Path $SetFilePath
 
 $ini = New-Object System.Collections.Generic.List[string]
