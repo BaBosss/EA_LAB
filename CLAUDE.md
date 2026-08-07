@@ -62,9 +62,8 @@ EVIDENCE IN
           MC (resize-first on a cap breach) → Model-4 if fill-sensitive → corr vs cohort
           ⇒ DEMO  (DEPLOYMENTS.csv row + judge criteria pre-registered at attach time)
           ⇒ ≥3 months demo forward → judge ⇒ LIVE (real money)
-             (irreversible: a Codex second opinion is mandatory, no anchoring · + a Fable-advisor
-              one-shot case-3 while quota exists — if Fable is unavailable the Opus-seat decides,
-              but the Codex leg can never be skipped)
+             (owner approval is mandatory; independent review must come from a different model family;
+              no author may be the sole final reviewer)
 ```
 
 **Bar table (one number per transition):**
@@ -100,7 +99,11 @@ EVIDENCE IN
 <sub>**paid-for history (real lessons — never delete):** 2026-07-08 called "dead" wrongly twice in one session because the optimize was incomplete (→ tree item 2) · 2026-07-10 ST03 "no-edge" was measured under a single scalp-exit (→ exit-mode is a lever) · 2026-07-16 SMC×STO died on a default-smoke, then optimize+ADX turned it into a real EURUSD candidate (→ item 2a: a default-smoke can only close a cell; StoK 5→17 flipped the result = optimize the entry-signal as the first lever) · 2026-07-17 Model-2 manufactured a fake grid plateau, AUDNZD PF 3-4 → M4 0.61 (→ grid under Model-2 is not evidence) · 2026-07-18 last-optimize-before-verdict + BWD soft-gate (user rule). Full provenance = memory `feedback-last-optimize-before-verdict` · `feedback-buildon-pf-gt-1` · `feedback-optimize-before-killing-reversion`.
 (TH verbatim: "2026-07-08 ตัด 'dead' ผิด 2 ครั้ง/session เพราะ optimize ไม่ครบ · 2026-07-10 ST03 'no-edge' วัดใต้ scalp-exit เดียว · 2026-07-16 SMC×STO ตายจาก default-smoke แล้ว optimize+ADX กลายเป็น EURUSD candidate จริง; default-smoke ปิดได้แค่ cell; StoK 5→17 พลิกผล · 2026-07-17 Model-2 ปั้น fake grid plateau AUDNZD PF 3-4→M4 0.61; grid = Model-2 ไม่ใช่หลักฐาน · 2026-07-18 last-optimize-before-verdict + BWD soft-gate")</sub>
 
-## Model transition (Fable → Opus) — ✅ ACTIVE since 2026-07-04 (Fable quota genuinely ran out, earlier than the 07-07 plan)
+## Historical model transition (Fable → Opus) — **SUPERSEDED 2026-08-07**
+
+> This section records the former seat-based operating model. It is historical provenance, not current
+> authority. Current roles, permissions, author/reviewer separation, and owner-approval boundaries live
+> only in `AGENTS.md` §§1–2.
 
 **UPDATE 2026-07-23 (user ratified):** **the Fable-seat is permanently available again** — the old
 1-week trial condition is over, and the "reserved for 4 cases" rule below is obsolete · whatever model
@@ -116,9 +119,8 @@ to cheaper tiers (qwen/Sonnet/Codex per the cost ladder); never burn Fable as ba
 ORDER-082 Wave5 spec (3) the first real-money promotion of the next candidate (4) RCA of an abnormal
 real-money event · full plan = `PROJECT_STATE.md` §7</sub>
 
-**The lead/judge seat = Claude Code running on Opus.** The role belongs to the seat, not to the model —
-Opus performs everything Fable used to do. Full post-transition team workflow (tier ladder + quota lane +
-Codex review) = **`AGENTS.md` §1.5 + §5** (owns the multi-agent protocol — read the two together).
+**Historical rule:** the lead/judge seat was Claude Code running on Opus. This was superseded by the
+owner-ratified 2026-08-07 model in **`AGENTS.md` §§1–2**.
 
 - Nothing project-critical lives in any model's head. Everything is in: `VISION.md` → `PROJECT_STATE.md`
   → `ROADMAP.md` → `AGENTS.md`/`AGENT_TASKBOARD.md` → skills (`C:\Users\patip\.claude\skills\`) →
@@ -141,24 +143,24 @@ Codex review) = **`AGENTS.md` §1.5 + §5** (owns the multi-agent protocol — r
 - If anything here conflicts with what you observe in the repo, trust the repo + pre-commit guard,
   then fix the doc — that's the anti-drift system working as designed.
 
-## Multi-agent collaboration (Claude Code + Codex + ZCode on this machine)
+## Multi-agent collaboration (current)
 
-Cross-agent protocol lives in **[AGENTS.md](AGENTS.md)** (roles, write permissions, iron rules) and the
-work queue in **[AGENT_TASKBOARD.md](AGENT_TASKBOARD.md)**. Claude-specific duties:
+Cross-agent protocol lives in **[AGENTS.md](AGENTS.md)** (roles, write permissions, review separation,
+owner approvals) and the work queue in **[AGENT_TASKBOARD.md](AGENT_TASKBOARD.md)**. Claude-specific duties:
 
-- **You are lead engineer + sole judge.** Other agents produce raw evidence; verdicts, direction, and
-  Decision-log/VISION/scorecard-verdict edits are yours (or the user's) alone.
-- **Before your token window ends** (or at any natural pause): leave the taskboard stocked with OPEN
-  orders — each one self-contained, mechanical, with numeric acceptance criteria and an explicit
-  list of prohibitions. A Claude hour should end as "orders written + prior results judged", not as
-  raw batch runs.
-- **On-return protocol (every session start):** (1) `git log --oneline -15` — look for `[codex]`/`[zcode]`
-  commits since your last one; (2) read AGENT_TASKBOARD for DONE/BLOCKED rows; (3) review their raw
-  results → issue verdicts → move conclusions into scorecard/PROJECT_STATE → mark rows REVIEWED;
-  (4) run `scripts/check_state.ps1` if anything looks off. Never build on unreviewed agent output.
+- Read the assigned task contract and operate only in the role, scope, and review position that it names.
+- Apply every author/reviewer and owner-approval boundary by reference to `AGENTS.md` §§1–2; do not restate
+  or widen those governance facts here.
+- **On-return protocol (every session start):** (1) `git log --oneline -15`; (2) read AGENT_TASKBOARD for
+  the assigned contract and DONE/BLOCKED rows relevant to it; (3) inspect raw evidence and report findings
+  to the project reviewer/owner; (4) run `scripts/check_state.ps1` if anything looks off. Never build on
+  unreviewed high-risk output.
 - Don't edit rows other agents have CLAIMED; don't assume their in-flight work — check timestamps.
 
-## Orchestration workflow
+## Historical Claude-orchestrator workflow — **SUPERSEDED 2026-08-07**
+
+> Kept for quota-routing provenance only. ChatGPT now owns project management, architecture coordination,
+> dispatch, and project-level review. Claude has the specialist/reviewer role defined above.
 
 You (the orchestrator model = **Opus-seat** since 2026-07-04) plan, decompose, and synthesize — you do not do mechanical work yourself when a subagent can. **Cost rule (user directive 2026-07-03): always route to the CHEAPEST tier whose output you can still verify.** Cost order: qwen ≈ free < Sonnet < Codex ≈ you(Opus). **Transition note:** the seat is now Opus → there is no "Opus deep-reasoner tier smarter than the seat" left to escalate to (see `AGENTS.md` §1.5).
 

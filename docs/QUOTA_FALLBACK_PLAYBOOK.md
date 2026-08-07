@@ -1,6 +1,6 @@
-# QUOTA FALLBACK PLAYBOOK — ทำอะไรต่อเมื่อ Claude quota หมด
+# QUOTA FALLBACK PLAYBOOK — ทำอะไรต่อเมื่อ project coordination ไม่พร้อม
 
-> owner ของเอกสารนี้ = **วิธีให้เครื่องไม่ว่างตอน seat หลัก (Opus/Claude) ไม่อยู่** · กติกา agent ทั่วไป → `AGENTS.md` ·
+> owner ของเอกสารนี้ = **วิธีให้เครื่องไม่ว่างตอน ChatGPT/project coordination ไม่พร้อม** · กติกา authority และ agent ทั่วไป → `AGENTS.md` ·
 > คิวงานจริง → `AGENT_TASKBOARD.md` · verdict → VERDICT GATE ใน `CLAUDE.md`
 > สร้าง 2026-07-25 (user: "กลัวว่าเตรียม 10 batch แล้วรันหมดก็ไม่มีอะไรทำอยู่ดี — และผมไม่ได้ใช้ powershell/cmd")
 
@@ -13,7 +13,7 @@
 |---|---|---|
 | **1. conditional order** (order 1 ใบ = ต้นไม้ 2-3 ชั้น) | order ใบเดียวเดินได้หลายรอบโดยไม่ต้องถาม | template §2 + header `AGENT_TASKBOARD.md` |
 | **2. generator order** (standing, ท้ายคิวเสมอ) | คิว OPEN หมด → ยังมีงานพื้นฐานให้หยิบ | `ORDER-GEN-STANDING` ใน taskboard |
-| **3. Telegram lane** (oc-qwen) | ทางแยกที่ต้นไม้ไม่ครอบ → ถาม user จากมือถือแทนรอ Claude | §4 |
+| **3. Telegram lane** (oc-qwen) | ทางแยกที่ต้นไม้ไม่ครอบ → ถาม user จากมือถือแทนรอ project coordination | §4 |
 
 **หลักเดียวที่คุมทั้ง 3 ชั้น: worker เดินต้นไม้ที่ *เลขถูกล็อกไว้ก่อนแล้ว* — worker ไม่เคยตัดสิน.**
 เลขตัดสิน (bars) มาจาก VERDICT GATE และต้อง pre-register ก่อนรันเสมอ (กติกาเดิมตั้งแต่ ORDER-124+).
@@ -21,28 +21,28 @@
 ## 1. วงจรใหญ่
 
 ```
-Claude (มีโควตา)           worker lane (qwen/ZCode/oc-qwen)        user (Telegram/มือถือ)
-─────────────────          ────────────────────────────────        ──────────────────────
-ตัดสินกอง DONE ค้าง   →
-เขียน conditional order  →   เดินต้นไม้ branch A/B/C
-เติม matrix ของ                 ↓ คิวว่าง
-generator order          →   หยิบ cell ถัดไปจาก matrix
-                                ↓ เจอเคสนอกต้นไม้
-                             mark BLOCKED + ส่งคำถาม      →      เคาะ branch ตอบกลับ
-                                ↓                                (เลือกจากตัวเลือกที่ order เขียนไว้)
-                             เดินต่อ / ข้ามไปใบถัดไป
-   ↑                            ↓
-   └────── กองผลดิบ DONE รอ REVIEWED ←──────────────────────────┘
+ChatGPT/project coordinator     worker lane (qwen/ZCode/oc-qwen)     owner (Telegram/มือถือ)
+───────────────────────────     ────────────────────────────────     ──────────────────────
+review/route กอง DONE ค้าง →
+เขียน conditional order    →    เดินต้นไม้ branch A/B/C
+เติม matrix ของ                    ↓ คิวว่าง
+generator order             →    หยิบ cell ถัดไปจาก matrix
+                                   ↓ เจอเคสนอกต้นไม้
+                                mark BLOCKED + ส่งคำถาม     →      เคาะ branch ตอบกลับ
+                                   ↓                               (เลือกจากตัวเลือกที่ order เขียนไว้)
+                                เดินต่อ / ข้ามไปใบถัดไป
+   ↑                               ↓
+   └────── กองผลดิบ DONE รอ project review ←────────────────────┘
 ```
 
-**ชั่วโมงสุดท้ายก่อนโควตาหมด ของ Claude ต้องจบด้วย 3 อย่างนี้เสมอ** (ไม่ใช่ "รัน backtest ให้ครบ"):
-1. order ค้างทุกใบถูกตัดสิน (DONE → REVIEWED)
+**ช่วง coordination สุดท้ายก่อน project coordination ไม่พร้อม ควรจบด้วย 3 อย่างนี้** (ไม่ใช่ "รัน backtest ให้ครบ"):
+1. order ค้างทุกใบถูกส่งเข้า review/approval ที่ถูกต้อง (DONE → REVIEWED เมื่อหลักฐานครบ)
 2. conditional order ชุดใหม่ ≥2 ใบ **ที่มีต้นไม้ครบทุก branch**
 3. matrix ของ `ORDER-GEN-STANDING` ถูกเติมให้เหลืออย่างน้อย ~10 cell
 
 ## 2. CONDITIONAL ORDER — template บังคับ
 
-order สำหรับ lane ที่ Claude ไม่อยู่ **ต้องมีทุกบรรทัดนี้** (ขาดข้อใด = worker ห้ามรับ):
+order สำหรับ lane ตอน ChatGPT/project coordinator ไม่พร้อม **ต้องมีทุกบรรทัดนี้** (ขาดข้อใด = worker ห้ามรับ):
 
 ```markdown
 ## ORDER-xxx — <ชื่อ> — `OPEN` · ทำได้: <agents> · 👉 แนะ: <default>
@@ -54,12 +54,12 @@ order สำหรับ lane ที่ Claude ไม่อยู่ **ต้อ
   - ถ้า 1.0 ≤ PF < 1.2 → STEP 2B: <สเปกครบ — fine grid ช่วงไหน step เท่าไหร่>
   - ถ้า PF < 1.0      → STOP lane นี้ · append ผลดิบ · ไป order ถัดไป (ห้ามสรุปว่า "ตาย")
   - ผลไม่เข้า branch ไหนเลย / รันไม่ผ่าน 2 ครั้ง → `BLOCKED(<คำถามพร้อมตัวเลือก A/B>)` + แจ้ง user
-**ชั้นที่ 3 (ถ้ามี):** <จาก 2A/2B ต่ออีกชั้น — ลึกได้ ยิ่งลึกยิ่งกินเวลา Claude น้อย>
+**ชั้นที่ 3 (ถ้ามี):** <จาก 2A/2B ต่ออีกชั้น — ลึกได้ ยิ่งลึกยิ่งลดเวลาประสานงาน>
 **ห้าม:** เขียน verdict · แตะ scorecard/EDGE_CATALOG/PROJECT_STATE/VISION · รายงาน Model-2 ·
         ตีความผลนอก branch ที่เขียนไว้ · เปลี่ยนค่าที่ไม่ได้ระบุใน STEP
 ```
 
-**กติกาเขียนต้นไม้ (Claude):**
+**กติกาเขียนต้นไม้ (project coordinator):**
 - ทุก branch ต้อง **สเปกครบพอที่จะรันได้ทันที** — "ลองปรับดู" ไม่ใช่ branch, "SL {2.5,3.0,3.5} step 0.5" คือ branch
 - ปลายทุก branch ต้องเป็นหนึ่งใน 3 อย่าง: **STEP ถัดไป · STOP+ไปใบถัดไป · BLOCKED+ถาม** — ห้ามมีปลายเปิด
 - ลึก 2-3 ชั้นกำลังดี (ชั้นที่ 4 มักเดาผิดจนเสียเปล่า)
@@ -68,12 +68,12 @@ order สำหรับ lane ที่ Claude ไม่อยู่ **ต้อ
 ## 3. GENERATOR ORDER — กันคิวว่าง
 
 `ORDER-GEN-STANDING` = order ใบเดียวที่ **อยู่ท้ายคิวถาวร ไม่มีวัน DONE** — เปิดตลอด, worker หยิบได้ก็ต่อเมื่อ
-**ไม่มี order OPEN อื่นเหลือแล้วเท่านั้น**. เนื้อใน = matrix ที่ Claude เติมไว้ (symbol × TF × lever × window)
+**ไม่มี order OPEN อื่นเหลือแล้วเท่านั้น**. เนื้อใน = matrix ที่ project coordinator อนุมัติไว้ (symbol × TF × lever × window)
 พร้อม template คำสั่งรัน 1 แบบ. worker หยิบ cell บนสุดที่ยังไม่มีผล → รัน → append ผลดิบ → ทำเครื่องหมาย cell → cell ถัดไป.
 
-- generator order **ไม่ใช่ข้อยกเว้นของกฎ "ไม่มี order OPEN + Claude ไม่อยู่ → หยุด อย่าคิดงานใหม่เอง"**
-  (`AGENTS.md` §4) — มันคือ order ที่ Claude เขียนไว้ล่วงหน้าแล้ว งานทุก cell ผ่านสมอง Claude มาก่อน worker ไม่ได้คิดเอง
-- ผล generator = **ผลดิบสำรวจ (screening) เท่านั้น** ห้ามใช้เป็นหลักฐาน promote อะไรทั้งสิ้น จนกว่า Claude review
+- generator order **ไม่ใช่ข้อยกเว้นของกฎ "ไม่มี order OPEN + project coordination ไม่พร้อม → หยุด อย่าคิดงานใหม่เอง"**
+  (`AGENTS.md` §4) — มันคือ task contract ที่อนุมัติไว้ล่วงหน้า worker ไม่ได้คิดเอง
+- ผล generator = **ผลดิบสำรวจ (screening) เท่านั้น** ห้ามใช้เป็นหลักฐาน promote อะไรทั้งสิ้น จนกว่า project review
 - matrix หมด → worker mark `BLOCKED(matrix หมด)` + แจ้ง user แล้วหยุด (นี่คือจุดเดียวที่ยอมให้เครื่องว่างได้)
 
 ## 4. TELEGRAM LANE (oc-qwen) — สั่งจากมือถือ ไม่ต้องแตะ powershell/cmd
@@ -88,13 +88,13 @@ order สำหรับ lane ที่ Claude ไม่อยู่ **ต้อ
 | `next` | หยิบ order OPEN บนสุดที่ทำได้ → รัน → สรุปสั้นกลับมา |
 | `status` | order ไหน CLAIMED/DONE/BLOCKED บ้าง + cell generator เหลือเท่าไหร่ |
 | `branch A` / `branch B` | ตอบทางแยกที่ worker ถาม (ตัวเลือกมาจาก order ไม่ใช่ worker คิดเอง) |
-| `stop` | หยุด lane ทิ้งงานค้างไว้ให้ Claude |
+| `stop` | หยุด lane ทิ้งงานค้างไว้ให้ project reviewer |
 
 **เส้นแดง oc-qwen (เขียนซ้ำในทุก order · ต่อให้ user สั่งผ่าน Telegram ก็ห้าม):**
-1. ❌ เขียน/แก้ **verdict** ทุกรูปแบบ — คำว่า DEAD/CANDIDATE/DEMO/BUILD-ON เป็นของ Claude เท่านั้น
+1. ❌ เขียน/แก้ **verdict** ทุกรูปแบบ — batch lane ส่งเฉพาะหลักฐาน; authority path อยู่ใน `AGENTS.md` §§1–2
 2. ❌ แตะ `EA_SCORECARD_AND_REGISTRY.md` · `EA_MASTER_INDEX.csv` · `EDGE_CATALOG.md` · `PROJECT_STATE.md` ·
    `VISION.md` · `CLAUDE.md` · `AGENTS.md` · `B1_DATASET.csv` — เขียนได้ไฟล์เดียวคือ **แถว order ที่ตัว claim ใน taskboard**
-3. ❌ แตะ source (`.mq5` / `ea_template\core\`) — qwen ไม่ใช่เลน code (`AGENTS.md` §5.1: ZCode/qwen ห้ามแตะ source)
+3. ❌ แตะ source (`.mq5` / `ea_template\core\`) — qwen ไม่ใช่เลน code (`AGENTS.md` §§2, 5)
 4. ❌ deploy / แก้ .set ของ EA ที่รัน demo อยู่ / แตะ `_vps_deploy`
 5. ❌ ตีความผลนอก branch — ตอบได้แค่ "เลขนี้เข้าช่องไหนของ bars ที่ล็อกไว้"
 6. ✅ ต้องทำ: append ผลดิบ **ทั้งก้อน** (ห้ามสรุปทิ้งตัวเลข) · commit tag `[oc-qwen]` · เจอไม่เข้าช่อง = BLOCKED + ถาม
@@ -107,11 +107,11 @@ ORDER-xxx STEP 1 done · PF 1.31 / trades 84 / DD 6.2%
 ผลดิบเต็ม: taskboard ORDER-xxx (commit abc1234)
 ```
 
-## 5. ON-RETURN (Claude โควตากลับมา) — ไม่เปลี่ยนจากเดิม
+## 5. ON-RETURN (project coordination กลับมา)
 
 1. `git log --oneline -20` หา commit `[oc-qwen]`/`[qwen]`/`[zcode]`
 2. อ่านแถว DONE/BLOCKED ใน taskboard — **ตัดสิน BLOCKED ก่อน** (นั่นคือจุดที่ระบบติด)
-3. เดิน VERDICT GATE ให้ครบต้น → Row-X write-checklist → mark REVIEWED
+3. route ให้ Codex/Claude วิเคราะห์ตาม assignment → project review → owner approval เมื่อเป็น owner-reserved outcome → mark REVIEWED
 4. **ก่อนหมดโควตารอบถัดไป: เขียนต้นไม้ชุดใหม่ + เติม matrix** (§1 ข้อ 3)
 
 ⚠️ อย่าสร้าง verdict จากผล generator เพียวๆ — มันคือ screening ไม่ได้ผ่าน ladder
@@ -150,7 +150,7 @@ ORDER-xxx STEP 1 done · PF 1.31 / trades 84 / DD 6.2%
 (1 cell = แสนกว่า combo). สองชั้นนี้คนละหน้าที่: ชั้นแรกคัดทิ้งของถูก ชั้นสองขุดของแพง — อย่าเอาชั้นสอง
 ไปรันทุกคู่ตั้งแต่แรก (เปลืองหลายสิบชั่วโมงไปกับคู่ที่ไม่มีอะไรเลย)
 
-## 5.7 prompt สั่งงานต่อบนคอม (วางลง Claude Code / ZCode บนเครื่อง — ใช้ซ้ำได้ทุกรอบ)
+## 5.7 prompt สั่งงานต่อบนคอม (วางลง Codex / Claude Code / ZCode บนเครื่อง — ใช้ซ้ำได้ทุกรอบ)
 
 ```
 อ่าน 3 ไฟล์นี้ก่อน: AGENTS.md · docs/QUOTA_FALLBACK_PLAYBOOK.md ·

@@ -3,8 +3,8 @@
 > ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: **คิวงาน + ผลดิบระหว่างรอ review เท่านั้น** ·
 > กติกาเต็ม → `AGENTS.md` (อ่านก่อน claim) · verdict สุดท้ายไม่อยู่ที่นี่ — อยู่ที่ EA_SCORECARD/PROJECT_STATE
 >
-> สถานะ: `OPEN` → `CLAIMED(agent, เวลา)` → `DONE` / `BLOCKED(คำถาม)` → `REVIEWED(Claude)`
-> agent อื่นแก้ได้เฉพาะแถว order ที่ตัว claim · เพิ่ม order ใหม่ = Claude/user เท่านั้น
+> สถานะ: `OPEN` → `CLAIMED(agent, เวลา)` → `DONE` / `BLOCKED(คำถาม)` → `REVIEWED(project reviewer)`
+> agent อื่นแก้ได้เฉพาะแถว order ที่ตัว claim · เพิ่ม order ใหม่ = ChatGPT/user หรือ agent ที่ task contract อนุญาตชัดเจน
 >
 > 📋 **ORDER TEMPLATE (บังคับตั้งแต่ ORDER-124+ · framework Part 5 enforcement #1):** order ทดสอบ/optimize ทุกใบ
 > ต้องมี 2 บรรทัดนี้ในสเปก — pre-register ก่อนรัน ห้ามเติมย้อนหลัง:
@@ -19,7 +19,7 @@
 > **bars:** pass = X · dead = Y · กลาง = Z          **flat-lot probe:** done / N-A / pending
 > **STEP 1:** <คำสั่งรันที่ copy ไปวางได้ตรงๆ — EA/symbol/TF/window/path ครบ>
 > **TREE:** PF ≥ pass → STEP 2A <สเปกครบ> · pass > PF ≥ กลาง → STEP 2B <สเปกครบ> ·
->           PF < dead → STOP lane นี้ + ไป order ถัดไป (ห้ามสรุปว่า "ตาย" — verdict = Claude) ·
+>           PF < dead → STOP lane นี้ + ไป order ถัดไป (ห้ามสรุปว่า "ตาย" — ส่งให้ project reviewer ประสาน working verdict) ·
 >           ไม่เข้า branch ไหน / รันพลาด 2 ครั้ง → `BLOCKED(<คำถาม + ตัวเลือก A/B>)` แล้วแจ้ง user
 > **ห้าม:** verdict · แตะ scorecard/MASTER_INDEX/EDGE_CATALOG/PROJECT_STATE/VISION/B1_DATASET ·
 >          แตะ .mq5 หรือ ea_template\core\ · แตะ _vps_deploy/.set ของ EA ที่ demo อยู่ · Model-2 ·
@@ -104,6 +104,24 @@
 > 🧭 **TRANCHE 670-674 (written 2026-07-31, lane `S-2026-07-31-TIERSNAP`)** — three of these are the owner's decisions from 14:2x, recorded in `PROJECT_STATE.md` §3 **before** any code moved (`671` · `672` · `673`), and two come out of one measurement: **31 of 32 declared reads of judged evidence in the checker set read the WORKING TREE while the tier is a pre-commit hook** (`670` · `674`). Design = [`_triage/factory_os/TIER_SNAPSHOT_DESIGN.md`](_triage/factory_os/TIER_SNAPSHOT_DESIGN.md) **rev 2**, attacked by an independent review before a line was written: rev 1's central argument was wrong twice and its arrival check was a blacklist. **Do not implement from rev 1's shape — read §7 first, it is short and it is the reason the rest is trustworthy.**
 
 ---
+
+## ORDER-1530 — [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent model — `DONE + REVIEWED(owner-ratified, 2026-08-07 — independent Standards PASS + Spec PASS; implementation and applicable validation complete)` · Can do: Codex Primary (owner-authorized for this migration) · 👉 Suggested: Codex Primary
+
+**Source of authority:** repository owner's attached instruction, 2026-08-07. This one task explicitly authorizes Codex to create/claim this row, edit `AGENTS.md` and conflicting canonical workflow documents, and record the decision in the canonical decision log. It does not create continuing authority for later governance changes.
+
+**Scope:** governance/documentation only. Replace active vendor-specific authority with the role model in which the owner is final approval authority; ChatGPT is project manager/architect/dispatcher/reviewer; Codex Primary is lead developer/integration owner for the local repository; Claude is specialist engineer/researcher/architecture or independent alternative reviewer; ZCode/Qwen/batch agents produce mechanical evidence. Preserve all trading criteria, numeric gates, tester rules, and safety constraints.
+
+**Author/review rule:** normal tooling/docs use a scoped author plus applicable checks and review when needed. Core/execution/position/accounting/money/risk code may be authored by Codex or Claude as assigned, but requires independent review by a different model family, compile and all required cages/tests, evidence, and owner approval before risk-default, live, or irreversible behavior changes. No author may be the sole final reviewer of high-risk work.
+
+**Files authorized:** `AGENTS.md` · `docs/PIPELINE.md` · `docs/QUOTA_FALLBACK_PLAYBOOK.md` (active fallback routing surfaced by conflict sweep) · `PROJECT_STATE.md` · `PROJECT_HISTORY.md` · `PLATFORM_INDEX.md` · `README.md` · `CLAUDE.md` · this row and active header wording · this lane's `docs/SESSION_LEDGER.md` row · generated `TASKBOARD_DIGEST.md` only when its `-Check` freshness guard requires regeneration. Drop any inspected file that contains only historical or already-consistent text.
+
+**Acceptance:** active canonical sole-authority phrases for Claude/Opus are removed or explicitly superseded; `AGENTS.md` owns detailed roles/permissions; `docs/PIPELINE.md` retains stage routing and points to `AGENTS.md`; the owner decision is recorded concisely in the decision log; historical provenance remains historical; documentation/governance guards and `powershell -File scripts/check_state.ps1 -Strict` pass; only approved governance paths are staged; one focused migration commit uses `[codex] Ratify ChatGPT-led multi-agent governance`; no push.
+
+**Reviewer:** two independent read-only reviews before commit — one against repository standards and one against the owner's attached specification; Codex Primary repairs findings and reports both axes to ChatGPT/owner. This is documentation governance, not high-risk trading code.
+
+**Prohibited:** MQL4/MQL5 source · trading/risk defaults · scripts/tests unless strictly required for documentation validation · portfolio/deployment/backtest evidence · unrelated dirty paths · rewriting archived history, closed-order evidence, or superseded documents solely to modernize wording.
+
+**Raw result (2026-08-07):** migration complete on the approved paths. Independent final reviews: **Standards PASS, 0 findings** · **Spec PASS, 0 findings** after all repairs. `check_state.ps1 -Strict` CLEAN · taskboard digest check CLEAN · archive audit 0 unresolved · staged precommit check PASS · order-collision PASS · handoff check PASS (no-op). The initial **unscoped** full tier was exactly **29 PASS / 2 FAIL**: the byte-pinned work-receipt grant (migration-caused, restored verbatim and its cage then PASS) and `run_s2a_cages.ps1` (pre-existing `ORDER-1462`, attestation line 10 binds bundle `e28c5c9d68bb` while current is `2ce1ea874449`). The required final changed-path tier selected exactly **3/31 applicable suites and passed 3/3 in 26.2s**: order-collision, work-receipts, and front-guard evidence; transcript `_triage/tier_runs/tier_20260807_074552_9728.jsonl`. S2a is unrelated to every staged path and therefore skipped by the hook's generated per-path dependency map; no bypass was used. No trading code, deployment, tester lane, or unrelated dirty path was touched/staged.
 
 ## ORDER-1462 — [🔴 factory/S2a] 👤 The s2a attestation gate is RED at HEAD: a lane changed a bundle member and closed without re-making the record — `OPEN (needs the owner — an attestation is a signature)` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
 **bars:** N-A (an owner signature) · **flat-lot probe:** N-A

@@ -10,6 +10,9 @@
 | ไฟล์ | คือ |
 |---|---|
 | **`PROJECT_STATE.md`** | 👉 **AI START HERE** — living state กลาง (ภาพรวม/สถานะ%/decision/monitor/แผนต่อ) เปิดก่อนเสมอ |
+| **`AGENTS.md`** | บทบาท/สิทธิ์ของ owner, ChatGPT, Codex, Claude และ batch agents · กฎแยก author/reviewer |
+| **`AGENT_TASKBOARD.md`** | คิว task contract + หลักฐานดิบระหว่างรอ review |
+| **`docs/PIPELINE.md`** | stage routing เท่านั้น; อ้าง `AGENTS.md` สำหรับคนทำ/คน review/approval |
 | `_archive_docs/EA_CORE_ST03_LOOP_PLAN.md` | แผนปิด framework loop ด้วย ST03 edge (EA_CORE ทางเลือก 2) — archived, loop closed |
 | **`DEMO_DEPLOYMENT_PLAN.md`** | พอร์ต live ที่ deploy จริง (source of truth) + .set + magic + monitoring rule |
 | **`EA_SCORECARD_AND_REGISTRY.md`** | ทะเบียน EA ทุกตัว + scoring rubric + kill-reason |
