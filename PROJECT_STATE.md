@@ -4,7 +4,7 @@
 > session narrative, the accumulated changelog, and the full Decision log with provenance. This file
 > holds only: current status, active work, binding decisions, and the forward plan.
 
-> **last updated:** 2026-08-07 (Codex Primary, owner-ratified) — ChatGPT-led governance migration complete (`ORDER-1530`); trading and risk gates unchanged.
+> **last updated:** 2026-08-08 (owner-accepted) — Controlled Execution MVP and Owner-Controlled EA_LAB Integration accepted; current milestone = EA_LAB REAL WORKFLOW INTEGRATION.
 > Full session-by-session history → `PROJECT_HISTORY.md`. · owner: patip
 
 ---
@@ -89,6 +89,9 @@ Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine
 ---
 
 ## 2. Current status (one-liner per layer)
+
+> **2026-08-08 (owner-accepted) — Controlled Execution MVP = ACCEPTED; accepted Executor manifest** `DD11E90EEE7C258483DB8C58084E90AFE3CDB98AF6228360404783A5A258F469`. **Owner-Controlled EA_LAB Integration = ACCEPTED; final accepted Executor manifest** `1D11B3A4CAC8E8A806096E506F1703228630197B8E02AD6CD875AAB9BD616172`. **Proof:** commit `6a4cc7ef2310cf6e51c0aa174361605756af6585` · `docs/owner-controlled-probe.md` · blob SHA-256 `1BA3B69CCAB379242A10D31FE4A7BF315DB5DAC57EE93FC849FA5592F543CC9C` · independent different-family review PASS / BLOCKERS: NONE.
+> **Current milestone: EA_LAB REAL WORKFLOW INTEGRATION.**
 
 > 🆕 **2026-08-01 (Opus-seat) — `ORDER-710` CLOSED: the EA now hashes its own live inputs, and the digest MATCHES the compiler's on 2 builds × 2 configurations · lane `S-2026-08-01-CFGFP`, block 730-739, MT5 lane 1**
 > **The `[CFG]` half of slice S6, and the acceptance is four tester runs, not an argument.** `ea_template/core/InputSurface_gen.mqh` is GENERATED (1,082 lines, one `#ifdef LAB_ENTRY_nn` block per build) from `preset.parse_surface` — the same call on the same file the compiler uses — so at `OnInit` the EA builds the fingerprint preimage from **the values the binary is holding** and prints `[CFG] input surface: build=… keys=… scope=… effective_config_hash=…`. Measured on lane 1 (`scripts/verify_config_fingerprint.ps1`, XAUUSD H1 2024.01.01–2024.01.15 model 1): `LAB_ENTRY_16`/135 keys and `LAB_ENTRY_11`/113 keys, each at declared defaults and again with two inputs perturbed — **all four EA digests identical to the compiler's, and the two configurations differ from each other.**
