@@ -1,5 +1,5 @@
 ﻿{
-    "generated_utc":  "2026-08-08T00:37:23Z",
+    "generated_utc":  "2026-08-09T00:37:28Z",
     "state":  "NEUTRAL",
     "risk_index":  0.385,
     "bias":  "balanced - watch for tilt",
@@ -60,9 +60,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  99.604,
+                           "spot":  99.6,
                            "sma200":  99.1665,
-                           "chg5d_pct":  -0.196,
+                           "chg5d_pct":  -0.2,
                            "signal":  0,
                            "reason":  "DXY no strong move -\u003e neutral",
                            "flags":  [
@@ -74,9 +74,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  4401.2998,
-                           "sma200":  4478.9745,
-                           "chg5d_pct":  8.698,
+                           "spot":  4340.7002,
+                           "sma200":  4478.6715,
+                           "chg5d_pct":  7.202,
                            "signal":  0,
                            "reason":  "gold move is structural/USD-driven (no meaningful VIX co-move) -\u003e neutral",
                            "flags":  [
@@ -88,9 +88,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  64843.5117,
-                           "sma200":  70369.4579,
-                           "chg5d_pct":  2.145,
+                           "spot":  64926.1484,
+                           "sma200":  70252.7176,
+                           "chg5d_pct":  2.309,
                            "signal":  -1,
                            "reason":  "below SMA200 -\u003e risk-off lean",
                            "flags":  [
@@ -116,11 +116,11 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  6.585,
+                           "spot":  6.5705,
                            "sma200":  5.8322,
-                           "chg5d_pct":  2.315,
+                           "chg5d_pct":  2.09,
                            "signal":  1,
-                           "reason":  "above SMA200, 5d 2.315% -\u003e risk-on intact",
+                           "reason":  "above SMA200, 5d 2.09% -\u003e risk-on intact",
                            "flags":  [
 
                                      ]
