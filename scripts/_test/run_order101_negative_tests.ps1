@@ -336,31 +336,49 @@ $results.Add([pscustomobject]@{
 })
 
 # --- 10. FIX 2 (blocker): manifest identity must be the ARCHIVE's git blob SHA, not repo HEAD.
-#        Proven against the REAL repo (not the synthetic fixtures): ARCHIVE_TASKBOARD_2026-07A.md's
-#        content is byte-identical between HEAD and the 4aebbc37 split commit (verified: `git diff
-#        4aebbc37 HEAD -- ARCHIVE_TASKBOARD_2026-07A.md` is empty), yet HEAD is a different commit SHA
-#        than 4aebbc37 -- a "simulated HEAD difference" without creating any new commit. Regenerating
-#        against CurrentArchiveSource=GIT:HEAD:... vs GIT:4aebbc37:... must produce byte-identical
-#        manifest + index. ---
+#        Use an isolated Git fixture rather than relying on a historical repository commit whose
+#        archive content may legitimately drift. The fixture clones the current trusted history and
+#        adds one unrelated commit: the two HEAD identities differ, while the archive blob/content
+#        at both refs is byte-identical. Regenerating against those two refs must produce byte-
+#        identical manifest + index. ---
 $fix2OutA = Join-Path $out 'fix2_headA'
 $fix2OutB = Join-Path $out 'fix2_headB'
 foreach ($d in @($fix2OutA, $fix2OutB)) { if (-not (Test-Path $d)) { New-Item -ItemType Directory -Force -Path $d | Out-Null } }
 
+$fix2Repo = Join-Path $out 'fix2_git_fixture'
+& git -C $out clone -q --no-local -- "$RepoRoot" "$fix2Repo"
+if ($LASTEXITCODE -ne 0) { throw 'cross-HEAD fixture clone failed' }
+& git -C $fix2Repo config user.email 'order101@test.example'
+& git -C $fix2Repo config user.name 'order101 fixture'
+$fix2BaseSha = (& git -C $fix2Repo rev-parse HEAD).Trim()
+
+[System.IO.File]::WriteAllText((Join-Path $fix2Repo 'unrelated.txt'), "unrelated fixture commit`n", (New-Object System.Text.UTF8Encoding($false)))
+& git -C $fix2Repo add -- unrelated.txt
+& git -C $fix2Repo commit -q -m 'fixture unrelated advance'
+if ($LASTEXITCODE -ne 0) { throw 'cross-HEAD fixture unrelated commit failed' }
+$fix2HeadSha = (& git -C $fix2Repo rev-parse HEAD).Trim()
+
+if ($fix2HeadSha -eq $fix2BaseSha) { throw 'cross-HEAD fixture did not advance HEAD' }
+$fix2HeadArchiveBlob = (& git -C $fix2Repo rev-parse "${fix2HeadSha}:ARCHIVE_TASKBOARD_2026-07A.md").Trim()
+$fix2BaseArchiveBlob = (& git -C $fix2Repo rev-parse "${fix2BaseSha}:ARCHIVE_TASKBOARD_2026-07A.md").Trim()
+if ($fix2HeadArchiveBlob -ne $fix2BaseArchiveBlob) { throw 'cross-HEAD fixture archive blob is not byte-identical' }
+
 $fix2Common = [ordered]@{
-    RepoRoot            = $RepoRoot
+    RepoRoot            = $fix2Repo
     PreSplitSource      = 'GIT:4aebbc37^:AGENT_TASKBOARD.md'
     SplitActiveSource   = 'GIT:4aebbc37:AGENT_TASKBOARD.md'
     SplitArchiveSource  = 'GIT:4aebbc37:ARCHIVE_TASKBOARD_2026-07A.md'
-    CurrentActiveSource = 'GIT:HEAD:AGENT_TASKBOARD.md'
 }
 $fix2A = [ordered]@{}; foreach ($k in $fix2Common.Keys) { $fix2A[$k] = $fix2Common[$k] }
-$fix2A['CurrentArchiveSource'] = 'GIT:HEAD:ARCHIVE_TASKBOARD_2026-07A.md'
+$fix2A['CurrentActiveSource']  = "GIT:${fix2BaseSha}:AGENT_TASKBOARD.md"
+$fix2A['CurrentArchiveSource'] = "GIT:${fix2BaseSha}:ARCHIVE_TASKBOARD_2026-07A.md"
 $fix2A['ManifestPath']   = Join-Path $fix2OutA 'manifest.csv'
 $fix2A['IndexPath']      = Join-Path $fix2OutA 'index.md'
 $fix2A['ExceptionsPath'] = Join-Path $fix2OutA 'exceptions.md'
 
 $fix2B = [ordered]@{}; foreach ($k in $fix2Common.Keys) { $fix2B[$k] = $fix2Common[$k] }
-$fix2B['CurrentArchiveSource'] = 'GIT:4aebbc37:ARCHIVE_TASKBOARD_2026-07A.md'
+$fix2B['CurrentActiveSource']  = "GIT:${fix2HeadSha}:AGENT_TASKBOARD.md"
+$fix2B['CurrentArchiveSource'] = "GIT:${fix2HeadSha}:ARCHIVE_TASKBOARD_2026-07A.md"
 $fix2B['ManifestPath']   = Join-Path $fix2OutB 'manifest.csv'
 $fix2B['IndexPath']      = Join-Path $fix2OutB 'index.md'
 $fix2B['ExceptionsPath'] = Join-Path $fix2OutB 'exceptions.md'
@@ -371,11 +389,11 @@ $fix2ManifestEqual = ([Convert]::ToBase64String([System.IO.File]::ReadAllBytes($
 $fix2IndexEqual    = ([Convert]::ToBase64String([System.IO.File]::ReadAllBytes($fix2A['IndexPath']))    -eq [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($fix2B['IndexPath'])))
 
 $results.Add([pscustomobject]@{
-    Name = 'cross-HEAD-zero-diff (fix 2, real repo, HEAD vs 4aebbc37)'
+    Name = 'cross-HEAD-zero-diff (fix 2, isolated fixture, base vs unrelated commit)'
     ExpectAudit = 0; ActualAudit = $fix2AResult.ExitCode
     ExpectStrict = 0; ActualStrict = $fix2BResult.ExitCode
     Pass = $fix2ManifestEqual -and $fix2IndexEqual -and ($fix2AResult.ExitCode -eq 0) -and ($fix2BResult.ExitCode -eq 0)
-    AuditOut = $fix2AResult.StdOut + "`n[manifest byte-identical across HEAD vs 4aebbc37: $fix2ManifestEqual] [index byte-identical: $fix2IndexEqual]"
+    AuditOut = $fix2AResult.StdOut + "`n[manifest byte-identical across base vs unrelated commit: $fix2ManifestEqual] [index byte-identical: $fix2IndexEqual]"
     StrictOut = $fix2BResult.StdOut
 })
 

@@ -122,6 +122,99 @@ function Get-HookReferencedScripts {
     }
     return $names.ToArray()
 }
+
+function Copy-HookFixtureDependencies {
+    <# Bare/parent fixtures must carry the real non-repository hook inputs too.
+       The hook fails closed when its attestation runtime or fast-tier pathspec
+       is absent; copying them keeps these cases focused on ORDER-103 Fix 2. #>
+    param([string]$Dir, [switch]$CommitBareRuntime)
+    New-Item -ItemType Directory -Force -Path (Join-Path $Dir '.githooks') | Out-Null
+    Copy-Item (Join-Path $RepoRoot '.githooks\fast_tier_pathspec') (Join-Path $Dir '.githooks\fast_tier_pathspec') -Force
+    # A protected archive staging in the valid and real-binding cases selects the
+    # current fast tier, then the suites selected by its current guard declarations.
+    # Carry that exact runtime closure into every fixture so these cases execute
+    # the production hook path rather than failing on a stale checkout surface.
+    $testRoot = Join-Path $Dir 'scripts\_test'
+    New-Item -ItemType Directory -Force -Path $testRoot | Out-Null
+    Copy-Item (Join-Path $RepoRoot 'scripts\_test\run_fast_cages.ps1') (Join-Path $testRoot 'run_fast_cages.ps1') -Force
+    Copy-Item (Join-Path $RepoRoot 'scripts\_test\run_statusclass_tests.ps1') (Join-Path $testRoot 'run_statusclass_tests.ps1') -Force
+    Copy-Item (Join-Path $RepoRoot 'scripts\_test\run_front_guard_evidence_tests.ps1') (Join-Path $testRoot 'run_front_guard_evidence_tests.ps1') -Force
+    foreach ($rel in @(
+        'scripts\check_state.ps1',
+        'scripts\check_order_collision.ps1',
+        'scripts\check_handoff_contract.ps1',
+        'scripts\lib\evidence.ps1',
+        'scripts\lib\magic_guard.ps1',
+        '_triage\factory_os\magic.py',
+        '_triage\factory_os\scheduler.py',
+        '_triage\factory_os\schemas.json',
+        'PROJECT_STATE.md',
+        'DEMO_DEPLOYMENT_PLAN.md',
+        'MASTER_BACKLOG.md',
+        'EA_SCORECARD_AND_REGISTRY.md',
+        'portfolio\DEPLOYMENTS.csv',
+        'factory\magic_allocations.jsonl',
+        'scripts\live_dashboard.ps1',
+        'docs\SESSION_LEDGER.md',
+        '.claude\agents\ea-screener.md',
+        '.claude\agents\ea-validator.md',
+        'scripts\mt5_run.ps1',
+        'scripts\mt5_optimize.ps1',
+        'scripts\mt4_run.ps1',
+        'scripts\mt4_optimize.ps1',
+        'scripts\run_backtest.ps1'
+    )) {
+        $dest = Join-Path $Dir $rel
+        $parent = Split-Path -Parent $dest
+        if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+        Copy-Item (Join-Path $RepoRoot $rel) $dest -Force
+    }
+    $runtimeRoot = Join-Path $Dir 'tools\python312'
+    New-Item -ItemType Directory -Force -Path $runtimeRoot | Out-Null
+    foreach ($name in @('python.exe','python312.dll','python312.zip','python312._pth','vcruntime140.dll','vcruntime140_1.dll','_hashlib.pyd')) {
+        Copy-Item (Join-Path $RepoRoot "tools\python312\$name") (Join-Path $runtimeRoot $name) -Force
+    }
+    $factoryRoot = Join-Path $Dir '_triage\factory_os'
+    New-Item -ItemType Directory -Force -Path $factoryRoot | Out-Null
+    foreach ($name in @('check_attested_pin_staged.py','check_s2a_attestation.py','check_s2a_migration.py','evidence.py','gen_design_contracts.py','registry.py')) {
+        Copy-Item (Join-Path $RepoRoot "_triage\factory_os\$name") (Join-Path $factoryRoot $name) -Force
+    }
+    if ($CommitBareRuntime) {
+        $runtimePaths = @(
+            '.githooks\fast_tier_pathspec',
+            'scripts\_test\run_fast_cages.ps1',
+            'scripts\_test\run_statusclass_tests.ps1',
+            'scripts\_test\run_front_guard_evidence_tests.ps1',
+            'scripts\check_state.ps1',
+            'scripts\check_order_collision.ps1',
+            'scripts\check_handoff_contract.ps1',
+            'scripts\lib\evidence.ps1',
+            'scripts\lib\magic_guard.ps1',
+            '_triage\factory_os\magic.py',
+            '_triage\factory_os\scheduler.py',
+            '_triage\factory_os\schemas.json',
+            'PROJECT_STATE.md',
+            'DEMO_DEPLOYMENT_PLAN.md',
+            'MASTER_BACKLOG.md',
+            'EA_SCORECARD_AND_REGISTRY.md',
+            'portfolio\DEPLOYMENTS.csv',
+            'factory\magic_allocations.jsonl',
+            'scripts\live_dashboard.ps1',
+            'docs\SESSION_LEDGER.md',
+            '.claude\agents\ea-screener.md',
+            '.claude\agents\ea-validator.md',
+            'scripts\mt5_run.ps1',
+            'scripts\mt5_optimize.ps1',
+            'scripts\mt4_run.ps1',
+            'scripts\mt4_optimize.ps1',
+            'scripts\run_backtest.ps1'
+        )
+        Invoke-GitRaw -RepoRoot $Dir -Arguments ('add -- ' + (($runtimePaths | ForEach-Object { '"{0}"' -f ($_ -replace '\\','/') }) -join ' ')) | Out-Null
+        $baseline = Invoke-GitRaw -RepoRoot $Dir -Arguments 'commit -q -m "temp front-guard runtime baseline"'
+        if ($baseline.ExitCode -ne 0) { throw "front-guard runtime baseline commit failed: $($baseline.StdErr)" }
+    }
+}
+
 function Invoke-PowerShellFile {
     param(
         [string]$Dir,
@@ -183,6 +276,7 @@ function New-RealWorkingTreeFixture {
             Copy-Item -LiteralPath $src -Destination $dest -Force
         }
     }
+    Copy-HookFixtureDependencies -Dir $dir
     [System.IO.File]::WriteAllText((Join-Path $dir 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
     return $dir
 }
@@ -567,6 +661,11 @@ function New-TempHookRepo {
     New-Item -ItemType Directory -Force -Path $hooksDir | Out-Null
     Copy-Item (Join-Path $RepoRoot '.githooks\pre-commit') (Join-Path $hooksDir 'pre-commit') -Force
     New-Item -ItemType Directory -Force -Path (Join-Path $dir 'scripts') | Out-Null
+    # ORDER-103 fixture dependency: check_precommit_staged.ps1 dot-sources the
+    # real nested B1 rule library. Bare hook fixtures do not get it from a clone,
+    # so copy the production dependency instead of stubbing or weakening the guard.
+    New-Item -ItemType Directory -Force -Path (Join-Path $dir 'scripts\lib') | Out-Null
+    Copy-Item (Join-Path $RepoRoot 'scripts\lib\b1_guard.ps1') (Join-Path $dir 'scripts\lib\b1_guard.ps1') -Force
     Copy-Item (Join-Path $RepoRoot 'scripts\check_precommit_staged.ps1') (Join-Path $dir 'scripts\check_precommit_staged.ps1') -Force
     Copy-Item (Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1') (Join-Path $dir 'scripts\check_taskboard_archive.ps1') -Force
     Copy-Item (Join-Path $RepoRoot 'scripts\check_experiment_events.ps1') (Join-Path $dir 'scripts\check_experiment_events.ps1') -Force
@@ -590,6 +689,7 @@ function New-TempHookRepo {
             [System.IO.File]::WriteAllText($dest, 'exit 0', (New-Object System.Text.UTF8Encoding($false)))
         }
     }
+    Copy-HookFixtureDependencies -Dir $dir -CommitBareRuntime
     # NOTE: hooksPath deliberately NOT set here -- callers seed their checkpoint/setup
     # commits first (which may themselves touch protected files) and only call
     # Enable-TempHook right before the commit actually under test, so setup commits
@@ -889,7 +989,7 @@ $bindingParent = (Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('rev-parse "{0}^
 $checkoutParent = Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments ('checkout -q "{0}"' -f $bindingParent)
 if ($checkoutParent.ExitCode -ne 0) { throw "binding parent checkout failed: $($checkoutParent.StdErr)" }
 
-foreach ($rel in @('.githooks/pre-commit','scripts/check_taskboard_archive.ps1','scripts/check_precommit_staged.ps1','scripts/check_experiment_events.ps1','scripts/experiment_event_log.ps1')) {
+foreach ($rel in @('.githooks/pre-commit','scripts/check_taskboard_archive.ps1','scripts/check_precommit_staged.ps1','scripts/check_experiment_events.ps1','scripts/experiment_event_log.ps1','scripts/lib/b1_guard.ps1')) {
     $dest = Join-Path $hookRepoBinding $rel
     $parent = Split-Path -Parent $dest
     if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
@@ -903,6 +1003,7 @@ foreach ($n in (Get-HookReferencedScripts -RepoRoot $RepoRoot)) {
         Copy-Item -LiteralPath $src -Destination $dest -Force
     }
 }
+Copy-HookFixtureDependencies -Dir $hookRepoBinding -CommitBareRuntime
 [System.IO.File]::WriteAllText((Join-Path $hookRepoBinding 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
 foreach ($rel in @('ARCHIVE_TASKBOARD_2026-07A.md','docs/memory_control/ARCHIVE_MANIFEST.csv','docs/memory_control/ARCHIVE_INDEX.md','docs/memory_control/RECONCILE_EXCEPTIONS.md')) {
     $dest = Join-Path $hookRepoBinding $rel
