@@ -4,7 +4,7 @@
 > the collaboration protocol between agents** — status/plan/verdicts live in PROJECT_STATE.md ·
 > the work queue lives in AGENT_TASKBOARD.md
 
-**Read before starting work, every time (every agent):** `VISION.md` → `PROJECT_STATE.md` → `AGENT_TASKBOARD.md` → this file
+**Normal startup context (every agent):** read `PROJECT_STATE.md` → the relevant `AGENTS.md` authority/task-contract rules → the exact assigned ORDER/task block. Load `VISION.md`, `docs/WORK_LIFECYCLE.md`, and `docs/PIPELINE.md` on demand only when the assigned task genuinely requires them. `TASKBOARD_DIGEST.md` is a generated, read-only locator/navigation aid only; it does not replace `PROJECT_STATE.md`, `AGENTS.md`, or the exact ORDER/task block. `PROJECT_HISTORY.md` is cold historical reference, not normal startup context.
 
 ---
 
@@ -194,7 +194,7 @@ verdict, order status, or decision-feeding field.</sub>
 ```
 Owner + ChatGPT agree the goal and approval boundary
   → ChatGPT writes a task contract in AGENT_TASKBOARD (scope · exclusions · acceptance · validation · reviewer)
-  → assigned agent reads the 4 mandatory files, reserves a lane, and CLAIMS the order
+  → assigned agent reads the normal startup context, reserves a lane, and CLAIMS the order
   → agent works only inside the contract, attaches exact evidence, marks DONE/BLOCKED, and commits [tag]
   → ChatGPT/project reviewer checks the evidence and routes independent review where required
   → owner approves any DEMO/LIVE, real-money, risk-default, governance-exception, or irreversible decision
