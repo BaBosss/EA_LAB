@@ -32,7 +32,7 @@
         19 committed files in the new family carry the routing marker; driven
         offline against real current board content before this line changed, 18
         passed clean and 1 (this repo's own in-flight handoff) had a genuine
-        compound-token defect, fixed separately. See _triage/PROMPT_NEXT_SESSION_1510.md
+        compound-token defect, fixed separately. See _triage/_archive/handoffs_closed/2026-08-repository-hygiene/PROMPT_NEXT_SESSION_1510.md
         section 3.3 for the measurement.
 
     THE CONTRACT

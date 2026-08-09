@@ -603,7 +603,7 @@ hypothesis token and a compile-time allowlist. This is the single largest reuse 
   > 🔴 Rev 1 claimed a static walk gave 128–153 against 113–135 from the real Inputs page, called the ~15
   > gap unexplained, and filed it as a discovery task. **There was never a gap.** The walk was counting
   > the 25 group headers; removing them reproduces the Inputs-page range exactly, and Boss_14's 116 matches
-  > the figure already recorded in `_triage/HANDOFF_2026-07-28_BATCHQUEUE.md`. A counting bug was written
+  > the figure already recorded in `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-28_BATCHQUEUE.md`. A counting bug was written
   > up as a known unknown, which is worse than the bug.
   Target after the change: **Operator ≤ 40** per Boss.
 
@@ -1148,7 +1148,7 @@ bug — see §5.3. Listing a bug as a known unknown is how it survives an audit,
 
 ## 14. Audit response — every finding, and what changed
 
-The blind audit (`_triage/factory_os/CODEX_BLIND_AUDIT_2026-07-30.md`, verdict **NO-GO**) returned
+The blind audit (`_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_BLIND_AUDIT_2026-07-30.md`, verdict **NO-GO**) returned
 **22 findings: 2 P0 and 20 P1**, across the design, the appendix, and two existing scripts.
 *(I described it as "20" in conversation before counting the three in its own "other findings" section —
 the number is 22.)*

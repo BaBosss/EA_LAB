@@ -5,9 +5,9 @@
 > `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
-> NOT repo HEAD; stable across any commit that does not touch that file): `15e7ed7b86a179ab2eabee6412ec451f8a6c7896`
+> NOT repo HEAD; stable across any commit that does not touch that file): `c0126016ba8ce78619bb05795fe7d8695d736418`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
-> EOL/whitespace drift the per-block hashes below cannot see): `ba92e3a05a84b2bd8ad635204d37d13e5d865c892a9ae21929b1116d4e796cb4`
+> EOL/whitespace drift the per-block hashes below cannot see): `863ea060ee1c3522567eac0965cf51947a45eac43d85904a769fe1d4f1d11f9e`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
 > normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
 > block will not change that block's sha256; rely on the whole-file raw-byte hash above.
@@ -294,3 +294,32 @@
 | 420\|ORDER\|current-archive#278 | 420 | ORDER | 278 | 9ad8b208bbfbd8f472ce133f809b3924efe9a0b3025bb11d5cce3672d44aa1a1 |
 | 340\|ORDER\|current-archive#279 | 340 | ORDER | 279 | d007a32a108ef5d227284148656fa6e9a93e52668c9f0c4a1b4fbc2113d4354f |
 | NA\|OTHER\|current-archive#280 |  | OTHER | 280 | 619593e3586ca31b2fe5e00b00907fff25304371ac59ed58093d6766e06fe703 |
+| 1530\|ORDER\|current-archive#281 | 1530 | ORDER | 281 | eaea035b1057e1db527339980c7e902d67686966c7eeeff795e2034f051db37f |
+| 546\|ORDER\|current-archive#282 | 546 | ORDER | 282 | 5948d10f8ececb6332677e9e2f4876fd3ea2f226b3ef5d1f1781248d839ca9c8 |
+| 541\|ORDER\|current-archive#283 | 541 | ORDER | 283 | ffa95dc1364f857c4ad03542ef300d1e18b4d080ce58ceb73aa22ee2f254c3a8 |
+| 542\|ORDER\|current-archive#284 | 542 | ORDER | 284 | 4d8e4a1d1ed861d413d1070a5d78c5eee1be5842e629547625d07f2fbaac4907 |
+| 543\|ORDER\|current-archive#285 | 543 | ORDER | 285 | d61d9fe9eb47f9c4a8a3c6b1d30a7ac28cee6dc41ef11834b24c99911b2a1939 |
+| 355\|ORDER\|current-archive#286 | 355 | ORDER | 286 | 609494f0ac397c62d18b84832ad48428f144d5bbd11edb084a0f49a26e5329a7 |
+| 354\|ORDER\|current-archive#287 | 354 | ORDER | 287 | 046c362bd9d2f80731a235520a259d3b3c24e30898f2a0eb0644847373685a6d |
+| 352\|ORDER\|current-archive#288 | 352 | ORDER | 288 | 22f834fd8e2de93841449791743f6dbf2d7edf3247e18ece5034cac7087fa937 |
+| 351\|ORDER\|current-archive#289 | 351 | ORDER | 289 | d9947b15ecd3f66c392d3f71885186ab68bc37415dfbd4db4e8c398b34557b65 |
+| 421\|ORDER\|current-archive#290 | 421 | ORDER | 290 | 983cfc834743d6840437bb07cb2a6a1bb9bc54133b7379151de9a7556c5d264e |
+| 410\|ORDER\|current-archive#291 | 410 | ORDER | 291 | 028c0005a1cb242a0a9c0e3ea76dd5b07e3d206c5bbbd64e84badd81da6b3c60 |
+| 371\|ORDER\|current-archive#292 | 371 | ORDER | 292 | 67254e5b9686d7e315205e2989ea7f0ab88ee38d60526402dba2ffe2089e9288 |
+| 372\|ORDER\|current-archive#293 | 372 | ORDER | 293 | da7d5d8153dd2d11640bdeea8797dbd0c3432c7472cffe02a18c9a079bc8d652 |
+| 280\|ORDER\|current-archive#294 | 280 | ORDER | 294 | 0540e7b42c80339e9ec4111c0490a869ec257c923bd86507dde302fac7764120 |
+| 230\|ORDER\|current-archive#295 | 230 | ORDER | 295 | 81104e67c5bc7d55c3114e7cceeb8a363b8a10589df20e5c6581b47a8bf8c2b5 |
+| 235\|ORDER\|current-archive#296 | 235 | ORDER | 296 | 7a89d22e55d51b9a236e0b8c35f36985d8e46dbcdfa8a8ed194a45666dca81a8 |
+| 119\|ORDER\|current-archive#297 | 119 | ORDER | 297 | 4d4a34bc1b7492f87f2fdd896f3fc45a5611089687a5c530ac97ee35b81c2ca7 |
+| 095\|ORDER\|current-archive#298 | 095 | ORDER | 298 | d800f779307888669fba910f8af79a6cb514efe41dd9346e3e5e17ac5538bec5 |
+| 098-K\|ORDER\|current-archive#299 | 098-K | ORDER | 299 | 10a3a7badde8e29bba6fbe6a73bd708c88de4ba65b0e16c7509751e1a59b898c |
+| 108\|ORDER\|current-archive#300 | 108 | ORDER | 300 | 2366115b86b185c5944d61a9a0e7917850167a3df9c1f74619de5b96ebcbf01d |
+| 091C-D1d\|ORDER\|current-archive#301 | 091C-D1d | ORDER | 301 | 952e40a9cc5336d318a4f9049a29d6479143455d4ef6e64fecbdd611e7997a5e |
+| 091C-D1g\|ORDER\|current-archive#302 | 091C-D1g | ORDER | 302 | 0c4a1e6dfd91a0da05379510a1301f3109acc787f751dbd0576b2455554147e1 |
+| 400\|ORDER\|current-archive#303 | 400 | ORDER | 303 | 86cbc687db971b66c88bf4e6f93514944aa9d092541cef0a49eef77d8defbe5c |
+| 430\|ORDER\|current-archive#304 | 430 | ORDER | 304 | ff948bd23a0355647787ee75fe2cfce6603bf2b22c24765b6bf89e492112153a |
+| 431\|ORDER\|current-archive#305 | 431 | ORDER | 305 | c2fdc0bad9c5a616fbe63c415642d0c2f27fee1269f3bfd82a20765c77758768 |
+| 500\|ORDER\|current-archive#306 | 500 | ORDER | 306 | 0bbd94f8b0959b67aa9f59518cfac721cf0fb482b34e7ea708a4ea58ca6f6895 |
+| 511\|ORDER\|current-archive#307 | 511 | ORDER | 307 | acd4976c4098fc330b78c65c2ea03c47be2eac71ad6f9d822948a15a35034dd6 |
+| 520\|ORDER\|current-archive#308 | 520 | ORDER | 308 | 12f1f81393ec891efb3b8f2420861fdfbf659acaedc4385082c40d371338db33 |
+| NA\|OTHER\|current-archive#309 |  | OTHER | 309 | 6c9cbfef444d244dbb85b793e0dbceb093ad9cb20fadac8338d4bf340cdd0b68 |

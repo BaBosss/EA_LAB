@@ -14,7 +14,7 @@ reasons unrelated to the task, and the user reports never hitting these when sen
 | 1st (`codex-rescue`, ~21 min in) | stopped by OpenAI content moderation — *"flagged for possible cybersecurity risk"*. Cause was the **brief's wording** (`rebuild the attack` / `bypassable` / `defeat the purpose`), not the task. Brief reworded to plain QA language in `f9a430ba`. |
 | 2nd (reworded, 4 min in) | ran clean past moderation, then the **Codex thread vanished**: the job log shows `Codex turn interrupt failed: thread not found`, no work after 13:20:11, while `status` still printed `running`. The plugin's tracked PID (4560) was already dead. Nothing further was spent. |
 
-**The brief is written, committed and ready:** `_triage/factory_os/CODEX_AUDIT7_BRIEF.md`
+**The brief is written, committed and ready:** `_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT7_BRIEF.md`
 
 ### Paste this into Codex
 
@@ -29,7 +29,7 @@ could satisfy all nine while still being useless to the person who has to read i
 the acceptance criteria are too weak. Writing such a sample input and running the validator
 on it is the requested evidence.
 
-Write your report to exactly one file: _triage/factory_os/CODEX_AUDIT7_2026-07-30.md.
+Write your report to exactly one file: _triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT7_2026-07-30.md.
 Everything else is read-only — stage nothing, commit nothing, and do not run `git add -A`
 or `git stash`; the working tree has unrelated modified files from other work.
 
@@ -65,7 +65,7 @@ worked for audit 6: all 8 findings reproduced before being fixed, and a self-rev
 
 Audit 7 came back **NOT DONE** and was right; its blocker and every finding are fixed (`caf9f18c`), and
 the remainder became `ORDER-602`, now built (`ea44077e`). **Brief 8 is much shorter and targets only what
-audit 7 could not have seen:** `_triage/factory_os/CODEX_AUDIT8_BRIEF.md`
+audit 7 could not have seen:** `_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT8_BRIEF.md`
 
 ### Paste this into Codex
 
@@ -77,7 +77,7 @@ all inside this one repository. No security dimension, no external system, no th
 Where the brief asks for a constructed input, that is negative testing: does a conformance
 checker accept inputs that satisfy its letter while failing the specification's intent?
 
-Write your report to exactly one file: _triage/factory_os/CODEX_AUDIT8_2026-07-30.md.
+Write your report to exactly one file: _triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT8_2026-07-30.md.
 Everything else is read-only — stage nothing, commit nothing, and do not run `git add -A`
 or `git stash`; the working tree has unrelated modified files from other work.
 ```

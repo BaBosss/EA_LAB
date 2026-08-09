@@ -14,7 +14,7 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
 > 🆕 **2026-07-26→27 (Opus-seat, session `CUTLOSS` + `CUTLOSS-VERIFY`) — the guards of 2 real-money EAs got tested for the first time
-> and neither one turned out to be a guard · handoff = `_triage/HANDOFF_2026-07-27_CUTLOSS_VERIFY.md`**
+> and neither one turned out to be a guard · handoff = `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-27_CUTLOSS_VERIFY.md`**
 > Closed ORDER-219/220/221/222 + ORDER-215 (cut-loss half) · opened 370-373 · **touched no account at all, no holdout used**
 > - **Closed the question the block below (07-26) itself left open — "no window where cut30 was measured against control":**
 >   Measured it by pushing risk right up to the line — **`CutLoss=30` tripped exactly at −30.02%** (deal 123, the first ticket, matching control exactly
@@ -120,7 +120,7 @@
 
 - **2026-07-18C (Opus)** — **Research session: D1g pending/TP=NULL (ORDER-080 closed) + event-log dogfood #1 (7 rough edges fixed) · ORDER-116 split=a narrow lever · ORDER-117 coverage+filter=low-yield (1 PARKED-VERIFY, GBPUSD MacdDiv D1) · new rule LAST-OPTIMIZE-BEFORE-VERDICT · the big takeaway: the pipeline is MATURE, cheap levers have been exhausted → EV is now in operate/judge.** Handoff scratchpad `HANDOFF_2026-07-18.md`, decision-log §3 rows 2026-07-18.
 
-- **Previously (a different session, same day as 2026-07-18)** — **ORDER-073 news/macro risk system CLOSED end-to-end:** Phase-2.5 MRIS SHIPPED live (a web feeder for all 8 barometers from Yahoo · thresholds LOCKED v1.0 + an in-file tuning guide · whisper embedded in LIVE_DASHBOARD + the daily chain · Codex-hardened, 5 fixes) · **Phase-3 MacroGate = a VALIDATED deploy-candidate** (GV bridge block+lot-mult · A/B on Boss_12_Breakout, full-year-2024, 2 symbols = ~~**eqDD −54..−56%, P&L flat→much better**~~ **[RETRACTED — ORDER-211 bans citing this number; ORDER-073 withdrew the claim 2026-07-26. MacroGate was later demoted to ADVISORY-ONLY, having been validated on broken input. Kept verbatim as history; do not cite.]** · manage-only on a grid = no-op · cage inert · Codex QA 7/7 fixed) → WAITING-USER for live attach · commits `7ee6bbd8`→`e219db8e`, safe branch `order073-macrogate-safe` · handoff `handoff/SESSION_2026-07-18_ORDER073_CLOSE.md`.
+- **Previously (a different session, same day as 2026-07-18)** — **ORDER-073 news/macro risk system CLOSED end-to-end:** Phase-2.5 MRIS SHIPPED live (a web feeder for all 8 barometers from Yahoo · thresholds LOCKED v1.0 + an in-file tuning guide · whisper embedded in LIVE_DASHBOARD + the daily chain · Codex-hardened, 5 fixes) · **Phase-3 MacroGate = a VALIDATED deploy-candidate** (GV bridge block+lot-mult · A/B on Boss_12_Breakout, full-year-2024, 2 symbols = ~~**eqDD −54..−56%, P&L flat→much better**~~ **[RETRACTED — ORDER-211 bans citing this number; ORDER-073 withdrew the claim 2026-07-26. MacroGate was later demoted to ADVISORY-ONLY, having been validated on broken input. Kept verbatim as history; do not cite.]** · manage-only on a grid = no-op · cage inert · Codex QA 7/7 fixed) → WAITING-USER for live attach · commits `7ee6bbd8`→`e219db8e`, safe branch `order073-macrogate-safe` · handoff `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/SESSION_2026-07-18_ORDER073_CLOSE.md`.
 
 - **2026-07-17B (Opus)** — #098 corpus sprint: 098-F pairs-spread stat-arb = 🟢 CANDIDATE H4 z2.5; handoff scratchpad `HANDOFF_2026-07-17B.md`.
 
@@ -132,7 +132,7 @@
 
 ## 2. Current status (one-liner per layer)
 
-> 🆕 **2026-07-26 (Opus-seat) — SuperTrendFlip lever campaign round closed · full handoff = [`_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md`](_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md)**
+> 🆕 **2026-07-26 (Opus-seat) — SuperTrendFlip lever campaign round closed · full handoff = [`_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md`](_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md)**
 > **Got 1 candidate:** BTCUSD H4 `(TRD)_SuperTrendFlip_rev03` (Donchian20 + pyramid MaxAdds=1) — M4 with swap already deducted
 > MAIN **2.257**/50 · BWD **3.949**/66 · **HOLDOUT 2026H1 = 4.274**/9 (already burned) · MC ruin 0% PF-5th 1.052 ·
 > fan 69/81 · corr +0.167 vs real-money ⇒ **VALIDATED CANDIDATE awaiting user's call on demo attach**

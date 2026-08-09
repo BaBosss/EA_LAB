@@ -1,4 +1,4 @@
-﻿# User-side tasks — 2026-07-31 (overnight Factory OS tranche)
+# User-side tasks — 2026-07-31 (overnight Factory OS tranche)
 
 Owner: **user**. Claude cannot do these from its seat. One section per task.
 
@@ -103,4 +103,4 @@ not caught by review. It was caught by running the gate again afterwards.</sub>
 
 Unchanged: see `_triage/USER_TASKS_2026-07-30.md` §1. The overnight tranche adds to that one pass
 rather than requesting a separate review; the brief for it is
-`_triage/factory_os/CODEX_FINAL_FACTORY_OS_AUDIT_BRIEF_2026-07-31.md`.
+`_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_FINAL_FACTORY_OS_AUDIT_BRIEF_2026-07-31.md`.
