@@ -10483,3 +10483,448 @@ caps Recovery and clamps lot sizing. **Must not be written up as 5× exposure.**
 | non-terminal-in-archive | 108\|ORDER\|current-archive#300 | 2366115b86b185c5944d61a9a0e7917850167a3df9c1f74619de5b96ebcbf01d | user-supplied C1 cleanup inventory 2026-08-09 |
 | non-terminal-in-archive | 091C-D1d\|ORDER\|current-archive#301 | 952e40a9cc5336d318a4f9049a29d6479143455d4ef6e64fecbdd611e7997a5e | user-supplied C1 cleanup inventory 2026-08-09 |
 | non-terminal-in-archive | 091C-D1g\|ORDER\|current-archive#302 | 0c4a1e6dfd91a0da05379510a1301f3109acc787f751dbd0576b2455554147e1 | user-supplied C1 cleanup inventory 2026-08-09 |
+
+---
+
+## ORDER-521 — [🟠 ops/integrity] `EA_BREAKOUT_XAU (XAUUSDm,H1)` runs on 463666728 with no inventory row, and its config matches a REAL-MONEY row — `REVIEWED(Claude/Opus 2026-07-28)` — magic read = **992017**, not 991001: no real-money collision, but the wrong EA is wearing PivotBreakout's magic (escalated to ORDER-530 §11a) — was `OPEN` · runnable by: **Claude/Opus** (user reads Inputs) · 👉 recommended: Claude
+**bars:** N-A (ops) · **flat-lot probe:** N-A
+
+Found by ORDER-511 in the VPS Experts log. On account **463666728** the chart
+`EA_BREAKOUT_XAU (XAUUSDm,H1)` initialises with
+`AllowLive=YES OptMode=off Bars=40 SL×1.5 TP×5.0 EMA200=ON`.
+
+**Why it matters:** `DEPLOYMENTS.csv` lists EA_BREAKOUT_XAU on this account only on **USDJPYm
+(991003)** and **US30m (991005)**. There is **no XAU row for this account**. And `Bars40` is the exact
+description carried by **`991001` on 159503454 — a REAL-MONEY row** ("validated set (Bars40 compiled
+defaults)"). The init line does **not** print the magic, so the magic is unknown.
+
+Two possibilities, and they need different fixes: an unregistered demo instance (add a row), or the
+same magic live on a demo **and** a real-money account (the `no duplicate account|magic` check is
+per-account and cannot see cross-account reuse — note row 22 of the CSV already flags a deliberate
+991001 reuse across 159503454/159475669, so this pattern has precedent and may be intentional).
+
+**STEP 1:** user opens the Inputs tab of that chart and reads **`_06_Magic`** · **STEP 2:** add the
+inventory row, or record the reuse explicitly the way row 22 does.
+
+**ห้าม:** เดาว่า magic คืออะไรจากคำอธิบาย `Bars40` ที่ตรงกัน — ตรงกันเพราะมันคือ compiled default
+ซึ่งหลาย instance ใช้ร่วมกันได้ · แก้แถวของ **159503454 (เงินจริง)** โดยไม่มี user เคาะ
+
+### the two cheaper instruments were tried first and BOTH come up empty (`S-2026-07-28-JUDGEINTEG`, 2026-07-28)
+
+Before asking the user for a read, the two sources already on disk were checked. Neither can answer this,
+so **STEP 1 stands exactly as written** — one Inputs tab, one field, `_06_Magic`.
+
+- **The deals export cannot discriminate.** `EA_LAB_deals_463666728_20260728.csv` over `07-16 → 07-27`
+  contains **no deal on magic `991001`** (magics present: `990001` `990020` `990120` `990301` `990302`
+  `991003` `991070` `999094` and `0`). That is consistent with *both* hypotheses at once: the chart is on
+  `991001` and simply has not traded (`991001`'s own expectation is **1.08 trades/month ⇒ 0.25/week**, so
+  11 days at that rate predicts zero — the ORDER-235 thin case, precisely the inference this lab forbids
+  reading as breakage), **or** it is on some other magic that also has not traded. No information.
+- **The Experts log cannot answer it either.** `EA_BREAKOUT_XAU` prints
+  `init | AllowLive=%s OptMode=%s Bars=%d SL×%.1f TP×%.1f EMA%d=%s` (`EA_BREAKOUT_XAU.mq5:210-211`) — the
+  format string **has no magic field**, which is exactly why the original finding says the magic is
+  unknown. Re-capturing the log will not change that; `_06_Magic` is set on the chart and only the Inputs
+  tab (or a deal, once one exists) exposes it.
+- 🟢 **What IS settled without a read: `AllowLive=YES` on this chart is measured, from its own init line.**
+  So whatever magic it carries, this instance **can** trade. An unregistered EA that is live-enabled on the
+  judge account is the reason this order is 🟠 and not a housekeeping note.
+- <sub>The risk if it *is* `991001`: nothing breaks in MT5 (magic scoping is per-account, and CSV row 22
+  already records a deliberate cross-account `991001` reuse), but a **fleet-wide rollup keyed on magic
+  alone** would blend demo deals from 463666728 into the real-money `991001` record on 159503454. That is a
+  bookkeeping hazard in the judge, not a trading hazard — which is why it needs a row, not a shutdown.</sub>
+
+---
+
+---
+
+## ORDER-530 — [🔴 ops/integrity] the "was the `.set` ever loaded" sweep across account 463666728 — `REVIEWED(Claude/Opus 2026-07-28)` — 3 faults found and fixed same-day (992017 wrong EA on the magic · 990067 missing / 990068 duplicated · 990016 removed); was `OPEN` · runnable by: **Claude/Opus** (user supplies one log export + 2 reads) · 👉 recommended: Claude
+**bars:** N-A (ops) · **flat-lot probe:** N-A
+
+Opened by `S-2026-07-28-JUDGEINTEG` to own item 3 of
+`_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-28_JUDGE_ACCOUNT_INTEGRITY.md` — "ten `ACTIVE` magics produced zero deals in
+11 days" — plus the `990020` identification. The handoff's §4 tell-table was used as instructed and
+**not** recomputed. What follows is what changed when it was *checked* rather than re-derived.
+
+### 1. 🟢 CLOSED BY MEASUREMENT — `990020` is registered. There are ZERO unregistered magics on this account.
+
+The handoff's finding 2 ("**two** magics trade here with no `DEPLOYMENTS.csv` row — `990001` and
+`990020`") is **refuted for `990020`**:
+
+- `portfolio/DEPLOYMENTS.csv` line 50 — `463666728,Demo bundle 10,DEMO,MT5,VPS 66.212.22.7,`
+  **`EA_SUPERTREND,990020,XAUUSDm,ACTIVE,DD 8%,2026-10-16,2026-07-16`** — present in committed `HEAD`,
+  not something added by this lane.
+- It is also in **`portfolio/expectations.csv`** (row 40, PF 1.54 IS / DD95 3.26 MC95), in
+  **`portfolio/ATTESTATION_MAP.csv`** (row 37, confidence `high`, `463666728,990020` →
+  `_vps_deploy/EA_SUPERTREND_XAU`), in `portfolio/control_room_snapshot.json`, in `EDGE_CATALOG.md`
+  and in the `DEMO_DEPLOYMENT_PLAN.md` bundle-10 line. It was never missing from the inventory.
+
+**Identity, settled from source and needing no chart read:** the EA is **`EA_SUPERTREND`**,
+`ea_projects/CRYPTO_TRENDRIDER/EA_SUPERTREND.mq5` — `_06_Magic = 990020` at `:40`, and the order
+comment `"ST_ATR10x3"` is **hard-coded** into its two order calls at `:218-219`. The deals carry that
+exact comment on `XAUUSDm`. Magic, symbol, comment and bundle all agree on one row.
+
+**`990001` is not a second EA either** — it is the compiled default `_0_Magic` (`Inputs.mqh:538`) of the
+un-pinned `Boss_17_Wave5 USDJPYm,H1` chart, which is `ORDER-511`, now re-pinned to `990303`.
+⇒ **the "unregistered magics" finding closes at zero.** The two magics were one bookkeeping artifact and
+one row that was there all along.
+
+<sub>Worth naming the failure mode, because it is cheap to repeat: a magic that appears in a deals export
+but not in a *filtered view* of the inventory reads exactly like a magic with no row. The check that
+settles it is one `grep` of the committed CSV, and it costs less than the paragraph that speculates.</sub>
+
+### 2. 🟢 A discriminator that needs NO user read — and it clears 7 of the 8 trading legs
+
+**Every standalone EA in `ea_projects/` ships `AllowLive = false` compiled and gates order placement on
+it**, uniformly as `const bool allow = _0x_AllowLive || (bool)MQLInfoInteger(MQL_TESTER); if(!allow) return;`
+(verified across ~50 EAs; e.g. `EA_SUPERTREND.mq5:39,201` · `EA_BREAKOUT_XAU.mq5:92,288` ·
+`(EXP)_EmaStoRev.mq5:50,212` · `(EXP)_MacdDiv_Naked.mq5:22,123`). On a demo or live account
+`MQL_TESTER` is **false**, so:
+
+> **a closed deal is proof that this chart is not running compiled defaults.** No screenshot required.
+
+Two forms, and both are already in hand from `EA_LAB_deals_463666728_20260728.csv` (`07-16 → 07-27`):
+
+| magic | EA | proof it is NOT at compiled defaults | §4 tell |
+|---|---|---|---|
+| **990020** | EA_SUPERTREND XAUUSDm | traded ⇒ `_06_AllowLive=true` (default `false`) | **§4's only tell — PASSES by measurement** |
+| **991003** | EA_BREAKOUT_XAU USDJPYm | traded ⇒ `AllowLive=true`, **and** deal magic `991003` ≠ default `991001` | **both §4 tells PASS by measurement** |
+| **991070** | EmaStoRev EURUSDm | traded ⇒ `_06_AllowLive=true` | AllowLive settled; other fields unread |
+| **999094** | MacdDiv_Naked XAUUSDm | traded ⇒ `_06_AllowLive=true` | AllowLive settled; `_01_LookbackBars` unread |
+| **990301** | Boss_17_Wave5 XAUUSDm | deal magic ≠ template default `990001`; **and** its `[INIT]` logged `exit=23` = its `.set` value | **`.set` loaded — settled** |
+| **990302** | Boss_17_Wave5 XAGUSDm | same, both ways | **`.set` loaded — settled** |
+| **990120** | Boss_12_Breakout USDJPYm | deal magic ≠ `990001` | not-at-defaults settled |
+| 990001 | Boss_17_Wave5 USDJPYm | — this is the one that WAS at defaults | ORDER-511 |
+
+⇒ **the `_06_AllowLive` sweep the brief asked to start with is already 2/3 done.** `EA_BREAKOUT_XAU`
+(`991003`) and `EA_SUPERTREND` (`990020`) both **traded**, so both are live-enabled and their `.set`
+values took. Only **`991005` (US30m)** of that trio is still unknown.
+
+<sub>Scope limit, stated rather than glossed: a deal proves the chart is **not at compiled defaults**. It
+does not prove every field equals the bundle — a hand-toggled `AllowLive` looks the same. For the
+zero-deal charts below it proves nothing at all, which is the whole reason the read list is not empty.</sub>
+
+### 3. 🔴 TWO CORRECTIONS TO §4 — one removes power the table claimed, one restores power it denied
+
+**3a. `MACROGATE_DEMOLEG` and `BOSS16`'s `ExitMode`/`SLMode` tells are FALSE POSITIVES — the table is
+comparing an enum label to its own number.** §4 says read `ExitMode` = **22** and `SLMode` = **33**, and
+that reading `EXIT_ATR_TP` / `SL_ATR` means the `.set` was not loaded. But
+`Inputs.mqh:33-45` defines **`EXIT_ATR_TP = 22`** and **`SL_ATR = 33`**, and `Inputs.mqh:122-123` sets
+exactly those as the defaults — **unconditionally**, outside every `#ifdef LAB_ENTRY_*` block, so this is
+not per-build. `22` *is* `EXIT_ATR_TP`. The values are identical and the tell carries **zero information**.
+
+- `MACROGATE_DEMOLEG (990120)` — both its listed tells are void ⇒ **§4 has no power here**. Harmless in
+  the end: §2 settles it by magic anyway.
+- `BOSS16_KANGAROO_XAU (990016)` — the `ExitMode` half is void; **only `_0_Magic` retains power.**
+- <sub>Wave5's `ExitMode=23` is genuinely different (`23` = `EXIT_TRAIL` ≠ `22`), so ORDER-511's
+  six-field count is unaffected. The generator's bug is the label/number comparison, and it only bites
+  where a `.set` happens to spell out the default numerically — which is why it produced two hits and not
+  twenty.</sub>
+
+**3b. 🔴 The "NO POWER" list is WRONG — every bundle on it ships an `AllowLive=true` key, and every one of
+those EAs compiles `AllowLive=false`.** §4 declares the test powerless for `PIVOTBREAKOUT_XAU`,
+`S2_TSMOM_XAU`, `SMCSTO_EURUSD`, `SS1_LONDONORB_XAU`, `W2_S1_TRENDRIDER_XAU`, `ST03_GBPUSD`, `CB_EUR`,
+`CB_GBP` on the grounds that they show **zero** differing inputs. Reading every `.set` in `_vps_deploy/`
+with per-file encoding detection says otherwise:
+
+| bundle | `.set` carries | compiled default | source |
+|---|---|---|---|
+| **`PIVOTBREAKOUT_XAU`** | `_06_AllowLive=true` | **`false`** | `(TRND)_PivotBreakout_XAU_rev01.mq5:58` |
+| `S2_TSMOM_XAU` | `_05_AllowLive=true` | **`false`** | `(TRND)_TsMom_XAU_rev01.mq5:53` |
+| `SMCSTO_EURUSD` | `_06_AllowLive=true` | **`false`** | `(EXP)_EmaStoRev.mq5:50` |
+| `SS1_LONDONORB_XAU` | `_06_AllowLive=true` | **`false`** | `(BRK)_LondonORB_XAU_rev01.mq5:61` |
+| `W2_S1_TRENDRIDER_XAU` | `_06_AllowLive=true` | **`false`** | `(TRND)_TrendRider_XAU_rev01.mq5:60` |
+| `CB_EUR` · `CB_GBP` | `_06_AllowLive=true` | **`false`** | (their own READMEs already say to verify `AllowLive=YES` in the Experts tab) |
+| `ST03_GBPUSD` | `InpAllowLiveOrders=true` | to confirm | differently-named input — likely why the scan missed the family |
+
+⇒ §4's "no power" verdict was **an artifact of a comparison that never looked at `AllowLive`** — the very
+input the same table uses as the tell for three other bundles. §4 itself offered this as one of two
+explanations ("or the comparison failed to locate that EA's source"); that is the one that is true.
+
+**Why this matters more than the other correction:** the list's headline entry is **`992017`
+PivotBreakout_XAU — "the strongest candidate in the fleet"** — which produced **zero deals in 11 days**
+and was written off as unverifiable. It is not unverifiable. It has a **decisive** tell whose wrong value
+means *cannot place a single order*, and it is the same defect that silenced `990025` for three days
+(`_vps_deploy/CRYPTO_TRENDRIDER/ST_BTC_deploy.set` still ships `_06_AllowLive=false` — that file is the
+recorded cause, and this method finds it).
+
+<sub>🔬 encoding, per memory `prove-the-instrument-can-see-the-file`: checked **per file**, not per folder.
+36 of 38 bundle `.set` files are ASCII; exactly two are UTF-16LE-with-BOM
+(`MACROGATE/MacroGate_watchdog_asdeployed_2026-07-26.set` and
+`MACROGATE_DEMOLEG/Boss12_Breakout_USDJPY_H1_demoleg_asdeployed_2026-07-26.set`). Both mixed families
+exist in the same tree, which is exactly how a folder-wide encoding assumption produces a confident wrong
+answer in either direction.</sub>
+
+### 4. The residual read list — and the ONE export that answers most of it
+
+**🟢 Do this first: re-supply the Experts logs (`Mql-Logs\`, the same `Log.7z` shape as before).** Several
+of these EAs print magic *and* `AllowLive` at `OnInit`, so one log export replaces most of the chart-opening:
+
+| EA | init line | settles |
+|---|---|---|
+| `PivotBreakout_XAU` | `PivotBreakout init magic=%d AllowLive=%s` (`rev01:82`) | **`992017` completely — magic + AllowLive** |
+| `(Boss)_RSI_MR_GridLog` | `RSI_MR_GridLog init \| magic=%d RSI(%d) %.0f/%.0f EMAfilter=%s AllowLive=%s` (`rev01:464`) | **`990103` completely** — magic, the RSI 25/75 thresholds *and* AllowLive |
+| `(TRD)_SuperTrendFlip_rev05` | `STFlip init magic=%d AllowLive=%s` (`rev05:465`) | **`990026`** magic + AllowLive |
+| `EA_BREAKOUT_XAU` | `init \| AllowLive=%s OptMode=%s Bars=%d SL×%.1f TP×%.1f EMA%d=%s` (`:210`) | **`991005` AllowLive** + the ORDER-521 XAU chart's AllowLive (**no magic in the format string**) |
+| Boss template (`Boss_17`, `Boss_12`, `Boss_16`) | `[INIT] Boss_%s \| exit=%d sl=%d stack=%d …` (`LabCore.mqh:349`) | `ExitMode` for ORDER-511 — **but only in a capture taken AFTER the 14:00 re-pin**; the existing one ends 13:54 |
+
+The previous capture already spans a terminal restart (all `[INIT]` at **07-26 17:02**), so charts
+attached before then already have their lines in it. `990026` was attached **07-28**, so it needs a
+capture that reaches past 13:54.
+
+**Then the Inputs tab, for what no log prints — in priority order:**
+
+| # | chart (account 463666728) | read | expect | if it reads the other value |
+|---|---|---|---|---|
+| **1** | `Boss_17_Wave5 (USDJPYm,H1)` | `_9_MaxLevels` · `_23_TrailStart` · `_23_TrailStep` · `_17_Wave3MinMult` | **1 · 2000 · 800 · 1.618** | 5 · 300 · 100 · 0.618 ⇒ the re-pin was a hand edit, not a `.set` load → **ORDER-511 stays open** |
+| **2** | `EA_BREAKOUT_XAU (XAUUSDm,H1)` | `_06_Magic` | — | **ORDER-521**; if `991001`, it collides with a real-money row's magic across accounts |
+| 3 | `PairSpread_StatArb (EURUSDm)` `990984` | `_06_AllowLive` | **true** | `false` ⇒ cannot trade at all (no init log for this EA) |
+| 4 | `IchiADX (USDJPYm)` ×2 `990066` `990067` | `TenkanPeriod` · `KijunPeriod` | **20 · 60** | 9 · 26 ⇒ `.set` not loaded |
+| 5 | `IchiADX (XAUUSDm)` ×2 `990068` `990069` | `TenkanPeriod` · `KijunPeriod` | **20 · 60** | 9 · 26 |
+| 6 | `Boss_16_KangarooGrid (XAUUSDm,H1)` `990016` | `_0_Magic` | **990016** | `990001`, or **`990018`** = the `_scaled_demo` preset, which is in no inventory row |
+
+### 5. 🚫 Standing prohibitions on this order
+
+- **`deals = 0` is NOT evidence of breakage.** ORDER-235 (ratified 2026-07-28) accepts 0.2-0.3 closed
+  trades/week as normal, and 11 days at that rate predicts **zero**. Every row above needs a *second,
+  independent* signal — which is exactly what the tell is for. Writing up a zero-deal EA as silent
+  without one is the error this order exists to avoid.
+- **The bundles in §3b must not be reported as `verified` on the strength of this analysis.** What
+  changed is that a *usable tell now exists*; none of it has been read off a chart yet.
+- **`_9_MaxLevels` 1→5 is not 5× exposure** — see the ORDER-511 correction.
+- No chart edit, no `.set` load, no position closed, no `Boss_*.ex5` copied (ORDER-510 still `OPEN`).
+
+**Status: `OPEN`** — nothing here is marked `REVIEWED`, so **no `B1_DATASET.csv` row is owed** on this
+commit. §1 is closed by measurement and needs no reader; §2-4 wait on one log export and two reads.
+
+### 6. 🟢 MOST OF THIS ORDER IS NOW MEASURED — the VPS Experts log was already on disk (`S-2026-07-28-JUDGEINTEG`, 2026-07-28)
+
+**The log export asked for in §4 did not need to be re-supplied.** The `Log.7z` the user handed the
+previous lane was still extracted in that session's scratchpad
+(`…\5fbb336e-…\scratchpad\o511log\Log\Mql-Logs\2026072{6,7,8}.log`, 3,747 lines, 07-26 → 07-28 13:54).
+Read it instead of asking again.
+
+<sub>🔬 **the instrument nearly lied, in the documented way.** First pass reported **0 hits in all three
+files**. The files are **UTF-16LE with BOM** (`FF FE`) and the encoding sniff tested `bytes[1] == 0`,
+which is true for UTF-16 *without* a BOM and false here (`bytes[1] = 0xFE`). Decoding as UTF-8 produced a
+confident empty answer. Re-run with a proper BOM check: 3,747 lines, 11 init lines.
+memory `prove-the-instrument-can-see-the-file` — and note the failure was in the *detector*, not the grep.</sub>
+
+**🟢 Settled from the log, no chart read needed:**
+
+| magic | log line (07-26 17:02:51 restart) | verdict |
+|---|---|---|
+| **991005** | `EA_BREAKOUT_XAU (US30m,H4)` → `init \| AllowLive=YES OptMode=off Bars=40 SL×1.5 TP×5.0 EMA200=ON` | ✅ **the brief's #1 question is answered: `AllowLive` is YES.** Its zero deals are **not** a live-gate problem |
+| **990103** | `(Boss)_RSI_MR_GridLog_rev01 (EURUSDm,H1)` → `init \| magic=990103 RSI(14) 25/75 EMAfilter=on AllowLive=YES` | ✅ **fully settled** — magic right, and `25/75` **is** §4's `_01_RsiOversold=25.0` tell (default 30) ⇒ `.set` loaded |
+| **990984** | `PairSpread_StatArb (EURUSDm,H4)` → `init \| EURUSDm/GBPUSDm Zwin=100 entry=2.5 exit=0.3 stop=3.5 magic=990984` | ✅ **fully settled** — `entry=2.5` **is** §4's `_01_EntryZ=2.5` tell (default 2.0) ⇒ `.set` loaded |
+| **990016** | `Boss_16_KangarooGrid (XAUUSDm,H1)` `[INIT]` ×2 (17:29:45, 17:31:04 = the binary swap) | attached and running; magic not printed ⇒ `_0_Magic` read still owed |
+| 991003 · ORDER-521 chart | both `EA_BREAKOUT_XAU` charts → `AllowLive=YES` | consistent with the deals; ORDER-521 still needs `_06_Magic` (**not in the format string**) |
+
+<sub>Correcting §4 of this order: it said PairSpread has no init log. It does, and it prints the `EntryZ`
+tell and the magic. The claim was made from a grep for `init.*Allow`, which that EA's line does not
+match — a search shaped by the answer expected rather than by what the EA prints.</sub>
+
+### 7. 🔴 `992017` PivotBreakout_XAU is very likely NOT ATTACHED — a third independent signal
+
+At **07-26 17:02:51** the terminal restarted and **eight** charts printed init lines. `PivotBreakout`
+printed nothing — not at the restart, not anywhere in 3,747 lines across three days.
+
+**This EA prints unconditionally on a live chart.** `(TRND)_PivotBreakout_XAU_rev01.mq5:82` —
+`if(!g_suppress_log) PrintFormat("PivotBreakout init magic=%d AllowLive=%s", …)` — and `:76` sets
+`g_suppress_log = _00_OptimizeMode || MQL_OPTIMIZATION`. `MQL_OPTIMIZATION` is false on a chart, and
+`_vps_deploy/PIVOTBREAKOUT_XAU/PivotBreakout_XAU_deploy.set` pins **`_00_OptimizeMode=false`**. The
+escape hatch is closed: if it were running, it would have printed.
+
+That is the **second and third independent signal** ORDER-235 requires before calling a zero-deal EA
+silent — (1) zero deals in 11 days, (2) never sighted in the Navigator list, (3) **no init line at a
+restart that caught every other chart**. `DEPLOYMENTS.csv` calls it `ACTIVE` since 2026-07-24.
+
+<sub>Same bundle also proves §3b: its `.set` carries `_06_AllowLive=true` and `_06_Magic=992017` against a
+compiled `false`, so §4's "zero differing inputs, no power" was simply wrong about this EA.</sub>
+
+**🚫 Still not proof, and the wording matters** — the log shows what was *printed*, not what was
+*attached*. It cannot be closed from here; the user has to look at the terminal. But this is no longer
+"absence in a truncated screenshot": it is absence from the terminal's own record at a moment when
+everything else announced itself.
+
+### 8. 🔬 CONTROL — why silence is uninformative for four other EAs
+
+The instrument was calibrated against EAs **known** to be attached, rather than assumed to be sensitive:
+**`990020` EA_SUPERTREND, `999094` MacdDiv_Naked and `991070` EmaStoRev all closed real deals in this
+window** — they are unquestionably attached and running — **and none of them appears anywhere in the
+log.** They print nothing at init. So for those, and for the four **IchiADX** charts (`990066-069`,
+whose source was not located in `ea_projects/`), **absence from this log is not evidence of anything.**
+
+⇒ the log is a **one-way instrument**: a line present is proof; a line missing is proof only for an EA
+whose init print has been verified in source. Applied that way here, and only that way.
+
+### 9. 🟠 New minor item: `(Boss)_MacroGate (EURUSDm,H1)` runs on this account with no inventory row
+
+17 log lines across the window. `DEPLOYMENTS.csv` has no MacroGate row for 463666728 — only
+`Boss_12_Breakout (MacroGate leg)` `990120` on `USDJPYm`, which is a different chart on a different
+symbol. This is the **watchdog** (bundle `_vps_deploy/MACROGATE/`), withdrawn to advisory-only by
+ORDER-211; it produced **no deals under any magic** in the export, so this is a bookkeeping gap, not a
+trading exposure. Give it a row or record deliberately that the watchdog is not inventoried.
+
+### 10. What is actually left — 5 reads, none of them urgent
+
+1. **`_06_Magic`** on `EA_BREAKOUT_XAU (XAUUSDm,H1)` — **ORDER-521**; no log prints it, so this one is
+   unavoidable and it is the only item with a real-money bookkeeping consequence.
+2. **`992017`** — confirm from the Navigator whether the chart exists at all (§7).
+3. **IchiADX ×4** (`990066-069`) — `TenkanPeriod`/`KijunPeriod` = **20 / 60**.
+4. **`990016`** — `_0_Magic` = **990016** (not `990001`, not the `_scaled_demo` preset's `990018`).
+5. **`990026`** STFlip — `_06_AllowLive`; attached 07-28, after this log ends at 13:54, so a newer
+   capture would settle it without opening the chart.
+
+
+### 11. 🔴🔴 THE READS CAME BACK — three rows on the judge account are not producing the evidence they claim (`S-2026-07-28-JUDGEINTEG`, 2026-07-28, user screenshots 16:22–16:25)
+
+**The Navigator tree was fully visible this time — 19 charts, untruncated** (the Indicators node sits below
+it in the screenshot, so nothing is cut off). That closes the caveat the previous lane had to leave open.
+Charts present: Wave5 ×3 (XAU/XAG/USDJPY H1) · EA_BREAKOUT_XAU ×3 (USDJPYm H4, US30m H4, **XAUUSDm H1**) ·
+MacdDiv XAU H4 · EmaStoRev EURUSD H1 · IchiADX ×4 · EA_SUPERTREND XAU H4 · AccountSnapshotExporter ·
+PairSpread EURUSD H4 · Boss_12_Breakout USDJPY H1 · **(Boss)_MacroGate EURUSD H1** · RSI_MR EURUSD H1 ·
+SuperTrendFlip BTC H4. **Absent: `PivotBreakout_XAU` and `Boss_16_KangarooGrid`.**
+
+#### 11a. 🔴 `992017` — the wrong EA is wearing the magic. ORDER-521 and the 992017 mystery are the same fault.
+
+`EA_BREAKOUT_XAU (XAUUSDm,H1)` Inputs read **`_06_Magic = 992017`** — *not* `991001`. So ORDER-521's
+real-money-collision hypothesis is **refuted** (the `Bars40` match was the compiled default, exactly as
+that order's own prohibition warned), and something worse is true instead.
+
+Every EA_BREAKOUT-specific input on that chart is at **its compiled default**: `_01_BreakoutBars` 40 ·
+`_02_SlAtrMult` 1.5 · `_02_TpAtrMult` 5.0 · `_03_AtrPeriod` 14 · `_03_AtrMaPeriod` 20 ·
+`_03_AtrExpandRatio` 1.0 · `_04_UseDailyEma` true · `_04_EmaPeriod` 200 · `_05_BuyOnly` true ·
+lot 0.01 (all match `EA_BREAKOUT_XAU.mq5:30-92`). The **only** overrides are `_06_Magic` and
+`_06_AllowLive`.
+
+That is the exact fingerprint of **loading `PIVOTBREAKOUT_XAU/PivotBreakout_XAU_deploy.set` onto an
+`EA_BREAKOUT_XAU` chart.** MT5 applies only inputs whose **names** match and silently drops the rest;
+across the two EAs the shared names are `_00_OptimizeMode` · `_02_SlAtrMult` · `_06_Magic` ·
+`_06_Deviation` · `_06_AllowLive`, and the only two where the `.set` disagrees with EA_BREAKOUT's
+defaults are **`_06_Magic` 991001→992017** and **`_06_AllowLive` false→true**. Both are exactly what the
+chart shows. **No error is raised anywhere in this sequence** — not by MT5, not by the EA, not by any
+guard we own.
+
+⇒ **since 2026-07-24 the `992017` row has been fed by a 40-bar breakout with a 5×ATR TP on XAU H1, not by
+the validated daily-pivot R1/S1 H4 TpRR-3.0 strategy.** The funnel evidence on that row (M4 MAIN 1.16 /
+BWD 1.22 / holdout 1.33 / MC ruin 0.00) describes a config that has never been on a chart on this account.
+The strongest candidate in the fleet has produced **no evidence at all**, and the four days everyone
+assumed it was accumulating were spent by a different EA.
+
+<sub>Both halves of §7's prediction land: it is not attached, and the log silence was real. What §7 did not
+anticipate is that the magic was *not idle* — it was occupied. "Zero deals under magic X" and "magic X is
+running the wrong strategy" look identical from the deals export.</sub>
+
+#### 11b. 🔴 `990067` does not exist on any chart, and `990068` is on two
+
+| chart | Tenkan/Kijun/Senkou | `MagicNo` | matching bundle | expected | |
+|---|---|---|---|---|---|
+| IchiADX `USDJPYm,H4` | 12 / 34 / 68 | **990066** | `IchiADX_USDJPY_H4_med_leg_A.set` | 990066 | ✅ |
+| IchiADX `USDJPYm,H1` | 20 / 60 / 120 | **990068** | `IchiADX_USDJPY_H1_slow_leg_B.set` | **990067** | 🔴 |
+| IchiADX `XAUUSDm,H4` | 12 / 34 / 68 | **990069** | `IchiADX_XAUUSD_H4_med.set` | 990069 | ✅ |
+| IchiADX `XAUUSDm,H1` | 20 / 60 / 120 | **990068** | `IchiADX_XAUUSD_H1_slow.set` | 990068 | ✅ |
+
+**Mechanism:** the two *slow* bundles are **identical in every key except `MagicNo`** — both
+`20/60/120`, `AdxPeriod=14`, `AdxMin=20.0`, `ExitMode=2`, `FixedLot=0.10`. Loading the **XAU** slow `.set`
+onto the **USDJPY H1** chart therefore changes nothing observable except the magic. That is what happened.
+
+- **Trade separation is intact.** `(EXP)_IchiADX_Naked_rev00.mq5:104-105` filters `POSITION_SYMBOL`
+  **and** `POSITION_MAGIC` together, so the two charts cannot manage each other's positions. Same
+  conclusion, same reason, as ORDER-511.
+- **The damage is bookkeeping, and it hits the October judge in three places:** `990067` can never close a
+  trade (which is the whole explanation of its zero-deal row) · the USDJPY basket `990066+990067` is being
+  judged with one leg missing · the XAU basket rollup on `990068` is inflated by a leg that is not XAU.
+- 🔴 **§4's tell was structurally incapable of catching this** — it reads `TenkanPeriod`/`KijunPeriod`,
+  which are the same `20/60` in both slow bundles. A discriminator that cannot discriminate the two things
+  actually at risk of being swapped (memory `discriminating-test-must-be-able-to-discriminate`).
+
+#### 11c. 🟠 `990016` Boss_16 Kangaroo — attached on 07-26, gone by 07-28
+
+`[INIT] Boss_16_KangarooGrid (XAUUSDm,H1)` twice on 2026-07-26 (17:29:45, 17:31:04 — the binary swap), and
+**no Boss_16 chart in the complete Navigator tree on 07-28 16:24.** Attached, then removed or closed, some
+time in between. This retires the ORDER-511 open question: the ORDER-129 default-magic guard was **not**
+the explanation — it started cleanly, twice.
+
+#### 11d. 🟢 Settled clean
+
+- **`990026`** SuperTrendFlip BTC H4 → `_06_Magic=990026` · `_06_AllowLive=true` ✅ (item 5 closed; the
+  `AllowLive=false` defect that silenced `990025` for three days did **not** repeat here)
+- **`(Boss)_MacroGate (EURUSDm,H1)`** confirmed present in the Navigator — still no inventory row (§9)
+
+#### 11e. Net effect on the October judge
+
+Of the ~13 EAs on this account, **three rows are not producing what they claim**: `992017` (wrong EA on
+the magic) · `990067` (no chart) · `990016` (removed) — plus `990068` contaminated by a second leg. None
+of it is real money and none of it is a trading risk; all of it is the *input* to a real-money promotion
+decision, which is what makes it worth the paragraphs.
+
+**`status` was deliberately left `ACTIVE` on all three rows.** Choosing between `ACTIVE` and `REMOVED`
+encodes a disposition — re-attach, re-magic, or drop — and that is the user's call, not a bookkeeping
+repair. The measured reality is written into each row's `notes` in full so no reader can mistake the state
+while the decision is pending.
+
+**Remaining user decisions (chart actions, none taken here):** attach the real `PivotBreakout_XAU` and
+remove/re-magic the `EA_BREAKOUT_XAU` XAU H1 chart · re-pin `MagicNo` to `990067` on IchiADX `USDJPYm,H1`
+**while that leg is flat** · re-attach or retire `990016` · give `(Boss)_MacroGate` a row. Every one of
+them re-bases a judge clock, so none should be done piecemeal without saying which date moves.
+
+### 12. 🟢 ORDER-530 CLOSES — all five reads came back, three faults fixed by the user the same day (2026-07-28 16:37–16:40)
+
+| # | item | result |
+|---|---|---|
+| 1 | **`992017`** | ✅ **real `PivotBreakout_XAU` attached on XAUUSDm,H1.** Inputs match `PivotBreakout_XAU_deploy.set` on **15 of 15 keys** (`_00_OptimizeMode` false · `_01_AtrPeriod` 14 · `_02_SlAtrMult` 1.5 · `_02_TpRR` **3.0** · `_03_StartGmt` 0 · `_03_EndGmt` 24 · `_03_ServerGmtOffset` 3 · `_04_BuyOk`/`_04_SellOk` true · `_04_LotSize` 0.01 · `_05_DailyLossPct` 5.0 · `_05_EmergencyDdPct` 25.0 · `_06_Magic` 992017 · `_06_Deviation` 20 · `_06_AllowLive` true) ⇒ genuinely loaded, not hand-typed |
+| 2 | ORDER-521 chart | ✅ **gone — swapped in place.** Navigator went 19 → 20 charts while `Boss_16` was added, and `EA_BREAKOUT_XAU (XAUUSDm,H1)` is no longer listed ⇒ the offending chart became the PivotBreakout chart. **No duplicate `992017`** |
+| 3 | **IchiADX `990067`** | ✅ **re-pinned 990068 → 990067** by the user, who confirmed the cause was loading the wrong preset — the mechanism reconstructed in §11b, confirmed by the person who did it |
+| 4 | **`990016`** | ✅ **re-attached**, `Boss_16_KangarooGrid 2.00` XAUUSDm,H1, `_0_Magic` = **990016** (not `990001`, not the `_scaled_demo` `990018`) |
+| 5 | **`990026`** | ✅ `_06_Magic` 990026 · `_06_AllowLive` true |
+
+**Clocks re-based** (both demo, both losing nothing — each leg closed zero trades in the discarded span):
+`992017` start `2026-07-24 → 2026-07-28`, judge `2026-10-24 → 2026-12-17` (**not** +3mo: at 6.42
+trades/month a 3-month judge sees ~19 trades and cannot clear a 30-trade bar — the documented
+`DEMO_DEPLOYMENT_PLAN` formula `start + (30 / rate_per_week) × 7` gives 142 days; the same treatment
+seven other EAs already carry) · `990016` start `2026-07-26 → 2026-07-28`, judge `2027-01-11 →
+2027-01-13`, preserving that row's own pre-registered "attach + 5.5 months" rule rather than swapping
+methods mid-row. **Both are lab conventions on demo rows, not measurements — the user can override.**
+
+**🎁 Free ORDER-510 evidence, from `990016`'s Inputs:** it started with `RC_PersistHalt=true` **and**
+`RC_AdoptLegacyHalt=false`. Per `RiskControl.mqh:137-156` that combination fail-closes `OnInit` if any
+legacy magic-only `Boss_990016_*` key exists. It started ⇒ **no legacy key for that magic on 463666728**,
+consistent with the four `rc_peak_eq` deletions, and the first time the gate has been observed *not*
+firing on a clean account. It says nothing about the other four accounts — ORDER-510 stays `OPEN`.
+
+### 13. 🔴 §9 WAS WRONG — `(Boss)_MacroGate (EURUSDm,H1)` is not unregistered
+
+**User correction, and it is correct:** the MacroGate chart is the **watchdog for `990120`**, not a
+deployment of its own. `DEPLOYMENTS.csv` row 55 already documents it inside the `990120` row —
+*"MacroGate demo carry-leg ORDER-073 P3 (**watchdog InpMagicsCsv=990120** stale=200 manual-CSV-refresh
+weekly)"* — so the magic it gates is named, its config is recorded, and it places no orders (the deals
+export confirms: no deal under any magic but the registered ones).
+
+**Where I went wrong:** §9 asked "is there a `DEPLOYMENTS.csv` **row** for this chart" when the question
+that mattered was "is this chart **accounted for**". A non-trading utility attached to serve another
+row is documented *in that row*, which is the right place for it — the same is true of
+`AccountSnapshotExporter (GBPJPYm,H1)`, which §9 never flagged because it happens to look like
+infrastructure while `(Boss)_MacroGate` looks like an EA. **A row-shaped test applied to something that
+is not a deployment.** No fix owed; §9 is withdrawn.
+
+<sub>Its chart sits on `EURUSDm,H1` while the leg it gates trades `USDJPYm` — irrelevant for a utility
+that reads a CSV and writes GVs rather than trading its own symbol.</sub>
+
+### 14. Status
+
+**`REVIEWED`.** All five reads answered, three faults found and fixed by the user the same day, clocks
+re-based, one claim of my own withdrawn. `ORDER-510` remains `OPEN` on its own terms (legacy-GV sweep of
+the four other accounts, three of them `REAL_CENT`) — it is the only thing left from either handoff.
+
+---
+
+## C1-ENFORCE-SOURCEA-BINDING — `REVIEWED(cleanup integrator, 2026-08-10)` — final append-only repair bindings
+
+> These rows close only the exact `(kind, block_id, block_sha256)` tuples created by this surgical archive append. They do not alter any archived ORDER block or change validator semantics.
+
+| kind | block_id | block_sha256 | review_ref |
+|---|---|---|---|
+| non-terminal-in-archive | 521\|ORDER\|current-archive#310 | a1a0b3c03264d8904a03e315569beb40726134c2ff0d4367a758d1b9179bbbc6 | surgical append-only repair 2026-08-10 |
+| non-terminal-in-archive | 530\|ORDER\|current-archive#311 | dd15deda3a58c1b1bdca488499dc511bd17704a5c91732dba0af34d9670ce568 | surgical append-only repair 2026-08-10 |
+
+---
