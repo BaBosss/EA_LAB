@@ -133,8 +133,8 @@ $fileDateDisplay = ""   # folded into acctLabels per file
 #            NOTE this changed a few advisory warn thresholds vs the old hand table
 #            (old table was ad-hoc: e.g. kill15 -> warn10; now kill15 -> warn12).
 #            Kill thresholds (the red flag + DEPLOYMENTS.csv) are unchanged.
-#    Rows with non-numeric magic (UNVERIFIED) are skipped; non-ACTIVE rows are kept
-#    (their closed-deal history still renders) with the status tagged in the name.
+#    Rows with non-numeric magic (UNVERIFIED) are kept as explicit blocked rows;
+#    non-ACTIVE rows are kept with operational and verification states tagged in the name.
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 # 2b. account registry: portfolio\ACCOUNTS.csv is the owner of governance_scope
@@ -204,9 +204,12 @@ function Get-AcctBaseText([string]$acct) {
 }
 
 $deploymentsCsv = Join-Path (Split-Path $LiveDealsDir -Parent) 'DEPLOYMENTS.csv'
+$statusLib = Join-Path (Join-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) 'lib') 'deployment_status.ps1'
+if (-not (Test-Path $statusLib)) { throw "deployment status contract is missing: $statusLib" }
+. $statusLib
 $cohort = [ordered]@{}
-foreach ($dep in @(Import-Csv $deploymentsCsv)) {
-  if ($dep.magic -notmatch '^\d+$') { continue }
+$statusRows = @(Get-DeploymentMonitoringRows @(Import-Csv $deploymentsCsv))
+foreach ($dep in $statusRows) {
   $key = "$($dep.account)|$($dep.magic)"
   if ($cohort.Contains($key)) { continue }   # checker guards duplicates; first row wins
   $plat = 'MT5'; if ($dep.platform -match 'MT4') { $plat = 'MT4' }
@@ -226,10 +229,10 @@ foreach ($dep in @(Import-Csv $deploymentsCsv)) {
   } else {
     $warnDD = [math]::Round($killDD * 0.8, 1)
   }
-  if ($dep.status -ne 'ACTIVE') { $name += " [$($dep.status)]" }
+  if ($dep.status -ne 'ACTIVE') { $name += " [$($dep.operational_status) / $($dep.verification_state)]" }
   # deals CSV symbol (broker-suffixed) overrides this; strip common m/c suffix for the fallback
   $sym = "$($dep.symbol)" -replace '[mc]$',''
-  $cohort[$key] = @{ Name = $name; Symbol = $sym; Platform = $plat; KillDD = $killDD; WarnDD = $warnDD }
+  $cohort[$key] = @{ Name = $name; Symbol = $sym; Platform = $plat; KillDD = $killDD; WarnDD = $warnDD; Status = $dep.status; OperationalStatus = $dep.operational_status; VerificationState = $dep.verification_state; Attention = $dep.attention }
 }
 
 # ---------------------------------------------------------------------------
@@ -439,6 +442,18 @@ foreach ($key in $allKeys) {
     }
   }
 
+  # ORDER-944: attachment and verification are separate facts. Runtime deals may make
+  # the row measurable, but they never turn a pending/unverified inventory state green.
+  if ($inCohort -and $meta.Attention -eq 'BLOCKED') {
+    $statusIcon = 'red'
+    $statusLabel = "BLOCKED: operational=$($meta.OperationalStatus), verification=$($meta.VerificationState); runtime data is not verification evidence"
+    $rank = 0
+  } elseif ($inCohort -and $meta.Attention -eq 'WARNING' -and $statusIcon -ne 'red') {
+    $statusIcon = 'yellow'
+    $statusLabel = "WARNING: operational=$($meta.OperationalStatus), verification=$($meta.VerificationState); runtime data does not verify attachment"
+    $rank = 1
+  }
+
   $killDDDisplay = "n/a"
   if ($inCohort) { $killDDDisplay = "$($meta.KillDD)%" }
 
@@ -456,6 +471,8 @@ foreach ($key in $allKeys) {
     DaysSince  = $daysSince
     StatusIcon = $statusIcon
     StatusLabel= $statusLabel
+    OperationalStatus = if ($inCohort) { $meta.OperationalStatus } else { 'UNKNOWN' }
+    VerificationState = if ($inCohort) { $meta.VerificationState } else { 'UNKNOWN' }
     InCohort   = $inCohort
   })
 }
@@ -685,7 +702,7 @@ function Fmt-DD {
 }
 
 # --- one <section> per account: header (label + window + subtotal) + its own table ---
-$theadHtml = "<tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>"
+$theadHtml = "<tr><th>Status</th><th>Operational</th><th>Verification</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>"
 
 $accOrder = @{}
 foreach ($k in $acctMeta.Keys) { $accOrder[$k] = $acctMeta[$k].Order }
@@ -714,6 +731,8 @@ foreach ($ag in $accGroups) {
 
     [void]$sectionsHtml.AppendLine("<tr class=`"$rowClass`">")
     [void]$sectionsHtml.AppendLine("<td class=`"status-cell`" title=`"$(HtmlEnc $r.StatusLabel)`">$icon</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"label-cell`">$(HtmlEnc $r.OperationalStatus)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"label-cell`">$(HtmlEnc $r.VerificationState)</td>")
     [void]$sectionsHtml.AppendLine("<td class=`"name-cell`">$(HtmlEnc $r.Name)</td>")
     [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.Magic)</td>")
     [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.Symbol)</td>")

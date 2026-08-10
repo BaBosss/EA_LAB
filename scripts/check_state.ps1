@@ -41,6 +41,8 @@ param(
 . (Join-Path $PSScriptRoot 'lib\evidence.ps1')
 # ORDER-1100 (S10): the global magic rule, as one callable both this guard and its cage can drive.
 . (Join-Path $PSScriptRoot 'lib\magic_guard.ps1')
+# ORDER-944: deployment status is a closed vocabulary shared by every monitoring consumer.
+. (Join-Path $PSScriptRoot 'lib\deployment_status.ps1')
 
 $script:warn = 0
 $script:toolFail = 0
@@ -131,6 +133,14 @@ if ($null -ne $rows -and $rows.Count -gt 0) {
   $cols = $rows[0].PSObject.Properties.Name
   $missingCols = @($required | Where-Object { $cols -notcontains $_ })
   Check ($missingCols.Count -eq 0) "inventory has all required columns" ("inventory missing columns: " + ($missingCols -join ', '))
+
+  $badStatuses = @()
+  for ($i = 0; $i -lt $rows.Count; $i++) {
+    try { Get-DeploymentStatusSpec "$($rows[$i].status)" | Out-Null }
+    catch { $badStatuses += "line $($i + 2): status='$($rows[$i].status)'" }
+  }
+  Check ($badStatuses.Count -eq 0) "every deployment uses a declared status (ACTIVE/ACTIVE-PENDING-VERIFY/PENDING_ATTACH/UNVERIFIED/REMOVED)" `
+    ("unknown deployment status value(s) - fail closed rather than omit from monitoring: " + ($badStatuses -join ', '))
 
   $withMagic = @($rows | Where-Object { $_.magic -match '^\d+$' })
   $dups = @($withMagic | Group-Object { "$($_.account)|$($_.magic)" } | Where-Object Count -gt 1)

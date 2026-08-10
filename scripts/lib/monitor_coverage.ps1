@@ -56,6 +56,8 @@ the CALLING script runs under, for the rest of that script (memory:
 strictmode-in-dotsourced-library-leaks). A shared library must be inert to its caller.
 #>
 
+. (Join-Path $PSScriptRoot 'deployment_status.ps1')
+
 function Get-MonitorCoverage {
     <#
       Returns:
@@ -114,6 +116,34 @@ function Get-MonitorCoverage {
         $failures.Add('snapshot-unreadable') | Out-Null
         $log.Add($msg) | Out-Null
         return [pscustomobject]@{ Summary = $msg; Failures = $failures.ToArray(); Log = $log.ToArray() }
+    }
+
+    # ---- 1b. deployment attachment/verification coverage (ORDER-944) ----------------
+    # A deployment row is part of the monitoring universe even when its verification is
+    # pending or absent. Normalize the rows through the same closed status contract used by
+    # the writers; an unknown status is a data-integrity failure, never an omitted row.
+    $deploymentRows = @()
+    if ($null -ne $cr.deployments -and $null -ne $cr.deployments.rows) {
+        try {
+            $deploymentRows = @(Get-DeploymentMonitoringRows @($cr.deployments.rows))
+        } catch {
+            $msg = "coverage check FAILED [deployment-status-invalid]: $($_.Exception.Message) - deployment monitoring cannot classify every inventory row"
+            $failures.Add('deployment-status-invalid') | Out-Null
+            $log.Add($msg) | Out-Null
+        }
+    }
+    $deploymentWarnings = 0
+    $deploymentBlocks = 0
+    foreach ($d in $deploymentRows) {
+        if ($d.verification_state -eq 'UNVERIFIED') {
+            $deploymentBlocks++
+            $failures.Add("deployment-unverified-$($d.account)|$($d.magic)") | Out-Null
+            $log.Add("COVERAGE GAP: deployment $($d.account)|$($d.magic) is visible but BLOCKED: operational=$($d.operational_status), verification=UNVERIFIED") | Out-Null
+        } elseif ($d.verification_state -eq 'PENDING') {
+            $deploymentWarnings++
+            $failures.Add("deployment-pending-verification-$($d.account)|$($d.magic)") | Out-Null
+            $log.Add("COVERAGE GAP: deployment $($d.account)|$($d.magic) is visible but WARNING: operational=$($d.operational_status), verification=PENDING") | Out-Null
+        }
     }
 
     # ---- 2. closed-deal sensor freshness (system_health) ----------------------------
@@ -182,6 +212,9 @@ function Get-MonitorCoverage {
         $log.Add("COVERAGE GAP: account $acct (LAB_MANAGED) floating-risk sensor state=$st$detail") | Out-Null
     }
     $summary += " | $floatOk/$($labAccts.Count) LAB_MANAGED float-sensor fresh"
+    if ($deploymentWarnings -gt 0 -or $deploymentBlocks -gt 0) {
+        $summary += " | deployment verification: $deploymentWarnings pending, $deploymentBlocks UNVERIFIED"
+    }
     if ($failures.Count -gt 0) {
         $floatBad = @($failures | Where-Object { $_ -like 'float-*' } | ForEach-Object { $_.Substring(6) })
         if ($floatBad.Count -gt 0) { $summary += "; float-sensor missing: $($floatBad -join ', ')" }

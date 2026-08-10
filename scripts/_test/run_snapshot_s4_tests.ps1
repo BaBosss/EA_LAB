@@ -44,6 +44,22 @@ function Assert-Equal([string]$name, $expected, $actual) {
 
 . (Join-Path $RepoRoot 'scripts\lib\snapshot_reader.ps1')
 . (Join-Path $RepoRoot 'scripts\lib\monitor_coverage.ps1')
+. (Join-Path $RepoRoot 'scripts\lib\deployment_status.ps1')
+
+Write-Host '=== ORDER-944: snapshot status model is explicit and fail-visible ==='
+$snapshotStatusRows = @(Get-DeploymentMonitoringRows @(
+    [pscustomobject]@{ account='100000001'; magic='900001'; status='ACTIVE' },
+    [pscustomobject]@{ account='100000001'; magic='900004'; status='ACTIVE-PENDING-VERIFY' },
+    [pscustomobject]@{ account='100000001'; magic='900005'; status='UNVERIFIED' }
+))
+Assert-True 'snapshot status model keeps ACTIVE visible' ($snapshotStatusRows[0].monitoring_visible -and $snapshotStatusRows[0].verification_state -eq 'VERIFIED')
+Assert-True 'snapshot status model keeps pending verification visible and warning' ($snapshotStatusRows[1].monitoring_visible -and $snapshotStatusRows[1].forward_observed -and $snapshotStatusRows[1].attention -eq 'WARNING' -and $snapshotStatusRows[1].verification_state -eq 'PENDING')
+Assert-True 'snapshot status model keeps UNVERIFIED visible and blocked' ($snapshotStatusRows[2].monitoring_visible -and $snapshotStatusRows[2].attention -eq 'BLOCKED' -and $snapshotStatusRows[2].verification_state -eq 'UNVERIFIED')
+$unknownSnapshotStatus = $false
+try { Get-DeploymentStatusSpec 'MYSTERY' | Out-Null } catch { $unknownSnapshotStatus = $true }
+Assert-True 'snapshot status model rejects unknown status' $unknownSnapshotStatus
+$snapshotSource = Get-Content (Join-Path $RepoRoot 'scripts\control_room_snapshot.ps1') -Raw
+Assert-True 'snapshot source carries operational and verification fields into monitoring output' ($snapshotSource -match 'operational_status' -and $snapshotSource -match 'verification_state' -and $snapshotSource -match 'forward_observed')
 
 $py = Join-Path $RepoRoot 'tools\python312\python.exe'
 $builder = Join-Path $RepoRoot '_triage\factory_os\snapshot_build.py'

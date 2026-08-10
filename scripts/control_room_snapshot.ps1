@@ -7,13 +7,14 @@
  Sections:
    meta              schema/version, as-of, git HEAD, source file hashes
    system_health     per-account collector freshness (stale bar 30h, aligned with daily chain guard)
-   deployments       inventory pass-through + gap lists (UNVERIFIED / missing kill_rule / judge_date)
-   judge_readiness   per ACTIVE magic: closed-trade count vs the 30-trade decision bar
+   deployments       inventory pass-through + explicit operational/verification states
+                     and gap lists (UNVERIFIED / missing kill_rule / judge_date)
+   judge_readiness   per non-REMOVED deployment: closed-trade count vs the 30-trade decision bar
                      (CLAUDE.md demo->LIVE judge bar), days-to-judge, decision_capable flag,
                      observed vs needed trades/week (CR-005-lite vertical slice)
    judge_cohorts     per-judge-date rollup (2026-10-09 / 2026-10-16 cohorts): capable now,
                      projected capable/shortfall at judge date, no-sensor magics
-   attestation       CR-002: per ACTIVE/PENDING_ATTACH deployment, sha256 of the APPROVED
+   attestation       CR-002: per non-REMOVED deployment, sha256 of the APPROVED
                      bundle artifacts (.ex5 + locked .set) from portfolio\ATTESTATION_MAP.csv
                      (owner of deployment->bundle expectations) vs what is on disk in
                      _vps_deploy. States: HASHED / PARTIAL (a mapped artifact slot is empty,
@@ -50,12 +51,15 @@ $INV   = Join-Path $Root 'portfolio\DEPLOYMENTS.csv'
 $DEALS = Join-Path $Root 'portfolio\live_deals'
 $DASH  = Join-Path $Root 'portfolio\LIVE_DASHBOARD.html'
 $ACCTS = Join-Path $Root 'portfolio\ACCOUNTS.csv'
+$STATUS = Join-Path $Root 'scripts\lib\deployment_status.ps1'
 if ($OutFile -eq "") { $OutFile = Join-Path $Root 'portfolio\control_room_snapshot.json' }
 $now = Get-Date
 # The repo's pinned interpreter (see .githooks/pre-commit). Named once so the two invocations
 # below cannot drift onto different pythons.
 $PY = Join-Path $Root 'tools\python312\python.exe'
 if (-not (Test-Path $PY)) { throw "control_room_snapshot: $PY is missing -- the snapshot cannot be validated, so it will not be written." }
+if (-not (Test-Path $STATUS)) { throw "control_room_snapshot: deployment status contract is missing: $STATUS" }
+. $STATUS
 
 function SourceRow([string]$name, [string]$p, [bool]$mandatory){
   # ORDER-612 (S4). v5 source row. It carries BOTH identities and NO EVIDENCE.
@@ -124,10 +128,10 @@ function LatestCollector([string]$acct){
 }
 
 # --- deployments (single source: DEPLOYMENTS.csv) ---
-$rows = @(Import-Csv $INV)
-$gapUnverified = @($rows | Where-Object { $_.status -match 'UNVERIFIED' })
-$gapKill  = @($rows | Where-Object { $_.status -eq 'ACTIVE' -and (-not $_.kill_rule -or $_.kill_rule.Trim() -eq '') })
-$gapJudge = @($rows | Where-Object { $_.status -eq 'ACTIVE' -and ($_.judge_date -notmatch '^\d{4}-\d{2}-\d{2}$') })
+$rows = @(Get-DeploymentMonitoringRows @(Import-Csv $INV))
+$gapUnverified = @($rows | Where-Object { $_.verification_state -eq 'UNVERIFIED' })
+$gapKill  = @($rows | Where-Object { $_.forward_observed -and (-not $_.kill_rule -or $_.kill_rule.Trim() -eq '') })
+$gapJudge = @($rows | Where-Object { $_.forward_observed -and ($_.judge_date -notmatch '^\d{4}-\d{2}-\d{2}$') })
 
 # --- system health: collector freshness per account in the inventory ---
 $staleBarHours = 30
@@ -178,12 +182,20 @@ $EXP = Join-Path $Root 'portfolio\expectations.csv'
 $expMeta = @{}
 if (Test-Path $EXP) { foreach($e in @(Import-Csv $EXP)) { $expMeta["$($e.account)|$($e.magic)"] = $e } }
 
-# --- judge readiness per ACTIVE row with a magic ---
+# --- judge readiness per visible non-REMOVED row ---
 $decisionBar = 30   # CLAUDE.md judge bar: PF>=1.40 at >=30 trades
 $watchBar    = 15   # CLAUDE.md demo-kill floor sample
 $jr = @()
 $dealCache = @{}
-foreach($r in ($rows | Where-Object { $_.status -eq 'ACTIVE' -and $_.magic -match '^\d+$' })){
+foreach($r in ($rows | Where-Object { $_.operational_status -ne 'REMOVED' })){
+  if ($r.magic -notmatch '^\d+$') {
+    $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$null; days_active=$null; days_to_judge=$null; judge_date=$r.judge_date; readiness='NOT_MONITORABLE'; projected_trades_at_judge=$null; forecast='NOT_APPLICABLE'; obs_trades_per_week=$null; needed_trades_per_week=$null; expected_pf=$null; expected_dd95=$null; expected_trades_per_week=$null; rate_flag='NA' }
+    continue
+  }
+  if (-not $r.forward_observed) {
+    $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$null; days_active=$null; days_to_judge=$null; judge_date=$r.judge_date; readiness='NOT_FORWARD_OBSERVED'; projected_trades_at_judge=$null; forecast='NOT_APPLICABLE'; obs_trades_per_week=$null; needed_trades_per_week=$null; expected_pf=$null; expected_dd95=$null; expected_trades_per_week=$null; rate_flag='NA' }
+    continue
+  }
   $c = LatestCollector $r.account
   $trades = $null; $state = 'DATA_INSUFFICIENT'
   if ($null -ne $c) {
@@ -238,12 +250,12 @@ foreach($r in ($rows | Where-Object { $_.status -eq 'ACTIVE' -and $_.magic -matc
       }
     }
   }
-  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; closed_trades=$trades; days_active=$daysActive; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk; expected_pf=$expPf; expected_dd95=$expDd95; expected_trades_per_week=$expWk; rate_flag=$rateFlag }
+  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$trades; days_active=$daysActive; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk; expected_pf=$expPf; expected_dd95=$expDd95; expected_trades_per_week=$expWk; rate_flag=$rateFlag }
 }
 
 # --- CR-005-lite vertical slice: per-judge-date cohort rollup ---
 $cohorts = @()
-foreach($g in ($jr | Where-Object { $_.judge_date -match '^\d{4}-\d{2}-\d{2}$' } | Group-Object { $_.judge_date } | Sort-Object Name)){
+foreach($g in ($jr | Where-Object { $_.forward_observed -and $_.magic -match '^\d+$' -and $_.judge_date -match '^\d{4}-\d{2}-\d{2}$' } | Group-Object { $_.judge_date } | Sort-Object Name)){
   $cg = @($g.Group)
   $noSensor = @($cg | Where-Object { $_.readiness -eq 'DATA_INSUFFICIENT' })
   $short    = @($cg | Where-Object { $_.forecast -eq 'PROJECTED_SHORTFALL' })
@@ -274,7 +286,7 @@ function ArtifactMeta([string]$bundleDir,[string]$fileName){
   return [ordered]@{ file=$rel; sha256=(Get-FileHash $p -Algorithm SHA256).Hash.ToLower(); missing=$false; git_tracked=[bool]$gitTracked[$rel] }
 }
 $attest = @()
-foreach($r in ($rows | Where-Object { ($_.status -eq 'ACTIVE' -or $_.status -eq 'PENDING_ATTACH') -and $_.magic -match '^\d+$' })){
+foreach($r in ($rows | Where-Object { $_.operational_status -ne 'REMOVED' })){
   $key = "$($r.account)|$($r.magic)"
   $m = $attMap[$key]
   $state = 'NO_MAP'; $ex5 = $null; $set = $null; $conf = $null; $note = $null
@@ -289,7 +301,7 @@ foreach($r in ($rows | Where-Object { ($_.status -eq 'ACTIVE' -or $_.status -eq 
       elseif ($null -eq $ex5 -or $null -eq $set) { $state = 'PARTIAL' }   # a mapped slot is empty (e.g. ambiguous set)
     }
   }
-  $attest += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; status=$r.status; state=$state; confidence=$conf; ex5=$ex5; set=$set; note=$note }
+  $attest += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; attention=$r.attention; state=$state; confidence=$conf; ex5=$ex5; set=$set; note=$note }
 }
 $attHashed = @($attest | Where-Object { $_.state -eq 'HASHED' -and $_.confidence -eq 'high' })
 $attGaps   = @($attest | Where-Object { -not ($_.state -eq 'HASHED' -and $_.confidence -eq 'high') })
@@ -372,6 +384,9 @@ $sum = [ordered]@{
   accounts_stale_or_no_sensor = $accounts.Count - $freshN
   deployments_total     = $rows.Count
   deployments_active    = @($rows | Where-Object { $_.status -eq 'ACTIVE' }).Count
+  deployments_forward_observed = @($rows | Where-Object { $_.forward_observed }).Count
+  deployments_pending_verification = @($rows | Where-Object { $_.verification_state -eq 'PENDING' }).Count
+  deployments_unverified = @($rows | Where-Object { $_.verification_state -eq 'UNVERIFIED' }).Count
   gaps_unverified       = $gapUnverified.Count
   gaps_missing_kill     = $gapKill.Count
   gaps_missing_judge    = $gapJudge.Count
@@ -475,7 +490,7 @@ if ($buildRc -ne 0) {
 
 Write-Host "=== CONTROL ROOM TODAY ($($now.ToString('yyyy-MM-dd HH:mm'))) ==="
 Write-Host ("SYSTEM   {0}/{1} accounts fresh ({2} stale/no-sensor, bar {3}h)" -f $sum.accounts_fresh, $sum.accounts_total, $sum.accounts_stale_or_no_sensor, $staleBarHours)
-Write-Host ("FLEET    {0} rows, {1} ACTIVE | gaps: {2} UNVERIFIED, {3} no-kill, {4} no-judge" -f $sum.deployments_total, $sum.deployments_active, $sum.gaps_unverified, $sum.gaps_missing_kill, $sum.gaps_missing_judge)
+Write-Host ("FLEET    {0} rows, {1} ACTIVE, {2} forward-observed | verification: {3} pending, {4} UNVERIFIED | gaps: {5} no-kill, {6} no-judge" -f $sum.deployments_total, $sum.deployments_active, $sum.deployments_forward_observed, $sum.deployments_pending_verification, $sum.deployments_unverified, $sum.gaps_missing_kill, $sum.gaps_missing_judge)
 Write-Host ("JUDGE    {0} decision-capable | {1} partial | {2} collecting | {3} no-data" -f $sum.judge_decision_capable, $sum.judge_partial, $sum.judge_data_collection, $sum.judge_data_insufficient)
 Write-Host ("FORECAST {0} projected-capable at judge date | {1} projected SHORTFALL (<30 trades)" -f $sum.judge_projected_capable, $sum.judge_projected_shortfall)
 Write-Host ("RATE     {0} magic(s) UNDER_RATE (obs weekly closes < 50% of expectations.csv, >=14d history)" -f $sum.judge_under_rate)

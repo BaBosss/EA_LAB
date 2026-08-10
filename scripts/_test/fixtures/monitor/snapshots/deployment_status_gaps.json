@@ -1,0 +1,18 @@
+{
+  "meta": { "schema": "ControlRoomSnapshot", "version": 4, "generated_at": "2026-07-30T06:00:00" },
+  "system_health": [
+    { "account": "100000001", "collector": "MT5", "state": "FRESH", "age_hours": 0.1, "governance_scope": "LAB_MANAGED" }
+  ],
+  "floating_risk": [
+    { "account": "100000001", "state": "FRESH", "age_hours": 0.0, "equity": 10000.0, "balance": 10000.0, "floating_pl": 0.0, "magics": [] }
+  ],
+  "deployments": {
+    "rows": [
+      { "account": "100000001", "magic": "900001", "ea_name": "ACTIVE_EA", "status": "ACTIVE" },
+      { "account": "100000001", "magic": "900004", "ea_name": "PENDING_EA", "status": "ACTIVE-PENDING-VERIFY" },
+      { "account": "100000001", "magic": "900005", "ea_name": "UNVERIFIED_EA", "status": "UNVERIFIED" }
+    ],
+    "gaps": {}
+  },
+  "summary": { "unknown_magics_unclassified": 0 }
+}

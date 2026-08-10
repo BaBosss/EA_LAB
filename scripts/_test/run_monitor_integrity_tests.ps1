@@ -93,6 +93,7 @@ $snapScript = Join-Path $RepoRoot 'scripts\control_room_snapshot.ps1'
 if (-not $CoverageLib) { $CoverageLib = Join-Path $RepoRoot 'scripts\lib\monitor_coverage.ps1' }
 if (-not $DashScript) { $DashScript = Join-Path $RepoRoot 'scripts\live_dashboard.ps1' }
 $dashScript = $DashScript
+$statusLib = Join-Path $RepoRoot 'scripts\lib\deployment_status.ps1'
 
 $script:pass = 0
 $script:fail = 0
@@ -112,6 +113,42 @@ function Assert-True {
     param([string]$What, $Condition)
     Assert-Equal $What $true ([bool]$Condition)
 }
+
+# =====================================================================================
+# ORDER-944 -- deployment status is a closed, fail-visible model. This is the public
+# seam shared by the snapshot, dashboard, and coverage reader; the consumers are tested
+# below at their real boundaries as well.
+# =====================================================================================
+Write-Host ''
+Write-Host '=== ORDER-944: deployment visibility and verification state ==='
+if (-not (Test-Path $statusLib)) { throw "missing: $statusLib" }
+. $statusLib
+
+$statusRows = @(
+    [pscustomobject]@{ account='100000001'; magic='900001'; status='ACTIVE'; ea_name='ACTIVE_EA' },
+    [pscustomobject]@{ account='100000001'; magic='900004'; status='ACTIVE-PENDING-VERIFY'; ea_name='PENDING_EA' },
+    [pscustomobject]@{ account='100000001'; magic='900005'; status='UNVERIFIED'; ea_name='UNVERIFIED_EA' },
+    [pscustomobject]@{ account='100000001'; magic='900006'; status='PENDING_ATTACH'; ea_name='PENDING_ATTACH_EA' },
+    [pscustomobject]@{ account='100000001'; magic='900007'; status='REMOVED'; ea_name='REMOVED_EA' }
+)
+$normalised = @(Get-DeploymentMonitoringRows $statusRows)
+$active = $normalised | Where-Object { $_.magic -eq '900001' }
+$pending = $normalised | Where-Object { $_.magic -eq '900004' }
+$unverified = $normalised | Where-Object { $_.magic -eq '900005' }
+Assert-True 'ACTIVE row remains visible and verified' ($active.monitoring_visible -and $active.operational_status -eq 'ATTACHED' -and $active.verification_state -eq 'VERIFIED' -and $active.attention -eq 'NONE')
+Assert-True 'ACTIVE-PENDING-VERIFY remains visible as attached but pending verification' ($pending.monitoring_visible -and $pending.forward_observed -and $pending.operational_status -eq 'ATTACHED' -and $pending.verification_state -eq 'PENDING' -and $pending.attention -eq 'WARNING')
+Assert-True 'UNVERIFIED remains visible and blocked' ($unverified.monitoring_visible -and $unverified.verification_state -eq 'UNVERIFIED' -and $unverified.attention -eq 'BLOCKED')
+Assert-Equal 'all declared statuses are accepted' 5 $normalised.Count
+$unknownRejected = $false
+try { Get-DeploymentMonitoringRows @([pscustomobject]@{ account='100000001'; magic='900008'; status='MYSTERY' }) | Out-Null } catch { $unknownRejected = $true }
+Assert-True 'unknown deployment status is rejected fail-closed' $unknownRejected
+Assert-True 'pending/unverified rows stay visible to snapshot and judge/attestation consumers' `
+    ((Get-Content $snapScript -Raw) -match 'Get-DeploymentMonitoringRows' -and
+     (Get-Content $snapScript -Raw) -match 'operational_status' -and
+     (Get-Content $snapScript -Raw) -match 'verification_state')
+Assert-True 'coverage consumer has a deployment-status visibility check' `
+    ((Get-Content $CoverageLib -Raw) -match 'deployment-pending-verification' -and
+     (Get-Content $CoverageLib -Raw) -match 'deployment-unverified')
 
 # =====================================================================================
 # PART 1 (D5) -- unknown-magic age classification
@@ -284,6 +321,14 @@ Assert-Equal 'green fixture produces no failure token' 0 $g.Failures.Count
 Assert-True  'green fixture summary reports both sensors' `
     ($g.Summary -match 'deal-sensor fresh' -and $g.Summary -match 'float-sensor fresh')
 
+Write-Host '   -- ORDER-944: deployment rows are visible to coverage --'
+$dg = Cover 'deployment_status_gaps.json'
+Assert-True 'ACTIVE row remains in the coverage snapshot input' ((LogText $dg) -notmatch 'deployment-status-invalid')
+Assert-True 'pending verification cannot disappear from coverage' ((LogText $dg) -match '100000001\|900004.*WARNING.*ATTACHED.*PENDING' -and ($dg.Failures -join ',') -match 'deployment-pending-verification-100000001\|900004')
+Assert-True 'UNVERIFIED cannot disappear from coverage and is blocked' ((LogText $dg) -match '100000001\|900005.*BLOCKED.*UNVERIFIED' -and ($dg.Failures -join ',') -match 'deployment-unverified-100000001\|900005')
+$du = Cover 'deployment_status_unknown.json'
+Assert-True 'unknown status in a snapshot fails coverage closed' (($du.Failures -join ',') -match 'deployment-status-invalid' -and (LogText $du) -match 'MYSTERY')
+
 Write-Host '   -- WARN: a non-LAB_MANAGED account degraded on BOTH sensors --'
 $w = Cover 'warn_nonlab.json'
 Assert-Equal 'a USER_OBSERVED account never turns the chain red' 0 $w.Failures.Count
@@ -411,6 +456,33 @@ try {
     Assert-Equal 'the dashboard runs clean over the fixture tree' 0 $dashExit
     if ($dashExit -ne 0) { Write-Host ($dashOut | Out-String) }
     $html = Get-Content $outHtml -Raw
+
+    # ORDER-944 real dashboard seam: append one attached-but-pending row and one
+    # unverified row (including the current blank-magic shape) to the isolated inventory.
+    # Both must render as non-green rows with the two states printed separately.
+    $invPath = Join-Path $work 'portfolio\DEPLOYMENTS.csv'
+    $invRows = @(Import-Csv $invPath)
+    $pendingInv = $invRows[0].PSObject.Copy()
+    $pendingInv.account = '100000001'; $pendingInv.ea_name = 'PENDING_EA'; $pendingInv.magic = '900004'; $pendingInv.status = 'ACTIVE-PENDING-VERIFY'
+    $unverifiedInv = $invRows[0].PSObject.Copy()
+    $unverifiedInv.account = '100000001'; $unverifiedInv.ea_name = 'UNVERIFIED_EA'; $unverifiedInv.magic = ''; $unverifiedInv.status = 'UNVERIFIED'
+    $invRows += $pendingInv; $invRows += $unverifiedInv
+    $invRows | Export-Csv -LiteralPath $invPath -NoTypeInformation -Encoding UTF8
+    $statusOut = Join-Path $work 'DASH_STATUS.html'
+    $statusDashOut = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $dashScript -LiveDealsDir $wDeals -OutFile $statusOut 2>&1
+    Assert-Equal 'ACTIVE row remains visible in the dashboard' 0 $LASTEXITCODE
+    $statusHtml = Get-Content $statusOut -Raw
+    function StatusRow([string]$doc, [string]$needle) {
+        foreach ($m in [regex]::Matches($doc, '(?s)<tr[^>]*>.*?</tr>')) {
+            if ($m.Value -match 'status-cell' -and $m.Value -match [regex]::Escape($needle)) { return $m.Value }
+        }
+        return ''
+    }
+    $pendingHtmlRow = StatusRow $statusHtml 'PENDING_EA'
+    $unverifiedHtmlRow = StatusRow $statusHtml 'UNVERIFIED_EA'
+    Assert-True 'ACTIVE-PENDING-VERIFY remains visible in the dashboard' ($pendingHtmlRow -ne '')
+    Assert-True 'pending verification is warning/non-green and names both states' ($pendingHtmlRow -match 'st-yellow' -and $pendingHtmlRow -match 'ATTACHED' -and $pendingHtmlRow -match 'PENDING' -and $pendingHtmlRow -notmatch 'st-green')
+    Assert-True 'UNVERIFIED remains visible in the dashboard as blocked/non-green' ($unverifiedHtmlRow -match 'st-red' -and $unverifiedHtmlRow -match 'UNKNOWN' -and $unverifiedHtmlRow -match 'UNVERIFIED' -and $unverifiedHtmlRow -notmatch 'st-green')
 
     # Pull the CLOSED-DEALS <tr> for a magic. Scoped by the status-cell, which only the
     # closed-deals tables emit -- the first draft matched the first <tr> containing the
