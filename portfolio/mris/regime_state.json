@@ -1,13 +1,14 @@
 ﻿{
-    "generated_utc":  "2026-08-09T00:37:28Z",
+    "generated_utc":  "2026-08-10T11:13:44Z",
     "state":  "NEUTRAL",
-    "risk_index":  0.385,
+    "risk_index":  0.308,
     "bias":  "balanced - watch for tilt",
     "confidence":  "HIGH",
     "confidence_frac":  0.75,
     "active_count":  8,
     "flags":  [
-                  "TRIPWIRE_NEAR: AUDJPY 111.52 only 1.38% above pin 110"
+                  "TRIPWIRE_NEAR: AUDJPY 112.18 only 1.98% above pin 110",
+                  "LOADED_FUSE: USDJPY 158.83 at extreme - crowded short, snap-back risk high"
               ],
     "data_pending":  [
 
@@ -18,13 +19,13 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  3,
-                           "spot":  111.52,
-                           "sma200":  109.4073,
-                           "chg5d_pct":  0.452,
+                           "spot":  112.183,
+                           "sma200":  109.4106,
+                           "chg5d_pct":  1.049,
                            "signal":  1,
-                           "reason":  "above SMA200, 5d 0.452% -\u003e risk-on intact",
+                           "reason":  "above SMA200, 5d 1.049% -\u003e risk-on intact",
                            "flags":  [
-                                         "TRIPWIRE_NEAR: AUDJPY 111.52 only 1.38% above pin 110"
+                                         "TRIPWIRE_NEAR: AUDJPY 112.18 only 1.98% above pin 110"
                                      ]
                        },
                        {
@@ -32,13 +33,13 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  2,
-                           "spot":  157.745,
-                           "sma200":  158.0589,
-                           "chg5d_pct":  0.103,
-                           "signal":  0,
-                           "reason":  "no sharp reversal, not extreme -\u003e neutral",
+                           "spot":  158.829,
+                           "sma200":  158.0643,
+                           "chg5d_pct":  0.791,
+                           "signal":  0.5,
+                           "reason":  "extreme weak (158.829 \u003e= 158) -\u003e risk-on now BUT crowded/loaded",
                            "flags":  [
-
+                                         "LOADED_FUSE: USDJPY 158.83 at extreme - crowded short, snap-back risk high"
                                      ]
                        },
                        {
@@ -46,11 +47,11 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  2,
-                           "spot":  14.9,
-                           "sma200":  18.5815,
-                           "chg5d_pct":  -6.817,
-                           "signal":  1,
-                           "reason":  "VIX 14.9 \u003c= 15 -\u003e calm / risk-on",
+                           "spot":  15.46,
+                           "sma200":  18.5658,
+                           "chg5d_pct":  -2.522,
+                           "signal":  0,
+                           "reason":  "VIX 15.46 mid-range -\u003e neutral",
                            "flags":  [
 
                                      ]
@@ -60,9 +61,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  99.6,
-                           "sma200":  99.1665,
-                           "chg5d_pct":  -0.2,
+                           "spot":  99.687,
+                           "sma200":  99.1702,
+                           "chg5d_pct":  -0.273,
                            "signal":  0,
                            "reason":  "DXY no strong move -\u003e neutral",
                            "flags":  [
@@ -74,9 +75,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  4340.7002,
-                           "sma200":  4478.6715,
-                           "chg5d_pct":  7.202,
+                           "spot":  4395.1001,
+                           "sma200":  4480.2085,
+                           "chg5d_pct":  8.96,
                            "signal":  0,
                            "reason":  "gold move is structural/USD-driven (no meaningful VIX co-move) -\u003e neutral",
                            "flags":  [
@@ -88,9 +89,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  64926.1484,
-                           "sma200":  70252.7176,
-                           "chg5d_pct":  2.309,
+                           "spot":  64927.5195,
+                           "sma200":  70007.2752,
+                           "chg5d_pct":  0.511,
                            "signal":  -1,
                            "reason":  "below SMA200 -\u003e risk-off lean",
                            "flags":  [
@@ -116,11 +117,11 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  6.5705,
-                           "sma200":  5.8322,
-                           "chg5d_pct":  2.09,
+                           "spot":  6.6125,
+                           "sma200":  5.8406,
+                           "chg5d_pct":  1.512,
                            "signal":  1,
-                           "reason":  "above SMA200, 5d 2.09% -\u003e risk-on intact",
+                           "reason":  "above SMA200, 5d 1.512% -\u003e risk-on intact",
                            "flags":  [
 
                                      ]

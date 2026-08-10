@@ -1,0 +1,9 @@
+row_type,login,server_time,currency,equity,balance,margin,free_margin,margin_level_pct,stopout_mode,stopout_level,magic,symbols,float_pl,open_lots,open_positions,oldest_open_hours,pending_orders
+ACCOUNT,159475669,2026.08.10 11:12:40,USC,10626.57,10804.97,52.40,10574.17,20279.7,PERCENT,0.0,,,,,,,
+MAGIC,159475669,2026.08.10 11:12:40,,,,,,,,,20240001,CHFJPYc,-104.02,0.11,9,645.2,0
+MAGIC,159475669,2026.08.10 11:12:40,,,,,,,,,1524,EURUSDc,-127.11,0.13,12,310.1,0
+MAGIC,159475669,2026.08.10 11:12:40,,,,,,,,,9397,GBPUSDc,52.73,0.02,2,1177.2,0
+MAGIC,159475669,2026.08.10 11:12:40,,,,,,,,,8005,XAUUSDc,0.00,0.00,0,0.0,2
+SYMBOL,159475669,2026.08.10 11:12:40,,,,,,,,,,CHFJPYc,-104.02,0.11,9,,
+SYMBOL,159475669,2026.08.10 11:12:40,,,,,,,,,,EURUSDc,-127.11,0.13,12,,
+SYMBOL,159475669,2026.08.10 11:12:40,,,,,,,,,,GBPUSDc,52.73,0.02,2,,
