@@ -8,7 +8,10 @@ param(
     [string]$PythonPath = ''
 )
 $ErrorActionPreference = 'Stop'
-if ($RepoRoot -eq '') { $RepoRoot = Split-Path -Parent (Split-Path -Parent $PSCommandPath) }
+if ($RepoRoot -eq '') {
+    $scriptDir = Split-Path -Parent $PSCommandPath
+    $RepoRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
+}
 if ($PythonPath -eq '') { $PythonPath = Join-Path $RepoRoot 'tools\python312\python.exe' }
 . (Join-Path $RepoRoot 'scripts\lib\runtime_identity.ps1')
 
