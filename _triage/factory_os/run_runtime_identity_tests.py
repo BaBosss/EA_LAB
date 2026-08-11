@@ -11,6 +11,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from runtime_identity import (  # noqa: E402
     IDENTITY_SCHEMA,
     BUILD_RECEIPT_SCHEMA,
+    DEAL_ENTRY_IN,
+    DEAL_ENTRY_OUT,
+    DEAL_ENTRY_INOUT,
+    DEAL_ENTRY_OUT_BY,
     derive_first_trade,
     validate_identity,
     validate_identity_batch,
@@ -161,8 +165,15 @@ def main():
           derive_first_trade(forward_identity, [deal(magic='900002')])['state'] == 'AWAITING_FIRST_TRADE')
     check('wrong symbol -> AWAITING_FIRST_TRADE',
           derive_first_trade(forward_identity, [deal(symbol='GBPUSDm')])['state'] == 'AWAITING_FIRST_TRADE')
-    check('non-entry deal -> AWAITING_FIRST_TRADE',
-          derive_first_trade(forward_identity, [deal(entry='1')])['state'] == 'AWAITING_FIRST_TRADE')
+    for label, entry in [
+        ('DEAL_ENTRY_OUT', DEAL_ENTRY_OUT),
+        ('DEAL_ENTRY_INOUT', DEAL_ENTRY_INOUT),
+        ('DEAL_ENTRY_OUT_BY', DEAL_ENTRY_OUT_BY),
+    ]:
+        check('%s is not a qualifying entry -> AWAITING_FIRST_TRADE' % label,
+              derive_first_trade(forward_identity, [deal(entry=entry)])['state'] == 'AWAITING_FIRST_TRADE')
+    check('DEAL_ENTRY_IN is the only qualifying entry',
+          derive_first_trade(forward_identity, [deal(entry=DEAL_ENTRY_IN)])['state'] == 'VERIFIED')
     check('pre-attach deal -> AWAITING_FIRST_TRADE',
           derive_first_trade(forward_identity, [deal(time_unix=str(attach - 1))])['state'] == 'AWAITING_FIRST_TRADE')
     boundary = derive_first_trade(forward_identity, [deal(time_unix=str(attach))])

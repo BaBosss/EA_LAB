@@ -1,0 +1,17 @@
+{
+  "order": "ORDER-353",
+  "check": "bounded template regression differential",
+  "starting_lineage": {
+    "commit": "c8efbd8eaffe82439ae6f8ad2d235ae83ba1e072",
+    "result": "REFUSED_BEFORE_COMPARISON",
+    "signature": "fatal: Invalid revision range ac294d3a8f8e3a2b0dfa88860c2558e0646df6fb..c8efbd8eaffe82439ae6f8ad2d235ae83ba1e072",
+    "note": "The untouched c8 worktree lacks the historical ac294d3a object referenced by its active baseline manifest. No source or baseline file was changed."
+  },
+  "repaired_lineage": {
+    "commit": "72314865fd38a68beb3decd633bd11a5ba7020ec",
+    "result": "REFUSED_PREEXISTING",
+    "signature": "REFUSE: Boss_11_GridTrend set hash differs"
+  },
+  "classification": "PREEXISTING_UNCHANGED",
+  "interpretation": "The repaired lineage reaches the same known template cage refusal recorded before canonical prep; the starting-lineage probe is independently blocked by a missing historical object, not by this prep."
+}

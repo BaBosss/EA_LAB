@@ -27,6 +27,20 @@ inert and the regime-conditional thesis is unsupported regardless of P&L.
 | `(TRD)_SuperTrendFlip_rev05.ex5` | compiled 2026-07-27 09:07:59, source 09:07:46 → **not stale** (mtime is the only valid staleness test; MQL5 compiles are not byte-reproducible) · ⚠️ **on disk only — `.gitignore` line 53 excludes `*.ex5`, so this file is NOT in the repo.** A fresh clone gets this bundle without its binary; recompile from `ea_projects/(TRD)_SuperTrendFlip/(TRD)_SuperTrendFlip_rev05.mq5` or copy from the terminal's `MQL5\Experts\` |
 | `STF_BTC_H4_ORDER353_DEMO.set` | `_06_AllowLive=true`, `_06_Magic=990026` |
 
+## Canonical pre-attach RI02 packet
+
+The canonical artifact is `(TRD)_SuperTrendFlip_rev05_ri02.ex5`, logical identity
+`(TRD)_SuperTrendFlip_rev05`, for account `463666728`, magic `990026`, symbol `BTCUSDm`,
+timeframe `PERIOD_H4`. Its build receipt is `br-81fad90230b74411a444ebe3aaae8506`, source SHA256 is
+`19e686b82126985d79b3cfb58ba12381f7d47a0de2fdeb714333db365c07ec84`, and artifact SHA256 is
+`a4c1d8da91d0032d9cbc94c2b0d3c2351a40d2a507a6824e2cfff0865bc75b11`.
+
+The compatible DealsExporter is the additive `time_unix` build: source SHA256
+`51d119609675a040273d85d7f41bffbcd16fd991b0e87171b183204fba363237`, artifact SHA256
+`f4d530d756472eb5432fe27bb5eb1c1f23b720b5a212a4d9d546c3fd5666f277`. Treat
+`EXPORTER_UPDATE_REQUIRED_BEFORE_FORWARD_EVIDENCE` as blocking until the VPS exporter is proven
+equivalent. This packet is pre-attach: `attach_epoch`, attach time, and first-trade fields remain null.
+
 > ⚠️ **The source `.set` shipped `_06_AllowLive=false`.** That exact defect made the `990025`
 > leg sit silent for three days in July 2026 while looking attached and healthy. It is fixed
 > in this bundle — **verify it on the chart's Inputs tab after attaching anyway**, because the
