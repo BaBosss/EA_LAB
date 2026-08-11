@@ -13,6 +13,8 @@
 //| Included LAST by LabCore.mqh, after every header that defines one  |
 //| of these macros - an enumeration placed before them would not      |
 //| merely be wrong, it would not compile.                             |
+//| @CFG_METADATA declarations remain compile-visible but are excluded |
+//| from this semantic preimage by the source-level metadata marker.    |
 //+------------------------------------------------------------------+
 #ifndef BOSS_LOCKED_CONSTANTS_GEN_MQH
 #define BOSS_LOCKED_CONSTANTS_GEN_MQH

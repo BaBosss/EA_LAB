@@ -282,6 +282,7 @@ _ENFORCEMENT_DECLARED = frozenset((
     "CoverageCell", "DeploymentAttestationEvent", "Hypothesis", "MagicAllocation",
     "MetricRef", "OwnerRef", "ReconciliationEvidence", "RunTransition", "SafeProjection",
     "SnapshotBuilderInput", "SnapshotVerdict", "SystemFinding", "WorkReceipt",
+    "RuntimeIdentityObserved", "RuntimeIdentityRecord", "RuntimeIdentitySummary",
 ))
 _NO_ENFORCEMENT_DECLARATION = frozenset((
     "CandidatePayload", "EvidenceRef", "ExecutionKey", "IdeaRef", "InstrumentProfile",

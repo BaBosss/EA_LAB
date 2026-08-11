@@ -555,6 +555,12 @@ the builder side is closed and has no place to put an answer.*
 
 → **contract [`SnapshotMeta`](factory_os/CONTRACTS.md#snapshotmeta)** — fields, types, required-set and validation rules.
 
+→ **contract [`RuntimeIdentityObserved`](factory_os/CONTRACTS.md#runtimeidentityobserved)** — EA-emitted account, magic, build, config, symbol, timeframe and epoch evidence.
+
+→ **contract [`RuntimeIdentityRecord`](factory_os/CONTRACTS.md#runtimeidentityrecord)** — collected identity evidence plus the canonical validation outcome.
+
+→ **contract [`RuntimeIdentitySummary`](factory_os/CONTRACTS.md#runtimeidentitysummary)** — fail-closed fleet summary consumed by monitoring.
+
 → **contract [`SafeProjection`](factory_os/CONTRACTS.md#safeprojection)** — fields, types, required-set and validation rules.
 
 ### 4.8 Attribution key

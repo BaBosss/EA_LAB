@@ -516,6 +516,17 @@ EXECKEY_OK = {"expert": "Boss_14", "symbol": "XAUUSD", "tf": "H1", "from_date": 
               "effective_config_hash": H64, "data_fingerprint": "df1", "lane": "MT5-A"}
 ATTEMPT_OK = {"attempt": 1, "transition": "QUEUED", "at": "2026-07-31T00:00:00Z"}
 
+RUNTIME_IDENTITY_OK = {
+    "schema": "runtime_identity/1", "account_login": "100000001", "magic": "900001",
+    "ea_logical_identity": "EA_X_TEST", "build_receipt": "br-" + "a" * 32,
+    "config_fingerprint": "c" * 64, "config_fingerprint_version": "cfgfp-v1",
+    "symbol": "EURUSDm", "timeframe": "PERIOD_H1", "attach_epoch": "epoch-1",
+    "first_trade_epoch": None, "evidence_timestamp": "2026-08-11T00:00:00",
+    "evidence_source": "EA_RUNTIME_COMMON_FILE",
+}
+RUNTIME_IDENTITY_RECORD_OK = with_(RUNTIME_IDENTITY_OK, validation_state="PASS", validation_reasons=[])
+RUNTIME_IDENTITY_SUMMARY_OK = {"state": "PASS", "records": 1, "reasons": []}
+
 
 def ecase(entity, name, guards, expect, instance, says=None):
     ENTITY_CASES.append({
@@ -568,6 +579,21 @@ epair('EvidenceRef',
       'ORDER-611: the evidence id encodes WHICH digest was taken; a non-sha256 id would let two '
       'different artifacts share one identity',
       [{'keyword': 'pattern', 'instancePath': '/evidence_id'}])
+
+epair('RuntimeIdentityObserved', RUNTIME_IDENTITY_OK,
+      with_(RUNTIME_IDENTITY_OK, magic="0"),
+      'runtime identity account/magic/build/config/symbol/timeframe evidence is closed and a malformed magic must fail',
+      [{'keyword': 'pattern', 'instancePath': '/magic'}])
+
+epair('RuntimeIdentityRecord', RUNTIME_IDENTITY_RECORD_OK,
+      with_(RUNTIME_IDENTITY_RECORD_OK, validation_state="UNKNOWN"),
+      'the collection boundary may emit only a canonical runtime identity validation state',
+      [{'keyword': 'enum', 'instancePath': '/validation_state'}])
+
+epair('RuntimeIdentitySummary', RUNTIME_IDENTITY_SUMMARY_OK,
+      with_(RUNTIME_IDENTITY_SUMMARY_OK, records=-1),
+      'a runtime identity summary cannot report a negative record count',
+      [{'keyword': 'minimum', 'instancePath': '/records'}])
 
 epair('IdeaRef',
       {"entity": "IdeaRef", "idea_id": "IDEA-0001", "received_at": "2026-07-31T00:00:00Z",
@@ -1154,12 +1180,12 @@ def run(schema, instance):
 # of quietly ageing a sentence nobody re-reads. If a number below is wrong, the schema is not the
 # thing to change: update the number, in the commit that changed the thing it counts.
 HEADER_COUNTS = {
-    'defs': 29,
+    'defs': 32,
     'root_branches': 21,
     'root_cases': 41,
-    'entity_cases': 68,        # ORDER-1268: +4 = two CandidatePayload minimal pairs for build_tag
-    'entity_negatives': 35,    # ORDER-1268: +2 = build-tag-absent, build-tag-malformed
-    'entities_with_a_negative': 29,
+    'entity_cases': 74,
+    'entity_negatives': 38,
+    'entities_with_a_negative': 32,
 }
 
 

@@ -16,6 +16,7 @@ def parse_report(path):
     try: html=raw.decode("utf-16-le")
     except: html=raw.decode("utf-8",errors="replace")
     c=strip_html(html)
+    build_match = re.search(r'\bBuild\s+(\d+)\b', html, re.I)
     def fl(label):
         i=c.find(label)
         if i==-1: return ""
@@ -30,6 +31,8 @@ def parse_report(path):
     r["ea_name"]=fl("Expert:")
     r["symbol"]=fl("Symbol:")
     r["company"]=fl("Company:")
+    r["report_build"]=int(build_match.group(1)) if build_match else 0
+    r["currency"]=fl("Currency:")
     pr=fl("Period:")
     if pr:
         pts=pr.split("(")

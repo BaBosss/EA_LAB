@@ -2214,6 +2214,15 @@
         },
         "summary": {
           "type": "object"
+        },
+        "runtime_identity": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeIdentityRecord"
+          }
+        },
+        "runtime_identity_summary": {
+          "$ref": "#/$defs/RuntimeIdentitySummary"
         }
       },
       "x-enforcement-status": "BUILT",
@@ -2441,10 +2450,155 @@
         },
         "summary": {
           "type": "object"
+        },
+        "runtime_identity": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeIdentityObserved"
+          }
+        },
+        "runtime_identity_summary": {
+          "type": "object",
+          "required": ["state", "records", "identity_findings"],
+          "unevaluatedProperties": false,
+          "properties": {
+            "state": { "enum": ["PASS", "FAIL", "LEGACY_UNVERIFIED"] },
+            "records": { "type": "integer", "minimum": 0 },
+            "identity_findings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["code", "detail"],
+                "unevaluatedProperties": false,
+                "properties": {
+                  "code": { "type": "string", "minLength": 1 },
+                  "detail": { "type": "string" }
+                }
+              }
+            }
+          }
         }
       },
       "x-enforcement-status": "BUILT",
       "x-enforcer": "_triage/factory_os/snapshot_validator.py"
+    },
+    "RuntimeIdentityObserved": {
+      "type": "object",
+      "x-owner-file": "runtime sidecars collected under portfolio/live_deals/",
+      "description": "Runtime identity emitted by the EA. Validation state is added by the collection boundary, not supplied by the EA.",
+      "required": [
+        "schema",
+        "account_login",
+        "magic",
+        "ea_logical_identity",
+        "build_receipt",
+        "config_fingerprint",
+        "config_fingerprint_version",
+        "symbol",
+        "timeframe",
+        "attach_epoch",
+        "first_trade_epoch",
+        "evidence_timestamp",
+        "evidence_source"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "schema": { "const": "runtime_identity/1" },
+        "account_login": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "magic": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "ea_logical_identity": { "type": "string", "minLength": 1 },
+        "build_receipt": { "type": "string", "pattern": "^br-[0-9a-f]{32}$" },
+        "config_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "config_fingerprint_version": { "const": "cfgfp-v1" },
+        "symbol": { "type": "string", "minLength": 1 },
+        "timeframe": { "type": "string", "minLength": 1 },
+        "attach_epoch": { "type": "string", "pattern": "^epoch-[1-9][0-9]*$" },
+        "first_trade_epoch": { "type": ["string", "null"] },
+        "evidence_timestamp": { "type": "string", "minLength": 1 },
+        "evidence_source": { "const": "EA_RUNTIME_COMMON_FILE" }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/runtime_identity.py",
+      "x-enforced-by": "runtime_identity.py: validates the EA-emitted identity shape and build/artifact evidence"
+    },
+    "RuntimeIdentityRecord": {
+      "type": "object",
+      "x-owner-file": "runtime_identity in portfolio/control_room_snapshot.json",
+      "description": "Observed runtime identity plus canonical validator outcome.",
+      "required": [
+        "schema",
+        "account_login",
+        "magic",
+        "ea_logical_identity",
+        "build_receipt",
+        "config_fingerprint",
+        "config_fingerprint_version",
+        "symbol",
+        "timeframe",
+        "attach_epoch",
+        "first_trade_epoch",
+        "evidence_timestamp",
+        "evidence_source",
+        "validation_state",
+        "validation_reasons"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "schema": { "const": "runtime_identity/1" },
+        "account_login": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "magic": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "ea_logical_identity": { "type": "string", "minLength": 1 },
+        "build_receipt": { "type": "string", "pattern": "^br-[0-9a-f]{32}$" },
+        "config_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "config_fingerprint_version": { "const": "cfgfp-v1" },
+        "symbol": { "type": "string", "minLength": 1 },
+        "timeframe": { "type": "string", "minLength": 1 },
+        "attach_epoch": { "type": "string", "pattern": "^epoch-[1-9][0-9]*$" },
+        "first_trade_epoch": { "type": ["string", "null"] },
+        "evidence_timestamp": { "type": "string", "minLength": 1 },
+        "evidence_source": { "const": "EA_RUNTIME_COMMON_FILE" },
+        "validation_state": { "enum": ["PASS", "FAIL", "LEGACY_UNVERIFIED"] },
+        "validation_reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code", "detail"],
+            "unevaluatedProperties": false,
+            "properties": {
+              "code": { "type": "string", "minLength": 1 },
+              "detail": { "type": "string" }
+            }
+          }
+        }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/runtime_identity.py",
+      "x-enforced-by": "runtime_identity.py: annotates collected identity records with fail-closed validation state"
+    },
+    "RuntimeIdentitySummary": {
+      "type": "object",
+      "x-owner-file": "runtime_identity_summary in portfolio/control_room_snapshot.json",
+      "required": ["state", "records", "reasons"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "state": { "enum": ["PASS", "FAIL", "LEGACY_UNVERIFIED"] },
+        "records": { "type": "integer", "minimum": 0 },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code", "detail"],
+            "unevaluatedProperties": false,
+            "properties": {
+              "code": { "type": "string", "minLength": 1 },
+              "detail": { "type": "string" }
+            }
+          }
+        }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "scripts/lib/monitor_coverage.ps1",
+      "x-enforced-by": "monitor_coverage.ps1: red-lines missing, legacy, mixed, or failed runtime identity evidence"
     },
     "SnapshotMeta": {
       "type": "object",
@@ -2564,6 +2718,10 @@
             "null"
           ],
           "description": "COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it."
+        },
+        "runtime_identity_required": {
+          "type": "boolean",
+          "description": "Current VPS DEMO/forward-test snapshots require runtime identity; legacy snapshots may omit this policy flag."
         },
         "reconciliation": {
           "$ref": "#/$defs/ReconciliationEvidence"

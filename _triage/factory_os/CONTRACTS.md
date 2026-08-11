@@ -55,6 +55,9 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `ReconciliationEvidence` | `the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json` | — | snapshot_validator: this object is the INPUT to the reconciliation_clear computation and never contains the answer |
 | `SnapshotVerdict` | `the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator` | — | snapshot_validator.verify_snapshot: recomputes reconciliation_clear from the persisted evidence and refuses a document whose stored verdict does not match. Proves INTERNAL CONSISTENCY, not authenticity: read_ok/age_hours/path/sha256/mtime and the reconciliation counts are builder claims taken at face value (Codex audit 6 accepted a document whose sources all pointed at a nonexistent drive with mtime 2099). Deriving them from the real files and re-hashing on read is S4. NOT on every READ - Codex audit 6 measured that no reader calls load_verified(); wiring readers is S4, so the honest status today is BUILT_NOT_WIRED |
 | `SnapshotBuilderInput` | `NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.` | — | snapshot_validator.build_snapshot: refuses a supplied answer via a recursive forbidden-key scan (verdict / reconciliation_clear / all_clear / reasons) UNCONDITIONALLY; refuses a schema-invalid input only when called with ajv_schema_validator, which the fast computation suite does not do. Treat the schema half as enforced at the load_verified() boundary, not on every code path |
+| `RuntimeIdentityObserved` | `runtime sidecars collected under portfolio/live_deals/` | — | runtime_identity.py: validates the EA-emitted identity shape and build/artifact evidence |
+| `RuntimeIdentityRecord` | `runtime_identity in portfolio/control_room_snapshot.json` | — | runtime_identity.py: annotates collected identity records with fail-closed validation state |
+| `RuntimeIdentitySummary` | `runtime_identity_summary in portfolio/control_room_snapshot.json` | — | monitor_coverage.ps1: red-lines missing, legacy, mixed, or failed runtime identity evidence |
 | `SnapshotMeta` | `the `meta` property of portfolio/control_room_snapshot.json` | — | — |
 | `SafeProjection` | `build/safe_projection.json (derived, never hand-written)` | — | projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot |
 | `AlertEvent` | **derived, never written** — True | — | notifier.assert_sendable: the declared SHAPE checked against this file, PLUS safe_projection.scan_forbidden run with the real snapshot secret list - the layer the sender structurally cannot run |
@@ -638,6 +641,13 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `judge_readiness` | array of `any` | **yes** |  |
 | `judge_cohorts` | array of `object` | **yes** | MEASURED 2026-07-31 (ORDER-612 / S4): this was `type: object` and the real document has always carried an ARRAY of 17 per-judge-date cohort rollups (scripts/control_room_snapshot.ps1 `$cohorts`). The first build of a v5 document was refused by ajv naming `/judge_cohorts`, which is how it was found. It is the same defect class as rev 2's flat root: a contract that claims to describe a file and describes a shape the file never has. Nothing caught it earlier because no fixture ever validated the REAL document -- which is exactly what C1 of this order requires and why C1 is worded as a flip of that line rather than as a claim about it. |
 | `summary` | `object` | **yes** |  |
+| `runtime_identity` | array of [`RuntimeIdentityObserved`](#runtimeidentityobserved) | — |  |
+| `runtime_identity_summary` | object *(fields below)* | — | closed · requires `state`, `records`, `identity_findings` |
+| `runtime_identity_summary.state` | `PASS` \| `FAIL` \| `LEGACY_UNVERIFIED` | **yes** |  |
+| `runtime_identity_summary.records` | `integer` | **yes** | min `0` |
+| `runtime_identity_summary.identity_findings` | array of object *(fields below)* | **yes** | items closed · items require `code`, `detail` |
+| `runtime_identity_summary.identity_findings[].code` | `string` | **yes** | minLength `1` |
+| `runtime_identity_summary.identity_findings[].detail` | `string` | **yes** |  |
 
 **Unknown fields:** rejected (closed object).
 
@@ -712,10 +722,89 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `judge_readiness` | array of `any` | **yes** |  |
 | `judge_cohorts` | array of `object` | **yes** | MEASURED 2026-07-31 (ORDER-612 / S4): this was `type: object` and the real document has always carried an ARRAY of 17 per-judge-date cohort rollups (scripts/control_room_snapshot.ps1 `$cohorts`). The first build of a v5 document was refused by ajv naming `/judge_cohorts`, which is how it was found. It is the same defect class as rev 2's flat root: a contract that claims to describe a file and describes a shape the file never has. Nothing caught it earlier because no fixture ever validated the REAL document -- which is exactly what C1 of this order requires and why C1 is worded as a flip of that line rather than as a claim about it. |
 | `summary` | `object` | **yes** |  |
+| `runtime_identity` | array of [`RuntimeIdentityRecord`](#runtimeidentityrecord) | — |  |
+| `runtime_identity_summary` | [`RuntimeIdentitySummary`](#runtimeidentitysummary) | — |  |
 
 **Unknown fields:** rejected (closed object).
 
 <!-- END GENERATED CONTRACT: ControlRoomSnapshotV5 -->
+
+<!-- BEGIN GENERATED CONTRACT: RuntimeIdentityObserved -->
+### RuntimeIdentityObserved
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`RuntimeIdentityObserved`** · stored in `runtime sidecars collected under portfolio/live_deals/` · enforced by *runtime_identity.py: validates the EA-emitted identity shape and build/artifact evidence*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `schema` | const `runtime_identity/1` | **yes** |  |
+| `account_login` | `string` | **yes** | pattern `^[1-9][0-9]*$` |
+| `magic` | `string` | **yes** | pattern `^[1-9][0-9]*$` |
+| `ea_logical_identity` | `string` | **yes** | minLength `1` |
+| `build_receipt` | `string` | **yes** | pattern `^br-[0-9a-f]{32}$` |
+| `config_fingerprint` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `config_fingerprint_version` | const `cfgfp-v1` | **yes** |  |
+| `symbol` | `string` | **yes** | minLength `1` |
+| `timeframe` | `string` | **yes** | minLength `1` |
+| `attach_epoch` | `string` | **yes** | pattern `^epoch-[1-9][0-9]*$` |
+| `first_trade_epoch` | `string` \| `null` | **yes** |  |
+| `evidence_timestamp` | `string` | **yes** | minLength `1` |
+| `evidence_source` | const `EA_RUNTIME_COMMON_FILE` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: RuntimeIdentityObserved -->
+
+<!-- BEGIN GENERATED CONTRACT: RuntimeIdentityRecord -->
+### RuntimeIdentityRecord
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`RuntimeIdentityRecord`** · stored in `runtime_identity in portfolio/control_room_snapshot.json` · enforced by *runtime_identity.py: annotates collected identity records with fail-closed validation state*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `schema` | const `runtime_identity/1` | **yes** |  |
+| `account_login` | `string` | **yes** | pattern `^[1-9][0-9]*$` |
+| `magic` | `string` | **yes** | pattern `^[1-9][0-9]*$` |
+| `ea_logical_identity` | `string` | **yes** | minLength `1` |
+| `build_receipt` | `string` | **yes** | pattern `^br-[0-9a-f]{32}$` |
+| `config_fingerprint` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `config_fingerprint_version` | const `cfgfp-v1` | **yes** |  |
+| `symbol` | `string` | **yes** | minLength `1` |
+| `timeframe` | `string` | **yes** | minLength `1` |
+| `attach_epoch` | `string` | **yes** | pattern `^epoch-[1-9][0-9]*$` |
+| `first_trade_epoch` | `string` \| `null` | **yes** |  |
+| `evidence_timestamp` | `string` | **yes** | minLength `1` |
+| `evidence_source` | const `EA_RUNTIME_COMMON_FILE` | **yes** |  |
+| `validation_state` | `PASS` \| `FAIL` \| `LEGACY_UNVERIFIED` | **yes** |  |
+| `validation_reasons` | array of object *(fields below)* | **yes** | items closed · items require `code`, `detail` |
+| `validation_reasons[].code` | `string` | **yes** | minLength `1` |
+| `validation_reasons[].detail` | `string` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: RuntimeIdentityRecord -->
+
+<!-- BEGIN GENERATED CONTRACT: RuntimeIdentitySummary -->
+### RuntimeIdentitySummary
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`RuntimeIdentitySummary`** · stored in `runtime_identity_summary in portfolio/control_room_snapshot.json` · enforced by *monitor_coverage.ps1: red-lines missing, legacy, mixed, or failed runtime identity evidence*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `state` | `PASS` \| `FAIL` \| `LEGACY_UNVERIFIED` | **yes** |  |
+| `records` | `integer` | **yes** | min `0` |
+| `reasons` | array of object *(fields below)* | **yes** | items closed · items require `code`, `detail` |
+| `reasons[].code` | `string` | **yes** | minLength `1` |
+| `reasons[].detail` | `string` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: RuntimeIdentitySummary -->
 
 <!-- BEGIN GENERATED CONTRACT: SnapshotMeta -->
 ### SnapshotMeta
@@ -744,6 +833,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `stale_bar_hours` | `number` \| `null` | — | COMPATIBILITY: exists in the real v4 file (scripts/control_room_snapshot.ps1). The validator derives freshness from this, never from a hardcoded threshold and never from a caller-supplied `fresh`. |
 | `decision_bar_trades` | `integer` \| `null` | — | COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it. |
 | `counting_method` | `string` \| `null` | — | COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it. |
+| `runtime_identity_required` | `boolean` | — | Current VPS DEMO/forward-test snapshots require runtime identity; legacy snapshots may omit this policy flag. |
 | `reconciliation` | [`ReconciliationEvidence`](#reconciliationevidence) | **yes** |  |
 
 **Unknown fields:** rejected (closed object).

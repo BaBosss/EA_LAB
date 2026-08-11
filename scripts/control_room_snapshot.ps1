@@ -60,6 +60,7 @@ $PY = Join-Path $Root 'tools\python312\python.exe'
 if (-not (Test-Path $PY)) { throw "control_room_snapshot: $PY is missing -- the snapshot cannot be validated, so it will not be written." }
 if (-not (Test-Path $STATUS)) { throw "control_room_snapshot: deployment status contract is missing: $STATUS" }
 . $STATUS
+. (Join-Path $Root 'scripts\lib\runtime_identity.ps1')
 
 function SourceRow([string]$name, [string]$p, [bool]$mandatory){
   # ORDER-612 (S4). v5 source row. It carries BOTH identities and NO EVIDENCE.
@@ -409,6 +410,21 @@ $sum = [ordered]@{
   judge_under_rate          = @($jr | Where-Object { $_.rate_flag -eq 'UNDER_RATE' }).Count
 }
 
+# Runtime identity is a separate trust domain from config fingerprint and from the
+# deployment-status vocabulary. The validator annotates each collected sidecar; an empty
+# collection is an explicit LEGACY_UNVERIFIED result, never an all-clear default.
+$runtimeRecordsRaw = @(Get-RuntimeIdentityRecords -DealsRoot $DEALS)
+$runtimeValidation = Get-RuntimeIdentityValidation -RepoRoot $Root -Records $runtimeRecordsRaw
+$runtimeIdentity = if ($null -eq $runtimeValidation.identity) { @() } else { @($runtimeValidation.identity) }
+$runtimeIdentitySummary = [ordered]@{
+  state = "$($runtimeValidation.state)"
+  records = $runtimeIdentity.Count
+  # `identity_findings` is transient builder input. snapshot_validator renames it to the
+  # persisted `reasons` field after computing the document, so the recursive verdict-key
+  # refusal cannot mistake this derived identity detail for a supplied reconciliation answer.
+  identity_findings = @($runtimeValidation.reasons)
+}
+
 $snapshot = [ordered]@{
   entity = 'SnapshotBuilderInput'
   meta = [ordered]@{
@@ -433,6 +449,7 @@ $snapshot = [ordered]@{
     git_head = (git -C $Root rev-parse --short HEAD 2>$null)
     stale_bar_hours = $staleBarHours
     decision_bar_trades = $decisionBar
+    runtime_identity_required = $true
     # The REGISTRY of what must be present, by LOGICAL name, kept separate from what was
     # discovered. Without it a missing source is indistinguishable from one never expected --
     # which is how the original reconciliation satisfied its equation with 0 == 0.
@@ -464,8 +481,10 @@ $snapshot = [ordered]@{
   attestation     = $attest
   unknown_magics  = $unknown
   floating_risk   = $floating
+  runtime_identity_summary = $runtimeIdentitySummary
   summary         = $sum
 }
+if ($runtimeIdentity.Count -gt 0) { $snapshot.runtime_identity = $runtimeIdentity }
 
 # --- ORDER-612 (S4) build->validate->replace. This script never writes $OutFile itself. -------
 # The builder input goes to a sibling temp file; snapshot_build.py derives the evidence, computes

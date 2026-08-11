@@ -29,15 +29,36 @@ if [ -z "$msgfile" ] || [ ! -f "$msgfile" ]; then
   exit 1
 fi
 
-baseline='ea_template/regression_baseline.csv'
+baseline_paths='ea_template/regression_baseline.csv
+ea_template/regression_baseline.active.json
+ea_template/regression_baseline_build6090.csv
+ea_template/regression_baseline_build6090.manifest.json
+ea_template/regression_baseline_build5836.manifest.json'
+changed_baseline=0
+changed_build6090=0
+while IFS= read -r path; do
+  [ -z "$path" ] && continue
+  if git diff --cached --name-only -- "$path" | grep -q . && ! git diff --cached --quiet -- "$path"; then
+    changed_baseline=1
+    case "$path" in
+      ea_template/regression_baseline_build6090.*|ea_template/regression_baseline.active.json) changed_build6090=1 ;;
+    esac
+  fi
+done <<EOF
+$baseline_paths
+EOF
+
+if git diff --cached --name-only -- ea_template/regression_baseline.csv | grep -q . && ! git diff --cached --quiet -- ea_template/regression_baseline.csv; then
+  echo "[commit-msg] BLOCK: historical Build-5836 CSV is byte-protected and cannot be re-pinned."
+  exit 1
+fi
 
 # Only act when the baseline is actually staged AND its staged bytes differ from HEAD.
 # A commit that merely touches other files, or re-stages identical bytes, is a no-op here.
-if git diff --cached --name-only -- "$baseline" | grep -q .; then
-  if ! git diff --cached --quiet -- "$baseline"; then
+if [ "$changed_baseline" -eq 1 ]; then
     if ! grep -qi 're-pin' "$msgfile"; then
       echo ""
-      echo "[commit-msg] BLOCK: $baseline changed, but the commit message does not contain 're-pin'."
+      echo "[commit-msg] BLOCK: versioned TPL baseline files changed, but the commit message does not contain 're-pin'."
       echo "[commit-msg] The baseline is the only record of what the chassis used to do. Moving it needs"
       echo "[commit-msg] an explicit declaration in the message, stating WHICH EAs moved and WHY the old"
       echo "[commit-msg] numbers were wrong -- not just the token."
@@ -46,7 +67,10 @@ if git diff --cached --name-only -- "$baseline" | grep -q .; then
       echo ""
       exit 1
     fi
-  fi
+fi
+if [ "$changed_build6090" -eq 1 ] && ! grep -Eqi 'BUILD-6090[- ]+PROVENANCE[- ]+MIGRATION' "$msgfile"; then
+  echo "[commit-msg] BLOCK: Build-6090 baseline artifacts require BUILD-6090-PROVENANCE-MIGRATION in the commit message."
+  exit 1
 fi
 
 # ---------------------------------------------------------------------------

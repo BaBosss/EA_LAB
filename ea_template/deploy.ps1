@@ -10,7 +10,10 @@ NOTE: headless smoke/optimize (mt5_run.ps1) needs the MT5 GUI CLOSED.
 param([switch]$Compile)
 $ErrorActionPreference = "Stop"
 
-$src  = "D:\EA_LAB\ea_template"
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$src  = Join-Path $repoRoot "ea_template"
+$receiptRegistry = Join-Path $repoRoot "portfolio\build_receipts.jsonl"
+. (Join-Path $repoRoot "scripts\lib\build_receipt.ps1")
 $data = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"
 # robocopy's subdirectory-create (core\) intermittently fails when writing THROUGH the
 # Roaming junction (found 2026-07-03) - resolve to the real target before copying.
@@ -35,6 +38,12 @@ if ($Compile) {
   foreach($t in $targets){
     $mq5 = Join-Path $dst $t
     if(-not (Test-Path $mq5)){ Write-Host "skip (missing): $t" -ForegroundColor DarkGray; continue }
+    $targetFailed = $false
+    $sourceText = Get-Content -LiteralPath $mq5 -Raw
+    $logical = [IO.Path]::GetFileNameWithoutExtension($t)
+    if($sourceText -match '#define\s+LAB_ENTRY_TAG\s+"([^"]+)"'){ $logical = $Matches[1] }
+    $receipt = New-BuildReceiptToken
+    Write-BuildReceiptHeader -HeaderPath (Join-Path $dst "core\BuildReceipt_gen.mqh") -Receipt $receipt
     $ex5 = Join-Path $dst ([IO.Path]::GetFileNameWithoutExtension($t) + ".ex5")
     # D6 fix (ORDER-094): delete the OLD .ex5 before compiling so a compile that fails this run
     # cannot leave a stale, previously-good binary behind looking like a fresh clean build.
@@ -56,19 +65,24 @@ if ($Compile) {
         $warn = if ($Matches[2]) { [int]$Matches[2] } else { 0 }
         if ([int]$Matches[1] -gt 0 -or $warn -gt 0) {
           Write-Host "  ** COMPILE FAIL: $t ($([int]$Matches[1]) errors, $warn warnings - 0/0 required) **" -ForegroundColor Red
-          $compileFailed = $true
+          $compileFailed = $true; $targetFailed = $true
         }
       } else {
         Write-Host "  ** COMPILE FAIL: $t (no Result: line found in log) **" -ForegroundColor Red
-        $compileFailed = $true
+        $compileFailed = $true; $targetFailed = $true
       }
       if (-not (Test-Path $ex5)) {
         Write-Host "  ** COMPILE FAIL: $t (no .ex5 produced) **" -ForegroundColor Red
-        $compileFailed = $true
+        $compileFailed = $true; $targetFailed = $true
       }
     } else {
       Write-Host "  ** COMPILE FAIL: $t (no log produced) **" -ForegroundColor Red
-      $compileFailed = $true
+      $compileFailed = $true; $targetFailed = $true
+    }
+    if(-not $targetFailed -and (Test-Path $ex5)) {
+      Write-BuildReceiptRecord -RegistryPath $receiptRegistry -Receipt $receipt `
+        -ArtifactPath $ex5 -SourcePath $mq5 -EaLogicalIdentity $logical
+      Write-Host "  build receipt recorded -> $receipt" -ForegroundColor Green
     }
   }
 }

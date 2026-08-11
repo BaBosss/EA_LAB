@@ -60,6 +60,8 @@
 // the LAB_ENTRY_TAG fallback directly above is one of them. Moved earlier, it does not produce a
 // wrong hash, it fails to compile. CFG_Fingerprint() lives in it for the same reason.
 #include "LockedConstants_gen.mqh"
+#include "BuildReceipt_gen.mqh"
+#include "RuntimeIdentity.mqh"
 
 // _0_BarOpenOnly state (recompile-safe: reset in OnInit)
 datetime g_lab_last_bar = 0;
@@ -376,6 +378,7 @@ int OnInit()
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,
                FirstLotMode, LotProg, ProtectLevel, (DryRun ? "Y" : "N"));
    Lab_LogEffectiveConfig();   // ORDER-192: log-only summary of which inputs actually win
+   RuntimeIdentity_Init();     // identity telemetry only; never affects strategy decisions
    if(StackMode == STACK_PYRAMID && _9_PendingMode != 2 && _9_PendingMode != 3)
       Print("[INIT] WARN: StackMode=93 but _9_PendingMode not 2/3 - ladder disabled, behaves like single");
    // ORDER-124 chore 3: exit-owner assert. Mode 93 declares the pending ladder the
@@ -444,6 +447,7 @@ void Lab_OpenOrder(const int dir, const int level)
 //+------------------------------------------------------------------+
 void OnTick()
 {
+   RuntimeIdentity_Update();  // binds the first observed entry to this attach epoch
    if(_MG_SelfGate)
    {
       // refresh the macro gate once per M1 bar (regime is daily; this runs BEFORE any

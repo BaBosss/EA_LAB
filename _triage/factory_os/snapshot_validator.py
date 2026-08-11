@@ -528,6 +528,12 @@ def build_snapshot(inp, schema_validator):
     # (path/sha256/mtime). Enumerating fields to copy instead would drop the next one added.
     out = copy.deepcopy(inp)
     out['entity'] = OUTPUT_ENTITY
+    # Runtime identity validation is computed by the collection bridge. Keep its transient
+    # input spelling separate from validator-owned reconciliation `reasons`, then publish the
+    # canonical output shape only after the supplied-answer scan has completed.
+    identity_summary = out.get('runtime_identity_summary')
+    if isinstance(identity_summary, dict) and 'identity_findings' in identity_summary:
+        identity_summary['reasons'] = identity_summary.pop('identity_findings')
     f = facts_of(out)
     for row in out['meta']['sources']:
         derived = derive_fresh(f, row)

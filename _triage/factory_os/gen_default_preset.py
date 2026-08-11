@@ -73,6 +73,23 @@ def build(build_tag, overrides=None, root=ROOT):
                                  enums=preset.load_enums(src)), surface
 
 
+def read_overlay(path, surface, unit_classes):
+    """Read an existing .set as an explicit value layer without losing money units."""
+    rows = []
+    with open(path, 'r', encoding='utf-8-sig') as handle:
+        for raw in handle:
+            text = raw.strip()
+            if not text or text.startswith(';') or '=' not in text:
+                continue
+            key, value = text.split('=', 1)
+            if key not in surface.by_name:
+                raise preset.PresetRefusal('%s is not on %s' % (key, surface.build_tag))
+            if preset.is_money_unit(unit_classes.get(key)):
+                value = {'value': value, 'unit': 'usd'}
+            rows.append((key, value))
+    return rows
+
+
 def _wrapper_rels(root):
     return gen_consts.wrapper_rels_on_disk(root)
 
@@ -80,7 +97,9 @@ def _wrapper_rels(root):
 def main(argv):
     build_tag = None
     out = None
+    root = ROOT
     overrides = []
+    overlay = None
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -90,12 +109,18 @@ def main(argv):
         elif a == '--out':
             out = argv[i + 1]
             i += 2
+        elif a == '--root':
+            root = os.path.abspath(argv[i + 1])
+            i += 2
         elif a == '--override':
             key, _sep, val = argv[i + 1].partition('=')
             if not _sep:
                 sys.stderr.write('--override needs NAME=VALUE, got %r\n' % argv[i + 1])
                 return 2
             overrides.append((key, val))
+            i += 2
+        elif a == '--overlay-set':
+            overlay = argv[i + 1]
             i += 2
         else:
             sys.stderr.write('unknown argument %r\n' % a)
@@ -105,7 +130,12 @@ def main(argv):
                          '[--override NAME=VALUE ...]\n')
         return 2
     try:
-        pre, surface = build(build_tag, overrides)
+        if overlay:
+            src = evidence.EvidenceSource('worktree', root=root)
+            surface = preset.load_surface(src, build_tag)
+            unit_classes = preset.load_unit_classes(src)
+            overrides = read_overlay(overlay, surface, unit_classes)
+        pre, surface = build(build_tag, overrides, root=root)
     except (preset.PresetRefusal, evidence.ToolFailure) as exc:
         sys.stderr.write('%s: %s\n' % (type(exc).__name__, exc))
         return 1

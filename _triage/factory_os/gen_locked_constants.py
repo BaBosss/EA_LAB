@@ -93,6 +93,12 @@ _CANON_CALL = {
     KIND_DOUBLE: 'CFG_CanonDouble(%s)',
 }
 
+# A valued define is normally part of the semantic locked-constant surface.  Build/fingerprint
+# metadata is deliberately still defined for the MQL5 translation unit, but it is marked at its
+# source declaration so the exclusion is structural and applies to every build closure rather
+# than being a hand-edited exception in the generated file.
+_SEMANTIC_METADATA_MARKER = '@CFG_METADATA'
+
 
 class Constant(object):
     """One locked constant: where it came from, what kind it is, and its canonical text.
@@ -442,7 +448,8 @@ def _walk(read, rel, defined, resolved, order, stack, seen_chain):
                     % (name, prev.text, prev.origin, text_value, const.origin))
             continue
         resolved[name] = const
-        order.append(name)
+        if _SEMANTIC_METADATA_MARKER not in raw:
+            order.append(name)
     if len(stack) != depth0:
         raise preset.PresetRefusal('%s ends inside an unclosed #ifdef/#ifndef' % rel)
 
@@ -507,6 +514,8 @@ def emit(read, inputs_text, wrapper_rels):
     w('//| Included LAST by LabCore.mqh, after every header that defines one  |')
     w('//| of these macros - an enumeration placed before them would not      |')
     w('//| merely be wrong, it would not compile.                             |')
+    w('//| @CFG_METADATA declarations remain compile-visible but are excluded |')
+    w('//| from this semantic preimage by the source-level metadata marker.    |')
     w('//+------------------------------------------------------------------+')
     w('#ifndef BOSS_LOCKED_CONSTANTS_GEN_MQH')
     w('#define BOSS_LOCKED_CONSTANTS_GEN_MQH')

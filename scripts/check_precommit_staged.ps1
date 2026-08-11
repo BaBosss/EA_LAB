@@ -64,7 +64,13 @@ $DeploymentPath = 'portfolio/DEPLOYMENTS.csv'
 $ScorecardPath = 'EA_SCORECARD_AND_REGISTRY.md'
 $MasterIndexPath = 'EA_MASTER_INDEX.csv'
 $B1DatasetPath = 'docs/memory_control/B1_DATASET.csv'
-$RegressionBaselinePath = 'ea_template/regression_baseline.csv'
+$RegressionBaselinePaths = @(
+    'ea_template/regression_baseline.csv',
+    'ea_template/regression_baseline.active.json',
+    'ea_template/regression_baseline_build6090.csv',
+    'ea_template/regression_baseline_build6090.manifest.json',
+    'ea_template/regression_baseline_build5836.manifest.json'
+)
 
 function Get-StagedBytesOrNull {
     param([string]$RelPath)
@@ -178,7 +184,7 @@ foreach ($s in $staged) { $stagedByPath[$s.Path] = $s.Status }
 
 # ORDER-144: validate operational staged blobs before the legacy protected-set
 # early return. No working-tree bytes are consulted for these checks.
-$order144Paths = @($DeploymentPath, $ScorecardPath, $MasterIndexPath, $B1DatasetPath, $RegressionBaselinePath)
+$order144Paths = @($DeploymentPath, $ScorecardPath, $MasterIndexPath, $B1DatasetPath) + $RegressionBaselinePaths
 $order144Staged = @($order144Paths | Where-Object { $stagedByPath.ContainsKey($_) })
 if ($order144Staged.Count -gt 0) {
     Write-Host ('[precommit-staged] ORDER-144 staged-bytes check: ' + ($order144Staged -join ', '))
@@ -233,8 +239,19 @@ if ($order144Staged.Count -gt 0) {
     # is NOT weakened -- it is enforced somewhere it can actually read its input. Left as
     # a note rather than deleted, so the next reader finds out where it went instead of
     # concluding the rule was dropped.
-    if ($stagedByPath.ContainsKey($RegressionBaselinePath)) {
-        Write-Host '[precommit-staged] NOTE: regression-baseline re-pin rule is enforced by .githooks/commit-msg (it needs the message this commit is about, which pre-commit cannot see)'
+    $baselineSurfaceStaged = @($stagedByPath.Keys | Where-Object {
+        ($_ -in $RegressionBaselinePaths) -or ($_ -like 'ea_template/sets/regression/*.set') -or ($_ -like 'ea_template/regression_reports/build6090/*.htm')
+    })
+    if ($baselineSurfaceStaged.Count -gt 0) {
+        if ($stagedByPath.ContainsKey('ea_template/regression_baseline.csv')) {
+            $historicalHead = Get-HeadBytesOrNull 'ea_template/regression_baseline.csv'
+            $historicalStaged = Get-StagedBytesOrNull 'ea_template/regression_baseline.csv'
+            if (-not (Compare-BytesExact $historicalHead $historicalStaged)) { $order144Failures.Add('historical Build-5836 regression_baseline.csv is byte-protected') }
+        }
+        $requiredBaseline = @('ea_template/regression_baseline.active.json','ea_template/regression_baseline_build6090.csv','ea_template/regression_baseline_build6090.manifest.json','ea_template/regression_baseline_build5836.manifest.json')
+        $missingBaseline = @($requiredBaseline | Where-Object { -not $stagedByPath.ContainsKey($_) })
+        if ($missingBaseline.Count -gt 0) { $order144Failures.Add('TPL baseline governance transaction is incomplete; missing staged: ' + ($missingBaseline -join ', ')) }
+        Write-Host '[precommit-staged] NOTE: TPL baseline governance transaction and re-pin message are enforced by both hooks'
     }
 
     if ($order144Failures.Count -gt 0) {

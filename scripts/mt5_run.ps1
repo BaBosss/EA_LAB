@@ -74,7 +74,8 @@ if (-not $Force) {
 }
 if (-not (Test-Path $Terminal)) { Write-Output "ABORT: terminal not found: $Terminal"; exit 2 }
 
-$auto = "D:\EA_LAB\_mt5_auto"
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$auto = Join-Path $repoRoot '_mt5_auto'
 New-Item -ItemType Directory -Force "$auto\reports", "$auto\ini" | Out-Null
 $srcHtm = Join-Path $DataDir "$ReportName.htm"        # MT5 writes here (bare Report name)
 $destHtm = "$auto\reports\$ReportName.htm"

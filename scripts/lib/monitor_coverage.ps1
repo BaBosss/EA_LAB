@@ -118,6 +118,22 @@ function Get-MonitorCoverage {
         return [pscustomobject]@{ Summary = $msg; Failures = $failures.ToArray(); Log = $log.ToArray() }
     }
 
+    # Runtime identity is required for the current VPS DEMO / forward-test path. Older
+    # snapshots without the policy flag remain readable for compatibility, but a current
+    # snapshot with a missing, legacy, failed, or mixed identity result is explicitly red.
+    if ($cr.meta.runtime_identity_required -eq $true) {
+        $identitySummary = $cr.runtime_identity_summary
+        $identityBad = ($null -eq $identitySummary -or "$($identitySummary.state)" -ne 'PASS')
+        if (-not $identityBad -and $null -ne $cr.runtime_identity) {
+            $identityBad = @($cr.runtime_identity | Where-Object { "$($_.validation_state)" -ne 'PASS' }).Count -gt 0
+        }
+        if ($identityBad) {
+            $detail = if ($null -eq $identitySummary) { 'summary missing' } else { "$($identitySummary.state): $((@($identitySummary.reasons) | ForEach-Object { "$($_.code)=$($_.detail)" }) -join '; ')" }
+            $failures.Add('runtime-identity-unverified') | Out-Null
+            $log.Add("COVERAGE GAP: runtime identity is NON-GREEN ($detail); account/magic/build/config/symbol/timeframe/epoch evidence must not be read as healthy") | Out-Null
+        }
+    }
+
     # ---- 1b. deployment attachment/verification coverage (ORDER-944) ----------------
     # A deployment row is part of the monitoring universe even when its verification is
     # pending or absent. Normalize the rows through the same closed status contract used by

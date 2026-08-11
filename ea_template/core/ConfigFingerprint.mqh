@@ -33,6 +33,7 @@
 // hash the same two halves. check_input_surface_gen.py G3 is what holds them together, and G5
 // is what stops this line moving without the enumeration moving with it.
 #define CFG_FP_SCOPE "surface+constants"
+#define CFG_FP_VERSION "cfgfp-v1" // @CFG_METADATA
 
 union CFG_DoubleBits
   {

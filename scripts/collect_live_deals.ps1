@@ -56,6 +56,50 @@ if (-not $snaps) {
   }
 }
 
+# Runtime identity sidecars (VPS DEMO / Forward-Test identity blocker). These are the
+# per-chart records emitted by the EA itself. Collection is additive: a missing or malformed
+# sidecar is carried as a monitoring finding later, never silently upgraded to healthy here.
+$identityFiles = @(Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_identity_*.json') -ErrorAction SilentlyContinue)
+$identityStaleH = 30  # canonical collector freshness bar; keep aligned with runtime_identity.py
+$identityFutureToleranceMinutes = 5
+if (-not $identityFiles) {
+  Write-Host "no EA_LAB_identity_*.json in $CommonFiles (runtime identity not attached yet)"
+} else {
+  foreach ($f in $identityFiles) {
+    if ($f.Name -notmatch '^EA_LAB_identity_[1-9]\d*_[1-9]\d*\.json$') {
+      Write-Host "identity skipped (invalid login/magic filename): $($f.Name)" -ForegroundColor Yellow
+      continue
+    }
+    try {
+      $doc = Get-Content -LiteralPath $f.FullName -Raw | ConvertFrom-Json
+      if ($doc.schema -ne 'runtime_identity/1' -or -not $doc.account_login -or -not $doc.magic) {
+        throw 'missing runtime identity schema/login/magic'
+      }
+      $producerTime = [datetime]::MinValue
+      try { $producerTime = [datetime]::Parse([string]$doc.evidence_timestamp) }
+      catch { throw 'invalid producer evidence_timestamp' }
+      $ageH = ((Get-Date) - $producerTime).TotalHours
+      if ($ageH -gt $identityStaleH) {
+        Write-Host ("identity skipped (STALE producer timestamp): {0} ({1:n1} h ago > {2} h)" -f $f.Name,$ageH,$identityStaleH) -ForegroundColor Yellow
+        continue
+      }
+      if ($ageH -lt -($identityFutureToleranceMinutes / 60.0)) {
+        Write-Host ("identity skipped (FUTURE producer timestamp): {0} ({1:n1} h ahead > {2} min)" -f $f.Name,-$ageH,$identityFutureToleranceMinutes) -ForegroundColor Yellow
+        continue
+      }
+    } catch {
+      Write-Host "identity skipped (malformed/unreadable): $($f.Name) :: $($_.Exception.Message)" -ForegroundColor Red
+      continue
+    }
+    $stamp = Get-Date -Format 'yyyyMMdd'
+    $dest = Join-Path $DestDir ($f.BaseName + "_$stamp.json")
+    # The date in the archive filename is collection provenance only. Copy the producer JSON
+    # byte-for-byte so evidence_timestamp remains the authoritative producer time.
+    Copy-Item -LiteralPath $f.FullName -Destination $dest -Force
+    Write-Host "collected runtime identity -> $dest"
+  }
+}
+
 $found = @()
 $found += Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_deals_*.csv') -ErrorAction SilentlyContinue
 $found += Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_mt4_orders_*.csv') -ErrorAction SilentlyContinue
