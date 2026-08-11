@@ -43,7 +43,7 @@ vector, because the vectors exercise the predicates rather than counting them.
 
 ---
 
-## 2. What is bound, and what a signature is owed for
+## 2. What is bound, and what a policy change requires
 
 ### 2.1 Proposed bundle membership — **OPEN-2**
 
@@ -62,14 +62,14 @@ vector, because the vectors exercise the predicates rather than counting them.
 | `gen_s2a_migration.py` | it produced D1, but **D1 itself is bound**, so the generator's bytes cannot change what the owner read without changing D1 too. |
 
 
-### 2.2 When a signature is owed
+### 2.2 When a policy change is owed
 
 - **Owed:** any change to the bound set above — including a change to this policy's criteria, their
   scope, their evaluation order, or the vector corpus.
 - **Not owed:** any change to the implementation that keeps all `CANONICAL` vectors reproducing
   exactly. Repairs, refactors, renamed variables, better diagnostics, faster git reads.
 - **Owed, and stated so nobody has to judge it:** *promoting a `PROVISIONAL` vector to `CANONICAL`,
-  or adding any vector, is a change to the corpus and therefore owes a signature.* There is no
+  or adding any vector, is a change to the corpus and therefore owes a new attestation.* There is no
   "cosmetic vector" category and no exemption list — rev 1 died of exactly that.
 
 ### 2.3 The digest algorithm is part of the policy
@@ -82,6 +82,17 @@ digest = sha256( for each member in DECLARED ORDER:
 Member order is load-bearing (`B2`). CRLF normalization is load-bearing (`B3`). Both are pinned by
 vectors with hermetic synthetic files, so the algorithm is testable without depending on the real
 bundle's bytes.
+
+### 2.4 Attestation disposition is not owner authorization
+
+`decision=APPROVED` records an attestation disposition/provenance state only. `signer` is
+display-only metadata and is never evidence of owner identity. An informational attestation may
+therefore omit `authorization_ref`; such historical rows remain valid provenance but are explicitly
+`NON_AUTHORITATIVE` (legacy), not owner approval. A consumer that controls owner-reserved behavior
+must require the current valid `Coverage` attestation, `decision=APPROVED`, and a separately
+validated `authorization_ref` whose source is the pre-existing taskboard authorization for that
+action. Missing or invalid authorization fails closed. Consumers must not describe an attestation
+as a signature or owner approval merely because its disposition is `APPROVED`.
 
 ---
 
@@ -482,7 +493,8 @@ Concretely:
    deliberate simplification and a real gap.
 6. **The corpus says nothing about who made a decision.** Neither does the artifact. This
    repository commits under a single git identity, so nothing here separates the owner from any
-   other writer. Do not cite an attestation record as a signature.
+   other writer. The separate authorization state is therefore a resolved provenance reference,
+   not pretend signer authentication; do not cite an attestation record as a signature.
 7. **`B4` — the bundle member list — is unvectorable** (§4.6). If a member is silently dropped from
    the implementation's list, every vector still passes.
 8. **The corpus does not prove the criteria are the RIGHT criteria.** It proves an implementation

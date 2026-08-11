@@ -44,6 +44,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check_s2a_migration as chk  # noqa: E402
+import candidate as C  # noqa: E402 -- ORDER-1263 is the one OwnerRef resolver
 import evidence  # noqa: E402
 import registry  # noqa: E402  -- ORDER-1310 #1, for classify_record ONLY: THE metadata rule
 
@@ -80,6 +81,17 @@ def _index_src():
 ATTESTATION_PATH = '_triage/factory_os/s2a_attestations.jsonl'
 DECISIONS = ('APPROVED', 'REFUSED')
 REQUIRED = ('bundle_sha256', 'current_owner', 'decision', 'signer', 'decided_at', 'reason')
+AUTHORIZATION_STATES = ('AUTHORIZED_BY_RESOLVED_REF', 'NON_AUTHORITATIVE',
+                        'INVALID_AUTHORIZATION_REF')
+AUTHORIZATION_SOURCE = {
+    # Verified in the accepted 99e7b7ba checkout: this is the pre-existing ORDER-600 taskboard
+    # record that says the owner approved the Coverage edge. The anchor is intentionally a token,
+    # not a prose copy of the decision; OwnerRef R4 still requires it to be unique in the pinned
+    # blob. Consumers bind to this source, not to the signer string in the attestation row.
+    'owner_type': 'taskboard_order',
+    'path': 'AGENT_TASKBOARD.md',
+    'anchor': 'unblocks',
+}
 
 # audit 8 BLOCKER 2: the record binds the whole reviewed bundle, not just D1. If the document the
 # owner read, or the rules that decide what the decision MEANS, change afterwards, the record stops
@@ -451,6 +463,13 @@ def eligible_records(rows, d1_owners, problems):
                             'follows its parent. Record the decision against the parent\'s owner.'
                             % (n, r['current_owner']))
             continue
+        # `authorization_ref` is optional for an informational attestation, but a supplied ref
+        # must be real. This keeps malformed metadata from becoming an authority claim while
+        # preserving every historical row that predates the field.
+        auth = authorization_status(r, require=False)
+        if auth['problems']:
+            problems.extend('AUTH-INVALID line %s %s' % (n, p) for p in auth['problems'])
+            continue
         eligible.append(r)
     return eligible
 
@@ -509,6 +528,71 @@ def owner_ref_paths(d1_rows):
         if ref.get('path'):
             paths.add(ref['path'])
     return {k: sorted(v) for k, v in out.items()}
+
+
+def _authorization_source_problems(ref, action):
+    """Return action-specific source failures after OwnerRef has resolved."""
+    if action != 'coverage_transfer':
+        return []
+    problems = []
+    for field in ('owner_type', 'path', 'anchor'):
+        expected = AUTHORIZATION_SOURCE[field]
+        if ref.get(field) != expected:
+            problems.append('AUTH-SOURCE %s must be %r for coverage_transfer, got %r'
+                            % (field, expected, ref.get(field)))
+    return problems
+
+
+def authorization_status(row, require=False, action=None, src=None):
+    """Classify attestation authority without upgrading its ``decision`` field.
+
+    The normal ledger path permits an absent ref as an informational/legacy attestation. An
+    owner-sensitive consumer calls this with ``require=True``; absence and invalidity then fail
+    closed with deterministic ``AUTH-*`` reasons. OwnerRef resolution is delegated to
+    ``candidate.owner_ref_problems``; resolver ToolFailure deliberately propagates as exit 2.
+    """
+    status = {
+        'attestation_state': 'VALID',
+        'authorization_state': 'NON_AUTHORITATIVE',
+        'signer_role': 'display_only',
+        'decision_role': 'attestation_disposition',
+        'legacy': False,
+        'problems': [],
+    }
+    if 'authorization_ref' not in row or row.get('authorization_ref') is None:
+        status['legacy'] = True
+        if require:
+            status['problems'].append(
+                'AUTH-ABSENT current %r has no authorization_ref; owner authorization is required '
+                'for %s and signer text is display-only'
+                % (row.get('current_owner'), action or 'this action'))
+        return status
+
+    ref = row.get('authorization_ref')
+    ref_problems = C.owner_ref_problems(ref, 'authorization_ref', src=src)
+    if ref_problems:
+        status['attestation_state'] = 'INVALID'
+        status['authorization_state'] = 'INVALID_AUTHORIZATION_REF'
+        status['problems'].extend(ref_problems)
+        if require:
+            status['problems'].insert(0,
+                                      'AUTH-INVALID authorization_ref cannot authorize %s'
+                                      % (action or 'this action'))
+        return status
+
+    source_problems = _authorization_source_problems(ref, action)
+    if source_problems:
+        status['attestation_state'] = 'INVALID'
+        status['authorization_state'] = 'INVALID_AUTHORIZATION_REF'
+        status['problems'].extend(source_problems)
+        if require:
+            status['problems'].insert(0,
+                                      'AUTH-INVALID authorization_ref source is not authorized '
+                                      'for %s' % (action or 'this action'))
+        return status
+
+    status['authorization_state'] = 'AUTHORIZED_BY_RESOLVED_REF'
+    return status
 
 
 def note_for_owner(stale, ref_paths, owner):
@@ -1057,7 +1141,11 @@ def main(argv):
     rows, problems = load_records()
     check_append_only(problems)
     vintage = chk.pin_vintage_notes(d1)
-    current = check(rows, problems, digest, d1_owners, vintage)
+    try:
+        current = check(rows, problems, digest, d1_owners, vintage)
+    except evidence.ToolFailure as exc:
+        print('[TOOL FAILURE] cannot resolve authorization metadata: %s' % exc)
+        return 2
 
     # RESCOPED (audit 8 section 2): ORDER-600 blocks on ONE decision, not on all 23 owners.
     coverage = current.get('MASTER_BACKLOG.md')
@@ -1070,9 +1158,12 @@ def main(argv):
     # ORDER-1269 #3: through `reported_decision`, so a record that failed its own checks cannot be
     # announced as APPROVED four lines above its own failure.
     _dec, _note = reported_decision(coverage, 'MASTER_BACKLOG.md') if coverage else (None, None)
+    auth = authorization_status(coverage, require=False, action='coverage_transfer') \
+        if coverage else None
     print('    MASTER_BACKLOG.md (Coverage edge) -> %s'
-          % ('%s by %s (line %s)%s' % (_dec, coverage.get('signer', '<n/a>'), coverage['_line'],
-                                       ' -- ' + _note if _note else '')
+          % ('%s [%s; signer display-only] (line %s)%s'
+             % (_dec, auth['authorization_state'] if auth else 'NOT_AUTHORITATIVE',
+                coverage['_line'], ' -- ' + _note if _note else '')
              if coverage else 'NOT YET RECORDED'))
     others = [o for o in d1_owners if o in current and o != 'MASTER_BACKLOG.md']
     print('  %d other owner(s) recorded, %d not yet -- none of them block ORDER-600'
@@ -1081,6 +1172,27 @@ def main(argv):
         print('  %d pin-vintage note(s); blocking only for the owners they name' % len(vintage))
     for pn in PIN_NOTES:
         print('  PIN NOT ENFORCED -> %s' % pn)
+
+    if '--require-authorization' in argv:
+        print('  owner-reserved consumer: Coverage transfer requires a resolved authorization_ref')
+        if problems:
+            print('  -> AUTH-ATTESTATION-INVALID current attestation ledger is not valid')
+            return 1
+        if not coverage:
+            print('  -> AUTH-ABSENT Coverage has no current attestation')
+            return 1
+        required = authorization_status(coverage, require=True,
+                                         action='coverage_transfer')
+        if coverage.get('decision') != 'APPROVED':
+            required['problems'].insert(0,
+                                        'AUTH-DECISION Coverage current decision is %r, not APPROVED'
+                                        % coverage.get('decision'))
+        if required['problems']:
+            for p in required['problems']:
+                print('  -> %s' % p)
+            return 1
+        print('  -> AUTHORIZED_BY_RESOLVED_REF (owner authorization source is independently '
+              'validated; signer remains display-only)')
 
     if problems:
         print('')

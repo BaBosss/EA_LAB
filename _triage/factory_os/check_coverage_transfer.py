@@ -593,8 +593,11 @@ def a4_renderer_is_deterministic(section, records, problems):
 
 
 def a8_attestation_still_valid(problems):
-    """ORDER-610 A8, restored to what it actually said: the transfer may not invalidate the
-    approval that authorized it, and `check_s2a_attestation.py` must exit 0.
+    """ORDER-610 A8: an owner-reserved transfer needs an independently resolved authorization.
+
+    The attestation checker remains the single implementation of ledger validity and OwnerRef
+    resolution. The explicit mode below prevents this consumer from treating an informational
+    `decision=APPROVED` row or display-only signer as owner authorization.
 
     ORDER-613 D3 DELETED the downgrade that used to live here. It existed because the attestation
     contract could not express "the pinned bytes changed INTO the state this record approved", so
@@ -605,13 +608,14 @@ def a8_attestation_still_valid(problems):
 
     There is no exemption path here any more. If this reddens, something is wrong.
     """
-    p = subprocess.run([sys.executable, os.path.join(HERE, 'check_s2a_attestation.py')],
+    p = subprocess.run([sys.executable, os.path.join(HERE, 'check_s2a_attestation.py'),
+                        '--require-authorization'],
                        capture_output=True, cwd=ROOT)
     if p.returncode != 0:
-        problems.append('A8 the attested bundle no longer verifies (check_s2a_attestation.py exit '
-                        '%s). The approval that authorized this transfer binds six files; if one '
-                        'changed, the approval is void and the owner must decide again -- this '
-                        'order does not get to decide that.\n%s'
+        problems.append('A8 owner authorization for this transfer is not valid '
+                        '(check_s2a_attestation.py --require-authorization exit %s). A valid '
+                        'informational attestation is insufficient: the current Coverage row must '
+                        'be APPROVED and carry a resolved, action-bound authorization_ref.\n%s'
                         % (p.returncode, p.stdout.decode('utf-8', 'replace')[-800:]))
 
 
