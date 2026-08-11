@@ -748,6 +748,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `symbol` | `string` | **yes** | minLength `1` |
 | `timeframe` | `string` | **yes** | minLength `1` |
 | `attach_epoch` | `string` | **yes** | pattern `^epoch-[1-9][0-9]*$` |
+| `attach_time_unix` | `integer` | — | min `1` |
 | `first_trade_epoch` | `string` \| `null` | **yes** |  |
 | `evidence_timestamp` | `string` | **yes** | minLength `1` |
 | `evidence_source` | const `EA_RUNTIME_COMMON_FILE` | **yes** |  |
@@ -775,6 +776,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `symbol` | `string` | **yes** | minLength `1` |
 | `timeframe` | `string` | **yes** | minLength `1` |
 | `attach_epoch` | `string` | **yes** | pattern `^epoch-[1-9][0-9]*$` |
+| `attach_time_unix` | `integer` | — | min `1` |
 | `first_trade_epoch` | `string` \| `null` | **yes** |  |
 | `evidence_timestamp` | `string` | **yes** | minLength `1` |
 | `evidence_source` | const `EA_RUNTIME_COMMON_FILE` | **yes** |  |
@@ -798,6 +800,14 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 |---|---|---|---|
 | `state` | `PASS` \| `FAIL` \| `LEGACY_UNVERIFIED` | **yes** |  |
 | `records` | `integer` | **yes** | min `0` |
+| `forward_test_state` | `DEMO_DEPLOYED_AWAITING_FIRST_TRADE` \| `FORWARD_TEST_EVIDENCE_STARTED` \| `FORWARD_TEST_UNTRUSTED` \| `NO_VALID_RUNTIME_IDENTITY` | — |  |
+| `first_trade_findings` | array of object *(fields below)* | — | items closed · items require `account_login`, `magic`, `state` |
+| `first_trade_findings[].account_login` | `string` | **yes** | pattern `^[1-9][0-9]*$` |
+| `first_trade_findings[].magic` | `string` | **yes** | pattern `^[1-9][0-9]*$` |
+| `first_trade_findings[].state` | `string` | **yes** | minLength `1` |
+| `first_trade_findings[].first_trade_epoch` | `string` \| `null` | — |  |
+| `first_trade_findings[].qualifying_deal` | `object` \| `null` | — |  |
+| `first_trade_findings[].reasons` | array of `any` | — |  |
 | `reasons` | array of object *(fields below)* | **yes** | items closed · items require `code`, `detail` |
 | `reasons[].code` | `string` | **yes** | minLength `1` |
 | `reasons[].detail` | `string` | **yes** |  |

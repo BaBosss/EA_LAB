@@ -40,7 +40,7 @@ void Exporter_Run()
       PrintFormat("[EXPORT] FileOpen failed err=%d", GetLastError());
       return;
    }
-   FileWrite(fh, "ticket", "time", "symbol", "magic", "type", "entry",
+   FileWrite(fh, "ticket", "time", "time_unix", "symbol", "magic", "type", "entry",
                  "volume", "price", "profit", "swap", "commission", "comment");
    int rows = 0;
    for(int i = 0; i < total; i++)
@@ -50,6 +50,7 @@ void Exporter_Run()
       FileWrite(fh,
          IntegerToString((long)tk),
          TimeToString((datetime)HistoryDealGetInteger(tk, DEAL_TIME), TIME_DATE | TIME_SECONDS),
+         IntegerToString(HistoryDealGetInteger(tk, DEAL_TIME)),
          HistoryDealGetString(tk, DEAL_SYMBOL),
          IntegerToString(HistoryDealGetInteger(tk, DEAL_MAGIC)),
          IntegerToString(HistoryDealGetInteger(tk, DEAL_TYPE)),

@@ -21,6 +21,12 @@ CONFIG_FINGERPRINT_VERSION = 'cfgfp-v1'
 RUNTIME_IDENTITY_MAX_AGE_HOURS = 30
 RUNTIME_IDENTITY_FUTURE_TOLERANCE_MINUTES = 5
 EXPECTED_ERRORS_KEY = '__errors__'
+FORWARD_AWAITING = 'AWAITING_FIRST_TRADE'
+FORWARD_VERIFIED = 'VERIFIED'
+FORWARD_INVALID_IDENTITY = 'INVALID_RUNTIME_IDENTITY'
+FORWARD_STALE_DEALS = 'STALE_DEAL_EVIDENCE'
+FORWARD_MALFORMED_DEALS = 'MALFORMED_DEAL_EVIDENCE'
+DEAL_ENTRY_IN = '0'
 
 REQUIRED_FIELDS = (
     'account_login',
@@ -39,6 +45,7 @@ REQUIRED_FIELDS = (
 _HEX64 = re.compile(r'^[0-9a-f]{64}$')
 _RECEIPT = re.compile(r'^br-[0-9a-f]{32}$')
 _EPOCH = re.compile(r'^epoch-[1-9][0-9]*$')
+_UNSET = object()
 
 
 def _reason(code, detail):
@@ -71,6 +78,120 @@ def validate_epoch_evidence(current_epoch, evidence, label='epoch evidence'):
         return _result('FAIL', [_reason('EPOCH_EVIDENCE_MISMATCH',
                                          'expected=%s observed=%s' % (current_epoch, observed_epoch))])
     return _result('PASS', [], evidence)
+
+
+def _positive_integer(value):
+    """Accept the integer values emitted by MQL5 and their CSV string form."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value if value > 0 else None
+    if isinstance(value, str) and re.fullmatch(r'[1-9][0-9]*', value.strip()):
+        return int(value.strip())
+    return None
+
+
+def derive_first_trade(identity, deals, deals_fresh=True, supplied_first_trade_epoch=_UNSET):
+    """Derive the first qualifying entry from one validated runtime identity and deal feed.
+
+    The deal feed is deliberately a list of canonical collected rows.  `time_unix` is required;
+    the display `time` column is never used for the authority comparison.  Account context is
+    attached by the collector from the account-scoped filename, so a row cannot qualify without
+    an explicit account match.
+    """
+    if not isinstance(identity, dict):
+        return _result(FORWARD_INVALID_IDENTITY,
+                       [_reason('IDENTITY_MISSING', 'runtime identity is not an object')])
+
+    account = _as_text(identity.get('account_login'))
+    magic = _as_text(identity.get('magic'))
+    symbol = _as_text(identity.get('symbol'))
+    epoch = _as_text(identity.get('attach_epoch'))
+    attach_time = _positive_integer(identity.get('attach_time_unix'))
+    identity_reasons = []
+    if not account.isdigit() or not account:
+        identity_reasons.append(_reason('ACCOUNT_LOGIN_INVALID', str(identity.get('account_login'))))
+    if not magic.isdigit() or not magic:
+        identity_reasons.append(_reason('MAGIC_INVALID', str(identity.get('magic'))))
+    if not symbol:
+        identity_reasons.append(_reason('SYMBOL_MISSING', 'symbol'))
+    if not _EPOCH.fullmatch(epoch):
+        identity_reasons.append(_reason('ATTACH_EPOCH_INVALID', str(identity.get('attach_epoch'))))
+    if attach_time is None:
+        identity_reasons.append(_reason('ATTACH_TIME_UNIX_MISSING', 'forward-test authority requires attach_time_unix'))
+    if identity_reasons:
+        return _result(FORWARD_INVALID_IDENTITY, identity_reasons, identity)
+
+    if not deals_fresh:
+        return _result(FORWARD_STALE_DEALS,
+                       [_reason('DEAL_EVIDENCE_STALE', 'fresh canonical deal evidence is required')],
+                       identity)
+    if not isinstance(deals, list):
+        return _result(FORWARD_MALFORMED_DEALS,
+                       [_reason('DEAL_EVIDENCE_MALFORMED', 'deal evidence is not an array')], identity)
+
+    candidates = []
+    for index, row in enumerate(deals):
+        if not isinstance(row, dict):
+            return _result(FORWARD_MALFORMED_DEALS,
+                           [_reason('DEAL_EVIDENCE_MALFORMED', 'row=%d is not an object' % index)], identity)
+        missing = [field for field in ('account_login', 'ticket', 'time_unix', 'symbol', 'magic', 'entry')
+                   if field not in row]
+        if missing:
+            return _result(FORWARD_MALFORMED_DEALS,
+                           [_reason('DEAL_EVIDENCE_INCOMPLETE', 'row=%d missing=%s' %
+                                    (index, ','.join(missing)))], identity)
+        row_account = _as_text(row.get('account_login'))
+        ticket = _positive_integer(row.get('ticket'))
+        deal_time = _positive_integer(row.get('time_unix'))
+        row_magic = _as_text(row.get('magic'))
+        row_symbol = _as_text(row.get('symbol'))
+        entry = _as_text(row.get('entry'))
+        if (not row_account.isdigit() or not row_account or ticket is None or deal_time is None or
+                not row_magic.isdigit() or not row_magic or not row_symbol or entry == ''):
+            return _result(FORWARD_MALFORMED_DEALS,
+                           [_reason('DEAL_EVIDENCE_MALFORMED', 'row=%d has invalid canonical fields' % index)],
+                           identity)
+        if (row_account == account and row_magic == magic and row_symbol == symbol and
+                entry == DEAL_ENTRY_IN and deal_time >= attach_time):
+            candidates.append((deal_time, ticket, row))
+
+    supplied = identity.get('first_trade_epoch') if supplied_first_trade_epoch is _UNSET else supplied_first_trade_epoch
+    if not candidates:
+        if supplied is not None:
+            return _result(FORWARD_INVALID_IDENTITY,
+                           [_reason('FIRST_TRADE_EVIDENCE_MISSING',
+                                    'first_trade_epoch=%s but no qualifying deal exists' % supplied)], identity)
+        return {
+            'state': FORWARD_AWAITING,
+            'reasons': [],
+            'identity': identity,
+            'first_trade_epoch': None,
+            'qualifying_deal': None,
+            'attach_time_unix': attach_time,
+            'attach_epoch': epoch,
+        }
+
+    deal_time, ticket, row = min(candidates, key=lambda item: (item[0], item[1]))
+    if supplied is not None and supplied != epoch:
+        return _result(FORWARD_INVALID_IDENTITY,
+                       [_reason('FIRST_TRADE_EPOCH_MISMATCH',
+                                'expected=%s observed=%s' % (epoch, supplied))], identity)
+    return {
+        'state': FORWARD_VERIFIED,
+        'reasons': [],
+        'identity': identity,
+        'first_trade_epoch': epoch,
+        'qualifying_deal': {
+            'ticket': str(ticket),
+            'time_unix': deal_time,
+            'symbol': row['symbol'],
+            'magic': str(row['magic']),
+            'entry': str(row['entry']),
+        },
+        'attach_time_unix': attach_time,
+        'attach_epoch': epoch,
+    }
 
 
 def _as_text(value):
@@ -146,6 +267,8 @@ def _shape_reasons(observed):
             reasons.append(_reason(field.upper() + '_MISSING', field))
     if not _EPOCH.fullmatch(_as_text(observed.get('attach_epoch'))):
         reasons.append(_reason('ATTACH_EPOCH_INVALID', str(observed.get('attach_epoch'))))
+    if 'attach_time_unix' in observed and _positive_integer(observed.get('attach_time_unix')) is None:
+        reasons.append(_reason('ATTACH_TIME_UNIX_INVALID', str(observed.get('attach_time_unix'))))
     first = observed.get('first_trade_epoch')
     if first is not None and first != observed.get('attach_epoch'):
         reasons.append(_reason('FIRST_TRADE_EPOCH_MISMATCH', str(first)))
@@ -165,6 +288,10 @@ def _expected_reasons(observed, expected):
         if field in expected and observed.get(field) != expected.get(field):
             reasons.append(_reason(field.upper() + '_MISMATCH',
                                    'expected=%s observed=%s' % (expected.get(field), observed.get(field))))
+    if 'attach_time_unix' in expected and observed.get('attach_time_unix') != expected.get('attach_time_unix'):
+        reasons.append(_reason('ATTACH_TIME_UNIX_MISMATCH',
+                               'expected=%s observed=%s' %
+                               (expected.get('attach_time_unix'), observed.get('attach_time_unix'))))
     for field in ('source_sha256', 'artifact_sha256'):
         value = expected.get(field)
         if not _HEX64.fullmatch(_as_text(value)):
@@ -391,6 +518,15 @@ def _read_json(path, fallback):
 
 
 def main(argv):
+    if argv[1:2] == ['derive-first-trade']:
+        if len(argv) not in (4, 5):
+            print('usage: runtime_identity.py derive-first-trade <identity.json> <deals.json> [--stale]')
+            return 2
+        identity = _read_json(argv[2], {})
+        deals = _read_json(argv[3], [])
+        result = derive_first_trade(identity, deals, deals_fresh=(len(argv) == 4))
+        print(json.dumps(result, sort_keys=True))
+        return 0 if result['state'] in (FORWARD_AWAITING, FORWARD_VERIFIED) else 1
     if len(argv) != 5 or argv[1] != 'verify-batch':
         print('usage: runtime_identity.py verify-batch <records.json> <expected.json> <build_receipts.jsonl>')
         return 2

@@ -132,6 +132,13 @@ function Get-MonitorCoverage {
             $failures.Add('runtime-identity-unverified') | Out-Null
             $log.Add("COVERAGE GAP: runtime identity is NON-GREEN ($detail); account/magic/build/config/symbol/timeframe/epoch evidence must not be read as healthy") | Out-Null
         }
+        if ($null -ne $identitySummary -and "$($identitySummary.forward_test_state)" -eq 'FORWARD_TEST_UNTRUSTED') {
+            $findings = (@($identitySummary.first_trade_findings) | ForEach-Object {
+                "$($_.account_login)|$($_.magic):$($_.state)"
+            }) -join '; '
+            $failures.Add('first-trade-untrusted') | Out-Null
+            $log.Add("COVERAGE GAP: first qualifying trade cannot be trusted ($findings); forward-test start remains fail-closed") | Out-Null
+        }
     }
 
     # ---- 1b. deployment attachment/verification coverage (ORDER-944) ----------------

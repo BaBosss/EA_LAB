@@ -4,12 +4,14 @@ import hashlib
 import os
 import sys
 import datetime as _dt
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from runtime_identity import (  # noqa: E402
     IDENTITY_SCHEMA,
     BUILD_RECEIPT_SCHEMA,
+    derive_first_trade,
     validate_identity,
     validate_identity_batch,
 )
@@ -135,6 +137,67 @@ def main():
     missing = validate_identity({}, expected, artifacts)
     check('missing identity cannot become green', missing['state'] != 'PASS', str(missing))
     check('legacy evidence remains explicit non-green', missing['state'] == 'LEGACY_UNVERIFIED', str(missing))
+
+    # ORDER-353 contract repair: the sidecar's numeric attach time, not its display timestamp,
+    # is the comparison authority for the first qualifying entry.
+    attach = 1_750_000_000
+    forward_identity = base_identity(receipt, attach_time_unix=attach, first_trade_epoch=None)
+
+    def deal(account='100000001', magic='900001', symbol='EURUSDm', entry='0',
+             time_unix=str(attach + 60), ticket='7001'):
+        return {
+            'account_login': account, 'ticket': ticket, 'time_unix': time_unix,
+            'symbol': symbol, 'magic': magic, 'entry': entry,
+        }
+
+    check('attach_time_unix is an integer authority', isinstance(forward_identity['attach_time_unix'], int))
+    awaiting = derive_first_trade(forward_identity, [])
+    check('no deals -> AWAITING_FIRST_TRADE with null epoch',
+          awaiting['state'] == 'AWAITING_FIRST_TRADE' and awaiting['first_trade_epoch'] is None,
+          str(awaiting))
+    check('unrelated account -> AWAITING_FIRST_TRADE',
+          derive_first_trade(forward_identity, [deal(account='100000002')])['state'] == 'AWAITING_FIRST_TRADE')
+    check('wrong magic -> AWAITING_FIRST_TRADE',
+          derive_first_trade(forward_identity, [deal(magic='900002')])['state'] == 'AWAITING_FIRST_TRADE')
+    check('wrong symbol -> AWAITING_FIRST_TRADE',
+          derive_first_trade(forward_identity, [deal(symbol='GBPUSDm')])['state'] == 'AWAITING_FIRST_TRADE')
+    check('non-entry deal -> AWAITING_FIRST_TRADE',
+          derive_first_trade(forward_identity, [deal(entry='1')])['state'] == 'AWAITING_FIRST_TRADE')
+    check('pre-attach deal -> AWAITING_FIRST_TRADE',
+          derive_first_trade(forward_identity, [deal(time_unix=str(attach - 1))])['state'] == 'AWAITING_FIRST_TRADE')
+    boundary = derive_first_trade(forward_identity, [deal(time_unix=str(attach))])
+    check('entry exactly at attach boundary -> VERIFIED',
+          boundary['state'] == 'VERIFIED' and boundary['first_trade_epoch'] == 'epoch-1', str(boundary))
+    verified = derive_first_trade(forward_identity, [deal(ticket='7002')])
+    check('correct entry after attach -> VERIFIED',
+          verified['state'] == 'VERIFIED' and verified['qualifying_deal']['ticket'] == '7002', str(verified))
+    earliest = derive_first_trade(forward_identity, [deal(time_unix=str(attach + 120), ticket='7002'),
+                                                      deal(time_unix=str(attach + 60), ticket='7001')])
+    check('earliest qualifying entry selected',
+          earliest['state'] == 'VERIFIED' and earliest['qualifying_deal']['ticket'] == '7001', str(earliest))
+    check('supplied first_trade_epoch without evidence rejected',
+          derive_first_trade(dict(forward_identity, first_trade_epoch='epoch-1'), [])['state'] == 'INVALID_RUNTIME_IDENTITY')
+    check('mismatched supplied epoch rejected',
+          derive_first_trade(dict(forward_identity, first_trade_epoch='epoch-2'), [deal()])['state'] == 'INVALID_RUNTIME_IDENTITY')
+    check('wrong supplied epoch argument rejected',
+          derive_first_trade(forward_identity, [deal()], supplied_first_trade_epoch='epoch-2')['state'] == 'INVALID_RUNTIME_IDENTITY')
+    check('stale deal source cannot start forward evidence',
+          derive_first_trade(forward_identity, [deal()], deals_fresh=False)['state'] == 'STALE_DEAL_EVIDENCE')
+    check('malformed deal evidence fails closed',
+          derive_first_trade(forward_identity, [{'account_login': '100000001'}])['state'] == 'MALFORMED_DEAL_EVIDENCE')
+    check('missing attach time cannot qualify forward evidence',
+          derive_first_trade(base_identity(receipt), [deal()])['state'] == 'INVALID_RUNTIME_IDENTITY')
+
+    repo = Path(__file__).resolve().parents[2]
+    ri_source = (repo / 'ea_template' / 'core' / 'RuntimeIdentity.mqh').read_text(encoding='utf-8')
+    exporter_source = (repo / 'tools' / 'DealsExporter' / 'DealsExporter.mq5').read_text(encoding='utf-8')
+    check('EA emission carries numeric attach_time_unix from g_ri_attach_time',
+          '\\"attach_time_unix\\":%I64d' in ri_source and '(long)g_ri_attach_time' in ri_source)
+    check('same lifecycle re-init does not recapture attach time or epoch',
+          'if(g_ri_initialized)' in ri_source and 'recapture TimeCurrent()' in ri_source)
+    check('deal exporter preserves display time and adds native numeric time_unix',
+          '"ticket", "time", "time_unix", "symbol"' in exporter_source and
+          'IntegerToString(HistoryDealGetInteger(tk, DEAL_TIME))' in exporter_source)
 
     if FAIL:
         print('FAIL %d/%d' % (PASS, PASS + FAIL))

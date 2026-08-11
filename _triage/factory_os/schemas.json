@@ -2515,6 +2515,7 @@
         "symbol": { "type": "string", "minLength": 1 },
         "timeframe": { "type": "string", "minLength": 1 },
         "attach_epoch": { "type": "string", "pattern": "^epoch-[1-9][0-9]*$" },
+        "attach_time_unix": { "type": "integer", "minimum": 1 },
         "first_trade_epoch": { "type": ["string", "null"] },
         "evidence_timestamp": { "type": "string", "minLength": 1 },
         "evidence_source": { "const": "EA_RUNTIME_COMMON_FILE" }
@@ -2556,6 +2557,7 @@
         "symbol": { "type": "string", "minLength": 1 },
         "timeframe": { "type": "string", "minLength": 1 },
         "attach_epoch": { "type": "string", "pattern": "^epoch-[1-9][0-9]*$" },
+        "attach_time_unix": { "type": "integer", "minimum": 1 },
         "first_trade_epoch": { "type": ["string", "null"] },
         "evidence_timestamp": { "type": "string", "minLength": 1 },
         "evidence_source": { "const": "EA_RUNTIME_COMMON_FILE" },
@@ -2585,6 +2587,30 @@
       "properties": {
         "state": { "enum": ["PASS", "FAIL", "LEGACY_UNVERIFIED"] },
         "records": { "type": "integer", "minimum": 0 },
+        "forward_test_state": {
+          "enum": [
+            "DEMO_DEPLOYED_AWAITING_FIRST_TRADE",
+            "FORWARD_TEST_EVIDENCE_STARTED",
+            "FORWARD_TEST_UNTRUSTED",
+            "NO_VALID_RUNTIME_IDENTITY"
+          ]
+        },
+        "first_trade_findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["account_login", "magic", "state"],
+            "unevaluatedProperties": false,
+            "properties": {
+              "account_login": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+              "magic": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+              "state": { "type": "string", "minLength": 1 },
+              "first_trade_epoch": { "type": ["string", "null"] },
+              "qualifying_deal": { "type": ["object", "null"] },
+              "reasons": { "type": "array" }
+            }
+          }
+        },
         "reasons": {
           "type": "array",
           "items": {

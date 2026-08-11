@@ -424,6 +424,9 @@ $runtimeIdentitySummary = [ordered]@{
   # refusal cannot mistake this derived identity detail for a supplied reconciliation answer.
   identity_findings = @($runtimeValidation.reasons)
 }
+$runtimeForward = Get-RuntimeIdentityForwardStates -RepoRoot $Root -DealsRoot $DEALS -RuntimeRecords $runtimeIdentity
+$runtimeIdentitySummary.forward_test_state = "$($runtimeForward.state)"
+$runtimeIdentitySummary.first_trade_findings = @($runtimeForward.findings)
 
 $snapshot = [ordered]@{
   entity = 'SnapshotBuilderInput'

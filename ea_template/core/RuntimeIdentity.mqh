@@ -7,6 +7,7 @@ datetime g_ri_attach_time = 0;
 long     g_ri_epoch_counter = 0;
 string   g_ri_attach_epoch = "";
 bool     g_ri_first_trade_seen = false;
+bool     g_ri_initialized = false;
 
 string RI_JsonEscape(string value)
   {
@@ -69,12 +70,11 @@ bool RI_Write()
       "{\"schema\":\"runtime_identity/1\",\"account_login\":\"%I64d\",\"magic\":\"%I64d\","
       "\"ea_logical_identity\":\"%s\",\"build_receipt\":\"%s\","
       "\"config_fingerprint\":\"%s\",\"config_fingerprint_version\":\"%s\","
-      "\"symbol\":\"%s\",\"timeframe\":\"%s\",\"attach_epoch\":\"%s\","
-      "\"first_trade_epoch\":%s,\"evidence_timestamp\":\"%s\","
-      "\"evidence_source\":\"EA_RUNTIME_COMMON_FILE\"}",
+      "\"symbol\":\"%s\",\"timeframe\":\"%s\",\"attach_epoch\":\"%s\",\"attach_time_unix\":%I64d,"
+      "\"first_trade_epoch\":%s,\"evidence_timestamp\":\"%s\",\"evidence_source\":\"EA_RUNTIME_COMMON_FILE\"}",
       login, (long)_0_Magic, RI_JsonEscape(LAB_ENTRY_TAG), LAB_BUILD_RECEIPT,
       cfg, CFG_FP_VERSION, RI_JsonEscape(_Symbol), EnumToString(_Period),
-      RI_JsonEscape(g_ri_attach_epoch), first, RI_JsonEscape(evidence));
+      RI_JsonEscape(g_ri_attach_epoch), (long)g_ri_attach_time, first, RI_JsonEscape(evidence));
    FileWriteString(fh, json);
    FileClose(fh);
    if(!FileMove(tmp, FILE_COMMON, fname, FILE_COMMON | FILE_REWRITE))
@@ -84,14 +84,22 @@ bool RI_Write()
       PrintFormat("[IDENTITY] FileMove failed err=%d - identity sidecar not published", err);
       return(false);
      }
-   PrintFormat("[IDENTITY] account=%I64d magic=%I64d ea=%s build_receipt=%s cfg=%s epoch=%s first_trade_epoch=%s",
+   PrintFormat("[IDENTITY] account=%I64d magic=%I64d ea=%s build_receipt=%s cfg=%s epoch=%s attach_time_unix=%I64d first_trade_epoch=%s",
                login, (long)_0_Magic, LAB_ENTRY_TAG, LAB_BUILD_RECEIPT, cfg,
-               g_ri_attach_epoch, (g_ri_first_trade_seen ? g_ri_attach_epoch : "null"));
+               g_ri_attach_epoch, (long)g_ri_attach_time,
+               (g_ri_first_trade_seen ? g_ri_attach_epoch : "null"));
    return(true);
   }
 
 void RuntimeIdentity_Init()
   {
+   if(g_ri_initialized)
+     {
+      // A repeated init/write in one process is the same attachment lifecycle. Do not
+      // recapture TimeCurrent() or manufacture a new epoch; only republish the stable record.
+      RI_Write();
+      return;
+     }
    g_ri_attach_time = TimeCurrent();
    string gv = RI_GVName();
    double prior = 0.0;
@@ -102,6 +110,7 @@ void RuntimeIdentity_Init()
    GlobalVariablesFlush();
    g_ri_attach_epoch = "epoch-" + IntegerToString(g_ri_epoch_counter);
    g_ri_first_trade_seen = false;
+   g_ri_initialized = true;
    if(StringLen(LAB_BUILD_RECEIPT) == 0 || LAB_BUILD_RECEIPT == "UNSTAMPED")
       Print("[IDENTITY] WARNING: build receipt is UNSTAMPED; monitoring must keep this runtime NON-GREEN");
    RI_Write();

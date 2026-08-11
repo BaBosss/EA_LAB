@@ -29,6 +29,7 @@ function Identity([string]$account, [string]$magic, [string]$receipt, [string]$e
         ea_logical_identity = 'EA_X_TEST'; build_receipt = $receipt
         config_fingerprint = ('c' * 64); config_fingerprint_version = 'cfgfp-v1'
         symbol = 'EURUSDm'; timeframe = 'PERIOD_H1'; attach_epoch = $epoch
+        attach_time_unix = 1750000000
         first_trade_epoch = $null; evidence_timestamp = $timestamp
         evidence_source = 'EA_RUNTIME_COMMON_FILE'
     }
@@ -119,6 +120,25 @@ account,magic,ea_logical_identity,build_receipt,config_fingerprint,config_finger
     & powershell.exe -NoProfile -File (Join-Path $RepoRoot 'scripts\collect_live_deals.ps1') -CommonFiles $common -DestDir $dest | Out-Null
     $copied = @(Get-ChildItem -LiteralPath $dest -Filter 'EA_LAB_identity_*.json' -File -ErrorAction SilentlyContinue)
     Check 'C collector does not restamp stale producer evidence' ($copied.Count -eq 0) (($copied | Select-Object -ExpandProperty FullName) -join ',')
+
+    $entry = [ordered]@{ account_login='100000001'; ticket='7001'; time_unix='1750000060'; symbol='EURUSDm'; magic='900001'; entry='0' }
+    $awaiting = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $a -Deals @() -DealsFresh:$true -PythonPath $PythonPath
+    Check 'N no qualifying deal -> AWAITING_FIRST_TRADE' ($awaiting.state -eq 'AWAITING_FIRST_TRADE' -and $null -eq $awaiting.first_trade_epoch) ($awaiting | ConvertTo-Json -Depth 8)
+    $verified = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $a -Deals @($entry) -DealsFresh:$true -PythonPath $PythonPath
+    Check 'O qualifying entry -> VERIFIED' ($verified.state -eq 'VERIFIED' -and $verified.first_trade_epoch -eq 'epoch-1') ($verified | ConvertTo-Json -Depth 8)
+    $pre = [ordered]@{ account_login='100000001'; ticket='7002'; time_unix='1749999999'; symbol='EURUSDm'; magic='900001'; entry='0' }
+    $preResult = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $a -Deals @($pre) -DealsFresh:$true -PythonPath $PythonPath
+    Check 'P pre-attach entry cannot verify' ($preResult.state -eq 'AWAITING_FIRST_TRADE') ($preResult | ConvertTo-Json -Depth 8)
+    $staleTrade = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $a -Deals @($entry) -DealsFresh:$false -PythonPath $PythonPath
+    Check 'Q stale deals cannot verify' ($staleTrade.state -eq 'STALE_DEAL_EVIDENCE') ($staleTrade | ConvertTo-Json -Depth 8)
+    $badEpoch = $a | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+    $badEpoch.first_trade_epoch = 'epoch-2'
+    $badEpochResult = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $badEpoch -Deals @($entry) -DealsFresh:$true -PythonPath $PythonPath
+    Check 'R mismatched supplied epoch is rejected' ($badEpochResult.state -eq 'INVALID_RUNTIME_IDENTITY') ($badEpochResult | ConvertTo-Json -Depth 8)
+    $noTime = $a | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+    $noTime.PSObject.Properties.Remove('attach_time_unix')
+    $noTimeResult = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $noTime -Deals @($entry) -DealsFresh:$true -PythonPath $PythonPath
+    Check 'S missing attach time cannot verify' ($noTimeResult.state -eq 'INVALID_RUNTIME_IDENTITY') ($noTimeResult | ConvertTo-Json -Depth 8)
 }
 finally {
     Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
