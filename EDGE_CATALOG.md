@@ -427,6 +427,10 @@ measured identical to the cent, so a grid that sweeps it at base is sweeping not
 🚫 **Not established:** that the sibling `_9_RegimeGateAdds` behaves the same way. It does not — see the
 next entry.
 
+### ORDER-236 documentary classification (accepted 2026-08-11)
+
+The existing `CONF_PA_ENGULF` and `_9_RegimeGateAdds` entries are aligned as `LEVER_ONLY`, verdict `PARKED-VERIFY(user)`, and `NOT DEPLOYABLE`. `fire_count=UNKNOWN`; there is no safety claim, no host, and no setting. These entries do not certify the guard as safe.
+
 ## LEVER: `_9_RegimeGateAdds` (ADX regime gate on grid adds) — ⬛ **NOT AN INDEPENDENT LEVER** (ORDER-236, 2026-08-06)
 
 `Stack.mqh:280-285` calls exactly one function, `Regime_AllowsEntryDirection`, whose first line is

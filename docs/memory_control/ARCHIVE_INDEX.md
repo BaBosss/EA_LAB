@@ -5,9 +5,9 @@
 > `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
-> NOT repo HEAD; stable across any commit that does not touch that file): `956dd7cc471595413801d548393ca92b60ba69c2`
+> NOT repo HEAD; stable across any commit that does not touch that file): `88e860bb00dea3af82b5876ebfed9939d8d9540d`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
-> EOL/whitespace drift the per-block hashes below cannot see): `c7c60f33eb5746ea3ce6a47555785d984a8f3e6ac11285335ba0f13480fe56ce`
+> EOL/whitespace drift the per-block hashes below cannot see): `7d74156f1f4e7af8776579b6ead683a0aaca549071aaaf0ae9d7d1d44b986361`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
 > normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
 > block will not change that block's sha256; rely on the whole-file raw-byte hash above.
@@ -326,3 +326,9 @@
 | 521\|ORDER\|current-archive#310 | 521 | ORDER | 310 | a1a0b3c03264d8904a03e315569beb40726134c2ff0d4367a758d1b9179bbbc6 |
 | 530\|ORDER\|current-archive#311 | 530 | ORDER | 311 | dd15deda3a58c1b1bdca488499dc511bd17704a5c91732dba0af34d9670ce568 |
 | NA\|OTHER\|current-archive#312 |  | OTHER | 312 | 6bfd24a51b9cbc39912906d1ca3c3c4ced379166e54265a72100ee6d7d67481e |
+| 236\|ORDER\|current-archive#313 | 236 | ORDER | 313 | 07fa7934b86a1565b4a38e110e5100381219a5b408f222fac4dcea77ecf2b123 |
+| NA\|OTHER\|current-archive#314 |  | OTHER | 314 | b661f7c96ed82de3f905b23dd9abba029e697c4d78694f408d026f45c9599de2 |
+| NA\|OTHER\|current-archive#315 |  | OTHER | 315 | b9b767a8ea76972131c4e40a956afe917f6c8faa36e0aa09e1d7547ce28a6683 |
+| 433\|ORDER\|current-archive#316 | 433 | ORDER | 316 | 6f76e61fb1f2a7544ed85e343031509d93bc7117aa9e96ff31a061ed7e92b6d2 |
+| 671\|ORDER\|current-archive#317 | 671 | ORDER | 317 | 55011e79fe3b2d1ebacf98181ac90e1399a4615dee14670ea74f02e4300d75f8 |
+| 672\|ORDER\|current-archive#318 | 672 | ORDER | 318 | e0073ed97eee466347c5152ed7010a1269054ae43eb06e69b7af77eb2e07c06e |
