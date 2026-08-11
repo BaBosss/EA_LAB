@@ -47,6 +47,7 @@ _CANON_CALL = {
     'double': 'CFG_CanonDouble(%s)',
     'int':    'CFG_CanonLong((long)%s)',
     'long':   'CFG_CanonLong((long)%s)',
+    'ulong':  'CFG_CanonLong((long)%s)',
     'string': 'CFG_CanonString(%s)',
 }
 

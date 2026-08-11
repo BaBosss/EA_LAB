@@ -321,6 +321,7 @@ _BOOL_LITERALS = {'true': True, 'false': False}
 _INT_RANGES = {
     'int':  (decimal.Decimal(-2 ** 31), decimal.Decimal(2 ** 31 - 1)),
     'long': (decimal.Decimal(-2 ** 63), decimal.Decimal(2 ** 63 - 1)),
+    'ulong': (decimal.Decimal(0), decimal.Decimal(2 ** 64 - 1)),
 }
 
 
@@ -351,7 +352,7 @@ def render_value(decl, value, enums):
         return 'true' if value else 'false'
     if isinstance(value, bool):
         raise PresetRefusal('input %s is %s but got a bool %r' % (decl.name, t, value))
-    if t in ('int', 'long') or t.startswith('ENUM_'):
+    if t in ('int', 'long', 'ulong') or t.startswith('ENUM_'):
         if isinstance(value, float) and value != int(value):
             raise PresetRefusal('input %s is %s but got the non-integral %r'
                                 % (decl.name, t, value))
@@ -416,7 +417,7 @@ def _to_number(text, decl):
             'rather than escaping as a raw Python exception -- a caller catching this module\'s '
             'declared refusal set would not catch the latter, and a crash reads as a broken tool '
             'instead of a bad value.' % (decl.name, t, text))
-    if t in ('int', 'long') or t.startswith('ENUM_'):
+    if t in ('int', 'long', 'ulong') or t.startswith('ENUM_'):
         if d != d.to_integral_value():
             raise PresetRefusal('input %s is %s but got the non-integral %r'
                                 % (decl.name, t, text))
@@ -427,7 +428,7 @@ def _to_number(text, decl):
         # int-to-string ValueError instead -- a DIFFERENT raw exception escaping the same
         # declared set. Bounding by the declared type answers both, and answers them for the
         # right reason rather than by chasing whichever exception the runtime raises this year.
-        lo, hi = _INT_RANGES['long' if t == 'long' else 'int']
+        lo, hi = _INT_RANGES['ulong' if t == 'ulong' else ('long' if t == 'long' else 'int')]
         if d < lo or d > hi:
             raise PresetRefusal(
                 'input %s is %s, which holds %s..%s, and %r is outside it. Refused rather than '
@@ -741,7 +742,7 @@ def canonical_for_hash(decl, rendered):
     t = decl.mql_type
     if t == 'double':
         return canonical_double(rendered)
-    if t == 'bool' or t == 'string' or t in ('int', 'long') or t.startswith('ENUM_'):
+    if t == 'bool' or t == 'string' or t in ('int', 'long', 'ulong') or t.startswith('ENUM_'):
         return rendered
     raise PresetRefusal('input %s has type %s, which has no canonical hash form'
                         % (decl.name, t))
