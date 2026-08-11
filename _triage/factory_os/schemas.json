@@ -2487,7 +2487,7 @@
     "RuntimeIdentityObserved": {
       "type": "object",
       "x-owner-file": "runtime sidecars collected under portfolio/live_deals/",
-      "description": "Runtime identity emitted by the EA. Validation state is added by the collection boundary, not supplied by the EA.",
+      "description": "Runtime identity emitted by the EA. Validation state is added by the collection boundary, not supplied by the EA. Collected sidecars are persisted evidence/storage locations, and no single canonical owner currently owns the observation corpus.",
       "required": [
         "schema",
         "account_login",

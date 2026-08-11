@@ -77,6 +77,7 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `MagicAllocation` | `portfolio/DEPLOYMENTS.csv` | `factory/magic_allocations.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `ParameterBinding` | `docs/PARAM_REGISTRY.csv` | `factory/parameter_bindings.jsonl` | **TRANSFER** | claude (lead engineer) | PROPOSED |
 | `RunTransition` | `scripts/experiment_event_log.ps1` | `factory/runs/` | **TRANSFER** | claude (lead engineer) | PROPOSED |
+| `RuntimeIdentityObserved` | `NO_CURRENT_OWNER` | `portfolio/runtime_identity_observed.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `SafeProjection` | `DERIVED_NOT_PERSISTED` | `build/safe_projection.json` | **TRANSFER** | user (Boss) | PROPOSED |
 | `SystemFinding` | `portfolio/control_room_snapshot.json` | `ops/findings.jsonl` | **TRANSFER** | claude (lead engineer) | PROPOSED |
 | `TestUniverse` | `NO_CURRENT_OWNER` | `factory/universe.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
@@ -94,11 +95,13 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `ReconciliationEvidence` | `EMBEDDED:SnapshotMeta` | `EMBEDDED:SnapshotMeta` | KEEP | claude (lead engineer) | PROPOSED |
 | `RunAttempt` | `EMBEDDED:RunTransition` | `EMBEDDED:RunTransition` | KEEP | claude (lead engineer) | PROPOSED |
 | `RunJournal` | `TRANSIENT` | `TRANSIENT` | KEEP | user (Boss) | PROPOSED |
+| `RuntimeIdentityRecord` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
+| `RuntimeIdentitySummary` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 | `SnapshotBuilderInput` | `_triage/factory_os/snapshot_validator.py` | `_triage/factory_os/snapshot_validator.py` | KEEP | claude (lead engineer) | PROPOSED |
 | `SnapshotMeta` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 | `SnapshotVerdict` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 
-**KEEP = 16 · TRANSFER = 13** · 29 rows total.
+**KEEP = 18 · TRANSFER = 14** · 32 rows total.
 
 ## The two coverage numbers, reconciled rather than equated
 
@@ -209,6 +212,16 @@ One block per row that proposes a move. These four fields are the reviewer check
 - **Evidence lost — what cannot be reconstructed:** In-flight state for any run that was interrupted and not yet folded into the event log: the attempt counter and the last completed step. The event log records completed occurrences, so a half-finished run leaves no trace there.
 - **Retention window:** per-run, until the run completes and its occurrence is written to the event log; the checkpoint is safe to prune after that, and MUST be pruned or it becomes a second, stale copy of the timeline.
 
+### `RuntimeIdentityObserved` — `NO_CURRENT_OWNER` → `portfolio/runtime_identity_observed.jsonl`
+
+*canonical · signer: user (Boss) · state: PROPOSED*
+
+- **Breaks if moved — names a specific reader or writer:** Nothing is moved by this proposal: the current per-chart sidecars are evidence/storage locations rather than one canonical owner, so there is no existing canonical artifact to relocate. The future owner would be created only by a separately executed transfer.
+- **Breaks if NOT moved — a concrete failure, with a date or trigger:** The observation corpus remains split across collected per-chart sidecars under portfolio/live_deals/, so no versioned canonical owner can answer which observations were in force for a later snapshot or reconcile the corpus as one ownership surface. This row proposes that canonical owner; it does not execute the transfer.
+- **Reverse steps — executable, not "revert the commit":** Before the transfer is executed, no reverse action is required. After execution, stop the canonical writer, remove portfolio/runtime_identity_observed.jsonl, and return readers to the collected sidecar evidence without deleting the sidecars.
+- **Evidence lost — what cannot be reconstructed:** No evidence is lost by this proposal because it creates no file and moves no sidecar. If the future transfer is executed and then reversed incorrectly, the canonical aggregation could be lost; the source sidecars remain the recovery evidence.
+- **Retention window:** Not applicable until the proposed owner is separately created and approved; once created, retain the append-only canonical observations indefinitely with source-sidecar provenance.
+
 ### `SafeProjection` — `DERIVED_NOT_PERSISTED` → `build/safe_projection.json`
 
 *derived · signer: user (Boss) · state: PROPOSED*
@@ -270,6 +283,8 @@ One block per row that proposes a move. These four fields are the reviewer check
 | `ReconciliationEvidence` | `EMBEDDED:SnapshotMeta` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `RunAttempt` | `EMBEDDED:RunTransition` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `RunJournal` | `TRANSIENT` | correctly owned by nobody, now and after: the schema declares it x-derived and "NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written." Persisting a fold of an append-only log creates a second copy that can disagree with the log, so KEEP here means "never g… |
+| `RuntimeIdentityRecord` | `EMBEDDED:ControlRoomSnapshotV5` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
+| `RuntimeIdentitySummary` | `EMBEDDED:ControlRoomSnapshotV5` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `SnapshotBuilderInput` | `_triage/factory_os/snapshot_validator.py` | transient by contract - the schema says "NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted." Its only home today is the module that defines and validates its shape, and that module is a real tracked file, so this row names a genuine current owner ra… |
 | `SnapshotMeta` | `EMBEDDED:ControlRoomSnapshotV5` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `SnapshotVerdict` | `EMBEDDED:ControlRoomSnapshotV5` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |

@@ -82,6 +82,7 @@ PLANNED_PATHS = (
     # what one machine observed and sent, and committing it would put a scheduled writer on
     # master -- a lane the commit guards cannot see (memory: negative-claims-over-a-commit-range).
     'ops/delivery_ledger.jsonl',
+    'portfolio/runtime_identity_observed.jsonl',
 )
 
 COVERAGE_CURRENT_OWNER = 'MASTER_BACKLOG.md'
@@ -153,6 +154,8 @@ UNOWNABLE = {
                        'an AlertEvent is never persisted'),
     'AlertDelivery':  ('NO_CURRENT_OWNER', '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
                        'Without it, dedupe is a claim about sending, not about arriving'),
+    'RuntimeIdentityObserved': ('NO_CURRENT_OWNER', '_triage/factory_os/schemas.json',
+                                'no single canonical owner currently owns the observation corpus'),
 }
 
 

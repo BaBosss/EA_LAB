@@ -78,7 +78,7 @@ KEEP_RETENTION = ('indefinite - the owner file is unchanged by this row, so noth
                   'retention window')
 
 # ---------------------------------------------------------------------------------------------
-# The 27 rows. `owner` is the current_owner; owner_ref is recomputed from it below.
+# The schema storage rows. `owner` is the current_owner; owner_ref is recomputed from it below.
 # EMBEDDED rows are written first, compactly, because their judgement is genuinely uniform - the
 # alternative would be 9 paraphrases of one sentence, which is the "24 copies of the same string"
 # that audit 5 rejected. Stating it once and pointing at it is more honest than varying the wording.
@@ -91,6 +91,8 @@ EMBEDDED = [
     ('ReconciliationEvidence', 'SnapshotMeta', 'canonical'),
     ('SnapshotMeta', 'ControlRoomSnapshotV5', 'canonical'),
     ('SnapshotVerdict', 'ControlRoomSnapshotV5', 'derived'),
+    ('RuntimeIdentityRecord', 'ControlRoomSnapshotV5', 'derived'),
+    ('RuntimeIdentitySummary', 'ControlRoomSnapshotV5', 'derived'),
 ]
 
 # OwnerRef is the design's universal pinning primitive: 12 entities embed it. Naming one parent would
@@ -531,6 +533,40 @@ ROWS = [
         ),
     ),
     # ---------------------------------------------------------------- UNOWNED (rev 5)
+    dict(
+        entity='RuntimeIdentityObserved',
+        owner='NO_CURRENT_OWNER',
+        proposed='portfolio/runtime_identity_observed.jsonl',
+        disposition='TRANSFER',
+        canonical_or_derived='canonical',
+        unowned_evidence='_triage/factory_os/schemas.json',
+        breaks_if_moved=(
+            'Nothing is moved by this proposal: the current per-chart sidecars are evidence/storage '
+            'locations rather than one canonical owner, so there is no existing canonical artifact '
+            'to relocate. The future owner would be created only by a separately executed transfer.'
+        ),
+        breaks_if_not_moved=(
+            'The observation corpus remains split across collected per-chart sidecars under '
+            'portfolio/live_deals/, so no versioned canonical owner can answer which observations '
+            'were in force for a later snapshot or reconcile the corpus as one ownership surface. '
+            'This row proposes that canonical owner; it does not execute the transfer.'
+        ),
+        reverse_steps=(
+            'Before the transfer is executed, no reverse action is required. After execution, stop '
+            'the canonical writer, remove portfolio/runtime_identity_observed.jsonl, and return '
+            'readers to the collected sidecar evidence without deleting the sidecars.'
+        ),
+        evidence_lost=(
+            'No evidence is lost by this proposal because it creates no file and moves no sidecar. '
+            'If the future transfer is executed and then reversed incorrectly, the canonical '
+            'aggregation could be lost; the source sidecars remain the recovery evidence.'
+        ),
+        retention_window=(
+            'Not applicable until the proposed owner is separately created and approved; once '
+            'created, retain the append-only canonical observations indefinitely with source-sidecar '
+            'provenance.'
+        ),
+    ),
     dict(
         entity='TestUniverse',
         owner='NO_CURRENT_OWNER',
