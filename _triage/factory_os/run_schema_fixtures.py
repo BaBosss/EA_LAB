@@ -1444,6 +1444,37 @@ def main():
         # so rather than printing a clean line. Three of the five stores are empty by design.
         print("  0 rows means this check is UNTESTED by this run, not that the stores are clean")
 
+    # --- ORDER-1500: the committed scheduler recovery journals -----------------------------
+    # `factory/runs/*.jsonl` is deliberately NOT added to registry.STORES. It is an unbounded
+    # append-only journal whose persisted entity is one RunTransition per line. The validator
+    # below is beside this AJV live-input pass so the existing schema-tool invocation is reused.
+    # Three owner-approved historical manifests are accepted only by exact path + ID + bytes;
+    # every other row must pass the current RunTransition contract normally.
+    print("\n--- ORDER-1500 committed scheduler recovery journals ---")
+    import run_journal_validator as _journal_validator
+    try:
+        _journal_report = _journal_validator.validate_run_journals(_src, SCHEMA)
+    except _journal_validator.JournalInfrastructureError as _exc:
+        print("  TOOL FAILURE: %s" % _exc)
+        bad += 1
+    else:
+        _legacy = sum(1 for _r in _journal_report.rows
+                      if _r['state'] == _journal_validator.LEGACY_EXCEPTION)
+        _valid = sum(1 for _r in _journal_report.rows
+                     if _r['state'] == _journal_validator.VALID)
+        _invalid = _journal_report.invalid_rows
+        for _r in _invalid:
+            print("  [BAD] %s:%s (%s) %s" % (_r['file'], _r['line'], _r['state'],
+                                               _r['detail'][:220]))
+        if _invalid:
+            bad += len(_invalid)
+        print("  %d row(s) VALID, %d row(s) LEGACY_EXCEPTION, %d row(s) INVALID" %
+              (_valid, _legacy, len(_invalid)))
+        if _journal_report.legacy_files:
+            print("  legacy files: %s" % ', '.join(sorted(_journal_report.legacy_files)))
+        print("  retention wake: prune only after the corresponding event-log occurrence is durable; "
+              "no automatic deletion is performed")
+
     print("\n--- the real snapshot, validated against the schema that claims to describe it ---")
     # C1 is a claim about the artifact THIS COMMIT contains (design section 2: the
     # commit-vintage claim about a builder's output is made by a checker, never the builder).

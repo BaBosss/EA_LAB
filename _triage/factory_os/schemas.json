@@ -1277,7 +1277,9 @@
           "$ref": "#/$defs/OwnerRef"
         }
       },
-      "x-enforcement-status": "PLANNED"
+      "x-enforced-by": "_triage/factory_os/run_schema_fixtures.py: ajv validates every committed factory/runs/*.jsonl RunTransition row; exactly three byte-pinned historical manifests are visible LEGACY_EXCEPTION results until their event-log occurrence is durable",
+      "x-enforcer": "_triage/factory_os/run_schema_fixtures.py",
+      "x-enforcement-status": "WIRED"
     },
     "RunJournal": {
       "type": "object",

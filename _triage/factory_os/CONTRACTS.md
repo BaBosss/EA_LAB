@@ -41,7 +41,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `CoverageCell` | `factory/coverage.jsonl` | automation for state; claude only for not_applicable_reason | coverage_validator: comparison-group same-lane rule; MASTER_BACKLOG section 2 regenerated from this, never hand-edited |
 | `ExecutionKey` | *embedded in its parent — no file* | — | — |
 | `RunAttempt` | *embedded in its parent — no file* | — | — |
-| `RunTransition` | `factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only` | the scheduler only | scheduler: reconcile process + report + event store BEFORE any retry; monotonic transition validator |
+| `RunTransition` | `factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only` | the scheduler only | _triage/factory_os/run_schema_fixtures.py: ajv validates every committed factory/runs/*.jsonl RunTransition row; exactly three byte-pinned historical manifests are visible LEGACY_EXCEPTION results until their event-log occurrence is durable |
 | `RunJournal` | **derived, never written** — True | — | — |
 | `EvidenceRef` | `docs/memory_control/experiment_events/evidence-manifest.jsonl (EXISTING - NOT replaced)` | — | — |
 | `CandidatePayload` | *embedded in its parent — no file* | — | — |
@@ -304,7 +304,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`RunTransition`** · stored in `factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only` · written by *the scheduler only* · enforced by *scheduler: reconcile process + report + event store BEFORE any retry; monotonic transition validator*
+**`RunTransition`** · stored in `factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only` · written by *the scheduler only* · enforced by *_triage/factory_os/run_schema_fixtures.py: ajv validates every committed factory/runs/*.jsonl RunTransition row; exactly three byte-pinned historical manifests are visible LEGACY_EXCEPTION results until their event-log occurrence is durable*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -931,4 +931,3 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | 5 | delete the generated tree, regenerate from the registry | byte-identical .mq5 - NOT .ex5, MQL5 compilation is not reproducible, staleness is judged by mtime |
 
 <!-- END GENERATED CONTRACT: META_parity_cases -->
-
