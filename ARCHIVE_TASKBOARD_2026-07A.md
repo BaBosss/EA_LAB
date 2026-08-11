@@ -11696,3 +11696,201 @@ are done here.</sub>
 - ❌ `schemas.json` is **not** in the attestation bundle, but `check_s2a_migration.py` reads it ⇒ **re-run the S2a gate before commit**. ❌ No `REVIEWED`.
 
 ---
+## ORDER-1050 ? [factory/S6] The live `[CFG]` digest does not match the compiler's for a hand-built `.set` ? `REVIEWED(Codex, 2026-08-11): HISTORICALLY_UNRESOLVABLE ? historical digest mismatch unreconciled; PROHIBITED AS VALIDATION EVIDENCE; future Runtime Identity/build receipts apply prospectively; Build-6090 formal historical acceptance unavailable on this lineage` ? runnable by: **Claude/Opus** ? ?? recommended: Claude
+**bars:** N-A (cross-language contract) · **flat-lot probe:** N-A
+
+Opened 2026-08-02 (`S-2026-08-02-ADOPTDONE`) from the first live use of the fingerprint.
+
+**The observation.** `Boss_14_GridLog` on `415573666` printed
+`effective_config_hash=cb45e0e68…` (STEP2 `.set`) and `3334c996b…` (STEP3 `.set`), both with
+`keys=116 scope=surface+constants`. Recompiling the **same two `.set` files** through
+`preset.compile_preset` yields `d1335d39…` and `1de384c8…`. Neither matches.
+
+**Why this matters more than it looks.** `ORDER-710` and `ORDER-730` proved the EA and the compiler
+agree — **on four tester runs driven by `gen_default_preset`**. This is the first time the pair has
+been exercised on a `.set` built another way, and it disagrees. Either the recompute path is wrong
+(most likely) or the agreement demonstrated in the tester does not generalise to how presets are
+actually shipped — and the second reading would make the fingerprint useless for the job design §5.6
+gives it: *"is the `.set` on this chart the `.set` we validated"*.
+
+**First moves, cheapest first:** (1) re-drive the same two `.set` through
+`scripts/verify_config_fingerprint.ps1`'s own path in the tester, which is known-good, and see
+whether the disagreement follows the `.set` or the caller · (2) diff the preimage, not the digest —
+dump both sides' line lists and find the first differing line · (3) check the money-unit branch,
+since the recompute passed `unit='usd'` for every money input by assumption.
+
+**Prohibitions:** ❌ do not quote the live digest as a validation check until this closes · ❌ do not
+"fix" it by changing what the EA hashes — the EA is the side reading real loaded values, and if the
+two disagree the compiler is the suspect.
+
+### ✅ DIAGNOSED 2026-08-05 (lane `S-2026-08-05-OWNERQ`) — the recompute path, exactly as this row guessed
+
+**It is not the `.set`, not the binary, and not `CryptEncode` vs `hashlib`. The recompute was called
+without `locked_constants`, and that changes the FIRST LINE of the preimage.**
+
+`preset._fingerprint()` builds `['scope=<scope>', 'build=<tag>', …]`, and the scope comes from
+`_constant_scope(locked_constants)` — which returns `surface_only` when it is handed nothing. The EA
+does not derive its label at all: `ea_template/core/ConfigFingerprint.mqh:35` is
+`#define CFG_FP_SCOPE "surface+constants"`. Measured just now:
+
+| | first preimage line |
+|---|---|
+| `preset._constant_scope(None)` | `scope=surface_only` |
+| `preset._constant_scope({...})` | `scope=surface+constants` |
+| EA, `ConfigFingerprint.mqh:35` | `scope=surface+constants` |
+
+**Control, on an otherwise byte-identical body** (`build=LAB_ENTRY_14`, one input):
+`scope=surface_only` → `fa403f671fa6…` · `scope=surface+constants` → `f3142969df02…`.
+One line, and every digest downstream of it is unrelated. The mismatch is therefore **total and
+unconditional** — it was never going to match for *any* `.set`, which is why **both** files
+disagreed rather than one.
+
+**And the second half compounds it:** omitting `locked_constants` does not only relabel, it also
+drops every `const:<name>=<value>` line from the tail of the preimage while the EA hashes
+`CFG_SurfacePreimage() + CFG_ConstPreimage()` (guard `G6`). So the two strings differ at the top
+*and* are different lengths.
+
+**Why the four ORDER-710/730 tester runs agreed and this did not — the two callers are not the same
+caller.** `_triage/factory_os/gen_default_preset.py:66-73` resolves the constants and passes
+`locked_constants=consts`, with a comment saying in as many words that this *"is what moves the scope
+from `surface_only` to `surface+constants`"*. The ORDER-1050 recompute called `compile_preset` directly
+and did not. **So the agreement demonstrated in the tester is real and does generalise** — the second
+and worse reading this row raised (*"the fingerprint is useless for the job design §5.6 gives it"*) is
+**refuted**. The contract holds; one caller did not honour it.
+
+**The guards were right, and that is worth stating rather than glossing.** `check_input_surface_gen.py`
+`G3`/`G5` derive the expected label from *whether a constant enumeration is compiled in* and compare
+it to the `#define` — they pass because both sides genuinely are in the `surface+constants` state.
+They are source-side checks over the EA and the generator, and **nothing in that contract can see a
+third-party Python caller that skips an argument.** That is the actual hole: the contract is enforced
+between two files and violated from outside them.
+
+**What this row still owes** — the diagnosis is not the fix:
+1. `compile_preset` should **refuse**, not silently relabel, when it is asked for a fingerprint while
+   a constant enumeration exists in the tree and it was handed no constants. A default that produces a
+   valid-looking hash nobody can match is the `unreadable-input-must-refuse-not-skip` shape.
+2. The **numeric** reproduction is owed: re-run the two `415573666` `.set` files through the corrected
+   call and show they land on `cb45e0e68…` / `3334c996b…`. 🔴 **This lane did NOT do that** — it
+   demonstrated the mechanism and its control, which is a different and weaker claim, and the row must
+   not be closed on it. The two `.set` files were not located in this session.
+3. The `keys=116` in the live log matches `CFG_SurfaceKeys()` for `LAB_ENTRY_14` (line 403 of the
+   generated file), so the surface halves were the same size — one more reason the scope line is the
+   whole story.
+
+
+---
+
+### 2026-08-06 (lane `S-2026-08-06-CLEARALL`) — item 1 DONE · **item 2 done and it REFUTES the diagnosis above**
+
+#### ✅ Item 1 — `compile_preset` now REFUSES
+
+`_constant_scope` no longer collapses two different claims into one branch:
+
+| caller | before | now |
+|---|---|---|
+| `locked_constants=None` (said nothing) | `surface_only`, digest issued | 🔴 **`PresetRefusal`**, naming the argument and `ConfigFingerprint.mqh:35` |
+| `locked_constants={}` (said "none") | `surface_only`, digest issued | `surface+constants`, zero `const:` lines |
+| non-empty | `surface+constants` | unchanged |
+
+Silence and *"this build has none"* are different statements and the old `if not locked_constants`
+could not tell them apart — which is precisely how a digest nobody can match got issued without
+complaint. **Red before green:** the new assertion was run against the unfixed module first and
+failed with `scope is 'surface_only'; a preimage the EA can never reproduce is not a fingerprint`.
+Green after: `run_preset_tests.ps1` passes **with `--mutate`** (every criterion seen red for its own
+reason), `run_fast_cages.ps1` **29 suites / 0 failed / 100.3s**, and G3 —
+`check_input_surface_gen.py`, which is the only thing tying `CFG_FP_SCOPE` to `_constant_scope` —
+reports `scope label : surface+constants (both sides; enumerated=True)`.
+<sub>`SCOPE_SURFACE_ONLY` is kept rather than deleted: G3 reads both names off the module, and the
+older digests carrying it are real records. The `{}` branch is **reasoned, not measured** — no build
+here declares zero locked constants, so nothing has exercised it against a binary. Said in the
+docstring too, rather than left for a reader to assume.</sub>
+
+#### 🔴 Item 2 — the reproduction was done, and **the scope label is NOT the cause of this row's mismatch**
+
+Both `.set` files were located: **`_vps_deploy/BOSS14_GBPJPY/O510_990208_STEP2_ADOPT.set`** and
+**`…_STEP3_NORMAL.set`** (read only; nothing under `_vps_deploy/` was modified). Driven through the
+caller shape `gen_default_preset.py` uses — constants supplied, scope now `surface+constants`:
+
+| `.set` | EA printed | recompute **with** constants | 2026-08-02 recompute |
+|---|---|---|---|
+| STEP2 ADOPT | `cb45e0e68…` | `d1335d3922daf448…` | `d1335d39…` |
+| STEP3 NORMAL | `3334c996b…` | `1de384c876c743cb…` | `1de384c8…` |
+
+**The corrected call produces the identical digests the broken call produced.** The block above
+states the mismatch is *"total and unconditional — it was never going to match for any `.set`"*;
+that is true of a `surface_only` digest and it is **not what produced these two numbers**. Item 1
+was a real defect and is worth having fixed; **it was not this defect.**
+
+**What the reproduction positively rules out**, so the next attempt does not re-walk it:
+- preimage **line 1** (`scope=`) — now `surface+constants` on both sides;
+- preimage **line 2** (`build=`) — `InputSurface_gen.mqh:407` emits `build=LAB_ENTRY_14`, which is
+  the tag the recompute used;
+- **which inputs are hashed** — the `.set` maps **116 of 116** onto the surface with **nothing
+  missing and nothing extra**, matching the live log's `keys=116`.
+
+⇒ the disagreement is in the **values or the constants**, not in the shape or the labels.
+
+#### A second finding, ⚠️ **half of which the author retracted an hour later — read the retraction block below before quoting any of it**
+
+| | |
+|---|---|
+| `_vps_deploy/BOSS14_GBPJPY/Boss_14_GridLog.ex5` mtime | **2026-08-02 11:05:35** |
+| `1825bebc` — *"the `Inputs.mqh` capability-token rollout, Boss_14 only — 78 inputs compiled away"* | **2026-08-02 13:00:51** |
+| the owner's two chart runs | **13:08 and 13:10** |
+
+`#ifndef LAB_CONST__` guards in `ea_template/core/Inputs.mqh`: **0 at `1825bebc~1`, 152 today.**
+Locked constants for Boss_14 **did not exist** before that commit.
+
+#### 🔴 RETRACTED within the hour, by the author, before anyone read it
+
+~~So a binary built at 11:05:35 could not print `scope=surface+constants`, and the one on the chart
+did. The `.ex5` in the bundle is therefore not the binary that ran.~~ — **the inference is unsound
+and the conclusion is probably false.**
+
+**A commit timestamp records when source was COMMITTED, not when it existed on disk.** `1825bebc`
+landing at 13:00:51 says nothing about whether its source was already in the worktree at 11:05, and
+the ordinary way of working is to build, test, then commit. One `Length` check settles what the
+timestamp could not:
+
+| binary | mtime | bytes |
+|---|---|---|
+| `_vps_deploy/BOSS14_GBPJPY/Boss_14_GridLog.ex5` | 2026-08-02 11:05 | **178,182** |
+| `D:\Meta 5b\…\EALabTpl\Boss_14_GridLog.ex5` (post-rollout, current) | 2026-08-02 13:59 | **178,300** |
+| `D:\Meta 5b\MQL5\Experts\Boss_14_GridLog.ex5` (pre-rollout) | 2026-07-27 08:55 | **152,178** |
+| `…_PRE132_2026-07-16.ex5.old` | 2026-07-16 | 103,616 |
+
+**The bundle's binary is in the ~178 KB post-rollout size class, not the 152 KB pre-rollout one.**
+So it is entirely consistent with being the binary that printed `scope=surface+constants`, and the
+bundle-is-stale claim is withdrawn.
+
+🎯 **The lesson is the one this repo keeps paying for, and it is mine:** I asserted a negative from
+a timestamp when a stronger instrument — the file's own size — was one command away, and I did it
+inside a write-up whose entire subject is *a digest that was trusted without being checked*. Memory
+`prove-the-instrument-can-see-the-file` and `pin-the-magnitude-before-calling-it-urgent` both say
+this; `parent-cpu-and-path-limit-both-mislead` is the same shape. **A commit timestamp is not a
+build timestamp, and mtime is not provenance.** What would actually settle it is the build tag or a
+hash of the running binary, and neither is recorded anywhere.
+
+⇒ Item 2's finding is unchanged and does not depend on any of this: **the corrected call reproduces
+`d1335d39…`/`1de384c8…`, so the scope label was not the cause.** The vintage of the running binary
+remains **unknown**, which is still the thing blocking the row — it just is not knowably *wrong*.
+
+#### What is still owed — narrower than before, and one item is an instrumentation ask
+
+1. **Pin the running binary's vintage.** Every remaining candidate (constant *values*, canonical
+   form of some input) is a statement about *which source the chart's binary was compiled from*, and
+   that is currently unknown. Nothing can be concluded until it is.
+2. **Diff the preimage, not the digest** — this row's own "first move (2)", still not done and now
+   the only move left. 🔴 **It cannot be done today: the EA prints the digest and not the preimage.**
+   `CFG_SurfacePreimage()` exists and is never emitted. This is the same shape as `ORDER-1000` — a
+   thing that cannot say what it did — and it needs one `Print()` behind a debug input.
+3. 🚫 **The prohibition at the top of this row stands and is now load-bearing:** the live digest must
+   not be quoted as a validation check until this closes. Item 1 did not close it.
+
+### FINAL LIFECYCLE CLOSURE ? HISTORICALLY_UNRESOLVABLE (2026-08-11)
+
+The historical runtime artifact for account `415573666`, magic `990208`, and `Boss_14_GridLog` cannot be independently bound to a source commit, SHA-256, build receipt, or EA-side canonical preimage. The recorded candidate MD5 `5D2C5A9E7CB9A5B4BB2D99EA1E07AA41` remains partial provenance only. The historical config digest mismatch is unreconciled and is **PROHIBITED AS VALIDATION EVIDENCE**; no further historical reconstruction is owed.
+
+Runtime Identity and build receipts bind future runs prospectively. The formal Build-6090 historical provenance gate cannot run on this integration lineage because the requisite historic source Git objects are unavailable; this is not acceptance of historical Build-6090 provenance. No new identity mechanism, runtime/config implementation, tester run, or historical evidence round is required for ORDER-1050.
+
+**Lifecycle disposition:** `HISTORICALLY_UNRESOLVABLE` ? closed after lifecycle binding; unresolved historical evidence is preserved as a limitation, not treated as a green validation result.
