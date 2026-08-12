@@ -661,15 +661,44 @@ def _crypto_run_records(src):
     return out
 
 
+def _swap_mode_probe_is_valid(src, reference, symbol):
+    """Return ``(ok, detail)`` for a non-copied, dated symbol-spec probe reference."""
+    if not isinstance(reference, str) or not reference.startswith('factory/runs/pilot/swap_probe/'):
+        return (False, 'must be a repository reference under factory/runs/pilot/swap_probe/')
+    try:
+        content = _read(src, reference)
+    except (evidence.ToolFailure, Refusal) as exc:
+        return (False, 'cannot read referenced probe %r: %s' % (reference, exc))
+    matches = []
+    for n, line in enumerate(content.split('\n'), 1):
+        if not line.strip():
+            continue
+        try:
+            probe = json.loads(line)
+        except ValueError:
+            return (False, 'referenced probe is unparseable at line %d' % n)
+        if (probe.get('entity') == 'SwapProbe' and probe.get('probe') == 'spec'
+                and probe.get('logical_symbol') == symbol and probe.get('taken_utc')
+                and probe.get('swap_mode')):
+            matches.append(probe)
+    if len(matches) != 1:
+        return (False, 'referenced probe must contain exactly one dated spec record for %s' % symbol)
+    return (True, '')
+
+
 def item_crypto_financing(src):
-    """8.6.10 -- crypto cells have financing deducted post-hoc, and say so."""
+    """8.6.10 -- crypto cells state their tester financing treatment, and say so."""
     recs = _crypto_run_records(src)
     if not recs:
         return (BLOCKED,
                 'no %s run record is committed under factory/runs/pilot/, so there is no crypto '
                 'number for a financing cost to be deducted from.' % '/'.join(CRYPTO_SYMBOLS))
 
-    # HALF ONE -- "and say so". Structural, and it is the half that can be judged from the records.
+    # HALF ONE -- "and say so". The old contract required `applied=true` because it assumed
+    # INTEREST_CURRENT meant the tester skipped financing. ORDER-1350 disproved that premise from
+    # the reports themselves: the stored PF/gross/net values are tester-native and the report has
+    # a non-zero Swap total. `applied` therefore means a post-hoc change to those stored metrics,
+    # and must be false. Requiring true would certify a false accounting claim.
     problems = []
     for rel, n, rec in recs:
         where = '%s:%d %s [%s]' % (rel, n, rec.get('cell_id'), rec.get('arm') or rec.get('window'))
@@ -677,13 +706,16 @@ def item_crypto_financing(src):
         if not isinstance(fin, dict):
             problems.append('%s carries no financing_deducted block' % where)
             continue
-        for f in ('applied', 'tool', 'rate_long_pct_yr', 'rate_short_pct_yr', 'detail'):
+        for f in ('applied', 'metric_basis'):
             if fin.get(f) in (None, ''):
                 problems.append('%s financing_deducted has no %s' % (where, f))
-        if fin.get('applied') is not True:
-            problems.append('%s records financing_deducted.applied=%r; an unapplied deduction '
-                            'leaves the number exactly as optimistic as no deduction at all'
+        if fin.get('applied') is not False:
+            problems.append('%s records financing_deducted.applied=%r; the stored metrics are '
+                            'tester-native, so a post-hoc adjustment would double-charge swap'
                             % (where, fin.get('applied')))
+        if fin.get('metric_basis') != 'tester_native':
+            problems.append('%s records metric_basis=%r instead of tester_native'
+                            % (where, fin.get('metric_basis')))
     if problems:
         # WHY THIS IS A CONTRADICTION AND NOT A GAP. The records do not merely omit something --
         # they disagree with each other: within one crypto cell, the baseline arm carries a
@@ -708,13 +740,9 @@ def item_crypto_financing(src):
                 % (len(problems), '/'.join(CRYPTO_SYMBOLS), shape, min(3, len(problems)),
                    '; '.join(problems[:3])))
 
-    # HALF TWO -- "deducted", which is not the same as "a deduction is recorded". ORDER-1350
-    # measured that the tester itself charges swap on BTCUSD in these very runs (a non-zero Swap
-    # column; implied annual mean 14.3% against the broker's stated 14.67%), while
-    # swap_adjust_crypto.py applies the cost a SECOND time on top -- its docstring's premise, a
-    # probe run 2026-07-26, no longer holds. A number carrying the cost twice does not satisfy
-    # this item any more than a number carrying it zero times: the item exists so that crypto
-    # figures carry their financing CORRECTLY.
+    # HALF TWO -- the report-backed tester charge and a dated symbol-probe reference. This is what
+    # distinguishes an annotation from a synthetic post-hoc estimate, and lets a reader see that
+    # no second charge was included in tester-native metrics.
     #
     # 🔴 THE GATE IS READ FROM THE RECORD, NOT HARDCODED, and that is deliberate. A handler that
     # returned BLOCKED on a constant because of ORDER-1350 would be a stub wearing a reader --
@@ -727,6 +755,7 @@ def item_crypto_financing(src):
     #                                           premise in swap_adjust_crypto.py is a 2026-07-26
     #                                           measurement and broker state moves under it
     ungated = []
+    invalid_refs = []
     for rel, n, rec in recs:
         fin = rec['financing_deducted']
         where = '%s:%d %s' % (rel, n, rec.get('cell_id'))
@@ -734,19 +763,22 @@ def item_crypto_financing(src):
             ungated.append('%s has no numeric financing_deducted.tester_swap_charged' % where)
         if not fin.get('swap_mode_probe'):
             ungated.append('%s has no financing_deducted.swap_mode_probe' % where)
+        else:
+            ok, detail = _swap_mode_probe_is_valid(src, fin['swap_mode_probe'], rec['logical_symbol'])
+            if not ok:
+                invalid_refs.append('%s %s' % (where, detail))
+    if invalid_refs:
+        return (FAIL, 'crypto financing evidence has %d invalid swap-mode probe reference(s); first: %s'
+                % (len(invalid_refs), invalid_refs[0]))
     if ungated:
         return (BLOCKED,
-                'all %d %s run record(s) carry a complete financing statement (tool, both rates, '
-                'amount, applied=true), so the "say so" half is satisfied. The "deducted" half is '
-                'not evidenced: ORDER-1350 measured that the tester CHARGES swap on these same '
-                'runs (implied annual mean 14.3%% vs the broker-stated 14.67%%), so the post-hoc '
-                'cost is applied on top of a charge that already happened, and no record says '
-                'otherwise. %d missing field(s); first: %s'
+                'all %d %s run record(s) state tester-native metrics with no post-hoc adjustment, '
+                'but the primary tester charge/probe provenance is incomplete. %d missing '
+                'field(s); first: %s'
                 % (len(recs), '/'.join(CRYPTO_SYMBOLS), len(ungated), ungated[0]))
     return (PASS,
-            'all %d %s run record(s) carry a complete financing statement AND state the tester s '
-            'own swap charge beside the post-hoc one with a dated swap-mode probe, so the cost is '
-            'deducted once and the record shows which side charged what.'
+            'all %d %s run record(s) state tester-native metrics with no post-hoc adjustment and '
+            'carry the report-derived tester swap beside a dated swap-mode probe reference.'
             % (len(recs), '/'.join(CRYPTO_SYMBOLS)))
 
 

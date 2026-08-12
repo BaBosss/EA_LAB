@@ -971,7 +971,7 @@ this by narrowing what the contract requires.**
 
 ---
 
-## ORDER-1350 — [factory/S13] 🔴 The tester IS charging BTCUSD swap, so every crypto record deducts the financing a second time — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+## ORDER-1350 — [factory/S13] 🔴 The tester IS charging BTCUSD swap, so every crypto record deducts the financing a second time — `DONE 2026-08-12 (Codex Primary implementation/evidence complete; PENDING independent different-model-family review)` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Opened 2026-08-04 by lane `S-2026-08-04-S13G`, found while executing `ORDER-1330` item 3 — the
 > deal-level diff that named the swap column is the same evidence that shows the column is not zero.
@@ -1060,6 +1060,41 @@ it here for one cell is how a corpus ends up half-migrated.
 symbol. ⚠️ And the coupling stands: this probe is dated because the next one need not agree.
 
 ---
+
+### ✅ Completion evidence — 2026-08-12, lane `S-2026-08-12-SWAPFIX`
+
+**Accounting truth (traced, not inferred from the field name).** The stored `pf`, `gross_profit`,
+`gross_loss` and `net_profit` values are copied directly from `Get-ReportMetrics` in
+`pilot_cells.ps1` / `pilot_verify_selected.ps1`; no code in either writer subtracts the post-hoc
+estimate. `Get-CryptoFinancing` only populated the metadata `detail` string, while
+`swap_adjust_crypto.py --deals --out` writes a separate derived trade CSV. The precise bad seam was
+therefore downstream: the false `financing_deducted.applied=true` annotation and prose called raw
+tester values adjusted, allowing the separately estimated CSV/manual prose to subtract a tester
+Swap total a second time. The historical quote `tester PF 1.44 -> 1.20 after financing` is that
+second deduction, not a mutation of a `PilotCellRun` metric.
+
+**Repair.** `scripts/swap_adjust_crypto.py` is now documented as a diagnostic estimator that must
+not be applied where a report's Deals/Swap column is non-zero. A deterministic migration reads each
+original BTCUSD report's Deals/Swap column, changes only the financing metadata, and records:
+`applied:false` · `metric_basis:"tester_native"` · the report-derived
+`tester_swap_charged` · a repository reference to the dated BTC spec probe. It refuses missing
+reports, malformed Swap values, and missing/wrong probe provenance; a second apply is a no-op.
+The 28 current BTCUSD records all resolve to their original reports and retain every raw metric.
+
+**ETHUSD required by this order and run:** lane `D:\Meta 5\terminal64.exe`, Model 1. The dated
+spec probe (`2025.12.01..2025.12.10`) recorded `INTEREST_CURRENT`, long `-9.86%/yr`, short
+`-3.95%/yr`, contract 1.0, min lot 0.1. The dated charge probe (`2025.10.01..2025.12.09`, BUY
+0.10) reports `Swap = -4.73` on the close deal, so ETHUSD too must not receive a second estimated
+deduction. Evidence: `factory/runs/pilot/swap_probe/swap_probe_20260812_ethusd.jsonl` and the two
+`_mt5_auto/reports/ORDER1350_ETHUSD_*_20260812.htm` reports. Both probe reports verified leverage
+1:100 and were not truncated; the charge-probe `.set` is recorded as UNDECLARED by the generic
+surface checker, so its narrow conclusion is only the non-zero tester charge.
+
+**Validation.** `run_crypto_financing_migration_tests.py`: 11/11; `run_s13_tests.py`: 91/91;
+the current checker reads item 10 PASS for all 28 BTCUSD records. The overall pilot checker remains
+red for unrelated items 2 and 5 and BLOCKED for 3, 4, 11, 12 and 14. No BTCUSD Model-4 rerun was
+needed; original reports supplied primary evidence. Independent different-model-family review is
+still required before this accounting integrity repair is treated as finally accepted.
 
 ## ORDER-1301 — [factory/S13] Every configuration in the PF-max plateau has essentially no realized loss, which is what a basket martingale looks like when it is measured on PF — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
@@ -3484,7 +3519,7 @@ two items now read real evidence and neither one's evidence is clean.
 
 ---
 
-## ORDER-1370 — [factory/S13] 🔴 Two arms of every crypto cell disagree about whether financing was deducted, and the falsifier compares across them — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+## ORDER-1370 — [factory/S13] 🔴 Two arms of every crypto cell disagree about whether financing was deducted, and the falsifier compares across them — `DONE 2026-08-12 (Codex Primary implementation/evidence complete; PENDING independent different-model-family review)` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Opened 2026-08-04 by lane `S-2026-08-04-S13H` while implementing `ORDER-1256` item 10. It is the
 > **owner of the `FAIL`** that item now renders — a red checklist item with no order behind it is
@@ -3529,6 +3564,24 @@ letting `EVIDENCE_COMPLETE` be reached while any handler is a stub — `U4` asse
 flag tracks the declaration and is not hardcoded.
 
 ---
+
+### ✅ Completion evidence — 2026-08-12, lane `S-2026-08-12-SWAPFIX`
+
+Exact pre-migration inventory: **28 BTCUSD `PilotCellRun` records** in five JSONL files — 12
+baseline records with the old block, 10 flat-lot probes and 6 probe-escalated arms without one;
+there were **0 ETHUSD pilot run records**. Exact post-migration inventory: all 28 BTCUSD records
+have consistent tester-native/no-posthoc semantics, a numeric report-derived
+`financing_deducted.tester_swap_charged`, and the same non-copied reference to
+`factory/runs/pilot/swap_probe/swap_probe_20260804.jsonl`. The migration changed no non-crypto
+record, did not alter `pf`/`gross_profit`/`gross_loss`/`net_profit`, and a second run reported
+`MIGRATED: 0 BTCUSD record(s); 28 already migrated`.
+
+The checker was corrected rather than weakened: its former `applied=true` predicate contradicted
+the report-to-record data flow. It now requires `applied:false`, `metric_basis:"tester_native"`, a
+numeric tester Swap total, and a readable dated probe reference. Its adversarial cage includes
+missing report, wrong symbol, already-migrated no-op, stale/wrong probe, malformed Swap, raw-metric
+preservation and an `applied:true` double-charge attempt. `check_pilot_acceptance` item 10 is now
+PASS by reading the migrated evidence; the remaining pilot failures/blocks are outside this order.
 
 ## ORDER-1240 — [factory/S13] Resolve the pilot first lot MECHANICALLY, re-run the matrix, and de-confound the falsifier — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13SIZE) — criterion written before the sweep; 0.03 selected; 3 arms x 16 cells; 2 of 4 owner-ratified items done, 2 blocked with reasons` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 

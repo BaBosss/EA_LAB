@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Charge the financing cost the MT5 tester silently skips on INTEREST-mode symbols.
+"""Estimate financing only when a tested report proves the tester did not already charge it.
 
-WHY THIS EXISTS (measured 2026-07-26, not assumed):
-  Probing the tester's own numbers with a 30-day single-position hold showed:
-    XAUUSD  SYMBOL_SWAP_MODE_POINTS            -> swap IS charged (-29.25 measured vs -29.19 expected)
-    BTCUSD  SYMBOL_SWAP_MODE_INTEREST_CURRENT  -> swap is NOT charged (net == price-only P&L to the cent)
-    ETHUSD  SYMBOL_SWAP_MODE_INTEREST_CURRENT  -> same as BTC
-  So every XAU backtest in this lab already carries its financing cost and must NOT be adjusted twice,
-  while crypto results overstate profit until this script is applied.
-  Probes live in ea_projects/(TST)_SymbolSwapProbe/ -- run them before trusting any new symbol.
+WHY THIS EXISTS:
+  Swap mode is not proof that the tester skipped financing. ORDER-1350's dated BTCUSD probe and
+  the historical pilot reports show non-zero tester Swap totals for INTEREST_CURRENT. Before using
+  this tool, inspect the report's Deals/Swap column or run the dated charge probe. If the tester
+  charged a non-zero total, DO NOT feed this tool's estimate into a reported tester metric or a
+  downstream calculation of that same run: that would deduct financing twice.
+  This tool remains a diagnostic estimator for reports where primary evidence establishes that the
+  tester charge is zero. Probes live in ea_projects/(TST)_SymbolSwapProbe/.
 
 METHOD (deliberately conservative):
   cost_per_position = notional * (annual_rate/100/360) * days_held

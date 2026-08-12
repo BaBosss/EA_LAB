@@ -735,10 +735,10 @@ check('L5 SPECIFICITY a RUN record with no lane is caught even when every metric
 # another edit to this file.
 
 def fin(**over):
-    f = {'applied': True, 'tool': 'scripts/swap_adjust_crypto.py',
+    f = {'applied': False, 'metric_basis': 'tester_native', 'tool': 'scripts/swap_adjust_crypto.py',
          'rate_long_pct_yr': 14.67, 'rate_short_pct_yr': 0.49,
-         'detail': 'positions: 55 / swap charged: -625.70',
-         'tester_swap_charged': -382.75, 'swap_mode_probe': '2026-08-04 INTEREST_CURRENT'}
+         'detail': 'positions: 55 / swap charged: -625.70', 'tester_swap_charged': -382.75,
+         'swap_mode_probe': 'factory/runs/pilot/swap_probe/fixture.jsonl'}
     f.update(over)
     return f
 
@@ -757,7 +757,10 @@ def crypto_run(arm='baseline', symbol='BTCUSD', financing='default', **over):
 
 def crypto_source(runs, verification=None):
     files = {PA.DESIGN_REL: REAL_DESIGN,
-             PA.COVERAGE_REL: '\n'.join(json.dumps(c) for c in [cell('c1')])}
+             PA.COVERAGE_REL: '\n'.join(json.dumps(c) for c in [cell('c1')]),
+             'factory/runs/pilot/swap_probe/fixture.jsonl': json.dumps({
+                 'entity': 'SwapProbe', 'probe': 'spec', 'logical_symbol': 'BTCUSD',
+                 'taken_utc': '2026-08-04T00:00:00Z', 'swap_mode': 'INTEREST_CURRENT'})}
     if runs is not None:
         files['factory/runs/pilot/fixture.jsonl'] = '\n'.join(json.dumps(r) for r in runs)
     if verification is not None:
@@ -786,17 +789,17 @@ check('F3 ATTACK one arm adjusted, the other not -> FAIL and it names the ARM sp
       '%s: %s' % (state, detail))
 
 state, detail = PA.item_crypto_financing(crypto_source(
-    [crypto_run('baseline', financing=fin(applied=False))]))
-check('F4 ATTACK applied=false -> FAIL (an unapplied deduction leaves the number optimistic)',
-      state == PA.FAIL and 'applied=False' in detail, '%s: %s' % (state, detail))
+    [crypto_run('baseline', financing=fin(applied=True))]))
+check('F4 ATTACK applied=true -> FAIL (tester-native metrics would be double-charged)',
+      state == PA.FAIL and 'applied=True' in detail, '%s: %s' % (state, detail))
 
 # The ORDER-1350 gate, and the reason it is a FIELD and not a constant: with the two fields absent
 # the item is BLOCKED; F1 above proves the same handler returns PASS once they are present. A
 # hardcoded gate would make this item unreachable, which is the defect UNIMPLEMENTED exists for.
 state, detail = PA.item_crypto_financing(crypto_source(
     [crypto_run('baseline', financing=fin(tester_swap_charged=None, swap_mode_probe=None))]))
-check('F5 ATTACK a deduction with no tester-side charge recorded -> BLOCKED, naming ORDER-1350',
-      state == PA.BLOCKED and 'ORDER-1350' in detail and 'tester_swap_charged' in detail,
+check('F5 ATTACK tester-native record with no tester-side charge recorded -> BLOCKED',
+      state == PA.BLOCKED and 'tester_swap_charged' in detail,
       '%s: %s' % (state, detail))
 
 # SPECIFICITY: `*` does not cross `/` in list_committed, and the BWD + Model-4 runs live one level
@@ -816,6 +819,11 @@ state, detail = PA.item_crypto_financing(crypto_source(
      {'entity': 'SwapProbe', 'logical_symbol': 'BTCUSD', 'swap_mode': 'INTEREST_CURRENT'}]))
 check('F7 ATTACK a non-run record carrying a crypto symbol is not demanded to hold financing',
       state == PA.PASS, '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=fin(swap_mode_probe='factory/runs/pilot/swap_probe/missing.jsonl'))]))
+check('F8 ATTACK stale or wrong probe reference -> FAIL, not a truthy-string pass',
+      state == PA.FAIL and 'invalid swap-mode probe reference' in detail, '%s: %s' % (state, detail))
 
 
 # item 11 (ORDER-1256) ----------------------------------------------------------------------------
