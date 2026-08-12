@@ -1079,7 +1079,8 @@ original BTCUSD report's Deals/Swap column, changes only the financing metadata,
 `applied:false` · `metric_basis:"tester_native"` · the report-derived
 `tester_swap_charged` · a repository reference to the dated BTC spec probe. It refuses missing
 reports, malformed Swap values, and missing/wrong probe provenance; a second apply is a no-op.
-The 28 current BTCUSD records all resolve to their original reports and retain every raw metric.
+All 38 current BTCUSD run records (28 `PilotCellRun` + 10 `PilotSelectedVerification`) resolve to
+their original reports and retain every raw tester metric.
 
 **ETHUSD required by this order and run:** lane `D:\Meta 5\terminal64.exe`, Model 1. The dated
 spec probe (`2025.12.01..2025.12.10`) recorded `INTEREST_CURRENT`, long `-9.86%/yr`, short
@@ -1090,8 +1091,9 @@ deduction. Evidence: `factory/runs/pilot/swap_probe/swap_probe_20260812_ethusd.j
 1:100 and were not truncated; the charge-probe `.set` is recorded as UNDECLARED by the generic
 surface checker, so its narrow conclusion is only the non-zero tester charge.
 
-**Validation.** `run_crypto_financing_migration_tests.py`: 11/11; `run_s13_tests.py`: 91/91;
-the current checker reads item 10 PASS for all 28 BTCUSD records. The overall pilot checker remains
+**Validation.** `run_crypto_financing_migration_tests.py`: 15/15; `run_s13_tests.py`: 91/91;
+the current checker reads item 10 PASS for all 38 BTCUSD run records (28 `PilotCellRun` + 10
+`PilotSelectedVerification`). The overall pilot checker remains
 red for unrelated items 2 and 5 and BLOCKED for 3, 4, 11, 12 and 14. No BTCUSD Model-4 rerun was
 needed; original reports supplied primary evidence. Independent different-model-family review is
 still required before this accounting integrity repair is treated as finally accepted.
@@ -3567,19 +3569,23 @@ flag tracks the declaration and is not hardcoded.
 
 ### ✅ Completion evidence — 2026-08-12, lane `S-2026-08-12-SWAPFIX`
 
-Exact pre-migration inventory: **28 BTCUSD `PilotCellRun` records** in five JSONL files — 12
-baseline records with the old block, 10 flat-lot probes and 6 probe-escalated arms without one;
-there were **0 ETHUSD pilot run records**. Exact post-migration inventory: all 28 BTCUSD records
+Exact pre-migration inventory: **38 BTCUSD financing run records** ? 28 `PilotCellRun` records
+(12 baseline records with the old block, 10 flat-lot probes and 6 probe-escalated arms without one)
+plus 10 `PilotSelectedVerification` records with legacy `applied:true`; the 10
+`PilotProbeRun`/`PilotProbeSelection` records remain excluded. There were **0 ETHUSD pilot run
+records**. Exact post-migration inventory: all 38 BTCUSD run records
 have consistent tester-native/no-posthoc semantics, a numeric report-derived
 `financing_deducted.tester_swap_charged`, and the same non-copied reference to
-`factory/runs/pilot/swap_probe/swap_probe_20260804.jsonl`. The migration changed no non-crypto
-record, did not alter `pf`/`gross_profit`/`gross_loss`/`net_profit`, and a second run reported
-`MIGRATED: 0 BTCUSD record(s); 28 already migrated`.
+`factory/runs/pilot/swap_probe/swap_probe_20260804.jsonl`. The migration changed no non-BTC/non-run
+record, did not alter `pf`/`gross_profit`/`gross_loss`/`net_profit`/`trades`/`dd_pct`, corrected
+only stale financing notes, and a second run reported `MIGRATED: 0 BTCUSD record(s); 38 already
+migrated`.
 
 The checker was corrected rather than weakened: its former `applied=true` predicate contradicted
 the report-to-record data flow. It now requires `applied:false`, `metric_basis:"tester_native"`, a
 numeric tester Swap total, and a readable dated probe reference. Its adversarial cage includes
-missing report, wrong symbol, already-migrated no-op, stale/wrong probe, malformed Swap, raw-metric
+realistic `PilotSelectedVerification` records, missing report, wrong symbol, excluded non-run
+entity, already-migrated no-op, stale/wrong probe, malformed Swap, six-field raw-metric
 preservation and an `applied:true` double-charge attempt. `check_pilot_acceptance` item 10 is now
 PASS by reading the migrated evidence; the remaining pilot failures/blocks are outside this order.
 

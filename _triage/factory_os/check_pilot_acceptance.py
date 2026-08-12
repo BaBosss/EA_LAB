@@ -52,6 +52,7 @@ EXIT
 """
 
 import json
+import math
 import os
 import re
 import sys
@@ -102,6 +103,7 @@ PILOT_HYPOTHESES = ('B14-H01', 'B14-H02')
 # design section 8.3: 4 symbols x 2 timeframes x 2 hypotheses.
 PILOT_CELL_COUNT = 16
 CRYPTO_SYMBOLS = ('BTCUSD',)
+FINANCING_RUN_ENTITIES = frozenset(('PilotCellRun', 'PilotSelectedVerification'))
 
 # The verdict vocabulary CLAUDE.md declares canonical. This module may not emit any of it.
 # `BUILD-ON` and `CANDIDATE` are the ones a "helpful" summary line reaches for first.
@@ -655,8 +657,8 @@ def _crypto_run_records(src):
                 # type filed under these directories -- a probe result, a selection row, a
                 # closeout marker -- and then demand a financing block of something that is not a
                 # run. The swap probe record ORDER-1350 writes is exactly that shape.
-                if (rec.get('entity') == 'PilotCellRun'
-                        and rec.get('logical_symbol') in CRYPTO_SYMBOLS):
+                if (rec.get('entity') in FINANCING_RUN_ENTITIES
+                and rec.get('logical_symbol') in CRYPTO_SYMBOLS):
                     out.append((rel, n, rec))
     return out
 
@@ -677,8 +679,13 @@ def _swap_mode_probe_is_valid(src, reference, symbol):
             probe = json.loads(line)
         except ValueError:
             return (False, 'referenced probe is unparseable at line %d' % n)
+        if not isinstance(probe, dict):
+            return (False, 'referenced probe line %d is not a JSON object' % n)
         if (probe.get('entity') == 'SwapProbe' and probe.get('probe') == 'spec'
-                and probe.get('logical_symbol') == symbol and probe.get('taken_utc')
+                and probe.get('logical_symbol') == symbol
+                and isinstance(probe.get('taken_utc'), str)
+                and re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$',
+                             probe['taken_utc'])
                 and probe.get('swap_mode')):
             matches.append(probe)
     if len(matches) != 1:
@@ -693,6 +700,16 @@ def item_crypto_financing(src):
         return (BLOCKED,
                 'no %s run record is committed under factory/runs/pilot/, so there is no crypto '
                 'number for a financing cost to be deducted from.' % '/'.join(CRYPTO_SYMBOLS))
+
+    entity_counts = {}
+    for _rel, _n, rec in recs:
+        entity = rec.get('entity')
+        entity_counts[entity] = entity_counts.get(entity, 0) + 1
+    run_summary = '%d %s run record(s): %s' % (
+        len(recs), '/'.join(CRYPTO_SYMBOLS),
+        ', '.join('%d %s' % (count, entity)
+                  for entity, count in sorted(entity_counts.items()))
+    )
 
     # HALF ONE -- "and say so". The old contract required `applied=true` because it assumed
     # INTEREST_CURRENT meant the tester skipped financing. ORDER-1350 disproved that premise from
@@ -759,7 +776,9 @@ def item_crypto_financing(src):
     for rel, n, rec in recs:
         fin = rec['financing_deducted']
         where = '%s:%d %s' % (rel, n, rec.get('cell_id'))
-        if not isinstance(fin.get('tester_swap_charged'), (int, float)):
+        tester_swap = fin.get('tester_swap_charged')
+        if (not isinstance(tester_swap, (int, float))
+                or isinstance(tester_swap, bool) or not math.isfinite(tester_swap)):
             ungated.append('%s has no numeric financing_deducted.tester_swap_charged' % where)
         if not fin.get('swap_mode_probe'):
             ungated.append('%s has no financing_deducted.swap_mode_probe' % where)
@@ -772,14 +791,13 @@ def item_crypto_financing(src):
                 % (len(invalid_refs), invalid_refs[0]))
     if ungated:
         return (BLOCKED,
-                'all %d %s run record(s) state tester-native metrics with no post-hoc adjustment, '
+                '%s state tester-native metrics with no post-hoc adjustment, '
                 'but the primary tester charge/probe provenance is incomplete. %d missing '
                 'field(s); first: %s'
-                % (len(recs), '/'.join(CRYPTO_SYMBOLS), len(ungated), ungated[0]))
+                % (run_summary, len(ungated), ungated[0]))
     return (PASS,
-            'all %d %s run record(s) state tester-native metrics with no post-hoc adjustment and '
-            'carry the report-derived tester swap beside a dated swap-mode probe reference.'
-            % (len(recs), '/'.join(CRYPTO_SYMBOLS)))
+            '%s state tester-native metrics with no post-hoc adjustment and carry the '
+            'report-derived tester swap beside a dated swap-mode probe reference.' % run_summary)
 
 
 def _run_journals(src):

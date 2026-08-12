@@ -39,10 +39,16 @@ def probe(symbol="BTCUSD"):
         "taken_utc": "2026-08-04T00:00:00Z", "swap_mode": "INTEREST_CURRENT"}))) + "\n"
 
 
-def record(symbol="BTCUSD", report_path=""):
-    return {"entity": "PilotCellRun", "logical_symbol": symbol, "cell_id": "B14/X/H4",
-            "arm": "baseline", "report": report_path, "pf": 1.2, "gross_profit": 12,
-            "gross_loss": -10, "net_profit": 2}
+def record(symbol="BTCUSD", report_path="", entity="PilotCellRun"):
+    return {"entity": entity, "logical_symbol": symbol, "cell_id": "B14/X/H4",
+            "arm": "baseline" if entity == "PilotCellRun" else "selected-verification",
+            "window": "MAIN" if entity == "PilotCellRun" else "BWD",
+            "model": 1 if entity == "PilotCellRun" else 4,
+            "selection_record": "factory/runs/pilot/selection/selection.jsonl"
+            if entity == "PilotSelectedVerification" else None,
+            "report": report_path, "pf": 1.2, "gross_profit": 12,
+            "gross_loss": -10, "net_profit": 2, "trades": 49, "dd_pct": 15.22,
+            "notes": ["CRYPTO FINANCING: tester-native PF is optimistic until deducted."]}
 
 
 def run(root: Path, probe_path: Path, apply=False):
@@ -64,26 +70,39 @@ with tempfile.TemporaryDirectory() as tmp_s:
     try:
         crypto = runs / "crypto.jsonl"
         noncrypto = runs / "noncrypto.jsonl"
-        crypto.write_text(json.dumps(record(report_path=str(source_report)), separators=(",", ":")) + "\n", encoding="utf-8")
+        crypto.write_text("\n".join((
+            json.dumps(record(report_path=str(source_report)), separators=(",", ":")),
+            json.dumps(record(report_path=str(source_report), entity="PilotSelectedVerification"), separators=(",", ":")),
+            json.dumps(record(report_path=str(source_report), entity="PilotProbeRun"), separators=(",", ":")),
+            json.dumps(record(report_path=str(source_report), entity="PilotProbeSelection"), separators=(",", ":")),
+            json.dumps(record(report_path=str(source_report), entity="PilotCloseout"), separators=(",", ":")),
+        )) + "\n", encoding="utf-8")
         noncrypto.write_text(json.dumps(record("XAUUSD", str(source_report)), separators=(",", ":")) + "\n", encoding="utf-8")
         noncrypto_before = noncrypto.read_bytes()
-        before = json.loads(crypto.read_text(encoding="utf-8"))
+        before_lines = [json.loads(line) for line in crypto.read_text(encoding="utf-8").splitlines()]
+        before = before_lines[0]
 
         result = run(runs, probe_file, apply=False)
-        check("dry run identifies the intended BTC record", result.returncode == 0 and "1 BTCUSD" in result.stdout, result.stdout + result.stderr)
-        check("dry run writes nothing", json.loads(crypto.read_text(encoding="utf-8")) == before)
+        check("dry run identifies both financing run entities", result.returncode == 0 and "2 BTCUSD" in result.stdout, result.stdout + result.stderr)
+        check("dry run writes nothing", [json.loads(line) for line in crypto.read_text(encoding="utf-8").splitlines()] == before_lines)
 
         result = run(runs, probe_file, apply=True)
-        after = json.loads(crypto.read_text(encoding="utf-8"))
+        after_lines = [json.loads(line) for line in crypto.read_text(encoding="utf-8").splitlines()]
+        after = after_lines[0]
+        selected_after = after_lines[1]
+        nonrun_after = after_lines[2:]
         fin = after["financing_deducted"]
-        check("apply derives tester swap from the report", result.returncode == 0 and fin["tester_swap_charged"] == -1.25, result.stdout + result.stderr)
-        check("apply records tester-native/no-posthoc semantics", fin["applied"] is False and fin["metric_basis"] == "tester_native")
-        check("apply stores a probe reference rather than copied mode/rate", fin["swap_mode_probe"].endswith("fixture_crypto_migration.jsonl") and "swap_mode" not in fin)
-        check("apply preserves all tester-native metrics", all(after[k] == before[k] for k in ("pf", "gross_profit", "gross_loss", "net_profit")))
+        selected_fin = selected_after["financing_deducted"]
+        check("apply derives tester swap for both run entities", result.returncode == 0 and fin["tester_swap_charged"] == -1.25 and selected_fin["tester_swap_charged"] == -1.25, result.stdout + result.stderr)
+        check("apply records tester-native/no-posthoc semantics for selected verification", selected_fin["applied"] is False and selected_fin["metric_basis"] == "tester_native")
+        check("apply stores a probe reference rather than copied mode/rate", selected_fin["swap_mode_probe"].endswith("fixture_crypto_migration.jsonl") and "swap_mode" not in selected_fin)
+        check("apply preserves all six tester-native metrics", all(after[k] == before[k] for k in ("pf", "gross_profit", "gross_loss", "net_profit", "trades", "dd_pct")) and all(selected_after[k] == before[k] for k in ("pf", "gross_profit", "gross_loss", "net_profit", "trades", "dd_pct")))
+        check("apply corrects only the stale financing note", selected_after["notes"] == ["CRYPTO FINANCING: the MT5 tester's Swap column is included in the stored tester-native metrics. financing_deducted records the report-derived tester swap for provenance; no post-hoc deduction is applied."])
+        check("BTC probe/selection/closeout entities remain byte-identical", after_lines[2:] == before_lines[2:])
         check("wrong-symbol/noncrypto record is byte-identical", noncrypto.read_bytes() == noncrypto_before)
 
         result = run(runs, probe_file, apply=True)
-        check("rerun is an explicit no-op", result.returncode == 0 and "MIGRATED: 0" in result.stdout and "1 already migrated" in result.stdout, result.stdout + result.stderr)
+        check("rerun is an explicit no-op", result.returncode == 0 and "MIGRATED: 0" in result.stdout and "2 already migrated" in result.stdout, result.stdout + result.stderr)
 
         crypto.write_text(json.dumps(record(report_path=str(reports / "missing.htm"))) + "\n", encoding="utf-8")
         result = run(runs, probe_file, apply=True)
@@ -97,6 +116,22 @@ with tempfile.TemporaryDirectory() as tmp_s:
             check("wrong/stale probe reference refuses", result.returncode == 2 and "exactly one dated spec record for BTCUSD" in result.stdout, result.stdout + result.stderr)
         finally:
             bad_probe.unlink(missing_ok=True)
+
+        bad_date_probe = ROOT / "factory" / "runs" / "pilot" / "swap_probe" / "fixture_bad_date_crypto_migration.jsonl"
+        bad_date_probe.write_text(probe().replace("2026-08-04T00:00:00Z", "not-a-date"), encoding="utf-8")
+        try:
+            result = run(runs, bad_date_probe, apply=True)
+            check("undated probe provenance refuses", result.returncode == 2 and "exactly one dated spec record for BTCUSD" in result.stdout, result.stdout + result.stderr)
+        finally:
+            bad_date_probe.unlink(missing_ok=True)
+
+        scalar_probe = ROOT / "factory" / "runs" / "pilot" / "swap_probe" / "fixture_scalar_crypto_migration.jsonl"
+        scalar_probe.write_text("null\n", encoding="utf-8")
+        try:
+            result = run(runs, scalar_probe, apply=True)
+            check("non-object probe provenance refuses", result.returncode == 2 and "not a JSON object" in result.stdout, result.stdout + result.stderr)
+        finally:
+            scalar_probe.unlink(missing_ok=True)
 
         source_report.write_text(report(swap="oops"), encoding="utf-8")
         result = run(runs, probe_file, apply=True)

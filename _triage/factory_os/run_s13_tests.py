@@ -755,6 +755,35 @@ def crypto_run(arm='baseline', symbol='BTCUSD', financing='default', **over):
     return r
 
 
+def selected_verification(symbol='BTCUSD', financing='default', **over):
+    """Realistic verification-shaped financing run, not a PilotCellRun alias."""
+    r = {
+        'entity': 'PilotSelectedVerification',
+        'cell_id': 'B14-H01-r1/%s/H4' % symbol,
+        'arm': 'selected-verification',
+        'logical_symbol': symbol,
+        'window': 'BWD',
+        'model': 4,
+        'first_lot': '0.03',
+        'lane': r'D:\Meta 5\terminal64.exe',
+        'data_fingerprint': 'df-selected',
+        'selection_record': r'D:\Meta 5\selection\selection.jsonl',
+        'report': r'D:\Meta 5\reports\selected.htm',
+        'pf': 1.44,
+        'gross_profit': 2787.53,
+        'gross_loss': -1936.59,
+        'net_profit': 850.94,
+        'trades': 49,
+        'dd_pct': 15.22,
+    }
+    if financing == 'default':
+        r['financing_deducted'] = fin()
+    elif financing is not None:
+        r['financing_deducted'] = financing
+    r.update(over)
+    return r
+
+
 def crypto_source(runs, verification=None):
     files = {PA.DESIGN_REL: REAL_DESIGN,
              PA.COVERAGE_REL: '\n'.join(json.dumps(c) for c in [cell('c1')]),
@@ -770,7 +799,7 @@ def crypto_source(runs, verification=None):
 
 
 state, detail = PA.item_crypto_financing(crypto_source(
-    [crypto_run('baseline'), crypto_run('flat-lot-probe')]))
+    [crypto_run('baseline'), selected_verification()]))
 check('F1 POSITIVE every crypto arm states the deduction AND what the tester itself charged -> PASS',
       state == PA.PASS, '%s: %s' % (state, detail))
 
@@ -789,8 +818,8 @@ check('F3 ATTACK one arm adjusted, the other not -> FAIL and it names the ARM sp
       '%s: %s' % (state, detail))
 
 state, detail = PA.item_crypto_financing(crypto_source(
-    [crypto_run('baseline', financing=fin(applied=True))]))
-check('F4 ATTACK applied=true -> FAIL (tester-native metrics would be double-charged)',
+    [selected_verification(financing=fin(applied=True))]))
+check('F4 ATTACK selected-verification applied=true -> FAIL (tester-native metrics would be double-charged)',
       state == PA.FAIL and 'applied=True' in detail, '%s: %s' % (state, detail))
 
 # The ORDER-1350 gate, and the reason it is a FIELD and not a constant: with the two fields absent
@@ -806,7 +835,7 @@ check('F5 ATTACK tester-native record with no tester-side charge recorded -> BLO
 # down in verification/. A handler that only globbed the matrix directory would pass while the
 # runs a bar is actually read off carried nothing.
 state, detail = PA.item_crypto_financing(crypto_source(
-    [crypto_run('baseline')], verification=[crypto_run('selected-verification', financing=None)]))
+    [crypto_run('baseline')], verification=[selected_verification(financing=None)]))
 check('F6 SPECIFICITY a record under verification/ is read too, not just the matrix directory',
       state == PA.FAIL and 'verification/v.jsonl' in detail, '%s: %s' % (state, detail))
 

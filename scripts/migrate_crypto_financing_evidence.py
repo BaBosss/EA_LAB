@@ -7,15 +7,17 @@ must be retained only as provenance and must never be represented as having chan
 tester-native PF/gross/net metric.  This migration adds the tester's actual aggregate
 swap and a reference to the dated swap-mode probe to every intended crypto run record.
 
-The tool is deliberately narrow: only PilotCellRun records with an explicitly requested
-symbol are eligible; missing report/probe evidence refuses before any file is written;
-and a second application is a no-op.
+The tool is deliberately narrow: only PilotCellRun and PilotSelectedVerification records with an
+explicitly requested symbol are eligible; probe/selection/closeout entities remain excluded;
+missing report/probe evidence refuses before any file is written; and a second application is a
+no-op.
 """
 from __future__ import annotations
 
 import argparse
 import html
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -24,7 +26,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = ROOT / "factory" / "runs" / "pilot"
 DEFAULT_PROBE = "factory/runs/pilot/swap_probe/swap_probe_20260804.jsonl"
-TARGET_METRICS = ("pf", "gross_profit", "gross_loss", "net_profit")
+FINANCING_RUN_ENTITIES = frozenset(("PilotCellRun", "PilotSelectedVerification"))
+TARGET_METRICS = ("pf", "gross_profit", "gross_loss", "net_profit", "trades", "dd_pct")
+STALE_FINANCING_PREFIX = "CRYPTO FINANCING:"
+STALE_FINANCING_MARKERS = ("until deducted", "not financing-adjusted", "deduct again",
+                           "deducted again")
+CORRECTED_FINANCING_NOTE = (
+    "CRYPTO FINANCING: the MT5 tester's Swap column is included in the stored tester-native "
+    "metrics. financing_deducted records the report-derived tester swap for provenance; no "
+    "post-hoc deduction is applied."
+)
 ROW = re.compile(r"<tr[^>]*>(.*?)</tr>", re.IGNORECASE | re.DOTALL)
 CELL = re.compile(r"<t[dh][^>]*>(.*?)</t[dh]>", re.IGNORECASE | re.DOTALL)
 TAG = re.compile(r"<[^>]+>")
@@ -41,9 +52,12 @@ def clean_cell(value: str) -> str:
 def parse_number(value: str, *, where: str) -> float:
     text = value.replace("\xa0", "").replace(" ", "").replace(",", "")
     try:
-        return float(text)
+        number = float(text)
     except ValueError as exc:
         raise Refusal(f"malformed tester swap value at {where}: {value!r}") from exc
+    if not math.isfinite(number):
+        raise Refusal(f"malformed tester swap value at {where}: {value!r}")
+    return number
 
 
 def read_report(path: Path, symbol: str) -> float:
@@ -107,15 +121,24 @@ def load_probe(path: Path, symbol: str) -> str:
     if not path.is_file():
         raise Refusal(f"dated swap-mode probe is missing: {path}")
     try:
-        records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
-                   if line.strip() and not json.loads(line).get("_comment")]
+        records = []
+        for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            if not isinstance(record, dict):
+                raise Refusal(f"probe line {line_no} is not a JSON object: {path}")
+            if not record.get("_comment"):
+                records.append(record)
     except (OSError, ValueError) as exc:
         raise Refusal(f"cannot parse dated swap-mode probe {path}: {exc}") from exc
     matches = [record for record in records
                if record.get("entity") == "SwapProbe"
                and record.get("probe") == "spec"
                and record.get("logical_symbol") == symbol
-               and record.get("taken_utc")
+                and isinstance(record.get("taken_utc"), str)
+                and re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$",
+                             record["taken_utc"])
                and record.get("swap_mode")]
     if len(matches) != 1:
         raise Refusal(
@@ -146,6 +169,23 @@ def migrated_block(old: object, *, tester_swap: float, probe: str) -> dict:
     return block
 
 
+def corrected_notes(old: object) -> tuple[object, bool]:
+    """Replace only notes that still claim tester-native metrics need a second deduction."""
+    if not isinstance(old, list):
+        return old, False
+    changed = False
+    notes = []
+    for note in old:
+        lowered = note.casefold() if isinstance(note, str) else ""
+        if (isinstance(note, str) and note.startswith(STALE_FINANCING_PREFIX)
+                and any(marker in lowered for marker in STALE_FINANCING_MARKERS)):
+            notes.append(CORRECTED_FINANCING_NOTE)
+            changed = True
+        else:
+            notes.append(note)
+    return notes, changed
+
+
 def target_files(root: Path):
     return sorted(path for path in root.rglob("*.jsonl") if "swap_probe" not in path.parts)
 
@@ -155,6 +195,8 @@ def plan(root: Path, *, symbol: str, probe: str):
     probe_ref = load_probe(probe_path, symbol)
     planned = []
     skipped = 0
+    migrated = 0
+    notes_changed = 0
     for path in target_files(root):
         try:
             original = path.read_text(encoding="utf-8")
@@ -172,7 +214,9 @@ def plan(root: Path, *, symbol: str, probe: str):
                 record = json.loads(line)
             except ValueError as exc:
                 raise Refusal(f"unparseable JSONL {path}:{line_no}: {exc}") from exc
-            if not (record.get("entity") == "PilotCellRun" and record.get("logical_symbol") == symbol):
+            if (not isinstance(record, dict)
+                    or record.get("entity") not in FINANCING_RUN_ENTITIES
+                    or record.get("logical_symbol") != symbol):
                 rendered.append(line)
                 continue
             targets += 1
@@ -180,20 +224,28 @@ def plan(root: Path, *, symbol: str, probe: str):
             tester_swap = read_report(report, symbol)
             block = migrated_block(record.get("financing_deducted"), tester_swap=tester_swap,
                                    probe=probe_ref)
-            if record.get("financing_deducted") == block:
+            notes, note_changed = corrected_notes(record.get("notes"))
+            block_changed = record.get("financing_deducted") != block
+            if not block_changed and not note_changed:
                 skipped += 1
                 rendered.append(line)
                 continue
             before = {name: record.get(name) for name in TARGET_METRICS}
             record["financing_deducted"] = block
+            if note_changed:
+                record["notes"] = notes
             if before != {name: record.get(name) for name in TARGET_METRICS}:
                 raise Refusal(f"metric mutation attempted at {path}:{line_no}")
+            if block_changed:
+                migrated += 1
+            if note_changed:
+                notes_changed += 1
             newline = "\n" if line.endswith("\n") else ""
             rendered.append(json.dumps(record, separators=(",", ":"), ensure_ascii=False) + newline)
             changed = True
         if targets and changed:
             planned.append((path, original, "".join(rendered), targets))
-    return planned, skipped
+    return planned, skipped, migrated, notes_changed
 
 
 def main() -> int:
@@ -204,17 +256,24 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="write planned evidence migration")
     args = parser.parse_args()
     try:
-        planned, skipped = plan(args.root, symbol=args.symbol, probe=args.probe)
+        planned, skipped, migrated, notes_changed = plan(
+            args.root, symbol=args.symbol, probe=args.probe
+        )
     except Refusal as exc:
         print(f"REFUSE: {exc}")
         return 2
-    changed_records = sum(targets for _path, _old, _new, targets in planned)
     if not args.apply:
-        print(f"DRY-RUN: {changed_records} {args.symbol} record(s) would migrate; {skipped} already migrated")
+        print(
+            f"DRY-RUN: {migrated} {args.symbol} record(s) would migrate; "
+            f"{skipped} already migrated; {notes_changed} stale financing note(s) would be corrected"
+        )
         return 0
     for path, _old, rendered, _targets in planned:
         path.write_text(rendered, encoding="utf-8", newline="")
-    print(f"MIGRATED: {changed_records} {args.symbol} record(s); {skipped} already migrated")
+    print(
+        f"MIGRATED: {migrated} {args.symbol} record(s); {skipped} already migrated; "
+        f"corrected {notes_changed} stale financing note(s)"
+    )
     return 0
 
 
