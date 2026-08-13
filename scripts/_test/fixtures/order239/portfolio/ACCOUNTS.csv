@@ -1,0 +1,2 @@
+account,account_name,platform,environment,governance_scope,expected_sensor,monitor_sla_minutes,base_equity,currency,start_date,alert_policy,notes
+100000001,ORDER-239 fixture,MT5,DEMO,LAB_MANAGED,MT5_deals+AccountSnapshot,1800,10000,USD,2026-07-01,RED,deterministic fixture

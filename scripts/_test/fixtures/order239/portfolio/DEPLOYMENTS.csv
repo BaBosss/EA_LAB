@@ -1,0 +1,2 @@
+account,account_name,type,platform,host,ea_name,magic,symbol,status,kill_rule,judge_date,start_date,notes
+100000001,ORDER-239 fixture,DEMO,MT5,fixture,ORDER239_EA,900001,EURUSD,ACTIVE,closedDD 20%,2026-10-09,2026-07-01,deterministic fixture

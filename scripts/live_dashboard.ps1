@@ -203,12 +203,28 @@ function Get-AcctBaseText([string]$acct) {
   return ("base equity {0:N0}{1} (ACCOUNTS.csv)" -f [double]$b, $ccy)
 }
 
+function Try-ParseFiniteDbl([string]$s, [ref]$value) {
+  $parsed = 0.0
+  $ok = [double]::TryParse($s, [System.Globalization.NumberStyles]::Any,
+                           [System.Globalization.CultureInfo]::InvariantCulture, [ref]$parsed)
+  if (-not $ok -or [double]::IsNaN($parsed) -or [double]::IsInfinity($parsed)) { return $false }
+  $value.Value = $parsed
+  return $true
+}
+
 $deploymentsCsv = Join-Path (Split-Path $LiveDealsDir -Parent) 'DEPLOYMENTS.csv'
 $statusLib = Join-Path (Join-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) 'lib') 'deployment_status.ps1'
 if (-not (Test-Path $statusLib)) { throw "deployment status contract is missing: $statusLib" }
 . $statusLib
 $cohort = [ordered]@{}
 $statusRows = @(Get-DeploymentMonitoringRows @(Import-Csv $deploymentsCsv))
+$expectationsCsv = Join-Path (Split-Path $LiveDealsDir -Parent) 'expectations.csv'
+$expectations = @{}
+if (Test-Path $expectationsCsv) {
+  foreach ($exp in @(Import-Csv $expectationsCsv)) {
+    $expectations["$($exp.account)|$($exp.magic)"] = $exp
+  }
+}
 foreach ($dep in $statusRows) {
   $key = "$($dep.account)|$($dep.magic)"
   if ($cohort.Contains($key)) { continue }   # checker guards duplicates; first row wins
@@ -230,9 +246,20 @@ foreach ($dep in $statusRows) {
     $warnDD = [math]::Round($killDD * 0.8, 1)
   }
   if ($dep.status -ne 'ACTIVE') { $name += " [$($dep.operational_status) / $($dep.verification_state)]" }
+  # ORDER-239: only a row with a pre-registered basket-age threshold participates in
+  # this warning. Blank thresholds keep the existing behavior for every unrelated EA.
+  $basketAgeWarnH = $null
+  $exp = $expectations[$key]
+  if ($null -ne $exp) {
+    $candidate = "$($exp.basket_age_warn_h)".Trim()
+    $parsedThreshold = 0.0
+    if ($candidate -and (Try-ParseFiniteDbl $candidate ([ref]$parsedThreshold)) -and $parsedThreshold -gt 0) {
+      $basketAgeWarnH = $parsedThreshold
+    }
+  }
   # deals CSV symbol (broker-suffixed) overrides this; strip common m/c suffix for the fallback
   $sym = "$($dep.symbol)" -replace '[mc]$',''
-  $cohort[$key] = @{ Name = $name; Symbol = $sym; Platform = $plat; KillDD = $killDD; WarnDD = $warnDD; Status = $dep.status; OperationalStatus = $dep.operational_status; VerificationState = $dep.verification_state; Attention = $dep.attention }
+  $cohort[$key] = @{ Name = $name; Symbol = $sym; Platform = $plat; KillDD = $killDD; WarnDD = $warnDD; Status = $dep.status; OperationalStatus = $dep.operational_status; VerificationState = $dep.verification_state; Attention = $dep.attention; BasketAgeWarnH = $basketAgeWarnH }
 }
 
 # ---------------------------------------------------------------------------
@@ -631,6 +658,24 @@ if ($snapByLogin.Count -eq 0) {
           $flag = '&#9888;&#65039; UNMAPPED - not in cohort map'
           $rowCls = ' class="st-grey"'
         }
+        # ORDER-239: oldest_age_h is already supplied by the raw snapshot. The
+        # expectation row supplies the threshold; missing/malformed raw age is an
+        # UNKNOWN measurement, never a healthy zero. The boundary is inclusive.
+        if ($cohort.Contains($key) -and $null -ne $cohort[$key].BasketAgeWarnH) {
+          $ageRaw = "$($mr.oldest_open_hours)".Trim()
+          $ageH = 0.0
+          if (-not $ageRaw -or -not (Try-ParseFiniteDbl $ageRaw ([ref]$ageH)) -or $ageH -lt 0) {
+            $ageFlag = "BASKET AGE UNKNOWN: oldest_age_h missing or malformed; threshold $($cohort[$key].BasketAgeWarnH) h not evaluated"
+            if ($rowCls -notmatch 'st-red') { $rowCls = ' class="st-unknown"' }
+          } elseif ($ageH -ge [double]$cohort[$key].BasketAgeWarnH) {
+            $ageFlag = "OLD BASKET: oldest_age_h=$([math]::Round($ageH,1)) &gt;= $($cohort[$key].BasketAgeWarnH) h (100 days)"
+            if ($rowCls -notmatch 'st-red|st-nobase') { $rowCls = ' class="st-yellow"' }
+          } else {
+            $ageFlag = "basket age $([math]::Round($ageH,1)) h normal (< $($cohort[$key].BasketAgeWarnH) h)"
+          }
+          if ($flag) { $flag += '; ' }
+          $flag += $ageFlag
+        }
         $fpl = ToDbl $mr.float_pl
         $fplClass = 'neu'; if ($fpl -gt 0) { $fplClass = 'pos' }; if ($fpl -lt 0) { $fplClass = 'neg' }
         [void]$fh.AppendLine("<tr$rowCls><td class=`"name-cell`">$name</td><td class=`"num-cell`">$(HtmlEnc $magic)</td><td class=`"num-cell`">$(HtmlEnc $mr.symbols)</td><td class=`"num-cell $fplClass`">$('{0:N2}' -f $fpl)</td><td class=`"num-cell`">$(HtmlEnc $mr.open_lots)</td><td class=`"num-cell`">$(HtmlEnc $mr.open_positions)</td><td class=`"num-cell`">$(HtmlEnc $mr.oldest_open_hours)</td><td class=`"num-cell`">$(HtmlEnc $mr.pending_orders)</td><td class=`"label-cell`">$flag</td></tr>")
@@ -849,6 +894,7 @@ $html = @"
     tr.st-white  { background: #22252b !important; }
     tr.st-grey   { background: #24242a !important; }
     tr.st-nobase { background: #14243a !important; }
+    tr.st-unknown { background: #3a2a12 !important; }
     .pos { color: #6fe08a !important; }
     .neg { color: #ff8a80 !important; }
     .legend { background: #1d2026 !important; border-color: #33373f !important; }
@@ -891,6 +937,7 @@ $html = @"
   tr.st-white  { background: #fafafa; }
   tr.st-grey   { background: #f1f1f1; }
   tr.st-nobase { background: #e8f0fb; }
+  tr.st-unknown { background: #fff0d6; }
   .footer { color: #888; font-size: 12px; margin-top: 16px; }
   /* ORDER-092 floating-risk panel */
   .ml-green  { color: #17792f; font-weight: 700; }

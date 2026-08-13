@@ -1,0 +1,2 @@
+magic,ea_name,symbol,account,basket_id,pf_expected,pf_basis,trades_per_month_expected,dd95_expected,dd95_basis,source_evidence,recorded_date,notes,basket_age_warn_h
+900001,ORDER239_EA,EURUSD,100000001,,1.50,MAIN,1.0,2.0,MC95,ORDER-239 deterministic fixture,2026-08-13,unrelated expectation fields must remain independent,2400
