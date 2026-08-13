@@ -19,6 +19,13 @@ MQL5 has a specific set of bugs that pass every backtest and then bite live or p
 - **Silent failure is the default failure mode.** Most of these bugs throw no error — the EA just trades wrong or not at all. Each check below maps to a real silent failure.
 - **Every finding carries the mechanism + the fix line.** Not "looks risky" — name what breaks, when, and the corrected code.
 
+## Architecture and paths
+- Boss V2 / `ea_template/core` is the chassis-first default, with routing owned by
+  `docs/PIPELINE.md`.
+- A standalone path requires a stated reason and belongs under
+  `D:\EA_LAB\ea_projects\<EA>\`.
+- `EA_CORE` is a read-only archive, not an active authoring path.
+
 ---
 
 ## The review checklist (run every item)
@@ -37,9 +44,10 @@ MQL5 has a specific set of bugs that pass every backtest and then bite live or p
      and optimize/backtest results that don't reproduce live.
 
 [A3] LOT can be below broker min?
-     Balance-derived lot (balance/Lots_divided or %risk) must be normalized AND
-     checked against SYMBOL_VOLUME_MIN. On a cent account this silently rounds
-     to 0 / below-min → no fills. (ST_EA03 10k cent incident.)
+     A requested lot below SYMBOL_VOLUME_MIN must be rejected as invalid/0 and skipped;
+     never increase it to the broker minimum. Invalid/non-positive min/max/step values
+     also fail closed. Valid requests are floored to SYMBOL_VOLUME_STEP, with precision
+     derived from the step. This applies to balance-derived and %risk lots alike.
 
 [A4] SIGNAL reads CLOSED bars, not the forming one?
      Use index [1] (last closed) for signal/indicator values, not [0].
@@ -58,8 +66,12 @@ MQL5 has a specific set of bugs that pass every backtest and then bite live or p
      → for those, require distances expressed in POINTS via input, NOT a pip
      formula. Use mql-code-generator's PipSize() verbatim for the FX case.
 
-[B2] LOT normalized to broker step/min/max — never NormalizeDouble(lot,2)?
-     Must use mql-code-generator's NormalizeLot() (floor-to-step + clamp min/max).
+[B2] LOT NORMALIZATION to broker step/min/max — never NormalizeDouble(lot,2)?
+     Must use the generator's exact semantics: reject invalid/non-positive
+     SYMBOL_VOLUME_MIN/MAX/STEP; reject requestedLot <= 0 or requestedLot < minLot
+     with invalid/0; never clamp a sub-minimum request upward; floor to step; derive
+     decimal precision from the step; then reject any result outside min/max. The
+     reviewer must flag NormalizeDouble(lot,2) and any clamp-up-to-min implementation.
 
 [B3] OWN positions identified by MAGIC, never by comment equality?
      Brokers truncate/rewrite comments. Sub-groups → encode in magic.
@@ -70,12 +82,21 @@ MQL5 has a specific set of bugs that pass every backtest and then bite live or p
      each other's trades. (CB_GBP/CB_EUR share magic 990005 — safe only because
      of this filter.)
 
-[B5] HEDGING account checked before any hedge logic?
-     ACCOUNT_MARGIN_MODE==ACCOUNT_MARGIN_MODE_RETAIL_HEDGING in OnInit, else
-     fail INIT.
+[B5] NETTING / HEDGING account semantics explicit?
+     Inspect ACCOUNT_MARGIN_MODE when multi-position semantics matter. Hedge modules
+     must refuse incompatible netting assumptions; scenario tests must distinguish
+     netting from hedging where relevant.
 
-[B6] GMT/session offset — session-based EAs must not assume the backtest
-     broker's server time equals the VPS broker's. Document the assumed offset.
+[B6] FILLING policy broker-compatible?
+     Inspect SYMBOL_FILLING_MODE and the symbol's execution mode; do not invent one
+     universal ORDER_FILLING_* policy. This is a knowledge/cage rule in this milestone,
+     not a production behavior change.
+
+[B7] COPYBUFFER / INDICATOR reads safe?
+     Handle creation is not data readiness: require CopyBuffer's expected return count,
+     make array/series ordering explicit, and document closed-bar [1] versus forming-bar [0].
+     Do not use an ambiguous 0.0 failure sentinel when zero is legitimate. A
+     protective/risk-path read failure must fail closed where appropriate.
 ```
 
 ### C — Is it safe? (risk-cap bugs)
@@ -84,8 +105,11 @@ MQL5 has a specific set of bugs that pass every backtest and then bite live or p
      max_positions, max_total_lot, daily_loss_limit, emergency_exit_dd.
 [C2] No L5 (Grid+Martingale+Hedge combined). L4 only with explicit user
      risk acceptance recorded.
-[C3] Return codes checked after OrderSend/trade.Position* — a failed send that
-     isn't checked = the EA thinks it has a position it doesn't.
+[C3] TRADE RESULT SEMANTICS checked after CTrade calls?
+     CTrade::Buy/Sell/etc. returning true only means the request was accepted locally.
+     Require the appropriate ResultRetcode()/ResultRetcodeDescription() and resulting
+     deal/order/server-state inspection/logging where applicable. Do not edit
+     Execution.mqh in this milestone.
 [C4] No unbounded recursion of recovery (martingale steps / grid levels capped).
 ```
 

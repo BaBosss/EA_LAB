@@ -18,9 +18,15 @@ Hedge TP, Scale Ladder.
 Requires a Master EA Spec Card (YAML) from the strategy-and-risk skill.
 If none exists, route the user there first — do not invent a spec.
 
-## STANDALONE EA TEMPLATE PATTERN (one authoring option; chassis-first Boss V2 is the default per docs/PIPELINE.md — standalone needs a stated reason)
+## ARCHITECTURE AND PATHS (chassis-first default; routing owned by docs/PIPELINE.md)
 
-New EAs use `EA_STANDALONE_TEMPLATE.mq5` at `D:\EA_Project\CURRENT_BUILD\TEMPLATE\`.
+Boss V2 / `ea_template/core` is the default chassis-first path. A standalone EA is an
+exception and must state its reason (for example, an MT4 target or an experiment that
+must not touch `ea_template`). New standalone work belongs under
+`D:\EA_LAB\ea_projects\<EA>\`. `EA_CORE` is a read-only archive, not an active
+authoring path.
+
+When a standalone path is explicitly justified, use its local template and patterns:
 Key patterns to copy into every new standalone EA:
 
 ```mql5
@@ -76,31 +82,85 @@ double PipSize(const string symbol)
 // For non-FX symbols prefer expressing distances in POINTS via input, not pips.
 ```
 
-2. **Lot must respect broker constraints — never `NormalizeDouble(lot, 2)`:**
+2. **LOT NORMALIZATION — reject unsafe requests; never `NormalizeDouble(lot,2)`:**
 ```mql5
-double NormalizeLot(const string symbol, double lot)
+int VolumeDigits(const double step)
 {
-    double minLot  = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MIN);
-    double maxLot  = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MAX);
-    double lotStep = SymbolInfoDouble(symbol, SYMBOL_VOLUME_STEP);
-    lot = MathFloor(lot / lotStep) * lotStep;
-    return MathMin(MathMax(lot, minLot), maxLot);
+    if(!MathIsValidNumber(step) || step <= 0.0) return -1;
+    int digits = 0;
+    double scaled = step;
+    while(digits < 8 && MathAbs(scaled - MathRound(scaled)) > 1e-9)
+    {
+        scaled *= 10.0;
+        digits++;
+    }
+    return (MathAbs(scaled - MathRound(scaled)) <= 1e-9) ? digits : -1;
+}
+
+double NormalizeLot(const string symbol, const double requestedLot)
+{
+    const double minLot  = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MIN);
+    const double maxLot  = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MAX);
+    const double lotStep = SymbolInfoDouble(symbol, SYMBOL_VOLUME_STEP);
+    const int digits = VolumeDigits(lotStep);
+    if(!MathIsValidNumber(requestedLot) || requestedLot <= 0.0 ||
+       !MathIsValidNumber(minLot) || !MathIsValidNumber(maxLot) ||
+       !MathIsValidNumber(lotStep) || minLot <= 0.0 || maxLot <= 0.0 ||
+       lotStep <= 0.0 || minLot > maxLot || digits < 0)
+        return 0.0;
+    if(requestedLot < minLot) return 0.0; // never increase requested risk
+
+    const double capped = MathMin(requestedLot, maxLot);
+    const double floored = MathFloor(capped / lotStep) * lotStep;
+    const double normalized = NormalizeDouble(floored, digits); // digits come from step
+    if(!MathIsValidNumber(normalized) || normalized < minLot || normalized > maxLot)
+        return 0.0;
+    return normalized;
 }
 ```
+The same contract applies to fixed, risk-based, LOG, grid, and hedge lots: a
+non-positive/invalid broker constraint fails closed; a requested lot below the broker
+minimum returns invalid/0; valid requests are floored to the broker step and formatted
+with precision derived from that step. Never clamp a sub-minimum request up to the
+minimum, and never recommend `NormalizeDouble(lot,2)`.
 
-3. **Identify own positions by MAGIC NUMBER, never by comment equality.**
+3. **TRADE RESULT SEMANTICS — a `CTrade::Buy`/`Sell`/etc. `true` is not broker confirmation.**
+After a successful method call, inspect the appropriate `ResultRetcode()` and
+`ResultRetcodeDescription()`, then inspect/log the resulting deal, order, or
+server-state where applicable. Treat missing/failed confirmation as a failed operation. This
+is a knowledge/cage rule; it does not authorize changing `Execution.mqh` here.
+
+4. **COPYBUFFER / INDICATOR READS — handle creation is not data readiness.**
+Require `CopyBuffer` to return the expected count; do not use an ambiguous `0.0`
+failure sentinel when zero is a legitimate indicator value. Declare array direction
+explicitly (`ArraySetAsSeries` or an explicit non-series convention), document
+closed-bar [1] versus forming-bar [0], and fail closed on protective/risk-path indicator
+read failures where appropriate.
+
+5. **FILLING POLICY — broker-compatible, never universal by invention.**
+Inspect `SYMBOL_FILLING_MODE` and select/log only a filling mode compatible with the
+symbol and execution mode. Do not hardcode one universal ORDER_FILLING policy or
+invent a universal ORDER_FILLING_* policy.
+This milestone changes knowledge/cages only; it does not change production behavior.
+
+6. **NETTING / HEDGING — account semantics must be explicit.**
+When multi-position behavior matters, inspect the account margin mode explicitly.
+Hedge modules must refuse incompatible netting assumptions; future scenario tests must
+distinguish netting and hedging behavior where relevant.
+
+7. **Identify own positions by MAGIC NUMBER, never by comment equality.**
    Brokers may truncate or rewrite comments. If sub-grouping is needed
    (e.g. GRID vs HEDGE), encode it in the magic number (offset scheme) or
    match comment by prefix as fallback only.
 
-4. **Always check `ACCOUNT_MARGIN_MODE == ACCOUNT_MARGIN_MODE_RETAIL_HEDGING`
+8. **Always check `ACCOUNT_MARGIN_MODE == ACCOUNT_MARGIN_MODE_RETAIL_HEDGING`
    in OnInit before enabling any hedge module.** Fail INIT otherwise.
 
-5. **Every EA must implement the spec's hard caps**: max_positions,
+9. **Every EA must implement the spec's hard caps**: max_positions,
    max_total_lot, daily_loss_limit, emergency_exit_dd — checked before every
    OrderSend, not only in OnInit.
 
-6. **Refuse L5** (Hedge+Martingale+Grid combined). L4 only with explicit user
+10. **Refuse L5** (Hedge+Martingale+Grid combined). L4 only with explicit user
    risk acceptance recorded in the spec.
 
 ## KEY CODE PATTERNS
@@ -199,8 +259,8 @@ double g_totalHedgeLot      = 0.0;
 ```
 
 ## EA_CORE_V1 PLATFORM NOTE
-When the user is working inside the EA_CORE_V1 platform (D:\EA_Project), code
-must follow platform rules instead of standalone patterns:
+When the user is working inside the EA_CORE_V1 archive, treat it as read-only and
+follow platform rules instead of standalone patterns:
 - Raw MT5 terminal calls ONLY inside `CORE\RuntimeMarketDataTerminalAdapter_v1.mqh`
 - New strategy logic goes through StrategySignal/EntryGate/ExitGate contracts
 - No `CTrade`/`OrderSend` until the live-execution phase is officially opened
