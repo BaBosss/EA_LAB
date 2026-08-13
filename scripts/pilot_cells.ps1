@@ -135,8 +135,11 @@ function Get-ReportMetrics([string]$htm) { Get-PilotReportMetrics -Ctx $ctx -Htm
 function As-Num($v) { ConvertTo-PilotNumber $v }
 function Resolve-PF([hashtable]$m) { Resolve-PilotPF -Metrics $m }
 function Get-CarriedAtEnd([string]$htm) { Get-PilotCarriedAtEnd -Ctx $ctx -Htm $htm }
-function Get-DataFingerprint([hashtable]$m, [string]$symbol, [string]$period) {
-  Get-PilotDataFingerprint -Ctx $ctx -Metrics $m -Symbol $symbol -Period $period
+# ORDER-1330 Blocker A. Probes the SAME lane, immediately adjacent to the cell this fingerprint is
+# for, and feeds the reading into -SymbolSpec so the result is v2. A probe failure does not abort
+# the matrix -- Get-PilotDataFingerprintProbed falls back to v1, loudly, never silently.
+function Get-DataFingerprint([hashtable]$m, [string]$symbol, [string]$period, [string]$reportTag) {
+  Get-PilotDataFingerprintProbed -Ctx $ctx -Metrics $m -Symbol $symbol -Period $period -ReportTag $reportTag
 }
 function Get-CryptoFinancing([string]$htm) { Get-PilotCryptoFinancing -Ctx $ctx -Htm $htm }
 function Invoke-Cell([string]$expert, [string]$symbol, [string]$period, [string]$setPath,
@@ -186,7 +189,7 @@ foreach ($rev in $Revisions) {
         to_date               = $ToDate
         model                 = $Model
         lane                  = $Terminal
-        data_fingerprint      = (Get-DataFingerprint $m $symbol $period)
+        data_fingerprint      = (Get-DataFingerprint $m $symbol $period ('S13CELL_' + $tag + '_baseline'))
         effective_config_hash = $baseSet.hash
         set                   = $baseSet.path
         report                = $htm
@@ -285,7 +288,7 @@ foreach ($rev in $Revisions) {
           to_date               = $ToDate
           model                 = $Model
           lane                  = $Terminal
-          data_fingerprint      = (Get-DataFingerprint $me $symbol $period)
+          data_fingerprint      = (Get-DataFingerprint $me $symbol $period ('S13CELL_' + $tag + '_probeesc'))
           effective_config_hash = $baseSet.hash
           set                   = $baseSet.path
           report                = $htmE
@@ -323,7 +326,7 @@ foreach ($rev in $Revisions) {
           to_date               = $ToDate
           model                 = $Model
           lane                  = $Terminal
-          data_fingerprint      = (Get-DataFingerprint $mf $symbol $period)
+          data_fingerprint      = (Get-DataFingerprint $mf $symbol $period ('S13CELL_' + $tag + '_flatlot'))
           effective_config_hash = $flatSet.hash
           set                   = $flatSet.path
           report                = $htmF

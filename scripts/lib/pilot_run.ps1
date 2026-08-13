@@ -257,6 +257,30 @@ function Get-PilotDataFingerprint {
              "and that is the exact confusion ORDER-1330 exists to remove. Supply all of " +
              ($required -join ', ') + ", or omit -SymbolSpec entirely and stay on v1.")
     }
+    # A key whose value is null, blank or non-numeric is just as unknown as an absent key.  In
+    # particular, concatenating $null would silently hash an empty component and manufacture a
+    # v2 claim from incomplete broker data -- the partial-spec failure this guard exists to prevent.
+    $invalid = @()
+    foreach ($rate in @('swap_long', 'swap_short')) {
+      $parsed = 0.0
+      if ($null -eq $SymbolSpec[$rate] -or
+          -not [double]::TryParse([string]$SymbolSpec[$rate],
+                                   [Globalization.NumberStyles]::Float,
+                                   [Globalization.CultureInfo]::InvariantCulture,
+                                   [ref]$parsed) -or
+          [double]::IsNaN($parsed) -or [double]::IsInfinity($parsed)) {
+        $invalid += $rate
+      }
+    }
+    if ($null -eq $SymbolSpec['swap_mode'] -or
+        [string]::IsNullOrWhiteSpace([string]$SymbolSpec['swap_mode'])) {
+      $invalid += 'swap_mode'
+    }
+    if ($invalid.Count) {
+      throw ("Get-PilotDataFingerprint was given a SymbolSpec with unknown value(s) for " +
+             ($invalid -join ', ') + ". A v2 fingerprint requires complete observed broker data; " +
+             "omit -SymbolSpec entirely and stay on v1 when any component is unknown.")
+    }
     # `fpver=v2` goes in the PREIMAGE as well as the prefix, so a v2 digest cannot collide with a
     # v1 one even if the tag is later stripped. v1's preimage is left exactly as it was -- adding
     # this line to it would have changed every existing digest, which is the defect this replaces.
@@ -281,7 +305,7 @@ function Get-PilotFingerprintVersion {
      recipe would make the 135 committed rows look incomparable to new ones that are, in fact,
      computed identically. #>
   param([Parameter(Mandatory)][AllowEmptyString()][string]$Fingerprint)
-  if ($Fingerprint -match '^(v[0-9]+):') { return $Matches[1] }
+  if ($Fingerprint -match '^(v[0-9]+):[0-9a-f]{64}$') { return $Matches[1] }
   if ($Fingerprint -match '^[0-9a-f]{64}$') { return 'v1' }
   throw ("data_fingerprint " + ($Fingerprint | ConvertTo-Json) + " is neither a versioned value " +
          "(v<N>:<sha256>) nor a legacy bare sha256. It is REFUSED rather than classified: an " +
@@ -303,6 +327,113 @@ function Assert-PilotFingerprintComparable {
            "'different data'. Comparing them at all is the error (ORDER-1330, owner 2026-08-06).")
   }
   return $va
+}
+
+# --- per-run symbol swap spec (ORDER-1330 Blocker A, option 2: a probe, not an ea_template edit) ---
+# `Get-PilotDataFingerprint -SymbolSpec` has existed since 2026-08-06 with nothing to feed it: the
+# only source of a real swap_long/swap_short/swap_mode reading is `(TST)_SymbolSwapProbe`, and every
+# use of it before this was a manual, DATED, one-off diagnostic with no run_id -- exactly the "joins
+# to nothing" gap Blocker A named. This function makes the probe a per-cell step instead of a
+# once-in-a-while manual measurement: it runs the SAME probe EA on the SAME lane, immediately
+# adjacent to the cell it is spec'ing, and reads back only the Journal bytes THAT RUN appended.
+#
+# WHY POSITION-TRACKED, NOT TIMESTAMP-FILTERED. The Tester log is one file per CALENDAR DAY and
+# every run on that lane that day appends to it. A regex search over the whole day's log would
+# happily match a stale SWAPPROBE line from an earlier, unrelated run on the same symbol -- the
+# "check reads the wrong bytes" shape (GUARD_SHAPES shape 1). Capturing the file's length
+# immediately before invoking the probe and reading only what was appended after makes a stale match
+# structurally impossible rather than merely unlikely.
+#
+# WHY THIS CAN FAIL AND THE CALLER DECIDES WHAT THAT MEANS. Like every function in this file, this
+# one `throw`s rather than returns a sentinel. `Get-PilotDataFingerprint`'s own contract already
+# says "omit -SymbolSpec entirely and stay on v1" is the honest answer to "I do not have one" --
+# so the CALLER wraps this in try/catch and falls back to v1 on failure, loudly (a warning printed,
+# not a silent catch). This function's job is only to get a spec or explain why it could not.
+function Get-PilotSymbolSpec {
+  param(
+    [Parameter(Mandatory)][hashtable]$Ctx,
+    [Parameter(Mandatory)][string]$Symbol,
+    [Parameter(Mandatory)][string]$ReportName
+  )
+  $today = Get-Date -Format 'yyyyMMdd'
+  $logPath = Join-Path $Ctx.DataDir ('Tester\logs\' + $today + '.log')
+  $before = 0L
+  if (Test-Path $logPath) { $before = (Get-Item $logPath).Length }
+
+  $probeReport = $ReportName + '_symbolspec'
+  & (Join-Path $Ctx.ScriptDir 'mt5_run.ps1') -Expert 'EALabTpl\SwapProbe\(TST)_SymbolSwapProbe' `
+      -Symbol $Symbol -Period 'H1' -FromDate '2025.12.01' -ToDate '2025.12.02' -Model 1 `
+      -ReportName $probeReport -Terminal $Ctx.Terminal -DataDir $Ctx.DataDir | Out-Null
+  $rc = $LASTEXITCODE
+  if ($rc -ne 0) {
+    throw ("Get-PilotSymbolSpec: mt5_run.ps1 exited " + $rc + " running the symbol-spec probe for " +
+           $Symbol + " -- the probe did not run, so nothing is known about this run's swap spec.")
+  }
+
+  if (-not (Test-Path $logPath)) {
+    throw ("Get-PilotSymbolSpec: the probe reported success but no Tester log exists at " + $logPath +
+           " -- cannot confirm what it printed.")
+  }
+  $after = (Get-Item $logPath).Length
+  if ($after -le $before) {
+    throw ("Get-PilotSymbolSpec: the Tester log at " + $logPath + " did not grow (before=" + $before +
+           " after=" + $after + ") -- the probe's own output cannot be told apart from an earlier run's.")
+  }
+  $stream = [System.IO.File]::Open($logPath, [System.IO.FileMode]::Open,
+                                    [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+  $len = [int]($after - $before)
+  $buf = New-Object byte[] $len
+  $read = 0
+  try {
+    $stream.Seek($before, [System.IO.SeekOrigin]::Begin) | Out-Null
+    $read = $stream.Read($buf, 0, $len)
+  } finally {
+    $stream.Dispose()
+  }
+  $text = [System.Text.Encoding]::Unicode.GetString($buf, 0, $read)
+
+  $pattern = 'SWAPPROBE\s+' + [regex]::Escape($Symbol) + '\s*\|\s*mode=([A-Za-z_]+)[^\|]*\|\s*' +
+             'swap_long=(-?[0-9.]+)\s+swap_short=(-?[0-9.]+)'
+  $match = [regex]::Match($text, $pattern)
+  if (-not $match.Success) {
+    throw ("Get-PilotSymbolSpec: no SWAPPROBE line for " + $Symbol + " found in the " + $len +
+           " byte(s) this run appended to " + $logPath + " -- refusing rather than falling back to " +
+           "a possibly-stale earlier reading.")
+  }
+  return @{
+    swap_mode    = $match.Groups[1].Value
+    swap_long    = [double]$match.Groups[2].Value
+    swap_short   = [double]$match.Groups[3].Value
+    probe_report = $probeReport
+    taken_utc    = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
+  }
+}
+
+# One shared caller for both host scripts, so "try the probe, fall back to v1 on failure, warn
+# rather than swallow" is written once. `pilot_cells.ps1` and `pilot_verify_selected.ps1` both call
+# this instead of `Get-PilotDataFingerprint` directly, wherever a live cell's fingerprint is needed --
+# a second inline try/catch in either host script would be the exact "second reader of the same
+# artifact" this file's own header warns against.
+function Get-PilotDataFingerprintProbed {
+  param(
+    [Parameter(Mandatory)][hashtable]$Ctx,
+    [Parameter(Mandatory)][hashtable]$Metrics,
+    [Parameter(Mandatory)][string]$Symbol,
+    [Parameter(Mandatory)][string]$Period,
+    [Parameter(Mandatory)][string]$ReportTag
+  )
+  $spec = $null
+  try {
+    $spec = Get-PilotSymbolSpec -Ctx $Ctx -Symbol $Symbol -ReportName $ReportTag
+  } catch {
+    Write-Warning ("Get-PilotDataFingerprintProbed: symbol-spec probe failed for " + $Symbol +
+                   " (" + $ReportTag + ") -- staying on v1. " + $_.Exception.Message)
+  }
+  if ($spec) {
+    return Get-PilotDataFingerprint -Ctx $Ctx -Metrics $Metrics -Symbol $Symbol -Period $Period `
+      -SymbolSpec @{ swap_long = $spec.swap_long; swap_short = $spec.swap_short; swap_mode = $spec.swap_mode }
+  }
+  return Get-PilotDataFingerprint -Ctx $Ctx -Metrics $Metrics -Symbol $Symbol -Period $Period
 }
 
 function Get-PilotCryptoFinancing {

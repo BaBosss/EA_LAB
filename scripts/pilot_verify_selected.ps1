@@ -234,7 +234,7 @@ foreach ($s in $selected) {
     selection_record      = $SelectionRecord
     selected              = $s.selected
     trade_floor           = $s.trade_floor
-    data_fingerprint      = (Get-PilotDataFingerprint -Ctx $ctx -Metrics $m -Symbol $symbol -Period $period)
+    data_fingerprint      = (Get-PilotDataFingerprintProbed -Ctx $ctx -Metrics $m -Symbol $symbol -Period $period -ReportTag $reportName)
     effective_config_hash = $set.hash
     set                   = $set.path
     report                = $htm
