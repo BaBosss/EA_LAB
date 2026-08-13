@@ -67,6 +67,63 @@ def find(rows, entity):
     raise SystemExit('fixture drift: no row for %s' % entity)
 
 
+def c4_only(rows):
+    problems = []
+    chk.c4_owner_ref_recomputed(rows, problems)
+    return '\n'.join(problems)
+
+
+def c4_owner_binding_part():
+    """ORDER-1410 C4: distinguish an owner-path pin from a valid alternate-source pin."""
+    print('\n=== ORDER-1410 C4: owner-path binding ===')
+    rows, _ = load_real()
+    ordinary = find(rows, 'Hypothesis')
+    coverage = find(rows, 'CoverageCell')
+    bad = 0
+
+    ordinary_result = c4_only([json.loads(json.dumps(ordinary))])
+    ordinary_ok = not ordinary_result
+    print('  [%s] CONTROL a valid pin at the declared current_owner path passes'
+          % ('OK ' if ordinary_ok else 'BAD'))
+    if not ordinary_ok:
+        print('        -> %s' % ordinary_result)
+        bad += 1
+
+    alternate_result = c4_only([json.loads(json.dumps(coverage))])
+    alternate_ok = not alternate_result
+    print('  [%s] CONTROL the exact CoverageCell alternate canonical-source contract passes'
+          % ('OK ' if alternate_ok else 'BAD'))
+    if not alternate_ok:
+        print('        -> %s' % alternate_result)
+        bad += 1
+
+    wrong = json.loads(json.dumps(coverage))
+    # Hypothesis supplies a complete, already-valid commit/blob/raw pin to another tracked owner
+    # file.  Copying the whole pin makes this a real valid wrong-owner pin, not a hash/path fixture.
+    wrong['owner_ref'] = json.loads(json.dumps(ordinary['owner_ref']))
+    wrong_result = c4_only([wrong])
+    hash_or_resolution_failure = any(token in wrong_result for token in (
+        'does not resolve', 'blob_oid MISMATCH', 'raw_sha256 MISMATCH'))
+    wrong_ok = ('does not match current_owner' in wrong_result and
+                not hash_or_resolution_failure)
+    print('  [%s] NEGATIVE a fully valid pin to another tracked owner file is rejected by C4'
+          % ('OK ' if wrong_ok else 'BAD'))
+    if not wrong_ok:
+        print('        -> %s' % (wrong_result or 'NOTHING AT ALL'))
+        bad += 1
+
+    missing_reason = json.loads(json.dumps(coverage))
+    missing_reason.pop('owner_ref_path_reason', None)
+    missing_reason_result = c4_only([missing_reason])
+    reason_ok = 'does not match current_owner' in missing_reason_result
+    print('  [%s] NEGATIVE the alternate path without its contract rationale is rejected'
+          % ('OK ' if reason_ok else 'BAD'))
+    if not reason_ok:
+        print('        -> %s' % (missing_reason_result or 'NOTHING AT ALL'))
+        bad += 1
+    return bad
+
+
 # --------------------------------------------------------------------------- mutations
 def m_bad_hash(rows, cov):
     r = find(rows, 'CoverageCell')
@@ -373,8 +430,8 @@ def main():
         return 1
     print('  [OK ] %d rows, all nine criteria silent\n' % len(rows))
 
+    bad = c4_owner_binding_part()
     print('=== %d MUTATIONS, each must redden its own criterion by name ===' % len(CASES))
-    bad = 0
     for label, mutate, expect in CASES:
         rows, cov = load_real()          # fresh copy per case: no mutation may leak into the next
         mutate(rows, cov)

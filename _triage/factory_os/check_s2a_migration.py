@@ -13,7 +13,8 @@ WHAT IT ASSERTS  (the nine MACHINE criteria of ORDER-600 rev 4, one function eac
   C1  entity set == the generated __STORAGE__ row set, by SET EQUALITY, read from the generator
   C2  zero rows with signoff_state == APPROVED
   C3  owner vocabulary: current_owner exists at HEAD; proposed_owner exists or is in PLANNED_PATHS
-  C4  owner_ref is RECOMPUTED from git, not shaped: blob_oid and raw_sha256 both verified
+  C4  owner_ref is RECOMPUTED from git, not shaped: its path binds to current_owner (with the
+      explicit CoverageCell canonical-source exception), and blob_oid/raw_sha256 are verified
   C5  owner_ref values distinct across rows unless same_blob_reason is given
   C6  exactly one sign-off row per distinct current_owner, each with a named signer
   C7  the Coverage edge row is present and explicit
@@ -87,6 +88,18 @@ PLANNED_PATHS = (
 
 COVERAGE_CURRENT_OWNER = 'MASTER_BACKLOG.md'
 COVERAGE_PROPOSED_OWNER = 'factory/coverage.jsonl'
+
+# ORDER-1410 C4: the CoverageCell transfer is the one intentional case where the bytes being
+# pinned live at a different path from the declared owner.  Keep this as a closed semantic
+# exception, not as a generic "different path plus a reason" escape hatch.
+COVERAGE_OWNER_REF_REASON_MARKERS = (
+    'The canonical bytes MOVED: section 2 of MASTER_BACKLOG.md is now GENERATED from '
+    'factory/coverage.jsonl',
+    'owner_ref exists to answer ONE question',
+    'current_owner is DELIBERATELY left as MASTER_BACKLOG.md',
+    'the append-only attestation log references it (R6',
+    'check_s2a_migration.py C7 keys the existence of the Coverage edge on it',
+)
 
 # ORDER-600 rev 5: four of the 27 entities have NEITHER a file nor a parent entity -- design 1.3 #2 says
 # Test Universe is "genuinely unowned" in as many words. C3 as written left them three options, all
@@ -541,6 +554,20 @@ def c4_owner_ref_recomputed(rows, problems):
         if digest != ref['raw_sha256']:
             fail(problems, 'C4 %s raw_sha256 MISMATCH for %s: stated %s, recomputed %s'
                  % (e, spec, ref['raw_sha256'][:12], digest[:12]))
+        current_owner = r.get('current_owner') or ''
+        owner_path = ref.get('path') or ''
+        same_owner_path = owner_path == current_owner
+        coverage_alternate = (
+            e == 'CoverageCell'
+            and current_owner == COVERAGE_CURRENT_OWNER
+            and owner_path == COVERAGE_PROPOSED_OWNER
+            and all(marker in (r.get('owner_ref_path_reason') or '')
+                    for marker in COVERAGE_OWNER_REF_REASON_MARKERS)
+        )
+        if not (same_owner_path or coverage_alternate):
+            fail(problems, 'C4 %s owner_ref.path=%r does not match current_owner=%r and is not '
+                 'the validated CoverageCell alternate canonical-source binding'
+                 % (e, owner_path, current_owner))
 
 
 def pin_vintage_notes(rows):
