@@ -524,6 +524,7 @@
         "entity",
         "hypothesis_revision",
         "parameter",
+        "parameter_pid",
         "role",
         "surface",
         "definition_ref"
@@ -543,6 +544,12 @@
             "pattern": "\\["
           },
           "description": "ORDER-672: the BARE parameter name. A build tag inside this string is REFUSED -- `StackMode[LAB_ENTRY_16]` encodes two facts in the join key, which produced F1 (a tagged binding invisible to its only consumer: bare => AMBIGUOUS, tagged => unseen, jointly unsatisfiable) and half of S7 (last-wins across rows that disagree). The tag lives in build_tag. Two encodings of one fact is the defect, not a migration path."
+        },
+        "parameter_pid": {
+          "type": "integer",
+          "minimum": 10000,
+          "maximum": 99999,
+          "description": "R4 global five-digit parameter identity; it must resolve back to parameter exactly."
         },
         "build_tag": {
           "type": [

@@ -207,6 +207,14 @@ DECISIONS = {
     'RC_AdoptLegacyHalt': ('SAFETY',  'RESEARCH', 'FREEZE',  None),
     'DryRun':             ('SAFETY',  'OPERATOR', 'FREEZE',  None),
 
+    # R4 metadata additions. Heat is a safety gate; the Middle Path master
+    # switch is a tunable entry filter. Their dependent inputs are gated off
+    # at the pinned defaults and therefore become INACTIVE rows. The Event Bus
+    # and stable-regime additions are intentionally absent: their current
+    # runtime paths are unwired and activation.py records that truth.
+    '_HEAT_Enable':        ('SAFETY',  'OPERATOR', 'FREEZE',  None),
+    'UseMiddlePathVeto':   ('TUNABLE', 'OPERATOR', 'SIGNAL', None),
+
     # --- runtime identity / plumbing: settable per deployment, never a sweep dimension -------------
     '_0_Magic':           ('RUNTIME', 'OPERATOR', 'FREEZE',  None),
     '_0_Slippage':        ('RUNTIME', 'RESEARCH', 'FREEZE',  None),

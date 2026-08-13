@@ -88,7 +88,7 @@ function Read-ReportText {
        them is actually present. If no encoding yields them, we cannot see the file and say so. #>
     param([string]$Path, [string[]]$Tokens)
     foreach ($enc in @([System.Text.Encoding]::Unicode, [System.Text.Encoding]::UTF8, [System.Text.Encoding]::Default)) {
-        $t = [System.IO.File]::ReadAllText($Path, $enc)
+        $t = [System.IO.File]::ReadAllText($Path, $enc) # snapshot: worktree -- caller-supplied report
         foreach ($tok in $Tokens) {
             if ($t.Contains($tok)) { return $t }
         }
@@ -96,7 +96,7 @@ function Read-ReportText {
     return $null
 }
 
-$reports = @(Get-ChildItem -Path $ReportGlob -File -ErrorAction SilentlyContinue)
+$reports = @(Get-ChildItem -Path $ReportGlob -File -ErrorAction SilentlyContinue) # snapshot: worktree -- caller-supplied report glob
 if ($reports.Count -eq 0) {
     Write-Host ("{0} TOOLING: no report matched {1} -- nothing was checked" -f $Tag, $ReportGlob)
     exit 2

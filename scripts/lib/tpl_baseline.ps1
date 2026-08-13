@@ -75,11 +75,10 @@ function Get-TplActiveBaseline {
 
     $manifestPath = Resolve-TplRepoPath $Root ([string]$selector.active_manifest) 'selector.active_manifest'
     $manifest = Get-TplJson $manifestPath 'active baseline manifest'
-    Assert-TplRequired $manifest @('schema','status','baseline_kind','metrics_file','metrics_sha256','expected_mt5_build','terminal_executable','tester_data_directory','portable','baseline_source_commit','baseline_source_clean','tester_contract','cases','generation_utc','report_freshness_evidence') 'manifest'
+    Assert-TplRequired $manifest @('schema','status','baseline_kind','metrics_file','metrics_sha256','expected_mt5_build','terminal_executable','tester_data_directory','portable','baseline_source_commit','baseline_source_clean','accepted_runtime_lineage_tip','tester_contract','cases','generation_utc','report_freshness_evidence') 'manifest'
     if ($manifest.schema -ne 'tpl_regression_baseline/2') { throw "REFUSE: unsupported baseline manifest schema '$($manifest.schema)'" }
     if ($manifest.status -ne 'ACTIVE_COMPARABLE' -or $manifest.baseline_kind -ne 'VERSIONED') { throw "REFUSE: active manifest status is not ACTIVE_COMPARABLE/VERSIONED" }
     if ([int]$manifest.expected_mt5_build -ne 6090) { throw "REFUSE: expected MT5 build is $($manifest.expected_mt5_build), not 6090" }
-    if ($manifest.baseline_source_commit -ne '99e7b7ba59b39e15e1cfcb276c99a12f8806f357') { throw "REFUSE: baseline source is not the required pre-identity commit" }
     if (-not [bool]$manifest.baseline_source_clean) { throw 'REFUSE: baseline source was not clean' }
 
     $metricsPath = Resolve-TplRepoPath $Root ([string]$manifest.metrics_file) 'manifest.metrics_file'
@@ -130,14 +129,31 @@ function Get-TplActiveBaseline {
     return [pscustomobject]@{ Selector = $selector; Manifest = $manifest; Metrics = $metrics; ManifestPath = $manifestPath }
 }
 
+function Assert-TplCommitIdentity {
+    param([Parameter(Mandatory)][string]$Root, [string]$Sha, [Parameter(Mandatory)][string]$Label)
+    $value = $Sha.Trim()
+    if ($value -notmatch '^[0-9a-fA-F]{40}$') {
+        throw "REFUSE: $Label must be a full 40-hex commit SHA"
+    }
+    $type = (& git -C $Root cat-file -t $value 2>$null)
+    if ($LASTEXITCODE -ne 0 -or ([string]$type).Trim() -ne 'commit') {
+        throw "REFUSE: $Label is not a resolvable commit object: $value"
+    }
+    return $value.ToLowerInvariant()
+}
+
 function Assert-TplSourceContract {
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][object]$Baseline)
     $git = & git -C $Root rev-parse HEAD 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $git) { throw 'REFUSE: current source identity unavailable' }
     $current = ([string]$git).Trim()
     $base = [string]$Baseline.Manifest.baseline_source_commit
-    $runtime = [string]$Baseline.Manifest.accepted_runtime_lineage_tip
+    $runtime = Assert-TplCommitIdentity -Root $Root -Sha ([string]$Baseline.Manifest.accepted_runtime_lineage_tip) -Label 'accepted_runtime_lineage_tip'
     if ($current -eq $base -or $current -eq $runtime) { return $current }
+    & git -C $Root merge-base --is-ancestor $runtime $current 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        throw "REFUSE: accepted runtime lineage tip $runtime is not an ancestor of current source identity $current"
+    }
     $changed = @(& git -C $Root diff --name-only ($runtime + '..' + $current) 2>$null)
     if ($LASTEXITCODE -ne 0) { throw "REFUSE: source identity $current is not in the accepted comparison lineage" }
     $forbidden = @($changed | Where-Object { $_ -match '^(ea_template/(core|modules|generated)/|ea_template/Boss_.*\.mq5$|ea_template/EA_LabTemplate\.mq5$)' })

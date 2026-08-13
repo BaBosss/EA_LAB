@@ -1,0 +1,110 @@
+# -*- coding: utf-8 -*-
+"""Canonical human-facing identity cards for Boss 11 through Boss 18.
+
+This module owns descriptive text only.  No PID, magic, input, default, or
+fingerprint value is derived from it.
+"""
+from collections import OrderedDict
+
+CARD_FIELDS = (
+    'ea_id', 'short_name', 'strategy_summary', 'purpose', 'entry_summary',
+    'add_scale_summary', 'exit_summary', 'risk_character',
+)
+
+_CARDS = (
+    OrderedDict([
+        ('ea_id', 'E011'), ('short_name', 'GridTrend'),
+        ('strategy_summary', 'MA trend + ATR grid + basket exits'),
+        ('purpose', 'Follow directional MA structure while spacing adverse adds by ATR.'),
+        ('entry_summary', 'MA trend direction with the shared trend filter.'),
+        ('add_scale_summary', 'Fixed-step/grid additions under the shared stack cage.'),
+        ('exit_summary', 'Shared per-leg and basket exit modes.'),
+        ('risk_character', 'Grid exposure; hard depth, lot, DD, and halt cages apply.'),
+    ]),
+    OrderedDict([
+        ('ea_id', 'E012'), ('short_name', 'Breakout'),
+        ('strategy_summary', 'Donchian breakout + ATR grid + basket exits'),
+        ('purpose', 'Enter on a channel break and manage continuation exposure.'),
+        ('entry_summary', 'Donchian breakout with the shared trend/regime gates.'),
+        ('add_scale_summary', 'Shared stack additions with ATR-aware spacing.'),
+        ('exit_summary', 'Shared per-leg, basket, and safety exits.'),
+        ('risk_character', 'Breakout grid; exposure is bounded by the shared cages.'),
+    ]),
+    OrderedDict([
+        ('ea_id', 'E013'), ('short_name', 'MeanRev'),
+        ('strategy_summary', 'BB + RSI mean reversion with basket management'),
+        ('purpose', 'Fade stretched price back toward the mean.'),
+        ('entry_summary', 'Bollinger-band excursion confirmed by RSI.'),
+        ('add_scale_summary', 'Shared DCA/grid stack, subject to hard safety limits.'),
+        ('exit_summary', 'Shared basket target, partial, and protection exits.'),
+        ('risk_character', 'Mean-reversion/grid exposure; regime failure is the main risk.'),
+    ]),
+    OrderedDict([
+        ('ea_id', 'E014'), ('short_name', 'GridLog'),
+        ('strategy_summary', 'ATR grid + log-power lots + basket exits'),
+        ('purpose', 'Run the Zeus-inspired grid-log entry with explicit shared cages.'),
+        ('entry_summary', 'GridLog distance arm with directional entry controls.'),
+        ('add_scale_summary', 'Log-power progression with DD-adaptive first-lot support.'),
+        ('exit_summary', 'Basket target, partial-close, and safety exits.'),
+        ('risk_character', 'Grid and progression exposure; sizing and DD cages are load-bearing.'),
+    ]),
+    OrderedDict([
+        ('ea_id', 'E015'), ('short_name', 'ST03'),
+        ('strategy_summary', 'MACD consecutive-count edge trigger on the chassis'),
+        ('purpose', 'Require a counted MACD signal run before a chassis entry.'),
+        ('entry_summary', 'MACD direction plus consecutive-count and rearm logic.'),
+        ('add_scale_summary', 'Shared stack/progression path after the signal entry.'),
+        ('exit_summary', 'Shared per-leg, basket, and safety exits.'),
+        ('risk_character', 'Signal edge remains unproven; standard chassis cages apply.'),
+    ]),
+    OrderedDict([
+        ('ea_id', 'E016'), ('short_name', 'Kangaroo'),
+        ('strategy_summary', 'RSI fade + ATR grid + basket exits'),
+        ('purpose', 'Run the self-contained Kangaroo entry-16 pipeline.'),
+        ('entry_summary', 'RSI fade in the configured fixed direction.'),
+        ('add_scale_summary', 'Adverse ATR adds with a hard per-side order cap.'),
+        ('exit_summary', 'Kangaroo single-order, basket-dollar, and overlap exits.'),
+        ('risk_character', 'Self-contained grid engine; hard cage remains supreme.'),
+    ]),
+    OrderedDict([
+        ('ea_id', 'E017'), ('short_name', 'Wave5'),
+        ('strategy_summary', 'Wave-4 retrace arm for wave-5 continuation'),
+        ('purpose', 'Arm a directional continuation after a validated wave structure.'),
+        ('entry_summary', 'Elliott wave-4 retracement and wave-5 expansion trigger.'),
+        ('add_scale_summary', 'Naked structural probe; stack/recovery remain constrained.'),
+        ('exit_summary', 'Structural SL/TP with trailing and divergence tightening.'),
+        ('risk_character', 'Structural-stop probe; guard conditions are mandatory.'),
+    ]),
+    OrderedDict([
+        ('ea_id', 'E018'), ('short_name', 'JumStoch'),
+        ('strategy_summary', 'LWMA displacement + Stoch seed on the chassis'),
+        ('purpose', 'Use the JumStoch seed signal with shared chassis management.'),
+        ('entry_summary', 'LWMA displacement filtered by Stochastic state.'),
+        ('add_scale_summary', 'Shared chassis grid/DCA path after the seed signal.'),
+        ('exit_summary', 'Shared per-leg, basket, and safety exits.'),
+        ('risk_character', 'Direction-mode A/B is unresolved; deployment approval is separate.'),
+    ]),
+)
+
+
+def cards():
+    """Return fresh card mappings so callers cannot mutate the canonical tuple."""
+    return [OrderedDict(c) for c in _CARDS]
+
+
+def validate(cards_value=None):
+    value = cards() if cards_value is None else cards_value
+    expected = ['E011', 'E012', 'E013', 'E014', 'E015', 'E016', 'E017', 'E018']
+    if len(value) != 8 or [c.get('ea_id') for c in value] != expected:
+        raise ValueError('strategy catalog must contain exactly E011-E018 in order')
+    for card in value:
+        missing = [f for f in CARD_FIELDS if not str(card.get(f, '')).strip()]
+        if missing:
+            raise ValueError('%s is missing card fields: %s' % (card.get('ea_id'), missing))
+    return value
+
+
+def memory_aid(card):
+    """Compact first-group label; descriptive text only."""
+    return '%s %s | %s | Modes' % (
+        card['ea_id'], card['short_name'], card['strategy_summary'])

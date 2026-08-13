@@ -29,11 +29,34 @@
 #define LAB_CAP_STACK
 
 //--- design 5.3 / 5.4: the inputs this revision compiles away ---------------
-//| 84 const, 32 left on the Inputs page.
+//| 90 const, 52 left on the Inputs page.
 //| Each pair switches ea_template/core/Inputs.mqh from its `input` branch to
 //| its `const` branch. LAB_CONSTVAL_* carries the EFFECTIVE value -- the
 //| canonical default for an unreachable input, the PINNED value for a locked
 //| one -- so a lock is applied rather than merely declared.
+//|
+//| NOT const-ed although unreachable under this config, and the reason is
+//| load-bearing: a still-live input decides whether each of these matters,
+//| so const-ing them would freeze one arm of a decision the optimizer is
+//| allowed to sweep. See gen_wrapper.const_plan().
+//|   MID_HIGH               kept, because UseMiddlePathVeto is still an input
+//|   MID_LOW                kept, because UseMiddlePathVeto is still an input
+//|   MIN_CHANNEL_ATR        kept, because UseMiddlePathVeto is still an input
+//|   MIN_LINE_WEIGHT        kept, because UseMiddlePathVeto is still an input
+//|   _HEAT_ClusterCorr      kept, because _HEAT_Enable is still an input
+//|   _HEAT_CorrWindowBars   kept, because _HEAT_Enable is still an input
+//|   _HEAT_DefaultCorr      kept, because _HEAT_Enable is still an input
+//|   _HEAT_MaxClusterLots   kept, because _HEAT_Enable is still an input
+//|   _HEAT_MaxPortfolioLots kept, because _HEAT_Enable is still an input
+//|   _HEAT_UseDynamicCorr   kept, because _HEAT_Enable is still an input
+//|   _MID_ClusterATRmult    kept, because UseMiddlePathVeto is still an input
+//|   _MID_DonchianBars      kept, because UseMiddlePathVeto is still an input
+//|   _MID_LineLookbackBars  kept, because UseMiddlePathVeto is still an input
+//|   _MID_LineSource        kept, because UseMiddlePathVeto is still an input
+//|   _MID_MaxLines          kept, because UseMiddlePathVeto is still an input
+//|   _MID_MinRR             kept, because UseMiddlePathVeto is still an input
+//|   _MID_PivotDepth        kept, because UseMiddlePathVeto is still an input
+//|   _MID_UseRoomCheck      kept, because UseMiddlePathVeto is still an input
 
 #define LAB_CONST_ExitMode
 #define LAB_CONSTVAL_ExitMode EXIT_ATR_TP
@@ -131,12 +154,16 @@
 #define LAB_CONSTVAL__50_ADX_Period 14
 #define LAB_CONST__50_ADX_TrendMin
 #define LAB_CONSTVAL__50_ADX_TrendMin 25.0
+#define LAB_CONST__50_ADX_TrendMin_Exit
+#define LAB_CONSTVAL__50_ADX_TrendMin_Exit 20.0
 #define LAB_CONST__50_AllowRange
 #define LAB_CONSTVAL__50_AllowRange true
 #define LAB_CONST__50_AllowTrendDown
 #define LAB_CONSTVAL__50_AllowTrendDown true
 #define LAB_CONST__50_AllowTrendUp
 #define LAB_CONSTVAL__50_AllowTrendUp true
+#define LAB_CONST__50_RegimeConfirmBars
+#define LAB_CONSTVAL__50_RegimeConfirmBars 3
 #define LAB_CONST__50_RegimeMode
 #define LAB_CONSTVAL__50_RegimeMode 0
 #define LAB_CONST__50_Regime_TF
@@ -187,6 +214,14 @@
 #define LAB_CONSTVAL__9_RegimeGateAdds false
 #define LAB_CONST__9_StepMinPips
 #define LAB_CONSTVAL__9_StepMinPips 0
+#define LAB_CONST__EVT_BucketATRmult
+#define LAB_CONSTVAL__EVT_BucketATRmult 0.25
+#define LAB_CONST__EVT_BucketSeconds
+#define LAB_CONSTVAL__EVT_BucketSeconds 900
+#define LAB_CONST__EVT_PreemptMargin
+#define LAB_CONSTVAL__EVT_PreemptMargin 1.30
+#define LAB_CONST__EVT_RevengeBlockBars
+#define LAB_CONSTVAL__EVT_RevengeBlockBars 5
 #define LAB_CONST__H_MaxLot
 #define LAB_CONSTVAL__H_MaxLot 0.0
 #define LAB_CONST__MG_BlockNew

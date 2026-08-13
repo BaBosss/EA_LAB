@@ -109,7 +109,8 @@ def _check_engine_edge_cage(hyp_id, hyp, verdicts, config):
     """
     if not hyp.get('engine_edge'):
         return
-    live = [n for n in sorted(LOSS_CAPS) if n in verdicts and verdicts[n].active]
+    live = [n for n in sorted(LOSS_CAPS)
+            if n in verdicts and verdicts[n]['state'] == 'ACTIVE']
     if not live:
         raise Refusal(
             '%s is labelled engine_edge and its pinned config leaves EVERY basket-level loss cap '
@@ -163,8 +164,8 @@ def hypothesis_row(hyp_id, hyp, surface, read, owner_ref):
 def binding_rows(hyp_id, hyp, surface, owner_ref):
     """-> [ParameterBinding] for every input on the build's surface, in surface order."""
     cfg = pinned_config(hyp, surface)
-    verdicts = activation.classify(surface.build_tag, cfg, surface=surface)
-    _check_engine_edge_cage(hyp_id, hyp, verdicts, cfg)
+    states = activation.effective_state(surface.build_tag, cfg, surface=surface)
+    _check_engine_edge_cage(hyp_id, hyp, states, cfg)
 
     decisions = HB.decisions_for(hyp_id)
     revision_id = '%s-r%d' % (hyp_id, hyp['revision'])
@@ -172,8 +173,8 @@ def binding_rows(hyp_id, hyp, surface, owner_ref):
 
     # Both completeness directions, computed before anything is emitted so the refusal names the
     # whole discrepancy rather than the first item of it.
-    visible = [n for n, v in verdicts.items()
-               if v.active and n not in HB.LOCKED_SELECTORS]
+    visible = [n for n, state in states.items()
+               if state['state'] == 'ACTIVE' and n not in HB.LOCKED_SELECTORS]
     undecided = [n for n in visible if n not in decisions]
     if undecided:
         raise Refusal(
@@ -190,15 +191,16 @@ def binding_rows(hyp_id, hyp, surface, owner_ref):
             % (revision_id, len(stale), ', '.join(stale)))
 
     rows = []
-    for name, verdict in verdicts.items():
+    for name, state in states.items():
         row = {
             'entity': 'ParameterBinding',
             'hypothesis_revision': revision_id,
             'parameter': name,
+            'parameter_pid': registry.parameter_pid_for(name, surface.build_tag),
             'build_tag': surface.build_tag,
             'definition_ref': definition,
         }
-        if not verdict.active:
+        if state['state'] != 'ACTIVE':
             row['role'] = INACTIVE_ROLE
             row['surface'] = INACTIVE_SURFACE
             row['optimize_stage'] = 'FREEZE'

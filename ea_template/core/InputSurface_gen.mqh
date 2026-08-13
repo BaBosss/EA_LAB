@@ -19,7 +19,7 @@
 #ifdef LAB_ENTRY_11
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_11"); }
-int    CFG_SurfaceKeys() { return(113); }
+int    CFG_SurfaceKeys() { return(151); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_11";
@@ -59,6 +59,8 @@ string CFG_SurfacePreimage()
    s += "\n_50_Regime_TF=" + CFG_CanonLong((long)_50_Regime_TF);
    s += "\n_50_ADX_Period=" + CFG_CanonLong((long)_50_ADX_Period);
    s += "\n_50_ADX_TrendMin=" + CFG_CanonDouble(_50_ADX_TrendMin);
+   s += "\n_50_ADX_TrendMin_Exit=" + CFG_CanonDouble(_50_ADX_TrendMin_Exit);
+   s += "\n_50_RegimeConfirmBars=" + CFG_CanonLong((long)_50_RegimeConfirmBars);
    s += "\n_50_StormATRmult=" + CFG_CanonDouble(_50_StormATRmult);
    s += "\n_50_StormLookback=" + CFG_CanonLong((long)_50_StormLookback);
    s += "\n_21_TP_Pip=" + CFG_CanonDouble(_21_TP_Pip);
@@ -133,6 +135,42 @@ string CFG_SurfacePreimage()
    s += "\n_MG_BlockNew=" + CFG_CanonBool(_MG_BlockNew);
    s += "\n_MG_TriggerRiskOff=" + CFG_CanonBool(_MG_TriggerRiskOff);
    s += "\n_MG_OffsetHours=" + CFG_CanonLong((long)_MG_OffsetHours);
+   s += "\n_EVT_BucketATRmult=" + CFG_CanonDouble(_EVT_BucketATRmult);
+   s += "\n_EVT_BucketSeconds=" + CFG_CanonLong((long)_EVT_BucketSeconds);
+   s += "\n_EVT_PreemptMargin=" + CFG_CanonDouble(_EVT_PreemptMargin);
+   s += "\n_EVT_RevengeBlockBars=" + CFG_CanonLong((long)_EVT_RevengeBlockBars);
+   s += "\n_HEAT_Enable=" + CFG_CanonBool(_HEAT_Enable);
+   s += "\n_HEAT_MaxClusterLots=" + CFG_CanonDouble(_HEAT_MaxClusterLots);
+   s += "\n_HEAT_MaxPortfolioLots=" + CFG_CanonDouble(_HEAT_MaxPortfolioLots);
+   s += "\n_HEAT_ClusterCorr=" + CFG_CanonDouble(_HEAT_ClusterCorr);
+   s += "\n_HEAT_DefaultCorr=" + CFG_CanonDouble(_HEAT_DefaultCorr);
+   s += "\n_HEAT_UseDynamicCorr=" + CFG_CanonBool(_HEAT_UseDynamicCorr);
+   s += "\n_HEAT_CorrWindowBars=" + CFG_CanonLong((long)_HEAT_CorrWindowBars);
+   s += "\nUseMiddlePathVeto=" + CFG_CanonBool(UseMiddlePathVeto);
+   s += "\n_MID_LineSource=" + CFG_CanonLong((long)_MID_LineSource);
+   s += "\nMID_LOW=" + CFG_CanonDouble(MID_LOW);
+   s += "\nMID_HIGH=" + CFG_CanonDouble(MID_HIGH);
+   s += "\nMIN_CHANNEL_ATR=" + CFG_CanonDouble(MIN_CHANNEL_ATR);
+   s += "\nMIN_LINE_WEIGHT=" + CFG_CanonDouble(MIN_LINE_WEIGHT);
+   s += "\n_MID_DonchianBars=" + CFG_CanonLong((long)_MID_DonchianBars);
+   s += "\n_MID_PivotDepth=" + CFG_CanonLong((long)_MID_PivotDepth);
+   s += "\n_MID_LineLookbackBars=" + CFG_CanonLong((long)_MID_LineLookbackBars);
+   s += "\n_MID_MaxLines=" + CFG_CanonLong((long)_MID_MaxLines);
+   s += "\n_MID_ClusterATRmult=" + CFG_CanonDouble(_MID_ClusterATRmult);
+   s += "\n_MID_UseRoomCheck=" + CFG_CanonBool(_MID_UseRoomCheck);
+   s += "\n_MID_MinRR=" + CFG_CanonDouble(_MID_MinRR);
+   s += "\n_5A_UseSMCVeto=" + CFG_CanonBool(_5A_UseSMCVeto);
+   s += "\n_5A_PivotDepth=" + CFG_CanonLong((long)_5A_PivotDepth);
+   s += "\n_5A_SwingLookback=" + CFG_CanonLong((long)_5A_SwingLookback);
+   s += "\n_5A_MaxSwings=" + CFG_CanonLong((long)_5A_MaxSwings);
+   s += "\n_5A_BreakLookbackBars=" + CFG_CanonLong((long)_5A_BreakLookbackBars);
+   s += "\n_5A_ChochRecentBars=" + CFG_CanonLong((long)_5A_ChochRecentBars);
+   s += "\n_5A_SweepMinATR=" + CFG_CanonDouble(_5A_SweepMinATR);
+   s += "\n_5A_MinScore=" + CFG_CanonDouble(_5A_MinScore);
+   s += "\n_5A_HighScore=" + CFG_CanonDouble(_5A_HighScore);
+   s += "\n_5B_ExtendMinRR=" + CFG_CanonDouble(_5B_ExtendMinRR);
+   s += "\n_5B_LockStepR=" + CFG_CanonDouble(_5B_LockStepR);
+   s += "\n_5B_MaxChain=" + CFG_CanonLong((long)_5B_MaxChain);
    s += "\n_0_Magic=" + CFG_CanonLong((long)_0_Magic);
    s += "\n_0_Slippage=" + CFG_CanonLong((long)_0_Slippage);
    s += "\n_0_MaxSpread=" + CFG_CanonLong((long)_0_MaxSpread);
@@ -143,7 +181,7 @@ string CFG_SurfacePreimage()
 #ifdef LAB_ENTRY_12
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_12"); }
-int    CFG_SurfaceKeys() { return(117); }
+int    CFG_SurfaceKeys() { return(155); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_12";
@@ -187,6 +225,8 @@ string CFG_SurfacePreimage()
    s += "\n_50_Regime_TF=" + CFG_CanonLong((long)_50_Regime_TF);
    s += "\n_50_ADX_Period=" + CFG_CanonLong((long)_50_ADX_Period);
    s += "\n_50_ADX_TrendMin=" + CFG_CanonDouble(_50_ADX_TrendMin);
+   s += "\n_50_ADX_TrendMin_Exit=" + CFG_CanonDouble(_50_ADX_TrendMin_Exit);
+   s += "\n_50_RegimeConfirmBars=" + CFG_CanonLong((long)_50_RegimeConfirmBars);
    s += "\n_50_StormATRmult=" + CFG_CanonDouble(_50_StormATRmult);
    s += "\n_50_StormLookback=" + CFG_CanonLong((long)_50_StormLookback);
    s += "\n_21_TP_Pip=" + CFG_CanonDouble(_21_TP_Pip);
@@ -261,6 +301,42 @@ string CFG_SurfacePreimage()
    s += "\n_MG_BlockNew=" + CFG_CanonBool(_MG_BlockNew);
    s += "\n_MG_TriggerRiskOff=" + CFG_CanonBool(_MG_TriggerRiskOff);
    s += "\n_MG_OffsetHours=" + CFG_CanonLong((long)_MG_OffsetHours);
+   s += "\n_EVT_BucketATRmult=" + CFG_CanonDouble(_EVT_BucketATRmult);
+   s += "\n_EVT_BucketSeconds=" + CFG_CanonLong((long)_EVT_BucketSeconds);
+   s += "\n_EVT_PreemptMargin=" + CFG_CanonDouble(_EVT_PreemptMargin);
+   s += "\n_EVT_RevengeBlockBars=" + CFG_CanonLong((long)_EVT_RevengeBlockBars);
+   s += "\n_HEAT_Enable=" + CFG_CanonBool(_HEAT_Enable);
+   s += "\n_HEAT_MaxClusterLots=" + CFG_CanonDouble(_HEAT_MaxClusterLots);
+   s += "\n_HEAT_MaxPortfolioLots=" + CFG_CanonDouble(_HEAT_MaxPortfolioLots);
+   s += "\n_HEAT_ClusterCorr=" + CFG_CanonDouble(_HEAT_ClusterCorr);
+   s += "\n_HEAT_DefaultCorr=" + CFG_CanonDouble(_HEAT_DefaultCorr);
+   s += "\n_HEAT_UseDynamicCorr=" + CFG_CanonBool(_HEAT_UseDynamicCorr);
+   s += "\n_HEAT_CorrWindowBars=" + CFG_CanonLong((long)_HEAT_CorrWindowBars);
+   s += "\nUseMiddlePathVeto=" + CFG_CanonBool(UseMiddlePathVeto);
+   s += "\n_MID_LineSource=" + CFG_CanonLong((long)_MID_LineSource);
+   s += "\nMID_LOW=" + CFG_CanonDouble(MID_LOW);
+   s += "\nMID_HIGH=" + CFG_CanonDouble(MID_HIGH);
+   s += "\nMIN_CHANNEL_ATR=" + CFG_CanonDouble(MIN_CHANNEL_ATR);
+   s += "\nMIN_LINE_WEIGHT=" + CFG_CanonDouble(MIN_LINE_WEIGHT);
+   s += "\n_MID_DonchianBars=" + CFG_CanonLong((long)_MID_DonchianBars);
+   s += "\n_MID_PivotDepth=" + CFG_CanonLong((long)_MID_PivotDepth);
+   s += "\n_MID_LineLookbackBars=" + CFG_CanonLong((long)_MID_LineLookbackBars);
+   s += "\n_MID_MaxLines=" + CFG_CanonLong((long)_MID_MaxLines);
+   s += "\n_MID_ClusterATRmult=" + CFG_CanonDouble(_MID_ClusterATRmult);
+   s += "\n_MID_UseRoomCheck=" + CFG_CanonBool(_MID_UseRoomCheck);
+   s += "\n_MID_MinRR=" + CFG_CanonDouble(_MID_MinRR);
+   s += "\n_5A_UseSMCVeto=" + CFG_CanonBool(_5A_UseSMCVeto);
+   s += "\n_5A_PivotDepth=" + CFG_CanonLong((long)_5A_PivotDepth);
+   s += "\n_5A_SwingLookback=" + CFG_CanonLong((long)_5A_SwingLookback);
+   s += "\n_5A_MaxSwings=" + CFG_CanonLong((long)_5A_MaxSwings);
+   s += "\n_5A_BreakLookbackBars=" + CFG_CanonLong((long)_5A_BreakLookbackBars);
+   s += "\n_5A_ChochRecentBars=" + CFG_CanonLong((long)_5A_ChochRecentBars);
+   s += "\n_5A_SweepMinATR=" + CFG_CanonDouble(_5A_SweepMinATR);
+   s += "\n_5A_MinScore=" + CFG_CanonDouble(_5A_MinScore);
+   s += "\n_5A_HighScore=" + CFG_CanonDouble(_5A_HighScore);
+   s += "\n_5B_ExtendMinRR=" + CFG_CanonDouble(_5B_ExtendMinRR);
+   s += "\n_5B_LockStepR=" + CFG_CanonDouble(_5B_LockStepR);
+   s += "\n_5B_MaxChain=" + CFG_CanonLong((long)_5B_MaxChain);
    s += "\n_0_Magic=" + CFG_CanonLong((long)_0_Magic);
    s += "\n_0_Slippage=" + CFG_CanonLong((long)_0_Slippage);
    s += "\n_0_MaxSpread=" + CFG_CanonLong((long)_0_MaxSpread);
@@ -271,7 +347,7 @@ string CFG_SurfacePreimage()
 #ifdef LAB_ENTRY_13
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_13"); }
-int    CFG_SurfaceKeys() { return(119); }
+int    CFG_SurfaceKeys() { return(157); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_13";
@@ -317,6 +393,8 @@ string CFG_SurfacePreimage()
    s += "\n_50_Regime_TF=" + CFG_CanonLong((long)_50_Regime_TF);
    s += "\n_50_ADX_Period=" + CFG_CanonLong((long)_50_ADX_Period);
    s += "\n_50_ADX_TrendMin=" + CFG_CanonDouble(_50_ADX_TrendMin);
+   s += "\n_50_ADX_TrendMin_Exit=" + CFG_CanonDouble(_50_ADX_TrendMin_Exit);
+   s += "\n_50_RegimeConfirmBars=" + CFG_CanonLong((long)_50_RegimeConfirmBars);
    s += "\n_50_StormATRmult=" + CFG_CanonDouble(_50_StormATRmult);
    s += "\n_50_StormLookback=" + CFG_CanonLong((long)_50_StormLookback);
    s += "\n_21_TP_Pip=" + CFG_CanonDouble(_21_TP_Pip);
@@ -391,6 +469,42 @@ string CFG_SurfacePreimage()
    s += "\n_MG_BlockNew=" + CFG_CanonBool(_MG_BlockNew);
    s += "\n_MG_TriggerRiskOff=" + CFG_CanonBool(_MG_TriggerRiskOff);
    s += "\n_MG_OffsetHours=" + CFG_CanonLong((long)_MG_OffsetHours);
+   s += "\n_EVT_BucketATRmult=" + CFG_CanonDouble(_EVT_BucketATRmult);
+   s += "\n_EVT_BucketSeconds=" + CFG_CanonLong((long)_EVT_BucketSeconds);
+   s += "\n_EVT_PreemptMargin=" + CFG_CanonDouble(_EVT_PreemptMargin);
+   s += "\n_EVT_RevengeBlockBars=" + CFG_CanonLong((long)_EVT_RevengeBlockBars);
+   s += "\n_HEAT_Enable=" + CFG_CanonBool(_HEAT_Enable);
+   s += "\n_HEAT_MaxClusterLots=" + CFG_CanonDouble(_HEAT_MaxClusterLots);
+   s += "\n_HEAT_MaxPortfolioLots=" + CFG_CanonDouble(_HEAT_MaxPortfolioLots);
+   s += "\n_HEAT_ClusterCorr=" + CFG_CanonDouble(_HEAT_ClusterCorr);
+   s += "\n_HEAT_DefaultCorr=" + CFG_CanonDouble(_HEAT_DefaultCorr);
+   s += "\n_HEAT_UseDynamicCorr=" + CFG_CanonBool(_HEAT_UseDynamicCorr);
+   s += "\n_HEAT_CorrWindowBars=" + CFG_CanonLong((long)_HEAT_CorrWindowBars);
+   s += "\nUseMiddlePathVeto=" + CFG_CanonBool(UseMiddlePathVeto);
+   s += "\n_MID_LineSource=" + CFG_CanonLong((long)_MID_LineSource);
+   s += "\nMID_LOW=" + CFG_CanonDouble(MID_LOW);
+   s += "\nMID_HIGH=" + CFG_CanonDouble(MID_HIGH);
+   s += "\nMIN_CHANNEL_ATR=" + CFG_CanonDouble(MIN_CHANNEL_ATR);
+   s += "\nMIN_LINE_WEIGHT=" + CFG_CanonDouble(MIN_LINE_WEIGHT);
+   s += "\n_MID_DonchianBars=" + CFG_CanonLong((long)_MID_DonchianBars);
+   s += "\n_MID_PivotDepth=" + CFG_CanonLong((long)_MID_PivotDepth);
+   s += "\n_MID_LineLookbackBars=" + CFG_CanonLong((long)_MID_LineLookbackBars);
+   s += "\n_MID_MaxLines=" + CFG_CanonLong((long)_MID_MaxLines);
+   s += "\n_MID_ClusterATRmult=" + CFG_CanonDouble(_MID_ClusterATRmult);
+   s += "\n_MID_UseRoomCheck=" + CFG_CanonBool(_MID_UseRoomCheck);
+   s += "\n_MID_MinRR=" + CFG_CanonDouble(_MID_MinRR);
+   s += "\n_5A_UseSMCVeto=" + CFG_CanonBool(_5A_UseSMCVeto);
+   s += "\n_5A_PivotDepth=" + CFG_CanonLong((long)_5A_PivotDepth);
+   s += "\n_5A_SwingLookback=" + CFG_CanonLong((long)_5A_SwingLookback);
+   s += "\n_5A_MaxSwings=" + CFG_CanonLong((long)_5A_MaxSwings);
+   s += "\n_5A_BreakLookbackBars=" + CFG_CanonLong((long)_5A_BreakLookbackBars);
+   s += "\n_5A_ChochRecentBars=" + CFG_CanonLong((long)_5A_ChochRecentBars);
+   s += "\n_5A_SweepMinATR=" + CFG_CanonDouble(_5A_SweepMinATR);
+   s += "\n_5A_MinScore=" + CFG_CanonDouble(_5A_MinScore);
+   s += "\n_5A_HighScore=" + CFG_CanonDouble(_5A_HighScore);
+   s += "\n_5B_ExtendMinRR=" + CFG_CanonDouble(_5B_ExtendMinRR);
+   s += "\n_5B_LockStepR=" + CFG_CanonDouble(_5B_LockStepR);
+   s += "\n_5B_MaxChain=" + CFG_CanonLong((long)_5B_MaxChain);
    s += "\n_0_Magic=" + CFG_CanonLong((long)_0_Magic);
    s += "\n_0_Slippage=" + CFG_CanonLong((long)_0_Slippage);
    s += "\n_0_MaxSpread=" + CFG_CanonLong((long)_0_MaxSpread);
@@ -401,7 +515,7 @@ string CFG_SurfacePreimage()
 #ifdef LAB_ENTRY_14
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_14"); }
-int    CFG_SurfaceKeys() { return(116); }
+int    CFG_SurfaceKeys() { return(154); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_14";
@@ -444,6 +558,8 @@ string CFG_SurfacePreimage()
    s += "\n_50_Regime_TF=" + CFG_CanonLong((long)_50_Regime_TF);
    s += "\n_50_ADX_Period=" + CFG_CanonLong((long)_50_ADX_Period);
    s += "\n_50_ADX_TrendMin=" + CFG_CanonDouble(_50_ADX_TrendMin);
+   s += "\n_50_ADX_TrendMin_Exit=" + CFG_CanonDouble(_50_ADX_TrendMin_Exit);
+   s += "\n_50_RegimeConfirmBars=" + CFG_CanonLong((long)_50_RegimeConfirmBars);
    s += "\n_50_StormATRmult=" + CFG_CanonDouble(_50_StormATRmult);
    s += "\n_50_StormLookback=" + CFG_CanonLong((long)_50_StormLookback);
    s += "\n_21_TP_Pip=" + CFG_CanonDouble(_21_TP_Pip);
@@ -518,6 +634,42 @@ string CFG_SurfacePreimage()
    s += "\n_MG_BlockNew=" + CFG_CanonBool(_MG_BlockNew);
    s += "\n_MG_TriggerRiskOff=" + CFG_CanonBool(_MG_TriggerRiskOff);
    s += "\n_MG_OffsetHours=" + CFG_CanonLong((long)_MG_OffsetHours);
+   s += "\n_EVT_BucketATRmult=" + CFG_CanonDouble(_EVT_BucketATRmult);
+   s += "\n_EVT_BucketSeconds=" + CFG_CanonLong((long)_EVT_BucketSeconds);
+   s += "\n_EVT_PreemptMargin=" + CFG_CanonDouble(_EVT_PreemptMargin);
+   s += "\n_EVT_RevengeBlockBars=" + CFG_CanonLong((long)_EVT_RevengeBlockBars);
+   s += "\n_HEAT_Enable=" + CFG_CanonBool(_HEAT_Enable);
+   s += "\n_HEAT_MaxClusterLots=" + CFG_CanonDouble(_HEAT_MaxClusterLots);
+   s += "\n_HEAT_MaxPortfolioLots=" + CFG_CanonDouble(_HEAT_MaxPortfolioLots);
+   s += "\n_HEAT_ClusterCorr=" + CFG_CanonDouble(_HEAT_ClusterCorr);
+   s += "\n_HEAT_DefaultCorr=" + CFG_CanonDouble(_HEAT_DefaultCorr);
+   s += "\n_HEAT_UseDynamicCorr=" + CFG_CanonBool(_HEAT_UseDynamicCorr);
+   s += "\n_HEAT_CorrWindowBars=" + CFG_CanonLong((long)_HEAT_CorrWindowBars);
+   s += "\nUseMiddlePathVeto=" + CFG_CanonBool(UseMiddlePathVeto);
+   s += "\n_MID_LineSource=" + CFG_CanonLong((long)_MID_LineSource);
+   s += "\nMID_LOW=" + CFG_CanonDouble(MID_LOW);
+   s += "\nMID_HIGH=" + CFG_CanonDouble(MID_HIGH);
+   s += "\nMIN_CHANNEL_ATR=" + CFG_CanonDouble(MIN_CHANNEL_ATR);
+   s += "\nMIN_LINE_WEIGHT=" + CFG_CanonDouble(MIN_LINE_WEIGHT);
+   s += "\n_MID_DonchianBars=" + CFG_CanonLong((long)_MID_DonchianBars);
+   s += "\n_MID_PivotDepth=" + CFG_CanonLong((long)_MID_PivotDepth);
+   s += "\n_MID_LineLookbackBars=" + CFG_CanonLong((long)_MID_LineLookbackBars);
+   s += "\n_MID_MaxLines=" + CFG_CanonLong((long)_MID_MaxLines);
+   s += "\n_MID_ClusterATRmult=" + CFG_CanonDouble(_MID_ClusterATRmult);
+   s += "\n_MID_UseRoomCheck=" + CFG_CanonBool(_MID_UseRoomCheck);
+   s += "\n_MID_MinRR=" + CFG_CanonDouble(_MID_MinRR);
+   s += "\n_5A_UseSMCVeto=" + CFG_CanonBool(_5A_UseSMCVeto);
+   s += "\n_5A_PivotDepth=" + CFG_CanonLong((long)_5A_PivotDepth);
+   s += "\n_5A_SwingLookback=" + CFG_CanonLong((long)_5A_SwingLookback);
+   s += "\n_5A_MaxSwings=" + CFG_CanonLong((long)_5A_MaxSwings);
+   s += "\n_5A_BreakLookbackBars=" + CFG_CanonLong((long)_5A_BreakLookbackBars);
+   s += "\n_5A_ChochRecentBars=" + CFG_CanonLong((long)_5A_ChochRecentBars);
+   s += "\n_5A_SweepMinATR=" + CFG_CanonDouble(_5A_SweepMinATR);
+   s += "\n_5A_MinScore=" + CFG_CanonDouble(_5A_MinScore);
+   s += "\n_5A_HighScore=" + CFG_CanonDouble(_5A_HighScore);
+   s += "\n_5B_ExtendMinRR=" + CFG_CanonDouble(_5B_ExtendMinRR);
+   s += "\n_5B_LockStepR=" + CFG_CanonDouble(_5B_LockStepR);
+   s += "\n_5B_MaxChain=" + CFG_CanonLong((long)_5B_MaxChain);
    s += "\n_0_Magic=" + CFG_CanonLong((long)_0_Magic);
    s += "\n_0_Slippage=" + CFG_CanonLong((long)_0_Slippage);
    s += "\n_0_MaxSpread=" + CFG_CanonLong((long)_0_MaxSpread);
@@ -528,7 +680,7 @@ string CFG_SurfacePreimage()
 #ifdef LAB_ENTRY_15
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_15"); }
-int    CFG_SurfaceKeys() { return(119); }
+int    CFG_SurfaceKeys() { return(157); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_15";
@@ -574,6 +726,8 @@ string CFG_SurfacePreimage()
    s += "\n_50_Regime_TF=" + CFG_CanonLong((long)_50_Regime_TF);
    s += "\n_50_ADX_Period=" + CFG_CanonLong((long)_50_ADX_Period);
    s += "\n_50_ADX_TrendMin=" + CFG_CanonDouble(_50_ADX_TrendMin);
+   s += "\n_50_ADX_TrendMin_Exit=" + CFG_CanonDouble(_50_ADX_TrendMin_Exit);
+   s += "\n_50_RegimeConfirmBars=" + CFG_CanonLong((long)_50_RegimeConfirmBars);
    s += "\n_50_StormATRmult=" + CFG_CanonDouble(_50_StormATRmult);
    s += "\n_50_StormLookback=" + CFG_CanonLong((long)_50_StormLookback);
    s += "\n_21_TP_Pip=" + CFG_CanonDouble(_21_TP_Pip);
@@ -648,6 +802,42 @@ string CFG_SurfacePreimage()
    s += "\n_MG_BlockNew=" + CFG_CanonBool(_MG_BlockNew);
    s += "\n_MG_TriggerRiskOff=" + CFG_CanonBool(_MG_TriggerRiskOff);
    s += "\n_MG_OffsetHours=" + CFG_CanonLong((long)_MG_OffsetHours);
+   s += "\n_EVT_BucketATRmult=" + CFG_CanonDouble(_EVT_BucketATRmult);
+   s += "\n_EVT_BucketSeconds=" + CFG_CanonLong((long)_EVT_BucketSeconds);
+   s += "\n_EVT_PreemptMargin=" + CFG_CanonDouble(_EVT_PreemptMargin);
+   s += "\n_EVT_RevengeBlockBars=" + CFG_CanonLong((long)_EVT_RevengeBlockBars);
+   s += "\n_HEAT_Enable=" + CFG_CanonBool(_HEAT_Enable);
+   s += "\n_HEAT_MaxClusterLots=" + CFG_CanonDouble(_HEAT_MaxClusterLots);
+   s += "\n_HEAT_MaxPortfolioLots=" + CFG_CanonDouble(_HEAT_MaxPortfolioLots);
+   s += "\n_HEAT_ClusterCorr=" + CFG_CanonDouble(_HEAT_ClusterCorr);
+   s += "\n_HEAT_DefaultCorr=" + CFG_CanonDouble(_HEAT_DefaultCorr);
+   s += "\n_HEAT_UseDynamicCorr=" + CFG_CanonBool(_HEAT_UseDynamicCorr);
+   s += "\n_HEAT_CorrWindowBars=" + CFG_CanonLong((long)_HEAT_CorrWindowBars);
+   s += "\nUseMiddlePathVeto=" + CFG_CanonBool(UseMiddlePathVeto);
+   s += "\n_MID_LineSource=" + CFG_CanonLong((long)_MID_LineSource);
+   s += "\nMID_LOW=" + CFG_CanonDouble(MID_LOW);
+   s += "\nMID_HIGH=" + CFG_CanonDouble(MID_HIGH);
+   s += "\nMIN_CHANNEL_ATR=" + CFG_CanonDouble(MIN_CHANNEL_ATR);
+   s += "\nMIN_LINE_WEIGHT=" + CFG_CanonDouble(MIN_LINE_WEIGHT);
+   s += "\n_MID_DonchianBars=" + CFG_CanonLong((long)_MID_DonchianBars);
+   s += "\n_MID_PivotDepth=" + CFG_CanonLong((long)_MID_PivotDepth);
+   s += "\n_MID_LineLookbackBars=" + CFG_CanonLong((long)_MID_LineLookbackBars);
+   s += "\n_MID_MaxLines=" + CFG_CanonLong((long)_MID_MaxLines);
+   s += "\n_MID_ClusterATRmult=" + CFG_CanonDouble(_MID_ClusterATRmult);
+   s += "\n_MID_UseRoomCheck=" + CFG_CanonBool(_MID_UseRoomCheck);
+   s += "\n_MID_MinRR=" + CFG_CanonDouble(_MID_MinRR);
+   s += "\n_5A_UseSMCVeto=" + CFG_CanonBool(_5A_UseSMCVeto);
+   s += "\n_5A_PivotDepth=" + CFG_CanonLong((long)_5A_PivotDepth);
+   s += "\n_5A_SwingLookback=" + CFG_CanonLong((long)_5A_SwingLookback);
+   s += "\n_5A_MaxSwings=" + CFG_CanonLong((long)_5A_MaxSwings);
+   s += "\n_5A_BreakLookbackBars=" + CFG_CanonLong((long)_5A_BreakLookbackBars);
+   s += "\n_5A_ChochRecentBars=" + CFG_CanonLong((long)_5A_ChochRecentBars);
+   s += "\n_5A_SweepMinATR=" + CFG_CanonDouble(_5A_SweepMinATR);
+   s += "\n_5A_MinScore=" + CFG_CanonDouble(_5A_MinScore);
+   s += "\n_5A_HighScore=" + CFG_CanonDouble(_5A_HighScore);
+   s += "\n_5B_ExtendMinRR=" + CFG_CanonDouble(_5B_ExtendMinRR);
+   s += "\n_5B_LockStepR=" + CFG_CanonDouble(_5B_LockStepR);
+   s += "\n_5B_MaxChain=" + CFG_CanonLong((long)_5B_MaxChain);
    s += "\n_0_Magic=" + CFG_CanonLong((long)_0_Magic);
    s += "\n_0_Slippage=" + CFG_CanonLong((long)_0_Slippage);
    s += "\n_0_MaxSpread=" + CFG_CanonLong((long)_0_MaxSpread);
@@ -658,7 +848,7 @@ string CFG_SurfacePreimage()
 #ifdef LAB_ENTRY_16
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_16"); }
-int    CFG_SurfaceKeys() { return(135); }
+int    CFG_SurfaceKeys() { return(173); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_16";
@@ -720,6 +910,8 @@ string CFG_SurfacePreimage()
    s += "\n_50_Regime_TF=" + CFG_CanonLong((long)_50_Regime_TF);
    s += "\n_50_ADX_Period=" + CFG_CanonLong((long)_50_ADX_Period);
    s += "\n_50_ADX_TrendMin=" + CFG_CanonDouble(_50_ADX_TrendMin);
+   s += "\n_50_ADX_TrendMin_Exit=" + CFG_CanonDouble(_50_ADX_TrendMin_Exit);
+   s += "\n_50_RegimeConfirmBars=" + CFG_CanonLong((long)_50_RegimeConfirmBars);
    s += "\n_50_StormATRmult=" + CFG_CanonDouble(_50_StormATRmult);
    s += "\n_50_StormLookback=" + CFG_CanonLong((long)_50_StormLookback);
    s += "\n_21_TP_Pip=" + CFG_CanonDouble(_21_TP_Pip);
@@ -794,6 +986,42 @@ string CFG_SurfacePreimage()
    s += "\n_MG_BlockNew=" + CFG_CanonBool(_MG_BlockNew);
    s += "\n_MG_TriggerRiskOff=" + CFG_CanonBool(_MG_TriggerRiskOff);
    s += "\n_MG_OffsetHours=" + CFG_CanonLong((long)_MG_OffsetHours);
+   s += "\n_EVT_BucketATRmult=" + CFG_CanonDouble(_EVT_BucketATRmult);
+   s += "\n_EVT_BucketSeconds=" + CFG_CanonLong((long)_EVT_BucketSeconds);
+   s += "\n_EVT_PreemptMargin=" + CFG_CanonDouble(_EVT_PreemptMargin);
+   s += "\n_EVT_RevengeBlockBars=" + CFG_CanonLong((long)_EVT_RevengeBlockBars);
+   s += "\n_HEAT_Enable=" + CFG_CanonBool(_HEAT_Enable);
+   s += "\n_HEAT_MaxClusterLots=" + CFG_CanonDouble(_HEAT_MaxClusterLots);
+   s += "\n_HEAT_MaxPortfolioLots=" + CFG_CanonDouble(_HEAT_MaxPortfolioLots);
+   s += "\n_HEAT_ClusterCorr=" + CFG_CanonDouble(_HEAT_ClusterCorr);
+   s += "\n_HEAT_DefaultCorr=" + CFG_CanonDouble(_HEAT_DefaultCorr);
+   s += "\n_HEAT_UseDynamicCorr=" + CFG_CanonBool(_HEAT_UseDynamicCorr);
+   s += "\n_HEAT_CorrWindowBars=" + CFG_CanonLong((long)_HEAT_CorrWindowBars);
+   s += "\nUseMiddlePathVeto=" + CFG_CanonBool(UseMiddlePathVeto);
+   s += "\n_MID_LineSource=" + CFG_CanonLong((long)_MID_LineSource);
+   s += "\nMID_LOW=" + CFG_CanonDouble(MID_LOW);
+   s += "\nMID_HIGH=" + CFG_CanonDouble(MID_HIGH);
+   s += "\nMIN_CHANNEL_ATR=" + CFG_CanonDouble(MIN_CHANNEL_ATR);
+   s += "\nMIN_LINE_WEIGHT=" + CFG_CanonDouble(MIN_LINE_WEIGHT);
+   s += "\n_MID_DonchianBars=" + CFG_CanonLong((long)_MID_DonchianBars);
+   s += "\n_MID_PivotDepth=" + CFG_CanonLong((long)_MID_PivotDepth);
+   s += "\n_MID_LineLookbackBars=" + CFG_CanonLong((long)_MID_LineLookbackBars);
+   s += "\n_MID_MaxLines=" + CFG_CanonLong((long)_MID_MaxLines);
+   s += "\n_MID_ClusterATRmult=" + CFG_CanonDouble(_MID_ClusterATRmult);
+   s += "\n_MID_UseRoomCheck=" + CFG_CanonBool(_MID_UseRoomCheck);
+   s += "\n_MID_MinRR=" + CFG_CanonDouble(_MID_MinRR);
+   s += "\n_5A_UseSMCVeto=" + CFG_CanonBool(_5A_UseSMCVeto);
+   s += "\n_5A_PivotDepth=" + CFG_CanonLong((long)_5A_PivotDepth);
+   s += "\n_5A_SwingLookback=" + CFG_CanonLong((long)_5A_SwingLookback);
+   s += "\n_5A_MaxSwings=" + CFG_CanonLong((long)_5A_MaxSwings);
+   s += "\n_5A_BreakLookbackBars=" + CFG_CanonLong((long)_5A_BreakLookbackBars);
+   s += "\n_5A_ChochRecentBars=" + CFG_CanonLong((long)_5A_ChochRecentBars);
+   s += "\n_5A_SweepMinATR=" + CFG_CanonDouble(_5A_SweepMinATR);
+   s += "\n_5A_MinScore=" + CFG_CanonDouble(_5A_MinScore);
+   s += "\n_5A_HighScore=" + CFG_CanonDouble(_5A_HighScore);
+   s += "\n_5B_ExtendMinRR=" + CFG_CanonDouble(_5B_ExtendMinRR);
+   s += "\n_5B_LockStepR=" + CFG_CanonDouble(_5B_LockStepR);
+   s += "\n_5B_MaxChain=" + CFG_CanonLong((long)_5B_MaxChain);
    s += "\n_0_Magic=" + CFG_CanonLong((long)_0_Magic);
    s += "\n_0_Slippage=" + CFG_CanonLong((long)_0_Slippage);
    s += "\n_0_MaxSpread=" + CFG_CanonLong((long)_0_MaxSpread);
@@ -804,7 +1032,7 @@ string CFG_SurfacePreimage()
 #ifdef LAB_ENTRY_17
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_17"); }
-int    CFG_SurfaceKeys() { return(121); }
+int    CFG_SurfaceKeys() { return(159); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_17";
@@ -852,6 +1080,8 @@ string CFG_SurfacePreimage()
    s += "\n_50_Regime_TF=" + CFG_CanonLong((long)_50_Regime_TF);
    s += "\n_50_ADX_Period=" + CFG_CanonLong((long)_50_ADX_Period);
    s += "\n_50_ADX_TrendMin=" + CFG_CanonDouble(_50_ADX_TrendMin);
+   s += "\n_50_ADX_TrendMin_Exit=" + CFG_CanonDouble(_50_ADX_TrendMin_Exit);
+   s += "\n_50_RegimeConfirmBars=" + CFG_CanonLong((long)_50_RegimeConfirmBars);
    s += "\n_50_StormATRmult=" + CFG_CanonDouble(_50_StormATRmult);
    s += "\n_50_StormLookback=" + CFG_CanonLong((long)_50_StormLookback);
    s += "\n_21_TP_Pip=" + CFG_CanonDouble(_21_TP_Pip);
@@ -926,6 +1156,42 @@ string CFG_SurfacePreimage()
    s += "\n_MG_BlockNew=" + CFG_CanonBool(_MG_BlockNew);
    s += "\n_MG_TriggerRiskOff=" + CFG_CanonBool(_MG_TriggerRiskOff);
    s += "\n_MG_OffsetHours=" + CFG_CanonLong((long)_MG_OffsetHours);
+   s += "\n_EVT_BucketATRmult=" + CFG_CanonDouble(_EVT_BucketATRmult);
+   s += "\n_EVT_BucketSeconds=" + CFG_CanonLong((long)_EVT_BucketSeconds);
+   s += "\n_EVT_PreemptMargin=" + CFG_CanonDouble(_EVT_PreemptMargin);
+   s += "\n_EVT_RevengeBlockBars=" + CFG_CanonLong((long)_EVT_RevengeBlockBars);
+   s += "\n_HEAT_Enable=" + CFG_CanonBool(_HEAT_Enable);
+   s += "\n_HEAT_MaxClusterLots=" + CFG_CanonDouble(_HEAT_MaxClusterLots);
+   s += "\n_HEAT_MaxPortfolioLots=" + CFG_CanonDouble(_HEAT_MaxPortfolioLots);
+   s += "\n_HEAT_ClusterCorr=" + CFG_CanonDouble(_HEAT_ClusterCorr);
+   s += "\n_HEAT_DefaultCorr=" + CFG_CanonDouble(_HEAT_DefaultCorr);
+   s += "\n_HEAT_UseDynamicCorr=" + CFG_CanonBool(_HEAT_UseDynamicCorr);
+   s += "\n_HEAT_CorrWindowBars=" + CFG_CanonLong((long)_HEAT_CorrWindowBars);
+   s += "\nUseMiddlePathVeto=" + CFG_CanonBool(UseMiddlePathVeto);
+   s += "\n_MID_LineSource=" + CFG_CanonLong((long)_MID_LineSource);
+   s += "\nMID_LOW=" + CFG_CanonDouble(MID_LOW);
+   s += "\nMID_HIGH=" + CFG_CanonDouble(MID_HIGH);
+   s += "\nMIN_CHANNEL_ATR=" + CFG_CanonDouble(MIN_CHANNEL_ATR);
+   s += "\nMIN_LINE_WEIGHT=" + CFG_CanonDouble(MIN_LINE_WEIGHT);
+   s += "\n_MID_DonchianBars=" + CFG_CanonLong((long)_MID_DonchianBars);
+   s += "\n_MID_PivotDepth=" + CFG_CanonLong((long)_MID_PivotDepth);
+   s += "\n_MID_LineLookbackBars=" + CFG_CanonLong((long)_MID_LineLookbackBars);
+   s += "\n_MID_MaxLines=" + CFG_CanonLong((long)_MID_MaxLines);
+   s += "\n_MID_ClusterATRmult=" + CFG_CanonDouble(_MID_ClusterATRmult);
+   s += "\n_MID_UseRoomCheck=" + CFG_CanonBool(_MID_UseRoomCheck);
+   s += "\n_MID_MinRR=" + CFG_CanonDouble(_MID_MinRR);
+   s += "\n_5A_UseSMCVeto=" + CFG_CanonBool(_5A_UseSMCVeto);
+   s += "\n_5A_PivotDepth=" + CFG_CanonLong((long)_5A_PivotDepth);
+   s += "\n_5A_SwingLookback=" + CFG_CanonLong((long)_5A_SwingLookback);
+   s += "\n_5A_MaxSwings=" + CFG_CanonLong((long)_5A_MaxSwings);
+   s += "\n_5A_BreakLookbackBars=" + CFG_CanonLong((long)_5A_BreakLookbackBars);
+   s += "\n_5A_ChochRecentBars=" + CFG_CanonLong((long)_5A_ChochRecentBars);
+   s += "\n_5A_SweepMinATR=" + CFG_CanonDouble(_5A_SweepMinATR);
+   s += "\n_5A_MinScore=" + CFG_CanonDouble(_5A_MinScore);
+   s += "\n_5A_HighScore=" + CFG_CanonDouble(_5A_HighScore);
+   s += "\n_5B_ExtendMinRR=" + CFG_CanonDouble(_5B_ExtendMinRR);
+   s += "\n_5B_LockStepR=" + CFG_CanonDouble(_5B_LockStepR);
+   s += "\n_5B_MaxChain=" + CFG_CanonLong((long)_5B_MaxChain);
    s += "\n_0_Magic=" + CFG_CanonLong((long)_0_Magic);
    s += "\n_0_Slippage=" + CFG_CanonLong((long)_0_Slippage);
    s += "\n_0_MaxSpread=" + CFG_CanonLong((long)_0_MaxSpread);
@@ -936,7 +1202,7 @@ string CFG_SurfacePreimage()
 #ifdef LAB_ENTRY_18
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_18"); }
-int    CFG_SurfaceKeys() { return(121); }
+int    CFG_SurfaceKeys() { return(159); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_18";
@@ -984,6 +1250,8 @@ string CFG_SurfacePreimage()
    s += "\n_50_Regime_TF=" + CFG_CanonLong((long)_50_Regime_TF);
    s += "\n_50_ADX_Period=" + CFG_CanonLong((long)_50_ADX_Period);
    s += "\n_50_ADX_TrendMin=" + CFG_CanonDouble(_50_ADX_TrendMin);
+   s += "\n_50_ADX_TrendMin_Exit=" + CFG_CanonDouble(_50_ADX_TrendMin_Exit);
+   s += "\n_50_RegimeConfirmBars=" + CFG_CanonLong((long)_50_RegimeConfirmBars);
    s += "\n_50_StormATRmult=" + CFG_CanonDouble(_50_StormATRmult);
    s += "\n_50_StormLookback=" + CFG_CanonLong((long)_50_StormLookback);
    s += "\n_21_TP_Pip=" + CFG_CanonDouble(_21_TP_Pip);
@@ -1058,6 +1326,42 @@ string CFG_SurfacePreimage()
    s += "\n_MG_BlockNew=" + CFG_CanonBool(_MG_BlockNew);
    s += "\n_MG_TriggerRiskOff=" + CFG_CanonBool(_MG_TriggerRiskOff);
    s += "\n_MG_OffsetHours=" + CFG_CanonLong((long)_MG_OffsetHours);
+   s += "\n_EVT_BucketATRmult=" + CFG_CanonDouble(_EVT_BucketATRmult);
+   s += "\n_EVT_BucketSeconds=" + CFG_CanonLong((long)_EVT_BucketSeconds);
+   s += "\n_EVT_PreemptMargin=" + CFG_CanonDouble(_EVT_PreemptMargin);
+   s += "\n_EVT_RevengeBlockBars=" + CFG_CanonLong((long)_EVT_RevengeBlockBars);
+   s += "\n_HEAT_Enable=" + CFG_CanonBool(_HEAT_Enable);
+   s += "\n_HEAT_MaxClusterLots=" + CFG_CanonDouble(_HEAT_MaxClusterLots);
+   s += "\n_HEAT_MaxPortfolioLots=" + CFG_CanonDouble(_HEAT_MaxPortfolioLots);
+   s += "\n_HEAT_ClusterCorr=" + CFG_CanonDouble(_HEAT_ClusterCorr);
+   s += "\n_HEAT_DefaultCorr=" + CFG_CanonDouble(_HEAT_DefaultCorr);
+   s += "\n_HEAT_UseDynamicCorr=" + CFG_CanonBool(_HEAT_UseDynamicCorr);
+   s += "\n_HEAT_CorrWindowBars=" + CFG_CanonLong((long)_HEAT_CorrWindowBars);
+   s += "\nUseMiddlePathVeto=" + CFG_CanonBool(UseMiddlePathVeto);
+   s += "\n_MID_LineSource=" + CFG_CanonLong((long)_MID_LineSource);
+   s += "\nMID_LOW=" + CFG_CanonDouble(MID_LOW);
+   s += "\nMID_HIGH=" + CFG_CanonDouble(MID_HIGH);
+   s += "\nMIN_CHANNEL_ATR=" + CFG_CanonDouble(MIN_CHANNEL_ATR);
+   s += "\nMIN_LINE_WEIGHT=" + CFG_CanonDouble(MIN_LINE_WEIGHT);
+   s += "\n_MID_DonchianBars=" + CFG_CanonLong((long)_MID_DonchianBars);
+   s += "\n_MID_PivotDepth=" + CFG_CanonLong((long)_MID_PivotDepth);
+   s += "\n_MID_LineLookbackBars=" + CFG_CanonLong((long)_MID_LineLookbackBars);
+   s += "\n_MID_MaxLines=" + CFG_CanonLong((long)_MID_MaxLines);
+   s += "\n_MID_ClusterATRmult=" + CFG_CanonDouble(_MID_ClusterATRmult);
+   s += "\n_MID_UseRoomCheck=" + CFG_CanonBool(_MID_UseRoomCheck);
+   s += "\n_MID_MinRR=" + CFG_CanonDouble(_MID_MinRR);
+   s += "\n_5A_UseSMCVeto=" + CFG_CanonBool(_5A_UseSMCVeto);
+   s += "\n_5A_PivotDepth=" + CFG_CanonLong((long)_5A_PivotDepth);
+   s += "\n_5A_SwingLookback=" + CFG_CanonLong((long)_5A_SwingLookback);
+   s += "\n_5A_MaxSwings=" + CFG_CanonLong((long)_5A_MaxSwings);
+   s += "\n_5A_BreakLookbackBars=" + CFG_CanonLong((long)_5A_BreakLookbackBars);
+   s += "\n_5A_ChochRecentBars=" + CFG_CanonLong((long)_5A_ChochRecentBars);
+   s += "\n_5A_SweepMinATR=" + CFG_CanonDouble(_5A_SweepMinATR);
+   s += "\n_5A_MinScore=" + CFG_CanonDouble(_5A_MinScore);
+   s += "\n_5A_HighScore=" + CFG_CanonDouble(_5A_HighScore);
+   s += "\n_5B_ExtendMinRR=" + CFG_CanonDouble(_5B_ExtendMinRR);
+   s += "\n_5B_LockStepR=" + CFG_CanonDouble(_5B_LockStepR);
+   s += "\n_5B_MaxChain=" + CFG_CanonLong((long)_5B_MaxChain);
    s += "\n_0_Magic=" + CFG_CanonLong((long)_0_Magic);
    s += "\n_0_Slippage=" + CFG_CanonLong((long)_0_Slippage);
    s += "\n_0_MaxSpread=" + CFG_CanonLong((long)_0_MaxSpread);

@@ -177,9 +177,20 @@ def check(worktree=False, source=None):
     bind_text = src.read_committed(gen.BINDINGS_REL)
     hyp_text = src.read_committed(gen.HYPOTHESES_REL)
 
-    surface = preset.parse_surface(inputs_text, HB.BUILD_TAG)
     bindings = _rows_of(bind_text, 'ParameterBinding')
     hypotheses = _rows_of(hyp_text, 'Hypothesis')
+
+    # Inputs.mqh retains legacy SMC/5B declarations for source compatibility, while the
+    # accepted A1-A5 logical registry deliberately excludes them. The state-table contract
+    # governs the logical registry surface, not those compatibility-only declarations.
+    raw_surface = preset.parse_surface(inputs_text, HB.BUILD_TAG)
+    registry_rows = registry.parse_parameter_registry_text(
+        src.read_committed(registry.PARAM_REGISTRY_REL), registry.PARAM_REGISTRY_REL)
+    logical_names = {registry.bare_registry_name(row['name']) for row in registry_rows}
+    surface = preset.Surface(HB.BUILD_TAG,
+                             [decl for decl in raw_surface.inputs if decl.name in logical_names],
+                             raw_surface.known_tags)
+    surface.enums = raw_surface.enums
 
     by_rev = {}
     for _n, rec in bindings:

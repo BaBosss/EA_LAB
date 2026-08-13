@@ -1,0 +1,1978 @@
+{
+  "artifact": "EA_TEMPLATE_PID_ALLOCATION_V1_R4_FINAL",
+  "status": "INVENTORY_FROZEN_FOR_BATCH_A",
+  "inventory_evidence": {
+    "declarations": 210,
+    "logical_keys": 196,
+    "missing_vs_r2": 26,
+    "omitted_key_from_prior_audit": "_HEAT_CorrWindowBars",
+    "prior_25_still_present": true
+  },
+  "identity_rules": {},
+  "ea_identity": {
+    "format": "E001-E999",
+    "type": "stable 3-digit strategy/EA identity",
+    "rename_rule": "ea_id never changes when short_name or strategy_summary changes",
+    "legacy_rule": "Current Boss 11-18 map naturally to E011-E018; legacy Boss labels remain compatibility aliases.",
+    "magic_rule": "Magic number is independent; never derive magic from ea_id."
+  },
+  "pid_pools": {
+    "10000-18999": "Entry/signal and strategy-specific controls; shared pool, not per-EA reservations",
+    "19000-19999": "Filter/regime/environment",
+    "20000-29999": "Exit/TP",
+    "30000-39999": "SL/risk-distance",
+    "40000-49999": "Sizing/money-management",
+    "50000-59999": "Progression/stack/add/pending",
+    "60000-69999": "Recovery/hedge",
+    "70000-79999": "Reserved for future cross-strategy intelligence/context",
+    "80000-89999": "Safety/risk cage",
+    "90000-99999": "Execution/runtime/operations"
+  },
+  "display_contract": {
+    "parameter_comment_format": "[Pxxxxx] short description | relation hint",
+    "comment_limit": "<=63 characters total per official MQL5 input-comment display-name limit",
+    "strategy_top_group": "E### ShortName | short strategy principle | Modes",
+    "relation_hint_examples": [
+      "active: ExitMode=ATR",
+      "with P20410",
+      "overrides P20310",
+      "requires SL distance"
+    ]
+  },
+  "allocations": [
+    {
+      "pid": 11000,
+      "internal_key": "TradeDir",
+      "semantic_rev": 1,
+      "family": "ENTRY_SHARED",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1000
+    },
+    {
+      "pid": 11010,
+      "internal_key": "_0_FastMA",
+      "semantic_rev": 1,
+      "family": "ENTRY_SHARED",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1010
+    },
+    {
+      "pid": 11011,
+      "internal_key": "_0_SlowMA",
+      "semantic_rev": 1,
+      "family": "ENTRY_SHARED",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1011
+    },
+    {
+      "pid": 11012,
+      "internal_key": "_0_MAMethod",
+      "semantic_rev": 1,
+      "family": "ENTRY_SHARED",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1012
+    },
+    {
+      "pid": 11013,
+      "internal_key": "_0_MA_TF",
+      "semantic_rev": 1,
+      "family": "ENTRY_SHARED",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1013
+    },
+    {
+      "pid": 11020,
+      "internal_key": "_0_ATR_Period",
+      "semantic_rev": 1,
+      "family": "ENTRY_SHARED",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1020
+    },
+    {
+      "pid": 11021,
+      "internal_key": "_0_ATR_TF",
+      "semantic_rev": 1,
+      "family": "ENTRY_SHARED",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1021
+    },
+    {
+      "pid": 11200,
+      "internal_key": "_12_Bars",
+      "semantic_rev": 1,
+      "family": "BOSS_12",
+      "scope": "BOSS_12",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1200
+    },
+    {
+      "pid": 11201,
+      "internal_key": "_12_ConfirmBars",
+      "semantic_rev": 1,
+      "family": "BOSS_12",
+      "scope": "BOSS_12",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1201
+    },
+    {
+      "pid": 11202,
+      "internal_key": "_12_HourFrom",
+      "semantic_rev": 1,
+      "family": "BOSS_12",
+      "scope": "BOSS_12",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1202
+    },
+    {
+      "pid": 11203,
+      "internal_key": "_12_HourTo",
+      "semantic_rev": 1,
+      "family": "BOSS_12",
+      "scope": "BOSS_12",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1203
+    },
+    {
+      "pid": 11300,
+      "internal_key": "_13_BB_Period",
+      "semantic_rev": 1,
+      "family": "BOSS_13",
+      "scope": "BOSS_13",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1300
+    },
+    {
+      "pid": 11301,
+      "internal_key": "_13_BB_Dev",
+      "semantic_rev": 1,
+      "family": "BOSS_13",
+      "scope": "BOSS_13",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1301
+    },
+    {
+      "pid": 11302,
+      "internal_key": "_13_RSI_Period",
+      "semantic_rev": 1,
+      "family": "BOSS_13",
+      "scope": "BOSS_13",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1302
+    },
+    {
+      "pid": 11303,
+      "internal_key": "_13_RSI_OB",
+      "semantic_rev": 1,
+      "family": "BOSS_13",
+      "scope": "BOSS_13",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1303
+    },
+    {
+      "pid": 11304,
+      "internal_key": "_13_RSI_OS",
+      "semantic_rev": 1,
+      "family": "BOSS_13",
+      "scope": "BOSS_13",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1304
+    },
+    {
+      "pid": 11305,
+      "internal_key": "_13_RequireBB",
+      "semantic_rev": 1,
+      "family": "BOSS_13",
+      "scope": "BOSS_13",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1305
+    },
+    {
+      "pid": 11400,
+      "internal_key": "_14_Direction",
+      "semantic_rev": 1,
+      "family": "BOSS_14",
+      "scope": "BOSS_14",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1400
+    },
+    {
+      "pid": 11401,
+      "internal_key": "_14_DistAtrMult",
+      "semantic_rev": 1,
+      "family": "BOSS_14",
+      "scope": "BOSS_14",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1401
+    },
+    {
+      "pid": 11402,
+      "internal_key": "_14_MinDistPips",
+      "semantic_rev": 1,
+      "family": "BOSS_14",
+      "scope": "BOSS_14",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1402
+    },
+    {
+      "pid": 11500,
+      "internal_key": "_15_MacdFast",
+      "semantic_rev": 1,
+      "family": "BOSS_15",
+      "scope": "BOSS_15",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1500
+    },
+    {
+      "pid": 11501,
+      "internal_key": "_15_MacdSlow",
+      "semantic_rev": 1,
+      "family": "BOSS_15",
+      "scope": "BOSS_15",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1501
+    },
+    {
+      "pid": 11502,
+      "internal_key": "_15_MacdSignal",
+      "semantic_rev": 1,
+      "family": "BOSS_15",
+      "scope": "BOSS_15",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1502
+    },
+    {
+      "pid": 11503,
+      "internal_key": "_15_CountBars",
+      "semantic_rev": 1,
+      "family": "BOSS_15",
+      "scope": "BOSS_15",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1503
+    },
+    {
+      "pid": 11504,
+      "internal_key": "_15_EdgeTrigger",
+      "semantic_rev": 1,
+      "family": "BOSS_15",
+      "scope": "BOSS_15",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1504
+    },
+    {
+      "pid": 11505,
+      "internal_key": "_15_RearmBars",
+      "semantic_rev": 1,
+      "family": "BOSS_15",
+      "scope": "BOSS_15",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1505
+    },
+    {
+      "pid": 11600,
+      "internal_key": "_16_Direction",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1600
+    },
+    {
+      "pid": 11601,
+      "internal_key": "_16_RsiPeriod",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1601
+    },
+    {
+      "pid": 11602,
+      "internal_key": "_16_RsiLow",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1602
+    },
+    {
+      "pid": 11603,
+      "internal_key": "_16_RsiHigh",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1603
+    },
+    {
+      "pid": 11604,
+      "internal_key": "_16_AtrMultFirst4",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1604
+    },
+    {
+      "pid": 11605,
+      "internal_key": "_16_AtrMultAfter",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1605
+    },
+    {
+      "pid": 11606,
+      "internal_key": "_16_MinDistPips",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1606
+    },
+    {
+      "pid": 11607,
+      "internal_key": "_16_MaxOrdersPerSide",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1607
+    },
+    {
+      "pid": 11608,
+      "internal_key": "_16_BaseLotMode",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1608
+    },
+    {
+      "pid": 11609,
+      "internal_key": "_16_BaseLot",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1609
+    },
+    {
+      "pid": 11610,
+      "internal_key": "_16_LadderMult",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1610
+    },
+    {
+      "pid": 11611,
+      "internal_key": "_16_MaxLotPerOrder",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1611
+    },
+    {
+      "pid": 11612,
+      "internal_key": "_16_SlAtrMult",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1612
+    },
+    {
+      "pid": 11613,
+      "internal_key": "_16_MaxSlPips",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1613
+    },
+    {
+      "pid": 11614,
+      "internal_key": "_16_TpSingleAtrMult",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1614
+    },
+    {
+      "pid": 11615,
+      "internal_key": "_16_BasketTpUsdPer01",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1615
+    },
+    {
+      "pid": 11616,
+      "internal_key": "_16_OverlapMinUsd",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1616
+    },
+    {
+      "pid": 11617,
+      "internal_key": "_16_OverlapMinOrders",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1617
+    },
+    {
+      "pid": 11618,
+      "internal_key": "_16_FlattenOn",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1618
+    },
+    {
+      "pid": 11619,
+      "internal_key": "_16_FlattenMinOrders",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1619
+    },
+    {
+      "pid": 11620,
+      "internal_key": "_16_MaxControlledLossUsd",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1620
+    },
+    {
+      "pid": 11621,
+      "internal_key": "_16_EmergencyDDPct",
+      "semantic_rev": 1,
+      "family": "BOSS_16",
+      "scope": "BOSS_16",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1621
+    },
+    {
+      "pid": 11700,
+      "internal_key": "_17_FractalDepth",
+      "semantic_rev": 1,
+      "family": "BOSS_17",
+      "scope": "BOSS_17",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1700
+    },
+    {
+      "pid": 11701,
+      "internal_key": "_17_Wave3MinMult",
+      "semantic_rev": 1,
+      "family": "BOSS_17",
+      "scope": "BOSS_17",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1701
+    },
+    {
+      "pid": 11702,
+      "internal_key": "_17_EntryFib",
+      "semantic_rev": 1,
+      "family": "BOSS_17",
+      "scope": "BOSS_17",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1702
+    },
+    {
+      "pid": 11703,
+      "internal_key": "_17_SLbufferATR",
+      "semantic_rev": 1,
+      "family": "BOSS_17",
+      "scope": "BOSS_17",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1703
+    },
+    {
+      "pid": 11704,
+      "internal_key": "_17_UseStructLevels",
+      "semantic_rev": 1,
+      "family": "BOSS_17",
+      "scope": "BOSS_17",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1704
+    },
+    {
+      "pid": 11705,
+      "internal_key": "_17_DivergTrail",
+      "semantic_rev": 1,
+      "family": "BOSS_17",
+      "scope": "BOSS_17",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1705
+    },
+    {
+      "pid": 11706,
+      "internal_key": "_17_MaxSwings",
+      "semantic_rev": 1,
+      "family": "BOSS_17",
+      "scope": "BOSS_17",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1706
+    },
+    {
+      "pid": 11707,
+      "internal_key": "_17_RSI_Period",
+      "semantic_rev": 1,
+      "family": "BOSS_17",
+      "scope": "BOSS_17",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1707
+    },
+    {
+      "pid": 11800,
+      "internal_key": "_18_Direction",
+      "semantic_rev": 1,
+      "family": "BOSS_18",
+      "scope": "BOSS_18",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1800
+    },
+    {
+      "pid": 11801,
+      "internal_key": "_18_DirMode",
+      "semantic_rev": 1,
+      "family": "BOSS_18",
+      "scope": "BOSS_18",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1801
+    },
+    {
+      "pid": 11802,
+      "internal_key": "_18_MaPeriod",
+      "semantic_rev": 1,
+      "family": "BOSS_18",
+      "scope": "BOSS_18",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1802
+    },
+    {
+      "pid": 11803,
+      "internal_key": "_18_KPeriod",
+      "semantic_rev": 1,
+      "family": "BOSS_18",
+      "scope": "BOSS_18",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1803
+    },
+    {
+      "pid": 11804,
+      "internal_key": "_18_DPeriod",
+      "semantic_rev": 1,
+      "family": "BOSS_18",
+      "scope": "BOSS_18",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1804
+    },
+    {
+      "pid": 11805,
+      "internal_key": "_18_Slowing",
+      "semantic_rev": 1,
+      "family": "BOSS_18",
+      "scope": "BOSS_18",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1805
+    },
+    {
+      "pid": 11806,
+      "internal_key": "_18_LoLevel",
+      "semantic_rev": 1,
+      "family": "BOSS_18",
+      "scope": "BOSS_18",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1806
+    },
+    {
+      "pid": 11807,
+      "internal_key": "_18_UpLevel",
+      "semantic_rev": 1,
+      "family": "BOSS_18",
+      "scope": "BOSS_18",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 1807
+    },
+    {
+      "pid": 19000,
+      "internal_key": "TrendFilter",
+      "semantic_rev": 1,
+      "family": "FILTER",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7000
+    },
+    {
+      "pid": 19010,
+      "internal_key": "_71_ATRMA",
+      "semantic_rev": 1,
+      "family": "FILTER",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7010
+    },
+    {
+      "pid": 19011,
+      "internal_key": "_71_ATRRatio",
+      "semantic_rev": 1,
+      "family": "FILTER",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7011
+    },
+    {
+      "pid": 19020,
+      "internal_key": "_72_SlopeBar",
+      "semantic_rev": 1,
+      "family": "FILTER",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7020
+    },
+    {
+      "pid": 19100,
+      "internal_key": "_50_RegimeMode",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7100
+    },
+    {
+      "pid": 19101,
+      "internal_key": "_50_AllowTrendUp",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7101
+    },
+    {
+      "pid": 19102,
+      "internal_key": "_50_AllowTrendDown",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7102
+    },
+    {
+      "pid": 19103,
+      "internal_key": "_50_AllowRange",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7103
+    },
+    {
+      "pid": 19110,
+      "internal_key": "_50_Regime_TF",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7110
+    },
+    {
+      "pid": 19111,
+      "internal_key": "_50_ADX_Period",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7111
+    },
+    {
+      "pid": 19112,
+      "internal_key": "_50_ADX_TrendMin",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7112
+    },
+    {
+      "pid": 19113,
+      "internal_key": "_50_ADX_TrendMin_Exit",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 19114,
+      "internal_key": "_50_RegimeConfirmBars",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 19120,
+      "internal_key": "_50_StormATRmult",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7120
+    },
+    {
+      "pid": 19121,
+      "internal_key": "_50_StormLookback",
+      "semantic_rev": 1,
+      "family": "REGIME",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 7121
+    },
+    {
+      "pid": 20000,
+      "internal_key": "ExitMode",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2000
+    },
+    {
+      "pid": 20010,
+      "internal_key": "_21_TP_Pip",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2010
+    },
+    {
+      "pid": 20020,
+      "internal_key": "_22_TP_ATRmult",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2020
+    },
+    {
+      "pid": 20030,
+      "internal_key": "_2_BasketTP_Money",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2030
+    },
+    {
+      "pid": 20031,
+      "internal_key": "_2_BasketTP_ATRmult",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2031
+    },
+    {
+      "pid": 20032,
+      "internal_key": "_2_BasketTP_BalPct",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2032
+    },
+    {
+      "pid": 20040,
+      "internal_key": "_23_TrailStart",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2040
+    },
+    {
+      "pid": 20041,
+      "internal_key": "_23_TrailStep",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2041
+    },
+    {
+      "pid": 20050,
+      "internal_key": "_2_PartialPct1",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2050
+    },
+    {
+      "pid": 20051,
+      "internal_key": "_2_PartialFrac1",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2051
+    },
+    {
+      "pid": 20052,
+      "internal_key": "_2_PartialPct2",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2052
+    },
+    {
+      "pid": 20053,
+      "internal_key": "_2_PartialFrac2",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2053
+    },
+    {
+      "pid": 20060,
+      "internal_key": "_2_SuppressLegTP",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2060
+    },
+    {
+      "pid": 20070,
+      "internal_key": "_2_MaxHoldBars",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2070
+    },
+    {
+      "pid": 20080,
+      "internal_key": "_57_DynCloseOn",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "ORDER-740 Part A: generic DynClose is not effective on Boss_16/Kangaroo; must not be silently presented as effective there.",
+      "legacy_provisional_pid_r1": 2080
+    },
+    {
+      "pid": 20081,
+      "internal_key": "_57_DynCloseBase",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2081
+    },
+    {
+      "pid": 20082,
+      "internal_key": "_57_DynCloseBalPct",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2082
+    },
+    {
+      "pid": 20083,
+      "internal_key": "_57_DynCloseDivisor",
+      "semantic_rev": 1,
+      "family": "EXIT_TP",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 2083
+    },
+    {
+      "pid": 30000,
+      "internal_key": "SLMode",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3000
+    },
+    {
+      "pid": 30010,
+      "internal_key": "_31_SL_Pip",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3010
+    },
+    {
+      "pid": 30020,
+      "internal_key": "_32_SL_Money",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3020
+    },
+    {
+      "pid": 30021,
+      "internal_key": "_32_SL_BalPct",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3021
+    },
+    {
+      "pid": 30030,
+      "internal_key": "_33_SL_ATRmult",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3030
+    },
+    {
+      "pid": 30031,
+      "internal_key": "_33_SL_MaxPips",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3031
+    },
+    {
+      "pid": 30032,
+      "internal_key": "_33_SL_MaxATRmult",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3032
+    },
+    {
+      "pid": 30033,
+      "internal_key": "_33_AdaptiveON",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3033
+    },
+    {
+      "pid": 30034,
+      "internal_key": "_33_AdaptiveN",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3034
+    },
+    {
+      "pid": 30040,
+      "internal_key": "_34_DonchianBars",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3040
+    },
+    {
+      "pid": 30050,
+      "internal_key": "_35_SRBars",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3050
+    },
+    {
+      "pid": 30060,
+      "internal_key": "_36_SD_Mult",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3060
+    },
+    {
+      "pid": 30061,
+      "internal_key": "_36_SD_Period",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3061
+    },
+    {
+      "pid": 30090,
+      "internal_key": "_3_RiskATR_Period",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3090
+    },
+    {
+      "pid": 30091,
+      "internal_key": "_3_RiskATR_TF",
+      "semantic_rev": 1,
+      "family": "STOP_RISK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 3091
+    },
+    {
+      "pid": 40000,
+      "internal_key": "FirstLotMode",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4000
+    },
+    {
+      "pid": 40010,
+      "internal_key": "_41_FixedLot",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4010
+    },
+    {
+      "pid": 40020,
+      "internal_key": "_42_RiskPct",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4020
+    },
+    {
+      "pid": 40030,
+      "internal_key": "_43_LotPerAnchor",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4030
+    },
+    {
+      "pid": 40031,
+      "internal_key": "_43_BalanceAnchor",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4031
+    },
+    {
+      "pid": 40100,
+      "internal_key": "_4_DdAdaptiveOn",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4100
+    },
+    {
+      "pid": 40101,
+      "internal_key": "_4_DdTier1Pct",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4101
+    },
+    {
+      "pid": 40102,
+      "internal_key": "_4_DdTier1Mult",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4102
+    },
+    {
+      "pid": 40103,
+      "internal_key": "_4_DdTier2Pct",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4103
+    },
+    {
+      "pid": 40104,
+      "internal_key": "_4_DdTier2Mult",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4104
+    },
+    {
+      "pid": 40105,
+      "internal_key": "_4_DdHardCapMult",
+      "semantic_rev": 1,
+      "family": "SIZING",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 4105
+    },
+    {
+      "pid": 50000,
+      "internal_key": "LotProg",
+      "semantic_rev": 1,
+      "family": "LOT_PROGRESSION",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5000
+    },
+    {
+      "pid": 50010,
+      "internal_key": "_51_ProgFactor",
+      "semantic_rev": 1,
+      "family": "LOT_PROGRESSION",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5010
+    },
+    {
+      "pid": 50020,
+      "internal_key": "_52_ProgMult",
+      "semantic_rev": 1,
+      "family": "LOT_PROGRESSION",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5020
+    },
+    {
+      "pid": 50030,
+      "internal_key": "_53_PlusLot",
+      "semantic_rev": 1,
+      "family": "LOT_PROGRESSION",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5030
+    },
+    {
+      "pid": 50050,
+      "internal_key": "_55_LogPowerFactor",
+      "semantic_rev": 1,
+      "family": "LOT_PROGRESSION",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5050
+    },
+    {
+      "pid": 50051,
+      "internal_key": "_55_UseLnNotLog10",
+      "semantic_rev": 1,
+      "family": "LOT_PROGRESSION",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5051
+    },
+    {
+      "pid": 50060,
+      "internal_key": "_56_FibMaxStep",
+      "semantic_rev": 1,
+      "family": "LOT_PROGRESSION",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5060
+    },
+    {
+      "pid": 50200,
+      "internal_key": "StackMode",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "One logical PID; multiple build-tag semantic rows are allowed only for this same internal key.",
+      "legacy_provisional_pid_r1": 5200
+    },
+    {
+      "pid": 50201,
+      "internal_key": "StackConfirm",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "One logical PID; multiple build-tag semantic rows are allowed only for this same internal key.",
+      "legacy_provisional_pid_r1": 5201
+    },
+    {
+      "pid": 50210,
+      "internal_key": "_9_StepUseATR",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5210
+    },
+    {
+      "pid": 50211,
+      "internal_key": "_9_StepATRmult",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5211
+    },
+    {
+      "pid": 50212,
+      "internal_key": "_9_StepPoints",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5212
+    },
+    {
+      "pid": 50213,
+      "internal_key": "_9_StepMinPips",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5213
+    },
+    {
+      "pid": 50214,
+      "internal_key": "_9_StepATRShift",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5214
+    },
+    {
+      "pid": 50220,
+      "internal_key": "_9_MaxLevels",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5220
+    },
+    {
+      "pid": 50230,
+      "internal_key": "_9_RegimeGateAdds",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5230
+    },
+    {
+      "pid": 50240,
+      "internal_key": "_9_PA_MinBodyRatio",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5240
+    },
+    {
+      "pid": 50250,
+      "internal_key": "_9_PendingMode",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5250
+    },
+    {
+      "pid": 50251,
+      "internal_key": "_9_PendingLegs",
+      "semantic_rev": 1,
+      "family": "STACK",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 5251
+    },
+    {
+      "pid": 60000,
+      "internal_key": "RecoveryMode",
+      "semantic_rev": 1,
+      "family": "RECOVERY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6000
+    },
+    {
+      "pid": 60010,
+      "internal_key": "_8_TriggerATR",
+      "semantic_rev": 1,
+      "family": "RECOVERY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6010
+    },
+    {
+      "pid": 60011,
+      "internal_key": "_8_StepATR",
+      "semantic_rev": 1,
+      "family": "RECOVERY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6011
+    },
+    {
+      "pid": 60020,
+      "internal_key": "_8_RecMult",
+      "semantic_rev": 1,
+      "family": "RECOVERY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6020
+    },
+    {
+      "pid": 60030,
+      "internal_key": "_8_DDRefMoney",
+      "semantic_rev": 1,
+      "family": "RECOVERY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6030
+    },
+    {
+      "pid": 60031,
+      "internal_key": "_8_DDRefBalPct",
+      "semantic_rev": 1,
+      "family": "RECOVERY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6031
+    },
+    {
+      "pid": 60200,
+      "internal_key": "HedgeMode",
+      "semantic_rev": 1,
+      "family": "HEDGE",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6200
+    },
+    {
+      "pid": 60210,
+      "internal_key": "_H_TriggerDDPct",
+      "semantic_rev": 1,
+      "family": "HEDGE",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6210
+    },
+    {
+      "pid": 60211,
+      "internal_key": "_H_ReleaseDDPct",
+      "semantic_rev": 1,
+      "family": "HEDGE",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6211
+    },
+    {
+      "pid": 60220,
+      "internal_key": "_H_Ratio",
+      "semantic_rev": 1,
+      "family": "HEDGE",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6220
+    },
+    {
+      "pid": 60221,
+      "internal_key": "_H_MaxLot",
+      "semantic_rev": 1,
+      "family": "HEDGE",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 6221
+    },
+    {
+      "pid": 70000,
+      "internal_key": "_EVT_BucketATRmult",
+      "semantic_rev": 1,
+      "family": "EVENT_CONTEXT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 70001,
+      "internal_key": "_EVT_BucketSeconds",
+      "semantic_rev": 1,
+      "family": "EVENT_CONTEXT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 70002,
+      "internal_key": "_EVT_PreemptMargin",
+      "semantic_rev": 1,
+      "family": "EVENT_CONTEXT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 70003,
+      "internal_key": "_EVT_RevengeBlockBars",
+      "semantic_rev": 1,
+      "family": "EVENT_CONTEXT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 71000,
+      "internal_key": "_HEAT_Enable",
+      "semantic_rev": 1,
+      "family": "PORTFOLIO_HEAT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 71001,
+      "internal_key": "_HEAT_MaxClusterLots",
+      "semantic_rev": 1,
+      "family": "PORTFOLIO_HEAT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 71002,
+      "internal_key": "_HEAT_MaxPortfolioLots",
+      "semantic_rev": 1,
+      "family": "PORTFOLIO_HEAT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 71003,
+      "internal_key": "_HEAT_ClusterCorr",
+      "semantic_rev": 1,
+      "family": "PORTFOLIO_HEAT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 71004,
+      "internal_key": "_HEAT_DefaultCorr",
+      "semantic_rev": 1,
+      "family": "PORTFOLIO_HEAT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 71005,
+      "internal_key": "_HEAT_UseDynamicCorr",
+      "semantic_rev": 1,
+      "family": "PORTFOLIO_HEAT",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 71006,
+      "internal_key": "_HEAT_CorrWindowBars",
+      "semantic_rev": 1,
+      "family": "PORTFOLIO_HEAT",
+      "scope": "SHARED",
+      "status": "R4_FINAL_INVENTORY_PIN",
+      "note": "26th audit-missing key identified by exact local inventory recheck."
+    },
+    {
+      "pid": 72000,
+      "internal_key": "UseMiddlePathVeto",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72001,
+      "internal_key": "_MID_LineSource",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72002,
+      "internal_key": "MID_LOW",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72003,
+      "internal_key": "MID_HIGH",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72004,
+      "internal_key": "MIN_CHANNEL_ATR",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72005,
+      "internal_key": "MIN_LINE_WEIGHT",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72006,
+      "internal_key": "_MID_DonchianBars",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72007,
+      "internal_key": "_MID_PivotDepth",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72008,
+      "internal_key": "_MID_LineLookbackBars",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72009,
+      "internal_key": "_MID_MaxLines",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72010,
+      "internal_key": "_MID_ClusterATRmult",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72011,
+      "internal_key": "_MID_UseRoomCheck",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 72012,
+      "internal_key": "_MID_MinRR",
+      "semantic_rev": 1,
+      "family": "MIDDLE_PATH",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
+      "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 80000,
+      "internal_key": "ProtectLevel",
+      "semantic_rev": 1,
+      "family": "SAFETY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 8000
+    },
+    {
+      "pid": 80010,
+      "internal_key": "RC_MaxLot",
+      "semantic_rev": 1,
+      "family": "SAFETY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 8010
+    },
+    {
+      "pid": 80011,
+      "internal_key": "RC_RecMultMax",
+      "semantic_rev": 1,
+      "family": "SAFETY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 8011
+    },
+    {
+      "pid": 80012,
+      "internal_key": "RC_MaxLevelsOverride",
+      "semantic_rev": 1,
+      "family": "SAFETY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 8012
+    },
+    {
+      "pid": 80020,
+      "internal_key": "RC_AcctDDLimitPct",
+      "semantic_rev": 1,
+      "family": "SAFETY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 8020
+    },
+    {
+      "pid": 80030,
+      "internal_key": "RC_PersistHalt",
+      "semantic_rev": 1,
+      "family": "SAFETY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 8030
+    },
+    {
+      "pid": 80031,
+      "internal_key": "RC_AdoptLegacyHalt",
+      "semantic_rev": 1,
+      "family": "SAFETY",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 8031
+    },
+    {
+      "pid": 90000,
+      "internal_key": "DryRun",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9000
+    },
+    {
+      "pid": 90001,
+      "internal_key": "_0_BarOpenOnly",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9001
+    },
+    {
+      "pid": 90100,
+      "internal_key": "_MG_SelfGate",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9100
+    },
+    {
+      "pid": 90101,
+      "internal_key": "_MG_RegimeFile",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9101
+    },
+    {
+      "pid": 90102,
+      "internal_key": "_MG_InCommon",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9102
+    },
+    {
+      "pid": 90103,
+      "internal_key": "_MG_LotMult",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9103
+    },
+    {
+      "pid": 90104,
+      "internal_key": "_MG_BlockNew",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9104
+    },
+    {
+      "pid": 90105,
+      "internal_key": "_MG_TriggerRiskOff",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9105
+    },
+    {
+      "pid": 90106,
+      "internal_key": "_MG_OffsetHours",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9106
+    },
+    {
+      "pid": 90200,
+      "internal_key": "_0_Magic",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9200
+    },
+    {
+      "pid": 90201,
+      "internal_key": "_0_Slippage",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9201
+    },
+    {
+      "pid": 90202,
+      "internal_key": "_0_MaxSpread",
+      "semantic_rev": 1,
+      "family": "EXECUTION_OPS",
+      "scope": "SHARED",
+      "status": "PROVISIONAL_R2_UNTIL_S13_DELTA_AND_TARGETED_AUDIT",
+      "note": "",
+      "legacy_provisional_pid_r1": 9202
+    }
+  ]
+}

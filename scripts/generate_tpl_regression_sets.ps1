@@ -11,7 +11,8 @@ param(
     [string]$RepoRoot = '',
     [string]$PythonExe = '',
     [string]$GeneratorPath = '',
-    [switch]$CheckOnly
+    [switch]$CheckOnly,
+    [switch]$TestOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -54,11 +55,94 @@ function Test-EquivalentValue([string]$A, [string]$B) {
     return ($okA -and $okB -and $da -eq $db)
 }
 
+function Get-SetByteProfile([string]$Path) {
+    $bytes = [IO.File]::ReadAllBytes($Path)
+    $bomLength = 0
+    $encodingName = 'UTF-8'
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        $bomLength = 3
+        $encodingName = 'UTF-8 BOM'
+        $encoding = New-Object System.Text.UTF8Encoding($true)
+    } elseif ($bytes.Length -ge 2 -and $bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) {
+        $bomLength = 2
+        $encodingName = 'UTF-16 LE BOM'
+        $encoding = New-Object System.Text.UnicodeEncoding($false, $true)
+    } elseif ($bytes.Length -ge 2 -and $bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF) {
+        $bomLength = 2
+        $encodingName = 'UTF-16 BE BOM'
+        $encoding = New-Object System.Text.UnicodeEncoding($true, $true)
+    }
+    $text = $encoding.GetString($bytes, $bomLength, $bytes.Length - $bomLength)
+    $hasCrlf = $text.Contains("`r`n")
+    $withoutCrlf = $text.Replace("`r`n", '')
+    $hasLf = $withoutCrlf.Contains("`n")
+    $hasCr = $withoutCrlf.Contains("`r")
+    $newline = if ($hasCrlf -and -not $hasLf -and -not $hasCr) { 'CRLF' }
+               elseif ($hasLf -and -not $hasCrlf -and -not $hasCr) { 'LF' }
+               elseif ($hasCr -and -not $hasCrlf -and -not $hasLf) { 'CR' }
+               elseif (-not $hasCrlf -and -not $hasLf -and -not $hasCr) { 'NONE' }
+               else { 'MIXED' }
+    return [pscustomobject]@{
+        Sha256 = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+        Newline = $newline
+        EncodingName = $encodingName
+        Encoding = $encoding
+        BomLength = $bomLength
+        Text = $text
+    }
+}
+
+function Get-NormalizedSetText([string]$Path) {
+    $text = (Get-SetByteProfile $Path).Text
+    return (($text -replace "`r`n", "`n") -replace "`r", "`n")
+}
+
+function Assert-NoExistingValueChanges([hashtable]$Old, [hashtable]$New, [string]$Label) {
+    $changed = @($Old.Keys | Where-Object { -not $New.Contains($_) -or -not (Test-EquivalentValue $Old[$_] $New[$_]) })
+    if ($changed.Count -gt 0) {
+        $detail = $changed | ForEach-Object { "$_=[$($Old[$_])] -> [$($New[$_])]" }
+        throw "effective parameter delta for ${Label}: $($detail -join '; ')"
+    }
+}
+
+function Write-SetIfSemanticallyChanged([string]$GeneratedPath, [string]$TargetPath, [bool]$SemanticallyIdentical = $false) {
+    # gen_default_preset.py intentionally emits LF. Preserve an existing set byte-for-byte
+    # when the generated text is otherwise identical; line-ending normalization is not a
+    # semantic/configuration change and must not churn the repository's canonical bytes.
+    if (Test-Path -LiteralPath $TargetPath -PathType Leaf) {
+        $profile = Get-SetByteProfile $TargetPath
+        if ($SemanticallyIdentical -or (Get-NormalizedSetText $GeneratedPath) -ceq (Get-NormalizedSetText $TargetPath)) {
+            Write-Host ("PRESERVED existing bytes: {0} sha256={1} newline={2} encoding={3}" -f $TargetPath, $profile.Sha256, $profile.Newline, $profile.EncodingName) -ForegroundColor DarkGreen
+            return $false
+        }
+        if ($profile.Newline -eq 'MIXED') { throw "cannot materialize changed set with mixed newline convention: $TargetPath" }
+        $normalized = Get-NormalizedSetText $GeneratedPath
+        $newline = if ($profile.Newline -eq 'CRLF') { "`r`n" } elseif ($profile.Newline -eq 'CR') { "`r" } else { "`n" }
+        $materialized = $normalized.Replace("`n", $newline)
+        $payload = $profile.Encoding.GetBytes($materialized)
+        $preamble = $profile.Encoding.GetPreamble()
+        $bytes = New-Object byte[] ($preamble.Length + $payload.Length)
+        [Array]::Copy($preamble, 0, $bytes, 0, $preamble.Length)
+        [Array]::Copy($payload, 0, $bytes, $preamble.Length, $payload.Length)
+        [IO.File]::WriteAllBytes($TargetPath, $bytes)
+        Write-Host ("WROTE changed set using existing bytes convention: {0} newline={1} encoding={2}" -f $TargetPath, $profile.Newline, $profile.EncodingName) -ForegroundColor Yellow
+        return $true
+    }
+    if (-not (Test-Path -LiteralPath $TargetPath -PathType Leaf)) {
+        Copy-Item -LiteralPath $GeneratedPath -Destination $TargetPath
+        Write-Host "WROTE new set: $TargetPath" -ForegroundColor Yellow
+        return $true
+    }
+}
+
 function Invoke-Generator([hashtable]$Boss, [string]$OutPath, [string]$OverlayPath) {
     $args = @($generator, '--root', $RepoRoot, '--build', $Boss.Tag, '--out', $OutPath, '--overlay-set', $OverlayPath)
     & $py @args
     if ($LASTEXITCODE -ne 0) { throw "declared set generation failed for $($Boss.Name)" }
 }
+
+if ($TestOnly) { return }
 
 New-Item -ItemType Directory -Force $tmpDir | Out-Null
 try {
@@ -70,11 +154,7 @@ try {
         Invoke-Generator $boss $outPath $oldPath
         $new = Read-SetMap $outPath
 
-        $changed = @($old.Keys | Where-Object { -not $new.Contains($_) -or -not (Test-EquivalentValue $old[$_] $new[$_]) })
-        if ($changed.Count -gt 0) {
-            $detail = $changed | ForEach-Object { "$_=[$($old[$_])] -> [$($new[$_])]" }
-            throw "effective parameter delta for $($boss.Name): $($detail -join '; ')"
-        }
+        Assert-NoExistingValueChanges $old $new $boss.Name
         $missing = @($new.Keys | Where-Object { -not $old.Contains($_) })
         if ($boss.Tag -eq 'LAB_ENTRY_16' -and -not $new.Contains('_16_BaseLotMode')) {
             throw 'Boss_16 regeneration did not add the newly exposed _16_BaseLotMode default'
@@ -84,7 +164,7 @@ try {
         if ($boss.Tag -eq 'LAB_ENTRY_16') { $target = Join-Path $setDir 'Boss_16_KangarooGrid_regression_full.set' }
         Write-Host ("{0}: old={1} generated={2} added={3} target={4}" -f $boss.Name, $old.Count, $new.Count, ($missing -join ','), $target)
         if (-not $CheckOnly) {
-            Copy-Item -LiteralPath $outPath -Destination $target -Force
+            [void](Write-SetIfSemanticallyChanged $outPath $target ($missing.Count -eq 0))
         }
     }
     $summary = 'DECLARED SETS REGENERATED'

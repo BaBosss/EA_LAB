@@ -64,8 +64,25 @@ import capability                                  # noqa: E402
 import gen_registry_rows as grr                    # noqa: E402
 import hypothesis_b14 as HB                        # noqa: E402
 import preset                                      # noqa: E402
+import registry                                    # noqa: E402
 
 Refusal = preset.PresetRefusal
+
+
+def logical_surface(read, build_tag):
+    """Parse the build surface after excluding compatibility-only declarations.
+
+    Inputs.mqh intentionally retains the legacy SMC/5B declarations, but the accepted registry
+    and activation tables define the 196-parameter logical surface consumed by wrappers.
+    """
+    raw = preset.parse_surface(read(preset.INPUTS_REL), build_tag)
+    rows = registry.parse_parameter_registry_text(
+        read(preset.PARAM_REGISTRY_REL), preset.PARAM_REGISTRY_REL)
+    names = {registry.bare_registry_name(row['name']) for row in rows}
+    surface = preset.Surface(build_tag, [decl for decl in raw.inputs if decl.name in names],
+                             raw.known_tags)
+    surface.enums = raw.enums
+    return surface
 
 # WHERE THE TWO ARTIFACTS LIVE, and it took TWO measurements to settle.
 #
@@ -140,6 +157,8 @@ def _closed_for_every_config(gate, name, cfg, const, surface):
     reason that does not hold. One definitely-closed leg closes an AND.
     """
     kind = gate[0]
+    if kind == 'NEVER':
+        return (True, None)
     if kind == 'ALWAYS':
         return (False, None)
     if kind == 'SELF_GT0':
@@ -190,22 +209,14 @@ def const_plan(build_tag, hyp, surface, cfg):
 
     Anything else stays an `input`, and lands in `refused` with the selector that kept it alive.
     """
-    table = activation.TABLE.get(build_tag)
-    if table is None:
-        raise Refusal(
-            'no activation table is declared for build %r, so which inputs this wrapper may '
-            'compile away cannot be derived. REFUSED rather than defaulted to "none": a wrapper '
-            'that const-ed nothing would compile, run, and be indistinguishable from its parent '
-            'while claiming to be a distinct revision.' % build_tag)
-
-    verdicts = activation.classify(build_tag, cfg, surface=surface)
+    states = activation.effective_state(build_tag, cfg, surface=surface)
     locked = set(HB.LOCKED_SELECTORS)
 
     # Seed: the two reasons that need no fixpoint. A LOCKED input is const even when it is
     # perfectly reachable -- that is what "locked" means, and it is the only class whose value is
     # not its canonical default.
-    const = set(n for n, v in verdicts.items() if not v.token_enabled)
-    const |= set(n for n in locked if n in verdicts)
+    const = set(n for n, state in states.items() if not state['token_enabled'])
+    const |= set(n for n in locked if n in states)
 
     # Fixpoint over the gate-closed remainder.
     refused = []
@@ -213,10 +224,11 @@ def const_plan(build_tag, hyp, surface, cfg):
     while changed:
         changed = False
         refused = []
-        for name, verdict in verdicts.items():
-            if name in const or verdict.gate_open:
+        for name, state in states.items():
+            if name in const or state['gate_open']:
                 continue
-            closed, blocker = _closed_for_every_config(table[name][1], name, cfg, const, surface)
+            closed, blocker = _closed_for_every_config(
+                state['gate'], name, cfg, const, surface)
             if not closed:
                 refused.append((name, blocker,
                                 'its gate reads %s, which is still an input on this wrapper'
@@ -341,7 +353,7 @@ def build_for(revision_id, read):
                       % (revision_id, hyp_id, expected))
 
     build_tag = HB.BUILD_TAG
-    surface = preset.parse_surface(read(preset.INPUTS_REL), build_tag)
+    surface = logical_surface(read, build_tag)
     cfg = grr.pinned_config(hyp, surface)
     tokens = capability.enabled_tokens(build_tag, cfg, surface=surface)
 

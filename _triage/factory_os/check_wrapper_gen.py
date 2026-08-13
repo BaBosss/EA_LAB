@@ -140,7 +140,7 @@ def _plan_for(read, revision_id):
     import hypothesis_b14 as HB
     hyp_id = revision_id.rsplit('-r', 1)[0]
     hyp = HB.HYPOTHESES[hyp_id]
-    surface = preset.parse_surface(read(preset.INPUTS_REL), HB.BUILD_TAG)
+    surface = gw.logical_surface(read, HB.BUILD_TAG)
     cfg = grr.pinned_config(hyp, surface)
     return gw.const_plan(HB.BUILD_TAG, hyp, surface, cfg), surface
 

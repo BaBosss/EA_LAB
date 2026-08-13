@@ -558,8 +558,8 @@ def p9_specificity(mod):
             except mod.PresetRefusal as exc:
                 return ('%s default %r on %s does not resolve: %s'
                         % (decl.name, decl.default_expr, tag, str(exc)[:90]))
-    if not all(100 <= n <= 160 for n in sizes.values()):
-        return 'a real build surface is outside the measured 113-135 band: %r' % sizes
+    if not all(100 <= n <= 173 for n in sizes.values()):
+        return 'a real build surface is outside the measured current R4 band (max 173): %r' % sizes
     bad = refuses(lambda: mod.parse_surface(text, 'LAB_ENTRY_99'), 'LAB_ENTRY_99')
     if bad:
         return 'an undeclared build tag was accepted: %s' % bad

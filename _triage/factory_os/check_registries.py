@@ -136,6 +136,8 @@ RESOLVER_SWEEP_EXEMPT = {
                                        'contract and its implementation are not two copies',
     '_triage/factory_os/check_registries.py': 'this file, which must name what it forbids',
     '_triage/factory_os/run_registry_tests.py': 'the suite, which must name what it asserts',
+    '_triage/factory_os/run_batch_a_tests.py': 'the Batch-A cage, which must name the role and '
+                                               'classification cases it exercises',
     '_triage/factory_os/CONTRACTS.md': 'a GENERATED projection of schemas.json',
     '_triage/factory_os/run_param_surface_tests.py':
         'ORDER-1020: the CAGE for the state-table checker. Its attacks corrupt `role` fields to '

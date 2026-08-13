@@ -233,7 +233,7 @@ def w9_const_soundness_sweep():
     import activation
     import capability
     import preset as pr
-    surf = pr.parse_surface(_disk(pr.INPUTS_REL), HB.BUILD_TAG)
+    surf = gw.logical_surface(_disk, HB.BUILD_TAG)
     TB = activation.TABLE[HB.BUILD_TAG]
 
     def candidates(sel):

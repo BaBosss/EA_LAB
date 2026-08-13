@@ -42,9 +42,12 @@ $ErrorActionPreference = 'Stop'
 $repoRoot   = Split-Path -Parent $PSScriptRoot
 $inputsPath = Join-Path $repoRoot 'ea_template\core\Inputs.mqh'
 $csvPath    = Join-Path $repoRoot 'docs\PARAM_REGISTRY.csv'
+$csvReader  = Join-Path $PSScriptRoot 'lib\param_registry_csv.ps1'
 
 if (-not (Test-Path $inputsPath)) { throw "Not found: $inputsPath" }
 if (-not (Test-Path $csvPath))    { throw "Not found: $csvPath" }
+if (-not (Test-Path $csvReader))  { throw "Not found: $csvReader" }
+. $csvReader
 
 # ---------------------------------------------------------------------------
 # 1. Parse ea_template/core/Inputs.mqh: every `input` declaration (not
@@ -114,38 +117,23 @@ $codeNameSet = New-Object System.Collections.Generic.HashSet[string]
 foreach ($k in $codeByName.Keys) { [void]$codeNameSet.Add($k) }
 
 # ---------------------------------------------------------------------------
-# 2. Parse docs/PARAM_REGISTRY.csv: skip leading "> ..." comment lines, take the
-#    header, then every data row. All 12 columns are always double-quoted and
-#    none of the traced text in this file contains an escaped/embedded quote,
-#    so a simple "all-quoted-fields-in-order" extraction is safe here (this is
-#    NOT a general-purpose CSV parser).
+# 2. Parse docs/PARAM_REGISTRY.csv through the strict header-keyed reader.
 # ---------------------------------------------------------------------------
-$csvLines = Get-Content -LiteralPath $csvPath
-$dataLines = $csvLines | Where-Object { $_.Length -gt 0 -and $_[0] -ne '>' -and $_ -ne 'name,owner,unit,context,active_when,coupled_parameters,default_profile,optimize_stage,safe_range,causal_question,classification,classification_note' }
+$parsedCsv = Read-ParameterRegistryCsv -Path $csvPath
 
 # csvRows: one per data row (name, baseName, tag, defaultProfileCell)
 $csvRows = New-Object System.Collections.Generic.List[object]
-foreach ($line in $dataLines) {
-    if ($line[0] -ne '"') { continue }   # defensive: only quoted data rows
-    $fieldMatches = [regex]::Matches($line, '"([^"]*)"')
-    if ($fieldMatches.Count -lt 7) {
-        Write-Warning "Could not parse expected columns out of CSV row: $line"
-        continue
-    }
-    $name = $fieldMatches[0].Groups[1].Value
-    $defaultProfile = $fieldMatches[6].Groups[1].Value
-
-    $baseName = $name
-    $tag = $null
-    if ($name -match '^(.*)\[(.+)\]$') {
-        $baseName = $Matches[1]
-        $tag = $Matches[2]
-    }
+foreach ($record in $parsedCsv) {
+    $name = [string]$record.name
+    $nt = if ($name -match '^(.*)\[(.+)\]$') {
+        [pscustomobject]@{ BaseName = $Matches[1]; Tag = $Matches[2] }
+    } else { [pscustomobject]@{ BaseName = $name; Tag = $null } }
     $csvRows.Add([pscustomobject]@{
         Name = $name
-        BaseName = $baseName
-        Tag = $tag
-        DefaultProfile = $defaultProfile
+        BaseName = $nt.BaseName
+        Tag = $nt.Tag
+        DefaultProfile = [string]$record.default_profile
+        ParameterPid = [int]$record.parameter_pid
     })
 }
 

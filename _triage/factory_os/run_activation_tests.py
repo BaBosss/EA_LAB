@@ -45,8 +45,12 @@ import preset as P                                                          # no
 BUILD = 'LAB_ENTRY_14'
 INPUTS_TEXT = io.open(os.path.join(ROOT, P.INPUTS_REL.replace('/', os.sep)),
                       encoding='utf-8-sig').read()                  # snapshot: worktree
-SURFACE = P.parse_surface(INPUTS_TEXT, BUILD)
-S16 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_16')
+_RAW_SURFACE = P.parse_surface(INPUTS_TEXT, BUILD)
+SURFACE = P.Surface(BUILD, [d for d in _RAW_SURFACE.inputs if d.name in ACT.TABLE[BUILD]],
+                    _RAW_SURFACE.known_tags)
+SURFACE.enums = _RAW_SURFACE.enums
+_RAW_S16 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_16')
+S16 = _RAW_S16
 
 
 def base_config(surface=None, **over):

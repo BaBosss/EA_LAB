@@ -5,4 +5,5 @@
     "metrics_file":  "ea_template/regression_baseline.csv",
     "metrics_sha256":  "85619f21faa53f7394769389fa488b5ec78160fa2345d13bc42725c6a27e4593",
     "expected_historical_build":  5836
+
 }

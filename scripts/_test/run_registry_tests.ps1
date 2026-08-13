@@ -83,7 +83,7 @@ function Seed([string]$role) {
         $row = '{"definition_ref": {"blob_oid": "' + ('0'*40) + '", "commit_oid": "' + ('0'*40) +
                '", "entity": "OwnerRef", "owner_type": "param_registry", "path": "docs/PARAM_REGISTRY.csv", "raw_sha256": "' + ('0'*64) +
                '"}, "entity": "ParameterBinding", "hypothesis_revision": "' + $rev +
-               '", "locked_value": 1, "parameter": "' + $param + '", "role": "' + $role + '", "surface": "RESEARCH"}'
+               '", "locked_value": 1, "parameter": "' + $param + '", "parameter_pid": 20031, "role": "' + $role + '", "surface": "RESEARCH"}'
         Add-Content -LiteralPath (Join-Path $work 'factory\parameter_bindings.jsonl') -Encoding ASCII -Value $row
     }
 }

@@ -135,6 +135,9 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repoRoot     = Split-Path -Parent $PSScriptRoot
+$csvReader    = Join-Path $PSScriptRoot 'lib\param_registry_csv.ps1'
+if (-not (Test-Path -LiteralPath $csvReader -PathType Leaf)) { throw "Not found: $csvReader" }
+. $csvReader
 $registryPath = Join-Path $repoRoot 'docs\PARAM_REGISTRY.csv'
 $linkagePath  = Join-Path $repoRoot 'docs\PARAM_LINKAGE.md'
 $auditPath    = Join-Path $repoRoot '_triage\PARAM_INACTIVE_AUDIT.md'
@@ -199,28 +202,26 @@ function Split-NameTag {
 # ---------------------------------------------------------------------------
 function Get-RegistryRows {
     param([string]$Path)
-    $lines = Get-Content -LiteralPath $Path
+    $parsed = Read-ParameterRegistryCsv -Path $Path
     $rows = New-Object System.Collections.Generic.List[object]
-    foreach ($line in $lines) {
-        if ($line.Length -eq 0 -or $line[0] -ne '"') { continue }
-        $m = [regex]::Matches($line, '"([^"]*)"')
-        if ($m.Count -lt 12) { continue }
-        $nt = Split-NameTag $m[0].Groups[1].Value
+    foreach ($record in $parsed) {
+        $nt = Split-NameTag $record.name
         $rows.Add([pscustomobject]@{
-            Name               = $m[0].Groups[1].Value
+            Name               = $record.name
             BaseName           = $nt.BaseName
             Tag                = $nt.Tag
-            Owner              = $m[1].Groups[1].Value
-            Unit               = $m[2].Groups[1].Value
-            Context            = $m[3].Groups[1].Value
-            ActiveWhen         = $m[4].Groups[1].Value
-            Coupled            = $m[5].Groups[1].Value
-            DefaultProfile     = $m[6].Groups[1].Value
-            OptimizeStage      = $m[7].Groups[1].Value
-            SafeRange          = $m[8].Groups[1].Value
-            CausalQuestion     = $m[9].Groups[1].Value
-            Classification     = $m[10].Groups[1].Value
-            ClassificationNote = $m[11].Groups[1].Value
+            Owner              = $record.owner
+            Unit               = $record.unit
+            Context            = $record.context
+            ActiveWhen         = $record.active_when
+            Coupled            = $record.coupled_parameters
+            DefaultProfile     = $record.default_profile
+            OptimizeStage      = $record.optimize_stage
+            SafeRange          = $record.safe_range
+            CausalQuestion     = $record.causal_question
+            Classification     = $record.classification
+            ClassificationNote = $record.classification_note
+            ParameterPid       = [int]$record.parameter_pid
         })
     }
     return $rows

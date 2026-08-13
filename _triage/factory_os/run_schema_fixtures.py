@@ -627,10 +627,10 @@ epair('LogicalSymbol',
 
 epair('ParameterBinding',
       {"entity": "ParameterBinding", "hypothesis_revision": "B14-H01-r1",
-       "parameter": "GridStepATR", "role": "TUNABLE", "surface": "RESEARCH",
+       "parameter": "GridStepATR", "parameter_pid": 12345, "role": "TUNABLE", "surface": "RESEARCH",
        "definition_ref": OWNER},
       {"entity": "ParameterBinding", "hypothesis_revision": "B14-H01-r1",
-       "parameter": "GridStepATR", "role": "TUNABLE", "surface": "SEMI_HIDDEN",
+       "parameter": "GridStepATR", "parameter_pid": 12345, "role": "TUNABLE", "surface": "SEMI_HIDDEN",
        "definition_ref": OWNER},
       'ORDER-611: the surface decides who is shown a parameter. A fourth, undeclared surface is a '
       'parameter with no answer to "should the operator see this?"',
@@ -642,10 +642,10 @@ epair('ParameterBinding',
 # anything else.
 epair('ParameterBinding',
       {"entity": "ParameterBinding", "hypothesis_revision": "B14-H01-r1",
-       "parameter": "StackMode", "build_tag": "LAB_ENTRY_16",
+       "parameter": "StackMode", "parameter_pid": 12346, "build_tag": "LAB_ENTRY_16",
        "role": "TUNABLE", "surface": "RESEARCH", "definition_ref": OWNER},
       {"entity": "ParameterBinding", "hypothesis_revision": "B14-H01-r1",
-       "parameter": "StackMode[LAB_ENTRY_16]",
+       "parameter": "StackMode[LAB_ENTRY_16]", "parameter_pid": 12346,
        "role": "TUNABLE", "surface": "RESEARCH", "definition_ref": OWNER},
       'ORDER-672: a build tag INSIDE `parameter` is two facts in the join key. Accepting it '
       'alongside the new field would leave two encodings of one fact live at once -- which is the '

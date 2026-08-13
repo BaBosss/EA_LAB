@@ -8,7 +8,8 @@ must be run from the owner-selected pre-identity source worktree.
 [CmdletBinding()]
 param(
     [string]$RepoRoot = '',
-    [Parameter(Mandatory)][string]$SourceCommit,
+    [Parameter(Mandatory)][ValidatePattern('^[0-9a-fA-F]{40}$')][string]$SourceCommit,
+    [Parameter(Mandatory)][ValidatePattern('^[0-9a-fA-F]{40}$')][string]$AcceptedRuntimeLineageTip,
     [switch]$ConfirmBaseline,
     [string]$PythonExe = '',
     [string]$SetScriptPath = '',
@@ -21,10 +22,30 @@ param(
 
 $ErrorActionPreference = 'Stop'
 if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
-$requiredSource = '99e7b7ba59b39e15e1cfcb276c99a12f8806f357'
-if ($SourceCommit -ne $requiredSource) { throw "refusing non-canonical baseline source: $SourceCommit" }
+$SourceCommit = $SourceCommit.Trim().ToLowerInvariant()
+$sourceType = (& git -C $RepoRoot cat-file -t $SourceCommit 2>$null)
+if ($LASTEXITCODE -ne 0 -or ([string]$sourceType).Trim() -ne 'commit') {
+    throw "refusing invalid baseline source commit: $SourceCommit"
+}
 $head = (& git -C $RepoRoot rev-parse HEAD).Trim()
 if ($head -ne $SourceCommit) { throw "baseline generator must run at $SourceCommit, got $head" }
+$originHead = (& git -C $RepoRoot rev-parse --verify 'origin/master^{commit}' 2>$null)
+if ($LASTEXITCODE -ne 0 -or -not $originHead) {
+    throw 'refusing baseline source validation: origin/master commit is unavailable'
+}
+& git -C $RepoRoot merge-base --is-ancestor $SourceCommit ([string]$originHead).Trim() 2>$null
+if ($LASTEXITCODE -ne 0) {
+    throw "refusing baseline source ${SourceCommit}: it is not reachable from origin/master"
+}
+$acceptedTip = $AcceptedRuntimeLineageTip.Trim().ToLowerInvariant()
+$tipType = (& git -C $RepoRoot cat-file -t $acceptedTip 2>$null)
+if ($LASTEXITCODE -ne 0 -or ([string]$tipType).Trim() -ne 'commit') {
+    throw "refusing invalid accepted runtime lineage tip: $acceptedTip"
+}
+& git -C $RepoRoot merge-base --is-ancestor $acceptedTip ([string]$originHead).Trim() 2>$null
+if ($LASTEXITCODE -ne 0) {
+    throw "refusing accepted runtime lineage tip ${acceptedTip}: it is not an ancestor of origin/master"
+}
 $beforeStatus = @(git -C $RepoRoot status --porcelain)
 if ($beforeStatus.Count -ne 0) { throw 'baseline source worktree is not clean before generation' }
 if (-not (Test-Path -LiteralPath $Terminal -PathType Leaf)) { throw "terminal not found: $Terminal" }
@@ -118,7 +139,7 @@ $terminalHash = (Get-FileHash -LiteralPath $Terminal -Algorithm SHA256).Hash.ToL
 $manifest = [ordered]@{
     schema='tpl_regression_baseline/2'; status='ACTIVE_COMPARABLE'; baseline_kind='VERSIONED'; metrics_file='ea_template/regression_baseline_build6090.csv'; metrics_sha256=(Get-FileHash -LiteralPath $metricsPath -Algorithm SHA256).Hash.ToLowerInvariant()
     expected_mt5_build=6090; terminal_executable=$Terminal; terminal_executable_sha256=$terminalHash; tester_data_directory=$DataDir; portable=$false
-    baseline_source_commit=$SourceCommit; baseline_source_clean=$true; accepted_runtime_lineage_tip='ac294d3a8f8e3a2b0dfa88860c2558e0646df6fb'
+    baseline_source_commit=$SourceCommit; baseline_source_clean=$true; accepted_runtime_lineage_tip=$acceptedTip
     tester_contract=[ordered]@{ symbol='XAUUSD'; timeframe='H1'; date_from='2024.01.01'; date_to='2024.07.01'; model=1; deposit=10000; currency='USD'; leverage=100 }
     generation_utc=(Get-Date).ToUniversalTime().ToString('o'); report_freshness_evidence=[ordered]@{ all_fresh=$true; runner_exit_codes=@{ baseline='0 per EA' }; generated_from=$SourceCommit }
     cases=$cases

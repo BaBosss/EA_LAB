@@ -30,6 +30,42 @@ function Expect-Refusal([string]$Name, [scriptblock]$Mutate) {
         Write-Host "[PASS] $Name :: $message"
     } finally { Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue }
 }
+function New-LineageRepo {
+    $dir = Join-Path ([IO.Path]::GetTempPath()) ('tpl_lineage_case_' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force (Join-Path $dir 'ea_template\core') | Out-Null
+    [IO.File]::WriteAllText((Join-Path $dir 'README.md'), 'seed')
+    [IO.File]::WriteAllText((Join-Path $dir 'ea_template\core\Seed.mqh'), '// seed')
+    & git init --quiet $dir
+    & git -C $dir config user.name 'TPL lineage test'
+    & git -C $dir config user.email 'tpl-lineage-test@example.invalid'
+    & git -C $dir add .
+    & git -C $dir commit --quiet -m initial
+    if ($LASTEXITCODE -ne 0) { throw "failed to create lineage fixture: $dir" }
+    return $dir
+}
+function Get-LineageHead([string]$Root) { return (& git -C $Root rev-parse HEAD).Trim() }
+function Commit-LineageFile([string]$Root, [string]$RelativePath, [string]$Text, [string]$Message) {
+    $path = Join-Path $Root ($RelativePath -replace '/', '\')
+    New-Item -ItemType Directory -Force (Split-Path -Parent $path) | Out-Null
+    [IO.File]::WriteAllText($path, $Text)
+    & git -C $Root add -- $RelativePath
+    & git -C $Root commit --quiet -m $Message
+    if ($LASTEXITCODE -ne 0) { throw "failed lineage fixture commit: $Message" }
+    return (Get-LineageHead $Root)
+}
+function New-LineageBaseline([string]$Tip) {
+    return [pscustomobject]@{ Manifest = [pscustomobject]@{ baseline_source_commit = ''; accepted_runtime_lineage_tip = $Tip } }
+}
+function Expect-SourceRefusal([string]$Name, [string]$Root, [string]$Tip) {
+    $refused = $false
+    try { Assert-TplSourceContract -Root $Root -Baseline (New-LineageBaseline $Tip) | Out-Null }
+    catch { $refused = $true; Write-Host "[PASS] $Name :: $($_.Exception.Message)" }
+    if (-not $refused) { throw "FAIL: $Name unexpectedly passed" }
+}
+function Expect-SourceAllowed([string]$Name, [string]$Root, [string]$Tip) {
+    try { Assert-TplSourceContract -Root $Root -Baseline (New-LineageBaseline $Tip) | Out-Null; Write-Host "[PASS] $Name" }
+    catch { throw "FAIL: $Name unexpectedly refused: $($_.Exception.Message)" }
+}
 
 try {
     Expect-Refusal 'missing active manifest' { param($d) Remove-Item (Join-Path $d 'ea_template\regression_baseline.active.json') -Force }
@@ -46,6 +82,32 @@ try {
     Expect-Refusal 'extra EA' { param($d) $p=Join-Path $d 'ea_template\regression_baseline_build6090.manifest.json'; $m=Read-Json $p; $m.cases[0].ea='Boss_99_Extra'; Write-Json $p $m }
     Expect-Refusal 'malformed manifest' { param($d) [IO.File]::WriteAllText((Join-Path $d 'ea_template\regression_baseline_build6090.manifest.json'), '{not-json') }
     Expect-Refusal 'incomplete provenance' { param($d) $p=Join-Path $d 'ea_template\regression_baseline_build6090.manifest.json'; $m=Read-Json $p; $m.cases[0].report_sha256=$null; Write-Json $p $m }
-    Write-Host 'TPL BASELINE NEGATIVE TESTS: 14/14 PASS' -ForegroundColor Green
+    $lineage = New-LineageRepo
+    try {
+        $tip = Get-LineageHead $lineage
+        Expect-SourceRefusal 'missing lineage tip' $lineage ''
+        Expect-SourceRefusal 'malformed lineage tip' $lineage 'not-a-commit-sha'
+
+        $mainBranch = (& git -C $lineage branch --show-current).Trim()
+        & git -C $lineage checkout --quiet -b side
+        $sideTip = Commit-LineageFile $lineage 'side.txt' 'side' 'side lineage'
+        & git -C $lineage checkout --quiet $mainBranch
+        $mainTip = Commit-LineageFile $lineage 'README.md' 'mainline' 'non-protected lineage'
+        Expect-SourceRefusal 'valid non-ancestor lineage tip' $lineage $sideTip
+        Expect-SourceAllowed 'valid ancestor with non-protected change' $lineage $tip
+
+        $protectedTip = Commit-LineageFile $lineage 'ea_template/core/Changed.mqh' '// protected' 'protected lineage'
+        Expect-SourceRefusal 'valid ancestor with protected change' $lineage $mainTip
+    } finally { Remove-Item -LiteralPath $lineage -Recurse -Force -ErrorAction SilentlyContinue }
+
+    $ownerFiles = @(
+        (Join-Path $RepoRoot 'ea_template\regression_baseline_build6090.manifest.json'),
+        (Join-Path $RepoRoot 'scripts\generate_tpl_baseline.ps1'),
+        (Join-Path $RepoRoot 'scripts\lib\tpl_baseline.ps1')
+    )
+    $oldOwnerHit = @(Select-String -Path $ownerFiles -SimpleMatch 'ac294d3a8f8e3a2b0dfa88860c2558e0646df6fb')
+    if ($oldOwnerHit.Count -gt 0) { throw 'FAIL: old orphan lineage SHA remains in an active owner' }
+    Write-Host '[PASS] old orphan lineage SHA absent from active owners'
+    Write-Host 'TPL BASELINE NEGATIVE TESTS: 20/20 PASS' -ForegroundColor Green
     exit 0
 } finally { Remove-Item -LiteralPath $template -Recurse -Force -ErrorAction SilentlyContinue }

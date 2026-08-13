@@ -76,7 +76,7 @@ def build(build_tag, overrides=None, root=ROOT):
 def read_overlay(path, surface, unit_classes):
     """Read an existing .set as an explicit value layer without losing money units."""
     rows = []
-    with open(path, 'r', encoding='utf-8-sig') as handle:
+    with open(path, 'r', encoding='utf-8-sig') as handle:  # snapshot: worktree -- explicit overlay path
         for raw in handle:
             text = raw.strip()
             if not text or text.startswith(';') or '=' not in text:

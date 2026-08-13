@@ -12,6 +12,11 @@
 #include "Persist.mqh"   // ORDER-138 #3: full-basket close intent survives restart
 #include "MoneyManagement.mqh"   // 2026-07-23: MM_BalancePct for the _*_BalPct targets
                                  // (no cycle: MM -> Inputs/RiskControl only, never ExitManager)
+#include "Regime.mqh"    // AAM Module 4.6: Regime_SuggestExitMode() advisory helper -
+                          // Regime.mqh must never include ExitManager.mqh back (circular
+                          // include), so this direction is the only legal one. Not called
+                          // from any default path in this order - purely makes the
+                          // function available for a future opt-in wiring order.
 
 double Exit_Point() { return Indi_Point(); }
 

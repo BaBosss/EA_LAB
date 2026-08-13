@@ -31,6 +31,9 @@ $ErrorActionPreference = 'Stop'
 $repoRoot   = Split-Path -Parent $PSScriptRoot
 $inputsPath = Join-Path $repoRoot 'ea_template\core\Inputs.mqh'
 $csvPath    = Join-Path $repoRoot 'docs\PARAM_REGISTRY.csv'
+$csvReader  = Join-Path $PSScriptRoot 'lib\param_registry_csv.ps1'
+if (-not (Test-Path -LiteralPath $csvReader)) { throw "Not found: $csvReader" }
+. $csvReader
 
 # --- parse Inputs.mqh exactly the way param_registry_check.ps1 does, so the two agree by
 # --- construction (same #ifdef nesting rules -> same LAB_ENTRY_nn disambiguation).
@@ -69,23 +72,28 @@ foreach ($e in $codeInputs) {
     $codeByName[$e.Name].Add($e)
 }
 
-# --- walk the CSV line by line (NOT via Import-Csv: the file must come back out with its
-# --- comment header, quoting and ordering untouched).
+# --- Parse through the strict header-keyed reader first. The raw lines below are only used to
+# --- preserve formatting while changing the one cited number.
 $csvLines = Get-Content -LiteralPath $csvPath
+$records = @(Read-ParameterRegistryCsv -Path $csvPath)
+$dataStart = 0
+while ($dataStart -lt $csvLines.Count -and
+       ($csvLines[$dataStart].Trim().Length -eq 0 -or $csvLines[$dataStart].StartsWith('>'))) { $dataStart++ }
+$dataLines = @($csvLines[($dataStart + 1)..($csvLines.Count - 1)] | Where-Object { $_.Trim().Length -gt 0 -and -not $_.StartsWith('>') })
+if ($dataLines.Count -ne $records.Count) { throw "CSV parser/data-line count mismatch: $($records.Count) vs $($dataLines.Count)" }
+$defaultProfileIndex = [array]::IndexOf($script:ParameterRegistryLastHeaders, 'default_profile')
+if ($defaultProfileIndex -lt 0) { throw 'default_profile header was not resolved' }
 $out = New-Object System.Collections.Generic.List[string]
 $changed = 0; $unknown = New-Object System.Collections.Generic.List[string]
 
-foreach ($line in $csvLines) {
-    if ($line.Length -eq 0 -or $line[0] -ne '"') { $out.Add($line); continue }
-    $fields = [regex]::Matches($line, '"([^"]*)"')
-    if ($fields.Count -lt 7) { $out.Add($line); continue }
-
-    $name = $fields[0].Groups[1].Value
+for ($rowIndex = 0; $rowIndex -lt $dataLines.Count; $rowIndex++) {
+    $line = $dataLines[$rowIndex]
+    $record = $records[$rowIndex]
+    $name = [string]$record.name
     $baseName = $name; $tag = $null
     if ($name -match '^(.*)\[(.+)\]$') { $baseName = $Matches[1]; $tag = $Matches[2] }
 
-    $profileField = $fields[6]
-    $m = [regex]::Match($profileField.Groups[1].Value, 'Inputs\.mqh:(\d+)')
+    $m = [regex]::Match([string]$record.default_profile, 'Inputs\.mqh:(\d+)')
     if (-not $m.Success) { $out.Add($line); continue }
 
     if (-not $codeByName.ContainsKey($baseName)) { $unknown.Add($name); $out.Add($line); continue }
@@ -98,11 +106,29 @@ foreach ($line in $csvLines) {
     $cited = [int]$m.Groups[1].Value
     if ($cited -eq $entry.Line) { $out.Add($line); continue }
 
-    # rewrite only inside this row's default_profile field, by absolute offset, so an
-    # identical "Inputs.mqh:<N>" substring elsewhere in the row cannot be hit by accident
-    $fieldStart = $profileField.Groups[1].Index
-    $absIndex   = $fieldStart + $m.Groups[1].Index
-    $newLine    = $line.Substring(0, $absIndex) + $entry.Line + $line.Substring($absIndex + $m.Groups[1].Length)
+    # Find the header-selected field with a quote-aware scan; do not assume default_profile is
+    # column 7 and do not touch an identical citation in another field.
+    $spans = New-Object System.Collections.Generic.List[object]
+    $inQuotes = $false; $start = 0; $i = 0
+    while ($i -lt $line.Length) {
+        $ch = $line[$i]
+        if ($ch -eq '"') {
+            if ($inQuotes -and $i + 1 -lt $line.Length -and $line[$i + 1] -eq '"') { $i++; }
+            else { $inQuotes = -not $inQuotes }
+        } elseif ($ch -eq ',' -and -not $inQuotes) {
+            $spans.Add([pscustomobject]@{ Start = $start; Length = $i - $start })
+            $start = $i + 1
+        }
+        $i++
+    }
+    $spans.Add([pscustomobject]@{ Start = $start; Length = $line.Length - $start })
+    if ($spans.Count -le $defaultProfileIndex) { throw "Unable to locate default_profile field for $name" }
+    $profileSpan = $spans[$defaultProfileIndex]
+    $fieldText = $line.Substring($profileSpan.Start, $profileSpan.Length)
+    $fieldMatch = [regex]::Match($fieldText, 'Inputs\.mqh:(\d+)')
+    if (-not $fieldMatch.Success) { $out.Add($line); continue }
+    $absIndex = $profileSpan.Start + $fieldMatch.Groups[1].Index
+    $newLine = $line.Substring(0, $absIndex) + $entry.Line + $line.Substring($absIndex + $fieldMatch.Groups[1].Length)
     $out.Add($newLine)
     $changed++
     Write-Host ("  {0,-34} {1} -> {2}" -f $name, $cited, $entry.Line)

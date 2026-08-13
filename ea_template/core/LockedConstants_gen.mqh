@@ -23,11 +23,12 @@
 
 #ifdef LAB_ENTRY_11
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(23); }
+int    CFG_ConstKeys() { return(24); }
 string CFG_ConstPreimage()
   {
    string s = "";
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
    s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
    s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);
@@ -56,11 +57,12 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_12
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(23); }
+int    CFG_ConstKeys() { return(24); }
 string CFG_ConstPreimage()
   {
    string s = "";
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
    s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
    s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);
@@ -89,11 +91,12 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_13
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(23); }
+int    CFG_ConstKeys() { return(24); }
 string CFG_ConstPreimage()
   {
    string s = "";
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
    s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
    s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);
@@ -122,11 +125,12 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_14
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(23); }
+int    CFG_ConstKeys() { return(24); }
 string CFG_ConstPreimage()
   {
    string s = "";
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
    s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
    s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);
@@ -155,11 +159,12 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_15
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(23); }
+int    CFG_ConstKeys() { return(24); }
 string CFG_ConstPreimage()
   {
    string s = "";
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
    s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
    s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);
@@ -188,11 +193,12 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_16
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(23); }
+int    CFG_ConstKeys() { return(24); }
 string CFG_ConstPreimage()
   {
    string s = "";
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
    s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
    s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);
@@ -221,11 +227,12 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_17
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
    s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
    s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);
@@ -255,11 +262,12 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_18
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(23); }
+int    CFG_ConstKeys() { return(24); }
 string CFG_ConstPreimage()
   {
    string s = "";
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
    s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
    s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);

@@ -79,6 +79,97 @@ def AND(*gates):
     return ('AND',) + gates
 
 
+def NEVER(reason_code):
+    """A permanently closed metadata gate with an explicit reason code."""
+    return ('NEVER', reason_code)
+
+
+# A4's relation vocabulary is closed here. Relations describe existing source
+# call/gate paths; they do not create runtime callers or change execution.
+RELATION_KINDS = ('PARENT', 'GATES', 'REQUIRES', 'COUPLED_WITH', 'SUPERSEDES')
+
+
+_R4_RELATIONS = {
+    '_50_ADX_TrendMin_Exit': (('REQUIRES', '_50_RegimeMode'),
+                              ('COUPLED_WITH', '_50_ADX_TrendMin')),
+    '_50_RegimeConfirmBars': (('REQUIRES', '_50_RegimeMode'),
+                              ('COUPLED_WITH', '_50_ADX_TrendMin_Exit')),
+    '_EVT_BucketATRmult': (('COUPLED_WITH', '_EVT_BucketSeconds'),),
+    '_EVT_BucketSeconds': (('COUPLED_WITH', '_EVT_BucketATRmult'),),
+    '_EVT_PreemptMargin': (),
+    '_EVT_RevengeBlockBars': (),
+    '_HEAT_Enable': tuple([('PARENT', n) for n in (
+        '_HEAT_MaxClusterLots', '_HEAT_MaxPortfolioLots', '_HEAT_ClusterCorr',
+        '_HEAT_DefaultCorr', '_HEAT_UseDynamicCorr', '_HEAT_CorrWindowBars')]) +
+        tuple([('GATES', n) for n in (
+        '_HEAT_MaxClusterLots', '_HEAT_MaxPortfolioLots', '_HEAT_ClusterCorr',
+        '_HEAT_DefaultCorr', '_HEAT_UseDynamicCorr', '_HEAT_CorrWindowBars')]),
+    '_HEAT_MaxClusterLots': (('REQUIRES', '_HEAT_Enable'),),
+    '_HEAT_MaxPortfolioLots': (('REQUIRES', '_HEAT_Enable'),),
+    '_HEAT_ClusterCorr': (('REQUIRES', '_HEAT_Enable'),
+                          ('COUPLED_WITH', '_HEAT_DefaultCorr')),
+    '_HEAT_DefaultCorr': (('REQUIRES', '_HEAT_Enable'),
+                          ('COUPLED_WITH', '_HEAT_ClusterCorr')),
+    '_HEAT_UseDynamicCorr': (('REQUIRES', '_HEAT_Enable'),),
+    '_HEAT_CorrWindowBars': (('REQUIRES', '_HEAT_Enable'),
+                             ('REQUIRES', '_HEAT_UseDynamicCorr')),
+    'UseMiddlePathVeto': tuple([('PARENT', n) for n in (
+        '_MID_LineSource', 'MID_LOW', 'MID_HIGH', 'MIN_CHANNEL_ATR',
+        'MIN_LINE_WEIGHT', '_MID_DonchianBars', '_MID_PivotDepth',
+        '_MID_LineLookbackBars', '_MID_MaxLines', '_MID_ClusterATRmult',
+        '_MID_UseRoomCheck', '_MID_MinRR')]) +
+        tuple([('GATES', n) for n in (
+        '_MID_LineSource', 'MID_LOW', 'MID_HIGH', 'MIN_CHANNEL_ATR',
+        'MIN_LINE_WEIGHT', '_MID_DonchianBars', '_MID_PivotDepth',
+        '_MID_LineLookbackBars', '_MID_MaxLines', '_MID_ClusterATRmult',
+        '_MID_UseRoomCheck', '_MID_MinRR')]),
+}
+for _name in ('_MID_LineSource', 'MID_LOW', 'MID_HIGH', 'MIN_CHANNEL_ATR',
+              'MIN_LINE_WEIGHT'):
+    _R4_RELATIONS[_name] = (('REQUIRES', 'UseMiddlePathVeto'),)
+for _name in ('_MID_DonchianBars', '_MID_PivotDepth', '_MID_LineLookbackBars',
+              '_MID_MaxLines', '_MID_ClusterATRmult'):
+    _R4_RELATIONS[_name] = (('REQUIRES', 'UseMiddlePathVeto'),
+                            ('REQUIRES', '_MID_LineSource'))
+_R4_RELATIONS['_MID_UseRoomCheck'] = (('REQUIRES', 'UseMiddlePathVeto'),)
+_R4_RELATIONS['_MID_MinRR'] = (('REQUIRES', 'UseMiddlePathVeto'),
+                               ('REQUIRES', '_MID_UseRoomCheck'))
+
+_STATIC_INACTIVE = {
+    '_50_ADX_TrendMin_Exit': 'UNWIRED_REGIME_STABLE_PATH',
+    '_50_RegimeConfirmBars': 'UNWIRED_REGIME_STABLE_PATH',
+    '_EVT_BucketATRmult': 'UNWIRED_EVENT_BUS_RUNTIME_CALLER',
+    '_EVT_BucketSeconds': 'UNWIRED_EVENT_BUS_RUNTIME_CALLER',
+    '_EVT_PreemptMargin': 'UNWIRED_EVENT_BUS_RUNTIME_CALLER',
+    '_EVT_RevengeBlockBars': 'OUTCOME_LEDGER_NOT_IMPLEMENTED',
+}
+
+
+def relation_metadata(name):
+    """Return deterministic static relation/effect metadata for one identity."""
+    if name not in _R4_RELATIONS:
+        raise Refusal('no R4 relation metadata is declared for %r' % name)
+    reason_code = _STATIC_INACTIVE.get(name)
+    return {
+        'name': name,
+        'relations': tuple({'kind': kind, 'target': target}
+                           for kind, target in _R4_RELATIONS[name]),
+        'state': 'HIDDEN_INACTIVE' if reason_code else 'REACHABLE_WHEN_GATED',
+        'reason_code': reason_code,
+        'effective': False if reason_code else None,
+    }
+
+
+def _gate_dependencies(gate):
+    kind = gate[0]
+    if kind in ('EQ', 'NE', 'GT0'):
+        return (gate[1],)
+    if kind == 'AND':
+        return tuple(dict.fromkeys(
+            dependency for sub in gate[1:] for dependency in _gate_dependencies(sub)))
+    return ()
+
+
 # --- the Boss_14 table -------------------------------------------------------------------------
 # name -> (capability token, gate). Sourced cell by cell from docs/PARAM_REGISTRY.csv's
 # `active_when`, using the [LAB_ENTRY_14]-tagged row where one exists.
@@ -140,6 +231,9 @@ _B14 = {
     '_50_ADX_TrendMin':    ('LAB_CAP_REGIME', ALWAYS),
     '_50_StormATRmult':    ('LAB_CAP_REGIME', SELF_GT0),
     '_50_StormLookback':   ('LAB_CAP_REGIME', GT0('_50_StormATRmult')),
+    # The stable exit classifier is declared but has no current runtime caller.
+    '_50_ADX_TrendMin_Exit': ('LAB_CAP_REGIME', NEVER('UNWIRED_REGIME_STABLE_PATH')),
+    '_50_RegimeConfirmBars': ('LAB_CAP_REGIME', NEVER('UNWIRED_REGIME_STABLE_PATH')),
 
     # --- entry (build 14's own) ------------------------------------------------------------------
     '_14_Direction':       ('LAB_CAP_ENTRY_GRIDLOG', ALWAYS),
@@ -234,6 +328,44 @@ _B14 = {
     '_H_Ratio':            ('LAB_CAP_HEDGE', ALWAYS),
     '_H_MaxLot':           ('LAB_CAP_HEDGE', SELF_GT0),
 
+    # --- R4 Event Bus / Heat / Middle Path additions --------------------------------------------
+    # Event Bus functions are currently uncalled, so these remain metadata-only and inactive.
+    '_EVT_BucketATRmult':  ('LAB_CAP_CORE', NEVER('UNWIRED_EVENT_BUS_RUNTIME_CALLER')),
+    '_EVT_BucketSeconds':  ('LAB_CAP_CORE', NEVER('UNWIRED_EVENT_BUS_RUNTIME_CALLER')),
+    '_EVT_PreemptMargin':  ('LAB_CAP_CORE', NEVER('UNWIRED_EVENT_BUS_RUNTIME_CALLER')),
+    '_EVT_RevengeBlockBars': ('LAB_CAP_CORE', NEVER('OUTCOME_LEDGER_NOT_IMPLEMENTED')),
+
+    # Heat is called from Lab_OpenOrder; the master switch is the real gate.
+    '_HEAT_Enable':        ('LAB_CAP_RISK', ALWAYS),
+    '_HEAT_MaxClusterLots': ('LAB_CAP_RISK', EQ('_HEAT_Enable', 'true')),
+    '_HEAT_MaxPortfolioLots': ('LAB_CAP_RISK', EQ('_HEAT_Enable', 'true')),
+    '_HEAT_ClusterCorr':   ('LAB_CAP_RISK', EQ('_HEAT_Enable', 'true')),
+    '_HEAT_DefaultCorr':   ('LAB_CAP_RISK', EQ('_HEAT_Enable', 'true')),
+    '_HEAT_UseDynamicCorr': ('LAB_CAP_RISK', EQ('_HEAT_Enable', 'true')),
+    '_HEAT_CorrWindowBars': ('LAB_CAP_RISK', AND(EQ('_HEAT_Enable', 'true'),
+                                                  EQ('_HEAT_UseDynamicCorr', 'true'))),
+
+    # MiddlePath_AllowEntry is called from Lab_OpenOrder; all other values are gated by its switch.
+    'UseMiddlePathVeto':   ('LAB_CAP_CORE', ALWAYS),
+    '_MID_LineSource':     ('LAB_CAP_CORE', EQ('UseMiddlePathVeto', 'true')),
+    'MID_LOW':             ('LAB_CAP_CORE', EQ('UseMiddlePathVeto', 'true')),
+    'MID_HIGH':            ('LAB_CAP_CORE', EQ('UseMiddlePathVeto', 'true')),
+    'MIN_CHANNEL_ATR':     ('LAB_CAP_CORE', EQ('UseMiddlePathVeto', 'true')),
+    'MIN_LINE_WEIGHT':     ('LAB_CAP_CORE', EQ('UseMiddlePathVeto', 'true')),
+    '_MID_DonchianBars':   ('LAB_CAP_CORE', AND(EQ('UseMiddlePathVeto', 'true'),
+                                                 EQ('_MID_LineSource', 'MID_LINES_DONCHIAN'))),
+    '_MID_PivotDepth':     ('LAB_CAP_CORE', AND(EQ('UseMiddlePathVeto', 'true'),
+                                                 EQ('_MID_LineSource', 'MID_LINES_PIVOT'))),
+    '_MID_LineLookbackBars': ('LAB_CAP_CORE', AND(EQ('UseMiddlePathVeto', 'true'),
+                                                   EQ('_MID_LineSource', 'MID_LINES_PIVOT'))),
+    '_MID_MaxLines':       ('LAB_CAP_CORE', AND(EQ('UseMiddlePathVeto', 'true'),
+                                                 EQ('_MID_LineSource', 'MID_LINES_PIVOT'))),
+    '_MID_ClusterATRmult': ('LAB_CAP_CORE', AND(EQ('UseMiddlePathVeto', 'true'),
+                                                 EQ('_MID_LineSource', 'MID_LINES_PIVOT'))),
+    '_MID_UseRoomCheck':   ('LAB_CAP_CORE', EQ('UseMiddlePathVeto', 'true')),
+    '_MID_MinRR':          ('LAB_CAP_CORE', AND(EQ('UseMiddlePathVeto', 'true'),
+                                                 EQ('_MID_UseRoomCheck', 'true'))),
+
     # --- macro gate ---------------------------------------------------------------------------------
     '_MG_RegimeFile':      ('LAB_CAP_MACROGATE', ALWAYS),
     '_MG_InCommon':        ('LAB_CAP_MACROGATE', ALWAYS),
@@ -303,6 +435,8 @@ def _eval(gate, name, config, surface=None):
             raise Refusal('the gate for %s reads %s > 0 but that value %r is not a number'
                           % (name, gate[1], config.get(gate[1])))
         return v > 0
+    if kind == 'NEVER':
+        return False
     if kind == 'AND':
         return all(_eval(g, name, config, surface) for g in gate[1:])
     raise Refusal('unknown activation gate kind %r for %s' % (kind, name))
@@ -313,9 +447,10 @@ class Verdict(object):
     dark because its module is off or because its own sub-mode is not selected, and those have
     different fixes."""
 
-    def __init__(self, name, token, token_enabled, gate_open):
+    def __init__(self, name, token, gate, token_enabled, gate_open):
         self.name = name
         self.token = token
+        self.gate = gate
         self.token_enabled = token_enabled
         self.gate_open = gate_open
 
@@ -325,6 +460,8 @@ class Verdict(object):
 
     @property
     def reason(self):
+        if self.gate[0] == 'NEVER':
+            return self.gate[1]
         if self.active:
             return 'reachable'
         if not self.token_enabled:
@@ -365,8 +502,44 @@ def classify(build_tag, config, surface=None):
     out = OrderedDict()
     for name in names:
         token, gate = table[name]
-        out[name] = Verdict(name, token, token in tokens, _eval(gate, name, config, surface))
+        out[name] = Verdict(name, token, gate, token in tokens, _eval(gate, name, config, surface))
     return out
+
+
+def effective_state(build_tag, config, surface=None):
+    """Return the shared deterministic effective-state projection.
+
+    This is metadata only. It combines the existing activation verdict with
+    the typed relation metadata so surface generation, wrappers, and previews
+    have one reason-bearing projection without adding runtime behavior.
+    """
+    states = {}
+    for name, verdict in classify(build_tag, config, surface=surface).items():
+        static = relation_metadata(name) if name in _R4_RELATIONS else {
+            'relations': (), 'reason_code': None
+        }
+        if verdict.active:
+            state, effective, reason_code = 'ACTIVE', True, None
+        elif verdict.gate[0] == 'NEVER':
+            state, effective, reason_code = 'HIDDEN_INACTIVE', False, verdict.gate[1]
+        elif not verdict.token_enabled:
+            state, effective, reason_code = 'HIDDEN_INACTIVE', False, 'CAPABILITY_DISABLED'
+        else:
+            state, effective, reason_code = 'HIDDEN_INACTIVE', False, 'GATE_CLOSED'
+        states[name] = {
+            'name': name,
+            'state': state,
+            'effective': effective,
+            'reason_code': reason_code,
+            'reason': verdict.reason,
+            'token': verdict.token,
+            'token_enabled': verdict.token_enabled,
+            'gate_open': verdict.gate_open,
+            'gate': verdict.gate,
+            'gate_dependencies': _gate_dependencies(verdict.gate),
+            'relations': static.get('relations', ()),
+        }
+    return states
 
 
 def _repo_root():
@@ -388,26 +561,27 @@ def main(argv):
         surface = preset.parse_surface(text, build_tag)
         config = dict((d.name, d.default_expr) for d in surface.inputs)
         config.update(overrides)
-        verdicts = classify(build_tag, config, surface=surface)
+        states = effective_state(build_tag, config, surface=surface)
     except Refusal as exc:
         sys.stderr.write('REFUSED: %s\n' % exc)
         return 1
-    active = [v for v in verdicts.values() if v.active]
-    dark = [v for v in verdicts.values() if not v.active]
+    active = [v for v in states.values() if v['state'] == 'ACTIVE']
+    dark = [v for v in states.values() if v['state'] != 'ACTIVE']
     by_reason = collections.Counter(
-        'capability off' if not v.token_enabled else 'own gate closed' for v in dark)
+        v['reason_code'] or 'GATE_CLOSED' for v in dark)
     sys.stdout.write('build %s%s\n' % (build_tag,
                                        (' with ' + ', '.join('%s=%s' % kv for kv in
                                                              sorted(overrides.items()))
                                         if overrides else '')))
-    sys.stdout.write('  surface           : %d input(s)\n' % len(verdicts))
+    sys.stdout.write('  surface           : %d input(s)\n' % len(states))
     sys.stdout.write('  reachable         : %d\n' % len(active))
     sys.stdout.write('  unreachable       : %d  (%s)\n'
                      % (len(dark), ', '.join('%s %d' % (k, v) for k, v in by_reason.most_common())))
     if '--list' in argv:
-        for v in verdicts.values():
+        for v in states.values():
             sys.stdout.write('    %-22s %-28s %s\n'
-                             % (v.name, v.token, 'ACTIVE' if v.active else v.reason))
+                             % (v['name'], v['token'],
+                                'ACTIVE' if v['state'] == 'ACTIVE' else v['reason']))
     return 0
 
 

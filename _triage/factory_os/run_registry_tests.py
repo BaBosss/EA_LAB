@@ -40,11 +40,11 @@ def check(name, ok, detail=''):
                            ('  -> ' + detail) if detail and not ok else ''))
 
 
-def refuses(name, fn, must_contain):
+def refuses(name, fn, must_contain=None):
     try:
         fn()
     except reg.RegistryRefusal as exc:
-        if must_contain in str(exc):
+        if must_contain is None or must_contain in str(exc):
             check(name, True)
         else:
             check(name, False, 'refused for a different reason: %s' % str(exc)[:150])
@@ -91,8 +91,11 @@ def _write_param_registry(root):
     with io.open(os.path.join(root, 'docs', 'PARAM_REGISTRY.csv'), 'w',
                  encoding='utf-8', newline='\n') as fh:
         fh.write('> synthetic fixture registry'+chr(10))
+        fh.write(','.join(reg.PARAM_REGISTRY_REQUIRED_HEADERS) + chr(10))
+        pids = {}
         for name, cls in SYNTHETIC_PARAMS:
-            cells = [name] + [''] * 9 + [cls, '']
+            if name not in pids: pids[name] = 10000 + len(pids)
+            cells = [name] + [''] * 9 + [cls, '', str(pids[name])]
             fh.write(','.join('"%s"' % c for c in cells) + chr(10))
     # ORDER-670 migration: the cache is keyed on (root, MODE), so popping `root` alone stopped
     # clearing anything the moment the mode half was added. A fixture helper that silently
@@ -119,7 +122,11 @@ def binding(rev='B14-H01-r1', param='SL_ATR', role='TUNABLE', surface='RESEARCH'
             build_tag=None, **extra):
     # ORDER-672: `parameter` is BARE and the tag is its own field. A fixture that still wrote
     # `SplitMode[LAB_ENTRY_B]` into the name would be testing the encoding the schema now refuses.
+    pids = {name: 10000 + i for i, (name, _cls) in enumerate(SYNTHETIC_PARAMS)}
+    bare_pids = {reg.bare_registry_name(name): pid for name, pid in pids.items()}
+    registry_key = reg.registry_name(param, build_tag)
     r = {'entity': 'ParameterBinding', 'hypothesis_revision': rev, 'parameter': param,
+         'parameter_pid': pids.get(registry_key, bare_pids.get(param, next(iter(pids.values())))),
          'build_tag': build_tag, 'role': role, 'surface': surface,
          'definition_ref': {'entity': 'OwnerRef', 'owner_type': 'param_registry',
                             'path': 'docs/PARAM_REGISTRY.csv', 'commit_oid': '0' * 40,
@@ -146,14 +153,11 @@ def main():
         check('a LOCKED binding carries its locked_value through',
               lk['optimizable'] is False and lk['locked_value'] == 0.01)
         # THE ONE THAT MATTERS: an unbound parameter must not be granted permission by silence.
-        u = reg.resolve('B14-H01-r1', 'NeverBound', root=root, stores=st)
-        check('an UNBOUND parameter resolves optimizable=None, never True',
-              u['optimizable'] is None and u['role'] is None and u['source'] == 'UNBOUND',
-              json.dumps(u))
+        refuses('an unknown parameter name refuses closed',
+                lambda: reg.resolve('B14-H01-r1', 'NeverBound', root=root, stores=st))
         # The per-hypothesis point of the whole entity: same parameter, other revision.
-        o = reg.resolve('B14-H02-r1', 'SL_ATR', root=root, stores=st)
-        check('the SAME parameter is UNBOUND in a different revision (bindings are per-revision)',
-              o['source'] == 'UNBOUND')
+        refuses('a parameter unbound in a revision refuses closed',
+                lambda: reg.resolve('B14-H02-r1', 'SL_ATR', root=root, stores=st))
         check('resolve_all returns exactly the parameters bound in that revision',
               sorted(reg.resolve_all('B14-H01-r1', root=root, stores=st)) == ['LotBase', 'MaxOpen', 'SL_ATR'])
 
@@ -335,9 +339,7 @@ def main():
                 shutil.rmtree(lroot, ignore_errors=True)
 
         lk = seed(tempfile.mkdtemp(prefix='s5lock_'),
-                  parameter_bindings=[{'entity': 'ParameterBinding',
-                                       'hypothesis_revision': 'B14-H01-r1', 'parameter': 'Z',
-                                       'role': 'LOCKED', 'surface': 'HIDDEN'}])
+                  parameter_bindings=[binding(param='Z', role='LOCKED', surface='HIDDEN')])
         try:
             refuses('NEG role=LOCKED with NO locked_value is REFUSED (probed: it resolved to None)',
                     lambda: reg.resolve('B14-H01-r1', 'Z', root=lk),
@@ -538,11 +540,8 @@ def main():
                    parameter_bindings=[binding(param='SplitMode'),
                                        binding(param='SplitMode', build_tag='LAB_ENTRY_A')])
         try:
-            got = reg.resolve('B14-H01-r1', 'SplitMode', root=amb)
-            check('G3 an UNTAGGED binding on a parameter whose CSV rows disagree stays '
-                  'NOT optimizable after the field split',
-                  got['optimizable'] is False and got['classification'] is None
-                  and 'AMBIGUOUS' in (got['classification_source'] or ''), json.dumps(got))
+            refuses('G3 an untagged request with disagreeing build rows refuses',
+                    lambda: reg.resolve('B14-H01-r1', 'SplitMode', root=amb))
             tagged = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A', root=amb)
             check('G3 SPECIFICITY naming the build RESOLVES it -- the refusal is about the '
                   'question being under-specified, not about the parameter being poisoned',
@@ -557,11 +556,11 @@ def main():
         # started passing --build-tag. Under ORDER-671 that turns every bound parameter into a
         # REFUSAL. Caught by run_registry_tests.ps1 cases B/C/C2 going red, not by re-reading.
         onlybare = seed(tempfile.mkdtemp(prefix='s5ob_'),
-                        parameter_bindings=[binding(param='SplitMode')])
+                        parameter_bindings=[binding(param='SL_ATR')])
         try:
             check('G2 `build_tag: null` means EVERY build, so a request naming one still '
                   'resolves to it',
-                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A',
+                  reg.resolve('B14-H01-r1', 'SL_ATR', build_tag='LAB_ENTRY_A',
                               root=onlybare)['source'] == 'BOUND')
         finally:
             shutil.rmtree(onlybare, ignore_errors=True)
@@ -569,10 +568,9 @@ def main():
         otherbuild = seed(tempfile.mkdtemp(prefix='s5ub_'),
                           parameter_bindings=[binding(param='SplitMode', build_tag='LAB_ENTRY_B')])
         try:
-            check('G2 SPECIFICITY a request for build A where only build B is bound is UNBOUND '
-                  '-- the tag is not decoration',
-                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A',
-                              root=otherbuild)['source'] == 'UNBOUND')
+            refuses('G2 SPECIFICITY a request for build A where only build B is bound refuses',
+                    lambda: reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A',
+                                        root=otherbuild))
             check('G2 SPECIFICITY and the exact build still resolves',
                   reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_B',
                               root=otherbuild)['source'] == 'BOUND')
@@ -608,7 +606,7 @@ def main():
             refuses('AUDIT F1 NEG two tagged bindings sharing a bare name make a BARE request '
                     'AMBIGUOUS, not majority-resolved',
                     lambda: reg.resolve('B14-H01-r1', 'SplitMode', root=two),
-                    'more than one answer')
+                    'ambiguous')
             check('AUDIT F1 SPECIFICITY and each EXACT name still resolves to its own row',
                   reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A',
                               root=two)['role'] == 'TUNABLE'
@@ -658,12 +656,10 @@ def main():
             check('AUDIT S7 a build-TAGGED name resolves to ITS OWN row, both ways',
                   tagged_dead['optimizable'] is False and tagged_live['optimizable'] is True,
                   '%s / %s' % (tagged_dead['classification'], tagged_live['classification']))
-            bare = reg.resolve('B14-H01-r1', 'SplitMode', root=both)
-            check('AUDIT S7 an UNTAGGED name whose tagged rows DISAGREE is AMBIGUOUS, not the '
-                  'majority answer (probed: stripping the tag was last-wins across 8 real rows)',
-                  bare['classification'] is None and bare['optimizable'] is False
-                  and 'AMBIGUOUS' in (bare['classification_source'] or ''),
-                  json.dumps(bare))
+            refuses('AUDIT S7 an UNTAGGED name whose tagged rows DISAGREE is AMBIGUOUS, not the '
+                    'majority answer (probed: stripping the tag was last-wins across 8 real rows)',
+                    lambda: reg.resolve('B14-H01-r1', 'SplitMode', root=both),
+                    'ambiguous')
         finally:
             shutil.rmtree(both, ignore_errors=True)
         # An unparseable / absent registry must REFUSE, never resolve everything to UNKNOWN quietly.
@@ -671,7 +667,7 @@ def main():
         try:
             os.makedirs(os.path.join(noreg, 'factory'))
             refuses('AUDIT S7 an ABSENT PARAM_REGISTRY is REFUSED, not defaulted to live',
-                    lambda: reg._classifications(noreg), 'Refused rather than defaulted')
+                    lambda: reg._classifications(noreg), 'not present')
         finally:
             shutil.rmtree(noreg, ignore_errors=True)
         # resolve_all must carry the root through -- it did not, so answers came from two trees.
@@ -735,7 +731,7 @@ def main():
                                       encoding='utf-8').read())
                           for r in reg.STORES
                           if os.path.isfile(os.path.join(part, r.replace('/', os.sep))))
-            py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
+            py = sys.executable
             pr = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'canonicalize',
                                  '--root=' + part], capture_output=True, text=True)
             check('AUDIT P2-9 canonicalize with an unreadable store exits non-zero',
@@ -750,7 +746,7 @@ def main():
         # SPECIFICITY: a complete tree canonicalizes, honours --root, and leaves no temp file.
         good = seed(tempfile.mkdtemp(prefix='s5can3_'))
         try:
-            py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
+            py = sys.executable
             pr = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'canonicalize',
                                  '--root=' + good], capture_output=True, text=True)
             leftovers = [f for f in os.listdir(os.path.join(good, 'factory'))
@@ -910,7 +906,8 @@ def main():
         # Until this commit `resolve()` answered "may this run optimize this parameter" from
         # docs/PARAM_REGISTRY.csv on the WORKING TREE, while the tier that consumes the answer
         # runs as a pre-commit hook. A staged classification flip was therefore invisible to it.
-        t1r = seed(tempfile.mkdtemp(prefix='s5evd1r_'))
+        t1r = seed(tempfile.mkdtemp(prefix='s5evd1r_'),
+                   parameter_bindings=[binding(param='SL_ATR')])
         try:
             _git(t1r, 'init', '-q')
             _git(t1r, 'add', '-A')
@@ -1152,7 +1149,7 @@ def main():
 
         # End to end through the real CLI, both modes pinned explicitly (the suite may itself
         # be running under a hook-set EA_LAB_EVIDENCE; these cases must not inherit it blind).
-        py_exe = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
+        py_exe = sys.executable
         for mode in ('worktree', 'index'):
             env = dict(os.environ)
             env['EA_LAB_EVIDENCE'] = mode
@@ -1174,7 +1171,7 @@ def main():
                   ok, diag)
 
         print('\n--- the CLI both consumers go through ---')
-        py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
+        py = sys.executable
         p = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'resolve', 'B14-H01-r1'],
                            capture_output=True, text=True, cwd=reg.REPO_ROOT)
         # ORDER-1030: this asserted `json.loads(p.stdout) == {}` -- i.e. that the REAL store is

@@ -35,6 +35,7 @@ USAGE
 TESTS
   tools\\python312\\python.exe _triage/factory_os/run_registry_tests.py
 """
+import csv
 import io
 import json
 import os
@@ -147,7 +148,113 @@ PARAM_REGISTRY_REL = 'docs/PARAM_REGISTRY.csv'
 LIVE_CLASSIFICATIONS = ('ACTIVE', 'OVERRIDE')
 DEAD_CLASSIFICATIONS = ('INACTIVE', 'COMPATIBILITY')
 
+PARAM_REGISTRY_REQUIRED_HEADERS = (
+    'name', 'owner', 'unit', 'context', 'active_when', 'coupled_parameters',
+    'default_profile', 'optimize_stage', 'safe_range', 'causal_question',
+    'classification', 'classification_note', 'parameter_pid',
+)
+
 _CLASSIFICATION_CACHE = {}
+_PARAMETER_PID_CACHE = {}
+
+
+def _csv_fields(line, where):
+    """Parse exactly one physical CSV line, refusing malformed or multiline data."""
+    try:
+        reader = csv.reader([line], strict=True)
+        fields = next(reader)
+    except (csv.Error, StopIteration) as exc:
+        _refuse('%s is malformed CSV: %s' % (where, exc))
+    return fields
+
+
+def parse_parameter_registry_text(text, where=PARAM_REGISTRY_REL):
+    """-> header-keyed PARAM_REGISTRY rows; no positional fallback is permitted."""
+    lines = text.splitlines()
+    header_line = None
+    header_index = None
+    for i, line in enumerate(lines):
+        if line.strip() and not line.startswith('>'):
+            header_line, header_index = line, i
+            break
+    if header_line is None:
+        _refuse('%s has no CSV header' % where)
+    headers = _csv_fields(header_line, '%s header' % where)
+    if len(headers) != len(set(headers)):
+        _refuse('%s has duplicate CSV headers' % where)
+    missing = [h for h in PARAM_REGISTRY_REQUIRED_HEADERS if h not in headers]
+    if missing:
+        _refuse('%s is missing required CSV header(s): %s' % (where, ', '.join(missing)))
+    out = []
+    for line_no, line in enumerate(lines[header_index + 1:], header_index + 2):
+        if not line.strip() or line.startswith('>'):
+            continue
+        fields = _csv_fields(line, '%s line %d' % (where, line_no))
+        if len(fields) != len(headers):
+            _refuse('%s line %d has %d fields; header declares %d' %
+                    (where, line_no, len(fields), len(headers)))
+        row = dict(zip(headers, fields))
+        if not row.get('name', '').strip():
+            _refuse('%s line %d has an empty name' % (where, line_no))
+        raw_pid = row.get('parameter_pid', '').strip()
+        if not re.fullmatch(r'[1-9][0-9]{4}', raw_pid):
+            _refuse('%s line %d has malformed parameter_pid %r' %
+                    (where, line_no, raw_pid))
+        row['parameter_pid'] = int(raw_pid)
+        row['_line'] = line_no
+        out.append(row)
+    if not out:
+        _refuse('%s parsed to zero registry rows' % where)
+    return out
+
+
+def _parameter_registry_text(root=None, source=None):
+    if source is not None:
+        if not source.exists_committed(PARAM_REGISTRY_REL):
+            _refuse('%s is not present (%s mode)' % (PARAM_REGISTRY_REL, source.mode))
+        try:
+            return source.read_committed(PARAM_REGISTRY_REL)
+        except Exception as exc:
+            _refuse('%s: %s' % (PARAM_REGISTRY_REL, exc))
+    base = REPO_ROOT if root is None else root
+    path = os.path.join(base, PARAM_REGISTRY_REL.replace('/', os.sep))
+    if not os.path.isfile(path):
+        _refuse('%s is not present' % PARAM_REGISTRY_REL)
+    with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree -- caller-selected root
+        return fh.read()
+
+
+def read_parameter_registry(root=None, source=None):
+    return parse_parameter_registry_text(
+        _parameter_registry_text(root=root, source=source), PARAM_REGISTRY_REL)
+
+
+def _parameter_pids(root=None, source=None):
+    if source is not None:
+        key = (source.root, source.mode)
+    else:
+        key = (REPO_ROOT if root is None else root, 'worktree-direct')
+    if key in _PARAMETER_PID_CACHE:
+        return _PARAMETER_PID_CACHE[key]
+    out = {}
+    for row in read_parameter_registry(root=root, source=source):
+        name, pid = row['name'], row['parameter_pid']
+        if name in out and out[name] != pid:
+            _refuse('%s assigns two PIDs to %r (%s and %s)' %
+                    (PARAM_REGISTRY_REL, name, out[name], pid))
+        out[name] = pid
+    _PARAMETER_PID_CACHE[key] = out
+    return out
+
+
+def parameter_pid_for(parameter, build_tag=None, root=None, source=None):
+    """Return the canonical PID for a binding identity or refuse if absent."""
+    pids = _parameter_pids(root=root, source=source)
+    key = registry_name(parameter, build_tag)
+    pid = pids.get(key, pids.get(parameter))
+    if pid is None:
+        _refuse('%s has no PID for binding identity %r' % (PARAM_REGISTRY_REL, key))
+    return pid
 
 
 def _classifications(root=None, source=None):
@@ -165,16 +272,8 @@ def _classifications(root=None, source=None):
     value it is watching, which is the defect recorded in memory
     `drift-guard-regenerating-against-head`. The two vintages must not share a slot.
 
-    POSITIONAL, index 0 = name and index 10 = classification, which is what
-    scripts/optimize_guard.ps1 reads ($m[10]) and what its own header calls "column 11". The file
-    has NO quoted header row -- it opens with `>` prose lines and then goes straight to data -- so
-    a header-driven parser finds nothing. The first version of this function was header-driven and
-    returned ZERO rows silently, which is the "readable but not understood, published as empty"
-    defect this pipeline refuses everywhere else. It is refused here too.
-
-    Deliberately not a general CSV parser: it relies on every field being double-quoted with no
-    embedded quotes, exactly as optimize_guard does, and a row that does not match that shape is
-    SKIPPED AND COUNTED rather than guessed at.
+    The parser is header-keyed and strict. Appended unrelated columns are tolerated; required
+    headers, duplicate headers, malformed quoting and malformed PIDs refuse closed.
     """
     # When a source is given, the bytes come from ITS root -- so the cache key must too.
     # /scrutinize round 2: keying on the `root` argument while reading through `source` let a
@@ -189,48 +288,18 @@ def _classifications(root=None, source=None):
         key = (base, 'worktree-direct')
     if key in _CLASSIFICATION_CACHE:
         return _CLASSIFICATION_CACHE[key]
-    if source is not None:
-        if not source.exists_committed(PARAM_REGISTRY_REL):
-            _refuse('%s is not present (%s mode), so a parameter PERMANENT-semantics lookup is '
-                    'impossible. Refused rather than defaulted: "I cannot tell whether this '
-                    'input is dead" must never be answered as "it is live".'
-                    % (PARAM_REGISTRY_REL, source.mode))
-        try:
-            text = source.read_committed(PARAM_REGISTRY_REL)
-        except Exception as exc:      # evidence.ToolFailure -- cannot read IS a refusal here
-            _refuse('%s: %s' % (PARAM_REGISTRY_REL, exc))
-    else:
-        path = os.path.join(base, PARAM_REGISTRY_REL.replace('/', os.sep))
-        if not os.path.isfile(path):
-            _refuse('%s is not present, so a parameter PERMANENT-semantics lookup is impossible. '
-                    'Refused rather than defaulted: "I cannot tell whether this input is dead" '
-                    'must never be answered as "it is live".' % PARAM_REGISTRY_REL)
-        with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree
-            text = fh.read()
-    out, skipped = {}, 0
-    for line in text.split('\n'):
-        if not line.startswith('"'):
-            continue
-        fields = re.findall(r'"([^"]*)"', line)
-        if len(fields) < 11:
-            skipped += 1
-            continue
-        name = fields[0].strip()
-        if not name:
-            skipped += 1
-            continue
+    out = {}
+    for row in read_parameter_registry(root=base, source=source):
+        name = row['name'].strip()
         # KEYED ON THE FULL NAME, TAG INCLUDED. The first version stripped the build tag
         # and wrote out[bare], which is last-wins across rows that disagree -- and they DO:
         # measured, StackMode[LAB_ENTRY_16] is INACTIVE while the other seven StackMode rows
         # are ACTIVE. Collapsing eight answers into one and keeping whichever came last is the
         # same "a store with two answers cannot be a resolver" defect this module refuses for
         # duplicate bindings, committed by the resolver itself.
-        out[name] = fields[10].strip().upper()
+        out[name] = row['classification'].strip().upper()
     if not out:
-        _refuse('%s parsed to ZERO classifications (%d row(s) skipped as unparseable). Refused: a '
-                'permanent-semantics table that reads as empty would make every parameter '
-                'UNKNOWN, and the first version of this parser did exactly that in silence.'
-                % (PARAM_REGISTRY_REL, skipped))
+        _refuse('%s parsed to ZERO classifications' % PARAM_REGISTRY_REL)
     _CLASSIFICATION_CACHE[key] = out
     return out
 
@@ -434,13 +503,14 @@ def load_all(root=None, source=None):
 # THE RESOLVER.
 
 def _binding_index(rows):
-    """(hypothesis_revision, parameter) -> binding. Refuses a duplicate key.
+    """Index dual-key bindings and refuse duplicate scoped PID/name identities.
 
     A duplicate is refused rather than last-wins: two rows binding the same parameter in the same
     revision is a store that cannot answer its own question, and picking one silently is how a
     consumer and a generator end up reading different answers from the same file.
     """
     out = {}
+    seen_pids = {}
     for n, rec in rows:
         # ORDER-672: the key is the TRIPLE. `build_tag` is a field now, so "which build is this
         # binding about" is data the index can carry, not a suffix a parser has to recover from
@@ -450,6 +520,16 @@ def _binding_index(rows):
             _refuse('factory/parameter_bindings.jsonl line %d binds %r (build_tag %r) in %r a '
                     'second time. Refused: a store with two answers cannot be a resolver.'
                     % (n, key[1], key[2], key[0]))
+        pid = rec.get('parameter_pid')
+        if isinstance(pid, bool) or not isinstance(pid, int) or pid < 10000 or pid > 99999:
+            _refuse('factory/parameter_bindings.jsonl line %d has malformed parameter_pid %r'
+                    % (n, pid))
+        pid_key = (rec.get('hypothesis_revision'), pid, rec.get('build_tag'))
+        if pid_key in seen_pids:
+            _refuse('factory/parameter_bindings.jsonl line %d reuses parameter_pid %s in %r '
+                    'for build_tag %r (already used by %r). Refused: PID identity is not '
+                    'last-wins.' % (n, pid, key[0], key[2], seen_pids[pid_key]))
+        seen_pids[pid_key] = key[1]
         out[key] = rec
     return out
 
@@ -475,7 +555,7 @@ def _overlay_index(root, overlay_root):
     return merged
 
 
-def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root=None,
+def _resolve_legacy(hypothesis_revision, parameter, root=None, stores=None, overlay_root=None,
             source=None, build_tag=None):
     """-> {parameter, hypothesis_revision, role, surface, optimizable, locked_value, safe_range,
            definition_ref, source}
@@ -620,6 +700,75 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
             'safe_range': rec.get('safe_range'),
             'definition_ref': rec.get('definition_ref'),
             'source': 'BOUND'}
+
+
+def resolve(hypothesis_revision, parameter=None, root=None, stores=None, overlay_root=None,
+            source=None, build_tag=None, parameter_pid=None):
+    """Resolve by PID, name, or an agreeing pair; ambiguity and unknowns refuse."""
+    build_tag = canonical_build_tag(build_tag)
+    if parameter is None and parameter_pid is None:
+        _refuse('resolve requires parameter, parameter_pid, or both')
+    if parameter is not None and not isinstance(parameter, str):
+        _refuse('parameter name must be a string')
+    if parameter_pid is not None and (
+            isinstance(parameter_pid, bool) or not isinstance(parameter_pid, int) or
+            not 10000 <= parameter_pid <= 99999):
+        _refuse('parameter_pid %r is not a valid five-digit PID' % (parameter_pid,))
+
+    if overlay_root is not None:
+        idx = _overlay_index(root, overlay_root)
+    else:
+        if stores is None:
+            stores = load_all(root=root)
+        _meta, rows = stores['factory/parameter_bindings.jsonl']
+        idx = _binding_index(rows)
+
+    name_rows = [v for (rev, name, _tag), v in idx.items()
+                 if rev == hypothesis_revision and (parameter is None or name == parameter)]
+    pid_rows = [v for (rev, _name, _tag), v in idx.items()
+                if rev == hypothesis_revision and
+                (parameter_pid is None or v.get('parameter_pid') == parameter_pid)]
+    if parameter is not None and parameter_pid is not None:
+        if name_rows and pid_rows and not any(v in pid_rows for v in name_rows):
+            _refuse('parameter/name disagreement: %r and parameter_pid %s refer to different '
+                    'bindings' % (parameter, parameter_pid))
+    if parameter is not None and parameter_pid is not None:
+        candidates = [v for v in name_rows if v in pid_rows]
+    elif parameter is not None:
+        candidates = name_rows
+    else:
+        candidates = pid_rows
+    if build_tag is not None:
+        exact = [v for v in candidates if v.get('build_tag') == build_tag]
+        candidates = exact or [v for v in candidates if v.get('build_tag') is None]
+    if not candidates:
+        _refuse('unknown binding identity: %r / %s' % (parameter, parameter_pid))
+    if build_tag is None and len(candidates) > 1:
+        _refuse('ambiguous binding identity for %r / %s; build_tag is required' %
+                (parameter, parameter_pid))
+    if len(candidates) != 1:
+        _refuse('ambiguous binding identity for %r / %s' % (parameter, parameter_pid))
+    rec = candidates[0]
+    effective_tag = build_tag if build_tag is not None else rec.get('build_tag')
+    parameter_pids = _parameter_pids(root=root, source=source)
+    registry_key = registry_name(rec['parameter'], effective_tag)
+    if rec.get('build_tag') is None:
+        # A null binding applies to every build, but its identity is the untagged
+        # registry row.  Do not make the requested build tag change that PID.
+        expected_pid = parameter_pids.get(rec['parameter'])
+    else:
+        # A tagged binding may legitimately consume an untagged registry identity
+        # when the registry has no build-specific row for that parameter.
+        expected_pid = parameter_pids.get(registry_key, parameter_pids.get(rec['parameter']))
+    if expected_pid != rec.get('parameter_pid'):
+        _refuse('binding %r carries parameter_pid %s but PARAM_REGISTRY maps it to %s' %
+                (rec['parameter'], rec.get('parameter_pid'), expected_pid))
+    result = _resolve_legacy(hypothesis_revision, rec['parameter'], root=root,
+                             stores=stores if overlay_root is None else None,
+                             overlay_root=overlay_root, source=source,
+                             build_tag=build_tag)
+    result['parameter_pid'] = rec['parameter_pid']
+    return result
 
 
 def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None, source=None,

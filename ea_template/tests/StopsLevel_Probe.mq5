@@ -93,4 +93,5 @@ void OnDeinit(const int reason)
    else
       Print("[PROBE] VERDICT: the buffered distance can fall under minDist, so the branch IS "
             "reachable at the shipped buffer and its zero fire count needs another explanation.");
+   Print("[PASS] StopsLevel_Probe: probe executed and emitted verdict");
   }

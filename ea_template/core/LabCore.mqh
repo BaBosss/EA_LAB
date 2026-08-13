@@ -21,6 +21,7 @@
 #include "Recovery.mqh"
 #include "Hedge.mqh"
 #include "Basket.mqh"
+#include "MiddlePath.mqh"   // AAM Module 2: Middle Path Veto (off by default)
 
 // compile-time entry selection (one only; wrapper defines the token + LAB_ENTRY_TAG)
 #ifdef LAB_ENTRY_11
@@ -281,6 +282,14 @@ int OnInit()
    // here instead; only runtime data failures are handled (as skipped orders) in MM_FirstLot.
    if(!MM_ConfigValid())
       return INIT_FAILED;
+   // R4 compatibility-only control: the outcome/loss ledger required for
+   // revenge blocking does not exist yet. Keep the frozen input/default for
+   // identity compatibility, but make its inactive state explicit and loud.
+   // Canonical Batch-A A1/A3 assertion: role/classification=INACTIVE,
+   // surface=HIDDEN, optimizable=false, effective=false,
+   // reason_code=OUTCOME_LEDGER_NOT_IMPLEMENTED (HIDDEN_INACTIVE).
+   PrintFormat("[INIT] WARN: _EVT_RevengeBlockBars=%d is HIDDEN_INACTIVE (reason_code=OUTCOME_LEDGER_NOT_IMPLEMENTED) - compatibility-only; revenge blocking is not implemented and this value is not effective",
+               _EVT_RevengeBlockBars);
    if(!Indi_Init())
    {
       Print("[INIT] indicator handles failed");
@@ -441,6 +450,12 @@ void Lab_OpenOrder(const int dir, const int level)
    double tp       = Exit_InitialTP(dir, entry);
    double firstLot = MM_FirstLot(Exit_SLDistancePoints());
    double lot      = MM_NextLot(firstLot, level);
+   // AAM Module 3 (Portfolio Heat, Basket.mqh): checked here, not at the
+   // RiskControl_AllowNewOrder() call sites above - the actual lot for THIS order
+   // is only known once MM_NextLot has run, and duplicating the sizing math ahead
+   // of those gates just to check heat earlier would risk it drifting from what
+   // actually gets sent. _HEAT_Enable=false (default) makes this a no-op.
+   if(!Basket_HeatCheckPass(_Symbol, lot)) return;
    Exec_Open(dir, lot, sl, tp, LAB_ENTRY_TAG + " L" + IntegerToString(level));
 }
 
@@ -488,6 +503,7 @@ void OnTick()
          EntrySignal s = Entry_Evaluate();        // resting-stop trigger check
          if(!s.valid) return;
          if(!Regime_AllowsEntryDirection(s.direction)) return;
+         if(!MiddlePath_AllowEntry(s.direction)) return;   // AAM Module 2 (off by default)
          if(!RiskControl_AcctGateOK()) return;    // acct-DD gate (first-entry only, no-op when off)
          if(!RiskControl_AllowNewOrder()) return;
          if(_9_MaxLevels <= 0) return;
@@ -524,6 +540,7 @@ void OnTick()
       if(Regime_BlocksFlatEntry()) return;        // gate only the first entry; open baskets stay untouched
       if(!sig.valid) return;
       if(!Regime_AllowsEntryDirection(sig.direction)) return;
+      if(!MiddlePath_AllowEntry(sig.direction)) return;   // AAM Module 2 (off by default)
       if(!RiskControl_AcctGateOK()) return;   // acct-DD gate (first-entry only, no-op when off)
       if(!RiskControl_AllowNewOrder()) return;
       if(_9_MaxLevels <= 0) return;
