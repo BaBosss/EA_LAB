@@ -92,9 +92,36 @@ foreach ($d in @($runsDir, $leaseDir)) {
 function Now-Stamp { (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ') }
 function Stamp([datetime]$d) { $d.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ') }
 function Say([string]$m, [string]$c = 'Gray') { Write-Host ("   " + $m) -ForegroundColor $c }
+function Get-TerminalBuildFromFileVersion([string]$FileVersion) {
+  if ($FileVersion -notmatch '^\d+\.\d+\.\d+\.(\d+)$') {
+    throw "REFUSE: terminal FileVersion is missing or malformed: '$FileVersion'"
+  }
+  return [int64]$Matches[1]
+}
+function Get-TerminalBuild([string]$TerminalPath) {
+  $resolved = (Resolve-Path -LiteralPath $TerminalPath -ErrorAction Stop).Path
+  return Get-TerminalBuildFromFileVersion ([Diagnostics.FileVersionInfo]::GetVersionInfo($resolved).FileVersion)
+}
 
 if (-not $ReportName) { $ReportName = ($Run -replace '[^A-Za-z0-9]', '_') }
-$key = Get-Content -LiteralPath $KeyFile -Raw | ConvertFrom-Json
+$resolvedTerminalBuild = Get-TerminalBuild $Terminal
+# The queued journal owns identity. KeyFile is parsed and checked by scheduler.py, then the
+# dispatcher uses the exact persisted object returned by that check. This closes the race where a
+# caller edits terminal_build (or any other identity field) in KeyFile after queueing.
+$dispatchRaw = & $py $sched dispatch-key "--run=$Run" "--key-file=$KeyFile" `
+                         "--terminal-build=$resolvedTerminalBuild" "--root=$root"
+if ($LASTEXITCODE -ne 0) {
+  throw "REFUSE: dispatch key is not authoritative for run ${Run}: $dispatchRaw"
+}
+$dispatch = $dispatchRaw | ConvertFrom-Json
+if (-not $dispatch.execution_key) {
+  throw "REFUSE: dispatch key validation returned no persisted ExecutionKey for run $Run."
+}
+$key = $dispatch.execution_key
+$FrozenTesterCurrency = 'USD'
+if ($key.currency -cne $FrozenTesterCurrency) {
+  throw "REFUSE: persisted ExecutionKey currency must be $FrozenTesterCurrency; mt5_run.ps1 emits only that tester currency."
+}
 $laneTag  = ($key.lane -replace '[^A-Za-z0-9]', '_')
 $leaseFile = Join-Path $leaseDir ($laneTag + '.json')
 $htm = Join-Path $root ('_mt5_auto\reports\' + $ReportName + '.htm')
@@ -124,7 +151,7 @@ if ($WorkerMode) {
   # text distinguishes them.
   $tail = $out
   if ($tail.Length -gt 2000) { $tail = $tail.Substring($tail.Length - 2000) }
-  [PSCustomObject]@{ exit_code = $code; at = (Now-Stamp); stdout_tail = $tail } |
+  [PSCustomObject]@{ run_id = $Run; attempt = $Attempt; exit_code = $code; at = (Now-Stamp); stdout_tail = $tail } |
     ConvertTo-Json | Set-Content -LiteralPath (Exit-Sidecar $Attempt) -Encoding UTF8
   exit 0
 }
@@ -145,6 +172,9 @@ function Get-Observation([int]$attempt, $journal) {
   $intentAt = ($journal.attempts |
                Where-Object { $_.attempt -eq $attempt -and $_.launch_intent_at } |
                Select-Object -Last 1).launch_intent_at
+  $boundReportPath = ($journal.attempts |
+                      Where-Object { $_.attempt -eq $attempt -and $_.report_path } |
+                      Select-Object -Last 1).report_path
   $lease = $null
   if (Test-Path $leaseFile) {
     $lease = Get-Content -LiteralPath $leaseFile -Raw | ConvertFrom-Json
@@ -168,7 +198,10 @@ function Get-Observation([int]$attempt, $journal) {
   $exitRec = $null; $fresh = $null; $mtime = $null
   if (Test-Path (Exit-Sidecar $attempt)) {
     $exitRec = Get-Content -LiteralPath (Exit-Sidecar $attempt) -Raw | ConvertFrom-Json
-    if (-not $intentAt) {
+    if ($exitRec.run_id -ne $Run -or [int]$exitRec.attempt -ne $attempt) {
+      Write-Host "   [STALE-GUARD] exit sidecar does not belong to $Run attempt $attempt - refusing." -ForegroundColor Red
+      $fresh = $false
+    } elseif (-not $intentAt -or -not $boundReportPath -or $boundReportPath -ne ('_mt5_auto/reports/' + $ReportName + '.htm')) {
       # No recorded run start => no way to tell this run's report from last week's. REFUSE, which
       # routes to FAILED(TESTER_ERROR) and a retry, rather than passing a report nothing dates.
       Write-Host "   [STALE-GUARD] attempt $attempt has an exit record but the manifest holds no launch_intent_at - freshness is UNPROVABLE, refusing." -ForegroundColor Red
@@ -201,10 +234,34 @@ function Get-Observation([int]$attempt, $journal) {
     spawn_marker   = [bool]$spawn
     exit_record    = $exitRec
     report_fresh   = $fresh
-    report_path    = ('_mt5_auto/reports/' + $ReportName + '.htm')
+    report_path    = $boundReportPath
     report_mtime   = $mtime
     evidence       = $evidence
   }
+}
+
+function Get-AuthoritativeCompletionProof([int]$attempt, $journal) {
+  $runStart = ($journal.attempts | Where-Object { $_.attempt -eq $attempt -and $_.launch_intent_at } |
+               Select-Object -Last 1).launch_intent_at
+  $reportPath = ($journal.attempts | Where-Object { $_.attempt -eq $attempt -and $_.report_path } |
+                 Select-Object -Last 1).report_path
+  $expectedPath = '_mt5_auto/reports/' + $ReportName + '.htm'
+  if (-not $runStart -or $reportPath -ne $expectedPath) {
+    throw "REFUSE: current attempt has no authoritative launch intent/report binding."
+  }
+  $sidecar = Exit-Sidecar $attempt
+  if (-not (Test-Path -LiteralPath $sidecar)) { throw "REFUSE: current attempt exit sidecar is missing." }
+  $exitRec = Get-Content -LiteralPath $sidecar -Raw | ConvertFrom-Json
+  if ($exitRec.run_id -ne $Run -or [int]$exitRec.attempt -ne $attempt) {
+    throw "REFUSE: exit sidecar does not belong to current run/attempt."
+  }
+  if (-not (Test-Path -LiteralPath $htm)) { throw "REFUSE: current attempt report is missing." }
+  $mtime = Stamp (Get-Item -LiteralPath $htm).LastWriteTimeUtc
+  $isFresh = Test-ReportIsFresh -Htm $htm -RunStart ([datetime]::Parse($runStart).ToUniversalTime()) `
+                                 -RunnerExit ([int]$exitRec.exit_code) -Label $ReportName -Quiet
+  if (-not $isFresh) { throw "REFUSE: current attempt report is not fresh by Test-ReportIsFresh." }
+  return @{ runner_exit = [int]$exitRec.exit_code; report_path = $reportPath
+            report_mtime = $mtime; run_start = $runStart }
 }
 
 # =================================================================================================
@@ -289,7 +346,8 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
                                                         expires_at = $lease.expires_at } })
     }
     'DECLARE_LAUNCH_INTENT' {
-      Invoke-Append (New-Line 'LAUNCH_INTENT' $a @{ launch_intent_at = (Now-Stamp) })
+      Invoke-Append (New-Line 'LAUNCH_INTENT' $a @{ launch_intent_at = (Now-Stamp)
+                                                     report_path = ('_mt5_auto/reports/' + $ReportName + '.htm') })
     }
     'LAUNCH' {
       # THE MARKER IS WRITTEN FIRST, and the order is the whole point: absence of the marker is
@@ -345,12 +403,15 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
     'OBSERVE_RUNNING' { Invoke-Append (New-Line 'RUNNING' $a $null) }
     'WAIT'            { Start-Sleep -Seconds $PollSeconds }
     'RECORD_COMPLETED' {
+      $proof = Get-AuthoritativeCompletionProof $a $journal
+      foreach ($name in @('runner_exit', 'report_path', 'report_mtime', 'run_start')) {
+        if ($act.proof.$name -ne $proof[$name]) {
+          throw "REFUSE: planner completion proof $name disagrees with authoritative observation."
+        }
+      }
       Invoke-Append (New-Line 'COMPLETED' $a @{
-        exit_code = [int]$act.exit_code; failure_class = 'NONE'
-        report_fresh_proof = @{ fresh = $true; runner_exit = [int]$act.proof.runner_exit
-                                report_path = $act.proof.report_path
-                                report_mtime = $act.proof.report_mtime
-                                run_start = $act.proof.run_start } })
+          exit_code = [int]$act.exit_code; failure_class = 'NONE'
+         report_fresh_proof = $proof })
     }
     'RECORD_FAILED' {
       $ec = $null; if ($null -ne $act.exit_code) { $ec = [int]$act.exit_code }

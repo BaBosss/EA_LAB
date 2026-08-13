@@ -55,6 +55,7 @@ param(
   [switch]$Force
 )
 $ErrorActionPreference = "Stop"
+$FrozenTesterCurrency = 'USD'
 
 # Guard is now scoped to THIS install's exe path, not the global "terminal64" name, so a
 # second portable instance (different exe path) can run in parallel without false aborts.
@@ -141,7 +142,7 @@ if ($surface.State -ne 'NOSETFILE') {
 $lines = @(
   "[Tester]", "Expert=$Expert", "Symbol=$Symbol", "Period=$Period", "Model=$Model",
   "Optimization=0", "FromDate=$FromDate", "ToDate=$ToDate", "ForwardMode=0",
-  "Deposit=$Deposit", "Currency=USD", "Leverage=1:$Leverage", "ExecutionMode=0", "Visual=0",
+  "Deposit=$Deposit", "Currency=$FrozenTesterCurrency", "Leverage=1:$Leverage", "ExecutionMode=0", "Visual=0",
   "Report=$ReportName", "ReplaceReport=1", "ShutdownTerminal=1", "[TesterInputs]"
 ) + $inputs
 $ini = "$auto\ini\$ReportName.ini"

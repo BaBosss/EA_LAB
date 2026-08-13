@@ -1025,7 +1025,7 @@
     },
     "ExecutionKey": {
       "type": "object",
-      "description": "NEW. Audit P1: rev 1's idempotency key did not require the hashes, leverage, deposit, currency or data fingerprint, so a 10,000/1:100 run and a 100,000/1:200 run were indistinguishable and the scheduler would have returned the wrong cached evidence. This is the COMPLETE simulator input identity. Every field is required. USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 6): ini_hash MOVED OUT to RunAttempt.ini_sha256 and this key is now 14 fields. The key gates whether a run may happen at all, so it must be computable BEFORE the run - but the ini is written by the runner at launch, and worse, it contains Report=<name>, which differs every run, so a literal ini hash would give two runs of an identical configuration two digests and criterion 3 could never fire. Same shape as the pid fix on the lease below: a schema that demands a fact nobody can know yet is a schema that gets filled with a placeholder.",
+      "description": "The complete new simulator input identity. Currency is frozen to the USD runner contract; account_unit and the resolved terminal FileVersion build are distinct cache dimensions. effective_config_hash remains the existing chart/set/config/surface fingerprint, not account or terminal identity. ini_sha256 remains attempt forensics because it does not exist before launch.",
       "required": [
         "expert",
         "symbol",
@@ -1035,7 +1035,9 @@
         "model",
         "deposit",
         "currency",
+        "account_unit",
         "leverage",
+        "terminal_build",
         "set_hash",
         "ex5_hash",
         "effective_config_hash",
@@ -1071,11 +1073,22 @@
           "type": "number"
         },
         "currency": {
-          "type": "string"
+          "const": "USD"
+        },
+        "account_unit": {
+          "enum": [
+            "USD",
+            "CENT"
+          ]
         },
         "leverage": {
           "type": "integer",
           "description": "written as 1:N in the ini and asserted post-run; a bare Leverage=N is a silent no-op"
+        },
+        "terminal_build": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "numeric build component mechanically read from the resolved terminal64.exe FileVersion; never inferred from lane or caller text"
         },
         "set_hash": {
           "type": "string",
@@ -1094,6 +1107,46 @@
         },
         "lane": {
           "type": "string"
+        }
+      },
+      "$defs": {
+        "LegacyExecutionKey": {
+      "type": "object",
+      "description": "Closed historical unit/build-unknown shape. It is readable for audit only and cannot equal a new ExecutionKey. The optional ini_hash is the exact pre-2026-08-02 persisted form and is removed only for the established legacy digest migration.",
+      "required": [
+        "expert",
+        "symbol",
+        "tf",
+        "from_date",
+        "to_date",
+        "model",
+        "deposit",
+        "currency",
+        "leverage",
+        "set_hash",
+        "ex5_hash",
+        "effective_config_hash",
+        "data_fingerprint",
+        "lane"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "expert": { "type": "string" },
+        "symbol": { "type": "string" },
+        "tf": { "type": "string" },
+        "from_date": { "type": "string" },
+        "to_date": { "type": "string" },
+        "model": { "type": "integer", "enum": [1, 2, 4] },
+        "deposit": { "type": "number" },
+        "currency": { "type": "string" },
+        "leverage": { "type": "integer" },
+        "set_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "ex5_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "effective_config_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "data_fingerprint": { "type": "string" },
+        "lane": { "type": "string" },
+        "ini_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
         }
       }
     },
@@ -1158,6 +1211,13 @@
             "null"
           ],
           "description": "written BEFORE spawn. Its presence with no process_observed means the crash happened around the spawn and the resume must RECONCILE (is an MT5 already running on this lane?) rather than launch again."
+        },
+        "report_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "the report path bound by LAUNCH_INTENT for this attempt; later transitions cannot replace that identity"
         },
         "process_observed": {
           "type": [
@@ -1254,7 +1314,10 @@
           "type": "string"
         },
         "execution_key": {
-          "$ref": "#/$defs/ExecutionKey",
+          "anyOf": [
+            { "$ref": "#/$defs/ExecutionKey" },
+            { "$ref": "#/$defs/ExecutionKey/$defs/LegacyExecutionKey" }
+          ],
           "description": "written once, on the QUEUED line"
         },
         "attempt": {
@@ -1313,7 +1376,10 @@
           "type": "string"
         },
         "execution_key": {
-          "$ref": "#/$defs/ExecutionKey"
+          "anyOf": [
+            { "$ref": "#/$defs/ExecutionKey" },
+            { "$ref": "#/$defs/ExecutionKey/$defs/LegacyExecutionKey" }
+          ]
         },
         "attempts": {
           "type": "array",

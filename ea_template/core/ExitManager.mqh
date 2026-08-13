@@ -35,17 +35,35 @@ bool Wave5_SLValid(const int dir, const double slPrice)
    double pt = Exit_Point();
    long stopsLevelPts = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
    double minDist = stopsLevelPts * pt;
+   double brokerSl = NormalizeDouble(slPrice, _Digits);
+   if(brokerSl <= 0.0 || !MathIsValidNumber(brokerSl)) return false;
+
+   double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   if(tickSize <= 0.0 || !MathIsValidNumber(tickSize)) return false;
+
+   // Validate only the broker-facing value that Exit_InitialSL submits. The
+   // structural anchor remains raw for the existing strategy/risk semantics.
+   // This tolerance admits binary representation noise, not a real fraction
+   // of a tick, and no price is rounded or otherwise mutated here.
+   double gridUnits = brokerSl / tickSize;
+   if(!MathIsValidNumber(gridUnits)) return false;
+   double nearestGridUnits = MathRound(gridUnits);
+   double gridPrice = nearestGridUnits * tickSize;
+   double gridScale = MathMax(1.0, MathMax(MathAbs(brokerSl), MathAbs(gridPrice)));
+   double gridTolerance = MathMax(tickSize * 1.0e-9,
+                                  64.0 * 2.2204460492503131e-16 * gridScale);
+   if(MathAbs(brokerSl - gridPrice) > gridTolerance) return false;
 
    if(dir == 1) // long: SL below bid, at least minDist away
    {
-      if(slPrice >= t.bid) return false;
-      if(minDist > 0.0 && (t.bid - slPrice) < minDist) return false;
+      if(brokerSl >= t.bid) return false;
+      if(minDist > 0.0 && (t.bid - brokerSl) < minDist) return false;
       return true;
    }
    if(dir == 2) // short: SL above ask, at least minDist away
    {
-      if(slPrice <= t.ask) return false;
-      if(minDist > 0.0 && (slPrice - t.ask) < minDist) return false;
+      if(brokerSl <= t.ask) return false;
+      if(minDist > 0.0 && (brokerSl - t.ask) < minDist) return false;
       return true;
    }
    return false;

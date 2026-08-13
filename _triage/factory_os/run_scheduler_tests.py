@@ -33,10 +33,13 @@ USAGE  tools\\python312\\python.exe _triage/factory_os/run_scheduler_tests.py
 EXIT   0 = every criterion refused its attack and the matrix is complete  -  1 = a failure
 """
 
+import calendar
 import io
+import json
 import os
 import re
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scheduler as S                                                      # noqa: E402
@@ -76,7 +79,7 @@ def refuses(label, problems, expect_id):
 BASE_KEY = {
     'expert': 'EALabTpl\\generated\\B14_H01_r1', 'symbol': 'XAUUSD', 'tf': 'H1',
     'from_date': '2024.01.01', 'to_date': '2024.01.15', 'model': 1, 'deposit': 10000,
-    'currency': 'USD', 'leverage': 100,
+    'currency': 'USD', 'account_unit': 'USD', 'leverage': 100, 'terminal_build': 6090,
     # NO `ini_hash`: it moved to `RunAttempt.ini_sha256` (owner decision 2026-08-02, item 6). The
     # shape refusal in `execution_key_digest` is what makes this a real change rather than a
     # convention -- a key still carrying it is now an UNKNOWN field and is refused.
@@ -605,11 +608,12 @@ def J(*lines):
 
 
 QUEUED_LINE = dict(L('QUEUED', at='2026-08-02T00:00:00Z'), execution_key=dict(BASE_KEY))
-GOOD_PROOF = {'fresh': True, 'runner_exit': 0, 'report_path': 'r.htm',
+GOOD_PROOF = {'runner_exit': 0, 'report_path': '_mt5_auto/reports/RUN_20260802_001.htm',
               'report_mtime': '2026-08-02T00:05:00Z', 'run_start': '2026-08-02T00:02:00Z'}
 SPINE = [QUEUED_LINE,
          L('LEASED', lease={'lease_id': 'L1', 'owner': RUN, 'expires_at': '2026-08-02T01:00:00Z'}),
-         L('LAUNCH_INTENT', at='2026-08-02T00:02:00Z', launch_intent_at='2026-08-02T00:02:00Z'),
+         L('LAUNCH_INTENT', at='2026-08-02T00:02:00Z', launch_intent_at='2026-08-02T00:02:00Z',
+           report_path=GOOD_PROOF['report_path']),
          L('PROCESS_OBSERVED', at='2026-08-02T00:03:00Z',
            process_observed={'pid': 1, 'observed_at': '2026-08-02T00:03:00Z'}),
          L('RUNNING', at='2026-08-02T00:04:00Z')]
@@ -643,9 +647,9 @@ refuses('a later line that contradicts the QUEUED ExecutionKey',
 # --- ACCEPTANCE CRITERION 2, four ways ---------------------------------------------------------
 refuses('CRITERION 2  COMPLETED with no freshness proof at all',
         S.validate_transition(J(*SPINE), L('COMPLETED', at='2026-08-02T00:05:00Z')), 'S6')
-refuses('CRITERION 2  COMPLETED whose proof says fresh=false',
+refuses('CRITERION 2  COMPLETED carrying the caller-owned fresh claim',
         S.validate_transition(J(*SPINE), L('COMPLETED', at='2026-08-02T00:05:00Z',
-                                           report_fresh_proof=dict(GOOD_PROOF, fresh=False))), 'S6')
+                                           report_fresh_proof=dict(GOOD_PROOF, fresh=True))), 'S6')
 refuses('CRITERION 2  COMPLETED on runner exit 1 (= NO REPORT, whatever is on disk)',
         S.validate_transition(J(*SPINE), L('COMPLETED', at='2026-08-02T00:05:00Z',
                                            report_fresh_proof=dict(GOOD_PROOF, runner_exit=1))), 'S6')
@@ -659,6 +663,121 @@ check('S6   CONTROL a COMPLETED carrying a real proof is ACCEPTED',
                                              report_fresh_proof=dict(GOOD_PROOF))),
       str(S.validate_transition(J(*SPINE), L('COMPLETED', at='2026-08-02T00:05:00Z',
                                              report_fresh_proof=dict(GOOD_PROOF)))))
+
+_proof_root = tempfile.mkdtemp()
+try:
+    _report_abs = os.path.join(_proof_root, GOOD_PROOF['report_path'].replace('/', os.sep))
+    os.makedirs(os.path.dirname(_report_abs))
+    with io.open(_report_abs, 'w', encoding='utf-8') as _fh:
+        _fh.write('authoritative report')
+    _mtime_epoch = calendar.timegm((2026, 8, 2, 0, 5, 0))
+    os.utime(_report_abs, (_mtime_epoch, _mtime_epoch))
+    _sidecar_dir = os.path.join(_proof_root, 'factory', 'runs')
+    os.makedirs(_sidecar_dir)
+    with io.open(os.path.join(_sidecar_dir, RUN + '.a1.exit.json'), 'w', encoding='utf-8') as _fh:
+        json.dump({'run_id': RUN, 'attempt': 1, 'exit_code': 0}, _fh)
+    _source_journal = J(*SPINE)
+    _completed_line = L('COMPLETED', at='2026-08-02T00:06:00Z',
+                        report_fresh_proof=dict(GOOD_PROOF))
+    check('S6 AUTHORITY  normal completion binds intent, current sidecar and filesystem report',
+          not S.authoritative_completion_problems(_source_journal, _completed_line, _proof_root),
+          str(S.authoritative_completion_problems(_source_journal, _completed_line, _proof_root)))
+    _report_b = os.path.join(_proof_root, '_mt5_auto', 'reports', 'other.htm')
+    with io.open(_report_b, 'w', encoding='utf-8') as _fh:
+        _fh.write('other report')
+    os.utime(_report_b, (_mtime_epoch, _mtime_epoch))
+    _later_override_journal = J(*(SPINE + [
+        L('RUNNING', at='2026-08-02T00:04:30Z',
+          launch_intent_at='2026-08-02T00:03:00Z', report_path='_mt5_auto/reports/other.htm')
+    ]))
+    check('S6 AUTHORITY  later launch_intent_at override is refused',
+          bool(S.authoritative_completion_problems(
+              _later_override_journal, L('COMPLETED', at='2026-08-02T00:06:00Z',
+                                         report_fresh_proof=dict(GOOD_PROOF,
+                                                                 run_start='2026-08-02T00:03:00Z')),
+              _proof_root)),
+          'later transition supplied the apparent run_start authority')
+    check('S6 AUTHORITY  later report_path override is refused',
+          bool(S.authoritative_completion_problems(
+              _later_override_journal, L('COMPLETED', at='2026-08-02T00:06:00Z',
+                                         report_fresh_proof=dict(GOOD_PROOF,
+                                                                 report_path='_mt5_auto/reports/other.htm',
+                                                                 report_mtime='2026-08-02T00:05:00Z')),
+              _proof_root)),
+          'later transition supplied the apparent report identity')
+    check('S6 AUTHORITY  later run_start/report_path overrides consistently are refused',
+          bool(S.authoritative_completion_problems(
+              _later_override_journal, L('COMPLETED', at='2026-08-02T00:06:00Z',
+                                         report_fresh_proof=dict(GOOD_PROOF,
+                                                                 run_start='2026-08-02T00:03:00Z',
+                                                                 report_path='_mt5_auto/reports/other.htm')),
+              _proof_root)),
+          'internally consistent forged later fields must not become S6 authority')
+    check('S6 AUTHORITY  missing LAUNCH_INTENT fails closed',
+          bool(S.authoritative_completion_problems(
+              J(QUEUED_LINE, L('LEASED')),
+              L('COMPLETED', at='2026-08-02T00:06:00Z', report_fresh_proof=dict(GOOD_PROOF)),
+              _proof_root)),
+          'no current-attempt LAUNCH_INTENT was present')
+    _ambiguous_journal = J(*(SPINE + [
+        L('LAUNCH_INTENT', at='2026-08-02T00:04:30Z',
+          launch_intent_at='2026-08-02T00:02:00Z', report_path=GOOD_PROOF['report_path'])
+    ]))
+    check('S6 AUTHORITY  multiple LAUNCH_INTENT records fail closed',
+          bool(S.authoritative_completion_problems(
+              _ambiguous_journal, _completed_line, _proof_root)),
+          'multiple launch-intent records were silently collapsed')
+    for field, value in (('runner_exit', 3), ('report_path', '_mt5_auto/reports/other.htm'),
+                         ('report_mtime', '2026-08-02T00:06:00Z'),
+                         ('run_start', '2026-08-02T00:01:00Z')):
+        forged = L('COMPLETED', at='2026-08-02T00:06:00Z',
+                   report_fresh_proof=dict(GOOD_PROOF, **{field: value}))
+        check('S6 AUTHORITY  forged %-12s is refused against authoritative sources' % field,
+              bool(S.authoritative_completion_problems(_source_journal, forged, _proof_root)),
+              str(S.authoritative_completion_problems(_source_journal, forged, _proof_root)))
+    with io.open(os.path.join(_sidecar_dir, RUN + '.a1.exit.json'), 'w', encoding='utf-8') as _fh:
+        json.dump({'run_id': RUN, 'attempt': 2, 'exit_code': 0}, _fh)
+    check('S6 AUTHORITY  an exit sidecar from another attempt is refused',
+          bool(S.authoritative_completion_problems(_source_journal, _completed_line, _proof_root)),
+          str(S.authoritative_completion_problems(_source_journal, _completed_line, _proof_root)))
+    with io.open(os.path.join(_sidecar_dir, RUN + '.a1.exit.json'), 'w', encoding='utf-8') as _fh:
+        json.dump({'run_id': RUN, 'attempt': 1, 'exit_code': 0}, _fh)
+    _prestart_epoch = calendar.timegm((2026, 8, 2, 0, 1, 0))
+    os.utime(_report_abs, (_prestart_epoch, _prestart_epoch))
+    _prestart_line = L('COMPLETED', at='2026-08-02T00:06:00Z',
+                       report_fresh_proof=dict(GOOD_PROOF, report_mtime='2026-08-02T00:01:00Z'))
+    check('S6 AUTHORITY  a real pre-start report is refused',
+          bool(S.authoritative_completion_problems(_source_journal, _prestart_line, _proof_root)),
+          str(S.authoritative_completion_problems(_source_journal, _prestart_line, _proof_root)))
+    os.remove(_report_abs)
+    check('S6 AUTHORITY  a missing report is refused',
+          bool(S.authoritative_completion_problems(_source_journal, _completed_line, _proof_root)),
+          str(S.authoritative_completion_problems(_source_journal, _completed_line, _proof_root)))
+finally:
+    import shutil
+    shutil.rmtree(_proof_root, ignore_errors=True)
+
+# --- DISPATCH BOUNDARY: the persisted key owns identity, not the mutable KeyFile ----------------
+NAMED.add('DISPATCH_KEY')
+_dispatch_key = dict(BASE_KEY, terminal_build=6091)
+_dispatch_journal = J(dict(L('QUEUED', at='2026-08-02T00:00:00Z'),
+                           execution_key=_dispatch_key))
+check('DISPATCH_KEY R1 KeyFile build mismatch is refused before launch',
+      bool(S.dispatch_key_problems(_dispatch_journal, dict(_dispatch_key, terminal_build=6090),
+                                   resolved_terminal_build=6090)),
+      'external terminal_build matched the executable but not the persisted key')
+check('DISPATCH_KEY R2 non-build KeyFile mutation is refused before launch',
+      bool(S.dispatch_key_problems(_dispatch_journal, dict(_dispatch_key, symbol='EURUSD'),
+                                   resolved_terminal_build=6091)),
+      'only terminal_build equality would have missed the mutation')
+check('DISPATCH_KEY R3 exact KeyFile and persisted key with matching build are accepted',
+      not S.dispatch_key_problems(_dispatch_journal, dict(_dispatch_key),
+                                  resolved_terminal_build=6091),
+      'the normal dispatch gate refused an exact match')
+check('DISPATCH_KEY R4 actual executable build mismatch is refused against persisted key',
+      bool(S.dispatch_key_problems(_dispatch_journal, dict(_dispatch_key),
+                                   resolved_terminal_build=6090)),
+      'the executable fact disagreed with the persisted terminal_build')
 
 refuses('FAILED with no failure_class',
         S.validate_transition(J(*SPINE), L('FAILED', at='2026-08-02T00:05:00Z')), 'S7')
@@ -708,21 +827,20 @@ check('IDENTICAL_RERUN  CRITERION 3  and the CACHED EVIDENCE is returned in its 
 # RUN-20260802-002 -- which holds EVIDENCE, and whose refusal the S9 ledger records returning
 # `evd_sha256_90c1f032...` -- returned QUEUED. Four cases, because the obvious fix (count them and
 # say so) passes three of them while leaving the lane just as spendable.
-LEGACY_KEY = dict(BASE_KEY, ini_hash='b' * 64)          # the shape the store actually holds
+LEGACY_KEY = dict((k, v) for k, v in BASE_KEY.items()
+                  if k not in ('account_unit', 'terminal_build'))
+LEGACY_KEY['ini_hash'] = 'b' * 64                       # the exact historical persisted shape
 prior_legacy = {'RUN-20260801-003': _journal_for(LEGACY_KEY,
                                                  ['COMPLETED', 'EVIDENCE_REGISTERED'],
                                                  'RUN-20260801-003')}
 
-# (1) THE RESTORATION, and this is the case that proves the fix rather than the noise: a key
-#     written in the OLD shape must still BLOCK a re-queue in the NEW shape, and hand back the
-#     evidence. An implementation that only reported would fail exactly here.
+# (1) Historical rows remain readable, but their unit/build are unknown. They must never block a
+#     new USD/CENT-aware key or hand historical evidence to it.
 dec_l = S.queue_decision(prior_legacy, BASE_KEY, CELL, '2026-08-02T00:00:00Z', RUN)
-check('CRITERION 3  a prior run stored in the PRE-decision 15-field shape still BLOCKS, and '
-      'returns its cached evidence',
-      dec_l['action'] == 'REFUSE' and dec_l.get('code') == 'IDENTICAL_RERUN'
-      and dec_l.get('cached_run') == 'RUN-20260801-003' and dec_l.get('cached_event_id'),
+check('LEGACY KEY  a prior unit/build-unknown row remains readable but cannot satisfy a new key',
+      dec_l['action'] == 'QUEUED' and not dec_l.get('cached_run'),
       str(dec_l))
-check('CRITERION 3  ...and the answer REPORTS that a legacy key was rewritten to be read -- a '
+check('LEGACY KEY  the established ini_hash migration remains observable while reading history -- a '
       'migration that fires invisibly is one nobody can audit',
       dec_l.get('migrated_prior') == ['RUN-20260801-003:ini_hash'], str(dec_l))
 
@@ -748,8 +866,7 @@ check('UNCOMPARABLE_PRIOR  CRITERION 3  a stored key missing a required field is
       'not narrowed to the fields it happens to have',
       dec_s['action'] == 'REFUSE' and dec_s.get('code') == 'UNCOMPARABLE_PRIOR', str(dec_s))
 
-# (4) CONTROL. The refusal must not be "any store with an old-shaped run is now unqueueable":
-#     a DIFFERENT configuration, with the legacy run present and readable, still queues.
+# (4) CONTROL. A different new configuration also queues with readable history present.
 dec_c = S.queue_decision(prior_legacy, dict(BASE_KEY, symbol='EURUSD'), CELL,
                          '2026-08-02T00:00:00Z', RUN)
 check('CRITERION 3  CONTROL a different configuration still QUEUES with a legacy-shaped run in '
@@ -767,16 +884,22 @@ dec2 = S.queue_decision(prior_failed, BASE_KEY, CELL, '2026-08-02T00:00:00Z', RU
 check('CRITERION 3  a re-run after a TESTER_ERROR is ALLOWED (decision 18\'s one exception)',
       dec2['action'] == 'QUEUED', str(dec2))
 
-# THE REASON ExecutionKey IS 15 FIELDS WIDE, made a test rather than a comment: rev 1 omitted
-# deposit/currency/leverage, so these two runs would have shared a key and the cache would have
-# served the wrong evidence.
-for field, other in (('deposit', 100000), ('leverage', 200), ('currency', 'EUR'),
+# Every new ExecutionKey dimension is made a test rather than a comment: omission would let the cache
+# serve the wrong evidence.
+for field, other in (('deposit', 100000), ('leverage', 200), ('account_unit', 'CENT'),
+                     ('terminal_build', 6091),
                      ('data_fingerprint', 'lane1|XAUUSD|H1|2020.01.01|2020.06.01|1'),
                      ('lane', 'lane2'), ('effective_config_hash', 'f' * 64)):
     d = S.queue_decision(prior_done, dict(BASE_KEY, **{field: other}), CELL,
                          '2026-08-02T00:00:00Z', RUN)
     check('CRITERION 3  a run differing only in %-22s is NOT served the cached evidence' % field,
           d['action'] == 'QUEUED', str(d))
+prior_cent = {'RUN-20260801-008': _journal_for(dict(BASE_KEY, account_unit='CENT'),
+                                                ['COMPLETED', 'EVIDENCE_REGISTERED'],
+                                                'RUN-20260801-008')}
+d = S.queue_decision(prior_cent, BASE_KEY, CELL, '2026-08-02T00:00:00Z', RUN)
+check('ACCOUNT UNIT  USD lookup cannot reuse otherwise-identical CENT evidence',
+      d['action'] == 'QUEUED', str(d))
 
 # The two dispositions that are NOT "this already succeeded" and still must block, because
 # decision 18's exception is a whitelist of two failure classes and not "anything that is not a
@@ -821,6 +944,15 @@ d = S.queue_decision({}, dict((k, v) for k, v in BASE_KEY.items() if k != 'lane'
                      '2026-08-02T00:00:00Z', RUN)
 check('MALFORMED_KEY    a key that is not the contract is refused rather than digested',
       d['action'] == 'REFUSE' and d['code'] == 'MALFORMED_KEY', str(d))
+for field, value in (('currency', 'EUR'), ('account_unit', 'MILLI'), ('terminal_build', '6090')):
+    d = S.queue_decision({}, dict(BASE_KEY, **{field: value}), CELL, '2026-08-02T00:00:00Z', RUN)
+    check('MALFORMED_KEY    invalid %-14s is refused before it can queue or launch' % field,
+          d['action'] == 'REFUSE' and d['code'] == 'MALFORMED_KEY', str(d))
+for field in ('account_unit', 'terminal_build'):
+    d = S.queue_decision({}, dict((k, v) for k, v in BASE_KEY.items() if k != field), CELL,
+                         '2026-08-02T00:00:00Z', RUN)
+    check('MALFORMED_KEY    missing new %-10s is refused' % field,
+          d['action'] == 'REFUSE' and d['code'] == 'MALFORMED_KEY', str(d))
 
 # --- CRITERION 4: cross-lane, and the lane lease ------------------------------------------------
 NAMED.add('CROSS_LANE')
@@ -1016,6 +1148,26 @@ else:
           (handled - {'ADOPT_PROCESS'}) != set(S.ACTIONS))
     check('the dispatcher gates its report read through the shared freshness guard',
           'Test-ReportIsFresh' in disp)
+    check('TERMINAL BUILD  FileVersion 5.0.0.6090 normalizes to numeric build 6090',
+          re.match(r'^\d+\.\d+\.\d+\.(\d+)$', '5.0.0.6090').group(1) == '6090'
+          and 'Get-TerminalBuildFromFileVersion' in disp
+          and 'FileVersionInfo]::GetVersionInfo' in disp)
+    check('TERMINAL BUILD  missing or malformed FileVersion fails closed before dispatch',
+          "if ($FileVersion -notmatch '^\\d+\\.\\d+\\.\\d+\\.(\\d+)$')" in disp)
+    check('DISPATCH KEY  dispatcher validates KeyFile against persisted journal identity',
+          'dispatch-key' in disp and 'dispatch key is not authoritative' in disp
+          and '$key = $dispatch.execution_key' in disp)
+    check('TERMINAL BUILD  dispatcher checks the resolved executable against persisted identity',
+          'terminal-build=$resolvedTerminalBuild' in disp
+          and '$dispatch.execution_key' in disp)
+    check('CURRENCY  dispatcher and mt5 runner use the named frozen USD contract',
+          "$FrozenTesterCurrency = 'USD'" in disp
+          and 'Currency=$FrozenTesterCurrency' in io.open(os.path.join(ROOT, 'scripts', 'mt5_run.ps1'),
+                                                           encoding='utf-8-sig').read())
+    check('S6 AUTHORITY  completion proof is rebuilt from current intent, sidecar and report before append',
+          'Get-AuthoritativeCompletionProof' in disp
+          and 'planner completion proof $name disagrees with authoritative observation' in disp
+          and 'run_id = $Run; attempt = $Attempt; exit_code = $code' in disp)
     # 🔴 /scrutinize round 1. Two dispatcher-only defects the pure cage CANNOT see, because it
     # models the design rather than the PowerShell: the observation layer is not driven by
     # scheduler.py, so a permissive default inside it is invisible to all 256 recoveries.

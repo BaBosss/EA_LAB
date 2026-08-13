@@ -11894,3 +11894,650 @@ The historical runtime artifact for account `415573666`, magic `990208`, and `Bo
 Runtime Identity and build receipts bind future runs prospectively. The formal Build-6090 historical provenance gate cannot run on this integration lineage because the requisite historic source Git objects are unavailable; this is not acceptance of historical Build-6090 provenance. No new identity mechanism, runtime/config implementation, tester run, or historical evidence round is required for ORDER-1050.
 
 **Lifecycle disposition:** `HISTORICALLY_UNRESOLVABLE` ? closed after lifecycle binding; unresolved historical evidence is preserved as a limitation, not treated as a green validation result.
+## ORDER-1330 — [factory/S13] The same configuration produced different money on two different days, and both identity fields the pipeline records said it was the same run — `REVIEWED(user-supplied canonical inventory, 2026-08-13): CANONICAL / DONE` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> Opened 2026-08-04 by lane `S-2026-08-04-S13F` while auditing its own `ORDER-1273` step-6 work.
+> **Nothing was adjusted to fit and no verdict follows from it** — this is a measurement about the
+> evidence pipeline, not about either hypothesis.
+
+### 🔬 UNSOUGHT REPRODUCTION 2026-08-05 — a different symbol, a different order, not looking for this
+
+Found by `ORDER-236 STEP 3 STAGE 2`, which re-ran the `B14_AB_off.set` CTRL on **EURJPY H1** and
+compared it to the same file's run on the same lane the previous day. **PF, trade count and the
+`.set` are identical; the money is not:**
+
+| window | PF | trades | net 2026-08-04 | net 2026-08-05 | Δ |
+|---|---|---|---|---|---|
+| MAIN | 1.82 | 184 | +2344.20 | **+2353.69** | **+9.49** |
+| BWD | 1.06 | 498 | +567.24 | **+599.32** | **+32.08** |
+
+**Why this is worth adding rather than noting in passing.** Every prior instance was on **BTCUSD H4**
+under `pilot_cells.ps1`, which left open the reading that it was a crypto-financing artefact of one
+pipeline. This is **EURJPY H1**, driven by `mt5_run.ps1` from a completely different order, by a lane
+that did not know it was going to find it. ⇒ the effect is **not** confined to crypto and **not**
+confined to the pilot pipeline — which is consistent with the swap mechanism `item 3` named, and
+inconsistent with the narrower explanations.
+
+⚠️ Also note the direction: **both windows moved UP over one day**, and the larger move is on the
+window with 2.7× the trades. Nothing here establishes proportionality — two windows is not a
+measurement — but if a later lane tests the swap hypothesis, *net drift scaling with position-days
+held* is the shape to test against.
+🚫 Items 1 and 2 of this row remain owed and this does not touch them. `ORDER-236`'s conclusions do
+not depend on the nets, only on PF and trade counts, both of which reproduced exactly.
+
+**The measurement.** `B14-H01-r1/BTCUSD/H4`, baseline arm, re-run through `scripts/pilot_cells.ps1`:
+
+| field | 2026-08-03 | 2026-08-04 (twice) |
+|---|---|---|
+| `pf` | 1.18 | 1.18 |
+| `trades` / long / short | 55 / 55 / 0 | 55 / 55 / 0 |
+| `net_profit` | **332.50** | **324.75** (−2.3 %) |
+| `gross_loss` | **−1838.85** | **−1850.78** |
+| `dd_pct` | **15.12** | **15.22** |
+
+**Everything that is supposed to identify a run was identical**, and each was checked rather than
+assumed: `effective_config_hash` `833394aa…`, `data_fingerprint` `c69ca500…`, the tracked `.set`
+unmodified since `080de7c0`, the wrapper `.ex5` mtime `2026-08-02 13:59`, `terminal64.exe` and
+`metatester64.exe` both `2026-07-25`, `bars`/`ticks` `6417`/`6035574`, and no commit touching
+`ea_template/` since `2026-08-03`.
+
+🔴 **It is NOT run-to-run noise, and that is the part that makes it actionable.** The two 2026-08-04
+runs are **byte-identical to each other** on every numeric field, and the two `ORDER-1273` step-6
+verification runs likewise reproduced exactly when re-run the same session. **Same session
+reproducible; across sessions not.** So a re-run inside one session is a copy, not an independent
+sample — and the usual "just run it again" does not measure this.
+
+**The design already named the missing piece.** §6.4 defines `data_fingerprint` as
+`hash(lane · symbol · tf · from · to · model · bars · ticks · server · Bases\ state marker)`, and
+`Get-PilotDataFingerprint` in `scripts/lib/pilot_run.ps1` says in its own comment that the `Bases\`
+marker **is not computed by anything in this repo**. This is the first measured case where that
+omission is the only thing that could have told two differently-numbered runs apart.
+
+**Why it is not fixed in the lane that found it.** Changing the fingerprint recipe invalidates every
+fingerprint already recorded across the whole pilot corpus, so it is a design decision with a
+migration attached, not a repair. 🚫 Do not quietly start hashing the `Bases\` marker into
+`Get-PilotDataFingerprint` — that silently reclassifies every existing record as un-comparable.
+
+**What it costs, concretely, right now:** `ORDER-1254` runs BWD on one day and compares it against
+MAIN measured on another. At ±2.3 % on net profit, **a marginal both-window comparison is inside the
+noise and nothing in the record says so.** The BWD numbers this lane produced (H01 `PF 0.76`,
+H02 `PF 1.61`) are far enough from `1.0` that the ordering does not change — but that is luck, and
+the next cell need not be.
+
+**Owed:**
+1. Decide whether `data_fingerprint` gains the `Bases\` marker (and what happens to existing rows),
+   or whether the design text drops a component nothing computes. **The two texts must stop
+   disagreeing** — same shape of debt as `ORDER-1300` owes §6.2.
+   👤 **RULED 2026-08-06** (TH: *"เพิ่ม symbol-spec เข้าสูตร + migrate"*) — **and the ruling
+   supersedes the question as asked.** `item 3` had already found that the missing component is not
+   a `Bases\` marker but the **symbol specification in force at run time**; a `Bases\` marker would
+   have separated nothing. 🟡 **PARTIALLY EXECUTED — see `§ITEM-1` below. The mechanism is in and
+   proved; the content it needs is blocked, and the migration is blocked on an attestation.**
+2. Until then, every record that carries a cross-session comparison should say that ±2–3 % on money
+   is inside measured session-to-session variation for this engine.
+   ✅ **DONE 2026-08-06** — the sentence is written below as `§ITEM-2`, with the range corrected
+   from the ±2–3 % first estimate to what was actually measured, and with a new observation that
+   changes what it should say.
+3. Reproduce it on a second cell before generalising: **one cell, one pair of days** is what has
+   actually been measured (memory `phantom-regression-from-two-single-samples` — the two 08-04
+   samples are what stop this being that mistake, but the 08-03 side is still a single sample).
+
+Evidence: `factory/runs/pilot/pilot_cells_MAIN_lot0p03_20260803_123147.jsonl` (08-03) vs
+`…_20260804_081932.jsonl` and `…_20260804_082029.jsonl` (08-04, both committed).
+
+---
+
+### ✅ `§ITEM-2` — the sentence every cross-session comparison must carry (2026-08-06, lane `S-2026-08-06-CLEARALL`)
+
+> 🔴 **Money is not a comparison surface across sessions on this engine.** A byte-identical
+> configuration re-run on a different day has been measured returning a different `net_profit`,
+> `gross_loss` and `dd_pct` while `pf` and `trades` reproduced exactly. **The measured spread is
+> `0.5 %` to a PF crossing `1.0`** — not the `±2–3 %` this row first estimated from its opening pair.
+> **Compare `pf`, `trades` and drawdown; state the nets, do not conclude from them.** The mechanism
+> is named (`ORDER-1350`: the tester charges the broker's *current* financing, which no record
+> carries) and nothing in `data_fingerprint` can currently tell two such runs apart.
+
+**Copy that block verbatim into any record that puts two sessions' money side by side.** It is
+written once here so it cannot drift into several differently-wrong paraphrases.
+
+---
+
+### 🟡 `§ITEM-1` — the versioning and the refusal are IN; the swap values are NOT, and the difference is the point
+
+**What landed** (`scripts/lib/pilot_run.ps1`, cage `scripts/_test/run_pilot_fingerprint_tests.ps1`):
+
+| value | means |
+|---|---|
+| `<sha>` bare | **v1** — the nine existing parts, **byte-for-byte what the function returned before this change.** The 135 committed rows are v1 and stay valid untouched |
+| `v2:<sha>` | the nine parts **plus** `swap_long`, `swap_short`, `swap_mode` |
+
+#### 🔴 CORRECTED 2026-08-06 by `/scrutinize`, before anything ran on it — the first version changed the digest it claimed only to label
+
+The first attempt emitted **`v1:<sha>`** and folded `fpver=v1` into the preimage. **That made the v1
+digest of an unchanged run differ from the digest the same run had always produced** — measured
+directly: `10a7f939…` became `6bdf17b5…` for identical inputs.
+
+**Why that is a defect and not a cosmetic choice:** `data_fingerprint` is a member of
+`scheduler.py:83`'s `EXECUTION_KEY_FIELDS`, which feeds `find_cached`. **All 135 committed rows would
+have stopped matching, and the pilot would have silently re-run cells it already had** — paid in MT5
+hours, bought for nothing, because no `v2` can be produced until `ORDER-1350` wires a per-run probe.
+The commit message for `db13175a` claimed the change "fails toward re-running, which is the safe
+direction"; **that was true and beside the point — the re-running had no upside to pay for it.**
+
+⇒ **v1 is now the status quo and says so by being it.** A version tag must not change the thing it
+labels. The invented third state `legacy` is gone too: a bare digest *is* v1, since the recipe is
+identical, and calling it something else would have made every committed row look incomparable to
+new rows computed the same way.
+<sub>The cage now carries this as a **regression guard**: it recomputes the nine-part digest
+independently of the function and asserts equality, so the mistake cannot return silently. Plus a
+specificity case — a committed bare row vs a new v1 row must still be **comparable**. 15/15.</sub>
+
+- `Get-PilotDataFingerprint -SymbolSpec` is optional; **a PARTIAL spec is refused by name** rather
+  than hashed, because a missing field folded in as empty is indistinguishable from a broker
+  genuinely reporting one — the exact confusion this row exists to remove.
+- `Get-PilotFingerprintVersion` **refuses** an unreadable value instead of classifying it
+  (memory `unreadable-input-must-refuse-not-skip`).
+- `Assert-PilotFingerprintComparable` **refuses** a cross-version comparison — the owner's ruling —
+  because *"not equal"* between a v1 and a v2 digest means *different recipe*, not *different data*.
+- The version is inside the **preimage** as well as the prefix, so a stripped tag cannot collide.
+
+**Cage: 13 cases, all green, and it includes its own specificity** — a changed swap rate must move
+the digest (or the change is decoration), a partial spec must refuse, a legacy-vs-v2 comparison must
+refuse, **and a same-version comparison must still be ALLOWED**. A guard that refuses everything
+discriminates nothing.
+🔴 **Not wired into the fast tier — and `/scrutinize` found the gap is older and wider than "my new
+cage isn't registered yet".** Measured: **`scripts/lib/pilot_run.ps1` appears in neither
+`.githooks/fast_tier_pathspec` nor any `$SUITE_GUARDS` entry in `run_fast_cages.ps1`.** So the file
+that computes every pilot fingerprint **has had no cage on the commit path at all**, before this
+change and after it. Adding a `$SUITE_GUARDS` key requires the pathspec and
+`run_guard_trigger_tests.ps1` to move together, so it is owed rather than half-done here — but the
+thing to fix is the *file's* coverage, not just this cage's registration.
+<sub>✅ **Closed 2026-08-06** — see `§ITEM-1` **Owed item 1** below. The paragraph above is kept
+because its measurement is the reason the fix is scoped to the FILE and not to the cage.</sub>
+
+#### 🔴 Blocker A — nothing captures the swap spec, so no `v2` fingerprint can actually be produced yet
+
+`Get-PilotDataFingerprint` builds from `$Ctx` and `$Metrics`, and **`$Metrics` comes from the MT5
+report, which does not carry swap.** The only thing in this repo that reads the real properties is
+`ea_projects/(TST)_SymbolSwapProbe`, whose single output
+(`factory/runs/pilot/swap_probe/swap_probe_20260804.jsonl`) is **one dated probe with no `run_id`
+and no `data_fingerprint`**, so it joins to nothing.
+⚠️ **The pipeline's `financing_deducted` is NOT a substitute** — it is built from the hardcoded
+`$CryptoRateLong = 14.67` / `$CryptoRateShort = 0.49` in `pilot_cells.ps1:78-80`, i.e. **our
+assumption, not the broker's rate.** Hashing those would fingerprint what we believed, which is
+precisely the failure that produced this row.
+⇒ Every run today emits **`v1`**, honestly. **Wiring the probe per-run is `ORDER-1350`'s to own**,
+and this row now has a slot ready for its output the moment it exists.
+<sub>Deliberately NOT done: emitting `v2` from the hardcoded constants to make the field look
+populated. That would satisfy the ruling's letter and reintroduce its cause.</sub>
+
+#### 🔴 Blocker B — the migration of the 135 committed rows touches an attestation-pinned file
+
+The owner's ruling says re-stamp existing rows as `legacy-v1` (not delete, not re-run). **135 rows
+carry a `data_fingerprint`**, and **16 of them are in `factory/coverage.jsonl`, which is named in
+`_triage/factory_os/s2a_attestations.jsonl`** — a file this lane is prohibited from touching and
+whose approval pins content. Rewriting those rows without the owner is not available.
+
+**⇒ It also turns out not to be needed, and that is a better outcome than the migration.** Bare
+digests are classified `legacy` and every comparison against one **refuses**, so the guarantee the
+re-stamp was for is already in force **without rewriting a byte of committed evidence.** The
+remaining value of an explicit re-stamp is that `legacy` would stop being inferred from a value's
+*shape* — which is a real objection (`ledger-cell-is-prose-and-parser-input`), just not an urgent one.
+👤 **Owner's to schedule, not this lane's to force.**
+
+#### Owed, precisely
+
+1. Wire the cage into the fast tier (`fast_tier_pathspec` + `$SUITE_GUARDS` + trigger tests together).
+2. **A `pattern` on `data_fingerprint` in `schemas.json` — attempted and REVERTED this session.**
+   `^(v[0-9]+:)?[0-9a-f]{64}$` reddens **11 fixtures** that use filler values (`"f1"`, `"df1"`,
+   `"f"`). 🎯 **That is the finding, not the obstacle:** the field has no pattern *because* nothing
+   ever had to produce a real one, so the schema cannot currently reject a fingerprint that is not a
+   fingerprint (memory `fixture-of-filler-values-cannot-test-resolution`). Fixing the fixtures is the
+   work; relaxing the pattern to fit them would be the mistake.
+3. The `$Ctx`/`$Metrics` plumbing to pass a spec through `pilot_cells.ps1` and
+   `pilot_verify_selected.ps1` — trivial once Blocker A has something to pass.
+
+#### 🔴 BOTH ITEMS BELOW ARE DONE AND **UNCOMMITTED** — the commit is REFUSED by `ORDER-1462`
+
+**This work exists only in the working tree.** Five files: `_triage/factory_os/schemas.json` ·
+`_triage/factory_os/run_schema_fixtures.py` · `_triage/factory_os/CONTRACTS.md` ·
+`scripts/_test/run_fast_cages.ps1` · `.githooks/fast_tier_pathspec`. A copy of the diff is at
+`…\scratchpad\ORDER-1330_blocked_by_1462.patch` so nothing is lost if the tree is swept.
+
+**The reproduction, since `ORDER-1462` describes this consequence but nobody had hit it yet.** Staging
+those five selects **10 of 30** suites, one of which is `run_s2a_cages.ps1`, which fails on the
+unmade attestation. Everything else in that suite is green — all nine machine criteria, 32/32
+mutations, every negative and every control — and the one failure is:
+
+```
+F1 line 10 attests bundle e28c5c9d68bb but the current bundle is 2ce1ea874449
+```
+
+⇒ `[pre-commit] REJECTED`. **None of the five files is an s2a bundle member** (`BUNDLE` is six paths
+and `schemas.json` is not among them); they merely *select* the suite. 🚫 Not landed with
+`--no-verify`: bypassing is the owner's call, and the ledger row for this lane forbids it.
+
+📌 **Splitting the commit does not help, and that was checked rather than assumed:** every suite
+implicitly guards `run_fast_cages.ps1` and the hooks, so the wiring half selects everything including
+`run_s2a_cages.ps1`, and the schema half selects it directly. **The board and ledger commits are
+unaffected** (`AGENT_TASKBOARD.md` selects `run_front_guard_evidence_tests.ps1` only), which is why
+this record could land while the work it describes could not.
+
+**To land it after the attestation:** `git add` those five paths and commit — nothing else is needed,
+and the tier was already measured green apart from the s2a suite.
+
+#### ✅ `§ITEM-1` **Owed item 1** DONE 2026-08-06 (lane `S-2026-08-06-OWED`) — the FILE's coverage, not just this cage's registration
+
+<sub>📌 Numbering, because this row has two lists that both start at 1: these two headings close
+**"Owed, precisely" items 1 and 2 inside `§ITEM-1`** (wire the cage · the schema pattern). They are
+NOT `§ITEM-1` and `§ITEM-2` of the row itself. `§ITEM-1` stays **PARTIAL** — its owed item 3, the
+`$Ctx`/`$Metrics` plumbing, is still blocked on Blocker A, and no `v2` can be produced until
+`ORDER-1350` wires a per-run swap probe.</sub>
+
+All three moved together, which is what this item said was required: `$SUITE_GUARDS` gained
+`'run_pilot_fingerprint_tests.ps1' = @('scripts/lib/pilot_run.ps1')`, `$FAST_SUITES` gained the suite,
+and `.githooks/fast_tier_pathspec` was **regenerated** by `scripts/gen_fast_tier_pathspec.ps1` (it is
+derived from the table, not hand-edited) — one line added, `scripts/lib/pilot_run.ps1`.
+`run_guard_trigger_tests.ps1` **all parts green**, including PART 4's undeclared-reference sweep.
+
+**Proven by selection, not by inspection.** Staging `scripts/lib/pilot_run.ps1` now selects
+**`run_pilot_fingerprint_tests.ps1`** (with `run_report_freshness_tests.ps1`, which declares
+`scripts/*.ps1`), against a control of `docs/SESSION_LEDGER.md` selecting exactly **1**. At HEAD the
+same file appeared **0 times** in the pathspec and **0 times** anywhere in `run_fast_cages.ps1` — so
+the hook did not merely pick the wrong suites for it, it **never ran the tier at all**.
+
+**The tier, measured with `-Hook` on a lane with no MT5 run in flight** (quote the invocation —
+memory `tier-number-needs-its-invocation`):
+
+| | samples | suites | median | headroom of the pinned 120.0s |
+|---|---|---|---|---|
+| before | 109.2 / 109.1 / 109.0 | 29 | **109.1s** | 10.9s |
+| after | 110.1 / 110.1 / 110.0 | 30 | **110.1s** | 9.9s |
+
+The suite's own line reads **0.3s** and the tier moved **1.0s**; the difference is process startup and
+is stated rather than glossed, because both spreads are 0.2s so 1.0s is outside the noise.
+⚠️ **The tier is RED in all six samples and it is not this suite** — `run_s2a_cages.ps1` fails on
+`ORDER-1462`, which only the owner can clear. The comparison is still sound (the same one suite fails
+either side, in 6.7s, without short-circuiting the run) but **no green tier is claimed here.**
+
+#### ✅ `§ITEM-1` **Owed item 2** DONE 2026-08-06 (lane `S-2026-08-06-OWED`) — the pattern is in, and the fixtures were fixed rather than the rule
+
+`^(v[0-9]+:)?[0-9a-f]{64}$` is now on `data_fingerprint` at **both** sites in `schemas.json` —
+`MetricRef` and `ExecutionKey`. **The pattern was not relaxed to fit the fixtures; the fixtures were
+made to carry fingerprints.** `"df1"` / `"f1"` / `"f"` became `DF64`, a real 64-hex constant kept
+deliberately distinct from `H64` so a swap shows up in a diff instead of two identical strings
+agreeing with each other.
+
+🎯 **The finding held up exactly as this row predicted it would:** the field had no pattern *because*
+nothing in the test corpus ever had to produce a real one, so the contract could not tell a
+fingerprint from a label. Ten fixture cases went red the moment the rule was real — and one of them,
+`metricref-core-negative`, was a NEGATIVE that still failed while failing **for the wrong reason**,
+which the `says` harness caught and a bare pass/fail would not have.
+
+**Three cases added, because a pattern with no negative is decoration:**
+- `metricref-data-fingerprint-must-be-a-fingerprint` — `"df1"`, the value every fixture here carried
+  until today, is now REFUSED with `keyword: pattern` at the field.
+- `executionkey-data-fingerprint-must-be-a-fingerprint` — the same rule at the other site, and the
+  costlier one: `data_fingerprint` is in `scheduler.py`'s `EXECUTION_KEY_FIELDS`, so a placeholder
+  there does not merely fail to identify a run, it decides what `find_cached` calls already-executed.
+- `metricref-data-fingerprint-versioned-form-is-accepted` — **the specificity case.** `v1` is a bare
+  digest and `vN:` prefixes the recipe version, so a pattern taking only the bare form would refuse
+  every fingerprint the versioning above was added to make possible.
+
+`run_schema_fixtures.py` **112/112** (41 root + 71 per-entity), `HEADER_COUNTS` moved with it, and
+`CONTRACTS.md` regenerated so the schema cages stay green. 📌 **The 250 LIVE registry rows validated
+without a single change.**
+
+🔴 **CORRECTION 2026-08-06 (`/scrutinize`, lane `S-2026-08-06-SCRUT2`) — the sentence that stood here
+said "the real corpus already conformed; only the test corpus did not", and that is FALSE.** What was
+measured is that the **five stores `registry.STORES` names** conformed. `factory/runs/*.jsonl` is not
+one of them, and **three committed rows there carry a `data_fingerprint` that is not a hash at all**:
+
+```
+"data_fingerprint":"D:\\Meta 5|XAUUSD|H1|2024.01.02|2024.01.16|M1"
+```
+
+— the **unhashed preimage**, 45 characters, in `RUN-20260802-001` / `-002` / `-004`. ⇒ **The strongest
+evidence for this item's own thesis was sitting in committed evidence the whole time**, and it took a
+review to look. **Generalising "the validated corpus passed" to "the corpus passed" is the error
+here**; the store was never validated by anything. → **`ORDER-1500`.**
+
+#### 🔬 A new observation from today that changes the shape of the claim — the drift is not per-day
+
+`ORDER-236 STAGE 3` re-ran the same EURJPY H1 CTRL again on **2026-08-06**, a third consecutive day,
+on the **fresh `EALabTpl` binary** rather than the stale lane-root one:
+
+| date | PF | trades | eqDD% | net | Δ net vs previous day |
+|---|---|---|---|---|---|
+| 2026-08-04 | 1.82 | 184 | 7.12 | +2344.20 | — |
+| 2026-08-05 | 1.82 | 184 | 7.12 | +2353.69 | **+9.49** |
+| **2026-08-06** | **1.82** | **184** | **7.12** | **+2353.69** | **0.00 — exact** |
+
+⇒ **The drift is not a per-session tax.** Two runs a day apart reproduced to the cent, so "across
+sessions not reproducible" is too strong as a general statement: runs reproduce exactly **while the
+external state holds**, and the state moved once between 08-04 and 08-05 and has held for two days
+since. That matches the restatement `item 3` already made after the eight-cell reproduction, and it
+is now confirmed on a **different symbol, timeframe and pipeline** (`EURJPY H1` under `mt5_run.ps1`,
+not `BTCUSD H4` under `pilot_cells.ps1`).
+
+🎯 **The practical consequence, and it is the useful part:** an unexplained net difference is
+therefore **evidence that something external moved**, not noise to be averaged away. Averaging
+repeated runs would destroy exactly the signal worth having. **A record that cannot say which
+financing was in force cannot distinguish the two** — which is what `item 1` exists to fix.
+
+<sub>⚠️ Not claimed: that the binary swap (stale 152,178-byte lane-root build → fresh 178,300-byte
+`EALabTpl` build) is *irrelevant*. It is one run; the numbers landing identically is consistent with
+the chassis changes being behaviour-neutral for this configuration, and consistent with several other
+things. It is recorded as an observation, not as a parity result — a real parity claim needs the
+comparison run deliberately, both binaries, same day.</sub>
+
+### ✅ Item 3 executed — 2026-08-04, lane `S-2026-08-04-S13G`. Predictions committed before the run.
+
+Full write-up `_triage/ORDER-1330_reproduction_result_S13G.md`; predictions
+`_triage/ORDER-1330_reproduction_prereg_S13G.md` (`6953bfea`, committed **before** the runner
+started); records `factory/runs/pilot/pilot_cells_MAIN_lot0p03_20260804_11{0950,1101,1301,1509}.jsonl`.
+Eight H4 cells re-run on the identical invocation — MAIN · Model 1 · lot 0.03 · same lane.
+
+🔴 **All 8 differ from their 08-03 records, and in 3 of them the ENTIRE difference is the `Swap`
+column** (`/scrutinize` corrected this line from "5" — the per-cell recount is **3 swap-only** ·
+**3 with deal time/price/comment also moved** · **2 with a changed deal count**; the swap mechanism
+is proven on the first group and is not the whole story. ⚠️ `_2_BasketTP_BalPct` closes on a
+percentage of BALANCE, so a changed swap moves the exit tick — the second group is *consistent with*
+the same cause and is **not** demonstrated to be it). `H02/BTCUSD/H4`: swap **+15.28**, profit column identical
+to the cent, and +15.28 is exactly the change in net profit. `H01/EURUSD/H4`: swap **+204.78**,
+profit identical, **PF 0.62 → 1.06**. `H01/USDJPY/H4`: swap **+163.31**, profit identical, gross loss
+**−92.69 → −11.06**, **PF 12.46 → 111.77**. Three cells cross or move around a PF bar with **no
+configuration change of any kind**.
+
+**The mechanism, by elimination rather than by assumption.** The BTCUSD tick and 2026 history files
+were rewritten at 08:39 and 08:47 — *after* the 08:19/08:20 runs — and today's 11:09 run reproduced
+08:19 **byte-identically at deal level**, so current-year data updates are ruled out. What is left
+before 08:19 is `symbols-146237.dat` at **08:13:59**, the symbol-specification store, which is where
+swap rates live; the deal-level diff points at the same field independently. Meanwhile `D:\Meta 5\Bases`
+— the directory §6.4's marker names — **has not had one file modified since 2026-08-01**, so hashing
+it would have separated nothing. ⇒ **item 1's missing component is not a `Bases\` marker, it is the
+symbol specification in force at run time** (swap long/short + mode at minimum). Still not hashed in
+from this lane: that decision carries the migration item 1 already describes.
+
+**P1 restated with its evidence:** *"same session reproducible, across sessions not"* was too strong.
+Runs reproduce exactly while the external state holds — the state moved **once** between 08-03 12:31
+and 08-04 08:19 and has held across two sessions since. **P4 refuted in 2 of 8:** `H02/EURUSD/H4`
+(33 → 45 deals) and `H01/XAUUSD/H4` flat-lot (45 → 103) changed behaviour, both on symbols whose
+price history was also rewritten. **Two mechanisms, not one.**
+
+**Item 2 is now bigger than it was written:** the session-to-session move on these eight cells ranges
+from 0.5 % to a PF crossing 1.0, not ±2–3 %.
+
+---
+
+## ORDER-1251 — [factory/guards] `check_r3`'s verdict-value scan is an equality test, so prose walks past it — `REVIEWED(user-supplied canonical inventory, 2026-08-13): ALREADY_FIXED_NEEDS_ARCHIVE` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+`_triage/factory_os/check_registries.py:291` reads
+`if isinstance(v, str) and v.strip().upper() in FORBIDDEN_VERDICT_VALUES`. That fires only when a
+value is **exactly** a verdict word, so `"parked as a BUILD-ON until the optimize probe runs"` — a
+verdict, in a free-text field, in a registry store — passes R3 clean. Found while repairing the
+identical shape in `check_coverage_transfer.a3_native_rows` (`ORDER-1250` §2a), where a fixture
+demonstrated it rather than an argument.
+
+The **key** half one line above has the same shape but is not the same risk: a key is an
+identifier, so equality is the right test there.
+
+**Acceptance.** (1) A word-boundary search replaces the equality test for values. (2) A negative
+fixture in `run_registry_tests.py` plants a verdict word inside a sentence in a real store shape
+and requires R3 to catch it. (3) A **specificity** case proving an innocent description that merely
+contains a verdict word as a *fragment* is still accepted — the fix must not make the stores
+unwritable, which is how a guard earns an exemption list. (4) `VERDICT_VALUE_EXEMPTIONS` still
+excuses exactly what it excuses today (`coverage.jsonl` / `status` / `LIVE`) and no more — check
+the exemption is still reachable after the change, or it has become dead code asserting nothing.
+
+**Prohibited:** widening `FORBIDDEN_VERDICT_VALUES` to compensate · adding a substring exemption
+(memory `citation-guard-satisfied-by-a-universal-file`) · changing what the guard judges to make
+the new case pass.
+
+---
+
+## ORDER-944 — [ops/monitoring] A row that is not exactly `ACTIVE` is invisible to the Control Room, so "pending verify" silently means "unmonitored" — `REVIEWED(user-supplied canonical inventory, 2026-08-13): ALREADY_FIXED_NEEDS_ARCHIVE` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Found while closing `ORDER-940`'s item 3. `990026` sat at `ACTIVE-PENDING-VERIFY` from 2026-07-28,
+> and `control_room_snapshot.ps1` counts `status == ACTIVE` only ⇒ the row appeared in **no**
+> `judge_readiness`, **no** `deployments`, **no** attestation and **no** rate check. The status was
+> invented to mean *"attached, verification owed"*; what it actually did was **remove the EA from every
+> instrument that would have noticed the verification was still owed.** Same family as memory
+> `stale-detector-masked-by-advisory-label` and `guard-disarmed-by-prose-reported-as-note`.
+
+**Acceptance** — **D1** the snapshot treats every attached-and-trading status as in-scope and carries the
+verification state as its own field, so an unverified row is **loud, not absent** · **D2** a cage case
+that is RED first: a row in a pending state must appear in `judge_readiness` with its state named ·
+**D3** the closed set of statuses is declared in one place and an unknown status **fails**, never
+silently drops (`check_state.ps1` currently validates columns, not the status vocabulary).
+
+## ORDER-1410 — [factory/S2a] Audit 7 refused `ORDER-600` and `ORDER-601` **twice**, and nothing has been repaired — `REVIEWED(user-supplied canonical inventory, 2026-08-13): CANONICAL / DONE` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+**bars:** N-A (repair driven by a named report) · **flat-lot probe:** N-A
+
+**Why this exists as its own row:** audit 7 returned on **2026-07-30** (`caf9f18c`) and again independently
+on **2026-08-04** at a later HEAD. Both refused both orders. For five days the two rows read *awaiting an
+independent re-check* while the answer sat in the repository — **the audit was never the missing thing; an
+owner for its findings was.** This row is that owner.
+
+**Reports (read both — the second audited a later HEAD, it is not a copy):**
+`_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT7_2026-07-30.md` · `_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT7B_2026-08-04.md`
+
+**🔴 The finding that controls everything else — it is not a lint, it is the acceptance being empty:**
+a deliberately useless 27-row D1 — **26 false `UNOWNED` rows** plus the one real Coverage edge, every row
+`REFUSED`, all 32 non-LIVE coverage cells replaced with the bare string `"junk"`, one-character
+human-review fields — **passed all nine criteria and the checker exited 0.** `C4` separately accepted a
+valid hash belonging to the **wrong owner file**. 🚫 **Do not answer this by making the checkers green:**
+all four S2a commands already exit 0 at HEAD *while that input still passes*. Green is the symptom.
+
+**`ORDER-600` closure conditions, per the reports:** reject the combined useless-D1/`C8` construction ·
+separate owner sign-off from D1/checker/generator edits · implement `C6` as an owner-level decision ·
+replace the broad `UNOWNED` escape with owner-state semantics · correct or replace the four unsupported
+TRANSFER rationales.
+**`ORDER-601` closure conditions:** correct the three stale `all_clear` design statements · replace the
+seven false `x-enforced-by` claims with planned/built/wired enforcement status.
+
+**Codex's own read of the common mechanism, worth keeping:** *evidence is adjacent to the claim but not
+bound to the exact claim.* The next repair should make that binding explicit rather than adding prose
+around the existing fields.
+
+**ห้าม:** ปิดใบนี้ด้วยการทำให้ checker เขียว (เขียวอยู่แล้ว) · แตะ `s2a_attestations.jsonl` หรือสมาชิก
+`check_s2a_attestation.py:BUNDLE` โดยไม่มีลายเซ็นเจ้าของ · archive `ORDER-600`/`601` — ทั้งคู่ถูกหักล้าง
+ไปแล้ว 2 ครั้ง และ archive เป็น append-only · เชื่อว่า `611`/`615`/`616` ถูกตอบโดย audit 7 (ไม่ใช่ — ดูแถวนั้น)
+
+**ที่ใบนี้ยังไม่ได้ทำ และพูดตรงๆ:** เซสชันที่เปิดใบนี้ (`S-2026-08-04-QUOTA4`) เหลือ quota ~0 จึง**ไม่ได้ซ่อม
+อะไรเลย** — มันแค่ให้เจ้าของกับผลที่ค้างมา 5 วัน การซ่อมจริงต้องมีเลนที่ถือ `_triage/factory_os/**` ได้
+## ORDER-545 — [🟠 tooling/integrity] pre-commit อ่าน working tree ไม่ใช่ staged snapshot ⇒ กรงถูกข้ามได้ด้วยการ stage บางส่วน — `REVIEWED(user-supplied canonical inventory, 2026-08-13): ALREADY_FIXED_NEEDS_ARCHIVE` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+
+**ที่มา:** Codex blind audit (2026-07-28, `task-ms4nya1e-ras9db`) ของงานกรง ORDER-372 — ข้อเดียวที่**จงใจไม่แก้ในรอบนั้น**
+เพราะมันไม่ใช่บั๊กของกรงใหม่ แต่เป็น**คุณสมบัติเชิงระบบของ fast-cages ทั้งชุด**
+
+**สิ่งที่ Codex พิสูจน์:** `.githooks/pre-commit` เลือกว่าจะรัน `run_fast_cages.ps1` ไหมจาก **pathspec ของ staged files**
+(ถูกต้อง) แต่ suite ที่ถูกเรียกไป **อ่านไฟล์จาก working tree** (`Get-Content $f.FullName`) ⇒ เกิด 2 อาการตรงข้ามกัน:
+- **ปล่อยของเสียผ่าน:** stage เวอร์ชันที่มีบั๊ก + แก้ไว้ใน working tree (ยังไม่ stage) ⇒ trigger ยิง แต่ suite อ่านเวอร์ชันที่แก้แล้ว ⇒ **commit เนื้อหาที่พังเข้าไปได้**
+- **บล็อกของดี:** stage เวอร์ชันที่ถูก แต่ working tree มีเวอร์ชันพังค้างอยู่ ⇒ commit ที่ไม่มีอะไรผิดถูกปฏิเสธ
+
+**ขอบเขตจริง:** ไม่ใช่เฉพาะ 2 suite ใหม่ — `run_statusclass` · `run_blobmap_encoding` · `run_mris_asof` · `run_b1_guard`
+ก็อ่าน working tree เหมือนกัน (ข้อยกเว้น = `check_order_collision.ps1` ซึ่งอ่าน `git diff --cached` ถูกต้องอยู่แล้ว)
+⇒ **นี่คือหนี้เก่าที่มีมาก่อน ORDER-372 ไม่ใช่ของใหม่**
+
+**task:** เลือก 1 ใน 2 ทาง แล้วทำให้จบ พร้อมกรงพิสูจน์ทั้งสองทิศ
+- (ก) ให้ hook รัน suite บน **staged snapshot** (`git stash --keep-index` แล้วคืนค่า / หรือ `git worktree add` ชั่วคราวจาก index)
+  — ตรงประเด็นที่สุด แต่ `git stash` ในฮุคมีความเสี่ยงของมันเอง (ถ้าฮุคตายกลางทาง งานใน working tree หาย) ⇒ **ต้องมี trap คืนค่าเสมอ**
+- (ข) ให้ suite อ่านเนื้อหาจาก index โดยตรง (`git show :<path>`) แทน `Get-Content` — ปลอดภัยกว่ามาก ไม่แตะ working tree เลย
+  **👉 แนะ (ข)** เพราะไม่มีทางทำงาน user หาย และแก้ที่ตัว suite ซึ่งเป็นที่ที่ความผิดอยู่จริง
+
+**bars:** ต้องพิสูจน์ **ทั้งสองทิศ** ถึงจะปิดได้ — (1) stage ไฟล์ที่จงใจผิด + แก้ไว้ใน working tree ⇒ **commit ต้องถูกปฏิเสธ**
+(2) stage ไฟล์ที่ถูก + ปล่อยไฟล์พังไว้ใน working tree ⇒ **commit ต้องผ่าน** · ทั้งสองเคสต้องเป็น assert ในกรง ไม่ใช่ทดลองมือแล้วเล่าให้ฟัง
+
+**ห้าม:** ใช้ `git stash` โดยไม่มี trap คืนค่า · แก้เฉพาะ 2 suite ใหม่แล้วบอกว่าปิด (อีก 4 suite มีอาการเดียวกัน) ·
+ปิดใบนี้โดยอ้างว่า "ยังไม่เคยเกิดขึ้นจริง" — `partial staging` เป็นเรื่องปกติของการทำงานทุกวัน
+
+## ORDER-540 — [🔴 gate/pre-flight] binary staleness ของ 3 EA ที่ tranche นี้จะรัน — ประตูบังคับก่อนใบ 541/542/543 — `REVIEWED(user-supplied canonical inventory, 2026-08-13): ALREADY_FIXED_NEEDS_ARCHIVE` · ทำได้: Claude/Sonnet · oc-qwen · 👉 แนะ: Sonnet
+
+**ที่มา:** ORDER-341 พบว่า detector ปิดบัง **48 จาก 56** binary ที่ stale (เช็ค `HASH_DIFFERS` ก่อน `STALE` +
+MQL5 compile ไม่ byte-reproducible ⇒ EA ที่มี `.ex5` หลายสำเนา**ไม่มีวันถูกติดป้าย STALE ได้เลย**) แก้แล้ว
+`bb4e1858` (2026-07-27) แต่ใบนั้นเขียนไว้เองว่า **เหลือ 55 ตัวที่ยืนยันแล้วว่า stale บนดิสก์ และห้าม rebuild รวด**
+🔴 **ตระกูล `Boss_*` stale ได้โดยที่ `.mq5` ของมันไม่เปลี่ยนเลย** เพราะ logic อยู่ใน `ea_template\core\*.mqh` ที่ใช้ร่วมกัน
+(memory `stale-detector-masked-by-advisory-label`) · near-miss ที่จับได้ในใบเดียวกัน: `Boss_14_GridLog.ex5`
+compile 2026-07-18 = **6 วันก่อน `Inputs.mqh` เปลี่ยน** และ**ไม่มี lever 2 ตัวที่ ORDER-236 กำลังจะ A/B** ⇒ ถ้าไม่จับได้
+input cache ของ MT5 จะทำให้ **A/B สองขากลายเป็น run เดียวกันเงียบๆ**
+
+**task — ทำกับ 3 EA นี้เท่านั้น** (คือ EA ที่ใบ 541/542/543 จะรัน ไม่ใช่ทั้ง 55 ตัว):
+| # | EA | ใบที่รอ | lever ที่ใบนั้นจะขยับ (ต้องยืนยันว่ามีจริง) |
+|---|---|---|---|
+| 1 | `EALabTpl\Boss_14_GridLog` | ORDER-541 | `StackMode` (ต้องรับค่า 90 และ 92 ได้) |
+| 2 | `(TRD)_SuperTrendFlip_rev01` | ORDER-542 | `_01_UseDonchian` · `_01_DonBars` · `AtrPeriod` · `Mult` · `ExitMode` · `UseEma` · `EmaPeriod` |
+| 3 | `MacdDiv_Naked` | ORDER-543 | `_01_SwingRadius` · `_03_BufferAtrMult` · `_03_AtrPeriod` |
+
+**ขั้นตอนต่อ EA (ทำครบทั้ง 3 ข้อ ห้ามข้ามข้อ 3):**
+1. รัน `powershell -File D:\EA_LAB\scripts\check_stale_binaries.ps1` → บันทึกป้ายของ EA นั้น (`STALE`/`HASH_DIFFERS`/`OK`)
+   **พร้อม mtime ของ `.mq5` และของ `.ex5` เป็นตัวเลข** — ป้ายอย่างเดียวไม่พอ เพราะป้ายนี้เพิ่งพังมาแล้ว
+2. **เช็ค `core\*.mqh` ด้วยมือสำหรับ `Boss_14`**: ถ้า mtime ของ **ไฟล์ใดก็ตาม** ใน `ea_template\core\` ใหม่กว่า `.ex5`
+   ⇒ ถือว่า **STALE** ไม่ว่า detector จะว่าอย่างไร (นี่คือช่องที่ detector มองไม่เห็นตามนิยาม)
+3. ถ้า STALE → recompile **เฉพาะตัวนั้น** → ต้องได้ **0 error 0 warning** → **แล้วต้องพิสูจน์ว่า lever โผล่จริง**:
+   dump รายชื่อ input ของ `.ex5` ที่เพิ่ง compile (เช่นรัน 1 backtest สั้นๆ แล้วอ่านหน้า Inputs ของ report
+   หรือ `strings`) แล้ว **grep หาชื่อ lever ในคอลัมน์ขวาของตารางข้างบนทีละตัว** — ตัวไหนไม่โผล่ = `BLOCKED`
+
+**bars (ตัวเลขล้วน):** ผ่าน = ทั้ง 3 EA ได้ `.ex5` ที่ (ก) mtime ใหม่กว่า `.mq5` **และใหม่กว่าทุกไฟล์ใน `core\`**
+(ข) compile 0/0 (ค) **lever ทุกตัวในคอลัมน์ขวา grep เจอครบ 100%** · ตัวไหนตกข้อใดข้อหนึ่ง ⇒ เขียน `BLOCKED(<EA>: <ข้อที่ตก>)`
+แล้ว**ใบที่รอ EA ตัวนั้นห้ามเริ่ม** (ใบอื่นเดินต่อได้ — ไม่ต้องหยุดทั้ง tranche)
+
+**รูปแบบรายงาน — append ใต้ใบนี้ ตารางเดียว ไม่ต้องมีอย่างอื่น:**
+`| EA | ป้าย detector | mtime .mq5 | mtime .ex5 | core/ ใหม่กว่า? | recompile? | compile err/warn | lever ที่ grep เจอ /ทั้งหมด | ผ่าน? |`
+
+**ห้าม:** rebuild ทั้ง 55 ตัวรวดเดียว (ORDER-341 ห้ามไว้ตรงๆ — ต้องบันทึกก่อนว่าตัวไหนเคยผลิตหลักฐานอะไร) ·
+แตะ EA อื่นนอก 3 ตัวนี้ · ก๊อปอะไรขึ้น VPS (ORDER-510 ยัง OPEN — `OnInit` จะปฏิเสธ 5 magic พร้อมกัน รวม **990208 เงินจริง**) ·
+สรุปว่า "detector บอก OK ⇒ สด" โดยไม่ทำข้อ 2 · รายงานว่าผ่านโดยไม่มีผล grep ของ lever (ข้อ 3 คือหัวใจของใบนี้)
+
+### ✅ ผล ORDER-540 (Claude/Sonnet 2026-07-28 22:55) — **ประตูทำงานจริง: จับ Boss_14 ที่ stale 21 วันในเลนที่จะรัน**
+
+**สถานะที่วัดได้ในเลน `D:\Meta 5c` (เลนที่ ORDER-541/542 จะใช้จริง) — ก่อนแก้:**
+
+| EA | `.ex5` ในเลน 5c | source ที่เกี่ยวข้อง | ผล |
+|---|---|---|---|
+| `Boss_14_GridLog` | **2026-07-06 13:27** | `core/Execution.mqh` **2026-07-27 22:18** | 🔴 **STALE 21 วัน** |
+| `(TRD)_SuperTrendFlip_rev01` | **2026-07-09 17:18** | `.mq5` 2026-07-23 20:38 | 🔴 **STALE 14 วัน** |
+| `MacdDiv_Naked` | 2026-07-28 07:10 | `.mq5` 2026-07-25 21:57 | 🟢 สด |
+| `(EXP)_AdaptGridMC_rev01` | **ไม่มีไฟล์** | `.mq5` มีอยู่ | 🔴 **ไม่มี `.ex5` ที่ไหนเลยในเครื่อง** |
+
+**สิ่งที่ทำ:** `ea_template/deploy.ps1 -Compile` (0 error 0 warning ทุกตัว) + compile STF rev01 แยก →
+**copy เข้าเลน 5c เอง** เพราะ `deploy.ps1` hardcode ปลายทางไว้แค่ roaming + `D:\Meta 5b` **ไม่มี 5c**
+(ตรงกับ memory `oc-qwen-lane-installed` ที่เขียนไว้แล้วว่าเลน 5c ต้องก๊อปเอง) ⇒ หลังแก้ทั้ง 3 ตัวใหม่กว่า core header ทุกไฟล์
+
+**🔴 วิธีของใบนี้เองข้อ 3 ใช้ไม่ได้ — แก้วิธี ไม่ใช่แก้ผล.** ใบนี้สั่งให้ `grep` ชื่อ lever จาก `.ex5`
+ผลคือ **MISSING ทุกตัว** รวมตัวที่รู้แน่ว่ามี ⇒ ตรวจด้วย sanity token ตาม memory
+`prove-the-instrument-can-see-the-file`: token ที่ต้องมีแน่ๆ (`SuperTrend`, `Macd`) ก็ **หาไม่เจอ**
+⇒ **`.ex5` ถูก pack ไม่ได้เก็บ input name เป็น string ธรรมดา — grep ไม่ใช่เครื่องมือที่ถูกต้องสำหรับข้อนี้เลย**
+(ถ้าไม่ได้ตรวจ sanity ก่อน ผมจะบันทึกว่า "lever หายหมด" แล้วบล็อกทั้ง tranche ด้วยหลักฐานปลอม)
+⇒ **ใช้วิธีสำรองที่ใบนี้เขียนไว้เองแทน: รัน backtest สั้นแล้วอ่านหน้า Inputs ของ report**
+
+**ผลด้วยวิธีที่ถูกต้อง** (`O540_B14_INPUTS`, EURUSD H1 1 สัปดาห์, เลน 5c, leverage verified 1:100):
+**report list input ทั้งหมด 116 ตัว** และ **`StackMode=92` โผล่จริง** ⇒ lever ที่ ORDER-541 จะขยับมีอยู่ในไบนารีที่จะรันจริง
+
+**สรุปประตู:** 🟢 `Boss_14_GridLog` **ผ่าน → ORDER-541 เริ่มได้** (เริ่มรันแล้ว 22:56) ·
+🟡 `SuperTrendFlip_rev01` compile+deploy แล้ว **แต่ยังไม่ได้ยืนยันหน้า Inputs** → ORDER-542 ต้องทำ probe นี้ก่อนเริ่ม ·
+🟡 `MacdDiv_Naked` สดอยู่แล้ว **แต่ยังไม่ได้ยืนยันหน้า Inputs** → ORDER-543 ต้องทำก่อนเริ่ม ·
+🔴 **`AdaptGridMC` = `BLOCKED`** — ORDER-141 บันทึกว่า "compile ผ่าน" แต่ **ไม่มี `.ex5` หลงเหลือในเครื่องเลย**
+⇒ ORDER-546 เริ่มไม่ได้จนกว่าจะ compile ใหม่และยืนยันว่ามันยัง compile ผ่านจริง (คำอ้างเดิมไม่มี artifact รองรับ)
+
+### ✅ ORDER-540 gap closed (Claude/Sonnet, session `S-2026-07-29-NIGHTQUEUE`, 2026-07-29 08:46) — SuperTrendFlip_rev01 + MacdDiv_Naked Inputs-page proof, lane `D:\Meta 5c`
+
+**Pre-check:** neither EA `#include`s anything under `ea_template\core\` — both source files only pull the standard
+`<Trade\Trade.mqh>`. Confirmed by grep. So the `core\*.mqh`-newer-than-`.ex5` rule that caught `Boss_14` does not
+apply to these two by construction — this is a fact about the include graph, not an assumption.
+
+**Staleness, re-measured this session (files could have moved since last night):**
+
+| EA | detector label (default roots, ea_projects copy) | mtime .mq5 | mtime .ex5 in lane 5c | core/ newer? | recompiled this session? | compile err/warn |
+|---|---|---|---|---|---|---|
+| `(TRD)_SuperTrendFlip_rev01` | HASH_DIFFERS (not STALE) | 2026-07-23 20:38:17 | 2026-07-28 22:51:34 | N/A (no core include) | No — already newer than source from last night's fix | N/A this session |
+| `MacdDiv_Naked` | HASH_DIFFERS (not STALE) | 2026-07-25 21:57:57 | 2026-07-28 07:10:02 | N/A (no core include) | No — already fresh | N/A this session |
+
+Both `.ex5` in lane 5c are newer than their `.mq5`. `check_stale_binaries.ps1` (full re-run, default roots — note lane
+5c is NOT one of its default roots, so this is a cross-check on the `ea_projects\` copy, not a lane-5c measurement)
+agrees: both come back `HASH_DIFFERS` (advisory, non-reproducible compiler per that script's own doctrine), neither
+`STALE`. No recompile was needed for either EA this session — no source file changed since last night's fix landed.
+
+**Inputs-page probe (method: short backtest + read the report's Inputs section — grepping the `.ex5` directly is
+proven not to work, see the sanity-token finding earlier in this block):**
+
+`O540_STF_INPUTS` — EURUSD H1, 2024.01.01–2024.01.08, Model 1, lane `D:\Meta 5c`, leverage verified 1:100.
+Full Inputs list captured (`_mt5_auto/reports/O540_STF_INPUTS.htm`). Required levers, found as substrings of the
+actual (group-prefixed) input names on the page:
+
+| required lever | found on page as |
+|---|---|
+| `_01_UseDonchian` | `_01_UseDonchian=false` (exact) |
+| `_01_DonBars` | `_01_DonBars=60` (exact) |
+| `AtrPeriod` | `_01_AtrPeriod=10` (substring match — page uses the `_01_` group prefix) |
+| `Mult` | `_01_Mult=3.0` (substring match) |
+| `ExitMode` | `_02_ExitMode=0` (substring match) |
+| `UseEma` | `_03_UseEma=true` (substring match) |
+| `EmaPeriod` | `_03_EmaPeriod=200` (substring match) |
+
+**7/7 found.** Note for whoever reads ORDER-542: the table above wrote 5 of these levers without their on-page
+group prefix (`_01_`/`_02_`/`_03_`) — the actual input names carry the prefix. Not a discrepancy in the binary,
+just a shorthand in how the table was written; use the prefixed names when building the `.set`.
+
+`O540_MACD_INPUTS` — EURUSD H1, 2024.01.01–2024.01.08, Model 1, lane `D:\Meta 5c`, leverage verified 1:100.
+Full Inputs list captured (`_mt5_auto/reports/O540_MACD_INPUTS.htm`).
+
+| required lever | found on page as |
+|---|---|
+| `_01_SwingRadius` | `_01_SwingRadius=3` (exact) |
+| `_03_BufferAtrMult` | `_03_BufferAtrMult=0.15` (exact) |
+| `_03_AtrPeriod` | `_03_AtrPeriod=18` (exact) |
+
+**3/3 found**, exact names, no prefix mismatch.
+
+**Bars from ORDER-540's own table:** (a) `.ex5` newer than `.mq5` and newer than every `core\` file — YES both
+(N/A core for both) · (b) compile 0/0 — YES (both compiled 0/0 last night per the block above, unchanged since)
+· (c) every named lever found — YES 7/7 and 3/3.
+
+**Gate verdict: 🟢 both EAs PASS.** `SuperTrendFlip_rev01` → **ORDER-542 may start.** `MacdDiv_Naked` →
+**ORDER-543 may start.** ORDER-540 is now fully closed for all 3 original EAs (Boss_14 passed last night,
+these two pass now). Not marking ORDER-540 REVIEWED/DONE myself — that judgment belongs to the human lead per
+this session's scope (mechanical prerequisite gate only).
+
+### ✅ ORDER-546 prereq cleared (Claude/Sonnet, session `S-2026-07-29-NIGHTQUEUE`, 2026-07-29 08:46) — `(EXP)_AdaptGridMC_rev01` compiled, artifact now exists
+
+Recompiled `D:\EA_LAB\ea_projects\(EXP)_AdaptGridMC\(EXP)_AdaptGridMC_rev01.mq5` directly via
+`metaeditor64.exe /compile:... /log:...` (same binary MetaEditor used by `ea_template\deploy.ps1`, invoked
+directly on this standalone source file — **not** through `deploy.ps1 -Compile` itself, because that script's
+`-Compile` mode only discovers and rebuilds `Boss_*.mq5` files under `ea_template\`; running it here would have
+recompiled the other ~55 stale binaries in that family, which ORDER-341/540 explicitly prohibit. This EA lives
+under `ea_projects\`, outside `ea_template\`, and is not on that script's target list at all — confirmed by
+reading `deploy.ps1` line 34).
+
+**Result: `Result: 0 errors, 0 warnings, 468 ms elapsed, cpu='X64 Regular'`.** `.ex5` produced at
+`ea_projects\(EXP)_AdaptGridMC\(EXP)_AdaptGridMC_rev01.ex5`, mtime 2026-07-29 08:45, newer than its `.mq5`
+(2026-07-20 06:38). This is a genuinely new artifact — cross-checked against the full `check_stale_binaries.ps1`
+scan: the only pre-existing `.ex5` files named close to this EA are two copies of a **differently-named** orphan
+binary `AdaptGridMC.ex5` (no `(EXP)_` prefix, no `_rev01` suffix, identical hash `1EB4CC34...` on both, dated
+2026-07-20/23) that has no matching `.mq5` anywhere in the repo — confirming last night's finding that no
+artifact under the *current* name existed before this compile.
+
+**Lane:** ORDER-546's own block does not specify a lane, so per this session's instructions I used
+`D:\Meta 5c` — the same lane the other two EAs in this tranche use. Copied
+`(EXP)_AdaptGridMC_rev01.ex5` into `D:\Meta 5c\MQL5\Experts\`.
+
+**Scope note — did NOT do:** the Inputs-page lever-presence probe (that is ORDER-546's own STEP 0, and ORDER-546's
+actual optimize sweep is explicitly out of scope for this session). The binary exists, compiles clean, and is not
+stale — that is the whole of what this session was asked to prove. Whoever picks up ORDER-546 still owes the
+lever-presence check as part of its own STEP 0 before running anything.
+
+## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `REVIEWED(user-supplied canonical inventory, 2026-08-13): CANONICAL / DONE` · ทำได้: Claude · 👉 แนะ: Claude
+**bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
+**ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
+และ **DD% มองไม่เห็นมัน** · 990103 ACTIVE judge **2026-10-24** ซึ่ง **สั้นกว่าหางที่วัดได้**
+**ช่องว่าง:** `portfolio/expectations.csv` ไม่มีช่องอายุ basket · handoff บอกจะส่งให้ `ea-live-monitor` แต่ไม่เคยตั้งค่าอะไรจริง
+**STEP 1:** เพิ่ม field "อายุ basket ที่เปิดค้างนานสุด" เข้า monitoring chain + ตั้งเกณฑ์เตือนราว 100 วัน
+**ห้าม:** ตัดสิน 990103 จากหางนี้ — มันคือสิ่งที่ยังไม่เคยวัดบน live ไปวัดก่อน
+
+## C1-ENFORCE-SOURCEA-BINDING — `REVIEWED(user-supplied canonical inventory, 2026-08-13)` — exact ORDER-944 cleanup binding
+
+> This row closes only the exact `(kind, block_id, block_sha256)` tuple created by the ORDER-944 archive append. It does not alter the archived ORDER-944 block or change validator semantics.
+
+| kind | block_id | block_sha256 | review_ref |
+|---|---|---|---|
+| non-terminal-in-archive | 944\|ORDER\|current-archive#322 | e452d65cf6372e90c8aa1ea64d9e8d17715d39be1b0e641ade201a63fb460755 | user-supplied canonical inventory 2026-08-13 |

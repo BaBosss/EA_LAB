@@ -54,6 +54,7 @@ import json
 import os
 import re
 import sys
+import datetime as dt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
@@ -69,7 +70,8 @@ TRANSITIONS = ('QUEUED', 'LEASED', 'LAUNCH_INTENT', 'PROCESS_OBSERVED', 'RUNNING
                'COMPLETED', 'FAILED', 'ABANDONED', 'EVIDENCE_REGISTERED')
 FAILURE_CLASSES = ('NONE', 'TESTER_ERROR', 'TERMINAL_ERROR', 'TIMEOUT', 'LEASE_LOST',
                    'KILLED', 'CONFIG_REJECTED')
-# 🔴 FOURTEEN, not fifteen. USER DECISION 2026-08-02 (`_triage/USER_DECISIONS_PENDING.md` item 6):
+# 🔴 SIXTEEN. `ini_hash` remains outside identity, while account unit and the terminal build are
+# simulator facts that can change the meaning of otherwise identical output.
 # `ini_hash` MOVED OUT of the key onto `RunAttempt.ini_sha256`. The key gates whether a run may
 # happen at all, so it has to be computable BEFORE the run -- but the ini is written by the runner
 # at launch. S9 shipped with the field seeded from a canonical rendering of the other fields,
@@ -79,8 +81,16 @@ FAILURE_CLASSES = ('NONE', 'TESTER_ERROR', 'TERMINAL_ERROR', 'TIMEOUT', 'LEASE_L
 # an IDENTICAL configuration two different digests -- and criterion 3, the gate that stops the
 # lane being spent twice, could never fire at all.
 EXECUTION_KEY_FIELDS = ('expert', 'symbol', 'tf', 'from_date', 'to_date', 'model', 'deposit',
-                        'currency', 'leverage', 'set_hash', 'ex5_hash',
-                        'effective_config_hash', 'data_fingerprint', 'lane')
+                        'currency', 'account_unit', 'leverage', 'terminal_build', 'set_hash',
+                        'ex5_hash', 'effective_config_hash', 'data_fingerprint', 'lane')
+
+# Exact pre-ORDER-1265/1266 identity. It is readable only as historical evidence: it carries no
+# account unit or terminal build and therefore can never be an equivalent of a new key.
+LEGACY_EXECUTION_KEY_FIELDS = ('expert', 'symbol', 'tf', 'from_date', 'to_date', 'model', 'deposit',
+                               'currency', 'leverage', 'set_hash', 'ex5_hash',
+                               'effective_config_hash', 'data_fingerprint', 'lane')
+FROZEN_TESTER_CURRENCY = 'USD'
+ACCOUNT_UNITS = ('USD', 'CENT')
 
 # 🔴 THE STORED KEYS FROM BEFORE THE DECISION, AND WHY THIS IS A CLOSED TUPLE AND NOT A RULE.
 #
@@ -93,8 +103,8 @@ EXECUTION_KEY_FIELDS = ('expert', 'symbol', 'tf', 'from_date', 'to_date', 'model
 # returned -- so this is a before/after regression, not a latent hole.
 #
 # The migration is sound rather than convenient: decision 6 removed `ini_hash` BECAUSE it was never
-# the hash of an ini, so the remaining fourteen fields are the identity and they are all present in
-# the old keys. Dropping it is applying the owner's decision to stored data, not guessing at one.
+# the hash of an ini, so the old fourteen fields remain readable only as legacy provenance.
+# Dropping it is applying the owner's decision to stored data, not guessing at one.
 # Measured: the old and new spellings of `RUN-20260802-002`'s configuration produce the SAME digest.
 #
 # CLOSED, and that is the whole safety of it. This is not "drop fields you do not recognise" -- an
@@ -185,7 +195,7 @@ RENEW_MARGIN_SEC = 1800
 # name; the cage asserts that each is named by a test, which is the L2 idea applied to a module L2
 # does not reach (it globs `check_*.py`).
 REFUSAL_CODES = ('LANE_BUSY', 'IDENTICAL_RERUN', 'CROSS_LANE', 'RUN_DEAD', 'ATTEMPTS_EXHAUSTED',
-                 'MALFORMED_KEY', 'UNKNOWN_RUN', 'UNCOMPARABLE_PRIOR')
+                 'MALFORMED_KEY', 'UNKNOWN_RUN', 'UNCOMPARABLE_PRIOR', 'DISPATCH_KEY')
 
 RUN_ID_RE = re.compile(r'^RUN-[0-9]{8}-[0-9]{3,}$')
 # One timestamp format everywhere, so ordering and expiry are STRING comparisons and therefore
@@ -250,21 +260,34 @@ def normalize_numbers(obj):
     return obj
 
 
+def _key_shape_digest(key, fields, label):
+    missing = [f for f in fields if f not in key]
+    extra = [f for f in key if f not in fields]
+    if missing or extra:
+        raise ValueError('%s missing %s / unknown %s -- a digest over a key whose shape '
+                         'is not the contract is a digest of something else'
+                         % (label, sorted(missing), sorted(extra)))
+    return hashlib.sha256(canonical(normalize_numbers(dict((f, key[f]) for f in fields)))
+                          .encode('utf-8')).hexdigest()
+
+
 def execution_key_digest(key):
-    """sha256 over the canonical form of the 14 required ExecutionKey fields. Raises on any other
-    shape.
+    """sha256 over the canonical form of the 16 required new ExecutionKey fields.
 
     WHY IT IS SO WIDE (design 4.5): rev 1 omitted deposit, currency and leverage, so a
     10,000/1:100 run and a 100,000/1:200 run had identical keys and the scheduler would have
     served the wrong cached evidence to criterion 3. Every field below is load-bearing for that
     one sentence.
     """
-    missing = [f for f in EXECUTION_KEY_FIELDS if f not in key]
-    extra = [f for f in key if f not in EXECUTION_KEY_FIELDS]
-    if missing or extra:
-        raise ValueError('ExecutionKey missing %s / unknown %s -- a digest over a key whose shape '
-                         'is not the contract is a digest of something else'
-                         % (sorted(missing), sorted(extra)))
+    if key.get('currency') != FROZEN_TESTER_CURRENCY:
+        raise ValueError('ExecutionKey currency must be %s for this USD-only runner, got %r'
+                         % (FROZEN_TESTER_CURRENCY, key.get('currency')))
+    if key.get('account_unit') not in ACCOUNT_UNITS:
+        raise ValueError('ExecutionKey account_unit must be one of %s, got %r'
+                         % (list(ACCOUNT_UNITS), key.get('account_unit')))
+    build = key.get('terminal_build')
+    if not isinstance(build, int) or isinstance(build, bool) or build < 0:
+        raise ValueError('ExecutionKey terminal_build must be a non-negative integer, got %r' % build)
     # 🔴 NUMERIC NORMALIZATION, /scrutinize round 2. `10000` and `10000.0` are the same deposit and
     # serialized to different bytes, so ONE configuration had TWO digests -- exactly the failure
     # design 4.5 warns about for `candidate_digest` ("two serializers that disagree produce two
@@ -275,10 +298,45 @@ def execution_key_digest(key):
     # lanes. Normalising paths would be guessing at an identity the repo has not defined; the
     # lane id is expected to be pasted from the ledger, not typed.
     # The normalization itself now lives in `normalize_numbers` so `candidate_digest` can import
-    # the one implementation (ORDER-1100). This loop still selects the fourteen fields, which is
+    # the one implementation (ORDER-1100). This loop selects the sixteen new-key fields, which is
     # the OTHER half of the refusal above and is specific to this key.
-    trimmed = normalize_numbers(dict((f, key[f]) for f in EXECUTION_KEY_FIELDS))
-    return hashlib.sha256(canonical(trimmed).encode('utf-8')).hexdigest()
+    return _key_shape_digest(key, EXECUTION_KEY_FIELDS, 'ExecutionKey')
+
+
+def legacy_execution_key_digest(key):
+    """Digest one exact unit/build-unknown historical shape, never a new key."""
+    return _key_shape_digest(key, LEGACY_EXECUTION_KEY_FIELDS, 'legacy ExecutionKey')
+
+
+def dispatch_key_problems(journal, key, resolved_terminal_build=None):
+    """Validate the dispatch key against the run's persisted identity.
+
+    Queueing owns the ExecutionKey identity. The dispatcher may receive a KeyFile, but that file is
+    only an input transport and must not be allowed to replace the key already persisted on the
+    QUEUED transition. The optional resolved build is the actual executable fact supplied by the
+    PowerShell boundary; it is checked against the persisted key, never against caller text.
+    """
+    problems = []
+    authoritative = (journal or {}).get('execution_key') if journal else None
+    if not authoritative:
+        return ['DISPATCH_KEY no persisted ExecutionKey is available for this run']
+    try:
+        execution_key_digest(authoritative)
+    except ValueError as exc:
+        problems.append('DISPATCH_KEY persisted ExecutionKey is not a valid new key: %s' % exc)
+    try:
+        execution_key_digest(key)
+    except ValueError as exc:
+        problems.append('DISPATCH_KEY external KeyFile is not a valid new key: %s' % exc)
+    if not problems and key != authoritative:
+        differing = sorted(set(key) | set(authoritative))
+        differing = [f for f in differing if key.get(f) != authoritative.get(f)]
+        problems.append('DISPATCH_KEY external KeyFile differs from persisted ExecutionKey in %s'
+                        % differing)
+    if resolved_terminal_build is not None and authoritative.get('terminal_build') != resolved_terminal_build:
+        problems.append('DISPATCH_KEY resolved terminal build %r disagrees with persisted terminal_build %r'
+                        % (resolved_terminal_build, authoritative.get('terminal_build')))
+    return problems
 
 
 # ---------------------------------------------------------------------------------------------
@@ -343,6 +401,26 @@ def _field(journal, attempt, name):
         if rec.get(name) is not None:
             val = rec[name]
     return val
+
+
+def authoritative_launch_intent(journal, attempt):
+    """Return the one current-attempt LAUNCH_INTENT record, or its binding errors.
+
+    S6 authority is deliberately narrower than `_field`: later transitions may carry similarly
+    named data, but they cannot rewrite the launch boundary. Multiple launch-intent records are
+    ambiguous even if their values match, so the safe answer is refusal.
+    """
+    intents = [rec for rec in attempt_records(journal, attempt)
+               if rec.get('transition') == 'LAUNCH_INTENT'] if journal else []
+    if not intents:
+        return None, ['S6 authoritative LAUNCH_INTENT is missing for attempt %r' % attempt]
+    if len(intents) != 1:
+        return None, ['S6 authoritative LAUNCH_INTENT is ambiguous for attempt %r (%d records)'
+                      % (attempt, len(intents))]
+    intent = intents[0]
+    if intent.get('launch_intent_at') is None or intent.get('report_path') is None:
+        return None, ['S6 authoritative LAUNCH_INTENT lacks launch_intent_at or report_path']
+    return intent, []
 
 
 # ---------------------------------------------------------------------------------------------
@@ -441,22 +519,22 @@ def validate_transition(journal, line):
             and line['execution_key'] != journal['execution_key']:
         problems.append('S5 this line carries an ExecutionKey that contradicts the QUEUED line')
 
-    # -- S6 COMPLETED is REFUSED without a fresh report. This is acceptance criterion 2, and it is
-    #    a refusal in the validator rather than a check in the driver so that no future caller can
-    #    write COMPLETED by any other route. The proof shape is the shared guard's own two halves:
-    #    an accepted runner exit AND a mtime at or after the moment the run started.
+    # -- S6 COMPLETED carries source material only. `append` below re-reads the sidecar, intent,
+    #    and report from disk before accepting it; a caller's `fresh=true` is deliberately not a
+    #    proof and is rejected as an unknown field.
     if trans == 'COMPLETED':
         proof = (line.get('record') or {}).get('report_fresh_proof')
         if not proof:
             problems.append('S6 COMPLETED without report_fresh_proof -- "the .htm exists" is not '
                             'evidence that this attempt produced it (scripts/lib/report_freshness.ps1)')
+        elif set(proof) != set(('runner_exit', 'report_path', 'report_mtime', 'run_start')):
+            problems.append('S6 report_fresh_proof fields must be exactly runner_exit, report_path, '
+                            'report_mtime, run_start; got %s' % sorted(proof))
         else:
-            if proof.get('fresh') is not True:
-                problems.append('S6 COMPLETED whose report_fresh_proof.fresh is %r'
-                                % proof.get('fresh'))
-            if proof.get('runner_exit') not in (0, 3):
-                problems.append('S6 COMPLETED with runner exit %r -- only 0 and 3 mean a report '
-                                'was written by THIS run' % proof.get('runner_exit'))
+            if proof.get('runner_exit') != 0:
+                problems.append('S6 COMPLETED with runner exit %r -- Test-ReportIsFresh accepts '
+                                'only exit 0 without an explicit non-comparable override'
+                                % proof.get('runner_exit'))
             if not proof.get('report_path'):
                 problems.append('S6 report_fresh_proof names no report path')
             if not TS_RE.match(str(proof.get('report_mtime', ''))) \
@@ -465,7 +543,7 @@ def validate_transition(journal, line):
                                 'one timestamp format, got %r / %r'
                                 % (proof.get('run_start'), proof.get('report_mtime')))
             elif proof['report_mtime'] < proof['run_start']:
-                problems.append('S6 report_fresh_proof claims fresh but the report (%s) predates '
+                problems.append('S6 report_fresh_proof report (%s) predates '
                                 'the run start (%s)' % (proof['report_mtime'], proof['run_start']))
 
     # -- S7 a failure must say WHICH failure. An unclassified FAILED cannot be routed by decision
@@ -724,8 +802,7 @@ def _plan_inner(journal, obs):
             if trans == 'COMPLETED':
                 return _act('RECORD_COMPLETED', 'the worker finished and its report is fresh',
                             attempt=attempt, exit_code=exit_rec.get('exit_code'),
-                            proof={'fresh': True,
-                                   'runner_exit': exit_rec.get('exit_code'),
+                            proof={'runner_exit': exit_rec.get('exit_code'),
                                    'report_path': obs.get('report_path'),
                                    'report_mtime': obs.get('report_mtime'),
                                    'run_start': _field(journal, attempt, 'launch_intent_at')})
@@ -820,10 +897,12 @@ def stored_key_digest(key):
     nobody can audit.
     """
     k = dict(key)
+    if set(k) == set(EXECUTION_KEY_FIELDS):
+        return execution_key_digest(k), ()
     dropped = [f for f in LEGACY_DROPPED_KEY_FIELDS if f in k]
     for f in dropped:
         del k[f]
-    return execution_key_digest(k), tuple(dropped)
+    return legacy_execution_key_digest(k), tuple(dropped)
 
 
 def find_cached(all_runs, key_digest, exclude_run=None):
@@ -979,6 +1058,74 @@ def read_manifest(path):
     return out
 
 
+def authoritative_completion_problems(journal, line, root=None):
+    """Bind a proposed COMPLETED line to the current attempt's actual runner evidence.
+
+    This is intentionally an append-edge check: RunJournal stays a derived fold, while the
+    persisted RunTransition remains append-only. The PowerShell dispatcher independently runs
+    Test-ReportIsFresh before reaching this point; this check prevents a direct scheduler caller
+    from replacing that observed proof with internally consistent claims.
+    """
+    attempt = line.get('attempt')
+    proof = (line.get('record') or {}).get('report_fresh_proof') or {}
+    problems = []
+    intent, intent_problems = authoritative_launch_intent(journal, attempt)
+    problems.extend(intent_problems)
+    run_start = intent.get('launch_intent_at') if intent else None
+    report_path = intent.get('report_path') if intent else None
+    if proof.get('run_start') != run_start:
+        problems.append('S6 authoritative run_start %r does not equal LAUNCH_INTENT %r'
+                        % (proof.get('run_start'), run_start))
+    if proof.get('report_path') != report_path:
+        problems.append('S6 authoritative report_path %r does not equal LAUNCH_INTENT %r'
+                        % (proof.get('report_path'), report_path))
+
+    root_path = os.path.abspath(root or ROOT)
+    sidecar = os.path.join(runs_dir(root_path), '%s.a%s.exit.json' % (line.get('run_id'), attempt))
+    try:
+        with io.open(sidecar, 'r', encoding='utf-8-sig') as fh:
+            exit_record = json.load(fh)
+    except (IOError, ValueError) as exc:
+        problems.append('S6 authoritative exit sidecar missing or unreadable for current attempt: %s' % exc)
+        exit_record = None
+    if exit_record is not None:
+        if exit_record.get('run_id') != line.get('run_id') or exit_record.get('attempt') != attempt:
+            problems.append('S6 authoritative exit sidecar does not belong to run %s attempt %s'
+                            % (line.get('run_id'), attempt))
+        if proof.get('runner_exit') != exit_record.get('exit_code'):
+            problems.append('S6 authoritative runner_exit %r disagrees with sidecar %r'
+                            % (proof.get('runner_exit'), exit_record.get('exit_code')))
+
+    if not isinstance(report_path, str) or not report_path or os.path.isabs(report_path):
+        problems.append('S6 authoritative report path is not a repo-relative launch binding: %r' % report_path)
+        return problems
+    report_abs = os.path.abspath(os.path.join(root_path, report_path.replace('/', os.sep)))
+    try:
+        if os.path.commonpath((root_path, report_abs)) != root_path:
+            problems.append('S6 authoritative report path escapes the repository: %r' % report_path)
+            return problems
+    except ValueError:
+        problems.append('S6 authoritative report path is invalid: %r' % report_path)
+        return problems
+    if not os.path.isfile(report_abs):
+        problems.append('S6 authoritative report is missing at %r' % report_path)
+        return problems
+    actual_mtime = dt.datetime.utcfromtimestamp(os.path.getmtime(report_abs)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    if proof.get('report_mtime') != actual_mtime:
+        problems.append('S6 authoritative report_mtime %r disagrees with filesystem %r'
+                        % (proof.get('report_mtime'), actual_mtime))
+    if not run_start or actual_mtime < run_start:
+        problems.append('S6 authoritative report mtime %r predates launch intent %r'
+                        % (actual_mtime, run_start))
+    # Test-ReportIsFresh without -AcceptLeverageMismatch accepts exactly exit 0 and the same
+    # mtime boundary above. The dispatcher calls that PowerShell function; this re-check keeps a
+    # direct `scheduler.py append` from bypassing its authoritative sources.
+    if exit_record is not None and exit_record.get('exit_code') != 0:
+        problems.append('S6 authoritative runner exit %r is not fresh-report success'
+                        % exit_record.get('exit_code'))
+    return problems
+
+
 def append_manifest(path, line):
     """Append ONE line. No rewrite path exists in this module, deliberately: the store's
     append-only claim is worth exactly as much as the absence of a function that could break it."""
@@ -1022,6 +1169,10 @@ def assert_vocabulary_matches_schema(root=None):
     if tuple(sorted(got)) != tuple(sorted(EXECUTION_KEY_FIELDS)):
         problems.append('EXECUTION_KEY_FIELDS %s != schema required %s'
                         % (sorted(EXECUTION_KEY_FIELDS), sorted(got)))
+    got = tuple(defs['ExecutionKey']['$defs']['LegacyExecutionKey']['required'])
+    if tuple(sorted(got)) != tuple(sorted(LEGACY_EXECUTION_KEY_FIELDS)):
+        problems.append('LEGACY_EXECUTION_KEY_FIELDS %s != schema required %s'
+                        % (sorted(LEGACY_EXECUTION_KEY_FIELDS), sorted(got)))
     return problems
 
 
@@ -1085,6 +1236,8 @@ def main(argv):
         journal = fold(read_manifest(path))
         line = json.loads(args['line'])
         problems = validate_transition(journal, line)
+        if line.get('transition') == 'COMPLETED' and not problems:
+            problems.extend(authoritative_completion_problems(journal, line, root))
         if problems:
             return _emit({'action': 'REFUSE', 'code': 'RUN_DEAD', 'why': problems}, 1)
         append_manifest(path, line)
@@ -1093,6 +1246,22 @@ def main(argv):
 
     if cmd == 'journal':
         return _emit(fold(read_manifest(manifest_path(args['run'], root))) or {})
+
+    if cmd == 'dispatch-key':
+        journal = fold(read_manifest(manifest_path(args['run'], root)))
+        key = json.loads(args['key'])
+        resolved = args.get('terminal_build')
+        if resolved is not None:
+            try:
+                resolved = int(resolved)
+            except ValueError:
+                return _emit({'action': 'REFUSE', 'code': 'DISPATCH_KEY',
+                              'why': ['DISPATCH_KEY resolved terminal build is not an integer: %r'
+                                      % resolved]}, 1)
+        problems = dispatch_key_problems(journal, key, resolved)
+        if problems:
+            return _emit({'action': 'REFUSE', 'code': 'DISPATCH_KEY', 'why': problems}, 1)
+        return _emit({'action': 'ACCEPTED', 'execution_key': journal['execution_key']})
 
     if cmd == 'compare':
         wanted = [r for r in args['runs'].split(',') if r]

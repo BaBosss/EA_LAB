@@ -312,7 +312,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `entity` | const `RunTransition` | **yes** |  |
 | `run_id` | `string` | **yes** | pattern `^RUN-[0-9]{8}-[0-9]{3,}$` |
 | `cell_id` | `string` | **yes** |  |
-| `execution_key` | [`ExecutionKey`](#executionkey) | — | written once, on the QUEUED line |
+| `execution_key` | `any` | — | written once, on the QUEUED line |
 | `attempt` | `integer` | **yes** | min `1` |
 | `transition` | `QUEUED` \| `LEASED` \| `LAUNCH_INTENT` \| `PROCESS_OBSERVED` \| `RUNNING` \| `COMPLETED` \| `FAILED` \| `ABANDONED` \| `EVIDENCE_REGISTERED` | **yes** |  |
 | `at` | `string` | **yes** |  |
@@ -340,6 +340,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `lease.owner` | `string` | **yes** |  |
 | `lease.expires_at` | `string` | **yes** | without an expiry a machine that died holding a lease keeps the lane forever |
 | `launch_intent_at` | `string` \| `null` | — | written BEFORE spawn. Its presence with no process_observed means the crash happened around the spawn and the resume must RECONCILE (is an MT5 already running on this lane?) rather than launch again. |
+| `report_path` | `string` \| `null` | — | the report path bound by LAUNCH_INTENT for this attempt; later transitions cannot replace that identity |
 | `process_observed` | `object` \| `null` | — | closed · requires `pid`, `observed_at` · SELF-REVIEW FIX: rev 3 had a single `launched_at` written before launch, which cannot distinguish crash-before-spawn from crash-after-spawn - the exact hole the field was added to close. Two records, so the pair is decidable. |
 | `process_observed.pid` | `integer` | **yes** |  |
 | `process_observed.observed_at` | `string` | **yes** |  |
@@ -366,7 +367,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `entity` | const `RunJournal` | **yes** |  |
 | `run_id` | `string` | **yes** | pattern `^RUN-[0-9]{8}-[0-9]{3,}$` |
 | `cell_id` | `string` | **yes** |  |
-| `execution_key` | [`ExecutionKey`](#executionkey) | **yes** |  |
+| `execution_key` | `any` | **yes** |  |
 | `attempts` | array of [`RunAttempt`](#runattempt) | **yes** | minItems `1` |
 | `event_log_ref` | [`OwnerRef`](#ownerref) | — |  |
 
@@ -390,8 +391,10 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `to_date` | `string` | **yes** |  |
 | `model` | `1` \| `2` \| `4` | **yes** |  |
 | `deposit` | `number` | **yes** |  |
-| `currency` | `string` | **yes** |  |
+| `currency` | const `USD` | **yes** |  |
+| `account_unit` | `USD` \| `CENT` | **yes** |  |
 | `leverage` | `integer` | **yes** | written as 1:N in the ini and asserted post-run; a bare Leverage=N is a silent no-op |
+| `terminal_build` | `integer` | **yes** | min `0` · numeric build component mechanically read from the resolved terminal64.exe FileVersion; never inferred from lane or caller text |
 | `set_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
 | `ex5_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
 | `effective_config_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |

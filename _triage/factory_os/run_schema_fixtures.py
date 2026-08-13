@@ -512,7 +512,8 @@ METRIC_UNDEF_OK = {"window": "MAIN", "pf": None, "pf_state": "UNDEFINED_NO_LOSSE
                    "data_fingerprint": "df1", "model": 1}
 EXECKEY_OK = {"expert": "Boss_14", "symbol": "XAUUSD", "tf": "H1", "from_date": "2023.01.01",
               "to_date": "2025.12.31", "model": 1, "deposit": 10000.0, "currency": "USD",
-              "leverage": 100, "set_hash": H64, "ex5_hash": H64,
+              "account_unit": "USD", "leverage": 100, "terminal_build": 6090,
+              "set_hash": H64, "ex5_hash": H64,
               "effective_config_hash": H64, "data_fingerprint": "df1", "lane": "MT5-A"}
 ATTEMPT_OK = {"attempt": 1, "transition": "QUEUED", "at": "2026-07-31T00:00:00Z"}
 
@@ -798,11 +799,35 @@ epair('ExecutionKey', EXECKEY_OK, with_(EXECKEY_OK, model=3),
       'ORDER-611: the execution key is the cache key for evidence reuse. A model outside {1,2,4} '
       'means two different runs could share a key (audit-1 #8, the wrong cached evidence served)',
       [{'keyword': 'enum', 'instancePath': '/model'}])
+ecase('ExecutionKey', 'cent-valid',
+      'ORDER-1266: CENT is a valid new account-unit identity, distinct from USD', 'pass',
+      with_(EXECKEY_OK, account_unit='CENT'))
+ecase('ExecutionKey', 'currency-non-usd',
+      'ORDER-1265: the runner emits USD only, so a EUR key must be rejected before launch', 'fail',
+      with_(EXECKEY_OK, currency='EUR'),
+      says=[{'keyword': 'const', 'instancePath': '/instance/currency'}])
+ecase('ExecutionKey', 'account-unit-invalid',
+      'ORDER-1266: account unit is a closed USD/CENT identity dimension', 'fail',
+      with_(EXECKEY_OK, account_unit='MILLI'),
+      says=[{'keyword': 'enum', 'instancePath': '/instance/account_unit'}])
+ecase('ExecutionKey', 'terminal-build-malformed',
+      'ORDER-1265: terminal build must be a numeric identity fact, never caller text', 'fail',
+      with_(EXECKEY_OK, terminal_build='6090'),
+      says=[{'keyword': 'type', 'instancePath': '/instance/terminal_build'}])
 
 epair('RunAttempt', ATTEMPT_OK, with_(ATTEMPT_OK, failure_class="WEIRD"),
       'ORDER-611: the failure class decides whether a resume is safe. An undeclared class leaves '
       'the recovery decision undefined, which is what S9 must not permit',
       [{'keyword': 'enum', 'instancePath': '/failure_class'}])
+ecase('RunAttempt', 'launch-intent-report-path',
+      'S6: the canonical LAUNCH_INTENT record carries the report identity used by the freshness '
+      'boundary', 'pass',
+      with_(ATTEMPT_OK, transition='LAUNCH_INTENT', launch_intent_at='2026-07-31T00:01:00Z',
+            report_path='_mt5_auto/reports/RUN-20260731-001.htm'))
+ecase('RunAttempt', 'unknown-extra-still-rejected',
+      'S6: adding an undeclared RunAttempt field must not weaken the closed-object contract', 'fail',
+      with_(ATTEMPT_OK, transition='LAUNCH_INTENT', report_path='r.htm', forged_authority=True),
+      says=[{'keyword': 'unevaluatedProperties', 'instancePath': '/instance'}])
 
 epair('SnapshotMeta', META_OK, without(META_OK, "build_id"),
       'ORDER-611: without a build id two snapshots cannot be told apart, and "which build said '
@@ -1183,8 +1208,8 @@ HEADER_COUNTS = {
     'defs': 32,
     'root_branches': 21,
     'root_cases': 41,
-    'entity_cases': 74,
-    'entity_negatives': 38,
+    'entity_cases': 80,
+    'entity_negatives': 42,
     'entities_with_a_negative': 32,
 }
 

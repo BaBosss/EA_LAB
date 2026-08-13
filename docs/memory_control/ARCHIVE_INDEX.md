@@ -5,9 +5,9 @@
 > `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
-> NOT repo HEAD; stable across any commit that does not touch that file): `ba95be9f598b8e727f540fb35c26ffee0e7e0a5f`
+> NOT repo HEAD; stable across any commit that does not touch that file): `948543a49020a5b1d2eede900d6d9326bc25cb43`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
-> EOL/whitespace drift the per-block hashes below cannot see): `f99986c03acb98151cc1c1ff5d02c80854bdbd3478e33eb86dac1348e93ec95d`
+> EOL/whitespace drift the per-block hashes below cannot see): `639a8a03540572652e0f7ace429c1479af44c150990e386f2970733b170ca8bf`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
 > normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
 > block will not change that block's sha256; rely on the whole-file raw-byte hash above.
@@ -333,3 +333,11 @@
 | 671\|ORDER\|current-archive#317 | 671 | ORDER | 317 | 55011e79fe3b2d1ebacf98181ac90e1399a4615dee14670ea74f02e4300d75f8 |
 | 672\|ORDER\|current-archive#318 | 672 | ORDER | 318 | e0073ed97eee466347c5152ed7010a1269054ae43eb06e69b7af77eb2e07c06e |
 | 1050\|ORDER\|current-archive#319 | 1050 | ORDER | 319 | 47181672982b417e0ec8eb5101e559b95796fc9d3419ef4a2add823982e86a1f |
+| 1330\|ORDER\|current-archive#320 | 1330 | ORDER | 320 | fcfb7c451e1026e1069114d658c8e752a71b54a13d329d1410d8bee199c8961b |
+| 1251\|ORDER\|current-archive#321 | 1251 | ORDER | 321 | c812ccaf19e5110b157bd4dbb38d714807c8f98606b27159214d8a0f18d093ed |
+| 944\|ORDER\|current-archive#322 | 944 | ORDER | 322 | e452d65cf6372e90c8aa1ea64d9e8d17715d39be1b0e641ade201a63fb460755 |
+| 1410\|ORDER\|current-archive#323 | 1410 | ORDER | 323 | 5e3cc4482a1ea412dc4a780944eba7e70b66bc34fabb98277ff079ddff603820 |
+| 545\|ORDER\|current-archive#324 | 545 | ORDER | 324 | 2118b1948d8b12fd2a5a1fdee5655b903b819cc88ac8f4a795fce2f1ec885948 |
+| 540\|ORDER\|current-archive#325 | 540 | ORDER | 325 | db7182cb41b9edd2c9257ffddc5dca36b42ba14b82301f70f4f84690ecb867f6 |
+| 239\|ORDER\|current-archive#326 | 239 | ORDER | 326 | a60b83d118526c814450207c5d91a340057680955b9124cbb2bab2cce3731e69 |
+| NA\|OTHER\|current-archive#327 |  | OTHER | 327 | 710db4e358396ea346e7b836fbe5d42f4efb851f82f816f17f5aa75c2a5051a4 |
