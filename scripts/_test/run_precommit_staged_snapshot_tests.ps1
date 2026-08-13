@@ -156,7 +156,7 @@ exit 0
     Write-Host '[PASS] T4 disposable repository/index/worktree isolation'
     Write-Host '[PASS] T5 Hook mode reached the selected suite'
     $t6 = Invoke-FastTier -PowerShell $powerShell -FastScript $fastScript -Root $tempRoot -PathsFile $pathsFile -DebugPretendIndexMoved
-    Assert-True (($t6.Exit -ne 0) -and (($t6.Output -join "`n") -match 'index .* changed content')) 'T6 index-movement refusal did not fire'
+    Assert-True (($t6.Exit -ne 0) -and (($t6.Output -join "`n") -match 'rewritten during the tier')) 'T6 index-movement refusal did not fire'
     Write-Host '[PASS] T6 existing hook-mode movement refusal remains fail-closed'
     Write-Host '[PASS] T7 bounded change is limited to the staged-snapshot seam and its cage'
     Write-Host 'ORDER-545 staged-snapshot integrity cage: PASS'

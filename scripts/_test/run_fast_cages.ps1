@@ -1598,8 +1598,22 @@ $stagedSnapshotPath = $null
 function New-StagedSnapshotWorktree {
     param([string]$Root)
 
-    $snapshot = Join-Path ([System.IO.Path]::GetTempPath()) `
-                ('ea_lab_fast_snapshot_' + [guid]::NewGuid().ToString('N'))
+    # The repository contains tracked archive paths over 200 characters long. A normal
+    # %TEMP% path leaves too little Windows MAX_PATH headroom for a full checkout, so put only
+    # this disposable linked worktree beneath a short system-drive root. The parent is created
+    # automatically; callers never need to override TEMP.
+    $systemDrive = [System.Environment]::GetEnvironmentVariable('SystemDrive')
+    if (-not $systemDrive) {
+        $systemDrive = [System.IO.Path]::GetPathRoot([System.IO.Path]::GetTempPath()).TrimEnd('\')
+    }
+    $snapshotParent = Join-Path $systemDrive 'ea_lab_tmp'
+    try {
+        New-Item -ItemType Directory -Path $snapshotParent -Force -ErrorAction Stop | Out-Null
+    } catch {
+        throw ("cannot create short staged-snapshot root {0}: {1}" -f $snapshotParent, $_.Exception.Message)
+    }
+    $snapshot = Join-Path $snapshotParent `
+                ('s_' + [guid]::NewGuid().ToString('N'))
     $priorIndex = $env:GIT_INDEX_FILE
     $priorAuthorName = $env:GIT_AUTHOR_NAME
     $priorAuthorEmail = $env:GIT_AUTHOR_EMAIL
@@ -1901,7 +1915,7 @@ if ($Hook) {
         $indexHashNow = (Get-FileHash -LiteralPath $hookIndexPath -Algorithm SHA256).Hash
         if ($DebugPretendIndexMoved) { $indexHashNow = 'DEBUG-FORCED-INDEX-MOVE' }
         if ($indexHashNow -ne $hookStampIndexHash) {
-            $evidenceProblems.Add(('the index ({0}) changed content during the tier (mtime ticks {1} -> {2}) -- a verdict over a moving index means nothing; re-run' -f $hookIndexPath, $hookStampIndexTime.Ticks, $indexTimeNow.Ticks))
+            $evidenceProblems.Add(('the index ({0}) was rewritten during the tier (content hash changed; mtime ticks {1} -> {2}) -- a verdict over a moving index means nothing; re-run' -f $hookIndexPath, $hookStampIndexTime.Ticks, $indexTimeNow.Ticks))
         }
     } elseif ($DebugPretendIndexMoved) {
         $evidenceProblems.Add('the index was rewritten during the tier (debug-forced) -- re-run')
