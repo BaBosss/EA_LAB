@@ -12541,3 +12541,122 @@ lever-presence check as part of its own STEP 0 before running anything.
 | kind | block_id | block_sha256 | review_ref |
 |---|---|---|---|
 | non-terminal-in-archive | 944\|ORDER\|current-archive#322 | e452d65cf6372e90c8aa1ea64d9e8d17715d39be1b0e641ade201a63fb460755 | user-supplied canonical inventory 2026-08-13 |
+
+## ORDER-490 — [🔴 guard coverage] ~~Wave5 guard G4 has never been observed firing~~ → **G4 runs and accepts; its REJECTION arm is `UNTESTED`** — force it, and close the gap the audit found in the guard itself — `REVIEWED(user-supplied canonical inventory, 2026-08-13): CANONICAL / DONE` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+<sub>🔧 **หัวใบแก้ 2026-07-28 หลัง Codex blind audit.** ของเดิมเขียนว่า guard "ไม่เคยถูกเห็นว่าทำงาน" ซึ่งพิสูจน์แล้วว่าไม่จริง — `signalled=26` แปลว่ามันทำงานและตอบผ่าน 26 ครั้ง เพราะ counter ตัวนั้นเพิ่มหลัง guard เท่านั้น · **ที่ยังไม่เคยถูกเห็นคือแขนปฏิเสธ** · รายละเอียด + ของแถมที่ใหญ่กว่าใบสั่ง อยู่ในบล็อก CODEX BLIND AUDIT ท้ายใบ</sub>
+**bars:** N-A (guard-coverage work, not an EA measurement) · **flat-lot probe:** N-A
+
+**Evidence:** `_triage/CODEX_AUDIT_RESULTS_2026-07-27.md` §1 finding 6 + the counters added in `c44ca743`/`671783b1`. Two full regression runs over the same window report `sl_invalid=0` across **2936 evaluated bars**:
+`evaluated=2936 signalled=26 unaccounted=0 | no_swings=0 bad_pattern=2568 no_tick=0 not_in_zone=203 struct_invalid=52 already_latched=87 NO_RISK_ATR=0 sl_invalid=0`
+
+**Why this is not a footnote.** Guard G4 — the broker stops-level check in `Wave5_SLValid` (`ea_template/core/ExitManager.mqh:25-47`) — is the control the **entire ORDER-082 structural design rests on**: it is what makes Wave5 "preventive, not detective", and it is the reason the naked-probe design was accepted in the first place. It has now been observed executing **zero times**. Per the VERDICT GATE guard clause that is `UNTESTED`, and the clause is explicit that *numbers identical to base in every digit is evidence a guard is inert, not evidence it is safe*. **Nobody has ever seen this guard reject anything.** That was invisible until 2026-07-27 because there was no counter; it is now measured, and the measurement is zero.
+
+**The work — a discriminating test, not a bigger sample:**
+1. Force the reject deliberately. `SYMBOL_TRADE_STOPS_LEVEL` is a broker property, so the lever is the **distance**, not the level: pick a symbol/TF where the wave-1 invalidation sits within the stops level, or drive `_17_SLbufferATR` to ~0 so `slPrice` lands within `minDist` of the tick. **Pre-register both directions** (`gate-specificity-not-just-sensitivity`): a config where it MUST fire, and one where it MUST stay silent.
+2. Confirm via the counter (`sl_invalid` > 0) **and** zero trades from that path — not from the report alone, which cannot tell the two apart.
+3. If it turns out G4 **cannot** fire on any reachable config, that is the real finding and it is bigger than this ticket: the naked-probe acceptance rested on a control that does not exist. Say so plainly rather than closing this quietly.
+
+**Also in scope (same class, cheap while here):** `NO_RISK_ATR=0` — the finding-2 guard added the same day is in the identical position. Its reachability is argued from `Indicators.mqh:104`, never demonstrated.
+
+**ห้าม / Prohibitions:** close this by running a longer window and reporting a bigger zero — a bigger sample of "never fired" is the same evidence · treat `sl_invalid=0` as proof the guard works · touch a live account or any `_vps_deploy/` bundle · edit `ea_template/core/` without `tpl_regression.ps1` in the same session · re-pin the baseline without the `re-pin` declaration (`.githooks/commit-msg` enforces it, and as of 2026-07-27 it actually can)
+
+---
+
+### 🔎 CODEX BLIND AUDIT (dispatched 2026-07-28, `task-ms3wgign-8kc63b`, 6m46s) — และมันแก้ **หัวเรื่องของใบนี้เอง**
+
+<sub>ยิงแบบ blind ตาม doctrine (ไม่ให้เห็นคำตอบฝั่งเรา — เราเองก็ยังไม่มีคำตอบ) · **ผมไล่เช็คข้ออ้างที่ load-bearing ทุกข้อกับ source ด้วยตัวเองแล้ว ไม่ได้เชื่อตามรายงาน** (ผลตรวจอยู่ท้ายแต่ละข้อ)</sub>
+
+**🔴 1. ชื่อใบนี้ผิด และผิดในทางที่สำคัญ.** ใบนี้เขียนว่า G4 *"has never been observed firing / never been observed executing"* — **ปนกันสองเรื่อง**
+`g_w5_n_signalled++` อยู่ที่บรรทัด **218** ส่วน `if(!Wave5_SLValid(...))` อยู่ที่ **211** และแขนปฏิเสธ `return` ออกไปที่ **213**
+⇒ ไม้ที่ signalled ได้ **ต้องผ่าน G4 มาแล้วทุกไม้** ⇒ **`signalled=26` คือหลักฐานว่า G4 ทำงานแล้วอย่างน้อย 26 ครั้ง และตอบ true ทุกครั้ง**
+**สิ่งที่ยังไม่เคยถูกเห็นคือ *แขนปฏิเสธ* ไม่ใช่ตัว guard** ⇒ สถานะที่ถูกต้อง = **"G4 reachable + observed accepting · rejection arm = `UNTESTED`"**
+✅ **ตรวจเองแล้ว:** `Entry_Wave5.mqh:211/213/218` เรียงตามนี้จริง — ลำดับนี้คือทั้งหมดที่คำกล่าวนี้ยืนอยู่ และมันยืนได้
+<sub>เรื่องนี้สำคัญเพราะ **"guard ตายเป็น dead code" กับ "แขนปฏิเสธยังไม่ถูกทดสอบ" ต้องแก้คนละวิธี** — อันแรกต้องรื้อโค้ด อันหลังต้องออกแบบเทส · ใบนี้เขียนไว้แบบแรก ซึ่งจะพาคนถัดไปไปผิดทาง</sub>
+
+**2. แขนปฏิเสธ reachable จริง — ไม่มีเงื่อนไขก่อนหน้าที่การันตีระยะ.** zone test ที่บรรทัด 150/152 คุม `iClose(...,1)` เทียบกับ `w1_end` ขณะที่ G4 เทียบ `slPrice` กับ **bid/ask สดที่ `Wave5_SLValid()` ไปดึงเองข้างใน** ⇒ **คนละปริมาณกัน** · ส่วน ATR check ที่ 192-193 การันตีแค่ `riskAtr > 0` ไม่ได้เทียบ buffer กับ minimum ของโบรกเลย · และ **G4 ปฏิเสธแล้วยังไม่ latch** (latch อยู่ที่ 219) ⇒ candidate เดิมกลับมาชน G4 ได้อีก
+เงื่อนไขที่ทำให้ยิง (จาก `ExitManager.mqh:27-41`): long ⇒ `bid − I + A×R < S×P` · short ⇒ `I − ask + A×R < S×P` · และถ้า `S=0` **สาขาระยะถูกปิดทั้งดุ้น** เหลือแค่เช็คบวก/ฝั่ง
+
+**🔴 3. ของแถมที่ใหญ่กว่าใบสั่ง — G4 ไม่ใช่การพิสูจน์ความถูกต้องกับโบรกอย่างที่ชื่อมันบอก.**
+`Wave5_SLValid()` อ่านแค่ `SYMBOL_TRADE_STOPS_LEVEL` + point · **ไม่แตะ `SYMBOL_TRADE_TICK_SIZE` และไม่แตะ `SYMBOL_TRADE_FREEZE_LEVEL` เลย** · และมันตรวจ **ราคาที่ยังไม่ normalize** — `ExitManager.mqh:134` เรียก `Wave5_SLValid()` ก่อน แล้วค่อย `NormalizeDouble(..., _Digits)` บรรทัดถัดไป
+⇒ **ผ่าน G4 ไม่ได้แปลว่า SL ที่ส่งจริงถูกต้อง** ⇒ คำว่า *"preventive, not detective"* ที่ ORDER-082 พิงอยู่ **กว้างเกินกว่าที่โค้ดทำจริง**
+✅ **ตรวจเองแล้ว:** `SYMBOL_TRADE_TICK_SIZE` โผล่ที่ `ExitManager.mqh:513` เท่านั้น (คนละ path) · `FREEZE_LEVEL` ไม่มีในไฟล์เลย · ลำดับ validate-ก่อน-normalize ที่ 134-135 เป็นอย่างที่ว่าจริง
+
+**🔴 4. ข้อสันนิษฐานเดิมว่า "บังคับให้ยิงใน tester ไม่ได้" — ผิดสำหรับ G4.** `HANDOFF_2026-07-27_AUDIT_REPAIR.md` §3 จัด finding 2/4/5 เป็น *"cannot be forced in the tester"* และเหมารวม G4 ไปด้วย · แต่ **`SYMBOL_TRADE_STOPS_LEVEL` ตั้งได้ผ่าน custom symbol** (`CustomSymbolSetInteger`) ⇒ **G4 บังคับให้ยิงใน tester ได้**
+<sub>⚠️ Codex ระบุเองว่าข้อนี้เป็น **inference จากเอกสาร API ไม่ได้ลองรัน** — ยังไม่ใช่ของที่พิสูจน์แล้ว แต่ก็พอที่จะทำให้ "ทำไม่ได้" ตกไป</sub>
+
+**เทสที่ถูกที่สุดที่ตัดสินได้ (เข้ากับ memory `gate-specificity-not-just-sensitivity` พอดี — ต้อง pre-register ทั้งสองฝั่ง):**
+- **arm ที่ต้องยิง:** custom symbol ที่ copy tick ของ run 26-signal มา · ตั้ง `SYMBOL_TRADE_STOPS_LEVEL` ใหญ่ๆ · `_17_SLbufferATR=0` (SL ไปนั่งที่ `w1_end` พอดี) ⇒ pre-register ว่าต้องได้ **`sl_invalid > 0` · `signalled` ลดลงหรือเป็น 0 · `unaccounted=0`**
+- **arm ที่ต้องเงียบ (specificity):** tick ชุดเดียวกัน `STOPS_LEVEL=0` หรือเล็กมาก ⇒ pre-register **`sl_invalid=0` · `signalled>0`**
+- **discriminating จริง** เพราะโครงสร้างตลาดเหมือนกันทั้งสอง arm ต่างกันแค่ property เดียวที่ `ExitManager.mqh:31` อ่าน
+- **ระดับ unit (ทนกว่า):** แยก `Wave5_SLValidAt(dir, sl, bid, ask, point, stopsLevelPts)` เป็น pure function แล้ว assert 4 เคส — โดยเฉพาะ **ที่ระยะเท่ากับ minDist พอดีต้องได้ true** เพราะโค้ดปฏิเสธ `< minDist` ไม่ใช่ `<= minDist` · แต่ **unit test พิสูจน์แค่ predicate** ยังต้องมี integration ที่พิสูจน์ว่า `Entry_Evaluate()` เพิ่ม counter จริงและกลืนสัญญาณจริง
+
+**5. adversarial pass ของ Codex เอง (ต้องเก็บไว้):** ข้อโต้แย้งที่แรงที่สุดคือ buffer `0.5 × Risk-ATR` ตาม default (`Inputs.mqh:291` + regression set) **อาจมากกว่า stops-level ของโบรกเสมอในทางปฏิบัติ** ซึ่งอธิบายเลขศูนย์ทั้งหมดได้ · **แต่ไม่ได้ทำให้แขนปฏิเสธ unreachable** เพราะไม่มี invariant ใดในซอร์สที่ผูก ATR · ระยะจากราคาถึง `w1_end` · และ `S×P` เข้าด้วยกัน
+**สิ่งที่จะพิสูจน์ว่าบทวิเคราะห์นี้ผิด:** run ที่ log ออกมาว่า `D>0` และระยะจริง `< D` **แต่ `signalled` ยังเพิ่มและ `sl_invalid` ยังศูนย์**
+
+**🔧 แก้ให้แล้ว 1 จุดในใบนี้:** ใบเดิมเขียนว่า counter พิมพ์ที่ `OnDeinit` บรรทัด 73 — **บรรทัด 73 คือ `PrintFormat` ข้างใน `Entry_Wave5_LogCounters()`** ส่วน `OnDeinit` เรียกมันที่ `LabCore.mqh:397` ✅ ตรวจเองแล้ว
+
+**สถานะใบนี้: ยัง `OPEN`** — audit เปลี่ยนสิ่งที่ต้องทำ ไม่ได้ทำแทน · เหลือ: รัน 2 arm ข้างบน แล้วตัดสินว่า `NO_RISK_ATR=0` เป็นคลาสเดียวกันไหม · **และหนี้ใหม่ที่ใบนี้ยังไม่มีเจ้าของ = ข้อ 3 (tick-size / freeze-level / validate-ก่อน-normalize)** ซึ่งไม่ใช่เรื่อง coverage แล้ว แต่เป็นช่องว่างของตัว guard เอง
+
+---
+
+
+## ORDER-1265 — [factory/S9] The scheduler's cache identity does not match what the driver runs, and the kill matrix cannot stop where the defects live — `REVIEWED(user-supplied canonical inventory, 2026-08-13): CANONICAL / DONE` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+Evidence = `_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT_S9_2026-08-03.md`. Brief committed before the audit ran.
+**Codex refutes all four of this slice's acceptance criteria (C1–C4).** Most of its case is
+hypotheses it says plainly it could not execute — those stay in that file's Part 2 and are **not**
+in this order. What is below was measured.
+
+| # | sev | defect | file |
+|---|---|---|---|
+| 1 | 🟠 | **`currency` is hashed into the cache identity and never passed to the runner**, which hardcodes `Currency=USD`; **`deposit` is a contractual number the driver coerces to `[int]`.** Measured: `currency` ∈ `EXECUTION_KEY_FIELDS`, `scheduler_run.ps1` mentions it **0 times**, `mt5_run.ps1` has `"Currency=USD"` and `[int]$Deposit`. A later request for EUR or for `10000.5` gets a **distinct digest** and is answered by `find_cached()` with evidence produced under USD at a rounded deposit | `scheduler.py:81` · `scripts/mt5_run.ps1` · `scripts/scheduler_run.ps1` |
+| 2 | 🟡 | **Terminal build is in no identity** — not in `EXECUTION_KEY_FIELDS`, not in design §6.4's data fingerprint. Update MT5 in place and old-build evidence is served as fresh. This repo has already measured tick history differing **14× across installs**; terminal build is the same class of difference, unpinned | `scheduler.py:81` |
+
+**The finding that is really about the cage, and it is the one worth acting on first.** Two of the
+three critical hypotheses are unreproducible **because the cage cannot represent the state they live
+in**: it cannot stop between `Start-Process` succeeding and the PID being written to the marker, and
+it creates report-freshness and the exit record **atomically**, so "report exists, sidecar does not"
+is unrepresentable. A kill-at-every-**state** matrix that can only stop *at* states and never
+*between* them is not measuring the acceptance sentence. **Fix the cage's expressiveness before
+judging the hypotheses** — otherwise they can neither be confirmed nor closed.
+
+ℹ️ The S9 brief said **seven** refusal codes; there are **eight** (`UNCOMPARABLE_PRIOR` was the one
+missed). The brief was wrong and the audit caught it — no code change owed.
+
+**Next cheapest step:** claim 2.7 (`COMPLETED` accepts a caller-asserted `fresh=true`, a nonexistent
+report path, a forged `run_start`, and `runner_exit=3`) is **purely in-process and needs no lane**.
+This seat's probe `CANNOT-BUILD` on an input-shape error, which is a failed probe and not a
+refutation. Settle it first.
+
+> ### ✅ SETTLED 2026-08-04, lane `S-2026-08-04-CORRECT5B`/`CORRECT6` — claim 2.7 is **CONFIRMED**, and #1/#2 re-measured
+>
+> The earlier probe's `CANNOT-BUILD` was an input-shape error in the probe, exactly as this row
+> suspected. Rebuilt against the real `EXECUTION_KEY_FIELDS` and driven in-process — no lane, no
+> tester, nothing written to the repo. **Claim 2.7 moves out of the audit's Part 2 and into this
+> order as a measured defect.**
+>
+> **`S6` checks the proof's INTERNAL SELF-CONSISTENCY and never checks it against the disk.** A
+> `COMPLETED` whose `report_fresh_proof` is entirely caller-asserted validates **CLEAN**:
+> `fresh: true`, `runner_exit: 0` **or `3`**, a `report_path` pointing at a file **that does not
+> exist on this machine** (measured: `os.path.exists(...) == False`), and a `run_start` the caller
+> chose one second before its own `report_mtime`.
+>
+> **Five controls, all REFUSED, so `S6` is live rather than absent** — `fresh=false` ·
+> `runner_exit=1` · an empty `report_path` · `report_mtime` before `run_start` · no proof at all.
+> That is what makes this a gap in *what is verified* rather than a rule that was never wired up.
+>
+> **#1 re-measured and it holds in both halves:** `currency` **is** in `EXECUTION_KEY_FIELDS`;
+> `scripts/scheduler_run.ps1` mentions it **0 times**; `scripts/mt5_run.ps1:134` hardcodes
+> `"Currency=USD"` and `:31` declares `[int]$Deposit`. And the digests **do** separate: USD vs EUR
+> and `10000` vs `10000.5` each produce a distinct `execution_key_digest`, so a later request for
+> either is a cache MISS answered by evidence produced under USD at a rounded deposit.
+>
+> **#2 re-measured:** `terminal_build`/`build_number` appear **0 times** in `scheduler.py`.
+>
+> 🚫 **Nothing repaired here, deliberately.** This lane measured; it did not touch the S9 slice.
+> The row's own sequencing still stands — **fix the cage's expressiveness before judging the three
+> critical hypotheses**, because a kill matrix that can only stop *at* states and never *between*
+> them cannot represent the state they live in. Whoever takes that starts with these numbers
+> instead of re-deriving them.
+
+---
