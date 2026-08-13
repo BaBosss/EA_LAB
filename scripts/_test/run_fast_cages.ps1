@@ -1467,18 +1467,11 @@ if ($null -ne $EvidenceSuitesOverride) {
 
 $hookStampHead = ''
 $hookStampIndexTime = $null
+$hookStampIndexHash = ''
 $hookIndexPath = ''
 if ($Hook) {
     $env:EA_LAB_EVIDENCE = 'index'
     Write-Host '[fast-cages] hook mode: EA_LAB_EVIDENCE=index set for every child'
-    # T6: a concurrent writer (this repo has a scheduled committer) can move HEAD or the
-    # index mid-tier, leaving two suites judging two different commits. Detected, not
-    # prevented: stamp both now, compare at the end, refuse on movement.
-    $hookStampHead = (& git -C $RepoRoot rev-parse HEAD 2>$null)
-    $hookIndexPath = if ($env:GIT_INDEX_FILE) { $env:GIT_INDEX_FILE } else { Join-Path $RepoRoot '.git\index' }
-    if (Test-Path -LiteralPath $hookIndexPath) {
-        $hookStampIndexTime = (Get-Item -LiteralPath $hookIndexPath).LastWriteTimeUtc
-    }
 }
 
 $ps = (Get-Process -Id $PID).Path
@@ -1595,6 +1588,123 @@ function Get-InputHashes {
     return $out
 }
 
+# ORDER-545. A hook runs against the index, but the suites are PowerShell programs that resolve
+# their repository root from their own script path. Merely exporting EA_LAB_EVIDENCE=index does
+# not redirect those reads: a suite can still call Get-Content on the live worktree. Materialize
+# the exact index tree in a disposable linked worktree and launch hook-mode suites from there.
+# Manual runs retain their historical worktree semantics.
+$stagedSnapshotPath = $null
+
+function New-StagedSnapshotWorktree {
+    param([string]$Root)
+
+    $snapshot = Join-Path ([System.IO.Path]::GetTempPath()) `
+                ('ea_lab_fast_snapshot_' + [guid]::NewGuid().ToString('N'))
+    $priorIndex = $env:GIT_INDEX_FILE
+    $priorAuthorName = $env:GIT_AUTHOR_NAME
+    $priorAuthorEmail = $env:GIT_AUTHOR_EMAIL
+    $priorCommitterName = $env:GIT_COMMITTER_NAME
+    $priorCommitterEmail = $env:GIT_COMMITTER_EMAIL
+    if ($priorIndex) {
+        $sourceIndex = $priorIndex
+    } else {
+        $sourceIndex = ((& git --no-optional-locks -C $Root rev-parse --git-path index 2>$null) | Select-Object -Last 1).ToString().Trim()
+        if (-not [System.IO.Path]::IsPathRooted($sourceIndex)) { $sourceIndex = Join-Path $Root $sourceIndex }
+    }
+    $temporaryIndex = Join-Path ([System.IO.Path]::GetTempPath()) `
+                      ('ea_lab_fast_snapshot_index_' + [guid]::NewGuid().ToString('N'))
+    try {
+        Copy-Item -LiteralPath $sourceIndex -Destination $temporaryIndex -Force
+        $env:GIT_INDEX_FILE = $temporaryIndex
+        $treeOutput = @(& git -C $Root write-tree 2>&1)
+        $treeExit = $LASTEXITCODE
+        if ($treeExit -ne 0) {
+            throw ("cannot materialize staged tree: {0}" -f ($treeOutput -join "`n"))
+        }
+        $tree = (($treeOutput | Select-Object -Last 1).ToString()).Trim()
+        if ($tree -notmatch '^[0-9a-f]{40}$') { throw "write-tree returned an invalid tree oid: $tree" }
+
+        # worktree add must use its own index. The hook's temporary index names the parent
+        # worktree and must not be reused for checkout or cleanup of this disposable one.
+        Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue
+        $headOutput = @(& git --no-optional-locks -C $Root rev-parse HEAD 2>&1)
+        $headExit = $LASTEXITCODE
+        if ($headExit -ne 0) {
+            throw ("cannot resolve HEAD for staged tree: {0}" -f ($headOutput -join "`n"))
+        }
+        $head = (($headOutput | Select-Object -Last 1).ToString()).Trim()
+        $env:GIT_AUTHOR_NAME = 'EA_LAB staged snapshot'
+        $env:GIT_AUTHOR_EMAIL = 'ea-lab-staged-snapshot@example.invalid'
+        $env:GIT_COMMITTER_NAME = 'EA_LAB staged snapshot'
+        $env:GIT_COMMITTER_EMAIL = 'ea-lab-staged-snapshot@example.invalid'
+        $commitOutput = @(& git -C $Root commit-tree $tree -p $head -m 'temporary ORDER-545 staged snapshot' 2>&1)
+        if ($LASTEXITCODE -ne 0) {
+            throw ("cannot create temporary staged snapshot commit: {0}" -f ($commitOutput -join "`n"))
+        }
+        $commit = (($commitOutput | Select-Object -Last 1).ToString()).Trim()
+        if ($commit -notmatch '^[0-9a-f]{40}$') { throw "commit-tree returned an invalid commit oid: $commit" }
+
+        $addOutput = @(& git -C $Root worktree add --detach --no-checkout --quiet $snapshot $commit 2>&1)
+        if ($LASTEXITCODE -ne 0) {
+            throw ("cannot create temporary staged snapshot worktree: {0}" -f ($addOutput -join "`n"))
+        }
+        $checkoutOutput = @(& git -C $snapshot reset --hard --quiet $commit 2>&1)
+        if ($LASTEXITCODE -ne 0) {
+            throw ("cannot populate temporary staged snapshot worktree: {0}" -f ($checkoutOutput -join "`n"))
+        }
+        return $snapshot
+    } catch {
+        if (Test-Path -LiteralPath $snapshot) {
+            Remove-Item -LiteralPath $snapshot -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        throw
+    } finally {
+        if ($null -eq $priorIndex) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
+        else { $env:GIT_INDEX_FILE = $priorIndex }
+        if ($null -eq $priorAuthorName) { Remove-Item Env:GIT_AUTHOR_NAME -ErrorAction SilentlyContinue }
+        else { $env:GIT_AUTHOR_NAME = $priorAuthorName }
+        if ($null -eq $priorAuthorEmail) { Remove-Item Env:GIT_AUTHOR_EMAIL -ErrorAction SilentlyContinue }
+        else { $env:GIT_AUTHOR_EMAIL = $priorAuthorEmail }
+        if ($null -eq $priorCommitterName) { Remove-Item Env:GIT_COMMITTER_NAME -ErrorAction SilentlyContinue }
+        else { $env:GIT_COMMITTER_NAME = $priorCommitterName }
+        if ($null -eq $priorCommitterEmail) { Remove-Item Env:GIT_COMMITTER_EMAIL -ErrorAction SilentlyContinue }
+        else { $env:GIT_COMMITTER_EMAIL = $priorCommitterEmail }
+        Remove-Item -LiteralPath $temporaryIndex -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Remove-StagedSnapshotWorktree {
+    param([string]$Root, [string]$Snapshot)
+    if (-not $Snapshot) { return }
+    $priorIndex = $env:GIT_INDEX_FILE
+    try {
+        Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue
+        & git -C $Root worktree remove --force $Snapshot 2>$null | Out-Null
+    } finally {
+        if ($null -eq $priorIndex) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
+        else { $env:GIT_INDEX_FILE = $priorIndex }
+    }
+    if (Test-Path -LiteralPath $Snapshot) {
+        Remove-Item -LiteralPath $Snapshot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+$childRepoRoot = $RepoRoot
+if ($Hook) {
+    $stagedSnapshotPath = New-StagedSnapshotWorktree -Root $RepoRoot
+    $childRepoRoot = $stagedSnapshotPath
+    Write-Host ("[fast-cages] hook mode: child suites run from staged snapshot {0}" -f $stagedSnapshotPath)
+    # T6: stamp only after staged-snapshot materialization. The snapshot is built from the
+    # hook index and its git plumbing may refresh index metadata; that setup is not a mid-tier
+    # movement. Any later content change is still refused below.
+    $hookStampHead = (& git --no-optional-locks -C $RepoRoot rev-parse HEAD 2>$null)
+    $hookIndexPath = if ($env:GIT_INDEX_FILE) { $env:GIT_INDEX_FILE } else { Join-Path $RepoRoot '.git\index' }
+    if (Test-Path -LiteralPath $hookIndexPath) {
+        $hookStampIndexTime = (Get-Item -LiteralPath $hookIndexPath).LastWriteTimeUtc
+        $hookStampIndexHash = (Get-FileHash -LiteralPath $hookIndexPath -Algorithm SHA256).Hash
+    }
+}
+
 function Get-IndexPath {
     param([string]$GitDir)
     # B2 (independent review). git honours GIT_INDEX_FILE, and `check_s2a_migration.py`'s `_git()`
@@ -1670,7 +1780,7 @@ $stampStart = Get-GitStateStamp -GitDir (Join-Path $RepoRoot '.git')
 Write-TierStamp -LogPath $tierRunLog -GitDir (Join-Path $RepoRoot '.git') -Phase 'start' -Suite '' -Exit $null -Seconds 0
 
 foreach ($suite in $selected) {
-    $path = Join-Path $testDir $suite
+    $path = Join-Path (Join-Path $childRepoRoot 'scripts\_test') $suite
     if (-not (Test-Path -LiteralPath $path)) {
         # A missing suite is a failure, not a skip. Silently passing over a cage that was
         # deleted or renamed is precisely how a cage stops existing without anyone noticing.
@@ -1690,12 +1800,22 @@ foreach ($suite in $selected) {
     # child-marker env var set. It killed the instrumentation on exactly the abnormal path the
     # instrumentation exists for. Caught here and converted into an ordinary non-zero result, so
     # the run is recorded rather than vanishing.
+    $priorChildIndex = $env:GIT_INDEX_FILE
+    $priorChildLocation = Get-Location
     try {
+        if ($Hook) {
+            Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue
+            Set-Location -LiteralPath $childRepoRoot
+        }
         $out = & $ps -NoProfile -ExecutionPolicy Bypass -File $path 2>&1
         $code = $LASTEXITCODE
     } catch {
         $out = "SUITE THREW (stderr under EAP=Stop, or the launcher failed): $($_.Exception.Message)"
         $code = if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }
+    } finally {
+        if ($null -eq $priorChildIndex) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
+        else { $env:GIT_INDEX_FILE = $priorChildIndex }
+        Set-Location -LiteralPath $priorChildLocation
     }
     $sw.Stop()
     $total += $sw.Elapsed.TotalSeconds
@@ -1772,15 +1892,16 @@ if ($Hook) {
         }
     }
     # ORDER-670 T6: did the ground move under the run?
-    $headNow = (& git -C $RepoRoot rev-parse HEAD 2>$null)
+    $headNow = (& git --no-optional-locks -C $RepoRoot rev-parse HEAD 2>$null)
     if ($hookStampHead -and $headNow -ne $hookStampHead) {
         $evidenceProblems.Add(('HEAD moved during the tier ({0} -> {1}) -- two suites may have judged two different commits; re-run' -f $hookStampHead, $headNow))
     }
     if ($null -ne $hookStampIndexTime -and (Test-Path -LiteralPath $hookIndexPath)) {
         $indexTimeNow = (Get-Item -LiteralPath $hookIndexPath).LastWriteTimeUtc
-        if ($DebugPretendIndexMoved) { $indexTimeNow = $indexTimeNow.AddSeconds(1) }
-        if ($indexTimeNow -ne $hookStampIndexTime) {
-            $evidenceProblems.Add(('the index ({0}) was rewritten during the tier -- a verdict over a moving index means nothing; re-run' -f $hookIndexPath))
+        $indexHashNow = (Get-FileHash -LiteralPath $hookIndexPath -Algorithm SHA256).Hash
+        if ($DebugPretendIndexMoved) { $indexHashNow = 'DEBUG-FORCED-INDEX-MOVE' }
+        if ($indexHashNow -ne $hookStampIndexHash) {
+            $evidenceProblems.Add(('the index ({0}) changed content during the tier (mtime ticks {1} -> {2}) -- a verdict over a moving index means nothing; re-run' -f $hookIndexPath, $hookStampIndexTime.Ticks, $indexTimeNow.Ticks))
         }
     } elseif ($DebugPretendIndexMoved) {
         $evidenceProblems.Add('the index was rewritten during the tier (debug-forced) -- re-run')
@@ -1830,6 +1951,10 @@ if ($tierRunLog) {
 # fixed.
 function Exit-Tier {
     param([int]$Code)
+    if ($stagedSnapshotPath) {
+        Remove-StagedSnapshotWorktree -Root $RepoRoot -Snapshot $stagedSnapshotPath
+        $stagedSnapshotPath = $null
+    }
     # Restore the child-marker env var on EVERY path out of this script, not just the happy
     # one. A guard that cleans up only when it passes is a guard that leaks exactly when
     # something went wrong -- which is when the next run's transcript matters most.
