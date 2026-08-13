@@ -61,6 +61,7 @@ SIGNERS = {
     'docs/PARAM_REGISTRY.csv': LEAD,
     'scripts/experiment_event_log.ps1': LEAD,
     '_triage/factory_os/snapshot_validator.py': LEAD,
+    '_triage/factory_os/qi_1.py': LEAD,
 }
 
 KEEP_EMBEDDED = ('this fact is a sub-object of another entity and owns no file of its own, so there '
@@ -1042,6 +1043,13 @@ def _pin_commit(entity, path, pins, head):
         return head
     commit, pinned_path = rec
     return commit if pinned_path == path else head
+
+
+# QI-1 canonical append-only contract/result records share one existing writer authority.
+ROWS.extend([
+    dict(entity='ExperimentContract', owner='_triage/factory_os/qi_1.py', proposed='_triage/factory_os/qi_1.py', disposition='KEEP', canonical_or_derived='canonical', same_blob_reason='Both entities are intentionally owned by the single QI-1 writer module; this is one authority, not a second registry.', keep_reason='QI-1 contracts are written only by the existing qi_1.py writer.', breaks_if_moved='Moving this row without the writer would orphan contract validation.', breaks_if_not_moved='Keeping the row preserves one canonical contract writer.', reverse_steps=KEEP_REVERSE, evidence_lost=KEEP_NO_LOSS, retention_window=KEEP_RETENTION),
+    dict(entity='ExperimentResult', owner='_triage/factory_os/qi_1.py', proposed='_triage/factory_os/qi_1.py', disposition='KEEP', canonical_or_derived='canonical', same_blob_reason='Both entities are intentionally owned by the single QI-1 writer module; this is one authority, not a second registry.', keep_reason='QI-1 results are written only by the existing qi_1.py writer.', breaks_if_moved='Moving this row without the writer would orphan result binding.', breaks_if_not_moved='Keeping the row preserves one canonical result writer.', reverse_steps=KEEP_REVERSE, evidence_lost=KEEP_NO_LOSS, retention_window=KEEP_RETENTION),
+])
 
 
 def build_rows(pins=None):

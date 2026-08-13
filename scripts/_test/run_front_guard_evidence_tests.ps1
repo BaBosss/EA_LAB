@@ -114,6 +114,33 @@ function Good([string]$m) { Write-Host "  [ok]   $m" }
 function Git([string]$argline) { Invoke-EvidenceGitBytes -Arguments $argline -RepoRoot $RepoRoot }
 function GitText([string]$argline) { (ConvertFrom-EvidenceUtf8 -Bytes (Git $argline).Bytes).Trim() }
 
+# `.git` is a directory in the primary checkout but a gitfile in a linked worktree. Resolve the
+# index through Git so this fixture copies the index that belongs to the checkout under test.
+$realIndexPath = GitText 'rev-parse --git-path index'
+if (-not $realIndexPath) { throw "git rev-parse --git-path index returned no path for $RepoRoot" }
+if (-not [System.IO.Path]::IsPathRooted($realIndexPath)) {
+    $realIndexPath = Join-Path $RepoRoot ($realIndexPath -replace '/', '\')
+}
+$realIndexPath = (Resolve-Path -LiteralPath $realIndexPath).Path
+
+# The staged-snapshot worktree contains tracked files only; the embedded Python runtime's zip is
+# intentionally ignored. Make that test-only runtime input available when the snapshot omits it,
+# using the repository's common checkout as the source. The disposable snapshot removes it with
+# the rest of its worktree after this suite.
+$runtimeZip = Join-Path $RepoRoot 'tools\python312\python312.zip'
+if (-not (Test-Path -LiteralPath $runtimeZip)) {
+    $commonGitDir = GitText 'rev-parse --git-common-dir'
+    if (-not [System.IO.Path]::IsPathRooted($commonGitDir)) {
+        $commonGitDir = Join-Path $RepoRoot ($commonGitDir -replace '/', '\')
+    }
+    $sourceRuntimeZip = Join-Path ((Split-Path -Parent (Resolve-Path -LiteralPath $commonGitDir).Path)) 'tools\python312\python312.zip'
+    if (-not (Test-Path -LiteralPath $sourceRuntimeZip)) {
+        throw "embedded Python runtime zip is unavailable at $sourceRuntimeZip"
+    }
+    Copy-Item -LiteralPath $sourceRuntimeZip -Destination $runtimeZip -Force
+    $runtimeZipCopied = $true
+}
+
 $INV = 'portfolio/DEPLOYMENTS.csv'
 $guard = Join-Path $RepoRoot 'scripts\check_state.ps1'
 $ps = (Get-Process -Id $PID).Path
@@ -159,9 +186,9 @@ Copy-Item -LiteralPath $INV -Destination $backup -Force
 # A COPY of the index. Everything below stages into this; `.git/index` is never written, so the
 # tier's T6 "did the ground move under the run" detector stays true and stays useful.
 $tmpIndex = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674_" + [guid]::NewGuid().ToString('N') + '.idx')
-Copy-Item -LiteralPath (Join-Path $RepoRoot '.git\index') -Destination $tmpIndex -Force
+Copy-Item -LiteralPath $realIndexPath -Destination $tmpIndex -Force
 $prevIndexEnv = $env:GIT_INDEX_FILE
-$realIndexBefore = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
+$realIndexBefore = (Get-Item -LiteralPath $realIndexPath).LastWriteTimeUtc
 $env:GIT_INDEX_FILE = $tmpIndex
 try {
     $raw = [System.IO.File]::ReadAllText((Join-Path $RepoRoot ($INV -replace '/', '\')))
@@ -280,7 +307,7 @@ if ($nowIndexSha -eq $origIndexSha -and $nowDiskSha -eq $origDiskSha) {
 # ...and the REAL index was never written at all, which is what keeps T6 meaningful. Asserted
 # separately from the shas above: "the bytes are back" and "the file was never touched" are
 # different claims, and only the second one lets this suite live inside the tier.
-$realIndexAfter = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
+$realIndexAfter = (Get-Item -LiteralPath $realIndexPath).LastWriteTimeUtc
 if ($realIndexAfter -eq $realIndexBefore) {
     Good 'A6 .git/index was never written -- the attack ran against a temp index, so T6 stays intact'
 } else {
@@ -431,9 +458,9 @@ function StageBlobFrom([string]$RelPath, [string]$AppendText) {
 }
 
 $tmpIndex2 = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674b_" + [guid]::NewGuid().ToString('N') + '.idx')
-Copy-Item -LiteralPath (Join-Path $RepoRoot '.git\index') -Destination $tmpIndex2 -Force
+Copy-Item -LiteralPath $realIndexPath -Destination $tmpIndex2 -Force
 $prevIndexEnv2 = $env:GIT_INDEX_FILE
-$realIndexBefore2 = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
+$realIndexBefore2 = (Get-Item -LiteralPath $realIndexPath).LastWriteTimeUtc
 $env:GIT_INDEX_FILE = $tmpIndex2
 try {
     # B0 SPECIFICITY FIRST, so "the attack goes red" cannot be confused with "this guard always
@@ -473,7 +500,7 @@ $nowActiveIdx  = GitText ('rev-parse ":{0}"' -f $ACTIVE)
 $nowArchiveIdx = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
 $nowActiveDisk  = GitText ('hash-object "{0}"' -f $ACTIVE)
 $nowArchiveDisk = GitText ('hash-object "{0}"' -f $ARCHIVE)
-$nowIndexAfter2 = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
+$nowIndexAfter2 = (Get-Item -LiteralPath $realIndexPath).LastWriteTimeUtc
 if ($nowActiveIdx -eq $origActiveIdx -and $nowArchiveIdx -eq $origArchiveIdx -and
     $nowActiveDisk -eq $origActiveDisk -and $nowArchiveDisk -eq $origArchiveDisk -and
     $nowIndexAfter2 -eq $realIndexBefore2) {
@@ -512,9 +539,9 @@ function RunHandoff {
 $origArchiveIdx2  = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
 $origArchiveDisk2 = GitText ('hash-object "{0}"' -f $ARCHIVE)
 $tmpIndex3 = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674c_" + [guid]::NewGuid().ToString('N') + '.idx')
-Copy-Item -LiteralPath (Join-Path $RepoRoot '.git\index') -Destination $tmpIndex3 -Force
+Copy-Item -LiteralPath $realIndexPath -Destination $tmpIndex3 -Force
 $prevIndexEnv3 = $env:GIT_INDEX_FILE
-$realIndexBefore3 = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
+$realIndexBefore3 = (Get-Item -LiteralPath $realIndexPath).LastWriteTimeUtc
 $env:GIT_INDEX_FILE = $tmpIndex3
 try {
     # The handoff routes ONE item, to an order that exists only in the STAGED archive.
@@ -560,7 +587,7 @@ try {
 $nowArchiveIdx2  = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
 $nowArchiveDisk2 = GitText ('hash-object "{0}"' -f $ARCHIVE)
 if ($nowArchiveIdx2 -eq $origArchiveIdx2 -and $nowArchiveDisk2 -eq $origArchiveDisk2 -and
-    (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc -eq $realIndexBefore3 -and
+    (Get-Item -LiteralPath $realIndexPath).LastWriteTimeUtc -eq $realIndexBefore3 -and
     -not (Test-Path -LiteralPath $probeAbs)) {
     Good 'C  the archive is byte-identical on disk AND in the index, the probe handoff is gone, and .git/index was never written'
 } else {
@@ -580,6 +607,7 @@ if ($hook -match '(?m)^\s*export\s+EA_LAB_EVIDENCE=index') {
 }
 
 PhaseReport
+if ($runtimeZipCopied) { Remove-Item -LiteralPath $runtimeZip -Force -ErrorAction SilentlyContinue }
 Pop-Location
 if ($fail -gt 0) {
     Write-Host "[front-guards] $fail FAILURE(S)" -ForegroundColor Red

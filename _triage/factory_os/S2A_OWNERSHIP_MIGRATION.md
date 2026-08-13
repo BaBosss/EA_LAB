@@ -88,6 +88,8 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `DeploymentAttestationEvent` | `portfolio/ATTESTATION_MAP.csv` | `portfolio/ATTESTATION_MAP.csv` | KEEP | claude (lead engineer) | PROPOSED |
 | `EvidenceRef` | `docs/memory_control/experiment_events/evidenc…` | `docs/memory_control/experiment_events/evidenc…` | KEEP | claude (lead engineer) | PROPOSED |
 | `ExecutionKey` | `EMBEDDED:RunTransition` | `EMBEDDED:RunTransition` | KEEP | claude (lead engineer) | PROPOSED |
+| `ExperimentContract` | `_triage/factory_os/qi_1.py` | `_triage/factory_os/qi_1.py` | KEEP | claude (lead engineer) | PROPOSED |
+| `ExperimentResult` | `_triage/factory_os/qi_1.py` | `_triage/factory_os/qi_1.py` | KEEP | claude (lead engineer) | PROPOSED |
 | `IdeaRef` | `INTAKE_QUEUE.md` | `INTAKE_QUEUE.md` | KEEP | user (Boss) | PROPOSED |
 | `MetricRef` | `EMBEDDED:CoverageCell` | `EMBEDDED:CoverageCell` | KEEP | claude (lead engineer) | PROPOSED |
 | `ModuleUse` | `EMBEDDED:Hypothesis` | `EMBEDDED:Hypothesis` | KEEP | claude (lead engineer) | PROPOSED |
@@ -101,7 +103,7 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `SnapshotMeta` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 | `SnapshotVerdict` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 
-**KEEP = 18 · TRANSFER = 14** · 32 rows total.
+**KEEP = 20 · TRANSFER = 14** · 34 rows total.
 
 ## The two coverage numbers, reconciled rather than equated
 
@@ -276,6 +278,8 @@ One block per row that proposes a move. These four fields are the reviewer check
 | `DeploymentAttestationEvent` | `portfolio/ATTESTATION_MAP.csv` | design section 1.1 reuses this file directly for Candidate/Deployment identity (section 5.6). The schema's x-owner-file also mentions an "append-only event log" beside the CSV; that log is NOT proposed here, because no PLANNED_PATHS entry declares it and inventing a destination inside a proposal is… |
 | `EvidenceRef` | `docs/memory_control/experiment_events/e…` | design section 1.3 #6: owned, with its own schema, and "no new index. Register through the existing utility." The manifest already stores exactly the {path, commit_oid, blob_oid, raw_sha256} shape this order recomputes for every owner_ref, so it is the precedent for the pinning discipline rather th… |
 | `ExecutionKey` | `EMBEDDED:RunTransition` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
+| `ExperimentContract` | `_triage/factory_os/qi_1.py` | QI-1 contracts are written only by the existing qi_1.py writer. |
+| `ExperimentResult` | `_triage/factory_os/qi_1.py` | QI-1 results are written only by the existing qi_1.py writer. |
 | `IdeaRef` | `INTAKE_QUEUE.md` | design section 1.3 #11 is unusually direct: the file "opens by declaring itself the single place for every new source/strategy drop", so there is to be "no ops/ideas.csv". Stable ID and exact-URL dedupe are added AS COLUMNS on the existing owner, and the Factory OS holds only a read projection. |
 | `MetricRef` | `EMBEDDED:CoverageCell` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `ModuleUse` | `EMBEDDED:Hypothesis` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |

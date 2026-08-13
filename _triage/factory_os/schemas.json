@@ -3145,7 +3145,10 @@
             "strategy_revision": { "type": "integer", "minimum": 1 }
           }
         },
-        "experiment_type": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$" },
+        "experiment_type": {
+          "type": "string",
+          "enum": ["EA_EXECUTABLE", "EA_BACKTEST", "BACKTEST", "OPTIMIZATION", "EA_OPTIMIZATION"]
+        },
         "spec_ref": { "$ref": "#/$defs/OwnerRef" },
         "hypothesis_revision": { "type": ["string", "null"], "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
         "implementation_ref": {

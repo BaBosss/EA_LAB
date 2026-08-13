@@ -945,7 +945,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `strategy_ref` | object *(fields below)* | **yes** | closed · requires `ea_id`, `strategy_revision` |
 | `strategy_ref.ea_id` | `string` | **yes** | pattern `^E[0-9]{3}$` |
 | `strategy_ref.strategy_revision` | `integer` | **yes** | min `1` |
-| `experiment_type` | `string` | **yes** | pattern `^[A-Za-z][A-Za-z0-9_-]{0,63}$` |
+| `experiment_type` | `EA_EXECUTABLE` \| `EA_BACKTEST` \| `BACKTEST` \| `OPTIMIZATION` \| `EA_OPTIMIZATION` | **yes** |  |
 | `spec_ref` | [`OwnerRef`](#ownerref) | **yes** |  |
 | `hypothesis_revision` | `string` \| `null` | **yes** | pattern `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$` |
 | `implementation_ref` | object *(fields below)* | **yes** | closed · requires `ex5_hash`, `source_hash`, `effective_config_hash`, `set_hash` |
