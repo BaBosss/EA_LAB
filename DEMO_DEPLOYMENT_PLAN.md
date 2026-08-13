@@ -554,3 +554,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 **จับตาพิเศษ (จากภาพหน้าบัญชี Real):** พอร์ต MT4 cent อีกหลายตัว (Abyssal/Ember Strike/Twin Flares/Golden
 Ember/Iron Discipline) โชว์ **Free margin 0.00-0.35 USC** — ถ้าบัญชีพวกนี้มีเงิน+ไม้เปิดอยู่ = ชิด margin call
 มาก / ถ้ายังไม่ funded = ไม่เป็นไร → user ยืนยันสถานะด้วย
+## 2026-08-14 VPS manual-ops closeout
+
+- `992001` TsMom_XAU: owner corrected discovered H1 drift to canonical D1; pre-correction H1 evidence is discarded, valid-forward reset is `2026-08-14`, and the next valid D1 first trade starts the judge clock.
+- `990026` ORDER-353: full CONFIG PASS on `463666728/BTCUSDm/H4`; zero closed trades as of `2026-08-14`; first trade remains NONE and disposition is `MONITOR_FORWARD`.
