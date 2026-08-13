@@ -110,6 +110,17 @@ if [ "$rc" -ne 0 ]; then
   exit $rc
 fi
 
+qi_staged=$(git diff --cached --name-only -- 'factory/experiments')
+if [ -n "$qi_staged" ]; then
+  "$py" _triage/factory_os/qi1_staged_guard.py
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo ""
+    echo "[pre-commit] QI-1 staged append-only/whole-store check failed (above)."
+    exit $rc
+  fi
+fi
+
 event_staged=$(git diff --cached --name-only -- 'docs/memory_control/experiment_events')
 if [ -n "$event_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_experiment_events.ps1

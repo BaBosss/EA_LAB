@@ -13,6 +13,7 @@ import os
 import re
 
 import candidate as _candidate
+import capability as _capability
 import evidence as _evidence
 
 
@@ -108,8 +109,26 @@ def _id_or_null(value, regex, field):
 
 
 def _owner_ref_problems(ref, field, root):
+    if isinstance(ref, dict):
+        type_problems = []
+        for name in ("entity", "owner_type", "path", "commit_oid", "blob_oid", "raw_sha256"):
+            if name in ref and not isinstance(ref[name], str):
+                type_problems.append("%s.%s must be a string" % (field, name))
+        if "anchor" in ref and ref["anchor"] is not None and not isinstance(ref["anchor"], str):
+            type_problems.append("%s.anchor must be a string or null" % field)
+        if type_problems:
+            return type_problems
     source = _evidence.EvidenceSource("worktree", root=_root(root))
-    return _candidate.owner_ref_problems(ref, field, src=source)
+    problems = _candidate.owner_ref_problems(ref, field, src=source)
+    try:
+        schema = _json(_path(root, "_triage/factory_os/schemas.json"))
+        allowed = schema["$defs"]["OwnerRef"]["properties"]["owner_type"]["enum"]
+    except (IOError, KeyError, TypeError, ValueError) as exc:
+        problems.append("canonical OwnerRef schema is unavailable: %s" % exc)
+        return problems
+    if isinstance(ref, dict) and ref.get("owner_type") not in allowed:
+        problems.append("%s.owner_type is not a canonical OwnerRef value" % field)
+    return problems
 
 
 def load_strategy_index(root=None):
@@ -256,18 +275,20 @@ def validate_contract(contract, root=None):
     return problems
 
 
-def _strategy_matches_run(strategy_ref, execution_key, root):
-    if not isinstance(execution_key, dict):
+def strategy_matches_run(strategy_ref, execution_key, root=None):
+    """Match an observed run to one exact, existing R4 strategy identity."""
+    if (not isinstance(strategy_ref, dict) or set(strategy_ref) != STRATEGY_FIELDS or
+            not isinstance(execution_key, dict)):
         return False
-    expert = str(execution_key.get("expert", ""))
     expected = load_strategy_index(root)
-    ea_id = strategy_ref["ea_id"]
-    short_name = next((row.get("short_name") for row in _json(_path(root, "factory/strategy_catalog.json"))
-                       if row.get("ea_id") == ea_id), None)
-    boss_match = re.search(r"Boss[_-](\d{2})", expert, re.I)
-    if boss_match and "E0%s" % int(boss_match.group(1)) == ea_id:
-        return True
-    return bool(short_name and short_name.lower() in expert.lower()) and ea_id in expected
+    ea_id = strategy_ref.get("ea_id")
+    if ea_id not in expected or expected[ea_id] != strategy_ref.get("strategy_revision"):
+        return False
+    wrapper = _capability.WRAPPER_FILE.get("LAB_ENTRY_%d" % int(ea_id[1:]))
+    if not isinstance(wrapper, str) or not wrapper.lower().endswith(".mq5"):
+        return False
+    expected_expert = "EALabTpl\\%s" % wrapper[:-4]
+    return execution_key.get("expert") == expected_expert
 
 
 def validate_result(result, root=None, contract=None):
@@ -323,7 +344,7 @@ def validate_result(result, root=None, contract=None):
             problems.append("run %s ex5_hash does not match contract" % run_id)
         if implementation.get("effective_config_hash") and observed.get("effective_config_hash") != implementation["effective_config_hash"]:
             problems.append("run %s effective_config_hash does not match contract" % run_id)
-        if not _strategy_matches_run(contract.get("strategy_ref", {}), observed, root):
+        if not strategy_matches_run(contract.get("strategy_ref", {}), observed, root):
             problems.append("run %s is bound to a different strategy identity" % run_id)
     for evidence_id in result.get("evidence_ids", []) if isinstance(result.get("evidence_ids"), list) else []:
         if evidence_id not in evidence:
@@ -430,15 +451,21 @@ def _write_once(path, record, validator, storage_root, repo_root):
     return True
 
 
-def _find_result_path(storage_root, result_id):
+def _find_result_paths(storage_root, result_id):
     base = _path(storage_root, "factory/experiments")
+    paths = []
     if not os.path.isdir(base):
-        return None
-    for experiment_id in os.listdir(base):
+        return paths
+    for experiment_id in sorted(os.listdir(base)):
         candidate = os.path.join(base, experiment_id, "results", result_id + ".json")
         if os.path.isfile(candidate):
-            return candidate
-    return None
+            paths.append(candidate)
+    return paths
+
+
+def _find_result_path(storage_root, result_id):
+    paths = _find_result_paths(storage_root, result_id)
+    return paths[0] if paths else None
 
 
 def _check_contract_supersession(contract, storage_root):
@@ -474,11 +501,15 @@ def write_result(result, storage_root, repo_root=None):
     if not os.path.isfile(contract_path):
         raise QIValidationError(["cannot write a result without an established contract"])
     _check_result_supersession(result, storage_root)
+    result_id = result.get("result_id", "INVALID")
+    target = _path(storage_root, "factory/experiments/%s/results/%s.json" %
+                   (result.get("experiment_id", "INVALID"), result_id))
+    for established in _find_result_paths(storage_root, result_id):
+        if os.path.normcase(os.path.abspath(established)) != os.path.normcase(os.path.abspath(target)):
+            raise QIValidationError(["result_id is already established in another experiment: %s" % result_id])
     contract = _json(contract_path)
     validator = lambda value, root: validate_result(value, root, contract=contract)
-    path = _path(storage_root, "factory/experiments/%s/results/%s.json" %
-                 (result.get("experiment_id", "INVALID"), result.get("result_id", "INVALID")))
-    return _write_once(path, result, validator, storage_root, repo_root)
+    return _write_once(target, result, validator, storage_root, repo_root)
 
 
 def derive_lifecycle(experiment_id, root=None):
