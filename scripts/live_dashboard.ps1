@@ -666,7 +666,7 @@ if ($snapByLogin.Count -eq 0) {
           $ageH = 0.0
           if (-not $ageRaw -or -not (Try-ParseFiniteDbl $ageRaw ([ref]$ageH)) -or $ageH -lt 0) {
             $ageFlag = "BASKET AGE UNKNOWN: oldest_age_h missing or malformed; threshold $($cohort[$key].BasketAgeWarnH) h not evaluated"
-            if ($rowCls -notmatch 'st-red') { $rowCls = ' class="st-unknown"' }
+            if ($rowCls -notmatch 'st-red|st-nobase') { $rowCls = ' class="st-unknown"' }
           } elseif ($ageH -ge [double]$cohort[$key].BasketAgeWarnH) {
             $ageFlag = "OLD BASKET: oldest_age_h=$([math]::Round($ageH,1)) &gt;= $($cohort[$key].BasketAgeWarnH) h (100 days)"
             if ($rowCls -notmatch 'st-red|st-nobase') { $rowCls = ' class="st-yellow"' }
