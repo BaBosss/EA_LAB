@@ -20,7 +20,7 @@ import qi_1 as qi  # noqa: E402
 
 PYTHON = os.path.join(ROOT, "tools", "python312", "python.exe")
 GUARD = os.path.join(HERE, "qi1_staged_guard.py")
-RUN_ID = "RUN-20260802-001"
+RUN_ID = "RUN-20990101-001"
 EVIDENCE_ID = "evd_sha256_092b3189c504570708f91b4bb2d48fe3119f04396f515299d34d728db03622de"
 BASE_EXP = "exp_93d9457a-4857-438e-99af-370def7a8392"
 BASE_RESULT = "res_12345678-1234-4234-8234-1234567890ab"
@@ -44,7 +44,6 @@ def copy_authority(root):
     files = [
         "AGENT_TASKBOARD.md",
         "factory/strategy_catalog.json",
-        "factory/runs/RUN-20260802-001.jsonl",
         "docs/memory_control/experiment_events/evidence-manifest.jsonl",
         "docs/memory_control/experiment_events/events-2026-07.jsonl",
         "docs/memory_control/experiment_events/schema/event-v1.schema.json",
@@ -57,6 +56,20 @@ def copy_authority(root):
         target = os.path.join(root, rel.replace("/", os.sep))
         os.makedirs(os.path.dirname(target), exist_ok=True)
         shutil.copyfile(source, target)
+    with open(os.path.join(ROOT, "docs", "memory_control", "experiment_events", "events-2026-07.jsonl"), encoding="utf-8") as handle:
+        event = next(json.loads(line) for line in handle if json.loads(line).get("event_type") == "RESULT_LINKED")
+    artifacts = event["artifact_hashes"]
+    key = {"expert": "EALabTpl\\Boss_14_GridLog", "symbol": "XAUUSD", "tf": "H1",
+           "from_date": "2024.01.02", "to_date": "2024.01.16", "model": 1, "deposit": 10000,
+           "currency": "USD", "account_unit": "USD", "leverage": 100, "terminal_build": 0,
+           "set_hash": artifacts["set"], "ex5_hash": artifacts["ea"],
+           "effective_config_hash": "0" * 64, "data_fingerprint": "QI-1 staged fixture", "lane": "fixture"}
+    row = {"entity": "RunTransition", "run_id": RUN_ID, "cell_id": "QI-1", "execution_key": key,
+           "attempt": 1, "transition": "QUEUED", "at": "2099-01-01T00:00:00Z"}
+    path = os.path.join(root, "factory", "runs", RUN_ID + ".jsonl")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(row, separators=(",", ":")) + "\n")
 
 
 def owner_ref(root):
@@ -96,7 +109,7 @@ def make_result(root, contract, result_id=BASE_RESULT, supersedes=None):
     return {
         "schema_version": 1, "entity": "ExperimentResult", "result_id": result_id,
         "experiment_id": contract["experiment_id"], "recorded_at_utc": "2026-08-13T00:01:00Z",
-        "run_ids": [], "evidence_ids": [EVIDENCE_ID], "verdict": "INCONCLUSIVE",
+        "run_ids": [RUN_ID], "evidence_ids": [EVIDENCE_ID], "verdict": "INCONCLUSIVE",
         "reason_code": "insufficient_forward_evidence", "reason_ref": owner_ref(root),
         "supersedes_result_id": supersedes,
     }

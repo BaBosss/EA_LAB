@@ -7,17 +7,16 @@ does not write any of those stores and it never turns an experiment verdict
 into a strategy, deployment, execution, or risk decision.
 """
 import copy
-import datetime
-import hashlib
 import io
 import json
 import os
 import re
+import subprocess
 import tempfile
 
 import candidate as _candidate
-import capability as _capability
 import evidence as _evidence
+import run_journal_validator as _run_journal_validator
 
 
 EXPERIMENT_ID_RE = re.compile(r"^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
@@ -83,203 +82,6 @@ def _jsonl(path):
                     raise QIValidationError(["%s:%s authority record must be an object" % (path, line_no)])
                 rows.append((line_no, value))
     return rows
-
-
-def _schema_type_matches(value, expected):
-    if expected == "object":
-        return isinstance(value, dict)
-    if expected == "array":
-        return isinstance(value, list)
-    if expected == "string":
-        return isinstance(value, str)
-    if expected == "integer":
-        return isinstance(value, int) and not isinstance(value, bool)
-    if expected == "null":
-        return value is None
-    return False
-
-
-def _schema_problems(value, schema, root_schema, where):
-    """Validate the JSON-Schema subset used by the immutable event/evidence v1 authorities."""
-    if not isinstance(schema, dict):
-        return ["%s schema node is not an object" % where]
-    if "$ref" in schema:
-        ref = schema["$ref"]
-        if not isinstance(ref, str) or not ref.startswith("#/$defs/"):
-            return ["%s has an unsupported schema reference" % where]
-        target = root_schema.get("$defs", {}).get(ref.split("/")[-1])
-        if not isinstance(target, dict):
-            return ["%s schema reference does not resolve" % where]
-        return _schema_problems(value, target, root_schema, where)
-
-    problems = []
-    expected = schema.get("type")
-    if expected is not None:
-        choices = expected if isinstance(expected, list) else [expected]
-        if not any(_schema_type_matches(value, choice) for choice in choices):
-            return ["%s does not match schema type %s" % (where, choices)]
-    if "const" in schema and value != schema["const"]:
-        problems.append("%s does not match schema const" % where)
-    if "enum" in schema and value not in schema["enum"]:
-        problems.append("%s is outside the schema enum" % where)
-
-    if isinstance(value, str):
-        if "pattern" in schema and re.search(schema["pattern"], value) is None:
-            problems.append("%s does not match schema pattern" % where)
-        if len(value) < schema.get("minLength", 0):
-            problems.append("%s is shorter than schema minimum" % where)
-        if "maxLength" in schema and len(value) > schema["maxLength"]:
-            problems.append("%s is longer than schema maximum" % where)
-    elif isinstance(value, int) and not isinstance(value, bool):
-        if "minimum" in schema and value < schema["minimum"]:
-            problems.append("%s is below schema minimum" % where)
-        if "maximum" in schema and value > schema["maximum"]:
-            problems.append("%s is above schema maximum" % where)
-    elif isinstance(value, dict):
-        required = schema.get("required", [])
-        missing = sorted(name for name in required if name not in value)
-        if missing:
-            problems.append("%s is missing required fields: %s" % (where, ", ".join(missing)))
-        properties = schema.get("properties", {})
-        if schema.get("additionalProperties") is False:
-            extra = sorted(set(value) - set(properties))
-            if extra:
-                problems.append("%s has unknown fields: %s" % (where, ", ".join(extra)))
-        for name, child in value.items():
-            if name in properties:
-                problems.extend(_schema_problems(child, properties[name], root_schema,
-                                                 "%s.%s" % (where, name)))
-    elif isinstance(value, list):
-        if len(value) < schema.get("minItems", 0):
-            problems.append("%s has fewer items than schema minimum" % where)
-        if "maxItems" in schema and len(value) > schema["maxItems"]:
-            problems.append("%s has more items than schema maximum" % where)
-        if schema.get("uniqueItems"):
-            keys = [json.dumps(item, ensure_ascii=False, sort_keys=True,
-                               separators=(",", ":")) for item in value]
-            if len(keys) != len(set(keys)):
-                problems.append("%s contains duplicate items" % where)
-        item_schema = schema.get("items")
-        if isinstance(item_schema, dict):
-            for index, item in enumerate(value):
-                problems.extend(_schema_problems(item, item_schema, root_schema,
-                                                 "%s[%d]" % (where, index)))
-    return problems
-
-
-def _authority_jsonl(path, schema_path, authority_name):
-    try:
-        schema = _json(schema_path)
-    except (IOError, TypeError, ValueError) as exc:
-        raise QIValidationError(["%s schema is unavailable: %s" % (authority_name, exc)])
-    if not isinstance(schema, dict):
-        raise QIValidationError(["%s schema must be an object" % authority_name])
-    rows = _jsonl(path)
-    problems = []
-    for line_no, row in rows:
-        structural = _schema_problems(row, schema, schema, authority_name)
-        for problem in structural:
-            problems.append("%s:%s %s" % (path, line_no, problem))
-        if structural:
-            continue
-        if authority_name == "event-v1":
-            semantic = _event_rule_problems(row, schema)
-        elif authority_name == "evidence-v1":
-            semantic = _evidence_rule_problems(row, schema)
-        else:
-            semantic = ["unsupported authority schema %s" % authority_name]
-        for problem in semantic:
-            problems.append("%s:%s %s" % (path, line_no, problem))
-    if problems:
-        raise QIValidationError(problems)
-    return rows
-
-
-def _evidence_rule_problems(row, schema):
-    rules = schema.get("x-ea-lab-rules")
-    if not isinstance(rules, dict):
-        return ["schema is missing x-ea-lab-rules"]
-    if rules.get("id_from") != "raw_sha256":
-        return ["schema has an unsupported evidence identity rule"]
-    if row.get("evidence_id") != "evd_sha256_" + str(row.get("raw_sha256")):
-        return ["evidence_id is not derived from raw_sha256"]
-    return []
-
-
-def _event_rule_problems(event, schema):
-    rules = schema.get("x-ea-lab-rules")
-    if not isinstance(rules, dict):
-        return ["schema is missing x-ea-lab-rules"]
-    event_rules = rules.get("event_rules")
-    rule = event_rules.get(event.get("event_type")) if isinstance(event_rules, dict) else None
-    if not isinstance(rule, dict):
-        return ["event_type has no v1 semantic rule"]
-
-    problems = []
-    event_type = event.get("event_type")
-    allowed = rule.get("allowed_fields", [])
-    for name in event:
-        if name not in allowed:
-            problems.append("%s does not allow field %s" % (event_type, name))
-    forbidden = {str(name).lower() for name in rules.get("forbidden_fields_case_insensitive", [])}
-    for name in event:
-        if name.lower() in forbidden:
-            problems.append("forbidden ownership/narrative field %s" % name)
-
-    roles = rules.get("actor_roles", {}).get(event.get("actor"), [])
-    if event.get("role") not in roles:
-        problems.append("actor %s cannot use role %s" % (event.get("actor"), event.get("role")))
-    if "authorized_actors" in rule and event.get("actor") not in rule["authorized_actors"]:
-        problems.append("actor %s is not authorized for %s" % (event.get("actor"), event_type))
-    try:
-        datetime.datetime.strptime(event.get("timestamp_utc", ""), "%Y-%m-%dT%H:%M:%S.%fZ")
-    except (TypeError, ValueError):
-        problems.append("timestamp_utc is not a real fixed-millisecond UTC timestamp")
-
-    prior = (event.get("prior_event_id"), event.get("prior_event_sha256"))
-    if rule.get("prior") == "null" and prior != (None, None):
-        problems.append("%s requires null prior fields" % event_type)
-    elif rule.get("prior") != "null" and (prior[0] is None or prior[1] is None):
-        problems.append("%s requires both prior fields" % event_type)
-    trial = (event.get("trial_family"), event.get("trial_count"))
-    if rule.get("trial") == "null" and trial != (None, None):
-        problems.append("%s requires null trial fields" % event_type)
-    elif rule.get("trial") != "null" and (trial[0] is None or trial[1] is None):
-        problems.append("%s requires trial_family and trial_count" % event_type)
-
-    artifacts = event.get("artifact_hashes", {})
-    values = [artifacts.get(name) for name in ("ea", "source", "set", "data", "tester")]
-    if rule.get("artifacts") == "all_null" and any(value is not None for value in values):
-        problems.append("%s requires all artifact hashes to be null" % event_type)
-    elif rule.get("artifacts") == "source_required":
-        if artifacts.get("source") is None or any(artifacts.get(name) is not None for name in ("ea", "set", "data", "tester")):
-            problems.append("%s requires only artifact_hashes.source" % event_type)
-    elif rule.get("artifacts") == "all_required" and any(value is None for value in values):
-        problems.append("%s requires all five artifact hashes" % event_type)
-    if event.get("reason_code") not in rule.get("reason_codes", []):
-        problems.append("reason_code is not allowed for %s" % event_type)
-    for owner in event.get("owner_refs", []):
-        owner_type = owner.get("owner_type")
-        if owner_type not in rule.get("owner_types", []):
-            problems.append("owner_type %s is not allowed for %s" % (owner_type, event_type))
-        pattern = rules.get("owner_path_patterns", {}).get(owner_type)
-        if not isinstance(pattern, str) or re.fullmatch(pattern, str(owner.get("path"))) is None:
-            problems.append("owner path does not match owner_type %s" % owner_type)
-    if "evidence_min" in rule and len(event.get("evidence_ids", [])) < rule["evidence_min"]:
-        problems.append("%s requires at least %s evidence ID" % (event_type, rule["evidence_min"]))
-    if event_type in ("AMENDMENT_ADDED", "TOMBSTONE_ADDED"):
-        if "target_event_id" not in event or "target_event_sha256" not in event:
-            problems.append("%s requires target event identity" % event_type)
-        if event.get("target_event_id") == event.get("event_id"):
-            problems.append("%s cannot target itself" % event_type)
-    if event.get("reason_code") == "physical_recovery":
-        if event.get("actor") not in ("user", "claude"):
-            problems.append("physical_recovery requires user or claude")
-        if "recovery_target_month" not in event:
-            problems.append("physical_recovery requires recovery_target_month")
-    elif "recovery_target_month" in event:
-        problems.append("recovery_target_month is allowed only for physical_recovery")
-    return problems
 
 
 def _shape(record, fields, name):
@@ -377,153 +179,91 @@ def load_pid_index(root=None):
 
 
 def load_run_index(root=None):
-    """Return the observed first ExecutionKey for every existing run journal."""
+    """Project observed ExecutionKeys only after the canonical journal validator passes."""
+    root = _root(root)
+    source = _evidence.EvidenceSource("worktree", root=root)
+    schema = _path(root, "_triage/factory_os/schemas.json")
+    try:
+        report = _run_journal_validator.validate_run_journals(source, schema)
+    except _run_journal_validator.JournalInfrastructureError as exc:
+        raise QIValidationError(["canonical run-journal validation is unavailable: %s" % exc])
+    if not report.ok:
+        raise QIValidationError(["%s:%s canonical RunTransition rejected: %s" %
+                                 (row["file"], row["line"], row["detail"])
+                                 for row in report.invalid_rows + report.error_rows])
     out = {}
-    run_dir = _path(root, "factory/runs")
-    for name in sorted(os.listdir(run_dir)) if os.path.isdir(run_dir) else []:
-        if not name.endswith(".jsonl"):
-            continue
-        for _line, row in _jsonl(os.path.join(run_dir, name)):
-            if row.get("entity") != "RunTransition":
-                continue
-            run_id, key = row.get("run_id"), row.get("execution_key")
-            if not isinstance(run_id, str) or not isinstance(key, dict):
-                continue
-            if run_id in out and out[run_id] != key:
-                raise QIValidationError(["run_id %s has conflicting observed identities" % run_id])
-            out[run_id] = key
+    try:
+        paths = source.list_committed("factory/runs/*.jsonl")
+        for rel in sorted(paths):
+            raw = source.read_committed_bytes(rel)
+            for line_no, line in enumerate(raw.decode("utf-8-sig").splitlines(), 1):
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                if row.get("entity") != "RunTransition":
+                    raise QIValidationError(["%s:%s canonical RunTransition projection is invalid" %
+                                             (rel, line_no)])
+                run_id, key = row.get("run_id"), row.get("execution_key")
+                if key is None:
+                    continue
+                if not isinstance(run_id, str) or not isinstance(key, dict):
+                    raise QIValidationError(["%s:%s canonical RunTransition has no readable ExecutionKey" %
+                                             (rel, line_no)])
+                if run_id in out and out[run_id] != key:
+                    raise QIValidationError(["run_id %s has conflicting observed identities" % run_id])
+                out[run_id] = key
+    except (_evidence.ToolFailure, UnicodeDecodeError, ValueError) as exc:
+        raise QIValidationError(["canonical run-journal projection failed: %s" % exc])
     return out
+
+
+def _event_authority_snapshot(root=None):
+    """Ask the canonical event utility to validate before QI derives any projection."""
+    root = _root(root)
+    utility = _path(REPO_ROOT, "scripts/experiment_event_log.ps1")
+    if not os.path.isfile(utility):
+        raise QIValidationError(["canonical event validator is unavailable: %s" % utility])
+    command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", utility,
+               "-Command", "Scan", "-RepoRoot", root]
+    try:
+        proc = subprocess.run(command, capture_output=True, text=True)
+    except OSError as exc:
+        raise QIValidationError(["canonical event validator cannot run: %s" % exc])
+    if proc.returncode != 0:
+        detail = ((proc.stdout or "") + "\n" + (proc.stderr or "")).strip()
+        raise QIValidationError(["canonical event authority rejected: %s" % detail[:2000]])
+
+    authority = _path(root, "docs/memory_control/experiment_events")
+    evidence = {}
+    manifest = os.path.join(authority, "evidence-manifest.jsonl")
+    try:
+        for _line_no, row in _jsonl(manifest):
+            evidence_id = row.get("evidence_id")
+            if evidence_id in evidence:
+                raise QIValidationError(["evidence manifest duplicates %s" % evidence_id])
+            evidence[evidence_id] = row
+        events = []
+        for name in sorted(os.listdir(authority)):
+            if name.startswith("events-") and name.endswith(".jsonl"):
+                events.extend(row for _line_no, row in _jsonl(os.path.join(authority, name)))
+    except (IOError, OSError, ValueError) as exc:
+        raise QIValidationError(["canonical event projection failed: %s" % exc])
+    return evidence, events
 
 
 def load_evidence_index(root=None):
-    """Return the existing evidence-manifest IDs; this module never rewrites that manifest."""
-    root = _root(root)
-    path = _path(root, "docs/memory_control/experiment_events/evidence-manifest.jsonl")
-    schema = _path(root, "docs/memory_control/experiment_events/schema/evidence-v1.schema.json")
-    source = _evidence.EvidenceSource("worktree", root=root)
-    out = {}
-    problems = []
-    for line_no, row in _authority_jsonl(path, schema, "evidence-v1"):
-        evidence_id = row.get("evidence_id")
-        if evidence_id in out:
-            raise QIValidationError(["evidence manifest duplicates %s" % evidence_id])
-        try:
-            resolved = source.resolve_pin(row["commit_oid"], row["path"],
-                                          "evidence-v1 committed locator")
-            if resolved != row["blob_oid"]:
-                problems.append("%s:%s evidence locator blob_oid does not resolve" %
-                                (path, line_no))
-                continue
-            raw = source.read_blob(resolved, "evidence-v1 committed locator")
-        except _evidence.ToolFailure as exc:
-            problems.append("%s:%s evidence locator cannot be verified: %s" %
-                            (path, line_no, exc))
-            continue
-        if hashlib.sha256(raw).hexdigest() != row["raw_sha256"]:
-            problems.append("%s:%s evidence locator raw_sha256 mismatch" % (path, line_no))
-        if len(raw) != row["byte_length"]:
-            problems.append("%s:%s evidence locator byte_length mismatch" % (path, line_no))
-        out[evidence_id] = row
-    if problems:
-        raise QIValidationError(problems)
-    return out
-
-
-def _event_snapshot_problems(records, evidence, schema):
-    problems = []
-    event_by_id = {}
-    tail_by_experiment = {}
-    core_position = {}
-    tombstoned = set()
-    core = schema.get("x-ea-lab-rules", {}).get("core_lifecycle", [])
-    evidence_hashes = {row.get("raw_sha256") for row in evidence.values()}
-
-    for path, line_no, event in records:
-        where = "%s:%s" % (path, line_no)
-        event_id = event.get("event_id")
-        experiment_id = event.get("experiment_id")
-        event_type = event.get("event_type")
-        month = re.search(r"events-([0-9]{4}-[0-9]{2})\.jsonl$", path.replace("\\", "/"))
-        if not month or not str(event.get("timestamp_utc", "")).startswith(month.group(1)):
-            problems.append("%s event timestamp does not match monthly filename" % where)
-        if event_id in event_by_id:
-            problems.append("%s duplicates event_id %s" % (where, event_id))
-            continue
-
-        if event_type == "IDEA_CREATED":
-            if experiment_id in tail_by_experiment:
-                problems.append("%s duplicates IDEA_CREATED for %s" % (where, experiment_id))
-            tail_by_experiment[experiment_id] = (event, _authority_record_hash(event))
-            core_position[experiment_id] = 1
-        else:
-            tail = tail_by_experiment.get(experiment_id)
-            prior_id = event.get("prior_event_id")
-            if tail is None:
-                problems.append("%s experiment has no preceding IDEA_CREATED" % where)
-            elif prior_id not in event_by_id:
-                problems.append("%s prior event is missing or forward" % where)
-            elif event_by_id[prior_id][0].get("experiment_id") != experiment_id:
-                problems.append("%s prior event belongs to another experiment" % where)
-            elif tail[0].get("event_id") != prior_id:
-                problems.append("%s prior event is not the experiment tail" % where)
-            elif tail[1] != event.get("prior_event_sha256"):
-                problems.append("%s prior_event_sha256 mismatch" % where)
-            tail_by_experiment[experiment_id] = (event, _authority_record_hash(event))
-
-            if event_type in core:
-                expected = core_position.get(experiment_id, 0)
-                if core.index(event_type) != expected:
-                    problems.append("%s out-of-order or duplicate core event %s" % (where, event_type))
-                else:
-                    core_position[experiment_id] = expected + 1
-
-        event_by_id[event_id] = (event, _authority_record_hash(event))
-        for evidence_id in event.get("evidence_ids", []):
-            if evidence_id not in evidence:
-                problems.append("%s evidence %s is absent from manifest" % (where, evidence_id))
-        for artifact_hash in event.get("artifact_hashes", {}).values():
-            if artifact_hash is not None and artifact_hash not in evidence_hashes:
-                problems.append("%s artifact hash %s is absent from manifest" % (where, artifact_hash))
-        if event_type in ("AMENDMENT_ADDED", "TOMBSTONE_ADDED"):
-            target = event.get("target_event_id")
-            if target not in event_by_id or target == event_id:
-                problems.append("%s target event is missing, forward, or self" % where)
-            elif event_by_id[target][0].get("experiment_id") != experiment_id:
-                problems.append("%s target event belongs to another experiment" % where)
-            elif event_by_id[target][1] != event.get("target_event_sha256"):
-                problems.append("%s target_event_sha256 mismatch" % where)
-            if event_type == "TOMBSTONE_ADDED":
-                if target in tombstoned:
-                    problems.append("%s target event was already tombstoned" % where)
-                tombstoned.add(target)
-    return problems
-
-
-def _authority_record_hash(record):
-    raw = json.dumps(record, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()
+    """Return manifest IDs after canonical event/evidence authority validation."""
+    evidence, _events = _event_authority_snapshot(root)
+    return evidence
 
 
 def load_evidence_lineage(root=None):
-    root = _root(root)
+    """Return canonical event records by evidence ID; never creates an authority store."""
+    _evidence_index, events = _event_authority_snapshot(root)
     lineage = {}
-    event_root = _path(root, "docs/memory_control/experiment_events")
-    schema = _path(root, "docs/memory_control/experiment_events/schema/event-v1.schema.json")
-    schema_value = _json(schema)
-    evidence = load_evidence_index(root)
-    records = []
-    for name in sorted(os.listdir(event_root)) if os.path.isdir(event_root) else []:
-        if not (name.startswith("events-") and name.endswith(".jsonl")):
-            continue
-        path = os.path.join(event_root, name)
-        for line_no, event in _authority_jsonl(path, schema, "event-v1"):
-            records.append((path, line_no, event))
-            evidence_ids = event.get("evidence_ids", [])
-            for evidence_id in evidence_ids:
-                lineage.setdefault(evidence_id, set()).add(event.get("experiment_id"))
-    problems = _event_snapshot_problems(records, evidence, schema_value)
-    if problems:
-        raise QIValidationError(problems)
+    for event in events:
+        for evidence_id in event.get("evidence_ids", []):
+            lineage.setdefault(evidence_id, []).append(event)
     return lineage
 
 
@@ -598,22 +338,37 @@ def validate_contract(contract, root=None):
     return problems
 
 
-def strategy_matches_run(strategy_ref, execution_key, root=None):
-    """Match an observed run to one exact, existing R4 strategy identity."""
-    if (not isinstance(strategy_ref, dict) or set(strategy_ref) != STRATEGY_FIELDS or
-            not isinstance(execution_key, dict)):
+def _run_matches_implementation(implementation, execution_key):
+    """Compare only immutable implementation facts shared by Contract and ExecutionKey."""
+    if not isinstance(implementation, dict) or not isinstance(execution_key, dict):
         return False
-    expected = load_strategy_index(root)
-    ea_id = strategy_ref.get("ea_id")
-    if ea_id not in expected or expected[ea_id] != strategy_ref.get("strategy_revision"):
+    for field in ("ex5_hash", "effective_config_hash"):
+        if execution_key.get(field) != implementation.get(field):
+            return False
+    if implementation.get("set_hash") is not None and execution_key.get("set_hash") != implementation["set_hash"]:
         return False
-    if execution_key.get("strategy_ref") != strategy_ref:
+    # Current ExecutionKey has no source_hash.  Do not infer one from filenames or catalog state.
+    if (implementation.get("source_hash") is not None and
+            execution_key.get("source_hash") is not None and
+            execution_key["source_hash"] != implementation["source_hash"]):
         return False
-    wrapper = _capability.WRAPPER_FILE.get("LAB_ENTRY_%d" % int(ea_id[1:]))
-    if not isinstance(wrapper, str) or not wrapper.lower().endswith(".mq5"):
+    return True
+
+
+def _result_linked_event_matches_run(event, execution_key):
+    """Require one direct, shared artifact identity; absent dimensions are never inferred."""
+    artifacts = event.get("artifact_hashes") if isinstance(event, dict) else None
+    if not isinstance(artifacts, dict) or not isinstance(execution_key, dict):
         return False
-    expected_expert = "EALabTpl\\%s" % wrapper[:-4]
-    return execution_key.get("expert") == expected_expert
+    shared = 0
+    for event_field, run_field in (("ea", "ex5_hash"), ("set", "set_hash")):
+        event_value = artifacts.get(event_field)
+        run_value = execution_key.get(run_field)
+        if event_value is not None and run_value is not None:
+            shared += 1
+            if event_value != run_value:
+                return False
+    return shared > 0
 
 
 def validate_result(result, root=None, contract=None):
@@ -651,6 +406,10 @@ def validate_result(result, root=None, contract=None):
         return problems
     if result.get("experiment_id") != contract.get("experiment_id"):
         problems.append("result experiment_id does not match its contract")
+    executable = contract.get("experiment_type") in EXECUTABLE_TYPES
+    run_ids = result.get("run_ids") if isinstance(result.get("run_ids"), list) else []
+    if executable and not run_ids:
+        problems.append("executable result requires at least one run_id")
     try:
         runs = load_run_index(root)
     except QIValidationError as exc:
@@ -664,22 +423,30 @@ def validate_result(result, root=None, contract=None):
     except QIValidationError as exc:
         evidence_lineage, _ = {}, problems.extend(exc.problems)
     implementation = contract.get("implementation_ref", {})
-    for run_id in result.get("run_ids", []) if isinstance(result.get("run_ids"), list) else []:
+    observed_runs = []
+    for run_id in run_ids:
         observed = runs.get(run_id)
         if observed is None:
             problems.append("run_id %s does not resolve in existing run journals" % run_id)
             continue
-        if implementation.get("ex5_hash") and observed.get("ex5_hash") != implementation["ex5_hash"]:
-            problems.append("run %s ex5_hash does not match contract" % run_id)
-        if implementation.get("effective_config_hash") and observed.get("effective_config_hash") != implementation["effective_config_hash"]:
-            problems.append("run %s effective_config_hash does not match contract" % run_id)
-        if not strategy_matches_run(contract.get("strategy_ref", {}), observed, root):
-            problems.append("run %s is bound to a different strategy identity" % run_id)
+        if not _run_matches_implementation(implementation, observed):
+            problems.append("run %s implementation identity does not match contract" % run_id)
+            continue
+        observed_runs.append(observed)
     for evidence_id in result.get("evidence_ids", []) if isinstance(result.get("evidence_ids"), list) else []:
         if evidence_id not in evidence:
             problems.append("evidence_id %s does not resolve through evidence-manifest.jsonl" % evidence_id)
-        elif evidence_lineage.get(evidence_id) != {contract.get("experiment_id")}:
-            problems.append("evidence_id %s is not bound to this experiment event lineage" % evidence_id)
+            continue
+        events = evidence_lineage.get(evidence_id, [])
+        if {event.get("experiment_id") for event in events} != {contract.get("experiment_id")}:
+            problems.append("evidence_id %s is not bound only to this experiment event lineage" % evidence_id)
+            continue
+        linked = [event for event in events if event.get("event_type") == "RESULT_LINKED"]
+        if not linked:
+            problems.append("evidence_id %s has no canonical RESULT_LINKED lineage" % evidence_id)
+        elif executable and not any(_result_linked_event_matches_run(event, observed)
+                                    for event in linked for observed in observed_runs):
+            problems.append("evidence_id %s cannot be tied to a referenced run artifact identity" % evidence_id)
     return problems
 
 
@@ -893,18 +660,10 @@ def write_result(result, storage_root, repo_root=None):
 
 def derive_lifecycle(experiment_id, root=None):
     """Project lifecycle solely from existing event-v1 files; no lifecycle file is written."""
-    root = _root(root)
-    events = []
-    event_root = _path(root, "docs/memory_control/experiment_events")
-    for name in sorted(os.listdir(event_root)) if os.path.isdir(event_root) else []:
-        if not (name.startswith("events-") and name.endswith(".jsonl")):
-            continue
-        for line_no, event in _jsonl(os.path.join(event_root, name)):
-            if event.get("experiment_id") == experiment_id:
-                events.append({"event_id": event.get("event_id"), "event_type": event.get("event_type"),
-                               "timestamp_utc": event.get("timestamp_utc"), "line": line_no,
-                               "path": "docs/memory_control/experiment_events/%s" % name})
-    return events
+    _evidence_index, events = _event_authority_snapshot(root)
+    return [{"event_id": event.get("event_id"), "event_type": event.get("event_type"),
+             "timestamp_utc": event.get("timestamp_utc")}
+            for event in events if event.get("experiment_id") == experiment_id]
 
 
 def derive_registry(storage_root, repo_root=None):
