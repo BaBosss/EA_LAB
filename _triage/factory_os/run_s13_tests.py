@@ -729,15 +729,20 @@ check('L5 SPECIFICITY a RUN record with no lane is caught even when every metric
 
 
 # item 10 (ORDER-1256) ----------------------------------------------------------------------------
-# The handler judges TWO halves and they fail differently: "say so" is structural and its failure
-# is a CONTRADICTION between arms of one cell; "deducted" is gated on two fields that do not exist
-# in any record yet, and the gate is read rather than hardcoded so the item can go green without
-# another edit to this file.
+# The fixture set exercises both accepted accounting paths and the fail-closed
+# boundaries between them. Native records intentionally omit legacy estimator fields.
 
 def fin(**over):
-    f = {'applied': False, 'metric_basis': 'tester_native', 'tool': 'scripts/swap_adjust_crypto.py',
-         'rate_long_pct_yr': 14.67, 'rate_short_pct_yr': 0.49,
-         'detail': 'positions: 55 / swap charged: -625.70', 'tester_swap_charged': -382.75,
+    f = {'applied': False, 'metric_basis': 'tester_native', 'tester_swap_charged': -382.75,
+         'swap_mode_probe': 'factory/runs/pilot/swap_probe/fixture.jsonl'}
+    f.update(over)
+    return f
+
+
+def post_hoc_fin(**over):
+    f = {'applied': True, 'metric_basis': 'post_hoc_estimator', 'tester_swap_charged': 0,
+         'tool': 'scripts/swap_adjust_crypto.py', 'rate_long_pct_yr': 14.67,
+         'rate_short_pct_yr': 0.49, 'detail': 'post-hoc deduction: -20.21',
          'swap_mode_probe': 'factory/runs/pilot/swap_probe/fixture.jsonl'}
     f.update(over)
     return f
@@ -800,7 +805,7 @@ def crypto_source(runs, verification=None):
 
 state, detail = PA.item_crypto_financing(crypto_source(
     [crypto_run('baseline'), selected_verification()]))
-check('F1 POSITIVE every crypto arm states the deduction AND what the tester itself charged -> PASS',
+check('A tester-native applied=false with numeric tester swap and dated probe -> PASS',
       state == PA.PASS, '%s: %s' % (state, detail))
 
 state, detail = PA.item_crypto_financing(crypto_source([crypto_run(symbol='XAUUSD')]))
@@ -813,22 +818,48 @@ check('F2 no crypto run at all -> BLOCKED (absent evidence is not a clean deduct
 # -- "12 with / 10 without" scattered at random would be a different defect than one whole arm.
 state, detail = PA.item_crypto_financing(crypto_source(
     [crypto_run('baseline'), crypto_run('flat-lot-probe', financing=None)]))
-check('F3 ATTACK one arm adjusted, the other not -> FAIL and it names the ARM split',
-      state == PA.FAIL and 'flat-lot-probe 0 with / 1 without' in detail,
+check('H mixed accounting treatment across comparable arms -> FAIL',
+      state == PA.FAIL and 'inconsistent accounting bases' in detail
+      and 'flat-lot-probe=unknown' in detail,
       '%s: %s' % (state, detail))
 
 state, detail = PA.item_crypto_financing(crypto_source(
     [selected_verification(financing=fin(applied=True))]))
-check('F4 ATTACK selected-verification applied=true -> FAIL (tester-native metrics would be double-charged)',
-      state == PA.FAIL and 'applied=True' in detail, '%s: %s' % (state, detail))
+check('B tester-native applied=true -> FAIL as double-charge',
+      state == PA.FAIL and 'applied=true' in detail and 'double-charge' in detail,
+      '%s: %s' % (state, detail))
 
 # The ORDER-1350 gate, and the reason it is a FIELD and not a constant: with the two fields absent
 # the item is BLOCKED; F1 above proves the same handler returns PASS once they are present. A
 # hardcoded gate would make this item unreachable, which is the defect UNIMPLEMENTED exists for.
 state, detail = PA.item_crypto_financing(crypto_source(
     [crypto_run('baseline', financing=fin(tester_swap_charged=None, swap_mode_probe=None))]))
-check('F5 ATTACK tester-native record with no tester-side charge recorded -> BLOCKED',
+check('C tester-native applied=false without numeric tester swap -> not PASS',
       state == PA.BLOCKED and 'tester_swap_charged' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=fin(swap_mode_probe=None))]))
+check('D tester-native applied=false without swap-mode probe -> not PASS',
+      state == PA.BLOCKED and 'swap_mode_probe' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())]))
+check('E post-hoc no-charge proof with complete estimator provenance -> PASS',
+      state == PA.PASS and 'post_hoc_estimator' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin(tool=None))]))
+check('F post-hoc path missing estimator provenance -> not PASS',
+      state == PA.BLOCKED and 'incomplete estimator provenance' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin(tester_swap_charged=-1))]))
+check('G tester charge present with post-hoc applied=true -> FAIL as double-charge',
+      state == PA.FAIL and 'double-charge' in detail,
       '%s: %s' % (state, detail))
 
 # SPECIFICITY: `*` does not cross `/` in list_committed, and the BWD + Model-4 runs live one level
@@ -853,6 +884,10 @@ state, detail = PA.item_crypto_financing(crypto_source(
     [crypto_run('baseline', financing=fin(swap_mode_probe='factory/runs/pilot/swap_probe/missing.jsonl'))]))
 check('F8 ATTACK stale or wrong probe reference -> FAIL, not a truthy-string pass',
       state == PA.FAIL and 'invalid swap-mode probe reference' in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(evidence.EvidenceSource('worktree'))
+check('I current committed ORDER-1370 crypto evidence -> item 10 PASS',
+      state == PA.PASS, '%s: %s' % (state, detail))
 
 
 # item 11 (ORDER-1256) ----------------------------------------------------------------------------

@@ -695,8 +695,72 @@ def _swap_mode_probe_is_valid(src, reference, symbol):
     return (True, '')
 
 
+def _finite_number(value):
+    return (isinstance(value, (int, float)) and not isinstance(value, bool)
+            and math.isfinite(value))
+
+
+def _crypto_financing_path(src, rel, n, rec):
+    """Classify one run's exactly-once financing claim."""
+    where = '%s:%d %s [%s]' % (rel, n, rec.get('cell_id'), rec.get('arm') or rec.get('window'))
+    fin = rec.get('financing_deducted')
+    if not isinstance(fin, dict):
+        return ('unknown', '%s carries no financing_deducted block' % where)
+
+    applied = fin.get('applied')
+    basis = fin.get('metric_basis')
+    tester_swap = fin.get('tester_swap_charged')
+
+    if applied is False:
+        if basis != 'tester_native':
+            return ('unknown', '%s applied=false requires metric_basis=tester_native, got %r'
+                    % (where, basis))
+        if not _finite_number(tester_swap):
+            return ('unknown', '%s tester-native path has no numeric '
+                    'financing_deducted.tester_swap_charged' % where)
+        reference = fin.get('swap_mode_probe')
+        if not reference:
+            return ('unknown', '%s tester-native path has no financing_deducted.swap_mode_probe'
+                    % where)
+        ok, detail = _swap_mode_probe_is_valid(src, reference, rec['logical_symbol'])
+        if not ok:
+            return ('fail', '%s invalid swap-mode probe reference: %s' % (where, detail))
+        return ('tester_native', '')
+
+    if applied is True:
+        # A non-zero tester charge plus applied=true is an explicit double charge,
+        # regardless of whether legacy estimator metadata is otherwise complete.
+        if _finite_number(tester_swap) and tester_swap != 0:
+            return ('fail', '%s has applied=true with tester_swap_charged=%s: double-charge'
+                    % (where, tester_swap))
+        missing = []
+        if basis != 'post_hoc_estimator':
+            missing.append('metric_basis=post_hoc_estimator')
+        for field in ('tool', 'detail', 'swap_mode_probe'):
+            if not isinstance(fin.get(field), str) or not fin.get(field).strip():
+                missing.append(field)
+        for field in ('rate_long_pct_yr', 'rate_short_pct_yr'):
+            if not _finite_number(fin.get(field)):
+                missing.append(field)
+        if not _finite_number(tester_swap):
+            missing.append('tester_swap_charged=0 proof')
+        elif tester_swap != 0:
+            return ('fail', '%s post-hoc path claims no tester charge but tester_swap_charged=%s: '
+                    'double-charge' % (where, tester_swap))
+        if missing:
+            return ('unknown', '%s applied=true post-hoc path has incomplete estimator '
+                    'provenance: %s' % (where, ', '.join(missing)))
+        ok, detail = _swap_mode_probe_is_valid(src, fin['swap_mode_probe'], rec['logical_symbol'])
+        if not ok:
+            return ('fail', '%s invalid post-hoc swap-mode probe reference: %s' % (where, detail))
+        return ('post_hoc_estimator', '')
+
+    return ('unknown', '%s financing_deducted.applied must be false or true, got %r'
+            % (where, applied))
+
+
 def item_crypto_financing(src):
-    """8.6.10 -- crypto cells state their tester financing treatment, and say so."""
+    """8.6.10 -- crypto cells account for financing exactly once, with provenance."""
     recs = _crypto_run_records(src)
     if not recs:
         return (BLOCKED,
@@ -713,56 +777,38 @@ def item_crypto_financing(src):
                   for entity, count in sorted(entity_counts.items()))
     )
 
-    # HALF ONE -- "and say so". The old contract required `applied=true` because it assumed
-    # INTEREST_CURRENT meant the tester skipped financing. ORDER-1350 disproved that premise from
-    # the reports themselves: the stored PF/gross/net values are tester-native and the report has
-    # a non-zero Swap total. `applied` therefore means a post-hoc change to those stored metrics,
-    # and must be false. Requiring true would certify a false accounting claim.
-    problems = []
+    # The accepted basis is a per-record fact, then a cross-arm consistency fact.
+    # A complete arm must never make an incomplete or contradictory peer disappear.
+    outcomes = []
     for rel, n, rec in recs:
-        where = '%s:%d %s [%s]' % (rel, n, rec.get('cell_id'), rec.get('arm') or rec.get('window'))
-        fin = rec.get('financing_deducted')
-        if not isinstance(fin, dict):
-            problems.append('%s carries no financing_deducted block' % where)
-            continue
-        for f in ('applied', 'metric_basis'):
-            if fin.get(f) in (None, ''):
-                problems.append('%s financing_deducted has no %s' % (where, f))
-        if fin.get('applied') is not False:
-            problems.append('%s records financing_deducted.applied=%r; the stored metrics are '
-                            'tester-native, so a post-hoc adjustment would double-charge swap'
-                            % (where, fin.get('applied')))
-        if fin.get('metric_basis') != 'tester_native':
-            problems.append('%s records metric_basis=%r instead of tester_native'
-                            % (where, fin.get('metric_basis')))
-    if problems:
-        # WHY THIS IS A CONTRADICTION AND NOT A GAP. The records do not merely omit something --
-        # they disagree with each other: within one crypto cell, the baseline arm carries a
-        # financing statement and the probe arms carry none, so the falsifier comparison the arms
-        # exist for puts an adjusted number beside an unadjusted one. Which side is the repair is
-        # NOT decided here and cannot be until ORDER-1350 settles whether the tester already
-        # charges the cost (in which case the baseline is the arm that is wrong). Either way the
-        # evidence contradicts this item as written.
-        by_arm = {}
-        for rel, n, rec in recs:
-            has = isinstance(rec.get('financing_deducted'), dict)
-            slot = by_arm.setdefault(str(rec.get('arm')), [0, 0])
-            slot[0 if has else 1] += 1
-        shape = '; '.join('%s %d with / %d without' % (a, v[0], v[1])
-                          for a, v in sorted(by_arm.items()))
-        return (FAIL,
-                '%d %s run record(s) carry no complete financing statement, and the split is by '
-                'ARM rather than random -- %s. Two arms of one cell, same symbol and window, one '
-                'adjusted and one not, is the comparison the flat-lot falsifier rests on. Which '
-                'arm is the one to repair is open (ORDER-1350: the tester may already be charging '
-                'the cost, which would make the baseline the wrong side). First %d: %s'
-                % (len(problems), '/'.join(CRYPTO_SYMBOLS), shape, min(3, len(problems)),
-                   '; '.join(problems[:3])))
+        path, detail = _crypto_financing_path(src, rel, n, rec)
+        outcomes.append((rel, n, rec, path, detail))
 
-    # HALF TWO -- the report-backed tester charge and a dated symbol-probe reference. This is what
-    # distinguishes an annotation from a synthetic post-hoc estimate, and lets a reader see that
-    # no second charge was included in tester-native metrics.
-    #
+    failures = [detail for _rel, _n, _rec, path, detail in outcomes if path == 'fail']
+    unknown = [detail for _rel, _n, _rec, path, detail in outcomes if path == 'unknown']
+    known_paths = {path for _rel, _n, _rec, path, _detail in outcomes
+                   if path in ('tester_native', 'post_hoc_estimator')}
+
+    # All comparable crypto arms in this closeout must state one explicit accounting basis.
+    # Mixed complete bases, or a known basis beside an unproven peer, are FAIL rather than PASS.
+    if len(known_paths) > 1 or (known_paths and unknown):
+        arm_paths = {}
+        for _rel, _n, rec, path, _detail in outcomes:
+            arm_paths.setdefault(str(rec.get('arm')), set()).add(path)
+        split = '; '.join('%s=%s' % (arm, '/'.join(sorted(paths)))
+                          for arm, paths in sorted(arm_paths.items()))
+        suffix = ' (first unproven record: %s)' % unknown[0] if unknown else ''
+        failures.append('inconsistent accounting bases across comparable crypto arms: %s%s'
+                        % (split, suffix))
+
+    if failures:
+        return (FAIL, '%s; first: %s' % (run_summary, failures[0]))
+    if unknown:
+        return (BLOCKED,
+                '%s cannot establish exactly-once financing for %d record(s); first: %s'
+                % (run_summary, len(unknown), unknown[0]))
+
+    # Both accepted paths above require auditable tester/probe provenance.
     # 🔴 THE GATE IS READ FROM THE RECORD, NOT HARDCODED, and that is deliberate. A handler that
     # returned BLOCKED on a constant because of ORDER-1350 would be a stub wearing a reader --
     # exactly the shape the UNIMPLEMENTED block above exists to stop. So the two facts that would
@@ -773,33 +819,10 @@ def item_crypto_financing(src):
     #   financing_deducted.swap_mode_probe      a DATED probe of the symbol's swap mode; the
     #                                           premise in swap_adjust_crypto.py is a 2026-07-26
     #                                           measurement and broker state moves under it
-    ungated = []
-    invalid_refs = []
-    for rel, n, rec in recs:
-        fin = rec['financing_deducted']
-        where = '%s:%d %s' % (rel, n, rec.get('cell_id'))
-        tester_swap = fin.get('tester_swap_charged')
-        if (not isinstance(tester_swap, (int, float))
-                or isinstance(tester_swap, bool) or not math.isfinite(tester_swap)):
-            ungated.append('%s has no numeric financing_deducted.tester_swap_charged' % where)
-        if not fin.get('swap_mode_probe'):
-            ungated.append('%s has no financing_deducted.swap_mode_probe' % where)
-        else:
-            ok, detail = _swap_mode_probe_is_valid(src, fin['swap_mode_probe'], rec['logical_symbol'])
-            if not ok:
-                invalid_refs.append('%s %s' % (where, detail))
-    if invalid_refs:
-        return (FAIL, 'crypto financing evidence has %d invalid swap-mode probe reference(s); first: %s'
-                % (len(invalid_refs), invalid_refs[0]))
-    if ungated:
-        return (BLOCKED,
-                '%s state tester-native metrics with no post-hoc adjustment, '
-                'but the primary tester charge/probe provenance is incomplete. %d missing '
-                'field(s); first: %s'
-                % (run_summary, len(ungated), ungated[0]))
+    path = next(iter(known_paths))
     return (PASS,
-            '%s state tester-native metrics with no post-hoc adjustment and carry the '
-            'report-derived tester swap beside a dated swap-mode probe reference.' % run_summary)
+            '%s use one exactly-once accounting basis (%s) with auditable tester/probe '
+            'provenance.' % (run_summary, path))
 
 
 def _run_journals(src):

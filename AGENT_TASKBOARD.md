@@ -3589,6 +3589,13 @@ entity, already-migrated no-op, stale/wrong probe, malformed Swap, six-field raw
 preservation and an `applied:true` double-charge attempt. `check_pilot_acceptance` item 10 is now
 PASS by reading the migrated evidence; the remaining pilot failures/blocks are outside this order.
 
+**Owner decision — 2026-08-14:** the owner superseded only the earlier
+implementation constraint that item 10 pass without a checker edit. The economic
+criterion is unchanged: crypto financing must be accounted for exactly once. The
+narrow checker repair aligns mechanical acceptance with the measured tester-native
+behavior while retaining a strict, positively evidenced post-hoc path. No strategy,
+risk, deployment, or pilot-verdict authorization resulted.
+
 ## ORDER-1240 — [factory/S13] Resolve the pilot first lot MECHANICALLY, re-run the matrix, and de-confound the falsifier — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13SIZE) — criterion written before the sweep; 0.03 selected; 3 arms x 16 cells; 2 of 4 owner-ratified items done, 2 blocked with reasons` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Follows `ORDER-1230`, which ran all 16 cells and found every flat-lot probe `UNTESTED-INERT`.
