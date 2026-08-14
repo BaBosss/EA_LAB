@@ -281,7 +281,10 @@ def _event_authority_snapshot(root=None):
             rel = member.get("path") if isinstance(member, dict) else None
             if not isinstance(rel, str) or os.path.isabs(rel) or ".." in rel.replace("\\", "/").split("/") or rel in raw:
                 raise QIValidationError(["validated snapshot manifest has unsafe path"])
-            data = open(os.path.join(snapshot_dir, rel), "rb").read()
+            try:
+                data = open(os.path.join(snapshot_dir, rel), "rb").read()
+            except OSError as exc:
+                raise QIValidationError(["validated snapshot member unavailable: %s" % rel]) from exc
             if len(data) != member.get("byte_length") or hashlib.sha256(data).hexdigest() != member.get("sha256"):
                 raise QIValidationError(["validated snapshot member failed integrity binding: %s" % rel])
             raw[rel] = data
