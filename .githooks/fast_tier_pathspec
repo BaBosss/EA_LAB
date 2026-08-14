@@ -38,6 +38,7 @@ _triage/factory_os/preset.py
 _triage/factory_os/registry.py
 _triage/factory_os/run_activation_tests.py
 _triage/factory_os/run_guard_shape_lint.py
+_triage/factory_os/run_journal_validator.py
 _triage/factory_os/run_param_surface_tests.py
 _triage/factory_os/run_parity_tests.py
 _triage/factory_os/run_pilot_cells_tests.py
@@ -112,6 +113,7 @@ scripts/control_room_snapshot.ps1
 scripts/daily_monitor.ps1
 scripts/gen_fast_tier_pathspec.ps1
 scripts/lib/b1_guard.ps1
+scripts/lib/deployment_status.ps1
 scripts/lib/evidence.ps1
 scripts/lib/magic_guard.ps1
 scripts/lib/monitor_coverage.ps1

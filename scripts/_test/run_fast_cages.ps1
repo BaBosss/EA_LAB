@@ -616,7 +616,11 @@ $SUITE_GUARDS = @{
                                           # ORDER-670 T5 (2026-07-31): snapshot_build now calls
                                           # evidence.observe() instead of reimplementing it, so
                                           # this suite's python transitively imports the reader.
-                                          '_triage/factory_os/evidence.py')
+                                          '_triage/factory_os/evidence.py',
+                                          # The integrity cage loads the deployment-status helper
+                                          # and inventory while exercising the monitor path.
+                                          'scripts/lib/deployment_status.ps1',
+                                          'portfolio/DEPLOYMENTS.csv')
     # ORDER-612 (S4). Its fixtures are built by snapshot_build.py through the real schema, and the
     # two readers it asserts on are make_status's renderer and the daily digest -- so all of those
     # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when
@@ -875,6 +879,8 @@ $SUITE_GUARDS = @{
                                           # directly for the S3 behavioural race case).
                                           '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/schemas.json',
+                                          # The S4 wrapper dot-sources this shared status helper.
+                                          'scripts/lib/deployment_status.ps1',
                                           'scripts/lib/snapshot_reader.ps1',
                                           'scripts/lib/monitor_coverage.ps1',
                                           'scripts/make_status.ps1',
@@ -956,7 +962,13 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/gen_coverage.py',
                                           '_triage/factory_os/gen_design_contracts.py',
-                                          '_triage/factory_os/registry.py'
+                                          '_triage/factory_os/registry.py',
+                                          # check_s2a_attestation imports candidate, whose
+                                          # canonical OwnerRef resolver imports these modules.
+                                          '_triage/factory_os/candidate.py',
+                                          '_triage/factory_os/scheduler.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/setfile.py'
                                         )
     'run_schema_cages.ps1'            = @(
                                           # ORDER-702: DERIVED by the import sweep in
@@ -982,6 +994,9 @@ $SUITE_GUARDS = @{
                                           'factory/parameter_bindings.jsonl',
                                           '_triage/factory_os/run_schema_fixtures.py',
                                           '_triage/factory_os/check_schema_structure.py',
+                                          # The fixture runner imports this validator for the
+                                          # committed journal-record cases.
+                                          '_triage/factory_os/run_journal_validator.py',
                                           # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first
                                           # run after this suite was registered, not remembered:
                                           # run_schema_fixtures imports registry (to load every
@@ -1662,10 +1677,55 @@ function New-StagedSnapshotWorktree {
         if ($LASTEXITCODE -ne 0) {
             throw ("cannot create temporary staged snapshot worktree: {0}" -f ($addOutput -join "`n"))
         }
+        # Git hooks export GIT_DIR/GIT_WORK_TREE for the parent worktree.  If those variables
+        # leak into the disposable checkout, `git -C $snapshot` still targets the parent and
+        # can reset its branch/index to the temporary snapshot commit.  Clear the parent-only
+        # plumbing for this checkout operation; the source worktree context is restored below.
+        $priorSnapshotGitDir = $env:GIT_DIR
+        $priorSnapshotGitWorkTree = $env:GIT_WORK_TREE
+        $priorSnapshotGitCommonDir = $env:GIT_COMMON_DIR
+        Remove-Item Env:GIT_DIR -ErrorAction SilentlyContinue
+        Remove-Item Env:GIT_WORK_TREE -ErrorAction SilentlyContinue
+        Remove-Item Env:GIT_COMMON_DIR -ErrorAction SilentlyContinue
         $checkoutOutput = @(& git -C $snapshot reset --hard --quiet $commit 2>&1)
+        if ($null -eq $priorSnapshotGitDir) { Remove-Item Env:GIT_DIR -ErrorAction SilentlyContinue }
+        else { $env:GIT_DIR = $priorSnapshotGitDir }
+        if ($null -eq $priorSnapshotGitWorkTree) { Remove-Item Env:GIT_WORK_TREE -ErrorAction SilentlyContinue }
+        else { $env:GIT_WORK_TREE = $priorSnapshotGitWorkTree }
+        if ($null -eq $priorSnapshotGitCommonDir) { Remove-Item Env:GIT_COMMON_DIR -ErrorAction SilentlyContinue }
+        else { $env:GIT_COMMON_DIR = $priorSnapshotGitCommonDir }
         if ($LASTEXITCODE -ne 0) {
             throw ("cannot populate temporary staged snapshot worktree: {0}" -f ($checkoutOutput -join "`n"))
         }
+
+        # The embedded interpreter is tracked except for its ignored stdlib archive.  A staged
+        # snapshot therefore needs the same non-canonical runtime support that the source
+        # checkout uses, while all Python source remains the staged checkout above.  Reuse the
+        # existing common-checkout hydration rule used by run_front_guard_evidence_tests.ps1;
+        # never fall back to a system interpreter.
+        $runtimeRel = 'tools\python312\python312.zip'
+        $sourceRuntime = Join-Path $Root $runtimeRel
+        if (-not (Test-Path -LiteralPath $sourceRuntime -PathType Leaf)) {
+            $commonGitDir = ((& git --no-optional-locks -C $Root rev-parse --git-common-dir 2>$null) | Select-Object -Last 1).ToString().Trim()
+            if (-not $commonGitDir) {
+                throw "embedded Python runtime unavailable: git common directory could not be resolved; restore tools/python312/python312.zip in the source checkout"
+            }
+            if (-not [System.IO.Path]::IsPathRooted($commonGitDir)) {
+                $commonGitDir = Join-Path $Root ($commonGitDir -replace '/', '\')
+            }
+            try {
+                $commonRoot = Split-Path -Parent (Resolve-Path -LiteralPath $commonGitDir -ErrorAction Stop).Path
+            } catch {
+                throw ("embedded Python runtime unavailable: cannot resolve git common directory {0}; restore tools/python312/python312.zip in the source checkout" -f $commonGitDir)
+            }
+            $sourceRuntime = Join-Path $commonRoot $runtimeRel
+        }
+        if (-not (Test-Path -LiteralPath $sourceRuntime -PathType Leaf)) {
+            throw ("embedded Python runtime unavailable at {0}; restore tools/python312/python312.zip in the source checkout" -f $sourceRuntime)
+        }
+        $snapshotRuntime = Join-Path $snapshot $runtimeRel
+        New-Item -ItemType Directory -Path (Split-Path -Parent $snapshotRuntime) -Force -ErrorAction Stop | Out-Null
+        Copy-Item -LiteralPath $sourceRuntime -Destination $snapshotRuntime -Force -ErrorAction Stop
         return $snapshot
     } catch {
         if (Test-Path -LiteralPath $snapshot) {
@@ -1815,10 +1875,16 @@ foreach ($suite in $selected) {
     # instrumentation exists for. Caught here and converted into an ordinary non-zero result, so
     # the run is recorded rather than vanishing.
     $priorChildIndex = $env:GIT_INDEX_FILE
+    $priorChildGitDir = $env:GIT_DIR
+    $priorChildGitWorkTree = $env:GIT_WORK_TREE
+    $priorChildGitCommonDir = $env:GIT_COMMON_DIR
     $priorChildLocation = Get-Location
     try {
         if ($Hook) {
             Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue
+            Remove-Item Env:GIT_DIR -ErrorAction SilentlyContinue
+            Remove-Item Env:GIT_WORK_TREE -ErrorAction SilentlyContinue
+            Remove-Item Env:GIT_COMMON_DIR -ErrorAction SilentlyContinue
             Set-Location -LiteralPath $childRepoRoot
         }
         $out = & $ps -NoProfile -ExecutionPolicy Bypass -File $path 2>&1
@@ -1829,6 +1895,12 @@ foreach ($suite in $selected) {
     } finally {
         if ($null -eq $priorChildIndex) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
         else { $env:GIT_INDEX_FILE = $priorChildIndex }
+        if ($null -eq $priorChildGitDir) { Remove-Item Env:GIT_DIR -ErrorAction SilentlyContinue }
+        else { $env:GIT_DIR = $priorChildGitDir }
+        if ($null -eq $priorChildGitWorkTree) { Remove-Item Env:GIT_WORK_TREE -ErrorAction SilentlyContinue }
+        else { $env:GIT_WORK_TREE = $priorChildGitWorkTree }
+        if ($null -eq $priorChildGitCommonDir) { Remove-Item Env:GIT_COMMON_DIR -ErrorAction SilentlyContinue }
+        else { $env:GIT_COMMON_DIR = $priorChildGitCommonDir }
         Set-Location -LiteralPath $priorChildLocation
     }
     $sw.Stop()
