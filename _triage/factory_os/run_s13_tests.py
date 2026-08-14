@@ -743,7 +743,7 @@ def post_hoc_fin(**over):
     f = {'applied': True, 'metric_basis': 'post_hoc_estimator', 'tester_swap_charged': 0,
          'tool': 'scripts/swap_adjust_crypto.py', 'rate_long_pct_yr': 14.67,
          'rate_short_pct_yr': 0.49, 'detail': 'post-hoc deduction: -20.21',
-         'swap_mode_probe': 'factory/runs/pilot/swap_probe/fixture.jsonl'}
+         'swap_mode_probe': 'factory/runs/pilot/swap_probe/charge_fixture.jsonl'}
     f.update(over)
     return f
 
@@ -790,11 +790,22 @@ def selected_verification(symbol='BTCUSD', financing='default', **over):
 
 
 def crypto_source(runs, verification=None):
+    spec_probe = {
+        'entity': 'SwapProbe', 'probe': 'spec', 'logical_symbol': 'BTCUSD',
+        'taken_utc': '2026-08-04T00:00:00Z', 'swap_mode': 'INTEREST_CURRENT'}
+    charge_probe = {
+        'entity': 'SwapProbe', 'probe': 'charge', 'logical_symbol': 'BTCUSD',
+        'taken_utc': '2026-08-04T00:01:00Z', 'lane': r'D:\Meta 5\terminal64.exe',
+        'report': 'factory/runs/pilot/swap_probe/fixture_charge.htm',
+        'source': 'fixture report Deals/Swap table', 'window': '2025.10.01..2025.12.09',
+        'model': 1, 'side': 'BUY', 'lot': 0.1, 'days_held': 68,
+        'tester_swap_charged': 0, 'inputs_pinned': True}
     files = {PA.DESIGN_REL: REAL_DESIGN,
              PA.COVERAGE_REL: '\n'.join(json.dumps(c) for c in [cell('c1')]),
-             'factory/runs/pilot/swap_probe/fixture.jsonl': json.dumps({
-                 'entity': 'SwapProbe', 'probe': 'spec', 'logical_symbol': 'BTCUSD',
-                 'taken_utc': '2026-08-04T00:00:00Z', 'swap_mode': 'INTEREST_CURRENT'})}
+             'factory/runs/pilot/swap_probe/fixture.jsonl': json.dumps(spec_probe),
+             'factory/runs/pilot/swap_probe/charge_fixture.jsonl': json.dumps(charge_probe),
+             'factory/runs/pilot/swap_probe/charge_nonzero_fixture.jsonl': json.dumps(
+                 dict(charge_probe, tester_swap_charged=-4.73))}
     if runs is not None:
         files['factory/runs/pilot/fixture.jsonl'] = '\n'.join(json.dumps(r) for r in runs)
     if verification is not None:
@@ -826,7 +837,13 @@ check('H mixed accounting treatment across comparable arms -> FAIL',
 state, detail = PA.item_crypto_financing(crypto_source(
     [selected_verification(financing=fin(applied=True))]))
 check('B tester-native applied=true -> FAIL as double-charge',
-      state == PA.FAIL and 'applied=true' in detail and 'double-charge' in detail,
+      state == PA.FAIL and 'applied=true' in detail and 'double-application' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [selected_verification(financing=fin(applied=True, tester_swap_charged=0))]))
+check('B0 tester-native applied=true with zero tester swap -> FAIL unconditionally',
+      state == PA.FAIL and 'double-application' in detail,
       '%s: %s' % (state, detail))
 
 # The ORDER-1350 gate, and the reason it is a FIELD and not a constant: with the two fields absent
@@ -845,6 +862,18 @@ check('D tester-native applied=false without swap-mode probe -> not PASS',
       '%s: %s' % (state, detail))
 
 state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin(
+        swap_mode_probe='factory/runs/pilot/swap_probe/fixture.jsonl'))]))
+check('A-posthoc post-hoc zero field plus spec-only probe -> not PASS',
+      state == PA.BLOCKED and 'positive tester no-charge evidence' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin(swap_mode_probe=None))]))
+check('C-posthoc post-hoc with no tester observation -> not PASS',
+      state == PA.BLOCKED, '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
     [crypto_run('baseline', financing=post_hoc_fin())]))
 check('E post-hoc no-charge proof with complete estimator provenance -> PASS',
       state == PA.PASS and 'post_hoc_estimator' in detail,
@@ -854,6 +883,13 @@ state, detail = PA.item_crypto_financing(crypto_source(
     [crypto_run('baseline', financing=post_hoc_fin(tool=None))]))
 check('F post-hoc path missing estimator provenance -> not PASS',
       state == PA.BLOCKED and 'incomplete estimator provenance' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_crypto_financing(crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin(
+        swap_mode_probe='factory/runs/pilot/swap_probe/charge_nonzero_fixture.jsonl'))]))
+check('D-posthoc post-hoc charge probe reports non-zero tester swap -> FAIL',
+      state == PA.FAIL and 'not zero' in detail,
       '%s: %s' % (state, detail))
 
 state, detail = PA.item_crypto_financing(crypto_source(

@@ -663,36 +663,85 @@ def _crypto_run_records(src):
     return out
 
 
-def _swap_mode_probe_is_valid(src, reference, symbol):
-    """Return ``(ok, detail)`` for a non-copied, dated symbol-spec probe reference."""
+def _read_swap_probe_records(src, reference):
+    """Return ``(records, detail)`` for a committed swap-probe JSONL reference."""
     if not isinstance(reference, str) or not reference.startswith('factory/runs/pilot/swap_probe/'):
-        return (False, 'must be a repository reference under factory/runs/pilot/swap_probe/')
+        return (None, 'must be a repository reference under factory/runs/pilot/swap_probe/')
     try:
         content = _read(src, reference)
     except (evidence.ToolFailure, Refusal) as exc:
-        return (False, 'cannot read referenced probe %r: %s' % (reference, exc))
-    matches = []
+        return (None, 'cannot read referenced probe %r: %s' % (reference, exc))
+    records = []
     for n, line in enumerate(content.split('\n'), 1):
         if not line.strip():
             continue
         try:
             probe = json.loads(line)
         except ValueError:
-            return (False, 'referenced probe is unparseable at line %d' % n)
+            return (None, 'referenced probe is unparseable at line %d' % n)
         if not isinstance(probe, dict):
-            return (False, 'referenced probe line %d is not a JSON object' % n)
+            return (None, 'referenced probe line %d is not a JSON object' % n)
         if probe.get('_comment'):
             continue
-        if (probe.get('entity') == 'SwapProbe' and probe.get('probe') == 'spec'
-                and probe.get('logical_symbol') == symbol
-                and isinstance(probe.get('taken_utc'), str)
-                and re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$',
-                             probe['taken_utc'])
-                and probe.get('swap_mode')):
-            matches.append(probe)
+        records.append(probe)
+    return (records, '')
+
+
+def _swap_mode_probe_is_valid(src, reference, symbol):
+    """Return ``(ok, detail)`` for a dated symbol-spec probe reference."""
+    records, detail = _read_swap_probe_records(src, reference)
+    if records is None:
+        return (False, detail)
+    matches = [probe for probe in records
+               if (probe.get('entity') == 'SwapProbe' and probe.get('probe') == 'spec'
+                   and probe.get('logical_symbol') == symbol
+                   and isinstance(probe.get('taken_utc'), str)
+                   and re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$',
+                                probe['taken_utc'])
+                   and probe.get('swap_mode'))]
     if len(matches) != 1:
         return (False, 'referenced probe must contain exactly one dated spec record for %s' % symbol)
     return (True, '')
+
+
+def _charge_probe_is_valid(src, reference, symbol):
+    """Return ``(status, detail)`` for positive tester no-charge evidence."""
+    records, detail = _read_swap_probe_records(src, reference)
+    if records is None:
+        return ('unknown', detail)
+    matches = [probe for probe in records
+               if (probe.get('entity') == 'SwapProbe' and probe.get('probe') == 'charge'
+                   and probe.get('logical_symbol') == symbol
+                   and isinstance(probe.get('taken_utc'), str)
+                   and re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$',
+                                probe['taken_utc']))]
+    if len(matches) != 1:
+        return ('unknown', 'referenced probe must contain exactly one dated charge observation '
+                'for %s' % symbol)
+    probe = matches[0]
+    tester_swap = probe.get('tester_swap_charged')
+    if not _finite_number(tester_swap):
+        return ('unknown', 'charge observation has no numeric tester_swap_charged')
+    if tester_swap != 0:
+        return ('fail', 'charge observation reports tester_swap_charged=%s, not zero'
+                % tester_swap)
+    missing = []
+    for field in ('lane', 'report', 'source', 'window', 'side'):
+        if not isinstance(probe.get(field), str) or not probe.get(field).strip():
+            missing.append(field)
+    for field in ('model', 'lot', 'days_held'):
+        if not _finite_number(probe.get(field)):
+            missing.append(field)
+    if not _finite_number(probe.get('lot')) or probe.get('lot') <= 0:
+        missing.append('lot>0')
+    if not _finite_number(probe.get('days_held')) or probe.get('days_held') <= 0:
+        missing.append('days_held>0')
+    if probe.get('inputs_pinned') is not True and not probe.get('set'):
+        missing.append('pinned config identity')
+    if missing:
+        return ('unknown', 'charge observation lacks auditable execution/exposure fields: %s'
+                % ', '.join(dict.fromkeys(missing)))
+    return ('pass', '')
 
 
 def _finite_number(value):
@@ -710,6 +759,10 @@ def _crypto_financing_path(src, rel, n, rec):
     applied = fin.get('applied')
     basis = fin.get('metric_basis')
     tester_swap = fin.get('tester_swap_charged')
+
+    if basis == 'tester_native' and applied is True:
+        return ('fail', '%s declares tester_native metrics with applied=true: double-application'
+                % where)
 
     if applied is False:
         if basis != 'tester_native':
@@ -750,9 +803,13 @@ def _crypto_financing_path(src, rel, n, rec):
         if missing:
             return ('unknown', '%s applied=true post-hoc path has incomplete estimator '
                     'provenance: %s' % (where, ', '.join(missing)))
-        ok, detail = _swap_mode_probe_is_valid(src, fin['swap_mode_probe'], rec['logical_symbol'])
-        if not ok:
-            return ('fail', '%s invalid post-hoc swap-mode probe reference: %s' % (where, detail))
+        probe_status, detail = _charge_probe_is_valid(
+            src, fin['swap_mode_probe'], rec['logical_symbol'])
+        if probe_status == 'fail':
+            return ('fail', '%s invalid post-hoc charge observation: %s' % (where, detail))
+        if probe_status == 'unknown':
+            return ('unknown', '%s post-hoc path lacks positive tester no-charge evidence: %s'
+                    % (where, detail))
         return ('post_hoc_estimator', '')
 
     return ('unknown', '%s financing_deducted.applied must be false or true, got %r'
