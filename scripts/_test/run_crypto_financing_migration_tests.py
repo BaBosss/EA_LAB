@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 TOOL = ROOT / "scripts" / "migrate_crypto_financing_evidence.py"
+SWAP_TOOL = ROOT / "scripts" / "swap_adjust_crypto.py"
 PASS = 0
 FAIL = 0
 
@@ -48,6 +49,8 @@ def record(symbol="BTCUSD", report_path="", entity="PilotCellRun"):
             if entity == "PilotSelectedVerification" else None,
             "report": report_path, "pf": 1.2, "gross_profit": 12,
             "gross_loss": -10, "net_profit": 2, "trades": 49, "dd_pct": 15.22,
+            "financing_deducted": {"applied": True, "rate_long_pct_yr": 14.67,
+                                   "rate_short_pct_yr": 0.49, "detail": "legacy estimate"},
             "notes": ["CRYPTO FINANCING: tester-native PF is optimistic until deducted."]}
 
 
@@ -68,6 +71,11 @@ with tempfile.TemporaryDirectory() as tmp_s:
     probe_file = ROOT / "factory" / "runs" / "pilot" / "swap_probe" / "fixture_crypto_migration.jsonl"
     probe_file.write_text(probe(), encoding="utf-8")
     try:
+        result = subprocess.run([sys.executable, str(SWAP_TOOL), "--tester-swap-only",
+                                 str(source_report)], text=True, capture_output=True)
+        check("tester-swap extractor reads the raw Deals/Swap aggregate",
+              result.returncode == 0 and "tester swap charged : -1.25000000" in result.stdout,
+              result.stdout + result.stderr)
         crypto = runs / "crypto.jsonl"
         noncrypto = runs / "noncrypto.jsonl"
         crypto.write_text("\n".join((
@@ -95,6 +103,7 @@ with tempfile.TemporaryDirectory() as tmp_s:
         selected_fin = selected_after["financing_deducted"]
         check("apply derives tester swap for both run entities", result.returncode == 0 and fin["tester_swap_charged"] == -1.25 and selected_fin["tester_swap_charged"] == -1.25, result.stdout + result.stderr)
         check("apply records tester-native/no-posthoc semantics for selected verification", selected_fin["applied"] is False and selected_fin["metric_basis"] == "tester_native")
+        check("apply classifies legacy applied=true evidence explicitly", selected_fin["legacy_disposition"] == "double-adjusted / invalid derived evidence" and "raw tester metrics" in selected_fin["legacy_disposition_reason"])
         check("apply stores a probe reference rather than copied mode/rate", selected_fin["swap_mode_probe"].endswith("fixture_crypto_migration.jsonl") and "swap_mode" not in selected_fin)
         check("apply preserves all six tester-native metrics", all(after[k] == before[k] for k in ("pf", "gross_profit", "gross_loss", "net_profit", "trades", "dd_pct")) and all(selected_after[k] == before[k] for k in ("pf", "gross_profit", "gross_loss", "net_profit", "trades", "dd_pct")))
         check("apply corrects only the stale financing note", selected_after["notes"] == ["CRYPTO FINANCING: the MT5 tester's Swap column is included in the stored tester-native metrics. financing_deducted records the report-derived tester swap for provenance; no post-hoc deduction is applied."])

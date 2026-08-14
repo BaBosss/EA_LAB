@@ -19,8 +19,8 @@ WHY THIS EXISTS (ORDER-1273 step 6, 2026-08-04)
                                 and that reads as the exact inverse of what happened.
      * Get-PilotCarriedAtEnd  - under SL_NONE a basket closes only in profit, so a carried loss is
                                 never inside the PF printed beside it.
-     * Get-PilotCryptoFinancing - the tester charges POINTS-mode swap but not INTEREST_CURRENT, and
-                                BTCUSD is the only symbol these two verifications run on.
+     * Get-PilotCryptoFinancing - reads the tester-native Deals/Swap aggregate; a swap mode is not
+                                treated as proof that financing was skipped.
   Those are the three rules in this file that were each paid for with a wrong number in a table.
   Sharing the plumbing and copying the judgement would have shared the cheap half.
 
@@ -436,15 +436,47 @@ function Get-PilotDataFingerprintProbed {
   return Get-PilotDataFingerprint -Ctx $Ctx -Metrics $Metrics -Symbol $Symbol -Period $Period
 }
 
+function Get-PilotSwapModeProbeReference {
+  param(
+    [Parameter(Mandatory)][hashtable]$Ctx,
+    [Parameter(Mandatory)][string]$Symbol
+  )
+  $probeDir = Join-Path $Ctx.RepoRoot 'factory\runs\pilot\swap_probe'
+  $files = @(Get-ChildItem -LiteralPath $probeDir -Filter 'swap_probe_*.jsonl' -File |
+             Sort-Object Name -Descending)
+  foreach ($file in $files) {
+    $matches = @()
+    foreach ($line in Get-Content -LiteralPath $file.FullName) {
+      if (-not $line.Trim()) { continue }
+      try { $probe = $line | ConvertFrom-Json }
+      catch { throw ("Get-PilotSwapModeProbeReference: invalid JSON in " + $file.FullName) }
+      if ($probe.entity -eq 'SwapProbe' -and $probe.probe -eq 'spec' -and
+          $probe.logical_symbol -eq $Symbol -and
+          $probe.lane -eq $Ctx.Terminal -and
+          "$($probe.taken_utc)" -match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$' -and
+          $probe.swap_mode) { $matches += $probe }
+    }
+    if ($matches.Count -eq 1) {
+      return ('factory/runs/pilot/swap_probe/' + $file.Name)
+    }
+  }
+  throw ("Get-PilotSwapModeProbeReference: no dated symbol-spec probe found for " + $Symbol)
+}
+
 function Get-PilotCryptoFinancing {
   param(
     [Parameter(Mandatory)][hashtable]$Ctx,
     [Parameter(Mandatory)][string]$Htm
   )
   $out = & $Ctx.Python (Join-Path $Ctx.ScriptDir 'swap_adjust_crypto.py') `
-            '--rate-long' $Ctx.CryptoRateLong '--rate-short' $Ctx.CryptoRateShort $Htm
+            '--tester-swap-only' $Htm
   if ($LASTEXITCODE -ne 0) { throw ("swap_adjust_crypto.py failed on " + $Htm + ": " + ($out -join ' ')) }
-  return ($out -join "`n")
+  $lines = @($out | Where-Object { "$_" -match '^tester swap charged\s*:\s*(-?[0-9]+(?:\.[0-9]+)?)$' })
+  if ($lines.Count -ne 1) { throw ("swap_adjust_crypto.py returned no unique tester swap aggregate for " + $Htm) }
+  $text = [string]$lines[0]
+  [void]($text -match '^tester swap charged\s*:\s*(-?[0-9]+(?:\.[0-9]+)?)$')
+  return @{ tester_swap_charged = [double]::Parse($Matches[1], [Globalization.CultureInfo]::InvariantCulture)
+            detail = ($out -join "`n") }
 }
 
 # --- one tester pass --------------------------------------------------------------------------------

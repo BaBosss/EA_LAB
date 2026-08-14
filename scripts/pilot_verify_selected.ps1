@@ -266,16 +266,18 @@ foreach ($s in $selected) {
   }
 
   if ($symbol -match 'BTC|ETH') {
+    $fin = Get-PilotCryptoFinancing -Ctx $ctx -Htm $htm
     $rec.financing_deducted = @{
-      applied           = $true
-      rate_long_pct_yr  = $CryptoRateLong
-      rate_short_pct_yr = $CryptoRateShort
-      tool              = 'scripts/swap_adjust_crypto.py'
-      detail            = (Get-PilotCryptoFinancing -Ctx $ctx -Htm $htm)
+      applied           = $false
+      metric_basis      = 'tester_native'
+      tester_swap_charged = $fin.tester_swap_charged
+      swap_mode_probe   = (Get-PilotSwapModeProbeReference -Ctx $ctx -Symbol $symbol)
+      tester_swap_extractor = 'scripts/swap_adjust_crypto.py --tester-swap-only'
+      detail            = $fin.detail
     }
-    $rec.notes += ('CRYPTO FINANCING: the tester charges POINTS-mode swap but NOT INTEREST_CURRENT, ' +
-                   'so this cell is optimistic by the amount above until deducted. The PF here is ' +
-                   'the TESTER PF and is NOT financing-adjusted.')
+    $rec.notes += ('CRYPTO FINANCING: the MT5 tester Swap column is included in the stored ' +
+                   'tester-native metrics. financing_deducted records the report-derived tester ' +
+                   'swap for provenance; no post-hoc deduction is applied.')
   }
   $rec.notes += ('Model ' + $Model + ' is a pulse-finding pass, NOT verdict-grade for a grid: ' +
                  'CLAUDE.md makes Model 4 mandatory for the ENGINE-EDGE class both of these ' +

@@ -31,13 +31,9 @@ back to 2020, so a cell run on the wrong lane is a WRONG number rather than a no
 is a parameter with an explicit default, it is recorded in every record, and it is printed in the
 header - a cross-install comparison must be impossible to make by accident.
 
-CRYPTO FINANCING IS DEDUCTED POST-HOC AND SAID OUT LOUD. The tester charges POINTS-mode swap
-(XAUUSD, verified -29.25) but NOT INTEREST_CURRENT (BTCUSD, -14.67%/yr) - memory
-tester-charges-points-swap-not-interest-swap. Every BTCUSD record therefore carries
-`financing_deducted` with the cost and the rate, and its `net_profit` is the ADJUSTED figure with
-the raw one kept beside it. PF is left as the tester reported it and flagged, because this script
-cannot recompute a profit factor from an aggregate without the per-position gross split - claiming
-an adjusted PF it did not compute would be worse than naming the gap.
+CRYPTO FINANCING IS TESTER-NATIVE AND SAID OUT LOUD. The tester's Deals/Swap aggregate is retained
+as provenance beside the raw tester metrics. No post-hoc estimate is applied to `net_profit`, PF,
+or gross profit/loss; a swap mode alone is never treated as proof that the tester skipped financing.
 
 REQUIRES: MT5 GUI closed (mt5_run.ps1's process guard).
 
@@ -218,17 +214,16 @@ foreach ($rev in $Revisions) {
       if ($symbol -match 'BTC|ETH') {
         $fin = Get-CryptoFinancing $htm
         $rec.financing_deducted = @{
-          applied      = $true
-          rate_long_pct_yr  = $CryptoRateLong
-          rate_short_pct_yr = $CryptoRateShort
-          tool         = 'scripts/swap_adjust_crypto.py'
-          detail       = $fin
+          applied      = $false
+          metric_basis = 'tester_native'
+          tester_swap_charged = $fin.tester_swap_charged
+          swap_mode_probe = (Get-PilotSwapModeProbeReference -Ctx $ctx -Symbol $symbol)
+          tester_swap_extractor = 'scripts/swap_adjust_crypto.py --tester-swap-only'
+          detail       = $fin.detail
         }
-        $rec.notes += ('CRYPTO FINANCING: the tester charges POINTS-mode swap but NOT ' +
-                       'INTEREST_CURRENT, so this cell is optimistic by the amount above until ' +
-                       'deducted. PF as printed is the TESTER PF and is NOT financing-adjusted -- ' +
-                       'recomputing it needs the per-position gross split, which this script does ' +
-                       'not have.')
+        $rec.notes += ('CRYPTO FINANCING: the MT5 tester Swap column is included in the stored ' +
+                       'tester-native metrics. financing_deducted records the report-derived ' +
+                       'tester swap for provenance; no post-hoc deduction is applied.')
       }
       $rec.notes += ('Model ' + $Model + ' is a pulse-finding pass, NOT verdict-grade for a grid: ' +
                      'CLAUDE.md makes Model 4 mandatory for the ENGINE-EDGE class both of these ' +

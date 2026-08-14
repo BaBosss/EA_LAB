@@ -1,5 +1,9 @@
 # MT5 AUTOMATION — headless backtest (2026-06-14)
 
+> ORDER-1350 correction: a non-zero tester `Swap` aggregate is already part of the tester-native
+> report metrics. `scripts/swap_adjust_crypto.py --tester-swap-only` records that aggregate for
+> provenance; its rate-based estimator is diagnostic only and must never be applied on top of it.
+
 > ตอบคำถาม "ให้ MT5 รันอัตโนมัติได้ไหม" = **ได้** ผ่าน headless config (.ini)
 > แต่มีเงื่อนไขจริง (ด้านล่าง) — อ่านก่อนรัน
 

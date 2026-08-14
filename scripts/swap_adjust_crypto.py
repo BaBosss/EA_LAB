@@ -17,6 +17,7 @@ METHOD (deliberately conservative):
 
 Usage:
   python swap_adjust_crypto.py --rate-long 14.67 --rate-short 0.49 report1.htm [report2.htm ...]
+  python swap_adjust_crypto.py --tester-swap-only report1.htm
   python swap_adjust_crypto.py --rate-long 9.86 --rate-short 3.95 --deals in.csv --out adj.csv rep*.htm
 
   --deals/--out  optional: rewrite a trades CSV (time,profit from extract_deals.py) with the cost
@@ -90,15 +91,52 @@ def positions(path):
     return out
 
 
+def tester_swap(path):
+    """Return the aggregate Swap column from the report's Deals table."""
+    txt = read_text_auto(path)
+    header = None
+    total = 0.0
+    rows = 0
+    for row in ROW.findall(txt):
+        cells = [TAG.sub("", x).replace("&nbsp;", " ").strip() for x in CELL.findall(row)]
+        lowered = [cell.casefold() for cell in cells]
+        if {"time", "deal", "swap"}.issubset(lowered):
+            header = {name: index for index, name in enumerate(lowered)}
+            continue
+        if not header or len(cells) <= max(header.values()):
+            continue
+        if not re.match(r"^\d{4}\.\d{2}\.\d{2}", cells[header["time"]]):
+            continue
+        if not cells[header["deal"]].replace(",", "").isdigit():
+            continue
+        value = num(cells[header["swap"]])
+        if value is None:
+            raise ValueError(f"malformed tester Swap value in {path}: {cells[header['swap']]!r}")
+        total += value
+        rows += 1
+    if not header or not rows:
+        raise ValueError(f"report has no readable Deals/Swap rows: {path}")
+    return total
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("reports", nargs="+")
-    ap.add_argument("--rate-long", type=float, required=True, help="annual %% paid on long notional")
-    ap.add_argument("--rate-short", type=float, required=True, help="annual %% paid on short notional")
+    ap.add_argument("--rate-long", type=float, help="annual %% paid on long notional")
+    ap.add_argument("--rate-short", type=float, help="annual %% paid on short notional")
     ap.add_argument("--contract", type=float, default=1.0, help="SYMBOL_TRADE_CONTRACT_SIZE (crypto = 1.0)")
     ap.add_argument("--deals", help="trades CSV from extract_deals.py to adjust (time,profit)")
     ap.add_argument("--out", help="where to write the adjusted trades CSV")
+    ap.add_argument("--tester-swap-only", action="store_true",
+                    help="read and print the tester-native Deals/Swap aggregate only")
     a = ap.parse_args()
+
+    if a.tester_swap_only:
+        for report in a.reports:
+            print(f"tester swap charged : {tester_swap(report):.8f}")
+        return
+    if a.rate_long is None or a.rate_short is None:
+        ap.error("--rate-long and --rate-short are required unless --tester-swap-only is used")
 
     costs, total_days = [], 0.0
     for p in a.reports:

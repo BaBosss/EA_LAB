@@ -102,7 +102,7 @@ PILOT_HYPOTHESES = ('B14-H01', 'B14-H02')
 
 # design section 8.3: 4 symbols x 2 timeframes x 2 hypotheses.
 PILOT_CELL_COUNT = 16
-CRYPTO_SYMBOLS = ('BTCUSD',)
+CRYPTO_SYMBOLS = ('BTCUSD', 'ETHUSD')
 FINANCING_RUN_ENTITIES = frozenset(('PilotCellRun', 'PilotSelectedVerification'))
 
 # The verdict vocabulary CLAUDE.md declares canonical. This module may not emit any of it.
@@ -681,6 +681,8 @@ def _swap_mode_probe_is_valid(src, reference, symbol):
             return (False, 'referenced probe is unparseable at line %d' % n)
         if not isinstance(probe, dict):
             return (False, 'referenced probe line %d is not a JSON object' % n)
+        if probe.get('_comment'):
+            continue
         if (probe.get('entity') == 'SwapProbe' and probe.get('probe') == 'spec'
                 and probe.get('logical_symbol') == symbol
                 and isinstance(probe.get('taken_utc'), str)

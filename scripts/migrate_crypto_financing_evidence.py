@@ -36,6 +36,12 @@ CORRECTED_FINANCING_NOTE = (
     "metrics. financing_deducted records the report-derived tester swap for provenance; no "
     "post-hoc deduction is applied."
 )
+LEGACY_INVALID_DISPOSITION = "double-adjusted / invalid derived evidence"
+LEGACY_INVALID_REASON = (
+    "Legacy financing_deducted.applied=true described a post-hoc charge on metrics whose raw "
+    "tester aggregates already included Swap; the raw tester metrics are retained and no "
+    "deterministic regeneration is required."
+)
 ROW = re.compile(r"<tr[^>]*>(.*?)</tr>", re.IGNORECASE | re.DOTALL)
 CELL = re.compile(r"<t[dh][^>]*>(.*?)</t[dh]>", re.IGNORECASE | re.DOTALL)
 TAG = re.compile(r"<[^>]+>")
@@ -166,6 +172,15 @@ def migrated_block(old: object, *, tester_swap: float, probe: str) -> dict:
         "tester_swap_charged": tester_swap,
         "swap_mode_probe": probe,
     })
+    # The first migration already changed `applied` to false. The explicit disposition is the
+    # durable classification marker; do not infer legacy invalidity from ordinary provenance
+    # fields that a future tester-native writer may also carry.
+    if (prior.get("applied") is True
+            or prior.get("legacy_disposition") == LEGACY_INVALID_DISPOSITION):
+        block.update({
+            "legacy_disposition": LEGACY_INVALID_DISPOSITION,
+            "legacy_disposition_reason": LEGACY_INVALID_REASON,
+        })
     return block
 
 

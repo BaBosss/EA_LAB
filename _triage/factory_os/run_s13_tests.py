@@ -805,7 +805,7 @@ check('F1 POSITIVE every crypto arm states the deduction AND what the tester its
 
 state, detail = PA.item_crypto_financing(crypto_source([crypto_run(symbol='XAUUSD')]))
 check('F2 no crypto run at all -> BLOCKED (absent evidence is not a clean deduction)',
-      state == PA.BLOCKED and 'no BTCUSD run record' in detail, '%s: %s' % (state, detail))
+      state == PA.BLOCKED and 'no BTCUSD/ETHUSD run record' in detail, '%s: %s' % (state, detail))
 
 # 🔴 THE CASE THIS HANDLER EXISTS FOR, and the one the real corpus is in today: the baseline arm
 # carries a financing statement and the probe arm carries none, so the flat-lot falsifier compares
