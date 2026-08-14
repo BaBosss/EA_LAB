@@ -7,12 +7,14 @@ does not write any of those stores and it never turns an experiment verdict
 into a strategy, deployment, execution, or risk decision.
 """
 import copy
+import hashlib
 import io
 import json
 import os
 import re
 import subprocess
 import tempfile
+import shutil
 
 import candidate as _candidate
 import capability as _capability
@@ -82,6 +84,17 @@ def _jsonl(path):
                 if not isinstance(value, dict):
                     raise QIValidationError(["%s:%s authority record must be an object" % (path, line_no)])
                 rows.append((line_no, value))
+    return rows
+
+
+def _jsonl_bytes(raw, label):
+    rows=[]
+    for line_no,line in enumerate(raw.decode("utf-8-sig").splitlines(),1):
+        if line.strip():
+            try: value=json.loads(line)
+            except ValueError as exc: raise QIValidationError(["%s:%s is not JSON: %s" % (label,line_no,exc)])
+            if not isinstance(value,dict): raise QIValidationError(["%s:%s authority record must be an object" % (label,line_no)])
+            rows.append((line_no,value))
     return rows
 
 
@@ -242,32 +255,47 @@ def _event_authority_snapshot(root=None):
     utility = _path(REPO_ROOT, "scripts/experiment_event_log.ps1")
     if not os.path.isfile(utility):
         raise QIValidationError(["canonical event validator is unavailable: %s" % utility])
+    snapshot_dir = tempfile.mkdtemp(prefix="ea_lab_qi_event_snapshot_")
     command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", utility,
-               "-Command", "Scan", "-RepoRoot", root]
+               "-Command", "Scan", "-RepoRoot", root, "-ValidatedSnapshotDir", snapshot_dir]
     try:
         proc = subprocess.run(command, capture_output=True, text=True)
     except OSError as exc:
         raise QIValidationError(["canonical event validator cannot run: %s" % exc])
-    if proc.returncode != 0:
-        detail = ((proc.stdout or "") + "\n" + (proc.stderr or "")).strip()
-        raise QIValidationError(["canonical event authority rejected: %s" % detail[:2000]])
-
-    authority = _path(root, "docs/memory_control/experiment_events")
-    evidence = {}
-    manifest = os.path.join(authority, "evidence-manifest.jsonl")
     try:
-        for _line_no, row in _jsonl(manifest):
-            evidence_id = row.get("evidence_id")
-            if evidence_id in evidence:
-                raise QIValidationError(["evidence manifest duplicates %s" % evidence_id])
-            evidence[evidence_id] = row
-        events = []
-        for name in sorted(os.listdir(authority)):
-            if name.startswith("events-") and name.endswith(".jsonl"):
-                events.extend(row for _line_no, row in _jsonl(os.path.join(authority, name)))
-    except (IOError, OSError, ValueError) as exc:
-        raise QIValidationError(["canonical event projection failed: %s" % exc])
-    return evidence, events
+        if proc.returncode != 0:
+            detail = ((proc.stdout or "") + "\n" + (proc.stderr or "")).strip()
+            raise QIValidationError(["canonical event authority rejected: %s" % detail[:2000]])
+        rows = [json.loads(line) for line in (proc.stdout or "").splitlines() if line.strip().startswith("{")]
+        if len(rows) != 1 or not isinstance(rows[0].get("details", {}).get("validated_snapshot"), dict):
+            raise QIValidationError(["canonical event validator did not report one validated snapshot"])
+        expected = rows[0]["details"]["validated_snapshot"].get("manifest_sha256")
+        manifest_path = os.path.join(snapshot_dir, "validated-snapshot-manifest.json")
+        manifest_raw = open(manifest_path, "rb").read()
+        if not isinstance(expected, str) or hashlib.sha256(manifest_raw).hexdigest() != expected:
+            raise QIValidationError(["validated snapshot manifest does not match canonical scanner output"])
+        members = json.loads(manifest_raw.decode("utf-8"))
+        if not isinstance(members, list): raise QIValidationError(["validated snapshot manifest is malformed"])
+        raw = {}
+        for member in members:
+            rel = member.get("path") if isinstance(member, dict) else None
+            if not isinstance(rel, str) or os.path.isabs(rel) or ".." in rel.replace("\\", "/").split("/") or rel in raw:
+                raise QIValidationError(["validated snapshot manifest has unsafe path"])
+            data = open(os.path.join(snapshot_dir, rel), "rb").read()
+            if len(data) != member.get("byte_length") or hashlib.sha256(data).hexdigest() != member.get("sha256"):
+                raise QIValidationError(["validated snapshot member failed integrity binding: %s" % rel])
+            raw[rel] = data
+        manifest_rel = next((rel for rel in raw if rel.replace("\\", "/").endswith("/evidence-manifest.jsonl") or rel == "evidence-manifest.jsonl"), None)
+        if manifest_rel is None: raise QIValidationError(["validated snapshot lacks evidence manifest"])
+        evidence = {}
+        for _line_no, row in _jsonl_bytes(raw[manifest_rel], "validated/evidence-manifest.jsonl"):
+            evidence[row.get("evidence_id")] = row
+        events=[]
+        for rel, data in raw.items():
+            if os.path.basename(rel).startswith("events-") and rel.endswith(".jsonl"): events.extend(row for _n,row in _jsonl_bytes(data, "validated/"+rel))
+        return evidence, events
+    finally:
+        shutil.rmtree(snapshot_dir, ignore_errors=True)
 
 
 def load_evidence_index(root=None):

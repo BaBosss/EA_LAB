@@ -797,8 +797,8 @@ function Invoke-EventUtilityMain {
             $details=[ordered]@{event_count=$snapshot.Events.Count;evidence_count=$snapshot.Evidence.Count;good_event_ids=@($snapshot.GoodEventIds)}
             if($ValidatedSnapshotDir){
                 if(Test-Path -LiteralPath $ValidatedSnapshotDir){if((Get-ChildItem -LiteralPath $ValidatedSnapshotDir -Force|Measure-Object).Count){Throw-EventLogError 'integrity_corrupt' 'validated snapshot directory must be empty'}}else{New-Item -ItemType Directory -Force -Path $ValidatedSnapshotDir|Out-Null}
-                $files=@();foreach($rel in @($live.EventFiles.Keys|Sort-Object)+@('evidence-manifest.jsonl')){$bytes=if($rel -ceq 'evidence-manifest.jsonl'){$live.ManifestBytes}else{$live.EventFiles[$rel]};$dest=Join-Path $ValidatedSnapshotDir $rel;New-Item -ItemType Directory -Force -Path (Split-Path $dest)|Out-Null;[IO.File]::WriteAllBytes($dest,$bytes);$files+=[ordered]@{path=$rel;byte_length=$bytes.Length;sha256=(Get-BytesSha256 $bytes)}}
-                $mb=[Text.Encoding]::UTF8.GetBytes((ConvertTo-Json $files -Compress));[IO.File]::WriteAllBytes((Join-Path $ValidatedSnapshotDir 'validated-snapshot-manifest.json'),$mb);$details.validated_snapshot=[ordered]@{manifest_sha256=(Get-BytesSha256 $mb);file_count=$files.Count}
+                $files=@();foreach($rel in @($live.EventFiles.Keys|Sort-Object)+@('evidence-manifest.jsonl')){$bytes=if($rel -ceq 'evidence-manifest.jsonl'){$live.ManifestBytes}else{$live.EventFiles[$rel]};$dest=Join-Path $ValidatedSnapshotDir $rel;New-Item -ItemType Directory -Force -Path (Split-Path $dest)|Out-Null;[IO.File]::WriteAllBytes($dest,$bytes);$files+=[ordered]@{path=$rel;byte_length=$bytes.Length;sha256=(Get-Sha256Hex $bytes)}}
+                $mb=[Text.Encoding]::UTF8.GetBytes((ConvertTo-Json $files -Compress));[IO.File]::WriteAllBytes((Join-Path $ValidatedSnapshotDir 'validated-snapshot-manifest.json'),$mb);$details.validated_snapshot=[ordered]@{manifest_sha256=(Get-Sha256Hex $mb);file_count=$files.Count}
             }
             Write-MachineStatus -Status 'appended' -Operation 'scan' -LockWaitCount $lock.WaitCount -Details $details;return 0
         }
