@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 
 import candidate as _candidate
+import capability as _capability
 import evidence as _evidence
 import run_journal_validator as _run_journal_validator
 
@@ -103,6 +104,24 @@ def _hash_value(value, field, nullable=True):
     if not isinstance(value, str) or not HASH_RE.fullmatch(value):
         return ["%s must be a lowercase SHA-256 hex string" % field]
     return []
+
+
+def _expected_expert(strategy_ref):
+    ea_id = strategy_ref.get("ea_id") if isinstance(strategy_ref, dict) else None
+    if not isinstance(ea_id, str) or not re.fullmatch(r"E01[1-8]", ea_id):
+        return None
+    wrapper = _capability.WRAPPER_FILE.get("LAB_ENTRY_" + ea_id[-2:])
+    if not isinstance(wrapper, str) or not wrapper.endswith(".mq5"):
+        return None
+    return wrapper[:-4]
+
+
+def _expert_matches(strategy_ref, observed):
+    expected = _expected_expert(strategy_ref)
+    expert = observed.get("expert") if isinstance(observed, dict) else None
+    if not expected or not isinstance(expert, str):
+        return False
+    return re.split(r"[\\\\/]", expert)[-1] == expected
 
 
 def _id_or_null(value, regex, field):
@@ -428,6 +447,9 @@ def validate_result(result, root=None, contract=None):
         observed = runs.get(run_id)
         if observed is None:
             problems.append("run_id %s does not resolve in existing run journals" % run_id)
+            continue
+        if not _expert_matches(contract.get("strategy_ref"), observed):
+            problems.append("run %s expert does not exactly match contract strategy wrapper" % run_id)
             continue
         if not _run_matches_implementation(implementation, observed):
             problems.append("run %s implementation identity does not match contract" % run_id)
