@@ -7,13 +7,13 @@ fingerprint value is derived from it.
 from collections import OrderedDict
 
 CARD_FIELDS = (
-    'ea_id', 'short_name', 'strategy_summary', 'purpose', 'entry_summary',
+    'ea_id', 'strategy_revision', 'short_name', 'strategy_summary', 'purpose', 'entry_summary',
     'add_scale_summary', 'exit_summary', 'risk_character',
 )
 
 _CARDS = (
     OrderedDict([
-        ('ea_id', 'E011'), ('short_name', 'GridTrend'),
+        ('ea_id', 'E011'), ('strategy_revision', 1), ('short_name', 'GridTrend'),
         ('strategy_summary', 'MA trend + ATR grid + basket exits'),
         ('purpose', 'Follow directional MA structure while spacing adverse adds by ATR.'),
         ('entry_summary', 'MA trend direction with the shared trend filter.'),
@@ -22,7 +22,7 @@ _CARDS = (
         ('risk_character', 'Grid exposure; hard depth, lot, DD, and halt cages apply.'),
     ]),
     OrderedDict([
-        ('ea_id', 'E012'), ('short_name', 'Breakout'),
+        ('ea_id', 'E012'), ('strategy_revision', 1), ('short_name', 'Breakout'),
         ('strategy_summary', 'Donchian breakout + ATR grid + basket exits'),
         ('purpose', 'Enter on a channel break and manage continuation exposure.'),
         ('entry_summary', 'Donchian breakout with the shared trend/regime gates.'),
@@ -31,7 +31,7 @@ _CARDS = (
         ('risk_character', 'Breakout grid; exposure is bounded by the shared cages.'),
     ]),
     OrderedDict([
-        ('ea_id', 'E013'), ('short_name', 'MeanRev'),
+        ('ea_id', 'E013'), ('strategy_revision', 1), ('short_name', 'MeanRev'),
         ('strategy_summary', 'BB + RSI mean reversion with basket management'),
         ('purpose', 'Fade stretched price back toward the mean.'),
         ('entry_summary', 'Bollinger-band excursion confirmed by RSI.'),
@@ -40,7 +40,7 @@ _CARDS = (
         ('risk_character', 'Mean-reversion/grid exposure; regime failure is the main risk.'),
     ]),
     OrderedDict([
-        ('ea_id', 'E014'), ('short_name', 'GridLog'),
+        ('ea_id', 'E014'), ('strategy_revision', 1), ('short_name', 'GridLog'),
         ('strategy_summary', 'ATR grid + log-power lots + basket exits'),
         ('purpose', 'Run the Zeus-inspired grid-log entry with explicit shared cages.'),
         ('entry_summary', 'GridLog distance arm with directional entry controls.'),
@@ -49,7 +49,7 @@ _CARDS = (
         ('risk_character', 'Grid and progression exposure; sizing and DD cages are load-bearing.'),
     ]),
     OrderedDict([
-        ('ea_id', 'E015'), ('short_name', 'ST03'),
+        ('ea_id', 'E015'), ('strategy_revision', 1), ('short_name', 'ST03'),
         ('strategy_summary', 'MACD consecutive-count edge trigger on the chassis'),
         ('purpose', 'Require a counted MACD signal run before a chassis entry.'),
         ('entry_summary', 'MACD direction plus consecutive-count and rearm logic.'),
@@ -58,7 +58,7 @@ _CARDS = (
         ('risk_character', 'Signal edge remains unproven; standard chassis cages apply.'),
     ]),
     OrderedDict([
-        ('ea_id', 'E016'), ('short_name', 'Kangaroo'),
+        ('ea_id', 'E016'), ('strategy_revision', 1), ('short_name', 'Kangaroo'),
         ('strategy_summary', 'RSI fade + ATR grid + basket exits'),
         ('purpose', 'Run the self-contained Kangaroo entry-16 pipeline.'),
         ('entry_summary', 'RSI fade in the configured fixed direction.'),
@@ -67,7 +67,7 @@ _CARDS = (
         ('risk_character', 'Self-contained grid engine; hard cage remains supreme.'),
     ]),
     OrderedDict([
-        ('ea_id', 'E017'), ('short_name', 'Wave5'),
+        ('ea_id', 'E017'), ('strategy_revision', 1), ('short_name', 'Wave5'),
         ('strategy_summary', 'Wave-4 retrace arm for wave-5 continuation'),
         ('purpose', 'Arm a directional continuation after a validated wave structure.'),
         ('entry_summary', 'Elliott wave-4 retracement and wave-5 expansion trigger.'),
@@ -76,7 +76,7 @@ _CARDS = (
         ('risk_character', 'Structural-stop probe; guard conditions are mandatory.'),
     ]),
     OrderedDict([
-        ('ea_id', 'E018'), ('short_name', 'JumStoch'),
+        ('ea_id', 'E018'), ('strategy_revision', 1), ('short_name', 'JumStoch'),
         ('strategy_summary', 'LWMA displacement + Stoch seed on the chassis'),
         ('purpose', 'Use the JumStoch seed signal with shared chassis management.'),
         ('entry_summary', 'LWMA displacement filtered by Stochastic state.'),

@@ -62,6 +62,8 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `SafeProjection` | `build/safe_projection.json (derived, never hand-written)` | — | projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot |
 | `AlertEvent` | **derived, never written** — True | — | notifier.assert_sendable: the declared SHAPE checked against this file, PLUS safe_projection.scan_forbidden run with the real snapshot secret list - the layer the sender structurally cannot run |
 | `AlertDelivery` | `ops/delivery_ledger.jsonl` | — | notifier.deliver: every event produces exactly one line whatever happened, and dedupe reads DELIVERED and nothing else |
+| `ExperimentContract` | `factory/experiments/<experiment_id>/contract.json` | _triage/factory_os/qi_1.py | _triage/factory_os/qi_1.py: strict shape, OwnerRef, R4 strategy/PID resolution, and append-only writes |
+| `ExperimentResult` | `factory/experiments/<experiment_id>/results/<result_id>.json` | _triage/factory_os/qi_1.py | _triage/factory_os/qi_1.py: strict shape, run/evidence identity binding, and append-only writes |
 
 <!-- END GENERATED CONTRACT: __STORAGE__ -->
 
@@ -926,6 +928,67 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 **Unknown fields:** rejected (closed object).
 
 <!-- END GENERATED CONTRACT: AlertDelivery -->
+
+<!-- BEGIN GENERATED CONTRACT: ExperimentContract -->
+### ExperimentContract
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`ExperimentContract`** · stored in `factory/experiments/<experiment_id>/contract.json` · written by *_triage/factory_os/qi_1.py* · enforced by *_triage/factory_os/qi_1.py: strict shape, OwnerRef, R4 strategy/PID resolution, and append-only writes*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `schema_version` | const `1` | **yes** |  |
+| `entity` | const `ExperimentContract` | **yes** |  |
+| `experiment_id` | `string` | **yes** | pattern `^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` · maxLength `40` |
+| `created_at_utc` | `string` | **yes** | pattern `^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{3})?Z$` |
+| `strategy_ref` | object *(fields below)* | **yes** | closed · requires `ea_id`, `strategy_revision` |
+| `strategy_ref.ea_id` | `string` | **yes** | pattern `^E[0-9]{3}$` |
+| `strategy_ref.strategy_revision` | `integer` | **yes** | min `1` |
+| `experiment_type` | `EA_EXECUTABLE` \| `EA_BACKTEST` \| `BACKTEST` \| `OPTIMIZATION` \| `EA_OPTIMIZATION` | **yes** |  |
+| `spec_ref` | [`OwnerRef`](#ownerref) | **yes** |  |
+| `hypothesis_revision` | `string` \| `null` | **yes** | pattern `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$` |
+| `implementation_ref` | object *(fields below)* | **yes** | closed · requires `ex5_hash`, `source_hash`, `effective_config_hash`, `set_hash` |
+| `implementation_ref.ex5_hash` | `string` \| `null` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `implementation_ref.source_hash` | `string` \| `null` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `implementation_ref.effective_config_hash` | `string` \| `null` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `implementation_ref.set_hash` | `string` \| `null` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `parameter_refs` | array of object *(fields below)* | **yes** | items closed · items require `pid`, `semantic_rev` |
+| `parameter_refs[].pid` | `integer` | **yes** | min `10000` · max `99999` |
+| `parameter_refs[].semantic_rev` | `integer` | **yes** | min `1` |
+| `supersedes_experiment_id` | `string` \| `null` | **yes** | pattern `^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` |
+
+**Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `experiment_type` ∈ `EA_EXECUTABLE`, `EA_BACKTEST`, `BACKTEST`, `OPTIMIZATION`, `EA_OPTIMIZATION`** → `implementation_ref` → `any`
+
+<!-- END GENERATED CONTRACT: ExperimentContract -->
+
+<!-- BEGIN GENERATED CONTRACT: ExperimentResult -->
+### ExperimentResult
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`ExperimentResult`** · stored in `factory/experiments/<experiment_id>/results/<result_id>.json` · written by *_triage/factory_os/qi_1.py* · enforced by *_triage/factory_os/qi_1.py: strict shape, run/evidence identity binding, and append-only writes*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `schema_version` | const `1` | **yes** |  |
+| `entity` | const `ExperimentResult` | **yes** |  |
+| `result_id` | `string` | **yes** | pattern `^res_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` · maxLength `40` |
+| `experiment_id` | `string` | **yes** | pattern `^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` · maxLength `40` |
+| `recorded_at_utc` | `string` | **yes** | pattern `^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{3})?Z$` |
+| `run_ids` | array of `string` | **yes** |  |
+| `evidence_ids` | array of `string` | **yes** |  |
+| `verdict` | `ACCEPTED` \| `REJECTED` \| `INCONCLUSIVE` \| `INVALID` | **yes** |  |
+| `reason_code` | `string` | **yes** | pattern `^[a-z][a-z0-9_]{0,47}$` |
+| `reason_ref` | [`OwnerRef`](#ownerref) | **yes** |  |
+| `supersedes_result_id` | `string` \| `null` | **yes** | pattern `^res_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: ExperimentResult -->
 
 <!-- BEGIN GENERATED CONTRACT: META_parity_cases -->
 ### META_parity_cases

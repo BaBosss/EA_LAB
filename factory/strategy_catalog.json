@@ -1,6 +1,7 @@
 [
   {
     "ea_id": "E011",
+    "strategy_revision": 1,
     "short_name": "GridTrend",
     "strategy_summary": "MA trend + ATR grid + basket exits",
     "purpose": "Follow directional MA structure while spacing adverse adds by ATR.",
@@ -11,6 +12,7 @@
   },
   {
     "ea_id": "E012",
+    "strategy_revision": 1,
     "short_name": "Breakout",
     "strategy_summary": "Donchian breakout + ATR grid + basket exits",
     "purpose": "Enter on a channel break and manage continuation exposure.",
@@ -21,6 +23,7 @@
   },
   {
     "ea_id": "E013",
+    "strategy_revision": 1,
     "short_name": "MeanRev",
     "strategy_summary": "BB + RSI mean reversion with basket management",
     "purpose": "Fade stretched price back toward the mean.",
@@ -31,6 +34,7 @@
   },
   {
     "ea_id": "E014",
+    "strategy_revision": 1,
     "short_name": "GridLog",
     "strategy_summary": "ATR grid + log-power lots + basket exits",
     "purpose": "Run the Zeus-inspired grid-log entry with explicit shared cages.",
@@ -41,6 +45,7 @@
   },
   {
     "ea_id": "E015",
+    "strategy_revision": 1,
     "short_name": "ST03",
     "strategy_summary": "MACD consecutive-count edge trigger on the chassis",
     "purpose": "Require a counted MACD signal run before a chassis entry.",
@@ -51,6 +56,7 @@
   },
   {
     "ea_id": "E016",
+    "strategy_revision": 1,
     "short_name": "Kangaroo",
     "strategy_summary": "RSI fade + ATR grid + basket exits",
     "purpose": "Run the self-contained Kangaroo entry-16 pipeline.",
@@ -61,6 +67,7 @@
   },
   {
     "ea_id": "E017",
+    "strategy_revision": 1,
     "short_name": "Wave5",
     "strategy_summary": "Wave-4 retrace arm for wave-5 continuation",
     "purpose": "Arm a directional continuation after a validated wave structure.",
@@ -71,6 +78,7 @@
   },
   {
     "ea_id": "E018",
+    "strategy_revision": 1,
     "short_name": "JumStoch",
     "strategy_summary": "LWMA displacement + Stoch seed on the chassis",
     "purpose": "Use the JumStoch seed signal with shared chassis management.",

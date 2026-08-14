@@ -372,6 +372,15 @@ preferred later, the CSV encoding grammar and round-trip fixtures must be specif
 
 ### 4.1 Hypothesis registry
 
+QI-1 experiment identity and result records are bounded append-only projections over the existing
+strategy, run and evidence authorities:
+
+→ **contract [`ExperimentContract`](factory_os/CONTRACTS.md#experimentcontract)** — preregistration
+identity, expected executable/configuration hashes, and R4 strategy/PID references.
+
+→ **contract [`ExperimentResult`](factory_os/CONTRACTS.md#experimentresult)** — verdict and pointers
+to existing run/evidence records; normalized metrics remain owned by evidence-v1.
+
 → **contract [`Hypothesis`](factory_os/CONTRACTS.md#hypothesis)** — fields, types, required-set and validation rules.
 
 → **contract [`ModuleUse`](factory_os/CONTRACTS.md#moduleuse)** — fields, types, required-set and validation rules.

@@ -572,6 +572,37 @@ epair('OwnerRef', OWNER, with_(OWNER, raw_sha256="NOT-A-SHA"),
       'nothing, so a C4-style recompute has no counterpart to compare against',
       [{'keyword': 'pattern', 'instancePath': '/raw_sha256'}])
 
+QI1_CONTRACT = {
+    "entity": "ExperimentContract", "schema_version": 1,
+    "experiment_id": "exp_123e4567-e89b-42d3-a456-426614174000",
+    "created_at_utc": "2026-08-13T00:00:00Z",
+    "strategy_ref": {"ea_id": "E014", "strategy_revision": 1},
+    "experiment_type": "EA_EXECUTABLE", "spec_ref": OWNER,
+    "hypothesis_revision": None,
+    "implementation_ref": {"ex5_hash": H64, "source_hash": H64,
+                            "effective_config_hash": H64, "set_hash": H64},
+    "parameter_refs": [{"pid": 11000, "semantic_rev": 1}],
+    "supersedes_experiment_id": None,
+}
+epair('ExperimentContract', QI1_CONTRACT,
+      with_(QI1_CONTRACT, unknown_field=True),
+      'QI-1: the experiment contract is a closed immutable boundary; an unknown field must not be accepted',
+      [{'keyword': 'unevaluatedProperties', 'instancePath': '', 'unevaluatedProperty': 'unknown_field'}])
+
+QI1_RESULT = {
+    "entity": "ExperimentResult", "schema_version": 1,
+    "result_id": "res_123e4567-e89b-42d3-a456-426614174001",
+    "experiment_id": QI1_CONTRACT["experiment_id"],
+    "recorded_at_utc": "2026-08-13T00:00:00Z",
+    "run_ids": ["RUN-20260802-001"], "evidence_ids": ["evd_sha256_" + "f" * 64],
+    "verdict": "INCONCLUSIVE", "reason_code": "needs_more_oos",
+    "reason_ref": OWNER, "supersedes_result_id": None,
+}
+epair('ExperimentResult', QI1_RESULT,
+      with_(QI1_RESULT, normalized_metrics={"pf": 1.2}),
+      'QI-1: result records are pointers and verdicts, not a second normalized-metrics authority',
+      [{'keyword': 'unevaluatedProperties', 'instancePath': '', 'unevaluatedProperty': 'normalized_metrics'}])
+
 epair('EvidenceRef',
       {"entity": "EvidenceRef", "evidence_id": "evd_sha256_" + "f" * 64, "kind": "REPORT",
        "path": "_mt5_auto/report.htm", "commit_oid": D40, "raw_sha256": H64},
@@ -1205,12 +1236,12 @@ def run(schema, instance):
 # of quietly ageing a sentence nobody re-reads. If a number below is wrong, the schema is not the
 # thing to change: update the number, in the commit that changed the thing it counts.
 HEADER_COUNTS = {
-    'defs': 32,
-    'root_branches': 21,
+    'defs': 34,
+    'root_branches': 23,
     'root_cases': 41,
-    'entity_cases': 80,
-    'entity_negatives': 42,
-    'entities_with_a_negative': 32,
+    'entity_cases': 84,
+    'entity_negatives': 44,
+    'entities_with_a_negative': 34,
 }
 
 

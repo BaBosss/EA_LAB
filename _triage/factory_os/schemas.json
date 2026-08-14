@@ -164,7 +164,9 @@
         "SnapshotBuilderInput",
         "SafeProjection",
         "AlertEvent",
-        "AlertDelivery"
+        "AlertDelivery",
+        "ExperimentContract",
+        "ExperimentResult"
       ]
     }
   },
@@ -336,6 +338,22 @@
         }
       },
       "$ref": "#/$defs/AlertDelivery"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "ExperimentContract"
+        }
+      },
+      "$ref": "#/$defs/ExperimentContract"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "ExperimentResult"
+        }
+      },
+      "$ref": "#/$defs/ExperimentResult"
     }
   ],
   "$defs": {
@@ -3092,6 +3110,111 @@
       },
       "x-enforcement-status": "BUILT",
       "x-enforcer": "_triage/factory_os/notifier.py"
+    },
+    "ExperimentContract": {
+      "type": "object",
+      "x-owner-file": "factory/experiments/<experiment_id>/contract.json",
+      "x-writer": "_triage/factory_os/qi_1.py",
+      "x-enforced-by": "_triage/factory_os/qi_1.py: strict shape, OwnerRef, R4 strategy/PID resolution, and append-only writes",
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/qi_1.py",
+      "description": "Immutable QI-1 preregistration. It stores expected implementation identity; observed run identity is joined by the validator.",
+      "required": [
+        "schema_version",
+        "entity",
+        "experiment_id",
+        "created_at_utc",
+        "strategy_ref",
+        "experiment_type",
+        "spec_ref",
+        "hypothesis_revision",
+        "implementation_ref",
+        "parameter_refs",
+        "supersedes_experiment_id"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "schema_version": { "const": 1 },
+        "entity": { "const": "ExperimentContract" },
+        "experiment_id": { "type": "string", "pattern": "^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "maxLength": 40 },
+        "created_at_utc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{3})?Z$" },
+        "strategy_ref": {
+          "type": "object", "required": ["ea_id", "strategy_revision"], "unevaluatedProperties": false,
+          "properties": {
+            "ea_id": { "type": "string", "pattern": "^E[0-9]{3}$" },
+            "strategy_revision": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "experiment_type": {
+          "type": "string",
+          "enum": ["EA_EXECUTABLE", "EA_BACKTEST", "BACKTEST", "OPTIMIZATION", "EA_OPTIMIZATION"]
+        },
+        "spec_ref": { "$ref": "#/$defs/OwnerRef" },
+        "hypothesis_revision": { "type": ["string", "null"], "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+        "implementation_ref": {
+          "type": "object", "required": ["ex5_hash", "source_hash", "effective_config_hash", "set_hash"],
+          "unevaluatedProperties": false,
+          "properties": {
+            "ex5_hash": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+            "source_hash": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+            "effective_config_hash": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+            "set_hash": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "parameter_refs": {
+          "type": "array", "uniqueItems": true,
+          "items": {
+            "type": "object", "required": ["pid", "semantic_rev"], "unevaluatedProperties": false,
+            "properties": {
+              "pid": { "type": "integer", "minimum": 10000, "maximum": 99999 },
+              "semantic_rev": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "supersedes_experiment_id": { "type": ["string", "null"], "pattern": "^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "experiment_type": { "enum": ["EA_EXECUTABLE", "EA_BACKTEST", "BACKTEST", "OPTIMIZATION", "EA_OPTIMIZATION"] } } },
+          "then": { "properties": { "implementation_ref": { "properties": { "ex5_hash": { "type": "string" }, "effective_config_hash": { "type": "string" } } } } }
+        }
+      ]
+    },
+    "ExperimentResult": {
+      "type": "object",
+      "x-owner-file": "factory/experiments/<experiment_id>/results/<result_id>.json",
+      "x-writer": "_triage/factory_os/qi_1.py",
+      "x-enforced-by": "_triage/factory_os/qi_1.py: strict shape, run/evidence identity binding, and append-only writes",
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/qi_1.py",
+      "description": "Immutable QI-1 result pointer. It carries no normalized metrics; evidence remains the metric authority.",
+      "required": [
+        "schema_version",
+        "entity",
+        "result_id",
+        "experiment_id",
+        "recorded_at_utc",
+        "run_ids",
+        "evidence_ids",
+        "verdict",
+        "reason_code",
+        "reason_ref",
+        "supersedes_result_id"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "schema_version": { "const": 1 },
+        "entity": { "const": "ExperimentResult" },
+        "result_id": { "type": "string", "pattern": "^res_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "maxLength": 40 },
+        "experiment_id": { "type": "string", "pattern": "^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "maxLength": 40 },
+        "recorded_at_utc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{3})?Z$" },
+        "run_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^RUN-[A-Za-z0-9._-]{1,80}$" } },
+        "evidence_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^evd_sha256_[0-9a-f]{64}$" } },
+        "verdict": { "enum": ["ACCEPTED", "REJECTED", "INCONCLUSIVE", "INVALID"] },
+        "reason_code": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,47}$" },
+        "reason_ref": { "$ref": "#/$defs/OwnerRef" },
+        "supersedes_result_id": { "type": ["string", "null"], "pattern": "^res_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
+      }
     }
   }
 }
