@@ -1684,17 +1684,21 @@ function New-StagedSnapshotWorktree {
         $priorSnapshotGitDir = $env:GIT_DIR
         $priorSnapshotGitWorkTree = $env:GIT_WORK_TREE
         $priorSnapshotGitCommonDir = $env:GIT_COMMON_DIR
-        Remove-Item Env:GIT_DIR -ErrorAction SilentlyContinue
-        Remove-Item Env:GIT_WORK_TREE -ErrorAction SilentlyContinue
-        Remove-Item Env:GIT_COMMON_DIR -ErrorAction SilentlyContinue
-        $checkoutOutput = @(& git -C $snapshot reset --hard --quiet $commit 2>&1)
-        if ($null -eq $priorSnapshotGitDir) { Remove-Item Env:GIT_DIR -ErrorAction SilentlyContinue }
-        else { $env:GIT_DIR = $priorSnapshotGitDir }
-        if ($null -eq $priorSnapshotGitWorkTree) { Remove-Item Env:GIT_WORK_TREE -ErrorAction SilentlyContinue }
-        else { $env:GIT_WORK_TREE = $priorSnapshotGitWorkTree }
-        if ($null -eq $priorSnapshotGitCommonDir) { Remove-Item Env:GIT_COMMON_DIR -ErrorAction SilentlyContinue }
-        else { $env:GIT_COMMON_DIR = $priorSnapshotGitCommonDir }
-        if ($LASTEXITCODE -ne 0) {
+        try {
+            Remove-Item Env:GIT_DIR -ErrorAction SilentlyContinue
+            Remove-Item Env:GIT_WORK_TREE -ErrorAction SilentlyContinue
+            Remove-Item Env:GIT_COMMON_DIR -ErrorAction SilentlyContinue
+            $checkoutOutput = @(& git -C $snapshot reset --hard --quiet $commit 2>&1)
+            $checkoutExit = $LASTEXITCODE
+        } finally {
+            if ($null -eq $priorSnapshotGitDir) { Remove-Item Env:GIT_DIR -ErrorAction SilentlyContinue }
+            else { $env:GIT_DIR = $priorSnapshotGitDir }
+            if ($null -eq $priorSnapshotGitWorkTree) { Remove-Item Env:GIT_WORK_TREE -ErrorAction SilentlyContinue }
+            else { $env:GIT_WORK_TREE = $priorSnapshotGitWorkTree }
+            if ($null -eq $priorSnapshotGitCommonDir) { Remove-Item Env:GIT_COMMON_DIR -ErrorAction SilentlyContinue }
+            else { $env:GIT_COMMON_DIR = $priorSnapshotGitCommonDir }
+        }
+        if ($checkoutExit -ne 0) {
             throw ("cannot populate temporary staged snapshot worktree: {0}" -f ($checkoutOutput -join "`n"))
         }
 
