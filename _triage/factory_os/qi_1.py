@@ -7,10 +7,13 @@ does not write any of those stores and it never turns an experiment verdict
 into a strategy, deployment, execution, or risk decision.
 """
 import copy
+import datetime
+import hashlib
 import io
 import json
 import os
 import re
+import tempfile
 
 import candidate as _candidate
 import capability as _capability
@@ -71,14 +74,212 @@ def _jsonl(path):
     rows = []
     with io.open(path, encoding="utf-8-sig") as handle:
         for line_no, line in enumerate(handle, 1):
-            if line.strip() and not line.lstrip().startswith("{"):
-                continue
             if line.strip():
                 try:
-                    rows.append((line_no, json.loads(line)))
+                    value = json.loads(line)
                 except ValueError as exc:
                     raise QIValidationError(["%s:%s is not JSON: %s" % (path, line_no, exc)])
+                if not isinstance(value, dict):
+                    raise QIValidationError(["%s:%s authority record must be an object" % (path, line_no)])
+                rows.append((line_no, value))
     return rows
+
+
+def _schema_type_matches(value, expected):
+    if expected == "object":
+        return isinstance(value, dict)
+    if expected == "array":
+        return isinstance(value, list)
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected == "null":
+        return value is None
+    return False
+
+
+def _schema_problems(value, schema, root_schema, where):
+    """Validate the JSON-Schema subset used by the immutable event/evidence v1 authorities."""
+    if not isinstance(schema, dict):
+        return ["%s schema node is not an object" % where]
+    if "$ref" in schema:
+        ref = schema["$ref"]
+        if not isinstance(ref, str) or not ref.startswith("#/$defs/"):
+            return ["%s has an unsupported schema reference" % where]
+        target = root_schema.get("$defs", {}).get(ref.split("/")[-1])
+        if not isinstance(target, dict):
+            return ["%s schema reference does not resolve" % where]
+        return _schema_problems(value, target, root_schema, where)
+
+    problems = []
+    expected = schema.get("type")
+    if expected is not None:
+        choices = expected if isinstance(expected, list) else [expected]
+        if not any(_schema_type_matches(value, choice) for choice in choices):
+            return ["%s does not match schema type %s" % (where, choices)]
+    if "const" in schema and value != schema["const"]:
+        problems.append("%s does not match schema const" % where)
+    if "enum" in schema and value not in schema["enum"]:
+        problems.append("%s is outside the schema enum" % where)
+
+    if isinstance(value, str):
+        if "pattern" in schema and re.search(schema["pattern"], value) is None:
+            problems.append("%s does not match schema pattern" % where)
+        if len(value) < schema.get("minLength", 0):
+            problems.append("%s is shorter than schema minimum" % where)
+        if "maxLength" in schema and len(value) > schema["maxLength"]:
+            problems.append("%s is longer than schema maximum" % where)
+    elif isinstance(value, int) and not isinstance(value, bool):
+        if "minimum" in schema and value < schema["minimum"]:
+            problems.append("%s is below schema minimum" % where)
+        if "maximum" in schema and value > schema["maximum"]:
+            problems.append("%s is above schema maximum" % where)
+    elif isinstance(value, dict):
+        required = schema.get("required", [])
+        missing = sorted(name for name in required if name not in value)
+        if missing:
+            problems.append("%s is missing required fields: %s" % (where, ", ".join(missing)))
+        properties = schema.get("properties", {})
+        if schema.get("additionalProperties") is False:
+            extra = sorted(set(value) - set(properties))
+            if extra:
+                problems.append("%s has unknown fields: %s" % (where, ", ".join(extra)))
+        for name, child in value.items():
+            if name in properties:
+                problems.extend(_schema_problems(child, properties[name], root_schema,
+                                                 "%s.%s" % (where, name)))
+    elif isinstance(value, list):
+        if len(value) < schema.get("minItems", 0):
+            problems.append("%s has fewer items than schema minimum" % where)
+        if "maxItems" in schema and len(value) > schema["maxItems"]:
+            problems.append("%s has more items than schema maximum" % where)
+        if schema.get("uniqueItems"):
+            keys = [json.dumps(item, ensure_ascii=False, sort_keys=True,
+                               separators=(",", ":")) for item in value]
+            if len(keys) != len(set(keys)):
+                problems.append("%s contains duplicate items" % where)
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, item in enumerate(value):
+                problems.extend(_schema_problems(item, item_schema, root_schema,
+                                                 "%s[%d]" % (where, index)))
+    return problems
+
+
+def _authority_jsonl(path, schema_path, authority_name):
+    try:
+        schema = _json(schema_path)
+    except (IOError, TypeError, ValueError) as exc:
+        raise QIValidationError(["%s schema is unavailable: %s" % (authority_name, exc)])
+    if not isinstance(schema, dict):
+        raise QIValidationError(["%s schema must be an object" % authority_name])
+    rows = _jsonl(path)
+    problems = []
+    for line_no, row in rows:
+        structural = _schema_problems(row, schema, schema, authority_name)
+        for problem in structural:
+            problems.append("%s:%s %s" % (path, line_no, problem))
+        if structural:
+            continue
+        if authority_name == "event-v1":
+            semantic = _event_rule_problems(row, schema)
+        elif authority_name == "evidence-v1":
+            semantic = _evidence_rule_problems(row, schema)
+        else:
+            semantic = ["unsupported authority schema %s" % authority_name]
+        for problem in semantic:
+            problems.append("%s:%s %s" % (path, line_no, problem))
+    if problems:
+        raise QIValidationError(problems)
+    return rows
+
+
+def _evidence_rule_problems(row, schema):
+    rules = schema.get("x-ea-lab-rules")
+    if not isinstance(rules, dict):
+        return ["schema is missing x-ea-lab-rules"]
+    if rules.get("id_from") != "raw_sha256":
+        return ["schema has an unsupported evidence identity rule"]
+    if row.get("evidence_id") != "evd_sha256_" + str(row.get("raw_sha256")):
+        return ["evidence_id is not derived from raw_sha256"]
+    return []
+
+
+def _event_rule_problems(event, schema):
+    rules = schema.get("x-ea-lab-rules")
+    if not isinstance(rules, dict):
+        return ["schema is missing x-ea-lab-rules"]
+    event_rules = rules.get("event_rules")
+    rule = event_rules.get(event.get("event_type")) if isinstance(event_rules, dict) else None
+    if not isinstance(rule, dict):
+        return ["event_type has no v1 semantic rule"]
+
+    problems = []
+    event_type = event.get("event_type")
+    allowed = rule.get("allowed_fields", [])
+    for name in event:
+        if name not in allowed:
+            problems.append("%s does not allow field %s" % (event_type, name))
+    forbidden = {str(name).lower() for name in rules.get("forbidden_fields_case_insensitive", [])}
+    for name in event:
+        if name.lower() in forbidden:
+            problems.append("forbidden ownership/narrative field %s" % name)
+
+    roles = rules.get("actor_roles", {}).get(event.get("actor"), [])
+    if event.get("role") not in roles:
+        problems.append("actor %s cannot use role %s" % (event.get("actor"), event.get("role")))
+    if "authorized_actors" in rule and event.get("actor") not in rule["authorized_actors"]:
+        problems.append("actor %s is not authorized for %s" % (event.get("actor"), event_type))
+    try:
+        datetime.datetime.strptime(event.get("timestamp_utc", ""), "%Y-%m-%dT%H:%M:%S.%fZ")
+    except (TypeError, ValueError):
+        problems.append("timestamp_utc is not a real fixed-millisecond UTC timestamp")
+
+    prior = (event.get("prior_event_id"), event.get("prior_event_sha256"))
+    if rule.get("prior") == "null" and prior != (None, None):
+        problems.append("%s requires null prior fields" % event_type)
+    elif rule.get("prior") != "null" and (prior[0] is None or prior[1] is None):
+        problems.append("%s requires both prior fields" % event_type)
+    trial = (event.get("trial_family"), event.get("trial_count"))
+    if rule.get("trial") == "null" and trial != (None, None):
+        problems.append("%s requires null trial fields" % event_type)
+    elif rule.get("trial") != "null" and (trial[0] is None or trial[1] is None):
+        problems.append("%s requires trial_family and trial_count" % event_type)
+
+    artifacts = event.get("artifact_hashes", {})
+    values = [artifacts.get(name) for name in ("ea", "source", "set", "data", "tester")]
+    if rule.get("artifacts") == "all_null" and any(value is not None for value in values):
+        problems.append("%s requires all artifact hashes to be null" % event_type)
+    elif rule.get("artifacts") == "source_required":
+        if artifacts.get("source") is None or any(artifacts.get(name) is not None for name in ("ea", "set", "data", "tester")):
+            problems.append("%s requires only artifact_hashes.source" % event_type)
+    elif rule.get("artifacts") == "all_required" and any(value is None for value in values):
+        problems.append("%s requires all five artifact hashes" % event_type)
+    if event.get("reason_code") not in rule.get("reason_codes", []):
+        problems.append("reason_code is not allowed for %s" % event_type)
+    for owner in event.get("owner_refs", []):
+        owner_type = owner.get("owner_type")
+        if owner_type not in rule.get("owner_types", []):
+            problems.append("owner_type %s is not allowed for %s" % (owner_type, event_type))
+        pattern = rules.get("owner_path_patterns", {}).get(owner_type)
+        if not isinstance(pattern, str) or re.fullmatch(pattern, str(owner.get("path"))) is None:
+            problems.append("owner path does not match owner_type %s" % owner_type)
+    if "evidence_min" in rule and len(event.get("evidence_ids", [])) < rule["evidence_min"]:
+        problems.append("%s requires at least %s evidence ID" % (event_type, rule["evidence_min"]))
+    if event_type in ("AMENDMENT_ADDED", "TOMBSTONE_ADDED"):
+        if "target_event_id" not in event or "target_event_sha256" not in event:
+            problems.append("%s requires target event identity" % event_type)
+        if event.get("target_event_id") == event.get("event_id"):
+            problems.append("%s cannot target itself" % event_type)
+    if event.get("reason_code") == "physical_recovery":
+        if event.get("actor") not in ("user", "claude"):
+            problems.append("physical_recovery requires user or claude")
+        if "recovery_target_month" not in event:
+            problems.append("physical_recovery requires recovery_target_month")
+    elif "recovery_target_month" in event:
+        problems.append("recovery_target_month is allowed only for physical_recovery")
+    return problems
 
 
 def _shape(record, fields, name):
@@ -196,14 +397,134 @@ def load_run_index(root=None):
 
 def load_evidence_index(root=None):
     """Return the existing evidence-manifest IDs; this module never rewrites that manifest."""
+    root = _root(root)
     path = _path(root, "docs/memory_control/experiment_events/evidence-manifest.jsonl")
+    schema = _path(root, "docs/memory_control/experiment_events/schema/evidence-v1.schema.json")
+    source = _evidence.EvidenceSource("worktree", root=root)
     out = {}
-    for _line, row in _jsonl(path):
+    problems = []
+    for line_no, row in _authority_jsonl(path, schema, "evidence-v1"):
         evidence_id = row.get("evidence_id")
         if evidence_id in out:
             raise QIValidationError(["evidence manifest duplicates %s" % evidence_id])
+        try:
+            resolved = source.resolve_pin(row["commit_oid"], row["path"],
+                                          "evidence-v1 committed locator")
+            if resolved != row["blob_oid"]:
+                problems.append("%s:%s evidence locator blob_oid does not resolve" %
+                                (path, line_no))
+                continue
+            raw = source.read_blob(resolved, "evidence-v1 committed locator")
+        except _evidence.ToolFailure as exc:
+            problems.append("%s:%s evidence locator cannot be verified: %s" %
+                            (path, line_no, exc))
+            continue
+        if hashlib.sha256(raw).hexdigest() != row["raw_sha256"]:
+            problems.append("%s:%s evidence locator raw_sha256 mismatch" % (path, line_no))
+        if len(raw) != row["byte_length"]:
+            problems.append("%s:%s evidence locator byte_length mismatch" % (path, line_no))
         out[evidence_id] = row
+    if problems:
+        raise QIValidationError(problems)
     return out
+
+
+def _event_snapshot_problems(records, evidence, schema):
+    problems = []
+    event_by_id = {}
+    tail_by_experiment = {}
+    core_position = {}
+    tombstoned = set()
+    core = schema.get("x-ea-lab-rules", {}).get("core_lifecycle", [])
+    evidence_hashes = {row.get("raw_sha256") for row in evidence.values()}
+
+    for path, line_no, event in records:
+        where = "%s:%s" % (path, line_no)
+        event_id = event.get("event_id")
+        experiment_id = event.get("experiment_id")
+        event_type = event.get("event_type")
+        month = re.search(r"events-([0-9]{4}-[0-9]{2})\.jsonl$", path.replace("\\", "/"))
+        if not month or not str(event.get("timestamp_utc", "")).startswith(month.group(1)):
+            problems.append("%s event timestamp does not match monthly filename" % where)
+        if event_id in event_by_id:
+            problems.append("%s duplicates event_id %s" % (where, event_id))
+            continue
+
+        if event_type == "IDEA_CREATED":
+            if experiment_id in tail_by_experiment:
+                problems.append("%s duplicates IDEA_CREATED for %s" % (where, experiment_id))
+            tail_by_experiment[experiment_id] = (event, _authority_record_hash(event))
+            core_position[experiment_id] = 1
+        else:
+            tail = tail_by_experiment.get(experiment_id)
+            prior_id = event.get("prior_event_id")
+            if tail is None:
+                problems.append("%s experiment has no preceding IDEA_CREATED" % where)
+            elif prior_id not in event_by_id:
+                problems.append("%s prior event is missing or forward" % where)
+            elif event_by_id[prior_id][0].get("experiment_id") != experiment_id:
+                problems.append("%s prior event belongs to another experiment" % where)
+            elif tail[0].get("event_id") != prior_id:
+                problems.append("%s prior event is not the experiment tail" % where)
+            elif tail[1] != event.get("prior_event_sha256"):
+                problems.append("%s prior_event_sha256 mismatch" % where)
+            tail_by_experiment[experiment_id] = (event, _authority_record_hash(event))
+
+            if event_type in core:
+                expected = core_position.get(experiment_id, 0)
+                if core.index(event_type) != expected:
+                    problems.append("%s out-of-order or duplicate core event %s" % (where, event_type))
+                else:
+                    core_position[experiment_id] = expected + 1
+
+        event_by_id[event_id] = (event, _authority_record_hash(event))
+        for evidence_id in event.get("evidence_ids", []):
+            if evidence_id not in evidence:
+                problems.append("%s evidence %s is absent from manifest" % (where, evidence_id))
+        for artifact_hash in event.get("artifact_hashes", {}).values():
+            if artifact_hash is not None and artifact_hash not in evidence_hashes:
+                problems.append("%s artifact hash %s is absent from manifest" % (where, artifact_hash))
+        if event_type in ("AMENDMENT_ADDED", "TOMBSTONE_ADDED"):
+            target = event.get("target_event_id")
+            if target not in event_by_id or target == event_id:
+                problems.append("%s target event is missing, forward, or self" % where)
+            elif event_by_id[target][0].get("experiment_id") != experiment_id:
+                problems.append("%s target event belongs to another experiment" % where)
+            elif event_by_id[target][1] != event.get("target_event_sha256"):
+                problems.append("%s target_event_sha256 mismatch" % where)
+            if event_type == "TOMBSTONE_ADDED":
+                if target in tombstoned:
+                    problems.append("%s target event was already tombstoned" % where)
+                tombstoned.add(target)
+    return problems
+
+
+def _authority_record_hash(record):
+    raw = json.dumps(record, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
+def load_evidence_lineage(root=None):
+    root = _root(root)
+    lineage = {}
+    event_root = _path(root, "docs/memory_control/experiment_events")
+    schema = _path(root, "docs/memory_control/experiment_events/schema/event-v1.schema.json")
+    schema_value = _json(schema)
+    evidence = load_evidence_index(root)
+    records = []
+    for name in sorted(os.listdir(event_root)) if os.path.isdir(event_root) else []:
+        if not (name.startswith("events-") and name.endswith(".jsonl")):
+            continue
+        path = os.path.join(event_root, name)
+        for line_no, event in _authority_jsonl(path, schema, "event-v1"):
+            records.append((path, line_no, event))
+            evidence_ids = event.get("evidence_ids", [])
+            for evidence_id in evidence_ids:
+                lineage.setdefault(evidence_id, set()).add(event.get("experiment_id"))
+    problems = _event_snapshot_problems(records, evidence, schema_value)
+    if problems:
+        raise QIValidationError(problems)
+    return lineage
 
 
 def validate_contract(contract, root=None):
@@ -231,8 +552,9 @@ def validate_contract(contract, root=None):
                 problems.append("strategy_ref.strategy_revision does not resolve for ea_id")
         except QIValidationError as exc:
             problems.extend(exc.problems)
-    if not isinstance(contract.get("experiment_type"), str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,63}", contract["experiment_type"]):
-        problems.append("experiment_type must be a non-empty stable token")
+    if (not isinstance(contract.get("experiment_type"), str) or
+            contract.get("experiment_type") not in EXECUTABLE_TYPES):
+        problems.append("experiment_type must be one of %s" % sorted(EXECUTABLE_TYPES))
     problems.extend(_owner_ref_problems(contract.get("spec_ref"), "spec_ref", root))
     hypothesis = contract.get("hypothesis_revision")
     if hypothesis is not None and (not isinstance(hypothesis, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", hypothesis)):
@@ -243,7 +565,8 @@ def validate_contract(contract, root=None):
     else:
         for field in sorted(IMPLEMENTATION_FIELDS):
             problems.extend(_hash_value(implementation[field], "implementation_ref.%s" % field))
-        if contract["experiment_type"] in EXECUTABLE_TYPES:
+        if (isinstance(contract.get("experiment_type"), str) and
+                contract["experiment_type"] in EXECUTABLE_TYPES):
             for field in ("ex5_hash", "effective_config_hash"):
                 if implementation.get(field) is None:
                     problems.append("executable experiment requires implementation_ref.%s" % field)
@@ -283,6 +606,8 @@ def strategy_matches_run(strategy_ref, execution_key, root=None):
     expected = load_strategy_index(root)
     ea_id = strategy_ref.get("ea_id")
     if ea_id not in expected or expected[ea_id] != strategy_ref.get("strategy_revision"):
+        return False
+    if execution_key.get("strategy_ref") != strategy_ref:
         return False
     wrapper = _capability.WRAPPER_FILE.get("LAB_ENTRY_%d" % int(ea_id[1:]))
     if not isinstance(wrapper, str) or not wrapper.lower().endswith(".mq5"):
@@ -334,6 +659,10 @@ def validate_result(result, root=None, contract=None):
         evidence = load_evidence_index(root)
     except QIValidationError as exc:
         evidence, _ = {}, problems.extend(exc.problems)
+    try:
+        evidence_lineage = load_evidence_lineage(root)
+    except QIValidationError as exc:
+        evidence_lineage, _ = {}, problems.extend(exc.problems)
     implementation = contract.get("implementation_ref", {})
     for run_id in result.get("run_ids", []) if isinstance(result.get("run_ids"), list) else []:
         observed = runs.get(run_id)
@@ -349,6 +678,8 @@ def validate_result(result, root=None, contract=None):
     for evidence_id in result.get("evidence_ids", []) if isinstance(result.get("evidence_ids"), list) else []:
         if evidence_id not in evidence:
             problems.append("evidence_id %s does not resolve through evidence-manifest.jsonl" % evidence_id)
+        elif evidence_lineage.get(evidence_id) != {contract.get("experiment_id")}:
+            problems.append("evidence_id %s is not bound to this experiment event lineage" % evidence_id)
     return problems
 
 
@@ -440,15 +771,47 @@ def _write_once(path, record, validator, storage_root, repo_root):
         raise QIValidationError(problems)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     data = _canonical_bytes(record)
-    if os.path.exists(path):
-        with io.open(path, "rb") as handle:
-            existing = handle.read()
-        if existing != data:
-            raise QIValidationError(["established QI record cannot be silently mutated: %s" % path])
-        return False
-    with io.open(path, "wb") as handle:
-        handle.write(data)
-    return True
+    fd, temporary = tempfile.mkstemp(prefix=".qi1-write-", suffix=".tmp",
+                                     dir=os.path.dirname(path))
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            os.link(temporary, path)
+            return True
+        except FileExistsError:
+            with io.open(path, "rb") as handle:
+                existing = handle.read()
+            if existing != data:
+                raise QIValidationError(["established QI record cannot be silently mutated: %s" % path])
+            return False
+    finally:
+        try:
+            os.unlink(temporary)
+        except OSError:
+            pass
+
+
+def _acquire_store_lock(storage_root):
+    lock = _path(storage_root, "factory/experiments/.qi1.lock")
+    os.makedirs(os.path.dirname(lock), exist_ok=True)
+    try:
+        fd = os.open(lock, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+    except FileExistsError:
+        raise QIValidationError(["QI-1 store is busy; refusing concurrent mutation"])
+    return lock, fd
+
+
+def _release_store_lock(lock, fd):
+    try:
+        os.close(fd)
+    finally:
+        try:
+            os.unlink(lock)
+        except OSError:
+            pass
 
 
 def _find_result_paths(storage_root, result_id):
@@ -490,26 +853,42 @@ def _check_result_supersession(result, storage_root):
 
 
 def write_contract(contract, storage_root, repo_root=None):
-    _check_contract_supersession(contract, storage_root)
-    path = _path(storage_root, "factory/experiments/%s/contract.json" % contract.get("experiment_id", "INVALID"))
-    return _write_once(path, contract, validate_contract, storage_root, repo_root or REPO_ROOT)
+    lock, fd = _acquire_store_lock(storage_root)
+    try:
+        repo_root = repo_root or REPO_ROOT
+        store_problems, _contracts, _results = validate_store(storage_root, repo_root)
+        if store_problems:
+            raise QIValidationError(store_problems)
+        _check_contract_supersession(contract, storage_root)
+        path = _path(storage_root, "factory/experiments/%s/contract.json" % contract.get("experiment_id", "INVALID"))
+        return _write_once(path, contract, validate_contract, storage_root, repo_root)
+    finally:
+        _release_store_lock(lock, fd)
 
 
 def write_result(result, storage_root, repo_root=None):
-    repo_root = repo_root or REPO_ROOT
-    contract_path = _path(storage_root, "factory/experiments/%s/contract.json" % result.get("experiment_id", "INVALID"))
-    if not os.path.isfile(contract_path):
-        raise QIValidationError(["cannot write a result without an established contract"])
-    _check_result_supersession(result, storage_root)
-    result_id = result.get("result_id", "INVALID")
-    target = _path(storage_root, "factory/experiments/%s/results/%s.json" %
-                   (result.get("experiment_id", "INVALID"), result_id))
-    for established in _find_result_paths(storage_root, result_id):
-        if os.path.normcase(os.path.abspath(established)) != os.path.normcase(os.path.abspath(target)):
-            raise QIValidationError(["result_id is already established in another experiment: %s" % result_id])
-    contract = _json(contract_path)
-    validator = lambda value, root: validate_result(value, root, contract=contract)
-    return _write_once(target, result, validator, storage_root, repo_root)
+    lock, fd = _acquire_store_lock(storage_root)
+    try:
+        repo_root = repo_root or REPO_ROOT
+        store_problems, contracts, _results = validate_store(storage_root, repo_root)
+        if store_problems:
+            raise QIValidationError(store_problems)
+        contract = contracts.get(result.get("experiment_id"))
+        if contract is None:
+            raise QIValidationError(["cannot write a result without an established contract"])
+        if contract.get("experiment_id") != result.get("experiment_id"):
+            raise QIValidationError(["stored contract/result experiment_id mismatch"])
+        _check_result_supersession(result, storage_root)
+        result_id = result.get("result_id", "INVALID")
+        target = _path(storage_root, "factory/experiments/%s/results/%s.json" %
+                       (result.get("experiment_id", "INVALID"), result_id))
+        for established in _find_result_paths(storage_root, result_id):
+            if os.path.normcase(os.path.abspath(established)) != os.path.normcase(os.path.abspath(target)):
+                raise QIValidationError(["result_id is already established in another experiment: %s" % result_id])
+        validator = lambda value, root: validate_result(value, root, contract=contract)
+        return _write_once(target, result, validator, storage_root, repo_root)
+    finally:
+        _release_store_lock(lock, fd)
 
 
 def derive_lifecycle(experiment_id, root=None):

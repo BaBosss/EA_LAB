@@ -22,7 +22,7 @@ PYTHON = os.path.join(ROOT, "tools", "python312", "python.exe")
 GUARD = os.path.join(HERE, "qi1_staged_guard.py")
 RUN_ID = "RUN-20260802-001"
 EVIDENCE_ID = "evd_sha256_092b3189c504570708f91b4bb2d48fe3119f04396f515299d34d728db03622de"
-BASE_EXP = "exp_12345678-1234-4234-8234-1234567890ab"
+BASE_EXP = "exp_93d9457a-4857-438e-99af-370def7a8392"
 BASE_RESULT = "res_12345678-1234-4234-8234-1234567890ab"
 
 
@@ -46,6 +46,9 @@ def copy_authority(root):
         "factory/strategy_catalog.json",
         "factory/runs/RUN-20260802-001.jsonl",
         "docs/memory_control/experiment_events/evidence-manifest.jsonl",
+        "docs/memory_control/experiment_events/events-2026-07.jsonl",
+        "docs/memory_control/experiment_events/schema/event-v1.schema.json",
+        "docs/memory_control/experiment_events/schema/evidence-v1.schema.json",
         "_triage/factory_os/schemas.json",
         "_triage/factory_os/EA_TEMPLATE_PID_ALLOCATION_V1_R4_FINAL.json",
     ]
@@ -63,6 +66,14 @@ def owner_ref(root):
     return {"entity": "OwnerRef", "owner_type": "taskboard_order", "path": "AGENT_TASKBOARD.md",
             "commit_oid": commit, "blob_oid": blob,
             "raw_sha256": hashlib.sha256(raw).hexdigest()}
+
+
+def hydrate_evidence_objects(root):
+    objects = run_git(ROOT, "rev-parse", "--path-format=absolute", "--git-path", "objects")
+    alternates = os.path.join(root, ".git", "objects", "info", "alternates")
+    os.makedirs(os.path.dirname(alternates), exist_ok=True)
+    with io.open(alternates, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(objects.replace("\\", "/") + "\n")
 
 
 def make_contract(root, experiment_id=BASE_EXP):
@@ -85,7 +96,7 @@ def make_result(root, contract, result_id=BASE_RESULT, supersedes=None):
     return {
         "schema_version": 1, "entity": "ExperimentResult", "result_id": result_id,
         "experiment_id": contract["experiment_id"], "recorded_at_utc": "2026-08-13T00:01:00Z",
-        "run_ids": [RUN_ID], "evidence_ids": [EVIDENCE_ID], "verdict": "INCONCLUSIVE",
+        "run_ids": [], "evidence_ids": [EVIDENCE_ID], "verdict": "INCONCLUSIVE",
         "reason_code": "insufficient_forward_evidence", "reason_ref": owner_ref(root),
         "supersedes_result_id": supersedes,
     }
@@ -98,6 +109,7 @@ def fixture(with_result=True):
     run_git_quiet(root, "init", "-q")
     run_git_quiet(root, "config", "user.email", "qi1-tests@example.invalid")
     run_git_quiet(root, "config", "user.name", "QI-1 tests")
+    hydrate_evidence_objects(root)
     run_git_quiet(root, "add", ".")
     run_git_quiet(root, "commit", "-qm", "authority")
     contract = make_contract(root)
