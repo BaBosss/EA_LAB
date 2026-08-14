@@ -21,6 +21,7 @@ red the day the pilot starts producing evidence, which is the opposite of a cage
 USAGE  tools\\python312\\python.exe _triage/factory_os/run_s13_tests.py [--list]
 """
 import io
+import hashlib
 import json
 import os
 import re
@@ -81,6 +82,13 @@ class FakeSource(object):
         if rel not in self.files:
             raise evidence.ToolFailure('%s is not in the fixture source' % rel)
         return self.files[rel]
+
+    def read_committed_bytes(self, rel):
+        rel = rel.replace(os.sep, '/')
+        if rel not in self.files:
+            raise evidence.ToolFailure('%s is not in the fixture source' % rel)
+        raw = self.files[rel]
+        return raw if isinstance(raw, bytes) else raw.encode('utf-8')
 
     def read_blob(self, sha, why):
         if sha not in self.blobs:
@@ -790,13 +798,31 @@ def selected_verification(symbol='BTCUSD', financing='default', **over):
 
 
 def crypto_source(runs, verification=None):
+    probe_id = 'BTCUSD-CHARGE-2026-08-04T00:01:00Z'
+    config_id = 'BTCUSD-CHARGE-CONFIG-1'
+    report = '''<html><head>
+<meta name="probe_id" content="%s">
+<meta name="config_id" content="%s">
+<meta name="logical_symbol" content="BTCUSD">
+<meta name="window" content="2025.10.01..2025.12.09">
+</head><body><table><tr><th>Time</th><th>Deal</th><th>Symbol</th><th>Type</th>
+<th>Direction</th><th>Volume</th><th>Price</th><th>Order</th><th>Commission</th>
+<th>Swap</th><th>Profit</th><th>Balance</th><th>Comment</th></tr>
+<tr><td>2025.12.09</td><td>3</td><td>BTCUSD</td><td>Deal</td><td>out</td><td>0.1</td>
+<td>100</td><td>3</td><td>0</td><td>0</td><td>10</td><td>10</td><td>probe</td></tr>
+</table></body></html>''' % (probe_id, config_id)
+    config = '; probe_id=%s\n; config_id=%s\n; logical_symbol=BTCUSD\n; window=2025.10.01..2025.12.09\n_01_Lot=0.10\n' % (probe_id, config_id)
     spec_probe = {
         'entity': 'SwapProbe', 'probe': 'spec', 'logical_symbol': 'BTCUSD',
         'taken_utc': '2026-08-04T00:00:00Z', 'swap_mode': 'INTEREST_CURRENT'}
     charge_probe = {
         'entity': 'SwapProbe', 'probe': 'charge', 'logical_symbol': 'BTCUSD',
         'taken_utc': '2026-08-04T00:01:00Z', 'lane': r'D:\Meta 5\terminal64.exe',
+        'probe_id': probe_id, 'config_id': config_id,
         'report': 'factory/runs/pilot/swap_probe/fixture_charge.htm',
+        'report_sha256': hashlib.sha256(report.encode('utf-8')).hexdigest(),
+        'set': 'factory/runs/pilot/swap_probe/fixture_charge.set',
+        'set_sha256': hashlib.sha256(config.encode('utf-8')).hexdigest(),
         'source': 'fixture report Deals/Swap table', 'window': '2025.10.01..2025.12.09',
         'model': 1, 'side': 'BUY', 'lot': 0.1, 'days_held': 68,
         'tester_swap_charged': 0, 'inputs_pinned': True}
@@ -804,6 +830,8 @@ def crypto_source(runs, verification=None):
              PA.COVERAGE_REL: '\n'.join(json.dumps(c) for c in [cell('c1')]),
              'factory/runs/pilot/swap_probe/fixture.jsonl': json.dumps(spec_probe),
              'factory/runs/pilot/swap_probe/charge_fixture.jsonl': json.dumps(charge_probe),
+             'factory/runs/pilot/swap_probe/fixture_charge.htm': report,
+             'factory/runs/pilot/swap_probe/fixture_charge.set': config,
              'factory/runs/pilot/swap_probe/charge_nonzero_fixture.jsonl': json.dumps(
                  dict(charge_probe, tester_swap_charged=-4.73))}
     if runs is not None:
@@ -873,10 +901,103 @@ state, detail = PA.item_crypto_financing(crypto_source(
 check('C-posthoc post-hoc with no tester observation -> not PASS',
       state == PA.BLOCKED, '%s: %s' % (state, detail))
 
+missing_report_source = crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())])
+del missing_report_source.files['factory/runs/pilot/swap_probe/fixture_charge.htm']
+state, detail = PA.item_crypto_financing(missing_report_source)
+check('C1-posthoc self-asserted pinned probe with missing report -> not PASS',
+      state == PA.BLOCKED and 'report' in detail,
+      '%s: %s' % (state, detail))
+
+inputs_only_source = crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())])
+inputs_only_probe_path = 'factory/runs/pilot/swap_probe/charge_fixture.jsonl'
+inputs_only_probe = json.loads(inputs_only_source.files[inputs_only_probe_path])
+for field in ('probe_id', 'config_id', 'report_sha256', 'set', 'set_sha256'):
+    inputs_only_probe.pop(field, None)
+inputs_only_source.files[inputs_only_probe_path] = json.dumps(inputs_only_probe)
+state, detail = PA.item_crypto_financing(inputs_only_source)
+check('C2-posthoc inputs_pinned-only -> not PASS',
+      state != PA.PASS, '%s: %s' % (state, detail))
+
+missing_set_source = crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())])
+missing_set_probe = json.loads(missing_set_source.files[inputs_only_probe_path])
+missing_set_probe['set'] = 'factory/runs/pilot/swap_probe/missing.set'
+missing_set_source.files[inputs_only_probe_path] = json.dumps(missing_set_probe)
+state, detail = PA.item_crypto_financing(missing_set_source)
+check('C3-posthoc truthy nonexistent set -> not PASS',
+      state != PA.PASS and 'pinned config' in detail,
+      '%s: %s' % (state, detail))
+
+missing_set_artifact_source = crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())])
+del missing_set_artifact_source.files['factory/runs/pilot/swap_probe/fixture_charge.set']
+state, detail = PA.item_crypto_financing(missing_set_artifact_source)
+check('C4-posthoc real report with missing set artifact -> not PASS',
+      state != PA.PASS and 'pinned config' in detail,
+      '%s: %s' % (state, detail))
+
+corrupt_hash_source = crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())])
+corrupt_hash_probe = json.loads(corrupt_hash_source.files[inputs_only_probe_path])
+corrupt_hash_probe['set_sha256'] = '0' * 64
+corrupt_hash_source.files[inputs_only_probe_path] = json.dumps(corrupt_hash_probe)
+state, detail = PA.item_crypto_financing(corrupt_hash_source)
+check('C5-posthoc corrupt config hash -> not PASS',
+      state != PA.PASS and 'SHA256 mismatch' in detail,
+      '%s: %s' % (state, detail))
+
+identity_source = crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())])
+identity_report_path = 'factory/runs/pilot/swap_probe/fixture_charge.htm'
+identity_report = identity_source.files[identity_report_path].replace(
+    'content="BTCUSD"', 'content="ETHUSD"', 1)
+identity_source.files[identity_report_path] = identity_report
+identity_probe = json.loads(identity_source.files[inputs_only_probe_path])
+identity_probe['report_sha256'] = hashlib.sha256(identity_report.encode('utf-8')).hexdigest()
+identity_source.files[inputs_only_probe_path] = json.dumps(identity_probe)
+state, detail = PA.item_crypto_financing(identity_source)
+check('C6-posthoc mismatched report/probe identity -> not PASS',
+      state != PA.PASS and 'probe identity' in detail,
+      '%s: %s' % (state, detail))
+
+nonzero_report_source = crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())])
+nonzero_report = nonzero_report_source.files[identity_report_path].replace(
+    '<td>0</td><td>10</td>', '<td>-4.73</td><td>10</td>', 1)
+nonzero_report_source.files[identity_report_path] = nonzero_report
+nonzero_report_probe = json.loads(nonzero_report_source.files[inputs_only_probe_path])
+nonzero_report_probe['report_sha256'] = hashlib.sha256(nonzero_report.encode('utf-8')).hexdigest()
+nonzero_report_source.files[inputs_only_probe_path] = json.dumps(nonzero_report_probe)
+state, detail = PA.item_crypto_financing(nonzero_report_source)
+check('C7-posthoc record zero with report nonzero -> FAIL',
+      state == PA.FAIL and 'disagrees' in detail,
+      '%s: %s' % (state, detail))
+
 state, detail = PA.item_crypto_financing(crypto_source(
     [crypto_run('baseline', financing=post_hoc_fin())]))
 check('E post-hoc no-charge proof with complete estimator provenance -> PASS',
       state == PA.PASS and 'post_hoc_estimator' in detail,
+      '%s: %s' % (state, detail))
+
+malformed_report_source = crypto_source(
+    [crypto_run('baseline', financing=post_hoc_fin())])
+malformed_report_path = 'factory/runs/pilot/swap_probe/fixture_charge.htm'
+malformed_report = malformed_report_source.files[malformed_report_path]
+for old, new in (('<th>Time</th>', '<th>ColumnA</th>'),
+                 ('<th>Deal</th>', '<th>ColumnB</th>'),
+                 ('<th>Symbol</th>', '<th>ColumnC</th>'),
+                 ('<th>Direction</th>', '<th>ColumnE</th>'),
+                 ('<th>Swap</th>', '<th>ColumnJ</th>')):
+    malformed_report = malformed_report.replace(old, new, 1)
+malformed_report_source.files[malformed_report_path] = malformed_report
+malformed_probe = json.loads(malformed_report_source.files[inputs_only_probe_path])
+malformed_probe['report_sha256'] = hashlib.sha256(malformed_report.encode('utf-8')).hexdigest()
+malformed_report_source.files[inputs_only_probe_path] = json.dumps(malformed_probe)
+state, detail = PA.item_crypto_financing(malformed_report_source)
+check('E1-posthoc unrelated 13-cell table without Deals header -> not PASS',
+      state != PA.PASS and 'Deals' in detail,
       '%s: %s' % (state, detail))
 
 state, detail = PA.item_crypto_financing(crypto_source(

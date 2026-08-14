@@ -51,6 +51,7 @@ EXIT
   3  no FAILs, but at least one item BLOCKED -- the ordinary state of a pilot in progress
 """
 
+import hashlib
 import json
 import math
 import os
@@ -704,6 +705,160 @@ def _swap_mode_probe_is_valid(src, reference, symbol):
     return (True, '')
 
 
+def _artifact_reference(reference, kind):
+    """Return a safe repository-relative committed-artifact reference."""
+    if not isinstance(reference, str) or not reference.startswith('factory/runs/pilot/'):
+        return (None, '%s must be a repository reference under factory/runs/pilot/' % kind)
+    normalized = reference.replace('\\', '/')
+    parts = normalized.split('/')
+    if (normalized.startswith('/') or re.match(r'^[A-Za-z]:', normalized)
+            or '..' in parts or any(not part for part in parts)):
+        return (None, '%s is not a safe repository-relative reference' % kind)
+    return (normalized, '')
+
+
+def _read_artifact_bytes(src, reference, kind):
+    """Read one committed artifact through the evidence source, with no disk fallback."""
+    reference, detail = _artifact_reference(reference, kind)
+    if reference is None:
+        return (None, detail)
+    try:
+        return (src.read_committed_bytes(reference), '')
+    except (AttributeError, evidence.ToolFailure) as exc:
+        return (None, 'cannot resolve committed %s %r: %s' % (kind, reference, exc))
+
+
+def _artifact_text(raw, kind):
+    """Decode a committed text artifact using the repository's MT5-compatible encodings."""
+    for encoding in ('utf-8-sig', 'utf-16', 'utf-16-le'):
+        try:
+            text = raw.decode(encoding)
+        except (AttributeError, UnicodeDecodeError):
+            continue
+        if text.count('\x00') < max(1, len(text) // 100):
+            return (text, '')
+    return (None, '%s is not a readable UTF-8/UTF-16 text artifact' % kind)
+
+
+def _artifact_hash_matches(raw, recorded, kind):
+    if not isinstance(recorded, str) or not re.match(r'^[0-9a-fA-F]{64}$', recorded):
+        return ('unknown', '%s has no valid SHA256 identity' % kind)
+    actual = hashlib.sha256(raw).hexdigest()
+    if actual.lower() != recorded.lower():
+        return ('fail', '%s SHA256 mismatch: recorded=%s actual=%s'
+                % (kind, recorded, actual))
+    return ('pass', '')
+
+
+def _html_meta(text):
+    meta = {}
+    for match in re.finditer(
+            r'<meta\b[^>]*\bname=["\']([^"\']+)["\'][^>]*\bcontent=["\']([^"\']*)["\'][^>]*>',
+            text, re.I):
+        meta[match.group(1).strip().lower()] = match.group(2).strip()
+    return meta
+
+
+def _set_meta(text):
+    meta = {}
+    for line in text.splitlines():
+        match = re.match(r'^\s*;\s*([A-Za-z0-9_.-]+)\s*=\s*(.*?)\s*$', line)
+        if match:
+            meta[match.group(1).strip().lower()] = match.group(2).strip()
+    return meta
+
+
+def _report_swap_total(text, symbol):
+    """Read the realized Swap column from a validated MT5 13-column Deals table."""
+    rows = re.findall(r'<tr[^>]*>(.*?)</tr>', text, re.I | re.S)
+    swaps = []
+    header = None
+    for row in rows:
+        cells = [re.sub(r'<[^>]+>', '', cell).strip()
+                 for cell in re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', row, re.I | re.S)]
+        labels = [cell.lower() for cell in cells]
+        required = ('time', 'deal', 'symbol', 'direction', 'swap')
+        if len(cells) == 13 and all(label in labels for label in required):
+            header = {label: labels.index(label) for label in required}
+            continue
+        if header is None or len(cells) != 13:
+            continue
+        if cells[header['direction']].lower() != 'out':
+            continue
+        if cells[header['symbol']] != symbol:
+            return ('unknown', 'Deals row symbol %r does not match charge probe symbol %r'
+                    % (cells[header['symbol']], symbol))
+        if not cells[header['time']] or not re.match(r'^\d{4}[.\-/]\d{2}[.\-/]\d{2}',
+                                                       cells[header['time']]):
+            return ('unknown', 'Deals row has no auditable timestamp')
+        if not re.match(r'^#?\d+$', cells[header['deal']]):
+            return ('unknown', 'Deals row has no numeric deal identity')
+        value = cells[header['swap']].replace(',', '').replace(' ', '')
+        try:
+            swaps.append(float(value))
+        except ValueError:
+            return ('unknown', 'report Deals table has a non-numeric Swap value')
+    if header is None:
+        return ('unknown', 'report has no readable Deals table header')
+    if not swaps:
+        return ('unknown', 'report has no readable closing Deals row carrying Swap')
+    return ('pass', sum(swaps))
+
+
+def _charge_probe_artifacts(src, probe, symbol):
+    """Resolve report and set artifacts and bind their identities to one charge probe."""
+    report_raw, detail = _read_artifact_bytes(src, probe.get('report'), 'tester report')
+    if report_raw is None:
+        return ('unknown', detail)
+    status, detail = _artifact_hash_matches(report_raw, probe.get('report_sha256'), 'tester report')
+    if status != 'pass':
+        return (status, detail)
+    report_text, detail = _artifact_text(report_raw, 'tester report')
+    if report_text is None:
+        return ('unknown', detail)
+
+    set_raw, detail = _read_artifact_bytes(src, probe.get('set'), 'pinned config')
+    if set_raw is None:
+        return ('unknown', detail)
+    status, detail = _artifact_hash_matches(set_raw, probe.get('set_sha256'), 'pinned config')
+    if status != 'pass':
+        return (status, detail)
+    set_text, detail = _artifact_text(set_raw, 'pinned config')
+    if set_text is None:
+        return ('unknown', detail)
+
+    report_meta = _html_meta(report_text)
+    set_meta = _set_meta(set_text)
+    expected = {
+        'probe_id': probe.get('probe_id'),
+        'config_id': probe.get('config_id'),
+        'logical_symbol': symbol,
+        'window': probe.get('window'),
+    }
+    missing = [key for key, value in expected.items()
+               if not isinstance(value, str) or not value.strip()]
+    if missing:
+        return ('unknown', 'charge probe lacks artifact identity fields: %s'
+                % ', '.join(missing))
+    mismatches = []
+    for key, value in expected.items():
+        if report_meta.get(key) != value:
+            mismatches.append('report %s' % key)
+        if set_meta.get(key) != value:
+            mismatches.append('pinned config %s' % key)
+    if mismatches:
+        return ('unknown', 'charge artifacts do not share probe identity: %s'
+                % ', '.join(mismatches))
+
+    status, observed_swap = _report_swap_total(report_text, symbol)
+    if status != 'pass':
+        return (status, observed_swap)
+    if not math.isclose(observed_swap, probe.get('tester_swap_charged'), abs_tol=1e-9):
+        return ('fail', 'tester report Swap=%s disagrees with charge probe tester_swap_charged=%s'
+                % (observed_swap, probe.get('tester_swap_charged')))
+    return ('pass', '')
+
+
 def _charge_probe_is_valid(src, reference, symbol):
     """Return ``(status, detail)`` for positive tester no-charge evidence."""
     records, detail = _read_swap_probe_records(src, reference)
@@ -736,12 +891,13 @@ def _charge_probe_is_valid(src, reference, symbol):
         missing.append('lot>0')
     if not _finite_number(probe.get('days_held')) or probe.get('days_held') <= 0:
         missing.append('days_held>0')
-    if probe.get('inputs_pinned') is not True and not probe.get('set'):
-        missing.append('pinned config identity')
+    for field in ('probe_id', 'config_id', 'report_sha256', 'set', 'set_sha256'):
+        if not isinstance(probe.get(field), str) or not probe.get(field).strip():
+            missing.append(field)
     if missing:
         return ('unknown', 'charge observation lacks auditable execution/exposure fields: %s'
                 % ', '.join(dict.fromkeys(missing)))
-    return ('pass', '')
+    return _charge_probe_artifacts(src, probe, symbol)
 
 
 def _finite_number(value):
