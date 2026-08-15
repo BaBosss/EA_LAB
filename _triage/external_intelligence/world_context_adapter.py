@@ -98,6 +98,9 @@ def normalize_world_observation(
     diag = dict(diagnostics or {})
     diag.update(class_diag)
     diag["capability_policy"] = "ADOPT" if capability in ACCEPTED_CAPABILITIES else "OPTIONAL"
+    if data_timestamp_utc is None and availability == "AVAILABLE":
+        availability = "PARTIAL"
+        diag["reason"] = "missing_data_timestamp_freshness_unproven"
     if upstream_stale is not None:
         diag["upstream_stale_ignored"] = True
     if stale:

@@ -64,7 +64,7 @@ def _world(**overrides):
         "upstream_repo": "world-intel-mcp",
         "upstream_sha": UPSTREAM_WORLD_SHA,
         "retrieved_at_utc": UTC,
-        "data_timestamp_utc": None,
+        "data_timestamp_utc": UTC,
         "provenance": {"fixture": "deterministic"},
         "now_utc": UTC,
     }
@@ -79,6 +79,8 @@ def test_world_negative_and_freshness() -> None:
     assert stale.stale and stale.availability == "STALE"
     empty = _world(payload={})
     assert empty.availability == "UNAVAILABLE"
+    no_timestamp = _world(data_timestamp_utc=None)
+    assert no_timestamp.availability == "PARTIAL"
     partial = _world(capability="yield_curve", payload={"tenors": {"2Y": 0.02}, "complete": False})
     assert partial.availability == "PARTIAL"
     _expect(UnsupportedCapabilityError, lambda: _world(capability="gdelt_event_intensity"))
