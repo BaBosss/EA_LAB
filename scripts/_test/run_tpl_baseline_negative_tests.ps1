@@ -53,18 +53,48 @@ function Commit-LineageFile([string]$Root, [string]$RelativePath, [string]$Text,
     if ($LASTEXITCODE -ne 0) { throw "failed lineage fixture commit: $Message" }
     return (Get-LineageHead $Root)
 }
-function New-LineageBaseline([string]$Tip) {
-    return [pscustomobject]@{ Manifest = [pscustomobject]@{ baseline_source_commit = ''; accepted_runtime_lineage_tip = $Tip } }
+function New-LineageBaseline([string]$Tip, [string]$Base = '') {
+    if (-not $Base) { $Base = $Tip }
+    return [pscustomobject]@{ Manifest = [pscustomobject]@{ baseline_source_commit = $Base; accepted_runtime_lineage_tip = $Tip } }
 }
-function Expect-SourceRefusal([string]$Name, [string]$Root, [string]$Tip) {
+function Expect-SourceRefusal([string]$Name, [string]$Root, [string]$Tip, [string]$Base = '') {
     $refused = $false
-    try { Assert-TplSourceContract -Root $Root -Baseline (New-LineageBaseline $Tip) | Out-Null }
+    try { Assert-TplSourceContract -Root $Root -Baseline (New-LineageBaseline $Tip $Base) | Out-Null }
     catch { $refused = $true; Write-Host "[PASS] $Name :: $($_.Exception.Message)" }
     if (-not $refused) { throw "FAIL: $Name unexpectedly passed" }
 }
-function Expect-SourceAllowed([string]$Name, [string]$Root, [string]$Tip) {
-    try { Assert-TplSourceContract -Root $Root -Baseline (New-LineageBaseline $Tip) | Out-Null; Write-Host "[PASS] $Name" }
+function Expect-SourceAllowed([string]$Name, [string]$Root, [string]$Tip, [string]$Base = '') {
+    try { Assert-TplSourceContract -Root $Root -Baseline (New-LineageBaseline $Tip $Base) | Out-Null; Write-Host "[PASS] $Name" }
     catch { throw "FAIL: $Name unexpectedly refused: $($_.Exception.Message)" }
+}
+function Invoke-GeneratorLineageProbe([string]$Root, [string]$SourceCommit, [string]$AcceptedTip) {
+    $script = Join-Path $RepoRoot 'scripts\generate_tpl_baseline.ps1'
+    $missingTerminal = Join-Path $Root 'missing-terminal.exe'
+    $probeId = [guid]::NewGuid().ToString('N')
+    $stdout = Join-Path ([IO.Path]::GetTempPath()) ('generator-' + $probeId + '.stdout.log')
+    $stderr = Join-Path ([IO.Path]::GetTempPath()) ('generator-' + $probeId + '.stderr.log')
+    $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $script,
+        '-RepoRoot', $Root, '-SourceCommit', $SourceCommit,
+        '-AcceptedRuntimeLineageTip', $AcceptedTip, '-Terminal', $missingTerminal
+    ) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru -WindowStyle Hidden
+    $output = @((Get-Content -LiteralPath $stdout -ErrorAction SilentlyContinue), (Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue))
+    Remove-Item -LiteralPath $stdout, $stderr -Force -ErrorAction SilentlyContinue
+    return [pscustomobject]@{ ExitCode = $proc.ExitCode; Output = (($output | Out-String).Trim()) }
+}
+function Expect-GeneratorLineageAllowed([string]$Name, [string]$Root, [string]$SourceCommit, [string]$AcceptedTip) {
+    $probe = Invoke-GeneratorLineageProbe $Root $SourceCommit $AcceptedTip
+    if ($probe.ExitCode -eq 0 -or $probe.Output -notmatch 'terminal not found') {
+        throw "FAIL: $Name did not pass lineage preflight: exit=$($probe.ExitCode) output=$($probe.Output)"
+    }
+    Write-Host "[PASS] $Name :: lineage accepted before expected terminal refusal"
+}
+function Expect-GeneratorLineageRefusal([string]$Name, [string]$Root, [string]$SourceCommit, [string]$AcceptedTip) {
+    $probe = Invoke-GeneratorLineageProbe $Root $SourceCommit $AcceptedTip
+    if ($probe.ExitCode -eq 0 -or $probe.Output -notmatch 'not linearly related') {
+        throw "FAIL: $Name did not refuse unrelated lineage: exit=$($probe.ExitCode) output=$($probe.Output)"
+    }
+    Write-Host "[PASS] $Name :: $($probe.Output)"
 }
 
 try {
@@ -88,16 +118,54 @@ try {
         Expect-SourceRefusal 'missing lineage tip' $lineage ''
         Expect-SourceRefusal 'malformed lineage tip' $lineage 'not-a-commit-sha'
 
+        Expect-SourceAllowed 'baseline source equals HEAD' $lineage $tip $tip
+
         $mainBranch = (& git -C $lineage branch --show-current).Trim()
         & git -C $lineage checkout --quiet -b side
         $sideTip = Commit-LineageFile $lineage 'side.txt' 'side' 'side lineage'
         & git -C $lineage checkout --quiet $mainBranch
         $mainTip = Commit-LineageFile $lineage 'README.md' 'mainline' 'non-protected lineage'
         Expect-SourceRefusal 'valid non-ancestor lineage tip' $lineage $sideTip
-        Expect-SourceAllowed 'valid ancestor with non-protected change' $lineage $tip
+        Expect-SourceAllowed 'baseline ancestor with non-protected descendant' $lineage $tip $tip
 
         $protectedTip = Commit-LineageFile $lineage 'ea_template/core/Changed.mqh' '// protected' 'protected lineage'
-        Expect-SourceRefusal 'valid ancestor with protected change' $lineage $mainTip
+        Expect-SourceRefusal 'protected EA change after baseline source' $lineage $tip $tip
+        Expect-SourceRefusal 'runtime tip not ancestor of baseline source' $lineage $sideTip $tip
+
+        & git -C $lineage checkout --quiet -b source-contract-side $tip
+        $sideCurrent = Commit-LineageFile $lineage 'side-current.txt' 'side-current' 'side current'
+        Expect-SourceRefusal 'baseline source not ancestor of current HEAD' $lineage $tip $mainTip
+
+        $generatorF = New-LineageRepo
+        try {
+            $generatorFTip = Get-LineageHead $generatorF
+            $generatorFSource = Commit-LineageFile $generatorF 'local.txt' 'local' 'local candidate'
+            & git -C $generatorF update-ref refs/remotes/origin/master $generatorFTip
+            Expect-GeneratorLineageAllowed 'local SourceCommit descendant of origin/master' $generatorF $generatorFSource $generatorFTip
+        } finally { Remove-Item -LiteralPath $generatorF -Recurse -Force -ErrorAction SilentlyContinue }
+
+        $generatorG = New-LineageRepo
+        try {
+            $generatorGSource = Get-LineageHead $generatorG
+            & git -C $generatorG checkout --quiet -b origin-history
+            $generatorGOrigin = Commit-LineageFile $generatorG 'origin.txt' 'origin' 'origin history'
+            & git -C $generatorG checkout --quiet $generatorGSource
+            & git -C $generatorG update-ref refs/remotes/origin/master $generatorGOrigin
+            Expect-GeneratorLineageAllowed 'SourceCommit ancestor of origin/master' $generatorG $generatorGSource $generatorGSource
+        } finally { Remove-Item -LiteralPath $generatorG -Recurse -Force -ErrorAction SilentlyContinue }
+
+        $generatorH = New-LineageRepo
+        try {
+            $generatorHTip = Get-LineageHead $generatorH
+            & git -C $generatorH checkout --quiet --orphan unrelated
+            & git -C $generatorH rm -r --cached . 2>$null | Out-Null
+            [IO.File]::WriteAllText((Join-Path $generatorH 'unrelated.txt'), 'unrelated')
+            & git -C $generatorH add .
+            & git -C $generatorH commit --quiet -m unrelated
+            $generatorHSource = Get-LineageHead $generatorH
+            & git -C $generatorH update-ref refs/remotes/origin/master $generatorHTip
+            Expect-GeneratorLineageRefusal 'unrelated source and origin histories' $generatorH $generatorHSource $generatorHTip
+        } finally { Remove-Item -LiteralPath $generatorH -Recurse -Force -ErrorAction SilentlyContinue }
     } finally { Remove-Item -LiteralPath $lineage -Recurse -Force -ErrorAction SilentlyContinue }
 
     $ownerFiles = @(
@@ -108,6 +176,6 @@ try {
     $oldOwnerHit = @(Select-String -Path $ownerFiles -SimpleMatch 'ac294d3a8f8e3a2b0dfa88860c2558e0646df6fb')
     if ($oldOwnerHit.Count -gt 0) { throw 'FAIL: old orphan lineage SHA remains in an active owner' }
     Write-Host '[PASS] old orphan lineage SHA absent from active owners'
-    Write-Host 'TPL BASELINE NEGATIVE TESTS: 20/20 PASS' -ForegroundColor Green
+    Write-Host 'TPL BASELINE CONTRACT TESTS: existing negative coverage plus A-H PASS' -ForegroundColor Green
     exit 0
 } finally { Remove-Item -LiteralPath $template -Recurse -Force -ErrorAction SilentlyContinue }

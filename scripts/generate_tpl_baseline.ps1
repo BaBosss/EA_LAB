@@ -33,9 +33,14 @@ $originHead = (& git -C $RepoRoot rev-parse --verify 'origin/master^{commit}' 2>
 if ($LASTEXITCODE -ne 0 -or -not $originHead) {
     throw 'refusing baseline source validation: origin/master commit is unavailable'
 }
+$sourceIsAncestor = $false
 & git -C $RepoRoot merge-base --is-ancestor $SourceCommit ([string]$originHead).Trim() 2>$null
-if ($LASTEXITCODE -ne 0) {
-    throw "refusing baseline source ${SourceCommit}: it is not reachable from origin/master"
+$sourceIsAncestor = ($LASTEXITCODE -eq 0)
+$originIsAncestor = $false
+& git -C $RepoRoot merge-base --is-ancestor ([string]$originHead).Trim() $SourceCommit 2>$null
+$originIsAncestor = ($LASTEXITCODE -eq 0)
+if (-not ($sourceIsAncestor -or $originIsAncestor)) {
+    throw "refusing baseline source ${SourceCommit}: it is not linearly related to origin/master"
 }
 $acceptedTip = $AcceptedRuntimeLineageTip.Trim().ToLowerInvariant()
 $tipType = (& git -C $RepoRoot cat-file -t $acceptedTip 2>$null)

@@ -147,14 +147,18 @@ function Assert-TplSourceContract {
     $git = & git -C $Root rev-parse HEAD 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $git) { throw 'REFUSE: current source identity unavailable' }
     $current = ([string]$git).Trim()
-    $base = [string]$Baseline.Manifest.baseline_source_commit
+    $base = Assert-TplCommitIdentity -Root $Root -Sha ([string]$Baseline.Manifest.baseline_source_commit) -Label 'baseline_source_commit'
     $runtime = Assert-TplCommitIdentity -Root $Root -Sha ([string]$Baseline.Manifest.accepted_runtime_lineage_tip) -Label 'accepted_runtime_lineage_tip'
-    if ($current -eq $base -or $current -eq $runtime) { return $current }
-    & git -C $Root merge-base --is-ancestor $runtime $current 2>$null
+    & git -C $Root merge-base --is-ancestor $runtime $base 2>$null
     if ($LASTEXITCODE -ne 0) {
-        throw "REFUSE: accepted runtime lineage tip $runtime is not an ancestor of current source identity $current"
+        throw "REFUSE: accepted runtime lineage tip $runtime is not an ancestor of baseline source identity $base"
     }
-    $changed = @(& git -C $Root diff --name-only ($runtime + '..' + $current) 2>$null)
+    if ($current -eq $base) { return $current }
+    & git -C $Root merge-base --is-ancestor $base $current 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        throw "REFUSE: baseline source identity $base is not an ancestor of current source identity $current"
+    }
+    $changed = @(& git -C $Root diff --name-only ($base + '..' + $current) 2>$null)
     if ($LASTEXITCODE -ne 0) { throw "REFUSE: source identity $current is not in the accepted comparison lineage" }
     $forbidden = @($changed | Where-Object { $_ -match '^(ea_template/(core|modules|generated)/|ea_template/Boss_.*\.mq5$|ea_template/EA_LabTemplate\.mq5$)' })
     if ($forbidden.Count -gt 0) { throw "REFUSE: source/build identity changed behavioral EA source: $($forbidden -join ', ')" }
