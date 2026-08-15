@@ -4,3 +4,4 @@
 .githooks/fast_tier_pathspec text eol=lf
 *.sh text eol=lf
 docs/memory_control/experiment_events/** text eol=lf
+ea_template/sets/regression/*.set text eol=lf
