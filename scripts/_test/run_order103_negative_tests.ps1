@@ -27,7 +27,10 @@
     Exit code: 0 if every case matched its expected outcome, 1 otherwise.
 #>
 param(
-    [string]$RepoRoot = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+    [string]$RepoRoot = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)),
+    [switch]$QiHookOnly,
+    [ValidateRange(1, 3600)]
+    [int]$ChildTimeoutSeconds = 600
 )
 
 $ErrorActionPreference = 'Stop'
@@ -234,6 +237,46 @@ function Invoke-PowerShellFile {
     $stderr = $proc.StandardError.ReadToEnd()
     $proc.WaitForExit()
     return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
+}
+
+function Invoke-GitRawWithTimeout {
+    param(
+        [string]$RepoRoot,
+        [string]$Arguments,
+        [string]$CaseName,
+        [int]$TimeoutSeconds
+    )
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = 'git'
+    $psi.Arguments = $Arguments
+    $psi.WorkingDirectory = $RepoRoot
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $proc = [System.Diagnostics.Process]::Start($psi)
+    $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+    $stderrTask = $proc.StandardError.ReadToEndAsync()
+    if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
+        return [pscustomobject]@{
+            ExitCode = $null
+            StdOut = ''
+            StdErr = ''
+            TimedOut = $true
+            CaseName = $CaseName
+            TimeoutSeconds = $TimeoutSeconds
+        }
+    }
+    $proc.WaitForExit()
+    return [pscustomobject]@{
+        ExitCode = $proc.ExitCode
+        StdOut = $stdoutTask.Result
+        StdErr = $stderrTask.Result
+        TimedOut = $false
+        CaseName = $CaseName
+        TimeoutSeconds = $TimeoutSeconds
+    }
 }
 
 function New-RealWorkingTreeFixture {
@@ -751,6 +794,152 @@ function New-RealHookFixture {
     if ($baselineCommit.ExitCode -ne 0) { throw "real hook fixture baseline commit failed: $($baselineCommit.StdErr)" }
     Enable-TempHook -Dir $dir
     return $dir
+}
+
+function Get-LineEndingProfile {
+    param([string]$Path)
+
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    $text = [System.Text.Encoding]::UTF8.GetString($bytes)
+    return [pscustomobject]@{
+        CrLf = [regex]::Matches($text, "`r`n").Count
+        LfOnly = [regex]::Matches($text, '(?<!\r)\n').Count
+        Text = $text
+    }
+}
+
+function New-QiRealHookFixture {
+    param(
+        [string]$Tag,
+        [bool]$AutoCrlf
+    )
+
+    $dir = Join-Path $scratchRoot $Tag
+    New-Item -ItemType Directory -Path $dir | Out-Null
+    $init = Invoke-GitRaw -RepoRoot $dir -Arguments 'init -q'
+    if ($init.ExitCode -ne 0) { throw "$Tag init failed: $($init.StdErr)" }
+
+    # B9/B10 require the Windows line-ending policy to exist before Git writes a
+    # single tracked byte. A post-clone config cannot test checkout conversion.
+    Invoke-GitRaw -RepoRoot $dir -Arguments ('config core.autocrlf ' + $AutoCrlf.ToString().ToLowerInvariant()) | Out-Null
+    Invoke-GitRaw -RepoRoot $dir -Arguments 'config core.hooksPath .githooks' | Out-Null
+    Invoke-GitRaw -RepoRoot $dir -Arguments 'config user.email test@example.com' | Out-Null
+    Invoke-GitRaw -RepoRoot $dir -Arguments 'config user.name "order103 qihook"' | Out-Null
+    $remote = Invoke-GitRaw -RepoRoot $dir -Arguments ('remote add origin "{0}"' -f $RepoRoot)
+    if ($remote.ExitCode -ne 0) { throw "$Tag remote add failed: $($remote.StdErr)" }
+    $sourceHead = (Invoke-GitRaw -RepoRoot $RepoRoot -Arguments 'rev-parse HEAD').StdOut.Trim()
+    $fetch = Invoke-GitRaw -RepoRoot $dir -Arguments ('-c core.longpaths=true fetch -q --no-tags origin "{0}"' -f $sourceHead)
+    if ($fetch.ExitCode -ne 0) { throw "$Tag fetch failed: $($fetch.StdErr)" }
+    $checkout = Invoke-GitRaw -RepoRoot $dir -Arguments 'checkout -q --detach FETCH_HEAD'
+    if ($checkout.ExitCode -ne 0) { throw "$Tag checkout failed: $($checkout.StdErr)" }
+    # The embeddable stdlib archive is intentionally gitignored. Real worktrees
+    # receive it from the repository-local runtime, so disposable hook fixtures
+    # must do the same before the Python front guard starts.
+    $stdlibSource = Join-Path $RepoRoot 'tools\python312\python312.zip'
+    if (-not (Test-Path -LiteralPath $stdlibSource)) {
+        throw "$Tag portable Python stdlib missing: $stdlibSource"
+    }
+    Copy-Item -LiteralPath $stdlibSource -Destination (Join-Path $dir 'tools\python312\python312.zip') -Force
+    return $dir
+}
+
+function Invoke-QiRealHookCase {
+    param(
+        [string]$Name,
+        [bool]$AutoCrlf
+    )
+
+    Write-Host "[progress] START $Name :: autocrlf=$($AutoCrlf.ToString().ToLowerInvariant())"
+    $dir = New-QiRealHookFixture -Tag ('qi_hook_' + $Name.ToLowerInvariant()) -AutoCrlf $AutoCrlf
+    $specPath = Join-Path $dir '.githooks\fast_tier_pathspec'
+    $profile = Get-LineEndingProfile -Path $specPath
+    $patterns = @($profile.Text.Split("`n") | Where-Object { $_.Length -gt 0 })
+    $trailingCr = @($patterns | Where-Object { $_.EndsWith("`r", [System.StringComparison]::Ordinal) }).Count
+    Write-Host "[progress] $Name pathspec :: crlf=$($profile.CrLf) lf_only=$($profile.LfOnly) loaded=$($patterns.Count) trailing_cr=$trailingCr"
+    if ($profile.CrLf -ne 0 -or $profile.LfOnly -le 0 -or $trailingCr -ne 0) {
+        throw "$Name fast_tier_pathspec is not LF-only"
+    }
+
+    [System.IO.File]::AppendAllText(
+        (Join-Path $dir '_triage\factory_os\run_qi1_snapshot_adversarial_tests.py'),
+        "`n# disposable $Name hook trigger`n",
+        (New-Object System.Text.UTF8Encoding($false))
+    )
+    [System.IO.File]::AppendAllText(
+        (Join-Path $dir 'scripts\_test\run_fast_cages.ps1'),
+        "`n# disposable $Name fast-tier trigger`n",
+        (New-Object System.Text.UTF8Encoding($false))
+    )
+    $add = Invoke-GitRaw -RepoRoot $dir -Arguments 'add -- _triage/factory_os/run_qi1_snapshot_adversarial_tests.py scripts/_test/run_fast_cages.ps1'
+    if ($add.ExitCode -ne 0) { throw "$Name staging failed: $($add.StdErr)" }
+    $staged = @((Invoke-GitRaw -RepoRoot $dir -Arguments 'diff --cached --name-only').StdOut -split "`r?`n" | Where-Object { $_ })
+    Write-Host "[progress] $Name staged_paths :: $($staged -join ',')"
+    $requiredStaged = @(
+        '_triage/factory_os/run_qi1_snapshot_adversarial_tests.py',
+        'scripts/_test/run_fast_cages.ps1'
+    )
+    if ($staged.Count -ne 2 -or @($requiredStaged | Where-Object { $staged -notcontains $_ }).Count -ne 0) {
+        throw "$Name staged-path sanity failed: $($staged -join ',')"
+    }
+
+    Push-Location $dir
+    try {
+        $selected = @(& git diff --cached --name-only -- @patterns)
+        $selectorExit = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+    $selected = @($selected | Where-Object { $_ })
+    Write-Host "[progress] $Name hook_equivalent_cage_staged :: exit=$selectorExit count=$($selected.Count) paths=$($selected -join ',')"
+    if ($selectorExit -ne 0 -or $selected.Count -le 0) {
+        throw "$Name hook-equivalent fast-tier selection was empty"
+    }
+
+    Write-Host "[progress] $Name child=git-commit timeout_seconds=$ChildTimeoutSeconds"
+    $commit = Invoke-GitRawWithTimeout -RepoRoot $dir -Arguments ('commit -m "{0}"' -f $Name) -CaseName $Name -TimeoutSeconds $ChildTimeoutSeconds
+    if ($commit.TimedOut) {
+        Write-Host "[progress] TIMEOUT $Name :: child=git-commit timeout_seconds=$($commit.TimeoutSeconds)"
+        throw "$Name child git commit timed out after $($commit.TimeoutSeconds)s"
+    }
+    $output = $commit.StdOut + $commit.StdErr
+    $frontGuards = (
+        $output -match '##EVIDENCE-MODE## check_state\.ps1 index git_index=' -and
+        $output -match '\[precommit-staged\]' -and
+        $output -match '\[order-collision\]' -and
+        $output -match '\[handoff-contract\]'
+    )
+    $fastTier = $output -match '\[fast-cages\]\s+[1-9][0-9]* suite\(s\),'
+    $ok = ($commit.ExitCode -eq 0 -and $frontGuards -and $fastTier)
+    if (-not $ok) {
+        Write-Host "[progress] FAIL $Name :: exit=$($commit.ExitCode) front_guards=$frontGuards fast_tier=$fastTier"
+        Write-Host $output
+        throw "$Name real-hook commit failed its evidence assertions"
+    }
+    $headSubject = (Invoke-GitRaw -RepoRoot $dir -Arguments 'log -1 --format=%s').StdOut.Trim()
+    if ($headSubject -cne $Name) { throw "$Name disposable commit did not land" }
+    Write-Host "[progress] PASS $Name :: exit=0 real_precommit=YES front_guards=YES fast_tier=YES nonzero_suites=YES"
+    return [pscustomobject]@{
+        Name = $Name
+        Output = $output
+        AllRequiredLegs = ($frontGuards -and $fastTier)
+    }
+}
+
+function Invoke-QiRealHookCases {
+    $b9 = Invoke-QiRealHookCase -Name 'B9-LF-REAL-HOOK' -AutoCrlf $false
+    $b10 = Invoke-QiRealHookCase -Name 'B10-AUTOCRLF-REAL-HOOK' -AutoCrlf $true
+    Write-Host '[progress] START B11-FULL-PRECOMMIT'
+    if (-not $b9.AllRequiredLegs) {
+        throw 'B11 cannot reuse B9: a required pre-commit leg was not observed'
+    }
+    Write-Host '[progress] PASS B11-FULL-PRECOMMIT :: evidence_source=B9-LF-REAL-HOOK git_initiated=YES all_required_legs=YES nonzero_suites=YES exit=0'
+    return @($b9, $b10)
+}
+
+if ($QiHookOnly) {
+    Invoke-QiRealHookCases | Out-Null
+    $suiteExitCode = 0
+    return
 }
 
 # --- ordinary commit (touches no protected file) must PASS ---
