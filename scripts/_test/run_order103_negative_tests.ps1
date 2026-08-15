@@ -906,7 +906,8 @@ function Invoke-QiRealHookCase {
         $output -match '##EVIDENCE-MODE## check_state\.ps1 index git_index=' -and
         $output -match '\[precommit-staged\]' -and
         $output -match '\[order-collision\]' -and
-        $output -match '\[handoff-contract\]'
+        $output -match '\[handoff-contract\]' -and
+        $output -match '##EVIDENCE-MODE## attested-pin-staged index git_index='
     )
     $fastTier = $output -match '\[fast-cages\]\s+[1-9][0-9]* suite\(s\),'
     $ok = ($commit.ExitCode -eq 0 -and $frontGuards -and $fastTier)
