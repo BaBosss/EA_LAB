@@ -57,7 +57,7 @@ bool Stack_ConfirmOK(const int dir, const double triggerLevel, const EntrySignal
       {
          if(!(sig.valid && sig.direction == dir)) return false;
          // require a new bar since the last order in this direction
-         datetime lastT = Exec_LastTimeDir(dir);
+         datetime lastT = Exec_LastDirectionalTimeDir(dir);
          datetime barT  = iTime(_Symbol, _Period, 0);
          return (lastT > 0 && barT > lastT);
       }
@@ -178,7 +178,7 @@ void Stack_ManagePyramid()
 {
    if(StackMode != STACK_PYRAMID) return;
 
-   int filled  = Exec_CountAll();
+   int filled  = Exec_CountDirectionalDir(0);
    int pending = Exec_CountPending();
 
    if(filled == 0)
@@ -203,9 +203,9 @@ void Stack_ManagePyramid()
       // arm: snapshot leg0 refs once. Later retry ticks may see filled>1 (a
       // pending filled) - LastPriceDir/TotalLots would then re-base the ladder
       // on the wrong leg, so every retry reuses this snapshot.
-      int dir = (Exec_CountDir(1) > 0 ? 1 : 2);
-      double leg0price = Exec_LastPriceDir(dir);
-      double leg0lot   = Exec_TotalLots();          // filled==1 -> exactly leg0's lot
+      int dir = (Exec_CountDirectionalDir(1) > 0 ? 1 : 2);
+      double leg0price = Exec_LastDirectionalPriceDir(dir);
+      double leg0lot   = Exec_TotalDirectionalLots(); // filled==1 -> exactly leg0's lot
       if(leg0price <= 0.0 || leg0lot <= 0.0) return;
 
       int maxLegs = RiskControl_MaxLevels();
@@ -285,7 +285,7 @@ bool Stack_DecideAdd(const int dir, const int have, const EntrySignal &sig)
 
    MqlTick t;
    if(!SymbolInfoTick(_Symbol, t)) return false;
-   double last = Exec_LastPriceDir(dir);
+   double last = Exec_LastDirectionalPriceDir(dir);
    if(last <= 0.0) return false;
    double step = Stack_StepPrice();
    if(step <= 0.0) return false;

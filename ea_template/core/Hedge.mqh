@@ -24,9 +24,7 @@ bool Hedge_Enabled() { return (HedgeMode != HEDGE_OFF); }
 // is this position one of our hedge legs? (magic-scoped + comment tag)
 bool Hedge_PosIsHedge(const int index)
 {
-   if(!Exec_PosIsMine(index)) return false;
-   string c = PositionGetString(POSITION_COMMENT);
-   return (StringFind(c, " " + HEDGE_TAG) >= 0);
+   return Exec_PosIsHedge(index);
 }
 
 // count our live hedge legs

@@ -27,6 +27,20 @@ bool Exec_PosIsMine(const int index)
    return true;
 }
 
+// Hedge legs use the same magic as the directional basket, so magic/symbol
+// ownership alone cannot distinguish their role. Keep the role predicate in
+// this dependency-low layer so directional consumers do not include Hedge.mqh.
+bool Exec_PosIsHedge(const int index)
+{
+   if(!Exec_PosIsMine(index)) return false;
+   return (StringFind(PositionGetString(POSITION_COMMENT), " H") >= 0);
+}
+
+bool Exec_PosIsDirectional(const int index)
+{
+   return (Exec_PosIsMine(index) && !Exec_PosIsHedge(index));
+}
+
 double Exec_NormalizeLot(double lot)
 {
    double minv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
@@ -199,6 +213,34 @@ int Exec_CountDir(const int direction)   // 0=any 1=buy 2=sell
    return n;
 }
 
+// Directional basket counts deliberately exclude defensive hedge legs. The
+// legacy Exec_CountDir/Exec_CountAll contract remains available for full
+// ownership/flatness scans and close-all reconciliation.
+int Exec_CountDirectionalDir(const int direction)   // 0=directional any, 1=buy, 2=sell
+{
+   int n = 0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_PosIsDirectional(i)) continue;
+      long type = PositionGetInteger(POSITION_TYPE);
+      if(direction == 0) n++;
+      else if(direction == 1 && type == POSITION_TYPE_BUY) n++;
+      else if(direction == 2 && type == POSITION_TYPE_SELL) n++;
+   }
+   return n;
+}
+
+double Exec_TotalDirectionalLots()
+{
+   double lots = 0.0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_PosIsDirectional(i)) continue;
+      lots += PositionGetDouble(POSITION_VOLUME);
+   }
+   return lots;
+}
+
 int Exec_CountAll() { return Exec_CountDir(0); }
 
 double Exec_TotalLots()
@@ -246,6 +288,37 @@ datetime Exec_LastTimeDir(const int direction)
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
       if(!Exec_PosIsMine(i)) continue;
+      long type = PositionGetInteger(POSITION_TYPE);
+      if(direction == 1 && type != POSITION_TYPE_BUY) continue;
+      if(direction == 2 && type != POSITION_TYPE_SELL) continue;
+      datetime t = (datetime)PositionGetInteger(POSITION_TIME);
+      if(t >= best) best = t;
+   }
+   return best;
+}
+
+double Exec_LastDirectionalPriceDir(const int direction)
+{
+   datetime best = 0;
+   double   price = 0.0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_PosIsDirectional(i)) continue;
+      long type = PositionGetInteger(POSITION_TYPE);
+      if(direction == 1 && type != POSITION_TYPE_BUY) continue;
+      if(direction == 2 && type != POSITION_TYPE_SELL) continue;
+      datetime t = (datetime)PositionGetInteger(POSITION_TIME);
+      if(t >= best) { best = t; price = PositionGetDouble(POSITION_PRICE_OPEN); }
+   }
+   return price;
+}
+
+datetime Exec_LastDirectionalTimeDir(const int direction)
+{
+   datetime best = 0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_PosIsDirectional(i)) continue;
       long type = PositionGetInteger(POSITION_TYPE);
       if(direction == 1 && type != POSITION_TYPE_BUY) continue;
       if(direction == 2 && type != POSITION_TYPE_SELL) continue;
@@ -467,7 +540,7 @@ bool Exec_ClosePartialFraction(const double frac, ulong &doneTickets[])
    bool allOk = true;
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
-      if(!Exec_PosIsMine(i)) continue;
+      if(!Exec_PosIsDirectional(i)) continue;
       ulong  tk  = PositionGetInteger(POSITION_TICKET);
       if(Exec_TicketInList(tk, doneTickets)) continue;   // already reduced in this milestone
       double vol = PositionGetDouble(POSITION_VOLUME);

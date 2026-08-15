@@ -253,7 +253,7 @@ void Exit_ApplyTrailing()
    double pt = Exit_Point();
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
-      if(!Exec_PosIsMine(i)) continue;
+      if(!Exec_PosIsDirectional(i)) continue;
       long   type  = PositionGetInteger(POSITION_TYPE);
       double open  = PositionGetDouble(POSITION_PRICE_OPEN);
       double curSL = PositionGetDouble(POSITION_SL);
@@ -359,7 +359,7 @@ void Wave5_TightenTrail(const int dir)
    double tightDist = MathMax(_23_TrailStep * 0.25, 1.0) * pt;
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
-      if(!Exec_PosIsMine(i)) continue;
+      if(!Exec_PosIsDirectional(i)) continue;
       long type = PositionGetInteger(POSITION_TYPE);
       if(dir == 1 && type != POSITION_TYPE_BUY) continue;
       if(dir == 2 && type != POSITION_TYPE_SELL) continue;
@@ -388,12 +388,12 @@ void Wave5_DivergenceTightenHook()
    MqlTick t;
    if(!SymbolInfoTick(_Symbol, t)) return;
 
-   if(Exec_CountDir(1) > 0)
+   if(Exec_CountDirectionalDir(1) > 0)
    {
       bool inZone = (t.bid >= g_wave5_tp_price);
       if(inZone && Wave5_DivergenceDetected(1)) Wave5_TightenTrail(1);
    }
-   if(Exec_CountDir(2) > 0)
+   if(Exec_CountDirectionalDir(2) > 0)
    {
       bool inZone = (t.ask <= g_wave5_tp_price);
       if(inZone && Wave5_DivergenceDetected(2)) Wave5_TightenTrail(2);
@@ -719,8 +719,8 @@ bool Exit_ManageBasket()
       double f = Indi_FastMA(0), s = Indi_SlowMA(0);
       if(f > 0.0 && s > 0.0)
       {
-         if(Exec_CountDir(1) > 0 && f < s) return Exit_CloseBasket(false);
-         if(Exec_CountDir(2) > 0 && f > s) return Exit_CloseBasket(false);
+         if(Exec_CountDirectionalDir(1) > 0 && f < s) return Exit_CloseBasket(false);
+         if(Exec_CountDirectionalDir(2) > 0 && f > s) return Exit_CloseBasket(false);
       }
    }
 

@@ -7,6 +7,7 @@
 #define BOSS_LAB_CORE_MQH
 
 #include "Inputs.mqh"
+#include "HedgeSafety.mqh"
 // ORDER-710: must come AFTER Inputs.mqh -- it enumerates that file's inputs per build tag, and
 // Inputs.mqh is where the fallback tag is defined when a wrapper defines none.
 #include "InputSurface_gen.mqh"   // GENERATED (gen_input_surface.py); guarded by check_input_surface_gen.py
@@ -282,6 +283,11 @@ int OnInit()
    // here instead; only runtime data failures are handled (as skipped orders) in MM_FirstLot.
    if(!MM_ConfigValid())
       return INIT_FAILED;
+   // Hedge/Recovery require independent legs and Hedge requires strict DD
+   // hysteresis. This is deliberately not gated on MQL_TESTER: tester results
+   // must exercise the same account-mode/config contract as attachment.
+   if(!HedgeSafety_ValidateOnInit())
+      return INIT_FAILED;
    // R4 compatibility-only control: the outcome/loss ledger required for
    // revenge blocking does not exist yet. Keep the frozen input/default for
    // identity compatibility, but make its inactive state explicit and loud.
@@ -530,8 +536,8 @@ void OnTick()
    // (3) entry signal
    EntrySignal sig = Entry_Evaluate();
 
-   int haveBuy  = Exec_CountDir(1);
-   int haveSell = Exec_CountDir(2);
+   int haveBuy  = Exec_CountDirectionalDir(1);
+   int haveSell = Exec_CountDirectionalDir(2);
    int have     = haveBuy + haveSell;
 
    if(have == 0)

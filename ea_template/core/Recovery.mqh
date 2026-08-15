@@ -98,8 +98,8 @@ void Recovery_OnTick()
    if(RecoveryMode == REC_NONE) return;   // 80: OFF path, identical to stub
 
    // need an existing single-direction basket in the red
-   int haveBuy  = Exec_CountDir(1);
-   int haveSell = Exec_CountDir(2);
+   int haveBuy  = Exec_CountDirectionalDir(1);
+   int haveSell = Exec_CountDirectionalDir(2);
    int have     = haveBuy + haveSell;
    if(have <= 0) return;                       // nothing to recover
    if(haveBuy > 0 && haveSell > 0) return;     // mixed (hedged) basket - skip
@@ -121,7 +121,7 @@ void Recovery_OnTick()
 
    MqlTick t;
    if(!SymbolInfoTick(_Symbol, t)) return;
-   double last = Exec_LastPriceDir(dir);       // most-recent entry in dir
+   double last = Exec_LastDirectionalPriceDir(dir); // most-recent directional entry in dir
    if(last <= 0.0) return;
 
    // adverse travel of current price vs the last entry, in price units
