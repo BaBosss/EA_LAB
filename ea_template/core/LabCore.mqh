@@ -542,6 +542,7 @@ void OnTick()
 
    if(have == 0)
    {
+      if(Exec_CountAll() > 0) return;
       // first order requires a valid entry signal
       if(Regime_BlocksFlatEntry()) return;        // gate only the first entry; open baskets stay untouched
       if(!sig.valid) return;
