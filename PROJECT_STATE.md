@@ -4,7 +4,7 @@
 > session narrative, the accumulated changelog, and the full Decision log with provenance. This file
 > holds only: current status, active work, binding decisions, and the forward plan.
 
-> **last updated:** 2026-08-15 (QI-1 accepted milestone state sync) — Controlled Execution MVP, Owner-Controlled EA_LAB Integration, EA_LAB Real Workflow Integration, OPERATIONAL / HIGH-RISK GATE, Controlled Backtest Execution MVP, and Controlled Optimization Execution MVP accepted; CONTEXT REDUCTION / CONTEXT-HYGIENE accepted and closed; current milestone = VPS DEMO Deployment / Forward-Test. Local execution scope = MT5 Strategy Tester/backtest; owner-gated LIVE remains a future milestone.
+> **last updated:** 2026-08-15 (QI-1 + H/R accepted milestone state sync) — Controlled Execution MVP, Owner-Controlled EA_LAB Integration, EA_LAB Real Workflow Integration, OPERATIONAL / HIGH-RISK GATE, Controlled Backtest Execution MVP, and Controlled Optimization Execution MVP accepted; CONTEXT REDUCTION / CONTEXT-HYGIENE accepted and closed; current milestone = VPS DEMO Deployment / Forward-Test. Local execution scope = MT5 Strategy Tester/backtest; owner-gated LIVE remains a future milestone.
 > **POST-C18B CANONICAL INTEGRATION:** commit `c18b144d3ef4d14b39c07bf33b77276171e2bad4` is canonical. `ORDER-490` and Factory-OS `ORDER-1265` are **CANONICAL / DONE**; Factory-OS `ORDER-1266 #1` is **CANONICAL / DONE**. QI-1 Foundation Design Freeze is **CANONICAL / FROZEN**; QI-1 Foundation implementation is **OWNER AUTHORIZED / IMPLEMENTED / ACCEPTED**; QI-1 acceptance current blockers = **NONE**; QI-2+ = **NOT AUTHORIZED**. The current operational milestone remains **VPS DEMO Deployment / Forward-Test**; VPS disposition = **MONITOR_FORWARD**. No deployment, LIVE, or risk-default authorization occurred.
 > Full session-by-session history → `PROJECT_HISTORY.md`. · owner: patip
 
@@ -81,7 +81,7 @@ doc opens with the banner: `> ⚠️ canonical entry = PROJECT_STATE.md · this 
 | Name | Actual location | Role (aligned 2026-07-03) | Status % |
 |---|---|---|---|
 | **EA_LAB** | `D:\EA_LAB` (this repo) | Factory — find/validate/deploy EA + automation pipeline | 90% mature |
-| **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **the factory's single master mold** (UNFREEZE 2026-07-03) — shared central functions (MM/lot/SL/grid/hedge/recovery), differ only by entry+TF · every new EA build comes out of here | chassis done · remaining: fill in Hedge/Recovery + smoke-regression |
+| **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **the factory's single master mold** (UNFREEZE 2026-07-03) — shared central functions (MM/lot/SL/grid/hedge/recovery), differ only by entry+TF · every new EA build comes out of here | H/R Safety Repair accepted; D3/D6 remain owner-gated architecture decisions; no H/R redesign implied |
 | **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | 🏛️ **read-only ARCHIVE (MERGE-08, 2026-07-06)** — parts fully ported into the mold · reference/evidence only, no deletion, no new work | 100% — track closed (`AGENT_TASKBOARD_MERGE.md`) |
 | **Live Portfolio** | account 10,000 cent (demo) | **the real goal** — real money | 20% (9 EAs fully live, awaiting judge) |
 
@@ -103,6 +103,7 @@ Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine
 > **Owner clarification (2026-08-09):** local execution scope is MT5 Strategy Tester/backtest only; DEMO deployment/execution is a future VPS milestone; LIVE remains a future owner-gated milestone.
 > **CONTEXT_REDUCTION_CONTEXT_HYGIENE_ACCEPTED = YES · CONTEXT_HYGIENE_MILESTONE_CLOSED = YES.** Implementation commit `03e1dd5444922846f1f96fcd6b1c713cffbb65a6`; test-harness repair commit `06ee4ebf63c486a0069b3c26a2a0744002b18be4`; deterministic evidence: ORDER-101 **24/24 PASS**, ORDER-103 **40/40 PASS**; production validator semantics unchanged; blockers: **NONE**.
 > **STATUS.html:** owner-approved preservation exception, **STATUS.html ONLY**. **Current milestone: VPS DEMO Deployment / Forward-Test lane.**
+> **H/R SAFETY REPAIR = ACCEPTED.** Final local acceptance HEAD `e97215aec04e9388bd94d6a6f4d4981c8a54617a`; different-family source review PASS; final CAGE passed Boss11-Boss18 compile 8/8 (0 errors/0 warnings), exact Build-6090 regression CLEAN 8/8 with unchanged metrics, T1/T2/T4/T6 and HedgeSafety/HedgeSemantic/HedgeStackPath/Hedge/HedgeOff/Recovery81/82/83 PASS, check_state PASS, and pre-commit PASS. Build-6090 baseline was locally re-attested with metrics unchanged. No current H/R blocker; D3/D6 are owner-gated and R1-R7 remain PARKED.
 
 > 🆕 **2026-08-01 (Opus-seat) — `ORDER-710` CLOSED: the EA now hashes its own live inputs, and the digest MATCHES the compiler's on 2 builds × 2 configurations · lane `S-2026-08-01-CFGFP`, block 730-739, MT5 lane 1**
 > **The `[CFG]` half of slice S6, and the acceptance is four tester runs, not an argument.** `ea_template/core/InputSurface_gen.mqh` is GENERATED (1,082 lines, one `#ifdef LAB_ENTRY_nn` block per build) from `preset.parse_surface` — the same call on the same file the compiler uses — so at `OnInit` the EA builds the fingerprint preimage from **the values the binary is holding** and prints `[CFG] input surface: build=… keys=… scope=… effective_config_hash=…`. Measured on lane 1 (`scripts/verify_config_fingerprint.ps1`, XAUUSD H1 2024.01.01–2024.01.15 model 1): `LAB_ENTRY_16`/135 keys and `LAB_ENTRY_11`/113 keys, each at declared defaults and again with two inputs perturbed — **all four EA digests identical to the compiler's, and the two configurations differ from each other.**
@@ -183,8 +184,9 @@ Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine
 
 - **EA_LAB 90%** — pipeline complete (intake→smoke→IS/OOS→MC→corr→deploy). Remaining 10% = work tied to
   real time (operate up to judge, expand from 1→multiple portfolios), not more build work.
-- **EA_Template (Boss V2)** — the single master mold. Remaining work to become a full mold: (1) fill in the
-  real Hedge/Recovery module (currently a disabled stub) (2) add a small smoke-regression suite (3) port
+- **EA_Template (Boss V2)** — the single master mold. The bounded H/R Safety Repair is accepted; D3/D6 remain
+  owner-gated architecture decisions and R1-R7 remain parked. Remaining work to become a full mold is not
+  defined by this repair; broader H/R redesign remains out of scope. (1) add a small smoke-regression suite (2) port
   Zeus grid/LOG in as an entry after Zeus passes validation. Note: `modules\`(V1) vs `core\`(V2)
   duplication is intentional, not junk. Architecture + usage → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
 - **EA_CORE** — R&D parts warehouse. Loop closed 2026-07-02; engineering-complete framework ready to reuse
@@ -366,6 +368,8 @@ Attribution key = **(magic, symbol)**. Deployed 2026-07-02 (history — see the 
 ---
 
 ## 7. FORWARD PLAN (today → judge → after)
+
+**Immediate sequence after accepted H/R repair:** canonical sync / owner push boundary → workspace hygiene and migration → `ORDER-740`. The H/R repair is closed for this lane; no source, baseline, runtime, deployment, LIVE, or risk/default changes are authorized by this state sync.
 
 > 🧠 **MEMORY-CONTROL OS BUILD (canonical 2026-07-12):** implementation source = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d` (full SHA in §3 Decision log) · split orders as **serial — Contract A first** · **stop review after system order 4** · **MVP-2 still B1-gated**. Design not repeated here — owner = §20.
 
