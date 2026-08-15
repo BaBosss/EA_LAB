@@ -53,6 +53,21 @@ if (-not (Test-Path -LiteralPath $suite)) { Write-Host "[s12] FAIL: suite not fo
 # $ErrorActionPreference='Stop' turns any stderr line into a TERMINATING error -- so the tier
 # reports `exit -1  SUITE THREW` and the actual cause never appears. Both this suite and S11's
 # failed exactly that way inside a real commit while passing every interactive run.
+# The projection is a derived build artifact, not a tracked input.  The four end-to-end cases
+# below deliberately drive the sender against the REAL repository and its generated projection;
+# a clean staged snapshot therefore has to build the same artifact before the Python cage starts.
+# Run the production builder so snapshot validation, shape checks, and fail-closed projection
+# validation remain in force.  This also makes the fixture independent of a stale ignored file in
+# whichever checkout happened to launch the tier.
+$safeProjection = Join-Path $RepoRoot '_triage\factory_os\safe_projection.py'
+$buildOutput = & $py $safeProjection build --repo-root $RepoRoot 2>&1
+$buildCode = $LASTEXITCODE
+$buildOutput | ForEach-Object { Write-Host $_ }
+if ($buildCode -ne 0) {
+    Write-Host "[s12] FAIL: safe projection fixture could not be built (exit $buildCode)" -ForegroundColor Red
+    exit 1
+}
+
 $env:PYTHONIOENCODING = 'utf-8'
 $out  = & $py $suite 2>&1
 $code = $LASTEXITCODE

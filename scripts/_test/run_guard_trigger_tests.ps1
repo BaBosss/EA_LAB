@@ -356,14 +356,65 @@ for p in sorted(judged):
     $before = $fail
     $cages = Join-Path $PSScriptRoot 'run_fast_cages.ps1'
 
-    function Selection([string[]]$staged) {
-        if ($staged) { @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -ExportSelection -StagedPaths $staged) }
-        else         { @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -ExportSelection) }
+    function SelectionBatch([object[]]$queries) {
+        $batchFile = Join-Path ([System.IO.Path]::GetTempPath()) ("gt673_selection_" + [guid]::NewGuid().ToString('N') + '.txt')
+        try {
+            $lines = New-Object System.Collections.Generic.List[string]
+            foreach ($query in $queries) {
+                $paths = @($query)
+                if ($paths.Count -eq 0) { [void]$lines.Add('__NONE__') }
+                else { [void]$lines.Add(($paths -join "`t")) }
+            }
+            Set-Content -LiteralPath $batchFile -Encoding ASCII -Value $lines
+            $out = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -ExportSelectionBatchFile $batchFile 2>&1)
+            $code = $LASTEXITCODE
+            if ($code -ne 0) { throw ("selection batch exited {0}: {1}" -f $code, (($out | Select-Object -Last 3) -join ' | ')) }
+            # The unmatched-path query deliberately exercises Select-Suites' fail-open warning;
+            # keep that diagnostic but parse only the JSON result rows from the batch channel.
+            $rows = @($out | Where-Object { "$($_)" -match '^\s*\{' } |
+                      ForEach-Object { $_ | ConvertFrom-Json })
+            if ($rows.Count -ne $queries.Count) { throw ("selection batch returned {0} row(s) for {1} query(ies)" -f $rows.Count, $queries.Count) }
+            return $rows
+        } finally {
+            Remove-Item -LiteralPath $batchFile -Force -ErrorAction SilentlyContinue
+        }
     }
+
+    function Selection([string[]]$staged) {
+        @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -ExportSelection -StagedPaths $staged)
+    }
+
+    # Build the complete PART 5 matrix first, then drive the real production selector for every
+    # query in one child process. No assertion is removed: the batch output is still the exact
+    # Select-Suites result for each independent staged-path set.
+    $selectionQueries = New-Object System.Collections.Generic.List[object]
+    [void]$selectionQueries.Add([object[]]@())
+    $allQuery = 0
+    $reachQuery = @{}
+    foreach ($s in $table.Suites) {
+        $g = $table.Guards.$s
+        if (-not $g -or $g.Count -eq 0) { continue }
+        $reachQuery[$s] = $selectionQueries.Count
+        [void]$selectionQueries.Add([object[]]@($g[0]))
+    }
+    $oneGuard = $table.Guards.'run_guard_trigger_tests.ps1'[0]
+    $oneQuery = $selectionQueries.Count
+    [void]$selectionQueries.Add([object[]]@($oneGuard))
+    $selfProbe = @($table.Suites[0], $table.Suites[[int]($table.Suites.Count / 2)],
+                   $table.Suites[$table.Suites.Count - 1]) | Select-Object -Unique
+    $selfQuery = @{}
+    foreach ($s in $selfProbe) {
+        if ($table.Suites -notcontains $s) { Bad ("PART 4b probes '{0}', which is not in the suite table" -f $s); continue }
+        $selfQuery[$s] = $selectionQueries.Count
+        [void]$selectionQueries.Add([object[]]@('scripts/_test/' + $s))
+    }
+    $unmatchedQuery = $selectionQueries.Count
+    [void]$selectionQueries.Add([object[]]@('no/such/path/at/all.txt'))
+    $selectionRows = @(SelectionBatch $selectionQueries.ToArray())
 
     # 1. no staged paths -> EVERYTHING. Manual runs and any caller that cannot determine the
     #    staged set must get the full tier.
-    $all = Selection $null
+    $all = @($selectionRows[$allQuery].Selected)
     if ($all.Count -eq $table.Suites.Count) {
         Good ("no staged paths selects the whole tier ({0} suites)" -f $all.Count)
     } else {
@@ -376,7 +427,7 @@ for p in sorted(judged):
     foreach ($s in $table.Suites) {
         $g = $table.Guards.$s
         if (-not $g -or $g.Count -eq 0) { continue }     # no guards = always runs, checked below
-        $sel = Selection @($g[0])
+        $sel = @($selectionRows[$reachQuery[$s]].Selected)
         if ($sel -notcontains $s) { $unreachable += "$s (via $($g[0]))" }
     }
     if ($unreachable.Count -eq 0) { Good 'every guarded suite is selected by its own first declared path' }
@@ -389,8 +440,7 @@ for p in sorted(judged):
 
     # 4. THE FILTER MUST NOT BE INERT: a path guarded by one suite must select a PROPER SUBSET.
     #    Measured against a real declaration rather than a guess, so it cannot rot into a tautology.
-    $oneGuard = $table.Guards.'run_guard_trigger_tests.ps1'[0]
-    $subset = Selection @($oneGuard)
+    $subset = @($selectionRows[$oneQuery].Selected)
     if ($subset.Count -gt 0 -and $subset.Count -lt $table.Suites.Count) {
         Good ("a single guarded path selects a proper subset ({0} of {1}) -- the filter is not inert" -f $subset.Count, $table.Suites.Count)
     } else {
@@ -405,19 +455,14 @@ for p in sorted(judged):
     #     was the one edit its cage did not run.
     #     SPECIFICITY in the same case: it must select that suite WITHOUT falling back to the
     #     whole tier, or "selected" would just be the fail-open branch wearing the right answer.
-    #     THREE SUITES, NOT SIXTEEN, and the number is a measured trade rather than a shrug: each
-    #     Selection call is a PowerShell process (~0.29s), so all sixteen cost 4.6s against 7s of
-    #     full-tier headroom. Self-selection is ONE line in Select-Suites applying uniformly to
-    #     every suite, so three instances catch its regression exactly as well as sixteen; the
-    #     sixteenth would only pay for itself if selection ever became per-suite. If it does, this
-    #     loop widens and something else in the tier gets displaced.
-    $selfProbe = @($table.Suites[0], $table.Suites[[int]($table.Suites.Count / 2)],
-                   $table.Suites[$table.Suites.Count - 1]) | Select-Object -Unique
+    #     THREE SUITES, NOT SIXTEEN, and the number is a measured trade rather than a shrug. The
+    #     three queries remain independent; SelectionBatch only avoids paying PowerShell launcher
+    #     startup once per query.
     $selfMissed = @()
     $selfWide = @()
     foreach ($s in $selfProbe) {
-        if ($table.Suites -notcontains $s) { Bad ("PART 4b probes '{0}', which is not in the suite table" -f $s); continue }
-        $sel = Selection @('scripts/_test/' + $s)
+        if ($table.Suites -notcontains $s) { continue }
+        $sel = @($selectionRows[$selfQuery[$s]].Selected)
         if ($sel -notcontains $s) { $selfMissed += $s }
         elseif ($sel.Count -eq $table.Suites.Count) { $selfWide += $s }
     }
@@ -437,7 +482,7 @@ for p in sorted(judged):
     #    introduced per-path selection ran ZERO suites, while printing a confident selection
     #    message, because `powershell -File` bound a comma-joined list of three paths as one
     #    literal. It failed CLOSED while claiming it could only fail open.
-    $unmatched = @(Selection @('no/such/path/at/all.txt') | Where-Object { $_ -like '*.ps1' })
+    $unmatched = @($selectionRows[$unmatchedQuery].Selected | Where-Object { $_ -like '*.ps1' })
     if ($unmatched.Count -eq $table.Suites.Count) {
         Good ('staged paths matching nothing fall back to the WHOLE tier ({0}) -- fails open' -f $unmatched.Count)
     } else {
@@ -488,7 +533,7 @@ for p in sorted(judged):
         # T4 ATTACK: declare the selected suite an evidence suite; it emits no marker => tier
         # fails, naming it. The suite named here MUST be one the fixture path selects, or the
         # attack would pass for the wrong reason (nothing in scope to be silent).
-        $o1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -StagedPathsFile $cheapStaged -EvidenceSuitesOverride @('run_order_collision_tests.ps1') 2>&1)
+        $o1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -ReuseCurrentSnapshot -StagedPathsFile $cheapStaged -EvidenceSuitesOverride @('run_order_collision_tests.ps1') 2>&1)
         if ($LASTEXITCODE -eq 1 -and (($o1 -join "`n") -match 'run_order_collision_tests\.ps1 emitted NO evidence-mode marker')) {
             Good 'T4 ATTACK a declared evidence suite emitting no marker fails the hook tier, by name'
         } else {
@@ -496,14 +541,14 @@ for p in sorted(judged):
         }
         # T4 SPECIFICITY: with no evidence suite selected, the same run is green -- the
         # verifier must not fire on suites that never migrated.
-        $o2 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -StagedPathsFile $cheapStaged -EvidenceSuitesOverride 'NONE' 2>&1)
+        $o2 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -ReuseCurrentSnapshot -StagedPathsFile $cheapStaged -EvidenceSuitesOverride 'NONE' 2>&1)
         if ($LASTEXITCODE -eq 0) {
             Good 'T4 SPECIFICITY the same hook run with no evidence suite in scope is green'
         } else {
             Bad ("T4 SPECIFICITY expected exit 0; got {0}: {1}" -f $LASTEXITCODE, (($o2 | Select-Object -Last 3) -join ' | '))
         }
         # T6 ATTACK: force the end-stamp mismatch => the tier refuses and says the index moved.
-        $o3 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -StagedPathsFile $cheapStaged -EvidenceSuitesOverride 'NONE' -DebugPretendIndexMoved 2>&1)
+        $o3 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -ReuseCurrentSnapshot -StagedPathsFile $cheapStaged -EvidenceSuitesOverride 'NONE' -DebugPretendIndexMoved 2>&1)
         if ($LASTEXITCODE -eq 1 -and (($o3 -join "`n") -match 'rewritten during the tier')) {
             Good 'T6 ATTACK an index rewritten mid-tier is refused, loudly'
         } else {

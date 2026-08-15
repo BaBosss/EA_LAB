@@ -61,6 +61,9 @@ function Get-LiveSkillFiles {
         # while reporting success.
         $segments = $rel -split '[\\/]'
         if ($segments -contains '.git' -or $segments -contains 'node_modules' -or $segments -contains '__pycache__') { continue }
+        # .skill_id is generated installation metadata, not durable skill content.
+        # Exclude this exact basename while retaining ordinary files such as foo.skill_id.
+        if ($segments[-1] -eq '.skill_id') { continue }
         $out.Add([pscustomobject]@{ Rel = $rel; Full = $f })
     }
     # Deterministic order, or the manifest churns for no reason.

@@ -180,6 +180,29 @@ if (-not $origIndexSha -or $origIndexSha -ne $origDiskSha) {
     exit 1
 }
 
+# check_state also verifies the skills mirror.  That is a real production prerequisite, but it is
+# machine-local input to this inventory-specific fixture: the live Claude library may contain
+# generated installation sidecars that this canonical base predates.  Supply the minimum valid
+# companion evidence from the live files named by the committed manifest, omitting only generated
+# installation sidecars and the live library's tooling internals, so D0/A2 measure only the staged
+# inventory state.
+# The production guard is unchanged and still runs in its normal Strict/index or worktree mode.
+$skillsFixtureProfile = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674_skills_" + [guid]::NewGuid().ToString('N'))
+$skillsFixtureRoot = Join-Path $skillsFixtureProfile '.claude\skills'
+New-Item -ItemType Directory -Path $skillsFixtureRoot -Force | Out-Null
+$priorUserProfile = $env:USERPROFILE
+$liveSkillsRoot = Join-Path $priorUserProfile '.claude\skills'
+foreach ($source in [System.IO.Directory]::EnumerateFiles($liveSkillsRoot, '*', [System.IO.SearchOption]::AllDirectories)) {
+    $rel = $source.Substring($liveSkillsRoot.Length + 1)
+    $segments = $rel -split '[\\/]'
+    if ($segments -contains '.git' -or $segments -contains 'node_modules' -or
+        $segments -contains '__pycache__' -or [System.IO.Path]::GetFileName($rel) -eq '.skill_id') { continue }
+    $dest = Join-Path $skillsFixtureRoot $rel
+    New-Item -ItemType Directory -Path (Split-Path -Parent $dest) -Force | Out-Null
+    Copy-Item -LiteralPath $source -Destination $dest -Force
+}
+$env:USERPROFILE = $skillsFixtureProfile
+
 $backup = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674_" + [guid]::NewGuid().ToString('N') + '.csv')
 Copy-Item -LiteralPath $INV -Destination $backup -Force
 
@@ -608,6 +631,9 @@ if ($hook -match '(?m)^\s*export\s+EA_LAB_EVIDENCE=index') {
 
 PhaseReport
 if ($runtimeZipCopied) { Remove-Item -LiteralPath $runtimeZip -Force -ErrorAction SilentlyContinue }
+if ($null -eq $priorUserProfile) { Remove-Item Env:USERPROFILE -ErrorAction SilentlyContinue }
+else { $env:USERPROFILE = $priorUserProfile }
+Remove-Item -LiteralPath $skillsFixtureProfile -Recurse -Force -ErrorAction SilentlyContinue
 Pop-Location
 if ($fail -gt 0) {
     Write-Host "[front-guards] $fail FAILURE(S)" -ForegroundColor Red

@@ -158,6 +158,10 @@ param(
     [string]$StagedPathsFile = '',
     # print the selection and exit, running nothing. For the cage.
     [switch]$ExportSelection,
+    # test-only: answer several independent selection queries in one PowerShell process. The
+    # guard-trigger cage still evaluates every query through Select-Suites; this only amortizes
+    # launcher startup across its deterministic PART 5 matrix.
+    [string]$ExportSelectionBatchFile = '',
     # ORDER-670: THIS RUN IS A PRE-COMMIT HOOK. An ARGUMENT, not an env var, and passed by
     # .githooks/pre-commit at BOTH call sites including the fail-closed branch -- an argument
     # cannot fail to arrive from a caller that is one file with two lines. Given -Hook, this
@@ -173,7 +177,11 @@ param(
     # test-only: force the end-of-run index-movement stamp to mismatch, so the T6 refusal
     # path can be OBSERVED RED (a detector nobody has seen fire is UNTESTED, per the
     # VERDICT GATE's own guard rule).
-    [switch]$DebugPretendIndexMoved
+    [switch]$DebugPretendIndexMoved,
+    # test-only: a nested tier invoked by the guard-trigger cage may reuse the immutable staged
+    # snapshot already created by its outer tier. It is refused outside a nested tier so a normal
+    # hook can never accidentally skip staged-snapshot materialization.
+    [switch]$ReuseCurrentSnapshot
 )
 
 $ErrorActionPreference = 'Stop'
@@ -1455,6 +1463,26 @@ if ($StagedPathsFile -and (Test-Path -LiteralPath $StagedPathsFile)) {
                      Where-Object { $_ })
 }
 
+if ($ExportSelectionBatchFile) {
+    if (-not (Test-Path -LiteralPath $ExportSelectionBatchFile -PathType Leaf)) {
+        throw "selection batch file not found: $ExportSelectionBatchFile"
+    }
+    $queryIndex = 0
+    foreach ($line in Get-Content -LiteralPath $ExportSelectionBatchFile) {
+        $query = if ($line -eq '__NONE__') {
+            @()
+        } else {
+            @($line -split "`t" | Where-Object { $_ })
+        }
+        [pscustomobject]@{
+            Index    = $queryIndex
+            Selected = @(Select-Suites -Suites $FAST_SUITES -Guards $SUITE_GUARDS -Staged $query)
+        } | ConvertTo-Json -Compress -Depth 3
+        $queryIndex++
+    }
+    exit 0
+}
+
 if ($ExportSelection) {
     # Used by run_guard_trigger_tests.ps1 to assert the selection without running any suite.
     (Select-Suites -Suites $FAST_SUITES -Guards $SUITE_GUARDS -Staged $StagedPaths) | ForEach-Object { $_ }
@@ -1769,9 +1797,16 @@ function Remove-StagedSnapshotWorktree {
 
 $childRepoRoot = $RepoRoot
 if ($Hook) {
-    $stagedSnapshotPath = New-StagedSnapshotWorktree -Root $RepoRoot
-    $childRepoRoot = $stagedSnapshotPath
-    Write-Host ("[fast-cages] hook mode: child suites run from staged snapshot {0}" -f $stagedSnapshotPath)
+    if ($ReuseCurrentSnapshot) {
+        if (-not $env:EA_LAB_TIER_RUN) {
+            throw '-ReuseCurrentSnapshot is test-only and requires a nested fast-tier run'
+        }
+        Write-Host ("[fast-cages] hook mode: child suites reuse the current staged snapshot {0}" -f $RepoRoot)
+    } else {
+        $stagedSnapshotPath = New-StagedSnapshotWorktree -Root $RepoRoot
+        $childRepoRoot = $stagedSnapshotPath
+        Write-Host ("[fast-cages] hook mode: child suites run from staged snapshot {0}" -f $stagedSnapshotPath)
+    }
     # T6: stamp only after staged-snapshot materialization. The snapshot is built from the
     # hook index and its git plumbing may refresh index metadata; that setup is not a mid-tier
     # movement. Any later content change is still refused below.
