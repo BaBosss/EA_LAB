@@ -20,12 +20,16 @@
 # classifier's carry_fuel/narrowing branch reads the 5d bps move to score it.
 [CmdletBinding()]
 param(
-  [string]$Snapshot = "D:\EA_LAB\portfolio\mris\barometer_snapshot.csv",
-  [string]$CacheDir = "D:\EA_LAB\portfolio\mris\webfeed_cache",
+  [string]$Snapshot = '',
+  [string]$CacheDir = '',
   [int]$CacheMaxHours = 20,
   [int]$TimeoutSec = 25
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $Snapshot) { $Snapshot = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\barometer_snapshot.csv' }
+if (-not $CacheDir) { $CacheDir = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\webfeed_cache' }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # all 8 barometers: snapshot symbol -> Yahoo ticker (+ how to note the source).

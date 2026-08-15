@@ -16,9 +16,12 @@ which stays keyed to the closed-history exporters exactly as before.
 [CmdletBinding()]
 param(
   [string]$CommonFiles = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files",
-  [string]$DestDir = "D:\EA_LAB\portfolio\live_deals"
+  [string]$DestDir = ''
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $DestDir) { $DestDir = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\live_deals' }
 if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Force $DestDir | Out-Null }
 
 # ---------------------------------------------------------------------------

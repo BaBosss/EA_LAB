@@ -57,6 +57,7 @@ strictmode-in-dotsourced-library-leaks). A shared library must be inert to its c
 #>
 
 . (Join-Path $PSScriptRoot 'deployment_status.ps1')
+. (Join-Path $PSScriptRoot 'repo_paths.ps1')
 
 function Get-MonitorCoverage {
     <#
@@ -67,7 +68,8 @@ function Get-MonitorCoverage {
       Never throws on bad input: an unreadable snapshot is a RESULT, not an exception.
     #>
     param(
-        [Parameter(Mandatory = $true)][string]$SnapshotPath
+        [Parameter(Mandatory = $true)][string]$SnapshotPath,
+        [string]$RepoRoot = ''
     )
 
     $failures = New-Object System.Collections.Generic.List[string]
@@ -86,8 +88,9 @@ function Get-MonitorCoverage {
     # Both are red HERE because this chain's entire job is coverage and it is on nobody's commit
     # path. make_status.ps1 makes the opposite call about its exit code, for the opposite reason,
     # and both are written down in scripts\lib\snapshot_reader.ps1.
-    . D:\EA_LAB\scripts\lib\snapshot_reader.ps1
-    $verified = Get-VerifiedSnapshot -SnapshotPath $SnapshotPath
+    if (-not $RepoRoot) { $RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSScriptRoot }
+    . (Join-Path $PSScriptRoot 'snapshot_reader.ps1')
+    $verified = Get-VerifiedSnapshot -SnapshotPath $SnapshotPath -RepoRoot $RepoRoot
     if ($verified.State -ne 'OK') {
         # The token comes from Code, never from matching the Reason text. Four distinct facts,
         # four tokens, because they have four different fixes:

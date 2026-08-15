@@ -10,11 +10,15 @@
 # file) is only ever READ here - it is never modified, so the local/private view stays full.
 [CmdletBinding()]
 param(
-  [string]$Dashboard = "D:\EA_LAB\portfolio\LIVE_DASHBOARD.html",
+  [string]$Dashboard = '',
   [string]$IdFile    = "D:\Monitor\dashboard_gist_id.txt",
-  [string]$DeploymentsCsv = "D:\EA_LAB\portfolio\DEPLOYMENTS.csv"
+  [string]$DeploymentsCsv = ''
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $Dashboard) { $Dashboard = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\LIVE_DASHBOARD.html' }
+if (-not $DeploymentsCsv) { $DeploymentsCsv = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\DEPLOYMENTS.csv' }
 $tmp = Join-Path $env:TEMP "dashboard.html"
 Copy-Item $Dashboard $tmp -Force
 

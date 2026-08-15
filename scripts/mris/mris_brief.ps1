@@ -11,14 +11,22 @@
 # LIVE_DASHBOARD can embed like news_today.html.
 [CmdletBinding()]
 param(
-  [string]$StateJson    = "D:\EA_LAB\portfolio\mris\regime_state.json",
-  [string]$ExposureJson = "D:\EA_LAB\portfolio\mris\exposure_map.json",
-  [string]$CrisisJson   = "D:\EA_LAB\portfolio\mris\crisis_models_state.json",
-  [string]$Templates    = "D:\EA_LAB\scripts\mris\brief_templates.json",
-  [string]$OutMd        = "D:\EA_LAB\portfolio\mris\whisper_brief.md",
-  [string]$OutHtml      = "D:\EA_LAB\portfolio\mris\whisper_brief.html"
+  [string]$StateJson    = '',
+  [string]$ExposureJson = '',
+  [string]$CrisisJson   = '',
+  [string]$Templates    = '',
+  [string]$OutMd        = '',
+  [string]$OutHtml      = ''
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $StateJson) { $StateJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\regime_state.json' }
+if (-not $ExposureJson) { $ExposureJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\exposure_map.json' }
+if (-not $CrisisJson) { $CrisisJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\crisis_models_state.json' }
+if (-not $Templates) { $Templates = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\brief_templates.json' }
+if (-not $OutMd) { $OutMd = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\whisper_brief.md' }
+if (-not $OutHtml) { $OutHtml = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\whisper_brief.html' }
 if (!(Test-Path $StateJson)) { throw "state json not found: $StateJson (run mris_classify first)" }
 if (!(Test-Path $Templates)) { throw "templates not found: $Templates" }
 $st = Get-Content $StateJson -Raw -Encoding UTF8 | ConvertFrom-Json

@@ -7,9 +7,25 @@
 # (never republish a stale dashboard), and the task exits non-zero so LastTaskResult
 # shows the failure instead of a false green.
 param([switch]$Force)   # -Force = manual run, bypass the freshness guard
-$log = "D:\EA_LAB\portfolio\daily_monitor.log"
-$successMarker = "D:\EA_LAB\portfolio\daily_monitor_last_success.txt"
-$alertFile     = "D:\EA_LAB\portfolio\MONITOR_ALERT.txt"
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+$log = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\daily_monitor.log'
+$successMarker = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\daily_monitor_last_success.txt'
+$alertFile = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\MONITOR_ALERT.txt'
+$monitorRotation = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\monitor_rotation.ps1'
+$collectLiveDeals = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\collect_live_deals.ps1'
+$newsCalendar = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\news_calendar.ps1'
+$mrisRun = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\mris_run.ps1'
+$publishNews = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\publish_news_to_vps.ps1'
+$mrisExport = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\mris_export_regime.ps1'
+$liveDashboard = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\live_dashboard.ps1'
+$controlRoomSnapshot = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\control_room_snapshot.ps1'
+$detectorDigest = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\detector_digest.ps1'
+$monitorCoverage = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\lib\monitor_coverage.ps1'
+$publishDashboardGist = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\publish_dashboard_gist.ps1'
+$pythonExe = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'tools\python312\python.exe'
+$safeProjection = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath '_triage\factory_os\safe_projection.py'
+$notifier = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath '_triage\factory_os\notifier.py'
 # ORDER-128 freshness guard: the task now also fires at logon (to catch up runs the
 # 07:30 trigger missed while logged out / asleep). Skip quietly when the last full
 # success is recent so the logon trigger can't double-run the chain.
@@ -30,28 +46,28 @@ function Step([string]$name, [scriptblock]$body) {
     }
 }
 # 0) rotate read-only logins through the monitor terminals so exporters snapshot all 5 accounts
-Step 'rotation'  { powershell -NoProfile -File D:\EA_LAB\scripts\monitor_rotation.ps1 *>> $log }
-Step 'collect'   { powershell -NoProfile -File D:\EA_LAB\scripts\collect_live_deals.ps1 *>> $log }
-Step 'news'      { powershell -NoProfile -File D:\EA_LAB\scripts\news_calendar.ps1 *>> $log }
+Step 'rotation'  { powershell -NoProfile -File $monitorRotation *>> $log }
+Step 'collect'   { powershell -NoProfile -File $collectLiveDeals *>> $log }
+Step 'news'      { powershell -NoProfile -File $newsCalendar *>> $log }
 # ORDER-073: refresh the MRIS macro-regime whisper (barometers -> regime -> brief) BEFORE
 # the dashboard so it embeds the fresh whisper_brief.html. Its own stages are non-fatal and
 # a mris failure never blocks the dashboard/gist (only a 'dashboard' failure skips the gist).
-Step 'mris'      { powershell -NoProfile -File D:\EA_LAB\scripts\mris\mris_run.ps1 *>> $log }
+Step 'mris'      { powershell -NoProfile -File $mrisRun *>> $log }
 # ORDER-083: publish the news CSV where every (Boss)_NewsGuard instance reads it. 2026-07-28:
 # the old inline Copy-Item only reached the LOCAL Common\Files, so the VPS fleet ran on a
 # missing feed and sat INACTIVE for days. publish_news_to_vps.ps1 validates the CSV (age,
 # header, >=1 parseable event) and publishes atomically to BOTH the local Common\Files and the
 # OneDrive lab-to-vps staging folder the VPS pulls with rclone. Fail-visible like any Step.
-Step 'newsguard-csv' { powershell -NoProfile -File D:\EA_LAB\scripts\publish_news_to_vps.ps1 *>> $log }
+Step 'newsguard-csv' { powershell -NoProfile -File $publishNews *>> $log }
 # ORDER-073 Phase-3: append today's MRIS macro state to the rolling regime CSV that the
 # (Boss)_MacroGate watchdog reads. Runs after 'mris' so regime_state.json is fresh. The
 # script mirrors the CSV to local Common\Files; the VPS copy is delivered by rclone (runbook).
-Step 'export-regime' { powershell -NoProfile -File D:\EA_LAB\scripts\mris\mris_export_regime.ps1 *>> $log }
-Step 'dashboard' { powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.ps1 *>> $log }
+Step 'export-regime' { powershell -NoProfile -File $mrisExport *>> $log }
+Step 'dashboard' { powershell -NoProfile -File $liveDashboard *>> $log }
 # CR-001b (ROADMAP Phase 4.5, 2026-07-19): regenerate the ControlRoomSnapshot after collect+
 # dashboard so it reads the freshest data. Read-only projection (never writes owners); a
 # failure here is fail-visible like any step but never blocks dashboard/gist above.
-Step 'snapshot'  { powershell -NoProfile -File D:\EA_LAB\scripts\control_room_snapshot.ps1 *>> $log }
+Step 'snapshot'  { powershell -NoProfile -File $controlRoomSnapshot -Root $RepoRoot *>> $log }
 # ORDER-1200 (S12): build the SafeProjection and send the Telegram alerts + Morning Brief.
 #
 # WHY IT SITS HERE AND NOWHERE ELSE, and why it is not a separate scheduled task. Every finding
@@ -85,14 +101,14 @@ try {
 # bytes with the ANSI codepage, so the message arrives as mojibake and the log stops being
 # readable exactly where it matters most. Measured, not assumed - the first run of this
 # block wrote its Thai as question marks.
-$projOut = powershell -NoProfile -Command "`$env:PYTHONIOENCODING='utf-8'; & 'D:\EA_LAB\tools\python312\python.exe' 'D:\EA_LAB\_triage\factory_os\safe_projection.py' build --repo-root 'D:\EA_LAB'; exit `$LASTEXITCODE"
+$projOut = powershell -NoProfile -Command "`$env:PYTHONIOENCODING='utf-8'; & '$pythonExe' '$safeProjection' build --repo-root '$RepoRoot'; exit `$LASTEXITCODE"
 $projExit = $LASTEXITCODE
 $projOut | Add-Content $log -Encoding utf8
 if ($projExit -ne 0) {
     $failed += 'notify-projection'
     "ALERT: the SafeProjection could not be built, so NOTHING was sent - the sender has no other document it is allowed to read" | Add-Content $log
 } else {
-    $notifyOut = powershell -NoProfile -Command "`$env:PYTHONIOENCODING='utf-8'; & 'D:\EA_LAB\tools\python312\python.exe' 'D:\EA_LAB\_triage\factory_os\notifier.py' send --confirm --brief --repo-root 'D:\EA_LAB'; exit `$LASTEXITCODE"
+    $notifyOut = powershell -NoProfile -Command "`$env:PYTHONIOENCODING='utf-8'; & '$pythonExe' '$notifier' send --confirm --brief --repo-root '$RepoRoot'; exit `$LASTEXITCODE"
     $notifyExit = $LASTEXITCODE
     $notifyOut | Add-Content $log -Encoding utf8
     if ($notifyExit -eq 4) {
@@ -113,8 +129,8 @@ if ($projExit -ne 0) {
 # That split is the actual ORDER-218 finding: the Boss_16 truncation flag was ONE DAY old and
 # still invisible, while 180-odd historical sidecars were never the problem.
 "--- detector digest ---" | Add-Content $log
-powershell -NoProfile -File D:\EA_LAB\scripts\detector_digest.ps1 *>> $log
-powershell -NoProfile -File D:\EA_LAB\scripts\detector_digest.ps1 -SinceDays 2 -Quiet *>> $log
+powershell -NoProfile -File $detectorDigest *>> $log
+powershell -NoProfile -File $detectorDigest -SinceDays 2 -Quiet *>> $log
 if ($LASTEXITCODE -eq 2) {
     $failed += 'detector-flags'
     "ALERT: a detector flagged something in the last 2 days - see the digest above before trusting any recent run or building a bundle" | Add-Content $log
@@ -139,9 +155,9 @@ if ($LASTEXITCODE -eq 2) {
 # It is a library rather than inline code because daily_monitor.ps1 cannot be run in a
 # test (step 0 rotates logins through five real terminals), which is exactly why these two
 # rules were never exercised. Cage: scripts\_test\run_monitor_integrity_tests.ps1.
-. D:\EA_LAB\scripts\lib\monitor_coverage.ps1
-$crJson = 'D:\EA_LAB\portfolio\control_room_snapshot.json'
-$cov = Get-MonitorCoverage -SnapshotPath $crJson
+. $monitorCoverage
+$crJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\control_room_snapshot.json'
+$cov = Get-MonitorCoverage -SnapshotPath $crJson -RepoRoot $RepoRoot
 foreach ($line in $cov.Log) { $line | Add-Content $log }
 $failed += $cov.Failures
 $coverageMsg = $cov.Summary
@@ -152,11 +168,11 @@ if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
     if ($failed -contains 'dashboard') {
         "gist publish SKIPPED: dashboard step failed - refusing to republish a stale dashboard" | Add-Content $log
     } else {
-        Step 'gist' { powershell -NoProfile -File D:\EA_LAB\scripts\publish_dashboard_gist.ps1 *>> $log }
+        Step 'gist' { powershell -NoProfile -File $publishDashboardGist *>> $log }
     }
 }
 # commit the snapshot (audit trail) - quiet if nothing changed
-Set-Location D:\EA_LAB
+Set-Location -LiteralPath $RepoRoot
 # CR-TOOL-01: the same pathspec is used for both `add` and `commit`. This is a shared
 # worktree (see memory shared-worktree-concurrent-writers) - a bare `git commit` with no
 # pathspec would sweep in whatever another concurrent session has staged in the meantime.
@@ -180,7 +196,7 @@ if ($staged) {
 }
 # ORDER-128 health check: stale exporter data means the chain "ran" but the eyes are
 # still blind - surface it as loudly as a step failure instead of a quiet green.
-$newest = Get-ChildItem 'D:\EA_LAB\portfolio\live_deals' -File -ErrorAction SilentlyContinue |
+$newest = Get-ChildItem (Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\live_deals') -File -ErrorAction SilentlyContinue |
           Sort-Object LastWriteTime -Descending | Select-Object -First 1
 $dataAgeH = if ($newest) { ((Get-Date) - $newest.LastWriteTime).TotalHours } else { [double]::MaxValue }
 if ($dataAgeH -gt 26) {

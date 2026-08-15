@@ -9,11 +9,16 @@
 # (user rule: correlation/risk -> reduce lot, not cut).
 [CmdletBinding()]
 param(
-  [string]$Deployments = "D:\EA_LAB\portfolio\DEPLOYMENTS.csv",
-  [string]$StateJson   = "D:\EA_LAB\portfolio\mris\regime_state.json",
-  [string]$OutJson     = "D:\EA_LAB\portfolio\mris\exposure_map.json"
+  [string]$Deployments = '',
+  [string]$StateJson   = '',
+  [string]$OutJson     = ''
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $Deployments) { $Deployments = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\DEPLOYMENTS.csv' }
+if (-not $StateJson) { $StateJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\regime_state.json' }
+if (-not $OutJson) { $OutJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\exposure_map.json' }
 if (!(Test-Path $Deployments)) { throw "DEPLOYMENTS.csv not found: $Deployments" }
 
 $dep = Import-Csv $Deployments

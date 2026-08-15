@@ -11,14 +11,19 @@
 # not OK (PENDING/STALE/missing) are skipped and weights renormalised.
 [CmdletBinding()]
 param(
-  [string]$Snapshot = "D:\EA_LAB\portfolio\mris\barometer_snapshot.csv",
-  [string]$Config   = "D:\EA_LAB\scripts\mris\barometers.json",
-  [string]$OutJson  = "D:\EA_LAB\portfolio\mris\regime_state.json",
+  [string]$Snapshot = '',
+  [string]$Config   = '',
+  [string]$OutJson  = '',
   # an OK row whose `asof` stamp is older than this is treated as STALE and excluded
   # (defends against a snapshot that silently froze; 120h = weekend/holiday tolerant).
   [int]$MaxAgeHours = 120
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $Snapshot) { $Snapshot = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\barometer_snapshot.csv' }
+if (-not $Config) { $Config = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\barometers.json' }
+if (-not $OutJson) { $OutJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\regime_state.json' }
 
 if (!(Test-Path $Config))   { throw "config not found: $Config" }
 if (!(Test-Path $Snapshot)) { throw "snapshot not found: $Snapshot (run the MT5 exporter or seed it)" }

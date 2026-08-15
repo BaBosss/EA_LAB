@@ -12,13 +12,16 @@
 # One writer per direction: the lab only ever writes lab-to-vps\news.
 [CmdletBinding()]
 param(
-  [string]$SrcCsv     = 'D:\EA_LAB\portfolio\news_week.csv',
+  [string]$SrcCsv     = '',
   [string]$CommonDir  = 'C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files',
   [string]$StagingDir = 'C:\Users\patip\OneDrive\EA_LAB_VPS_SYNC\lab-to-vps\news',
   [string]$DestName   = 'EA_LAB_news_week.csv',
   [int]   $MaxAgeHours = 26
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $SrcCsv) { $SrcCsv = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\news_week.csv' }
 
 function Fail([string]$msg) { Write-Host "publish-news FAILED: $msg"; exit 1 }
 

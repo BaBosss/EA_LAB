@@ -19,18 +19,24 @@
 # accounts are untouched until the switch is deliberately flipped.
 [CmdletBinding()]
 param(
-  [string]$StateJson = "D:\EA_LAB\portfolio\mris\regime_state.json",
-  [string]$OutCsv    = "D:\EA_LAB\portfolio\EA_LAB_mris_regime.csv",
+  [string]$StateJson = '',
+  [string]$OutCsv    = '',
   [string]$CommonDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files",
   [int]   $KeepRows  = 400,
   # DEFAULT OFF. When on, a crisis model at 'active' downgrades the exported state ONE notch.
   [switch]$EnableCrisisFold,
-  [string]$CrisisJson = "D:\EA_LAB\portfolio\mris\crisis_models_state.json",
+  [string]$CrisisJson = '',
   # fold policy (ladder / min_coverage / max_age_hours) lives in the crisis config so the
   # cost estimator reads the SAME numbers this exporter acts on
-  [string]$FoldPolicyJson = "D:\EA_LAB\scripts\mris\crisis_models.json"
+  [string]$FoldPolicyJson = ''
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $StateJson) { $StateJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\regime_state.json' }
+if (-not $OutCsv) { $OutCsv = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\EA_LAB_mris_regime.csv' }
+if (-not $CrisisJson) { $CrisisJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\crisis_models_state.json' }
+if (-not $FoldPolicyJson) { $FoldPolicyJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\crisis_models.json' }
 $ci = [System.Globalization.CultureInfo]::InvariantCulture
 
 if (!(Test-Path $StateJson)) { Write-Host "[export-regime] state json NOT found: $StateJson"; exit 1 }

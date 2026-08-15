@@ -12,13 +12,16 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory=$true, ParameterSetName='Send')][string]$Message,
-  [string]$Config = "D:\EA_LAB\scripts\config.yaml",
+  [string]$Config = '',
   [Parameter(ParameterSetName='Send')][switch]$WhatIf,
   # setup helper: list chat ids that have messaged the bot, so the token never has to be
   # pasted into a browser URL (getUpdates needs it in the path, and that lands in history).
   [Parameter(Mandatory=$true, ParameterSetName='Discover')][switch]$ShowChatIds
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $Config) { $Config = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\config.yaml' }
 
 function Parse-ConfigYaml {
   param([string]$Path)

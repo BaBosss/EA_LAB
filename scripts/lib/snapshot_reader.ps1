@@ -55,6 +55,7 @@ NOTE: this file deliberately sets NO $ErrorActionPreference and NO Set-StrictMod
 does not create a scope, so either would silently change the rules the CALLING script runs under
 for the rest of that script (memory: strictmode-in-dotsourced-library-leaks).
 #>
+. (Join-Path $PSScriptRoot 'repo_paths.ps1')
 
 function Get-VerifiedSnapshot {
     <#
@@ -68,8 +69,10 @@ function Get-VerifiedSnapshot {
     #>
     param(
         [Parameter(Mandatory = $true)][string]$SnapshotPath,
-        [string]$RepoRoot = 'D:\EA_LAB'
+        [string]$RepoRoot = ''
     )
+
+    if (-not $RepoRoot) { $RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSScriptRoot }
 
     $py = Join-Path $RepoRoot 'tools\python312\python.exe'
     $validator = Join-Path $RepoRoot '_triage\factory_os\snapshot_validator.py'

@@ -5,10 +5,13 @@
 # throws is reported and the run continues so a partial brief still lands.
 [CmdletBinding()]
 param(
-  [string]$Root = "D:\EA_LAB\scripts\mris",
+  [string]$Root = '',
   [switch]$Quiet
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $Root) { $Root = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris' }
 $steps = @(
   @{ name="webfeed";      script="$Root\mris_web_feeder.ps1" },
   @{ name="macrofeed";    script="$Root\mris_macro_feeder.ps1" },
@@ -28,7 +31,7 @@ foreach ($s in $steps) {
     Write-Host "[mris] $($s.name) FAILED: $($_.Exception.Message)"
   }
 }
-$brief = "D:\EA_LAB\portfolio\mris\whisper_brief.md"
+$brief = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\whisper_brief.md'
 if (Test-Path $brief) { Write-Host "[mris] brief -> $brief" }
 if ($fail -gt 0) { Write-Host "[mris] $fail stage(s) failed"; exit 1 }
 Write-Host "[mris] done"

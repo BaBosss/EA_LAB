@@ -53,14 +53,18 @@ Shows "no snapshot data yet" when no snapshot CSVs exist; all prior behavior unc
 #>
 [CmdletBinding()]
 param(
-  [string]$LiveDealsDir = "D:\EA_LAB\portfolio\live_deals",
-  [string]$OutFile      = "D:\EA_LAB\portfolio\LIVE_DASHBOARD.html",
+  [string]$LiveDealsDir = '',
+  [string]$OutFile      = '',
   # Owner of governance_scope and base_equity. There is deliberately NO -BaseEquity
   # parameter and no global default any more: a single number applied to six accounts is
   # the defect (see the header). If a value is missing here, the answer is UNKNOWN.
   [string]$AccountsCsv  = ""
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $LiveDealsDir) { $LiveDealsDir = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\live_deals' }
+if (-not $OutFile) { $OutFile = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\LIVE_DASHBOARD.html' }
 if (-not $AccountsCsv) { $AccountsCsv = Join-Path (Split-Path $LiveDealsDir -Parent) 'ACCOUNTS.csv' }
 
 # ---------------------------------------------------------------------------

@@ -9,13 +9,19 @@
 # Zero LLM tokens. Advisory only - does NOT touch the exported MacroGate RI.
 [CmdletBinding()]
 param(
-  [string]$RegimeJson = "D:\EA_LAB\portfolio\mris\regime_state.json",
-  [string]$CrisisJson = "D:\EA_LAB\portfolio\mris\crisis_models_state.json",
-  [string]$LastState  = "D:\EA_LAB\portfolio\mris\last_alert_state.json",
-  [string]$AlertsMd   = "D:\EA_LAB\portfolio\mris\ALERTS.md",
+  [string]$RegimeJson = '',
+  [string]$CrisisJson = '',
+  [string]$LastState  = '',
+  [string]$AlertsMd   = '',
   [switch]$NoPush
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $RegimeJson) { $RegimeJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\regime_state.json' }
+if (-not $CrisisJson) { $CrisisJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\crisis_models_state.json' }
+if (-not $LastState) { $LastState = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\last_alert_state.json' }
+if (-not $AlertsMd) { $AlertsMd = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\ALERTS.md' }
 
 if (!(Test-Path $RegimeJson)) { Write-Host "[alert] no regime_state.json - run mris_classify first"; exit 0 }
 $reg = Get-Content $RegimeJson -Raw | ConvertFrom-Json

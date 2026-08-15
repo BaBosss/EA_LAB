@@ -5,14 +5,18 @@
 # Zero LLM tokens - pure script, runs in the daily 07:30 chain.
 [CmdletBinding()]
 param(
-  [string]$OutHtml = "D:\EA_LAB\portfolio\news_today.html",
-  [string]$OutCsv  = "D:\EA_LAB\portfolio\news_week.csv",
+  [string]$OutHtml = '',
+  [string]$OutCsv  = '',
   [string[]]$Currencies = @('USD','GBP','EUR','JPY','AUD','NZD','CAD','CHF')
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $OutHtml) { $OutHtml = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\news_today.html' }
+if (-not $OutCsv) { $OutCsv = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\news_week.csv' }
 Add-Type -AssemblyName System.Web -ErrorAction SilentlyContinue
 $url = 'https://nfs.faireconomy.media/ff_calendar_thisweek.xml'
-$cache = "D:\EA_LAB\portfolio\news_feed_cache.xml"
+$cache = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\news_feed_cache.xml'
 $raw = $null
 try {
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12

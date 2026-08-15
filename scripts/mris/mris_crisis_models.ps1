@@ -10,13 +10,19 @@
 # Components whose input row is missing/STALE/aged are dropped and weights renormalised.
 [CmdletBinding()]
 param(
-  [string]$SnapCore  = "D:\EA_LAB\portfolio\mris\barometer_snapshot.csv",
-  [string]$SnapMacro = "D:\EA_LAB\portfolio\mris\barometer_snapshot_macro.csv",
-  [string]$Config    = "D:\EA_LAB\scripts\mris\crisis_models.json",
-  [string]$OutJson   = "D:\EA_LAB\portfolio\mris\crisis_models_state.json",
+  [string]$SnapCore  = '',
+  [string]$SnapMacro = '',
+  [string]$Config    = '',
+  [string]$OutJson   = '',
   [int]$MaxAgeHours  = 120
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\lib\repo_paths.ps1')
+$RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
+if (-not $SnapCore) { $SnapCore = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\barometer_snapshot.csv' }
+if (-not $SnapMacro) { $SnapMacro = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\barometer_snapshot_macro.csv' }
+if (-not $Config) { $Config = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\crisis_models.json' }
+if (-not $OutJson) { $OutJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\mris\crisis_models_state.json' }
 if (!(Test-Path $Config))   { throw "config not found: $Config" }
 if (!(Test-Path $SnapCore)) { throw "core snapshot not found: $SnapCore (run mris_web_feeder.ps1)" }
 
