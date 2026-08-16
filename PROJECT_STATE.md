@@ -92,7 +92,8 @@ Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine
 ## 2. Current status (one-liner per layer)
 
 > **2026-08-16 FINAL MONITORING REPAIRS + DURABLE STATE SYNC PREP:** canonical monitoring code defects are repaired; ORDER-740 is accepted/canonical; Build-6090 provenance is refreshed with metrics unchanged; the reconciliation parser repair is integrated from `021f2516378bef5cf207451668bc07f30ab670f1`; and basket expectation semantics are repaired from `908c24fc`. Monitoring remains **DEGRADED_MONITORING**. Known product defects = none; remaining blockers are evidence/authority only.
-> **Remaining owner/external blockers:** monitored-account runtime identity evidence; exact ClevrFX magic/attachment authority for `69424711`; ORDER-941 / ORDER-1000 attach-runtime proof; and existing owner gates such as ORDER-510 as applicable. ORDER-1257 and ORDER-1462 are closed by the owner-confirmed in-force S2a attestation and deterministic closure checks below. QI-2+ remains **NOT AUTHORIZED**.
+> **2026-08-16 IchiADX runtime-evidence closure:** owner-accepted ORDER-1000 A2/A3 proof satisfies the IchiADX `990066`–`990069` runtime-evidence sub-scope of ORDER-941 on DEMO account `463666728` / `Exness-MT5Trial17`. ORDER-1000 is **SATISFIED / CLOSED**; ORDER-941 remains partial for other tracked runtime rows; ORDER-943 remains **PARTIAL** with runtime-evidence blocked rows `991004`, `991002`, `990202`. Known product defects = **NONE**. No portfolio/judge-policy, deployment, trading, risk/default, LIVE, retirement, or QI-2+ change occurred.
+> **Remaining owner/external blockers:** monitored-account runtime identity evidence; exact ClevrFX magic/attachment authority for `69424711`; residual ORDER-941 runtime evidence outside the accepted IchiADX four-leg sub-scope; and existing owner gates such as ORDER-510 as applicable. ORDER-1257 and ORDER-1462 are closed by the owner-confirmed in-force S2a attestation and deterministic closure checks below. QI-2+ remains **NOT AUTHORIZED**.
 > **2026-08-16 S2a owner-gate closure:** ORDER-1257 option (b) and ORDER-1462 are closed against the owner-confirmed in-force bundle `8e051930e96c8ed4876183fb39bc090724cb2ba1bd761fa4bf8c8c747d8f4a0c` on canonical `1b7e287c`; all seven required deterministic S2a checks PASS. No new attestation, re-pin, stale-pin acknowledgement, deployment, trading, LIVE promotion, risk/default change, or QI-2+ action occurred.
 > **2026-08-14 VPS DEMO / Forward-Test manual verification complete:** disposition = `MONITOR_FORWARD`; CURRENT blockers = NONE. VPS snapshot/exporter is operational and fresh; News/MRIS was refreshed by the owner. TsMom `992001` was corrected from discovered H1 drift to canonical D1 and pre-correction H1 evidence was discarded; valid-forward reset = `2026-08-14`. ORDER-353 `990026` is CONFIG PASS with zero closed trades; its judge clock has not started. Next action is observation only: no manual trading and no LIVE promotion.
 
@@ -359,7 +360,7 @@ Attribution key = **(magic, symbol)**. Deployed 2026-07-02 (history — see the 
 > Export via an MQL5 script that reads `DEAL_MAGIC` instead. Everything is built + tested.
 
 **Steps (to send to the AI for checking):**
-> **Current disposition: `DEGRADED_MONITORING`.** The monitoring parser and basket expectation defects are repaired, but this is not runtime proof. Do not infer monitored-account identity, exact ClevrFX magic/attachment authority for `69424711`, or ORDER-941 / ORDER-1000 attach-runtime proof from repository snapshots; these remain owner/external evidence gates.
+> **Current disposition: `DEGRADED_MONITORING`.** The monitoring parser and basket expectation defects are repaired, but this is not general runtime proof. Do not infer monitored-account identity or exact ClevrFX magic/attachment authority for `69424711` from repository snapshots. The owner-accepted ORDER-1000 proof resolves the ORDER-941 IchiADX `990066`–`990069` sub-scope; remaining runtime-evidence blockers are `991004`, `991002`, and `990202`.
 1. In MT5 (the machine/VPS running demo): copy `D:\EA_LAB\scripts\report_deals.mq5` → `<DataDir>\MQL5\Scripts\`
    → refresh Navigator → drag onto any chart → set `InpFromDate=2026.06.22` → run.
 2. It writes **`live_deals.csv`** into `Common\Files\` (the path shows in the Experts log). Columns:
@@ -485,18 +486,16 @@ enabling = validate like a new mechanism.
 > **The date was `2026-09-22` here and it does not exist** (`ORDER-940`, 2026-08-01 — see §4). First lab
 > judge = **2026-10-09**; the calendar is generated, `scripts/control_room_snapshot.ps1` → `judge_cohorts`.
 
-- **`ORDER-941` first — 8 EAs may not be trading at all, and the judge policy cannot be decided until that
-  is separated from thinness.** Three legs of the same EA (`990066`/`990067`/`990069`, IchiADX) show **0
-  closed trades in 16 days against an expected 1.0–1.1/week** — about 2.5 expected trades each, three legs
-  silent together. That is an attach/gate defect shape (the `990025` `AllowLive=false` precedent), not a
-  thin EA. `990068` on the same EA is at 1 vs ~2.3 expected.
+- **`ORDER-941` IchiADX sub-scope = SATISFIED:** owner-accepted ORDER-1000 A2/A3 runtime proof covers
+  `990066`, `990067`, `990068`, and `990069` on DEMO `463666728` / `Exness-MT5Trial17`. ORDER-941 remains
+  partial for other tracked runtime rows; no judge-policy or portfolio disposition is inferred.
 - **`ORDER-942` = ACCEPTED/CLOSED:** the expected-rate substrate for the 19-row projected-shortfall cohort is accepted.
-- **`ORDER-943` = PARTIAL / OWNER-RATIFIED (2026-08-16):** exact cohort = 19. Rebase = `990204`, `990206`,
-  `990301`, `990302`, `999094`, `990103`; ORDER-235 thin treatment = `991003`, `990020`; monitor with no thin
-  exception yet = `990984`; provisional until first real trade = `991005`, `990208`, `992004`; runtime-evidence
-  blocked = `990066`, `990067`, `990068`, `990069`, `991004`, `991002`, `990202`. **No retirement/removal is
-  authorized.** ORDER-943 remains PARTIAL until the runtime-evidence rows are resolved and the provisional/monitor
-  conditions are separately satisfied.
+- **`ORDER-943` = PARTIAL / OWNER-RATIFIED (2026-08-16):** exact cohort = 19. Runtime-proven / observation =
+  `990066`, `990067`, `990068`, `990069`; remaining runtime-evidence blocked = `991004`, `991002`, `990202`.
+  Rebase = `990204`, `990206`, `990301`, `990302`, `999094`, `990103`; ORDER-235 thin treatment = `991003`,
+  `990020`; monitor with no thin exception yet = `990984`; provisional until first real trade = `991005`,
+  `990208`, `992004`. **No retirement/removal is authorized.** ORDER-943 remains PARTIAL until the remaining
+  runtime-evidence rows are resolved and the provisional/monitor conditions are separately satisfied.
 - /ea-monitor every 1–2 weeks (send `live_deals.csv`) — the collector is already writing
   `portfolio/live_deals/` daily for 4 of 6 accounts; MT4 `141049900` and `69424711` are STALE (38.5 h).
 

@@ -6004,7 +6004,9 @@ edit: **green, 25.4 s, unchanged**.
 
 ---
 
-## ORDER-941 — [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — silent, or thin? — `WAITING-USER / OWNER_ACTION (expectation defect CLOSED by 908c24fc; waiting runtime evidence)` — **all three suspected causes REFUTED 2026-08-02 with the owner's evidence; the question is now UNFALSIFIABLE with the instrumentation that exists → `ORDER-1000`** · ทำได้: Claude/Opus + user (อ่าน Inputs) · 👉 แนะ: Claude
+## ORDER-941 — [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — silent, or thin? — `PARTIAL / OWNER-ACTION (IchiADX 990066–990069 runtime-evidence sub-scope SATISFIED 2026-08-16; other tracked runtime rows remain)` — **all three suspected causes REFUTED 2026-08-02 with the owner's evidence; the IchiADX runtime uncertainty is resolved by the owner-accepted `ORDER-1000` proof; no full ORDER-941 closure or judge-policy decision is claimed** · ทำได้: Claude/Opus + user (อ่าน Inputs) · 👉 แนะ: Claude
+
+> ✅ **IchiADX RUNTIME-EVIDENCE SUB-SCOPE SATISFIED 2026-08-16:** the owner-accepted `ORDER-1000` A2/A3 proof covers `990066`, `990067`, `990068`, and `990069`. `ORDER-941` remains partial/open for other tracked runtime rows; no portfolio, judge-policy, deployment, trading, risk/default, LIVE, retirement, or QI-2+ decision is recorded here.
 
 > ### 🔴 2026-08-02 (`S-2026-08-02-OPERATOR`) — the owner read all four Inputs tabs and sent the account's 8-day Expert log. Every hypothesis this row was built on is dead, and what replaces them is worse to live with.
 >
@@ -6096,13 +6098,24 @@ edit: **green, 25.4 s, unchanged**.
 > reason to suspect they are not. (3) `990068` shows 4 deals vs 1 closed live, which is entry+exit
 > accounting plus the broker difference, not a discrepancy worth chasing.</sub>
 >
-> **Status: `ORDER-1000` is still owed** — not because the legs look broken, but because this row
-> spent weeks and one owner trip on a question the EA could have answered itself.
+> **Status: `ORDER-1000` is DONE / CLOSED** — A2/A3 runtime proof is owner-accepted on all four legs;
+> the instrumentation implementation is not reopened and no portfolio or judge-policy disposition is made here.
 
 ---
 
-## ORDER-1000 — [🔴 instrumentation] `(EXP)_IchiADX_Naked_rev00` cannot say whether it is evaluating — `INSTRUMENTED 2026-08-06 (Claude/Opus) — [INIT] + per-reason counters + the unaccounted self-check are built, compiled on DEV only per the owner's ruling, and proved non-zero in the tester with the invariant closing (3096 = 411+35+1976+609+22+43). 🔴 A1's two named inputs DO NOT EXIST in this EA, so ORDER-941's leading cause cannot apply to these legs — A1 amended. STILL OPEN: A2/A3 need the build actually on the four charts, which is 👤 the owner's call.` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+## ORDER-1000 — [🔴 instrumentation] `(EXP)_IchiADX_Naked_rev00` cannot say whether it is evaluating — `DONE / CLOSED (owner-accepted A2/A3 runtime proof 2026-08-16; instrumentation implementation not reopened)` — **[INIT] + per-reason counters + the unaccounted self-check are built and the accepted instrumented build is verified on all four DEMO legs** · runnable by: **Claude/Opus** · 👉 recommended: Claude
 **bars:** N-A (instrumentation, not an EA measurement) · **flat-lot probe:** N-A
+
+> ✅ **A2/A3 RUNTIME PROOF ACCEPTED 2026-08-16:** account `463666728` DEMO / server `Exness-MT5Trial17`, terminal `D:\Monitor\MT5 - 463666728\terminal64.exe`, authorized source build `386593bcedb42e52ad9dc1850967355d60399a30`, and EX5 SHA256 `D1B4465159338F344904B9637612320D6C09A0665923F878F88B9415C2BF69F3` (binary recovered from `D:\Meta 5b\MQL5\Experts\(EXP)_IchiADX_Naked_rev00.ex5`).
+>
+> | magic | symbol / timeframe | result |
+> |---|---|---|
+> | `990066` | USDJPYm H4 | **PASS** |
+> | `990067` | USDJPYm H1 | **PASS** |
+> | `990068` | XAUUSDm H1 | **PASS** |
+> | `990069` | XAUUSDm H4 | **PASS** |
+>
+> Each leg produced the correct `[INIT]` runtime identity, `[COUNTERS]`, `[COUNTERS][OK] unaccounted=0`, and `order_sent=0`, with correct account/build/hash/symbol/timeframe/MagicNo/config identity. Per-EA Allow Algo Trading was disabled for all four; global Algo Trading was unchanged; no unauthorized trades were generated; existing BTCJPYm H1 + DealsExporter were preserved. This closes ORDER-1000 A2/A3 only and does not assign any portfolio or judge-policy disposition.
 
 Split out of `ORDER-941` (2026-08-02) once the owner's evidence refuted all three of its suspected
 causes and left a question no reading can settle.
@@ -6394,9 +6407,10 @@ changes outside `notes`/`source_evidence`/the rate.
 > | **ORDER-235 THIN TREATMENT** | `991003`, `990020` |
 > | **MONITOR / NO THIN EXCEPTION YET** | `990984` |
 > | **PROVISIONAL UNTIL FIRST REAL TRADE** | `991005`, `990208`, `992004` |
-> | **RUNTIME-EVIDENCE BLOCKED** | `990066`, `990067`, `990068`, `990069`, `991004`, `991002`, `990202` |
+> | **RUNTIME-PROVEN / OBSERVATION** | `990066`, `990067`, `990068`, `990069` |
+> | **RUNTIME-EVIDENCE BLOCKED** | `991004`, `991002`, `990202` |
 >
-> The seven runtime-evidence-blocked rows remain blocked. The three provisional rows remain provisional until their first real trade. `990984` remains monitor-only with no thin exception yet. This owner-ratified subset does not close ORDER-943.
+> The four IchiADX rows are now runtime-proven / observation-only from the owner-accepted `ORDER-1000` proof; they receive no REBASE, THIN, RETIRE, or new judge-policy assignment here. The remaining runtime-evidence-blocked rows are `991004`, `991002`, and `990202`. The three provisional rows remain provisional until their first real trade. `990984` remains monitor-only with no thin exception yet. This owner-ratified subset does not close ORDER-943.
 
 > `ORDER-940` measured it: **19 projected SHORTFALL vs 11 projected capable**, and the nearest cohort
 > (**2026-10-09**, 5 EAs) has **0 decision-capable today**. The bar exists (`CLAUDE.md` VERDICT GATE:
