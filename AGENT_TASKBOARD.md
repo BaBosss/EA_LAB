@@ -6413,6 +6413,14 @@ changes outside `notes`/`source_evidence`/the rate.
 
 > **Accepted runtime-evidence closure:** `991004 = RUNTIME_PROVEN`; `991002 = RUNTIME_PROVEN`; `990202 = RUNTIME_PROVEN / CONFIG_MATCH`. This is a documentation/state-sync closure only: no portfolio, deployment, trading, risk/default, LIVE, retirement, or QI-2+ change was made.
 
+### ClevrFX historical attribution closure — 2026-08-16 (accepted observational state)
+
+> Account `69424711`, server `Exness-Trial8`, MT4 terminal `D:\Monitor\MT4 - 69424711\terminal.exe`. Fresh sensor provenance passed; the current sensor is `OrdersExporterMT4` on `EURUSDm,H1`. Four open EURUSDm positions and magic `9244` were observed, and the historical order comment `Clevr FX` supports observational attribution.
+>
+> All 25 saved `.chr` files were inspected. No existing ClevrFX/ClevrFX_EA expert attachment, no current account-associated `ClevrFX_EA.ex4`, and no current ClevrFX load/unload runtime evidence were found. The unrelated ClevrFX binary under `D:\Meta4b` is not proven associated and is not ratified. Current executable attachment = **NOT PROVEN**; historical executable identity = **UNRECOVERABLE FROM CURRENT EVIDENCE**.
+>
+> **Disposition: CLOSED — HISTORICAL / OBSERVATIONAL ATTRIBUTION ACCEPTED; CURRENT EXECUTABLE ATTACHMENT UNRESOLVED / UNRECOVERABLE FROM CURRENT EVIDENCE.** Product defect = **NONE**; runtime changes and trades = **NONE**. Do not attach/re-attach and do not ratify the unrelated `D:\Meta4b` binary; no further magic-`9244` investigation is required for this closure.
+
 > `ORDER-940` measured it: **19 projected SHORTFALL vs 11 projected capable**, and the nearest cohort
 > (**2026-10-09**, 5 EAs) has **0 decision-capable today**. The bar exists (`CLAUDE.md` VERDICT GATE:
 > ≥3 months AND ≥30 closed trades; thin EAs <0.5/wk use `ORDER-235`'s 12-month rule instead).
