@@ -423,7 +423,16 @@ try {
     $stagedExceptionsId = Get-StagedBlobIdOrNull -RelPath $ExceptionsPath
 
     $mismatches = New-Object System.Collections.Generic.List[string]
-    if ($null -eq $stagedManifestId -or $stagedManifestId -ne $freshManifestId) { $mismatches.Add('ARCHIVE_MANIFEST.csv (staged blob) is not byte-identical to a fresh -Generate candidate after Git clean filters') }
+    # ARCHIVE_MANIFEST.csv is derived only from the archive snapshot and its blob
+    # identity. An active-board-only change still needs the index/exceptions
+    # checks below, but must not be blocked by a pre-existing manifest drift.
+    # Keep enforcing the manifest when the archive changed, or when the manifest
+    # itself is part of the staged transaction (artifact-only tamper protection).
+    $manifestInputChanged = $archiveChanged
+    $manifestExplicitlyStaged = $stagedByPath.ContainsKey($ManifestPath)
+    if (($manifestInputChanged -or $manifestExplicitlyStaged) -and ($null -eq $stagedManifestId -or $stagedManifestId -ne $freshManifestId)) {
+        $mismatches.Add('ARCHIVE_MANIFEST.csv (staged blob) is not byte-identical to a fresh -Generate candidate after Git clean filters')
+    }
     if ($null -eq $stagedIndexId -or $stagedIndexId -ne $freshIndexId) { $mismatches.Add('ARCHIVE_INDEX.md (staged blob) is not byte-identical to a fresh -Generate candidate after Git clean filters') }
     if ($null -eq $stagedExceptionsId -or $stagedExceptionsId -ne $freshExceptionsId) { $mismatches.Add('RECONCILE_EXCEPTIONS.md (staged blob) is not byte-identical to a fresh -Generate candidate after Git clean filters') }
 
