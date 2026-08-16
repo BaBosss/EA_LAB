@@ -337,6 +337,8 @@ int OnInit()
    // than fail - the input is an inert dial, not a safety promise.
    if(_2_MaxHoldBars > 0)
       Print("[INIT] WARN: _2_MaxHoldBars has NO EFFECT on Boss_16/Kangaroo (Kangaroo owns its exits) - input ignored");
+   if(_57_DynCloseOn)
+      Print("[INIT] WARN: _57_DynCloseOn has NO EFFECT on Boss_16/Kangaroo (Kangaroo owns its exits) - input ignored");
 #endif
 #ifdef LAB_ENTRY_17
    Entry_Wave5_Init();
