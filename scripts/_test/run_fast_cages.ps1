@@ -914,8 +914,8 @@ $SUITE_GUARDS = @{
     # without these two lines the cage would run only when something ELSE it guards was staged,
     # which is the exact five-times-in-four-days failure BACKLOG-D32 exists to end.
     # 🔴 ORDER-1252 (BOX 1b). This key is `run_schema_cages.ps1` now, not
-    # `run_contract_binding_tests.ps1` -- the wrapper left the tier and the three cheap schema
-    # four cages stayed. run_guard_trigger_tests requires the key sets of $FAST_SUITES and
+    # `run_contract_binding_tests.ps1` -- the wrapper left the tier and the four cheap schema
+    # cages stayed. run_guard_trigger_tests requires the key sets of $FAST_SUITES and
     # $SUITE_GUARDS to match EXACTLY, so the rename happens in both places or neither.
     #
     # The factory/*.jsonl entries below are the load-bearing ones and the comment they carry is

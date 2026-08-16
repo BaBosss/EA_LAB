@@ -29,12 +29,14 @@
                                                 WIRED labels checked against the repo
       gen_design_contracts.py --check 0.1s      CONTRACTS.md still matches schemas.json, and the
                                                 design still links every contract in it
-      run_enforcement_status_tests.py  0.7-0.9s enforcement mutations run against a temporary
+      run_enforcement_status_tests.py  0.7-0.9s (local tooling lane; no MT4/MT5 tester)
+                                                enforcement mutations run against a temporary
                                                 schema document, never the tracked store
 
     MEASURED with -Timing under EA_LAB_EVIDENCE=index, which is the only number worth quoting --
-    memory `tier-number-needs-its-invocation`. The current four-entry samples in this lane were
-    7.05s and 4.56s; re-measure before treating either as a budget claim.
+    memory `tier-number-needs-its-invocation`. The current four-entry samples in the isolated
+    local tooling lane (no MT4/MT5 tester) were 7.05s and 4.56s; re-measure before treating
+    either as a budget claim.
 
     ORDER-1264, 2026-08-03: the table above used to read 3.71 / 0.71 / 0.05 = 4.47s and it was
     stale in every row -- the SAME three entries now measure 8.8 / 7.1 / 7.9s summed. Recorded
