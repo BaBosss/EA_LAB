@@ -15,14 +15,18 @@ $csv="D:\EA_LAB\ea_projects\(TRD)_PA_Probe\reports\step2_grid_ab.csv"
 # label, expert, set, from, to, model
 $cells=@(
   @{lab="NEUT_OLD2"; ex="Boss_14_GridLog_OLD2"; set="Boss14_GridLog_AUDNZD_ISpick.set"; from="2023.01.01"; to="2026.01.01"; model=2}
-  @{lab="NEUT_NEW";  ex="Boss_14_GridLog";      set="Boss14_GridLog_AUDNZD_ISpick.set"; from="2023.01.01"; to="2026.01.01"; model=2}
-  @{lab="OFF_UP_M4"; ex="Boss_14_GridLog"; set="Boss14_GridLog_AUDNZD_ISpick.set"; from="2019.01.01"; to="2022.01.01"; model=4}
-  @{lab="ON_UP_M4";  ex="Boss_14_GridLog"; set="B14_PAon.set";                     from="2019.01.01"; to="2022.01.01"; model=4}
-  @{lab="OFF_DN_M4"; ex="Boss_14_GridLog"; set="Boss14_GridLog_AUDNZD_ISpick.set"; from="2023.01.01"; to="2026.01.01"; model=4}
-  @{lab="ON_DN_M4";  ex="Boss_14_GridLog"; set="B14_PAon.set";                     from="2023.01.01"; to="2026.01.01"; model=4}
+  @{lab="NEUT_NEW";  ex="EALabTpl\Boss_14_GridLog";      set="Boss14_GridLog_AUDNZD_ISpick.set"; from="2023.01.01"; to="2026.01.01"; model=2}
+  @{lab="OFF_UP_M4"; ex="EALabTpl\Boss_14_GridLog"; set="Boss14_GridLog_AUDNZD_ISpick.set"; from="2019.01.01"; to="2022.01.01"; model=4}
+  @{lab="ON_UP_M4";  ex="EALabTpl\Boss_14_GridLog";  set="B14_PAon.set";                     from="2019.01.01"; to="2022.01.01"; model=4}
+  @{lab="OFF_DN_M4"; ex="EALabTpl\Boss_14_GridLog"; set="Boss14_GridLog_AUDNZD_ISpick.set"; from="2023.01.01"; to="2026.01.01"; model=4}
+  @{lab="ON_DN_M4";  ex="EALabTpl\Boss_14_GridLog";  set="B14_PAon.set";                     from="2023.01.01"; to="2026.01.01"; model=4}
 )
 "label,PF,net,eqDDpct,trades,winpct,maxLoss,recovery,report" | Out-File -FilePath $csv -Encoding utf8
 foreach($c in $cells){
+  if ($c.ex -match '(?i)(^|\\)Boss_14_GridLog_OLD\d*$') {
+    Write-Error "REFUSE: legacy executable identity '$($c.ex)' is not an active writer target"
+    exit 2
+  }
   Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "D:\Meta 5b\terminal64.exe" } | Stop-Process -Force -ErrorAction SilentlyContinue
   Start-Sleep -Seconds 3
   $rn="PAGRID_$($c.lab)"

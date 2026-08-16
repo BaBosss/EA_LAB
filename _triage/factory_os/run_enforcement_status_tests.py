@@ -28,6 +28,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_design_contracts as gen  # noqa: E402
@@ -98,18 +99,15 @@ CASES = (
     # are the audit's own words -- "a constraint and its enforcement metadata can be deleted
     # TOGETHER and the lint still prints STRUCTURE OK".
     #
-    # The exception is stated rather than left to read as a fifth catch: the ExecutionKey case
-    # was ALREADY red at HEAD, because once `x-enforced-by` appeared the old loop stopped
-    # skipping the entity and demanded a valid `x-enforcement-status`, which it had none. What
-    # ORDER-1264 changed for it is only WHICH check fires and what the message tells you to do
-    # (move it to _ENFORCEMENT_DECLARED). It is kept because it pins the inventory's second
-    # direction, not because it is evidence of the repair.
+    # ORDER-1280 closes the old undeclared list. The second inventory direction is
+    # now pinned by an explicit scope exemption gaining a declaration: a justified
+    # exemption must not become an unverified enforcement claim by accident.
     ('ORDER-1264: x-enforced-by DELETED from a declared entity', 'SafeProjection',
      _drop('SafeProjection', 'x-enforced-by')),
     ('ORDER-1264: constraint AND metadata deleted together', 'ReconciliationEvidence',
      _drop('ReconciliationEvidence', 'x-enforced-by', 'x-enforcement-status', 'x-enforcer')),
-    ('ORDER-1264: an undeclared entity quietly GAINS a declaration', 'ExecutionKey',
-     _patch('ExecutionKey', **{'x-enforced-by': 'somebody_validator: trust me'})),
+    ('ORDER-1280: a scope exemption quietly GAINS a declaration', 'EvidenceRef',
+     _patch('EvidenceRef', **{'x-enforced-by': 'somebody_validator: trust me'})),
     ('ORDER-1264: a new entity classified by nobody', 'TotallyNewContract',
      _add_entity('TotallyNewContract')),
     # Both inventory directions at once: the new name is unclassified AND the old one is a stale
@@ -144,7 +142,8 @@ def main():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
     schema_path = os.path.abspath(gen.SCHEMA_PATH)
-    original = io.open(schema_path, encoding='utf-8').read()
+    original_bytes = io.open(schema_path, 'rb').read()
+    original = original_bytes.decode('utf-8')
     bad = 0
 
     rc, out = run_checker()
@@ -165,6 +164,13 @@ def main():
                 raise AssertionError('mutation for %s changed no fields' % entity)
             io.open(mutant_path, 'w', encoding='utf-8', newline='\n').write(
                 json.dumps(doc, indent=2, ensure_ascii=False) + '\n')
+            # Test-only interruption seam. A harness may terminate this process after the
+            # mutation is materialised; the tracked schema must still be byte-identical.
+            pause_marker = os.environ.get('EA_LAB_ENFORCEMENT_PAUSE_MARKER')
+            if pause_marker:
+                io.open(pause_marker, 'w', encoding='ascii').write('mutation materialized\n')
+                while os.path.exists(pause_marker):
+                    time.sleep(0.05)
             rc, out = run_checker(mutant_path)
             hit = [l for l in out.splitlines() if '[FAIL]' in l and entity in l]
             ok = rc != 0 and hit
@@ -174,7 +180,7 @@ def main():
                 bad += 1
                 print('        -> %s' % (hit[0].strip()[:100] if hit
                                          else 'NOTHING NAMED %s FAILED' % entity))
-    if io.open(schema_path, encoding='utf-8').read() != original:
+    if io.open(schema_path, 'rb').read() != original_bytes:
         print('  [BAD] this suite changed tracked schemas.json')
         bad += 1
     else:

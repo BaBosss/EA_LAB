@@ -63,6 +63,7 @@ from __future__ import annotations
 import collections
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -126,6 +127,54 @@ def staged_bytes(path):
 Pin = collections.namedtuple('Pin', 'kind value field section')   # kind: 'blob' | 'section'
 
 
+def authoritative_owner_pins(d1_rows, owners):
+    """Return fail-closed blob pins for every authoritative D1 owner path.
+
+    ORDER-1269 #4: ``expected_post_state`` is an attestation claim, not the complete
+    ownership inventory.  D1 ``owner_ref.path`` is the canonical owned-path resolver;
+    every in-force file owner must therefore contribute a valid owner-ref pin here.
+    """
+    rows_by_owner = collections.defaultdict(list)
+    for row in d1_rows or ():
+        owner = row.get('current_owner')
+        if owner:
+            rows_by_owner[str(owner)].append(row)
+
+    paths_by_owner = att.owner_ref_paths(d1_rows)
+    pins = {}
+    non_file_owners = {'NO_CURRENT_OWNER', 'TRANSIENT', 'UNOWNED'}
+    for owner in sorted(set(rows_by_owner).intersection(owners)):
+        if owner in non_file_owners or owner.startswith('EMBEDDED:'):
+            continue
+        rows = rows_by_owner[owner]
+        paths = paths_by_owner.get(owner, ())
+        if not paths:
+            raise evidence.ToolFailure(
+                'P3 D1 owner %r has no authoritative owner_ref.path pin' % owner)
+        for row in rows:
+            ref = row.get('owner_ref')
+            if not isinstance(ref, dict):
+                raise evidence.ToolFailure(
+                    'P3 D1 owner %r is missing owner_ref' % owner)
+            path = ref.get('path')
+            blob = ref.get('blob_oid')
+            commit = ref.get('commit_oid')
+            raw_sha = ref.get('raw_sha256')
+            if (not isinstance(path, str) or not path or path not in paths or
+                    not isinstance(blob, str) or not re.fullmatch(r'[0-9a-f]{40}', blob) or
+                    not isinstance(commit, str) or not re.fullmatch(r'[0-9a-f]{40}', commit) or
+                    not isinstance(raw_sha, str) or not re.fullmatch(r'[0-9a-f]{64}', raw_sha)):
+                raise evidence.ToolFailure(
+                    'P3 D1 owner %r has an invalid owner_ref pin' % owner)
+            pin = Pin('blob', blob, 'D1.owner_ref.blob_oid', None)
+            existing = pins.get(path)
+            if existing is not None and existing.value != pin.value:
+                raise evidence.ToolFailure(
+                    'P3 conflicting D1 owner_ref pins for %s' % path)
+            pins[path] = pin
+    return pins
+
+
 def pinned_expectations(src):
     """path -> Pin for every path an IN-FORCE record pins.
 
@@ -180,6 +229,11 @@ def pinned_expectations(src):
             if path not in pins:
                 pins[path] = Pin('blob', str(ack['current_blob']),
                                  'stale_pin_acknowledgement.current_blob', None)
+    # ORDER-1269 #4: owner_ref paths remain protected even when a record omits them from
+    # expected_post_state.  expected_post_state still wins for a shared path because it is the
+    # narrower, record-specific claim; the authoritative D1 path fills only the coverage gap.
+    for path, pin in authoritative_owner_pins(d1, in_force.keys()).items():
+        pins.setdefault(path, pin)
     return pins
 
 

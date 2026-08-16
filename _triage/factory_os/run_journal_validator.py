@@ -14,11 +14,17 @@ import os
 import shutil
 import subprocess
 import tempfile
+import re
 
 try:
     import evidence
 except ImportError:  # direct import from a different caller remains explicit
     evidence = None
+
+try:
+    import surface_evidence
+except ImportError:  # direct callers still get the schema-only journal checks
+    surface_evidence = None
 
 
 VALID = 'VALID'
@@ -34,12 +40,18 @@ LEGACY_EXCEPTION_IDS = frozenset({
 
 LEGACY_MANIFEST_SHA256 = {
     'factory/runs/RUN-20260802-001.jsonl':
-        '799db7e3fb79c446a707df774c6110f958345cbea2264597c95045d2b020e8b4',
+        '47e684a7af52a5c877d7cd84202e8a684d94c39485d199d041c727cfaaf963e7',
     'factory/runs/RUN-20260802-002.jsonl':
-        '93c6ced66d26c24fd9b788603fce5929ebcd82d1efc6b38f68f88a08c7eb0188',
+        '8edf62d132d368c66d9d1dd299d209e4a7bb1a8b1d2faea79d63d93321423c6a',
     'factory/runs/RUN-20260802-004.jsonl':
-        'e99e4d607837452fc1d26abd12119ce509f8bd3d906c5d529918d971c8c716c2',
+        '09307da68db0236ce0f0846f51b7680a0ab914bfe589ff53522cb86275c18210',
 }
+
+CURRENT_FINGERPRINT_RE = re.compile(r'^(?:v[0-9]+:)?[0-9a-f]{64}$')
+CURRENT_KEY_FIELDS = frozenset((
+    'expert', 'symbol', 'tf', 'from_date', 'to_date', 'model', 'deposit',
+    'currency', 'account_unit', 'leverage', 'terminal_build', 'set_hash',
+    'ex5_hash', 'effective_config_hash', 'data_fingerprint', 'lane'))
 
 
 class JournalInfrastructureError(Exception):
@@ -166,6 +178,49 @@ def _ajv_validate(schema_path, rows):
         shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+def _journal_semantic_problems(record, source, key_by_file):
+    """Rules that the broad historical schema cannot express safely.
+
+    The schema keeps LegacyExecutionKey readable so the historical rows can be
+    audited.  It is not permission for a new journal to use that shape.  The
+    same boundary is where the versioned fingerprint contract is enforced.
+    """
+    if not isinstance(record, dict):
+        return ['RunTransition must be an object']
+    problems = []
+    key = record.get('execution_key')
+    if record.get('transition') == 'QUEUED' and not isinstance(key, dict):
+        problems.append('QUEUED must carry a current ExecutionKey')
+    if isinstance(key, dict):
+        if set(key) != set(CURRENT_KEY_FIELDS):
+            problems.append('legacy or incomplete ExecutionKey is allowed only by the exact '
+                            'three-manifest historical exception')
+        if 'ini_hash' in key:
+            problems.append('execution_key.ini_hash is historical and cannot enter a new journal')
+        fingerprint = key.get('data_fingerprint')
+        if not isinstance(fingerprint, str) or not CURRENT_FINGERPRINT_RE.match(fingerprint):
+            problems.append('data_fingerprint must be a versioned or bare sha256, not a preimage')
+
+    surface = record.get('record', {}).get('set_surface_state') \
+        if isinstance(record.get('record'), dict) else None
+    if surface is not None:
+        if surface_evidence is None:
+            problems.append('surface evidence reader is unavailable')
+        else:
+            run_key = key_by_file.get(record.get('_source_file'))
+            if run_key is None:
+                problems.append('surface evidence has no QUEUED ExecutionKey in this journal')
+            else:
+                try:
+                    set_bytes = source.read_committed_bytes(surface['set_path'])
+                    input_bytes = source.read_committed_bytes(surface['input_source_path'])
+                    problems.extend(surface_evidence.validate_surface_state(
+                        surface, record.get('run_id'), run_key, set_bytes, input_bytes))
+                except Exception as exc:
+                    problems.append('surface evidence inputs could not be read: %s' % exc)
+    return problems
+
+
 def _validate_run_journals(source, schema_path, legacy_ids=LEGACY_EXCEPTION_IDS):
     report = JournalValidationReport()
     try:
@@ -176,6 +231,8 @@ def _validate_run_journals(source, schema_path, legacy_ids=LEGACY_EXCEPTION_IDS)
         raise
 
     ordinary = []
+    key_by_file = {}
+    surface_files = set()
     for rel in sorted(paths):
         try:
             raw = source.read_committed_bytes(rel)
@@ -213,6 +270,11 @@ def _validate_run_journals(source, schema_path, legacy_ids=LEGACY_EXCEPTION_IDS)
                 })
             continue
         for line_no, record in parsed:
+            if isinstance(record, dict) and isinstance(record.get('execution_key'), dict):
+                key_by_file.setdefault(rel, record['execution_key'])
+            if isinstance(record, dict) and isinstance(record.get('record'), dict) \
+                    and record['record'].get('set_surface_state') is not None:
+                surface_files.add(rel)
             ordinary.append({
                 'file': rel,
                 'line': line_no,
@@ -226,6 +288,16 @@ def _validate_run_journals(source, schema_path, legacy_ids=LEGACY_EXCEPTION_IDS)
         raise
     for item in ordinary:
         state, detail = ajv_results[id(item)]
+        item['record']['_source_file'] = item['file']
+        semantic = _journal_semantic_problems(item['record'], source, key_by_file)
+        if (isinstance(item['record'], dict)
+                and item['record'].get('transition') in ('COMPLETED', 'EVIDENCE_REGISTERED')
+                and item['file'] not in surface_files):
+            semantic.append('completed evidence has no durable set_surface_state')
+        item['record'].pop('_source_file', None)
+        if semantic:
+            state = INVALID
+            detail = '; '.join(semantic)
         report.rows.append({
             'file': item['file'],
             'line': item['line'],

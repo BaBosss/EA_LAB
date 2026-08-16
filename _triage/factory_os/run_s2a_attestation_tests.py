@@ -120,6 +120,120 @@ def good(**over):
     return row
 
 
+def run_order1269_derived_cases():
+    """ORDER-1269 #2: D2 is derived, but it is still verified and fail-closed."""
+    import contextlib
+    import gen_s2a_migration_doc as gen_d2
+
+    src = evidence.EvidenceSource('worktree', root=att._ROOT)
+    original_read = src.read_committed_bytes
+    original_build = gen_d2.build
+    bad = 0
+
+    problems = att.derived_artifact_problems(src)
+    ok = problems == []
+    print('  [%s] A unchanged authoritative inputs plus regenerated D2 needs no re-attestation'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %r' % (problems,))
+        bad += 1
+
+    src.read_committed_bytes = lambda path: (
+        b'MANUALLY TAMPERED\n' if path == att.DERIVED_HANDOUT_PATH else original_read(path))
+    try:
+        problems = att.derived_artifact_problems(src)
+    finally:
+        src.read_committed_bytes = original_read
+    ok = bool(problems) and 'stale or tampered' in problems[0]
+    print('  [%s] B manually tampered generated handout is refused' % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %r' % (problems,))
+        bad += 1
+
+    gen_d2.build = lambda rows, cov: original_build(rows, cov) + 'stale\n'
+    try:
+        problems = att.derived_artifact_problems(src)
+    finally:
+        gen_d2.build = original_build
+    ok = bool(problems) and 'stale or tampered' in problems[0]
+    print('  [%s] C generated handout stale relative to generator is refused'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %r' % (problems,))
+        bad += 1
+
+    # A source change without the required canonical regeneration is the same governed failure
+    # at this seam: the source contract and its derived artifact disagree.
+    gen_d2.build = lambda rows, cov: original_build(rows, cov) + 'unapproved source change\n'
+    try:
+        problems = att.derived_artifact_problems(src)
+    finally:
+        gen_d2.build = original_build
+    ok = bool(problems) and 'does not match canonical generator output' in problems[0]
+    print('  [%s] D generator/source change without governed regeneration is refused'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %r' % (problems,))
+        bad += 1
+
+    src.read_committed_bytes = lambda path: (
+        original_read(path) + b'\nUNPINNED SOURCE CHANGE' if path == att.GENERATOR_SOURCE_PATH
+        else original_read(path))
+    try:
+        problems = att.derived_artifact_problems(src)
+    finally:
+        src.read_committed_bytes = original_read
+    ok = bool(problems) and 'D4 governed generator source changed' in problems[0]
+    print('  [%s] D4 generator source change without its governed pin is refused'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %r' % (problems,))
+        bad += 1
+
+    stable_changed = att._digest_paths(
+        att.AUTHORITATIVE_BUNDLE,
+        lambda path: original_read(path) + (b'\nUNAUTHORIZED' if
+                                             path == att.AUTHORITATIVE_BUNDLE[3] else b''))
+    _, problems = run_with([good(bundle_sha256=stable_changed)])
+    ok = 'the current bundle is' in problems
+    print('  [%s] E owner-controlled policy input changed without authority is refused'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % (problems or 'no refusal',))
+        bad += 1
+
+    historical = '8e051930e96c8ed4876183fb39bc090724cb2ba1bd761fa4bf8c8c747d8f4a0c'
+    _, problems = run_with([good(bundle_sha256=historical)])
+    ok = not problems
+    print('  [%s] F accepted historical raw bundle remains verifiable after D2 regeneration'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % (problems or 'unexpected refusal',))
+        bad += 1
+
+    saved_source = att._SRC[0]
+    tampered_src = evidence.EvidenceSource('worktree', root=att._ROOT)
+    tampered_read = tampered_src.read_committed_bytes
+    tampered_src.read_committed_bytes = lambda path: (
+        b'MANUALLY TAMPERED\n' if path == att.DERIVED_HANDOUT_PATH else tampered_read(path))
+    att._SRC[0] = tampered_src
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            rc = att.main([])
+    finally:
+        att._SRC[0] = saved_source
+        att._DIGEST_CACHE.clear()
+    output = buf.getvalue()
+    ok = rc == 1 and 'D2 derived handout' in output and '-> APPROVED' not in output
+    print('  [%s] G invalid derived integrity state never displays APPROVED'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> rc=%r output=%r' % (rc, output[-500:]))
+        bad += 1
+    return bad
+
+
 def main():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
@@ -134,6 +248,8 @@ def main():
     if not ok:
         print('        -> %s' % (problems or 'not recorded as the current decision'))
         bad += 1
+    print('\n=== ORDER-1269 #2: derived handout and historical bundle contract ===')
+    bad += run_order1269_derived_cases()
     d1_rows = [json.loads(l) for l in io.open(chk.MIGRATION_PATH, encoding='utf-8') if l.strip()]
     probe = [dict(r) for r in d1_rows]
     probe[0]['signoff_state'] = 'APPROVED'

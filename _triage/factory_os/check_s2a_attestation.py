@@ -93,9 +93,9 @@ AUTHORIZATION_SOURCE = {
     'anchor': 'unblocks',
 }
 
-# audit 8 BLOCKER 2: the record binds the whole reviewed bundle, not just D1. If the document the
-# owner read, or the rules that decide what the decision MEANS, change afterwards, the record stops
-# matching and must be re-made.
+# audit 8 BLOCKER 2: the record binds the stable reviewed governance inputs, not just D1. The
+# deterministic document the owner reads is verified as a derived artifact below, so a correct
+# regeneration does not itself change the attested identity.
 # ORDER-614 rev 2 (owner-ratified 2026-07-31): the bundle binds WHAT THE CRITERIA MEAN and
 # WHAT THEY DO -- never HOW they are executed. This file is therefore OUT of its own bundle:
 # repairing it no longer voids the record that authorised the previous repair, which had cost
@@ -109,14 +109,32 @@ AUTHORIZATION_SOURCE = {
 #     what D1's acceptance MEANS -- have no policy-and-vectors replacement yet, and dropping
 #     it would bind D1's bytes while unbinding D1's meaning. It leaves when it gets the same
 #     treatment, and not before.
-BUNDLE = (
+AUTHORITATIVE_BUNDLE = (
     '_triage/factory_os/s2a_migration.jsonl',               # D1 - the data
     '_triage/factory_os/s2a_coverage_reconciliation.json',  # C8's evidence
-    '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md',        # D2 - what the owner actually reads
     '_triage/factory_os/check_s2a_migration.py',            # what D1's acceptance MEANS
     '_triage/factory_os/S2A_ATTESTATION_POLICY.md',         # what THESE criteria mean
     '_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl',     # what these criteria DO
 )
+
+# The previous contract was raw bytes of all six members. It remains readable only as a
+# historical contract: a historical record may survive a regenerated projection when every
+# authoritative member is still byte-identical to the revision that produced that record.
+LEGACY_BUNDLE = (
+    AUTHORITATIVE_BUNDLE[0],
+    AUTHORITATIVE_BUNDLE[1],
+    '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md',
+    AUTHORITATIVE_BUNDLE[2],
+    AUTHORITATIVE_BUNDLE[3],
+    AUTHORITATIVE_BUNDLE[4],
+)
+BUNDLE = AUTHORITATIVE_BUNDLE
+DERIVED_HANDOUT_PATH = '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md'
+GENERATOR_SOURCE_PATH = '_triage/factory_os/gen_s2a_migration_doc.py'
+# Governed implementation pin: changing the generator requires updating this instrumented pin
+# in the same reviewed change. It is deliberately outside the owner-attested bundle because the
+# generator is an implementation; its output remains independently verified below.
+GENERATOR_SOURCE_SHA256 = '697bd7ddbedc98915643491e5731357f16d5ea484b12a6bb13c29b9df3e4ac79'
 
 _D1_ROWS = []          # set by main(); the D1 rows, for A6's recompute
 
@@ -176,35 +194,102 @@ def reported_decision(row, owner):
 # reused after garbage collection, and a cache that can answer for a dead object is a cache that
 # can answer for the wrong one.
 _DIGEST_CACHE = {}
+_LEGACY_MATCH_CACHE = {}
+
+
+def _digest_paths(paths, read_bytes):
+    h = hashlib.sha256()
+    for path in paths:
+        h.update(path.encode('utf-8'))
+        h.update(b'\0')
+        h.update(hashlib.sha256(read_bytes(path).replace(b'\r\n', b'\n')).digest())
+    return h.hexdigest()
 
 
 def bundle_digest():
-    """The fingerprint a record binds itself to, read through the process source.
+    """The fingerprint of stable governance inputs, read through the process source.
 
-    ORDER-670 migration: this read the DISK unconditionally, under the reasoning "the digest
-    describes the bytes the signer is LOOKING AT". True of a manual run and false of the gate --
-    and the gap between them was an A7 at the highest-ceremony target in the repo: stage a change
-    to a bundle file, restore the worktree copy, and the digest recomputes to the OLD value, so
-    the owner's record still validates and THE COMMIT LANDS A BUNDLE CHANGE NO ATTESTATION COVERS.
-
-    The mode is what separates the two readings, which is what it is for. Manual runs
-    (`run_s2a_gate.py`, `--template`) stay worktree and still describe what a signer sees; under
-    the hook the same code fingerprints what the commit contains.
-
-    BYTES, through read_committed_bytes: a digest over decoded-and-renormalised text would
-    fingerprint something other than the file. The CRLF fold stays HERE, where it is visible and
-    where it has always been, so the digest value is unchanged for every existing record.
+    The generated D2 handout is not silently ignored: ``derived_artifact_problems`` verifies its
+    exact canonical rendering. It is simply not part of this stable identity, so a deterministic
+    projection can be regenerated without changing the owner's attested governance inputs.
     """
     src = _src()
     if src in _DIGEST_CACHE:
         return _DIGEST_CACHE[src]
-    h = hashlib.sha256()
-    for path in BUNDLE:
-        h.update(path.encode('utf-8'))
-        h.update(b'\0')
-        h.update(hashlib.sha256(src.read_committed_bytes(path).replace(b'\r\n', b'\n')).digest())
-    _DIGEST_CACHE[src] = h.hexdigest()
+    _DIGEST_CACHE[src] = _digest_paths(AUTHORITATIVE_BUNDLE, src.read_committed_bytes)
     return _DIGEST_CACHE[src]
+
+
+def _git_bytes_at(commit, path):
+    p = subprocess.run(['git', 'show', '%s:%s' % (commit, path)],
+                       capture_output=True, cwd=_ROOT)
+    if p.returncode != 0:
+        return None
+    return p.stdout
+
+
+def historical_bundle_matches(expected, current_digest):
+    """Accept an old raw-bundle digest only when its stable members are unchanged.
+
+    This is compatibility for existing records, not a second attestation source. The matching
+    historical revision is discovered from Git, its legacy six-file digest is recomputed, and its
+    authoritative-member digest must equal the current one. A changed D1/policy/vector input
+    therefore cannot be hidden behind an old handout-era digest.
+    """
+    key = (str(expected), str(current_digest))
+    if key in _LEGACY_MATCH_CACHE:
+        return _LEGACY_MATCH_CACHE[key]
+    # Conformance vectors supply hermetic synthetic bundle digests. Historical Git lookup is a
+    # real-repository compatibility path and must never escape into that synthetic world.
+    if current_digest != bundle_digest():
+        _LEGACY_MATCH_CACHE[key] = False
+        return False
+    if not isinstance(expected, str) or len(expected) != 64:
+        _LEGACY_MATCH_CACHE[key] = False
+        return False
+    p = subprocess.run(['git', 'rev-list', '--all', '--', DERIVED_HANDOUT_PATH],
+                       capture_output=True, cwd=_ROOT)
+    if p.returncode != 0:
+        _LEGACY_MATCH_CACHE[key] = False
+        return False
+    for raw_commit in p.stdout.splitlines():
+        commit = raw_commit.decode('ascii', 'replace').strip()
+        if not commit:
+            continue
+        cache = {}
+        for path in LEGACY_BUNDLE:
+            data = _git_bytes_at(commit, path)
+            if data is None:
+                break
+            cache[path] = data
+        else:
+            if _digest_paths(LEGACY_BUNDLE, cache.get) != expected:
+                continue
+            if _digest_paths(AUTHORITATIVE_BUNDLE, cache.get) == current_digest:
+                _LEGACY_MATCH_CACHE[key] = True
+                return True
+    _LEGACY_MATCH_CACHE[key] = False
+    return False
+
+
+def derived_artifact_problems(src):
+    """Validate the generated handout against authoritative D1/C8 generator inputs."""
+    import gen_s2a_migration_doc as gen_d2
+
+    source_sha = hashlib.sha256(src.read_committed_bytes(GENERATOR_SOURCE_PATH)
+                               .replace(b'\r\n', b'\n')).hexdigest()
+    if source_sha != GENERATOR_SOURCE_SHA256:
+        return ['D4 governed generator source changed without its required source pin: %s '
+                'does not match the instrumented contract.' % GENERATOR_SOURCE_PATH]
+    rows = [json.loads(line) for line in src.read_committed(chk.MIGRATION_PATH).split('\n')
+            if line.strip()]
+    cov = json.loads(src.read_committed(chk.COVERAGE_PATH))
+    expected = gen_d2.build(rows, cov).encode('utf-8')
+    actual = src.read_committed_bytes(DERIVED_HANDOUT_PATH).replace(b'\r\n', b'\n')
+    if actual == expected:
+        return []
+    return ['D2 derived handout is stale or tampered: %s does not match canonical generator '
+            'output; refuse until regenerated from authoritative inputs.' % DERIVED_HANDOUT_PATH]
 
 
 BLOB_OID = re.compile(r'^[0-9a-f]{40}$')
@@ -828,11 +913,12 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         # demanding that history be rewritten, and in an append-only file that is not merely wrong,
         # it is impossible -- so the artifact could never survive its own evolution.
         in_force = r is latest.get(r['current_owner'])
-        if in_force and r['bundle_sha256'] != digest:
+        if (in_force and r['bundle_sha256'] != digest and
+                not historical_bundle_matches(r['bundle_sha256'], digest)):
             problems.append('F1 line %s attests bundle %s but the current bundle is %s -- the '
-                            'bound policy, corpus, D1, D2 or the reconciliation changed after this '
-                            'record, so it no longer describes what is on disk. Re-make it against '
-                            'the current bytes.'
+                            'authoritative governance inputs changed after this record, so it no '
+                            'longer describes what is on disk. Re-make it against the current '
+                            'contract.'
                             % (n, str(r['bundle_sha256'])[:12], digest[:12]))
             continue
         # (R6/R7 live in pass 1: eligibility must be decided before `latest` is, or a row that
@@ -956,8 +1042,9 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         # when the two stable instruments the ratification names have actually done their work on
         # THIS run. Not "are declared". VERIFIED:
         #
-        #   the MIGRATION        F1, above, recomputed the bundle digest (D1 + D2 + the migration
-        #                        checker + POLICY + VECTORS) and the record still binds it. A row
+        #   the MIGRATION        F1, above, recomputed the authoritative bundle digest (D1 + the
+        #                        reconciliation + migration checker + POLICY + VECTORS) and the record
+        #                        still binds it. A row
         #                        that failed F1 `continue`d and never reached this line.
         #   the GENERATED SECTION  F6-F14, immediately above, resolved this record's
         #                        `expected_post_state` against HEAD and it reproduced. F7 already
@@ -1075,8 +1162,17 @@ def main(argv):
     d1 = [json.loads(l) for l in _src().read_committed(chk.MIGRATION_PATH).split('\n') if l.strip()]
     _D1_ROWS[:] = d1
     d1_owners = sorted({r['current_owner'] for r in d1})
+    try:
+        derived_problems = derived_artifact_problems(_src())
+    except evidence.ToolFailure as exc:
+        print('[TOOL FAILURE] cannot validate generated handout: %s' % exc)
+        return 2
 
     if '--template' in argv:
+        if derived_problems:
+            for problem in derived_problems:
+                print('  -> %s' % problem)
+            return 1
         owner = 'MASTER_BACKLOG.md'
         line = {
             'bundle_sha256': digest,
@@ -1134,8 +1230,8 @@ def main(argv):
     print('      It does NOT prove who made it -- this repo commits under one git identity, so')
     print('      nothing here separates the owner from any other writer. Do not cite it as a')
     print('      signature. (Codex audit 8.)')
-    print('bundle : %s (D1 + D2 + reconciliation + migration checker + POLICY + VECTORS -- '
-          'the implementation is NOT a member, per ORDER-614 rev 2)' % digest[:16])
+    print('bundle : %s (authoritative D1 + reconciliation + migration checker + POLICY + VECTORS; '
+          'D2 is a separately verified deterministic projection)' % digest[:16])
     print('log    : %s\n' % ATTESTATION_PATH)
 
     rows, problems = load_records()
@@ -1146,6 +1242,11 @@ def main(argv):
     except evidence.ToolFailure as exc:
         print('[TOOL FAILURE] cannot resolve authorization metadata: %s' % exc)
         return 2
+    if derived_problems:
+        problems.extend(derived_problems)
+        # Keep the human-facing decision fail-closed as well as the exit code. A derived artifact
+        # failure is not permission to print the last owner decision as APPROVED.
+        IN_FORCE_FAILED['MASTER_BACKLOG.md'] = 'derived handout'
 
     # RESCOPED (audit 8 section 2): ORDER-600 blocks on ONE decision, not on all 23 owners.
     coverage = current.get('MASTER_BACKLOG.md')

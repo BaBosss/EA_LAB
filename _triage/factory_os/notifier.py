@@ -130,6 +130,10 @@ NON_REOPENING_STATES = ('HEALTHY_1_OF_2', 'RESOLVED')
 # not a new string literal.
 OUTCOMES = ('DELIVERED', 'SUPPRESSED_DUPLICATE', 'UNCONFIGURED', 'UNCONFIGURED_REGRESSION',
             'FAILED')
+# ORDER-1380. A closed vocabulary keeps a delivery record from claiming a transport
+# the runtime cannot identify. Only TELEGRAM proves that a real credentialed transport
+# existed; RECORDING is test evidence and UNKNOWN is deliberately conservative.
+TRANSPORT_KINDS = ('TELEGRAM', 'RECORDING', 'UNKNOWN')
 
 # Reason code -> finding class, so control_center.fold_finding can apply design 7.1's lifecycle.
 # Only RUNTIME auto-resolves, which is why the split matters: a stale mandatory source really
@@ -828,6 +832,8 @@ class RecordingTransport(object):
     the same CLI a human drives - and a CLI with a test-only code path is not that CLI.
     """
 
+    transport_kind = 'RECORDING'
+
     def __init__(self, path=None):
         self.sent = []
         self.path = path
@@ -847,6 +853,7 @@ class TelegramTransport(object):
     """
 
     API = 'https://api.telegram.org/bot%s/sendMessage'
+    transport_kind = 'TELEGRAM'
 
     def __init__(self, credentials):
         self.credentials = credentials
@@ -869,6 +876,16 @@ class TelegramTransport(object):
                 raise NotifyRefusal(scrub('telegram did not report ok: %s' % body, token))
             receipts.append(str((body.get('result') or {}).get('message_id')))
         return ','.join(receipts)
+
+
+def _transport_kind_for(transport):
+    """Return the closed transport kind, refusing an unregistered transport object."""
+    if transport is None:
+        return 'UNKNOWN'
+    kind = getattr(transport, 'transport_kind', None)
+    if kind not in TRANSPORT_KINDS or kind == 'UNKNOWN':
+        raise NotifyRefusal('unsupported or malformed transport_kind %r' % (kind,))
+    return kind
 
 
 def read_jsonl(path):
@@ -917,6 +934,10 @@ def read_jsonl(path):
                             'same as a record, and a non-object here reaches every consumer '
                             'that expects one' % (path, n, type(row).__name__))
                 continue
+            if 'transport_kind' in row and row['transport_kind'] not in TRANSPORT_KINDS:
+                torn.append('%s line %d has malformed transport_kind %r -- the record is not '
+                            'usable as delivery evidence' % (path, n, row['transport_kind']))
+                continue
             rows.append(row)
     return rows, torn
 
@@ -945,6 +966,16 @@ class Ledger(object):
     def delivered(self):
         return set((r.get('dedupe_key'), r.get('channel'))
                    for r in self.rows if r.get('outcome') == 'DELIVERED')
+
+    def credentialed_channels(self):
+        """Channels with a recorded successful REAL credentialed transport.
+
+        Missing transport_kind is legacy evidence, not evidence of configuration. Recording
+        transports are intentionally excluded even though they have outcome DELIVERED.
+        """
+        return set(r.get('channel') for r in self.rows
+                   if r.get('outcome') == 'DELIVERED'
+                   and r.get('transport_kind') == 'TELEGRAM')
 
     def append(self, path, lines):
         d = os.path.dirname(path)
@@ -995,7 +1026,7 @@ def safe_detail(text, known_secrets=safe_projection.NO_KNOWN_SECRETS_AVAILABLE):
 
 
 def deliver(events, delivered, transports, now, known_secrets, openclaw='UNKNOWN',
-            previously_delivered=()):
+            previously_delivered=(), previously_configured=None):
     """
     -> (ledger lines, problems). Every event produces EXACTLY ONE line, whatever happened.
 
@@ -1025,9 +1056,13 @@ def deliver(events, delivered, transports, now, known_secrets, openclaw='UNKNOWN
     answering the question, and `NO_KNOWN_SECRETS_AVAILABLE` remains the honest answer for a
     caller that genuinely has nothing -- it just has to be given on purpose.
 
-    `previously_delivered` is the set of channels the ledger has EVER delivered on. ORDER-1261 #6:
-    it is what separates "not provisioned yet" from "the credential that was working is gone".
+    `previously_configured` is the set of channels with a historical successful REAL credentialed
+    delivery. `previously_delivered` remains accepted as a compatibility keyword, but is ignored
+    unless the caller explicitly supplies the new set; a generic DELIVERED row is not proof of a
+    credential because RecordingTransport also produces that outcome.
     """
+    if previously_configured is None:
+        previously_configured = ()
     lines = []
     problems = 0
     for ev in events:
@@ -1042,7 +1077,7 @@ def deliver(events, delivered, transports, now, known_secrets, openclaw='UNKNOWN
         key = (ev['dedupe_key'], ev['channel'])
         base = {'entity': ENTITY_DELIVERY, 'dedupe_key': ev['dedupe_key'],
                 'channel': ev['channel'], 'kind': ev['kind'], 'at': now,
-                'openclaw': openclaw}
+                'openclaw': openclaw, 'transport_kind': 'UNKNOWN'}
         if key in delivered:
             base.update({'outcome': 'SUPPRESSED_DUPLICATE', 'receipt': None,
                          'detail': 'ส่งไปแล้วบนช่องนี้ ตาม ledger — ไม่ส่งซ้ำ'})
@@ -1061,7 +1096,7 @@ def deliver(events, delivered, transports, now, known_secrets, openclaw='UNKNOWN
             # channel that has EVER delivered was configured. Measured at HEAD: a channel with a
             # past DELIVERED row, now absent from `transports`, produced the identical outcome
             # and the identical detail as one that never existed.
-            regression = ev['channel'] in set(previously_delivered)
+            regression = ev['channel'] in set(previously_configured)
             base.update({
                 'outcome': 'UNCONFIGURED_REGRESSION' if regression else 'UNCONFIGURED',
                 'receipt': None,
@@ -1074,6 +1109,8 @@ def deliver(events, delivered, transports, now, known_secrets, openclaw='UNKNOWN
             problems += 1
             continue
         try:
+            kind = _transport_kind_for(transport)
+            base['transport_kind'] = kind
             receipt = transport.send(ev['channel'], ev['text'])
         except Exception as exc:                            # noqa: BLE001 - reported, not swallowed
             base.update({'outcome': 'FAILED', 'receipt': None,
@@ -1082,7 +1119,8 @@ def deliver(events, delivered, transports, now, known_secrets, openclaw='UNKNOWN
             lines.append(base)
             problems += 1
             continue
-        base.update({'outcome': 'DELIVERED', 'receipt': str(receipt), 'detail': ''})
+        base.update({'outcome': 'DELIVERED', 'receipt': str(receipt), 'detail': '',
+                     'transport_kind': kind})
         lines.append(base)
         delivered.add(key)
     return lines, problems
@@ -1255,11 +1293,11 @@ def main(argv):
             transports[channel] = TelegramTransport(creds) if creds else None
 
     oc = openclaw_state()
-    # ORDER-1261 #3 + #4 + #6: the real secret list reaches the boundary that WRITES the ledger
-    # and the one that SENDS, and the set of channels the ledger has ever delivered on reaches
-    # the branch that has to tell "never provisioned" from "the credential is gone".
+    # ORDER-1261 #3 + #4 + #6 and ORDER-1380: the real secret list reaches the boundary that
+    # WRITES the ledger and the one that SENDS. Only successful TELEGRAM records reach the branch
+    # that distinguishes "never provisioned" from "the credential is gone".
     lines, problems = deliver(events, delivered, transports, now, secrets, oc,
-                              previously_delivered=set(c for (_k, c) in delivered))
+                              previously_configured=ledger.credentialed_channels())
     ledger.append(ledger_path, lines)
     if journal_lines:
         d = os.path.dirname(journal_path)

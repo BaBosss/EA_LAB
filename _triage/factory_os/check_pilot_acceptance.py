@@ -63,6 +63,7 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
 import evidence  # noqa: E402
+import parity  # noqa: E402
 # The RunJournal fold belongs to scheduler.py and is imported rather than re-derived here. A
 # second fold would be a second reader of the same append-only store, which is the defect
 # ORDER-1255 names for parity and which applies identically to the journal.
@@ -297,14 +298,11 @@ def item_parity_directions(src):
 
 
 def _parity_results(src):
-    """-> list of parity result manifests committed under factory/, or []."""
-    hits = []
-    for pat in ('factory/parity/*.json', 'factory/runs/*.parity.json'):
-        try:
-            hits.extend(src.list_committed(pat))
-        except evidence.ToolFailure:
-            pass
-    return sorted(hits)
+    """-> the one canonical parity result manifest, or []."""
+    try:
+        return [parity.RESULT_MANIFEST_REL] if src.exists_committed(parity.RESULT_MANIFEST_REL) else []
+    except evidence.ToolFailure:
+        return []
 
 
 def _parity_evidence(src, want_directions):
@@ -313,13 +311,39 @@ def _parity_evidence(src, want_directions):
         what = ('the must-trade and deliberate-refusal directions' if want_directions
                 else 'the seven parity points')
         return (BLOCKED,
-                'no committed parity result manifest exists (looked for factory/parity/*.json and '
-                'factory/runs/*.parity.json), so %s have not been observed. `parity.py` is BUILT '
-                'and cage-tested -- what is missing is a RUN of the pilot pair.' % what)
-    return (BLOCKED,
-            '%d parity manifest(s) found but this item is not yet wired to read them: the manifest '
-            'schema is owned by parity.py and reading it here would be a second reader. '
-            'Wire through parity.verdict_for_case before turning this green.' % len(results))
+                'no committed parity result manifest exists at %s, so %s have not been observed. '
+                '`parity.py` is BUILT '
+                'and cage-tested -- what is missing is a RUN of the pilot pair.'
+                % (parity.RESULT_MANIFEST_REL, what))
+    if len(results) != 1:
+        return (FAIL, 'expected exactly one canonical parity result manifest, found %d' % len(results))
+    rel = results[0]
+    try:
+        manifest = parity.read_result_manifest(_read(src, rel), rel)
+    except parity.ManifestError as exc:
+        return (FAIL, 'parity result manifest rejected: %s' % exc)
+    summary = parity.evaluate_result_manifest(manifest)
+    if not summary['replay_ok']:
+        return (FAIL, 'parity result manifest does not replay cleanly: %s'
+                % ' · '.join(summary['replay_problems']))
+    if want_directions:
+        if summary['direction_failures'][parity.MUST_TRADE]:
+            return (FAIL, 'the must-trade case did not actually trade on both sides')
+        if summary['direction_failures'][parity.DELIBERATE_REFUSAL]:
+            return (FAIL, 'the deliberate-refusal case did not refuse on both sides')
+        missing = [kind for kind in (parity.MUST_TRADE, parity.DELIBERATE_REFUSAL)
+                   if not summary['directions'][kind]]
+        if missing:
+            return (BLOCKED, 'the committed result has no evidenced %s direction case'
+                    % ' or '.join(missing))
+        return (PASS, 'parity.verdict_for_case replayed both required directions on lane %s'
+                % manifest['run_identity']['lane'])
+    if summary['rollup_ok']:
+        return (PASS, 'parity result replayed all seven points across the committed case set on '
+                'lane %s' % manifest['run_identity']['lane'])
+    return (BLOCKED, 'the committed parity result is readable but the case set is incomplete: %s'
+            % ' · '.join(line.strip() for line in summary['rollup_lines']
+                         if line.strip().startswith('- ')))
 
 
 def item_operator_surface(src):
@@ -1211,12 +1235,6 @@ def item_regression_and_registry_clean(src):
 # exact in both directions. Implementing one means DELETING its name here -- which is the forcing
 # function: you cannot quietly leave a stub in place while claiming the checklist is mechanical.
 UNIMPLEMENTED = {
-    'item_parity_all_points':
-        'needs the parity result manifest schema, owned by parity.py. Reading it here would be a '
-        'second reader; wire through parity.verdict_for_case.',
-    'item_parity_directions':
-        'same manifest as item_parity_all_points; the DIRECTIONS (must-trade actually traded, '
-        'refusal actually refused) come from parity.verdict_for_case, not from a re-read.',
     'item_evidence_complete_no_verdict':
         'the compound claim can only be evaluated once every other item can PASS; the half that '
         'is testable today (no verdict vocabulary) IS implemented and driven.',

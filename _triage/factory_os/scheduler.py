@@ -51,6 +51,7 @@ EXIT   0 = the command succeeded  -  1 = a REFUSAL (the reason is on stdout as J
 import hashlib
 import io
 import json
+import math
 import os
 import re
 import sys
@@ -282,6 +283,17 @@ def execution_key_digest(key):
     if key.get('currency') != FROZEN_TESTER_CURRENCY:
         raise ValueError('ExecutionKey currency must be %s for this USD-only runner, got %r'
                          % (FROZEN_TESTER_CURRENCY, key.get('currency')))
+    deposit = key.get('deposit')
+    try:
+        deposit_is_integral = (not isinstance(deposit, bool) and
+                               isinstance(deposit, (int, float)) and
+                               math.isfinite(deposit) and
+                               float(deposit).is_integer())
+    except (OverflowError, TypeError, ValueError):
+        deposit_is_integral = False
+    if not deposit_is_integral:
+        raise ValueError('ExecutionKey deposit must be a finite integer because scheduler_run.ps1 '
+                         'passes it to mt5_run.ps1 as [int], got %r' % deposit)
     if key.get('account_unit') not in ACCOUNT_UNITS:
         raise ValueError('ExecutionKey account_unit must be one of %s, got %r'
                          % (list(ACCOUNT_UNITS), key.get('account_unit')))

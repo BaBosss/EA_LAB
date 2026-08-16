@@ -98,8 +98,10 @@ param(
     # (docs/PARAM_REGISTRY.csv) with a per-hypothesis role their own way is how the same parameter
     # becomes tunable in one tool and locked in the other with nothing red anywhere.
     #
-    # OMITTED = every existing call site. With no revision, not one line of this script's
-    # behaviour changes; there is a control fixture asserting exactly that, byte for byte.
+    # OMITTED = legacy/non-generated call sites. Generated-wrapper optimization is different:
+    # without a revision the wrapper has no hypothesis attribution, so the main path below
+    # refuses it before the tester can be reached. The legacy no-revision behavior remains
+    # covered by the existing control fixture.
     [string]$HypothesisRevision = '',
     # An OVERLAY of extra ParameterBinding rows, on top of the canonical store. It exists so a
     # FIXTURE can drive this script against synthetic bindings without writing into the committed
@@ -564,6 +566,29 @@ if ($ParamNames) {
     }
 }
 
+# A generated wrapper is not a Boss executable whose build can be inferred from `Expert=`. It is
+# the materialized implementation of one exact hypothesis revision. Allowing it through without
+# both declarations silently disables the two strongest checks below: build-inertness has no build
+# and ParameterBinding has no revision. This is deliberately scoped to the generated-wrapper
+# namespace; legacy/non-wrapper experts retain their existing behavior.
+$generatedWrapperId = $null
+if ($expertName -and $expertName -match '(?i)EALabTpl[\\/]generated[\\/]([^\\/]+)$') {
+    $generatedWrapperId = $Matches[1] -replace '_', '-'
+}
+$wrapperGuardFacts = New-Object System.Collections.Generic.List[object]
+if ($generatedWrapperId -and $checkList.Count -gt 0) {
+    if ([string]::IsNullOrWhiteSpace($HypothesisRevision)) {
+        $wrapperGuardFacts.Add([pscustomobject]@{ Refuse = $true; Text = "generated wrapper '$expertName' requires -HypothesisRevision; without it ParameterBinding cannot identify the evidence revision" }) | Out-Null
+    } elseif ($HypothesisRevision -cne $generatedWrapperId) {
+        $wrapperGuardFacts.Add([pscustomobject]@{ Refuse = $true; Text = "generated wrapper '$expertName' requires -HypothesisRevision '$generatedWrapperId', got '$HypothesisRevision'" }) | Out-Null
+    }
+    if ($null -eq $build) {
+        $wrapperGuardFacts.Add([pscustomobject]@{ Refuse = $true; Text = "generated wrapper '$expertName' requires -Build (or a resolvable Boss Expert=) so build-inertness is checked" }) | Out-Null
+    } elseif ($generatedWrapperId -match '^B(\d+)-' -and [int]$Matches[1] -ne [int]$build) {
+        $wrapperGuardFacts.Add([pscustomobject]@{ Refuse = $true; Text = "generated wrapper '$expertName' encodes build $([int]$Matches[1]) but guard build is $([int]$build)" }) | Out-Null
+    }
+}
+
 if ($checkList.Count -eq 0) {
     Write-Host "Nothing to check (no Y-flagged sweep dimensions in the .ini and no -ParamNames given)." -ForegroundColor Yellow
     if ($DecisionLog -ne '') {
@@ -605,11 +630,12 @@ if ($unknownIsWarn) {
     Write-Host ""
 }
 
-# ORDER-630 (S5): the per-hypothesis layer, resolved ONCE, by the one resolver.
-# `$bindings` stays empty when no revision was given, so the loop below is a no-op and this
-# script behaves exactly as it did before -- asserted as a CONTROL in run_registry_tests.ps1.
+# ORDER-630 (S5): the per-hypothesis layer, resolved ONCE, by the one resolver. Legacy callers
+# without a revision still leave `$bindings` empty and retain their prior behavior. A generated
+# wrapper with incomplete metadata is handled by `$wrapperGuardFacts` above and deliberately does
+# not enter this resolver path; its refusal must name the missing wrapper metadata.
 $bindings = @{}
-if ($HypothesisRevision -ne '') {
+if ($wrapperGuardFacts.Count -eq 0 -and $HypothesisRevision -ne '') {
     $py = Join-Path $repoRoot 'tools\python312\python.exe'
     $resolver = Join-Path $repoRoot '_triage\factory_os\registry.py'
     if (-not (Test-Path -LiteralPath $py) -or -not (Test-Path -LiteralPath $resolver)) {
@@ -668,7 +694,7 @@ foreach ($name in $checkList) {
         } else {
             $r.Facts.Add([pscustomobject]@{ Refuse = $false; Text = "ParameterBinding: role='$($b.role)' in $HypothesisRevision is optimizable" }) | Out-Null
         }
-    } elseif ($HypothesisRevision -ne '') {
+    } elseif ($wrapperGuardFacts.Count -eq 0 -and $HypothesisRevision -ne '') {
         # The `-ne ''` guard is NOT decoration. Without it this branch fired for EVERY parameter on
         # EVERY existing call site, because `$bindings` is empty when no revision was declared --
         # which would have broken the one promise this wiring made in writing: with no
@@ -709,6 +735,10 @@ foreach ($name in $checkList) {
             source      = 'UNBOUND'
         }
         $r.Facts.Add([pscustomobject]@{ Refuse = $true; Text = "ParameterBinding: UNBOUND - '$name' is swept under $HypothesisRevision, but that revision registers no binding for it (build tag: $(if ($build) { $build } else { '(none)' })). REFUSED (ORDER-671, owner-ratified): declaring -HypothesisRevision claims this run is EVIDENCE ABOUT $HypothesisRevision, and a dimension that revision never describes cannot be evidence about it. Either register a ParameterBinding for '$name' in $HypothesisRevision, or drop -HypothesisRevision and run it as an undeclared sweep." }) | Out-Null
+        $r.Verdict = 'REFUSE'
+    }
+    foreach ($fact in $wrapperGuardFacts) {
+        $r.Facts.Add($fact) | Out-Null
         $r.Verdict = 'REFUSE'
     }
     $results.Add($r)

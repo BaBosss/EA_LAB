@@ -289,9 +289,65 @@ finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# =============================================================================================
+# PART 3 - ORDER-1270: generated-wrapper metadata is mandatory, and every guard layer is live.
+#
+# These are synthetic .ini submissions. They never start MT5; they exercise the same
+# optimize_guard.ps1 boundary that mt5_optimize.ps1 calls before an expensive tester launch.
+# =============================================================================================
+Write-Host ""
+Write-Host "=== PART 3: generated-wrapper guard boundary (ORDER-1270) ===" -ForegroundColor Cyan
+
+function Invoke-GeneratedGuard {
+    param(
+        [string]$ParamName,
+        [string]$Revision = '',
+        [Nullable[int]]$Build = $null
+    )
+    $ini = Join-Path ([System.IO.Path]::GetTempPath()) ("optguard_wrapper_" + [guid]::NewGuid().ToString('N') + '.ini')
+    $lines = @('[Tester]', 'Expert=EALabTpl\generated\B14_H01_r1', '[TesterInputs]',
+               ($ParamName + '=1.0||0.5||0.25||3.0||Y'))
+    [System.IO.File]::WriteAllLines($ini, $lines, (New-Object System.Text.UTF8Encoding($false)))
+    try {
+        $extra = @()
+        if ($Revision -ne '') { $extra += ("-HypothesisRevision '" + $Revision + "'") }
+        if ($null -ne $Build) { $extra += ("-Build " + [int]$Build) }
+        $cmd = "& '" + $guard + "' -IniPath '" + $ini + "' -WarnOnly " + ($extra -join ' ')
+        $text = (& powershell -NoProfile -Command $cmd 2>&1 | Out-String)
+        $line = @($text -split "`r?`n" | Where-Object {
+            $_ -match ("^\[(ALLOW|REFUSE)\]\s+" + [regex]::Escape($ParamName) + '(\s|\[|$)')
+        }) | Select-Object -First 1
+        $verdict = if ($line -and $line -match '^\[(ALLOW|REFUSE)\]') { $Matches[1] } else { '(no verdict line)' }
+        return [pscustomobject]@{ Verdict = $verdict; Text = $text }
+    }
+    finally {
+        Remove-Item -LiteralPath $ini -ErrorAction SilentlyContinue
+    }
+}
+
+$wrapperCases = @(
+    @{ id='wrapper-valid-bound-active'; param='_9_StepATRmult'; revision='B14-H01-r1'; build=14
+       expect='ALLOW'; needle="ParameterBinding: role='TUNABLE'" },
+    @{ id='wrapper-unbound-refused'; param='_12_Bars'; revision='B14-H01-r1'; build=14
+       expect='REFUSE'; needle='ParameterBinding: UNBOUND' },
+    @{ id='wrapper-inert-refused'; param='TrendFilter'; revision='B14-H01-r1'; build=14
+       expect='REFUSE'; needle='inert on build 14' },
+    @{ id='wrapper-missing-revision-refused'; param='_9_StepATRmult'; revision=''; build=14
+       expect='REFUSE'; needle='requires -HypothesisRevision' },
+    @{ id='wrapper-wrong-revision-refused'; param='_9_StepATRmult'; revision='B14-H01-r2'; build=14
+       expect='REFUSE'; needle="requires -HypothesisRevision 'B14-H01-r1'" },
+    @{ id='wrapper-missing-build-refused'; param='_9_StepATRmult'; revision='B14-H01-r1'; build=$null
+       expect='REFUSE'; needle='requires -Build' }
+)
+foreach ($c in $wrapperCases) {
+    $r = Invoke-GeneratedGuard -ParamName $c.param -Revision $c.revision -Build $c.build
+    $ok = ($r.Verdict -eq $c.expect) -and ($r.Text -match [regex]::Escape($c.needle))
+    Check2 $c.id $ok ("expected {0} / {1}, got {2}; needle={3}" -f $c.expect, $c.needle, $r.Verdict, $c.needle)
+}
+
 Write-Host ""
 Write-Host ("--- part 1: {0} passed / {1} failed / {2} total ---" -f $pass, $fail, $cases.Count)
-Write-Host ("--- part 2: {0} passed / {1} failed ---" -f $p2pass, $p2fail)
+Write-Host ("--- parts 2+3: {0} passed / {1} failed ---" -f $p2pass, $p2fail)
 if ($fail -gt 0 -or $p2fail -gt 0) { Write-Host "=== OPTIMIZE-GUARD CAGE RED ===" -ForegroundColor Red; exit 1 }
 Write-Host "=== OPTIMIZE-GUARD CAGE GREEN ===" -ForegroundColor Green
 exit 0

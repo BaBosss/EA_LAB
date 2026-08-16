@@ -244,6 +244,27 @@ def validate_event(event, prior_events):
 
     state = fold(prior_events).get(pair_key(event))
 
+    # ORDER-1380 (owner decision A).  Assignment event names are state transitions,
+    # not merely labels on an authorization.  Keeping this rule in the existing
+    # validator means retries use the existing event-id dedupe (A2) instead of
+    # inventing a second lifecycle machine.
+    current_candidate = (state or {}).get('candidate_id')
+    event_type = event['event_type']
+    if event_type == 'CANDIDATE_ASSIGNED':
+        if event.get('candidate_id') is None:
+            problems.append('A6 CANDIDATE_ASSIGNED requires a non-null candidate_id')
+        elif current_candidate is not None:
+            problems.append('A6 CANDIDATE_ASSIGNED requires an empty assignment; %s is already assigned'
+                            % current_candidate)
+    elif event_type == 'CANDIDATE_REASSIGNED':
+        if event.get('candidate_id') is None:
+            problems.append('A6 CANDIDATE_REASSIGNED requires a non-null candidate_id')
+        elif current_candidate is None:
+            problems.append('A6 CANDIDATE_REASSIGNED requires an existing assignment')
+        elif event['candidate_id'] == current_candidate:
+            problems.append('A6 CANDIDATE_REASSIGNED must target a different candidate; %s is already assigned'
+                            % current_candidate)
+
     # -- A6 ONLY AN ASSIGNMENT EVENT MAY MOVE THE CANDIDATE. See the module docstring: without
     #    this, A3 is an enum check and automation reassigns deployments through the field the
     #    entity was rewritten to protect.

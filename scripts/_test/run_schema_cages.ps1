@@ -1,7 +1,7 @@
 <#
     run_schema_cages.ps1 -- ORDER-1252 (BOX 1b of the S13C handoff, owner-ratified 2026-08-03).
 
-    THE FOUR CHEAP SCHEMA CAGES, SPLIT OUT OF run_contract_binding_tests.ps1 SO THEY CAN STAY
+    THE SEVEN CHEAP SCHEMA CAGES, SPLIT OUT OF run_contract_binding_tests.ps1 SO THEY CAN STAY
     IN THE PRE-COMMIT TIER WHILE THE EXPENSIVE PART LEAVES IT.
     (ORDER-1283 returned the enforcement-status cage after moving its mutations to a temporary
     injected schema document.)
@@ -20,7 +20,7 @@
 
     So the entries below stay, and only they do:
 
-      run_schema_fixtures.py          5.8-7.2s  ajv over 41 root + 64 per-entity fixtures AND over
+      run_schema_fixtures.py          5.8-7.2s  ajv over 45 root + 84 per-entity fixtures AND over
                                                 every live registry row. THE reason this suite
                                                 exists: it is what case E is about.
       check_schema_structure.py       1.1-1.5s  discriminator consistency, the closed-object
@@ -32,11 +32,15 @@
       run_enforcement_status_tests.py  0.7-0.9s (local tooling lane; no MT4/MT5 tester)
                                                 enforcement mutations run against a temporary
                                                 schema document, never the tracked store
+      run_order1290_tests.py           durable surface-state positive/adversarial fixtures
+      run_order1500_tests.py           bounded RunTransition journal positive/adversarial fixtures
+      run_order1281_tests.py           live OwnerRef positive/adversarial resolution fixtures
 
     MEASURED with -Timing under EA_LAB_EVIDENCE=index, which is the only number worth quoting --
-    memory `tier-number-needs-its-invocation`. The current four-entry samples in the isolated
-    local tooling lane (no MT4/MT5 tester) were 7.05s and 4.56s; re-measure before treating
-    either as a budget claim.
+    memory `tier-number-needs-its-invocation`. The previous four-entry samples in the isolated
+    local tooling lane (no MT4/MT5 tester) were 7.05s and 4.56s; the first seven-entry sample
+    after ORDER-1281/1290/1500 measured 8.46s under EA_LAB_EVIDENCE=index on 2026-08-16.
+    Re-measure before treating any of these as a budget claim.
 
     ORDER-1264, 2026-08-03: the table above used to read 3.71 / 0.71 / 0.05 = 4.47s and it was
     stale in every row -- the SAME three entries now measure 8.8 / 7.1 / 7.9s summed. Recorded
@@ -89,7 +93,10 @@ $scripts = @(
     @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() },
     @{ Path = '_triage\factory_os\check_schema_structure.py'; Args = @() },
     @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },
-    @{ Path = '_triage\factory_os\run_enforcement_status_tests.py'; Args = @() }
+    @{ Path = '_triage\factory_os\run_enforcement_status_tests.py'; Args = @() },
+    @{ Path = 'scripts\_test\run_order1290_tests.py'; Args = @() },
+    @{ Path = 'scripts\_test\run_order1500_tests.py'; Args = @() },
+    @{ Path = '_triage\factory_os\run_order1281_tests.py'; Args = @() }
 )
 
 $failed = 0
@@ -116,6 +123,56 @@ foreach ($s in $scripts) {
         Write-Host ($out | Out-String)
         $failed++
     }
+}
+
+# ORDER-1283 NEGATIVE / INTERRUPTION: terminate the mutation cage after it has written a
+# temporary mutant but before the checker runs. This is the failure path that a normal
+# "tracked bytes unchanged at the end" assertion cannot exercise: the process may disappear
+# before its cleanup/final assertion. The marker is test-only and the mutation code never opens
+# the tracked schema for writing.
+$schemaPath = Join-Path $RepoRoot '_triage\factory_os\schemas.json'
+$beforeBytes = [System.IO.File]::ReadAllBytes($schemaPath)
+$marker = Join-Path ([System.IO.Path]::GetTempPath()) ('enforcement_pause_' + [guid]::NewGuid().ToString('N') + '.marker')
+$interruptProc = $null
+try {
+    $pausePsi = New-Object System.Diagnostics.ProcessStartInfo
+    $pausePsi.FileName = $python
+    $pauseScript = Join-Path $RepoRoot '_triage\factory_os\run_enforcement_status_tests.py'
+    $pausePsi.Arguments = '"{0}"' -f $pauseScript
+    $pausePsi.WorkingDirectory = $RepoRoot
+    $pausePsi.UseShellExecute = $false
+    $pausePsi.CreateNoWindow = $true
+    $pausePsi.RedirectStandardOutput = $true
+    $pausePsi.RedirectStandardError = $true
+    [void]$pausePsi.EnvironmentVariables.Add('EA_LAB_ENFORCEMENT_PAUSE_MARKER', $marker)
+    $interruptProc = New-Object System.Diagnostics.Process
+    $interruptProc.StartInfo = $pausePsi
+    if (-not $interruptProc.Start()) { throw 'could not start the interruption probe' }
+    $marked = $false
+    for ($i = 0; $i -lt 200; $i++) {
+        if (Test-Path -LiteralPath $marker -PathType Leaf) { $marked = $true; break }
+        Start-Sleep -Milliseconds 50
+    }
+    if (-not $marked) { throw 'mutation pause marker was not observed within 10 seconds' }
+    $interruptProc.Kill()
+    $interruptProc.WaitForExit()
+    $afterBytes = [System.IO.File]::ReadAllBytes($schemaPath)
+    if ([Convert]::ToBase64String($beforeBytes) -ceq [Convert]::ToBase64String($afterBytes)) {
+        Write-Host '[schema-cages] ORDER-1283 interruption probe preserved tracked schemas.json bytes'
+    } else {
+        Write-Host '[schema-cages] FAIL ORDER-1283 interruption probe changed tracked schemas.json bytes' -ForegroundColor Red
+        $failed++
+    }
+} catch {
+    Write-Host ("[schema-cages] FAIL ORDER-1283 interruption probe: {0}" -f $_.Exception.Message) -ForegroundColor Red
+    $failed++
+} finally {
+    if ($interruptProc -and -not $interruptProc.HasExited) {
+        $interruptProc.Kill()
+        $interruptProc.WaitForExit()
+    }
+    if ($interruptProc) { $interruptProc.Dispose() }
+    Remove-Item -LiteralPath $marker -Force -ErrorAction SilentlyContinue
 }
 
 if ($Timing) {

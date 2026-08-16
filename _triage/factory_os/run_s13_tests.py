@@ -21,6 +21,7 @@ red the day the pilot starts producing evidence, which is the opposite of a cage
 USAGE  tools\\python312\\python.exe _triage/factory_os/run_s13_tests.py [--list]
 """
 import io
+import copy
 import hashlib
 import json
 import os
@@ -1120,6 +1121,45 @@ state, detail = PA.item_scheduler_resume(journal_source([
     trans(1, 'QUEUED'), trans(1, 'LEASED'), trans(1, 'COMPLETED'), trans(2, 'LEASED')]))
 check('S7 SPECIFICITY an attempt after COMPLETED is caught with NO kill anywhere in the journal',
       state == PA.FAIL and 'already COMPLETED' in detail, '%s: %s' % (state, detail))
+
+
+# parity result manifest (ORDER-1255) -----------------------------------------------------------
+
+PARITY_RESULT_REL = 'factory/parity/result_manifest.json'
+PARITY_RESULT = json.loads(io.open(
+    os.path.join(evidence.REPO_ROOT, PARITY_RESULT_REL.replace('/', os.sep)),
+    encoding='utf-8').read())
+
+
+def parity_result_source(manifest):
+    return FakeSource({PA.DESIGN_REL: REAL_DESIGN,
+                       PARITY_RESULT_REL: json.dumps(manifest)})
+
+
+state, detail = PA.item_parity_all_points(parity_result_source(PARITY_RESULT))
+check('PARY1 POSITIVE a committed result manifest replays all seven points -> PASS',
+      state == PA.PASS and 'lane' in detail, '%s: %s' % (state, detail))
+state, detail = PA.item_parity_directions(parity_result_source(PARITY_RESULT))
+check('PARY2 POSITIVE the same manifest proves both directions -> PASS',
+      state == PA.PASS and 'both required directions' in detail, '%s: %s' % (state, detail))
+
+missing_observation = copy.deepcopy(PARITY_RESULT)
+del missing_observation['cases'][0]['sides']['wrapper']['observation']['alerts']
+state, detail = PA.item_parity_all_points(parity_result_source(missing_observation))
+check('PARY3 ATTACK a missing observation field is FAIL, not silently incomplete',
+      state == PA.FAIL and 'alerts' in detail, '%s: %s' % (state, detail))
+
+tampered_verdict = copy.deepcopy(PARITY_RESULT)
+tampered_verdict['cases'][0]['point_verdicts'][0]['verdict'] = 'DIFFER'
+state, detail = PA.item_parity_all_points(parity_result_source(tampered_verdict))
+check('PARY4 ATTACK a tampered recorded point verdict is FAIL after replay',
+      state == PA.FAIL and 'replay' in detail, '%s: %s' % (state, detail))
+
+tampered_identity = copy.deepcopy(PARITY_RESULT)
+tampered_identity['cases'][0]['sides']['wrapper']['expected_hash'] = 'f' * 64
+state, detail = PA.item_parity_all_points(parity_result_source(tampered_identity))
+check('PARY5 ATTACK a compiler-anchor mismatch is FAIL, not a two-sided PASS',
+      state == PA.FAIL and 'replay' in detail, '%s: %s' % (state, detail))
 
 
 # =================================================================================================

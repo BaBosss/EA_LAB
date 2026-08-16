@@ -20,8 +20,9 @@
       PART 3  the committed .githooks/fast_tier_pathspec matches the declarations, and every
               declared path is actually SELECTED by it -- measured with git, not reasoned about.
       PART 4  the undeclared-reference sweep. PART 1 cannot see a declaration that lists three
-              of four inputs, so every repo path a suite's source mentions must be declared or
-              listed in $NOT_A_DEPENDENCY. Silence is not available.
+              of four inputs, so every repo path a suite's wrapper or Python body mentions must
+              be declared or listed in $NOT_A_DEPENDENCY. Root-level paths are included; silence
+              is not available.
 
     Run standalone; it is wired into the fast tier so it guards itself.
 #>
@@ -106,6 +107,12 @@ try {
     $declaredFor = @{}
     foreach ($p in $table.Guards.PSObject.Properties) { $declaredFor[$p.Name] = @($p.Value) }
     $notDep = @($table.NotADependency)
+    $notDepBySuite = @{}
+    foreach ($p in $table.NotADependencyBySuite.PSObject.Properties) { $notDepBySuite[$p.Name] = @($p.Value) }
+    function IsNotDependency([string]$suite, [string]$path) {
+        return ($notDep -contains $path) -or ($notDepBySuite.ContainsKey($suite) -and
+            $notDepBySuite[$suite] -contains $path)
+    }
 
     Phase '[guard-trigger] PART 1 -- every suite declares what it guards'
     foreach ($s in $suites) {
@@ -178,16 +185,22 @@ try {
 
     Phase '[guard-trigger] PART 4 -- undeclared references sweep'
     $before = $fail
+    # ORDER-1284: the old expression only matched directory-prefixed paths in PowerShell
+    # wrappers. That missed root-level governance files and all paths named by a Python body.
+    # Keep the expression deliberately file-shaped and repository-root bounded: a bare word
+    # ending in .md in prose is considered, then tracked/declaration filtering decides whether
+    # it is a real input or an explicit fixture exemption.
+    $repoPathRe = [regex]'(?<![A-Za-z0-9_./\\-])(?:(?:(?:scripts|docs|_triage|portfolio|tools|\.githooks)[/\\][A-Za-z0-9_./\\-]+\.(?:ps1|psm1|csv|md|json|py|exe))|(?:[A-Za-z0-9_.-]+\.(?:ps1|psm1|csv|md|json|py|exe)))(?![A-Za-z0-9_./\\-])'
     foreach ($s in $suites) {
         $src = Get-Content -LiteralPath (Join-Path $RepoRoot "scripts\_test\$s") -Raw
-        $refs = [regex]::Matches($src, '(?:scripts|docs|_triage|portfolio|tools|\.githooks)[/\\][A-Za-z0-9_./\\-]+\.(?:ps1|psm1|csv|md|json|py|exe)')
+        $refs = $repoPathRe.Matches($src)
         $seen = @{}
         foreach ($m in $refs) {
             $r = $m.Value.Replace('\', '/')
             if ($seen.ContainsKey($r)) { continue }
             $seen[$r] = $true
             if (-not $tracked.ContainsKey($r)) { continue }          # synthetic fixture name
-            if ($notDep -contains $r) { continue }                   # declared non-dependency
+            if (IsNotDependency $s $r) { continue }                  # declared non-dependency
             if ($declaredFor[$s] -contains $r) { continue }          # declared
             if ("scripts/_test/$s" -eq $r) { continue }              # itself
             Bad "$s references tracked path '$r' but neither declares it nor lists it in `$NOT_A_DEPENDENCY"
@@ -235,7 +248,7 @@ try {
                 if ($seen.ContainsKey($modRel)) { continue }
                 $seen[$modRel] = $true
                 $stack.Push($modRel)
-                if ($notDep -contains $modRel) { continue }
+                if (IsNotDependency $s $modRel) { continue }
                 if ($declaredFor[$s] -contains $modRel) { continue }
                 Bad ("$s reaches '$modRel' through the imports of $py, but declares neither. A " +
                      "commit touching only that module would run no cage at all -- the " +
@@ -345,6 +358,117 @@ for p in sorted(judged):
     if ($fail -eq $before) {
         Good 'PART 4c every path the S2a checkers JUDGE through a module constant is declared'
     }
+
+    # -------------------------------------------------------------------------------------
+    # PART 4d -- ORDER-1284. A wrapper is only the launcher; Python bodies also name files
+    # directly. Parse string literals rather than scanning raw source so comments/docstrings
+    # do not become accidental dependencies. The scan includes root-level files because S10
+    # pins governance documents at HEAD. Every discovered tracked path must be declared or have
+    # a narrow, named fixture exemption.
+    $before = $fail
+    $astProbe = @'
+import ast
+import json
+import os
+import re
+import sys
+
+root = sys.argv[1]
+files = sys.argv[2:]
+path_re = re.compile(
+    r'(?<![A-Za-z0-9_./\\-])(?:'
+    r'(?:(?:scripts|docs|_triage|portfolio|tools|\.githooks)[/\\]'
+    r'[A-Za-z0-9_./\\-]+\.(?:ps1|psm1|csv|md|json|py|exe))|'
+    r'(?:[A-Za-z0-9_.-]+\.(?:ps1|psm1|csv|md|json|py|exe))'
+    r')(?![A-Za-z0-9_./\\-])'
+)
+
+for rel in files:
+    full = os.path.join(root, rel.replace('/', os.sep))
+    tree = ast.parse(open(full, encoding='utf-8').read(), filename=full)
+    doc_nodes = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if node.body and isinstance(node.body[0], ast.Expr):
+                value = node.body[0].value
+                if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                    doc_nodes.add(id(value))
+    refs = set()
+    for node in ast.walk(tree):
+        if id(node) in doc_nodes or not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            continue
+        for match in path_re.finditer(node.value):
+            refs.add(match.group(0).replace('\\', '/'))
+    print(json.dumps({'path': rel, 'refs': sorted(refs)}))
+'@
+    $pythonEntries = @()
+    foreach ($s in $suites) {
+        $ownPy = '_triage/factory_os/' + ($s -replace '\.ps1$', '.py')
+        if ($tracked.ContainsKey($ownPy)) { $pythonEntries += $ownPy }
+    }
+    if (-not (Test-Path -LiteralPath $pyExe -PathType Leaf)) {
+        Bad "PART 4d cannot run: no interpreter at $pyExe"
+    } elseif ($pythonEntries.Count -eq 0) {
+        Bad 'PART 4d found no Python suite bodies to scan -- a vacuous green is not acceptable'
+    } else {
+        $savedEap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $astOut = @(& $pyExe -c $astProbe $RepoRoot @($pythonEntries) 2>&1)
+        $ErrorActionPreference = $savedEap
+        if ($LASTEXITCODE -ne 0) {
+            Bad ("PART 4d Python body parser failed: {0}" -f (($astOut | Select-Object -Last 3) -join ' | '))
+        } else {
+            foreach ($line in $astOut) {
+                if (-not $line) { continue }
+                try { $row = $line | ConvertFrom-Json } catch { Bad "PART 4d emitted invalid JSON: $line"; continue }
+                $suite = Split-Path -Leaf $row.path
+                $suite = $suite -replace '\.py$', '.ps1'
+                foreach ($r in @($row.refs)) {
+                    if (-not $tracked.ContainsKey($r)) { continue }
+                    if (IsNotDependency $suite $r) { continue }
+                    if ($declaredFor[$suite] -contains $r) { continue }
+                    Bad "$suite Python body references tracked path '$r' but neither declares it nor lists it in `$NOT_A_DEPENDENCY"
+                }
+            }
+        }
+    }
+    if ($fail -eq $before) {
+        Good 'PART 4d every tracked path in a Python body is declared or explicitly exempt'
+    }
+
+    # NEGATIVE/control: prove the new scanner sees both a root-level path and a nested path,
+    # while ignoring an untracked filename. Without this, a broken parser can report green only
+    # because the real suite bodies happen not to contain a currently undeclared path.
+    $before = $fail
+    $tmpPy = Join-Path ([System.IO.Path]::GetTempPath()) ('gt1284_' + [guid]::NewGuid().ToString('N') + '.py')
+    try {
+        $fixture = @'
+"README.md in this module docstring is not a dependency"
+REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.txt")
+'@
+        [System.IO.File]::WriteAllText($tmpPy, $fixture, (New-Object System.Text.UTF8Encoding($false)))
+        $savedEap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $negOut = @(& $pyExe -c $astProbe $RepoRoot $tmpPy 2>&1)
+        $ErrorActionPreference = $savedEap
+        if ($LASTEXITCODE -ne 0) {
+            Bad ("PART 4d NEG parser failed: {0}" -f (($negOut | Select-Object -Last 3) -join ' | '))
+        } else {
+            $negRow = $negOut | Select-Object -Last 1 | ConvertFrom-Json
+            $negRefs = @($negRow.refs)
+            if (($negRefs -contains 'AGENT_TASKBOARD.md') -and
+                ($negRefs -contains 'scripts/check_state.ps1') -and
+                ($negRefs -notcontains 'not-a-repo-file.txt') -and
+                ($negRefs -notcontains 'README.md')) {
+                Good 'PART 4d NEG finds root/nested tracked literals and ignores docstrings/untracked names'
+            } else {
+                Bad ("PART 4d NEG expected root+nested tracked refs only, got: {0}" -f ($negRefs -join ', '))
+            }
+        }
+    } finally {
+        Remove-Item -LiteralPath $tmpPy -Force -ErrorAction SilentlyContinue
+    }
+    if ($fail -eq $before) { Good 'PART 4d negative/control remains red-capable' }
 
     # -------------------------------------------------------------------------------------
     Write-Host ''

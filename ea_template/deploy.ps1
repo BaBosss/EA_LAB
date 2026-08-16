@@ -83,6 +83,11 @@ if ($Compile) {
       Write-BuildReceiptRecord -RegistryPath $receiptRegistry -Receipt $receipt `
         -ArtifactPath $ex5 -SourcePath $mq5 -EaLogicalIdentity $logical
       Write-Host "  build receipt recorded -> $receipt" -ForegroundColor Green
+      if ($t -ieq 'Boss_14_GridLog.mq5') {
+        $compat = Join-Path (Split-Path -Parent $dst) 'Boss_14_GridLog.ex5'
+        Sync-ManagedCompatibilityArtifact -CanonicalArtifactPath $ex5 -CompatibilityArtifactPath $compat | Out-Null
+        Write-Host "  managed compatibility copy refreshed -> $compat" -ForegroundColor Green
+      }
     }
   }
 }
@@ -99,9 +104,15 @@ if ($compileFailed) {
     robocopy "$dst" "$dst2" /MIR /R:1 /W:1 /XF *.log /NFL /NDL /NJH /NJS | Out-Null
     if($LASTEXITCODE -lt 8){ Write-Host "deployed lane2 -> $dst2" -ForegroundColor Cyan }
     else { Write-Host "lane2 robocopy error ($LASTEXITCODE)" -ForegroundColor Yellow }
+    $canonical2 = Join-Path $dst2 'Boss_14_GridLog.ex5'
+    if (Test-Path -LiteralPath $canonical2) {
+      $compat2 = Join-Path (Split-Path -Parent $dst2) 'Boss_14_GridLog.ex5'
+      Sync-ManagedCompatibilityArtifact -CanonicalArtifactPath $canonical2 -CompatibilityArtifactPath $compat2 | Out-Null
+      Write-Host "managed compatibility lane2 copy refreshed -> $compat2" -ForegroundColor Green
+    }
   }
 }
 
-Write-Host "Expert names: EALabTpl\Boss_11_GridTrend | Boss_12_Breakout | Boss_13_MeanRev | Boss_14_GridLog | Boss_15_ST03" -ForegroundColor Green
+Write-Host "Expert names: EALabTpl\Boss_11_GridTrend | EALabTpl\Boss_12_Breakout | EALabTpl\Boss_13_MeanRev | EALabTpl\Boss_14_GridLog | EALabTpl\Boss_15_ST03" -ForegroundColor Green
 if ($compileFailed) { Write-Host "=== DEPLOY: compile failure(s) - see COMPILE FAIL lines above ===" -ForegroundColor Red; exit 1 }
 exit 0

@@ -205,6 +205,9 @@ $FAST_SUITES = @(
     'run_order_collision_tests.ps1',
     'run_handoff_contract_tests.ps1',
     'run_blobmap_encoding_tests.ps1',
+    # S1 SYSTEM-COMPLETION: validate/provision the ignored embeddable-Python stdlib before
+    # dozens of Python-backed cages are launched from a fresh linked worktree.
+    'run_portable_python_tests.ps1',
     # ORDER-434: guards the `asof` clock in scripts/mris/mris_macro_feeder.ps1. Note this
     # suite protects a file OUTSIDE scripts/check_*.ps1 and scripts/_test/*, so the hook's
     # trigger glob was widened to scripts/mris/* in the same commit -- otherwise the cage
@@ -584,6 +587,7 @@ $SUITE_GUARDS = @{
     'run_order_collision_tests.ps1'   = @('scripts/check_order_collision.ps1', 'docs/SESSION_LEDGER.md')
     'run_handoff_contract_tests.ps1'  = @('scripts/check_handoff_contract.ps1')
     'run_blobmap_encoding_tests.ps1'  = @('scripts/check_taskboard_archive.ps1')
+    'run_portable_python_tests.ps1'   = @('scripts/use_python.ps1')
     'run_mris_asof_tests.ps1'         = @('scripts/mris/mris_macro_feeder.ps1',
                                           'scripts/mris/mris_crisis_models.ps1',
                                           'scripts/mris/mris_web_feeder.ps1')
@@ -767,7 +771,14 @@ $SUITE_GUARDS = @{
                                           'scripts/check_state.ps1',
                                           'scripts/lib/magic_guard.ps1',
                                           'factory/magic_allocations.jsonl',
-                                          'portfolio/DEPLOYMENTS.csv')
+                                          'portfolio/DEPLOYMENTS.csv',
+                                          # ORDER-1284: run_s10_tests.py pins these HEAD files.
+                                          # They are governance-owned and this lane never edits
+                                          # them, but a change to one must still run S10.
+                                          'EA_SCORECARD_AND_REGISTRY.md',
+                                          'AGENT_TASKBOARD.md',
+                                          'VISION.md',
+                                          'PROJECT_STATE.md')
     'run_wrapper_gen_tests.ps1'       = @('_triage/factory_os/check_wrapper_gen.py',
                                           '_triage/factory_os/run_wrapper_gen_tests.py',
                                           '_triage/factory_os/gen_wrapper.py',
@@ -1029,6 +1040,17 @@ $SUITE_GUARDS = @{
                                           # wrapper's path-string sweep cannot see an `import`.
                                           '_triage/factory_os/registry.py',
                                           '_triage/factory_os/snapshot_validator.py',
+                                          # The live-row fixture path reaches the canonical OwnerRef
+                                          # resolver transitively; keep the schema cage selected when
+                                          # any of these imported readers changes.
+                                          '_triage/factory_os/candidate.py',
+                                          '_triage/factory_os/scheduler.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/setfile.py',
+                                          '_triage/factory_os/surface_evidence.py',
+                                          'scripts/_test/run_order1290_tests.py',
+                                          'scripts/_test/run_order1500_tests.py',
+                                          '_triage/factory_os/run_order1281_tests.py',
                                           '_triage/factory_os/schemas.json',
                                           # The generated tables moved out of the design into
                                           # CONTRACTS.md; the design is still an input because
@@ -1316,7 +1338,12 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/gen_registry_rows.py',
                                           '_triage/factory_os/gen_design_contracts.py',
                                           '_triage/factory_os/gen_s2a_migration.py',
-                                          '_triage/factory_os/check_s2a_migration.py')
+                                          '_triage/factory_os/check_s2a_migration.py',
+                                          # ORDER-1255: the checker replays the committed result
+                                          # through parity.py; the result itself is a judged input,
+                                          # not an ignored tester-report directory.
+                                          '_triage/factory_os/parity.py',
+                                          'factory/parity/result_manifest.json')
     # ORDER-1273. Deliberately NARROW, and each entry is here because moving it changes what the
     # selection returns:
     #   scripts/pilot_probe_select.py       the rule itself
@@ -1343,6 +1370,19 @@ $SUITE_GUARDS = @{
     # ORDER-1130 RE-REGISTERED both blocks together, 2026-08-03, once the room was bought.
     'run_s12_tests.ps1'               = @('_triage/factory_os/notifier.py',
                                           '_triage/factory_os/run_s12_tests.py',
+                                          # run_s12 imports the canonical producer checker for
+                                          # the new-row transport contract. Keep its transitive
+                                          # governed readers here so a module-only edit cannot
+                                          # leave the S12 cage unselected.
+                                          '_triage/factory_os/run_schema_fixtures.py',
+                                          '_triage/factory_os/candidate.py',
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/run_journal_validator.py',
+                                          '_triage/factory_os/surface_evidence.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/setfile.py',
+                                          '_triage/factory_os/scheduler.py',
                                           '_triage/factory_os/safe_projection.py',
                                           '_triage/factory_os/control_center.py',
                                           '_triage/factory_os/snapshot_validator.py',
@@ -1403,6 +1443,23 @@ $NOT_A_DEPENDENCY = @(
     '_triage/FXDREEMA_XRAY.md'
 )
 
+# ORDER-1284: fixture/cross-reference names are scoped to the suite that mentions them. A
+# global exemption would let a future suite silently escape a real dependency check merely by
+# reusing a common governance filename.
+$NOT_A_DEPENDENCY_BY_SUITE = @{
+    'run_statusclass_tests.ps1' = @('AGENT_TASKBOARD.md', 'ARCHIVE_TASKBOARD_2026-07A.md')
+    'run_order_collision_tests.ps1' = @('AGENT_TASKBOARD.md', 'ARCHIVE_TASKBOARD_2026-07A.md', 'README.md')
+    'run_handoff_contract_tests.ps1' = @('AGENT_TASKBOARD.md', 'ARCHIVE_TASKBOARD_2026-07A.md', 'MASTER_BACKLOG.md')
+    'run_blobmap_encoding_tests.ps1' = @('ARCHIVE_TASKBOARD_2026-07A.md')
+    'run_snapshot_s4_tests.ps1' = @('CLAUDE.md')
+    'run_guard_trigger_tests.ps1' = @('README.md', 'AGENT_TASKBOARD.md', 'scripts/check_state.ps1')
+    'run_front_guard_evidence_tests.ps1' = @('DEMO_DEPLOYMENT_PLAN.md', 'AGENT_TASKBOARD_MERGE.md', 'AGENT_TASKBOARD_PQUANT.md')
+    'run_registry_tests.ps1' = @('scripts/check_state.ps1')
+    'run_s12_tests.ps1' = @('CLAUDE.md')
+    'run_s13_tests.ps1' = @('AGENT_TASKBOARD.md', 'scripts/swap_adjust_crypto.py')
+    'run_work_receipts_tests.ps1' = @('MASTER_BACKLOG.md')
+}
+
 if ($ExportGuards) {
     # Machine-readable export so the generator and the cage read THIS table rather than
     # re-typing it. Two copies of a dependency list is the defect one directory over.
@@ -1410,6 +1467,7 @@ if ($ExportGuards) {
         Suites         = $FAST_SUITES
         Guards         = $SUITE_GUARDS
         NotADependency = $NOT_A_DEPENDENCY
+        NotADependencyBySuite = $NOT_A_DEPENDENCY_BY_SUITE
     } | ConvertTo-Json -Depth 5
     exit 0
 }
@@ -1505,6 +1563,19 @@ if ($ExportSelection) {
 }
 
 $selected = Select-Suites -Suites $FAST_SUITES -Guards $SUITE_GUARDS -Staged $StagedPaths
+
+# S1 SYSTEM-COMPLETION / portable-Python preflight. The embeddable interpreter is tracked, but
+# its stdlib archive is intentionally ignored. A fresh linked worktree therefore used to launch
+# every selected suite and let each Python child die with the opaque `encodings` traceback. Reuse
+# the one bootstrap library and its approved common-checkout provisioning rule, and refuse before
+# any cage starts when neither copy is available.
+try {
+    . (Join-Path $RepoRoot 'scripts\use_python.ps1')
+    [void](Assert-PortablePython -Root $RepoRoot -Provision)
+} catch {
+    Write-Host ("[fast-cages] FAIL: portable Python preflight: {0}" -f $_.Exception.Message) -ForegroundColor Red
+    exit 2
+}
 
 # ORDER-670: suites that have MIGRATED to the evidence reader. Each must emit exactly one
 # `##EVIDENCE-MODE## <suite-name> <mode> ...` line, produced by running evidence.for_run()

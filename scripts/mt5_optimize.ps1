@@ -36,6 +36,7 @@ param(
   [int]$TimeoutSec = 7200,
   [switch]$Portable,   # 2nd portable install (D:\Meta 5b): pass -Terminal/-DataDir there too
   [switch]$Force,
+  [switch]$AllowLegacyIdentity,  # explicit non-green escape hatch for historical/fixture runs
   [switch]$SkipOptimizeGuard,  # override: proceed even if optimize_guard.ps1 refuses a swept dimension
   # ORDER-1253. Both are passed straight through to optimize_guard.ps1 and both default to the
   # behaviour every existing call site already gets.
@@ -47,9 +48,29 @@ param(
   # silently inactive on exactly the sweeps the Factory OS pilot exists to judge, and the decision
   # record's `binding` field was null on every real submission as a result.
   [string]$HypothesisRevision = '',
-  [Nullable[int]]$GuardBuild = $null
+  [Nullable[int]]$GuardBuild = $null,
+  [string]$LaneId = '',
+  [string]$UniversePath = '',
+  [string]$CapabilityFile = ''
 )
 $ErrorActionPreference = "Stop"
+if (-not (Test-Path -LiteralPath $Terminal -PathType Leaf)) {
+  Write-Output "ABORT: terminal not found: $Terminal"; exit 2
+}
+. (Join-Path $PSScriptRoot 'lib\symbol_preflight.ps1')
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$universeCandidate = Join-Path $repoRoot 'factory\universe.jsonl'
+if (-not $UniversePath -and (Test-Path -LiteralPath $universeCandidate -PathType Leaf)) { $UniversePath = $universeCandidate }
+try {
+  $symbolResolution = Resolve-TesterSymbol -LogicalSymbol $Symbol -TerminalPath $Terminal -DataDir $DataDir `
+    -LaneId $LaneId -UniversePath $UniversePath -CapabilityFile $CapabilityFile
+}
+catch {
+  Write-Output "ABORT: $($_.Exception.Message)"
+  exit 2
+}
+$TesterSymbol = $symbolResolution.tester_symbol
+Write-Output "symbol preflight: logical=$($symbolResolution.logical_symbol) tester=$TesterSymbol status=$($symbolResolution.comparison_status) economics=$($symbolResolution.economics_check) source=$($symbolResolution.capability_source)"
 # guard scoped by exe PATH (same convention as mt5_run.ps1) so the two installs
 # can run in parallel without aborting each other
 $running = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $Terminal }
@@ -87,13 +108,36 @@ if ($surface.Refuse) {
 }
 Write-Output "surface: $($surface.State) -- $($surface.Message)"
 
+# Normal optimization evidence must bind the exact executable and full config before the
+# optimizer selects anything. Legacy use is available only as an explicitly non-green escape.
+. (Join-Path $PSScriptRoot 'lib\build_receipt.ps1')
+. (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
+$expertsDir = Get-TesterExpertsDir -TerminalPath $Terminal -DataDir $DataDir -Portable:$Portable
+$buildIdentity = Get-BuildReceiptStatus -Expert $Expert -ExpertsDir $expertsDir `
+  -RegistryPath (Join-Path $repoRoot 'portfolio\build_receipts.jsonl')
+if (($Expert -replace '\.ex5$','') -ieq 'Boss_14_GridLog') {
+  $buildIdentity = Get-ManagedCompatibilityStatus -ExpertsDir $expertsDir `
+    -RegistryPath (Join-Path $repoRoot 'portfolio\build_receipts.jsonl')
+}
+$configIdentity = Get-SetConfigIdentity -Path $SetFile -Surface $surface
+if (-not $AllowLegacyIdentity -and (-not $buildIdentity.Valid -or -not $configIdentity.Valid)) {
+  Write-Output ("ABORT: identity refusal -- build={0} ({1}); config={2} ({3}). Pass -AllowLegacyIdentity only for explicitly non-green legacy/fixture work." -f
+    $buildIdentity.State, $buildIdentity.Reason, $configIdentity.State, $configIdentity.Reason)
+  exit 2
+}
+if ($AllowLegacyIdentity) {
+  Write-Output ("identity: LEGACY_ALLOWED -- build={0} ({1}); config={2} ({3})" -f
+    $buildIdentity.State, $buildIdentity.Reason, $configIdentity.State, $configIdentity.Reason)
+} else {
+  Write-Output (Format-LaunchIdentityLine -Build $buildIdentity -Config $configIdentity)
+}
+
 # ORDER-1461, and this is the entry point that mattered most. An OPTIMIZATION run does not
 # merely report a wrong number off a stale binary -- it SELECTS the parameters everything
 # downstream is built on. The rule and its measurements live in scripts\lib\binary_staleness.ps1,
 # shared with mt5_run.ps1 and run_backtest.ps1. Advisory: it cannot abort and cannot change an
 # exit code.
-. (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
-Write-Output (Get-StaleCheckLine -Expert $Expert -ExpertsDir (Get-TesterExpertsDir -TerminalPath $Terminal -DataDir $DataDir -Portable:$Portable))
+Write-Output (Get-StaleCheckLine -Expert $Expert -ExpertsDir $expertsDir -RepoRoot $repoRoot)
 
 $inputs = @()
 if ($surface.State -ne 'NOSETFILE') {
@@ -104,7 +148,8 @@ if ($surface.State -ne 'NOSETFILE') {
 }
 
 $lines = @(
-  "[Tester]", "Expert=$Expert", "Symbol=$Symbol", "Period=$Period", "Model=$Model",
+  "; logical_symbol=$($symbolResolution.logical_symbol)", "; tester_symbol=$TesterSymbol", "; symbol_comparison_status=$($symbolResolution.comparison_status)", "; economics_check=$($symbolResolution.economics_check)",
+  "[Tester]", "Expert=$Expert", "Symbol=$TesterSymbol", "Period=$Period", "Model=$Model",
   "Optimization=$Optimization", "OptimizationCriterion=$Criterion",
   "FromDate=$FromDate", "ToDate=$ToDate", "ForwardMode=0",
   "Deposit=$Deposit", "Currency=USD", "Leverage=1:$Leverage", "ExecutionMode=0", "Visual=0",
@@ -155,7 +200,7 @@ else {
   Write-Output "optimize_guard: scripts\optimize_guard.ps1 not found, skipping pre-flight check"
 }
 
-Write-Output "OPTIMIZE: $Expert | $Symbol $Period | $FromDate..$ToDate | mode=$Optimization"
+Write-Output "OPTIMIZE: $Expert | logical=$($symbolResolution.logical_symbol) tester=$TesterSymbol $Period | $FromDate..$ToDate | mode=$Optimization"
 $mtArgs = @("/config:`"$ini`""); if ($Portable) { $mtArgs += "/portable" }
 $proc = Start-Process -FilePath $Terminal -ArgumentList $mtArgs -PassThru
 $sw = [Diagnostics.Stopwatch]::StartNew()

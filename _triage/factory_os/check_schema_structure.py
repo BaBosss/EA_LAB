@@ -37,7 +37,7 @@ try:
     schema_override = (os.environ.get('EA_LAB_ENFORCEMENT_SCHEMA_OVERRIDE')
                        if os.environ.get('EA_LAB_EVIDENCE') == 'worktree' else None)
     if schema_override:
-        with open(schema_override, encoding='utf-8') as fh:
+        with open(schema_override, encoding='utf-8') as fh:  # snapshot: not-a-judged-input
             d = json.load(fh)
     else:
         d = json.loads(src.read_committed('_triage/factory_os/schemas.json'))
@@ -279,13 +279,10 @@ _wiring = _invocation_text()
 # entity between them is an edit to THIS file rather than a deletion over in schemas.json.
 # Same self-policing shape as OPEN_ROOT_BY_DESIGN above, for the same reason.
 #
-# _NO_ENFORCEMENT_DECLARATION is named for what it IS and not for what would be
-# comfortable: it does NOT assert that these entities need no enforcement declaration.
-# Several demonstrably do -- `ExecutionKey` gates whether a run may happen at all,
-# `ParameterBinding`'s own description says the wrapper generator and optimize_guard MUST
-# read the same resolver, `RunAttempt` is append-only -- and writing a TRUE declaration for
-# each means auditing its enforcer one at a time, which is ORDER-1280. What this list buys
-# today is only that the hole cannot widen, move, or close itself without a code edit.
+# ORDER-1280. An entity without an x-enforced-by is now either declared with the
+# existing checker that actually owns its extra-schema rule, or is an explicit
+# scope exemption. The exemption is not a claim that the entity is safe; it says
+# which other contract owns it or why no current owner can enforce it.
 _ENFORCEMENT_DECLARED = frozenset((
     "AlertDelivery", "AlertEvent", "CandidateManifest", "ControlRoomSnapshotV5",
     "CoverageCell", "DeploymentAttestationEvent", "Hypothesis", "MagicAllocation",
@@ -293,18 +290,23 @@ _ENFORCEMENT_DECLARED = frozenset((
     "SnapshotBuilderInput", "SnapshotVerdict", "SystemFinding", "WorkReceipt",
     "RuntimeIdentityObserved", "RuntimeIdentityRecord", "RuntimeIdentitySummary",
     "ExperimentContract", "ExperimentResult",
+    "CandidatePayload", "ExecutionKey", "InstrumentProfile", "ModuleUse",
+    "ParameterBinding", "RunAttempt", "RunJournal", "SnapshotMeta",
 ))
-_NO_ENFORCEMENT_DECLARATION = frozenset((
-    "CandidatePayload", "EvidenceRef", "ExecutionKey", "IdeaRef", "InstrumentProfile",
-    "LogicalSymbol", "ModuleUse", "ParameterBinding", "RunAttempt", "RunJournal",
-    "SnapshotMeta", "TestUniverse",
-))
+_ENFORCEMENT_SCOPE_EXEMPTIONS = {
+    "EvidenceRef": "owned by the existing experiment evidence-manifest schema and checker; Factory OS does not replace that canonical store",
+    "IdeaRef": "projection of the owner-controlled intake queue; no Factory OS reader owns an IdeaRef artifact",
+    "LogicalSymbol": "explicitly blocked by the S2A ownership state NOT_YET_BUILT; registry.py refuses to treat the proposed universe file as an owner",
+    "TestUniverse": "explicitly blocked by the S2A ownership state NO_CURRENT_OWNER; registry.py refuses to treat the proposed universe file as an owner",
+}
+_ENFORCEMENT_EXEMPT = frozenset(_ENFORCEMENT_SCOPE_EXEMPTIONS)
+_NO_ENFORCEMENT_DECLARATION = frozenset()
 # `OwnerRef` was on the second list when ORDER-1264 froze it, and it was the most expensive
 # entry on it: the pin primitive S2's whole ownership discipline rests on, unchecked here,
 # which is why ORDER-1263 survived. It moved up in the commit that gave it a resolver, and
 # not one commit earlier -- a declaration written ahead of its enforcer is exactly the false
 # governance state this whole block exists to end.
-_inventory = _ENFORCEMENT_DECLARED | _NO_ENFORCEMENT_DECLARATION
+_inventory = _ENFORCEMENT_DECLARED | _ENFORCEMENT_EXEMPT
 _defs_names = set(d["$defs"])
 chk(not (_ENFORCEMENT_DECLARED & _NO_ENFORCEMENT_DECLARATION),
     "the two inventory sets are disjoint (both=%s)"
@@ -313,12 +315,21 @@ chk(_inventory == _defs_names,
     "every $defs entity is classified by the inventory (unclassified=%s stale-entry=%s) -- an "
     "entity in neither set would be SKIPPED by every check below, which is the defect ORDER-1264 "
     "closed" % (sorted(_defs_names - _inventory), sorted(_inventory - _defs_names)))
+chk(all(isinstance(reason, str) and reason.strip()
+        for reason in _ENFORCEMENT_SCOPE_EXEMPTIONS.values()),
+    "every scope exemption has a non-empty reason")
+_exempt_with_declaration = sorted(n for n in _ENFORCEMENT_EXEMPT
+                                  if isinstance(d["$defs"].get(n), dict)
+                                  and d["$defs"][n].get("x-enforced-by"))
+chk(not _exempt_with_declaration,
+    "scope exemptions do not carry an unverified x-enforced-by (gained=%s)"
+    % _exempt_with_declaration)
 _lost = sorted(n for n in _ENFORCEMENT_DECLARED
                if isinstance(d["$defs"].get(n), dict) and not d["$defs"][n].get("x-enforced-by"))
 chk(not _lost,
     "no entity classified as declaring enforcement has LOST its x-enforced-by (lost=%s) -- before "
     "ORDER-1264 this deletion removed the entity from the check instead of failing it" % _lost)
-_gained = sorted(n for n in _NO_ENFORCEMENT_DECLARATION
+_gained = sorted(n for n in _ENFORCEMENT_EXEMPT
                  if isinstance(d["$defs"].get(n), dict) and d["$defs"][n].get("x-enforced-by"))
 chk(not _gained,
     "no entity classified as undeclared has quietly GAINED an x-enforced-by (gained=%s) -- move it "
@@ -346,9 +357,10 @@ for _name in sorted(_ENFORCEMENT_DECLARED):
             chk(bool(_enf) and os.path.basename(_enf) in _wiring,
                 "%s is WIRED and %s is actually invoked by a hook or the tier"
                 % (_name, os.path.basename(_enf or "")))
-print("  PLANNED=%d BUILT=%d WIRED=%d UNDECLARED=%d -- only WIRED means the constraint is enforced "
-      "today, and UNDECLARED is a hole this lint now NAMES instead of skipping (ORDER-1280)"
-      % (_counts["PLANNED"], _counts["BUILT"], _counts["WIRED"], len(_NO_ENFORCEMENT_DECLARATION)))
+print("  PLANNED=%d BUILT=%d WIRED=%d EXEMPT=%d UNDECLARED=%d -- every entity is either "
+      "classified with a checked enforcer or has a named scope exemption (ORDER-1280)"
+      % (_counts["PLANNED"], _counts["BUILT"], _counts["WIRED"],
+         len(_ENFORCEMENT_EXEMPT), len(_NO_ENFORCEMENT_DECLARATION)))
 
 print("\n=== %s ===" % ("STRUCTURE OK" if fail == 0 else "%d STRUCTURAL FAILURES" % fail))
 sys.exit(1 if fail else 0)

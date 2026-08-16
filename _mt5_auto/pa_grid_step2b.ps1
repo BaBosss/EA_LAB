@@ -15,7 +15,7 @@ foreach($c in $cells){
   Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "D:\Meta 5b\terminal64.exe" } | Stop-Process -Force -ErrorAction SilentlyContinue
   Start-Sleep -Seconds 3
   $rn="PAGRID2_$($c.lab)"
-  $a=@("-File","D:\EA_LAB\scripts\mt5_run.ps1","-Expert","Boss_14_GridLog","-Symbol","AUDNZD","-Period","H1","-Model","4","-FromDate",$c.from,"-ToDate",$c.to,"-SetFile","$sd\B14_PAon.set","-ReportName",$rn,"-Terminal","D:\Meta 5b\terminal64.exe","-Portable","-DataDir","D:\Meta 5b","-TimeoutSec","1500","-Force")
+  $a=@("-File","D:\EA_LAB\scripts\mt5_run.ps1","-Expert","EALabTpl\Boss_14_GridLog","-Symbol","AUDNZD","-Period","H1","-Model","4","-FromDate",$c.from,"-ToDate",$c.to,"-SetFile","$sd\B14_PAon.set","-ReportName",$rn,"-Terminal","D:\Meta 5b\terminal64.exe","-Portable","-DataDir","D:\Meta 5b","-TimeoutSec","1500","-Force")
   & powershell $a 2>&1 | Out-Null
   $rep="D:\EA_LAB\_mt5_auto\reports\$rn.htm"
   $mPF="";$mNet="";$mDD="";$mTr="";$mWp="";$mLL="";$mRec=""

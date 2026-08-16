@@ -52,7 +52,11 @@ param(
   [int]$TimeoutSec = 1800,
   [int]$ReserveCores = 4,        # leave this many logical CPUs free so the desktop stays responsive
   [switch]$Portable,             # run this terminal in /portable mode (data dir = install folder) for parallel instances
-  [switch]$Force
+  [switch]$Force,
+  [switch]$AllowLegacyIdentity,  # explicit non-green escape hatch for historical/fixture runs
+  [string]$LaneId = '',
+  [string]$UniversePath = '',
+  [string]$CapabilityFile = ''
 )
 $ErrorActionPreference = "Stop"
 $FrozenTesterCurrency = 'USD'
@@ -76,6 +80,19 @@ if (-not $Force) {
 if (-not (Test-Path $Terminal)) { Write-Output "ABORT: terminal not found: $Terminal"; exit 2 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'lib\symbol_preflight.ps1')
+$universeCandidate = Join-Path $repoRoot 'factory\universe.jsonl'
+if (-not $UniversePath -and (Test-Path -LiteralPath $universeCandidate -PathType Leaf)) { $UniversePath = $universeCandidate }
+try {
+  $symbolResolution = Resolve-TesterSymbol -LogicalSymbol $Symbol -TerminalPath $TermPath -DataDir $DataDir `
+    -LaneId $LaneId -UniversePath $UniversePath -CapabilityFile $CapabilityFile
+}
+catch {
+  Write-Output "ABORT: $($_.Exception.Message)"
+  exit 2
+}
+$TesterSymbol = $symbolResolution.tester_symbol
+Write-Output "symbol preflight: logical=$($symbolResolution.logical_symbol) tester=$TesterSymbol status=$($symbolResolution.comparison_status) economics=$($symbolResolution.economics_check) source=$($symbolResolution.capability_source)"
 $auto = Join-Path $repoRoot '_mt5_auto'
 New-Item -ItemType Directory -Force "$auto\reports", "$auto\ini" | Out-Null
 $srcHtm = Join-Path $DataDir "$ReportName.htm"        # MT5 writes here (bare Report name)
@@ -120,14 +137,38 @@ if ($surface.Refuse) {
 }
 Write-Output "surface: $($surface.State) -- $($surface.Message)"
 
+# Identity is a launch precondition for normal evidence. The explicit legacy switch exists for
+# old/fixture callers, but its output is deliberately non-green so a caller cannot mistake it for
+# a stamped M2/M3 run.
+. (Join-Path $PSScriptRoot 'lib\build_receipt.ps1')
+. (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
+$expertsDir = Get-TesterExpertsDir -TerminalPath $TermPath -DataDir $DataDir -Portable:$Portable
+$buildIdentity = Get-BuildReceiptStatus -Expert $Expert -ExpertsDir $expertsDir `
+  -RegistryPath (Join-Path $repoRoot 'portfolio\build_receipts.jsonl')
+if (($Expert -replace '\.ex5$','') -ieq 'Boss_14_GridLog') {
+  $buildIdentity = Get-ManagedCompatibilityStatus -ExpertsDir $expertsDir `
+    -RegistryPath (Join-Path $repoRoot 'portfolio\build_receipts.jsonl')
+}
+$configIdentity = Get-SetConfigIdentity -Path $SetFile -Surface $surface
+if (-not $AllowLegacyIdentity -and (-not $buildIdentity.Valid -or -not $configIdentity.Valid)) {
+  Write-Output ("ABORT: identity refusal -- build={0} ({1}); config={2} ({3}). Pass -AllowLegacyIdentity only for explicitly non-green legacy/fixture work." -f
+    $buildIdentity.State, $buildIdentity.Reason, $configIdentity.State, $configIdentity.Reason)
+  exit 2
+}
+if ($AllowLegacyIdentity) {
+  Write-Output ("identity: LEGACY_ALLOWED -- build={0} ({1}); config={2} ({3})" -f
+    $buildIdentity.State, $buildIdentity.Reason, $configIdentity.State, $configIdentity.Reason)
+} else {
+  Write-Output (Format-LaunchIdentityLine -Build $buildIdentity -Config $configIdentity)
+}
+
 # ORDER-1461: IS THE BINARY THIS RUN IS ABOUT TO LOAD OLDER THAN ITS SOURCE?
 # The rule, its measurements and the visible-before-refusing reasoning all live in
 # scripts\lib\binary_staleness.ps1 -- SHARED, because mt5_optimize.ps1 and run_backtest.ps1
 # write Expert= into a tester .ini exactly like this file does, and covering only this one
 # left the detector off two thirds of the run path (the optimizer being the worse omission:
 # a stale binary there SELECTS the parameters everything downstream is built on).
-. (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
-Write-Output (Get-StaleCheckLine -Expert $Expert -ExpertsDir (Get-TesterExpertsDir -TerminalPath $TermPath -DataDir $DataDir -Portable:$Portable))
+Write-Output (Get-StaleCheckLine -Expert $Expert -ExpertsDir $expertsDir -RepoRoot $repoRoot)
 
 $inputs = @()
 if ($surface.State -ne 'NOSETFILE') {
@@ -140,7 +181,8 @@ if ($surface.State -ne 'NOSETFILE') {
 # ORDER-165: leverage MUST be the "1:N" string form - the numeric form is silently ignored
 # and the tester then uses its own cached last-used leverage (see -Leverage note above).
 $lines = @(
-  "[Tester]", "Expert=$Expert", "Symbol=$Symbol", "Period=$Period", "Model=$Model",
+  "; logical_symbol=$($symbolResolution.logical_symbol)", "; tester_symbol=$TesterSymbol", "; symbol_comparison_status=$($symbolResolution.comparison_status)", "; economics_check=$($symbolResolution.economics_check)",
+  "[Tester]", "Expert=$Expert", "Symbol=$TesterSymbol", "Period=$Period", "Model=$Model",
   "Optimization=0", "FromDate=$FromDate", "ToDate=$ToDate", "ForwardMode=0",
   "Deposit=$Deposit", "Currency=$FrozenTesterCurrency", "Leverage=1:$Leverage", "ExecutionMode=0", "Visual=0",
   "Report=$ReportName", "ReplaceReport=1", "ShutdownTerminal=1", "[TesterInputs]"
@@ -149,7 +191,7 @@ $ini = "$auto\ini\$ReportName.ini"
 [IO.File]::WriteAllLines($ini, $lines)
 
 $portTag = if ($Portable) { " [portable]" } else { "" }
-Write-Output "launch: $Expert | $Symbol $Period | $FromDate..$ToDate | set=$([IO.Path]::GetFileName($SetFile))$portTag"
+Write-Output "launch: $Expert | logical=$($symbolResolution.logical_symbol) tester=$TesterSymbol $Period | $FromDate..$ToDate | set=$([IO.Path]::GetFileName($SetFile))$portTag"
 $argList = if ($Portable) { "/config:`"$ini`" /portable" } else { "/config:`"$ini`"" }
 $proc = Start-Process -FilePath $Terminal -ArgumentList $argList -PassThru
 # FREEZE GUARD: keep the box responsive even under every-tick (Model 4) load.

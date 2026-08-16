@@ -121,6 +121,10 @@ def main():
 
     wrong_build = base_identity('br-' + ('b' * 32))
     check('same semantic config fingerprint with wrong build -> not healthy', result(wrong_build)['state'] != 'PASS')
+    unstamped = base_identity('UNSTAMPED')
+    check('UNSTAMPED build receipt cannot become healthy',
+          result(unstamped)['state'] != 'PASS' and
+          any(reason['code'] == 'BUILD_RECEIPT_INVALID' for reason in result(unstamped)['reasons']))
     wrong_config = base_identity(receipt, config='d' * 64)
     check('same build with wrong config -> not healthy', result(wrong_config)['state'] != 'PASS')
 

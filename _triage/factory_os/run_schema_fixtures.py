@@ -179,6 +179,61 @@ def with_(d, **kw):
     return out
 
 
+def check_new_alert_delivery_row(row, where='AlertDelivery'):
+    """Check the producer-side part of the optional transport_kind contract.
+
+    The JSON Schema keeps this field optional because old delivery-ledger rows are a permanent
+    compatibility surface.  A newly emitted row is a different claim: the accepted notifier
+    runtime must state which transport produced it, including conservative UNKNOWN.  Keeping that
+    producer check beside the schema fixtures makes a missing field fail without rewriting or
+    backfilling legacy evidence.
+    """
+    problems = []
+    if not isinstance(row, dict) or row.get('entity') != 'AlertDelivery':
+        return ['%s is not an AlertDelivery row' % where]
+    if 'transport_kind' not in row:
+        return ['%s is a newly emitted delivery row without transport_kind' % where]
+    if row['transport_kind'] not in ('TELEGRAM', 'RECORDING', 'UNKNOWN'):
+        problems.append('%s transport_kind %r is not registered' %
+                        (where, row['transport_kind']))
+    return problems
+
+
+def _owner_refs(value, where=''):
+    """Yield the governed Factory OwnerRef objects without inventing a second resolver."""
+    if isinstance(value, dict):
+        if value.get('entity') == 'OwnerRef':
+            yield where or 'OwnerRef', value
+        for key, child in value.items():
+            child_where = '%s.%s' % (where, key) if where else key
+            for item in _owner_refs(child, child_where):
+                yield item
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            child_where = '%s[%d]' % (where, index) if where else '[%d]' % index
+            for item in _owner_refs(child, child_where):
+                yield item
+
+
+def check_live_owner_refs(records, source):
+    """Resolve every OwnerRef embedded in live governed registry rows.
+
+    `candidate.owner_ref_problems` is the one resolver.  This function is only the canonical
+    governed-row enumerator and roll-up, so the schema/commit path cannot report PASS after AJV
+    accepted a synthetic-looking but unresolvable pin.  `records` is deliberately injectable for
+    adversarial tests; production calls it with the rows read from the same EvidenceSource that
+    AJV judged.
+    """
+    import candidate as _candidate
+    count = 0
+    problems = []
+    for where, record in records:
+        for ref_where, ref in _owner_refs(record, where):
+            count += 1
+            problems.extend(_candidate.owner_ref_problems(ref, ref_where, src=source))
+    return count, problems
+
+
 CASES = [
     # ---- the original P0: a root that accepted anything -------------------------
     case("empty-object", "audit-1 P0 root accepted almost anything", "fail", {}),
@@ -264,6 +319,27 @@ CASES = [
          {"entity": "AlertDelivery", "dedupe_key": "k", "channel": "EMERGENCY",
           "kind": "DELIVERY_PROBE", "outcome": "DELIVERED", "receipt": "1234",
           "at": "2026-08-02T00:00:00", "openclaw": "NOT_RUNNING", "detail": ""}),
+    case("alert-delivery-telegram-valid", "a new TELEGRAM delivery line declares its transport",
+         "pass", {"entity": "AlertDelivery", "dedupe_key": "k-telegram", "channel": "EMERGENCY",
+                   "kind": "DELIVERY_PROBE", "outcome": "DELIVERED", "receipt": "1234",
+                   "at": "2026-08-02T00:00:00", "openclaw": "NOT_RUNNING", "detail": "",
+                   "transport_kind": "TELEGRAM"}),
+    case("alert-delivery-recording-valid", "a new RECORDING delivery line declares its transport",
+         "pass", {"entity": "AlertDelivery", "dedupe_key": "k-recording", "channel": "EMERGENCY",
+                   "kind": "DELIVERY_PROBE", "outcome": "DELIVERED", "receipt": "1234",
+                   "at": "2026-08-02T00:00:00", "openclaw": "NOT_RUNNING", "detail": "",
+                   "transport_kind": "RECORDING"}),
+    case("alert-delivery-unknown-valid", "UNKNOWN is a conservative registered transport state",
+         "pass", {"entity": "AlertDelivery", "dedupe_key": "k-unknown", "channel": "EMERGENCY",
+                   "kind": "DELIVERY_PROBE", "outcome": "UNCONFIGURED", "receipt": None,
+                   "at": "2026-08-02T00:00:00", "openclaw": "UNKNOWN", "detail": "not configured",
+                   "transport_kind": "UNKNOWN"}),
+    case("alert-delivery-unregistered-transport", "an unregistered transport kind is refused", "fail",
+         {"entity": "AlertDelivery", "dedupe_key": "k-bad-transport", "channel": "EMERGENCY",
+          "kind": "DELIVERY_PROBE", "outcome": "DELIVERED", "receipt": "1234",
+          "at": "2026-08-02T00:00:00", "openclaw": "NOT_RUNNING", "detail": "",
+          "transport_kind": "SMTP"},
+         says=[{"keyword": "enum", "instancePath": "/transport_kind"}]),
     case("alert-delivery-carrying-a-chat-id",
          "a chat id is a delivery credential - the ledger names a CHANNEL, never a chat", "fail",
          {"entity": "AlertDelivery", "dedupe_key": "k", "channel": "EMERGENCY",
@@ -1238,7 +1314,7 @@ def run(schema, instance):
 HEADER_COUNTS = {
     'defs': 34,
     'root_branches': 23,
-    'root_cases': 41,
+    'root_cases': 45,
     'entity_cases': 84,
     'entity_negatives': 44,
     'entities_with_a_negative': 34,
@@ -1499,6 +1575,26 @@ def main():
         # The guard rule, applied here: a run that validated nothing proves nothing, and must say
         # so rather than printing a clean line. Three of the five stores are empty by design.
         print("  0 rows means this check is UNTESTED by this run, not that the stores are clean")
+
+    # ORDER-1281: AJV proves the row has OwnerRef SHAPE; the existing candidate resolver proves
+    # that every live pin names the blob, digest and optional anchor it claims.  This is deliberately
+    # the same `_src` used above: hook mode judges the staged registry bytes, while the resolver
+    # reads pinned historical blobs independently.  A resolver ToolFailure is infrastructure
+    # failure, never a clean refusal.
+    print("\n--- ORDER-1281 live governed OwnerRefs ---")
+    try:
+        _owner_count, _owner_problems = check_live_owner_refs(
+            ((_c['name'], _c['instance']) for _c in _cases), _src)
+    except _ev.ToolFailure as _exc:
+        print("  TOOL FAILURE: %s" % _exc)
+        bad += 1
+    else:
+        for _problem in _owner_problems:
+            print("  [BAD] %s" % _problem)
+        if _owner_problems:
+            bad += len(_owner_problems)
+        print("  %d live OwnerRef(s) resolved; %d refusal(s)" %
+              (_owner_count, len(_owner_problems)))
 
     # --- ORDER-1500: the committed scheduler recovery journals -----------------------------
     # `factory/runs/*.jsonl` is deliberately NOT added to registry.STORES. It is an unbounded

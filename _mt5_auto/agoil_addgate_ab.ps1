@@ -14,12 +14,16 @@ $csv="D:\EA_LAB\ea_projects\(Boss)_AdaptiveGrid_Oil\reports\addgate_ab.csv"
 # label, expert, set, sym, from, to, model
 $cells=@(
   @{lab="NEUT_OLD"; ex="Boss_14_GridLog_OLD"; set="Boss14_GridLog_AUDNZD_ISpick.set"; sym="AUDNZD"; from="2023.01.01"; to="2026.01.01"; model=2}
-  @{lab="NEUT_NEWoff"; ex="Boss_14_GridLog"; set="Boss14_GridLog_AUDNZD_ISpick.set"; sym="AUDNZD"; from="2023.01.01"; to="2026.01.01"; model=2}
-  @{lab="AB_off_M4"; ex="Boss_14_GridLog"; set="B14_AB_off.set"; sym="AUDNZD"; from="2019.01.01"; to="2026.01.01"; model=4}
-  @{lab="AB_on_M4";  ex="Boss_14_GridLog"; set="B14_AB_on.set";  sym="AUDNZD"; from="2019.01.01"; to="2026.01.01"; model=4}
+  @{lab="NEUT_NEWoff"; ex="EALabTpl\Boss_14_GridLog"; set="Boss14_GridLog_AUDNZD_ISpick.set"; sym="AUDNZD"; from="2023.01.01"; to="2026.01.01"; model=2}
+  @{lab="AB_off_M4"; ex="EALabTpl\Boss_14_GridLog"; set="B14_AB_off.set"; sym="AUDNZD"; from="2019.01.01"; to="2026.01.01"; model=4}
+  @{lab="AB_on_M4";  ex="EALabTpl\Boss_14_GridLog"; set="B14_AB_on.set";  sym="AUDNZD"; from="2019.01.01"; to="2026.01.01"; model=4}
 )
 "label,expert,PF,net,eqDDpct,trades,winpct,maxLoss,recovery,report" | Out-File -FilePath $csv -Encoding utf8
 foreach($c in $cells){
+  if ($c.ex -match '(?i)(^|\\)Boss_14_GridLog_OLD\d*$') {
+    Write-Error "REFUSE: legacy executable identity '$($c.ex)' is not an active writer target"
+    exit 2
+  }
   Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "D:\Meta 5b\terminal64.exe" } | Stop-Process -Force -ErrorAction SilentlyContinue
   Start-Sleep -Seconds 3
   $rn="ADGATE_$($c.lab)"

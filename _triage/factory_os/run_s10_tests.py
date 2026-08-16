@@ -606,6 +606,10 @@ for _t in A.EVENT_TYPES:
             # BOTH rules bite here. A3 keys on the event type, A4 on the actor, and the cell only
             # proves one of them -- so the pair is asserted separately below.
             EXPECTED[(_t, _a)] = 'A4'
+        elif _t == 'CANDIDATE_REASSIGNED':
+            # ORDER-1380: a reassignment from an empty history is impossible even with
+            # a valid human authorization; authorization does not invent a prior assignment.
+            EXPECTED[(_t, _a)] = 'A6'
         else:
             EXPECTED[(_t, _a)] = None      # user/claude WITH a ref
 
@@ -617,6 +621,8 @@ def part2_attestation():
     for (etype, actor) in sorted(EXPECTED):
         want = EXPECTED[(etype, actor)]
         kw = {} if etype == 'OBSERVED' else {'authorization_ref': copy.deepcopy(AUTH)}
+        if etype in A.CANDIDATE_MOVING_EVENT_TYPES:
+            kw['candidate_id'] = 'CAND-' + '1' * 12
         ev = _event(etype, actor, **kw)
         problems = A.validate_event(ev, [])
         if want is None:
@@ -750,6 +756,39 @@ def part2_attestation():
                                     candidate_id='CAND-' + '2' * 12,
                                     authorization_ref=copy.deepcopy(AUTH),
                                     prev_hash=A.chain_head(prior)), prior))
+
+    # -- ORDER-1380 owner decision A. Assignment event names now carry their lifecycle meaning;
+    #    these are intentionally sequence cases, not isolated shape checks.
+    empty_assigned = _event('CANDIDATE_ASSIGNED', 'user', candidate_id='CAND-' + '1' * 12,
+                            authorization_ref=copy.deepcopy(AUTH))
+    accepts('ORDER-1380 empty -> ASSIGNED(A)', A.validate_event(empty_assigned, []))
+    refuses('ORDER-1380 A -> ASSIGNED(A) is a same-target refusal',
+            A.validate_event(_event('CANDIDATE_ASSIGNED', 'user', event_id='ATT-20260802-003',
+                                    candidate_id='CAND-' + '1' * 12,
+                                    authorization_ref=copy.deepcopy(AUTH),
+                                    prev_hash=A.chain_head([empty_assigned])), [empty_assigned]), 'A6')
+    accepts('ORDER-1380 A -> REASSIGNED(B)',
+            A.validate_event(_event('CANDIDATE_REASSIGNED', 'user', event_id='ATT-20260802-003',
+                                    candidate_id='CAND-' + '2' * 12,
+                                    authorization_ref=copy.deepcopy(AUTH),
+                                    prev_hash=A.chain_head([empty_assigned])), [empty_assigned]))
+    refuses('ORDER-1380 A -> REASSIGNED(A) is a same-target refusal',
+            A.validate_event(_event('CANDIDATE_REASSIGNED', 'user', event_id='ATT-20260802-003',
+                                    candidate_id='CAND-' + '1' * 12,
+                                    authorization_ref=copy.deepcopy(AUTH),
+                                    prev_hash=A.chain_head([empty_assigned])), [empty_assigned]), 'A6')
+    refuses('ORDER-1380 empty -> REASSIGNED(A) is a refusal',
+            A.validate_event(_event('CANDIDATE_REASSIGNED', 'user', event_id='ATT-20260802-003',
+                                    candidate_id='CAND-' + '1' * 12,
+                                    authorization_ref=copy.deepcopy(AUTH)), []), 'A6')
+    for etype in A.CANDIDATE_MOVING_EVENT_TYPES:
+        refuses('ORDER-1380 %s with null target is a refusal' % etype,
+                A.validate_event(_event(etype, 'user', event_id='ATT-20260802-003',
+                                        authorization_ref=copy.deepcopy(AUTH)), []), 'A6')
+        refuses('ORDER-1380 %s with malformed target is a refusal' % etype,
+                A.validate_event(_event(etype, 'user', event_id='ATT-20260802-003',
+                                        candidate_id='not-a-candidate',
+                                        authorization_ref=copy.deepcopy(AUTH)), []), 'A1')
 
     # -- A1: the shape rule, attacked so the PART 5 roll-up has nothing to report as unfired.
     refuses('an event carrying an undeclared field',

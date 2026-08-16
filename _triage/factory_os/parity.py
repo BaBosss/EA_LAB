@@ -36,6 +36,16 @@ is what lets the cage drive it with synthetic artifact pairs instead of four tes
 """
 import re
 
+
+RESULT_MANIFEST_REL = 'factory/parity/result_manifest.json'
+RESULT_SCHEMA_VERSION = 1
+RESULT_ENTITY = 'ParityResultManifest'
+_HEX64 = re.compile(r'^[0-9a-f]{64}$')
+
+
+class ManifestError(ValueError):
+    """The committed parity result is present but cannot be trusted as evidence."""
+
 # --- the seven points, in design 5.5's order ------------------------------------------------------
 POINTS = (
     ('init', 'init result -- both attach, or both refuse for the SAME reason'),
@@ -222,6 +232,30 @@ def observe(label, report_html=None, log_lines=None, expert=None, binary=None):
     return obs
 
 
+def observation_to_record(obs):
+    """Return only the observed fields needed to replay the seven-point comparison."""
+    return {
+        'init_fatal': obs.init_fatal,
+        'cfg': obs.cfg,
+        'orders': obs.orders,
+        'deals': obs.deals,
+        'side_effects': obs.side_effects,
+        'alerts': obs.alerts,
+    }
+
+
+def observation_from_record(record, label):
+    """Rehydrate an Observation without reading the tester report or agent log."""
+    obs = Observation(label)
+    obs.init_fatal = record['init_fatal']
+    obs.cfg = record['cfg']
+    obs.orders = record['orders']
+    obs.deals = record['deals']
+    obs.side_effects = record['side_effects']
+    obs.alerts = record['alerts']
+    return obs
+
+
 _TS = re.compile(r'^\s*[\d:. ]*\s*')
 
 
@@ -322,6 +356,20 @@ def verdict_for_case(kind, a, b, points):
     direction is asserted about the OBSERVATION, not about the comparison, and a case that fails
     its own direction fails even when all seven points agree.
     """
+    reasons = direction_reasons(kind, a, b)
+    for p in points:
+        if p.verdict == DIFFER:
+            reasons.append('point %s DIFFERS: %s' % (p.point, p.detail))
+        elif p.verdict == UNTESTED:
+            reasons.append('point %s is UNTESTED: %s' % (p.point, p.detail))
+        # NOT_APPLICABLE is NOT appended: it is only reachable behind
+        # `both_refused_identically`, i.e. point 1 has already asserted the agreement this
+        # point would otherwise restate. Every other non-AGREE verdict fails the case.
+    return (not reasons, reasons)
+
+
+def direction_reasons(kind, a, b):
+    """Return only the case-direction failures, shared by the live and replayed readers."""
     reasons = []
     if kind == MUST_TRADE:
         for side in (a, b):
@@ -345,16 +393,7 @@ def verdict_for_case(kind, a, b, points):
                                'be proving that two silent runs are silent.' % side.label)
     elif kind != NEUTRAL:
         raise ValueError('unknown parity case kind %r' % kind)
-
-    for p in points:
-        if p.verdict == DIFFER:
-            reasons.append('point %s DIFFERS: %s' % (p.point, p.detail))
-        elif p.verdict == UNTESTED:
-            reasons.append('point %s is UNTESTED: %s' % (p.point, p.detail))
-        # NOT_APPLICABLE is NOT appended: it is only reachable behind
-        # `both_refused_identically`, i.e. point 1 has already asserted the agreement this
-        # point would otherwise restate. Every other non-AGREE verdict fails the case.
-    return (not reasons, reasons)
+    return reasons
 
 
 # --- CLI -------------------------------------------------------------------------------------------
@@ -475,6 +514,17 @@ def _rollup_main(dirs):
 
 def main(argv):
     import sys
+    if argv and argv[0] == '--write-result':
+        if len(argv) < 3:
+            sys.stderr.write('usage: parity.py --write-result <output.json> <caseDir> ...\n')
+            return 2
+        try:
+            write_result_manifest(argv[2:], argv[1])
+        except (IOError, OSError, KeyError, ValueError, ManifestError) as exc:
+            sys.stderr.write('REFUSED: cannot write parity result manifest: %s\n' % exc)
+            return 2
+        sys.stdout.write('wrote %s\n' % argv[1])
+        return 0
     if argv and argv[0] == '--rollup':
         return _rollup_main(argv[1:])
     if len(argv) < 2:
@@ -589,6 +639,312 @@ def rollup(cases):
         problems.append('the case set has no %s case. design 5.5 requires both directions, and '
                         'without it some points cannot be exercised at all.' % d)
     return (not problems, lines + ([''] + ['  - ' + p for p in problems] if problems else []))
+
+
+# --- committed result manifest ---------------------------------------------------------------
+
+_RESULT_TOP_KEYS = frozenset(('schema_version', 'entity', 'run_identity', 'cases'))
+_RESULT_IDENTITY_KEYS = frozenset(('lane', 'symbol', 'period', 'from', 'to', 'model'))
+_RESULT_CASE_KEYS = frozenset(('case', 'kind', 'included', 'sides', 'point_verdicts',
+                               'case_passed'))
+_RESULT_SIDE_KEYS = frozenset(('label', 'expert', 'binary', 'binary_mtime', 'expected_hash',
+                               'source_manifest', 'observation'))
+_RESULT_OBSERVATION_KEYS = frozenset(('init_fatal', 'cfg', 'orders', 'deals', 'side_effects',
+                                      'alerts'))
+_RESULT_POINT_KEYS = frozenset(('point', 'verdict'))
+
+
+def _manifest_object(value, where):
+    if not isinstance(value, dict):
+        raise ManifestError('%s must be an object' % where)
+    return value
+
+
+def _manifest_keys(value, required, where, optional=()):
+    actual = set(value)
+    required = set(required)
+    optional = set(optional)
+    missing = sorted(required - actual)
+    extra = sorted(actual - required - optional)
+    if missing:
+        raise ManifestError('%s is missing %s' % (where, ', '.join(missing)))
+    if extra:
+        raise ManifestError('%s has undeclared field(s): %s' % (where, ', '.join(extra)))
+
+
+def _manifest_string(value, where, nonempty=True):
+    if not isinstance(value, str) or (nonempty and not value):
+        raise ManifestError('%s must be a non-empty string' % where)
+
+
+def _manifest_bool(value, where):
+    if not isinstance(value, bool):
+        raise ManifestError('%s must be boolean' % where)
+
+
+def _manifest_hex(value, where):
+    _manifest_string(value, where)
+    if not _HEX64.match(value):
+        raise ManifestError('%s must be a lowercase SHA-256 hex digest' % where)
+
+
+def _validate_observation(record, where):
+    _manifest_object(record, where)
+    _manifest_keys(record, _RESULT_OBSERVATION_KEYS, where)
+    if record['init_fatal'] is not None and not isinstance(record['init_fatal'], str):
+        raise ManifestError('%s.init_fatal must be a string or null' % where)
+
+    cfg = record['cfg']
+    if cfg is not None:
+        _manifest_object(cfg, where + '.cfg')
+        _manifest_keys(cfg, ('build', 'keys', 'scope', 'hash'), where + '.cfg')
+        _manifest_string(cfg['build'], where + '.cfg.build')
+        if not isinstance(cfg['keys'], int) or isinstance(cfg['keys'], bool) or cfg['keys'] < 0:
+            raise ManifestError('%s.cfg.keys must be a non-negative integer' % where)
+        _manifest_string(cfg['scope'], where + '.cfg.scope')
+        _manifest_hex(cfg['hash'], where + '.cfg.hash')
+
+    for key in ('orders', 'deals'):
+        rows = record[key]
+        if not isinstance(rows, list):
+            raise ManifestError('%s.%s must be an array' % (where, key))
+        for i, row in enumerate(rows):
+            if not isinstance(row, list) or not all(isinstance(cell, str) for cell in row):
+                raise ManifestError('%s.%s[%d] must be an array of strings' % (where, key, i))
+    for key in ('side_effects', 'alerts'):
+        values = record[key]
+        if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
+            raise ManifestError('%s.%s must be an array of strings' % (where, key))
+
+
+def _validate_result_manifest(manifest):
+    _manifest_object(manifest, 'result manifest')
+    _manifest_keys(manifest, _RESULT_TOP_KEYS, 'result manifest')
+    if manifest['schema_version'] != RESULT_SCHEMA_VERSION:
+        raise ManifestError('result manifest schema_version must be %d' % RESULT_SCHEMA_VERSION)
+    if manifest['entity'] != RESULT_ENTITY:
+        raise ManifestError('result manifest entity must be %s' % RESULT_ENTITY)
+
+    identity = _manifest_object(manifest['run_identity'], 'result manifest.run_identity')
+    _manifest_keys(identity, _RESULT_IDENTITY_KEYS, 'result manifest.run_identity')
+    for key in ('lane', 'symbol', 'period', 'from', 'to'):
+        _manifest_string(identity[key], 'result manifest.run_identity.%s' % key)
+    if (not isinstance(identity['model'], int) or isinstance(identity['model'], bool)
+            or identity['model'] not in (1, 2, 4)):
+        raise ManifestError('result manifest.run_identity.model must be 1, 2, or 4')
+
+    cases = manifest['cases']
+    if not isinstance(cases, list) or not cases:
+        raise ManifestError('result manifest.cases must be a non-empty array')
+    names = set()
+    for i, case in enumerate(cases):
+        where = 'result manifest.cases[%d]' % i
+        _manifest_object(case, where)
+        _manifest_keys(case, _RESULT_CASE_KEYS, where, optional=('exclusion_reason',))
+        _manifest_string(case['case'], where + '.case')
+        if case['case'] in names:
+            raise ManifestError('duplicate case %r in result manifest' % case['case'])
+        names.add(case['case'])
+        if case['kind'] not in (MUST_TRADE, DELIBERATE_REFUSAL, NEUTRAL):
+            raise ManifestError('%s.kind is not a parity case kind' % where)
+        _manifest_bool(case['included'], where + '.included')
+        _manifest_bool(case['case_passed'], where + '.case_passed')
+        if case['included']:
+            if 'exclusion_reason' in case:
+                raise ManifestError('%s included case cannot carry exclusion_reason' % where)
+        else:
+            if case['case'] != 'locked-absent' or case.get('exclusion_reason') != 'EXPECTED_DIFFERENCE':
+                raise ManifestError('%s only locked-absent may be excluded, with reason '
+                                    'EXPECTED_DIFFERENCE' % where)
+
+        sides = _manifest_object(case['sides'], where + '.sides')
+        if set(sides) != {'wrapper', 'parent'}:
+            raise ManifestError('%s.sides must contain exactly wrapper and parent' % where)
+        for side_name in ('wrapper', 'parent'):
+            side = _manifest_object(sides[side_name], where + '.sides.' + side_name)
+            _manifest_keys(side, _RESULT_SIDE_KEYS, where + '.sides.' + side_name)
+            if side['label'] != side_name:
+                raise ManifestError('%s.label must be %s' % (where, side_name))
+            for key in ('expert', 'binary', 'binary_mtime', 'source_manifest'):
+                _manifest_string(side[key], where + '.sides.%s.%s' % (side_name, key))
+            _manifest_hex(side['expected_hash'], where + '.sides.%s.expected_hash' % side_name)
+            if ':' in side['source_manifest'] or side['source_manifest'].startswith(('\\', '/')):
+                raise ManifestError('%s.source_manifest must be repository-relative' % where)
+            _validate_observation(side['observation'],
+                                  where + '.sides.%s.observation' % side_name)
+
+        points = case['point_verdicts']
+        if not isinstance(points, list) or len(points) != len(POINTS):
+            raise ManifestError('%s.point_verdicts must contain exactly seven points' % where)
+        for point, (expected, _title) in zip(points, POINTS):
+            _manifest_object(point, where + '.point_verdicts')
+            _manifest_keys(point, _RESULT_POINT_KEYS, where + '.point_verdicts')
+            if point['point'] != expected:
+                raise ManifestError('%s.point_verdicts must be in canonical order' % where)
+            if point['verdict'] not in (AGREE, DIFFER, UNTESTED, NOT_APPLICABLE):
+                raise ManifestError('%s.point_verdicts[%s].verdict is unknown' % (where, expected))
+
+
+def read_result_manifest(text, source=RESULT_MANIFEST_REL):
+    """Parse one committed result manifest; never substitute raw tester files."""
+    import json
+    if not isinstance(text, str):
+        raise ManifestError('%s is not text' % source)
+    try:
+        manifest = json.loads(text)
+    except (TypeError, ValueError) as exc:
+        raise ManifestError('%s is not valid JSON: %s' % (source, exc))
+    try:
+        _validate_result_manifest(manifest)
+    except ManifestError as exc:
+        raise ManifestError('%s is invalid: %s' % (source, exc))
+    return manifest
+
+
+def _recorded_points(points):
+    return [{'point': p.point, 'verdict': p.verdict} for p in points]
+
+
+def evaluate_result_manifest(manifest):
+    """Replay every recorded case and return machine-readable acceptance facts."""
+    _validate_result_manifest(manifest)
+    replay_problems = []
+    included_cases = []
+    direction_state = {MUST_TRADE: [], DELIBERATE_REFUSAL: []}
+    for case in manifest['cases']:
+        sides = case['sides']
+        a = observation_from_record(sides['wrapper']['observation'], 'wrapper')
+        b = observation_from_record(sides['parent']['observation'], 'parent')
+        points = compare(a, b)
+        recorded = case['point_verdicts']
+        actual_points = _recorded_points(points)
+        if recorded != actual_points:
+            replay_problems.append('%s recorded point verdicts do not match parity.py replay'
+                                   % case['case'])
+        passed, _reasons = verdict_for_case(case['kind'], a, b, points)
+        anchors = anchor_reasons(sides['wrapper'], a) + anchor_reasons(sides['parent'], b)
+        if anchors and case['included']:
+            replay_problems.append('%s has compiler-anchor mismatch' % case['case'])
+        if anchors:
+            passed = False
+        if case['case_passed'] != passed:
+            replay_problems.append('%s recorded case result does not match parity.py replay'
+                                   % case['case'])
+        if case['included']:
+            included_cases.append((case['case'], case['kind'], points))
+            if case['kind'] in direction_state:
+                direction_state[case['kind']].append(not direction_reasons(case['kind'], a, b))
+
+    rollup_ok, rollup_lines = rollup(included_cases)
+    directions = {
+        MUST_TRADE: any(direction_state[MUST_TRADE]),
+        DELIBERATE_REFUSAL: any(direction_state[DELIBERATE_REFUSAL]),
+    }
+    direction_failures = {
+        kind: bool(values) and not any(values)
+        for kind, values in direction_state.items()
+    }
+    return {
+        'replay_ok': not replay_problems,
+        'replay_problems': replay_problems,
+        'rollup_ok': rollup_ok,
+        'rollup_lines': rollup_lines,
+        'directions': directions,
+        'direction_failures': direction_failures,
+    }
+
+
+def _case_result(name, kind, wrapper, parent, included=True, exclusion_reason=None,
+                 source_wrapper='', source_parent=''):
+    """Build the committed, report-free representation for one raw parity case."""
+    points = compare(wrapper['observation'], parent['observation'])
+    passed, _reasons = verdict_for_case(kind, wrapper['observation'], parent['observation'], points)
+    anchors = anchor_reasons(wrapper, wrapper['observation']) + anchor_reasons(parent,
+                                                                                parent['observation'])
+    if anchors:
+        passed = False
+    def side_result(raw, obs, source):
+        return {
+            'label': raw['label'],
+            'expert': raw['expert'],
+            'binary': raw['binary'],
+            'binary_mtime': raw['binary_mtime'],
+            'expected_hash': raw['expected_hash'],
+            'source_manifest': source,
+            'observation': observation_to_record(obs),
+        }
+
+    out = {
+        'case': name,
+        'kind': kind,
+        'included': included,
+        'sides': {
+            'wrapper': side_result(wrapper, wrapper['observation'], source_wrapper),
+            'parent': side_result(parent, parent['observation'], source_parent),
+        },
+        'point_verdicts': _recorded_points(points),
+        'case_passed': passed,
+    }
+    if not included:
+        out['exclusion_reason'] = exclusion_reason
+    return out
+
+
+def write_result_manifest(case_dirs, output_path):
+    """Materialize committed evidence from the raw side manifests and their current artifacts."""
+    import json
+    import os
+    if not case_dirs:
+        raise ManifestError('at least one parity case directory is required')
+    result_cases = []
+    identity = None
+    for case_dir in case_dirs:
+        case_dir = os.path.abspath(case_dir)
+        wrapper_path = os.path.join(case_dir, 'wrapper.json')
+        parent_path = os.path.join(case_dir, 'parent.json')
+        wrapper = _load(wrapper_path)
+        parent = _load(parent_path)
+        if wrapper.get('label') != 'wrapper' or parent.get('label') != 'parent':
+            raise ManifestError('%s must contain wrapper and parent side labels' % case_dir)
+        for key in ('case', 'kind', 'lane', 'symbol', 'period', 'from', 'to', 'model'):
+            if wrapper.get(key) != parent.get(key):
+                raise ManifestError('%s side identity mismatch at %s' % (case_dir, key))
+        case_identity = {key: wrapper[key] for key in
+                         ('lane', 'symbol', 'period', 'from', 'to', 'model')}
+        if identity is None:
+            identity = case_identity
+        elif identity != case_identity:
+            raise ManifestError('%s does not share the result-set identity' % case_dir)
+        wrapper_obs = observe_manifest(wrapper)
+        parent_obs = observe_manifest(parent)
+        wrapper_record = dict(wrapper)
+        parent_record = dict(parent)
+        wrapper_record['observation'] = wrapper_obs
+        parent_record['observation'] = parent_obs
+        rel_wrapper = os.path.relpath(wrapper_path, os.path.dirname(os.path.abspath(output_path)))
+        rel_parent = os.path.relpath(parent_path, os.path.dirname(os.path.abspath(output_path)))
+        rel_wrapper = rel_wrapper.replace(os.sep, '/')
+        rel_parent = rel_parent.replace(os.sep, '/')
+        result_cases.append(_case_result(
+            wrapper.get('case'), wrapper.get('kind'), wrapper_record, parent_record,
+            included=wrapper.get('case') != 'locked-absent',
+            exclusion_reason='EXPECTED_DIFFERENCE' if wrapper.get('case') == 'locked-absent' else None,
+            source_wrapper=rel_wrapper, source_parent=rel_parent))
+
+    manifest = {
+        'schema_version': RESULT_SCHEMA_VERSION,
+        'entity': RESULT_ENTITY,
+        'run_identity': identity,
+        'cases': result_cases,
+    }
+    _validate_result_manifest(manifest)
+    out_dir = os.path.dirname(os.path.abspath(output_path))
+    if out_dir and not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    with open(output_path, 'w', encoding='utf-8', newline='\n') as fh:
+        json.dump(manifest, fh, ensure_ascii=False, indent=2, sort_keys=False)
+        fh.write('\n')
+    return manifest
 
 
 if __name__ == '__main__':

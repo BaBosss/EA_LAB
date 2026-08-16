@@ -30,21 +30,21 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 | entity | canonical storage | writer | enforced by |
 |---|---|---|---|
-| `OwnerRef` | *embedded in its parent — no file* | — | candidate.owner_ref_resolution_problems: RESOLUTION, which JSON Schema cannot express. R1 commit_oid:path resolves to a blob; R2 that blob is the one blob_oid names; R3 sha256 over the blob's raw bytes equals raw_sha256; R4 anchor contains no spaces and occurs EXACTLY once in the blob - the rule stated in prose on the field below, which nothing read until ORDER-1263. The schema checks the PATTERNS only, and three well-formed hex fields can identify three different documents: an authorization_ref whose path was VISION.md, whose blob_oid was PROJECT_STATE.md's and whose raw_sha256 was unrelated validated clean on a CANDIDATE_ASSIGNED event. |
+| `OwnerRef` | *embedded in its parent — no file* | — | _triage/factory_os/run_schema_fixtures.py: AJV validates each live governed registry row, then the existing candidate.owner_ref_problems resolver checks R1 commit_oid:path, R2 blob_oid, R3 raw_sha256 and R4 anchor uniqueness. Synthetic or malformed pins refuse the governed schema/commit path. |
 | `Hypothesis` | `factory/hypotheses.jsonl` | claude|user | hypothesis_validator: status transitions, and the refusal to register without a falsifier |
-| `ModuleUse` | *embedded in its parent — no file* | — | — |
-| `ParameterBinding` | `factory/parameter_bindings.jsonl` | claude | — |
+| `ModuleUse` | *embedded in its parent — no file* | — | candidate.py: validates the module token/stability contract before CandidatePayload identity is accepted |
+| `ParameterBinding` | `factory/parameter_bindings.jsonl` | claude | check_registries.py: required-field floor and registry resolver reachability; optimize_guard consumes the same resolver |
 | `TestUniverse` | `factory/universe.jsonl` | claude|user | — |
 | `LogicalSymbol` | `factory/universe.jsonl` | — | — |
-| `InstrumentProfile` | `factory/instrument_profiles.jsonl` | — | — |
+| `InstrumentProfile` | `factory/instrument_profiles.jsonl` | — | check_registries.py: required-field floor and profile content-hash/version registry checks |
 | `MetricRef` | *embedded in its parent — no file* | — | run_schema_fixtures.py: ajv validates the pf/pf_state conditional in BOTH directions, over the crafted fixtures AND over every live row of every registry store |
 | `CoverageCell` | `factory/coverage.jsonl` | automation for state; claude only for not_applicable_reason | coverage_validator: comparison-group same-lane rule; MASTER_BACKLOG section 2 regenerated from this, never hand-edited |
-| `ExecutionKey` | *embedded in its parent — no file* | — | — |
-| `RunAttempt` | *embedded in its parent — no file* | — | — |
+| `ExecutionKey` | *embedded in its parent — no file* | — | scheduler.py: canonical execution-key digest and cache/queue identity gate |
+| `RunAttempt` | *embedded in its parent — no file* | — | scheduler.py: append-only transition validator and durable per-attempt surface/ini forensics |
 | `RunTransition` | `factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only` | the scheduler only | _triage/factory_os/run_schema_fixtures.py: ajv validates every committed factory/runs/*.jsonl RunTransition row; exactly three byte-pinned historical manifests are visible LEGACY_EXCEPTION results until their event-log occurrence is durable |
-| `RunJournal` | **derived, never written** — True | — | — |
+| `RunJournal` | **derived, never written** — True | — | scheduler.py: folds and validates the RunTransition lines into the derived journal read-model |
 | `EvidenceRef` | `docs/memory_control/experiment_events/evidence-manifest.jsonl (EXISTING - NOT replaced)` | — | — |
-| `CandidatePayload` | *embedded in its parent — no file* | — | — |
+| `CandidatePayload` | *embedded in its parent — no file* | — | candidate.py: canonical payload digest, full input surface, module stability, profile hashes, and cited-run linkage |
 | `CandidateManifest` | `factory/candidates/<candidate_id>.json` | claude, once, at verdict time | candidate_validator: MUST recompute sha256 over the canonical serialization of `payload` and compare to candidate_digest. The schema checks the PATTERN only - it cannot verify a hash. |
 | `MagicAllocation` | `factory/magic_allocations.jsonl` | automation allocates; claude approves; user ratifies scope changes | allocator: global uniqueness for NEW allocations; check_state.ps1 remains the account\|magic backstop |
 | `DeploymentAttestationEvent` | `portfolio/ATTESTATION_MAP.csv (EXISTING) + append-only event log` | claude|user only | attestation_validator: no actor other than user/claude may append an event that changes candidate_id or status; automation may append OBSERVED events only |
@@ -58,7 +58,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `RuntimeIdentityObserved` | `runtime sidecars collected under portfolio/live_deals/` | — | runtime_identity.py: validates the EA-emitted identity shape and build/artifact evidence |
 | `RuntimeIdentityRecord` | `runtime_identity in portfolio/control_room_snapshot.json` | — | runtime_identity.py: annotates collected identity records with fail-closed validation state |
 | `RuntimeIdentitySummary` | `runtime_identity_summary in portfolio/control_room_snapshot.json` | — | monitor_coverage.ps1: red-lines missing, legacy, mixed, or failed runtime identity evidence |
-| `SnapshotMeta` | `the `meta` property of portfolio/control_room_snapshot.json` | — | — |
+| `SnapshotMeta` | `the `meta` property of portfolio/control_room_snapshot.json` | — | snapshot_validator.py: parent ControlRoomSnapshot validation recomputes mandatory-source reconciliation and freshness |
 | `SafeProjection` | `build/safe_projection.json (derived, never hand-written)` | — | projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot |
 | `AlertEvent` | **derived, never written** — True | — | notifier.assert_sendable: the declared SHAPE checked against this file, PLUS safe_projection.scan_forbidden run with the real snapshot secret list - the layer the sender structurally cannot run |
 | `AlertDelivery` | `ops/delivery_ledger.jsonl` | — | notifier.deliver: every event produces exactly one line whatever happened, and dedupe reads DELIVERED and nothing else |
@@ -99,7 +99,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`ModuleUse`** · embedded — has no file of its own
+**`ModuleUse`** · embedded — has no file of its own · enforced by *candidate.py: validates the module token/stability contract before CandidatePayload identity is accepted*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -116,7 +116,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`OwnerRef`** · embedded — has no file of its own · enforced by *candidate.owner_ref_resolution_problems: RESOLUTION, which JSON Schema cannot express. R1 commit_oid:path resolves to a blob; R2 that blob is the one blob_oid names; R3 sha256 over the blob's raw bytes equals raw_sha256; R4 anchor contains no spaces and occurs EXACTLY once in the blob - the rule stated in prose on the field below, which nothing read until ORDER-1263. The schema checks the PATTERNS only, and three well-formed hex fields can identify three different documents: an authorization_ref whose path was VISION.md, whose blob_oid was PROJECT_STATE.md's and whose raw_sha256 was unrelated validated clean on a CANDIDATE_ASSIGNED event.*
+**`OwnerRef`** · embedded — has no file of its own · enforced by *_triage/factory_os/run_schema_fixtures.py: AJV validates each live governed registry row, then the existing candidate.owner_ref_problems resolver checks R1 commit_oid:path, R2 blob_oid, R3 raw_sha256 and R4 anchor uniqueness. Synthetic or malformed pins refuse the governed schema/commit path.*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -158,7 +158,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`ParameterBinding`** · stored in `factory/parameter_bindings.jsonl` · written by *claude*
+**`ParameterBinding`** · stored in `factory/parameter_bindings.jsonl` · written by *claude* · enforced by *check_registries.py: required-field floor and registry resolver reachability; optimize_guard consumes the same resolver*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -228,7 +228,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`InstrumentProfile`** · stored in `factory/instrument_profiles.jsonl`
+**`InstrumentProfile`** · stored in `factory/instrument_profiles.jsonl` · enforced by *check_registries.py: required-field floor and profile content-hash/version registry checks*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -330,7 +330,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`RunAttempt`** · embedded — has no file of its own
+**`RunAttempt`** · embedded — has no file of its own · enforced by *scheduler.py: append-only transition validator and durable per-attempt surface/ini forensics*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -348,6 +348,19 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `process_observed.observed_at` | `string` | **yes** |  |
 | `process_observed.process_fingerprint` | `string` \| `null` | — |  |
 | `ini_sha256` | `string` \| `null` | — | pattern `^[0-9a-f]{64}$` · USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 6): the sha256 of the .ini the runner actually wrote, recorded PER ATTEMPT and AFTER the file exists. It moved here from ExecutionKey, where it was a fact nobody could know at the moment the key was needed. Identity lives in the key; forensics - what exactly was handed to the tester - lives here, where it can be true. |
+| `set_surface_state` | `object` \| `null` | — | closed · requires `run_id`, `execution_key_digest`, `set_path`, `set_sha256`, `input_source_path`, `input_source_sha256`, `state`, `build_tag`, `declared`, `assignments`, `complete`, `effective_config_hash` · ORDER-1290. The exact Get-SetSurfaceState result made durable: the committed .set path and bytes, the Inputs.mqh source bytes and build surface, and the ExecutionKey/run binding. FULL is reproducible; UNDECLARED/MISMATCH/UNREADABLE/NOSETFILE is not accepted as complete evidence. |
+| `set_surface_state.run_id` | `string` | **yes** | pattern `^RUN-[0-9]{8}-[0-9]{3,}$` |
+| `set_surface_state.execution_key_digest` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `set_surface_state.set_path` | `string` | **yes** | pattern `^(?![A-Za-z]:)(?![/\\])[^/\\]+(?:[/\\][^/\\]+)+$` |
+| `set_surface_state.set_sha256` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `set_surface_state.input_source_path` | `string` | **yes** | pattern `^(?![A-Za-z]:)(?![/\\])[^/\\]+(?:[/\\][^/\\]+)+$` |
+| `set_surface_state.input_source_sha256` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `set_surface_state.state` | `FULL` \| `MISMATCH` \| `UNDECLARED` \| `UNREADABLE` \| `NOSETFILE` | **yes** |  |
+| `set_surface_state.build_tag` | `string` \| `null` | **yes** |  |
+| `set_surface_state.declared` | `integer` \| `null` | **yes** | min `0` |
+| `set_surface_state.assignments` | `integer` | **yes** | min `0` |
+| `set_surface_state.complete` | `boolean` | **yes** |  |
+| `set_surface_state.effective_config_hash` | `string` \| `null` | **yes** | pattern `^[0-9a-f]{64}$` |
 | `exit_code` | `integer` \| `null` | — | persisted immediately on receipt - the freshness guard needs exit 0/3 and cannot reconstruct it |
 | `failure_class` | `NONE` \| `TESTER_ERROR` \| `TERMINAL_ERROR` \| `TIMEOUT` \| `LEASE_LOST` \| `KILLED` \| `CONFIG_REJECTED` | — | decision 18 permits a re-run of an identical ExecutionKey only after an execution or a tester error. USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 7) ratified that those are two CATEGORIES, not two enum members: tester = TESTER_ERROR; execution = TERMINAL_ERROR, TIMEOUT, KILLED, LEASE_LOST; neither, and therefore still blocked = CONFIG_REJECTED. This description used to name only TESTER_ERROR and TERMINAL_ERROR, and read literally it made a machine crash a permanent block on the configuration - in the slice whose whole purpose is recovery. |
 | `report_fresh_proof` | `object` \| `null` | — |  |
@@ -362,7 +375,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`RunJournal`** · **DERIVED** — True · stored in `NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written.`
+**`RunJournal`** · **DERIVED** — True · stored in `NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written.` · enforced by *scheduler.py: folds and validates the RunTransition lines into the derived journal read-model*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -382,7 +395,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`ExecutionKey`** · embedded — has no file of its own
+**`ExecutionKey`** · embedded — has no file of its own · enforced by *scheduler.py: canonical execution-key digest and cache/queue identity gate*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -432,7 +445,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`CandidatePayload`** · embedded — has no file of its own
+**`CandidatePayload`** · embedded — has no file of its own · enforced by *candidate.py: canonical payload digest, full input surface, module stability, profile hashes, and cited-run linkage*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -835,7 +848,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`SnapshotMeta`** · stored in `the `meta` property of portfolio/control_room_snapshot.json`
+**`SnapshotMeta`** · stored in `the `meta` property of portfolio/control_room_snapshot.json` · enforced by *snapshot_validator.py: parent ControlRoomSnapshot validation recomputes mandatory-source reconciliation and freshness*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -932,6 +945,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `at` | `string` | **yes** |  |
 | `openclaw` | `RUNNING` \| `NOT_RUNNING` \| `UNKNOWN` | **yes** | design 10 requires alerts to work with OpenClaw stopped. Recording the OBSERVED gateway state beside the receipt turns that from a claim in a handoff into a measurement stored next to the evidence. UNKNOWN is a real third answer and is never collapsed onto NOT_RUNNING. |
 | `detail` | `string` | **yes** |  |
+| `transport_kind` | `TELEGRAM` \| `RECORDING` \| `UNKNOWN` | — | Optional for legacy ledger rows; newly emitted rows carry the runtime transport classification. UNKNOWN is conservative and does not prove a credentialed transport. |
 
 **Unknown fields:** rejected (closed object).
 

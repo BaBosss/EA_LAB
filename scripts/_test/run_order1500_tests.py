@@ -63,6 +63,19 @@ def row(run_id='RUN-20990101-001', attempt=1, transition='QUEUED'):
         'attempt': attempt,
         'transition': transition,
         'at': '2099-01-01T00:00:00Z',
+        'execution_key': current_key(),
+    }
+
+
+def current_key():
+    return {
+        'expert': 'SyntheticEA', 'symbol': 'XAUUSD', 'tf': 'H1',
+        'from_date': '2099.01.01', 'to_date': '2099.01.02', 'model': 1,
+        'deposit': 10000, 'currency': 'USD', 'account_unit': 'USD',
+        'leverage': 100, 'terminal_build': 5000,
+        'set_hash': 'a' * 64, 'ex5_hash': 'b' * 64,
+        'effective_config_hash': 'c' * 64,
+        'data_fingerprint': 'v1:' + ('d' * 64), 'lane': 'D:/Meta 5',
     }
 
 
@@ -106,17 +119,50 @@ def main():
     check('G near-match ID/path -> INVALID',
           not near_report.ok and near_report.invalid_rows[0]['state'] == validator.INVALID)
 
+    # J/K: AJV's historical anyOf is deliberately broad so it can read old rows;
+    # the journal validator must not let that compatibility branch become a new
+    # writer contract.  A path preimage and an old ini_hash are both refused.
+    legacy_key = {
+        k: v for k, v in current_key().items()
+        if k not in ('account_unit', 'terminal_build')
+    }
+    legacy_key['ini_hash'] = 'e' * 64
+    legacy_key['data_fingerprint'] = 'D:/Meta 5|XAUUSD|H1|2099.01.01|2099.01.02|M1'
+    bad_legacy = row('RUN-20990101-006')
+    bad_legacy['execution_key'] = legacy_key
+    bad_legacy_report = validator.validate_run_journals(
+        MemorySource({'factory/runs/RUN-20990101-006.jsonl': encoded(bad_legacy)}), schema)
+    check('J new legacy ini_hash/preimage row -> INVALID',
+          not bad_legacy_report.ok and bad_legacy_report.invalid_rows)
+
+    bad_fingerprint = row('RUN-20990101-007')
+    bad_fingerprint['execution_key']['data_fingerprint'] = 'D:/Meta 5|XAUUSD|H1|preimage'
+    bad_fingerprint_report = validator.validate_run_journals(
+        MemorySource({'factory/runs/RUN-20990101-007.jsonl': encoded(bad_fingerprint)}), schema)
+    check('K current key with fingerprint preimage -> INVALID',
+          not bad_fingerprint_report.ok and bad_fingerprint_report.invalid_rows)
+
+    missing_surface_source = MemorySource({
+        'factory/runs/RUN-20990101-008.jsonl': encoded(
+            row('RUN-20990101-008'),
+            row('RUN-20990101-008', transition='COMPLETED')),
+    })
+    missing_surface_report = validator.validate_run_journals(missing_surface_source, schema)
+    check('L completed current row without surface evidence -> INVALID',
+          not missing_surface_report.ok and any(
+              'durable set_surface_state' in r.get('detail', '')
+              for r in missing_surface_report.invalid_rows))
+
     # C/D/E and byte preservation: read the real committed manifests without writing them.
     legacy_paths = [
         'factory/runs/RUN-20260802-001.jsonl',
         'factory/runs/RUN-20260802-002.jsonl',
         'factory/runs/RUN-20260802-004.jsonl',
     ]
+    legacy_source = evidence.EvidenceSource('index', root=REPO_ROOT)
     before = {}
     for path in legacy_paths:
-        with io.open(os.path.join(REPO_ROOT, path.replace('/', os.sep)), 'rb') as fh:
-            before[path] = fh.read()
-    legacy_source = evidence.EvidenceSource('worktree', root=REPO_ROOT)
+        before[path] = legacy_source.read_committed_bytes(path)
     legacy_report = validator.validate_run_journals(legacy_source, schema)
     after = {p: legacy_source.read_committed_bytes(p) for p in legacy_paths}
     check('C/D/E exact three manifests -> LEGACY_EXCEPTION',

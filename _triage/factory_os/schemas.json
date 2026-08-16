@@ -360,9 +360,9 @@
     "OwnerRef": {
       "type": "object",
       "description": "The ONLY legal way for a Factory OS artifact to carry a fact owned elsewhere. Pins the owner at a commit so the reference cannot silently drift, exactly as the existing event log does. Rev 1's mutable copies are replaced by this everywhere.",
-      "x-enforced-by": "candidate.owner_ref_resolution_problems: RESOLUTION, which JSON Schema cannot express. R1 commit_oid:path resolves to a blob; R2 that blob is the one blob_oid names; R3 sha256 over the blob's raw bytes equals raw_sha256; R4 anchor contains no spaces and occurs EXACTLY once in the blob - the rule stated in prose on the field below, which nothing read until ORDER-1263. The schema checks the PATTERNS only, and three well-formed hex fields can identify three different documents: an authorization_ref whose path was VISION.md, whose blob_oid was PROJECT_STATE.md's and whose raw_sha256 was unrelated validated clean on a CANDIDATE_ASSIGNED event.",
-      "x-enforcement-status": "BUILT",
-      "x-enforcer": "_triage/factory_os/candidate.py",
+      "x-enforced-by": "_triage/factory_os/run_schema_fixtures.py: AJV validates each live governed registry row, then the existing candidate.owner_ref_problems resolver checks R1 commit_oid:path, R2 blob_oid, R3 raw_sha256 and R4 anchor uniqueness. Synthetic or malformed pins refuse the governed schema/commit path.",
+      "x-enforcement-status": "WIRED",
+      "x-enforcer": "_triage/factory_os/run_schema_fixtures.py",
       "required": [
         "entity",
         "owner_type",
@@ -510,6 +510,9 @@
     },
     "ModuleUse": {
       "type": "object",
+      "x-enforced-by": "candidate.py: validates the module token/stability contract before CandidatePayload identity is accepted",
+      "x-enforcer": "_triage/factory_os/candidate.py",
+      "x-enforcement-status": "BUILT",
       "description": "A capability token plus the stability of the module behind it. Audit P1: without per-module stability, an EXPERIMENTAL module's evidence could reach a Candidate.",
       "required": [
         "token",
@@ -535,6 +538,9 @@
     },
     "ParameterBinding": {
       "type": "object",
+      "x-enforced-by": "check_registries.py: required-field floor and registry resolver reachability; optimize_guard consumes the same resolver",
+      "x-enforcer": "_triage/factory_os/check_registries.py",
+      "x-enforcement-status": "BUILT",
       "x-owner-file": "factory/parameter_bindings.jsonl",
       "x-writer": "claude",
       "description": "NEW ENTITY answering the audit: rev 1 put role=LOCKED/TUNABLE on the GLOBAL parameter definition, but locked-ness is per hypothesis - the same input can be LOCKED in B14-H01 and TUNABLE in B14-H02. Marking it globally would make optimize_guard refuse it on every Boss. docs/PARAM_REGISTRY.csv keeps permanent semantics (owner/unit/context/active_when); this binds role and locked value per hypothesis revision. The wrapper generator and optimize_guard MUST read the same resolver.",
@@ -759,6 +765,9 @@
     },
     "InstrumentProfile": {
       "type": "object",
+      "x-enforced-by": "check_registries.py: required-field floor and profile content-hash/version registry checks",
+      "x-enforcer": "_triage/factory_os/check_registries.py",
+      "x-enforcement-status": "BUILT",
       "x-owner-file": "factory/instrument_profiles.jsonl",
       "description": "PARTLY owned already: baseline semantics and starting values live in ea_template/OPTIMIZATION_PROCEDURE_V2.md section 4. This entity owns only the broker/lane mapping layer and pins the rest by reference. Audit P1: a mutable profile string id let profile CONTENT change under a fixed id while a Candidate still looked valid - hence content_hash + version.",
       "required": [
@@ -1043,6 +1052,9 @@
     },
     "ExecutionKey": {
       "type": "object",
+      "x-enforced-by": "scheduler.py: canonical execution-key digest and cache/queue identity gate",
+      "x-enforcer": "_triage/factory_os/scheduler.py",
+      "x-enforcement-status": "BUILT",
       "description": "The complete new simulator input identity. Currency is frozen to the USD runner contract; account_unit and the resolved terminal FileVersion build are distinct cache dimensions. effective_config_hash remains the existing chart/set/config/surface fingerprint, not account or terminal identity. ini_sha256 remains attempt forensics because it does not exist before launch.",
       "required": [
         "expert",
@@ -1170,6 +1182,9 @@
     },
     "RunAttempt": {
       "type": "object",
+      "x-enforced-by": "scheduler.py: append-only transition validator and durable per-attempt surface/ini forensics",
+      "x-enforcer": "_triage/factory_os/scheduler.py",
+      "x-enforcement-status": "BUILT",
       "description": "One append-only record. Audit P1: rev 1 had ONE attempt field and ONE state on the manifest while the design claimed every attempt was kept, and it was not crash-safe. Transitions are now appended, never overwritten.",
       "required": [
         "attempt",
@@ -1271,6 +1286,42 @@
           "pattern": "^[0-9a-f]{64}$",
           "description": "USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 6): the sha256 of the .ini the runner actually wrote, recorded PER ATTEMPT and AFTER the file exists. It moved here from ExecutionKey, where it was a fact nobody could know at the moment the key was needed. Identity lives in the key; forensics - what exactly was handed to the tester - lives here, where it can be true."
         },
+        "set_surface_state": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "run_id",
+            "execution_key_digest",
+            "set_path",
+            "set_sha256",
+            "input_source_path",
+            "input_source_sha256",
+            "state",
+            "build_tag",
+            "declared",
+            "assignments",
+            "complete",
+            "effective_config_hash"
+          ],
+          "unevaluatedProperties": false,
+          "description": "ORDER-1290. The exact Get-SetSurfaceState result made durable: the committed .set path and bytes, the Inputs.mqh source bytes and build surface, and the ExecutionKey/run binding. FULL is reproducible; UNDECLARED/MISMATCH/UNREADABLE/NOSETFILE is not accepted as complete evidence.",
+          "properties": {
+            "run_id": { "type": "string", "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$" },
+            "execution_key_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "set_path": { "type": "string", "pattern": "^(?![A-Za-z]:)(?![/\\\\])[^/\\\\]+(?:[/\\\\][^/\\\\]+)+$" },
+            "set_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "input_source_path": { "type": "string", "pattern": "^(?![A-Za-z]:)(?![/\\\\])[^/\\\\]+(?:[/\\\\][^/\\\\]+)+$" },
+            "input_source_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "state": { "enum": ["FULL", "MISMATCH", "UNDECLARED", "UNREADABLE", "NOSETFILE"] },
+            "build_tag": { "type": ["string", "null"] },
+            "declared": { "type": ["integer", "null"], "minimum": 0 },
+            "assignments": { "type": "integer", "minimum": 0 },
+            "complete": { "type": "boolean" },
+            "effective_config_hash": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
         "exit_code": {
           "type": [
             "integer",
@@ -1371,6 +1422,9 @@
     },
     "RunJournal": {
       "type": "object",
+      "x-enforced-by": "scheduler.py: folds and validates the RunTransition lines into the derived journal read-model",
+      "x-enforcer": "_triage/factory_os/scheduler.py",
+      "x-enforcement-status": "BUILT",
       "x-derived": true,
       "x-owner-file": "NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written.",
       "description": "Read-model only. Realizes EVOLUTION_PLAN section 20.8 Contract B. Occurrence metadata and hashes only - the experiment event log remains the owner of the experiment timeline; this fold owns ONLY scheduler recovery state, which the audit agreed is a genuinely new fact.",
@@ -1460,6 +1514,9 @@
     },
     "CandidatePayload": {
       "type": "object",
+      "x-enforced-by": "candidate.py: canonical payload digest, full input surface, module stability, profile hashes, and cited-run linkage",
+      "x-enforcer": "_triage/factory_os/candidate.py",
+      "x-enforcement-status": "BUILT",
       "description": "THE HASHED OBJECT. Audit P1: rev 1 made candidate_id a required member of the object whose hash it was defined to be - id = hash(manifest containing id) has no normal construction, so a team would have hashed a different payload than the validator and quietly disabled the check. The id is now the hash of THIS object, which does not contain it. Also widened per the audit: module set with stability, resolved profile CONTENT hashes, generator/allowlist/source hashes, effective config, and evidence as a list with per-window provenance rather than one lane.",
       "required": [
         "hypothesis_revision",
@@ -2745,6 +2802,9 @@
     },
     "SnapshotMeta": {
       "type": "object",
+      "x-enforced-by": "snapshot_validator.py: parent ControlRoomSnapshot validation recomputes mandatory-source reconciliation and freshness",
+      "x-enforcer": "_triage/factory_os/snapshot_validator.py",
+      "x-enforcement-status": "BUILT",
       "x-owner-file": "the `meta` property of portfolio/control_room_snapshot.json",
       "description": "The META SUB-OBJECT ONLY - not the whole file. Audit P1 (rev 1): reconciliation_clear was a writer-supplied boolean, `fresh` was not required, there was no mandatory-source registry and no category totals, so a snapshot with a missing mandatory source - or one that simply omitted the source from the array - could report reconciliation_clear:true and satisfy the equation with 0=0. Version note: HEAD is already v4; the Factory domain lands as v5.",
       "required": [
@@ -3130,6 +3190,14 @@
         },
         "detail": {
           "type": "string"
+        },
+        "transport_kind": {
+          "enum": [
+            "TELEGRAM",
+            "RECORDING",
+            "UNKNOWN"
+          ],
+          "description": "Optional for legacy ledger rows; newly emitted rows carry the runtime transport classification. UNKNOWN is conservative and does not prove a credentialed transport."
         }
       },
       "x-enforcement-status": "BUILT",

@@ -20,7 +20,11 @@ param(
     [switch]$DebugVisible,
     [switch]$Portable,
     [switch]$NoPortable,
-    [switch]$NoShutdown
+    [switch]$NoShutdown,
+    [switch]$AllowLegacyIdentity, # explicit non-green escape hatch for historical/fixture runs
+     [string]$LaneId = '',
+     [string]$UniversePath = '',
+     [string]$CapabilityFile = ''
 )
 
 $ErrorActionPreference = "Stop"
@@ -117,6 +121,27 @@ if (-not (Test-Path -LiteralPath $TerminalPath)) {
     throw "MT5 terminal not found: $TerminalPath"
 }
 
+. (Join-Path $PSScriptRoot 'lib\symbol_preflight.ps1')
+$UniverseCandidate = Join-Path $Root 'factory\universe.jsonl'
+if (-not $UniversePath -and (Test-Path -LiteralPath $UniverseCandidate -PathType Leaf)) { $UniversePath = $UniverseCandidate }
+$CapabilityDataPath = $ConfiguredDataPath
+if (-not $CapabilityDataPath) {
+    $terminalInstallRoot = Split-Path -Parent $TerminalPath
+    if (Test-Path -LiteralPath (Join-Path $terminalInstallRoot 'Bases') -PathType Container) {
+        $CapabilityDataPath = $terminalInstallRoot
+    }
+}
+try {
+    $SymbolResolution = Resolve-TesterSymbol -LogicalSymbol $Symbol -TerminalPath $TerminalPath -DataDir $CapabilityDataPath `
+        -LaneId $LaneId -UniversePath $UniversePath -CapabilityFile $CapabilityFile
+}
+catch {
+    Write-Host "ABORT: $($_.Exception.Message)" -ForegroundColor Red
+    exit 2
+}
+$TesterSymbol = $SymbolResolution.tester_symbol
+Write-Host "symbol preflight: logical=$($SymbolResolution.logical_symbol) tester=$TesterSymbol status=$($SymbolResolution.comparison_status) economics=$($SymbolResolution.economics_check) source=$($SymbolResolution.capability_source)"
+
 $ExistingTerminals = @(Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object {
     try {
         [string]::Equals($_.Path, $TerminalPath, [System.StringComparison]::OrdinalIgnoreCase)
@@ -137,7 +162,7 @@ if (-not $ExpertName) {
     $ExpertName = "$Project.ex5"
 }
 
-$ReportPath = Join-Path $OutputFolder "${Project}_${Symbol}_${ResolvedTimeframe}_report.html"
+$ReportPath = Join-Path $OutputFolder "${Project}_${TesterSymbol}_${ResolvedTimeframe}_report.html"
 $TesterConfigPath = Join-Path $OutputFolder "tester_config.ini"
 $LogFile = Join-Path $LogFolder "backtest_$Timestamp.log"
 $ShutdownValue = if ($NoShutdown.IsPresent -or $DebugVisible.IsPresent) { "0" } else { "1" }
@@ -159,8 +184,28 @@ Write-Host "surface: $($surface.State) -- $($surface.Message)"
 # implementation -- this file writes Expert= into a tester .ini exactly like they do, so a stale
 # binary here is the same exposure. $ExpertName may already carry `.ex5` (it defaults to
 # "$Project.ex5" above); Get-StaleCheckLine normalises that rather than each caller remembering.
+. (Join-Path $PSScriptRoot 'lib\build_receipt.ps1')
 . (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
-Write-Host (Get-StaleCheckLine -Expert $ExpertName -ExpertsDir (Get-TesterExpertsDir -TerminalPath $TerminalPath -DataDir $ConfiguredDataPath -Portable:$UsePortable))
+$expertsDir = Get-TesterExpertsDir -TerminalPath $TerminalPath -DataDir $ConfiguredDataPath -Portable:$UsePortable
+$buildIdentity = Get-BuildReceiptStatus -Expert $ExpertName -ExpertsDir $expertsDir `
+    -RegistryPath (Join-Path $Root 'portfolio\build_receipts.jsonl')
+if (($ExpertName -replace '\.ex5$','') -ieq 'Boss_14_GridLog') {
+    $buildIdentity = Get-ManagedCompatibilityStatus -ExpertsDir $expertsDir `
+        -RegistryPath (Join-Path $Root 'portfolio\build_receipts.jsonl')
+}
+$configIdentity = Get-SetConfigIdentity -Path $SetFilePath -Surface $surface
+if (-not $AllowLegacyIdentity -and (-not $buildIdentity.Valid -or -not $configIdentity.Valid)) {
+    Write-Host ("ABORT: identity refusal -- build={0} ({1}); config={2} ({3}). Pass -AllowLegacyIdentity only for explicitly non-green legacy/fixture work." -f
+        $buildIdentity.State, $buildIdentity.Reason, $configIdentity.State, $configIdentity.Reason) -ForegroundColor Red
+    exit 2
+}
+if ($AllowLegacyIdentity) {
+    Write-Host ("identity: LEGACY_ALLOWED -- build={0} ({1}); config={2} ({3})" -f
+        $buildIdentity.State, $buildIdentity.Reason, $configIdentity.State, $configIdentity.Reason) -ForegroundColor Yellow
+} else {
+    Write-Host (Format-LaunchIdentityLine -Build $buildIdentity -Config $configIdentity)
+}
+Write-Host (Get-StaleCheckLine -Expert $ExpertName -ExpertsDir $expertsDir -RepoRoot $Root)
 
 $SetInputs = Get-SetInputs -Path $SetFilePath
 
@@ -170,7 +215,11 @@ $ini.Add("; Broker/server/account fields are informational only and are not pass
 $ini.Add("; No Currency, DepositCurrency, AccountCurrency, or Leverage override is emitted.")
 $ini.Add("[Tester]")
 $ini.Add("Expert=$ExpertName")
-$ini.Add("Symbol=$Symbol")
+$ini.Add("; logical_symbol=$($SymbolResolution.logical_symbol)")
+$ini.Add("; tester_symbol=$TesterSymbol")
+$ini.Add("; symbol_comparison_status=$($SymbolResolution.comparison_status)")
+$ini.Add("; economics_check=$($SymbolResolution.economics_check)")
+$ini.Add("Symbol=$TesterSymbol")
 $ini.Add("Period=$ResolvedTimeframe")
 $ini.Add("Optimization=0")
 $ini.Add("OptimizationCriterion=0")
@@ -211,7 +260,11 @@ $CommandLine = '"' + $TerminalPath + '" ' + (($argsList | ForEach-Object {
 $Metadata = [ordered]@{
     job_type = "backtest"
     project = $Project
-    symbol = $Symbol
+    logical_symbol = $SymbolResolution.logical_symbol
+    tester_symbol = $TesterSymbol
+    symbol_resolution = $SymbolResolution.resolution_source
+    symbol_comparison_status = $SymbolResolution.comparison_status
+    economics_check = $SymbolResolution.economics_check
     timeframe = $ResolvedTimeframe
     expert_name = $ExpertName
     set_file_path = $SetFilePath

@@ -22,6 +22,7 @@ USAGE  tools\\python312\\python.exe _triage/factory_os/run_parity_tests.py
 EXIT   0 = every case behaved as declared - 1 = one did not
 """
 import os
+import json
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -221,6 +222,96 @@ def d_rollup_needs_every_point_exercised():
             'the roll-up accepted a set with an unexercised point: %r' % (lines,))
 
 
+# --- committed result-manifest replay -----------------------------------------------------------
+
+def _result_side(label, observation):
+    return {
+        'label': label,
+        'expert': 'EALabTpl\\%s' % label,
+        'binary': 'lane\\%s.ex5' % label,
+        'binary_mtime': '2026-08-16 00:00:00',
+        'expected_hash': 'a' * 64,
+        'source_manifest': 'factory/parity/fixture/%s.json' % label,
+        'observation': P.observation_to_record(observation),
+    }
+
+
+def _result_case(name, kind, a, b, included=True):
+    points = P.compare(a, b)
+    passed, _reasons = P.verdict_for_case(kind, a, b, points)
+    case = {
+        'case': name,
+        'kind': kind,
+        'included': included,
+        'sides': {'wrapper': _result_side('wrapper', a),
+                  'parent': _result_side('parent', b)},
+        'point_verdicts': [{'point': p.point, 'verdict': p.verdict} for p in points],
+        'case_passed': passed,
+    }
+    if not included:
+        case['exclusion_reason'] = 'EXPECTED_DIFFERENCE'
+    return case
+
+
+def _valid_result_manifest():
+    must_a = obs('wrapper', deals=[DEAL_A, DEAL_EOT_A], orders=[ORDER_A], log=[CFG, RISK])
+    must_b = obs('parent', deals=[DEAL_A, DEAL_EOT_A], orders=[ORDER_A], log=[CFG, RISK])
+    refusal_a = obs('wrapper', log=[FATAL])
+    refusal_b = obs('parent', log=[FATAL])
+    locked_a = obs('wrapper', deals=[DEAL_A], orders=[ORDER_A], log=[CFG])
+    locked_b = obs('parent', deals=[DEAL_A, DEAL_B], orders=[ORDER_A], log=[CFG])
+    return {
+        'schema_version': 1,
+        'entity': 'ParityResultManifest',
+        'run_identity': {'lane': 'D:\\Meta 5\\terminal64.exe', 'symbol': 'XAUUSD',
+                         'period': 'H1', 'from': '2024.01.01', 'to': '2024.07.01',
+                         'model': 1},
+        'cases': [_result_case('must-trade', P.MUST_TRADE, must_a, must_b),
+                  _result_case('deliberate-refusal', P.DELIBERATE_REFUSAL, refusal_a, refusal_b),
+                  _result_case('locked-absent', P.NEUTRAL, locked_a, locked_b, included=False)],
+    }
+
+
+def a_result_manifest_valid_replays():
+    manifest = _valid_result_manifest()
+    parsed = P.read_result_manifest(json.dumps(manifest), 'fixture')
+    summary = P.evaluate_result_manifest(parsed)
+    return (summary['replay_ok'] and summary['rollup_ok']
+            and summary['directions'][P.MUST_TRADE]
+            and summary['directions'][P.DELIBERATE_REFUSAL],
+            'valid committed result was rejected: %r' % summary)
+
+
+def a_result_manifest_missing_observation_is_rejected():
+    manifest = _valid_result_manifest()
+    del manifest['cases'][0]['sides']['wrapper']['observation']['alerts']
+    try:
+        P.read_result_manifest(json.dumps(manifest), 'fixture')
+    except P.ManifestError as exc:
+        return 'alerts' in str(exc), 'missing observation rejected without naming alerts: %s' % exc
+    return False, 'incomplete observation was accepted'
+
+
+def a_result_manifest_tampered_verdict_is_rejected():
+    manifest = _valid_result_manifest()
+    manifest['cases'][0]['point_verdicts'][0]['verdict'] = P.DIFFER
+    parsed = P.read_result_manifest(json.dumps(manifest), 'fixture')
+    summary = P.evaluate_result_manifest(parsed)
+    return (not summary['replay_ok'] and any('recorded point verdicts' in p
+                                             for p in summary['replay_problems']),
+            'tampered recorded verdict was not detected: %r' % summary)
+
+
+def a_result_manifest_tampered_identity_is_rejected():
+    manifest = _valid_result_manifest()
+    manifest['cases'][0]['sides']['wrapper']['expected_hash'] = 'f' * 64
+    parsed = P.read_result_manifest(json.dumps(manifest), 'fixture')
+    summary = P.evaluate_result_manifest(parsed)
+    return (not summary['replay_ok'] and any('compiler-anchor' in p
+                                             for p in summary['replay_problems']),
+            'compiler identity mismatch was not detected: %r' % summary)
+
+
 POINT_ATTACKS = (
     ('deals', 'two different trade lists', a_deals_differ),
     ('cfg', 'same trades, different effective_config_hash -- point 4 alone calls this parity',
@@ -249,6 +340,14 @@ PLAIN_ATTACKS = (
      a_alert_ignores_host_noise),
     ('anchor', 'both sides cache-poisoned to the SAME wrong hash -- only the compiler corner sees it',
      a_anchor_catches_cache_poison),
+    ('manifest', 'a valid committed result replays and satisfies the case-set contract',
+     a_result_manifest_valid_replays),
+    ('manifest', 'incomplete observation fields are rejected deterministically',
+     a_result_manifest_missing_observation_is_rejected),
+    ('manifest', 'tampered recorded point verdicts are rejected by replay',
+     a_result_manifest_tampered_verdict_is_rejected),
+    ('manifest', 'tampered compiler identity is rejected by replay',
+     a_result_manifest_tampered_identity_is_rejected),
 )
 
 

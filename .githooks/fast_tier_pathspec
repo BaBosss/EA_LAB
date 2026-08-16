@@ -40,6 +40,7 @@ _triage/factory_os/run_activation_tests.py
 _triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_guard_shape_lint.py
 _triage/factory_os/run_journal_validator.py
+_triage/factory_os/run_order1281_tests.py
 _triage/factory_os/run_param_surface_tests.py
 _triage/factory_os/run_parity_tests.py
 _triage/factory_os/run_pilot_cells_tests.py
@@ -70,6 +71,7 @@ _triage/factory_os/schemas.json
 _triage/factory_os/setfile.py
 _triage/factory_os/snapshot_build.py
 _triage/factory_os/snapshot_validator.py
+_triage/factory_os/surface_evidence.py
 _triage/PARAM_INACTIVE_AUDIT.md
 AGENT_TASKBOARD.md
 AGENTS.md
@@ -78,6 +80,7 @@ docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv
 docs/SESSION_LEDGER.md
+EA_SCORECARD_AND_REGISTRY.md
 ea_template/Boss_14_GridLog.mq5
 ea_template/core/Inputs.mqh
 ea_template/generated/B14_H01_r1.mq5
@@ -90,6 +93,7 @@ factory/instrument_profiles.jsonl
 factory/magic_allocations.jsonl
 factory/optimize_decisions.jsonl
 factory/parameter_bindings.jsonl
+factory/parity/result_manifest.json
 factory/runs/pilot/pilot_cells_MAIN_lot0p03_*.jsonl
 factory/runs/pilot/probe/*.jsonl
 factory/runs/pilot/selection/*.jsonl
@@ -101,9 +105,12 @@ portfolio/ATTESTATION_MAP.csv
 portfolio/control_room_snapshot.json
 portfolio/DEPLOYMENTS.csv
 portfolio/live_deals/*
+PROJECT_STATE.md
 scripts/*.ps1
 scripts/_test/*
 scripts/_test/run_fast_cages.ps1
+scripts/_test/run_order1290_tests.py
+scripts/_test/run_order1500_tests.py
 scripts/_test/run_pilot_verify_tests.py
 scripts/_test/run_selection_tests.py
 scripts/check_handoff_contract.ps1
@@ -142,3 +149,4 @@ scripts/pilot_verify_check.py
 scripts/run_backtest.ps1
 scripts/scheduler_run.ps1
 scripts/use_python.ps1
+VISION.md

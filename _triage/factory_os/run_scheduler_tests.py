@@ -1100,6 +1100,14 @@ check('EXECUTION KEY  a deposit of 10000 and 10000.0 give ONE digest. Probed bef
 check('EXECUTION KEY  CONTROL a genuinely different deposit still gives a different digest',
       S.execution_key_digest(BASE_KEY)
       != S.execution_key_digest(dict(BASE_KEY, deposit=10001)))
+try:
+    S.execution_key_digest(dict(BASE_KEY, deposit=10000.5))
+    _fractional_deposit_refused = False
+except ValueError as exc:
+    _fractional_deposit_refused = 'passes it to mt5_run.ps1 as [int]' in str(exc)
+check('EXECUTION KEY  a fractional deposit is refused before the runner can truncate it',
+      _fractional_deposit_refused,
+      'scheduler identity must not admit 10000.5 when the runner executes 10000')
 
 # The `queue` CLI path, driven end to end through a temp root. Probed before the fix: queueing one
 # run id TWICE appended a second QUEUED line and both calls exited 0, because the one command that

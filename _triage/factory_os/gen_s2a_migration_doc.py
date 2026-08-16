@@ -143,11 +143,12 @@ indistinguishable from a table nobody thought about.
 
 `signoff_state` is yours. Per row, in your own commit:
 
-- **approve** → set `signoff_state` to `APPROVED` on that row of
-  `_triage/factory_os/s2a_migration.jsonl`. Note the checker refuses `APPROVED` **by design** — that
-  guard exists to stop *me* writing it, so the criterion has to be relaxed to accept the owner's act
-  in the same commit that records your approval. That relaxation is deliberately not pre-built, so it
-  cannot be used before you have decided.
+- **approve** → record the owner's decision in
+  `_triage/factory_os/s2a_attestations.jsonl`; do not set `signoff_state` to `APPROVED` in D1.
+  The D1 checker deliberately rejects that state, while the attestation checker validates the
+  owner's decision against its bundle and pins. The front guard derives required paths from D1
+  `owner_ref` as well as `expected_post_state`; a missing or invalid pin is refused and can never
+  be displayed as `APPROVED`.
 - **refuse** → set `signoff_state` to `REFUSED` and add a `refused_reason`. A refusal with a stated
   reason closes the question; silence leaves it open and it comes back.
 

@@ -24,6 +24,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check_s2a_migration as chk  # noqa: E402
+import gen_s2a_migration_doc as gen_d2  # noqa: E402
 
 
 def load_real():
@@ -655,6 +656,31 @@ def drift_guard_part():
     ok = rc == 0
     print('  [%s] CONTROL D1 pinned at %s while HEAD is %s -> still OK (a pin is a historical '
           'claim, not a HEAD tracker)' % ('OK ' if ok else 'BAD', ','.join(sorted(pinned)), head))
+    if not ok:
+        bad += 1
+
+    # ORDER-1269 #2: the current handout is generated prose, so stale policy wording must be
+    # caught at the source and the rendering must be deterministic. Historical evidence is not
+    # rewritten; only the current generator output is checked.
+    rows, cov = load_real()
+    generated_a = gen_d2.build(rows, cov)
+    generated_b = gen_d2.build(rows, cov)
+    current = io.open(gen_d2.DOC_PATH, encoding='utf-8').read()
+    obsolete = (
+        'the criterion has to be relaxed',
+        'that relaxation is deliberately not pre-built',
+        'same commit that records your approval',
+    )
+    required = (
+        '`owner_ref` as well as `expected_post_state`',
+        'missing or invalid pin',
+        'can never\n  be displayed as `APPROVED`',
+    )
+    ok = (generated_a == generated_b == current and
+          not any(token in generated_a for token in obsolete) and
+          all(token in generated_a for token in required))
+    print('  [%s] ORDER-1269 #2 current handout is deterministic and has no obsolete policy text'
+          % ('OK ' if ok else 'BAD'))
     if not ok:
         bad += 1
 

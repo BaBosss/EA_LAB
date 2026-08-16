@@ -310,6 +310,69 @@ def run_selection_cases():
          m.get(PATH) is good, repr(m))
 
 
+def run_owner_path_cases():
+    """ORDER-1269 #4: D1's authoritative owner path must not disappear behind post-state."""
+    import tempfile
+
+    src = evidence.EvidenceSource('worktree', root=_ROOT)
+    base = [line for line in src.read_committed(att.ATTESTATION_PATH).split('\n')
+            if line.strip() and not line.lstrip().startswith('{"_comment"')]
+    if not base:
+        case('ENGAGEMENT', 'the real attestation log has an in-force fixture row', False,
+             'no attestation row')
+        return
+
+    fd, tmp = tempfile.mkstemp(prefix='order1269_owner_path_', suffix='.jsonl')
+    saved_path = att.ATTESTATION_PATH
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(base[-1] + '\n')
+        att.ATTESTATION_PATH = tmp
+        pins = guard.pinned_expectations(src)
+    finally:
+        att.ATTESTATION_PATH = saved_path
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+    case('ATTACK', 'a current owner path omitted from expected_post_state is still pinned',
+         'factory/coverage.jsonl' in pins,
+         'pins=%r' % (pins,))
+
+    owner_path = 'factory/coverage.jsonl'
+    owner_pin = pins.get(owner_path)
+    p = guard.evaluate({owner_path: owner_pin}, {owner_path},
+                        resolve=lambda _p: owner_pin.value if owner_pin else None)
+    case('CONTROL', 'a valid authoritative owner pin passes',
+         owner_pin is not None and p == [], repr(p))
+
+    bad_value = 'f' * 40 if not owner_pin or owner_pin.value != 'f' * 40 else 'e' * 40
+    p = guard.evaluate({owner_path: owner_pin}, {owner_path}, resolve=lambda _p: bad_value)
+    case('ATTACK', 'a changed authoritative owner path is refused with P1',
+         owner_pin is not None and fired(p, 'P1'), repr(p))
+
+    p = guard.evaluate({owner_path: owner_pin}, {'docs/SESSION_LEDGER.md'},
+                        resolve=lambda _p: bad_value)
+    case('SPECIFICITY', 'an unrelated non-owned path creates no owner requirement',
+         owner_pin is not None and p == [], repr(p))
+
+    missing = [{'current_owner': owner_path, 'entity': 'CoverageCell', 'owner_ref': None}]
+    bad = [{'current_owner': owner_path, 'entity': 'CoverageCell',
+            'owner_ref': {'path': owner_path, 'blob_oid': 'not-a-blob',
+                          'commit_oid': 'a' * 40, 'raw_sha256': 'b' * 64}}]
+
+    def refused(rows):
+        try:
+            guard.authoritative_owner_pins(rows, {owner_path})
+        except evidence.ToolFailure:
+            return True
+        return False
+
+    case('ATTACK', 'a missing authoritative owner pin is refused', refused(missing))
+    case('ATTACK', 'an invalid authoritative owner pin is refused', refused(bad))
+
+
 def run_snapshot_cases():
     """🔴 ATTACK: the guard must read the INDEX, and NOTHING here proved that until now.
 
@@ -410,6 +473,24 @@ def run_tooling_cases():
         rc = _capture(guard.main, ['x'], buf)
         case('ATTACK', 'P3 an unreadable index exits 2, never 0',
              rc == 2 and any('P3' in l for l in buf), 'rc=%r out=%r' % (rc, buf))
+
+        malformed = [
+            ('missing', [{'current_owner': PATH, 'entity': 'MissingOwnerRef',
+                          'owner_ref': None}]),
+            ('invalid', [{'current_owner': PATH, 'entity': 'InvalidOwnerRef',
+                          'owner_ref': {'path': PATH, 'blob_oid': 'not-a-blob',
+                                        'commit_oid': 'a' * 40, 'raw_sha256': 'b' * 64}}]),
+        ]
+        for label, rows in malformed:
+            guard.pinned_expectations = lambda src, rows=rows: guard.authoritative_owner_pins(
+                rows, {PATH})
+            buf = []
+            rc = _capture(guard.main, ['x'], buf)
+            article = 'an' if label == 'invalid' else 'a'
+            case('ATTACK', '%s %s owner pin cannot display APPROVED' % (article, label),
+                 rc == 2 and any('P3' in l for l in buf)
+                 and not any('APPROVED' in l for l in buf),
+                 'rc=%r out=%r' % (rc, buf))
     finally:
         guard.pinned_expectations = saved
         guard.staged_paths = saved_staged
@@ -435,6 +516,7 @@ def main():
         run_rule_cases()
         run_section_cases()
         run_selection_cases()
+        run_owner_path_cases()
         run_engagement_cases()
         run_snapshot_cases()
         run_tooling_cases()

@@ -43,6 +43,7 @@ sys.path.insert(0, HERE)
 
 import control_center                                        # noqa: E402
 import notifier                                              # noqa: E402
+import run_schema_fixtures as schema_fixtures                # noqa: E402
 import safe_projection                                       # noqa: E402
 import snapshot_validator                                    # noqa: E402
 
@@ -488,8 +489,17 @@ FAKE_TOKEN = '7788990011:AAHSECRETTOKENVALUEfakefakefakefake12'
 
 
 class Boom(object):
+    transport_kind = 'TELEGRAM'
+
     def send(self, channel, text):
         raise RuntimeError('send rejected, request carried %s' % FAKE_TOKEN)
+
+
+class DeclaredTelegram(object):
+    transport_kind = 'TELEGRAM'
+
+    def send(self, channel, text):
+        return 'telegram-receipt'
 
 
 @case('L01', 'a first delivery is DELIVERED and carries a receipt')
@@ -502,8 +512,26 @@ def _l01():
     eq(len(t.sent), 1, '')
     if not lines[0]['receipt']:
         raise AssertionError('a DELIVERED line with no receipt cannot answer "did it arrive"')
+    eq(lines[0]['transport_kind'], 'RECORDING',
+       'newly emitted recording evidence must identify its transport')
     hit('outcome:DELIVERED')
     hit('openclaw:NOT_RUNNING')
+
+
+@case('L12', 'new delivery rows identify TELEGRAM or RECORDING, and a missing field is caught')
+def _l12():
+    ev = notifier.plan([rec(severity='WARN')], PROJECTION)
+    telegram, problems = notifier.deliver(ev, set(), {'CONTROL_ROOM': DeclaredTelegram()},
+                                          't', SENT, 'NOT_RUNNING')
+    eq(problems, 0, 'the declared Telegram transport should deliver')
+    eq(telegram[0]['transport_kind'], 'TELEGRAM',
+       'newly emitted Telegram evidence must identify its transport')
+    eq(schema_fixtures.check_new_alert_delivery_row(telegram[0], 'telegram'), [],
+       'the canonical producer checker should accept a complete new row')
+    missing = dict(telegram[0])
+    del missing['transport_kind']
+    if not schema_fixtures.check_new_alert_delivery_row(missing, 'synthetic-missing'):
+        raise AssertionError('a newly emitted row missing transport_kind passed the checker')
 
 
 @case('L02', 'a replay of an already-DELIVERED key sends NOTHING and says so')
@@ -552,6 +580,8 @@ def _l05():
     ev = notifier.plan([rec(severity='WARN')], PROJECTION)
     lines, problems = notifier.deliver(ev, set(), {'CONTROL_ROOM': None}, 't', SENT, 'NOT_RUNNING')
     eq([l['outcome'] for l in lines], ['UNCONFIGURED'], '')
+    eq(lines[0]['transport_kind'], 'UNKNOWN',
+       'an unconfigured new row must carry conservative UNKNOWN')
     eq(problems, 1, '')
     if not lines[0]['detail']:
         raise AssertionError('an unconfigured channel that says nothing is indistinguishable '
@@ -621,6 +651,27 @@ def _l07():
                                      {'CONTROL_ROOM': notifier.RecordingTransport()},
                                      't', SENT, 'NOT_RUNNING')
         eq([l['outcome'] for l in lines2], ['SUPPRESSED_DUPLICATE'], '')
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+@case('L13', 'a legacy delivery row without transport_kind remains readable and unchanged')
+def _l13():
+    tmp = tempfile.mkdtemp(prefix='s12-legacy-delivery-')
+    try:
+        path = os.path.join(tmp, 'legacy.jsonl')
+        legacy = {'entity': 'AlertDelivery', 'dedupe_key': 'legacy', 'channel': 'EMERGENCY',
+                  'kind': 'ALERT', 'outcome': 'DELIVERED', 'receipt': 'old-receipt',
+                  'at': '2026-08-01T00:00:00', 'openclaw': 'UNKNOWN', 'detail': ''}
+        raw = json.dumps(legacy, sort_keys=True) + '\n'
+        with io.open(path, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(raw)
+        before = io.open(path, 'rb').read()
+        rows, torn = notifier.read_jsonl(path)
+        eq(torn, [], 'a legacy row is readable, not torn')
+        eq(rows, [legacy], 'the legacy row was not rewritten or backfilled in memory')
+        after = io.open(path, 'rb').read()
+        eq(after, before, 'reading legacy evidence must not rewrite historical bytes')
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -1248,6 +1299,8 @@ def _n03():
     eq(notifier.safe_detail(err), err, 'the default stopped being the declared no-op')
     # END TO END through deliver(), which is the boundary that actually writes the line.
     class Boom2(object):
+        transport_kind = 'TELEGRAM'
+
         def send(self, channel, text):
             raise RuntimeError('socket to account %s died' % secret)
     evs = notifier.plan([rec(severity='CRITICAL', state='OPEN', pid='FP-1111111111')],
@@ -1328,20 +1381,77 @@ def _n06():
     The muting rationale is real and stays; what could not stay is the two situations sharing it.
     """
     led = notifier.Ledger([{'entity': 'AlertDelivery', 'dedupe_key': 'old|OPEN|CRITICAL|0',
-                            'channel': 'EMERGENCY', 'outcome': 'DELIVERED', 'receipt': '1'}])
+                            'channel': 'EMERGENCY', 'outcome': 'DELIVERED', 'receipt': '1',
+                            'transport_kind': 'TELEGRAM'}])
     evs = notifier.plan([rec(severity='REAL_MONEY', state='OPEN', pid='FP-9999999999')],
                         projection=None, now=at(1, 2))
-    prev = set(c for (_k, c) in led.delivered())
-    lines, _ = notifier.deliver(evs, led.delivered(), {}, at(1, 2), SENT, previously_delivered=prev)
+    prev = led.credentialed_channels()
+    lines, _ = notifier.deliver(evs, led.delivered(), {}, at(1, 2), SENT,
+                                previously_configured=prev)
     eq(lines[0]['outcome'], 'UNCONFIGURED_REGRESSION',
        'a channel that was delivering yesterday still reads as never-provisioned')
     # CONTROL: the never-provisioned case is UNCHANGED, because ORDER-219's rationale still holds
     # for it -- it is true every day until the owner makes the bot, and it must not go red daily.
-    lines2, _ = notifier.deliver(evs, set(), {}, at(1, 2), SENT, previously_delivered=set())
+    lines2, _ = notifier.deliver(evs, set(), {}, at(1, 2), SENT,
+                                 previously_configured=set())
     eq(lines2[0]['outcome'], 'UNCONFIGURED', 'the expected case stopped being the expected case')
     # ...and the two say different things to a human, not just to a switch statement.
     if lines[0]['detail'] == lines2[0]['detail']:
         raise AssertionError('the two situations still print the same sentence')
+
+
+@case('N11', 'ORDER-1380 transport_kind prevents test delivery from creating credential history')
+def _n11_transport_kind():
+    evs = notifier.plan([rec(severity='REAL_MONEY', state='OPEN', pid='FP-8888888888')],
+                        projection=None, now=at(1, 2))
+    recording = notifier.RecordingTransport()
+    lines, _ = notifier.deliver(evs, set(), {'EMERGENCY': recording}, at(1, 2), SENT)
+    eq(lines[0]['outcome'], 'DELIVERED', 'recording transport did not produce delivery evidence')
+    eq(lines[0]['transport_kind'], 'RECORDING', 'recording delivery was not labelled')
+    ledger = notifier.Ledger(lines)
+    eq(ledger.credentialed_channels(), set(),
+       'RecordingTransport was incorrectly treated as credentialed history')
+
+    missing, _ = notifier.deliver(evs, set(), {}, at(1, 2), SENT,
+                                  previously_configured=ledger.credentialed_channels())
+    eq(missing[0]['outcome'], 'UNCONFIGURED',
+       'recording history incorrectly created UNCONFIGURED_REGRESSION')
+    eq(missing[0]['transport_kind'], 'UNKNOWN', 'missing transport was not conservative UNKNOWN')
+
+    # Legacy DELIVERED rows have no transport_kind and are therefore also conservative.
+    legacy = notifier.Ledger([{'entity': 'AlertDelivery', 'dedupe_key': 'legacy',
+                               'channel': 'EMERGENCY', 'outcome': 'DELIVERED', 'receipt': '1'}])
+    eq(legacy.credentialed_channels(), set(),
+       'legacy no-kind evidence was treated as proof of configured history')
+
+    malformed = notifier.Ledger([{'entity': 'AlertDelivery', 'dedupe_key': 'bad',
+                                  'channel': 'EMERGENCY', 'outcome': 'DELIVERED',
+                                  'receipt': '1', 'transport_kind': 'FAKE'}])
+    # Constructed rows are retained for callers that already have them; file reads refuse the
+    # malformed wire value below. This keeps the in-memory model from silently laundering it.
+    eq(malformed.credentialed_channels(), set(),
+       'malformed in-memory kind was treated as credentialed history')
+    tmp = tempfile.mkdtemp(prefix='s12_transport_kind_')
+    try:
+        path = os.path.join(tmp, 'ledger.jsonl')
+        io.open(path, 'w', encoding='utf-8').write(
+            '{"entity":"AlertDelivery","dedupe_key":"bad","channel":"EMERGENCY",'
+            '"outcome":"DELIVERED","receipt":"1","transport_kind":"FAKE"}\n')
+        loaded = notifier.Ledger.load(path)
+        eq(len(loaded.rows), 0, 'malformed transport_kind was accepted from the wire')
+        eq(len(loaded.torn), 1, 'malformed transport_kind was not reported as unreadable')
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    class UnknownTransport(object):
+        def send(self, channel, text):
+            return 'x'
+    bad_lines, bad_problems = notifier.deliver(
+        evs, set(), {'EMERGENCY': UnknownTransport()}, at(1, 2), SENT)
+    eq(bad_problems, 1, 'an unregistered transport did not refuse')
+    eq(bad_lines[0]['outcome'], 'FAILED', 'an unregistered transport was treated as delivered')
+    if 'malformed transport_kind' not in bad_lines[0]['detail']:
+        raise AssertionError('malformed transport refusal did not name the contract failure')
 
 
 # =======================================================================================
