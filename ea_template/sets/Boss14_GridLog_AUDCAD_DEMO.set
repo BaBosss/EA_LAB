@@ -1,8 +1,7 @@
-; Boss14_GridLog_AUDJPY_20x.set
-; Parity backtest set - maps ZeusInspired_AUDJPY_lot20x.set (standalone
-; (Boss)_ZeusInspired_GridLog_rev01.mq5) onto Boss_14_GridLog chassis inputs.
-; Target: AUDJPY H1 2025.01.01-2026.07.01 Model 1
-; Acceptance: PF 1.91, 54 trades, net +$2780, eqDD 14.73% (tol: trades +-15%, PF +-0.20, eqDD +-5pp)
+; Boss14_GridLog_AUDCAD_DEMO.set
+; M4 rebase target: magic 990204 / AUDCADm / Boss_14_GridLog.
+; Current mold baseline: ea_template/Boss_14_GridLog.mq5 + this full pinned surface.
+; Provenance-only correction; values below are unchanged.
 ;
 ; Mode selectors
 ExitMode=22
@@ -84,4 +83,3 @@ RC_MaxLevelsOverride=6
 _0_Magic=990204
 _0_Slippage=20
 _0_MaxSpread=0
-
