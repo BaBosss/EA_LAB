@@ -375,6 +375,10 @@ $FAST_SUITES = @(
     # 4.6s, measured either side). It then grew back to ~5.8s when rounds 1 and 2 of the
     # self-review added two more built fixtures and a stub-root case.
     'run_snapshot_s4_tests.ps1',
+    # Monitoring snapshot schema repair regression: exercises the real producer with a
+    # timestamp-controlled sensor fixture, the transient builder schema, and the unknown-field
+    # refusal. Measured locally at ~4s; it is selected only for the monitoring/schema paths below.
+    'run_monitor_snapshot_schema_repair_tests.ps1',
     # ORDER-630 (S5, 2026-07-31): the CONSUMER half of "the generator and optimize_guard provably
     # read ONE resolver". The python half (the resolver's answers, and each of check_registries'
     # five criteria going red) joined run_contract_binding_tests.ps1's wrapper; this proves
@@ -894,6 +898,16 @@ $SUITE_GUARDS = @{
                                           'scripts/make_status.ps1',
                                           'scripts/control_room_snapshot.ps1',
                                           'portfolio/control_room_snapshot.json')
+    'run_monitor_snapshot_schema_repair_tests.ps1' = @(
+                                          'scripts/control_room_snapshot.ps1',
+                                          'scripts/lib/runtime_identity.ps1',
+                                          'scripts/use_python.ps1',
+                                          '_triage/factory_os/schemas.json',
+                                          '_triage/factory_os/snapshot_validator.py',
+                                          'portfolio/DEPLOYMENTS.csv',
+                                          'portfolio/ACCOUNTS.csv',
+                                          'portfolio/ATTESTATION_MAP.csv',
+                                          'portfolio/live_deals/*')
     # ORDER-601 part 2 added the snapshot validator and its computation suite to this wrapper
     # rather than to a suite of its own (the budget note in that file explains the trade), so
     # both files are inputs to it. Declaring them is what puts them in the trigger pathspec --

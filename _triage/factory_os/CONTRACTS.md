@@ -654,6 +654,14 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `runtime_identity_summary.identity_findings` | array of object *(fields below)* | **yes** | items closed · items require `code`, `detail` |
 | `runtime_identity_summary.identity_findings[].code` | `string` | **yes** | minLength `1` |
 | `runtime_identity_summary.identity_findings[].detail` | `string` | **yes** |  |
+| `runtime_identity_summary.forward_test_state` | `DEMO_DEPLOYED_AWAITING_FIRST_TRADE` \| `FORWARD_TEST_EVIDENCE_STARTED` \| `FORWARD_TEST_UNTRUSTED` \| `NO_VALID_RUNTIME_IDENTITY` | — |  |
+| `runtime_identity_summary.first_trade_findings` | array of object *(fields below)* | — | items closed · items require `account_login`, `magic`, `state` |
+| `runtime_identity_summary.first_trade_findings[].account_login` | `string` | **yes** | pattern `^[1-9][0-9]*$` |
+| `runtime_identity_summary.first_trade_findings[].magic` | `string` | **yes** | pattern `^[1-9][0-9]*$` |
+| `runtime_identity_summary.first_trade_findings[].state` | `string` | **yes** | minLength `1` |
+| `runtime_identity_summary.first_trade_findings[].first_trade_epoch` | `string` \| `null` | — |  |
+| `runtime_identity_summary.first_trade_findings[].qualifying_deal` | `object` \| `null` | — |  |
+| `runtime_identity_summary.first_trade_findings[].reasons` | array of `any` | — |  |
 
 **Unknown fields:** rejected (closed object).
 

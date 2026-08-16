@@ -21,7 +21,11 @@ function Get-RuntimeIdentityRecords {
     # Do not collapse account|magic to the newest file here. The validator owns current-epoch
     # partitioning; keeping every dated archive is what lets it distinguish a legitimate prior
     # epoch from duplicate current evidence or a mixed current unit.
-    return @($records)
+    # PowerShell 5.1's enumerable binder can throw "Argument types do not match"
+    # when an empty generic List is wrapped directly in @(...). Materialise the
+    # list explicitly so an empty identity store is a valid LEGACY_UNVERIFIED
+    # result instead of aborting the whole control-room snapshot.
+    return $records.ToArray()
 }
 
 function Get-RuntimeIdentityExpectations {
@@ -200,5 +204,5 @@ function Get-RuntimeIdentityForwardStates {
             $overall = 'DEMO_DEPLOYED_AWAITING_FIRST_TRADE'
         }
     }
-    return [pscustomobject]@{ state = $overall; findings = @($findings) }
+    return [pscustomobject]@{ state = $overall; findings = $findings.ToArray() }
 }

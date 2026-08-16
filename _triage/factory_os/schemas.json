@@ -2568,6 +2568,30 @@
                   "detail": { "type": "string" }
                 }
               }
+            },
+            "forward_test_state": {
+              "enum": [
+                "DEMO_DEPLOYED_AWAITING_FIRST_TRADE",
+                "FORWARD_TEST_EVIDENCE_STARTED",
+                "FORWARD_TEST_UNTRUSTED",
+                "NO_VALID_RUNTIME_IDENTITY"
+              ]
+            },
+            "first_trade_findings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["account_login", "magic", "state"],
+                "unevaluatedProperties": false,
+                "properties": {
+                  "account_login": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+                  "magic": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+                  "state": { "type": "string", "minLength": 1 },
+                  "first_trade_epoch": { "type": ["string", "null"] },
+                  "qualifying_deal": { "type": ["object", "null"] },
+                  "reasons": { "type": "array" }
+                }
+              }
             }
           }
         }
