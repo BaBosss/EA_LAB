@@ -1,6 +1,6 @@
 {
-  "schema":  "tpl_regression_selector/1",
-  "active_manifest":  "ea_template/regression_baseline_build6090.manifest.json",
-  "active_build":  6090,
-  "historical_manifest":  "ea_template/regression_baseline_build5836.manifest.json"
+    "schema":  "tpl_regression_selector/1",
+    "active_manifest":  "ea_template/regression_baseline_build6090.manifest.json",
+    "active_build":  6090,
+    "historical_manifest":  "ea_template/regression_baseline_build5836.manifest.json"
 }
