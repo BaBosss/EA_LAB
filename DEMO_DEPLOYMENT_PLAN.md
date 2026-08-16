@@ -21,7 +21,7 @@ Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื
 | **141049900** Celestial Woodfire | REAL cent MT4 | user exp: Zeus Gold Hedge(7777, no-SL) · Gold_Kangaroo L1-4(1112-1115) | ⚠️ user exp · kill floating DD 40% |
 | **415573666** Demo Mt5-2 (Exness Trial14) | DEMO MT5 | **Boss_14_GridLog ×7** (990201-207) **+ Zeus AUDJPY(990110) + GBPJPY leg8(990208) + TrendRider_XAU/W2 S1(992004)** · AccountSnapshotExporter | ✅ Boss V2 bench + 2 grid legs (attached 2026-07-16, judge 2026-10-16) · TrendRider_XAU attached 2026-07-23, judge 2026-10-23 (ORDER-139; attached here per user override, not the originally-planned 463666728 bundle account) |
 | **463666728** Demo bundle 10 (Exness Trial17) | DEMO MT5 | **11 single-position (attached 2026-07-16, judge 2026-10-16):** Wave5 XAU/XAG(990301-2) · BRK USDJPY/US30(991003/5) · MacdDiv(999094) · SMCSTO/EmaStoRev(991070) · IchiADX USDJPY×2(990066-7) · IchiADX XAU×2(990068-9) · SuperTrend(990020) · **➕ RSI-MR(990103) EURUSDm attached 2026-07-24, judge 2026-10-24** (demo-isolate re-attach after real-account removal 2026-07-18 for DD25% kill; re-validated ORDER-182→186, both-window strong but holdout 2026H1 fails outright — accepted as BUILD-ON exception per user) · **➕ Boss_16_KangarooGrid(990016) XAUUSDm H1 attached 2026-07-26, judge 2027-01-11** (flat preset, lot 0.01 คงที่; +5.5 เดือนไม่ใช่ +3 เพราะ 5.7 เทรด/เดือน) | 🆕 **มี exporter แล้ว** — `AccountSnapshotExporter - GBPJPYm,H1` เห็นใน Navigator 2026-07-26 (ข้อความเดิม "ยังไม่มี exporter" ล้าสมัย; ถ้า sensor ยัง STALE แปลว่าปัญหาอยู่ฝั่งรับไฟล์ ไม่ใช่ฝั่ง attach) |
-| **69424711** Demo EA3 | DEMO MT4 | UnNomGuai(1/2) · RSI-orig(5888) · swb(990) · ClevrFX(unverified) | monitor deferred (Trial8 login) |
+| **69424711** Demo EA3 | DEMO MT4 | UnNomGuai(1/2) · RSI-orig(5888) · swb(990) · ClevrFX historical/observational attribution (magic 9244; current attachment NOT PROVEN) | **CLOSED** — no current executable identity |
 | **146237** Exness demo (user) | DEMO MT5 | user's own pool ~10 EA — magic ยังไม่ enumerate (บัญชีนี้เคยโผล่ใน live_deals) | 🆕 registered 2026-07-18 (user ยืนยัน: demo Exness, ขอให้เฝ้า) → enumerate magics จาก live_deals รอบ `/ea-monitor` ถัดไป |
 
 ### 🔴 CRYPTO LEGS — นาฬิกาตัดสินรีเซ็ตเป็น **2027-01-26** (2026-07-26)
@@ -337,16 +337,17 @@ manual pause ถ้า EA ตัวใด DD ผิดปกติเทีย�
 
 ---
 
-## 🆕 ClevrFX_EA — MT4 demo experiment — 🟢 **ATTACHED แล้ว (user ยืนยัน 2026-07-06)**
+## ClevrFX_EA — MT4 demo experiment — **CLOSED (historical / observational attribution)**
 
-> **demo-clock เริ่ม 2026-07-06 → judge เร็วสุด ~2026-10-06** (≥3 เดือน + ≥30 trades) ·
-> monitor: ทุก ~2 สัปดาห์ user export MT4 account statement ส่ง Claude (รอบแรก ~2026-07-20)
+> **Account:** `69424711 / Exness-Trial8` · **observed historical magic:** `9244` ·
+> **historical/observational attribution:** ACCEPTED · **current executable attachment:** NOT PROVEN ·
+> **historical executable identity:** UNRECOVERABLE FROM CURRENT EVIDENCE · **investigation:** CLOSED.
 
-> **ตัวแรกจาก treasure hunt (222 EA) ที่ผ่านครบทุกด่าน** — BWD-OOS ทุกปีบวก (1.76/1.51/2.37) + 2026=2.04 ·
+> **Historical validation context only; not current attachment evidence.** ตัวแรกจาก treasure hunt (222 EA) ที่ผ่านครบทุกด่าน — BWD-OOS ทุกปีบวก (1.76/1.51/2.37) + 2026=2.04 ·
 > spread-stress 3x ไม่สะเทือน (sp45=1.93) · ไม่ระเบิดปี hostile · **compiled กลไกดำ → สถานะ demo-experiment
 > เท่านั้น** (Fxcore100 คู่กัน = DQ pirated — ตัวเลขเก็บเป็น prior ถ้าซื้อ official ในอนาคต)
 
-**Deploy checklist (user, บน MT4 demo ที่มีอยู่):**
+**Historical deployment checklist (superseded; preserved for provenance only):**
 1. **บัญชี:** แนะนำ ClevrFX **ตัวเดียวบนบัญชี** (attribution ตรง + วัด kill-DD ระดับบัญชีได้) · balance
    ใกล้ $10k = เทียบ validation ตรงสุด (ต่างได้ — ดู DD% ไม่ใช่ $)
 2. ก็อป `D:\Forex\10_EA_PROJECTS\2. wait for test\.EA OK\ClevrFX\ClevrFX_EA.ex4` → `MQL4\Experts\` → refresh Navigator
@@ -355,7 +356,7 @@ manual pause ถ้า EA ตัวใด DD ผิดปกติเทีย�
 4. เปิด AutoTrading → **จดวันที่ attach → แจ้ง Claude** (demo-clock ≥3 เดือน)
 5. ⚠️ **no hard SL บนไม้ — เครื่อง/VPS ต้องออนไลน์ตลอด** (disconnect = ไม้เปลือยไม่มี SL บน server)
 
-**Kill-switch:** equity DD บัญชี >40% (= worst year backtest) → detach ทันที · **Monitor:** ~2 สัปดาห์/ครั้ง
+**Historical criteria (not current operational instructions):** Kill-switch: equity DD บัญชี >40% (= worst year backtest) → detach ทันที · Monitor: ~2 สัปดาห์/ครั้ง
 export MT4 account statement ส่ง Claude (MT4 ไม่ใช้ /ea-monitor MT5 pipeline — ใช้ statement แทน) ·
 **Judge:** ≥3 เดือน + ≥30 trades (ได้ในเดือนเดียว ~1 ไม้/วัน) → PF live ≥1.4 = คุยขั้นต่อ
 
@@ -375,7 +376,7 @@ export MT4 account statement ส่ง Claude (MT4 ไม่ใช้ /ea-monito
 
 **1 บัญชี demo ใหม่ ($10k, ThinkMarkets) รันทั้ง 3** (คนละ chart/magic ไม่ชน) · ลง MT4 portable
 `D:\Meta4demo` (ห้ามทับเลนเทส) · **ห้ามแก้ input · no hard SL ทุกตัว → online ตลอด** ·
-**จดวันที่ attach → แจ้ง Claude = demo-clock เริ่ม (judge +3 เดือน)** · monitor รอบเดียวกับ ClevrFX
+**จดวันที่ attach → แจ้ง Claude = demo-clock เริ่ม (judge +3 เดือน)** · monitor รอบเดียวกับ MT4 statement process
 (statement ทุก ~2 สัปดาห์, แยก P&L ตาม magic) — รายละเอียดทั้งหมดใน README
 
 ---
@@ -392,7 +393,7 @@ export MT4 account statement ส่ง Claude (MT4 ไม่ใช้ /ea-monito
 
 **attach บนบัญชี demo MT4 69424711** (chart/magic ไม่ชน cohort เดิม UnNomGuai 1/2 · RSI-orig 5888) ·
 **ห้ามแก้ input · no hard SL → online ตลอด** · **จดวันที่ attach → แจ้ง Claude = demo-clock เริ่ม (judge +3 เดือน)** ·
-สถานะ = bench tier 5-6 / กรง premium-track ตาม `VISION.md` · monitor รอบเดียวกับ ClevrFX (statement ~2 สัปดาห์, แยกตาม magic)
+สถานะ = bench tier 5-6 / กรง premium-track ตาม `VISION.md` · monitor รอบเดียวกับ MT4 statement process (statement ~2 สัปดาห์, แยกตาม magic)
 
 ---
 
@@ -523,7 +524,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 | บัญชี | ชื่อ | Platform | รันอะไร |
 |---|---|---|---|
 | **415573666** | Demo Mt5-2 | MT5 (Trial14) | **Boss_14_GridLog ×7 symbols** (USDJPYm/AUDNZDm/EURJPYm/AUDCADm/CADJPYm/EURUSDm/XAUUSDm H1) = Boss V2 bench ขึ้น demo แล้ว · **➕ รอ attach (user approve 2026-07-11): EA_SUPERTREND XAUUSDm H4 magic 990020** set `_vps_deploy\ST_XAU_H4_live_v1.set` — เป้าหมาย = EA-SCORE criterion 7 (live tracking ≥2 เดือน) หลัง 085B: BWD ตกบาร์/plateau ผ่าน · ตลาดปิดวันที่อนุมัติ user จะ attach เมื่อว่าง |
-| **69424711** | Demo EA3 | MT4 (Trial8) | **MT4 cohort**: UnNomGuai(1/2) · RSI-orig(5888) · swb(990) + ClevrFX_EA (ORDER-041 ผ่าน spread-stress) |
+| **69424711** | Demo EA3 | MT4 (Trial8) | **MT4 cohort**: UnNomGuai(1/2) · RSI-orig(5888) · swb(990) + ClevrFX historical/observational attribution (magic 9244; current attachment NOT PROVEN; CLOSED) |
 
 **📌 การตัดสินใจ user 2026-07-11 (หลัง CODEX-AUDIT + REVIEW 085B) — สถานะ pending จนกว่า user ลงมือ (ตลาดปิด):**
 1. **RSI-MR (990103) ถอดจาก real 159503454 → ย้ายไป demo isolate** (premium-track experiment เดี่ยว

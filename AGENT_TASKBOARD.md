@@ -6004,9 +6004,9 @@ edit: **green, 25.4 s, unchanged**.
 
 ---
 
-## ORDER-941 — [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — silent, or thin? — `PARTIAL / OWNER-ACTION (IchiADX 990066–990069 runtime-evidence sub-scope SATISFIED 2026-08-16; other tracked runtime rows remain)` — **all three suspected causes REFUTED 2026-08-02 with the owner's evidence; the IchiADX runtime uncertainty is resolved by the owner-accepted `ORDER-1000` proof; no full ORDER-941 closure or judge-policy decision is claimed** · ทำได้: Claude/Opus + user (อ่าน Inputs) · 👉 แนะ: Claude
+## ORDER-941 — [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — silent, or thin? — `PARTIAL / NO ACTIONABLE RESIDUAL RUNTIME-EVIDENCE GAP IN ACCEPTED SCOPE (2026-08-16)` — **the owner-accepted runtime-evidence scope is satisfied; any remaining ORDER-941 lifecycle is not an actionable runtime-evidence blocker and no full judge-policy closure is claimed** · ทำได้: Claude/Opus + user (อ่าน Inputs) · 👉 แนะ: Claude
 
-> ✅ **IchiADX RUNTIME-EVIDENCE SUB-SCOPE SATISFIED 2026-08-16:** the owner-accepted `ORDER-1000` A2/A3 proof covers `990066`, `990067`, `990068`, and `990069`. `ORDER-941` remains partial/open for other tracked runtime rows; no portfolio, judge-policy, deployment, trading, risk/default, LIVE, retirement, or QI-2+ decision is recorded here.
+> ✅ **IchiADX RUNTIME-EVIDENCE SUB-SCOPE SATISFIED 2026-08-16:** the owner-accepted `ORDER-1000` A2/A3 proof covers `990066`, `990067`, `990068`, and `990069`. Together with the accepted runtime proofs recorded in `ORDER-943`, the accepted scope has **no actionable residual runtime-evidence gap**. Historical investigation narrative remains below; no portfolio, judge-policy, deployment, trading, risk/default, LIVE, retirement, or QI-2+ decision is recorded here.
 
 > ### 🔴 2026-08-02 (`S-2026-08-02-OPERATOR`) — the owner read all four Inputs tabs and sent the account's 8-day Expert log. Every hypothesis this row was built on is dead, and what replaces them is worse to live with.
 >
@@ -10711,7 +10711,7 @@ config · do not delete or weaken the guard to "resolve" the open item · do not
 
 **ห้าม / Prohibitions:** let any crisis score touch a money path before this order closes · treat a `data_status = OK` as evidence of freshness anywhere until the feeder is fixed · quote replay numbers from `portfolio/mris/backtest/*.csv` as validation while they remain untracked and unbound to a commit · rewrite history-bound one-shot scripts to hide what past runs actually did
 
-## ORDER-510 — [🔴 money path · deploy trap] ฟลีตที่รันอยู่จริงเป็นไบนารีก่อน ORDER-132/138 ทั้งชุด — และการอัปเดตมันจะทำให้ EA 5 ตัวหยุดพร้อมกันแบบเงียบๆ — `OPEN` · runnable by: **Claude/Opus only** · 👉 recommended: Claude
+## ORDER-510 — [🔴 money path · deploy trap] ฟลีตที่รันอยู่จริงเป็นไบนารีก่อน ORDER-132/138 ทั้งชุด — และการอัปเดตมันจะทำให้ EA 5 ตัวหยุดพร้อมกันแบบเงียบๆ — `SUPERSEDED / NO CURRENT BLOCKING EFFECT (owner-accepted 2026-08-16; persistence migration complete; fingerprint discrepancy belongs to ORDER-1050)` · runnable by: **Claude/Opus only** · 👉 recommended: Claude
 **bars:** N-A (deploy procedure + ops) · **flat-lot probe:** N-A
 
 **หลักฐาน 2 ชั้นที่ชี้เรื่องเดียวกัน เก็บได้จากคนละทางในวันเดียวกัน (2026-07-28):**
