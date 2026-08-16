@@ -3,8 +3,8 @@
   "meta": {
     "schema": "ControlRoomSnapshot",
     "version": 5,
-    "generated_at": "2026-08-16T20:00:37",
-    "git_head": "33d4c7a2",
+    "generated_at": "2026-08-16T20:17:59",
+    "git_head": "ec18571a",
     "stale_bar_hours": 30,
     "decision_bar_trades": 30,
     "runtime_identity_required": true,
@@ -20,8 +20,8 @@
         "mandatory": true,
         "read_ok": true,
         "sha256": "aa05d6895d257e56284bdcfbe3fd99b77f2b06735c6e5cb5e6939d54fd52ffe1",
-        "mtime": "2026-08-16T20:00:31",
-        "age_hours": 0.0022,
+        "mtime": "2026-08-16T20:13:52",
+        "age_hours": 0.069,
         "fresh": true
       },
       {
@@ -29,9 +29,9 @@
         "path": "portfolio\\LIVE_DASHBOARD.html",
         "mandatory": true,
         "read_ok": true,
-        "sha256": "bb71440e3ae8814faefa67eb196c39bb2c6f4ca6c59aabd8224c7a6d0da857d1",
-        "mtime": "2026-08-16T20:00:37",
-        "age_hours": 0.0006,
+        "sha256": "83010724066326d73f8b6054abeebe5e9f9ff1d930032f66bf494b841a6da3da",
+        "mtime": "2026-08-16T20:13:52",
+        "age_hours": 0.069,
         "fresh": true
       },
       {
@@ -40,8 +40,8 @@
         "mandatory": true,
         "read_ok": true,
         "sha256": "a5278ffa282c6c26d05868968c62110470a001ac8cba0cbf08a0a622f8b5f766",
-        "mtime": "2026-08-16T19:52:43",
-        "age_hours": 0.1322,
+        "mtime": "2026-08-16T20:13:46",
+        "age_hours": 0.0708,
         "fresh": true
       }
     ],
@@ -67,7 +67,7 @@
         "cells_in_universe": 56
       }
     },
-    "build_id": "7b24191bebac387d"
+    "build_id": "af97e93ddd72b9fb"
   },
   "system_health": [
     {
