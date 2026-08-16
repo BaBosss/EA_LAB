@@ -104,8 +104,15 @@
 
 ---
 
-## ORDER-1462 — [🔴 factory/S2a] 👤 The s2a attestation gate is RED at HEAD: a lane changed a bundle member and closed without re-making the record — `OPEN (needs the owner — an attestation is a signature)` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
+## ORDER-1462 — [factory/S2a] 👤 The s2a attestation gate was RED at the pre-owner-confirmation snapshot; the in-force owner attestation is now validated — `DONE 2026-08-16 (bundle 8e051930; owner intent confirmed; all seven deterministic S2a checks PASS)` · ทำได้: Codex Primary (deterministic closure) · 👉 แนะ: Codex
 **bars:** N-A (an owner signature) · **flat-lot probe:** N-A
+
+> ✅ **CLOSED 2026-08-16:** the owner explicitly confirmed that the in-force attestation for bundle
+> `8e051930e96c8ed4876183fb39bc090724cb2ba1bd761fa4bf8c8c747d8f4a0c` satisfies this order and incorporates
+> ORDER-1257 option (b). On canonical `origin/master` `1b7e287c`, `check_s2a_attestation.py`,
+> `check_s2a_migration.py`, `run_s2a_gate.py`, `check_coverage_transfer.py`, `run_s2a_conformance.py`,
+> `run_s2a_attestation_tests.py`, and `run_s2a_migration_tests.py` all exit 0. The older RED report below
+> is retained as history; it is no longer the current order state.
 
 Found 2026-08-06 by `/scrutinize`, which ran the fast tier after a change to an unrelated file.
 
@@ -3138,7 +3145,12 @@ suite's declarations leaving) · **budget untouched at 120.0s.**
 
 ---
 
-## ORDER-1257 — [factory/S2a] 🔴 Registering the 16 cells VOIDED the attestation that authorises the coverage store, and the tier can no longer see it — `OPEN (needs the owner)` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
+## ORDER-1257 — [factory/S2a] Registering the 16 cells had invalidated the old coverage attestation; the accepted option (b) instrument and final owner confirmation now close the gate — `DONE 2026-08-16 (option (b); bundle 8e051930; all seven deterministic S2a checks PASS)` · ทำได้: Codex Primary (deterministic closure) · 👉 แนะ: Codex
+
+> ✅ **CLOSED 2026-08-16:** the owner-ratified option (b) instrument is preserved, the 16 cells are preserved,
+> and the owner explicitly confirmed that the in-force `8e051930e96c8ed4876183fb39bc090724cb2ba1bd761fa4bf8c8c747d8f4a0c`
+> attestation incorporates this decision. The deterministic S2a closure suite is green on canonical `origin/master`
+> `1b7e287c`. The original RED diagnosis below remains historical evidence only.
 
 **Found by running the hand-run wrapper at HEAD immediately after `ORDER-1250`+`1252` landed, which
 is the only thing that would have found it.** Reported by the lane that caused it.
