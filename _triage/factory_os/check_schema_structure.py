@@ -34,7 +34,7 @@ try:
     # ORDER-1283: mutation cages may inject a temporary schema document. The production
     # path still reads the judged evidence source; the override is an explicit test-only
     # seam so a cage never rewrites the tracked schema it is checking.
-    schema_override = (os.environ.get('EA_LAB_SCHEMA_OVERRIDE')
+    schema_override = (os.environ.get('EA_LAB_ENFORCEMENT_SCHEMA_OVERRIDE')
                        if os.environ.get('EA_LAB_EVIDENCE') == 'worktree' else None)
     if schema_override:
         with open(schema_override, encoding='utf-8') as fh:

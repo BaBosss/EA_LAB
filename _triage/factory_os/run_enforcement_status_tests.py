@@ -36,26 +36,45 @@ CHECKER = '_triage/factory_os/check_schema_structure.py'
 
 def _patch(entity, **fields):
     def mutate(doc):
-        doc['$defs'][entity].update(fields)
+        body = doc['$defs'][entity]
+        unchanged = [key for key, value in fields.items() if body.get(key) == value]
+        if unchanged:
+            raise AssertionError('mutation anchor already has requested value for %s: %s'
+                                 % (entity, unchanged))
+        body.update(fields)
+        return len(fields)
     return mutate
 
 
 def _drop(entity, *keys):
     def mutate(doc):
+        body = doc['$defs'][entity]
+        missing = [key for key in keys if key not in body]
+        if missing:
+            raise AssertionError('mutation anchor missing for %s: %s' % (entity, missing))
         for k in keys:
-            doc['$defs'][entity].pop(k, None)
+            body.pop(k)
+        return len(keys)
     return mutate
 
 
 def _rename(entity, new):
     def mutate(doc):
+        if entity not in doc['$defs']:
+            raise AssertionError('mutation anchor missing for %s' % entity)
+        if new in doc['$defs']:
+            raise AssertionError('mutation target already exists: %s' % new)
         doc['$defs'][new] = doc['$defs'].pop(entity)
+        return 1
     return mutate
 
 
 def _add_entity(name):
     def mutate(doc):
+        if name in doc['$defs']:
+            raise AssertionError('mutation target already exists: %s' % name)
         doc['$defs'][name] = {'type': 'object', 'description': 'a contract nobody classified'}
+        return 1
     return mutate
 
 
@@ -113,9 +132,9 @@ def run_checker(schema_override=None):
     env = dict(os.environ)
     env['EA_LAB_EVIDENCE'] = 'worktree'
     if schema_override:
-        env['EA_LAB_SCHEMA_OVERRIDE'] = schema_override
+        env['EA_LAB_ENFORCEMENT_SCHEMA_OVERRIDE'] = schema_override
     else:
-        env.pop('EA_LAB_SCHEMA_OVERRIDE', None)
+        env.pop('EA_LAB_ENFORCEMENT_SCHEMA_OVERRIDE', None)
     p = subprocess.run(['tools\\python312\\python.exe', CHECKER], capture_output=True,
                        text=True, env=env)
     return p.returncode, p.stdout
@@ -141,7 +160,9 @@ def main():
         mutant_path = os.path.join(tmp, 'schemas.json')
         for label, entity, mutate in CASES:
             doc = json.loads(original)
-            mutate(doc)
+            changed = mutate(doc)
+            if not changed:
+                raise AssertionError('mutation for %s changed no fields' % entity)
             io.open(mutant_path, 'w', encoding='utf-8', newline='\n').write(
                 json.dumps(doc, indent=2, ensure_ascii=False) + '\n')
             rc, out = run_checker(mutant_path)
