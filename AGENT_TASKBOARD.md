@@ -6407,10 +6407,11 @@ changes outside `notes`/`source_evidence`/the rate.
 > | **ORDER-235 THIN TREATMENT** | `991003`, `990020` |
 > | **MONITOR / NO THIN EXCEPTION YET** | `990984` |
 > | **PROVISIONAL UNTIL FIRST REAL TRADE** | `991005`, `990208`, `992004` |
-> | **RUNTIME-PROVEN / OBSERVATION** | `990066`, `990067`, `990068`, `990069` |
-> | **RUNTIME-EVIDENCE BLOCKED** | `991004`, `991002`, `990202` |
+> | **RUNTIME-PROVEN / OBSERVATION** | `990066`, `990067`, `990068`, `990069`, `991004`, `991002`, `990202` |
 >
-> The four IchiADX rows are now runtime-proven / observation-only from the owner-accepted `ORDER-1000` proof; they receive no REBASE, THIN, RETIRE, or new judge-policy assignment here. The remaining runtime-evidence-blocked rows are `991004`, `991002`, and `990202`. The three provisional rows remain provisional until their first real trade. `990984` remains monitor-only with no thin exception yet. This owner-ratified subset does not close ORDER-943.
+> The four IchiADX rows are runtime-proven / observation-only from the owner-accepted `ORDER-1000` proof; the three previously blocked rows are now runtime-proven from the accepted state-sync evidence (`991004`, `991002`, and `990202`, with `990202` also `CONFIG_MATCH`). All runtime-evidence blockers are now **NONE**. No row receives REBASE, THIN, RETIRE, or a new judge-policy assignment here. The three provisional rows remain provisional until their first real trade. `990984` remains monitor-only with no thin exception yet. ORDER-943 remains PARTIAL because the remaining lifecycle dispositions are observation, monitor, and provisional rather than a full closure.
+
+> **Accepted runtime-evidence closure:** `991004 = RUNTIME_PROVEN`; `991002 = RUNTIME_PROVEN`; `990202 = RUNTIME_PROVEN / CONFIG_MATCH`. This is a documentation/state-sync closure only: no portfolio, deployment, trading, risk/default, LIVE, retirement, or QI-2+ change was made.
 
 > `ORDER-940` measured it: **19 projected SHORTFALL vs 11 projected capable**, and the nearest cohort
 > (**2026-10-09**, 5 EAs) has **0 decision-capable today**. The bar exists (`CLAUDE.md` VERDICT GATE:

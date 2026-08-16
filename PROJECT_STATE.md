@@ -491,11 +491,12 @@ enabling = validate like a new mechanism.
   partial for other tracked runtime rows; no judge-policy or portfolio disposition is inferred.
 - **`ORDER-942` = ACCEPTED/CLOSED:** the expected-rate substrate for the 19-row projected-shortfall cohort is accepted.
 - **`ORDER-943` = PARTIAL / OWNER-RATIFIED (2026-08-16):** exact cohort = 19. Runtime-proven / observation =
-  `990066`, `990067`, `990068`, `990069`; remaining runtime-evidence blocked = `991004`, `991002`, `990202`.
+  `990066`, `990067`, `990068`, `990069`, `991004`, `991002`, `990202`; runtime-evidence blocked = **NONE**.
   Rebase = `990204`, `990206`, `990301`, `990302`, `999094`, `990103`; ORDER-235 thin treatment = `991003`,
   `990020`; monitor with no thin exception yet = `990984`; provisional until first real trade = `991005`,
-  `990208`, `992004`. **No retirement/removal is authorized.** ORDER-943 remains PARTIAL until the remaining
-  runtime-evidence rows are resolved and the provisional/monitor conditions are separately satisfied.
+  `990208`, `992004`. `991004` and `991002` are `RUNTIME_PROVEN`; `990202` is `RUNTIME_PROVEN / CONFIG_MATCH`.
+  **No retirement/removal is authorized.** ORDER-943 remains PARTIAL for the observation, monitor, and provisional
+  lifecycle conditions. This state sync changes no portfolio, deployment, trading, risk/default, LIVE, or QI-2+ policy.
 - /ea-monitor every 1–2 weeks (send `live_deals.csv`) — the collector is already writing
   `portfolio/live_deals/` daily for 4 of 6 accounts; MT4 `141049900` and `69424711` are STALE (38.5 h).
 
