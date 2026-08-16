@@ -516,14 +516,38 @@ _SPAN = re.compile(r'`([^`]+)`')
 _VERB = re.compile(r'^[^A-Za-z]*([A-Z][A-Z-]*)\b')
 
 
-def _order_rows(text):
-    """Every `## ORDER-...` header as (order_id, status_verb_or_None), in file order."""
+def _order_rows(text, archive=False):
+    """Every `## ORDER-...` header as (order_id, status_verb_or_None), in file order.
+
+    The active board uses the conservative precedence rule below: an explicit non-terminal
+    status wins over a terminal status mentioned elsewhere in the header, so a title cannot hide
+    live work. The archive is different: its headers routinely preserve historical phrases such
+    as ``was `OPEN``` after the current `` `REVIEWED(...)` `` status. Applying the active-board
+    precedence to those historical mentions resurrects already-reviewed work as actionable.
+    For archive rows, the first known status span is the current status; later status mentions are
+    historical context.
+    """
     out = []
     for line in text.splitlines():
         if not line.startswith('## ORDER-'):
             continue
         m = _ORDER_ID.match(line)
         order_id = m.group(1) if m else line[3:].split()[0]
+        if archive:
+            verb = None
+            fallback = None
+            for span in _SPAN.findall(line):
+                vm = _VERB.match(span.strip())
+                if not vm:
+                    continue
+                if fallback is None:
+                    fallback = vm.group(1)
+                if vm.group(1) in NON_TERMINAL_VERBS or vm.group(1) in TERMINAL_VERBS:
+                    verb = vm.group(1)
+                    break
+            out.append((order_id, verb if verb is not None else fallback))
+            continue
+
         # PRECEDENCE, not position. Round 3 changed this from "first uppercase span" to "first
         # span whose verb is a KNOWN status", which fixed inline code in a title -- and round 4
         # broke it with one line: `## ORDER-X -- title mentions `DONE` -- `OPEN`` resolved to DONE,
@@ -646,7 +670,7 @@ def reconcile(root=None):
             sv._refuse('cannot reconcile: %s is not present, and an absent board is not the same '
                        'fact as a board with no orders.' % rel)
         with io.open(path, encoding='utf-8') as fh:  # snapshot: worktree
-            board = _order_rows(fh.read())
+            board = _order_rows(fh.read(), archive=(rel == TASKBOARDS[1]))
         per_board.append([oid for oid, _v in board])
         rows.extend(board)
 

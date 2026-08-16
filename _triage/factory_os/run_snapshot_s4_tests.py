@@ -242,6 +242,17 @@ def main():
               '%d + %d != %d' % (rec['categorized'], rec['unclassified'], rec['discovered']))
         check('and the six category buckets sum to categorized',
               sum(rec['categories'].values()) == rec['categorized'])
+        # Archive headers preserve historical phrases such as "was `OPEN`" after the current
+        # `REVIEWED(...)` status. The archive parser must keep the first known status, while the
+        # active-board parser retains its conservative non-terminal precedence rule.
+        history_header = ('## ORDER-521 -- `EA_BREAKOUT_XAU` -- '
+                          '`REVIEWED(Claude/Opus 2026-07-28)` -- was `OPEN`')
+        check('C2b archive status uses the current first status, not historical was-OPEN text',
+              sb._order_rows(history_header, archive=True)[0][1] == 'REVIEWED',
+              repr(sb._order_rows(history_header, archive=True)))
+        check('C2b active status still prefers an explicit non-terminal mention',
+              sb._order_rows(history_header, archive=False)[0][1] == 'OPEN',
+              repr(sb._order_rows(history_header, archive=False)))
         # ROUND-2 FINDING, fixtured. reconcile() read 2 of the 5 taskboard-shaped files in the
         # repo root; the other 3 were invisible to `discovered`. They carry ZERO order headers
         # today (measured), so the count was not wrong -- it was UNGUARDED, and two of the three
