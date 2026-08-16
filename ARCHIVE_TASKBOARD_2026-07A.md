@@ -12660,3 +12660,141 @@ refutation. Settle it first.
 > instead of re-deriving them.
 
 ---
+
+## ORDER-740 — [lever/integrity] `_57_DynCloseOn` is INERT on Boss_16/Kangaroo, and the mold announces the *other* inert shared input but stays silent about this one — `REVIEWED(user-supplied canonical inventory, 2026-08-16): CANONICAL / DONE` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (code-path integrity — a lever that cannot fire is not a lever) · **flat-lot probe:** N-A
+
+**Why this order exists, and what it replaces.** `ORDER-197` closed the `ORDER-098` campaign's "recommended move #2" and left exactly one thread open: *"DynClose-on-Kangaroo (deferred above, exit-owner conflict) remains the one open thread from the shortlist if anyone wants to pick it up later"*. Its stated reason for deferring rather than killing was a claim about the code — *"`_57_DynCloseOn` (Exit_DynCloseTargetMoney) **does** run through the shared exit path (`LabCore.mqh:151`) so it could apply to Kangaroo"*. **That claim is wrong, and the mold contradicts it in its own comment.** The thread is not "deferred pending an A/B"; it is inert pending a code change.
+
+**Measured from source, not recalled:**
+- `Exit_DynCloseTargetMoney()` is only ever called from **inside** `Exit_ManageBasket()` — [`ExitManager.mqh:620`](ea_template/core/ExitManager.mqh:620) opens the function, [`:639`](ea_template/core/ExitManager.mqh:639) is the call site.
+- **Boss_16 never reaches `Exit_ManageBasket()`.** The shared call is [`LabCore.mqh:490`](ea_template/core/LabCore.mqh:490); `Kangaroo_OnTick` returns before it ([`Kangaroo.mqh:596`](ea_template/core/entries/Kangaroo.mqh:596)). This is not an inference — [`LabCore.mqh:310-313`](ea_template/core/LabCore.mqh:310) records it as standing fact, written by `ORDER-125` after a Codex MAJOR-3 finding: *"Boss_16 exits exclusively through Kangaroo's own exit owner (Kangaroo_OnTick returns before Exit_ManageBasket), so the shared vertical-barrier input is a silent no-op here."*
+
+⇒ **`_57_DynCloseOn=true` on a Boss_16 chart changes nothing at all.** It is inert by construction — structurally the same finding `ORDER-197` *did* make about `PROG_FIBONACCI` on this chassis (Kangaroo owns its own `Kangaroo_NextLot()` and never calls the shared `MM_NextLot`/`LotProg` dispatcher). One of the two parts `ORDER-098-C` built was checked against Kangaroo's dispatch; the other was not.
+
+**🔴 The asymmetry that makes this an order and not a footnote.** [`LabCore.mqh:314-315`](ea_template/core/LabCore.mqh:314) prints `[INIT] WARN: _2_MaxHoldBars has NO EFFECT on Boss_16/Kangaroo (Kangaroo owns its exits) - input ignored`. `_57_DynCloseOn` is inert on Boss_16 **for the identical reason, through the identical mechanism**, and prints nothing. The mold therefore teaches a reader that an inert shared input announces itself — while one of them does not. CLAUDE.md's guard row already owns this failure shape: *numbers identical in every digit are evidence a thing is **inert**, not evidence it is safe*. A silent inert dial is precisely how that reading gets made.
+
+### A — the cheap half (do first; it is the whole finding, made visible)
+Extend the existing `#ifdef LAB_ENTRY_16` warn block to name `_57_DynCloseOn` on the same terms as `_2_MaxHoldBars`. Additive, zero behaviour change when the input is off, no new input.
+
+**acceptance:**
+1. compile **0 errors / 0 warnings**
+2. `tpl_regression.ps1` **CLEAN** — mandatory for any `ea_template/core/` change (Decision log 2026-07-06) and the cage pins its lane explicitly (Decision log 2026-07-30)
+3. the WARN is proven to **FIRE** with `_57_DynCloseOn=true` on a Boss_16 chart **and** proven to stay **SILENT** on a build that is not `LAB_ENTRY_16` — both directions, per memory `gate-specificity-not-just-sensitivity`. A warn only shown to fire is half a test
+4. the text says the input **has no effect**; it must not imply the input is unsafe. `ORDER-125` chose "warn loudly rather than fail — the input is an inert dial, not a safety promise", and that wording is the precedent to match
+
+⛔ **BLOCKED ON A LANE, not on a decision:** `tpl_regression` pins **MT5 lane 1**, held by `S-2026-08-01-CFGFP`. Do not begin A until that lane closes. This order is written now precisely so the finding does not live only in a chat window.
+
+### B — the decision the retrofit actually needs (do NOT start without the owner)
+If DynClose is still wanted on Kangaroo it requires a code change routing it **inside** `Kangaroo_ManageExits()`. The moment that lands, two profit-target laws are armed on one basket:
+
+| owner | law | scales with |
+|---|---|---|
+| Kangaroo — [`Kangaroo.mqh:465-469`](ea_template/core/entries/Kangaroo.mqh:465) | `_16_BasketTpUsdPer01 * (TotalLots / 0.01)` | **total lots** |
+| shared — [`ExitManager.mqh:537-546`](ea_template/core/ExitManager.mqh:537) | `base + (openCount / _57_DynCloseDivisor) * base` | **open-order count** |
+
+Both armed ⇒ the effective exit becomes a silent `min(` the two `)`, and on a deepening ladder the two laws diverge rather than track each other (lots per level are not constant). **That is the "exit-owner conflict" `ORDER-197` named — now stated as a mechanism instead of a worry.** `990016` is a **live demo leg** (judge `2027-01-13`, kill `DD 12%`), so B is an owner decision about a running experiment, not a lever toggle.
+
+**Evidence bar if B is ever run:** the A/B must report **how many times the DynClose branch actually fired**, against a named base control run. Fired 0 times ⇒ `UNTESTED`, and must not be written up as passed (CLAUDE.md guard row).
+
+### ห้าม
+- ❌ Do not enable `_57_DynCloseOn` on Boss_16 expecting an effect — it cannot have one until B lands, and a run that shows "no change" is evidence of A, not of safety.
+- ❌ Do not touch `ea_template/core/**` while `S-2026-08-01-CFGFP` holds lane 1.
+- ❌ Do not re-open `PROG_FIBONACCI`. `ORDER-197` closed it against a bar pre-registered *before* the runs, and Decision log 2026-07-18 item 5 is explicit that a closed lever stays closed. <sub>Recorded once so nobody rediscovers it as news: it was ruled out at a single untuned `_56_FibMaxStep=5` and the sweep was forbidden in that pass. That is a reason **not to re-litigate**, not a reason to reopen.</sub>
+- ❌ No `REVIEWED` written by an agent — verdicts are the lead's.
+
+**corrects the record (both were checked against the boards, not recalled):** `ORDER-197`'s *"could apply to Kangaroo"* line · and `PROJECT_STATE.md` §7 item 6, which stated the owner's MM-parts directive was never issued under any number — it was, twice over: `ORDER-098-C` carries **two different orders** (`ARCHIVE_TASKBOARD_2026-07A.md:7476` = FVG-fill + RSI gate, REJECT · `:7806` = the MM-parts library, `DONE + REVIEWED`), which is one of the three collisions `docs/SESSION_LEDGER.md` cites as the reason lane reservation exists.
+
+---
+
+## ORDER-820 — [tier] The budget question is REOPENED, not answered: the suite did NOT grow ~9s (that is the evidence-mode delta) and the full tier measured the way the hook invokes it spans 83.3-90.1s against the 90.0s budget — ON THE LINE, one of six samples over — every earlier sample was taken with no recorded invocation — `REVIEWED(user-supplied canonical inventory, 2026-08-16): CANONICAL / DONE` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> 🔴 **CORRECTED 2026-08-01 by `ORDER-830` (lane `S-2026-08-01-TIERATTR`), and the correction goes to
+> the PREMISE of this row, not to a detail in it. Everything below the next box is kept verbatim
+> because a decision loses its meaning without the thing it decided — but two of its headline claims
+> are refuted and must not be quoted forward.**
+>
+> | this row says | measured |
+> |---|---|
+> | `run_contract_binding_tests.ps1` **grew +8.7 s** between `ddbaec95` and now | it grew **+0.7 s** (measured, mode and shell held constant at both commits). The +8.7 s matches the **evidence-mode delta**, which is the same (+8.46 s) at `ddbaec95` itself — the mode assignment of the original 22.9 s / 31.6 s figures is **inference**: neither recorded its invocation, and no measured configuration reproduces 22.9 s. |
+> | the breach is **intermittent**, one suite swinging 24.9-32.1 s | it is **configuration, not variance**. Reproducing `.githooks/pre-commit:220` exactly (`sh` → `powershell -File ... -Hook`), six full-tier samples span **83.3 - 90.1 s against 90.0 s — ON THE LINE, one over** (17 suites, `7e4d8361`/`60a6eb12`). The same script launched from PowerShell is 95.1-98.6 s, because every `git` spawn goes through a 45 KB `cmd\git.exe` shim (**+9.1..9.2 ms × ~142 spawns**, measured interleaved). |
+> | the full tier is **OVER budget on every sample** (the row title) | 🔴 **not supported by any measurement taken the way git invokes it.** The six samples carry no record of how they were launched, and the spread between invocations (83-98 s) is wider than the spread between the samples. This is **not** proof the tier is safe — it is proof the budget has been argued from numbers with no stated provenance. |
+> | C1 = *"which commit added 8.7 s"* | **unanswerable as written, and it does not need answering.** No commit added it. |
+>
+> 📐 **A seventh sample exists and is NOT on this row's list: 100.0 s, suite at 34.8 s**, recorded by
+> lane `S-2026-08-01-WRFIX` in its ledger cell with **no invocation recorded**. It exceeds every
+> configuration `ORDER-830` measured. *Inference, not measurement:* 34.8 s ≈ PowerShell+index (33.4-34.1 s)
+> **plus the ~0.5 s suite `S14GRANT` added that day**, and 100.0 s ≈ PowerShell `-Hook` (97.6 s) + the same —
+> so it most likely sits in the PowerShell population rather than widening any swing. **Nobody has
+> confirmed it.** Confirm or refute before quoting it.
+>
+> **C1 is therefore CLOSED by `ORDER-830`.** 🔴 **Order of work: rebuild the premise BEFORE spending anything
+> on C2** — three full-tier samples through `.githooks/pre-commit`'s own line, shell + suite count +
+> commit stated beside each. The tier may not need a fix at all. **C2 stays here**, with one named candidate if it is still
+> needed: replace `evidence.py`'s per-path `git show` (129 spawns in `check_r4`'s sweep) with one
+> `git cat-file --batch`. **But C2's premise must be re-established first** — time the full tier the way
+> the hook invokes it, and if it is inside budget there is nothing to displace, speed up, or raise.
+> **C3 must be restated as three consecutive runs THROUGH `.githooks/pre-commit`'s own invocation**,
+> with the shell and the suite count written down beside each number. A tier total with no stated
+> invocation is not evidence — that is the whole lesson of `ORDER-830`.
+
+> 🔎 **C1's timing half is MEASURED and lives on `ORDER-830` (2026-08-01) — do not re-measure it.**
+> It says three entries drifted rather than one, and that the largest single item is a
+> `check_registries.py` call costing **5.1s in `index` mode against 0.07s in `worktree` mode**.
+> It also says **this row's premise may be wrong**: the only commit that introduced the expensive
+> path (`5082bd4d`) predates *both* the 22.9s and 31.6s measurements compared below, so it cannot
+> explain the jump between them. `ORDER-830` A2 decides which, and corrects this row if needed.
+> **C2 and C3 stay here and are not answerable until then.**
+
+> Opened by lane `S-2026-08-01-TIERINSTR` while instrumenting `ORDER-731` item 2. **Not this
+> lane's doing, and that is measured rather than claimed** — see the decomposition below.
+
+**The number.** Five full-tier samples on 2026-08-01, machine otherwise idle:
+**91.8 · 91.5 · 91.7 · 91.1 · 93.6 s** against the **90.0 s ENFORCED** budget.
+
+🔴 **SIXTH SAMPLE, and it changes the shape of this order: `87.8 s` — UNDER budget, 2.2 s of
+headroom**, with `run_contract_binding_tests.ps1` at **24.9 s** rather than 31.6 s (measured by
+lane `S-2026-08-01-INSTRREV`, machine idle, no code change between it and the 93.6 s sample that
+could account for 5.8 s). **So the breach is INTERMITTENT and the driver is one suite swinging
+24.9-32.1 s — a 7 s spread on a 90 s budget.** That reframes C1: the question is no longer only
+*"what added 8.7 s"* but *"why does this one suite vary by 7 s"*, and a fix aimed at the mean
+would leave the tier failing on the bad half of the distribution. **Do not tune against a single
+run in either direction** — five samples said "over", the sixth said "under", and both are true. The tier therefore
+**exits 1**. The budget's own message is the spec for what must happen: *"Displace a suite, make
+the named one faster, or raise the number DELIBERATELY in the same commit that says why — but do
+not leave it breached and green."* It is breached and RED, which is the budget working; this row
+is the "say why" that has to come before the number moves.
+
+**Where it went, measured.** `run_contract_binding_tests.ps1` = **31.4-32.1 s**, i.e. **35 % of
+the whole tier**, against **22.9 s** measured by an independent pass earlier the same day
+(commit `ddbaec95`). That is **+8.7 s** on one suite.
+
+**It is not the S2a work, and this is the decomposition that rules it out** — the lane that
+landed between the two measurements (`02e11b10`, `ORDER-731` M1-M4) touched only S2a suites:
+
+| measured | |
+|---|---|
+| everything `M1-M4` ADDED (`2× att.main --template` + `2× gen.build_rows`) | **1.8 s** |
+| the three suites it touched, in FULL (`attestation 1.6` + `migration 3.6` + `pin cage 0.3`) | **5.4 s** |
+| the whole S2a gate (`run_s2a_gate.py`, all 7 steps) | **5.2 s** |
+| the item-2 tier instrumentation, 17 stamps (one run's worth) | **0.09 s** |
+| `run_contract_binding_tests.ps1` | **31.6 s** |
+
+A subsystem that costs 5.4 s in total cannot have added 8.7 s. **The growth is somewhere else in
+`contract_binding` — the ajv fixtures, the design-contract binding, or the snapshot validator —
+and nobody has attributed it.**
+
+### Acceptance
+- **C1** attribute the **+8.7 s**: time `run_contract_binding_tests.ps1`'s parts individually and
+  name which one grew, with the commit that grew it. A number without a name is how this became a
+  surprise.
+- **C2** then EITHER make the named part faster, OR displace a suite, OR raise the budget in the
+  commit that carries C1's measurement — **not** before it.
+- **C3** whichever is chosen, the tier must exit 0 on **three consecutive** full runs, and the
+  three numbers go in the RESULT — one clean run is a sample, not a state.
+- 🚫 **Do not raise the budget to make the red go away.** That is the one move the budget exists
+  to refuse, and `ORDER-673` already paid for the version of this file where it was advisory and
+  breached for days with nothing happening.
+
+<sub>**Day-to-day impact is smaller than the number looks, and that is why it can be an order rather than an emergency:** the hook selects suites **per path**, and the per-path budget is **65.0 s**. A normal commit runs 1-3 suites well inside it. The full tier runs when a change touches many declared paths — which is exactly when a breach is most likely to earn a `--no-verify`.</sub>
+

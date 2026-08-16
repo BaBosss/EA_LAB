@@ -4,7 +4,7 @@
 > session narrative, the accumulated changelog, and the full Decision log with provenance. This file
 > holds only: current status, active work, binding decisions, and the forward plan.
 
-> **last updated:** 2026-08-15 (QI-1 + H/R accepted milestone state sync) — Controlled Execution MVP, Owner-Controlled EA_LAB Integration, EA_LAB Real Workflow Integration, OPERATIONAL / HIGH-RISK GATE, Controlled Backtest Execution MVP, and Controlled Optimization Execution MVP accepted; CONTEXT REDUCTION / CONTEXT-HYGIENE accepted and closed; current milestone = VPS DEMO Deployment / Forward-Test. Local execution scope = MT5 Strategy Tester/backtest; owner-gated LIVE remains a future milestone.
+> **last updated:** 2026-08-16 (QI-1 + H/R accepted milestone state sync) — Controlled Execution MVP, Owner-Controlled EA_LAB Integration, EA_LAB Real Workflow Integration, OPERATIONAL / HIGH-RISK GATE, Controlled Backtest Execution MVP, and Controlled Optimization Execution MVP accepted; CONTEXT REDUCTION / CONTEXT-HYGIENE accepted and closed; current milestone = VPS DEMO Deployment / Forward-Test. Local execution scope = MT5 Strategy Tester/backtest; owner-gated LIVE remains a future milestone.
 > **POST-C18B CANONICAL INTEGRATION:** commit `c18b144d3ef4d14b39c07bf33b77276171e2bad4` is canonical. `ORDER-490` and Factory-OS `ORDER-1265` are **CANONICAL / DONE**; Factory-OS `ORDER-1266 #1` is **CANONICAL / DONE**. QI-1 Foundation Design Freeze is **CANONICAL / FROZEN**; QI-1 Foundation implementation is **OWNER AUTHORIZED / IMPLEMENTED / ACCEPTED**; QI-1 acceptance current blockers = **NONE**; QI-2+ = **NOT AUTHORIZED**. The current operational milestone remains **VPS DEMO Deployment / Forward-Test**; VPS disposition = **MONITOR_FORWARD**. No deployment, LIVE, or risk-default authorization occurred.
 > Full session-by-session history → `PROJECT_HISTORY.md`. · owner: patip
 
@@ -90,6 +90,9 @@ Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine
 ---
 
 ## 2. Current status (one-liner per layer)
+
+> **2026-08-16 FINAL MONITORING REPAIRS + DURABLE STATE SYNC PREP:** canonical monitoring code defects are repaired; ORDER-740 is accepted/canonical; Build-6090 provenance is refreshed with metrics unchanged; the reconciliation parser repair is integrated from `021f2516378bef5cf207451668bc07f30ab670f1`; and basket expectation semantics are repaired from `908c24fc`. Monitoring remains **DEGRADED_MONITORING**. Known product defects = none; remaining blockers are evidence/authority only.
+> **Remaining owner/external blockers:** monitored-account runtime identity evidence; exact ClevrFX magic/attachment authority for `69424711`; ORDER-941 / ORDER-1000 attach-runtime proof; and existing owner gates such as ORDER-1462 / ORDER-1257 / ORDER-510 as applicable. QI-2+ remains **NOT AUTHORIZED**.
 > **2026-08-14 VPS DEMO / Forward-Test manual verification complete:** disposition = `MONITOR_FORWARD`; CURRENT blockers = NONE. VPS snapshot/exporter is operational and fresh; News/MRIS was refreshed by the owner. TsMom `992001` was corrected from discovered H1 drift to canonical D1 and pre-correction H1 evidence was discarded; valid-forward reset = `2026-08-14`. ORDER-353 `990026` is CONFIG PASS with zero closed trades; its judge clock has not started. Next action is observation only: no manual trading and no LIVE promotion.
 
 > **2026-08-08 (owner-accepted) — Controlled Execution MVP = ACCEPTED; accepted Executor manifest** `DD11E90EEE7C258483DB8C58084E90AFE3CDB98AF6228360404783A5A258F469`. **Owner-Controlled EA_LAB Integration = ACCEPTED; final accepted Executor manifest** `1D11B3A4CAC8E8A806096E506F1703228630197B8E02AD6CD875AAB9BD616172`. **Proof:** commit `6a4cc7ef2310cf6e51c0aa174361605756af6585` · `docs/owner-controlled-probe.md` · blob SHA-256 `1BA3B69CCAB379242A10D31FE4A7BF315DB5DAC57EE93FC849FA5592F543CC9C` · independent different-family review PASS / BLOCKERS: NONE.
@@ -355,6 +358,7 @@ Attribution key = **(magic, symbol)**. Deployed 2026-07-02 (history — see the 
 > Export via an MQL5 script that reads `DEAL_MAGIC` instead. Everything is built + tested.
 
 **Steps (to send to the AI for checking):**
+> **Current disposition: `DEGRADED_MONITORING`.** The monitoring parser and basket expectation defects are repaired, but this is not runtime proof. Do not infer monitored-account identity, exact ClevrFX magic/attachment authority for `69424711`, or ORDER-941 / ORDER-1000 attach-runtime proof from repository snapshots; these remain owner/external evidence gates.
 1. In MT5 (the machine/VPS running demo): copy `D:\EA_LAB\scripts\report_deals.mq5` → `<DataDir>\MQL5\Scripts\`
    → refresh Navigator → drag onto any chart → set `InpFromDate=2026.06.22` → run.
 2. It writes **`live_deals.csv`** into `Common\Files\` (the path shows in the Experts log). Columns:

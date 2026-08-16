@@ -5,9 +5,9 @@
 > `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
-> NOT repo HEAD; stable across any commit that does not touch that file): `efdea7c2ca80fc13b82fb900c857e47f8517b852`
+> NOT repo HEAD; stable across any commit that does not touch that file): `769edf7e6d941a21ac34db941929fc8b18153743`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
-> EOL/whitespace drift the per-block hashes below cannot see): `906df156e1f40417c331e2634f2e67405c4cec76c8a42a3a8c12facd43b6e5dd`
+> EOL/whitespace drift the per-block hashes below cannot see): `f131defcc51b16e63e530c6268c1a359929f90df987ea6adb505e26fd875b4b3`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
 > normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
 > block will not change that block's sha256; rely on the whole-file raw-byte hash above.
@@ -342,4 +342,6 @@
 | 239\|ORDER\|current-archive#326 | 239 | ORDER | 326 | a60b83d118526c814450207c5d91a340057680955b9124cbb2bab2cce3731e69 |
 | NA\|OTHER\|current-archive#327 |  | OTHER | 327 | 8da967630be5038323b3171792914adf63ec5554304525c2774e9b34d78c1064 |
 | 490\|ORDER\|current-archive#328 | 490 | ORDER | 328 | 3ae717b8f8c0e0a82c2befa36bb0597b84263c703528c96f11c568d35391a844 |
-| 1265\|ORDER\|current-archive#329 | 1265 | ORDER | 329 | d3d62ebea8a30d7deba984dafd54403b2c87782e7664c4c9c463756e9cae8bf4 |
+| 1265\|ORDER\|current-archive#329 | 1265 | ORDER | 329 | a99b46c03f3dfb419810a8d42506f7909001b8ab7db12bba55179db0f5a10e54 |
+| 740\|ORDER\|current-archive#330 | 740 | ORDER | 330 | 4938736d522d65686f2ce21254bf58e67026198db9c74bf58b5998f7d370ced7 |
+| 820\|ORDER\|current-archive#331 | 820 | ORDER | 331 | de2883076c030546a596df391160d0966e04d8b058fd48e7c3b9dc1b3d2ebd79 |
