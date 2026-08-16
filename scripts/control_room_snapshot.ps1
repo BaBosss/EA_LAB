@@ -174,14 +174,22 @@ foreach($a in $accounts){
 }
 
 # --- CR-005-lite-b: expected-vs-actual reference (portfolio\expectations.csv is the owner of
-# per-magic expected profile). We use it ONLY for a trade-RATE flag here (the cheapest, most
-# actionable "has this EA gone silent?" signal) plus surfacing expected pf/dd95 for context.
+# the pre-registered expectation profile). We use it ONLY for a trade-RATE flag here (the
+# cheapest, most actionable "has this EA gone silent?" signal) plus surfacing expected pf/dd95
+# for context. A non-separable basket rate is assessed once for the basket, never once per leg.
 # Live-PF-vs-band and DD-vs-dd95 comparison need per-magic profit summation and belong to the
 # full CR-005 drift engine - deliberately NOT computed in this lite slice. Never touches the
 # CLAUDE.md promotion bar (PF>=1.40 / >=30 trades / >=3 months) - advisory only.
 $EXP = Join-Path $Root 'portfolio\expectations.csv'
+$EXP_SEMANTICS = Join-Path $Root 'scripts\lib\expectation_semantics.ps1'
+if (-not (Test-Path $EXP_SEMANTICS)) { throw "control_room_snapshot: missing expectation semantics library: $EXP_SEMANTICS" }
+. $EXP_SEMANTICS
+$expRows = @()
 $expMeta = @{}
-if (Test-Path $EXP) { foreach($e in @(Import-Csv $EXP)) { $expMeta["$($e.account)|$($e.magic)"] = $e } }
+if (Test-Path $EXP) {
+  $expRows = @(Import-Csv $EXP)
+  foreach($e in $expRows) { $expMeta["$($e.account)|$($e.magic)"] = $e }
+}
 
 # --- judge readiness per visible non-REMOVED row ---
 $decisionBar = 30   # CLAUDE.md judge bar: PF>=1.40 at >=30 trades
@@ -234,24 +242,33 @@ foreach($r in ($rows | Where-Object { $_.operational_status -ne 'REMOVED' })){
   if ($null -ne $trades -and $null -ne $d2j -and $d2j -gt 0 -and $trades -lt $decisionBar) {
     $needWk = [math]::Round(($decisionBar - $trades) * 7.0 / $d2j, 1)
   }
-  # CR-005-lite-b expected-vs-actual: attach expected profile + a trade-rate flag.
-  # rate_flag = UNDER_RATE only when we have >=14d of history AND observed weekly close rate
-  # is below half the expected rate (gone-quiet detector); ON_RATE when meeting it; NA otherwise
-  # (too little history, no expectation row, or no numeric expected rate). Advisory only.
+  # CR-005-lite-b expected-vs-actual: attach expected PF/DD context here. Trade-rate semantics
+  # are applied after the loop, because a basket expectation must see all of its legs together.
   $em = $expMeta["$($r.account)|$($r.magic)"]
   $expPf = $null; $expDd95 = $null; $expWk = $null; $rateFlag = 'NA'
   if ($null -ne $em) {
     $expPf   = $em.pf_expected
     $expDd95 = $em.dd95_expected
-    $tpm = 0.0
-    if ([double]::TryParse($em.trades_per_month_expected, [ref]$tpm) -and $tpm -gt 0) {
-      $expWk = [math]::Round($tpm / 4.33, 1)
-      if ($null -ne $obsWk -and $null -ne $daysActive -and $daysActive -ge 14) {
-        if ($obsWk -lt (0.5 * $expWk)) { $rateFlag = 'UNDER_RATE' } else { $rateFlag = 'ON_RATE' }
-      }
-    }
   }
-  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$trades; days_active=$daysActive; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk; expected_pf=$expPf; expected_dd95=$expDd95; expected_trades_per_week=$expWk; rate_flag=$rateFlag }
+  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$trades; days_active=$daysActive; observation_start_date=$r.start_date; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk; expected_pf=$expPf; expected_dd95=$expDd95; expected_trades_per_week=$expWk; expectation_unit='MAGIC'; expectation_key=("$($r.account)|$($r.magic)"); expectation_violation='NOT_EVALUATED'; expectation_status_reason='NOT_EVALUATED'; rate_flag=$rateFlag }
+}
+
+# Apply trade-rate semantics only after every visible leg has contributed its observation.
+# Per-leg closed_trades remains the raw observation. For non-separable baskets, the per-leg
+# expectation fields are deliberately non-evaluated; the aggregate lives in summary.
+$expAssess = Get-ExpectationRateAssessments -Observations @($jr) -Expectations $expRows
+$expByKey = @{}
+foreach($el in @($expAssess.legs)) { $expByKey["$($el.account)|$($el.magic)"] = $el }
+foreach($j in $jr) {
+  $el = $expByKey["$($j.account)|$($j.magic)"]
+  if ($null -eq $el) { continue }
+  $j.expectation_unit = $el.expectation_unit
+  $j.expectation_key = $el.expectation_key
+  $j.expected_trades_per_week = $el.expected_trades_per_week
+  $j.observed_trades_per_week = $el.observed_trades_per_week
+  $j.expectation_violation = $el.expectation_violation
+  $j.expectation_status_reason = $el.expectation_status_reason
+  $j.rate_flag = $el.rate_flag
 }
 
 # --- CR-005-lite vertical slice: per-judge-date cohort rollup ---
@@ -407,7 +424,12 @@ $sum = [ordered]@{
   # historical is the exact defect this counter exists to make impossible to repeat.
   unknown_magics_unclassified = @($unknown | Where-Object { $_.age_class -eq 'UNCLASSIFIED' }).Count
   accounts_floating_blind   = @($floating | Where-Object { $_.state -ne 'FRESH' }).Count
-  judge_under_rate          = @($jr | Where-Object { $_.rate_flag -eq 'UNDER_RATE' }).Count
+  # Count expectation units, not deployment rows. A basket warning is one warning even
+  # when its constituent legs are four separate DEPLOYMENTS rows.
+  judge_under_rate          = $expAssess.standalone_under_rate + $expAssess.basket_under_rate
+  expectation_standalone_under_rate = $expAssess.standalone_under_rate
+  expectation_basket_under_rate = $expAssess.basket_under_rate
+  expectation_baskets      = @($expAssess.baskets)
 }
 
 # Runtime identity is a separate trust domain from config fingerprint and from the
@@ -515,7 +537,7 @@ Write-Host ("SYSTEM   {0}/{1} accounts fresh ({2} stale/no-sensor, bar {3}h)" -f
 Write-Host ("FLEET    {0} rows, {1} ACTIVE, {2} forward-observed | verification: {3} pending, {4} UNVERIFIED | gaps: {5} no-kill, {6} no-judge" -f $sum.deployments_total, $sum.deployments_active, $sum.deployments_forward_observed, $sum.deployments_pending_verification, $sum.deployments_unverified, $sum.gaps_missing_kill, $sum.gaps_missing_judge)
 Write-Host ("JUDGE    {0} decision-capable | {1} partial | {2} collecting | {3} no-data" -f $sum.judge_decision_capable, $sum.judge_partial, $sum.judge_data_collection, $sum.judge_data_insufficient)
 Write-Host ("FORECAST {0} projected-capable at judge date | {1} projected SHORTFALL (<30 trades)" -f $sum.judge_projected_capable, $sum.judge_projected_shortfall)
-Write-Host ("RATE     {0} magic(s) UNDER_RATE (obs weekly closes < 50% of expectations.csv, >=14d history)" -f $sum.judge_under_rate)
+Write-Host ("RATE     {0} expectation unit(s) UNDER_RATE (obs weekly closes < 50% of expectations.csv, >=14d history)" -f $sum.judge_under_rate)
 foreach($cRoll in $cohorts){
   Write-Host ("COHORT   judge {0} ({1}d): {2} EAs | capable-now {3} | proj-capable {4} | proj-shortfall {5} | no-sensor {6}" -f $cRoll.judge_date, $cRoll.days_to_judge, $cRoll.deployments, $cRoll.decision_capable_now, $cRoll.projected_capable, $cRoll.projected_shortfall, $cRoll.no_sensor)
 }
