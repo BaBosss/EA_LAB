@@ -6384,7 +6384,19 @@ and four Boss_14 reports. And the `expectations.csv` rewrite touched nothing it 
 only key changes are the 3 intended re-points and the 1 new row, with **zero** unexpected field
 changes outside `notes`/`source_evidence`/the rate.
 
-## ORDER-943 — [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one — `DONE (Claude/Opus proposed + user ratified 2026-08-02) — the whole judge-dated fleet decided in ONE pass now that ORDER-942 supplied the rates: 14 THIN (ORDER-235, pre-registered before any judge date lands) · 12 re-based on arithmetic · 7 on track · 3 HELD OUT to ORDER-941 because the projection is optimistic for them and two are real money. Written into DEPLOYMENTS.csv + DEMO_DEPLOYMENT_PLAN.md; check_state CLEAN` · ทำได้: Claude/Opus (เสนอ) + user (ratify) · 👉 แนะ: Claude
+## ORDER-943 — [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one — `PARTIAL (owner-ratified 2026-08-16) — 19-row disposition recorded; 12 resolved by owner direction, 7 remain runtime-evidence blocked; no retirement authorized` · ทำได้: Codex Primary (state sync) + owner (ratify) · 👉 แนะ: Codex
+
+> ✅ **OWNER-RATIFIED PARTIAL DISPOSITION 2026-08-16:** the exact 19-row ORDER-943 cohort is now recorded as follows. This is a partial state, not a full closure: no retirement/removal is authorized, and no runtime, deployment, trading, risk/default, or expectation-rate change was made.
+>
+> | disposition | magic rows |
+> |---|---|
+> | **REBASE** | `990204`, `990206`, `990301`, `990302`, `999094`, `990103` |
+> | **ORDER-235 THIN TREATMENT** | `991003`, `990020` |
+> | **MONITOR / NO THIN EXCEPTION YET** | `990984` |
+> | **PROVISIONAL UNTIL FIRST REAL TRADE** | `991005`, `990208`, `992004` |
+> | **RUNTIME-EVIDENCE BLOCKED** | `990066`, `990067`, `990068`, `990069`, `991004`, `991002`, `990202` |
+>
+> The seven runtime-evidence-blocked rows remain blocked. The three provisional rows remain provisional until their first real trade. `990984` remains monitor-only with no thin exception yet. This owner-ratified subset does not close ORDER-943.
 
 > `ORDER-940` measured it: **19 projected SHORTFALL vs 11 projected capable**, and the nearest cohort
 > (**2026-10-09**, 5 EAs) has **0 decision-capable today**. The bar exists (`CLAUDE.md` VERDICT GATE:
@@ -6400,7 +6412,7 @@ this changes when real money can move, so it is not the seat's call alone · **C
 written into `DEPLOYMENTS.csv` (`kill_rule` / `judge_date` / notes), not into a handoff.
 🚫 Do not decide the four `ORDER-941` legs here. 🚫 Do not move a judge date to make a cohort look ready.
 
-### C1 PROPOSAL (Claude/Opus 2026-08-02, lane `S-2026-08-02-JUDGERATE`) — **awaiting C2 ratification; nothing has been written to `DEPLOYMENTS.csv`**
+### C1 PROPOSAL (Claude/Opus 2026-08-02, lane `S-2026-08-02-JUDGERATE`) — **historical pre-ratification proposal; the owner-ratified partial disposition above is current, and ORDER-943 remains PARTIAL**
 
 Now that `ORDER-942` gave all 36 judge-dated rows an expected rate, the projection is no longer
 observed-only. **Projected total = observed + expected/wk × weeks to judge**, against the 30-trade bar.
@@ -6443,7 +6455,7 @@ date makes a real-money leg that has produced nothing look *scheduled* for eleve
 to `ORDER-941`'s question — silent or thin — and that question now has an expectation to be falsified
 against, which it did not have this morning. Instrument first, decide after.
 
-**What C2 is being asked to ratify:** (1) Bucket A as written · (2) Bucket B's computed dates ·
+**Historical C2 question, now partially answered by the owner:** (1) Bucket A as written · (2) Bucket B's computed dates ·
 (3) whether the four 0.51–0.64/wk rows move to Bucket A · (4) the three Bucket C rows deferred to
 `ORDER-941`. **C3 (writing `DEPLOYMENTS.csv`) happens only after that, and not before.**
 

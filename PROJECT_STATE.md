@@ -490,12 +490,13 @@ enabling = validate like a new mechanism.
   closed trades in 16 days against an expected 1.0–1.1/week** — about 2.5 expected trades each, three legs
   silent together. That is an attach/gate defect shape (the `990025` `AllowLive=false` precedent), not a
   thin EA. `990068` on the same EA is at 1 vs ~2.3 expected.
-- **`ORDER-942` — 11 of the 19 shortfall EAs have no row in `portfolio/expectations.csv`**, so for them
-  *silent* and *thin* are not distinguishable by any measurement the lab currently takes. Fill the expected
-  rate before deciding anyone's judge policy.
-- **`ORDER-943` — then decide the 19, per EA**, between ORDER-235's thin-EA treatment (≥12 months, net
-  positive, no kill tripped, permanently small lot) and re-basing/retiring. **Decide before the date, not
-  on it**: on 2026-10-09 the 5-EA cohort currently has **0 decision-capable and 2 projected shortfall**.
+- **`ORDER-942` = ACCEPTED/CLOSED:** the expected-rate substrate for the 19-row projected-shortfall cohort is accepted.
+- **`ORDER-943` = PARTIAL / OWNER-RATIFIED (2026-08-16):** exact cohort = 19. Rebase = `990204`, `990206`,
+  `990301`, `990302`, `999094`, `990103`; ORDER-235 thin treatment = `991003`, `990020`; monitor with no thin
+  exception yet = `990984`; provisional until first real trade = `991005`, `990208`, `992004`; runtime-evidence
+  blocked = `990066`, `990067`, `990068`, `990069`, `991004`, `991002`, `990202`. **No retirement/removal is
+  authorized.** ORDER-943 remains PARTIAL until the runtime-evidence rows are resolved and the provisional/monitor
+  conditions are separately satisfied.
 - /ea-monitor every 1–2 weeks (send `live_deals.csv`) — the collector is already writing
   `portfolio/live_deals/` daily for 4 of 6 accounts; MT4 `141049900` and `69424711` are STALE (38.5 h).
 
