@@ -37,6 +37,7 @@ _triage/factory_os/parity.py
 _triage/factory_os/preset.py
 _triage/factory_os/registry.py
 _triage/factory_os/run_activation_tests.py
+_triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_guard_shape_lint.py
 _triage/factory_os/run_journal_validator.py
 _triage/factory_os/run_param_surface_tests.py

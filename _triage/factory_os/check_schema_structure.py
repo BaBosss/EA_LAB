@@ -31,7 +31,16 @@ import evidence as ev  # noqa: E402
 try:
     src = ev.EvidenceSource.for_run()
     print(src.marker('check_schema_structure.py'))
-    d = json.loads(src.read_committed('_triage/factory_os/schemas.json'))
+    # ORDER-1283: mutation cages may inject a temporary schema document. The production
+    # path still reads the judged evidence source; the override is an explicit test-only
+    # seam so a cage never rewrites the tracked schema it is checking.
+    schema_override = (os.environ.get('EA_LAB_SCHEMA_OVERRIDE')
+                       if os.environ.get('EA_LAB_EVIDENCE') == 'worktree' else None)
+    if schema_override:
+        with open(schema_override, encoding='utf-8') as fh:
+            d = json.load(fh)
+    else:
+        d = json.loads(src.read_committed('_triage/factory_os/schemas.json'))
 except ev.ToolFailure as exc:
     print('[TOOL FAILURE] %s' % exc)
     sys.exit(2)

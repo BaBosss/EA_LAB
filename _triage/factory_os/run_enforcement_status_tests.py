@@ -16,18 +16,9 @@ WHY THIS EXISTS
   Only whitelisting the arrays that are actually executed made it decidable. Being named in a
   dependency list is not being invoked, and two attempts got that wrong.
 
-🔴 DO NOT PUT THIS SUITE ON THE COMMIT PATH UNTIL IT STOPS WRITING TO schemas.json (ORDER-1283)
-  This suite tests the checker by MUTATING the live, tracked `_triage/factory_os/schemas.json`
-  and restoring it in a `finally`. On a hand-run wrapper that is untidy. In the pre-commit tier
-  of a repo where two lanes commit concurrently it is a DATA-LOSS PATH, and that was OBSERVED,
-  not theorised: ORDER-1264 added it to run_schema_cages.ps1, and within twenty minutes a hand
-  run and another lane's hook collided on the file -- one died with OSError 22, the other's
-  `finally` restored ITS idea of "the original", and `WorkReceipt.x-enforcement-status` was left
-  sitting in the working tree as "TOTALLY_FINE". Whichever process reads the file while the
-  other holds a mutation restores THE MUTATION.
-
-  It goes back in the tier when the checker is drivable with an INJECTED document instead of
-  only as a subprocess over a fixed path. Adding it back before then re-opens the same hole.
+  ORDER-1283: the mutation cage uses an injected temporary schema document. The tracked
+  `_triage/factory_os/schemas.json` is never opened for writing, so concurrent commit hooks
+  cannot restore one another's mutation or leave a false-green receipt behind.
 
 USAGE  tools\\python312\\python.exe _triage/factory_os/run_enforcement_status_tests.py
 """
@@ -36,6 +27,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_design_contracts as gen  # noqa: E402
@@ -111,15 +103,19 @@ CASES = (
 )
 
 
-def run_checker():
-    # ORDER-670: mode pinned to WORKTREE explicitly. This suite writes mutations into the
-    # worktree copy of schemas.json and asserts the checker refuses them -- it is testing the
+def run_checker(schema_override=None):
+    # ORDER-670: mode pinned to WORKTREE explicitly. This suite injects mutations from a
+    # temporary copy of schemas.json and asserts the checker refuses them -- it is testing the
     # checker's RULES against synthetic bytes (category C), not judging a commit. Under a
     # pre-commit hook the inherited env says `index`, and an index-mode checker cannot see a
     # worktree mutation: every case here would report GREEN-for-the-wrong-reason and the
     # suite would call that BAD. The mode must therefore be deterministic, not inherited.
     env = dict(os.environ)
     env['EA_LAB_EVIDENCE'] = 'worktree'
+    if schema_override:
+        env['EA_LAB_SCHEMA_OVERRIDE'] = schema_override
+    else:
+        env.pop('EA_LAB_SCHEMA_OVERRIDE', None)
     p = subprocess.run(['tools\\python312\\python.exe', CHECKER], capture_output=True,
                        text=True, env=env)
     return p.returncode, p.stdout
@@ -128,7 +124,8 @@ def run_checker():
 def main():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
-    original = io.open(gen.SCHEMA_PATH, encoding='utf-8').read()
+    schema_path = os.path.abspath(gen.SCHEMA_PATH)
+    original = io.open(schema_path, encoding='utf-8').read()
     bad = 0
 
     rc, out = run_checker()
@@ -140,13 +137,14 @@ def main():
         return 1
 
     print('\n=== %d mutations, each must be refused BY NAME ===' % len(CASES))
-    try:
+    with tempfile.TemporaryDirectory(prefix='enforcementmut_') as tmp:
+        mutant_path = os.path.join(tmp, 'schemas.json')
         for label, entity, mutate in CASES:
             doc = json.loads(original)
             mutate(doc)
-            io.open(gen.SCHEMA_PATH, 'w', encoding='utf-8', newline='\n').write(
+            io.open(mutant_path, 'w', encoding='utf-8', newline='\n').write(
                 json.dumps(doc, indent=2, ensure_ascii=False) + '\n')
-            rc, out = run_checker()
+            rc, out = run_checker(mutant_path)
             hit = [l for l in out.splitlines() if '[FAIL]' in l and entity in l]
             ok = rc != 0 and hit
             print('  [%s] %-46s expect=RED got=%s' % ('OK ' if ok else 'BAD', label,
@@ -155,12 +153,11 @@ def main():
                 bad += 1
                 print('        -> %s' % (hit[0].strip()[:100] if hit
                                          else 'NOTHING NAMED %s FAILED' % entity))
-    finally:
-        io.open(gen.SCHEMA_PATH, 'w', encoding='utf-8', newline='\n').write(original)
-
-    if io.open(gen.SCHEMA_PATH, encoding='utf-8').read() != original:
-        print('  [BAD] this suite did not restore schemas.json')
+    if io.open(schema_path, encoding='utf-8').read() != original:
+        print('  [BAD] this suite changed tracked schemas.json')
         bad += 1
+    else:
+        print('  [OK ] tracked schemas.json was never written (mutations stayed in a temp copy)')
     rc, _ = run_checker()
     print('\n  [%s] CONTROL schema restored and green again (exit %d)'
           % ('OK ' if rc == 0 else 'BAD', rc))
