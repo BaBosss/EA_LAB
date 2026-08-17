@@ -399,6 +399,13 @@ class ControlTowerRelay:
             raise RelayError("corrupt job metadata: evidence path escapes job directory")
         return candidate
 
+    def _read_owned_bytes(self, job_id: str, relative_path: str) -> bytes:
+        path = self._owned_path(job_id, relative_path)
+        try:
+            return path.read_bytes()
+        except OSError as exc:
+            raise RelayError("missing or unreadable job evidence: %s" % path) from exc
+
     def _lock_for(self, job_id: str) -> threading.RLock:
         with self._global_lock:
             return self._locks.setdefault(job_id, threading.RLock())
@@ -621,8 +628,14 @@ class ControlTowerRelay:
             actual_hash = _sha256(_json_bytes(result))
             if expected_hash != actual_hash:
                 raise RelayError("corrupt or mismatched result metadata")
-            result["raw_stdout"] = self._owned_path(job_id, result["raw_stdout_path"]).read_bytes().decode("utf-8", "replace")
-            result["raw_stderr"] = self._owned_path(job_id, result["raw_stderr_path"]).read_bytes().decode("utf-8", "replace")
+            raw_stdout = self._read_owned_bytes(job_id, result.get("raw_stdout_path"))
+            raw_stderr = self._read_owned_bytes(job_id, result.get("raw_stderr_path"))
+            if _sha256(raw_stdout) != result.get("stdout_sha256"):
+                raise RelayError("corrupt or mismatched raw stdout evidence")
+            if _sha256(raw_stderr) != result.get("stderr_sha256"):
+                raise RelayError("corrupt or mismatched raw stderr evidence")
+            result["raw_stdout"] = raw_stdout.decode("utf-8", "replace")
+            result["raw_stderr"] = raw_stderr.decode("utf-8", "replace")
             return result
 
     def continue_codex(

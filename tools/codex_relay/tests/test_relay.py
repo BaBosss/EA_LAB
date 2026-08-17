@@ -91,6 +91,15 @@ class RelayTests(unittest.TestCase):
         with self.assertRaises(RelayError):
             relay.get_codex_result(job["job_id"])
 
+        relay = self.make_relay(FakeCodexAdapter())
+        job = relay.dispatch_codex("wrong-evidence", "p")
+        relay.get_codex_result(job["job_id"])
+        result = relay.get_codex_result(job["job_id"])
+        stdout_path = relay.state_dir / result["raw_stdout_path"]
+        stdout_path.write_bytes(b"tampered")
+        with self.assertRaises(RelayError):
+            relay.get_codex_result(job["job_id"])
+
     def test_reload_terminal_and_lost_running_job(self):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
