@@ -4,13 +4,13 @@
 > session narrative, the accumulated changelog, and the full Decision log with provenance. This file
 > holds only: current status, active work, binding decisions, and the forward plan.
 
-> **last updated:** 2026-08-17 (durable SYSTEM FOUNDATION state sync) — the EA_LAB SYSTEM FOUNDATION is **ACCEPTED / COMPLETE FOR CURRENT FACTORY SCOPE**. The accepted local integration commit is `fa3ae6079cdc4664810a74819d24d0c5e6a40706`; the canonical remote remains pre-push at `a2545d853c1636ed680f6c4102d7ea76f03ac230`, and canonical push remains owner-gated. The next phase is **Factory production → EA Template / Boss14 master mold → Monitoring / Control Plane**. No deployment, LIVE, or risk-default authorization occurred.
+> **last updated:** 2026-08-17 (durable SYSTEM FOUNDATION state sync) — the EA_LAB SYSTEM FOUNDATION is **ACCEPTED / COMPLETE FOR CURRENT FACTORY SCOPE**. The accepted integration SHA is `fa3ae6079cdc4664810a74819d24d0c5e6a40706`; the canonical SHA is `4a96954f6a49170cab1df262fbbc85e98ef12c10`, and canonical push = **COMPLETED / VERIFIED**. The next phase is **Factory production → EA Template / Boss14 master mold → Monitoring / Control Plane**. No deployment, LIVE, or risk-default authorization occurred.
 > **POST-INTEGRATION STATE:** S1, S2, S3, and S4 are complete; ORDER-1380 and ORDER-1281 are closed; the Boss14 AUDCAD/EURUSD preset surface repair is accepted. Monitoring remains **DEGRADED_MONITORING**; system-foundation acceptance does not create GREEN runtime status. QI-2+ remains **NOT AUTHORIZED**.
 
 ### 2026-08-17 DURABLE SYSTEM FOUNDATION SYNC
 
 - **Accepted milestone:** EA_LAB SYSTEM FOUNDATION = ACCEPTED / COMPLETE FOR CURRENT FACTORY SCOPE.
-- **Accepted integration:** local `fa3ae6079cdc4664810a74819d24d0c5e6a40706`; canonical remote remains pre-push `a2545d853c1636ed680f6c4102d7ea76f03ac230`; push is owner-gated.
+- **Accepted integration:** `fa3ae6079cdc4664810a74819d24d0c5e6a40706`; **canonical SHA:** `4a96954f6a49170cab1df262fbbc85e98ef12c10`; canonical push = **COMPLETED / VERIFIED**.
 - **Accepted lanes:** S1 complete; S2 complete; S3 complete; S4 complete; ORDER-1380 closed; ORDER-1281 closed; Boss14 AUDCAD/EURUSD preset surface repair accepted.
 - **CURRENT:** Factory production; EA Template / Boss14 master-mold continuation; Monitoring / Control Plane continuation.
 - **Factory disposition:** Wave4 Candidate 3 rejected from M3 after bounded Invalid Stops repair; Candidate 4 scheduled straddle rejected from M3 after volume/atomicity/expiry repairs; Wave5 Candidate 1 RSI Break Trend Line parked / implementation-blocked after self-termination (not valid ZERO_TRADE evidence); Wave5 Candidate 2 OH Bot parked because its intentional recovery/multi-position semantics are outside the current one-position M2 contract; Wave5 Candidate 3 ExpertMACD is the current production task for bounded Invalid Stops RCA/repair/retest.
