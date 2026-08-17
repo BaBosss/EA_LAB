@@ -1,0 +1,11 @@
+; Diagnostic probe -- reproduce the coarse-grid cell that reported PF=370.938 on GBPUSD M30
+; (Signal_MA_Period=8, Signal_MA_Shift=6, Trailing_MA_Period=16) to inspect the actual trade list.
+Inp_Expert_Title=ExpertMAMA
+Inp_Signal_MA_Period=8
+Inp_Signal_MA_Shift=6
+Inp_Signal_MA_Method=0
+Inp_Signal_MA_Applied=1
+Inp_Trailing_MA_Period=16
+Inp_Trailing_MA_Shift=0
+Inp_Trailing_MA_Method=0
+Inp_Trailing_MA_Applied=1

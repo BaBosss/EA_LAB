@@ -1,0 +1,13 @@
+; ExpertMAMA frozen Factory surface -- next candidate after ExpertMAPSAR (Wave5 C4)
+; All 9 EA inputs pinned so no value comes from the per-terminal tester cache (ORDER-165).
+; Frozen semantics: signal MA period=12 shift=6 SMA/CLOSE, trailing MA period=12 shift=0 SMA/CLOSE,
+; money=CMoneyNone (fixed min lot). No fixed SL/TP -- exit is trailing-MA + signal reversal only.
+Inp_Expert_Title=ExpertMAMA
+Inp_Signal_MA_Period=12
+Inp_Signal_MA_Shift=6
+Inp_Signal_MA_Method=0
+Inp_Signal_MA_Applied=1
+Inp_Trailing_MA_Period=12
+Inp_Trailing_MA_Shift=0
+Inp_Trailing_MA_Method=0
+Inp_Trailing_MA_Applied=1

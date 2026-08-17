@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "M3RH_MAMA_GBPUSD_M30",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

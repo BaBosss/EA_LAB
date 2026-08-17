@@ -1,0 +1,14 @@
+; ExpertMAMA coarse optimize grid -- pre-registered 3 levers, GBPUSD M30 + H1
+; Format: current||start||step||stop||Y  (complete grid, -Optimization 1, per PROJECT_STATE
+; genetic-optimizer policy: <=1000 combos -> complete, not genetic)
+; 5 x 5 x 5 = 125 cells per TF. Frozen: MA method=SMA, applied=CLOSE (both signal+trailing),
+; Trailing MA Shift frozen at source default (0). MAIN window only 2023.01.01-2025.12.31.
+Inp_Expert_Title=ExpertMAMA
+Inp_Signal_MA_Period=12||8||2||16||Y
+Inp_Signal_MA_Shift=6||0||3||12||Y
+Inp_Signal_MA_Method=0
+Inp_Signal_MA_Applied=1
+Inp_Trailing_MA_Period=12||8||2||16||Y
+Inp_Trailing_MA_Shift=0
+Inp_Trailing_MA_Method=0
+Inp_Trailing_MA_Applied=1

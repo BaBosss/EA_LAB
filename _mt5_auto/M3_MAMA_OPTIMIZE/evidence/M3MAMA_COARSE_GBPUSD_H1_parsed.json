@@ -1,0 +1,318 @@
+{
+  "header": [
+    "Pass",
+    "Result",
+    "Profit",
+    "Expected Payoff",
+    "Profit Factor",
+    "Recovery Factor",
+    "Sharpe Ratio",
+    "Custom",
+    "Equity DD %",
+    "Trades",
+    "Inp_Signal_MA_Period",
+    "Inp_Signal_MA_Shift",
+    "Inp_Trailing_MA_Period"
+  ],
+  "n_rows": 125,
+  "n_ge_trades": 14,
+  "n_pf_ok": 28,
+  "eligible": [
+    {
+      "trades": 125.0,
+      "pf": 13.444167,
+      "net": 298.66,
+      "eqdd_pct": 1.113,
+      "Inp_Signal_MA_Period": 10.0,
+      "Inp_Signal_MA_Shift": 9.0,
+      "Inp_Trailing_MA_Period": 14.0
+    },
+    {
+      "trades": 135.0,
+      "pf": 8.726672,
+      "net": 269.12,
+      "eqdd_pct": 0.9464,
+      "Inp_Signal_MA_Period": 10.0,
+      "Inp_Signal_MA_Shift": 6.0,
+      "Inp_Trailing_MA_Period": 8.0
+    },
+    {
+      "trades": 151.0,
+      "pf": 7.449057,
+      "net": 321.55,
+      "eqdd_pct": 1.323,
+      "Inp_Signal_MA_Period": 16.0,
+      "Inp_Signal_MA_Shift": 12.0,
+      "Inp_Trailing_MA_Period": 16.0
+    },
+    {
+      "trades": 113.0,
+      "pf": 7.782834,
+      "net": 222.07,
+      "eqdd_pct": 1.1082,
+      "Inp_Signal_MA_Period": 12.0,
+      "Inp_Signal_MA_Shift": 6.0,
+      "Inp_Trailing_MA_Period": 8.0
+    },
+    {
+      "trades": 139.0,
+      "pf": 16.514793,
+      "net": 235.98,
+      "eqdd_pct": 1.344,
+      "Inp_Signal_MA_Period": 16.0,
+      "Inp_Signal_MA_Shift": 12.0,
+      "Inp_Trailing_MA_Period": 8.0
+    },
+    {
+      "trades": 139.0,
+      "pf": 16.501644,
+      "net": 235.78,
+      "eqdd_pct": 1.344,
+      "Inp_Signal_MA_Period": 14.0,
+      "Inp_Signal_MA_Shift": 12.0,
+      "Inp_Trailing_MA_Period": 8.0
+    },
+    {
+      "trades": 101.0,
+      "pf": 10.356303,
+      "net": 230.82,
+      "eqdd_pct": 1.3298,
+      "Inp_Signal_MA_Period": 16.0,
+      "Inp_Signal_MA_Shift": 12.0,
+      "Inp_Trailing_MA_Period": 12.0
+    },
+    {
+      "trades": 101.0,
+      "pf": 10.356303,
+      "net": 230.82,
+      "eqdd_pct": 1.3298,
+      "Inp_Signal_MA_Period": 14.0,
+      "Inp_Signal_MA_Shift": 12.0,
+      "Inp_Trailing_MA_Period": 12.0
+    },
+    {
+      "trades": 101.0,
+      "pf": 6.767868,
+      "net": 188.84,
+      "eqdd_pct": 1.1082,
+      "Inp_Signal_MA_Period": 16.0,
+      "Inp_Signal_MA_Shift": 3.0,
+      "Inp_Trailing_MA_Period": 8.0
+    },
+    {
+      "trades": 104.0,
+      "pf": 3.380016,
+      "net": 181.5,
+      "eqdd_pct": 1.0711,
+      "Inp_Signal_MA_Period": 8.0,
+      "Inp_Signal_MA_Shift": 6.0,
+      "Inp_Trailing_MA_Period": 14.0
+    },
+    {
+      "trades": 121.0,
+      "pf": 1.978384,
+      "net": 134.43,
+      "eqdd_pct": 1.6658,
+      "Inp_Signal_MA_Period": 16.0,
+      "Inp_Signal_MA_Shift": 6.0,
+      "Inp_Trailing_MA_Period": 16.0
+    },
+    {
+      "trades": 101.0,
+      "pf": 1.911278,
+      "net": 123.87,
+      "eqdd_pct": 1.6675,
+      "Inp_Signal_MA_Period": 12.0,
+      "Inp_Signal_MA_Shift": 6.0,
+      "Inp_Trailing_MA_Period": 16.0
+    },
+    {
+      "trades": 120.0,
+      "pf": 1.901781,
+      "net": 124.04,
+      "eqdd_pct": 1.6675,
+      "Inp_Signal_MA_Period": 14.0,
+      "Inp_Signal_MA_Shift": 6.0,
+      "Inp_Trailing_MA_Period": 16.0
+    },
+    {
+      "trades": 116.0,
+      "pf": 1.797381,
+      "net": 109.6,
+      "eqdd_pct": 1.6698,
+      "Inp_Signal_MA_Period": 8.0,
+      "Inp_Signal_MA_Shift": 9.0,
+      "Inp_Trailing_MA_Period": 16.0
+    }
+  ],
+  "plateau": [
+    {
+      "cell": {
+        "trades": 125.0,
+        "pf": 13.444167,
+        "net": 298.66,
+        "eqdd_pct": 1.113,
+        "Inp_Signal_MA_Period": 10.0,
+        "Inp_Signal_MA_Shift": 9.0,
+        "Inp_Trailing_MA_Period": 14.0
+      },
+      "support": 0
+    },
+    {
+      "cell": {
+        "trades": 135.0,
+        "pf": 8.726672,
+        "net": 269.12,
+        "eqdd_pct": 0.9464,
+        "Inp_Signal_MA_Period": 10.0,
+        "Inp_Signal_MA_Shift": 6.0,
+        "Inp_Trailing_MA_Period": 8.0
+      },
+      "support": 1
+    },
+    {
+      "cell": {
+        "trades": 151.0,
+        "pf": 7.449057,
+        "net": 321.55,
+        "eqdd_pct": 1.323,
+        "Inp_Signal_MA_Period": 16.0,
+        "Inp_Signal_MA_Shift": 12.0,
+        "Inp_Trailing_MA_Period": 16.0
+      },
+      "support": 0
+    },
+    {
+      "cell": {
+        "trades": 113.0,
+        "pf": 7.782834,
+        "net": 222.07,
+        "eqdd_pct": 1.1082,
+        "Inp_Signal_MA_Period": 12.0,
+        "Inp_Signal_MA_Shift": 6.0,
+        "Inp_Trailing_MA_Period": 8.0
+      },
+      "support": 1
+    },
+    {
+      "cell": {
+        "trades": 139.0,
+        "pf": 16.514793,
+        "net": 235.98,
+        "eqdd_pct": 1.344,
+        "Inp_Signal_MA_Period": 16.0,
+        "Inp_Signal_MA_Shift": 12.0,
+        "Inp_Trailing_MA_Period": 8.0
+      },
+      "support": 1
+    },
+    {
+      "cell": {
+        "trades": 139.0,
+        "pf": 16.501644,
+        "net": 235.78,
+        "eqdd_pct": 1.344,
+        "Inp_Signal_MA_Period": 14.0,
+        "Inp_Signal_MA_Shift": 12.0,
+        "Inp_Trailing_MA_Period": 8.0
+      },
+      "support": 1
+    },
+    {
+      "cell": {
+        "trades": 101.0,
+        "pf": 10.356303,
+        "net": 230.82,
+        "eqdd_pct": 1.3298,
+        "Inp_Signal_MA_Period": 16.0,
+        "Inp_Signal_MA_Shift": 12.0,
+        "Inp_Trailing_MA_Period": 12.0
+      },
+      "support": 1
+    },
+    {
+      "cell": {
+        "trades": 101.0,
+        "pf": 10.356303,
+        "net": 230.82,
+        "eqdd_pct": 1.3298,
+        "Inp_Signal_MA_Period": 14.0,
+        "Inp_Signal_MA_Shift": 12.0,
+        "Inp_Trailing_MA_Period": 12.0
+      },
+      "support": 1
+    },
+    {
+      "cell": {
+        "trades": 101.0,
+        "pf": 6.767868,
+        "net": 188.84,
+        "eqdd_pct": 1.1082,
+        "Inp_Signal_MA_Period": 16.0,
+        "Inp_Signal_MA_Shift": 3.0,
+        "Inp_Trailing_MA_Period": 8.0
+      },
+      "support": 0
+    },
+    {
+      "cell": {
+        "trades": 104.0,
+        "pf": 3.380016,
+        "net": 181.5,
+        "eqdd_pct": 1.0711,
+        "Inp_Signal_MA_Period": 8.0,
+        "Inp_Signal_MA_Shift": 6.0,
+        "Inp_Trailing_MA_Period": 14.0
+      },
+      "support": 0
+    },
+    {
+      "cell": {
+        "trades": 121.0,
+        "pf": 1.978384,
+        "net": 134.43,
+        "eqdd_pct": 1.6658,
+        "Inp_Signal_MA_Period": 16.0,
+        "Inp_Signal_MA_Shift": 6.0,
+        "Inp_Trailing_MA_Period": 16.0
+      },
+      "support": 1
+    },
+    {
+      "cell": {
+        "trades": 101.0,
+        "pf": 1.911278,
+        "net": 123.87,
+        "eqdd_pct": 1.6675,
+        "Inp_Signal_MA_Period": 12.0,
+        "Inp_Signal_MA_Shift": 6.0,
+        "Inp_Trailing_MA_Period": 16.0
+      },
+      "support": 1
+    },
+    {
+      "cell": {
+        "trades": 120.0,
+        "pf": 1.901781,
+        "net": 124.04,
+        "eqdd_pct": 1.6675,
+        "Inp_Signal_MA_Period": 14.0,
+        "Inp_Signal_MA_Shift": 6.0,
+        "Inp_Trailing_MA_Period": 16.0
+      },
+      "support": 2
+    },
+    {
+      "cell": {
+        "trades": 116.0,
+        "pf": 1.797381,
+        "net": 109.6,
+        "eqdd_pct": 1.6698,
+        "Inp_Signal_MA_Period": 8.0,
+        "Inp_Signal_MA_Shift": 9.0,
+        "Inp_Trailing_MA_Period": 16.0
+      },
+      "support": 0
+    }
+  ]
+}
