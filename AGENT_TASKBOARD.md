@@ -38,8 +38,19 @@
 
 The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items. The next Control Tower phase is:
 
-- **FACTORY:** Wave5 Candidate 3 ExpertMACD — bounded Invalid Stops RCA / repair / retest.
-- **TEMPLATE:** resume Boss14 / EA_Template master-mold work from the accepted system foundation.
+- **FACTORY (2026-08-17 update):** Wave5 Candidate 3 ExpertMACD is **closed** — `REJECT_FROM_M3` (bounded
+  Invalid Stops repair landed, invalid stops 5→0, valid evidence PF 0.67; evidence integrated at
+  `_mt5_auto/M2_WAVE5_C3_REPAIR/`). Wave5 Candidate 4 ExpertMAPSAR = `PARKED-VERIFY(user)` (BWD
+  participation 58 < the ≥100/window floor on the plateau host; canonical right-home XAU/GBP naked smoke
+  all four cells thin; evidence at `_mt5_auto/M2_WAVE5_C4_MAPSAR/`, `_mt5_auto/M3_WAVE5_C4_MAPSAR/`,
+  `_mt5_auto/M3_RIGHTHOME_MAPSAR/`). ExpertMAMA = `PARKED-VERIFY(user)` (right-home naked smoke PROCEED,
+  M3 coarse optimize showed no genuine plateau; evidence at `_mt5_auto/M2_MAMA/`, `_mt5_auto/M3_MAMA_OPTIMIZE/`).
+  Zeus (`ZeusInspired_GridLog`) optimization = **HOLD FOR LATER** per owner direction (not dead/non-viable;
+  BWD participation 70 < the ≥100/window floor; evidence at `_mt5_auto/ZEUS_XAU_VALIDATION/`). **No current
+  Factory candidate is selected as the next production task** — the Control Tower must bind the next
+  canonical task contract before any agent claims new Factory work.
+- **TEMPLATE:** smoke-regression suite accepted (`scripts/tpl_smoke_regression.ps1`, 8/8 clean across every
+  current Boss build); the Zeus grid/LOG port stays waiting on the Zeus optimization outcome above.
 - **MONITOR:** resume deterministic monitoring / Control Plane continuation; preserve `DEGRADED_MONITORING` until runtime evidence warrants a change.
 
 No new detailed order is invented here; the Control Tower should bind these phase items to the next canonical task contracts.
