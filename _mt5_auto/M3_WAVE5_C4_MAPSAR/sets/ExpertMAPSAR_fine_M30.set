@@ -1,0 +1,25 @@
+; ExpertMAPSAR M3 FINE optimize surface -- M30 only (winning TF from coarse: H1 had only 5/125
+; cells clear the >=100-trade floor and NONE formed a plateau -- even the accepted M2 point
+; (period=12,shift=6,step=0.02) has ZERO passing 1-step neighbours, i.e. it is a spike, not a
+; plateau-center. M30 coarse showed 19/125 eligible cells and a genuine 6/6 contiguous region at
+; sarstep=0.02, period in {12,14,16}, shift in {3,6}. Best-connected coarse node inside that
+; region = period=14 shift=3 step=0.02 (4/6 one-step neighbours also clear the floor+PF bar).
+; This fine grid narrows to +/-2 (finer) steps around that region, centered so the surface can
+; be read more cleanly (contract: "conditional... if the coarse zone needs sharpening" -- the
+; coarse read showed sharp cliffs just outside the 6-cell region, e.g. shift=0 and shift=9 both
+; collapse trades to <60, so a sharper center pick that sits further from the cliff is worth the
+; pass). Pre-registered BEFORE launch, ranges never widened past original coarse bounds
+; (period 8-16, shift 0-12, step 0.01-0.03):
+;   Inp_Signal_MA_Period  fine {12,13,14,15,16} step 1  (same bounds as coarse, finer step)
+;   Inp_Signal_MA_Shift   fine {2,3,4,5,6} step 1        (centered between the two coarse-good
+;                                                          points 3 and 6, one step toward the
+;                                                          shift=0 cliff to map its edge)
+;   Inp_Trailing_ParabolicSAR_Step fine {0.015,0.0175,0.02,0.0225,0.025} step 0.0025
+; 5x5x5 = 125 combos, complete grid (Optimization=1).
+Inp_Expert_Title=ExpertMAPSAR
+Inp_Signal_MA_Period=14||12||1||16||Y
+Inp_Signal_MA_Shift=4||2||1||6||Y
+Inp_Signal_MA_Method=0
+Inp_Signal_MA_Applied=1
+Inp_Trailing_ParabolicSAR_Step=0.02||0.015||0.0025||0.025||Y
+Inp_Trailing_ParabolicSAR_Maximum=0.2

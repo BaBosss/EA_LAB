@@ -1,0 +1,13 @@
+; ExpertMAPSAR M3 coarse optimize surface -- Wave5 Candidate 4
+; Used for BOTH TFs this campaign (H1 primary, M30 secondary) -- TF is a launcher param, not
+; a .set field. Swept: Inp_Signal_MA_Period {8,10,12,14,16}, Inp_Signal_MA_Shift {0,3,6,9,12},
+; Inp_Trailing_ParabolicSAR_Step {0.01,0.015,0.02,0.025,0.03} -- 5x5x5=125 combos, complete grid.
+; Frozen: MA method=SMA(0), applied=CLOSE(1), PSAR max=0.20, money=CMoneyNone (unchanged).
+; Pre-registered in TASK_CONTRACT.md before any optimizer launch (commit 57b56779).
+Inp_Expert_Title=ExpertMAPSAR
+Inp_Signal_MA_Period=12||8||2||16||Y
+Inp_Signal_MA_Shift=6||0||3||12||Y
+Inp_Signal_MA_Method=0
+Inp_Signal_MA_Applied=1
+Inp_Trailing_ParabolicSAR_Step=0.02||0.01||0.005||0.03||Y
+Inp_Trailing_ParabolicSAR_Maximum=0.2

@@ -1,0 +1,91 @@
+﻿DQ	0	13:31:49.777	Tester	Local network farm switched off
+LJ	0	13:31:49.777	Tester	Cloud servers switched off
+DS	0	13:31:51.391	Tester	"M2W5C4_ORIGINAL.ex5" X64
+EI	0	13:31:51.520	Tester	NZDUSD: history data begins from 2015.01.02 00:00
+KP	0	13:31:51.522	Tester	NZDUSD: history data begins from 2015.01.02 00:00
+MI	0	13:31:51.524	Core 01	agent process started on 127.0.0.1:3000
+NN	0	13:31:51.524	Core 01	connecting to 127.0.0.1:3000
+II	0	13:31:52.036	Core 01	connected
+MQ	0	13:31:52.042	Core 01	authorized (agent build 6090)
+RJ	0	13:31:52.051	Tester	NZDUSD,H1 (ThinkMarkets-Live): testing of Experts\M2W5C4_ORIGINAL.ex5 from 2025.01.01 00:00 to 2025.12.31 00:00
+EJ	0	13:31:52.059	Core 01	common synchronization completed
+RS	0	13:31:52.109	Tester	quality of analyzed history is 100%
+GG	0	13:31:52.429	Core 01	MetaTester 5 started on 127.0.0.1:3000
+EM	0	13:31:52.429	Core 01	cloud network mode is off
+RK	0	13:31:52.429	Core 01	initialization finished
+CF	0	13:31:52.429	Core 01	login (build 6090)
+EM	0	13:31:52.429	Core 01	16516 bytes of account info loaded
+HI	0	13:31:52.429	Core 01	1478 bytes of tester parameters loaded
+KN	0	13:31:52.429	Core 01	3780 bytes of input parameters loaded
+JK	0	13:31:52.429	Core 01	10378 bytes of symbols list loaded (1402 symbols)
+DM	0	13:31:52.429	Core 01	expert file added: Experts\M2W5C4_ORIGINAL.ex5. 129753 bytes loaded
+HR	0	13:31:52.429	Core 01	17614 Mb available, 220 blocks set for ticks generating
+DK	0	13:31:52.429	Core 01	initial deposit 10000.00 USD, leverage 1:100
+MR	0	13:31:52.429	Core 01	successfully initialized
+RJ	0	13:31:52.429	Core 01	140 Kb of total initialization data received
+FP	0	13:31:52.429	Core 01	13th Gen Intel Core i5-13500, 32535 MB
+RE	0	13:31:52.429	Core 01	NZDUSD: symbol to be synchronized
+KQ	0	13:31:52.429	Core 01	NZDUSD: symbol synchronized, 3720 bytes of symbol info received
+FN	0	13:31:52.429	Core 01	NZDUSD: load 27 bytes of history data to synchronize in 0:00:00.001
+DI	0	13:31:52.429	Core 01	NZDUSD: history synchronized from 2016.01.04 to 2026.08.07
+PJ	0	13:31:52.429	Core 01	NZDUSD,H1: history cache allocated for 12480 bars and contains 6240 bars from 2024.01.02 00:00 to 2024.12.31 23:00
+LI	0	13:31:52.429	Core 01	NZDUSD,H1: history begins from 2024.01.02 00:00
+NO	0	13:31:52.429	Core 01	NZDUSD,H1 (ThinkMarkets-Live): 1 minutes OHLC ticks generating
+MI	0	13:31:52.429	Core 01	NZDUSD,H1: testing of Experts\M2W5C4_ORIGINAL.ex5 from 2025.01.01 00:00 to 2025.12.31 00:00 started with inputs:
+PD	0	13:31:52.429	Core 01	  Inp_Expert_Title=ExpertMAPSAR
+CM	0	13:31:52.429	Core 01	  Inp_Signal_MA_Period=12
+MJ	0	13:31:52.429	Core 01	  Inp_Signal_MA_Shift=6
+LL	0	13:31:52.429	Core 01	  Inp_Signal_MA_Method=0
+ME	0	13:31:52.429	Core 01	  Inp_Signal_MA_Applied=1
+FR	0	13:31:52.429	Core 01	  Inp_Trailing_ParabolicSAR_Step=0.02
+JF	0	13:31:52.429	Core 01	  Inp_Trailing_ParabolicSAR_Maximum=0.2
+FR	0	13:31:52.429	Core 01	2025.01.02 00:02:30   market sell 0.01 NZDUSD (0.55878 / 0.56095 / 0.55878)
+MG	0	13:31:52.429	Core 01	2025.01.02 00:02:30   deal #2 sell 0.01 NZDUSD at 0.55878 done (based on order #2)
+IJ	0	13:31:52.429	Core 01	2025.01.02 00:02:30   deal performed [#2 sell 0.01 NZDUSD at 0.55878]
+FK	0	13:31:52.429	Core 01	2025.01.02 00:02:30   order performed sell 0.01 at 0.55878 [#2 sell 0.01 NZDUSD at 0.55878]
+ES	0	13:31:52.429	Core 01	2025.01.02 00:02:30   CTrade::OrderSend: market sell 0.01 NZDUSD [done at 0.55878]
+GN	0	13:31:52.429	Core 01	2025.01.10 19:00:00   position modified [#2 sell 0.01 NZDUSD 0.55878 sl: 0.55824]
+RO	0	13:31:52.429	Core 01	2025.01.10 19:00:00   CTrade::OrderSend: modify position #2 NZDUSD (sl: 0.55824, tp: 0.00000) [done]
+MQ	0	13:31:52.429	Core 01	2025.01.10 20:00:00   position modified [#2 sell 0.01 NZDUSD 0.55878 sl: 0.55770]
+PM	0	13:31:52.429	Core 01	2025.01.10 20:00:00   CTrade::OrderSend: modify position #2 NZDUSD (sl: 0.55770, tp: 0.00000) [done]
+OS	0	13:31:52.429	Core 01	2025.01.10 21:00:00   position modified [#2 sell 0.01 NZDUSD 0.55878 sl: 0.55724]
+JK	0	13:31:52.429	Core 01	2025.01.10 21:00:00   CTrade::OrderSend: modify position #2 NZDUSD (sl: 0.55724, tp: 0.00000) [done]
+QE	0	13:31:52.429	Core 01	2025.01.10 22:00:00   position modified [#2 sell 0.01 NZDUSD 0.55878 sl: 0.55684]
+DF	0	13:31:52.429	Core 01	2025.01.10 22:00:00   CTrade::OrderSend: modify position #2 NZDUSD (sl: 0.55684, tp: 0.00000) [done]
+OH	0	13:31:52.429	Core 01	2025.01.10 23:00:00   position modified [#2 sell 0.01 NZDUSD 0.55878 sl: 0.55654]
+JD	0	13:31:52.429	Core 01	2025.01.10 23:00:00   CTrade::OrderSend: modify position #2 NZDUSD (sl: 0.55654, tp: 0.00000) [done]
+DJ	0	13:31:52.429	Core 01	2025.01.13 01:00:00   position modified [#2 sell 0.01 NZDUSD 0.55878 sl: 0.55605]
+IR	0	13:31:52.429	Core 01	2025.01.13 01:00:00   CTrade::OrderSend: modify position #2 NZDUSD (sl: 0.55605, tp: 0.00000) [done]
+CM	0	13:31:52.429	Core 01	2025.01.13 01:31:40   stop loss triggered #2 sell 0.01 NZDUSD 0.55878 sl: 0.55605 [#3 buy 0.01 NZDUSD at 0.55605]
+IF	0	13:31:52.429	Core 01	2025.01.13 01:31:40   deal #3 buy 0.01 NZDUSD at 0.55605 done (based on order #3)
+DO	0	13:31:52.429	Core 01	2025.01.13 01:31:40   deal performed [#3 buy 0.01 NZDUSD at 0.55605]
+MQ	0	13:31:52.429	Core 01	2025.01.13 01:31:40   order performed buy 0.01 at 0.55605 [#3 buy 0.01 NZDUSD at 0.55605]
+PS	0	13:31:52.429	Core 01	2025.01.13 02:00:00   market sell 0.01 NZDUSD (0.55626 / 0.55640 / 0.55626)
+OD	0	13:31:52.429	Core 01	2025.01.13 02:00:00   deal #4 sell 0.01 NZDUSD at 0.55626 done (based on order #4)
+IE	0	13:31:52.429	Core 01	2025.01.13 02:00:00   deal performed [#4 sell 0.01 NZDUSD at 0.55626]
+IL	0	13:31:52.429	Core 01	2025.01.13 02:00:00   order performed sell 0.01 at 0.55626 [#4 sell 0.01 NZDUSD at 0.55626]
+GR	0	13:31:52.429	Core 01	2025.01.13 02:00:00   CTrade::OrderSend: market sell 0.01 NZDUSD [done at 0.55626]
+LO	0	13:31:52.429	Core 01	2025.04.09 04:00:00   position modified [#4 sell 0.01 NZDUSD 0.55626 sl: 0.55616]
+JL	0	13:31:52.429	Core 01	2025.04.09 04:00:00   CTrade::OrderSend: modify position #4 NZDUSD (sl: 0.55616, tp: 0.00000) [done]
+HR	0	13:31:52.429	Core 01	2025.04.09 05:00:00   position modified [#4 sell 0.01 NZDUSD 0.55626 sl: 0.55464]
+JJ	0	13:31:52.429	Core 01	2025.04.09 05:00:00   CTrade::OrderSend: modify position #4 NZDUSD (sl: 0.55464, tp: 0.00000) [done]
+HE	0	13:31:52.429	Core 01	2025.04.09 05:00:40   stop loss triggered #4 sell 0.01 NZDUSD 0.55626 sl: 0.55464 [#5 buy 0.01 NZDUSD at 0.55464]
+FO	0	13:31:52.429	Core 01	2025.04.09 05:00:40   deal #5 buy 0.01 NZDUSD at 0.55464 done (based on order #5)
+EG	0	13:31:52.429	Core 01	2025.04.09 05:00:40   deal performed [#5 buy 0.01 NZDUSD at 0.55464]
+OI	0	13:31:52.429	Core 01	2025.04.09 05:00:40   order performed buy 0.01 at 0.55464 [#5 buy 0.01 NZDUSD at 0.55464]
+NJ	0	13:31:52.429	Core 01	2025.04.09 06:00:00   market sell 0.01 NZDUSD (0.55328 / 0.55341 / 0.55328)
+HO	0	13:31:52.429	Core 01	2025.04.09 06:00:00   deal #6 sell 0.01 NZDUSD at 0.55328 done (based on order #6)
+PR	0	13:31:52.429	Core 01	2025.04.09 06:00:00   deal performed [#6 sell 0.01 NZDUSD at 0.55328]
+IS	0	13:31:52.429	Core 01	2025.04.09 06:00:00   order performed sell 0.01 at 0.55328 [#6 sell 0.01 NZDUSD at 0.55328]
+PK	0	13:31:52.429	Core 01	2025.04.09 06:00:00   CTrade::OrderSend: market sell 0.01 NZDUSD [done at 0.55328]
+QE	0	13:31:52.429	Core 01	2025.12.30 23:59:59   position closed due end of test at 0.57930 [#6 sell 0.01 NZDUSD 0.55328]
+EJ	0	13:31:52.429	Core 01	2025.12.30 23:59:59   deal #7 buy 0.01 NZDUSD at 0.57930 done (based on order #7)
+HH	0	13:31:52.429	Core 01	2025.12.30 23:59:59   deal performed [#7 buy 0.01 NZDUSD at 0.57930]
+HN	0	13:31:52.429	Core 01	2025.12.30 23:59:59   order performed buy 0.01 at 0.57930 [#7 buy 0.01 NZDUSD at 0.57930]
+GP	0	13:31:52.429	Core 01	final balance 9981.93 USD
+EF	0	13:31:52.429	Core 01	NZDUSD,H1: 1460489 ticks, 6192 bars generated. Environment synchronized in 0:00:00.018. Test passed in 0:00:00.369 (including ticks preprocessing 0:00:00.047).
+PR	0	13:31:52.429	Core 01	NZDUSD,H1: total time from login to stop testing 0:00:00.387 (including 0:00:00.018 for history data synchronization)
+QM	0	13:31:52.429	Core 01	70 Mb memory used including 0.94 Mb of history data, 64 Mb of tick data
+JM	0	13:31:52.429	Core 01	log file "C:\Users\patip\AppData\Roaming\MetaQuotes\Tester\9CA16B8382AE4CF692710FB36B9DA355\Agent-127.0.0.1-3000\logs\20260817.log" written
+PO	0	13:31:52.539	Tester	automatic testing finished
+MF	0	13:31:52.541	Core 01	connection closed

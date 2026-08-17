@@ -1,0 +1,16 @@
+; ExpertMAPSAR M3 LOCKED candidate -- Wave5 Candidate 4, NZDUSD M30
+; Plateau-center picked from the pre-registered fine grid (ExpertMAPSAR_fine_M30.set,
+; commit d1cecb9a) on MAIN 2023.01.01-2025.12.31, complete grid, 38/125 cells eligible
+; (>=100 trades, PF>=1.20, net>0). Interior candidate (no swept dimension at a tested-range
+; edge) with the strongest neighbour connectivity: 4/6 one-step neighbours also clear the
+; floor+PF bar (period+ and shift+ miss: period+ collapses to 57 trades/PF1.31, shift+ misses
+; the floor narrowly at 98 trades). Fine-grid result at this cell: PF=8.21, trades=127,
+; net=+204.56, DD%=0.516, Sharpe=1.081.
+; All 7 inputs pinned as plain values -- immutable, not retuned after this point.
+Inp_Expert_Title=ExpertMAPSAR
+Inp_Signal_MA_Period=13
+Inp_Signal_MA_Shift=4
+Inp_Signal_MA_Method=0
+Inp_Signal_MA_Applied=1
+Inp_Trailing_ParabolicSAR_Step=0.0225
+Inp_Trailing_ParabolicSAR_Maximum=0.2
