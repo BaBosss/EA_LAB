@@ -1,0 +1,10 @@
+; ExpertMACD frozen Factory surface -- Wave5 Candidate 3
+; All 6 EA inputs are pinned here so no value can come from the per-terminal tester cache.
+; Frozen semantics: MACD 12/24/9, StopLoss=20, TakeProfit=50, trailing OFF (CTrailingNone),
+; money OFF (CMoneyNone -> fixed minimum lot). Do not edit without a Control Tower instruction.
+Inp_Expert_Title=ExpertMACD
+Inp_Signal_MACD_PeriodFast=12
+Inp_Signal_MACD_PeriodSlow=24
+Inp_Signal_MACD_PeriodSignal=9
+Inp_Signal_MACD_TakeProfit=50
+Inp_Signal_MACD_StopLoss=20
