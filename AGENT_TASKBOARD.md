@@ -38,6 +38,23 @@
 
 The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items. The next Control Tower phase is:
 
+- **SYSTEM COMPLETION (2026-08-17 durable governance sync): `SYSTEM ACTIONABLE WORK = COMPLETE`.**
+  ORDER-1283, ORDER-1284, ORDER-601 and ORDER-1360 are closed as duplicate-stale on this board (canonical
+  already satisfied their acceptance — see each row's 2026-08-17 closure note; no code change). ORDER-1251
+  and ORDER-1265 were already correctly archived (`ARCHIVE_TASKBOARD_2026-07A.md`) and are unchanged.
+  Monitoring Real Defect A (`make_status.ps1` taskboard-read-failure vs empty-queue conflation) and Real
+  Defect B (`SnapshotVerdict` `x-enforced-by` stale "no reader calls `load_verified()`" prose) are
+  `FIX_ACCEPTED`, integrated at `64fbf2c2` (branch `system-completion-monitoring-integration`, parent
+  canonical `23d916d2`) — `SnapshotVerdict.x-enforcement-status` remains `BUILT`, not promoted to `WIRED`.
+  No product/system defect from the Gap-to-Done pass remains open. Remaining work is either
+  **OWNER/EXTERNAL BLOCKED** (Telegram CONTROL_ROOM credentials · AGENTS.md §2 Work Receipts writer
+  authority · ClevrFX/`69424711` deployment-runtime evidence · deal-sensor freshness · owner
+  signatures/attestations · PR #8 / ORDER-1560 owner-pending merge) or **PARKED/FUTURE** (Relay R4 · D3/D6
+  owner-gated · Zeus optimization HOLD + the Template Zeus port waiting on it · ExpertMAPSAR · ExpertMAMA
+  + its Model-4 fill-sensitivity investigation · QI-2+ · the portable-Python extra end-to-end committed
+  test · other previously parked future hardening). Monitoring stays `DEGRADED_MONITORING` (see MONITOR
+  below) — System Completion does not make it GREEN. Factory stays paused (see FACTORY below) through the
+  owner push boundary. No deployment, trading, LIVE, risk/default, or QI-2+ authority is implied.
 - **FACTORY (2026-08-17 update):** Wave5 Candidate 3 ExpertMACD is **closed** — `REJECT_FROM_M3` (bounded
   Invalid Stops repair landed, invalid stops 5→0, valid evidence PF 0.67; evidence integrated at
   `_mt5_auto/M2_WAVE5_C3_REPAIR/`). Wave5 Candidate 4 ExpertMAPSAR = `PARKED-VERIFY(user)` (BWD
@@ -48,7 +65,9 @@ The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items
   Zeus (`ZeusInspired_GridLog`) optimization = **HOLD FOR LATER** per owner direction (not dead/non-viable;
   BWD participation 70 < the ≥100/window floor; evidence at `_mt5_auto/ZEUS_XAU_VALIDATION/`). **No current
   Factory candidate is selected as the next production task** — the Control Tower must bind the next
-  canonical task contract before any agent claims new Factory work.
+  canonical task contract before any agent claims new Factory work. **Factory stays paused through this
+  System Completion closeout, until it reaches the owner push boundary** — do not select a candidate off
+  this sync.
 - **TEMPLATE:** smoke-regression suite accepted (`scripts/tpl_smoke_regression.ps1`, 8/8 clean across every
   current Boss build); the Zeus grid/LOG port stays waiting on the Zeus optimization outcome above.
 - **MONITOR:** resume deterministic monitoring / Control Plane continuation; preserve `DEGRADED_MONITORING` until runtime evidence warrants a change.
@@ -948,7 +967,12 @@ cells alive — that is the failure this order is about.
 
 ---
 
-## ORDER-1360 — [guards] The handoff contract cannot see a single handoff this project actually writes — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1360 — [guards] The handoff contract cannot see a single handoff this project actually writes — `DONE / REVIEWED (canonical verification 2026-08-17; duplicate-stale — fixed by 88ff7467, handoff-contract tests 28/28 PASS)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** `check_handoff_contract.ps1`'s trigger already widened to the
+> `PROMPT_NEXT_SESSION_*.md` family in commit `88ff7467` (2026-08-06), which is an ancestor of
+> canonical `23d916d2`. `run_handoff_contract_tests.ps1` = PASS 28/28. No code change was needed.
+> The investigation below is retained as history; this order is no longer active.
 
 > Opened 2026-08-04 by lane `S-2026-08-04-CORRECT5B`, out of its own reserved block. The previous
 > lane found it while writing its handoff and deliberately did **not** open it: its ledger row
@@ -1380,7 +1404,13 @@ pinned 120.0s** (see `ORDER-1282`) and the budget must not be raised to make roo
 
 ---
 
-## ORDER-1283 — [infra/cages] A cage that mutates the LIVE `schemas.json` must mutate a COPY, and the repo wrote that down before I broke it — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1283 — [infra/cages] A cage that mutates the LIVE `schemas.json` must mutate a COPY, and the repo wrote that down before I broke it — `DONE / REVIEWED (canonical verification 2026-08-17; duplicate-stale — mutate-a-copy pattern already landed, focused 10/10 + schema cage PASS)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** canonical already satisfies the tracked-byte mutation/interruption
+> contract — `run_enforcement_status_tests.py` mutates a temp copy only (`schemas.json` bytes verified
+> unchanged before/after a run), the `🚫 DO NOT PUT THIS ON THE COMMIT PATH` banner is gone, and the
+> suite is wired into `run_schema_cages.ps1`'s executed set. Focused evidence 10/10 + schema cage PASS.
+> No code change was needed. The investigation below is retained as history; this order is no longer active.
 
 `run_enforcement_status_tests.py` proves `check_schema_structure.py`'s labels can go red by
 **writing mutations into the live, tracked `_triage/factory_os/schemas.json`** and restoring them in
@@ -1484,7 +1514,14 @@ case exists to refuse.
 
 ---
 
-## ORDER-1284 — [infra/cages] PART 4's undeclared-reference sweep has two blind spots, and neither is visible from inside it — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1284 — [infra/cages] PART 4's undeclared-reference sweep has two blind spots, and neither is visible from inside it — `DONE / REVIEWED (canonical verification 2026-08-17; duplicate-stale — both blind spots already closed, guard-trigger tests PASS)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** both PART 4 blind spots are already closed on canonical — PART 4d
+> parses Python suite bodies via AST for tracked-path references (blind spot 1), and the widened
+> `$repoPathRe` regex now also matches bare repo-root filenames with no directory prefix (blind spot 2),
+> both gated through the existing `IsNotDependency`/`$NOT_A_DEPENDENCY` exemption list.
+> `run_guard_trigger_tests.ps1` — all parts green. No code change was needed. The investigation below
+> is retained as history; this order is no longer active.
 
 `run_guard_trigger_tests.ps1` PART 4 is the check that a suite cannot read a tracked file it has not
 declared. Measured 2026-08-03 while landing `ORDER-1263`, and **both** limits are structural rather
@@ -8546,7 +8583,14 @@ Inputs page to be read back to prove the intended `.set` was loaded. 🚫 **Noth
 this sweep reports DD between **0.46% and 1.08%** on 91-379 trades. Drawdown that small with no stop
 is the kind of number that is usually explained by something other than skill. It is not this order's
 job to answer, and it must not be quietly enjoyed.
-## ORDER-601 — [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is owed — `RE-OPENED 2026-08-04 by audit 7 — NOT REVIEWED-able` (was `DONE(Claude/Opus 2026-07-30) — audit-7 closure conditions MET 2026-07-31 (54e82c81)`; the re-check it was awaiting **RAN on 2026-07-30 (`caf9f18c`) and refused it, and a second independent run on 2026-08-04 refused it again** — reports `_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT7_2026-07-30.md` and `_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT7B_2026-08-04.md`, which name stale `all_clear` design statements and false `x-enforced-by` claims as the conditions still owed. ⚠️ This row is ALSO the live instance of the classifier defect: its status said *before REVIEWED*, and `Get-StatusClass` matched the word and rated it Terminal/REVIEWED, i.e. archivable. It was not) · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-601 — [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is owed — `DONE / REVIEWED (canonical verification 2026-08-17; duplicate-stale — audit-7 defects no longer reproduce, 129 schema fixtures incl. 84 per-entity PASS + snapshot validator 35 fixtures/13 mutations PASS)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** the stale `all_clear` design statements and false `x-enforced-by`
+> claims that audit 7 (`CODEX_AUDIT7_2026-07-30.md` / `CODEX_AUDIT7B_2026-08-04.md`) named no longer
+> reproduce on canonical. `check_schema_structure.py` = STRUCTURE OK; `run_schema_fixtures.py` = ALL
+> 129 CASES BEHAVED AS DECLARED (45 root + 84 per-entity); `run_snapshot_validator_tests.py` = ALL 35
+> FIXTURES AND 13 MUTATIONS BEHAVED AS DECLARED. No code change was needed. The spec below is retained
+> verbatim as history; this order is no longer active.
 
 **⚠️ READ THIS BEFORE TOUCHING THE SPEC BELOW — the work is already built.** The spec is kept verbatim as the record of what was asked. What exists:
 - **part 1** `c8d03d4b` — evidence/verdict entity split, so a supplied answer has nowhere to sit; ajv 17→28
