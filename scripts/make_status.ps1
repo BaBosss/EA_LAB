@@ -9,9 +9,28 @@ $oneDrive = "C:\Users\patip\OneDrive\EA_LAB_STATUS.md"
 $now = Get-Date -Format "yyyy-MM-dd HH:mm"
 $branch = git -C $repo rev-parse --abbrev-ref HEAD
 
-$orders = Get-Content (Join-Path $repo "AGENT_TASKBOARD.md") -Encoding UTF8 |
-  Where-Object { $_ -match '^## ORDER-' } |
-  ForEach-Object { $_ -replace '^## ', '- ' }
+# --- taskboard read: same "unreadable must not equal silent nothing" rule as ORDER-612 -------
+#
+# Design row 4 ("make_status.ps1 still has an 'unreadable = nothing found' path") named THIS
+# block too, not only the Control Room read below. Under the file-wide SilentlyContinue, a
+# missing/unreadable AGENT_TASKBOARD.md and a taskboard with genuinely zero '## ORDER-' lines
+# both produced $null -- one line in the rendered page for two different facts. Narrowed the
+# same way ORDER-612 narrows around Get-VerifiedSnapshot: EAP='Stop' for the read alone, an
+# explicit UNKNOWN line on failure, an explicit placeholder on a real empty queue, so the two
+# cases are never the same bytes in STATUS.md.
+$taskboardPath = Join-Path $repo "AGENT_TASKBOARD.md"
+$savedEapTb = $ErrorActionPreference
+$ErrorActionPreference = 'Stop'
+try {
+  $orders = Get-Content -LiteralPath $taskboardPath -Encoding UTF8 |
+    Where-Object { $_ -match '^## ORDER-' } |
+    ForEach-Object { $_ -replace '^## ', '- ' }
+  if (-not $orders) { $orders = @('- (no open orders -- taskboard read OK, zero matching lines)') }
+} catch {
+  $orders = @("- UNKNOWN: AGENT_TASKBOARD.md could not be read ($($_.Exception.Message))")
+} finally {
+  $ErrorActionPreference = $savedEapTb
+}
 
 $log = git -C $repo log --oneline -12 | ForEach-Object { "- $_" }
 
