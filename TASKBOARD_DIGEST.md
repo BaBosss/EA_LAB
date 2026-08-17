@@ -1,4 +1,4 @@
-﻿# TASKBOARD_DIGEST — ทุก order บรรทัดเดียว
+# TASKBOARD_DIGEST — ทุก order บรรทัดเดียว
 
 > **GENERATED — read-only — ห้ามแก้มือ.** สร้างโดย `scripts/make_taskboard_digest.ps1`
 > จาก `AGENT_TASKBOARD.md` + `ARCHIVE_TASKBOARD_2026-07A.md` · `-Check` = เช็คว่า stale ไหม (read-only)
@@ -60,10 +60,10 @@
 | ORDER-042 | 2026-07-06 | REVIEWED | DealsExporter: nightly deals snapshot สำหรับ /ea-monitor |  | ARCHIVE:2125 |
 | ORDER-043 | 2026-07-09 | REVIEWED/CLOSED | US30 GridLog: IS-optimize probe (optional, EV ต่ำ) |  | ARCHIVE:2033 |
 | ORDER-044 | 2026-07-07 | REVIEWED | EURUSD Trading Forex Robot: full chain re-test | BWD 2020-22 PF 0.39 / -$5,840) | ARCHIVE:2054 |
-| ORDER-045 |  | WAITING-USER | MT4 demo experiment #2: UnNomGuai + RSI from pips (คู่, บัญชีใหม่) |  | ACTIVE:9961 |
+| ORDER-045 |  | WAITING-USER | MT4 demo experiment #2: UnNomGuai + RSI from pips (คู่, บัญชีใหม่) |  | ACTIVE:9983 |
 | ORDER-046 | 2026-07-07 | REVIEWED/CLOSED | Revival probes: กฎ "ห้าม DEAD ก่อนลอง optimize" กับ ORDER-036 dead pool |  | ARCHIVE:1998 |
 | ORDER-047 | 2026-07-07 | REVIEWED/CLOSED | RSI from pips_EA: symbol/TF breadth → BWD confirm → optimize (user สั่ง 2026-07-07: "ตัวน… |  | ARCHIVE:1960 |
-| ORDER-055 | 2026-07-09 |  | demo cohort 8 ตัว: attach + monitor | user attach exporter ×5 บน VPS + เลือกท่อ CSV (OneDrive บน VPS หรือ RDP-copy รายสัปดาห์) + จับตา Boss-TrendSw… | ACTIVE:9977 |
+| ORDER-055 | 2026-07-09 |  | demo cohort 8 ตัว: attach + monitor | user attach exporter ×5 บน VPS + เลือกท่อ CSV (OneDrive บน VPS หรือ RDP-copy รายสัปดาห์) + จับตา Boss-TrendSw… | ACTIVE:9999 |
 | ORDER-057 | 2026-07-09 | CLOSED | mold upgrade: `Regime.mqh` (market-state filter, additive) |  | ARCHIVE:5707 |
 | ORDER-058 | 2026-07-09 | REVIEWED | live-monitor dashboard: ตาราง per-EA แบบเข้าใจใน 5 วิ (ต่อยอด DealsExporter) | ระดับ 🟡 ต้องใช้เตือนที่ README ประกาศ (MT4 25%/MT5 15%) ไม่ใช่สูตร 80% ล้วน · verify: synthetic CSV ผ่าน (br… | ARCHIVE:2150 |
 | ORDER-059 | 2026-07-09 | REVIEWED/CLOSED | COT regime filter สำหรับ EA ทอง: exploratory ผ่าน → ต้อง validate เต็ม |  | ARCHIVE:2169 |
@@ -81,7 +81,7 @@
 | ORDER-071 | 2026-07-10 | STAGE2-DONE | rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-… |  | ARCHIVE:2576 |
 | ORDER-071 |  | OPEN | ST03 entry rescue: HTF trend-gate A/B บน flat-lot |  | ARCHIVE:5065 |
 | ORDER-072 | 2026-07-26 | DONE | build "(Boss)_Kangaroo" = Boss_16 บนแม่พิมพ์ V2 | core\entries\Kangaroo.mqh (ไม่ใช่ core\) · ea_template\tests\run_tests.ps1 (ไม่ใช่ tests\) + REVIEWED(Claude/… | ARCHIVE:7558 |
-| ORDER-073 |  | DONE | News-aware risk system (user directive 2026-07-10) — Phase 1 |  | ACTIVE:10052 |
+| ORDER-073 |  | DONE | News-aware risk system (user directive 2026-07-10) — Phase 1 |  | ACTIVE:10074 |
 | ORDER-074 | 2026-07-10 | DONE | fxDreema X-ray: อ่าน EA คลังเรียนของ user แบบไม่เปลือง token |  | ARCHIVE:2675 |
 | ORDER-075 | 2026-07-10 | DONE | Boss_16 entry sweep v1 (BUY-first) |  | ARCHIVE:2716 |
 | ORDER-075/078 |  |  | NOTE เพิ่ม (user observation 2026-07-10 ค่ำ): Boss_16 entry v1 candidate = SPIKE-FADE |  | ARCHIVE:3036 |
@@ -90,10 +90,10 @@
 | ORDER-078 | 2026-07-11 | DONE | Boss_16 BUY 21/30: validation funnel เต็ม |  | ARCHIVE:2843 |
 | ORDER-079 | 2026-07-26 | DONE | Idea mining คลังคอร์ส: concept catalog (reframe จาก user 2026-07-10) |  | ARCHIVE:7655 |
 | ORDER-080 | 2026-07-26 | CLOSED | วัดมูลค่า "limit-entry แทน market" บน EA เรา (แรงบันดาลใจ: บอท maker-only ของโพสต์ FB) | ตอบผ่าน ORDER-108 + 091C-D1d ไม่ต้อง build Boss_16 ซ้ำ + REVIEWED(Claude/Opus 2026-07-26) | ARCHIVE:7682 |
-| ORDER-080-orig |  |  | (spec เดิม — superseded) |  | ACTIVE:10109 |
+| ORDER-080-orig |  |  | (spec เดิม — superseded) |  | ACTIVE:10131 |
 | ORDER-081 | 2026-07-11 | DONE | Crypto lane feasibility study (maker-fee scalper blueprint) |  | ARCHIVE:3006 |
-| ORDER-082 | 2026-07-14 | CLOSED | Entry_Wave5: สัญญาณ Elliott ขา 5 ตาม rule ที่ user ถ่ายทอดเอง (2026-07-10) |  | ACTIVE:10121 |
-| ORDER-082 |  |  | AMENDMENT (user ยืนยัน 2026-07-10 ค่ำ) |  | ACTIVE:10149 |
+| ORDER-082 | 2026-07-14 | CLOSED | Entry_Wave5: สัญญาณ Elliott ขา 5 ตาม rule ที่ user ถ่ายทอดเอง (2026-07-10) |  | ACTIVE:10143 |
+| ORDER-082 |  |  | AMENDMENT (user ยืนยัน 2026-07-10 ค่ำ) |  | ACTIVE:10171 |
 | ORDER-083 | 2026-07-10 | DONE | build "(Boss)_NewsGuard" watchdog EA (user เคาะ policy ครบ 2026-07-10) |  | ARCHIVE:3043 |
 | ORDER-083B | 2026-07-11 | DONE | port NewsGuard เป็น MQL4 (คุมกอง no-SL บน MT4 141049900) |  | ARCHIVE:3871 |
 | ORDER-083C | 2026-07-11 | DONE | P0-before-attach: NewsGuard hardening (MT5+MT4) + VPS transport |  | ARCHIVE:4120 |
@@ -105,7 +105,7 @@
 | ORDER-088 | 2026-07-10 | DONE | Oracle EA: ปิดเงื่อนไขค้าง "อ่าน trade list" |  | ARCHIVE:3271 |
 | ORDER-089 | 2026-07-10 | DONE | EA_ZSCORE × AUDCAD: rescue-ladder เต็มตามสูตร (ตัวแรกที่ใช้กฎใหม่ครบวงจร) |  | ARCHIVE:3324 |
 | ORDER-090 | 2026-07-10 | DONE-STOPPED-AT-STAGE-2 | ZSCORE AUDCAD H4: funnel เต็ม (ด่านสุดท้ายก่อน bench) |  | ARCHIVE:3450 |
-| ORDER-091 |  | OPEN | MASTER PLAN: intake คลัง Forex 9 โฟลเดอร์ของ user (แผนแม่บท — ลูก 091A-D จ่ายตาม pacing) |  | ACTIVE:10188 |
+| ORDER-091 |  | OPEN | MASTER PLAN: intake คลัง Forex 9 โฟลเดอร์ของ user (แผนแม่บท — ลูก 091A-D จ่ายตาม pacing) |  | ACTIVE:10210 |
 | ORDER-091B | 2026-07-11 | DONE-PHASE1 | BOT MOGUL report sweep (เฟส 1: parse+rank+shortlist) |  | ARCHIVE:3614 |
 | ORDER-091B | 2026-07-11 | DONE | เฟส 2 — BWD spot-kill 5 ตัว "least-bad" ของ BOT MOGUL |  | ARCHIVE:3708 |
 | ORDER-091C-D1 | 2026-07-11 | DONE | JUMSTOCH_FIXEDLOT full funnel |  | ARCHIVE:4360 |
@@ -118,17 +118,17 @@
 | ORDER-092 | 2026-07-11 | DONE | P0: Floating-risk telemetry (ตาบอด floating = รูใหญ่สุดของทั้งระบบ) |  | ARCHIVE:4017 |
 | ORDER-093 | 2026-07-11 | DONE | P0: Deployment truth เดียว + ซ่อม PROJECT_STATE encoding |  | ARCHIVE:4106 |
 | ORDER-094 | 2026-07-11 | DONE | P1: Cage hardening (ปิดทาง stale-pass ทั้ง 4 ตัว) |  | ARCHIVE:4165 |
-| ORDER-095 | 2026-07-17 | CLOSED + REVIEWED | / #4 — Boss_14 GridLog EUR-cross symbol-expand | EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่… | ACTIVE:10256 |
-| ORDER-095 | 2026-07-14 | OPEN | CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อ… | EA_BREAKOUT_XAU → USDJPY (PF 1.28/1.25) + US30 (1.46/1.39 WATCH-thin) demo-eligible · bundles staged _vps_dep… | ACTIVE:10258 |
+| ORDER-095 | 2026-07-17 | CLOSED + REVIEWED | / #4 — Boss_14 GridLog EUR-cross symbol-expand | EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่… | ACTIVE:10278 |
+| ORDER-095 | 2026-07-14 | OPEN | CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อ… | EA_BREAKOUT_XAU → USDJPY (PF 1.28/1.25) + US30 (1.46/1.39 WATCH-thin) demo-eligible · bundles staged _vps_dep… | ACTIVE:10280 |
 | ORDER-095 | 2026-07-17 | CLOSED + REVIEWED | / #4 — Boss_14 GridLog EUR-cross symbol-expand | EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่… | ARCHIVE:9528 |
 | ORDER-095-A | 2026-07-11 | DONE | Boss_14_GridLog ขยาย symbol (ตัวแรก, demo flagship) |  | ARCHIVE:4733 |
 | ORDER-096A | 2026-07-11 | REVIEWED | Alligator+AO naked smoke (WOBR lead 2 ตัวสุดท้าย) |  | ARCHIVE:5000 |
 | ORDER-096B | 2026-07-11 | REVIEWED | ปิดเซลล์ USDJPY IchiADX (PARKED→verdict) |  | ARCHIVE:5028 |
 | ORDER-096C | 2026-07-11 | DONE | commit WOBR intake artifacts |  | ARCHIVE:5048 |
 | ORDER-097 | 2026-07-11 | DONE | build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build |  | ARCHIVE:8397 |
-| ORDER-098 |  | OPEN | CAMPAIGN: fxDreema YouTube corpus build-on |  | ACTIVE:10278 |
-| ORDER-098-A | 2026-07-16 | CLOSED | FVG-fill entry (EX009 algo) flat-lot smoke | naked FVG-fill ไม่มี edge — 22 runs ครบ BWD both-regime (0.79-0.88) + RR sweep TP{15,20,25,30,40,60}: PF ไต่ถ… | ACTIVE:10298 |
-| ORDER-098-B | 2026-07-16 | CLOSED | MACD-divergence entry (EX154/EX010 algo) flat-lot smoke | 🥇 XAU H4 ผ่านครบทุกด่าน funnel — MAIN plateau 1.91 (9 neighbor ไม่มีตัวขาดทุน) · BWD 1.04 · HOLDOUT 1.30 · M… | ACTIVE:10318 |
+| ORDER-098 |  | OPEN | CAMPAIGN: fxDreema YouTube corpus build-on |  | ACTIVE:10300 |
+| ORDER-098-A | 2026-07-16 | CLOSED | FVG-fill entry (EX009 algo) flat-lot smoke | naked FVG-fill ไม่มี edge — 22 runs ครบ BWD both-regime (0.79-0.88) + RR sweep TP{15,20,25,30,40,60}: PF ไต่ถ… | ACTIVE:10320 |
+| ORDER-098-B | 2026-07-16 | CLOSED | MACD-divergence entry (EX154/EX010 algo) flat-lot smoke | 🥇 XAU H4 ผ่านครบทุกด่าน funnel — MAIN plateau 1.91 (9 neighbor ไม่มีตัวขาดทุน) · BWD 1.04 · HOLDOUT 1.30 · M… | ACTIVE:10340 |
 | ORDER-098-C | 2026-07-17 | DONE + REVIEWED | FVG-fill + RSI confluence gate (fxDreema course, #098 corpus) | REJECT. build FVGFill_RSIgate (naked 098-A chassis + RSI gate, mql-review PASS, compile 0/0). RSI threshold s… | ARCHIVE:7476 |
 | ORDER-098-C | 2026-07-26 | DONE | reusable MM-parts library (dynamic close_money + Fibonacci-capped lot) |  | ARCHIVE:7806 |
 | ORDER-098-D | 2026-07-17 | DONE + REVIEWED | Currency-strength meter EA (fxDreema CCI-Strength lineage, #098 corpus) | 🟡 PARAMETRIC-marginal → BUILD-ON candidate. naked CurrStrength_Naked (7-pair USD-basket momentum→chart-cross… | ARCHIVE:7478 |
@@ -154,8 +154,8 @@
 | ORDER-111 | 2026-07-16 | DONE + REVIEWED | re-audit open-price-killed pile + source-catalog build-material (user เคาะ 2026-07-16) | Part A 6-marginal recheck = **ไม่มี wrongly-parked** (every-tick แย่ลงทั้ง 6, PF ตกทุกตัว, 2 ตัวโผล่ DD~99% ท… | ARCHIVE:5679 |
 | ORDER-112E | 2026-07-26 | DONE | corr check: Ichimoku-XAU additive หรือ redundant? | 990069 ไม่ใช่ "reserved" แล้ว — attach + ACTIVE บน 463666728 + REVIEWED(Claude/Opus 2026-07-26) | ARCHIVE:7799 |
 | ORDER-115 | 2026-07-17 | DONE + REVIEWED | B1 observation cohort START + event-log adoption guide (§20.2 step 6 @ `4eb839d`) |  | ARCHIVE:6282 |
-| ORDER-116 | 2026-07-18 | CORE DONE | CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2… |  | ACTIVE:10234 |
-| ORDER-117 | 2026-07-18 | CORE DONE | CAMPAIGN: รีด EA ที่ validated แล้ว — coverage (symbol×TF) + precision-filter (user 2026-… |  | ACTIVE:10213 |
+| ORDER-116 | 2026-07-18 | CORE DONE | CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2… |  | ACTIVE:10256 |
+| ORDER-117 | 2026-07-18 | CORE DONE | CAMPAIGN: รีด EA ที่ validated แล้ว — coverage (symbol×TF) + precision-filter (user 2026-… |  | ACTIVE:10235 |
 | ORDER-118 | 2026-07-26 | CLOSED-OBSOLETE | ST03 real-money CutLoss guardrail | user ถอดตระกูล ST03 ออกจากบัญชีจริง 159475669 ทั้ง 3 ตัว (9398/939721/990010 — DEPLOYMENTS.csv = REMOVED, ยืน… | ARCHIVE:7415 |
 | ORDER-119 | 2026-07-19 | REVIEWED | CAMPAIGN: ST03 rescue รอบ owner-override — 3 lever ที่ยังไม่เคยแตะ (flat-lot bar ตัดสิน) | DEAD-OPTIMIZED (flat-lot MACD-reversion entry, ranger homes) — campaign ปิด, lever A/B ไม่เดิน | ARCHIVE:9502 |
 | ORDER-120 | 2026-07-26 | DONE | implement framework Part 4: rewrite CLAUDE.md VERDICT GATE เป็น tree + bar table | CLAUDE.md gate = decision tree (STRUCTURAL→PARAMETRIC→DEAD-OPTIMIZED/BUILD-ON/PARKED-VERIFY/CANDIDATE) + bar… | ARCHIVE:7434 |
@@ -177,7 +177,7 @@
 | ORDER-138 | 2026-07-19 | DONE + REVIEWED | template SEV-1 pack #2 (Codex roadmap 2026-07-19): persist/kill transactional hardening | #1-4 + 138b + 138c ครบ, Codex audit 2 รอบครบ loop → live-rollout blocker ปลด (ฝั่ง code); user ยังต้องเดิน PE… | ARCHIVE:5487 |
 | ORDER-139 | 2026-07-20 | DONE + REVIEWED | Wave-2 XAU optimize ladders: S1 TrendRider H4 + SS4 SweepReversal M15 | S1 = VALIDATED CANDIDATE → DEMO-ready 992004 (plateau 6-cell a20×s{.3,.5}×c{2..3}; center a20/s0.5/c2.5 MAIN… | ARCHIVE:7388 |
 | ORDER-140 | 2026-07-20 | DONE + REVIEWED | SS1 LondonORB BUILD-ON: symbol×TF expansion | ไม่มี home ใหม่ผ่าน bar — GBP 0.79 MAIN / EUR 0.88-0.89 ตาย · USDJPY M15 1.14/1.10 + XAU M30 1.13/1.08 @n~700… | ARCHIVE:5448 |
-| ORDER-141 | 2026-07-20 | DONE | (EXP)_AdaptGridMC_rev01 build (FINDYOUR8 #1 MC block-bootstrap zone grid) | spec→code→compile+tests พอ) | ACTIVE:9951 |
+| ORDER-141 | 2026-07-20 | DONE | (EXP)_AdaptGridMC_rev01 build (FINDYOUR8 #1 MC block-bootstrap zone grid) | spec→code→compile+tests พอ) | ACTIVE:9973 |
 | ORDER-142 | 2026-07-23 | REVIEWED | AdaptGridMC backtest campaign (ต่อจาก 141 build) | NOT a validated candidate — MAIN PF is a realized-path artifact, structural flaw found | ARCHIVE:5434 |
 | ORDER-143 | 2026-07-26 | DONE | SS1 LondonORB lever ค้าง: partial-TP + trend-filter sweep | input _07_UseTrendFilter/_07_TrendEmaPeriod=200 + _07_PartialPct/_07_PartialAtR ถูกเพิ่มเข้า EA จริง · sweep… | ARCHIVE:7376 |
 | ORDER-144 | 2026-07-26 | DONE | [codex] pre-commit staged-bytes validation (roadmap finding #12, ops-debt) |  | ARCHIVE:7380 |
@@ -187,7 +187,7 @@
 | ORDER-148 | 2026-07-23 | REVIEWED | Boss_17 Wave5 symbol expansion (JPY crosses) | DEAD-OPTIMIZED (new-home expansion) — 0/8 cells cleared MAIN≥1.1 gate on GBPJPY/EURJPY/AUDJPY/CHFJPY H1/H4 (E… | ARCHIVE:5430 |
 | ORDER-149 | 2026-07-23 | REVIEWED + CORRECTED | MacdDiv divergence: majors D1/H4 sweep (ต่อยอด 999094 + GBPUSD-D1 parked) | GBPUSD D1 DEAD-OPTIMIZED (earned properly now) · USDJPY D1 DEAD-OPTIMIZED (holdout-fail) — ORDER-167 ปิดทั้งค… | ARCHIVE:7363 |
 | ORDER-150 | 2026-07-23 | REVIEWED | (MR)_SweepReversal_XAU (SS4, 992006) new-home ladder: ranger symbols | PARKED-VERIFY(user) — EURUSD M15 = weak pulse (PF 1.08/40t), keep for build-on | ARCHIVE:5414 |
-| ORDER-151 | 2026-07-23 | DONE | (TRND)_TsMom_XAU (S2, 992001) demo-isolate bundle prep |  | ACTIVE:9941 |
+| ORDER-151 | 2026-07-23 | DONE | (TRND)_TsMom_XAU (S2, 992001) demo-isolate bundle prep |  | ACTIVE:9963 |
 | ORDER-152 | 2026-06-29 | REVIEWED | [infra] doctrine reconciliation: Codex routing + stale verdict vocabulary + doc-retiremen… | moved 6 root docs → _archive_docs/ (DEPLOY_CHECKLIST_2026-06-29 + 5 one-off analysis docs), deleted empty por… | ARCHIVE:7214 |
 | ORDER-153 | 2026-07-23 | REVIEWED | [infra] `portfolio/expectations.csv` + capture-at-attach rule (PQ-03 ครึ่ง data-capture,… |  | ARCHIVE:5124 |
 | ORDER-154 | 2026-07-23 | REVIEWED-WITH-DEFECTS | [infra · money-adjacent] Attach-time portfolio risk budget (admission control) |  | ARCHIVE:5139 |
@@ -198,7 +198,7 @@
 | ORDER-159 | 2026-07-23 | REVIEWED | [infra] DD95 backfill + แก้ basket/leg double-count (ปลดล็อก ORDER-154 ให้ใช้ตัดสินใจได้จ… |  | ARCHIVE:5182 |
 | ORDER-160 | 2026-07-23 | REVIEWED | [infra · core, comment-only] แก้ป้าย "(stub)" ผิดข้อเท็จจริงใน `Inputs.mqh` (RecoveryMode… |  | ARCHIVE:5404 |
 | ORDER-161 | 2026-07-26 | DONE + VERIFIED-NEUTRAL | template: portable money params (cent/USD-safe) + balance-scaled lot sizing |  | ARCHIVE:7332 |
-| ORDER-162 | 2026-07-23 | RESOLVED | [investigation] ~~MT5 tester engine drift~~ → **ROOT CAUSE = leverage unpinnable + margin… |  | ACTIVE:9889 |
+| ORDER-162 | 2026-07-23 | RESOLVED | [investigation] ~~MT5 tester engine drift~~ → **ROOT CAUSE = leverage unpinnable + margin… |  | ACTIVE:9911 |
 | ORDER-163 | 2026-07-23 | REVIEWED | [template hardening, CORE-002] Clean-room dependency audit: Boss V2 ไม่พึ่ง EA_CORE V1 | 0 forbidden dependency | ARCHIVE:5352 |
 | ORDER-164 | 2026-07-23 | REVIEWED | [template hardening, PARAM-001] Full parameter registry — trace ทุก input ใน `Inputs.mqh`… |  | ARCHIVE:5363 |
 | ORDER-165 | 2026-07-26 | DONE | [🔴 T0 BLOCKER · tooling] pin leverage + INPUT CACHE ให้ได้จริง ก่อน re-validate | TESTER INPUT-CACHE ไม่ใช่ leverage · cage พิสูจน์ reproducible 8/8 แล้ว + REVIEWED(Claude/Opus 2026-07-26) | ARCHIVE:7316 |
@@ -221,7 +221,7 @@
 | ORDER-187 | 2026-07-26 | DONE | [core/money] fail-closed first-lot sizing + Wave5 naked-order guard (Codex review 2026-07… | ไม่สะอาด — 2 high/1 med/1 low แล้ว 194c เจอ fix ไม่ครบอีก 2 + บั๊กใหม่ 1) · ⚠️ ประโยค ".set ไม่มีไฟล์พัง" ถูก… | ARCHIVE:7058 |
 | ORDER-188 | 2026-07-26 | DONE | [test] positive-path cage ของ lot mode 42/43 (`scripts\mm_lotmode_test.ps1`) | ✅ เดิมคือ run 6 ไม้ที่ DD-25% ฆ่าตั้งแต่วันที่ 8 · cage ตอนนี้ 13 เคส (E2_unit_indep_hi + K0/K1_scaled_*) + R… | ARCHIVE:7069 |
 | ORDER-189 | 2026-07-26 | DONE | [docs] PARAM_REGISTRY 183/183 + คู่มือ lot mode §3.6 | 183/183 → 184/184 (ตรวจแล้วสองฝั่งตรงกัน) + REVIEWED(Claude/Opus 2026-07-26) | ARCHIVE:7087 |
-| ORDER-190 | 2026-07-24 | DONE | [lever/funnel] MM-OWNER-002: Boss_16/Kangaroo ให้ scale ตาม balance ได้ (opt-in) |  | ACTIVE:9868 |
+| ORDER-190 | 2026-07-24 | DONE | [lever/funnel] MM-OWNER-002: Boss_16/Kangaroo ให้ scale ตาม balance ได้ (opt-in) |  | ACTIVE:9890 |
 | ORDER-191 | 2026-07-26 | DONE 2026-07-24 | [docs/tooling] parameter linkage matrix + ล้างหนี้ line-number ของ registry | Sonnet lane + Claude verify · b/c: commit de14b3f3 "ORDER-191(b)(c): generated parameter linkage doc + inacti… | ARCHIVE:7175 |
 | ORDER-192 | 2026-07-24 | REVIEWED | [tooling] OnInit effective-config summary + optimizer active-parameter guard | [CFG] sizing block landed + follow-up fix commit a97d7f7e "effective-config summary was lying about entry 16"… | ARCHIVE:7181 |
 | ORDER-192(b) | 2026-07-26 | DONE | [tooling] optimizer active-parameter guard (`scripts/optimize_guard.ps1`) |  | ARCHIVE:7134 |
@@ -246,9 +246,9 @@
 | ORDER-210 | 2026-07-25 | REVIEWED | [🔴 เงินจริง · funnel] `EA_BREAKOUT_XAU` 991001 re-optimize บนหน้าต่างสะอาด | 🟡 กลาง ตามบาร์ที่ล็อกไว้ล่วงหน้า → คง v2 บนเงินจริง ไม่สลับ | ARCHIVE:6297 |
 | ORDER-211 | 2026-07-25 | REVIEWED | [macro/re-validate] MacroGate 990120: หลักฐานเดิมสร้างจาก classifier ที่พัง | 🔴 ถอดสถานะ "VALIDATED deploy-candidate" → ADVISORY-ONLY | ARCHIVE:6347 |
 | ORDER-212 | 2026-07-25 | REVIEWED | [🔴 เงินจริง · integrity] `NuiIndy` guardrail `CutLoss=30` — หาหน้าต่างที่มันถูกวัดมา | provenance = CLEAN · แต่หลักฐานพิสูจน์คนละเรื่องกับที่ถูกอ้าง | ARCHIVE:6410 |
-| ORDER-213 | 2026-07-25 | DONE | [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด |  | ACTIVE:9256 |
+| ORDER-213 | 2026-07-25 | DONE | [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด |  | ACTIVE:9278 |
 | ORDER-214 | 2026-07-25 | REVIEWED | [🔴 เงินจริง · integrity] Gold Reaper 4.3: lab เขียน CORE ให้ EA เงินจริงโดยที่ plateau-c… | แก้ข้อความแล้ว · funnel = ไม่คุ้มรัน อธิบายเหตุผลไว้ | ARCHIVE:6684 |
-| ORDER-215 | 2026-07-26 | PART 1 DONE | [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-… | "bounded+SL" ถอนแล้ว — safety switch ไม่ตอบสนอง · re-measure funnel ยัง OPEN | ACTIVE:9294 |
+| ORDER-215 | 2026-07-26 | PART 1 DONE | [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-… | "bounded+SL" ถอนแล้ว — safety switch ไม่ตอบสนอง · re-measure funnel ยัง OPEN | ACTIVE:9316 |
 | ORDER-216 | 2026-07-25 | REVIEWED | [demo · funnel] MacdDiv XAU H4 (999094): เติม fine-grid + fan ที่ genetic pick ไม่เคยมี | 🔴 plateau เดิม = ของปลอมที่สร้างจากแกนตาย · cell จริงคือ knife-edge → ถอดสถานะ "ผ่านครบทุกด่าน" → PARKED-VER… | ARCHIVE:6714 |
 | ORDER-217 | 2026-07-25 | REVIEWED | [lever/build-on] MacdDiv: เส้น MACD signal ที่ EA ไม่เคยอ่าน = lever ที่ยังไม่เคยลอง | 🟨 กลาง ตามบาร์ที่ล็อกไว้ → เก็บเป็น lever ใน EDGE_CATALOG ไม่ deploy · code เก็บไว้ (default OFF พิสูจน์ ine… | ARCHIVE:6599 |
 | ORDER-218 | 2026-07-25 | DONE + REVIEWED | [ops/integrity] error sweep: เครื่องเตือนไว้แล้ว แต่ไม่มีใครอ่าน |  | ARCHIVE:6492 |
@@ -258,9 +258,9 @@
 | ORDER-222 | 2026-07-26 | DONE + REVIEWED | [🔴 เงินจริง · test] พิสูจน์ว่า `CutLoss=30` ของ NuiIndy "ตัดได้จริง" ไม่ใช่แค่ "ไม่เกะกะ" |  | ARCHIVE:6426 |
 | ORDER-230 | 2026-07-26 | REVIEWED | [🔴 เงินจริง · integrity] บัญชี 463666728: currency เป็น cent หรือ USD |  | ARCHIVE:9444 |
 | ORDER-231 | 2026-07-27 | DONE | [demo · funnel gap] 992001 TsMom_XAU: ACTIVE อยู่แต่ไม่เคยมี Monte Carlo |  | ARCHIVE:8116 |
-| ORDER-232 |  | DONE | [🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด |  | ACTIVE:9142 |
-| ORDER-233 |  | OPEN | [🔴 เงินจริง · audit] `--resolve-single-leg-baskets`: flag ที่พลิกงบพอร์ต 73% → 38% |  | ACTIVE:9169 |
-| ORDER-234 |  | OPEN | [🔴 เงินจริง · migration] PERSIST_MIGRATION checklist: ลอยข้าม handoff 3 ใบโดยไม่มีเจ้าของ |  | ACTIVE:9209 |
+| ORDER-232 |  | DONE | [🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด |  | ACTIVE:9164 |
+| ORDER-233 |  | OPEN | [🔴 เงินจริง · audit] `--resolve-single-leg-baskets`: flag ที่พลิกงบพอร์ต 73% → 38% |  | ACTIVE:9191 |
+| ORDER-234 |  | OPEN | [🔴 เงินจริง · migration] PERSIST_MIGRATION checklist: ลอยข้าม handoff 3 ใบโดยไม่มีเจ้าของ |  | ACTIVE:9231 |
 | ORDER-235 | 2026-07-28 | REVIEWED | [policy] บาร์ 30 ไม้ใช้กับ 4 EA นี้ไม่ได้ — ต้องเคาะ ไม่ใช่เลื่อนไปเรื่อยๆ |  | ARCHIVE:9478 |
 | ORDER-236 | 2026-08-11 | REVIEWED | [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ |  | ARCHIVE:10931 |
 | ORDER-237 | 2026-07-26 | REVIEWED | [integrity] "GBPJPY leg-8" = 3 magic 2 spacing คนละตัวกัน |  | ARCHIVE:7935 |
@@ -278,13 +278,13 @@
 | ORDER-350 | 2026-07-27 | REVIEWED | [lever] rev05 SL buffer บน BTC H4 — คืน flip-exit ที่ไม่เคยได้ทำงาน | 45) | ARCHIVE:7956 |
 | ORDER-351 | 2026-07-27 | REVIEWED | [🔴 tooling/integrity] คอมเมนต์ HTML ใน ledger ปิดกรงกันชนเลนทั้งระบบเงียบๆ | 32) | ARCHIVE:9109 |
 | ORDER-352 | 2026-07-28 | REVIEWED | [lever] pyramid MM ลึกขึ้น (3 ATR × 5 ชั้น) บน BTC H4 | 31) | ARCHIVE:9077 |
-| ORDER-353 | 2026-07-28 | DONE | [campaign] optimize pyramid depth + ER regime gate บน BTC H4 | 45) — ผ่าน M4 สองหน้าต่าง · เหลือ MC (ต้อง delegate) + การตัดสินใจเรื่อง holdout (user) | ACTIVE:8793 |
+| ORDER-353 | 2026-07-28 | DONE | [campaign] optimize pyramid depth + ER regime gate บน BTC H4 | 45) — ผ่าน M4 สองหน้าต่าง · เหลือ MC (ต้อง delegate) + การตัดสินใจเรื่อง holdout (user) | ACTIVE:8815 |
 | ORDER-354 | 2026-07-28 | REVIEWED | [🔴 tooling/integrity] แก้ ORDER-351 แล้วกรงยัง**ไม่กลับมา** — สถานะถูกอ่านจากทั้งเซลล์ | 36) | ARCHIVE:9059 |
 | ORDER-355 | 2026-07-28 | REVIEWED | [🔴 ops/tooling] Model 4 บน BTCUSD 3 ปี คืน **0 บาร์เงียบๆ เพราะชนเพดาน RAM** ไม่ใช่ข้อมู… | 30) | ARCHIVE:9010 |
 | ORDER-370 | 2026-07-27 | DONE | [🔴 ops/integrity] `check_stale_binaries` ไม่ส่องที่ที่ binary ถูก **ส่งขึ้นชาร์ตจริง** |  | ARCHIVE:8456 |
 | ORDER-371 | 2026-07-28 | REVIEWED | [ops/integrity] tick history ของ `Meta 5b` เพี้ยนจาก terminal หลัก | ห้ามเทียบข้าม install ถาวร (ไม่ sync) · เขียนลง AGENTS.md §3 เป็นกฎเหล็กแล้ว (aa2cb4f6) | ARCHIVE:9235 |
 | ORDER-372 | 2026-07-28 | REVIEWED | [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน | 20) — ยืนยัน ORDER-222 · cut100 ชนะทั้งแกน net และแกน DD | ARCHIVE:9265 |
-| ORDER-373 | 2026-07-27 | DECIDED | [🔴 เงินจริง · user decision] สอง EA ที่คำอ้างเรื่อง "กรง" ถูกถอนไปแล้ว — จะทำอะไรต่อ |  | ACTIVE:9100 |
+| ORDER-373 | 2026-07-27 | DECIDED | [🔴 เงินจริง · user decision] สอง EA ที่คำอ้างเรื่อง "กรง" ถูกถอนไปแล้ว — จะทำอะไรต่อ |  | ACTIVE:9122 |
 | ORDER-390 | 2026-07-27 | DONE + REVIEWED | [tooling/integrity] inline code ใน status span ทำให้ order ที่ REVIEWED แล้วค้างบอร์ดเงีย… |  | ARCHIVE:8031 |
 | ORDER-400 | 2026-07-28 | REVIEWED | [infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666) | 15) — ปิดครบทั้ง 4 ข้อ · วัดแล้ว FLOATING 0/6 blind · SYSTEM 6/6 fresh · เป้าหมายเดิม "6/6 floating FRESH" สำ… | ARCHIVE:9612 |
 | ORDER-410 | 2026-07-28 | STEP 1 DONE + REVIEWED | [🔴 ops/integrity] 13 bundle ที่ staged ไว้เก่ากว่า source — บน VPS รันตัวไหนอยู่จริง |  | ARCHIVE:9194 |
@@ -294,13 +294,13 @@
 | ORDER-421 | 2026-07-28 | REVIEWED | [🔴 tooling/integrity] `run_order105_negative_tests` แดงอยู่ และไม่มีใครรู้ |  | ARCHIVE:9141 |
 | ORDER-430 | 2026-08-06 | REVIEWED | [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged lever… | BOTH QUALIFICATIONS VOID, ZERO HOSTS QUALIFY — see the RE-READ block at the end of this row. The order does N… | ARCHIVE:9711 |
 | ORDER-431 | 2026-07-28 | REVIEWED | [optimize] MacdDiv_Naked USDJPY H4: the one home that cleared both windows and has never… |  | ARCHIVE:9801 |
-| ORDER-432 | 2026-08-01 | DONE | [🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in fi… |  | ACTIVE:10550 |
+| ORDER-432 | 2026-08-01 | DONE | [🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in fi… |  | ACTIVE:10572 |
 | ORDER-433 | 2026-08-11 | REVIEWED | [portfolio risk] The single-leg-basket proxy is not the fix; build the combined two-leg s… |  | ARCHIVE:11611 |
-| ORDER-434 |  | OPEN | [🔴 data integrity] MRIS crisis models: stale data is being relabelled fresh, and Phase D… |  | ACTIVE:10684 |
+| ORDER-434 |  | OPEN | [🔴 data integrity] MRIS crisis models: stale data is being relabelled fresh, and Phase D… |  | ACTIVE:10706 |
 | ORDER-490 | 2026-08-13 | REVIEWED | [🔴 guard coverage] ~~Wave5 guard G4 has never been observed firing~~ → **G4 runs and acc… | CANONICAL / DONE | ARCHIVE:12545 |
 | ORDER-500 | 2026-07-28 | REVIEWED | [🔴 data integrity] `B1_DATASET.csv` lost a row to a missing newline, and the guard that… |  | ARCHIVE:9871 |
-| ORDER-501 | 2026-08-06 | STEP 1 DONE 2026-08-06 | [🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load — flaky test หรือ ev… | events<150 ⟺ childOk=False on all 9 runs, so the log never lost an accepted write; the worker exhausts a 3-at… | ACTIVE:8947 |
-| ORDER-510 |  | OPEN | [🔴 money path · deploy trap] ฟลีตที่รันอยู่จริงเป็นไบนารีก่อน ORDER-132/138 ทั้งชุด — แล… |  | ACTIVE:10714 |
+| ORDER-501 | 2026-08-06 | STEP 1 DONE 2026-08-06 | [🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load — flaky test หรือ ev… | events<150 ⟺ childOk=False on all 9 runs, so the log never lost an accepted write; the worker exhausts a 3-at… | ACTIVE:8969 |
+| ORDER-510 | 2026-08-16 | SUPERSEDED / NO CURRENT BLOCKING EFFECT | [🔴 money path · deploy trap] ฟลีตที่รันอยู่จริงเป็นไบนารีก่อน ORDER-132/138 ทั้งชุด — แล… |  | ACTIVE:10736 |
 | ORDER-511 | 2026-07-28 | REVIEWED | [🔴 ops/integrity] มี template EA รันอยู่บน 463666728 โดยไม่ได้ pin magic — ใช้ค่า defaul… |  | ARCHIVE:9956 |
 | ORDER-520 | 2026-07-28 | REVIEWED | [🟠 ops/integrity] the four `thin` EAs still carry +3mo judge dates that ORDER-235 replac… |  | ARCHIVE:10247 |
 | ORDER-521 | 2026-07-28 | REVIEWED | [🟠 ops/integrity] `EA_BREAKOUT_XAU (XAUUSDm,H1)` runs on 463666728 with no inventory row… |  | ARCHIVE:10489 |
@@ -309,110 +309,110 @@
 | ORDER-541 | 2026-07-28 | REVIEWED | [screen] Boss_14 GridLog × 12 คู่เงินที่ยังไม่เคยแตะ — cell ที่ GEN-STANDING เขียนสเปกครบ… | 40) — 12/12 ครบ 24 run · 2 ENGINE-EDGE-CANDIDATE (AUDUSD/USDCAD) ที่ยังไม่ผ่าน BWD · entry-edge จริงตัวเดียว… | ARCHIVE:8853 |
 | ORDER-542 | 2026-07-30 | REVIEWED | [optimize] SuperTrendFlip × non-FX cell #20-24 — ปิดสมมติฐาน "crypto เหมาะ ไม่ใช่ non-FX… | BRENT fails holdout → BUILD-ON/parked · US30 clears thin margin → MC next · NAS100 still CANDIDATE-pending-fa… | ARCHIVE:8922 |
 | ORDER-543 | 2026-07-30 | REVIEWED | [lever] MacdDiv USDJPY H4: fan ที่ ORDER-431 เลือก **ค่าที่ขอบกริดพอดี** + 2 แกนที่ไม่เคย… |  | ARCHIVE:8950 |
-| ORDER-544 |  | OPEN | [classification · ไม่ใช่คำแนะนำเรื่องเงิน] NuiIndy: กรง ENGINE-EDGE 5 ข้อที่ไม่เคยเดิน |  | ACTIVE:8764 |
+| ORDER-544 |  | OPEN | [classification · ไม่ใช่คำแนะนำเรื่องเงิน] NuiIndy: กรง ENGINE-EDGE 5 ข้อที่ไม่เคยเดิน |  | ACTIVE:8786 |
 | ORDER-545 | 2026-08-13 | REVIEWED | [🟠 tooling/integrity] pre-commit อ่าน working tree ไม่ใช่ staged snapshot ⇒ กรงถูกข้ามได… | ALREADY_FIXED_NEEDS_ARCHIVE | ARCHIVE:12349 |
 | ORDER-546 | 2026-07-30 | REVIEWED | [test] `(EXP)_AdaptGridMC_rev01`: EA ที่ build เสร็จตั้งแต่ 2026-07-20 แต่**ไม่เคยรัน bac… |  | ARCHIVE:8705 |
-| ORDER-600 |  | C4 | [factory/governance] S2a: Coverage ownership proposal + migration table — `RE-OPENED 2026… |  | ACTIVE:8622 |
-| ORDER-601 | 2026-07-31 | DONE | [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is o… |  | ACTIVE:8516 |
-| ORDER-602 |  | DONE | [factory/governance] S2a closure: separate the decision from the proposal, and replace th… |  | ACTIVE:8158 |
-| ORDER-610 |  | RE-OPENED | [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.j… |  | ACTIVE:8057 |
-| ORDER-611 |  | DONE | [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attri… |  | ACTIVE:7982 |
-| ORDER-612 |  | DONE | [factory/S4] Snapshot **v5** + fail-closed readers |  | ACTIVE:7939 |
-| ORDER-613 |  | RE-OPENED | [factory/governance] Option B: make an approval survive the change it approves — and clos… |  | ACTIVE:7863 |
-| ORDER-614 | 2026-07-31 | DONE | [factory/governance] Stop charging the owner a signature for every bug fix — **rev 2, aft… |  | ACTIVE:7801 |
-| ORDER-615 |  | DONE | [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance |  | ACTIVE:7746 |
-| ORDER-616 |  | DONE | [factory/discipline] The four defect SHAPES behind 24 audit findings — lint where mechani… |  | ACTIVE:7699 |
-| ORDER-630 |  | DONE | [factory/S5] Registries + the ONE ParameterBinding resolver |  | ACTIVE:7665 |
-| ORDER-670 | 2026-08-01 | DONE | [factory/tier] The whole checker set judges the WORKING TREE while the commit carries the… | 5 of 5 checker(s) bound; 0 still suspended | ACTIVE:7487 |
+| ORDER-600 |  | C4 | [factory/governance] S2a: Coverage ownership proposal + migration table — `RE-OPENED 2026… |  | ACTIVE:8644 |
+| ORDER-601 | 2026-07-31 | DONE | [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is o… |  | ACTIVE:8538 |
+| ORDER-602 |  | DONE | [factory/governance] S2a closure: separate the decision from the proposal, and replace th… |  | ACTIVE:8180 |
+| ORDER-610 |  | RE-OPENED | [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.j… |  | ACTIVE:8079 |
+| ORDER-611 |  | DONE | [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attri… |  | ACTIVE:8004 |
+| ORDER-612 |  | DONE | [factory/S4] Snapshot **v5** + fail-closed readers |  | ACTIVE:7961 |
+| ORDER-613 |  | RE-OPENED | [factory/governance] Option B: make an approval survive the change it approves — and clos… |  | ACTIVE:7885 |
+| ORDER-614 | 2026-07-31 | DONE | [factory/governance] Stop charging the owner a signature for every bug fix — **rev 2, aft… |  | ACTIVE:7823 |
+| ORDER-615 |  | DONE | [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance |  | ACTIVE:7768 |
+| ORDER-616 |  | DONE | [factory/discipline] The four defect SHAPES behind 24 audit findings — lint where mechani… |  | ACTIVE:7721 |
+| ORDER-630 |  | DONE | [factory/S5] Registries + the ONE ParameterBinding resolver |  | ACTIVE:7687 |
+| ORDER-670 | 2026-08-01 | DONE | [factory/tier] The whole checker set judges the WORKING TREE while the commit carries the… | 5 of 5 checker(s) bound; 0 still suspended | ACTIVE:7509 |
 | ORDER-671 | 2026-08-11 | REVIEWED | [factory/S5] An UNBOUND swept parameter under a declared revision becomes a REFUSAL |  | ARCHIVE:11660 |
 | ORDER-672 | 2026-08-11 | REVIEWED | [factory/S5] `build_tag` becomes its own `ParameterBinding` field — a name that encodes t… |  | ARCHIVE:11680 |
-| ORDER-673 | 2026-07-31 | DONE | [factory/tier] The fast-tier budget becomes a real number and is ENFORCED |  | ACTIVE:7576 |
-| ORDER-674 | 2026-08-01 | DONE | [factory/tier] The six PowerShell guards that run BEFORE the tier were never measured |  | ACTIVE:7606 |
-| ORDER-675 | 2026-07-31 | DONE | [infra/guard] The collision guard read a FILENAME as a reserved block and permitted every… |  | ACTIVE:7462 |
-| ORDER-700 | 2026-07-31 | DONE | [factory/S6] The preset compiler: a full-surface `.set` that cannot be silently completed… |  | ACTIVE:7399 |
-| ORDER-702 | 2026-07-31 | DONE | [factory/tier] `evidence.py` is guarded by no suite, so a commit that touches only it run… |  | ACTIVE:5438 |
-| ORDER-710 | 2026-08-01 | DONE | [factory/S6] `[CFG]` emits the input-surface fingerprint |  | ACTIVE:7331 |
-| ORDER-730 | 2026-08-02 | DONE | [factory/S6] The fingerprint covers the inputs but not the LOCKED CONSTANTS design §5.6 a… |  | ACTIVE:7213 |
-| ORDER-731 |  | DONE | [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks i… |  | ACTIVE:6630 |
-| ORDER-732 |  | DEAD-OPTIMIZED | [tier] The undeclared-reference sweep cannot see a path referenced by an IMPORTED module |  | ACTIVE:5589 |
+| ORDER-673 | 2026-07-31 | DONE | [factory/tier] The fast-tier budget becomes a real number and is ENFORCED |  | ACTIVE:7598 |
+| ORDER-674 | 2026-08-01 | DONE | [factory/tier] The six PowerShell guards that run BEFORE the tier were never measured |  | ACTIVE:7628 |
+| ORDER-675 | 2026-07-31 | DONE | [infra/guard] The collision guard read a FILENAME as a reserved block and permitted every… |  | ACTIVE:7484 |
+| ORDER-700 | 2026-07-31 | DONE | [factory/S6] The preset compiler: a full-surface `.set` that cannot be silently completed… |  | ACTIVE:7421 |
+| ORDER-702 | 2026-07-31 | DONE | [factory/tier] `evidence.py` is guarded by no suite, so a commit that touches only it run… |  | ACTIVE:5460 |
+| ORDER-710 | 2026-08-01 | DONE | [factory/S6] `[CFG]` emits the input-surface fingerprint |  | ACTIVE:7353 |
+| ORDER-730 | 2026-08-02 | DONE | [factory/S6] The fingerprint covers the inputs but not the LOCKED CONSTANTS design §5.6 a… |  | ACTIVE:7235 |
+| ORDER-731 |  | DONE | [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks i… |  | ACTIVE:6652 |
+| ORDER-732 |  | DEAD-OPTIMIZED | [tier] The undeclared-reference sweep cannot see a path referenced by an IMPORTED module |  | ACTIVE:5611 |
 | ORDER-740 | 2026-08-16 | REVIEWED | [lever/integrity] `_57_DynCloseOn` is INERT on Boss_16/Kangaroo, and the mold announces t… | CANONICAL / DONE | ARCHIVE:12664 |
-| ORDER-760 |  | DONE | [ledger] Prose inside a ledger cell silently changes what the collision guard enforces —… |  | ACTIVE:5483 |
-| ORDER-761 | 2026-08-02 | DEAD-OPTIMIZED | [tier] A module should DECLARE the paths it reads, instead of a regex guessing them |  | ACTIVE:6485 |
+| ORDER-760 |  | DONE | [ledger] Prose inside a ledger cell silently changes what the collision guard enforces —… |  | ACTIVE:5505 |
+| ORDER-761 | 2026-08-02 | DEAD-OPTIMIZED | [tier] A module should DECLARE the paths it reads, instead of a regex guessing them |  | ACTIVE:6507 |
 | ORDER-820 | 2026-08-16 | REVIEWED | [tier] The budget question is REOPENED, not answered: the suite did NOT grow ~9s (that is… | CANONICAL / DONE | ARCHIVE:12710 |
-| ORDER-830 | 2026-08-01 | DONE | [tier] `ORDER-820` C1, measured, then ANSWERED: the biggest item is one `check_registries… |  | ACTIVE:5661 |
-| ORDER-941 | 2026-08-16 | PARTIAL / OWNER-ACTION | [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — sil… |  | ACTIVE:6007 |
-| ORDER-942 | 2026-08-02 | DONE | [judge policy · blocker] 11 of the 19 shortfall EAs have no expected trade rate, so silen… | the gap is 17 → 0, all 36 ACTIVE judge-dated rows carry a derived rate, and three live EAs are UNDER_RATE (tw… | ACTIVE:6261 |
-| ORDER-943 | 2026-08-16 | PARTIAL | [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one |  | ACTIVE:6400 |
+| ORDER-830 | 2026-08-01 | DONE | [tier] `ORDER-820` C1, measured, then ANSWERED: the biggest item is one `check_registries… |  | ACTIVE:5683 |
+| ORDER-941 | 2026-08-16 | PARTIAL / NO ACTIONABLE RESIDUAL RUNTIME-EVIDENCE GAP IN ACCEPTED SCOPE | [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — sil… |  | ACTIVE:6029 |
+| ORDER-942 | 2026-08-02 | DONE | [judge policy · blocker] 11 of the 19 shortfall EAs have no expected trade rate, so silen… | the gap is 17 → 0, all 36 ACTIVE judge-dated rows carry a derived rate, and three live EAs are UNDER_RATE (tw… | ACTIVE:6283 |
+| ORDER-943 | 2026-08-16 | PARTIAL | [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one |  | ACTIVE:6422 |
 | ORDER-944 | 2026-08-13 | REVIEWED | [ops/monitoring] A row that is not exactly `ACTIVE` is invisible to the Control Room, so… | ALREADY_FIXED_NEEDS_ARCHIVE | ARCHIVE:12299 |
-| ORDER-950 |  | OPEN | [🔴 money path] Guard G4 (`Wave5_SLValid` / `g_w5_n_sl_invalid`) has never been observed… |  | ACTIVE:10621 |
-| ORDER-1000 | 2026-08-16 | DONE / CLOSED | [🔴 instrumentation] `(EXP)_IchiADX_Naked_rev00` cannot say whether it is evaluating |  | ACTIVE:6106 |
-| ORDER-1020 | 2026-08-02 | DONE | [factory/S7] Parameter registry extension + Operator/Research surface, Boss_14 only | param_registry_check CLEAN (it now runs the design §5.4 state table too) · Boss_14 Operator surface = 18 with… | ACTIVE:4953 |
-| ORDER-1021 | 2026-08-02 | DONE | [factory/S8] Thin Wrapper generator + the 7-point parity harness | the rollout landed (38 on the Inputs page, counted from the BINARY's own report), tpl_regression CLEAN 8/8, a… | ACTIVE:5083 |
-| ORDER-1022 | 2026-08-02 | DONE | [infra/guard] A cage had a narrower idea of the ledger than the guard it tests, and the f… |  | ACTIVE:5402 |
-| ORDER-1030 | 2026-08-02 | DONE | [🔴 money path / factory] `optimize_guard` spelled a build tag `14` while every binding s… |  | ACTIVE:5326 |
-| ORDER-1031 | 2026-08-02 | DONE | [tier] The live-row schema guard spawns one `ajv` per row, so its cost is LINEAR in the s… |  | ACTIVE:5278 |
+| ORDER-950 |  | OPEN | [🔴 money path] Guard G4 (`Wave5_SLValid` / `g_w5_n_sl_invalid`) has never been observed… |  | ACTIVE:10643 |
+| ORDER-1000 | 2026-08-16 | DONE / CLOSED | [🔴 instrumentation] `(EXP)_IchiADX_Naked_rev00` cannot say whether it is evaluating |  | ACTIVE:6128 |
+| ORDER-1020 | 2026-08-02 | DONE | [factory/S7] Parameter registry extension + Operator/Research surface, Boss_14 only | param_registry_check CLEAN (it now runs the design §5.4 state table too) · Boss_14 Operator surface = 18 with… | ACTIVE:4975 |
+| ORDER-1021 | 2026-08-02 | DONE | [factory/S8] Thin Wrapper generator + the 7-point parity harness | the rollout landed (38 on the Inputs page, counted from the BINARY's own report), tpl_regression CLEAN 8/8, a… | ACTIVE:5105 |
+| ORDER-1022 | 2026-08-02 | DONE | [infra/guard] A cage had a narrower idea of the ledger than the guard it tests, and the f… |  | ACTIVE:5424 |
+| ORDER-1030 | 2026-08-02 | DONE | [🔴 money path / factory] `optimize_guard` spelled a build tag `14` while every binding s… |  | ACTIVE:5348 |
+| ORDER-1031 | 2026-08-02 | DONE | [tier] The live-row schema guard spawns one `ajv` per row, so its cost is LINEAR in the s… |  | ACTIVE:5300 |
 | ORDER-1050 | 2026-08-11 | REVIEWED | ? [factory/S6] The live `[CFG]` digest does not match the compiler's for a hand-built `.s… | HISTORICALLY_UNRESOLVABLE ? historical digest mismatch unreconciled; PROHIBITED AS VALIDATION EVIDENCE; futur… | ARCHIVE:11699 |
-| ORDER-1080 | 2026-08-02 | DONE | [factory/S9] Recoverable, idempotent scheduler (design §6.5 / §3.3 = §20.8 Contract B) | the kill matrix is ENUMERATED (all nine §3.3 transitions killed on both sides of their own append; the cell a… | ACTIVE:4830 |
-| ORDER-1100 | 2026-08-02 | DONE | [factory/S10] Candidate identity + append-only Deployment attestation + magic reservation… |  | ACTIVE:4677 |
-| ORDER-1130 | 2026-08-03 | DONE | [tier] The budgets were raised to make the bound true; earn them back |  | ACTIVE:4389 |
-| ORDER-1131 | 2026-08-02 | DONE | [factory/S11] Control Center shell + `TODAY`/`WORK`/`LIVE`/`SYSTEM` in shadow mode |  | ACTIVE:4516 |
-| ORDER-1132 | 2026-08-05 | DONE | [🔴 data integrity] `portfolio/DEPLOYMENTS.csv` does not round-trip through a CSV parser,… |  | ACTIVE:4283 |
-| ORDER-1170 |  | OPEN | [portfolio design] The thin class is a PORTFOLIO problem, not a judging problem — raise t… |  | ACTIVE:4220 |
-| ORDER-1180 | 2026-08-02 | DONE | [factory/S12] Direct Telegram Control Room + Morning Brief |  | ACTIVE:4053 |
-| ORDER-1200 | 2026-08-03 | DONE | [ops/S12] Wire the notifier into the daily chain, and remove the third-party credential |  | ACTIVE:3980 |
-| ORDER-1210 | 2026-08-03 | DONE | [factory/S13] The pilot acceptance checklist, made mechanical |  | ACTIVE:3909 |
-| ORDER-1220 | 2026-08-03 | DONE | [factory/S13] PRE-REGISTRATION of the pilot hypotheses B14-H01 and B14-H02 |  | ACTIVE:3833 |
-| ORDER-1230 | 2026-08-03 | DONE | [factory/S13] The pilot matrix, run end-to-end: parity holds, and the mechanism under tes… |  | ACTIVE:3719 |
-| ORDER-1240 | 2026-08-03 | DONE | [factory/S13] Resolve the pilot first lot MECHANICALLY, re-run the matrix, and de-confoun… |  | ACTIVE:3611 |
-| ORDER-1250 | 2026-08-03 | DONE | [factory/S13] BOX 1a: give an UNDEFINED profit factor a shape, then register the 16 pilot… |  | ACTIVE:2939 |
+| ORDER-1080 | 2026-08-02 | DONE | [factory/S9] Recoverable, idempotent scheduler (design §6.5 / §3.3 = §20.8 Contract B) | the kill matrix is ENUMERATED (all nine §3.3 transitions killed on both sides of their own append; the cell a… | ACTIVE:4852 |
+| ORDER-1100 | 2026-08-02 | DONE | [factory/S10] Candidate identity + append-only Deployment attestation + magic reservation… |  | ACTIVE:4699 |
+| ORDER-1130 | 2026-08-03 | DONE | [tier] The budgets were raised to make the bound true; earn them back |  | ACTIVE:4411 |
+| ORDER-1131 | 2026-08-02 | DONE | [factory/S11] Control Center shell + `TODAY`/`WORK`/`LIVE`/`SYSTEM` in shadow mode |  | ACTIVE:4538 |
+| ORDER-1132 | 2026-08-05 | DONE | [🔴 data integrity] `portfolio/DEPLOYMENTS.csv` does not round-trip through a CSV parser,… |  | ACTIVE:4305 |
+| ORDER-1170 |  | OPEN | [portfolio design] The thin class is a PORTFOLIO problem, not a judging problem — raise t… |  | ACTIVE:4242 |
+| ORDER-1180 | 2026-08-02 | DONE | [factory/S12] Direct Telegram Control Room + Morning Brief |  | ACTIVE:4075 |
+| ORDER-1200 | 2026-08-03 | DONE | [ops/S12] Wire the notifier into the daily chain, and remove the third-party credential |  | ACTIVE:4002 |
+| ORDER-1210 | 2026-08-03 | DONE | [factory/S13] The pilot acceptance checklist, made mechanical |  | ACTIVE:3931 |
+| ORDER-1220 | 2026-08-03 | DONE | [factory/S13] PRE-REGISTRATION of the pilot hypotheses B14-H01 and B14-H02 |  | ACTIVE:3855 |
+| ORDER-1230 | 2026-08-03 | DONE | [factory/S13] The pilot matrix, run end-to-end: parity holds, and the mechanism under tes… |  | ACTIVE:3741 |
+| ORDER-1240 | 2026-08-03 | DONE | [factory/S13] Resolve the pilot first lot MECHANICALLY, re-run the matrix, and de-confoun… |  | ACTIVE:3633 |
+| ORDER-1250 | 2026-08-03 | DONE | [factory/S13] BOX 1a: give an UNDEFINED profit factor a shape, then register the 16 pilot… |  | ACTIVE:2959 |
 | ORDER-1251 | 2026-08-13 | REVIEWED | [factory/guards] `check_r3`'s verdict-value scan is an equality test, so prose walks past… | ALREADY_FIXED_NEEDS_ARCHIVE | ARCHIVE:12273 |
-| ORDER-1252 | 2026-08-03 | DONE | [factory/tier] BOX 1b: SPLIT `run_contract_binding_tests`, do not displace it |  | ACTIVE:3071 |
-| ORDER-1253 |  | OPEN | [factory/S13] The decision-13 optimize probe, and `optimize_guard` OBSERVED refusing a re… |  | ACTIVE:3240 |
-| ORDER-1254 |  | OPEN | [factory/S13] BWD 2020-22 as a HARD gate, then Model 4 |  | ACTIVE:3275 |
-| ORDER-1255 |  | OPEN | [factory/S13] The parity result manifest belongs to `parity.py` |  | ACTIVE:3449 |
-| ORDER-1256 | 2026-08-04 | OPEN | [factory/S13] Teach the last four stubs to read what will exist |  | ACTIVE:3488 |
-| ORDER-1257 | 2026-08-16 | DONE 2026-08-16 | [factory/S2a] Registering the 16 cells had invalidated the old coverage attestation; the… |  | ACTIVE:3148 |
-| ORDER-1260 |  | DF8D3FFC | [factory/S10] Five verified defects from the first independent audit of the money path: a… |  | ACTIVE:2794 |
-| ORDER-1261 |  |  | [factory/S12] Five verified defects from the first independent audit: a reopened incident… |  | ACTIVE:2707 |
-| ORDER-1262 | 2026-08-03 | RATIFIED | [security/repo] 🔴 A THIRD PARTY's Telegram credential is in this repository's pushed his… | accept, record, and close the forward path. NOT a history rewrite | ACTIVE:2614 |
-| ORDER-1263 | 2026-08-03 | DONE 2026-08-03 | [factory/S2·S3·S10] 🔴 `OwnerRef` validates shape and resolves nothing, so every pin in t… |  | ACTIVE:2517 |
-| ORDER-1264 | 2026-08-03 | DONE 2026-08-03 | [factory/S3] A contract can lose its enforcement declaration and vanish from the check in… |  | ACTIVE:2437 |
+| ORDER-1252 | 2026-08-03 | DONE | [factory/tier] BOX 1b: SPLIT `run_contract_binding_tests`, do not displace it |  | ACTIVE:3091 |
+| ORDER-1253 |  | OPEN | [factory/S13] The decision-13 optimize probe, and `optimize_guard` OBSERVED refusing a re… |  | ACTIVE:3260 |
+| ORDER-1254 |  | OPEN | [factory/S13] BWD 2020-22 as a HARD gate, then Model 4 |  | ACTIVE:3295 |
+| ORDER-1255 | 2026-08-17 | DONE / REVIEWED | [factory/S13] The parity result manifest belongs to `parity.py` |  | ACTIVE:3469 |
+| ORDER-1256 | 2026-08-04 | OPEN | [factory/S13] Teach the last four stubs to read what will exist |  | ACTIVE:3510 |
+| ORDER-1257 | 2026-08-16 | DONE 2026-08-16 | [factory/S2a] Registering the 16 cells had invalidated the old coverage attestation; the… |  | ACTIVE:3168 |
+| ORDER-1260 |  | DF8D3FFC | [factory/S10] Five verified defects from the first independent audit of the money path: a… |  | ACTIVE:2814 |
+| ORDER-1261 |  |  | [factory/S12] Five verified defects from the first independent audit: a reopened incident… |  | ACTIVE:2727 |
+| ORDER-1262 | 2026-08-03 | RATIFIED | [security/repo] 🔴 A THIRD PARTY's Telegram credential is in this repository's pushed his… | accept, record, and close the forward path. NOT a history rewrite | ACTIVE:2634 |
+| ORDER-1263 | 2026-08-03 | DONE 2026-08-03 | [factory/S2·S3·S10] 🔴 `OwnerRef` validates shape and resolves nothing, so every pin in t… |  | ACTIVE:2537 |
+| ORDER-1264 | 2026-08-03 | DONE 2026-08-03 | [factory/S3] A contract can lose its enforcement declaration and vanish from the check in… |  | ACTIVE:2457 |
 | ORDER-1265 | 2026-08-13 | REVIEWED | [factory/S9] The scheduler's cache identity does not match what the driver runs, and the… | CANONICAL / DONE | ARCHIVE:12603 |
-| ORDER-1266 |  | OPEN | [factory/S6] The effective-config fingerprint is broken in both directions, and one of th… |  | ACTIVE:2325 |
-| ORDER-1267 |  | D59CDC2E | [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no rec… |  | ACTIVE:2137 |
-| ORDER-1268 | 2026-08-03 | DONE | [factory/S6·S10] 🔴 Nothing refuses a partial `.set` ENTERING a run, and the check that c… |  | ACTIVE:2038 |
-| ORDER-1269 |  |  | [factory/S2] The approval that authorises the Coverage transfer binds an evolving whole s… |  | ACTIVE:1912 |
-| ORDER-1270 |  | OPEN | [factory/S13] Every optimize sweep on a generated wrapper ran with the two strongest guar… |  | ACTIVE:1743 |
-| ORDER-1271 |  | OPEN | [factory/S13] The decision log makes the guard's coverage visible, and it is smaller than… |  | ACTIVE:1800 |
-| ORDER-1272 | 2026-08-04 | DONE | [factory/S13] `gen_pilot_cells.py --check` is the only thing standing between the coverag… |  | ACTIVE:1645 |
-| ORDER-1273 | 2026-08-04 | DONE | [factory/S13] PRE-REGISTRATION: how a configuration is selected out of a probe surface, w… |  | ACTIVE:1513 |
-| ORDER-1274 |  | OPEN | [factory/S13] The fine half of the §6.2 ladder, queued rather than dropped |  | ACTIVE:1627 |
-| ORDER-1280 |  | OPEN | [factory/S3] Twelve contracts still carry no enforcement declaration, and the inventory t… |  | ACTIVE:1301 |
-| ORDER-1281 |  | OPEN | [factory/S2·S10] Pin resolution exists but nothing on the commit path resolves a live pin |  | ACTIVE:1331 |
-| ORDER-1282 |  | OPEN | [infra/tier] The fast tier is over its pinned 120.0s budget, and one commit was refused b… |  | ACTIVE:1482 |
-| ORDER-1283 |  | OPEN | [infra/cages] A cage that mutates the LIVE `schemas.json` must mutate a COPY, and the rep… |  | ACTIVE:1356 |
-| ORDER-1284 |  | OPEN | [infra/cages] PART 4's undeclared-reference sweep has two blind spots, and neither is vis… |  | ACTIVE:1458 |
-| ORDER-1290 |  | OPEN | [factory/S6·S9] A run's SURFACE STATE is printed and lost, so its committed evidence stil… |  | ACTIVE:1405 |
-| ORDER-1291 |  | OPEN | [factory/S10] C10 resolves a candidate's surface at TODAY's vintage, which is a different… |  | ACTIVE:1433 |
-| ORDER-1300 | 2026-08-04 | DONE | [factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions… |  | ACTIVE:882 |
-| ORDER-1301 |  | OPEN | [factory/S13] Every configuration in the PF-max plateau has essentially no realized loss,… |  | ACTIVE:1108 |
-| ORDER-1302 |  | OPEN | [factory/S13] 14 of 16 cells are BOUNDARY, and "expand the grid" here means editing a `sa… |  | ACTIVE:1136 |
-| ORDER-1310 |  | C732A6E8 | [factory/S2·S11] 🔴 The independent review of `ORDER-1269`+`ORDER-1267` found nine defect… |  | ACTIVE:1821 |
+| ORDER-1266 |  | OPEN | [factory/S6] The effective-config fingerprint is broken in both directions, and one of th… |  | ACTIVE:2345 |
+| ORDER-1267 |  | D59CDC2E | [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no rec… |  | ACTIVE:2155 |
+| ORDER-1268 | 2026-08-03 | DONE | [factory/S6·S10] 🔴 Nothing refuses a partial `.set` ENTERING a run, and the check that c… |  | ACTIVE:2056 |
+| ORDER-1269 |  |  | [factory/S2] The approval that authorises the Coverage transfer binds an evolving whole s… |  | ACTIVE:1930 |
+| ORDER-1270 |  | OPEN | [factory/S13] Every optimize sweep on a generated wrapper ran with the two strongest guar… |  | ACTIVE:1761 |
+| ORDER-1271 |  | OPEN | [factory/S13] The decision log makes the guard's coverage visible, and it is smaller than… |  | ACTIVE:1818 |
+| ORDER-1272 | 2026-08-04 | DONE | [factory/S13] `gen_pilot_cells.py --check` is the only thing standing between the coverag… |  | ACTIVE:1663 |
+| ORDER-1273 | 2026-08-04 | DONE | [factory/S13] PRE-REGISTRATION: how a configuration is selected out of a probe surface, w… |  | ACTIVE:1531 |
+| ORDER-1274 |  | OPEN | [factory/S13] The fine half of the §6.2 ladder, queued rather than dropped |  | ACTIVE:1645 |
+| ORDER-1280 | 2026-08-17 | DONE / REVIEWED | [factory/S3] Twelve contracts still carry no enforcement declaration, and the inventory t… |  | ACTIVE:1313 |
+| ORDER-1281 | 2026-08-17 | DONE / REVIEWED | [factory/S2·S10] Pin resolution exists but nothing on the commit path resolves a live pin |  | ACTIVE:1345 |
+| ORDER-1282 |  | OPEN | [infra/tier] The fast tier is over its pinned 120.0s budget, and one commit was refused b… |  | ACTIVE:1500 |
+| ORDER-1283 |  | OPEN | [infra/cages] A cage that mutates the LIVE `schemas.json` must mutate a COPY, and the rep… |  | ACTIVE:1372 |
+| ORDER-1284 |  | OPEN | [infra/cages] PART 4's undeclared-reference sweep has two blind spots, and neither is vis… |  | ACTIVE:1476 |
+| ORDER-1290 | 2026-08-17 | DONE / REVIEWED | [factory/S6·S9] A run's SURFACE STATE is printed and lost, so its committed evidence stil… |  | ACTIVE:1421 |
+| ORDER-1291 |  | OPEN | [factory/S10] C10 resolves a candidate's surface at TODAY's vintage, which is a different… |  | ACTIVE:1451 |
+| ORDER-1300 | 2026-08-04 | DONE | [factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions… |  | ACTIVE:894 |
+| ORDER-1301 |  | OPEN | [factory/S13] Every configuration in the PF-max plateau has essentially no realized loss,… |  | ACTIVE:1120 |
+| ORDER-1302 |  | OPEN | [factory/S13] 14 of 16 cells are BOUNDARY, and "expand the grid" here means editing a `sa… |  | ACTIVE:1148 |
+| ORDER-1310 |  | C732A6E8 | [factory/S2·S11] 🔴 The independent review of `ORDER-1269`+`ORDER-1267` found nine defect… |  | ACTIVE:1839 |
 | ORDER-1330 | 2026-08-13 | REVIEWED | [factory/S13] The same configuration produced different money on two different days, and… | CANONICAL / DONE | ARCHIVE:11897 |
-| ORDER-1350 | 2026-08-12 | DONE 2026-08-12 | [factory/S13] 🔴 The tester IS charging BTCUSD swap, so every crypto record deducts the f… |  | ACTIVE:981 |
-| ORDER-1360 |  | OPEN | [guards] The handoff contract cannot see a single handoff this project actually writes |  | ACTIVE:928 |
-| ORDER-1370 | 2026-08-12 | DONE 2026-08-12 | [factory/S13] 🔴 Two arms of every crypto cell disagree about whether financing was deduc… |  | ACTIVE:3536 |
-| ORDER-1380 |  | OPEN | [factory/S10+S12] Two review findings with no home: an assignment with no lifecycle rule,… |  | ACTIVE:2290 |
-| ORDER-1400 |  | OPEN | [factory/portfolio] The thin-sample answer the owner gave is a BUILD, not a bar: multi-sy… |  | ACTIVE:3306 |
+| ORDER-1350 | 2026-08-12 | DONE 2026-08-12 | [factory/S13] 🔴 The tester IS charging BTCUSD swap, so every crypto record deducts the f… |  | ACTIVE:993 |
+| ORDER-1360 |  | OPEN | [guards] The handoff contract cannot see a single handoff this project actually writes |  | ACTIVE:940 |
+| ORDER-1370 | 2026-08-12 | DONE 2026-08-12 | [factory/S13] 🔴 Two arms of every crypto cell disagree about whether financing was deduc… |  | ACTIVE:3558 |
+| ORDER-1380 | 2026-08-17 | DONE / REVIEWED | [factory/S10+S12] Two review findings with no home: an assignment with no lifecycle rule,… |  | ACTIVE:2308 |
+| ORDER-1400 |  | OPEN | [factory/portfolio] The thin-sample answer the owner gave is a BUILD, not a bar: multi-sy… |  | ACTIVE:3326 |
 | ORDER-1410 | 2026-08-13 | REVIEWED | [factory/S2a] Audit 7 refused `ORDER-600` and `ORDER-601` **twice**, and nothing has been… | CANONICAL / DONE | ARCHIVE:12314 |
-| ORDER-1411 | 2026-08-05 | DONE | [optimize] The two WATCH cells from tonight's screen, neither ever optimized |  | ACTIVE:8235 |
-| ORDER-1420 | 2026-08-06 | CLOSED | [host search] The `Boss_14` chassis cannot trade both directions at all, so the shorts qu… |  | ACTIVE:696 |
-| ORDER-1460 | 2026-08-06 | DONE 2026-08-06 | [🔴 tooling/integrity] The ORDER-105 negative suite has been ABORTING at case 15 since 20… |  | ACTIVE:201 |
-| ORDER-1461 | 2026-08-06 | OPEN | [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path… | it had shipped on 1 of the 3 tester entry points, and the one it missed was the OPTIMIZER. Now shared in scri… | ACTIVE:478 |
-| ORDER-1462 | 2026-08-16 | DONE 2026-08-16 | [factory/S2a] 👤 The s2a attestation gate was RED at the pre-owner-confirmation snapshot;… |  | ACTIVE:107 |
-| ORDER-1500 | 2026-08-06 | OPEN | [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows… | the store IS declared unvalidated (x-enforcement-status PLANNED) so this order's "third state" was half wrong… | ACTIVE:298 |
+| ORDER-1411 | 2026-08-05 | DONE | [optimize] The two WATCH cells from tonight's screen, neither ever optimized |  | ACTIVE:8257 |
+| ORDER-1420 | 2026-08-06 | CLOSED | [host search] The `Boss_14` chassis cannot trade both directions at all, so the shorts qu… |  | ACTIVE:708 |
+| ORDER-1460 | 2026-08-06 | DONE 2026-08-06 | [🔴 tooling/integrity] The ORDER-105 negative suite has been ABORTING at case 15 since 20… |  | ACTIVE:211 |
+| ORDER-1461 | 2026-08-06 | OPEN | [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path… | it had shipped on 1 of the 3 tester entry points, and the one it missed was the OPTIMIZER. Now shared in scri… | ACTIVE:490 |
+| ORDER-1462 | 2026-08-16 | DONE 2026-08-16 | [factory/S2a] 👤 The s2a attestation gate was RED at the pre-owner-confirmation snapshot;… |  | ACTIVE:117 |
+| ORDER-1500 | 2026-08-17 | DONE / REVIEWED | [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows… |  | ACTIVE:308 |
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
-| ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:9364 |
+| ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:9386 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |

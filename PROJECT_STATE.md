@@ -4,8 +4,19 @@
 > session narrative, the accumulated changelog, and the full Decision log with provenance. This file
 > holds only: current status, active work, binding decisions, and the forward plan.
 
-> **last updated:** 2026-08-16 (QI-1 + H/R accepted milestone state sync) — Controlled Execution MVP, Owner-Controlled EA_LAB Integration, EA_LAB Real Workflow Integration, OPERATIONAL / HIGH-RISK GATE, Controlled Backtest Execution MVP, and Controlled Optimization Execution MVP accepted; CONTEXT REDUCTION / CONTEXT-HYGIENE accepted and closed; current milestone = VPS DEMO Deployment / Forward-Test. Local execution scope = MT5 Strategy Tester/backtest; owner-gated LIVE remains a future milestone.
-> **POST-C18B CANONICAL INTEGRATION:** commit `c18b144d3ef4d14b39c07bf33b77276171e2bad4` is canonical. `ORDER-490` and Factory-OS `ORDER-1265` are **CANONICAL / DONE**; Factory-OS `ORDER-1266 #1` is **CANONICAL / DONE**. QI-1 Foundation Design Freeze is **CANONICAL / FROZEN**; QI-1 Foundation implementation is **OWNER AUTHORIZED / IMPLEMENTED / ACCEPTED**; QI-1 acceptance current blockers = **NONE**; QI-2+ = **NOT AUTHORIZED**. The current operational milestone remains **VPS DEMO Deployment / Forward-Test**; VPS disposition = **MONITOR_FORWARD**. No deployment, LIVE, or risk-default authorization occurred.
+> **last updated:** 2026-08-17 (durable SYSTEM FOUNDATION state sync) — the EA_LAB SYSTEM FOUNDATION is **ACCEPTED / COMPLETE FOR CURRENT FACTORY SCOPE**. The accepted local integration commit is `fa3ae6079cdc4664810a74819d24d0c5e6a40706`; the canonical remote remains pre-push at `a2545d853c1636ed680f6c4102d7ea76f03ac230`, and canonical push remains owner-gated. The next phase is **Factory production → EA Template / Boss14 master mold → Monitoring / Control Plane**. No deployment, LIVE, or risk-default authorization occurred.
+> **POST-INTEGRATION STATE:** S1, S2, S3, and S4 are complete; ORDER-1380 and ORDER-1281 are closed; the Boss14 AUDCAD/EURUSD preset surface repair is accepted. Monitoring remains **DEGRADED_MONITORING**; system-foundation acceptance does not create GREEN runtime status. QI-2+ remains **NOT AUTHORIZED**.
+
+### 2026-08-17 DURABLE SYSTEM FOUNDATION SYNC
+
+- **Accepted milestone:** EA_LAB SYSTEM FOUNDATION = ACCEPTED / COMPLETE FOR CURRENT FACTORY SCOPE.
+- **Accepted integration:** local `fa3ae6079cdc4664810a74819d24d0c5e6a40706`; canonical remote remains pre-push `a2545d853c1636ed680f6c4102d7ea76f03ac230`; push is owner-gated.
+- **Accepted lanes:** S1 complete; S2 complete; S3 complete; S4 complete; ORDER-1380 closed; ORDER-1281 closed; Boss14 AUDCAD/EURUSD preset surface repair accepted.
+- **CURRENT:** Factory production; EA Template / Boss14 master-mold continuation; Monitoring / Control Plane continuation.
+- **Factory disposition:** Wave4 Candidate 3 rejected from M3 after bounded Invalid Stops repair; Candidate 4 scheduled straddle rejected from M3 after volume/atomicity/expiry repairs; Wave5 Candidate 1 RSI Break Trend Line parked / implementation-blocked after self-termination (not valid ZERO_TRADE evidence); Wave5 Candidate 2 OH Bot parked because its intentional recovery/multi-position semantics are outside the current one-position M2 contract; Wave5 Candidate 3 ExpertMACD is the current production task for bounded Invalid Stops RCA/repair/retest.
+- **Monitoring:** retain `DEGRADED_MONITORING`; do not infer GREEN from system-foundation acceptance alone.
+- **Parked / future hardening:** ORDER-1256 items 12/14; future governed worker-routing capability; eight pin-vintage advisory messages; parity result-manifest cryptographic binding to committed source-manifest bytes plus measured EX5/build receipt; Candidate 5 risk-semantics decision; low-ROI/rejected candidates.
+- **Owner boundaries:** no push, deployment, trading, LIVE, DEMO→LIVE expansion, risk/default change, QI-2+, owner attestation/signature, or destructive cleanup.
 > Full session-by-session history → `PROJECT_HISTORY.md`. · owner: patip
 
 ---

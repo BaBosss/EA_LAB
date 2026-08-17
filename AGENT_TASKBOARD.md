@@ -33,6 +33,16 @@
 > `AGENT_TASKBOARD_MERGE.md` (เหลือ MERGE-07 Entry_ST03 = HOLD ถึง judge — เงื่อนไขอยู่ในบอร์ดนั้น)
 
 ---
+
+## CURRENT NEXT PHASE — 2026-08-17 DURABLE STATE SYNC
+
+The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items. The next Control Tower phase is:
+
+- **FACTORY:** Wave5 Candidate 3 ExpertMACD — bounded Invalid Stops RCA / repair / retest.
+- **TEMPLATE:** resume Boss14 / EA_Template master-mold work from the accepted system foundation.
+- **MONITOR:** resume deterministic monitoring / Control Plane continuation; preserve `DEGRADED_MONITORING` until runtime evidence warrants a change.
+
+No new detailed order is invented here; the Control Tower should bind these phase items to the next canonical task contracts.
 > 🔧 **SYSTEMS TRANCHE ORDER-152..158 (เขียน 2026-07-23, Opus-seat)** — งาน infra/tooling ล้วน ไม่ใช่ verdict EA.
 > ที่มา = 2 backlog รวมกัน: (A) review แผน `docs/EA_CORE_TEMPLATE_WORKPLAN_FOR_CLAUDE.md` (7 finding ของ Opus
 > + 4 ที่ Codex จับเพิ่ม) (B) `ROADMAP.md` §3 development backlog. **ลำดับ = อะไร block งานอื่น/เสียข้อมูลถาวร
@@ -295,7 +305,9 @@ rewritten from memory, and the full header set now differs from that commit by e
 
 ---
 
-## ORDER-1500 — [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows prove it — `OPEN — all three owed items DECIDED AND MEASURED 2026-08-06 (lane S-2026-08-06-S1500), and the measurement changed two answers: the store IS declared unvalidated (x-enforcement-status PLANNED) so this order's "third state" was half wrong; the three rows break the contract TWICE, the second break (ini_hash) being live at HEAD and unrelated to the fingerprint; and the risk direction is fail-OPEN (a re-run), measured, not a false cache hit. Decision: validate against the existing RunTransition contract, NOT via STORES, with a closed 3-row exemption — proven by 5 checks, one of which deleted half the proposed design as inert. 🔴 The code cannot be written: both target files are in the ORDER-1462-blocked pile. One question (the retention window vs. the only three manifests the repo has) is the owner's` · ทำได้: Claude/Opus (the code, once `ORDER-1462` clears) · 👉 แนะ: Claude
+## ORDER-1500 — [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows prove it — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17; focused evidence 16/16)` · ทำได้: Claude/Opus (the code, once `ORDER-1462` clears) · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** the accepted integration carries the bounded journal/schema enforcement and focused evidence passed 16/16. The earlier blocked/open analysis below is retained as historical provenance.
 **bars:** N-A (a contract gap) · **flat-lot probe:** N-A
 
 Opened 2026-08-06 by `/scrutinize` (lane `S-2026-08-06-SCRUT2`) while checking whether `ORDER-1330`'s
@@ -1298,7 +1310,9 @@ the sweep. 🚫 Not picked from this seat.
 
 ---
 
-## ORDER-1280 — [factory/S3] Twelve contracts still carry no enforcement declaration, and the inventory that now names them is not a substitute for writing them — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1280 — [factory/S3] Twelve contracts still carry no enforcement declaration, and the inventory that now names them is not a substitute for writing them — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** S3 enforcement coverage is part of the accepted integration and strict state/schema evidence passed. The historical diagnosis below is retained; no active work remains under this order.
 
 **This order is CITED FROM CODE** — `check_schema_structure.py`'s `_NO_ENFORCEMENT_DECLARATION`
 block and the `UNDECLARED=12` line of its own report both name it — so it is not optional
@@ -1328,7 +1342,9 @@ equal `$defs`; an entity moved out of the check is the `ORDER-1264` defect weari
 
 ---
 
-## ORDER-1281 — [factory/S2·S10] Pin resolution exists but nothing on the commit path resolves a live pin — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1281 — [factory/S2·S10] Pin resolution exists but nothing on the commit path resolves a live pin — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** OwnerRef commit-path enforcement and its adversarial cage are included in the accepted integration; ORDER-1281 is closed. The pre-integration findings below remain historical evidence only.
 
 `ORDER-1263` gave `OwnerRef` a resolver and `run_s10_tests` proves it can go red. What it did **not**
 do is put it in front of the stores: `OwnerRef` is declared **BUILT, not WIRED**, because no checker
@@ -1402,7 +1418,9 @@ genuinely good and will be persuasive again.
 
 ---
 
-## ORDER-1290 — [factory/S6·S9] A run's SURFACE STATE is printed and lost, so its committed evidence still cannot be asked afterwards — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1290 — [factory/S6·S9] A run's SURFACE STATE is printed and lost, so its committed evidence still cannot be asked afterwards — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17; focused evidence 8/8)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** the accepted SYSTEM FOUNDATION integration carries the durable surface-state contract and its focused cage passed 8/8. The pre-integration investigation below is retained as history; this order is no longer active.
 
 Opened by `ORDER-1268`'s own lane, naming the half of its acceptance that is **weaker than the
 sentence implies**. That acceptance reads: *"the runners either refuse a partial `.set` or record
@@ -2287,7 +2305,9 @@ the code, not a flag. Both are the stronger shape. The failure is in **recognisi
 
 ---
 
-## ORDER-1380 — [factory/S10+S12] Two review findings with no home: an assignment with no lifecycle rule, and "ever delivered" inferred from a recording transport — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1380 — [factory/S10+S12] Two review findings with no home: an assignment with no lifecycle rule, and "ever delivered" inferred from a recording transport — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** lifecycle and `transport_kind` contracts are integrated and schema/runtime cages passed. ORDER-1380 is fully closed; the original review narrative below is retained for provenance.
 
 > Opened 2026-08-04 by lane `S-2026-08-04-CORRECT6` out of its own block, for the two findings of
 > the independent review that are **real, reproduced, and not inside any existing order's subject**.
@@ -3446,7 +3466,9 @@ verdict from automation.
 
 ---
 
-## ORDER-1255 — [factory/S13] The parity result manifest belongs to `parity.py` — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1255 — [factory/S13] The parity result manifest belongs to `parity.py` — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** the accepted integration includes the committed result-manifest/replay path and parity evidence passed. Cryptographic binding of that manifest to source bytes and the measured EX5/build receipt remains explicitly parked future hardening, not an active acceptance task.
 
 §8.6 items **3 and 4** are the two remaining `BLOCKED` items with a clean, MT5-free path to green.
 
