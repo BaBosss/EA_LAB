@@ -55,10 +55,16 @@
 <div class="wrap">
 
   <div class="stats">
+    <div class="stat"><div class="n" style="color:{{MONITORING_COLOR}}">{{MONITORING_LABEL}}</div><div class="l">Monitoring</div></div>
     <div class="stat"><div class="n" style="color:var(--amber)">{{DAYS_TO_JUDGE}}</div><div class="l">วันถึง Judge ({{JUDGE_DATE}})</div></div>
     <div class="stat"><div class="n" style="color:var(--red)">{{USER_ACTION_COUNT}}</div><div class="l">งานรอมือคุณ</div></div>
     <div class="stat"><div class="n" style="color:var(--blue)">{{OPEN_COUNT}}</div><div class="l">order เปิดค้าง</div></div>
     <div class="stat"><div class="n" style="color:var(--green)">{{LIVE_COUNT}} + {{DEMO_COUNT}}</div><div class="l">EA live + demo</div></div>
+  </div>
+
+  <div class="card">
+    <h2>📡 Control Room (verified snapshot only)</h2>
+    {{CONTROL_ROOM_HTML}}
   </div>
 
   <div class="card">

@@ -195,6 +195,34 @@ Assert-True 'C6 NEG the page says SNAPSHOT UNAVAILABLE' ($missBlock -match 'SNAP
 Assert-True 'C6 NEG and still renders NO counts' ($missBlock -notmatch 'orders discovered')
 Assert-True 'C6 NEG and states that this is about the INSTRUMENT, not the fleet' ($missBlock -match 'INSTRUMENT')
 
+# --- C6 reader 3 (monitoring-status-audit): Format-ControlRoomHtml, which STATUS.html renders ---
+# STATUS.html (scripts\make_status_html.ps1) had NO Control Room section at all before this
+# function existed -- the phone/OneDrive dashboard silently never rendered the verified-snapshot
+# machinery, while STATUS.md (same generator run, same commit) rendered it correctly. This proves
+# the HTML twin holds the SAME fail-closed contract as the markdown one: OK renders counts,
+# REFUSED/UNAVAILABLE render a banner with the reason text and NO numbers.
+$okHtml = (Format-ControlRoomHtml -Verified (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $RepoRoot)) -join "`n"
+Assert-True 'C6 HTML OK renders the verified build id' ($okHtml -match 'Verified snapshot')
+Assert-True 'C6 HTML OK renders the reconciliation counts' ($okHtml -match 'orders discovered')
+
+$refHtml = (Format-ControlRoomHtml -Verified $vT) -join "`n"
+Assert-True 'C6 HTML NEG the page says SNAPSHOT REFUSED, loudly' ($refHtml -match 'SNAPSHOT REFUSED')
+Assert-True 'C6 HTML NEG and renders NO counts from it' ($refHtml -notmatch 'orders discovered')
+Assert-True 'C6 HTML NEG and no build id either' ($refHtml -notmatch 'Verified snapshot')
+
+$missHtml = (Format-ControlRoomHtml -Verified $vM) -join "`n"
+Assert-True 'C6 HTML NEG the page says SNAPSHOT UNAVAILABLE' ($missHtml -match 'SNAPSHOT UNAVAILABLE')
+Assert-True 'C6 HTML NEG and still renders NO counts' ($missHtml -notmatch 'orders discovered')
+Assert-True 'C6 HTML NEG and states this is about the INSTRUMENT, not the fleet' ($missHtml -match 'INSTRUMENT')
+
+# NEGATIVE: the Reason string is HTML-escaped -- it can carry a validator error message or file
+# path verbatim, and this sink is a browser. Fed a reason containing HTML metacharacters directly
+# (bypassing the validator, since it never emits markup) to prove the escaping path is exercised,
+# not merely assumed absent because no fixture ever happened to contain a "<".
+$xssVerified = [pscustomobject]@{ State = 'UNAVAILABLE'; Code = 'TOOL'; Document = $null; Reason = 'bad <script>alert(1)</script> & "quoted"' }
+$xssHtml = (Format-ControlRoomHtml -Verified $xssVerified) -join "`n"
+Assert-True 'C6 HTML escapes a Reason string before writing it into the page' ($xssHtml -notmatch '<script>' -and $xssHtml -match '&lt;script&gt;')
+
 # NEGATIVE 3: corrupt bytes. Distinct from both of the above.
 $corrupt = Join-Path $work 'corrupt.json'
 Set-Content -LiteralPath $corrupt -Value '{ "entity": ' -Encoding ASCII

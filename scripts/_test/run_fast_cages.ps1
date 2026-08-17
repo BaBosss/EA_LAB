@@ -907,6 +907,14 @@ $SUITE_GUARDS = @{
                                           'scripts/lib/snapshot_reader.ps1',
                                           'scripts/lib/monitor_coverage.ps1',
                                           'scripts/make_status.ps1',
+                                          # monitoring-status-audit: make_status_html.ps1 now also
+                                          # dot-sources snapshot_reader.ps1 (Format-ControlRoomHtml,
+                                          # the STATUS.html twin of Format-ControlRoomBlock) and this
+                                          # suite's C6 block asserts on that function directly. Its
+                                          # template has no logic of its own, but declaring it too is
+                                          # what puts a template-only edit onto this cage's pathspec.
+                                          'scripts/make_status_html.ps1',
+                                          'scripts/status_template.html',
                                           'scripts/control_room_snapshot.ps1',
                                           'portfolio/control_room_snapshot.json')
     'run_monitor_snapshot_schema_repair_tests.ps1' = @(

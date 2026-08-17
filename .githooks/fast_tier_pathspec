@@ -134,6 +134,7 @@ scripts/lib/setfile_surface.ps1
 scripts/lib/snapshot_reader.ps1
 scripts/live_dashboard.ps1
 scripts/make_status.ps1
+scripts/make_status_html.ps1
 scripts/monitor_rotation.ps1
 scripts/mris/mris_crisis_models.ps1
 scripts/mris/mris_macro_feeder.ps1
@@ -148,5 +149,6 @@ scripts/pilot_selected_surface_row.py
 scripts/pilot_verify_check.py
 scripts/run_backtest.ps1
 scripts/scheduler_run.ps1
+scripts/status_template.html
 scripts/use_python.ps1
 VISION.md

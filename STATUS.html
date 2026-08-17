@@ -50,15 +50,30 @@
 <body>
 <header>
   <h1>🏭 EA_LAB — Dashboard</h1>
-  <div class="sub">generated 2026-07-31 14:18 · branch master · commit 6f297ca0 · <b>ห้ามแก้ไฟล์นี้มือ</b> (regenerate ทุก commit)</div>
+  <div class="sub">generated 2026-08-17 23:58 · branch worktree-agent-aa5f6011a9dee7cc0 · commit 01ea150f · <b>ห้ามแก้ไฟล์นี้มือ</b> (regenerate ทุก commit)</div>
 </header>
 <div class="wrap">
 
   <div class="stats">
-    <div class="stat"><div class="n" style="color:var(--amber)">53</div><div class="l">วันถึง Judge (2026-09-22)</div></div>
+    <div class="stat"><div class="n" style="color:var(--amber)">DEGRADED</div><div class="l">Monitoring</div></div>
+    <div class="stat"><div class="n" style="color:var(--amber)">36</div><div class="l">วันถึง Judge (2026-09-22)</div></div>
     <div class="stat"><div class="n" style="color:var(--red)">0</div><div class="l">งานรอมือคุณ</div></div>
-    <div class="stat"><div class="n" style="color:var(--blue)">37</div><div class="l">order เปิดค้าง</div></div>
+    <div class="stat"><div class="n" style="color:var(--blue)">91</div><div class="l">order เปิดค้าง</div></div>
     <div class="stat"><div class="n" style="color:var(--green)">9 + 0</div><div class="l">EA live + demo</div></div>
+  </div>
+
+  <div class="card">
+    <h2>📡 Control Room (verified snapshot only)</h2>
+    <div class="note">Verified snapshot - build <span class="mono">af97e93ddd72b9fb</span> - v5 - generated 2026-08-16T20:17:59 - git <span class="mono">ec18571a</span></div>
+<div style="margin:8px 0">reconciliation_clear: <span class='tag t-user'>NOT CLEAR</span></div>
+<div class='note'>reasons (not a fleet-health verdict - order/coverage reconciliation and mandatory-source freshness only):</div><ul><li><span class='mono'>DISCOVERED_CATEGORIZED_MISMATCH</span> discovered=403 categorized=365</li>
+<li><span class='mono'>DUPLICATES_PRESENT</span> duplicates=6</li>
+<li><span class='mono'>CONFLICTS_PRESENT</span> conflicts=1</li>
+<li><span class='mono'>UNCLASSIFIED_PRESENT</span> unclassified=38</li>
+<li><span class='mono'>ACTIONABLE_PRESENT</span> actionable=37</li></ul>
+<div class="note">orders discovered 403 / categorized 365 - unclassified 38 - duplicates 6 - conflicts 1</div>
+<div class="note">coverage cells 56 = tested 24 + untested 32 + n/a 0</div>
+<div style="margin-top:6px"><span class='tag t-live'>deployments_inventory=fresh</span> <span class='tag t-live'>live_dashboard=fresh</span> <span class='tag t-live'>attestation_map=fresh</span></div>
   </div>
 
   <div class="card">
@@ -104,29 +119,85 @@
   </div>
 
   <div class="card">
-    <h2>📋 คิวงานเปิด (37)</h2>
+    <h2>📋 คิวงานเปิด (91)</h2>
     <div class="scroll"><table>
       <tr><th>Order</th><th>สถานะ</th><th>เรื่อง</th></tr>
-      <tr><td class='mono'>ORDER-630</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S5] Registries + the ONE ParameterBinding resolver</td></tr>
+      <tr><td class='mono'>ORDER-1462</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S2a] 👤 The s2a attestation gate was RED at the pre-owner-confirmation snapshot; the in-for...</td></tr>
+<tr><td class='mono'>ORDER-1460</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 tooling/integrity] The ORDER-105 negative suite has been ABORTING at case 15 since 2026-08-01, a...</td></tr>
+<tr><td class='mono'>ORDER-1461</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path calls it</td></tr>
+<tr><td class='mono'>ORDER-1300</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions are engine-...</td></tr>
+<tr><td class='mono'>ORDER-1350</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] 🔴 The tester IS charging BTCUSD swap, so every crypto record deducts the financing a ...</td></tr>
+<tr><td class='mono'>ORDER-1301</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S13] Every configuration in the PF-max plateau has essentially no realized loss, which is w...</td></tr>
+<tr><td class='mono'>ORDER-1302</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S13] 14 of 16 cells are BOUNDARY, and "expand the grid" here means editing a safe_range</td></tr>
+<tr><td class='mono'>ORDER-1291</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S10] C10 resolves a candidate's surface at TODAY's vintage, which is a different claim than...</td></tr>
+<tr><td class='mono'>ORDER-1282</td><td><span class='tag t-open'>OPEN</span></td><td>[infra/tier] The fast tier is over its pinned 120.0s budget, and one commit was refused by the 90.0s...</td></tr>
+<tr><td class='mono'>ORDER-1273</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] PRE-REGISTRATION: how a configuration is selected out of a probe surface, written befo...</td></tr>
+<tr><td class='mono'>ORDER-1274</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S13] The fine half of the §6.2 ladder, queued rather than dropped</td></tr>
+<tr><td class='mono'>ORDER-1272</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] gen_pilot_cells.py --check is the only thing standing between the coverage store and a...</td></tr>
+<tr><td class='mono'>ORDER-1270</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S13] Every optimize sweep on a generated wrapper ran with the two strongest guard layers sw...</td></tr>
+<tr><td class='mono'>ORDER-1271</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S13] The decision log makes the guard's coverage visible, and it is smaller than it reads</td></tr>
+<tr><td class='mono'>ORDER-1310</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S2·S11] 🔴 The independent review of ORDER-1269+ORDER-1267 found nine defects, and six of t...</td></tr>
+<tr><td class='mono'>ORDER-1269</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S2] The approval that authorises the Coverage transfer binds an evolving whole store, and t...</td></tr>
+<tr><td class='mono'>ORDER-1268</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S6·S10] 🔴 Nothing refuses a partial .set ENTERING a run, and the check that claims to is a...</td></tr>
+<tr><td class='mono'>ORDER-1266</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S6] The effective-config fingerprint is broken in both directions, and one of them is asser...</td></tr>
+<tr><td class='mono'>ORDER-1264</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S3] A contract can lose its enforcement declaration and vanish from the check instead of re...</td></tr>
+<tr><td class='mono'>ORDER-1263</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S2·S3·S10] 🔴 OwnerRef validates shape and resolves nothing, so every pin in this system is...</td></tr>
+<tr><td class='mono'>ORDER-1250</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] BOX 1a: give an UNDEFINED profit factor a shape, then register the 16 pilot cells</td></tr>
+<tr><td class='mono'>ORDER-1252</td><td><span class='tag t-done'>DONE</span></td><td>[factory/tier] BOX 1b: SPLIT run_contract_binding_tests, do not displace it</td></tr>
+<tr><td class='mono'>ORDER-1257</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S2a] Registering the 16 cells had invalidated the old coverage attestation; the accepted op...</td></tr>
+<tr><td class='mono'>ORDER-1253</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S13] The decision-13 optimize probe, and optimize_guard OBSERVED refusing a real sweep</td></tr>
+<tr><td class='mono'>ORDER-1254</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S13] BWD 2020-22 as a HARD gate, then Model 4</td></tr>
+<tr><td class='mono'>ORDER-1400</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/portfolio] The thin-sample answer the owner gave is a BUILD, not a bar: multi-symbol, or 3-...</td></tr>
+<tr><td class='mono'>ORDER-1256</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] Teach the last four stubs to read what will exist</td></tr>
+<tr><td class='mono'>ORDER-1370</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] 🔴 Two arms of every crypto cell disagree about whether financing was deducted, and th...</td></tr>
+<tr><td class='mono'>ORDER-1240</td><td><span class='tag t-user'>BLOCKED</span></td><td>[factory/S13] Resolve the pilot first lot MECHANICALLY, re-run the matrix, and de-confound the falsi...</td></tr>
+<tr><td class='mono'>ORDER-1230</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] The pilot matrix, run end-to-end: parity holds, and the mechanism under test never ran</td></tr>
+<tr><td class='mono'>ORDER-1220</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] PRE-REGISTRATION of the pilot hypotheses B14-H01 and B14-H02</td></tr>
+<tr><td class='mono'>ORDER-1210</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S13] The pilot acceptance checklist, made mechanical</td></tr>
+<tr><td class='mono'>ORDER-1200</td><td><span class='tag t-done'>DONE</span></td><td>[ops/S12] Wire the notifier into the daily chain, and remove the third-party credential</td></tr>
+<tr><td class='mono'>ORDER-1180</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S12] Direct Telegram Control Room + Morning Brief</td></tr>
+<tr><td class='mono'>ORDER-1170</td><td><span class='tag t-open'>OPEN</span></td><td>[portfolio design] The thin class is a PORTFOLIO problem, not a judging problem</td></tr>
+<tr><td class='mono'>ORDER-1132</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 data integrity] portfolio/DEPLOYMENTS.csv does not round-trip through a CSV parser, and it is th...</td></tr>
+<tr><td class='mono'>ORDER-1130</td><td><span class='tag t-done'>DONE</span></td><td>[tier] The budgets were raised to make the bound true; earn them back</td></tr>
+<tr><td class='mono'>ORDER-1131</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S11] Control Center shell + TODAY/WORK/LIVE/SYSTEM in shadow mode</td></tr>
+<tr><td class='mono'>ORDER-1100</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S10] Candidate identity + append-only Deployment attestation + magic reservation (design §4...</td></tr>
+<tr><td class='mono'>ORDER-1080</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S9] Recoverable, idempotent scheduler (design §6.5 / §3.3 = §20.8 Contract B)</td></tr>
+<tr><td class='mono'>ORDER-1020</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S7] Parameter registry extension + Operator/Research surface, Boss_14 only</td></tr>
+<tr><td class='mono'>ORDER-1021</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S8] Thin Wrapper generator + the 7-point parity harness</td></tr>
+<tr><td class='mono'>ORDER-1031</td><td><span class='tag t-done'>DONE</span></td><td>[tier] The live-row schema guard spawns one ajv per row, so its cost is LINEAR in the size of a stor...</td></tr>
+<tr><td class='mono'>ORDER-1030</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 money path / factory] optimize_guard spelled a build tag 14 while every binding spells it LAB_EN...</td></tr>
+<tr><td class='mono'>ORDER-1022</td><td><span class='tag t-done'>DONE</span></td><td>[infra/guard] A cage had a narrower idea of the ledger than the guard it tests, and the first four-d...</td></tr>
+<tr><td class='mono'>ORDER-702</td><td><span class='tag t-done'>DONE</span></td><td>[factory/tier] evidence.py is guarded by no suite, so a commit that touches only it runs ZERO cages</td></tr>
+<tr><td class='mono'>ORDER-760</td><td><span class='tag t-done'>DONE</span></td><td>[ledger] Prose inside a ledger cell silently changes what the collision guard enforces</td></tr>
+<tr><td class='mono'>ORDER-830</td><td><span class='tag t-done'>DONE</span></td><td>[tier] ORDER-820 C1, measured, then ANSWERED: the biggest item is one check_registries.py call costi...</td></tr>
+<tr><td class='mono'>ORDER-941</td><td><span class='tag t-done'>PARTIAL</span></td><td>[🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week</td></tr>
+<tr><td class='mono'>ORDER-942</td><td><span class='tag t-done'>DONE</span></td><td>[judge policy · blocker] 11 of the 19 shortfall EAs have no expected trade rate, so silent and thin ...</td></tr>
+<tr><td class='mono'>ORDER-943</td><td><span class='tag t-user'>BLOCKED</span></td><td>[judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one</td></tr>
+<tr><td class='mono'>ORDER-731</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S2a] An attested blob pin is checked against HEAD, so the commit that breaks it is never re...</td></tr>
+<tr><td class='mono'>ORDER-730</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S6] The fingerprint covers the inputs but not the LOCKED CONSTANTS design §5.6 asks for</td></tr>
+<tr><td class='mono'>ORDER-710</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S6] [CFG] emits the input-surface fingerprint</td></tr>
+<tr><td class='mono'>ORDER-700</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S6] The preset compiler: a full-surface .set that cannot be silently completed from a termi...</td></tr>
+<tr><td class='mono'>ORDER-675</td><td><span class='tag t-done'>DONE</span></td><td>[infra/guard] The collision guard read a FILENAME as a reserved block and permitted every order numb...</td></tr>
+<tr><td class='mono'>ORDER-670</td><td><span class='tag t-done'>DONE</span></td><td>[factory/tier] The whole checker set judges the WORKING TREE while the commit carries the INDEX</td></tr>
+<tr><td class='mono'>ORDER-673</td><td><span class='tag t-done'>DONE</span></td><td>[factory/tier] The fast-tier budget becomes a real number and is ENFORCED</td></tr>
+<tr><td class='mono'>ORDER-674</td><td><span class='tag t-done'>DONE</span></td><td>[factory/tier] The six PowerShell guards that run BEFORE the tier were never measured</td></tr>
+<tr><td class='mono'>ORDER-630</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S5] Registries + the ONE ParameterBinding resolver</td></tr>
 <tr><td class='mono'>ORDER-616</td><td><span class='tag t-done'>DONE</span></td><td>[factory/discipline] The four defect SHAPES behind 24 audit findings</td></tr>
 <tr><td class='mono'>ORDER-615</td><td><span class='tag t-done'>DONE</span></td><td>[factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance</td></tr>
-<tr><td class='mono'>ORDER-614</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/governance] Stop charging the owner a signature for every bug fix</td></tr>
+<tr><td class='mono'>ORDER-614</td><td><span class='tag t-done'>DONE</span></td><td>[factory/governance] Stop charging the owner a signature for every bug fix</td></tr>
 <tr><td class='mono'>ORDER-613</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/governance] Option B: make an approval survive the change it approves</td></tr>
 <tr><td class='mono'>ORDER-612</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S4] Snapshot v5 + fail-closed readers</td></tr>
 <tr><td class='mono'>ORDER-611</td><td><span class='tag t-done'>DONE</span></td><td>[factory/S3] Close S3: a negative fixture for every entity, proven by ajv's own attribution</td></tr>
 <tr><td class='mono'>ORDER-610</td><td><span class='tag t-open'>OPEN</span></td><td>[factory/S2] Execute the Coverage transfer</td></tr>
 <tr><td class='mono'>ORDER-602</td><td><span class='tag t-done'>DONE</span></td><td>[factory/governance] S2a closure: separate the decision from the proposal, and replace the broad UNO...</td></tr>
+<tr><td class='mono'>ORDER-1411</td><td><span class='tag t-done'>DONE</span></td><td>[optimize] The two WATCH cells from tonight's screen, neither ever optimized</td></tr>
 <tr><td class='mono'>ORDER-600</td><td><span class='tag t-done'>DONE</span></td><td>[factory/governance] S2a: Coverage ownership proposal + migration table</td></tr>
-<tr><td class='mono'>ORDER-545</td><td><span class='tag t-open'>OPEN</span></td><td>[🟠 tooling/integrity] pre-commit อ่าน working tree ไม่ใช่ staged snapshot ⇒ กรงถูกข้ามได้ด้วยการ st...</td></tr>
-<tr><td class='mono'>ORDER-540</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 gate/pre-flight] binary staleness ของ 3 EA ที่ tranche นี้จะรัน</td></tr>
 <tr><td class='mono'>ORDER-544</td><td><span class='tag t-open'>OPEN</span></td><td>[classification · ไม่ใช่คำแนะนำเรื่องเงิน] NuiIndy: กรง ENGINE-EDGE 5 ข้อที่ไม่เคยเดิน</td></tr>
 <tr><td class='mono'>ORDER-353</td><td><span class='tag t-done'>DONE</span></td><td>[campaign] optimize pyramid depth + ER regime gate บน BTC H4</td></tr>
-<tr><td class='mono'>ORDER-501</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load</td></tr>
-<tr><td class='mono'>ORDER-232</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด</td></tr>
+<tr><td class='mono'>ORDER-501</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load</td></tr>
+<tr><td class='mono'>ORDER-232</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด</td></tr>
 <tr><td class='mono'>ORDER-233</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 เงินจริง · audit] --resolve-single-leg-baskets: flag ที่พลิกงบพอร์ต 73% → 38%</td></tr>
 <tr><td class='mono'>ORDER-234</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 เงินจริง · migration] PERSIST_MIGRATION checklist: ลอยข้าม handoff 3 ใบโดยไม่มีเจ้าของ</td></tr>
-<tr><td class='mono'>ORDER-236</td><td><span class='tag t-open'>OPEN</span></td><td>[lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์</td></tr>
-<tr><td class='mono'>ORDER-239</td><td><span class='tag t-open'>OPEN</span></td><td>[monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge</td></tr>
 <tr><td class='mono'>ORDER-213</td><td><span class='tag t-done'>DONE</span></td><td>[bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด</td></tr>
 <tr><td class='mono'>ORDER-215</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-stage</td></tr>
 <tr><td class='mono'>ORDER-GEN-STANDING</td><td><span class='tag t-open'>OPEN</span></td><td>matrix screening (standing order, ไม่มีวัน DONE)</td></tr>
@@ -139,18 +210,16 @@
 <tr><td class='mono'>ORDER-116</td><td><span class='tag t-done'>DONE</span></td><td>CAMPAIGN: split-entry breakout</td></tr>
 <tr><td class='mono'>ORDER-095</td><td><span class='tag t-done'>DONE</span></td><td>CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อยู่ ได้อีกเ...</td></tr>
 <tr><td class='mono'>ORDER-098</td><td><span class='tag t-open'>OPEN</span></td><td>CAMPAIGN: fxDreema YouTube corpus build-on</td></tr>
-<tr><td class='mono'>ORDER-432</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in first-lot siz...</td></tr>
-<tr><td class='mono'>ORDER-433</td><td><span class='tag t-open'>OPEN</span></td><td>[portfolio risk] The single-leg-basket proxy is not the fix; build the combined two-leg series inste...</td></tr>
+<tr><td class='mono'>ORDER-432</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in first-lot siz...</td></tr>
+<tr><td class='mono'>ORDER-950</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 money path] Guard G4 (Wave5_SLValid / g_w5_n_sl_invalid) has never been observed firing</td></tr>
 <tr><td class='mono'>ORDER-434</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 data integrity] MRIS crisis models: stale data is being relabelled fresh, and Phase D stays gate...</td></tr>
-<tr><td class='mono'>ORDER-490</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 guard coverage] ~~Wave5 guard G4 has never been observed firing~~ → G4 runs and accepts; its REJ...</td></tr>
-<tr><td class='mono'>ORDER-510</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 money path · deploy trap] ฟลีตที่รันอยู่จริงเป็นไบนารีก่อน ORDER-132/138 ทั้งชุด</td></tr>
     </table></div>
-    <div class="note">ปิดไปแล้วทั้งหมด 42 order — ประวัติเต็มอยู่ใน AGENT_TASKBOARD*.md</div>
+    <div class="note">ปิดไปแล้วทั้งหมด 26 order — ประวัติเต็มอยู่ใน AGENT_TASKBOARD*.md</div>
   </div>
 
   <div class="card">
     <h2>🕐 Commits ล่าสุด</h2>
-    <div class="mono">6f297ca0 Close the batch-1 lane: 29 findings across five independent review rounds<br>45c49ed8 Fable review: a FIFTH defect shape, named from my own repairs, plus 4 findings<br>1ebaf540 Blind audit round 4: 8 findings, and a false closure claim I had written<br>2b52af2e Brief for review round 4: pin the range, and stop re-reporting 17 fixed findings<br>d92549a4 Blind audit round 3: 7 findings, and the duplication that produced two of them<br>c449f375 Blind audit round 2: 10 findings, all reproduced first, all fixed<br>48c55aad Blind-audit finding: the resolver kept its promise, the consumer broke it<br>be5278c7 Correct the fast-tier median: I quoted a background loop before it finished</div>
+    <div class="mono">01ea150f Durable governance sync: SYSTEM ACTIONABLE WORK = COMPLETE for System Completion<br>64fbf2c2 [claude] Monitoring Gap-to-Done Claim A+B: taskboard-read UNKNOWN state + stale CONTRACTS.md wiring text<br>23d916d2 [claude] governance sync: retire ExpertMACD as current production task, record Wave5/Zeus dispositions<br>329d73b4 [claude] integrate Zeus XAU Template-precondition evidence: locked-config Model 1, BWD participation-blocked<br>0543f1e3 [claude] integrate ExpertMAMA evidence: M2 right-home naked smoke PROCEED, M3 coarse optimize no plateau, PARKED-VERIFY<br>7ffc79da [claude] integrate Wave5 C4 ExpertMAPSAR evidence: M2/M3 optimize + right-home naked-pulse, PARKED-VERIFY<br>63703e7c [claude] integrate Wave5 C3 ExpertMACD evidence: bounded Invalid Stops repair, REJECT_FROM_M3<br>7c559142 [claude] add small smoke-regression suite for EA_Template master mold</div>
   </div>
 
   <footer>

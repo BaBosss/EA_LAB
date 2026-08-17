@@ -8,6 +8,29 @@ $template = Join-Path $repo "scripts\status_template.html"
 $out      = Join-Path $repo "STATUS.html"
 $oneDrive = "C:\Users\patip\OneDrive\EA_LAB_STATUS.html"
 
+# ---- Control Room (verified snapshot only) -----------------------------------
+# monitoring-status-audit: until this block, STATUS.html (this OneDrive/phone dashboard) had
+# NO Control Room section at all -- STATUS.md rendered Format-ControlRoomBlock (the verified,
+# fail-closed snapshot reader) but scripts\status_template.html never mentioned "Control Room",
+# "snapshot" or "DEGRADED" anywhere. A reader who only opens the phone page could not see WHY
+# monitoring is DEGRADED_MONITORING, or that it is degraded at all. This block gives STATUS.html
+# the SAME verified-only guarantee STATUS.md already has: NO number is ever rendered from an
+# unverified snapshot. $ErrorActionPreference is narrowed to 'Continue' around this block for the
+# same reason make_status.ps1 narrows it -- Get-VerifiedSnapshot is preference-independent by
+# construction, and a failure here must not be swallowed by the file-wide SilentlyContinue.
+$savedEapCr = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+. (Join-Path $repo 'scripts\lib\snapshot_reader.ps1')
+$crVerified = Get-VerifiedSnapshot -SnapshotPath (Join-Path $repo 'portfolio\control_room_snapshot.json') -RepoRoot $repo
+$ErrorActionPreference = $savedEapCr
+$controlRoomHtml = (Format-ControlRoomHtml -Verified $crVerified) -join "`n"
+if ($crVerified.State -eq 'OK') {
+  $monitoringLabel = 'OK'; $monitoringColor = 'var(--green)'
+  if ($crVerified.Document.verdict.reconciliation_clear -ne $true) { $monitoringLabel = 'DEGRADED'; $monitoringColor = 'var(--amber)' }
+} else {
+  $monitoringLabel = 'DEGRADED'; $monitoringColor = 'var(--amber)'
+}
+
 function HtmlEnc([string]$s) {
   if ($null -eq $s) { return "" }
   return $s.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;')
@@ -131,6 +154,9 @@ $map = @{
   '{{GENERATED}}'         = $now
   '{{BRANCH}}'            = $branch
   '{{COMMIT}}'            = $commit
+  '{{MONITORING_LABEL}}'  = $monitoringLabel
+  '{{MONITORING_COLOR}}'  = $monitoringColor
+  '{{CONTROL_ROOM_HTML}}' = $controlRoomHtml
   '{{JUDGE_DATE}}'        = $judge
   '{{DAYS_TO_JUDGE}}'     = "$daysToJudge"
   '{{USER_ACTION_COUNT}}' = "$userActionCount"

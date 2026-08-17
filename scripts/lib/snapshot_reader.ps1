@@ -263,3 +263,70 @@ un_snapshot_s4_tests.ps1.
     }
     return $out
 }
+
+
+function Format-ControlRoomHtml {
+    <#
+      HTML twin of Format-ControlRoomBlock, for STATUS.html (scripts\make_status_html.ps1).
+
+      WHY THIS EXISTS. STATUS.html is the OneDrive-synced, phone-read mobile dashboard (its own
+      header says so: "regenerate every commit"; make_status_html.ps1 is the ONLY writer). Until
+      this function, it was generated from PROJECT_STATE.md / DEMO_DEPLOYMENT_PLAN.md / taskboard
+      files ONLY -- scripts\status_template.html had zero mention of "Control Room", "snapshot", or
+      "DEGRADED" anywhere in it (grepped, ORDER: monitoring-status-audit). So the one artifact this
+      repo's own workflow describes as the owner's daily phone read was silently the ONE consumer
+      that never rendered the verified-snapshot machinery snapshot_reader.ps1 exists to protect --
+      while STATUS.md (the markdown twin, same generator, same commit) rendered it correctly. A
+      reader who only opens the phone page could not see WHY monitoring is DEGRADED_MONITORING, or
+      that it is degraded at all: the page showed order/EA counts with no Control Room section at
+      all, not even a blank one.
+
+      This mirrors Format-ControlRoomBlock's three-state contract exactly (same function, same
+      inputs, only the sink differs) so the same C6 guarantee holds here: NEITHER RENDERER EVER
+      EMITS A NUMBER FROM AN UNVERIFIED SNAPSHOT. OK renders counts; REFUSED and UNAVAILABLE render
+      a banner with the reason text and nothing else -- HTML-escaped, since Reason strings can carry
+      arbitrary text (a validator error message, a file path) and this sink is a browser.
+
+      Cage: scripts\_test
+un_snapshot_s4_tests.ps1 (same fixtures as Format-ControlRoomBlock's C6 block).
+    #>
+    param([Parameter(Mandatory = $true)]$Verified)
+
+    function _Esc([string]$s) {
+        if ($null -eq $s) { return '' }
+        return $s.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
+    }
+
+    if ($Verified.State -eq 'OK') {
+        $m = $Verified.Document.meta
+        $v = $Verified.Document.verdict
+        $r = $m.reconciliation
+        $reasonsHtml = ''
+        if (@($v.reasons).Count -gt 0) {
+            $items = (@($v.reasons) | ForEach-Object { "<li><span class='mono'>$(_Esc $_.code)</span> $(_Esc $_.detail)</li>" }) -join "`n"
+            $reasonsHtml = "<div class='note'>reasons (not a fleet-health verdict - order/coverage reconciliation and mandatory-source freshness only):</div><ul>$items</ul>"
+        }
+        $sourcesHtml = (@($m.sources) | ForEach-Object {
+            $state = if ($_.read_ok) { if ($_.fresh) { 'fresh' } else { "stale($($_.age_hours)h)" } } else { 'UNREADABLE' }
+            $cls = if ($state -eq 'fresh') { 't-live' } elseif ($state -eq 'UNREADABLE') { 't-user' } else { 't-watch' }
+            "<span class='tag $cls'>$(_Esc $_.name)=$(_Esc $state)</span>"
+        }) -join ' '
+        $clearTag = if ($v.reconciliation_clear) { "<span class='tag t-live'>CLEAR</span>" } else { "<span class='tag t-user'>NOT CLEAR</span>" }
+        return @"
+<div class="note">Verified snapshot - build <span class="mono">$(_Esc $m.build_id)</span> - v$(_Esc $m.version) - generated $(_Esc $m.generated_at) - git <span class="mono">$(_Esc $m.git_head)</span></div>
+<div style="margin:8px 0">reconciliation_clear: $clearTag</div>
+$reasonsHtml
+<div class="note">orders discovered $(_Esc $r.discovered) / categorized $(_Esc $r.categorized) - unclassified $(_Esc $r.unclassified) - duplicates $(_Esc $r.duplicates) - conflicts $(_Esc $r.conflicts)</div>
+<div class="note">coverage cells $(_Esc $r.coverage.cells_in_universe) = tested $(_Esc $r.coverage.tested) + untested $(_Esc $r.coverage.untested) + n/a $(_Esc $r.coverage.not_applicable)</div>
+<div style="margin-top:6px">$sourcesHtml</div>
+"@
+    } elseif ($Verified.State -eq 'REFUSED') {
+        return @"
+<div class="todo"><span class="dot">&#9679;</span><div><b>SNAPSHOT REFUSED</b> - no Control Room numbers are shown on this page.<br>The snapshot exists and <span class="mono">snapshot_validator</span> refused it (<span class="mono">$(_Esc $Verified.Code)</span>). Rendering it anyway would produce a stale-but-pretty page, which is the failure this block exists to prevent. The daily monitoring chain fails hard on this same state.<br><span class="mono">$(_Esc $Verified.Reason)</span></div></div>
+"@
+    } else {
+        return @"
+<div class="todo"><span class="dot" style="color:var(--amber)">&#9679;</span><div><b>SNAPSHOT UNAVAILABLE</b> - no Control Room numbers are shown on this page.<br>This is a statement about the INSTRUMENT (<span class="mono">$(_Esc $Verified.Code)</span>), not about the fleet: either no snapshot has been built, or the checker could not run. It is not treated as a failure HERE because this page regenerates after every commit; the daily monitoring chain, whose job this actually is, returns a hard failure token for the same state.<br><span class="mono">$(_Esc $Verified.Reason)</span></div></div>
+"@
+    }
+}
