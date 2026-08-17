@@ -203,8 +203,13 @@ Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine
   real time (operate up to judge, expand from 1→multiple portfolios), not more build work.
 - **EA_Template (Boss V2)** — the single master mold. The bounded H/R Safety Repair is accepted; D3/D6 remain
   owner-gated architecture decisions and R1-R7 remain parked. Remaining work to become a full mold is not
-  defined by this repair; broader H/R redesign remains out of scope. (1) add a small smoke-regression suite (2) port
-  Zeus grid/LOG in as an entry after Zeus passes validation. Note: `modules\`(V1) vs `core\`(V2)
+  defined by this repair; broader H/R redesign remains out of scope. ~~(1) add a small smoke-regression
+  suite~~ ✅ **done 2026-08-17** — `scripts/tpl_smoke_regression.ps1` (a cheap, lane-3, short-window
+  "did every build come up alive" gate; reuses the existing regression manifest's declared FULL-surface
+  sets, makes no baseline metric comparison, and is deliberately separate from the expensive lane-1-pinned
+  `tpl_regression.ps1`). Measured clean 8/8 across every current build (`Boss_11`..`Boss_18`). (2) port
+  Zeus grid/LOG in as an entry after Zeus passes validation — still not started, Zeus has not passed
+  validation. Note: `modules\`(V1) vs `core\`(V2)
   duplication is intentional, not junk. Architecture + usage → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
 - **EA_CORE** — R&D parts warehouse. Loop closed 2026-07-02; engineering-complete framework ready to reuse
   once there is a signal with a genuine edge. **Do not re-tune this parameter family.**
