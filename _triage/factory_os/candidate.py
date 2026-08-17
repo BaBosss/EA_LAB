@@ -60,7 +60,7 @@ WHAT THIS FILE DELIBERATELY DOES NOT DO
   clean list.
 
 USAGE  tools\\python312\\python.exe _triage/factory_os/candidate.py <command> [args]
-       commands: digest | read | --self-test
+       commands: digest | build | write | read | --self-test
 EXIT   0 = ok  -  1 = a REFUSAL (the reasons are on stdout as JSON)  -  2 = unreadable input
 """
 
@@ -816,6 +816,42 @@ def main(argv):
             return _emit({'action': 'REFUSE', 'why': str(exc)}, 1)
         return _emit({'action': 'DIGEST', 'candidate_digest': digest,
                       'candidate_id': candidate_id_for(digest)})
+
+    if cmd in ('build', 'write'):
+        # BEFORE this pair existed, the only way from evidence to a committed CandidateManifest
+        # was to hand-write the manifest JSON (fifteen payload fields, five profile hashes, an
+        # evidence array of MetricRefs) or to script `build_manifest`/`write_manifest` ad hoc --
+        # the exact shape of manual, error-prone step the CANDIDATE_INTAKE-> ... ->DISPOSITION
+        # flow keeps landing on. Both functions already existed, fully caged by run_s10_tests.py;
+        # nothing here is new validation, only the CLI surface `digest`/`read` already set the
+        # convention for (JSON arrives by FILE -- PowerShell 5.1 re-quotes an inline argument).
+        with io.open(args['payload_file'], 'r', encoding='utf-8-sig') as fh:
+            payload = json.load(fh)
+        with io.open(args['scorecard_ref_file'], 'r', encoding='utf-8-sig') as fh:
+            scorecard_ref = json.load(fh)
+        try:
+            manifest = build_manifest(payload, scorecard_ref)
+        except ValueError as exc:
+            return _emit({'action': 'REFUSE', 'why': str(exc)}, 1)
+        # build_manifest only refuses a payload whose SHAPE cannot be hashed (canonical_payload).
+        # validate_manifest is the full C1-C9 acceptance -- provenance included, when a run store
+        # is supplied -- and it is what write_manifest itself calls before it will touch disk.
+        # Running it here too means `build` (no filesystem write) reports the SAME problems a
+        # `write` of the same inputs would, rather than a lighter check that looks clean and then
+        # refuses a moment later.
+        lookup = S.load_all_runs(root)
+        problems = validate_manifest(manifest, run_lookup=lookup)
+        if problems:
+            return _emit({'action': 'REFUSE', 'why': '; '.join(problems)}, 1)
+        if cmd == 'build':
+            return _emit({'action': 'BUILD', 'candidate_id': manifest['candidate_id'],
+                          'candidate_digest': manifest['candidate_digest'], 'manifest': manifest})
+        try:
+            path = write_manifest(manifest, root=root, run_lookup=lookup)
+        except DigestMismatch as exc:
+            return _emit({'action': 'REFUSE', 'why': str(exc)}, 1)
+        return _emit({'action': 'WRITE', 'candidate_id': manifest['candidate_id'],
+                      'candidate_digest': manifest['candidate_digest'], 'path': path})
 
     if cmd == 'read':
         # `--no-runs` is gone with the default it went with: it produced a read that always

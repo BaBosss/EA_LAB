@@ -1532,6 +1532,116 @@ def part7_review():
             A.verify_log([three[0], three[2]]), 'A8')
 
 
+# =============================================================================================
+# PART 8 -- the CLI surface for `build_manifest`/`write_manifest` (`candidate.py build|write`).
+# Added because the only path from EVIDENCE_COMPLETE to a committed CandidateManifest was to
+# hand-assemble the fifteen-field CandidatePayload, or to script `build_manifest`/`write_manifest`
+# ad hoc -- the exact manual, error-prone step the intake->...->disposition flow kept landing on.
+# Neither function is new here and neither gains a new criterion id; this PART proves the CLI
+# wraps them with no gap of its own, using the same JSON-by-file convention `digest`/`read`
+# already established (PowerShell 5.1 re-quotes an inline argument on its way to a native process).
+# =============================================================================================
+def _cli(argv):
+    """Drive candidate.main in-process with stdout captured (same shape as PART 6's
+    `_quiet_check`, which captures gen_magic_allocations.main the same way and for the same
+    reason). Returns (exit_code, parsed-JSON-or-None, raw stdout)."""
+    out = io.StringIO()
+    saved = sys.stdout
+    sys.stdout = out
+    try:
+        code = C.main(argv)
+    finally:
+        sys.stdout = saved
+    text = out.getvalue()
+    try:
+        parsed = json.loads(text)
+    except ValueError:
+        parsed = None
+    return code, parsed, text
+
+
+def _materialize_runs(root, journals):
+    """Write real RunTransition `.jsonl` files so `scheduler.load_all_runs(root)` -- the exact
+    call the CLI makes -- resolves them from DISK. Every other PART injects the in-memory `RUNS`
+    dict straight into `write_manifest(run_lookup=...)`; that skips the one seam the CLI actually
+    depends on (`--root` -> `factory/runs/*.jsonl` -> `load_all_runs`), so it is exercised here."""
+    d = os.path.join(root, 'factory', 'runs')
+    os.makedirs(d, exist_ok=True)
+    for run_id, journal in journals.items():
+        lines = [{'entity': 'RunTransition', 'run_id': run_id, 'cell_id': journal['cell_id'],
+                  'attempt': 1, 'transition': 'QUEUED', 'at': '2026-08-02T00:00:00Z',
+                  'execution_key': journal['execution_key']}]
+        # the rest of the real journal's attempts (COMPLETED, EVIDENCE_REGISTERED, ...) -- C9
+        # checks the FOLDED journal's LAST transition, so a run stuck at QUEUED here would refuse
+        # for a reason that has nothing to do with what this PART is testing.
+        for att in journal['attempts']:
+            lines.append(dict(att, entity='RunTransition', run_id=run_id, cell_id=journal['cell_id']))
+        with io.open(os.path.join(d, run_id + '.jsonl'), 'w', encoding='utf-8', newline='\n') as fh:
+            for line in lines:
+                fh.write(json.dumps(line) + '\n')
+
+
+def part8_cli():
+    sys.stdout.write('\nPART 8 -- the CLI surface: `build` (dry-run) and `write` (once), '
+                     'wrapping build_manifest/write_manifest with no new gap\n')
+    tmp = tempfile.mkdtemp(prefix='s10cli_')
+    try:
+        _materialize_runs(tmp, RUNS)
+        payload_path = os.path.join(tmp, 'payload.json')
+        owner_path = os.path.join(tmp, 'owner.json')
+        io.open(payload_path, 'w', encoding='utf-8').write(json.dumps(PAYLOAD))
+        io.open(owner_path, 'w', encoding='utf-8').write(json.dumps(OWNER))
+        argv_common = ['--payload_file=' + payload_path, '--scorecard_ref_file=' + owner_path,
+                       '--root=' + tmp]
+        expected = manifest()
+
+        # -- `build` is a DRY RUN: same id/digest `write` would report, no file touched.
+        code, parsed, text = _cli(['build'] + argv_common)
+        check('`build` on a valid payload exits 0', code == 0, text)
+        check('...and reports the SAME candidate_id build_manifest computes',
+              bool(parsed) and parsed.get('candidate_id') == expected['candidate_id'], parsed)
+        check('...and the SAME candidate_digest',
+              bool(parsed) and parsed.get('candidate_digest') == expected['candidate_digest'], parsed)
+        check('...and it is a dry run -- no candidates directory exists yet',
+              not os.path.isdir(os.path.join(tmp, 'factory', 'candidates')))
+
+        # -- `write` persists exactly what `build` previewed.
+        code, parsed, text = _cli(['write'] + argv_common)
+        check('`write` on the same valid payload exits 0', code == 0, text)
+        want_path = C.manifest_path(expected['candidate_id'], tmp)
+        check('...and writes to the path manifest_path() names',
+              bool(parsed) and parsed.get('path') == want_path, parsed)
+        on_disk = os.path.exists(want_path)
+        check('...and the file is actually there', on_disk)
+        if on_disk:
+            got = C.read_manifest(want_path, run_lookup=S.load_all_runs(tmp))
+            check('...and it reads back through read_manifest with the same digest',
+                  got['candidate_digest'] == expected['candidate_digest'])
+
+        # -- the write-once rule holds THROUGH THE CLI: PART 1c already proves write_manifest
+        #    itself refuses a second write; this proves the CLI did not open a second door to it.
+        code, parsed, text = _cli(['write'] + argv_common)
+        check('a second `write` of the same candidate is REFUSED, not silently re-written',
+              code == 1 and bool(parsed) and parsed.get('action') == 'REFUSE'
+              and 'ONCE' in parsed.get('why', ''), text)
+
+        # -- SPECIFICITY: an invalid payload is refused by `build` too, for a real reason (C9 --
+        #    a cited run this store does not have), and writes nothing.
+        bad = copy.deepcopy(PAYLOAD)
+        bad['evidence'][0]['run_id'] = 'RUN-NOT-REGISTERED'
+        bad_payload_path = os.path.join(tmp, 'payload_bad.json')
+        io.open(bad_payload_path, 'w', encoding='utf-8').write(json.dumps(bad))
+        code, parsed, text = _cli(['build', '--payload_file=' + bad_payload_path,
+                                   '--scorecard_ref_file=' + owner_path, '--root=' + tmp])
+        check('`build` REFUSES a payload citing an unregistered run (C9), and reports why',
+              code == 1 and bool(parsed) and parsed.get('action') == 'REFUSE'
+              and 'C9' in parsed.get('why', ''), text)
+        bad_path = C.manifest_path(C.candidate_id_for(C.candidate_digest(bad)), tmp)
+        check('...and no manifest for it landed on disk', not os.path.exists(bad_path))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     part1_identity()
     part1b_serializer()
@@ -1541,6 +1651,7 @@ def main():
     part4_real()
     part6_order_1260()          # before part5: its roll-up compares against every id NAMED so far
     part7_review()
+    part8_cli()
     part5_the_other_half()
     sys.stdout.write('\n')
     if FAILS:
