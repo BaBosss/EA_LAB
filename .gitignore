@@ -54,6 +54,9 @@ ea_projects/*/reports/latest/*
 __pycache__/
 *.pyc
 
+# Control Tower Relay job state (runtime evidence, not source)
+tools/codex_relay/_*state*/
+
 # compiled MQL5 binaries
 *.ex5
 *.ex4
