@@ -2,11 +2,30 @@
 # Called by make_status.ps1 after every commit; safe to run manually anytime.
 # ASCII-only source ON PURPOSE (PS 5.1 + BOM-less Thai literals = mojibake).
 # All Thai text lives in scripts\status_template.html or comes from the data files.
+#
+# WORKTREE ISOLATION (monitoring-status-audit follow-on). Same defect and same fix as
+# scripts\make_status.ps1 (read that file's header for the full account) -- $repo was hardcoded
+# to "D:\EA_LAB", so a run from any isolated worktree silently operated on the shared checkout
+# and its live OneDrive files. $repo now resolves via Resolve-EaLabRepoRoot from where THIS FILE
+# lives on disk, or from an explicit -RepoRoot; an unresolvable root THROWS, never falls back to
+# "D:\EA_LAB". When called FROM make_status.ps1, -RepoRoot and -IsPrimaryWorkspace are the
+# CALLER'S already-resolved values, used as-is -- this script does not re-decide primary-ness in
+# that case, so the two callers cannot disagree. When run standalone (no params), it resolves and
+# decides for itself, using the same -PrimaryRepoRoot comparison make_status.ps1 uses.
+param(
+    [string]$RepoRoot = '',
+    [Nullable[bool]]$IsPrimaryWorkspace = $null,
+    [string]$PrimaryRepoRoot = 'D:\EA_LAB',
+    [string]$OneDrivePath = 'C:\Users\patip\OneDrive\EA_LAB_STATUS.html'
+)
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+$repo = if ($RepoRoot) { Resolve-EaLabRepoRoot -AnchorPath $RepoRoot } else { Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath }
+if ($null -eq $IsPrimaryWorkspace) { $IsPrimaryWorkspace = ($repo -eq $PrimaryRepoRoot.TrimEnd('\')) }
+
 $ErrorActionPreference = "SilentlyContinue"
-$repo     = "D:\EA_LAB"
 $template = Join-Path $repo "scripts\status_template.html"
 $out      = Join-Path $repo "STATUS.html"
-$oneDrive = "C:\Users\patip\OneDrive\EA_LAB_STATUS.html"
+$oneDrive = $OneDrivePath
 
 # ---- Control Room (verified snapshot only) -----------------------------------
 # monitoring-status-audit: until this block, STATUS.html (this OneDrive/phone dashboard) had
@@ -174,7 +193,13 @@ foreach ($k in $map.Keys) { $html = $html.Replace($k, [string]$map[$k]) }
 
 [System.IO.File]::WriteAllText($out, $html, (New-Object System.Text.UTF8Encoding($true)))
 Write-Host "STATUS.html written -> $out"
-if (Test-Path (Split-Path $oneDrive)) {
+# PUBLICATION GATE: see the WORKTREE ISOLATION note at the top of this file. IsPrimaryWorkspace
+# is FALSE for any resolved root other than -PrimaryRepoRoot (or the caller's own decision, when
+# passed through from make_status.ps1), so an isolated worktree or test fixture never reaches
+# Copy-Item against the owner's real OneDrive file, however Test-Path resolves on this machine.
+if ($IsPrimaryWorkspace -and (Test-Path (Split-Path $oneDrive))) {
   Copy-Item $out $oneDrive -Force
   Write-Host "copied -> $oneDrive"
+} else {
+  Write-Host "OneDrive publish SKIPPED (not the primary workspace: repo=$repo)"
 }

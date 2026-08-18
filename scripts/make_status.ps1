@@ -1,10 +1,36 @@
 # make_status.ps1 - regenerate STATUS.md (one-file mobile dashboard) + copy to OneDrive.
 # Agents run this after every commit (AGENTS.md rule 7); safe to run manually anytime.
 # ASCII-only source on purpose: PowerShell 5.1 chokes on BOM-less UTF-8 Thai literals.
+#
+# WORKTREE ISOLATION (monitoring-status-audit follow-on). Until this param block, $repo was
+# hardcoded to "D:\EA_LAB" -- so running this script from ANY isolated worktree silently read
+# and wrote against the SHARED primary checkout and its live OneDrive-synced files instead of
+# the worktree the caller was actually sandboxed to (reproduced directly in that earlier
+# session: an incidental run from an isolated worktree overwrote D:\EA_LAB\STATUS.html and its
+# OneDrive copy). $repo now resolves from where THIS SCRIPT FILE lives on disk (or an explicit
+# -RepoRoot), via the same Resolve-EaLabRepoRoot walker scripts\daily_monitor.ps1 already uses --
+# not invented here. A root that cannot be resolved (no .git found walking up) THROWS and stops
+# the script; there is no fallback to "D:\EA_LAB" on failure.
+#
+# PUBLICATION STAYS GATED, NOT REMOVED: the OneDrive copy below only fires when the resolved
+# root equals -PrimaryRepoRoot (default 'D:\EA_LAB', the one real owner checkout). Any other
+# resolved root -- an isolated worktree, a CI checkout, a test fixture -- is, by construction,
+# not the primary workspace, so it can never publish to the owner's shared files by accident.
+# -PrimaryRepoRoot and -OneDrivePath are override points ONLY for tests (see
+# scripts\_test\run_make_status_worktree_isolation_tests.ps1); their defaults reproduce the
+# exact prior behavior for the real primary checkout.
+param(
+    [string]$RepoRoot = '',
+    [string]$PrimaryRepoRoot = 'D:\EA_LAB',
+    [string]$OneDrivePath = 'C:\Users\patip\OneDrive\EA_LAB_STATUS.md'
+)
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+$repo = if ($RepoRoot) { Resolve-EaLabRepoRoot -AnchorPath $RepoRoot } else { Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath }
+$isPrimaryWorkspace = ($repo -eq $PrimaryRepoRoot.TrimEnd('\'))
+
 $ErrorActionPreference = "SilentlyContinue"
-$repo = "D:\EA_LAB"
 $out  = Join-Path $repo "STATUS.md"
-$oneDrive = "C:\Users\patip\OneDrive\EA_LAB_STATUS.md"
+$oneDrive = $OneDrivePath
 
 $now = Get-Date -Format "yyyy-MM-dd HH:mm"
 $branch = git -C $repo rev-parse --abbrev-ref HEAD
@@ -82,11 +108,19 @@ $body += "## Recent commits"
 $body += $log
 $body | Set-Content $out -Encoding UTF8
 
-if (Test-Path (Split-Path $oneDrive)) {
+# PUBLICATION GATE: see the WORKTREE ISOLATION note at the top of this file. $isPrimaryWorkspace
+# is FALSE for any resolved root other than -PrimaryRepoRoot, so an isolated worktree or test
+# fixture never reaches Copy-Item against the owner's real OneDrive files, however Test-Path
+# resolves on this machine.
+if ($isPrimaryWorkspace -and (Test-Path (Split-Path $oneDrive))) {
   Copy-Item $out $oneDrive -Force
-  Copy-Item (Join-Path $repo "EA_MASTER_INDEX.csv") "C:\Users\patip\OneDrive\EA_MASTER_INDEX.csv" -Force
+  Copy-Item (Join-Path $repo "EA_MASTER_INDEX.csv") (Join-Path (Split-Path $oneDrive) 'EA_MASTER_INDEX.csv') -Force
 }
 
-# STATUS.html - single-file visual dashboard (same data, same OneDrive drop)
-& (Join-Path $PSScriptRoot "make_status_html.ps1")
+# STATUS.html - single-file visual dashboard (same data, same OneDrive drop). The resolved root
+# and primary-workspace decision are PASSED THROUGH, not re-resolved: two independent
+# Resolve-EaLabRepoRoot calls (one here, one inside make_status_html.ps1) could in principle
+# disagree if the two scripts ever lived at different depths; passing the already-resolved
+# values removes that possibility entirely.
+& (Join-Path $PSScriptRoot "make_status_html.ps1") -RepoRoot $repo -IsPrimaryWorkspace $isPrimaryWorkspace -OneDrivePath (Join-Path (Split-Path $oneDrive) 'EA_LAB_STATUS.html')
 
