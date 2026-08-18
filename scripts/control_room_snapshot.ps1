@@ -43,10 +43,23 @@
 [CmdletBinding()]
 param(
   [string]$Root = "",
-  [string]$OutFile = ""
+  [string]$OutFile = "",
+  # L9/CR-002 (2026-08-18): the one owner checkout whose disk carries materialized .ex5 bytes.
+  # See scripts\lib\repo_paths.ps1 Get-EaLabExecutionContext for why this is a path-equality
+  # test, not a .git file-vs-directory test. Override exists for tests only (mirrors
+  # make_status.ps1's -PrimaryRepoRoot); production default is the real D:\EA_LAB.
+  [string]$PrimaryRepoRoot = 'D:\EA_LAB'
 )
 $ErrorActionPreference = 'Stop'
 if ($Root -eq "") { $Root = Split-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) -Parent }
+. (Join-Path $Root 'scripts\lib\repo_paths.ps1')
+$snapshotExecCtx = Get-EaLabExecutionContext -ResolvedRoot $Root -PrimaryRepoRoot $PrimaryRepoRoot
+$attestationCaveat = if ($snapshotExecCtx -eq 'NON_PRIMARY_WORKSPACE') {
+  "execution_context=NON_PRIMARY_WORKSPACE: .ex5/.ex4 are gitignored and never materialize outside " +
+  "$PrimaryRepoRoot, so this run's attestation[].state values (especially FILE_MISSING) are NOT " +
+  "authoritative approval evidence -- they may only mean this checkout was never a compile target. " +
+  "L7 preflight and D6 must not accept this snapshot's attestation array as authoritative."
+} else { $null }
 $INV   = Join-Path $Root 'portfolio\DEPLOYMENTS.csv'
 $DEALS = Join-Path $Root 'portfolio\live_deals'
 $DASH  = Join-Path $Root 'portfolio\LIVE_DASHBOARD.html'
@@ -475,6 +488,12 @@ $snapshot = [ordered]@{
     stale_bar_hours = $staleBarHours
     decision_bar_trades = $decisionBar
     runtime_identity_required = $true
+    # L9/CR-002 (2026-08-18): computed above, before any of the file-existence checks that
+    # feed the attestation section, so the caveat is available to every row's classification
+    # without a second pass. See Get-EaLabExecutionContext for the false-PRIMARY case this is
+    # written to avoid (a standalone clone with a real .git directory at the wrong path).
+    execution_context = $snapshotExecCtx
+    attestation_caveat = $attestationCaveat
     # The REGISTRY of what must be present, by LOGICAL name, kept separate from what was
     # discovered. Without it a missing source is indistinguishable from one never expected --
     # which is how the original reconciliation satisfied its equation with 0 == 0.
@@ -542,6 +561,9 @@ foreach($cRoll in $cohorts){
   Write-Host ("COHORT   judge {0} ({1}d): {2} EAs | capable-now {3} | proj-capable {4} | proj-shortfall {5} | no-sensor {6}" -f $cRoll.judge_date, $cRoll.days_to_judge, $cRoll.deployments, $cRoll.decision_capable_now, $cRoll.projected_capable, $cRoll.projected_shortfall, $cRoll.no_sensor)
 }
 Write-Host ("ATTEST   {0} fully hashed (high-confidence) | {1} gaps (NO_BUNDLE/PARTIAL/FILE_MISSING/low-conf)" -f $sum.attestation_ok, $sum.attestation_gaps)
+if ($null -ne $attestationCaveat) {
+  Write-Host ("ATTEST   !! NON_PRIMARY_WORKSPACE -- attestation array above is NOT authoritative, see meta.attestation_caveat") -ForegroundColor Yellow
+}
 Write-Host ("UNKNOWN  {0} collector magic(s) not in DEPLOYMENTS.csv ({1} active, {2} historical, {3} unclassified)" -f $sum.unknown_magics, $sum.unknown_magics_active, $sum.unknown_magics_historical, $sum.unknown_magics_unclassified)
 if ($sum.unknown_magics_unclassified -gt 0) {
   # Printed on its own line, in red, because the whole point of the UNCLASSIFIED bucket is
