@@ -16,7 +16,7 @@
 | **ChatGPT** | Project manager / architect / dispatcher / reviewer | discuss goals, read the GitHub repository, set priorities with the owner, create task contracts, route work, review commits/PRs, coordinate working decisions, maintain cross-session management context | claim local tests/runtime evidence it has not received · assume it can see uncommitted local files, MT4/MT5 runtime, or local-only reports unless they are supplied or pushed · make binding risk/live/irreversible decisions without owner approval |
 | **Codex Primary** | Lead developer / integration owner for the local EA_LAB repository | inspect the actual workspace, implement approved contracts, compile/test, operate local tooling, integrate worker output, manage focused commits, prepare PRs, and report exact evidence/risks | independently change vision, risk defaults, live policy, DEMO/LIVE status, or task scope · act as author and sole final reviewer of high-risk work · edit governance without explicit owner authorization |
 | **Claude** | Specialist engineer / researcher / architecture reviewer / independent alternative reviewer | deep architecture/RCA/research, strategy analysis, alternative proposals, assigned implementations, and independent review of Codex-authored high-risk work | acquire authority merely from vendor/model name · make owner-reserved decisions · expand an assigned contract |
-| **ZCode / Qwen / batch agents** | Mechanical evidence producers | run existing scripts, backtest/optimize/parse within an approved order, and return reproducible raw evidence | independently change source, direction, verdicts, risk policy, or scope unless a separate explicit contract grants a narrow permission |
+| **ZCode / Qwen / batch agents** | Bounded execution workers | under an explicit bounded task contract, inspect the repository, edit the contracted source, implement bounded changes, run deterministic tests, perform bounded repair, execute approved local backtest/orchestration, and generate evidence | independently expand scope, change owner approval boundaries or risk policy/defaults, deploy, promote LIVE, make owner attestations, or make irreversible strategic decisions |
 | **OpenClaw team (commanded from Telegram)** | Remote execution/coordination lanes mapped to the roles above | perform only the role and task contract assigned to each lane; track via STATUS.md + git log (tag `[oc-*]`) + Telegram | gain extra authority from running remotely or through a manager layer |
 
 **Heartbeat (user rule 2026-07-04):** any agent working longer than ~10 minutes must report progress
@@ -25,11 +25,44 @@ Telegram via the manager · Codex/ZCode running on the desktop report in their o
 (TH verbatim: "ทุก agent ที่ทำงานเกิน ~10 นาที ต้องรายงานความคืบหน้าทุก ~10-15 นาที (1 บรรทัด: ทำอะไร ~% ติดอะไร)")
 
 The operating principle: **authority comes from the assigned role and task contract, not the vendor/model
-name.** Batch agents produce evidence only. Codex and Claude may analyze evidence and propose verdicts.
-ChatGPT coordinates project-level working decisions. The owner retains final authority and veto, and must
-explicitly approve DEMO/LIVE promotion, real-money deployment, risk-default changes, governance exceptions,
-and irreversible strategic decisions. A question outside the contract → write `BLOCKED(<question>)` and stop
-that branch.
+name.** Bounded workers may implement only what their explicit contract grants; they do not gain authority
+to expand scope, change risk policy, or make owner-reserved decisions. Codex and Claude may analyze evidence
+and propose verdicts. ChatGPT coordinates project-level working decisions. The owner retains final authority
+and veto for deployment, trading, LIVE promotion, risk/default changes, owner signatures/attestations,
+consequential governance exceptions, QI-2+, destructive/reset/cleanup outside an explicitly authorized
+bounded fixture, force push, history rewrite, and irreversible strategic decisions. A question outside the
+contract → write `BLOCKED(<question>)` and stop that branch; unrelated ready branches continue.
+
+### 1.4 Objective-level autonomous batch execution (owner-ratified 2026-08-18)
+
+The owner approves the **objective, scope, and acceptance criteria**, not each routine execution step.
+Once those exist, owner absence is not a blocker. Continue automatically through implementation, focused
+tests, negative/self-adversarial tests, impacted regression, acceptance, integration, durable state sync,
+and the next already-approved dependency when the action is bounded/deterministic, non-destructive,
+preserves unrelated work, and crosses no owner hard stop. Do not request re-approval for continuation,
+test/compile/checker, bounded repair, integration, commit, routine accepted state sync, or an eligible
+canonical push.
+
+**PLAN ONCE / DISPATCH ALL:** build the currently-known dependency DAG before starting a non-trivial
+milestone; dispatch every independent ready task immediately; queue dependent tasks; when a dependency
+passes, dispatch newly-ready tasks automatically; and let blocked branches coexist with unrelated ready
+branches. Normal model-worker WIP is up to **4** independent lanes, **8** for batch work, and **10** only
+for isolated, bounded, non-duplicative, safely integrable high-fan-out work that does not compete for
+acceptance-critical runtime/files. These limits never weaken the machine/tester limits in §3; within a
+tester lane one job remains the rule, and Model 4/real ticks remain serial wherever §3 requires it.
+
+Progress/heartbeat reports are informational and never an owner-acknowledgement gate.
+
+Canonical push is standing-authorized after the objective is approved when required deterministic gates,
+compile/tests/regression, required independent or milestone review, and safe reconciliation pass; unrelated
+work is preserved; no semantic conflict remains; the push is normal/fast-forward-compatible; and there is
+no force push or history rewrite. If origin moves, reconcile in isolation and rerun impacted acceptance.
+Canonical push is not itself an owner hard stop. The owner hard stops remain: deployment/runtime attachment,
+trading, real-money deployment, LIVE promotion or DEMO→LIVE authority expansion, risk/default changes,
+owner signatures/attestations, consequential new strategy/risk semantics not already approved, future
+changes to these approval boundaries, consequential scope promotion, QI-2+, destructive/reset/cleanup
+outside explicitly authorized bounded fixtures, force push, history rewrite, and irreversible strategic
+decisions.
 
 ### 1.5 Current assignment and review rule (owner-ratified 2026-08-07)
 
@@ -164,7 +197,7 @@ verdict, order status, or decision-feeding field.</sub>
    in the same regime
    — other agents do not have to apply these rules themselves, they just **must not report a summary
    that contradicts them** (reporting the raw numbers is enough)
-5. **Git:** commit often; the commit message starts with your own tag `[codex]` / `[zcode]` / `[oc-*]` · no push/force/rebase/amend ·
+5. **Git:** commit often; the commit message starts with your own tag `[codex]` / `[zcode]` / `[oc-*]` · no force push/rebase/amend ·
    no `--no-verify` (the pre-commit guard is everyone's bumper) · work on the current branch, do not create/switch branches yourself ·
    **a Claude commit ends with `Co-Authored-By:` matching the current seat model — both trailers are accepted**
    (user ratified 2026-07-23, seat model updated 2026-07-27): `Claude Opus 5 <noreply@anthropic.com>`
@@ -192,20 +225,20 @@ verdict, order status, or decision-feeding field.</sub>
 ## 4. Work cycle (per order)
 
 ```
-Owner + ChatGPT agree the goal and approval boundary
-  → ChatGPT writes a task contract in AGENT_TASKBOARD (scope · exclusions · acceptance · validation · reviewer)
-  → assigned agent reads the normal startup context, reserves a lane, and CLAIMS the order
-  → agent works only inside the contract, attaches exact evidence, marks DONE/BLOCKED, and commits [tag]
-  → ChatGPT/project reviewer checks the evidence and routes independent review where required
-  → owner approves any DEMO/LIVE, real-money, risk-default, governance-exception, or irreversible decision
-  → row becomes REVIEWED and conclusions move to their canonical owner files
+  Owner + ChatGPT agree the objective, scope, acceptance, and hard-stop boundary
+  → build the dependency DAG and dispatch all currently-ready independent work
+  → assigned workers read the normal startup context, reserve lanes, and claim their contracts
+  → workers execute, test, repair once when bounded, attach exact evidence, and close their lanes
+  → required independent/milestone review is dispatched automatically
+  → integrate, sync durable state, and AUTO-PUSH when the standing conditions pass
+  → stop only at an owner hard stop or genuine unresolved semantic/authority conflict
 ```
 - one order = **one self-contained task** whose result is verifiable by numbers/files — if the task is big, ChatGPT splits it first
 - **orders involving interpretation/classification (lesson from ORDER-012):** the criteria must be a
   checklist answerable yes/no on every item (e.g. "Y only if: there is a real entry indicator AND
   grid/martingale is not the core AND there is an SL")
   — never write criteria that ask the agent to use judgment ("interesting", "has edge"), because the result is always loose
-- no OPEN orders matching your assigned role → **stop, do not invent work** (you may record proposals as a comment on the taskboard)
+- no OPEN orders matching your assigned role → **stop, do not invent work** (you may record proposals as a comment on the taskboard), unless the objective's already-approved dependency DAG has a newly-ready contracted task
   — the single exception: you may take the next cell from **`ORDER-GEN-STANDING`**, because it is a pre-approved matrix
   (the worker is not inventing work) · matrix exhausted = `BLOCKED(matrix exhausted)` then genuinely stop → `docs/QUOTA_FALLBACK_PLAYBOOK.md` §3
 
@@ -217,7 +250,7 @@ Owner + ChatGPT agree the goal and approval boundary
 | local integration, normal application/tooling/docs | Codex Primary by default; Claude when assigned | applicable cages; ChatGPT or another agent reviews when needed |
 | core/execution/position/accounting/money/risk code | Codex or Claude, explicitly assigned | different-model-family independent review + compile/all cages + evidence; owner approval for risk-default/live/irreversible change |
 | architecture/RCA/research/alternative proposal | Claude or Codex as assigned | ChatGPT synthesizes; owner approves owner-reserved direction |
-| batch/backtest/optimize/parse | ZCode/Qwen/batch lane | raw reproducible evidence only; Codex/Claude may analyze; ChatGPT coordinates working verdict; owner retains final authority |
+| batch/backtest/optimize/parse | ZCode/Qwen/batch lane | bounded implementation, deterministic execution, repair, and evidence are allowed under the explicit contract; no scope/risk/owner-reserved decisions |
 
 Every order must state **`Can do: <capable roles> · 👉 Suggested: <default>`**, plus scope, exclusions,
 acceptance criteria, validation, and any independent-review/owner-approval boundary.
@@ -315,7 +348,7 @@ must not write code" but a split by how much damage a mistake causes:**
 order to be sent / a wrong lot size / a risk control to stop working*? — yes = Claude writes it · no (it only
 reports/parses/checks) = a cheaper tier may take it.
 
-### 5.3 The oc-qwen lane + quota-fallback mode (user directive 2026-07-25) — full version: `docs/QUOTA_FALLBACK_PLAYBOOK.md`
+### 5.3 The oc-qwen lane + quota-fallback mode (user directive 2026-07-25; autonomous execution clarified 2026-08-18)
 
 **The problem being fixed:** prepare N orders, run them all, and the machine is idle at N. The fix = orders
 must be a **branching tree**, not a task list, + a permanent **generator order** at the end of the queue +
@@ -326,14 +359,16 @@ a way for the user to pick a branch from their phone.
   conclusion in §5.1 ("OpenClaw is not worth it because the overhead eats the same quota pool")
   **still applies to oc-dev/oc-btest, but not to oc-qwen**
   ⇒ **oc-qwen = the default for batch work while the seat is away · commandable via Telegram, no need to touch powershell/cmd**
-- **orders handed to this lane must be CONDITIONAL ORDERS** (a complete `TREE:` covering every branch, with
-  every branch tip being the next STEP / STOP / BLOCKED) — an order with no TREE = the worker must not take it.
-  Template = the `AGENT_TASKBOARD.md` header
-- **Red lines (forbidden even if the user commands it over Telegram):** ❌ writing a verdict of any kind
-  ❌ touching EA_SCORECARD / EA_MASTER_INDEX / EDGE_CATALOG / PROJECT_STATE / PROJECT_HISTORY / VISION / CLAUDE.md / AGENTS.md / B1_DATASET.csv
-  ❌ touching `.mq5` or `ea_template\core\` ❌ touching `_vps_deploy` or the .set of an EA currently on demo
-  ❌ interpreting results outside the branch — there is exactly one place it may write = the order row it claimed · commit tag `[oc-qwen]`
-  <sub>(the phrase meaning "single-file" is deliberately avoided here: `check_state.ps1` §7 caught that phrase as a competing entry claim by substring — the intended meaning was "only one place it may write", not a claim to be the source of truth)</sub>
+- **orders handed to this lane must carry an explicit bounded task contract** (a complete `TREE:` is
+  recommended for branching work). The contract names the allowed files, exclusions, acceptance, validation,
+  and reviewer. A worker may edit bounded source and run bounded implementation/orchestration when the
+  contract grants it; it may not expand scope or cross the owner hard stops in §1.4.
+- The former blanket bans on source edits and governance-file edits are **SUPERSEDED** by §1.4 and the
+  current role/permission table. They remain forbidden only when the task contract does not explicitly grant
+  the bounded action. Qwen remains fallback/overflow compute, not mandatory merely because it is free.
+- Qwen may not independently write verdicts, change scorecards/indices/risk defaults/approval boundaries,
+  deploy, promote LIVE, make owner attestations, or make irreversible strategic decisions. A verdict or
+  owner-reserved decision is routed to the authorized reviewer/owner.
 - **The project manager's last available coordination window before quota runs out should end with:** (1) every pending DONE routed for review (2) ≥2 new conditional orders
   (3) the `ORDER-GEN-STANDING` matrix topped up to ≥10 cells — **not** with sitting there running backtests itself
   (TH verbatim: "ชั่วโมงสุดท้ายของ Claude ก่อนโควตาหมด ต้องจบด้วย: (1) ตัดสิน DONE ค้างครบ (2) conditional order ใหม่ ≥2 ใบ (3) เติม matrix `ORDER-GEN-STANDING` ให้เหลือ ≥10 cell — ไม่ใช่ ไปนั่งรัน backtest เอง")
