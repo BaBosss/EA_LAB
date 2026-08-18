@@ -1,5 +1,15 @@
 # ✅ ATTACH CHECKLIST — เหลือจริงแค่ 3 รายการ (สถานะจริงจาก DEPLOYMENTS.csv 2026-07-18)
 
+> 🛑 **HISTORICAL / CONSUMED (2026-08-18)** — This checklist is a historical record, not a current
+> instruction. Every item listed below has already been consumed/deployed. Current deployment facts
+> come from `portfolio/DEPLOYMENTS.csv`. This document creates no current pending target, and no
+> Factory candidate may be inferred or selected from it. Actual deployment remains OWNER HARD STOP.
+>
+> 🛑 **บันทึกประวัตินี้ใช้แล้ว (2026-08-18)** — เช็กลิสต์นี้คือบันทึกประวัติ ไม่ใช่คำสั่งปัจจุบัน รายการด้านล่าง
+> ถูกใช้/เดพลอยหมดแล้ว ความจริงการเดพลอยปัจจุบันดูที่ `portfolio/DEPLOYMENTS.csv` เอกสารนี้ไม่ได้สร้าง
+> เป้าหมายปัจจุบันที่รอ attach ใด ๆ และห้ามอนุมาน/เลือก Factory candidate จากเอกสารนี้ การเดพลอยจริง
+> ยังคงเป็น OWNER HARD STOP
+
 > ข่าวดี: bundle ส่วนใหญ่ attach ไปแล้ว (SuperTrend 990020 · MacdDiv 999094 · IchiADX ×4 ·
 > Wave5 XAU/XAG · BRK USDJPY/US30 · SMCSTO 991070 = ACTIVE ครบใน CSV). เหลือค้าง 3 ชุดข้างล่าง.
 > วิธี attach เหมือนกันทุกตัว: copy .ex5 → `MQL5\Experts` (ผ่าน rclone pipe เดิม หรือ copy-paste

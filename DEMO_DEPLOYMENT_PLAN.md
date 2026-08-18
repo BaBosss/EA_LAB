@@ -1,5 +1,16 @@
 # Demo Deployment Plan — Portfolio
 
+> 🛑 **HISTORICAL / CONSUMED (2026-08-18)** — This document is a historical record, not a current
+> instruction. All attach targets in the old approved/attach sections below have already been
+> consumed/deployed. Current deployment facts come from `portfolio/DEPLOYMENTS.csv`. This document
+> creates no current pending target, and no Factory candidate may be inferred or selected from it.
+> Actual deployment remains OWNER HARD STOP.
+>
+> 🛑 **บันทึกประวัตินี้ใช้แล้ว (2026-08-18)** — เอกสารนี้คือบันทึกประวัติ ไม่ใช่คำสั่งปัจจุบัน เป้าหมาย attach
+> ในส่วน approved/attach เก่าด้านล่างถูกใช้/เดพลอยหมดแล้ว ความจริงการเดพลอยปัจจุบันดูที่
+> `portfolio/DEPLOYMENTS.csv` เอกสารนี้ไม่ได้สร้างเป้าหมายปัจจุบันที่รอ attach ใด ๆ และห้ามอนุมาน/เลือก
+> Factory candidate จากเอกสารนี้ การเดพลอยจริงยังคงเป็น OWNER HARD STOP
+
 > ⚠️ canonical entry = **`PROJECT_STATE.md`** · machine-readable ownership ของ live portfolio =
 > **`portfolio/DEPLOYMENTS.csv`** (check_state บังคับความถูกต้องทุก commit) · ไฟล์ .md นี้ = human view +
 > monitor/kill-rule detail. **ถ้าตัวเลขในไฟล์นี้ขัดกับ DEPLOYMENTS.csv → เชื่อ CSV เสมอ.**
