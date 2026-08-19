@@ -853,14 +853,15 @@ USAGE = ('usage: python _triage/factory_os/snapshot_build.py build '
          '       (<source-root> defaults to the repo root; it is the directory every source row\'s\n'
          '        `path` resolves against, and exists so a FIXTURE can be built through this exact\n'
          '        pipeline against a controlled directory instead of a hand-authored document)\n'
-         '       python _triage/factory_os/snapshot_build.py reconcile   '
-         '(prints a ReconciliationEvidence object on stdout)')
+         '       python _triage/factory_os/snapshot_build.py reconcile [<root>]\n'
+         '       (<root> defaults to the repo root; same fixture rationale as <source-root>)\n'
+         '       (prints a ReconciliationEvidence object on stdout)')
 
 
 def main(argv):
-    if len(argv) == 2 and argv[1] == 'reconcile':
+    if len(argv) in (2, 3) and argv[1] == 'reconcile':
         try:
-            sys.stdout.write(json.dumps(reconcile()))
+            sys.stdout.write(json.dumps(reconcile(root=argv[2] if len(argv) == 3 else None)))
         except sv.SnapshotRefusal as exc:
             sys.stderr.write('[REFUSED] %s\n' % exc)
             return 1

@@ -463,6 +463,18 @@ $runtimeForward = Get-RuntimeIdentityForwardStates -RepoRoot $Root -DealsRoot $D
 $runtimeIdentitySummary.forward_test_state = "$($runtimeForward.state)"
 $runtimeIdentitySummary.first_trade_findings = @($runtimeForward.findings)
 
+# Reconciliation is PRODUCED by the builder's own reconcile(root=$Root), run fail-closed here
+# before this document exists: if the builder cannot reconcile this root (missing board, missing
+# coverage store), the build dies and $OutFile is never touched. The ps1 carries the builder's
+# answer, never a hand-typed count -- the ORDER-612 round-1 lesson (an all-zero typed claim
+# produced reconciliation_clear=true) applies to a typed value here exactly as it did in the
+# first pipeline version.
+$reconOut = & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') reconcile $Root
+if ($LASTEXITCODE -ne 0) {
+  throw "control_room_snapshot: snapshot_build.py reconcile refused root '$Root' (exit $LASTEXITCODE). No snapshot was built."
+}
+$reconciliation = $reconOut | ConvertFrom-Json
+
 $snapshot = [ordered]@{
   entity = 'SnapshotBuilderInput'
   meta = [ordered]@{
@@ -494,6 +506,7 @@ $snapshot = [ordered]@{
     # written to avoid (a standalone clone with a real .git directory at the wrong path).
     execution_context = $snapshotExecCtx
     attestation_caveat = $attestationCaveat
+    reconciliation = $reconciliation
     # The REGISTRY of what must be present, by LOGICAL name, kept separate from what was
     # discovered. Without it a missing source is indistinguishable from one never expected --
     # which is how the original reconciliation satisfied its equation with 0 == 0.
@@ -503,12 +516,11 @@ $snapshot = [ordered]@{
       (SourceRow 'live_dashboard'        $DASH $true),
       (SourceRow 'attestation_map'       $ATT  $true)
     )
-    # meta.reconciliation is DELIBERATELY ABSENT. snapshot_build.py derives it from the two
-    # taskboards and factory/coverage.jsonl and fills it in. This script does not compute it, does
-    # not carry it, and therefore CANNOT misstate it -- which is stronger than computing it here
-    # and having the builder check the answer. Found by probing the first version of this pipeline
-    # (ORDER-612 round 1): the source rows were authenticated and the counts were accepted on
-    # trust, so an all-zero claim produced reconciliation_clear=true.
+    # meta.reconciliation (set above) is carried from the builder's own reconcile(root=$Root)
+    # -- single producer, run fail-closed before this document exists. This script never
+    # hand-types the counts, so it cannot misstate them: the ORDER-612 round-1 defect (an
+    # all-zero typed claim produced reconciliation_clear=true) stays closed, and the builder
+    # hashes the value into build_id so a stale or fabricated count changes the identity.
     counting_method = 'MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic.'
   }
   system_health   = $health
@@ -542,7 +554,7 @@ $builderTmp = Join-Path (Split-Path $OutFile -Parent) (".control_room_builder_in
 $json = $snapshot | ConvertTo-Json -Depth 8
 [System.IO.File]::WriteAllText($builderTmp, $json, (New-Object System.Text.UTF8Encoding($false)))
 try {
-  & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') build $builderTmp $OutFile
+  & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') build $builderTmp $OutFile $Root
   $buildRc = $LASTEXITCODE
 } finally {
   Remove-Item $builderTmp -ErrorAction SilentlyContinue
