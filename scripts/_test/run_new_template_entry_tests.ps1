@@ -128,6 +128,71 @@ try {
         Remove-Item -LiteralPath $tmp2 -Recurse -Force -ErrorAction SilentlyContinue
     }
 
+    # =====================================================================
+    # Transaction-safety: fault-injection rollback tests.
+    #
+    # New-TemplateEntryScaffold takes a TEST-ONLY -TestFaultHook scriptblock.
+    # It is invoked with a checkpoint-name string immediately before that
+    # checkpoint's publication step; a hook that throws simulates a mid-write
+    # I/O fault at exactly that point without touching real disk I/O. No
+    # production caller (scripts\new_template_entry.ps1) ever passes it, so
+    # default (unset) behavior is unaffected.
+    # =====================================================================
+    function New-ThrowingFaultHook([string]$TripPoint) {
+        return { param($Point) if ($Point -eq $TripPoint) { throw "INJECTED_TEST_FAULT_AT_$Point" } }.GetNewClosure()
+    }
+
+    function Get-ScaffoldTempResidue([string]$Root) {
+        return @(Get-ChildItem -Path $Root -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '\.scaffoldtmp_|\.scaffoldbak_' })
+    }
+
+    function Invoke-ScaffoldFaultTest([string]$TripPoint) {
+        $root = Join-Path ([IO.Path]::GetTempPath()) ('new_template_entry_fault_' + [guid]::NewGuid().ToString('N'))
+        New-Item -ItemType Directory -Path $root -Force | Out-Null
+        New-FixtureTemplateRoot -Root $root
+        $before = Get-Content -LiteralPath (Join-Path $root 'core\LabCore.mqh') -Raw
+        $result = New-TemplateEntryScaffold -EntryNumber 19 -Name 'Fault' -TemplateRoot $root -TestFaultHook (New-ThrowingFaultHook $TripPoint)
+        return [pscustomobject]@{ Root = $root; Before = $before; Result = $result }
+    }
+
+    function Assert-FullRollback([string]$TripPoint) {
+        $ctx = Invoke-ScaffoldFaultTest $TripPoint
+        try {
+            Check "fault at $TripPoint is reported as not applied" (-not $ctx.Result.Applied) ($ctx.Result | ConvertTo-Json -Depth 5)
+            Check "fault at $TripPoint returns an explicit failure reason" ([string]::IsNullOrEmpty($ctx.Result.Reason) -eq $false -and $ctx.Result.Reason -ne 'OK') $ctx.Result.Reason
+            Check "fault at $TripPoint leaves zero Boss file" (-not (Test-Path -LiteralPath (Join-Path $ctx.Root 'Boss_19_Fault.mq5')))
+            Check "fault at $TripPoint leaves zero Entry file" (-not (Test-Path -LiteralPath (Join-Path $ctx.Root 'core\entries\Entry_Fault.mqh')))
+            $after = Get-Content -LiteralPath (Join-Path $ctx.Root 'core\LabCore.mqh') -Raw
+            Check "fault at $TripPoint restores LabCore.mqh byte-identical" ($after -ceq $ctx.Before)
+            $residue = Get-ScaffoldTempResidue $ctx.Root
+            Check "fault at $TripPoint leaves zero temp/backup files" ($residue.Count -eq 0) (($residue | ForEach-Object { $_.FullName }) -join '; ')
+        } finally {
+            Remove-Item -LiteralPath $ctx.Root -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    Assert-FullRollback 'BeforeBoss'
+    Assert-FullRollback 'AfterBoss'
+    Assert-FullRollback 'AfterEntry'
+    Assert-FullRollback 'BeforeLabCoreReplace'
+    Assert-FullRollback 'AfterLabCoreReplace'
+
+    # --- sanity: a hook present but never tripped must not change the happy path ---
+    $hookedRoot = Join-Path ([IO.Path]::GetTempPath()) ('new_template_entry_hooked_' + [guid]::NewGuid().ToString('N'))
+    try {
+        New-Item -ItemType Directory -Path $hookedRoot -Force | Out-Null
+        New-FixtureTemplateRoot -Root $hookedRoot
+        $hookedResult = New-TemplateEntryScaffold -EntryNumber 19 -Name 'Hooked' -TemplateRoot $hookedRoot -TestFaultHook (New-ThrowingFaultHook 'NeverMatchedPoint')
+        Check 'successful publication is unaffected by a hook that never trips' $hookedResult.Applied ($hookedResult | ConvertTo-Json -Depth 5)
+        Check 'successful publication writes Boss file with hook present' (Test-Path -LiteralPath (Join-Path $hookedRoot 'Boss_19_Hooked.mq5'))
+        Check 'successful publication writes Entry file with hook present' (Test-Path -LiteralPath (Join-Path $hookedRoot 'core\entries\Entry_Hooked.mqh'))
+        $hookedResidue = Get-ScaffoldTempResidue $hookedRoot
+        Check 'successful publication leaves zero temp/backup files' ($hookedResidue.Count -eq 0) (($hookedResidue | ForEach-Object { $_.FullName }) -join '; ')
+    } finally {
+        Remove-Item -LiteralPath $hookedRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
     # --- negative: ambiguous LabCore.mqh anchor (two OnInit PrintFormat lines) ---
     $tmp3 = Join-Path ([IO.Path]::GetTempPath()) ('new_template_entry_ambiguous_' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path (Join-Path $tmp3 'core\entries') -Force | Out-Null
