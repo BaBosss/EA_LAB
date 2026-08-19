@@ -297,7 +297,11 @@ function New-V5Fixture([string]$name) {
     $inPath  = Join-Path $fxRoot ("in_" + $name)
     $outPath = Join-Path $fxRoot ("v5_" + $name)
     [System.IO.File]::WriteAllText($inPath, ($inp | ConvertTo-Json -Depth 12), (New-Object System.Text.UTF8Encoding($false)))
-    $buildOut = & $py $builder build $inPath $outPath $fxRoot 2>&1
+    # --no-reconcile: $fxRoot is a throwaway temp root with no real AGENT_TASKBOARD.md, so the
+    # builder cannot derive a real reconciliation to verify meta.reconciliation against. Explicit
+    # now (was implicit from passing a <source-root> at all, before snapshot_build.py's CLI split
+    # the two independent switches -- see snapshot_build.py main()).
+    $buildOut = & $py $builder build $inPath $outPath $fxRoot --no-reconcile 2>&1
     if ($LASTEXITCODE -ne 0) { throw "fixture $name did not build: $($buildOut -join ' ')" }
     $fxBuilt[$name] = $outPath
     return $outPath

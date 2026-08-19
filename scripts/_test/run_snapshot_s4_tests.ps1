@@ -101,7 +101,11 @@ function Build-Fixture([string]$tag, $sourceRows, [string[]]$mandatory) {
     $inPath = Join-Path $work "in_$tag.json"
     $outPath = Join-Path $work "v5_$tag.json"
     [System.IO.File]::WriteAllText($inPath, ($inp | ConvertTo-Json -Depth 12), (New-Object System.Text.UTF8Encoding($false)))
-    $o = & $py $builder build $inPath $outPath $work 2>&1
+    # --no-reconcile: $work is a throwaway temp root with no real AGENT_TASKBOARD.md, so the
+    # builder cannot derive a real reconciliation to verify meta.reconciliation against. Explicit
+    # now (was implicit from passing a <source-root> at all, before snapshot_build.py's CLI split
+    # the two independent switches -- see snapshot_build.py main()).
+    $o = & $py $builder build $inPath $outPath $work --no-reconcile 2>&1
     if ($LASTEXITCODE -ne 0) { throw "fixture $tag did not build: $($o -join ' ')" }
     return $outPath
 }

@@ -849,10 +849,15 @@ def build_file(input_path, out_path, root=None, now=None, schema_validator=None,
 
 
 USAGE = ('usage: python _triage/factory_os/snapshot_build.py build '
-         '<builder-input.json> <out-snapshot.json> [<source-root>]\n'
+         '<builder-input.json> <out-snapshot.json> [<source-root>] [--no-reconcile]\n'
          '       (<source-root> defaults to the repo root; it is the directory every source row\'s\n'
          '        `path` resolves against, and exists so a FIXTURE can be built through this exact\n'
          '        pipeline against a controlled directory instead of a hand-authored document)\n'
+         '       (--no-reconcile accepts the builder-input\'s own meta.reconciliation claim as-is,\n'
+         '        instead of deriving it from this process\'s AGENT_TASKBOARD/coverage store and\n'
+         '        refusing a contradicting claim -- for a <source-root> fixture directory with no\n'
+         '        real boards to reconcile against. Without the flag the CLI always derives+\n'
+         '        verifies, root override or not: that is the PRODUCTION default.)\n'
          '       python _triage/factory_os/snapshot_build.py reconcile [<root>]\n'
          '       (<root> defaults to the repo root; same fixture rationale as <source-root>)\n'
          '       (prints a ReconciliationEvidence object on stdout)')
@@ -866,15 +871,32 @@ def main(argv):
             sys.stderr.write('[REFUSED] %s\n' % exc)
             return 1
         return 0
-    if len(argv) not in (4, 5) or argv[1] != 'build':
+    if argv[1:2] != ['build']:
         print(USAGE)
         return 2
+    rest = argv[2:]
+    no_reconcile = '--no-reconcile' in rest
+    positional = [a for a in rest if a != '--no-reconcile']
+    if len(positional) not in (2, 3):
+        print(USAGE)
+        return 2
+    input_path, out_path = positional[0], positional[1]
+    root = positional[2] if len(positional) == 3 else None
     try:
-        # The CLI is the PRODUCTION path, so it always derives. The sentinel exists for
-        # fixtures, which build against a temp root that has no boards.
-        doc = build_file(argv[2], argv[3], root=(argv[4] if len(argv) == 5 else None),
-                         reconciler=(reconcile if len(argv) == 4
-                                     else RECONCILIATION_NOT_DERIVED))
+        # Root override and reconciliation mode are INDEPENDENT and must be chosen
+        # independently -- they used to be the same argv-length switch (a <source-root>
+        # present meant RECONCILIATION_NOT_DERIVED), which conflated "this fixture builds
+        # against a controlled directory" with "skip verifying the claim". That coupling had
+        # exactly one real caller before D7 (run_snapshot_s4_tests.ps1's Build-Fixture, which
+        # legitimately needs both: a temp root with no real AGENT_TASKBOARD.md to reconcile
+        # against). control_room_snapshot.ps1 then became a SECOND caller needing a root
+        # override for worktree-correctness (D7, 79f5d7cc) but NOT wanting to skip
+        # verification -- and silently inherited RECONCILIATION_NOT_DERIVED anyway, disabling
+        # the exact independent-verification guarantee ORDER-612 round 1 exists to provide, in
+        # production, the one place that must never accept an unverified claim. Each caller now
+        # states its own intent explicitly instead of getting it implicitly from argv length.
+        doc = build_file(input_path, out_path, root=root,
+                         reconciler=(RECONCILIATION_NOT_DERIVED if no_reconcile else reconcile))
     except sv.ToolFailure as exc:
         print('[TOOL-FAILURE] %s' % exc)
         return 3
@@ -883,7 +905,7 @@ def main(argv):
         return 1
     v = doc['verdict']
     print('[OK] %s written  build_id=%s  reconciliation_clear=%s  reasons=%d'
-          % (argv[3], doc['meta']['build_id'], v['reconciliation_clear'], len(v['reasons'])))
+          % (out_path, doc['meta']['build_id'], v['reconciliation_clear'], len(v['reasons'])))
     for r in v['reasons']:
         print('     %s: %s' % (r['code'], r.get('detail')))
     return 0
