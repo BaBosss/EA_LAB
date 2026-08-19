@@ -573,6 +573,7 @@ enabling = validate like a new mechanism.
 | automation/MT5 headless | `AUTOMATION_GUIDE.md` · `docs/MT5_AUTOMATION.md` |
 | intake new source | `INTAKE_QUEUE.md` |
 | ideas from the 200-prompt PDF | `_archive_docs/STRATEGY_200_ANALYSIS.md` |
+| pre-deployment evidence packet contract (sections + PASS logic + completion checklist) | `docs/PRE_DEPLOYMENT_EVIDENCE_PACKET.md` |
 
 ---
 
