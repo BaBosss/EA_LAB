@@ -1476,7 +1476,13 @@ $NOT_A_DEPENDENCY_BY_SUITE = @{
     'run_order_collision_tests.ps1' = @('AGENT_TASKBOARD.md', 'ARCHIVE_TASKBOARD_2026-07A.md', 'README.md')
     'run_handoff_contract_tests.ps1' = @('AGENT_TASKBOARD.md', 'ARCHIVE_TASKBOARD_2026-07A.md', 'MASTER_BACKLOG.md')
     'run_blobmap_encoding_tests.ps1' = @('ARCHIVE_TASKBOARD_2026-07A.md')
-    'run_snapshot_s4_tests.ps1' = @('CLAUDE.md')
+    'run_snapshot_s4_tests.ps1' = @('CLAUDE.md',
+                                    # The --no-reconcile comment names AGENT_TASKBOARD.md only
+                                    # to say its throwaway temp root has no real one; the suite
+                                    # never reads it. A comment is not a dependency.
+                                    'AGENT_TASKBOARD.md')
+    # Same --no-reconcile comment shape in the integrity suite's fixture builder.
+    'run_monitor_integrity_tests.ps1' = @('AGENT_TASKBOARD.md')
     'run_guard_trigger_tests.ps1' = @('README.md', 'AGENT_TASKBOARD.md', 'scripts/check_state.ps1')
     'run_front_guard_evidence_tests.ps1' = @('DEMO_DEPLOYMENT_PLAN.md', 'AGENT_TASKBOARD_MERGE.md', 'AGENT_TASKBOARD_PQUANT.md')
     'run_registry_tests.ps1' = @('scripts/check_state.ps1')
