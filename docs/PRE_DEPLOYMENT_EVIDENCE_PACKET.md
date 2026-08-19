@@ -282,3 +282,134 @@ the *shape*, and Control Tower's job is then to judge the *content*, not chase m
   contract (VERDICT GATE, portfolio selection), not inside it.
 - Executing any part of the operation named in a hypothetical §2J sentence — this document
   produces the sentence's *shape*, never triggers the action itself.
+
+---
+
+# Populated Packet Instance — VPS-DEMO-MILESTONE-20260819-01
+
+> Populated per the contract above. This instance is a **pre-push snapshot** of the VPS DEMO
+> preparation/hardening batch (9 commits, `4c5a1e19..eead6d0c`). It performs no candidate
+> selection and no deployment action.
+
+## 1. Packet identity block
+
+| Field | Value |
+|---|---|
+| `packet_id` | `VPS-DEMO-MILESTONE-20260819-01` |
+| `generated_at` | `2026-08-19 14:38:16 +07:00` |
+| `packet_commit_sha` | `eead6d0cbbccf791d51adbb0dec8bdccfc0ea479` (HEAD at pack time — the commit the packet's evidence was read against) |
+| `canonical_commit_sha` | `4c5a1e1988599a6c0e4457370538164b01d7f9ac` (live `git ls-remote origin master` at pack time) |
+| `canonical_status` | `DRIFTED` — integration branch is 9 commits ahead of origin/master (0 behind); push `PENDING`. Per the §1 drift rule this packet is `BLOCKED: CANONICAL_DRIFT`: the sections below are filled for record, and the roll-up stops at `NOT_READY`. |
+| `populating_lanes` | L3 (attestation reconciliation → §2F) · L4 (regression test suite → §2K test evidence) · L7 (integration closeout → §1, §2A–E, §2G, §2H, §2I, §2J, §3) · milestone reviewer (§2K review — recorded in the step-8 durable-sync commit) |
+| `consumer` | `Control Tower` |
+
+## 2. Required sections
+
+### A. Canonical identity
+
+| Field | Value |
+|---|---|
+| `canonical_commit_sha` | `4c5a1e1988599a6c0e4457370538164b01d7f9ac` |
+| `integration_head` | `eead6d0cbbccf791d51adbb0dec8bdccfc0ea479` |
+| `parent_sha` | `553c89202c7cd4bfe632c2ac9b8131db0557cc15` |
+| `canonical_push_status` | `PENDING` |
+
+**Status: `DRIFTED`** (0 behind / 9 ahead of origin/master; fast-forward push viable and pending).
+
+### B. Target binding
+
+**Status: `TARGET_UNBOUND`** (literal, verbatim). No account/server/magic is bound in this
+packet; it is a milestone/readiness packet by design.
+
+### C. Deployment inventory identity
+
+**Status: `NOT_FOUND`** (0 single-row matches). Design note: this is a milestone-level
+readiness packet; no single EA is selected by design (see §2B `TARGET_UNBOUND`). The zero
+matches are by design, not a lookup failure. §2J is blocked by §2B regardless.
+
+### D. Artifact / config identity
+
+**Status: `UNREADABLE`** — no live terminal read in this closeout (runtime operations are out
+of scope). The config-identity basis is the on-file attestation evidence in §2F, including for
+990016: verified binary SHA256 `B5001606FCBB30FF419A45DB7F9D477185E22DCDB5B6B1B7DCDAEB7CC0127CFC`
+(134,550-byte build) and Inputs-tab read-back `_0_Magic=990016` (2026-07-28 16:37).
+
+### E. Preflight results
+
+**Status: `UNTESTED`** — `checks_run = 0`. Preflight is a per-attach operation; no attach is
+being prepared in this packet.
+
+### F. Attestation state
+
+| magic | EA / bundle | Status | Evidence |
+|---|---|---|---|
+| 992001 | TsMom_XAU (`_vps_deploy/S2_TSMOM_XAU`) | `FRESH` | L3R row added at `eead6d0c`: README magic 992001 confirmed; tracked ex5 + tracked .set |
+| 992003 | LondonORB_XAU (`_vps_deploy/SS1_LONDONORB_XAU`) | `FRESH` | L3R row added at `eead6d0c`: README magic 992003 confirmed; tracked ex5 + tracked .set |
+| 992017 | PivotBreakout_XAU (`_vps_deploy/PIVOTBREAKOUT_XAU`) | `FRESH` | L3R row added at `eead6d0c`: README magic 992017 confirmed; tracked ex5 + tracked .set |
+| 990016 | Boss_16_KangarooGrid (`_vps_deploy/BOSS16_KANGAROO_XAU`) | `FRESH` | L3R row added at `eead6d0c`: DEPLOYMENTS.csv row 64 (ORDER-530, 2026-07-28) confirms the FLAT preset `Boss16_Kangaroo_XAU_21_30.set` (own `_0_Magic=990016`) was attached, not the scaled preset the bundle README nominates; binary SHA256 `B5001606…` verified; Inputs-tab read-back 2026-07-28 16:37 `_0_Magic=990016` |
+| 990103 | RSI_MR_EURUSD (`_vps_deploy/RSI_MR_EURUSD`) | `NO_ATTESTATION_ON_FILE` | Named gap: zero tracked ex5 in the bundle (README + .set only); README never states an ex5 filename; not repo-actionable |
+| 990026 | STF_BTC_H4_ORDER353 (`_vps_deploy/STF_BTC_H4_ORDER353`) | `NO_ATTESTATION_ON_FILE` | Named gap: zero tracked ex5 in the bundle (README + .set only); runtime build ref `br-81fad90230b74411a444ebe3aaae8506` does not map to a tracked bundle ex5; not repo-actionable |
+
+**Section status: 4 × `FRESH` + 2 × `NO_ATTESTATION_ON_FILE`** (both named gaps, recorded per
+the L3R reconciliation gate; neither is repo-actionable).
+
+### G. Monitoring / forward-test readiness
+
+- **G1. Evidence completeness: `READ`** — every field sourced: `portfolio/live_deals/`
+  per-account CSVs tracked (latest tracked date `20260811`, ≈8 days before pack date — cited as
+  a tracked fact, not claimed as live freshness); dashboard wiring confirmed (`STATUS.html`
+  line 58: Monitoring = `DEGRADED` banner); kill-switch/guard armed state and
+  `portfolio/expectations.csv` trade-rate row present in the tracked tree.
+- **G2. Global monitoring state: `DEGRADED_MONITORING`** — re-stated verbatim from the Control
+  Room / `STATUS.html` project-wide banner; not promoted by this packet.
+- **G3. Target-specific readiness: `UNKNOWN`** — §2B is `TARGET_UNBOUND`; no target-specific
+  staleness measurement is applicable.
+
+### H. Current blockers
+
+1. `{blocker_id: H1, source_order: L7 closeout / §2A, hard, description: canonical drift — integration head eead6d0c is 9 commits ahead of origin/master 4c5a1e19; push PENDING}`
+2. `{blocker_id: H2, source_order: L3R gate / eead6d0c, hard, description: NO_MAP gap 990103 RSI_MR_EURUSD — zero tracked ex5 in _vps_deploy/RSI_MR_EURUSD/; not repo-actionable}`
+3. `{blocker_id: H3, source_order: L3R gate / eead6d0c, hard, description: NO_MAP gap 990026 STF_BTC_H4_ORDER353 — zero tracked ex5 in _vps_deploy/STF_BTC_H4_ORDER353/; runtime build ref br-81fad90230b74411a444ebe3aaae8506 unmapped; not repo-actionable}`
+
+### I. Parked / future
+
+1. `{item: QI-2+ authority, status: NOT AUTHORIZED, reason: owner decision pending, owner: owner}`
+2. `{item: runtime attachment / actual VPS attach, status: OWNER HARD STOP, reason: no agent executes deployment/attachment, owner: owner}`
+3. `{item: full VPS DEMO Forward-Test milestone completion, status: HOLD, reason: this batch is preparation/hardening only; forward-test observation pending}`
+
+### J. Exact OWNER HARD STOP operation
+
+`NO OWNER ACTION REQUESTED — blocked by §2A (DRIFTED), §2B (TARGET_UNBOUND), §2F (NO_ATTESTATION_ON_FILE ×2), §2G3 (UNKNOWN), §2H (open gaps)`
+
+### K. Regression / review evidence
+
+| Field | Value |
+|---|---|
+| `tpl_regression` | Justified skip — `git diff --name-only origin/master..HEAD -- ea_template/core/` is empty at pack time (verified); no EA/core source in the 9-commit batch |
+| compile evidence | No EA `.mq5` / `ea_template/core/*` changes in the batch (full 9-commit inventory: docs/scripts/portfolio/.githooks only) → no new compile required |
+| D7 regression | PENDING at pack time — runs at closeout step 5; exact results recorded in the step-8 durable-sync commit |
+| independent review | PENDING at pack time — ONE independent milestone review of the final pre-sync evidence HEAD; actual verdict + reviewing family/model recorded in the step-8 durable-sync commit. Family-coverage note: the 9-commit batch is mixed `[claude]` (3) + `[qwen]` (6) authored; the reviewer is a fresh-context Qwen-family subagent, which is a different family only for the claude-authored portion — this limitation is recorded here and in the step-8 commit, per the honest-reporting rule of this contract |
+
+## 3. Overall packet verdict roll-up
+
+| Roll-up | Value |
+|---|---|
+| `SECTIONS_COMPLETE` | `true` — every section carries a stated vocabulary value, including named unknowns (`TARGET_UNBOUND`, `UNREADABLE`, `UNTESTED`, `NO_ATTESTATION_ON_FILE`, `UNKNOWN`) |
+| `READY_FOR_OWNER_ACTION` | `false` — §2J carries the `NO OWNER ACTION REQUESTED` literal |
+| Overall roll-up | `NOT_READY` — per the §1 drift rule (`canonical_status = DRIFTED`): packet marked `BLOCKED: CANONICAL_DRIFT`; sections filled for record; roll-up stops at `NOT_READY` |
+
+## 4. Deterministic completion checklist (resolved)
+
+- [x] §1 packet identity block filled; `canonical_status` computed = `DRIFTED` → packet marked `BLOCKED: CANONICAL_DRIFT`; sections filled for record; roll-up stops at `NOT_READY`
+- [x] §2A canonical identity → status recorded: `DRIFTED` (0 behind / 9 ahead, push `PENDING`)
+- [x] §2B target binding → literal `TARGET_UNBOUND`
+- [x] §2C deployment inventory identity → `NOT_FOUND` stated (by design — milestone-level packet, no single EA selected)
+- [x] §2D artifact/config identity → `UNREADABLE` stated, with on-file binary SHA256 + Inputs-tab read-back recorded for 990016
+- [x] §2E preflight results → `UNTESTED` (`checks_run = 0`)
+- [x] §2F attestation state → 4 × `FRESH` + 2 × `NO_ATTESTATION_ON_FILE` with the records checked
+- [x] §2G monitoring/forward-test readiness → G1 `READ`, G2 `DEGRADED_MONITORING` (verbatim, never promoted), G3 `UNKNOWN` recorded separately; only G3 feeds §2J
+- [x] §2H current blockers → 3-item list (H1 drift, H2 990103 gap, H3 990026 gap)
+- [x] §2I parked/future → 3-item list (QI-2+ authority, runtime attachment, full milestone completion)
+- [x] §2J owner hard stop → mechanically derived: `NO OWNER ACTION REQUESTED — blocked by §2A, §2B, §2F, §2G3, §2H`
+- [x] §2K regression/review evidence → `tpl_regression` justified skip + no-compile-needed recorded; D7 + independent review PENDING at pack time, to be filled in the step-8 durable-sync commit
+- [x] §3 roll-up computed: `SECTIONS_COMPLETE = true`, `READY_FOR_OWNER_ACTION = false`, overall `NOT_READY`
