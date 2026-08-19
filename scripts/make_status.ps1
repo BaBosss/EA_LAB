@@ -124,3 +124,19 @@ if ($isPrimaryWorkspace -and (Test-Path (Split-Path $oneDrive))) {
 # values removes that possibility entirely.
 & (Join-Path $PSScriptRoot "make_status_html.ps1") -RepoRoot $repo -IsPrimaryWorkspace $isPrimaryWorkspace -OneDrivePath (Join-Path (Split-Path $oneDrive) 'EA_LAB_STATUS.html')
 
+# EA_LAB_MAP.html - visual canvas map of every EA in EA_MASTER_INDEX.csv (docs\memory_control\FACT_OWNER_MAP.md row 10b).
+# Generation runs in ANY worktree (make_ea_map.py resolves its own repo root from its file
+# location and only reads EA_MASTER_INDEX.csv, same non-mutating contract as the rest of this
+# pipeline). Python comes from Assert-PortablePython -Provision (scripts\use_python.ps1) -- the
+# same call .githooks\pre-commit already makes -- so a worktree missing tools\python312\python312.zip
+# (gitignored; not checked out per-worktree) hydrates it from the primary checkout instead of
+# failing. The OneDrive copy reuses the SAME $isPrimaryWorkspace gate as the STATUS.md/.html
+# copies above -- see the WORKTREE ISOLATION note at the top of this file -- so an isolated
+# worktree can regenerate the map locally but can never publish it to the owner's OneDrive.
+. (Join-Path $PSScriptRoot "use_python.ps1")
+$pyExe = Assert-PortablePython -Root $repo -Provision
+& $pyExe (Join-Path $PSScriptRoot "make_ea_map.py")
+if ($isPrimaryWorkspace -and (Test-Path (Split-Path $oneDrive))) {
+  Copy-Item (Join-Path $repo "EA_LAB_MAP.html") (Join-Path (Split-Path $oneDrive) 'EA_LAB_MAP.html') -Force
+}
+
