@@ -4,7 +4,9 @@ mt5_optimize.ps1 — headless MT5 OPTIMIZATION.
 Same proven pattern as mt5_run.ps1 (Report=<bare name> -> written to the terminal
 DATA folder, then moved here). Runs a genetic optimization using the optimize
 ranges baked into the base .set (the ||start||step||stop||Y lines), then collects
-the optimizer XML so select_robust_pass.py can pick the robust pass.
+the optimizer XML for the pre-registered candidate/hypothesis selection contract
+to consume (NOT select_robust_pass.py -- that script implements the archived,
+superseded BacktestScore v1 gate; see the "next:" line this script prints).
 
 STATUS: launcher built on the verified single-test mechanism. The single-test
 path is proven; the optimization XML auto-export is expected to work the same way
@@ -57,6 +59,14 @@ $ErrorActionPreference = "Stop"
 if (-not (Test-Path -LiteralPath $Terminal -PathType Leaf)) {
   Write-Output "ABORT: terminal not found: $Terminal"; exit 2
 }
+# Checked BEFORE any use of $PSScriptRoot: both the dot-source below (Join-Path) and the
+# repo-root derivation (Split-Path -Parent) THROW a parameter-binding exception on an empty
+# string rather than returning one, so the checked value must be $PSScriptRoot itself, not
+# something derived from it a line later.
+if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+  Write-Output "ABORT: could not resolve the repo root -- `$PSScriptRoot is empty. Run this script with -File (not as an inline scriptblock/expression) so PowerShell sets `$PSScriptRoot; refusing to fall back to a guessed or hardcoded path."
+  exit 2
+}
 . (Join-Path $PSScriptRoot 'lib\symbol_preflight.ps1')
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $universeCandidate = Join-Path $repoRoot 'factory\universe.jsonl'
@@ -78,7 +88,7 @@ if ($running -and -not $Force) {
   Write-Output "ABORT: this MT5 instance is running ($Terminal). Close it first, or -Force."; exit 2
 }
 
-$auto = "D:\EA_LAB\_mt5_auto"
+$auto = Join-Path $repoRoot "_mt5_auto"
 New-Item -ItemType Directory -Force "$auto\optimizations", "$auto\ini" | Out-Null
 $srcXml = Join-Path $DataDir "$ReportName.xml"
 $destXml = "$auto\optimizations\$ReportName.xml"
@@ -177,27 +187,33 @@ $guardScript = Join-Path $PSScriptRoot "optimize_guard.ps1"
 # `optimization-flag-launders-hand-rolled-selection`). That hole is unchanged by this record.
 #
 # The repo root is derived, not typed: a hardcoded D:\EA_LAB defeats the worktree cage (memory
-# `hardcoded-repo-path-defeats-worktree-cage`, and the `$auto` line above is an instance of it).
-$decisionLog = Join-Path (Split-Path -Parent $PSScriptRoot) "factory\optimize_decisions.jsonl"
+# `hardcoded-repo-path-defeats-worktree-cage`; the `$auto` line above was once an instance of
+# this and is now derived from `$repoRoot` -- see run_mt5_optimize_launcher_hardening_tests.ps1).
+$decisionLog = Join-Path $repoRoot "factory\optimize_decisions.jsonl"
 $guardExtra = @{ DecisionLog = $decisionLog; Lane = $Terminal }
 if ($HypothesisRevision -ne '') { $guardExtra['HypothesisRevision'] = $HypothesisRevision }
 if ($null -ne $GuardBuild)      { $guardExtra['Build'] = $GuardBuild }
-if (Test-Path $guardScript) {
-  if ($SkipOptimizeGuard) {
-    Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
-    & $guardScript -IniPath $ini -WarnOnly @guardExtra | Write-Output
-  }
-  else {
-    & $guardScript -IniPath $ini @guardExtra | Write-Output
-    if ($LASTEXITCODE -ne 0) {
-      Write-Output "ABORT: optimize_guard.ps1 refused at least one swept dimension in $ini (see REFUSE lines above)."
-      Write-Output "        Re-run with -SkipOptimizeGuard to proceed anyway (e.g. a confirmed false positive)."
-      exit 3
-    }
-  }
+# The guard's presence is required, not advisory: an optimize pass SELECTS the parameters
+# everything downstream is built on, so a missing guard must ABORT the launch, not silently
+# skip the pre-flight and let the sweep proceed unchecked. -SkipOptimizeGuard overrides an
+# existing guard's REFUSE verdict (a governed, printed override); it is not a substitute for
+# the guard existing at all, so this check runs BEFORE -SkipOptimizeGuard is considered.
+if (-not (Test-Path -LiteralPath $guardScript -PathType Leaf)) {
+  Write-Output "ABORT: optimize_guard.ps1 not found at $guardScript. The governed pre-flight guard is required before every optimize pass (ORDER-192b) -- it cannot be skipped by omission."
+  Write-Output "        Corrective action: restore the file (e.g. 'git checkout -- scripts\optimize_guard.ps1'), or run from a repo checkout that has it. -SkipOptimizeGuard only overrides a REFUSE verdict from an EXISTING guard; it cannot substitute for a missing one."
+  exit 5
+}
+if ($SkipOptimizeGuard) {
+  Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
+  & $guardScript -IniPath $ini -WarnOnly @guardExtra | Write-Output
 }
 else {
-  Write-Output "optimize_guard: scripts\optimize_guard.ps1 not found, skipping pre-flight check"
+  & $guardScript -IniPath $ini @guardExtra | Write-Output
+  if ($LASTEXITCODE -ne 0) {
+    Write-Output "ABORT: optimize_guard.ps1 refused at least one swept dimension in $ini (see REFUSE lines above)."
+    Write-Output "        Re-run with -SkipOptimizeGuard to proceed anyway (e.g. a confirmed false positive)."
+    exit 3
+  }
 }
 
 Write-Output "OPTIMIZE: $Expert | logical=$($symbolResolution.logical_symbol) tester=$TesterSymbol $Period | $FromDate..$ToDate | mode=$Optimization"
@@ -212,7 +228,8 @@ while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
 if (Test-Path $srcXml) {
   Move-Item $srcXml $destXml -Force
   Write-Output "OK OPTIMIZER XML: $destXml"
-  Write-Output "next: python select_robust_pass.py `"$destXml`" --strategy <strat>"
+  . (Join-Path $PSScriptRoot 'lib\optimize_next_step.ps1')
+  Write-Output (Get-OptimizeNextStepMessage -DestXml $destXml -HypothesisRevision $HypothesisRevision)
 }
 else {
   Write-Output "NO XML (exited=$($proc.HasExited)). If the test ran but produced no .xml, the optimization report may export differently on this build. Check the $ReportName files in $DataDir and the Tester logs."
