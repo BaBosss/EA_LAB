@@ -78,11 +78,28 @@ $boardFiles = @("AGENT_TASKBOARD.md","AGENT_TASKBOARD_MERGE.md") |
   ForEach-Object { Join-Path $repo $_ } | Where-Object { Test-Path $_ }
 
 # ---- judge date + countdown -------------------------------------------------
-$judge = "2026-09-22"
+# Source 1: the strict declaration form in PROJECT_STATE.md -- the current
+# canonical declaration. A verified snapshot proves integrity, not freshness,
+# so it must not outrank the live declaration.
+# Source 2: the verified snapshot's judge_cohorts (earliest cohort) as fallback.
+# The declaration form cannot match narrative lines that merely QUOTE a date
+# (e.g. the ORDER-940 correction quoting the obsolete 2026-09-22), which lack
+# the `= **YYYY-MM-DD**` shape. No hardcoded default: if nothing is found, the
+# page says so.
+$judge = $null
 foreach ($l in $psLines) {
-  if ($l -match 'judge[^\d]*(\d{4}-\d{2}-\d{2})') { $judge = $Matches[1]; break }
+  if ($l -match 'judge (?:date )?= \*\*(\d{4}-\d{2}-\d{2})\*\*') { $judge = $Matches[1]; break }
 }
-$daysToJudge = [int]([datetime]$judge - (Get-Date).Date).TotalDays
+if (-not $judge -and $crVerified.State -eq 'OK' -and $null -ne $crVerified.Document.judge_cohorts -and @($crVerified.Document.judge_cohorts).Count -gt 0) {
+  $judge = (@($crVerified.Document.judge_cohorts) | Where-Object { $_.judge_date -match '^\d{4}-\d{2}-\d{2}$' } |
+    Sort-Object { [datetime]$_.judge_date } | Select-Object -First 1).judge_date
+}
+if ($judge) {
+  $daysToJudge = [int]([datetime]$judge - (Get-Date).Date).TotalDays
+} else {
+  $judge = 'unknown'
+  $daysToJudge = 0
+}
 
 # ---- live portfolio table (PROJECT_STATE section 4) --------------------------
 $liveRows = @(); $inLive = $false
