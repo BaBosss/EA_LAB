@@ -149,18 +149,21 @@ deploy (see §3).
     value on its own authority — it re-states whatever Control Room currently reports, verbatim.
 
 - **G3. Target-specific monitoring readiness** — is monitoring actually wired and fresh for the
-  account/magic bound in §2B. Meaningless while `TARGET_UNBOUND`.
-  - **Fields:** the same `collector_status`/dashboard/kill-switch/trade-rate fields as G1, but
-    read and staleness-clocked for the bound target specifically.
-  - **Status vocabulary:** `FRESH` (state the exact staleness in hours, e.g. `"6.2 h"`) / `STALE`
-    / `NOT_WIRED` / `NOT_APPLICABLE` (§2B is `TARGET_UNBOUND`).
-  - **PASS rule:** `FRESH` with staleness under the project's operating threshold, cited as a
-    number — never a bare "OK".
+  account/magic bound in §2B. Meaningless while `TARGET_UNBOUND`. This is a readiness *verdict*,
+  not a freshness measurement — the measurement is a supporting field, not the vocabulary itself.
+  - **Fields:** the same `collector_status`/dashboard/kill-switch/trade-rate fields as G1, read
+    and staleness-clocked for the bound target specifically; `staleness_hours` (the freshness
+    evidence backing the verdict, e.g. `"6.2 h"`) cited alongside every non-`UNKNOWN` value;
+    `fail_reason` (`STALE` | `NOT_WIRED`) cited alongside any `FAIL` value.
+  - **Status vocabulary:** `PASS` / `FAIL` / `UNKNOWN` (§2B is `TARGET_UNBOUND`, or the target's
+    monitoring evidence could not be read even though G1 is otherwise `READ`).
+  - **PASS rule:** `PASS` only, with `staleness_hours` under the project's operating threshold
+    and cited as a number — never a bare "OK" or a bare `PASS` with no number backing it.
 
 - **Section PASS rule (what gates §2J):** §2J's monitoring input is **G3 alone**, and only when
   G1 is `READ` (an `UNREADABLE` G1 means G3's value cannot be trusted regardless of what it
   says). A global `DEGRADED_MONITORING` state in G2 is reported truthfully but **must not, by
-  itself, block or fail** a target whose own G3 is `FRESH` — global monitoring degradation and
+  itself, block or fail** a target whose own G3 is `PASS` — global monitoring degradation and
   target-specific monitoring readiness are different claims; collapsing them into one status was
   the defect this section corrects. G2 stays `DEGRADED_MONITORING` until Control Room reports
   otherwise — this contract has no mechanism to promote it, and none should be added here.
@@ -197,10 +200,10 @@ deploy (see §3).
   hard-stop path through this packet — it does not belong in §2J.
 - **PASS rule (the gate this whole contract exists to enforce):** §2J may contain a real request
   **only when** §2 A (`BOUND`), B (`BOUND`, i.e. not `TARGET_UNBOUND`), C (`RESOLVED`), D
-  (`CONFIG_MATCH`), E (`PASS`), F (`FRESH`), and **G3** (`FRESH`, target-specific monitoring
+  (`CONFIG_MATCH`), E (`PASS`), F (`FRESH`), and **G3** (`PASS`, target-specific monitoring
   readiness) are *all* true, **and** §2H's blocker list is `NONE`. G3's own PASS rule already
   requires G1 = `READ`. **G2 (global monitoring state) is excluded from this list on purpose:** a
-  global `DEGRADED_MONITORING` does not, by itself, block §2J for a target whose G3 is `FRESH` —
+  global `DEGRADED_MONITORING` does not, by itself, block §2J for a target whose G3 is `PASS` —
   see §2G's section PASS rule. If any one of A, B, C, D, E, F, G3, or §2H is not satisfied, §2J is
   mechanically `NO OWNER ACTION REQUESTED` — this is a deterministic roll-up, not a judgment call
   left to whoever writes the packet. A packet must never phrase a soft, exploratory, or
