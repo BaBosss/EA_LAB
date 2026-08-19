@@ -74,7 +74,8 @@ param(
   [int]$TimeoutSec = 1800,
   [string]$Terminal = "",               # passthrough to mt5_run.ps1 -Terminal (e.g. a 2nd portable install)
   [string]$DataDir = "",                # passthrough to mt5_run.ps1 -DataDir
-  [switch]$Portable                     # passthrough to mt5_run.ps1 -Portable
+  [switch]$Portable,                    # passthrough to mt5_run.ps1 -Portable
+  [switch]$AllowLegacySelection         # explicit opt-in: run this superseded highest-PF selector as historical/research-only (NON_FACTORY)
 )
 $ErrorActionPreference = "Stop"
 $root = "D:\EA_LAB"
@@ -86,6 +87,14 @@ if ($Model -eq 2) {
   Write-Output "ABORT: Model=2 is disallowed for reported walk-forward numbers (project rule: Model-2 filters zero-trade only, never a result). Use -Model 4 (default) or a documented higher-fidelity model."
   exit 2
 }
+
+if (-not $AllowLegacySelection) {
+  Write-Output "REFUSED (LEGACY / NON_FACTORY): walkforward.ps1 selects the highest-PF combo per fold by hand (superseded optimization-selection policy). It is NOT the current Factory selection contract."
+  Write-Output "Current Factory selection comes from candidate/hypothesis pre-registration (ParameterBinding + registry resolver). Do not use this script's picks for Factory verdict/selection."
+  Write-Output "To run it explicitly as historical/research-only (output NON-AUTHORITATIVE for Factory), re-invoke with -AllowLegacySelection."
+  exit 3
+}
+Write-Output "LEGACY / NON_FACTORY: walkforward.ps1 running with explicit -AllowLegacySelection. Its highest-PF picks are NON-AUTHORITATIVE for current Factory verdict/selection (historical/research only)."
 
 # ---------- fold construction ----------
 . (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
@@ -285,7 +294,7 @@ $summary = [PSCustomObject]@{
   n_folds                     = $foldSummaries.Count
   avg_efficiency_ratio        = $avgEr
   pct_folds_oos_profitable    = $pctOosProfitable
-  note = "Tooling output only (ORDER-157). Not a verdict -- do not use these numbers to judge/kill/promote an EA without going through the VERDICT GATE in CLAUDE.md."
+  note = "LEGACY / NON_FACTORY: highest-PF hand-selection (superseded optimization-selection policy); output NON-AUTHORITATIVE for current Factory verdict/selection. Tooling output only (ORDER-157). Not a verdict -- do not use these numbers to judge/kill/promote an EA without going through the VERDICT GATE in CLAUDE.md."
 }
 $summary | ConvertTo-Json -Depth 8 | Out-File $SummaryJson -Encoding utf8
 

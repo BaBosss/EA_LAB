@@ -102,10 +102,10 @@ def _title_meta(path):
     return title, "", "", "", ""
 
 
-def row_for_optimize(path, strategy):
+def row_for_optimize(path, strategy, allow_legacy=False):
     ea, sym, tf, frm, to = _title_meta(path)
     d = P.parse_optimizer_xml(Path(path), top=0)
-    r = RS.select_robust(d.get("passes") or [], strategy)
+    r = RS.select_robust(d.get("passes") or [], strategy, allow_legacy=allow_legacy)
     # ไม่มี robust survivor -> log ตัว profit-max แทน (กันแถวว่าง), หมายเหตุไว้ใน verdict
     rb = r.get("robust") or r.get("profit_max") or {}
     tag = "robust" if r.get("robust") else "profitmax"
@@ -172,6 +172,9 @@ def main():
     ap.add_argument("--show", action="store_true", help="โชว์ log ปัจจุบัน")
     ap.add_argument("--dedup", action="store_true", help="เหลือ run ล่าสุดต่อ ea+symbol+type")
     ap.add_argument("--purge-files", action="store_true", help="ลบไฟล์ report เก่าที่ถูก dedup ด้วย")
+    ap.add_argument("--allow-legacy-selection", action="store_true",
+                    help="Explicitly log an optimize run via the legacy selector "
+                         "(historical/research-only, NON_FACTORY output).")
     a = ap.parse_args()
 
     if a.dedup:
@@ -201,7 +204,14 @@ def main():
     typ = a.type
     if typ == "auto":
         typ = "optimize" if a.report.lower().endswith(".xml") else "single"
-    row = row_for_optimize(a.report, a.strategy) if typ == "optimize" else row_for_single(a.report, a.strategy)
+    if typ == "optimize" and not a.allow_legacy_selection:
+        print("REFUSED (LEGACY / NON_FACTORY): log_run.py optimize logging uses the "
+              "superseded BacktestScore v1 robust-pass selector. It is NOT the current "
+              "Factory selection contract.")
+        print("To log an optimize run explicitly as historical/research-only, re-invoke "
+              "with --allow-legacy-selection.")
+        sys.exit(3)
+    row = row_for_optimize(a.report, a.strategy, allow_legacy=True) if typ == "optimize" else row_for_single(a.report, a.strategy)
 
     rows = _read_rows()
     rows.append(row)

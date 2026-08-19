@@ -25,6 +25,14 @@ import score_backtest as SB                      # noqa: E402
 GATE_PF, GATE_DD, GATE_RF = 1.20, 20.0, 1.50
 
 
+class LegacySelectionRefused(RuntimeError):
+    """Raised when the legacy BacktestScore v1 selection gate is invoked
+    without explicit opt-in. This selector is NOT the current Factory
+    selection contract (see docs/PARAM_REGISTRY.csv + pre-registered
+    candidate/hypothesis selection contracts). It is preserved for
+    historical/research use only and requires allow_legacy=True."""
+
+
 def _m(p):
     return {
         "PF": p.get("profit_factor"),
@@ -99,7 +107,14 @@ def plateau_center(survivors_passes, all_passes):
     return best, best_n
 
 
-def select_robust(passes, strategy="default"):
+def select_robust(passes, strategy="default", allow_legacy=False):
+    if not allow_legacy:
+        raise LegacySelectionRefused(
+            "select_robust() is the legacy BacktestScore v1 gate "
+            "(PF>=1.20, DD<=20, RF>=1.50, trade floor) — superseded and NOT the "
+            "current Factory selection contract. Refusing by default. Pass "
+            "allow_legacy=True (or --allow-legacy-selection on the CLI) to run "
+            "it explicitly as historical/research-only (NON_FACTORY output).")
     total = len(passes)
     # trade-count floor: reject high-PF/low-trade flukes (e.g. PF 24 on 30 trades)
     min_trades = max(100, SB.TRADE_MIN.get(strategy, 80))
@@ -156,11 +171,25 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("xml")
     ap.add_argument("--strategy", default="default")
+    ap.add_argument("--allow-legacy-selection", action="store_true",
+                    help="Explicitly run this legacy selector as "
+                         "historical/research-only (NON_FACTORY output).")
     a = ap.parse_args()
+    if not a.allow_legacy_selection:
+        print("REFUSED (LEGACY / NON_FACTORY): select_robust_pass.py is the "
+              "superseded BacktestScore v1 gate (PF>=1.20, DD<=20, RF>=1.50, "
+              "trade floor). It is NOT the current Factory selection contract.")
+        print("Current Factory selection comes from candidate/hypothesis "
+              "pre-registration (ParameterBinding + registry resolver).")
+        print("To run it explicitly as historical/research-only, re-invoke "
+              "with --allow-legacy-selection.")
+        sys.exit(3)
     sys.path.insert(0, r"C:\Users\patip\.claude\skills\backtest-report-analyzer\scripts")
     import parse_mt5_report as P
     d = P.parse_optimizer_xml(Path(a.xml), top=0)
-    r = select_robust(d.get("passes") or [], a.strategy)
+    r = select_robust(d.get("passes") or [], a.strategy, allow_legacy=True)
+    print("LEGACY / NON_FACTORY: output is historical/research-only and "
+          "NON-AUTHORITATIVE for current Factory verdict/selection.")
     print(f"passes={r['total_passes']} survivors={r['survivors']} "
           f"({r['survivor_ratio_pct']}%) plateau={r['plateau']}")
     print(f"robust pick : {r['robust']}  score={r['robust_score']}")

@@ -14,8 +14,10 @@ from pathlib import Path
 
 SKILLS = r"C:\Users\patip\.claude\skills\backtest-report-analyzer\scripts"
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, SKILLS)
+# SKILLS must stay at index 0: the local scripts\parse_mt5_report.py is a partial
+# htm-only parser and lacks parse_optimizer_xml (the SKILLS copy has the full set).
 sys.path.insert(0, HERE)
+sys.path.insert(0, SKILLS)
 import parse_mt5_report as P          # noqa: E402
 import score_backtest as SB           # noqa: E402
 import select_robust_pass as RS       # noqa: E402
@@ -48,8 +50,31 @@ def project_of(path):
     return Path(path).parent.name
 
 
+def _optimizer_legacy_allowed(argv):
+    """Narrow guard: only the optimizer-batch branch below consumes the legacy
+    BacktestScore v1 selector (select_robust_pass.select_robust). Single-test
+    HTML scoring uses score_backtest.score() and is unaffected — it is not
+    gated, so it keeps working by default with no flag required."""
+    if "--allow-legacy-selection" in argv:
+        print("LEGACY / NON_FACTORY: run_pipeline.py running with explicit "
+              "--allow-legacy-selection. Optimizer-batch picks are NON-AUTHORITATIVE "
+              "for current Factory verdict/selection (historical/research only).")
+        return True
+    print("REFUSED (LEGACY / NON_FACTORY): optimizer-batch XML files use the "
+          "superseded BacktestScore v1 robust-pass selector. It is NOT the "
+          "current Factory selection contract, so optimizer XML files are "
+          "skipped by default (single-test HTML scoring is unaffected).")
+    print("Current Factory selection comes from candidate/hypothesis "
+          "pre-registration (ParameterBinding + registry resolver).")
+    print("To include optimizer-batch picks explicitly as historical/research-only, "
+          "re-invoke with --allow-legacy-selection.")
+    return False
+
+
 def main():
-    roots = sys.argv[1:] or DEFAULT_ROOTS
+    argv = sys.argv[1:]
+    allow_legacy = _optimizer_legacy_allowed(argv)
+    roots = [a for a in argv if a != "--allow-legacy-selection"] or DEFAULT_ROOTS
     files = []
     for root in roots:
         for dp, _, fns in os.walk(root):
@@ -61,16 +86,20 @@ def main():
                     files.append(os.path.join(dp, fn))
 
     records, errors, shortlist = [], [], []
+    skipped_optimizer = 0
     for f in sorted(files):
         proj = project_of(f)
         strat = guess_strategy(proj + " " + os.path.basename(f))
         try:
             if f.lower().endswith(".xml"):
+                if not allow_legacy:
+                    skipped_optimizer += 1
+                    continue
                 d = P.parse_optimizer_xml(Path(f), top=0)
                 passes = d.get("passes") or []
                 if not passes:
                     continue
-                r = RS.select_robust(passes, strat)
+                r = RS.select_robust(passes, strat, allow_legacy=True)
                 pick = r["robust"] or r["profit_max"]
                 rec = {
                     "project": proj, "type": "optimizer", "ea_name": "", "symbol": "",
@@ -123,12 +152,20 @@ def main():
         md.append("| {verdict} | {score} | {project} | {symbol} | {PF} | {DD%} | {RF} | "
                   "{trades} | {net} | {f} |".format(f=os.path.basename(r["file"]), **r))
 
-    md += ["", "## Optimizer batches (ROBUST pick, not profit-max)", "",
-           "| Plateau | RobustScore | Project | PF | DD% | RF | Trades | Net | Survivors | File |",
-           "|---|---:|---|---:|---:|---:|---:|---:|---:|---|"]
-    for r in opt:
-        md.append("| {plateau} | {score} | {project} | {PF} | {DD%} | {RF} | {trades} | "
-                  "{net} | {survivors} | {f} |".format(f=os.path.basename(r["file"]), **r))
+    md += ["", "## Optimizer batches (ROBUST pick, not profit-max)"]
+    if allow_legacy:
+        md += ["LEGACY / NON_FACTORY: picks below come from the superseded BacktestScore v1 "
+               "robust-pass selector — historical/research-only, NON-AUTHORITATIVE for "
+               "current Factory verdict/selection.", "",
+               "| Plateau | RobustScore | Project | PF | DD% | RF | Trades | Net | Survivors | File |",
+               "|---|---:|---|---:|---:|---:|---:|---:|---:|---|"]
+        for r in opt:
+            md.append("| {plateau} | {score} | {project} | {PF} | {DD%} | {RF} | {trades} | "
+                      "{net} | {survivors} | {f} |".format(f=os.path.basename(r["file"]), **r))
+    else:
+        md += [f"REFUSED (LEGACY / NON_FACTORY): {skipped_optimizer} optimizer XML file(s) "
+               "skipped — re-run with --allow-legacy-selection to include historical/"
+               "research-only picks here."]
 
     # SHORTLIST: robust pass exists + a real plateau -> worth re-testing in MT5
     shortlist.sort(key=lambda x: -(x[0] or 0))
@@ -147,6 +184,9 @@ def main():
     npass = sum(1 for r in singles if r["verdict"] == "PASS")
     print(f"reports={len(records)} single={len(singles)} optimizer={len(opt)} errors={len(errors)}")
     print(f"  single PASS={npass}  ·  shortlist (robust+plateau)={len(shortlist)}")
+    if skipped_optimizer:
+        print(f"  REFUSED (LEGACY / NON_FACTORY): {skipped_optimizer} optimizer XML file(s) "
+              "skipped (use --allow-legacy-selection to include historical/research-only picks)")
     print(f"wrote {LAB}\\RUN_REGISTRY.md + .csv")
 
 

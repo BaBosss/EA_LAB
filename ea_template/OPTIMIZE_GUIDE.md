@@ -1,4 +1,12 @@
 # EA_Lab — Optimize Guide (Instrument Scale + Strategy Plans)
+
+> ## ⚠️ LEGACY / NON-FACTORY / NON-AUTHORITATIVE (quarantined 2026-08-19)
+> This guide predates the current Factory architecture (ParameterBinding + registry resolver + pre-registered selection contracts). It is historical reference only.
+> - Do NOT use Plan A–E or any embedded PF / DD / risk examples in this guide as current Factory policy (e.g. "PF>1.3" as a selection trigger is NOT a current Factory rule).
+> - Current Factory optimization dimensions come from **ParameterBinding / the registry resolver** (`docs/PARAM_REGISTRY.csv`).
+> - Current Factory optimization **selection** comes from the **candidate/hypothesis pre-registered selection contract** (VERDICT GATE / optimize guard), not from this guide's coarse/fine workflow.
+> The historical content below is preserved unchanged for research/provenance.
+
 > เขียน 2026-06-18 · ใช้คู่ [DESIGN_V2.md](DESIGN_V2.md) · โค้ดอ้างอิงตาม numbering V2
 
 เป้าหมาย: ตอน test/optimize ให้ค่า **อยู่ในสเกลที่เหมาะกับสินค้า** + มี **plan หยาบๆ**
