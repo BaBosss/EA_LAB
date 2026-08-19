@@ -99,6 +99,20 @@ if [ ! -x "$py" ] && [ ! -f "$py" ]; then
   echo "PRECOMMIT-FAIL-CLOSED: $py not found -- cannot run check_attested_pin_staged.py, blocking commit"
   exit 1
 fi
+# Linked-worktree hydration (2026-08-18): a fresh linked worktree materializes tracked files
+# only, and python312.zip is ignored, so the interpreter above cannot load its stdlib
+# (ModuleNotFoundError: encodings) until the archive is copied in from the source checkout.
+# Dot-source the canonical provisioning mechanism and let it do that copy (git-common-dir).
+# FAIL-CLOSED: a provisioning failure blocks the commit; there is deliberately no fallback to
+# a system Python (this box has none, and a different interpreter would change the guard's
+# semantics).
+"$ps" -NoProfile -ExecutionPolicy Bypass -Command ". ./scripts/use_python.ps1; try { \$exe = Assert-PortablePython -Provision; if (-not \$exe) { throw 'Assert-PortablePython returned no executable' } } catch { Write-Host ('PRECOMMIT-FAIL-CLOSED: portable Python provisioning failed -- ' + \$_.Exception.Message); exit 1 }"
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] portable Python provisioning failed (above) -- cannot run check_attested_pin_staged.py, blocking commit"
+  exit $rc
+fi
 "$py" _triage/factory_os/check_attested_pin_staged.py
 rc=$?
 if [ "$rc" -ne 0 ]; then

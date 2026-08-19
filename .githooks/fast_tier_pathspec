@@ -9,6 +9,7 @@ _triage/factory_os/architecture.py
 _triage/factory_os/attestation.py
 _triage/factory_os/candidate.py
 _triage/factory_os/capability.py
+_triage/factory_os/check_attested_pin_staged.py
 _triage/factory_os/check_coverage_transfer.py
 _triage/factory_os/check_param_surface.py
 _triage/factory_os/check_pilot_acceptance.py

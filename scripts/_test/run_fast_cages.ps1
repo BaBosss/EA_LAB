@@ -587,7 +587,24 @@ $SUITE_GUARDS = @{
     'run_order_collision_tests.ps1'   = @('scripts/check_order_collision.ps1', 'docs/SESSION_LEDGER.md')
     'run_handoff_contract_tests.ps1'  = @('scripts/check_handoff_contract.ps1')
     'run_blobmap_encoding_tests.ps1'  = @('scripts/check_taskboard_archive.ps1')
-    'run_portable_python_tests.ps1'   = @('scripts/use_python.ps1')
+    # check_attested_pin_staged.py is a real input: PART 3 of the suite executes it inside the
+    # freshly hydrated linked worktree, so an edit to the guard must re-run the suite.
+    # The ten _triage/factory_os modules below are DERIVED by the import sweep in
+    # run_guard_trigger_tests PART 4b, not remembered: check_attested_pin_staged.py's transitive
+    # imports pull them in, so a commit touching only one of them changes what the executed
+    # guard does, and the suite must re-run.
+    'run_portable_python_tests.ps1'   = @('scripts/use_python.ps1',
+                                          '_triage/factory_os/check_attested_pin_staged.py',
+                                          '_triage/factory_os/check_s2a_attestation.py',
+                                          '_triage/factory_os/check_s2a_migration.py',
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/gen_design_contracts.py',
+                                          '_triage/factory_os/candidate.py',
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/gen_s2a_migration_doc.py',
+                                          '_triage/factory_os/scheduler.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/setfile.py')
     'run_mris_asof_tests.ps1'         = @('scripts/mris/mris_macro_feeder.ps1',
                                           'scripts/mris/mris_crisis_models.ps1',
                                           'scripts/mris/mris_web_feeder.ps1')
