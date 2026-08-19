@@ -21,6 +21,14 @@
 - **Authority / status preserved, unchanged by this sync:** VPS DEMO Deployment / Forward-Test = **NOT COMPLETE**; `TARGET_UNBOUND`; `READY_FOR_OWNER_ACTION=false`; **no owner action requested**; monitoring remains `DEGRADED_MONITORING`; Factory candidate = **NONE SELECTED**; runtime/deployment attachment remains an **owner hard stop**. No LIVE / DEMO→LIVE / real-money / risk-default / QI-2+ authority was exercised or changed by this sync.
 - **Scope:** this is a state-sync/documentation entry recording an already-accepted, already-pushed milestone — no source/product implementation was made in this commit.
 
+### 2026-08-19 EA_LAB_MAP RECOVERY / PR #8 SUPERSEDE SYNC
+
+- **Resolves prior stale item:** the 2026-08-17 DURABLE SYSTEM COMPLETION SYNC below listed `PR #8 / ORDER-1560 merge (owner-pending)` under owner/external-blocked items. This is **RESOLVED / SUPERSEDED** — it is no longer a current blocker.
+- **What happened:** the EA_LAB_MAP capability (generated visual EA registry `EA_LAB_MAP.html`, its generator `scripts/make_ea_map.py`, deterministic tests `run_make_ea_map_tests.ps1`, `make_status.ps1` worktree-safe OneDrive-gated integration, the README pointer, and the `FACT_OWNER_MAP.md` generated-file ownership row) was recovered independently onto current canonical master at `f700f7b695c337505ee6fe43b8e417319a7b0bf5`, confirmed present at canonical `2faa6b1ca8717b1adcd2e866011aded5aab9c69a`. This does not depend on merging PR #8.
+- **PR #8 disposition:** `SUPERSEDED_BY_CANONICAL_RECOVERY`. PR #8 (`https://github.com/BaBosss/EA_LAB/pull/8`) must **not** be merged — its stale branch predates the current canonical history. Closure was attempted; see the taskboard/commit trail for the outcome.
+- **Unchanged by this sync:** VPS DEMO Deployment / Forward-Test = **NOT COMPLETE**; `TARGET_UNBOUND`; `READY_FOR_OWNER_ACTION=false`; **no owner action requested**; monitoring remains `DEGRADED_MONITORING`; Factory candidate = **NONE SELECTED**. No deployment, trading, LIVE, risk/default, or QI-2+ authority was exercised or changed by this sync.
+- **The historical 2026-08-17 snapshot below is left unchanged; this entry records the current disposition only.**
+
 ### 2026-08-18 DURABLE FACTORY PRODUCTION READINESS — WAVE 1 SYNC
 
 - **Accepted milestone:** `FACTORY PRODUCTION READINESS — WAVE 1 = ACCEPTED / COMPLETE`. Three independently accepted lanes were integrated into one canonical line; this is a tooling/visibility milestone only and creates no runtime, deployment, or selection authority.
