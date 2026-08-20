@@ -9,6 +9,7 @@ const { execFileSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..', '..');
 const CONTRACT_PATH = path.join(__dirname, 'm3-remote-contract.json');
 const SHA = /^[0-9a-f]{40}$/i;
+const SHA256 = /^[0-9a-f]{64}$/i;
 const SECRET_NAME = /^[A-Z][A-Z0-9_]{2,127}$/;
 const TRUSTED_SOURCE_ROOT = 'D:\\EA_LAB_TOOLS\\lnwjud-v4-src';
 
@@ -23,9 +24,15 @@ function samePath(left, right) { return path.resolve(left).replaceAll('/', '\\')
 function inside(root, candidate) { const item = path.relative(root, candidate); return item !== '' && !item.startsWith('..') && !path.isAbsolute(item); }
 function displayPath(value) { return value.replaceAll('\\', '/'); }
 
+function trustedClientSha(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string' || !SHA256.test(value)) fail('tunnel_client_sha256 must be a 64-character hex SHA-256 or null');
+  return value.toLowerCase();
+}
+function optionalText(value) { return typeof value === 'string' && value.trim() !== '' ? value : null; }
 function loadContract(file = CONTRACT_PATH) {
   const value = object(readJson(file), 'contract');
-  const allowed = new Set(['schema_version', 'canonical_base_sha', 'transport', 'listener', 'launcher', 'gateway_policy', 'upstream_source_root', 'runtime_root', 'tunnel_profile', 'credential_environment', 'activation']);
+  const allowed = new Set(['schema_version', 'canonical_base_sha', 'transport', 'listener', 'launcher', 'gateway_policy', 'upstream_source_root', 'runtime_root', 'tunnel_profile', 'credential_environment', 'activation', 'tunnel_client_sha256', 'tunnel_client_version', 'tunnel_client_source_ref']);
   if (Object.keys(value).some((key) => !allowed.has(key))) fail('unknown contract field');
   if (value.schema_version !== 1) fail('unsupported schema_version');
   const canonicalBaseSha = text(value.canonical_base_sha, 'canonical_base_sha').toLowerCase(); if (!SHA.test(canonicalBaseSha)) fail('canonical_base_sha must be a SHA');
@@ -40,7 +47,10 @@ function loadContract(file = CONTRACT_PATH) {
   const tunnelProfile = text(value.tunnel_profile, 'tunnel_profile'); if (!/^[a-z0-9-]{3,64}$/.test(tunnelProfile)) fail('tunnel_profile is invalid');
   const credentialEnvironment = text(value.credential_environment, 'credential_environment'); if (!SECRET_NAME.test(credentialEnvironment)) fail('credential_environment is invalid');
   if (value.activation !== 'OWNER_REQUIRED') fail('activation must remain owner-required');
-  return Object.freeze({ canonicalBaseSha, launcher, gatewayPolicy, upstreamSourceRoot, runtimeRoot, tunnelProfile, credentialEnvironment });
+  const tunnelClientSha256 = trustedClientSha(Object.prototype.hasOwnProperty.call(value, 'tunnel_client_sha256') ? value.tunnel_client_sha256 : null);
+  const tunnelClientVersion = optionalText(value.tunnel_client_version);
+  const tunnelClientSourceRef = optionalText(value.tunnel_client_source_ref);
+  return Object.freeze({ canonicalBaseSha, launcher, gatewayPolicy, upstreamSourceRoot, runtimeRoot, tunnelProfile, credentialEnvironment, tunnelClientSha256, tunnelClientVersion, tunnelClientSourceRef });
 }
 function buildRestrictedLaunch({ contract = loadContract(), worktree = ROOT } = {}) {
   const root = path.resolve(worktree);

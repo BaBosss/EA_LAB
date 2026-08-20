@@ -79,20 +79,35 @@ function tunnelLifecycle(remote, contract) {
   return contract.milestone.secure_tunnel;
 }
 function fileSha(file) { try { return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'); } catch { return null; } }
+const EVIDENCE_TTL_MS = 10 * 60 * 1000;
+const EVIDENCE_FUTURE_SKEW_MS = 60 * 1000;
+function evidenceFresh(generatedAt, now = Date.now()) {
+  const generated = Date.parse(generatedAt);
+  return Number.isFinite(generated) && now - generated <= EVIDENCE_TTL_MS && generated - now <= EVIDENCE_FUTURE_SKEW_MS;
+}
 function safeTunnelEvidence(runtimeRoot, context = {}) {
   try {
     const value = readJson(path.join(runtimeRoot, 'm3-tunnel-state.json'));
     if (value?.schema_version !== 2 || !['DOCTOR_PASSED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'CONNECTED', 'DISCONNECTED'].includes(value.state)) return { state: 'UNKNOWN_UNBOUND', error: null };
     if (typeof value.checkout_head !== 'string' || value.checkout_head !== context.actual_head || value.profile !== 'ea-lab-lnwjud-m3') return { state: 'UNKNOWN_UNBOUND', error: null };
-    if (value.state === 'DOCTOR_PASSED' && (value.artifact !== path.join(runtimeRoot, 'm3-sealed-profile.yaml') || value.profile_sha256 !== fileSha(value.artifact) || !value.launcher_sha256 || value.launcher_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'm3-restricted-launcher.cmd')) || !value.policy_sha256 || value.policy_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'ea-lab-policy.json')))) return { state: 'UNKNOWN_UNBOUND', error: null };
-    const generated = Date.parse(value.generated_at); if (!Number.isFinite(generated) || Date.now() - generated > 10 * 60 * 1000 || generated - Date.now() > 60 * 1000) return { state: 'UNKNOWN_STALE', error: null };
+    if (value.state === 'DOCTOR_PASSED' && (value.artifact !== path.join(runtimeRoot, 'm3-sealed-profile.yaml') || value.profile_sha256 !== fileSha(value.artifact) || !value.launcher_sha256 || value.launcher_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'm3-restricted-launcher.cmd')) || !value.policy_sha256 || value.policy_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'ea-lab-policy.json')) || !value.tunnel_client_sha256 || typeof value.tunnel_client_sha256 !== 'string')) return { state: 'UNKNOWN_UNBOUND', error: null };
+    if (!evidenceFresh(value.generated_at)) return { state: 'UNKNOWN_STALE', error: null };
     return { state: value.state, error: null };
   } catch { return { state: 'UNKNOWN_UNBOUND', error: null }; }
 }
-function liveTunnelClient(profile) {
+function tunnelClientCommandMatches(commandLine, runtimeRoot) {
+  if (typeof commandLine !== 'string' || typeof runtimeRoot !== 'string' || runtimeRoot === '') return false;
+  const prefix = path.join(runtimeRoot, 'm3-launch-').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`--profile-file\\s+"?${prefix}[0-9a-f]{64}\\.yaml"?`, 'i');
+  return pattern.test(commandLine);
+}
+function liveTunnelClient(runtimeRoot) {
   try {
-    const raw = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', "@(Get-CimInstance Win32_Process -Filter \"Name = 'tunnel-client.exe'\" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match '--profile\\s+ea-lab-lnwjud-m3' }).Count"], { encoding: 'utf8', windowsHide: true });
-    return Number.parseInt(raw.trim(), 10) > 0;
+    const raw = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', "Get-CimInstance Win32_Process -Filter \"Name = 'tunnel-client.exe'\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty CommandLine | ConvertTo-Json -Compress"], { encoding: 'utf8', windowsHide: true });
+    const trimmed = raw.trim();
+    const rows = trimmed === '' ? [] : JSON.parse(trimmed);
+    const lines = Array.isArray(rows) ? rows : [rows];
+    return lines.some((line) => tunnelClientCommandMatches(line, runtimeRoot));
   } catch { return false; }
 }
 function deriveStatus(input) {
@@ -145,7 +160,7 @@ function collectLiveStatus(options = {}) {
   const listeners = liveListeners(processes);
   const actualHead = git(workspace, ['rev-parse', 'HEAD']);
   const evidence = safeTunnelEvidence(runtimeRoot, { actual_head: actualHead, workspace });
-  return deriveStatus({ contract, generated_at: options.generated_at, actual_source_sha: git(contract.lnwjud.source_path, ['rev-parse', 'HEAD']), actual_head: actualHead, authorized_workspace: workspace, policy: policyResult.value, processes, lock: safeLock(runtimeRoot), listener_state: listenerState(processes, listeners), tunnel: { evidence_state: evidence.state, client_detected: liveTunnelClient(contract.tunnel_profile) }, last_error: policyResult.error });
+  return deriveStatus({ contract, generated_at: options.generated_at, actual_source_sha: git(contract.lnwjud.source_path, ['rev-parse', 'HEAD']), actual_head: actualHead, authorized_workspace: workspace, policy: policyResult.value, processes, lock: safeLock(runtimeRoot), listener_state: listenerState(processes, listeners), tunnel: { evidence_state: evidence.state, client_detected: liveTunnelClient(runtimeRoot) }, last_error: policyResult.error });
 }
 function lane(status) {
   const problem = status.audit.last_error;
@@ -157,4 +172,4 @@ function writeAtomic(file, content) { fs.mkdirSync(path.dirname(file), { recursi
 function publish(status) { writeAtomic(path.join(ROOT, 'lnwjud-local-status.json'), `${JSON.stringify(status, null, 2)}\n`); writeAtomic(path.join(ROOT, 'lanes', 'lnwjud-local-execution-plane.json'), `${JSON.stringify(lane(status), null, 2)}\n`); }
 function parseArgs(argv) { const options = {}; for (let i = 0; i < argv.length; i += 1) { if (argv[i] === '--publish') options.publish = true; else if (argv[i] === '--now') options.generated_at = argv[++i]; else throw new Error('usage: local-status.cjs [--publish] [--now <ISO-8601>]'); } return options; }
 if (require.main === module) { const options = parseArgs(process.argv.slice(2)); const status = collectLiveStatus(options); if (options.publish) publish(status); process.stdout.write(`${JSON.stringify(status, null, 2)}\n`); }
-module.exports = { loadContract, sanitize, deriveStatus, collectLiveStatus, lane, tunnelLifecycle, safeTunnelEvidence };
+module.exports = { loadContract, sanitize, deriveStatus, collectLiveStatus, lane, tunnelLifecycle, safeTunnelEvidence, evidenceFresh, tunnelClientCommandMatches };

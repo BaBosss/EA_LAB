@@ -24,9 +24,17 @@ function tunnelEnv(env, credential) {
   return result;
 }
 function publish(runtimeRoot, value) { fs.mkdirSync(runtimeRoot, { recursive: true }); fs.writeFileSync(path.join(runtimeRoot, 'm3-tunnel-state.json'), `${JSON.stringify(value)}\n`, 'utf8'); }
-function prepare({ options, env = process.env, worktree, execFile = execFileSync, runtimeRoot } = {}) {
-  const contract = loadContract(); const ready = validateLocalReadiness({ contract, worktree, env });
-  if (!options || !fs.existsSync(options.tunnelClient)) fail('tunnel-client executable was not found');
+function verifiedClientSha(tunnelClient, contract) {
+  if (typeof tunnelClient !== 'string' || !fs.existsSync(tunnelClient) || !fs.statSync(tunnelClient).isFile()) fail('tunnel-client executable was not found');
+  const clientSha = sha(tunnelClient);
+  if (contract.tunnelClientSha256 === null) fail('TUNNEL_CLIENT_IDENTITY_UNBOUND: no approved tunnel-client identity is configured in the trusted contract');
+  if (clientSha !== contract.tunnelClientSha256) fail('tunnel-client binary is not the approved identity');
+  return clientSha;
+}
+function prepare({ options, env = process.env, worktree, execFile = execFileSync, runtimeRoot, contract: contractOverride } = {}) {
+  const contract = contractOverride || loadContract(); const ready = validateLocalReadiness({ contract, worktree, env });
+  if (!options) fail('tunnel-client executable was not found');
+  const clientSha = verifiedClientSha(options.tunnelClient, contract);
   if (typeof env[contract.credentialEnvironment] !== 'string' || env[contract.credentialEnvironment].trim() === '') fail(`${contract.credentialEnvironment} is required only for this owner process`);
   const launch = buildRestrictedLaunch({ contract, worktree }); const outputRoot = runtimeRoot || contract.runtimeRoot; const profile = path.join(outputRoot, SEALED_PROFILE); const safeEnv = tunnelEnv(env, contract.credentialEnvironment);
   try {
@@ -35,7 +43,7 @@ function prepare({ options, env = process.env, worktree, execFile = execFileSync
     const profileSha = sha(profile);
     execFile(options.tunnelClient, ['doctor', '--profile-file', profile, '--explain'], { cwd: launch.cwd, env: safeEnv, windowsHide: true, stdio: 'ignore', timeout: 60_000 });
     if (sha(profile) !== profileSha) fail('sealed profile changed during doctor');
-    const evidence = { schema_version: 2, state: 'DOCTOR_PASSED', checkout_head: ready.checkout_head, profile: contract.tunnelProfile, artifact: profile, profile_sha256: profileSha, launcher_sha256: sha(launch.command), policy_sha256: sha(launch.policy_path), tunnel_client: options.tunnelClient, generated_at: new Date().toISOString() };
+    const evidence = { schema_version: 2, state: 'DOCTOR_PASSED', checkout_head: ready.checkout_head, profile: contract.tunnelProfile, artifact: profile, profile_sha256: profileSha, launcher_sha256: sha(launch.command), policy_sha256: sha(launch.policy_path), tunnel_client: options.tunnelClient, tunnel_client_sha256: clientSha, generated_at: new Date().toISOString() };
     publish(outputRoot, evidence); return evidence;
   } catch (error) { publish(outputRoot, { schema_version: 2, state: 'DOCTOR_FAILED', checkout_head: ready.checkout_head, profile: contract.tunnelProfile, generated_at: new Date().toISOString() }); throw error; }
 }

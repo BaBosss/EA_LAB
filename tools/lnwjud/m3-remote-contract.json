@@ -9,5 +9,8 @@
   "runtime_root": "D:\\EA_LAB_CONTROL\\lnwjud-v4-m3",
   "tunnel_profile": "ea-lab-lnwjud-m3",
   "credential_environment": "CONTROL_PLANE_API_KEY",
-  "activation": "OWNER_REQUIRED"
+  "activation": "OWNER_REQUIRED",
+  "tunnel_client_sha256": null,
+  "tunnel_client_version": null,
+  "tunnel_client_source_ref": null
 }
