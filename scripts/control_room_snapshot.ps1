@@ -112,6 +112,95 @@ function TryParseTradeTime([string]$s){
   if ([datetime]::TryParse($norm, [ref]$dt)) { return $dt }
   return $null
 }
+$EPOCH_UTC = [datetime]::SpecifyKind((New-Object datetime(1970,1,1)), [System.DateTimeKind]::Utc)
+function TryParseUnixSeconds($v){
+  # AUDIT C, C-A8 helper. Returns [datetime] (UTC) or $null. Rejects 0/negative/non-numeric:
+  # an EA that never captured its attach time writes 0, and 1970-01-01 is not a bound.
+  $s = "$v".Trim()
+  if ($s -notmatch '^[0-9]+$') { return $null }
+  $n = [int64]$s
+  if ($n -le 0) { return $null }
+  return $EPOCH_UTC.AddSeconds($n)
+}
+function ResolveForwardTradeBound([object]$row, $identityRecord, $mapRow){
+  <#
+    AUDIT C, C-A8 (2026-08-20, lane M0-L1). The forward trade count was
+        @($deals | Where-Object { $_.magic -eq $r.magic -and $_.entry -eq '1' }).Count
+    over a CUMULATIVE collector file -- a magic filter and nothing else. No lower time bound of
+    any kind, so a magic re-used after a prior attach, or history that predates this deployment,
+    counts toward the judge bar for THIS attachment. Latent rather than active: the fleet's
+    collector files currently start after the deployments, so the number happens to be the same.
+    Bounding it is cheap; noticing it later, after a judge decision rested on it, is not.
+
+    Precedence, and the reason for each rung:
+      RUNTIME_ATTACH_EPOCH   the sidecar's own attach_time_unix -- the only source that knows
+                             when THIS binary attached. Exact, epoch-to-epoch.
+      OBSERVATION_START_DATE DEPLOYMENTS.csv start_date -- the canonical observation start, and
+                             what days_active is already computed from in this same file.
+      NONE                   neither exists -> the count stays UNBOUNDED and says so.
+    Nothing is invented: a missing epoch is never replaced with "now" or with the file's first row.
+
+    $mapRow (RUNTIME_IDENTITY_MAP.csv) is accepted as a parameter but DELIBERATELY not read for a
+    bound: its attach_epoch column is a generation LABEL written by
+    ea_template\core\RuntimeIdentity.mqh ("epoch-" + an incrementing GlobalVariable counter, e.g.
+    "epoch-3") -- not a Unix timestamp, and it never matches ^[0-9]+$. An earlier draft of this
+    function tried TryParseUnixSeconds on it as a fallback rung; that rung could never fire (a
+    named-but-dead precedence step is the shape memory inert-axis-fake-plateau warns about), so it
+    was removed rather than left in as false documentation of a working fallback. The map row is
+    kept as a parameter so a future column addition (a real attach_time_unix on the CSV) has
+    somewhere to plug in without changing this function's signature again.
+  #>
+  $epoch = $null
+  if ($null -ne $identityRecord) { $epoch = TryParseUnixSeconds $identityRecord.attach_time_unix }
+  if ($null -ne $epoch) { return [pscustomobject]@{ Bound = $epoch; Source = 'RUNTIME_ATTACH_EPOCH'; Precision = 'EPOCH' } }
+  if ("$($row.start_date)" -match '^\d{4}-\d{2}-\d{2}$') {
+    return [pscustomobject]@{ Bound = ([datetime]"$($row.start_date)"); Source = 'OBSERVATION_START_DATE'; Precision = 'DATE' }
+  }
+  return [pscustomobject]@{ Bound = $null; Source = 'NONE'; Precision = 'NONE' }
+}
+function CountBoundedTrades($deals, [string]$magic, [string]$kind, $bound){
+  <#
+    C-A8. Counts closed trades for one magic at or after $bound.Bound, and REPORTS what it could
+    not resolve instead of quietly including or excluding it.
+      Counted     trades at/after the bound
+      Unbounded   trades matching the magic with no time bound applied (the old number)
+      Unresolved  trades whose time could not be read at all -> excluded from Counted and NAMED.
+                  An unreadable input must refuse, not be skipped silently.
+  #>
+  $timeCol = if ($kind -eq 'MT5') { 'time' } else { 'close_time' }
+  $matching = @($deals | Where-Object {
+    $_.magic -eq $magic -and $(if ($kind -eq 'MT5') { $_.entry -eq '1' } else { $_.close_time -and $_.close_time.Trim() -ne '' })
+  })
+  $unboundedCount = $matching.Count
+  if ($null -eq $bound.Bound) {
+    return [pscustomobject]@{ Counted = $unboundedCount; Unbounded = $unboundedCount; Unresolved = 0; State = 'UNBOUNDED' }
+  }
+  $counted = 0; $unresolved = 0
+  foreach ($row in $matching) {
+    $when = $null
+    # Prefer the native numeric epoch when the exporter wrote one: comparing an epoch against a
+    # broker-server display string would silently import a timezone error of several hours.
+    if ($null -ne $row.PSObject.Properties['time_unix']) { $when = TryParseUnixSeconds $row.time_unix }
+    if ($null -ne $when -and $bound.Precision -eq 'EPOCH') {
+      if ($when -ge $bound.Bound) { $counted++ }
+      continue
+    }
+    $disp = TryParseTradeTime "$($row.$timeCol)"
+    if ($null -eq $disp) {
+      # Last chance: a numeric epoch is still better than nothing when the display string is junk.
+      if ($null -ne $when) { if ($when -ge $bound.Bound.ToUniversalTime()) { $counted++ } ; continue }
+      $unresolved++
+      continue
+    }
+    $cmp = if ($bound.Precision -eq 'EPOCH') { $bound.Bound.ToLocalTime() } else { $bound.Bound }
+    if ($bound.Precision -eq 'DATE') {
+      if ($disp.Date -ge $cmp.Date) { $counted++ }
+    } elseif ($disp -ge $cmp) { $counted++ }
+  }
+  $state = 'BOUNDED'
+  if ($unresolved -gt 0) { $state = 'BOUNDED_PARTIAL_UNRESOLVED_TIME' }
+  return [pscustomobject]@{ Counted = $counted; Unbounded = $unboundedCount; Unresolved = $unresolved; State = $state }
+}
 function ClassifyUnknownAge([string]$lastSeen, [datetime]$asOf, [int]$activeDays = 14){
   # Three-valued on purpose (2026-07-30, Stage 0B D5).
   #
@@ -204,6 +293,28 @@ if (Test-Path $EXP) {
   foreach($e in $expRows) { $expMeta["$($e.account)|$($e.magic)"] = $e }
 }
 
+# --- C-A8 lookup tables: cheap raw reads only (no python subprocess) -----------------------
+# ResolveForwardTradeBound (below, in the judge-readiness loop) needs a per-key attach bound.
+# Both sources are read HERE, deliberately BEFORE that loop, using the same raw accessors the
+# full runtime-identity validation pass reuses later in this file ($runtimeRecordsRaw /
+# $identityExpectations at the bottom) -- reading them again here is a second cheap file read,
+# not a second python invocation, and it keeps this lookup independent of whether the full
+# validation pass below succeeds.
+#   $identityByKey     "account_login|magic" -> raw sidecar doc (has attach_time_unix). Multiple
+#                       dated archives can exist per key; Get-RuntimeIdentityRecords returns them
+#                       sorted by filename, so the LAST one written here is the most recent one.
+#   $identityMapByKey  "account|magic" -> RUNTIME_IDENTITY_MAP.csv row (ordered hash; may carry
+#                       attach_epoch). Ordered hashtable from Get-RuntimeIdentityExpectations
+#                       supports the same string-key indexing Resolve-ForwardTradeBound uses.
+$identityByKey = @{}
+foreach ($rec in @(Get-RuntimeIdentityRecords -DealsRoot $DEALS)) {
+  if ($null -eq $rec) { continue }
+  $k = "$($rec.account_login)|$($rec.magic)"
+  if ($k -eq '|') { continue }
+  $identityByKey[$k] = $rec
+}
+$identityMapByKey = Get-RuntimeIdentityExpectations -Path (Join-Path $Root 'portfolio\RUNTIME_IDENTITY_MAP.csv')
+
 # --- judge readiness per visible non-REMOVED row ---
 $decisionBar = 30   # CLAUDE.md judge bar: PF>=1.40 at >=30 trades
 $watchBar    = 15   # CLAUDE.md demo-kill floor sample
@@ -220,12 +331,18 @@ foreach($r in ($rows | Where-Object { $_.operational_status -ne 'REMOVED' })){
   }
   $c = LatestCollector $r.account
   $trades = $null; $state = 'DATA_INSUFFICIENT'
+  # C-A8: the bound is resolved per row and CARRIED into the output, whichever rung supplied it.
+  $tradeBound = ResolveForwardTradeBound $r $identityByKey["$($r.account)|$($r.magic)"] $identityMapByKey["$($r.account)|$($r.magic)"]
+  $tradesUnbounded = $null; $tradesUnresolvedTime = $null; $tradeBoundState = 'NOT_MEASURED'
   if ($null -ne $c) {
     $key = $c.file.FullName
     if (-not $dealCache.ContainsKey($key)) { $dealCache[$key] = @(Import-Csv $key) }
     $d = $dealCache[$key]
-    if ($c.kind -eq 'MT5') { $trades = @($d | Where-Object { $_.magic -eq $r.magic -and $_.entry -eq '1' }).Count }
-    else                   { $trades = @($d | Where-Object { $_.magic -eq $r.magic -and $_.close_time -and $_.close_time.Trim() -ne '' }).Count }
+    $counted = CountBoundedTrades $d "$($r.magic)" $c.kind $tradeBound
+    $trades = $counted.Counted
+    $tradesUnbounded = $counted.Unbounded
+    $tradesUnresolvedTime = $counted.Unresolved
+    $tradeBoundState = $counted.State
     if     ($trades -ge $decisionBar) { $state = 'DECISION_CAPABLE' }
     elseif ($trades -ge $watchBar)    { $state = 'PARTIAL' }
     else                              { $state = 'DATA_COLLECTION' }
@@ -304,6 +421,32 @@ foreach($g in ($jr | Where-Object { $_.forward_observed -and $_.magic -match '^\
 }
 
 # --- CR-002 attestation: hash the APPROVED bundle artifacts per deployment ---
+#
+# AUDIT C, C-A4 (2026-08-20, lane M0-L1) -- INVESTIGATED, BLOCKED, NOT IMPLEMENTED. The finding
+# asked to bind ATTESTATION_MAP.csv's expected artifact hashes to the existing authoritative
+# build-receipt source (scripts\lib\build_receipt.ps1 / portfolio\build_receipts.jsonl) WHERE
+# DETERMINISTIC, and to mark BLOCKED rather than invent a binding if no unique source exists.
+# MEASURED: no unique source exists.
+#   - portfolio\ATTESTATION_MAP.csv carries NO build_receipt (or any receipt-token) column at
+#     all -- only account/magic/bundle_dir/ex5_file/set_file/confidence/notes. `confidence` is a
+#     hand-declared free-text column (none/low/high), not derived from any hash comparison.
+#   - portfolio\build_receipts.jsonl (65 rows measured) is keyed by a br-<guid> token minted at
+#     EACH compile, with no "this is the currently-approved build" flag -- multiple receipts can
+#     and do share the same ea_logical_identity and even the same set_path (e.g. br-623141b3...
+#     and br-81fad902... both point at _vps_deploy\STF_BTC_H4_ORDER353\..., built 1 hour apart).
+#   - The state=HASHED below has ALWAYS meant "the file on disk hashed successfully, is not
+#     missing" -- it has never meant "matches an expected/approved digest", because there was
+#     never an expected digest to compare against. C-A4 would need ATTESTATION_MAP.csv to name
+#     WHICH build_receipts.jsonl row is the approved one per account|magic; that column does not
+#     exist, and fabricating a "most recent receipt for this ea_logical_identity" join would be
+#     exactly the invented-authority C-A4 forbids (the ATTESTATION_MAP.csv notes column already
+#     documents real, human-adjudicated set-lineage ambiguity for several rows -- a mechanical
+#     "latest wins" join would silently overrule that adjudication).
+# INTEGRATION REQUEST (not this lane's file to edit): adding a `build_receipt` column to
+# portfolio\ATTESTATION_MAP.csv (owner: CR-002/attestation) is the missing link; once that column
+# exists this function can look the receipt up in build_receipts.jsonl and compare artifact_sha256
+# to the bundle file's hash below, the same way scripts\lib\runtime_identity.ps1 already does for
+# RUNTIME_IDENTITY_MAP.csv's build_receipt column.
 $ATT = Join-Path $Root 'portfolio\ATTESTATION_MAP.csv'
 $gitTracked = @{}
 foreach($f in @(git -C $Root ls-files 2>$null)) { $gitTracked[$f] = $true }
@@ -462,6 +605,50 @@ $runtimeIdentitySummary = [ordered]@{
 $runtimeForward = Get-RuntimeIdentityForwardStates -RepoRoot $Root -DealsRoot $DEALS -RuntimeRecords $runtimeIdentity
 $runtimeIdentitySummary.forward_test_state = "$($runtimeForward.state)"
 $runtimeIdentitySummary.first_trade_findings = @($runtimeForward.findings)
+
+# AUDIT C, C-A3 + C-A9 (2026-08-20, lane M0-L1). The expected identity universe comes from the
+# canonical deployment scope (forward-observed, non-REMOVED $rows), NOT from
+# RUNTIME_IDENTITY_MAP.csv -- that file supplies the MAPPINGS and cannot also define what a
+# mapping is owed for, or a missing row is invisible instead of failing. Measured before the fix:
+# map = 1 row, ACTIVE deployments = 58, so 57 rows could not fail. Nothing is synthesized here:
+# an expected key with no mapping is reported UNMAPPED.
+#
+# WHY THIS LIVES ON $sum, NOT ON $runtimeIdentitySummary: measured directly against
+# _triage\factory_os\schemas.json (2026-08-20) -- SnapshotBuilderInput.runtime_identity_summary
+# and ControlRoomSnapshotV5's `#/$defs/RuntimeIdentitySummary` are BOTH `unevaluatedProperties:
+# false` with a closed property list that does not include `coverage`. Attaching this object
+# there previously refused every build outright ("unevaluatedProperties at
+# '/runtime_identity_summary' -> coverage"), which is a strictly worse defect than not exposing
+# the number yet: a schema-refused build leaves the ENTIRE snapshot on the previous version,
+# taking every other domain's fresh data down with it. `summary` (both schemas: `{"type":
+# "object"}`, no unevaluatedProperties restriction) is the one place in this document that is
+# already open to a new field without a schema change, so the payload goes there instead. This is
+# not this lane's file to edit (see the C-A4 note above on _triage\factory_os\schemas.json
+# ownership) -- INTEGRATION REQUEST: add `coverage` to RuntimeIdentitySummary's allowed properties
+# in both places so this can move back to its more natural home under runtime_identity_summary.
+$identityExpectedScope = @(Get-RuntimeIdentityExpectedScope -DeploymentRows $rows)
+$identityExpectations = Get-RuntimeIdentityExpectations -Path (Join-Path $Root 'portfolio\RUNTIME_IDENTITY_MAP.csv')
+$identityCoverage = Get-RuntimeIdentityCoverage -ExpectedScope $identityExpectedScope `
+  -Expectations $identityExpectations -Records $runtimeIdentity
+$sum.identity_coverage = [ordered]@{
+  state             = $identityCoverage.State
+  expected          = $identityCoverage.ExpectedCount
+  expected_source   = 'DEPLOYMENTS.csv forward-observed, non-REMOVED rows'
+  mapped            = $identityCoverage.MappedCount
+  records           = $identityCoverage.RecordCount
+  validated_pass    = $identityCoverage.PassCount
+  # C-A9: attestation-and-identity coverage, published as a number instead of being left at zero
+  # with nothing to notice it.
+  fully_bound       = $identityCoverage.FullyBoundCount
+  unmapped_count    = @($identityCoverage.Unmapped).Count
+  unobserved_count  = @($identityCoverage.Unobserved).Count
+  orphaned_count    = @($identityCoverage.Orphaned).Count
+  unmapped          = @($identityCoverage.Unmapped)
+  unobserved        = @($identityCoverage.Unobserved)
+  orphaned          = @($identityCoverage.Orphaned)
+  fully_bound_keys  = @($identityCoverage.FullyBound)
+  reason            = $identityCoverage.Reason
+}
 
 # Reconciliation is PRODUCED by the builder's own reconcile(root=$Root), run fail-closed here
 # before this document exists: if the builder cannot reconcile this root (missing board, missing

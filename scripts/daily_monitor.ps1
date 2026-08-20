@@ -157,7 +157,20 @@ if ($LASTEXITCODE -eq 2) {
 # rules were never exercised. Cage: scripts\_test\run_monitor_integrity_tests.ps1.
 . $monitorCoverage
 $crJson = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\control_room_snapshot.json'
-$cov = Get-MonitorCoverage -SnapshotPath $crJson -RepoRoot $RepoRoot
+# AUDIT C, C-A7 (2026-08-20, lane M0-L1). The 'snapshot' Step above can fail while leaving
+# portfolio\control_room_snapshot.json byte-for-byte intact -- control_room_snapshot.ps1 says so
+# in its own throw text ("$OutFile was NOT replaced and still holds the previous validated
+# snapshot"). This call then read that PREVIOUS document and logged its derived counts under
+# today's date as though they were this morning's measurement.
+#
+# The evidence that it actually happened is in the repo: portfolio\MONITOR_ALERT.txt records
+#   "2026-08-05 07:37 monitoring chain UNHEALTHY: snapshot, notify-projection, ...
+#    (newest data 0h old; 4/6 LAB_MANAGED deal-sensor fresh; ...)"
+# -- the snapshot step FAILED and a "4/6 fresh" coverage measurement was published in the same
+# sentence. Only this caller knows the build failed; after a failed build the file on disk is a
+# perfectly valid snapshot, just not this run's. So the fact is PASSED IN, not inferred.
+$snapshotBuildFailed = ($failed -contains 'snapshot')
+$cov = Get-MonitorCoverage -SnapshotPath $crJson -RepoRoot $RepoRoot -SnapshotBuildFailed $snapshotBuildFailed
 foreach ($line in $cov.Log) { $line | Add-Content $log }
 $failed += $cov.Failures
 $coverageMsg = $cov.Summary

@@ -69,11 +69,28 @@ function Get-MonitorCoverage {
     #>
     param(
         [Parameter(Mandatory = $true)][string]$SnapshotPath,
-        [string]$RepoRoot = ''
+        [string]$RepoRoot = '',
+        # AUDIT C, C-A7. The caller states, as a FACT it owns, whether the snapshot BUILD step of
+        # this run succeeded. daily_monitor.ps1 knows this ($failed -contains 'snapshot') and used
+        # to throw the knowledge away, then read the file anyway -- so a failed build published
+        # the PREVIOUS snapshot's coverage counts under today's date, as if newly measured.
+        # There is no way for this function to infer it: after a failed build the file on disk is
+        # a perfectly valid snapshot. It is just not THIS run's snapshot.
+        [bool]$SnapshotBuildFailed = $false
     )
 
     $failures = New-Object System.Collections.Generic.List[string]
     $log = New-Object System.Collections.Generic.List[string]
+
+    # ---- 0. C-A7: did the build that was supposed to produce this document actually run? -----
+    # NOT MEASURED is not a softer failure than a dead sensor; it is a different one, and it must
+    # not be dressed up in derived counts. Returning here is what makes that impossible.
+    if ($SnapshotBuildFailed) {
+        $msg = "coverage NOT MEASURED [snapshot-build-failed]: the snapshot build step of THIS run failed, so portfolio\control_room_snapshot.json still holds a PREVIOUS build. No coverage count is derived from it - a stale document's numbers are not this morning's measurement"
+        $failures.Add('snapshot-build-failed') | Out-Null
+        $log.Add($msg) | Out-Null
+        return [pscustomobject]@{ Summary = $msg; Failures = $failures.ToArray(); Log = $log.ToArray() }
+    }
 
     # ---- 1. can we read it, AND is it verified? -------------------------------------
     # ORDER-612 (S4). This used to be Get-Content | ConvertFrom-Json, which answered "is this
@@ -111,6 +128,21 @@ function Get-MonitorCoverage {
         $log.Add($msg) | Out-Null
         return [pscustomobject]@{ Summary = $msg; Failures = $failures.ToArray(); Log = $log.ToArray() }
     }
+    # AUDIT C, C-A1/C-A6. Integrity OK is not the same as "these numbers describe now". The two
+    # new refusals get their own tokens because they have their own fixes:
+    #   snapshot-stale           rebuild it (scripts\control_room_snapshot.ps1)
+    #   snapshot-source-changed  a recorded source moved under the document -> rebuild, and find
+    #                            out who wrote to the source after the build
+    # Trust is resolved by the reader; matching Reason text would be the shape ORDER-612 already
+    # banned in this file.
+    $trust = Resolve-SnapshotTrustToken $verified
+    if ($trust -ne 'OK') {
+        $token = if ("$($verified.SourceIntegrity.State)" -in @('CHANGED','UNREADABLE','UNKNOWN')) { 'snapshot-source-changed' } else { 'snapshot-stale' }
+        $msg = "coverage check FAILED [$token]: $($verified.Reason) - the document is intact but NOT current, so none of its sensor rows may be read as today's measurement"
+        $failures.Add($token) | Out-Null
+        $log.Add($msg) | Out-Null
+        return [pscustomobject]@{ Summary = $msg; Failures = $failures.ToArray(); Log = $log.ToArray() }
+    }
     $cr = $verified.Document
     if ($null -eq $cr -or $null -eq $cr.system_health) {
         # Valid JSON that is not a snapshot (empty file, an array, a truncated write).
@@ -142,16 +174,65 @@ function Get-MonitorCoverage {
             $failures.Add('first-trade-untrusted') | Out-Null
             $log.Add("COVERAGE GAP: first qualifying trade cannot be trusted ($findings); forward-test start remains fail-closed") | Out-Null
         }
+        # AUDIT C, C-A3 + C-A9. The identity COVERAGE gap is a different finding from the identity
+        # VALIDATION state above, and only this one can see a deployment that has no mapping at
+        # all. A snapshot too old to carry the coverage block gets its own token rather than a
+        # pass: "the writer did not publish it" must not read as "there is no gap".
+        #
+        # READS FROM $cr.summary.identity_coverage, NOT $identitySummary.coverage: the builder
+        # (scripts\control_room_snapshot.ps1) writes it there because
+        # _triage\factory_os\schemas.json's runtime_identity_summary is closed
+        # (unevaluatedProperties:false) and does not list `coverage` -- see that file's own note
+        # at the C-A3/C-A9 block for the measured detail and the INTEGRATION REQUEST to move it
+        # back once the schema is widened.
+        $identityCov = $null
+        if ($null -ne $cr.summary) { $identityCov = $cr.summary.identity_coverage }
+        if ($null -eq $identityCov) {
+            $failures.Add('runtime-identity-coverage-unknown') | Out-Null
+            $log.Add("COVERAGE GAP: this snapshot publishes no summary.identity_coverage block, so the number of forward-observed deployments owed an identity mapping is UNKNOWN - not zero") | Out-Null
+        } elseif ("$($identityCov.state)" -ne 'PASS') {
+            $failures.Add("runtime-identity-coverage-$("$($identityCov.state)".ToLower())") | Out-Null
+            $log.Add("COVERAGE GAP: runtime identity coverage $($identityCov.state) - expected $($identityCov.expected) forward-observed deployment(s) from $($identityCov.expected_source); mapped $($identityCov.mapped), validated PASS $($identityCov.validated_pass), FULLY BOUND $($identityCov.fully_bound). $($identityCov.reason)") | Out-Null
+            $unmappedList = @($identityCov.unmapped)
+            if ($unmappedList.Count -gt 0) {
+                $log.Add("  identity UNMAPPED (no RUNTIME_IDENTITY_MAP.csv row): " + ((@($unmappedList | Select-Object -First 12)) -join ', ') + $(if ($unmappedList.Count -gt 12) { " ... +$($unmappedList.Count - 12) more" } else { '' })) | Out-Null
+            }
+        }
     }
 
     # ---- 1b. deployment attachment/verification coverage (ORDER-944) ----------------
     # A deployment row is part of the monitoring universe even when its verification is
     # pending or absent. Normalize the rows through the same closed status contract used by
     # the writers; an unknown status is a data-integrity failure, never an omitted row.
+    #
+    # AUDIT C, C-A2 + C-A5 (2026-08-20, lane M0-L1). The rows are re-derived here THROUGH THE
+    # SNAPSHOT'S OWN EVIDENCE SECTIONS rather than trusted as written. The snapshot on disk was
+    # built when the ACTIVE lifecycle word alone produced verification_state=VERIFIED, so reading
+    # its verification_state field back would re-import the very claim C-A2 removed. Building the
+    # evidence table from $cr.attestation + $cr.runtime_identity and re-resolving is what makes
+    # the hand-written attestation confidence reach an operator FAILURE TOKEN (C-A5) instead of
+    # sitting in a JSON field nobody opens.
+    $evidence = @{}
+    foreach ($a in @($cr.attestation)) {
+        if ($null -eq $a) { continue }
+        $evidence["$($a.account)|$($a.magic)"] = @{
+            attestation_state      = "$($a.state)"
+            attestation_confidence = "$($a.confidence)"
+            runtime_identity_state = ''
+        }
+    }
+    foreach ($ri in @($cr.runtime_identity)) {
+        if ($null -eq $ri) { continue }
+        $k = "$($ri.account_login)|$($ri.magic)"
+        if (-not $evidence.ContainsKey($k)) {
+            $evidence[$k] = @{ attestation_state = ''; attestation_confidence = ''; runtime_identity_state = '' }
+        }
+        $evidence[$k].runtime_identity_state = "$($ri.validation_state)"
+    }
     $deploymentRows = @()
     if ($null -ne $cr.deployments -and $null -ne $cr.deployments.rows) {
         try {
-            $deploymentRows = @(Get-DeploymentMonitoringRows @($cr.deployments.rows))
+            $deploymentRows = @(Get-DeploymentMonitoringRows -Rows @($cr.deployments.rows) -Evidence $evidence)
         } catch {
             $msg = "coverage check FAILED [deployment-status-invalid]: $($_.Exception.Message) - deployment monitoring cannot classify every inventory row"
             $failures.Add('deployment-status-invalid') | Out-Null
@@ -160,15 +241,35 @@ function Get-MonitorCoverage {
     }
     $deploymentWarnings = 0
     $deploymentBlocks = 0
+    $deploymentUnderived = New-Object System.Collections.Generic.List[string]
+    $deploymentVerified = 0
     foreach ($d in $deploymentRows) {
         if ($d.verification_state -eq 'UNVERIFIED') {
             $deploymentBlocks++
             $failures.Add("deployment-unverified-$($d.account)|$($d.magic)") | Out-Null
             $log.Add("COVERAGE GAP: deployment $($d.account)|$($d.magic) is visible but BLOCKED: operational=$($d.operational_status), verification=UNVERIFIED") | Out-Null
+        } elseif ($d.verification_state -eq 'PENDING' -and $d.verification_basis -eq 'NO_EVIDENCE') {
+            # C-A2. The row the CSV calls ACTIVE and nothing verifies. Aggregated into ONE token
+            # deliberately: on the measured fleet this is 58 rows, and 58 tokens in the alert line
+            # is a wall of text that gets muted inside a week (the ORDER-219 lesson). The per-row
+            # detail still goes to the log, capped, with the count stated.
+            $deploymentUnderived.Add("$($d.account)|$($d.magic) [$($d.verification_evidence)]") | Out-Null
         } elseif ($d.verification_state -eq 'PENDING') {
             $deploymentWarnings++
             $failures.Add("deployment-pending-verification-$($d.account)|$($d.magic)") | Out-Null
             $log.Add("COVERAGE GAP: deployment $($d.account)|$($d.magic) is visible but WARNING: operational=$($d.operational_status), verification=PENDING") | Out-Null
+        } elseif ($d.verification_state -eq 'VERIFIED') {
+            $deploymentVerified++
+        }
+    }
+    if ($deploymentUnderived.Count -gt 0) {
+        $failures.Add("deployment-verification-underived-x$($deploymentUnderived.Count)") | Out-Null
+        $log.Add("COVERAGE GAP: $($deploymentUnderived.Count) deployment(s) are ACTIVE in DEPLOYMENTS.csv with NO verification evidence in this snapshot (attestation HASHED/high + runtime_identity PASS are both required). The lifecycle word ACTIVE is an attachment intent, not a verification claim") | Out-Null
+        foreach ($u in @($deploymentUnderived | Select-Object -First 12)) {
+            $log.Add("  verification underived: $u") | Out-Null
+        }
+        if ($deploymentUnderived.Count -gt 12) {
+            $log.Add("  ... and $($deploymentUnderived.Count - 12) more (full list in control_room_snapshot.json deployments.rows[].verification_evidence)") | Out-Null
         }
     }
 
@@ -238,8 +339,10 @@ function Get-MonitorCoverage {
         $log.Add("COVERAGE GAP: account $acct (LAB_MANAGED) floating-risk sensor state=$st$detail") | Out-Null
     }
     $summary += " | $floatOk/$($labAccts.Count) LAB_MANAGED float-sensor fresh"
-    if ($deploymentWarnings -gt 0 -or $deploymentBlocks -gt 0) {
-        $summary += " | deployment verification: $deploymentWarnings pending, $deploymentBlocks UNVERIFIED"
+    if ($deploymentWarnings -gt 0 -or $deploymentBlocks -gt 0 -or $deploymentUnderived.Count -gt 0) {
+        # C-A2/C-A5: the derived-VERIFIED count is stated even when it is 0, next to the underived
+        # count. "0 verified / 58 underived" is the sentence the old code could not produce.
+        $summary += " | deployment verification: $deploymentVerified evidence-VERIFIED, $($deploymentUnderived.Count) underived (ACTIVE, no evidence), $deploymentWarnings declared-pending, $deploymentBlocks UNVERIFIED"
     }
     if ($failures.Count -gt 0) {
         $floatBad = @($failures | Where-Object { $_ -like 'float-*' } | ForEach-Object { $_.Substring(6) })
@@ -277,4 +380,167 @@ function Get-MonitorCoverage {
     }
 
     return [pscustomobject]@{ Summary = $summary; Failures = $failures.ToArray(); Log = $log.ToArray() }
+}
+
+
+<#
+AUDIT C REPAIR, C-A10 (2026-08-20, lane M0-L1): monitoring-chain health had no route to either
+operator surface.
+
+MEASURED on canonical 649207d6:
+  portfolio\daily_monitor_last_success.txt = "2026-07-31 07:37:35"  (20 days before today)
+  portfolio\MONITOR_ALERT.txt              = "2026-08-05 07:37 monitoring chain UNHEALTHY:
+                                              snapshot, notify-projection, sensor-141049900,
+                                              sensor-69424711 ..."
+  grep -i 'last success|daily_monitor|MONITOR_ALERT|UNHEALTHY' STATUS.html  -> 0 hits
+  same grep over scripts\status_template.html                               -> 0 hits
+
+So the two files the chain writes to say "I have not succeeded in 20 days, and here is the
+standing alert" were invisible on both surfaces, while {{MONITORING_LABEL}} was derived
+exclusively from the SNAPSHOT VERDICT -- a document the dead chain is no longer refreshing. That
+is the worst possible arrangement: the indicator is fed by the very thing the outage stops
+updating.
+
+Note what that alert text independently proves about C-A7: it names `snapshot` as a FAILED step
+and then reports "4/6 LAB_MANAGED deal-sensor fresh" in the same sentence. Those counts came from
+a PREVIOUS build. The operator's own alert file recorded the defect.
+
+NO NEW THRESHOLD IS INVENTED HERE. The overdue bar is supplied by the caller from the same
+canonical authority C-A1 uses (meta.stale_bar_hours). A run with no bar available reports UNKNOWN;
+it is never quietly called healthy.
+#>
+function Get-MonitorChainHealth {
+    <#
+      Returns:
+        State        'OK' | 'ALERT' | 'OVERDUE' | 'UNKNOWN'
+        LastSuccess  [string] as recorded by daily_monitor.ps1, or '' when unavailable
+        AgeHours     [double] hours since that recorded success, or $null
+        BarHours     [double] the overdue bar actually used, or $null
+        AlertText    [string] the standing MONITOR_ALERT.txt text on one line, or ''
+        Reason       [string] one human line
+      Never throws: an unreadable marker is a RESULT ('UNKNOWN'), never an exception and never a
+      silent OK.
+    #>
+    param(
+        [string]$RepoRoot = '',
+        # Supplied by the caller from the snapshot's own meta.stale_bar_hours. 0 or absent means
+        # the caller could not establish a bar, which yields UNKNOWN rather than a guessed number.
+        [double]$BarHours = 0,
+        [datetime]$Now = (Get-Date)
+    )
+    if (-not $RepoRoot) { $RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSScriptRoot }
+    $markerPath = Join-Path $RepoRoot 'portfolio\daily_monitor_last_success.txt'
+    $alertPath  = Join-Path $RepoRoot 'portfolio\MONITOR_ALERT.txt'
+
+    $alertText = ''
+    if (Test-Path -LiteralPath $alertPath) {
+        try {
+            $raw = [System.IO.File]::ReadAllText($alertPath)
+            if ($raw.Length -gt 0 -and [int]$raw[0] -eq 0xFEFF) { $raw = $raw.Substring(1) }
+            $alertText = ($raw -replace '[\r\n]+', ' ').Trim()
+            if ($alertText -eq '') { $alertText = '(MONITOR_ALERT.txt exists but is empty)' }
+        } catch {
+            $alertText = "MONITOR_ALERT.txt exists and could not be read: $($_.Exception.Message)"
+        }
+    }
+
+    $lastText = ''
+    $ageH = $null
+    $markerReadable = $false
+    if (Test-Path -LiteralPath $markerPath) {
+        try {
+            $raw = [System.IO.File]::ReadAllText($markerPath)
+            if ($raw.Length -gt 0 -and [int]$raw[0] -eq 0xFEFF) { $raw = $raw.Substring(1) }
+            $lastText = $raw.Trim()
+            $markerReadable = $true
+        } catch { $lastText = '' }
+    }
+    $parsed = [datetime]::MinValue
+    if ($markerReadable -and $lastText -ne '' -and [datetime]::TryParse($lastText, [ref]$parsed)) {
+        $ageH = [math]::Round(($Now - $parsed).TotalHours, 1)
+    }
+
+    # PRECEDENCE, and it is deliberate: a standing ALERT outranks any age computation. The alert
+    # file is the chain's own statement that its last attempt did not succeed; letting a
+    # recent-enough timestamp paint over it would be the "green with a dead sensor" shape again.
+    if ($alertText -ne '') {
+        return [pscustomobject]@{
+            State = 'ALERT'; LastSuccess = $lastText; AgeHours = $ageH
+            BarHours = $(if ($BarHours -gt 0) { $BarHours } else { $null })
+            AlertText = $alertText
+            Reason = "the monitoring chain left a standing alert: $alertText"
+        }
+    }
+    if ($null -eq $ageH) {
+        return [pscustomobject]@{
+            State = 'UNKNOWN'; LastSuccess = $lastText; AgeHours = $null
+            BarHours = $(if ($BarHours -gt 0) { $BarHours } else { $null })
+            AlertText = ''
+            Reason = "no readable last-success marker at portfolio\daily_monitor_last_success.txt, so it is not known whether the chain has ever completed"
+        }
+    }
+    if ($BarHours -le 0) {
+        return [pscustomobject]@{
+            State = 'UNKNOWN'; LastSuccess = $lastText; AgeHours = $ageH; BarHours = $null; AlertText = ''
+            Reason = "last success $lastText (${ageH}h ago), but no overdue bar was available to judge it against"
+        }
+    }
+    if ($ageH -gt $BarHours) {
+        return [pscustomobject]@{
+            State = 'OVERDUE'; LastSuccess = $lastText; AgeHours = $ageH; BarHours = $BarHours; AlertText = ''
+            Reason = "the chain last succeeded $lastText = ${ageH}h ago, past the ${BarHours}h bar"
+        }
+    }
+    return [pscustomobject]@{
+        State = 'OK'; LastSuccess = $lastText; AgeHours = $ageH; BarHours = $BarHours; AlertText = ''
+        Reason = ''
+    }
+}
+
+function Format-MonitorChainBlock {
+    <#
+      STATUS.md rendering of Get-MonitorChainHealth. EVERY state prints a line; there is no state
+      that prints nothing, because "nothing" is exactly what this defect looked like.
+    #>
+    param([Parameter(Mandatory = $true)]$Health)
+    $out = @()
+    $last = if ("$($Health.LastSuccess)" -ne '') { "$($Health.LastSuccess)" } else { 'never recorded' }
+    $age  = if ($null -ne $Health.AgeHours) { "$($Health.AgeHours)h ago" } else { 'age unknown' }
+    $bar  = if ($null -ne $Health.BarHours) { "$($Health.BarHours)h" } else { 'no bar available' }
+    if ($Health.State -eq 'OK') {
+        $out += "- monitoring chain: **OK** - last full success ``$last`` ($age, bar $bar), no standing alert"
+        return $out
+    }
+    $out += "> :rotating_light: **MONITORING CHAIN $($Health.State)**"
+    $out += ">"
+    $out += "> last full success: ``$last`` ($age, bar $bar)"
+    if ("$($Health.AlertText)" -ne '') {
+        $out += "> standing alert (``portfolio\MONITOR_ALERT.txt``):"
+        $out += "> ``$($Health.AlertText)``"
+    }
+    $out += "> $($Health.Reason)"
+    return $out
+}
+
+function Format-MonitorChainHtml {
+    <#
+      STATUS.html twin of Format-MonitorChainBlock. The text is HTML-escaped: MONITOR_ALERT.txt
+      carries arbitrary step/operator text and this sink is a browser.
+    #>
+    param([Parameter(Mandatory = $true)]$Health)
+    function _EscChain([string]$s) {
+        if ($null -eq $s) { return '' }
+        return $s.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
+    }
+    $last = if ("$($Health.LastSuccess)" -ne '') { "$($Health.LastSuccess)" } else { 'never recorded' }
+    $age  = if ($null -ne $Health.AgeHours) { "$($Health.AgeHours)h ago" } else { 'age unknown' }
+    $bar  = if ($null -ne $Health.BarHours) { "$($Health.BarHours)h" } else { 'no bar available' }
+    if ($Health.State -eq 'OK') {
+        return "<div class='note'>monitoring chain: <b>OK</b> - last full success <span class='mono'>$(_EscChain $last)</span> ($(_EscChain $age), bar $(_EscChain $bar)), no standing alert</div>"
+    }
+    $alertHtml = ''
+    if ("$($Health.AlertText)" -ne '') {
+        $alertHtml = "<br>standing alert (<span class='mono'>portfolio\MONITOR_ALERT.txt</span>): <span class='mono'>$(_EscChain $Health.AlertText)</span>"
+    }
+    return "<div class='todo'><span class='dot' style='color:var(--red)'>&#9679;</span><div><b>MONITORING CHAIN $(_EscChain $Health.State)</b><br>last full success <span class='mono'>$(_EscChain $last)</span> ($(_EscChain $age), bar $(_EscChain $bar))$alertHtml<br>$(_EscChain $Health.Reason)</div></div>"
 }
