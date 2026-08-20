@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = 'D:\\EA_LAB_CONTROL';
+const POLICY_CHECKOUT = path.resolve(__dirname, '..', '..');
 const CONTRACT_PATH = path.join(__dirname, 'status-contract.json');
 const MAX_ERROR = 180;
 
@@ -70,6 +71,12 @@ function listenerState(processes, listeners) {
   if (listeners.length > 0) return 'LOOPBACK_LISTENER_OBSERVED';
   return 'NO_RELEVANT_LISTENER_OBSERVED';
 }
+function tunnelLifecycle(remote, contract) {
+  const state = typeof remote?.state === 'string' ? remote.state : null;
+  const allowed = new Set(['NOT_CONFIGURED_OWNER_ACTION_REQUIRED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'ACTIVATING', 'CONNECTED', 'DISCONNECTED', 'COMPLETED']);
+  if (state !== null && allowed.has(state)) return state;
+  return contract.milestone.secure_tunnel;
+}
 function deriveStatus(input) {
   const contract = input.contract;
   const actualHead = input.actual_head || null;
@@ -89,19 +96,19 @@ function deriveStatus(input) {
   const processState = active.length === 0 ? 'NOT_RUNNING' : owned.length > 0 ? 'OWNED' : 'UNOWNED';
   const listener = input.listener_state || listenerState(processes);
   const remote = input.tunnel || { configured: false, client_detected: false };
-  const tunnelState = remote.configured && remote.client_detected ? 'UNKNOWN' : contract.milestone.secure_tunnel;
+  const tunnelState = tunnelLifecycle(remote, contract);
   const controlState = policy === null || lock.error !== null ? 'ERROR' : !headMatch || listener === 'NON_LOOPBACK_LISTENER_OBSERVED' || index.state === 'ERROR' ? 'DEGRADED' : 'OK';
   const output = {
     schema_version: 1,
     generated_at: isoNow(input.generated_at),
     control_state: controlState,
     lnwjud: { expected_version: contract.lnwjud.expected_version, expected_sha: contract.lnwjud.expected_sha, source_path: contract.lnwjud.source_path, actual_sha: input.actual_source_sha || null, pin_match: input.actual_source_sha === contract.lnwjud.expected_sha },
-    ea_lab_gateway: { health: gatewayHealth, policy_version: policy?.schema_version ?? null, authorized_workspace: contract.gateway.authorized_workspace, expected_head: expectedHead, actual_head: actualHead, head_match: headMatch, writer_owner: lock.owner, writer_state: lock.state, review_frozen: reviewFrozen },
+    ea_lab_gateway: { health: gatewayHealth, policy_version: policy?.schema_version ?? null, authorized_workspace: input.authorized_workspace || contract.gateway.authorized_workspace, expected_head: expectedHead, actual_head: actualHead, head_match: headMatch, writer_owner: lock.owner, writer_state: lock.state, review_frozen: reviewFrozen },
     index: { state: index.state, source: index.source || 'UNAVAILABLE', coverage: index.coverage || 'PARTIAL', last_known_refresh: index.last_known_refresh || null, error: index.error || null },
     processes: { state: processState, task_owned_count: owned.length, relevant_background_tasks: owned.map((row) => ({ pid: row.pid, name: row.name })) },
     network: { local_transport: contract.gateway.local_transport, listener_state: listener, public_listener_detected: listener === 'NON_LOOPBACK_LISTENER_OBSERVED', tunnel_state: tunnelState, tunnel_client_detected: Boolean(remote.client_detected), remote_chatgpt: contract.milestone.remote_chatgpt },
     audit: { available: false, source: 'UNAVAILABLE', coverage: 'PARTIAL', last_error: lastError },
-    milestone: { completion: contract.milestone.local_execution_plane === 'PASS' ? 'COMPLETE' : 'INCOMPLETE', health: gatewayHealth, review: reviewState, security: securityState, local_execution_plane: contract.milestone.local_execution_plane, secure_tunnel: contract.milestone.secure_tunnel, overall: contract.milestone.secure_tunnel === 'BLOCKED(E)' ? 'PARTIAL' : contract.milestone.local_execution_plane }
+    milestone: { completion: tunnelState === 'COMPLETED' && contract.milestone.local_execution_plane === 'PASS' ? 'COMPLETE' : 'INCOMPLETE', health: gatewayHealth, review: reviewState, security: securityState, local_execution_plane: contract.milestone.local_execution_plane, secure_tunnel: tunnelState, overall: tunnelState === 'COMPLETED' ? contract.milestone.local_execution_plane : 'PARTIAL' }
   };
   return output;
 }
@@ -110,9 +117,10 @@ function collectLiveStatus(options = {}) {
   const policyPath = options.policy_path || path.join(__dirname, 'ea-lab-policy.json');
   const policyResult = safePolicy(policyPath);
   const runtimeRoot = contract.gateway.runtime_root;
+  const workspace = contract.gateway.authorized_workspace === 'POLICY_CHECKOUT' ? POLICY_CHECKOUT : contract.gateway.authorized_workspace;
   const processes = liveProcesses();
   const listeners = liveListeners(processes);
-  return deriveStatus({ contract, generated_at: options.generated_at, actual_source_sha: git(contract.lnwjud.source_path, ['rev-parse', 'HEAD']), actual_head: git(contract.gateway.authorized_workspace, ['rev-parse', 'HEAD']), policy: policyResult.value, processes, lock: safeLock(runtimeRoot), listener_state: listenerState(processes, listeners), last_error: policyResult.error });
+  return deriveStatus({ contract, generated_at: options.generated_at, actual_source_sha: git(contract.lnwjud.source_path, ['rev-parse', 'HEAD']), actual_head: git(workspace, ['rev-parse', 'HEAD']), authorized_workspace: workspace, policy: policyResult.value, processes, lock: safeLock(runtimeRoot), listener_state: listenerState(processes, listeners), last_error: policyResult.error });
 }
 function lane(status) {
   const problem = status.audit.last_error;
@@ -124,4 +132,4 @@ function writeAtomic(file, content) { fs.mkdirSync(path.dirname(file), { recursi
 function publish(status) { writeAtomic(path.join(ROOT, 'lnwjud-local-status.json'), `${JSON.stringify(status, null, 2)}\n`); writeAtomic(path.join(ROOT, 'lanes', 'lnwjud-local-execution-plane.json'), `${JSON.stringify(lane(status), null, 2)}\n`); }
 function parseArgs(argv) { const options = {}; for (let i = 0; i < argv.length; i += 1) { if (argv[i] === '--publish') options.publish = true; else if (argv[i] === '--now') options.generated_at = argv[++i]; else throw new Error('usage: local-status.cjs [--publish] [--now <ISO-8601>]'); } return options; }
 if (require.main === module) { const options = parseArgs(process.argv.slice(2)); const status = collectLiveStatus(options); if (options.publish) publish(status); process.stdout.write(`${JSON.stringify(status, null, 2)}\n`); }
-module.exports = { loadContract, sanitize, deriveStatus, collectLiveStatus, lane };
+module.exports = { loadContract, sanitize, deriveStatus, collectLiveStatus, lane, tunnelLifecycle };

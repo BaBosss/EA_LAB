@@ -3,8 +3,10 @@
   "canonical_base_sha": "f399615afe36505c1f111ced817e56dc50d5b42d",
   "transport": "OUTBOUND_STDIO_TUNNEL",
   "listener": "NONE",
+  "launcher": "tools/lnwjud/m3-restricted-launcher.cmd",
   "gateway_policy": "tools/lnwjud/ea-lab-policy.json",
-  "gateway_command": ["node", "tools/lnwjud/ea-lab-gateway.cjs", "--policy", "tools/lnwjud/ea-lab-policy.json"],
+  "upstream_source_root": "D:\\EA_LAB_TOOLS\\lnwjud-v4-src",
+  "runtime_root": "D:\\EA_LAB_CONTROL\\lnwjud-v4-m3",
   "tunnel_profile": "ea-lab-lnwjud-m3",
   "credential_environment": "LNWJUD_M3_CONTROL_PLANE_API_KEY",
   "activation": "OWNER_REQUIRED"

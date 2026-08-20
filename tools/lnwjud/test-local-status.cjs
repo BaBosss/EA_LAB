@@ -2,14 +2,17 @@
 'use strict';
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { loadContract, deriveStatus, sanitize, collectLiveStatus, lane } = require('./local-status.cjs');
+const { loadContract, deriveStatus, sanitize, collectLiveStatus, lane, tunnelLifecycle } = require('./local-status.cjs');
 const contract = loadContract();
 const expected = contract.lnwjud.expected_sha;
 const head = 'a'.repeat(40);
 const policy = { schema_version: 1, base_sha: head, review_state: 'OPEN' };
 function build(change = {}) { return deriveStatus({ contract, generated_at: '2026-08-20T09:00:00Z', actual_source_sha: expected, actual_head: head, policy, processes: [], lock: { state: 'NOT_RUNNING', owner: null, pid: null, error: null }, listener_state: 'NO_RELEVANT_LISTENER_OBSERVED', ...change }); }
 const normal = build();
-assert.equal(normal.control_state, 'OK'); assert.equal(normal.lnwjud.pin_match, true); assert.equal(normal.ea_lab_gateway.authorized_workspace, contract.gateway.authorized_workspace); assert.equal(normal.ea_lab_gateway.head_match, true); assert.equal(normal.ea_lab_gateway.writer_state, 'NOT_RUNNING'); assert.equal(normal.ea_lab_gateway.review_frozen, false); assert.equal(normal.index.state, 'NOT_READY'); assert.equal(normal.index.coverage, 'PARTIAL'); assert.equal(normal.processes.task_owned_count, 0); assert.equal(normal.network.tunnel_state, 'BLOCKED(E)'); assert.equal(normal.milestone.local_execution_plane, 'PASS'); assert.equal(normal.milestone.review, 'NOT_REVIEWED'); assert.equal(normal.milestone.secure_tunnel, 'BLOCKED(E)'); assert.equal(lane(normal).status, 'BLOCKED'); assert.equal(lane(normal).progress, 0);
+assert.equal(normal.control_state, 'OK'); assert.equal(normal.lnwjud.pin_match, true); assert.equal(normal.ea_lab_gateway.authorized_workspace, contract.gateway.authorized_workspace); assert.equal(normal.ea_lab_gateway.head_match, true); assert.equal(normal.ea_lab_gateway.writer_state, 'NOT_RUNNING'); assert.equal(normal.ea_lab_gateway.review_frozen, false); assert.equal(normal.index.state, 'NOT_READY'); assert.equal(normal.index.coverage, 'PARTIAL'); assert.equal(normal.processes.task_owned_count, 0); assert.equal(normal.network.tunnel_state, 'LOCAL_READY_OWNER_PREFLIGHT_REQUIRED'); assert.equal(normal.milestone.local_execution_plane, 'PASS'); assert.equal(normal.milestone.review, 'NOT_REVIEWED'); assert.equal(normal.milestone.secure_tunnel, 'LOCAL_READY_OWNER_PREFLIGHT_REQUIRED'); assert.equal(normal.milestone.overall, 'PARTIAL'); assert.equal(lane(normal).status, 'BLOCKED'); assert.equal(lane(normal).progress, 0);
+for (const state of ['NOT_CONFIGURED_OWNER_ACTION_REQUIRED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'ACTIVATING', 'CONNECTED', 'DISCONNECTED', 'COMPLETED']) assert.equal(tunnelLifecycle({ state }, contract), state);
+assert.equal(build({ tunnel: { state: 'AUTH_FAILED' } }).network.tunnel_state, 'AUTH_FAILED');
+assert.equal(build({ tunnel: { state: 'COMPLETED' } }).milestone.completion, 'COMPLETE');
 const stale = build({ policy: { ...policy, base_sha: 'b'.repeat(40) } }); assert.equal(stale.ea_lab_gateway.head_match, false); assert.equal(stale.control_state, 'DEGRADED');
 assert.equal(build({ index: { state: 'ERROR', last_known_refresh: null, error: { code: 'INDEX_ERROR', message: 'missing' } } }).index.state, 'ERROR');
 const secret = build({ last_error: { code: 'LOG', message: 'API_KEY=synthetic-secret-value Bearer sk-secret-token' } });

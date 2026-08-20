@@ -7,13 +7,13 @@
     "source_path": "D:\\EA_LAB_TOOLS\\lnwjud-v4-src"
   },
   "gateway": {
-    "authorized_workspace": "D:\\EA_LAB_worktrees\\lnwjud-final-reconcile-20260820",
+    "authorized_workspace": "POLICY_CHECKOUT",
     "local_transport": "STDIO",
-    "runtime_root": "D:\\EA_LAB_CONTROL\\lnwjud-v4"
+    "runtime_root": "D:\\EA_LAB_CONTROL\\lnwjud-v4-m3"
   },
   "milestone": {
     "local_execution_plane": "PASS",
-    "secure_tunnel": "BLOCKED(E)",
-    "remote_chatgpt": "NOT_CONFIGURED"
+    "secure_tunnel": "LOCAL_READY_OWNER_PREFLIGHT_REQUIRED",
+    "remote_chatgpt": "NOT_CONFIGURED_OWNER_ACTION_REQUIRED"
   }
 }

@@ -16,7 +16,13 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const { createRequire } = require('node:module');
 
-const sourceRoot = process.env.LNWJUD_SOURCE_ROOT || 'D:\\EA_LAB_TOOLS\\lnwjud-v4-src';
+const TRUSTED_SOURCE_ROOT = 'D:\\EA_LAB_TOOLS\\lnwjud-v4-src';
+if (process.env.LNWJUD_SOURCE_ROOT !== undefined
+  && path.resolve(process.env.LNWJUD_SOURCE_ROOT).toLowerCase() !== path.resolve(TRUSTED_SOURCE_ROOT).toLowerCase()) {
+  throw new Error('LNWJUD_SOURCE_ROOT override is forbidden');
+}
+const sourceRoot = TRUSTED_SOURCE_ROOT;
+
 const SELECTED_WORKTREE = process.env.EA_LAB_APPROVED_WORKTREE;
 const sourceRequire = createRequire(path.join(sourceRoot, 'packages', 'mcp-server', 'package.json'));
 const { McpServer } = sourceRequire('@modelcontextprotocol/server');
