@@ -11,6 +11,162 @@
 #      fast no-op pass. Reads the git INDEX (staged bytes), never the working
 #      tree, so `git commit` always judges what will actually land.
 #
+# =========================================================================================
+# D-F4 (Audit D, 2026-08-20) -- HOOKSPATH ASSERTION, ON THE COMMIT PATH, FIRST.
+#
+# REPRODUCED LIVE at canonical 649207d6: the PRIMARY checkout's .git/config carries
+#   core.hooksPath = D:\EA_LAB\.githooks
+# at LOCAL scope, which is SHARED by every linked worktree. `extensions.worktreeConfig` is
+# true, so the fix is a per-worktree pin -- but until one is applied, a brand-new CLEAN linked
+# worktree resolves its hooks to the DIRTY PRIMARY's .githooks. Measured there:
+#   git -C <linked-worktree> rev-parse --git-path hooks  ->  D:\EA_LAB\.githooks
+# and .githooks/fast_tier_pathspec is currently MODIFIED in that dirty tree. So the guard bytes
+# that judge a commit in worktree A can be whatever somebody is mid-edit on in worktree B, and
+# nothing said so. That is not a hook being bypassed loudly; it is a hook being SWAPPED quietly.
+#
+# THE CONTRACT (stated here so Lane 2's tracked negative fixture can be reconciled with it):
+#
+#   A1  BYTES  -- REFUSE. dirname($0), canonicalized, must equal <toplevel>/.githooks,
+#                 canonicalized. This is an OBSERVATION of which file is executing, not an
+#                 inference from config: it is the only check that catches "foreign tree" and
+#                 "absolute-to-another-tree" directly, because those differ from the correct
+#                 case in exactly this value.
+#   A2a EMPTY  -- REFUSE. An effective core.hooksPath that is unset or the empty string.
+#                 HONEST LIMIT: with hooksPath truly empty git does not run this file at all,
+#                 so this branch is reachable only via .git/hooks or an explicit invocation.
+#                 The empty case is therefore ALSO asserted from outside, in
+#                 scripts/_test/run_hookspath_assertion_tests.ps1, which drives real commits in
+#                 a fixture repo. A guard cannot be the only witness to its own absence.
+#   A2b SCOPE  -- REFUSE. The dir git actually resolved (`rev-parse --git-path hooks`),
+#                 canonicalized, must equal <toplevel>/.githooks.
+#   A2c CONVEN -- WARN ONLY, and deliberately not a refusal. An ABSOLUTE hooksPath that still
+#                 points at THIS worktree's own .githooks runs the correct bytes (A1 and A2b
+#                 both pass); it is a convention violation and a latent hazard for the NEXT
+#                 linked worktree, not a live leak. The primary operator checkout is in exactly
+#                 this state today, and turning that into a hard block would stop the owner
+#                 committing for a reason that is not yet a defect. The exact one-line repair is
+#                 printed instead.
+#
+# Keeps the relative `.githooks` convention: `.githooks` is the ONLY value that passes silently.
+# =========================================================================================
+_hp_top=$(git rev-parse --show-toplevel 2>/dev/null || true)
+if [ -z "$_hp_top" ]; then
+  echo "PRECOMMIT-FAIL-CLOSED: cannot resolve the committing worktree (git rev-parse --show-toplevel gave nothing) -- refusing to run guards whose provenance cannot be established"
+  exit 1
+fi
+_hp_canon() { ( cd "$1" 2>/dev/null && pwd -P ) 2>/dev/null || true; }
+_hp_want=$(_hp_canon "$_hp_top/.githooks")
+_hp_self=$(_hp_canon "$(dirname "$0")")
+_hp_raw=$(git config --get core.hooksPath 2>/dev/null || true)
+_hp_res=$(_hp_canon "$(git rev-parse --git-path hooks 2>/dev/null)")
+
+if [ -z "$_hp_want" ]; then
+  echo "PRECOMMIT-FAIL-CLOSED: $_hp_top/.githooks does not exist -- this worktree has no canonical hook directory"
+  exit 1
+fi
+# A1 -- which bytes are executing
+if [ -z "$_hp_self" ] || [ "$_hp_self" != "$_hp_want" ]; then
+  echo "PRECOMMIT-FAIL-CLOSED (D-F4/A1): the pre-commit hook that is RUNNING does not belong to the committing worktree."
+  echo "  executing hook dir : ${_hp_self:-<unresolvable>} (from \$0 = $0)"
+  echo "  this worktree wants: $_hp_want"
+  echo "  core.hooksPath     : '${_hp_raw:-<unset>}'"
+  echo "  Guard bytes from another checkout judged this commit. Pin this worktree:"
+  echo "      git config --worktree core.hooksPath .githooks"
+  exit 1
+fi
+# A2a -- empty/unset
+if [ -z "$_hp_raw" ]; then
+  echo "PRECOMMIT-FAIL-CLOSED (D-F4/A2a): core.hooksPath is unset or empty, so nothing pins the hook directory."
+  echo "      git config --worktree core.hooksPath .githooks"
+  exit 1
+fi
+# A2b -- git's own resolution must land inside this worktree
+if [ -z "$_hp_res" ] || [ "$_hp_res" != "$_hp_want" ]; then
+  echo "PRECOMMIT-FAIL-CLOSED (D-F4/A2b): git resolves core.hooksPath OUTSIDE the committing worktree."
+  echo "  core.hooksPath     : '$_hp_raw'"
+  echo "  resolves to        : ${_hp_res:-<unresolvable>}"
+  echo "  this worktree wants: $_hp_want"
+  echo "      git config --worktree core.hooksPath .githooks"
+  exit 1
+fi
+# A2c -- convention. WARN, never block: the bytes are right, the pin is not.
+if [ "$_hp_raw" != ".githooks" ]; then
+  echo "[pre-commit] WARN (D-F4/A2c): core.hooksPath is '$_hp_raw', not the relative '.githooks'."
+  echo "[pre-commit]   The correct bytes ran (A1/A2b passed), so this commit is not compromised. But a"
+  echo "[pre-commit]   non-relative value at shared scope is what makes the NEXT linked worktree resolve"
+  echo "[pre-commit]   its hooks to THIS tree. Repair: git config --worktree core.hooksPath .githooks"
+fi
+
+# =========================================================================================
+# D-F2 (Audit D, 2026-08-20) -- STAGED GITLINK REFUSAL.
+#
+# `git add -A` in a repo that holds nested worker repositories stages them as mode 160000
+# gitlinks. A gitlink commits a POINTER to a commit in a repository this project does not have,
+# does not fetch, and cannot check out -- so the tree looks fine and is unreconstructable.
+#
+# FAIL CLOSED TODAY, and this is verified rather than assumed: this repo has NO .gitmodules
+# (`git ls-files | grep gitmodules` is empty at canonical 649207d6), therefore there is no
+# governed submodule and EVERY staged gitlink is unintended.
+#
+# NOT a permanent block on a future governed submodule: if a valid .gitmodules lands and
+# DECLARES the path, it is allowed. The declaration is read with `git config --blob :.gitmodules`
+# -- git's own config parser, against the INDEX blob (what will land), so a malformed file
+# yields no declarations and the gitlink stays refused rather than being waved through.
+#
+# The mode comes from the RAW MODE FIELD of the INDEX and of HEAD's tree -- git plumbing, not
+# any parsed convenience output: comparing parsed fields instead of raw bytes/modes has already
+# produced two false-green guards in this repo on live-money files
+# (guard-compares-parsed-fields-not-bytes).
+#
+# WHY NOT `git diff --cached --raw` (tried first, REJECTED, 2026-08-20): it drives git's
+# submodule-aware diff FORMATTER, which reads the staged `.gitmodules` blob AS CONFIG for any
+# 160000 entry in the diff. A malformed staged `.gitmodules` makes that formatter itself fatal
+# -- `git diff --cached --raw` exits 128 and prints NO raw lines at all -- which silently
+# emptied the gitlink list and DISARMED THIS ENTIRE GATE for exactly the attack it exists to
+# catch (a malformed .gitmodules laundering a gitlink). Reproduced directly: staging a 1-line
+# garbage `.gitmodules` alongside a gitlink turned the refusal into total silence. `git
+# ls-files --stage` (pure index read) and `git ls-tree -r HEAD` (pure tree read) are plumbing
+# only, never consult .gitmodules, and cannot be crashed by a broken one.
+# =========================================================================================
+# field 2 of the metadata half is the DESTINATION mode. Source-side 160000 is skipped on
+# purpose: REMOVING a gitlink is the repair, and a guard that blocks its own remedy is the
+# prohibition-disarms-its-own-check shape.
+_gl_idx=$(git ls-files --stage | awk -F'\t' '{ split($1, f, " "); if (f[1] == "160000") print f[2]"\t"$2 }')
+_gl=$(printf '%s\n' "$_gl_idx" | while IFS="$(printf '\t')" read -r _gl_sha _gl_path; do
+  [ -z "$_gl_path" ] && continue
+  _gl_head=$(git ls-tree HEAD -- "$_gl_path" 2>/dev/null)
+  _gl_head_mode=$(printf '%s' "$_gl_head" | awk '{print $1}')
+  _gl_head_sha=$(printf '%s' "$_gl_head" | awk '{print $3}')
+  # unchanged relative to HEAD (same mode, same object) -- not something THIS commit
+  # introduces, so it is not this gate's job to relitigate an already-committed state.
+  if [ "$_gl_head_mode" = "160000" ] && [ "$_gl_head_sha" = "$_gl_sha" ]; then continue; fi
+  printf '%s\n' "$_gl_path"
+done)
+if [ -n "$_gl" ]; then
+  _gl_declared=""
+  if git cat-file -e :.gitmodules 2>/dev/null; then
+    _gl_declared=$(git config --blob :.gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null | sed 's/^[^ ]* //')
+  fi
+  # newline-delimited read, not word splitting: a path with a space must not become two paths.
+  _gl_bad=$(printf '%s\n' "$_gl" | while IFS= read -r p; do
+    [ -z "$p" ] && continue
+    if [ -n "$_gl_declared" ] && printf '%s\n' "$_gl_declared" | grep -Fxq -- "$p"; then continue; fi
+    printf '%s\n' "$p"
+  done)
+  if [ -n "$_gl_bad" ]; then
+    echo "PRECOMMIT-FAIL-CLOSED (D-F2): this commit stages GITLINK entries (mode 160000):"
+    printf '%s\n' "$_gl_bad" | while IFS= read -r p; do [ -n "$p" ] && echo "    $p"; done
+    echo ""
+    echo "[pre-commit] This repo has no .gitmodules, so a staged mode-160000 entry is a NESTED WORKER"
+    echo "[pre-commit] REPOSITORY that 'git add -A' swept up, not a submodule. Committing it writes a"
+    echo "[pre-commit] pointer to a commit nothing here can fetch. Unstage it:"
+    printf '%s\n' "$_gl_bad" | while IFS= read -r p; do [ -n "$p" ] && echo "[pre-commit]     git rm --cached \"$p\""; done
+    echo "[pre-commit] (and add the path to .gitignore so it does not come back)."
+    exit 1
+  fi
+  echo "[pre-commit] staged gitlink(s) are DECLARED in .gitmodules -- allowed (governed submodule)."
+fi
+
 # Fail-CLOSED: if PowerShell cannot be found at all, this hook BLOCKS the
 # commit (exit 1) with the diagnostic string below -- it does not silently
 # skip the checks the way the pre-ORDER-103 version of this hook used to.
@@ -251,6 +407,55 @@ if [ -n "$cage_staged" ]; then
     echo "[pre-commit] a guard's own test suite failed (above) -- ORDER-420."
     echo "[pre-commit] You are editing scripts/check_*.ps1 or scripts/_test/*, and its cage went red."
     echo "[pre-commit] Slow suites are NOT covered here: run_chainwalk_tests (74s), run_order101/103/105."
+    exit $rc
+  fi
+fi
+
+# =========================================================================================
+# D-F9 (Audit D, 2026-08-20) -- TASKBOARD_DIGEST STALENESS, NOW ON THE COMMIT PATH.
+#
+# REPRODUCED at canonical 649207d6: `grep -in digest .githooks/pre-commit` returned NOTHING, and
+# `grep -rn make_taskboard_digest` found no caller on any commit path -- the -Check mode existed
+# and ran only when a human remembered. That is the ORDER-270 finding ("a cage that never runs
+# protects nothing") applied to a generated artifact that is the only human-readable index of
+# 403 orders.
+#
+# PATH-SELECTED, same idiom as the experiment-events and QI-1 blocks above: it does real work
+# only when this commit touches one of the three files involved, so an unaffected commit pays
+# nothing but the `git diff --cached --name-only` it was already going to run.
+#
+# JUDGES THE INDEX, NOT THE WORKTREE. make_taskboard_digest.ps1 -Check reads files from -Root, so
+# the three index blobs are extracted to a temp root and it is pointed there. Without this the
+# gate would answer a question about the working tree while `git commit` writes something else --
+# the ORDER-674 defect, which was measured on portfolio/DEPLOYMENTS.csv and is the reason
+# EA_LAB_EVIDENCE=index exists at the top of this file.
+# =========================================================================================
+digest_staged=$(git diff --cached --name-only -- 'AGENT_TASKBOARD.md' 'ARCHIVE_TASKBOARD_2026-07A.md' 'TASKBOARD_DIGEST.md')
+if [ -n "$digest_staged" ]; then
+  dg_root=$(mktemp -d 2>/dev/null || echo "${TMPDIR:-/tmp}/ea_digest_$$")
+  mkdir -p "$dg_root"
+  dg_ok=1
+  for f in AGENT_TASKBOARD.md ARCHIVE_TASKBOARD_2026-07A.md TASKBOARD_DIGEST.md; do
+    if ! git cat-file -e ":$f" 2>/dev/null; then
+      echo "PRECOMMIT-FAIL-CLOSED (D-F9): ':$f' is not in the index -- the digest gate cannot judge what will land"
+      dg_ok=0
+      break
+    fi
+    git show ":$f" > "$dg_root/$f" || { dg_ok=0; break; }
+  done
+  if [ "$dg_ok" -ne 1 ]; then
+    rm -rf "$dg_root"
+    exit 1
+  fi
+  "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/make_taskboard_digest.ps1 -Check -Root "$(cygpath -w "$dg_root" 2>/dev/null || echo "$dg_root")"
+  rc=$?
+  rm -rf "$dg_root"
+  if [ "$rc" -ne 0 ]; then
+    echo ""
+    echo "[pre-commit] TASKBOARD_DIGEST.md is STALE against the taskboard bytes THIS COMMIT would land (rc=$rc)."
+    echo "[pre-commit] Regenerate and stage it in the SAME commit:"
+    echo "[pre-commit]     powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make_taskboard_digest.ps1"
+    echo "[pre-commit]     git add TASKBOARD_DIGEST.md"
     exit $rc
   fi
 fi
