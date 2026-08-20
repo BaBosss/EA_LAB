@@ -77,6 +77,19 @@ function tunnelLifecycle(remote, contract) {
   if (state !== null && allowed.has(state)) return state;
   return contract.milestone.secure_tunnel;
 }
+function safeTunnelEvidence(runtimeRoot) {
+  try {
+    const value = readJson(path.join(runtimeRoot, 'm3-tunnel-state.json'));
+    if (value?.schema_version !== 1 || !['DOCTOR_PASSED', 'AUTH_FAILED', 'DOCTOR_FAILED'].includes(value.state)) throw new Error('invalid');
+    return { state: value.state, error: null };
+  } catch { return { state: null, error: null }; }
+}
+function liveTunnelClient(profile) {
+  try {
+    const raw = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', "@(Get-CimInstance Win32_Process -Filter \"Name = 'tunnel-client.exe'\" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match '--profile\\s+ea-lab-lnwjud-m3' }).Count"], { encoding: 'utf8', windowsHide: true });
+    return Number.parseInt(raw.trim(), 10) > 0;
+  } catch { return false; }
+}
 function deriveStatus(input) {
   const contract = input.contract;
   const actualHead = input.actual_head || null;
@@ -98,7 +111,10 @@ function deriveStatus(input) {
   const processState = active.length === 0 ? 'NOT_RUNNING' : owned.length > 0 ? 'OWNED' : 'UNOWNED';
   const listener = input.listener_state || listenerState(processes);
   const remote = input.tunnel || { configured: false, client_detected: false };
-  const tunnelState = tunnelLifecycle(remote, contract);
+  let tunnelState = tunnelLifecycle(remote, contract);
+  if (remote.evidence_state === 'AUTH_FAILED' || remote.evidence_state === 'DOCTOR_FAILED') tunnelState = remote.evidence_state;
+  else if (remote.evidence_state === 'DOCTOR_PASSED') tunnelState = remote.client_detected ? 'CONNECTED' : 'ACTIVATING';
+  else if (remote.previous_state === 'CONNECTED' && !remote.client_detected) tunnelState = 'DISCONNECTED';
   const controlState = policy === null || lock.error !== null ? 'ERROR' : !headMatch || listener === 'NON_LOOPBACK_LISTENER_OBSERVED' || index.state === 'ERROR' ? 'DEGRADED' : 'OK';
   const output = {
     schema_version: 1,
@@ -122,7 +138,8 @@ function collectLiveStatus(options = {}) {
   const workspace = contract.gateway.authorized_workspace === 'POLICY_CHECKOUT' ? POLICY_CHECKOUT : contract.gateway.authorized_workspace;
   const processes = liveProcesses();
   const listeners = liveListeners(processes);
-  return deriveStatus({ contract, generated_at: options.generated_at, actual_source_sha: git(contract.lnwjud.source_path, ['rev-parse', 'HEAD']), actual_head: git(workspace, ['rev-parse', 'HEAD']), authorized_workspace: workspace, policy: policyResult.value, processes, lock: safeLock(runtimeRoot), listener_state: listenerState(processes, listeners), last_error: policyResult.error });
+  const evidence = safeTunnelEvidence(runtimeRoot);
+  return deriveStatus({ contract, generated_at: options.generated_at, actual_source_sha: git(contract.lnwjud.source_path, ['rev-parse', 'HEAD']), actual_head: git(workspace, ['rev-parse', 'HEAD']), authorized_workspace: workspace, policy: policyResult.value, processes, lock: safeLock(runtimeRoot), listener_state: listenerState(processes, listeners), tunnel: { evidence_state: evidence.state, client_detected: liveTunnelClient(contract.tunnel_profile) }, last_error: policyResult.error });
 }
 function lane(status) {
   const problem = status.audit.last_error;
@@ -134,4 +151,4 @@ function writeAtomic(file, content) { fs.mkdirSync(path.dirname(file), { recursi
 function publish(status) { writeAtomic(path.join(ROOT, 'lnwjud-local-status.json'), `${JSON.stringify(status, null, 2)}\n`); writeAtomic(path.join(ROOT, 'lanes', 'lnwjud-local-execution-plane.json'), `${JSON.stringify(lane(status), null, 2)}\n`); }
 function parseArgs(argv) { const options = {}; for (let i = 0; i < argv.length; i += 1) { if (argv[i] === '--publish') options.publish = true; else if (argv[i] === '--now') options.generated_at = argv[++i]; else throw new Error('usage: local-status.cjs [--publish] [--now <ISO-8601>]'); } return options; }
 if (require.main === module) { const options = parseArgs(process.argv.slice(2)); const status = collectLiveStatus(options); if (options.publish) publish(status); process.stdout.write(`${JSON.stringify(status, null, 2)}\n`); }
-module.exports = { loadContract, sanitize, deriveStatus, collectLiveStatus, lane, tunnelLifecycle };
+module.exports = { loadContract, sanitize, deriveStatus, collectLiveStatus, lane, tunnelLifecycle, safeTunnelEvidence };
