@@ -198,7 +198,7 @@ verdict, order status, or decision-feeding field.</sub>
    — other agents do not have to apply these rules themselves, they just **must not report a summary
    that contradicts them** (reporting the raw numbers is enough)
 5. **Git:** commit often; the commit message starts with your own tag `[codex]` / `[zcode]` / `[oc-*]` · no force push/rebase/amend ·
-   no `--no-verify` (the pre-commit guard is everyone's bumper) · work on the current branch, do not create/switch branches yourself ·
+   no `--no-verify` (the pre-commit guard is everyone's bumper) · in an ordinary same-checkout task, work on the current branch and do not create/switch branches yourself · an isolated git worktree with its own branch is the accepted exception for parallel/bounded lane work (already extensively practiced and covered by the `worktree-isolation` regression suite) — create it only under an explicit task contract or dispatch, and it never licenses touching another lane's worktree or the primary checkout ·
    **a Claude commit ends with `Co-Authored-By:` matching the current seat model — both trailers are accepted**
    (user ratified 2026-07-23, seat model updated 2026-07-27): `Claude Opus 5 <noreply@anthropic.com>`
    or `Claude Fable 5 <noreply@anthropic.com>`, whichever seat is actually running (the Fable-seat is available again — the
