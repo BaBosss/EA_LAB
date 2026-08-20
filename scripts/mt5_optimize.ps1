@@ -94,6 +94,26 @@ $srcXml = Join-Path $DataDir "$ReportName.xml"
 $destXml = "$auto\optimizations\$ReportName.xml"
 Get-ChildItem $DataDir -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
+# A-F2: CLEAR THE DESTINATION TOO, BEFORE THE LAUNCH.
+# The line above clears the SOURCE side only. The destination is keyed on the report name, and the
+# collection step at the bottom of this script is conditional (`if (Test-Path $srcXml)`), so a run
+# that produced nothing used to leave the PREVIOUS run's XML sitting at
+# _mt5_auto\optimizations\<ReportName>.xml -- which is the path every downstream consumer reads
+# (scripts\pilot_probe.ps1 records it as this run's `xml`; scripts\pilot_probe_select.py loads
+# surfaces out of that directory). pilot_probe.ps1's own comment records a smoke run where exactly
+# that happened: a cell whose launcher aborted found the XML from that cell's earlier successful
+# run and reported xml_present=true. That reader was given an mtime freshness test; the launcher
+# was not, so the stale artefact stayed readable by everyone else.
+#
+# QUARANTINED, NOT DELETED. The file may be another lane's evidence, so it is renamed rather than
+# removed and the rename is PRINTED -- an artefact that disappears silently is its own problem.
+# SCOPE IS EXACTLY THIS REPORT NAME: this touches $destXml and nothing else in the directory.
+if (Test-Path -LiteralPath $destXml -PathType Leaf) {
+  $supersededXml = $destXml + '.superseded-' + (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
+  Move-Item -LiteralPath $destXml -Destination $supersededXml -Force
+  Write-Output "STALE DEST XML: a previous artefact was already at $destXml under this report name. Quarantined to $supersededXml so this run cannot be read off it. Nothing else in $auto\optimizations was touched."
+}
+
 # Hygiene: clear the optimization cache so every run is provably fresh.
 # (2026-07-04 note: a suspected cross-date cache-reuse bug was DISPROVEN by a
 # controlled rerun - identical IS vs full-window rows on GBPAUD turned out to be
@@ -233,6 +253,15 @@ if (Test-Path $srcXml) {
 }
 else {
   Write-Output "NO XML (exited=$($proc.HasExited)). If the test ran but produced no .xml, the optimization report may export differently on this build. Check the $ReportName files in $DataDir and the Tester logs."
+  # A-F2: state the CONSUMER-side fact, not only the source-side one. The destination was
+  # quarantined before launch, so a reader of $destXml sees an absent artefact rather than a
+  # previous run's surface under this run's report name. Asserted, not assumed: if something
+  # re-created the path between the quarantine and here, say so instead of claiming absence.
+  if (Test-Path -LiteralPath $destXml) {
+    Write-Output "        WARNING: $destXml EXISTS despite this run producing no optimizer XML. It was not written by this run's collection step. Do not read it as this run's surface."
+  } else {
+    Write-Output "        Consumer path: the destination is ABSENT ($destXml). No previous run's surface can be read as this run's evidence."
+  }
   # ORDER-1253: EXIT 4, not 0. This printed the line above and then fell off the end of the
   # script, which PowerShell exits 0 for -- so a launcher whose ONLY product is an optimizer XML
   # reported SUCCESS when that XML did not exist. Measured, not theorised: a pilot probe

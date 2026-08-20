@@ -445,7 +445,14 @@ function Get-PilotSwapModeProbeReference {
   $files = @(Get-ChildItem -LiteralPath $probeDir -Filter 'swap_probe_*.jsonl' -File |
              Sort-Object Name -Descending)
   foreach ($file in $files) {
-    $matches = @()
+    # NOT `$matches`. PowerShell variable names are case-insensitive, so a local named $matches IS
+    # the automatic variable $Matches -- and the `-match` in the loop condition below overwrites it
+    # with the regex match dictionary on every dated probe. The consequences ran in both directions:
+    # a VALID probe THREW ("a hash table can only be added to another hash table") because `+=` was
+    # appending to that dictionary, and a probe with an ABSENT/blank swap_mode RETURNED A CITATION
+    # because the 1-entry dictionary left behind by -match made `.Count -eq 1` true.
+    # Cage: scripts\_test\run_pilot_swap_probe_tests.ps1 (both directions + a static regression scan).
+    $probeMatches = @()
     foreach ($line in Get-Content -LiteralPath $file.FullName) {
       if (-not $line.Trim()) { continue }
       try { $probe = $line | ConvertFrom-Json }
@@ -454,9 +461,9 @@ function Get-PilotSwapModeProbeReference {
           $probe.logical_symbol -eq $Symbol -and
           $probe.lane -eq $Ctx.Terminal -and
           "$($probe.taken_utc)" -match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$' -and
-          $probe.swap_mode) { $matches += $probe }
+          "$($probe.swap_mode)".Trim()) { $probeMatches += $probe }
     }
-    if ($matches.Count -eq 1) {
+    if (@($probeMatches).Count -eq 1) {
       return ('factory/runs/pilot/swap_probe/' + $file.Name)
     }
   }
