@@ -76,6 +76,9 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $py   = Join-Path $root 'tools\python312\python.exe'
 $outDir = Join-Path $root 'factory\runs\pilot\probe'
 New-Item -ItemType Directory -Force $outDir | Out-Null
+# A-F7: Get-PilotXmlArtefactVerdict -- the optimizer XML artefact identity check is byte-digest
+# based, not mtime-only. See scripts\lib\pilot_run.ps1 for why.
+. (Join-Path $PSScriptRoot 'lib\pilot_run.ps1')
 
 function Fail { param([string]$Msg) Write-Host "REFUSED: $Msg" -ForegroundColor Red; exit 1 }
 
@@ -246,6 +249,16 @@ foreach ($rev in $Revisions) {
       }
       if ($waited -gt 0) { Write-Host "lane free after ${waited}s" }
 
+      # A-F7: snapshot the destination XML's identity BEFORE the launcher runs, so this reader's
+      # own freshness test does not depend on mtime alone (Get-PilotXmlArtefactVerdict below).
+      $xmlPath = Join-Path $root ('_mt5_auto\optimizations\' + $reportName + '.xml')
+      $preXmlExisted = Test-Path -LiteralPath $xmlPath -PathType Leaf
+      $preXmlMtime = $null; $preXmlSha = ''
+      if ($preXmlExisted) {
+        $preXmlMtime = (Get-Item -LiteralPath $xmlPath).LastWriteTime
+        $preXmlSha = (Get-FileHash -LiteralPath $xmlPath -Algorithm SHA256).Hash
+      }
+
       $prevEAP = $ErrorActionPreference
       $ErrorActionPreference = 'Continue'
       $global:LASTEXITCODE = $null
@@ -262,13 +275,23 @@ foreach ($rev in $Revisions) {
       if ($launchError) { $rc = -1 }
       $ErrorActionPreference = $prevEAP
       $elapsed = [math]::Round(((Get-Date) - $started).TotalSeconds, 1)
-      $xmlPath = Join-Path $root ('_mt5_auto\optimizations\' + $reportName + '.xml')
-      $xmlIsFresh = $false
-      if (Test-Path -LiteralPath $xmlPath) {
-        # -ge, not -gt: a run shorter than the filesystem's timestamp resolution would otherwise
-        # fail its own freshness test. The window this leaves open is one clock tick, against a
-        # stale file that is minutes or hours old.
-        $xmlIsFresh = ((Get-Item -LiteralPath $xmlPath).LastWriteTime -ge $started)
+      # A-F7: byte-digest identity, not mtime alone (Get-PilotXmlArtefactVerdict, scripts\lib\pilot_run.ps1).
+      $postXmlExists = Test-Path -LiteralPath $xmlPath -PathType Leaf
+      $postXmlMtime = $null; $postXmlSha = ''
+      if ($postXmlExists) {
+        $postXmlMtime = (Get-Item -LiteralPath $xmlPath).LastWriteTime
+        $postXmlSha = (Get-FileHash -LiteralPath $xmlPath -Algorithm SHA256).Hash
+      }
+      $xmlVerdict = Get-PilotXmlArtefactVerdict -PreExisted $preXmlExisted -PreMtime $preXmlMtime -PreSha256 $preXmlSha `
+        -PostExists $postXmlExists -PostMtime $postXmlMtime -PostSha256 $postXmlSha -Started $started
+      $xmlIsFresh = $xmlVerdict.Fresh
+      if ($xmlVerdict.Inconsistent) {
+        # FLAGGED, not thrown: one cell's ambiguous artefact must not abort a whole batch (the same
+        # reasoning as the exit=2/lane-busy path above). xml_present stays false, so the existing
+        # `xml_present is True` bar in gen_pilot_cells.py already excludes it without any change
+        # there -- this cell simply does not qualify until re-run.
+        Write-Host ("XML ARTEFACT INCONSISTENT at $xmlPath -- " + $xmlVerdict.Reason + `
+          ". mtime and bytes disagree about whether this run produced new evidence; recorded as absent rather than guessed.") -ForegroundColor Red
       }
 
       $rec = [ordered]@{
@@ -305,10 +328,15 @@ foreach ($rev in $Revisions) {
         # attempts. The artefact must therefore be NEWER than this attempt, or the field is a
         # statement about history rather than about this run.
         xml_present         = $xmlIsFresh
+        # A-F7: the byte digest actually observed (empty when no artefact exists), plus whether
+        # mtime and bytes disagreed. Recorded even when xml_present is false/inconsistent -- an
+        # absent or ambiguous artefact is still a fact worth keeping next to the one that IS present.
+        xml_sha256          = $postXmlSha
+        xml_identity_inconsistent = $xmlVerdict.Inconsistent
         # 3 = optimize_guard refused. Named here because "the launcher exited non-zero" and "the
         # guard refused this sweep" are different events and only one of them is evidence for 8.6.
         guard_refused       = ($rc -eq 3)
-        xml                 = (Join-Path $root ('_mt5_auto\optimizations\' + $reportName + '.xml'))
+        xml                 = $xmlPath
         notes               = @(
           'The swept dimension set is DERIVED from factory/parameter_bindings.jsonl via registry.py; it is not chosen in this script and not chosen from any result.',
           'No verdict: design section 10 stops this slice at EVIDENCE_COMPLETE.'
