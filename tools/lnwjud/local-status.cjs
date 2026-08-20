@@ -81,12 +81,12 @@ function deriveStatus(input) {
   const contract = input.contract;
   const actualHead = input.actual_head || null;
   const policy = input.policy || null;
+  const lock = input.lock || { state: 'NOT_RUNNING', owner: null, pid: null, base_sha: null, error: null };
   const policyHead = typeof policy?.base_sha === 'string' && /^[0-9a-f]{40}$/i.test(policy.base_sha) ? policy.base_sha.toLowerCase() : null;
   const dynamicHead = policy?.base_sha === 'WORKTREE_HEAD_AT_START' && /^[0-9a-f]{40}$/i.test(lock.base_sha || '') ? lock.base_sha.toLowerCase() : null;
   const expectedHead = policyHead || dynamicHead;
   const headMatch = expectedHead !== null && actualHead !== null && expectedHead === actualHead;
   const processes = input.processes === undefined ? [] : input.processes;
-  const lock = input.lock || { state: 'NOT_RUNNING', owner: null, pid: null, error: null };
   const active = Array.isArray(processes) ? processes : [];
   const owned = lock.state === 'PRESENT' && lock.pid !== null ? active.filter((row) => row.pid === lock.pid) : [];
   const gatewayHealth = processes === null ? 'UNKNOWN' : active.length === 0 ? 'OFFLINE' : headMatch ? 'RUNNING' : 'DEGRADED';
