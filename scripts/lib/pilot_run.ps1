@@ -445,7 +445,14 @@ function Get-PilotSwapModeProbeReference {
   $files = @(Get-ChildItem -LiteralPath $probeDir -Filter 'swap_probe_*.jsonl' -File |
              Sort-Object Name -Descending)
   foreach ($file in $files) {
-    $matches = @()
+    # NOT `$matches`. PowerShell variable names are case-insensitive, so a local named $matches IS
+    # the automatic variable $Matches -- and the `-match` in the loop condition below overwrites it
+    # with the regex match dictionary on every dated probe. The consequences ran in both directions:
+    # a VALID probe THREW ("a hash table can only be added to another hash table") because `+=` was
+    # appending to that dictionary, and a probe with an ABSENT/blank swap_mode RETURNED A CITATION
+    # because the 1-entry dictionary left behind by -match made `.Count -eq 1` true.
+    # Cage: scripts\_test\run_pilot_swap_probe_tests.ps1 (both directions + a static regression scan).
+    $probeMatches = @()
     foreach ($line in Get-Content -LiteralPath $file.FullName) {
       if (-not $line.Trim()) { continue }
       try { $probe = $line | ConvertFrom-Json }
@@ -454,9 +461,9 @@ function Get-PilotSwapModeProbeReference {
           $probe.logical_symbol -eq $Symbol -and
           $probe.lane -eq $Ctx.Terminal -and
           "$($probe.taken_utc)" -match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$' -and
-          $probe.swap_mode) { $matches += $probe }
+          "$($probe.swap_mode)".Trim()) { $probeMatches += $probe }
     }
-    if ($matches.Count -eq 1) {
+    if (@($probeMatches).Count -eq 1) {
       return ('factory/runs/pilot/swap_probe/' + $file.Name)
     }
   }
@@ -511,4 +518,60 @@ function Invoke-PilotCell {
     throw ("cell " + $Symbol + " " + $Period + ": the report at " + $htm + " is not evidence from THIS run (absent, or written before it started).")
   }
   return $htm
+}
+
+# --- optimizer XML artefact identity (M1-A finding A-F7) ------------------------------------------
+# WHY BYTES, NOT ONLY mtime. pilot_probe.ps1 used to call a produced optimizer XML "fresh" purely
+# from `LastWriteTime -ge $started`. mtime is a coarse, spoofable signal: a copy tool that preserves
+# timestamps, a filesystem with second-level resolution, or a quarantine move landing in the same
+# tick as a fresh write can all make an OLD artefact's mtime read as new, or a genuinely NEW
+# artefact's mtime read as unchanged. The bytes are the ground truth of whether anything actually
+# changed; mtime is a hint, not a fact. (mt5_optimize.ps1 A-F2 already quarantines the destination
+# path BEFORE every launch, which closes most of this on the WRITER side -- this is the matching
+# check on the READER side, for the case where the launcher aborts before reaching its own
+# quarantine step, e.g. the process-guard exit 2 this file's own header describes.)
+#
+# THE RULE: an artefact counts as fresh only when BOTH signals agree something changed -- mtime
+# advanced to at least $Started, AND the byte digest differs from whatever was at this path before
+# the run started (or nothing was there before). If the two signals DISAGREE -- most importantly,
+# mtime says "unchanged" but the digest says the bytes are different -- that is not resolved by
+# trusting one signal over the other; it comes back Inconsistent so the caller records and flags it
+# rather than a script silently guessing which signal lied.
+#
+# SCOPE: the optimizer XML artefact only. Do NOT reuse this for compiled MQL5 binaries -- MQL5
+# compilation is not byte-reproducible (memory `mql5-compile-not-byte-reproducible`, measured 5/5
+# distinct SHA256 hashes from identical source), so byte-equality there would flag every clean
+# rebuild as a mismatch. check_stale_binaries.ps1 already documents that call as ADVISORY ONLY for
+# exactly this reason; this function must stay scoped to the one artefact family it was built for.
+function Get-PilotXmlArtefactVerdict {
+  param(
+    [Parameter(Mandatory)][bool]$PreExisted,
+    $PreMtime = $null,
+    [string]$PreSha256 = '',
+    [Parameter(Mandatory)][bool]$PostExists,
+    $PostMtime = $null,
+    [string]$PostSha256 = '',
+    [Parameter(Mandatory)][datetime]$Started
+  )
+  if (-not $PostExists) {
+    return [pscustomobject]@{ Fresh = $false; Inconsistent = $false; Reason = 'no artefact at this path' }
+  }
+  # -ge, not -gt: preserved from the original check -- a run shorter than the filesystem's
+  # timestamp resolution must not fail its own freshness test.
+  $mtimeSaysFresh = ($null -ne $PostMtime) -and ($PostMtime -ge $Started)
+  $bytesChanged = (-not $PreExisted) -or ($PreSha256 -ne $PostSha256)
+
+  if ($mtimeSaysFresh -and $bytesChanged) {
+    return [pscustomobject]@{ Fresh = $true; Inconsistent = $false; Reason = 'mtime advanced and bytes differ from pre-run state' }
+  }
+  if ((-not $mtimeSaysFresh) -and (-not $bytesChanged)) {
+    return [pscustomobject]@{ Fresh = $false; Inconsistent = $false; Reason = 'mtime unchanged and bytes match pre-run state -- genuinely stale' }
+  }
+  # The two signals disagree; neither is trusted over the other.
+  $why = if ($mtimeSaysFresh) {
+    'mtime advanced but the bytes are identical to pre-run state (a touch/copy with no real content change)'
+  } else {
+    'mtime did not advance but the bytes differ from pre-run state (a same-tick or timestamp-preserving write)'
+  }
+  return [pscustomobject]@{ Fresh = $false; Inconsistent = $true; Reason = $why }
 }

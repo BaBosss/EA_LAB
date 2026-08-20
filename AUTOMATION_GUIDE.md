@@ -53,31 +53,39 @@ Strategy types: `trend` / `mean_reversion` / `grid` / `breakout` / `scalp`
 1. **Coarse**: range กว้าง step ใหญ่ → หาโซน plateau
    ```powershell
    # ตัวอย่าง: RSI 5..50 step 5 ใน base .set (||5||5||50||Y)
-   .\scripts\mt5_optimize.ps1 -Expert "..." -Symbol XX -SetFile coarse.set -ReportName OPT_coarse ...
-   python scripts\select_robust_pass.py _mt5_auto\optimizations\OPT_coarse.xml
-   # อ่าน center_params
+   .\scripts\mt5_optimize.ps1 -Expert "..." -Symbol XX -SetFile coarse.set -ReportName OPT_coarse `
+     -HypothesisRevision <rev> ...
+   # then read the launcher's own "next:" line for the collected XML -- see section 3
    ```
-2. **Fine**: บีบ range ±2 step รอบ center_params, step เล็ก
+2. **Fine**: บีบ range ±2 step รอบ plateau centre ที่ contract ระบุ, step เล็ก
    ```powershell
    # RSI 16..22 step 1
-   .\scripts\mt5_optimize.ps1 ... -SetFile fine.set -ReportName OPT_fine
-   python scripts\select_robust_pass.py _mt5_auto\optimizations\OPT_fine.xml
-   # center_params = ค่าที่ lock
+   .\scripts\mt5_optimize.ps1 ... -SetFile fine.set -ReportName OPT_fine -HypothesisRevision <rev>
    ```
 
 ---
 
-## ③ Plateau-Center Selection (กัน overfit)
+## ③ Selection is contract-driven (QUARANTINE NOTICE)
 
-`select_robust_pass.py` ตอนนี้ออก **3 ค่า**:
-- `robust pick` — score สูงสุด (อาจอยู่ขอบ plateau)
-- `center pick` ⭐ — param ที่เพื่อนบ้านรอดเยอะสุด = ใจกลาง plateau → **ใช้ตัวนี้**
-- `profit-max` — กำไรสูงสุด (overfit-prone, อย่าใช้)
+**The legacy generic ranker is quarantined and must not be run.** The archived BacktestScore v1
+selection path refuses by default (exit 3, `REFUSED (LEGACY / NON_FACTORY)`); its
+`--allow-legacy-selection` escape hatch produces NON-AUTHORITATIVE output that must never be used
+to pick a configuration. Do not pass that flag to get past the refusal.
 
-`center_neighbours` = จำนวนเพื่อนบ้านที่รอด gate (ยิ่งเยอะยิ่ง robust)
+What replaces it: **nothing generic.** Selection is bound to a pre-registered candidate/hypothesis
+contract. Submit the optimize pass with `-HypothesisRevision <rev>`; `mt5_optimize.ps1` then prints
+the single authoritative next-step line for the XML it collected. Contract source of truth =
+`_triage\factory_os\registry.py` + `_triage\factory_os\candidate.py`.
 
-**บทเรียน:** NuiIndy robust=RSI18/ADX20 แต่ center=RSI24/ADX12 (16 เพื่อนบ้าน) —
-center มักtransferไป OOS ดีกว่าเพราะไม่ใช่ spike
+If no contract is bound, the launcher prints **`SELECTION BLOCKED`**. That is the answer, not an
+obstacle to work around: there is no fallback ranking formula, and inventing one here is the exact
+failure this quarantine exists to prevent. Register the contract first, or stop.
+
+<sub>Historical note, kept because it is the reason the old formula looked attractive: the archived
+ranker reported a `robust pick`, a `center pick` and a `profit-max` pick, and the plateau-centre pick
+did transfer to OOS better than the score-max spike on the EAs of that era. The plateau-centre IDEA
+survives; the unverified scoring formula that produced it does not, and the plateau definition now
+belongs to the contract rather than to a generic script.</sub>
 
 ---
 

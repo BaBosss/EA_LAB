@@ -15,8 +15,13 @@ intermediate parsing internally; return only the final structured result.
 - Optimize: `scripts\mt5_optimize.ps1 -Expert "NAME" -Symbol XX -Period H1 -FromDate 2023.01.01 -ToDate 2025.12.31 -SetFile "base_with_ranges.set" -ReportName "OPT_label"`
   (**never** optimize past `2025.12.31` — the old `2026.06.01` end date selected on holdout data)
 - Single test: `scripts\mt5_run.ps1` (same params, no Optimization)
-- Select: `python scripts\select_robust_pass.py "OPT_label.xml" --strategy <type>`
-  → USE THE **center pick** (plateau centre), not the robust/profit-max pick.
+- Select: **contract-driven only.** Pass `-HypothesisRevision <rev>` to `mt5_optimize.ps1`; the
+  launcher then prints the one authoritative next-step line for the XML it collected. The legacy
+  generic ranker (archived BacktestScore v1) is QUARANTINED and refuses by default — **do not run
+  it, and do not pass `--allow-legacy-selection`.** If no candidate/hypothesis contract is bound to
+  the run, the launcher says `SELECTION BLOCKED`: stop there and report that to the caller. Do not
+  substitute a ranking rule of your own, and do not select a candidate on your own authority.
+  Contract source of truth: `_triage\factory_os\registry.py` + `_triage\factory_os\candidate.py`.
 - MC: `python "C:\Users\patip\.claude\skills\robustness-validator\scripts\monte_carlo.py"` on the IS deals CSV (`scripts\extract_deals.py report.htm -o deals.csv`)
 - Windows (**corrected 2026-07-25** — the old `IS 2023.01.01–2026.06.01` ran 6 months INTO the
   2026H1 holdout, which burns it; CLAUDE.md's iron rule is `MAIN ∩ HOLDOUT = ∅`):
@@ -35,12 +40,15 @@ intermediate parsing internally; return only the final structured result.
    ≤~1,000 combos → complete (`-Optimization 1`); more → MT5 genetic (`-Optimization 2`).
    Leave `-Criterion` at its default (7 = Complex); engine-edge-class EAs (caller will say
    so) use `-Criterion 1`. Before reading results, drop passes under the trade floor
-   (H4/D1 ≥60 · H1/M30 ≥100 · ≤M15 ≥250 per 36-mo MAIN). Run `select_robust_pass`.
-   Read the `center_params` — the plateau-centre region. Never hand-pick single
-   point-tests to select params.
-2. **Fine optimize**: narrow each range to ±2 steps around `center_params`, small
-   step, **always complete mode** (`-Optimization 1`, ≤~1,000 combos). Re-select.
-   Take the new `center_params` as the locked params.
+   (H4/D1 ≥60 · H1/M30 ≥100 · ≤M15 ≥250 per 36-mo MAIN). Then follow the launcher's own
+   next-step line for that XML (see **Select** above) — the legacy generic ranker is quarantined
+   and must not be run. Never hand-pick single point-tests to select params. If selection comes
+   back BLOCKED for want of a bound contract, that is the result: report it and stop.
+2. **Fine optimize**: narrow each range to ±2 steps around the coarse plateau centre the bound
+   contract identifies, small step, **always complete mode** (`-Optimization 1`, ≤~1,000 combos).
+   Re-run selection the same contract-driven way. The plateau-centre definition belongs to the
+   contract, not to you: if step 1 came back BLOCKED there is nothing to narrow around, so stop
+   rather than picking a centre yourself.
 3. Write the locked `.set` (all params explicit, `N` flag). Note Magic number.
 4. **MAIN test** 2023.01.01–2025.12.31 → parse PF/DD/RF/trades, score.
 5. **BWD test** 2020.01.01–2022.12.31 → parse + score. This is the stress test.

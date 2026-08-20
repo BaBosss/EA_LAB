@@ -443,16 +443,47 @@ def item_optimize_guard(src):
                 'one real case, so the refusal alone does not distinguish a working guard from one '
                 'broken closed.' % (len(records), len(refusals), len(allows)))
 
+    # M1-A A-F6 (2026-08-20). A real decision by itself proves the guard fired; it does not prove
+    # a reader can tell WHICH artefact it fired about. `hypothesis_revision` alone is not enough --
+    # 13 of these 18 records share just two revision strings, one per symbol x TF sweep -- so
+    # `optimize_log.artefact_key` (lane, expert, ini_path) is the join key checked here. This does
+    # not gate the PASS/BLOCKED verdict item 6 itself asks for (a record missing the key is still a
+    # real observed fire; scripts/optimize_guard.ps1, the writer, is out of this lane's owned path
+    # family, so a record it wrote without the key cannot be repaired here) -- it gates on the
+    # ambiguity a key CAN detect: two records claiming the same artefact while disagreeing about
+    # what the guard decided about it. That is unresolvable evidence, not merely incomplete
+    # evidence, so it is a FAIL rather than folded quietly into the PASS count.
+    keyed, unkeyed = 0, 0
+    for rec in records:
+        try:
+            optimize_log.artefact_key(rec)
+            keyed += 1
+        except optimize_log.ArtefactKeyError:
+            unkeyed += 1
+    collisions = optimize_log.artefact_key_collisions(records)
+    if collisions:
+        key, group = collisions[0]
+        return (FAIL,
+                '%d decision record(s) share artefact_key %r (lane, expert, ini_path) while '
+                'disagreeing about what the guard decided -- %d record(s) at that one key, verdicts '
+                '%s. A join key that cannot tell two different decisions apart is not a join key; '
+                'the .ini at that path changed content between submissions without its path '
+                'changing.' % (len(group), key, len(group),
+                               sorted(set(r.get('result') for r in group))))
+
     r0 = refusals[0]
     refused_names = ', '.join(sorted(d.get('name', '?')
                                      for d in optimize_log.refused_dimensions(r0)))
     return (PASS,
             '%d real submission(s) recorded in %s: %d with a dimension REFUSED, %d ALLOWed '
             'outright. First observed refusal: %s refused %s on lane %s (revision %r). The '
-            'both-directions fixture pair is carried by %s, which is inside $FAST_SUITES.'
+            'both-directions fixture pair is carried by %s, which is inside $FAST_SUITES. '
+            'Artefact join (A-F6): %d/%d record(s) resolve a (lane, expert, ini_path) key, 0 '
+            'collision(s) among them.'
             % (len(records), OPTIMIZE_LOG_REL, len(refusals), len(allows),
                r0.get('submitted_utc'), refused_names, r0.get('lane'),
-               r0.get('hypothesis_revision') or '(none declared)', OPTIMIZE_GUARD_CAGE))
+               r0.get('hypothesis_revision') or '(none declared)', OPTIMIZE_GUARD_CAGE,
+               keyed, len(records)))
 
 
 def _pilot_cells(src):

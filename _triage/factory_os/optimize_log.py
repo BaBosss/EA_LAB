@@ -65,9 +65,44 @@ DIMENSION_REQUIRED = ('name', 'verdict', 'facts')
 
 SUPPORTED_VERSION = 1
 
+# M1-A A-F6 (2026-08-20). ARTEFACT IDENTITY -- the join key that ties a decision record back to
+# the exact .ini sweep-configuration it judged, so a decision is not merely "some submission that
+# happened", it is THIS submission, about THIS file.
+#
+# WHY NOT `hypothesis_revision` OR `lane` ALONE. Measured against the committed log: one
+# `hypothesis_revision` (e.g. `B14-H01-r1`) covers every symbol x TF sweep of that revision --
+# 13 of the 18 committed records share just two revision strings -- and `lane` names the whole MT5
+# install, shared by all 18. Neither distinguishes one submission's ARTEFACT from another's; using
+# either as a join key would be exactly the shape memory `identity-fields-that-do-not-identify-the-
+# run` warns about -- a field that looks like an identifier but does not.
+#
+# `expert` + `ini_path` are the two fields the writer (scripts/optimize_guard.ps1) ALREADY emits
+# that name the specific build and the specific .ini file the decision read. Verified against all
+# 18 committed records in factory/optimize_decisions.jsonl: (lane, expert, ini_path) is unique on
+# every one of them -- 18 records, 18 distinct keys.
+#
+# THIS IS A PATH IDENTITY, NOT A BYTE IDENTITY, AND THE LIMIT IS NAMED RATHER THAN HIDDEN. The
+# writer does not hash the .ini's bytes the way scripts/lib/pilot_run.ps1's
+# Get-PilotXmlArtefactVerdict does for the optimizer XML (A-F7) -- `ini_path` only proves the
+# decision NAMED this file, not that the file's bytes at decision time are the bytes a later reader
+# finds at the same path. Closing that residual gap needs the writer to record a digest, and
+# scripts/optimize_guard.ps1 is out of this lane's owned path family (never touched by M1-A's P0
+# commits) -- so ARTEFACT_KEY_FIELDS is the strongest join buildable from what the writer emits
+# today, and `artefact_key_collisions` below is the mechanical check that the path-identity is
+# actually holding (no two DIFFERENT decisions are silently sharing one key).
+ARTEFACT_KEY_FIELDS = ('lane', 'expert', 'ini_path')
+
 
 class LogRefusal(Exception):
     """The log could not be read as a log. Never a verdict about the guard."""
+
+
+class ArtefactKeyError(Exception):
+    """A record cannot be joined to the artefact it judged -- it is missing one of
+    ARTEFACT_KEY_FIELDS. Raised rather than silently building a partial key: a key with a hole
+    filled by `None` would still compare equal to another hole-filled key, which is the same
+    "I cannot check" -> "checked, fine" shape memory `guard-disarmed-by-prose-reported-as-note`
+    names, one field down from candidate.py's C9."""
 
 
 def parse(text, where='factory/optimize_decisions.jsonl'):
@@ -163,3 +198,63 @@ def real_allows(records):
     submissions rather than on the fixture suite.
     """
     return [r for r in records if allowed_dimensions(r) and not refused_dimensions(r)]
+
+
+def artefact_key(record):
+    """-> (lane, expert, ini_path): the join key tying `record` to the artefact it judged.
+
+    Raises ArtefactKeyError, never builds a key with a hole in it, if any of ARTEFACT_KEY_FIELDS is
+    absent or blank -- a caller that wants "every record, best effort" must catch it per-record and
+    say so, the way `artefact_key_collisions` below does; a caller must never receive a key that
+    silently stands in for "cannot tell".
+    """
+    missing = [f for f in ARTEFACT_KEY_FIELDS if not record.get(f)]
+    if missing:
+        raise ArtefactKeyError(
+            'decision record (hypothesis_revision=%r, submitted_utc=%r) names no %s, so it cannot '
+            'be tied to the artefact it judged'
+            % (record.get('hypothesis_revision'), record.get('submitted_utc'), ', '.join(missing)))
+    return tuple(record[f] for f in ARTEFACT_KEY_FIELDS)
+
+
+def _verdict_signature(rec):
+    """-> a hashable summary of WHAT the guard decided, for comparing two records that share one
+    artefact_key. Built from `result` and the (name, verdict) pairs, sorted so two records that
+    list the same dimensions in a different order still compare equal -- the question is whether
+    the DECISION differs, not whether the writer's dict order did."""
+    return (rec.get('result'),
+           tuple(sorted((d.get('name'), d.get('verdict')) for d in rec.get('dimensions') or [])))
+
+
+def artefact_key_collisions(records):
+    """-> [(key, [record, ...])] for every artefact_key shared by two or more records whose
+    verdicts DISAGREE.
+
+    A key that is a genuine per-artefact identity may legitimately see the SAME (lane, expert,
+    ini_path) submitted more than once with the SAME verdict -- the guard re-run for provenance, or
+    invoked twice in one pipeline stage. What a sound identity must never show is the same key
+    carrying two DIFFERENT verdicts, because that means the .ini at that path changed content
+    between two decisions without the path itself changing -- exactly the residual risk
+    ARTEFACT_KEY_FIELDS' own docstring names (path identity, not byte identity). A caller that
+    joined on this key alone would then be unable to say which decision governs the artefact a
+    later run actually used, which is the ambiguity this function exists to surface rather than
+    hide.
+
+    Records that cannot build a key (ArtefactKeyError) are left out of the grouping, not treated as
+    a silent match on some default key -- `parse()`'s caller sees those via `artefact_key` raising,
+    not via a false negative here.
+    """
+    groups = {}
+    for rec in records:
+        try:
+            key = artefact_key(rec)
+        except ArtefactKeyError:
+            continue
+        groups.setdefault(key, []).append(rec)
+    collisions = []
+    for key, group in groups.items():
+        if len(group) < 2:
+            continue
+        if len(set(_verdict_signature(r) for r in group)) > 1:
+            collisions.append((key, group))
+    return collisions

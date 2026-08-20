@@ -16,7 +16,11 @@ per-test launch output, or parsing errors — just the verdict table.
   (**corrected 2026-07-25** — the old `2026.06.01` end date smoke-screened 6 months into the
   2026H1 holdout, spending it before the funnel ever got there)
 - Parser keys (parse_mt5_report): `profit_factor`, `equity_drawdown_relative`, `recovery_factor`, `total_trades`, `symbol`
-- Scorer: `from score_backtest import score` → `score(d, name)["BacktestScore"]`, `["verdict"]`
+- Scorer: **none — do not import or run the archived BacktestScore v1 scorer.** Its PASS / WATCH /
+  REJECT vocabulary was retired by CLAUDE.md's VERDICT GATE, and it says REJECT at PF < 1.05 on a
+  single cell, which the gate forbids. Your screen mark comes from the parsed numbers against the
+  bar table in step 4 below and from nothing else. Report the parsed PF/DD/trades as measured; do
+  not compute or quote a composite score.
 
 ## CRITICAL — never hang the batch
 Every smoke single-test MUST have a per-test timeout. Use the proven wrapper
@@ -38,17 +42,18 @@ NAME_ERROR and move on. Never retry more than once.
      close that one cell, never a concept (paid-for rule: SMC×STO looked dead on default smoke
      and became a real EURUSD candidate after optimize).
 
-## What your "Verdict" column is and is not
-It is a **screen label** from `score_backtest.py`'s retired BacktestScore v1 formula. The words
-PASS / WATCH / REJECT are NOT the project's verdict vocabulary (that is DEAD-STRUCTURAL /
+## What your "Screen" column is and is not
+It is the PROCEED / WATCH / no-mark label from step 4 — the bar table applied to this one cell's
+parsed numbers, nothing more. It is NOT the project's verdict vocabulary (that is DEAD-STRUCTURAL /
 DEAD-OPTIMIZED / PARKED-VERIFY(user) / BUILD-ON / CANDIDATE / DEMO / LIVE, and only the lead
-engineer or the user may issue one). Never write "REJECT" in a way that reads as a kill decision —
-the caller decides that after the ladder, not you.
+engineer or the user may issue one). The retired BacktestScore v1 words PASS / WATCH / REJECT must
+not appear in your output at all: "REJECT" in particular reads as a kill decision, and the caller
+decides that after the ladder, not you.
 
 ## Output (return EXACTLY this, nothing else)
 A markdown table sorted by PF desc:
 
-| Symbol | PF | DD% | Trades | Verdict | Candidate? |
+| Symbol | PF | DD% | Trades | Screen | Candidate? |
 
 Then 2-3 lines max: which symbols cleared the smoke gate and should go to the
 Validator next, and any NAME_ERROR rows to fix. Do not paste raw report content.
