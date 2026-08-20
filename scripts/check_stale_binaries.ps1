@@ -19,7 +19,8 @@ WHAT THIS CHECKS
   2. Groups copies by base file name and flags when two copies of the "same" EA have DIFFERENT
      SHA256 hashes (HASH_DIFFERS). ADVISORY ONLY - see the measured note at the hash check:
      the MQL5 compiler is not byte-reproducible, so this is NOT proof the code differs.
-  3. For each .ex5, finds the matching .mq5 anywhere under D:\EA_LAB, walks its #include graph
+  3. For each .ex5, finds the matching .mq5 anywhere under the RESOLVED repo root - the checkout
+     this script itself lives in, not a hardcoded one (M0-LANE2 / D-F6) - walks its #include graph
      transitively (relative to the including file's folder, then ea_template\ / ea_template\modules
      as fallback roots, with a visited-set guard against include cycles), and compares the .ex5
      mtime against the newest mtime among the .mq5 + every reachable .mqh. Older binary => STALE,
@@ -43,7 +44,8 @@ HOW MUCH A "STALE" LINE ACTUALLY MATTERS - triage before you panic
 
 USAGE
   powershell -File scripts\check_stale_binaries.ps1
-  powershell -File scripts\check_stale_binaries.ps1 -Roots "D:\EA_LAB\ea_template","D:\Meta 5b\MQL5\Experts"
+  powershell -File scripts\check_stale_binaries.ps1 -Roots "ea_template","D:\Meta 5b\MQL5\Experts"
+    (relative -Roots entries resolve against the resolved repo root; absolute ones are used as given)
 
 EXIT CODES
   0 = every .ex5 found matches its source and its sibling copies
@@ -71,10 +73,19 @@ param(
   # ORDER-213 caught exactly this case by hand once (the Boss_16 bundle was missing
   # _16_BaseLotMode entirely) and answered it with "hash in the README", which only protects
   # bundles somebody remembers to check.
+  #
+  # M0-LANE2 (Audit D-F6): THE THREE REPO ROOTS ARE NOW REPO-RELATIVE. They used to be the
+  # literals "D:\EA_LAB\ea_template" / "...\ea_projects" / "...\_vps_deploy", so this script
+  # READ THE PRIMARY CHECKOUT no matter which worktree launched it -- and, with the default
+  # -JsonOut below, WROTE ITS SIDECAR INTO THE PRIMARY as well. From a linked worktree that
+  # meant the verdict described somebody else's files and the audit trail landed in somebody
+  # else's tree. Relative entries are resolved against $RepoRoot in the body (section 0).
+  # The two entries that are genuinely MACHINE paths -- the standalone MT5 install and the
+  # roaming terminal data folder -- stay absolute, because they are not in any repo.
   [string[]]$Roots = @(
-    "D:\EA_LAB\ea_template",
-    "D:\EA_LAB\ea_projects",
-    "D:\EA_LAB\_vps_deploy",
+    "ea_template",
+    "ea_projects",
+    "_vps_deploy",
     "D:\Meta 5b\MQL5\Experts",
     "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\MQL5\Experts"
   ),
@@ -86,10 +97,46 @@ param(
   [string]$OnlyName = "",       # limit the scan to one .ex5 base name (the run-path entry point)
   [switch]$AllTerminals,        # expand to every roaming terminal-id folder (audit mode)
   [switch]$IncludeForeign,      # emit a record per no-source binary instead of one summary line
-  [string]$RepoRoot = "D:\EA_LAB",
-  [string]$JsonOut = "D:\EA_LAB\_mt5_auto\reports\stale_binaries_check.json"
+  # M0-LANE2 (Audit D-F6): both of these were hardcoded "D:\EA_LAB..." literals. Empty now
+  # means DERIVE FROM THIS SCRIPT'S OWN LOCATION (section 0), which is the only answer that is
+  # right in every checkout. An explicit value still wins, unchanged, and that is what the
+  # existing cage passes.
+  [string]$RepoRoot = "",
+  [string]$JsonOut = ""
 )
 $ErrorActionPreference = "Stop"
+
+# ---------------------------------------------------------------------------
+# 0. WHICH CHECKOUT AM I. (M0-LANE2, Audit D-F6)
+#
+#    REPRODUCED at canonical 649207d6: run from D:\EA_LAB_M0_L2_canonical, the old defaults
+#    made this script scan D:\EA_LAB\ea_template, resolve includes against D:\EA_LAB, and write
+#    D:\EA_LAB\_mt5_auto\reports\stale_binaries_check.json. Every one of those is a different
+#    tree from the one that launched it. Staleness is an mtime comparison between a BINARY and
+#    ITS SOURCE; comparing this tree's binary against another tree's source is not a weaker
+#    answer, it is a different question.
+#
+#    Resolve-EaLabRepoRoot walks up from $PSScriptRoot to the .git marker and handles both a
+#    .git DIRECTORY and a linked worktree's .git FILE, so it is correct in the primary and in
+#    every worktree. It never consults the current working directory -- a Scheduled Task's
+#    default cwd must not be able to redirect this.
+# ---------------------------------------------------------------------------
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+
+if (-not $RepoRoot) {
+  $anchor = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+  $RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $anchor
+}
+$RepoRoot = ([System.IO.Path]::GetFullPath($RepoRoot)).TrimEnd('\')
+if (-not $JsonOut) {
+  $JsonOut = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath '_mt5_auto\reports\stale_binaries_check.json'
+}
+# Repo-relative root entries become absolute HERE, against the resolved root. Get-EaLabPath
+# returns a rooted path unchanged, so an explicitly-passed absolute -Roots list is untouched.
+$Roots = @($Roots | ForEach-Object { Get-EaLabPath -RepoRoot $RepoRoot -RelativePath $_ })
+$eaScopeContext = Get-EaLabExecutionContext -ResolvedRoot $RepoRoot
+Write-Host ("[scope] repo_root={0} ({1})" -f $RepoRoot, $eaScopeContext)
+Write-Host ("[scope] json_out={0}" -f $JsonOut)
 
 if ($AllTerminals) {
   $Roots = @($Roots | Where-Object { $_ -notlike "*\Terminal\*" }) +
@@ -266,9 +313,18 @@ function Find-Ex5Source {
   # repo, and a checkout stamps every file with the checkout time, not its real edit history.
   # Without this exclusion, every .mq5/.mqh in a worktree looks "just edited" and makes every
   # .ex5 in the real ea_template\ falsely report STALE - found while verifying this script.
+  #
+  # M0-LANE2 (Audit D-F7): the exclusion above named ONE nested worktree root. There are four
+  # on this machine (.worktrees\, .claude\worktrees\, .qwen\worktrees\, .lane6-canonical\) and
+  # the reasoning that produced the original exclusion applies verbatim to all of them: a
+  # checkout stamps every file with the checkout time, so any .mq5 inside one makes the real
+  # ea_template\ binary look STALE. Excluding one of four is not a weaker version of the rule,
+  # it is the rule working for 25% of the inputs. Same list as .gitignore's nested-worktree
+  # block, and it is a SKIP for source-search purposes only -- nothing is moved or deleted.
   param([string]$BaseName, [string]$SearchRoot)
   $hits = Get-ChildItem -LiteralPath $SearchRoot -Filter "$BaseName.mq5" -Recurse -File -ErrorAction SilentlyContinue
-  $hits = $hits | Where-Object { $_.FullName -notmatch '\\\.claude\\worktrees\\' }
+  $nestedWorktreeRe = '\\(\.worktrees|\.claude\\worktrees|\.qwen\\worktrees|\.lane6-canonical)\\'
+  $hits = $hits | Where-Object { $_.FullName -notmatch $nestedWorktreeRe }
   return $hits
 }
 
