@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 'use strict';
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const path = require('node:path');
 const { buildPackage, renderPrompt } = require('./delegation-package.cjs');
 const worktree = path.resolve(__dirname, '..', '..');
@@ -18,19 +17,17 @@ const base = {
 function rejects(change, pattern) { const spec = structuredClone(base); change(spec); assert.throws(() => buildPackage(spec), pattern); }
 const pkg = buildPackage(base); const prompt = renderPrompt(pkg);
 const codexPkg = buildPackage({ ...base, model: 'codex' });
-const fixtureDir = path.join(__dirname, 'fixtures', 'm6-delegation');
-const savedSpec = JSON.parse(fs.readFileSync(path.join(fixtureDir, 'm7-qwen-context.json'), 'utf8'));
-const savedPrompt = fs.readFileSync(path.join(fixtureDir, 'm7-qwen-context.prompt.txt'), 'utf8');
+const staleSpec = { ...base, worktree: path.resolve(worktree, '..', 'lnwjud-execution-plane-20260820'), expected_worktree_head_sha: '0'.repeat(40) };
 assert.equal(pkg.provenance.expected_worktree_head_sha, base.expected_worktree_head_sha); assert(prompt.includes('LOOP_BREAKER=')); assert(prompt.includes('M5_ROUTE=')); assert(prompt.includes('CANONICAL_BASE_SHA=')); assert(prompt.includes('DIRECT_CONSUMER=')); assert(prompt.includes('CALLERS='));
 assert.equal(codexPkg.model, 'codex');
-assert.throws(() => buildPackage(savedSpec), /trusted worktree/);
-const regenerated = buildPackage({ ...savedSpec, worktree, expected_worktree_head_sha: base.expected_worktree_head_sha });
+assert.throws(() => buildPackage(staleSpec), /trusted worktree/);
+const regenerated = buildPackage({ ...base, worktree, expected_worktree_head_sha: base.expected_worktree_head_sha });
 assert(renderPrompt(regenerated).includes(`HEAD=${base.expected_worktree_head_sha}`));
 rejects((x) => { x.expected_worktree_head_sha = '0'.repeat(40); }, /stale worktree HEAD/);
 rejects((x) => { x.worktree = path.resolve(worktree, '..', 'lnwjud-execution-plane-20260820'); }, /trusted worktree/);
 rejects((x) => { x.canonical_base_sha = 'NOT-A-SHA'; }, /40-character SHA/);
 rejects((x) => { x.canonical_base_sha = '0'.repeat(40); }, /canonical base provenance/);
-assert.equal(buildPackage(base, { canonical_base_sha: '0'.repeat(40), worktree: 'D:\\EA_LAB', allowed_paths: ['tools/'], forbidden_paths: [], authority: {}, hard_stops: [] }).provenance.canonical_base_sha, 'a8093c9f65af381ca33f9293566b33cac61cd4c8');
+assert.equal(buildPackage(base, { canonical_base_sha: '0'.repeat(40), worktree: 'D:\\EA_LAB', allowed_paths: ['tools/'], forbidden_paths: [], authority: {}, hard_stops: [] }).provenance.canonical_base_sha, 'ea370b0f185ccf0aa54e8af0c08390a5c7770304');
 rejects((x) => { x.trustedParentContext = { canonical_base_sha: '0'.repeat(40) }; }, /untrusted child may not supply parent context/);
 rejects((x) => { x.relevant_files = [{ path: 'AGENTS.md', symbols: ['x'] }]; }, /out-of-scope/);
 rejects((x) => { x.bounded_callers = ['AGENTS.md']; }, /out-of-scope/);

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "canonical_base_sha": "a8093c9f65af381ca33f9293566b33cac61cd4c8",
+  "canonical_base_sha": "ea370b0f185ccf0aa54e8af0c08390a5c7770304",
   "lnwjud": {
     "expected_version": "v4.0.0",
     "expected_sha": "6a585a8c62015316efb205f2c89aab66bde2f47e",
     "source_path": "D:\\EA_LAB_TOOLS\\lnwjud-v4-src"
   },
   "gateway": {
-    "authorized_workspace": "D:\\EA_LAB_WORKTREES\\lnwjud-execution-plane-20260820",
+    "authorized_workspace": "D:\\EA_LAB_worktrees\\lnwjud-final-reconcile-20260820",
     "local_transport": "STDIO",
     "runtime_root": "D:\\EA_LAB_CONTROL\\lnwjud-v4"
   },
