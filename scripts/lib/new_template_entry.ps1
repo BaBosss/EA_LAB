@@ -148,6 +148,56 @@ function Get-TemplateEntryInputsAnchors {
     return [pscustomobject]$result
 }
 
+# B-F2 (Audit B). Wrapper -> registry direction was previously unchecked: a wrapper declaring
+# `#define LAB_ENTRY_<N>` for an N that core/Inputs.mqh's fallback chain does not know falls
+# through to the LAB_ENTRY_11 fallback SILENTLY (same root mechanism as B-F1, minus the compile
+# error -- an unregistered N still compiles, just with the wrong entry's semantics, because
+# StackMode/StackConfirm etc. are all declared, just under LAB_ENTRY_11's branch). MQL5's
+# preprocessor has no `#ifdef`-with-wildcard, so "was any LAB_ENTRY_* defined that Inputs.mqh
+# does not know about" cannot be expressed as a compile-time #error from inside Inputs.mqh
+# itself -- it has no way to name a token it has never seen. This is the pre-compile checker the
+# audit asks for instead: run it on a wrapper before compiling, refuse closed if the wrapper's
+# token is not registered.
+function Get-TemplateEntryWrapperTag {
+    param([Parameter(Mandatory)][string]$WrapperText)
+    $m = [regex]::Match($WrapperText, '(?m)^\s*#define\s+LAB_ENTRY_(\d+)\s*$')
+    if (-not $m.Success) { return $null }
+    return [int]$m.Groups[1].Value
+}
+
+function Test-TemplateEntryWrapperRegistered {
+    param(
+        [Parameter(Mandatory)][string]$WrapperPath,
+        [Parameter(Mandatory)][string]$InputsPath
+    )
+    if (-not (Test-Path -LiteralPath $WrapperPath)) {
+        return [pscustomobject]@{ Ok = $false; EntryNumber = $null; Reason = "WRAPPER_NOT_FOUND: $WrapperPath" }
+    }
+    if (-not (Test-Path -LiteralPath $InputsPath)) {
+        return [pscustomobject]@{ Ok = $false; EntryNumber = $null; Reason = "INPUTS_NOT_FOUND: $InputsPath" }
+    }
+    $wrapperText = Get-Content -LiteralPath $WrapperPath -Raw -Encoding UTF8
+    $n = Get-TemplateEntryWrapperTag -WrapperText $wrapperText
+    if ($null -eq $n) {
+        return [pscustomobject]@{ Ok = $false; EntryNumber = $null; Reason = "NO_LAB_ENTRY_TOKEN: $WrapperPath defines no '#define LAB_ENTRY_<N>'" }
+    }
+    $inputsText = Get-Content -LiteralPath $InputsPath -Raw -Encoding UTF8
+    # Get-TemplateEntryInputsAnchors is written to plan an INSERTION for a NEW entry, so it
+    # reports ENTRY_NUMBER_COLLISION precisely when the tag IS already known -- reused here
+    # unchanged; "already known" is exactly what "registered" means for this check.
+    $anchors = Get-TemplateEntryInputsAnchors -InputsText $inputsText -EntryNumber $n
+    if ((-not $anchors.Valid) -and $anchors.Reason -like 'ENTRY_NUMBER_COLLISION:*') {
+        return [pscustomobject]@{ Ok = $true; EntryNumber = $n; Reason = "REGISTERED: LAB_ENTRY_$n is known to $InputsPath" }
+    }
+    if (-not $anchors.Valid) {
+        # Some other refusal (MISSING_ANCHOR, etc.) -- this checker cannot tell registered from
+        # unregistered on a file shape it does not recognize, so it fails closed rather than
+        # guessing either way.
+        return [pscustomobject]@{ Ok = $false; EntryNumber = $n; Reason = "CANNOT_JUDGE: $($anchors.Reason)" }
+    }
+    return [pscustomobject]@{ Ok = $false; EntryNumber = $n; Reason = "UNREGISTERED: LAB_ENTRY_$n is not known to $InputsPath -- this wrapper would silently compile with LAB_ENTRY_11's fallback semantics instead of failing closed" }
+}
+
 function Get-TemplateEntryScaffoldPlan {
     param(
         [Parameter(Mandatory)]$EntryNumber,
