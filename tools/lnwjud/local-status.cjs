@@ -5,6 +5,7 @@ const { execFileSync } = require('node:child_process');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { loadContract: loadM3Contract } = require('./m3-remote-contract.cjs');
 
 const ROOT = 'D:\\EA_LAB_CONTROL';
 const POLICY_CHECKOUT = path.resolve(__dirname, '..', '..');
@@ -90,16 +91,39 @@ function safeTunnelEvidence(runtimeRoot, context = {}) {
     const value = readJson(path.join(runtimeRoot, 'm3-tunnel-state.json'));
     if (value?.schema_version !== 2 || !['DOCTOR_PASSED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'CONNECTED', 'DISCONNECTED'].includes(value.state)) return { state: 'UNKNOWN_UNBOUND', error: null };
     if (typeof value.checkout_head !== 'string' || value.checkout_head !== context.actual_head || value.profile !== 'ea-lab-lnwjud-m3') return { state: 'UNKNOWN_UNBOUND', error: null };
-    if (value.state === 'DOCTOR_PASSED' && (value.artifact !== path.join(runtimeRoot, 'm3-sealed-profile.yaml') || value.profile_sha256 !== fileSha(value.artifact) || !value.launcher_sha256 || value.launcher_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'm3-restricted-launcher.cmd')) || !value.policy_sha256 || value.policy_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'ea-lab-policy.json')) || !value.tunnel_client_sha256 || typeof value.tunnel_client_sha256 !== 'string')) return { state: 'UNKNOWN_UNBOUND', error: null };
+    const trustedClientSha = loadM3Contract(context.contract_path).tunnelClientSha256;
+    if (value.state === 'DOCTOR_PASSED' && (value.artifact !== path.join(runtimeRoot, 'm3-sealed-profile.yaml') || value.profile_sha256 !== fileSha(value.artifact) || !value.launcher_sha256 || value.launcher_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'm3-restricted-launcher.cmd')) || !value.policy_sha256 || value.policy_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'ea-lab-policy.json')) || typeof trustedClientSha !== 'string' || value.tunnel_client_sha256 !== trustedClientSha)) return { state: 'UNKNOWN_UNBOUND', error: null };
     if (!evidenceFresh(value.generated_at)) return { state: 'UNKNOWN_STALE', error: null };
     return { state: value.state, error: null };
   } catch { return { state: 'UNKNOWN_UNBOUND', error: null }; }
 }
+function windowsCommandTokens(commandLine) {
+  if (typeof commandLine !== 'string') return null;
+  const tokens = [];
+  let token = '';
+  let quoted = false;
+  for (const character of commandLine) {
+    if (character === '"') { quoted = !quoted; continue; }
+    if (!quoted && /\s/.test(character)) {
+      if (token !== '') { tokens.push(token); token = ''; }
+      continue;
+    }
+    token += character;
+  }
+  if (quoted) return null;
+  if (token !== '') tokens.push(token);
+  return tokens;
+}
 function tunnelClientCommandMatches(commandLine, runtimeRoot) {
-  if (typeof commandLine !== 'string' || typeof runtimeRoot !== 'string' || runtimeRoot === '') return false;
-  const prefix = path.join(runtimeRoot, 'm3-launch-').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pattern = new RegExp(`--profile-file\\s+"?${prefix}[0-9a-f]{64}\\.yaml"?`, 'i');
-  return pattern.test(commandLine);
+  const tokens = windowsCommandTokens(commandLine);
+  if (tokens === null || tokens.length !== 4 || typeof runtimeRoot !== 'string' || !path.win32.isAbsolute(runtimeRoot)) return false;
+  if (tokens[1] !== 'run' || tokens[2] !== '--profile-file' || !path.win32.isAbsolute(tokens[3])) return false;
+  const basename = path.win32.basename(tokens[3]);
+  const match = /^m3-launch-([0-9a-f]{64})\.yaml$/i.exec(basename);
+  if (!match) return false;
+  const expected = path.win32.normalize(path.win32.join(path.win32.resolve(runtimeRoot), basename)).toLowerCase();
+  const actual = path.win32.normalize(path.win32.resolve(tokens[3])).toLowerCase();
+  return actual === expected;
 }
 function liveTunnelClient(runtimeRoot) {
   try {
