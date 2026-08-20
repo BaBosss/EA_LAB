@@ -82,9 +82,9 @@ function fileSha(file) { try { return crypto.createHash('sha256').update(fs.read
 function safeTunnelEvidence(runtimeRoot, context = {}) {
   try {
     const value = readJson(path.join(runtimeRoot, 'm3-tunnel-state.json'));
-    if (value?.schema_version !== 1 || !['DOCTOR_PASSED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'CONNECTED', 'DISCONNECTED'].includes(value.state)) return { state: 'UNKNOWN_UNBOUND', error: null };
+    if (value?.schema_version !== 2 || !['DOCTOR_PASSED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'CONNECTED', 'DISCONNECTED'].includes(value.state)) return { state: 'UNKNOWN_UNBOUND', error: null };
     if (typeof value.checkout_head !== 'string' || value.checkout_head !== context.actual_head || value.profile !== 'ea-lab-lnwjud-m3') return { state: 'UNKNOWN_UNBOUND', error: null };
-    if (value.state === 'DOCTOR_PASSED' && (!value.profile_sha256 || value.profile_sha256.length !== 64 || !value.launcher_sha256 || value.launcher_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'm3-restricted-launcher.cmd')) || !value.policy_sha256 || value.policy_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'ea-lab-policy.json')))) return { state: 'UNKNOWN_UNBOUND', error: null };
+    if (value.state === 'DOCTOR_PASSED' && (value.artifact !== path.join(runtimeRoot, 'm3-sealed-profile.yaml') || value.profile_sha256 !== fileSha(value.artifact) || !value.launcher_sha256 || value.launcher_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'm3-restricted-launcher.cmd')) || !value.policy_sha256 || value.policy_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'ea-lab-policy.json')))) return { state: 'UNKNOWN_UNBOUND', error: null };
     const generated = Date.parse(value.generated_at); if (!Number.isFinite(generated) || Date.now() - generated > 10 * 60 * 1000 || generated - Date.now() > 60 * 1000) return { state: 'UNKNOWN_STALE', error: null };
     return { state: value.state, error: null };
   } catch { return { state: 'UNKNOWN_UNBOUND', error: null }; }
