@@ -1949,19 +1949,112 @@ function Get-IndexPath {
     return (Join-Path $GitDir 'index')
 }
 
+# M0-LANE2 (Audit D-F8). `.git` IS NOT ALWAYS A DIRECTORY. In a linked worktree it is a FILE
+# holding `gitdir: <path>`, so every caller that handed this instrument `Join-Path $RepoRoot
+# '.git'` was pointing it at a file and getting head='UNREADABLE' back.
+# REPRODUCED at canonical 649207d6, from D:\EA_LAB_M0_L2_canonical (a linked worktree):
+#   Get-Content 'D:\EA_LAB_M0_L2_canonical\.git\HEAD'   ->   throws; stamp head = UNREADABLE
+#   git -C D:\EA_LAB_M0_L2_canonical rev-parse --git-dir
+#     ->  D:/EA_LAB/.git/worktrees/EA_LAB_M0_L2_canonical
+# The instrument built to prove "HEAD did not move during this run" was blind in exactly the
+# checkouts these lanes run in -- and 'UNREADABLE' == 'UNREADABLE' compares EQUAL, so
+# head_moved_since_tier_start read FALSE no matter what happened. A silent false negative in a
+# detector, which is the failure family this file's own comments keep repairing.
+#
+# TWO paths are needed, not one: HEAD and index live in the PER-WORKTREE gitdir, while
+# refs/heads/* live in the COMMON dir. Resolving only the first would trade UNREADABLE for
+# PACKED-OR-ABSENT and still never yield a sha.
+#
+# NO GIT SUBPROCESS on the hot path. The resolution is a memoised file read (`gitdir:` +
+# `commondir`), so a normal checkout behaves EXACTLY as before (zero new work, same two file
+# reads) and a linked worktree costs one extra tiny read once per run. `git rev-parse` is the
+# last-resort fallback only, because the comment on index_* below is right that spawning git
+# once per stamp perturbs what this instrument measures.
+$script:GitDirMemo = @{}
+function Resolve-CageGitDirs {
+    param([string]$Path)
+    # $Path may be a repo root, a real .git directory, or a linked worktree's .git FILE.
+    $key = [string]$Path
+    if ($script:GitDirMemo.ContainsKey($key)) { return $script:GitDirMemo[$key] }
+
+    $gitDir = $null; $commonDir = $null; $repoRootGuess = $null
+
+    if (Test-Path -LiteralPath $Path -PathType Container) {
+        # A directory that IS a gitdir (has HEAD), or a repo root containing .git.
+        if (Test-Path -LiteralPath (Join-Path $Path 'HEAD')) { $gitDir = $Path }
+        else { $repoRootGuess = $Path; $Path = Join-Path $Path '.git' }
+    }
+    if (-not $gitDir -and (Test-Path -LiteralPath $Path -PathType Container)) { $gitDir = $Path }
+    if (-not $gitDir -and (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        $line = $null
+        try { $line = @(Get-Content -LiteralPath $Path -ErrorAction Stop)[0] } catch { $line = $null }
+        if ($line -and $line -match '^\s*gitdir:\s*(.+?)\s*$') {
+            $t = $Matches[1]
+            $base = Split-Path -Parent $Path
+            if (-not [System.IO.Path]::IsPathRooted($t)) { $t = Join-Path $base $t }
+            try { $gitDir = ([System.IO.Path]::GetFullPath($t)).TrimEnd('\') } catch { $gitDir = $t }
+            if (-not $repoRootGuess) { $repoRootGuess = $base }
+        }
+    }
+    if (-not $gitDir -and $repoRootGuess) {
+        # Last resort: ask git. Once per distinct path, memoised.
+        $saved = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        try {
+            $o = & git -C $repoRootGuess rev-parse --absolute-git-dir 2>$null
+            if ($LASTEXITCODE -eq 0 -and $o) { $gitDir = (([string](@($o)[0])).Trim() -replace '/', '\').TrimEnd('\') }
+        } catch { } finally { $ErrorActionPreference = $saved }
+    }
+
+    if ($gitDir) {
+        $commonDir = $gitDir
+        $cdFile = Join-Path $gitDir 'commondir'
+        if (Test-Path -LiteralPath $cdFile -PathType Leaf) {
+            $cd = $null
+            try { $cd = (@(Get-Content -LiteralPath $cdFile -ErrorAction Stop)[0]).Trim() } catch { $cd = $null }
+            if ($cd) {
+                if (-not [System.IO.Path]::IsPathRooted($cd)) { $cd = Join-Path $gitDir $cd }
+                try { $commonDir = ([System.IO.Path]::GetFullPath($cd)).TrimEnd('\') } catch { $commonDir = $cd }
+            }
+        }
+    }
+
+    $res = [pscustomobject]@{ git_dir = $gitDir; common_dir = $commonDir; repo_root = $repoRootGuess }
+    $script:GitDirMemo[$key] = $res
+    return $res
+}
+
 function Get-GitStateStamp {
     param([string]$GitDir)
     $head = $null; $ref = $null; $idxTicks = $null; $idxLen = $null
-    try { $head = (Get-Content -LiteralPath (Join-Path $GitDir 'HEAD') -Raw -ErrorAction Stop).Trim() } catch { $head = 'UNREADABLE' }
+    $dirs = Resolve-CageGitDirs -Path $GitDir
+    # A resolution failure keeps the OLD behaviour rather than inventing a path: the caller's
+    # argument is still tried, so an unexpected shape degrades to what it did before, loudly.
+    $realGitDir  = if ($dirs.git_dir)    { $dirs.git_dir }    else { $GitDir }
+    $commonDir   = if ($dirs.common_dir) { $dirs.common_dir } else { $realGitDir }
+    try { $head = (Get-Content -LiteralPath (Join-Path $realGitDir 'HEAD') -Raw -ErrorAction Stop).Trim() } catch { $head = 'UNREADABLE' }
     try {
         if ($head -like 'ref: *') {
-            $refPath = Join-Path $GitDir ($head.Substring(5).Trim() -replace '/', '\')
+            $relRef  = ($head.Substring(5).Trim() -replace '/', '\')
+            # Per-worktree gitdir first (HEAD, and per-worktree refs like refs/bisect), then the
+            # COMMON dir (where refs/heads/* actually live for a linked worktree).
+            $refPath = Join-Path $realGitDir $relRef
+            if (-not (Test-Path -LiteralPath $refPath)) { $refPath = Join-Path $commonDir $relRef }
             if (Test-Path -LiteralPath $refPath) { $ref = (Get-Content -LiteralPath $refPath -Raw).Trim() }
-            else { $ref = 'PACKED-OR-ABSENT' }
+            else {
+                # Packed refs, or a shape not covered above. Ask git rather than record a
+                # placeholder that compares equal to every other placeholder.
+                $ref = 'PACKED-OR-ABSENT'
+                $root = if ($dirs.repo_root) { $dirs.repo_root } else { $commonDir }
+                $saved = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+                try {
+                    $o = & git -C $root rev-parse --verify HEAD 2>$null
+                    if ($LASTEXITCODE -eq 0 -and $o) { $ref = ([string](@($o)[0])).Trim() }
+                } catch { } finally { $ErrorActionPreference = $saved }
+            }
         } else { $ref = $head }
     } catch { $ref = 'UNREADABLE' }
     try {
-        $fi = Get-Item -LiteralPath (Get-IndexPath -GitDir $GitDir) -ErrorAction Stop
+        $fi = Get-Item -LiteralPath (Get-IndexPath -GitDir $realGitDir) -ErrorAction Stop
         $idxTicks = $fi.LastWriteTimeUtc.Ticks; $idxLen = $fi.Length
     } catch { $idxTicks = -1; $idxLen = -1 }
     return [pscustomobject]@{ head = $head; ref = $ref; index_ticks = $idxTicks; index_len = $idxLen }
@@ -2085,7 +2178,13 @@ foreach ($suite in $selected) {
         # "something in the tier itself", which is the question 2026-08-01 could not answer.
         if ($tierRunLog) {
             try {
-                $gd = Join-Path $RepoRoot '.git'
+                # M0-LANE2 (D-F8). This is a CALL SITE of Get-GitStateStamp (below) and it also
+                # feeds the index.lock probe and the reflog tail. All three read files INSIDE the
+                # gitdir, and in a linked worktree `<root>\.git` is a FILE -- so the failure dump
+                # reported "no index.lock, no reflog, HEAD did not move" for every lane worktree,
+                # which is the shape of a clean run. Resolved, so the dump describes reality.
+                $gdResolved = Resolve-CageGitDirs -Path (Join-Path $RepoRoot '.git')
+                $gd = if ($gdResolved.git_dir) { $gdResolved.git_dir } else { Join-Path $RepoRoot '.git' }
                 $lock = Test-Path -LiteralPath (Join-Path $gd 'index.lock')
                 $procs = @()
                 try {
