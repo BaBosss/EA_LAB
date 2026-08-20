@@ -27,7 +27,7 @@ rejects((x) => { x.expected_worktree_head_sha = '0'.repeat(40); }, /stale worktr
 rejects((x) => { x.worktree = path.resolve(worktree, '..', 'lnwjud-execution-plane-20260820'); }, /trusted worktree/);
 rejects((x) => { x.canonical_base_sha = 'NOT-A-SHA'; }, /40-character SHA/);
 rejects((x) => { x.canonical_base_sha = '0'.repeat(40); }, /canonical base provenance/);
-assert.equal(buildPackage(base, { canonical_base_sha: '0'.repeat(40), worktree: 'D:\\EA_LAB', allowed_paths: ['tools/'], forbidden_paths: [], authority: {}, hard_stops: [] }).provenance.canonical_base_sha, 'ea370b0f185ccf0aa54e8af0c08390a5c7770304');
+assert.equal(buildPackage(base, { canonical_base_sha: '0'.repeat(40), worktree: 'D:\\EA_LAB', allowed_paths: ['tools/'], forbidden_paths: [], authority: {}, hard_stops: [] }).provenance.canonical_base_sha, 'f399615afe36505c1f111ced817e56dc50d5b42d');
 rejects((x) => { x.trustedParentContext = { canonical_base_sha: '0'.repeat(40) }; }, /untrusted child may not supply parent context/);
 rejects((x) => { x.relevant_files = [{ path: 'AGENTS.md', symbols: ['x'] }]; }, /out-of-scope/);
 rejects((x) => { x.bounded_callers = ['AGENTS.md']; }, /out-of-scope/);

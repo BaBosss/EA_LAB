@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "task_id": "LNWJUD-LOCAL-EXECUTION-PLANE-20260820",
-  "canonical_base_sha": "ea370b0f185ccf0aa54e8af0c08390a5c7770304",
+  "canonical_base_sha": "f399615afe36505c1f111ced817e56dc50d5b42d",
   "base_sha": "WORKTREE_HEAD_AT_START",
   "worktree": "POLICY_CHECKOUT",
   "protected_worktree_roots": ["D:\\EA_LAB"],
