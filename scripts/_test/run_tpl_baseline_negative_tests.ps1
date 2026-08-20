@@ -110,6 +110,13 @@ try {
     Expect-Refusal 'tester contract mismatch' { param($d) $p=Join-Path $d 'ea_template\regression_baseline_build6090.manifest.json'; $m=Read-Json $p; $m.tester_contract.timeframe='M30'; Write-Json $p $m }
     Expect-Refusal 'missing EA' { param($d) $p=Join-Path $d 'ea_template\regression_baseline_build6090.manifest.json'; $m=Read-Json $p; $m.cases=@($m.cases | Select-Object -Skip 1); Write-Json $p $m }
     Expect-Refusal 'extra EA' { param($d) $p=Join-Path $d 'ea_template\regression_baseline_build6090.manifest.json'; $m=Read-Json $p; $m.cases[0].ea='Boss_99_Extra'; Write-Json $p $m }
+    # B-F3 (Audit B): Get-TplExpectedEas used to gate on a literal wrapper COUNT ("-ne 8"),
+    # which cannot see a same-count SWAP on disk. These three prove the replacement -- set
+    # equality between disk and manifest -- actually fires for add, remove, AND a
+    # count-preserving swap, with the manifest left untouched in every case.
+    Expect-Refusal 'disk wrapper added (extra real-shaped file, manifest unchanged)' { param($d) Copy-Item (Join-Path $d 'ea_template\Boss_11_GridTrend.mq5') (Join-Path $d 'ea_template\Boss_99_Decoy.mq5') }
+    Expect-Refusal 'disk wrapper removed (manifest unchanged)' { param($d) Remove-Item (Join-Path $d 'ea_template\Boss_15_ST03.mq5') -Force }
+    Expect-Refusal 'disk wrapper swapped for a same-count decoy (manifest unchanged)' { param($d) Remove-Item (Join-Path $d 'ea_template\Boss_15_ST03.mq5') -Force; Copy-Item (Join-Path $d 'ea_template\Boss_11_GridTrend.mq5') (Join-Path $d 'ea_template\Boss_15_Decoy.mq5') }
     Expect-Refusal 'malformed manifest' { param($d) [IO.File]::WriteAllText((Join-Path $d 'ea_template\regression_baseline_build6090.manifest.json'), '{not-json') }
     Expect-Refusal 'incomplete provenance' { param($d) $p=Join-Path $d 'ea_template\regression_baseline_build6090.manifest.json'; $m=Read-Json $p; $m.cases[0].report_sha256=$null; Write-Json $p $m }
     $lineage = New-LineageRepo
