@@ -108,6 +108,7 @@ run_legacy_quarantine_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV Lane C
 # ---------------------------------------------------------------------------------------
 run_hook_safety_fixture_tests.ps1|UNMEASURED|D-F3/D-F2/D-F4 hook fixture cage (Lane 3, 2026-08-20); drives real git ops, not timed against the pinned budget.
 run_reverse_completeness_negative_tests.ps1|UNMEASURED|D-F5 PART 8 negative-direction cage (Lane 3, 2026-08-20); spawns 6 child PowerShell processes, not timed against the pinned budget.
+run_taskboard_digest_terminal_tests.ps1|UNMEASURED|D-F10/D-F9 digest strongest-terminal + -Check staleness cage (Lane 3, 2026-08-20); not timed against the pinned budget.
 run_attestation_account_move_tests.ps1|UNMEASURED|Cage for the attestation account-move path; not timed against the pinned budget.
 run_binary_staleness_tests.ps1|UNMEASURED|ORDER-1461 cage for the launch-banner staleness line; not timed against the pinned budget.
 run_build_identity_tests.ps1|UNMEASURED|Build/config launch-identity cage; not timed against the pinned budget.

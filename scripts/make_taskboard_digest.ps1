@@ -115,6 +115,21 @@ function Get-OrderHeaders {
         elseif ($statusFull -match '^([A-Za-z][A-Za-z0-9\-\+/]*)') { $verb = $Matches[1].Trim() }
         if ($verb) { $verb = $verb.ToUpperInvariant() }
 
+        # D-F10 (Audit D, 2026-08-20) -- STRONGEST-TERMINAL, not first-terminal.
+        # The primary-verb match above stops at the FIRST '(' | ':' | '.', so a compound
+        # status whose lead verb closes its own attribution paren BEFORE a trailing
+        # "+ <VERB2>(...)" segment truncates to VERB1 and silently drops VERB2. Concretely:
+        #   `DONE(Claude 2026-07-17C, commit bd709fca) + REVIEWED(Claude/Opus 2026-07-26)`
+        # collapsed to just `DONE` -- misclassifying a row that WAS reviewed (the strongest
+        # terminal verb in the VERDICT GATE vocabulary) as merely built-not-reviewed.
+        # Measured 2026-08-20: 14 real headers in ARCHIVE_TASKBOARD_2026-07A.md carry this
+        # exact shape (ORDER-098-C @ line 7806 is one). Fold REVIEWED back in whenever the
+        # primary match missed it: DONE + REVIEWED must beat a bare DONE.
+        if ($verb -and $verb -notmatch '\bREVIEWED\b') {
+            $revMatch = [regex]::Match($statusFull, '\+\s*(REVIEWED)\b')
+            if ($revMatch.Success) { $verb = $verb + ' + ' + $revMatch.Groups[1].Value.ToUpperInvariant() }
+        }
+
         # outcome = the clause after the first ':' in the status (that is where the
         # verdict sentence lives), else the status minus the verb+attribution
         $outcome = ''
@@ -171,8 +186,15 @@ function ConvertTo-CellText {
 }
 
 function Build-Digest {
-    $activeRows  = Get-OrderHeaders -Path $activePath  -Location 'ACTIVE'
-    $archiveRows = Get-OrderHeaders -Path $archivePath -Location 'ARCHIVE'
+    # @(...) forces array-wrapping: a PowerShell function that `return`s a collection with
+    # ZERO items hands the caller $null instead of an empty collection (the items are
+    # unrolled onto the output pipeline and zero items unroll to nothing). Without this,
+    # a board with no matching ORDER- headers at all (e.g. right after a full archive
+    # sweep) throws inside AddRange() instead of producing an empty-but-valid digest.
+    # Found 2026-08-20 while building a fixture whose ACTIVE board legitimately has zero
+    # headers (D-F10 cage).
+    $activeRows  = @(Get-OrderHeaders -Path $activePath  -Location 'ACTIVE')
+    $archiveRows = @(Get-OrderHeaders -Path $archivePath -Location 'ARCHIVE')
 
     $all = New-Object System.Collections.Generic.List[object]
     $all.AddRange($activeRows)
