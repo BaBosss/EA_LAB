@@ -46,8 +46,8 @@ function safeLock(runtimeRoot) {
   if (!fs.existsSync(file)) return { state: 'NOT_RUNNING', owner: null, error: null };
   try {
     const value = readJson(file);
-    return { state: 'PRESENT', owner: typeof value.task_id === 'string' ? value.task_id : null, pid: Number.isInteger(value.pid) ? value.pid : null, error: null };
-  } catch { return { state: 'UNKNOWN', owner: null, error: error('WRITER_LOCK_INVALID', 'writer lock is malformed') }; }
+    return { state: 'PRESENT', owner: typeof value.task_id === 'string' ? value.task_id : null, pid: Number.isInteger(value.pid) ? value.pid : null, base_sha: typeof value.base_sha === 'string' && /^[0-9a-f]{40}$/i.test(value.base_sha) ? value.base_sha.toLowerCase() : null, error: null };
+  } catch { return { state: 'UNKNOWN', owner: null, base_sha: null, error: error('WRITER_LOCK_INVALID', 'writer lock is malformed') }; }
 }
 function liveProcesses() {
   try {
@@ -82,7 +82,7 @@ function deriveStatus(input) {
   const actualHead = input.actual_head || null;
   const policy = input.policy || null;
   const policyHead = typeof policy?.base_sha === 'string' && /^[0-9a-f]{40}$/i.test(policy.base_sha) ? policy.base_sha.toLowerCase() : null;
-  const dynamicHead = policy?.base_sha === 'WORKTREE_HEAD_AT_START' ? actualHead : null;
+  const dynamicHead = policy?.base_sha === 'WORKTREE_HEAD_AT_START' && /^[0-9a-f]{40}$/i.test(lock.base_sha || '') ? lock.base_sha.toLowerCase() : null;
   const expectedHead = policyHead || dynamicHead;
   const headMatch = expectedHead !== null && actualHead !== null && expectedHead === actualHead;
   const processes = input.processes === undefined ? [] : input.processes;

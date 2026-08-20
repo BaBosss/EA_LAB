@@ -13,6 +13,8 @@ assert.equal(normal.control_state, 'OK'); assert.equal(normal.lnwjud.pin_match, 
 for (const state of ['NOT_CONFIGURED_OWNER_ACTION_REQUIRED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'ACTIVATING', 'CONNECTED', 'DISCONNECTED', 'COMPLETED']) assert.equal(tunnelLifecycle({ state }, contract), state);
 assert.equal(build({ tunnel: { state: 'AUTH_FAILED' } }).network.tunnel_state, 'AUTH_FAILED');
 assert.equal(build({ tunnel: { state: 'COMPLETED' } }).milestone.completion, 'COMPLETE');
+const dynamic = build({ policy: { ...policy, base_sha: 'WORKTREE_HEAD_AT_START' } }); assert.equal(dynamic.ea_lab_gateway.expected_head, null); assert.equal(dynamic.ea_lab_gateway.head_match, false);
+const captured = build({ policy: { ...policy, base_sha: 'WORKTREE_HEAD_AT_START' }, lock: { state: 'PRESENT', owner: 'M3', pid: 9, base_sha: head, error: null } }); assert.equal(captured.ea_lab_gateway.expected_head, head); assert.equal(captured.ea_lab_gateway.head_match, true);
 const stale = build({ policy: { ...policy, base_sha: 'b'.repeat(40) } }); assert.equal(stale.ea_lab_gateway.head_match, false); assert.equal(stale.control_state, 'DEGRADED');
 assert.equal(build({ index: { state: 'ERROR', last_known_refresh: null, error: { code: 'INDEX_ERROR', message: 'missing' } } }).index.state, 'ERROR');
 const secret = build({ last_error: { code: 'LOG', message: 'API_KEY=synthetic-secret-value Bearer sk-secret-token' } });
