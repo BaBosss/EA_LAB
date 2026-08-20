@@ -1,0 +1,140 @@
+# SUITE_TIER_REGISTRY.txt -- D-F5 REVERSE trigger-map completeness data (Audit D, 2026-08-20).
+#
+# WHY THIS FILE EXISTS
+#   run_guard_trigger_tests.ps1 PART 1 validated the declared $FAST_SUITES set AGAINST ITSELF:
+#   `foreach ($s in $suites)`, where $suites IS $FAST_SUITES. So a run_* suite that nobody ever
+#   classified was INVISIBLE to it -- not failing, not warning, simply not looked at. Measured at
+#   canonical 649207d6: 69 tracked run_* files under scripts/_test/, 31 in $FAST_SUITES,
+#   38 unclassified and unseen.
+#
+#   This file is the OTHER direction: every tracked scripts/_test/run_* file must appear here
+#   exactly once, with a TIER and a REASON. PART 8 of run_guard_trigger_tests.ps1 enforces
+#   that 1:1 mapping and PRINTS its scope counts.
+#
+# THIS FILE IS NOT A WIRING INSTRUCTION.
+#   Classifying a suite here does NOT put it in the fast tier and does NOT spend the pinned
+#   120.0s full-tier budget. EXEMPT-with-reason is a first-class, valid outcome. The point is
+#   that a suite must be SEEN, not that it must be RUN in the hook.
+#
+# FORMAT  (ASCII only -- PS 5.1 reads scripts/data as ANSI, and a suite that runs inside the
+#          pre-commit hook must never emit non-ASCII: UnicodeEncodeError is reported by the hook
+#          as `exit -1 SUITE THREW`, which is a real prior incident in this repo)
+#
+#   <filename>|<TIER>|<reason>
+#
+#   filename  LITERAL file name only, no directory, NO WILDCARD. The no-wildcard rule is
+#             load-bearing: it is what makes this a CLOSED set. A blanket row such as
+#             `run_*.ps1|EXEMPT|...` cannot silence the check, because PART 8 requires one
+#             literal row per real file and refuses any row whose name is not a tracked file.
+#   TIER      one of:
+#               FAST       must be a member of $FAST_SUITES in run_fast_cages.ps1 (checked
+#                          both ways -- FAST here and not there, or there and not FAST here,
+#                          both FAIL)
+#               HARNESS    the tier runner itself, not a suite it can contain
+#               SLOW       governed slow tier: measured cost makes it unsurvivable in a hook.
+#                          The reason MUST carry the measured number.
+#               NOT_WIRED  deliberately unwired with the disposition on record in
+#                          PROJECT_STATE.md. The reason MUST name that record.
+#               UNMEASURED honest state: never measured against the pinned full-tier budget,
+#                          so no wiring decision can be made. Visible, not silent.
+#   reason    non-empty, >= 20 chars, one line.
+#
+# TIERS ARE NOT RANKED AND `UNMEASURED` IS NOT A PARKING LOT WITH NO COST: PART 8 prints the
+# per-tier counts on every run, so the size of the UNMEASURED column is a number somebody has
+# to look at rather than an absence nobody can see.
+
+# ---------------------------------------------------------------------------------------
+# HARNESS
+# ---------------------------------------------------------------------------------------
+run_fast_cages.ps1|HARNESS|The fast-tier runner itself; it holds $FAST_SUITES and cannot be a member of the set it selects.
+
+# ---------------------------------------------------------------------------------------
+# FAST -- in $FAST_SUITES. Cross-checked both ways by PART 8.
+# ---------------------------------------------------------------------------------------
+run_statusclass_tests.ps1|FAST|In the fast tier; guards scripts/check_taskboard_archive.ps1
+run_order_collision_tests.ps1|FAST|In the fast tier; guards scripts/check_order_collision.ps1, docs/SESSION_LEDGER.md
+run_handoff_contract_tests.ps1|FAST|In the fast tier; guards scripts/check_handoff_contract.ps1
+run_blobmap_encoding_tests.ps1|FAST|In the fast tier; guards scripts/check_taskboard_archive.ps1
+run_portable_python_tests.ps1|FAST|In the fast tier; guards scripts/use_python.ps1, _triage/factory_os/check_attested_pin_staged.py, _triage/factory_os/check_s2a_attestation.py (+9 more)
+run_mris_asof_tests.ps1|FAST|In the fast tier; guards scripts/mris/mris_macro_feeder.ps1, scripts/mris/mris_crisis_models.ps1, scripts/mris/mris_web_feeder.ps1
+run_b1_guard_tests.ps1|FAST|In the fast tier; guards scripts/lib/b1_guard.ps1, scripts/check_precommit_staged.ps1, .githooks/commit-msg (+1 more)
+run_report_freshness_tests.ps1|FAST|In the fast tier; guards scripts/lib/report_freshness.ps1, scripts/*.ps1
+run_truncation_message_tests.ps1|FAST|In the fast tier; guards scripts/check_truncated_run.ps1
+run_optimize_guard_tests.ps1|FAST|In the fast tier; guards scripts/optimize_guard.ps1, docs/PARAM_REGISTRY.csv, docs/PARAM_LINKAGE.md (+2 more)
+run_monitor_integrity_tests.ps1|FAST|In the fast tier; guards scripts/daily_monitor.ps1, _triage/factory_os/registry.py, scripts/live_dashboard.ps1 (+9 more)
+run_schema_cages.ps1|FAST|In the fast tier; guards _triage/factory_os/evidence.py, _triage/factory_os/gen_design_contracts.py, factory/coverage.jsonl (+20 more)
+run_s2a_cages.ps1|FAST|In the fast tier; guards _triage/factory_os/s2a_migration.jsonl, _triage/factory_os/s2a_attestations.jsonl, _triage/factory_os/s2a_coverage_reconciliation.json (+23 more)
+run_snapshot_s4_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/registry.py, _triage/factory_os/snapshot_build.py, _triage/factory_os/snapshot_validator.py (+11 more)
+run_monitor_snapshot_schema_repair_tests.ps1|FAST|In the fast tier; guards scripts/control_room_snapshot.ps1, scripts/lib/runtime_identity.ps1, scripts/use_python.ps1 (+6 more)
+run_registry_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/evidence.py, _triage/factory_os/run_guard_shape_lint.py, _triage/factory_os/gen_coverage.py (+18 more)
+run_guard_trigger_tests.ps1|FAST|In the fast tier; guards scripts/gen_fast_tier_pathspec.ps1, .githooks/fast_tier_pathspec, scripts/_test/run_fast_cages.ps1
+run_preset_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/preset.py, _triage/factory_os/run_preset_tests.py, ea_template/core/Inputs.mqh (+4 more)
+run_setfile_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/setfile.py, _triage/factory_os/run_setfile_tests.py, _triage/factory_os/preset.py (+7 more)
+run_activation_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/activation.py, _triage/factory_os/architecture.py, _triage/factory_os/capability.py (+6 more)
+run_param_surface_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_param_surface.py, _triage/factory_os/run_param_surface_tests.py, _triage/factory_os/gen_registry_rows.py (+15 more)
+run_wrapper_gen_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_wrapper_gen.py, _triage/factory_os/run_wrapper_gen_tests.py, _triage/factory_os/gen_wrapper.py (+18 more)
+run_parity_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/parity.py, _triage/factory_os/run_parity_tests.py, scripts/parity_run.ps1
+run_scheduler_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/scheduler.py, _triage/factory_os/run_scheduler_tests.py, scripts/scheduler_run.ps1 (+1 more)
+run_s10_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/candidate.py, _triage/factory_os/attestation.py, _triage/factory_os/magic.py (+16 more)
+run_s11_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/control_center.py, _triage/factory_os/safe_projection.py, _triage/factory_os/run_s11_tests.py (+4 more)
+run_s12_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/notifier.py, _triage/factory_os/run_s12_tests.py, _triage/factory_os/run_schema_fixtures.py (+15 more)
+run_s13_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_pilot_acceptance.py, scripts/_test/run_pilot_verify_tests.py, scripts/pilot_verify_check.py (+30 more)
+run_selection_tests.ps1|FAST|In the fast tier; guards scripts/pilot_probe_select.py, scripts/_test/run_selection_tests.py, factory/coverage.jsonl (+4 more)
+run_work_receipts_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_work_receipts.py, _triage/factory_os/run_work_receipts_tests.py, factory/work_receipts.jsonl (+2 more)
+run_front_guard_evidence_tests.ps1|FAST|In the fast tier; guards scripts/check_state.ps1, scripts/check_order_collision.ps1, scripts/check_handoff_contract.ps1 (+6 more)
+
+# ---------------------------------------------------------------------------------------
+# SLOW -- governed slow tier. Measured cost, named. These are the four suites the pre-commit
+# hook's own ORDER-420 comment block already names as deliberately excluded; that prose is now
+# data a check can read.
+# ---------------------------------------------------------------------------------------
+run_chainwalk_tests.ps1|SLOW|Measured 74s (ORDER-270 archive-chain integrity walk); named as excluded in .githooks/pre-commit.
+run_order101_negative_tests.ps1|SLOW|Measured ~120s (ORDER-101 Contract C0 negative suite); named as excluded in .githooks/pre-commit.
+run_order103_negative_tests.ps1|SLOW|Measured ~760s (ORDER-103 Contract C1-ENFORCE negative suite); named as excluded in .githooks/pre-commit.
+run_order105_negative_tests.ps1|SLOW|Measured 521s (ORDER-105 Contract D concurrency/recovery/real-hook suite); named as excluded in .githooks/pre-commit.
+
+# ---------------------------------------------------------------------------------------
+# NOT_WIRED -- deliberately unwired, disposition on record. PRESERVED AS-IS by D-F5; this repair
+# does not re-wire any of them and does not raise the budget.
+# ---------------------------------------------------------------------------------------
+run_new_template_entry_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV sync: MEASURED_NOT_WIRED, still parked, full tier already above its pinned budget.
+run_mt5_optimize_launcher_hardening_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV Lane A (1cc31d97, 33/33 PASS); Lane D measurement closed MEASURED_NOT_WIRED, no wiring made.
+run_legacy_quarantine_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV Lane C (aaee37ea, 12/12 PASS); same MEASURED_NOT_WIRED disposition, no budget increase.
+
+# ---------------------------------------------------------------------------------------
+# UNMEASURED -- never timed against the pinned 120.0s full-tier budget, so no wiring decision
+# is available. Listed so each one is VISIBLE. Promoting any of these to FAST requires a fresh
+# current-canonical measurement, which is exactly the trade PROJECT_STATE's PREDEV sync records.
+# ---------------------------------------------------------------------------------------
+run_hook_safety_fixture_tests.ps1|UNMEASURED|D-F3/D-F2/D-F4 hook fixture cage (Lane 3, 2026-08-20); drives real git ops, not timed against the pinned budget.
+run_reverse_completeness_negative_tests.ps1|UNMEASURED|D-F5 PART 8 negative-direction cage (Lane 3, 2026-08-20); spawns 6 child PowerShell processes, not timed against the pinned budget.
+run_attestation_account_move_tests.ps1|UNMEASURED|Cage for the attestation account-move path; not timed against the pinned budget.
+run_binary_staleness_tests.ps1|UNMEASURED|ORDER-1461 cage for the launch-banner staleness line; not timed against the pinned budget.
+run_build_identity_tests.ps1|UNMEASURED|Build/config launch-identity cage; not timed against the pinned budget.
+run_contract_binding_tests.ps1|UNMEASURED|Guards the Factory design/schema binding seam; not timed against the pinned budget.
+run_control_dashboard_tests.ps1|UNMEASURED|Acceptance tests for control_dashboard.ps1; not timed against the pinned budget.
+run_crypto_financing_migration_tests.py|UNMEASURED|ORDER-1350/1370 report-backed evidence migration cage; not timed against the pinned budget.
+run_daily_monitor_paths_tests.ps1|UNMEASURED|DailyMonitor repository-path portability cage; not timed against the pinned budget.
+run_execution_context_tests.ps1|UNMEASURED|CR-002 attestation execution-context cage; not timed against the pinned budget.
+run_expectation_semantics_tests.ps1|UNMEASURED|Control-room rate-monitor expectation semantics regression; not timed against the pinned budget.
+run_make_ea_map_tests.ps1|UNMEASURED|EA_LAB_MAP.html generator cage (2026-08-19 recovery); not timed against the pinned budget.
+run_make_status_taskboard_tests.ps1|UNMEASURED|Monitoring Gap-to-Done Claim A cage for make_status taskboard rendering; not timed against the pinned budget.
+run_make_status_worktree_isolation_tests.ps1|UNMEASURED|make_status worktree-isolation cage; not timed against the pinned budget.
+run_order1290_tests.py|UNMEASURED|ORDER-1290 surface-evidence tests; not timed against the pinned budget.
+run_order1500_tests.py|UNMEASURED|ORDER-1500 run-journal validator tests; not timed against the pinned budget.
+run_order239_monitoring_tests.ps1|UNMEASURED|ORDER-239 deterministic monitoring cage; not timed against the pinned budget.
+run_order740_tests.ps1|UNMEASURED|ORDER-740 targeted regression; not timed against the pinned budget.
+run_persist_legacy_tests.ps1|UNMEASURED|ORDER-510 cage for scripts/check_persist_legacy.ps1; not timed against the pinned budget.
+run_pilot_fingerprint_tests.ps1|UNMEASURED|ORDER-1330 versioned-fingerprint branch/refusal cage; not timed against the pinned budget.
+run_pilot_verify_tests.py|UNMEASURED|Cage for pilot_selected_surface_row.py and pilot_verify_check.py; not timed against the pinned budget.
+run_precommit_staged_manifest_scope_tests.ps1|UNMEASURED|ORDER-103 ARCHIVE_MANIFEST staged-scope gating regression; not timed against the pinned budget.
+run_precommit_staged_snapshot_tests.ps1|UNMEASURED|ORDER-545 staged-snapshot integrity cage; not timed against the pinned budget.
+run_runtime_identity_tests.ps1|UNMEASURED|Bounded runtime-identity acceptance suite; not timed against the pinned budget.
+run_selection_tests.py|UNMEASURED|ORDER-1273 cage for scripts/pilot_probe_select.py; not timed against the pinned budget.
+run_skills_mirror_tests.ps1|UNMEASURED|Focused skills-mirror metadata cage; not timed against the pinned budget.
+run_stale_binaries_tests.ps1|UNMEASURED|ORDER-370 cage for scripts/check_stale_binaries.ps1; not timed against the pinned budget.
+run_symbol_preflight_tests.ps1|UNMEASURED|Cage for scripts/lib/symbol_preflight.ps1; not timed against the pinned budget.
+run_tpl_baseline_guard_tests.ps1|UNMEASURED|Commit-message guard tests for the versioned baseline re-pin policy; not timed against the pinned budget.
+run_tpl_baseline_negative_tests.ps1|UNMEASURED|Fail-closed tests for the versioned TPL baseline contract; not timed against the pinned budget.
+run_tpl_set_byte_preservation_tests.ps1|UNMEASURED|Regression-set byte-preservation cage; not timed against the pinned budget.
+run_tpl_set_checkout_contract_tests.ps1|UNMEASURED|Checkout-byte contract cage for the versioned TPL regression sets; not timed against the pinned budget.

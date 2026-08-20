@@ -1,0 +1,100 @@
+#!/bin/sh
+# =========================================================================================
+# EA_LAB pre-push guard -- D-F3 (Audit D, 2026-08-20). CRITICAL.
+#
+# REPRODUCED at canonical 649207d6: `ls .githooks/` listed exactly
+#     commit-msg   fast_tier_pathspec   pre-commit
+# and nothing else. Force/non-fast-forward protection on master was PROCEDURAL ONLY -- written
+# in AGENTS.md and in prose, enforced by nobody. A single `git push --force origin master`, or
+# a push from a stale local master, would rewrite canonical history with zero mechanical
+# resistance, and every guard in pre-commit is irrelevant to that operation because pre-commit
+# does not run on push.
+#
+# WHAT THIS REFUSES (master only):
+#   1. NON-FAST-FORWARD: the remote's master commit is not an ancestor of what is being pushed.
+#      This is the check that catches --force, --force-with-lease over a diverged remote,
+#      a push from a rebased branch, and a push from a stale clone. The hook cannot see the
+#      --force FLAG at all -- git does not pass it -- so the ANCESTRY is what is tested, which
+#      is the property that actually matters.
+#   2. DELETION of master (local side all-zero).
+#
+# WHAT THIS DOES NOT TOUCH:
+#   * any ref that is not refs/heads/master. Over-blocking a hook is how it earns --no-verify,
+#     and a bypassed hook protects nothing while looking like it protects everything (the same
+#     argument the pre-commit fast-tier budget note makes).
+#   * GitHub branch protection. That is OWNER/EXTERNAL and out of scope for a local hook; a
+#     local hook is defeated by `--no-verify` and by any push from another machine, so it is a
+#     seatbelt, NOT the fence. The fence has to be server-side.
+#
+# FAIL-CLOSED, and the case that forces it: if the remote's master commit is not present in the
+# local object store (nobody fetched), ancestry is UNDECIDABLE. An undecidable safety question
+# on canonical master must refuse, because the alternative -- assuming fast-forward because the
+# object is missing -- is exactly the state a stale clone is in when it is about to clobber.
+#
+# stdin, one line per ref being pushed:  <local ref> <local sha> <remote ref> <remote sha>
+# =========================================================================================
+
+PROTECTED='refs/heads/master'
+ZERO='0000000000000000000000000000000000000000'
+rc=0
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "$remote_ref" ] && continue
+  if [ "$remote_ref" != "$PROTECTED" ]; then
+    continue
+  fi
+
+  # ---- deletion --------------------------------------------------------------------------
+  case "$local_sha" in
+    $ZERO|"")
+      echo "PREPUSH-REFUSED (D-F3): this push would DELETE $remote_ref."
+      echo "  Canonical master is not deletable through this hook. If a deletion is genuinely"
+      echo "  intended, it is an owner decision made on the remote, not a local push."
+      rc=1
+      continue
+      ;;
+  esac
+
+  # ---- remote has no master yet: creating it is a fast-forward from nothing ---------------
+  if [ "$remote_sha" = "$ZERO" ]; then
+    echo "[pre-push] $remote_ref does not exist on the remote yet -- creation is a fast-forward, allowed."
+    continue
+  fi
+
+  # ---- the remote commit must be KNOWN locally, or ancestry is undecidable ----------------
+  if ! git cat-file -e "${remote_sha}^{commit}" 2>/dev/null; then
+    echo "PREPUSH-REFUSED (D-F3, fail-closed): the remote's $remote_ref commit $remote_sha is not"
+    echo "  in this repository's object store, so whether this push fast-forwards CANNOT be decided."
+    echo "  An undecidable answer about canonical master is a refusal, not a pass."
+    echo "      git fetch origin master     # then push again"
+    rc=1
+    continue
+  fi
+
+  # ---- THE CHECK: is the remote tip an ancestor of what we are pushing? -------------------
+  if git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+    echo "[pre-push] $remote_ref fast-forward ${remote_sha}..${local_sha} -- allowed."
+  else
+    echo "PREPUSH-REFUSED (D-F3): NON-FAST-FORWARD update of $remote_ref."
+    echo "  remote tip : $remote_sha"
+    echo "  pushing    : $local_sha"
+    echo "  The remote commit is NOT an ancestor of the commit being pushed, so this push would"
+    echo "  DISCARD canonical history. This is what a force-push looks like from inside the hook;"
+    echo "  it also catches a push from a stale or rebased local master."
+    echo ""
+    echo "  Integrate instead of overwriting:"
+    echo "      git fetch origin master"
+    echo "      git rebase origin/master     # or: git merge origin/master"
+    echo "  A genuine history rewrite of canonical master is an OWNER decision and is not"
+    echo "  performed by an agent."
+    rc=1
+  fi
+done
+
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-push] push blocked. NOTE: this hook is a local seatbelt only -- it is bypassed by"
+  echo "[pre-push] --no-verify and absent on any other machine. Server-side branch protection on"
+  echo "[pre-push] master is the actual fence and is an owner/external action."
+fi
+exit $rc

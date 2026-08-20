@@ -30,7 +30,12 @@
 param(
     [string]$RepoRoot,
     # ORDER-1130 T1: attribute this suite's cost to a PART, reproducibly, instead of to prose.
-    [switch]$Timing
+    [switch]$Timing,
+    # D-F5 / PART 8. TEST SEAM, and deliberately a seam rather than a second implementation:
+    # run_reverse_completeness_negative_tests.ps1 drives THIS script with a fabricated registry
+    # so the firing direction is proven by the production code, not by a copy of it. Defaults to
+    # the real registry, so an ordinary run and the hook are unaffected.
+    [string]$RegistryPath = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -753,6 +758,134 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
     if ($cagesSrc -match '\$BudgetSeconds\s*=\s*90\.0') { Good 'N1 the per-path default is the measured 90.0s' } else { Bad 'N1 the per-path default is not 90.0 -- it was changed without this case being updated' }
     if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*120\.0') { Good 'N1 the full-tier default is the measured 120.0s' } else { Bad 'N1 the full-tier default is not 120.0 -- it was changed without this case being updated' }
     if ($fail -eq $before) { Good 'the budget can fail, and does not fail a healthy run' }
+
+    # -------------------------------------------------------------------------------------
+    Write-Host ''
+    Phase '[guard-trigger] PART 8 -- D-F5 REVERSE completeness: every run_* file is classified'
+    # PARTS 1-3 walk `foreach ($s in $suites)` where $suites IS $FAST_SUITES, so they validate the
+    # declared set AGAINST ITSELF. A run_* suite nobody ever classified is not failed, not warned
+    # about -- it is never looked at. Measured at canonical 649207d6: 69 tracked run_* files under
+    # scripts/_test/, 31 in $FAST_SUITES, 38 invisible.
+    #
+    # This part asks the reverse question against scripts/_test/SUITE_TIER_REGISTRY.txt: for every
+    # tracked run_* FILE, is there a row? It does NOT wire anything into the fast tier and it does
+    # NOT spend the pinned 120.0s budget -- EXEMPT-with-reason (SLOW / NOT_WIRED / UNMEASURED) is a
+    # valid outcome. The requirement is visibility, not execution.
+    #
+    # THE REGISTRY IS A CLOSED SET BY CONSTRUCTION: literal file names only, no wildcard, one row
+    # per real file, and a row naming a non-existent file FAILS. So a single blanket/catch-all
+    # entry cannot silence this check -- the defect class this repo has already paid for
+    # (citation-guard-satisfied-by-a-universal-file).
+    $before = $fail
+    $regPath = if ($RegistryPath) { $RegistryPath } else { Join-Path $RepoRoot 'scripts\_test\SUITE_TIER_REGISTRY.txt' }
+    $VALID_TIERS = @('FAST', 'HARNESS', 'SLOW', 'NOT_WIRED', 'UNMEASURED')
+    if (-not (Test-Path -LiteralPath $regPath)) {
+        Bad 'PART 8 scripts/_test/SUITE_TIER_REGISTRY.txt does not exist -- the reverse check cannot run, and a check that cannot run is a FAILURE, not a pass'
+    } else {
+        # The files, from git (the index), not from the filesystem: an untracked scratch file in
+        # scripts/_test is not something the trigger map owes an entry for.
+        $suiteFiles = @{}
+        foreach ($t in (git ls-files -- 'scripts/_test/run_*')) {
+            $suiteFiles[(Split-Path -Leaf $t.Replace('\', '/'))] = $true
+        }
+
+        $rows = @{}
+        $dupes = @()
+        $lineNo = 0
+        foreach ($raw in (Get-Content -LiteralPath $regPath)) {
+            $lineNo++
+            $line = $raw.Trim()
+            if (-not $line -or $line.StartsWith('#')) { continue }
+            $parts = $line -split '\|', 3
+            if ($parts.Count -ne 3) {
+                Bad "PART 8 registry line ${lineNo} is not <filename>|<TIER>|<reason>: $line"
+                continue
+            }
+            $fn = $parts[0].Trim(); $tier = $parts[1].Trim(); $reason = $parts[2].Trim()
+            # NO WILDCARDS. This single rule is what makes the set closed.
+            if ($fn -match '[*?\[\]]') {
+                Bad "PART 8 registry line ${lineNo} uses a WILDCARD name '$fn' -- the registry must be a closed set of literal file names"
+                continue
+            }
+            if ($fn -match '[/\\]') {
+                Bad "PART 8 registry line ${lineNo} carries a directory in '$fn' -- leaf file names only"
+                continue
+            }
+            if ($VALID_TIERS -notcontains $tier) {
+                Bad "PART 8 registry line ${lineNo} tier '$tier' is not one of: $($VALID_TIERS -join ', ')"
+                continue
+            }
+            if ($reason.Length -lt 20) {
+                Bad "PART 8 registry line ${lineNo} ('$fn') has no usable reason -- a classification with no reason is the silence this part exists to remove"
+                continue
+            }
+            if ($rows.ContainsKey($fn)) { $dupes += $fn; continue }
+            $rows[$fn] = [pscustomobject]@{ Tier = $tier; Reason = $reason; Line = $lineNo }
+        }
+        foreach ($d in ($dupes | Sort-Object -Unique)) {
+            Bad "PART 8 '$d' is classified more than once -- one row per file, so a reader cannot be shown two answers"
+        }
+
+        # (1) every FILE has a row
+        foreach ($f in ($suiteFiles.Keys | Sort-Object)) {
+            if (-not $rows.ContainsKey($f)) {
+                Bad "PART 8 UNCLASSIFIED: scripts/_test/$f is tracked but has no row in SUITE_TIER_REGISTRY.txt (classify it, or exempt it WITH A REASON)"
+            }
+        }
+        # (2) every ROW names a real file -- a stale row is a declaration that matches nothing,
+        #     which is the original D-F5 defect wearing a classification.
+        foreach ($f in ($rows.Keys | Sort-Object)) {
+            if (-not $suiteFiles.ContainsKey($f)) {
+                Bad "PART 8 STALE ROW: registry line $($rows[$f].Line) classifies '$f', which is not a tracked scripts/_test/run_* file"
+            }
+        }
+        # (3) FAST must agree with $FAST_SUITES IN BOTH DIRECTIONS. This is what stops the
+        #     registry becoming a second, drifting copy of the tier: it is checked against the
+        #     tier's own exported table, not against a literal typed here.
+        foreach ($f in ($rows.Keys | Sort-Object)) {
+            $isFastHere = ($rows[$f].Tier -eq 'FAST')
+            $isFastThere = ($suites -contains $f)
+            if ($isFastHere -and -not $isFastThere) {
+                Bad "PART 8 '$f' is tier FAST in the registry but is NOT in `$FAST_SUITES"
+            }
+            if ($isFastThere -and -not $isFastHere) {
+                Bad "PART 8 '$f' is in `$FAST_SUITES but the registry does not classify it FAST (tier=$($rows[$f].Tier))"
+            }
+        }
+        # (4) NO SILENT WIRING. The registry must not become a way to grow the fast tier: the
+        #     count of FAST rows is asserted against the tier's own count, so a FAST row added
+        #     without touching run_fast_cages.ps1 (or the reverse) is refused.
+        $fastRows = @($rows.Values | Where-Object { $_.Tier -eq 'FAST' })
+        if ($fastRows.Count -ne $suites.Count) {
+            Bad ("PART 8 registry FAST rows = {0} but `$FAST_SUITES = {1}" -f $fastRows.Count, $suites.Count)
+        }
+
+        # PRINT THE SCOPE, NOT JUST THE VERDICT. A roll-up that says "complete" without naming
+        # what it looked at has already burned this repo (guard-must-print-its-scope-not-just-
+        # its-verdict). These counts are the whole point of the part.
+        $byTier = @{}
+        foreach ($t in $VALID_TIERS) { $byTier[$t] = @($rows.Values | Where-Object { $_.Tier -eq $t }).Count }
+        Write-Host ("  [scope] examined {0} tracked scripts/_test/run_* file(s); registry rows {1}" -f `
+                    $suiteFiles.Count, $rows.Count)
+        Write-Host ("  [scope] classified: FAST {0} (= FAST_SUITES {1}) | HARNESS {2} | SLOW {3} | NOT_WIRED {4} | UNMEASURED {5}" -f `
+                    $byTier['FAST'], $suites.Count, $byTier['HARNESS'], $byTier['SLOW'], `
+                    $byTier['NOT_WIRED'], $byTier['UNMEASURED'])
+        $exempt = $byTier['SLOW'] + $byTier['NOT_WIRED'] + $byTier['UNMEASURED']
+        Write-Host ("  [scope] explicitly EXEMPT-with-reason (not wired, not costing budget): {0}" -f $exempt)
+        # The accepted PREDEV disposition is named, so a future lane that quietly re-wires it has
+        # to change this assertion too. PROJECT_STATE 2026-08-19: MEASURED_NOT_WIRED, still parked.
+        foreach ($predev in @('run_new_template_entry_tests.ps1',
+                              'run_mt5_optimize_launcher_hardening_tests.ps1',
+                              'run_legacy_quarantine_tests.ps1')) {
+            if (-not $rows.ContainsKey($predev)) {
+                Bad "PART 8 the accepted PREDEV suite '$predev' has no registry row"
+            } elseif ($rows[$predev].Tier -ne 'NOT_WIRED') {
+                Bad ("PART 8 PREDEV disposition BROKEN: '{0}' is tier {1}, but PROJECT_STATE 2026-08-19 records MEASURED_NOT_WIRED" -f `
+                     $predev, $rows[$predev].Tier)
+            }
+        }
+    }
+    if ($fail -eq $before) { Good 'every tracked run_* file is classified or explicitly exempt WITH a reason' }
 
     # Reported before BOTH exits: a suite that only attributes its cost when it passes cannot
     # answer "which part got slow" on the run where that question is actually being asked.
