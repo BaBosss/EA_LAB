@@ -41,11 +41,21 @@ function Resolve-TplRepoPath([string]$Root, [string]$RelativePath, [string]$Fiel
 }
 
 function Get-TplExpectedEas([string]$Root) {
+    # B-F3 (Audit B): this used to gate on `$files.Count -ne 8` -- a literal cardinality check
+    # blind to WHICH 8. That check passes unchanged if one real wrapper is deleted and a
+    # same-count decoy is dropped in next to it (e.g. Boss_15_ST03.mq5 swapped for
+    # Boss_15_Decoy.mq5): the count never moves. The only thing that can catch a swap is
+    # comparing the discovered NAMES against the manifest's declared NAMES as a set, which
+    # Get-TplActiveBaseline already does below (missing/extra) -- so cardinality is no longer
+    # asserted here at all; a wrong SET is asserted there, unconditionally, by identity not count.
     $files = @(Get-ChildItem -LiteralPath (Join-Path $Root 'ea_template') -Filter 'Boss_*.mq5' -File | Sort-Object Name)
-    if ($files.Count -ne 8) { throw "FAIL: expected exactly 8 canonical Boss EAs, found $($files.Count)" }
+    if ($files.Count -eq 0) { throw 'FAIL: no canonical Boss EA wrappers found on disk under ea_template\' }
+    $seen = @{}
     return @($files | ForEach-Object {
         $match = [regex]::Match($_.BaseName, '^Boss_(\d+)_')
         if (-not $match.Success) { throw "FAIL: malformed Boss EA name $($_.Name)" }
+        if ($seen.ContainsKey($_.BaseName)) { throw "FAIL: duplicate Boss EA wrapper name on disk: $($_.Name)" }
+        $seen[$_.BaseName] = $true
         [pscustomobject]@{ Name = $_.BaseName; Tag = ('LAB_ENTRY_' + $match.Groups[1].Value); Source = $_ }
     })
 }
@@ -98,8 +108,17 @@ function Get-TplActiveBaseline {
 
     $expected = Get-TplExpectedEas $Root
     $cases = @($manifest.cases)
-    if ($cases.Count -ne 8) { throw "FAIL: manifest has $($cases.Count) EA cases, expected 8" }
+    if ($cases.Count -eq 0) { throw 'FAIL: manifest declares zero EA cases' }
     $caseNames = @($cases | ForEach-Object { [string]$_.ea })
+    # B-F3: the manifest side used to gate on `$cases.Count -ne 8` too -- a second literal
+    # cardinality check, independent of the disk side, equally blind to a same-count rename.
+    # Cardinality is dropped in favor of SET EQUALITY: both sides must be duplicate-free, and
+    # the two name sets must be identical. A swap moves neither count but always breaks this.
+    $caseNameSet = @($caseNames | Select-Object -Unique)
+    if ($caseNameSet.Count -ne $caseNames.Count) {
+        $dupes = @($caseNames | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object Name)
+        throw "FAIL: manifest declares duplicate EA case name(s): $($dupes -join ', ')"
+    }
     $expectedNames = @($expected | ForEach-Object Name)
     $missing = @($expectedNames | Where-Object { $caseNames -notcontains $_ })
     $extra = @($caseNames | Where-Object { $expectedNames -notcontains $_ })
