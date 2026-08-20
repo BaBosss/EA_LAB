@@ -142,3 +142,8 @@ run_tpl_set_checkout_contract_tests.ps1|UNMEASURED|Checkout-byte contract cage f
 run_audit_c_tests.ps1|UNMEASURED|Audit C monitoring-trust cage (Lane 1, 2026-08-20); guards snapshot age/digest/coverage/identity gates; not timed against the pinned budget.
 run_gitdir_resolution_test.ps1|UNMEASURED|D-F8 Get-GitStateStamp linked-worktree gitdir cage (Lane 2, 2026-08-20); not timed against the pinned budget.
 run_worktree_hookspath_negative_test.ps1|UNMEASURED|D-F4 hooksPath ownership negative cage (Lane 2, 2026-08-20); builds a real linked worktree fixture, not timed against the pinned budget.
+run_legacy_selector_routing_tests.ps1|UNMEASURED|A-F5 instruction-layer legacy-selector quarantine cage (M1-Lane A, 2026-08-20); scans dispatchable-surface routing text, not timed against the pinned budget.
+run_optimize_dest_xml_staleness_tests.ps1|UNMEASURED|A-F2 stale destination optimizer XML cage (M1-Lane A, 2026-08-20); not timed against the pinned budget.
+run_pilot_swap_probe_tests.ps1|UNMEASURED|A-F1 pilot swap-probe $Matches collision cage (M1-Lane A, 2026-08-20); not timed against the pinned budget.
+run_pilot_xml_artefact_identity_tests.ps1|UNMEASURED|A-F7 optimizer XML artefact byte-identity cage (M1-Lane A, 2026-08-20); not timed against the pinned budget.
+run_template_entry_wrapper_registration_tests.ps1|UNMEASURED|B-F2 wrapper-to-registry direction check cage (M1-Lane B, 2026-08-20); not timed against the pinned budget.
