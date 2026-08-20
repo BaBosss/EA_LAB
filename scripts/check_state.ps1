@@ -43,9 +43,18 @@ param(
 . (Join-Path $PSScriptRoot 'lib\magic_guard.ps1')
 # ORDER-944: deployment status is a closed vocabulary shared by every monitoring consumer.
 . (Join-Path $PSScriptRoot 'lib\deployment_status.ps1')
+# M0-LANE2 (Audit D-F1): canonicality classification. See section 11 at the bottom.
+. (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
 
 $script:warn = 0
 $script:toolFail = 0
+# A guard that CANNOT SEE must not say CLEAN. $toolFail already covers "an input threw";
+# $unknown covers "the question could be asked but not answered" -- offline, no canonical ref,
+# git not on PATH. That is NOT a warning (nothing is drifting) and NOT a pass, so it gets its
+# own counter and its own banner, and it suppresses CLEAN in EVERY mode -- the same rule the
+# $toolFail comment at the bottom of this file already states.
+$script:unknown = 0
+$script:unknownNotes = @()
 function ReadJudged($rel){
   # SNAPSHOT: chosen by the CALLER's mode, not by this function -- `Read-Committed` returns the
   # index in hook mode and the disk otherwise, and that is the whole point of routing every read
@@ -339,6 +348,96 @@ if(Test-Path $mirrorScript){
     ("SKILLS DRIFT - the decision bars changed outside git: " + (($mirrorOut | Select-Object -Skip 1 | Select-Object -First 6) -join ' | ') + " -- if intended, run scripts\sync_skills_mirror.ps1 -Update and commit the mirror alongside the reason")
 }
 
+
+# 11. CANONICALITY (M0-LANE2, Audit D-F1). THE DEFECT, MEASURED BEFORE THE FIX:
+#     this guard printed "=== CLEAN - no drift detected ===" for a checkout 135 commits
+#     BEHIND and 26 AHEAD of origin/master. Proof at canonical 649207d6:
+#       git -C D:\EA_LAB rev-list --left-right --count origin/master...HEAD   ->   135  26
+#     and grep -E 'origin|ancestor|merge-base|rev-list|behind|diverg' over THIS FILE returned
+#     only comment prose plus the CLEAN banner itself. There was no ancestry logic at all.
+#     "CLEAN" only ever meant "the docs agree with each other" -- an operator reasonably read
+#     it as "this tree is current", and published from a superseded source on that reading.
+#
+#     WHAT IS AND IS NOT CHECKED HERE. The subject is COMMITTED HISTORY, so this section
+#     deliberately does not go through ReadJudged: there is no staged-vs-worktree choice to
+#     make about "which commit is HEAD". A DIRTY tree still gets a correct classification --
+#     `dirty` is reported next to the state and never suppresses it. Proven live: this
+#     worktree classified CANONICAL while dirty with this very edit.
+#
+#     NO NETWORK. The canonical ref is the LOCAL remote-tracking ref refs/remotes/origin/master.
+#     This guard does NOT fetch -- a guard on the commit path must not reach the network. An
+#     offline run therefore lands REMOTE_UNAVAILABLE, which is UNKNOWN, never a false CLEAN.
+#     Freshness of that ref is the operator's job (git fetch), and the banner says so.
+$canon = $null
+try { $canon = Get-EaLabCanonicalityState -RepoRoot $Root }
+catch { $canon = $null }
+
+if ($null -eq $canon) {
+  $script:unknown++
+  $script:unknownNotes += 'canonicality could not be computed (the classifier threw)'
+  Write-Host "[UNKNOWN] canonicality could not be computed - this run cannot claim the tree is current" -ForegroundColor Magenta
+}
+else {
+  $cLine = "{0} (behind={1} ahead={2} head={3} ref={4}{5})" -f `
+    $canon.state, $canon.behind, $canon.ahead, `
+    $(if($canon.head){$canon.head.Substring(0,[Math]::Min(8,$canon.head.Length))}else{'?'}), `
+    $canon.canonical_ref, $(if($canon.dirty){'; working tree DIRTY'}else{''})
+  switch ($canon.state) {
+    'CANONICAL' {
+      Write-Host ("[OK]   canonicality: {0}" -f $cLine) -ForegroundColor Green
+    }
+    'AHEAD_CANONICAL' {
+      # Ahead-only is the normal state of a lane doing work: it is publishable (nothing on
+      # the canonical ref is missing from it) but it is NOT the same thing as CANONICAL.
+      Write-Host ("[OK]   canonicality: {0} - publishable, not yet pushed" -f $cLine) -ForegroundColor Green
+    }
+    'BEHIND_CANONICAL' {
+      Write-Host ("[WARN] canonicality: {0} - THIS TREE IS SUPERSEDED. Do not publish from it; integrate {1} first." -f $cLine, $canon.canonical_ref) -ForegroundColor Yellow
+      $script:warn++
+    }
+    'DIVERGED_FROM_CANONICAL' {
+      Write-Host ("[WARN] canonicality: {0} - DIVERGED. Publishing from here would overwrite current content with superseded content; reconcile against {1} first." -f $cLine, $canon.canonical_ref) -ForegroundColor Yellow
+      $script:warn++
+    }
+    'REMOTE_UNAVAILABLE' {
+      $script:unknown++
+      $script:unknownNotes += ("canonicality UNKNOWN: {0}" -f $canon.reason)
+      Write-Host ("[UNKNOWN] canonicality: {0} - {1}" -f $canon.state, $canon.reason) -ForegroundColor Magenta
+    }
+    default {
+      $script:unknown++
+      $script:unknownNotes += ("canonicality UNKNOWN: {0}" -f $canon.reason)
+      Write-Host ("[UNKNOWN] canonicality: {0} - {1}" -f $canon.state, $canon.reason) -ForegroundColor Magenta
+    }
+  }
+  # The publication decision, printed as the machine-readable line an operator or a
+  # publisher script can grep. ALLOW | BLOCK | UNKNOWN -- never a bare boolean, because
+  # "cannot tell" and "no" must not collapse into the same token.
+  Write-Host ("[canonicality] publish_gate={0} state={1} behind={2} ahead={3} dirty={4}" -f `
+    $canon.publish_gate, $canon.state, $canon.behind, $canon.ahead, $canon.dirty)
+}
+
+# 12. HOOKS-PATH OWNERSHIP (M0-LANE2, Audit D-F4). extensions.worktreeConfig is true on this
+#     repo and the PRIMARY's .git/config sets core.hooksPath in LOCAL scope, which every
+#     linked worktree inherits -- so a clean linked worktree ran the DIRTY primary's hook
+#     bytes. Reported here (warn) as well as asserted at commit time, because the commit-time
+#     assertion lives in .githooks/ and a broken hooksPath is exactly the condition under
+#     which no hook runs at all. This surface still answers when the hook cannot.
+$hooksOwn = $null
+try { $hooksOwn = Test-EaLabHooksPathOwnership -RepoRoot $Root } catch { $hooksOwn = $null }
+if ($null -eq $hooksOwn) {
+  $script:unknown++
+  $script:unknownNotes += 'core.hooksPath ownership could not be determined'
+  Write-Host "[UNKNOWN] core.hooksPath ownership could not be determined" -ForegroundColor Magenta
+} elseif ($hooksOwn.verdict -eq 'UNKNOWN') {
+  $script:unknown++
+  $script:unknownNotes += ("core.hooksPath ownership UNKNOWN: {0}" -f $hooksOwn.reason)
+  Write-Host ("[UNKNOWN] core.hooksPath: {0}" -f $hooksOwn.reason) -ForegroundColor Magenta
+} else {
+  Check ($hooksOwn.ok) ("core.hooksPath belongs to this checkout ({0}: {1})" -f $hooksOwn.verdict, $(if($hooksOwn.resolved){$hooksOwn.resolved}else{'<gitdir>/hooks'})) `
+    ("HOOKS PATH {0} - {1}. Fix with: git -C {2} config --worktree core.hooksPath .githooks" -f $hooksOwn.verdict, $hooksOwn.reason, $Root)
+}
+
 # /scrutinize (ORDER-674 round 1): $toolFail EXISTED AND NOTHING READ IT. A ReadJudged throw
 # printed [TOOL] in red, returned $null -- and unless that null happened to trip a downstream
 # Check, the run ended "=== CLEAN ===" exit 0. "I could not read my inputs" was a PASS, in the
@@ -348,7 +447,19 @@ if($script:toolFail -gt 0){
   Write-Host ("=== TOOL FAILURE - {0} input(s) could not be read; the verdicts above are over an incomplete evidence set ===" -f $script:toolFail) -ForegroundColor Red
   exit 2
 }
-if($script:warn -eq 0){ Write-Host "=== CLEAN - no drift detected ===" -ForegroundColor Green }
-else { Write-Host ("=== {0} WARNING(s) - fix the drift above ===" -f $script:warn) -ForegroundColor Yellow }
+# M0-LANE2 (Audit D-F1): CLEAN is a positive claim and must not be printed over an
+# unanswered question. $unknown is not $warn -- nothing is drifting -- and it is not $toolFail
+# either, because an offline machine with no origin/master is a NORMAL condition, not a broken
+# input, and blocking every offline commit would get this guard switched off within a day. So
+# it gets its own banner and exit 0 in non-strict mode, but it NEVER borrows the word CLEAN.
+if($script:warn -eq 0 -and $script:unknown -eq 0){
+  Write-Host "=== CLEAN - no drift detected ===" -ForegroundColor Green
+}
+elseif($script:warn -eq 0){
+  Write-Host ("=== UNKNOWN - no drift detected, but {0} question(s) could not be answered: {1} ===" -f $script:unknown, ($script:unknownNotes -join '; ')) -ForegroundColor Magenta
+}
+else {
+  Write-Host ("=== {0} WARNING(s){1} - fix the drift above ===" -f $script:warn, $(if($script:unknown -gt 0){ " + " + $script:unknown + " UNKNOWN" }else{''})) -ForegroundColor Yellow
+}
 if($Strict -and $script:warn -gt 0){ exit 1 }
 exit 0
