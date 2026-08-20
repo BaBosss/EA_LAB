@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+'use strict';
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { loadContract, deriveStatus, sanitize, collectLiveStatus, lane } = require('./local-status.cjs');
+const contract = loadContract();
+const expected = contract.lnwjud.expected_sha;
+const head = 'a'.repeat(40);
+const policy = { schema_version: 1, base_sha: head, review_state: 'OPEN' };
+function build(change = {}) { return deriveStatus({ contract, generated_at: '2026-08-20T09:00:00Z', actual_source_sha: expected, actual_head: head, policy, processes: [], lock: { state: 'NOT_RUNNING', owner: null, pid: null, error: null }, listener_state: 'NO_RELEVANT_LISTENER_OBSERVED', ...change }); }
+const normal = build();
+assert.equal(normal.control_state, 'OK'); assert.equal(normal.lnwjud.pin_match, true); assert.equal(normal.ea_lab_gateway.authorized_workspace, contract.gateway.authorized_workspace); assert.equal(normal.ea_lab_gateway.head_match, true); assert.equal(normal.ea_lab_gateway.writer_state, 'NOT_RUNNING'); assert.equal(normal.ea_lab_gateway.review_frozen, false); assert.equal(normal.index.state, 'NOT_READY'); assert.equal(normal.index.coverage, 'PARTIAL'); assert.equal(normal.processes.task_owned_count, 0); assert.equal(normal.network.tunnel_state, 'BLOCKED(E)'); assert.equal(normal.milestone.local_execution_plane, 'PASS'); assert.equal(normal.milestone.review, 'NOT_REVIEWED'); assert.equal(normal.milestone.secure_tunnel, 'BLOCKED(E)'); assert.equal(lane(normal).status, 'BLOCKED'); assert.equal(lane(normal).progress, 0);
+const stale = build({ policy: { ...policy, base_sha: 'b'.repeat(40) } }); assert.equal(stale.ea_lab_gateway.head_match, false); assert.equal(stale.control_state, 'DEGRADED');
+assert.equal(build({ index: { state: 'ERROR', last_known_refresh: null, error: { code: 'INDEX_ERROR', message: 'missing' } } }).index.state, 'ERROR');
+const secret = build({ last_error: { code: 'LOG', message: 'API_KEY=synthetic-secret-value Bearer sk-secret-token' } });
+assert(!JSON.stringify(secret).includes('synthetic-secret-value')); assert(!JSON.stringify(secret).includes('sk-secret-token'));
+const long = build({ last_error: { code: 'LONG', message: 'x'.repeat(400) } }); assert(long.audit.last_error.message.endsWith('…[TRUNCATED]'));
+const unowned = build({ processes: [{ pid: 99, name: 'node.exe' }] }); assert.equal(unowned.processes.state, 'UNOWNED'); assert.equal(unowned.processes.task_owned_count, 0);
+const owned = build({ processes: [{ pid: 99, name: 'node.exe' }], lock: { state: 'PRESENT', owner: 'M7', pid: 99, error: null } }); assert.equal(owned.processes.state, 'OWNED'); assert.equal(owned.processes.task_owned_count, 1);
+const publicListener = build({ listener_state: 'NON_LOOPBACK_LISTENER_OBSERVED' }); assert.equal(publicListener.network.public_listener_detected, true); assert.equal(publicListener.control_state, 'DEGRADED');
+const loopbackListener = build({ listener_state: 'LOOPBACK_LISTENER_OBSERVED' }); assert.equal(loopbackListener.network.public_listener_detected, false);
+const frozen = build({ policy: { ...policy, review_state: 'FROZEN' } }); assert.equal(frozen.ea_lab_gateway.review_frozen, true);
+assert.equal(lane(frozen).status, 'BLOCKED');
+assert.equal(lane(build({ review_state: 'REVIEW_BLOCKED', security_state: 'FAILED' })).status, 'BLOCKED');
+const malformed = collectLiveStatus({ policy_path: path.join(__dirname, 'fixtures', 'm7-status', 'malformed.json'), generated_at: '2026-08-20T09:00:00Z' }); assert.equal(malformed.audit.last_error.code, 'POLICY_INVALID'); assert.equal(malformed.control_state, 'ERROR'); assert.equal(lane(malformed).status, 'ERROR');
+assert.equal(sanitize('token=abc').includes('abc'), false);
+console.log('RESULT: 31 PASS');

@@ -1,0 +1,24 @@
+{
+  "task_id": "M7-CONTROL-PLANE-CONTEXT",
+  "role": "EA-WORKER",
+  "model": "qwen",
+  "runtime_forecast": "NORMAL <=30m",
+  "objective": "Prepare bounded M7 control-plane evidence context; do not implement M7.",
+  "canonical_base_sha": "a8093c9f65af381ca33f9293566b33cac61cd4c8",
+  "expected_worktree_head_sha": "abed57a987887049658d1f960a76322729a1d96b",
+  "worktree": "D:\\EA_LAB_WORKTREES\\lnwjud-execution-plane-20260820",
+  "allowed_paths": ["tools/lnwjud/"],
+  "forbidden_paths": [".env", "PROJECT_STATE.md", "AGENTS.md", "AGENT_TASKBOARD.md", "ea_template/", "portfolio/"],
+  "authority": {"allow_push": false, "allow_deploy": false, "allow_trade": false, "allow_risk_change": false, "allow_shutdown": false},
+  "hard_stops": ["no_deploy", "no_trade", "no_live", "no_risk_change", "no_push", "no_history_rewrite", "no_shutdown"],
+  "relevant_files": [
+    {"path": "tools/lnwjud/ea-lab-gateway.cjs", "symbols": ["READ_TOOLS", "METADATA_TOOLS"]},
+    {"path": "tools/lnwjud/test-gateway.cjs", "symbols": ["connect", "assertDenied"]}
+  ],
+  "bounded_callers": ["tools/lnwjud/test-gateway.cjs"],
+  "affected_tests": ["tools/lnwjud/test-gateway.cjs", "tools/lnwjud/test-delegation-package.cjs"],
+  "known_accepted_evidence": ["M0-M5 PASS", "M3 BLOCKED(E)", "45 security checks PASS"],
+  "model_roi": {"unique_output": "M7 context contract", "downstream_skip": "no manual prompt rediscovery", "direct_consumer": "M7 control-plane integration"},
+  "acceptance": ["exact SHA", "bounded scope", "tests supplied"],
+  "return_format": "PASS/BLOCKED with exact evidence"
+}
