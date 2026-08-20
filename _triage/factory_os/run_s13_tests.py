@@ -40,6 +40,7 @@ for _s in (sys.stdout, sys.stderr):
 
 import evidence                        # noqa: E402
 import check_pilot_acceptance as PA    # noqa: E402
+import optimize_log                    # noqa: E402
 
 FAILURES = []
 RAN = []
@@ -642,6 +643,67 @@ state, detail = PA.item_optimize_guard(
     guard_source([decision(exit_code=0, warn_only=True), ALLOW_REC]))
 check('G9 a -WarnOnly refusal is still an observed refusal (exit code is not the signal)',
       state == PA.PASS, '%s: %s' % (state, detail))
+
+
+# -- A-F6 (M1-A, 2026-08-20): the artefact_key join -----------------------------------------------
+# `hypothesis_revision` alone repeats across every symbol x TF sweep of one revision, so it cannot
+# tell one decision's ARTEFACT apart from another's. `optimize_log.artefact_key` uses
+# (lane, expert, ini_path) instead -- these cases prove it disambiguates two real-shaped, similar
+# records, and that item 6's handler turns a genuine collision (two decisions about ONE key that
+# disagree) into a FAIL rather than folding it quietly into the PASS count.
+
+INI_XAU_H1 = r'D:\EA_LAB\_mt5_auto\ini\S13PROBE_B14_H01_r1_XAUUSD_H1.ini'
+INI_XAU_H1_REFUSAL = r'D:\EA_LAB\_mt5_auto\ini\S13PROBE_B14_H01_r1_XAUUSD_H1_REFUSALCASE.ini'
+EXPERT_H01 = 'EALabTpl\\generated\\B14_H01_r1'
+
+state, detail = PA.item_optimize_guard(guard_source([
+    decision(ini_path=INI_XAU_H1, expert=EXPERT_H01),
+    dict(ALLOW_REC, ini_path=INI_XAU_H1_REFUSAL, expert=EXPERT_H01),
+]))
+check('AF6-1 DISAMBIGUATION: same lane+expert+hypothesis_revision, DIFFERENT ini_path -> still '
+     'PASS (two distinct artefacts, not a collision)',
+      state == PA.PASS and '0 collision' in detail, '%s: %s' % (state, detail))
+
+same_key_same_verdict = [
+    decision(ini_path=INI_XAU_H1, expert=EXPERT_H01, submitted_utc='2026-08-03T09:00:00Z'),
+    decision(ini_path=INI_XAU_H1, expert=EXPERT_H01, submitted_utc='2026-08-03T09:05:00Z'),
+    dict(ALLOW_REC, ini_path=INI_XAU_H1_REFUSAL, expert=EXPERT_H01),
+]
+state, detail = PA.item_optimize_guard(guard_source(same_key_same_verdict))
+check('AF6-2 CONTROL: the SAME artefact_key re-submitted with the SAME verdict twice -> still '
+     'PASS (a legitimate re-check, not an ambiguity)',
+      state == PA.PASS and '0 collision' in detail, '%s: %s' % (state, detail))
+
+collide = [
+    decision(ini_path=INI_XAU_H1, expert=EXPERT_H01, submitted_utc='2026-08-03T09:00:00Z'),
+    dict(ALLOW_REC, ini_path=INI_XAU_H1, expert=EXPERT_H01, submitted_utc='2026-08-03T09:05:00Z'),
+]
+state, detail = PA.item_optimize_guard(guard_source(collide))
+check('AF6-3 ATTACK: the SAME artefact_key (lane, expert, ini_path) with a DIFFERENT verdict -> '
+     'FAIL, names the shared key',
+      state == PA.FAIL and 'share artefact_key' in detail
+      and "['ALLOW', 'REFUSE']" in detail,
+      '%s: %s' % (state, detail))
+
+# A record missing ini_path/expert (the shape every existing G1-G10 fixture above already is) must
+# not crash the join -- it is simply excluded from the keyed count, which G1's own PASS above
+# already demonstrates (0/2 keyed there). Direct proof at the function level, isolated from the
+# handler's plumbing:
+no_key_rec = decision()
+try:
+    optimize_log.artefact_key(no_key_rec)
+    af6_raised = False
+except optimize_log.ArtefactKeyError as exc:
+    af6_raised = 'ini_path' in str(exc) or 'expert' in str(exc)
+check('AF6-4 a record with no ini_path/expert raises ArtefactKeyError naming the missing field(s)',
+      af6_raised, '')
+
+collisions = optimize_log.artefact_key_collisions(
+    [decision(ini_path=INI_XAU_H1, expert=EXPERT_H01),
+     dict(ALLOW_REC, ini_path=INI_XAU_H1, expert=EXPERT_H01)])
+check('AF6-5 artefact_key_collisions() itself finds exactly one colliding group for the ATTACK pair',
+      len(collisions) == 1 and collisions[0][0] == (r'D:\Meta 5\terminal64.exe', EXPERT_H01, INI_XAU_H1),
+      str(collisions))
 
 
 # item 7 ------------------------------------------------------------------------------------------
