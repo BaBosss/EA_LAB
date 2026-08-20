@@ -194,6 +194,32 @@ def probed_cells(probe_runs, baseline_by_cell, backfilled):
     such records exist and the honest repair is to re-run those cells, not to assume in their
     favour: the whole point of this transition is that a cell reaching PROBE_RUN was probed.
 
+    🔴 M1-A A-F4 (2026-08-20). The back-fill escape below used to fire whenever
+    `xml_present is not True`, which does not distinguish "this record PREDATES the field" (the
+    only case `load_xml_backfill`'s own docstring describes -- "records ... written by a launcher
+    that could exit 0 with no XML, and they predate the field that would say otherwise") from "this
+    record HAS the field and the launcher explicitly reported False". Measured against the
+    committed probe store: `probe_runs_20260803_205415.jsonl` (USDJPY H1/H4) and
+    `probe_runs_20260803_205416.jsonl` (BTCUSD H1/H4) both carry `xml_present: false` -- a real
+    negative from a launcher that HAD the capability to report it -- and all four were back-filled
+    anyway, with `xml_backfill_20260803_210948.jsonl`'s `why` field copy-pasting the "predates the
+    xml_present field" justification onto records that do not predate it at all. Those four never
+    became this generator's evidence only because a SEPARATE gate (`launcher_exit_code=2`, four
+    lines below) also excludes them today -- so the escape is a live hole, not a hypothetical one:
+    a future record with `xml_present: false` AND `launcher_exit_code: 0` (a launcher that ran
+    clean but genuinely produced no XML) would sail through on the back-fill alone.
+
+    THE REPAIR IS FIELD-PRESENCE, NOT VALUE. The escape now requires `'xml_present' not in rec` --
+    the record predates the field entirely -- rather than merely `rec.get('xml_present') is not
+    True`. A record that HAS the field and says False is a genuine negative signal from an
+    instrument capable of measuring it, and back-fill (a tool that only proves the artefact EXISTS
+    today, never that THIS run produced it) must never be allowed to overrule that. This does not
+    move any of the 10 historical PROBE_RUN cells: every one of their qualifying probe records was
+    written before ORDER-1253 introduced the field at all (`'xml_present' not in rec` is true for
+    all of them, verified against the committed store), so `predates_field` is true for exactly the
+    same rows the old `is not True` reading accepted. It only closes the escape for a record that
+    HAS the field and says False.
+
     EXACTLY ONE qualifying record per cell. Two would make "which run is this cell's probe" a
     question this generator answers by picking, and picking the newest is how a generator silently
     re-points at a different configuration -- the exact risk the pinned baseline SOURCE avoids.
@@ -216,12 +242,23 @@ def probed_cells(probe_runs, baseline_by_cell, backfilled):
             # guard-rail was missing, so this must neither refuse forever nor skip in silence.
             excluded.append('%s: names no cell in the design 8.3 universe' % where)
             continue
-        if rec.get('xml_present') is not True and rec.get('xml') not in backfilled:
-            excluded.append('%s: xml_present=%r and no back-fill row names its XML, so this record '
-                            'cannot demonstrate the probe produced anything (exit_code=%r is not '
-                            'sufficient -- the launcher reported success without an XML until '
-                            'ORDER-1253)'
-                            % (where, rec.get('xml_present'), rec.get('launcher_exit_code')))
+        # A-F4: the escape is for records that PREDATE the field, never for a record that carries
+        # the field and reports False. `in rec` (not `.get`), because a caller could otherwise not
+        # tell "the field is absent" from "the field is present and null" -- and this repo has paid
+        # for exactly that ambiguity before (memory `ps-allownull-string-coerces-null-to-empty`).
+        predates_field = 'xml_present' not in rec
+        if rec.get('xml_present') is not True and not (predates_field and rec.get('xml') in backfilled):
+            if predates_field:
+                reason = ('xml_present=%r (field absent -- record predates ORDER-1253) and no '
+                          'back-fill row names its XML' % rec.get('xml_present'))
+            else:
+                reason = ('xml_present=%r is an EXPLICIT negative from a launcher that has the '
+                          'field -- a back-fill row asserting the artefact exists today cannot '
+                          'overrule a direct report that it did not exist at run time (A-F4)'
+                          % rec.get('xml_present'))
+            excluded.append('%s: %s (exit_code=%r is not sufficient -- the launcher reported '
+                            'success without an XML until ORDER-1253)'
+                            % (where, reason, rec.get('launcher_exit_code')))
             continue
         if rec.get('launcher_exit_code') != 0:
             excluded.append('%s: launcher_exit_code=%r' % (where, rec.get('launcher_exit_code')))

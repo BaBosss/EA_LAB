@@ -165,7 +165,67 @@ def edit_line(root, rel, must_contain, old, new):
     io.open(p, 'w', encoding='utf-8', newline='\n').write('\n'.join(lines) + '\n')
 
 
+def probe_rec(**over):
+    r = {'entity': 'PilotProbeRun', 'cell_id': 'B14-HTEST-r1/EURUSD/H1', 'arm': gen.PROBE_ARM,
+         'lane': 'LANE', 'window': 'MAIN', 'from_date': '2023-01-01', 'to_date': '2025-12-31',
+         'first_lot': 0.01, 'model': 1, 'xml': 'X.xml', 'launcher_exit_code': 0,
+         '_source_file': 'fixture.jsonl'}
+    r.update(over)
+    return r
+
+
+def af4_backfill_escape_cases():
+    """A-F4 (M1-A, 2026-08-20) -- direct, PURE unit tests of `probed_cells`'s back-fill escape.
+
+    Isolated from the DRIFT-detection machinery the rest of this file drives: no disk, no
+    EvidenceSource, no --check. `probed_cells` is called directly with synthetic PilotProbeRun /
+    baseline / back-fill inputs, because the defect and its repair live entirely inside that one
+    `if` (gen_pilot_cells.py, `probed_cells`) and a synthetic case can put a record exactly on the
+    boundary the real committed store cannot reach any more (its four `xml_present: false` records
+    all also have `launcher_exit_code: 2`, so the OTHER gate masks the escape there -- see the
+    A-F4 docstring on `probed_cells`). This suite drives `launcher_exit_code: 0` deliberately, which
+    is the combination the old `is not True` reading would have let through.
+    """
+    baseline = {'B14-HTEST-r1/EURUSD/H1': {
+        'lane': 'LANE', 'window': 'MAIN', 'from_date': '2023-01-01', 'to_date': '2025-12-31',
+        'first_lot': 0.01, 'model': 1,
+    }}
+    cid = 'B14-HTEST-r1/EURUSD/H1'
+
+    # HEALTHY CONTROL: the record PREDATES xml_present entirely (no key at all) and is back-filled
+    # -- the one case `load_xml_backfill`'s docstring actually describes. Must still qualify.
+    predates = probe_rec()
+    predates.pop('xml_present', None)
+    qualifying, excluded = gen.probed_cells([predates], baseline, {'X.xml': 5})
+    check('A-F4 CONTROL: record PREDATES xml_present (field absent) + back-filled -> still qualifies',
+          cid in qualifying, str(excluded))
+
+    # 🔴 ATTACK: the record HAS the field and reports False -- a genuine negative from a launcher
+    # capable of measuring it -- yet a back-fill row still names its XML, and launcher_exit_code=0
+    # so the exit-code gate cannot mask the escape the way it does for the four historical records.
+    # Before A-F4 this qualified; it must not any more.
+    explicit_false = probe_rec(xml_present=False)
+    qualifying2, excluded2 = gen.probed_cells([explicit_false], baseline, {'X.xml': 5})
+    check('A-F4 ATTACK: explicit xml_present=False + exit_code=0 + back-filled XML -> excluded',
+          cid not in qualifying2 and any('EXPLICIT negative' in e for e in excluded2),
+          str(excluded2))
+
+    # CONTROL: a genuine positive still qualifies (the fix must not touch the True path at all).
+    genuine_true = probe_rec(xml_present=True)
+    qualifying3, excluded3 = gen.probed_cells([genuine_true], baseline, {'X.xml': 5})
+    check('A-F4 CONTROL: genuine xml_present=True + back-filled passes -> qualifies',
+          cid in qualifying3, str(excluded3))
+
+    # CONTROL: xml_present=False with NO back-fill row at all was already excluded before A-F4 and
+    # must stay excluded -- this case is untouched by the fix, and proves that.
+    false_no_backfill = probe_rec(xml_present=False)
+    qualifying4, excluded4 = gen.probed_cells([false_no_backfill], baseline, {})
+    check('A-F4 CONTROL: xml_present=False with no back-fill entry -> excluded (pre-existing behaviour)',
+          cid not in qualifying4, str(excluded4))
+
+
 def main():
+    af4_backfill_escape_cases()
     tmp = tempfile.mkdtemp(prefix='pilotcells_')
     try:
       # 🔴 THE NET, and the live control is why it is here. Anything this suite raises becomes a
