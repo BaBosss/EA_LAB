@@ -10,7 +10,7 @@
   "tunnel_profile": "ea-lab-lnwjud-m3",
   "credential_environment": "CONTROL_PLANE_API_KEY",
   "activation": "OWNER_REQUIRED",
-  "tunnel_client_sha256": null,
-  "tunnel_client_version": null,
-  "tunnel_client_source_ref": null
+  "tunnel_client_sha256": "6649169733686805ca16cccd91774594d0c017fd729c37ad4ce1cd18323d9ae8",
+  "tunnel_client_version": "v0.0.12",
+  "tunnel_client_source_ref": "https://github.com/openai/tunnel-client/releases/tag/v0.0.12"
 }

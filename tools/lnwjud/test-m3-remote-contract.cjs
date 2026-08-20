@@ -16,6 +16,7 @@ function temporary(change) { const file = path.join(os.tmpdir(), `lnwjud-m3-${pr
 function rejects(change, pattern) { const file = temporary(change); try { assert.throws(() => loadContract(file), pattern); pass(pattern.source); } finally { fs.rmSync(file, { force: true }); } }
 function rejectsReadiness(change, pattern) { const file = temporary(change); try { assert.throws(() => validateLocalReadiness({ contract: loadContract(file), worktree: root, env: {} }), pattern); pass(pattern.source); } finally { fs.rmSync(file, { force: true }); } }
 const contract = loadContract(); const local = validateLocalReadiness({ contract, worktree: root, env: {} });
+assert.equal(contract.tunnelClientSha256, '6649169733686805ca16cccd91774594d0c017fd729c37ad4ce1cd18323d9ae8'); assert.equal(contract.tunnelClientVersion, 'v0.0.12'); assert.equal(contract.tunnelClientSourceRef, 'https://github.com/openai/tunnel-client/releases/tag/v0.0.12'); pass('loadContract returns the exact approved tunnel-client identity');
 assert.equal(local.state, 'LOCAL_READY_OWNER_PREFLIGHT_REQUIRED'); assert.equal(local.external_state, 'BLOCKED(E)'); assert.equal(local.listener, 'NONE'); assert(!JSON.stringify(local).includes(secret)); pass('no credential is explicit external block and secret-free');
 const tokenShaped = validateLocalReadiness({ contract, worktree: root, env: { [contract.credentialEnvironment]: secret } }); assert.equal(tokenShaped.state, 'LOCAL_READY_OWNER_PREFLIGHT_REQUIRED'); assert.equal(tokenShaped.credential_present, true); assert(!JSON.stringify(tokenShaped).includes(secret)); pass('token shape never creates a readiness green');
 const launch = buildRestrictedLaunch({ contract, worktree: root }); assert(launch.command.endsWith('m3-restricted-launcher.cmd')); assert(path.isAbsolute(launch.command)); assert.equal(launch.cwd, root); assert(renderTunnelInit({ contract, worktree: root }).includes(launch.command.replaceAll('\\', '/'))); pass('restricted launcher remains checkout-bound');
@@ -58,8 +59,11 @@ withGeneratedAtOffset(30 * 1000); { const spec = prepareRun({ options: runOption
 reseal();
 
 // trusted tunnel-client identity: only a repository-pinned SHA-256 is authority, never a self-derived one
-assert.throws(() => prepare({ options, env: safeEnv, worktree: root, execFile: fakeExec, runtimeRoot: primary.sandbox, contract }), /TUNNEL_CLIENT_IDENTITY_UNBOUND/); pass('preflight fails closed when no approved tunnel-client identity is configured');
-assert.throws(() => prepareRun({ options: runOptions, env: safeEnv, worktree: root, runtimeRoot: primary.sandbox, contract }), /TUNNEL_CLIENT_IDENTITY_UNBOUND/); pass('run fails closed when no approved tunnel-client identity is configured');
+// Production m3-remote-contract.json is now bound (LNWJUD M3 tunnel-client identity binding); this fixture
+// contract overrides tunnelClientSha256 back to null so the fail-closed UNBOUND path stays covered.
+const unboundContract = { ...contract, tunnelClientSha256: null };
+assert.throws(() => prepare({ options, env: safeEnv, worktree: root, execFile: fakeExec, runtimeRoot: primary.sandbox, contract: unboundContract }), /TUNNEL_CLIENT_IDENTITY_UNBOUND/); pass('preflight fails closed when no approved tunnel-client identity is configured');
+assert.throws(() => prepareRun({ options: runOptions, env: safeEnv, worktree: root, runtimeRoot: primary.sandbox, contract: unboundContract }), /TUNNEL_CLIENT_IDENTITY_UNBOUND/); pass('run fails closed when no approved tunnel-client identity is configured');
 const rogue = freshClient('an-unapproved-binary');
 assert.throws(() => prepare({ options: { tunnelClient: rogue.client, tunnelId: options.tunnelId }, env: safeEnv, worktree: root, execFile: fakeExec, runtimeRoot: primary.sandbox, contract: boundContract }), /not the approved identity/); pass('preflight refuses an executable path whose bytes do not match the approved hash');
 assert.throws(() => prepareRun({ options: { tunnelClient: rogue.client }, env: safeEnv, worktree: root, runtimeRoot: primary.sandbox, contract: boundContract }), /not the approved identity/); assert.equal(spawns, 1); pass('run refuses an executable path whose bytes do not match the approved hash, zero spawn');
