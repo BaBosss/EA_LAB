@@ -52,7 +52,14 @@ $snapshotStatusRows = @(Get-DeploymentMonitoringRows @(
     [pscustomobject]@{ account='100000001'; magic='900004'; status='ACTIVE-PENDING-VERIFY' },
     [pscustomobject]@{ account='100000001'; magic='900005'; status='UNVERIFIED' }
 ))
-Assert-True 'snapshot status model keeps ACTIVE visible' ($snapshotStatusRows[0].monitoring_visible -and $snapshotStatusRows[0].verification_state -eq 'VERIFIED')
+# AUDIT C, C-A2 (2026-08-20, lane M0-L1): this used to assert verification_state -eq 'VERIFIED'
+# for a bare 'ACTIVE' row with no evidence supplied -- which was the defect (58 deployments read
+# VERIFIED off the lifecycle word alone, with zero attestation/runtime-identity evidence behind
+# any of them). ACTIVE now means ATTACHED with verification PENDING/NO_EVIDENCE until real
+# evidence is supplied to Get-DeploymentMonitoringRows -Evidence; only Resolve-DeploymentVerification
+# can promote a row to VERIFIED, and only when attestation HASHED/high + runtime_identity PASS are
+# both present for that key.
+Assert-True 'snapshot status model keeps ACTIVE visible' ($snapshotStatusRows[0].monitoring_visible -and $snapshotStatusRows[0].verification_state -eq 'PENDING' -and $snapshotStatusRows[0].verification_basis -eq 'NO_EVIDENCE')
 Assert-True 'snapshot status model keeps pending verification visible and warning' ($snapshotStatusRows[1].monitoring_visible -and $snapshotStatusRows[1].forward_observed -and $snapshotStatusRows[1].attention -eq 'WARNING' -and $snapshotStatusRows[1].verification_state -eq 'PENDING')
 Assert-True 'snapshot status model keeps UNVERIFIED visible and blocked' ($snapshotStatusRows[2].monitoring_visible -and $snapshotStatusRows[2].attention -eq 'BLOCKED' -and $snapshotStatusRows[2].verification_state -eq 'UNVERIFIED')
 $unknownSnapshotStatus = $false
@@ -65,6 +72,19 @@ $py = Join-Path $RepoRoot 'tools\python312\python.exe'
 $builder = Join-Path $RepoRoot '_triage\factory_os\snapshot_build.py'
 $work = Join-Path ([System.IO.Path]::GetTempPath()) ("s4rd_" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $work -Force | Out-Null
+# AUDIT C, C-A6 (2026-08-20, lane M0-L1): Get-VerifiedSnapshot now RECOMPUTES every meta.sources[]
+# sha256 against the bytes on disk under -RepoRoot, instead of trusting the build-time value. The
+# fixtures below are built with root=$work (see the "Sources resolve against $work" note), so a
+# reader verifying them must ALSO be given $work as -RepoRoot -- otherwise it looks for 'fresh.txt'
+# etc under the REAL repo root, does not find them, and every fixture reads back UNAVAILABLE
+# (a recorded source could not be read) instead of OK. snapshot_build.py's own _resolve() refuses
+# an absolute source path outright ("the evidence can be re-derived from the same root by a
+# different machine"), so junctioning $work to the real tools/_triage trees -- the same pattern the
+# SHAPE-1 fixtures below already use for $raceRoot/$stubRoot -- is what lets ONE root satisfy both
+# needs: the real validator+schema for Get-VerifiedSnapshotDocument, and the fixture files for
+# Get-SnapshotSourceIntegrity's re-hash.
+cmd /c mklink /J "$(Join-Path $work 'tools')" "$(Join-Path $RepoRoot 'tools')" | Out-Null
+cmd /c mklink /J "$(Join-Path $work '_triage')" "$(Join-Path $RepoRoot '_triage')" | Out-Null
 
 # --- fixture construction ---------------------------------------------------------------
 # Sources resolve against $work, never against the repo: a source row pointing at a repo file
@@ -171,7 +191,7 @@ Write-Host ''
 Write-Host '=== C6: readers consume ONLY a validated snapshot ==='
 
 # --- C6 reader 1: Format-ControlRoomBlock, which is what make_status.ps1 renders ---------
-$okBlock = (Format-ControlRoomBlock -Verified (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $RepoRoot)) -join "`n"
+$okBlock = (Format-ControlRoomBlock -Verified (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $work)) -join "`n"
 Assert-True 'C6 OK renders the verified build id' ($okBlock -match 'Verified snapshot')
 Assert-True 'C6 OK renders the reconciliation counts' ($okBlock -match 'orders discovered')
 
@@ -181,7 +201,7 @@ $tampered = Join-Path $work 'tampered.json'
 $t = Get-Content -LiteralPath $clean -Raw | ConvertFrom-Json
 $t.verdict.reconciliation_clear = $false   # the document now disagrees with its own evidence
 [System.IO.File]::WriteAllText($tampered, ($t | ConvertTo-Json -Depth 14), (New-Object System.Text.UTF8Encoding($false)))
-$vT = Get-VerifiedSnapshot -SnapshotPath $tampered -RepoRoot $RepoRoot
+$vT = Get-VerifiedSnapshot -SnapshotPath $tampered -RepoRoot $work
 Assert-Equal 'C6 NEG a tampered verdict is REFUSED' 'REFUSED' $vT.State
 Assert-Equal 'C6 NEG and the code says it is the VERDICT, not corrupt bytes' 'VERDICT' $vT.Code
 Assert-True  'C6 NEG the reader hands back NO document, so no caller can read numbers off it' ($null -eq $vT.Document)
@@ -205,7 +225,7 @@ Assert-True 'C6 NEG and states that this is about the INSTRUMENT, not the fleet'
 # machinery, while STATUS.md (same generator run, same commit) rendered it correctly. This proves
 # the HTML twin holds the SAME fail-closed contract as the markdown one: OK renders counts,
 # REFUSED/UNAVAILABLE render a banner with the reason text and NO numbers.
-$okHtml = (Format-ControlRoomHtml -Verified (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $RepoRoot)) -join "`n"
+$okHtml = (Format-ControlRoomHtml -Verified (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $work)) -join "`n"
 Assert-True 'C6 HTML OK renders the verified build id' ($okHtml -match 'Verified snapshot')
 Assert-True 'C6 HTML OK renders the reconciliation counts' ($okHtml -match 'orders discovered')
 
@@ -281,7 +301,7 @@ Assert-True  'C6 SHAPE-1 and hands back no document' ($null -eq $vRace.Document)
 # CONTROL: the SAME file through the REAL validator is OK -- so the branch above was entered
 # because the digests disagreed, not because the fixture or the file is broken.
 Assert-Equal 'C6 SHAPE-1 CONTROL the same snapshot verifies OK against the real validator' `
-    'OK' (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $RepoRoot).State
+    'OK' (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $work).State
 # ...and the digest the REAL validator publishes must actually match the file, or the comparison
 # above would be passing for the wrong reason.
 $realOut = & (Join-Path $RepoRoot ('tools'+[char]92+'python312'+[char]92+'python.exe')) `
@@ -309,7 +329,9 @@ Assert-True  'C6 SHAPE-1 and says it cannot prove it is reading the verified byt
 Assert-True  'C6 SHAPE-1 and hands back no document' ($null -eq $vNoDigest.Document)
 
 # --- C6 reader 2: the daily digest, which pre-registers the OPPOSITE exit behaviour ------
-$cov = Get-MonitorCoverage -SnapshotPath $clean
+# C-A6: same reason as the Get-VerifiedSnapshot calls above -- $clean's sources are only
+# re-derivable against $work, the root it was built with.
+$cov = Get-MonitorCoverage -SnapshotPath $clean -RepoRoot $work
 Assert-Equal 'C6 digest: a verified snapshot produces no failure token' 0 $cov.Failures.Count
 $covT = Get-MonitorCoverage -SnapshotPath $tampered
 Assert-Equal 'C6 NEG digest: a tampered verdict IS red, with its own token' 'snapshot-refused' ($covT.Failures -join ',')

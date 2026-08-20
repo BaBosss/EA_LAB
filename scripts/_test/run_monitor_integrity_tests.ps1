@@ -135,7 +135,10 @@ $normalised = @(Get-DeploymentMonitoringRows $statusRows)
 $active = $normalised | Where-Object { $_.magic -eq '900001' }
 $pending = $normalised | Where-Object { $_.magic -eq '900004' }
 $unverified = $normalised | Where-Object { $_.magic -eq '900005' }
-Assert-True 'ACTIVE row remains visible and verified' ($active.monitoring_visible -and $active.operational_status -eq 'ATTACHED' -and $active.verification_state -eq 'VERIFIED' -and $active.attention -eq 'NONE')
+# AUDIT C, C-A2 (2026-08-20, lane M0-L1): 'ACTIVE' no longer implies verification_state=VERIFIED
+# off the lifecycle word alone -- see the matching note in run_snapshot_s4_tests.ps1. With no
+# -Evidence supplied, Resolve-DeploymentVerification cannot promote the row past PENDING/NO_EVIDENCE.
+Assert-True 'ACTIVE row remains visible, attached, pending verification (no evidence supplied)' ($active.monitoring_visible -and $active.operational_status -eq 'ATTACHED' -and $active.verification_state -eq 'PENDING' -and $active.verification_basis -eq 'NO_EVIDENCE' -and $active.attention -eq 'NONE')
 Assert-True 'ACTIVE-PENDING-VERIFY remains visible as attached but pending verification' ($pending.monitoring_visible -and $pending.forward_observed -and $pending.operational_status -eq 'ATTACHED' -and $pending.verification_state -eq 'PENDING' -and $pending.attention -eq 'WARNING')
 Assert-True 'UNVERIFIED remains visible and blocked' ($unverified.monitoring_visible -and $unverified.verification_state -eq 'UNVERIFIED' -and $unverified.attention -eq 'BLOCKED')
 Assert-Equal 'all declared statuses are accepted' 5 $normalised.Count
@@ -250,6 +253,14 @@ $builder = Join-Path $RepoRoot '_triage\factory_os\snapshot_build.py'
 $fxRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("crfx_" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $fxRoot -Force | Out-Null
 Set-Content -Path (Join-Path $fxRoot 'srcA.txt') -Value 'fixture source A' -Encoding ASCII
+# AUDIT C, C-A6 (2026-08-20, lane M0-L1). Get-VerifiedSnapshot (called by Get-MonitorCoverage) now
+# RECOMPUTES meta.sources[].sha256 against the bytes on disk under -RepoRoot, so a reader checking
+# a fixture built with root=$fxRoot must be given -RepoRoot $fxRoot too, or it looks for srcA.txt
+# under the real repo, fails to find it, and every fixture reads back untrusted instead of OK.
+# Junctioning tools/_triage into $fxRoot (same pattern as scripts\_test\run_snapshot_s4_tests.ps1)
+# is what lets $fxRoot serve both needs: the real python/validator/schema, and the fixture file.
+cmd /c mklink /J "$(Join-Path $fxRoot 'tools')" "$(Join-Path $RepoRoot 'tools')" | Out-Null
+cmd /c mklink /J "$(Join-Path $fxRoot '_triage')" "$(Join-Path $RepoRoot '_triage')" | Out-Null
 $fxBuilt = @{}
 
 function New-V5Fixture([string]$name) {
@@ -313,7 +324,7 @@ $RAW_FIXTURES = @('unreadable.json', 'not_a_snapshot.json')
 
 function Cover([string]$name) {
     if ($RAW_FIXTURES -contains $name) { return Get-MonitorCoverage -SnapshotPath (Join-Path $snapDir $name) }
-    return Get-MonitorCoverage -SnapshotPath (New-V5Fixture $name)
+    return Get-MonitorCoverage -SnapshotPath (New-V5Fixture $name) -RepoRoot $fxRoot
 }
 # Convenience: the two things daily_monitor.ps1 actually consumes.
 function IsRed($r) { return ([int]$r.Failures.Count -gt 0) }

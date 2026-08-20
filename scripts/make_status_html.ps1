@@ -40,9 +40,20 @@ $oneDrive = $OneDrivePath
 $savedEapCr = $ErrorActionPreference
 $ErrorActionPreference = 'Continue'
 . (Join-Path $repo 'scripts\lib\snapshot_reader.ps1')
+. (Join-Path $repo 'scripts\lib\monitor_coverage.ps1')
 $crVerified = Get-VerifiedSnapshot -SnapshotPath (Join-Path $repo 'portfolio\control_room_snapshot.json') -RepoRoot $repo
 $ErrorActionPreference = $savedEapCr
 $controlRoomHtml = (Format-ControlRoomHtml -Verified $crVerified) -join "`n"
+
+# --- AUDIT C, C-A10 (2026-08-20, lane M0-L1): monitoring-chain health, the STATUS.html twin of
+# the block make_status.ps1 now renders in STATUS.md. Same reasoning: this page's ONLY monitoring
+# indicator was {{MONITORING_LABEL}} below, itself derived from the snapshot verdict -- so an
+# outage that stops the snapshot from refreshing could not show up here at all. BarHours reuses
+# $crVerified's own Age.StaleBarHours (C-A1's bar); no new threshold.
+$chainBarHtml = if ($null -ne $crVerified.Age -and $null -ne $crVerified.Age.StaleBarHours) { [double]$crVerified.Age.StaleBarHours } else { 0 }
+$chainHealthHtml = Get-MonitorChainHealth -RepoRoot $repo -BarHours $chainBarHtml
+$monitorChainHtml = Format-MonitorChainHtml -Health $chainHealthHtml
+
 if ($crVerified.State -eq 'OK') {
   $monitoringLabel = 'OK'; $monitoringColor = 'var(--green)'
   if ($crVerified.Document.verdict.reconciliation_clear -ne $true) { $monitoringLabel = 'DEGRADED'; $monitoringColor = 'var(--amber)' }
@@ -193,6 +204,7 @@ $map = @{
   '{{MONITORING_LABEL}}'  = $monitoringLabel
   '{{MONITORING_COLOR}}'  = $monitoringColor
   '{{CONTROL_ROOM_HTML}}' = $controlRoomHtml
+  '{{MONITOR_CHAIN_HTML}}' = $monitorChainHtml
   '{{JUDGE_DATE}}'        = $judge
   '{{DAYS_TO_JUDGE}}'     = "$daysToJudge"
   '{{USER_ACTION_COUNT}}' = "$userActionCount"

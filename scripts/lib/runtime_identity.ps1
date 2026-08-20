@@ -28,6 +28,128 @@ function Get-RuntimeIdentityRecords {
     return $records.ToArray()
 }
 
+<#
+AUDIT C REPAIR, C-A3 + C-A9 (2026-08-20, lane M0-L1).
+
+  C-A3  The EXPECTED identity universe was drawn from RUNTIME_IDENTITY_MAP.csv itself -- the same
+        file that supplies the mappings. A row absent from the map was therefore absent from the
+        expectation, so it could not fail; it simply did not exist. MEASURED on canonical
+        649207d6:
+            portfolio\RUNTIME_IDENTITY_MAP.csv        1 data row (463666728|990026)
+            portfolio\DEPLOYMENTS.csv status=ACTIVE   58 rows
+        57 forward-observed deployments were invisible to identity validation, and the validator
+        still reported on the one row it was handed. A checker whose expected set is its own input
+        cannot report a gap (memory: prohibition-disarms-its-own-check -- same shape: the input is
+        filtered by the thing being checked).
+
+  C-A9  attestation ceiling runtime-identity coverage was zero and nothing said so. fully_bound is
+        published mechanically here.
+
+  WHAT IS DELIBERATELY NOT DONE: no sidecar, digest, epoch or mapping row is synthesized. The
+  expected UNIVERSE is derived from the canonical deployment scope (forward-observed, non-REMOVED
+  rows -- the same scope the snapshot already uses for judge_readiness and attestation); the
+  MAPPINGS still come only from the map file. A member of the universe with no mapping is reported
+  as UNMAPPED, which is a visible failure, not a fabricated pass.
+#>
+function Get-RuntimeIdentityExpectedScope {
+    <#
+      The expected identity universe: one key per forward-observed, non-REMOVED deployment row.
+      Input is the ALREADY-NORMALIZED rows (Get-DeploymentMonitoringRows output) so the scope
+      definition is not re-invented here.
+      Returns an array of "account|magic" strings, de-duplicated, order-stable.
+    #>
+    param([AllowNull()][object[]]$DeploymentRows)
+    $seen = [ordered]@{}
+    foreach ($r in @($DeploymentRows)) {
+        if ($null -eq $r) { continue }
+        if ("$($r.operational_status)" -eq 'REMOVED') { continue }
+        if (-not [bool]$r.forward_observed) { continue }
+        $acct = "$($r.account)"; $magic = "$($r.magic)"
+        # A row whose account or magic is not a positive integer cannot be an identity key. It is
+        # NOT silently dropped: it is returned in the malformed list so the caller can report it.
+        if ($acct -notmatch '^[1-9]\d*$' -or $magic -notmatch '^[1-9]\d*$') { continue }
+        $k = "$acct|$magic"
+        if (-not $seen.Contains($k)) { [void]($seen[$k] = $true) }
+    }
+    return @($seen.Keys)
+}
+
+function Get-RuntimeIdentityCoverage {
+    <#
+      C-A3/C-A9. Compares the expected universe against what the map and the collected sidecars
+      actually cover. Purely mechanical - it counts, it does not create.
+        ExpectedCount / MappedCount / RecordCount / PassCount / FullyBoundCount
+        Unmapped     [string[]] expected keys with NO row in RUNTIME_IDENTITY_MAP.csv
+        Unobserved   [string[]] mapped keys with NO collected runtime sidecar record
+        Orphaned     [string[]] mapped keys that are NOT in the expected universe at all
+        FullyBound   [string[]] expected keys with a mapping AND a validated (PASS) record
+        State        'PASS'  every expected key is fully bound (and there is at least one)
+                     'GAP'   at least one expected key is not
+                     'UNKNOWN' the expected universe could not be established (no rows in scope)
+    #>
+    param(
+        [AllowNull()][object[]]$ExpectedScope,
+        $Expectations = $null,
+        [AllowNull()][object[]]$Records
+    )
+    $expected = @($ExpectedScope | Where-Object { "$_" -ne '' })
+    $mapped = @{}
+    if ($null -ne $Expectations -and $Expectations -is [System.Collections.IDictionary]) {
+        foreach ($k in @($Expectations.Keys)) {
+            if ("$k" -eq '__errors__') { continue }
+            $mapped["$k"] = $true
+        }
+    }
+    $recordState = @{}
+    foreach ($r in @($Records)) {
+        if ($null -eq $r) { continue }
+        $k = "$($r.account_login)|$($r.magic)"
+        # A key seen more than once keeps the WORST answer: one PASS beside one non-PASS is not a
+        # pass (memory: bar-cleared-by-non-participation -- an aggregate must not launder a leg).
+        $st = "$($r.validation_state)"
+        if ($recordState.ContainsKey($k) -and $recordState[$k] -ne 'PASS') { continue }
+        $recordState[$k] = $st
+    }
+    $unmapped = New-Object System.Collections.Generic.List[string]
+    $unobserved = New-Object System.Collections.Generic.List[string]
+    $fullyBound = New-Object System.Collections.Generic.List[string]
+    foreach ($k in $expected) {
+        if (-not $mapped.ContainsKey($k)) { $unmapped.Add($k) | Out-Null; continue }
+        if (-not $recordState.ContainsKey($k) -or $recordState[$k] -ne 'PASS') {
+            $unobserved.Add($k) | Out-Null
+            continue
+        }
+        $fullyBound.Add($k) | Out-Null
+    }
+    $expectedSet = @{}
+    foreach ($k in $expected) { $expectedSet[$k] = $true }
+    $orphaned = New-Object System.Collections.Generic.List[string]
+    foreach ($k in @($mapped.Keys)) { if (-not $expectedSet.ContainsKey($k)) { $orphaned.Add($k) | Out-Null } }
+
+    $state = 'GAP'
+    if ($expected.Count -eq 0) { $state = 'UNKNOWN' }
+    elseif ($unmapped.Count -eq 0 -and $unobserved.Count -eq 0) { $state = 'PASS' }
+    $passCount = @($recordState.Values | Where-Object { $_ -eq 'PASS' }).Count
+    return [pscustomobject]@{
+        State = $state
+        ExpectedCount = $expected.Count
+        MappedCount = @($mapped.Keys).Count
+        RecordCount = @($Records).Count
+        PassCount = $passCount
+        FullyBoundCount = $fullyBound.Count
+        Unmapped = $unmapped.ToArray()
+        Unobserved = $unobserved.ToArray()
+        Orphaned = $orphaned.ToArray()
+        FullyBound = $fullyBound.ToArray()
+        Reason = $(if ($expected.Count -eq 0) {
+                'no forward-observed deployment row is in scope, so the expected identity universe could not be established'
+            } elseif ($unmapped.Count -eq 0 -and $unobserved.Count -eq 0) { '' }
+            else {
+                "expected $($expected.Count) forward-observed deployment(s): $($unmapped.Count) have NO RUNTIME_IDENTITY_MAP row, $($unobserved.Count) are mapped with no validated runtime record, $($fullyBound.Count) fully bound"
+            })
+    }
+}
+
 function Get-RuntimeIdentityExpectations {
     param([Parameter(Mandatory)][string]$Path)
     if (-not (Test-Path -LiteralPath $Path)) { return @{} }

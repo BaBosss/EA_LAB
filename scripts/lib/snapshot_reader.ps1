@@ -57,7 +57,217 @@ for the rest of that script (memory: strictmode-in-dotsourced-library-leaks).
 #>
 . (Join-Path $PSScriptRoot 'repo_paths.ps1')
 
+<#
+AUDIT C REPAIR (2026-08-20, lane M0-L1). Integrity is not freshness, and a digest recorded at
+build time is not a digest that still holds.
+
+  C-A1  MEASURED on canonical 649207d6: portfolio\control_room_snapshot.json was generated
+        2026-08-16T20:17:59 -- 82.8 hours old against its OWN declared bar of 30 -- and
+        Get-VerifiedSnapshot returned State=OK, so Format-ControlRoomBlock printed every
+        reconciliation number plus "mandatory sources: ...=fresh". Those three words were TRUE
+        WHEN WRITTEN and were being re-published three and a half days later as a present-tense
+        claim. No new threshold is invented here: meta.stale_bar_hours is the snapshot's own
+        bar, written by scripts\control_room_snapshot.ps1. An ABSENT or unusable bar is
+        UNKNOWN -- a document that names no bar cannot be called fresh by the reader.
+
+  C-A6  MEASURED on the same file: meta.sources[].sha256 is recorded by snapshot_build.py and
+        NOTHING ever recomputed it. attestation_map (portfolio\ATTESTATION_MAP.csv) had ALREADY
+        changed on disk (recorded a5278ffa282c, on disk d169e9403a74) while the snapshot still
+        rendered it as read_ok=true / fresh. A digest nobody rechecks is a comment.
+
+The three-state Document contract described above is UNCHANGED: State/Code remain statements
+about the DOCUMENT'S OWN INTEGRITY, which is what snapshot_validator answers. Freshness and
+source drift are separate questions, so they get separate fields plus ONE derived token that
+readers switch on:
+
+  Trust  'OK'          integrity OK, age within the document's own bar, and every recorded
+                       source digest still matches the bytes on disk. The ONLY value that may
+                       render a number.
+         'STALE'       intact, but describing a world that has moved: older than its own bar,
+                       age not establishable, or a recorded source changed / was never digested.
+         'REFUSED'     unchanged.
+         'UNAVAILABLE' unchanged, PLUS a source this reader could not read at all. An unreadable
+                       input must refuse, never be skipped (memory:
+                       unreadable-input-must-refuse-not-skip).
+
+  Document is populated ONLY for Trust='OK'. A stale-but-intact document comes back under the
+  deliberately awkward name UntrustedDocument, so every read of it is greppable and intentional.
+  A caller that keeps doing `if (State -eq 'OK') { read Document }` therefore gets $null and
+  fails closed WITHOUT being edited -- which is the whole reason the gate lives here.
+#>
+
+function Get-SnapshotAgeState {
+    <#
+      Age of a parsed snapshot against ITS OWN meta.stale_bar_hours. Never invents a bar.
+        State 'FRESH' | 'STALE' | 'UNKNOWN'
+      UNKNOWN is not a soft OK: it means the reader cannot bound the age, and the Trust mapping
+      treats it exactly as harshly as STALE.
+    #>
+    param($Document, [datetime]$Now = (Get-Date))
+
+    if ($null -eq $Document -or $null -eq $Document.meta) {
+        return [pscustomobject]@{
+            State = 'UNKNOWN'; AgeHours = $null; StaleBarHours = $null; GeneratedAt = $null
+            Reason = 'the document carries no meta section, so its age cannot be bounded'
+        }
+    }
+    $barRaw = "$($Document.meta.stale_bar_hours)"
+    $bar = $null
+    if ($barRaw -match '^[0-9]+(\.[0-9]+)?$' -and [double]$barRaw -gt 0) { $bar = [double]$barRaw }
+    $genRaw = "$($Document.meta.generated_at)"
+    $gen = [datetime]::MinValue
+    $genOk = [datetime]::TryParse($genRaw, [ref]$gen)
+    if ($null -eq $bar) {
+        return [pscustomobject]@{
+            State = 'UNKNOWN'; AgeHours = $null; StaleBarHours = $null
+            GeneratedAt = $(if ($genOk) { $gen.ToString('s') } else { $null })
+            Reason = "meta.stale_bar_hours is absent or unusable ('$barRaw'), so this snapshot names no freshness bar and cannot be called fresh"
+        }
+    }
+    if (-not $genOk) {
+        return [pscustomobject]@{
+            State = 'UNKNOWN'; AgeHours = $null; StaleBarHours = $bar; GeneratedAt = $null
+            Reason = "meta.generated_at is absent or unparseable ('$genRaw'), so the age of these numbers is unknown"
+        }
+    }
+    $ageH = [math]::Round(($Now - $gen).TotalHours, 2)
+    if ($ageH -lt -1) {
+        # A snapshot from the future is a clock disagreement, not proof of freshness.
+        return [pscustomobject]@{
+            State = 'UNKNOWN'; AgeHours = $ageH; StaleBarHours = $bar; GeneratedAt = $gen.ToString('s')
+            Reason = "meta.generated_at ($genRaw) is $([math]::Abs($ageH))h in the FUTURE -- a clock disagreement is not evidence of freshness"
+        }
+    }
+    if ($ageH -gt $bar) {
+        return [pscustomobject]@{
+            State = 'STALE'; AgeHours = $ageH; StaleBarHours = $bar; GeneratedAt = $gen.ToString('s')
+            Reason = "generated $genRaw = ${ageH}h ago, past this snapshot's own stale_bar_hours of $bar"
+        }
+    }
+    return [pscustomobject]@{
+        State = 'FRESH'; AgeHours = $ageH; StaleBarHours = $bar; GeneratedAt = $gen.ToString('s')
+        Reason = ''
+    }
+}
+
+function Get-SnapshotSourceIntegrity {
+    <#
+      RECOMPUTES the sha256 of every meta.sources[] entry against the bytes on disk now.
+        State 'OK' | 'CHANGED' | 'UNREADABLE' | 'UNKNOWN'
+      Checked  how many rows were actually digested. A 0 here means this check is INERT for this
+               document, and it is reported as UNKNOWN, never as a pass.
+    #>
+    param($Document, [string]$RepoRoot)
+
+    $rows = @()
+    if ($null -ne $Document -and $null -ne $Document.meta) { $rows = @($Document.meta.sources) }
+    if ($rows.Count -eq 0) {
+        return [pscustomobject]@{
+            State = 'UNKNOWN'; Checked = 0; Changed = @(); Unreadable = @(); Undigested = @()
+            Reason = 'the document enumerates no meta.sources rows, so no recorded digest could be rechecked'
+        }
+    }
+    $changed = New-Object System.Collections.Generic.List[string]
+    $unreadable = New-Object System.Collections.Generic.List[string]
+    $undigested = New-Object System.Collections.Generic.List[string]
+    $checked = 0
+    foreach ($s in $rows) {
+        $name = "$($s.name)"
+        if ($name -eq '') { $name = '(unnamed source)' }
+        $rel = "$($s.path)"
+        $claim = "$($s.sha256)".ToLower()
+        if ($rel -eq '') { $undigested.Add("$name records no path") | Out-Null; continue }
+        if ($claim -notmatch '^[0-9a-f]{64}$') {
+            $undigested.Add("$name ($rel) carries no usable sha256, so nothing about it can be rechecked") | Out-Null
+            continue
+        }
+        $p = if ([System.IO.Path]::IsPathRooted($rel)) { $rel } else { Join-Path $RepoRoot $rel }
+        if (-not (Test-Path -LiteralPath $p)) {
+            $unreadable.Add("$name is GONE from disk ($rel)") | Out-Null
+            continue
+        }
+        $bytes = $null
+        try { $bytes = [System.IO.File]::ReadAllBytes($p) }
+        catch {
+            $unreadable.Add("$name could not be read ($rel): $($_.Exception.Message)") | Out-Null
+            continue
+        }
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        try { $mine = ([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-','').ToLower() }
+        finally { $sha.Dispose() }
+        $checked++
+        if ($mine -ne $claim) {
+            $changed.Add("$name changed since this snapshot was built (recorded $($claim.Substring(0,12)), on disk $($mine.Substring(0,12)))") | Out-Null
+        }
+    }
+    $state = 'OK'
+    if ($unreadable.Count -gt 0)  { $state = 'UNREADABLE' }
+    elseif ($changed.Count -gt 0) { $state = 'CHANGED' }
+    elseif ($checked -eq 0)       { $state = 'UNKNOWN' }
+    $parts = @()
+    if ($unreadable.Count -gt 0) { $parts += ($unreadable -join '; ') }
+    if ($changed.Count -gt 0)    { $parts += ($changed -join '; ') }
+    if ($undigested.Count -gt 0) { $parts += ($undigested -join '; ') }
+    if ($checked -eq 0 -and $parts.Count -eq 0) { $parts += 'no source row could be digested at all' }
+    return [pscustomobject]@{
+        State = $state; Checked = $checked
+        Changed = $changed.ToArray(); Unreadable = $unreadable.ToArray(); Undigested = $undigested.ToArray()
+        Reason = ($parts -join ' | ')
+    }
+}
+
 function Get-VerifiedSnapshot {
+    <#
+      Integrity (from Get-VerifiedSnapshotDocument, whose contract is unchanged) PLUS the
+      freshness and source-drift gates. See the AUDIT C REPAIR block above.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$SnapshotPath,
+        [string]$RepoRoot = ''
+    )
+    if (-not $RepoRoot) { $RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSScriptRoot }
+    $v = Get-VerifiedSnapshotDocument -SnapshotPath $SnapshotPath -RepoRoot $RepoRoot
+
+    if ($v.State -ne 'OK') {
+        return [pscustomobject]@{
+            State = $v.State; Code = $v.Code; Document = $null; UntrustedDocument = $null
+            Trust = $v.State; Reason = $v.Reason
+            Age = (Get-SnapshotAgeState -Document $null)
+            SourceIntegrity = (Get-SnapshotSourceIntegrity -Document $null -RepoRoot $RepoRoot)
+        }
+    }
+
+    $age = Get-SnapshotAgeState -Document $v.Document
+    $src = Get-SnapshotSourceIntegrity -Document $v.Document -RepoRoot $RepoRoot
+    $trust = 'OK'
+    $reasons = @()
+    if ($src.State -eq 'UNREADABLE') {
+        $trust = 'UNAVAILABLE'
+        $reasons += "a recorded source could not be read: $($src.Reason)"
+    } elseif ($src.State -ne 'OK') {
+        $trust = 'STALE'
+        $reasons += "source drift ($($src.State)): $($src.Reason)"
+    }
+    if ($age.State -ne 'FRESH') {
+        if ($trust -eq 'OK') { $trust = 'STALE' }
+        $reasons += "age $($age.State): $($age.Reason)"
+    }
+    if ($trust -eq 'OK') {
+        return [pscustomobject]@{
+            State = 'OK'; Code = 'OK'; Document = $v.Document; UntrustedDocument = $null
+            Trust = 'OK'; Reason = ''
+            Age = $age; SourceIntegrity = $src
+        }
+    }
+    # Document is deliberately $null here.
+    return [pscustomobject]@{
+        State = 'OK'; Code = 'OK'; Document = $null; UntrustedDocument = $v.Document
+        Trust = $trust; Reason = ($reasons -join ' | ')
+        Age = $age; SourceIntegrity = $src
+    }
+}
+
+function Get-VerifiedSnapshotDocument {
     <#
       Returns:
         State     [string] 'OK' | 'REFUSED' | 'UNAVAILABLE'
@@ -216,6 +426,25 @@ function Get-VerifiedSnapshot {
 }
 
 
+function Resolve-SnapshotTrustToken {
+    <#
+      The ONE place a renderer turns a Get-VerifiedSnapshot result into a render decision.
+
+      FAIL-CLOSED ON AN UNDECORATED OBJECT, and that is the load-bearing part: a caller that
+      hand-builds a result object (or an older caller that predates the Trust field) gets
+      'UNAVAILABLE', never 'OK'. A gate whose default is "render the numbers" is not a gate.
+    #>
+    param($Verified)
+    if ($null -eq $Verified) { return 'UNAVAILABLE' }
+    $hasTrust = $null -ne $Verified.PSObject.Properties['Trust']
+    if ($hasTrust) {
+        $t = "$($Verified.Trust)"
+        if ($t -in @('OK','STALE','REFUSED','UNAVAILABLE')) { return $t }
+    }
+    if ("$($Verified.State)" -eq 'REFUSED') { return 'REFUSED' }
+    return 'UNAVAILABLE'
+}
+
 function Format-ControlRoomBlock {
     <#
       Renders the Control Room section of STATUS.md from a Get-VerifiedSnapshot result.
@@ -229,7 +458,8 @@ un_snapshot_s4_tests.ps1.
     #>
     param([Parameter(Mandatory = $true)]$Verified)
     $out = @()
-    if ($Verified.State -eq 'OK') {
+    $trust = Resolve-SnapshotTrustToken $Verified
+    if ($trust -eq 'OK') {
       $m = $Verified.Document.meta
       $v = $Verified.Document.verdict
       $r = $m.reconciliation
@@ -242,8 +472,27 @@ un_snapshot_s4_tests.ps1.
       }
       $out += "- orders discovered $($r.discovered) / categorized $($r.categorized) - unclassified $($r.unclassified) - duplicates $($r.duplicates) - conflicts $($r.conflicts)"
       $out += "- coverage cells $($r.coverage.cells_in_universe) = tested $($r.coverage.tested) + untested $($r.coverage.untested) + n/a $($r.coverage.not_applicable)"
-      $out += "- mandatory sources: " + ((@($m.sources) | ForEach-Object { "$($_.name)=" + $(if ($_.read_ok) { if ($_.fresh) { 'fresh' } else { "stale($($_.age_hours)h)" } } else { 'UNREADABLE' }) }) -join ', ')
-    } elseif ($Verified.State -eq 'REFUSED') {
+      # AUDIT C (C-A1/C-A6): the source states below are the BUILD-TIME record, so they are
+      # labelled as such, and the reader's own RE-CHECK is printed next to them. Without that
+      # second line "sources: x=fresh" reads as a present-tense claim about a file the reader
+      # never looked at -- which is exactly what it was.
+      $out += "- mandatory sources (as recorded AT BUILD TIME): " + ((@($m.sources) | ForEach-Object { "$($_.name)=" + $(if ($_.read_ok) { if ($_.fresh) { 'fresh' } else { "stale($($_.age_hours)h)" } } else { 'UNREADABLE' }) }) -join ', ')
+      $out += "- reader re-check NOW: age $($Verified.Age.AgeHours)h vs bar $($Verified.Age.StaleBarHours)h = **$($Verified.Age.State)** - source digests recomputed $($Verified.SourceIntegrity.Checked)/$(@($m.sources).Count), drift **$($Verified.SourceIntegrity.State)**"
+    } elseif ($trust -eq 'STALE') {
+      # C-A1/C-A6. Intact, and therefore the most dangerous state there is: every number in it
+      # would render perfectly. NONE of them are shown.
+      $out += "> :hourglass: **SNAPSHOT STALE - no Control Room numbers are shown on this page.**"
+      $out += ">"
+      $out += "> The document is internally valid, so it would render cleanly. That is precisely why it"
+      $out += "> is withheld: it describes a world that has moved. Freshness is measured against the"
+      $out += "> snapshot's OWN ``meta.stale_bar_hours``, and every source digest it recorded is"
+      $out += "> recomputed against the bytes on disk now. Rebuild it with"
+      $out += "> ``scripts\control_room_snapshot.ps1`` before trusting any figure."
+      $out += ">"
+      $out += "> age: $($Verified.Age.AgeHours)h vs bar $($Verified.Age.StaleBarHours)h = ``$($Verified.Age.State)`` - source drift ``$($Verified.SourceIntegrity.State)`` ($($Verified.SourceIntegrity.Checked) digest(s) rechecked)"
+      $out += ">"
+      $out += "> ``$($Verified.Reason)``"
+    } elseif ($trust -eq 'REFUSED') {
       $out += "> :x: **SNAPSHOT REFUSED - no Control Room numbers are shown on this page.**"
       $out += ">"
       $out += "> The snapshot exists and ``snapshot_validator`` refused it (``$($Verified.Code)``). Rendering it"
@@ -297,7 +546,8 @@ un_snapshot_s4_tests.ps1 (same fixtures as Format-ControlRoomBlock's C6 block).
         return $s.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
     }
 
-    if ($Verified.State -eq 'OK') {
+    $trust = Resolve-SnapshotTrustToken $Verified
+    if ($trust -eq 'OK') {
         $m = $Verified.Document.meta
         $v = $Verified.Document.verdict
         $r = $m.reconciliation
@@ -318,9 +568,14 @@ un_snapshot_s4_tests.ps1 (same fixtures as Format-ControlRoomBlock's C6 block).
 $reasonsHtml
 <div class="note">orders discovered $(_Esc $r.discovered) / categorized $(_Esc $r.categorized) - unclassified $(_Esc $r.unclassified) - duplicates $(_Esc $r.duplicates) - conflicts $(_Esc $r.conflicts)</div>
 <div class="note">coverage cells $(_Esc $r.coverage.cells_in_universe) = tested $(_Esc $r.coverage.tested) + untested $(_Esc $r.coverage.untested) + n/a $(_Esc $r.coverage.not_applicable)</div>
-<div style="margin-top:6px">$sourcesHtml</div>
+<div class="note">mandatory sources AS RECORDED AT BUILD TIME: $sourcesHtml</div>
+<div class="note">reader re-check NOW: age $(_Esc $Verified.Age.AgeHours)h vs bar $(_Esc $Verified.Age.StaleBarHours)h = <b>$(_Esc $Verified.Age.State)</b> &middot; source digests recomputed $(_Esc $Verified.SourceIntegrity.Checked), drift <b>$(_Esc $Verified.SourceIntegrity.State)</b></div>
 "@
-    } elseif ($Verified.State -eq 'REFUSED') {
+    } elseif ($trust -eq 'STALE') {
+        return @"
+<div class="todo"><span class="dot" style="color:var(--amber)">&#9679;</span><div><b>SNAPSHOT STALE</b> - no Control Room numbers are shown on this page.<br>The document is internally valid, so it would render cleanly - which is exactly why it is withheld: it describes a world that has moved. Age is measured against the snapshot's OWN <span class="mono">meta.stale_bar_hours</span>, and every source digest it recorded is recomputed against the bytes on disk now. Rebuild with <span class="mono">scripts\control_room_snapshot.ps1</span> before trusting any figure.<br>age $(_Esc $Verified.Age.AgeHours)h vs bar $(_Esc $Verified.Age.StaleBarHours)h = <span class="mono">$(_Esc $Verified.Age.State)</span> &middot; source drift <span class="mono">$(_Esc $Verified.SourceIntegrity.State)</span> ($(_Esc $Verified.SourceIntegrity.Checked) digest(s) rechecked)<br><span class="mono">$(_Esc $Verified.Reason)</span></div></div>
+"@
+    } elseif ($trust -eq 'REFUSED') {
         return @"
 <div class="todo"><span class="dot">&#9679;</span><div><b>SNAPSHOT REFUSED</b> - no Control Room numbers are shown on this page.<br>The snapshot exists and <span class="mono">snapshot_validator</span> refused it (<span class="mono">$(_Esc $Verified.Code)</span>). Rendering it anyway would produce a stale-but-pretty page, which is the failure this block exists to prevent. The daily monitoring chain fails hard on this same state.<br><span class="mono">$(_Esc $Verified.Reason)</span></div></div>
 "@
