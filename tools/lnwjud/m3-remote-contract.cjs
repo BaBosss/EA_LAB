@@ -23,7 +23,7 @@ function relative(value, name) {
 }
 function readJson(file) { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { fail(`cannot read JSON ${path.basename(file)}`); } }
 function sameArray(left, right) { return Array.isArray(left) && left.length === right.length && left.every((value, index) => value === right[index]); }
-function git(worktree, args) { return execFileSync('git', args, { cwd: worktree, encoding: 'utf8', windowsHide: true }).trim(); }
+function git(worktree, args) { return execFileSync('git', args, { cwd: worktree, encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] }).trim(); }
 
 function loadContract(file = CONTRACT_PATH) {
   const value = object(readJson(file), 'contract');
