@@ -10,6 +10,13 @@ gates that run_snapshot_s4_tests.ps1 and run_monitor_integrity_tests.ps1 exercis
          deployment absent from RUNTIME_IDENTITY_MAP.csv is UNMAPPED (a visible gap), not invisible.
   C-A10  Get-MonitorChainHealth: OK / ALERT / OVERDUE / UNKNOWN, and the precedence between them
          (a standing alert outranks a fresh-enough timestamp; a missing bar is UNKNOWN, never OK).
+  C-A8   ResolveForwardTradeBound / CountBoundedTrades (scripts\control_room_snapshot.ps1): a
+         forward trade count may be trusted as bounded/current evidence ONLY when a valid
+         deterministic lower-time bound exists. Codex M0 review (2026-08-20) found this fail-open:
+         with no valid bound, Counted silently became the raw unbounded count, and the emitted
+         judge_readiness row never carried the bound source/value/state at all (0 of 59 real rows
+         did). Extracted by AST from control_room_snapshot.ps1, not dot-sourced -- it is a runner,
+         not a lib, and dot-sourcing it would execute the whole snapshot build.
 
 Every assertion here is checked in BOTH directions per the VERDICT GATE guard rule: a case where
 the gate SHOULD fire and a case where it should NOT, so a guard that never fires is caught as
@@ -159,8 +166,72 @@ Assert-Equal 'C-A10 no marker file at all is UNKNOWN (never recorded), not OVERD
 Assert-Equal 'C-A10 LastSuccess is empty when never recorded' '' $hNoMarker.LastSuccess
 
 Write-Host ''
-Write-Host ("GUARD FIRE COUNT: {0}/5 codes observed firing -> {1}" -f $fired.Count, (($fired.Keys | Sort-Object) -join ', '))
-Assert-Equal 'all 5 AUDIT C guard codes were OBSERVED FIRING (0 would mean UNTESTED, not safe)' 5 $fired.Count
+Write-Host '=== C-A8: a forward trade count may be BOUNDED evidence only when a real time bound exists ==='
+# Extract the real functions by AST, from the real file, by name -- a rename must break this
+# cage, not silently leave it testing a stale private copy. control_room_snapshot.ps1 is a
+# runner (builds a whole snapshot on load), so it cannot be dot-sourced directly.
+$snapPath = Join-Path $RepoRoot 'scripts\control_room_snapshot.ps1'
+Assert-True 'control_room_snapshot.ps1 exists' (Test-Path -LiteralPath $snapPath) $snapPath
+$snapParseErrors = $null
+$snapAst = [System.Management.Automation.Language.Parser]::ParseFile($snapPath, [ref]$null, [ref]$snapParseErrors)
+if ($snapParseErrors -and $snapParseErrors.Count -gt 0) { throw "control_room_snapshot.ps1 does not parse: $($snapParseErrors[0].Message)" }
+$wantedBoundFns = @('TryParseUnixSeconds', 'TryParseTradeTime', 'ResolveForwardTradeBound', 'CountBoundedTrades')
+$boundDefs = @{}
+foreach ($fn in $snapAst.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)) {
+    if ($wantedBoundFns -contains $fn.Name) { $boundDefs[$fn.Name] = $fn.Extent.Text }
+}
+foreach ($w in $wantedBoundFns) {
+    Assert-True ("control_room_snapshot.ps1 still defines {0}" -f $w) ($boundDefs.ContainsKey($w)) `
+        'the cage extracts this function by name; a rename must break the cage, not silently skip it'
+}
+# TryParseUnixSeconds reads the script-scoped $EPOCH_UTC constant defined next to it in the real
+# file (not itself a function, so AST-by-name above does not capture it) -- mirrored here with the
+# exact same value/kind so the extracted function behaves identically to the shipped one.
+$EPOCH_UTC = [datetime]::SpecifyKind((New-Object datetime(1970,1,1)), [System.DateTimeKind]::Utc)
+foreach ($w in $wantedBoundFns) { if ($boundDefs.ContainsKey($w)) { . ([scriptblock]::Create($boundDefs[$w])) } }
+
+# Fixture deals: two MT5 closed trades (entry='1') on magic 555, one before and one after an
+# epoch bound of 2026-08-01T00:00:00Z (Unix 1785542400).
+$epochBoundUnix = 1785542400  # 2026-08-01T00:00:00Z
+$dealsMT5 = @(
+    [pscustomobject]@{ magic = '555'; entry = '1'; time_unix = ($epochBoundUnix - 3600); time = '2026.07.31 23:00:00' }   # before
+    [pscustomobject]@{ magic = '555'; entry = '1'; time_unix = ($epochBoundUnix + 3600); time = '2026.08.01 01:00:00' }   # after
+)
+
+# --- A: valid runtime-attach epoch -> bound carried, count attributed to it ---
+$identityWithEpoch = [pscustomobject]@{ attach_time_unix = "$epochBoundUnix" }
+$boundA = ResolveForwardTradeBound ([pscustomobject]@{ start_date = '2020-01-01' }) $identityWithEpoch $null
+Assert-Equal 'C-A8/A bound source is RUNTIME_ATTACH_EPOCH when a real attach epoch exists' 'RUNTIME_ATTACH_EPOCH' $boundA.Source
+$countedA = CountBoundedTrades $dealsMT5 '555' 'MT5' $boundA
+Assert-Equal 'C-A8/A only the post-epoch deal is Counted' 1 $countedA.Counted
+Assert-Equal 'C-A8/A state is BOUNDED, not UNBOUNDED, when a real epoch bound applied' 'BOUNDED' $countedA.State
+if ($countedA.State -eq 'BOUNDED' -and $countedA.Counted -eq 1) { $fired['bound-epoch-attributed'] = 1 }
+
+# --- B: valid observation-start-date bound (no identity epoch available) -> source/value carried ---
+$boundB = ResolveForwardTradeBound ([pscustomobject]@{ start_date = '2026-08-01' }) $null $null
+Assert-Equal 'C-A8/B bound source is OBSERVATION_START_DATE with no identity epoch' 'OBSERVATION_START_DATE' $boundB.Source
+Assert-True 'C-A8/B bound value is the real start_date, not invented' ($boundB.Bound -eq [datetime]'2026-08-01')
+if ($boundB.Source -eq 'OBSERVATION_START_DATE') { $fired['bound-observation-start'] = 1 }
+
+# --- C: no valid bound (no epoch, no parseable start_date) -> MUST NOT trust the raw count ---
+$boundNone = ResolveForwardTradeBound ([pscustomobject]@{ start_date = '' }) $null $null
+Assert-Equal 'C-A8/C bound source is NONE when neither rung resolves' 'NONE' $boundNone.Source
+$countedNone = CountBoundedTrades $dealsMT5 '555' 'MT5' $boundNone
+Assert-Equal 'C-A8/C ATTACK: Counted must be NULL, not the raw unbounded count, when unbounded' '' "$($countedNone.Counted)"
+Assert-Equal 'C-A8/C state is explicitly UNBOUNDED, not silently BOUNDED' 'UNBOUNDED' $countedNone.State
+if ($null -eq $countedNone.Counted -and $countedNone.State -eq 'UNBOUNDED') { $fired['unbounded-refuses-counted'] = 1 }
+
+# --- D: the raw/unbounded diagnostic count survives, but visibly separate from Counted ---
+Assert-Equal 'C-A8/D the raw diagnostic count is still preserved (both real deals) as Unbounded' 2 $countedNone.Unbounded
+Assert-True 'C-A8/D Unbounded is a DIFFERENT field from Counted, never read back into it' ($null -eq $countedNone.Counted -and $countedNone.Unbounded -eq 2)
+if ($countedNone.Unbounded -eq 2 -and $null -eq $countedNone.Counted) { $fired['unbounded-diagnostic-separate'] = 1 }
+
+# --- BASE CONTROL: a bounded run with a real epoch is not itself broken by the fail-closed fix ---
+Assert-Equal 'C-A8 BASE CONTROL: a genuinely bounded, resolvable count still reports the real number' 1 $countedA.Counted
+
+Write-Host ''
+Write-Host ("GUARD FIRE COUNT: {0}/9 codes observed firing -> {1}" -f $fired.Count, (($fired.Keys | Sort-Object) -join ', '))
+Assert-Equal 'all 9 AUDIT C guard codes were OBSERVED FIRING (0 would mean UNTESTED, not safe)' 9 $fired.Count
 
 Write-Host ''
 if ($script:fail -eq 0) {

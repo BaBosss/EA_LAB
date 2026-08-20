@@ -17,12 +17,12 @@
 
 | # | Fact / artifact | Canonical owner + write path | Permitted writers | Generated consumers (read-only) | Freshness check |
 |---|---|---|---|---|---|
-| 1 | Active order text, acceptance, execution state, raw result narrative | `AGENT_TASKBOARD.md` (each agent edits only its own order block) | all agents (own block); **new orders = Claude/user only** | future generated active view; STATUS.md/STATUS.html | `scripts\check_state.ps1` (state consistency); order-block status lifecycle |
-| 2 | Reviewed order history | immutable archive of `REVIEWED` blocks, verbatim + stable ORDER ID + anchor *(archive mechanism = Contract C, not yet built; today history stays inline in the taskboard / `PROJECT_STATE_SESSIONLOG_ARCHIVE.md`)* | Claude/user | generated index + active view | byte/round-trip validator (Contract C acceptance) |
+| 1 | Active order text, acceptance, execution state, raw result narrative | `AGENT_TASKBOARD.md` (each agent edits only its own order block) | all agents (own block); new order rows only as `AGENTS.md` §2 permits (ChatGPT or the owner creates task contracts) | future generated active view; STATUS.md/STATUS.html | `scripts\check_state.ps1` (state consistency); order-block status lifecycle |
+| 2 | Reviewed order history | immutable archive of `REVIEWED` blocks, verbatim + stable ORDER ID + anchor *(archive mechanism = Contract C, not yet built; today history stays inline in the taskboard / `PROJECT_STATE_SESSIONLOG_ARCHIVE.md`)* | per `AGENTS.md` §2 | generated index + active view | byte/round-trip validator (Contract C acceptance) |
 | 3 | Structured experiment timeline | monthly JSONL: occurrence metadata + hashes + references only *(utility = Contract D, not yet built)* | one locked append utility (Contract D) | dashboards / timelines | `RESULT_LINKED` / `REVIEW_LINKED` / `DECISION_LINKED` must resolve to live evidence |
 | 4a | Verdict / EA status | `EA_SCORECARD_AND_REGISTRY.md` (verdict) + `EA_MASTER_INDEX.csv` (mirror) | per `AGENTS.md` §2 + §1.5 — a working verdict may be written by Codex or Claude under an approved review contract, and DEMO/LIVE, real-money, risk-default or irreversible decisions require explicit owner approval; other agents add UNTESTED rows only | Event Log (refs only) | index row must match scorecard on every verdict change (`AGENTS.md` §3.8) |
 | 4b | Decisions / decision log | `PROJECT_STATE.md` §3 Decision log | per `AGENTS.md` §2 — owner, or an agent under an explicit owner-ratified governance/decision-recording task | forward-plan / docs-index pointers | anti-drift guard; single-writer rule |
-| 4c | Deployment truth (what runs where) | `portfolio/DEPLOYMENTS.csv` | Claude (per ORDER-093) | `DEMO_DEPLOYMENT_PLAN.md`, `scripts\live_dashboard.ps1` cohort map, STATUS | `check_state.ps1` — 13 checks incl. bidirectional dashboard-map ↔ inventory sync |
+| 4c | Deployment truth (what runs where) | `portfolio/DEPLOYMENTS.csv` | per `AGENTS.md` §2 (ORDER-093 assigned Claude as the initial per-order writer; current authority is `AGENTS.md` §2's source-code/task-contract rule, not this row) | `DEMO_DEPLOYMENT_PLAN.md`, `scripts\live_dashboard.ps1` cohort map, STATUS | `check_state.ps1` — 13 checks incl. bidirectional dashboard-map ↔ inventory sync |
 | 5 | Decisive evidence | tracked artifact (report/CSV/set/commit) OR durable evidence store + manifest + existence check | all agents (per order, produce files) | Event Log stores path/hash/ref only | existence check; ignored/transient files are NOT permanent just because a path/hash exists |
 | 6 | Safety thresholds (DD / margin / risk / deployment config) | canonical risk / deployment config | per `AGENTS.md` §1 + §2 — risk/default changes are owner-reserved | AI monitoring = shadow / alert-only | deterministic layer enforces; AI explains/alerts only — never enforces |
 | 7 | Big-picture / factory philosophy | `VISION.md` | per `AGENTS.md` §2 — **owner only**, or an agent under explicit owner authorization | — | "work conflicts with VISION → stop & ask" rule |
@@ -34,7 +34,7 @@
 ## Conflict scan
 
 - Every fact above resolves to **exactly one** canonical owner. Sub-scoped files (e.g. `PROJECT_STATE.md`
-  §3 = Claude/user, other sections = Claude) are **not** conflicts — the sub-scope has a single owner.
+  §3 and other sections both fall under `AGENTS.md` §2's `PROJECT_STATE.md` row) are **not** conflicts — the sub-scope has a single owner, per `AGENTS.md` §2.
 - Overlap that could look like conflict, and why it is not:
   - verdict (4a) vs decision log (4b) vs deployment (4c): three **distinct** facts, three files, three
     owners — a verdict is not a deployment is not a decision. Event Log (fact 3) stores only references

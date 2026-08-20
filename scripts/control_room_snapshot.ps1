@@ -173,7 +173,11 @@ function CountBoundedTrades($deals, [string]$magic, [string]$kind, $bound){
   })
   $unboundedCount = $matching.Count
   if ($null -eq $bound.Bound) {
-    return [pscustomobject]@{ Counted = $unboundedCount; Unbounded = $unboundedCount; Unresolved = 0; State = 'UNBOUNDED' }
+    # C-A8 fail-closed (Codex M0 review, 2026-08-20): Counted must not silently become the raw
+    # unbounded count when no time bound could be resolved -- that is exactly the untrusted
+    # evidence this function exists to refuse. $unboundedCount survives ONLY in the separately
+    # named Unbounded field, marked non-verdict by the caller never reading it into $trades.
+    return [pscustomobject]@{ Counted = $null; Unbounded = $unboundedCount; Unresolved = 0; State = 'UNBOUNDED' }
   }
   $counted = 0; $unresolved = 0
   foreach ($row in $matching) {
@@ -322,11 +326,11 @@ $jr = @()
 $dealCache = @{}
 foreach($r in ($rows | Where-Object { $_.operational_status -ne 'REMOVED' })){
   if ($r.magic -notmatch '^\d+$') {
-    $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$null; days_active=$null; days_to_judge=$null; judge_date=$r.judge_date; readiness='NOT_MONITORABLE'; projected_trades_at_judge=$null; forecast='NOT_APPLICABLE'; obs_trades_per_week=$null; needed_trades_per_week=$null; expected_pf=$null; expected_dd95=$null; expected_trades_per_week=$null; rate_flag='NA' }
+    $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$null; closed_trades_unbounded=$null; closed_trades_unresolved_time=$null; trade_bound_source='NOT_APPLICABLE'; trade_bound_value=$null; trade_bound_state='NOT_APPLICABLE'; days_active=$null; days_to_judge=$null; judge_date=$r.judge_date; readiness='NOT_MONITORABLE'; projected_trades_at_judge=$null; forecast='NOT_APPLICABLE'; obs_trades_per_week=$null; needed_trades_per_week=$null; expected_pf=$null; expected_dd95=$null; expected_trades_per_week=$null; rate_flag='NA' }
     continue
   }
   if (-not $r.forward_observed) {
-    $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$null; days_active=$null; days_to_judge=$null; judge_date=$r.judge_date; readiness='NOT_FORWARD_OBSERVED'; projected_trades_at_judge=$null; forecast='NOT_APPLICABLE'; obs_trades_per_week=$null; needed_trades_per_week=$null; expected_pf=$null; expected_dd95=$null; expected_trades_per_week=$null; rate_flag='NA' }
+    $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$null; closed_trades_unbounded=$null; closed_trades_unresolved_time=$null; trade_bound_source='NOT_APPLICABLE'; trade_bound_value=$null; trade_bound_state='NOT_APPLICABLE'; days_active=$null; days_to_judge=$null; judge_date=$r.judge_date; readiness='NOT_FORWARD_OBSERVED'; projected_trades_at_judge=$null; forecast='NOT_APPLICABLE'; obs_trades_per_week=$null; needed_trades_per_week=$null; expected_pf=$null; expected_dd95=$null; expected_trades_per_week=$null; rate_flag='NA' }
     continue
   }
   $c = LatestCollector $r.account
@@ -343,9 +347,16 @@ foreach($r in ($rows | Where-Object { $_.operational_status -ne 'REMOVED' })){
     $tradesUnbounded = $counted.Unbounded
     $tradesUnresolvedTime = $counted.Unresolved
     $tradeBoundState = $counted.State
-    if     ($trades -ge $decisionBar) { $state = 'DECISION_CAPABLE' }
-    elseif ($trades -ge $watchBar)    { $state = 'PARTIAL' }
-    else                              { $state = 'DATA_COLLECTION' }
+    # C-A8 fail-closed (Codex M0 review, 2026-08-20): an UNBOUNDED count means CountBoundedTrades
+    # refused to vouch for $trades (it is $null) -- readiness must stay at its DATA_INSUFFICIENT
+    # default rather than being silently promoted off an untrusted raw number. The full picture
+    # (which rung was tried, why it failed, the raw diagnostic count) is still carried into the
+    # emitted row below via trade_bound_source/value/state and closed_trades_unbounded.
+    if ($tradeBoundState -ne 'UNBOUNDED') {
+      if     ($trades -ge $decisionBar) { $state = 'DECISION_CAPABLE' }
+      elseif ($trades -ge $watchBar)    { $state = 'PARTIAL' }
+      else                              { $state = 'DATA_COLLECTION' }
+    }
   }
   $d2j = $null
   if ($r.judge_date -match '^\d{4}-\d{2}-\d{2}$') { $d2j = [int]([datetime]$r.judge_date - $now.Date).TotalDays }
@@ -380,7 +391,12 @@ foreach($r in ($rows | Where-Object { $_.operational_status -ne 'REMOVED' })){
     $expPf   = $em.pf_expected
     $expDd95 = $em.dd95_expected
   }
-  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$trades; days_active=$daysActive; observation_start_date=$r.start_date; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk; expected_pf=$expPf; expected_dd95=$expDd95; expected_trades_per_week=$expWk; expectation_unit='MAGIC'; expectation_key=("$($r.account)|$($r.magic)"); expectation_violation='NOT_EVALUATED'; expectation_status_reason='NOT_EVALUATED'; rate_flag=$rateFlag }
+  # C-A8 (Codex M0 review, 2026-08-20): carry the bound actually used into the evidence row --
+  # source (RUNTIME_ATTACH_EPOCH / OBSERVATION_START_DATE / NONE), the bound value itself, its
+  # resolution state, and the raw/unbounded diagnostic count kept separate from the verdict-driving
+  # closed_trades field so it can never be mistaken for trusted bounded evidence.
+  $tradeBoundValue = if ($null -ne $tradeBound.Bound) { $tradeBound.Bound.ToString('o') } else { $null }
+  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; status=$r.status; operational_status=$r.operational_status; verification_state=$r.verification_state; forward_observed=$r.forward_observed; monitoring_visible=$r.monitoring_visible; attention=$r.attention; closed_trades=$trades; closed_trades_unbounded=$tradesUnbounded; closed_trades_unresolved_time=$tradesUnresolvedTime; trade_bound_source=$tradeBound.Source; trade_bound_value=$tradeBoundValue; trade_bound_state=$tradeBoundState; days_active=$daysActive; observation_start_date=$r.start_date; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk; expected_pf=$expPf; expected_dd95=$expDd95; expected_trades_per_week=$expWk; expectation_unit='MAGIC'; expectation_key=("$($r.account)|$($r.magic)"); expectation_violation='NOT_EVALUATED'; expectation_status_reason='NOT_EVALUATED'; rate_flag=$rateFlag }
 }
 
 # Apply trade-rate semantics only after every visible leg has contributed its observation.
