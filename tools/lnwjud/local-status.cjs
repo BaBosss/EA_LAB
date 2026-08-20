@@ -81,7 +81,9 @@ function deriveStatus(input) {
   const contract = input.contract;
   const actualHead = input.actual_head || null;
   const policy = input.policy || null;
-  const expectedHead = typeof policy?.base_sha === 'string' && /^[0-9a-f]{40}$/i.test(policy.base_sha) ? policy.base_sha.toLowerCase() : null;
+  const policyHead = typeof policy?.base_sha === 'string' && /^[0-9a-f]{40}$/i.test(policy.base_sha) ? policy.base_sha.toLowerCase() : null;
+  const dynamicHead = policy?.base_sha === 'WORKTREE_HEAD_AT_START' ? actualHead : null;
+  const expectedHead = policyHead || dynamicHead;
   const headMatch = expectedHead !== null && actualHead !== null && expectedHead === actualHead;
   const processes = input.processes === undefined ? [] : input.processes;
   const lock = input.lock || { state: 'NOT_RUNNING', owner: null, pid: null, error: null };
