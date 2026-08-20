@@ -755,8 +755,12 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
     # already 90.4s before the slice opened). These two lines are the friction that makes raising
     # a budget a deliberate two-file act, so they are updated WITH the numbers rather than to
     # match whatever the other file now says -- the point is that someone had to type them.
+    # RAISED 2026-08-20, post-audit M0 repair program (owner-approved): full tier 120.0 -> 195.0
+    # (measured 172.6s / 157.6s at the integration point, 168.0s independently by M0-Lane3 in
+    # isolation -- see run_fast_cages.ps1's own note next to the parameter). Per-path 90.0
+    # untouched; that budget was not breached.
     if ($cagesSrc -match '\$BudgetSeconds\s*=\s*90\.0') { Good 'N1 the per-path default is the measured 90.0s' } else { Bad 'N1 the per-path default is not 90.0 -- it was changed without this case being updated' }
-    if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*120\.0') { Good 'N1 the full-tier default is the measured 120.0s' } else { Bad 'N1 the full-tier default is not 120.0 -- it was changed without this case being updated' }
+    if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*195\.0') { Good 'N1 the full-tier default is the measured 195.0s' } else { Bad 'N1 the full-tier default is not 195.0 -- it was changed without this case being updated' }
     if ($fail -eq $before) { Good 'the budget can fail, and does not fail a healthy run' }
 
     # -------------------------------------------------------------------------------------

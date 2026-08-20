@@ -140,7 +140,24 @@ param(
     # them is its own order -- recorded on the ORDER-1100 board row with the measurements, so the
     # next lane inherits the number and not just the complaint.
     [double]$BudgetSeconds = 90.0,
-    [double]$FullTierBudgetSeconds = 120.0,
+    #
+    # 🔴 RAISED 2026-08-20, post-audit M0 repair program (owner-approved). Blocked a lane that
+    # owns none of the three slowest suites: an M0 integration commit only touching
+    # SUITE_TIER_REGISTRY.txt (a scripts/_test/* file, so ORDER-420 forces the full tier, not
+    # per-path) was refused twice.
+    #   MEASURED 172.6s then 157.6s on the same clean, all-green 31-suite run (two attempts,
+    #   differing only in background machine load -- see below), both against the pinned 120.0s.
+    #   Independently, M0-Lane3 measured 168.0s / 31 suites / all green in complete isolation on
+    #   2026-08-20, before this commit and before any of this lane's own diff -- so the breach
+    #   predates and is independent of the M0/M1 audit-repair diffs. Top contributors on every
+    #   run: run_front_guard_evidence_tests ~20s, run_monitor_integrity_tests ~18s,
+    #   run_guard_trigger_tests ~16s = ~54s, none of them new suites.
+    #   The 157.6s low measurement was taken after killing stray concurrent PowerShell/MetaEditor
+    #   processes from parallel lane agents -- contention explains some of the 172.6s->157.6s
+    #   delta, but not the gap under 120.0s, which held even on the quieter run.
+    # New number sits ~13% above the highest clean measurement (172.6s), same margin convention
+    # as the 2026-08-02 raise above.
+    [double]$FullTierBudgetSeconds = 195.0,
     # N2's negative needs a way to be over budget without waiting for a suite to genuinely rot.
     # Same shape as -DebugPretendIndexMoved below: a seam the cage drives, never the hook.
     [double]$DebugPadSeconds = 0.0,

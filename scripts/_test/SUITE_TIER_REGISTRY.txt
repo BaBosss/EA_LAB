@@ -139,3 +139,6 @@ run_tpl_baseline_guard_tests.ps1|UNMEASURED|Commit-message guard tests for the v
 run_tpl_baseline_negative_tests.ps1|UNMEASURED|Fail-closed tests for the versioned TPL baseline contract; not timed against the pinned budget.
 run_tpl_set_byte_preservation_tests.ps1|UNMEASURED|Regression-set byte-preservation cage; not timed against the pinned budget.
 run_tpl_set_checkout_contract_tests.ps1|UNMEASURED|Checkout-byte contract cage for the versioned TPL regression sets; not timed against the pinned budget.
+run_audit_c_tests.ps1|UNMEASURED|Audit C monitoring-trust cage (Lane 1, 2026-08-20); guards snapshot age/digest/coverage/identity gates; not timed against the pinned budget.
+run_gitdir_resolution_test.ps1|UNMEASURED|D-F8 Get-GitStateStamp linked-worktree gitdir cage (Lane 2, 2026-08-20); not timed against the pinned budget.
+run_worktree_hookspath_negative_test.ps1|UNMEASURED|D-F4 hooksPath ownership negative cage (Lane 2, 2026-08-20); builds a real linked worktree fixture, not timed against the pinned budget.
