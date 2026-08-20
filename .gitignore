@@ -138,3 +138,27 @@ build/
 # the ledger through a real file in a temp repo.
 ops/
 
+
+# M0-LANE2 (Audit D-F2). NESTED WORKTREE ROOTS. Every path below is a directory in which
+# `git worktree add` plants CHECKOUTS OF THIS SAME REPO, physically inside the primary
+# working tree. A nested checkout has its own .git entry, so `git add -A` from the primary
+# stages it as a mode-160000 GITLINK -- a submodule pointer to a commit that exists only on
+# this machine. Nothing downstream can resolve it, and the commit looks ordinary in `git log`.
+#
+# MEASURED BEFORE THIS RULE EXISTED, at canonical 649207d6:
+#   git check-ignore -v --no-index .worktrees/x        -> NOT IGNORED
+#   git check-ignore -v --no-index .qwen/worktrees/x   -> NOT IGNORED
+#   git check-ignore -v --no-index .lane6-canonical/x  -> NOT IGNORED
+#   git check-ignore -v --no-index .claude/worktrees/x -> .git/info/exclude:12
+# Only ONE of the four was covered, and by .git/info/exclude -- which is machine-local and
+# UNTRACKED, so it protected exactly one clone of this repo and no other. Tracked coverage is
+# the point: the rule has to travel with the repository.
+#
+# These entries IGNORE the roots; they do not move or delete anything. 125 live worktrees
+# existed under the primary when this was written and all of them stay where they are.
+# The commit-time REFUSAL for an already-staged gitlink is a separate, complementary guard
+# (Lane 3, .githooks/pre-commit) -- an ignore rule cannot un-stage what is already in the index.
+.worktrees/
+.claude/worktrees/
+.qwen/worktrees/
+.lane6-canonical/
