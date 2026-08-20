@@ -2,6 +2,7 @@
 'use strict';
 
 const { execFileSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -73,16 +74,20 @@ function listenerState(processes, listeners) {
 }
 function tunnelLifecycle(remote, contract) {
   const state = typeof remote?.state === 'string' ? remote.state : null;
-  const allowed = new Set(['NOT_CONFIGURED_OWNER_ACTION_REQUIRED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'ACTIVATING', 'CONNECTED', 'DISCONNECTED', 'COMPLETED']);
+  const allowed = new Set(['NOT_CONFIGURED_OWNER_ACTION_REQUIRED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'ACTIVATING', 'CONNECTED', 'DISCONNECTED', 'UNKNOWN_STALE', 'UNKNOWN_UNBOUND', 'UNKNOWN_NO_CURRENT_EVIDENCE', 'COMPLETED']);
   if (state !== null && allowed.has(state)) return state;
   return contract.milestone.secure_tunnel;
 }
-function safeTunnelEvidence(runtimeRoot) {
+function fileSha(file) { try { return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'); } catch { return null; } }
+function safeTunnelEvidence(runtimeRoot, context = {}) {
   try {
     const value = readJson(path.join(runtimeRoot, 'm3-tunnel-state.json'));
-    if (value?.schema_version !== 1 || !['DOCTOR_PASSED', 'AUTH_FAILED', 'DOCTOR_FAILED'].includes(value.state)) throw new Error('invalid');
+    if (value?.schema_version !== 1 || !['DOCTOR_PASSED', 'AUTH_FAILED', 'DOCTOR_FAILED', 'CONNECTED', 'DISCONNECTED'].includes(value.state)) return { state: 'UNKNOWN_UNBOUND', error: null };
+    if (typeof value.checkout_head !== 'string' || value.checkout_head !== context.actual_head || value.profile !== 'ea-lab-lnwjud-m3') return { state: 'UNKNOWN_UNBOUND', error: null };
+    if (value.state === 'DOCTOR_PASSED' && (!value.profile_sha256 || value.profile_sha256.length !== 64 || !value.launcher_sha256 || value.launcher_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'm3-restricted-launcher.cmd')) || !value.policy_sha256 || value.policy_sha256 !== fileSha(path.join(context.workspace || '', 'tools', 'lnwjud', 'ea-lab-policy.json')))) return { state: 'UNKNOWN_UNBOUND', error: null };
+    const generated = Date.parse(value.generated_at); if (!Number.isFinite(generated) || Date.now() - generated > 10 * 60 * 1000 || generated - Date.now() > 60 * 1000) return { state: 'UNKNOWN_STALE', error: null };
     return { state: value.state, error: null };
-  } catch { return { state: null, error: null }; }
+  } catch { return { state: 'UNKNOWN_UNBOUND', error: null }; }
 }
 function liveTunnelClient(profile) {
   try {
@@ -113,7 +118,7 @@ function deriveStatus(input) {
   const remote = input.tunnel || { configured: false, client_detected: false };
   let tunnelState = tunnelLifecycle(remote, contract);
   if (remote.evidence_state === 'AUTH_FAILED' || remote.evidence_state === 'DOCTOR_FAILED') tunnelState = remote.evidence_state;
-  else if (remote.evidence_state === 'DOCTOR_PASSED') tunnelState = remote.client_detected ? 'CONNECTED' : 'ACTIVATING';
+  else if (remote.evidence_state === 'DOCTOR_PASSED') tunnelState = remote.client_detected ? 'CONNECTED' : 'UNKNOWN_NO_CURRENT_EVIDENCE';
   else if (remote.previous_state === 'CONNECTED' && !remote.client_detected) tunnelState = 'DISCONNECTED';
   const controlState = policy === null || lock.error !== null ? 'ERROR' : !headMatch || listener === 'NON_LOOPBACK_LISTENER_OBSERVED' || index.state === 'ERROR' ? 'DEGRADED' : 'OK';
   const output = {
@@ -138,8 +143,9 @@ function collectLiveStatus(options = {}) {
   const workspace = contract.gateway.authorized_workspace === 'POLICY_CHECKOUT' ? POLICY_CHECKOUT : contract.gateway.authorized_workspace;
   const processes = liveProcesses();
   const listeners = liveListeners(processes);
-  const evidence = safeTunnelEvidence(runtimeRoot);
-  return deriveStatus({ contract, generated_at: options.generated_at, actual_source_sha: git(contract.lnwjud.source_path, ['rev-parse', 'HEAD']), actual_head: git(workspace, ['rev-parse', 'HEAD']), authorized_workspace: workspace, policy: policyResult.value, processes, lock: safeLock(runtimeRoot), listener_state: listenerState(processes, listeners), tunnel: { evidence_state: evidence.state, client_detected: liveTunnelClient(contract.tunnel_profile) }, last_error: policyResult.error });
+  const actualHead = git(workspace, ['rev-parse', 'HEAD']);
+  const evidence = safeTunnelEvidence(runtimeRoot, { actual_head: actualHead, workspace });
+  return deriveStatus({ contract, generated_at: options.generated_at, actual_source_sha: git(contract.lnwjud.source_path, ['rev-parse', 'HEAD']), actual_head: actualHead, authorized_workspace: workspace, policy: policyResult.value, processes, lock: safeLock(runtimeRoot), listener_state: listenerState(processes, listeners), tunnel: { evidence_state: evidence.state, client_detected: liveTunnelClient(contract.tunnel_profile) }, last_error: policyResult.error });
 }
 function lane(status) {
   const problem = status.audit.last_error;
