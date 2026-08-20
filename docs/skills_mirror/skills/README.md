@@ -29,7 +29,8 @@ All scripts are stdlib-only Python 3 — no pip installs needed.
 
 - Cross-references between skills use skill names only (no version pins).
 - The 7-dimension scorecard in backtest-report-analyzer is the canonical
-  screening standard (supersedes the old BacktestScore/100 system).
+  screening standard (the old BacktestScore/100 system is superseded and
+  must not be used).
 - Every skill output ends with exactly one NEXT STEP block.
 - `chain_id` is generated in strategy-and-risk and propagated through every
   audit_trail downstream.

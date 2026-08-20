@@ -26,17 +26,22 @@
 ## วิธีใช้ (ตอนสะดวก)
 1. ปิด MT5 GUI
 2. `powershell -File D:\EA_LAB\scripts\mt5_batch_shortlist.ps1`  ← รัน IS+OOS ให้ 4 ตัว
-3. `python D:\EA_LAB\scripts\run_pipeline.py D:\EA_LAB\ea_projects D:\EA_LAB\_mt5_auto\reports`  ← score
+3. ~~step 3, the legacy scoring pipeline~~ — **REMOVED. That pipeline is QUARANTINED** (archived
+   BacktestScore v1; it refuses by default with exit 3 / `REFUSED (LEGACY / NON_FACTORY)`). Do not
+   run it and do not pass `--allow-legacy-selection` to get past the refusal. There is no generic
+   replacement: read the parsed report numbers against CLAUDE.md's VERDICT GATE bar table.
 4. สั่ง Claude "วิ่ง analyst+reviewer" → robustness + รีวิว
 
 → นายไม่ต้องนั่งคลิกทีละ test เอง แค่ปิด MT5 แล้วสั่ง 1 บรรทัด (หรือให้ผมสั่งให้ตอน GUI ปิด)
 
 ## วงจรเต็มที่นายอยากได้ (optimize → select → single-test)
 ```
-[optimize EA]  → [select robust pass] → [gen .set] → [single-test IS+OOS] → [score+MC] → [registry]
-   v2 (ดูล่าง)        select_robust ✅      set_from_robust ✅   mt5_run ✅        pipeline ✅
+[optimize EA] -> [CONTRACT-DRIVEN selection] -> [gen .set] -> [single-test IS+OOS] -> [MC] -> [registry]
 ```
-ขั้น single-test เป็นต้นไป **อัตโนมัติครบแล้ว**
+ขั้น single-test เป็นต้นไป **อัตโนมัติครบแล้ว** — แต่ **ขั้น select ไม่ใช่ script generic อีกแล้ว**: the two
+legacy selection scripts and the legacy scoring pipeline that used to fill those boxes are quarantined
+(see the QUARANTINE NOTICE below). A tick mark next to them in an older revision of this table meant
+"the file runs", never "this is the sanctioned path".
 
 ## ⚠️ UPDATE 2026-07-26 — swap: tester คิดโหมด POINTS แต่ **ไม่คิด** โหมด INTEREST_CURRENT
 
@@ -63,9 +68,18 @@ python D:\EA_LAB\scripts\swap_adjust_crypto.py --rate-long 14.67 --rate-short 0.
 ## ✅ UPDATE 2026-07-25 — headless OPTIMIZATION ทำได้แล้ว (หัวข้อ "v2 ยังไม่ทำ" ข้างล่าง = ล้าสมัย)
 
 `scripts/mt5_optimize.ps1` รัน genetic headless แล้ว export XML ได้จริง → `scripts/parse_opt_xml.ps1` →
-`scripts/select_robust_pass.py` → `scripts/set_from_robust.py` → `mt5_run.ps1` Model-4 confirm.
+**contract-driven selection** → `mt5_run.ps1` Model-4 confirm.
 optimize range เก็บใน .set เป็น `value||start||step||stop||Y`. ตัวอย่างใช้งานจริง = `ORDER-GEN-STANDING`
 MATRIX ชุดที่ 2 ใน `AGENT_TASKBOARD.md`.
+
+**QUARANTINE NOTICE — the selection step of that chain changed.** The two legacy scripts that used
+to sit between the parse and the Model-4 confirm implement the archived BacktestScore v1 gate, were
+never re-verified against the current VERDICT GATE, and are now quarantined: they refuse by default
+(exit 3, `REFUSED (LEGACY / NON_FACTORY)`) and their `--allow-legacy-selection` output is
+NON-AUTHORITATIVE. **Do not run them and do not pass that flag.** Submit the pass with
+`-HypothesisRevision <rev>` instead and follow the launcher's own printed `next:` line; with no
+contract bound it prints `SELECTION BLOCKED`, which is the answer rather than something to work
+around. Contract source of truth = `_triage/factory_os/registry.py` + `_triage/factory_os/candidate.py`.
 **⚠️ ผล optimize รันบน Model 1 (เร็ว) = ใช้หา candidate เท่านั้น ห้ามใช้เป็นหลักฐาน** — ตัวเลขที่ใช้ตัดสิน
 ต้องมาจาก Model-4 single-test ของ pass ที่เลือกแล้วเสมอ
 

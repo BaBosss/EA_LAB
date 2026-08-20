@@ -1,9 +1,9 @@
 # optimize_next_step.ps1 -- ORDER-152(c). What should the operator do with a produced optimizer XML?
 #
-# WHY THIS EXISTS. mt5_optimize.ps1 used to print "next: python select_robust_pass.py ..." on every
-# successful optimize pass. select_robust_pass.py's own docstring says it implements the archived,
-# superseded BacktestScore v1 gate and has not been re-verified against the current VERDICT GATE /
-# backtest-optimize-rigor LADDER. Selection stays candidate/hypothesis-contract driven (see
+# WHY THIS EXISTS. mt5_optimize.ps1 used to point every successful optimize pass straight at the
+# retired generic ranker's command line. That ranker's own docstring says it implements the
+# archived, superseded BacktestScore v1 gate and has not been re-verified against the current
+# VERDICT GATE / backtest-optimize-rigor LADDER. Selection stays candidate/hypothesis-contract driven (see
 # _triage/factory_os/registry.py + candidate.py, the resolver mt5_optimize.ps1 already threads
 # -HypothesisRevision through to optimize_guard.ps1). This launcher must not point operators at the
 # old generic ranking formula, and per the same rule must not invent a replacement formula here
