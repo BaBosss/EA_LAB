@@ -76,6 +76,55 @@ The Control Tower then executed the A-PATH remotely and observed:
 
 This is the accepted end-to-end ChatGPT/remote-control proof for the observe-only A-PATH. Codex, Claude, and Qwen were not dispatched for the proof.
 
+## Remote Desktop Commander auto-start
+
+A Windows Scheduled Task starts the Remote Desktop Commander remote agent automatically at user logon, so the manual `npx ... remote` recovery step above is no longer required after a normal reboot.
+
+**Scheduled task:** `EA_LAB_RemoteDesktopCommander`
+**Trigger:** at logon of the current interactive user, 30 second delay
+**Principal:** current user (`patip`), logon type Interactive, run level Limited — never SYSTEM, never elevated
+**Action:** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "D:\EA_LAB_CONTROL\remote-desktop-commander\start-remote.ps1"`
+**Restart on failure:** bounded, up to 3 attempts, 1 minute apart — no infinite loop
+**Pinned package:** `@wonderwhy-er/desktop-commander@0.2.47` — the launcher deliberately does not use `@latest`, so an automatic reboot-time start can never silently change the remote-control software version. Bumping the pinned version is a separate explicit maintenance action.
+
+**Launcher files** (machine-local, not in this repo, no secrets):
+
+- `D:\EA_LAB_CONTROL\remote-desktop-commander\start-remote.ps1` — the launcher
+- `D:\EA_LAB_CONTROL\remote-desktop-commander\Start_EA_LAB_Remote.cmd` — manual double-click fallback, runs the same launcher
+- `D:\EA_LAB_CONTROL\remote-desktop-commander\logs\launcher.log` — bootstrap metadata only (timestamps, START_REQUESTED / ALREADY_RUNNING / PROCESS_STARTED / PROCESS_EXITED / exit codes). The launcher never captures or redirects the agent's own stdout/stderr, since that stream can contain device authorization codes.
+
+**Duplicate guard:** the launcher detects the real running agent by matching `node.exe` command lines against `desktop-commander[\/]dist[\/]index\.js` — the actual package entrypoint — not by generic `node.exe`/`npx.exe`/`powershell.exe` presence. If a match is found it logs `ALREADY_RUNNING` and exits 0 without starting a second agent.
+
+**Reauthentication:** the launcher starts the pinned agent in a visible (minimized, not hidden) console window under the current user's own session. If the persisted device session is not accepted, the user sees the device-code/browser prompt in that window and completes it manually, exactly as in the manual recovery flow above. The launcher does not automate or store any authentication step.
+
+**No secrets stored:** the launcher script, the `.cmd` fallback, and the log file contain no API keys, tokens, device-code cache, or credentials of any kind.
+
+**Inspect the task:**
+
+```powershell
+Get-ScheduledTask -TaskName EA_LAB_RemoteDesktopCommander | Format-List *
+Get-ScheduledTaskInfo -TaskName EA_LAB_RemoteDesktopCommander
+```
+
+**Disable the task** (stops auto-start without deleting it):
+
+```powershell
+Disable-ScheduledTask -TaskName EA_LAB_RemoteDesktopCommander
+```
+
+**Re-enable the task:**
+
+```powershell
+Enable-ScheduledTask -TaskName EA_LAB_RemoteDesktopCommander
+```
+
+**Manual fallback** if auto-start does not fire or fails: run `D:\EA_LAB_CONTROL\remote-desktop-commander\Start_EA_LAB_Remote.cmd`, or fall back to the original manual recovery command earlier in this runbook (`npx @wonderwhy-er/desktop-commander@latest remote`).
+
+**Acceptance status — 2026-08-21:** the task was created and independently inspected (task definition, trigger, principal, and settings all confirmed read-only against the contract above). The launcher was run manually twice while the real agent (PIDs `16088`/`18808`) was already live — both via direct script invocation and via `Start-ScheduledTask` — and both times logged `ALREADY_RUNNING` with `LastTaskResult 0`, created no duplicate process, and left the live agent's PIDs and Control Tower connection undisturbed.
+
+**Auto-start configuration: INSTALLED / VERIFIED NON-DISRUPTIVELY.**
+**Real reboot proof: PENDING.** This has not yet been proven across an actual Windows reboot — only that the task exists correctly and the launcher is idempotent while the agent is already running. The next step is one real reboot performed while the owner is present: log into Windows, wait for the 30 second trigger delay, and confirm from Control Tower that device `BaBoss` returns online automatically with no manual PowerShell step.
+
 ## Not covered by this runbook
 
 - task-scoped mutation/A6
