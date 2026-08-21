@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "task_id": "LNWJUD-A-PATH-BRIDGE-20260821",
+  "canonical_base_sha": "3aa80897c666c01d66f15f6f1cdd703abce46a3e",
+  "base_sha": "WORKTREE_HEAD_AT_START",
+  "worktree": "POLICY_CHECKOUT",
+  "protected_worktree_roots": ["D:\\EA_LAB"],
+  "role": "EA-OBSERVE",
+  "review_state": "OPEN",
+  "allowed_paths": [
+    "tools/lnwjud/"
+  ],
+  "forbidden_paths": [
+    ".env"
+  ],
+  "allowed_process": {
+    "executable": "powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-File",
+      "tools/lnwjud/run-acceptance-fixture.ps1"
+    ]
+  },
+  "execution_profiles": {
+    "build": {
+      "executable": "powershell.exe",
+      "args": ["-NoProfile", "-File", "tools/lnwjud/fixtures/m2-exec/run.ps1", "-Profile", "build"],
+      "mutation_capable": true
+    },
+    "test": {
+      "executable": "powershell.exe",
+      "args": ["-NoProfile", "-File", "tools/lnwjud/fixtures/m2-exec/run.ps1", "-Profile", "test"],
+      "mutation_capable": false
+    },
+    "check": {
+      "executable": "powershell.exe",
+      "args": ["-NoProfile", "-File", "tools/lnwjud/fixtures/m2-exec/run.ps1", "-Profile", "check"],
+      "mutation_capable": false
+    },
+    "state_check": {
+      "executable": "powershell.exe",
+      "args": ["-NoProfile", "-File", "scripts/check_handoff_contract.ps1"],
+      "mutation_capable": false
+    }
+  }
+}
