@@ -78,7 +78,7 @@ This is the accepted end-to-end ChatGPT/remote-control proof for the observe-onl
 
 ## Remote Desktop Commander auto-start
 
-A Windows Scheduled Task starts the Remote Desktop Commander remote agent automatically at user logon. The task-start path itself passed one real reboot on 2026-08-22. Zero-touch session restore remains a separate proof until one reboot occurs after the persistent session was seeded.
+A Windows Scheduled Task starts the Remote Desktop Commander remote agent automatically at user logon. Both the task-start path and owner-approved persistent-session zero-touch restore passed real reboot proof on 2026-08-22.
 
 **Scheduled task:** `EA_LAB_RemoteDesktopCommander`
 **Trigger:** at logon of the current interactive user, 30 second delay
@@ -123,10 +123,10 @@ Disabling the task stops future logon auto-start; it does not itself terminate a
 - persistent session seeded: PASS; session credential values were not read or displayed
 - credential ACL hardening: PASS
 - Desktop recovery shortcut: INSTALLED
-- zero-touch reboot/session-restore proof: PENDING
+- zero-touch reboot/session-restore proof: PASS / COMPLETE
 
-**Auto-start configuration: INSTALLED / REBOOT START PASS.**
-**Zero-touch session restore proof: PENDING.** Perform one owner-present reboot after the persisted session seed. After Windows login, do not click Verify and do not start the agent manually; wait at least 60 seconds and let Control Tower confirm that device `BaBoss` returns online from the saved session.
+**Auto-start + persistent-session configuration: ACCEPTED / COMPLETE.**
+**Zero-touch session restore proof: PASS / COMPLETE.** Final proof on 2026-08-22: Scheduled Task ran at `10:07:09` with result 0; pinned `@wonderwhy-er/desktop-commander@0.2.47 remote --persist-session` processes started at `10:07:10–10:07:13`; `BaBoss` returned online with valid session and ping PASS; no additional launcher invocation occurred after boot; and `lnwjudctl status`, `workspace-info`, `git-status`, `read PROJECT_STATE.md`, and `execute check` all passed against clean canonical `2bb38c62598bf0892e8566712029870ade19f673`.
 
 ## Not covered by this runbook
 
