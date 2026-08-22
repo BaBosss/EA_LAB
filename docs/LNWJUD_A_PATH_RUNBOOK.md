@@ -78,52 +78,55 @@ This is the accepted end-to-end ChatGPT/remote-control proof for the observe-onl
 
 ## Remote Desktop Commander auto-start
 
-A Windows Scheduled Task starts the Remote Desktop Commander remote agent automatically at user logon, so the manual `npx ... remote` recovery step above is no longer required after a normal reboot.
+A Windows Scheduled Task starts the Remote Desktop Commander remote agent automatically at user logon. The task-start path itself passed one real reboot on 2026-08-22. Zero-touch session restore remains a separate proof until one reboot occurs after the persistent session was seeded.
 
 **Scheduled task:** `EA_LAB_RemoteDesktopCommander`
 **Trigger:** at logon of the current interactive user, 30 second delay
 **Principal:** current user (`patip`), logon type Interactive, run level Limited — never SYSTEM, never elevated
 **Action:** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "D:\EA_LAB_CONTROL\remote-desktop-commander\start-remote.ps1"`
 **Restart on failure:** bounded, up to 3 attempts, 1 minute apart — no infinite loop
-**Pinned package:** `@wonderwhy-er/desktop-commander@0.2.47` — the launcher deliberately does not use `@latest`, so an automatic reboot-time start can never silently change the remote-control software version. Bumping the pinned version is a separate explicit maintenance action.
+**Pinned package:** `@wonderwhy-er/desktop-commander@0.2.47`
+**Session mode:** `remote --persist-session`
 
-**Launcher files** (machine-local, not in this repo, no secrets):
+**Launcher / recovery:**
 
-- `D:\EA_LAB_CONTROL\remote-desktop-commander\start-remote.ps1` — the launcher
-- `D:\EA_LAB_CONTROL\remote-desktop-commander\Start_EA_LAB_Remote.cmd` — manual double-click fallback, runs the same launcher
-- `D:\EA_LAB_CONTROL\remote-desktop-commander\logs\launcher.log` — bootstrap metadata only (timestamps, START_REQUESTED / ALREADY_RUNNING / PROCESS_STARTED / PROCESS_EXITED / exit codes). The launcher never captures or redirects the agent's own stdout/stderr, since that stream can contain device authorization codes.
+- `D:\EA_LAB_CONTROL\remote-desktop-commander\start-remote.ps1` — launcher v1.1.0; pinned 0.2.47 with `remote --persist-session`
+- `D:\EA_LAB_CONTROL\remote-desktop-commander\Start_EA_LAB_Remote.cmd` — manual fallback
+- Desktop shortcut `EA_LAB Remote` points to that same `.cmd` fallback
+- `D:\EA_LAB_CONTROL\remote-desktop-commander\logs\launcher.log` — bootstrap metadata only; never captures child-agent stdout/stderr
 
-**Duplicate guard:** the launcher detects the real running agent by matching `node.exe` command lines against `desktop-commander[\/]dist[\/]index\.js` — the actual package entrypoint — not by generic `node.exe`/`npx.exe`/`powershell.exe` presence. If a match is found it logs `ALREADY_RUNNING` and exits 0 without starting a second agent.
+**CLI window:** Minimize is safe. Closing the agent console with `X` stops the agent. If that happens, double-click `EA_LAB Remote` on the Desktop to start the same pinned launcher again.
 
-**Reauthentication:** the launcher starts the pinned agent in a visible (minimized, not hidden) console window under the current user's own session. If the persisted device session is not accepted, the user sees the device-code/browser prompt in that window and completes it manually, exactly as in the manual recovery flow above. The launcher does not automate or store any authentication step.
+**Duplicate guard:** the launcher matches the actual `desktop-commander[\/]dist[\/]index\.js` entrypoint, not generic node/npm/powershell processes. If already running it logs `ALREADY_RUNNING` and exits 0 without creating a duplicate.
 
-**No secrets stored:** the launcher script, the `.cmd` fallback, and the log file contain no API keys, tokens, device-code cache, or credentials of any kind.
+**Credential persistence boundary:** the owner explicitly authorized persistent Remote Desktop Commander authentication for zero-touch reboot recovery. Package-managed session credentials are stored only in `C:\Users\patip\.desktop-commander-device\device.json`; they are not copied into the launcher, `.cmd`, Desktop shortcut, logs, or repository. After seeding, ACLs were hardened so the credential directory/file is readable only by `BABOSS\patip`, `NT AUTHORITY\SYSTEM`, and `BUILTIN\Administrators`; inherited `BaBoss\CodexSandboxUsers` read access was removed.
 
-**Inspect the task:**
+**Reauthentication:** if the saved session is missing, expired, or rejected, the visible minimized agent window may request device-code verification again and the user completes it manually. The launcher does not automate browser/device-code approval.
+
+**Task controls (PowerShell):**
 
 ```powershell
 Get-ScheduledTask -TaskName EA_LAB_RemoteDesktopCommander | Format-List *
 Get-ScheduledTaskInfo -TaskName EA_LAB_RemoteDesktopCommander
-```
-
-**Disable the task** (stops auto-start without deleting it):
-
-```powershell
 Disable-ScheduledTask -TaskName EA_LAB_RemoteDesktopCommander
-```
-
-**Re-enable the task:**
-
-```powershell
 Enable-ScheduledTask -TaskName EA_LAB_RemoteDesktopCommander
 ```
 
-**Manual fallback** if auto-start does not fire or fails: run `D:\EA_LAB_CONTROL\remote-desktop-commander\Start_EA_LAB_Remote.cmd`, or fall back to the original manual recovery command earlier in this runbook (`npx @wonderwhy-er/desktop-commander@latest remote`).
+Disabling the task stops future logon auto-start; it does not itself terminate an agent that is already running.
 
-**Acceptance status — 2026-08-21:** the task was created and independently inspected (task definition, trigger, principal, and settings all confirmed read-only against the contract above). The launcher was run manually twice while the real agent (PIDs `16088`/`18808`) was already live — both via direct script invocation and via `Start-ScheduledTask` — and both times logged `ALREADY_RUNNING` with `LastTaskResult 0`, created no duplicate process, and left the live agent's PIDs and Control Tower connection undisturbed.
+**Manual fallback:** double-click `EA_LAB Remote`, run `D:\EA_LAB_CONTROL\remote-desktop-commander\Start_EA_LAB_Remote.cmd`, or run `npx --yes @wonderwhy-er/desktop-commander@0.2.47 remote --persist-session`.
 
-**Auto-start configuration: INSTALLED / VERIFIED NON-DISRUPTIVELY.**
-**Real reboot proof: PENDING.** This has not yet been proven across an actual Windows reboot — only that the task exists correctly and the launcher is idempotent while the agent is already running. The next step is one real reboot performed while the owner is present: log into Windows, wait for the 30 second trigger delay, and confirm from Control Tower that device `BaBoss` returns online automatically with no manual PowerShell step.
+**Acceptance status — 2026-08-22:**
+- real reboot proved Scheduled Task startup: PASS
+- pinned 0.2.47 startup after logon: PASS
+- A-PATH `lnwjudctl status/workspace-info/git-status/execute check`: PASS after reboot
+- persistent session seeded: PASS; session credential values were not read or displayed
+- credential ACL hardening: PASS
+- Desktop recovery shortcut: INSTALLED
+- zero-touch reboot/session-restore proof: PENDING
+
+**Auto-start configuration: INSTALLED / REBOOT START PASS.**
+**Zero-touch session restore proof: PENDING.** Perform one owner-present reboot after the persisted session seed. After Windows login, do not click Verify and do not start the agent manually; wait at least 60 seconds and let Control Tower confirm that device `BaBoss` returns online from the saved session.
 
 ## Not covered by this runbook
 
