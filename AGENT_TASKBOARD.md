@@ -157,8 +157,8 @@ No new detailed order is invented here; the Control Tower should bind these phas
 > Do not hand-edit the marker block below — it is the machine-read source of truth for
 > which parts exist and in what order.
 
-- `taskboards/active/P01.md` — 63 orders (ORDER-1462 … ORDER-830), 455150 bytes
-- `taskboards/active/P02.md` — 35 orders (ORDER-941 … ORDER-GEN-STANDING), 460278 bytes
+- `taskboards/active/P01.md` — 54 orders (ORDER-1462 … ORDER-830), 418450 bytes
+- `taskboards/active/P02.md` — 34 orders (ORDER-941 … ORDER-GEN-STANDING), 450058 bytes
 - `taskboards/active/P03.md` — 22 orders (ORDER-190 … ORDER-510), 187390 bytes
 
 <!-- TASKBOARD-ACTIVE-PARTS

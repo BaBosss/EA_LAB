@@ -12798,3 +12798,609 @@ and nobody has attributed it.**
 
 <sub>**Day-to-day impact is smaller than the number looks, and that is why it can be an order rather than an emergency:** the hook selects suites **per path**, and the per-path budget is **65.0 s**. A normal commit runs 1-3 suites well inside it. The full tier runs when a change touches many declared paths — which is exactly when a breach is most likely to earn a `--no-verify`.</sub>
 
+## ORDER-1500 — [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows prove it — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17; focused evidence 16/16)` · ทำได้: Claude/Opus (the code, once `ORDER-1462` clears) · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** the accepted integration carries the bounded journal/schema enforcement and focused evidence passed 16/16. The earlier blocked/open analysis below is retained as historical provenance.
+**bars:** N-A (a contract gap) · **flat-lot probe:** N-A
+
+Opened 2026-08-06 by `/scrutinize` (lane `S-2026-08-06-SCRUT2`) while checking whether `ORDER-1330`'s
+new `data_fingerprint` pattern could break a live writer. It cannot — but the question surfaced
+something the pattern was written for and nobody had found.
+
+**Three committed rows carry the UNHASHED PREIMAGE where a digest belongs:**
+
+```
+factory/runs/RUN-20260802-001.jsonl
+factory/runs/RUN-20260802-002.jsonl
+factory/runs/RUN-20260802-004.jsonl
+  "data_fingerprint":"D:\\Meta 5|XAUUSD|H1|2024.01.02|2024.01.16|M1"
+```
+
+45 characters, pipe-delimited, containing an absolute machine path. Every other committed value in
+`factory/` is 64 hex characters (132 of them, counted). These three are what
+`^(v[0-9]+:)?[0-9a-f]{64}$` exists to refuse, and they are **real evidence, not a fixture.**
+
+### 🎯 The finding is the store, not the three rows
+
+`registry.STORES` names **five** files — `universe` · `instrument_profiles` · `hypotheses` ·
+`parameter_bindings` · `coverage`. **`factory/runs/*.jsonl` is not among them**, so
+`run_schema_fixtures.py`'s live-store pass never reads it, and neither does `check_registries.py`.
+⇒ **the store that records what actually ran has no contract enforcement at all.** A row can carry
+any shape and nothing objects.
+
+⚠️ **And it is load-bearing:** `data_fingerprint` is a member of `scheduler.py:83`'s
+`EXECUTION_KEY_FIELDS`, which feeds `find_cached`. A row whose fingerprint is a path string joins to
+nothing, so a cell that HAS run can be re-run — paid in MT5 hours — or, worse, two different runs
+whose preimages happen to match can be treated as the same execution.
+
+### Owed
+1. **Decide whether `factory/runs/*.jsonl` gets an entity contract and joins `STORES`**, or is
+   explicitly declared out of scope with the reason written down. 🚫 Do not leave it in the current
+   third state — *not validated and not declared unvalidated* — which is what let this sit.
+2. **Judge the three rows.** 🚫 Do not rewrite them silently: they are committed evidence of runs
+   that happened, and a fingerprint that was never computed cannot be reconstructed after the fact.
+   Marking them `UNVERIFIED_IMPORT`-style is the honest shape, and that is a schema question, not an
+   edit.
+3. **Ask whether anything READ them.** If a `find_cached` decision was ever taken against one of
+   these three, that decision was taken on a key that identifies nothing.
+
+**Prohibitions:** ❌ do not relax `^(v[0-9]+:)?[0-9a-f]{64}$` to accommodate these rows — the rows are
+the defect, the pattern is not · ❌ do not add the store to `STORES` without an entity contract, which
+would make it validated-in-name against nothing.
+
+#### ✅ ALL THREE OWED ITEMS ANSWERED 2026-08-06 (lane `S-2026-08-06-S1500`) — decided and MEASURED, and the measurement moved two of the three answers
+
+Everything below was driven against the **committed** corpus (`git show HEAD:`, never the disk) with
+the same `ajv` harness `run_schema_fixtures.py` uses. **Nothing in the `ORDER-1462`-blocked pile was
+edited** — the patterned schema was read where it lies and copied to a scratchpad; no suite was
+registered, per §1 decision 5 of `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/PROMPT_NEXT_SESSION_1500.md`.
+
+🔴 **First, a correction to this order's own framing — written earlier the same day, by the previous lane in this seat.** It says the store
+sits in a *"third state — not validated and not declared unvalidated"*. **The second half is false.**
+`RunTransition` in `schemas.json` carries `x-enforcement-status: "PLANNED"` — one of five entities
+that do — and `check_schema_structure.py:321` already reads that field and demands it be a valid
+member. So the store **is** declared unvalidated, in machine-readable form. What is missing is a
+**caller**, not a contract and not a declaration: `RunTransition.x-owner-file` already reads
+`factory/runs/<run_id>.jsonl`, i.e. the contract has named this exact path the whole time. Same
+family as memory `correct-check-exists-only-its-cage-calls-it`. The *substance* of the order stands
+— nothing validates the store — but "undeclared" was one word wider than the evidence, which is the
+**identical error** the same lane had just retracted in `ORDER-1330` (handoff `§3.1`: *"the corpus"*
+for *"the validated corpus"*) **in the act of opening this order.**
+
+##### 🎯 The three rows break the contract TWICE, and only one break was known
+
+| | refused by | present at | cause |
+|---|---|---|---|
+| **`execution_key.ini_hash`** | `unevaluatedProperties: false` on `ExecutionKey` | **HEAD, today** | USER DECISION 2026-08-02 moved `ini_hash` onto `RunAttempt`. `scheduler.py` got `LEGACY_DROPPED_KEY_FIELDS` to keep reading the stored 15-field keys; **`schemas.json` got no counterpart**, so the writer and the contract have disagreed about the same corpus for four days |
+| **`data_fingerprint` preimage** | `^(v[0-9]+:)?[0-9a-f]{64}$` | only once `ORDER-1330` lands | the row this order was opened on |
+
+⚠️ **The `ini_hash` break needed a control to see at all.** Against the schema's real root — a
+`oneOf` over 19 entities — all three rows come back `required must have required property
+'owner_type'`, a property `RunTransition` does not have and never mentions. That is `ajv` reporting
+the first error from whichever branch it tried first, exactly as `run_schema_fixtures.py`'s own
+header warns at lines 92-104. **Reading it as a verdict would have named a wrong defect with
+real-looking evidence.** Pinning the root to `#/$defs/RunTransition` is what produced the two rows
+of the table above.
+
+##### 👉 DECISION on owed item 1 — validated, and NOT via `STORES`
+
+**`factory/runs/*.jsonl` is validated against the `RunTransition` contract that already names it. It
+does not join `registry.STORES`.** Three reasons, none of them stylistic:
+
+1. `STORES` is a `{one file: one entity}` map and every consumer (`registry.load_all`,
+   `check_registries` R5, the `run_schema_fixtures.py` live pass) **enumerates a fixed file list**.
+   `factory/runs/` is an unbounded glob of per-run append-only journals. Forcing it in means growing
+   `load_all` a glob mode and letting R5's "required-key floor" claim coverage over a set it cannot
+   enumerate — which is the order's own prohibition (*validated-in-name against nothing*) arriving by
+   the other door.
+2. The rows are not registry rows. One store row is one entity; one journal is **N transition lines
+   folded into a derived `RunJournal`** that `schemas.json` marks `x-derived` and *never persisted*.
+3. The contract exists and the store is declared. The whole gap is the caller.
+
+⇒ the caller belongs **beside the live-store pass in `run_schema_fixtures.py`**, where `ajv` is
+already spawned and the node budget is already paid, and `RunTransition.x-enforcement-status` goes
+`PLANNED` → `WIRED` in the same act.
+
+##### 👉 DECISION on owed item 2 — a closed exemption of exactly three `(file, line)` pairs
+
+Not rewritten (a fingerprint never computed cannot be reconstructed), not deleted (see the retention
+note below), pattern not relaxed. The three are **named with their reason** and everything else is
+validated. Closed as a literal set, not as a rule like *"any fingerprint that is not a hash"* — that
+would exempt the next one too (memory `citation-guard-satisfied-by-a-universal-file`).
+
+🔴 **And the proof killed half the design.** The first version had **two** mechanisms: strip
+`LEGACY_DROPPED_KEY_FIELDS` before validating *and* exempt the three rows. Five checks, run against
+the real corpus:
+
+| # | check | want | got |
+|---|---|---|---|
+| 1 | the design green | 0 refused | **0** (22 validated, 3 exempt) |
+| 2 | exemption REMOVED — it must fire | 3 refused | **3** |
+| 3 | a 4th bad row it does not name | 1 refused | **1** |
+| 4 | **strip OFF, exemption kept** | red, if the strip does anything | **GREEN — 0 refused** |
+| 5 | bare contract, nothing accommodated | 3 refused | **3**, and the rows carrying `ini_hash` are **exactly** the exempt set |
+
+**Check 4 is the finding.** `execution_key` is written **once, on the `QUEUED` line**, so the only
+rows that carry `ini_hash` are the three the exemption already covers — the strip is **inert on this
+corpus** and would have shipped as a mechanism nobody could ever watch fire (memory
+`falsifier-satisfied-by-unexercised-mechanism`). It is dropped, and not because it is merely
+harmless: **a validator that silently migrates its input is lying about the corpus.** The scheduler
+needs the migration because it must *read* these keys to decide whether a cell has run; the
+validator must not, because a future 15-field key would be a **new** defect and the strip would
+launder it. ⇒ **exemption alone.**
+
+🚫 **Not deletion, and the reason is not sentiment.** The S2a migration row for `RunTransition`
+(`gen_s2a_migration.py:348`) sets a retention window — *"safe to prune after the occurrence is
+written to the event log, and MUST be pruned or it becomes a second, stale copy of the timeline"* —
+and by that rule these three are four days overdue. **Pruning them would break a live reader:**
+`check_pilot_acceptance.item_scheduler_resume` returns `BLOCKED` with *no* journals, so deleting the
+store replaces a named, honest BLOCKED with an unnamed one. 👤 **The retention window vs. the only
+three manifests the repo has is a genuine conflict and is handed up, not resolved here.**
+
+##### ✅ Owed item 3 — ANSWERED BY MEASUREMENT: two readers, and neither took a wrong decision
+
+| reader | what it did with the three rows |
+|---|---|
+| `scheduler.find_cached` | reads all three (via the `LEGACY_DROPPED_KEY_FIELDS` migration, which fired and **reported itself** on all 3). Re-queueing `RUN-20260802-002` verbatim → **`hit=RUN-20260802-002 / EVIDENCE`**, criterion 3 firing correctly. **Control:** the same key with `symbol=EURUSD` → `hit=None`, so the instrument can tell things apart. |
+| `check_pilot_acceptance` 8.6.11 | folds all three and returns **`BLOCKED`** — *"1 of them DO show a KILLED attempt followed by a resume … not among the 16 registered pilot cells"*. It reaches that **without reading `data_fingerprint` at all.** |
+
+🎯 **The direction is fail-OPEN, and this narrows the order's own risk sentence.** Measured: the same
+run with a *well-formed* fingerprint → **`hit=None`**. So for any writer that actually hashes — which
+is every live writer, `Get-PilotDataFingerprint` — **the store joins to nothing**, and the cost is a
+**re-run paid in MT5 hours**, never another run's evidence served as this one's.
+
+- The order's *"a cell that HAS run can be re-run"* → **confirmed.**
+- The order's *"two runs whose preimages happen to match can be treated as the same execution"* →
+  **not demonstrated, and it needs a sharper statement to be true.** `001` and `002` do share a
+  digest, but they *are* the same configuration (`001` died KILLED×3, `002` completed) — that is
+  correct behaviour, not a collision. The real channel is the part count: the stored preimage is
+  **6 parts** (`lane|symbol|tf|from|to|model`) against the v1 recipe's **9** (`+bars +ticks
+  +server`). ⇒ **two runs over differently-backfilled history are indistinguishable to these three
+  rows.** That is a false-identity channel; it is just not the one the sentence described.
+- 🟢 **Nothing has yet taken a decision off the bad field.** That lowers the urgency and changes
+  nothing about the fix.
+
+##### 🔴 OWED, and why none of it could land today
+
+**Both blockers are the owner's, and neither is this lane's to route around.**
+
+1. **`run_schema_fixtures.py` and `schemas.json` are in the `ORDER-1462`-blocked pile.** Every commit
+   touching them is refused until the s2a attestation is re-made. The work is *specified and proven*
+   above; it is ~30 lines beside the existing live-store pass.
+2. **`x-enforcement-status` `PLANNED` → `WIRED`** must move in the *same* commit as the caller.
+   Flipping it first is the exact defect this repo keeps paying for.
+3. **No suite was registered** — §1 decision 5 puts the fast tier at 6.2s of headroom inside a
+   recorded 6.3s load spread. The pass costs nothing new: it rides the `ajv` batch already spawned.
+4. 👤 **The retention-window conflict** above.
+
+**Reproduce any number here:** `…\scratchpad\measure_run_journal_contract.py` (the two-schema
+control) · `measure_run_journal_readers.py` (the two readers) · `prove_run_journal_pass.py` (the five
+checks). ⚠️ **A scratchpad is not storage** — these are re-runnable in ten seconds and are not
+evidence anyone should go looking for later.
+
+---
+
+## ORDER-1360 — [guards] The handoff contract cannot see a single handoff this project actually writes — `DONE / REVIEWED (canonical verification 2026-08-17; duplicate-stale — fixed by 88ff7467, handoff-contract tests 28/28 PASS)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** `check_handoff_contract.ps1`'s trigger already widened to the
+> `PROMPT_NEXT_SESSION_*.md` family in commit `88ff7467` (2026-08-06), which is an ancestor of
+> canonical `23d916d2`. `run_handoff_contract_tests.ps1` = PASS 28/28. No code change was needed.
+> The investigation below is retained as history; this order is no longer active.
+
+> Opened 2026-08-04 by lane `S-2026-08-04-CORRECT5B`, out of its own reserved block. The previous
+> lane found it while writing its handoff and deliberately did **not** open it: its ledger row
+> declared *"expects to open no new order"*, and quietly opening one out of a block reserved on
+> that declaration is the scope drift the ledger exists to prevent. The finding is theirs; the
+> measurement below and the number are this lane's.
+
+**`check_handoff_contract.ps1` triggers on `_triage/HANDOFF*.md` and `_triage/SESSION_HANDOFF*.md`
+(`$HandoffPathRegex`, its own §22). Every handoff this project has written for months is
+`_triage/PROMPT_NEXT_SESSION_*.md`.** Measured: committing `PROMPT_NEXT_SESSION_CORRECTIONS_5.md`
+printed `[handoff-contract] no added/modified handoff staged -- pass (no-op)`. The routing block at
+the bottom of that file was written **to the contract** and nothing validated it.
+
+This is `ORDER-1310` #7 one directory over: **a guard that is not on the commit path of the thing
+it governs.** It is the more dangerous half of that shape, because the guard is not silent — it
+prints a PASS.
+
+### 🔴 It is NOT a one-line fix, and here is the number that says so
+
+Widening the pattern subjects every existing `PROMPT_NEXT_SESSION_*.md` to the contract.
+**Measured at `df8d3ffc` over the tracked set:**
+
+| tracked `_triage/PROMPT_NEXT_SESSION*.md` | carry a `<!-- HANDOFF-ROUTING -->` block | do not |
+|---|---|---|
+| **27** | **8** | **19** |
+
+The 19 include **`PROMPT_NEXT_SESSION_S13H.md`, written this morning**, and all four earlier
+`CORRECTIONS` files. So a naive widening reddens the next commit that touches any of nineteen
+files, most of which nobody is going to edit again — which is how a guard teaches people to reach
+for `--no-verify` (`feedback-audit-rule-rationale-not-compliance`).
+
+### What the repair has to decide (and it is a real choice, not a detail)
+
+1. **Scope the trigger to newly-ADDED files.** The guard already reads the status letter, so `A`
+   vs `M` is available. New handoffs are held to the contract; the 19 legacy ones are not, and are
+   never touched again. Cheapest, and it leaves the existing 19 unvalidated forever.
+2. **Widen, and back-fill routing blocks into the 19.** Honest, and it is 19 files of invented
+   routing — a routing block written after the fact, by someone who did not run the session, is a
+   fabricated record of where work went. **This one is worse than it looks.**
+3. **Widen, with the 19 as a CLOSED declared exemption list** (not a date rule, not a glob):
+   `citation-guard-satisfied-by-a-universal-file`'s lesson is that an exemption must be a closed
+   declaration. The list shrinks only as files are archived.
+
+**Acceptance:** the guard must FIRE on a `PROMPT_NEXT_SESSION_*.md` with no routing block and a
+`PROMPT_NEXT_SESSION_*.md` whose routing points at an order that does not exist (the two things it
+already checks for `HANDOFF*.md`), **and** the commit that lands it must be green over the whole
+repo without any file being edited to make it so. Whichever option is taken, the cage
+(`run_handoff_contract_tests.ps1`) gets a case per branch, and the 🚫 that matters: **do not fix
+this by narrowing what the contract requires.**
+
+---
+
+## ORDER-1280 — [factory/S3] Twelve contracts still carry no enforcement declaration, and the inventory that now names them is not a substitute for writing them — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** S3 enforcement coverage is part of the accepted integration and strict state/schema evidence passed. The historical diagnosis below is retained; no active work remains under this order.
+
+**This order is CITED FROM CODE** — `check_schema_structure.py`'s `_NO_ENFORCEMENT_DECLARATION`
+block and the `UNDECLARED=12` line of its own report both name it — so it is not optional
+bookkeeping. `ORDER-1264` closed the hole where a declaration could **vanish**; it did not fill the
+twelve that were never written.
+
+| | |
+|---|---|
+| still undeclared | `CandidatePayload` · `EvidenceRef` · `ExecutionKey` · `IdeaRef` · `InstrumentProfile` · `LogicalSymbol` · `ModuleUse` · `ParameterBinding` · `RunAttempt` · `RunJournal` · `SnapshotMeta` · `TestUniverse` |
+| why it is not one commit | each needs its enforcer **audited**, not named. The schema's own rule (line 16) is that `x-enforced-by` marks a constraint **JSON Schema cannot express**, and the status must then be verified against the repo: `PLANNED` = enforced by nothing · `BUILT` = the enforcer exists with negative fixtures · `WIRED` = a hook or the tier actually invokes it. Writing a comfortable label is the *original* defect (Codex audit 7 MAJOR 7: seven of ten names had no implementation at all) |
+
+**At least five of the twelve demonstrably DO carry an extra-schema constraint**, from their own
+descriptions: `ExecutionKey` (*"the key gates whether a run may happen at all"* — and the S9 audit's
+`ORDER-1265` says the cache identity does not match what the driver runs) · `ParameterBinding`
+(*"the wrapper generator and optimize_guard MUST read the same resolver"*) · `RunAttempt`
+(append-only, *"transitions are now appended, never overwritten"*) · `ModuleUse` (an EXPERIMENTAL
+module's evidence must not reach a Candidate) · `SnapshotMeta` (the mandatory-source registry and
+the reconciliation equation).
+
+**Acceptance:** every `$defs` entity is in `_ENFORCEMENT_DECLARED` with a status verified against
+the repo, **or** its move to a `SCHEMA_ONLY` classification is argued in the commit that makes it —
+and `_NO_ENFORCEMENT_DECLARATION` is **empty**. Do them one at a time; a batch of twelve labels
+written in one sitting is the thing this order exists to prevent.
+
+⚠️ **Do not "fix" this by relaxing the inventory.** The two sets are closed and their union must
+equal `$defs`; an entity moved out of the check is the `ORDER-1264` defect wearing a code edit.
+
+---
+
+## ORDER-1281 — [factory/S2·S10] Pin resolution exists but nothing on the commit path resolves a live pin — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** OwnerRef commit-path enforcement and its adversarial cage are included in the accepted integration; ORDER-1281 is closed. The pre-integration findings below remain historical evidence only.
+
+`ORDER-1263` gave `OwnerRef` a resolver and `run_s10_tests` proves it can go red. What it did **not**
+do is put it in front of the stores: `OwnerRef` is declared **BUILT, not WIRED**, because no checker
+in the pre-commit tier resolves the pins that are actually committed. A pin in
+`factory/parameter_bindings.jsonl` can rot — the commit it names garbage-collected, the blob
+replaced — and nothing would say so until someone reads it.
+
+**The cost is already measured and it is small:** 234 live `OwnerRef`s across three distinct
+`(commit, path)` targets resolve in **0.30s** with the caches `ORDER-1263` shipped (11.54s without
+them, which is why they exist). **All 234 resolve today** — measured 2026-08-03, so this starts from
+a clean baseline and any red is news.
+
+**Acceptance:** a checker on the commit path resolves every `OwnerRef` in every live `factory/*.jsonl`
+row and reddens on a pin that does not · a control proving it goes red on a planted bad pin · and
+`OwnerRef`'s `x-enforcement-status` moves **BUILT → WIRED** in the same commit, since that label is
+the claim this order makes true.
+
+⚠️ **Budget first, and it is not free right now.** `check_registries.py` is the natural home and it
+left the fast tier with `run_contract_binding_tests.ps1` at `ORDER-1252`, so wiring it there does
+**not** put the check on the commit path. Whatever host is chosen, the tier is **already over its
+pinned 120.0s** (see `ORDER-1282`) and the budget must not be raised to make room.
+
+---
+
+## ORDER-1283 — [infra/cages] A cage that mutates the LIVE `schemas.json` must mutate a COPY, and the repo wrote that down before I broke it — `DONE / REVIEWED (canonical verification 2026-08-17; duplicate-stale — mutate-a-copy pattern already landed, focused 10/10 + schema cage PASS)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** canonical already satisfies the tracked-byte mutation/interruption
+> contract — `run_enforcement_status_tests.py` mutates a temp copy only (`schemas.json` bytes verified
+> unchanged before/after a run), the `🚫 DO NOT PUT THIS ON THE COMMIT PATH` banner is gone, and the
+> suite is wired into `run_schema_cages.ps1`'s executed set. Focused evidence 10/10 + schema cage PASS.
+> No code change was needed. The investigation below is retained as history; this order is no longer active.
+
+`run_enforcement_status_tests.py` proves `check_schema_structure.py`'s labels can go red by
+**writing mutations into the live, tracked `_triage/factory_os/schemas.json`** and restoring them in
+a `finally`. `ORDER-1264` put that suite in `run_schema_cages.ps1`, i.e. on the **commit path**;
+`ORDER-1283` is that decision being taken back, and this order is what remains.
+
+**OBSERVED, not theorised — twenty minutes after the change:**
+
+```
+1b144630 20:37 · 7eb883d7 20:44 · 5389b0b8 20:46   (another lane's commits, each running the tier)
+a hand run of the suite at the same time           -> OSError 22 on schemas.json
+left in the working tree afterwards                -> WorkReceipt.x-enforcement-status = "TOTALLY_FINE"
+```
+
+The mechanism is worse than a stranded mutation: **whichever process reads the file while the other
+holds a mutation restores THE MUTATION**, because each one's "original" is whatever it read at
+start-up. A partial commit of that state writes a schema nobody authored.
+
+🔴 **The repo already had this receipt.** 2026-07-31, `run_preset_tests.py`'s row: *"an interrupted
+suite that mutates a real repo file has already turned two unrelated gates red here once
+(`run_enforcement_status_tests`), and the handoff named it as a thing not to repeat"*. And the
+`GIT_INDEX_FILE` incident row: *"a stranded mutation from `run_enforcement_status_tests.py` ... the
+mutate-a-copy fix is flagged as its own task, not silently absorbed"*. It was never done, and
+`ORDER-1264` walked into it.
+
+**So there is nothing to design.** `run_preset_tests.py --mutate` is the proven pattern: it rewrites
+one line of a **temp copy**, requires an anchor to match exactly once (a mutation that changes
+nothing would print a false green forever), and detects 9/9. Apply it here.
+
+**Acceptance:** the suite never writes to a tracked path · the tree is unchanged before and after a
+run, **including after an interrupted one** (kill it mid-loop and check) · all ten mutation cases
+still refused BY NAME · and only then does it go back into `run_schema_cages.ps1`, with the
+`🚫 DO NOT PUT THIS ON THE COMMIT PATH` banner in its own docstring removed **in the same commit**.
+
+⚠️ **`git status` is the WRONG instrument for that acceptance, measured 2026-08-03.** The suite's
+`finally` writes with `newline='\n'` into a CRLF checkout, so **even a completely clean run leaves
+`schemas.json` listed as modified** while `git diff` is empty — the content is identical and only
+the line endings differ. So `git status` reports dirty on a good run and dirty on a corrupted one,
+which is exactly no information. Compare with `git diff --quiet -- <path>`, or hash the bytes before
+and after. This is also why the real incident above was easy to miss: the file had been showing as
+modified all along.
+
+⚠️ **Do not re-add it before the mutation is on a copy.** The banner is in the file and the array
+comment in `run_schema_cages.ps1` says the same thing, because the argument for adding it is
+genuinely good and will be persuasive again.
+
+---
+
+## ORDER-1290 — [factory/S6·S9] A run's SURFACE STATE is printed and lost, so its committed evidence still cannot be asked afterwards — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17; focused evidence 8/8)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** the accepted SYSTEM FOUNDATION integration carries the durable surface-state contract and its focused cage passed 8/8. The pre-integration investigation below is retained as history; this order is no longer active.
+
+Opened by `ORDER-1268`'s own lane, naming the half of its acceptance that is **weaker than the
+sentence implies**. That acceptance reads: *"the runners either refuse a partial `.set` or record
+that they used one, **so a run's own evidence says whether its remainder came from the cache**."*
+
+`ORDER-1268` delivered the first clause and the middle of the second. What all three launchers do
+today is `Write-Output "surface: <STATE> -- <message>"`. Callers capture stdout, so the fact is
+**available at run time** — and it is **gone by the time anyone reads the evidence**. The `.htm`
+report does not carry it, the `.ini` does not carry it, and nothing in `factory/` does. So the
+question the clause was written to make answerable — *"was this number produced with a full
+surface, or partly from the terminal cache?"* — is still unanswerable from anything committed,
+which is the state the clause exists to end.
+
+**Why it was not done in `ORDER-1268`.** Two reasons, both stated rather than discovered later:
+the obvious destination (`_mt5_auto/**`) was held by the live `S-2026-08-03-S13D` lane, and
+writing a `;`-comment into the generated `.ini` is a change to what the **tester** parses, which
+cannot be validated without an MT5 terminal — and that lane held the terminal too.
+
+**Acceptance.** A run leaves a **durable, committed** record of its `.set` surface state alongside
+whatever else identifies it, and a reader asking *"is this number reproducible?"* can answer from
+that record without re-running anything. ⚠️ Decide **where** before writing anything: `RunJournal`
+already exists and already carries an `ExecutionKey`, so a new sidecar may be the wrong shape and a
+`set_surface_state` field on the existing record the right one. ⚠️ Do **not** close this by adding
+another `Write-Output`.
+
+---
+
+## ORDER-1284 — [infra/cages] PART 4's undeclared-reference sweep has two blind spots, and neither is visible from inside it — `DONE / REVIEWED (canonical verification 2026-08-17; duplicate-stale — both blind spots already closed, guard-trigger tests PASS)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** both PART 4 blind spots are already closed on canonical — PART 4d
+> parses Python suite bodies via AST for tracked-path references (blind spot 1), and the widened
+> `$repoPathRe` regex now also matches bare repo-root filenames with no directory prefix (blind spot 2),
+> both gated through the existing `IsNotDependency`/`$NOT_A_DEPENDENCY` exemption list.
+> `run_guard_trigger_tests.ps1` — all parts green. No code change was needed. The investigation below
+> is retained as history; this order is no longer active.
+
+`run_guard_trigger_tests.ps1` PART 4 is the check that a suite cannot read a tracked file it has not
+declared. Measured 2026-08-03 while landing `ORDER-1263`, and **both** limits are structural rather
+than a missing entry:
+
+| # | blind spot | evidence |
+|---|---|---|
+| 1 | it reads **only** `scripts/_test/<suite>.ps1` — never the Python file the wrapper runs | `run_guard_trigger_tests.ps1:182` — `Get-Content (Join-Path $RepoRoot "scripts\_test\$s")`. Every path string inside a `run_*_tests.py` is outside the sweep |
+| 2 | its regex requires a directory prefix from a closed set (`scripts\|docs\|_triage\|portfolio\|tools\|.githooks`), so a **repo-root** path can never match — `AGENT_TASKBOARD.md`, `VISION.md`, `PROJECT_STATE.md`, `EA_SCORECARD_AND_REGISTRY.md`, `MASTER_BACKLOG.md` are all invisible | `:183` |
+
+**Live instance:** `ORDER-1263` made `run_s10_tests.py` read five tracked files at HEAD and only
+`portfolio/DEPLOYMENTS.csv` is declared — and PART 4 stayed green for both reasons at once. That
+instance is **benign and deliberately left undeclared** (the suite derives every pin from whatever
+HEAD holds, so it is invariant to their content, and declaring `AGENT_TASKBOARD.md` would put a 9.4s
+suite on the commit path of the repo's most-edited file); the reasoning is written into `_pin()`'s
+docstring. **The blind spot is the finding, not that instance.**
+
+⚠️ **Widening the sweep will redden suites that are fine**, so it needs the `$NOT_A_DEPENDENCY`
+escape hatch to absorb them deliberately, one at a time, each with a reason. Do not widen it and then
+bulk-add exemptions to get back to green — that converts a real check into a list of names.
+
+---
+
+## ORDER-1380 — [factory/S10+S12] Two review findings with no home: an assignment with no lifecycle rule, and "ever delivered" inferred from a recording transport — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** lifecycle and `transport_kind` contracts are integrated and schema/runtime cages passed. ORDER-1380 is fully closed; the original review narrative below is retained for provenance.
+
+> Opened 2026-08-04 by lane `S-2026-08-04-CORRECT6` out of its own block, for the two findings of
+> the independent review that are **real, reproduced, and not inside any existing order's subject**.
+> The other ten were fixed in `fec31b69` or handed to `ORDER-1266`.
+
+**1 · 🟠 `CANDIDATE_ASSIGNED` and `CANDIDATE_REASSIGNED` have no invariants that distinguish them.**
+`ORDER-1260` #2 established WHICH event types may move a candidate. It did not establish what each
+of the two means. Measured: an authorized `CANDIDATE_REASSIGNED(B)` on an **empty history**
+validates (a reassignment of nothing), a `CANDIDATE_ASSIGNED(B)` **after** the pair is already on
+candidate A validates (a first assignment onto something already assigned), and either event with
+`candidate_id: null` validates (a move to nowhere). The actor matrix is otherwise correct —
+automation can write neither. `attestation.py:247`.
+**The shape of the answer, so it is not re-derived:** the fold already knows the current
+`candidate_id`, so ASSIGNED means *current is None* and REASSIGNED means *current is not None and
+differs*. That is two lines and no new state. What it needs first is a decision on whether a
+re-`ASSIGNED` to the SAME candidate is an error or a harmless restatement.
+
+**2 · 🟡 `UNCONFIGURED_REGRESSION` infers "was configured" from any past `DELIVERED`, including a
+`RecordingTransport` one.** `ORDER-1261` #6 splits *"the owner has not made the bot yet"* from
+*"the credential that was working is gone"* by asking whether the channel has ever delivered. A
+`--record` run writes `DELIVERED` through `RecordingTransport` **without any credential existing**,
+so a later real run reports a regression that never happened. And the converse: a torn or archived
+historical delivery gives a false `UNCONFIGURED`, which is the muted one. `notifier.py:1020` ·
+`:1200`.
+**Why it was still worth landing:** both directions are strictly better than the single value they
+replaced, and the false-positive direction is the loud one. But the inference is on the wrong fact
+— *"a credential existed"* is not *"a message was recorded"*. The ledger line would have to record
+the transport kind, which is a wire-contract change and therefore its own decision.
+
+🚫 Do not fix #2 by dropping the split back to one outcome. 🚫 Do not fix #1 by adding a state to
+the event enum — the fold already carries what both rules need.
+
+---
+
+## ORDER-1255 — [factory/S13] The parity result manifest belongs to `parity.py` — `DONE / REVIEWED (SYSTEM FOUNDATION accepted 2026-08-17)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** the accepted integration includes the committed result-manifest/replay path and parity evidence passed. Cryptographic binding of that manifest to source bytes and the measured EX5/build receipt remains explicitly parked future hardening, not an active acceptance task.
+
+§8.6 items **3 and 4** are the two remaining `BLOCKED` items with a clean, MT5-free path to green.
+
+**The obstacle, measured.** `factory/parity/*/wrapper.json` name their tester reports under
+`_mt5_auto/reports/`, and `.gitignore:70` ignores that directory — so the committed manifests
+point at files **that are not in the repo**, and `parity.py --rollup` reproduces only on the
+machine that ran it. A checker that re-read those directories would be judging bytes nobody else
+can see.
+
+**Build.** `parity.py` gains a **result manifest**: the derived OBSERVATIONS (the fields `compare`
+actually reads) plus the per-case verdicts, written once by the machine that ran the pair and
+committed. `check_pilot_acceptance` then drives **`parity.verdict_for_case` over the recorded
+observations** — it does not re-implement the comparison and it does not re-read the reports.
+
+**Acceptance.** (1) The manifest has a schema entity and a negative fixture. (2) Item 3 PASSes only
+when every one of the **seven** points of §5.5 is exercised by a real observation somewhere in the
+case set — `--rollup` is the contract, and `must-trade`/`cage-fires` **exiting 1 is not a failure**
+(no single case can exercise all seven). (3) Item 4 asserts the two DIRECTIONS from
+`verdict_for_case`: the must-trade case actually traded and the refusal case actually refused on
+both sides. (4) The lane is named in the output. (5) `locked-absent` stays EXCLUDED from the
+contract — it is expected to differ, and folding it in reports the harness working as the harness
+failing.
+
+**Prohibited:** wiring the checker to re-read `_mt5_auto/reports/**` · a second implementation of
+the comparison in the checker · deleting an `UNIMPLEMENTED` entry without implementing it.
+
+⚠️ **Not started 2026-08-04 by lane `S-2026-08-04-S13H`, and the reason is a lane conflict, not
+time.** Acceptance (1) is *"the manifest has a schema entity and a negative fixture"*, which is an
+edit to `_triage/factory_os/schemas.json` — declared in `docs/SESSION_LEDGER.md` by
+`S-2026-08-04-CORRECT5`, which is `ACTIVE`. Rule 4 is one writer per shared file per period. Building
+the `parity.py` half and leaving the entity for later would put the store in a state where the
+manifest exists and nothing describes it, which is the shape `ORDER-1280` is already paying for
+twelve times over. **The next lane that owns `schemas.json` should take this whole order at once.**
+🚫 The `_mt5_auto/reports/**` obstacle above is unchanged and is still the reason a re-reading
+checker is not the shortcut it looks like.
+
+---
+
+## ORDER-601 — [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is owed — `DONE / REVIEWED (canonical verification 2026-08-17; duplicate-stale — audit-7 defects no longer reproduce, 129 schema fixtures incl. 84 per-entity PASS + snapshot validator 35 fixtures/13 mutations PASS)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **2026-08-17 durable closure:** the stale `all_clear` design statements and false `x-enforced-by`
+> claims that audit 7 (`CODEX_AUDIT7_2026-07-30.md` / `CODEX_AUDIT7B_2026-08-04.md`) named no longer
+> reproduce on canonical. `check_schema_structure.py` = STRUCTURE OK; `run_schema_fixtures.py` = ALL
+> 129 CASES BEHAVED AS DECLARED (45 root + 84 per-entity); `run_snapshot_validator_tests.py` = ALL 35
+> FIXTURES AND 13 MUTATIONS BEHAVED AS DECLARED. No code change was needed. The spec below is retained
+> verbatim as history; this order is no longer active.
+
+**⚠️ READ THIS BEFORE TOUCHING THE SPEC BELOW — the work is already built.** The spec is kept verbatim as the record of what was asked. What exists:
+- **part 1** `c8d03d4b` — evidence/verdict entity split, so a supplied answer has nowhere to sit; ajv 17→28
+- **part 2** `4a4d6003` — `_triage/factory_os/snapshot_validator.py` (13 predicates, recompute-on-read), `run_snapshot_validator_tests.py`, `SNAPSHOT_VALIDATOR_MUTATION_TABLE.md`
+- **blind audit 6** `_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_AUDIT6_2026-07-30.md` — verdict **NOT DONE**, 8 findings
+- **audit fixes** `161d2033` + `a7960e08` — all 8 reproduced here, then fixed
+
+**The audit's headline finding was the NAME, not the arithmetic:** a snapshot with a dead fleet sensor, a blind risk sensor, missing kill/judge controls and missing attestation verified `all_clear=true`, because the verdict is computed from `meta.reconciliation` and the source rows **only**. The field is now **`reconciliation_clear`** and the schema states what it excludes. Making it a genuinely global verdict needs health contracts for 7 domains that are `array of arbitrary object` today ⇒ **S4**.
+
+**Not fixed, named:** `verify_snapshot` proves **internal consistency, not authenticity** — `read_ok` / `age_hours` / `path` / `sha256` / `mtime` are builder claims taken at face value, so rows pointing at a nonexistent drive with `mtime 2099` are accepted. Deriving and re-hashing them, plus wiring readers through `load_verified()`, is **S4**.
+
+**Why this is `DONE` and not `REVIEWED`:** the work, the audit and the fixes are all from the same seat. Self-certifying after a blind audit said NOT DONE is exactly the anchoring the audit protocol exists to prevent. `REVIEWED` is owed a re-check by Codex or the user.
+
+⚠️ **`bars:` / `flat-lot probe:` do not apply** — tooling order, not a test/optimize order.
+
+**Blocks:** S3, and through it S4
+
+### The blocker this order removes
+`all_clear` is **required** in the persisted document *and* a writer-supplied value **must be rejected**.
+Both cannot be checked against one document: the builder has to write it, so no validator inspecting the
+persisted file alone can tell "computed" from "typed". That is the builder-input/persisted-output boundary.
+
+**Shape to build — audit 5's refinement of the two-entity split, adopted:**
+- `SnapshotBuilderInput` — closed; carries the snapshot facts and a closed `ReconciliationEvidence` that
+  **has no `all_clear`**, so a supplied value is refused by the schema with no special-case code.
+- `ControlRoomSnapshotV5` — the persisted document: the same preserved facts, plus validator-owned
+  `all_clear` and a **closed list of reason codes**.
+- **One output verification function** recomputes `all_clear` from the persisted evidence and rejects a
+  mismatched boolean. This is the part rev 1 was missing. JSON Schema can prove the boolean is well-typed;
+  it cannot prove authorship. Audit 5's surviving attack was a hand-authored output with `sources=[]` and
+  `all_clear=true` — structurally valid, and only recomputation catches it.
+- Readers accept a snapshot **only through that verifier** (wiring the readers is S4, not this order).
+
+### Fixture discipline — applies to every case below, no exceptions
+1. **One-field minimal pair.** Every negative is a known-valid positive with **exactly one** field changed.
+   Rev 1 allowed a negative that was also missing `entity`; ajv returns nonzero and the case is credited to
+   the rule it names while never reaching it.
+2. **Assert the reason.** Each negative asserts a stable reason code / error path — not merely "rejected".
+3. **Paired repair.** Repairing only that delta makes the instance valid again.
+4. **Tool failure is ERROR, never rejection.** Already implemented in `run_schema_fixtures.py` as of
+   `3812d72c` — `run()` returns `pass`/`fail`/`ERROR` and ERROR satisfies no expectation. Measured: with the
+   schema file absent, the old code reported **14 of 17 cases OK**. Reuse this; do not reintroduce a boolean.
+5. **Mutation table required.** Disable each predicate in turn; **only that predicate's named fixture may go
+   red.** A predicate whose removal turns nothing red is not tested. This artifact is a deliverable.
+6. **No test-only identifiers in validator logic.** `build_id == "fixture-healthy"` returning true is the
+   cheapest way to pass everything below.
+
+### Acceptance — every line is a fixture, both directions
+- [ ] Mandatory source **missing** ⇒ `all_clear=false`, reason `MANDATORY_SOURCE_MISSING:<name>`.
+- [ ] Mandatory source **unreadable** ⇒ `all_clear=false`, reason distinct from missing. Two closed states,
+      `MISSING` and `UNREADABLE`, asserted by exact path — not two free-text messages nobody checks.
+      ("cannot read" and "nothing to report" must never collapse: memory `prove-the-instrument-can-see-the-file`.)
+- [ ] Mandatory source **stale** ⇒ `all_clear=false`. `age_hours` must be varied **across the
+      `stale_bar_hours` boundary supplied in the input** — the validator must derive freshness, not accept a
+      caller-supplied `fresh=false`. No threshold may be hardcoded.
+- [ ] **`sources=[]` — two separate attacks, both required.**
+      (a) builder input with `sources=[]` and no `all_clear` ⇒ computed false with `MANDATORY_SOURCE_MISSING`;
+      (b) a complete **persisted** document with `sources=[]` and `all_clear=true` ⇒ **rejected by output
+      recomputation**, naming the mismatch. Rev 1 had only a form of (a), and audit 4 built an instance ajv
+      accepted.
+- [ ] Builder input carrying `all_clear` ⇒ rejected, with the ajv error path/keyword **naming that property**;
+      the same instance without it passes the input schema.
+- [ ] `discovered != categorized` ⇒ false. Category sum ≠ `categorized` ⇒ false. Coverage sum mismatch ⇒ false.
+- [ ] `conflicts > 0` ⇒ false. `unclassified > 0` ⇒ false.
+- [ ] **`categories.actionable > 0` ⇒ false.** Omitted from rev 1 although `schemas.json` states it.
+- [ ] **Nonnegative counts.** Measured 2026-07-30: `discovered` and `categorized` carry `minimum: 0`, but
+      every nested `categories.*` and `coverage.*` integer, and `duplicates`/`conflicts`/`unclassified`, carry
+      **none**. Audit 5's failing instance — `categories.actionable = -1`, `running = 1` — balances every
+      equation and validates. Add `minimum: 0` to all of them, with a fixture per group.
+- [ ] **Source identity.** Registry and source names unique; ~~exact membership both ways between
+      `mandatory_sources` and `sources`~~ **AMENDED 2026-07-30 (rev 3, after Codex audit 6 flagged the
+      deviation rather than letting it be called DONE): membership both ways for MANDATORY rows only** —
+      every registry name must have a row, and every row claiming `mandatory:true` must be in the
+      registry — because a genuinely optional source outside the registry is legitimate (the real v4
+      writer emits three sources and the registry need not name all of them). Exact set equality would
+      forbid that, and the implementation chose the weaker rule silently; this line now says which rule
+      is meant. Plus a fixture where a row's own `mandatory:false` contradicts the registry.
+      Prefer removing the redundant per-row flag over reconciling it — **deferred to S4**: the real v4
+      consumers read the flag, so until they migrate, a contradiction that cannot be reported is one
+      that ships.
+- [ ] **Two independently constructed healthy positives** ⇒ `all_clear=true` — different non-zero counts and
+      reordered sources. One positive only blocks a constant-false implementation.
+- [ ] **Whole-root, not a detached `meta`.** Note `reconciliation` currently lives under `SnapshotMeta`, and
+      `ControlRoomSnapshotV5` is declared `additionalProperties: true` — an arbitrary top-level shape
+      validates today. Close the root, then assert independently that removing `entity`, `system_health` and
+      `summary` each produces a root-path failure.
+- [ ] **Compatibility fields survive input → output.** `stale_bar_hours`, `decision_bar_trades`,
+      `counting_method` and the real source-row metadata exist in the live v4 file
+      (`scripts/control_room_snapshot.ps1:383-389`) and are absent from the closed `SnapshotMeta`. The
+      boundary must preserve them, with a fixture seeding them and asserting they are present in the output.
+- [ ] The real `portfolio/control_room_snapshot.json` is **not required to pass** — that is S4's criterion and
+      stays S4's. But its diagnostic line must distinguish expected schema incompatibility from a read/tool
+      error (implemented in `3812d72c`; keep it).
+
+### Prohibited
+- ❌ Writing `portfolio/control_room_snapshot.json` or changing the live snapshot's version.
+- ❌ Touching `make_status.ps1`, `live_dashboard.ps1`, `daily_monitor.ps1`, `control_room_snapshot.ps1` — S4.
+- ❌ Inventing a freshness threshold. `stale_bar_hours` exists in the real snapshot `meta`; read it.
+- ❌ Declaring any bullet satisfied by a fixture that has never been observed failing **for the reason it names**.
+- ❌ Reporting DONE without the mutation table from discipline rule 5.
+
+---
+
+---
+
