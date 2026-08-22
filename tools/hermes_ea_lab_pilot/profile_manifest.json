@@ -1,0 +1,19 @@
+{
+  "schema": "ea-lab-hermes-pilot-v1",
+  "base_sha": "a3123655a82981a3ddd2fd81aa311affb9159b6e",
+  "hermes_version": "0.20.5",
+  "hermes_tag": "v2026.8.19",
+  "hermes_commit": "fcbd1076a93841fa88855acce810e342a5b78101",
+  "default_model": "anthropic/claude-sonnet-4.6",
+  "default_provider": "anthropic",
+  "terminal_cwd": ".",
+  "profiles": [
+    {"name":"ea-researcher","soul":"profiles/ea-researcher.SOUL.md","enabled_toolsets":["web","todo","memory","session_search","clarify","cronjob"]},
+    {"name":"ea-coder","soul":"profiles/ea-coder.SOUL.md","enabled_toolsets":["todo","memory","session_search","clarify","cronjob"]},
+    {"name":"ea-tester","soul":"profiles/ea-tester.SOUL.md","enabled_toolsets":["todo","memory","session_search","clarify","cronjob"]},
+    {"name":"ea-reviewer","soul":"profiles/ea-reviewer.SOUL.md","enabled_toolsets":["todo","memory","session_search","clarify","cronjob"]}
+  ],
+  "forbidden_persistent_toolsets": ["terminal","file","code_execution","computer_use","delegation"],
+  "provider_evidence": {"anthropic":"LIVE_PASS","qwen_direct":"LIVE_PASS_EXTERNAL","openai_codex":"AUTH_PASS_QUOTA_429"},
+  "merge_policy": "STOP_BEFORE_MERGE"
+}
