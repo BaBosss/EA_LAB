@@ -34,7 +34,7 @@ void Exporter_Run()
       return;
    }
    int total = HistoryDealsTotal();
-   int fh = FileOpen(Exporter_FileName(), FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_ANSI, ',');
+   int fh = FileOpen(Exporter_FileName(), FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_ANSI | FILE_SHARE_READ | FILE_SHARE_WRITE, ',');
    if(fh == INVALID_HANDLE)
    {
       PrintFormat("[EXPORT] FileOpen failed err=%d", GetLastError());
