@@ -75,6 +75,7 @@ $chain = @(
 
 $legacyLiteral = 'D:\EA_LAB'
 $executionHardCodes = @()
+$allowedPrimaryRootDefaults = 0
 $allSource = @{}
 foreach ($relative in $chain) {
     $path = Join-Path $RepoRoot $relative
@@ -83,11 +84,21 @@ foreach ($relative in $chain) {
     $allSource[$relative] = ($lines -join "`n")
     foreach ($line in $lines) {
         if ($line -notmatch '^\s*#' -and $line.Contains($legacyLiteral)) {
+            # L9 execution-context contract: this ONE literal is an external operator-workspace
+            # identity, not a repository I/O root. control_room_snapshot.ps1 compares the current
+            # checkout against it to decide whether gitignored compiled artifacts can be trusted.
+            # Keep the exception exact so any second D:\EA_LAB operational literal still fails.
+            if ($relative -eq 'scripts\control_room_snapshot.ps1' -and
+                $line.Trim() -eq "[string]`$PrimaryRepoRoot = 'D:\EA_LAB'") {
+                $allowedPrimaryRootDefaults++
+                continue
+            }
             $executionHardCodes += "$relative :: $line"
         }
     }
 }
-Assert-Equal 'no execution-chain operational literal D:\EA_LAB remains' 0 $executionHardCodes.Count
+Assert-Equal 'exactly one declared PrimaryRepoRoot external-identity default exists' 1 $allowedPrimaryRootDefaults
+Assert-Equal 'no other execution-chain operational literal D:\EA_LAB remains' 0 $executionHardCodes.Count
 
 $parseErrors = @()
 foreach ($relative in $chain) {

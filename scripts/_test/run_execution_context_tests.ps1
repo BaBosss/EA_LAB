@@ -97,6 +97,19 @@ $resolved = Resolve-EaLabRepoRoot -AnchorPath $standaloneClone
 Assert-Equal 'Resolve-EaLabRepoRoot accepts the standalone-clone fixture as a real repo root' $standaloneClone $resolved
 
 Write-Host ''
+Write-Host '=== (c2) -Root is authoritative even when caller CWD is outside the repo ==='
+$outExternalCwd = Join-Path $work 'snapshot_external_cwd.json'
+Push-Location $work
+try {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot 'scripts\control_room_snapshot.ps1') -Root $RepoRoot -OutFile $outExternalCwd *>$null
+    $rcExternalCwd = $LASTEXITCODE
+} finally {
+    Pop-Location
+}
+Assert-Equal 'external-CWD invocation with explicit -Root exits 0' 0 $rcExternalCwd
+Assert-True 'external-CWD invocation produces a validated snapshot' (Test-Path $outExternalCwd)
+
+Write-Host ''
 Write-Host '=== (d) live pipeline smoke: the new meta fields survive the real build->validate->replace chain ==='
 $outNonPrimary = Join-Path $work 'snapshot_nonprimary.json'
 $outPrimary    = Join-Path $work 'snapshot_fakeprimary.json'

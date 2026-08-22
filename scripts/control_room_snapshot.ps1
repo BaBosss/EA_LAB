@@ -672,9 +672,15 @@ $sum.identity_coverage = [ordered]@{
 # answer, never a hand-typed count -- the ORDER-612 round-1 lesson (an all-zero typed claim
 # produced reconciliation_clear=true) applies to a typed value here exactly as it did in the
 # first pipeline version.
-$reconOut = & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') reconcile $Root
-if ($LASTEXITCODE -ne 0) {
-  throw "control_room_snapshot: snapshot_build.py reconcile refused root '$Root' (exit $LASTEXITCODE). No snapshot was built."
+Push-Location $Root
+try {
+  $reconOut = & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') reconcile $Root
+  $reconRc = $LASTEXITCODE
+} finally {
+  Pop-Location
+}
+if ($reconRc -ne 0) {
+  throw "control_room_snapshot: snapshot_build.py reconcile refused root '$Root' (exit $reconRc). No snapshot was built."
 }
 $reconciliation = $reconOut | ConvertFrom-Json
 
@@ -757,8 +763,13 @@ $builderTmp = Join-Path (Split-Path $OutFile -Parent) (".control_room_builder_in
 $json = $snapshot | ConvertTo-Json -Depth 8
 [System.IO.File]::WriteAllText($builderTmp, $json, (New-Object System.Text.UTF8Encoding($false)))
 try {
-  & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') build $builderTmp $OutFile $Root
-  $buildRc = $LASTEXITCODE
+  Push-Location $Root
+  try {
+    & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') build $builderTmp $OutFile $Root
+    $buildRc = $LASTEXITCODE
+  } finally {
+    Pop-Location
+  }
 } finally {
   Remove-Item $builderTmp -ErrorAction SilentlyContinue
 }
