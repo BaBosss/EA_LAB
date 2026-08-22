@@ -70,7 +70,7 @@ The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items
   this sync.
 - **TEMPLATE:** smoke-regression suite accepted (`scripts/tpl_smoke_regression.ps1`, 8/8 clean across every
   current Boss build); the Zeus grid/LOG port stays waiting on the Zeus optimization outcome above.
-- **MONITOR:** resume deterministic monitoring / Control Plane continuation; preserve `DEGRADED_MONITORING` until runtime evidence warrants a change.
+- **MONITOR (2026-08-22 update):** deterministic Control Plane continuation tranche is accepted/canonical at `a3123655`; the external-CWD snapshot root-binding defect is repaired, independently reviewed, and post-fix smoke-proven. Preserve `DEGRADED_MONITORING`; no repo-actionable monitoring defect remains from this tranche. ORDER-353 now waits on owner/external runtime evidence (current live config read, actual-VPS preflight, attestation, target runtime identity), so do not invent another monitoring order without new evidence or a direct consumer.
 
 No new detailed order is invented here; the Control Tower should bind these phase items to the next canonical task contracts.
 > 🔧 **SYSTEMS TRANCHE ORDER-152..158 (เขียน 2026-07-23, Opus-seat)** — งาน infra/tooling ล้วน ไม่ใช่ verdict EA.
