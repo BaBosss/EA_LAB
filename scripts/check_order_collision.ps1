@@ -69,6 +69,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# ORDER: taskboard-active-split-20260822 -- Get-TaskboardActiveLogicalText/-Bytes below.
+. (Join-Path $PSScriptRoot 'lib\taskboard_source.ps1')
+
 $Tag         = '[order-collision]'
 $ActivePath  = 'AGENT_TASKBOARD.md'
 $ArchivePath = 'ARCHIVE_TASKBOARD_2026-07A.md'
@@ -488,22 +491,30 @@ if ($offline) {
     }
 }
 
+# ORDER: taskboard-active-split-20260822. AGENT_TASKBOARD.md's ORDER blocks now live in
+# taskboards/active/* (declared, in order, by the manifest). A staged change to a part alone
+# -- root untouched -- must still trigger this guard, exactly like a staged change to the old
+# monolith did (task requirement E: no silent no-op on a secondary-part-only commit).
 $taskboardStaged = $false
-foreach ($p in $stagedPaths) { if ($p -eq $ActivePath) { $taskboardStaged = $true } }
+foreach ($p in $stagedPaths) {
+    if ($p -eq $ActivePath) { $taskboardStaged = $true }
+    if ($p -like 'taskboards/active/*') { $taskboardStaged = $true }
+}
 if (-not $taskboardStaged) {
-    Write-Host ('{0} {1} not staged -- pass (no-op)' -f $Tag, $ActivePath)
+    Write-Host ('{0} {1} (or taskboards/active/*) not staged -- pass (no-op)' -f $Tag, $ActivePath)
     exit 0
 }
 
-# --- staged active board ---
+# --- staged active board (reconstructed: manifest + all declared parts, in order) ---
 $stagedActive = ''
 if ($offline) {
     if ($PSBoundParameters.ContainsKey('StagedActiveContent')) { $stagedActive = $StagedActiveContent }
 } else {
-    # snapshot: index -- the board as this commit will contain it. RULE 1's subject.
-    $stagedActive = Get-GitBlobText -Spec (':{0}' -f $ActivePath)
-    if ($null -eq $stagedActive) {
-        Write-Host ('{0} NOTE: {1} is staged but has no index blob (staged for deletion) -- nothing to check, pass' -f $Tag, $ActivePath)
+    # snapshot: index -- the FULL LOGICAL board as this commit will contain it. RULE 1's subject.
+    try {
+        $stagedActive = Get-TaskboardActiveLogicalText -RepoRoot $RepoRoot -Mode Staged
+    } catch {
+        Write-Host ('{0} NOTE: staged active board not readable ({1}) -- nothing to check, pass' -f $Tag, $_.Exception.Message)
         exit 0
     }
 }
@@ -551,8 +562,14 @@ if ($offline) {
     # the index would subtract the staged board from itself, RULE 2 would see zero new orders,
     # and the reserved-block rule could never fire again -- shape 3, produced by making the
     # vintages agree when they are supposed to differ.
-    $headActive = Get-GitBlobText -Spec ('HEAD:{0}' -f $ActivePath)
-    if ($null -eq $headActive) { $headActive = '' }
+    # Reconstructed (manifest + parts) the same way as the staged read above, at HEAD instead
+    # of the index -- a HEAD predating this migration is still a single-file board and resolves
+    # via the same function (no TASKBOARD-ACTIVE-PARTS marker = whole-manifest fallback).
+    try {
+        $headActive = Get-TaskboardActiveLogicalText -RepoRoot $RepoRoot -Mode Committed -CommitSha 'HEAD'
+    } catch {
+        $headActive = ''
+    }
 }
 
 # --- committed ledger (absence is a NOTE, not an error) ---

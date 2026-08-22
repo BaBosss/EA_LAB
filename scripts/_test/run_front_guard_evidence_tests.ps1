@@ -356,9 +356,20 @@ if ($bogus.Code -ne 0 -and $bogus.Text -match "is not 'index' or 'worktree'") {
 # what ORDER-670's T6 refuses, correctly.
 # ===========================================================================================
 Phase 'B -- check_order_collision judged at the index, not at HEAD'
-$ACTIVE  = 'AGENT_TASKBOARD.md'
-$ARCHIVE = 'ARCHIVE_TASKBOARD_2026-07A.md'
-$collide = Join-Path $RepoRoot 'scripts\check_order_collision.ps1'
+$ACTIVE_ENTRY = 'AGENT_TASKBOARD.md'
+$ARCHIVE      = 'ARCHIVE_TASKBOARD_2026-07A.md'
+$collide      = Join-Path $RepoRoot 'scripts\check_order_collision.ps1'
+# The canonical entry is now a manifest. B0/B1 must stage their probe into a REAL active part;
+# appending an ORDER header to the manifest is intentionally ignored by the logical-board resolver
+# and would make this attack a false green. Resolve the storage parts from the staged manifest,
+# while retaining the legacy single-file fallback for pre-split fixtures.
+. (Join-Path $RepoRoot 'scripts\lib\taskboard_source.ps1')
+$activeManifestAtIndex = GitText ('show ":{0}"' -f $ACTIVE_ENTRY)
+$activePartPaths = @()
+if ($activeManifestAtIndex -and $activeManifestAtIndex.IndexOf('<!-- TASKBOARD-ACTIVE-PARTS') -ge 0) {
+    $activePartPaths = @(Get-TaskboardActivePartList -ManifestText $activeManifestAtIndex)
+}
+$ACTIVE = if ($activePartPaths.Count -gt 0) { $activePartPaths[-1] } else { $ACTIVE_ENTRY }
 # THE PROBE ID IS DERIVED, NOT TYPED, and the reason is a failure this cage produced.
 #
 # It has to be inside the COMMITTING LANE's reserved block so RULE 2 stays silent and the
@@ -406,7 +417,8 @@ function Get-ProbeOrderId {
     $ruleTwoLive = $ranges.Count -gt 0
     if (-not $ruleTwoLive) { $ranges = @(, @(900, 998)) }
     $used = @{}
-    foreach ($board in @('AGENT_TASKBOARD.md', 'AGENT_TASKBOARD_MERGE.md', 'AGENT_TASKBOARD_PQUANT.md', 'ARCHIVE_TASKBOARD_2026-07A.md')) {
+    $activeStoragePaths = if ($activePartPaths.Count -gt 0) { @($activePartPaths) } else { @($ACTIVE_ENTRY) }
+    foreach ($board in @($activeStoragePaths + @('AGENT_TASKBOARD_MERGE.md', 'AGENT_TASKBOARD_PQUANT.md', 'ARCHIVE_TASKBOARD_2026-07A.md'))) {
         $txt = GitText ('show ":{0}"' -f $board)
         if (-not $txt) { continue }
         foreach ($m in [regex]::Matches($txt, '(?m)^##\s+ORDER-(\d+)\b')) { $used[[int]$m.Groups[1].Value] = $true }

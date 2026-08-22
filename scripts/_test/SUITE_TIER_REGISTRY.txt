@@ -147,3 +147,4 @@ run_optimize_dest_xml_staleness_tests.ps1|UNMEASURED|A-F2 stale destination opti
 run_pilot_swap_probe_tests.ps1|UNMEASURED|A-F1 pilot swap-probe $Matches collision cage (M1-Lane A, 2026-08-20); not timed against the pinned budget.
 run_pilot_xml_artefact_identity_tests.ps1|UNMEASURED|A-F7 optimizer XML artefact byte-identity cage (M1-Lane A, 2026-08-20); not timed against the pinned budget.
 run_template_entry_wrapper_registration_tests.ps1|UNMEASURED|B-F2 wrapper-to-registry direction check cage (M1-Lane B, 2026-08-20); not timed against the pinned budget.
+run_taskboard_split_negative_tests.ps1|UNMEASURED|Active taskboard split adversarial migration cage; run directly for this migration and not timed against the pinned fast-tier budget.

@@ -430,7 +430,7 @@ fi
 # the ORDER-674 defect, which was measured on portfolio/DEPLOYMENTS.csv and is the reason
 # EA_LAB_EVIDENCE=index exists at the top of this file.
 # =========================================================================================
-digest_staged=$(git diff --cached --name-only -- 'AGENT_TASKBOARD.md' 'ARCHIVE_TASKBOARD_2026-07A.md' 'TASKBOARD_DIGEST.md')
+digest_staged=$(git diff --cached --name-only -- 'AGENT_TASKBOARD.md' 'taskboards/active/*' 'ARCHIVE_TASKBOARD_2026-07A.md' 'TASKBOARD_DIGEST.md')
 if [ -n "$digest_staged" ]; then
   dg_root=$(mktemp -d 2>/dev/null || echo "${TMPDIR:-/tmp}/ea_digest_$$")
   mkdir -p "$dg_root"
@@ -443,6 +443,22 @@ if [ -n "$digest_staged" ]; then
     fi
     git show ":$f" > "$dg_root/$f" || { dg_ok=0; break; }
   done
+  # Active ORDER blocks may live in split part files declared by AGENT_TASKBOARD.md.
+  # Materialize the INDEX versions into the same temp root so make_taskboard_digest -Check
+  # judges the exact logical queue this commit will land. Part-only commits must trigger this gate.
+  if [ "$dg_ok" -eq 1 ]; then
+    git ls-files -- 'taskboards/active/*' > "$dg_root/.active_parts"
+    while IFS= read -r f; do
+      [ -z "$f" ] && continue
+      if ! git cat-file -e ":$f" 2>/dev/null; then
+        echo "PRECOMMIT-FAIL-CLOSED (D-F9): ':$f' is not in the index -- split active queue incomplete"
+        dg_ok=0
+        break
+      fi
+      mkdir -p "$dg_root/$(dirname "$f")"
+      git show ":$f" > "$dg_root/$f" || { dg_ok=0; break; }
+    done < "$dg_root/.active_parts"
+  fi
   if [ "$dg_ok" -ne 1 ]; then
     rm -rf "$dg_root"
     exit 1

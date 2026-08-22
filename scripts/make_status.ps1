@@ -44,11 +44,15 @@ $branch = git -C $repo rev-parse --abbrev-ref HEAD
 # same way ORDER-612 narrows around Get-VerifiedSnapshot: EAP='Stop' for the read alone, an
 # explicit UNKNOWN line on failure, an explicit placeholder on a real empty queue, so the two
 # cases are never the same bytes in STATUS.md.
-$taskboardPath = Join-Path $repo "AGENT_TASKBOARD.md"
+#
+# ORDER: taskboard-active-split-20260822. AGENT_TASKBOARD.md is now a manifest; its ORDER
+# blocks live in taskboards/active/*. scripts/lib/taskboard_source.ps1 reconstructs the full
+# logical active board (declared parts, in order) so this page keeps seeing every order.
+. (Join-Path $PSScriptRoot 'lib\taskboard_source.ps1')
 $savedEapTb = $ErrorActionPreference
 $ErrorActionPreference = 'Stop'
 try {
-  $orders = Get-Content -LiteralPath $taskboardPath -Encoding UTF8 |
+  $orders = Get-TaskboardActiveLogicalLines -RepoRoot $repo -Mode Working |
     Where-Object { $_ -match '^## ORDER-' } |
     ForEach-Object { $_ -replace '^## ', '- ' }
   if (-not $orders) { $orders = @('- (no open orders -- taskboard read OK, zero matching lines)') }

@@ -242,11 +242,16 @@ Assert "fresh report but exit 1 (no report) = REFUSED" { -not (Test-ReportIsFres
 Assert "unknown exit 4 = REFUSED (whitelist, not blacklist)"  { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 4 -Quiet) }
 Assert "unknown exit 99 = REFUSED"                            { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 99 -Quiet) }
 Assert "negative exit -1 = REFUSED"                           { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit -1 -Quiet) }
+# Do not invoke the missing mandatory parameter directly in an interactive Windows PowerShell host:
+# PowerShell prompts for it instead of throwing, which can hang the entire fast tier indefinitely.
+# The contract under test is declaration-level -- RunnerExit must be Mandatory -- so inspect the
+# command metadata deterministically. A non-mandatory parameter makes this assertion fail red.
+$runnerExitParam = (Get-Command Test-ReportIsFresh).Parameters['RunnerExit']
+$runnerExitMandatory = @($runnerExitParam.Attributes | Where-Object {
+  $_ -is [System.Management.Automation.ParameterAttribute] -and $_.Mandatory
+}).Count -gt 0
 Assert "omitting -RunnerExit is an ERROR, not a silent pass (parameter is mandatory)" {
-  $threw = $false
-  try { Test-ReportIsFresh -Htm $fresh -RunStart $runStart -Quiet -ErrorAction Stop | Out-Null }
-  catch { $threw = $true }
-  $threw
+  $runnerExitMandatory
 }
 
 # Exit 3 means the report is real but its numbers are not comparable. Accepting it silently is how

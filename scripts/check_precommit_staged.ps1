@@ -50,6 +50,9 @@ $ErrorActionPreference = 'Stop'
 # it does NOT also run Invoke-Main / call `exit` -- only defines functions.
 . (Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1') -RepoRoot $RepoRoot 6>$null
 
+# ORDER: taskboard-active-split-20260822 -- Get-TaskboardActiveLogicalBytes below.
+. (Join-Path $RepoRoot 'scripts\lib\taskboard_source.ps1')
+
 $ArchivePath    = 'ARCHIVE_TASKBOARD_2026-07A.md'
 $ActivePath     = 'AGENT_TASKBOARD.md'
 $ManifestPath   = 'docs/memory_control/ARCHIVE_MANIFEST.csv'
@@ -263,12 +266,21 @@ if ($order144Staged.Count -gt 0) {
 }
 
 $protectedStaged = @($ProtectedSet | Where-Object { $stagedByPath.ContainsKey($_) })
-if ($protectedStaged.Count -eq 0) {
+# ORDER: taskboard-active-split-20260822. A staged change to a part alone (root manifest
+# untouched) must still run the full consistency check below -- it changes what the staged
+# active board's logical content is, exactly as an edit to the old monolith did.
+$partsStaged = @($stagedByPath.Keys | Where-Object { $_ -like 'taskboards/active/*' })
+if ($protectedStaged.Count -eq 0 -and $partsStaged.Count -eq 0) {
     Write-Host '[precommit-staged] no protected-set file staged -- pass (ordinary commit)'
     exit 0
 }
+if ($partsStaged.Count -gt 0 -and -not $stagedByPath.ContainsKey($ActivePath)) {
+    Write-Host ('[precommit-staged] active part(s) staged without the root manifest: ' + ($partsStaged -join ', '))
+}
 
-Write-Host ('[precommit-staged] protected file(s) staged: ' + ($protectedStaged -join ', '))
+if ($protectedStaged.Count -gt 0) {
+    Write-Host ('[precommit-staged] protected file(s) staged: ' + ($protectedStaged -join ', '))
+}
 
 # --- deleted/renamed protected file = block outright ---
 foreach ($p in $protectedStaged) {
@@ -309,7 +321,13 @@ try {
     # snapshot: index -- and this one is load-bearing enough that the file's .DESCRIPTION already
     # called it out: the exception scan judges the board as it will look AFTER this commit, never
     # HEAD and never the working tree.
-    $stagedActive  = Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $ActivePath
+    #
+    # ORDER: taskboard-active-split-20260822. AGENT_TASKBOARD.md is now a manifest; its ORDER
+    # blocks live in taskboards/active/*. RECONSTRUCTED (manifest + every declared part, in
+    # order) rather than read as a single blob -- otherwise this candidate would look like it
+    # lost every currently-active order the moment the split landed (Invoke-ActiveConservationCheck
+    # below resolves canonical ids against exactly these bytes).
+    $stagedActiveBytes = Get-TaskboardActiveLogicalBytes -RepoRoot $RepoRoot -Mode Staged
 } catch {
     Write-Host "[precommit-staged] INTEGRITY: failed to read staged/HEAD snapshot: $($_.Exception.Message)"
     exit 2
@@ -348,7 +366,7 @@ Write-Host '[precommit-staged] staged archive is a valid checkpoint->HEAD->stage
 # not a workaround.
 $tempDir = $null
 try {
-    $tempActiveBlocks  = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $stagedActive.Bytes) -SourceTag 'current-active')
+    $tempActiveBlocks  = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $stagedActiveBytes) -SourceTag 'current-active')
     $tempArchiveBlocks = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $stagedArchive.Bytes) -SourceTag 'current-archive')
 
     # Candidate-level equivalent of the public Strict policy/integrity checks.

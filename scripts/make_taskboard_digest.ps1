@@ -46,33 +46,32 @@ $ErrorActionPreference = 'Stop'
 # `Split-Path -Parent $PSScriptRoot` in the param default then threw before the body ran.
 # Suppressed stdout hid that: the script "ran", wrote nothing, and left a stale digest
 # behind that looked freshly generated.
+$scriptDir = $PSScriptRoot
+if (-not $scriptDir -and $MyInvocation.MyCommand.Path) {
+    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+}
+if (-not $scriptDir) {
+    throw 'cannot resolve script directory; pass -Root explicitly'
+}
 if (-not $Root) {
-    $scriptDir = $PSScriptRoot
-    if (-not $scriptDir -and $MyInvocation.MyCommand.Path) {
-        $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    }
-    if (-not $scriptDir) {
-        throw 'cannot resolve script directory; pass -Root explicitly'
-    }
     $Root = Split-Path -Parent $scriptDir
 }
 
-$ACTIVE_REL  = 'AGENT_TASKBOARD.md'
 $ARCHIVE_REL = 'ARCHIVE_TASKBOARD_2026-07A.md'
 $OUT_REL     = 'TASKBOARD_DIGEST.md'
 
-$activePath  = Join-Path $Root $ACTIVE_REL
+# ORDER: taskboard-active-split-20260822. AGENT_TASKBOARD.md is now a manifest; its ORDER
+# blocks live in taskboards/active/*. The central resolver reconstructs the full logical
+# active board (declared parts, in order) from -Root, so -Check against an extracted temp
+# root (see .githooks/pre-commit's D-F9 block) keeps working unchanged.
+. (Join-Path $scriptDir 'lib\taskboard_source.ps1')
 $archivePath = Join-Path $Root $ARCHIVE_REL
 $outPath     = Join-Path $Root $OUT_REL
 
-function Get-OrderHeaders {
-    <# Returns one object per '## ORDER-...' header found in $Path. #>
-    param([string]$Path, [string]$Location)
-
-    if (-not (Test-Path -LiteralPath $Path)) {
-        throw "taskboard not found: $Path"
-    }
-    $lines = Get-Content -LiteralPath $Path -Encoding UTF8
+function Get-OrderHeadersFromLines {
+    <# Returns one object per '## ORDER-...' header found in $Lines. #>
+    param([string[]]$Lines, [string]$Location)
+    $lines = $Lines
     $rows  = New-Object System.Collections.Generic.List[object]
 
     for ($idx = 0; $idx -lt $lines.Count; $idx++) {
@@ -193,8 +192,12 @@ function Build-Digest {
     # sweep) throws inside AddRange() instead of producing an empty-but-valid digest.
     # Found 2026-08-20 while building a fixture whose ACTIVE board legitimately has zero
     # headers (D-F10 cage).
-    $activeRows  = @(Get-OrderHeaders -Path $activePath  -Location 'ACTIVE')
-    $archiveRows = @(Get-OrderHeaders -Path $archivePath -Location 'ARCHIVE')
+    $activeLines = @(Get-TaskboardActiveLogicalLines -RepoRoot $Root -Mode Working)
+    if (-not (Test-Path -LiteralPath $archivePath)) { throw "taskboard not found: $archivePath" }
+    $archiveLines = @(Get-Content -LiteralPath $archivePath -Encoding UTF8)
+
+    $activeRows  = @(Get-OrderHeadersFromLines -Lines $activeLines  -Location 'ACTIVE')
+    $archiveRows = @(Get-OrderHeadersFromLines -Lines $archiveLines -Location 'ARCHIVE')
 
     $all = New-Object System.Collections.Generic.List[object]
     $all.AddRange($activeRows)

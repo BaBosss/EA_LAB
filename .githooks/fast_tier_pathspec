@@ -133,6 +133,7 @@ scripts/lib/report_freshness.ps1
 scripts/lib/runtime_identity.ps1
 scripts/lib/setfile_surface.ps1
 scripts/lib/snapshot_reader.ps1
+scripts/lib/taskboard_source.ps1
 scripts/live_dashboard.ps1
 scripts/make_status.ps1
 scripts/make_status_html.ps1
@@ -152,4 +153,5 @@ scripts/run_backtest.ps1
 scripts/scheduler_run.ps1
 scripts/status_template.html
 scripts/use_python.ps1
+taskboards/active/*
 VISION.md

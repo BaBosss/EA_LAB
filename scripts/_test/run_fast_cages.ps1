@@ -692,6 +692,10 @@ $SUITE_GUARDS = @{
                                           'portfolio/DEPLOYMENTS.csv',
                                           # the B and C cases stage into these two boards
                                           'AGENT_TASKBOARD.md',
+                                          # ORDER: taskboard-active-split-20260822. The active board's
+                                          # ORDER blocks now live in these parts, not the root file.
+                                          'taskboards/active/*',
+                                          'scripts/lib/taskboard_source.ps1',
                                           'ARCHIVE_TASKBOARD_2026-07A.md')
     # ORDER: the S14 Work Receipt grant (AGENTS.md section 2, owner-confirmed 2026-08-01).
     # The GRANT file itself is declared, so widening the permission row cannot land without
