@@ -26,11 +26,14 @@ FORWARD_VERIFIED = 'VERIFIED'
 FORWARD_INVALID_IDENTITY = 'INVALID_RUNTIME_IDENTITY'
 FORWARD_STALE_DEALS = 'STALE_DEAL_EVIDENCE'
 FORWARD_MALFORMED_DEALS = 'MALFORMED_DEAL_EVIDENCE'
-# Canonical DealsExporter representation of ENUM_DEAL_ENTRY.
+# Canonical DealsExporter representation of MT5 deal enums.
 DEAL_ENTRY_IN = '0'
 DEAL_ENTRY_OUT = '1'
 DEAL_ENTRY_INOUT = '2'
 DEAL_ENTRY_OUT_BY = '3'
+TRADE_DEAL_TYPES = frozenset(('0', '1'))
+NON_TRADE_DEAL_TYPES = frozenset(str(value) for value in range(2, 18))
+VALID_DEAL_TYPES = TRADE_DEAL_TYPES | NON_TRADE_DEAL_TYPES
 
 REQUIRED_FIELDS = (
     'account_login',
@@ -139,22 +142,34 @@ def derive_first_trade(identity, deals, deals_fresh=True, supplied_first_trade_e
         if not isinstance(row, dict):
             return _result(FORWARD_MALFORMED_DEALS,
                            [_reason('DEAL_EVIDENCE_MALFORMED', 'row=%d is not an object' % index)], identity)
-        missing = [field for field in ('account_login', 'ticket', 'time_unix', 'symbol', 'magic', 'entry')
-                   if field not in row]
-        if missing:
+        missing_base = [field for field in ('account_login', 'ticket', 'time_unix', 'type') if field not in row]
+        if missing_base:
             return _result(FORWARD_MALFORMED_DEALS,
                            [_reason('DEAL_EVIDENCE_INCOMPLETE', 'row=%d missing=%s' %
-                                    (index, ','.join(missing)))], identity)
+                                    (index, ','.join(missing_base)))], identity)
         row_account = _as_text(row.get('account_login'))
         ticket = _positive_integer(row.get('ticket'))
         deal_time = _positive_integer(row.get('time_unix'))
+        raw_type = row.get('type')
+        deal_type = str(raw_type).strip() if isinstance(raw_type, (int, str)) and not isinstance(raw_type, bool) else ''
+        if (not row_account.isdigit() or not row_account or ticket is None or deal_time is None or
+                deal_type not in VALID_DEAL_TYPES):
+            return _result(FORWARD_MALFORMED_DEALS,
+                           [_reason('DEAL_EVIDENCE_MALFORMED', 'row=%d has invalid base deal fields' % index)],
+                           identity)
+        if deal_type in NON_TRADE_DEAL_TYPES:
+            continue
+        missing_trade = [field for field in ('symbol', 'magic', 'entry') if field not in row]
+        if missing_trade:
+            return _result(FORWARD_MALFORMED_DEALS,
+                           [_reason('DEAL_EVIDENCE_INCOMPLETE', 'row=%d missing=%s' %
+                                    (index, ','.join(missing_trade)))], identity)
         row_magic = _as_text(row.get('magic'))
         row_symbol = _as_text(row.get('symbol'))
         entry = _as_text(row.get('entry'))
-        if (not row_account.isdigit() or not row_account or ticket is None or deal_time is None or
-                not row_magic.isdigit() or not row_magic or not row_symbol or entry == ''):
+        if not row_magic.isdigit() or not row_magic or not row_symbol or entry == '':
             return _result(FORWARD_MALFORMED_DEALS,
-                           [_reason('DEAL_EVIDENCE_MALFORMED', 'row=%d has invalid canonical fields' % index)],
+                           [_reason('DEAL_EVIDENCE_MALFORMED', 'row=%d has invalid canonical trade fields' % index)],
                            identity)
         if (row_account == account and row_magic == magic and row_symbol == symbol and
                 entry == DEAL_ENTRY_IN and deal_time >= attach_time):

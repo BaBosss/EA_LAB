@@ -152,10 +152,10 @@ def main():
     forward_identity = base_identity(receipt, attach_time_unix=attach, first_trade_epoch=None)
 
     def deal(account='100000001', magic='900001', symbol='EURUSDm', entry='0',
-             time_unix=str(attach + 60), ticket='7001'):
+             time_unix=str(attach + 60), ticket='7001', deal_type='0'):
         return {
             'account_login': account, 'ticket': ticket, 'time_unix': time_unix,
-            'symbol': symbol, 'magic': magic, 'entry': entry,
+            'symbol': symbol, 'magic': magic, 'entry': entry, 'type': deal_type,
         }
 
     check('attach_time_unix is an integer authority', isinstance(forward_identity['attach_time_unix'], int))
@@ -163,6 +163,20 @@ def main():
     check('no deals -> AWAITING_FIRST_TRADE with null epoch',
           awaiting['state'] == 'AWAITING_FIRST_TRADE' and awaiting['first_trade_epoch'] is None,
           str(awaiting))
+    balance = deal(symbol='', magic='0', entry='0', ticket='6001', deal_type='2')
+    correction = deal(symbol='', magic='0', entry='0', ticket='6002', deal_type='5')
+    check('valid MT5 balance row is ignored for first-trade qualification',
+          derive_first_trade(forward_identity, [balance])['state'] == 'AWAITING_FIRST_TRADE')
+    check('valid MT5 correction row is ignored for first-trade qualification',
+          derive_first_trade(forward_identity, [correction])['state'] == 'AWAITING_FIRST_TRADE')
+    after_non_trade = derive_first_trade(forward_identity, [balance, correction, deal(ticket='7003')])
+    check('valid non-trade rows cannot block a later qualifying EA trade',
+          after_non_trade['state'] == 'VERIFIED' and after_non_trade['qualifying_deal']['ticket'] == '7003',
+          str(after_non_trade))
+    check('unknown MT5 deal type fails closed',
+          derive_first_trade(forward_identity, [deal(deal_type='99')])['state'] == 'MALFORMED_DEAL_EVIDENCE')
+    check('malformed MT5 trade row still fails closed',
+          derive_first_trade(forward_identity, [deal(symbol='', deal_type='0')])['state'] == 'MALFORMED_DEAL_EVIDENCE')
     check('unrelated account -> AWAITING_FIRST_TRADE',
           derive_first_trade(forward_identity, [deal(account='100000002')])['state'] == 'AWAITING_FIRST_TRADE')
     check('wrong magic -> AWAITING_FIRST_TRADE',

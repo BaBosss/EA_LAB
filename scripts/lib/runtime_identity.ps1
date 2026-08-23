@@ -291,6 +291,7 @@ function Get-RuntimeIdentityForwardStates {
                                 account_login = $account
                                 ticket = "$($row.ticket)"
                                 time_unix = "$($row.time_unix)"
+                                type = "$($row.type)"
                                 symbol = "$($row.symbol)"
                                 magic = "$($row.magic)"
                                 entry = "$($row.entry)"

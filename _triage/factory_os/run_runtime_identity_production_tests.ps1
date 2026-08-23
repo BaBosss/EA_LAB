@@ -121,12 +121,12 @@ account,magic,ea_logical_identity,build_receipt,config_fingerprint,config_finger
     $copied = @(Get-ChildItem -LiteralPath $dest -Filter 'EA_LAB_identity_*.json' -File -ErrorAction SilentlyContinue)
     Check 'C collector does not restamp stale producer evidence' ($copied.Count -eq 0) (($copied | Select-Object -ExpandProperty FullName) -join ',')
 
-    $entry = [ordered]@{ account_login='100000001'; ticket='7001'; time_unix='1750000060'; symbol='EURUSDm'; magic='900001'; entry='0' }
+    $entry = [ordered]@{ account_login='100000001'; ticket='7001'; time_unix='1750000060'; type='0'; symbol='EURUSDm'; magic='900001'; entry='0' }
     $awaiting = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $a -Deals @() -DealsFresh:$true -PythonPath $PythonPath
     Check 'N no qualifying deal -> AWAITING_FIRST_TRADE' ($awaiting.state -eq 'AWAITING_FIRST_TRADE' -and $null -eq $awaiting.first_trade_epoch) ($awaiting | ConvertTo-Json -Depth 8)
     $verified = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $a -Deals @($entry) -DealsFresh:$true -PythonPath $PythonPath
     Check 'O qualifying entry -> VERIFIED' ($verified.state -eq 'VERIFIED' -and $verified.first_trade_epoch -eq 'epoch-1') ($verified | ConvertTo-Json -Depth 8)
-    $pre = [ordered]@{ account_login='100000001'; ticket='7002'; time_unix='1749999999'; symbol='EURUSDm'; magic='900001'; entry='0' }
+    $pre = [ordered]@{ account_login='100000001'; ticket='7002'; time_unix='1749999999'; type='0'; symbol='EURUSDm'; magic='900001'; entry='0' }
     $preResult = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $a -Deals @($pre) -DealsFresh:$true -PythonPath $PythonPath
     Check 'P pre-attach entry cannot verify' ($preResult.state -eq 'AWAITING_FIRST_TRADE') ($preResult | ConvertTo-Json -Depth 8)
     $staleTrade = Invoke-RuntimeIdentityFirstTrade -RepoRoot $RepoRoot -Identity $a -Deals @($entry) -DealsFresh:$false -PythonPath $PythonPath
