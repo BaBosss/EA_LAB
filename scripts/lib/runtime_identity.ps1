@@ -208,7 +208,7 @@ function Get-RuntimeIdentityValidation {
         if ($ExpectedPath -eq '') { $ExpectedPath = Join-Path $RepoRoot 'portfolio\RUNTIME_IDENTITY_MAP.csv' }
         if ($RegistryPath -eq '') { $RegistryPath = Join-Path $RepoRoot 'portfolio\build_receipts.jsonl' }
         $expected = Get-RuntimeIdentityExpectations -Path $ExpectedPath
-        $recordJson = if (@($Records).Count -eq 0) { '[]' } else { @($Records) | ConvertTo-Json -Depth 12 }
+        $recordJson = if (@($Records).Count -eq 0) { '[]' } else { ConvertTo-Json -InputObject @($Records) -Depth 12 }
         $expectedJson = if ($expected.Count -eq 0) { '{}' } else { $expected | ConvertTo-Json -Depth 12 }
         [IO.File]::WriteAllText($recordsJsonPath, $recordJson, (New-Object Text.UTF8Encoding($false)))
         [IO.File]::WriteAllText($expectedJsonPath, $expectedJson, (New-Object Text.UTF8Encoding($false)))

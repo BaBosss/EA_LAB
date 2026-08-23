@@ -55,6 +55,28 @@ try {
     Remove-Item -LiteralPath $emptyDeals -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# A singleton runtime-identity batch must cross the PowerShell -> Python bridge as a JSON ARRAY.
+# PowerShell pipeline serialization unwraps one-element arrays, which made the validator iterate
+# the record's field names instead of validating one record when the first real sidecar arrived.
+$fakePy = Join-Path ([IO.Path]::GetTempPath()) ('runtime_identity_array_probe_' + [guid]::NewGuid().ToString('N') + '.ps1')
+$fakePyBody = @(
+    'param([string]$Validator,[string]$Mode,[string]$RecordsPath,[string]$ExpectedPath,[string]$RegistryPath)',
+    '$raw = [IO.File]::ReadAllText($RecordsPath)',
+    'if ($raw.TrimStart().StartsWith(''['')) {',
+    '    Write-Output ''{"state":"PASS","identity":[],"reasons":[]}'' ',
+    '} else {',
+    '    Write-Output ''{"state":"FAIL","identity":[],"reasons":[{"code":"SINGLETON_NOT_ARRAY","detail":"records.json root is not an array"}]}'' ',
+    '}'
+) -join "`n"
+[IO.File]::WriteAllText($fakePy, $fakePyBody, (New-Object Text.UTF8Encoding($false)))
+try {
+    $single = [pscustomobject]@{ account_login='463666728'; magic='990026' }
+    $singleValidation = Get-RuntimeIdentityValidation -RepoRoot $RepoRoot -Records @($single) -PythonPath $fakePy
+    Assert-Equal 'singleton runtime identity crosses validation bridge as JSON array' 'PASS' $singleValidation.state
+} finally {
+    Remove-Item -LiteralPath $fakePy -Force -ErrorAction SilentlyContinue
+}
+
 # The producer and schema must agree on the policy flag and on the closed summary shape.
 $schema = Get-Content -LiteralPath $schemaPath -Raw | ConvertFrom-Json
 $meta = $schema.'$defs'.SnapshotMeta
