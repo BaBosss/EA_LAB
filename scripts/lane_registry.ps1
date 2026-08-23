@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidateSet('Claim','Check','Transition','List','Get','Validate')][string]$Command = 'List',
-    [string]$RegistryRoot = 'D:\EA_LAB_CONTROL\lanes',
+    [string]$RegistryRoot = 'D:\EA_LAB_CONTROL\lanes\registry-v1',
     [string]$LaneId,
     [string]$OwnerChat,
     [string]$Worker,

@@ -114,6 +114,15 @@ try {
     Assert-True 'validate accepts a well-formed registry' ($x.ExitCode -eq 0 -and $x.Text -match '"result":"VALID"') $x.Text
     $x=Invoke-Tool (New-ClaimArgs $r13 'w1' 'chat-z' $wtC 'lane-c' $head 'zeta')
     Assert-True 'duplicate lane id is refused' ($x.ExitCode -ne 0 -and $x.Text -match 'lane_exists') $x.Text
+
+    $scriptText=[IO.File]::ReadAllText($scriptPath)
+    Assert-True 'default registry root isolates legacy dashboard JSON' ($scriptText -match [regex]::Escape("D:\EA_LAB_CONTROL\lanes\registry-v1")) 'default registry root is not registry-v1'
+    $legacyParent=Join-Path $tempRoot 'legacy-parent'; New-Item -ItemType Directory -Force -Path $legacyParent|Out-Null
+    [IO.File]::WriteAllText((Join-Path $legacyParent 'control.json'),'{"lane":"control","status":"DONE"}',(New-Object Text.UTF8Encoding($false)))
+    $isolatedRoot=Join-Path $legacyParent 'registry-v1'
+    $x=Invoke-Tool (New-ClaimArgs $isolatedRoot 'isolated' 'chat-i' $wtB 'lane-b' $head 'isolated/path')
+    $v=Invoke-Tool @('-Command','Validate','-RegistryRoot',$isolatedRoot,'-Json')
+    Assert-True 'legacy parent JSON does not poison registry-v1' ($x.ExitCode -eq 0 -and $v.ExitCode -eq 0 -and $v.Text -match '"result":"VALID"') (($x.Text+' | '+$v.Text))
 } catch {
     Fail 'test harness' $_.Exception.Message
 } finally {
