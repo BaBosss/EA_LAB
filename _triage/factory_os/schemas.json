@@ -2646,7 +2646,7 @@
                   "state": { "type": "string", "minLength": 1 },
                   "first_trade_epoch": { "type": ["string", "null"] },
                   "qualifying_deal": { "type": ["object", "null"] },
-                  "reasons": { "type": "array" }
+                  "identity_findings": { "type": "array" }
                 }
               }
             }

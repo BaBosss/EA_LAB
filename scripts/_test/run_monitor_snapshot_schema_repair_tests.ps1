@@ -63,6 +63,9 @@ $builderSummary = $builder.properties.runtime_identity_summary
 Assert-Equal 'runtime_identity_required is boolean snapshot metadata' 'boolean' $meta.properties.runtime_identity_required.type
 Assert-True 'SnapshotBuilderInput accepts the runtime identity forward-test state' ($null -ne $builderSummary.properties.forward_test_state)
 Assert-True 'SnapshotBuilderInput accepts first-trade findings' ($null -ne $builderSummary.properties.first_trade_findings)
+$builderFinding = $builderSummary.properties.first_trade_findings.items
+Assert-True 'builder first-trade finding uses transient identity_findings' ($null -ne $builderFinding.properties.identity_findings)
+Assert-True 'builder first-trade finding cannot carry validator-owned reasons' ($null -eq $builderFinding.properties.reasons)
 Assert-Equal 'runtime identity builder summary stays closed' $false $builderSummary.unevaluatedProperties
 Assert-Equal 'snapshot metadata stays closed against unknown fields' $false $meta.unevaluatedProperties
 Assert-True 'an unexpected field is not part of the accepted schema' ($null -eq $meta.properties.unexpected_field)
@@ -112,7 +115,20 @@ doc['entity'] = 'SnapshotBuilderInput'
 doc.pop('verdict', None)
 summary = doc['runtime_identity_summary']
 summary['identity_findings'] = summary.pop('reasons')
+summary['first_trade_findings'] = [{
+    'account_login': '463666728',
+    'magic': '990026',
+    'state': 'AWAITING_FIRST_TRADE',
+    'first_trade_epoch': None,
+    'qualifying_deal': None,
+    'identity_findings': [{'code': 'NO_FIRST_TRADE', 'detail': 'fixture'}],
+}]
 sv.ajv_schema_validator(doc, 'SnapshotBuilderInput')
+built = sv.build_snapshot(json.loads(json.dumps(doc)), sv.ajv_schema_validator)
+finding = built['runtime_identity_summary']['first_trade_findings'][0]
+assert 'identity_findings' not in finding
+assert finding['reasons'][0]['code'] == 'NO_FIRST_TRADE'
+print('NESTED_FINDINGS_PUBLISHED')
 doc['meta']['unexpected_field'] = True
 try:
     sv.ajv_schema_validator(doc, 'SnapshotBuilderInput')
@@ -123,6 +139,7 @@ raise SystemExit('unknown schema field was accepted')
 '@
         $schemaResult = & $py -c $pyCode $output $RepoRoot 2>&1
         Assert-Equal 'runtime identity builder input validates at the real schema gate' 0 $LASTEXITCODE
+        Assert-True 'nested first-trade findings publish only after supplied-answer scan' (@($schemaResult) -match 'NESTED_FINDINGS_PUBLISHED')
         Assert-True 'unknown unexpected schema field is rejected' (@($schemaResult) -match 'UNKNOWN_REJECTED')
     }
 } finally {
