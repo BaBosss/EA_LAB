@@ -534,6 +534,10 @@ def build_snapshot(inp, schema_validator):
     identity_summary = out.get('runtime_identity_summary')
     if isinstance(identity_summary, dict) and 'identity_findings' in identity_summary:
         identity_summary['reasons'] = identity_summary.pop('identity_findings')
+    if isinstance(identity_summary, dict):
+        for finding in identity_summary.get('first_trade_findings', []):
+            if isinstance(finding, dict) and 'identity_findings' in finding:
+                finding['reasons'] = finding.pop('identity_findings')
     f = facts_of(out)
     for row in out['meta']['sources']:
         derived = derive_fresh(f, row)

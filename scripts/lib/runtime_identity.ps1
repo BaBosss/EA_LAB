@@ -311,7 +311,10 @@ function Get-RuntimeIdentityForwardStates {
             state = "$($result.state)"
             first_trade_epoch = $result.first_trade_epoch
             qualifying_deal = $result.qualifying_deal
-            reasons = @($result.reasons)
+            # Builder-input spelling must not use validator-owned `reasons` anywhere in
+            # SnapshotBuilderInput. snapshot_validator publishes this as `reasons` only
+            # after the recursive supplied-answer scan has completed.
+            identity_findings = @($result.reasons)
         }) | Out-Null
     }
 

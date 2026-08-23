@@ -733,7 +733,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `runtime_identity_summary.first_trade_findings[].state` | `string` | **yes** | minLength `1` |
 | `runtime_identity_summary.first_trade_findings[].first_trade_epoch` | `string` \| `null` | — |  |
 | `runtime_identity_summary.first_trade_findings[].qualifying_deal` | `object` \| `null` | — |  |
-| `runtime_identity_summary.first_trade_findings[].reasons` | array of `any` | — |  |
+| `runtime_identity_summary.first_trade_findings[].identity_findings` | array of `any` | — |  |
 
 **Unknown fields:** rejected (closed object).
 
