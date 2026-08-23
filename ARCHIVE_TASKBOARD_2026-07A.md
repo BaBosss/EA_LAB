@@ -13404,3 +13404,368 @@ persisted file alone can tell "computed" from "typed". That is the builder-input
 
 ---
 
+## ORDER-1180 — [factory/S12] Direct Telegram Control Room + Morning Brief — `DONE (Claude/Opus 2026-08-02, lane S-2026-08-02-S12TG) — every acceptance driven, one real message delivered with the gateway observed down, and the replay of it suppressed; the case count is printed by run_s12_tests.py --list and is deliberately not restated here` · ทำได้: **Codex/Sonnet** (design §10 assigns this slice) · 👉 แนะ: Codex/Sonnet, reviewed by Claude/Opus
+
+**Acceptance (design §10, S12 row, verbatim)** — alerts work with OpenClaw stopped · the dedupe key
+includes **severity AND `material_revision`** · a **per-channel delivery ledger** `(event, channel,
+receipt)` · **one** recovery message, and an escalation is never swallowed.
+**Prohibitions (design §10)** — no token in git / logs / generated HTML / chat · OpenClaw not in the
+alert path.
+
+**Two owner decisions were taken as costed tables before a line was written, because both change
+what the product does rather than how it is built.**
+1. **Routing.** `REAL_MONEY` + `CRITICAL` → the existing Trade emergency bot · `WARN` + `INFO` +
+   Morning Brief → the new `EA LAB Control Room` bot. Design-literal, and the owner chose it after
+   being shown the measurement that makes the *safer-looking* alternative worse: the whole
+   `REASON_SEVERITY` table can produce `CRITICAL` (2 codes), `WARN` (9) and `INFO` (2), and
+   **nothing can produce `REAL_MONEY` today**. Routing only `REAL_MONEY` to the emergency bot would
+   have given that channel **zero reachable events** — `UNTESTED` by CLAUDE.md's own bar table —
+   while a `BLIND` sensor on a real-money account went to the quiet channel, which is the S11
+   round-1 defect wearing a different hat.
+2. **Where the token lives.** `scripts/config.yaml`, the arrangement the emergency bot has used all
+   along: **already git-ignored**, already scrubbed out of every `mris_notify.ps1` output including
+   exception text. Two new keys, documented in `scripts/config.example.yaml` with placeholders. A
+   second secret store would have been a second place to leak from.
+
+🔴 **THE REAL LEG WAS DRIVEN, NOT ASSERTED.** With the owner's explicit go-ahead, ONE real message
+was sent: `probe --id S12-2026-08-02 --channel EMERGENCY --confirm` → **`DELIVERED`, Telegram
+`message_id=9`, `openclaw=NOT_RUNNING`** — the observed gateway state is written on the ledger line
+beside the receipt, so "it worked with OpenClaw stopped" is a measurement stored next to its
+evidence rather than a sentence in a handoff. Running the identical command again returned
+**`SUPPRESSED_DUPLICATE` with zero HTTP calls.** A second, non-sending run against the live snapshot
+(`send --confirm --brief`) produced **6 × `UNCONFIGURED` and exit 1** — the Control Room bot does not
+exist yet, and that is a *stated failure*, which is the whole point: a sender that cannot send and
+reports nothing is indistinguishable from a quiet fleet.
+
+**The seam, and the prohibition that used to disarm its own check.** S11 found that taking the
+snapshot away from the sender emptied `scan_forbidden`'s `KNOWN_SECRET` layer, because that layer's
+input *is* the snapshot, and answered on the sender side with a shape check. S12 answers on the
+**other** side too: the planner still holds the snapshot, so `assert_sendable` runs the full literal
+scan **with the real secret list** before anything crosses. Shape on the far side, literals on the
+near side, and neither substitutes for the other (memory `prohibition-disarms-its-own-check`).
+
+🔴 **FOUR DEFECTS THE CAGE FOUND, three of them in code written this session and one of them older.**
+- **`occurrences_24h` counted observations, not recurrences.** An hourly collector would have turned
+  a single continuously-open finding into `FLAPPING — root cause required` before lunch — a
+  different and wrong statement about it, and one that collapses its alert into an incident nobody
+  opened. A *recurrence* is an appearance after an absence; that is what "3 recurrences in 24h"
+  means. Case `W01`, and `W04` holds the window shut.
+- **`FLAPPING` was permanently silent.** design §7.3 requires it to get a *bounded reminder* "so a
+  state that never changes cannot go unreported forever", and design §11 row 16 owes that to S12 by
+  name. With the design's four dedupe fields alone, a FLAPPING finding is alerted once and never
+  again. Only a FLAPPING key now carries the calendar day. Cases `W05` / `W06` / `W07`.
+- **The ledger would have written an unscrubbed provider error to disk.** `deliver()` wrote
+  `'%s: %s' % (type(exc), exc)` verbatim, so "no token in a log" rested entirely on every transport
+  scrubbing itself — and **the URL of a Telegram send request contains the token**. The guarantee now
+  holds at the boundary that writes the file. Case `L06`.
+- **A third party's live-shaped Telegram bot token is committed in `_triage/FXDREEMA_XRAY.md`**,
+  inside the x-ray of a downloaded fxDreema EA. Found by PART B's tracked-tree sweep. It is not this
+  project's credential and nothing here uses it, but it is somebody else's credential sitting in
+  this history. **Quarantined at exactly 1 hit in a closed declaration, not excluded** — a new one
+  anywhere still fails. History rewriting is not a thing to do as a side effect of a notifier slice,
+  so it is carried below as owed.
+
+🔴 **THE SUITE WENT GREEN ON ITS FIRST RUN, WHICH IS NOT THE SAME AS BEING RIGHT.** It was written
+after the module, so it never went red first, and saying "51/51 green" would have been the weakest
+kind of evidence. Instead **14 mutants were planted in `notifier.py` and `safe_projection.py`, one
+at a time** — dedupe drops severity · the ledger ignores the channel · the planner skips the
+known-secret scan · `UNKNOWN` collapses onto `NOT_RUNNING` · the shape check is skipped · and nine
+more. **13 died immediately. One survived, and it was the one that mattered:** a `Ledger.delivered()`
+counting `FAILED` as delivered passed every case, because the retry was only ever proven against the
+in-memory set `deliver()` mutates — not against the FILE the next scheduled run reads. That mutant is
+a real job losing an alert permanently the first time the API blips. Cases `L10` / `L11` close it,
+and the sweep is now 14/14.
+
+### Three `/scrutinize` rounds over this slice, in the same session
+
+**Round 1 — the acceptance was met in letter and broken in spirit.** design §7.3 says
+`OPEN → HEALTHY_1_OF_2 → OPEN` must emit no *recovery* message, "and treating it as one produces
+exactly the flapping spam the two-check rule exists to stop". The first version dutifully withheld
+the recovery **label** and then sent an `ALERT` saying `HEALTHY_1_OF_2` instead — the same spam under
+a different word. Traced on a five-run flicker: **three messages delivered**, the middle one
+announcing that a problem had been briefly absent. Worse, case `V01` asserted `['ALERT','ALERT',
+'ALERT']` — **the implementation written down as the requirement**. An intermediate healthy check now
+emits nothing at all (`SILENT_STATES`), the same flicker sends **two** messages, and `V05` counts what
+*leaves* rather than what is planned, which is the case that would have caught this alone.
+
+**Round 2 — the tier finding above.** It began as "S12 costs 3.2s of an 8s budget" and ended as
+"the 8s was a non-hook number, the real figure is 1.3s, and an unguarded staged path runs the whole
+tier". The measurement that settled it: the tier with S12 unregistered, three clean samples.
+
+**Round 3 — `notifier.PUBLIC_API` was declared and nothing read it.** A closed surface no check
+consumes reads as governance while being decoration (memory `declared-as-trigger-but-never-read`),
+and it matters here specifically because this module **sends**: a new public writer arriving
+unnoticed is the one thing the declaration exists to prevent. Case `P01` now crosses it against the
+module's real callables in both directions.
+
+**Two roll-ups, not one** (memory `completeness-rollup-measured-after-topup`): *coverage* — every
+routing target, event kind, delivery outcome, scan layer and OpenClaw state was produced by a real
+case, and the roll-up **prints which case first produced each**, so a bucket whose only contributor
+exists for no other reason is visible rather than hidden behind a tick; *reachability* — every
+catalogued case ran, with the counter read **before** the first case executed.
+
+**OpenClaw is out of the path as a property, not a sentence.** A text scan for "openclaw" cannot tell
+a call from the paragraph explaining there is no call (memory `text-scan-cannot-tell-read-from-mention`).
+So the check is an **AST import closure** over `notifier.py` + the three repo modules it reaches,
+crossed with a closed `ALLOWED_IMPORTS`; `O06` plants `from openclaw.gateway import dispatch` and
+watches the allowlist reject it, so the guard is not a zero-fire one.
+
+🔴 **THE SUITE IS BUILT AND GREEN AND IS *NOT* REGISTERED IN THE FAST TIER — and that is the single
+most important line in this row.** The headroom everyone has been quoting, including this slice's
+own opening prompt ("~8s"), was **measured with the wrong invocation** (memory
+`tier-number-needs-its-invocation`). The tier costs **110.8s / 111.5s / 112.4s** launched from a
+shell and **118.6s / 118.7s / 118.7s** launched as `-Hook`, which is how the pre-commit hook launches
+it and therefore the only number that decides whether a commit lands. **Real hook-mode headroom:
+1.3s.** The S12 suite is **2.8s / 3.0s / 2.9s** (down from 3.2s, and from 3.9s before that, with no
+case dropped — it verifies the snapshot once instead of three times, `probe` no longer reads a
+snapshot it does not use, and a usage error is settled before any document is opened).
+
+**Why that is worse than a 1.6s overrun sounds.** Staged paths that match no guard fall back to
+running **everything** — `Select-Suites` fails open, by design. `-ExportSelection` over a single
+`_mt5_auto/*.csv` selects **all 26 suites**. So committing a backtest CSV, an ordinary act in this
+repo, is a full hook-mode run: with S12 registered that measured **122.0s / 121.6s / 122.1s** and the
+commit is **refused, OVER BUDGET**. Registering it would not have cost 2.9s of margin; it would have
+turned "commit a CSV" into "commit blocked" for everyone, discovered by the owner rather than by me.
+So the suite is **commented out of `$FAST_SUITES` together with its `$SUITE_GUARDS` entry** (both, or
+`run_guard_trigger_tests` fails on the key sets disagreeing — that guard doing its job), with the
+restore path written at the declaration. **Re-registering is uncommenting two blocks, the moment
+`ORDER-1130` buys the room.** Until then: `powershell -NoProfile -File scripts\_test\run_s12_tests.ps1`.
+
+<sub>The honest shape of this: the acceptance says "registered in the fast tier" and this row does not
+meet it. The alternative was to meet it by shipping a tier that refuses ordinary commits while the
+owner slept, or by raising a budget `run_guard_trigger_tests` asserts is "the measured 120.0s" —
+a ratified number, at 23:00, alone. Neither is a decision to take quietly.</sub>
+
+**`schemas.json`:** `AlertEvent` and `AlertDelivery` added, both `BUILT` with `x-enforcer` naming
+`notifier.py` — not `WIRED`, by the checker's own definition: the cage drives them, nothing in
+production calls them yet. This forced the **S2a bundle**, and the forcing is worth recording because
+the next slice will hit it too: C1 demands an ownership row for **every** schema entity, so two new
+entities move `s2a_migration.jsonl`, the reconciliation, D2 and the checker — and moving any bundle
+member invalidates the owner's standing attestation (memory `approval-pinning-self-invalidates`, still
+open in this form). **The owner ratified both ownership statements in session** — `AlertEvent` =
+`TRANSIENT`/`KEEP` (never persisted; a stored copy would be a way to obtain one that never passed
+`assert_sendable`), `AlertDelivery` = `NO_CURRENT_OWNER` → `ops/delivery_ledger.jsonl` — and exactly
+one attestation line was appended. <sub>A trap for whoever does this next: regenerating **D2 after**
+taking the digest moves the digest, because D2 is itself a bundle member. Regenerate D1 **and** D2,
+*then* take the template, *then* append. And `Set-Content -Encoding utf8` writes a BOM the log's own
+reader refuses — both cost a red run here.</sub>
+
+**Not done, deliberately:** the `EA LAB Control Room` bot does not exist, so every WARN/INFO alert
+and the Morning Brief report `UNCONFIGURED` and exit non-zero until the owner creates it and fills
+the two keys · nothing **schedules** the notifier — that is the next step, and it is also the moment
+`ops/delivery_ledger.jsonl`'s retention question stops being theoretical · no `factory/runs/*.jsonl`
+touched, no `CandidateManifest`, no attestation event on a real deployment, no magic allocated · no
+DD band is computed anywhere: the brief prints what a detector publishes and says out loud that
+nobody publishes one (design §7.1, "the dashboard creates no competing threshold").
+
+**Owed, and named rather than left implicit:**
+- **the third-party token in `_triage/FXDREEMA_XRAY.md`** — an owner decision: scrub the line, or
+  accept it. It is quarantined either way, and the guard will not let a second one in.
+- **`WINDOWS_ABSOLUTE_PATH` matches the `s:/` inside `https://`**, so any URL in a failure detail is
+  redacted and the operator loses the HTTP status. Fail-closed and therefore acceptable, **measured
+  by case `L09` rather than discovered later** — but widening a rule shared with the projection's
+  leak scan is not a change to make as a side effect of a notifier.
+- a producer for `REAL_MONEY` severity (nothing emits one, so the emergency channel's only reachable
+  traffic today is `CRITICAL`) · a `dd_band` detector, still owed from S11 · `AlertEvent`/
+  `AlertDelivery` → `WIRED` once something in production sends.
+
+---
+
+## ORDER-1131 — [factory/S11] Control Center shell + `TODAY`/`WORK`/`LIVE`/`SYSTEM` in shadow mode — `DONE (Claude/Opus 2026-08-02, lane S-2026-08-02-S11CC) — both halves of the acceptance driven; the scenario count is printed by run_s11_tests.py --list and is deliberately not restated here` · ทำได้: **Codex/Sonnet** (design §10 assigns this slice) · 👉 แนะ: Codex/Sonnet, reviewed by Claude/Opus
+
+> Owner decision 2026-08-02: *"Codex/Sonnet ตาม design table"*, and the two lanes run **in parallel**
+> with `ORDER-942`/`943`. The full brief is `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/PROMPT_NEXT_SESSION_S11.md` — this row exists so
+> the work has a home on the board and a numbered acceptance, not to restate it.
+
+**Acceptance (design §10, S11 row, verbatim)** — **all 30 handoff acceptance scenarios** (design §7.1's
+`TODAY` ordering; the order **is** the product and every row must render **why it is where it is**) ·
+**`SafeProjection` DTO** with a **recursive** forbidden-key scan plus **synthetic secret/account
+fixtures**.
+**Prohibitions (design §10)** — no dispatch, claim or closure from the UI · Telegram must not be able
+to read the full snapshot.
+
+🔴 **The `SafeProjection` acceptance is a NEGATIVE, so build the fixtures FIRST.** A scan that finds
+nothing on a clean snapshot proves nothing; per CLAUDE.md's bar table a guard with zero fires is
+`UNTESTED`. Watch it catch a planted account number nested three levels down, with its control.
+
+🔴 **The tier has ~13s of headroom** (`ORDER-1130` is the row that fixes that, not this one). The S10
+lesson applies directly: when a cage is too slow, make it **cheaper to DRIVE, not cheaper to CARE** —
+S10's first cage spawned a whole guard per case (13.1s), the rule moved into a callable, cost fell to
+3.9s, **and the trimming is what found a real defect** because the cheap case became affordable to keep.
+
+**LANE BOUNDARY, because this runs beside `ORDER-942`/`943`.** This order owns the shell,
+`SafeProjection`, `_triage/factory_os/snapshot_validator.py` and `scripts/control_room_snapshot.ps1`.
+The `JUDGERATE` lane **reads** `control_room_snapshot.ps1` to count `NA` rows and never writes it, and
+owns `portfolio/expectations.csv` + `portfolio/DEPLOYMENTS.csv`. Neither lane may touch the other's
+list (ledger rule 4 · memory `shared-worktree-concurrent-writers`).
+
+**Executed by the Opus seat, not delegated — and the delegation call is the first thing to push back
+on if it is wrong.** design §10 assigns this slice to Codex/Sonnet, and the cost ladder says try the
+cheaper tier first *where a verification cage exists*. Here one did not: the cage **was** the work.
+The thirty scenarios had no source (below), so the catalog had to be derived from the design clause
+by clause, and the `SafeProjection` half is a **negative** acceptance whose first honest attempt
+failed — a defect a fixture-writing tier would have had no reason to look for. What is genuinely
+mechanical and still open to a cheaper tier is the **next** slice's fixture volume, once this
+catalog exists to copy the shape from.
+
+🔴 **THE THIRTY SCENARIOS HAVE NO SOURCE IN THIS REPO.** design §10 cites
+`EA_LAB_CONTROL_ROOM_HANDOFF_2026-07-29.md` ("22 sections + 30 acceptance scenarios") as an input.
+That file **was never committed** — checked with `git log --all --diff-filter=D` and a name sweep
+across every ref — and the owner confirmed on 2026-08-02 that they no longer have it. So the
+catalog in `run_s11_tests.py` is **DERIVED**: every case names the design §7.1 / §7.3 / §7.4 clause
+it tests, and this row does **not** claim it reproduces the missing thirty. It is larger than
+thirty, which is not the same as being the same thirty.
+
+🔴 **THE NEGATIVE WENT RED FIRST, AND ONE OF THE TWO FAILURES WAS REAL.** The cage was written
+before the modules satisfied it and its first run failed **two cases and two roll-ups**. Case `SB03`
+found that `read_for_sender()` released a document whose planted account number sat **three levels
+down in an undeclared field**: the recursive scan could not see it **because the sender has no
+snapshot to derive its known-secret list from** — the prohibition ("Telegram must not be able to
+read the full snapshot") disarming the very check that enforces it. Adding `source_account` to the
+forbidden-key list would have made that one fixture pass and taught nothing, because a blacklist of
+field names has no end. The boundary now checks the **SHAPE**, as an allowlist **read from
+`schemas.json`** so the two cannot drift, and an undeclared field is refused *for being undeclared*.
+The other two failures were the same lesson in small: `PEM_BLOCK` and `UNC_PATH` had **zero fires**,
+which by CLAUDE.md's bar table makes them `UNTESTED`, and one placement rule was reachable only
+through a helper no scenario called.
+
+**What was built.** `_triage/factory_os/control_center.py` — a pure projection producing the four
+pages, with the TODAY band placement written as a **numbered, ordered rule table** so every row
+renders the id of the rule that placed it, and a row no rule matches **refuses the build** instead
+of landing at the bottom of the page. `_triage/factory_os/safe_projection.py` — the allowlist-only
+DTO, the recursive scan (forbidden keys at any depth · literals taken from the source snapshot ·
+declared value shapes), and the sender boundary. `run_s11_tests.py` drives everything in process;
+`scripts/_test/run_s11_tests.ps1` adds **PART B**, the one claim python cannot make — the **real**
+`snapshot_reader.ps1` driven for real, its actual states handed to the **real** python shell, which
+is the only way two spellings of one vocabulary can be caught drifting apart.
+
+**Three roll-ups, and each began red:** every placement rule fired by some case · every scan layer
+fired at least once · every catalogued case ran.
+
+🔴 **NO DRAWDOWN IS COMPUTED ANYWHERE, and that has a visible consequence.** design §7.1: the
+dashboard creates no competing threshold. A `dd_pct_band` is therefore **passed through** from a
+detector or it is `UNKNOWN` — and **no detector in `control_room_snapshot.json` publishes one
+today**, so every band in the live projection reads `UNKNOWN`. That is a real gap in the design's
+"percentages instead of money amounts", surfaced rather than papered over, and it is `UNKNOWN` **by
+measurement**: case `SP12` supplies a band and watches it travel, so the constant is not hardcoded.
+
+🔴 **`WORK` renders `UNKNOWN`, not an empty queue.** `factory/work_receipts.jsonl` carries no
+receipts (that import is S14) while the snapshot's reconciliation counts **334 discovered**. An
+empty page there would be the Codex blind audit's own failure scenario F4. Case `W09` drives it.
+
+**Measured.** Suite **1.4s / 1.4s / 1.3s** over three runs. Full tier with it registered: **25
+suites, 0 failed, 109.1s / 107.9s / 107.9s** of the 120.0s budget — three samples, per memory
+`phantom-regression-from-two-single-samples`, and the single 111.6s baseline sample taken at the
+start of the lane was noise-high rather than this slice being free.
+
+**`schemas.json`:** `SafeProjection` flipped `PLANNED` → **`BUILT`** with `x-enforcer` naming
+`safe_projection.py`. Not `WIRED`, deliberately and by the checker's own definition: the cage drives
+it, nothing in production calls it yet. `check_schema_structure.py` verifies the label.
+
+**Not done, deliberately:** no dispatch, claim or closure exists anywhere in the UI layer (case
+`P01` asserts the module's public callables are a closed declaration carrying no write verb) · no
+Telegram path was built (S12) · no second snapshot producer, serializer or reader was created · no
+`factory/runs/*.jsonl` touched, no `CandidateManifest` issued, no attestation appended, no magic
+allocated · `build/**` is **git-ignored** rather than committed, because a derived rendering of a
+file the daily chain rebuilds would go stale on somebody else's commit and a `--check` guard would
+then be red for a reason no author caused (memory `drift-guard-regenerating-against-head`).
+
+**Owed, and named rather than left implicit:** a producer for `dd_band` · wiring the shell into a
+page anyone actually opens (it renders to `build/control_center.html` and nothing links it) ·
+`SafeProjection` → `WIRED` once something in production builds it · the tier speed-up is
+`ORDER-1130`, not this row.
+
+### Three `/scrutinize` rounds over this slice (lane `S-2026-08-02-SCRUT11S`, 2026-08-02)
+
+**Six more defects, all found after the slice was called DONE, each reproduced by a read-only probe
+before it was touched and each fix written as a failing case first.** Handoff:
+`_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-08-02_SCRUT11S.md`.
+
+| round | commit | the defect |
+|---|---|---|
+| 1 | `c2576b97` | an account only ONE detector knew about was **invisible on both surfaces**; and `OK`-with-no-document **invented a headline** |
+| 2 | `6ff84dca` | the roll-up that refuses untested rules **could not fail** — and was hiding three; plus a partial row list that read as a queue, and a rule text asserting a heartbeat nobody measured |
+| 3 | `c9920c18` | the shape checker **silently accepted every construct it did not implement**; and the CLI a human runs held two defects because no case had called it |
+
+🔴 **ROUND 1 — `ALL CLEAR` could render over an account no health detector had ever seen.**
+`build_live` and `safe_projection.build` both walked `system_health` and joined the rest onto it,
+so an account with a `floating_risk` row and no `system_health` row produced **nothing**: no LIVE
+row, nothing added to `exception_count`, and no entry in the projection's masked account list. Not
+`UNKNOWN` — **absent**. The probe made the cost concrete with a BLIND sensor and 9.9 open lots.
+Both walks are now over the **union**, symmetric in both directions so neither detector is
+privileged, and a detector that is *silent* about an account is itself the finding. **The real
+snapshot renders identically before and after** (6 accounts, 6 exceptions) because its two
+detectors agree today — which is what makes it a hole rather than a bug: nothing on this machine
+would have shown it. Also: `_health_row` read the verdict off `read.document or {}`, so
+`OK`-with-no-document rendered `ATTENTION` with zero reasons and numbers **not** suppressed.
+
+🔴 **ROUND 2 — the roll-up designed to catch untested rules was the thing concealing them.** `R1`
+("every placement rule was fired by a case") was computed **after** `main()` appended thirteen
+synthetic rows that fire every rule, so it was green regardless of which scenarios existed. The
+probe printed what it hid: the catalogued scenarios fired **10 of 13**; `B02`, `B05` and `B06` were
+reached by none. Split into `R1` (fired by a catalogued scenario — coverage, and it can go red) and
+`R4` (reachable at all — a dead rule, weaker, still worth having); `W15`/`W16` added for the three.
+Same round: `W09` had closed the zero-rows case and left the **partial** one open (one row beside
+`discovered=334` came out `unknown=False`), rule `B11`'s text asserted *"ยังมี heartbeat"* from the
+**absence** of a heartbeat field, and `WIRE1` pinned today's empty `work_receipts.jsonl` in a way
+S14 would have turned red for no defect.
+
+🔴 **ROUND 3 — four of the six defects lived in code no case had ever executed.**
+`safe_projection._check_shape` implemented five constructs and fell off the end for the rest:
+`type: integer` handed an account string, `type: boolean` handed a token, an unresolved `$ref` and
+an unresolved `oneOf` — **all four produced no hits**, inside the function whose entire job is
+checking. And `control_center.main` — in `PUBLIC_API`, checked *by name* by `P01`, called by
+nothing — read `factory/work_receipts.jsonl` and handed every line to `normalise_row`: a corrupt
+file killed the CLI instead of rendering `UNKNOWN`, and a `WorkReceipt` **is not a work row**
+(`schemas.json` requires `entity`/`receipt_id`/`source_agent`/`requested_at` and nothing about a
+lifecycle), so the CLI would have raised on the day S14 imported its first row. `read_work_rows()`
+now returns no rows and a `source` stating which of the three situations it is, the adapter gap is
+rendered **on the page**, and `WIRE3` drives the CLI end to end — the one case that would have
+caught all of it.
+
+**The shape all six share:** the unhandled case rendering as the satisfied one. Rounds 1 and 3 are
+the family memory `unreadable-input-must-refuse-not-skip` already covers; round 2 is new and now has
+its own, `completeness-rollup-measured-after-topup`.
+
+**Measured after the rounds:** suite **1.6s / 1.6s / 1.6s** (1.4s before; the 0.2s is `WIRE3`).
+Full tier numbers are in the `S-2026-08-02-SCRUT11S` ledger row. `check_state.ps1` **CLEAN**.
+
+---
+
+## ORDER-232 — [🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด — `DONE` (user เคาะ 2026-07-28 = (a) คงไว้เป็น sensor advisory · ค้างเฉพาะ REVIEWED+archive) · ทำได้: user ตัดสิน + Claude เสนอ · 👉 แนะ: user
+
+> 🔴 **หัวข้อนี้เขียนว่า `OPEN` อยู่ 4 วันทั้งที่ user เคาะไปแล้ว** (บล็อก `### ✅ DECIDED` ข้างล่าง,
+> 2026-07-28) — และมันหลอกได้จริง: 2026-08-01 seat สรุปสถานะพอร์ตให้ user โดยรายงานใบนี้ว่า
+> *"เงินจริง ยังค้างรอเคาะ"* เพราะอ่าน header แล้วไม่ได้อ่านตัว body (`ORDER-940`)
+> **status ใน header คือสิ่งที่คนอ่านตอนเร่ง** — ถ้ามันไม่ตรงกับ body มันไม่ใช่แค่ค้าง มันคือข้อมูลผิด
+**bars:** N-A (decision) · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-211 ถอดสถานะ VALIDATED → ADVISORY-ONLY แล้ว แต่ **990120 ยัง ACTIVE บน USDJPYm judge 2026-10-16**
+และมี **คำแนะนำที่ขัดกันเอง 2 ฉบับ** ค้างอยู่:
+- handoff 2026-07-25C → "ย้ายไป AUDJPY" (ที่ DD-timing จริง)
+- bundle sweep 2026-07-26 (`85b55fd9`) → **หักล้างข้อบน**: host ขาดทุนทั้งเปิดและปิด gate ทั้งสอง symbol ⇒ ไม่มี symbol ไหน
+  แยก "gate จับจังหวะถูก" ออกจาก "เทรดน้อยลง" ได้ → เก็บเป็น sensor เฉยๆ
+**คำแนะนำของผม = ฉบับหลัง** (คงเป็น plumbing sensor · ห้ามนับเป็น edge · ห้าม size ตาม PF)
+**STEP 1:** user เคาะ 1 ใน 3 — (a) คงเป็น sensor advisory (b) ย้าย AUDJPY (c) ถอด
+**ห้าม:** ตัดสินแทน user · อ้างคำแนะนำฉบับแรกโดยไม่บอกว่ามันถูกหักล้างแล้ว
+
+### ✅ DECIDED (user 2026-07-28) = **(a) คงไว้เป็น sensor advisory**
+
+**สิ่งที่การเคาะนี้อนุญาต:** 990120 อยู่บน USDJPYm ต่อได้ · ท่อ regime CSV เดินต่อ · judge date 2026-10-16 คงเดิม
+**สิ่งที่มันห้ามถาวร:** ห้ามนับ MacroGate เป็น edge ในเอกสารใดๆ · ห้ามใช้ PF ของมันเป็นเหตุผลเพิ่มขนาด ·
+ห้ามอ้างว่ามันเป็น validated deploy-candidate (ORDER-211 ถอดสถานะนั้นไปแล้ว)
+
+**คำแนะนำฉบับ "ย้ายไป AUDJPY" ถือว่าตายแล้ว** — bundle sweep 2026-07-26 (`85b55fd9`) วัดแล้วว่า host
+ขาดทุนทั้งตอนเปิดและตอนปิด gate **ทั้งสอง symbol** ⇒ ไม่มี symbol ไหนแยก *"gate จับจังหวะถูก"* ออกจาก
+*"เทรดน้อยลงเลยขาดทุนน้อยลง"* ได้ · การย้ายบ้านจึงไม่ตอบคำถามที่ทำให้สถานะถูกถอนตั้งแต่แรก
+**ใครหยิบใบนี้ขึ้นมาอ่านทีหลังแล้วเจอ handoff 2026-07-25C ที่เขียนว่า "ย้าย AUDJPY" — นั่นคือฉบับที่ถูกหักล้าง**
+
+## C1-ENFORCE-SOURCEA-BINDING - `REVIEWED(cleanup integrator, 2026-08-22)` - exact Batch-2 stale-review linkage
+
+> Append-only linkage for three orders whose canonical active headers already carry explicit review evidence. This record creates no new review or verdict; it only binds the exact archived block identity to that pre-existing evidence so Contract C1 can verify the lifecycle move.
+
+| kind | block_id | block_sha256 | review_ref |
+|---|---|---|---|
+| terminal-no-linked-review | 1180\|ORDER\|current-archive#342 | 2723d8e05fe71a123c5635a1a73031a8f86aeef008015171a7b0ba58d6a6d41c | ORDER-1180 header: Codex/Sonnet, reviewed by Claude/Opus |
+| terminal-no-linked-review | 1131\|ORDER\|current-archive#343 | 810003910c32288c3093fa2e997a763721862d6b22d468d52414c1e914aa5c8b | ORDER-1131 header: Codex/Sonnet, reviewed by Claude/Opus |
+| terminal-no-linked-review | 232\|ORDER\|current-archive#344 | 29db994458084c8f86e8cc5a5e86b3a0037fc46e369dd809511572b47910e3ad | ORDER-232 header: owner disposition REVIEWED+archive (2026-07-28) |
+
