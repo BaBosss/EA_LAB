@@ -2678,7 +2678,7 @@
         "runtime_identity": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/RuntimeIdentityObserved"
+            "$ref": "#/$defs/RuntimeIdentityRecord"
           }
         },
         "runtime_identity_summary": {

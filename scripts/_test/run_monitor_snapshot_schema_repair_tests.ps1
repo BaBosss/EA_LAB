@@ -77,10 +77,28 @@ try {
     Remove-Item -LiteralPath $fakePy -Force -ErrorAction SilentlyContinue
 }
 
+# The snapshot builder must preserve the validator's one-element identity array before counting it.
+# Execute the exact assignment block from the production script so this regression cannot pass if
+# the producer drifts back to the conditional-expression form that PowerShell unwraps.
+$snapshotSource = [IO.File]::ReadAllText($snapshotScript)
+$identityAssign = [regex]::Match($snapshotSource, '(?ms)^\$runtimeIdentity = @\(\)\r?\nif \(\$null -ne \$runtimeValidation\.identity\) \{\r?\n  \$runtimeIdentity = @\(\$runtimeValidation\.identity\)\r?\n\}')
+Assert-True 'snapshot producer preserves singleton runtime identity as an array before counting' $identityAssign.Success
+Assert-True 'snapshot producer emits runtime identity record count as an explicit integer' ($snapshotSource -match '(?m)^  records = \[int\]\$runtimeIdentity\.Count\r?$')
+if ($identityAssign.Success) {
+    $runtimeValidation = '{"state":"PASS","identity":[{"account_login":"463666728","magic":"990026"}],"reasons":[]}' | ConvertFrom-Json
+    Invoke-Expression $identityAssign.Value
+    Assert-Equal 'singleton snapshot runtime identity collection remains Object[]' 'System.Object[]' $runtimeIdentity.GetType().FullName
+    $probeSummary = [ordered]@{ records = [int]$runtimeIdentity.Count }
+    $probeRoundTrip = (($probeSummary | ConvertTo-Json -Compress) | ConvertFrom-Json)
+    Assert-Equal 'singleton snapshot runtime identity record count round-trips as integer one' 1 $probeRoundTrip.records
+    Remove-Variable runtimeValidation,runtimeIdentity -ErrorAction SilentlyContinue
+}
+
 # The producer and schema must agree on the policy flag and on the closed summary shape.
 $schema = Get-Content -LiteralPath $schemaPath -Raw | ConvertFrom-Json
 $meta = $schema.'$defs'.SnapshotMeta
 $builder = $schema.'$defs'.SnapshotBuilderInput
+Assert-Equal 'SnapshotBuilderInput accepts annotated RuntimeIdentityRecord from validation bridge' '#/$defs/RuntimeIdentityRecord' $builder.properties.runtime_identity.items.'$ref'
 $builderSummary = $builder.properties.runtime_identity_summary
 Assert-Equal 'runtime_identity_required is boolean snapshot metadata' 'boolean' $meta.properties.runtime_identity_required.type
 Assert-True 'SnapshotBuilderInput accepts the runtime identity forward-test state' ($null -ne $builderSummary.properties.forward_test_state)

@@ -609,10 +609,13 @@ $sum = [ordered]@{
 # collection is an explicit LEGACY_UNVERIFIED result, never an all-clear default.
 $runtimeRecordsRaw = @(Get-RuntimeIdentityRecords -DealsRoot $DEALS)
 $runtimeValidation = Get-RuntimeIdentityValidation -RepoRoot $Root -Records $runtimeRecordsRaw
-$runtimeIdentity = if ($null -eq $runtimeValidation.identity) { @() } else { @($runtimeValidation.identity) }
+$runtimeIdentity = @()
+if ($null -ne $runtimeValidation.identity) {
+  $runtimeIdentity = @($runtimeValidation.identity)
+}
 $runtimeIdentitySummary = [ordered]@{
   state = "$($runtimeValidation.state)"
-  records = $runtimeIdentity.Count
+  records = [int]$runtimeIdentity.Count
   # `identity_findings` is transient builder input. snapshot_validator renames it to the
   # persisted `reasons` field after computing the document, so the recursive verdict-key
   # refusal cannot mistake this derived identity detail for a supplied reconciliation answer.
