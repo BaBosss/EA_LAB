@@ -145,3 +145,4 @@ finally {
 }
 if ($fail -gt 0) { Write-Host "FAIL $fail/$($pass + $fail)"; exit 1 }
 Write-Host "PASS $pass/$pass"
+exit 0
