@@ -1,0 +1,115 @@
+{
+  "artifact_sha256": {
+    "evidence_refs.jsonl": "af6b8a01b0d8e1b0c2e4e1048f8d3b4d803b7d5a56bce2fb5dc8a0283b8f6b26",
+    "historical_claims.jsonl": "12626d0f80255e06b43ff05cead67e05a805b5fbd1118b1c0d790a3e87fd9a0f",
+    "strategy_bridge.jsonl": "fccea9b142341ec680d60fc95690ca065a0fe9a34c4932ce442fe71ead9927c7"
+  },
+  "authority": {
+    "legacy_evidence_candidate_eligible": false,
+    "legacy_evidence_e3_allowed": false,
+    "legacy_strategy_promotion": false,
+    "physical_cleanup_authorized": false
+  },
+  "canonical_evidence_reuse": [
+    {
+      "canonical_evidence_id": "evd_sha256_092b3189c504570708f91b4bb2d48fe3119f04396f515299d34d728db03622de",
+      "raw_sha256": "092b3189c504570708f91b4bb2d48fe3119f04396f515299d34d728db03622de",
+      "source_evidence_id": "EV-LEG-092b3189c5045707"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_32f3b12445530bb946b184e207944739fa559e477d292c7ec93f4b075acc2ecf",
+      "raw_sha256": "32f3b12445530bb946b184e207944739fa559e477d292c7ec93f4b075acc2ecf",
+      "source_evidence_id": "EV-LEG-32f3b12445530bb9"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_622e5edc812b49d98f7241e4fcde5bff6826afcae4d158bdea44c838f4338af7",
+      "raw_sha256": "622e5edc812b49d98f7241e4fcde5bff6826afcae4d158bdea44c838f4338af7",
+      "source_evidence_id": "EV-LEG-622e5edc812b49d9"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_73fb3977098e17bf40aa7f020a43879904d2ce6606c8966f6d37783345c06922",
+      "raw_sha256": "73fb3977098e17bf40aa7f020a43879904d2ce6606c8966f6d37783345c06922",
+      "source_evidence_id": "EV-LEG-73fb3977098e17bf"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_84224028a2c9b744a7f3421db97d27b448726b8695b7887cf41baec56de67182",
+      "raw_sha256": "84224028a2c9b744a7f3421db97d27b448726b8695b7887cf41baec56de67182",
+      "source_evidence_id": "EV-LEG-84224028a2c9b744"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_8bedc68b81d334ba5bd19ea34a4bbce99ccc5d231d2f2dc0f394561b6b48eac0",
+      "raw_sha256": "8bedc68b81d334ba5bd19ea34a4bbce99ccc5d231d2f2dc0f394561b6b48eac0",
+      "source_evidence_id": "EV-LEG-8bedc68b81d334ba"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_90c1f03268fc14b1f10fc99f605821f550c13e5e6fe37f5cedf9fae84b850bcb",
+      "raw_sha256": "90c1f03268fc14b1f10fc99f605821f550c13e5e6fe37f5cedf9fae84b850bcb",
+      "source_evidence_id": "EV-LEG-90c1f03268fc14b1"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_a72e5437a05059018fa7ebf83663177b28528682e2232eaaf97943c169c09596",
+      "raw_sha256": "a72e5437a05059018fa7ebf83663177b28528682e2232eaaf97943c169c09596",
+      "source_evidence_id": "EV-LEG-a72e5437a0505901"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_c491a362cc2b6961e0eef2b81f71830072d41bba9eae8898626543a1804b0bbf",
+      "raw_sha256": "c491a362cc2b6961e0eef2b81f71830072d41bba9eae8898626543a1804b0bbf",
+      "source_evidence_id": "EV-LEG-c491a362cc2b6961"
+    },
+    {
+      "canonical_evidence_id": "evd_sha256_e8a2d21296bc0cc070181ac7f979f23f998cea2494af6010ec22fee04a2f1683",
+      "raw_sha256": "e8a2d21296bc0cc070181ac7f979f23f998cea2494af6010ec22fee04a2f1683",
+      "source_evidence_id": "EV-LEG-e8a2d21296bc0cc0"
+    }
+  ],
+  "counts": {
+    "canonical_evidence_reuse": 10,
+    "historical_claims": 226,
+    "legacy_evidence_refs": 56584,
+    "source_evidence_total": 56594,
+    "strategy_refs": 1398
+  },
+  "cutover": {
+    "deployment_authority": "portfolio/DEPLOYMENTS.csv",
+    "evidence_authority": "docs/memory_control/experiment_events/evidence-manifest.jsonl",
+    "legacy_migration_authority": "factory/legacy_migration/",
+    "legacy_sources_status": "HISTORICAL_GENERATED_ONLY",
+    "retired_authorities": [
+      "RUN_LOG.csv",
+      "EA_MASTER_INDEX.csv",
+      "EA_STRATEGY_GUIDE.md:status_sections",
+      "EA_SCORECARD_AND_REGISTRY.md:registry_status_sections"
+    ],
+    "run_authority": "factory/runs/*.jsonl",
+    "strategy_authority": "factory/strategy_catalog.json"
+  },
+  "implementation_base": "e92c3a17fc98ef124cce99eba832a72d86be8f75",
+  "migration_id": "M4-20260823",
+  "schema_version": 1,
+  "source_artifacts": {
+    "canonical_evidence_manifest": {
+      "byte_length": 6263,
+      "sha256": "f9c77e3d6326d9b53ad1f80ce83c8c4382d1a511b3572483f2280275a07f6e25"
+    },
+    "evidence_addressability": {
+      "byte_length": 20326720,
+      "sha256": "101217e6cb605093ba2f2ce04e40c83dc6ba6ddfbb999e966681d5ca14916647"
+    },
+    "m1_aliases": {
+      "byte_length": 157978000,
+      "sha256": "2294dff86d62f744694d11b974c6470d1c49a07839d7c9ff1f3f158d577acf79"
+    },
+    "m2_claims": {
+      "byte_length": 161807,
+      "sha256": "b04cf053f9102c281e4929893c97d3e866e8623b370880ea219b518f564fc84d"
+    },
+    "m3_evidence": {
+      "byte_length": 59005767,
+      "sha256": "f9666ba903d88e76e95f69ba9bc64cf9486b8a9009c84a65f760308f2b0af9a1"
+    },
+    "strategy_bridge": {
+      "byte_length": 255403,
+      "sha256": "ee5254c7f0b170709d9ec323756af8f5d905162bfa10e6fe574ed8622b68ead4"
+    }
+  }
+}
