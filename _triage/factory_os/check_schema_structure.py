@@ -286,7 +286,7 @@ _wiring = _invocation_text()
 _ENFORCEMENT_DECLARED = frozenset((
     "AlertDelivery", "AlertEvent", "CandidateManifest", "ControlRoomSnapshotV5",
     "CoverageCell", "DeploymentAttestationEvent", "Hypothesis", "MagicAllocation",
-    "MetricRef", "OwnerRef", "ReconciliationEvidence", "RunTransition", "SafeProjection",
+    "MetricRef", "OwnerRef", "LegacyStrategyRef", "LegacyEvidenceRef", "ReconciliationEvidence", "RunTransition", "SafeProjection",
     "SnapshotBuilderInput", "SnapshotVerdict", "SystemFinding", "WorkReceipt",
     "RuntimeIdentityObserved", "RuntimeIdentityRecord", "RuntimeIdentitySummary",
     "ExperimentContract", "ExperimentResult",

@@ -202,10 +202,33 @@ def run_order1269_derived_cases():
         print('        -> %s' % (problems or 'no refusal',))
         bad += 1
 
-    historical = '8e051930e96c8ed4876183fb39bc090724cb2ba1bd761fa4bf8c8c747d8f4a0c'
-    _, problems = run_with([good(bundle_sha256=historical)])
+    # Hermetic positive for the legacy six-file bundle compatibility path.  A repository commit
+    # cannot carry the CURRENT authoritative bytes until this bundle-changing change is committed,
+    # so a fixed historical digest becomes invalid for the right reason whenever D1/policy changes.
+    # Build one fake historical revision whose ONLY difference is the generated D2 handout.  The
+    # compatibility contract must accept that revision because every authoritative member is equal.
+    fake_history = {path: original_read(path) for path in att.LEGACY_BUNDLE}
+    fake_history[att.DERIVED_HANDOUT_PATH] += b'\nHISTORICAL D2 PROJECTION\n'
+    historical = att._digest_paths(att.LEGACY_BUNDLE, fake_history.get)
+    original_run = att.subprocess.run
+    original_git_bytes_at = att._git_bytes_at
+    def fake_run(args, *pargs, **kwargs):
+        if list(args[:4]) == ['git', 'rev-list', '--all', '--']:
+            return subprocess.CompletedProcess(args, 0, stdout=b'fixture-history\n', stderr=b'')
+        return original_run(args, *pargs, **kwargs)
+    att.subprocess.run = fake_run
+    att._git_bytes_at = lambda commit, path: (fake_history.get(path)
+                                               if commit == 'fixture-history'
+                                               else original_git_bytes_at(commit, path))
+    att._LEGACY_MATCH_CACHE.clear()
+    try:
+        _, problems = run_with([good(bundle_sha256=historical)])
+    finally:
+        att.subprocess.run = original_run
+        att._git_bytes_at = original_git_bytes_at
+        att._LEGACY_MATCH_CACHE.clear()
     ok = not problems
-    print('  [%s] F accepted historical raw bundle remains verifiable after D2 regeneration'
+    print('  [%s] F authoritative bytes unchanged: historical raw bundle survives D2 regeneration'
           % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> %s' % (problems or 'unexpected refusal',))

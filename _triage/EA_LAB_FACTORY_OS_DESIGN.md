@@ -473,6 +473,9 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
 → **contract [`ExecutionKey`](factory_os/CONTRACTS.md#executionkey)** — fields, types, required-set and validation rules.
 
 → **contract [`EvidenceRef`](factory_os/CONTRACTS.md#evidenceref)** — fields, types, required-set and validation rules.
+→ **contract [`LegacyStrategyRef`](factory_os/CONTRACTS.md#legacystrategyref)** — migration-only legacy identity; never allocates a new Factory E### identity or promotion authority.
+
+→ **contract [`LegacyEvidenceRef`](factory_os/CONTRACTS.md#legacyevidenceref)** — immutable legacy-vault evidence reference; historical/rediscovery only, never E3 or Candidate promotion evidence.
 
 → **contract [`CandidatePayload`](factory_os/CONTRACTS.md#candidatepayload)** — fields, types, required-set and validation rules.
 

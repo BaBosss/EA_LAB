@@ -44,6 +44,8 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `RunTransition` | `factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only` | the scheduler only | _triage/factory_os/run_schema_fixtures.py: ajv validates every committed factory/runs/*.jsonl RunTransition row; exactly three byte-pinned historical manifests are visible LEGACY_EXCEPTION results until their event-log occurrence is durable |
 | `RunJournal` | **derived, never written** — True | — | scheduler.py: folds and validates the RunTransition lines into the derived journal read-model |
 | `EvidenceRef` | `docs/memory_control/experiment_events/evidence-manifest.jsonl (EXISTING - NOT replaced)` | — | — |
+| `LegacyStrategyRef` | `factory/legacy_migration/strategy_bridge.jsonl` | owner-approved M4 migration tooling only | legacy_migration.py: validates migration-only identity, current Factory E011-E018 bridge uniqueness, collision null-mapping, and promotion_authority=false |
+| `LegacyEvidenceRef` | `factory/legacy_migration/evidence_refs.jsonl` | owner-approved M4 migration tooling only | legacy_migration.py: validates vault/root addressability, content identity, strategy links, quality ceiling below E3, and promotion_authority=false |
 | `CandidatePayload` | *embedded in its parent — no file* | — | candidate.py: canonical payload digest, full input surface, module stability, profile hashes, and cited-run linkage |
 | `CandidateManifest` | `factory/candidates/<candidate_id>.json` | claude, once, at verdict time | candidate_validator: MUST recompute sha256 over the canonical serialization of `payload` and compare to candidate_digest. The schema checks the PATTERN only - it cannot verify a hash. |
 | `MagicAllocation` | `factory/magic_allocations.jsonl` | automation allocates; claude approves; user ratifies scope changes | allocator: global uniqueness for NEW allocations; check_state.ps1 remains the account\|magic backstop |
@@ -439,6 +441,63 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 **Unknown fields:** rejected (closed object).
 
 <!-- END GENERATED CONTRACT: EvidenceRef -->
+<!-- BEGIN GENERATED CONTRACT: LegacyStrategyRef -->
+### LegacyStrategyRef
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`LegacyStrategyRef`** · stored in `factory/legacy_migration/strategy_bridge.jsonl` · written by *owner-approved M4 migration tooling only* · enforced by *legacy_migration.py: validates migration-only identity, current Factory E011-E018 bridge uniqueness, collision null-mapping, and promotion_authority=false*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `LegacyStrategyRef` | **yes** |  |
+| `strategy_id` | `string` | **yes** | pattern `^STRAT-LEG-[0-9a-f]{16}$` |
+| `canonical_name_candidate` | `string` | **yes** | minLength `1` |
+| `bridge_state` | `LEGACY_ONLY` \| `CURRENT_FACTORY_EXACT` \| `BOSS_NUMBER_COLLISION` | **yes** |  |
+| `factory_ea_id` | `string` \| `null` | **yes** | pattern `^E01[1-8]$` |
+| `identity_confidence` | `CONFIRMED` \| `LIKELY` \| `UNKNOWN` | **yes** |  |
+| `promotion_authority` | const `False` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `bridge_state` = `CURRENT_FACTORY_EXACT`** → `factory_ea_id` → `string` (pattern `^E01[1-8]$`)
+- **otherwise (no `bridge_state` = `CURRENT_FACTORY_EXACT`)** → `factory_ea_id` → `null`
+
+<!-- END GENERATED CONTRACT: LegacyStrategyRef -->
+
+<!-- BEGIN GENERATED CONTRACT: LegacyEvidenceRef -->
+### LegacyEvidenceRef
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`LegacyEvidenceRef`** · stored in `factory/legacy_migration/evidence_refs.jsonl` · written by *owner-approved M4 migration tooling only* · enforced by *legacy_migration.py: validates vault/root addressability, content identity, strategy links, quality ceiling below E3, and promotion_authority=false*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `LegacyEvidenceRef` | **yes** |  |
+| `legacy_evidence_id` | `string` | **yes** | pattern `^leg_evd_sha256_[0-9a-f]{64}$` |
+| `source_evidence_id` | `string` | **yes** | pattern `^EV-LEG-[0-9a-f]{16}$` |
+| `raw_sha256` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `byte_length` | `integer` | **yes** | min `0` |
+| `vault_id` | const `PREMIG_20260823` | **yes** |  |
+| `root_id` | `string` | **yes** | pattern `^[A-Z0-9_]{2,96}$` |
+| `relative_path` | `string` | **yes** | minLength `1` |
+| `storage_class` | `TAR_SNAPSHOT` \| `DIRECTORY_SNAPSHOT` \| `TERMINAL_CAS_ARCHIVE` | **yes** |  |
+| `evidence_role` | `IMAGE_EVIDENCE` \| `TEST_CONFIG` \| `TEST_EVIDENCE` \| `MT_REPORT` \| `SET_FILE` \| `JSON_EVIDENCE` \| `OPTIMIZATION_XML` \| `RESULT_TABLE` \| `LOG_EVIDENCE` \| `FACTORY_EVIDENCE` \| `SPREADSHEET` \| `CONFIG_INI` \| `XML_EVIDENCE` | **yes** |  |
+| `legacy_quality` | `E1_REPORT_FOUND` \| `E2_CONFIG_BOUND` \| `N_A_SUPPORTING_ARTIFACT` | **yes** |  |
+| `link_state` | `LINKED_SINGLE` \| `AMBIGUOUS` \| `UNRESOLVED` | **yes** |  |
+| `strategy_ids` | array of `string` | **yes** |  |
+| `promotion_authority` | const `False` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `link_state` = `LINKED_SINGLE`** → `strategy_ids` → `any` (minItems `1`)
+- **when `link_state` = `AMBIGUOUS`** → `strategy_ids` → `any` (minItems `2`)
+- **when `link_state` = `UNRESOLVED`** → `strategy_ids` → `any`
+
+<!-- END GENERATED CONTRACT: LegacyEvidenceRef -->
 
 <!-- BEGIN GENERATED CONTRACT: CandidatePayload -->
 ### CandidatePayload

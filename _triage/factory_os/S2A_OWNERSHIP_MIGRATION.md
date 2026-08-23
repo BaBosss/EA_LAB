@@ -91,6 +91,8 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `ExperimentContract` | `_triage/factory_os/qi_1.py` | `_triage/factory_os/qi_1.py` | KEEP | claude (lead engineer) | PROPOSED |
 | `ExperimentResult` | `_triage/factory_os/qi_1.py` | `_triage/factory_os/qi_1.py` | KEEP | claude (lead engineer) | PROPOSED |
 | `IdeaRef` | `INTAKE_QUEUE.md` | `INTAKE_QUEUE.md` | KEEP | user (Boss) | PROPOSED |
+| `LegacyEvidenceRef` | `factory/legacy_migration/evidence_refs.jsonl` | `factory/legacy_migration/evidence_refs.jsonl` | KEEP | claude (lead engineer) | PROPOSED |
+| `LegacyStrategyRef` | `factory/legacy_migration/strategy_bridge.jsonl` | `factory/legacy_migration/strategy_bridge.jsonl` | KEEP | claude (lead engineer) | PROPOSED |
 | `MetricRef` | `EMBEDDED:CoverageCell` | `EMBEDDED:CoverageCell` | KEEP | claude (lead engineer) | PROPOSED |
 | `ModuleUse` | `EMBEDDED:Hypothesis` | `EMBEDDED:Hypothesis` | KEEP | claude (lead engineer) | PROPOSED |
 | `OwnerRef` | `EMBEDDED:*` | `EMBEDDED:*` | KEEP | claude (lead engineer) | PROPOSED |
@@ -103,7 +105,7 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `SnapshotMeta` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 | `SnapshotVerdict` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 
-**KEEP = 20 · TRANSFER = 14** · 34 rows total.
+**KEEP = 22 · TRANSFER = 14** · 36 rows total.
 
 ## The two coverage numbers, reconciled rather than equated
 
@@ -281,6 +283,8 @@ One block per row that proposes a move. These four fields are the reviewer check
 | `ExperimentContract` | `_triage/factory_os/qi_1.py` | QI-1 contracts are written only by the existing qi_1.py writer. |
 | `ExperimentResult` | `_triage/factory_os/qi_1.py` | QI-1 results are written only by the existing qi_1.py writer. |
 | `IdeaRef` | `INTAKE_QUEUE.md` | design section 1.3 #11 is unusually direct: the file "opens by declaring itself the single place for every new source/strategy drop", so there is to be "no ops/ideas.csv". Stable ID and exact-URL dedupe are added AS COLUMNS on the existing owner, and the Factory OS holds only a read projection. |
+| `LegacyEvidenceRef` | `factory/legacy_migration/evidence_refs.…` | M4 bootstrap commit created the content-addressed legacy reference store first; this file owns LegacyEvidenceRef records only, not the external bytes. |
+| `LegacyStrategyRef` | `factory/legacy_migration/strategy_bridg…` | M4 bootstrap commit created the immutable migration-only strategy bridge first; this file now owns STRAT-LEG-* provenance while promotion_authority remains false. |
 | `MetricRef` | `EMBEDDED:CoverageCell` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `ModuleUse` | `EMBEDDED:Hypothesis` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `OwnerRef` | `EMBEDDED:*` | the design's universal pinning primitive - 12 entities embed it, so naming a single parent would be false precision. It owns no file and cannot: it IS the pin (commit + blob + sha256) that lets an artifact hold a fact it does not own, per design section 1.3. |

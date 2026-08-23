@@ -49,6 +49,8 @@ SIGNERS = {
     'AGENT_TASKBOARD.md': USER,
     'INTAKE_QUEUE.md': USER,
     'portfolio/DEPLOYMENTS.csv': USER,
+    'factory/legacy_migration/strategy_bridge.jsonl': LEAD,
+    'factory/legacy_migration/evidence_refs.jsonl': LEAD,
     # ORDER-602 B: one signer for the whole not-currently-owned group, whichever state each row is in.
     'NO_CURRENT_OWNER': USER,
     'NOT_YET_BUILT': USER,
@@ -533,7 +535,42 @@ ROWS = [
             'before then, so nothing is yet in a retention window.'
         ),
     ),
-    # ---------------------------------------------------------------- UNOWNED (rev 5)
+    # ------------------------------------------------------- M4 legacy owners (bootstrap landed)
+    dict(
+        entity='LegacyStrategyRef',
+        owner='factory/legacy_migration/strategy_bridge.jsonl',
+        proposed='factory/legacy_migration/strategy_bridge.jsonl',
+        disposition='KEEP',
+        canonical_or_derived='canonical',
+        keep_reason=('M4 bootstrap commit created the immutable migration-only strategy bridge first; '
+                     'this file now owns STRAT-LEG-* provenance while promotion_authority remains false.'),
+        breaks_if_moved=('Moving this owner without an exact replacement would orphan M1/M2 identity '
+                         'provenance or create a second status authority.'),
+        breaks_if_not_moved=('Nothing: keeping this immutable bridge as owner is the intended post-M4 state.'),
+        reverse_steps=('Revert the M4 LegacyStrategyRef schema/reader contract and stop consuming the bridge; '
+                       'do not delete source legacy bytes or alter E011-E018 strategy_catalog.json.'),
+        evidence_lost=('Without Git history the deterministic identity bridge and collision/non-promotion '
+                       'decisions would become unavailable.'),
+        retention_window=('git history indefinitely; physical source cleanup remains separately gated.'),
+    ),
+    dict(
+        entity='LegacyEvidenceRef',
+        owner='factory/legacy_migration/evidence_refs.jsonl',
+        proposed='factory/legacy_migration/evidence_refs.jsonl',
+        disposition='KEEP',
+        canonical_or_derived='canonical',
+        keep_reason=('M4 bootstrap commit created the content-addressed legacy reference store first; '
+                     'this file owns LegacyEvidenceRef records only, not the external bytes.'),
+        breaks_if_moved=('Moving this owner without an exact replacement would sever the durable '
+                         'vault/root/path join and could recreate absolute-path authority.'),
+        breaks_if_not_moved=('Nothing: keeping this immutable reference store is the intended post-M4 state.'),
+        reverse_steps=('Revert the M4 LegacyEvidenceRef schema/reader contract and stop consuming this store; '
+                       'leave canonical EvidenceRef and all external legacy bytes untouched.'),
+        evidence_lost=('Without Git history the immutable vault/root/relative-path mapping for historical '
+                       'E1/E2 evidence would become unavailable.'),
+        retention_window=('git history indefinitely for references; PREMIG_20260823 vault bytes remain frozen '
+                          'until separately gated archive/cleanup milestones.'),
+    ),
     dict(
         entity='RuntimeIdentityObserved',
         owner='NO_CURRENT_OWNER',

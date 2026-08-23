@@ -154,6 +154,8 @@
         "RunTransition",
         "RunJournal",
         "EvidenceRef",
+        "LegacyStrategyRef",
+        "LegacyEvidenceRef",
         "CandidateManifest",
         "MagicAllocation",
         "DeploymentAttestationEvent",
@@ -250,6 +252,22 @@
         }
       },
       "$ref": "#/$defs/EvidenceRef"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "LegacyStrategyRef"
+        }
+      },
+      "$ref": "#/$defs/LegacyStrategyRef"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "LegacyEvidenceRef"
+        }
+      },
+      "$ref": "#/$defs/LegacyEvidenceRef"
     },
     {
       "properties": {
@@ -1511,6 +1529,62 @@
           "pattern": "^[0-9a-f]{64}$"
         }
       }
+    },
+    "LegacyStrategyRef": {
+      "type": "object",
+      "x-owner-file": "factory/legacy_migration/strategy_bridge.jsonl",
+      "x-writer": "owner-approved M4 migration tooling only",
+      "x-enforced-by": "legacy_migration.py: validates migration-only identity, current Factory E011-E018 bridge uniqueness, collision null-mapping, and promotion_authority=false",
+      "x-enforcer": "_triage/factory_os/legacy_migration.py",
+      "x-enforcement-status": "BUILT",
+      "description": "M4 owner-approved migration identity. STRAT-LEG-* is provenance/rediscovery identity only. It cannot allocate a new Factory E### identity, select a candidate, deploy, or change lifecycle state. CURRENT_FACTORY_EXACT means only that this historical identity resolves to an E### identity that already exists in factory/strategy_catalog.json.",
+      "required": ["entity","strategy_id","canonical_name_candidate","bridge_state","factory_ea_id","identity_confidence","promotion_authority"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": {"const": "LegacyStrategyRef"},
+        "strategy_id": {"type": "string", "pattern": "^STRAT-LEG-[0-9a-f]{16}$"},
+        "canonical_name_candidate": {"type": "string", "minLength": 1},
+        "bridge_state": {"enum": ["LEGACY_ONLY","CURRENT_FACTORY_EXACT","BOSS_NUMBER_COLLISION"]},
+        "factory_ea_id": {"type": ["string","null"], "pattern": "^E01[1-8]$"},
+        "identity_confidence": {"enum": ["CONFIRMED","LIKELY","UNKNOWN"]},
+        "promotion_authority": {"const": false}
+      },
+      "allOf": [{
+        "if": {"properties": {"bridge_state": {"const": "CURRENT_FACTORY_EXACT"}}, "required": ["bridge_state"]},
+        "then": {"properties": {"factory_ea_id": {"type": "string", "pattern": "^E01[1-8]$"}}},
+        "else": {"properties": {"factory_ea_id": {"type": "null"}}}
+      }]
+    },
+    "LegacyEvidenceRef": {
+      "type": "object",
+      "x-owner-file": "factory/legacy_migration/evidence_refs.jsonl",
+      "x-writer": "owner-approved M4 migration tooling only",
+      "x-enforced-by": "legacy_migration.py: validates vault/root addressability, content identity, strategy links, quality ceiling below E3, and promotion_authority=false",
+      "x-enforcer": "_triage/factory_os/legacy_migration.py",
+      "x-enforcement-status": "BUILT",
+      "description": "M4 owner-approved immutable reference to historical bytes outside current canonical EvidenceRef storage. This entity is deliberately non-promotable: it may support historical E1/E2 interpretation and rediscovery, but it can never satisfy CandidateManifest promotion evidence and can never be E3_REPRODUCIBLE.",
+      "required": ["entity","legacy_evidence_id","source_evidence_id","raw_sha256","byte_length","vault_id","root_id","relative_path","storage_class","evidence_role","legacy_quality","link_state","strategy_ids","promotion_authority"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": {"const": "LegacyEvidenceRef"},
+        "legacy_evidence_id": {"type": "string", "pattern": "^leg_evd_sha256_[0-9a-f]{64}$"},
+        "source_evidence_id": {"type": "string", "pattern": "^EV-LEG-[0-9a-f]{16}$"},
+        "raw_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "byte_length": {"type": "integer", "minimum": 0},
+        "vault_id": {"const": "PREMIG_20260823"},
+        "root_id": {"type": "string", "pattern": "^[A-Z0-9_]{2,96}$"},        "relative_path": {"type": "string", "minLength": 1},
+        "storage_class": {"enum": ["TAR_SNAPSHOT","DIRECTORY_SNAPSHOT","TERMINAL_CAS_ARCHIVE"]},
+        "evidence_role": {"enum": ["IMAGE_EVIDENCE","TEST_CONFIG","TEST_EVIDENCE","MT_REPORT","SET_FILE","JSON_EVIDENCE","OPTIMIZATION_XML","RESULT_TABLE","LOG_EVIDENCE","FACTORY_EVIDENCE","SPREADSHEET","CONFIG_INI","XML_EVIDENCE"]},
+        "legacy_quality": {"enum": ["E1_REPORT_FOUND","E2_CONFIG_BOUND","N_A_SUPPORTING_ARTIFACT"]},
+        "link_state": {"enum": ["LINKED_SINGLE","AMBIGUOUS","UNRESOLVED"]},
+        "strategy_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^STRAT-LEG-[0-9a-f]{16}$"}},
+        "promotion_authority": {"const": false}
+      },
+      "allOf": [
+        {"if": {"properties": {"link_state": {"const": "LINKED_SINGLE"}}, "required": ["link_state"]}, "then": {"properties": {"strategy_ids": {"minItems": 1, "maxItems": 1}}}},
+        {"if": {"properties": {"link_state": {"const": "AMBIGUOUS"}}, "required": ["link_state"]}, "then": {"properties": {"strategy_ids": {"minItems": 2}}}},
+        {"if": {"properties": {"link_state": {"const": "UNRESOLVED"}}, "required": ["link_state"]}, "then": {"properties": {"strategy_ids": {"maxItems": 0}}}}
+      ]
     },
     "CandidatePayload": {
       "type": "object",

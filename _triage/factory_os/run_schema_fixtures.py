@@ -688,6 +688,31 @@ epair('EvidenceRef',
       'different artifacts share one identity',
       [{'keyword': 'pattern', 'instancePath': '/evidence_id'}])
 
+epair('LegacyStrategyRef',
+      {"entity": "LegacyStrategyRef", "strategy_id": "STRAT-LEG-" + "a" * 16,
+       "canonical_name_candidate": "Legacy Sample", "bridge_state": "LEGACY_ONLY",
+       "factory_ea_id": None, "identity_confidence": "LIKELY", "promotion_authority": False},
+      {"entity": "LegacyStrategyRef", "strategy_id": "STRAT-LEG-" + "a" * 16,
+       "canonical_name_candidate": "Legacy Sample", "bridge_state": "LEGACY_ONLY",
+       "factory_ea_id": None, "identity_confidence": "LIKELY", "promotion_authority": True},
+      'M4: legacy strategy identity is migration-only and can never gain promotion authority',
+      [{'keyword': 'const', 'instancePath': '/promotion_authority'}])
+
+epair('LegacyEvidenceRef',
+      {"entity": "LegacyEvidenceRef", "legacy_evidence_id": "leg_evd_sha256_" + "f" * 64,
+       "source_evidence_id": "EV-LEG-" + "a" * 16, "raw_sha256": "f" * 64,
+       "byte_length": 1, "vault_id": "PREMIG_20260823", "root_id": "EA_LAB",
+       "relative_path": "reports/legacy.htm", "storage_class": "TAR_SNAPSHOT",
+       "evidence_role": "MT_REPORT", "legacy_quality": "E1_REPORT_FOUND",
+       "link_state": "UNRESOLVED", "strategy_ids": [], "promotion_authority": False},
+      {"entity": "LegacyEvidenceRef", "legacy_evidence_id": "leg_evd_sha256_" + "f" * 64,
+       "source_evidence_id": "EV-LEG-" + "a" * 16, "raw_sha256": "f" * 64,
+       "byte_length": 1, "vault_id": "PREMIG_20260823", "root_id": "EA_LAB",
+       "relative_path": "reports/legacy.htm", "storage_class": "TAR_SNAPSHOT",
+       "evidence_role": "MT_REPORT", "legacy_quality": "E3_REPRODUCIBLE",
+       "link_state": "UNRESOLVED", "strategy_ids": [], "promotion_authority": False},
+      'M4: legacy evidence is historical/rediscovery-only and the schema must reject E3',
+      [{'keyword': 'enum', 'instancePath': '/legacy_quality'}])
 epair('RuntimeIdentityObserved', RUNTIME_IDENTITY_OK,
       with_(RUNTIME_IDENTITY_OK, magic="0"),
       'runtime identity account/magic/build/config/symbol/timeframe evidence is closed and a malformed magic must fail',
@@ -1312,12 +1337,12 @@ def run(schema, instance):
 # of quietly ageing a sentence nobody re-reads. If a number below is wrong, the schema is not the
 # thing to change: update the number, in the commit that changed the thing it counts.
 HEADER_COUNTS = {
-    'defs': 34,
-    'root_branches': 23,
+    'defs': 36,
+    'root_branches': 25,
     'root_cases': 45,
-    'entity_cases': 84,
-    'entity_negatives': 44,
-    'entities_with_a_negative': 34,
+    'entity_cases': 88,
+    'entity_negatives': 46,
+    'entities_with_a_negative': 36,
 }
 
 
