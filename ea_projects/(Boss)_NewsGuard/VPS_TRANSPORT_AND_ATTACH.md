@@ -1,4 +1,4 @@
-# NewsGuard VPS transport and attach runbook
+# NewsGuard + MacroGate VPS transport and attach runbook
 
 Scope: manual deployment for ORDER-083C. This document does not authorize an
 agent to log in to the VPS, attach an EA, or change a live terminal. The user
@@ -22,6 +22,7 @@ terminal configuration, or OneDrive token.
 | Direction | Source | OneDrive staging | Destination |
 |---|---|---|---|
 | lab -> VPS | `D:\EA_LAB\portfolio\news_week.csv` | `lab-to-vps\news\EA_LAB_news_week.csv` | VPS MetaQuotes `Terminal\Common\Files\EA_LAB_news_week.csv` |
+| lab -> VPS | `D:\EA_LAB\portfolio\EA_LAB_mris_regime.csv` | `lab-to-vps\news\EA_LAB_mris_regime.csv` | VPS MetaQuotes `Terminal\Common\Files\EA_LAB_mris_regime.csv` |
 | VPS -> lab | VPS MetaQuotes `Terminal\Common\Files\EA_LAB_snapshot_*.csv` | `vps-to-lab\snapshots\` | read directly by `scripts\collect_live_deals.ps1 -CommonFiles <synced snapshots path>` |
 
 Do not sync a terminal data directory or `Common\Files` wholesale. That would
@@ -69,38 +70,31 @@ the VPS-side sync engine differs.
 
 ## Scheduled copy: lab to VPS
 
-The existing lab daily chain creates `portfolio\news_week.csv`. Add a lab task
-after that chain (or a separate task shortly after it) which performs an atomic
-publish: copy to `EA_LAB_news_week.csv.tmp`, verify the CSV is non-empty and has
-at least one data event, then rename it to `EA_LAB_news_week.csv`. Never replace
-the last good file with an empty or malformed download.
+The daily chain generates `portfolio\news_week.csv` and then exports
+`portfolio\EA_LAB_mris_regime.csv`. `scripts\publish_guard_feeds_to_vps.ps1`
+validates the two feeds independently and publishes each valid file through a
+same-directory `.tmp` file to local `Common\Files` and the private OneDrive
+`lab-to-vps\news` staging directory. A bad feed never overwrites its last-good
+copy and does not prevent the other valid feed from publishing; the step still
+returns non-zero so failure remains visible.
 
-On the VPS, run a path-scoped PowerShell task every 5 minutes that first pulls
-the file with rclone, then validates and publishes it exactly as before:
+Before enabling the VPS scheduled task for this bundle, copy BOTH
+`vps_rclone\pull_news.cmd` and `vps_rclone\pull_guard_feeds.ps1` to the same
+VPS worker directory. Do not update the `.cmd` alone: it is only the compatibility
+entrypoint and calls the PowerShell worker beside it.
 
-1. Pull the latest copy into a local staging folder with rclone (the remote is
-   already scoped to `EA_LAB_VPS_SYNC`):
+Keep the existing task pointed at `pull_news.cmd`. Every run removes only the two
+private staged targets, fetches both files from the scoped OneDrive path, validates
+them, then replaces only valid `Common\Files` copies. News is rejected at age
+`>26 h`; the regime transport validator is stricter than the deployed MacroGate
+200-hour consumer setting. Missing/malformed/stale input retains last-good data
+and returns non-zero.
 
-   ```text
-   rclone copy "onedrive:lab-to-vps/news/EA_LAB_news_week.csv" ^
-     "C:\rclone\staging\lab-to-vps\news" --config C:\rclone\rclone.conf
-   ```
-
-   Leave freshness/format checks to the wrapper below; do not push validation
-   into rclone flags.
-2. Read only the staged `EA_LAB_news_week.csv`.
-3. Reject it if missing, zero bytes, older than 26 hours, or its header/event
-   rows do not match the NewsGuard feed format.
-4. Copy to `Common\Files\EA_LAB_news_week.csv.tmp`.
-5. Re-read/validate the temporary file and atomically rename it over
-   `EA_LAB_news_week.csv`.
-6. Exit non-zero and retain the last good destination on any failure.
-
-Configure both tasks with `Run whether user is logged on or not`,
-`Start when available`, three retries five minutes apart, and a non-zero-exit
-history check. Do not use `-Force` against terminal processes and do not kill a
-terminal. Logs must contain timestamps and file age, not credentials.
-
+The worker log is `C:\rclone\logs\pull_guard_feeds.log`; rclone also writes its
+INFO log there. A successful end-to-end pass must end with
+`guard feed pull COMPLETE`. Configure the task with `Run whether user is logged
+on or not`, `Start when available`, and retries as already documented. Do not
+kill or force-close an MT5 terminal.
 ## Scheduled copy: VPS to lab
 
 On the VPS, every 5 minutes enumerate only files matching

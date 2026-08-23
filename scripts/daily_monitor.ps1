@@ -16,7 +16,7 @@ $monitorRotation = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\moni
 $collectLiveDeals = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\collect_live_deals.ps1'
 $newsCalendar = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\news_calendar.ps1'
 $mrisRun = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\mris_run.ps1'
-$publishNews = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\publish_news_to_vps.ps1'
+$publishGuards = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\publish_guard_feeds_to_vps.ps1'
 $mrisExport = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\mris_export_regime.ps1'
 $liveDashboard = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\live_dashboard.ps1'
 $controlRoomSnapshot = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\control_room_snapshot.ps1'
@@ -53,16 +53,13 @@ Step 'news'      { powershell -NoProfile -File $newsCalendar *>> $log }
 # the dashboard so it embeds the fresh whisper_brief.html. Its own stages are non-fatal and
 # a mris failure never blocks the dashboard/gist (only a 'dashboard' failure skips the gist).
 Step 'mris'      { powershell -NoProfile -File $mrisRun *>> $log }
-# ORDER-083: publish the news CSV where every (Boss)_NewsGuard instance reads it. 2026-07-28:
-# the old inline Copy-Item only reached the LOCAL Common\Files, so the VPS fleet ran on a
-# missing feed and sat INACTIVE for days. publish_news_to_vps.ps1 validates the CSV (age,
-# header, >=1 parseable event) and publishes atomically to BOTH the local Common\Files and the
-# OneDrive lab-to-vps staging folder the VPS pulls with rclone. Fail-visible like any Step.
-Step 'newsguard-csv' { powershell -NoProfile -File $publishNews *>> $log }
-# ORDER-073 Phase-3: append today's MRIS macro state to the rolling regime CSV that the
-# (Boss)_MacroGate watchdog reads. Runs after 'mris' so regime_state.json is fresh. The
-# script mirrors the CSV to local Common\Files; the VPS copy is delivered by rclone (runbook).
+# ORDER-073 Phase-3: append today's MRIS macro state after MRIS refresh.
+# This must precede guard publishing so the VPS staging copy is the same-day regime file.
 Step 'export-regime' { powershell -NoProfile -File $mrisExport *>> $log }
+# Unified guard-feed publisher: validate NewsGuard + MacroGate independently, then publish each
+# valid feed atomically to local Common\Files and OneDrive staging. A bad feed preserves its
+# last-good destination and marks the chain unhealthy without blocking the other feed.
+Step 'guard-feeds' { powershell -NoProfile -File $publishGuards *>> $log }
 Step 'dashboard' { powershell -NoProfile -File $liveDashboard *>> $log }
 # CR-001b (ROADMAP Phase 4.5, 2026-07-19): regenerate the ControlRoomSnapshot after collect+
 # dashboard so it reads the freshest data. Read-only projection (never writes owners); a

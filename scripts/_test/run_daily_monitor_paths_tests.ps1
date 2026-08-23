@@ -63,7 +63,7 @@ $chain = @(
     'scripts\mris\mris_brief.ps1',
     'scripts\mris\mris_alert.ps1',
     'scripts\mris\mris_notify.ps1',
-    'scripts\publish_news_to_vps.ps1',
+    'scripts\publish_guard_feeds_to_vps.ps1',
     'scripts\mris\mris_export_regime.ps1',
     'scripts\live_dashboard.ps1',
     'scripts\control_room_snapshot.ps1',

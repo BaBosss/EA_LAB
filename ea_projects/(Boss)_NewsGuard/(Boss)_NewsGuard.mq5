@@ -38,32 +38,41 @@ input int    ReloadMinutes          = 15;                      // re-read the ne
 
 datetime g_ng_last_load = 0;
 datetime g_ng_last_offset_alert = 0;
+bool     g_ng_offset_reported = false;
+int      g_ng_last_detected_offset = 0;
 
 // Re-evaluate on every feed reload so a long-running terminal follows broker
-// DST changes. Alerts are throttled; the effective offset itself is not.
-int NG_ResolveServerOffset(const bool forceAlert)
+// DST changes. Auto-detected mismatch is informational; invalid detection or a
+// conflicting manual override remains alert-worthy.
+int NG_ResolveServerOffset(const bool forceReport)
 {
    int effectiveOffset = ServerToBkkOffsetHours;
    datetime serverNow = TimeTradeServer();
    datetime gmtNow = TimeGMT();
-   int serverUtc = (int)MathRound((double)(serverNow - gmtNow) / 3600.0);
    bool detectionValid = false;
    int detectedOffset = NG_BkkOffsetFromClocks(serverNow, gmtNow, ServerToBkkOffsetHours, detectionValid);
-   bool mayAlert = forceAlert || (TimeLocal() - g_ng_last_offset_alert >= NG_ALERT_THROTTLE_SEC);
+   bool mayAlert = forceReport || (TimeLocal() - g_ng_last_offset_alert >= NG_ALERT_THROTTLE_SEC);
    if(AutoDetectServerOffset)
    {
-      if(detectionValid) effectiveOffset = detectedOffset;
+      if(detectionValid)
+      {
+         effectiveOffset = detectedOffset;
+         if(forceReport || !g_ng_offset_reported || detectedOffset != g_ng_last_detected_offset)
+         {
+            if(detectedOffset != ServerToBkkOffsetHours)
+               PrintFormat("[NEWSGUARD] INFO: configured offset %+d h, detected %+d h; using detected value",
+                           ServerToBkkOffsetHours, detectedOffset);
+            else
+               PrintFormat("[NEWSGUARD] server offset confirmed: Bkk = server %+d h", detectedOffset);
+            g_ng_last_detected_offset = detectedOffset;
+            g_ng_offset_reported = true;
+         }
+      }
       else if(mayAlert)
       {
          g_ng_last_offset_alert = TimeLocal();
          NG_AlertCritical(StringFormat("NewsGuard cannot derive a valid server/GMT offset; using input %+d h",
                                        ServerToBkkOffsetHours));
-      }
-      if(detectionValid && detectedOffset != ServerToBkkOffsetHours && mayAlert)
-      {
-         g_ng_last_offset_alert = TimeLocal();
-         NG_AlertCritical(StringFormat("NewsGuard server offset mismatch: input Bkk=server%+d h, detected %+d h; using detected value",
-                                       ServerToBkkOffsetHours, detectedOffset));
       }
    }
    else if(detectionValid && detectedOffset != ServerToBkkOffsetHours && mayAlert)

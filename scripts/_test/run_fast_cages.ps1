@@ -277,6 +277,8 @@ $FAST_SUITES = @(
     # a test that reimplements its subject agrees with itself no matter what the subject
     # does, which is how run_fast_cages came to exist in the first place.
     'run_monitor_integrity_tests.ps1',
+    # Guard Feed transport: malformed/missing inputs preserve last-good files and daily ordering.
+    'run_guard_feed_pipeline_tests.ps1',
     # BACKLOG-D31 (2026-07-30): guards the design<->schema seam that produced every
     # regression across three blind audits of the Factory OS design. The suite it wraps does
     # not check that the design is well-formed -- it re-applies each of the 7 REGRESSED
@@ -671,6 +673,10 @@ $SUITE_GUARDS = @{
                                           # and inventory while exercising the monitor path.
                                           'scripts/lib/deployment_status.ps1',
                                           'portfolio/DEPLOYMENTS.csv')
+    'run_guard_feed_pipeline_tests.ps1' = @('scripts/publish_guard_feeds_to_vps.ps1',
+                                          'scripts/daily_monitor.ps1',
+                                          'ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1',
+                                          'ea_projects/(Boss)_NewsGuard/vps_rclone/pull_news.cmd')
     # ORDER-612 (S4). Its fixtures are built by snapshot_build.py through the real schema, and the
     # two readers it asserts on are make_status's renderer and the daily digest -- so all of those
     # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when

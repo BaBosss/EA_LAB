@@ -62,6 +62,7 @@ run_report_freshness_tests.ps1|FAST|In the fast tier; guards scripts/lib/report_
 run_truncation_message_tests.ps1|FAST|In the fast tier; guards scripts/check_truncated_run.ps1
 run_optimize_guard_tests.ps1|FAST|In the fast tier; guards scripts/optimize_guard.ps1, docs/PARAM_REGISTRY.csv, docs/PARAM_LINKAGE.md (+2 more)
 run_monitor_integrity_tests.ps1|FAST|In the fast tier; guards scripts/daily_monitor.ps1, _triage/factory_os/registry.py, scripts/live_dashboard.ps1 (+9 more)
+run_guard_feed_pipeline_tests.ps1|FAST|In the fast tier; guards scripts/publish_guard_feeds_to_vps.ps1, scripts/daily_monitor.ps1, ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1 (+1 more)
 run_schema_cages.ps1|FAST|In the fast tier; guards _triage/factory_os/evidence.py, _triage/factory_os/gen_design_contracts.py, factory/coverage.jsonl (+20 more)
 run_s2a_cages.ps1|FAST|In the fast tier; guards _triage/factory_os/s2a_migration.jsonl, _triage/factory_os/s2a_attestations.jsonl, _triage/factory_os/s2a_coverage_reconciliation.json (+23 more)
 run_snapshot_s4_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/registry.py, _triage/factory_os/snapshot_build.py, _triage/factory_os/snapshot_validator.py (+11 more)

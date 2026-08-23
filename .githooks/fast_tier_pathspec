@@ -81,6 +81,8 @@ docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv
 docs/SESSION_LEDGER.md
+ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1
+ea_projects/(Boss)_NewsGuard/vps_rclone/pull_news.cmd
 EA_SCORECARD_AND_REGISTRY.md
 ea_template/Boss_14_GridLog.mq5
 ea_template/core/Inputs.mqh
@@ -149,6 +151,7 @@ scripts/parity_run.ps1
 scripts/pilot_probe_select.py
 scripts/pilot_selected_surface_row.py
 scripts/pilot_verify_check.py
+scripts/publish_guard_feeds_to_vps.ps1
 scripts/run_backtest.ps1
 scripts/scheduler_run.ps1
 scripts/status_template.html

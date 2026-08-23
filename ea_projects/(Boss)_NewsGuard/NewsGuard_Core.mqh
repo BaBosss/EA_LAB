@@ -34,7 +34,8 @@
 #define NG_MAX_MAGICS          32
 #define NG_MAX_EVENTS          512
 #define NG_GV_PREFIX           "NEWSGUARD_BLOCK_"
-#define NG_ALERT_THROTTLE_SEC  (4 * 3600)   // fail-safe Alert at most every 4h (real time)
+#define NG_ALERT_THROTTLE_SEC  (4 * 3600)   // non-health warning throttle
+#define NG_HEALTH_REMINDER_SEC (12 * 3600)  // while still INACTIVE, remind at most every 12h
 
 #define NG_POLICY_NONE   0
 #define NG_POLICY_CLOSE  1
@@ -64,7 +65,9 @@ int      ng_evCount = 0;
 
 bool     ng_newsOK       = false;   // file found, fresh, parsed -> guard armed
 double   ng_fileAgeHours = -1.0;    // last observed file age (local clock)
-datetime ng_lastAlert    = 0;       // fail-safe Alert throttle (TimeLocal)
+datetime ng_lastAlert    = 0;       // last health notification (TimeLocal)
+bool     ng_healthKnown     = false;
+bool     ng_healthWasOK     = false;
 int      ng_notificationAttempts = 0; // observable in tester; SendNotification call count
 
 CTrade ng_trade;
@@ -77,6 +80,31 @@ void NG_AlertCritical(const string msg)
    ng_notificationAttempts++;
    if(!SendNotification(msg))
       PrintFormat("[NEWSGUARD] remote notification unavailable/failed (err %d); configure MetaQuotes ID in terminal Options > Notifications", GetLastError());
+}
+
+void NG_UpdateHealthNotice(const bool ok, const string downMsg)
+{
+   datetime now = TimeLocal();
+   if(!ng_healthKnown)
+   {
+      ng_healthKnown = true;
+      ng_healthWasOK = ok;
+      if(!ok) { ng_lastAlert = now; NG_AlertCritical(downMsg); }
+      return;
+   }
+   if(ok != ng_healthWasOK)
+   {
+      ng_healthWasOK = ok;
+      ng_lastAlert = now;
+      if(ok) NG_AlertCritical("NewsGuard RECOVERED: fresh news feed loaded - protection restored");
+      else   NG_AlertCritical(downMsg);
+      return;
+   }
+   if(!ok && now - ng_lastAlert >= NG_HEALTH_REMINDER_SEC)
+   {
+      ng_lastAlert = now;
+      NG_AlertCritical(downMsg + " (still inactive)");
+   }
 }
 
 int NG_BkkOffsetFromClocks(const datetime serverNow, const datetime gmtNow,
@@ -95,6 +123,9 @@ void NG_Setup(const int preMin, const int postMin,
    ng_postMin       = postMin;
    ng_offsetHours   = serverToBkkOffsetHours;
    ng_staleMaxHours = staleMaxHours;
+   ng_healthKnown   = false;
+   ng_healthWasOK   = false;
+   ng_lastAlert     = 0;
    ng_trade.SetAsyncMode(false);
    ng_trade.SetDeviationInPoints(50);
    ng_trade.LogLevel(LOG_LEVEL_ERRORS);
@@ -442,14 +473,10 @@ void NG_Tick(const datetime nowServer)
             NG_ClearBlock(i, "fail-safe/restart reconcile: news data unavailable");
          ng_winActive[i] = false;
       }
-      if(TimeLocal() - ng_lastAlert >= NG_ALERT_THROTTLE_SEC)
-      {
-         ng_lastAlert = TimeLocal();
-         string msg = "NewsGuard INACTIVE: news file missing/stale - guarded EAs are UNPROTECTED";
-         NG_AlertCritical(msg);
-      }
+      NG_UpdateHealthNotice(false, "NewsGuard INACTIVE: news file missing/stale - guarded EAs are UNPROTECTED");
       return;
    }
+   NG_UpdateHealthNotice(true, "");
    for(int i = 0; i < ng_count; i++)
    {
       int  ev     = NG_ActiveEventFor(nowServer, i);

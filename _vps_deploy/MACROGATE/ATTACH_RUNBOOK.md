@@ -3,7 +3,7 @@
 > **AS-DEPLOYED 2026-07-18:** the user attached via the simpler **manual-weekly** mode in
 > `_vps_deploy/MACROGATE_READY/README_TH.md` (copy the regime CSV to Common\Files on each RDP,
 > `InpStaleMaxHours=200` + `InpRowStaleMaxHours=200`). That is the live method — follow READY
-> for re-attach/reboot. STEP 1 below (rclone daily automation) is the **future** upgrade, not
+> for re-attach/reboot. STEP 1 below is the Guard Feed runtime rollout; until it passes verification it is not
 > what is running now. STEPs 2-5 are identical to what was done.
 
 Everything on the lab/dev side is DONE (export script wired, both EAs compiled+bundled).
@@ -16,28 +16,23 @@ Bundles:
 
 ---
 
-## STEP 1 — get the regime CSV onto the VPS (rides the NewsGuard pipe)
+## STEP 1 - rollout and verify Guard Feed automation
 
-The lab daily chain now writes `D:\EA_LAB\portfolio\EA_LAB_mris_regime.csv` (verified) and
-copies it to the lab's local `Common\Files`. To reach the VPS, add it to the SAME lab→VPS
-OneDrive folder used for the news CSV:
+Until this runtime rollout is completed, the 2026-07-18 AS-DEPLOYED method above remains
+manual-weekly with `InpStaleMaxHours=200` and `InpRowStaleMaxHours=200`.
 
-1. **Lab side:** in your `lab-to-vps` publish task (the one that stages `EA_LAB_news_week.csv`),
-   add a second atomic copy of `D:\EA_LAB\portfolio\EA_LAB_mris_regime.csv` →
-   `lab-to-vps\news\EA_LAB_mris_regime.csv` (same folder is fine; one writer).
-2. **VPS side:** in the 5-min rclone pull task, add `EA_LAB_mris_regime.csv` to the pulled
-   file list and copy it (atomic `.tmp`→rename) into the terminal's `Common\Files`.
-   Reject if missing / zero bytes / older than 48 h (MacroGate's staleness gate).
+1. Lab: run the normal daily chain and confirm both `portfolio\news_week.csv` and
+   `portfolio\EA_LAB_mris_regime.csv` are fresh and both staged OneDrive files exist.
+2. VPS worker directory: deploy BOTH `vps_rclone\pull_news.cmd` and
+   `vps_rclone\pull_guard_feeds.ps1` from the same accepted commit. Do not deploy only the `.cmd`.
+3. Keep the existing scheduled task pointed at `pull_news.cmd`; it now invokes the PowerShell worker.
+4. Run/observe one pass and require `C:\rclone\logs\pull_guard_feeds.log` to end with
+   `guard feed pull COMPLETE`.
+5. Confirm both `EA_LAB_news_week.csv` and `EA_LAB_mris_regime.csv` are fresh in VPS `Common\Files`.
 
-> Reference for the pipe details, security boundaries, atomic publish, task settings:
-> `ea_projects/(Boss)_NewsGuard/VPS_TRANSPORT_AND_ATTACH.md` — the regime CSV follows it
-> verbatim, just a second filename.
-
-**Check before moving on:** open the VPS terminal → File → Open Data Folder →
-`...\Common\Files\` and confirm `EA_LAB_mris_regime.csv` is there and fresh.
+After those checks pass, recurring weekly regime copy is retired. Manual copy remains emergency fallback only.
 
 ---
-
 ## STEP 2 — attach the demo carry-leg (DEMO MT5 account)
 
 Per `_vps_deploy/MACROGATE_DEMOLEG/README.md`:
@@ -54,7 +49,7 @@ Per `_vps_deploy/MACROGATE/README.md`:
 1. Copy `(Boss)_MacroGate.ex5` into `MQL5\Experts\`, refresh Navigator.
 2. Attach to ANY one chart (it trades nothing), Algo Trading ON.
 3. Inputs: `InpMagicsCsv = 990120`, `InpLotMult = 0.5`, `InpBlockNew = true`,
-   `InpRegimeInCommon = true`, rest default → OK.
+   `InpRegimeInCommon = true`, `InpStaleMaxHours = 200`, `InpRowStaleMaxHours = 200` -> OK.
 4. Save both charts into the startup profile so a VPS reboot reloads them.
 
 ---
