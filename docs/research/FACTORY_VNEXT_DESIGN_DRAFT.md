@@ -243,8 +243,8 @@ Historical evidence is preserved. Old reports may remain historical references, 
 
 ## 19. Open decisions before canonical policy migration
 
-- Exact Range Generator rule table and candidate-specific range-contract format.
-- Exact Visual Report Spec and graph layout.
+- Range Generator architecture/algorithm is SETTLED by §21.5; exact strategy-specific numeric defaults and calibration remain PROVISIONAL.
+- Visual Report five-page architecture is SETTLED by §21.6; exact chart implementation/UI polish is an MVP implementation detail, not an open architecture decision.
 - Exact numeric Grade thresholds / sample-adequacy rules where numbers are needed.
 - Exact overall-grade critical-floor algorithm beyond the qualitative direction above.
 - Exact risk-capacity envelopes and any deployment risk multipliers (owner hard stop; intentionally unset).
