@@ -1,7 +1,7 @@
 # Factory / Template vNext Design Draft
 
-> **STATUS: NON-CANONICAL DESIGN NOTE.** Consolidates the owner-approved design direction discussed on 2026-08-24. It does not replace current verdict/optimization/risk/deployment rules until a later explicit policy migration is accepted and reviewed.
-> No LIVE/deployment/trading action, risk/default numeric change, or owner attestation is created by this document.
+> **STATUS: DESIGN-FROZEN FOR MVP PILOT IMPLEMENTATION — NON-CANONICAL FOR CURRENT FACTORY POLICY.** Owner-approved design direction consolidated on 2026-08-24. This file is the durable implementation design source for the vNext sidecar pilot, but it does not replace current verdict/optimization/risk/deployment rules until a later explicit policy migration is accepted and reviewed.
+> No LIVE/deployment/trading action, runtime attachment, risk/default numeric change, or owner attestation is created by this document. Later sections marked `SETTLED` supersede earlier `OPEN` wording where they cover the same design question.
 
 ## 1. Core design principles
 
@@ -253,3 +253,182 @@ Historical evidence is preserved. Old reports may remain historical references, 
 ## 20. Promotion rule
 
 This draft becomes canonical only through a later explicit policy-migration milestone that reconciles at minimum the verdict gate, optimization skill, parameter registry/contract, enforcement scripts, evidence/report schemas and tests. Accepted historical evidence must not be rewritten merely to make it fit the new vocabulary.
+
+## 21. DESIGN FREEZE ADDENDUM — accepted 2026-08-24
+
+This section freezes the post-draft discussion for the MVP pilot. Labels mean:
+- `SETTLED`: implementation design is fixed unless a real pilot defect proves the assumption wrong.
+- `PROVISIONAL`: architecture is fixed but numeric thresholds/defaults require calibration from pilot evidence.
+- `OWNER-RESERVED`: no implementation may choose the value without explicit owner approval.
+- `FUTURE`: intentionally outside the MVP pilot and not a blocker.
+
+### 21.1 Identity and authority — SETTLED
+
+Do not state that an EA is simply “good”. Primary research quality/verdict is home-specific.
+
+`HomeContract = Concept/Strategy x LogicalSymbol x ExecutionTF`, with locked MTF/context architecture recorded in the contract. Auxiliary/safety TFs do not redefine the ExecutionTF anchor.
+
+Identity layers are distinct:
+1. Concept / strategy family;
+2. HomeContract;
+3. Profile (`BALANCED`, `SAFE`, `MAX_EDGE`, or a home-specific equivalent);
+4. Broker / execution environment;
+5. Deployment binding.
+
+A home report is the primary evidence unit. Concept roll-ups are portfolio/research summaries only and never substitute for home-specific evidence. Broker suffixes map through `LogicalSymbol`; for example broker-specific `XAUUSDm` can map to logical `XAUUSD` without creating a new concept.
+All run/report/profile artifacts must trace to `HomeContractID`, `LogicalSymbol`, `PhysicalSymbol`, `ExecutionTF`, `ProfileID`, `ParameterSetID`, and `RunID`. Missing Symbol/TF/Home identity makes the evidence invalid for grading.
+
+If runtime/test identity does not match the validated Home, display `OUTSIDE_VALIDATED_CONTRACT`; do not inherit the validated Grade/PASS label. Parameter sets are home/profile-bound unless a separate portability experiment proves otherwise.
+
+Every owner-facing report page keeps a visible identity header such as:
+`Strategy | LogicalSymbol | ExecutionTF | Profile | Broker/Data | WindowContractID`.
+
+### 21.2 Test-window doctrine — SETTLED architecture / PROVISIONAL numbers
+
+Use three separate evidence dimensions rather than pretending time, bars, or trade count are interchangeable:
+- calendar time = regime/history coverage;
+- execution bars/signals = opportunity/information coverage;
+- closed trades or baskets = outcome coverage.
+
+Use the **ExecutionTF** as the bar-count anchor. Context/MTF/shock TFs do not change the anchor.
+
+Window classes:
+1. `DISCOVERY`: compute-normalized, fast enough for Home/architecture screening;
+2. `COMMON_VALIDATION`: calendar-normalized, same start/end dates for finalist comparisons;
+3. `EXTENDED_VALIDATION`: strategy/TF-appropriate longer history for final confidence/regime coverage.
+
+Different `WindowContractID`s are not directly comparable for ranking unless the comparison contract explicitly normalizes them. MAIN/BWD/Holdout remain calendar blocks; BWD/holdout must not become iterative tuning surfaces.
+Provisional discovery/extended targets for calibration, not canonical kill thresholds:
+
+| Execution TF | Discovery target | Extended validation target |
+|---|---:|---:|
+| M1 | ~3 months | ~1–2 years |
+| M5 | ~6 months | ~2–3 years |
+| M15 | ~1 year | ~3 years |
+| M30 | ~1–2 years | ~3–4 years |
+| H1 | ~2–3 years | ~4–5 years |
+| H4 | ~3–5 years | ~5–8 years |
+| D1 | ~5 years | ~8–10+ years |
+
+Runtime/compute cost is first-class evidence. Record tester model, bars, runtime, pass count and empirical seconds-per-work-unit so future range contracts can forecast cost. Do not weaken tick/execution realism merely to make a tick-sensitive strategy faster.
+
+### 21.3 Sample adequacy and KINT-001 resolution direction — SETTLED direction / PROVISIONAL thresholds
+
+Replace the design assumption of one universal trade-count kill rule with a profile-relative **Sample Adequacy Contract** built from:
+- Time Coverage;
+- Opportunity Coverage (bars/signals);
+- Independent Outcome Coverage (trades for single-position systems, baskets for recovery/grid);
+- Regime Coverage;
+- Evidence Quality / telemetry completeness.
+
+Strategy sampling class and ExecutionTF both matter. A slow H4 trend system with long multi-regime history can have stronger confidence than a two-month M1 system with many correlated trades.
+`KINT-001` remains operationally OPEN until the later canonical policy-migration milestone removes/reconciles the conflicting active rule surfaces. The MVP sidecar may calculate the new confidence model, but it must not silently override current canonical verdict policy.
+
+Profit/outcome concentration and clustering may reduce confidence even when raw trade count is large. Missing evidence lowers confidence/completeness; it is not automatically negative strategy evidence.
+
+### 21.4 Grade/status model — SETTLED architecture / PROVISIONAL thresholds
+
+Keep four top-level axes separate:
+- `VERDICT = INVALID | FAIL | PARK | PASS`;
+- `QUALITY_GRADE = A | B | C | D`;
+- `EVIDENCE_CONFIDENCE = A | B | C | D`;
+- `BUILD_POTENTIAL = HIGH | MEDIUM | LOW | EXHAUSTED`.
+
+Metric status vocabulary:
+`STRONG | GOOD | WATCH | WEAK | FAIL | UNTESTED | N/A`.
+
+Core quality categories are Edge, Parameter Stability, Regime Robustness, Risk/Tail, Execution Robustness and Broker Portability. Recovery/Hedge Safety is mandatory only when that capability is active. Portfolio/Diversification Value is a later composition dimension and must not rewrite standalone strategy quality.
+
+Use **critical-floor/cap logic**, not a simple average. A severe tail/execution failure cannot be hidden by high Edge/Stability scores. Optional module weakness normally disables/reworks the module rather than killing the base strategy.
+
+A 0–100 score may be derived for visualization/ranking, but **Grade + Critical Floors + Evidence Confidence** control decisions. A one-point score boundary must never by itself promote or kill a strategy.
+
+Every weak category must emit `STATUS -> WHY -> ACTION`, with an optional `DO NOT` instruction to prevent unrelated re-optimization.
+### 21.5 Range Generator — SETTLED algorithm / PROVISIONAL numeric defaults
+
+Range generation is semantic and stage-adaptive. **Step size is not an intrinsic property of the parameter; it is a property of the current search stage.** There is no universal `0.25 ATR` step or universal min/max that applies to every strategy.
+
+Required inputs include ParameterName, Role, SemanticType, Unit, StrategyFamily, ExecutionTF, LogicalSymbol, Stage, current hypothesis, allowed domain, safety ceiling, activation condition and coupling group. Unknown semantics => `BLOCKED / SEMANTICS_REQUIRED`; do not guess a range.
+
+Semantic types include at least: period/lookback, threshold, normalized multiplier, distance/spacing, count/depth, progression factor, enum/mechanism, time/session, MTF relation, boolean/policy, ordered pair and percentage/ratio.
+
+Search stages:
+1. `COARSE`: normally 3–7 sparse values per parameter; coverage first, not decimal precision;
+2. `REGION_SELECT`: plateau, neighbors, boundary, unsafe region and sample checks;
+3. `REFINE`: denser values only inside an accepted region;
+4. `SENSITIVITY`: perturb selected region/point to test fragility.
+
+Example only: a wide GridSpacingATR hypothesis may legitimately span `2–8 ATR`; a coarse pass can sample `2,3,4,5,6,8`, then refine only the region supported by the surface. A `0.25 ATR` increment belongs only to a later fine/sensitivity stage when justified.
+
+Prefer normalized distance semantics (ATR, price %, tick-size-aware scale) to raw broker points. Range width must follow strategy hypothesis/home behavior; tight mean-reversion and wide recovery grids need not share the same spacing domain.
+Recovery parameters are coupled. GridSpacing, MaxLevels, progression geometry/factor, basket exit and exposure envelope must not be optimized as unrelated knobs. Geometry family is tested before fine factor tuning. Hard safety ceilings are never auto-expanded; a boundary hit at a safety ceiling returns `SAFETY_LIMITED / STOP_AUTO_EXPANSION`.
+
+Default optimization width is small (normally <=4 active parameters) unless an explicitly coupled family justifies more. Ordered/coupled constraints are enforced before dispatch so invalid combinations never consume tester time.
+
+Boundary actions are deterministic: `CENTERED -> FREEZE/ACCEPT`, `UPPER_BOUNDARY -> EXPAND_UP_ONCE`, `LOWER_BOUNDARY -> EXPAND_DOWN_ONCE`, `SAFETY_BOUNDARY -> STOP_AUTO_EXPANSION`. Repeated same-boundary expansion, no plateau after bounded searches, sample collapse, or immaterial improvement trips a loop breaker rather than widening forever.
+
+The generator must estimate passes and runtime before launch from empirical run telemetry. It may split a search phase when projected runtime is excessive. Numeric time budgets remain provisional until calibrated.
+
+### 21.6 Visual Report Spec — SETTLED architecture
+
+The owner-facing report is graph-first and home-specific. The intended reading goal is to understand strategy character, drawdown behavior, loss clustering, robustness and next action in roughly 20–30 seconds before drilling into numbers.
+
+Five pages are frozen for MVP design:
+1. **Overview** — identity, quality/confidence/verdict/build-potential, equity/balance, underwater DD, trade/SL timeline, calendar heatmap, compact optimize plateau view, regime strip, evidence-coverage card and concise diagnosis/action;
+2. **Trade Diagnostic** — MFE/MAE, giveback, SL clusters, streaks, holding time, long/short split, entry timing, context contribution and conditional basket/hedge diagnostics;
+3. **Optimization** — heatmap/surface, selected plateau center, neighbor stability, boundary pressure, parameter persistence, sensitivity and sample/runtime overlays;
+4. **Risk / Recovery / Hedge** — gross/net exposure, basket depth, exposure acceleration/convexity, recovery duration/tails, level contribution and hedge lifecycle;
+5. **Context / Regime / Broker** — regime matrix/timeline, News/Macro/Shock/SR/MTF/PA contribution, broker specification/cost/spread/slippage transfer evidence.
+
+Every displayed metric carries raw value where available plus `Status`, optional Grade, evidence label, WHY and ACTION. Scores/Radar charts are navigation/ranking aids only; they do not replace critical-floor logic.
+
+Concept overview, Home report, Cross-Home comparison, Profile comparison and Broker-transfer views are separate. Cross-Home ranking requires a comparable WindowContract. Aggregating equity across homes is a Bundle/Portfolio act and is forbidden unless an explicit allocation/composition contract exists.
+
+Evidence coverage is visible: calendar span, ExecutionTF/bars, signals, trades/baskets, regimes, tester model/data source and runtime. Missing legacy dimensions display `UNAVAILABLE/UNTESTED`, never an invented neutral score.
+
+### 21.7 Telemetry / Evidence Schema — SETTLED V1 direction
+
+Raw evidence precedes interpretation. A grading metric must trace back to immutable run identity and raw/derived evidence; AI text is never raw fact.
+
+Mandatory identity chain: `ConceptID -> StrategyVersion -> HomeContractID -> ProfileID -> ParameterSetID -> RunID`. Run manifests also record source/build hash, logical/physical symbol, ExecutionTF/context TFs, broker/data environment, WindowContract, tester model, start/end, bars, runtime and parameter snapshot hash.
+
+V1 raw families are `SIGNAL_EVENTS`, `TRADE_EVENTS`, `CONTEXT_EVENTS`, `OPTIMIZATION_PASSES`; `BASKET_EVENTS` and `HEDGE_EVENTS` are capability-conditional. Signals blocked by filters must be recorded with standardized reason codes, not discarded. Recovery outcome counts use baskets rather than raw child orders.
+
+Trade evidence supports deterministic MFE/MAE, time-to-extrema, holding time, giveback and exit reason. Context evidence separates raw features from derived regime labels and records classifier/source versions. Broker evidence separates logical instrument from broker symbol and records tick/volume/cost constraints.
+
+Evidence labels are `MEASURED | DERIVED | SIMULATED | INFERRED | UNTESTED | UNAVAILABLE`. Schema/calc versions and artifact SHA256 references are required for accepted evidence bundles. Large raw telemetry stays outside Git where appropriate; Git stores durable manifests/summaries/hashes rather than bloating canonical history.
+
+Progressive evidence manifests apply by lifecycle: SCREEN is lightweight; OPTIMIZE adds surfaces/runtime; ROBUSTNESS adds BWD/MC/holdout/cost stress; CANDIDATE requires fuller telemetry/portability; DEMO adds measured runtime/fill/spread/slippage identity evidence.
+
+### 21.8 Migration architecture — SETTLED
+
+No big-bang rewrite. Build a non-authoritative vNext sidecar beside the existing Factory, prove it, then migrate policy deliberately.
+
+Order of introduction:
+1. HomeContract + WindowContract + Run Manifest;
+2. Telemetry V1 and deterministic derived metrics;
+3. Range Generator V1 and surface diagnostics;
+4. Grade/Confidence sidecar and graph-first Visual Report;
+5. one offline Strategy Tester pilot;
+6. numeric calibration from accepted historical/pilot evidence;
+7. canonical KINT-001/policy reconciliation;
+8. gradual migration of active candidates/promising PARKED items;
+9. Bundle/Meta-EA and portfolio composition later.
+
+During sidecar phases, current canonical Factory verdict/optimization/risk/deployment authority remains unchanged. A sidecar Grade may disagree visibly with the old policy but may not silently override it.
+
+Legacy reports are imported only for fields they actually contain. New evidence dimensions remain `UNAVAILABLE` until an explicitly justified rerun. Failed/archived EAs are not mass-rerun merely for migration completeness.
+
+### 21.9 Numeric calibration / owner-reserved items
+
+`PROVISIONAL`: exact PF/expectancy Grade bands, sample-adequacy thresholds, regime adequacy, meaningful-improvement floor, runtime budgets and strategy-specific Range defaults. Calibrate from accepted EA_LAB history plus pilot measurements before enforcement.
+
+`OWNER-RESERVED`: exact risk-capacity envelopes, deployment multipliers/default risk, any LIVE/DEMO->LIVE promotion semantics, and any change that increases hard recovery/exposure ceilings.
+
+`FUTURE`: directional news trading, options/rates external-data capabilities, Bundle/Meta-EA optimization and portfolio allocation beyond the standalone pilot.
+
+### 21.10 Design-freeze implementation rule — SETTLED
+
+Implementation workers must cite this file and the exact frozen Git SHA as their design source. They must not reconstruct architecture from chat memory. A real pilot defect may generate a bounded design amendment; convenience, model preference or rediscovery is not sufficient reason to drift the frozen contract.
+
+The companion `FACTORY_VNEXT_MVP_PILOT_CONTRACT.md` defines the first executable sidecar milestone. That contract, not this narrative alone, controls MVP implementation acceptance.
