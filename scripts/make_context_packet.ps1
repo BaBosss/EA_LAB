@@ -4,6 +4,7 @@ param(
     [string]$Ref = 'origin/master',
     [string]$OrderId = '',
     [string]$OutputPath = '',
+    [string]$ControlRoot = '',
     [switch]$Stdout
 )
 $ErrorActionPreference = 'Stop'
@@ -131,7 +132,14 @@ $packet = [ordered]@{
 $json = ($packet | ConvertTo-Json -Depth 14) + "`n"
 if ($Stdout) { Write-Output $json; exit 0 }
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    $OutputPath = Join-Path 'D:\EA_LAB_CONTROL\context-packets' ($sourceCommit + '.json')
+    if ([string]::IsNullOrWhiteSpace($ControlRoot)) {
+        $ControlRoot = $env:EA_LAB_CONTROL_ROOT
+    }
+    if ([string]::IsNullOrWhiteSpace($ControlRoot)) {
+        $driveRoot = [IO.Path]::GetPathRoot([IO.Path]::GetFullPath($Root))
+        $ControlRoot = Join-Path $driveRoot 'EA_LAB_CONTROL'
+    }
+    $OutputPath = Join-Path (Join-Path $ControlRoot 'context-packets') ($sourceCommit + '.json')
 }
 $rootFull = [IO.Path]::GetFullPath($Root).TrimEnd('\') + '\'
 $outFull = [IO.Path]::GetFullPath($OutputPath)

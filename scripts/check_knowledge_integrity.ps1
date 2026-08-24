@@ -10,7 +10,8 @@ $required=@(
  'PROJECT_STATE.md','AGENTS.md','AGENT_TASKBOARD.md','EA_SCORECARD_AND_REGISTRY.md','VISION.md',
  'portfolio/DEPLOYMENTS.csv','docs/memory_control/FACT_OWNER_MAP.md','docs/memory_control/README.md',
  'docs/memory_control/B1_COHORT.md','docs/research/RESEARCH_IDEA_INBOX.md',
- 'docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md','docs/EA_LAB_KNOWLEDGE_MAP.md',
+ 'docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md','docs/EA_LAB_KNOWLEDGE_MAP.md','CLAUDE.md',
+ 'docs/skills_mirror/skills/backtest-optimize-rigor/SKILL.md',
  'scripts/make_context_packet.ps1','scripts/make_knowledge_map.ps1'
 )
 foreach($p in $required){ if(-not (Test-Path -LiteralPath (Join-Path $Root ($p -replace '/','\')))){ Add-Error "missing required knowledge path: $p" } }

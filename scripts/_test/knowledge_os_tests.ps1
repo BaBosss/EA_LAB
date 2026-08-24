@@ -40,6 +40,16 @@ try {
 }
 Assert-True $guarded 'context packet refuses writes inside repository'
 Assert-True (-not (Test-Path (Join-Path $Root '_forbidden_context_packet.json'))) 'forbidden in-repo packet is not created'
+$tempControl = Join-Path ([IO.Path]::GetTempPath()) ('ea_lab_kos_' + [guid]::NewGuid().ToString('N'))
+try {
+    & (Join-Path $Root 'scripts\make_context_packet.ps1') -Root $Root -Ref 'origin/master' -ControlRoot $tempControl | Out-Null
+    $written = @(Get-ChildItem -LiteralPath (Join-Path $tempControl 'context-packets') -Filter '*.json' -File)
+    Assert-True ($written.Count -eq 1) 'portable ControlRoot writes one transient packet outside the repo'
+    $writtenPacket = Get-Content -LiteralPath $written[0].FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+    Assert-True ($writtenPacket.source_commit -eq $p1.source_commit -and $writtenPacket.non_authoritative -eq $true) 'portable transient packet preserves pinned non-authoritative identity'
+} finally {
+    if (Test-Path -LiteralPath $tempControl) { Remove-Item -LiteralPath $tempControl -Recurse -Force }
+}
 $inbox = Get-Content -LiteralPath (Join-Path $Root 'docs\research\RESEARCH_IDEA_INBOX.md') -Raw -Encoding UTF8
 Assert-True ($inbox -match 'NON-AUTHORITATIVE INTAKE ONLY') 'research inbox preserves non-authoritative boundary'
 $draft = Get-Content -LiteralPath (Join-Path $Root 'docs\research\FACTORY_VNEXT_DESIGN_DRAFT.md') -Raw -Encoding UTF8
