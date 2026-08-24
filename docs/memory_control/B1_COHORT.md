@@ -93,3 +93,19 @@ the triggers, not the B0 comparison.
 
 - Window opened: **2026-07-17** (`0e13699e`) · rows so far: see `B1_DATASET.csv`
 - Trigger evaluation due: **not before 2026-08-16** (30 days) AND 20 rows
+
+## 7. MVP-2 gate evaluation — 2026-08-24
+
+The time/count preconditions are now satisfied: the window opened 2026-07-17, the 30-day boundary passed on 2026-08-16, and the running B1 dataset contains 120 rows at evaluation time.
+
+To preserve the originally pre-registered denominator, the trigger decision uses the **first 20 eligible B1 rows**:
+
+- `context_incident` sum = **7** -> trigger 1 **FIRES** (`>=2`).
+- `context_rework` sum = **2/20 = 10%** -> trigger 2 does **not** fire because the bar is strictly `>10%`.
+- `wrong_order_file_scope` sum = **0** -> trigger 4 does not fire in the first-20 denominator.
+- onboarding time was recorded for all 20; one row exceeded 10 minutes, but the dataset alone does not prove that delay was specifically the task/authority/prohibition identification failure named by trigger 5, so trigger 5 is not used for this decision.
+- `lead_attention_hours` records total lead attention, not the context-fixing subset required by trigger 3; trigger 3 is therefore not reconstructed or guessed.
+
+**MVP-2 GATE = PASS** because trigger 1 independently fires. The broader running log also contains later context incidents/rework/wrong-scope observations, but they are not needed to earn this gate.
+
+Implementation remains bound by the locked constraints: transient packet only (never committed), no fact/verdict/deployment ownership, no replacement of mandatory docs for money/verdict, deterministic content hash for an identical input commit, explicit freshness/staleness, and bounded excerpts/omissions.

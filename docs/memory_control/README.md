@@ -16,7 +16,7 @@
 | MVP-1-lite experiment event log + evidence manifest | Contract D / ORDER-105 | ✅ REVIEWED (8 blind rounds) | `0e13699` |
 | B0 baseline + fact→owner map | Contract A / ORDER-099 | ✅ REVIEWED | — |
 | **B1 observation window** (measures whether MVP helped; gates MVP-2) | ORDER-115 | 🟢 **OPEN** since 2026-07-17 | `dc566d77` |
-| **MVP-2 Context Packet generator** | — | ⛔ **NOT BUILT — B1-gated** (evaluate ≥2026-08-16) | — |
+| **MVP-2 Context Packet generator** | KOS gap-close 2026-08-24 | 🟢 **BUILT — B1 GATE PASSED; review required before canonical integration** | `scripts/make_context_packet.ps1` |
 
 **The event log is LIVE:** first real experiment = ORDER-091C-D1g (`exp_93d9457a`), full 8-event chain
 committed. Do NOT backfill except the 3 approved canaries (ST03 · Boss_16 · ORDER-095/Boss_14), lazily.
