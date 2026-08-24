@@ -37,7 +37,8 @@ Add-Link $lines 'EA_MASTER_INDEX.csv' 'registry mirror / legacy index surface wh
 Add-Link $lines 'CLAUDE.md' 'current Factory verdict gate and canonical operator rules'
 Add-Link $lines 'docs/PARAM_REGISTRY.csv' 'parameter semantics, activation and coupling metadata'
 Add-Link $lines 'docs/skills_mirror/skills/backtest-optimize-rigor/SKILL.md' 'optimization and robustness procedure'
-Add-Link $lines 'docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md' 'non-canonical consolidation of the current vNext design discussion'
+Add-Link $lines 'docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md' 'design-frozen non-canonical source for Factory vNext sidecar implementation'
+Add-Link $lines 'docs/research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md' 'frozen non-authoritative sidecar implementation contract for the first Factory vNext pilot'
 $lines.Add('')
 $lines.Add('## Template / Execution / Risk')
 Add-Link $lines 'ea_template' 'EA template source and capabilities'

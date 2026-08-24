@@ -10,7 +10,8 @@ $required=@(
  'PROJECT_STATE.md','AGENTS.md','AGENT_TASKBOARD.md','EA_SCORECARD_AND_REGISTRY.md','VISION.md',
  'portfolio/DEPLOYMENTS.csv','docs/memory_control/FACT_OWNER_MAP.md','docs/memory_control/README.md',
  'docs/memory_control/B1_COHORT.md','docs/research/RESEARCH_IDEA_INBOX.md',
- 'docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md','docs/EA_LAB_KNOWLEDGE_MAP.md','CLAUDE.md',
+ 'docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md','docs/research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md',
+ 'docs/EA_LAB_KNOWLEDGE_MAP.md','CLAUDE.md',
  'docs/skills_mirror/skills/backtest-optimize-rigor/SKILL.md',
  'scripts/make_context_packet.ps1','scripts/make_knowledge_map.ps1'
 )
@@ -38,7 +39,9 @@ try {
 $inbox=Get-Content -LiteralPath (Join-Path $Root 'docs\research\RESEARCH_IDEA_INBOX.md') -Raw -Encoding UTF8
 if($inbox -notmatch 'NON-AUTHORITATIVE INTAKE ONLY'){ Add-Error 'research inbox lacks non-authoritative boundary' }
 $draft=Get-Content -LiteralPath (Join-Path $Root 'docs\research\FACTORY_VNEXT_DESIGN_DRAFT.md') -Raw -Encoding UTF8
-if($draft -notmatch 'STATUS: NON-CANONICAL DESIGN NOTE'){ Add-Error 'Factory vNext draft lacks non-canonical boundary' }
+if($draft -notmatch 'NON-CANONICAL FOR CURRENT FACTORY POLICY'){ Add-Error 'Factory vNext draft lacks design-frozen non-canonical boundary' }
+$pilot=Get-Content -LiteralPath (Join-Path $Root 'docs\research\FACTORY_VNEXT_MVP_PILOT_CONTRACT.md') -Raw -Encoding UTF8
+if($pilot -notmatch 'FROZEN IMPLEMENTATION CONTRACT.*NON-CANONICAL SIDECAR'){ Add-Error 'Factory vNext pilot contract lacks frozen non-canonical sidecar boundary' }
 
 $claude=Get-Content -LiteralPath (Join-Path $Root 'CLAUDE.md') -Raw -Encoding UTF8
 $optSkill=Get-Content -LiteralPath (Join-Path $Root 'docs\skills_mirror\skills\backtest-optimize-rigor\SKILL.md') -Raw -Encoding UTF8

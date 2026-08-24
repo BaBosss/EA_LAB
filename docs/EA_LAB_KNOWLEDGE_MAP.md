@@ -21,7 +21,8 @@
 - [CLAUDE.md](../CLAUDE.md) - current Factory verdict gate and canonical operator rules
 - [docs/PARAM_REGISTRY.csv](../docs/PARAM_REGISTRY.csv) - parameter semantics, activation and coupling metadata
 - [docs/skills_mirror/skills/backtest-optimize-rigor/SKILL.md](../docs/skills_mirror/skills/backtest-optimize-rigor/SKILL.md) - optimization and robustness procedure
-- [docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md](../docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md) - non-canonical consolidation of the current vNext design discussion
+- [docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md](../docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md) - design-frozen non-canonical source for Factory vNext sidecar implementation
+- [docs/research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md](../docs/research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md) - frozen non-authoritative sidecar implementation contract for the first Factory vNext pilot
 
 ## Template / Execution / Risk
 - [ea_template](../ea_template) - EA template source and capabilities

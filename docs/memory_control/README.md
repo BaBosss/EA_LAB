@@ -37,6 +37,8 @@ committed. Do NOT backfill except the 3 approved canaries (ST03 · Boss_16 · OR
 | `B1_DATASET.csv` | append-only B1 rows (header byte-identical to `B0_DATASET.csv`). |
 | `experiment_events/` | the live event log: `events-YYYY-MM.jsonl`, `evidence-manifest.jsonl`, `schema/*.json`. |
 | `FACT_OWNER_MAP.md` | fact → canonical owner / permitted writers / generated consumers. Base = §20.7 + `AGENTS.md` §2. |
+| `../research/FACTORY_VNEXT_DESIGN_DRAFT.md` | design-frozen, non-canonical Factory vNext implementation source; current Factory authority remains elsewhere until explicit policy migration. |
+| `../research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md` | frozen non-authoritative sidecar contract for the first offline Factory vNext pilot. |
 | `B0_DATASET.csv` / `B0_REPORT.md` | Contract-A baseline: 20 terminal orders @ cutoff + selection/metric rules. |
 | `ARCHIVE_INDEX.md` / `ARCHIVE_MANIFEST.csv` / `RECONCILE_EXCEPTIONS.md` | MVP-3 archive machinery (generated/checked by `check_taskboard_archive.ps1`). |
 | `CODEX_ORDER10*_*.md` | build/review transcripts for Contracts C1-ENFORCE (103) and D (105) — history, not authority. |
