@@ -26,11 +26,9 @@ function Get-Sha256Text {
 function Get-RefFile {
     param([string]$Path)
     return Invoke-GitText @('show',("{0}:{1}" -f $Ref,$Path))
-}
-function Get-BoundedLines {
+}function Get-BoundedLines {
     param([string]$Text,[int]$MaxLines = 40)
-    $lines = @($Text -split "`r?`n") | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    return @($lines | Select-Object -First $MaxLines)
+    return @((@($Text -split "`r?`n") | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) | Select-Object -First $MaxLines)
 }
 function Get-MatchingLines {
     param([string]$Text,[string]$Pattern,[int]$MaxLines = 30)
@@ -40,56 +38,81 @@ function Get-OrderExcerpt {
     param([string]$Text,[string]$ExactOrderId,[int]$MaxLines = 90)
     if ([string]::IsNullOrWhiteSpace($ExactOrderId)) { return @() }
     $lines = @($Text -split "`r?`n")
+    $headerPattern = '^##\s+' + [regex]::Escape($ExactOrderId) + '(?:\s|$)'
     $start = -1
     for ($i=0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i] -match [regex]::Escape($ExactOrderId)) { $start=$i; break }
+        if ($lines[$i] -match $headerPattern) { $start=$i; break }
     }
     if ($start -lt 0) { return @() }
-    return @($lines[$start..([Math]::Min($lines.Count-1,$start+$MaxLines-1))])
+    $end = [Math]::Min($lines.Count-1,$start+$MaxLines-1)
+    for ($j=$start+1; $j -le $end; $j++) {
+        if ($lines[$j] -match '^##\s+ORDER-') { $end=$j-1; break }
+    }
+    return @($lines[$start..$end])
 }
-$sourceCommit = Invoke-GitText @('rev-parse',($Ref + '^{commit}'))
+function Get-ActiveHeaders {
+    param([string]$Text,[int]$MaxLines = 24)
+    return @((@($Text -split "`r?`n") | Where-Object {
+        $_ -match '^##\s+ORDER-' -and $_ -match '(?i)`[^`]*(OPEN|CLAIMED|IN-PROGRESS|WAITING|BLOCKED|PARTIAL|READY)[^`]*`'
+    }) | Select-Object -First $MaxLines)
+}$sourceCommit = Invoke-GitText @('rev-parse',($Ref + '^{commit}'))
 $originMaster = Invoke-GitText @('rev-parse','origin/master')
-$generatedAt = Invoke-GitText @('show','-s','--format=%cI',$sourceCommit)
+$sourceCommitTime = Invoke-GitText @('show','-s','--format=%cI',$sourceCommit)
 
 $sourceRoles = [ordered]@{
     'PROJECT_STATE.md' = 'current project status / binding decisions / forward plan'
     'AGENTS.md' = 'roles / permissions / hard stops / execution protocol'
-    'AGENT_TASKBOARD.md' = 'active order text / acceptance / execution state'
+    'AGENT_TASKBOARD.md' = 'active taskboard root manifest'
     'EA_SCORECARD_AND_REGISTRY.md' = 'EA verdict authority'
     'portfolio/DEPLOYMENTS.csv' = 'deployment truth'
     'VISION.md' = 'owner big-picture / factory philosophy'
     'docs/memory_control/FACT_OWNER_MAP.md' = 'fact to canonical-owner map'
 }
+$taskboardRootText = Get-RefFile 'AGENT_TASKBOARD.md'
+$taskboardPartPaths = @(
+    @($taskboardRootText -split "`r?`n") |
+        Where-Object { $_ -match '^taskboards/active/[^\s]+\.md$' } |
+        ForEach-Object { $_.Trim() }
+)
+foreach ($partPath in $taskboardPartPaths) {
+    $sourceRoles[$partPath] = 'active taskboard part / order text / acceptance / execution state'
+}
 $sourceText = [ordered]@{}
 $sourceMeta = New-Object Collections.Generic.List[object]
 foreach ($path in $sourceRoles.Keys) {
-    $text = Get-RefFile $path
+    $text = $(if ($path -ceq 'AGENT_TASKBOARD.md') { $taskboardRootText } else { Get-RefFile $path })
     $sourceText[$path] = $text
     $sourceMeta.Add([pscustomobject][ordered]@{
         path=$path; role=$sourceRoles[$path]; sha256=(Get-Sha256Text $text); authoritative=$true
     })
-}
+}$taskboardText = $sourceText['AGENT_TASKBOARD.md']
+foreach ($partPath in $taskboardPartPaths) { $taskboardText += "`n" + $sourceText[$partPath] }
 $projectLines = Get-BoundedLines $sourceText['PROJECT_STATE.md'] 8
 $hardStops = Get-MatchingLines $sourceText['AGENTS.md'] '(?i)hard stop|owner approval|LIVE|risk/default|force push|history rewrite' 36
-$activeHeaders = Get-MatchingLines $sourceText['AGENT_TASKBOARD.md'] '(?i)ORDER-[A-Za-z0-9._-]+.*(OPEN|CLAIMED|IN-PROGRESS|WAITING|BLOCKED|PARTIAL|READY)' 24
-$orderExcerpt = Get-OrderExcerpt $sourceText['AGENT_TASKBOARD.md'] $OrderId 90
+$activeHeaders = @(Get-ActiveHeaders $taskboardText 24)
+$orderExcerpt = @(Get-OrderExcerpt $taskboardText $OrderId 90)
 
 $core = [ordered]@{
     schema_version = 1
     source_commit = $sourceCommit
-    current_status_excerpt = $projectLines
+    current_status_excerpt = @($projectLines)
     kernel = [ordered]@{
-        authority_excerpt = $hardStops
+        authority_excerpt = @($hardStops)
         mandatory_docs_for_money_or_verdict = @('AGENTS.md','PROJECT_STATE.md','AGENT_TASKBOARD.md','EA_SCORECARD_AND_REGISTRY.md','portfolio/DEPLOYMENTS.csv')
         rule = 'This packet is a generated read-only aid. It never owns a fact, verdict, deployment, or risk decision.'
     }
     task = [ordered]@{
         order_id = $(if([string]::IsNullOrWhiteSpace($OrderId)){$null}else{$OrderId})
-        active_headers = $activeHeaders
-        order_excerpt = $orderExcerpt
+        active_headers = @($activeHeaders)
+        order_excerpt = @($orderExcerpt)
+        taskboard_parts = @($taskboardPartPaths)
     }
     sources = $sourceMeta.ToArray()
-    omissions = @('Full canonical documents are not copied into the packet.','Only bounded active-order/header excerpts are included.','Historical evidence bodies are referenced through canonical owners, not duplicated.')
+    omissions = @(
+        'Full canonical documents are not copied into the packet.',
+        'Only bounded active-order/header excerpts are included.',
+        'Historical evidence bodies are referenced through canonical owners, not duplicated.'
+    )
 }
 $coreJson = $core | ConvertTo-Json -Depth 12 -Compress
 $packetHash = Get-Sha256Text $coreJson
@@ -100,7 +123,7 @@ $packet = [ordered]@{
     source_commit = $sourceCommit
     origin_master_at_generation = $originMaster
     freshness = $(if($sourceCommit -ceq $originMaster){'FRESH'}else{'STALE'})
-    generated_at = $generatedAt
+    source_commit_time = $sourceCommitTime
     packet_hash = $packetHash
     core = $core
 }

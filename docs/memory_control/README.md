@@ -7,7 +7,7 @@
 > **Design source (single):** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d`.
 > **B0_CUTOFF_SHA:** `4eb839df09b1911cec2de18ec4a2df51cf766606`
 
-## Build status — 2026-07-18: all 4 contracts COMPLETE, B1 window OPEN
+## Build status — 2026-08-24: memory-control core complete; B1 running log open; MVP-2 gate passed
 
 | Piece | Contract / order | Status | Key commit |
 |---|---|---|---|
@@ -16,7 +16,7 @@
 | MVP-1-lite experiment event log + evidence manifest | Contract D / ORDER-105 | ✅ REVIEWED (8 blind rounds) | `0e13699` |
 | B0 baseline + fact→owner map | Contract A / ORDER-099 | ✅ REVIEWED | — |
 | **B1 observation window** (measures whether MVP helped; gates MVP-2) | ORDER-115 | 🟢 **OPEN** since 2026-07-17 | `dc566d77` |
-| **MVP-2 Context Packet generator** | KOS gap-close 2026-08-24 | 🟢 **BUILT — B1 GATE PASSED; review required before canonical integration** | `scripts/make_context_packet.ps1` |
+| **MVP-2 Context Packet generator** | KOS gap-close 2026-08-24 | 🟢 **IMPLEMENTED — B1 GATE PASSED; transient/read-only constraints apply** | `scripts/make_context_packet.ps1` |
 
 **The event log is LIVE:** first real experiment = ORDER-091C-D1g (`exp_93d9457a`), full 8-event chain
 committed. Do NOT backfill except the 3 approved canaries (ST03 · Boss_16 · ORDER-095/Boss_14), lazily.
@@ -24,9 +24,9 @@ committed. Do NOT backfill except the 3 approved canaries (ST03 · Boss_16 · OR
 ## What each session must keep doing (standing duties)
 
 1. **Order closes → append one row to `B1_DATASET.csv`** in the same commit (defs = `B1_COHORT.md`;
-   unobserved values = `NOT_RECORDED`, never a guessed 0). Stops when 20 rows collected.
+   unobserved values = `NOT_RECORDED`, never a guessed 0). B1 is a continuous running log; do not stop at 20 rows.
 2. **Experiment-shaped order → emit the event chain** per `EVENT_LOG_ADOPTION.md`.
-3. **MVP-2 stays unbuilt** until B1 triggers fire (`B1_COHORT.md` §5). Do not build it because it was designed.
+3. **MVP-2 Context Packet** may now be generated when bounded context is useful because the B1 gate fired. Packets are transient/read-only, never committed, and never replace mandatory canonical documents for money/verdict decisions.
 
 ## File map
 
