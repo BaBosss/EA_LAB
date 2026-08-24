@@ -119,6 +119,11 @@ foreach ($sensorFile in $sensorFiles) {
     $sensorFile.LastWriteTime = (Get-Date).AddMinutes(-1)
 }
 try {
+    $expectedRuntimeRecords = @(Get-RuntimeIdentityRecords -DealsRoot $deals)
+    $expectedRuntimeValidation = Get-RuntimeIdentityValidation -RepoRoot $RepoRoot -Records $expectedRuntimeRecords
+    $expectedRuntimeIdentity = @()
+    if ($null -ne $expectedRuntimeValidation.identity) { $expectedRuntimeIdentity = @($expectedRuntimeValidation.identity) }
+    $expectedRuntimeForward = Get-RuntimeIdentityForwardStates -RepoRoot $RepoRoot -DealsRoot $deals -RuntimeRecords $expectedRuntimeIdentity
     & powershell -NoProfile -File $snapshotScript -Root $RepoRoot -OutFile $output 2>&1 | Out-Host
     $rc = $LASTEXITCODE
     Assert-Equal 'normal snapshot construction succeeds' 0 $rc
@@ -126,8 +131,9 @@ try {
         $doc = Get-Content -LiteralPath $output -Raw | ConvertFrom-Json
         Assert-Equal 'constructed document is the persisted snapshot entity' 'ControlRoomSnapshotV5' $doc.entity
         Assert-Equal 'runtime identity policy flag is preserved' $true $doc.meta.runtime_identity_required
-        Assert-Equal 'empty runtime identity remains LEGACY_UNVERIFIED' 'LEGACY_UNVERIFIED' $doc.runtime_identity_summary.state
-        Assert-Equal 'empty forward-test state remains explicit' 'NO_VALID_RUNTIME_IDENTITY' $doc.runtime_identity_summary.forward_test_state
+        Assert-Equal 'producer runtime identity state matches current sidecar store' "$($expectedRuntimeValidation.state)" "$($doc.runtime_identity_summary.state)"
+        Assert-Equal 'producer runtime identity record count matches validated store' $expectedRuntimeIdentity.Count ([int]$doc.runtime_identity_summary.records)
+        Assert-Equal 'producer forward-test state matches current sidecar/deal store' "$($expectedRuntimeForward.state)" "$($doc.runtime_identity_summary.forward_test_state)"
 
         $health141 = @($doc.system_health | Where-Object { "$($_.account)" -eq '141049900' })
         $health694 = @($doc.system_health | Where-Object { "$($_.account)" -eq '69424711' })

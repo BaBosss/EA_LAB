@@ -35,6 +35,8 @@ timeframe `PERIOD_H4`. Its build receipt is `br-81fad90230b74411a444ebe3aaae8506
 `19e686b82126985d79b3cfb58ba12381f7d47a0de2fdeb714333db365c07ec84`, and artifact SHA256 is
 `a4c1d8da91d0032d9cbc94c2b0d3c2351a40d2a507a6824e2cfff0865bc75b11`.
 
+**Owner-attested F closeout (2026-08-24):** the exact RI02 artifact above is now tracked in this bundle as `(TRD)_SuperTrendFlip_rev05_ri02.ex5` despite the repository-wide `*.ex5` ignore rule. Its bytes match build receipt `br-81fad90230b74411a444ebe3aaae8506` exactly. This is repository attestation/evidence publication only; it does not re-attach MT5, promote LIVE, or change trading/risk defaults.
+
 The compatible DealsExporter is the additive `time_unix` build: source SHA256
 `51d119609675a040273d85d7f41bffbcd16fd991b0e87171b183204fba363237`, artifact SHA256
 `f4d530d756472eb5432fe27bb5eb1c1f23b720b5a212a4d9d546c3fd5666f277`. Treat
