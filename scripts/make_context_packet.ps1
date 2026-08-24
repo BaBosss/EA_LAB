@@ -103,6 +103,7 @@ $core = [ordered]@{
     }
     task = [ordered]@{
         order_id = $(if([string]::IsNullOrWhiteSpace($OrderId)){$null}else{$OrderId})
+        order_found = $(if([string]::IsNullOrWhiteSpace($OrderId)){$null}else{($orderExcerpt.Count -gt 0)})
         active_headers = @($activeHeaders)
         order_excerpt = @($orderExcerpt)
         taskboard_parts = @($taskboardPartPaths)
