@@ -53,7 +53,7 @@ try {
 $inbox = Get-Content -LiteralPath (Join-Path $Root 'docs\research\RESEARCH_IDEA_INBOX.md') -Raw -Encoding UTF8
 Assert-True ($inbox -match 'NON-AUTHORITATIVE INTAKE ONLY') 'research inbox preserves non-authoritative boundary'
 $draft = Get-Content -LiteralPath (Join-Path $Root 'docs\research\FACTORY_VNEXT_DESIGN_DRAFT.md') -Raw -Encoding UTF8
-Assert-True ($draft -match 'STATUS: NON-CANONICAL DESIGN NOTE') 'Factory vNext draft remains non-canonical pending policy migration'
+Assert-True ($draft -match 'NON-CANONICAL FOR CURRENT FACTORY POLICY') 'Factory vNext draft remains non-canonical pending policy migration'
 $trackedPackets = @(& git -C $Root ls-files '*context-packet*' '*context_packets*')
 Assert-True ($trackedPackets.Count -eq 0) 'no generated context packet is committed as authority'
 Write-Output ("KNOWLEDGE_OS_TESTS PASS tests={0}" -f $tests)
