@@ -46,11 +46,12 @@ The `0` above is a dated accepted evidence point, not a live counter. Current te
 
 - Factory candidate: **NONE SELECTED**.
 - Factory vNext Design Freeze / MVP Pilot Contract: **ACCEPTED / CANONICAL as a sidecar implementation source**.
-- Current Factory policy/verdict/optimization/risk/deployment authority is unchanged until an explicit later policy-migration milestone.
-- First vNext MVP pilot: existing `(TRD)_SuperTrendFlip` family, logical `BTCUSD`, ExecutionTF `H4`, **offline Strategy Tester/artifact processing only**.
-- Required MVP direction: Home/Window contracts, Run Manifest, Telemetry V1, Range Generator V1, Grade/Confidence sidecar, graph-first report, provenance/hashes, negative/reproducibility tests.
-- `KINT-001` remains intentionally OPEN until a later canonical policy migration resolves contradictory active sample-floor rules. Do not silently settle it in sidecar implementation.
-- No Factory candidate may be selected/promoted merely from sidecar evidence.
+- Factory vNext MVP Sidecar implementation + offline pilot package: **ACCEPTED / CANONICAL as `NON_AUTHORITATIVE_SIDECAR` evidence only**.
+- Implemented sidecar surfaces include deterministic Home/Window/Run identity, Parameter Surface V1, Telemetry V1, Range Generator V1, Derived Metrics V1, Grade/Confidence evidence scaffold, graph-first five-page report, SuperTrendFlip BTCUSD/H4 offline adapter, and the historical pilot artifact package.
+- The accepted pilot uses existing `(TRD)_SuperTrendFlip_rev05`, logical `BTCUSD`, ExecutionTF `H4`, and the 2026H1 historical holdout with 100% real-ticks evidence. Exact pilot IDs, hashes, and measured counts are owned by `factory/vnext/pilots/supertrend_rev05_btcusd_h4_holdout26h1/pilot_manifest.json` and `artifact_index.json`.
+- Current Factory production policy/verdict/optimization/risk/deployment authority is unchanged. No Factory candidate promotion, deployment/LIVE authority, risk/default change, or strategy trading-semantics change is created by this milestone.
+- `KINT-001` remains intentionally OPEN. SuperTrend parameter semantic metadata remains unresolved; affected Range Generator evidence remains `SEMANTICS_REQUIRED`.
+- Final numeric Grade/Confidence thresholds remain provisional/unratified; sidecar verdict/build-potential outputs remain non-authoritative.
 ### 1.3 Accepted control-plane capabilities
 
 The following are accepted/canonical and should not be generically re-audited without a reproducible regression:
@@ -224,7 +225,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 1. **Observe ORDER-353.** Consume fresh monitoring/runtime evidence only; wait for a genuine qualifying post-attach trade. Do not force one.
 2. **Keep target acceptance closed unless regression evidence appears.** F/G3/config/attestation work is not an open repo task.
 3. **Keep global monitoring honest.** `DEGRADED_MONITORING` remains current until canonical evidence satisfies its actual global criteria.
-4. **Allow bounded offline Factory vNext sidecar work to proceed in its own lane.** It may produce artifacts/tests; it may not select/promote a Factory candidate or migrate policy.
+4. **Treat Factory vNext MVP Sidecar as accepted evidence, not production policy.** Do not reopen the accepted MVP generically. Further rollout/migration needs its own bounded consumer and may not select/promote a Factory candidate or migrate policy by implication.
 5. **Use Lane Registry dynamically before writes/reviews/integration.** Do not infer writer ownership from old chat/session text.
 6. **Use current pushed origin/master as integration base.** Reconcile neighboring accepted lanes only when they reach their own acceptance boundary.
 7. **Keep MacroGate runtime activation separate from repo capability.** Persistent regime-only VPS automation requires its own authorized runtime task; do not reactivate or modify NewsGuard/REAL as a side effect.
@@ -234,7 +235,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 
 - Genuine ORDER-353 first trade -> record accepted `first_trade_epoch` through the canonical evidence/state path and derive the judge clock from the accepted rule.
 - Reproducible monitoring regression -> open a bounded repair with a direct consumer; do not manufacture monitoring work from historical warnings.
-- Factory vNext sidecar acceptance -> preserve it as sidecar evidence until a separately-authorized policy-migration milestone.
+- Further Factory vNext rollout/migration -> separate future milestone; broader Master Mold / Family / Variant production migration, Template Variant generator / MT5 Input UX / Boss11-18 compatibility remain future unless explicitly accepted.
 - New strategy/risk/default/deployment semantics -> stop at the applicable owner hard stop before mutation.
 - Canonical origin movement while an isolated lane is in progress -> re-anchor in isolation; rerun impacted acceptance before integration.
 
@@ -268,6 +269,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 | EA registry / scoring | `EA_SCORECARD_AND_REGISTRY.md` |
 | lifecycle/archive procedure | `docs/WORK_LIFECYCLE.md` |
 | Factory vNext frozen design / pilot contract | `docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md` + `docs/research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md` |
+| Factory vNext MVP sidecar / accepted offline pilot | `_triage/factory_vnext/` + `factory/vnext/pilots/supertrend_rev05_btcusd_h4_holdout26h1/` |
 | Harness v1 | `docs/EA_LAB_HARNESS_V1.md` + `tools/ea_lab_harness/` |
 | Lane Registry | D:\EA_LAB_CONTROL\lanes\registry-v1\ |
 | Long Job Runner | docs/LONG_JOB_RUNNER.md + scripts/long_jobs/ |
