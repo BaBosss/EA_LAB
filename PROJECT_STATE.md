@@ -179,7 +179,8 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 ### 4.2 Strategy / evidence / tester rules still in force
 
 - `VISION.md` owns the big picture; work that conflicts with it requires an explicit resolution.
-- Current Factory policy remains authoritative; Factory vNext sidecar does not migrate it.- MAIN backtest window is rolling 36 months and must not consume the holdout; re-pin on the accepted re-opt cadence.
+- Current Factory policy remains authoritative; Factory vNext sidecar does not migrate it.
+- MAIN backtest window is rolling 36 months and must not consume the holdout; re-pin on the accepted re-opt cadence.
 - Search/selection must follow the canonical Factory/verdict/optimization contracts; do not invent a new bar from prose in this file.
 - `KINT-001` is the explicit unresolved sample-floor conflict. Until a later policy migration resolves it, do not silently choose between contradictory active sample-floor formulations.
 - Never issue DEAD/REJECT from one parameter set when the accepted rescue/last-optimize rules require further bounded search.
