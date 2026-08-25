@@ -275,3 +275,38 @@ def plan_dimension_set(dimensions: Sequence[Mapping[str, Any]], *, stage: str) -
         "reason": "dimension plan accepted",
         "provenance": {"stage": stage_name, "requested": [dim["name"] for dim in normalized]},
     }
+
+
+def plan_parameter_range_from_metadata(
+    semantic_metadata: Mapping[str, Any], parameter: str, stage: str
+) -> Dict[str, Any]:
+    """Plan only when the semantic sidecar proves every required range fact."""
+    from .semantic_metadata import range_readiness, validate_semantic_metadata
+
+    validate_semantic_metadata(semantic_metadata)
+    readiness = range_readiness(semantic_metadata, parameter)
+    if readiness["status"] == "SEMANTICS_REQUIRED":
+        return {
+            "status": "SEMANTICS_REQUIRED:semantics required",
+            "candidates": [],
+            "reason": "semantic metadata is incomplete: %s" % ", ".join(readiness["missing"]),
+            "provenance": {"parameter": parameter, "stage": _upper(stage, "stage")},
+        }
+    rows = [row for row in semantic_metadata["parameters"] if row["parameter"] == parameter]
+    row = rows[0]
+    if readiness["status"] == "NOT_ELIGIBLE":
+        return plan_parameter_range(
+            {"name": parameter, "role": "LOCKED", "surface": "RESEARCH", "semantic_type": row["semantic_type"]["value"]},
+            stage,
+        )
+    return plan_parameter_range(
+        {
+            "name": parameter,
+            "role": "TUNABLE",
+            "surface": "RESEARCH",
+            "semantic_type": row["semantic_type"]["value"],
+            "domain": row["optimization_domain"]["value"],
+            "unit": row["unit"]["value"],
+        },
+        stage,
+    )
