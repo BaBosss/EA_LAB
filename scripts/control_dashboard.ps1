@@ -125,8 +125,12 @@ function Read-FactoryPilot([System.IO.DirectoryInfo]$Dir) {
     if ($entry.sha256 -ne (Hash-File $path)) { return [ordered]@{ valid=$false; source=$Dir.Name; issue="sha256 mismatch: $name" } }
   }
   $grade = $manifest.GradeEvidence
-  $sortEnd = [datetime]::ParseExact([string]$manifest.WindowContract.EndDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
-  $sortStart = [datetime]::ParseExact([string]$manifest.WindowContract.StartDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+  try {
+    $sortEnd = [datetime]::ParseExact([string]$manifest.WindowContract.EndDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $sortStart = [datetime]::ParseExact([string]$manifest.WindowContract.StartDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+  } catch {
+    return [ordered]@{ valid=$false; source=$Dir.Name; issue="invalid factory pilot window date: $($_.Exception.Message)" }
+  }
   return [ordered]@{
     valid=$true; source=$Dir.Name; PilotID=[string]$manifest.PilotID; RunID=[string]$index.RunID
     sort_end=$sortEnd; sort_start=$sortStart
@@ -174,7 +178,7 @@ $issues = @($issues | Sort-Object source, issue)
 
 $factoryDirs = @()
 if (Test-Path -LiteralPath $FactoryPilotRoot) {
-  $factoryDirs = @(Get-ChildItem -LiteralPath $FactoryPilotRoot -Directory | Sort-Object Name)
+  $factoryDirs = @(Get-ChildItem -LiteralPath $FactoryPilotRoot -Directory | Where-Object { $_.Name -notlike '*.staging' } | Sort-Object Name)
 }
 $factoryRows = @()
 $factoryIssues = @()

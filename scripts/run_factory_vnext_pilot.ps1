@@ -39,7 +39,7 @@ $pyPath = Join-Path $env:TEMP ("factory_vnext_pilot_{0}.py" -f ([guid]::NewGuid(
 [IO.File]::WriteAllText($cfgPath, ($cfg | ConvertTo-Json -Depth 5 -Compress), (New-Object System.Text.UTF8Encoding($true)))
 
 $py = @'
-import hashlib, json, os, subprocess, sys
+import hashlib, json, os, re, shutil, subprocess, sys
 from pathlib import Path
 
 def die(msg, code=1):
@@ -48,7 +48,7 @@ def die(msg, code=1):
 
 cfg = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig"))
 sys.path.insert(0, cfg["repo_root"])
-from _triage.factory_vnext.pilot import build_supertrend_report_pilot, write_pilot_artifacts
+from _triage.factory_vnext.pilot import build_supertrend_report_pilot, validate_pilot_record, write_pilot_artifacts
 from _triage.factory_vnext.supertrend_adapter import SOURCE_REL_PATH, PRESET_REL_PATH
 for key in ("source_path", "preset_path", "report_path"):
     if not os.path.isfile(cfg[key]):
@@ -95,6 +95,20 @@ try:
 except Exception as exc:
     die(f"BLOCKED {exc}", 3)
 
+canonical_refs = {
+    sha(tracked_source): SOURCE_REL_PATH.replace("\\", "/"),
+    sha(tracked_preset): PRESET_REL_PATH.replace("\\", "/"),
+}
+seen_refs = set()
+for ref in record["RunManifest"].get("artifacts", []):
+    canonical_path = canonical_refs.get(ref.get("sha256"))
+    if canonical_path:
+        ref["path"] = canonical_path
+        seen_refs.add(ref["sha256"])
+if seen_refs != set(canonical_refs):
+    die("BLOCKED source/preset provenance normalization mismatch", 3)
+validate_pilot_record(record)
+
 pilot_id = record["PilotID"]
 run_id = record["RunManifest"]["RunID"]
 output_root = Path(cfg["output_root"])
@@ -115,7 +129,7 @@ index = staging / "artifact_index.json"
 report = staging / "report.html"
 for path in (manifest, index, report):
     text = path.read_text(encoding="utf-8")
-    if "D:\\" in text or "C:\\" in text or "file://" in text.lower():
+    if re.search(r"[A-Za-z]:\\", text) or "file://" in text.lower():
         die(f"BLOCKED absolute path leak in {path.name}", 4)
 
 if pilot_dir.exists():
@@ -129,21 +143,16 @@ if pilot_dir.exists():
             die(f"BLOCKED collision mismatch missing {name}", 5)
         current[name] = {"sha256": sha_path(dst), "bytes": dst.stat().st_size}
     if current != expected:
-        die("BLOCKED collision mismatch refuses overwrite", 5)
+        changed = [name for name in expected if current.get(name) != expected.get(name)]
+        die("BLOCKED collision mismatch refuses overwrite: " + ",".join(changed), 5)
 else:
     pilot_dir.mkdir(parents=True, exist_ok=False)
     for name in ("pilot_manifest.json", "artifact_index.json", "report.html"):
         (pilot_dir / name).write_bytes((staging / name).read_bytes())
 
-index_path = pilot_dir / "artifact_index.json"
-index_data = json.loads(index_path.read_text(encoding="utf-8"))
-for name in ("pilot_manifest.json", "artifact_index.json", "report.html"):
-    final_path = pilot_dir / name
-    entry = index_data.get("files", {}).get(name)
-    if entry is not None:
-        entry["sha256"] = sha_path(final_path)
-        entry["bytes"] = final_path.stat().st_size
-index_path.write_text(json.dumps(index_data, ensure_ascii=False, sort_keys=True, indent=2), encoding="utf-8")
+# write_pilot_artifacts already binds exact manifest/report bytes in artifact_index.json.
+# Preserve artifact_index.json verbatim so identical reruns remain byte-idempotent.
+shutil.rmtree(staging, ignore_errors=True)
 
 print(json.dumps({"status": "PASS", "PilotID": pilot_id, "RunID": run_id, "ReportPath": str(pilot_dir / "report.html")}, sort_keys=True))
 '@
@@ -151,7 +160,11 @@ print(json.dumps({"status": "PASS", "PilotID": pilot_id, "RunID": run_id, "Repor
 [IO.File]::WriteAllText($pyPath, $py, (New-Object System.Text.UTF8Encoding($true)))
 try {
   $result = & $PythonExe $pyPath $cfgPath
-  if ($LASTEXITCODE -ne 0) { throw "run_factory_vnext_pilot failed exit=$LASTEXITCODE" }
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($result | ForEach-Object { [string]$_ }) -join "`n").Trim()
+    if ($detail) { throw "run_factory_vnext_pilot failed exit=$LASTEXITCODE :: $detail" }
+    throw "run_factory_vnext_pilot failed exit=$LASTEXITCODE"
+  }
   Write-Host $result
 } finally {
   $runnerTmp = Join-Path (Join-Path $RepoRoot '.tmp') 'factory_vnext_runner'

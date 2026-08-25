@@ -95,14 +95,21 @@ Build $($summary.report_build)
   $pilotId2 = Split-Path -Leaf (Get-PublishedPilotDir (Join-Path $out 'repeat'))
   $runId2 = (Get-Content -Raw (Join-Path (Join-Path (Join-Path $out 'repeat') $pilotId2) 'pilot_manifest.json') | ConvertFrom-Json).RunManifest.RunID
   if ($pilotId2 -ne $pilotId1 -or $runId2 -ne $runId1) { throw 'T02 identity changed on repeat' }
+  $sameRoot = Invoke-Runner $report (Join-Path $out 'first')
+  if ($sameRoot.Exit -ne 0) { throw "T02b identical collision rerun failed: $($sameRoot.Text)" }
+  $samePublished = Get-PublishedPilotDir (Join-Path $out 'first')
+  if ((Split-Path -Leaf $samePublished) -ne $pilotId1) { throw 'T02b identical collision changed PilotID' }
+  if (@(Get-ChildItem -LiteralPath (Join-Path $out 'first') -Directory | Where-Object { $_.Name -like '*.staging' }).Count -ne 0) { throw 'T02b successful runner left staging directory behind' }
 
   $wrongSymbol = Join-Path $tmp 'wrong_symbol.htm'
-  (Get-Content -Raw $report).Replace('BTCUSD','XAUUSD') | Set-Content -Encoding UTF8 $wrongSymbol
-  if ((Invoke-Runner $wrongSymbol (Join-Path $out 'bad_symbol')).Exit -eq 0) { throw 'T03 wrong symbol unexpectedly passed' }
+  [IO.File]::WriteAllText($wrongSymbol, $reportText.Replace('BTCUSD','XAUUSD'), (New-Object System.Text.UnicodeEncoding($false, $false)))
+  $badSymbol = Invoke-Runner $wrongSymbol (Join-Path $out 'bad_symbol')
+  if ($badSymbol.Exit -eq 0 -or $badSymbol.Text -notmatch 'OUTSIDE_VALIDATED_CONTRACT') { throw "T03 wrong symbol did not fail for contract reason: $($badSymbol.Text)" }
 
   $wrongTf = Join-Path $tmp 'wrong_tf.htm'
-  (Get-Content -Raw $report).Replace('H4','H1') | Set-Content -Encoding UTF8 $wrongTf
-  if ((Invoke-Runner $wrongTf (Join-Path $out 'bad_tf')).Exit -eq 0) { throw 'T04 wrong timeframe unexpectedly passed' }
+  [IO.File]::WriteAllText($wrongTf, $reportText.Replace('H4','H1'), (New-Object System.Text.UnicodeEncoding($false, $false)))
+  $badTf = Invoke-Runner $wrongTf (Join-Path $out 'bad_tf')
+  if ($badTf.Exit -eq 0 -or $badTf.Text -notmatch 'OUTSIDE_VALIDATED_CONTRACT') { throw "T04 wrong timeframe did not fail for contract reason: $($badTf.Text)" }
 
   $zeroBar = Join-Path $tmp 'zero_bar.htm'
   $reportText.Replace("<tr><td>Bars:</td><td>$([int]$summary.bars)</td></tr>","<tr><td>Bars:</td><td>0</td></tr>") | Set-Content -Encoding Unicode $zeroBar
@@ -138,12 +145,14 @@ Build $($summary.report_build)
   $dashboardRoot = Join-Path $tmp 'dashboard'
   New-Item -ItemType Directory -Path $dashboardRoot -Force | Out-Null
   Copy-Item -LiteralPath $pilotDir -Destination (Join-Path $dashboardRoot $pilotId1) -Recurse
+  Copy-Item -LiteralPath $pilotDir -Destination (Join-Path $dashboardRoot ($pilotId1 + '.staging')) -Recurse
   $dash = & powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot 'scripts\control_dashboard.ps1') -RepoRoot $RepoRoot -RuntimeRoot (Join-Path $tmp 'runtime') -LaneDir (Join-Path $tmp 'lanes') -FactoryPilotRoot $dashboardRoot -AsOfUtc '2026-08-25T00:00:00Z' -NoOneDriveCopy 2>&1
   if ($LASTEXITCODE -ne 0) { throw "T08 dashboard failed: $($dash -join "`n")" }
   $runtimeJson = Join-Path (Join-Path $tmp 'runtime') 'EA_LAB_CONTROL.json'
   $runtimeHtml = Join-Path (Join-Path $tmp 'runtime') 'EA_LAB_CONTROL.html'
   $snap = Get-Content -Raw $runtimeJson | ConvertFrom-Json
   if ($snap.factory_vnext.status -ne 'GREEN') { throw "T08 factory dashboard status not GREEN: $(($snap.factory_vnext | ConvertTo-Json -Depth 6))" }
+  if ($snap.factory_vnext.pilot_count -ne 1 -or @($snap.factory_vnext.rows).Count -ne 1) { throw 'T08 staging directory was not ignored' }
   if ($snap.factory_vnext.rows[0].PilotID -ne $pilotId1) { throw 'T08 deterministic pilot row missing' }
   if ($snap.factory_vnext.rows[0].details.RangeStatus -ne 'SEMANTICS_REQUIRED') { throw 'T08 range status not visible' }
   if ((Get-Content -Raw $runtimeHtml) -notmatch 'Factory vNext') { throw 'T08 html section missing' }
@@ -158,6 +167,23 @@ Build $($summary.report_build)
   if ($LASTEXITCODE -ne 0) { throw "T09 broken dashboard run failed unexpectedly: $($dashBroken -join "`n")" }
   $snapBroken = Get-Content -Raw (Join-Path (Join-Path $tmp 'runtime2') 'EA_LAB_CONTROL.json') | ConvertFrom-Json
   if ($snapBroken.factory_vnext.status -ne 'RED') { throw 'T09 corrupt artifact directory not surfaced as RED' }
+
+  $badWindowRoot = Join-Path $tmp 'bad-window-dashboard'
+  Copy-Item -LiteralPath $pilotDir -Destination (Join-Path $badWindowRoot $pilotId1) -Recurse
+  $badWindowManifest = Join-Path (Join-Path $badWindowRoot $pilotId1) 'pilot_manifest.json'
+  $badWindowIndex = Join-Path (Join-Path $badWindowRoot $pilotId1) 'artifact_index.json'
+  $badWindow = Get-Content -Raw $badWindowManifest | ConvertFrom-Json
+  $badWindow.WindowContract.EndDate = 'NOT-A-DATE'
+  [IO.File]::WriteAllText($badWindowManifest, ($badWindow | ConvertTo-Json -Depth 20), (New-Object System.Text.UTF8Encoding($false)))
+  $badIndex = Get-Content -Raw $badWindowIndex | ConvertFrom-Json
+  $manifestEntry = $badIndex.files.'pilot_manifest.json'
+  $manifestEntry.bytes = (Get-Item -LiteralPath $badWindowManifest).Length
+  $manifestEntry.sha256 = (Get-FileHash -LiteralPath $badWindowManifest -Algorithm SHA256).Hash.ToLowerInvariant()
+  [IO.File]::WriteAllText($badWindowIndex, ($badIndex | ConvertTo-Json -Depth 20), (New-Object System.Text.UTF8Encoding($false)))
+  $dashBadWindow = & powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot 'scripts\control_dashboard.ps1') -RepoRoot $RepoRoot -RuntimeRoot (Join-Path $tmp 'runtime3') -LaneDir (Join-Path $tmp 'lanes3') -FactoryPilotRoot $badWindowRoot -AsOfUtc '2026-08-25T00:00:00Z' -NoOneDriveCopy 2>&1
+  if ($LASTEXITCODE -ne 0) { throw "T10 malformed window aborted dashboard: $($dashBadWindow -join "`n")" }
+  $snapBadWindow = Get-Content -Raw (Join-Path (Join-Path $tmp 'runtime3') 'EA_LAB_CONTROL.json') | ConvertFrom-Json
+  if ($snapBadWindow.factory_vnext.status -ne 'RED' -or $snapBadWindow.factory_vnext.issues[0].issue -notmatch 'window date') { throw 'T10 malformed window date not surfaced as per-pilot RED' }
 
   Write-Host 'RUNNER TESTS: ALL PASS'
 } finally {
