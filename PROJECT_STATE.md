@@ -1,746 +1,290 @@
-# PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
+# PROJECT_STATE — EA_LAB current canonical state (AI START HERE)
 
-> **Read [PROJECT_HISTORY.md](PROJECT_HISTORY.md) only when a task touches past work.** It holds the
-> session narrative, the accumulated changelog, and the full Decision log with provenance. This file
-> holds only: current status, active work, binding decisions, and the forward plan.
-
-> **last updated:** 2026-08-24 — `FACTORY vNEXT DESIGN FREEZE / MVP PILOT CONTRACT = ACCEPTED / CANONICAL`, `ORDER-353 RI02 DEPLOYMENT ACCEPTANCE / OWNER ATTESTATION = COMPLETE; FORWARD TELEMETRY = FRESH / AWAITING FIRST TRADE`, `STRATEGY & EVIDENCE CONSOLIDATION M4 = ACCEPTED / CANONICAL`, `LANE OWNERSHIP / SHARED REGISTRY = ACCEPTED / CANONICAL`, and `TASKBOARD HYGIENE BATCHES 1–4 = LOOP CLOSED`. Factory vNext remains a non-authoritative sidecar design for current Factory policy until an explicit later policy-migration milestone. Existing deployment, trading, LIVE, risk/default, signature, QI-2+, destructive, force-push, history-rewrite, and irreversible-decision hard stops remain. Current program milestone = VPS DEMO Deployment / Forward-Test (**ACTIVE — observation continues; setup/acceptance complete**); next Factory research milestone = vNext MVP sidecar pilot; owner-gated LIVE remains a future milestone.
-> **POST-INTEGRATION STATE:** S1, S2, S3, and S4 are complete; ORDER-1380 and ORDER-1281 are closed; the Boss14 AUDCAD/EURUSD preset surface repair is accepted. **FACTORY PRODUCTION READINESS — WAVE 1 = ACCEPTED / COMPLETE**; **PREDEV OPTIMIZATION + EA TEMPLATE PRODUCTION MATURITY = ACCEPTED / COMPLETE**; **POST-OPUS-AUDIT M0 TRUST REPAIR = ACCEPTED / COMPLETE**; **POST-OPUS-AUDIT M1 FACTORY NEXT-CANDIDATE GENERIC REPAIR = ACCEPTED / COMPLETE**; **STRATEGY & EVIDENCE CONSOLIDATION M4 FACTORY OS UNIFICATION = ACCEPTED / CANONICAL**; **LNWJUD LOCAL EXECUTION PLANE = ACCEPTED**; **LNWJUD M3 REPOSITORY IMPLEMENTATION = ACCEPTED**; **LNWJUD M3 TUNNEL-CLIENT IDENTITY BINDING = ACCEPTED**; **LNWJUD A-PATH CONTROL BRIDGE MVP = ACCEPTED / COMPLETE** (see 2026-08-21 sync below); **HERMES EA_LAB PILOT = ACCEPTED / INTEGRATED** (tooling side-module; see 2026-08-22 sync below). Monitoring remains **DEGRADED_MONITORING**; none of the above acceptances create GREEN runtime status. QI-2+ remains **NOT AUTHORIZED**. Factory candidate = **NONE SELECTED**.
-
-### 2026-08-24 EA_LAB HARNESS V1 MODULE
-
-- **Scope:** project-local deterministic harness packaging only: `QUICK | BOUNDED | TEAM | STRICT | RUNTIME` routing, RED->GREEN TDD evidence validation, worker role/model/effort runtime-identity validation, and SHA-256-bound assurance/reviewer/hard-stop validation. It does not replace Lane Registry, canonical Git/worktree governance, different-family review, or owner hard stops.
-- **Authority ceiling:** harness output is evidence/gating only and never grants deployment, runtime attachment, trading, LIVE/DEMO->LIVE, risk/default, owner-attestation, QI-2+, force-push, history-rewrite, or other owner-reserved authority. `RUNTIME` mode still fails closed on unapproved hard-stop actions.
-- **Consumption gate:** this module is `ACCEPTED / CANONICAL` only when Lane Registry record `ea-lab-harness-v1-integration-20260824` carries an independent reviewer plus `reviewed_head` equal to the exact integrated candidate, and that reviewed lineage is then published to `origin/master` without semantic mutation. Until those conditions are true, treat this section as an integration candidate only.
-- **Current project status unchanged:** VPS DEMO Deployment / Forward-Test observation remains active; Factory vNext sidecar pilot remains the next Factory research milestone; monitoring remains `DEGRADED_MONITORING`; Factory candidate remains `NONE SELECTED`.
-
-
-### 2026-08-24 FACTORY vNEXT DESIGN FREEZE / MVP PILOT CONTRACT
-
-- **Design freeze = ACCEPTED / CANONICAL as implementation source, but NON-CANONICAL for current Factory policy authority.** `docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md` is frozen for the sidecar MVP; later `SETTLED` sections supersede older `OPEN` wording where they cover the same design question. Current Factory verdict/optimization/risk/deployment authority remains unchanged until an explicit policy-migration milestone.
-- **Primary research identity is Home-specific:** `HomeContract = Concept/Strategy x LogicalSymbol x ExecutionTF`, with profile and broker/execution environment layered separately. Wrong Symbol/TF must fail visibly as `OUTSIDE_VALIDATED_CONTRACT`; a Concept-level roll-up cannot substitute for Home evidence.
-- **Window/sample doctrine direction:** Discovery is compute-normalized; finalist comparison uses calendar-normalized Common Validation; extended validation is strategy/TF-relative. Sample Adequacy uses time + opportunity + independent outcomes + regime coverage + evidence quality. `KINT-001` therefore remains operationally OPEN until the later canonical policy migration reconciles the active contradictory sample-floor rules.
-- **Range Generator direction:** semantic, stage-adaptive search with `COARSE -> REGION_SELECT -> REFINE -> SENSITIVITY`; no universal fixed `0.25 ATR` step. A wide GridSpacingATR hypothesis may legitimately cover roughly `2–8 ATR`; coverage comes before resolution, and safety ceilings remain non-expandable without authority.
-- **Quality model:** keep `VERDICT`, `QUALITY_GRADE`, `EVIDENCE_CONFIDENCE`, and `BUILD_POTENTIAL` separate. Critical floors/caps override display scores; optional module weakness normally disables/reworks that module rather than averaging into a misleading overall pass.
-- **Visual/evidence architecture:** five-page graph-first report plus immutable Run/Home/Window identity, raw Signal/Trade/Context/Optimization telemetry, conditional Basket/Hedge telemetry, deterministic derived metrics, and evidence labels `MEASURED | DERIVED | SIMULATED | INFERRED | UNTESTED | UNAVAILABLE`. Any Grade used for a decision must trace back to raw evidence.
-- **MVP pilot contract = FROZEN / READY FOR IMPLEMENTATION.** First pilot uses existing `(TRD)_SuperTrendFlip` family on logical `BTCUSD`, ExecutionTF `H4`, offline Strategy Tester/artifact processing only. Required MVP covers Home/Window contracts, Run Manifest, Telemetry V1, Range Generator V1, Grade/Confidence sidecar, graph-first report, provenance/hashes, and deterministic negative/reproducibility tests.
-- **Acceptance evidence:** Factory vNext design-freeze cage `22/22 PASS`; Knowledge OS regression `19/19 PASS`; B1 guard `23/23 PASS`; Knowledge Integrity PASS with one intentional `KINT-001 OPEN` warning; `check_state.ps1 -Strict = CLEAN`; pre-commit hooks PASS. Independent Claude review of exact pre-repair frozen HEAD returned PASS / no blocking findings; one cosmetic §19 stale-open note was repaired in the single bounded repair round and targeted Claude recheck on the repaired HEAD returned PASS / findings none.
-- **Authority preserved:** no MT4/MT5/VPS/runtime attachment, deployment, trading, LIVE/DEMO→LIVE, strategy/risk/default numeric change, QI-2+, owner signature/attestation, force push/history rewrite, or destructive cleanup occurred. Bundle/Meta-EA, portfolio allocation, directional-news trading, and options/rates external-data capabilities remain future and are not blockers for the sidecar MVP.
-- **Next action:** open a new Control Tower after this freeze is published, treat the frozen Git design + pilot contract as implementation authority for the sidecar MVP, and do not re-derive settled design from chat memory. Numeric calibration (Grade/sample thresholds, meaningful-effect cutoffs, runtime budgets, recovery/risk ceilings) must come from pilot/historical evidence; risk-capacity numeric choices remain owner-reserved.
-### 2026-08-23 STRATEGY & EVIDENCE CONSOLIDATION — M4 FACTORY OS UNIFICATION
-
-- **Predecessor consolidation evidence remains accepted / non-destructive:** M-1 backup, M0 read-only inventory, M1 entity resolution, M2 draft legacy Strategy Cards, and M3 evidence migration all passed deterministic validation and were consumed by M4; do not generically rediscover them without a concrete regression.
-- **M4 = ACCEPTED / CANONICAL.** Bootstrap snapshot `1305c7341bbf534221b1979acac13febdb9be5d4` created the immutable legacy stores first; implementation `1141fe150a18de215ecddcb275137ce988ab31ee` added the schema/validator/authority bridge; canonical ORDER-353 repair `8574ec43e9e5aaf7e1f4c973c7e841c62e16547b` was merged without semantic conflict; reviewed and remote-verified M4 canonical head = `0444391762715155e9a90b713c8f0974b3a7967d`.
-- **Identity authority is fail-closed:** current operational Factory IDs `E011-E018` remain unchanged. `STRAT-LEG-*` is migration/rediscovery identity only with `promotion_authority=false`; no bulk E### allocation occurred and Boss-number collisions do not become Factory IDs.
-- **Evidence authority is split, not weakened:** M3 coverage is represented by `56,584` `LegacyEvidenceRef` rows plus `10` reused canonical `EvidenceRef` rows = `56,594` total selected evidence records. Legacy refs are historical E0/E1/E2 support only, cannot become E3, cannot satisfy Candidate promotion, and retain immutable root/relative-path/hash/size/storage binding. Canonical `EvidenceRef` semantics remain unchanged.
-- **Legacy status cutover:** `RUN_LOG.csv`, `EA_MASTER_INDEX.csv`, and old guide/scorecard status surfaces are historical/generated inputs/views for consolidation purposes, not strategy/run/evidence authority. Deployment truth remains `portfolio/DEPLOYMENTS.csv`. No legacy bytes were physically deleted or moved.
-- **Acceptance evidence:** M4 focused negative suite `20/20 PASS`; S2A machine criteria `9/9 PASS`; S2A canonical conformance vectors `68/68 PASS`; final owner-approved S2A bundle `c31c401319389583b0cfbba3821c08c23c3844e6fbbe39f5338c481c7c6165e9` = VALID; schema fixtures `133/133 PASS`; combined ORDER-353 monitoring repair `23/23 PASS`; full fast-cage at final reviewed head = `31/31`, `0 failed`, `144.11s`; independent Claude Code Sonnet review = `PASS`, blockers `NONE`, major findings `NONE`, `INTEGRATION_RECOMMENDATION=INTEGRATE`.
-- **Authority/status preserved:** no deployment/runtime attachment, trading, LIVE/DEMO→LIVE, risk/default change, QI-2+, force push/history rewrite, or destructive cleanup was performed. Current milestone remains **VPS DEMO Deployment / Forward-Test — NOT COMPLETE**; monitoring remains **DEGRADED_MONITORING**; Factory candidate remains **NONE SELECTED**.
-- **Downstream routing:** M5 Template Router / M7 Legacy Rediscovery may consume this accepted bridge when they have an approved direct consumer; they are not auto-started by this state sync. Physical cleanup remains M9 and stays an owner hard stop. Canonical mainline returns to VPS DEMO / Forward-Test.
-
-### 2026-08-24 ORDER-353 RI02 RUNTIME-EVIDENCE / FORWARD-TEST HANDOFF
-
-- **Existing DEMO binding only:** target remains `463666728|990026`, `(TRD)_SuperTrendFlip_rev05`, `BTCUSDm,H4`, lot `0.01`, attach `epoch-1`. No MT5 re-attach/redeploy, LIVE promotion, trading, or risk/default change is performed by this closeout.
-- **Exact artifact binding published:** canonical RI02 binary `(TRD)_SuperTrendFlip_rev05_ri02.ex5` is tracked in `_vps_deploy/STF_BTC_H4_ORDER353/` at SHA256 `a4c1d8da91d0032d9cbc94c2b0d3c2351a40d2a507a6824e2cfff0865bc75b11`, matching build receipt `br-81fad90230b74411a444ebe3aaae8506`; locked set canonical Git SHA256 = `00a755a09220ca131bd72e7b5ae53f285245219956fe93499923ad4807c9c921`.
-- **Owner attestation F = `HASHED / OWNER-ATTESTED`:** on 2026-08-24, after F was explicitly identified in the control chat as the final owner hard stop, the owner explicitly confirmed authorization to complete it. `portfolio/ATTESTATION_MAP.csv` now binds `463666728|990026` to the exact tracked RI02 `.ex5` + locked `.set` with `confidence=high`. This attestation is scoped only to the existing DEMO binding and does not authorize reattach, LIVE, trading, or risk/default changes.
-- **Runtime identity / G3 = PASS / WIRED:** `RUNTIME_IDENTITY_MAP.csv` binds `epoch-1`; immutable identity sidecar + verified receipt remain stored under `portfolio/`. Fresh DealsExporter evidence captured 2026-08-24 08:45 local is stored as `portfolio/live_deals/EA_LAB_deals_463666728_20260824.csv`, SHA256 `16a62381913f50579b0aea7a1275b69baf9e8feebe1e26ed15085d090e6808a5`, 215 rows, `time_unix` present, with 0 closed-deal rows for magic `990026`. Fresh account snapshot captured 08:47 is stored as `portfolio/live_deals/EA_LAB_snapshot_463666728_20260824.csv`, SHA256 `acdb8e4abcd8ce17bd46056c6b9f6ec130c0aa193315831900668b0fca20a4c7`, with no `990026` open-position/pending-order row.
-- **Forward-test state = `DEMO_DEPLOYED_AWAITING_FIRST_TRADE`:** fresh 2026-08-24 telemetry supersedes the prior stale snapshot. Runtime identity remains `PASS`, records `1`, target `463666728|990026` has 0 qualifying closed deals, and `first_trade_epoch=null`. No trade is forced and no judge clock is started; the next transition is driven only by a genuine post-attach qualifying trade.
-- **Accepted parser path:** canonical repair `c4ee6297f5e88325d9a1b1ad601a1d05961e0fd4`; focused `47/47 PASS`; production `18/18 PASS` with exit `0`; actual 213-row end-to-end PASS; full fast cage `32/32 PASS`; Qwen Code independent review = PASS, blockers NONE, major NONE, recommendation INTEGRATE.
-- **Current status:** D = `CONFIG_MATCH / PASS`; E = `PASS`; F = `HASHED / OWNER-ATTESTED`; G3 runtime identity = `PASS / WIRED`; current deal freshness = `FRESH`; forward state = `DEMO_DEPLOYED_AWAITING_FIRST_TRADE`; G2 remains `DEGRADED_MONITORING` at global scope. **ORDER-353 RI02 deployment/acceptance handoff is COMPLETE.** VPS DEMO / Forward-Test observation remains active until genuine trade/observation criteria are met; this closeout does not promote LIVE or change risk/defaults.
-
-### 2026-08-23 LANE OWNERSHIP / TASKBOARD HYGIENE LOOP CLOSURE
-
-- **Shared writer-lock registry = ACCEPTED / CANONICAL.** `scripts/lane_registry.ps1` + `scripts/_test/lane_registry_tests.ps1` landed at `c199796c4f8e720122dc1b8546f7605fd88e90bf`; bounded legacy-dashboard compatibility repair moved the default writer-lock root to `D:\EA_LAB_CONTROL\lanes\registry-v1` and landed at reviewed canonical `4e004913d69109bf7cecb6022622608a1b2958e4`. The pre-existing dashboard-era JSON files directly under `D:\EA_LAB_CONTROL\lanes\` are preserved and are not interpreted as registry-v1 claims.
-- **Lane-registry acceptance:** focused negative/concurrency suite `24/24 PASS`, including simultaneous overlapping claim winner-only behavior, critical-path/runtime conflicts, one active writer per owner chat, malformed-registry fail-closed, PAUSED semantics, review-head invalidation, and legacy-parent isolation. `check_state.ps1 -Strict = CLEAN`; pre-commit/selected fast-cage checks PASS; independent Hermes `ea-reviewer` / Claude Sonnet 4.6 review of exact `4e004913` = `PASS`, blockers `NONE`.
-- **Registry truth is coordination evidence, not omniscience:** known registered lanes for Lane Registry, Hermes integration, Taskboard Batch 2/resume, Batch 3, and Batch 4 are `DONE`. A chat/process not registered in `registry-v1` is not thereby proven absent; Control Tower still inventories exact Git/worktree identity before claiming overlapping writer scope.
-- **Taskboard Hygiene Batch 2 = ACCEPTED / CANONICAL** at `23d20bfe1fb94af67d61cafbd12c8d83db80b572`. Exactly `ORDER-1180`, `ORDER-1131`, and `ORDER-232` moved byte-preserved from active to append-only archive with exact C1 Source-A linkage to pre-existing review evidence; active count `110 -> 107`. Working + staged Generate/Audit: active-order-lost `0`, unresolved `0`, integrity failures `0`, manifest bijection/index/exceptions consistent; protected pre-commit + fast cages PASS; independent Hermes/Claude review = `PASS / BLOCKERS NONE`.
-- **Taskboard Hygiene Batch 3 = ACCEPTED / CANONICAL** at `42564b8799516ce936b104c0b7b60c493b802e2d`. Only the stale `ORDER-943` header was synchronized to evidence already present in its owner-ratified body: runtime-evidence blockers are `NONE`, while status remains `PARTIAL`, remaining lifecycle dispositions remain observation/monitor/provisional, and no retirement is authorized. Root P02 byte count was updated mechanically; all focused archive/digest/state gates and independent Hermes/Claude review PASS.
-- **Taskboard Hygiene Batch 4 = DONE / NO-WRITE.** Read-only policy dry-runs found no safe automatic archive candidate among explicit superseded/obsolete active rows. `ORDER-080-orig` has no archive-contract status token; `ORDER-510` uses `SUPERSEDED / NO CURRENT BLOCKING EFFECT`, which is not a Contract-C1 terminal verb. Both remain active rather than fabricating `REVIEWED/CLOSED` or changing money-path lifecycle semantics merely to reduce queue size.
-- **Coordination boundary:** this shared registry is a small deterministic local control guard, not LNWJUD A6. The accepted LNWJUD A-PATH bridge remains bounded `EA-OBSERVE`; task-scoped mutation/orchestration A6 remains `NOT YET IMPLEMENTED` / future unless separately authorized with a direct consumer.
-- **Authority/status preserved:** current milestone remains VPS DEMO Deployment / Forward-Test (**NOT COMPLETE**); monitoring remains `DEGRADED_MONITORING`; Factory candidate remains **NONE SELECTED**; QI-2+ remains **NOT AUTHORIZED**. No MT4/MT5/VPS attachment, deployment, trading, LIVE/DEMO→LIVE, risk/default, owner attestation/signature, force-push, history rewrite, or irreversible strategy decision was performed by this loop.
-### 2026-08-22 HERMES EA_LAB PILOT INTEGRATION
-
-- **Accepted tooling side-module:** reviewed module commit `4073d5c980799fe5ba19e4439437c1932c268f1c` was merged without content conflict onto canonical base `521336588205b296faaa6a9ac496735295af078a` by integration merge `5e3b5f8a401c01de04b4b7ce651f40d08086089e`; scope is exactly 12 files under `tools/hermes_ea_lab_pilot/**`.
-- **Acceptance:** four fail-closed profiles validated; role positive/negative tests PASS; canonical Bot Chat handoff PASS; targeted Bot Mode suite `110/110 PASS`; live routine PASS and removed; H9/H10 sandbox/security tests PASS; task wrapper observe/bounded-write/primary/path guards PASS; secret scan and PowerShell parse/formatting PASS. Independent Claude Code read-only review on exact frozen SHA = `PASS`, blockers `NONE`. Qwen review lane was `C_ENVIRONMENT` and was not used for the verdict.
-- **Authority/status preserved:** no MT4/MT5/VPS/runtime attachment, deployment, trading, LIVE/DEMO promotion, risk/default, QI-2+, force push, history rewrite, or credential disclosure is authorized or performed by this integration. Current milestone remains VPS DEMO Deployment / Forward-Test (**NOT COMPLETE**); monitoring remains `DEGRADED_MONITORING`.
-### 2026-08-22 ORDER-353 VPS DEMO / PRE-DEPLOYMENT EVIDENCE RE-ANCHOR
-
-- **Current bound target (existing attach, not a new candidate/attach):** `(TRD)_SuperTrendFlip_rev05` / ORDER-353, DEMO account `463666728`, server `Exness-MT5Trial17`, VPS `66.212.22.7`, `BTCUSDm,H4`, magic `990026`, lot `0.01`, A/B partner of `990025`. `portfolio/DEPLOYMENTS.csv` remains the current deployment truth. The stale `PENDING-ATTACH` wording in `EA_MASTER_INDEX.csv` / `EA_SCORECARD_AND_REGISTRY.md` is corrected by this sync; no deployment action is implied.
-- **Local monitoring repair accepted:** canonical `ce8dfbfb017161eace7371262abac5b72222cbc5` adds only shared read/write access to `DealsExporter` telemetry files so Desktop Commander can inspect them without blocking the producer. Compile = `0 errors / 0 warnings`; runtime-identity suite = `42/42 PASS`; monitoring-integrity suite = `100/100 PASS`. Runtime proof on the local DEMO monitor wrote `213` deal rows with `time_unix`; account `463666728` collector freshness measured `0 h` in the target-scoped Control Room rebuild.
-- **Control Room execution-context repair accepted / canonical:** `a3123655a82981a3ddd2fd81aa311affb9159b6e` makes explicit `-Root` authoritative even when the caller CWD is outside the repository by binding both `snapshot_build.py reconcile` and `build` child invocations to `$Root` with paired `Push-Location` / `Pop-Location` and preserved fail-closed exit handling. The pre-existing path-portability harness was narrowed only for the one intentional `PrimaryRepoRoot = 'D:\EA_LAB'` external-workspace identity default; any second operational literal still fails. Acceptance: path portability `31/31`, execution-context `18/18`, snapshot S4 `58/58`, monitor-integrity `100/100`, full fast-cages `31/31` / `0 failed` within the `195s` budget, independent Claude/Sonnet review `PASS / NONE / INTEGRATION_READY=YES`, and verified fast-forward push to `origin/master`.
-- **Fresh post-fix Control Room evidence:** a real external-CWD smoke against the refreshed evidence checkout succeeded and produced build `aadf6f4aa5f39ac5` with reconciliation still fail-visible (`reconciliation_clear=false`; 4 existing reasons). Target `463666728|990026` remains `ACTIVE / ATTACHED`, `DATA_COLLECTION`, `0` closed trades, `UNDER_RATE`; runtime-identity summary remains `LEGACY_UNVERIFIED / NO_VALID_RUNTIME_IDENTITY` with `0` target identity records. This repair improves instrument correctness only; it does **not** promote G2/G3 or remove any P3 blocker.
-- **Monitoring truth remains fail-visible:** G1 = `READ`; G2 = `DEGRADED_MONITORING`; G3 for `463666728|990026` = `FAIL / NOT_WIRED` because no validated runtime-identity sidecar exists for that bound target. Fresh account telemetry does not substitute for target runtime identity.
-- **Current P3 blockers:** D = `UNREADABLE` for current live config/hash re-read (historical CONFIG PASS from 2026-08-14 is preserved but is not promoted to a current live-read hash); E = `UNTESTED` on the actual VPS target lane (the local monitor lane cannot prove `BTCUSDm` capability and is not used as a proxy); F = `NO_ATTESTATION_ON_FILE`; G3 = `FAIL / NOT_WIRED`. Therefore `READY_FOR_OWNER_ACTION=false` and no new attachment request is generated.
-- **Owner/external hold:** current VPS GUI inspection / RI02 runtime-identity rebinding / owner attestation is intentionally deferred until the owner is available. Only RDP `3389` is reachable from BaBoss; SSH/WinRM/SMB are unavailable. Blind RDP automation is prohibited for this acceptance-critical runtime. This hold is `E OWNER-EXTERNAL`, not a product defect.
-- **Authority preserved:** no strategy, parameters, lot, risk/default, LIVE status, real-money state, or QI-2+ authority changed. Existing target stays attached; do not duplicate-attach or silently rebind it while the owner is unavailable.
-### 2026-08-21 LNWJUD A-PATH CONTROL BRIDGE MVP SYNC
-
-- **Accepted milestone:** `LNWJUD A-PATH CONTROL BRIDGE MVP = ACCEPTED / COMPLETE` at reviewed implementation `6b6f3c8ffbade82ef46edb1d34b02f79421e2bc1`, cherry-picked clean onto canonical `3aa80897c666c01d66f15f6f1cdd703abce46a3e`; reviewed bytes unchanged (diff vs canonical base is exactly the 3 files listed below, matching the reviewed delta).
-- **Architecture:** ChatGPT Plus → Remote Desktop Commander → `lnwjudctl` → existing restricted `ea-lab-gateway.cjs` → the exact clean authorized worktree the gateway itself resolves to. `lnwjudctl` is an adapter only; every allow/deny decision still comes from the existing gateway + a dedicated `EA-OBSERVE` policy (`tools/lnwjud/lnwjudctl-policy.json`) + the existing trusted-worktree/canonical-lineage checks. `D:\EA_LAB` remains a protected root the gateway refuses to operate on.
-- **Architectural purpose clarification (2026-08-22):** Remote Desktop Commander is the primary remote transport/operator surface: it answers whether the Control Tower can reach the BaBoss machine and perform an operation. LNWJUD is the deterministic execution-coordination/control layer intended for scalable multi-agent EA_LAB work: task identity, exact base/trusted-parent lineage, dependency state (`READY` / `WAITING` / `BLOCKED` / `DONE`), assigned worker, isolated worktree/branch ownership, allowed scope/delegation, writer ownership, reviewer authority, accepted-evidence identity, integration readiness, stale-base detection, and review-lineage validity. The intended model is `OWNER -> ChatGPT Control Tower -> Desktop Commander (transport) -> LNWJUD (coordination/control) -> task DAG -> isolated workers/worktrees -> tests/evidence -> single-writer integration queue -> frozen exact-HEAD independent review -> canonical origin/master`. Desktop Commander does not replace these coordination semantics. This records architectural purpose/future coordination intent, not a claim that the current A-PATH already exposes full multi-agent mutation/orchestration: the accepted bridge remains bounded `EA-OBSERVE`, and A6 task-scoped mutation remains future/parked until a direct consumer and owner-approved objective/scope exist.
-- **Independent review:** Qwen Code / High = `PASS-WITH-NOTES`, `BLOCKER_CLASS: NONE`, `INTEGRATION_READY: YES` (review occurred in a separate session/UI outside this repository's filesystem; no on-disk review artifact exists for this commit — recorded here on the owner's direct confirmation in-session, not from a file this session located itself).
-- **Files (exact, no other implementation files):** `tools/lnwjud/lnwjudctl.cjs`, `tools/lnwjud/lnwjudctl-policy.json`, `tools/lnwjud/test-lnwjudctl.cjs`.
-- **Current capability (read-only / observe bridge):** `status`, `workspace-info`, `git-status`, `git-log`, `read <repo-relative path>`, `search <query>`, `execute <existing named non-mutating policy profile>` (`test` / `check` / `state_check`; the existing `build` profile is `mutation_capable` and is refused under this bridge's `EA-OBSERVE` role).
-- **Explicitly NOT exposed:** unrestricted shell/powershell/cmd, raw MCP tool passthrough, `write_file`, `apply_patch`, arbitrary worktree selection, arbitrary process execution. Verified by 22/22 focused adversarial tests (`tools/lnwjud/test-lnwjudctl.cjs`), re-run clean in this integration worktree.
-- **Policy role:** `EA-OBSERVE` (no mutation reachable through this bridge in this MVP).
-- **Task-scoped mutation (A6):** `NOT YET IMPLEMENTED` — a separate, future owner-approved task.
-- **Mobile end-to-end proof:** `PASS / COMPLETE` — on 2026-08-21 the owner initiated the proof from ChatGPT on mobile after re-authenticating the Remote Desktop Commander agent. Control Tower observed device `BaBoss` online/pingable and executed `status`, `workspace-info`, `git-status`, `read PROJECT_STATE.md`, and `execute check` through `lnwjudctl`; canonical HEAD `531df46c8241914f3bcf72c76ae60d3334d7660b`, clean worktree, `EA-OBSERVE`, and exit 0 were confirmed. This closes the observe-only A-PATH MVP. Recovery/runbook: `docs/LNWJUD_A_PATH_RUNBOOK.md`.
-- **Evidence:** `tools/lnwjud/test-lnwjudctl.cjs` **22/22 PASS**; delegation **19/19 PASS**; M3 **32/32 PASS**; status **39/39 PASS**; `check_state.ps1 -Strict` **PASS**; `test-gateway.cjs` reaches the same pre-existing `EXECUTABLE_NOT_FOUND: rg` stop point with or without this change (9/9 PASS up to that point) — classified `BLOCKED(C)` / `C_ENVIRONMENT`, an optional-dependency gap in this machine's environment, not a product blocker and not caused by this change.
-- **Bootstrapping note (not a product change):** a fresh `git worktree add` does not carry the gitignored local asset `tools/python312/python312.zip` or a worktree-local `core.hooksPath`; both were locally restored/set (copied from the primary read-only; `git config --worktree core.hooksPath .githooks`, the exact remedy `check_state.ps1` itself prints) in both the review and integration worktrees. No tracked file or `D:\EA_LAB` content was touched.
-- **Remote Desktop Commander reboot recovery:** the PC device registration can persist while the agent itself is offline. Normal recovery is the Desktop shortcut `EA_LAB Remote`, which runs the same pinned launcher; command-line fallback is `npx --yes @wonderwhy-er/desktop-commander@0.2.47 remote --persist-session`. Minimize the agent console; closing it with `X` stops the agent. Codex/ChatGPT Remote pairing remains a separate transport. Durable procedure: `docs/LNWJUD_A_PATH_RUNBOOK.md`.
-- **A-PATH remote transport persistence hardening = ACCEPTED / COMPLETE.** The Windows Scheduled Task (`EA_LAB_RemoteDesktopCommander`) passed real reboot startup with pinned `@wonderwhy-er/desktop-commander@0.2.47`; launcher v1.1.0 uses `remote --persist-session`; the owner-approved package-managed session is stored only in `C:\Users\patip\.desktop-commander-device\device.json` with ACLs limited to `BABOSS\patip`, SYSTEM, and Administrators; and Desktop recovery shortcut `EA_LAB Remote` remains available. On the final owner-present reboot on 2026-08-22, the task ran at `10:07:09` with `LastTaskResult=0`, the pinned persistent-session agent started at `10:07:10–10:07:13`, device `BaBoss` returned online with valid session and ping PASS, no extra launcher invocation occurred after boot, and A-PATH `status`, `workspace-info`, `git-status`, `read PROJECT_STATE.md`, and `execute check` all passed against clean canonical `2bb38c62598bf0892e8566712029870ade19f673`. **Zero-touch reboot/session restore = PASS / COMPLETE.** Full procedure: `docs/LNWJUD_A_PATH_RUNBOOK.md` § "Remote Desktop Commander auto-start".
-- **M3 / Secure Tunnel truth (preserved, not reopened):** all prior M3 acceptances (local execution plane, repository implementation, tunnel-client identity binding) stand unchanged. A real owner-authorized tunnel doctor/readiness pass occurred on 2026-08-21: `D:\EA_LAB_CONTROL\lnwjud-v4-m3\m3-tunnel-state.json` records `state: "DOCTOR_PASSED"` at `checkout_head: 3aa80897` (the canonical base), `generated_at: 2026-08-21T12:31:36Z`, with matching sealed-profile/launcher/policy/tunnel-client SHA-256 pins; this session did not itself observe the live `/healthz`/`/readyz` HTTP responses (ephemeral, prior to this session), but this state-file evidence plus this session's own live-process check (`A0`, below) are consistent with a real pass followed by an intentional stop. The runtime was then intentionally stopped because ChatGPT Plus cannot consume the intended full custom-MCP surface, not because the doctor/readiness check failed. **Current M3 runtime state: `STOPPED` / `NOT PRIMARY TRANSPORT`** — do not record this as "never activated." No public listener was ever created (`transport: OUTBOUND_STDIO_TUNNEL`, `listener: NONE`, unchanged). This session's own process check found no live `tunnel-client.exe` and no `node.exe` with a `ea-lab-gateway.cjs` command line, consistent with `STOPPED`. M3 repository implementation is preserved unchanged; nothing was deprecated or deleted.
-- **Missing `rg`/ripgrep:** `C_ENVIRONMENT` / optional dependency gap on this machine. Not installed automatically (owner instruction); not classified as a product blocker for either `lnwjudctl` or the existing gateway suite.
-- **Authority preserved, unchanged by this sync:** VPS DEMO Deployment / Forward-Test remains **NOT COMPLETE**; monitoring remains **DEGRADED_MONITORING**; Factory candidate = **NONE SELECTED**; no LIVE / DEMO→LIVE, trading, real-money, risk/default-parameter, owner-attestation, or QI-2+ authority was exercised or changed by this sync. No deployment, MT5/runtime attachment, or strategy-semantic change occurred.
-
-### 2026-08-20 LNWJUD LOCAL EXECUTION PLANE SYNC
-
-- **Accepted milestone:** `LNWJUD LOCAL EXECUTION PLANE = ACCEPTED`. Reconciled exactly once to settled canonical `ea370b0f185ccf0aa54e8af0c08390a5c7770304`; frozen execution-plane head `a6a74fcd608ed693416be25782374bf0451f4089` passed the independent Luna verification and Sol final review.
-- **Evidence:** gateway/security **49 PASS**; delegation **19 PASS**; status **31 PASS**; `check_state.ps1 -Strict` PASS. The policy, trusted-parent, and status contracts all bind to the settled canonical base; the historical temporary delegation package was removed rather than carried as live authority.
-- **Boundaries preserved:** `D:\EA_LAB` remains a protected, dirty preservation root and received no writes. No deployment, trading, DEMO/LIVE, risk/default, QI-2+, push-force, history-rewrite, or authority expansion occurred. The separately reviewed M3 repository implementation is recorded below; actual Secure MCP Tunnel / remote ChatGPT activation remains an external dependency and does not block local acceptance.
-
-### 2026-08-20 LNWJUD M3 REPOSITORY ACCEPTANCE SYNC
-
-- **Accepted repository implementation:** `LNWJUD M3 REPOSITORY IMPLEMENTATION = ACCEPTED` at reviewed implementation `9b9107473618ae1182f15de64715cab8d827c5a2`.
-- **Independent final review:** Claude Opus / High = `PASS`; repository/product blocker = `NONE`. M3 **31 PASS**; status **39 PASS**; gateway/security **49 PASS**; delegation **19 PASS**; `check_state.ps1 -Strict` = `PASS`.
-- **Runtime truth:** the approved tunnel-client identity dependency was subsequently resolved by the 2026-08-21 binding sync below. Actual runtime activation remains `NOT ACTIVATED`, `OWNER_REQUIRED`, `BLOCKED(E) OWNER-EXTERNAL`; no tunnel was installed, activated, or connected, and no external credential was provisioned.
-- **Authority preserved:** this is repository-side acceptance only. VPS DEMO Deployment / Forward-Test remains **NOT COMPLETE**; monitoring remains **DEGRADED_MONITORING**; Factory candidate = **NONE SELECTED**; `TARGET_UNBOUND`; `READY_FOR_OWNER_ACTION=false`; LIVE / DEMO→LIVE, trading, real-money, risk/default, owner-attestation, and QI-2+ authority remain unchanged and unauthorized.
-
-### 2026-08-21 LNWJUD M3 TUNNEL-CLIENT IDENTITY BINDING SYNC
-
-- **Accepted identity binding:** `LNWJUD M3 TUNNEL-CLIENT IDENTITY BINDING = ACCEPTED` at reviewed implementation `c872897b1c1a2ed3f2621302c1a3d34b08b9b42d`.
-- **Independent review:** Qwen Code = `PASS`; repository/product blocker = `NONE`.
-- **Approved client:** OpenAI tunnel-client `v0.0.12`, `windows-amd64`; executable SHA-256 `6649169733686805ca16cccd91774594d0c017fd729c37ad4ce1cd18323d9ae8`; source ref: https://github.com/openai/tunnel-client/releases/tag/v0.0.12.
-- **Identity/runtime truth:** `TUNNEL_CLIENT_IDENTITY_UNBOUND = RESOLVED`. Actual Secure MCP Tunnel activation remains `NOT ACTIVATED`, `OWNER_REQUIRED`, `BLOCKED(E) OWNER-EXTERNAL`; no credential, tunnel ID, public listener, or runtime attachment was used.
-- **Authority preserved:** VPS DEMO Deployment / Forward-Test remains **NOT COMPLETE**; monitoring remains **DEGRADED_MONITORING**; Factory candidate = **NONE SELECTED**; `TARGET_UNBOUND`; `READY_FOR_OWNER_ACTION=false`; no LIVE/trading/risk/QI-2+ authority was created.
-
-### 2026-08-20 POST-OPUS-AUDIT M1 FACTORY NEXT-CANDIDATE GENERIC REPAIR SYNC
-
-- **Accepted milestone:** `POST-OPUS-AUDIT M1 FACTORY NEXT-CANDIDATE GENERIC REPAIR = ACCEPTED / COMPLETE`. Repairs the concrete Audit A (optimization/factory evidence) and Audit B (EA Template new-entry production) regressions named by the same four prior Opus audits that drove M0, without selecting or promoting any candidate, without touching `ea_template/core/**`, and without any strategy/risk/money semantic change.
-- **Canonical chain:** parent = canonical `a8093c9f65af381ca33f9293566b33cac61cd4c8` (M0, pushed same day). Two independent isolated-worktree lanes (optimization/factory evidence, EA-template new-entry production) merged with zero file-level conflicts, plus a registry-completeness fix for five test files added after the shared `SUITE_TIER_REGISTRY.txt` snapshot (same seam class as M0's own integration, caught by the same reverse-completeness guard working as designed). Integration HEAD = `4f1651f68736c377425541751d35a798f55dcbe7`.
-- **Optimization / factory evidence (Audit A):** `Get-PilotSwapModeProbeReference`'s local accumulator no longer aliases the PowerShell automatic `$Matches` variable (A-F1); the destination optimizer XML is quarantined before every launch so a failed run cannot leave a stale prior-run artefact readable as current evidence (A-F2); the pilot-XML backfill escape now requires field-*absence*, not merely a falsy value, so a record explicitly marked `xml_present: false` can no longer backfill through — the 16 historical pilot cells (10 of which used the escape) remain intact and readable (A-F4); the instruction-layer quarantine of the retired `select_robust_pass` / BacktestScore-v1 selector is complete across every dispatchable subagent/doc surface, fail-closed against reintroduction (A-F5); `optimize_guard` decisions now carry a mechanical `(lane, expert, ini_path)` join key rather than the repeating, non-distinguishing `hypothesis_revision` alone — explicitly documented as path identity, not byte identity (A-F6); optimizer XML artefact identity now compares by SHA-256 digest, scoped only to that artefact, never extended to non-byte-reproducible compiled MQL5 binaries (A-F7).
-- **A-F3 (hypothesis_revision → ExecutionKey binding) — correctly left BLOCKED, not implemented.** Investigation found widening `ExecutionKey` to include `hypothesis_revision` would change scheduler cache/dedup identity for every future run — a policy decision (does a hypothesis-revision mismatch on an otherwise-identical technical key block cache reuse, and does that belong in `ExecutionKey` at all) that this repo's culture reserves for owner ratification / independent review, not a same-session P1 fix. The existing `LEGACY`-key migration mechanism (`scheduler.py` `EXECUTION_KEY_FIELDS` vs `LEGACY_EXECUTION_KEY_FIELDS`, mirrored in `schemas.json`) was confirmed as the correct pattern to reuse *if and when* this is ratified. Nothing was partially wired in — confirmed independently by both the implementing session and the Codex review (zero diff to `schemas.json`/`scheduler.py`'s `ExecutionKey`).
-- **EA Template new-entry production (Audit B):** `New-TemplateEntryScaffold` (`scripts/lib/new_template_entry.ps1`) now also patches `ea_template/core/Inputs.mqh`'s two mechanical registration touchpoints (the fallback `#ifndef`/`#define` chain and the `StackMode`/`StackConfirm` guard-pair block) when scaffolding a new `LAB_ENTRY_<N>`, instead of a new entry silently inheriting entry 11's semantics or failing to compile with a duplicate-definition error — `StackMode`/`StackConfirm` are mandatory scaffold parameters with no guessed default, since they are money/risk-semantic (B-F1, the P0 blocker). A wrapper-to-registry direction check (`Test-TemplateEntryWrapperRegistered`) refuses an unregistered `LAB_ENTRY` tag rather than silently falling back (B-F2). The template regression baseline's hardcoded `.Count -ne 8` cardinality checks are replaced with deterministic set equality — a same-count swap now still refuses, not just a count mismatch (B-F3). Verified by a real MetaEditor compile: the existing `Boss_11`..`Boss_18` baseline and a synthetic scaffolded entry both compile 0 errors / 0 warnings, before and after the patch — zero drift on the 8 real wrappers, no real 9th candidate created.
-- **B-F4 (input-surface generator commit-path protection) — correctly left BLOCKED/measured, not wired.** The new suites are confirmed classified `NOT_WIRED`/`UNMEASURED` in `SUITE_TIER_REGISTRY.txt` and absent from `.githooks/fast_tier_pathspec` — no fast-tier budget was spent wiring them in without a fresh measurement justifying it.
-- **B-F5 (the Boss_16/"Kangaroo" OnTick short-circuit) — correctly left PARKED, not implemented.** Confirmed zero diff to `ea_template/core/LabCore.mqh` or any Kangaroo-prefixed file in this milestone's commit range; it remains a money/risk-semantic finding requiring an owner-approved strategy consumer that does not currently exist.
-- **Independent review:** Codex/OpenAI (different model family) reviewed frozen HEAD `4f1651f6` and returned `VERDICT: PASS-WITH-NOTES`, `BLOCKER_CLASS: NONE` — every content check it could run in its own sandbox passed with real numbers across 14 independently re-run suites (A-F1 18/18, A-F2 18/18, A-F4 15/15 plus a real `--check` against committed data confirming 16/16 historical pilot cells still resolve, A-F5 16/16 with a planted-reintroduction fire count of 5, A-F6 118/118, A-F7 24/24, B-F1 82/82, B-F2 6/6, B-F3 including a same-count-swap attack case), plus its own independent confirmation that A-F3/B-F4/B-F5 are genuinely unimplemented (zero diff in each relevant file). The reviewer's own sandbox lacked MetaEditor execution and tester-deployment write access, so it could not itself reproduce the B-F1 real-compile claim or a full `tpl_regression.ps1` run — the implementing session's own real MetaEditor evidence (0/0 on the real baseline and the synthetic scaffold) and this integration's own clean `check_state.ps1 -Strict` / 31-suite fast-cage run at the same exact HEAD cover that gap. No bounded repair was needed.
-- **No scope creep:** zero changes to `ea_template/core/**` beyond the B-F1 mechanical registration touchpoints in `Inputs.mqh`; zero diff to `portfolio/DEPLOYMENTS.csv`, `EA_SCORECARD_AND_REGISTRY.md`, or `EA_MASTER_INDEX.csv` (no candidate selected or promoted); no new LIVE/deployment/authority semantic; every closed item's negative/attack fixture still refuses (confirmed by both the implementing session and the independent review).
-- **Monitoring status:** remains **`DEGRADED_MONITORING`**, unaffected by this milestone (M1 touches optimization tooling and EA-template scaffolding, not monitoring).
-- **Authority:** no deployment, runtime attachment, trading, LIVE / DEMO→LIVE expansion, risk or default-parameter change, owner attestation/signature, or QI-2+ authority change occurred. **Canonical push** of this closeout is standing-authorized under `AGENTS.md` §1.4 (fast-forward only, no force push, no history rewrite).
-- **Parked / decision-ready for a future session:** A-F3's ExecutionKey/hypothesis_revision cache-identity question (see above — this needs an owner or independent-review decision before implementation, not further investigation); B-F4's fast-tier wiring (needs a fresh current-canonical timing measurement before any wiring decision); B-F5's Kangaroo/OnTick short-circuit (needs an owner-approved strategy consumer before any code change).
-- **Next milestone:** both milestones of the post-audit repair program are closed. Canonical project focus returns to **VPS DEMO Deployment / Forward-Test** (owner-gated LIVE remains a future milestone); Factory candidate selection remains a separate, not-yet-started decision.
-
-### 2026-08-20 POST-OPUS-AUDIT M0 CURRENT-MILESTONE TRUST REPAIR SYNC
-
-- **Accepted milestone:** `POST-OPUS-AUDIT M0 TRUST REPAIR = ACCEPTED / COMPLETE`. Repairs the concrete regressions named by four prior independent Opus audits (Factory/Optimization, EA Template Master Mold, Monitoring/Deployment/Forward Evidence, Governance/Control Plane) without reopening any accepted milestone generically — the audit findings were treated as known evidence, not rediscovered.
-- **Canonical chain:** parent = canonical `649207d61a45958b29ce5aeed1f9a11d5c6ab152`. Three independent isolated-worktree lanes (monitoring trust / Audit C, canonicality+worktree+hooksPath / Audit D-F1,F4,F6-F8, hook+trigger+digest safety / Audit D-F2,F3,F5,F9,F10) merged with zero file-level conflicts, plus a narrow governance-doc fix (D-F11 FACT_OWNER_MAP.md writer-authority pointers, D-F12 AGENTS.md worktree-branch wording) and a stale full-tier test budget correction (120.0s → 195.0s, evidence-backed, owner-approved). Integration HEAD after a Codex-found bounded repair (see below) = `af30503eb8d46104cf431975ffacac18f32311e9`.
-- **Monitoring trust (Audit C):** snapshot age gate (STALE snapshots render no verdict numbers), source-digest recomputation on read (a changed/unreadable source refuses, never silently passes), failed-build coverage correctly shows `NOT MEASURED` rather than stale-as-new, `ACTIVE` deployment status no longer itself implies `VERIFIED` without real evidence, runtime-identity expected-universe now derives from the deployment scope (an unmapped row is a visible GAP, not invisible), monitoring chain health/last-success reaches STATUS.md/STATUS.html, and forward trade-count evidence is now bounded by a real runtime-attach epoch or canonical observation-start date with the bound itself carried into the emitted evidence (fail-closed: an unresolvable bound no longer lets the raw unbounded count pass as trusted evidence). C-A4 (binding `ATTESTATION_MAP.csv` to an expected artifact digest) is correctly left `BLOCKED` — no uniquely authoritative digest source exists yet; not invented.
-- **Canonicality / worktree / hook trust (Audit D):** `check_state.ps1` now classifies `CANONICAL` / `BEHIND_CANONICAL` / `AHEAD_CANONICAL` / `DIVERGED_FROM_CANONICAL` / `REMOTE_UNAVAILABLE` — a behind or diverged tree can no longer report `CLEAN`; a linked worktree's `.git` file (not directory) now resolves correctly for tier stamping; `check_stale_binaries.ps1` resolves strictly against its own checkout, never a hardcoded primary path; nested worktree roots are gitignored and a staged gitlink is refused; `core.hooksPath` ownership is asserted on the commit path (foreign/absolute hook paths refused, empty documented as a residual covered only from outside); a `pre-push` hook now refuses non-fast-forward pushes to master; every tracked `run_*` test file is classified or explicitly exempted with a reason (reverse completeness); the taskboard digest runs `-Check` only when relevant paths are staged and now classifies `DONE+REVIEWED` above bare `DONE`.
-- **Independent review:** Codex/OpenAI (different model family from the Claude-family implementation) reviewed frozen HEAD `98c28933` and returned `VERDICT: FAIL`, `BLOCKER_CLASS: A`, citing exactly two real defects — everything else in the review scope (C-A1/2/3/5/6/7/9/10, D-F1-F10/F12, the budget raise) passed on the reviewer's own independently re-run suites and real generated evidence. One bounded repair round closed both: (1) the forward trade-bound evidence was fail-open (an unresolvable bound silently returned the raw unbounded count as `Counted`, and 0 of 59 real `judge_readiness` rows carried the bound source/value/state at all) — fixed to fail closed and to carry full bound evidence on every row, verified live (59/59 rows now carry the fields; 42/42 new/extended fixture assertions; a real snapshot rebuild confirmed the fix); (2) two writer-authority edits in `FACT_OWNER_MAP.md` had been silently blocked by a permission classifier in the original repair session and never retried, plus two more stale "Claude/user"-style claims the original pass never grepped for outside the table rows — all four now point at `AGENTS.md` §§1/1.5/2. A second, narrower Codex re-review of the repaired HEAD `af30503e` — including Codex's own independently-built adversarial AST-level test of the fixed function — returned `VERDICT: PASS-WITH-NOTES`, `BLOCKER_CLASS: NONE`; the only notes were the reviewer's own sandbox being read-only for a fresh snapshot rebuild, which this integration had already verified directly with full write access.
-- **Monitoring status:** remains **`DEGRADED_MONITORING`**. This program improves monitoring *evidence trust and honesty*; it is not runtime proof and does **not** make monitoring GREEN. A real snapshot/STATUS.html rebuilt from the integration HEAD still renders `MONITORING CHAIN ALERT` / `DEGRADED`.
-- **No scope creep:** zero changes to `ea_template/core/**`, EA `.mq5`, or any strategy/execution/risk/money/grid/hedge code across the entire M0 diff (independently confirmed by both Codex reviews). No new LIVE/deployment semantic, no widened approval authority, no owner hard stop crossed. No fabricated fixtures, invented thresholds, or fake evidence found by either review.
-- **Authority:** no deployment, runtime attachment, trading, LIVE / DEMO→LIVE expansion, risk or default-parameter change, owner attestation/signature, or QI-2+ authority change occurred. The 195.0s full-tier test-budget raise was evidence-backed (three independent measurements, 0 content failures) and explicitly owner-approved mid-session before being applied. **Canonical push** of this closeout is standing-authorized under `AGENTS.md` §1.4 (fast-forward only, no force push, no history rewrite).
-- **Remaining ENVIRONMENT dependencies (not product defects):** no runtime-identity sidecars exist yet on any deployment (C-A3's expected-universe fix correctly surfaces this as named gaps rather than hiding it); bundle→actual VPS terminal identity binding needs VPS-side evidence; the primary operator workspace `D:\EA_LAB` remains dirty/diverged from canonical and is explicitly treated as non-canonical/unsuitable for publication until reconciled separately (a preservation lane, not solved by or blocking this push).
-- **Remaining OWNER/EXTERNAL items (not blockers for this push):** GitHub branch-protection on master (the new local `pre-push` hook is a seatbelt only — bypassed by `--no-verify` and absent on any other clone — recommend requiring PRs into master / linear history / no force-push at the GitHub level); dirty `D:\EA_LAB` reconciliation remains a separate preservation lane.
-- **Next milestone:** M1 `FACTORY NEXT-CANDIDATE GENERIC REPAIR` continues on top of this canonical (Audit A optimization/factory-evidence repairs, Audit B EA-template new-entry production repairs); canonical project focus otherwise returns to **VPS DEMO Deployment / Forward-Test** (owner-gated LIVE remains a future milestone).
-
-### 2026-08-19 PREDEV OPTIMIZATION + TEMPLATE MATURITY SYNC
-
-- **Accepted milestone:** `PREDEV OPTIMIZATION + EA TEMPLATE PRODUCTION MATURITY = ACCEPTED / COMPLETE FOR GENERIC PRE-DEVELOPMENT SCOPE`.
-- **Canonical chain:** `b115949e` → `1cc31d97` (Lane A) → `3b467574` (Template transaction safety) → `aaee37ea` (Lane C). Canonical HEAD after this chain = `aaee37ea3e0eb3c408c2af00362817ded549d3d7`.
-- **Lane A — `1cc31d97` harden `mt5_optimize.ps1` launcher:** worktree-safe `_mt5_auto` root, missing `optimize_guard` now fails closed, stale `select_robust_pass` next-step selector removed, candidate/hypothesis contract enforced or `SELECTION BLOCKED`. 33/33 focused tests PASS.
-- **Template transaction safety — `3b467574`:** rollback-safe Boss/Entry/LabCore publication via `New-TemplateEntryScaffold`, deterministic test-only fault injection. 54/54 PASS. No strategy semantics changed.
-- **Lane C — `aaee37ea` quarantine legacy BacktestScore-v1 selector paths:** the executable paths that consumed the superseded `select_robust_pass.select_robust` now refuse by default; explicit legacy opt-in (`--allow-legacy-selection` / `-AllowLegacySelection`) retains research/historical capability, and opt-in output is marked `LEGACY` / `NON_FACTORY` / `NON_AUTHORITATIVE`. No new generic selector, threshold, or risk policy was introduced. 12/12 PASS.
-- **Lane D:** measurement complete — `MEASURED_NOT_WIRED`. No commit, no fast-cage budget increase, no fast-tier wiring performed.
-- **Neighbor monitoring work** referenced by this chain is already canonical via prior history (2026-08-17 / 2026-08-18 syncs below) and is not replayed here.
-- **Resolves prior parked item:** the 2026-08-18 Wave-1 parked note *"`New-TemplateEntryScaffold` is not atomic against a mid-write I/O fault"* is **RESOLVED** by canonical `3b467574` (rollback-safe transaction publication, 54/54 PASS). The historical 2026-08-18 snapshot below is left unchanged; this line records the current disposition.
-- **Still parked, unchanged:** `run_new_template_entry_tests.ps1` remains **NOT WIRED** into the fast-cage trigger map. Reason: Lane D found the existing full tier already above its pinned budget — no budget increase and no wiring were made in this sync. Any future wiring requires a fresh current-canonical measurement.
-- **Authority / status preserved, unchanged by this sync:** VPS DEMO Deployment / Forward-Test = **NOT COMPLETE**; `TARGET_UNBOUND`; `READY_FOR_OWNER_ACTION=false`; **no owner action requested**; monitoring remains `DEGRADED_MONITORING`; Factory candidate = **NONE SELECTED**; runtime/deployment attachment remains an **owner hard stop**. No LIVE / DEMO→LIVE / real-money / risk-default / QI-2+ authority was exercised or changed by this sync.
-- **Scope:** this is a state-sync/documentation entry recording an already-accepted, already-pushed milestone — no source/product implementation was made in this commit.
-
-### 2026-08-19 EA_LAB_MAP RECOVERY / PR #8 SUPERSEDE SYNC
-
-- **Resolves prior stale item:** the 2026-08-17 DURABLE SYSTEM COMPLETION SYNC below listed `PR #8 / ORDER-1560 merge (owner-pending)` under owner/external-blocked items. This is **RESOLVED / SUPERSEDED** — it is no longer a current blocker.
-- **What happened:** the EA_LAB_MAP capability (generated visual EA registry `EA_LAB_MAP.html`, its generator `scripts/make_ea_map.py`, deterministic tests `run_make_ea_map_tests.ps1`, `make_status.ps1` worktree-safe OneDrive-gated integration, the README pointer, and the `FACT_OWNER_MAP.md` generated-file ownership row) was recovered independently onto current canonical master at `f700f7b695c337505ee6fe43b8e417319a7b0bf5`, confirmed present at canonical `2faa6b1ca8717b1adcd2e866011aded5aab9c69a`. This does not depend on merging PR #8.
-- **PR #8 disposition:** `SUPERSEDED_BY_CANONICAL_RECOVERY`. PR #8 (`https://github.com/BaBosss/EA_LAB/pull/8`) must **not** be merged — its stale branch predates the current canonical history. Closure was attempted; see the taskboard/commit trail for the outcome.
-- **Unchanged by this sync:** VPS DEMO Deployment / Forward-Test = **NOT COMPLETE**; `TARGET_UNBOUND`; `READY_FOR_OWNER_ACTION=false`; **no owner action requested**; monitoring remains `DEGRADED_MONITORING`; Factory candidate = **NONE SELECTED**. No deployment, trading, LIVE, risk/default, or QI-2+ authority was exercised or changed by this sync.
-- **The historical 2026-08-17 snapshot below is left unchanged; this entry records the current disposition only.**
-
-### 2026-08-18 DURABLE FACTORY PRODUCTION READINESS — WAVE 1 SYNC
-
-- **Accepted milestone:** `FACTORY PRODUCTION READINESS — WAVE 1 = ACCEPTED / COMPLETE`. Three independently accepted lanes were integrated into one canonical line; this is a tooling/visibility milestone only and creates no runtime, deployment, or selection authority.
-- **Integration:** integration HEAD `d37e3213d25a2de9b8d45b9323927a64a2c858af`, parent = canonical `d2f1217bab07e21f850fb77801ff19a946172f8d`. Four commits, 14 files, +1115/-28; the integrated diff is exactly the union of the three accepted lanes, with no extra content.
-- **Factory OS:** `candidate.py` gains `build` / `write` CLI commands for CandidateManifest assembly. These are thin CLI wiring over the already-tested `build_manifest` / `validate_manifest` / `write_manifest` functions — **no new validation semantics, no new schema, and no new criterion id**. `build` is a dry run; `write` remains write-once and still refuses a second write of the same candidate.
-- **Monitoring:** `STATUS.html` now renders the verified-snapshot Control Room block, so the phone dashboard shows Control Room state and **why** monitoring is degraded rather than omitting it. `make_status.ps1` / `make_status_html.ps1` are now worktree-aware: the hardcoded `D:\EA_LAB` fallback is removed, one resolved root is propagated between the two generators, an anchor with no `.git` above it fails explicitly instead of silently falling back, and OneDrive publication is gated behind a primary-workspace check so it cannot fire from an isolated worktree.
-- **EA Template:** `scripts/new_template_entry.ps1` (+ `scripts/lib/new_template_entry.ps1`) adds a deterministic scaffold generator for new `LAB_ENTRY` plugins. It refuses rather than guesses: duplicate entry number, duplicate name, invalid/zero/negative entry number, malformed name, missing template root, missing `LabCore.mqh` anchor, and an ambiguous `OnInit` anchor are each rejected without mutating `LabCore.mqh`.
-- **Milestone review:** integrated milestone review = **PASS**, `BLOCKER_CLASS: NONE`, performed independently of the integrating author and re-running the suites rather than reading the diff alone. Regression at the integration HEAD: worktree-isolation 26/26 · snapshot S4 58/58 · taskboard 7/7 · monitor-integrity 100/100 · statusclass 23/23 · `new_template_entry` 20/20 · Factory S10 235 OK / 0 FAIL · path-selected fast-cage tier 10 suites / 0 failed · `check_state.ps1 -Strict` CLEAN.
-- **Monitoring status:** remains **`DEGRADED_MONITORING`**. Wave-1 improves monitoring *visibility and worktree safety*; it is not runtime proof and does **not** make monitoring GREEN. Regenerating `STATUS.html` from the integrated code still renders Monitoring = `DEGRADED`.
-- **No runtime/deployment evidence** was created, attached, or fabricated by this work. No EA was attached, no account was touched, and no tester/runtime result was produced or claimed.
-- **Factory candidate:** still **NONE SELECTED**. Wave-1 delivers the manifest-assembly *tooling*; it selects, promotes, or names no candidate, and no candidate may be selected off this sync.
-- **Parked (non-blocking, from the milestone review):** (1) `New-TemplateEntryScaffold` is not atomic against a mid-write I/O fault — worst case is a loud compile error, never a silent unsafe or tradable state; (2) `run_new_template_entry_tests.ps1` is not yet wired into the fast-cage trigger map. Neither blocks Wave-1 acceptance.
-- **Authority:** no deployment, runtime attachment, trading, LIVE / DEMO→LIVE expansion, risk or default-parameter change, owner attestation/signature, or QI-2+ authority change occurred. **Canonical push** of this closeout is standing-authorized under `AGENTS.md` §1.4 (fast-forward only, no force push, no history rewrite).
-- **Next milestone:** canonical project focus returns to **VPS DEMO Deployment / Forward-Test** (owner-gated LIVE remains a future milestone).
-
-### 2026-08-17 DURABLE SYSTEM COMPLETION SYNC
-
-- **Status:** `SYSTEM ACTIONABLE WORK = COMPLETE`. This closes out the System Completion phase's canonical-verification and monitoring-repair lanes; it does not reopen SYSTEM FOUNDATION (above).
-- **Integration:** local integration HEAD `64fbf2c2` on branch `system-completion-monitoring-integration`, parent = canonical `23d916d2606751cc555f3037154ddccd976cd32d`. Not pushed — owner push decision pending.
-- **Monitoring repairs integrated (bounded, no behavior/risk change):** Real Defect A — `make_status.ps1` no longer conflates a taskboard read failure with a legitimate empty queue (explicit read-failure state, deterministic tests accepted). Real Defect B — `SnapshotVerdict`'s `x-enforced-by` prose no longer claims "no reader calls `load_verified()`"; source-of-truth (`schemas.json`) corrected and `CONTRACTS.md` regenerated via the governed generator. `x-enforcement-status` **remains `BUILT`** (per the repo's strict WIRED definition — invoked by `.githooks/pre-commit` or the fast/schema-cage tier's executed set); this was a prose correction, not an enforcement promotion.
-- **Stale canonical-verification rows closed on the live board (duplicate-stale, no code change):** ORDER-1283, ORDER-1284, ORDER-601, ORDER-1360 — see `AGENT_TASKBOARD.md` for each row's closure evidence. ORDER-1251 and ORDER-1265 were already correctly archived and are unchanged.
-- **Monitoring:** remains `DEGRADED_MONITORING`. System Completion does not make it GREEN — remaining reasons are runtime/authority/external evidence, not current known product defects.
-- **Owner/external blocked (not actionable by an agent):** Telegram CONTROL_ROOM credentials; `AGENTS.md` §2 Work Receipts writer authority/amendment; ClevrFX/account `69424711` deployment-runtime evidence; deal-sensor freshness for relevant accounts; owner signatures/attestations; PR #8 / ORDER-1560 merge (owner-pending); other existing owner boundaries already canonical.
-- **Parked/future (no current consumer/spec, or explicitly held):** Relay R4; D3/D6 (owner-gated, not defined here); Zeus optimization HOLD + the Template Zeus port waiting on it; ExpertMAPSAR; ExpertMAMA + its Model-4 fill-sensitivity investigation; QI-2+; the portable-Python extra end-to-end committed provisioning test; other previously parked future hardening.
-- **Factory:** stays paused through this closeout; no Factory candidate is selected by this sync. Any future bounded, already-approved work follows the autonomous execution protocol in `AGENTS.md` §1.4.
-- **Owner boundaries:** deployment/runtime attachment, trading, LIVE/DEMO→LIVE expansion, risk/default change, QI-2+, owner attestation/signature, consequential scope/semantic change, destructive cleanup outside an authorized fixture, force push, history rewrite, or irreversible strategic decision. Canonical push is not a standalone hard stop when §1.4 conditions pass.
-
-### 2026-08-17 DURABLE SYSTEM FOUNDATION SYNC
-
-- **Accepted milestone:** EA_LAB SYSTEM FOUNDATION = ACCEPTED / COMPLETE FOR CURRENT FACTORY SCOPE.
-- **Accepted integration:** `fa3ae6079cdc4664810a74819d24d0c5e6a40706`; **canonical SHA:** `4a96954f6a49170cab1df262fbbc85e98ef12c10`; canonical push = **COMPLETED / VERIFIED**.
-- **Accepted lanes:** S1 complete; S2 complete; S3 complete; S4 complete; ORDER-1380 closed; ORDER-1281 closed; Boss14 AUDCAD/EURUSD preset surface repair accepted.
-- **CURRENT:** Factory production; EA Template / Boss14 master-mold continuation; Monitoring / Control Plane continuation.
-- **Factory disposition:** Wave4 Candidate 3 rejected from M3 after bounded Invalid Stops repair; Candidate 4 scheduled straddle rejected from M3 after volume/atomicity/expiry repairs; Wave5 Candidate 1 RSI Break Trend Line parked / implementation-blocked after self-termination (not valid ZERO_TRADE evidence); Wave5 Candidate 2 OH Bot parked because its intentional recovery/multi-position semantics are outside the current one-position M2 contract; **Wave5 Candidate 3 ExpertMACD = `REJECT_FROM_M3`** (bounded Invalid Stops repair landed, invalid stops 5→0, valid evidence PF 0.67 — closed, not the current production task); **Wave5 Candidate 4 ExpertMAPSAR = `PARKED-VERIFY(user)`** (NZDUSD M30 showed a real plateau and strong MAIN evidence, but BWD participation was 58 < the canonical ≥100/window floor; canonical right-home XAU/GBP naked smoke = all four cells thin, no qualifying right-home pulse; optimization not reopened); **ExpertMAMA = `PARKED-VERIFY(user)`** (GBPUSD M30 right-home naked smoke PROCEED at 134 trades/PF 1.59; M3 coarse optimize on M30+H1 showed no genuine plateau + extreme Model-1 trailing-stop fill sensitivity, fine search/BWD correctly skipped; future Model-4 investigation stays parked only); **Zeus (`ZeusInspired_GridLog`) optimization = HOLD FOR LATER** (owner direction, not dead/non-viable — MAIN 313 trades/PF 1.69, BWD 70 trades/PF 2.29 fails the ≥100/window participation floor; the Template Zeus port stays waiting on this outcome, `PROJECT_STATE.md` EA_Template section below). **No current Factory candidate is selected as the next production task** until a canonical next task contract names one.
-- **Monitoring:** retain `DEGRADED_MONITORING`; do not infer GREEN from system-foundation acceptance alone.
-- **Parked / future hardening:** ORDER-1256 items 12/14; future governed worker-routing capability; eight pin-vintage advisory messages; parity result-manifest cryptographic binding to committed source-manifest bytes plus measured EX5/build receipt; Candidate 5 risk-semantics decision; low-ROI/rejected candidates.
-- **Owner boundaries (historical 2026-08-17 snapshot):** deployment, trading, LIVE, DEMO→LIVE expansion, risk/default change, QI-2+, owner attestation/signature, or destructive cleanup. The current push boundary is governed by the 2026-08-18 decision below.
-> Full session-by-session history → `PROJECT_HISTORY.md`. · owner: patip
+> **Role:** current status / accepted decisions / forward plan.
+> **Last converged:** 2026-08-25 Asia/Bangkok.
+> **Canonical bytes:** always verify the current pushed `origin/master`. Do not infer canonical state from a dirty worktree, index, chat transcript, generated dashboard, or this file's historical Git SHA.
+> **History:** `PROJECT_HISTORY.md`. Historical snapshots and incident narratives are not current state unless explicitly restated here.
+> **Authority:** `AGENTS.md` owns roles, permissions, approval boundaries, one-writer rules, review separation, and standing push authority.
+> **Work queue:** `AGENT_TASKBOARD.md` is the manifest; exact active ORDER blocks live in `taskboards/active/P01.md`, `P02.md`, and `P03.md`. `TASKBOARD_DIGEST.md` is generated navigation only.
 
 ---
 
-## 0. UPDATE PROTOCOL — how to maintain this file (read + do every session)
+## 1. CURRENT PROGRAM STATUS
 
-1. **Always open this file first** when starting a new session (before README, before MASTER_BACKLOG).
-2. **Every time a large piece of work finishes → update this file:** edit the relevant section, bump
-   `last updated`, add a line to the Decision log (section 3) if a new decision was made, update the
-   Forward plan (section 7).
-3. **The truth is in the file, not in the chat** — anything not written here or into the canonical docs
-   is lost when the session ends.
-4. **Do not duplicate content** — if it already exists in DEMO_DEPLOYMENT_PLAN / MASTER_BACKLOG /
-   EA_SCORECARD, link to it instead of copying the whole block (this is what prevents self-contradiction).
-   This file keeps only "the summary + the pointers".
-5. **Commit to git every time this file is edited** (this file is the memory that crosses people and AIs).
+### 1.1 Mainline — VPS DEMO Deployment / Forward-Test
 
----
+**ACTIVE — setup/acceptance complete; observation continues.**
 
-## 0.5 ANTI-DRIFT — keeping the docs from skewing (so that "next read = last read")
+Existing accepted ORDER-353 DEMO binding:
 
-The original problem: several files claimed overlapping authority + the same fact was written in several
-places → hand updates made them skew. Three rules:
+- target: `463666728|990026`
+- EA: `(TRD)_SuperTrendFlip_rev05`
+- logical runtime: `BTCUSDm,H4`
+- lot: `0.01`
+- attach identity: `epoch-1`
+- D: `CONFIG_MATCH / PASS`
+- E: `PASS`
+- F: `HASHED / OWNER-ATTESTED`
+- G3 target runtime identity: `PASS / WIRED`
+- accepted telemetry state: `FRESH`
+- forward state: `DEMO_DEPLOYED_AWAITING_FIRST_TRADE`
+- accepted 2026-08-24 handoff evidence: `0` qualifying closed deals for magic `990026`
+- `first_trade_epoch = null`
 
-**1) One fact has one owner** — the fact lives in one file; everywhere else **links, never copies**:
+The `0` above is a dated accepted evidence point, not a live counter. Current telemetry must come from the canonical monitoring/evidence pipeline.
 
-| fact | sole owner | elsewhere |
-|---|---|---|
-| status% · decisions · plan · invariants | **PROJECT_STATE.md** (this file) | link |
-| owner's big picture / factory philosophy | **VISION.md** | link |
-| multi-agent roles, permissions, author/reviewer separation, approval boundaries | **AGENTS.md** | link |
-| central work queue + raw results awaiting review | **AGENT_TASKBOARD.md** | link |
-| live portfolio — **the data** (account/EA/magic/status/kill/judge) | **`portfolio\DEPLOYMENTS.csv`** (the single inventory, ORDER-093) | link · checker validates on every commit |
-| deployment → approved bundle artifacts (attestation expectations) | **`portfolio\ATTESTATION_MAP.csv`** (CR-002, 2026-07-19) | link · snapshot v2 hash compared daily |
-| live portfolio — **the accounts** (governance_scope/expected_sensor/SLA/alert_policy at account level) | **`portfolio\ACCOUNTS.csv`** (CR-003b, 2026-07-24) | link · the snapshot reads the account universe from this file · DEPLOYMENTS = per-EA only |
-| live portfolio — **the explanation/context** (why attached, warnings, history) | **DEMO_DEPLOYMENT_PLAN.md** | link |
-| backlog · coverage · hunt | **MASTER_BACKLOG.md** | link |
-| EA registry · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
-| file map · the 5 locations | **PLATFORM_INDEX.md** | link |
-| EA_CORE framework | `D:\EA_Project` docs + `EA_CORE_ST03_LOOP_PLAN.md` | link |
+**Operational consequence:**
 
-If two files say different things about the same subject → **INVARIANTS (rule 3) wins**, then fix the
-wrong file immediately.
+- ORDER-353 deployment/setup acceptance is complete. Do not reopen pre-deployment attachment, attestation, config verification, or target runtime-identity work without a concrete regression.
+- Do not force a trade.
+- Do not start the judge clock until a genuine qualifying post-attach trade establishes `first_trade_epoch`.
+- The next state transition is evidence-driven only.
+- LIVE / DEMO→LIVE remains a separate owner hard stop.
+- Global monitoring remains `DEGRADED_MONITORING`; target G3 `PASS / WIRED` does not make global monitoring GREEN.
 
-**2) PROJECT_STATE = the single entry** — no other file may write "just open this one file". A secondary
-doc opens with the banner: `> ⚠️ canonical entry = PROJECT_STATE.md · this file owns: <X only>`.
+### 1.2 Factory research
 
-**3) INVARIANTS — facts that must match everywhere (wherever it differs, that place is wrong):**
-- **every deployment (account/EA/magic/status/kill/judge) = `portfolio\DEPLOYMENTS.csv`, one row per magic**
-  (ORDER-093, 2026-07-11 — replaces the old invariant set "9 EA/1 account/judge 09-22" that had been stale
-  since the 06-22 era; current reality = 5 accounts, see DEMO_DEPLOYMENT_PLAN §DEPLOYMENT REALITY 2026-07-09) ·
-  wherever a deployment changes, the CSV must be changed first, and the checker will then force the
-  dashboard map + docs to match
-- backtest window: **MAIN 2023.01–2025.12** (36 months, does not eat the 2026H1 holdout) · re-opt/re-pin every 6 months
-- magic numbers must not collide — **scope = GLOBAL, one magic belongs to exactly one EA across every account** (owner-ratified Grill decision 56 on 2026-07-30, and ratified again explicitly on 2026-08-01 to end the contradiction this bullet used to carry: it asserted uniqueness per `account|magic` while the decision said global). **Three registered `legacy_exception` magics predate the rule and are FROZEN until their judge date, never renumbered as a side effect:** `991001` (the only live one — ACTIVE REAL_CENT on BOTH `159475669` and `159503454`), `991002` and `990103` (one side of each is already REMOVED). ✅ **The checker enforces the GLOBAL rule as of 2026-08-02 (ORDER-1100, slice S10).** The exception list it was waiting for is **`factory/magic_allocations.jsonl`** — one row per distinct magic in the inventory, imported at one cutover commit, of which exactly the three above are `LEGACY_ACCOUNT_SCOPED`. *(The row count is printed by `_triage/factory_os/gen_magic_allocations.py --check` and is deliberately not written here: it changes whenever `DEPLOYMENTS.csv` gains a magic, and a hand-copied count would be stale the same day.)* `scripts/check_state.ps1` asks `scripts/lib/magic_guard.ps1`, which asks `_triage/factory_os/magic.py`: **one implementation of the rule**, handed the same **judged bytes** as the inventory rather than a repo path (a child process reading the working tree would rebuild ORDER-674's A7). The list is checked **in both directions** — every real collision must be declared, and every declared exception must be a real collision, or the list becomes an off switch. The old `account|magic` check stays as the backstop; global uniqueness implies it, so it costs nothing. Decision recorded in `_triage/USER_DECISIONS_PENDING.md` item 3.
-- **the bot enforces this itself:** the git **pre-commit hook** (`.githooks/pre-commit`) runs
-  `scripts/check_state.ps1 -Strict` automatically on every commit → validates every doc/dashboard-map against
-  `DEPLOYMENTS.csv` in both directions (a CSV row missing from the map = a magic that is not monitored · a map
-  entry with no CSV row = a ghost row) + single entry + banner. One-time setup per machine:
-  `git config core.hooksPath .githooks`. Emergency bypass: `git commit --no-verify`. Manual run:
-  `powershell -File scripts/check_state.ps1`
-  > ⚠️ **Guard scope:** it governs structural deployment consistency — **not all content** (PF, EA status and
-  > other numbers still have to be read/updated by hand). A GUI commit client may hide hook output — if a
-  > commit is blocked for no apparent reason, run the check by hand.
+- Factory candidate: **NONE SELECTED**.
+- Factory vNext Design Freeze / MVP Pilot Contract: **ACCEPTED / CANONICAL as a sidecar implementation source**.
+- Current Factory policy/verdict/optimization/risk/deployment authority is unchanged until an explicit later policy-migration milestone.
+- First vNext MVP pilot: existing `(TRD)_SuperTrendFlip` family, logical `BTCUSD`, ExecutionTF `H4`, **offline Strategy Tester/artifact processing only**.
+- Required MVP direction: Home/Window contracts, Run Manifest, Telemetry V1, Range Generator V1, Grade/Confidence sidecar, graph-first report, provenance/hashes, negative/reproducibility tests.
+- `KINT-001` remains intentionally OPEN until a later canonical policy migration resolves contradictory active sample-floor rules. Do not silently settle it in sidecar implementation.
+- No Factory candidate may be selected/promoted merely from sidecar evidence.
+### 1.3 Accepted control-plane capabilities
 
----
+The following are accepted/canonical and should not be generically re-audited without a reproducible regression:
 
-## 1. Goal + 4-layer overview (1 factory + 1 mold + 1 parts warehouse → real portfolio)
+- Strategy & Evidence Consolidation M4.
+- EA_LAB Harness v1.
+- Lane Ownership / Shared Registry v1.
+- active taskboard split: manifest + `taskboards/active/P01.md` / `P02.md` / `P03.md`.
+- LNWJUD Local Execution Plane, M3 repository/identity work, and A-PATH observe bridge.
+- Remote Desktop Commander persistence / zero-touch reboot path.
+- POST-OPUS M0/M1 trust repairs.
+- VPS DEMO preparation/hardening batch and PREDEV generic pre-development hardening.
+- Long Job Runner durable detached execution support.
+- Ziplime research/data-preparation module for the Factory vNext research sidecar.
+- DEMO-safe MacroGate regime-only transport (-RegimeOnly / pull_regime.cmd) as a repository capability.
+- Traycer EA_LAB orchestration foundation as a tooling/UI support module.
 
-> **Ultimate goal:** 10 portfolios × 2–3 EAs that **don't correlate** × 10,000 cent → passive income.
-> **Owner's big-picture/factory philosophy → `VISION.md`** (read alongside this file every session — if the work conflicts with VISION, stop and ask the owner)
+Ziplime remains research/data-preparation support only; it does not migrate current Factory policy or grant deployment/promotion authority.
 
-| Name | Actual location | Role (aligned 2026-07-03) | Status % |
-|---|---|---|---|
-| **EA_LAB** | `D:\EA_LAB` (this repo) | Factory — find/validate/deploy EA + automation pipeline | 90% mature |
-| **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **the factory's single master mold** (UNFREEZE 2026-07-03) — shared central functions (MM/lot/SL/grid/hedge/recovery), differ only by entry+TF · every new EA build comes out of here | H/R Safety Repair accepted; D3/D6 remain owner-gated architecture decisions; no H/R redesign implied |
-| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | 🏛️ **read-only ARCHIVE (MERGE-08, 2026-07-06)** — parts fully ported into the mold · reference/evidence only, no deletion, no new work | 100% — track closed (`AGENT_TASKBOARD_MERGE.md`) |
-| **Live Portfolio** | account 10,000 cent (demo) | **the real goal** — real money | 20% (9 EAs fully live, awaiting judge) |
+MacroGate regime-only transport is canonical repository capability, but persistent VPS regime-only automation is **not yet deployed by this repo milestone**. Regime-only operation must not fetch/delete/publish NewsGuard; NewsGuard/REAL runtime remains intentionally untouched unless separately authorized.
 
-Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine inside).
+Traycer code/tooling foundation is accepted, but browser/device authorization and authenticated functional A2A acceptance remain **E OWNER-EXTERNAL / incomplete** (HOST_RPC_UNVERIFIED, E_AUTH_NO_CREDENTIALS). Traycer does not replace Control Tower, Lane Registry, Harness, constrained Hermes routing, Git authority, or owner hard stops.
+
+Harness is a deterministic router/evidence validator only. Successful Harness output always has `authority_granted=false`; it never grants deployment, runtime attachment, trading, LIVE, risk/default, owner-attestation, QI-2+, or governance authority.
+
+Lane Registry owns current writer/reviewer lineage. Do not copy live lane states into this file as durable facts.
+
+### 1.4 Monitoring
+
+**Global state: `DEGRADED_MONITORING`.**
+
+Monitoring is fail-visible. Stale/unreadable/unbound evidence must not be presented as current measured truth. ORDER-353 target G3 is `PASS / WIRED`, but that is target-specific and does not override the global G2 state.
 
 ---
 
-## 2. Current status (one-liner per layer)
+## 2. CURRENT BLOCKERS / HARD STOPS / PARKED WORK
 
-> **2026-08-16 FINAL MONITORING REPAIRS + DURABLE STATE SYNC PREP:** canonical monitoring code defects are repaired; ORDER-740 is accepted/canonical; Build-6090 provenance is refreshed with metrics unchanged; the reconciliation parser repair is integrated from `021f2516378bef5cf207451668bc07f30ab670f1`; and basket expectation semantics are repaired from `908c24fc`. Monitoring remains **DEGRADED_MONITORING**. Known product defects = none; remaining blockers are evidence/authority only.
-> **2026-08-16 IchiADX + ORDER-943 runtime-evidence closure:** owner-accepted proof satisfies the IchiADX `990066`–`990069` sub-scope of ORDER-941 on DEMO account `463666728` / `Exness-MT5Trial17`, and the accepted state sync proves `991004`, `991002`, and `990202` (`CONFIG_MATCH` for `990202`). ORDER-1000 is **SATISFIED / CLOSED**; ORDER-941 remains partial for other tracked runtime rows; ORDER-943 remains **PARTIAL** with runtime-evidence blocked = **NONE**. Known product defects = **NONE**. No portfolio/judge-policy, deployment, trading, risk/default, LIVE, retirement, or QI-2+ change occurred.
-> **Remaining owner/external blockers:** monitored-account runtime identity evidence; residual ORDER-941 runtime evidence outside the accepted IchiADX four-leg sub-scope; and existing owner gates such as ORDER-510 as applicable. ClevrFX historical/observational attribution for `69424711` is closed below; current executable attachment remains unresolved/unrecoverable, not an active repair request. ORDER-1257 and ORDER-1462 are closed by the owner-confirmed in-force S2a attestation and deterministic closure checks below. QI-2+ remains **NOT AUTHORIZED**.
-> **2026-08-16 ClevrFX historical attribution closure:** account `69424711`, server `Exness-Trial8`, MT4 terminal `D:\Monitor\MT4 - 69424711\terminal.exe`. Fresh sensor provenance passed; the current sensor is `OrdersExporterMT4` on `EURUSDm,H1`; four open EURUSDm positions and magic `9244` were observed, and the historical order comment `Clevr FX` supports observational attribution. All 25 saved `.chr` files were inspected. No existing ClevrFX/ClevrFX_EA expert attachment, no current account-associated `ClevrFX_EA.ex4`, and no current ClevrFX load/unload runtime evidence were found. The unrelated ClevrFX binary under `D:\Meta4b` is not proven associated and is not ratified. Current executable attachment = **NOT PROVEN**; historical executable identity = **UNRECOVERABLE FROM CURRENT EVIDENCE**. Investigation = **CLOSED — HISTORICAL / OBSERVATIONAL ATTRIBUTION ACCEPTED; CURRENT EXECUTABLE ATTACHMENT UNRESOLVED / UNRECOVERABLE FROM CURRENT EVIDENCE**. Product defect = **NONE**; runtime changes and trades = **NONE**; no attach/re-attach action is required for this closure.
-> **2026-08-16 S2a owner-gate closure:** ORDER-1257 option (b) and ORDER-1462 are closed against the owner-confirmed in-force bundle `8e051930e96c8ed4876183fb39bc090724cb2ba1bd761fa4bf8c8c747d8f4a0c` on canonical `1b7e287c`; all seven required deterministic S2a checks PASS. No new attestation, re-pin, stale-pin acknowledgement, deployment, trading, LIVE promotion, risk/default change, or QI-2+ action occurred.
-> **2026-08-14 VPS DEMO / Forward-Test manual verification complete:** disposition = `MONITOR_FORWARD`; CURRENT blockers = NONE. VPS snapshot/exporter is operational and fresh; News/MRIS was refreshed by the owner. TsMom `992001` was corrected from discovered H1 drift to canonical D1 and pre-correction H1 evidence was discarded; valid-forward reset = `2026-08-14`. ORDER-353 `990026` is CONFIG PASS with zero closed trades; its judge clock has not started. Next action is observation only: no manual trading and no LIVE promotion.
+### 2.1 Current blockers
+- No accepted canonical product defect currently blocks the ORDER-353 setup/acceptance state.
+- Forward-Test is waiting on genuine market/trade evidence, not on a repo repair.
+- Global monitoring remains degraded and must be represented honestly.
+- The dirty/diverged primary workspace D:\EA_LAB is not canonical and is not a safe integration writer. Preserve unrelated dirty/staged/untracked bytes.
 
-> **2026-08-08 (owner-accepted) — Controlled Execution MVP = ACCEPTED; accepted Executor manifest** `DD11E90EEE7C258483DB8C58084E90AFE3CDB98AF6228360404783A5A258F469`. **Owner-Controlled EA_LAB Integration = ACCEPTED; final accepted Executor manifest** `1D11B3A4CAC8E8A806096E506F1703228630197B8E02AD6CD875AAB9BD616172`. **Proof:** commit `6a4cc7ef2310cf6e51c0aa174361605756af6585` · `docs/owner-controlled-probe.md` · blob SHA-256 `1BA3B69CCAB379242A10D31FE4A7BF315DB5DAC57EE93FC849FA5592F543CC9C` · independent different-family review PASS / BLOCKERS: NONE.
-> **EA_LAB_REAL_WORKFLOW_INTEGRATION_ACCEPTED = YES** · different-family review PASS / BLOCKERS: NONE.
-> **FINAL_LOCAL_INTEGRATION = ACCEPTED / CLOSED (2026-08-11).** Owner-approved S2a runtime identity ownership repair landed in isolated integration commit `911dfa5756b709489d8781c813a0f653cc7c8b17`; targeted and deterministic acceptance gates PASS. **Current milestone remains VPS DEMO Deployment / Forward-Test.** No deployment/demo/live/risk-default change was authorized.
-> **R4_PARAMETER_IDENTITY_LINKAGE_V1_ACCEPTED = YES (2026-08-13, local closeout).** Accepted R4 snapshot integrated from `codex/r4-196-foundation` with 196 logical/unique PIDs (170 preserved + 26 additions), A1–A7 metadata/resolver tooling, no executable trading/default/risk behavior change, and no Batch-A scope expansion. Build-6090 Boss_11–Boss_18 equivalence, required compile, `tpl_regression`, deterministic tests, and targeted reviewer gates were accepted before integration. Canonical push complete. Accepted closeout lineage: `9671ef57` (accepted skill mirror prerequisite) → `f333f279` (R4 milestone) → `6f09c2d3` (state sync). ORDER-1330 is canonical/done; its archived taskboard body preserves the implementation history.
-> **QI-1_FOUNDATION_IMPLEMENTATION_ACCEPTED = YES (2026-08-15, local closeout).** Accepted integrated HEAD `95307771c3a3704dce97506379e4bb3ba532403b` on `codex/qi1-final-integration-20260815`, based on canonical `ca661a0736f5d02f419093f9945c9fe395428e57`; A1–A8, B1 concurrency 5/5, B2–B11, focused QI 21/21, snapshot authority, strategy/expert/implementation binding, closed ExecutionKey, append-only/derived projections, S2a, regression boundary, and CRLF fast-tier repair are accepted. No trading, risk, DEMO-LIVE, deployment, or QI-2+ authority was granted; next canonical milestone remains VPS DEMO Deployment / Forward-Test.
-> **OPERATIONAL_HIGH_RISK_GATE_ACCEPTED = YES** · independent review PASS / BLOCKERS: NONE / REPAIR: NONE.
-> **CONTROLLED_BACKTEST_EXECUTION_MVP_ACCEPTED = YES** · independent review PASS / BLOCKERS: NONE / REPAIR: NONE · proof packet SHA-256 `40B642FC89A54E02E327376ED8C7AEA8C30DCB540B182E49916EE943278F1A00`.
-> **CONTROLLED_OPTIMIZATION_EXECUTION_MVP_ACCEPTED = YES** · owner-accepted 2026-08-09 after real Proof #007 and verifier-only repair; independent different-family review PASS / BLOCKERS: NONE / REPAIR: NONE. Proof packet SHA-256 `659c074127dfe284e45769db844a47e77085ed510224669993b12a51dd397587` · spec SHA-256 `d3ed9997b1818ffe612dd4947ee587bd88dc7eac4efa2fc6156bddb28b17cdb7` · offline revalidation `proof_inputs/controlled_optimization_007/evidence/post_repair_revalidation_007.json` PASS. Historical Proof #007 `RECOVERY_REQUIRED: OPTIMIZATION_RECEIPT_INVALID` remains preserved as the original pre-repair outcome.
-> **Owner clarification (2026-08-09):** local execution scope is MT5 Strategy Tester/backtest only; DEMO deployment/execution is a future VPS milestone; LIVE remains a future owner-gated milestone.
-> **CONTEXT_REDUCTION_CONTEXT_HYGIENE_ACCEPTED = YES · CONTEXT_HYGIENE_MILESTONE_CLOSED = YES.** Implementation commit `03e1dd5444922846f1f96fcd6b1c713cffbb65a6`; test-harness repair commit `06ee4ebf63c486a0069b3c26a2a0744002b18be4`; deterministic evidence: ORDER-101 **24/24 PASS**, ORDER-103 **40/40 PASS**; production validator semantics unchanged; blockers: **NONE**.
-> **STATUS.html:** owner-approved preservation exception, **STATUS.html ONLY**. **Current milestone: VPS DEMO Deployment / Forward-Test lane.**
-> **H/R SAFETY REPAIR = ACCEPTED.** Final local acceptance HEAD `e97215aec04e9388bd94d6a6f4d4981c8a54617a`; different-family source review PASS; final CAGE passed Boss11-Boss18 compile 8/8 (0 errors/0 warnings), exact Build-6090 regression CLEAN 8/8 with unchanged metrics, T1/T2/T4/T6 and HedgeSafety/HedgeSemantic/HedgeStackPath/Hedge/HedgeOff/Recovery81/82/83 PASS, check_state PASS, and pre-commit PASS. Build-6090 baseline was locally re-attested with metrics unchanged. No current H/R blocker; D3/D6 are owner-gated and R1-R7 remain PARKED.
+Support/runtime pending items that do **not** block the current Forward-Test mainline:
+- Traycer browser/device authentication and authenticated A2A functional acceptance remain owner-external.
+- Persistent MacroGate regime-only VPS automation remains a later separately-authorized runtime task; repository integration did not deploy or schedule it.
 
-> 🆕 **2026-08-01 (Opus-seat) — `ORDER-710` CLOSED: the EA now hashes its own live inputs, and the digest MATCHES the compiler's on 2 builds × 2 configurations · lane `S-2026-08-01-CFGFP`, block 730-739, MT5 lane 1**
-> **The `[CFG]` half of slice S6, and the acceptance is four tester runs, not an argument.** `ea_template/core/InputSurface_gen.mqh` is GENERATED (1,082 lines, one `#ifdef LAB_ENTRY_nn` block per build) from `preset.parse_surface` — the same call on the same file the compiler uses — so at `OnInit` the EA builds the fingerprint preimage from **the values the binary is holding** and prints `[CFG] input surface: build=… keys=… scope=… effective_config_hash=…`. Measured on lane 1 (`scripts/verify_config_fingerprint.ps1`, XAUUSD H1 2024.01.01–2024.01.15 model 1): `LAB_ENTRY_16`/135 keys and `LAB_ENTRY_11`/113 keys, each at declared defaults and again with two inputs perturbed — **all four EA digests identical to the compiler's, and the two configurations differ from each other.**
-> **Two runs per build, because one is not evidence.** A single match is also what a constant would print, or a digest computed from the source instead of from live inputs. The verifier requires the pair to differ as well as to match; passing the match while failing the difference would mean both sides compute something stable and neither computes the configuration.
-> **🔴 The design change that made a cross-language hash possible at all.** The preimage used to carry the rendered `.set` TEXT, so a double entered as `repr(3e-05)` — Python's shortest-round-trip spelling, which MQL5's `%g` does not reproduce (they disagree on `1.0` vs `1` and on exponent width). That would have made the fingerprint a claim about two printf implementations agreeing. Doubles now enter as their **IEEE-754 bits** — the value MT5 actually parsed, no formatting on either side — with `-0.0` normalised to `+0.0`; `300`/`300.0`/`3e2` still collapse to one preimage.
-> **`C3` is honoured by NOT being met.** The label stays `surface_only` because the hash covers every input the build exposes and **no locked constant**, and nothing enumerates the locked constants yet. C3 says the manifest stops writing `surface_only` *only when* the fingerprint covers the real surface — relabelling now is precisely the failure the name was chosen to avoid. **OWED and stated: design §5.6's locked-constant half is a new order, not a silent remainder.**
-> <br>✅ **SUPERSEDED 2026-08-02 by `ORDER-730` (lane `S-2026-08-02-CONSTFP`) — the owed half landed and the label is now `surface+constants` on both sides.** The paragraph above is kept as the record of why it stayed narrow for a day, because the reasoning is the reusable part; the **current** state is the entry below.
+For current writer ownership or environment-dependent support lanes, read Lane Registry dynamically:
+`D:\EA_LAB_CONTROL\lanes\registry-v1\`.
 
-> 🆕 **2026-08-02 (Opus-seat) — Factory OS **S7 CLOSED**; S8's generator built, caged and COMPILING · lane `S-2026-08-02-FACTORY78B`, block 1030-1039, MT5 lane 1**
-> **S7's three acceptance criteria, all measured:** `param_registry_check` **CLEAN** — and it now runs the design §5.4 **state table** as well, so one command covers both halves (it used to be a *name* check only) · **zero `UNKNOWN` on Boss_14's Operator surface**, on real rows, enforced by criterion P3 · an old `.set` **fails loudly**, 42 real fires.
-> **The registries carry real rows for the first time:** 2 `Hypothesis` rows (B14-H01/H02, design §8.1) and **232 `ParameterBinding` rows**. `B14-H01-r1` = **18 OPERATOR** · 13 RESEARCH · 85 HIDDEN, from **116 visible inputs**; `B14-H02-r1` = **21** · 13 · 82. Design §5.3's target is `Operator ≤ 40` — and the number is **derived**, not a list of dials someone judged important.
-> **S8:** `gen_wrapper.py` emits a 16-line wrapper (`#define`/`#include` only) + a `LAB_CAP_*` allowlist; `check_wrapper_gen.py` holds **byte-identical regeneration** and **zero logic** — two of S8's three acceptances — plus allowlist==`module_set` and wiring. Both wrappers **compile 0 errors / 0 warnings** on lane 1 and `tpl_regression` is **CLEAN 8/8**. 🔴 **The first compile found a defect all four source-level criteria had passed:** design §5.2's snippet shows two include paths that cannot both be right, and the file was byte-identical, logic-free, wired and correctly tokenised. **Only the compiler knew.**
-> 🔴 **THE DURABLE LESSON, and it generalises: every defect found today was invisible while the stores were EMPTY.** An empty store answers `UNBOUND` to every question and spawns no validator, so a broken consumer and a correct one produced identical output. **`ORDER-1030`** — `optimize_guard` spelled a build tag `14` while every binding spells it `LAB_ENTRY_14`, so it refused every parameter of every declared revision and printed `role=''`: *the verdict was right by accident and the reason was wrong*, which is worse, because a real `LOCKED` binding and a tag typo produced identical output (`F1` reappearing at the consumer seam). **`ORDER-1031`** — the live-row schema guard spawned one `ajv` per row: **2.3s → 77.2s** at 234 rows, ~0.32s/row and **linear** in a store the design intends to grow 10×; batched to **3.4s**. And a cage fixture that used a revision id which was fictional when written and became real, against a `-BindingsRoot` that ADDS rather than replaces.
-> **Remaining on S8, in order:** the `Inputs.mqh` capability-token rollout (Boss_14 only, the owner's ratified per-Boss shape) **then** the 7-point parity harness — that order, because doing both at once gives a parity failure two candidate causes. Handoff = `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-08-02_FACTORY78B.md`.
+### 2.2 Owner hard stops
 
-> 🆕 **2026-08-02 (Opus-seat) — Factory OS **S7 PARTIAL, S8 NOT STARTED**, and the reason reorders the plan: **the two slices are ENTANGLED** · lane `S-2026-08-02-FACTORY78`, block 1020-1029, no tester run**
-> **The chain nobody had walked:** S7's acceptance is *zero `UNKNOWN` on Boss_14's **Operator surface***, and `surface` is **not a `docs/PARAM_REGISTRY.csv` column** — the generated contract `META_parameter_registry_columns` puts `role`/`surface`/`safe_range`/`optimize_stage` **per-hypothesis**. So the Operator surface is a statement about `ParameterBinding` rows → which need a `hypothesis_revision` → a `Hypothesis` row (`factory/hypotheses.jsonl` is **empty**) → a `module_set` of `LAB_CAP_*` tokens → **which no `.mqh` defines, because the allowlist header is S8.** S7 cannot fully close before S8 starts, and S8's generator needs rows S7 produces. Full write-up: `ORDER-1020`.
-> **Landed and caged (1):** the owner-ratified **old-`.set` policy** (design §11 decision 4, ratified 2026-08-01) — unknown key ⇒ a refusal that **names the key**; partial set ⇒ refused with the missing keys named; migration writes a **NEW** file and reports every key. Cage 5 criteria × (attack + specificity), 5/5 mutation-DETECTED. **Measured on 50 real template `.set` files: 42 `PARTIAL` (real fires) · 8 `LOADS` · 0 `UNKNOWN_KEY`** ⇒ the unknown-key branch is written up as **`UNTESTED` on real data**, not passed. Migration observed end to end on a real file, and it refuses to overwrite.
-> **Landed and caged (2):** **Boss_14's 116 visible inputs reduce to 38 REACHABLE** — under design §5.3's `Operator ≤ 40` target, and **derived** (can this input change anything under this config?) rather than chosen. `architecture.py` also supplies the `architecture_digest` every `Hypothesis` requires and that **nothing in the tree produced**, so the only previous way to register one was to type a digest by hand. Cage 7 criteria × 2, 7/7 mutation-DETECTED; **A6 asserts in both directions** because a classifier that calls everything unreachable produces a beautifully small surface and is completely wrong.
-> 🔴 **Two owner decisions found and deliberately NOT acted on:** the contract's `classification` vocabulary (`OPERATOR/TUNING/OVERRIDE/DEAD`) disagrees with the shipped CSV (`ACTIVE/INACTIVE/OVERRIDE/COMPATIBILITY`) that `registry.py:136` reads **by name**, and the contract names `unit_true`/`coupled_with` where the CSV ships `unit`/`coupled_parameters` while §4.2 *also* requires existing columns to keep their meaning. **Nothing checks the CSV against that table.** Changing it would silently move what `optimize_guard` decides.
-> **Also:** `ORDER-1022` — a cage matched reserved blocks with `\b(\d{3})-(\d{3})\b` while the guard it tests uses `(\d+)-(\d+)`; the first four-digit order block made the suite fail **on a healthy repo**, and the defect was the cage's own second parser. Handoff = `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-08-02_FACTORY78.md`.
+Fresh owner approval is required for:
 
-> 🆕 **2026-08-02 (Opus-seat) — `ORDER-730` CLOSED: the fingerprint now covers the LOCKED CONSTANTS too, so the scope label moved `surface_only` → `surface+constants` · lane `S-2026-08-02-CONSTFP`, block 970-979, MT5 lane 1**
-> **A locked constant is derived as a RULE, not a list:** a `#define` that carries a value and reaches the build, where "reaches the build" is decided by **evaluating the preprocessor over the include closure of each wrapper `.mq5`**. The exemption list is empty because both halves are mechanical — every include guard and build selector is a valueless `#define` and falls out without being named. Build 17 enumerates **24** constants, every other build **23** (`WAVE5_DIVERG_DEPTH` sits inside `#ifdef LAB_ENTRY_17`), which is what makes the second build evidence rather than a repeat. A value the generator cannot reduce to a scalar is **REFUSED by name**, never skipped.
-> **Measured on lane 1, 4 tester runs:** builds 16 and 17 × 2 configurations each — EA digest identical to the compiler's every time, and the two configurations differ. `tpl_regression` **CLEAN 8/8** (log-only change, no trade moved); compile **0 errors / 0 warnings on 9 targets**.
-> 🔴 **Then `/scrutinize` ×3 found nine more defects, and only one was in the hash.** Round 1: `#undef` was ignored — the one gap that ended in a *wrong answer* rather than an error · a `PresetRefusal` escaped the checker so a deleted wrapper printed a **traceback instead of a verdict** (the surface half had the same hole and always did) · a double referenced in arithmetic raised `ValueError` · a plain `#if` failed saying "unbalanced `#endif`", naming the wrong cause · and the generator's own docstring illustrated per-build derivation with a file that contributes **no** constant. Round 2: **nothing checked that the digest is over BOTH halves** — deleting `+ CFG_ConstPreimage()` from the generator produced **zero problems** across every criterion, because G4 compares the file against the generator and both move together ⇒ new **G6** reads the committed text · and the newline-joined preimage had **no escaping**, so a string constant containing a newline made two constant sets share one digest. Round 3: **G2 was satisfied by a comment** — commenting out every `CFG_Fingerprint()` call was ACCEPTED, shape 5 inside the criterion written to catch shape 5.
-> **Cage: 10 criteria, attack + specificity each, all mutation-DETECTED.** The generated file regenerates byte-identical after every round-1/2/3 fix, so none of them changed an output and no tester re-run was owed.
-> ⚠️ **Scope, stated rather than assumed:** the enumeration covers `#define` constants; a behaviour-changing value written as a `const` variable or baked into an expression is **not** in it. And **nothing automated compares the EA's printed digest to the compiler's** — only the manual `scripts/verify_config_fingerprint.ps1` does, so this protection is operator-triggered, not continuous.
-> **The guard, and the cage.** `check_input_surface_gen.py` (category A; T7 now **6 of 6 bound, 0 suspended**) regenerates from the committed `Inputs.mqh` and refuses drift, reading **both files from ONE `EvidenceSource`** — a staleness check is exactly where a mixed vintage passes the one commit it exists to refuse. Its cage is 5 criteria × (attack + specificity) + 5 mutation probes, all DETECTED; **X1** reads the emitted MQL5 back and requires the parsed surface, in order, through the canonicaliser each declared type demands (>900 real declarations across 8 builds) — its mutant routes everything through `CFG_CanonDouble`, producing a valid file that hashes cleanly on both sides and disagrees. `L0` demanded the new checker and its generator on their first run, the fourth consecutive time.
-> **`tpl_regression` CLEAN 8/8** on the lane pinned in the same commit, binaries asserted fresh first (C2); compile **0 errors / 0 warnings on 9 targets**. Full tier **16/16 at 78.8–81.4s** of the 90.0s budget over four runs, no budget raised.
-> **A stale fixture in someone else's cage, found by being the next lane.** `run_front_guard_evidence_tests`'s B0 case hardcoded `ORDER-711` because that was inside the *authoring* lane's reserved block; the moment this lane reserved 730-739 the case went red with the collision guard correctly refusing an out-of-block number. The probe id is **derived from the ACTIVE block at HEAD** now and printed in the assertion. Same shape as the PART 6 fixture trap: a fixture's validity was an undeclared assumption about somebody else's table.
-> 🔴 **`/scrutinize` ×2 then found three defects in this lane's own work, and all three were in the GUARDING, not in the hash.** (1) **`ea_template/core/ConfigFingerprint.mqh` — the file holding the entire MQL5 half of the contract — was in neither `$SUITE_GUARDS` nor the generated pathspec**, so a commit editing only it ran zero cages and did not even trigger the tier (measured with `-ExportSelection` and with the pathspec itself). Fixed by declaring it AND by adding criterion **G3**, which reads it, so the declaration is load-bearing rather than remembered; the undeclared-reference sweep did not demand it because a path referenced by an *imported module* is in neither PART 4 nor PART 4b → **`ORDER-732`**. (2) The generated file's fallback comment claimed it emits *"a fingerprint that cannot be mistaken for a real one"* while hashing the literal `"UNENUMERATED"` into an ordinary 64-char digest — it returns a non-hex sentinel now. (3) `verify_config_fingerprint.ps1` ignored `mt5_run.ps1`'s exit code, so an ABORT (MT5 GUI open) surfaced the previous run's log line and printed *"the EA printed the SAME hash for two different .set files"* — a defect that never happened. **Re-measured after every change:** compile 0/0 × 9, EA↔compiler digests **byte-identical to the pre-change run**, `tpl_regression` CLEAN 8/8 again, and the staleness guard driven **red on the real files** for the first time.
-> 🔴 **A tier failure explained too confidently, then corrected — and the correction is the useful part.** Three detectors fired on the same underlying event (`check_s2a_migration`'s ABORT · `run_front_guard_evidence_tests`' C cleanup, whose only live condition after four identical shas is `.git/index`'s mtime · `run_guard_trigger_tests` PART 6's nested tier saying *"the index was rewritten during the tier"*). The first instance had an answer in `git log` — `S-2026-08-01-OPERATE` committed twice mid-run — and it was written up as **the** cause. **It recurred with no lane open and nothing else running.** Honest statement at the time: **2 of 8 manual full-tier runs.** 🔴 **CORRECTED LATER THE SAME DAY — the "something inside the tier" half is REFUTED:** `run_front_guard_evidence_tests` asserts in those same runs that `.git/index` was never written, and no suite issues an index-writing git command. The better-supported candidate is a lane committing **45 minutes after its own ledger row was marked CLOSED**, inside the aborted run's window — "no lane open" had been established from `git log` and a ledger row, neither of which can see a late committer. The wake condition on the board was also DEAD (it said *"fires a second time"* while the row already recorded 2-of-8) and has been replaced with one that discriminates. Both detectors are still right that something moved. → **`ORDER-731`** item 2, which now has a **per-suite transcript** (`_triage/tier_runs/`) so the next occurrence names what moved and under which suite. (What still holds: a manual full-tier run is not a clean measurement while another lane is open.)
-> 🔴 **And the lane broke a gate with its own closing commit, which is the finding worth keeping.** `f4c9fd9f` appended ONE dormant row to `MASTER_BACKLOG.md`; the S2a attestation record pins that file at a blob *after the action it approves*, so `F11`/`F5` and `check_coverage_transfer`'s `A8` all went red — **after the commit landed**, because the pin is compared against `HEAD:`, and during a pre-commit hook `HEAD` is the PREVIOUS commit. The gate was green while the commit was being made and red the moment it existed. The row was reverted (blob restored byte-identical), the lane REOPENED to do it (a board row needs an ACTIVE reservation), and the finding is **`ORDER-731`**: it is the `ORDER-674` defect class one layer along — *read what the commit WILL contain, not what it already does* — with the consequence that **`MASTER_BACKLOG.md` was effectively frozen and nothing said so until after you committed.** Memory `approval-pinning-self-invalidates` had this as ADVISORY; it was then measured. ✅ **RESOLVED 2026-08-01 — the file is no longer frozen.** A front guard now refuses the breaking commit at the INDEX (item 1), the post-state pin was narrowed to **§2 only** (option A, owner-signed), and the second whole-file pin — `stale_pin_acknowledgement.current_blob`, which option A did NOT touch and which kept the toll alive — was removed by re-pointing D1's `owner_ref` at `factory/coverage.jsonl`, the file that has actually held the canonical Coverage bytes since the transfer (option 2, owner-signed, bundle `d88f795b`). **Probed at HEAD:** an append outside §2 passes the hook; an edit inside §2 is refused with `P1`. What still costs a signature, by design: an edit inside §2, a `gen_coverage.py --apply`, or a drift of the coverage store.
->
-> 🆕 **2026-08-01 (Opus-seat) — the `ORDER-670`/`ORDER-674` migration batch CLOSED: T7 = 5 of 5 bound, 0 suspended · lane `S-2026-07-31-FRONTDECL`, block 710-719**
-> **The five remaining front guards now declare `# snapshot:` on every read, and a new L3 lint checks the declaration against the call rather than trusting the comment** — the PowerShell form of T7: it derives the snapshot from the token on the line (`--cached`, `HEAD:`, `Get-Content`, `Get-Snapshot -Mode ...`) and refuses a declaration that contradicts it. Built FIRST, before any guard was annotated, specifically so the declarations landed into something that checks them. Excludes a guard quoting its own git command in an error message (measured: every such line has a diagnostic verb and no assignment).
-> **Declaring found two more real defects**, on top of `check_state`'s A7 from the original `ORDER-674` session:
-> — `check_order_collision` read the active board at the **index** and the archive at **HEAD** — one verdict, two moments (A2). Attack: stage `## ORDER-711` into both boards in one commit ⇒ pre-fix `exit 0` (cross-board duplicate lands), post-fix `exit 1`.
-> — `check_handoff_contract` had the identical mixed pair with the opposite symptom: it **refused** the exact same-commit archive move `WORK_LIFECYCLE` mandates (REVIEWED* = archive same commit).
-> — `check_precommit_staged`'s ORDER-144 duplicate-`account|magic` rule is `$_.magic -match '^d+$'` — a lost backslash, matching literal letter `d`s. **0 of 64 real rows ever passed it**; a SECOND guard over the live-money inventory has been inert since `baa1b6f5`, for an unrelated reason to `check_state`'s, which is why fixing one did not reveal the other. Blast radius measured at 0 duplicates in the real inventory.
-> **`ORDER-670` migration 9/9 (`check_coverage_transfer`)** — the one migration that was a *behaviour* change: the old reader fell back to disk for an untracked path, the shared reader has none. Two refusals in `check()` were deleted because the states they detected can no longer be constructed.
-> **`check_s2a_attestation`** — the last T7 suspension, closed with **no owner signature spent** (verified: all 7 bundle-adjacent paths clean before touching anything, digest byte-identical before/after). Found: `bundle_digest()` read the disk unconditionally, so a bundle-member change staged behind a clean worktree copy left an owner's approval validating against bytes the commit was changing. New primitive `evidence.read_committed_bytes` (no decode, no CRLF fold) closes three hand-rolled readers at once.
-> **T5 (design table) collapsed** — but not as prescribed: `evidence.observe()` had **zero production callers**; `snapshot_build` had reimplemented its exact one-handle/two-fstat mechanism under a different name. Routed through `observe()`; its suite gained the first-ever **behavioural** drive of the race (a patched `os.fstat` returning a mutated stat on the second call), where before only a source-string match existed.
-> **`T7 category-A binding: 5 of 5 checker(s) bound; 0 still suspended`** — the number the lint itself prints, not a claim in this paragraph.
-> 🔴 **`/scrutinize` ×3 then found a BLOCKER in this lane's own work, and it is the most useful thing here.** `evidence.observe()` raises for **two** different failures — "it moved under me" and "I could not open it" — and `ToolFailure` is not an `OSError`, so routing `_stat_evidence` through it silently removed the outer `except (IOError, OSError)`'s cover: an **unreadable** mandatory source went from `read_ok: False` → `MANDATORY_SOURCE_UNREADABLE` (a named reason code) to **refusing the whole build**, with a message blaming a mid-read mutation. It broke that function's own docstring (*"Never raises for a bad path"*). Reproduced by patching `io.open` to raise `PermissionError`; fixed with `evidence.ObservationUnstable(ToolFailure)` — a subclass, because message matching is not a contract — with both directions cased. **Textbook GUARD_SHAPES shape 5: the repair was graded by the counter-example it was written staring at, and changed behaviour for a shape outside it.** Also fixed: the cage mutated the two shared boards on disk (now staged through the object database — no restore window, both attacks re-proven red under the new mechanism); the lint's own `L1_NOT_PARSED` reason strings had rotted for 6 of 11 entries **inside one session** (BACKLOG-D29, produced and caught in the same batch).
-> Full tier **16/16 at 81.3s/81.8s** of the 90.0s budget (two clean runs), no budget raised. Handoff = [`_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-08-01_FRONTDECL.md`](_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-08-01_FRONTDECL.md).
->
-> 🆕 **2026-07-31 evening (Opus-seat) — Factory OS slice **S6** built; `ORDER-670` **T7** closed and two more migrations landed · lane `S-2026-07-31-S6PRESET`, block 700-709**
-> **`ORDER-700` (S6) — the preset compiler.** `_triage/factory_os/preset.py` emits a **full-surface `.set` or refuses**. It is a library: the caller hands it an `EvidenceSource`, it opens no path of its own, and that is why *"must not read the terminal cache"* is structural rather than promised. 9 criteria × (attack + specificity) = 18 cases, plus 9 **mutation probes** that rewrite one line of a temp copy and require that criterion to go red — 9/9 detected, nothing written inside the repo.
-> **🔴 The order's own headline number was wrong and building it is what found that.** It said *"zero of 2,177 `.set` files are full-surface, threshold ≥184 keys"* — but **184 is the count of `input` declarations**, and `StackMode`/`StackConfirm` are declared once per `#ifdef LAB_ENTRY_nn`. The distinct-name union is **170**; **no build exposes more than 135** (per build: 113·117·119·116·119·135·121·121). A threshold no build could meet made "zero" arithmetically guaranteed. Corrected: **228** tracked `.set` address the Boss chassis, **20** are full-surface for some build, **208** are partial at a median **44.8%** coverage — so the median Boss preset leaves ~55% of its inputs to the per-terminal tester cache. **The failure is the 208, not the 2,177.**
-> **Split out, not dropped:** `[CFG]` emitting the fingerprint is **`ORDER-701`** (MQL5 has no reflection ⇒ it needs a generated enumeration plus `tpl_regression` on a pinned lane; this lane reserved no MT5 lane). Until then the manifest labels its hash **`surface_only`**.
-> **`ORDER-670` T7 — the lint stops accepting a comment as the answer for a checker.** Every file L1 parses is now classified over a **closed** vocabulary (`A` checker · `B` builder · `P` pinned · `LIB` · `READER`) with **no default**, and in a category-A file a bare `open()` declaring `worktree`/`index`/`HEAD` is a violation. Proven on a real file both ways: a `# snapshot: worktree` read appended to `check_registries.py` is **green under the pre-T7 lint and red under this one**. The suspension list prints on every run, counted from the maps.
-> **Migrations 4/9 and 5/9.** `registry.py`'s resolve path now judges the commit — and the defect it nearly introduced is the interesting half: `_CLASSIFICATION_CACHE` was keyed on the root alone, so the first call would have decided for both vintages (a guard caching the value it watches). `gen_coverage` exposed that **category P had no mechanism at all** — the design named `read_blob` and part 1 shipped without it, so `# snapshot: blob` was a declaration with no call form. It exists now, with `why` required and no fallback.
-> **`ORDER-672` + `ORDER-671` (owner-ratified, built in that order because 671's U3 needs 672).** `build_tag` is a **field**, `parameter` is refused by the schema if it carries a tag, and the join **parses nothing**. An UNBOUND swept parameter under a declared revision is now a **REFUSAL** on attribution grounds — `-HypothesisRevision X` claims the run is evidence about `X`. Verified blast radius: **no production caller passes the flag**, so the strict rule refuses zero existing runs, which is why it was taken today. Two defects the suites caught in the act: `build_tag: null` means *every build*, and the first lookup made every untagged binding invisible the moment `--build-tag` started being passed — under 671 that turns every **bound** parameter into a refusal.
-> **`ORDER-673` + `ORDER-702` — and both were corrected BY BEING VIOLATED, which is the only evidence that matters here.** The tier budget is enforced (30→65s per-path, 75→90s full) and it refused **its own author's commit** twice: once on real growth this session caused, once on a number derived from single-file measurements when the commit touched four. `ORDER-702`: `evidence.py` — the module every migrated checker depends on — was guarded by **no suite**, so a commit touching only it ran **zero cages**. The trigger sweep now walks each suite's Python **import closure**; it named **12** undeclared dependencies on its first run, of which one was known.
-> 🔴 **`ORDER-674` — and it found the most serious defect of the whole batch.** The six PowerShell guards run **before** the tier and were never measured; the design's grep returned zero *declarations* and was read as zero *problems*. Measured: five read git already, and **`check_state` read the working tree exclusively** — the guard the hook runs **first**, enforcing the `account|magic` invariant over `portfolio/DEPLOYMENTS.csv`, the single inventory for real money. **Proved by attack before the fix:** a duplicate `account|magic` **staged** behind a clean worktree copy ⇒ `[OK] no duplicate account|magic` · `CLEAN`. **The commit writes a corrupted live-money inventory with the gate green.** Fixed via `scripts/lib/evidence.ps1` and caged 7/7. Four bugs in the new code were caught by its own cage or by an existing guard — including the suite staging into the **real** `.git/index`, which `ORDER-670`'s T6 refused; T6 was right, so the attack moved to a temp index rather than T6 being weakened.
-> **Owed (all closed 2026-08-01 except the last):** ~~the 9th migration~~ · ~~`check_s2a_attestation`~~ · ~~T5's collapse-the-split half~~ · ~~five front guards that read git but still declare nothing~~ · ~~`ORDER-710` ([CFG], still needs an MT5 lane)~~ **closed the same day by the lane above** -- opened 2026-08-01 under this number; it was referred to as `ORDER-701` in prose from 2026-07-31 but no board header was ever written, which `check_handoff_contract` caught. **Nothing from this tranche is open now**; what `ORDER-710` itself leaves owed (the locked-constant half of design §5.6) is a NEW order and not a remainder of it.
->
-> 🆕 **2026-07-30 (Opus-seat) — EA Template cage repaired, monitoring chain repaired, and a Factory OS design that failed its own audit · session `S-2026-07-30-TPLREPAIR` / `MONITOR0B` / `DESIGN1`**
-> **Stage 0A — EA Template confirmed defects: CLEAN.** `optimize_guard.ps1` was reading `classification=OVERRIDE` as "this input is dead". It means *member of a precedence chain*, so three working dials were refused (`_2_BasketTP_ATRmult` B14 · `_17_UseStructLevels` B17 · `_33_SL_MaxATRmult`) and the only way past was `-SkipOptimizeGuard`, which also disables the checks that do have evidence. Precedence is now decided per-run from sibling values; unknown classifications still fail closed. New cage `run_optimize_guard_tests.ps1` **proven red first (11/14) then green (14/14)**, wired into the pre-commit tier.
-> **The regression cage was compiling one MT5 install and measuring another** — an uncommitted edit had moved `mt5_run`/`mt5_optimize`'s default lane to `D:\Meta 5c` while `deploy.ps1` still targets lane 1, so it died at Boss_11 with "no fresh report" and nothing named the cause. Defaults reverted; `tpl_regression.ps1` now pins its lane explicitly and **asserts freshly-compiled binaries exist in the lane it is about to measure** (negative test fires: exit 1 before any tester run). Evidence, lane `D:\Meta 5`: compile **0 errors/0 warnings** (9 targets) · `param_registry_check` **CLEAN** · `tpl_regression` **CLEAN 8/8**.
-> **Stage 0B — monitoring integrity: 7 defects fixed.** A dead floating-risk sensor could not turn the chain red (only `system_health` was consulted); an unreadable/missing snapshot was logged but never failed; the dashboard applied **one base equity of 10,000 to all six accounts** (`463666728` was out by 10×); account `146237` was surfaced as if it were a lab account; an unparseable `last_seen` was filed as `HISTORICAL` — the quiet bucket. All fail-visible now, base equity is per-account with DD **suppressed not estimated** where `ACCOUNTS.csv` has no value (**5 of 6 accounts show UNKNOWN today — that is the honest state, and it is a prompt to fill the CSV in**). New suite **85/85**, in the fast tier. **Both guards mutation-tested by the lead, not taken on trust:** reverting the float rule ⇒ 7 red / 78 pass; reverting base equity ⇒ 11 red / 74 pass.
-> **Stage 1-3 — Factory OS + Control Center design → blind Codex audit → NO-GO → revised.** Design = [`_triage/EA_LAB_FACTORY_OS_DESIGN.md`](_triage/EA_LAB_FACTORY_OS_DESIGN.md) · audit = [`_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_BLIND_AUDIT_2026-07-30.md`](_triage/_archive/codex_reviews/factory_os/2026-08-repository-hygiene/CODEX_BLIND_AUDIT_2026-07-30.md) (**22 findings: 2 P0 + 20 P1**), all 22 answered in design §14.
-> **🔴 The audit's best finding was a claim, not a bug:** the design said eleven facts had no owner, and that was the foundation everything else stood on. Most are owned — `MASTER_BACKLOG` §2 owns coverage, `INTAKE_QUEUE.md` owns strategy intake, `evidence-manifest.jsonl` already exists. **Two are genuinely unowned.** The schemas were storing *mutable copies* of owned facts, which is what the anti-drift rule exists to prevent.
-> **🔴 And it caught a counting bug I had written up as intellectual honesty:** I reported 209 inputs in `Inputs.mqh` (the real figure is **184**; 25 of those lines are `input group` headers), then reported a "~15 unexplained gap" between my static count and the real Inputs page and filed it as a discovery task. Removing the group headers reproduces the Inputs page exactly. There was never a gap.
-> **Still owed before any Order is written:** `make_status.ps1` still has an "unreadable = nothing found" path · alert delivery ledger · ~~user must amend §3's `account|magic` invariant~~ (✅ done 2026-08-01, checker flipped 2026-08-02 by ORDER-1100) · **user must amend `AGENTS.md` §2** before Work Receipts get a writer.
->
-> 🆕 **2026-07-26 (Opus-seat) — SuperTrendFlip lever campaign round closed · full handoff = [`_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md`](_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md)**
-> **Got 1 candidate:** BTCUSD H4 `(TRD)_SuperTrendFlip_rev03` (Donchian20 + pyramid MaxAdds=1) — M4 with swap already deducted
-> MAIN **2.257**/50 · BWD **3.949**/66 · **HOLDOUT 2026H1 = 4.274**/9 (already burned) · MC ruin 0% PF-5th 1.052 ·
-> fan 69/81 · corr +0.167 vs real-money ⇒ **VALIDATED CANDIDATE awaiting user's call on demo attach**
-> **2 new levers (additive, default-off, regression passed):** Kaufman ER gate (`rev02`, worked on XAU H4) · capped pyramid (`rev03`, worked on BTC H4)
-> **Strategy-level conclusion:** SuperTrend flip = an edge of the 2023-2025 regime (every cell breaks even on BWD **except BTC H4**) ·
-> **BTC H4 is a special case, not the lead for the crypto fleet** (ETH fails at MC, the portable stack doesn't travel) ⇒ the "chain 20 symbols" plan = **20 separate funnels**
-> **🔴 3 gotchas that affect other work:** (1) the tester charges swap in POINTS mode but **does not charge** INTEREST_CURRENT mode ⇒ **XAU backtests already deduct financing · crypto has not been deducted yet**
-> (2) BTCUSD tick data differs across MT5 installs ⇒ crypto A/B must stay on the same lane (3) `select_robust_pass.py` reports the fan for basket-type EAs wrong — read raw XML
+- any new deployment/runtime attachment, detachment, or re-attachment outside the already-accepted existing ORDER-353 DEMO binding
+- trading / real-money activity
+- LIVE / DEMO→LIVE
+- risk/default changes
+- consequential new strategy/risk semantics
+- owner signature/attestation
+- consequential governance/approval-boundary or scope changes
+- QI-2+
+- destructive cleanup outside bounded fixtures
+- force push / history rewrite
+- irreversible strategic decisions
 
-- **EA_LAB 90%** — pipeline complete (intake→smoke→IS/OOS→MC→corr→deploy). Remaining 10% = work tied to
-  real time (operate up to judge, expand from 1→multiple portfolios), not more build work.
-- **EA_Template (Boss V2)** — the single master mold. The bounded H/R Safety Repair is accepted; D3/D6 remain
-  owner-gated architecture decisions and R1-R7 remain parked. Remaining work to become a full mold is not
-  defined by this repair; broader H/R redesign remains out of scope. ~~(1) add a small smoke-regression
-  suite~~ ✅ **done 2026-08-17** — `scripts/tpl_smoke_regression.ps1` (a cheap, lane-3, short-window
-  "did every build come up alive" gate; reuses the existing regression manifest's declared FULL-surface
-  sets, makes no baseline metric comparison, and is deliberately separate from the expensive lane-1-pinned
-  `tpl_regression.ps1`). Measured clean 8/8 across every current build (`Boss_11`..`Boss_18`). (2) port
-  Zeus grid/LOG in as an entry after Zeus passes validation — still not started, Zeus has not passed
-  validation. Note: `modules\`(V1) vs `core\`(V2)
-  duplication is intentional, not junk. Architecture + usage → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
-- **EA_CORE** — R&D parts warehouse. Loop closed 2026-07-02; engineering-complete framework ready to reuse
-  once there is a signal with a genuine edge. **Do not re-tune this parameter family.**
-- **Live Portfolio** — **58 ACTIVE rows across 6 accounts**, not the 9-EA single account this bullet used to
-  describe (it said *"9 EAs fully live … earliest judge 2026-09-22"*; corrected 2026-08-01, `ORDER-940` — see
-  §4). First lab judge date = **2026-10-09**. 🔴 **The blocker is no longer time, it is SAMPLE:** 7 EAs are
-  decision-capable today and **every one of them has a blank judge date** (they are on the account the lab
-  does not certify), while **19 of the EAs that do carry a judge date are forecast to arrive under 30 closed
-  trades** against 11 on track. Counts are generated — `powershell -File scripts/control_room_snapshot.ps1`,
-  never hand-copied into this bullet again.
-- **Signal hunt — not saturated.** Old dead concepts stay dead (see `MASTER_BACKLOG.md`), but the
-  mechanism×symbol axis is still open.
+Normal FF-compatible canonical push is not itself a hard stop when `AGENTS.md` gates pass. Local Strategy Tester/backtest is not deployment/trading.
 
-Everything dated 2026-07-02 → 07-11 (ST03 structural kill, CODEX-AUDIT hardening, Boss_16 bench pass,
-Zeus build-on, the MERGE track) → **`PROJECT_HISTORY.md` §2 archive**.
+### 2.3 Parked / future / decision-ready
+
+Do not dispatch without a direct consumer and the required authority:
+- A6 task-scoped mutation bridge
+- A-F3 `hypothesis_revision` in ExecutionKey/cache identity and cache-reuse semantics
+- B-F4 fast-tier wiring without fresh measurement/direct consumer
+- B-F5 Boss_16/Kangaroo OnTick/shared-pipeline semantics
+- dirty-primary preservation/reconciliation
+- physical legacy cleanup / M9
+- ExpertMAPSAR / ExpertMAMA Model-4 / Zeus optimization / Candidate-5 risk semantics
+- QI-2+
+- other explicitly parked low-ROI hardening
+
+M3 Secure Tunnel implementation/identity is preserved but runtime is intentionally STOPPED / NOT PRIMARY TRANSPORT. Remote Desktop Commander is the primary transport/operator surface.
 
 ---
 
-## 3. DECISION LOG — binding rules (locked — do not re-litigate without new evidence)
+## 3. STATE OWNERSHIP / ANTI-DRIFT INVARIANTS
 
-> This section keeps only rules that **still constrain future work**, stated in their operative form.
-> Closure records, one-off events, and the full reasoning behind every row →
-> **`PROJECT_HISTORY.md` §E (complete decision log)**. CLAUDE.md requires these be honored
-> verbatim; each was paid for with a real mistake, so the Thai the user ratified is kept alongside.
-
-| Date | Binding rule | Why (full provenance → PROJECT_HISTORY §E) |
-|---|---|---|
-| 2026-08-19 | **VPS DEMO preparation/hardening batch = ACCEPTED** at integrated HEAD `9a75330be7d2c28bf64eb64ed942c68ec4a9754b` (`origin/master` `4c5a1e1988599a6c0e4457370538164b01d7f9ac`..HEAD) on `integration/vps-demo-milestone-20260818`; independent different-family review **PASS** (**Codex/OpenAI**, job `task-mt002efh-87u5cc`). The prior 2026-08-19 entry at this same row named Qwen Code as the independent reviewer — corrected: Qwen authored 7 commits inside this exact batch and self-declared its own PASS (`ec66ffda`), which violates `CLAUDE.md`'s verbatim rule "no author may be the sole final reviewer"; that concurrent Qwen write also collided with an in-flight Codex review of an earlier HEAD, which correctly returned `BLOCKERS` rather than review a moving target. Owner stopped the Qwen lane; a clean Codex re-dispatch against the corrected, stable final HEAD returned PASS. The VPS DEMO Forward-Test milestone is **NOT** marked complete — the batch is preparation/hardening only, forward-test observation pending. Standing states preserved verbatim: `TARGET_UNBOUND` · `DEGRADED_MONITORING` · `NO OWNER ACTION REQUESTED` · runtime attachment = OWNER HARD STOP. No deployment, trading, risk-default, DEMO/LIVE, or QI-2+ authorization. | owner-directed final closeout under the 2026-08-18 objective-level autonomous batch execution decision; durable state sync only, corrected after a same-day concurrent-writer/self-review governance defect was caught and fixed |
-| 2026-08-15 | **QI-1 Foundation implementation = ACCEPTED / DONE** at integrated HEAD `95307771c3a3704dce97506379e4bb3ba532403b`, on `codex/qi1-final-integration-20260815`, integrated from canonical base `ca661a0736f5d02f419093f9945c9fe395428e57`. This supersedes the 2026-08-13 documentary note that implementation was not authorized; the design freeze and QI-2+ boundary remain in force. | owner-directed bounded local state sync after the already-accepted QI-1 closeout; no deployment, trading, risk-default, DEMO/LIVE, or QI-2+ authorization |
-| 2026-08-14 | **TsMom `992001` pre-correction H1 forward evidence is discarded after the owner corrected the chart to canonical D1; valid-forward observation resets to 2026-08-14 and the judge date must be derived from the first valid D1 trade under the accepted thin-EA rule.** | owner decision from the VPS manual verification closeout; no strategy, risk, or deployment change |
-| 2026-08-13 | **POST-R4 accepted integration is canonical at `c18b144d3ef4d14b39c07bf33b77276171e2bad4`.** `ORDER-490`, Factory-OS `ORDER-1265`, and Factory-OS `ORDER-1266 #1` are accepted/canonical; QI-1 remains a durable design freeze only, with implementation not started or authorized. The current milestone remains VPS DEMO Deployment / Forward-Test, with no deployment/LIVE/risk-default authorization. | owner-directed documentary state sync after the accepted POST-R4 integration push |
-| 2026-08-13 | **QI-1 Design Freeze = OWNER APPROVED / FROZEN.** The existing QI-1 owner decision packet is consumed as a design freeze only: it authorizes **no QI-1 implementation** and **no architecture reopening**. Any future QI-1 work requires a separately owner-approved, scoped task contract. | explicit owner decision supplied for the post-R4 canonical integration batch; documentary state sync only |
-| 2026-08-11 | **ORDER-433 owner decision: retain `--resolve-single-leg-baskets` in source; default OFF; DEPRECATED; PROHIBITED FOR USE.** The combined summed two-leg basket series is canonical. Retirement/removal is deferred outside the current VPS DEMO / Forward-Test milestone. No source or money-path implementation change is authorized by this decision. Historical proxy risk numbers are unusable for current closure and must not be quoted as active evidence. | owner binding supplied for Wave5 closure; documentary/lifecycle record only |
-| 2026-08-09 | **`CONTROLLED_OPTIMIZATION_EXECUTION_MVP_ACCEPTED = YES`.** The exact owner-granted Proof #007 scope completed one fresh local MT5 optimization with exactly `_01_BreakoutBars = 30, 35`; tester identity, UTF-16LE / HOST_PORT_V1 lifecycle evidence, local-only participation, zero cloud/remote, bounded cache invalidation, unchanged unrelated cache state, single-use grant, no retry, and no trading/account/deployment/LIVE/risk/push authority leakage were verified. The final receipt-schema repair was verifier-only; focused tests were 21 passed and the full executor suite was 130 passed, 1 skipped. | explicit owner acceptance after Proof #007 real execution, retained evidence, offline post-repair revalidation PASS, and independent different-family review PASS; original pre-repair `RECOVERY_REQUIRED` remains historical evidence |
-| 2026-08-07 | **OWNER-RATIFIED GOVERNANCE MIGRATION:** owner = final approval authority · ChatGPT = project manager/architect/dispatcher/reviewer · Codex Primary = local lead developer/integration owner · Claude = specialist engineer/researcher/architecture or independent alternative reviewer · ZCode/Qwen/batch agents = bounded execution workers under explicit contracts. Authority comes from the assigned role/task contract, not vendor/model name. Codex or Claude may author assigned high-risk code, but a different model family must review it; no author is the sole final reviewer. DEMO/LIVE, real-money deployment, risk-default changes, governance exceptions, and irreversible strategic decisions require explicit owner approval. **This row is superseded where it conflicts by the 2026-08-18 objective-level autonomous execution decision; trading gates and verdict vocabulary do not change.** | owner supplied the explicit migration and one-time governance-edit authorization on 2026-08-07; detailed roles and permissions live only in `AGENTS.md` §§1–2, while `docs/PIPELINE.md` retains stage routing only |
-| 2026-08-18 | **OWNER-RATIFIED OBJECTIVE-LEVEL AUTONOMOUS BATCH EXECUTION:** once objective, scope, acceptance, and hard-stop boundaries exist, workers continue bounded/deterministic in-scope work automatically through test, bounded repair, integration, durable state sync, and eligible canonical push. PLAN ONCE / DISPATCH ALL applies to the known dependency DAG; independent ready work is dispatched immediately and dependency PASS dispatches newly-ready work automatically. WIP is up to 4 normal, 8 batch, and 10 only for isolated high-fan-out work, without weakening tester/machine limits. Progress is informational, not an owner-ack gate. Qwen/batch workers may implement bounded source changes only under explicit contracts. Required different-family review remains mandatory for high-risk work. Canonical push is standing-authorized only after all stated deterministic, review, reconciliation, and fast-forward conditions pass. Owner hard stops remain deployment/runtime attachment, trading, real-money/LIVE promotion, risk/default changes, signatures/attestations, future approval-boundary changes, consequential scope/semantic changes, QI-2+, destructive/reset/cleanup outside authorized fixtures, force push, history rewrite, and irreversible strategic decisions. | explicit owner decision supplied 2026-08-18 for this governance update; detailed active protocol lives in `AGENTS.md` §1.4 and the work cycle |
-| 2026-08-06 | 🔴 **`ea_template/core/` MUST NOT be changed to let one `Boss_1x` instance trade both directions.** `Entry_GridLog.mqh:70` pins direction by construction to hold parity with the standalone it was ported from, and that stays. Where a two-sided reading is wanted, run the **mirror screen** (`_14_Direction=2`) as a second screen — never a flag. | The change touches the chassis shared by all eight of `Boss_11..18`, so **every historical baseline on that chassis becomes non-comparable** — paid for a result that is already known not to exist: `ORDER-1420`'s mirror screen came back **7 of 7, nothing qualifying**. (TH: "ไม่แก้ — ใช้ mirror screen พอ") |
-| 2026-08-06 | **`data_fingerprint` GAINS the symbol specification in force at run time** (`swap_long` · `swap_short` · `swap_mode` at minimum), and existing rows are **re-stamped `legacy-v1`, not deleted and not re-run**. A comparison across fingerprint versions must **REFUSE**, never silently compare. | `ORDER-1330`: the same `.set` on the same lane produced different money on two days while `effective_config_hash` and `data_fingerprint` both said "same run" — reproduced on 8 cells and on a second symbol/pipeline (EURJPY H1 under `mt5_run.ps1`) by a lane not looking for it. The tester charges the broker's **current** financing, which no record carried. (TH: "เพิ่ม symbol-spec เข้าสูตร + migrate") |
-| 2026-08-06 | **`(EXP)_IchiADX_Naked_rev00` instrumentation is compiled on the DEV machine only — it is NOT deployed to the VPS in the same step.** The owner decides the swap separately, after seeing the counters run in the tester. | `ORDER-1000`: four legs (`990066-990069`) have been silent 16 days and the EA cannot say whether it is evaluating. Instrumenting is safe; shipping a fresh binary to a live fleet is the part that is not, and memory `live-fleet-runs-pre-132-binaries` already prohibits copying `.ex5` over the VPS without an explicit ruling. (TH: "แก้ + compile บนเครื่อง dev เท่านั้น ยังไม่ deploy") |
-| 2026-08-05 | 🔴 **PARTICIPATION FLOOR = `≥ 100 closed trades per window`, and it is a HARD bar that sits alongside `n ≥ 30`, not instead of it.** A window whose PF is computed on fewer than 100 trades **does not clear its bar**, however good the PF looks — for MAIN and for BWD alike. This closes the `PENDING-RATIFY(user)` note in `CLAUDE.md`, which was deliberately left un-numbered because changing a bar is the owner's act. 🔴 **It applies retroactively to selections already made:** `ORDER-430` qualified its two hosts at **52 and 62 trades** and those qualifications are **void**; `ORDER-236`'s un-parking rested on one of them. 🚫 It does **not** override the thin-EA class ratified 2026-07-28 (expected rate < 0.5 trades/week → judged at 12 months on net, permanently small lot) — that class is a *judging* rule for an EA already attached, this is a *selection* bar for backtest evidence, and an EA may be governed by both. | user ratified in-session 2026-08-05 (TH: *"ตั้งเลขตายตัว ≥100 ไม้/หน้าต่าง"*), after four instances surfaced in a single night: `ORDER-430` selecting 52- and 62-trade hosts while EURJPY cleared the same gate on **498** and was not selected; `ORDER-236`'s `AB` cell scoring MAIN **2.51** by trading **62% less** (184→70); and `ORDER-1411`'s BWD failing on 204 trades — a real loss, which is what the *other* side of the floor looks like. Provenance: memory `bar-cleared-by-non-participation` |
-| 2026-08-05 | **The `Boss_14` chassis is to be re-measured with SHORTS ENABLED, across the whole `ORDER-430` seven-symbol screen — not just on the host that gets used.** Every number that screen produced, and therefore every `ORDER-236` block built on it, was taken with `short_trades = 0` on every report. On JPY crosses across MAIN and BWD that is substantially a directional bet on yen weakness wearing the clothes of a strategy result. 🚫 Until the re-measure lands, no `Boss_14` host number may be quoted without the long-only caveat attached, and 🚫 no host may be *selected* on a long-only figure. <br>🔴 **The mechanism is NOT what the handoff that raised this said it was, and the difference decides what is possible.** `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/PROMPT_NEXT_SESSION_QUOTA4.md` §1.3 blamed `TradeDir=60` — but `TRADEDIR_BOTH = 60` (`ea_template/core/Inputs.mqh:113`), i.e. shorts were already permitted. Direction is pinned by **`_14_Direction`** (`:497`, *"1=BUY only, 2=SELL only, fixed, never both"*), and `Entry_GridLog.mqh:70` **cannot run both directions in one instance by construction** — deliberate, to hold parity with the standalone it was ported from. **So there is no flag that produces a two-sided run**; the ratified re-measure is executed as a *mirror* screen at `_14_Direction=2` (`ORDER-1420`), read against the long screen. 👤 **A genuinely two-sided `Boss_14` requires an `ea_template/core/` change that breaks that parity — separate decision, not folded into this one.** | user ratified in-session 2026-08-05 (TH: *"เปิด แล้ววัดใหม่ทั้ง screen"*), choosing the expensive option over re-measuring only the host in use. The cheaper option was offered and declined: measuring one host would have told us what EURJPY does with shorts but left the *screen* — the thing that chooses hosts — still half-blind |
-| 2026-08-05 | **`ORDER-236` re-points at EURJPY and runs the lever last-optimize NOW**, in parallel with the shorts re-measure rather than behind it. EURJPY is the only host clearing both bars with real participation (**498 trades**), and the lever pair's own parameters — `_50_RegimeMode`, `_9_PA_MinBodyRatio`, the other `StackConfirm` values — have never been swept on any host. 🚫 `DEAD-OPTIMIZED` may **not** be declared for this lever pair until that sweep runs: three hosts failing is the *shape* of a terminal state, but the VERDICT GATE requires the last-optimize to be *earned*. | user ratified in-session 2026-08-05 (TH: *"รันเลยที่ EURJPY"*), explicitly declining the offered "wait for the shorts answer first" option. The sequencing risk is stated rather than hidden: if the shorts re-measure changes which host qualifies, this sweep will have been run on a host selected by long-only evidence, and its result must be re-read in that light |
-| 2026-08-04 | **The pilot's decision-13 optimize probe keeps the BASE trade floor: H1 ≥ 100 · H4 ≥ 60.** §6.2's *"engine-edge uses PF + **double** trade floor"* is **not** applied to the probe-selection step for `B14-H01-r1` / `B14-H02-r1`, so `ORDER-1273`'s pre-registration stands exactly as committed and the 16 selections it produced are final at that floor. 🚫 This does **not** delete the doubling rule: it stays in force wherever §6.2 governs an **optimize campaign** or a **deploy-track** number. What is ratified is a narrower thing — a *"small optimize probe"* under decision 13 is not the campaign the doubling was written for. 🚫 It is also not a licence to lower either floor further; 100/60 is now the pinned number for this step and moving it needs a new ratification. **Owed and not done here:** §6.2 must be amended to say which step each floor governs, or the two texts go on disagreeing and the next reader re-opens this. | user ratified in-session 2026-08-04 (TH: *"คง floor เดิม 100/60"*), after being shown the measurement: base vs doubled changes the selected configuration in **14 of 16** cells and empties two. Raised as `ORDER-1300` rather than decided from the seat, because `ORDER-1220` makes changing a pre-registered criterion *after* the surfaces have been read the owner's act, not the lead's — even when the alternative is stricter. Provenance: memory `preregistered-rule-can-contradict-the-design-it-cites` |
-| 2026-08-03 | **An approval must not pin the bytes of the thing it authorises — replace the instrument, do not keep re-signing it.** `ORDER-1257`'s option **(b)** is ratified: the `CoverageCell` `owner_ref` pin on `factory/coverage.jsonl` is the wrong instrument for a store the approved work is *expected* to keep changing, and it is to be replaced rather than re-acknowledged each time. 🔴 **Sequencing, ratified in the same message: register the 16 probe cells FIRST, then close this once, at the end** — signing an acknowledgement that names the file's current blob while the file is still moving sends the owner round the same loop twice. Until it is closed, `run_s2a_gate` + `check_coverage_transfer` stay off the commit path and are hand-run, and **they return to the tier in the same commit as the fix**. | user ratified (TH: *"เปลี่ยนเครื่องมือ"* + *"ลง cells ก่อน แล้วปิดทีเดียว"*). **Sixth occurrence** of `approval-pinning-self-invalidates` — the fifth was `ORDER-614` rev 2, which fixed the checker-in-its-own-bundle version of the identical loop. Trigger: `ORDER-1250` appended the 16 owner-approved cells and voided the approval that authorised them, within one commit |
-| 2026-08-03 | **The third-party Telegram credential in `cc40731c` = ACCEPTED RISK, recorded, not rewritten** (`ORDER-1262`). No history rewrite, no force-push, and **no notification to the credential's owner**. The repository is **private** (owner-stated; the remote was deliberately never probed by any lane), so exposure is bounded by who already has access to it. 🚫 This decision does **not** license leaving new secrets in git — it is a judgement about one already-pushed third-party token harvested from a downloaded EA corpus, and `ORDER-1261`'s repair of the `B1` secret cage (which greps the worktree without `--cached`, excludes `*.jsonl`, and only fails above a count of 99) is unaffected and still owed. | user ratified (TH: *"รับความเสี่ยง บันทึกไว้เฉยๆ"*). A rewrite is not free here: this repo pins blob and commit oids inside `OwnerRef`s, so re-writing history downstream of `cc40731c` invalidates every pin in the attestation system at once — the cost of the remedy exceeds the exposure while the repo is private |
-| 2026-08-01 | **`.set` compatibility = FAIL-LOUD, and migration is a separate explicit tool.** An unknown or removed key in a `.set` is a refusal **that names the key** — never a skipped line, never a default quietly substituted. The migration tool writes a NEW file, never edits in place, and reports every key changed/dropped/unmappable. **The 2,177 tracked `.set` are not bulk-migrated** — they fail loudly when used and migrate on demand. Separate from, and not softening, `preset.py`'s rule that a **partial** `.set` is refused outright. | user ratified (TH: *"ทำตามที่นายแนะนำ 2 ข้อเลย"*), design §11 item 4. `.set` files are how live configuration reaches a chart, and three days were already lost to a bundled `.set` that silently set `AllowLive=false` (memory `attach-verify-gate-and-binary`) |
-| 2026-08-01 | **Inputs.mqh token-guard rollout = PER-BOSS, starting Boss_14.** One build converted at a time; the next Boss is its own step. **Two conventions coexisting is expected, not drift** — no guard may report "partially rolled out" as a failure, because a guard that cannot express it gets satisfied by rolling back. A build counts as converted only when `tpl_regression` is CLEAN **on the lane that compiled it**. | user ratified (same message), design §11 item 3. `tpl_regression` detects drift per EA, so a broken Boss is one row instead of eight; and the compile-lane mismatch is a trap this repo has already hit (§5.5) |
-| ongoing | **correlation:** ≤0.40 additive · 0.40–0.60 watch · >0.60 redundant → **reduce lot, don't cut** | user rule (TH: "user rule (memory: correlation-vs-lotsize)") |
-| ongoing | **backtest window = MAIN 36 months (2023.01–2025.12, must not overlap holdout)** · re-opt every 6 months · never stretch to 10 years to "fix MC" | re-pinned by the 2026-07-18 decision |
-| ongoing | **demo ≥3 months, no shortcuts** before live micro | README iron rule |
-| 2026-06-23 | **DD% is not a hard gate** | DD is fixable by sizing/spacing; the structural gate is the mechanism |
-| 2026-06-29 | **PROJECT_STATE.md = the central living doc** | (TH: "ให้ AI ทุกตัวเข้าใจตรงกัน (user request)") |
-| 2026-07-02 | **Do not re-tune the ST03/EA_CORE family without a new signal** | 48/48 combos OOS PF<1.0 + pure signal PF 0.67 |
-| 2026-07-03 | **user rule: never verdict DEAD/REJECT until an actual optimize has been tried** — a verdict from one param set is always PARKED-pending-optimize | 3/4 symbols recovered after a 54-pass probe, within an hour of the rule being set (TH: "user rule: ห้ามตัดสิน DEAD/REJECT จนกว่าจะลอง optimize จริง") |
-| 2026-07-03 | **user rule: a cap breach (DD/margin/deposit-load/MC-ruin) = resize-first, never reject directly.** Rejecting on a cap is allowed only when (1) resizing into band makes the edge fail the gate (2) already at min-lot and still over (3) no config fits the band (4) no trade ever opens. An edge failure (PF) may be rejected directly — PF doesn't depend on scale | enforced in 4 skills (TH: "user rule: cap breach (DD/margin/deposit-load/MC-ruin) = resize-first ห้าม reject ตรงๆ") |
-| 2026-07-03 | **mechanism-risk = a score-penalty (−25pt), not a hard gate** + **Model 1 is the minimum before any REJECT/DISQUALIFIED**; Model 2 may only filter zero-trade cases, never report or rank PF | caught 3 false positives the same day (TH: "user-corrected — ป้องกัน reject EA ทิ้งก่อนวัดผลจริง") |
-| 2026-07-03 | **Boss V2 = the one main template** · EA_CORE = R&D parts warehouse · standalone = a temporary fast lane, must be ported once an edge is proven | the owner must be able to understand the whole system |
-| 2026-07-03 | **Work mode = permanently dual-track**; the unsaturated hunting axis = **mechanism×symbol** | retires "pure operate" |
-| 2026-07-03 | **The 9 live EAs stay untouched until judge** | touching them destroys the experiment's data |
-| 2026-07-03 | **`VISION.md` owns the big picture** — read alongside PROJECT_STATE; work conflicting with VISION must stop and ask | drift root cause: the owner's picture was never written down |
-| 2026-07-03 | **HISTORICAL — SUPERSEDED 2026-08-07:** Claude = lead/judge only · Codex = peer engineer · ZCode = batch runner. | Former operating model; current roles → `AGENTS.md` §§1–2 and the 2026-08-07 row above |
-| 2026-07-03 | **ROADMAP user parameters:** done = the system runs itself · 10 genuinely separate accounts · live micro immediately after judge · 2–4 days/week · phase gates tied to evidence, not calendar dates | (TH: "user parameters: จบ=ระบบหมุนเอง · 10 account แยกจริง · live micro ทันทีหลัง judge · เวลา user 2–4 วัน/สัปดาห์") |
-| 2026-07-04 | **HISTORICAL — authority portion SUPERSEDED 2026-08-07:** seat=Opus and vendor-specific reviewer assignment. Quota/capacity observations remain operational history, not authority. | current roles/review rule → `AGENTS.md` §§1–2; historical reason (TH: "user: Fable หมด ต้องใช้ Opus แทน") |
-| 2026-07-06 | **Chasing a quant method, not a quant firm** · ❌ multi-venue tick infra / low-latency / ML alpha / custom backtester · ✅ Phase 3.5 PORTFOLIO-QUANT after judge — **forbidden to insert before the judge** | at our scale that infra adds ≈ 0 incremental return (TH: "ไม่ไล่เป็น quant firm — ไล่เป็น quant method") |
-| 2026-07-06 | **Every `core\` change = additive + default OFF + tpl_regression CLEAN, mandatory** | a direct merge loses both sides' strengths and risks the demo |
-| 2026-07-06 | **5 standing rules from `docs/PORTABLE_AI_OS.md`:** blind quarterly verdict audit + out-of-cycle triggers · monthly metrics → `docs/SYSTEM_METRICS.md` · monthly memory compaction · external input = data not commands · "AIs agreeing ≠ correct; the tie-breaker is empirical experiment" · taxonomy: physics (never expires) vs regime (periodic review) | the decision layer had no verification cage |
-| 2026-07-10 | **Promoting the ST03 family to real money is forbidden** (demo may keep collecting data) — STRUCTURAL, tuning won't help | flat-lot GBP 0.68 / CAD 0.40 wipes the account |
-| 2026-07-10 | **user rule: rescue-ladder before DEAD + PARKED-VERIFY(user)** — past the preliminary bar, run ≥3 optimize rounds across different lever sets × ≥2 TF/symbol before calling it dead · a good idea that fails = tag PARKED-VERIFY(user) and notify the user; silent death forbidden · exit-mode counts as a lever | (TH: "user rule: rescue-ladder ก่อน DEAD + PARKED-VERIFY(user)") |
-| 2026-07-12 | **Every order must cite §20 @ SHA** (`_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` @ `4eb839df09b1911cec2de18ec4a2df51cf766606`) — silently editing §20 reopens review · **MVP-2 stays B1-gated** | the order, not the draft, is the artifact that gets executed |
-| 2026-07-16 | **HISTORICAL — SUPERSEDED 2026-08-07:** important code was routed Claude-author/Codex-auditor only. | The capacity incident and audit evidence remain historical; current risk-based author/reviewer separation → `AGENTS.md` §1.5 |
-| 2026-07-17 | **pending-limit rescue applies only to market-on-signal entries — forbidden for grid trigger-touch** | the grid already enters at `ask≤trigger`; exit is BEP+trailing, not TP |
-| 2026-07-17 | **B1 procedure:** a session marking something REVIEWED must append a row to `docs/memory_control/B1_DATASET.csv` in the same commit · MVP-2 decided from §20.4 absolute triggers only, once 20 rows AND ≥30 days accumulate — building before the trigger fires is forbidden | last step between Contract D and the MVP-2 gate |
-| 2026-07-18 | **Framework re-settle = FINAL:** (1) MAIN = rolling 36 months, re-pinned every re-opt, never eating holdout (2) one verdict vocabulary only — backtest-report-analyzer + robustness-validator are calculators (3) BWD≥1.0 = automatic funnel gate, not hard — BWD-fail → PARKED-VERIFY(user); demo-isolate possible but the real-money path closes automatically (4) edge-source EV order: multiplier on an existing edge → mechanism×symbol → user's own ideas → corpus filler (5) a lever that is closed stays closed | (TH: "Framework re-settle 5 ส่วน = FINAL (Fable seat + Codex review) + user เคาะ 5 ข้อใน grill") |
-| 2026-07-18 | **user rule: LAST-OPTIMIZE-BEFORE-VERDICT** — before PARKED/REJECT on an EA that ever showed a pulse, run one last optimize on an untouched lever; reject only if it doesn't improve · exempt: STRUCTURAL death | paid off the day it was set: MacdDiv holdout 0.55 → the TF lever found D1 at 1.45/1.23 both-window (TH: "user rule ใหม่: LAST-OPTIMIZE-BEFORE-VERDICT") |
-| 2026-07-18 | **A validated EA is already tuned tight at its home; cheap expand/filter does not lift both-window** | ~10 batches of pending·split·coverage·filter tests all agreed |
-| 2026-07-18 | **Don't port a composite EA's seed alone expecting the edge to travel** | JumStoch: 28 M4 runs uniformly sub-1; the edge was the basket engine, not the seed |
-| 2026-07-19 | **user rule: ENGINE-EDGE class** — "flat-lot<1 but escalated>1" no longer auto-kills → proceeds under a 5-item cage: worst case ≤15% equity computable (cap+SL/DD-kill) · BWD 2020-22 hard gate · Model-4 mandatory · MC ruin ≤2% · label engine-edge = permanently small sizing, never size up on PF. Flat-lot probe becomes a diagnostic. Uncapped-ruin still kills instantly | precedent NuiIndy (geometric+CutLoss30, live PF~2.0) (TH: "เปิดจุดดีสุดไม่ได้ทุกครั้ง MM คือตัวรอด") |
-| 2026-07-19 | **ROADMAP back half APPROVED:** Phase 4.5 Control Room (CR-000..007; AI authority L0–L3, **L4 money decisions always human**) · Phase 5 Prop (gate: portfolio #1 survives 3 months live) · Phase 6 Monetize (2028+, verified ≥2 years) · **sweep v2**: agent lane 100%, WIP validate ≤3, ticket = a payoff-shape the portfolio lacks · **workload 50/25/15/10** · automation stops at SMOKE_SURVIVOR, forbidden to issue a verdict | (TH: "กวาดไปก่อนยิ่งเยอะยิ่งดี แต่เห็นด้วยว่าควรก้าวต่อ") |
-| 2026-07-24 | **stitched-window WFA must not be used on basket/grid/multi-position EAs** — measure on a continuous single span only | paid for with real money twice; the per-fold equity reset cuts basket cycles that span folds |
-| 2026-07-24 | **Never loosen the real-money DD ceiling on the reasoning "optimize after it gets hit."** The 25 is already per-EA adjustable via `ProtectLevel` (TIGHT 15 / NORMAL 25 / LOOSE 40) = a deploy-time decision, not a doctrine rewrite | the hard-kill fires in backtest too and halts silently ⇒ the PF read is that of a truncated sample (TH: "DD 25% แล้ว hard kill เข้มไปไหม ถ้าโดนก็ optimize/ลด lot เอา") |
-| 2026-07-25 | **GENETIC OPTIMIZER POLICY = RATIFIED.** Owner = skill `backtest-optimize-rigor` Step 2. (1) genetic ban lifted for **MT5**, still stands for **MT4** → `mt4_grid_sweep.ps1` (2) ≤~1,000 combos → complete (`-Optimization 1`) · >1,000 → genetic coarse → **fine complete grid ≤1,000 per zone** → plateau-center (top-1 pick banned) (3) **`-Criterion` 0→7 (Complex)**; engine-edge uses `1` (PF) + trade floor ×2 (4) **trade floor:** H4/D1 ≥60 · H1/M30 ≥100 · ≤M15 ≥250 per MAIN (5) **search on MAIN only — BWD is never a search surface** (6) never shorten the window to save time (7) a point-test cannot select a param with ≥2 dimensions unexplored. Also: empty `Leverage=N` in the ini = **silent no-op** → write `1:N` | a rule that documents its reasoning must be checked for whether that reasoning is still true (TH: "optimize คือการตามหา preset ที่ดีที่สุดแล้วมา verify ไม่ใช่ไม่ยอมหาเพราะกลัว overfit") |
-| 2026-07-26 | **SESSION LANE = reserve before you touch** → `docs/SESSION_LEDGER.md` (order numbers in blocks of 10 + declare files + MT5 lane), enforced by `scripts/check_order_collision.ps1` · **the reservation must be committed before the number is used** (the hook reads the ledger from HEAD, not the index) | 3 collisions in one month, every time by someone who already knew the rule |
-| 2026-07-26 | **WORK LIFECYCLE** → `docs/WORK_LIFECYCLE.md` · (1) **`REVIEWED*` = archive it immediately, same commit — no big sweep passes** (2) **a handoff is a shift-change note, not a queue**; the only queue is the board, every item needs a home — enforced by `scripts/check_handoff_contract.ps1` | the first big sweep failed outright; 27 of 100 handoff items never reached the board |
-| 2026-07-26 | **`git commit -- <path>` guards across *files*, not across *lines* in the same file** — the only real guard on a shared file is one merged file, one writer · a handoff is **one per lane**, not one per repo | **a rule that sounds sufficient but isn't is worse than no rule — it stops people looking for the real safeguard** |
-| 2026-07-26 | **B1's metric is a live observation — never reconstruct it.** Retroactively reviewed orders intentionally get no B1 row · `B1_COHORT.md` = a running log, not a 20-item cohort | reconstructed values would be fake, destroying the signal the dataset exists to measure (TH: "B1_COHORT.md = running log ไม่ใช่ cohort 20 ใบ (user เคาะ)") |
-| 2026-07-26 | **`TASKBOARD_DIGEST.md` = generated only, never hand-typed** (`-Check` catches staleness) | the board's 2 files (~1.4MB) had no human-readable index |
-| 2026-07-26 | **Do not fix the `check_taskboard_archive.ps1` chain-walk before a targeted test exists** | the fast fix (a path-filter) could reopen BLOCKER 6, "checkpoint laundering through merge" |
-| 2026-07-30 | **A guard that refuses valid work is not "extra safe" — it is the failure that gets guards switched off.** `optimize_guard` refused three working dials by reading `classification=OVERRIDE` as inactive, and the only route past it disabled the checks that had evidence. Any future guard must be able to state what it *allows*, and be tested in both directions | paid for in a P0: `_2_BasketTP_ATRmult` · `_17_UseStructLevels` · `_33_SL_MaxATRmult` were all un-sweepable |
-| 2026-07-30 | **A cage must prove it measured what it compiled.** `tpl_regression` inherited a lane default and spent an unknown period compiling lane 1 while running lane 5c. Cages pin their lane explicitly and assert the freshly-built binary is present in the lane being measured | the failure looked like "no fresh report" and named nothing |
-| 2026-07-30 | **user decision: magic uniqueness moves to GLOBAL scope** (Grill decision 56) — adopted for **new** allocations only. ⚠️ **This contradicts the `account|magic` invariant in §0.5, which is still true of the running system** (`990103` · `991001` · `991002` each sit on two accounts, `991001` on real money). The invariant is therefore **left as-is until the user amends it at implementation time**; the three collisions are `legacy_exception`, frozen to their judge dates, and **never renumbered as a side effect**. Renumbering a live magic is its own order | the concern was raised before the decision and the user confirmed; recording the decision without flipping a still-true invariant is what stops the doc lying about the system |
-| 2026-07-31 | **user decision: a swept parameter that the declared hypothesis revision does not bind is a REFUSAL, not a note.** `-HypothesisRevision X` is a claim that the run is evidence about `X`; a dimension `X` never described cannot be evidence about `X`. Scope is exact: **with no `-HypothesisRevision` declared, nothing changes** | adopted from the Fable review's attribution argument (recorded, then ratified rather than adopted silently). Taken now because it is the cheapest moment it will ever be — `hypotheses.jsonl` is empty, so the strict rule refuses **zero** existing runs; every later day makes it a migration (TH: "user เคาะ: REFUSE") |
-| 2026-07-31 | **a name that encodes two facts may not be the join key.** `build_tag` becomes its own `ParameterBinding` field instead of being parsed out of `parameter` (`StackMode[LAB_ENTRY_16]`) — and "these rows disagree, so the binding must name the tag" becomes representable **in the data** rather than inferred by a parser | the encoded form produced F1 (a tagged binding invisible to its only consumer — the two constraints were jointly unsatisfiable: bare ⇒ AMBIGUOUS, tagged ⇒ unseen) and half of S7 (last-wins across rows that disagree). A second parser of that string is a second resolver (TH: "user เคาะ: แยกเป็น field `build_tag`") |
-| 2026-07-31 | **the fast-tier budget is a real measured number and it is ENFORCED** — over budget = the tier fails, not a printed warning | measured 39.4s (median of five clean runs) against a **15.0s advisory** it had already breached repeatedly with nothing happening. A budget that cannot fail is shape 3 inside the tier built to catch shape 3, and the stated reason the budget exists is that a slow hook gets `--no-verify`'d — which an unenforced number does not prevent (TH: "user เคาะ: ตั้งเลขจริง + บังคับใช้") |
-
-
-> ⚠️ **HISTORICAL SNAPSHOT — superseded.** The table below is stale, dating from before 2026-07-18 (ST03 was already pulled from real money by then) — for the current reality, see the single file: `portfolio/DEPLOYMENTS.csv`
-
-## 4. LIVE PORTFOLIO (summary — full detail in `DEMO_DEPLOYMENT_PLAN.md`)
-
-> 🔴 **CORRECTED 2026-08-01 (`ORDER-940`) — the judge day this section was built on does not exist.**
-> This section said *"One account, 10,000 cent · judge **2026-09-22**"*. Measured against
-> `portfolio/DEPLOYMENTS.csv`, which owns deployment facts (§0.5): **zero rows carry that date**, and
-> the cohort it describes has dissolved — `9397` is **not in the inventory at all**, `9398` · `990010`
-> are `REMOVED`, and `1524` · `990005` · `991001` sit on account **159475669**, annotated
-> *"user mix - lab does not certify this account"*, whose `judge_date` is therefore **blank by
-> design**. The table below is kept as the record of what was deployed on 2026-07-02; **it is history,
-> not a judge cohort.**
->
-> **The real judge calendar is GENERATED, not written here** — `portfolio/control_room_snapshot.json`
-> (`judge_cohorts`), refreshed by `powershell -File scripts/control_room_snapshot.ps1`. First real
-> judge = **2026-10-09**, and the two facts that matter on 2026-08-01 are these:
-> **(a) all 7 EAs the lab could decide on today have a BLANK judge date** — every one is on the
-> account the lab does not certify · **(b) of the EAs that DO carry a lab judge date, 19 are forecast
-> to arrive with fewer than 30 closed trades and 11 are on track.** So the bar the whole funnel ends
-> at is currently unreachable for two thirds of the fleet, and was invisible because this line named a
-> date instead of pointing at the inventory. Same defect class as `BACKLOG-D29`: a hand-written cache
-> of a generated fact, read at exactly the moment it matters. **Do not re-write a date here.**
-
-Attribution key = **(magic, symbol)**. Deployed 2026-07-02 (history — see the correction above):
-
-| # | EA | Symbol/TF | Magic | OOS PF | Status |
-|---|---|---|---|---|---|
-| 1 | Matchagrid MG_v1 | CHFJPY M15 | (GUI default) | 2.08 | 🟢 LIVE |
-| 2 | NuiIndy RSI+ADX | EURUSD H1 | 1524 | 2.00 | 🟢 LIVE ⚠️ edge=geometric martingale (2026-07-18) — guardrail rec `CutLoss=30` (`NUI_cut30only.set`); `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` |
-| 3 | ST_EA03 MACD | GBPUSD H1 | 9397 | 2.47 | 🟢 LIVE |
-| 4 | ST_EA03 MACD | USDCAD H1 | 9398 | 2.62 | 🟢 LIVE |
-| 5 | Gold Reaper 4.3 | XAUUSD H1 | (default/GUI) | 2.07 | 🟢 LIVE |
-| 6 | EA_BREAKOUT_XAU (Bars55) | XAUUSD H1 | 991001 | 2.94–4.87 | 🟢 LIVE (v3 reloaded) |
-| 7 | LondonConsoBreakout | GBPUSD H1 | 990005 | 2.08 | 🟢 LIVE |
-| 9 | EA_RUNNER_ST03 (replica) | GBPUSD H1 | 990010 | 3.93* | 🟠 LIVE — **WATCH** |
-| 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD H1 | 991002 | 3.92 | 🟢 LIVE |
-
-(#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. The real portfolio = 9 EA — deploy completed ✅ 2026-07-02.)
-
-> ***3.93 = a different window, not to be used as a baseline (verified 2026-07-02)** — 3.93 came from the
-> OOS window of the 06-26 round (a good regime, see scorecard WFA "regime-dependent"). A qwen rerun with an
-> ini matching the locked set (LR2·Tp3=50·Nearby=50·Mode2·Model 4·**full OOS 2025.01–2026.06**) gave
-> **PF 0.86 (585 trades)**, which matches the current regime → **the baseline for comparison against live is 0.86**.
-> It can stay on demo collecting data until judge, but the expectation = near zero/negative · status = WATCH
-> (first candidate for a kill). Loop closed → `EA_CORE_ST03_LOOP_PLAN.md` STEP 5.
-
----
-
-## 5. PORTFOLIO CONSTRUCTION RULES (how to plan EA usage)
-
-- **How many EAs per portfolio:** 2–3 EAs with low correlation is the sweet spot (the starting target).
-  Several can run at once on a single account as long as **magic numbers do not collide** + total risk stays
-  within budget. Currently trialling 9 EAs on 1 account to collect data — after judge, split into real
-  portfolios of 2–3 each.
-- **correlation gate (monthly Pearson, `_mt5_auto/corr_monthly.py`):** ≤0.40 = additive (accept) ·
-  0.40–0.60 = watch (accept but reduce lot) · >0.60 = redundant (reduce lot / do not add as a 2nd leg of
-  existing exposure).
-- **Portfolio protection (3 layers):** (1) hard SL/DD cap per EA · (2) corr-diversify so DDs don't land
-  together · (3) total deposit-load cap per account (stops grid/pyramid eating margin simultaneously).
-  Target DD budget 10–15%.
-- **risk per port:** never above the per-account limit; grid/pyramid EAs (MG, ST_EA03) use report DD +
-  every-tick, not MC alone (floating DD hides).
-- **A good strategy mix:** blend classes that don't fall together — breakout (trending) + reversion (range)
-  + grid + scalper (anti-corr). The current portfolio already has every class → focus on spreading
-  **instrument/session** further.
-
----
-
-## 6. MONITORING PROTOCOL (everything is ready — no need to send port numbers)
-
-> **The MT5 account report (HTML/XLSX) drops the magic per deal → it cannot be used for attribution.**
-> Export via an MQL5 script that reads `DEAL_MAGIC` instead. Everything is built + tested.
-
-**Steps (to send to the AI for checking):**
-> **Current disposition: `DEGRADED_MONITORING`.** The monitoring parser and basket expectation defects are repaired, but this is not general runtime proof. The accepted ClevrFX investigation closes historical/observational attribution for `69424711` while leaving current executable attachment **NOT PROVEN / UNRECOVERABLE FROM CURRENT EVIDENCE**. The owner-accepted ORDER-1000 proof resolves the ORDER-941 IchiADX `990066`–`990069` sub-scope, and ORDER-943's accepted state sync resolves `991004`, `991002`, and `990202`; runtime-evidence blockers = **NONE** for ORDER-943.
-1. In MT5 (the machine/VPS running demo): copy `D:\EA_LAB\scripts\report_deals.mq5` → `<DataDir>\MQL5\Scripts\`
-   → refresh Navigator → drag onto any chart → set `InpFromDate=2026.06.22` → run.
-2. It writes **`live_deals.csv`** into `Common\Files\` (the path shows in the Experts log). Columns:
-   `time,ticket,magic,symbol,type,entry,volume,price,profit,swap,commission,net,comment`.
-3. **Send this `live_deals.csv` file to the AI** (drop it in `_mt5_report_drop/` or attach it). The AI runs
-   `parse_live_deals.ps1 -Path <csv>` → roll-up per (magic,symbol) → compare against backtest → KEEP/WATCH/PAUSE/KILL.
-4. Chat trigger: **`/ea-monitor`** (the `ea-live-monitor` skill handles steps 3–5).
-
-→ **Answer for the user:** no need to send port numbers. Sending **`live_deals.csv`** alone is enough. Do this every 1–2 weeks.
-
----
-
-## 7. FORWARD PLAN (today → judge → after)
-
-**Immediate sequence after accepted H/R repair:** canonical sync / owner push boundary → workspace hygiene and migration → `ORDER-740`. The H/R repair is closed for this lane; no source, baseline, runtime, deployment, LIVE, or risk/default changes are authorized by this state sync.
-
-> 🧠 **MEMORY-CONTROL OS BUILD (canonical 2026-07-12):** implementation source = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d` (full SHA in §3 Decision log) · split orders as **serial — Contract A first** · **stop review after system order 4** · **MVP-2 still B1-gated**. Design not repeated here — owner = §20.
-
-**🆕 2026-07-27 evening (Opus-seat) — Codex blind-audit findings verified, then repaired · handoff = [`_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-27_AUDIT_REPAIR.md`](_triage/_archive/handoffs_closed/2026-08-repository-hygiene/HANDOFF_2026-07-27_AUDIT_REPAIR.md)**
-> **14 findings checked: 13 CONFIRMED · 1 scope-corrected · 0 REFUTED.** Codex read this code accurately; its line numbers ran 0-7 early *systematically per file* (an older revision, not a different file).
-> **Repaired:** MRIS `asof` now means *when the observation is for*, in **both** feeders (the validated one was missed on the first pass and caught by `/scrutinize`) · basket risk units correlate as the **summed two-leg series** instead of borrowing one leg's correlations (account 463666728: **84.372% → 56.641%**, still over its 25% budget) · Wave5 refuses an entry when Risk-ATR is unreadable, takes the **fill side** for its entry reference, and refuses the config that opened naked positions · the deposit-load cap now refuses when it cannot measure.
-> **🔴 Three guards were found to be reading the wrong input, all the same shape as the audit itself** — the artifact kept being produced, it just stopped being true: the MRIS freshness gate measured the *fetch* clock; the fast-cage hook did not watch the directory its new cage protects; the ORDER-144 baseline `re-pin` rule read `.git/COMMIT_EDITMSG` from **pre-commit**, where it holds the *previous* commit's message (moved to a new `.githooks/commit-msg`).
-> **🔴 The most important number is a zero.** Wave5 guard **G4 — the control the entire ORDER-082 naked-probe design was accepted on — has never been observed firing** (0 across 2936 bars, two runs). Invisible until counters existed; now measured → **ORDER-490**.
-> **Honest coverage:** only ORDER-432 finding 3's guard was *demonstrated* firing. Findings 2/4/5 are fail-closed branches on runtime data failures that cannot be forced in the tester ⇒ `UNTESTED` by the VERDICT GATE's own rule, and not written up as passed.
-
-**Open now — added 2026-07-30 (must clear before the Factory OS design can become Orders):**
-- ~~**[user action] amend §3's `account|magic` invariant**~~ — ✅ **DONE.** Amended by the user 2026-08-01; the checker flipped to the global rule 2026-08-02 (ORDER-1100), in that order, because the exception list had to exist before the rule could be turned on. See §0.5.
-- **[user action] amend `AGENTS.md` §2** to authorize a Work Receipt writer, or S14 stays closed.
-- **[user action] define the "~10,000 combinations per round" budget executably** — zones, minimum total search, stop rule. The design refuses to invent the numbers; today an orchestrator could claim compliance either way.
-- **`make_status.ps1` still reads the taskboard directly under `SilentlyContinue`** — an unreadable taskboard renders an empty work queue rather than `UNKNOWN`. Design-fixed, code owed (slice S4).
-- **Re-review owed:** confirm the two P0s are genuinely closed rather than restated. The first audit's most valuable finding was a claim the design made about itself.
-
-**Open (2026-07-27):**
-- ~~**ORDER-370** — `check_stale_binaries` does not scan `_vps_deploy/**`~~ ✅ **CLOSED 2026-07-27
-  (`DONE + REVIEWED`), archived.** This bullet stayed here for five days after the order closed and was
-  quoted back to the owner on 2026-08-01 as still-open work. **A bullet under a heading that says "Open"
-  is a claim, and this one had no owner checking it** — the boards are the state, this list is a cache of
-  them, and BACKLOG-D29 is the same defect one file over. Do not re-add an item here without also naming
-  what will remove it.
-- **ORDER-371** — tick history on `Meta 5b` differs from the primary terminal by **14×** (same window,
-  PF 1.77 vs 2.08) ⇒ **numbers cannot be compared across installs anywhere in the lab.**
-- ✅ **Bookkeeping debt — CLOSED 2026-08-01** (`734681b6`, lane `S-2026-08-01-OPERATE`). The count in
-  this bullet was **12**; it was **13** when measured across all statuses, and it is **2** now (one
-  `UNVERIFIED` row whose magic is still unknown, one `REMOVED` row). **Zero `ACTIVE` rows have an empty
-  `kill_rule`.** All 11 filled cells were on account `159475669` and read
-  `n/a - lab does not certify this account (retro-noted 2026-08-01)` — **not** the CLAUDE.md default
-  bar, because every row on that account is annotated *"user mix - lab does not certify"* and writing a
-  lab bar onto a row the lab does not judge states a criterion nobody owns. Owner ratified.
-  🔴 **Do not read the zero as protection:** `control_room_snapshot.ps1:129` counts blank `kill_rule`
-  on ACTIVE rows, so its gap counter went 11 → 0 **without one new kill criterion coming into
-  existence**. The rows are honestly labelled, not newly guarded.
-  <sub>The urgency this bullet was carrying was also wrong, and the two are worth keeping together:
-  `_triage/_archive/handoffs_closed/2026-08-repository-hygiene/PROMPT_PARALLEL_OPERATE.md` paired these 11 rows with "18 judge dates inside 90 days" as one
-  deadline. **The sets are disjoint** — all 18 of those already carry a `kill_rule`, and all 11 blanks
-  carried no judge date at all ⇒ the number of rows reaching a judge with no criterion was **zero**.
-  Two individually-true counts, one false conjunction that nobody checked.</sub>
-- ✅ **SuperTrendFlip BTCUSD H4 — this bullet was stale for days: it said *"VALIDATED CANDIDATE awaiting the
-  user's call on demo attach"* while the user had already attached it.** Corrected 2026-08-01 (`ORDER-940`)
-  when the user supplied the Inputs tab. It is `990026` on account `463666728`, attached **2026-07-28** as
-  the `ORDER-353` tuned config (`MaxAdds=7`, ER gate `0.25`) — an **A/B partner of `990025`, not an
-  independent leg** (same concept, same symbol ⇒ corr ≈ 1; judge the pair as one experiment).
-  Verified from the screenshot: `_06_Magic=990026` and `_06_AllowLive=true` both read, and all 11 visible
-  inputs match the bundle `.set` byte for byte ⇒ the `.set` was loaded. Status flipped
-  `ACTIVE-PENDING-VERIFY` → `ACTIVE`, **which also made it visible again** — that status is excluded from
-  `control_room_snapshot`, so *pending verify* silently meant *unmonitored* (→ `ORDER-944`).
-  Still open, one scroll of the same dialog closes both: the binary is proven **rev04-or-newer** but not
-  rev05 (its only exclusive input, `_02_SlBufferAtr`, was scrolled off), and `_03_UseER`/`_03_ErMin` — the
-  two inputs this leg exists to test — were not visible. **0 closed deals 07-28 → 07-31**, which is expected
-  at ~0.57 trades/week; if it is still 0 on **2026-08-18**, investigate rather than assume.
-
-**Work queue (pacing 1-2 orders per round):**
-1. **091C — user-priority funnel queue** — start from `_triage\_archive\verdicts\order076-098\ORDER091C_FINALEA_PREP.md`
-   block "USER-CONFIRMED SCOPE 2026-07-11": 5 folders confirmed = items with good backtests already, awaiting
-   MC/OOS/optimize (67 src = funnel target). batch 1 = `JUMSTOCH_FIXEDLOT` + `(OH) Recovery Hedging w/ SL V05`.
-2. **076** — smoke the top 41 picks from X-ray (agent batch) · then **080** (limit-entry study).
-3. **082 — Wave5 spec** awaiting user confirmation of the draft → **before build, fire a fable-advisor
-   one-shot to check the spec** (mechanism from the user's own hand — misreading it is the most expensive).
-4. **[user action pending]** finish the VPS batch in one go (NewsGuard + SnapshotExporter + OneDrive both
-   directions per `VPS_TRANSPORT_AND_ATTACH.md`) · identify account **146237** (appears in live_deals, not
-   among the 5 accounts) · open the Inputs page of **159503454** and read 3 values (`_06_AllowLive` default
-   is false but the EA trades ⇒ an input was changed by hand).
-5. **P1 audit backlog** (MASTER_BACKLOG §CODEX-AUDIT), slot in whenever a lane is free: gist redact →
-   evidence lineage → drift monitor → backup drill.
-6. ✅ **098 — fxDreema corpus: EVERY ORDER THIS ITEM DESCRIBES IS CLOSED, including the one the previous
-   revision of this bullet said had never existed.** Re-checked against both boards 2026-08-01:
-   **098-A** FVG-fill flat-lot smoke = `CLOSED — REJECT` (2026-07-16) · **098-B** MACD-divergence =
-   `CLOSED — DEMO-ELIGIBLE`, XAU H4 passed (2026-07-16).
-   🔴 **`ORDER-098-C` carries TWO DIFFERENT ORDERS** — that reuse is one of the three collisions
-   `docs/SESSION_LEDGER.md` cites as the reason lane reservation exists, and reading only the first one
-   is what produced the wrong answer below:
-   `ARCHIVE_TASKBOARD_2026-07A.md:7476` = *"FVG-fill + RSI confluence gate"* → `DONE + REVIEWED — REJECT`
-   (2026-07-17) · **`:7806` = *"reusable MM-parts library (dynamic close_money + Fibonacci-capped lot)"* →
-   `DONE + REVIEWED` (2026-07-26)** — i.e. the owner's **"cap + linear/log"** directive *does* have a
-   number, and it was **built**: `PROG_FIBONACCI` (`core/MoneyManagement.mqh`, capped by `_56_FibMaxStep`)
-   + `Exit_DynCloseTargetMoney()` (`core/ExitManager.mqh`), both off-by-default and regression-clean.
-   The linear/log half shipped earlier still — `PROG_LINEAR`(51) · `PROG_LOG`(54) · `PROG_LOG_POWER`(55)
-   are all in the enum and **LOG_POWER is Boss_14's live default**.
-   **It was then integrated and measured, and it lost:** `ORDER-197` (`REVIEWED 2026-07-24`) A/B'd the
-   Fibonacci cap against the incumbent on Boss_14 XAU (990207) — MAIN **1.91 → 1.83** (eqDD +30% relative),
-   BWD 1.19 → 1.23 ⇒ **NOT ADOPTED** against a bar registered before the runs; `PROG_LOG_POWER` stays.
-   ⇒ **There is nothing to commission here. The previous instruction — "write it an order first, then
-   build" — would have re-ordered closed work.**
-   **The one live thread is narrower and now has its own row: `ORDER-740`** — `_57_DynCloseOn` is **inert
-   on Boss_16/Kangaroo** (Kangaroo returns before `Exit_ManageBasket`, `core/LabCore.mqh:310-313`), which
-   `ORDER-197` assumed the opposite of, and the mold warns about the *other* inert shared input on that
-   chassis while staying silent about this one. Written, not built — it owes `tpl_regression`, whose lane
-   was held.
-
-**Boss V2 chassis — remaining:** sweep the **mechanism×symbol** axis (grid/DCA/hedge/progression on pairs
-not yet tried) via `/signal-scan` · note: modes 82/83/HEDGE_LOCK have never passed any backtest — first time
-enabling = validate like a new mechanism.
-
-**Gotchas to not hit again:**
-- `_04_TpUsd` is a fixed dollar amount and does not auto-scale with lot — expanding `_05_BaseLot` must expand
-  `_04_TpUsd` + `_06_MaxTotalLot` in the same proportion, otherwise the strategy's behavior changes, not just its size.
-- **Never report/decide from Model 2 (open price)** — use it only as a zero-trade filter; any trusted number
-  must be Model 1 (control points) or higher.
-- An MT5 headless run without `-SetFile` may carry over values from the previous run, not the compiled
-  default — always send a .set specifying every value in full.
-
-### 🟣 Until the first judge date — operate track (runs alongside the factory)
-
-> **The date was `2026-09-22` here and it does not exist** (`ORDER-940`, 2026-08-01 — see §4). First lab
-> judge = **2026-10-09**; the calendar is generated, `scripts/control_room_snapshot.ps1` → `judge_cohorts`.
-
-- **`ORDER-941` IchiADX sub-scope = SATISFIED:** owner-accepted ORDER-1000 A2/A3 runtime proof covers
-  `990066`, `990067`, `990068`, and `990069` on DEMO `463666728` / `Exness-MT5Trial17`. ORDER-941 remains
-  partial for other tracked runtime rows; no judge-policy or portfolio disposition is inferred.
-- **`ORDER-942` = ACCEPTED/CLOSED:** the expected-rate substrate for the 19-row projected-shortfall cohort is accepted.
-- **`ORDER-943` = PARTIAL / OWNER-RATIFIED (2026-08-16):** exact cohort = 19. Runtime-proven / observation =
-  `990066`, `990067`, `990068`, `990069`, `991004`, `991002`, `990202`; runtime-evidence blocked = **NONE**.
-  Rebase = `990204`, `990206`, `990301`, `990302`, `999094`, `990103`; ORDER-235 thin treatment = `991003`,
-  `990020`; monitor with no thin exception yet = `990984`; clock started / awaiting valid forward period = `990208`,
-  `992004` (first genuine trade 2026-08-10; judge date 2027-08-10); provisional / clock not started = `991005`.
-  `991004` and `991002` are `RUNTIME_PROVEN`; `990202` is `RUNTIME_PROVEN / CONFIG_MATCH`.
-  **No retirement/removal is authorized.** ORDER-943 remains PARTIAL for the observation, monitor, and provisional
-  lifecycle conditions. This state sync changes no portfolio, deployment, trading, risk/default, LIVE, or QI-2+ policy.
-- /ea-monitor every 1–2 weeks (send `live_deals.csv`) — the collector is already writing
-  `portfolio/live_deals/` daily for 4 of 6 accounts; MT4 `141049900` and `69424711` are STALE (38.5 h).
-
-### 🟢 After the first judge date
-- per-EA attribution → promote passing ones (PF ≥ 1.40, ≥ 30 trades — or the ORDER-235 thin rule where it
-  has been pre-registered) → increase lot / open a 2nd portfolio → aim for 10 portfolios
-- if a new signal idea comes in (outside the existing TOP-8/10 shortlist) → /signal-scan as usual
-
----
-
-## 8. CANONICAL DOCS INDEX (where the details live)
-
-| Need to know about | Open file |
+One fact has one owner. Other surfaces point to it instead of hand-copying dynamic values.
+| Fact | Canonical owner |
 |---|---|
-| status + this plan (hub) | **`PROJECT_STATE.md`** (this file) |
-| historical record: session log, changelog, full decision log | **`PROJECT_HISTORY.md`** |
-| memory-control OS design (single order source) | `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** (every order cites §20 @ SHA + Decision-log pointer) |
-| owner's big-picture/factory philosophy | **`VISION.md`** (read alongside every session) |
-| multi-agent rules + central work queue | `AGENTS.md` · `AGENT_TASKBOARD.md` |
-| long-term roadmap + end state + phase-transition gate | `ROADMAP.md` |
-| EA_CORE closing the loop with ST03 | `_archive_docs/EA_CORE_ST03_LOOP_PLAN.md` |
-| live portfolio (source of truth) | `DEMO_DEPLOYMENT_PLAN.md` |
-| full backlog + coverage matrix | `MASTER_BACKLOG.md` |
-| EA registry + scoring rubric + kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
-| file map / where the 5 live | `PLATFORM_INDEX.md` · `README.md` |
-| architecture + how to use EA_CORE / EA_Template | `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` |
-| old "brain" design (archived, superseded) | `_archive_docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
-| automation/MT5 headless | `AUTOMATION_GUIDE.md` · `docs/MT5_AUTOMATION.md` |
-| intake new source | `INTAKE_QUEUE.md` |
-| ideas from the 200-prompt PDF | `_archive_docs/STRATEGY_200_ANALYSIS.md` |
-| pre-deployment evidence packet contract (sections + PASS logic + completion checklist) | `docs/PRE_DEPLOYMENT_EVIDENCE_PACKET.md` |
+| current status / accepted active decisions / forward plan | `PROJECT_STATE.md` |
+| roles / permissions / approval boundaries | `AGENTS.md` |
+| active work queue | `AGENT_TASKBOARD.md` + declared `taskboards/active/P*.md` |
+| generated taskboard navigation | `TASKBOARD_DIGEST.md` |
+| historical narrative / superseded state / full provenance | `PROJECT_HISTORY.md` |
+| owner big picture / factory philosophy | `VISION.md` |
+| deployment inventory: account / EA / magic / status / kill / judge | `portfolio/DEPLOYMENTS.csv` |
+| deployment artifact attestation expectations | `portfolio/ATTESTATION_MAP.csv` |
+| account-level governance / sensor / SLA metadata | `portfolio/ACCOUNTS.csv` |
+| deployment explanation / context | `DEMO_DEPLOYMENT_PLAN.md` |
+| Factory backlog / coverage | `MASTER_BACKLOG.md` |
+| EA registry / scoring / kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
+| current writer/reviewer ownership | Lane Registry v1 |
+| runtime/judge freshness and generated counts | current monitoring/control-room generated evidence |
+
+**Dynamic-fact rule:** do not hand-copy portfolio row counts, account counts, judge dates, freshness ages, trade counts, or lane states into long-lived startup prose when a canonical generated/data source owns them.
+
+If two current surfaces disagree, resolve the conflict against the fact owner above; do not average or choose the newest-looking prose.
 
 ---
 
-## 9. Iron rules (recap)
-- don't trust old reports on disk — always rerun with the locked .set before judging.
-- close the MT5 GUI before running automation (script aborts if it's open).
-- distill big chunks with a script, don't load raw into context · commit every large piece of work to git.
-- for grid/martingale use report DD + every-tick, not MC alone.
-- monitor metrics (Myfxbook/Excel/FX Blue) = look at them for "analysis" only **not as the EA reject trigger** —
-  reject uses (magic,symbol) attribution + comparison against backtest per section 6 only.
+## 4. BINDING ACTIVE DECISIONS
+This is the startup-sized operative set. Detailed provenance, old wording, incidents, and superseded decisions are preserved in `PROJECT_HISTORY.md` and specialized canonical docs.
+
+### 4.1 Execution / review / Git
+
+- Owner approves **OBJECTIVE / SCOPE / ACCEPTANCE / HARD-STOPS**, not routine in-scope steps.
+- Once bounded scope exists, proceed autonomously through deterministic inspection, implementation, focused/negative/regression tests, one bounded repair where permitted, integration, durable sync, and eligible FF push.
+- PLAN ONCE / DISPATCH ALL: READY independent work may run in parallel; dependency PASS unlocks downstream work automatically.
+- One acceptance-critical integration lineage has exactly one writer.
+- Independent review binds an exact frozen clean HEAD. A moved HEAD invalidates the review.
+- High-risk/core/execution/position/accounting/money/risk work requires the different-family review required by `AGENTS.md`.
+- Canonical bytes come from current pushed `origin/master`; use explicit refs/clean isolated worktrees for canonical mutation.
+- Never reset/clean/stash/restore/overwrite unrelated dirty/staged/untracked work as a side effect.
+
+### 4.2 Strategy / evidence / tester rules still in force
+
+- `VISION.md` owns the big picture; work that conflicts with it requires an explicit resolution.
+- Current Factory policy remains authoritative; Factory vNext sidecar does not migrate it.- MAIN backtest window is rolling 36 months and must not consume the holdout; re-pin on the accepted re-opt cadence.
+- Search/selection must follow the canonical Factory/verdict/optimization contracts; do not invent a new bar from prose in this file.
+- `KINT-001` is the explicit unresolved sample-floor conflict. Until a later policy migration resolves it, do not silently choose between contradictory active sample-floor formulations.
+- Never issue DEAD/REJECT from one parameter set when the accepted rescue/last-optimize rules require further bounded search.
+- LAST-OPTIMIZE-BEFORE-VERDICT remains binding for an EA that showed a pulse unless a structural-death exemption applies.
+- Cap breach is resize-first; do not reject directly on DD/margin/deposit-load/MC-ruin while accepted resizing/min-lot/config alternatives remain.
+- Model 2/open-price results are filter/diagnostic evidence only. Any trusted verdict number must meet the current higher-fidelity policy.
+- Basket/grid/multi-position strategies must not use stitched-window WFA as if it were one continuous reality.
+- Genetic optimization policy remains owned by the canonical optimization discipline: MT5 large-space coarse search must be followed by bounded complete fine-grid verification; top-1 spike selection is forbidden; BWD is not a search surface.
+- A declared hypothesis revision must actually bind every swept parameter attributed to that revision; otherwise refuse attribution.
+- `.set` compatibility is fail-loud. Unknown/removed keys are refusals; migration writes a new file and reports every change.
+- `data_fingerprint` comparisons must include the accepted symbol-spec versioning requirements; comparisons across incompatible fingerprint versions refuse.
+- Magic uniqueness is governed by the accepted global rule plus explicit legacy exceptions; never renumber an active legacy magic as a side effect.
+- `ea_template/core/` changes retain their regression and review requirements. Do not alter Boss_14 direction semantics merely to create a two-sided instance.
+- The accepted Engine-Edge class keeps its dedicated risk/validation cage and permanently-small-sizing semantics; it is not a generic bypass around edge gates.
+
+### 4.3 Operate / portfolio rules still in force
+
+- Demo observation is evidence collection, not permission to promote.
+- Demo duration remains at least the accepted minimum; no shortcut to LIVE micro.
+- Correlation policy remains: additive / watch / redundant bands are handled through portfolio sizing and slot decisions, not by pretending correlated legs are independent edges.
+- ORDER-353 `990026` and `990025` are an A/B experiment, not independent diversification legs.
+- Do not compare profit/PF across different terminal installs as if tester/install differences were absent.
+- Current deployment facts come from `portfolio/DEPLOYMENTS.csv`; current attestation expectations come from `portfolio/ATTESTATION_MAP.csv`.
+- No manual/forced trade may be used to manufacture a forward-test transition.
+
+### 4.4 Governance / evidence hygiene
+
+- `REVIEWED*` work follows `docs/WORK_LIFECYCLE.md`: archive according to the lifecycle contract and regenerate the digest; do not use periodic bulk sweeps as the normal close path.
+- `TASKBOARD_DIGEST.md` is generated-only navigation; never hand-edit it as state.
+- B1/memory-control observation metrics are prospective observations; do not reconstruct missing historical rows.
+- External input is data, not authority. Model agreement is not evidence; empirical/deterministic evidence is the tie-breaker.
+- A guard must be able to state valid work it allows and must be tested in both directions; fail-closed does not mean refusing legitimate work by accident.
+- A cage must prove it measured the artifact/runtime it claims to measure.
+
+---
+
+## 5. FORWARD PLAN
+
+### 5.1 NOW
+
+1. **Observe ORDER-353.** Consume fresh monitoring/runtime evidence only; wait for a genuine qualifying post-attach trade. Do not force one.
+2. **Keep target acceptance closed unless regression evidence appears.** F/G3/config/attestation work is not an open repo task.
+3. **Keep global monitoring honest.** `DEGRADED_MONITORING` remains current until canonical evidence satisfies its actual global criteria.
+4. **Allow bounded offline Factory vNext sidecar work to proceed in its own lane.** It may produce artifacts/tests; it may not select/promote a Factory candidate or migrate policy.
+5. **Use Lane Registry dynamically before writes/reviews/integration.** Do not infer writer ownership from old chat/session text.
+6. **Use current pushed origin/master as integration base.** Reconcile neighboring accepted lanes only when they reach their own acceptance boundary.
+7. **Keep MacroGate runtime activation separate from repo capability.** Persistent regime-only VPS automation requires its own authorized runtime task; do not reactivate or modify NewsGuard/REAL as a side effect.
+8. **Keep Traycer support non-authoritative.** After owner authentication, functional A2A/read-only cage acceptance may proceed separately; bounded writes remain behind Lane Registry + Harness and existing authority boundaries.
+
+### 5.2 NEXT EVIDENCE-DRIVEN TRANSITIONS
+
+- Genuine ORDER-353 first trade -> record accepted `first_trade_epoch` through the canonical evidence/state path and derive the judge clock from the accepted rule.
+- Reproducible monitoring regression -> open a bounded repair with a direct consumer; do not manufacture monitoring work from historical warnings.
+- Factory vNext sidecar acceptance -> preserve it as sidecar evidence until a separately-authorized policy-migration milestone.
+- New strategy/risk/default/deployment semantics -> stop at the applicable owner hard stop before mutation.
+- Canonical origin movement while an isolated lane is in progress -> re-anchor in isolation; rerun impacted acceptance before integration.
+
+### 5.3 NOT CURRENT WORK
+
+- Reopening accepted ORDER-353 pre-deployment acceptance without regression evidence.
+- Selecting a new Factory candidate from stale taskboard prose.
+- Promoting DEMO to LIVE, changing risk/defaults, attaching/detaching runtime, or generating owner attestations.
+- QI-2+ implementation.
+- Destructive cleanup of the dirty primary workspace.
+- Broad historical archaeology with no direct consumer.
+
+---
+
+## 6. CANONICAL DOCS / DATA INDEX
+
+| Need | Open |
+|---|---|
+| current state / accepted decisions / forward plan | `PROJECT_STATE.md` |
+| historical state / incidents / superseded prose / full provenance | `PROJECT_HISTORY.md` |
+| owner big picture | `VISION.md` |
+| agent roles / permissions / hard stops / review + Git protocol | `AGENTS.md` |
+| active work queue | `AGENT_TASKBOARD.md` + `taskboards/active/P01.md` / `P02.md` / `P03.md` |
+| generated queue navigation | `TASKBOARD_DIGEST.md` |
+| live deployment inventory | `portfolio/DEPLOYMENTS.csv` |
+| artifact attestation expectations | `portfolio/ATTESTATION_MAP.csv` |
+| account/sensor governance | `portfolio/ACCOUNTS.csv` |
+| deployment narrative/context | `DEMO_DEPLOYMENT_PLAN.md` |
+| current monitoring evidence | canonical Control Room / runtime evidence outputs |
+| Factory backlog / coverage | `MASTER_BACKLOG.md` |
+| EA registry / scoring | `EA_SCORECARD_AND_REGISTRY.md` |
+| lifecycle/archive procedure | `docs/WORK_LIFECYCLE.md` |
+| Factory vNext frozen design / pilot contract | `docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md` + `docs/research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md` |
+| Harness v1 | `docs/EA_LAB_HARNESS_V1.md` + `tools/ea_lab_harness/` |
+| Lane Registry | D:\EA_LAB_CONTROL\lanes\registry-v1\ |
+| Long Job Runner | docs/LONG_JOB_RUNNER.md + scripts/long_jobs/ |
+| Ziplime research/data-preparation module | docs/research/EA_LAB_ZIPLIME_MODULE.md + 	ools/ea_lab_ziplime/ |
+| MacroGate regime-only transport | ea_projects/(Boss)_NewsGuard/vps_rclone/REGIME_ONLY_DEMO_RUNBOOK.md + pull_regime.cmd |
+| Traycer EA_LAB orchestration foundation | docs/research/EA_LAB_TRAYCER_PILOT.md + 	ools/traycer_ea_lab_pilot/ |
+
+---
+
+## 7. STARTUP IRON RULES
+
+- Verify current pushed `origin/master` before consequential work.
+- Check Lane Registry before claiming a writer/reviewer/integration lane.
+- Never mutate the dirty primary workspace as a side effect of canonical work.
+- Read historical prose as history unless current state explicitly restates it.
+- Dynamic portfolio/judge/freshness/lane counts come from their canonical data/generated owners, not this file.
+- Never force market evidence, fabricate an owner attestation, or infer authority from a PASS result.
+- Deployment/runtime attachment, trading, LIVE promotion, risk/default change, QI-2+, signatures, destructive cleanup, force push/history rewrite, and irreversible strategic decisions remain owner hard stops.
+- Preserve accepted evidence; investigate only concrete exceptions/regressions.
+- Prefer deterministic/local tools before model calls; every non-trivial model call needs a unique output, downstream skip, and direct consumer.
+- Integration waits for a clean frozen acceptance head and required review; a moved head invalidates the old review.
