@@ -20,7 +20,7 @@ from _triage.factory_vnext.pilot import (
 
 class FactoryVNextPilotTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(dir=r"D:\EA_LAB_CONTROL\temp")
+        self.tmp = tempfile.TemporaryDirectory(dir=str(ROOT / "_triage"))
         self.root = pathlib.Path(self.tmp.name)
         self.source = self.root / "(TRD)_SuperTrendFlip_rev05.mq5"
         self.preset = self.root / "STF_BTC_H4_rev05_off.set"
