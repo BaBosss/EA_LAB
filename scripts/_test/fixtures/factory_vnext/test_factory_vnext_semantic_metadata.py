@@ -60,7 +60,7 @@ class SemanticMetadataTests(unittest.TestCase):
         self.assertEqual(allow_live["allowed_values"], {"status": "PROVEN", "value": [False, True]})
         self.assertEqual(allow_live["boundedness"], {"status": "PROVEN", "value": "BOUNDED"})
         self.assertEqual(allow_live["unit"], {"status": "PROVEN", "value": "UNITLESS"})
-        self.assertEqual(allow_live["semantic_type"], {"status": "PROVEN", "value": "boolean_policy"})
+        self.assertEqual(allow_live["semantic_type"], {"status": "UNKNOWN", "value": None})
         self.assertEqual(allow_live["optimization_eligibility"]["status"], "UNKNOWN")
     def test_rerun_identity_and_bytes_are_stable(self):
         second = build_supertrend_semantic_metadata(str(REPO_ROOT))

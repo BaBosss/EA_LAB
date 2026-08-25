@@ -118,7 +118,6 @@ def _unknown_fields(source_type: str) -> Dict[str, Dict[str, Any]]:
     }
     if source_type == "bool":
         facts.update({
-            "semantic_type": _fact("PROVEN", "boolean_policy"),
             "unit": _fact("PROVEN", "UNITLESS"),
             "boundedness": _fact("PROVEN", "BOUNDED"),
             "allowed_values": _fact("PROVEN", [False, True]),
