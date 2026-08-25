@@ -1,0 +1,11 @@
+{
+  "columns": {
+    "timestamp": "Time",
+    "open": "Open",
+    "high": "High",
+    "low": "Low",
+    "close": "Close",
+    "volume": "Volume"
+  },
+  "timezone": "UTC"
+}
