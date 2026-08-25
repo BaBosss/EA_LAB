@@ -42,6 +42,46 @@ try {
     Assert $dup 'duplicate JobId not refused'
     $pass++; ReportCase 'duplicate job id' 'PASS'
 
+    $zeroExe = Join-Path $env:SystemRoot 'System32\hostname.exe'
+    & $Start -FilePath $zeroExe -JobId 'job-zero' -JobsRoot $JobsRoot -TimeoutSec 10 -HeartbeatSec 1 | Out-Null
+    Start-Sleep -Seconds 2
+    $zeroState = & $Status -JobId 'job-zero' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
+    $zeroMeta = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-zero\job.json') -Raw | ConvertFrom-Json
+    Assert ($zeroState.state -eq 'COMPLETE') "zero-argument job expected COMPLETE got $($zeroState.state)"
+    Assert ([int]$zeroMeta.arg_count -eq 0) 'zero-argument metadata arg_count was not zero'
+    $pass++; ReportCase 'zero argument job' 'PASS'
+
+    $raceScript = Join-Path $Root 'race_start.ps1'
+    ChildScript $raceScript @'
+param($StartScript,$Exe,$RaceJobsRoot,$RaceJobId,$Ready,$Barrier,$Result)
+Set-Content -LiteralPath $Ready -Value 'READY' -Encoding ascii
+while (-not (Test-Path -LiteralPath $Barrier)) { Start-Sleep -Milliseconds 10 }
+try {
+    & $StartScript -FilePath $Exe -JobId $RaceJobId -JobsRoot $RaceJobsRoot -TimeoutSec 10 -HeartbeatSec 1 | Out-Null
+    Set-Content -LiteralPath $Result -Value 'SUCCESS' -Encoding ascii
+} catch {
+    Set-Content -LiteralPath $Result -Value 'REFUSED' -Encoding ascii
+}
+'@
+    $ready1=Join-Path $Root 'race1.ready'; $ready2=Join-Path $Root 'race2.ready'; $barrier=Join-Path $Root 'race.go'
+    $result1=Join-Path $Root 'race1.result'; $result2=Join-Path $Root 'race2.result'; $raceId='job-race'
+    $raceArgs1=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$raceScript,$Start,$zeroExe,$JobsRoot,$raceId,$ready1,$barrier,$result1)
+    $raceArgs2=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$raceScript,$Start,$zeroExe,$JobsRoot,$raceId,$ready2,$barrier,$result2)
+    $rp1=Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList $raceArgs1 -PassThru -WindowStyle Hidden
+    $rp2=Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList $raceArgs2 -PassThru -WindowStyle Hidden
+    $readyDeadline=(Get-Date).AddSeconds(5)
+    while ((-not (Test-Path $ready1) -or -not (Test-Path $ready2)) -and (Get-Date) -lt $readyDeadline) { Start-Sleep -Milliseconds 20 }
+    Assert ((Test-Path $ready1) -and (Test-Path $ready2)) 'concurrent duplicate starters did not reach barrier'
+    Set-Content -LiteralPath $barrier -Value 'GO' -Encoding ascii
+    $rp1.WaitForExit(); $rp2.WaitForExit()
+    $raceResults=@((Get-Content -LiteralPath $result1 -Raw).Trim(),(Get-Content -LiteralPath $result2 -Raw).Trim())
+    Assert (@($raceResults | Where-Object { $_ -eq 'SUCCESS' }).Count -eq 1) ("concurrent duplicate success count was {0}" -f @($raceResults | Where-Object { $_ -eq 'SUCCESS' }).Count)
+    Assert (@($raceResults | Where-Object { $_ -eq 'REFUSED' }).Count -eq 1) ("concurrent duplicate refusal count was {0}" -f @($raceResults | Where-Object { $_ -eq 'REFUSED' }).Count)
+    $raceTerminal = & $Wait -JobId $raceId -JobsRoot $JobsRoot -PollSec 1 -MaxWaitSec 5 -Json | ConvertFrom-Json
+    Assert ($raceTerminal.state -eq 'COMPLETE') "concurrent winner expected COMPLETE got $($raceTerminal.state)"
+    $pass++; ReportCase 'concurrent duplicate job id' 'PASS'
+
+
     $job4 = Join-Path $JobsRoot 'job-004'
     New-Item -ItemType Directory -Path $job4 -Force | Out-Null
     $state4 = [ordered]@{ job_id = 'job-004'; state = 'RUNNING'; runner_pid = 999999; runner_start_utc = '2000-01-01T00:00:00.0000000Z'; child_pid = 999998; child_start_utc = '2000-01-01T00:00:00.0000000Z' }

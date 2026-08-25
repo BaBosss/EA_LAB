@@ -103,7 +103,7 @@ function Test-LjrLeafFilePath {
 }
 
 function ConvertTo-LjrProcessArguments {
-    param([Parameter(Mandatory = $true)][string[]]$ArgumentList)
+    param([Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$ArgumentList)
 
     function Quote-LjrArgument {
         param([string]$Value)

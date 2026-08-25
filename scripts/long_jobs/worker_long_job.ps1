@@ -35,7 +35,11 @@ $psi.UseShellExecute = $false
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError = $true
 $psi.CreateNoWindow = $true
-$psi.Arguments = ConvertTo-LjrProcessArguments -ArgumentList @($request.arguments)
+$requestArgs = @()
+if ($request.PSObject.Properties.Name -contains 'arguments') {
+    $requestArgs = @($request.arguments)
+}
+$psi.Arguments = ConvertTo-LjrProcessArguments -ArgumentList $requestArgs
 $child = New-Object System.Diagnostics.Process
 $child.StartInfo = $psi
 $stdoutBuffer = New-Object System.Collections.ArrayList

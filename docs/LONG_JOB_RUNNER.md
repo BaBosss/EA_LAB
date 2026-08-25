@@ -53,6 +53,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\long_jobs\cancel_lon
 
 - Do not pass credentials in arguments.
 - The runner does not intentionally persist secrets, but any secrets sent in a child process command line can still be visible to that child and the OS process model.
+- Child stdout/stderr is captured durably in the job logs; callers must not emit credentials or other secrets to stdout/stderr.
 - Prefer environment-free, file-based inputs for sensitive jobs when possible.
 
 ## Recovery Workflow

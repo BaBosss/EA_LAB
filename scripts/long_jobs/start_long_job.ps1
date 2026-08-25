@@ -31,9 +31,19 @@ if (-not $JobId) {
 if (-not (Test-LjrValidJobId -JobId $JobId)) { throw "invalid job id: $JobId" }
 
 $JobsRoot = Resolve-LjrSafeAbsPath -Path $JobsRoot
+if (-not (Test-Path -LiteralPath $JobsRoot)) {
+    New-Item -ItemType Directory -Path $JobsRoot -Force -ErrorAction Stop | Out-Null
+}
+if (-not (Get-Item -LiteralPath $JobsRoot -ErrorAction Stop).PSIsContainer) {
+    throw "jobs root must be a directory: $JobsRoot"
+}
 $jobRoot = Join-Path $JobsRoot $JobId
-if (Test-Path -LiteralPath $jobRoot) { throw "job already exists: $JobId" }
-New-Item -ItemType Directory -Path $jobRoot -Force | Out-Null
+try {
+    New-Item -ItemType Directory -Path $jobRoot -ErrorAction Stop | Out-Null
+} catch {
+    if (Test-Path -LiteralPath $jobRoot) { throw "job already exists: $JobId" }
+    throw
+}
 New-Item -ItemType Directory -Path (Join-Path $jobRoot 'logs') -Force | Out-Null
 
 $state = [ordered]@{
@@ -56,9 +66,7 @@ $request = [ordered]@{
     base_sha = $BaseSha
     stage = $Stage
     created_utc = Get-LjrUtcNowIso
-}
-if ($ArgumentList.Count -gt 0) {
-    $request.arguments = $ArgumentList
+    arguments = @($ArgumentList)
 }
 Invoke-LjrAtomicWriteJson -Path (Join-Path $jobRoot 'request.json') -Object $request
 Invoke-LjrAtomicWriteJson -Path (Join-Path $jobRoot 'job.json') -Object ([ordered]@{
