@@ -150,3 +150,4 @@ run_pilot_xml_artefact_identity_tests.ps1|UNMEASURED|A-F7 optimizer XML artefact
 run_template_entry_wrapper_registration_tests.ps1|UNMEASURED|B-F2 wrapper-to-registry direction check cage (M1-Lane B, 2026-08-20); not timed against the pinned budget.
 run_taskboard_split_negative_tests.ps1|UNMEASURED|Active taskboard split adversarial migration cage; run directly for this migration and not timed against the pinned fast-tier budget.
 run_ziplime_module_tests.ps1|UNMEASURED|Ziplime research module acceptance cage; not timed against the pinned fast-tier budget.
+run_factory_vnext_mvp_tests.ps1|UNMEASURED|Factory vNext non-authoritative sidecar focused schema/identity/range/report cage; not yet timed against the pinned full-tier budget. 
