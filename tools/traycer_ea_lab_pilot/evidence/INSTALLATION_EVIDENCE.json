@@ -1,0 +1,18 @@
+{
+    "captured_at":  "2026-08-25T09:50:29.1096298+07:00",
+    "installer":  {
+                      "path":  "D:\\EA_LAB_CONTROL\\traycer-pilot\\downloads\\traycer-desktop-windows-x64-1.2.0.exe",
+                      "sha256":  "538aefba2114610b3e3313c20bd81dc1d5b9385a43d81e01193347eda5f8ce0f",
+                      "size":  138119464,
+                      "signature":  "Valid",
+                      "signer":  "CN=TRAYCER AI INC., O=TRAYCER AI INC., L=Walnut Creek, S=California, C=US"
+                  },
+    "installed":  {
+                      "path":  "C:\\Users\\patip\\AppData\\Local\\Programs\\traycer\\Traycer.exe",
+                      "version":  "1.2.0",
+                      "signature":  "Valid",
+                      "signer":  "CN=TRAYCER AI INC., O=TRAYCER AI INC., L=Walnut Creek, S=California, C=US",
+                      "cli_path":  "C:\\Users\\patip\\AppData\\Local\\Programs\\traycer\\resources\\cli\\win32-x64\\traycer.exe",
+                      "cli_version":  "1.2.0"
+                  }
+}

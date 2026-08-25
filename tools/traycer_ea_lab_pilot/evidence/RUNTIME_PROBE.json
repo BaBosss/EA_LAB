@@ -1,0 +1,31 @@
+{
+    "timestamp":  "2026-08-25T10:18:27.0586880+07:00",
+    "tools":  {
+                  "git":  true,
+                  "claude":  true,
+                  "codex":  true,
+                  "qwen":  true,
+                  "gemini":  false
+              },
+    "traycer":  {
+                    "found":  true,
+                    "version":  "1.2.0",
+                    "signature_status":  "Valid",
+                    "signer_subject":  "CN=TRAYCER AI INC., O=TRAYCER AI INC., L=Walnut Creek, S=California, C=US"
+                },
+    "host":  {
+                 "running":  true,
+                 "version":  "1.2.0",
+                 "service_registered":  true
+             },
+    "doctor":  {
+                   "status":  "ok",
+                   "issue_codes":  [
+                                       "HOST_RPC_UNVERIFIED"
+                                   ]
+               },
+    "harness_probe":  {
+                          "status":  "error",
+                          "code":  "E_AUTH_NO_CREDENTIALS"
+                      }
+}

@@ -1,0 +1,47 @@
+{
+    "schema_version":  1,
+    "created_at":  "2026-08-25T09:47:51.7050397+07:00",
+    "ea_lab_base_sha":  "dc23aea70c79dd53b2241be0d2b32620a2e5e9c2",
+    "branch":  "module/traycer-ea-lab-pilot-20260825",
+    "worktree":  "D:\\EA_LAB_worktrees\\traycer-ea-lab-pilot-20260825",
+    "traycer":  {
+                    "desktop_version":  "1.2.0",
+                    "installer_url":  "https://github.com/traycerai/traycer/releases/download/desktop-v1.2.0/traycer-desktop-windows-x64.exe",
+                    "installer_sha256":  "538aefba2114610b3e3313c20bd81dc1d5b9385a43d81e01193347eda5f8ce0f",
+                    "signer":  "TRAYCER AI INC.",
+                    "installed_path":  "C:\\Users\\patip\\AppData\\Local\\Programs\\traycer\\Traycer.exe",
+                    "cli_path":  "C:\\Users\\patip\\AppData\\Local\\Programs\\traycer\\resources\\cli\\win32-x64\\traycer.exe"
+                },
+    "host":  {
+                 "version":  "1.2.0",
+                 "registry_sha256":  "9fb84a05d3fccfdfb562e80982a12c0f6a7e8b55b5523fdfd05000985b58c822",
+                 "running":  true,
+                 "service_registered":  true
+             },
+    "providers":  {
+                      "git":  true,
+                      "claude":  true,
+                      "codex":  true,
+                      "qwen":  true,
+                      "gemini":  false
+                  },
+    "auth_state":  "NOT_SIGNED_IN",
+    "allowed_repo_paths":  [
+                               "tools/traycer_ea_lab_pilot",
+                               "docs/research/EA_LAB_TRAYCER_PILOT.md"
+                           ],
+    "forbidden":  [
+                      "D:\\EA_LAB mutation",
+                      "PROJECT_STATE.md mutation in this lane",
+                      "AGENTS.md mutation in this lane",
+                      "taskboard mutation in this lane",
+                      "MT4/MT5 attachment",
+                      "deployment",
+                      "trading",
+                      "LIVE promotion",
+                      "risk/default changes",
+                      "force push",
+                      "history rewrite"
+                  ],
+    "intended_role":  "Traycer is an orchestration/UI layer only; EA_LAB Control Tower, Lane Registry, Harness, Hermes safety wrapper, and Git governance retain authority."
+}

@@ -1,0 +1,9 @@
+PASS reject dirty primary root
+PASS reject dirty primary descendant
+PASS accept isolated control cage
+PASS discover required coding CLIs
+PASS detect installed Traycer signature and version
+PASS create bounded disposable cage
+PASS refuse cage under protected checkout
+PASS bundled Traycer CLI answers version
+RESULT passed=8 failed=0

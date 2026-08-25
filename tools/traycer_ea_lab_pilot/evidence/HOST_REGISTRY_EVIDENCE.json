@@ -1,0 +1,16 @@
+{
+    "captured_at":  "2026-08-25T09:50:31.8576892+07:00",
+    "latest":  "1.2.0",
+    "version":  "1.2.0",
+    "released_at":  "2026-08-24T13:39:01.452Z",
+    "platform":  {
+                     "available":  true,
+                     "unavailableReason":  null,
+                     "url":  "https://github.com/traycerai/traycer/releases/download/host-v1.2.0/traycer-host-windows-x64.zip",
+                     "sizeBytes":  74634297,
+                     "sha256":  "9fb84a05d3fccfdfb562e80982a12c0f6a7e8b55b5523fdfd05000985b58c822",
+                     "signatureUrl":  "https://github.com/traycerai/traycer/releases/download/host-v1.2.0/traycer-host-windows-x64.zip.minisig",
+                     "signatureAlgorithm":  "minisign",
+                     "publicKeyId":  "847ef539119a1961"
+                 }
+}
