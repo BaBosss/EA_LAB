@@ -676,7 +676,8 @@ $SUITE_GUARDS = @{
     'run_guard_feed_pipeline_tests.ps1' = @('scripts/publish_guard_feeds_to_vps.ps1',
                                           'scripts/daily_monitor.ps1',
                                           'ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1',
-                                          'ea_projects/(Boss)_NewsGuard/vps_rclone/pull_news.cmd')
+                                          'ea_projects/(Boss)_NewsGuard/vps_rclone/pull_news.cmd',
+                                          'ea_projects/(Boss)_NewsGuard/vps_rclone/pull_regime.cmd')
     # ORDER-612 (S4). Its fixtures are built by snapshot_build.py through the real schema, and the
     # two readers it asserts on are make_status's renderer and the daily digest -- so all of those
     # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when

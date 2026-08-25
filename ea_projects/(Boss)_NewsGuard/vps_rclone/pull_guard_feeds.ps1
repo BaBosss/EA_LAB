@@ -1,5 +1,5 @@
 # VPS-side pull for NewsGuard + MacroGate feeds.
-# Fetches into private staging, validates each feed, then atomically replaces only valid files.
+# Fetches into private staging, validates each selected feed, then atomically replaces only valid files.
 [CmdletBinding()]
 param(
   [string]$RcloneExe = 'C:\rclone\rclone.exe',
@@ -10,6 +10,7 @@ param(
   [string]$LogFile = 'C:\rclone\logs\pull_guard_feeds.log',
   [int]$NewsMaxAgeHours = 26,
   [int]$RegimeMaxAgeHours = 36,
+  [switch]$RegimeOnly,
   [switch]$SkipFetch
 )
 $ErrorActionPreference = 'Stop'
@@ -76,14 +77,20 @@ if (-not $SkipFetch) {
   try {
     if (-not (Test-Path -LiteralPath $RcloneExe)) { throw "rclone not found: $RcloneExe" }
     if (-not (Test-Path -LiteralPath $LocalStagingDir)) { New-Item -ItemType Directory -Path $LocalStagingDir -Force | Out-Null }
-    # Remove only our two staged targets before fetch so a remote-missing file cannot masquerade
+    # Remove only selected staged targets before fetch so a remote-missing file cannot masquerade
     # as a fresh fetch from a previous pass. Common\Files last-good copies are never removed here.
-    foreach ($name in @('EA_LAB_news_week.csv','EA_LAB_mris_regime.csv')) {
+    $selectedNames = if ($RegimeOnly) { @('EA_LAB_mris_regime.csv') } else { @('EA_LAB_news_week.csv','EA_LAB_mris_regime.csv') }
+    foreach ($name in $selectedNames) {
       $oldStage = Join-Path $LocalStagingDir $name
       if (Test-Path -LiteralPath $oldStage) { Remove-Item -LiteralPath $oldStage -Force }
     }
-    & $RcloneExe copy $RemoteDir $LocalStagingDir --config $RcloneConfig `
-      --include 'EA_LAB_news_week.csv' --include 'EA_LAB_mris_regime.csv' --min-size 1 --log-level INFO --log-file $LogFile
+    if ($RegimeOnly) {
+      & $RcloneExe copy $RemoteDir $LocalStagingDir --config $RcloneConfig `
+        --include 'EA_LAB_mris_regime.csv' --min-size 1 --log-level INFO --log-file $LogFile
+    } else {
+      & $RcloneExe copy $RemoteDir $LocalStagingDir --config $RcloneConfig `
+        --include 'EA_LAB_news_week.csv' --include 'EA_LAB_mris_regime.csv' --min-size 1 --log-level INFO --log-file $LogFile
+    }
     if ($LASTEXITCODE -ne 0) { throw "rclone copy exit $LASTEXITCODE" }
     Log 'rclone fetch OK'
   } catch {
@@ -92,12 +99,18 @@ if (-not $SkipFetch) {
   }
 }
 
-Publish-Staged 'NewsGuard' 'EA_LAB_news_week.csv' $NewsMaxAgeHours ${function:Test-NewsFeed}
+if (-not $RegimeOnly) {
+  Publish-Staged 'NewsGuard' 'EA_LAB_news_week.csv' $NewsMaxAgeHours ${function:Test-NewsFeed}
+}
 Publish-Staged 'MacroGate' 'EA_LAB_mris_regime.csv' $RegimeMaxAgeHours ${function:Test-RegimeFeed}
 
 if ($failures.Count -gt 0) {
   Log "guard feed pull FAILED feed(s): $($failures -join ', ')"
   exit 1
 }
-Log 'guard feed pull COMPLETE: both feeds validated and published atomically'
+if ($RegimeOnly) {
+  Log 'guard feed pull COMPLETE: MacroGate regime-only feed validated and published atomically'
+} else {
+  Log 'guard feed pull COMPLETE: both feeds validated and published atomically'
+}
 exit 0

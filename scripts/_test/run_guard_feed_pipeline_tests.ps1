@@ -32,6 +32,32 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'valid VPS publish failed' }
   $vpsReg = Join-Path $vpsCommon 'EA_LAB_mris_regime.csv'
   $vpsBefore = (Get-FileHash $vpsReg).Hash
+
+  # DEMO-safe regime-only mode must publish MacroGate without touching NewsGuard.
+  $regOnlyCommon = Join-Path $t 'regonlycommon'
+  New-Item -ItemType Directory -Path $regOnlyCommon -Force | Out-Null
+  $regOnlyNews = Join-Path $regOnlyCommon 'EA_LAB_news_week.csv'
+  'KEEP_NEWS_UNCHANGED' | Set-Content $regOnlyNews -Encoding UTF8
+  $regOnlyNewsHash = (Get-FileHash $regOnlyNews).Hash
+  @('BkkTime,Currency,Title','BAD') | Set-Content (Join-Path $vpsStage 'EA_LAB_news_week.csv') -Encoding UTF8
+  Copy-Item $regDest (Join-Path $vpsStage 'EA_LAB_mris_regime.csv') -Force
+  & $vpsPull -RegimeOnly -SkipFetch -LocalStagingDir $vpsStage -CommonDir $regOnlyCommon -LogFile (Join-Path $logs 'pull-regime-only.log') -RegimeMaxAgeHours 100
+  if ($LASTEXITCODE -ne 0) { throw 'regime-only VPS publish failed' }
+  if ((Get-FileHash $regOnlyNews).Hash -ne $regOnlyNewsHash) { throw 'regime-only mode touched NewsGuard Common file' }
+  if (-not (Test-Path (Join-Path $regOnlyCommon 'EA_LAB_mris_regime.csv'))) { throw 'regime-only mode did not publish MacroGate feed' }
+  # RegimeOnly fetch must request only the regime object and leave staged news untouched.
+  $fetchArgs = Join-Path $t 'regime-fetch-args.txt'
+  $fakeRegimeRclone = Join-Path $t 'fake-regime-rclone.cmd'
+  $stagedNews = Join-Path $vpsStage 'EA_LAB_news_week.csv'
+  'KEEP_STAGED_NEWS' | Set-Content $stagedNews -Encoding UTF8
+  $stagedNewsHash = (Get-FileHash $stagedNews).Hash
+  @('@echo off',('echo %* > "{0}"' -f $fetchArgs),('copy /y "{0}" "{1}" >nul' -f $regDest,(Join-Path $vpsStage 'EA_LAB_mris_regime.csv')),'exit /b 0') | Set-Content -LiteralPath $fakeRegimeRclone -Encoding ASCII
+  & $vpsPull -RegimeOnly -RcloneExe $fakeRegimeRclone -RcloneConfig (Join-Path $t 'none.conf') -RemoteDir 'fake:remote' -LocalStagingDir $vpsStage -CommonDir $regOnlyCommon -LogFile (Join-Path $logs 'pull-regime-fetch.log') -RegimeMaxAgeHours 100
+  if ($LASTEXITCODE -ne 0) { throw 'regime-only fetch path failed' }
+  $fetchArgText = Get-Content -Raw -LiteralPath $fetchArgs
+  if ($fetchArgText -notmatch 'EA_LAB_mris_regime\.csv') { throw 'regime-only fetch did not request regime object' }
+  if ($fetchArgText -match 'EA_LAB_news_week\.csv') { throw 'regime-only fetch requested NewsGuard object' }
+  if ((Get-FileHash $stagedNews).Hash -ne $stagedNewsHash) { throw 'regime-only fetch touched staged NewsGuard file' }
   @('datetime,state,ri,flags','BAD') | Set-Content (Join-Path $vpsStage 'EA_LAB_mris_regime.csv') -Encoding UTF8
   & $vpsPull -SkipFetch -LocalStagingDir $vpsStage -CommonDir $vpsCommon -LogFile (Join-Path $logs 'pull-neg.log') -NewsMaxAgeHours 100 -RegimeMaxAgeHours 100
   if ($LASTEXITCODE -ne 1) { throw 'invalid VPS regime must exit 1' }
@@ -61,6 +87,8 @@ try {
 
   $cmd = Get-Content -Raw -LiteralPath (Join-Path $root 'ea_projects\(Boss)_NewsGuard\vps_rclone\pull_news.cmd')
   if ($cmd -notmatch 'pull_guard_feeds\.ps1') { throw 'compatibility pull_news.cmd not wired to unified VPS worker' }
+  $regCmd = Get-Content -Raw -LiteralPath (Join-Path $root 'ea_projects\(Boss)_NewsGuard\vps_rclone\pull_regime.cmd')
+  if ($regCmd -notmatch 'pull_guard_feeds\.ps1' -or $regCmd -notmatch 'RegimeOnly') { throw 'pull_regime.cmd not wired to regime-only worker mode' }
 
   Write-Host '[PASS] guard feed pipeline: valid, malformed-preserve, VPS atomic, and daily ordering checks passed'
   exit 0

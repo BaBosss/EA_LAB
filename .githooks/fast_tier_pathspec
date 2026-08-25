@@ -83,6 +83,7 @@ docs/PARAM_REGISTRY.csv
 docs/SESSION_LEDGER.md
 ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1
 ea_projects/(Boss)_NewsGuard/vps_rclone/pull_news.cmd
+ea_projects/(Boss)_NewsGuard/vps_rclone/pull_regime.cmd
 EA_SCORECARD_AND_REGISTRY.md
 ea_template/Boss_14_GridLog.mq5
 ea_template/core/Inputs.mqh
