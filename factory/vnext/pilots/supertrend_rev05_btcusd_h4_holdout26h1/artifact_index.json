@@ -1,0 +1,23 @@
+{
+  "ArtifactIndexID": "PIDX-d3d269023f7a05b7687108a74093f5e3",
+  "PilotID": "PILOT-08b58970de3b5ae2a679a2b96b0ddbb4",
+  "RawReportRef": {
+    "bytes": 54914,
+    "evidence_label": "MEASURED",
+    "path": "HOLDOUT26H1_rev05_off.htm",
+    "sha256": "ad76f607e349fa8d86ea8df3f3d3e1b02b8d0f8a0b9a417ba9217156662026dd"
+  },
+  "RunID": "RUN-9dfb2fdb1d73277479f782ed",
+  "authority": "NON_AUTHORITATIVE_SIDECAR",
+  "files": {
+    "pilot_manifest.json": {
+      "bytes": 19374,
+      "sha256": "8c0a0d6c1631aa142533f05edba31f859349b026cb255e63198efe980be7c898"
+    },
+    "report.html": {
+      "bytes": 17657,
+      "sha256": "5f7ba7db6d3f9814bb7ad14c5337a2fdfee81b742bf071ebd4e3cb3fffc13820"
+    }
+  },
+  "schema_version": "factory-vnext-pilot-artifact-index-v1"
+}

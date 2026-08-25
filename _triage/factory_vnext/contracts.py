@@ -207,12 +207,18 @@ def make_run_manifest(
     profile = _need_text(profile_id, "ProfileID")
     if parameter_set.get("ProfileID") != profile:
         raise ContractError("ParameterSet ProfileID mismatch")
+    physical = _need_text(physical_symbol, "PhysicalSymbol")
+    broker = _need_text(broker_data, "BrokerDataEnvironment")
+    tester = _need_text(tester_model, "TesterModel")
     identity = {
         "source_commit": commit,
         "HomeContractID": home["HomeContractID"],
         "WindowContractID": window["WindowContractID"],
         "ProfileID": profile,
         "ParameterSetID": parameter_set.get("ParameterSetID"),
+        "PhysicalSymbol": physical,
+        "BrokerDataEnvironment": broker,
+        "TesterModel": tester,
     }
     run_id = stable_id("RUN", identity, hex_chars=24)
     manifest = {
@@ -224,14 +230,14 @@ def make_run_manifest(
         "ConceptID": home["ConceptID"],
         "StrategyVersion": home["StrategyVersion"],
         "LogicalSymbol": home["LogicalSymbol"],
-        "PhysicalSymbol": _need_text(physical_symbol, "PhysicalSymbol"),
+        "PhysicalSymbol": physical,
         "ExecutionTF": home["ExecutionTF"],
         "ContextArchitecture": dict(home.get("ContextArchitecture") or {}),
         "WindowClass": window["WindowClass"],
         "StartDate": window["StartDate"],
         "EndDate": window["EndDate"],
-        "BrokerDataEnvironment": _need_text(broker_data, "BrokerDataEnvironment"),
-        "TesterModel": _need_text(tester_model, "TesterModel"),
+        "BrokerDataEnvironment": broker,
+        "TesterModel": tester,
         "bars": bars,
         "runtime_seconds": runtime_seconds,
         "parameter_snapshot_sha256": parameter_set.get("parameter_snapshot_sha256"),
@@ -245,7 +251,8 @@ def validate_run_manifest(manifest: Mapping[str, Any]) -> None:
     if manifest.get("authority") != "NON_AUTHORITATIVE_SIDECAR" or not NON_AUTHORITATIVE:
         raise ContractError("run manifest authority boundary is missing")
     for name in ("RunID", "HomeContractID", "WindowContractID", "ProfileID", "ParameterSetID",
-                 "LogicalSymbol", "PhysicalSymbol", "ExecutionTF", "source_commit"):
+                 "LogicalSymbol", "PhysicalSymbol", "ExecutionTF", "source_commit",
+                 "BrokerDataEnvironment", "TesterModel"):
         _need_text(manifest.get(name), name)
     expected = stable_id("RUN", {
         "source_commit": manifest["source_commit"],
@@ -253,6 +260,9 @@ def validate_run_manifest(manifest: Mapping[str, Any]) -> None:
         "WindowContractID": manifest["WindowContractID"],
         "ProfileID": manifest["ProfileID"],
         "ParameterSetID": manifest["ParameterSetID"],
+        "PhysicalSymbol": manifest["PhysicalSymbol"],
+        "BrokerDataEnvironment": manifest["BrokerDataEnvironment"],
+        "TesterModel": manifest["TesterModel"],
     }, hex_chars=24)
     if manifest["RunID"] != expected:
         raise ContractError("RunID does not match immutable identity chain")

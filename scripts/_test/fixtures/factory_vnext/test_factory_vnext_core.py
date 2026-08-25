@@ -121,6 +121,19 @@ class FactoryVNextCoreTests(unittest.TestCase):
         )
         self.assertEqual(run["ContextArchitecture"], context)
 
+    def test_run_id_binds_execution_environment(self):
+        home = make_home_contract("B11-V01", "1.0", "BTCUSD", "H4")
+        window = make_window_contract("COMMON_VALIDATION", "2026-01-01", "2026-06-30", "H4")
+        params = make_parameter_set({"AtrPeriod": 14}, "PROFILE-STF")
+        common = dict(source_commit="a" * 40, home=home, window=window, profile_id="PROFILE-STF", parameter_set=params, runtime_seconds=1.0, bars=100)
+        base = make_run_manifest(physical_symbol="BTCUSD", broker_data="BROKER-A", tester_model="MODEL-A", **common)
+        broker = make_run_manifest(physical_symbol="BTCUSD", broker_data="BROKER-B", tester_model="MODEL-A", **common)
+        model = make_run_manifest(physical_symbol="BTCUSD", broker_data="BROKER-A", tester_model="MODEL-B", **common)
+        physical = make_run_manifest(physical_symbol="BTCUSDm", broker_data="BROKER-A", tester_model="MODEL-A", **common)
+        self.assertNotEqual(base["RunID"], broker["RunID"])
+        self.assertNotEqual(base["RunID"], model["RunID"])
+        self.assertNotEqual(base["RunID"], physical["RunID"])
+
     def test_different_windows_are_not_rank_comparable(self):
         w1 = make_window_contract("DISCOVERY", "2026-01-01", "2026-02-01", "H4")
         w2 = make_window_contract("COMMON_VALIDATION", "2026-01-01", "2026-02-01", "H4")

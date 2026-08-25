@@ -1,0 +1,539 @@
+{
+  "Architecture": {
+    "Family": {
+      "Capabilities": [
+        "CAP_ENTRY"
+      ],
+      "DisplayID": null,
+      "FamilyID": "LEGACY-STF",
+      "FamilyName": "(TRD)_SuperTrendFlip",
+      "MasterMoldID": "LEGACY-STF-MOLD",
+      "MasterMoldVersion": "pilot-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "schema_version": "factory-vnext-family-v1"
+    },
+    "MasterMold": {
+      "Capabilities": [
+        "CAP_ENTRY"
+      ],
+      "MasterMoldID": "LEGACY-STF-MOLD",
+      "MasterMoldSnapshotID": "MOLD-6e7f35a3a525536deb44",
+      "MasterMoldVersion": "pilot-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "schema_version": "factory-vnext-master-mold-v1"
+    },
+    "Variant": {
+      "Components": [
+        {
+          "Capabilities": [
+            "CAP_ENTRY"
+          ],
+          "ComponentID": "CMP_ENTRY",
+          "ComponentRole": "ENTRY",
+          "Enabled": true,
+          "ParentPositionGroupID": null,
+          "PositionGroupID": "PG_MAIN",
+          "RecoveryScopePositionGroupID": null
+        }
+      ],
+      "DisplayID": null,
+      "FamilyID": "LEGACY-STF",
+      "PositionGroups": [
+        {
+          "Intent": "BASELINE",
+          "ParentPositionGroupID": null,
+          "PositionGroupID": "PG_MAIN"
+        }
+      ],
+      "StrategyVersion": "rev05",
+      "VariantID": "LEGACY-STF-REV05",
+      "VariantSnapshotID": "VAR-3bf29cd82a96125a824936fe",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "schema_version": "factory-vnext-variant-v1"
+    }
+  },
+  "GradeEvidence": {
+    "GradeEvidenceID": "GEV-4caf651fbea3b1f9df41391b",
+    "KINT_001": {
+      "state": "OPEN"
+    },
+    "MetricBundleID": "MBL-bd13fc3e5d491ff41311ee33",
+    "RunID": "RUN-9dfb2fdb1d73277479f782ed",
+    "VariantID": "LEGACY-STF-REV05",
+    "authority": "NON_AUTHORITATIVE_SIDECAR",
+    "category_records": [
+      {
+        "ACTION": "Emit exact metrics for Broker Portability to make this category visible",
+        "Category": "Broker Portability",
+        "Status": "UNTESTED",
+        "WHY": "No exact metrics for this category were present",
+        "source_event_ids": [],
+        "source_metric_ids": []
+      },
+      {
+        "ACTION": "Emit exact metrics for Edge to make this category visible",
+        "Category": "Edge",
+        "Status": "UNTESTED",
+        "WHY": "No exact metrics for this category were present",
+        "source_event_ids": [],
+        "source_metric_ids": []
+      },
+      {
+        "ACTION": "Emit exact metrics for Execution Robustness to make this category visible",
+        "Category": "Execution Robustness",
+        "Status": "UNTESTED",
+        "WHY": "No exact metrics for this category were present",
+        "source_event_ids": [],
+        "source_metric_ids": []
+      },
+      {
+        "ACTION": "Emit exact metrics for Parameter Stability to make this category visible",
+        "Category": "Parameter Stability",
+        "Status": "UNTESTED",
+        "WHY": "No exact metrics for this category were present",
+        "source_event_ids": [],
+        "source_metric_ids": []
+      },
+      {
+        "ACTION": "Leave as N/A unless recovery/hedge evidence becomes active",
+        "Category": "Recovery/Hedge Safety",
+        "Status": "N/A",
+        "WHY": "Category not mandatory for this run",
+        "source_event_ids": [],
+        "source_metric_ids": []
+      },
+      {
+        "ACTION": "Emit exact metrics for Regime Robustness to make this category visible",
+        "Category": "Regime Robustness",
+        "Status": "UNTESTED",
+        "WHY": "No exact metrics for this category were present",
+        "source_event_ids": [],
+        "source_metric_ids": []
+      },
+      {
+        "ACTION": "Emit exact metrics for Risk/Tail to make this category visible",
+        "Category": "Risk/Tail",
+        "Status": "UNTESTED",
+        "WHY": "No exact metrics for this category were present",
+        "source_event_ids": [],
+        "source_metric_ids": []
+      }
+    ],
+    "critical_floor_placeholders": {
+      "critical_floor_algorithm": null,
+      "meaningful_improvement_floor": null,
+      "note": "PROVISIONAL: KINT-001 remains OPEN; numeric floor policy is not ratified here",
+      "sample_adequacy_floor": null
+    },
+    "home_status": "INSIDE_VALIDATED_CONTRACT",
+    "schema_version": "factory-vnext-grade-confidence-v1",
+    "top_level": {
+      "BUILD_POTENTIAL": null,
+      "EVIDENCE_CONFIDENCE": null,
+      "QUALITY_GRADE": null,
+      "VERDICT": null
+    }
+  },
+  "HomeContract": {
+    "ConceptID": "(TRD)_SuperTrendFlip",
+    "ContextArchitecture": {
+      "FamilyID": "LEGACY-STF",
+      "MasterMoldID": "LEGACY-STF-MOLD",
+      "MasterMoldVersion": "pilot-v1",
+      "VariantID": "LEGACY-STF-REV05",
+      "VariantSnapshotID": "VAR-3bf29cd82a96125a824936fe"
+    },
+    "ExecutionTF": "H4",
+    "HomeContractID": "HOME-8c3290efb1eff82cb778",
+    "LogicalSymbol": "BTCUSD",
+    "StrategyVersion": "rev05",
+    "authority": "NON_AUTHORITATIVE_SIDECAR",
+    "schema_version": "factory-vnext-home-v1"
+  },
+  "MetricBundle": {
+    "MetricBundleID": "MBL-bd13fc3e5d491ff41311ee33",
+    "RunID": "RUN-9dfb2fdb1d73277479f782ed",
+    "VariantID": "LEGACY-STF-REV05",
+    "authority": "NON_AUTHORITATIVE_SIDECAR",
+    "schema_version": "factory-vnext-derived-metrics-v1",
+    "sections": {
+      "Optimization": [
+        {
+          "ACTION": "Add exact payload 'pass_count' values to enrich optimization evidence",
+          "MetricID": "optimization.pass_count.sum",
+          "Name": "optimization.pass_count.sum",
+          "Section": "Optimization",
+          "Status": "UNTESTED",
+          "Value": null,
+          "WHY": "Derived from exact payload key 'pass_count' across OPTIMIZATION_PASSES",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add exact payload 'runtime_seconds' values to enrich optimization evidence",
+          "MetricID": "optimization.runtime_seconds.sum",
+          "Name": "optimization.runtime_seconds.sum",
+          "Section": "Optimization",
+          "Status": "UNTESTED",
+          "Value": null,
+          "WHY": "Derived from exact payload key 'runtime_seconds' across OPTIMIZATION_PASSES",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add exact payload 'score' values to enrich optimization evidence",
+          "MetricID": "optimization.score.sum",
+          "Name": "optimization.score.sum",
+          "Section": "Optimization",
+          "Status": "UNTESTED",
+          "Value": null,
+          "WHY": "Derived from exact payload key 'score' across OPTIMIZATION_PASSES",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add exact payload 'surface_score' values to enrich optimization evidence",
+          "MetricID": "optimization.surface_score.sum",
+          "Name": "optimization.surface_score.sum",
+          "Section": "Optimization",
+          "Status": "UNTESTED",
+          "Value": null,
+          "WHY": "Derived from exact payload key 'surface_score' across OPTIMIZATION_PASSES",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        }
+      ],
+      "Overview": [
+        {
+          "ACTION": "Add raw events or accept UNTESTED/UNAVAILABLE when none exist",
+          "MetricID": "overview.basket_events.count",
+          "Name": "overview.basket_events.count",
+          "Section": "Overview",
+          "Status": "UNAVAILABLE",
+          "Value": 0,
+          "WHY": "Counts raw BASKET_EVENTS evidence for the bundle",
+          "evidence_label": "UNAVAILABLE",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add raw events or accept UNTESTED/UNAVAILABLE when none exist",
+          "MetricID": "overview.context_events.count",
+          "Name": "overview.context_events.count",
+          "Section": "Overview",
+          "Status": "MEASURED",
+          "Value": 1,
+          "WHY": "Counts raw CONTEXT_EVENTS evidence for the bundle",
+          "evidence_label": "MEASURED",
+          "source_event_ids": [
+            "EVT-65ee21a5137016e221eacc44"
+          ]
+        },
+        {
+          "ACTION": "Add raw events or accept UNTESTED/UNAVAILABLE when none exist",
+          "MetricID": "overview.hedge_events.count",
+          "Name": "overview.hedge_events.count",
+          "Section": "Overview",
+          "Status": "UNAVAILABLE",
+          "Value": 0,
+          "WHY": "Counts raw HEDGE_EVENTS evidence for the bundle",
+          "evidence_label": "UNAVAILABLE",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add raw events or accept UNTESTED/UNAVAILABLE when none exist",
+          "MetricID": "overview.optimization_passes.count",
+          "Name": "overview.optimization_passes.count",
+          "Section": "Overview",
+          "Status": "UNTESTED",
+          "Value": 0,
+          "WHY": "Counts raw OPTIMIZATION_PASSES evidence for the bundle",
+          "evidence_label": "UNTESTED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add raw events or accept UNTESTED/UNAVAILABLE when none exist",
+          "MetricID": "overview.signal_events.count",
+          "Name": "overview.signal_events.count",
+          "Section": "Overview",
+          "Status": "UNTESTED",
+          "Value": 0,
+          "WHY": "Counts raw SIGNAL_EVENTS evidence for the bundle",
+          "evidence_label": "UNTESTED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add telemetry events if this should be higher",
+          "MetricID": "overview.total_event_count",
+          "Name": "overview.total_event_count",
+          "Section": "Overview",
+          "Status": "DERIVED",
+          "Value": 1,
+          "WHY": "Total raw event count across observable families",
+          "evidence_label": "DERIVED",
+          "source_event_ids": [
+            "EVT-65ee21a5137016e221eacc44"
+          ]
+        },
+        {
+          "ACTION": "Add raw events or accept UNTESTED/UNAVAILABLE when none exist",
+          "MetricID": "overview.trade_events.count",
+          "Name": "overview.trade_events.count",
+          "Section": "Overview",
+          "Status": "UNTESTED",
+          "Value": 0,
+          "WHY": "Counts raw TRADE_EVENTS evidence for the bundle",
+          "evidence_label": "UNTESTED",
+          "source_event_ids": []
+        }
+      ],
+      "TradeDiagnostic": [
+        {
+          "ACTION": "Emit exact exit_reason payload values to enable exit attribution",
+          "MetricID": "trade.exit_reason.unavailable",
+          "Name": "trade.exit_reason.unavailable",
+          "Section": "TradeDiagnostic",
+          "Status": "UNAVAILABLE",
+          "Value": null,
+          "WHY": "No exact exit_reason payload keys were present",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add exact payload 'giveback' values to measure this diagnostic",
+          "MetricID": "trade.giveback.sum",
+          "Name": "trade.giveback.sum",
+          "Section": "TradeDiagnostic",
+          "Status": "UNAVAILABLE",
+          "Value": null,
+          "WHY": "Derived from exact payload key 'giveback' across TRADE_EVENTS",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add exact payload 'holding_seconds' values to measure this diagnostic",
+          "MetricID": "trade.holding_seconds.sum",
+          "Name": "trade.holding_seconds.sum",
+          "Section": "TradeDiagnostic",
+          "Status": "UNAVAILABLE",
+          "Value": null,
+          "WHY": "Derived from exact payload key 'holding_seconds' across TRADE_EVENTS",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add exact payload 'mae' values to measure this diagnostic",
+          "MetricID": "trade.mae.sum",
+          "Name": "trade.mae.sum",
+          "Section": "TradeDiagnostic",
+          "Status": "UNAVAILABLE",
+          "Value": null,
+          "WHY": "Derived from exact payload key 'mae' across TRADE_EVENTS",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        },
+        {
+          "ACTION": "Add exact payload 'mfe' values to measure this diagnostic",
+          "MetricID": "trade.mfe.sum",
+          "Name": "trade.mfe.sum",
+          "Section": "TradeDiagnostic",
+          "Status": "UNAVAILABLE",
+          "Value": null,
+          "WHY": "Derived from exact payload key 'mfe' across TRADE_EVENTS",
+          "evidence_label": "DERIVED",
+          "source_event_ids": []
+        }
+      ]
+    }
+  },
+  "ParameterSet": {
+    "ParameterSetID": "PARAM-eef0289d38e96a87eb2e",
+    "ProfileID": "STF_BTC_H4_rev05_off",
+    "parameter_snapshot_sha256": "eef0289d38e96a87eb2eca2c009d962e4d3f2a3cabf3a35ce7eae63a7d42b31f",
+    "parameters": {
+      "_00_OptimizeMode": "false",
+      "_01_AtrPeriod": "14",
+      "_01_DonBars": "20",
+      "_01_Lookback": "400",
+      "_01_Mult": "2.5",
+      "_01_UseDonchian": "true",
+      "_02_ExitMode": "0",
+      "_02_SlAtrMult": "1.0",
+      "_02_SlBufferAtr": "0.0",
+      "_02_TpAtrMult": "4.0",
+      "_03_EmaPeriod": "250",
+      "_03_ErMin": "0.30",
+      "_03_ErPeriod": "8",
+      "_03_UseER": "false",
+      "_03_UseEma": "true",
+      "_04_Buys": "true",
+      "_04_LotSize": "0.01",
+      "_04_Sells": "true",
+      "_05_DailyLossPct": "5.0",
+      "_05_EmergencyDdPct": "25.0",
+      "_06_AllowLive": "false",
+      "_06_Deviation": "20",
+      "_06_Magic": "991006",
+      "_07_AddAtAtr": "1.0",
+      "_07_AddLotFactor": "1.0",
+      "_07_BasketMaxLossPct": "8.0",
+      "_07_MaxAdds": "1",
+      "_07_UsePyramid": "true",
+      "_08_MaxReEntries": "1",
+      "_08_PbAtrMult": "1.0",
+      "_08_ReMode": "0",
+      "_08_SrAtrMult": "0.5",
+      "_08_SrBars": "20",
+      "_08_StoD": "3",
+      "_08_StoK": "14",
+      "_08_StoLevel": "25.0",
+      "_08_StoSlow": "3"
+    },
+    "schema_version": "factory-vnext-parameter-set-v1"
+  },
+  "PilotID": "PILOT-08b58970de3b5ae2a679a2b96b0ddbb4",
+  "RangeEvidence": {
+    "authority": "NON_AUTHORITATIVE_SIDECAR",
+    "candidates": [],
+    "evidence_label": "UNAVAILABLE",
+    "generator": "Factory vNext Range Generator V1",
+    "parameter_count": 37,
+    "reason": "Legacy SuperTrend rev05 preset has no canonical Factory vNext parameter semantic bindings; no optimization range may be invented by the sidecar",
+    "status": "SEMANTICS_REQUIRED"
+  },
+  "RawReportRef": {
+    "bytes": 54914,
+    "evidence_label": "MEASURED",
+    "path": "HOLDOUT26H1_rev05_off.htm",
+    "sha256": "ad76f607e349fa8d86ea8df3f3d3e1b02b8d0f8a0b9a417ba9217156662026dd"
+  },
+  "RawReportSummary": {
+    "bars": 1074.0,
+    "equity_drawdown_relative_pct": 2.53,
+    "from_date": "2026-01-01",
+    "history_quality": "100% real ticks",
+    "net_profit": 219.18,
+    "profit_factor": 3.74,
+    "report_build": 6061,
+    "report_sha256": "ad76f607e349fa8d86ea8df3f3d3e1b02b8d0f8a0b9a417ba9217156662026dd",
+    "ticks": 29309891.0,
+    "to_date": "2026-06-30",
+    "total_deals": 18.0,
+    "total_trades": 9.0
+  },
+  "Report": {
+    "GradeEvidenceID": "GEV-4caf651fbea3b1f9df41391b",
+    "MetricBundleID": "MBL-bd13fc3e5d491ff41311ee33",
+    "ReportID": "RPT-32049c7d7ac432ccc27fc475c78c3d0f",
+    "RunID": "RUN-9dfb2fdb1d73277479f782ed",
+    "VariantID": "LEGACY-STF-REV05",
+    "authority": "NON_AUTHORITATIVE_SIDECAR",
+    "html_sha256": "5f7ba7db6d3f9814bb7ad14c5337a2fdfee81b742bf071ebd4e3cb3fffc13820",
+    "page_ids": [
+      "overview",
+      "trade-diagnostic",
+      "optimization",
+      "risk-recovery-hedge",
+      "context-regime-broker"
+    ],
+    "schema_version": "factory-vnext-report-v1"
+  },
+  "RunManifest": {
+    "BrokerDataEnvironment": "TF Global Markets (Aust) Pty Ltd|MT5_BUILD_6061",
+    "ConceptID": "(TRD)_SuperTrendFlip",
+    "ContextArchitecture": {
+      "FamilyID": "LEGACY-STF",
+      "MasterMoldID": "LEGACY-STF-MOLD",
+      "MasterMoldVersion": "pilot-v1",
+      "VariantID": "LEGACY-STF-REV05",
+      "VariantSnapshotID": "VAR-3bf29cd82a96125a824936fe"
+    },
+    "EndDate": "2026-06-30",
+    "ExecutionTF": "H4",
+    "HomeContractID": "HOME-8c3290efb1eff82cb778",
+    "LogicalSymbol": "BTCUSD",
+    "ParameterSetID": "PARAM-eef0289d38e96a87eb2e",
+    "PhysicalSymbol": "BTCUSD",
+    "ProfileID": "STF_BTC_H4_rev05_off",
+    "RunID": "RUN-9dfb2fdb1d73277479f782ed",
+    "StartDate": "2026-01-01",
+    "StrategyVersion": "rev05",
+    "TesterModel": "MT5_MODEL_4_REAL_TICKS",
+    "WindowClass": "COMMON_VALIDATION",
+    "WindowContractID": "WIN-c12c9feb82e45074297d",
+    "artifacts": [
+      {
+        "bytes": 41425,
+        "evidence_label": "MEASURED",
+        "path": "ea_projects/(TRD)_SuperTrendFlip/(TRD)_SuperTrendFlip_rev05.mq5",
+        "sha256": "93a86af1d8c36391a59c7cf1379bca0c664f38940be5fb8db1072d3a7d0f7640"
+      },
+      {
+        "bytes": 1065,
+        "evidence_label": "MEASURED",
+        "path": "_mt5_auto/ab_sets/genstanding_stf/STF_BTC_H4_rev05_off.set",
+        "sha256": "5de0a383523948ad4b5a9ca5960c1459b12de5dd44d361b03d6bb32be0365a99"
+      },
+      {
+        "bytes": 54914,
+        "evidence_label": "MEASURED",
+        "path": "HOLDOUT26H1_rev05_off.htm",
+        "sha256": "ad76f607e349fa8d86ea8df3f3d3e1b02b8d0f8a0b9a417ba9217156662026dd"
+      }
+    ],
+    "authority": "NON_AUTHORITATIVE_SIDECAR",
+    "bars": 1074,
+    "frozen_design_sha": "42eb27025d20f15738dcc082d039880464436d21",
+    "parameter_snapshot_sha256": "eef0289d38e96a87eb2eca2c009d962e4d3f2a3cabf3a35ce7eae63a7d42b31f",
+    "runtime_seconds": null,
+    "schema_version": "factory-vnext-mvp-v1",
+    "source_commit": "4511ee136b5d9cfdcc7294c2afb3a4ccb5b3803a"
+  },
+  "TelemetryEvents": [
+    {
+      "ComponentID": null,
+      "EventFamily": "CONTEXT_EVENTS",
+      "EventID": "EVT-65ee21a5137016e221eacc44",
+      "EvidenceLabel": "MEASURED",
+      "IntentID": null,
+      "PositionGroupID": null,
+      "RunID": "RUN-9dfb2fdb1d73277479f782ed",
+      "Scope": "VARIANT",
+      "VariantID": "LEGACY-STF-REV05",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "payload": {
+        "bars": 1074.0,
+        "equity_drawdown_relative_pct": 2.53,
+        "from_date": "2026-01-01",
+        "history_quality": "100% real ticks",
+        "net_profit": 219.18,
+        "profit_factor": 3.74,
+        "report_build": 6061,
+        "report_sha256": "ad76f607e349fa8d86ea8df3f3d3e1b02b8d0f8a0b9a417ba9217156662026dd",
+        "ticks": 29309891.0,
+        "to_date": "2026-06-30",
+        "total_deals": 18.0,
+        "total_trades": 9.0
+      },
+      "schema_version": "factory-vnext-telemetry-event-v1",
+      "sequence": null,
+      "stable_key": "ad76f607e349fa8d86ea8df3f3d3e1b02b8d0f8a0b9a417ba9217156662026dd",
+      "timestamp": null
+    }
+  ],
+  "WindowContract": {
+    "Coverage": {
+      "execution_bars": 1074,
+      "independent_outcomes": 9,
+      "outcome_unit": "trades",
+      "signals": null
+    },
+    "EndDate": "2026-06-30",
+    "ExecutionTF": "H4",
+    "StartDate": "2026-01-01",
+    "WindowClass": "COMMON_VALIDATION",
+    "WindowContractID": "WIN-c12c9feb82e45074297d",
+    "schema_version": "factory-vnext-window-v1"
+  },
+  "authority": "NON_AUTHORITATIVE_SIDECAR",
+  "schema_version": "factory-vnext-supertrend-pilot-v1"
+}
