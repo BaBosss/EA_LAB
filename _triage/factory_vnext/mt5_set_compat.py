@@ -40,6 +40,12 @@ def _projection_rows(package: Mapping[str, Any]) -> list[Dict[str, Any]]:
         if not isinstance(raw, Mapping):
             raise MT5SetCompatError("ParameterProjection must contain mapping rows")
         name = raw.get("parameter")
+        for field in (
+            "parameter_pid", "parameter", "role", "surface", "optimize_stage",
+            "safe_range", "locked_value", "projection",
+        ):
+            if field not in raw:
+                raise MT5SetCompatError("%s is required for %s" % (field, name or "ParameterProjection row"))
         pid = raw.get("parameter_pid")
         if not isinstance(name, str) or not name:
             raise MT5SetCompatError("ParameterProjection parameter is required")
@@ -52,6 +58,9 @@ def _projection_rows(package: Mapping[str, Any]) -> list[Dict[str, Any]]:
         projection = raw.get("projection")
         if projection not in ("ACTIVE_TUNABLE", "SNAPSHOT_ONLY"):
             raise MT5SetCompatError("unsupported ParameterProjection projection for %s" % name)
+        role = raw.get("role")
+        if (role, projection) not in (("TUNABLE", "ACTIVE_TUNABLE"), ("LOCKED", "SNAPSHOT_ONLY")):
+            raise MT5SetCompatError("role/projection mismatch for %s" % name)
         names.add(name)
         pids.add(pid)
         rows.append(dict(raw))
@@ -63,6 +72,8 @@ def _semantic_state(states: Mapping[str, Any] | None, parameter: str) -> Any:
         return None
     state = states[parameter]
     if isinstance(state, Mapping):
+        if "state" in state and "status" in state and state["state"] != state["status"]:
+            raise MT5SetCompatError("conflicting semantic state/status for %s" % parameter)
         return state.get("state", state.get("status"))
     return state
 
@@ -75,13 +86,35 @@ def _render_scalar(value: Any) -> str | None:
     return None
 
 
-def _snapshot_tail(tail: str | None) -> tuple[str | None, bool]:
+def _snapshot_tail(tail: str | None) -> tuple[str | None, bool, str | None]:
     if tail is None:
-        return None, False
+        return None, False, None
     parts = tail.split("||")
-    changed = parts[-1].strip().upper() != "N"
-    parts[-1] = "N"
-    return "||".join(parts), changed
+    if len(parts) != 4 or any(not part for part in parts) or parts[-1] not in ("Y", "N"):
+        return tail, False, "MALFORMED_SNAPSHOT_OPTIMIZER_TAIL"
+    if parts[-1] == "N":
+        return tail, False, None
+    return tail[:-1] + "N", True, None
+
+
+def _replace_optimizer_tail(raw: str, tail: str, proposed_tail: str) -> str:
+    """Change only a validated optimizer flag while retaining the original physical line."""
+    end = len(raw.rstrip())
+    if not raw[:end].endswith(tail):
+        raise MT5SetCompatError("cannot locate validated optimizer tail in baseline line")
+    return raw[:end - len(tail)] + proposed_tail + raw[end:]
+
+
+def _render_baseline_with_replacements(baseline_text: str, lines: list[Any], replacements: Mapping[int, str]) -> str:
+    physical_lines = baseline_text.splitlines(keepends=True)
+    for line in lines:
+        if line.lineno not in replacements:
+            continue
+        index = line.lineno - 1
+        original = physical_lines[index]
+        ending = "\r\n" if original.endswith("\r\n") else "\n" if original.endswith("\n") else ""
+        physical_lines[index] = replacements[line.lineno] + ending
+    return "".join(physical_lines)
 
 
 def _manifest(result: Mapping[str, Any], proposed: str | None) -> Dict[str, Any]:
@@ -105,7 +138,7 @@ def build_mt5_set_compat(
     _validate_package(package)
     projection = _projection_rows(package)
     try:
-        lines, comments = setfile.parse_set(baseline_text)
+        lines, _comments = setfile.parse_set(baseline_text)
     except setfile.Refusal as exc:
         raise MT5SetCompatError(str(exc)) from exc
     baseline_by_name = {line.name: line for line in lines}
@@ -115,8 +148,8 @@ def build_mt5_set_compat(
         for line in lines if line.name not in projection_names
     ]
     rows: list[Dict[str, Any]] = []
-    output_lines: list[str] = list(comments)
     can_emit = not refusal_rows
+    replacements: Dict[int, str] = {}
     for projected in projection:
         name = projected["parameter"]
         semantic_state = _semantic_state(semantic_states, name)
@@ -136,8 +169,16 @@ def build_mt5_set_compat(
         elif line is not None:
             tail = line.optimize_tail
             if projected["projection"] == "SNAPSHOT_ONLY":
-                tail, changed = _snapshot_tail(tail)
+                tail, changed, tail_error = _snapshot_tail(tail)
+                if tail_error:
+                    row.update({"disposition": "REFUSE", "reason": tail_error})
+                    refusal_rows.append({"parameter": name, "disposition": "REFUSE", "reason": tail_error})
+                    can_emit = False
+                    rows.append(row)
+                    continue
                 row["optimizer_disabled"] = changed
+                if changed:
+                    replacements[line.lineno] = _replace_optimizer_tail(line.raw, line.optimize_tail, tail)
             row["disposition"] = "MATCH"
             row["proposed_value"] = line.value
             row["proposed_tail"] = tail
@@ -156,12 +197,12 @@ def build_mt5_set_compat(
     rows.sort(key=lambda row: (row["parameter_pid"], row["parameter"]))
     proposed = None
     if can_emit:
-        for row in rows:
-            output = "%s=%s" % (row["parameter"], row["proposed_value"])
-            if row.get("proposed_tail") is not None:
-                output += "||%s" % row["proposed_tail"]
-            output_lines.append(output)
-        proposed = "\n".join(output_lines) + "\n"
+        proposed = _render_baseline_with_replacements(baseline_text, lines, replacements)
+        additions = [row for row in rows if row["disposition"] == "ADD"]
+        if additions:
+            if proposed and not proposed.endswith(("\n", "\r")):
+                proposed += "\n"
+            proposed += "\n".join("%s=%s" % (row["parameter"], row["proposed_value"]) for row in additions) + "\n"
     result: Dict[str, Any] = {
         "schema_version": _SCHEMA_VERSION,
         "authority": AUTHORITY,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import pathlib
 import sys
 import unittest
@@ -123,6 +124,61 @@ class FactoryVNextMT5SetCompatTests(unittest.TestCase):
         self.assertEqual(active["disposition"], "UNMAPPED")
         with self.assertRaisesRegex(MT5SetCompatError, "AtrPeriod"):
             render_proposed_set(unmapped)
+
+    def test_existing_layout_is_preserved_and_manifest_hashes_exact_rendered_bytes(self):
+        package = self._package()
+        baseline = (
+            "; header stays first\n"
+            "FixedLot = 0.02||0.01||0.01||0.10||Y\n"
+            "\n"
+            "; ATR remains after the blank line\n"
+            "AtrPeriod=14||10||1||20||Y\n"
+        )
+        expected = (
+            "; header stays first\n"
+            "FixedLot = 0.02||0.01||0.01||0.10||N\n"
+            "\n"
+            "; ATR remains after the blank line\n"
+            "AtrPeriod=14||10||1||20||Y\n"
+        )
+
+        result = build_mt5_set_compat(package, baseline)
+
+        self.assertEqual(render_proposed_set(result), expected)
+        self.assertEqual(result["manifest"]["baseline_sha256"], hashlib.sha256(baseline.encode("utf-8")).hexdigest())
+        self.assertEqual(result["manifest"]["proposed_output_sha256"], hashlib.sha256(expected.encode("utf-8")).hexdigest())
+
+    def test_snapshot_optimizer_tail_must_be_complete_and_unambiguous(self):
+        package = self._package()
+        for tail in ("0.01||0.01||0.10", "0.01||||0.10||Y", "0.01||0.01||0.10||MAYBE"):
+            with self.subTest(tail=tail):
+                result = build_mt5_set_compat(package, "AtrPeriod=14\nFixedLot=0.02||%s\n" % tail)
+                self.assertEqual(result["operator_rows"][1]["disposition"], "REFUSE")
+                with self.assertRaisesRegex(MT5SetCompatError, "FixedLot"):
+                    render_proposed_set(result)
+
+    def test_conflicting_semantic_state_and_status_refuse(self):
+        with self.assertRaisesRegex(MT5SetCompatError, "conflicting semantic state/status for AtrPeriod"):
+            build_mt5_set_compat(
+                self._package(), "AtrPeriod=14\nFixedLot=0.01\n",
+                {"AtrPeriod": {"state": "READY", "status": "SEMANTICS_REQUIRED"}},
+            )
+
+    def test_projection_rows_require_canonical_fields_and_coherent_role_projection(self):
+        package = self._package()
+        missing_safe_range = dict(package["ParameterProjection"][0])
+        del missing_safe_range["safe_range"]
+        with self.assertRaisesRegex(MT5SetCompatError, "safe_range is required for AtrPeriod"):
+            build_mt5_set_compat(
+                self._reidentified(package, [missing_safe_range, package["ParameterProjection"][1]]),
+                "AtrPeriod=14\nFixedLot=0.01\n",
+            )
+        mismatched = {**package["ParameterProjection"][0], "projection": "SNAPSHOT_ONLY"}
+        with self.assertRaisesRegex(MT5SetCompatError, "role/projection mismatch for AtrPeriod"):
+            build_mt5_set_compat(
+                self._reidentified(package, [mismatched, package["ParameterProjection"][1]]),
+                "AtrPeriod=14\nFixedLot=0.01\n",
+            )
 
 
 if __name__ == "__main__":
