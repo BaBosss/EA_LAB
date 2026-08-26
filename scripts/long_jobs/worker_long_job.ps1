@@ -14,6 +14,16 @@ $postconditionStderrPath = Join-Path $JobRoot 'logs\postcondition.stderr.log'
 
 function Set-State([hashtable]$data) { Invoke-LjrAtomicWriteJson -Path $statePath -Object $data }
 
+function Stop-LjrOwnedPostconditionTree([System.Diagnostics.Process]$Process, [string]$ExpectedStartTimeUtc) {
+    try {
+        $Process.Refresh()
+        if ($Process.HasExited -or $Process.StartTime.ToUniversalTime().ToString('o') -ne $ExpectedStartTimeUtc) { return }
+        $Process.Kill()
+        return
+    } catch {}
+    Stop-LjrOwnedProcessTree -Process $Process -ExpectedStartTimeUtc $ExpectedStartTimeUtc
+}
+
 $request = Get-Content -LiteralPath $requestPath -Raw | ConvertFrom-Json
 Remove-Item -LiteralPath $requestPath -Force
 if (-not (Test-LjrValidBaseSha -BaseSha ([string]$request.base_sha))) { throw "invalid base sha in request" }
@@ -140,20 +150,70 @@ else {
             $postconditionInfo.Arguments = ConvertTo-LjrProcessArguments -ArgumentList $postconditionArgs
             $postcondition = New-Object System.Diagnostics.Process
             $postcondition.StartInfo = $postconditionInfo
+            $postconditionStdoutBuffer = New-Object System.Collections.ArrayList
+            $postconditionStderrBuffer = New-Object System.Collections.ArrayList
+            Register-ObjectEvent -InputObject $postcondition -EventName OutputDataReceived -Action {
+                if ($EventArgs.Data) {
+                    [void]$event.MessageData.Add($EventArgs.Data)
+                }
+            } -MessageData $postconditionStdoutBuffer | Out-Null
+            Register-ObjectEvent -InputObject $postcondition -EventName ErrorDataReceived -Action {
+                if ($EventArgs.Data) {
+                    [void]$event.MessageData.Add($EventArgs.Data)
+                }
+            } -MessageData $postconditionStderrBuffer | Out-Null
             [void]$postcondition.Start()
-            $postconditionStdout = $postcondition.StandardOutput.ReadToEndAsync()
-            $postconditionStderr = $postcondition.StandardError.ReadToEndAsync()
-            $postcondition.WaitForExit()
-            $postconditionOutput = $postconditionStdout.GetAwaiter().GetResult()
-            $postconditionError = $postconditionStderr.GetAwaiter().GetResult()
-            [System.IO.File]::AppendAllText($postconditionStdoutPath, $postconditionOutput, (New-Object System.Text.UTF8Encoding($false)))
-            [System.IO.File]::AppendAllText($postconditionStderrPath, $postconditionError, (New-Object System.Text.UTF8Encoding($false)))
-            $state.postcondition_exit_code = $postcondition.ExitCode
-            if ($postcondition.ExitCode -ne 0) {
-                $state.state = 'POSTCONDITION_FAILED'
-                $state.reason = "postcondition exit code $($postcondition.ExitCode)"
-            } else {
-                $state.state = 'COMPLETE'
+            $state.postcondition_pid = $postcondition.Id
+            $state.postcondition_start_utc = $postcondition.StartTime.ToUniversalTime().ToString('o')
+            Set-State $state
+            $postcondition.BeginOutputReadLine()
+            $postcondition.BeginErrorReadLine()
+            $postconditionTerminal = $false
+            while (-not $postcondition.HasExited) {
+                if (Test-Path -LiteralPath $cancelMarker) {
+                    Stop-LjrOwnedPostconditionTree -Process $postcondition -ExpectedStartTimeUtc $state.postcondition_start_utc
+                    $state.state = 'CANCELLED'
+                    $state.ended_utc = Get-LjrUtcNowIso
+                    $state.exit_code = $null
+                    $state.reason = 'cancel requested'
+                    $postconditionTerminal = $true
+                    break
+                }
+                if ($sw.Elapsed.TotalSeconds -ge $timeout) {
+                    Stop-LjrOwnedPostconditionTree -Process $postcondition -ExpectedStartTimeUtc $state.postcondition_start_utc
+                    $state.state = 'TIMED_OUT'
+                    $state.ended_utc = Get-LjrUtcNowIso
+                    $state.exit_code = $null
+                    $state.reason = 'timeout'
+                    $postconditionTerminal = $true
+                    break
+                }
+                if ((([DateTime]::UtcNow - $lastHeartbeat).TotalSeconds) -ge $heartbeat) {
+                    Invoke-LjrAtomicWriteJson -Path $heartbeatPath -Object ([ordered]@{
+                        job_id = $request.job_id
+                        state = 'POSTCONDITION_RUNNING'
+                        runner_pid = $PID
+                        child_pid = $child.Id
+                        postcondition_pid = $postcondition.Id
+                        updated_utc = Get-LjrUtcNowIso
+                    })
+                    $lastHeartbeat = [DateTime]::UtcNow
+                    Set-State $state
+                }
+                Start-Sleep -Milliseconds 200
+            }
+            if (-not $postconditionTerminal) {
+                $postconditionOutput = [string]::Join("`r`n", @($postconditionStdoutBuffer))
+                $postconditionError = [string]::Join("`r`n", @($postconditionStderrBuffer))
+                if ($postconditionOutput) { [System.IO.File]::AppendAllText($postconditionStdoutPath, ($postconditionOutput + "`r`n"), (New-Object System.Text.UTF8Encoding($false))) }
+                if ($postconditionError) { [System.IO.File]::AppendAllText($postconditionStderrPath, ($postconditionError + "`r`n"), (New-Object System.Text.UTF8Encoding($false))) }
+                $state.postcondition_exit_code = $postcondition.ExitCode
+                if ($postcondition.ExitCode -ne 0) {
+                    $state.state = 'POSTCONDITION_FAILED'
+                    $state.reason = "postcondition exit code $($postcondition.ExitCode)"
+                } else {
+                    $state.state = 'COMPLETE'
+                }
             }
         } catch {
             $state.state = 'POSTCONDITION_FAILED'

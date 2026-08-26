@@ -66,9 +66,15 @@ try {
     Assert ($liveRetry.retry_decision -eq 'REFUSE_RETRY') "live job retry decision was $($liveRetry.retry_decision)"
     $postconditionJobRoot = Join-Path $jobsRoot 'retry-postcondition'
     New-Item -ItemType Directory -Path $postconditionJobRoot | Out-Null
-    [ordered]@{ job_id = 'retry-postcondition'; state = 'POSTCONDITION_RUNNING'; runner_pid = 999999; child_pid = 999998 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $postconditionJobRoot 'state.json') -Encoding utf8
+    [ordered]@{ job_id = 'retry-postcondition'; state = 'POSTCONDITION_RUNNING'; runner_pid = 999999; child_pid = 999998; postcondition_pid = 999997 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $postconditionJobRoot 'state.json') -Encoding utf8
     $postconditionRetry = & $inspectRetry -JobId 'retry-postcondition' -JobsRoot $jobsRoot -Json | ConvertFrom-Json
-    Assert ($postconditionRetry.retry_decision -eq 'REFUSE_RETRY') "postcondition-running retry decision was $($postconditionRetry.retry_decision)"
+    Assert ($postconditionRetry.state -eq 'LOST_PROCESS') "dead postcondition state was $($postconditionRetry.state)"
+    Assert ($postconditionRetry.retry_decision -eq 'ALLOW_RETRY') "dead postcondition retry decision was $($postconditionRetry.retry_decision)"
+    $postconditionLiveJobRoot = Join-Path $jobsRoot 'retry-postcondition-live'
+    New-Item -ItemType Directory -Path $postconditionLiveJobRoot | Out-Null
+    [ordered]@{ job_id = 'retry-postcondition-live'; state = 'POSTCONDITION_RUNNING'; runner_pid = 999999; child_pid = 999998; postcondition_pid = $PID } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $postconditionLiveJobRoot 'state.json') -Encoding utf8
+    $postconditionLiveRetry = & $inspectRetry -JobId 'retry-postcondition-live' -JobsRoot $jobsRoot -Json | ConvertFrom-Json
+    Assert ($postconditionLiveRetry.retry_decision -eq 'REFUSE_RETRY') "live postcondition retry decision was $($postconditionLiveRetry.retry_decision)"
     $safeJobRoot = Join-Path $jobsRoot 'retry-safe'
     New-Item -ItemType Directory -Path $safeJobRoot | Out-Null
     [ordered]@{ job_id = 'retry-safe'; state = 'POSTCONDITION_FAILED'; runner_pid = 999997; child_pid = 999996 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $safeJobRoot 'state.json') -Encoding utf8
@@ -76,7 +82,7 @@ try {
     Assert ($safeRetry.retry_decision -eq 'ALLOW_RETRY') "safe terminal retry decision was $($safeRetry.retry_decision)"
     $unknownRetry = & $inspectRetry -JobId 'retry-unknown' -JobsRoot $jobsRoot -Json | ConvertFrom-Json
     Assert ($unknownRetry.retry_decision -eq 'REFUSE_RETRY') "missing state retry decision was $($unknownRetry.retry_decision)"
-    $pass++; ReportCase 'inspect before retry live refusal safe terminal allow and unknown fail closed'
+    $pass++; ReportCase 'inspect before retry postcondition recovery, live refusal, safe terminal allow and unknown fail closed'
 
     Set-Content -LiteralPath (Join-Path $worktree 'tracked.txt') -Value 'dirty' -Encoding ascii
     $dirtyRefused = $false

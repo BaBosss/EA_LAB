@@ -54,6 +54,42 @@ try {
     Assert ([int]$postFailDurable.exit_code -eq 0) 'child exit code evidence changed after postcondition failure'
     $pass++; ReportCase 'postcondition failure is non-complete terminal' 'PASS'
 
+    $postTimeout = Join-Path $Root 'post_timeout.ps1'
+    ChildScript $postTimeout 'Start-Sleep -Seconds 6'
+    & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postTimeout) -JobId 'job-post-timeout' -JobsRoot $JobsRoot -TimeoutSec 2 -HeartbeatSec 1 | Out-Null
+    Start-Sleep -Seconds 4
+    $postTimeoutState = & $Status -JobId 'job-post-timeout' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
+    Assert ($postTimeoutState.state -eq 'TIMED_OUT') "postcondition timeout expected TIMED_OUT got $($postTimeoutState.state)"
+    $postTimeoutDurable = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-timeout\state.json') -Raw | ConvertFrom-Json
+    Assert ($postTimeoutDurable.postcondition_pid) 'postcondition timeout missing durable postcondition pid'
+    Assert ($postTimeoutDurable.postcondition_start_utc) 'postcondition timeout missing durable postcondition start time'
+    Assert ($postTimeoutDurable.ended_utc) 'postcondition timeout missing terminal end time'
+    Assert ($postTimeoutDurable.reason -eq 'timeout') "postcondition timeout reason was $($postTimeoutDurable.reason)"
+    $postTimeoutAlive = $false
+    try { $postTimeoutAlive = [bool](Get-Process -Id ([int]$postTimeoutDurable.postcondition_pid) -ErrorAction Stop) } catch {}
+    Assert (-not $postTimeoutAlive) "postcondition process survived timeout pid=$($postTimeoutDurable.postcondition_pid)"
+    $pass++; ReportCase 'postcondition timeout is terminal and kills owned process' 'PASS'
+
+    $postCancel = Join-Path $Root 'post_cancel.ps1'
+    ChildScript $postCancel 'Start-Sleep -Seconds 10'
+    & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postCancel) -JobId 'job-post-cancel' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
+    $postCancelDeadline = (Get-Date).AddSeconds(5)
+    do {
+        Start-Sleep -Milliseconds 100
+        $postCancelRunning = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-cancel\state.json') -Raw | ConvertFrom-Json
+    } while ($postCancelRunning.state -ne 'POSTCONDITION_RUNNING' -and (Get-Date) -lt $postCancelDeadline)
+    Assert ($postCancelRunning.state -eq 'POSTCONDITION_RUNNING') "postcondition cancel setup expected POSTCONDITION_RUNNING got $($postCancelRunning.state)"
+    Assert ($postCancelRunning.postcondition_pid) 'postcondition cancel missing durable postcondition pid'
+    & $Cancel -JobId 'job-post-cancel' -JobsRoot $JobsRoot -Json | Out-Null
+    $postCancelState = & $Wait -JobId 'job-post-cancel' -JobsRoot $JobsRoot -PollSec 1 -MaxWaitSec 6 -Json | ConvertFrom-Json
+    Assert ($postCancelState.state -eq 'CANCELLED') "postcondition cancel expected CANCELLED got $($postCancelState.state)"
+    $postCancelDurable = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-cancel\state.json') -Raw | ConvertFrom-Json
+    Assert ($postCancelDurable.ended_utc) 'postcondition cancel missing terminal end time'
+    $postCancelAlive = $false
+    try { $postCancelAlive = [bool](Get-Process -Id ([int]$postCancelDurable.postcondition_pid) -ErrorAction Stop) } catch {}
+    Assert (-not $postCancelAlive) "postcondition process survived cancel pid=$($postCancelDurable.postcondition_pid)"
+    $pass++; ReportCase 'postcondition cancel is terminal and kills owned process' 'PASS'
+
     $postSkippedMarker = Join-Path $Root 'post_skipped.txt'
     $postSkipped = Join-Path $Root 'post_skipped.ps1'
     ChildScript $postSkipped "Set-Content -LiteralPath '$postSkippedMarker' -Value invoked"
@@ -115,6 +151,14 @@ try {
     $s4 = & $Status -JobId 'job-004' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
     Assert ($s4.state -eq 'LOST_PROCESS') "expected LOST_PROCESS got $($s4.state)"
     $pass++; ReportCase 'synthetic lost process' 'PASS'
+
+    $jobPostLost = Join-Path $JobsRoot 'job-post-lost'
+    New-Item -ItemType Directory -Path $jobPostLost -Force | Out-Null
+    $postLostState = [ordered]@{ job_id = 'job-post-lost'; state = 'POSTCONDITION_RUNNING'; runner_pid = 999999; child_pid = 999998; postcondition_pid = 999997 }
+    Set-Content -LiteralPath (Join-Path $jobPostLost 'state.json') -Value ($postLostState | ConvertTo-Json -Depth 4) -Encoding utf8
+    $postLostStatus = & $Status -JobId 'job-post-lost' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
+    Assert ($postLostStatus.state -eq 'LOST_PROCESS') "dead postcondition expected LOST_PROCESS got $($postLostStatus.state)"
+    $pass++; ReportCase 'dead postcondition is lost process' 'PASS'
 
     $child5 = Join-Path $Root 'child5.ps1'
     ChildScript $child5 'Start-Sleep -Seconds 10'

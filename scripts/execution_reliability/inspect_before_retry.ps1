@@ -34,6 +34,7 @@ $decision = [ordered]@{
     state = 'UNKNOWN'
     runner_alive = $false
     child_alive = $false
+    postcondition_alive = $false
     retry_decision = 'REFUSE_RETRY'
     reason = 'missing or ambiguous durable state'
 }
@@ -55,11 +56,21 @@ try {
     $decision.state = [string]$state.state
     $runner = if ($state.PSObject.Properties['runner_pid']) { Get-AliveProcess $state.runner_pid } else { Get-AliveProcess $null }
     $child = if ($state.PSObject.Properties['child_pid']) { Get-AliveProcess $state.child_pid } else { Get-AliveProcess $null }
+    $postcondition = if ($state.PSObject.Properties['postcondition_pid']) { Get-AliveProcess $state.postcondition_pid } else { Get-AliveProcess $null }
     $decision.runner_alive = [bool]$runner.alive
     $decision.child_alive = [bool]$child.alive
+    $decision.postcondition_alive = [bool]$postcondition.alive
 
-    if ($runner.alive -or $child.alive) {
-        $decision.reason = 'runner or child process is still live'
+    if ($runner.alive -or $child.alive -or $postcondition.alive) {
+        $decision.reason = 'runner, child, or postcondition process is still live'
+    } elseif ($decision.state -eq 'POSTCONDITION_RUNNING') {
+        $decision.state = 'LOST_PROCESS'
+        if (-not $runner.valid -or -not $child.valid -or -not $postcondition.valid) {
+            $decision.reason = 'lost postcondition has missing or invalid process identity'
+        } else {
+            $decision.retry_decision = 'ALLOW_RETRY'
+            $decision.reason = 'lost postcondition has no live runner, child, or postcondition process'
+        }
     } elseif ($decision.state -in @('STARTING','RUNNING','POSTCONDITION_RUNNING')) {
         $decision.reason = "job state $($decision.state) is still active"
     } elseif ($decision.state -in @('FAILED','POSTCONDITION_FAILED','TIMED_OUT','CANCELLED','LOST_PROCESS')) {
