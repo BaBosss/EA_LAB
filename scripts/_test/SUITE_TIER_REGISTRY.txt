@@ -151,3 +151,4 @@ run_template_entry_wrapper_registration_tests.ps1|UNMEASURED|B-F2 wrapper-to-reg
 run_taskboard_split_negative_tests.ps1|UNMEASURED|Active taskboard split adversarial migration cage; run directly for this migration and not timed against the pinned fast-tier budget.
 run_ziplime_module_tests.ps1|UNMEASURED|Ziplime research module acceptance cage; not timed against the pinned fast-tier budget.
 run_factory_vnext_mvp_tests.ps1|UNMEASURED|Factory vNext non-authoritative sidecar focused schema/identity/range/report cage; not yet timed against the pinned full-tier budget.
+run_factory_vnext_operationalization_tests.ps1|UNMEASURED|Factory vNext operationalization runner/dashboard acceptance cage; newly tracked and not yet timed against the pinned full-tier budget.
