@@ -63,6 +63,7 @@ The following are accepted/canonical and should not be generically re-audited wi
 - Lane Ownership / Shared Registry v1.
 - active taskboard split: manifest + `taskboards/active/P01.md` / `P02.md` / `P03.md`.
 - LNWJUD Local Execution Plane, M3 repository/identity work, and A-PATH observe bridge.
+- LNWJUD Scheduled Continuation module: **ACCEPTED / CANONICAL repository orchestration capability** for durable next-iteration resume state. It is `NO_NEW_AUTHORITY`, does not activate M3 or start a tunnel, and does not deploy, attach MT5, trade, enable LIVE, or change risk/defaults.
 - Remote Desktop Commander persistence / zero-touch reboot path.
 - POST-OPUS M0/M1 trust repairs.
 - VPS DEMO preparation/hardening batch and PREDEV generic pre-development hardening.
