@@ -37,6 +37,32 @@ try {
     Assert ($s2.state -eq 'FAILED') "expected FAILED got $($s2.state)"
     $pass++; ReportCase 'failed job' 'PASS'
 
+    $postPass = Join-Path $Root 'post_pass.ps1'
+    ChildScript $postPass 'exit 0'
+    & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postPass) -JobId 'job-post-pass' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
+    $postPassState = & $Wait -JobId 'job-post-pass' -JobsRoot $JobsRoot -PollSec 1 -MaxWaitSec 10 -Json | ConvertFrom-Json
+    Assert ($postPassState.state -eq 'COMPLETE') "postcondition pass expected COMPLETE got $($postPassState.state)"
+    $pass++; ReportCase 'postcondition pass completes job' 'PASS'
+
+    $postFail = Join-Path $Root 'post_fail.ps1'
+    ChildScript $postFail 'exit 9'
+    & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postFail) -JobId 'job-post-fail' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
+    $postFailState = & $Wait -JobId 'job-post-fail' -JobsRoot $JobsRoot -PollSec 1 -MaxWaitSec 10 -Json | ConvertFrom-Json
+    Assert ($postFailState.state -eq 'POSTCONDITION_FAILED') "postcondition fail expected POSTCONDITION_FAILED got $($postFailState.state)"
+    $postFailDurable = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-fail\state.json') -Raw | ConvertFrom-Json
+    Assert ($postFailDurable.reason -eq 'postcondition exit code 9') "unexpected postcondition reason: $($postFailDurable.reason)"
+    Assert ([int]$postFailDurable.exit_code -eq 0) 'child exit code evidence changed after postcondition failure'
+    $pass++; ReportCase 'postcondition failure is non-complete terminal' 'PASS'
+
+    $postSkippedMarker = Join-Path $Root 'post_skipped.txt'
+    $postSkipped = Join-Path $Root 'post_skipped.ps1'
+    ChildScript $postSkipped "Set-Content -LiteralPath '$postSkippedMarker' -Value invoked"
+    & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 7') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postSkipped) -JobId 'job-post-skip' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
+    $postSkippedState = & $Wait -JobId 'job-post-skip' -JobsRoot $JobsRoot -PollSec 1 -MaxWaitSec 10 -Json | ConvertFrom-Json
+    Assert ($postSkippedState.state -eq 'FAILED') "nonzero child was overridden by postcondition: $($postSkippedState.state)"
+    Assert (-not (Test-Path -LiteralPath $postSkippedMarker)) 'postcondition ran after nonzero child'
+    $pass++; ReportCase 'postcondition does not override failed child' 'PASS'
+
     $dup = $false
     try { & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -JobId 'job-002' -JobsRoot $JobsRoot -TimeoutSec 10 -HeartbeatSec 1 | Out-Null } catch { $dup = $true }
     Assert $dup 'duplicate JobId not refused'

@@ -9,6 +9,8 @@ $resultPath = Join-Path $JobRoot 'result.json'
 $heartbeatPath = Join-Path $JobRoot 'heartbeat.json'
 $stdoutPath = Join-Path $JobRoot 'logs\stdout.log'
 $stderrPath = Join-Path $JobRoot 'logs\stderr.log'
+$postconditionStdoutPath = Join-Path $JobRoot 'logs\postcondition.stdout.log'
+$postconditionStderrPath = Join-Path $JobRoot 'logs\postcondition.stderr.log'
 
 function Set-State([hashtable]$data) { Invoke-LjrAtomicWriteJson -Path $statePath -Object $data }
 
@@ -122,6 +124,44 @@ else {
     $state.ended_utc = Get-LjrUtcNowIso
     $state.exit_code = $child.ExitCode
     $state.state = if ($child.ExitCode -eq 0) { 'COMPLETE' } else { 'FAILED' }
+    $postconditionPath = if ($request.PSObject.Properties.Name -contains 'postcondition_file_path') { [string]$request.postcondition_file_path } else { '' }
+    if ($child.ExitCode -eq 0 -and $postconditionPath) {
+        $state.state = 'POSTCONDITION_RUNNING'
+        $state.postcondition_file_path = $postconditionPath
+        Set-State $state
+        try {
+            $postconditionArgs = if ($request.PSObject.Properties.Name -contains 'postcondition_arguments') { @($request.postcondition_arguments) } else { @() }
+            $postconditionInfo = New-Object System.Diagnostics.ProcessStartInfo
+            $postconditionInfo.FileName = $postconditionPath
+            $postconditionInfo.UseShellExecute = $false
+            $postconditionInfo.RedirectStandardOutput = $true
+            $postconditionInfo.RedirectStandardError = $true
+            $postconditionInfo.CreateNoWindow = $true
+            $postconditionInfo.Arguments = ConvertTo-LjrProcessArguments -ArgumentList $postconditionArgs
+            $postcondition = New-Object System.Diagnostics.Process
+            $postcondition.StartInfo = $postconditionInfo
+            [void]$postcondition.Start()
+            $postconditionStdout = $postcondition.StandardOutput.ReadToEndAsync()
+            $postconditionStderr = $postcondition.StandardError.ReadToEndAsync()
+            $postcondition.WaitForExit()
+            $postconditionOutput = $postconditionStdout.GetAwaiter().GetResult()
+            $postconditionError = $postconditionStderr.GetAwaiter().GetResult()
+            [System.IO.File]::AppendAllText($postconditionStdoutPath, $postconditionOutput, (New-Object System.Text.UTF8Encoding($false)))
+            [System.IO.File]::AppendAllText($postconditionStderrPath, $postconditionError, (New-Object System.Text.UTF8Encoding($false)))
+            $state.postcondition_exit_code = $postcondition.ExitCode
+            if ($postcondition.ExitCode -ne 0) {
+                $state.state = 'POSTCONDITION_FAILED'
+                $state.reason = "postcondition exit code $($postcondition.ExitCode)"
+            } else {
+                $state.state = 'COMPLETE'
+            }
+        } catch {
+            $state.state = 'POSTCONDITION_FAILED'
+            $state.postcondition_exit_code = $null
+            $state.reason = 'postcondition launch failed'
+            [System.IO.File]::AppendAllText($postconditionStderrPath, ($_.Exception.Message + "`r`n"), (New-Object System.Text.UTF8Encoding($false)))
+        }
+    }
 }
 
 $child.WaitForExit()
@@ -138,4 +178,6 @@ Invoke-LjrAtomicWriteJson -Path $resultPath -Object ([ordered]@{
     runner_pid = $PID
     child_pid = $child.Id
     ended_utc = $state.ended_utc
+    reason = if ($state.PSObject.Properties['reason']) { $state.reason } else { '' }
+    postcondition_exit_code = if ($state.PSObject.Properties['postcondition_exit_code']) { $state.postcondition_exit_code } else { $null }
 })

@@ -11,6 +11,8 @@ param(
     [string]$Worktree = '',
     [string]$BaseSha = '',
     [string]$Stage = '',
+    [string]$PostconditionFilePath = '',
+    [string[]]$PostconditionArgumentList = @(),
     [string]$JobsRoot = 'D:\EA_LAB_CONTROL\jobs',
     [switch]$Json
 )
@@ -20,6 +22,12 @@ $ErrorActionPreference = 'Stop'
 
 $filePath = Resolve-LjrSafeAbsPath -Path $FilePath
 if (-not (Test-LjrLeafFilePath -Path $filePath)) { throw "missing executable leaf file: $filePath" }
+if ($PostconditionFilePath) {
+    $PostconditionFilePath = Resolve-LjrSafeAbsPath -Path $PostconditionFilePath
+    if (-not (Test-LjrLeafFilePath -Path $PostconditionFilePath)) { throw "missing postcondition executable leaf file: $PostconditionFilePath" }
+} elseif ($PostconditionArgumentList.Count -gt 0) {
+    throw 'postcondition arguments require a postcondition executable'
+}
 if (-not (Test-LjrValidTimeout -Value $TimeoutSec)) { throw "invalid timeout: $TimeoutSec" }
 if (-not (Test-LjrValidHeartbeat -Value $HeartbeatSec)) { throw "invalid heartbeat: $HeartbeatSec" }
 if (-not (Test-LjrValidBaseSha -BaseSha $BaseSha)) { throw "invalid base sha: $BaseSha" }
@@ -65,8 +73,12 @@ $request = [ordered]@{
     worktree = $Worktree
     base_sha = $BaseSha
     stage = $Stage
+    postcondition_file_path = $PostconditionFilePath
+    postcondition_arg_count = $PostconditionArgumentList.Count
+    postcondition_arg_hash = ([Convert]::ToBase64String((New-Object System.Security.Cryptography.SHA256Managed).ComputeHash([Text.Encoding]::UTF8.GetBytes(($PostconditionArgumentList -join "`u0000")))))
     created_utc = Get-LjrUtcNowIso
     arguments = @($ArgumentList)
+    postcondition_arguments = @($PostconditionArgumentList)
 }
 Invoke-LjrAtomicWriteJson -Path (Join-Path $jobRoot 'request.json') -Object $request
 Invoke-LjrAtomicWriteJson -Path (Join-Path $jobRoot 'job.json') -Object ([ordered]@{
@@ -79,6 +91,9 @@ Invoke-LjrAtomicWriteJson -Path (Join-Path $jobRoot 'job.json') -Object ([ordere
     worktree = $Worktree
     base_sha = $BaseSha
     stage = $Stage
+    postcondition_file_path = $PostconditionFilePath
+    postcondition_arg_count = $request.postcondition_arg_count
+    postcondition_arg_hash = $request.postcondition_arg_hash
     created_utc = $request.created_utc
 })
 

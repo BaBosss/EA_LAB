@@ -10,7 +10,7 @@ $deadline = (Get-Date).ToUniversalTime().AddSeconds($MaxWaitSec)
 do {
     $out = & (Join-Path $PSScriptRoot 'status_long_job.ps1') -JobId $JobId -JobsRoot $JobsRoot -Json
     $st = $out | ConvertFrom-Json
-    if ($st.state -in @('COMPLETE','FAILED','TIMED_OUT','CANCELLED','LOST_PROCESS')) {
+    if ($st.state -in @('COMPLETE','FAILED','POSTCONDITION_FAILED','TIMED_OUT','CANCELLED','LOST_PROCESS')) {
         if ($Json) { $st | ConvertTo-Json -Depth 8 | Write-Output } else { $st | Format-List | Out-String | Write-Output }
         exit 0
     }
