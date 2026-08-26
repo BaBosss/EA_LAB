@@ -74,6 +74,8 @@ The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items
   current Boss build); the Zeus grid/LOG port stays waiting on the Zeus optimization outcome above.
 - **MONITOR (CURRENT ROUTING OVERRIDE, 2026-08-24):** preserve global `DEGRADED_MONITORING`. ORDER-353 setup/acceptance is complete: config/attestation/target G3 are closed at the accepted binding; forward observation is waiting only on genuine qualifying trade evidence. Do not reopen pre-deployment/runtime-identity work without a concrete regression, and do not invent another monitoring order without new evidence or a direct consumer.
 
+**POST-FACTORY vNEXT / EXECUTION RELIABILITY ACCEPTANCE SYNC - 2026-08-26:** Factory vNext MT5 set compatibility adapter and Execution Reliability Pack V1 are CLOSED/ACCEPTED integration inputs. They create no new active queue item, candidate selection, runtime/deployment authority, risk/default change, or KINT closure. Future Factory production migration and Boss11-18 rollout still require separate bounded consumers.
+
 No new detailed order is invented here; the Control Tower should bind these phase items to the next canonical task contracts.
 > 🔧 **SYSTEMS TRANCHE ORDER-152..158 (เขียน 2026-07-23, Opus-seat)** — งาน infra/tooling ล้วน ไม่ใช่ verdict EA.
 > ที่มา = 2 backlog รวมกัน: (A) review แผน `docs/EA_CORE_TEMPLATE_WORKPLAN_FOR_CLAUDE.md` (7 finding ของ Opus

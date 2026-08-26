@@ -47,7 +47,8 @@ The `0` above is a dated accepted evidence point, not a live counter. Current te
 - Factory candidate: **NONE SELECTED**.
 - Factory vNext Design Freeze / MVP Pilot Contract: **ACCEPTED / CANONICAL as a sidecar implementation source**.
 - Factory vNext MVP Sidecar implementation + offline pilot package: **ACCEPTED / CANONICAL as `NON_AUTHORITATIVE_SIDECAR` evidence only**.
-- Implemented sidecar surfaces include deterministic Home/Window/Run identity, Parameter Surface V1, Telemetry V1, Range Generator V1, Derived Metrics V1, Grade/Confidence evidence scaffold, graph-first five-page report, SuperTrendFlip BTCUSD/H4 offline adapter, and the historical pilot artifact package.
+- Implemented sidecar surfaces include deterministic Home/Window/Run identity, Parameter Surface V1, Telemetry V1, Range Generator V1, Derived Metrics V1, Grade/Confidence evidence scaffold, graph-first five-page report, SuperTrendFlip BTCUSD/H4 offline adapter, Parameter Semantics, Template Variant Generator, Operationalization Runner, MT5 set compatibility adapter, and the historical pilot artifact package.
+- The MT5 set compatibility adapter remains NON_AUTHORITATIVE_SIDECAR: it consumes canonical ParameterProjection directly, preserves baseline layout/comments, disables optimization for SNAPSHOT_ONLY, refuses unknown/removed/ambiguous/malformed inputs, and never mutates terminal files or production policy.
 - The accepted pilot uses existing `(TRD)_SuperTrendFlip_rev05`, logical `BTCUSD`, ExecutionTF `H4`, and the 2026H1 historical holdout with 100% real-ticks evidence. Exact pilot IDs, hashes, and measured counts are owned by `factory/vnext/pilots/supertrend_rev05_btcusd_h4_holdout26h1/pilot_manifest.json` and `artifact_index.json`.
 - Current Factory production policy/verdict/optimization/risk/deployment authority is unchanged. No Factory candidate promotion, deployment/LIVE authority, risk/default change, or strategy trading-semantics change is created by this milestone.
 - `KINT-001` remains intentionally OPEN. SuperTrend parameter semantic metadata remains unresolved; affected Range Generator evidence remains `SEMANTICS_REQUIRED`.
@@ -65,6 +66,7 @@ The following are accepted/canonical and should not be generically re-audited wi
 - POST-OPUS M0/M1 trust repairs.
 - VPS DEMO preparation/hardening batch and PREDEV generic pre-development hardening.
 - Long Job Runner durable detached execution support.
+- Execution Reliability Pack V1: durable-by-default worker launch, exact-head/bootstrap/hash checks, inspect-before-retry fail-closed recovery, provider-aware launcher policy, postcondition-aware completion, timeout/cancel enforcement, and owned process-tree cleanup.
 - Ziplime research/data-preparation module for the Factory vNext research sidecar.
 - DEMO-safe MacroGate regime-only transport (-RegimeOnly / pull_regime.cmd) as a repository capability.
 - Traycer EA_LAB orchestration foundation as a tooling/UI support module.
@@ -235,7 +237,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 
 - Genuine ORDER-353 first trade -> record accepted `first_trade_epoch` through the canonical evidence/state path and derive the judge clock from the accepted rule.
 - Reproducible monitoring regression -> open a bounded repair with a direct consumer; do not manufacture monitoring work from historical warnings.
-- Further Factory vNext rollout/migration -> separate future milestone; broader Master Mold / Family / Variant production migration, Template Variant generator / MT5 Input UX / Boss11-18 compatibility remain future unless explicitly accepted.
+- Further Factory vNext rollout/migration -> separate future milestone; broader Master Mold / Family / Variant production migration and Boss11-18 compatibility remain future unless explicitly accepted. Template Variant Generator and the MT5 Input UX compatibility adapter are accepted sidecar capabilities only and do not migrate production policy.
 - New strategy/risk/default/deployment semantics -> stop at the applicable owner hard stop before mutation.
 - Canonical origin movement while an isolated lane is in progress -> re-anchor in isolation; rerun impacted acceptance before integration.
 
@@ -272,7 +274,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 | Factory vNext MVP sidecar / accepted offline pilot | `_triage/factory_vnext/` + `factory/vnext/pilots/supertrend_rev05_btcusd_h4_holdout26h1/` |
 | Harness v1 | `docs/EA_LAB_HARNESS_V1.md` + `tools/ea_lab_harness/` |
 | Lane Registry | D:\EA_LAB_CONTROL\lanes\registry-v1\ |
-| Long Job Runner | docs/LONG_JOB_RUNNER.md + scripts/long_jobs/ |
+| Long Job Runner + Execution Reliability Pack | docs/LONG_JOB_RUNNER.md + scripts/long_jobs/ + scripts/execution_reliability/ |
 | Ziplime research/data-preparation module | docs/research/EA_LAB_ZIPLIME_MODULE.md + 	ools/ea_lab_ziplime/ |
 | MacroGate regime-only transport | ea_projects/(Boss)_NewsGuard/vps_rclone/REGIME_ONLY_DEMO_RUNBOOK.md + pull_regime.cmd |
 | Traycer EA_LAB orchestration foundation | docs/research/EA_LAB_TRAYCER_PILOT.md + 	ools/traycer_ea_lab_pilot/ |
