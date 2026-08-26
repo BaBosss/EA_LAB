@@ -15,12 +15,6 @@ $postconditionStderrPath = Join-Path $JobRoot 'logs\postcondition.stderr.log'
 function Set-State([hashtable]$data) { Invoke-LjrAtomicWriteJson -Path $statePath -Object $data }
 
 function Stop-LjrOwnedPostconditionTree([System.Diagnostics.Process]$Process, [string]$ExpectedStartTimeUtc) {
-    try {
-        $Process.Refresh()
-        if ($Process.HasExited -or $Process.StartTime.ToUniversalTime().ToString('o') -ne $ExpectedStartTimeUtc) { return }
-        $Process.Kill()
-        return
-    } catch {}
     Stop-LjrOwnedProcessTree -Process $Process -ExpectedStartTimeUtc $ExpectedStartTimeUtc
 }
 

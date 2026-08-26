@@ -89,6 +89,21 @@ try {
     try { $postCancelAlive = [bool](Get-Process -Id ([int]$postCancelDurable.postcondition_pid) -ErrorAction Stop) } catch {}
     Assert (-not $postCancelAlive) "postcondition process survived cancel pid=$($postCancelDurable.postcondition_pid)"
     $pass++; ReportCase 'postcondition cancel is terminal and kills owned process' 'PASS'
+    $postNested = Join-Path $Root 'post_nested.ps1'
+    $postNestedPidFile = Join-Path $Root 'post-nested-child.pid'
+    ChildScript $postNested '$pidFile=$args[0]; $p=Start-Process -FilePath (Join-Path $PSHOME "powershell.exe") -ArgumentList @("-NoProfile","-Command","Start-Sleep -Seconds 30") -PassThru; Set-Content -LiteralPath $pidFile -Value $p.Id -Encoding ascii; Wait-Process -Id $p.Id'
+    & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postNested,$postNestedPidFile) -JobId 'job-post-nested-cancel' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
+    $postNestedDeadline=(Get-Date).AddSeconds(6)
+    $postNestedState=$null
+    do { Start-Sleep -Milliseconds 100; try { $postNestedState=& $Status -JobId 'job-post-nested-cancel' -JobsRoot $JobsRoot -Json | ConvertFrom-Json } catch { $postNestedState=$null } } while ((-not (Test-Path -LiteralPath $postNestedPidFile) -or $null -eq $postNestedState -or $postNestedState.state -ne 'POSTCONDITION_RUNNING') -and (Get-Date) -lt $postNestedDeadline)
+    Assert ($null -ne $postNestedState -and $postNestedState.state -eq 'POSTCONDITION_RUNNING') 'postcondition nested child did not reach POSTCONDITION_RUNNING'
+    Assert (Test-Path -LiteralPath $postNestedPidFile) 'postcondition nested child pid evidence missing'
+    $postNestedPid=[int](Get-Content -LiteralPath $postNestedPidFile -Raw)
+    & $Cancel -JobId 'job-post-nested-cancel' -JobsRoot $JobsRoot -Json | Out-Null
+    $postNestedTerminal=& $Wait -JobId 'job-post-nested-cancel' -JobsRoot $JobsRoot -PollSec 1 -MaxWaitSec 8 -Json | ConvertFrom-Json
+    Assert ($postNestedTerminal.state -eq 'CANCELLED') "postcondition nested cancel expected CANCELLED got $($postNestedTerminal.state)"
+    foreach($ownedPid in @([int]$postNestedState.postcondition_pid,$postNestedPid)){ $alive=$false; try{$alive=[bool](Get-Process -Id $ownedPid -ErrorAction Stop)}catch{}; Assert (-not $alive) "postcondition owned process survived cancel pid=$ownedPid" }
+    $pass++; ReportCase 'postcondition nested child cancel' 'PASS'
 
     $postSkippedMarker = Join-Path $Root 'post_skipped.txt'
     $postSkipped = Join-Path $Root 'post_skipped.ps1'
