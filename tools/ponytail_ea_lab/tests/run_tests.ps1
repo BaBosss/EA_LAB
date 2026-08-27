@@ -62,6 +62,9 @@ Assert-True 'risk work type downgrades to review' ($null -ne $risk.Result -and $
 $mq5 = Invoke-Policy (New-Contract 'lite' 'tooling' @('ea_projects/Test/Test.mq5'))
 Assert-True 'EA source downgrades to review' ($null -ne $mq5.Result -and $mq5.Result.decision -eq 'DOWNGRADE' -and $mq5.Result.effective_mode -eq 'review') $mq5.Text
 
+$nestedLauncher = Invoke-Policy (New-Contract 'auto' 'tooling' @('scripts/lib/deployment_status.ps1'))
+Assert-True 'nested deploy launcher downgrades to review' ($null -ne $nestedLauncher.Result -and $nestedLauncher.Result.decision -eq 'DOWNGRADE' -and $nestedLauncher.Result.effective_mode -eq 'review') $nestedLauncher.Text
+
 $review = Invoke-Policy (New-Contract 'review' 'risk' @('ea_template/core/Money.mqh'))
 Assert-True 'explicit review is allowed on protected code' ($null -ne $review.Result -and $review.Result.decision -eq 'ALLOW' -and $review.Result.effective_mode -eq 'review') $review.Text
 

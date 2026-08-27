@@ -3,13 +3,14 @@ Ponytail EA_LAB Module focused acceptance
 Command:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\ponytail_ea_lab\tests\run_tests.ps1
 
-Observed after implementation and canonical fast-forward reconciliation:
+Observed after independent-review bounded repair:
 PASS auto tooling exits 0
 PASS auto tooling selects full
 PASS auto docs selects full
 PASS protected core downgrades to review
 PASS risk work type downgrades to review
 PASS EA source downgrades to review
+PASS nested deploy launcher downgrades to review
 PASS explicit review is allowed on protected code
 PASS off is allowed
 PASS ultra is refused in v1
@@ -21,5 +22,5 @@ PASS authority is never granted
 PASS safety and evidence are preserved
 PASS optimization target is complexity not LOC
 PASS upstream pin is exact
-RESULT passed=17 failed=0
+RESULT passed=18 failed=0
 EXIT=0

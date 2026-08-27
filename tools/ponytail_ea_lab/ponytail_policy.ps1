@@ -87,7 +87,7 @@ function Test-ProtectedPath {
     if ($p -match '\.(mq4|mq5|mqh)$') { return $true }
     if ($p -match '(^|/)(_vps_deploy|_demo_deploy|_mt5_auto|_mt4_auto)(/|$)') { return $true }
     if ($p -eq 'portfolio/deployments.csv') { return $true }
-    if ($p -match '^scripts/[^/]*(mt4|mt5|deploy|live|risk)[^/]*\.ps1$') { return $true }
+    if ($p -match '^scripts/(?:[^/]+/)*[^/]*(mt4|mt5|deploy|live|risk)[^/]*\.ps1$') { return $true }
     return $false
 }
 
