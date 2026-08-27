@@ -13,7 +13,7 @@ function New-Page {
     $css = @'
 *{box-sizing:border-box}body{margin:0;background:#f5f5f5;color:#2d3142;font-family:Arial,sans-serif}main{max-width:1480px;margin:0 auto;padding:40px 32px}.eyebrow,.meta,footer{font-family:Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}.eyebrow{font-size:12px;color:#4f5d75;margin:0 0 12px}.badge{display:inline-block;border:1px solid #eb6c36;border-radius:4px;color:#9e3c18;padding:6px 8px;font:600 11px Consolas,monospace;letter-spacing:.06em}h1{font:400 40px Georgia,serif;margin:16px 0 8px}.meta{font-size:12px;color:#4f5d75;margin:0 0 28px}.diagram{overflow-x:auto}svg{display:block;width:100%;min-width:900px;height:auto}footer{border-top:1px solid rgba(45,49,66,.16);margin-top:28px;padding-top:16px;color:#4f5d75;font-size:11px;line-height:1.5}.note{font-family:Arial,sans-serif;letter-spacing:0;text-transform:none}
 '@
-    return "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>$(Encode-Html $Title)</title><style>$css</style></head><body><main><span class='badge'>VISUAL_ONLY_NO_AUTHORITY</span><p class='eyebrow'>EA_LAB workflow documentation</p><h1>$(Encode-Html $Title)</h1><p class='meta'>profile: $(Encode-Html $Profile) · offline baseline</p><div class='diagram'>$Svg</div><footer>Provenance: tools/diagram_design_ea_lab/workflow_manifest.json · <span class='note'>Visual documentation only. Runtime, Git, governance, strategy specifications, risk policy and owner approvals remain authoritative elsewhere.</span></footer></main></body></html>"
+    return "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>$(Encode-Html $Title)</title><style>$css</style></head><body><main><span class='badge'>VISUAL_ONLY_NO_AUTHORITY</span><p class='eyebrow'>EA_LAB workflow documentation</p><h1>$(Encode-Html $Title)</h1><p class='meta'>profile: $(Encode-Html $Profile) | offline baseline</p><div class='diagram'>$Svg</div><footer>Provenance: tools/diagram_design_ea_lab/workflow_manifest.json | <span class='note'>Visual documentation only. Runtime, Git, governance, strategy specifications, risk policy and owner approvals remain authoritative elsewhere.</span></footer></main></body></html>"
 }
 
 function New-SvgStart([string]$Slug, [string]$Title, [string]$Description, [int]$Width, [int]$Height) {
@@ -57,7 +57,7 @@ function Render-Architecture {
         $count = [Math]::Min($items.Count, 6); $itemWidth = [int](1120 / $count)
         for ($i = 0; $i -lt $count; $i++) { $x = 184 + ($i * $itemWidth); $focal = ($label -eq 'Authority & truth' -and $i -eq 0); $svg += New-Node $x ($y + 20) ($itemWidth - 16) 40 ([string]$items[$i]) $focal }
     }
-    return "$svg<line x1='32' y1='492' x2='1328' y2='492' stroke='rgba(45,49,66,.18)'/><text x='32' y='516' fill='#4f5d75' font-family='Consolas,monospace' font-size='10'>LEGEND</text><text x='128' y='516' fill='#4f5d75' font-family='Arial,sans-serif' font-size='10'>system group · no operational command or authority delegation</text></svg>"
+    return "$svg<line x1='32' y1='492' x2='1328' y2='492' stroke='rgba(45,49,66,.18)'/><text x='32' y='516' fill='#4f5d75' font-family='Consolas,monospace' font-size='10'>LEGEND</text><text x='128' y='516' fill='#4f5d75' font-family='Arial,sans-serif' font-size='10'>system group | no operational command or authority delegation</text></svg>"
 }
 
 function Render-Swimlane {
@@ -71,7 +71,7 @@ function Render-Swimlane {
         $step = if ($focal) { 'Authority boundary' } else { 'Scoped handoff' }; $svg += New-Node 520 ($y + 12) 240 40 $step $focal
     }
     $legendY = $height - 28
-    return "$svg<line x1='32' y1='$($legendY - 20)' x2='1188' y2='$($legendY - 20)' stroke='rgba(45,49,66,.18)'/><text x='32' y='$legendY' fill='#4f5d75' font-family='Consolas,monospace' font-size='10'>LEGEND</text><text x='128' y='$legendY' fill='#4f5d75' font-family='Arial,sans-serif' font-size='10'>handoff direction · runtime action remains outside this visual</text></svg>"
+    return "$svg<line x1='32' y1='$($legendY - 20)' x2='1188' y2='$($legendY - 20)' stroke='rgba(45,49,66,.18)'/><text x='32' y='$legendY' fill='#4f5d75' font-family='Consolas,monospace' font-size='10'>LEGEND</text><text x='128' y='$legendY' fill='#4f5d75' font-family='Arial,sans-serif' font-size='10'>handoff direction | runtime action remains outside this visual</text></svg>"
 }
 
 foreach ($property in $manifest.profiles.PSObject.Properties) {
