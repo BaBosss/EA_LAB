@@ -15,13 +15,14 @@ param(
     [string]$SetScriptPath = '',
     [string]$ParserPath = '',
     [string]$GeneratorPath = '',
-    [string]$ReportRoot = 'D:\EA_LAB\_mt5_auto',
+    [string]$ReportRoot = '',
     [string]$Terminal = 'D:\Meta 5\terminal64.exe',
     [string]$DataDir = 'C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355'
 )
 
 $ErrorActionPreference = 'Stop'
 if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
+if (-not $ReportRoot) { $ReportRoot = Join-Path $RepoRoot '_mt5_auto' }
 $SourceCommit = $SourceCommit.Trim().ToLowerInvariant()
 $sourceType = (& git -C $RepoRoot cat-file -t $SourceCommit 2>$null)
 if ($LASTEXITCODE -ne 0 -or ([string]$sourceType).Trim() -ne 'commit') {
