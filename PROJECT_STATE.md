@@ -53,6 +53,10 @@ The `0` above is a dated accepted evidence point, not a live counter. Current te
 - The accepted pilot uses existing `(TRD)_SuperTrendFlip_rev05`, logical `BTCUSD`, ExecutionTF `H4`, and the 2026H1 historical holdout with 100% real-ticks evidence. Exact pilot IDs, hashes, and measured counts are owned by `factory/vnext/pilots/supertrend_rev05_btcusd_h4_holdout26h1/pilot_manifest.json` and `artifact_index.json`.
 - Current Factory production policy/verdict/optimization/risk/deployment authority is unchanged. No Factory candidate promotion, deployment/LIVE authority, risk/default change, or strategy trading-semantics change is created by this milestone.
 - `KINT-001` remains intentionally OPEN. SuperTrend parameter semantic metadata remains unresolved; affected Range Generator evidence remains `SEMANTICS_REQUIRED`.
+- Factory vNext BaselineCoverage: **ACCEPTED / CANONICAL**. When coverage is present it binds every physical baseline key exactly once by exact PID identity using `PROJECT` or `PRESERVE_SNAPSHOT`; duplicate/malformed/missing/case-mismatch/PID-mismatch conditions REFUSE, and legacy behavior is unchanged when coverage is absent.
+- Boss14 H01 first full-green Factory sidecar: **ACCEPTED / CANONICAL** at `376289d4cdf8b8f37e711a59307402c8343eb1e7`; reference package `VPKG-84cdbe53dc67d26ad078b385` has 142 bindings, 31 ParameterProjection rows, 116 physical baseline keys, BaselineCoverage 116/116 (30 PROJECT + 86 PRESERVE_SNAPSHOT), zero MT5 compatibility refusals, and authority `NON_AUTHORITATIVE_SIDECAR`.
+- Boss14 downstream quarantine: `ParameterProjection - BaselineCoverage.projection_parameter` must be checked explicitly. For the accepted package the difference is exactly `P72000 / UseMiddlePathVeto`; it has no physical baseline key, `safe_range=null`, and `locked_value=null`, so it must not enter Range Generator / optimizer semantics until explicitly resolved.
+- Boss11-18: deterministic read-only preflight is the next Factory direct consumer. Do not rank/select/promote a candidate or invent missing registry/range semantics; only deterministic-green bosses may advance to bounded rollout lanes.
 - Final numeric Grade/Confidence thresholds remain provisional/unratified; sidecar verdict/build-potential outputs remain non-authoritative.
 ### 1.3 Accepted control-plane capabilities
 
@@ -63,15 +67,17 @@ The following are accepted/canonical and should not be generically re-audited wi
 - Lane Ownership / Shared Registry v1.
 - active taskboard split: manifest + `taskboards/active/P01.md` / `P02.md` / `P03.md`.
 - LNWJUD Local Execution Plane, M3 repository/identity work, and A-PATH observe bridge.
-- LNWJUD Scheduled Continuation module: **ACCEPTED / CANONICAL repository orchestration capability** for durable next-iteration resume state. It is `NO_NEW_AUTHORITY`, does not activate M3 or start a tunnel, and does not deploy, attach MT5, trade, enable LIVE, or change risk/defaults.
+- LNWJUD Scheduled Continuation module: **ACCEPTED / CANONICAL / CLOSED** repository orchestration capability for durable next-iteration resume state. It is `NO_NEW_AUTHORITY`; do not reopen it without a concrete regression. It does not activate M3 or start a tunnel, and does not deploy, attach MT5, trade, enable LIVE, or change risk/defaults.
 - Remote Desktop Commander persistence / zero-touch reboot path.
 - POST-OPUS M0/M1 trust repairs.
 - VPS DEMO preparation/hardening batch and PREDEV generic pre-development hardening.
 - Long Job Runner durable detached execution support.
 - Execution Reliability Pack V1: durable-by-default worker launch, exact-head/bootstrap/hash checks, inspect-before-retry fail-closed recovery, provider-aware launcher policy, postcondition-aware completion, timeout/cancel enforcement, and owned process-tree cleanup.
+- Ponytail controlled-adoption protected-directory repair: **ACCEPTED / CANONICAL**; original protected-launcher defect resolved; final deterministic suite 25/25 PASS and targeted different-family rereview PASS; `authority_granted=false`; non-.ps1 protected-name hardening remains PARKED/FUTURE.
+- Diagram Design module: **ACCEPTED / CANONICAL** tooling/docs support only; it grants no Factory/runtime/deployment authority.
 - Ziplime research/data-preparation module for the Factory vNext research sidecar.
-- DEMO-safe MacroGate regime-only transport (-RegimeOnly / pull_regime.cmd) as a repository capability.
-- Traycer EA_LAB orchestration foundation as a tooling/UI support module.
+- MacroGate RegimeOnly readiness: **ACCEPTED / CANONICAL** repository readiness only; the Windows Scheduled Task is NOT CREATED and VPS runtime scheduling is NOT ACTIVATED.
+- Traycer authenticated-A2A OFFLINE evidence cage: **ACCEPTED / CANONICAL**; real browser/device authentication and functional A2A remain **E OWNER-EXTERNAL**.
 
 Ziplime remains research/data-preparation support only; it does not migrate current Factory policy or grant deployment/promotion authority.
 
@@ -125,6 +131,8 @@ Fresh owner approval is required for:
 Normal FF-compatible canonical push is not itself a hard stop when `AGENTS.md` gates pass. Local Strategy Tester/backtest is not deployment/trading.
 
 ### 2.3 Parked / future / decision-ready
+
+Cleanup Batch 1 is **PARTIAL_SAFE / CLOSED FOR NOW**: 129 HIGH-confidence objects requested, 44 removed, 83 drift-skipped, 2 failed safe, and approximately 14.842 GiB reclaimed. Cleanup Batch 2 is PARKED; do not requalify skipped items merely to reclaim more disk.
 
 Do not dispatch without a direct consumer and the required authority:
 - A6 task-scoped mutation bridge
@@ -229,17 +237,17 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 1. **Observe ORDER-353.** Consume fresh monitoring/runtime evidence only; wait for a genuine qualifying post-attach trade. Do not force one.
 2. **Keep target acceptance closed unless regression evidence appears.** F/G3/config/attestation work is not an open repo task.
 3. **Keep global monitoring honest.** `DEGRADED_MONITORING` remains current until canonical evidence satisfies its actual global criteria.
-4. **Treat Factory vNext MVP Sidecar as accepted evidence, not production policy.** Do not reopen the accepted MVP generically. Further rollout/migration needs its own bounded consumer and may not select/promote a Factory candidate or migrate policy by implication.
+4. **Run Boss11-18 deterministic read-only preflight next.** Use the accepted Boss14 construction/compatibility pattern, explicitly compute projection-minus-coverage set differences, and do not implement or invent semantics until a boss is deterministic green. This does not select/promote a Factory candidate or migrate production policy.
 5. **Use Lane Registry dynamically before writes/reviews/integration.** Do not infer writer ownership from old chat/session text.
 6. **Use current pushed origin/master as integration base.** Reconcile neighboring accepted lanes only when they reach their own acceptance boundary.
 7. **Keep MacroGate runtime activation separate from repo capability.** Persistent regime-only VPS automation requires its own authorized runtime task; do not reactivate or modify NewsGuard/REAL as a side effect.
-8. **Keep Traycer support non-authoritative.** After owner authentication, functional A2A/read-only cage acceptance may proceed separately; bounded writes remain behind Lane Registry + Harness and existing authority boundaries.
+8. **Keep Traycer support non-authoritative.** The OFFLINE authenticated-A2A evidence cage is accepted; real browser/device authentication and functional A2A remain owner-external. Bounded writes remain behind Lane Registry + Harness and existing authority boundaries.
 
 ### 5.2 NEXT EVIDENCE-DRIVEN TRANSITIONS
 
 - Genuine ORDER-353 first trade -> record accepted `first_trade_epoch` through the canonical evidence/state path and derive the judge clock from the accepted rule.
 - Reproducible monitoring regression -> open a bounded repair with a direct consumer; do not manufacture monitoring work from historical warnings.
-- Further Factory vNext rollout/migration -> separate future milestone; broader Master Mold / Family / Variant production migration and Boss11-18 compatibility remain future unless explicitly accepted. Template Variant Generator and the MT5 Input UX compatibility adapter are accepted sidecar capabilities only and do not migrate production policy.
+- Boss11-18 deterministic preflight green result -> dispatch bounded construction/implementation lanes only for READY bosses, reusing the accepted Boss14 path without inventing missing semantics; broader production migration remains separate and non-authoritative.
 - New strategy/risk/default/deployment semantics -> stop at the applicable owner hard stop before mutation.
 - Canonical origin movement while an isolated lane is in progress -> re-anchor in isolation; rerun impacted acceptance before integration.
 

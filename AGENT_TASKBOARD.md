@@ -65,17 +65,16 @@ The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items
   `_mt5_auto/M3_RIGHTHOME_MAPSAR/`). ExpertMAMA = `PARKED-VERIFY(user)` (right-home naked smoke PROCEED,
   M3 coarse optimize showed no genuine plateau; evidence at `_mt5_auto/M2_MAMA/`, `_mt5_auto/M3_MAMA_OPTIMIZE/`).
   Zeus (`ZeusInspired_GridLog`) optimization = **HOLD FOR LATER** per owner direction (not dead/non-viable;
-  BWD participation 70 < the ≥100/window floor; evidence at `_mt5_auto/ZEUS_XAU_VALIDATION/`). **No current
-  Factory candidate is selected as the next production task** — the Control Tower must bind the next
-  canonical task contract before any agent claims new Factory work. **Factory stays paused through this
-  System Completion closeout, until it reaches the owner push boundary** — do not select a candidate off
-  this sync.
+  BWD participation 70 < the ≥100/window floor; evidence at `_mt5_auto/ZEUS_XAU_VALIDATION/`). **No current Factory candidate is selected for production.** Boss14 H01 is now the accepted first full-green
+  `NON_AUTHORITATIVE_SIDECAR` reference; the next Factory queue item is deterministic read-only Boss11-18 preflight.
+  Do not rank/select/promote a production candidate or invent missing parameter/range semantics from this routing sync.
 - **TEMPLATE:** smoke-regression suite accepted (`scripts/tpl_smoke_regression.ps1`, 8/8 clean across every
   current Boss build); the Zeus grid/LOG port stays waiting on the Zeus optimization outcome above.
 - **MONITOR (CURRENT ROUTING OVERRIDE, 2026-08-24):** preserve global `DEGRADED_MONITORING`. ORDER-353 setup/acceptance is complete: config/attestation/target G3 are closed at the accepted binding; forward observation is waiting only on genuine qualifying trade evidence. Do not reopen pre-deployment/runtime-identity work without a concrete regression, and do not invent another monitoring order without new evidence or a direct consumer.
 
 **POST-FACTORY vNEXT / EXECUTION RELIABILITY ACCEPTANCE SYNC - 2026-08-26:** Factory vNext MT5 set compatibility adapter and Execution Reliability Pack V1 are CLOSED/ACCEPTED integration inputs. They create no new active queue item, candidate selection, runtime/deployment authority, risk/default change, or KINT closure. Future Factory production migration and Boss11-18 rollout still require separate bounded consumers.
 **FACTORY vNEXT MT5 SET CONSUMER PILOT CLOSE - 2026-08-26:** CLOSED/ACCEPTED as expected-refusal evidence. Real SuperTrend rev05 BTCUSD/H4 baseline reaches the consumer boundary and refuses because canonical VariantBuildPackage is absent while `KINT-001` is OPEN / semantics remain required. No MT5 terminal write, Strategy Tester invocation, candidate selection, runtime authority, risk/default change, or KINT closure occurred. This closeout creates no new active queue item.
+**CONTROL-PLANE P0 / BOSS14-PONYTAIL CONVERGENCE - 2026-08-27:** Boss14 H01 first full-green, BaselineCoverage, Ponytail final protected-directory repair, Diagram Design, MacroGate RegimeOnly readiness, Traycer authenticated-A2A OFFLINE cage, and Scheduled Continuation are accepted/canonical inputs. Boss11-18 deterministic read-only preflight is READY/NEXT; `P72000 / UseMiddlePathVeto` remains quarantined from Range Generator/optimizer semantics. Cleanup Batch 1 is PARTIAL_SAFE/CLOSED FOR NOW and Batch 2 is PARKED. ORDER-353 remains passive genuine-evidence monitoring only. No runtime/deployment/trading/risk authority is added.
 
 No new detailed order is invented here; the Control Tower should bind these phase items to the next canonical task contracts.
 > 🔧 **SYSTEMS TRANCHE ORDER-152..158 (เขียน 2026-07-23, Opus-seat)** — งาน infra/tooling ล้วน ไม่ใช่ verdict EA.
