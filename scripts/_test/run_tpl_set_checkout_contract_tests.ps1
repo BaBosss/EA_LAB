@@ -82,16 +82,18 @@ $crlfBytes = Convert-LfToCrlf $boss11Bytes
 $crlfHash = Get-ByteSha $crlfBytes
 Assert-True ($crlfHash -ne $boss11Hash) 'CRLF conversion produces a distinct hash'
 Assert-MapsEqual (Get-ParameterMapFromUtf8Bytes $boss11Bytes) (Get-ParameterMapFromUtf8Bytes $crlfBytes) 'Boss_11 logical map'
-Assert-True ((Get-ParameterMapFromUtf8Bytes $boss11Bytes).Count -eq 113) 'Boss_11 has 113 parameters'
+$expectedBoss11Assignments = [int]$boss11Case.set_surface.assignments
+Assert-True ((Get-ParameterMapFromUtf8Bytes $boss11Bytes).Count -eq $expectedBoss11Assignments) 'Boss_11 logical parameter count matches active manifest surface'
 Write-Host ("[PASS] Boss_11 hash {0}; CRLF hash {1}; logical map unchanged" -f $boss11Hash, $crlfHash)
 
 $manifestCases = @($manifest.cases)
-Assert-True ($manifestCases.Count -eq 9) 'active Build-6090 manifest has nine cases'
+$expectedBossCount = @(& git -C $RepoRoot ls-files -- 'ea_template/Boss_*.mq5' | Where-Object { $_ }).Count
+Assert-True ($manifestCases.Count -eq $expectedBossCount) 'active Build-6090 manifest case count matches canonical Boss wrappers'
 foreach ($case in $manifestCases) {
     $path = Join-Path $RepoRoot (([string]$case.declared_set_path) -replace '/', '\')
     Assert-True ((Get-ByteSha ([IO.File]::ReadAllBytes($path))) -eq ([string]$case.declared_set_sha256).ToLowerInvariant()) "manifest hash matches: $($case.ea)"
 }
-Write-Host '[PASS] all eight active-manifest set hashes match'
+Write-Host '[PASS] all active-manifest set hashes match canonical Boss wrappers'
 
 $unrelatedPaths = @(& git -C $RepoRoot ls-files -- '*.set' | Where-Object { $_ -and $_ -notlike 'ea_template/sets/regression/*.set' })
 Assert-True ($unrelatedPaths.Count -gt 0) 'unrelated set inventory is non-empty'

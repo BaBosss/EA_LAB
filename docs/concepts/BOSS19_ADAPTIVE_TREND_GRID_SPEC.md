@@ -55,3 +55,14 @@ and never places a duplicate.
 
 Monte Carlo and block-bootstrap logic are future validation work and are not
 part of V0 OnTick behavior.
+
+## V0 probe status and source boundary
+
+This is PRE-BASELINE research, exposed as `ea_template/Probe_19_AdaptiveTrendGrid.mq5` rather than claiming a canonical `Boss_19_*` baseline slot. The visible source post supports the adaptive-grid directionality and approximately `0.3 ATR` over a 30-day context; it does not resolve the exact trend detector, UP STOP-vs-LIMIT choice, sizing coefficients, or VWAP ATR exit multiplier.
+
+Two full-surface V0 probes therefore keep the unresolved UP-order choice explicit:
+
+- `ea_template/sets/probe/Boss_19_AdaptiveTrendGrid_V0_STOP.set`
+- `ea_template/sets/probe/Boss_19_AdaptiveTrendGrid_V0_LIMIT.set`
+
+Both pin `_0_ATR_Period=30` and `_9_StepATRmult=0.3`. The 20/50 MA trend probe, 5-level cap, UP linear factor `0.5`, DOWN divisor `1.3`, and `_22_TP_ATRmult=1.0` are engineering hypotheses for triage, not source-parity claims. Promotion to a canonical Boss wrapper requires source clarification plus normal validation/independent review.

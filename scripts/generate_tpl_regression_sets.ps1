@@ -32,8 +32,7 @@ $bosses = @(
     @{ Tag = 'LAB_ENTRY_15'; Name = 'Boss_15_ST03'; Source = 'Boss_15_ST03_defaults.set' },
     @{ Tag = 'LAB_ENTRY_16'; Name = 'Boss_16_KangarooGrid'; Source = 'Boss_16_KangarooGrid_regression_full.set' },
     @{ Tag = 'LAB_ENTRY_17'; Name = 'Boss_17_Wave5'; Source = 'Boss_17_Wave5_defaults.set' },
-    @{ Tag = 'LAB_ENTRY_18'; Name = 'Boss_18_JumStoch'; Source = 'Boss_18_JumStoch_defaults.set' },
-    @{ Tag = 'LAB_ENTRY_19'; Name = 'Boss_19_AdaptiveTrendGrid'; Source = $null }
+    @{ Tag = 'LAB_ENTRY_18'; Name = 'Boss_18_JumStoch'; Source = 'Boss_18_JumStoch_defaults.set' }
 )
 
 function Read-SetMap([string]$Path) {
