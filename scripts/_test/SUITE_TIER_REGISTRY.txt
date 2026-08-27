@@ -152,3 +152,4 @@ run_taskboard_split_negative_tests.ps1|UNMEASURED|Active taskboard split adversa
 run_ziplime_module_tests.ps1|UNMEASURED|Ziplime research module acceptance cage; not timed against the pinned fast-tier budget.
 run_factory_vnext_mvp_tests.ps1|UNMEASURED|Factory vNext non-authoritative sidecar focused schema/identity/range/report cage; not yet timed against the pinned full-tier budget.
 run_factory_vnext_operationalization_tests.ps1|UNMEASURED|Factory vNext operationalization runner/dashboard acceptance cage; newly tracked and not yet timed against the pinned full-tier budget.
+run_macrogate_regime_readiness_tests.ps1|UNMEASURED|MacroGate RegimeOnly repository readiness contract cage; deterministic/offline and not yet timed against the pinned full-tier budget.
