@@ -1,5 +1,5 @@
 <#
-Generate the eight canonical Boss regression .set files as declared full surfaces.
+Generate the canonical Boss regression .set files as declared full surfaces.
 
 The existing regression files are the source of intended values.  This command only
 adds the generator's provenance header and fills any newly exposed input with the
@@ -32,7 +32,8 @@ $bosses = @(
     @{ Tag = 'LAB_ENTRY_15'; Name = 'Boss_15_ST03'; Source = 'Boss_15_ST03_defaults.set' },
     @{ Tag = 'LAB_ENTRY_16'; Name = 'Boss_16_KangarooGrid'; Source = 'Boss_16_KangarooGrid_regression_full.set' },
     @{ Tag = 'LAB_ENTRY_17'; Name = 'Boss_17_Wave5'; Source = 'Boss_17_Wave5_defaults.set' },
-    @{ Tag = 'LAB_ENTRY_18'; Name = 'Boss_18_JumStoch'; Source = 'Boss_18_JumStoch_defaults.set' }
+    @{ Tag = 'LAB_ENTRY_18'; Name = 'Boss_18_JumStoch'; Source = 'Boss_18_JumStoch_defaults.set' },
+    @{ Tag = 'LAB_ENTRY_19'; Name = 'Boss_19_AdaptiveTrendGrid'; Source = $null }
 )
 
 function Read-SetMap([string]$Path) {
@@ -137,7 +138,8 @@ function Write-SetIfSemanticallyChanged([string]$GeneratedPath, [string]$TargetP
 }
 
 function Invoke-Generator([hashtable]$Boss, [string]$OutPath, [string]$OverlayPath) {
-    $args = @($generator, '--root', $RepoRoot, '--build', $Boss.Tag, '--out', $OutPath, '--overlay-set', $OverlayPath)
+    $args = @($generator, '--root', $RepoRoot, '--build', $Boss.Tag, '--out', $OutPath)
+    if ($OverlayPath) { $args += @('--overlay-set', $OverlayPath) }
     & $py @args
     if ($LASTEXITCODE -ne 0) { throw "declared set generation failed for $($Boss.Name)" }
 }
@@ -147,14 +149,18 @@ if ($TestOnly) { return }
 New-Item -ItemType Directory -Force $tmpDir | Out-Null
 try {
     foreach ($boss in $bosses) {
-        $oldPath = Join-Path $setDir $boss.Source
-        if (-not (Test-Path -LiteralPath $oldPath -PathType Leaf)) { throw "source regression set missing: $oldPath" }
-        $old = Read-SetMap $oldPath
+        $oldPath = $null
+        $old = @{}
+        if ($boss.Source) {
+            $oldPath = Join-Path $setDir $boss.Source
+            if (-not (Test-Path -LiteralPath $oldPath -PathType Leaf)) { throw "source regression set missing: $oldPath" }
+            $old = Read-SetMap $oldPath
+        }
         $outPath = Join-Path $tmpDir ($boss.Name + '.set')
         Invoke-Generator $boss $outPath $oldPath
         $new = Read-SetMap $outPath
 
-        Assert-NoExistingValueChanges $old $new $boss.Name
+        if ($boss.Source) { Assert-NoExistingValueChanges $old $new $boss.Name }
         $missing = @($new.Keys | Where-Object { -not $old.Contains($_) })
         if ($boss.Tag -eq 'LAB_ENTRY_16' -and -not $new.Contains('_16_BaseLotMode')) {
             throw 'Boss_16 regeneration did not add the newly exposed _16_BaseLotMode default'

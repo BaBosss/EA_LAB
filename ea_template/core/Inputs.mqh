@@ -17,7 +17,9 @@
 #ifndef LAB_ENTRY_16
 #ifndef LAB_ENTRY_17
 #ifndef LAB_ENTRY_18
+#ifndef LAB_ENTRY_19
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -327,6 +329,20 @@ const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
 #ifdef LAB_ENTRY_18
 #ifndef LAB_CONST_StackMode
 input ENUM_STACK_MODE    StackMode    = STACK_GRID_AGAINST;   // [P50200] Stack Mode | with P80012
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;   // [P50201] Stack Confirm | with P50240
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+#ifdef LAB_ENTRY_19
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;   // [P50200] Stack Mode | with P80012
 #endif
 #ifdef LAB_CONST_StackMode
 const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;

@@ -294,6 +294,40 @@ string CFG_ConstPreimage()
   }
 #endif
 
+#ifdef LAB_ENTRY_19
+#define CFG_CONSTANTS_ENUMERATED
+int    CFG_ConstKeys() { return(24); }
+string CFG_ConstPreimage()
+  {
+   string s = "";
+   s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
+   s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);
+   s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
+   s += "\nconst:MACROGATE_GV_MAX_AGE_SEC=" + CFG_CanonLong((long)MACROGATE_GV_MAX_AGE_SEC);
+   s += "\nconst:MG_ALERT_THROTTLE_SEC=" + CFG_CanonLong((long)MG_ALERT_THROTTLE_SEC);
+   s += "\nconst:MG_BLOCK_PREFIX=" + CFG_CanonString(MG_BLOCK_PREFIX);
+   s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
+   s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
+   s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
+   s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
+   s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
+   s += "\nconst:MG_ST_STRESS=" + CFG_CanonLong((long)MG_ST_STRESS);
+   s += "\nconst:MG_ST_UNKNOWN=" + CFG_CanonLong((long)MG_ST_UNKNOWN);
+   s += "\nconst:MM_WHY_NO_BALANCE=" + CFG_CanonLong((long)MM_WHY_NO_BALANCE);
+   s += "\nconst:MM_WHY_NO_SL_DIST=" + CFG_CanonLong((long)MM_WHY_NO_SL_DIST);
+   s += "\nconst:MM_WHY_NO_TICKVAL=" + CFG_CanonLong((long)MM_WHY_NO_TICKVAL);
+   s += "\nconst:MM_WHY_SLOTS=" + CFG_CanonLong((long)MM_WHY_SLOTS);
+   s += "\nconst:RC_DEPOSIT_LOAD_UNKNOWN=" + CFG_CanonDouble(RC_DEPOSIT_LOAD_UNKNOWN);
+   s += "\nconst:RC_STATE_HALTED=" + CFG_CanonDouble(RC_STATE_HALTED);
+   s += "\nconst:RC_STATE_KILL_PENDING=" + CFG_CanonDouble(RC_STATE_KILL_PENDING);
+   s += "\nconst:RC_STATE_RUNNING=" + CFG_CanonDouble(RC_STATE_RUNNING);
+   s += "\nconst:STACK_MAX_LEGS=" + CFG_CanonLong((long)STACK_MAX_LEGS);
+   return(s);
+  }
+#endif
+
 #ifndef CFG_CONSTANTS_ENUMERATED
 // Reached only when no LAB_ENTRY_* tag was defined -- the same unenumerated case
 // InputSurface_gen.mqh handles, and it returns the same kind of visible sentinel rather

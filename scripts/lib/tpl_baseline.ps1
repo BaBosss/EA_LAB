@@ -96,7 +96,8 @@ function Get-TplActiveBaseline {
     if ($metricsHash -ne ([string]$manifest.metrics_sha256).ToLowerInvariant()) { throw 'REFUSE: metrics integrity mismatch' }
     try { $metrics = @(Import-Csv -LiteralPath $metricsPath -ErrorAction Stop) }
     catch { throw "REFUSE: metrics file could not be parsed: $($_.Exception.Message)" }
-    if ($metrics.Count -ne 8) { throw "FAIL: versioned metrics contains $($metrics.Count) rows, expected 8" }
+    $expectedMetricCount = (Get-TplExpectedEas $Root).Count
+    if ($metrics.Count -ne $expectedMetricCount) { throw "FAIL: versioned metrics contains $($metrics.Count) rows, expected $expectedMetricCount" }
     $metricFields = @('ea','net','pf','trades','eqdd')
     foreach ($row in $metrics) { Assert-TplRequired $row $metricFields 'metrics row' }
 

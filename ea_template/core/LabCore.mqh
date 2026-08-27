@@ -52,6 +52,9 @@
 #ifdef LAB_ENTRY_18
    #include "entries/Entry_JumStoch.mqh"
 #endif
+#ifdef LAB_ENTRY_19
+   #include "entries/Entry_AdaptiveTrendGrid.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -391,6 +394,10 @@ int OnInit()
 #ifdef LAB_ENTRY_18
    Entry_JumStoch_Init();
 #endif
+#ifdef LAB_ENTRY_19
+   if(!Entry_AdaptiveTrendGrid_Init())
+      return INIT_FAILED;
+#endif
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,
                FirstLotMode, LotProg, ProtectLevel, (DryRun ? "Y" : "N"));
@@ -442,6 +449,9 @@ void OnDeinit(const int reason)
    // branches on it, and no other build compiles this line.
    Entry_Wave5_LogCounters();
 #endif
+#ifdef LAB_ENTRY_19
+   Entry_AdaptiveTrendGrid_Deinit();
+#endif
    if(_MG_SelfGate) MG_Deinit();   // clear any MACROGATE_* GVs we set
    Regime_Deinit();
    Indi_Deinit();
@@ -486,6 +496,12 @@ void OnTick()
    // runtime guard (not a bare return) keeps the code below compiling without
    // unreachable-code warnings. Other builds: this block does not exist.
    if(Kangaroo_OnTick()) return;
+#endif
+#ifdef LAB_ENTRY_19
+   // Boss19 owns the full pending-ladder/basket pipeline. Its own OnTick runs
+   // the hard cage and safety exits before strategy work, then always returns
+   // so shared Exit/Stack/Recovery/Hedge/Basket paths cannot also act.
+   if(AdaptiveTrendGrid_OnTick()) return;
 #endif
    // (1) hard kill FIRST - before any cadence gate. ORDER-129 (Codex system review
    // SEV-1): the bar gate below used to early-return before the kill check, so with

@@ -73,7 +73,7 @@ try {
             } else { Write-Host "[OK] $($case.ea) matches Build-6090 baseline" -ForegroundColor Green }
         }
         if ($fail -gt 0) { throw "REGRESSION: $fail exact metric mismatch(es)" }
-        Write-Host "=== REGRESSION CLEAN (8/8, Build 6090, lane $Terminal, source $sourceCommit) ===" -ForegroundColor Green
+        Write-Host "=== REGRESSION CLEAN ($($cases.Count)/$($cases.Count), Build 6090, lane $Terminal, source $sourceCommit) ===" -ForegroundColor Green
     } else {
         Write-Host "=== BASELINE CONTRACT CLEAN (Build 6090, source $sourceCommit) ===" -ForegroundColor Green
     }

@@ -93,7 +93,7 @@ $metricRows = @()
 $setMap = @{
     Boss_11_GridTrend = 'Boss_11_GridTrend_defaults.set'; Boss_12_Breakout = 'Boss_12_Breakout_defaults.set'; Boss_13_MeanRev = 'Boss_13_MeanRev_defaults.set';
     Boss_14_GridLog = 'Boss_14_GridLog_regression_full.set'; Boss_15_ST03 = 'Boss_15_ST03_defaults.set'; Boss_16_KangarooGrid = 'Boss_16_KangarooGrid_regression_full.set';
-    Boss_17_Wave5 = 'Boss_17_Wave5_defaults.set'; Boss_18_JumStoch = 'Boss_18_JumStoch_defaults.set'
+    Boss_17_Wave5 = 'Boss_17_Wave5_defaults.set'; Boss_18_JumStoch = 'Boss_18_JumStoch_defaults.set'; Boss_19_AdaptiveTrendGrid = 'Boss_19_AdaptiveTrendGrid_defaults.set'
 }
 
 foreach ($ea in ($setMap.Keys | Sort-Object)) {

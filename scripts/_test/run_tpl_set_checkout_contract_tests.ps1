@@ -86,7 +86,7 @@ Assert-True ((Get-ParameterMapFromUtf8Bytes $boss11Bytes).Count -eq 113) 'Boss_1
 Write-Host ("[PASS] Boss_11 hash {0}; CRLF hash {1}; logical map unchanged" -f $boss11Hash, $crlfHash)
 
 $manifestCases = @($manifest.cases)
-Assert-True ($manifestCases.Count -eq 8) 'active Build-6090 manifest has eight cases'
+Assert-True ($manifestCases.Count -eq 9) 'active Build-6090 manifest has nine cases'
 foreach ($case in $manifestCases) {
     $path = Join-Path $RepoRoot (([string]$case.declared_set_path) -replace '/', '\')
     Assert-True ((Get-ByteSha ([IO.File]::ReadAllBytes($path))) -eq ([string]$case.declared_set_sha256).ToLowerInvariant()) "manifest hash matches: $($case.ea)"
