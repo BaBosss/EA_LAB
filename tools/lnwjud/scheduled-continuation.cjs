@@ -43,7 +43,11 @@ function safeId(value, name) {
   return item;
 }
 function relative(value, name) {
-  const item = text(value, name).replaceAll('\\', '/');
+  const raw = text(value, name);
+  if (/[\u0000-\u001F\u007F-\u009F\u2028\u2029]/.test(raw)) {
+    fail(`${name} contains a dangerous control character`);
+  }
+  const item = raw.replaceAll('\\', '/');
   if (path.win32.isAbsolute(value) || item.startsWith('/') || item.split('/').includes('..')) {
     fail(`${name} must be a relative non-traversal path`);
   }
