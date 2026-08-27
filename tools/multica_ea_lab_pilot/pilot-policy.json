@@ -1,0 +1,21 @@
+﻿{
+  "schema_version": 1,
+  "authority": "NON_AUTHORITATIVE_SIDECAR",
+  "canonical_authority": "current pushed origin/master + EA_LAB governance",
+  "protected_primary": "D:\\EA_LAB",
+  "disposable_cage_root": "D:\\EA_LAB_CONTROL\\multica-pilot\\cages",
+  "ea_lab_resource_type": "github_repo",
+  "ea_lab_resource_requires_exact_sha": true,
+  "direct_ea_lab_local_directory_authorized": false,
+  "setup_authorized": false,
+  "auth_authorized": false,
+  "daemon_start_authorized": false,
+  "runtime_activation_authorized": false,
+  "deployment_authorized": false,
+  "trading_authorized": false,
+  "live_promotion_authorized": false,
+  "risk_default_change_authorized": false,
+  "owner_attestation_authorized": false,
+  "force_push_authorized": false,
+  "history_rewrite_authorized": false
+}

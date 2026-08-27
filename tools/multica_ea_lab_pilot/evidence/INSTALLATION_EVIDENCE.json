@@ -1,0 +1,25 @@
+{
+    "schema_version":  1,
+    "captured_at":  "2026-08-27T08:24:54.0712454+07:00",
+    "base_sha":  "165c999d4b91421bbd78d844d5388c3cc6c5bef6",
+    "multica_version":  "0.4.34",
+    "build_commit":  "e5f976144",
+    "platform":  "windows/amd64",
+    "release_asset":  "multica-cli-0.4.34-windows-amd64.zip",
+    "official_archive_sha256":  "a3ac7ca1c48029ebc6c9eb172c8b6572050161836d1c97fd1debda3043f79276",
+    "downloaded_archive_sha256":  "a3ac7ca1c48029ebc6c9eb172c8b6572050161836d1c97fd1debda3043f79276",
+    "archive_checksum_match":  true,
+    "installed_binary_sha256":  "E43833C124F9986C0BEB3B323DE856A98F7BCAA0238ADAA093675D5E92D60980",
+    "authenticode_status":  "NotSigned",
+    "setup_configured":  false,
+    "auth_performed":  false,
+    "daemon_state":  "STOPPED",
+    "runtime_activation":  false,
+    "providers":  {
+                      "git":  true,
+                      "claude":  true,
+                      "codex":  true,
+                      "qwen":  true,
+                      "antigravity_agy":  true
+                  }
+}

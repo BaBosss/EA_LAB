@@ -1,0 +1,14 @@
+﻿PASS reject dirty primary root
+PASS reject dirty primary descendant
+PASS reject EA_LAB local-directory resource
+PASS accept disposable local cage
+PASS accept EA_LAB github exact ref
+PASS reject symbolic EA_LAB ref
+PASS policy is non-authoritative and inert
+PASS installed binary is pinned
+PASS required coding CLIs detected
+PASS repo identity is exact branch
+PASS wrapper status is read-only
+PASS wrapper validates exact-ref resource
+PASS daemon remains stopped
+RESULT passed=13 failed=0
