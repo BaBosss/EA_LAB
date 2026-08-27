@@ -65,6 +65,14 @@ Assert-True 'EA source downgrades to review' ($null -ne $mq5.Result -and $mq5.Re
 $nestedLauncher = Invoke-Policy (New-Contract 'auto' 'tooling' @('scripts/lib/deployment_status.ps1'))
 Assert-True 'nested deploy launcher downgrades to review' ($null -ne $nestedLauncher.Result -and $nestedLauncher.Result.decision -eq 'DOWNGRADE' -and $nestedLauncher.Result.effective_mode -eq 'review') $nestedLauncher.Text
 
+$protectedDirectoryPaths = @('scripts/deploy/run.ps1','scripts/a/live/start.ps1','scripts/a/b/risk/check.ps1','scripts/a/mt4/bridge.ps1','scripts/a/b/mt5/bridge.ps1','scripts/a/deployment/status.ps1')
+foreach ($protectedDirectoryPath in $protectedDirectoryPaths) {
+    $directoryProtected = Invoke-Policy (New-Contract 'auto' 'tooling' @($protectedDirectoryPath))
+    Assert-True "protected directory segment downgrades to review: $protectedDirectoryPath" ($null -ne $directoryProtected.Result -and $directoryProtected.Result.decision -eq 'DOWNGRADE' -and $directoryProtected.Result.effective_mode -eq 'review') $directoryProtected.Text
+}
+$ordinaryScript = Invoke-Policy (New-Contract 'auto' 'tooling' @('scripts/lib/format_status.ps1'))
+Assert-True 'ordinary low-risk nested script remains full' ($null -ne $ordinaryScript.Result -and $ordinaryScript.Result.decision -eq 'ALLOW' -and $ordinaryScript.Result.effective_mode -eq 'full') $ordinaryScript.Text
+
 $review = Invoke-Policy (New-Contract 'review' 'risk' @('ea_template/core/Money.mqh'))
 Assert-True 'explicit review is allowed on protected code' ($null -ne $review.Result -and $review.Result.decision -eq 'ALLOW' -and $review.Result.effective_mode -eq 'review') $review.Text
 
