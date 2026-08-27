@@ -7,7 +7,7 @@ PASS reject symbolic EA_LAB ref
 PASS policy is non-authoritative and inert
 PASS installed binary is pinned
 PASS required coding CLIs detected
-PASS repo identity is exact branch
+PASS repo identity descends from exact base on exact branch
 PASS wrapper status is read-only
 PASS wrapper validates exact-ref resource
 PASS daemon remains stopped

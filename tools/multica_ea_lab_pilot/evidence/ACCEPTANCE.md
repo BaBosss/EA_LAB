@@ -1,4 +1,4 @@
-﻿# Multica pilot local acceptance
+# Multica pilot local acceptance
 
 Base SHA: `165c999d4b91421bbd78d844d5388c3cc6c5bef6`
 Branch: `module/multica-ea-lab-pilot-20260826`
@@ -6,7 +6,7 @@ Authority: `NON_AUTHORITATIVE_SIDECAR`
 
 Evidence:
 - Lane Registry duplicate/overlap check: PASS; no other active Multica writer/job found.
-- Focused + negative + integration tests: PASS 13/13.
+- Focused + negative + integration tests: PASS 13/13, including the post-commit base-ancestry repair check.
 - Multica CLI version/hash pin: PASS.
 - Official release archive SHA-256 vs downloaded archive: MATCH.
 - Dirty `D:\EA_LAB` rejection: PASS.
