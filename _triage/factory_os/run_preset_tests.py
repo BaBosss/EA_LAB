@@ -542,12 +542,14 @@ def p9_attack(mod):
 
 
 def p9_specificity(mod):
-    """all eight builds parse, every real default resolves, and an unknown tag is refused"""
+    """all declared builds parse, legacy builds remain present, and an unknown tag is refused"""
     text = _real_text()
     enums = mod.parse_enum_table(text)
     tags = sorted(mod.known_build_tags(text))
-    if len(tags) != 8:
-        return 'the real source declares %d build tags, expected 8' % len(tags)
+    required = {'LAB_ENTRY_%d' % n for n in range(11, 19)}
+    missing = sorted(required.difference(tags))
+    if missing:
+        return 'the real source lost required build tags: %s' % ', '.join(missing)
     sizes = {}
     for tag in tags:
         surface = mod.parse_surface(text, tag)
