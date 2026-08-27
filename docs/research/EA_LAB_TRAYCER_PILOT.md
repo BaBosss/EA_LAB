@@ -69,6 +69,21 @@ Before Traycer account authorization, the local host is healthy and listening, b
 - EA_LAB read-only Traycer pilot: WAITING on cage acceptance
 - EA_LAB bounded-write through Traycer: NOT YET AUTHORIZED by this module
 
+## Authenticated A2A evidence cage
+
+`tools/traycer_ea_lab_pilot/scripts/verify_authenticated_a2a_evidence.ps1` is an offline, deterministic verifier. It accepts a JSON capture only when it contains:
+
+- exactly two distinct endpoint identities, each represented by a non-secret label and SHA-256 digest;
+- `authenticated: true` plus a non-secret proof kind and proof digest for each endpoint;
+- one successful exchange ID and one successful message ID, with sender and receiver identities bound to the two authenticated endpoints; and
+- the same distinct sender/receiver pair on the message and exchange.
+
+The capture must set `capture.kind` to `authenticated_a2a_exchange` and `capture.redaction` to `identity_labels_and_digests_only`. It must not contain credentials, tokens, account IDs, message bodies, or provider-private identifiers. The complete schema is represented by `tools/traycer_ea_lab_pilot/tests/fixtures/authenticated_a2a/valid_exchange.json`.
+
+The verifier rejects generic `authenticated: true`, a local-tool-only success, missing endpoint auth proof, missing message proof, malformed or duplicate identities, sender=receiver, or unbound/mismatched message endpoints. A successful verifier result is `CAGE_READY` with `real_a2a_pass: false`; the deterministic schema check itself never reports `REAL_A2A_PASS`.
+
+After the owner completes device/browser authentication, the Control Tower must obtain a redacted capture of a genuine two-endpoint authenticated message exchange and run this verifier. Only that owner-external runtime evidence can support a later functional A2A acceptance report; this repository cage neither performs authentication nor activates any runtime.
+
 ## Integration discipline
 
 This branch is intentionally isolated while other EA_LAB lanes are committing in parallel. It may be committed locally as a self-contained module, but it must not be merged into moving canonical lineage until the module is frozen, reviewed independently, current origin/master is reconciled, and impacted checks are rerun once.

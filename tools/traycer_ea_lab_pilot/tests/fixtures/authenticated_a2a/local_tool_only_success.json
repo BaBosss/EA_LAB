@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "capture": { "kind": "local_tool_success", "redaction": "identity_labels_and_digests_only" },
+  "local_tool": { "name": "traycer-cli", "status": "success" },
+  "authenticated": true
+}

@@ -44,6 +44,10 @@ No PROJECT_STATE.md, AGENTS.md, taskboard, MT5, deployment, or risk files are in
 - `scripts/new_cage.ps1` — creates a disposable Git cage outside the protected EA_LAB checkout.
 - `tests/run_tests.ps1` — deterministic negative/positive pilot tests.
 
+## Authenticated A2A evidence cage
+
+`scripts/verify_authenticated_a2a_evidence.ps1` validates a redacted, two-endpoint authenticated A2A exchange capture without network access. A valid capture reports `CAGE_READY`, never `REAL_A2A_PASS`.
+
 ## TDD / acceptance evidence
 
 A genuine RED was observed before `TraycerPilot.psm1` existed. The test suite failed on Import-Module.
@@ -56,10 +60,11 @@ See `evidence/RED.md`, `evidence/GREEN.txt`, and `evidence/RUNTIME_PROBE.json`.
 2. Disposable cage safety tests — complete.
 3. Traycer account/browser authorization — external/user action still required.
 4. After auth, enumerate enabled harnesses and verify Claude/Codex provider profiles without changing EA_LAB.
-5. Run multi-agent/A2A tests in a disposable cage.
-6. Only after those pass, run an EA_LAB read-only exact-SHA workspace pilot.
-7. Bounded-write integration requires Lane Registry + Harness and explicit allowed paths.
-8. Hermes direct/native provider access must not bypass the existing EA_LAB Hermes wrapper; bridge design is a later bounded step.
+5. After owner authentication, capture a redacted two-endpoint exchange and verify it with `scripts/verify_authenticated_a2a_evidence.ps1`.
+6. Run multi-agent/A2A tests in a disposable cage.
+7. Only after those pass, run an EA_LAB read-only exact-SHA workspace pilot.
+8. Bounded-write integration requires Lane Registry + Harness and explicit allowed paths.
+9. Hermes direct/native provider access must not bypass the existing EA_LAB Hermes wrapper; bridge design is a later bounded step.
 
 ## Merge rule
 

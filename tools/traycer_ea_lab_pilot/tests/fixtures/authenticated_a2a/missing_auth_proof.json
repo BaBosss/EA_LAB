@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "capture": { "kind": "authenticated_a2a_exchange", "redaction": "identity_labels_and_digests_only" },
+  "endpoints": [
+    { "identity": { "label": "agent-alpha", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }, "authentication": { "authenticated": true, "proof": { "kind": "session-attestation", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111" } } },
+    { "identity": { "label": "agent-beta", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }, "authentication": { "authenticated": true } }
+  ],
+  "exchange": { "id": "exchange-001", "status": "success", "sender": { "label": "agent-alpha", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }, "receiver": { "label": "agent-beta", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }, "message": { "id": "message-001", "status": "success", "sender": { "label": "agent-alpha", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }, "receiver": { "label": "agent-beta", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" } } }
+}
