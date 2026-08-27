@@ -54,6 +54,7 @@ param(
   [switch]$Portable,             # run this terminal in /portable mode (data dir = install folder) for parallel instances
   [switch]$Force,
   [switch]$AllowLegacyIdentity,  # explicit non-green escape hatch for historical/fixture runs
+  [string]$BuildReceiptRegistry = '', # optional exact-run registry; default remains canonical portfolio registry
   [string]$LaneId = '',
   [string]$UniversePath = '',
   [string]$CapabilityFile = ''
@@ -143,11 +144,12 @@ Write-Output "surface: $($surface.State) -- $($surface.Message)"
 . (Join-Path $PSScriptRoot 'lib\build_receipt.ps1')
 . (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
 $expertsDir = Get-TesterExpertsDir -TerminalPath $TermPath -DataDir $DataDir -Portable:$Portable
+$receiptRegistry = if ($BuildReceiptRegistry) { [IO.Path]::GetFullPath($BuildReceiptRegistry) } else { Join-Path $repoRoot 'portfolio\build_receipts.jsonl' }
 $buildIdentity = Get-BuildReceiptStatus -Expert $Expert -ExpertsDir $expertsDir `
-  -RegistryPath (Join-Path $repoRoot 'portfolio\build_receipts.jsonl')
+  -RegistryPath $receiptRegistry
 if (($Expert -replace '\.ex5$','') -ieq 'Boss_14_GridLog') {
   $buildIdentity = Get-ManagedCompatibilityStatus -ExpertsDir $expertsDir `
-    -RegistryPath (Join-Path $repoRoot 'portfolio\build_receipts.jsonl')
+    -RegistryPath $receiptRegistry
 }
 $configIdentity = Get-SetConfigIdentity -Path $SetFile -Surface $surface
 if (-not $AllowLegacyIdentity -and (-not $buildIdentity.Valid -or -not $configIdentity.Valid)) {

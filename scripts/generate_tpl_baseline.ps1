@@ -57,6 +57,7 @@ if (-not (Test-Path -LiteralPath $Terminal -PathType Leaf)) { throw "terminal no
 
 . (Join-Path $RepoRoot 'scripts\lib\setfile_surface.ps1')
 . (Join-Path $RepoRoot 'scripts\lib\report_freshness.ps1')
+. (Join-Path $RepoRoot 'scripts\lib\build_receipt.ps1')
 $py = if ($PythonExe) { $PythonExe } else { Join-Path $RepoRoot 'tools\python312\python.exe' }
 $pyLib = Join-Path (Split-Path $py -Parent) 'Lib\encodings'
 if ((-not (Test-Path -LiteralPath $py -PathType Leaf) -or -not (Test-Path -LiteralPath $pyLib -PathType Container)) -and (Test-Path -LiteralPath 'D:\EA_LAB\tools\python312\python.exe' -PathType Leaf)) { $py = 'D:\EA_LAB\tools\python312\python.exe' }
@@ -75,16 +76,27 @@ New-Item -ItemType Directory -Force $laneExperts | Out-Null
 robocopy (Join-Path $RepoRoot 'ea_template') $laneExperts /MIR /R:1 /W:1 /XD .git /XF *.ex5 *.log /NFL /NDL /NJH /NJS | Out-Null
 if ($LASTEXITCODE -ge 8) { throw 'baseline source copy to pinned tester lane failed' }
 $meta = 'D:\Meta 5\MetaEditor64.exe'
+$receiptRegistry = Join-Path ([IO.Path]::GetTempPath()) ('tpl_receipts_' + [guid]::NewGuid().ToString('N') + '.jsonl')
+$receiptMap = @{}
 foreach ($mq5 in @(Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'ea_template') -Filter 'Boss_*.mq5' | Sort-Object Name)) {
     $target = Join-Path $laneExperts $mq5.Name
     $artifact = Join-Path $laneExperts ($mq5.BaseName + '.ex5')
     $log = Join-Path $laneExperts ('compile_' + $mq5.BaseName + '.log')
     if (Test-Path -LiteralPath $artifact) { Remove-Item -LiteralPath $artifact -Force }
     if (Test-Path -LiteralPath $log) { Remove-Item -LiteralPath $log -Force }
+    $receipt = New-BuildReceiptToken
+    Write-BuildReceiptHeader -HeaderPath (Join-Path $laneExperts 'core\BuildReceipt_gen.mqh') -Receipt $receipt
     Start-Process -FilePath $meta -ArgumentList @('/compile:"' + $target + '"', '/log:"' + $log + '"') -Wait
     if (-not (Test-Path -LiteralPath $log)) { throw "$($mq5.BaseName) compile log missing" }
     $compileText = Get-Content -LiteralPath $log -Raw -Encoding Unicode
     if ($compileText -notmatch 'Result:\s*0\s+errors,\s*0\s+warnings' -or -not (Test-Path -LiteralPath $artifact)) { throw "$($mq5.BaseName) did not compile 0/0" }
+    Write-BuildReceiptRecord -RegistryPath $receiptRegistry -Receipt $receipt -ArtifactPath $artifact `
+        -SourcePath $mq5.FullName -EaLogicalIdentity $mq5.BaseName
+    $receiptMap[$mq5.BaseName] = $receipt
+    if ($mq5.BaseName -eq 'Boss_14_GridLog') {
+        Sync-ManagedCompatibilityArtifact -CanonicalArtifactPath $artifact `
+            -CompatibilityArtifactPath (Join-Path (Split-Path $laneExperts -Parent) 'Boss_14_GridLog.ex5') | Out-Null
+    }
 }
 $compileStartUtc = (Get-Date).ToUniversalTime().ToString('o')
 
@@ -106,7 +118,7 @@ foreach ($ea in ($setMap.Keys | Sort-Object)) {
     $setTag = $Matches[1]; $declared = [int]$Matches[2]; $configHash = $Matches[3]
     $runStart = Get-Date
     $reportName = 'TPLBASE6090_' + $ea
-    $runArgs = @{ Expert = ('EALabTpl\' + $ea); Symbol = 'XAUUSD'; Period = 'H1'; FromDate = '2024.01.01'; ToDate = '2024.07.01'; Model = 1; ReportName = $reportName; SetFile = $setPath; Terminal = $Terminal; DataDir = $DataDir; Deposit = 10000; Leverage = 100 }
+    $runArgs = @{ Expert = ('EALabTpl\' + $ea); Symbol = 'XAUUSD'; Period = 'H1'; FromDate = '2024.01.01'; ToDate = '2024.07.01'; Model = 1; ReportName = $reportName; SetFile = $setPath; Terminal = $Terminal; DataDir = $DataDir; Deposit = 10000; Leverage = 100; BuildReceiptRegistry = $receiptRegistry }
     & (Join-Path $RepoRoot 'scripts\mt5_run.ps1') @runArgs | ForEach-Object { Write-Host $_ }
     $exit = $LASTEXITCODE
     if ($exit -ne 0) { throw "$ea baseline run failed with exit $exit" }
@@ -120,14 +132,13 @@ foreach ($ea in ($setMap.Keys | Sort-Object)) {
     $src = Join-Path $RepoRoot ('ea_template\' + $ea + '.mq5')
     $artifactPath = Join-Path $laneExperts ($ea + '.ex5')
     $artifactHash = (Get-FileHash -LiteralPath $artifactPath -Algorithm SHA256).Hash.ToLowerInvariant()
-    $receiptPreimage = [Text.Encoding]::UTF8.GetBytes($SourceCommit + '|' + $ea + '|' + $artifactHash)
-    $digest = ([BitConverter]::ToString(([Security.Cryptography.SHA256]::Create().ComputeHash($receiptPreimage))).Replace('-', '')).ToLowerInvariant()
-    $buildReceipt = 'br-' + $digest.Substring(0, 32)
+    $buildReceipt = [string]$receiptMap[$ea]
+    if ($buildReceipt -notmatch '^br-[0-9a-f]{32}$') { throw "$ea has no stamped baseline build receipt" }
     $archivedReport = Join-Path $archiveDir ($reportName + '.htm')
     Copy-Item -LiteralPath $reportPath -Destination $archivedReport -Force
     $cases += [ordered]@{
         ea=$ea; source_path=('ea_template/' + $ea + '.mq5'); source_sha256=(Get-FileHash -LiteralPath $src -Algorithm SHA256).Hash.ToLowerInvariant(); source_commit=$SourceCommit
-        build_receipt=$buildReceipt; build_receipt_kind='migration_compile'; compiled_artifact_path=$artifactPath; compiled_artifact_sha256=$artifactHash
+        build_receipt=$buildReceipt; build_receipt_kind='baseline_compile'; compiled_artifact_path=$artifactPath; compiled_artifact_sha256=$artifactHash
         declared_set_path=('ea_template/sets/regression/' + $setMap[$ea]); declared_set_sha256=(Get-FileHash -LiteralPath $setPath -Algorithm SHA256).Hash.ToLowerInvariant()
         set_surface=[ordered]@{ state=$surface.State; build_tag=$setTag; declared=$declared; assignments=[int]$surface.Assignments; effective_config_hash=$configHash }
         report_path=('ea_template/regression_reports/build6090/' + $reportName + '.htm'); report_sha256=(Get-FileHash -LiteralPath $archivedReport -Algorithm SHA256).Hash.ToLowerInvariant(); report_build=6090; report_fresh=$true

@@ -137,6 +137,12 @@ try {
         $text = Get-Content -LiteralPath (Join-Path $RepoRoot $runner) -Raw
         Check "$runner has the identity preflight" ($text.Contains('Get-BuildReceiptStatus') -and $text.Contains('Get-SetConfigIdentity') -and $text.Contains('ABORT: identity refusal')) $runner
     }
+    $mt5Run = Get-Content -LiteralPath (Join-Path $RepoRoot 'scripts\mt5_run.ps1') -Raw
+    Check 'mt5_run supports a caller-supplied exact build-receipt registry' `
+        ($mt5Run.Contains('[string]$BuildReceiptRegistry') -and $mt5Run.Contains('-RegistryPath $receiptRegistry')) 'scripts\mt5_run.ps1'
+    $baseline = Get-Content -LiteralPath (Join-Path $RepoRoot 'scripts\generate_tpl_baseline.ps1') -Raw
+    Check 'baseline generator stamps binaries and passes its temporary receipt registry to mt5_run' `
+        ($baseline.Contains('New-BuildReceiptToken') -and $baseline.Contains('Write-BuildReceiptRecord') -and $baseline.Contains('BuildReceiptRegistry = $receiptRegistry')) 'scripts\generate_tpl_baseline.ps1'
 }
 finally {
     if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue }
