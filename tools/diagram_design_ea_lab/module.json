@@ -1,0 +1,31 @@
+{
+  "name": "diagram-design-ea-lab",
+  "schema_version": 1,
+  "upstream": {
+    "repository": "https://github.com/cathrynlavery/diagram-design.git",
+    "commit": "4faae6696c2953b59dee2b89ad89c688f80c3a67",
+    "skill_version": "2.6",
+    "license": "MIT"
+  },
+  "install": {
+    "clone_path": "~/code/diagram-design",
+    "hub_skill_path": "~/.agents/skills/diagram-design",
+    "consumer_skill_paths": [
+      "~/.claude/skills/diagram-design",
+      "~/.codex/skills/diagram-design",
+      "~/.qwen/skills/diagram-design"
+    ],
+    "wrapper_skill_name": "ea-workflow-diagrams"
+  },
+  "authority": {
+    "mode": "VISUAL_DOCUMENTATION_ONLY",
+    "authority_granted": false,
+    "trading_authorized": false,
+    "deployment_authorized": false,
+    "live_promotion_authorized": false,
+    "risk_default_change_authorized": false,
+    "owner_attestation_authorized": false,
+    "canonical_write_authorized": false
+  },
+  "output_root": "docs/diagrams"
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "profiles": {
+    "toolchain-architecture": {
+      "title": "EA_LAB Toolchain Architecture",
+      "output": "docs/diagrams/EA_LAB_TOOLCHAIN_ARCHITECTURE.html",
+      "type": "architecture",
+      "groups": [
+        ["Authority & truth", "Owner", "ChatGPT Control Tower", "origin/master + governance", "Lane Registry + Harness"],
+        ["Planning sidecars", "Traycer", "Multica", "Ponytail", "Diagram Design"],
+        ["Workers", "Codex", "Claude", "Qwen", "Hermes + LNWJUD", "Long Job Runner"],
+        ["EA skills pipeline", "Strategy & Risk", "MQL Generator / Reviewer", "Backtest / Optimize", "Robustness", "Portfolio Selector", "VPS Deploy Ops"],
+        ["EA production & runtime", "Factory / Factory vNext", "MT5 / MT4 lanes", "MacroGate / NewsGuard", "Evidence -> DEMO -> LIVE"]
+      ]
+    },
+    "strategy-to-production": {
+      "title": "EA Strategy to Production",
+      "output": "docs/diagrams/EA_STRATEGY_TO_PRODUCTION.html",
+      "type": "process",
+      "stages": ["Idea / source", "Master EA Spec", "Visual strategy map", "Build / adapt", "ParameterProjection", "Compile + local test", "Optimize + robustness", "Portfolio fit", "DEMO gate", "LIVE owner hard stop"]
+    },
+    "strategy-semantic-template": {
+      "title": "EA Strategy Semantic Template",
+      "output": "docs/diagrams/EA_STRATEGY_SEMANTIC_TEMPLATE.html",
+      "type": "process",
+      "stages": ["Market context", "Entry trigger", "Filters", "Position sizing / risk", "Add / hedge / recovery", "Exits", "Safety / kill conditions", "Tunable parameters", "Evidence gates"]
+    },
+    "agent-execution-swimlane": {
+      "title": "EA Agent Execution Swimlane",
+      "output": "docs/diagrams/EA_AGENT_EXECUTION_SWIMLANE.html",
+      "type": "swimlane",
+      "lanes": ["Owner / Control Tower", "Context & planning sidecars", "Worker lane", "Deterministic tools", "Review / acceptance", "Runtime gate"]
+    },
+    "boss-factory-path": {
+      "title": "Boss11-18 Factory Path",
+      "output": "docs/diagrams/EA_BOSS_FACTORY_PATH.html",
+      "type": "process",
+      "stages": ["Boss11-18 intake", "Compatibility disposition", "Choose clean first Boss", "VariantBuildPackage", "ParameterProjection", "Proposed MT5 .set", "Compile + local test", "Optimization-ready package", "Repeat next Boss"]
+    }
+  }
+}
