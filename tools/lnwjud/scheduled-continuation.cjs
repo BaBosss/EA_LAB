@@ -25,6 +25,13 @@ function text(value, name) {
   if (typeof value !== 'string' || value.trim() === '') fail(`${name} is required`);
   return value.trim();
 }
+function promptText(value, name) {
+  const item = text(value, name).replace(/[\t-\r\u0085\u2028\u2029]+/g, ' ');
+  if (/[\u0000-\u0008\u000E-\u001F\u007F-\u0084\u0086-\u009F]/.test(item)) {
+    fail(`${name} contains a dangerous control character`);
+  }
+  return item;
+}
 function sha40(value, name) {
   const item = text(value, name).toLowerCase();
   if (!/^[0-9a-f]{40}$/.test(item)) fail(`${name} must be a 40-character SHA`);
@@ -119,9 +126,9 @@ function buildContinuation(spec, source) {
   if (safeId(spec.task_id, 'task_id') !== taskId) fail('task_id does not match delegation package');
   const evidencePaths = Array.isArray(spec.evidence_paths) ? spec.evidence_paths.map((item, i) => relative(item, `evidence_paths[${i}]`)) : fail('evidence_paths are required');
   if (evidencePaths.length === 0 || evidencePaths.length > 16) fail('evidence_paths must contain 1..16 items');
-  const completion = Array.isArray(spec.completion_predicates) ? spec.completion_predicates.map((item, i) => text(item, `completion_predicates[${i}]`)) : fail('completion_predicates are required');
+  const completion = Array.isArray(spec.completion_predicates) ? spec.completion_predicates.map((item, i) => promptText(item, `completion_predicates[${i}]`)) : fail('completion_predicates are required');
   if (completion.length === 0 || completion.length > 16) fail('completion_predicates must contain 1..16 items');
-  const inheritedStops = authority.hard_stops.map((item, i) => text(item, `hard_stops[${i}]`));
+  const inheritedStops = authority.hard_stops.map((item, i) => promptText(item, `hard_stops[${i}]`));
   const hardStops = [...new Set([...inheritedStops, ...REQUIRED_HARD_STOPS])];
   const base = {
     schema_version: 1,
@@ -144,7 +151,7 @@ function buildContinuation(spec, source) {
     },
     hard_stops: hardStops,
     completion_predicates: completion,
-    acceptance: pkg.acceptance.map((item, i) => text(item, `acceptance[${i}]`))
+    acceptance: pkg.acceptance.map((item, i) => promptText(item, `acceptance[${i}]`))
   };
   const prompt = renderPrompt(base);
   return Object.freeze({ ...base, prompt, prompt_sha256: digest(prompt) });
