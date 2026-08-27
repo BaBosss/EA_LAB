@@ -76,35 +76,41 @@ foreach ($e in $codeInputs) {
 # --- preserve formatting while changing the one cited number.
 $csvLines = Get-Content -LiteralPath $csvPath
 $records = @(Read-ParameterRegistryCsv -Path $csvPath)
-$dataStart = 0
-while ($dataStart -lt $csvLines.Count -and
-       ($csvLines[$dataStart].Trim().Length -eq 0 -or $csvLines[$dataStart].StartsWith('>'))) { $dataStart++ }
-$dataLines = @($csvLines[($dataStart + 1)..($csvLines.Count - 1)] | Where-Object { $_.Trim().Length -gt 0 -and -not $_.StartsWith('>') })
-if ($dataLines.Count -ne $records.Count) { throw "CSV parser/data-line count mismatch: $($records.Count) vs $($dataLines.Count)" }
+$headerIndex = 0
+while ($headerIndex -lt $csvLines.Count -and
+       ($csvLines[$headerIndex].Trim().Length -eq 0 -or $csvLines[$headerIndex].StartsWith('>'))) { $headerIndex++ }
+$dataLineIndices = @(
+    for ($lineIndex = $headerIndex + 1; $lineIndex -lt $csvLines.Count; $lineIndex++) {
+        if ($csvLines[$lineIndex].Trim().Length -gt 0 -and -not $csvLines[$lineIndex].StartsWith('>')) { $lineIndex }
+    }
+)
+if ($dataLineIndices.Count -ne $records.Count) { throw "CSV parser/data-line count mismatch: $($records.Count) vs $($dataLineIndices.Count)" }
 $defaultProfileIndex = [array]::IndexOf($script:ParameterRegistryLastHeaders, 'default_profile')
 if ($defaultProfileIndex -lt 0) { throw 'default_profile header was not resolved' }
 $out = New-Object System.Collections.Generic.List[string]
+foreach ($csvLine in $csvLines) { $out.Add([string]$csvLine) }
 $changed = 0; $unknown = New-Object System.Collections.Generic.List[string]
 
-for ($rowIndex = 0; $rowIndex -lt $dataLines.Count; $rowIndex++) {
-    $line = $dataLines[$rowIndex]
+for ($rowIndex = 0; $rowIndex -lt $dataLineIndices.Count; $rowIndex++) {
+    $lineIndex = [int]$dataLineIndices[$rowIndex]
+    $line = $csvLines[$lineIndex]
     $record = $records[$rowIndex]
     $name = [string]$record.name
     $baseName = $name; $tag = $null
     if ($name -match '^(.*)\[(.+)\]$') { $baseName = $Matches[1]; $tag = $Matches[2] }
 
     $m = [regex]::Match([string]$record.default_profile, 'Inputs\.mqh:(\d+)')
-    if (-not $m.Success) { $out.Add($line); continue }
+    if (-not $m.Success) { continue }
 
-    if (-not $codeByName.ContainsKey($baseName)) { $unknown.Add($name); $out.Add($line); continue }
+    if (-not $codeByName.ContainsKey($baseName)) { $unknown.Add($name); continue }
     $candidates = $codeByName[$baseName]
     $entry = if ($candidates.Count -eq 1) { $candidates[0] }
              elseif ($tag) { $candidates | Where-Object { $_.Tag -eq $tag } | Select-Object -First 1 }
              else { $null }
-    if (-not $entry) { $unknown.Add($name); $out.Add($line); continue }
+    if (-not $entry) { $unknown.Add($name); continue }
 
     $cited = [int]$m.Groups[1].Value
-    if ($cited -eq $entry.Line) { $out.Add($line); continue }
+    if ($cited -eq $entry.Line) { continue }
 
     # Find the header-selected field with a quote-aware scan; do not assume default_profile is
     # column 7 and do not touch an identical citation in another field.
@@ -126,10 +132,10 @@ for ($rowIndex = 0; $rowIndex -lt $dataLines.Count; $rowIndex++) {
     $profileSpan = $spans[$defaultProfileIndex]
     $fieldText = $line.Substring($profileSpan.Start, $profileSpan.Length)
     $fieldMatch = [regex]::Match($fieldText, 'Inputs\.mqh:(\d+)')
-    if (-not $fieldMatch.Success) { $out.Add($line); continue }
+    if (-not $fieldMatch.Success) { continue }
     $absIndex = $profileSpan.Start + $fieldMatch.Groups[1].Index
     $newLine = $line.Substring(0, $absIndex) + $entry.Line + $line.Substring($absIndex + $fieldMatch.Groups[1].Length)
-    $out.Add($newLine)
+    $out[$lineIndex] = $newLine
     $changed++
     Write-Host ("  {0,-34} {1} -> {2}" -f $name, $cited, $entry.Line)
 }
