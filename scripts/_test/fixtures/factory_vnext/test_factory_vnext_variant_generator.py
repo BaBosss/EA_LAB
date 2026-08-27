@@ -110,6 +110,22 @@ class FactoryVNextVariantGeneratorTests(unittest.TestCase):
         args.update(overrides)
         return make_variant_build_package(**args)
 
+    def _coverage(self):
+        return [
+            {
+                "baseline_parameter": "LegacyAtrPeriod",
+                "parameter_pid": 100,
+                "projection_parameter": "AtrPeriod",
+                "disposition": "PROJECT",
+            },
+            {
+                "baseline_parameter": "LegacyMode",
+                "parameter_pid": 999,
+                "projection_parameter": None,
+                "disposition": "PRESERVE_SNAPSHOT",
+            },
+        ]
+
     def test_package_is_deterministic_and_non_authoritative(self):
         left = self._package()
         right = self._package()
@@ -185,6 +201,50 @@ class FactoryVNextVariantGeneratorTests(unittest.TestCase):
             serialize_variant_build_package(left),
             serialize_variant_build_package(right),
         )
+
+    def test_baseline_coverage_is_sorted_identity_bound_and_optional_for_legacy_packages(self):
+        legacy = self._package()
+        reversed_coverage = list(reversed(self._coverage()))
+        left = self._package(baseline_coverage=self._coverage())
+        right = self._package(baseline_coverage=reversed_coverage)
+
+        self.assertNotIn("BaselineCoverage", legacy)
+        self.assertNotEqual(legacy["PackageID"], left["PackageID"])
+        self.assertEqual(left["PackageID"], right["PackageID"])
+        self.assertEqual(
+            serialize_variant_build_package(left),
+            serialize_variant_build_package(right),
+        )
+        self.assertEqual(
+            [row["baseline_parameter"] for row in left["BaselineCoverage"]],
+            ["LegacyAtrPeriod", "LegacyMode"],
+        )
+
+    def test_baseline_coverage_refuses_malformed_duplicate_and_invalid_project_rows(self):
+        cases = (
+            (self._coverage() + [dict(self._coverage()[0])], "duplicate BaselineCoverage baseline_parameter"),
+            ([{**self._coverage()[0], "projection_parameter": None}], "PROJECT.*projection_parameter"),
+            ([{**self._coverage()[0], "parameter_pid": 999}], "parameter_pid mismatch"),
+            ([{**self._coverage()[1], "projection_parameter": "AtrPeriod"}], "PRESERVE_SNAPSHOT.*projection_parameter"),
+            ([{**self._coverage()[0], "disposition": "INFER"}], "unsupported BaselineCoverage disposition"),
+            ([{key: value for key, value in self._coverage()[0].items() if key != "parameter_pid"}], "parameter_pid is required"),
+        )
+        for coverage, message in cases:
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(VariantGeneratorError, message):
+                    self._package(baseline_coverage=coverage)
+
+    def test_baseline_coverage_refuses_duplicate_parameter_pid(self):
+        duplicate_pid = {
+            **self._coverage()[0],
+            "baseline_parameter": "LegacyAtrPeriodAlias",
+        }
+
+        with self.assertRaisesRegex(
+            VariantGeneratorError,
+            "duplicate BaselineCoverage parameter_pid 100",
+        ):
+            self._package(baseline_coverage=self._coverage() + [duplicate_pid])
 
 
 if __name__ == "__main__":

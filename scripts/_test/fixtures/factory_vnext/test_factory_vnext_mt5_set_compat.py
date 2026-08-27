@@ -29,7 +29,7 @@ class FactoryVNextMT5SetCompatTests(unittest.TestCase):
         "source_commit", "TemplateID", "MasterMoldID", "MasterMoldVersion",
         "MasterMoldSnapshotID", "FamilyID", "VariantID", "VariantSnapshotID",
         "StrategyVersion", "ParameterSurfaceID", "hypothesis_revision", "build_tag",
-        "ActiveCapabilities", "EnabledComponents", "ParameterProjection",
+        "ActiveCapabilities", "EnabledComponents", "ParameterProjection", "BaselineCoverage",
     )
 
     def _package(self):
@@ -64,9 +64,16 @@ class FactoryVNextMT5SetCompatTests(unittest.TestCase):
 
     def _reidentified(self, package, projection):
         changed = {**package, "ParameterProjection": projection}
-        identity = {key: changed[key] for key in self._IDENTITY_KEYS}
+        identity = {key: changed[key] for key in self._IDENTITY_KEYS if key in changed}
         changed["PackageID"] = stable_id("VPKG", identity, hex_chars=24)
         return changed
+
+    def _coverage_package(self, coverage):
+        package = self._package()
+        package["BaselineCoverage"] = sorted(coverage, key=lambda row: row["baseline_parameter"])
+        identity = {key: package[key] for key in self._IDENTITY_KEYS if key in package}
+        package["PackageID"] = stable_id("VPKG", identity, hex_chars=24)
+        return package
 
     def test_projection_drives_deterministic_dry_run_and_disables_snapshot_optimizer(self):
         package = self._package()
@@ -179,6 +186,167 @@ class FactoryVNextMT5SetCompatTests(unittest.TestCase):
                 self._reidentified(package, [mismatched, package["ParameterProjection"][1]]),
                 "AtrPeriod=14\nFixedLot=0.01\n",
             )
+
+    def test_identity_bound_coverage_maps_scoped_project_and_preserves_known_snapshot(self):
+        coverage = [
+            {
+                "baseline_parameter": "LegacyAtr",
+                "parameter_pid": 100,
+                "projection_parameter": "AtrPeriod",
+                "disposition": "PROJECT",
+            },
+            {
+                "baseline_parameter": "FixedLot",
+                "parameter_pid": 200,
+                "projection_parameter": "FixedLot",
+                "disposition": "PROJECT",
+            },
+            {
+                "baseline_parameter": "LegacyMode",
+                "parameter_pid": 999,
+                "projection_parameter": None,
+                "disposition": "PRESERVE_SNAPSHOT",
+            },
+        ]
+        baseline = (
+            "LegacyAtr=14||10||1||20||Y\n"
+            "FixedLot=0.02||0.01||0.01||0.10||Y\n"
+            "LegacyMode=7||1||1||10||Y\n"
+        )
+
+        result = build_mt5_set_compat(self._coverage_package(coverage), baseline)
+
+        self.assertEqual(result["refusal_rows"], [])
+        rows = {row["parameter"]: row for row in result["operator_rows"]}
+        self.assertEqual(rows["LegacyAtr"]["projection_parameter"], "AtrPeriod")
+        self.assertEqual(rows["LegacyAtr"]["disposition"], "MATCH")
+        self.assertEqual(rows["LegacyMode"]["disposition"], "PRESERVE_SNAPSHOT")
+        self.assertTrue(rows["LegacyMode"]["optimizer_disabled"])
+        proposed = render_proposed_set(result)
+        self.assertIn("LegacyAtr=14||10||1||20||Y", proposed)
+        self.assertIn("FixedLot=0.02||0.01||0.01||0.10||N", proposed)
+        self.assertIn("LegacyMode=7||1||1||10||N", proposed)
+
+    def test_coverage_refuses_unknown_or_case_mismatched_physical_baseline_keys(self):
+        coverage = [
+            {
+                "baseline_parameter": "legacyatr",
+                "parameter_pid": 100,
+                "projection_parameter": "AtrPeriod",
+                "disposition": "PROJECT",
+            },
+        ]
+        package = self._coverage_package(coverage)
+        result = build_mt5_set_compat(package, "LegacyAtr=14\nUnknownThing=7\n")
+
+        self.assertEqual(
+            result["refusal_rows"],
+            [
+                {"parameter": "LegacyAtr", "disposition": "REFUSE", "reason": "BASELINE_COVERAGE_CASE_MISMATCH"},
+                {"parameter": "UnknownThing", "disposition": "REFUSE", "reason": "UNKNOWN_OR_REMOVED_BASELINE_KEY"},
+            ],
+        )
+        with self.assertRaisesRegex(MT5SetCompatError, "LegacyAtr, UnknownThing"):
+            render_proposed_set(result)
+
+    def test_missing_covered_snapshot_project_adds_its_physical_baseline_alias(self):
+        coverage = [{
+            "baseline_parameter": "LegacyFixedLot",
+            "parameter_pid": 200,
+            "projection_parameter": "FixedLot",
+            "disposition": "PROJECT",
+        }]
+
+        result = build_mt5_set_compat(self._coverage_package(coverage), "")
+
+        self.assertEqual(result["refusal_rows"], [])
+        self.assertEqual(
+            result["operator_rows"],
+            [
+                {
+                    **self._package()["ParameterProjection"][1],
+                    "parameter": "LegacyFixedLot",
+                    "baseline_parameter": "LegacyFixedLot",
+                    "projection_parameter": "FixedLot",
+                    "coverage_disposition": "PROJECT",
+                    "baseline_present": False,
+                    "baseline_value": None,
+                    "baseline_tail": None,
+                    "semantic_state": None,
+                    "optimizer_disabled": False,
+                    "disposition": "ADD",
+                    "proposed_value": "0.01",
+                    "proposed_tail": None,
+                },
+            ],
+        )
+        self.assertEqual(render_proposed_set(result), "LegacyFixedLot=0.01\n")
+
+    def test_missing_covered_active_project_refuses_without_output(self):
+        coverage = [{
+            "baseline_parameter": "LegacyAtr",
+            "parameter_pid": 100,
+            "projection_parameter": "AtrPeriod",
+            "disposition": "PROJECT",
+        }]
+
+        result = build_mt5_set_compat(self._coverage_package(coverage), "")
+
+        self.assertEqual(result["refusal_rows"], [])
+        self.assertEqual(
+            [(row["parameter"], row["disposition"], row["reason"])
+            for row in result["operator_rows"]],
+            [("LegacyAtr", "UNMAPPED", "MISSING_ACTIVE_TUNABLE")],
+        )
+        self.assertIsNone(result["proposed_set_text"])
+        with self.assertRaisesRegex(MT5SetCompatError, "LegacyAtr"):
+            render_proposed_set(result)
+
+    def test_missing_covered_snapshot_project_refuses_when_locked_value_is_not_renderable(self):
+        coverage = [{
+            "baseline_parameter": "LegacyFixedLot",
+            "parameter_pid": 200,
+            "projection_parameter": "FixedLot",
+            "disposition": "PROJECT",
+        }]
+        package = self._coverage_package(coverage)
+        invalid_locked = {**package["ParameterProjection"][1], "locked_value": [0.01]}
+        package = self._reidentified(package, [package["ParameterProjection"][0], invalid_locked])
+
+        result = build_mt5_set_compat(package, "")
+
+        self.assertEqual(
+            [(row["parameter"], row["disposition"], row["reason"])
+            for row in result["operator_rows"]],
+            [("LegacyFixedLot", "UNMAPPED", "NO_RENDERABLE_LOCKED_VALUE")],
+        )
+        self.assertIsNone(result["proposed_set_text"])
+        with self.assertRaisesRegex(MT5SetCompatError, "LegacyFixedLot"):
+            render_proposed_set(result)
+
+    def test_missing_preserve_snapshot_coverage_is_ignored_without_addition(self):
+        coverage = [{
+            "baseline_parameter": "LegacyMode",
+            "parameter_pid": 999,
+            "projection_parameter": None,
+            "disposition": "PRESERVE_SNAPSHOT",
+        }]
+
+        result = build_mt5_set_compat(self._coverage_package(coverage), "")
+
+        self.assertEqual(result["operator_rows"], [])
+        self.assertEqual(render_proposed_set(result), "")
+
+    def test_legacy_package_without_coverage_retains_projection_only_behavior(self):
+        package = self._package()
+        baseline = "AtrPeriod=14\nFixedLot=0.01\nRemovedThing=7\n"
+
+        result = build_mt5_set_compat(package, baseline)
+
+        self.assertEqual(
+            result["refusal_rows"],
+            [{"parameter": "RemovedThing", "disposition": "REFUSE", "reason": "UNKNOWN_OR_REMOVED_BASELINE_KEY"}],
+        )
 
 
 if __name__ == "__main__":

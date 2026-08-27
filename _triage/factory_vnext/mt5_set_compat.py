@@ -129,6 +129,140 @@ def _manifest(result: Mapping[str, Any], proposed: str | None) -> Dict[str, Any]
     }
 
 
+def _build_coverage_compat(
+    package: Mapping[str, Any], baseline_text: str, semantic_states: Mapping[str, Any] | None,
+) -> Dict[str, Any]:
+    projection = _projection_rows(package)
+    projection_by_name = {row["parameter"]: row for row in projection}
+    coverage = package["BaselineCoverage"]
+    coverage_by_name = {row["baseline_parameter"]: row for row in coverage}
+    coverage_by_casefold = {row["baseline_parameter"].casefold(): row for row in coverage}
+    try:
+        lines, _comments = setfile.parse_set(baseline_text)
+    except setfile.Refusal as exc:
+        raise MT5SetCompatError(str(exc)) from exc
+
+    refusal_rows: list[Dict[str, Any]] = []
+    rows: list[Dict[str, Any]] = []
+    replacements: Dict[int, str] = {}
+    can_emit = True
+    for line in lines:
+        coverage_row = coverage_by_name.get(line.name)
+        if coverage_row is None:
+            reason = (
+                "BASELINE_COVERAGE_CASE_MISMATCH"
+                if line.name.casefold() in coverage_by_casefold
+                else "UNKNOWN_OR_REMOVED_BASELINE_KEY"
+            )
+            refusal_rows.append({"parameter": line.name, "disposition": "REFUSE", "reason": reason})
+            continue
+        if coverage_row["disposition"] == "PROJECT":
+            projected = projection_by_name[coverage_row["projection_parameter"]]
+            semantic_state = _semantic_state(semantic_states, projected["parameter"])
+            row = dict(projected)
+            row.update({
+                "parameter": line.name,
+                "baseline_parameter": line.name,
+                "projection_parameter": projected["parameter"],
+                "coverage_disposition": "PROJECT",
+                "baseline_present": True,
+                "baseline_value": line.value,
+                "baseline_tail": line.optimize_tail,
+                "semantic_state": semantic_state,
+                "optimizer_disabled": False,
+            })
+            if semantic_state == "SEMANTICS_REQUIRED":
+                row.update({"disposition": "REFUSE", "reason": "SEMANTICS_REQUIRED"})
+                refusal_rows.append({"parameter": line.name, "disposition": "REFUSE", "reason": "SEMANTICS_REQUIRED"})
+                can_emit = False
+            elif projected["projection"] == "SNAPSHOT_ONLY":
+                tail, changed, tail_error = _snapshot_tail(line.optimize_tail)
+                if tail_error:
+                    row.update({"disposition": "REFUSE", "reason": tail_error})
+                    refusal_rows.append({"parameter": line.name, "disposition": "REFUSE", "reason": tail_error})
+                else:
+                    row.update({"disposition": "MATCH", "proposed_value": line.value, "proposed_tail": tail, "optimizer_disabled": changed})
+                    if changed:
+                        replacements[line.lineno] = _replace_optimizer_tail(line.raw, line.optimize_tail, tail)
+            else:
+                row.update({"disposition": "MATCH", "proposed_value": line.value, "proposed_tail": line.optimize_tail})
+        else:
+            tail, changed, tail_error = _snapshot_tail(line.optimize_tail)
+            row = dict(coverage_row)
+            row.update({
+                "parameter": line.name,
+                "baseline_present": True,
+                "baseline_value": line.value,
+                "baseline_tail": line.optimize_tail,
+                "semantic_state": None,
+                "optimizer_disabled": changed,
+            })
+            if tail_error:
+                row.update({"disposition": "REFUSE", "reason": tail_error})
+                refusal_rows.append({"parameter": line.name, "disposition": "REFUSE", "reason": tail_error})
+            else:
+                row.update({"disposition": "PRESERVE_SNAPSHOT", "proposed_value": line.value, "proposed_tail": tail})
+                if changed:
+                    replacements[line.lineno] = _replace_optimizer_tail(line.raw, line.optimize_tail, tail)
+        rows.append(row)
+
+    baseline_names = {line.name for line in lines}
+    for coverage_row in coverage:
+        if coverage_row["disposition"] != "PROJECT" or coverage_row["baseline_parameter"] in baseline_names:
+            continue
+        projected = projection_by_name[coverage_row["projection_parameter"]]
+        semantic_state = _semantic_state(semantic_states, projected["parameter"])
+        row = dict(projected)
+        row.update({
+            "parameter": coverage_row["baseline_parameter"],
+            "baseline_parameter": coverage_row["baseline_parameter"],
+            "projection_parameter": projected["parameter"],
+            "coverage_disposition": "PROJECT",
+            "baseline_present": False,
+            "baseline_value": None,
+            "baseline_tail": None,
+            "semantic_state": semantic_state,
+            "optimizer_disabled": False,
+        })
+        if semantic_state == "SEMANTICS_REQUIRED":
+            row.update({"disposition": "REFUSE", "reason": "SEMANTICS_REQUIRED"})
+            refusal_rows.append({"parameter": row["parameter"], "disposition": "REFUSE", "reason": "SEMANTICS_REQUIRED"})
+            can_emit = False
+        elif projected["projection"] == "SNAPSHOT_ONLY":
+            value = _render_scalar(projected.get("locked_value"))
+            if value is None:
+                row.update({"disposition": "UNMAPPED", "reason": "NO_RENDERABLE_LOCKED_VALUE"})
+                can_emit = False
+            else:
+                row.update({"disposition": "ADD", "proposed_value": value, "proposed_tail": None})
+        else:
+            row.update({"disposition": "UNMAPPED", "reason": "MISSING_ACTIVE_TUNABLE"})
+            can_emit = False
+        rows.append(row)
+
+    rows.sort(key=lambda row: (row["parameter_pid"], row["parameter"]))
+    proposed = None
+    if can_emit and not refusal_rows:
+        proposed = _render_baseline_with_replacements(baseline_text, lines, replacements)
+        additions = [row for row in rows if row["disposition"] == "ADD"]
+        if additions:
+            if proposed and not proposed.endswith(("\n", "\r")):
+                proposed += "\n"
+            proposed += "\n".join("%s=%s" % (row["parameter"], row["proposed_value"]) for row in additions) + "\n"
+    result: Dict[str, Any] = {
+        "schema_version": _SCHEMA_VERSION,
+        "authority": AUTHORITY,
+        "PackageID": package["PackageID"],
+        "baseline_text": baseline_text,
+        "baseline_sha256": _sha256_text(baseline_text),
+        "operator_rows": rows,
+        "refusal_rows": sorted(refusal_rows, key=lambda row: row["parameter"]),
+        "proposed_set_text": proposed,
+    }
+    result["manifest"] = _manifest(result, proposed)
+    return result
+
+
 def build_mt5_set_compat(
     package: Mapping[str, Any], baseline_text: str, semantic_states: Mapping[str, Any] | None = None,
 ) -> Dict[str, Any]:
@@ -136,6 +270,8 @@ def build_mt5_set_compat(
     if not isinstance(baseline_text, str):
         raise MT5SetCompatError("baseline_text must be text")
     _validate_package(package)
+    if "BaselineCoverage" in package:
+        return _build_coverage_compat(package, baseline_text, semantic_states)
     projection = _projection_rows(package)
     try:
         lines, _comments = setfile.parse_set(baseline_text)
