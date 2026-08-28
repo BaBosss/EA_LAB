@@ -39,6 +39,7 @@ param(
   [switch]$Portable,   # 2nd portable install (D:\Meta 5b): pass -Terminal/-DataDir there too
   [switch]$Force,
   [switch]$AllowLegacyIdentity,  # explicit non-green escape hatch for historical/fixture runs
+  [string]$BuildReceiptRegistry = '',  # optional exact per-run receipt ledger; defaults to canonical portfolio ledger
   [switch]$SkipOptimizeGuard,  # override: proceed even if optimize_guard.ps1 refuses a swept dimension
   # ORDER-1253. Both are passed straight through to optimize_guard.ps1 and both default to the
   # behaviour every existing call site already gets.
@@ -143,11 +144,12 @@ Write-Output "surface: $($surface.State) -- $($surface.Message)"
 . (Join-Path $PSScriptRoot 'lib\build_receipt.ps1')
 . (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
 $expertsDir = Get-TesterExpertsDir -TerminalPath $Terminal -DataDir $DataDir -Portable:$Portable
+$receiptRegistry = if ([string]::IsNullOrWhiteSpace($BuildReceiptRegistry)) { Join-Path $repoRoot 'portfolio\build_receipts.jsonl' } else { $BuildReceiptRegistry }
 $buildIdentity = Get-BuildReceiptStatus -Expert $Expert -ExpertsDir $expertsDir `
-  -RegistryPath (Join-Path $repoRoot 'portfolio\build_receipts.jsonl')
+  -RegistryPath $receiptRegistry
 if (($Expert -replace '\.ex5$','') -ieq 'Boss_14_GridLog') {
   $buildIdentity = Get-ManagedCompatibilityStatus -ExpertsDir $expertsDir `
-    -RegistryPath (Join-Path $repoRoot 'portfolio\build_receipts.jsonl')
+    -RegistryPath $receiptRegistry
 }
 $configIdentity = Get-SetConfigIdentity -Path $SetFile -Surface $surface
 if (-not $AllowLegacyIdentity -and (-not $buildIdentity.Valid -or -not $configIdentity.Valid)) {
