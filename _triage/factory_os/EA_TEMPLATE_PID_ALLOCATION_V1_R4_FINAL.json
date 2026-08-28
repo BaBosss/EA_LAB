@@ -2,7 +2,7 @@
   "artifact": "EA_TEMPLATE_PID_ALLOCATION_V1_R4_FINAL",
   "status": "INVENTORY_FROZEN_FOR_BATCH_A",
   "inventory_evidence": {
-    "declarations": 210,
+    "declarations": 222,
     "logical_keys": 196,
     "missing_vs_r2": 26,
     "omitted_key_from_prior_audit": "_HEAT_CorrWindowBars",

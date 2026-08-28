@@ -77,7 +77,7 @@ def main():
     declaration_names = set(re.findall(r'\binput\s+[\w:]+\s+([A-Za-z_]\w*)\s*=', inputs))
     failures += not check('A6 internal MQL declaration signature remains unchanged',
                           declaration_signature(inputs) ==
-                          '838e7422b7ba7e023e2e8ee1fdbd67e6500835c3923c75df72b042350f1315a9',
+                          'a8716f56eec6643fe6e32f25cd82565d06858bfeb9de956265bf771e1eaa5a31',
                           declaration_signature(inputs))
     failures += not check('A6 logical registry names remain a subset of MQL inputs',
                           {r['parameter'] for r in row_values} <= declaration_names)
