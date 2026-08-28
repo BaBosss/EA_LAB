@@ -74,7 +74,7 @@ foreach ($e in $codeInputs) {
 
 # --- Parse through the strict header-keyed reader first. The raw lines below are only used to
 # --- preserve formatting while changing the one cited number.
-$csvLines = Get-Content -LiteralPath $csvPath
+$csvLines = Get-Content -LiteralPath $csvPath -Encoding UTF8
 $records = @(Read-ParameterRegistryCsv -Path $csvPath)
 $headerIndex = 0
 while ($headerIndex -lt $csvLines.Count -and

@@ -73,6 +73,7 @@ run_preset_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/preset.py,
 run_setfile_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/setfile.py, _triage/factory_os/run_setfile_tests.py, _triage/factory_os/preset.py (+7 more)
 run_activation_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/activation.py, _triage/factory_os/architecture.py, _triage/factory_os/capability.py (+6 more)
 run_param_surface_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_param_surface.py, _triage/factory_os/run_param_surface_tests.py, _triage/factory_os/gen_registry_rows.py (+15 more)
+run_param_registry_fix_lines_tests.ps1|UNMEASURED|Focused PARAM_REGISTRY citation fixer preservation cage; not timed against pinned fast tier budget.
 run_wrapper_gen_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_wrapper_gen.py, _triage/factory_os/run_wrapper_gen_tests.py, _triage/factory_os/gen_wrapper.py (+18 more)
 run_parity_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/parity.py, _triage/factory_os/run_parity_tests.py, scripts/parity_run.ps1
 run_scheduler_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/scheduler.py, _triage/factory_os/run_scheduler_tests.py, scripts/scheduler_run.ps1 (+1 more)

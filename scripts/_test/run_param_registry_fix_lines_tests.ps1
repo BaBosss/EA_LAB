@@ -40,7 +40,8 @@ try {
 
     $preamble = 1..9 | ForEach-Object { "> fixture preamble $_" }
     $header = '"name","owner","unit","context","active_when","coupled_parameters","default_profile","optimize_stage","safe_range","causal_question","classification","classification_note","parameter_pid","unit_true","portability","display_label","relation_hint"'
-    $row = '"DemoParam","fixture","count","fixture","always","","DEMO(1) - Inputs.mqh:99","UNKNOWN","UNKNOWN","fixture question","ACTIVE","fixture note","20000","count","PORTABLE","Demo Param",""'
+    $unicodeMarker = -join @([char]0x0E44,[char]0x0E17,[char]0x0E22)
+    $row = '"DemoParam","fixture","count","fixture","always","","DEMO(1) - Inputs.mqh:99","UNKNOWN","UNKNOWN","fixture question","ACTIVE","fixture note ' + $unicodeMarker + '","20000","count","PORTABLE","Demo Param",""'
     $originalLines = @($preamble) + @($header, $row)
     $csvPath = Join-Path $tempRoot 'docs\PARAM_REGISTRY.csv'
     Write-Utf8NoBomLf -Path $csvPath -Lines $originalLines
@@ -53,7 +54,7 @@ try {
     $apply = @(& $powerShell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tempRoot 'scripts\param_registry_fix_lines.ps1') -Apply 2>&1 | ForEach-Object { $_.ToString() })
     Assert-True ($LASTEXITCODE -eq 0) "apply failed: $($apply -join "`n")"
 
-    $afterLines = @(Get-Content -LiteralPath $csvPath)
+    $afterLines = @(Get-Content -LiteralPath $csvPath -Encoding UTF8)
     Assert-True ($afterLines.Count -eq $originalLines.Count) "line count changed: $($originalLines.Count) -> $($afterLines.Count)"
     for ($i = 0; $i -lt $preamble.Count; $i++) {
         Assert-True ($afterLines[$i] -ceq $preamble[$i]) "preamble line $($i + 1) changed or disappeared"
