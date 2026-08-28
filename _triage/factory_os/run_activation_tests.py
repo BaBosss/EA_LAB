@@ -51,6 +51,8 @@ SURFACE = P.Surface(BUILD, [d for d in _RAW_SURFACE.inputs if d.name in ACT.TABL
 SURFACE.enums = _RAW_SURFACE.enums
 _RAW_S16 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_16')
 S16 = _RAW_S16
+S17 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_17')
+S18 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_18')
 
 
 def base_config(surface=None, **over):
@@ -310,6 +312,93 @@ def a8_specificity(mod):
     return None
 
 
+# --- B17/B18 activation extension: exact complete tables with source-proven gates ---------------
+
+B17_ENTRY_ROWS = ('_17_FractalDepth', '_17_Wave3MinMult', '_17_EntryFib',
+                  '_17_SLbufferATR', '_17_UseStructLevels', '_17_DivergTrail',
+                  '_17_MaxSwings', '_17_RSI_Period')
+B18_ENTRY_ROWS = ('_18_Direction', '_18_DirMode', '_18_MaPeriod', '_18_KPeriod',
+                  '_18_DPeriod', '_18_Slowing', '_18_LoLevel', '_18_UpLevel')
+
+
+def b17_b18_surface_completeness(mod):
+    """Both extensions must classify and project exactly their 159-key physical surfaces."""
+    for build, surface in (('LAB_ENTRY_17', S17), ('LAB_ENTRY_18', S18)):
+        names = set(d.name for d in surface.inputs)
+        table_names = set(mod.TABLE[build])
+        if len(names) != 159:
+            return '%s fixture has %d physical inputs, expected 159' % (build, len(names))
+        if table_names != names:
+            return '%s table differs from its surface: missing=%s extra=%s' % (
+                build, sorted(names - table_names), sorted(table_names - names))
+        verdicts = mod.classify(build, base_config(surface), surface=surface)
+        states = mod.effective_state(build, base_config(surface), surface=surface)
+        if set(verdicts) != names or set(states) != names:
+            return '%s classify/effective_state is not an exact surface projection' % build
+    return None
+
+
+def b17_b18_baseline_specificity(mod):
+    """Default baselines retain the declared module sets and no B14 entry row leaks across."""
+    expected = {
+        'LAB_ENTRY_17': {'LAB_CAP_CORE', 'LAB_CAP_ENTRY_WAVE5', 'LAB_CAP_EXEC', 'LAB_CAP_EXIT',
+                         'LAB_CAP_INDICATORS', 'LAB_CAP_MM', 'LAB_CAP_RISK'},
+        'LAB_ENTRY_18': {'LAB_CAP_CORE', 'LAB_CAP_ENTRY_JUMSTOCH', 'LAB_CAP_EXEC', 'LAB_CAP_EXIT',
+                         'LAB_CAP_INDICATORS', 'LAB_CAP_MM', 'LAB_CAP_RISK', 'LAB_CAP_STACK'},
+    }
+    for build, surface, entry_rows in (('LAB_ENTRY_17', S17, B17_ENTRY_ROWS),
+                                       ('LAB_ENTRY_18', S18, B18_ENTRY_ROWS)):
+        cfg = base_config(surface)
+        tokens = set(CAP.enabled_tokens(build, cfg, surface=surface))
+        if tokens != expected[build]:
+            return '%s baseline tokens differ: got=%s expected=%s' % (
+                build, sorted(tokens), sorted(expected[build]))
+        verdicts = mod.classify(build, cfg, surface=surface)
+        dark_entry_rows = set(name for name in entry_rows if not verdicts[name].active)
+        expected_dark = ({'_17_DivergTrail', '_17_RSI_Period'} if build == 'LAB_ENTRY_17' else set())
+        if dark_entry_rows != expected_dark:
+            return '%s baseline dark entry rows differ: got=%s expected=%s' % (
+                build, sorted(dark_entry_rows), sorted(expected_dark))
+        leaked = [name for name in ('_14_Direction', '_14_DistAtrMult', '_14_MinDistPips')
+                  if name in mod.TABLE[build]]
+        if leaked:
+            return '%s retained B14 entry rows: %s' % (build, leaked)
+    return None
+
+
+def b17_b18_gate_specificity(mod):
+    """B17 structural/trail controls open and close independently; B18 keeps its entry dials live."""
+    b17_default = mod.classify('LAB_ENTRY_17', base_config(S17), surface=S17)
+    b17_no_struct = mod.classify('LAB_ENTRY_17',
+                                 base_config(S17, _17_UseStructLevels='false'), surface=S17)
+    if not b17_default['_17_SLbufferATR'].active or b17_no_struct['_17_SLbufferATR'].active:
+        return '_17_SLbufferATR did not follow _17_UseStructLevels true/false'
+    b17_trail = mod.classify('LAB_ENTRY_17',
+                             base_config(S17, ExitMode='EXIT_TRAIL', _17_DivergTrail='true'),
+                             surface=S17)
+    b17_no_diverg = mod.classify('LAB_ENTRY_17',
+                                 base_config(S17, ExitMode='EXIT_TRAIL', _17_DivergTrail='false'),
+                                 surface=S17)
+    if b17_default['_17_DivergTrail'].active or b17_default['_17_RSI_Period'].active:
+        return 'B17 divergence controls are reachable outside EXIT_TRAIL'
+    if not b17_trail['_17_DivergTrail'].active or not b17_trail['_17_RSI_Period'].active:
+        return 'B17 divergence controls did not open at EXIT_TRAIL with DivergTrail=true'
+    if not b17_no_diverg['_17_DivergTrail'].active or b17_no_diverg['_17_RSI_Period'].active:
+        return 'B17 RSI period did not follow DivergTrail=true/false under EXIT_TRAIL'
+    for build, surface in (('LAB_ENTRY_17', S17), ('LAB_ENTRY_18', S18)):
+        trade_dir = mod.classify(build, base_config(surface), surface=surface)['TradeDir']
+        if trade_dir.active or trade_dir.token_enabled:
+            return '%s exposes inert TradeDir as an enabled capability' % build
+    return None
+
+
+EXTENSION_CASES = (
+    ('B17/B18-1', 'surface completeness and effective-state exactness', b17_b18_surface_completeness),
+    ('B17/B18-2', 'baseline specificity and no B14 entry leakage', b17_b18_baseline_specificity),
+    ('B17/B18-3', 'B17 structural/trail gates and B18 entry reachability', b17_b18_gate_specificity),
+)
+
+
 CASES = (
     ('A8', 'one configuration in two spellings gives ONE digest, ONE token set, ONE reachability',
      ACT, a8_attack, a8_specificity,
@@ -402,6 +491,15 @@ def main(argv):
             print('  [%s] %-3s %-11s %s' % ('OK ' if ok else 'BAD', cid, kind, label[:78]))
             if not ok:
                 print('        -> %s' % why)
+
+    print('\n=== B17/B18 activation extension: %d focused criteria ===' % len(EXTENSION_CASES))
+    for cid, label, fn in EXTENSION_CASES:
+        why = fn(ACT)
+        ok = why is None
+        bad += 0 if ok else 1
+        print('  [%s] %-9s %s' % ('OK ' if ok else 'BAD', cid, label))
+        if not ok:
+            print('        -> %s' % why)
 
     if '--mutate' in argv:
         print('\n=== mutation probes: break the mechanism, the case must go RED ===')

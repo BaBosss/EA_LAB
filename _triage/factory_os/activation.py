@@ -18,10 +18,10 @@ program can evaluate. It does not re-derive it and it does not extend it: where 
   🔴 THE TABLE IS PER BUILD, and that is a correction rather than a convenience. Several
   `active_when` cells are build-conditional ("builds 11/12/13 only", "NOT build 16"). A
   chassis-wide table would have to flatten those into a claim that is false somewhere, and the
-  place it would be false is exactly the place a reader would not check. S7 is Boss_14 only, so
-  `LAB_ENTRY_14` is the only build declared here, and asking about any other build is a REFUSAL --
-  "this build has no declared activation table" and "this build has no inactive inputs" are
-  different answers and must not share a code path.
+  place it would be false is exactly the place a reader would not check. Each declared build has
+  its own exact table; an undeclared build is a REFUSAL -- "this build has no declared activation
+  table" and "this build has no inactive inputs" are different answers and must not share a code
+  path.
 
   🔴 A CAPABILITY SELECTOR BELONGS TO `LAB_CAP_CORE`, NOT TO THE CAPABILITY IT SELECTS. `LotProg`
   decides whether `LAB_CAP_LOTPROG` is enabled; if it were itself owned by that token, then
@@ -375,7 +375,56 @@ _B14 = {
     '_MG_OffsetHours':     ('LAB_CAP_MACROGATE', ALWAYS),
 }
 
-TABLE = {'LAB_ENTRY_14': _B14}
+# Boss 17/18 share every B14 row except its build-local entry inputs.  Copying the full table and
+# then replacing that exact row set keeps shared gates mechanically identical while making a stale
+# B14 entry row impossible to carry into another build.
+_B14_ENTRY_ROWS = ('_14_Direction', '_14_DistAtrMult', '_14_MinDistPips')
+_COMPATIBILITY_NEVER_ROWS = (
+    '_5A_UseSMCVeto', '_5A_PivotDepth', '_5A_SwingLookback', '_5A_MaxSwings',
+    '_5A_BreakLookbackBars', '_5A_ChochRecentBars', '_5A_SweepMinATR', '_5A_MinScore',
+    '_5A_HighScore', '_5B_ExtendMinRR', '_5B_LockStepR', '_5B_MaxChain',
+)
+
+
+def _with_build_entry_rows(entry_rows):
+    table = dict(_B14)
+    for name in _B14_ENTRY_ROWS:
+        table.pop(name)
+    # PARAM_REGISTRY marks these serialized compatibility inputs active_when=NEVER with no
+    # behavioral owner. B14's older S7 table predates them; classify them only on the newly
+    # declared builds so this extension does not widen B14's accepted metadata surface.
+    table.update((name, ('LAB_CAP_CORE', NEVER('PHYSICAL_SURFACE_ONLY')))
+                 for name in _COMPATIBILITY_NEVER_ROWS)
+    table.update(entry_rows)
+    return table
+
+
+_B17 = _with_build_entry_rows({
+    '_17_FractalDepth':    ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
+    '_17_Wave3MinMult':    ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
+    '_17_EntryFib':        ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
+    '_17_SLbufferATR':     ('LAB_CAP_ENTRY_WAVE5', EQ('_17_UseStructLevels', 'true')),
+    '_17_UseStructLevels': ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
+    '_17_DivergTrail':     ('LAB_CAP_EXIT', EQ('ExitMode', 'EXIT_TRAIL')),
+    '_17_MaxSwings':       ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
+    '_17_RSI_Period':      ('LAB_CAP_EXIT', AND(EQ('ExitMode', 'EXIT_TRAIL'),
+                                                 EQ('_17_DivergTrail', 'true'))),
+})
+
+
+_B18 = _with_build_entry_rows({
+    '_18_Direction': ('LAB_CAP_ENTRY_JUMSTOCH', ALWAYS),
+    '_18_DirMode':   ('LAB_CAP_ENTRY_JUMSTOCH', ALWAYS),
+    '_18_MaPeriod':  ('LAB_CAP_ENTRY_JUMSTOCH', ALWAYS),
+    '_18_KPeriod':   ('LAB_CAP_ENTRY_JUMSTOCH', ALWAYS),
+    '_18_DPeriod':   ('LAB_CAP_ENTRY_JUMSTOCH', ALWAYS),
+    '_18_Slowing':   ('LAB_CAP_ENTRY_JUMSTOCH', ALWAYS),
+    '_18_LoLevel':   ('LAB_CAP_ENTRY_JUMSTOCH', ALWAYS),
+    '_18_UpLevel':   ('LAB_CAP_ENTRY_JUMSTOCH', ALWAYS),
+})
+
+
+TABLE = {'LAB_ENTRY_14': _B14, 'LAB_ENTRY_17': _B17, 'LAB_ENTRY_18': _B18}
 
 
 def _num(text):
