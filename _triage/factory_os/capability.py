@@ -79,6 +79,7 @@ WRAPPER_FILE = {
     'LAB_ENTRY_16': 'Boss_16_KangarooGrid.mq5',
     'LAB_ENTRY_17': 'Boss_17_Wave5.mq5',
     'LAB_ENTRY_18': 'Boss_18_JumStoch.mq5',
+    'LAB_ENTRY_19': 'Probe_19_AdaptiveTrendGrid.mq5',
 }
 
 # The capability vocabulary. Each entry: token -> (module relpath, selector input, test).
@@ -125,6 +126,15 @@ _BUILD_TOKEN_SUPPRESS = {
     'LAB_ENTRY_16': ('LAB_CAP_STACK',),
 }
 
+# Build-local direct calls can make a generic selector understate reachability. Boss19 requires
+# StackMode=SINGLE but still calls Stack_MarginBudgetOK() from Stack.mqh for every pending leg,
+# so the module is reachable even while the ordinary StackMode selector says the strategy stack
+# is off. This forces module reachability only; activation still decides which individual inputs
+# are effective for Boss19.
+_BUILD_TOKEN_FORCE = {
+    'LAB_ENTRY_19': ('LAB_CAP_STACK',),
+}
+
 _VERSION_RE = re.compile(r'^\s*#property\s+version\s+"([^"]*)"\s*$', re.M)
 
 
@@ -169,6 +179,7 @@ def enabled_tokens(build_tag, config, surface=None):
 
     suppressed = _BUILD_TOKEN_SUPPRESS.get(build_tag, ())
     tokens = {entry_token(build_tag)}
+    tokens.update(_BUILD_TOKEN_FORCE.get(build_tag, ()))
     for token, (_module, selector, test) in CAPABILITY.items():
         if token in suppressed:
             continue

@@ -65,6 +65,7 @@ ENTRY_MODULE = {
     'LAB_ENTRY_16': 'Entry_KangarooRSI',
     'LAB_ENTRY_17': 'Entry_Wave5',
     'LAB_ENTRY_18': 'Entry_JumStoch',
+    'LAB_ENTRY_19': 'Entry_AdaptiveTrendGrid',
 }
 
 # The selector inputs each field is computed from, in the order they enter that field's value.
@@ -92,6 +93,14 @@ _BUILD_OWNER_OVERRIDE = {
     'LAB_ENTRY_16': {
         'exit_owner':  'Kangaroo',
         'stack_owner': 'Kangaroo',
+    },
+    # Boss19 returns from AdaptiveTrendGrid_OnTick before the generic Exit/Stack pipeline,
+    # and its entry module computes the level-by-level lot law itself. Shared modules remain
+    # available for hard cages/helpers, but they are not the strategy owners.
+    'LAB_ENTRY_19': {
+        'exit_owner':  'AdaptiveTrendGrid',
+        'stack_owner': 'AdaptiveTrendGrid',
+        'lot_owner':   'AdaptiveTrendGrid',
     },
 }
 
