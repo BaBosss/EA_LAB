@@ -34,7 +34,12 @@ if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..'
 
 $py = Join-Path $RepoRoot 'tools\python312\python.exe'
 $suite = Join-Path $RepoRoot '_triage\factory_os\run_param_surface_tests.py'
+$registryCheck = Join-Path $RepoRoot 'scripts\param_registry_check.ps1'
 
+if (-not (Test-Path -LiteralPath $registryCheck)) {
+    Write-Host "[param-surface] FAIL: registry checker not found at $registryCheck" -ForegroundColor Red
+    exit 2
+}
 if (-not (Test-Path -LiteralPath $py)) {
     Write-Host "[param-surface] FAIL: interpreter not found at $py" -ForegroundColor Red
     exit 2
@@ -43,6 +48,19 @@ if (-not (Test-Path -LiteralPath $suite)) {
     # A MISSING SUITE IS A TOOL FAILURE, NOT A PASS. Exit 2, not 0.
     Write-Host "[param-surface] FAIL: suite not found at $suite" -ForegroundColor Red
     exit 2
+}
+
+Push-Location $RepoRoot
+try {
+    $registryOut = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $registryCheck 2>&1
+    $registryCode = $LASTEXITCODE
+} finally {
+    Pop-Location
+}
+$registryOut | ForEach-Object { Write-Host $_ }
+if ($registryCode -ne 0) {
+    Write-Host "[param-surface] PARAM_REGISTRY completeness/citation check FAILED (exit $registryCode)" -ForegroundColor Red
+    exit 1
 }
 
 $out = & $py $suite 2>&1

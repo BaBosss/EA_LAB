@@ -875,7 +875,8 @@ $SUITE_GUARDS = @{
                                           'ea_template/Boss_14_GridLog.mq5',
                                           'factory/hypotheses.jsonl',
                                           'factory/parameter_bindings.jsonl',
-                                          'scripts/param_registry_check.ps1')
+                                          'scripts/param_registry_check.ps1',
+                                          'docs/PARAM_REGISTRY.csv')
     'run_registry_tests.ps1'          = @(
                                           # ORDER-702: DERIVED by the import sweep in
                                           # run_guard_trigger_tests PART 4b, not remembered.
