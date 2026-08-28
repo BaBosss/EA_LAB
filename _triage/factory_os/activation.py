@@ -403,7 +403,7 @@ _B17 = _with_build_entry_rows({
     '_17_FractalDepth':    ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
     '_17_Wave3MinMult':    ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
     '_17_EntryFib':        ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
-    '_17_SLbufferATR':     ('LAB_CAP_ENTRY_WAVE5', EQ('_17_UseStructLevels', 'true')),
+    '_17_SLbufferATR':     ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
     '_17_UseStructLevels': ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
     '_17_DivergTrail':     ('LAB_CAP_EXIT', EQ('ExitMode', 'EXIT_TRAIL')),
     '_17_MaxSwings':       ('LAB_CAP_ENTRY_WAVE5', ALWAYS),

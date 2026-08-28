@@ -371,8 +371,10 @@ def b17_b18_gate_specificity(mod):
     b17_default = mod.classify('LAB_ENTRY_17', base_config(S17), surface=S17)
     b17_no_struct = mod.classify('LAB_ENTRY_17',
                                  base_config(S17, _17_UseStructLevels='false'), surface=S17)
-    if not b17_default['_17_SLbufferATR'].active or b17_no_struct['_17_SLbufferATR'].active:
-        return '_17_SLbufferATR did not follow _17_UseStructLevels true/false'
+    # Entry_Wave5.mqh consumes SLbufferATR in its risk-ATR and Wave5_SLValid veto paths
+    # independently of UseStructLevels, so the dial must remain reachable in both states.
+    if not b17_default['_17_SLbufferATR'].active or not b17_no_struct['_17_SLbufferATR'].active:
+        return '_17_SLbufferATR was not reachable with UseStructLevels true and false'
     b17_trail = mod.classify('LAB_ENTRY_17',
                              base_config(S17, ExitMode='EXIT_TRAIL', _17_DivergTrail='true'),
                              surface=S17)
