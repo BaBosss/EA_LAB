@@ -78,7 +78,8 @@ def logical_surface(read, build_tag):
     raw = preset.parse_surface(read(preset.INPUTS_REL), build_tag)
     rows = registry.parse_parameter_registry_text(
         read(preset.PARAM_REGISTRY_REL), preset.PARAM_REGISTRY_REL)
-    names = {registry.bare_registry_name(row['name']) for row in rows}
+    names = {registry.bare_registry_name(row['name']) for row in rows
+             if row.get('classification', '').strip().upper() != 'COMPATIBILITY'}
     surface = preset.Surface(build_tag, [decl for decl in raw.inputs if decl.name in names],
                              raw.known_tags)
     surface.enums = raw.enums

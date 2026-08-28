@@ -42,11 +42,13 @@ def _bare(name):
 
 
 def _rows(root):
-    text = io.open(os.path.join(root, PARAM_REL.replace('/', os.sep)),
-                   encoding='utf-8-sig').read()
-    lines = [line for line in text.splitlines(True)
-             if line.strip() and not line.startswith('>')]
-    return list(csv.DictReader(lines))
+    return registry.read_parameter_registry(root=root)
+
+
+def _logical_rows(root):
+    """The human metadata projection deliberately omits physical-only identities."""
+    return [row for row in _rows(root)
+            if row.get('classification', '').strip().upper() != 'COMPATIBILITY']
 
 
 def _portability(unit, context):
@@ -104,7 +106,7 @@ def _targets(row, names):
 
 def load_parameter_metadata(root=None):
     root = _root(root)
-    raw = _rows(root)
+    raw = _logical_rows(root)
     names = _known_names(raw)
     out = OrderedDict()
     for row in raw:

@@ -43,6 +43,17 @@ def main():
 
     rows = A6.load_parameter_metadata(ROOT)
     row_values = list(rows.values())
+    physical_rows = registry.read_parameter_registry(root=ROOT)
+    compatibility_rows = [row for row in physical_rows
+                          if row['classification'].strip().upper() == 'COMPATIBILITY']
+    failures += not check('A6 physical registry includes 12 compatibility identities',
+                          len(physical_rows) == 222 and
+                          len({registry.bare_registry_name(row['name'])
+                               for row in physical_rows}) == 208 and
+                          len(compatibility_rows) == 12 and
+                          {row['parameter_pid'] for row in compatibility_rows} ==
+                          set(range(73000, 73012)),
+                          (len(physical_rows), len(compatibility_rows)))
     failures += not check('A6 196 logical parameters have PID metadata',
                           len(row_values) == 196 and
                           len({r['parameter_pid'] for r in row_values}) == 196,

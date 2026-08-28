@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 184.
+Rows in source registry: 222.
 
 ## Override pairs
 
@@ -22,19 +22,40 @@ phrasing. **SILENT** means the losing input's own row carries no note warning th
 reader that it can be overridden - the reader would only discover this by reading the
 *winner's* row. See `_triage/PARAM_INACTIVE_AUDIT.md` for why each silent case matters.
 
-- **`_17_UseStructLevels`** beats **`ExitMode`** **[SILENT]** -- supersedes SLMode and ExitMode's per-order SL/TP output for build 17 when true and a valid structural SL exists
+- **`_17_UseStructLevels`** beats **`ExitMode`** -- OVERRIDDEN on build 17 by _17_UseStructLevels=true (per-order TP taken from the wave-1/wave-3 structural level instead, when ExitMode is not TRAIL/RUN_TREND); also OVERRIDDEN on any build by _2_SuppressLegTP=true (blanks every leg's TP to 0.0 before ExitMode's switch is even reached)
 - **`_17_UseStructLevels`** beats **`SLMode`** -- overridden per-order by _17_UseStructLevels on build17 when a valid structural SL is published
-- **`_2_BasketTP_ATRmult`** beats **`_2_BasketTP_Money`** **[SILENT]** -- supersedes _2_BasketTP_Money whenever this is set >0 (Exit_BasketTargetMoney checks this first)
-- **`_2_BasketTP_BalPct`** beats **`_2_BasketTP_ATRmult`** **[SILENT]** -- _2_BasketTP_ATRmult and _2_BasketTP_Money(both OVERRIDDEN when this is >0)
-- **`_2_BasketTP_BalPct`** beats **`_2_BasketTP_Money`** **[SILENT]** -- _2_BasketTP_ATRmult and _2_BasketTP_Money(both OVERRIDDEN when this is >0)
-- **`_2_SuppressLegTP`** beats **`ExitMode`** **[SILENT]** -- when true, supersedes/blanks whatever ExitMode(21/22) would have set as the per-leg broker TP
-- **`_32_SL_BalPct`** beats **`_32_SL_Money`** **[SILENT]** -- _32_SL_Money(OVERRIDDEN when this is >0)
+- **`_2_BasketTP_ATRmult`** beats **`_2_BasketTP_BalPct`** **[SILENT]** -- supersedes _2_BasketTP_Money whenever this is set >0 (Exit_BasketTargetMoney checks this first); but this input is itself OVERRIDDEN by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct before this)
+- **`_2_BasketTP_ATRmult`** beats **`_2_BasketTP_Money`** -- OVERRIDDEN by _2_BasketTP_ATRmult when that is >0, and by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct first, then ATRmult, falling through to this only when both are 0)
+- **`_2_BasketTP_BalPct`** beats **`_2_BasketTP_ATRmult`** -- supersedes _2_BasketTP_Money whenever this is set >0 (Exit_BasketTargetMoney checks this first); but this input is itself OVERRIDDEN by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct before this)
+- **`_2_BasketTP_BalPct`** beats **`_2_BasketTP_Money`** -- OVERRIDDEN by _2_BasketTP_ATRmult when that is >0, and by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct first, then ATRmult, falling through to this only when both are 0)
+- **`_2_BasketTP_Money`** beats **`_2_BasketTP_ATRmult`** -- supersedes _2_BasketTP_Money whenever this is set >0 (Exit_BasketTargetMoney checks this first); but this input is itself OVERRIDDEN by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct before this)
+- **`_2_SuppressLegTP`** beats **`ExitMode`** -- OVERRIDDEN on build 17 by _17_UseStructLevels=true (per-order TP taken from the wave-1/wave-3 structural level instead, when ExitMode is not TRAIL/RUN_TREND); also OVERRIDDEN on any build by _2_SuppressLegTP=true (blanks every leg's TP to 0.0 before ExitMode's switch is even reached)
+- **`_32_SL_BalPct`** beats **`_32_SL_Money`** -- the SL_MONEY(32) enum value on SLMode does not itself read this input - it is genuinely a separate, always-live check; OVERRIDDEN by _32_SL_BalPct when that is >0 (Exit_BasketStopMoney checks BalPct first)
 - **`_33_SL_MaxATRmult`** beats **`_33_SL_MaxPips`** -- superseded by _33_SL_MaxATRmult whenever that is set >0
-- **`_57_DynCloseBalPct`** beats **`_57_DynCloseBase`** **[SILENT]** -- _57_DynCloseBase(OVERRIDDEN when this is >0)
-- **`_8_DDRefBalPct`** beats **`_8_DDRefMoney`** **[SILENT]** -- _8_DDRefMoney(OVERRIDDEN when this is >0)
-- **`RC_MaxLevelsOverride`** beats **`ProtectLevel`** **[SILENT]** -- implicitly gates the default effective values of KillDD/DepositLoad/MaxRecSteps unless RC_MaxLevelsOverride overrides the steps component
+- **`_57_DynCloseBalPct`** beats **`_57_DynCloseBase`** -- OVERRIDDEN by _57_DynCloseBalPct when that is >0 (Exit_DynCloseTargetMoney resolves BalPct first, falling through to this only when it is 0)
+- **`_8_DDRefBalPct`** beats **`_8_DDRefMoney`** -- feeds the RecoveryMode=82 ENGINE-EDGE escalation formula directly; OVERRIDDEN by _8_DDRefBalPct when that is >0 (same resolver checks BalPct first)
+- **`RC_MaxLevelsOverride`** beats **`ProtectLevel`** -- the step-count component (RC_MaxRecSteps) is OVERRIDDEN by RC_MaxLevelsOverride when that is >0 (RiskControl_MaxLevels checks it first); KillDD and DepositLoad are never affected by RC_MaxLevelsOverride
+- **`RecoveryMode`** beats **`_8_DDRefMoney`** -- feeds the RecoveryMode=82 ENGINE-EDGE escalation formula directly; OVERRIDDEN by _8_DDRefBalPct when that is >0 (same resolver checks BalPct first)
+- **`SLMode`** beats **`_32_SL_Money`** -- the SL_MONEY(32) enum value on SLMode does not itself read this input - it is genuinely a separate, always-live check; OVERRIDDEN by _32_SL_BalPct when that is >0 (Exit_BasketStopMoney checks BalPct first)
 
 ## Parameters by context
+
+### compatibility / physical surface
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_5A_BreakLookbackBars` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5A_ChochRecentBars` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5A_HighScore` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5A_MaxSwings` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5A_MinScore` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5A_PivotDepth` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5A_SweepMinATR` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5A_SwingLookback` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5A_UseSMCVeto` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5B_ExtendMinRR` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5B_LockStepR` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
+| `_5B_MaxChain` | NEVER | UNKNOWN | Retained physical/serialized compatibility input has no current behavioral effect. |
 
 ### entry
 
@@ -85,6 +106,19 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_71_ATRMA` | builds 11/12/13 only, AND TrendFilter==TFILTER_ATR_EXPAND(71) | _71_ATRRatio | Smoothing period for the ATR moving average the expansion filter compares against. |
 | `_71_ATRRatio` | builds 11/12/13 only, AND TrendFilter==71 | _71_ATRMA | Minimum ratio of current ATR to its moving average required to consider volatility 'expanding'. |
 | `_72_SlopeBar` | builds 11/12/13 only, AND TrendFilter==TFILTER_MA_SLOPE(72) | _0_FastMA | Bars back the fast-MA slope is measured over. |
+| `_MID_ClusterATRmult` | _MID_LineSource=MID_LINES_PIVOT AND UseMiddlePathVeto=true | _MID_PivotDepth; _MID_MaxLines | ATR tolerance used to cluster nearby pivot touches into one line. |
+| `_MID_DonchianBars` | _MID_LineSource=MID_LINES_DONCHIAN AND UseMiddlePathVeto=true | _MID_LineSource; UseMiddlePathVeto | Lookback bars for the Donchian structural-line source. |
+| `_MID_LineLookbackBars` | _MID_LineSource=MID_LINES_PIVOT AND UseMiddlePathVeto=true | _MID_PivotDepth; _MID_MaxLines | Pivot scan window for structural-line construction. |
+| `_MID_LineSource` | UseMiddlePathVeto=true | UseMiddlePathVeto; _MID_DonchianBars; _MID_PivotDepth | Selects the structural line source used by the middle-path entry gate. |
+| `_MID_MaxLines` | _MID_LineSource=MID_LINES_PIVOT AND UseMiddlePathVeto=true | _MID_LineLookbackBars; _MID_PivotDepth | Maximum clustered pivot lines retained by the middle-path gate. |
+| `_MID_MinRR` | _MID_UseRoomCheck=true AND UseMiddlePathVeto=true | _MID_UseRoomCheck | Minimum room-to-SL-distance ratio required by the optional room check. |
+| `_MID_PivotDepth` | _MID_LineSource=MID_LINES_PIVOT AND UseMiddlePathVeto=true | _MID_LineLookbackBars; _MID_MaxLines | Bars on each side required to recognize a pivot structural line. |
+| `_MID_UseRoomCheck` | UseMiddlePathVeto=true | _MID_MinRR; UseMiddlePathVeto | Opt-in room-to-boundary check using the initial SL distance. |
+| `MID_HIGH` | UseMiddlePathVeto=true | MID_LOW; UseMiddlePathVeto | Upper position-ratio boundary for the middle-path veto zone. |
+| `MID_LOW` | UseMiddlePathVeto=true | MID_HIGH; UseMiddlePathVeto | Lower position-ratio boundary for the middle-path veto zone. |
+| `MIN_CHANNEL_ATR` | UseMiddlePathVeto=true | UseMiddlePathVeto | Minimum channel width in ATR units required for a structural middle-path decision. |
+| `MIN_LINE_WEIGHT` | UseMiddlePathVeto=true | _MID_LineSource | Minimum structural-line weight accepted by the middle-path gate. |
+| `UseMiddlePathVeto` | LabCore calls MiddlePath_AllowEntry; false is off by default | _MID_LineSource; MID_LOW; MID_HIGH | Master switch for rejecting entries in the middle of a structural channel. |
 
 ### entry filter (regime)
 
@@ -96,6 +130,7 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_50_AllowTrendDown` | _50_RegimeMode==1 only | _50_RegimeMode | In filter mode, whether a TREND_DOWN regime is allowed to take a new first-entry. |
 | `_50_AllowTrendUp` | _50_RegimeMode==1 only (mode 2 ignores this) | _50_RegimeMode | In filter mode, whether a TREND_UP regime is allowed to take a new first-entry. |
 | `_50_Regime_TF` | _50_RegimeMode != 0 | _50_ADX_Period | Timeframe the ADX/ATR regime classification runs on (cached per bar on this TF). |
+| `_50_RegimeConfirmBars` | _50_RegimeMode != 0 | _50_ADX_TrendMin_Exit; _50_ADX_TrendMin | Number of bars a candidate regime must persist before stable classification commits it. |
 | `_50_RegimeMode` | always checked (0 = off, fully inert) | _50_AllowTrendUp/Down/Range(mode1 only); everything else in this section | 0=off, 1=filter mode (block disallowed states from taking any new first-entry), 2=direction mode (force entry direction to match the regime, block range entirely). |
 | `_50_StormATRmult` | _50_RegimeMode != 0, AND this value >0 (0 disables the storm overlay) | _50_StormLookback | ATR spike multiple (vs its own lookback SMA) that classifies the bar as STORM (blocks all new entries), overriding the trend/range read for that bar. |
 | `_50_StormLookback` | _50_RegimeMode != 0, AND _50_StormATRmult >0 | _50_StormATRmult | Lookback window for the ATR SMA the storm spike is measured against. |
@@ -125,6 +160,15 @@ reader that it can be overridden - the reader would only discover this by readin
 | parameter | active when | coupled with | what it does |
 |---|---|---|---|
 | `_0_ATR_Period` | handle always built; functionally consumed wherever Indi_ATR()/Indi_ATR_Points() is read: Stack_StepPrice, Entry_GridLog's arm distance, Kangaroo's grid step, the TrendFilter=71 ATR-expand check | _0_ATR_TF | Period for the 'Signal-ATR' context (entry/stack timing), distinct from the separate Risk-ATR context used for SL/TP/sizing. |
+
+### event context
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_EVT_BucketATRmult` | no current runtime Event Bus caller | _EVT_BucketSeconds; Event_MakeID | ATR bucket multiplier used if the Event Bus ID path is wired. |
+| `_EVT_BucketSeconds` | no current runtime Event Bus caller | _EVT_BucketATRmult; Event_MakeID | Time bucket used if the Event Bus ID path is wired. |
+| `_EVT_PreemptMargin` | no current runtime Event Bus caller | Event_TryClaim | Score margin required for an Event Bus claimant to preempt an incumbent. |
+| `_EVT_RevengeBlockBars` | never - outcome ledger is not implemented | Event_IsChildBlocked | Compatibility value reserved for a future parent-loss outcome ledger. |
 
 ### execution
 
@@ -205,6 +249,12 @@ reader that it can be overridden - the reader would only discover this by readin
 | `ExitMode` | always - selects the exit sub-mode for every build | _21_TP_Pip(21); _22_TP_ATRmult(22); _23_TrailStart+_23_TrailStep(23, and Wave5_TightenTrail on build17); _0_FastMA/_0_SlowMA(24, RunTrend uses shared trend MA) | Selects which mechanism decides when to close a leg/basket: fixed pip(points) TP, ATR-multiple TP, trailing stop, or MA-cross run-trend close. |
 | `SLMode` | always, EXCEPT build17 which overrides the whole switch when _17_UseStructLevels+g_wave5_sl_price are set (guard G2) | _31_SL_Pip(31); _33_SL_ATRmult+_33_SL_MaxPips+_33_SL_MaxATRmult+_33_AdaptiveON+_33_AdaptiveN(33); _34_DonchianBars(34); _35_SRBars(35); _36_SD_Mult+_36_SD_Period(36); note SLMode=32(SL_MONEY) falls into the switch's default branch and returns 0 - it produces NO per-order price SL by itself, the basket-level stop actually comes from _32_SL_Money independently of this enum | Selects the per-order stop-loss calculation: none, fixed pip(points), basket-money(no-op here), ATR-multiple(+adaptive), Donchian break, swing S/R break, or StdDev band. |
 
+### exit filter (regime)
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_50_ADX_TrendMin_Exit` | _50_RegimeMode != 0 | _50_ADX_TrendMin | Minimum ADX threshold used by the hysteresis exit-side regime classifier. |
+
 ### exit/mm
 
 | parameter | active when | coupled with | what it does |
@@ -260,6 +310,18 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_56_FibMaxStep` | LotProg==PROG_FIBONACCI(56) | LotProg | Caps the Fibonacci lot-progression multiplier at the value reached by this step index, so growth stops instead of continuing unbounded. |
 | `FirstLotMode` | always - decides first-order sizing. Build 16 EXCEPTED: Kangaroo owns its lot law (_16_BaseLot) and LabCore short-circuits before MM_FirstLot, so every mode is inert there (MM_ConfigValid prints an INIT WARN) | _41_FixedLot(41); _42_RiskPct + SLMode(42 - SLMode must yield a distance; the combination is validated at OnInit, not at order time); _43_LotPerAnchor + _43_BalanceAnchor(43); _4_DdAdaptiveOn+tiers(multiplies the result of ALL three modes); RC_MaxLot(final clamp) | Switches level-0 lot sizing between a fixed lot, risk%-of-balance sized off the SL distance, and balance-anchored linear scaling. Since MM-SAFETY-001 (2026-07-24) an unusable config FAILS the attach (INIT_FAILED) and a runtime data failure SKIPS the order - it no longer degrades to _41_FixedLot silently. |
 | `LotProg` | have>0 (stacked/added orders only - level-0 lot is untouched by this) | _51_ProgFactor(51,54); _52_ProgMult(52, clamped by RC_RecMultMax); _53_PlusLot(53); _55_LogPowerFactor+_55_UseLnNotLog10(55); _56_FibMaxStep(56) | Chooses how lot size grows across stacked orders: flat, linear, multiplier(martingale, cage-clamped), additive-plus, log, log-power, or capped Fibonacci. |
+
+### portfolio safety gate
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_HEAT_ClusterCorr` | _HEAT_Enable=true AND same static cluster | _HEAT_DefaultCorr; _HEAT_UseDynamicCorr | Static correlation floor applied to symbols in the same heat cluster. |
+| `_HEAT_CorrWindowBars` | _HEAT_Enable=true AND _HEAT_UseDynamicCorr=true | _HEAT_UseDynamicCorr | Lookback window for rolling M15 log-return correlation. |
+| `_HEAT_DefaultCorr` | _HEAT_Enable=true AND different static cluster | _HEAT_ClusterCorr; _HEAT_UseDynamicCorr | Static correlation floor applied to symbols in different heat clusters. |
+| `_HEAT_Enable` | Lab_OpenOrder calls Basket_HeatCheckPass; false is fail-open default | _HEAT_MaxClusterLots; _HEAT_MaxPortfolioLots | Master switch for the portfolio heat gate; false leaves the existing entry path unchanged. |
+| `_HEAT_MaxClusterLots` | _HEAT_Enable=true | _HEAT_Enable; _HEAT_ClusterCorr | Maximum correlation-cluster lot heat allowed for a new order. |
+| `_HEAT_MaxPortfolioLots` | _HEAT_Enable=true | _HEAT_Enable; _HEAT_DefaultCorr | Maximum correlation-weighted portfolio lot heat allowed for a new order. |
+| `_HEAT_UseDynamicCorr` | _HEAT_Enable=true | _HEAT_CorrWindowBars; _HEAT_ClusterCorr; _HEAT_DefaultCorr | Opt-in switch for using rolling correlation while retaining the static floor. |
 
 ### recovery
 
@@ -322,6 +384,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 184 (must equal the source registry's 184 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 222 (must equal the source registry's 222 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
-Override pairs found: 11.
+Override pairs found: 15.

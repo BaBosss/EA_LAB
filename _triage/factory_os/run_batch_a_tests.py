@@ -46,6 +46,18 @@ EXPECTED_NEW = {
     72010: '_MID_ClusterATRmult',
     72011: '_MID_UseRoomCheck',
     72012: '_MID_MinRR',
+    73000: '_5A_UseSMCVeto',
+    73001: '_5A_PivotDepth',
+    73002: '_5A_SwingLookback',
+    73003: '_5A_MaxSwings',
+    73004: '_5A_BreakLookbackBars',
+    73005: '_5A_ChochRecentBars',
+    73006: '_5A_SweepMinATR',
+    73007: '_5A_MinScore',
+    73008: '_5A_HighScore',
+    73009: '_5B_ExtendMinRR',
+    73010: '_5B_LockStepR',
+    73011: '_5B_MaxChain',
 }
 
 SMC_KEYS = {
@@ -136,10 +148,19 @@ def write_root(rows, bindings):
 def main():
     rows = reg.read_parameter_registry(root=ROOT)
     by_name = {row['name']: row for row in rows}
-    logical = {reg.bare_registry_name(row['name']) for row in rows}
+    physical = {reg.bare_registry_name(row['name']) for row in rows}
+    logical = {reg.bare_registry_name(row['name']) for row in rows
+               if row['classification'].strip().upper() != 'COMPATIBILITY'}
     pids = {row['parameter_pid'] for row in rows}
+    compatibility = [row for row in rows
+                     if row['classification'].strip().upper() == 'COMPATIBILITY']
     check('A1 logical registry coverage is 196/196', len(logical) == 196, len(logical))
-    check('A1 PID coverage is unique 196/196', len(pids) == 196, len(pids))
+    check('A1 physical registry coverage is 208/208', len(physical) == 208, len(physical))
+    check('A1 PID coverage is unique 208/208', len(pids) == 208, len(pids))
+    check('A1 exact 12 compatibility identities are dead/non-optimizable',
+          len(compatibility) == 12 and
+          {row['parameter_pid'] for row in compatibility} == set(range(73000, 73012)) and
+          all(row['active_when'] == 'NEVER' for row in compatibility))
     check('A1 exact 26 R4 allocations are present',
           {row['parameter_pid']: reg.bare_registry_name(row['name']) for row in rows}
           .items() >= EXPECTED_NEW.items())
@@ -200,8 +221,12 @@ def main():
     rows = [['Alpha', 'owner', 'unit', 'context', 'always', 'none', '1', 'UNKNOWN',
              'UNKNOWN', 'question', 'ACTIVE', '', '10123'],
             ['Retired', 'owner', 'unit', 'context', 'never', 'none', '0', 'UNKNOWN',
-             'UNKNOWN', 'retired', 'INACTIVE', 'retired identity', '10124']]
-    root = write_root(rows, [binding('Alpha', 10123), binding('Retired', 10124)])
+             'UNKNOWN', 'retired', 'INACTIVE', 'retired identity', '10124'],
+            ['Compatibility', 'owner', 'unit', 'context', 'NEVER', 'UNKNOWN', 'physical',
+             'UNKNOWN', 'UNKNOWN', 'physical compatibility identity', 'COMPATIBILITY',
+             'PHYSICAL_SURFACE_ONLY', '73000']]
+    root = write_root(rows, [binding('Alpha', 10123), binding('Retired', 10124),
+                             binding('Compatibility', 73000)])
     try:
         check('A3 PID-only resolves exact binding',
               reg.resolve('B14-H01-r1', parameter_pid=10123, root=root)['parameter'] == 'Alpha')
@@ -217,6 +242,9 @@ def main():
             'B14-H01-r1', parameter='Missing', root=root))
         retired = reg.resolve('B14-H01-r1', parameter='Retired', root=root)
         check('A3 inactive identity never resolves optimizable', retired['optimizable'] is False)
+        compatibility = reg.resolve('B14-H01-r1', parameter='Compatibility', root=root)
+        check('A3 compatibility identity never resolves optimizable',
+              compatibility['optimizable'] is False)
         duplicate = write_root(rows, [binding('Alpha', 10123), binding('Retired', 10123)])
         try:
             refuses('A3 duplicate PID refuses', lambda: reg.resolve(

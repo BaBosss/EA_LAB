@@ -24,7 +24,9 @@
     "40000-49999": "Sizing/money-management",
     "50000-59999": "Progression/stack/add/pending",
     "60000-69999": "Recovery/hedge",
-    "70000-79999": "Reserved for future cross-strategy intelligence/context",
+    "70000-72999": "Cross-strategy intelligence/context",
+    "73000-73999": "Non-behavioral compatibility / physical-surface identities only, active_when=NEVER and excluded from optimization/effective Factory semantics",
+    "74000-79999": "Reserved future cross-strategy intelligence/context",
     "80000-89999": "Safety/risk cage",
     "90000-99999": "Execution/runtime/operations"
   },
@@ -1783,6 +1785,114 @@
       "scope": "SHARED",
       "status": "PROVISIONAL_R4_KNOWN_FROM_AUDIT",
       "note": "Named by independent R3 audit from current dirty workspace."
+    },
+    {
+      "pid": 73000,
+      "internal_key": "_5A_UseSMCVeto",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73001,
+      "internal_key": "_5A_PivotDepth",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73002,
+      "internal_key": "_5A_SwingLookback",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73003,
+      "internal_key": "_5A_MaxSwings",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73004,
+      "internal_key": "_5A_BreakLookbackBars",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73005,
+      "internal_key": "_5A_ChochRecentBars",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73006,
+      "internal_key": "_5A_SweepMinATR",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73007,
+      "internal_key": "_5A_MinScore",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73008,
+      "internal_key": "_5A_HighScore",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73009,
+      "internal_key": "_5B_ExtendMinRR",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73010,
+      "internal_key": "_5B_LockStepR",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
+    },
+    {
+      "pid": 73011,
+      "internal_key": "_5B_MaxChain",
+      "semantic_rev": 1,
+      "family": "PHYSICAL_SURFACE_COMPATIBILITY",
+      "scope": "SHARED",
+      "status": "R0_PID2_FINAL_COMPATIBILITY_IDENTITY",
+      "note": "Physical-surface compatibility identity only; active_when=NEVER and excluded from optimization/effective Factory semantics."
     },
     {
       "pid": 80000,
