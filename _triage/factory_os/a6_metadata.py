@@ -295,11 +295,15 @@ def _render_registry(root, metadata):
                             lineterminator='\n')
     writer.writeheader()
     for row in rows:
-        item = metadata[_bare(row['name'])]
-        row.update({
-            'unit_true': item['unit_true'], 'portability': item['portability'],
-            'display_label': item['display_label'], 'relation_hint': item['relation_hint'],
-        })
+        key = _bare(row['name'])
+        item = metadata.get(key)
+        if item is not None:
+            row.update({
+                'unit_true': item['unit_true'], 'portability': item['portability'],
+                'display_label': item['display_label'], 'relation_hint': item['relation_hint'],
+            })
+        elif row.get('classification', '').strip().upper() != 'COMPATIBILITY':
+            raise KeyError(key)
         writer.writerow(row)
     out.extend(buf.getvalue().splitlines())
     return '\n'.join(out) + '\n'

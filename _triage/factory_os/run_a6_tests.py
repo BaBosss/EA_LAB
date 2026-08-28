@@ -54,6 +54,18 @@ def main():
                           {row['parameter_pid'] for row in compatibility_rows} ==
                           set(range(73000, 73012)),
                           (len(physical_rows), len(compatibility_rows)))
+    rendered_registry = registry.parse_parameter_registry_text(
+        A6._render_registry(ROOT, rows), 'A6 rendered registry')
+    original_compatibility = dict((row['name'], dict((k, v) for k, v in row.items()
+                                                     if k != '_line'))
+                                  for row in compatibility_rows)
+    rendered_compatibility = dict((row['name'], dict((k, v) for k, v in row.items()
+                                                     if k != '_line'))
+                                  for row in rendered_registry
+                                  if row['classification'].strip().upper() == 'COMPATIBILITY')
+    failures += not check('A6 registry renderer preserves physical-only compatibility rows',
+                          len(rendered_registry) == 222 and
+                          rendered_compatibility == original_compatibility)
     failures += not check('A6 196 logical parameters have PID metadata',
                           len(row_values) == 196 and
                           len({r['parameter_pid'] for r in row_values}) == 196,
