@@ -57,6 +57,7 @@ The `0` above is a dated accepted evidence point, not a live counter. Current te
 - Boss14 H01 first full-green Factory sidecar: **ACCEPTED / CANONICAL** at `376289d4cdf8b8f37e711a59307402c8343eb1e7`; reference package `VPKG-84cdbe53dc67d26ad078b385` has 142 bindings, 31 ParameterProjection rows, 116 physical baseline keys, BaselineCoverage 116/116 (30 PROJECT + 86 PRESERVE_SNAPSHOT), zero MT5 compatibility refusals, and authority `NON_AUTHORITATIVE_SIDECAR`.
 - Boss14 downstream quarantine: `ParameterProjection - BaselineCoverage.projection_parameter` must be checked explicitly. For the accepted package the difference is exactly `P72000 / UseMiddlePathVeto`; it has no physical baseline key, `safe_range=null`, and `locked_value=null`, so it must not enter Range Generator / optimizer semantics until explicitly resolved.
 - Boss11-18: deterministic read-only preflight is the next Factory direct consumer. Do not rank/select/promote a candidate or invent missing registry/range semantics; only deterministic-green bosses may advance to bounded rollout lanes.
+- Boss19 AdaptiveTrendGrid: **ACCEPTED / CANONICAL as PRE-BASELINE source + evidence only**. Probe_19_AdaptiveTrendGrid uses the explicit ATR30 x 0.30 STOP/LIMIT hypotheses; bounded smoke and negative tests are accepted infrastructure/triage evidence, not an optimization verdict or candidate promotion. Next direct consumer is bounded local validation/robustness; deployment/LIVE/DEMO attach and consequential strategy/risk semantic changes remain outside this milestone.
 - Final numeric Grade/Confidence thresholds remain provisional/unratified; sidecar verdict/build-potential outputs remain non-authoritative.
 ### 1.3 Accepted control-plane capabilities
 
@@ -248,6 +249,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 - Genuine ORDER-353 first trade -> record accepted `first_trade_epoch` through the canonical evidence/state path and derive the judge clock from the accepted rule.
 - Reproducible monitoring regression -> open a bounded repair with a direct consumer; do not manufacture monitoring work from historical warnings.
 - Boss11-18 deterministic preflight green result -> dispatch bounded construction/implementation lanes only for READY bosses, reusing the accepted Boss14 path without inventing missing semantics; broader production migration remains separate and non-authoritative.
+- Boss19 PRE-BASELINE source milestone -> run bounded local validation/robustness against the locked V0 semantics; do not infer candidate promotion from the current smoke metrics, and stop before any consequential strategy/risk semantic change.
 - New strategy/risk/default/deployment semantics -> stop at the applicable owner hard stop before mutation.
 - Canonical origin movement while an isolated lane is in progress -> re-anchor in isolation; rerun impacted acceptance before integration.
 
