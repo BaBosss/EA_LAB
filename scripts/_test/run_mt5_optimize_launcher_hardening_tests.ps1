@@ -133,9 +133,10 @@ try {
 Write-Host '=== fixture construction: guard-present and guard-missing checkouts, real repo never touched ==='
 $guardYes = New-Fixture 'guard_yes' $true
 $guardNo  = New-Fixture 'guard_no'  $false
+$guardPass = New-Fixture 'guard_passthrough' $true
 Assert-True 'guard-present fixture has optimize_guard.ps1'    (Test-Path (Join-Path $guardYes 'scripts\optimize_guard.ps1'))
 Assert-True 'guard-missing fixture does NOT have optimize_guard.ps1' (-not (Test-Path (Join-Path $guardNo 'scripts\optimize_guard.ps1')))
-Assert-True 'fixtures are different directories' ($guardYes -ne $guardNo)
+Assert-True 'fixtures are different directories' ($guardYes -ne $guardNo -and $guardPass -ne $guardYes)
 
 # Shared synthetic MT5-side fixtures (never real MT5, never real terminal64.exe).
 $capabilityFile = Join-Path $work 'capability.json'
@@ -237,6 +238,28 @@ if (-not (Test-Path -LiteralPath $realHostname -PathType Leaf)) {
 }
 
 Write-Host ''
+Write-Host '=== J: optional ParameterBinding overlay is passed to the guard without changing default behavior ==='
+$guardCapture = @'
+param([string]$IniPath,[switch]$WarnOnly,[string]$DecisionLog,[string]$Lane,
+      [string]$HypothesisRevision,[string]$BindingsRoot,[Nullable[int]]$Build)
+Write-Output ("GUARD_CAPTURE revision={0} bindings={1} build={2}" -f $HypothesisRevision,$BindingsRoot,$Build)
+exit 0
+'@
+Set-Content -LiteralPath (Join-Path $guardPass 'scripts\optimize_guard.ps1') -Encoding ASCII -Value $guardCapture
+$overlayMarker = Join-Path $work 'B19_BINDING_OVERLAY_MARKER'
+$reportJ = 'JTEST_' + [guid]::NewGuid().ToString('N').Substring(0,12)
+$r = Invoke-Child (@('-NoProfile','-File', (Join-Path $guardPass 'scripts\mt5_optimize.ps1')) + $commonArgs + @(
+    '-SetFile', $undeclaredSet, '-ReportName', $reportJ, '-Terminal', $realHostname, '-DataDir', $dataDir,
+    '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '1', '-XmlFlushGraceSec', '0',
+    '-HypothesisRevision', 'B19-H01-r1', '-BindingsRoot', $overlayMarker, '-GuardBuild', '19'))
+$jOutText = ($r.Output -join "`n")
+Assert-True 'J launcher passes HypothesisRevision to guard' ($jOutText -match 'revision=B19-H01-r1')
+Assert-True 'J launcher passes exact BindingsRoot to guard' ($jOutText -match [regex]::Escape("bindings=$overlayMarker"))
+Assert-True 'J launcher passes GuardBuild=19 to guard' ($jOutText -match 'build=19')
+Assert-True 'J pipeline proceeds after the captured guard verdict' ($jOutText -match 'OPTIMIZE:')
+Assert-Equal 'J synthetic terminal still closes NO-XML with exit 4' 4 $r.ExitCode
+
+Write-Host ''
 Write-Host '=== I: delayed post-exit XML flush is collected inside bounded grace, not misclassified NO-XML ==='
 $reportI = 'FLUSH_' + [guid]::NewGuid().ToString('N').Substring(0,12)
 $delayedSrc = Join-Path $dataDir ($reportI + '.xml')
@@ -274,6 +297,8 @@ Assert-True 'H source derives $auto from $repoRoot' ($srcText -match [regex]::Es
 Assert-True 'H source no longer prints the old "next: python select_robust_pass.py" instruction' ($srcText -notmatch [regex]::Escape('next: python select_robust_pass.py'))
 Assert-True 'H source no longer has an unconditional guard-missing skip-and-continue branch' ($srcText -notmatch [regex]::Escape('optimize_guard: scripts\optimize_guard.ps1 not found, skipping pre-flight check'))
 Assert-True 'H source exposes bounded post-exit XML flush grace' ($srcText -match [regex]::Escape('[ValidateRange(0,60)][int]$XmlFlushGraceSec = 15'))
+Assert-True 'H source exposes optional BindingsRoot without changing its empty default' ($srcText -match [regex]::Escape("[string]`$BindingsRoot = ''"))
+Assert-True 'H source passes non-empty BindingsRoot into the governed guard only' ($srcText -match [regex]::Escape("`$guardExtra['BindingsRoot'] = `$BindingsRoot"))
 Assert-True 'H source polls only the exact source XML during flush grace' ($srcText -match 'XML FLUSH GRACE' -and $srcText -match [regex]::Escape('Test-Path -LiteralPath $srcXml -PathType Leaf'))
 
 Write-Host ''

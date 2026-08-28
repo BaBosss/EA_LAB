@@ -52,6 +52,9 @@ param(
   # silently inactive on exactly the sweeps the Factory OS pilot exists to judge, and the decision
   # record's `binding` field was null on every real submission as a result.
   [string]$HypothesisRevision = '',
+  # Optional ParameterBinding overlay for an attributed validation run. optimize_guard treats
+  # this as an ADD-ONLY overlay (canonical bindings win), so it can never relax canonical policy.
+  [string]$BindingsRoot = '',
   [Nullable[int]]$GuardBuild = $null,
   [string]$LaneId = '',
   [string]$UniversePath = '',
@@ -215,6 +218,7 @@ $guardScript = Join-Path $PSScriptRoot "optimize_guard.ps1"
 $decisionLog = Join-Path $repoRoot "factory\optimize_decisions.jsonl"
 $guardExtra = @{ DecisionLog = $decisionLog; Lane = $Terminal }
 if ($HypothesisRevision -ne '') { $guardExtra['HypothesisRevision'] = $HypothesisRevision }
+if ($BindingsRoot -ne '')       { $guardExtra['BindingsRoot'] = $BindingsRoot }
 if ($null -ne $GuardBuild)      { $guardExtra['Build'] = $GuardBuild }
 # The guard's presence is required, not advisory: an optimize pass SELECTS the parameters
 # everything downstream is built on, so a missing guard must ABORT the launch, not silently
