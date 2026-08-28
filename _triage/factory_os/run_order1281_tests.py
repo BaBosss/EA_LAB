@@ -20,6 +20,10 @@ import evidence  # noqa: E402
 import registry  # noqa: E402
 import run_schema_fixtures as fixtures  # noqa: E402
 
+# Cardinality is an engagement assertion, not a schema limit. B17-H01 adds one
+# preregistration_ref plus 147 definition_ref pins to the accepted 286-ref tree.
+EXPECTED_LIVE_OWNERREFS = 434
+
 
 def fail(message):
     raise AssertionError(message)
@@ -37,7 +41,8 @@ def first_live_ref(source):
         _meta, rows = stores[rel]
         records.extend(('%s:%d' % (rel, line), row) for line, row in rows)
     count, problems = fixtures.check_live_owner_refs(records, source)
-    expect(count == 286, 'live OwnerRef count changed: got %d, want 286' % count)
+    expect(count == EXPECTED_LIVE_OWNERREFS,
+           'live OwnerRef count changed: got %d, want %d' % (count, EXPECTED_LIVE_OWNERREFS))
     expect(not problems, 'a live OwnerRef failed before adversarial mutation: %s' % problems)
     for where, row in records:
         refs = list(fixtures._owner_refs(row, where))
@@ -112,7 +117,8 @@ def main():
     expect(owner.get('x-enforcer') == '_triage/factory_os/run_schema_fixtures.py',
            'OwnerRef points at the wrong enforcer: %r' % owner.get('x-enforcer'))
     print('PASS canonical schema/commit path is wired')
-    print('ORDER-1281 PASS: 286 live OwnerRefs, positive and four adversarial refusals')
+    print('ORDER-1281 PASS: %d live OwnerRefs, positive and four adversarial refusals'
+          % EXPECTED_LIVE_OWNERREFS)
     return 0
 
 

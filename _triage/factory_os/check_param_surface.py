@@ -47,6 +47,7 @@ sys.path.insert(0, HERE)
 import evidence                                   # noqa: E402
 import gen_registry_rows as gen                   # noqa: E402
 import hypothesis_b14 as HB                       # noqa: E402
+import hypothesis_b17 as HB17                     # noqa: E402
 import preset                                     # noqa: E402
 import registry                                   # noqa: E402
 
@@ -92,6 +93,7 @@ def _rows_of(text, entity):
 _GENERATOR_MODULES = (
     '_triage/factory_os/gen_registry_rows.py',
     '_triage/factory_os/hypothesis_b14.py',
+    '_triage/factory_os/hypothesis_b17.py',
     '_triage/factory_os/activation.py',
     '_triage/factory_os/architecture.py',
     '_triage/factory_os/capability.py',
@@ -99,44 +101,28 @@ _GENERATOR_MODULES = (
 
 
 def _import_matches_source(src):
-    """-> a problem string when the IMPORTED decision table is not the one in the source file.
-
-    🔴 /scrutinize round 3, and this one nearly shipped a decision nobody made. A probe mutated
-    `hypothesis_b14.py`, restored it in a `finally`, and CPython kept serving the mutated
-    bytecode: a `.pyc` is reused when `(mtime, size)` match, the edit swapped `OPERATOR` for
-    `RESEARCH` (both 8 characters) and the restore landed in the same second -- so both matched
-    and the stale cache was considered valid. `gen_registry_rows.py --write` then baked
-    `_14_DistAtrMult: RESEARCH` into the canonical store.
-
-    P5 reported CLEAN throughout, and could not have done otherwise: it regenerates through the
-    SAME import, so both sides of its comparison carried the same stale code. That is the
-    "a guard that caches the value it watches" family (memory
-    `name-it-honestly-when-you-cannot-prove-it`) -- the only thing that caught it was comparing
-    the store against `HEAD` by hand.
-
-    So the table is re-executed from its own TEXT, in a throwaway namespace, and compared to what
-    python imported. It is deliberately a second reader of one fact -- normally the thing this
-    tree forbids -- because detecting that the import is NOT the source is exactly what a single
-    reader cannot do.
-    """
-    rel = '_triage/factory_os/hypothesis_b14.py'
-    try:
-        text = src.read_committed(rel)
-    except ToolFailure as exc:
-        return 'P5 could not read %s to check it against the import: %s' % (rel, exc)
-    ns = {'__name__': 'hypothesis_b14__source_check', '__file__': os.path.join(ROOT, rel)}
-    try:
-        exec(compile(text, rel, 'exec'), ns)                    # noqa: S102 -- our own module
-    except Exception as exc:                                    # noqa: BLE001
-        return 'P5 %s does not execute: %s: %s' % (rel, type(exc).__name__, str(exc)[:120])
-    for attr in ('HYPOTHESES', 'DECISIONS', 'DECISIONS_H02_EXTRA', 'LOCKED_SELECTORS'):
-        if ns.get(attr) != getattr(HB, attr):
-            return (
-                'P5 the %s python IMPORTED from %s is not the %s in the file. A stale __pycache__ '
-                'entry is served whenever (mtime, size) match, so a same-length edit restored '
-                'inside one second is invisible to CPython -- and P5 cannot see it either, because '
-                'it regenerates through the same import. Delete %s/__pycache__ and re-run.'
-                % (attr, rel, attr, os.path.dirname(rel)))
+    """Return a problem when an imported decision table differs from its source bytes."""
+    specs = (
+        ('_triage/factory_os/hypothesis_b14.py', HB,
+         ('HYPOTHESES','DECISIONS','DECISIONS_H02_EXTRA','LOCKED_SELECTORS')),
+        ('_triage/factory_os/hypothesis_b17.py', HB17,
+         ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
+    )
+    for rel, module, attrs in specs:
+        try:
+            text = src.read_committed(rel)
+        except ToolFailure as exc:
+            return 'P5 could not read %s to check it against the import: %s' % (rel, exc)
+        ns = {'__name__': rel.replace('/','_'), '__file__': os.path.join(ROOT, rel)}
+        try:
+            exec(compile(text, rel, 'exec'), ns)
+        except Exception as exc:
+            return 'P5 %s does not execute: %s: %s' % (rel, type(exc).__name__, str(exc)[:120])
+        for attr in attrs:
+            if ns.get(attr) != getattr(module, attr):
+                return ('P5 the %s python IMPORTED from %s is not the %s in the file. '
+                        'Delete _triage/factory_os/__pycache__ and re-run.'
+                        % (attr, rel, attr))
     return None
 
 
@@ -180,18 +166,24 @@ def check(worktree=False, source=None):
     bindings = _rows_of(bind_text, 'ParameterBinding')
     hypotheses = _rows_of(hyp_text, 'Hypothesis')
 
-    # Inputs.mqh retains legacy SMC/5B declarations for source compatibility, while the
-    # accepted A1-A5 logical registry deliberately excludes them. The state-table contract
-    # governs the logical registry surface, not those compatibility-only declarations.
-    raw_surface = preset.parse_surface(inputs_text, HB.BUILD_TAG)
-    registry_rows = registry.parse_parameter_registry_text(
-        src.read_committed(registry.PARAM_REGISTRY_REL), registry.PARAM_REGISTRY_REL)
+    registry_text = src.read_committed(registry.PARAM_REGISTRY_REL)
+    registry_rows = registry.parse_parameter_registry_text(registry_text, registry.PARAM_REGISTRY_REL)
     logical_names = {registry.bare_registry_name(row['name']) for row in registry_rows
                      if row.get('classification', '').strip().upper() != 'COMPATIBILITY'}
-    surface = preset.Surface(HB.BUILD_TAG,
-                             [decl for decl in raw_surface.inputs if decl.name in logical_names],
-                             raw_surface.known_tags)
-    surface.enums = raw_surface.enums
+
+    def surface_for_revision(rev):
+        if rev.startswith('B14-'):
+            provider = HB
+        elif rev.startswith('B17-'):
+            provider = HB17
+        else:
+            raise preset.PresetRefusal('no decision provider for revision %s' % rev)
+        raw = preset.parse_surface(inputs_text, provider.BUILD_TAG)
+        surface = preset.Surface(provider.BUILD_TAG,
+                                 [d for d in raw.inputs if d.name in logical_names],
+                                 raw.known_tags)
+        surface.enums = raw.enums
+        return surface
 
     by_rev = {}
     for _n, rec in bindings:
@@ -202,6 +194,7 @@ def check(worktree=False, source=None):
     # --- P1 every revision's binding set covers the build's surface EXACTLY ---------------------
     for rev in sorted(by_rev):
         rows = by_rev[rev]
+        surface = surface_for_revision(rev)
         names = [r.get('parameter') for r in rows]
         dupes = sorted(set(n for n in names if names.count(n) > 1))
         if dupes:
@@ -291,15 +284,15 @@ def check(worktree=False, source=None):
         import gen_s2a_migration
         head = gen_s2a_migration.head_oid()
 
-        def owner_ref(path, anchor=None):
-            ref = gen_s2a_migration.owner_ref_for(path, head)
+        def owner_ref(path, anchor=None, commit=None):
+            ref = gen_s2a_migration.owner_ref_for(path, commit or head)
             ref['entity'] = 'OwnerRef'
             ref['owner_type'] = ('taskboard_order' if path.endswith('TASKBOARD.md')
                                  else 'param_registry')
             ref['anchor'] = anchor
             return ref
 
-        hyps, binds = gen.build(surface, read, owner_ref)
+        hyps, binds = gen.build_all(read, owner_ref)
     except preset.PresetRefusal as exc:
         problems.append('P5 the generator REFUSED to reproduce the stores: %s' % exc)
         return problems

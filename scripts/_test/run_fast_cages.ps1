@@ -829,6 +829,7 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/gen_wrapper.py',
                                           '_triage/factory_os/gen_registry_rows.py',
                                           '_triage/factory_os/hypothesis_b14.py',
+                                          '_triage/factory_os/hypothesis_b17.py',
                                           '_triage/factory_os/capability.py',
                                           '_triage/factory_os/architecture.py',
                                           '_triage/factory_os/activation.py',
@@ -855,6 +856,7 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/run_param_surface_tests.py',
                                           '_triage/factory_os/gen_registry_rows.py',
                                           '_triage/factory_os/hypothesis_b14.py',
+                                          '_triage/factory_os/hypothesis_b17.py',
                                           '_triage/factory_os/activation.py',
                                           '_triage/factory_os/architecture.py',
                                           '_triage/factory_os/capability.py',
@@ -918,6 +920,7 @@ $SUITE_GUARDS = @{
                                           # canonical store binds nothing under $rev") is what a
                                           # decision-table edit can silently falsify.
                                           '_triage/factory_os/hypothesis_b14.py',
+                                          '_triage/factory_os/hypothesis_b17.py',
                                           '_triage/factory_os/gen_registry_rows.py',
                                           # ...and the next level down, DEMANDED BY THE SWEEP on
                                           # the first run after the two above were declared. The
@@ -1388,6 +1391,7 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/architecture.py',
                                           '_triage/factory_os/capability.py',
                                           '_triage/factory_os/hypothesis_b14.py',
+                                          '_triage/factory_os/hypothesis_b17.py',
                                           '_triage/factory_os/gen_wrapper.py',
                                           '_triage/factory_os/gen_registry_rows.py',
                                           '_triage/factory_os/gen_design_contracts.py',

@@ -40,6 +40,7 @@ import activation                                  # noqa: E402
 import architecture                                # noqa: E402
 import capability                                  # noqa: E402
 import hypothesis_b14 as HB                        # noqa: E402
+import hypothesis_b17 as HB17                      # noqa: E402
 import preset                                      # noqa: E402
 import registry                                    # noqa: E402
 
@@ -47,6 +48,7 @@ Refusal = preset.PresetRefusal
 
 HYPOTHESES_REL = 'factory/hypotheses.jsonl'
 BINDINGS_REL = 'factory/parameter_bindings.jsonl'
+PROVIDERS = (HB, HB17)
 
 # The role every unreachable input gets, and the surface that follows from it. Not a default in the
 # "we had to pick something" sense: an input the build cannot reach has no dial to show and no
@@ -138,7 +140,7 @@ def _check_engine_edge_cage(hyp_id, hyp, verdicts, config):
                 % (hyp_id, name, held, ceiling, why))
 
 
-def hypothesis_row(hyp_id, hyp, surface, read, owner_ref):
+def hypothesis_row(hyp_id, hyp, surface, read, owner_ref, provider=HB):
     """-> the Hypothesis dict. `owner_ref` is a callable (path) -> OwnerRef dict."""
     cfg = pinned_config(hyp, surface)
     _arch, digest = architecture.digest_for(surface.build_tag, cfg, surface=surface)
@@ -155,26 +157,30 @@ def hypothesis_row(hyp_id, hyp, surface, read, owner_ref):
         'experimental': hyp['experimental'],
         'engine_edge': hyp['engine_edge'],
         'status': hyp['status'],
-        'preregistration_ref': owner_ref(HB.PREREGISTRATION_ORDER,
-                                         anchor=hyp['preregistration_anchor']),
+        'preregistration_ref': owner_ref(
+            provider.PREREGISTRATION_ORDER,
+            anchor=hyp['preregistration_anchor'],
+            commit=hyp.get('preregistration_commit')),
         'superseded_by': None,
     }
 
 
-def binding_rows(hyp_id, hyp, surface, owner_ref):
+def binding_rows(hyp_id, hyp, surface, owner_ref, provider=HB, activation_surface=None):
     """-> [ParameterBinding] for every input on the build's surface, in surface order."""
     cfg = pinned_config(hyp, surface)
-    states = activation.effective_state(surface.build_tag, cfg, surface=surface)
+    act_surface = activation_surface or surface
+    states_all = activation.effective_state(surface.build_tag, cfg, surface=act_surface)
+    states = {d.name: states_all[d.name] for d in surface.inputs}
     _check_engine_edge_cage(hyp_id, hyp, states, cfg)
 
-    decisions = HB.decisions_for(hyp_id)
+    decisions = provider.decisions_for(hyp_id)
     revision_id = '%s-r%d' % (hyp_id, hyp['revision'])
-    definition = owner_ref(HB.DEFINITION_PATH)
+    definition = owner_ref(provider.DEFINITION_PATH)
 
     # Both completeness directions, computed before anything is emitted so the refusal names the
     # whole discrepancy rather than the first item of it.
     visible = [n for n, state in states.items()
-               if state['state'] == 'ACTIVE' and n not in HB.LOCKED_SELECTORS]
+               if state['state'] == 'ACTIVE' and n not in provider.LOCKED_SELECTORS]
     undecided = [n for n in visible if n not in decisions]
     if undecided:
         raise Refusal(
@@ -205,7 +211,7 @@ def binding_rows(hyp_id, hyp, surface, owner_ref):
             row['surface'] = INACTIVE_SURFACE
             row['optimize_stage'] = 'FREEZE'
             row['safe_range'] = None
-        elif name in HB.LOCKED_SELECTORS:
+        elif name in provider.LOCKED_SELECTORS:
             row['role'] = 'LOCKED'
             row['surface'] = INACTIVE_SURFACE     # a const has no page to appear on
             row['locked_value'] = cfg[name]
@@ -235,15 +241,51 @@ def _validate_vocabulary(rows):
                           % (row.get('parameter'), row.get('surface'), list(registry.SURFACES)))
 
 
-def build(surface, read, owner_ref, hypothesis_ids=None):
-    """-> (hypothesis rows, binding rows). Deterministic: no clock, no dict-order dependence."""
-    ids = sorted(hypothesis_ids or HB.HYPOTHESES)
+def build(surface, read, owner_ref, hypothesis_ids=None, provider=HB, activation_surface=None):
+    """-> rows for one decision provider. Default preserves the B14 API."""
+    ids = sorted(hypothesis_ids or provider.HYPOTHESES)
     hyps, binds = [], []
     for hyp_id in ids:
-        hyp = HB.HYPOTHESES[hyp_id]
-        hyps.append(hypothesis_row(hyp_id, hyp, surface, read, owner_ref))
-        binds.extend(binding_rows(hyp_id, hyp, surface, owner_ref))
+        hyp = provider.HYPOTHESES[hyp_id]
+        hyps.append(hypothesis_row(hyp_id, hyp, surface, read, owner_ref, provider))
+        binds.extend(binding_rows(hyp_id, hyp, surface, owner_ref, provider, activation_surface))
     _validate_vocabulary(binds)
+    return hyps, binds
+
+
+def _surfaces(inputs_text, registry_text, build_tag):
+    """Return (logical emit surface, exact activation surface) for one build.
+
+    R0 keeps compatibility declarations physical but outside Factory bindings. Activation tables
+    may cover either the logical set (B14) or the full physical set (B17/B18); both are valid if
+    their table is exact for the surface it claims.
+    """
+    raw = preset.parse_surface(inputs_text, build_tag)
+    rows = registry.parse_parameter_registry_text(registry_text, registry.PARAM_REGISTRY_REL)
+    logical = {registry.bare_registry_name(r['name']) for r in rows
+               if r.get('classification', '').strip().upper() != 'COMPATIBILITY'}
+    emit = preset.Surface(build_tag, [d for d in raw.inputs if d.name in logical], raw.known_tags)
+    emit.enums = raw.enums
+    table_names = set(activation.TABLE[build_tag])
+    act = preset.Surface(build_tag, [d for d in raw.inputs if d.name in table_names], raw.known_tags)
+    act.enums = raw.enums
+    if set(d.name for d in act.inputs) != table_names:
+        missing = sorted(table_names - set(d.name for d in act.inputs))
+        raise Refusal('activation table for %s names missing physical input(s): %s'
+                      % (build_tag, ', '.join(missing[:10])))
+    return emit, act
+
+
+def build_all(read, owner_ref):
+    """Build every registered provider in deterministic provider order."""
+    hyps, binds = [], []
+    inputs = read(preset.INPUTS_REL)
+    registry_text = read(registry.PARAM_REGISTRY_REL)
+    for provider in PROVIDERS:
+        surface, act_surface = _surfaces(inputs, registry_text, provider.BUILD_TAG)
+        hrows, brows = build(surface, read, owner_ref, provider=provider,
+                             activation_surface=act_surface)
+        hyps.extend(hrows); binds.extend(brows)
     return hyps, binds
 
 
@@ -274,6 +316,36 @@ def render_jsonl(existing_text, rows, entity):
     return '\n'.join(out) + '\n'
 
 
+_GIT_RESOLVED = ('commit_oid', 'blob_oid', 'raw_sha256')
+
+def _store_key(entity, row):
+    if entity == 'Hypothesis': return row.get('revision_id')
+    return (row.get('hypothesis_revision'), row.get('parameter'))
+
+def _semantic_line(row):
+    c = dict(row)
+    for field in ('definition_ref', 'preregistration_ref'):
+        ref = c.get(field)
+        if isinstance(ref, dict):
+            c[field] = dict((k, v) for k, v in ref.items() if k not in _GIT_RESOLVED)
+    return registry.canonical_line(c)
+
+def render_preserving_equivalent(existing_text, rows, entity):
+    """Keep exact bytes/pins for semantically unchanged rows; render only new/changed rows."""
+    header, old = [], {}
+    for line in (existing_text or '').replace('\r\n','\n').split('\n'):
+        if not line.strip(): continue
+        obj = json.loads(line)
+        if '_comment' in obj and 'entity' not in obj: header.append(line); continue
+        if obj.get('entity') == entity: old[_store_key(entity, obj)] = (obj, line)
+    out = list(header)
+    for row in rows:
+        prior = old.get(_store_key(entity, row))
+        out.append(prior[1] if prior and _semantic_line(prior[0]) == _semantic_line(row)
+                   else registry.canonical_line(row))
+    return '\n'.join(out) + '\n'
+
+
 def _repo_root():
     return os.path.dirname(os.path.dirname(HERE))
 
@@ -289,23 +361,22 @@ def main(argv):
 
     head = gen_s2a_migration.head_oid()
 
-    def owner_ref(path, anchor=None):
-        ref = gen_s2a_migration.owner_ref_for(path, head)
+    def owner_ref(path, anchor=None, commit=None):
+        ref = gen_s2a_migration.owner_ref_for(path, commit or head)
         ref['entity'] = 'OwnerRef'
         ref['owner_type'] = ('taskboard_order' if path.endswith('TASKBOARD.md')
                              else 'param_registry')
         ref['anchor'] = anchor
         return ref
 
-    surface = preset.parse_surface(read(preset.INPUTS_REL), HB.BUILD_TAG)
     try:
-        hyps, binds = build(surface, read, owner_ref)
+        hyps, binds = build_all(read, owner_ref)
     except Refusal as exc:
         sys.stderr.write('REFUSED: %s\n' % exc)
         return 1
 
-    hyp_text = render_jsonl(read(HYPOTHESES_REL), hyps, 'Hypothesis')
-    bind_text = render_jsonl(read(BINDINGS_REL), binds, 'ParameterBinding')
+    hyp_text = render_preserving_equivalent(read(HYPOTHESES_REL), hyps, 'Hypothesis')
+    bind_text = render_preserving_equivalent(read(BINDINGS_REL), binds, 'ParameterBinding')
 
     if '--write' in argv:
         for rel, text in ((HYPOTHESES_REL, hyp_text), (BINDINGS_REL, bind_text)):

@@ -152,6 +152,10 @@ RESOLVER_SWEEP_EXEMPT = {
         'module validates every role and surface it names against registry.ROLES/SURFACES at '
         'import, so it cannot introduce a value the resolver does not know. Sweeping it would '
         'leave no legal place to WRITE a binding down.',
+    '_triage/factory_os/hypothesis_b17.py':
+        'B17-H01 decision table: same contract as hypothesis_b14.py. It records per-hypothesis '
+        'role/surface choices, validates them against registry.ROLES/SURFACES at import, and never '
+        'derives optimizability; registry.py remains the single resolver.',
     '_triage/factory_os/run_contract_binding_tests.py':
         'MEASURED: it names the role enum as SCHEMA MUTATION material -- it deletes values from '
         'ParameterBinding.role to prove the design<->schema binding goes red. It never decides '

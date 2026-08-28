@@ -31,6 +31,7 @@ _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/gen_wrapper.py
 _triage/factory_os/hypothesis_b14.py
+_triage/factory_os/hypothesis_b17.py
 _triage/factory_os/magic.py
 _triage/factory_os/notifier.py
 _triage/factory_os/optimize_log.py

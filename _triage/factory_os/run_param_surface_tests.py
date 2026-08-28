@@ -226,6 +226,42 @@ def _p5_stale_import_case():
     return C.check(source=_StaleSource({}))
 
 
+def _registration_specificity():
+    hyps = [r for _n, r in C._rows_of(_disk(gen.HYPOTHESES_REL), 'Hypothesis')]
+    binds = [r for _n, r in C._rows_of(_disk(gen.BINDINGS_REL), 'ParameterBinding')]
+    b17h = [h for h in hyps if h.get('revision_id') == 'B17-H01-r1']
+    b17 = [r for r in binds if r.get('hypothesis_revision') == 'B17-H01-r1']
+    problems = []
+    if len(b17h) != 1:
+        problems.append('B17-H01-r1 hypothesis count is %d, expected 1' % len(b17h))
+    else:
+        h = b17h[0]
+        if h.get('architecture_digest') != '52921084a24c3ea9':
+            problems.append('B17 digest drifted to %r' % h.get('architecture_digest'))
+        ref = h.get('preregistration_ref') or {}
+        if ref.get('commit_oid') != '0e9cebb1e87f155656c479055ea0e94212f51384':
+            problems.append('B17 prereg commit drifted')
+        if ref.get('anchor') != 'Entry_Wave5:':
+            problems.append('B17 prereg anchor drifted')
+        if h.get('status') != 'REGISTERED':
+            problems.append('B17 lifecycle status is not REGISTERED')
+    if len(b17) != 147:
+        problems.append('B17 binding count is %d, expected 147 logical rows' % len(b17))
+    counts = {}
+    for row in b17:
+        counts[row.get('role')] = counts.get(row.get('role'), 0) + 1
+    expected = {'INACTIVE':106,'LOCKED':31,'SAFETY':7,'SIZING':1,'RUNTIME':2}
+    if counts != expected:
+        problems.append('B17 role counts %r != %r' % (counts, expected))
+    if sum(1 for r in b17 if r.get('surface') == 'OPERATOR') != 7:
+        problems.append('B17 Operator surface is not exactly 7 rows')
+    if any(r.get('role') == 'TUNABLE' for r in b17):
+        problems.append('B17 historical frozen registration exposes a TUNABLE row')
+    if any(h.get('boss_family') == 18 for h in hyps) or any(str(r.get('hypothesis_revision','')).startswith('B18-') for r in binds):
+        problems.append('B18 materialized without the missing tracked pre-result configuration pin')
+    return problems
+
+
 def main(argv):
     os.chdir(ROOT)
     bad = 0
@@ -247,6 +283,11 @@ def main(argv):
             print('        -> %s' % p[:170])
         return 1
     print('  [OK ] specificity the REAL store produces ZERO problems')
+    registration = _registration_specificity()
+    if registration:
+        print('  [BAD] B17/B18 registration specificity failed: %s' % '; '.join(registration))
+        return 1
+    print('  [OK ] B17 registered fail-closed (147 rows, 0 optimizer-enabled tunables); B18 remains unregistered')
 
     for label, fn, needle, miss in (
             ('a generator whose COMMITTED bytes are not the ones python imported',
