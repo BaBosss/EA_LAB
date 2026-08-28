@@ -31,14 +31,18 @@ Lots require `FirstLotMode == FIRSTLOT_FIXED` and `LotProg == PROG_NONE`:
 - UP: `_41_FixedLot * (1 + max(0, _51_ProgFactor) * (k - 1))`.
 - DOWN: `_41_FixedLot / max(1, _52_ProgMult)^(k - 1)`.
 
-Each result is passed through `RiskControl_ClampLot`; final broker
-normalization remains in `Exec_PlacePending`.
+DOWN decay floors at broker `SYMBOL_VOLUME_MIN`; the hard `RC_MaxLot`
+ceiling is then re-applied, so a ceiling below broker minimum fails closed instead
+of sending a larger lot. Each result is normalized to the broker volume step before
+margin preflight and placement.
 
 ## Exits and reversal policy
 
-Boss19 requires `StackMode == STACK_SINGLE`, `RecoveryMode == REC_NONE`, and
-`HedgeMode == HEDGE_OFF` at initialization. It runs hard DD kill, halted state,
-and `Exit_SafetyMoneyStop` before strategy work, and bypasses shared
+Boss19 requires `SLMode == SL_NONE`, `StackMode == STACK_SINGLE`,
+`RecoveryMode == REC_NONE`, and `HedgeMode == HEDGE_OFF` at initialization.
+Strategy exits are entry-owned; a non-NONE shared SL declaration is refused rather
+than silently ignored. It runs hard DD kill, halted state, and
+`Exit_SafetyMoneyStop` before strategy work, and bypasses shared
 Stack/Recovery/Hedge/Basket/Exit strategy paths.
 
 For UP positions, Boss19 calculates BUY VWAP and closes all when
@@ -51,7 +55,9 @@ When trend reverses, remaining old pending orders are cancelled but filled
 positions are not force-closed. Existing positions continue their original
 direction's exit logic. An opposite ladder cannot arm until positions and
 pending orders are both confirmed absent. Ambiguous broker state fails safe
-and never places a duplicate.
+and never places a duplicate; the ambiguity latch is recomputed each tick so exits
+resume after a transient conflict has genuinely cleared. An empty arm whose broker
+placements all fail is reset so later retries use a fresh market reference.
 
 Monte Carlo and block-bootstrap logic are future validation work and are not
 part of V0 OnTick behavior.

@@ -26,7 +26,17 @@ int OnInit()
 
    if(MathAbs(B19_LotForLevel(1, 1) - 0.01) > 1.0e-9) fail++;
    if(MathAbs(B19_LotForLevel(1, 3) - 0.02) > 1.0e-9) fail++;
-   if(MathAbs(B19_LotForLevel(2, 2) - (0.01 / 1.3)) > 1.0e-9) fail++;
+   double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if(minLot <= 0.0) fail++;
+   double prevDown = B19_LotForLevel(2, 1);
+   if(prevDown <= 0.0 || prevDown + 1.0e-9 < minLot) fail++;
+   for(int k = 2; k <= 5; k++)
+   {
+      double curDown = B19_LotForLevel(2, k);
+      if(curDown <= 0.0 || curDown + 1.0e-9 < minLot) fail++;
+      if(curDown > prevDown + 1.0e-9) fail++;
+      prevDown = curDown;
+   }
 
    if(fail == 0) Print("[PASS] AdaptiveTrendGrid_Test: mapping and lot-law helpers OK");
    else          PrintFormat("[FAIL] AdaptiveTrendGrid_Test: %d assert(s) failed", fail);

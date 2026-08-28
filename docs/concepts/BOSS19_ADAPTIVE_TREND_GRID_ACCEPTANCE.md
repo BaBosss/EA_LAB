@@ -29,7 +29,13 @@ On the current XAUUSD / H1 / 2024-01-01..2024-07-01 / Model-1 environment, both 
 
 | UP hypothesis | Net | PF | Trades | Max equity DD |
 |---|---:|---:|---:|---:|
-| BUY STOP | 64.15 | 1.25 | 18 | 443.33 (4.41%) |
-| BUY LIMIT | 4.62 | 1.03 | 15 | 300.46 (2.96%) |
+| BUY STOP | 519.88 | 2.33 | 35 | 412.60 (4.11%) |
+| BUY LIMIT | 261.47 | 2.91 | 23 | 543.18 (5.23%) |
 
-The helper smoke compiled 0 errors / 0 warnings and emitted `[PASS] AdaptiveTrendGrid_Test: mapping and lot-law helpers OK`. The Probe wrapper also compiled 0/0. These are low-trade V0 triage results only: STOP is the stronger hypothesis in this one bounded smoke, but neither result is a source-parity claim, optimization verdict, candidate promotion, or permission to attach to DEMO/LIVE.
+The repaired helper and Probe wrapper compile 0 errors / 0 warnings. Tester log 20260828 emits `[PASS] AdaptiveTrendGrid_Test`. A negative full-surface run with `SLMode=SL_ATR` returns INIT failure with `Boss19 owns exits and requires SLMode=SL_NONE`. Tester logs also show repeated `[B19] finite pending ladder complete`, confirming the repaired short ladder is no longer silently one-leg-deep on the pinned XAUUSD environment. These remain V0 triage results only; neither is a source-parity claim, optimization verdict, candidate promotion, or permission to attach to DEMO/LIVE.
+
+## Independent review and bounded repair
+
+Claude Code / Opus reviewed frozen SHA `ad45b685ef473a1d80fb8ac1746f8869c3721cef` read-only and returned `VERDICT: PASS`, `ORIGINAL_SCOPE_PRESERVED: YES`, `INTEGRATION_RECOMMENDATION: INTEGRATE`. The review nevertheless identified concrete PRE-BASELINE defects: sub-minimum DOWN lots made later ladder levels unplaceable, non-NONE `SLMode` was silently unreachable, a transient ambiguity latch could suppress strategy exits, and an empty arm could retry stale targets indefinitely.
+
+One bounded repair keeps the hard risk ceiling supreme while flooring DOWN decay at broker minimum only when `RC_MaxLot` still permits it, requires `SLMode=SL_NONE`, recomputes ambiguity from broker state each tick, resets a fully empty failed arm for a fresh reference, and corrects Probe-facing labels. The post-repair smoke values above supersede the earlier 64.15/4.62 smoke values. Exact source coefficients remain engineering hypotheses and the strategy remains PRE-BASELINE.

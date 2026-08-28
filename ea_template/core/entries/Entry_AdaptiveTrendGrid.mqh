@@ -112,6 +112,10 @@ int B19_PendingDirection(bool &ambiguous)
 
 void B19_AdoptBrokerState(const int positions, const int pending)
 {
+   // Re-evaluate ambiguity from broker state every tick. A transient conflict
+   // blocks new placement while present, but must not permanently disable
+   // strategy exits after the broker state becomes unambiguous again.
+   g_b19_ambiguous = false;
    if(positions == 0 && pending == 0) return;
    int buys  = B19_CountPositions(1);
    int sells = B19_CountPositions(2);
@@ -261,7 +265,16 @@ double B19_LotForLevel(const int dir, const int level)
    else
       raw = base / MathPow(MathMax(1.0, _52_ProgMult), level - 1);
    if(!MathIsValidNumber(raw) || raw <= 0.0) return 0.0;
-   return RiskControl_ClampLot(raw);
+
+   // DOWN decay floors at broker minimum instead of becoming an unplaceable
+   // sub-minimum request. Re-apply the hard RC ceiling after the floor; if the
+   // ceiling itself is below broker minimum, fail closed and skip the order.
+   double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if(!MathIsValidNumber(minLot) || minLot <= 0.0) return 0.0;
+   if(raw < minLot) raw = minLot;
+   double capped = RiskControl_ClampLot(raw);
+   if(!MathIsValidNumber(capped) || capped < minLot) return 0.0;
+   return Exec_NormalizeLot(capped);
 }
 
 void B19_PlaceMissing()
@@ -342,6 +355,13 @@ void B19_Arm(const int dir)
                                              : g_b19_reference - k * step)
                                   : g_b19_reference + k * step);
    B19_PlaceMissing();
+   // If the broker accepted no leg at all, do not freeze stale targets forever.
+   // Reset the empty arm so the next eligible tick can reference current price.
+   if(!g_b19_any_leg_placed && Exec_CountAll() == 0 && Exec_CountPending() == 0)
+   {
+      Print("[B19] no ladder leg accepted - empty arm reset for fresh reference");
+      B19_ResetArm();
+   }
 }
 
 bool B19_CancelPendingAndConfirm()
@@ -405,6 +425,11 @@ bool Entry_AdaptiveTrendGrid_Init()
    if(LotProg != PROG_NONE)
    {
       PrintFormat("[INIT] FATAL: Boss19 requires LotProg=PROG_NONE, got %d", LotProg);
+      return false;
+   }
+   if(SLMode != SL_NONE)
+   {
+      PrintFormat("[INIT] FATAL: Boss19 owns exits and requires SLMode=SL_NONE, got %d", SLMode);
       return false;
    }
    if(StackMode != STACK_SINGLE || RecoveryMode != REC_NONE || HedgeMode != HEDGE_OFF)
