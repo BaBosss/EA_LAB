@@ -228,12 +228,32 @@ if (-not (Test-Path -LiteralPath $realHostname -PathType Leaf)) {
     $reportF = 'FTEST_' + [guid]::NewGuid().ToString('N').Substring(0,12)
     $r = Invoke-Child (@('-NoProfile','-File', (Join-Path $guardYes 'scripts\mt5_optimize.ps1')) + $commonArgs + @(
         '-SetFile', $undeclaredSet, '-ReportName', $reportF, '-Terminal', $realHostname, '-DataDir', $dataDir,
-        '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '30'))
+        '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '30', '-XmlFlushGraceSec', '0'))
     $fOutText = ($r.Output -join "`n")
     Assert-True  'F guard was NOT skipped (real guard banner present)' ($fOutText -match 'Nothing to check \(no Y-flagged sweep dimensions')
     Assert-True  'F never printed the old silent-skip message' ($fOutText -notmatch 'not found, skipping pre-flight check')
     Assert-True  'F pipeline proceeded past the guard to the OPTIMIZE launch line' ($fOutText -match 'OPTIMIZE:')
     Assert-Equal 'F clean NO-XML close (hostname.exe produces no optimizer report, by design)' 4 $r.ExitCode
+}
+
+Write-Host ''
+Write-Host '=== I: delayed post-exit XML flush is collected inside bounded grace, not misclassified NO-XML ==='
+$reportI = 'FLUSH_' + [guid]::NewGuid().ToString('N').Substring(0,12)
+$delayedSrc = Join-Path $dataDir ($reportI + '.xml')
+$delayedDest = Join-Path $guardYes ('_mt5_auto\optimizations\' + $reportI + '.xml')
+$job = Start-Job -ScriptBlock { param($p) Start-Sleep -Seconds 7; Set-Content -LiteralPath $p -Encoding UTF8 -Value '<Workbook />' } -ArgumentList $delayedSrc
+try {
+    $r = Invoke-Child (@('-NoProfile','-File', (Join-Path $guardYes 'scripts\mt5_optimize.ps1')) + $commonArgs + @(
+        '-SetFile', $undeclaredSet, '-ReportName', $reportI, '-Terminal', $realHostname, '-DataDir', $dataDir,
+        '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '1', '-XmlFlushGraceSec', '5'))
+    $iOutText = ($r.Output -join "`n")
+    Assert-Equal 'I delayed XML run exits 0 after bounded flush collection' 0 $r.ExitCode
+    Assert-True 'I delayed source XML was moved into the fixture optimization destination' (Test-Path -LiteralPath $delayedDest -PathType Leaf)
+    Assert-True 'I output records that post-exit XML flush grace recovered the artifact' ($iOutText -match 'XML FLUSH GRACE')
+    Assert-True 'I did not emit the false NO XML failure' ($iOutText -notmatch 'NO XML')
+} finally {
+    Wait-Job -Job $job -Timeout 15 | Out-Null
+    Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host ''
@@ -253,6 +273,8 @@ Assert-True 'H source no longer contains the literal hardcoded D:\EA_LAB\_mt5_au
 Assert-True 'H source derives $auto from $repoRoot' ($srcText -match [regex]::Escape('$auto = Join-Path $repoRoot "_mt5_auto"'))
 Assert-True 'H source no longer prints the old "next: python select_robust_pass.py" instruction' ($srcText -notmatch [regex]::Escape('next: python select_robust_pass.py'))
 Assert-True 'H source no longer has an unconditional guard-missing skip-and-continue branch' ($srcText -notmatch [regex]::Escape('optimize_guard: scripts\optimize_guard.ps1 not found, skipping pre-flight check'))
+Assert-True 'H source exposes bounded post-exit XML flush grace' ($srcText -match [regex]::Escape('[ValidateRange(0,60)][int]$XmlFlushGraceSec = 15'))
+Assert-True 'H source polls only the exact source XML during flush grace' ($srcText -match 'XML FLUSH GRACE' -and $srcText -match [regex]::Escape('Test-Path -LiteralPath $srcXml -PathType Leaf'))
 
 Write-Host ''
 if ($script:fail -gt 0) { Write-Host ("FAIL  {0}/{1} passed, {2} failed" -f $script:pass, ($script:pass + $script:fail), $script:fail); exit 1 }

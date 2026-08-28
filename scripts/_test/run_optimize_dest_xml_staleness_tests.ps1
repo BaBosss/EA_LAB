@@ -110,7 +110,7 @@ try {
 
     $r = Invoke-Child (@('-NoProfile','-File', (Join-Path $fx 'scripts\mt5_optimize.ps1')) + $commonArgs + @(
       '-SetFile', $setFile, '-ReportName', $report, '-Terminal', $hostnameExe, '-DataDir', $dataDir,
-      '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '30'))
+      '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '30', '-XmlFlushGraceSec', '0'))
     $txt = ($r.Output -join "`n")
 
     Assert-True 'the run reached the OPTIMIZE launch line (so the branch under test was exercised)' `
@@ -138,7 +138,7 @@ try {
     $dest2 = Join-Path $optDir ($report2 + '.xml')
     $r2 = Invoke-Child (@('-NoProfile','-File', (Join-Path $fx 'scripts\mt5_optimize.ps1')) + $commonArgs + @(
       '-SetFile', $setFile, '-ReportName', $report2, '-Terminal', $hostnameExe, '-DataDir', $dataDir,
-      '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '30'))
+      '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '30', '-XmlFlushGraceSec', '0'))
     $txt2 = ($r2.Output -join "`n")
     Assert-True 'clean run still closes on the NO-XML path (exit 4)' ($r2.ExitCode -eq 4) ("exit=" + $r2.ExitCode)
     Assert-True 'clean run does NOT claim to have quarantined anything (the guard is not inert-by-always-firing)' `
@@ -156,7 +156,7 @@ try {
     Set-Content -LiteralPath (Join-Path $optDir ($report3 + '.xml')) -Encoding ASCII -Value $staleXml
     $r3 = Invoke-Child (@('-NoProfile','-File', (Join-Path $fx 'scripts\mt5_optimize.ps1')) + $commonArgs + @(
       '-SetFile', $setFile, '-ReportName', $report3, '-Terminal', $hostnameExe, '-DataDir', $dataDir,
-      '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '30'))
+      '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '30', '-XmlFlushGraceSec', '0'))
     Assert-True 'scope run closed on the NO-XML path' ($r3.ExitCode -eq 4) ("exit=" + $r3.ExitCode)
     Assert-True 'the unrelated bystander XML still exists' (Test-Path -LiteralPath $bystander) ''
     Assert-True 'the unrelated bystander XML is byte-unchanged' `

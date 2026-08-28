@@ -36,6 +36,7 @@ param(
   [string]$Terminal = "D:\Meta 5\terminal64.exe",
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
   [int]$TimeoutSec = 7200,
+  [ValidateRange(0,60)][int]$XmlFlushGraceSec = 15, # bounded post-exit wait for delayed optimizer XML flush
   [switch]$Portable,   # 2nd portable install (D:\Meta 5b): pass -Terminal/-DataDir there too
   [switch]$Force,
   [switch]$AllowLegacyIdentity,  # explicit non-green escape hatch for historical/fixture runs
@@ -246,6 +247,20 @@ while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
   if (Test-Path $srcXml) { Start-Sleep -Seconds 2; break }
   if ($proc.HasExited -and $sw.Elapsed.TotalSeconds -gt 10) { Start-Sleep -Seconds 2; break }
   Start-Sleep -Seconds 6
+}
+# Some MT5 builds flush the optimizer XML a few seconds AFTER terminal64.exe exits.
+# Do not convert that exporter race into a false NO-XML failure: once the process is known
+# exited, give only this exact source path a bounded grace period. Stale-destination quarantine
+# above remains unchanged, and a genuinely absent XML still exits 4.
+if (-not (Test-Path -LiteralPath $srcXml) -and $proc.HasExited -and $XmlFlushGraceSec -gt 0) {
+  $flushSw = [Diagnostics.Stopwatch]::StartNew()
+  while ($flushSw.Elapsed.TotalSeconds -lt $XmlFlushGraceSec) {
+    if (Test-Path -LiteralPath $srcXml -PathType Leaf) {
+      Write-Output ("XML FLUSH GRACE: source appeared {0:N1}s after post-exit polling began." -f $flushSw.Elapsed.TotalSeconds)
+      break
+    }
+    Start-Sleep -Milliseconds 500
+  }
 }
 if (Test-Path $srcXml) {
   Move-Item $srcXml $destXml -Force
