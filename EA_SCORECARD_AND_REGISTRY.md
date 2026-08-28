@@ -418,3 +418,9 @@ Zeus locked = เพดาน 3 · Gold_Kangaroo copy = เพดาน 2 (crack
 
 **กติกาใช้งาน:** ให้คะแนนตอน (ก) จบ funnel (ข) ทุก judge day (ค) หลัง rescue sweep · คะแนนลด =
 สิทธิ์ลดทันที (ไม่มี grandfather) · คะแนนอยู่ในทะเบียน EA แต่ละตัวในไฟล์นี้
+
+## Boss19 AdaptiveTrendGrid V0 bounded validation — 2026-08-28
+
+| EA | Sym/TF | MAIN | BWD | Conf | Verdict | Notes |
+|---|---|---:|---:|---|---|---|
+| `Probe_19_AdaptiveTrendGrid` STOP | XAUUSD H1 | PF **4.64** / 100t / net +4486.59 | PF **0.34** / 49t / net -2095.59 / ~25% eqDD | ★★★ | **PARKED-VERIFY(user)** | ORDER-1273 plateau center = StepATR0.30/Fast20/Slow50/TP1.50, no MAIN boundary. Flat-lot control preserves MAIN pulse (PF 5.78/97t) but BWD remains PF0.30/37t and the existing 25% hard-DD cage fires. LIMIT remains repeated lower-boundary after one expansion. HOLDOUT 2026H1 unspent; no candidate/deploy path. Evidence: `docs/concepts/BOSS19_ADAPTIVE_TREND_GRID_ACCEPTANCE.md`. |

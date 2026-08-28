@@ -908,3 +908,11 @@ a new symbol's spec before believing any result on it**, and fix the lot in the 
 
 ETH swap is the same mode as BTC (`INTEREST_CURRENT`, long −9.86 %/yr, short −3.95 %) and is likewise
 **not charged by the tester** — see the swap-mode table above.
+
+## Boss19 AdaptiveTrendGrid V0 — XAUUSD H1 — PARKED-VERIFY(user) (2026-08-28)
+
+**Measured mechanism:** FastMA/SlowMA trend direction + D1 ATR-spaced finite pending ladder. The pre-registered STOP search has a real 2023-2025 MAIN region rather than a single peak: ORDER-1273 selects the interior center `StepATR=0.30 / Fast20 / Slow50 / TP1.50`, whose exact MAIN re-run is PF 4.64 on 100 trades. Removing the UP growth / DOWN decay progression does not erase the MAIN pulse (flat-lot PF 5.78 on 97 trades), so the headline is not explainable as sizing escalation alone.
+
+**Failure mode:** the edge is strongly regime-dependent. The unchanged center on 2020-2022 is PF 0.34 on only 49 trades and reaches ~25% equity DD. The flat-lot falsifier is also PF 0.30 / 37 trades and the existing hard-DD cage actually fires at 25.04%, so changing sizing does not repair the regime failure. The alternative LIMIT branch runs toward smaller StepATR and still lands on its lower search edge after the one allowed expansion; bounded search stops instead of manufacturing a plateau by widening indefinitely.
+
+**Reusable lesson:** an adaptive grid can show a broad recent-regime pulse while failing through both participation collapse and adverse-regime loss. Require an interior plateau plus independent-window participation before interpreting high MAIN PF as durable grid edge. Do not infer safety from a working hard-DD cage: here the cage prevents further loss but firing it is itself evidence that the strategy failed the stress regime. Future work, if reopened, should be a new regime-adaptation hypothesis rather than more tuning of the same V0 surface. HOLDOUT 2026H1 remains unspent.
