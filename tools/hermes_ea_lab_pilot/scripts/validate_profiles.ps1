@@ -6,6 +6,22 @@ $ErrorActionPreference = 'Stop'
 $moduleRoot = Split-Path -Parent $PSScriptRoot
 $manifest = Get-Content -Raw (Join-Path $moduleRoot 'profile_manifest.json') | ConvertFrom-Json
 $mcpSpecs = @($manifest.observe_read_only_mcp,$manifest.tester_execution_mcp)
+$validationEnvBackup = @{}
+foreach ($mcpSpec in @($mcpSpecs)) {
+  if ($null -eq $mcpSpec.env) { continue }
+  foreach ($envProp in $mcpSpec.env.PSObject.Properties) {
+    $envName = [string]$envProp.Name
+    if (-not $validationEnvBackup.ContainsKey($envName)) {
+      $validationEnvBackup[$envName] = [Environment]::GetEnvironmentVariable($envName,'Process')
+      if ([string]::IsNullOrWhiteSpace([string]$validationEnvBackup[$envName])) {
+        [Environment]::SetEnvironmentVariable($envName,"EA_LAB_PROFILE_VALIDATE_$envName",'Process')
+      }
+    }
+  }
+}
+function Restore-ValidationEnv {
+  foreach ($envName in $validationEnvBackup.Keys) { [Environment]::SetEnvironmentVariable($envName,$validationEnvBackup[$envName],'Process') }
+}
 $resolved = (Resolve-Path $SafeWorkspace).Path.TrimEnd('\')
 if ($resolved -ieq 'D:\EA_LAB' -or $resolved.StartsWith('D:\EA_LAB\',[StringComparison]::OrdinalIgnoreCase)) {
   throw 'Refusing protected dirty primary D:\EA_LAB and its descendants.'
@@ -89,8 +105,10 @@ foreach ($p in $manifest.profiles) {
 }
 
 if ($failures.Count) {
+  Restore-ValidationEnv
   $failures | ForEach-Object { Write-Error $_ }
   exit 1
 }
+Restore-ValidationEnv
 Write-Host 'PASS Hermes EA_LAB profile validation.'
 exit 0
