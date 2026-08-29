@@ -4,21 +4,21 @@ drive_file_id,filename,size_bytes,triage,notes
 15Ngcj17ccv9chGBsBU9OwLRWVZ1vgOg7,ssrn-3808539.pdf,731000,SUPPORT_ML_FEATURES,Financial Forecasting with Machine Learning: Price Vs Return; full-text Batch 1 card registered and raw bytes hashed
 1laP6ouz2EmXuEtWMxdZpiR0xpuSEpLQP,ssrn-3986000.pdf,1337354,PENDING_CLASSIFICATION,Inventory only
 15yVxGSMQ3XO8mTLp-xomE8VshSWNPnGL,ssrn-4438260.pdf,831034,PENDING_CLASSIFICATION,Inventory only
-1Y2E82TFHk6GzgynFJzqNB3mLRwJUQa93,ssrn-4708400.pdf,314039,CORE_STRATEGY_VALIDATION,TSI mean-reversion paper already inspected from source
+1Y2E82TFHk6GzgynFJzqNB3mLRwJUQa93,ssrn-4708400.pdf,314039,CORE_STRATEGY_VALIDATION,TSI mean-reversion paper already inspected from source; Batch 2 full-text card registered and raw bytes hashed
 1z4WpumsULSnPX7Gw-IQ9yGD9wW3tJ5kP,ssrn-3412429.pdf,2208964,CORE_STRATEGY,RSI trend-following and momentum paper already inspected from source
 1DesWRSChOHtjbgXN5pYqxHTGsMxd3va_,ssrn-3837579.pdf,256717,REJECT_UNRELATED,Marketing pricing and consumer-behaviour paper
 1THqqe3JFcK3bCP75GdukKu7KhEtH7Tvh,ssrn-3813202.pdf,999615,SUPPORT_REGIME,Inflation-regime strategy research already inspected from source
 1k-WpnR8PALLyXirMJMETUwni7P5KxOH2,ssrn-2701346.pdf,255211,PENDING_CLASSIFICATION,Inventory only
 1DmIVggcGbIpVrEu3Vy-rS95kb1j6m58m,ssrn-4475995.pdf,3118573,REJECT_UNRELATED,AI-in-education paper; useful elsewhere but not EA trading corpus
 1g1G1BIzqLdZoi329ioe6BRx-SE1UIytF,ssrn-4391243.pdf,1993719,PENDING_CLASSIFICATION,Inventory only
-1oNxNnYTGyoGV41kxmsjalvASaVoVDsBv,ssrn-1585517.pdf,914767,CORE_STRATEGY_PORTFOLIO,Relative-strength strategies paper already inspected from source
+1oNxNnYTGyoGV41kxmsjalvASaVoVDsBv,ssrn-1585517.pdf,914767,CORE_STRATEGY_PORTFOLIO,Relative-strength strategies paper already inspected from source; Batch 2 full-text card registered and raw bytes hashed
 1G6GXj6mAJideiWlqCd_OuiEkWxa8tow9,ssrn-962461.pdf,1158589,SUPPORT_TREND_RISK,Tactical asset allocation and trend risk-management paper
 14rHBr4YXoMuNKJGe6RI07xGSwkavlD5N,ssrn-5048674.pdf,2677728,CORE_CRYPTO_ML,Cryptocurrency volatility forecasting with ML/commonality paper already inspected from source
 14Y2c5_evpbgiUC8S76QvZCefGWHwHveL,ssrn-2147012.pdf,712561,SUPPORT_STATARB_MICROSTRUCTURE,Statistical arbitrage and HFT paper already inspected from source
-1cQwT4FO9xxK0YdJ1Bfn-z5HAkDd2aFuO,ssrn-2269045.pdf,193183,SUPPORT_CONTRADICTORY_EVIDENCE,Momentum study with weak abnormal-return evidence; useful counterexample
-1b95Gpr5mqTzd6D6ozAmFKx3h0wfGVFDv,ssrn-3375564.pdf,1178094,SUPPORT_MICROSTRUCTURE,Trading around price benchmarks paper already inspected from source
+1cQwT4FO9xxK0YdJ1Bfn-z5HAkDd2aFuO,ssrn-2269045.pdf,193183,SUPPORT_CONTRADICTORY_EVIDENCE,Momentum study with weak abnormal-return evidence; useful counterexample; Batch 2 full-text card registered and raw bytes hashed
+1b95Gpr5mqTzd6D6ozAmFKx3h0wfGVFDv,ssrn-3375564.pdf,1178094,SUPPORT_MICROSTRUCTURE,Trading around price benchmarks paper already inspected from source; Batch 2 full-text card registered and raw bytes hashed
 1tETPiVFMrt3KHsr2CJI9bkEepd5bgNJc,ssrn-384500.pdf,829548,PENDING_CLASSIFICATION,Inventory only
-1kjhbyOtWk-ZFFdt1yr6zdjjCtlw1XGi6,ssrn-1843305.pdf,604440,SUPPORT_EXECUTION_MICROSTRUCTURE,Time-dependent trading strategies in continuous double auction
+1kjhbyOtWk-ZFFdt1yr6zdjjCtlw1XGi6,ssrn-1843305.pdf,604440,SUPPORT_EXECUTION_MICROSTRUCTURE,Time-dependent trading strategies in continuous double auction; Batch 2 full-text card registered and raw bytes hashed
 1IhRFAu7yS83TPXl-l_GdZsE_H1PbtAVn,ssrn-2474755.pdf,675272,CORE_VALIDATION,Harvey and Liu Evaluating Trading Strategies; multiple-testing/false-discovery core
 1fFpR0qw5oz4jnZ-4x-lChfG_csS9w8NT,ssrn-870608.pdf,375213,PENDING_CLASSIFICATION,Inventory only
 1uCAi4rVVxsvV5GSHuJyJ5qAgM_Hu8hzm,ssrn-4420232.pdf,227321,PENDING_CLASSIFICATION,Inventory only

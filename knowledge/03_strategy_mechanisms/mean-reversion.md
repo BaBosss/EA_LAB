@@ -36,3 +36,10 @@ Range-like or statistically stable relationships are the natural hypothesis; str
 ## Transfer note
 
 Every variant needs its own hypothesis, reference definition, horizon, target symbol, and controlled validation.
+## Batch 2 full-text evidence
+
+`RC-SSRN4708400-001` adds a concrete short-horizon ETF example: a TSI-centered long-only oversold system for SPY/QQQ with RSI and other supporting filters, evaluated across stated IS/OOS windows and paper trading.
+
+This evidence does **not** collapse TSI, RSI, moving averages, IBS, OU, pairs, or other reversion variants into one mechanism. The transferable unit remains the exact reference definition, signal horizon, market, execution timing and validation design.
+
+The source-reported performance is research evidence only. EA_LAB has not independently replicated the paper's parameters or accepted an EA from this card.
