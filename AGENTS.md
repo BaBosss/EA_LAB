@@ -166,6 +166,7 @@ verdict, order status, or decision-feeding field.</sub>
      automatically via `ea_template\deploy.ps1` (lanes 1+2 — for lane 3, copy `MQL5\Experts\EALabTpl`
      from lane 2 when you need the latest EA version) · MT4b: new EAs must have their .ex4 copied into
      `D:\Meta4b\MQL4\Experts` by hand (the 07-06 snapshot holds 308 including the already-smoked pool)
+   - **MT5 Experts workspace policy (owner-ratified 2026-08-29):** `MQL5\Experts` is a deploy/compile/test surface, not canonical source storage or a long-term EA archive. Full contract: `docs/MT5_EXPERTS_WORKSPACE_POLICY.md`. Template/Factory/Boss work uses managed `Experts\EALabTpl` through `ea_template\deploy.ps1`; bounded legacy/imported/probe/fixture work uses an order-owned `Experts\EA_LAB_TEST\ORDER-<id>\...` tree with required relative include dependencies preserved. Do not drop generic EA_LAB files into the `Experts` root. `.mqh` files are compile-time dependencies: keep canonical headers in Git and mirror them wherever referenced source is compiled; an already-built `.ex5` does not need `.mqh` at runtime. Do not cosmetically rename accepted/current runtime or evidence identities. Third-party collections stay outside `Experts` until selected by a bounded test contract.
    - **Machine ceiling (i5-13500 = 14 cores / 32GB RAM — measured 2026-07-06):** light work (M1/M2 single
      run) ≈ 1 core/lane → **~6 jobs can genuinely run at once**, but **the default is to stop at the 5
      existing lanes**, because (1) a single MT5 optimizer on lane 1 spawns 5+ agents = already half the
