@@ -58,23 +58,23 @@ try {
   # Hermes 0.20.5 captures local TERMINAL_CWD from process cwd before --in is applied.
   # Pin both process cwd and env so file/terminal tools resolve to SafeWorkspace.
   $env:TERMINAL_CWD = $resolved
-  $quotePs = {
-    param([string]$Value)
-    "'" + ($Value -replace "'","''") + "'"
-  }
-  $exitFile = Join-Path $env:TEMP ("ea_lab_hermes_exit_{0}.txt" -f [guid]::NewGuid().ToString('N'))
-  $argLiterals = @($args | ForEach-Object { & $quotePs ([string]$_) }) -join ','
-  $childScript = "`$childArgs=@($argLiterals); & $(& $quotePs $HermesExe) @childArgs; `$code=`$LASTEXITCODE; Set-Content -LiteralPath $(& $quotePs $exitFile) -Value `$code -NoNewline; exit `$code"
-  $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($childScript))
-  $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-NonInteractive','-EncodedCommand',$encoded) -WorkingDirectory $resolved -NoNewWindow -PassThru
+  $startArgs = @($args | ForEach-Object {
+    $s = [string]$_
+    if ($s -match '[\s"]') { '"' + ($s -replace '"','\"') + '"' } else { $s }
+  })
+  $psi = New-Object System.Diagnostics.ProcessStartInfo
+  $psi.FileName = $HermesExe
+  $psi.Arguments = ($startArgs -join ' ')
+  $psi.WorkingDirectory = $resolved
+  $psi.UseShellExecute = $false
+  $proc = New-Object System.Diagnostics.Process
+  $proc.StartInfo = $psi
+  if (-not $proc.Start()) { throw 'Failed to start Hermes process.' }
   if (-not $proc.WaitForExit($hardTimeout * 1000)) {
     & taskkill.exe /PID $proc.Id /T /F 2>$null | Out-Null
-    Remove-Item -LiteralPath $exitFile -Force -ErrorAction SilentlyContinue
     throw "Hermes task exceeded hard timeout ${hardTimeout}s (run budget ${RunBudgetSeconds}s)."
   }
-  if (-not (Test-Path -LiteralPath $exitFile -PathType Leaf)) { throw 'Hermes child exited without an exit-code receipt.' }
-  $agentExit = [int](Get-Content -LiteralPath $exitFile -Raw)
-  Remove-Item -LiteralPath $exitFile -Force -ErrorAction SilentlyContinue
+  $agentExit = $proc.ExitCode
 } finally {
   Pop-Location
   if ($hadTerminalCwd) { $env:TERMINAL_CWD = $previousTerminalCwd }
