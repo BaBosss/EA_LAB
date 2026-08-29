@@ -100,7 +100,7 @@ def _architecture(hypotheses: list[dict[str, Any]]) -> tuple[dict[str, Any], dic
     versions = {str(module["module_version"]) for module in selected["module_set"]}
     if len(versions) != 1:
         raise Boss14FirstGreenError("selected hypothesis must have one module_version")
-    master = make_master_mold("EA_TEMPLATE_V2", versions.pop(), _module_tokens(hypotheses))
+    master = make_master_mold("EA_TEMPLATE_V2", versions.pop(), _module_tokens([row for row in hypotheses if row.get("boss_family") == 14]))
     family_hypotheses = [row for row in hypotheses if row.get("boss_family") == 14]
     if not family_hypotheses:
         raise Boss14FirstGreenError("Boss14 family has no hypotheses")
