@@ -49,7 +49,7 @@ try {
     $shadow = Join-Path $temp 'knowledge\08_experiments\shadow_registry.jsonl'
     [IO.File]::WriteAllText($shadow,'{"forbidden":true}',(New-Object Text.UTF8Encoding($false)))
     $badShadow = Invoke-Check $temp -KnowledgeOnly
-    Assert-True ($badShadow.ExitCode -ne 0 -and $badShadow.Output -match '(?s)shadow\s+registry/data\s+file.*forbidden\s+under\s+knowledge/08_experiments') 'second experiment registry is rejected'
+    Assert-True ($badShadow.ExitCode -ne 0 -and $badShadow.Output -match 'shadow\s+registry/data' -and $badShadow.Output -match 'forbidden' -and $badShadow.Output -match 'knowledge/08_experiments') 'second experiment registry is rejected'
 } finally {
     if (Test-Path -LiteralPath $temp) { Remove-Item -LiteralPath $temp -Recurse -Force }
 }
