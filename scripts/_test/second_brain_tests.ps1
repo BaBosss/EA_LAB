@@ -54,6 +54,10 @@ try {
     if (Test-Path -LiteralPath $temp) { Remove-Item -LiteralPath $temp -Recurse -Force }
 }
 
+$cardFiles = @(Get-ChildItem -LiteralPath (Join-Path $Root 'knowledge\02_research_cards') -Filter 'RC-*.md' -File)
+$missingResult = @($cardFiles | Where-Object { (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -notmatch '(?m)^## Result\s*$' })
+Assert-True ($missingResult.Count -eq 0) 'all research cards include normalized Result section'
+
 $expReadme = Get-Content -LiteralPath (Join-Path $Root 'knowledge\08_experiments\README.md') -Raw -Encoding UTF8
 $stratReadme = Get-Content -LiteralPath (Join-Path $Root 'knowledge\09_strategy_blueprints\README.md') -Raw -Encoding UTF8
 Assert-True ($expReadme -match 'must not become a second experiment registry') 'experiment pointer layer states no-second-registry boundary'
