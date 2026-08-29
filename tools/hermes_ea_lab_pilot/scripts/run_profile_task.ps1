@@ -64,7 +64,7 @@ try {
   }
   $exitFile = Join-Path $env:TEMP ("ea_lab_hermes_exit_{0}.txt" -f [guid]::NewGuid().ToString('N'))
   $argLiterals = @($args | ForEach-Object { & $quotePs ([string]$_) }) -join ','
-  $childScript = "& $(& $quotePs $HermesExe) @($argLiterals); `$code=`$LASTEXITCODE; Set-Content -LiteralPath $(& $quotePs $exitFile) -Value `$code -NoNewline; exit `$code"
+  $childScript = "`$childArgs=@($argLiterals); & $(& $quotePs $HermesExe) @childArgs; `$code=`$LASTEXITCODE; Set-Content -LiteralPath $(& $quotePs $exitFile) -Value `$code -NoNewline; exit `$code"
   $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($childScript))
   $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-NonInteractive','-EncodedCommand',$encoded) -WorkingDirectory $resolved -NoNewWindow -PassThru
   if (-not $proc.WaitForExit($hardTimeout * 1000)) {
