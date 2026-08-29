@@ -51,6 +51,8 @@ At minimum:
 - BWD 2020-2022: PF `0.34`, 49 trades, net `-2095.59`, equity-relative DD `25.02%`;
 - flat-lot MAIN: PF `5.78`, 97 trades, net `+3477.35`;
 - flat-lot BWD: PF `0.30`, 37 trades, net `-1873.43`, equity DD `25.04%`, hard-DD cage fired;
+- LIMIT first 500-row surface selected StepATR `0.20` on the lower boundary and TP `1.75` on the upper boundary; one allowed expansion moved the bounds `StepATR 0.20 -> 0.15` and `TP 1.75 -> 2.00`; the resulting 720-row surface selected StepATR `0.15` on the new lower boundary; repeated same-boundary pressure stopped automatic widening;
+- LIMIT first-surface StepATR must not be reported as `0.15`; `0.15` is the expanded-surface selected lower boundary;
 - LIMIT: repeated StepATR lower-boundary after one bounded expansion; automatic widening stopped;
 - HOLDOUT `2026H1 = UNSPENT`;
 - current working verdict: `PARKED-VERIFY(user)`;
