@@ -6,6 +6,9 @@ param(
   [ValidateSet('observe','bounded-write')][string]$Mode = 'observe',
   [string[]]$AllowedPaths = @(),
   [ValidateRange(10,300)][int]$RunBudgetSeconds = 120,
+  [string]$InferenceModel = '',
+  [string]$InferenceProvider = '',
+  [ValidateRange(0,900)][int]$HardTimeoutSeconds = 0,
   [string]$HermesExe = "$env:LOCALAPPDATA\hermes\hermes-agent\bin\hermes.exe"
 )
 $ErrorActionPreference = 'Stop'
@@ -41,8 +44,12 @@ $normalizedAllowed = @($AllowedPaths | ForEach-Object {
   $p
 })
 
-$args = @('-p',$Role,'chat','--in',$resolved,'-Q','--max-turns','8','--run-budget',"$RunBudgetSeconds",'--query-file',$PromptFile)
+$args = @('-p',$Role)
+if (-not [string]::IsNullOrWhiteSpace($InferenceModel)) { $args += @('-m',$InferenceModel) }
+if (-not [string]::IsNullOrWhiteSpace($InferenceProvider)) { $args += @('--provider',$InferenceProvider) }
+$args += @('chat','--in',$resolved,'-Q','--max-turns','8','--run-budget',"$RunBudgetSeconds",'--query-file',$PromptFile)
 if ($Mode -eq 'bounded-write') { $args += @('-t','file') }
+$hardTimeout = if ($HardTimeoutSeconds -gt 0) { $HardTimeoutSeconds } else { $RunBudgetSeconds + 60 }
 
 $hadTerminalCwd = Test-Path Env:TERMINAL_CWD
 $previousTerminalCwd = $env:TERMINAL_CWD
@@ -51,8 +58,16 @@ try {
   # Hermes 0.20.5 captures local TERMINAL_CWD from process cwd before --in is applied.
   # Pin both process cwd and env so file/terminal tools resolve to SafeWorkspace.
   $env:TERMINAL_CWD = $resolved
-  & $HermesExe @args
-  $agentExit = $LASTEXITCODE
+  $startArgs = @($args | ForEach-Object {
+    $s = [string]$_
+    if ($s -match '[\s"]') { '"' + ($s -replace '"','\"') + '"' } else { $s }
+  })
+  $proc = Start-Process -FilePath $HermesExe -ArgumentList $startArgs -WorkingDirectory $resolved -NoNewWindow -PassThru
+  if (-not $proc.WaitForExit($hardTimeout * 1000)) {
+    & taskkill.exe /PID $proc.Id /T /F 2>$null | Out-Null
+    throw "Hermes task exceeded hard timeout ${hardTimeout}s (run budget ${RunBudgetSeconds}s)."
+  }
+  $agentExit = $proc.ExitCode
 } finally {
   Pop-Location
   if ($hadTerminalCwd) { $env:TERMINAL_CWD = $previousTerminalCwd }

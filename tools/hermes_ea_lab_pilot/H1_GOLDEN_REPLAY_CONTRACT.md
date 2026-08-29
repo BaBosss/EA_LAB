@@ -76,6 +76,12 @@ Hermes must not claim:
 
 Mechanical/environment failures must remain visibly separate from strategy evidence.
 
+## Provider fallback boundary
+
+Primary launch uses the persistent `ea-researcher` model/provider unchanged. If the primary provider returns an explicit rate-limit/overload/connection failure before a usable H1 report is produced, Control Tower may perform **one runtime-only fallback replay** through the same `ea-researcher` profile and SafeWorkspace using `run_profile_task.ps1 -InferenceModel <model> -InferenceProvider <provider>`. The fallback must be preflighted by an exact-response smoke probe, must not modify the persistent profile/default model, and must be recorded in the H1 result. A provider fallback does not relax any numeric, interpretation, mutation, MT5, HOLDOUT, or authority acceptance criterion.
+
+For the 2026-08-29 H1 recovery, `anthropic/claude-sonnet-4.6` returned HTTP 429 before delivering the final canonical replay. The accepted one-run recovery route is `openai-codex / gpt-5.5`, preflighted with exact response `FALLBACK_OK`. `gpt-5.6` on the same Codex account returned HTTP 400 unsupported and is not an accepted recovery route.
+
 ## H1 PASS
 
 PASS only when:
