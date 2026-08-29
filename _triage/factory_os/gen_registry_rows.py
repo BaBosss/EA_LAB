@@ -39,16 +39,22 @@ if HERE not in sys.path:
 import activation                                  # noqa: E402
 import architecture                                # noqa: E402
 import capability                                  # noqa: E402
+import hypothesis_b11 as HB11                      # noqa: E402
+import hypothesis_b12 as HB12                      # noqa: E402
+import hypothesis_b13 as HB13                      # noqa: E402
 import hypothesis_b14 as HB                        # noqa: E402
+import hypothesis_b15 as HB15                      # noqa: E402
+import hypothesis_b16 as HB16                      # noqa: E402
 import hypothesis_b17 as HB17                      # noqa: E402
 import preset                                      # noqa: E402
 import registry                                    # noqa: E402
+import setfile                                     # noqa: E402
 
 Refusal = preset.PresetRefusal
 
 HYPOTHESES_REL = 'factory/hypotheses.jsonl'
 BINDINGS_REL = 'factory/parameter_bindings.jsonl'
-PROVIDERS = (HB, HB17)
+PROVIDERS = (HB11, HB12, HB13, HB, HB15, HB16, HB17)
 
 # The role every unreachable input gets, and the surface that follows from it. Not a default in the
 # "we had to pick something" sense: an input the build cannot reach has no dial to show and no
@@ -89,10 +95,30 @@ LOSS_CAPS = {
 _NOT_A_LOSS_CAP = {'_2_MaxHoldBars': 'a TIME stop: it bounds duration, not the worst case in equity'}
 
 
-def pinned_config(hyp, surface):
-    """-> the full effective config for one hypothesis: the build's declared defaults with the
-    hypothesis's overrides applied. REFUSES an override the build does not expose."""
+def pinned_config(hyp, surface, read=None, provider=HB):
+    """Return the full effective config for one hypothesis.
+
+    Legacy providers apply explicit overrides to declared defaults. Prospective fixed-baseline
+    providers instead overlay the exact preregistered regression .set on those defaults; omitted
+    physical keys therefore keep their compile-time defaults while the tracked .set remains the
+    byte-for-byte baseline artifact.
+    """
     cfg = dict((d.name, d.default_expr) for d in surface.inputs)
+    if getattr(provider, 'FIXED_BASELINE', False):
+        if read is None:
+            raise Refusal('%s fixed baseline requires a source reader' % surface.build_tag)
+        lines, _comments = setfile.parse_set(read(provider.CONFIG_SET_REL))
+        values = {}
+        for line in lines:
+            if line.name in values:
+                raise Refusal('%s baseline repeats key %s' % (provider.CONFIG_SET_REL, line.name))
+            values[line.name] = line.value
+        if len(values) != provider.EXPECTED_BASELINE_KEYS:
+            raise Refusal('%s baseline has %d physical keys, expected preregistered %d'
+                          % (provider.CONFIG_SET_REL, len(values), provider.EXPECTED_BASELINE_KEYS))
+        for key, value in values.items():
+            if key in cfg:              # physical-only compatibility rows are intentionally not bindings
+                cfg[key] = value
     for key, value in sorted(hyp['config'].items()):
         if key not in cfg:
             raise Refusal(
@@ -142,7 +168,7 @@ def _check_engine_edge_cage(hyp_id, hyp, verdicts, config):
 
 def hypothesis_row(hyp_id, hyp, surface, read, owner_ref, provider=HB):
     """-> the Hypothesis dict. `owner_ref` is a callable (path) -> OwnerRef dict."""
-    cfg = pinned_config(hyp, surface)
+    cfg = pinned_config(hyp, surface, read, provider)
     _arch, digest = architecture.digest_for(surface.build_tag, cfg, surface=surface)
     modules = capability.module_set(surface.build_tag, cfg, read, surface=surface)
     return {
@@ -165,9 +191,9 @@ def hypothesis_row(hyp_id, hyp, surface, read, owner_ref, provider=HB):
     }
 
 
-def binding_rows(hyp_id, hyp, surface, owner_ref, provider=HB, activation_surface=None):
+def binding_rows(hyp_id, hyp, surface, owner_ref, provider=HB, activation_surface=None, read=None):
     """-> [ParameterBinding] for every input on the build's surface, in surface order."""
-    cfg = pinned_config(hyp, surface)
+    cfg = pinned_config(hyp, surface, read, provider)
     act_surface = activation_surface or surface
     states_all = activation.effective_state(surface.build_tag, cfg, surface=act_surface)
     states = {d.name: states_all[d.name] for d in surface.inputs}
@@ -179,22 +205,32 @@ def binding_rows(hyp_id, hyp, surface, owner_ref, provider=HB, activation_surfac
 
     # Both completeness directions, computed before anything is emitted so the refusal names the
     # whole discrepancy rather than the first item of it.
+    fixed = bool(getattr(provider, 'FIXED_BASELINE', False))
+    locked_selectors = set(provider.LOCKED_SELECTORS)
     visible = [n for n, state in states.items()
-               if state['state'] == 'ACTIVE' and n not in provider.LOCKED_SELECTORS]
-    undecided = [n for n in visible if n not in decisions]
-    if undecided:
-        raise Refusal(
-            '%s leaves %d reachable, unlocked input(s) with no entry in DECISIONS: %s. Refused: '
-            'an input nobody classified would still be emitted, land on a surface, and be offered '
-            'to the optimizer with no decision behind it.'
-            % (revision_id, len(undecided), ', '.join(undecided)))
-    stale = [n for n in sorted(decisions) if n not in visible]
-    if stale:
-        raise Refusal(
-            '%s DECISIONS names %d input(s) that are not reachable-and-unlocked under its pinned '
-            'config: %s. Refused: a stale entry keeps a dial on the Operator surface after the '
-            'mode that needed it was switched off, and nothing else in the chain would notice.'
-            % (revision_id, len(stale), ', '.join(stale)))
+               if state['state'] == 'ACTIVE' and n not in locked_selectors]
+    if fixed:
+        # H01 is a fixed-config enrollment: reachable strategy/mechanism rows with no explicit
+        # safety/sizing/runtime classification are LOCKED to the baseline, never made TUNABLE.
+        stale = [n for n in sorted(decisions) if n not in states]
+        if stale:
+            raise Refusal('%s fixed-baseline DECISIONS names absent input(s): %s'
+                          % (revision_id, ', '.join(stale)))
+    else:
+        undecided = [n for n in visible if n not in decisions]
+        if undecided:
+            raise Refusal(
+                '%s leaves %d reachable, unlocked input(s) with no entry in DECISIONS: %s. Refused: '
+                'an input nobody classified would still be emitted, land on a surface, and be offered '
+                'to the optimizer with no decision behind it.'
+                % (revision_id, len(undecided), ', '.join(undecided)))
+        stale = [n for n in sorted(decisions) if n not in visible]
+        if stale:
+            raise Refusal(
+                '%s DECISIONS names %d input(s) that are not reachable-and-unlocked under its pinned '
+                'config: %s. Refused: a stale entry keeps a dial on the Operator surface after the '
+                'mode that needed it was switched off, and nothing else in the chain would notice.'
+                % (revision_id, len(stale), ', '.join(stale)))
 
     rows = []
     for name, state in states.items():
@@ -211,7 +247,7 @@ def binding_rows(hyp_id, hyp, surface, owner_ref, provider=HB, activation_surfac
             row['surface'] = INACTIVE_SURFACE
             row['optimize_stage'] = 'FREEZE'
             row['safe_range'] = None
-        elif name in provider.LOCKED_SELECTORS:
+        elif name in locked_selectors or (fixed and name not in decisions):
             row['role'] = 'LOCKED'
             row['surface'] = INACTIVE_SURFACE     # a const has no page to appear on
             row['locked_value'] = cfg[name]
@@ -248,7 +284,7 @@ def build(surface, read, owner_ref, hypothesis_ids=None, provider=HB, activation
     for hyp_id in ids:
         hyp = provider.HYPOTHESES[hyp_id]
         hyps.append(hypothesis_row(hyp_id, hyp, surface, read, owner_ref, provider))
-        binds.extend(binding_rows(hyp_id, hyp, surface, owner_ref, provider, activation_surface))
+        binds.extend(binding_rows(hyp_id, hyp, surface, owner_ref, provider, activation_surface, read))
     _validate_vocabulary(binds)
     return hyps, binds
 

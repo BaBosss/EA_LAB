@@ -46,7 +46,12 @@ sys.path.insert(0, HERE)
 
 import evidence                                   # noqa: E402
 import gen_registry_rows as gen                   # noqa: E402
+import hypothesis_b11 as HB11                     # noqa: E402
+import hypothesis_b12 as HB12                     # noqa: E402
+import hypothesis_b13 as HB13                     # noqa: E402
 import hypothesis_b14 as HB                       # noqa: E402
+import hypothesis_b15 as HB15                     # noqa: E402
+import hypothesis_b16 as HB16                     # noqa: E402
 import hypothesis_b17 as HB17                     # noqa: E402
 import preset                                     # noqa: E402
 import registry                                   # noqa: E402
@@ -92,7 +97,12 @@ def _rows_of(text, entity):
 # store is stale" have different next steps and only one of them is true.
 _GENERATOR_MODULES = (
     '_triage/factory_os/gen_registry_rows.py',
+    '_triage/factory_os/hypothesis_b11.py',
+    '_triage/factory_os/hypothesis_b12.py',
+    '_triage/factory_os/hypothesis_b13.py',
     '_triage/factory_os/hypothesis_b14.py',
+    '_triage/factory_os/hypothesis_b15.py',
+    '_triage/factory_os/hypothesis_b16.py',
     '_triage/factory_os/hypothesis_b17.py',
     '_triage/factory_os/activation.py',
     '_triage/factory_os/architecture.py',
@@ -103,8 +113,13 @@ _GENERATOR_MODULES = (
 def _import_matches_source(src):
     """Return a problem when an imported decision table differs from its source bytes."""
     specs = (
+        ('_triage/factory_os/hypothesis_b11.py', HB11, ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
+        ('_triage/factory_os/hypothesis_b12.py', HB12, ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
+        ('_triage/factory_os/hypothesis_b13.py', HB13, ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
         ('_triage/factory_os/hypothesis_b14.py', HB,
          ('HYPOTHESES','DECISIONS','DECISIONS_H02_EXTRA','LOCKED_SELECTORS')),
+        ('_triage/factory_os/hypothesis_b15.py', HB15, ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
+        ('_triage/factory_os/hypothesis_b16.py', HB16, ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
         ('_triage/factory_os/hypothesis_b17.py', HB17,
          ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
     )
@@ -172,11 +187,9 @@ def check(worktree=False, source=None):
                      if row.get('classification', '').strip().upper() != 'COMPATIBILITY'}
 
     def surface_for_revision(rev):
-        if rev.startswith('B14-'):
-            provider = HB
-        elif rev.startswith('B17-'):
-            provider = HB17
-        else:
+        providers = (HB11, HB12, HB13, HB, HB15, HB16, HB17)
+        provider = next((p for p in providers if rev.startswith('B%d-' % list(p.HYPOTHESES.values())[0]['boss_family'])), None)
+        if provider is None:
             raise preset.PresetRefusal('no decision provider for revision %s' % rev)
         raw = preset.parse_surface(inputs_text, provider.BUILD_TAG)
         surface = preset.Surface(provider.BUILD_TAG,

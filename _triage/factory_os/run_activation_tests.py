@@ -49,8 +49,11 @@ _RAW_SURFACE = P.parse_surface(INPUTS_TEXT, BUILD)
 SURFACE = P.Surface(BUILD, [d for d in _RAW_SURFACE.inputs if d.name in ACT.TABLE[BUILD]],
                     _RAW_SURFACE.known_tags)
 SURFACE.enums = _RAW_SURFACE.enums
-_RAW_S16 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_16')
-S16 = _RAW_S16
+S11 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_11')
+S12 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_12')
+S13 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_13')
+S15 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_15')
+S16 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_16')
 S17 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_17')
 S18 = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_18')
 
@@ -186,8 +189,9 @@ def a5_specificity(mod):
     """An UNDECLARED BUILD is refused rather than answered -- "no table" must not look like "no
     inactive inputs"."""
     try:
-        mod.classify('LAB_ENTRY_16', base_config(S16), surface=S16)
-        return ('build 16 was classified although slice S7 declared build 14 only, so an absent '
+        undeclared = P.parse_surface(INPUTS_TEXT, 'LAB_ENTRY_19')
+        mod.classify('LAB_ENTRY_19', base_config(undeclared), surface=undeclared)
+        return ('build 19 was classified although this activation table has not declared it, so an absent '
                 'table produced a confident answer')
     except mod.Refusal:
         return None
@@ -310,6 +314,71 @@ def a8_specificity(mod):
         if 'REC_NONEE' not in str(exc):
             return 'it refused the typo but did not name it: %s' % str(exc)[:120]
     return None
+
+
+# --- B11/B12/B13/B15/B16 prospective enrollment activation extension ---------------------------
+
+NEW_FAMILY_SURFACES = ((11, S11, 151), (12, S12, 155), (13, S13, 157),
+                       (15, S15, 157), (16, S16, 173))
+
+
+def new_family_surface_completeness(mod):
+    for number, surface, expected in NEW_FAMILY_SURFACES:
+        build = 'LAB_ENTRY_%d' % number
+        names = set(d.name for d in surface.inputs)
+        table_names = set(mod.TABLE[build])
+        if len(names) != expected:
+            return '%s fixture has %d physical inputs, expected %d' % (build, len(names), expected)
+        if table_names != names:
+            return '%s table differs from its surface: missing=%s extra=%s' % (
+                build, sorted(names-table_names), sorted(table_names-names))
+        verdicts = mod.classify(build, base_config(surface), surface=surface)
+        if set(verdicts) != names:
+            return '%s classify output is not the exact physical surface' % build
+    return None
+
+
+def new_family_gate_specificity(mod):
+    # B11: shared entry direction/trend filter genuinely control the entry.
+    b11 = mod.classify('LAB_ENTRY_11', base_config(S11), surface=S11)
+    if not b11['TradeDir'].active or not b11['TrendFilter'].active:
+        return 'B11 shared TradeDir/TrendFilter are not reachable'
+    # B12: equal hours mean session filter disabled; unequal means both hour selectors matter.
+    b12eq = mod.classify('LAB_ENTRY_12', base_config(S12, _12_HourFrom='0', _12_HourTo='0'), surface=S12)
+    b12ne = mod.classify('LAB_ENTRY_12', base_config(S12, _12_HourFrom='8', _12_HourTo='17'), surface=S12)
+    if b12eq['_12_HourFrom'].active or b12eq['_12_HourTo'].active:
+        return 'B12 equal-hour disabled session exposed its hour dials'
+    if not b12ne['_12_HourFrom'].active or not b12ne['_12_HourTo'].active:
+        return 'B12 unequal-hour active session did not expose both hour dials'
+    # B13: BB deviation only matters when the BB condition is required.
+    b13on = mod.classify('LAB_ENTRY_13', base_config(S13, _13_RequireBB='true'), surface=S13)
+    b13off = mod.classify('LAB_ENTRY_13', base_config(S13, _13_RequireBB='false'), surface=S13)
+    if not b13on['_13_BB_Dev'].active or b13off['_13_BB_Dev'].active:
+        return 'B13 _13_BB_Dev did not follow _13_RequireBB'
+    # B15 has TradeDir but no shared TrendFilter path; RearmBars is edge-trigger only.
+    b15on = mod.classify('LAB_ENTRY_15', base_config(S15, _15_EdgeTrigger='true'), surface=S15)
+    b15off = mod.classify('LAB_ENTRY_15', base_config(S15, _15_EdgeTrigger='false'), surface=S15)
+    if not b15on['TradeDir'].active or b15on['TrendFilter'].active:
+        return 'B15 TradeDir/TrendFilter ownership is not source-specific'
+    if not b15on['_15_RearmBars'].active or b15off['_15_RearmBars'].active:
+        return 'B15 RearmBars did not follow EdgeTrigger'
+    # B16 owns the runtime pipeline: shared stack/exit selectors are inert, direction-specific RSI is not.
+    b16buy = mod.classify('LAB_ENTRY_16', base_config(S16, _16_Direction='1'), surface=S16)
+    b16sell = mod.classify('LAB_ENTRY_16', base_config(S16, _16_Direction='2'), surface=S16)
+    for name in ('ExitMode','SLMode','StackMode','RecoveryMode','HedgeMode','TradeDir','TrendFilter'):
+        if b16buy[name].active:
+            return 'B16 exposes shared runtime selector %s despite Kangaroo ownership' % name
+    if not b16buy['_16_RsiLow'].active or b16buy['_16_RsiHigh'].active:
+        return 'B16 buy instance does not expose only its RSI-low threshold'
+    if not b16sell['_16_RsiHigh'].active or b16sell['_16_RsiLow'].active:
+        return 'B16 sell instance does not expose only its RSI-high threshold'
+    return None
+
+
+NEW_EXTENSION_CASES = (
+    ('B11-16-1', 'new-family exact physical activation surfaces', new_family_surface_completeness),
+    ('B11-16-2', 'family-specific entry gates and Kangaroo ownership', new_family_gate_specificity),
+)
 
 
 # --- B17/B18 activation extension: exact complete tables with source-proven gates ---------------
@@ -493,6 +562,15 @@ def main(argv):
             print('  [%s] %-3s %-11s %s' % ('OK ' if ok else 'BAD', cid, kind, label[:78]))
             if not ok:
                 print('        -> %s' % why)
+
+    print('\n=== B11/B12/B13/B15/B16 activation extension: %d focused criteria ===' % len(NEW_EXTENSION_CASES))
+    for cid, label, fn in NEW_EXTENSION_CASES:
+        why = fn(ACT)
+        ok = why is None
+        bad += 0 if ok else 1
+        print('  [%s] %-9s %s' % ('OK ' if ok else 'BAD', cid, label))
+        if not ok:
+            print('        -> %s' % why)
 
     print('\n=== B17/B18 activation extension: %d focused criteria ===' % len(EXTENSION_CASES))
     for cid, label, fn in EXTENSION_CASES:

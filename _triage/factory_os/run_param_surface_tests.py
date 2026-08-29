@@ -229,9 +229,38 @@ def _p5_stale_import_case():
 def _registration_specificity():
     hyps = [r for _n, r in C._rows_of(_disk(gen.HYPOTHESES_REL), 'Hypothesis')]
     binds = [r for _n, r in C._rows_of(_disk(gen.BINDINGS_REL), 'ParameterBinding')]
+    problems = []
+
+    prereg = '82fb2d06f8b6a6240ff1aa222d14e4438fead1e4'
+    anchor = 'FACTORY-B11-16-PROSPECTIVE-H01-PREREGISTRATION:'
+    expected_counts = {11:139, 12:143, 13:145, 15:145, 16:161}
+    for number, expected_count in sorted(expected_counts.items()):
+        revision = 'B%d-H01-r1' % number
+        hs = [h for h in hyps if h.get('revision_id') == revision]
+        rows = [r for r in binds if r.get('hypothesis_revision') == revision]
+        if len(hs) != 1:
+            problems.append('%s hypothesis count is %d, expected 1' % (revision, len(hs)))
+        else:
+            h = hs[0]
+            ref = h.get('preregistration_ref') or {}
+            if ref.get('commit_oid') != prereg:
+                problems.append('%s prereg commit drifted to %r' % (revision, ref.get('commit_oid')))
+            if ref.get('anchor') != anchor:
+                problems.append('%s prereg anchor drifted to %r' % (revision, ref.get('anchor')))
+            if h.get('status') != 'REGISTERED':
+                problems.append('%s lifecycle status is not REGISTERED' % revision)
+        if len(rows) != expected_count:
+            problems.append('%s binding count is %d, expected %d logical rows'
+                            % (revision, len(rows), expected_count))
+        if any(r.get('role') == 'TUNABLE' for r in rows):
+            problems.append('%s exposes a TUNABLE row despite fixed-config H01 authority' % revision)
+        if any(r.get('optimize_stage') not in (None, 'FREEZE') for r in rows):
+            problems.append('%s exposes non-FREEZE optimize_stage under fixed-config H01' % revision)
+        if any(r.get('safe_range') is not None for r in rows):
+            problems.append('%s exposes a safe_range under zero optimizer authority' % revision)
+
     b17h = [h for h in hyps if h.get('revision_id') == 'B17-H01-r1']
     b17 = [r for r in binds if r.get('hypothesis_revision') == 'B17-H01-r1']
-    problems = []
     if len(b17h) != 1:
         problems.append('B17-H01-r1 hypothesis count is %d, expected 1' % len(b17h))
     else:
@@ -258,7 +287,7 @@ def _registration_specificity():
     if any(r.get('role') == 'TUNABLE' for r in b17):
         problems.append('B17 historical frozen registration exposes a TUNABLE row')
     if any(h.get('boss_family') == 18 for h in hyps) or any(str(r.get('hypothesis_revision','')).startswith('B18-') for r in binds):
-        problems.append('B18 materialized without the missing tracked pre-result configuration pin')
+        problems.append('B18 materialized without the missing semantic direction decision')
     return problems
 
 
@@ -285,9 +314,9 @@ def main(argv):
     print('  [OK ] specificity the REAL store produces ZERO problems')
     registration = _registration_specificity()
     if registration:
-        print('  [BAD] B17/B18 registration specificity failed: %s' % '; '.join(registration))
+        print('  [BAD] B11-17/B18 registration specificity failed: %s' % '; '.join(registration))
         return 1
-    print('  [OK ] B17 registered fail-closed (147 rows, 0 optimizer-enabled tunables); B18 remains unregistered')
+    print('  [OK ] B11/B12/B13/B15/B16 fixed H01 registrations expose 0 tunables; B17 preserved; B18 remains unregistered')
 
     for label, fn, needle, miss in (
             ('a generator whose COMMITTED bytes are not the ones python imported',

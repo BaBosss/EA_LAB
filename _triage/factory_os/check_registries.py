@@ -152,6 +152,17 @@ RESOLVER_SWEEP_EXEMPT = {
         'module validates every role and surface it names against registry.ROLES/SURFACES at '
         'import, so it cannot introduce a value the resolver does not know. Sweeping it would '
         'leave no legal place to WRITE a binding down.',
+    '_triage/factory_os/hypothesis_b11.py':
+        'B11 prospective fixed-H01 decision table: records only explicit safety/sizing/runtime roles; '
+        'all other reachable rows are locked by gen_registry_rows.py, never made tunable here.',
+    '_triage/factory_os/hypothesis_b12.py':
+        'B12 prospective fixed-H01 decision table: same bounded fixed-baseline contract as B11.',
+    '_triage/factory_os/hypothesis_b13.py':
+        'B13 prospective fixed-H01 decision table: same bounded fixed-baseline contract as B11.',
+    '_triage/factory_os/hypothesis_b15.py':
+        'B15 prospective fixed-H01 decision table: same bounded fixed-baseline contract as B11.',
+    '_triage/factory_os/hypothesis_b16.py':
+        'B16 prospective fixed-H01 decision table: same bounded fixed-baseline contract, with Kangaroo-owned sizing/safety rows explicit.',
     '_triage/factory_os/hypothesis_b17.py':
         'B17-H01 decision table: same contract as hypothesis_b14.py. It records per-hypothesis '
         'role/surface choices, validates them against registry.ROLES/SURFACES at import, and never '

@@ -75,6 +75,16 @@ def GT0(selector):
     return ('GT0', selector)
 
 
+def GT(selector, threshold):
+    """active only when another numeric input is greater than `threshold`."""
+    return ('GT', selector, float(threshold))
+
+
+def FIELDS_NE(left, right):
+    """active when two selectors differ after canonical .set rendering."""
+    return ('FIELDS_NE', left, right)
+
+
 def AND(*gates):
     return ('AND',) + gates
 
@@ -399,6 +409,91 @@ def _with_build_entry_rows(entry_rows):
     return table
 
 
+def _with_shared_entry_family(entry_token, entry_rows, uses_trend_filter):
+    """Reuse chassis gates while rebinding only shared entry-family inputs proven live."""
+    table = _with_build_entry_rows(entry_rows)
+    table['TradeDir'] = (entry_token, ALWAYS)
+    if uses_trend_filter:
+        table['TrendFilter'] = (entry_token, ALWAYS)
+        table['_71_ATRMA'] = (entry_token, EQ('TrendFilter', 'TFILTER_ATR_EXPAND'))
+        table['_71_ATRRatio'] = (entry_token, EQ('TrendFilter', 'TFILTER_ATR_EXPAND'))
+        table['_72_SlopeBar'] = (entry_token, EQ('TrendFilter', 'TFILTER_MA_SLOPE'))
+    return table
+
+
+_B11 = _with_shared_entry_family('LAB_CAP_ENTRY_GRIDTRENDMA', {}, True)
+
+_B12 = _with_shared_entry_family('LAB_CAP_ENTRY_BREAKOUT', {
+    '_12_Bars':        ('LAB_CAP_ENTRY_BREAKOUT', ALWAYS),
+    '_12_ConfirmBars': ('LAB_CAP_ENTRY_BREAKOUT', ALWAYS),
+    '_12_HourFrom':    ('LAB_CAP_ENTRY_BREAKOUT', FIELDS_NE('_12_HourFrom', '_12_HourTo')),
+    '_12_HourTo':      ('LAB_CAP_ENTRY_BREAKOUT', FIELDS_NE('_12_HourFrom', '_12_HourTo')),
+}, True)
+
+_B13 = _with_shared_entry_family('LAB_CAP_ENTRY_MEANREVERSION', {
+    '_13_BB_Dev':      ('LAB_CAP_ENTRY_MEANREVERSION', EQ('_13_RequireBB', 'true')),
+    '_13_BB_Period':   ('LAB_CAP_ENTRY_MEANREVERSION', ALWAYS),
+    '_13_RSI_OB':      ('LAB_CAP_ENTRY_MEANREVERSION', ALWAYS),
+    '_13_RSI_OS':      ('LAB_CAP_ENTRY_MEANREVERSION', ALWAYS),
+    '_13_RSI_Period':  ('LAB_CAP_ENTRY_MEANREVERSION', ALWAYS),
+    '_13_RequireBB':   ('LAB_CAP_ENTRY_MEANREVERSION', ALWAYS),
+}, True)
+
+_B15 = _with_shared_entry_family('LAB_CAP_ENTRY_ST03', {
+    '_15_CountBars':   ('LAB_CAP_ENTRY_ST03', ALWAYS),
+    '_15_EdgeTrigger': ('LAB_CAP_ENTRY_ST03', ALWAYS),
+    '_15_MacdFast':    ('LAB_CAP_ENTRY_ST03', ALWAYS),
+    '_15_MacdSignal':  ('LAB_CAP_ENTRY_ST03', ALWAYS),
+    '_15_MacdSlow':    ('LAB_CAP_ENTRY_ST03', ALWAYS),
+    '_15_RearmBars':   ('LAB_CAP_ENTRY_ST03', EQ('_15_EdgeTrigger', 'true')),
+}, False)
+
+_B16 = _with_build_entry_rows({
+    '_16_AtrMultAfter':         ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_AtrMultFirst4':        ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_BaseLot':              ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_BaseLotMode':          ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_BasketTpUsdPer01':     ('LAB_CAP_ENTRY_KANGAROORSI', SELF_GT0),
+    '_16_Direction':            ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_EmergencyDDPct':       ('LAB_CAP_ENTRY_KANGAROORSI', SELF_GT0),
+    '_16_FlattenMinOrders':     ('LAB_CAP_ENTRY_KANGAROORSI', EQ('_16_FlattenOn', 'true')),
+    '_16_FlattenOn':            ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_LadderMult':           ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_MaxControlledLossUsd': ('LAB_CAP_ENTRY_KANGAROORSI', EQ('_16_FlattenOn', 'true')),
+    '_16_MaxLotPerOrder':       ('LAB_CAP_ENTRY_KANGAROORSI', GT('_16_LadderMult', 1.0)),
+    '_16_MaxOrdersPerSide':     ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_MaxSlPips':            ('LAB_CAP_ENTRY_KANGAROORSI', SELF_GT0),
+    '_16_MinDistPips':          ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_OverlapMinOrders':     ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_OverlapMinUsd':        ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_RsiHigh':              ('LAB_CAP_ENTRY_KANGAROORSI', EQ('_16_Direction', '2')),
+    '_16_RsiLow':               ('LAB_CAP_ENTRY_KANGAROORSI', EQ('_16_Direction', '1')),
+    '_16_RsiPeriod':            ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_SlAtrMult':            ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+    '_16_TpSingleAtrMult':      ('LAB_CAP_ENTRY_KANGAROORSI', ALWAYS),
+})
+# Entry 16 returns from Kangaroo_OnTick before the shared management pipeline.
+for _name, (_token, _gate) in list(_B16.items()):
+    if _token in ('LAB_CAP_EXIT', 'LAB_CAP_STACK', 'LAB_CAP_LOTPROG',
+                  'LAB_CAP_RECOVERY', 'LAB_CAP_HEDGE', 'LAB_CAP_REGIME'):
+        _B16[_name] = (_token, NEVER('KANGAROO_OWNS_RUNTIME_PIPELINE'))
+for _name in ('ExitMode', 'SLMode', 'StackMode', 'StackConfirm', 'FirstLotMode', 'LotProg',
+              'RecoveryMode', 'HedgeMode', 'TradeDir', 'TrendFilter', '_71_ATRMA',
+              '_71_ATRRatio', '_72_SlopeBar', '_0_BarOpenOnly'):
+    if _name in _B16:
+        _B16[_name] = ('LAB_CAP_CORE', NEVER('KANGAROO_OWNS_RUNTIME_PIPELINE'))
+for _name in list(_B16):
+    if (_name.startswith('_HEAT_') or _name == 'UseMiddlePathVeto' or
+            _name.startswith('_MID_') or _name.startswith('MID_')):
+        _B16[_name] = (_B16[_name][0], NEVER('KANGAROO_BYPASSES_SHARED_ENTRY_PIPELINE'))
+for _name in ('_41_FixedLot', '_42_RiskPct', '_4_DdAdaptiveOn', '_4_DdTier1Pct',
+              '_4_DdTier1Mult', '_4_DdTier2Pct', '_4_DdTier2Mult', '_4_DdHardCapMult'):
+    if _name in _B16:
+        _B16[_name] = ('LAB_CAP_MM', NEVER('KANGAROO_OWNS_LOT_LAW'))
+_B16['_43_LotPerAnchor'] = ('LAB_CAP_MM', EQ('_16_BaseLotMode', '1'))
+_B16['_43_BalanceAnchor'] = ('LAB_CAP_MM', EQ('_16_BaseLotMode', '1'))
+
+
 _B17 = _with_build_entry_rows({
     '_17_FractalDepth':    ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
     '_17_Wave3MinMult':    ('LAB_CAP_ENTRY_WAVE5', ALWAYS),
@@ -424,7 +519,9 @@ _B18 = _with_build_entry_rows({
 })
 
 
-TABLE = {'LAB_ENTRY_14': _B14, 'LAB_ENTRY_17': _B17, 'LAB_ENTRY_18': _B18}
+TABLE = {'LAB_ENTRY_11': _B11, 'LAB_ENTRY_12': _B12, 'LAB_ENTRY_13': _B13,
+         'LAB_ENTRY_14': _B14, 'LAB_ENTRY_15': _B15, 'LAB_ENTRY_16': _B16,
+         'LAB_ENTRY_17': _B17, 'LAB_ENTRY_18': _B18}
 
 
 def _num(text):
@@ -484,6 +581,16 @@ def _eval(gate, name, config, surface=None):
             raise Refusal('the gate for %s reads %s > 0 but that value %r is not a number'
                           % (name, gate[1], config.get(gate[1])))
         return v > 0
+    if kind == 'GT':
+        v = _num(_value(config, gate[1], name))
+        if v is None:
+            raise Refusal('the gate for %s reads %s > %s but that value %r is not a number'
+                          % (name, gate[1], gate[2], config.get(gate[1])))
+        return v > float(gate[2])
+    if kind == 'FIELDS_NE':
+        left = _canon(_value(config, gate[1], name), gate[1], surface)
+        right = _canon(_value(config, gate[2], name), gate[2], surface)
+        return left != right
     if kind == 'NEVER':
         return False
     if kind == 'AND':
