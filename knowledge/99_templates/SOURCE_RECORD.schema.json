@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EA_LAB Second Brain Source Record",
+  "type": "object",
+  "required": ["source_id", "source_type", "title", "locator", "sha256", "status", "authority"],
+  "properties": {
+    "source_id": {"type": "string", "pattern": "^SRC-[A-Z0-9-]+$"},
+    "source_type": {"type": "string"},
+    "title": {"type": "string", "minLength": 1},
+    "locator": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"type": "string"},
+    "authority": {"const": "RESEARCH_ONLY"},
+    "upstream": {"type": "string"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}

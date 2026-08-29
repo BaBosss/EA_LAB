@@ -11,6 +11,8 @@ $required=@(
  'portfolio/DEPLOYMENTS.csv','docs/memory_control/FACT_OWNER_MAP.md','docs/memory_control/README.md',
  'docs/memory_control/B1_COHORT.md','docs/research/RESEARCH_IDEA_INBOX.md',
  'docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md','docs/research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md',
+ 'docs/research/EA_LAB_SECOND_BRAIN_FOUNDATION.md','knowledge/README.md','knowledge/00_indexes/SECOND_BRAIN_INDEX.md',
+ 'knowledge/01_sources/source_registry.jsonl','scripts/check_second_brain.ps1',
  'docs/EA_LAB_KNOWLEDGE_MAP.md','CLAUDE.md',
  'docs/skills_mirror/skills/backtest-optimize-rigor/SKILL.md',
  'scripts/make_context_packet.ps1','scripts/make_knowledge_map.ps1'
@@ -52,6 +54,8 @@ if($flatRule -and $typeRelative){
     else { Add-Error 'sample-floor contradiction detected but KINT-001 is not documented OPEN in Factory vNext draft' }
 }
 
+try { & (Join-Path $Root 'scripts\check_second_brain.ps1') -Root $Root | Write-Output }
+catch { Add-Error ("Second Brain integrity failed: " + $_.Exception.Message) }
 try { & (Join-Path $Root 'scripts\make_knowledge_map.ps1') -Root $Root -Check | Write-Output }
 catch { Add-Error ("knowledge-map drift: " + $_.Exception.Message) }
 foreach($w in $warnings){ Write-Warning $w }

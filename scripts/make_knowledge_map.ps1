@@ -48,6 +48,12 @@ $lines.Add('')
 $lines.Add('## Research / Intake')
 Add-Link $lines 'docs/research/RESEARCH_IDEA_INBOX.md' 'non-authoritative intake and triage queue for ideas, links, PDFs and observations'
 Add-Link $lines 'docs/research/EA_LAB_QUANT_INTELLIGENCE_ARCHITECTURE_PLAN.md' 'quant-intelligence research architecture where present'
+Add-Link $lines 'docs/research/EA_LAB_SECOND_BRAIN_FOUNDATION.md' 'Second Brain foundation boundary, tooling, and seed migration'
+$lines.Add('')
+$lines.Add('## Second Brain / Research Knowledge')
+Add-Link $lines 'knowledge/README.md' 'non-authoritative research knowledge boundary and ingestion rules'
+Add-Link $lines 'knowledge/00_indexes/SECOND_BRAIN_INDEX.md' 'research knowledge navigation and canonical-owner pointers'
+Add-Link $lines 'knowledge/01_sources/source_registry.jsonl' 'hashed source/provenance registry for research inputs'
 $lines.Add('')
 $lines.Add('## History / Evidence')
 Add-Link $lines 'PROJECT_HISTORY.md' 'historical project narrative and decision provenance'

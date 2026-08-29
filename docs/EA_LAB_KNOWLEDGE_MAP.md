@@ -32,6 +32,12 @@
 ## Research / Intake
 - [docs/research/RESEARCH_IDEA_INBOX.md](../docs/research/RESEARCH_IDEA_INBOX.md) - non-authoritative intake and triage queue for ideas, links, PDFs and observations
 - [docs/research/EA_LAB_QUANT_INTELLIGENCE_ARCHITECTURE_PLAN.md](../docs/research/EA_LAB_QUANT_INTELLIGENCE_ARCHITECTURE_PLAN.md) - quant-intelligence research architecture where present
+- [docs/research/EA_LAB_SECOND_BRAIN_FOUNDATION.md](../docs/research/EA_LAB_SECOND_BRAIN_FOUNDATION.md) - Second Brain foundation boundary, tooling, and seed migration
+
+## Second Brain / Research Knowledge
+- [knowledge/README.md](../knowledge/README.md) - non-authoritative research knowledge boundary and ingestion rules
+- [knowledge/00_indexes/SECOND_BRAIN_INDEX.md](../knowledge/00_indexes/SECOND_BRAIN_INDEX.md) - research knowledge navigation and canonical-owner pointers
+- [knowledge/01_sources/source_registry.jsonl](../knowledge/01_sources/source_registry.jsonl) - hashed source/provenance registry for research inputs
 
 ## History / Evidence
 - [PROJECT_HISTORY.md](../PROJECT_HISTORY.md) - historical project narrative and decision provenance
