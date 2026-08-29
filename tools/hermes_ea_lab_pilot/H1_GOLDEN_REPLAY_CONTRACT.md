@@ -17,6 +17,7 @@ Read only current pushed canonical bytes needed from:
 - `docs/concepts/BOSS19_ADAPTIVE_TREND_GRID_SPEC.md`;
 - `docs/concepts/BOSS19_ADAPTIVE_TREND_GRID_ACCEPTANCE.md`;
 - `ea_template/sets/probe/Boss_19_AdaptiveTrendGrid_V0_STOP_VALIDATION_CENTER.set`;
+- `ea_template/core/RiskControl.mqh` and `ea_template/core/Inputs.mqh` for the executable risk-cage depth and protection-profile mapping;
 - immediate Boss19 source only if needed to verify mechanics.
 
 Do not search broadly once these sources answer the field.
@@ -34,12 +35,17 @@ Return one deterministic text report with sections:
 9. LIMIT BOUNDARY CONDITION;
 10. HOLDOUT STATE;
 11. REGIME EVIDENCE STATE;
-12. VERDICT / KNOWN UNKNOWNS / NEXT CONSUMER.## Golden facts that must reproduce
+12. VERDICT / KNOWN UNKNOWNS / NEXT CONSUMER.
+
+## Golden facts that must reproduce
 
 At minimum:
 - lineage: `19-0`, parent `NONE`, base/reference Adaptive Grid;
 - tested accepted home so far: XAUUSD H1 only;
 - reference center: StepATR `0.30`, Fast `20`, Slow `50`, TP_ATR `1.50`;
+- configured `_9_MaxLevels = 5`, but executable depth is `3`: `ProtectLevel=PROTECT_NORMAL=2` -> `RC_MaxRecSteps()=3`, `RC_MaxLevelsOverride=0`, therefore `RiskControl_MaxLevels()=3` and `min(3,5)=3`;
+- executable ladder/exposure must use L1-L3 only; farthest executable target is `3 * 0.30 = 0.90 D1 ATR` from the reference (not 1.50 ATR), with UP raw lots `0.010/0.015/0.020` and cumulative raw UP exposure `0.045` lots;
+- configured five-level values may be reported only when explicitly labeled **configured/non-executable under the locked risk cage**;
 - reference-center meaning: historical surface center, **not global optimum**;
 - MAIN 2023-2025: PF `4.64`, 100 trades, net `+4486.59`, report equity-relative DD `7.58%` (maximal-equity-DD line `6.62%`);
 - BWD 2020-2022: PF `0.34`, 49 trades, net `-2095.59`, equity-relative DD `25.02%`;
@@ -50,7 +56,9 @@ At minimum:
 - current working verdict: `PARKED-VERIFY(user)`;
 - broad Symbol x TF matrix: NOT RUN;
 - frozen-timeline regime affinity: NOT ESTABLISHED;
-- `QUALITY_GRADE = UNRATIFIED` unless an exact ratified mapping is subsequently canonical.
+- `QUALITY_GRADE = UNRATIFIED` unless an exact ratified mapping is subsequently canonical;
+- `EVIDENCE_CONFIDENCE = UNRATIFIED / DESCRIPTIVE ONLY` unless exact ratified thresholds are subsequently canonical;
+- `BUILD_POTENTIAL = UNRATIFIED / DESCRIPTIVE ONLY` unless exact ratified thresholds are subsequently canonical.
 
 ## Interpretation boundaries
 
@@ -64,7 +72,9 @@ Hermes must not claim:
 - a star rating is an authoritative Quality Grade;
 - any candidate/DEMO/LIVE/deployment authority.
 
-Mechanical/environment failures must remain visibly separate from strategy evidence.## H1 PASS
+Mechanical/environment failures must remain visibly separate from strategy evidence.
+
+## H1 PASS
 
 PASS only when:
 - all required sections are present;
