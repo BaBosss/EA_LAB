@@ -29,7 +29,7 @@ Batch 2 reinforces Batch 1's multiple-testing lesson: a promising mechanism card
 
 ## Direct next research consumers
 
-- classify remaining `PENDING_CLASSIFICATION` Drive papers before deep ingestion;
+- use the completed supplied corpus to generate source-traceable `TESTABLE_HYPOTHESIS` candidates through the existing knowledge-query and strategy-synthesis skills;
 - ingest additional execution/cost and counterevidence sources where they close a concrete hypothesis gap;
 - use these cards to narrow prospective hypotheses, not to auto-generate accepted strategies.
 
