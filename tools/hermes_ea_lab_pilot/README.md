@@ -1,4 +1,4 @@
-﻿# HERMES_EA_LAB_PILOT
+# HERMES_EA_LAB_PILOT
 
 Isolated Hermes Bot Mode pilot for EA_LAB. This module is prepared and reviewed on its own branch before any canonical merge.
 
@@ -43,4 +43,3 @@ Hermes MAY NOT invent a strategy hypothesis, silently change parent mechanics, c
 
 Canonical method: `docs/research/EA_RND_PROTOCOL.md`. Report owner: `docs/research/EA_REPORT_SCHEMA.md`. Regime owner: `docs/research/EA_REGIME_FRAMEWORK.md`.
 Qualification: H0 protocol load -> H1 Golden Replay (existing evidence only, no new MT5) -> H2 2-3 pre-authorized cells -> H3 approved batch mode. Current next contract: `H1_GOLDEN_REPLAY_CONTRACT.md`.
-
