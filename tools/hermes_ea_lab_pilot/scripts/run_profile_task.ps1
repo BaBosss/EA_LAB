@@ -58,16 +58,23 @@ try {
   # Hermes 0.20.5 captures local TERMINAL_CWD from process cwd before --in is applied.
   # Pin both process cwd and env so file/terminal tools resolve to SafeWorkspace.
   $env:TERMINAL_CWD = $resolved
-  $startArgs = @($args | ForEach-Object {
-    $s = [string]$_
-    if ($s -match '[\s"]') { '"' + ($s -replace '"','\"') + '"' } else { $s }
-  })
-  $proc = Start-Process -FilePath $HermesExe -ArgumentList $startArgs -WorkingDirectory $resolved -NoNewWindow -PassThru
+  $quotePs = {
+    param([string]$Value)
+    "'" + ($Value -replace "'","''") + "'"
+  }
+  $exitFile = Join-Path $env:TEMP ("ea_lab_hermes_exit_{0}.txt" -f [guid]::NewGuid().ToString('N'))
+  $argLiterals = @($args | ForEach-Object { & $quotePs ([string]$_) }) -join ','
+  $childScript = "& $(& $quotePs $HermesExe) @($argLiterals); `$code=`$LASTEXITCODE; Set-Content -LiteralPath $(& $quotePs $exitFile) -Value `$code -NoNewline; exit `$code"
+  $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($childScript))
+  $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-NonInteractive','-EncodedCommand',$encoded) -WorkingDirectory $resolved -NoNewWindow -PassThru
   if (-not $proc.WaitForExit($hardTimeout * 1000)) {
     & taskkill.exe /PID $proc.Id /T /F 2>$null | Out-Null
+    Remove-Item -LiteralPath $exitFile -Force -ErrorAction SilentlyContinue
     throw "Hermes task exceeded hard timeout ${hardTimeout}s (run budget ${RunBudgetSeconds}s)."
   }
-  $agentExit = $proc.ExitCode
+  if (-not (Test-Path -LiteralPath $exitFile -PathType Leaf)) { throw 'Hermes child exited without an exit-code receipt.' }
+  $agentExit = [int](Get-Content -LiteralPath $exitFile -Raw)
+  Remove-Item -LiteralPath $exitFile -Force -ErrorAction SilentlyContinue
 } finally {
   Pop-Location
   if ($hadTerminalCwd) { $env:TERMINAL_CWD = $previousTerminalCwd }
