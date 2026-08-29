@@ -1,7 +1,7 @@
 drive_file_id,filename,size_bytes,triage,notes
 1fMtyOoAOMJgONaxsSOZzpmTDSRZzh3ZE,ssrn-3697734.pdf,455086,PENDING_CLASSIFICATION,Inventory only; do not infer topic from filename
 18WIQtF_JfFFvtD6bvXyiuRhBwazjmPgi,ssrn-4878676.pdf,1249646,PENDING_CLASSIFICATION,Inventory only
-15Ngcj17ccv9chGBsBU9OwLRWVZ1vgOg7,ssrn-3808539.pdf,731000,PENDING_CLASSIFICATION,Inventory only
+15Ngcj17ccv9chGBsBU9OwLRWVZ1vgOg7,ssrn-3808539.pdf,731000,SUPPORT_ML_FEATURES,Financial Forecasting with Machine Learning: Price Vs Return; full-text Batch 1 card registered and raw bytes hashed
 1laP6ouz2EmXuEtWMxdZpiR0xpuSEpLQP,ssrn-3986000.pdf,1337354,PENDING_CLASSIFICATION,Inventory only
 15yVxGSMQ3XO8mTLp-xomE8VshSWNPnGL,ssrn-4438260.pdf,831034,PENDING_CLASSIFICATION,Inventory only
 1Y2E82TFHk6GzgynFJzqNB3mLRwJUQa93,ssrn-4708400.pdf,314039,CORE_STRATEGY_VALIDATION,TSI mean-reversion paper already inspected from source
@@ -23,5 +23,5 @@ drive_file_id,filename,size_bytes,triage,notes
 1fFpR0qw5oz4jnZ-4x-lChfG_csS9w8NT,ssrn-870608.pdf,375213,PENDING_CLASSIFICATION,Inventory only
 1uCAi4rVVxsvV5GSHuJyJ5qAgM_Hu8hzm,ssrn-4420232.pdf,227321,PENDING_CLASSIFICATION,Inventory only
 17COp4Rs7m46OwCDomyvIAihjoBXRKEbV,ssrn-4714721.pdf,281117,PENDING_CLASSIFICATION,Inventory only
-1Lahruer81Vb8EpLfI5wxY6L5EDNa11wU,ssrn_id3453295_code2224789.pdf,1676809,CORE_REFERENCE_DUPLICATE_CANDIDATE,151 Trading Strategies; same name size and modified time as another Drive item; checksum not exposed by connector
-1bLpubJa-A5BE3FXPp4Rd5vD2L-YCXw0T,ssrn_id3453295_code2224789.pdf,1676809,CORE_REFERENCE_DUPLICATE_CANDIDATE,151 Trading Strategies duplicate candidate; do not delete without byte/hash proof
+1Lahruer81Vb8EpLfI5wxY6L5EDNa11wU,ssrn_id3453295_code2224789.pdf,1676809,CORE_REFERENCE_DUPLICATE_CONFIRMED,151 Trading Strategies; exact downloaded bytes SHA256=1bc54915eb2778b1b6a8eacfa0b07fb8c568f2cd5caa3ded45fa28f47c83c73e match the second Drive object; no deletion authorized
+1bLpubJa-A5BE3FXPp4Rd5vD2L-YCXw0T,ssrn_id3453295_code2224789.pdf,1676809,CORE_REFERENCE_DUPLICATE_CONFIRMED,151 Trading Strategies; exact downloaded bytes SHA256=1bc54915eb2778b1b6a8eacfa0b07fb8c568f2cd5caa3ded45fa28f47c83c73e match the first Drive object; no deletion authorized
