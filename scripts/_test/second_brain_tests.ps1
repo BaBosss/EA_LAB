@@ -43,13 +43,13 @@ try {
     $tampered = [regex]::Replace($raw, '"sha256":"[0-9a-f]{64}"', '"sha256":"0000000000000000000000000000000000000000000000000000000000000000"', 1)
     [IO.File]::WriteAllText($regPath,$tampered,(New-Object Text.UTF8Encoding($false)))
     $badHash = Invoke-Check $temp -KnowledgeOnly
-    Assert-True ($badHash.ExitCode -ne 0 -and $badHash.Output -match 'source hash mismatch') 'tampered registered source hash fails closed'
+    Assert-True ($badHash.ExitCode -ne 0 -and $badHash.Output -match 'source\s+hash\s+mismatch') 'tampered registered source hash fails closed'
 
     Copy-Item -LiteralPath (Join-Path $Root 'knowledge\01_sources\source_registry.jsonl') -Destination $regPath -Force
     $shadow = Join-Path $temp 'knowledge\08_experiments\shadow_registry.jsonl'
     [IO.File]::WriteAllText($shadow,'{"forbidden":true}',(New-Object Text.UTF8Encoding($false)))
     $badShadow = Invoke-Check $temp -KnowledgeOnly
-    Assert-True ($badShadow.ExitCode -ne 0 -and $badShadow.Output -match 'shadow registry/data\s+file forbidden') 'second experiment registry is rejected'
+    Assert-True ($badShadow.ExitCode -ne 0 -and $badShadow.Output -match 'shadow\s+registry/data\s+file\s+forbidden') 'second experiment registry is rejected'
 } finally {
     if (Test-Path -LiteralPath $temp) { Remove-Item -LiteralPath $temp -Recurse -Force }
 }
