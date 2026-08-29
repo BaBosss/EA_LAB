@@ -60,10 +60,10 @@ This milestone does **not** implement QI-2 Evidence Intelligence, autonomous res
 - `scripts/_test/second_brain_tests.ps1` includes positive and negative tests for source-hash tampering and attempted shadow experiment registry creation.
 - Existing Knowledge OS integrity remains the parent navigation/integrity layer.
 
-## Google Drive intake status
+## Google Drive corpus status
 
-A read-only intake snapshot of the supplied folder is now recorded at `knowledge/01_sources/drive_intake_20260829.csv`: 26 direct PDF files were enumerated, initial triage was assigned, and the two identically named/identically sized `ssrn_id3453295_code2224789.pdf` objects are marked only as `DUPLICATE_CANDIDATE` until byte/hash equality is proven. No Drive file was moved, renamed, deleted, or copied into Git.
+The supplied Drive corpus is fully classified and provenance-bound: 26 direct PDF objects comprise 21 promoted trading/research sources, 3 rejected unrelated sources, and 2 byte-identical `151 Trading Strategies` objects retained as duplicate evidence. `PENDING_CLASSIFICATION = 0`. Source and receipt records preserve SHA-256 evidence for the completed intake. No Drive object was moved or deleted, and duplicate confirmation does not authorize deletion.
 
 ## Next research step
 
-Deep-ingest the Drive corpus in bounded batches. Prioritize high-value strategy, validation, regime, execution-realism, and crypto-volatility papers; classify remaining `PENDING_CLASSIFICATION` items before deep extraction; and explicitly reject unrelated/noise documents rather than polluting the Second Brain.
+Use the completed corpus through `ea-knowledge-query`, `ea-strategy-synthesizer`, `ea-evidence-critic`, and `ea-negative-memory` to produce source-traceable `TESTABLE_HYPOTHESIS` candidates with contradictions, transfer gaps, execution assumptions, and falsification needs explicit. Ingest new literature only when a concrete research consumer exists. Existing Factory, experiment, evidence, runtime, deployment, and risk owners remain authoritative.
