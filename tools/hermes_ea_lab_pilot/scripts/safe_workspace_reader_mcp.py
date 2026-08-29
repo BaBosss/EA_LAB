@@ -110,10 +110,11 @@ def search_text_impl(
         raise ValueError("query must be non-empty")
     if max_results < 1 or max_results > MAX_SEARCH_RESULTS:
         raise ValueError(f"max_results must be 1..{MAX_SEARCH_RESULTS}")
-    base = _resolve_inside(root, path, require_file=False)
+    base = _resolve_inside(root, path)
     needle = query if case_sensitive else query.casefold()
     rows: list[str] = []
-    for item in sorted(base.rglob("*"), key=lambda p: p.as_posix().lower()):
+    items = [base] if base.is_file() else sorted(base.rglob("*"), key=lambda p: p.as_posix().lower())
+    for item in items:
         if len(rows) >= max_results:
             break
         if not item.is_file():
@@ -172,7 +173,7 @@ def create_server(workspace: str | Path) -> MCPServer:
         case_sensitive: bool = False,
         max_results: int = 100,
     ) -> str:
-        """Literal-search bounded text files under a SafeWorkspace-relative directory."""
+        """Literal-search one SafeWorkspace-relative file or files under a relative directory."""
         return search_text_impl(root, query, path, glob, case_sensitive, max_results)
 
     @server.tool(annotations=READ_ONLY)

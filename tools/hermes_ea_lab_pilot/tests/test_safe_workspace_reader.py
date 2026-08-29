@@ -40,6 +40,10 @@ class SafeWorkspaceReaderTests(unittest.TestCase):
         hits = module.search_text_impl(self.root, "FastMA", max_results=10)
         self.assertIn("nested/b.txt:2: FastMA=20", hits)
 
+    def test_observe_search_accepts_direct_file_path(self) -> None:
+        hits = module.search_text_impl(self.root, "FastMA", path="nested/b.txt", max_results=10)
+        self.assertEqual(hits, "nested/b.txt:2: FastMA=20")
+
     def test_observe_rejects_path_escape(self) -> None:
         with self.assertRaisesRegex(ValueError, "absolute paths are denied"):
             module.read_text_impl(self.root, str(self.outside_root / "secret.txt"))
