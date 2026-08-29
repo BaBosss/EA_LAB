@@ -34,27 +34,25 @@ Then read targeted owners only when the task requires them.
 ### Boss19 `19-0` — Adaptive Grid
 - family ledger: `docs/research/BOSS19_EVOLUTION_LEDGER.md`;
 - evidence: `docs/concepts/BOSS19_ADAPTIVE_TREND_GRID_ACCEPTANCE.md`;
-- tested home so far: XAUUSD H1 only;
-- always-on reference: `PARKED-VERIFY(user)`;
-- MAIN pulse exists; BWD collapses;
-- broad Symbol x TF home search: NOT RUN;
-- regime affinity: NOT ESTABLISHED;
+- always-on strategy verdict: `PARKED-VERIFY(user)`; original BWD robustness/participation failure remains material;
+- H2 mechanical qualification: **PASS / H3_READY** at reviewed head `d5dbd31a`, six unique full-window eligible Model-1 runs across XAUUSD H4 / EURUSD H1 / AUDUSD M15;
+- H3 broad fixed-config contract: **CANONICAL** at `47c77320`, 6 symbols x 3 TF x MAIN/BWD = 36 pre-HOLDOUT run IDs on one MT5 install;
+- broad-matrix evidence collection is the current stage; live execution status belongs to Lane Registry;
+- regime affinity: NOT ESTABLISHED until H3 evidence is accepted and joined under a frozen timeline/classifier;
 - `StepATR=0.30`: historical reference center, NOT global optimum;
 - HOLDOUT `2026H1`: **UNSPENT**.
-
 ### Factory Boss17
 `B17-H01-r1` frozen registration and first-green Factory vNext package are canonical at `94b4bc6be58eabd391933a9079532a4c12911272`; exact-head independent review PASS, zero TUNABLE, no optimizer/runtime/risk authority. B18 remains provenance-blocked.
 
 ## Hermes
-Hermes is a deterministic/mechanical EA R&D factory, not a strategy architect. **H1 GOLDEN REPLAY = PASS** on the exact safe-reader path using existing Boss19 evidence only: no new MT5/tester run, no workspace mutation, HOLDOUT UNSPENT. Current next qualification is the bounded H2 small fixed-config pilot after its tester-executor enablement and exact launch gate are accepted.
-
+Hermes is a deterministic/mechanical EA R&D factory, not a strategy architect. **H1 GOLDEN REPLAY = PASS**. **H2 SMALL PILOT = PASS / H3_READY** after independent review at `d5dbd31a`: six unique authorized full-window runs, no optimization, no HOLDOUT, no repository mutation. The **H3 BROAD MATRIX contract is canonical at `47c77320`** and is the current bounded evidence stage; H3 grants no strategy/risk/candidate/deployment authority.
 ## Visual layer
 Diagram Design is already canonical. Use `skills/ea-workflow-diagrams` when a visual has a direct consumer. Diagram authority is `VISUAL_ONLY_NO_AUTHORITY`.
 
 ## Exact next R&D action
-1. complete this canonical state convergence after the accepted Boss17 package;
-2. accept/integrate the bounded Hermes H2 tester-executor enablement;
-3. launch only the exact pre-authorized H2 small fixed-config pilot after that gate passes;
-4. only after H2 qualification PASS: Boss19 `19-0` fixed-config broad matrix, then frozen-timeline regime attribution.
+1. complete H3's exact 36-run fixed-config evidence/accounting under the canonical contract;
+2. if H3 PASS, freeze the market/regime classifier and as-of timeline before joining eligible results for RND-P4 regime attribution;
+3. choose any next Boss19 mechanism change only from accepted P3/P4 evidence and preregister exactly one logical change;
+4. keep optimization and HOLDOUT separately gated; H3 alone does not unlock either.
 
 No normal startup should require reading the whole repository, all raw MT5 evidence, or every historical taskboard. Claude-seat sessions still load `CLAUDE.md`; its verdict gate remains required where applicable.

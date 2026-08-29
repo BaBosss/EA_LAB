@@ -1,7 +1,7 @@
 # PROJECT_STATE — EA_LAB current canonical state (AI START HERE)
 
 > **Role:** current status / accepted decisions / forward plan.
-> **Last converged:** 2026-08-25 Asia/Bangkok.
+> **Last converged:** 2026-08-29 Asia/Bangkok.
 > **Canonical bytes:** always verify the current pushed `origin/master`. Do not infer canonical state from a dirty worktree, index, chat transcript, generated dashboard, or this file's historical Git SHA.
 > **History:** `PROJECT_HISTORY.md`. Historical snapshots and incident narratives are not current state unless explicitly restated here.
 > **Authority:** `AGENTS.md` owns roles, permissions, approval boundaries, one-writer rules, review separation, and standing push authority.
@@ -62,7 +62,9 @@ The `0` above is a dated accepted evidence point, not a live counter. Current te
 - Boss17 prerequisites are canonical and closed: R0-FINAL `c26e62cf1b4d05ab1925140a10ba9cb94a9a65af`; R0-GUARD `e09323d480b6c8c95ec431f3b1a295af62ca3157`; Boss17/Boss18 activation `10200cf074a1e24a47eb87afebb62b634f254e54`. Do not reopen them without a live regression.
 - Boss18 remains **FAIL-CLOSED / NOT REGISTERED**: activation and physical coverage are complete, but no tracked exact pre-result configuration pin supports retrospective Hypothesis/ParameterBinding registration. Do not fabricate one.
 - Boss17 first-green Factory vNext package: **ACCEPTED / REVIEWED / CANONICAL** at `94b4bc6be58eabd391933a9079532a4c12911272`. The frozen `B17-H01-r1` package preserves 147 logical bindings versus 159 physical baseline inputs, exposes 31 projection rows all `LOCKED / SNAPSHOT_ONLY`, records BaselineCoverage 159/159 (31 PROJECT + 128 PRESERVE_SNAPSHOT), keeps P73000-P73011 physical-only/non-logical, and adds no optimizer/runtime/risk authority. **No optimization** until a new prospective Boss17 revision explicitly pre-registers optimizer authority/ranges.
-- Boss19 AdaptiveTrendGrid V0: **PARKED-VERIFY(user) after bounded validation**. The pre-registered STOP search selected the non-boundary center `StepATR=0.30 / FastMA=20 / SlowMA=50 / TP_ATR=1.50`; exact MAIN re-run was PF 4.64 / 100 trades, but BWD 2020-2022 was PF 0.34 / 49 trades / ~25% equity DD and therefore fails both the BWD PF gate and the canonical >=100-trades/window participation floor. Flat-lot control preserves a MAIN pulse (PF 5.78) but also fails BWD (PF 0.30 / 37 trades) and triggers the hard 25% DD cage. LIMIT remains `BOUNDARY` after the one permitted expansion, so bounded auto-search stopped. HOLDOUT 2026H1 remains unspent; no sensitivity/MC/Model-4/candidate/deployment path is opened by V0.
+- Boss19 AdaptiveTrendGrid V0 strategy verdict remains **PARKED-VERIFY(user)** from the original bounded validation: the historical reference center is `StepATR=0.30 / FastMA=20 / SlowMA=50 / TP_ATR=1.50`, BWD robustness/participation failed, and no candidate/deployment authority was created.
+- Hermes H2 small-pilot qualification: **ACCEPTED / PASS / H3_READY** at reviewed head `d5dbd31a44be84e0f396dd8ffedc7125f15b3388`. All six unique authorized Model-1 MAIN/BWD runs (XAUUSD H4, EURUSD H1, AUDUSD M15) are COMPLETE and full-window eligible; set/EX5/receipt/leverage identity held, optimization was `0`, repository bytes stayed clean, and HOLDOUT `2026H1` remained UNSPENT. H2 is mechanical execution qualification, not strategy promotion.
+- Hermes H3 Boss19 broad fixed-config contract is **CANONICAL** from `47c7732048406277096c1ccc31734b4122ae7285`: 6 symbols x 3 TF x MAIN/BWD = 36 pre-HOLDOUT run IDs on MT5-lane1, fixed Model 1, no optimization. Lane Registry owns live execution state. Only H3 PASS can unlock frozen-timeline regime attribution; H3 itself grants no candidate/risk/deploy authority.
 - Final numeric Grade/Confidence thresholds remain provisional/unratified; sidecar verdict/build-potential outputs remain non-authoritative.
 ### 1.3 Accepted control-plane capabilities
 
@@ -78,7 +80,9 @@ The following are accepted/canonical and should not be generically re-audited wi
 - POST-OPUS M0/M1 trust repairs.
 - VPS DEMO preparation/hardening batch and PREDEV generic pre-development hardening.
 - Long Job Runner durable detached execution support.
-- Hermes H1 Golden Replay qualification: **ACCEPTED / PASS** on the exact safe-reader path. Final mechanical check was `OVERALL=PASS`; no new MT5/tester run occurred, no repository mutation occurred, HOLDOUT `2026H1` remained UNSPENT, and Hermes gained no strategy/risk/runtime/deployment authority. The accepted execution lineage is rooted in canonical `f1dd0e9b`; H2 remains a separate bounded qualification step.
+- Hermes H1 Golden Replay qualification: **ACCEPTED / PASS** on the exact safe-reader path. Final mechanical check was `OVERALL=PASS`; no new MT5/tester run occurred, no repository mutation occurred, HOLDOUT `2026H1` remained UNSPENT, and Hermes gained no strategy/risk/runtime/deployment authority. The accepted execution lineage is rooted in canonical `f1dd0e9b`.
+- Hermes H2 small-pilot qualification: **ACCEPTED / PASS** after independent exact-head review at `d5dbd31a`; six unique authorized runs were admissible, the one Control-Tower duplicate dispatch was non-evidentiary/non-disqualifying, and downstream status is `H3_READY`.
+- Hermes H3 broad-matrix contract: **ACCEPTED / CANONICAL** at `47c77320`; live run ownership/status remains in Lane Registry and is intentionally not duplicated here.
 - Execution Reliability Pack V1: durable-by-default worker launch, exact-head/bootstrap/hash checks, inspect-before-retry fail-closed recovery, provider-aware launcher policy, postcondition-aware completion, timeout/cancel enforcement, and owned process-tree cleanup.
 - Ponytail controlled-adoption protected-directory repair: **ACCEPTED / CANONICAL**; original protected-launcher defect resolved; final deterministic suite 25/25 PASS and targeted different-family rereview PASS; `authority_granted=false`; non-.ps1 protected-name hardening remains PARKED/FUTURE.
 - Diagram Design module: **ACCEPTED / CANONICAL** tooling/docs support only; it grants no Factory/runtime/deployment authority.
@@ -244,7 +248,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 1. **Observe ORDER-353.** Consume fresh monitoring/runtime evidence only; wait for a genuine qualifying post-attach trade. Do not force one.
 2. **Keep target acceptance closed unless regression evidence appears.** F/G3/config/attestation work is not an open repo task.
 3. **Keep global monitoring honest.** `DEGRADED_MONITORING` remains current until canonical evidence satisfies its actual global criteria.
-4. **Close the current bounded Factory/R&D integration chain.** Complete exact-head Boss17 package review/integration; H1 is already accepted PASS. Then complete the separately bounded Hermes H2 executor/qualification path before any Boss19 broad matrix. Do not optimize Boss17, spend HOLDOUT, select/promote a Factory candidate, or migrate production policy as a side effect.
+4. **Complete the bounded Boss19 broad-evidence stage.** Boss17, H1 and H2 are already accepted; H3 is the canonical fixed-config broad-matrix contract. Complete H3 evidence/accounting, then—only on H3 PASS—unlock frozen-timeline regime attribution. Do not optimize Boss17/Boss19, spend HOLDOUT, select/promote a candidate, or migrate production policy as a side effect.
 5. **Use Lane Registry dynamically before writes/reviews/integration.** Do not infer writer ownership from old chat/session text.
 6. **Use current pushed origin/master as integration base.** Reconcile neighboring accepted lanes only when they reach their own acceptance boundary.
 7. **Keep MacroGate runtime activation separate from repo capability.** Persistent regime-only VPS automation requires its own authorized runtime task; do not reactivate or modify NewsGuard/REAL as a side effect.
@@ -255,7 +259,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 - Genuine ORDER-353 first trade -> record accepted `first_trade_epoch` through the canonical evidence/state path and derive the judge clock from the accepted rule.
 - Reproducible monitoring regression -> open a bounded repair with a direct consumer; do not manufacture monitoring work from historical warnings.
 - Boss11-18 deterministic preflight green result -> dispatch bounded construction/implementation lanes only for READY bosses, reusing the accepted Boss14 path without inventing missing semantics; broader production migration remains separate and non-authoritative.
-- Boss19 V0 bounded validation is closed as `PARKED-VERIFY(user)`: HOLDOUT remains unspent and there is no automatic downstream validation/deployment consumer. Any future regime-adaptation/redesign hypothesis is new work and must be pre-registered before another search; DEMO/LIVE attach remains owner-reserved.
+- Boss19 V0 strategy verdict remains `PARKED-VERIFY(user)`, but H2 mechanical qualification has separately passed and explicitly unlocked only the canonical H3 fixed-config broad matrix. HOLDOUT remains unspent. H3 PASS may unlock frozen-timeline regime attribution only; optimization, redesign, candidate selection and DEMO/LIVE attach remain separately gated.
 - New strategy/risk/default/deployment semantics -> stop at the applicable owner hard stop before mutation.
 - Canonical origin movement while an isolated lane is in progress -> re-anchor in isolation; rerun impacted acceptance before integration.
 

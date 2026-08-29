@@ -418,8 +418,8 @@
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
 | ORDER-RND-P0 | 2026-08-29 | DONE + REVIEWED | EA R&D governance/context convergence | PASS / CANONICAL at b7a75016 | ACTIVE:10022 |
 | ORDER-RND-P1 | 2026-08-29 | DONE + REVIEWED | Hermes H1 Golden Replay | H1 PASS / no new MT5 / HOLDOUT UNSPENT | ACTIVE:10029 |
-| ORDER-RND-P2 |  | WAITING | Hermes H2 small pilot |  | ACTIVE:10036 |
-| ORDER-RND-P3 |  | BLOCKED | Boss19 19-0 broad fixed-config matrix |  | ACTIVE:10042 |
-| ORDER-RND-P4 |  | BLOCKED | Boss19 regime attribution |  | ACTIVE:10049 |
-| ORDER-RND-P5 |  | BLOCKED | next Boss19 variant hypothesis |  | ACTIVE:10056 |
-| ORDER-RND-P6 |  | BLOCKED | survivor coarse-to-fine funnel |  | ACTIVE:10062 |
+| ORDER-RND-P2 | 2026-08-29 | DONE + REVIEWED | Hermes H2 small pilot | H2 PASS / H3_READY | ACTIVE:10036 |
+| ORDER-RND-P3 |  | RUNNING | Boss19 19-0 broad fixed-config matrix |  | ACTIVE:10042 |
+| ORDER-RND-P4 |  | BLOCKED | Boss19 regime attribution |  | ACTIVE:10048 |
+| ORDER-RND-P5 |  | BLOCKED | next Boss19 variant hypothesis |  | ACTIVE:10055 |
+| ORDER-RND-P6 |  | BLOCKED | survivor coarse-to-fine funnel |  | ACTIVE:10061 |
