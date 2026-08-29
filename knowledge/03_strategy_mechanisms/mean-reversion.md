@@ -43,3 +43,8 @@ Every variant needs its own hypothesis, reference definition, horizon, target sy
 This evidence does **not** collapse TSI, RSI, moving averages, IBS, OU, pairs, or other reversion variants into one mechanism. The transferable unit remains the exact reference definition, signal horizon, market, execution timing and validation design.
 
 The source-reported performance is research evidence only. EA_LAB has not independently replicated the paper's parameters or accepted an EA from this card.
+## Strategy-development evidence
+
+`RC-SSRN4878676-001` adds a practical mean-reversion development workflow with exact rule translation, transaction fees, bounded optimization, walk-forward/real-time evaluation, entry/exit, risk management and position sizing as separate design concerns.
+
+The workflow is reusable; the paper's indicator choices are not promoted as universal rules.

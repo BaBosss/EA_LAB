@@ -18,3 +18,11 @@ Triage labels are navigation only:
 - `*_DUPLICATE_CONFIRMED` — exact bytes have matching SHA-256; deletion still requires separate authorization.
 
 No intake label is an EA or Factory verdict.
+## Completed supplied-corpus receipts
+
+- `drive_batch1_hash_receipt_20260829.csv`: seven promoted Batch 1 sources plus the two byte-identical 151 Trading Strategies objects.
+- `drive_batch2_hash_receipt_20260829.csv`: five promoted Batch 2 sources.
+- `drive_final_pending_hash_receipt_20260829.csv`: the ten formerly pending objects, including one rejected AI-teaching source.
+- `drive_rejected_hash_receipt_20260829.csv`: all three unrelated/rejected objects.
+
+Together with `drive_intake_20260829.csv`, these receipts close classification for all 26 supplied direct PDF objects. No receipt authorizes deletion or changes a research claim into EA/Factory evidence.

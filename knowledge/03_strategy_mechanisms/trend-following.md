@@ -36,3 +36,8 @@ Persistent directional markets are the natural hypothesis. Choppy/range regimes 
 ## Transfer note
 
 Treat MA/Donchian/vol-scale/tanh variants as experimentable components, not accepted production rules.
+## Supplied-corpus full-text evidence
+
+`RC-SSRN4438260-001` adds a four-step trend system view: investment universe → trend detection → portfolio construction → realistic backtest. Its example uses inverse-volatility sizing, volatility targeting and explicit spread/rebalance assumptions, while naming range-bound markets as a structural weakness.
+
+This strengthens the mechanism model but does not make any specific trend indicator, volatility target or portfolio construction rule canonical for EA_LAB.
