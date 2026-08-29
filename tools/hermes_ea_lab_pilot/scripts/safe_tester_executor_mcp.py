@@ -202,6 +202,20 @@ def _read_sidecar(path: Path) -> dict[str, object] | None:
     except Exception as exc:
         return {"status": "SIDECAR_PARSE_ERROR", "error": str(exc)}
 
+
+def full_window_evidence_eligibility(truncation: dict[str, object] | None) -> tuple[bool, str]:
+    if truncation is None:
+        return False, "TRUNCATION_CHECK_MISSING"
+    if truncation.get("status") == "SIDECAR_PARSE_ERROR":
+        return False, "TRUNCATION_CHECK_PARSE_ERROR"
+    truncated = truncation.get("truncated")
+    if truncated is True:
+        return False, "TRUNCATED_RUN"
+    if truncated is False:
+        return True, "TRUNCATION_CHECK_PASS"
+    return False, "TRUNCATION_CHECK_UNKNOWN"
+
+
 def run_cell_impl(
     root: Path,
     manifest_path: str | Path,
@@ -254,6 +268,7 @@ def run_cell_impl(
         }
     leverage = _read_sidecar(reports / f"{row['report_name']}.leverage_check.json")
     truncation = _read_sidecar(reports / f"{row['report_name']}.truncation_check.json")
+    full_window_eligible, eligibility_reason = full_window_evidence_eligibility(truncation)
     return {
         **base,
         "status": "COMPLETE",
@@ -263,6 +278,8 @@ def run_cell_impl(
         "metrics": metrics,
         "leverage_check": leverage,
         "truncation_check": truncation,
+        "full_window_evidence_eligible": full_window_eligible,
+        "evidence_eligibility_reason": eligibility_reason,
     }
 
 

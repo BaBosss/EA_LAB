@@ -166,6 +166,10 @@ class SafeTesterExecutorTests(unittest.TestCase):
 
         def fake_run(*args, **kwargs):
             report.write_bytes(b"fresh-report")
+            (report_dir / "H2_XAU_H4_MAIN.truncation_check.json").write_text(
+                json.dumps({"report_name": "H2_XAU_H4_MAIN", "truncated": False, "detail": "PASS"}),
+                encoding="utf-8",
+            )
             return subprocess.CompletedProcess(args[0], 0, stdout="symbol preflight: logical=XAUUSD tester=XAUUSD status=EXACT economics=PINNED source=fixture", stderr="")
 
         def fake_parse(path: Path) -> dict[str, object]:
@@ -183,6 +187,19 @@ class SafeTesterExecutorTests(unittest.TestCase):
         self.assertEqual(result["status"], "COMPLETE")
         self.assertEqual(result["metrics"]["profit_factor"], 1.23)
         self.assertEqual(result["report_sha256"], hashlib.sha256(b"fresh-report").hexdigest())
+        self.assertIs(result["full_window_evidence_eligible"], True)
+        self.assertEqual(result["evidence_eligibility_reason"], "TRUNCATION_CHECK_PASS")
+
+    def test_truncation_sidecar_fails_closed_for_full_window_evidence(self) -> None:
+        cases = [
+            (None, False, "TRUNCATION_CHECK_MISSING"),
+            ({"status": "SIDECAR_PARSE_ERROR"}, False, "TRUNCATION_CHECK_PARSE_ERROR"),
+            ({"truncated": True}, False, "TRUNCATED_RUN"),
+            ({"truncated": "unknown"}, False, "TRUNCATION_CHECK_UNKNOWN"),
+            ({"truncated": False}, True, "TRUNCATION_CHECK_PASS"),
+        ]
+        for sidecar, eligible, reason in cases:
+            self.assertEqual(module.full_window_evidence_eligibility(sidecar), (eligible, reason))
 
     def test_report_identity_mismatch_is_mechanical_fail(self) -> None:
         report_dir = self.root / "_mt5_auto" / "reports"
@@ -211,6 +228,20 @@ class SafeTesterExecutorTests(unittest.TestCase):
             sha = hashlib.sha256(self.manifest.read_bytes()).hexdigest()
             with self.assertRaisesRegex(ValueError, pattern):
                 module.load_bound_cell(self.root, self.manifest, sha, "H2-C01-MAIN", self.set_sha)
+
+    def test_h2_contract_and_manifest_lock_fixed_no_holdout_pilot(self) -> None:
+        module_root = SCRIPT.parents[1]
+        contract = (module_root / "H2_SMALL_PILOT_CONTRACT.md").read_text(encoding="utf-8")
+        manifest_path = module_root / "H2_SMALL_PILOT_MANIFEST.csv"
+        with manifest_path.open("r", newline="", encoding="utf-8-sig") as handle:
+            rows = list(csv.DictReader(handle))
+        self.assertEqual(len(rows), 6)
+        self.assertEqual({(r["symbol"], r["tf"]) for r in rows}, {("XAUUSD", "H4"), ("EURUSD", "H1"), ("AUDUSD", "M15")})
+        self.assertTrue(all(r["model"] == "1" and r["holdout"] == "NO" and r["optimization"] == "NO" for r in rows))
+        self.assertIn("-HardTimeoutSeconds 900", contract)
+        self.assertIn("Run exactly ONE manifest run ID", contract)
+        self.assertIn("full_window_evidence_eligible", contract)
+        self.assertIn("2026H1 HOLDOUT", contract)
 
     def test_profile_manifest_keeps_generic_execution_toolsets_forbidden(self) -> None:
         module_root = SCRIPT.parents[1]

@@ -44,4 +44,4 @@ Hermes MAY, when an exact task contract authorizes it:
 Hermes MAY NOT invent a strategy hypothesis, silently change parent mechanics, change risk/defaults, choose/spend HOLDOUT, deploy/attach runtime, trade, promote a candidate, choose DEMO/LIVE, widen ranges outside contract, pick top PF as winner without the selection contract, hide mechanical failures, or reinterpret harness/environment failure as strategy failure.
 
 Canonical method: `docs/research/EA_RND_PROTOCOL.md`. Report owner: `docs/research/EA_REPORT_SCHEMA.md`. Regime owner: `docs/research/EA_REGIME_FRAMEWORK.md`.
-Qualification: H0 protocol load -> H1 Golden Replay -> H2 2-3 pre-authorized fixed-config cells -> H3 approved batch mode. H1 is accepted PASS evidence; H2 must use a separate exact execution contract and the manifest-bound tester executor.
+Qualification: H0 protocol load -> H1 Golden Replay -> H2 2-3 pre-authorized fixed-config cells -> H3 approved batch mode. H1 is accepted PASS evidence; current next contract is `H2_SMALL_PILOT_CONTRACT.md` with `H2_SMALL_PILOT_MANIFEST.csv` and the manifest-bound tester executor.

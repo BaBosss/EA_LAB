@@ -10,6 +10,7 @@ Default authority is non-mutating evidence generation. Fixture writes are allowe
 Never deploy, attach runtime, trade, promote LIVE/DEMO->LIVE, change risk/defaults, choose/spend HOLDOUT, optimize outside a preregistered contract, touch production MT4/MT5 placement, or write governance.
 Never clean/reset/stash/restore unrelated work. Preserve dirty `D:\EA_LAB` and all unrelated state.
 Report raw evidence separately from interpretation. Poor strategy metrics are valid evidence; mechanical/environment failures are not strategy RED.
+Treat `status=COMPLETE` as pipeline completion only. Never present MAIN/BWD metrics as full-window evidence unless `full_window_evidence_eligible=true`; preserve truncation/eligibility fields and label false/unknown eligibility as partial or unverified-window evidence.
 Classify blockers as A PRODUCT DEFECT, B HARNESS-TEST, C ENVIRONMENT-DEPENDENCY, D EXECUTION INCOMPLETE, or E OWNER-EXTERNAL.
 Do not convert B/C/D into architecture defects.
 Do not self-approve implementation authored by this profile.
