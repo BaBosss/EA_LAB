@@ -248,7 +248,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 1. **Observe ORDER-353.** Consume fresh monitoring/runtime evidence only; wait for a genuine qualifying post-attach trade. Do not force one.
 2. **Keep target acceptance closed unless regression evidence appears.** F/G3/config/attestation work is not an open repo task.
 3. **Keep global monitoring honest.** `DEGRADED_MONITORING` remains current until canonical evidence satisfies its actual global criteria.
-4. **Complete the bounded Boss19 broad-evidence stage.** Boss17, H1 and H2 are already accepted; H3 is the canonical fixed-config broad-matrix contract. Complete H3 evidence/accounting, then—only on H3 PASS—unlock frozen-timeline regime attribution. Do not optimize Boss17/Boss19, spend HOLDOUT, select/promote a candidate, or migrate production policy as a side effect.
+4. **Boss19 H3 broad evidence is complete.** H3 finished 36/36 full-window cells with HOLDOUT unspent and optimization NONE; frozen-timeline regime attribution is the only unlocked downstream research consumer. Do not optimize Boss17/Boss19, spend HOLDOUT, select/promote a candidate, or migrate production policy as a side effect.
 5. **Use Lane Registry dynamically before writes/reviews/integration.** Do not infer writer ownership from old chat/session text.
 6. **Use current pushed origin/master as integration base.** Reconcile neighboring accepted lanes only when they reach their own acceptance boundary.
 7. **Keep MacroGate runtime activation separate from repo capability.** Persistent regime-only VPS automation requires its own authorized runtime task; do not reactivate or modify NewsGuard/REAL as a side effect.
@@ -258,7 +258,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 
 - Genuine ORDER-353 first trade -> record accepted `first_trade_epoch` through the canonical evidence/state path and derive the judge clock from the accepted rule.
 - Reproducible monitoring regression -> open a bounded repair with a direct consumer; do not manufacture monitoring work from historical warnings.
-- Boss11-18 deterministic preflight green result -> dispatch bounded construction/implementation lanes only for READY bosses, reusing the accepted Boss14 path without inventing missing semantics; broader production migration remains separate and non-authoritative.
+- Boss11/12/13/15/16 prospective H01 fixed-baseline evidence is COMPLETE and mechanically attributable; all five BWD PF values are below 1.0, so no automatic optimization/promotion/HOLDOUT continuation is unlocked. B14/B17 remain reference molds; B18 remains owner-semantic PARKED on _18_DirMode=1 versus 2. See docs/factory/BOSS11_16_H01_FIXED_BASELINE_RESULTS.md.
 - Boss19 V0 strategy verdict remains `PARKED-VERIFY(user)`, but H2 mechanical qualification has separately passed and explicitly unlocked only the canonical H3 fixed-config broad matrix. HOLDOUT remains unspent. H3 PASS may unlock frozen-timeline regime attribution only; optimization, redesign, candidate selection and DEMO/LIVE attach remain separately gated.
 - New strategy/risk/default/deployment semantics -> stop at the applicable owner hard stop before mutation.
 - Canonical origin movement while an isolated lane is in progress -> re-anchor in isolation; rerun impacted acceptance before integration.
