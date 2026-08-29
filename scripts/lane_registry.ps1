@@ -173,6 +173,16 @@ function New-ConflictList {
     }
     return $conflicts.ToArray()
 }
+function Invoke-GitExitCode {
+    param([string]$Root,[string[]]$GitArgs)
+    $saved=$ErrorActionPreference
+    try {
+        $ErrorActionPreference='SilentlyContinue'
+        & git -C $Root @GitArgs 2>$null | Out-Null
+        return $LASTEXITCODE
+    } finally { $ErrorActionPreference=$saved }
+}
+
 function Get-LaneAuditRecord {
     param($Record,[string]$CanonicalRepo,[int]$StaleHours)
     $now=[DateTimeOffset]::UtcNow
@@ -188,12 +198,10 @@ function Get-LaneAuditRecord {
     }
     $canonicalRelation='UNKNOWN'
     if(Test-Path -LiteralPath $CanonicalRepo){
-        $quotedRepo='"' + $CanonicalRepo.Replace('"','\"') + '"'
         $head=[string]$Record.head_sha
-        & cmd.exe /d /s /c ("git -C $quotedRepo cat-file -e $head^{commit} >nul 2>nul") | Out-Null
-        if($LASTEXITCODE -eq 0){
-            & cmd.exe /d /s /c ("git -C $quotedRepo merge-base --is-ancestor $head origin/master >nul 2>nul") | Out-Null
-            if($LASTEXITCODE -eq 0){$canonicalRelation='ANCESTOR_OF_ORIGIN_MASTER'}else{$canonicalRelation='NOT_ANCESTOR_OF_ORIGIN_MASTER'}
+        if((Invoke-GitExitCode -Root $CanonicalRepo -GitArgs @('cat-file','-e',("$head^{commit}"))) -eq 0){
+            if((Invoke-GitExitCode -Root $CanonicalRepo -GitArgs @('merge-base','--is-ancestor',$head,'origin/master')) -eq 0){$canonicalRelation='ANCESTOR_OF_ORIGIN_MASTER'}
+            else {$canonicalRelation='NOT_ANCESTOR_OF_ORIGIN_MASTER'}
         }
     }
     $class='QUEUED_CURRENT'; $attention=$false
@@ -310,6 +318,8 @@ try {
     }
     if($Command -ceq 'Audit'){
         if($StaleAfterHours -lt 1){ Throw-LaneError 'bad_stale_window' 'StaleAfterHours must be >= 1' }
+        # Registry bytes are snapshotted under lock; slow observational Git checks run after release.
+        Exit-RegistryLock $lock; $lock=$null
         $audit=@($records | ForEach-Object { Get-LaneAuditRecord $_ $RepoRoot $StaleAfterHours })
         $summary=[ordered]@{}
         foreach($g in @($audit | Group-Object classification)){ $summary[$g.Name]=$g.Count }
