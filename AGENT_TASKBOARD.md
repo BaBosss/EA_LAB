@@ -79,7 +79,7 @@ The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items
 
 No new detailed order is invented here; the Control Tower should bind these phase items to the next canonical task contracts.
 > 🏭 **FACTORY B17 CURRENT QUEUE — 2026-08-29**
-> - **FACTORY-B17-PACKAGE — READY.** Base/canonical `f27f992707aa8eb3c358a2e7c45e28e3d0078491`. Consume registered `B17-H01-r1` and the accepted Boss14 first-green Factory vNext path. Acceptance: deterministic ParameterProjection + BaselineCoverage + VariantBuildPackage + proposed `.set`; preserve 147 logical bindings versus 159 physical baseline inputs; no optimizer/runtime/risk authority.
+> - **FACTORY-B17-PACKAGE — CLOSED / REVIEWED / CANONICAL at `94b4bc6be58eabd391933a9079532a4c12911272`.** Exact-head independent Claude review PASS. `B17-H01-r1` now has the deterministic first-green Factory vNext package: 147 logical bindings, 31 LOCKED/SNAPSHOT_ONLY projection rows, 159 physical baseline rows (31 PROJECT + 128 PRESERVE_SNAPSHOT), zero TUNABLE, proposed `.set` preserving the frozen baseline, and authority `NON_AUTHORITATIVE_SIDECAR`. No optimizer/runtime/risk authority was added.
 > - **FACTORY-B18-REGISTRATION — BLOCKED(PROVENANCE).** Do not create a B18 Hypothesis/ParameterBinding until an exact tracked pre-result configuration pin exists or a new prospective owner-approved hypothesis is registered. Activation/physical coverage are already complete and are not the blocker.
 > - R0-FINAL, R0-GUARD, and B17/B18 activation are closed prerequisites; **do not reopen them** for this package lane unless a live path proves a regression.
 >
