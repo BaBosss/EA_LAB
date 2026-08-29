@@ -5,6 +5,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $moduleRoot = Split-Path -Parent $PSScriptRoot
 $manifest = Get-Content -Raw (Join-Path $moduleRoot 'profile_manifest.json') | ConvertFrom-Json
+$mcpSpec = $manifest.observe_read_only_mcp
 $resolved = (Resolve-Path $SafeWorkspace).Path.TrimEnd('\')
 if ($resolved -ieq 'D:\EA_LAB' -or $resolved.StartsWith('D:\EA_LAB\',[StringComparison]::OrdinalIgnoreCase)) {
   throw 'Refusing protected dirty primary D:\EA_LAB and its descendants.'
@@ -45,6 +46,46 @@ foreach ($p in $manifest.profiles) {
   $missing = @($expected | Where-Object { $_ -notin $enabled })
   if ($extra.Count) { $failures.Add("$($p.name): unexpected toolsets: $($extra -join ',')") }
   if ($missing.Count) { $failures.Add("$($p.name): missing toolsets: $($missing -join ',')") }
+
+  if ($p.name -eq $mcpSpec.profile) {
+    $mcpName = [string]$mcpSpec.name
+    $argsOutput = @(& $HermesExe --profile $p.name config get "mcp_servers.$mcpName.args" 2>&1)
+    $argsText = $argsOutput -join "`n"
+    if ($LASTEXITCODE -ne 0 -or $argsText -notmatch [regex]::Escape('${workspaceFolder}')) {
+      $failures.Add("$($p.name): safe-reader MCP args are not workspace-rooted")
+    }
+    if ($argsText -notmatch [regex]::Escape('tools/hermes_ea_lab_pilot/scripts/safe_workspace_reader_mcp.py')) {
+      $failures.Add("$($p.name): safe-reader MCP script path mismatch")
+    }
+    $trust = ((@(& $HermesExe --profile $p.name config get "mcp_servers.$mcpName.trust" 2>&1)) -join '').Trim()
+    if ($trust -ne 'full') { $failures.Add("$($p.name): safe-reader MCP trust must be full for noninteractive read-only server") }
+    $include = ((@(& $HermesExe --profile $p.name config get "mcp_servers.$mcpName.tools.include" 2>&1)) -join "`n")
+    foreach ($toolName in @($mcpSpec.tools)) {
+      if ($include -notmatch ('(?m)^-\s+' + [regex]::Escape([string]$toolName) + '\s*$')) {
+        $failures.Add("$($p.name): missing safe-reader MCP tool $toolName")
+      }
+    }
+
+    $hadTerminalCwd = Test-Path Env:TERMINAL_CWD
+    $previousTerminalCwd = $env:TERMINAL_CWD
+    Push-Location -LiteralPath $resolved
+    try {
+      $env:TERMINAL_CWD = $resolved
+      $mcpTest = @(& $HermesExe --profile $p.name mcp test $mcpName 2>&1)
+      $mcpExit = $LASTEXITCODE
+    } finally {
+      Pop-Location
+      if ($hadTerminalCwd) { $env:TERMINAL_CWD = $previousTerminalCwd }
+      else { Remove-Item Env:TERMINAL_CWD -ErrorAction SilentlyContinue }
+    }
+    if ($mcpExit -ne 0) { $failures.Add("$($p.name): safe-reader MCP connection failed") }
+    $mcpText = $mcpTest -join "`n"
+    foreach ($toolName in @($mcpSpec.tools)) {
+      if ($mcpText -notmatch ('(?m)^\s*' + [regex]::Escape([string]$toolName) + '\s*$')) {
+        $failures.Add("$($p.name): safe-reader MCP did not expose $toolName")
+      }
+    }
+  }
   Write-Host "CHECK $($p.name): cwd=$($manifest.terminal_cwd); enabled=$($enabled -join ',')"
 }
 

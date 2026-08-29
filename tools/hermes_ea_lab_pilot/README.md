@@ -1,4 +1,4 @@
-# HERMES_EA_LAB_PILOT
+﻿# HERMES_EA_LAB_PILOT
 
 Isolated Hermes Bot Mode pilot for EA_LAB. This module is prepared and reviewed on its own branch before any canonical merge.
 
@@ -7,7 +7,8 @@ Isolated Hermes Bot Mode pilot for EA_LAB. This module is prepared and reviewed 
 - Pilot worktree: `C:\ea_lab_tmp\hermes_ea_lab_pilot_final_20260822`.
 - Never clean, reset, stash, restore, overwrite, or infer canonical bytes from dirty `D:\EA_LAB`.
 - No MT4/MT5/VPS attachment, deployment, trading, LIVE/DEMO->LIVE, risk/default changes, QI-2+, force push, or history rewrite.
-- Bot profiles are fail-closed by default: no terminal, file, code-execution, computer-use, or delegation toolsets.
+- Bot profiles remain fail-closed for built-in terminal, file, code-execution, computer-use, and delegation toolsets.
+- `ea-researcher` gets local canonical inspection only through the task-scoped `ea_lab_safe_reader` MCP server. The server accepts only SafeWorkspace-relative paths, canonicalizes each target under that root, and exposes read/search/list/hash operations only.
 - Coder/tester mutation authority is granted only by an explicit task-scoped invocation against an isolated worktree.
 
 ## Pilot roster
@@ -22,8 +23,9 @@ Python runtime: `3.11.16`.
 
 ## Task-scoped execution
 Persistent profiles store `terminal.cwd: .`; they are not permanently bound to any EA_LAB worktree.
+`ea-researcher` does not receive the built-in `file` or `terminal` toolset. `scripts/apply_profiles.ps1` binds its `ea_lab_safe_reader` MCP command to `${workspaceFolder}` so every observe session starts a reader rooted to the exact worktree selected by `chat --in`.
 Mutation must go through `scripts/run_profile_task.ps1`, which requires an exact clean Git worktree and exact HEAD.
-For `bounded-write`, only `ea-coder` may receive the task-scoped `file` toolset and every changed path must match the explicit allowlist.
+For `bounded-write`, only `ea-coder` may receive the task-scoped built-in `file` toolset and every changed path must match the explicit allowlist.
 Hermes 0.20.5 captures local `TERMINAL_CWD` before `chat --in` is applied, so the wrapper pins both process cwd and `TERMINAL_CWD` to `SafeWorkspace` before launch.
 The wrapper refuses `D:\EA_LAB` and every descendant of that protected dirty primary checkout.
 
@@ -41,3 +43,4 @@ Hermes MAY NOT invent a strategy hypothesis, silently change parent mechanics, c
 
 Canonical method: `docs/research/EA_RND_PROTOCOL.md`. Report owner: `docs/research/EA_REPORT_SCHEMA.md`. Regime owner: `docs/research/EA_REGIME_FRAMEWORK.md`.
 Qualification: H0 protocol load -> H1 Golden Replay (existing evidence only, no new MT5) -> H2 2-3 pre-authorized cells -> H3 approved batch mode. Current next contract: `H1_GOLDEN_REPLAY_CONTRACT.md`.
+

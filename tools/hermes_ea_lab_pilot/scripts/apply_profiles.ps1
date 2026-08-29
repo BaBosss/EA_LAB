@@ -21,6 +21,13 @@ $allToolsets = @(
   'x_search','tts','stt','skills','todo','memory','context_engine','session_search','clarify','delegation',
   'cronjob','homeassistant','spotify','yuanbao','computer_use','a2a'
 )
+$mcpSpec = $manifest.observe_read_only_mcp
+$hermesRoot = Split-Path -Parent (Split-Path -Parent $HermesExe)
+$mcpPython = Join-Path $hermesRoot 'venv\Scripts\python.exe'
+if (-not (Test-Path -LiteralPath $mcpPython -PathType Leaf)) { throw "Hermes MCP Python not found: $mcpPython" }
+$mcpScript = Join-Path $moduleRoot $mcpSpec.script
+if (-not (Test-Path -LiteralPath $mcpScript -PathType Leaf)) { throw "Safe reader MCP script not found: $mcpScript" }
+
 foreach ($p in $manifest.profiles) {
   & $HermesExe profile show $p.name *> $null
   if ($LASTEXITCODE -ne 0) {
@@ -40,6 +47,23 @@ foreach ($p in $manifest.profiles) {
   & $HermesExe --profile $p.name tools disable @allToolsets | Out-Null
   & $HermesExe --profile $p.name tools enable @($p.enabled_toolsets) | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "Toolset configuration failed for $($p.name)" }
+
+  if ($p.name -eq $mcpSpec.profile) {
+    $workspaceToken = '${workspaceFolder}'
+    $scriptRel = ([string]$mcpSpec.script).Replace('\','/')
+    # moduleRoot is tools/hermes_ea_lab_pilot, so the context-rooted repository path is stable across worktrees.
+    $scriptArg = "$workspaceToken/tools/hermes_ea_lab_pilot/$scriptRel"
+    $argsValue = "['$scriptArg','$workspaceToken']"
+    $includeValue = '[' + ((@($mcpSpec.tools) | ForEach-Object { "'$($_)'" }) -join ',') + ']'
+    & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).command" $mcpPython | Out-Null
+    & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).args" $argsValue | Out-Null
+    & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).enabled" true | Out-Null
+    & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).trust" full | Out-Null
+    & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).tools.include" $includeValue | Out-Null
+    & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).tools.resources" false | Out-Null
+    & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).tools.prompts" false | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "Read-only MCP configuration failed for $($p.name)" }
+  }
 
   $profileHome = Join-Path $env:LOCALAPPDATA "hermes\profiles\$($p.name)"
   $soulSource = Join-Path $moduleRoot $p.soul
