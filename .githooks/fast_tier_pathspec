@@ -30,7 +30,12 @@ _triage/factory_os/gen_registry_rows.py
 _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/gen_wrapper.py
+_triage/factory_os/hypothesis_b11.py
+_triage/factory_os/hypothesis_b12.py
+_triage/factory_os/hypothesis_b13.py
 _triage/factory_os/hypothesis_b14.py
+_triage/factory_os/hypothesis_b15.py
+_triage/factory_os/hypothesis_b16.py
 _triage/factory_os/hypothesis_b17.py
 _triage/factory_os/magic.py
 _triage/factory_os/notifier.py
@@ -74,6 +79,12 @@ _triage/factory_os/setfile.py
 _triage/factory_os/snapshot_build.py
 _triage/factory_os/snapshot_validator.py
 _triage/factory_os/surface_evidence.py
+_triage/factory_vnext/boss_family_first_green.py
+_triage/factory_vnext/boss11_first_green.py
+_triage/factory_vnext/boss12_first_green.py
+_triage/factory_vnext/boss13_first_green.py
+_triage/factory_vnext/boss15_first_green.py
+_triage/factory_vnext/boss16_first_green.py
 _triage/PARAM_INACTIVE_AUDIT.md
 AGENT_TASKBOARD.md
 AGENTS.md
@@ -103,6 +114,11 @@ factory/runs/pilot/pilot_cells_MAIN_lot0p03_*.jsonl
 factory/runs/pilot/probe/*.jsonl
 factory/runs/pilot/selection/*.jsonl
 factory/runs/pilot/verification/*.jsonl
+factory/vnext/pilots/boss11_h01_first_green/*
+factory/vnext/pilots/boss12_h01_first_green/*
+factory/vnext/pilots/boss13_h01_first_green/*
+factory/vnext/pilots/boss15_h01_first_green/*
+factory/vnext/pilots/boss16_h01_first_green/*
 factory/work_receipts.jsonl
 MASTER_BACKLOG.md
 portfolio/ACCOUNTS.csv
@@ -113,6 +129,7 @@ portfolio/live_deals/*
 PROJECT_STATE.md
 scripts/*.ps1
 scripts/_test/*
+scripts/_test/fixtures/factory_vnext/test_factory_vnext_boss11_16_first_green.py
 scripts/_test/run_fast_cages.ps1
 scripts/_test/run_order1290_tests.py
 scripts/_test/run_order1500_tests.py

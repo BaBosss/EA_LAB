@@ -62,4 +62,18 @@ if (($out -join "`n") -notmatch 'the REAL generated tree produces ZERO problems'
     exit 1
 }
 Write-Host '[wrapper-gen] Thin Wrapper cage green, real generated tree asserted clean' -ForegroundColor Green
+
+$pkgSuite = Join-Path $RepoRoot 'scripts\_test\fixtures\factory_vnext\test_factory_vnext_boss11_16_first_green.py'
+if (-not (Test-Path -LiteralPath $pkgSuite)) {
+    Write-Host "[wrapper-gen] FAIL: Boss11-16 first-green suite missing at $pkgSuite" -ForegroundColor Red
+    exit 2
+}
+$pkgOut = & $py $pkgSuite 2>&1
+$pkgCode = $LASTEXITCODE
+$pkgOut | ForEach-Object { Write-Host $_ }
+if ($pkgCode -ne 0) {
+    Write-Host "[wrapper-gen] Boss11-16 first-green package cage FAILED (exit $pkgCode)" -ForegroundColor Red
+    exit 1
+}
+Write-Host '[wrapper-gen] Boss11-16 deterministic first-green package cage green' -ForegroundColor Green
 exit 0
