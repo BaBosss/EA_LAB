@@ -78,6 +78,11 @@ The SYSTEM FOUNDATION acceptance lanes are closed and are not active queue items
 **BOSS19 ADAPTIVE TREND GRID V0 VALIDATION - 2026-08-28:** CLOSED as `PARKED-VERIFY(user)`. STOP MAIN search selected a non-boundary center (`StepATR 0.30 / Fast 20 / Slow 50 / TP 1.50`) and exact MAIN confirms PF 4.64 / 100 trades; BWD fails decisively at PF 0.34 / 49 trades / ~25% DD. Flat-lot control shows the MAIN pulse is not created only by progression (PF 5.78) but BWD still fails PF/trade-count and hits the hard DD cage. LIMIT hit the StepATR lower boundary twice across the one bounded expansion, so auto-expansion stopped. HOLDOUT 2026H1 is UNSPENT; no sensitivity/MC/Model-4/candidate/deployment continuation is READY. Future redesign is a new hypothesis; DEMO/LIVE attach and risk/default changes remain owner-reserved.
 
 No new detailed order is invented here; the Control Tower should bind these phase items to the next canonical task contracts.
+> 🏭 **FACTORY B17 CURRENT QUEUE — 2026-08-29**
+> - **FACTORY-B17-PACKAGE — READY.** Base/canonical `f27f992707aa8eb3c358a2e7c45e28e3d0078491`. Consume registered `B17-H01-r1` and the accepted Boss14 first-green Factory vNext path. Acceptance: deterministic ParameterProjection + BaselineCoverage + VariantBuildPackage + proposed `.set`; preserve 147 logical bindings versus 159 physical baseline inputs; no optimizer/runtime/risk authority.
+> - **FACTORY-B18-REGISTRATION — BLOCKED(PROVENANCE).** Do not create a B18 Hypothesis/ParameterBinding until an exact tracked pre-result configuration pin exists or a new prospective owner-approved hypothesis is registered. Activation/physical coverage are already complete and are not the blocker.
+> - R0-FINAL, R0-GUARD, and B17/B18 activation are closed prerequisites; **do not reopen them** for this package lane unless a live path proves a regression.
+>
 > 🔧 **SYSTEMS TRANCHE ORDER-152..158 (เขียน 2026-07-23, Opus-seat)** — งาน infra/tooling ล้วน ไม่ใช่ verdict EA.
 > ที่มา = 2 backlog รวมกัน: (A) review แผน `docs/EA_CORE_TEMPLATE_WORKPLAN_FOR_CLAUDE.md` (7 finding ของ Opus
 > + 4 ที่ Codex จับเพิ่ม) (B) `ROADMAP.md` §3 development backlog. **ลำดับ = อะไร block งานอื่น/เสียข้อมูลถาวร
