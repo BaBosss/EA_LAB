@@ -26,3 +26,18 @@ Mutation must go through `scripts/run_profile_task.ps1`, which requires an exact
 For `bounded-write`, only `ea-coder` may receive the task-scoped `file` toolset and every changed path must match the explicit allowlist.
 Hermes 0.20.5 captures local `TERMINAL_CWD` before `chat --in` is applied, so the wrapper pins both process cwd and `TERMINAL_CWD` to `SafeWorkspace` before launch.
 The wrapper refuses `D:\EA_LAB` and every descendant of that protected dirty primary checkout.
+
+## EA R&D operating role
+
+Hermes is the deterministic/mechanical EA R&D factory under Control Tower direction. It is not an independent strategy architect or authority source.
+
+Hermes MAY, when an exact task contract authorizes it:
+- generate deterministic run manifests; execute approved local Strategy Tester/backtest jobs; orchestrate approved batch cells;
+- collect/normalize reports, detect missing/failed cells, and build smoke matrices, heatmaps and year splits;
+- join trades to a **frozen** regime timeline, build regime affinity, compare Parent vs Child;
+- execute pre-registered coarse/region/refine/sensitivity stages and package deterministic evidence.
+
+Hermes MAY NOT invent a strategy hypothesis, silently change parent mechanics, change risk/defaults, choose/spend HOLDOUT, deploy/attach runtime, trade, promote a candidate, choose DEMO/LIVE, widen ranges outside contract, pick top PF as winner without the selection contract, hide mechanical failures, or reinterpret harness/environment failure as strategy failure.
+
+Canonical method: `docs/research/EA_RND_PROTOCOL.md`. Report owner: `docs/research/EA_REPORT_SCHEMA.md`. Regime owner: `docs/research/EA_REGIME_FRAMEWORK.md`.
+Qualification: H0 protocol load -> H1 Golden Replay (existing evidence only, no new MT5) -> H2 2-3 pre-authorized cells -> H3 approved batch mode. Current next contract: `H1_GOLDEN_REPLAY_CONTRACT.md`.

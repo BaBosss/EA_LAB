@@ -6,6 +6,8 @@
 
 **Normal startup context (every agent):** read `PROJECT_STATE.md` → the relevant `AGENTS.md` authority/task-contract rules → the exact assigned ORDER/task block. Load `VISION.md`, `docs/WORK_LIFECYCLE.md`, and `docs/PIPELINE.md` on demand only when the assigned task genuinely requires them. `TASKBOARD_DIGEST.md` is a generated, read-only locator/navigation aid only; it does not replace `PROJECT_STATE.md`, `AGENTS.md`, or the exact ORDER/task block. `PROJECT_HISTORY.md` is cold historical reference, not normal startup context.
 
+**EA R&D Control Tower startup:** add `EA_RND_DIGEST.md` to that startup pack, then open only the targeted R&D Protocol / Regime Framework / Report Schema / family ledger needed by the task. Do not load all raw reports or the whole Second Brain by default.
+
 ---
 
 ## 1. Roles (assigned by the owner or an approved task contract)
@@ -17,6 +19,7 @@
 | **Codex Primary** | Lead developer / integration owner for the local EA_LAB repository | inspect the actual workspace, implement approved contracts, compile/test, operate local tooling, integrate worker output, manage focused commits, prepare PRs, and report exact evidence/risks | independently change vision, risk defaults, live policy, DEMO/LIVE status, or task scope · act as author and sole final reviewer of high-risk work · edit governance without explicit owner authorization |
 | **Claude** | Specialist engineer / researcher / architecture reviewer / independent alternative reviewer | deep architecture/RCA/research, strategy analysis, alternative proposals, assigned implementations, and independent review of Codex-authored high-risk work | acquire authority merely from vendor/model name · make owner-reserved decisions · expand an assigned contract |
 | **ZCode / Qwen / batch agents** | Bounded execution workers | under an explicit bounded task contract, inspect the repository, edit the contracted source, implement bounded changes, run deterministic tests, perform bounded repair, execute approved local backtest/orchestration, and generate evidence | independently expand scope, change owner approval boundaries or risk policy/defaults, deploy, promote LIVE, make owner attestations, or make irreversible strategic decisions |
+| **Hermes** | Deterministic/mechanical EA R&D evidence factory | execute exact approved manifests/backtests/batches, normalize evidence, build smoke/year/regime/parent-child outputs, and run pre-registered optimization stages under the Hermes contract | invent hypotheses, change parent mechanics/risk/defaults, choose HOLDOUT, widen ranges outside contract, deploy/attach runtime, trade, promote a candidate, or reinterpret harness/environment failure as strategy failure |
 | **OpenClaw team (commanded from Telegram)** | Remote execution/coordination lanes mapped to the roles above | perform only the role and task contract assigned to each lane; track via STATUS.md + git log (tag `[oc-*]`) + Telegram | gain extra authority from running remotely or through a manager layer |
 
 **Heartbeat (user rule 2026-07-04):** any agent working longer than ~10 minutes must report progress
@@ -74,6 +77,12 @@ decisions.
 - No agent may be both the author and the sole final reviewer of high-risk work.
 - Use the cheapest capable execution lane whose output can be verified. Cost/quota is a routing concern,
   never a source of project authority.
+
+### 1.5a EA R&D authority split
+
+For EA research/variant work, ChatGPT Control Tower owns strategy architecture, hypothesis and experiment design, interpretation, dispatch, review/integration, and decisions inside existing owner-approved scope. The canonical method is `docs/research/EA_RND_PROTOCOL.md`; regime attribution and mandatory report fields are owned by `docs/research/EA_REGIME_FRAMEWORK.md` and `docs/research/EA_REPORT_SCHEMA.md`.
+
+Hermes is mechanical only. Its exact allowed/forbidden R&D operations and qualification stages are owned by `tools/hermes_ea_lab_pilot/README.md`. Second Brain material under `knowledge/` may support hypotheses but grants no experiment, Factory, runtime, risk, deployment, or trading authority.
 
 ### 1.6 Historical model/tier assignment — **SUPERSEDED 2026-08-07**
 

@@ -67,3 +67,7 @@ The first LIMIT MAIN surface (500 rows; SHA256 `17ea682c111676e407688da78a1f6a66
 ### Verdict and evidence boundary
 
 **Canonical working verdict: `PARKED-VERIFY(user)`.** This is not `DEAD-STRUCTURAL`: the strategy is capped and its hard DD cage works, and the flat-lot MAIN control retains a measurable pulse. It is not `CANDIDATE`: the locked STOP center fails BWD by a wide margin and the LIMIT branch never leaves the search boundary. HOLDOUT 2026H1 is deliberately **UNSPENT**; sensitivity fan, MC, Model-4, correlation and deploy packaging are not run after the BWD gate fails. No DEMO/LIVE attachment, real-money action, risk/default change, or strategy-semantic redesign is authorized or performed by this close.
+
+## Research lineage pointer — 2026-08-29
+
+This historical/evidence document maps to research lineage **`19-0`** in `docs/research/BOSS19_EVOLUTION_LEDGER.md`. This file continues to own the accepted measured evidence/provenance above; the ledger owns current family interpretation, parent/child lineage and next-research routing. The mapping does not change any historical metric, verdict, HOLDOUT state, runtime state or strategy semantics.

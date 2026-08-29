@@ -2,6 +2,8 @@
 
 Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_STATE.md) — read that first every session. This file only holds instructions for how Claude Code itself should operate in this repo.
 
+EA-wide R&D method is not owned here. For strategy research use `docs/research/EA_RND_PROTOCOL.md`, regime attribution use `docs/research/EA_REGIME_FRAMEWORK.md`, and mandatory reports use `docs/research/EA_REPORT_SCHEMA.md`; `AGENTS.md` owns authority. The verdict material below remains a Claude operating adapter to current verdict policy and must not override those canonical owners or `PROJECT_STATE.md`.
+
 ## 🌐 LANGUAGE RULE
 
 **All project documents, commit messages, and log entries are written in English. All chat replies to the user are in Thai. New doc entries must be English.**
