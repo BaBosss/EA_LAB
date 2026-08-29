@@ -9,6 +9,8 @@ A PF/DD-only report is insufficient. A useful EA report must make the strategy m
 
 Every field must be sourced from exact code/config/evidence or shown as `UNKNOWN / UNAVAILABLE / NOT RUN`. Do not guess missing mechanics or values.
 
+Reporting cadence and graph depth are owned by `docs/research/EA_REPORT_LADDER.md`. Every evidence-producing research step emits a research record, but the full graph pack is mandatory only at the Candidate/DEMO gate and later. Raw per-cell evidence remains machine-readable; reports normally aggregate at experiment/batch/milestone level.
+
 ## 1. Identity
 - Family;
 - Variant;
@@ -127,7 +129,7 @@ Every measured statement must point to the exact evidence identity. Every interp
 When a diagram is a direct consumer aid, use the canonical Diagram Design layer. For individual EAs prefer:
 `Market Context -> Entry Trigger -> Filters -> Position Sizing/Risk -> Execution -> Add/Scale-In -> Hedge/Recovery -> Exit -> Safety/Kill -> Tunable Parameters -> Evidence Gates`.
 
-Unknown semantics remain visibly unknown. Diagrams are `VISUAL_ONLY_NO_AUTHORITY`.
+Unknown semantics remain visibly unknown. Diagrams are `VISUAL_ONLY_NO_AUTHORITY`. Per-EA diagram levels and Candidate/DEMO diagram requirements are owned by `docs/research/EA_WORKFLOW_DIAGRAM_STANDARD.md`.
 ## Appendix A — Grade semantics owner decision packet
 
 **Recovered exactly from canonical Factory vNext design:**

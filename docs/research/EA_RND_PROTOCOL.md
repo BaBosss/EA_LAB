@@ -142,7 +142,11 @@ Hermes may not invent hypotheses, widen ranges, change parent mechanics, choose 
 
 ## 8. Reports and visuals
 
+Every evidence-producing step is research and must leave a durable research record, but reporting depth follows `docs/research/EA_REPORT_LADDER.md` rather than forcing a full production dossier after every tester batch. Discovery gets compact aggregate graphs; mechanism/optimization/robustness add decision-specific visuals; Candidate/DEMO requires the full graph pack.
+
 Every serious variant report must satisfy `docs/research/EA_REPORT_SCHEMA.md`. Grid/multi-position systems must expose position count, lot ladder, aggregate lots/exposure and grid span; PF/DD alone are insufficient.
+
+Per-EA workflow continuity follows `docs/research/EA_WORKFLOW_DIAGRAM_STANDARD.md`. A mechanism claim or child-variant design should have a source-bound workflow view; Candidate/DEMO requires the applicable full strategy/state/risk diagram set. Numeric evidence changes do not require redrawing unchanged mechanics.
 
 When architecture, workflow or strategy semantics are materially easier to understand visually, use the already-canonical Diagram Design layer through `skills/ea-workflow-diagrams`. Diagram output remains `VISUAL_ONLY_NO_AUTHORITY`; unresolved semantics must stay visibly unresolved.
 
