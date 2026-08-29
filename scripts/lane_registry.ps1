@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Claim','Check','Transition','List','Get','Validate')][string]$Command = 'List',
+    [ValidateSet('Claim','Check','Transition','List','Get','Validate','Audit')][string]$Command = 'List',
     [string]$RegistryRoot = 'D:\EA_LAB_CONTROL\lanes\registry-v1',
     [string]$LaneId,
     [string]$OwnerChat,
@@ -23,6 +23,8 @@ param(
     [string]$ExpectedState,
     [string]$NewState,
     [int]$LockTimeoutSeconds = 5,
+    [string]$RepoRoot = 'D:\EA_LAB',
+    [int]$StaleAfterHours = 24,
     [switch]$Json
 )
 $ErrorActionPreference = 'Stop'
@@ -171,6 +173,46 @@ function New-ConflictList {
     }
     return $conflicts.ToArray()
 }
+function Get-LaneAuditRecord {
+    param($Record,[string]$CanonicalRepo,[int]$StaleHours)
+    $now=[DateTimeOffset]::UtcNow
+    $updated=$null; $ageHours=$null
+    try { $updated=[DateTimeOffset]::Parse([string]$Record.updated_at); $ageHours=[math]::Round(($now-$updated).TotalHours,2) } catch {}
+    $wtExists=Test-Path -LiteralPath ([string]$Record.worktree)
+    $headMatch=$null; $branchMatch=$null
+    if($wtExists){
+        try {
+            $headMatch=((Invoke-GitText -Root ([string]$Record.worktree) -GitArgs @('rev-parse','HEAD')) -ceq [string]$Record.head_sha)
+            $branchMatch=((Invoke-GitText -Root ([string]$Record.worktree) -GitArgs @('rev-parse','--abbrev-ref','HEAD')) -ceq [string]$Record.branch)
+        } catch { $headMatch=$false; $branchMatch=$false }
+    }
+    $canonicalRelation='UNKNOWN'
+    if(Test-Path -LiteralPath $CanonicalRepo){
+        $quotedRepo='"' + $CanonicalRepo.Replace('"','\"') + '"'
+        $head=[string]$Record.head_sha
+        & cmd.exe /d /s /c ("git -C $quotedRepo cat-file -e $head^{commit} >nul 2>nul") | Out-Null
+        if($LASTEXITCODE -eq 0){
+            & cmd.exe /d /s /c ("git -C $quotedRepo merge-base --is-ancestor $head origin/master >nul 2>nul") | Out-Null
+            if($LASTEXITCODE -eq 0){$canonicalRelation='ANCESTOR_OF_ORIGIN_MASTER'}else{$canonicalRelation='NOT_ANCESTOR_OF_ORIGIN_MASTER'}
+        }
+    }
+    $class='QUEUED_CURRENT'; $attention=$false
+    if([string]$Record.state -ceq 'DONE'){ $class='CLOSED' }
+    elseif($ActiveWriterStates -contains [string]$Record.state){
+        if(-not $wtExists){$class='ACTIVE_MISSING_WORKTREE';$attention=$true}
+        elseif($headMatch -eq $false -or $branchMatch -eq $false){$class='ACTIVE_IDENTITY_MISMATCH';$attention=$true}
+        elseif($null -ne $ageHours -and $ageHours -gt $StaleHours){$class='ACTIVE_AGED';$attention=$true}
+        else {$class='ACTIVE_CURRENT'}
+    } elseif($null -eq $ageHours -or $ageHours -gt $StaleHours){$class='STALE_NONACTIVE';$attention=$true}
+    return [pscustomobject][ordered]@{
+        lane_id=[string]$Record.lane_id; state=[string]$Record.state; writer=[bool]$Record.writer
+        owner_chat=[string]$Record.owner_chat; classification=$class; attention_required=$attention
+        age_hours=$ageHours; worktree_exists=$wtExists; head_matches_record=$headMatch; branch_matches_record=$branchMatch
+        canonical_relation=$canonicalRelation; head_sha=[string]$Record.head_sha; runtime_lane=[string]$Record.runtime_lane
+        blocker_class=[string]$Record.blocker_class; direct_consumer=[string]$Record.direct_consumer; updated_at=[string]$Record.updated_at
+    }
+}
+
 function Assert-ClaimInput {
     $required=@{'LaneId'=$LaneId;'OwnerChat'=$OwnerChat;'Worker'=$Worker;'Objective'=$Objective;'BaseSha'=$BaseSha;'Worktree'=$Worktree;'Branch'=$Branch;'DirectConsumer'=$DirectConsumer}
     foreach($k in $required.Keys){ if([string]::IsNullOrWhiteSpace([string]$required[$k])){ Throw-LaneError 'missing_argument' "$k is required" } }
@@ -264,6 +306,19 @@ try {
     $records=@(Read-LaneRecords)
     if($Command -ceq 'Validate'){
         Write-Result ([pscustomobject]@{result='VALID';count=$records.Count;registry_root=[IO.Path]::GetFullPath($RegistryRoot)})
+        exit 0
+    }
+    if($Command -ceq 'Audit'){
+        if($StaleAfterHours -lt 1){ Throw-LaneError 'bad_stale_window' 'StaleAfterHours must be >= 1' }
+        $audit=@($records | ForEach-Object { Get-LaneAuditRecord $_ $RepoRoot $StaleAfterHours })
+        $summary=[ordered]@{}
+        foreach($g in @($audit | Group-Object classification)){ $summary[$g.Name]=$g.Count }
+        $result=[pscustomobject][ordered]@{
+            result='AUDIT'; generated_at=[DateTimeOffset]::UtcNow.ToString('o'); stale_after_hours=$StaleAfterHours
+            registry_root=[IO.Path]::GetFullPath($RegistryRoot); repo_root=$RepoRoot; counts=[pscustomobject]$summary; records=$audit
+        }
+        if($Json){ $result | ConvertTo-Json -Depth 10 -Compress }
+        else { $audit | Sort-Object -Property @{Expression='attention_required';Descending=$true},classification,lane_id | Format-Table lane_id,state,classification,attention_required,age_hours,canonical_relation -AutoSize }
         exit 0
     }
     if($Command -ceq 'Get'){

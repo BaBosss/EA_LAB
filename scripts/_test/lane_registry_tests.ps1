@@ -115,6 +115,24 @@ try {
     $x=Invoke-Tool (New-ClaimArgs $r13 'w1' 'chat-z' $wtC 'lane-c' $head 'zeta')
     Assert-True 'duplicate lane id is refused' ($x.ExitCode -ne 0 -and $x.Text -match 'lane_exists') $x.Text
 
+    $r14=New-Reg 'r14'
+    [void](Invoke-Tool (New-ClaimArgs $r14 'audit-active' 'audit-a' $wtB 'lane-b' $head 'audit/a' 'RUNNING' '' -ReadOnly))
+    [void](Invoke-Tool (New-ClaimArgs $r14 'audit-wait' 'audit-b' $wtC 'lane-c' $head 'audit/b' 'WAITING' '' -ReadOnly))
+    [void](Invoke-Tool (New-ClaimArgs $r14 'audit-done' 'audit-c' $wtB 'lane-b' $head 'audit/c' 'RUNNING' '' -ReadOnly))
+    [void](Invoke-Tool @('-Command','Transition','-RegistryRoot',$r14,'-LaneId','audit-done','-ExpectedState','RUNNING','-NewState','DONE','-Json'))
+    $waitPath=Join-Path $r14 'audit-wait.json'; $waitRec=Get-Content -Raw $waitPath|ConvertFrom-Json
+    $waitRec.updated_at=[DateTimeOffset]::UtcNow.AddHours(-48).ToString('o')
+    [IO.File]::WriteAllText($waitPath,(($waitRec|ConvertTo-Json -Depth 10)+"`n"),(New-Object Text.UTF8Encoding($false)))
+    $before=@{}; Get-ChildItem $r14 -Filter '*.json' | ForEach-Object {$before[$_.Name]=(Get-FileHash -Algorithm SHA256 $_.FullName).Hash}
+    $x=Invoke-Tool @('-Command','Audit','-RegistryRoot',$r14,'-RepoRoot',$repo,'-StaleAfterHours','24','-Json')
+    $audit=$x.Text|ConvertFrom-Json
+    $a=@($audit.records|Where-Object lane_id -eq 'audit-active')[0]; $w=@($audit.records|Where-Object lane_id -eq 'audit-wait')[0]; $d=@($audit.records|Where-Object lane_id -eq 'audit-done')[0]
+    Assert-True 'audit classifies live exact lane as ACTIVE_CURRENT' ($x.ExitCode -eq 0 -and $a.classification -eq 'ACTIVE_CURRENT' -and $a.head_matches_record -eq $true) $x.Text
+    Assert-True 'audit classifies aged nonactive lane as STALE_NONACTIVE' ($w.classification -eq 'STALE_NONACTIVE' -and $w.attention_required -eq $true) ($w|ConvertTo-Json -Compress)
+    Assert-True 'audit classifies done lane as CLOSED' ($d.classification -eq 'CLOSED' -and $d.attention_required -eq $false) ($d|ConvertTo-Json -Compress)
+    $after=@{}; Get-ChildItem $r14 -Filter '*.json' | ForEach-Object {$after[$_.Name]=(Get-FileHash -Algorithm SHA256 $_.FullName).Hash}
+    Assert-True 'audit is read-only over registry bytes' (-not @($before.Keys|Where-Object {$before[$_] -ne $after[$_]}).Count) (($before|ConvertTo-Json -Compress)+' / '+($after|ConvertTo-Json -Compress))
+
     $scriptText=[IO.File]::ReadAllText($scriptPath)
     Assert-True 'default registry root isolates legacy dashboard JSON' ($scriptText -match [regex]::Escape("D:\EA_LAB_CONTROL\lanes\registry-v1")) 'default registry root is not registry-v1'
     $legacyParent=Join-Path $tempRoot 'legacy-parent'; New-Item -ItemType Directory -Force -Path $legacyParent|Out-Null
