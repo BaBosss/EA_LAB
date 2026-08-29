@@ -19,6 +19,12 @@
     "script": "scripts/safe_workspace_reader_mcp.py",
     "tools": ["read_text","search_text","list_files","sha256_file"]
   },
+  "tester_execution_mcp": {
+    "profile": "ea-tester",
+    "name": "ea_lab_tester_executor",
+    "script": "scripts/safe_tester_executor_mcp.py",
+    "tools": ["run_fixed_backtest"]
+  },
   "forbidden_persistent_toolsets": ["terminal","file","code_execution","computer_use","delegation"],
   "provider_evidence": {"anthropic":"LIVE_PASS","qwen_direct":"LIVE_PASS_EXTERNAL","openai_codex":"AUTH_PASS_QUOTA_429"},
   "merge_policy": "STOP_BEFORE_MERGE"

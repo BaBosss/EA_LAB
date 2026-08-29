@@ -9,7 +9,8 @@ Isolated Hermes Bot Mode pilot for EA_LAB. This module is prepared and reviewed 
 - No MT4/MT5/VPS attachment, deployment, trading, LIVE/DEMO->LIVE, risk/default changes, QI-2+, force push, or history rewrite.
 - Bot profiles remain fail-closed for built-in terminal, file, code-execution, computer-use, and delegation toolsets.
 - `ea-researcher` gets local canonical inspection only through the task-scoped `ea_lab_safe_reader` MCP server. The server accepts only SafeWorkspace-relative paths, canonicalizes each target under that root, and exposes read/search/list/hash operations only.
-- Coder/tester mutation authority is granted only by an explicit task-scoped invocation against an isolated worktree.
+- Coder mutation authority is granted only by an explicit task-scoped bounded-write invocation against an isolated worktree.
+- `ea-tester` fixed-backtest authority is task-scoped through `ea_lab_tester_executor`: the model supplies only a pre-authorized manifest `cell_id`; the executor owns exact non-optimization runner arguments and exposes no arbitrary shell/terminal surface.
 
 ## Pilot roster
 - `ea-researcher`: evidence gathering and bounded synthesis.
@@ -26,6 +27,7 @@ Persistent profiles store `terminal.cwd: .`; they are not permanently bound to a
 `ea-researcher` does not receive the built-in `file` or `terminal` toolset. `scripts/apply_profiles.ps1` binds its `ea_lab_safe_reader` MCP command to `${workspaceFolder}` so every observe session starts a reader rooted to the exact worktree selected by `chat --in`.
 Mutation must go through `scripts/run_profile_task.ps1`, which requires an exact clean Git worktree and exact HEAD.
 For `bounded-write`, only `ea-coder` may receive the task-scoped built-in `file` toolset and every changed path must match the explicit allowlist.
+For `tester-execute`, only `ea-tester` may call `ea_lab_tester_executor.run_fixed_backtest(cell_id)` with manifest/receipt/set SHA bindings supplied by the wrapper. Persistent terminal/file/code-execution remain disabled; HOLDOUT, optimization, `-Force`, and `-AllowLegacyIdentity` are refused by construction.
 Hermes 0.20.5 captures local `TERMINAL_CWD` before `chat --in` is applied, so the wrapper pins both process cwd and `TERMINAL_CWD` to `SafeWorkspace` before launch.
 The wrapper refuses `D:\EA_LAB` and every descendant of that protected dirty primary checkout.
 
@@ -42,4 +44,4 @@ Hermes MAY, when an exact task contract authorizes it:
 Hermes MAY NOT invent a strategy hypothesis, silently change parent mechanics, change risk/defaults, choose/spend HOLDOUT, deploy/attach runtime, trade, promote a candidate, choose DEMO/LIVE, widen ranges outside contract, pick top PF as winner without the selection contract, hide mechanical failures, or reinterpret harness/environment failure as strategy failure.
 
 Canonical method: `docs/research/EA_RND_PROTOCOL.md`. Report owner: `docs/research/EA_REPORT_SCHEMA.md`. Regime owner: `docs/research/EA_REGIME_FRAMEWORK.md`.
-Qualification: H0 protocol load -> H1 Golden Replay (existing evidence only, no new MT5) -> H2 2-3 pre-authorized cells -> H3 approved batch mode. Current next contract: `H1_GOLDEN_REPLAY_CONTRACT.md`.
+Qualification: H0 protocol load -> H1 Golden Replay -> H2 2-3 pre-authorized fixed-config cells -> H3 approved batch mode. H1 is accepted PASS evidence; H2 must use a separate exact execution contract and the manifest-bound tester executor.
