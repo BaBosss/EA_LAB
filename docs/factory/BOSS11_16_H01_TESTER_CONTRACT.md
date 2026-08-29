@@ -1,6 +1,6 @@
 # Boss11-16 H01 Tester Contract
 
-Status: PREPARED / FAIL-CLOSED ON DATE PINS
+Status: READY FOR FIXED MODEL-1 MAIN+BWD
 Canonical reviewed build: `cf32ba8d32a8292e8f7b5ad2ef766e3442b20125`
 Authority: `NON_AUTHORITATIVE_SIDECAR`; no optimizer, HOLDOUT, deployment, DEMO/LIVE, risk/default, or candidate-promotion authority.
 
@@ -26,8 +26,9 @@ All five builds were compiled from pushed canonical bytes on Meta5b at 0 errors 
 
 ## Date-pin blocker
 
-Do not run MAIN or BWD yet. Current canonical policy says MAIN is a rolling 36-month window and must not spend HOLDOUT, but the H01 preregistration does not pin exact MAIN/BWD dates. Historical orders frequently use `2023.01.01-2025.12.31` and `2020.01.01-2022.12.31`; those are evidence examples, not sufficient authority to silently bind this new H01.
-A tester dispatcher may proceed only after an exact canonical date contract exists for BOTH windows. Once bound, use the same install for MAIN+BWD for each result, preserve the fixed H01 set, use Model 1, and record logical/actual symbol, timeframe, exact window, install/lane, build receipt, EX5/set/report SHA256, history quality, PF, trades, net, equity DD, truncation/full-window eligibility, and mechanical status.
+The user-ratified Framework re-settle (PROJECT_HISTORY 2026-07-18) binds MAIN to the rolling 36 months immediately before the holdout. With 2026H1 retained as HOLDOUT, the applicable full window is MAIN `2023.01.01-2025.12.31`. The accepted framework implementation pins the preceding BWD regime as `2020.01.01-2022.12.31`. These dates are bound before this H01 result batch and must not change after numbers are seen.
+
+Tester dispatch is authorized for those two windows only. Use the same install for MAIN+BWD for each result, preserve the fixed H01 set, use Model 1, and record logical/actual symbol, timeframe, exact window, install/lane, build receipt, EX5/set/report SHA256, history quality, PF, trades, net, equity DD, truncation/full-window eligibility, and mechanical status.
 
 HOLDOUT remains UNSPENT. No search, optimization, sensitivity, Model 4, or promotion is authorized by this contract.
 
