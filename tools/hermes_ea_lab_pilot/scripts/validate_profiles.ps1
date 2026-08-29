@@ -81,7 +81,7 @@ foreach ($p in $manifest.profiles) {
     if ($mcpExit -ne 0) { $failures.Add("$($p.name): safe-reader MCP connection failed") }
     $mcpText = $mcpTest -join "`n"
     foreach ($toolName in @($mcpSpec.tools)) {
-      if ($mcpText -notmatch ('(?m)^\s*' + [regex]::Escape([string]$toolName) + '\s*$')) {
+      if ($mcpText -notmatch ('(?m)^\s*' + [regex]::Escape([string]$toolName) + '(?:\s+.*)?\s*$')) {
         $failures.Add("$($p.name): safe-reader MCP did not expose $toolName")
       }
     }
