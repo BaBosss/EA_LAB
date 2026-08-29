@@ -23,7 +23,14 @@
     "profile": "ea-tester",
     "name": "ea_lab_tester_executor",
     "script": "scripts/safe_tester_executor_mcp.py",
-    "tools": ["run_fixed_backtest"]
+    "tools": ["run_fixed_backtest"],
+    "env": {
+      "EA_LAB_TESTER_MANIFEST": "${env:EA_LAB_TESTER_MANIFEST}",
+      "EA_LAB_TESTER_MANIFEST_SHA256": "${env:EA_LAB_TESTER_MANIFEST_SHA256}",
+      "EA_LAB_TESTER_RECEIPT_REGISTRY": "${env:EA_LAB_TESTER_RECEIPT_REGISTRY}",
+      "EA_LAB_TESTER_RECEIPT_SHA256": "${env:EA_LAB_TESTER_RECEIPT_SHA256}",
+      "EA_LAB_TESTER_SET_SHA256": "${env:EA_LAB_TESTER_SET_SHA256}"
+    }
   },
   "forbidden_persistent_toolsets": ["terminal","file","code_execution","computer_use","delegation"],
   "provider_evidence": {"anthropic":"LIVE_PASS","qwen_direct":"LIVE_PASS_EXTERNAL","openai_codex":"AUTH_PASS_QUOTA_429"},

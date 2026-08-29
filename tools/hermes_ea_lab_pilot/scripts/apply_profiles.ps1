@@ -58,6 +58,11 @@ foreach ($p in $manifest.profiles) {
     $includeValue = '[' + ((@($mcpSpec.tools) | ForEach-Object { "'$($_)'" }) -join ',') + ']'
     & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).command" $mcpPython | Out-Null
     & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).args" $argsValue | Out-Null
+    if ($null -ne $mcpSpec.env) {
+      foreach ($envProp in $mcpSpec.env.PSObject.Properties) {
+        & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).env.$($envProp.Name)" ([string]$envProp.Value) | Out-Null
+      }
+    }
     & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).enabled" true | Out-Null
     & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).trust" full | Out-Null
     & $HermesExe --profile $p.name config set "mcp_servers.$($mcpSpec.name).tools.include" $includeValue | Out-Null

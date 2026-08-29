@@ -249,6 +249,14 @@ class SafeTesterExecutorTests(unittest.TestCase):
         spec = manifest["tester_execution_mcp"]
         self.assertEqual(spec["profile"], "ea-tester")
         self.assertEqual(spec["tools"], ["run_fixed_backtest"])
+        expected_env = {
+            name: f"${{env:{name}}}" for name in (
+                "EA_LAB_TESTER_MANIFEST", "EA_LAB_TESTER_MANIFEST_SHA256",
+                "EA_LAB_TESTER_RECEIPT_REGISTRY", "EA_LAB_TESTER_RECEIPT_SHA256",
+                "EA_LAB_TESTER_SET_SHA256",
+            )
+        }
+        self.assertEqual(spec["env"], expected_env)
         for prohibited in ("terminal", "file", "code_execution", "computer_use", "delegation"):
             self.assertIn(prohibited, manifest["forbidden_persistent_toolsets"])
             tester = next(p for p in manifest["profiles"] if p["name"] == "ea-tester")

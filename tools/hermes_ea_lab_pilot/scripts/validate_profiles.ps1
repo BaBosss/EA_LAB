@@ -58,6 +58,18 @@ foreach ($p in $manifest.profiles) {
     if ($argsText -notmatch [regex]::Escape($scriptRel)) { $failures.Add("$($p.name): MCP script path mismatch: $mcpName") }
     $trust = ((@(& $HermesExe --profile $p.name config get "mcp_servers.$mcpName.trust" 2>&1)) -join '').Trim()
     if ($trust -ne 'full') { $failures.Add("$($p.name): MCP trust must be full: $mcpName") }
+    if ($null -ne $mcpSpec.env) {
+      foreach ($envProp in $mcpSpec.env.PSObject.Properties) {
+        $actualEnv = ((@(& $HermesExe --profile $p.name config get "mcp_servers.$mcpName.env.$($envProp.Name)" 2>&1)) -join "").Trim()
+        $expectedEnv = [string]$envProp.Value
+        $resolvedExpected = $expectedEnv
+        if ($expectedEnv -match '^\$\{env:([^}]+)\}$') {
+          $current = [Environment]::GetEnvironmentVariable($Matches[1],'Process')
+          if (-not [string]::IsNullOrWhiteSpace($current)) { $resolvedExpected = $current }
+        }
+        if ($actualEnv -ne $expectedEnv -and $actualEnv -ne $resolvedExpected) { $failures.Add("$($p.name): MCP env binding mismatch: $mcpName/$($envProp.Name)") }
+      }
+    }
     $include = ((@(& $HermesExe --profile $p.name config get "mcp_servers.$mcpName.tools.include" 2>&1)) -join "`n")
     foreach ($toolName in @($mcpSpec.tools)) {
       if ($include -notmatch ('(?m)^-\s+' + [regex]::Escape([string]$toolName) + '\s*$')) { $failures.Add("$($p.name): missing MCP tool $toolName on $mcpName") }
