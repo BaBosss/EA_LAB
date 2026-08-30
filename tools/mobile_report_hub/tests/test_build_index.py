@@ -101,11 +101,15 @@ class MobileReportHubDataTests(unittest.TestCase):
             r"path:D:\Meta 5", r"[D:\Meta 5]", r"see=D:\Meta 5",
             r"objective=D:\Meta 5,direct=ok", r"net:\\server\share",
             "C:/forward/slash/path exported",
+            r"exported result inD:\Meta 5\logs\out.csv",
+            r"artifactD:\Meta 5\report.html", r"seeD:\Meta 5\notes.txt",
+            r"backupC:\Users\bob\Desktop",
         ]
         for text in unsafe:
             self.assertEqual(build_index.lane_summary({"objective": text}), "[LOCAL_PATH_REDACTED]", text)
         self.assertEqual(build_index.lane_summary({"objective": unsafe[0], "direct_consumer": "safe consumer"}), "safe consumer")
         self.assertEqual(build_index.lane_summary({"objective": "https://example.com/report"}), "https://example.com/report")
+        self.assertEqual(build_index.lane_summary({"objective": "http://example.com/report"}), "http://example.com/report")
     def test_expected_sha_mismatch_and_missing_source_fail_closed(self):
         with self.assertRaisesRegex(build_index.BuildError, "expected SHA mismatch"):
             build_index.build(ROOT, SHA, self.out, FIXED_TIME, "0" * 40, None)

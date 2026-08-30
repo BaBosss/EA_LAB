@@ -189,7 +189,7 @@ def lane_registry(path: Path | None) -> list[dict]:
             for item in rows if isinstance(item, dict)]
 
 
-_LOCAL_WINDOWS_PATH_RE = re.compile(r"(?<![A-Za-z0-9])(?:[A-Za-z]:[\\/]|\\\\[^\\/\s]+[\\/])")
+_LOCAL_WINDOWS_PATH_RE = re.compile(r"(?:[A-Za-z]:[\\/](?![\\/])|\\\\[^\\/\s]+[\\/])")
 
 def contains_local_windows_path(value: object) -> bool:
     return bool(value and _LOCAL_WINDOWS_PATH_RE.search(str(value)))
