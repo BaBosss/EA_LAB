@@ -1,0 +1,12 @@
+{
+  "name": "EA_LAB Report Hub",
+  "short_name": "EA_LAB Hub",
+  "description": "Read-only EA_LAB research report hub",
+  "start_url": "./index.html#home",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

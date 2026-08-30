@@ -1,0 +1,271 @@
+{
+  "fixture_only": true,
+  "schema_version": "v1",
+  "generator": "mobile_report_hub fixture — test data only, not production SOT",
+  "project": {
+    "canonical_sha": "fixture-only-not-canonical",
+    "canonical_short_sha": "fixture-b16",
+    "source_ref": "fixture/report_index.json",
+    "generated_at": "2026-08-30T00:00:00Z",
+    "data_status": "STALE",
+    "freshness": "FIXTURE_ONLY_STALE"
+  },
+  "sources": [],
+  "eas": [
+    {
+      "id": "B16-H03",
+      "family_id": "B16",
+      "variant_id": "H03",
+      "display_name": "B16 H03 Fixed-config confirmation",
+      "home": {
+        "symbol": "XAUUSD",
+        "timeframe": "H4"
+      },
+      "lifecycle": "Research",
+      "research_state": "DONE",
+      "latest_experiment": "B16 H03 confirmation",
+      "verdict": "POSITION_ENGINE_DEPENDENT_OR_UNKNOWN",
+      "quality_grade": "UNRATIFIED",
+      "evidence_confidence": "UNRATIFIED",
+      "portfolio_value": "UNKNOWN",
+      "build_potential": "UNKNOWN",
+      "strategy": "UNAVAILABLE",
+      "evidence": {
+        "basis_id": "B16_H03_FIXED_CONFIG_MODEL1",
+        "report_stage": "H03",
+        "model": "MODEL_1",
+        "holdout_state": "UNSPENT",
+        "main": {
+          "pf": 4.08,
+          "dd_pct": 6.27,
+          "trades": 79,
+          "cycles": 42
+        },
+        "bwd": {
+          "pf": 1.44,
+          "dd_pct": 8.29,
+          "trades": 148,
+          "cycles": 70
+        },
+        "key_findings": [
+          "79.80% MAIN and 87.89% BWD gross profit came from multi-entry cycles."
+        ],
+        "known_weaknesses": [
+          "H04 is NOT unlocked; position-engine dependence remains unresolved."
+        ]
+      },
+      "status": "DONE",
+      "next_action": "H04 remains locked; no follow-on experiment is unlocked by this record.",
+      "links": {},
+      "provenance": "Fixture-only representation of accepted B16 H03 evidence."
+    },
+    {
+      "id": "B19-P4B",
+      "family_id": "Boss19",
+      "variant_id": "P4B",
+      "display_name": "Boss19 P4B Regime attribution",
+      "home": {
+        "symbol": "UNAVAILABLE",
+        "timeframe": "UNAVAILABLE"
+      },
+      "lifecycle": "Research",
+      "research_state": "BLOCKED",
+      "latest_experiment": "P4B immutable input check",
+      "verdict": "BLOCKED(C DATA / environment prerequisite)",
+      "quality_grade": "UNRATIFIED",
+      "evidence_confidence": "UNKNOWN",
+      "portfolio_value": "UNKNOWN",
+      "build_potential": "UNKNOWN",
+      "strategy": "UNAVAILABLE",
+      "evidence": {
+        "basis_id": "UNAVAILABLE",
+        "report_stage": "P4B",
+        "model": "UNAVAILABLE",
+        "holdout_state": "UNSPENT",
+        "main": {
+          "pf": "UNKNOWN",
+          "dd_pct": "UNKNOWN",
+          "trades": "UNKNOWN",
+          "cycles": "UNKNOWN"
+        },
+        "bwd": {
+          "pf": "UNKNOWN",
+          "dd_pct": "UNKNOWN",
+          "trades": "UNKNOWN",
+          "cycles": "UNKNOWN"
+        },
+        "key_findings": [
+          "No strategy failure has been recorded."
+        ],
+        "known_weaknesses": [
+          "Immutable tester-data-identity OHLC is missing."
+        ]
+      },
+      "status": "BLOCKED",
+      "blocker_type": "ENVIRONMENT",
+      "blocker_reason": "Immutable tester-data-identity OHLC missing.",
+      "next_action": "Await immutable tester-data-identity OHLC inputs.",
+      "links": {},
+      "provenance": "Fixture-only representation; no report metrics are available."
+    },
+    {
+      "id": "B16-XAUUSD-H4-H02",
+      "family_id": "B16",
+      "variant_id": "H02-XAUUSD-H4",
+      "display_name": "B16 XAUUSD H4 literal portability",
+      "home": {
+        "symbol": "XAUUSD",
+        "timeframe": "H4"
+      },
+      "lifecycle": "Research",
+      "research_state": "DONE",
+      "latest_experiment": "H02 literal portability",
+      "verdict": "NON_AUTHORITATIVE_SCREEN",
+      "quality_grade": "UNRATIFIED",
+      "evidence_confidence": "UNRATIFIED",
+      "portfolio_value": "UNKNOWN",
+      "build_potential": "UNKNOWN",
+      "strategy": "UNAVAILABLE",
+      "evidence": {
+        "basis_id": "H02_LITERAL_PORTABILITY_MODEL1",
+        "report_stage": "H02",
+        "model": "MODEL_1",
+        "holdout_state": "UNSPENT",
+        "main": {
+          "pf": "4.08",
+          "dd_pct": "6.27%",
+          "trades": "79",
+          "cycles": "UNKNOWN"
+        },
+        "bwd": {
+          "pf": "1.44",
+          "dd_pct": "8.29%",
+          "trades": "148",
+          "cycles": "UNKNOWN"
+        },
+        "key_findings": [
+          "Compatible comparison fixture record."
+        ],
+        "known_weaknesses": [
+          "Screening only; not a candidate or optimizer seed."
+        ]
+      },
+      "status": "DONE",
+      "links": {},
+      "provenance": "Fixture-only compatibility record."
+    },
+    {
+      "id": "B16-USDJPY-H1-H02",
+      "family_id": "B16",
+      "variant_id": "H02-USDJPY-H1",
+      "display_name": "B16 USDJPY H1 literal portability",
+      "home": {
+        "symbol": "USDJPY",
+        "timeframe": "H1"
+      },
+      "lifecycle": "Research",
+      "research_state": "DONE",
+      "latest_experiment": "H02 literal portability",
+      "verdict": "NON_AUTHORITATIVE_SCREEN",
+      "quality_grade": "UNRATIFIED",
+      "evidence_confidence": "UNRATIFIED",
+      "portfolio_value": "UNKNOWN",
+      "build_potential": "UNKNOWN",
+      "strategy": "UNAVAILABLE",
+      "evidence": {
+        "basis_id": "H02_LITERAL_PORTABILITY_MODEL1",
+        "report_stage": "H02",
+        "model": "MODEL_1",
+        "holdout_state": "UNSPENT",
+        "main": {
+          "pf": "1.53",
+          "dd_pct": "3.85%",
+          "trades": "275",
+          "cycles": "UNKNOWN"
+        },
+        "bwd": {
+          "pf": "1.11",
+          "dd_pct": "2.40%",
+          "trades": "267",
+          "cycles": "UNKNOWN"
+        },
+        "key_findings": [
+          "Compatible comparison fixture record."
+        ],
+        "known_weaknesses": [
+          "Screening only; not a candidate or optimizer seed."
+        ]
+      },
+      "status": "DONE",
+      "links": {},
+      "provenance": "Fixture-only compatibility record."
+    },
+    {
+      "id": "MISSING-FIELDS",
+      "family_id": "UNKNOWN",
+      "variant_id": "UNAVAILABLE",
+      "display_name": "Missing fields presentation fixture",
+      "home": {
+        "symbol": "UNKNOWN",
+        "timeframe": "UNKNOWN"
+      },
+      "lifecycle": "Blocked",
+      "research_state": "BLOCKED",
+      "latest_experiment": "UNAVAILABLE",
+      "verdict": "UNRATIFIED",
+      "quality_grade": "UNRATIFIED",
+      "evidence_confidence": "UNRATIFIED",
+      "portfolio_value": "UNKNOWN",
+      "build_potential": "UNKNOWN",
+      "strategy": "UNAVAILABLE",
+      "evidence": {
+        "basis_id": "UNAVAILABLE",
+        "report_stage": "UNAVAILABLE",
+        "model": "UNAVAILABLE",
+        "holdout_state": "UNRATIFIED",
+        "main": {
+          "pf": "UNKNOWN",
+          "dd_pct": "UNKNOWN",
+          "trades": "UNKNOWN",
+          "cycles": "UNKNOWN"
+        },
+        "bwd": {
+          "pf": "UNKNOWN",
+          "dd_pct": "UNKNOWN",
+          "trades": "UNKNOWN",
+          "cycles": "UNKNOWN"
+        },
+        "key_findings": [],
+        "known_weaknesses": []
+      },
+      "status": "BLOCKED",
+      "blocker_type": "HARNESS",
+      "blocker_reason": "UNAVAILABLE",
+      "links": {},
+      "provenance": "Fixture-only missing-value rendering record."
+    }
+  ],
+  "queue": [
+    {
+      "id": "B19-P4B",
+      "state": "BLOCKED",
+      "blocker_type": "ENVIRONMENT",
+      "summary": "Immutable tester-data-identity OHLC missing."
+    },
+    {
+      "id": "B16-H03",
+      "state": "DONE",
+      "blocker_type": "NOT_APPLICABLE",
+      "summary": "Confirmation complete; H04 not unlocked."
+    },
+    {
+      "id": "H02-PORTABILITY",
+      "state": "READY",
+      "blocker_type": "NOT_APPLICABLE",
+      "summary": "Fixture queue item."
+    }
+  ],
+  "compare": {
+    "supported": true
+  }
+}
