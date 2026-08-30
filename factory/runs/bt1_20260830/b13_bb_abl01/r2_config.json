@@ -1,0 +1,26 @@
+{
+    "schema":  "ea-lab-r2-config/1",
+    "hypothesis_id":  "HYP-B13-BB-ABL-01",
+    "ea":  "B13 / Boss_13_MeanRev",
+    "symbol":  "XAUUSD",
+    "timeframe":  "M15",
+    "canonical_base_sha":  "b26af204faf7907fe7e78a2b5f90a5dfa8c6bc02",
+    "reports":  {
+                    "MAIN":  "D:\\EA_LAB_CONTROL\\worktrees\\bt1-b13-bb-abl01\\factory\\runs\\bt1_20260830\\b13_bb_abl01\\raw\\BT1_B13_BB_ABL01_XAUUSD_M15_MAIN_M1.htm.gz",
+                    "BWD":  "D:\\EA_LAB_CONTROL\\worktrees\\bt1-b13-bb-abl01\\factory\\runs\\bt1_20260830\\b13_bb_abl01\\raw\\BT1_B13_BB_ABL01_XAUUSD_M15_BWD_M1.htm.gz"
+                },
+    "parent":  {
+                   "MAIN":  {
+                                "trades":  3929,
+                                "net":  1063.38,
+                                "eqdd_pct":  6.32,
+                                "pf":  1.06
+                            },
+                   "BWD":  {
+                               "trades":  3300,
+                               "net":  253.56,
+                               "eqdd_pct":  3.72,
+                               "pf":  1.02
+                           }
+               }
+}
