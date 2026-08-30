@@ -1,0 +1,4876 @@
+{
+  "bwd": {
+    "bins": [
+      {
+        "active_seconds_sum": 1690120,
+        "active_time_share_full_window": 0.017848,
+        "bin": "2020",
+        "closed_ticket_count": 35,
+        "cycle_count": 20,
+        "gross_loss": -198.32,
+        "gross_profit": 412.08,
+        "net_profit": 213.76,
+        "profit_factor": 2.0779,
+        "realized_balance_dd": 49.13
+      },
+      {
+        "active_seconds_sum": 6903840,
+        "active_time_share_full_window": 0.072907,
+        "bin": "2021",
+        "closed_ticket_count": 64,
+        "cycle_count": 22,
+        "gross_loss": -842.13,
+        "gross_profit": 757.35,
+        "net_profit": -84.78,
+        "profit_factor": 0.8993,
+        "realized_balance_dd": 556.25
+      },
+      {
+        "active_seconds_sum": 3188900,
+        "active_time_share_full_window": 0.033676,
+        "bin": "2022",
+        "closed_ticket_count": 49,
+        "cycle_count": 28,
+        "gross_loss": -121.62,
+        "gross_profit": 505.33,
+        "net_profit": 383.71,
+        "profit_factor": 4.155,
+        "realized_balance_dd": 0.0
+      },
+      {
+        "active_seconds_sum": 3001520,
+        "active_time_share_full_window": 0.031697,
+        "bin": "FOLD_1",
+        "closed_ticket_count": 59,
+        "cycle_count": 32,
+        "gross_loss": -216.43,
+        "gross_profit": 717.61,
+        "net_profit": 501.18,
+        "profit_factor": 3.3157,
+        "realized_balance_dd": 49.13
+      },
+      {
+        "active_seconds_sum": 8781340,
+        "active_time_share_full_window": 0.092733,
+        "bin": "FOLD_2",
+        "closed_ticket_count": 89,
+        "cycle_count": 38,
+        "gross_loss": -945.64,
+        "gross_profit": 957.15,
+        "net_profit": 11.51,
+        "profit_factor": 1.0122,
+        "realized_balance_dd": 556.25
+      }
+    ],
+    "concentration": {
+      "multi_entry_positive_gross_profit_share": 0.87889,
+      "top_losing_cycles": [
+        {
+          "closed_ticket_count": 10,
+          "closed_tickets": [
+            {
+              "deal": 128,
+              "pnl": -94.04
+            },
+            {
+              "deal": 129,
+              "pnl": -94.04
+            },
+            {
+              "deal": 131,
+              "pnl": -102.13
+            },
+            {
+              "deal": 133,
+              "pnl": -100.51
+            },
+            {
+              "deal": 134,
+              "pnl": 44.66
+            },
+            {
+              "deal": 135,
+              "pnl": -39.4
+            },
+            {
+              "deal": 136,
+              "pnl": 32.11
+            },
+            {
+              "deal": 137,
+              "pnl": -24.34
+            },
+            {
+              "deal": 138,
+              "pnl": 25.86
+            },
+            {
+              "deal": 139,
+              "pnl": 8.24
+            }
+          ],
+          "cycle": 33,
+          "deal_ids": [
+            120,
+            121,
+            122,
+            123,
+            124,
+            125,
+            126,
+            127,
+            128,
+            129,
+            130,
+            131,
+            132,
+            133,
+            134,
+            135,
+            136,
+            137,
+            138,
+            139
+          ],
+          "direction": "buy",
+          "duration_seconds": 2617960,
+          "end": "2021.07.14 15:12:40",
+          "entry_count": 10,
+          "entry_price_span": 109.43,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -454.46,
+          "gross_loss_share": 0.391078,
+          "gross_profit": 110.87,
+          "max_aggregate_lots": 0.08,
+          "max_basket_depth": 8,
+          "max_simultaneous_positions": 8,
+          "pnl": -343.59,
+          "start": "2021.06.14 08:00:00"
+        },
+        {
+          "closed_ticket_count": 8,
+          "closed_tickets": [
+            {
+              "deal": 146,
+              "pnl": -90.81
+            },
+            {
+              "deal": 147,
+              "pnl": -90.81
+            },
+            {
+              "deal": 148,
+              "pnl": -90.81
+            },
+            {
+              "deal": 150,
+              "pnl": 48.71
+            },
+            {
+              "deal": 151,
+              "pnl": -40.54
+            },
+            {
+              "deal": 153,
+              "pnl": 27.85
+            },
+            {
+              "deal": 154,
+              "pnl": 19.92
+            },
+            {
+              "deal": 155,
+              "pnl": 3.83
+            }
+          ],
+          "cycle": 34,
+          "deal_ids": [
+            140,
+            141,
+            142,
+            143,
+            144,
+            145,
+            146,
+            147,
+            148,
+            149,
+            150,
+            151,
+            152,
+            153,
+            154,
+            155
+          ],
+          "direction": "buy",
+          "duration_seconds": 217720,
+          "end": "2021.08.09 04:28:40",
+          "entry_count": 8,
+          "entry_price_span": 111.44,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -312.97,
+          "gross_loss_share": 0.269321,
+          "gross_profit": 100.31,
+          "max_aggregate_lots": 0.06,
+          "max_basket_depth": 6,
+          "max_simultaneous_positions": 6,
+          "pnl": -212.66,
+          "start": "2021.08.06 16:00:00"
+        },
+        {
+          "closed_ticket_count": 5,
+          "closed_tickets": [
+            {
+              "deal": 31,
+              "pnl": -90.81
+            },
+            {
+              "deal": 32,
+              "pnl": 37.64
+            },
+            {
+              "deal": 33,
+              "pnl": -30.91
+            },
+            {
+              "deal": 34,
+              "pnl": 26.17
+            },
+            {
+              "deal": 35,
+              "pnl": 8.78
+            }
+          ],
+          "cycle": 11,
+          "deal_ids": [
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35
+          ],
+          "direction": "buy",
+          "duration_seconds": 67120,
+          "end": "2020.08.12 10:38:40",
+          "entry_count": 5,
+          "entry_price_span": 85.04,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -121.72,
+          "gross_loss_share": 0.104744,
+          "gross_profit": 72.59,
+          "max_aggregate_lots": 0.05,
+          "max_basket_depth": 5,
+          "max_simultaneous_positions": 5,
+          "pnl": -49.13,
+          "start": "2020.08.11 16:00:00"
+        }
+      ],
+      "top_profitable_cycles": [
+        {
+          "closed_ticket_count": 11,
+          "closed_tickets": [
+            {
+              "deal": 182,
+              "pnl": 15.47
+            },
+            {
+              "deal": 183,
+              "pnl": -9.72
+            },
+            {
+              "deal": 186,
+              "pnl": 16.11
+            },
+            {
+              "deal": 187,
+              "pnl": -10.98
+            },
+            {
+              "deal": 190,
+              "pnl": 20.58
+            },
+            {
+              "deal": 191,
+              "pnl": -15.55
+            },
+            {
+              "deal": 195,
+              "pnl": 27.74
+            },
+            {
+              "deal": 196,
+              "pnl": -20.34
+            },
+            {
+              "deal": 197,
+              "pnl": 26.07
+            },
+            {
+              "deal": 198,
+              "pnl": 18.54
+            },
+            {
+              "deal": 199,
+              "pnl": 4.14
+            }
+          ],
+          "cycle": 42,
+          "deal_ids": [
+            178,
+            179,
+            180,
+            181,
+            182,
+            183,
+            184,
+            185,
+            186,
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199
+          ],
+          "direction": "buy",
+          "duration_seconds": 2034160,
+          "end": "2021.12.16 17:02:40",
+          "entry_count": 11,
+          "entry_price_span": 58.85,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -56.59,
+          "gross_profit": 128.65,
+          "gross_profit_share": 0.076817,
+          "max_aggregate_lots": 0.05,
+          "max_basket_depth": 5,
+          "max_simultaneous_positions": 5,
+          "pnl": 72.06,
+          "start": "2021.11.23 04:00:00"
+        },
+        {
+          "closed_ticket_count": 9,
+          "closed_tickets": [
+            {
+              "deal": 250,
+              "pnl": 32.33
+            },
+            {
+              "deal": 251,
+              "pnl": -26.93
+            },
+            {
+              "deal": 255,
+              "pnl": 44.7
+            },
+            {
+              "deal": 256,
+              "pnl": -34.49
+            },
+            {
+              "deal": 257,
+              "pnl": 34.2
+            },
+            {
+              "deal": 258,
+              "pnl": -26.3
+            },
+            {
+              "deal": 259,
+              "pnl": 36.15
+            },
+            {
+              "deal": 260,
+              "pnl": 15.93
+            },
+            {
+              "deal": 261,
+              "pnl": -3.83
+            }
+          ],
+          "cycle": 57,
+          "deal_ids": [
+            244,
+            245,
+            246,
+            247,
+            248,
+            249,
+            250,
+            251,
+            252,
+            253,
+            254,
+            255,
+            256,
+            257,
+            258,
+            259,
+            260,
+            261
+          ],
+          "direction": "buy",
+          "duration_seconds": 1966400,
+          "end": "2022.07.29 06:13:20",
+          "entry_count": 9,
+          "entry_price_span": 75.8,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -91.55,
+          "gross_profit": 163.31,
+          "gross_profit_share": 0.097512,
+          "max_aggregate_lots": 0.07,
+          "max_basket_depth": 7,
+          "max_simultaneous_positions": 7,
+          "pnl": 71.76,
+          "start": "2022.07.06 12:00:00"
+        },
+        {
+          "closed_ticket_count": 8,
+          "closed_tickets": [
+            {
+              "deal": 64,
+              "pnl": 44.34
+            },
+            {
+              "deal": 65,
+              "pnl": -36.62
+            },
+            {
+              "deal": 66,
+              "pnl": 32.06
+            },
+            {
+              "deal": 67,
+              "pnl": -24.34
+            },
+            {
+              "deal": 68,
+              "pnl": 21.87
+            },
+            {
+              "deal": 69,
+              "pnl": -15.64
+            },
+            {
+              "deal": 70,
+              "pnl": 23.88
+            },
+            {
+              "deal": 71,
+              "pnl": 8.59
+            }
+          ],
+          "cycle": 20,
+          "deal_ids": [
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71
+          ],
+          "direction": "buy",
+          "duration_seconds": 750700,
+          "end": "2020.12.02 12:31:40",
+          "entry_count": 8,
+          "entry_price_span": 75.3,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -76.6,
+          "gross_profit": 130.74,
+          "gross_profit_share": 0.078065,
+          "max_aggregate_lots": 0.08,
+          "max_basket_depth": 8,
+          "max_simultaneous_positions": 8,
+          "pnl": 54.14,
+          "start": "2020.11.23 20:00:00"
+        },
+        {
+          "closed_ticket_count": 3,
+          "closed_tickets": [
+            {
+              "deal": 117,
+              "pnl": 25.82
+            },
+            {
+              "deal": 118,
+              "pnl": 17.03
+            },
+            {
+              "deal": 119,
+              "pnl": 9.84
+            }
+          ],
+          "cycle": 32,
+          "deal_ids": [
+            114,
+            115,
+            116,
+            117,
+            118,
+            119
+          ],
+          "direction": "buy",
+          "duration_seconds": 70360,
+          "end": "2021.06.04 15:32:40",
+          "entry_count": 3,
+          "entry_price_span": 15.17,
+          "exit_type": "UNKNOWN",
+          "gross_loss": 0,
+          "gross_profit": 52.69,
+          "gross_profit_share": 0.031461,
+          "max_aggregate_lots": 0.03,
+          "max_basket_depth": 3,
+          "max_simultaneous_positions": 3,
+          "pnl": 52.69,
+          "start": "2021.06.03 20:00:00"
+        },
+        {
+          "closed_ticket_count": 3,
+          "closed_tickets": [
+            {
+              "deal": 87,
+              "pnl": 26.77
+            },
+            {
+              "deal": 88,
+              "pnl": 17.29
+            },
+            {
+              "deal": 89,
+              "pnl": 7.44
+            }
+          ],
+          "cycle": 26,
+          "deal_ids": [
+            84,
+            85,
+            86,
+            87,
+            88,
+            89
+          ],
+          "direction": "buy",
+          "duration_seconds": 291900,
+          "end": "2021.02.08 01:05:00",
+          "entry_count": 3,
+          "entry_price_span": 19.33,
+          "exit_type": "UNKNOWN",
+          "gross_loss": 0,
+          "gross_profit": 51.5,
+          "gross_profit_share": 0.030751,
+          "max_aggregate_lots": 0.03,
+          "max_basket_depth": 3,
+          "max_simultaneous_positions": 3,
+          "pnl": 51.5,
+          "start": "2021.02.04 16:00:00"
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 3,
+            "pnl": 2.78
+          }
+        ],
+        "cycle": 1,
+        "deal_ids": [
+          2,
+          3
+        ],
+        "direction": "buy",
+        "duration_seconds": 7780,
+        "end": "2020.02.04 22:09:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.78,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.78,
+        "start": "2020.02.04 20:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 6,
+            "pnl": 23.96
+          },
+          {
+            "deal": 7,
+            "pnl": 8.99
+          }
+        ],
+        "cycle": 2,
+        "deal_ids": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "direction": "buy",
+        "duration_seconds": 6620,
+        "end": "2020.02.28 21:50:20",
+        "entry_count": 2,
+        "entry_price_span": 14.97,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.95,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.95,
+        "start": "2020.02.28 20:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 10,
+            "pnl": 27.83
+          },
+          {
+            "deal": 11,
+            "pnl": 10.68
+          }
+        ],
+        "cycle": 3,
+        "deal_ids": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "direction": "buy",
+        "duration_seconds": 27400,
+        "end": "2020.03.13 08:37:40",
+        "entry_count": 2,
+        "entry_price_span": 17.15,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 38.51,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 38.51,
+        "start": "2020.03.13 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 13,
+            "pnl": 12.58
+          }
+        ],
+        "cycle": 4,
+        "deal_ids": [
+          12,
+          13
+        ],
+        "direction": "buy",
+        "duration_seconds": 4180,
+        "end": "2020.03.13 21:09:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 12.58,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 12.58,
+        "start": "2020.03.13 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 15,
+            "pnl": 15.4
+          }
+        ],
+        "cycle": 5,
+        "deal_ids": [
+          14,
+          15
+        ],
+        "direction": "buy",
+        "duration_seconds": 3400,
+        "end": "2020.03.16 16:56:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 15.4,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 15.4,
+        "start": "2020.03.16 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 17,
+            "pnl": 2.78
+          }
+        ],
+        "cycle": 6,
+        "deal_ids": [
+          16,
+          17
+        ],
+        "direction": "buy",
+        "duration_seconds": 7900,
+        "end": "2020.05.27 10:11:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.78,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.78,
+        "start": "2020.05.27 08:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 19,
+            "pnl": 2.83
+          }
+        ],
+        "cycle": 7,
+        "deal_ids": [
+          18,
+          19
+        ],
+        "direction": "buy",
+        "duration_seconds": 4000,
+        "end": "2020.05.27 13:06:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.83,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.83,
+        "start": "2020.05.27 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 21,
+            "pnl": 3.68
+          }
+        ],
+        "cycle": 8,
+        "deal_ids": [
+          20,
+          21
+        ],
+        "direction": "buy",
+        "duration_seconds": 3220,
+        "end": "2020.05.27 16:53:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.68,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.68,
+        "start": "2020.05.27 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 23,
+            "pnl": 1.07
+          }
+        ],
+        "cycle": 9,
+        "deal_ids": [
+          22,
+          23
+        ],
+        "direction": "buy",
+        "duration_seconds": 30560,
+        "end": "2020.06.04 04:29:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 1.07,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 1.07,
+        "start": "2020.06.03 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 25,
+            "pnl": 3.12
+          }
+        ],
+        "cycle": 10,
+        "deal_ids": [
+          24,
+          25
+        ],
+        "direction": "buy",
+        "duration_seconds": 202420,
+        "end": "2020.06.08 04:13:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.12,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.12,
+        "start": "2020.06.05 20:00:00"
+      },
+      {
+        "closed_ticket_count": 5,
+        "closed_tickets": [
+          {
+            "deal": 31,
+            "pnl": -90.81
+          },
+          {
+            "deal": 32,
+            "pnl": 37.64
+          },
+          {
+            "deal": 33,
+            "pnl": -30.91
+          },
+          {
+            "deal": 34,
+            "pnl": 26.17
+          },
+          {
+            "deal": 35,
+            "pnl": 8.78
+          }
+        ],
+        "cycle": 11,
+        "deal_ids": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35
+        ],
+        "direction": "buy",
+        "duration_seconds": 67120,
+        "end": "2020.08.12 10:38:40",
+        "entry_count": 5,
+        "entry_price_span": 85.04,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -121.72,
+        "gross_profit": 72.59,
+        "max_aggregate_lots": 0.05,
+        "max_basket_depth": 5,
+        "max_simultaneous_positions": 5,
+        "pnl": -49.13,
+        "start": "2020.08.11 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 37,
+            "pnl": 4.68
+          }
+        ],
+        "cycle": 12,
+        "deal_ids": [
+          36,
+          37
+        ],
+        "direction": "buy",
+        "duration_seconds": 1840,
+        "end": "2020.09.21 20:30:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.68,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.68,
+        "start": "2020.09.21 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 39,
+            "pnl": 5.87
+          }
+        ],
+        "cycle": 13,
+        "deal_ids": [
+          38,
+          39
+        ],
+        "direction": "buy",
+        "duration_seconds": 580,
+        "end": "2020.09.23 12:09:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 5.87,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 5.87,
+        "start": "2020.09.23 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 41,
+            "pnl": 6.08
+          }
+        ],
+        "cycle": 14,
+        "deal_ids": [
+          40,
+          41
+        ],
+        "direction": "buy",
+        "duration_seconds": 920,
+        "end": "2020.09.23 16:15:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 6.08,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 6.08,
+        "start": "2020.09.23 16:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 44,
+            "pnl": 23.55
+          },
+          {
+            "deal": 45,
+            "pnl": 9.0
+          }
+        ],
+        "cycle": 15,
+        "deal_ids": [
+          42,
+          43,
+          44,
+          45
+        ],
+        "direction": "buy",
+        "duration_seconds": 433900,
+        "end": "2020.09.28 20:31:40",
+        "entry_count": 2,
+        "entry_price_span": 12.13,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.55,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.55,
+        "start": "2020.09.23 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 47,
+            "pnl": 3.11
+          }
+        ],
+        "cycle": 16,
+        "deal_ids": [
+          46,
+          47
+        ],
+        "direction": "buy",
+        "duration_seconds": 6120,
+        "end": "2020.10.29 02:43:00",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.11,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.11,
+        "start": "2020.10.29 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 49,
+            "pnl": 3.76
+          }
+        ],
+        "cycle": 17,
+        "deal_ids": [
+          48,
+          49
+        ],
+        "direction": "buy",
+        "duration_seconds": 1960,
+        "end": "2020.10.29 16:32:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.76,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.76,
+        "start": "2020.10.29 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 51,
+            "pnl": 3.44
+          }
+        ],
+        "cycle": 18,
+        "deal_ids": [
+          50,
+          51
+        ],
+        "direction": "buy",
+        "duration_seconds": 13600,
+        "end": "2020.10.30 04:47:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.44,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.44,
+        "start": "2020.10.30 01:01:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 54,
+            "pnl": 20.46
+          },
+          {
+            "deal": 55,
+            "pnl": 13.1
+          }
+        ],
+        "cycle": 19,
+        "deal_ids": [
+          52,
+          53,
+          54,
+          55
+        ],
+        "direction": "buy",
+        "duration_seconds": 115900,
+        "end": "2020.11.20 16:11:40",
+        "entry_count": 2,
+        "entry_price_span": 7.36,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 33.56,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 33.56,
+        "start": "2020.11.19 08:00:00"
+      },
+      {
+        "closed_ticket_count": 8,
+        "closed_tickets": [
+          {
+            "deal": 64,
+            "pnl": 44.34
+          },
+          {
+            "deal": 65,
+            "pnl": -36.62
+          },
+          {
+            "deal": 66,
+            "pnl": 32.06
+          },
+          {
+            "deal": 67,
+            "pnl": -24.34
+          },
+          {
+            "deal": 68,
+            "pnl": 21.87
+          },
+          {
+            "deal": 69,
+            "pnl": -15.64
+          },
+          {
+            "deal": 70,
+            "pnl": 23.88
+          },
+          {
+            "deal": 71,
+            "pnl": 8.59
+          }
+        ],
+        "cycle": 20,
+        "deal_ids": [
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71
+        ],
+        "direction": "buy",
+        "duration_seconds": 750700,
+        "end": "2020.12.02 12:31:40",
+        "entry_count": 8,
+        "entry_price_span": 75.3,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -76.6,
+        "gross_profit": 130.74,
+        "max_aggregate_lots": 0.08,
+        "max_basket_depth": 8,
+        "max_simultaneous_positions": 8,
+        "pnl": 54.14,
+        "start": "2020.11.23 20:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 74,
+            "pnl": 25.54
+          },
+          {
+            "deal": 75,
+            "pnl": 9.67
+          }
+        ],
+        "cycle": 21,
+        "deal_ids": [
+          72,
+          73,
+          74,
+          75
+        ],
+        "direction": "buy",
+        "duration_seconds": 191100,
+        "end": "2021.01.11 01:05:00",
+        "entry_count": 2,
+        "entry_price_span": 15.87,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 35.21,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 35.21,
+        "start": "2021.01.08 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 77,
+            "pnl": 6.98
+          }
+        ],
+        "cycle": 22,
+        "deal_ids": [
+          76,
+          77
+        ],
+        "direction": "buy",
+        "duration_seconds": 2860,
+        "end": "2021.01.11 04:47:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 6.98,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 6.98,
+        "start": "2021.01.11 04:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 79,
+            "pnl": 7.9
+          }
+        ],
+        "cycle": 23,
+        "deal_ids": [
+          78,
+          79
+        ],
+        "direction": "buy",
+        "duration_seconds": 1960,
+        "end": "2021.01.11 08:32:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 7.9,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 7.9,
+        "start": "2021.01.11 08:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 81,
+            "pnl": 7.29
+          }
+        ],
+        "cycle": 24,
+        "deal_ids": [
+          80,
+          81
+        ],
+        "direction": "buy",
+        "duration_seconds": 2380,
+        "end": "2021.01.11 16:39:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 7.29,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 7.29,
+        "start": "2021.01.11 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 83,
+            "pnl": 3.81
+          }
+        ],
+        "cycle": 25,
+        "deal_ids": [
+          82,
+          83
+        ],
+        "direction": "buy",
+        "duration_seconds": 10120,
+        "end": "2021.02.04 14:48:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.81,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.81,
+        "start": "2021.02.04 12:00:00"
+      },
+      {
+        "closed_ticket_count": 3,
+        "closed_tickets": [
+          {
+            "deal": 87,
+            "pnl": 26.77
+          },
+          {
+            "deal": 88,
+            "pnl": 17.29
+          },
+          {
+            "deal": 89,
+            "pnl": 7.44
+          }
+        ],
+        "cycle": 26,
+        "deal_ids": [
+          84,
+          85,
+          86,
+          87,
+          88,
+          89
+        ],
+        "direction": "buy",
+        "duration_seconds": 291900,
+        "end": "2021.02.08 01:05:00",
+        "entry_count": 3,
+        "entry_price_span": 19.33,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 51.5,
+        "max_aggregate_lots": 0.03,
+        "max_basket_depth": 3,
+        "max_simultaneous_positions": 3,
+        "pnl": 51.5,
+        "start": "2021.02.04 16:00:00"
+      },
+      {
+        "closed_ticket_count": 4,
+        "closed_tickets": [
+          {
+            "deal": 94,
+            "pnl": 18.21
+          },
+          {
+            "deal": 95,
+            "pnl": -12.4
+          },
+          {
+            "deal": 96,
+            "pnl": 20.73
+          },
+          {
+            "deal": 97,
+            "pnl": 11.65
+          }
+        ],
+        "cycle": 27,
+        "deal_ids": [
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97
+        ],
+        "direction": "buy",
+        "duration_seconds": 483280,
+        "end": "2021.02.22 15:15:40",
+        "entry_count": 4,
+        "entry_price_span": 27.38,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -12.4,
+        "gross_profit": 50.59,
+        "max_aggregate_lots": 0.04,
+        "max_basket_depth": 4,
+        "max_simultaneous_positions": 4,
+        "pnl": 38.19,
+        "start": "2021.02.17 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 99,
+            "pnl": 6.0
+          }
+        ],
+        "cycle": 28,
+        "deal_ids": [
+          98,
+          99
+        ],
+        "direction": "buy",
+        "duration_seconds": 12040,
+        "end": "2021.02.26 23:20:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 6.0,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 6.0,
+        "start": "2021.02.26 20:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 102,
+            "pnl": 22.74
+          },
+          {
+            "deal": 103,
+            "pnl": 10.08
+          }
+        ],
+        "cycle": 29,
+        "deal_ids": [
+          100,
+          101,
+          102,
+          103
+        ],
+        "direction": "buy",
+        "duration_seconds": 50020,
+        "end": "2021.03.02 14:54:40",
+        "entry_count": 2,
+        "entry_price_span": 12.66,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.82,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.82,
+        "start": "2021.03.02 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 105,
+            "pnl": 4.87
+          }
+        ],
+        "cycle": 30,
+        "deal_ids": [
+          104,
+          105
+        ],
+        "direction": "buy",
+        "duration_seconds": 14500,
+        "end": "2021.03.05 08:01:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.87,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.87,
+        "start": "2021.03.05 04:00:00"
+      },
+      {
+        "closed_ticket_count": 4,
+        "closed_tickets": [
+          {
+            "deal": 110,
+            "pnl": 13.58
+          },
+          {
+            "deal": 111,
+            "pnl": -5.71
+          },
+          {
+            "deal": 112,
+            "pnl": 19.47
+          },
+          {
+            "deal": 113,
+            "pnl": 12.82
+          }
+        ],
+        "cycle": 31,
+        "deal_ids": [
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113
+        ],
+        "direction": "buy",
+        "duration_seconds": 180880,
+        "end": "2021.04.01 10:14:40",
+        "entry_count": 4,
+        "entry_price_span": 19.29,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -5.71,
+        "gross_profit": 45.87,
+        "max_aggregate_lots": 0.04,
+        "max_basket_depth": 4,
+        "max_simultaneous_positions": 4,
+        "pnl": 40.16,
+        "start": "2021.03.30 08:00:00"
+      },
+      {
+        "closed_ticket_count": 3,
+        "closed_tickets": [
+          {
+            "deal": 117,
+            "pnl": 25.82
+          },
+          {
+            "deal": 118,
+            "pnl": 17.03
+          },
+          {
+            "deal": 119,
+            "pnl": 9.84
+          }
+        ],
+        "cycle": 32,
+        "deal_ids": [
+          114,
+          115,
+          116,
+          117,
+          118,
+          119
+        ],
+        "direction": "buy",
+        "duration_seconds": 70360,
+        "end": "2021.06.04 15:32:40",
+        "entry_count": 3,
+        "entry_price_span": 15.17,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 52.69,
+        "max_aggregate_lots": 0.03,
+        "max_basket_depth": 3,
+        "max_simultaneous_positions": 3,
+        "pnl": 52.69,
+        "start": "2021.06.03 20:00:00"
+      },
+      {
+        "closed_ticket_count": 10,
+        "closed_tickets": [
+          {
+            "deal": 128,
+            "pnl": -94.04
+          },
+          {
+            "deal": 129,
+            "pnl": -94.04
+          },
+          {
+            "deal": 131,
+            "pnl": -102.13
+          },
+          {
+            "deal": 133,
+            "pnl": -100.51
+          },
+          {
+            "deal": 134,
+            "pnl": 44.66
+          },
+          {
+            "deal": 135,
+            "pnl": -39.4
+          },
+          {
+            "deal": 136,
+            "pnl": 32.11
+          },
+          {
+            "deal": 137,
+            "pnl": -24.34
+          },
+          {
+            "deal": 138,
+            "pnl": 25.86
+          },
+          {
+            "deal": 139,
+            "pnl": 8.24
+          }
+        ],
+        "cycle": 33,
+        "deal_ids": [
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127,
+          128,
+          129,
+          130,
+          131,
+          132,
+          133,
+          134,
+          135,
+          136,
+          137,
+          138,
+          139
+        ],
+        "direction": "buy",
+        "duration_seconds": 2617960,
+        "end": "2021.07.14 15:12:40",
+        "entry_count": 10,
+        "entry_price_span": 109.43,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -454.46,
+        "gross_profit": 110.87,
+        "max_aggregate_lots": 0.08,
+        "max_basket_depth": 8,
+        "max_simultaneous_positions": 8,
+        "pnl": -343.59,
+        "start": "2021.06.14 08:00:00"
+      },
+      {
+        "closed_ticket_count": 8,
+        "closed_tickets": [
+          {
+            "deal": 146,
+            "pnl": -90.81
+          },
+          {
+            "deal": 147,
+            "pnl": -90.81
+          },
+          {
+            "deal": 148,
+            "pnl": -90.81
+          },
+          {
+            "deal": 150,
+            "pnl": 48.71
+          },
+          {
+            "deal": 151,
+            "pnl": -40.54
+          },
+          {
+            "deal": 153,
+            "pnl": 27.85
+          },
+          {
+            "deal": 154,
+            "pnl": 19.92
+          },
+          {
+            "deal": 155,
+            "pnl": 3.83
+          }
+        ],
+        "cycle": 34,
+        "deal_ids": [
+          140,
+          141,
+          142,
+          143,
+          144,
+          145,
+          146,
+          147,
+          148,
+          149,
+          150,
+          151,
+          152,
+          153,
+          154,
+          155
+        ],
+        "direction": "buy",
+        "duration_seconds": 217720,
+        "end": "2021.08.09 04:28:40",
+        "entry_count": 8,
+        "entry_price_span": 111.44,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -312.97,
+        "gross_profit": 100.31,
+        "max_aggregate_lots": 0.06,
+        "max_basket_depth": 6,
+        "max_simultaneous_positions": 6,
+        "pnl": -212.66,
+        "start": "2021.08.06 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 157,
+            "pnl": 6.02
+          }
+        ],
+        "cycle": 35,
+        "deal_ids": [
+          156,
+          157
+        ],
+        "direction": "buy",
+        "duration_seconds": 1720,
+        "end": "2021.08.09 08:28:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 6.02,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 6.02,
+        "start": "2021.08.09 08:00:00"
+      },
+      {
+        "closed_ticket_count": 3,
+        "closed_tickets": [
+          {
+            "deal": 161,
+            "pnl": 31.07
+          },
+          {
+            "deal": 162,
+            "pnl": 15.56
+          },
+          {
+            "deal": 163,
+            "pnl": 2.23
+          }
+        ],
+        "cycle": 36,
+        "deal_ids": [
+          158,
+          159,
+          160,
+          161,
+          162,
+          163
+        ],
+        "direction": "buy",
+        "duration_seconds": 197260,
+        "end": "2021.08.11 18:47:40",
+        "entry_count": 3,
+        "entry_price_span": 28.03,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 48.86,
+        "max_aggregate_lots": 0.03,
+        "max_basket_depth": 3,
+        "max_simultaneous_positions": 3,
+        "pnl": 48.86,
+        "start": "2021.08.09 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 165,
+            "pnl": 2.47
+          }
+        ],
+        "cycle": 37,
+        "deal_ids": [
+          164,
+          165
+        ],
+        "direction": "buy",
+        "duration_seconds": 9580,
+        "end": "2021.09.08 03:40:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.47,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.47,
+        "start": "2021.09.08 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 167,
+            "pnl": 0.36
+          }
+        ],
+        "cycle": 38,
+        "deal_ids": [
+          166,
+          167
+        ],
+        "direction": "buy",
+        "duration_seconds": 54820,
+        "end": "2021.09.09 11:13:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 0.36,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 0.36,
+        "start": "2021.09.08 20:00:00"
+      },
+      {
+        "closed_ticket_count": 3,
+        "closed_tickets": [
+          {
+            "deal": 171,
+            "pnl": 25.14
+          },
+          {
+            "deal": 172,
+            "pnl": 15.94
+          },
+          {
+            "deal": 173,
+            "pnl": 7.86
+          }
+        ],
+        "cycle": 39,
+        "deal_ids": [
+          168,
+          169,
+          170,
+          171,
+          172,
+          173
+        ],
+        "direction": "buy",
+        "duration_seconds": 429940,
+        "end": "2021.09.21 15:25:40",
+        "entry_count": 3,
+        "entry_price_span": 17.28,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 48.94,
+        "max_aggregate_lots": 0.03,
+        "max_basket_depth": 3,
+        "max_simultaneous_positions": 3,
+        "pnl": 48.94,
+        "start": "2021.09.16 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 175,
+            "pnl": 2.66
+          }
+        ],
+        "cycle": 40,
+        "deal_ids": [
+          174,
+          175
+        ],
+        "direction": "buy",
+        "duration_seconds": 1400,
+        "end": "2021.11.03 20:23:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.66,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.66,
+        "start": "2021.11.03 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 177,
+            "pnl": 2.68
+          }
+        ],
+        "cycle": 41,
+        "deal_ids": [
+          176,
+          177
+        ],
+        "direction": "buy",
+        "duration_seconds": 27880,
+        "end": "2021.11.23 03:44:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.68,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.68,
+        "start": "2021.11.22 20:00:00"
+      },
+      {
+        "closed_ticket_count": 11,
+        "closed_tickets": [
+          {
+            "deal": 182,
+            "pnl": 15.47
+          },
+          {
+            "deal": 183,
+            "pnl": -9.72
+          },
+          {
+            "deal": 186,
+            "pnl": 16.11
+          },
+          {
+            "deal": 187,
+            "pnl": -10.98
+          },
+          {
+            "deal": 190,
+            "pnl": 20.58
+          },
+          {
+            "deal": 191,
+            "pnl": -15.55
+          },
+          {
+            "deal": 195,
+            "pnl": 27.74
+          },
+          {
+            "deal": 196,
+            "pnl": -20.34
+          },
+          {
+            "deal": 197,
+            "pnl": 26.07
+          },
+          {
+            "deal": 198,
+            "pnl": 18.54
+          },
+          {
+            "deal": 199,
+            "pnl": 4.14
+          }
+        ],
+        "cycle": 42,
+        "deal_ids": [
+          178,
+          179,
+          180,
+          181,
+          182,
+          183,
+          184,
+          185,
+          186,
+          187,
+          188,
+          189,
+          190,
+          191,
+          192,
+          193,
+          194,
+          195,
+          196,
+          197,
+          198,
+          199
+        ],
+        "direction": "buy",
+        "duration_seconds": 2034160,
+        "end": "2021.12.16 17:02:40",
+        "entry_count": 11,
+        "entry_price_span": 58.85,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -56.59,
+        "gross_profit": 128.65,
+        "max_aggregate_lots": 0.05,
+        "max_basket_depth": 5,
+        "max_simultaneous_positions": 5,
+        "pnl": 72.06,
+        "start": "2021.11.23 04:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 201,
+            "pnl": 3.33
+          }
+        ],
+        "cycle": 43,
+        "deal_ids": [
+          200,
+          201
+        ],
+        "direction": "buy",
+        "duration_seconds": 520,
+        "end": "2022.01.27 16:08:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.33,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.33,
+        "start": "2022.01.27 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 203,
+            "pnl": 3.58
+          }
+        ],
+        "cycle": 44,
+        "deal_ids": [
+          202,
+          203
+        ],
+        "direction": "buy",
+        "duration_seconds": 4240,
+        "end": "2022.01.27 21:10:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.58,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.58,
+        "start": "2022.01.27 20:00:00"
+      },
+      {
+        "closed_ticket_count": 3,
+        "closed_tickets": [
+          {
+            "deal": 207,
+            "pnl": 23.83
+          },
+          {
+            "deal": 208,
+            "pnl": 15.65
+          },
+          {
+            "deal": 209,
+            "pnl": 8.7
+          }
+        ],
+        "cycle": 45,
+        "deal_ids": [
+          204,
+          205,
+          206,
+          207,
+          208,
+          209
+        ],
+        "direction": "buy",
+        "duration_seconds": 390400,
+        "end": "2022.02.01 13:27:40",
+        "entry_count": 3,
+        "entry_price_span": 15.13,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 48.18,
+        "max_aggregate_lots": 0.03,
+        "max_basket_depth": 3,
+        "max_simultaneous_positions": 3,
+        "pnl": 48.18,
+        "start": "2022.01.28 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 211,
+            "pnl": 4.67
+          }
+        ],
+        "cycle": 46,
+        "deal_ids": [
+          210,
+          211
+        ],
+        "direction": "buy",
+        "duration_seconds": 2960,
+        "end": "2022.03.29 16:49:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.67,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.67,
+        "start": "2022.03.29 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 213,
+            "pnl": 3.68
+          }
+        ],
+        "cycle": 47,
+        "deal_ids": [
+          212,
+          213
+        ],
+        "direction": "buy",
+        "duration_seconds": 7900,
+        "end": "2022.04.25 10:11:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.68,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.68,
+        "start": "2022.04.25 08:00:00"
+      },
+      {
+        "closed_ticket_count": 6,
+        "closed_tickets": [
+          {
+            "deal": 218,
+            "pnl": 19.01
+          },
+          {
+            "deal": 219,
+            "pnl": -12.48
+          },
+          {
+            "deal": 222,
+            "pnl": 18.07
+          },
+          {
+            "deal": 223,
+            "pnl": -11.74
+          },
+          {
+            "deal": 224,
+            "pnl": 21.76
+          },
+          {
+            "deal": 225,
+            "pnl": 11.16
+          }
+        ],
+        "cycle": 48,
+        "deal_ids": [
+          214,
+          215,
+          216,
+          217,
+          218,
+          219,
+          220,
+          221,
+          222,
+          223,
+          224,
+          225
+        ],
+        "direction": "buy",
+        "duration_seconds": 341000,
+        "end": "2022.04.29 10:43:20",
+        "entry_count": 6,
+        "entry_price_span": 34.56,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -24.22,
+        "gross_profit": 70.0,
+        "max_aggregate_lots": 0.04,
+        "max_basket_depth": 4,
+        "max_simultaneous_positions": 4,
+        "pnl": 45.78,
+        "start": "2022.04.25 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 227,
+            "pnl": 4.83
+          }
+        ],
+        "cycle": 49,
+        "deal_ids": [
+          226,
+          227
+        ],
+        "direction": "buy",
+        "duration_seconds": 9460,
+        "end": "2022.05.02 18:37:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.83,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.83,
+        "start": "2022.05.02 16:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 230,
+            "pnl": 20.82
+          },
+          {
+            "deal": 231,
+            "pnl": 11.19
+          }
+        ],
+        "cycle": 50,
+        "deal_ids": [
+          228,
+          229,
+          230,
+          231
+        ],
+        "direction": "buy",
+        "duration_seconds": 59740,
+        "end": "2022.05.03 17:36:40",
+        "entry_count": 2,
+        "entry_price_span": 9.63,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.01,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.01,
+        "start": "2022.05.03 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 233,
+            "pnl": 3.9
+          }
+        ],
+        "cycle": 51,
+        "deal_ids": [
+          232,
+          233
+        ],
+        "direction": "buy",
+        "duration_seconds": 2960,
+        "end": "2022.05.11 04:49:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.9,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.9,
+        "start": "2022.05.11 04:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 235,
+            "pnl": 4.42
+          }
+        ],
+        "cycle": 52,
+        "deal_ids": [
+          234,
+          235
+        ],
+        "direction": "buy",
+        "duration_seconds": 1660,
+        "end": "2022.05.16 12:27:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.42,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.42,
+        "start": "2022.05.16 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 237,
+            "pnl": 3.96
+          }
+        ],
+        "cycle": 53,
+        "deal_ids": [
+          236,
+          237
+        ],
+        "direction": "buy",
+        "duration_seconds": 11560,
+        "end": "2022.06.15 04:13:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.96,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.96,
+        "start": "2022.06.15 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 239,
+            "pnl": 4.26
+          }
+        ],
+        "cycle": 54,
+        "deal_ids": [
+          238,
+          239
+        ],
+        "direction": "buy",
+        "duration_seconds": 260,
+        "end": "2022.07.01 16:04:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.26,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.26,
+        "start": "2022.07.01 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 241,
+            "pnl": 2.59
+          }
+        ],
+        "cycle": 55,
+        "deal_ids": [
+          240,
+          241
+        ],
+        "direction": "buy",
+        "duration_seconds": 28540,
+        "end": "2022.07.06 03:55:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.59,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.59,
+        "start": "2022.07.05 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 243,
+            "pnl": 3.14
+          }
+        ],
+        "cycle": 56,
+        "deal_ids": [
+          242,
+          243
+        ],
+        "direction": "buy",
+        "duration_seconds": 6520,
+        "end": "2022.07.06 09:48:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.14,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.14,
+        "start": "2022.07.06 08:00:00"
+      },
+      {
+        "closed_ticket_count": 9,
+        "closed_tickets": [
+          {
+            "deal": 250,
+            "pnl": 32.33
+          },
+          {
+            "deal": 251,
+            "pnl": -26.93
+          },
+          {
+            "deal": 255,
+            "pnl": 44.7
+          },
+          {
+            "deal": 256,
+            "pnl": -34.49
+          },
+          {
+            "deal": 257,
+            "pnl": 34.2
+          },
+          {
+            "deal": 258,
+            "pnl": -26.3
+          },
+          {
+            "deal": 259,
+            "pnl": 36.15
+          },
+          {
+            "deal": 260,
+            "pnl": 15.93
+          },
+          {
+            "deal": 261,
+            "pnl": -3.83
+          }
+        ],
+        "cycle": 57,
+        "deal_ids": [
+          244,
+          245,
+          246,
+          247,
+          248,
+          249,
+          250,
+          251,
+          252,
+          253,
+          254,
+          255,
+          256,
+          257,
+          258,
+          259,
+          260,
+          261
+        ],
+        "direction": "buy",
+        "duration_seconds": 1966400,
+        "end": "2022.07.29 06:13:20",
+        "entry_count": 9,
+        "entry_price_span": 75.8,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -91.55,
+        "gross_profit": 163.31,
+        "max_aggregate_lots": 0.07,
+        "max_basket_depth": 7,
+        "max_simultaneous_positions": 7,
+        "pnl": 71.76,
+        "start": "2022.07.06 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 263,
+            "pnl": 2.45
+          }
+        ],
+        "cycle": 58,
+        "deal_ids": [
+          262,
+          263
+        ],
+        "direction": "buy",
+        "duration_seconds": 5080,
+        "end": "2022.08.22 05:24:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.45,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.45,
+        "start": "2022.08.22 04:00:00"
+      },
+      {
+        "closed_ticket_count": 4,
+        "closed_tickets": [
+          {
+            "deal": 268,
+            "pnl": 11.17
+          },
+          {
+            "deal": 269,
+            "pnl": -5.85
+          },
+          {
+            "deal": 270,
+            "pnl": 19.08
+          },
+          {
+            "deal": 271,
+            "pnl": 13.32
+          }
+        ],
+        "cycle": 59,
+        "deal_ids": [
+          264,
+          265,
+          266,
+          267,
+          268,
+          269,
+          270,
+          271
+        ],
+        "direction": "buy",
+        "duration_seconds": 119440,
+        "end": "2022.08.23 17:10:40",
+        "entry_count": 4,
+        "entry_price_span": 17.02,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -5.85,
+        "gross_profit": 43.57,
+        "max_aggregate_lots": 0.04,
+        "max_basket_depth": 4,
+        "max_simultaneous_positions": 4,
+        "pnl": 37.72,
+        "start": "2022.08.22 08:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 273,
+            "pnl": 2.85
+          }
+        ],
+        "cycle": 60,
+        "deal_ids": [
+          272,
+          273
+        ],
+        "direction": "buy",
+        "duration_seconds": 6440,
+        "end": "2022.08.29 09:47:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.85,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.85,
+        "start": "2022.08.29 08:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 275,
+            "pnl": 3.62
+          }
+        ],
+        "cycle": 61,
+        "deal_ids": [
+          274,
+          275
+        ],
+        "direction": "buy",
+        "duration_seconds": 5140,
+        "end": "2022.08.29 13:25:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.62,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.62,
+        "start": "2022.08.29 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 277,
+            "pnl": 4.04
+          }
+        ],
+        "cycle": 62,
+        "deal_ids": [
+          276,
+          277
+        ],
+        "direction": "buy",
+        "duration_seconds": 17260,
+        "end": "2022.08.31 16:47:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.04,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.04,
+        "start": "2022.08.31 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 279,
+            "pnl": 2.6
+          }
+        ],
+        "cycle": 63,
+        "deal_ids": [
+          278,
+          279
+        ],
+        "direction": "buy",
+        "duration_seconds": 31460,
+        "end": "2022.09.01 12:44:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.6,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.6,
+        "start": "2022.09.01 04:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 282,
+            "pnl": 19.25
+          },
+          {
+            "deal": 283,
+            "pnl": 12.85
+          }
+        ],
+        "cycle": 64,
+        "deal_ids": [
+          280,
+          281,
+          282,
+          283
+        ],
+        "direction": "buy",
+        "duration_seconds": 92380,
+        "end": "2022.09.02 17:39:40",
+        "entry_count": 2,
+        "entry_price_span": 6.4,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.1,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.1,
+        "start": "2022.09.01 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 285,
+            "pnl": 3.72
+          }
+        ],
+        "cycle": 65,
+        "deal_ids": [
+          284,
+          285
+        ],
+        "direction": "buy",
+        "duration_seconds": 1720,
+        "end": "2022.09.15 20:28:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.72,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.72,
+        "start": "2022.09.15 20:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 288,
+            "pnl": 21.71
+          },
+          {
+            "deal": 289,
+            "pnl": 13.84
+          }
+        ],
+        "cycle": 66,
+        "deal_ids": [
+          286,
+          287,
+          288,
+          289
+        ],
+        "direction": "buy",
+        "duration_seconds": 59380,
+        "end": "2022.09.16 17:30:40",
+        "entry_count": 2,
+        "entry_price_span": 7.87,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 35.55,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 35.55,
+        "start": "2022.09.16 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 291,
+            "pnl": 8.51
+          }
+        ],
+        "cycle": 67,
+        "deal_ids": [
+          290,
+          291
+        ],
+        "direction": "buy",
+        "duration_seconds": 40,
+        "end": "2022.09.26 04:00:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 8.51,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 8.51,
+        "start": "2022.09.26 04:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 293,
+            "pnl": 3.62
+          }
+        ],
+        "cycle": 68,
+        "deal_ids": [
+          292,
+          293
+        ],
+        "direction": "buy",
+        "duration_seconds": 2980,
+        "end": "2022.10.10 20:49:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.62,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.62,
+        "start": "2022.10.10 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 295,
+            "pnl": 3.35
+          }
+        ],
+        "cycle": 69,
+        "deal_ids": [
+          294,
+          295
+        ],
+        "direction": "buy",
+        "duration_seconds": 10120,
+        "end": "2022.10.11 03:49:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.35,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.35,
+        "start": "2022.10.11 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 297,
+            "pnl": 3.49
+          }
+        ],
+        "cycle": 70,
+        "deal_ids": [
+          296,
+          297
+        ],
+        "direction": "buy",
+        "duration_seconds": 3340,
+        "end": "2022.10.11 08:55:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.49,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.49,
+        "start": "2022.10.11 08:00:00"
+      }
+    ],
+    "direction": [
+      {
+        "closed_ticket_count": 148,
+        "direction": "buy",
+        "gross_loss": -1162.07,
+        "gross_loss_share": 1.0,
+        "gross_profit": 1674.76,
+        "gross_profit_share": 1.0,
+        "net_profit": 512.69,
+        "profit_factor": 1.4412
+      }
+    ],
+    "exposure": {
+      "active_seconds_sum": 11782860,
+      "active_time_share_full_window": 0.093408,
+      "cap_contact": false,
+      "configured_orders_per_side_cap": 10,
+      "cycle_reconstruction": "DERIVED_FROM_FLAT_TO_NONFLAT_TO_FLAT_DEAL_LEDGER",
+      "exit_type": "UNKNOWN_FROM_REPORT_HISTORY",
+      "first_cycle_start": "2020.02.04 20:00:00",
+      "flat_lots_observed": true,
+      "last_cycle_end": "2022.10.11 08:55:40",
+      "max_aggregate_lots": 0.08,
+      "max_basket_depth": 8,
+      "max_entry_price_span": 111.44,
+      "max_simultaneous_positions": 8,
+      "optional_ladder_use": "UNKNOWN_FROM_REPORT_HISTORY",
+      "union_active_seconds": 11782860
+    },
+    "identity": {
+      "effective_tester_inputs_sha256": "19013c650622e379551efff2cfa4ba6f860b37fff78c766b99621bd80f7e3272",
+      "ini": {
+        "Currency": "USD",
+        "Deposit": "10000",
+        "Expert": "EALabTpl\\Boss_16_KangarooGrid",
+        "FromDate": "2020.01.01",
+        "Leverage": "1:100",
+        "Model": "1",
+        "Optimization": "0",
+        "Period": "H4",
+        "Report": "LANEH02_5B_B16_XAUUSD_H4_BWD_M1",
+        "Symbol": "XAUUSD",
+        "ToDate": "2022.12.31"
+      },
+      "report": {
+        "equity_drawdown_maximal": "873.12 (8.29%)",
+        "equity_drawdown_relative": "8.29% (873.12)",
+        "expert": "Boss_16_KangarooGrid",
+        "gross_loss": -1162.07,
+        "gross_profit": 1674.76,
+        "initial_deposit": "10 000.00",
+        "largest_loss_trade": -102.13,
+        "largest_profit_trade": 48.71,
+        "leverage": "1:100",
+        "net_profit": 512.69,
+        "period": "H4",
+        "profit_factor": 1.44,
+        "symbol": "XAUUSD",
+        "total_deals": 296,
+        "total_trades": 148,
+        "window_end": "2022.12.31",
+        "window_start": "2020.01.01"
+      }
+    },
+    "input": {
+      "ini_path": "D:\\EA_LAB_CONTROL\\worktrees\\lane-h-boss11-18-h01-r5-209636fb\\_mt5_auto\\ini\\LANEH02_5B_B16_XAUUSD_H4_BWD_M1.ini",
+      "ini_sha256": "775d2d4c50e33218c9526b9c5628decb1c207aeb3b584427a25e4ba3a640e172",
+      "report_path": "D:\\EA_LAB_CONTROL\\worktrees\\lane-h-boss11-18-h01-r5-209636fb\\_mt5_auto\\reports\\LANEH02_5B_B16_XAUUSD_H4_BWD_M1.htm",
+      "report_sha256": "df63addd9975b66a9471aafe929d3b7f31377a95a93342cc6f1521728f07cff3"
+    },
+    "reconciliation": {
+      "closed_ticket_count_matches_total_trades": true,
+      "gross_loss_matches": true,
+      "gross_profit_matches": true,
+      "net_profit_matches": true,
+      "profit_factor_matches_rounded": true,
+      "report_convention": "closed out-deal P&L includes Profit + Swap + Commission; Total Trades equals out-deal count"
+    },
+    "reconstructed": {
+      "closed_ticket_count": 148,
+      "deal_history_count": 296,
+      "gross_loss": -1162.07,
+      "gross_profit": 1674.76,
+      "net_profit": 512.69,
+      "profit_factor": 1.4412
+    },
+    "tail": {
+      "hard_kill_or_emergency_close": "UNKNOWN_NOT_IDENTIFIABLE_FROM_REPORT_HISTORY",
+      "intratrade_equity_series": "UNKNOWN_NOT_PRESENT_IN_HTML_TABLES",
+      "largest_realized_cycle_loss": -343.59,
+      "realized_balance_drawdown": {
+        "peak_time": "2021.06.04 15:32:40",
+        "realized_balance_dd_peak": 556.25,
+        "trough_time": "2021.08.09 04:28:40"
+      },
+      "source_equity_drawdown_maximal": "873.12 (8.29%)",
+      "source_equity_drawdown_relative": "8.29% (873.12)",
+      "source_largest_realized_ticket_loss": -102.13,
+      "underwater_series": "UNKNOWN_NOT_PRESENT_IN_HTML_TABLES"
+    }
+  },
+  "main": {
+    "bins": [
+      {
+        "active_seconds_sum": 3100840,
+        "active_time_share_full_window": 0.032746,
+        "bin": "2023",
+        "closed_ticket_count": 37,
+        "cycle_count": 18,
+        "gross_loss": -121.79,
+        "gross_profit": 399.17,
+        "net_profit": 277.38,
+        "profit_factor": 3.2775,
+        "realized_balance_dd": 0.0
+      },
+      {
+        "active_seconds_sum": 1417340,
+        "active_time_share_full_window": 0.014968,
+        "bin": "2024",
+        "closed_ticket_count": 24,
+        "cycle_count": 13,
+        "gross_loss": -58.81,
+        "gross_profit": 275.0,
+        "net_profit": 216.19,
+        "profit_factor": 4.6761,
+        "realized_balance_dd": 0.0
+      },
+      {
+        "active_seconds_sum": 371160,
+        "active_time_share_full_window": 0.00392,
+        "bin": "2025",
+        "closed_ticket_count": 18,
+        "cycle_count": 11,
+        "gross_loss": -48.88,
+        "gross_profit": 263.09,
+        "net_profit": 214.21,
+        "profit_factor": 5.3824,
+        "realized_balance_dd": 0.0
+      },
+      {
+        "active_seconds_sum": 3800760,
+        "active_time_share_full_window": 0.040137,
+        "bin": "FOLD_1",
+        "closed_ticket_count": 48,
+        "cycle_count": 25,
+        "gross_loss": -129.61,
+        "gross_profit": 505.64,
+        "net_profit": 376.03,
+        "profit_factor": 3.9012,
+        "realized_balance_dd": 0.0
+      },
+      {
+        "active_seconds_sum": 1088580,
+        "active_time_share_full_window": 0.011496,
+        "bin": "FOLD_2",
+        "closed_ticket_count": 31,
+        "cycle_count": 17,
+        "gross_loss": -99.87,
+        "gross_profit": 431.62,
+        "net_profit": 331.75,
+        "profit_factor": 4.3218,
+        "realized_balance_dd": 0.0
+      }
+    ],
+    "concentration": {
+      "multi_entry_positive_gross_profit_share": 0.797996,
+      "top_losing_cycles": [],
+      "top_profitable_cycles": [
+        {
+          "closed_ticket_count": 7,
+          "closed_tickets": [
+            {
+              "deal": 112,
+              "pnl": 24.65
+            },
+            {
+              "deal": 113,
+              "pnl": -19.15
+            },
+            {
+              "deal": 117,
+              "pnl": 39.87
+            },
+            {
+              "deal": 118,
+              "pnl": -31.84
+            },
+            {
+              "deal": 119,
+              "pnl": 32.66
+            },
+            {
+              "deal": 120,
+              "pnl": 16.13
+            },
+            {
+              "deal": 121,
+              "pnl": 1.59
+            }
+          ],
+          "cycle": 30,
+          "deal_ids": [
+            108,
+            109,
+            110,
+            111,
+            112,
+            113,
+            114,
+            115,
+            116,
+            117,
+            118,
+            119,
+            120,
+            121
+          ],
+          "direction": "buy",
+          "duration_seconds": 612040,
+          "end": "2024.11.18 18:00:40",
+          "entry_count": 7,
+          "entry_price_span": 81.4,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -50.99,
+          "gross_profit": 114.9,
+          "gross_profit_share": 0.122591,
+          "max_aggregate_lots": 0.05,
+          "max_basket_depth": 5,
+          "max_simultaneous_positions": 5,
+          "pnl": 63.91,
+          "start": "2024.11.11 16:00:00"
+        },
+        {
+          "closed_ticket_count": 10,
+          "closed_tickets": [
+            {
+              "deal": 52,
+              "pnl": 43.92
+            },
+            {
+              "deal": 53,
+              "pnl": -38.2
+            },
+            {
+              "deal": 54,
+              "pnl": 34.43
+            },
+            {
+              "deal": 55,
+              "pnl": -29.31
+            },
+            {
+              "deal": 56,
+              "pnl": 26.51
+            },
+            {
+              "deal": 57,
+              "pnl": -21.04
+            },
+            {
+              "deal": 58,
+              "pnl": 17.36
+            },
+            {
+              "deal": 59,
+              "pnl": -11.88
+            },
+            {
+              "deal": 60,
+              "pnl": 25.54
+            },
+            {
+              "deal": 61,
+              "pnl": 13.68
+            }
+          ],
+          "cycle": 15,
+          "deal_ids": [
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61
+          ],
+          "direction": "buy",
+          "duration_seconds": 1409200,
+          "end": "2023.10.13 15:26:40",
+          "entry_count": 10,
+          "entry_price_span": 77.27,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -100.43,
+          "gross_profit": 161.44,
+          "gross_profit_share": 0.172247,
+          "max_aggregate_lots": 0.1,
+          "max_basket_depth": 10,
+          "max_simultaneous_positions": 10,
+          "pnl": 61.01,
+          "start": "2023.09.27 08:00:00"
+        },
+        {
+          "closed_ticket_count": 5,
+          "closed_tickets": [
+            {
+              "deal": 18,
+              "pnl": 15.49
+            },
+            {
+              "deal": 19,
+              "pnl": -5.97
+            },
+            {
+              "deal": 21,
+              "pnl": 26.11
+            },
+            {
+              "deal": 22,
+              "pnl": 15.51
+            },
+            {
+              "deal": 23,
+              "pnl": 8.64
+            }
+          ],
+          "cycle": 6,
+          "deal_ids": [
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+          ],
+          "direction": "buy",
+          "duration_seconds": 544900,
+          "end": "2023.05.24 15:21:40",
+          "entry_count": 5,
+          "entry_price_span": 21.78,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -5.97,
+          "gross_profit": 65.75,
+          "gross_profit_share": 0.070151,
+          "max_aggregate_lots": 0.04,
+          "max_basket_depth": 4,
+          "max_simultaneous_positions": 4,
+          "pnl": 59.78,
+          "start": "2023.05.18 08:00:00"
+        },
+        {
+          "closed_ticket_count": 5,
+          "closed_tickets": [
+            {
+              "deal": 67,
+              "pnl": 20.85
+            },
+            {
+              "deal": 68,
+              "pnl": -15.39
+            },
+            {
+              "deal": 69,
+              "pnl": 23.99
+            },
+            {
+              "deal": 70,
+              "pnl": 17.47
+            },
+            {
+              "deal": 71,
+              "pnl": 7.42
+            }
+          ],
+          "cycle": 16,
+          "deal_ids": [
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71
+          ],
+          "direction": "buy",
+          "duration_seconds": 505160,
+          "end": "2023.11.14 16:19:20",
+          "entry_count": 5,
+          "entry_price_span": 32.2,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -15.39,
+          "gross_profit": 69.73,
+          "gross_profit_share": 0.074398,
+          "max_aggregate_lots": 0.05,
+          "max_basket_depth": 5,
+          "max_simultaneous_positions": 5,
+          "pnl": 54.34,
+          "start": "2023.11.08 20:00:00"
+        },
+        {
+          "closed_ticket_count": 4,
+          "closed_tickets": [
+            {
+              "deal": 128,
+              "pnl": 23.23
+            },
+            {
+              "deal": 129,
+              "pnl": -18.08
+            },
+            {
+              "deal": 130,
+              "pnl": 25.51
+            },
+            {
+              "deal": 131,
+              "pnl": 11.43
+            }
+          ],
+          "cycle": 32,
+          "deal_ids": [
+            124,
+            125,
+            126,
+            127,
+            128,
+            129,
+            130,
+            131
+          ],
+          "direction": "buy",
+          "duration_seconds": 248700,
+          "end": "2025.03.03 01:05:00",
+          "entry_count": 4,
+          "entry_price_span": 41.31,
+          "exit_type": "UNKNOWN",
+          "gross_loss": -18.08,
+          "gross_profit": 60.17,
+          "gross_profit_share": 0.064198,
+          "max_aggregate_lots": 0.04,
+          "max_basket_depth": 4,
+          "max_simultaneous_positions": 4,
+          "pnl": 42.09,
+          "start": "2025.02.28 04:00:00"
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 3,
+            "pnl": 4.3
+          }
+        ],
+        "cycle": 1,
+        "deal_ids": [
+          2,
+          3
+        ],
+        "direction": "buy",
+        "duration_seconds": 191800,
+        "end": "2023.02.06 01:16:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.3,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.3,
+        "start": "2023.02.03 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 5,
+            "pnl": 2.97
+          }
+        ],
+        "cycle": 2,
+        "deal_ids": [
+          4,
+          5
+        ],
+        "direction": "buy",
+        "duration_seconds": 7900,
+        "end": "2023.02.24 22:11:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.97,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.97,
+        "start": "2023.02.24 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 7,
+            "pnl": 2.45
+          }
+        ],
+        "cycle": 3,
+        "deal_ids": [
+          6,
+          7
+        ],
+        "direction": "buy",
+        "duration_seconds": 52420,
+        "end": "2023.02.27 15:38:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.45,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.45,
+        "start": "2023.02.27 01:05:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 10,
+            "pnl": 20.2
+          },
+          {
+            "deal": 11,
+            "pnl": 13.55
+          }
+        ],
+        "cycle": 4,
+        "deal_ids": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "direction": "buy",
+        "duration_seconds": 162280,
+        "end": "2023.03.09 17:04:40",
+        "entry_count": 2,
+        "entry_price_span": 5.84,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 33.75,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 33.75,
+        "start": "2023.03.07 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 13,
+            "pnl": 2.88
+          }
+        ],
+        "cycle": 5,
+        "deal_ids": [
+          12,
+          13
+        ],
+        "direction": "buy",
+        "duration_seconds": 11260,
+        "end": "2023.05.18 04:08:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.88,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.88,
+        "start": "2023.05.18 01:01:00"
+      },
+      {
+        "closed_ticket_count": 5,
+        "closed_tickets": [
+          {
+            "deal": 18,
+            "pnl": 15.49
+          },
+          {
+            "deal": 19,
+            "pnl": -5.97
+          },
+          {
+            "deal": 21,
+            "pnl": 26.11
+          },
+          {
+            "deal": 22,
+            "pnl": 15.51
+          },
+          {
+            "deal": 23,
+            "pnl": 8.64
+          }
+        ],
+        "cycle": 6,
+        "deal_ids": [
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "direction": "buy",
+        "duration_seconds": 544900,
+        "end": "2023.05.24 15:21:40",
+        "entry_count": 5,
+        "entry_price_span": 21.78,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -5.97,
+        "gross_profit": 65.75,
+        "max_aggregate_lots": 0.04,
+        "max_basket_depth": 4,
+        "max_simultaneous_positions": 4,
+        "pnl": 59.78,
+        "start": "2023.05.18 08:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 25,
+            "pnl": 2.79
+          }
+        ],
+        "cycle": 7,
+        "deal_ids": [
+          24,
+          25
+        ],
+        "direction": "buy",
+        "duration_seconds": 2800,
+        "end": "2023.06.22 16:46:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.79,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.79,
+        "start": "2023.06.22 16:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 28,
+            "pnl": 19.22
+          },
+          {
+            "deal": 29,
+            "pnl": 13.15
+          }
+        ],
+        "cycle": 8,
+        "deal_ids": [
+          26,
+          27,
+          28,
+          29
+        ],
+        "direction": "buy",
+        "duration_seconds": 71620,
+        "end": "2023.06.23 15:53:40",
+        "entry_count": 2,
+        "entry_price_span": 5.26,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.37,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.37,
+        "start": "2023.06.22 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 31,
+            "pnl": 0.06
+          }
+        ],
+        "cycle": 9,
+        "deal_ids": [
+          30,
+          31
+        ],
+        "direction": "buy",
+        "duration_seconds": 31660,
+        "end": "2023.08.10 04:47:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 0.06,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 0.06,
+        "start": "2023.08.09 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 33,
+            "pnl": 2.51
+          }
+        ],
+        "cycle": 10,
+        "deal_ids": [
+          32,
+          33
+        ],
+        "direction": "buy",
+        "duration_seconds": 160,
+        "end": "2023.08.17 01:03:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.51,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.51,
+        "start": "2023.08.17 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 35,
+            "pnl": 2.01
+          }
+        ],
+        "cycle": 11,
+        "deal_ids": [
+          34,
+          35
+        ],
+        "direction": "buy",
+        "duration_seconds": 19900,
+        "end": "2023.08.17 09:31:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.01,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.01,
+        "start": "2023.08.17 04:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 37,
+            "pnl": 2.28
+          }
+        ],
+        "cycle": 12,
+        "deal_ids": [
+          36,
+          37
+        ],
+        "direction": "buy",
+        "duration_seconds": 3940,
+        "end": "2023.08.17 13:05:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 2.28,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 2.28,
+        "start": "2023.08.17 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 39,
+            "pnl": 1.91
+          }
+        ],
+        "cycle": 13,
+        "deal_ids": [
+          38,
+          39
+        ],
+        "direction": "buy",
+        "duration_seconds": 47260,
+        "end": "2023.09.07 14:08:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 1.91,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 1.91,
+        "start": "2023.09.07 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 41,
+            "pnl": 1.0
+          }
+        ],
+        "cycle": 14,
+        "deal_ids": [
+          40,
+          41
+        ],
+        "direction": "buy",
+        "duration_seconds": 30820,
+        "end": "2023.09.27 04:33:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 1.0,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 1.0,
+        "start": "2023.09.26 20:00:00"
+      },
+      {
+        "closed_ticket_count": 10,
+        "closed_tickets": [
+          {
+            "deal": 52,
+            "pnl": 43.92
+          },
+          {
+            "deal": 53,
+            "pnl": -38.2
+          },
+          {
+            "deal": 54,
+            "pnl": 34.43
+          },
+          {
+            "deal": 55,
+            "pnl": -29.31
+          },
+          {
+            "deal": 56,
+            "pnl": 26.51
+          },
+          {
+            "deal": 57,
+            "pnl": -21.04
+          },
+          {
+            "deal": 58,
+            "pnl": 17.36
+          },
+          {
+            "deal": 59,
+            "pnl": -11.88
+          },
+          {
+            "deal": 60,
+            "pnl": 25.54
+          },
+          {
+            "deal": 61,
+            "pnl": 13.68
+          }
+        ],
+        "cycle": 15,
+        "deal_ids": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61
+        ],
+        "direction": "buy",
+        "duration_seconds": 1409200,
+        "end": "2023.10.13 15:26:40",
+        "entry_count": 10,
+        "entry_price_span": 77.27,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -100.43,
+        "gross_profit": 161.44,
+        "max_aggregate_lots": 0.1,
+        "max_basket_depth": 10,
+        "max_simultaneous_positions": 10,
+        "pnl": 61.01,
+        "start": "2023.09.27 08:00:00"
+      },
+      {
+        "closed_ticket_count": 5,
+        "closed_tickets": [
+          {
+            "deal": 67,
+            "pnl": 20.85
+          },
+          {
+            "deal": 68,
+            "pnl": -15.39
+          },
+          {
+            "deal": 69,
+            "pnl": 23.99
+          },
+          {
+            "deal": 70,
+            "pnl": 17.47
+          },
+          {
+            "deal": 71,
+            "pnl": 7.42
+          }
+        ],
+        "cycle": 16,
+        "deal_ids": [
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71
+        ],
+        "direction": "buy",
+        "duration_seconds": 505160,
+        "end": "2023.11.14 16:19:20",
+        "entry_count": 5,
+        "entry_price_span": 32.2,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -15.39,
+        "gross_profit": 69.73,
+        "max_aggregate_lots": 0.05,
+        "max_basket_depth": 5,
+        "max_simultaneous_positions": 5,
+        "pnl": 54.34,
+        "start": "2023.11.08 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 73,
+            "pnl": 3.75
+          }
+        ],
+        "cycle": 17,
+        "deal_ids": [
+          72,
+          73
+        ],
+        "direction": "buy",
+        "duration_seconds": 2080,
+        "end": "2023.12.11 20:34:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.75,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.75,
+        "start": "2023.12.11 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 75,
+            "pnl": 7.22
+          }
+        ],
+        "cycle": 18,
+        "deal_ids": [
+          74,
+          75
+        ],
+        "direction": "buy",
+        "duration_seconds": 5680,
+        "end": "2023.12.12 02:35:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 7.22,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 7.22,
+        "start": "2023.12.12 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 77,
+            "pnl": 3.71
+          }
+        ],
+        "cycle": 19,
+        "deal_ids": [
+          76,
+          77
+        ],
+        "direction": "buy",
+        "duration_seconds": 2380,
+        "end": "2024.01.08 16:39:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.71,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.71,
+        "start": "2024.01.08 16:00:00"
+      },
+      {
+        "closed_ticket_count": 4,
+        "closed_tickets": [
+          {
+            "deal": 82,
+            "pnl": 13.36
+          },
+          {
+            "deal": 83,
+            "pnl": -7.82
+          },
+          {
+            "deal": 84,
+            "pnl": 19.1
+          },
+          {
+            "deal": 85,
+            "pnl": 12.93
+          }
+        ],
+        "cycle": 20,
+        "deal_ids": [
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85
+        ],
+        "direction": "buy",
+        "duration_seconds": 273260,
+        "end": "2024.02.16 19:54:20",
+        "entry_count": 4,
+        "entry_price_span": 20.37,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -7.82,
+        "gross_profit": 45.39,
+        "max_aggregate_lots": 0.04,
+        "max_basket_depth": 4,
+        "max_simultaneous_positions": 4,
+        "pnl": 37.57,
+        "start": "2024.02.13 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 87,
+            "pnl": 9.19
+          }
+        ],
+        "cycle": 21,
+        "deal_ids": [
+          86,
+          87
+        ],
+        "direction": "buy",
+        "duration_seconds": 1060,
+        "end": "2024.04.23 08:17:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 9.19,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 9.19,
+        "start": "2024.04.23 08:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 89,
+            "pnl": 7.95
+          }
+        ],
+        "cycle": 22,
+        "deal_ids": [
+          88,
+          89
+        ],
+        "direction": "buy",
+        "duration_seconds": 13000,
+        "end": "2024.04.23 15:36:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 7.95,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 7.95,
+        "start": "2024.04.23 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 91,
+            "pnl": 4.82
+          }
+        ],
+        "cycle": 23,
+        "deal_ids": [
+          90,
+          91
+        ],
+        "direction": "buy",
+        "duration_seconds": 46240,
+        "end": "2024.05.01 13:51:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.82,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.82,
+        "start": "2024.05.01 01:01:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 94,
+            "pnl": 22.85
+          },
+          {
+            "deal": 95,
+            "pnl": 9.32
+          }
+        ],
+        "cycle": 24,
+        "deal_ids": [
+          92,
+          93,
+          94,
+          95
+        ],
+        "direction": "buy",
+        "duration_seconds": 333400,
+        "end": "2024.05.27 16:36:40",
+        "entry_count": 2,
+        "entry_price_span": 13.53,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.17,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.17,
+        "start": "2024.05.23 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 97,
+            "pnl": 3.24
+          }
+        ],
+        "cycle": 25,
+        "deal_ids": [
+          96,
+          97
+        ],
+        "direction": "buy",
+        "duration_seconds": 30580,
+        "end": "2024.06.27 09:30:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 3.24,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 3.24,
+        "start": "2024.06.27 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 99,
+            "pnl": 5.08
+          }
+        ],
+        "cycle": 26,
+        "deal_ids": [
+          98,
+          99
+        ],
+        "direction": "buy",
+        "duration_seconds": 1000,
+        "end": "2024.07.25 16:16:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 5.08,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 5.08,
+        "start": "2024.07.25 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 101,
+            "pnl": 4.88
+          }
+        ],
+        "cycle": 27,
+        "deal_ids": [
+          100,
+          101
+        ],
+        "direction": "buy",
+        "duration_seconds": 31000,
+        "end": "2024.07.26 04:36:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.88,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.88,
+        "start": "2024.07.25 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 103,
+            "pnl": 6.62
+          }
+        ],
+        "cycle": 28,
+        "deal_ids": [
+          102,
+          103
+        ],
+        "direction": "buy",
+        "duration_seconds": 5560,
+        "end": "2024.11.06 17:32:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 6.62,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 6.62,
+        "start": "2024.11.06 16:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 106,
+            "pnl": 27.5
+          },
+          {
+            "deal": 107,
+            "pnl": 4.71
+          }
+        ],
+        "cycle": 29,
+        "deal_ids": [
+          104,
+          105,
+          106,
+          107
+        ],
+        "direction": "buy",
+        "duration_seconds": 67480,
+        "end": "2024.11.07 14:44:40",
+        "entry_count": 2,
+        "entry_price_span": 20.37,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.21,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.21,
+        "start": "2024.11.06 20:00:00"
+      },
+      {
+        "closed_ticket_count": 7,
+        "closed_tickets": [
+          {
+            "deal": 112,
+            "pnl": 24.65
+          },
+          {
+            "deal": 113,
+            "pnl": -19.15
+          },
+          {
+            "deal": 117,
+            "pnl": 39.87
+          },
+          {
+            "deal": 118,
+            "pnl": -31.84
+          },
+          {
+            "deal": 119,
+            "pnl": 32.66
+          },
+          {
+            "deal": 120,
+            "pnl": 16.13
+          },
+          {
+            "deal": 121,
+            "pnl": 1.59
+          }
+        ],
+        "cycle": 30,
+        "deal_ids": [
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121
+        ],
+        "direction": "buy",
+        "duration_seconds": 612040,
+        "end": "2024.11.18 18:00:40",
+        "entry_count": 7,
+        "entry_price_span": 81.4,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -50.99,
+        "gross_profit": 114.9,
+        "max_aggregate_lots": 0.05,
+        "max_basket_depth": 5,
+        "max_simultaneous_positions": 5,
+        "pnl": 63.91,
+        "start": "2024.11.11 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 123,
+            "pnl": 4.84
+          }
+        ],
+        "cycle": 31,
+        "deal_ids": [
+          122,
+          123
+        ],
+        "direction": "buy",
+        "duration_seconds": 340,
+        "end": "2024.12.19 01:06:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 4.84,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 4.84,
+        "start": "2024.12.19 01:01:00"
+      },
+      {
+        "closed_ticket_count": 4,
+        "closed_tickets": [
+          {
+            "deal": 128,
+            "pnl": 23.23
+          },
+          {
+            "deal": 129,
+            "pnl": -18.08
+          },
+          {
+            "deal": 130,
+            "pnl": 25.51
+          },
+          {
+            "deal": 131,
+            "pnl": 11.43
+          }
+        ],
+        "cycle": 32,
+        "deal_ids": [
+          124,
+          125,
+          126,
+          127,
+          128,
+          129,
+          130,
+          131
+        ],
+        "direction": "buy",
+        "duration_seconds": 248700,
+        "end": "2025.03.03 01:05:00",
+        "entry_count": 4,
+        "entry_price_span": 41.31,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -18.08,
+        "gross_profit": 60.17,
+        "max_aggregate_lots": 0.04,
+        "max_basket_depth": 4,
+        "max_simultaneous_positions": 4,
+        "pnl": 42.09,
+        "start": "2025.02.28 04:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 133,
+            "pnl": 15.82
+          }
+        ],
+        "cycle": 33,
+        "deal_ids": [
+          132,
+          133
+        ],
+        "direction": "buy",
+        "duration_seconds": 100,
+        "end": "2025.04.07 04:01:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 15.82,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 15.82,
+        "start": "2025.04.07 04:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 135,
+            "pnl": 12.2
+          }
+        ],
+        "cycle": 34,
+        "deal_ids": [
+          134,
+          135
+        ],
+        "direction": "buy",
+        "duration_seconds": 8800,
+        "end": "2025.05.12 22:26:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 12.2,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 12.2,
+        "start": "2025.05.12 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 137,
+            "pnl": 10.18
+          }
+        ],
+        "cycle": 35,
+        "deal_ids": [
+          136,
+          137
+        ],
+        "direction": "buy",
+        "duration_seconds": 3160,
+        "end": "2025.05.14 16:52:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 10.18,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 10.18,
+        "start": "2025.05.14 16:00:00"
+      },
+      {
+        "closed_ticket_count": 4,
+        "closed_tickets": [
+          {
+            "deal": 142,
+            "pnl": 35.98
+          },
+          {
+            "deal": 143,
+            "pnl": -30.8
+          },
+          {
+            "deal": 144,
+            "pnl": 26.88
+          },
+          {
+            "deal": 145,
+            "pnl": 5.16
+          }
+        ],
+        "cycle": 36,
+        "deal_ids": [
+          138,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          145
+        ],
+        "direction": "buy",
+        "duration_seconds": 62120,
+        "end": "2025.05.15 13:15:20",
+        "entry_count": 4,
+        "entry_price_span": 64.36,
+        "exit_type": "UNKNOWN",
+        "gross_loss": -30.8,
+        "gross_profit": 68.02,
+        "max_aggregate_lots": 0.04,
+        "max_basket_depth": 4,
+        "max_simultaneous_positions": 4,
+        "pnl": 37.22,
+        "start": "2025.05.14 20:00:00"
+      },
+      {
+        "closed_ticket_count": 2,
+        "closed_tickets": [
+          {
+            "deal": 148,
+            "pnl": 23.12
+          },
+          {
+            "deal": 149,
+            "pnl": 8.91
+          }
+        ],
+        "cycle": 37,
+        "deal_ids": [
+          146,
+          147,
+          148,
+          149
+        ],
+        "direction": "buy",
+        "duration_seconds": 17260,
+        "end": "2025.06.27 20:47:40",
+        "entry_count": 2,
+        "entry_price_span": 14.21,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 32.03,
+        "max_aggregate_lots": 0.02,
+        "max_basket_depth": 2,
+        "max_simultaneous_positions": 2,
+        "pnl": 32.03,
+        "start": "2025.06.27 16:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 151,
+            "pnl": 7.71
+          }
+        ],
+        "cycle": 38,
+        "deal_ids": [
+          150,
+          151
+        ],
+        "direction": "buy",
+        "duration_seconds": 1180,
+        "end": "2025.06.30 04:19:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 7.71,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 7.71,
+        "start": "2025.06.30 04:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 153,
+            "pnl": 6.24
+          }
+        ],
+        "cycle": 39,
+        "deal_ids": [
+          152,
+          153
+        ],
+        "direction": "buy",
+        "duration_seconds": 6160,
+        "end": "2025.07.31 02:43:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 6.24,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 6.24,
+        "start": "2025.07.31 01:01:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 155,
+            "pnl": 18.75
+          }
+        ],
+        "cycle": 40,
+        "deal_ids": [
+          154,
+          155
+        ],
+        "direction": "buy",
+        "duration_seconds": 5980,
+        "end": "2025.10.28 13:39:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 18.75,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 18.75,
+        "start": "2025.10.28 12:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 157,
+            "pnl": 16.09
+          }
+        ],
+        "cycle": 41,
+        "deal_ids": [
+          156,
+          157
+        ],
+        "direction": "buy",
+        "duration_seconds": 7580,
+        "end": "2025.12.29 22:06:20",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 16.09,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 16.09,
+        "start": "2025.12.29 20:00:00"
+      },
+      {
+        "closed_ticket_count": 1,
+        "closed_tickets": [
+          {
+            "deal": 159,
+            "pnl": 15.88
+          }
+        ],
+        "cycle": 42,
+        "deal_ids": [
+          158,
+          159
+        ],
+        "direction": "buy",
+        "duration_seconds": 10120,
+        "end": "2025.12.30 03:49:40",
+        "entry_count": 1,
+        "entry_price_span": 0.0,
+        "exit_type": "UNKNOWN",
+        "gross_loss": 0,
+        "gross_profit": 15.88,
+        "max_aggregate_lots": 0.01,
+        "max_basket_depth": 1,
+        "max_simultaneous_positions": 1,
+        "pnl": 15.88,
+        "start": "2025.12.30 01:01:00"
+      }
+    ],
+    "direction": [
+      {
+        "closed_ticket_count": 79,
+        "direction": "buy",
+        "gross_loss": -229.48,
+        "gross_loss_share": 1.0,
+        "gross_profit": 937.26,
+        "gross_profit_share": 1.0,
+        "net_profit": 707.78,
+        "profit_factor": 4.0843
+      }
+    ],
+    "exposure": {
+      "active_seconds_sum": 4889340,
+      "active_time_share_full_window": 0.03876,
+      "cap_contact": true,
+      "configured_orders_per_side_cap": 10,
+      "cycle_reconstruction": "DERIVED_FROM_FLAT_TO_NONFLAT_TO_FLAT_DEAL_LEDGER",
+      "exit_type": "UNKNOWN_FROM_REPORT_HISTORY",
+      "first_cycle_start": "2023.02.03 20:00:00",
+      "flat_lots_observed": true,
+      "last_cycle_end": "2025.12.30 03:49:40",
+      "max_aggregate_lots": 0.1,
+      "max_basket_depth": 10,
+      "max_entry_price_span": 81.4,
+      "max_simultaneous_positions": 10,
+      "optional_ladder_use": "UNKNOWN_FROM_REPORT_HISTORY",
+      "union_active_seconds": 4889340
+    },
+    "identity": {
+      "effective_tester_inputs_sha256": "19013c650622e379551efff2cfa4ba6f860b37fff78c766b99621bd80f7e3272",
+      "ini": {
+        "Currency": "USD",
+        "Deposit": "10000",
+        "Expert": "EALabTpl\\Boss_16_KangarooGrid",
+        "FromDate": "2023.01.01",
+        "Leverage": "1:100",
+        "Model": "1",
+        "Optimization": "0",
+        "Period": "H4",
+        "Report": "LANEH02_5B_B16_XAUUSD_H4_MAIN_M1",
+        "Symbol": "XAUUSD",
+        "ToDate": "2025.12.31"
+      },
+      "report": {
+        "equity_drawdown_maximal": "636.50 (6.27%)",
+        "equity_drawdown_relative": "6.27% (636.50)",
+        "expert": "Boss_16_KangarooGrid",
+        "gross_loss": -229.48,
+        "gross_profit": 937.26,
+        "initial_deposit": "10 000.00",
+        "largest_loss_trade": -38.2,
+        "largest_profit_trade": 43.92,
+        "leverage": "1:100",
+        "net_profit": 707.78,
+        "period": "H4",
+        "profit_factor": 4.08,
+        "symbol": "XAUUSD",
+        "total_deals": 158,
+        "total_trades": 79,
+        "window_end": "2025.12.31",
+        "window_start": "2023.01.01"
+      }
+    },
+    "input": {
+      "ini_path": "D:\\EA_LAB_CONTROL\\worktrees\\lane-h-boss11-18-h01-r5-209636fb\\_mt5_auto\\ini\\LANEH02_5B_B16_XAUUSD_H4_MAIN_M1.ini",
+      "ini_sha256": "0e6f8e17a20d58b5d5319d3336572a0deb8b1716e572939936f0d22edbe3c322",
+      "report_path": "D:\\EA_LAB_CONTROL\\worktrees\\lane-h-boss11-18-h01-r5-209636fb\\_mt5_auto\\reports\\LANEH02_5B_B16_XAUUSD_H4_MAIN_M1.htm",
+      "report_sha256": "aee6819ba12f929caade4cf1b70915978a3259ec2b7136a1009e077057bb0e7e"
+    },
+    "reconciliation": {
+      "closed_ticket_count_matches_total_trades": true,
+      "gross_loss_matches": true,
+      "gross_profit_matches": true,
+      "net_profit_matches": true,
+      "profit_factor_matches_rounded": true,
+      "report_convention": "closed out-deal P&L includes Profit + Swap + Commission; Total Trades equals out-deal count"
+    },
+    "reconstructed": {
+      "closed_ticket_count": 79,
+      "deal_history_count": 158,
+      "gross_loss": -229.48,
+      "gross_profit": 937.26,
+      "net_profit": 707.78,
+      "profit_factor": 4.0843
+    },
+    "tail": {
+      "hard_kill_or_emergency_close": "UNKNOWN_NOT_IDENTIFIABLE_FROM_REPORT_HISTORY",
+      "intratrade_equity_series": "UNKNOWN_NOT_PRESENT_IN_HTML_TABLES",
+      "largest_realized_cycle_loss": 0.06,
+      "realized_balance_drawdown": {
+        "peak_time": null,
+        "realized_balance_dd_peak": 0.0,
+        "trough_time": null
+      },
+      "source_equity_drawdown_maximal": "636.50 (6.27%)",
+      "source_equity_drawdown_relative": "6.27% (636.50)",
+      "source_largest_realized_ticket_loss": -38.2,
+      "underwater_series": "UNKNOWN_NOT_PRESENT_IN_HTML_TABLES"
+    }
+  },
+  "parser": "b16_h03.parse_h02_reports.v1"
+}
