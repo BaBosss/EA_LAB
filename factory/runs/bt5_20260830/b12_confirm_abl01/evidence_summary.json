@@ -1,0 +1,113 @@
+{
+  "schema": "ea-lab-r2-evidence/1",
+  "hypothesis_id": "HYP-B12-CONFIRM-ABL-01",
+  "canonical_base_sha": "e62001c5a0163c5b65790e13010b3e56bd657714",
+  "intervention": "_12_ConfirmBars=1 -> 0",
+  "authority": "RESEARCH_ONLY",
+  "homes": {
+    "XAUUSD_H4": {
+      "PARENT": {
+        "MAIN": {
+          "pf": 1.26,
+          "net": 1019.5,
+          "eqdd_pct": 2.96,
+          "trades": 250,
+          "quality": "98%",
+          "report_sha256": "8218209679370cb7453333523c886b63ce14cf7f40ba21a9e90268ee653fc11e"
+        },
+        "BWD": {
+          "pf": 0.91,
+          "net": -249.43,
+          "eqdd_pct": 5.45,
+          "trades": 233,
+          "quality": "99%",
+          "report_sha256": "80c70f6ef23c4ff736f877cdc31667da4dc32a72b237f8d68c66714fd8d8d006"
+        }
+      },
+      "CHILD": {
+        "MAIN": {
+          "pf": 1.05,
+          "net": 261.06,
+          "eqdd_pct": 4.24,
+          "trades": 293,
+          "quality": "98%",
+          "report_sha256": "8c697dfb4028c70c550349fb93175987196a7207b0e54879fbb8440ba8509898"
+        },
+        "BWD": {
+          "pf": 0.79,
+          "net": -799.45,
+          "eqdd_pct": 9.92,
+          "trades": 289,
+          "quality": "99%",
+          "report_sha256": "c31e0980dc8560af95cb9cd70b6a69e3a32d537c9fcdceec211aff7f93b7d208"
+        }
+      },
+      "delta": {
+        "MAIN": {
+          "pf": -0.20999999999999996,
+          "net": -758.44,
+          "eqdd_pp": 1.2800000000000002,
+          "trades": 43
+        },
+        "BWD": {
+          "pf": -0.12,
+          "net": -550.02,
+          "eqdd_pp": 4.47,
+          "trades": 56
+        }
+      }
+    },
+    "USDJPY_H1": {
+      "PARENT": {
+        "MAIN": {
+          "pf": 0.93,
+          "net": -130.94,
+          "eqdd_pct": 2.25,
+          "trades": 970,
+          "quality": "100%",
+          "report_sha256": "5297a815130d9e2a8da86686c42c52586a4bdc817f535391b30f29454d6fce02"
+        },
+        "BWD": {
+          "pf": 1.15,
+          "net": 212.75,
+          "eqdd_pct": 0.7,
+          "trades": 956,
+          "quality": "99%",
+          "report_sha256": "b0a8567f8db6c10bb8cb3a5fdc7da391a8a65cc0fa66ad91b77ac58ccab1187f"
+        }
+      },
+      "CHILD": {
+        "MAIN": {
+          "pf": 0.85,
+          "net": -406.06,
+          "eqdd_pct": 4.4,
+          "trades": 1261,
+          "quality": "100%",
+          "report_sha256": "2d22fff89fb721286b940f3010511d9c35634c64be8c39478f777275bf23bfaa"
+        },
+        "BWD": {
+          "pf": 0.99,
+          "net": -19.55,
+          "eqdd_pct": 1.87,
+          "trades": 1185,
+          "quality": "99%",
+          "report_sha256": "4f91fea72d52ea6f50a1133dbace54044ca6cffabb04837e0534da87b7db2b70"
+        }
+      },
+      "delta": {
+        "MAIN": {
+          "pf": -0.08000000000000007,
+          "net": -275.12,
+          "eqdd_pp": 2.1500000000000004,
+          "trades": 291
+        },
+        "BWD": {
+          "pf": -0.15999999999999992,
+          "net": -232.3,
+          "eqdd_pp": 1.1700000000000002,
+          "trades": 229
+        }
+      }
+    }
+  }
+}

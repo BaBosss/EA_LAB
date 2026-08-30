@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "BT5_B12_CONFIRM_ABL01_PARENT_XAUUSD_H4_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.12.22 16:31:40 | window ends 2022.12.31 | idle tail 8.3 days (0.8% of window) | entry deals 233 | eqDD \r\n5.45%\r\n[OK] reached the window end within tolerance - idle tail 8.3 days (0.8% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

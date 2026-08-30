@@ -1,0 +1,5 @@
+symbol,tf,window,parent_pf,child_pf,parent_net,child_net,parent_eqdd_pct,child_eqdd_pct,parent_trades,child_trades
+XAUUSD,H4,MAIN,1.26,1.05,1019.5,261.06,2.96,4.24,250,293
+XAUUSD,H4,BWD,0.91,0.79,-249.43,-799.45,5.45,9.92,233,289
+USDJPY,H1,MAIN,0.93,0.85,-130.94,-406.06,2.25,4.4,970,1261
+USDJPY,H1,BWD,1.15,0.99,212.75,-19.55,0.7,1.87,956,1185

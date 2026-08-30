@@ -1,0 +1,20 @@
+{
+  "schema": "ea-lab-mechanical-acceptance/1",
+  "status": "PASS",
+  "hypothesis_id": "HYP-B12-CONFIRM-ABL-01",
+  "runtime": "MT5-lane3 / D:\\Meta 5c",
+  "model": 1,
+  "optimization": 0,
+  "holdout": "UNSPENT",
+  "expected_cells": 8,
+  "accepted_cells": 8,
+  "full_surface": "155/155",
+  "build_receipt": "br-c65dbb2519f84815adb3cfe950e80bc5",
+  "ex5_sha256": "c4fef86203803165675063074e04fd1560a970c64a12eaa53125c1569a6de3a9",
+  "parent_set_sha256": "62ffa4e95a08a483617046694309a8082c1d07bece39a778704f67cb389626c1",
+  "child_set_sha256": "6d4b3e12cdfe87cd555b2a91f147b2de8714ed623adf282d816e1142ee5dc00d",
+  "leverage": "1:100 all cells",
+  "truncated_cells": 0,
+  "fresh_reports": true,
+  "source_byte_reconciliation": "NO_RELEVANT_BYTE_CHANGES"
+}
