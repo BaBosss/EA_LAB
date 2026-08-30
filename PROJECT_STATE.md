@@ -1,7 +1,7 @@
 # PROJECT_STATE — EA_LAB current canonical state (AI START HERE)
 
 > **Role:** current status / accepted decisions / forward plan.
-> **Last converged:** 2026-08-29 Asia/Bangkok.
+> **Last converged:** 2026-08-30 Asia/Bangkok.
 > **Canonical bytes:** always verify the current pushed `origin/master`. Do not infer canonical state from a dirty worktree, index, chat transcript, generated dashboard, or this file's historical Git SHA.
 > **History:** `PROJECT_HISTORY.md`. Historical snapshots and incident narratives are not current state unless explicitly restated here.
 > **Authority:** `AGENTS.md` owns roles, permissions, approval boundaries, one-writer rules, review separation, and standing push authority.
@@ -88,6 +88,7 @@ The following are accepted/canonical and should not be generically re-audited wi
 - Execution Reliability Pack V1: durable-by-default worker launch, exact-head/bootstrap/hash checks, inspect-before-retry fail-closed recovery, provider-aware launcher policy, postcondition-aware completion, timeout/cancel enforcement, and owned process-tree cleanup.
 - Ponytail controlled-adoption protected-directory repair: **ACCEPTED / CANONICAL**; original protected-launcher defect resolved; final deterministic suite 25/25 PASS and targeted different-family rereview PASS; `authority_granted=false`; non-.ps1 protected-name hardening remains PARKED/FUTURE.
 - Diagram Design module: **ACCEPTED / CANONICAL** tooling/docs support only; it grants no Factory/runtime/deployment authority.
+- EA_LAB Portfolio Control Architecture v1: **OWNER-RATIFIED / CANONICAL / NO RUNTIME AUTHORITY**. It defines the scalable EA -> Cluster -> Port -> Global Supervisor -> Human hierarchy, deterministic local-safety/ownership invariants, bounded control-state/data-contract direction, restart reconciliation, regime/portfolio-control separation, staged automation and owner-operable dashboard contract. Canonical owner: `docs/architecture/EA_LAB_PORTFOLIO_CONTROL_ARCHITECTURE_V1.md`. Numeric risk defaults, runtime activation, LIVE authority, exact Grade thresholds and KINT-001 remain separately gated/unresolved.
 - Ziplime research/data-preparation module for the Factory vNext research sidecar.
 - MacroGate RegimeOnly readiness: **ACCEPTED / CANONICAL** repository readiness only; the Windows Scheduled Task is NOT CREATED and VPS runtime scheduling is NOT ACTIVATED.
 - Traycer authenticated-A2A OFFLINE evidence cage: **ACCEPTED / CANONICAL**; real browser/device authentication and functional A2A remain **E OWNER-EXTERNAL**.
@@ -297,6 +298,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 | Factory vNext frozen design / pilot contract | `docs/research/FACTORY_VNEXT_DESIGN_DRAFT.md` + `docs/research/FACTORY_VNEXT_MVP_PILOT_CONTRACT.md` |
 | Factory vNext MVP sidecar / accepted offline pilot | `_triage/factory_vnext/` + `factory/vnext/pilots/supertrend_rev05_btcusd_h4_holdout26h1/` |
 | Second Brain research foundation | `docs/research/EA_LAB_SECOND_BRAIN_FOUNDATION.md` + `knowledge/` + project-local `.agents/skills/` / `.claude/skills/` research skills |
+| portfolio control architecture v1 | `docs/architecture/EA_LAB_PORTFOLIO_CONTROL_ARCHITECTURE_V1.md` |
 | Harness v1 | `docs/EA_LAB_HARNESS_V1.md` + `tools/ea_lab_harness/` |
 | Lane Registry | D:\EA_LAB_CONTROL\lanes\registry-v1\ |
 | Long Job Runner + Execution Reliability Pack | docs/LONG_JOB_RUNNER.md + scripts/long_jobs/ + scripts/execution_reliability/ |

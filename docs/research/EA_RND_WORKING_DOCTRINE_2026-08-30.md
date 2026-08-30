@@ -460,3 +460,13 @@ Demotion should distinguish:
 A short weak forward period should usually reduce allocation or trigger review before changing the historical Strategy Grade.
 A challenger replaces an incumbent only when total evidence is better enough to justify the switch; better can mean lower DD, better execution, stronger plateau, better diversification, or better current regime fit, not only higher PF.
 Keeping both is valid when both are qualified and have useful different behavior.
+
+## 36. Architecture ratification boundary — 2026-08-30
+
+Owner ratified the portfolio-control architecture direction on 2026-08-30.
+Canonical architecture owner is now:
+`docs/architecture/EA_LAB_PORTFOLIO_CONTROL_ARCHITECTURE_V1.md`.
+
+The ratification covers hierarchy, module boundaries, control-state/data-contract direction, deterministic Supervisor role, ownership/recovery invariants, restart/reconciliation behavior, regime/cluster/port/global separation, human-operable dashboard requirement, DEMO arbitration principle, staged automation and implementation ordering.
+
+It does NOT ratify DD/hedge/recovery numeric defaults, risk budgets, LIVE/runtime activation, exact Grade thresholds, or replacement of KINT-001. Those remain explicit unresolved/hard-stop items until separately approved and migrated to their canonical owners.
