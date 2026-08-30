@@ -432,3 +432,31 @@ Candidate Supervisor -> EA fields include desired control state, regime classifi
 
 EA acknowledgment should include command sequence received, state accepted/rejected, resulting local state, timestamp, and rejection reason when a stricter local cage prevents execution.
 Transport can start with auditable shared state files and later change without changing the semantic contract.
+
+## 36. DEMO as arbitration layer
+When backtest evidence is genuinely ambiguous, DEMO should be used as a practical arbitration layer instead of forcing certainty from historical simulation alone.
+Working direction:
+- a one-month DEMO comparison can be useful for detecting execution mismatch, broker behavior, state/ownership defects, and whether observed behavior broadly resembles backtest expectations,
+- one month is not automatically sufficient to prove long-run edge for low-frequency strategies,
+- compare forward behavior against preregistered backtest expectations: trade frequency, holding time, side mix, spread/slippage sensitivity, basket depth, DD shape, regime response, and state transitions,
+- if the month contains too few relevant opportunities, extend evidence rather than manufacture a verdict.
+
+DEMO is evidence generation, not LIVE authorization.
+Any transition to LIVE remains an owner hard stop under current governance.
+
+## 37. Promotion / demotion / replacement direction
+Keep Strategy Grade separate from operational allocation state.
+Working lifecycle direction:
+RESEARCH -> QUALIFIED -> DEMO/FORWARD -> PRODUCTION-ELIGIBLE -> ACTIVE -> REPLACED/RETIRED.
+
+Promotion should require the relevant evidence gates for that strategy type, not just high PF.
+Demotion should distinguish:
+- wrong/currently hostile regime,
+- normal drawdown within thesis,
+- execution drift,
+- true edge decay,
+- structural/risk defect.
+
+A short weak forward period should usually reduce allocation or trigger review before changing the historical Strategy Grade.
+A challenger replaces an incumbent only when total evidence is better enough to justify the switch; better can mean lower DD, better execution, stronger plateau, better diversification, or better current regime fit, not only higher PF.
+Keeping both is valid when both are qualified and have useful different behavior.
