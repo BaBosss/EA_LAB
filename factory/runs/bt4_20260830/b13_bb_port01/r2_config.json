@@ -1,0 +1,16 @@
+{
+  "schema": "ea-lab-r2-config/1",
+  "hypothesis_id": "HYP-B13-BB-PORT-01",
+  "ea": "B13 / Boss_13_MeanRev",
+  "symbol": "GBPUSD",
+  "timeframe": "H4",
+  "canonical_base_sha": "4ad1b15f26644723f2954a1416f3662b58c0b565",
+  "reports": {
+    "MAIN": "D:\\EA_LAB_CONTROL\\worktrees\\bt4-b13-bb-port01\\factory\\runs\\bt4_20260830\\b13_bb_port01\\raw\\BT4_B13_BB_PORT01_CHILD_GBPUSD_H4_MAIN_M1.htm.gz",
+    "BWD": "D:\\EA_LAB_CONTROL\\worktrees\\bt4-b13-bb-port01\\factory\\runs\\bt4_20260830\\b13_bb_port01\\raw\\BT4_B13_BB_PORT01_CHILD_GBPUSD_H4_BWD_M1.htm.gz"
+  },
+  "parent": {
+    "MAIN": {"trades": 256, "net": 46.71, "eqdd_pct": 1.63, "pf": 1.05},
+    "BWD": {"trades": 272, "net": 29.47, "eqdd_pct": 2.65, "pf": 1.02}
+  }
+}

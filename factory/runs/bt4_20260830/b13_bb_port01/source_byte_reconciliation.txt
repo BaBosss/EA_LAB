@@ -1,0 +1,8 @@
+B13 source/binary reconciliation
+accepted build source ref: cf32ba8d32a8292e8f7b5ad2ef766e3442b20125
+preregistration head: da8029d2f83f99f9682f41df60fa246cadb5bc4d
+paths checked: ea_template/Boss_13_MeanRev.mq5 + ea_template/core
+result: NO_RELEVANT_BYTE_CHANGES
+source SHA256: 733c4e395c3f0e32d3fe960742cba9d6fb98280ad740d369931328a31ae797ee
+EX5 SHA256: 23daca942b38ccb2927d4674471b69392fc445ee306d09d959350675e5408a06
+mtime-only stale warnings are therefore reconciled as worktree materialization false positives.

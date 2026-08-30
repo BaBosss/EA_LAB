@@ -1,0 +1,91 @@
+{
+  "schema": "ea-lab-r2-evidence/1",
+  "hypothesis_id": "HYP-B13-BB-PORT-01",
+  "ea": "B13 / Boss_13_MeanRev",
+  "symbol": "GBPUSD",
+  "timeframe": "H4",
+  "canonical_base_sha": "4ad1b15f26644723f2954a1416f3662b58c0b565",
+  "parent": {
+    "MAIN": {
+      "trades": 256,
+      "net": 46.71,
+      "eqdd_pct": 1.63,
+      "pf": 1.05
+    },
+    "BWD": {
+      "trades": 272,
+      "net": 29.47,
+      "eqdd_pct": 2.65,
+      "pf": 1.02
+    }
+  },
+  "child": {
+    "MAIN": {
+      "quality": "99%",
+      "net": "22.38",
+      "eqdd": "158.58 (1.57%)",
+      "pf": "1.02",
+      "trades": "265",
+      "eqdd_pct": 1.57,
+      "pf_num": 1.02,
+      "trades_num": 265,
+      "net_num": 22.38,
+      "report_sha256": "37478a8e6aa9d2ad42cbcb6a7e22f3c3bd0c204e00655a54f66cebaf9e6fd899"
+    },
+    "BWD": {
+      "quality": "99%",
+      "net": "17.33",
+      "eqdd": "273.55 (2.71%)",
+      "pf": "1.01",
+      "trades": "273",
+      "eqdd_pct": 2.71,
+      "pf_num": 1.01,
+      "trades_num": 273,
+      "net_num": 17.33,
+      "report_sha256": "abb191b106368899b656543bd906d12cc8f0a73d3b7ccbf07ff2c2d55df226ae"
+    }
+  },
+  "years": {
+    "MAIN": {
+      "2023": {
+        "trades": 84,
+        "pf": 0.9936575052854123,
+        "net": -2.4000000000000012,
+        "balance_dd_pct": 0.810622345880767
+      },
+      "2024": {
+        "trades": 87,
+        "pf": 0.8736391049039834,
+        "net": -39.80999999999999,
+        "balance_dd_pct": 1.090591596468146
+      },
+      "2025": {
+        "trades": 94,
+        "pf": 1.1725206335639307,
+        "net": 64.59000000000003,
+        "balance_dd_pct": 1.2752572839524525
+      }
+    },
+    "BWD": {
+      "2020": {
+        "trades": 101,
+        "pf": 0.9394641937145802,
+        "net": -39.94999999999997,
+        "balance_dd_pct": 2.186739581085294
+      },
+      "2021": {
+        "trades": 72,
+        "pf": 1.2525687154568048,
+        "net": 68.09,
+        "balance_dd_pct": 1.544745548610409
+      },
+      "2022": {
+        "trades": 100,
+        "pf": 0.9825391697625585,
+        "net": -10.809999999999992,
+        "balance_dd_pct": 2.6338089797988027
+      }
+    }
+  },
+  "authority": "RESEARCH_ONLY"
+}

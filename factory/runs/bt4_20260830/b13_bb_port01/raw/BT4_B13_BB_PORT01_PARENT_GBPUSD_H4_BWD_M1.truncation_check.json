@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "BT4_B13_BB_PORT01_PARENT_GBPUSD_H4_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.12.15 17:31:40 | window ends 2022.12.31 | idle tail 15.3 days (1.4% of window) | entry deals 272 | eqDD \r\n2.65%\r\n[OK] reached the window end within tolerance - idle tail 15.3 days (1.4% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}
