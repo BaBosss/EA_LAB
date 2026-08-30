@@ -1,0 +1,7 @@
+Receipt-base source SHA256: e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f
+Execution-base source SHA256: e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f
+EX5 SHA256: f3dd7c5f2e2c1eb5a9f30a95a120e8977aa071e86f5ea4d9929e84f74940803a
+Build receipt: br-58971201f0774c47bf5e6f423c47e1bc
+Relevant diff cf32ba8d32a8292e8f7b5ad2ef766e3442b20125..e62001c5a0163c5b65790e13010b3e56bd657714 for Boss_15_ST03.mq5, ea_template/core, mt5_run.ps1, parse_mt5_report.py and check_truncated_run.ps1: EMPTY.
+Result: NO_RELEVANT_BYTE_CHANGES.
+The runner mtime STALE banner is therefore a worktree-materialization false positive, not a source/binary identity mismatch.

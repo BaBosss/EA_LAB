@@ -1,0 +1,5 @@
+symbol,tf,window,parent_pf,child_pf,parent_net,child_net,parent_eqdd_pct,child_eqdd_pct,parent_trades,child_trades
+USDJPY,H4,MAIN,1.24,0.83,173.71,-279.05,1.45,3.49,199,360
+USDJPY,H4,BWD,0.97,0.9,-18.83,-122.43,1.61,2.55,204,345
+EURUSD,H4,MAIN,0.96,0.86,-30.63,-164.15,0.97,1.95,206,325
+EURUSD,H4,BWD,1.25,1.0,179.25,-2.76,0.92,1.88,217,335

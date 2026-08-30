@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "BT6_B15_EDGE_PORT01_CHILD_USDJPY_H4_BWD_M1",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}
