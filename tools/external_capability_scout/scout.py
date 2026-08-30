@@ -10,7 +10,7 @@ CATALOG_PATH = ROOT / "catalog_snapshot.json"
 CAPABILITIES_PATH = ROOT / "ea_lab_capabilities.json"
 DANGEROUS_SECTIONS = {"Brokerage / exchange trading", "Brokerage execution & portfolio"}
 DANGEROUS_TERMS = {
-    "live trading", "order placement", "private key", "wallet", "transaction broadcasting",
+    "live trading", "trades live", "order placement", "private key", "wallet", "transaction broadcasting",
     "execute trades", "execution hook", "paper or live trading", "trade through", "exchange trading",
 }
 
@@ -24,8 +24,23 @@ def tokens(text: str) -> set[str]:
 
 
 def capability_match(query: str, entry: dict) -> int:
+    """Score an existing capability without letting one generic token win.
+
+    Exact capability/alias phrases are strong evidence, including a legitimate
+    one-word alias such as ``backtesting``. Otherwise require at least two
+    meaningful overlapping tokens before ``find_existing`` may reuse a local
+    capability. This keeps generic words such as ``backtest`` from masking a
+    different requested capability (for example cross-sectional ranking).
+    """
+    query_words = re.findall(r"[a-z0-9]+", query.lower())
+    query_norm = " ".join(query_words)
+    phrases = [entry["capability"], *entry.get("aliases", [])]
+    for phrase in phrases:
+        phrase_norm = " ".join(re.findall(r"[a-z0-9]+", str(phrase).lower()))
+        if phrase_norm and re.search(r"(?:^| )" + re.escape(phrase_norm) + r"(?: |$)", query_norm):
+            return 100 + len(tokens(phrase_norm))
     q = tokens(query)
-    corpus = " ".join([entry["capability"], *entry.get("aliases", [])])
+    corpus = " ".join(phrases)
     return len(q & tokens(corpus))
 
 
@@ -48,7 +63,7 @@ def danger_reasons(entry: dict) -> list[str]:
 def find_existing(query: str, capabilities: list[dict]) -> tuple[dict | None, int]:
     scored = [(capability_match(query, item), item) for item in capabilities]
     scored.sort(key=lambda pair: pair[0], reverse=True)
-    if scored and scored[0][0] > 0:
+    if scored and scored[0][0] >= 2:
         return scored[0][1], scored[0][0]
     return None, 0
 
