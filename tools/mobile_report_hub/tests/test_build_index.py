@@ -84,7 +84,8 @@ class MobileReportHubDataTests(unittest.TestCase):
         registry = Path(self.temp.name) / "lanes.json"
         registry.write_text(json.dumps({"lanes": [{
             "lane_id": "fixture-dynamic-lane", "state": "RUNNING", "blocker_class": "C",
-            "objective": "fixture dynamic observation"
+            "objective": r"export exact fixture from D:\Meta 5",
+            "direct_consumer": "fixture dynamic observation"
         }]}), encoding="utf-8")
         index = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, registry)
         canonical = next(item for item in index["queue"] if item["id"] == "BOSS19-P4-REGIME-ATTRIBUTION")
@@ -92,6 +93,8 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(canonical["source_kind"], "GIT_CANONICAL")
         self.assertEqual(dynamic["source_kind"], "LANE_REGISTRY_NONCANONICAL")
         self.assertEqual(dynamic["blocker_type"], "ENVIRONMENT")
+        self.assertEqual(dynamic["summary"], "fixture dynamic observation")
+        self.assertNotRegex(dynamic["summary"], r"[A-Za-z]:\\")
     def test_expected_sha_mismatch_and_missing_source_fail_closed(self):
         with self.assertRaisesRegex(build_index.BuildError, "expected SHA mismatch"):
             build_index.build(ROOT, SHA, self.out, FIXED_TIME, "0" * 40, None)

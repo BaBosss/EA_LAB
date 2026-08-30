@@ -189,6 +189,13 @@ def lane_registry(path: Path | None) -> list[dict]:
             for item in rows if isinstance(item, dict)]
 
 
+def lane_summary(item: dict) -> str:
+    candidates = [item.get("objective"), item.get("direct_consumer")]
+    for value in candidates:
+        if value and not re.search(r"(?:^|[\s`\"'(])(?:[A-Za-z]:\\|\\\\)", str(value)):
+            return str(value)
+    return "[LOCAL_PATH_REDACTED]" if any(candidates) else "UNKNOWN"
+
 def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None) -> dict:
     sha = resolve_ref(repo, ref)
     if expected_sha and sha != expected_sha:
@@ -217,7 +224,7 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
                       [{"id": item.get("lane_id", "UNKNOWN"),
                         "state": {"WAITING": "READY", "PAUSED": "READY", "REVIEW": "RUNNING", "FROZEN": "RUNNING", "INTEGRATING": "RUNNING"}.get(item.get("state", "UNKNOWN"), item.get("state", "UNKNOWN")),
                         "blocker_type": {"A": "PRODUCT_DEFECT", "B": "HARNESS", "C": "ENVIRONMENT", "D": "EXECUTION", "E": "OWNER_EXTERNAL"}.get(str(item.get("blocker_class", ""))[:1], "NOT_APPLICABLE"),
-                        "summary": item.get("objective", item.get("direct_consumer", "UNKNOWN")), "source_kind": "LANE_REGISTRY_NONCANONICAL"}
+                        "summary": lane_summary(item), "source_kind": "LANE_REGISTRY_NONCANONICAL"}
                        for item in lane_registry(registry) if item.get("state") != "DONE"],
              "compare": {"compatibility_rule": "DIRECT only when basis_id is identical; otherwise DIFFERENT_BASIS / N/A."}}
     (out / "report_index.json").write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
