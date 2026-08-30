@@ -1,0 +1,17 @@
+{
+  "schema": "ea-lab-mechanical-acceptance/1",
+  "hypothesis_id": "HYP-B13-BB-PORT-02",
+  "status": "PASS",
+  "authorized_cells": 8,
+  "completed_cells": 8,
+  "model": 1,
+  "optimization": "NONE",
+  "holdout": "UNSPENT",
+  "runtime_lane": "MT5-lane3 / D:\\Meta 5c",
+  "surface_identity": "PASS_157_OF_157",
+  "build_identity": "PASS",
+  "leverage": "1:100",
+  "truncated_cells": 0,
+  "parent_child_same_install": true,
+  "authority": "RESEARCH_ONLY"
+}

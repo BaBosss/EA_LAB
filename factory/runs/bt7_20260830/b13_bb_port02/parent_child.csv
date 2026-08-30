@@ -1,0 +1,5 @@
+symbol,tf,window,parent_pf,child_pf,parent_net,child_net,parent_eqdd_pct,child_eqdd_pct,parent_trades,child_trades
+EURUSD,H4,MAIN,1.15,1.18,109.87,149.83,1.46,1.21,231,270
+EURUSD,H4,BWD,0.98,0.97,-20.35,-36.01,2.1,1.81,267,289
+XAUUSD,H4,MAIN,0.79,0.78,-1334.25,-1499.9,18.69,20.11,350,368
+XAUUSD,H4,BWD,1.03,1.04,104.16,141.4,6.93,6.93,312,315

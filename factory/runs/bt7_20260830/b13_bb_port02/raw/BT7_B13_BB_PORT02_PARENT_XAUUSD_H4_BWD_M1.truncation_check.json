@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "BT7_B13_BB_PORT02_PARENT_XAUUSD_H4_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.12.22 20:00:40 | window ends 2022.12.31 | idle tail 8.2 days (0.7% of window) | entry deals 312 | eqDD \r\n6.93%\r\n[OK] reached the window end within tolerance - idle tail 8.2 days (0.7% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

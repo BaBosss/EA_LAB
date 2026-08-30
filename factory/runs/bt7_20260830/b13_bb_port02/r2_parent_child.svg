@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="330">
+<text x="20" y="24" font-size="17">HYP-B13-BB-PORT-02 parent vs RSI-only child</text>
+<text x="20" y="44" font-size="12">EURUSD/H4 MAIN: PF 1.15â†’1.18 | net +109.87â†’+149.83 | EqDD 1.46%â†’1.21% | trades 231â†’270</text>
+<text x="20" y="78" font-size="12">EURUSD/H4 BWD: PF 0.98â†’0.97 | net -20.35â†’-36.01 | EqDD 2.10%â†’1.81% | trades 267â†’289</text>
+<text x="20" y="112" font-size="12">XAUUSD/H4 MAIN: PF 0.79â†’0.78 | net -1334.25â†’-1499.90 | EqDD 18.69%â†’20.11% | trades 350â†’368</text>
+<text x="20" y="146" font-size="12">XAUUSD/H4 BWD: PF 1.03â†’1.04 | net +104.16â†’+141.40 | EqDD 6.93%â†’6.93% | trades 312â†’315</text>
+<text x="20" y="310" font-size="11">VISUAL_ONLY_NO_AUTHORITY; exact values in evidence_summary.json and parent_child.csv</text>
+</svg>

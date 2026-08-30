@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "BT7_B13_BB_PORT02_PARENT_XAUUSD_H4_BWD_M1",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

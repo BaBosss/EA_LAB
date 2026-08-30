@@ -1,0 +1,7 @@
+BT7 B13 BB portability 02 source-byte reconciliation
+canonical base: e62001c5a0163c5b65790e13010b3e56bd657714
+Boss_13 source SHA256: 733c4e395c3f0e32d3fe960742cba9d6fb98280ad740d369931328a31ae797ee
+parent set SHA256: 65f3d4287effd5cf821bac6fff5f123eb17430608f32e9bfa5853216d053d9a6
+child set SHA256: c21ce81236414edd35ea2d953b886d955ee398125a007f01e4cc397d01ea23ed
+EX5 SHA256: 23daca942b38ccb2927d4674471b69392fc445ee306d09d959350675e5408a06
+No relevant source/core/runner byte change was identified between accepted build receipt lineage and this experiment.
