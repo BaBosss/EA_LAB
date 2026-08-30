@@ -316,3 +316,35 @@ If two parameter regions are independently robust and have different useful pers
 Examples include Growth vs Smooth, higher-return vs lower-DD, or different regime specialists.
 Both may run as separate deployment instances until forward/portfolio evidence provides a better replacement.
 They remain related members of one risk/mechanism cluster when their trade streams are strongly correlated.
+
+## 31. Python Portfolio Supervisor direction
+The owner is considering a separate Python supervisor to oversee 30+ EA instances across multiple ports.
+Working architecture direction:
+- MQL/EA instances remain deterministic execution workers.
+- Python acts as portfolio/control-plane intelligence, not as a replacement for local EA safety cages.
+- Python may observe DD, exposure, regime, news/macro state, correlation clusters, and recovery state across instances.
+- Python may publish bounded commands or allocation states such as NORMAL / REDUCE / BLOCK_NEW / PROTECT / RECOVERY_ALLOWED.
+- Local EA hard stops and ownership rules must remain enforceable even if Python is offline.
+- Supervisor failure must default fail-safe; an unavailable Python process must not silently increase risk.
+
+Preferred hierarchy:
+EA INSTANCE -> STRATEGY/SYMBOL CLUSTER -> PORT -> GLOBAL PORTFOLIO SUPERVISOR.
+
+The supervisor should know each instance's family, symbol, TF, preset, magic/identity, current net exposure, DD, strategy thesis, weak regime, current regime fit, and recovery ownership state.
+
+This is a control-plane concept only. Runtime attachment, live control, and risk-default changes remain owner hard stops.
+
+## 32. Multi-level News/Regime control
+NewsGuard and Regime control should not be only binary ON/OFF switches.
+Candidate bounded action levels include:
+- NORMAL: no restriction.
+- REDUCE: reduce new risk/allocation while allowing existing position management.
+- BLOCK_NEW: prohibit new entries/adds but allow exits and recovery management.
+- PROTECT: permit defensive hedge/protection while blocking offensive risk growth.
+- RECOVERY_ALLOWED: permit recovery only when ownership and budget gates pass.
+- HARD_FREEZE: no new directional risk; only deterministic risk reduction/exit actions.
+
+Different strategies may respond differently to the same event. A breakout strategy can benefit from volatility that is harmful to a scalper or mean-reversion system.
+Therefore the supervisor should combine event severity with Strategy Thesis / regime sensitivity rather than apply one global news switch blindly.
+
+Any future command interface must be explicit, versioned, logged, acknowledged by the EA, and bounded by local safety rules. Loss of communications must not leave ambiguous ownership or half-applied risk state.
