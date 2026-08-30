@@ -1,6 +1,6 @@
 # BT1 - Ranked Research Queue - 2026-08-30
 
-Status: `RESEARCH_ONLY / QUEUE_READY`
+Status: `RESEARCH_ONLY / EXECUTED / CLOSED`
 Canonical base SHA: `b26af204faf7907fe7e78a2b5f90a5dfa8c6bc02`
 HOLDOUT: `UNSPENT`
 Optimization: `NONE`
@@ -104,3 +104,13 @@ Rank by information gain, direct consumer, semantic precision, ability to isolat
 ## Dispatch order
 
 BT0 runtime-policy conflict is independent of this queue's research synthesis. When a tester experiment is separately dispatched, preserve one acceptance-critical lineage per install and preregister exact override bytes before launch. Run Rank 1 before Rank 2 so the highest-information entry-vs-position-engine question is answered first. Rank 3 is independent and may use a separate legal Model-1 runtime if Lane Registry ownership is clear.
+
+## Execution closeout — post-result, 2026-08-30
+
+The three preregistered BT1 hypotheses above were executed exactly once per authorized MAIN/BWD cell under their prospective contracts. This closeout does not alter the preregistered questions or falsification rules.
+
+- `HYP-B16-PE-ABL-01`: `PASS / HYPOTHESIS_FALSIFIED`; `_16_MaxOrdersPerSide 10 -> 1`; MAIN PF 2.41 / net +149.08 / EqDD 1.18%; BWD PF 0.90 / net -32.09 / EqDD 2.42%; `MECHANISM_VALUE=WEAK`. Evidence: `docs/research/BT1_B16_PE_ABL_01_RESULTS.md`.
+- `HYP-B16-REC-ABL-01`: `PASS / HYPOTHESIS_NOT_FALSIFIED`; `_16_OverlapMinUsd 5.0 -> 0.0`; MAIN PF 0.51 / net -924.01 / EqDD 22.28%; BWD PF 1.94 / net +890.51 / EqDD 7.70%; `MECHANISM_VALUE=UNCLEAR` because the material effect reverses sign across windows. Evidence: `docs/research/BT1_B16_REC_ABL_01_RESULTS.md`.
+- `HYP-B13-BB-ABL-01`: `PASS / HYPOTHESIS_NOT_FALSIFIED`; `_13_RequireBB true -> false`; MAIN PF 1.06 / net +1056.60 / EqDD 6.27%; BWD PF 1.03 / net +296.67 / EqDD 3.53%; `MECHANISM_VALUE=UNCLEAR`. Evidence: `docs/research/BT1_B13_BB_ABL_01_RESULTS.md`.
+
+All parent/child comparisons stayed within one MT5 install per lineage, Model 1, optimization 0, and HOLDOUT unspent. No result unlocks H04, optimization, Candidate, DEMO/LIVE, deployment, trading, risk/default, KINT, or Grade authority. No further B16/B13 experiment is auto-opened from this queue.
