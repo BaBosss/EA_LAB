@@ -79,6 +79,7 @@ if ($failures.Count -eq 0) {
     Assert-True ($sw -match 'fixture/' -and $sw -match '!url\.pathname\.includes') 'Service worker must not cache fixture report data as the production index.'
     Assert-True ($css -match '@media \(max-width: 390px\)' -and $css -match 'orientation: landscape') 'CSS must include 390px portrait and landscape handling.'
     Assert-True ($css -match 'min-height: 44px') 'CSS must include practical 44px touch targets.'
+    Assert-True ($css -match '\.record-card\s*\{[^}]*min-width:\s*0;[^}]*overflow-wrap:\s*anywhere;' ) 'Record cards must shrink and wrap long canonical state tokens on phone widths.'
     Assert-True ($app -match 'safeRelativeHref' -and $app -match 'full_report') 'Links must be safe relative report links only.'
     Assert-True ($app -match 'INVENTORY_ONLY' -and $app -match 'const recent = records\.filter') 'Latest/recent must exclude inventory-only records.'
 }

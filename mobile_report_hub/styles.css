@@ -39,6 +39,7 @@ h3 { font-size: 1rem; }
 .button-link.secondary { font-weight: 600; }
 .page-heading { margin: 1.25rem 0; }
 .panel, .record-card, .metric-card, .count-card { border: 1px solid var(--line); border-radius: .75rem; background: var(--panel); padding: 1rem; }
+.record-card { min-width: 0; overflow-wrap: anywhere; }
 .panel { margin: 1rem 0; }
 .count-grid, .summary-grid, .metric-grid { display: grid; gap: .75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .count-card span { display: block; color: var(--muted); font-size: .85rem; }
