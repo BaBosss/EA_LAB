@@ -1,0 +1,15 @@
+{
+  "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+  "cage_kill_ineligible_cells": 4,
+  "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+  "full_window_eligible_cells": 84,
+  "holdout": "UNSPENT",
+  "leverage": "1:100 MATCH all 88",
+  "model": 1,
+  "new_cells": 88,
+  "optimization": "NONE",
+  "parent_set_sha256": "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+  "schema": "ea-lab-b16-characterization-mechanical/1",
+  "unique_reports": 88,
+  "unresolved_suspect_cells": 0
+}

@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16CHAR_PIPFLOOR_OFF_XAU_M15_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.12.29 19:51:40 | window ends 2022.12.31 | idle tail 1.2 days (0.1% of window) | entry deals 1483 | eqDD \r\n14.31%\r\n[OK] reached the window end within tolerance - idle tail 1.2 days (0.1% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

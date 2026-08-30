@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "B16EXT_PIPFLOOR_OFF_GBP_H4_MAIN_M1",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

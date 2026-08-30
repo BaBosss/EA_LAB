@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16CHAR_OVERLAP_OFF_XAU_M15_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.09.15 07:54:40 | window ends 2022.12.31 | idle tail 106.7 days (9.7% of window) | entry deals 952 | \r\neqDD 25.01%\r\n[OK] reached the window end within tolerance - idle tail 106.7 days (9.7% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

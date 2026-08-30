@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="390">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="28" font-size="18" font-family="sans-serif">B16 mechanism falsifier matrix</text>
+<text x="176" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 176 55)">DEPTH2</text>
+<text x="281" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 281 55)">DEPTH4</text>
+<text x="386" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 386 55)">DEPTH5</text>
+<text x="491" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 491 55)">SINGLETP_OFF</text>
+<text x="596" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 596 55)">BASKETTP_OFF</text>
+<text x="701" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 701 55)">OVERLAP_OFF</text>
+<text x="806" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 806 55)">PIPFLOOR_OFF</text>
+<text x="911" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 911 55)">DEEP_SPACING_EQUAL</text>
+<text x="1016" y="55" font-size="10" font-family="sans-serif" transform="rotate(-35 1016 55)">SELL_DIRECTION</text>
+<text x="20" y="99" font-size="13" font-family="sans-serif">XAU_H4</text>
+<rect x="170" y="70" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="215" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="275" y="70" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="320" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="380" y="70" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="425" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="485" y="70" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="530" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="590" y="70" width="101" height="44" fill="#999999" stroke="black"/>
+<text x="635" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">U</text>
+<rect x="695" y="70" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="740" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="800" y="70" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="845" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="905" y="70" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="950" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="1010" y="70" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="1055" y="98" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<text x="20" y="147" font-size="13" font-family="sans-serif">USDJPY_H1</text>
+<rect x="170" y="118" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="215" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="275" y="118" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="320" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="380" y="118" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="425" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="485" y="118" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="530" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="590" y="118" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="635" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="695" y="118" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="740" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="800" y="118" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="845" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="905" y="118" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="950" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="1010" y="118" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="1055" y="146" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<text x="20" y="195" font-size="13" font-family="sans-serif">XAU_M15</text>
+<rect x="170" y="166" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="215" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="275" y="166" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="320" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="380" y="166" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="425" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="485" y="166" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="530" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="590" y="166" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="635" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="695" y="166" width="101" height="44" fill="#999999" stroke="black"/>
+<text x="740" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">U</text>
+<rect x="800" y="166" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="845" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="905" y="166" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="950" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="1010" y="166" width="101" height="44" fill="#999999" stroke="black"/>
+<text x="1055" y="194" font-size="16" text-anchor="middle" font-family="sans-serif">U</text>
+<text x="20" y="243" font-size="13" font-family="sans-serif">EUR_H4</text>
+<rect x="170" y="214" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="215" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="275" y="214" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="320" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="380" y="214" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="425" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="485" y="214" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="530" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="590" y="214" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="635" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="695" y="214" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="740" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="800" y="214" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="845" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="905" y="214" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="950" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="1010" y="214" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="1055" y="242" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<text x="20" y="291" font-size="13" font-family="sans-serif">GBP_H4</text>
+<rect x="170" y="262" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="215" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="275" y="262" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="320" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="380" y="262" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="425" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="485" y="262" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="530" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="590" y="262" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="635" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="695" y="262" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="740" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="800" y="262" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="845" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<rect x="905" y="262" width="101" height="44" fill="#dddddd" stroke="black"/>
+<text x="950" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">F</text>
+<rect x="1010" y="262" width="101" height="44" fill="#ffffff" stroke="black"/>
+<text x="1055" y="290" font-size="16" text-anchor="middle" font-family="sans-serif">N</text>
+<text x="20" y="345" font-size="11" font-family="sans-serif">F=falsified by preregistered rule; N=not falsified; U=mechanically ineligible full-window pair.</text>
+<text x="20" y="98%" font-size="10" font-family="sans-serif">VISUAL_ONLY_NO_AUTHORITY</text>
+</svg>

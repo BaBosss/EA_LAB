@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16CHAR_BASKETTP_OFF_XAU_H4_BWD_M1",
+    "truncated":  true,
+    "detail":  "last deal 2022.07.13 15:41:40 | window ends 2022.12.31 | idle tail 170.3 days (15.6% of window) | entry deals 8 | eqDD \r\n25%\r\n[SUSPECT] stopped trading well before the window ended, AND the drawdown reached kill territory. Re-run with \r\n-TesterLog to confirm whether the cage killed it; do not use these metrics until you know."
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="230">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="28" font-size="18" font-family="sans-serif">Confirmed hard-cage events in characterization batch</text>
+<text x="20" y="65" font-size="11" font-family="sans-serif">B16CHAR_BASKETTP_OFF_XAU_H4_BWD_M1 | market=2022.07.13 15:41:40 | DD=25.00%</text>
+<text x="20" y="97" font-size="11" font-family="sans-serif">B16CHAR_OVERLAP_OFF_XAU_M15_BWD_M1 | market=2022.09.15 07:54:40 | DD=25.01%</text>
+<text x="20" y="129" font-size="11" font-family="sans-serif">B16CHAR_SELL_DIRECTION_XAU_M15_BWD_M1 | market=2020.08.07 01:20:40 | DD=25.18%</text>
+<text x="20" y="161" font-size="11" font-family="sans-serif">B16CHAR_SELL_DIRECTION_XAU_M15_MAIN_M1 | market=2025.02.11 03:13:40 | DD=25.08%</text>
+<text x="20" y="205" font-size="10" font-family="sans-serif">These cells are full-window ineligible; pre-kill PF/net are not used for pair verdicts.</text>
+<text x="20" y="98%" font-size="10" font-family="sans-serif">VISUAL_ONLY_NO_AUTHORITY</text>
+</svg>

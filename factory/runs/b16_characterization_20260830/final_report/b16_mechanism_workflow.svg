@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="28" font-size="18" font-family="sans-serif">B16 source-bound research workflow</text>
+<rect x="20" y="95" width="185" height="82" fill="white" stroke="black"/>
+<text x="28" y="120" font-size="12" font-family="sans-serif">RSI last closed bar</text>
+<text x="28" y="145" font-size="10" font-family="sans-serif">fixed BUY&lt;Low / SELL&gt;High</text>
+<line x1="205" y1="136" x2="229" y2="136" stroke="black"/><polygon points="229,136 222,132 222,140" fill="black"/>
+<rect x="229" y="95" width="185" height="82" fill="white" stroke="black"/>
+<text x="237" y="120" font-size="12" font-family="sans-serif">Bar-open first entry</text>
+<text x="237" y="145" font-size="10" font-family="sans-serif">market + per-order ATR SL</text>
+<line x1="414" y1="136" x2="438" y2="136" stroke="black"/><polygon points="438,136 431,132 431,140" fill="black"/>
+<rect x="438" y="95" width="185" height="82" fill="white" stroke="black"/>
+<text x="446" y="120" font-size="12" font-family="sans-serif">Adverse grid add</text>
+<text x="446" y="145" font-size="10" font-family="sans-serif">max(ATRÃ—mult, pip floor)</text>
+<line x1="623" y1="136" x2="647" y2="136" stroke="black"/><polygon points="647,136 640,132 640,140" fill="black"/>
+<rect x="647" y="95" width="185" height="82" fill="white" stroke="black"/>
+<text x="655" y="120" font-size="12" font-family="sans-serif">Flat lot default</text>
+<text x="655" y="145" font-size="10" font-family="sans-serif">cap depth / lot cages</text>
+<line x1="832" y1="136" x2="856" y2="136" stroke="black"/><polygon points="856,136 849,132 849,140" fill="black"/>
+<rect x="856" y="95" width="185" height="82" fill="white" stroke="black"/>
+<text x="864" y="120" font-size="12" font-family="sans-serif">Exit owner</text>
+<text x="864" y="145" font-size="10" font-family="sans-serif">single TP â†’ basket TP â†’ overlap</text>
+<line x1="1041" y1="136" x2="1065" y2="136" stroke="black"/><polygon points="1065,136 1058,132 1058,140" fill="black"/>
+<rect x="1065" y="95" width="185" height="82" fill="white" stroke="black"/>
+<text x="1073" y="120" font-size="12" font-family="sans-serif">Safety first</text>
+<text x="1073" y="145" font-size="10" font-family="sans-serif">hard DD cage / halt</text>
+<text x="20" y="225" font-size="11" font-family="sans-serif">Changed modules in this milestone: direction, max depth, single TP, basket TP, overlap threshold, pip floor, post-four ATR spacing.</text>
+<text x="20" y="250" font-size="11" font-family="sans-serif">Frozen: RSI thresholds/period, base lot/ladder, per-order SL, emergency/risk cages, dormant flatten, optimization, HOLDOUT.</text>
+<text x="20" y="98%" font-size="10" font-family="sans-serif">VISUAL_ONLY_NO_AUTHORITY</text>
+</svg>

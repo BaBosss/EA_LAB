@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16CHAR_DEEP_SPACING_EQUAL_XAU_H4_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.10.11 08:55:40 | window ends 2022.12.31 | idle tail 80.6 days (7.4% of window) | entry deals 164 | eqDD \r\n12.73%\r\n[OK] reached the window end within tolerance - idle tail 80.6 days (7.4% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

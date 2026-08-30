@@ -1,0 +1,92 @@
+{
+  "EUR_H4": {
+    "BWD": {
+      "dd": 8.46,
+      "net": -553.81,
+      "pf": 0.25,
+      "report_sha": "e170deb421f404619589b5b20518d3277b10f73f4baa606ebd895ba92fce6602",
+      "trades": 51
+    },
+    "MAIN": {
+      "dd": 1.42,
+      "net": 126.54,
+      "pf": 6.39,
+      "report_sha": "72dad125e39571057c1614e02632ceadf7cd6ef93720ce399aaa3b2439741fca",
+      "trades": 64
+    },
+    "symbol": "EURUSD",
+    "tf": "H4"
+  },
+  "GBP_H4": {
+    "BWD": {
+      "dd": 10.61,
+      "net": -736.29,
+      "pf": 0.44,
+      "report_sha": "1127be2db9c18c84cbdd8487c7bdf82c5888f7cc33ec9eff34e4cfb18d780eee",
+      "trades": 61
+    },
+    "MAIN": {
+      "dd": 1.93,
+      "net": 115.98,
+      "pf": 2.46,
+      "report_sha": "711a641ef2a35c69688133a3d8ac13b80b3a239d2e30625d3dffe6e3db4b1588",
+      "trades": 60
+    },
+    "symbol": "GBPUSD",
+    "tf": "H4"
+  },
+  "USDJPY_H1": {
+    "BWD": {
+      "dd": 2.4,
+      "net": 44.1,
+      "pf": 1.11,
+      "report_sha": "745cb0a465fbcb1b864e3e117e4ac1ce3de698606b100eb514adb110739a1893",
+      "trades": 267
+    },
+    "MAIN": {
+      "dd": 3.85,
+      "net": 252.53,
+      "pf": 1.53,
+      "report_sha": "45ac54affa7635cf350ba69492102d58557d54373424d802a3e2b57cdc562c64",
+      "trades": 275
+    },
+    "symbol": "USDJPY",
+    "tf": "H1"
+  },
+  "XAU_H4": {
+    "BWD": {
+      "dd": 8.29,
+      "net": 512.69,
+      "pf": 1.44,
+      "report_sha": "df63addd9975b66a9471aafe929d3b7f31377a95a93342cc6f1521728f07cff3",
+      "trades": 148
+    },
+    "MAIN": {
+      "dd": 6.27,
+      "net": 707.78,
+      "pf": 4.08,
+      "report_sha": "aee6819ba12f929caade4cf1b70915978a3259ec2b7136a1009e077057bb0e7e",
+      "trades": 79
+    },
+    "symbol": "XAUUSD",
+    "tf": "H4"
+  },
+  "XAU_M15": {
+    "BWD": {
+      "dd": 14.86,
+      "net": 1002.69,
+      "pf": 1.1,
+      "report_sha": "27149f0074c81e70b086a31dbf722eafa2920c281f05adaaf9022dd8a8bc2644",
+      "trades": 1463
+    },
+    "MAIN": {
+      "dd": 11.88,
+      "net": 2643.64,
+      "pf": 1.25,
+      "report_sha": "2aeb5f6c0de9a517b3a49c2ca62b75e87938edc457e7adac2317a0a7b5afb728",
+      "trades": 1577
+    },
+    "symbol": "XAUUSD",
+    "tf": "M15"
+  }
+}

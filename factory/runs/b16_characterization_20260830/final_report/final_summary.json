@@ -1,0 +1,16 @@
+{
+  "authority": "RESEARCH_ONLY",
+  "full_window_eligible": 84,
+  "hard_kill_cells": 4,
+  "holdout": "UNSPENT",
+  "mechanism_value": "STRONG",
+  "new_cells": 88,
+  "optimization": "NONE",
+  "pair_evaluations": 45,
+  "schema": "ea-lab-b16-mechanism-characterization-final/1",
+  "verdict_counts": {
+    "HYPOTHESIS_FALSIFIED": 18,
+    "HYPOTHESIS_NOT_FALSIFIED": 24,
+    "UNKNOWN_MECHANICAL_INELIGIBLE": 3
+  }
+}

@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16CHAR_SELL_DIRECTION_XAU_M15_MAIN_M1",
+    "truncated":  true,
+    "detail":  "last deal 2025.02.11 03:13:40 | window ends 2025.12.31 | idle tail 322.9 days (29.5% of window) | entry deals 1521 | \r\neqDD 25.08%\r\n[SUSPECT] stopped trading well before the window ended, AND the drawdown reached kill territory. Re-run with \r\n-TesterLog to confirm whether the cage killed it; do not use these metrics until you know."
+}

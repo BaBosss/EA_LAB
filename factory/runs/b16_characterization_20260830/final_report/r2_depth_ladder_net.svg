@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="28" font-size="18" font-family="sans-serif">B16 depth ladder: closed-window net</text>
+<line x1="70" y1="350" x2="950" y2="350" stroke="black"/>
+<line x1="70" y1="55" x2="70" y2="350" stroke="black"/>
+<line x1="70" y1="276.1" x2="950" y2="276.1" stroke="#888" stroke-dasharray="4,4"/>
+<circle cx="70.0" cy="263.6" r="3" fill="black"/>
+<text x="70.0" y="370" font-size="10" text-anchor="middle" font-family="sans-serif">1</text>
+<circle cx="290.0" cy="271.5" r="3" fill="black"/>
+<circle cx="510.0" cy="220.3" r="3" fill="black"/>
+<circle cx="730.0" cy="217.3" r="3" fill="black"/>
+<circle cx="950.0" cy="216.9" r="3" fill="black"/>
+<text x="950.0" y="370" font-size="10" text-anchor="middle" font-family="sans-serif">10</text>
+<polyline points="70.0,263.6 290.0,271.5 510.0,220.3 730.0,217.3 950.0,216.9" fill="none" stroke="black" stroke-width="1.5"/>
+<text x="80" y="73" font-size="11" font-family="sans-serif">XAU_H4 MAIN</text>
+<circle cx="70.0" cy="278.7" r="3" fill="black"/>
+<circle cx="290.0" cy="255.8" r="3" fill="black"/>
+<circle cx="510.0" cy="240.0" r="3" fill="black"/>
+<circle cx="730.0" cy="233.6" r="3" fill="black"/>
+<circle cx="950.0" cy="233.2" r="3" fill="black"/>
+<polyline points="70.0,278.7 290.0,255.8 510.0,240.0 730.0,233.6 950.0,233.2" fill="none" stroke="black" stroke-width="1.5" stroke-dasharray="7,4"/>
+<text x="80" y="89" font-size="11" font-family="sans-serif">XAU_H4 BWD</text>
+<circle cx="70.0" cy="261.6" r="3" fill="black"/>
+<circle cx="290.0" cy="254.2" r="3" fill="black"/>
+<circle cx="510.0" cy="257.2" r="3" fill="black"/>
+<circle cx="730.0" cy="254.0" r="3" fill="black"/>
+<circle cx="950.0" cy="254.9" r="3" fill="black"/>
+<polyline points="70.0,261.6 290.0,254.2 510.0,257.2 730.0,254.0 950.0,254.9" fill="none" stroke="black" stroke-width="1.5"/>
+<text x="80" y="105" font-size="11" font-family="sans-serif">USDJPY_H1 MAIN</text>
+<circle cx="70.0" cy="273.3" r="3" fill="black"/>
+<circle cx="290.0" cy="270.3" r="3" fill="black"/>
+<circle cx="510.0" cy="276.3" r="3" fill="black"/>
+<circle cx="730.0" cy="272.4" r="3" fill="black"/>
+<circle cx="950.0" cy="272.4" r="3" fill="black"/>
+<polyline points="70.0,273.3 290.0,270.3 510.0,276.3 730.0,272.4 950.0,272.4" fill="none" stroke="black" stroke-width="1.5" stroke-dasharray="7,4"/>
+<text x="80" y="121" font-size="11" font-family="sans-serif">USDJPY_H1 BWD</text>
+<circle cx="70.0" cy="258.2" r="3" fill="black"/>
+<circle cx="290.0" cy="138.9" r="3" fill="black"/>
+<circle cx="510.0" cy="111.3" r="3" fill="black"/>
+<circle cx="730.0" cy="184.7" r="3" fill="black"/>
+<circle cx="950.0" cy="55.0" r="3" fill="black"/>
+<polyline points="70.0,258.2 290.0,138.9 510.0,111.3 730.0,184.7 950.0,55.0" fill="none" stroke="black" stroke-width="1.5"/>
+<text x="80" y="137" font-size="11" font-family="sans-serif">XAU_M15 MAIN</text>
+<circle cx="70.0" cy="269.3" r="3" fill="black"/>
+<circle cx="290.0" cy="350.0" r="3" fill="black"/>
+<circle cx="510.0" cy="303.2" r="3" fill="black"/>
+<circle cx="730.0" cy="297.3" r="3" fill="black"/>
+<circle cx="950.0" cy="192.2" r="3" fill="black"/>
+<polyline points="70.0,269.3 290.0,350.0 510.0,303.2 730.0,297.3 950.0,192.2" fill="none" stroke="black" stroke-width="1.5" stroke-dasharray="7,4"/>
+<text x="80" y="153" font-size="11" font-family="sans-serif">XAU_M15 BWD</text>
+<text x="20" y="385" font-size="11" font-family="sans-serif">Net USD at depth cap 1/2/4/5/10; solid/dashed lines distinguish window/context series only.</text>
+<text x="20" y="98%" font-size="10" font-family="sans-serif">VISUAL_ONLY_NO_AUTHORITY</text>
+</svg>

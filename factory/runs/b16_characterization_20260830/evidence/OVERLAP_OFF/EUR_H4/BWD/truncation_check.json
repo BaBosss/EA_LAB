@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16EXT_OVERLAP_OFF_EUR_H4_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.11.10 15:47:40 | window ends 2022.12.31 | idle tail 50.3 days (4.6% of window) | entry deals 48 | eqDD \r\n9.4%\r\n[OK] reached the window end within tolerance - idle tail 50.3 days (4.6% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

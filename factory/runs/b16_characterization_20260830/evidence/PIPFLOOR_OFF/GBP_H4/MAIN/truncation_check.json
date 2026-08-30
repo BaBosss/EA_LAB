@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16EXT_PIPFLOOR_OFF_GBP_H4_MAIN_M1",
+    "truncated":  false,
+    "detail":  "last deal 2025.11.26 15:24:20 | window ends 2025.12.31 | idle tail 34.4 days (3.1% of window) | entry deals 117 | eqDD \r\n4.76%\r\n[OK] reached the window end within tolerance - idle tail 34.4 days (3.1% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

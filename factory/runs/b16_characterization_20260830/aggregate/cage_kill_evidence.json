@@ -1,0 +1,22 @@
+{
+  "B16CHAR_BASKETTP_OFF_XAU_H4_BWD_M1": {
+    "dd_pct": 25.0,
+    "market_time": "2022.07.13 15:41:40",
+    "tester_wallclock": "20:59:14.865"
+  },
+  "B16CHAR_OVERLAP_OFF_XAU_M15_BWD_M1": {
+    "dd_pct": 25.01,
+    "market_time": "2022.09.15 07:54:40",
+    "tester_wallclock": "21:01:20.771"
+  },
+  "B16CHAR_SELL_DIRECTION_XAU_M15_BWD_M1": {
+    "dd_pct": 25.18,
+    "market_time": "2020.08.07 01:20:40",
+    "tester_wallclock": "21:05:59.436"
+  },
+  "B16CHAR_SELL_DIRECTION_XAU_M15_MAIN_M1": {
+    "dd_pct": 25.08,
+    "market_time": "2025.02.11 03:13:40",
+    "tester_wallclock": "21:05:43.953"
+  }
+}

@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "B16EXT_DEPTH4_GBP_H4_BWD_M1",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

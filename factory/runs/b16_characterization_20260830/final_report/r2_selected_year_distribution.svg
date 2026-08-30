@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="690">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="28" font-size="18" font-family="sans-serif">Selected year-by-year closed-deal net</text>
+<line x1="30" y1="330" x2="1090" y2="330" stroke="black"/>
+<rect x="32.0" y="291.2" width="31.3" height="38.8" fill="#777"/>
+<text x="32.0" y="610" font-size="8" transform="rotate(65 32.0 610)" font-family="sans-serif">GBP_H4 SELL_DIRECTION BWD 2020</text>
+<rect x="67.3" y="316.9" width="31.3" height="13.1" fill="#777"/>
+<text x="67.3" y="610" font-size="8" transform="rotate(65 67.3 610)" font-family="sans-serif">GBP_H4 SELL_DIRECTION BWD 2021</text>
+<rect x="102.7" y="321.6" width="31.3" height="8.4" fill="#777"/>
+<text x="102.7" y="610" font-size="8" transform="rotate(65 102.7 610)" font-family="sans-serif">GBP_H4 SELL_DIRECTION BWD 2022</text>
+<rect x="138.0" y="312.2" width="31.3" height="17.8" fill="#777"/>
+<text x="138.0" y="610" font-size="8" transform="rotate(65 138.0 610)" font-family="sans-serif">GBP_H4 SELL_DIRECTION MAIN 2023</text>
+<rect x="173.3" y="311.1" width="31.3" height="18.9" fill="#777"/>
+<text x="173.3" y="610" font-size="8" transform="rotate(65 173.3 610)" font-family="sans-serif">GBP_H4 SELL_DIRECTION MAIN 2024</text>
+<rect x="208.7" y="303.3" width="31.3" height="26.7" fill="#777"/>
+<text x="208.7" y="610" font-size="8" transform="rotate(65 208.7 610)" font-family="sans-serif">GBP_H4 SELL_DIRECTION MAIN 2025</text>
+<rect x="244.0" y="330.0" width="31.3" height="3.9" fill="#777"/>
+<text x="244.0" y="610" font-size="8" transform="rotate(65 244.0 610)" font-family="sans-serif">USDJPY_H1 SINGLETP_OFF BWD 2020</text>
+<rect x="279.3" y="330.0" width="31.3" height="0.0" fill="#777"/>
+<text x="279.3" y="610" font-size="8" transform="rotate(65 279.3 610)" font-family="sans-serif">USDJPY_H1 SINGLETP_OFF BWD 2021</text>
+<rect x="314.7" y="274.6" width="31.3" height="55.4" fill="#777"/>
+<text x="314.7" y="610" font-size="8" transform="rotate(65 314.7 610)" font-family="sans-serif">USDJPY_H1 SINGLETP_OFF BWD 2022</text>
+<rect x="350.0" y="318.9" width="31.3" height="11.1" fill="#777"/>
+<text x="350.0" y="610" font-size="8" transform="rotate(65 350.0 610)" font-family="sans-serif">USDJPY_H1 SINGLETP_OFF MAIN 2023</text>
+<rect x="385.3" y="330.0" width="31.3" height="0.0" fill="#777"/>
+<text x="385.3" y="610" font-size="8" transform="rotate(65 385.3 610)" font-family="sans-serif">USDJPY_H1 SINGLETP_OFF MAIN 2024</text>
+<rect x="420.7" y="279.1" width="31.3" height="50.9" fill="#777"/>
+<text x="420.7" y="610" font-size="8" transform="rotate(65 420.7 610)" font-family="sans-serif">USDJPY_H1 SINGLETP_OFF MAIN 2025</text>
+<rect x="456.0" y="330.0" width="31.3" height="0.7" fill="#777"/>
+<text x="456.0" y="610" font-size="8" transform="rotate(65 456.0 610)" font-family="sans-serif">USDJPY_H1 BASKETTP_OFF BWD 2020</text>
+<rect x="491.3" y="330.0" width="31.3" height="0.0" fill="#777"/>
+<text x="491.3" y="610" font-size="8" transform="rotate(65 491.3 610)" font-family="sans-serif">USDJPY_H1 BASKETTP_OFF BWD 2021</text>
+<rect x="526.7" y="229.4" width="31.3" height="100.6" fill="#777"/>
+<text x="526.7" y="610" font-size="8" transform="rotate(65 526.7 610)" font-family="sans-serif">USDJPY_H1 BASKETTP_OFF BWD 2022</text>
+<rect x="562.0" y="327.7" width="31.3" height="2.3" fill="#777"/>
+<text x="562.0" y="610" font-size="8" transform="rotate(65 562.0 610)" font-family="sans-serif">USDJPY_H1 BASKETTP_OFF MAIN 2023</text>
+<rect x="597.3" y="330.0" width="31.3" height="0.0" fill="#777"/>
+<text x="597.3" y="610" font-size="8" transform="rotate(65 597.3 610)" font-family="sans-serif">USDJPY_H1 BASKETTP_OFF MAIN 2024</text>
+<rect x="632.7" y="225.3" width="31.3" height="104.7" fill="#777"/>
+<text x="632.7" y="610" font-size="8" transform="rotate(65 632.7 610)" font-family="sans-serif">USDJPY_H1 BASKETTP_OFF MAIN 2025</text>
+<rect x="668.0" y="281.0" width="31.3" height="49.0" fill="#777"/>
+<text x="668.0" y="610" font-size="8" transform="rotate(65 668.0 610)" font-family="sans-serif">XAU_H4 DEPTH5 BWD 2020</text>
+<rect x="703.3" y="330.0" width="31.3" height="17.6" fill="#777"/>
+<text x="703.3" y="610" font-size="8" transform="rotate(65 703.3 610)" font-family="sans-serif">XAU_H4 DEPTH5 BWD 2021</text>
+<rect x="738.7" y="247.4" width="31.3" height="82.6" fill="#777"/>
+<text x="738.7" y="610" font-size="8" transform="rotate(65 738.7 610)" font-family="sans-serif">XAU_H4 DEPTH5 BWD 2022</text>
+<rect x="774.0" y="269.0" width="31.3" height="61.0" fill="#777"/>
+<text x="774.0" y="610" font-size="8" transform="rotate(65 774.0 610)" font-family="sans-serif">XAU_H4 DEPTH5 MAIN 2023</text>
+<rect x="809.3" y="281.5" width="31.3" height="48.5" fill="#777"/>
+<text x="809.3" y="610" font-size="8" transform="rotate(65 809.3 610)" font-family="sans-serif">XAU_H4 DEPTH5 MAIN 2024</text>
+<rect x="844.7" y="282.0" width="31.3" height="48.0" fill="#777"/>
+<text x="844.7" y="610" font-size="8" transform="rotate(65 844.7 610)" font-family="sans-serif">XAU_H4 DEPTH5 MAIN 2025</text>
+<rect x="880.0" y="221.5" width="31.3" height="108.5" fill="#777"/>
+<text x="880.0" y="610" font-size="8" transform="rotate(65 880.0 610)" font-family="sans-serif">XAU_M15 DEPTH5 BWD 2020</text>
+<rect x="915.3" y="330.0" width="31.3" height="32.5" fill="#777"/>
+<text x="915.3" y="610" font-size="8" transform="rotate(65 915.3 610)" font-family="sans-serif">XAU_M15 DEPTH5 BWD 2021</text>
+<rect x="950.7" y="330.0" width="31.3" height="133.0" fill="#777"/>
+<text x="950.7" y="610" font-size="8" transform="rotate(65 950.7 610)" font-family="sans-serif">XAU_M15 DEPTH5 BWD 2022</text>
+<rect x="986.0" y="330.0" width="31.3" height="80.9" fill="#777"/>
+<text x="986.0" y="610" font-size="8" transform="rotate(65 986.0 610)" font-family="sans-serif">XAU_M15 DEPTH5 MAIN 2023</text>
+<rect x="1021.3" y="254.1" width="31.3" height="75.9" fill="#777"/>
+<text x="1021.3" y="610" font-size="8" transform="rotate(65 1021.3 610)" font-family="sans-serif">XAU_M15 DEPTH5 MAIN 2024</text>
+<rect x="1056.7" y="80.0" width="31.3" height="250.0" fill="#777"/>
+<text x="1056.7" y="610" font-size="8" transform="rotate(65 1056.7 610)" font-family="sans-serif">XAU_M15 DEPTH5 MAIN 2025</text>
+<text x="20" y="98%" font-size="10" font-family="sans-serif">Closed-deal year net; blank-PF years can be all-win/no-loss. VISUAL_ONLY_NO_AUTHORITY</text>
+</svg>

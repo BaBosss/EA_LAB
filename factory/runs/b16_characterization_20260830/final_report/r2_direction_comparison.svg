@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="365">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="28" font-size="18" font-family="sans-serif">Direction: accepted BUY parent vs SELL child</text>
+<text x="20" y="58" font-size="11" font-family="sans-serif">Context</text>
+<text x="130" y="58" font-size="11" font-family="sans-serif">Variant</text>
+<text x="350" y="58" font-size="11" font-family="sans-serif">MAIN net</text>
+<text x="470" y="58" font-size="11" font-family="sans-serif">BWD net</text>
+<text x="590" y="58" font-size="11" font-family="sans-serif">MAIN EqDD%</text>
+<text x="720" y="58" font-size="11" font-family="sans-serif">BWD EqDD%</text>
+<text x="850" y="58" font-size="11" font-family="sans-serif">Verdict</text>
+<text x="20" y="82" font-size="10" font-family="sans-serif">XAU_H4</text>
+<text x="130" y="82" font-size="10" font-family="sans-serif">PARENT</text>
+<text x="350" y="82" font-size="10" font-family="sans-serif">707.78</text>
+<text x="470" y="82" font-size="10" font-family="sans-serif">512.69</text>
+<text x="590" y="82" font-size="10" font-family="sans-serif">6.27</text>
+<text x="720" y="82" font-size="10" font-family="sans-serif">8.29</text>
+<text x="850" y="82" font-size="10" font-family="sans-serif">BASE</text>
+<text x="20" y="106" font-size="10" font-family="sans-serif">XAU_H4</text>
+<text x="130" y="106" font-size="10" font-family="sans-serif">SELL_DIRECTION</text>
+<text x="350" y="106" font-size="10" font-family="sans-serif">157.21</text>
+<text x="470" y="106" font-size="10" font-family="sans-serif">729.19</text>
+<text x="590" y="106" font-size="10" font-family="sans-serif">14.61</text>
+<text x="720" y="106" font-size="10" font-family="sans-serif">8.79</text>
+<text x="850" y="106" font-size="10" font-family="sans-serif">HYPOTHESIS_NOT_FALSIFIED</text>
+<text x="20" y="130" font-size="10" font-family="sans-serif">USDJPY_H1</text>
+<text x="130" y="130" font-size="10" font-family="sans-serif">PARENT</text>
+<text x="350" y="130" font-size="10" font-family="sans-serif">252.53</text>
+<text x="470" y="130" font-size="10" font-family="sans-serif">44.1</text>
+<text x="590" y="130" font-size="10" font-family="sans-serif">3.85</text>
+<text x="720" y="130" font-size="10" font-family="sans-serif">2.4</text>
+<text x="850" y="130" font-size="10" font-family="sans-serif">BASE</text>
+<text x="20" y="154" font-size="10" font-family="sans-serif">USDJPY_H1</text>
+<text x="130" y="154" font-size="10" font-family="sans-serif">SELL_DIRECTION</text>
+<text x="350" y="154" font-size="10" font-family="sans-serif">-488.21</text>
+<text x="470" y="154" font-size="10" font-family="sans-serif">-182.33</text>
+<text x="590" y="154" font-size="10" font-family="sans-serif">5.43</text>
+<text x="720" y="154" font-size="10" font-family="sans-serif">3.47</text>
+<text x="850" y="154" font-size="10" font-family="sans-serif">HYPOTHESIS_FALSIFIED</text>
+<text x="20" y="178" font-size="10" font-family="sans-serif">XAU_M15</text>
+<text x="130" y="178" font-size="10" font-family="sans-serif">PARENT</text>
+<text x="350" y="178" font-size="10" font-family="sans-serif">2643.64</text>
+<text x="470" y="178" font-size="10" font-family="sans-serif">1002.69</text>
+<text x="590" y="178" font-size="10" font-family="sans-serif">11.88</text>
+<text x="720" y="178" font-size="10" font-family="sans-serif">14.86</text>
+<text x="850" y="178" font-size="10" font-family="sans-serif">BASE</text>
+<text x="20" y="202" font-size="10" font-family="sans-serif">XAU_M15</text>
+<text x="130" y="202" font-size="10" font-family="sans-serif">SELL_DIRECTION</text>
+<text x="350" y="202" font-size="10" font-family="sans-serif">-2330.25</text>
+<text x="470" y="202" font-size="10" font-family="sans-serif">-2504.95</text>
+<text x="590" y="202" font-size="10" font-family="sans-serif">25.08</text>
+<text x="720" y="202" font-size="10" font-family="sans-serif">25.18</text>
+<text x="850" y="202" font-size="10" font-family="sans-serif">UNKNOWN_MECHANICAL_INELIGIBLE</text>
+<text x="20" y="226" font-size="10" font-family="sans-serif">EUR_H4</text>
+<text x="130" y="226" font-size="10" font-family="sans-serif">PARENT</text>
+<text x="350" y="226" font-size="10" font-family="sans-serif">126.54</text>
+<text x="470" y="226" font-size="10" font-family="sans-serif">-553.81</text>
+<text x="590" y="226" font-size="10" font-family="sans-serif">1.42</text>
+<text x="720" y="226" font-size="10" font-family="sans-serif">8.46</text>
+<text x="850" y="226" font-size="10" font-family="sans-serif">BASE</text>
+<text x="20" y="250" font-size="10" font-family="sans-serif">EUR_H4</text>
+<text x="130" y="250" font-size="10" font-family="sans-serif">SELL_DIRECTION</text>
+<text x="350" y="250" font-size="10" font-family="sans-serif">-52.14</text>
+<text x="470" y="250" font-size="10" font-family="sans-serif">-214.92</text>
+<text x="590" y="250" font-size="10" font-family="sans-serif">3.44</text>
+<text x="720" y="250" font-size="10" font-family="sans-serif">3.55</text>
+<text x="850" y="250" font-size="10" font-family="sans-serif">HYPOTHESIS_FALSIFIED</text>
+<text x="20" y="274" font-size="10" font-family="sans-serif">GBP_H4</text>
+<text x="130" y="274" font-size="10" font-family="sans-serif">PARENT</text>
+<text x="350" y="274" font-size="10" font-family="sans-serif">115.98</text>
+<text x="470" y="274" font-size="10" font-family="sans-serif">-736.29</text>
+<text x="590" y="274" font-size="10" font-family="sans-serif">1.93</text>
+<text x="720" y="274" font-size="10" font-family="sans-serif">10.61</text>
+<text x="850" y="274" font-size="10" font-family="sans-serif">BASE</text>
+<text x="20" y="298" font-size="10" font-family="sans-serif">GBP_H4</text>
+<text x="130" y="298" font-size="10" font-family="sans-serif">SELL_DIRECTION</text>
+<text x="350" y="298" font-size="10" font-family="sans-serif">283.2</text>
+<text x="470" y="298" font-size="10" font-family="sans-serif">268.97</text>
+<text x="590" y="298" font-size="10" font-family="sans-serif">1.72</text>
+<text x="720" y="298" font-size="10" font-family="sans-serif">1.27</text>
+<text x="850" y="298" font-size="10" font-family="sans-serif">HYPOTHESIS_NOT_FALSIFIED</text>
+<text x="20" y="98%" font-size="10" font-family="sans-serif">VISUAL_ONLY_NO_AUTHORITY</text>
+</svg>
