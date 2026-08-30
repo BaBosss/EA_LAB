@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **410** · ยังอยู่บนบอร์ด: **114** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **411** · ยังอยู่บนบอร์ด: **115** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -416,10 +416,11 @@
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
+| ORDER-RND-B16-H03 |  | READY | B16 XAUUSD/H4 fixed-config confirmation |  | ACTIVE:10055 |
 | ORDER-RND-P0 | 2026-08-29 | DONE + REVIEWED | EA R&D governance/context convergence | PASS / CANONICAL at b7a75016 | ACTIVE:10022 |
 | ORDER-RND-P1 | 2026-08-29 | DONE + REVIEWED | Hermes H1 Golden Replay | H1 PASS / no new MT5 / HOLDOUT UNSPENT | ACTIVE:10029 |
 | ORDER-RND-P2 | 2026-08-29 | DONE + REVIEWED | Hermes H2 small pilot | H2 PASS / H3_READY | ACTIVE:10036 |
 | ORDER-RND-P3 | 2026-08-29 | DONE + REVIEWED | Boss19 19-0 broad fixed-config matrix | H3 PASS / BROAD MATRIX COMPLETE | ACTIVE:10042 |
-| ORDER-RND-P4 |  | READY | Boss19 regime attribution |  | ACTIVE:10048 |
-| ORDER-RND-P5 |  | BLOCKED | next Boss19 variant hypothesis |  | ACTIVE:10055 |
-| ORDER-RND-P6 |  | BLOCKED | survivor coarse-to-fine funnel |  | ACTIVE:10061 |
+| ORDER-RND-P4 |  | P4A | Boss19 regime attribution |  | ACTIVE:10048 |
+| ORDER-RND-P5 |  | BLOCKED | next Boss19 variant hypothesis |  | ACTIVE:10059 |
+| ORDER-RND-P6 |  | BLOCKED | survivor coarse-to-fine funnel |  | ACTIVE:10065 |
