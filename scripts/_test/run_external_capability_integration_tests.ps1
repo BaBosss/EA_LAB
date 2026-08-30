@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $python = (Get-Command python -ErrorAction Stop).Source
 
@@ -30,7 +30,7 @@ $toolFiles = @(
     (Join-Path $repo 'tools\ea_research_pod\pod.py'),
     (Join-Path $repo 'tools\external_capability_scout\scout.py')
 )
-$forbiddenImports = 'smolagents|litellm|phoenix|mcp|requests|alpaca|kraken|okx|MetaTrader5'
+$forbiddenImports = '^\s*(from|import)\s+(smolagents|litellm|phoenix|mcp|requests|alpaca|kraken|okx|MetaTrader5)\b'
 foreach ($file in $toolFiles) {
     if (Select-String -Path $file -Pattern $forbiddenImports -Quiet) {
         throw "Forbidden runtime dependency/import in $file"

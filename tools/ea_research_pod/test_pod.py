@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pod import advance, consume_fixture, resume, spawn, validate_contract
+from pod import REPO_ROOT, advance, consume_fixture, resume, spawn, validate_contract
 
 BASE_SHA = "f3f95d6964c3bdff966697439007b6c0b152aecb"
 
@@ -97,6 +97,13 @@ class PodTests(unittest.TestCase):
             frozen.write_text(json.dumps(mutated), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "FROZEN_EXPERIMENT_DRIFT"):
                 advance(workspace, "EXECUTE")
+
+    def test_transient_workspace_inside_repo_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "contract.json"
+            source.write_text(json.dumps(contract()), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "TRANSIENT_WORKSPACE_MUST_BE_OUTSIDE_REPO"):
+                spawn(source, REPO_ROOT / "_forbidden_pod_workspace")
 
     def test_semantic_work_routes_to_model(self):
         with tempfile.TemporaryDirectory() as td:

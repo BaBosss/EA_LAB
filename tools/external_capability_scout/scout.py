@@ -67,6 +67,14 @@ def shortlist(query: str, entries: list[dict], limit: int = 5) -> list[dict]:
             "section": entry["section"], "description": entry["description"],
             "score": score, "authority_class": authority, "decision": decision,
             "security_reasons": reasons, "install_state": "NOT_INSTALLED",
+            "candidate_review": {
+                "source_code": "PUBLIC_GITHUB_CATALOG_LINK", "maintenance_activity": "UNVERIFIED",
+                "documentation": "UNVERIFIED", "downstream_license": "UNVERIFIED_MUST_VERIFY",
+                "dependency_burden": "UNASSESSED", "network_requirements": "UNASSESSED",
+                "data_provenance": "UNASSESSED", "mcp_permissions": "UNASSESSED",
+                "external_service_dependency": "UNASSESSED", "reproducibility": "UNASSESSED",
+                "windows_compatibility": "UNASSESSED", "mt5_relevance": "UNASSESSED",
+            },
         }))
     scored.sort(key=lambda row: (-row[0], row[1]))
     return [row[2] for row in scored[:limit]]

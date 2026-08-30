@@ -29,6 +29,7 @@ class ScoutTests(unittest.TestCase):
         self.assertFalse(result["automatic_install"])
         self.assertTrue(result["shortlist"])
         self.assertTrue(all(x["install_state"] == "NOT_INSTALLED" for x in result["shortlist"]))
+        self.assertTrue(all(x["candidate_review"]["downstream_license"] == "UNVERIFIED_MUST_VERIFY" for x in result["shortlist"]))
 
     def test_dangerous_catalog_items_are_parked(self):
         catalog = read_json(CATALOG_PATH)

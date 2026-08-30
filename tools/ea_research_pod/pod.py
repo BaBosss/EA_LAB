@@ -6,6 +6,7 @@ import json
 import re
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = 1
 LIFECYCLE = [
     "DORMANT", "SPAWN", "LOAD_FAMILY_MEMORY", "IDENTIFY_EVIDENCE_GAP",
@@ -87,6 +88,10 @@ def route_for(contract: dict) -> str:
 def spawn(contract_path: Path, workspace: Path) -> dict:
     contract = read_json(contract_path)
     validate_contract(contract)
+    workspace = workspace.resolve()
+    repo_root = REPO_ROOT.resolve()
+    if workspace == repo_root or repo_root in workspace.parents:
+        raise ValueError("TRANSIENT_WORKSPACE_MUST_BE_OUTSIDE_REPO")
     workspace.mkdir(parents=True, exist_ok=True)
     dst_contract = workspace / "contract.json"
     state_path = workspace / "pod_state.json"
