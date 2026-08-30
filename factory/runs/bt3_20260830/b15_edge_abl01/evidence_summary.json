@@ -1,0 +1,91 @@
+{
+  "schema": "ea-lab-r2-evidence/1",
+  "hypothesis_id": "HYP-B15-EDGE-ABL-01",
+  "ea": "B15 / Boss_15_ST03",
+  "symbol": "GBPUSD",
+  "timeframe": "H4",
+  "canonical_base_sha": "4ad1b15f26644723f2954a1416f3662b58c0b565",
+  "parent": {
+    "MAIN": {
+      "trades": 214,
+      "net": null,
+      "eqdd_pct": 0.97,
+      "pf": 1.1
+    },
+    "BWD": {
+      "trades": 218,
+      "net": null,
+      "eqdd_pct": 1.83,
+      "pf": 1.07
+    }
+  },
+  "child": {
+    "MAIN": {
+      "quality": "99%",
+      "net": "-210.43",
+      "eqdd": "299.35 (2.99%)",
+      "pf": "0.85",
+      "trades": "318",
+      "eqdd_pct": 2.99,
+      "pf_num": 0.85,
+      "trades_num": 318,
+      "net_num": -210.43,
+      "report_sha256": "e38877b96ccbb9fe8adc0a0ed0bdccb75a467c3b4c03de71449c83e8bf4d2d20"
+    },
+    "BWD": {
+      "quality": "99%",
+      "net": "-223.98",
+      "eqdd": "422.93 (4.18%)",
+      "pf": "0.88",
+      "trades": "341",
+      "eqdd_pct": 4.18,
+      "pf_num": 0.88,
+      "trades_num": 341,
+      "net_num": -223.98,
+      "report_sha256": "3cd154484e465a52604dac8df14575f976b06c2225b30d997f91b2d74755d49d"
+    }
+  },
+  "years": {
+    "MAIN": {
+      "2023": {
+        "trades": 122,
+        "pf": 0.666105391449373,
+        "net": -208.20999999999998,
+        "balance_dd_pct": 2.457499999999982
+      },
+      "2024": {
+        "trades": 104,
+        "pf": 0.9495934959349592,
+        "net": -19.219999999999995,
+        "balance_dd_pct": 2.915399999999972
+      },
+      "2025": {
+        "trades": 92,
+        "pf": 1.043333078432872,
+        "net": 17.000000000000004,
+        "balance_dd_pct": 2.6572000000000116
+      }
+    },
+    "BWD": {
+      "2020": {
+        "trades": 125,
+        "pf": 0.9274020287726741,
+        "net": -53.389999999999986,
+        "balance_dd_pct": 1.711494583396334
+      },
+      "2021": {
+        "trades": 109,
+        "pf": 0.604945160669617,
+        "net": -205.30999999999997,
+        "balance_dd_pct": 3.940489001275554
+      },
+      "2022": {
+        "trades": 107,
+        "pf": 1.0546178168604194,
+        "net": 34.72000000000001,
+        "balance_dd_pct": 4.166481386508107
+      }
+    }
+  },
+  "authority": "RESEARCH_ONLY"
+}

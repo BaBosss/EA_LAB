@@ -1,0 +1,21 @@
+{
+  "schema": "ea-lab-mechanical-acceptance/1",
+  "hypothesis_id": "HYP-B15-EDGE-ABL-01",
+  "overall": "PASS",
+  "runtime": "MT5-lane3 / D:\\Meta 5c",
+  "expert": "EALabTpl\\Boss_15_ST03",
+  "build_receipt": "br-58971201f0774c47bf5e6f423c47e1bc",
+  "ex5_sha256": "f3dd7c5f2e2c1eb5a9f30a95a120e8977aa071e86f5ea4d9929e84f74940803a",
+  "set_sha256": "df109ecc42016bf318f7f3de1bc936b00d9abe258ec58086f9db2152e5a295f8",
+  "config_fingerprint": "d3d548b77d96037fbee8a483bd25206f2d323600f2e00cf8ad012c7f566c2456",
+  "surface": "FULL 157/157",
+  "model": 1,
+  "optimization": 0,
+  "forward": 0,
+  "deposit": 10000,
+  "currency": "USD",
+  "leverage": "1:100",
+  "MAIN": {"fresh": true, "truncated": false, "full_window": true, "history_quality": "99%", "report_sha256": "e38877b96ccbb9fe8adc0a0ed0bdccb75a467c3b4c03de71449c83e8bf4d2d20"},
+  "BWD": {"fresh": true, "truncated": false, "full_window": true, "history_quality": "99%", "report_sha256": "3cd154484e465a52604dac8df14575f976b06c2225b30d997f91b2d74755d49d"},
+  "holdout": "UNSPENT"
+}

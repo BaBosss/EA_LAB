@@ -1,0 +1,8 @@
+B15 source/binary reconciliation
+accepted build source ref: cf32ba8d32a8292e8f7b5ad2ef766e3442b20125
+preregistration head: 87ef6cea1506c08a41b1c7d84a45112797139071
+paths checked: ea_template/Boss_15_ST03.mq5 + ea_template/core
+result: NO_RELEVANT_BYTE_CHANGES
+source SHA256: e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f
+EX5 SHA256: f3dd7c5f2e2c1eb5a9f30a95a120e8977aa071e86f5ea4d9929e84f74940803a
+mtime-only stale warning is therefore reconciled as a worktree materialization false positive.
