@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="320">
+<text x="20" y="25" font-size="17">B16 GBPUSD SELL timeframe portability — full-window net</text>
+<line x1="40" y1="155" x2="810" y2="155" stroke="black"/>
+<rect x="80" y="113.4" width="70" height="41.6" fill="gray"/>
+<text x="80" y="280" font-size="12">M15 MAIN</text>
+<text x="80" y="300" font-size="12">+118.80</text>
+<rect x="190" y="155.0" width="70" height="31.4" fill="gray"/>
+<text x="190" y="280" font-size="12">M15 BWD</text>
+<text x="190" y="300" font-size="12">-89.73</text>
+<rect x="300" y="155.0" width="70" height="24.7" fill="gray"/>
+<text x="300" y="280" font-size="12">H1 MAIN</text>
+<text x="300" y="300" font-size="12">-70.55</text>
+<rect x="410" y="71.0" width="70" height="84.0" fill="gray"/>
+<text x="410" y="280" font-size="12">H1 BWD</text>
+<text x="410" y="300" font-size="12">+240.00</text>
+<rect x="520" y="55.9" width="70" height="99.1" fill="gray"/>
+<text x="520" y="280" font-size="12">H4 MAIN</text>
+<text x="520" y="300" font-size="12">+283.20</text>
+<rect x="630" y="60.9" width="70" height="94.1" fill="gray"/>
+<text x="630" y="280" font-size="12">H4 BWD</text>
+<text x="630" y="300" font-size="12">+268.97</text>
+<text x="20" y="315" font-size="10">VISUAL_ONLY_NO_AUTHORITY; H4 is accepted prior evidence, H1/M15 are Step-5 cells.</text>
+</svg>
