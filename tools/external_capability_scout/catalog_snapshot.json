@@ -1,0 +1,838 @@
+{
+  "schema_version": 1,
+  "upstream_url": "https://github.com/LLMQuant/awesome-trading-agents",
+  "upstream_sha": "a5bcbc6a192386e7c625976082715dabed9bfb26",
+  "retrieval_date": "2026-08-30",
+  "license": "CC0-1.0",
+  "license_sha256": "f4e7f373b9b996950337e8d41a4a2939c2d90b7725e9baf3d5084a22717ad328",
+  "readme_sha256": "7cb2335c2e02895ae597c36a760cc00e098f6eff26f00a30ce5d5668dcd63f1a",
+  "entry_count": 118,
+  "entries": [
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "TauricResearch/TradingAgents",
+      "url": "https://github.com/TauricResearch/TradingAgents",
+      "description": "Multi-agent trading framework where analysts, bull/bear researchers, a trader, risk control, and a portfolio manager debate before making a decision; built with LangGraph."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "hsliuping/TradingAgents-CN",
+      "url": "https://github.com/hsliuping/TradingAgents-CN",
+      "description": "Chinese-localised TradingAgents fork tuned for A-shares; Tushare / AkShare data sources + Chinese-language reports + A-share regulatory context. *(← fork of TauricResearch/TradingAgents.)*"
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "KylinMountain/TradingAgents-AShare",
+      "url": "https://github.com/KylinMountain/TradingAgents-AShare",
+      "description": "A-share rewrite; 15 agents + visual UI + OpenClaw / Claude Code integration + one-click Docker deploy. *(← fork of TauricResearch/TradingAgents.)*"
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "oficcejo/aiagents-stock",
+      "url": "https://github.com/oficcejo/aiagents-stock",
+      "description": "A-share multi-agent analyst team with dragon-and-tiger list tracking, sector-rotation alerts, and a miniqmt execution hook. *(← inspired by TradingAgents.)*"
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "HKUDS/AI-Trader",
+      "url": "https://github.com/HKUDS/AI-Trader",
+      "description": "\"Agent-native trading platform\"; any AI agent (OpenClaw / nanobot / Claude Code / Codex / Cursor) registers via SKILL.md and trades live on AI4trade.ai; multi-asset + copy-trading + cross-platform sync."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "ValueCell-ai/valuecell",
+      "url": "https://github.com/ValueCell-ai/valuecell",
+      "description": "Community finance workspace with research, strategy, and news agents; connects to Binance, OKX, and Hyperliquid; includes macOS and Windows desktop apps."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "AI4Finance-Foundation/FinRobot",
+      "url": "https://github.com/AI4Finance-Foundation/FinRobot",
+      "description": "AI4Finance Foundation's open-source finance AI agent platform; useful for academic-style stock research, market forecasting, and report generation."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "HKUDS/Vibe-Trading",
+      "url": "https://github.com/HKUDS/Vibe-Trading",
+      "description": "Personal multi-agent finance workspace from HKUDS Lab; bundles Skills, MCP tools, and swarm presets across A-shares, HK, US, crypto, futures, and forex."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "brokermr810/QuantDinger",
+      "url": "https://github.com/brokermr810/QuantDinger",
+      "description": "Open-source AI quant-trading platform; combines multi-agent research, backtesting, live trading, and multi-exchange routing."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "Lumiwealth/lumibot",
+      "url": "https://github.com/Lumiwealth/lumibot",
+      "description": "Backtestable AI trading-agent/team runtime with research, debate, risk, and memory in one backtest/paper/live strategy loop."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "The-Swarm-Corporation/AutoHedge",
+      "url": "https://github.com/The-Swarm-Corporation/AutoHedge",
+      "description": "\"Spin up an autonomous hedge fund in minutes\"; applies the Swarms framework to market analysis, risk, and execution; CLI / SDK first."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "olaxbt/ai-market-maker",
+      "url": "https://github.com/olaxbt/ai-market-maker",
+      "description": "Agentic crypto hedge-fund stack with specialist agents, Risk Guard, backtests, paper trading, and OpenClaw packaging."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "ginlix-ai/LangAlpha",
+      "url": "https://github.com/ginlix-ai/LangAlpha",
+      "description": "\"Claude Code for finance\"; LangChain + LangGraph multi-agent investment workbench; integrates Agents · MCPs · Skills in one repo."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "ygwyg/MAHORAGA",
+      "url": "https://github.com/ygwyg/MAHORAGA",
+      "description": "TypeScript crypto-trading agent focused on social sentiment analysis and adaptive learning; useful if you want a TypeScript implementation."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "FinStep-AI/ContestTrade",
+      "url": "https://github.com/FinStep-AI/ContestTrade",
+      "description": "Multi-agent trading system where agents compete internally before one view is selected for the final decision."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "51bitquant/ai-hedge-fund-crypto",
+      "url": "https://github.com/51bitquant/ai-hedge-fund-crypto",
+      "description": "Crypto-focused fork of virattt/ai-hedge-fund; multi-timeframe analysis + strategy ensemble + crypto market-data access."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "dragon1086/prism-insight",
+      "url": "https://github.com/dragon1086/prism-insight",
+      "description": "Korean-market-focused multi-agent stock-analysis and trading system; built-in MCP integration."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "Tomortec/CryptoTradingAgents",
+      "url": "https://github.com/Tomortec/CryptoTradingAgents",
+      "description": "Multi-agent LLM crypto-trading framework; applies the TradingAgents idea to crypto trading."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "EthanAlgoX/LLM-TradeBot",
+      "url": "https://github.com/EthanAlgoX/LLM-TradeBot",
+      "description": "Multi-agent crypto-trading system; Binance real-time execution + adaptive strategy switching; combines ideas from TradingAgents and nof1.ai."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "huygiatrng/AlpacaTradingAgent",
+      "url": "https://github.com/huygiatrng/AlpacaTradingAgent",
+      "description": "TradingAgents-style multi-agent framework connected to Alpaca for US-equity trading. *(→ pairs with: [alpacahq/alpaca-mcp-server](#mcps-alpaca).)*"
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "Yaolinwang/AITD",
+      "url": "https://github.com/Yaolinwang/AITD",
+      "description": "\"AI Trading Agent for Everyone\"; multi-agent project designed for retail users."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "flash131307/multi-agent-investment",
+      "url": "https://github.com/flash131307/multi-agent-investment",
+      "description": "Multi-agent equity-research system that lets LLM agents gather evidence, then uses a separate math layer to produce BUY / NEUTRAL / SELL."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "YichengYang-Ethan/oracle3",
+      "url": "https://github.com/YichengYang-Ethan/oracle3",
+      "description": "Multi-venue (Kalshi / Polymarket / Solana) prediction-market autonomous agent; Wang-Transform pricing + Kelly criterion + cross-venue arbitrage."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "Ganador1/FenixAI_tradingBot",
+      "url": "https://github.com/Ganador1/FenixAI_tradingBot",
+      "description": "LangGraph + Ollama + CrewAI autonomous trading agent; local-LLM first."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "ryan-yuuu/crypto-trading-arena",
+      "url": "https://github.com/ryan-yuuu/crypto-trading-arena",
+      "description": "Open-source crypto-trading arena; Claude / Claude Code agents compete head-to-head on live crypto data."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "FareedKhan-dev/multi-agent-trading-system",
+      "url": "https://github.com/FareedKhan-dev/multi-agent-trading-system",
+      "description": "\"Deep Thinking Trading System\" tutorial implementation; beginner-friendly multi-agent example design."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "Tanglumy/Finance-Bro",
+      "url": "https://github.com/Tanglumy/Finance-Bro",
+      "description": "Persona-styled finance \"bro\" trading-and-investment agent; uses the persona as the main interaction style."
+    },
+    {
+      "category": "Agents",
+      "section": "Multi-agent trading systems",
+      "name": "liangdabiao/autogen-financial-analysis",
+      "url": "https://github.com/liangdabiao/autogen-financial-analysis",
+      "description": "Microsoft AutoGen-based multi-agent financial-analysis system; VaR / Monte Carlo / factor models / visualization integration."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "virattt/ai-hedge-fund",
+      "url": "https://github.com/virattt/ai-hedge-fund",
+      "description": "Widely forked LLM-driven equity-trading repo; analyst personas (Buffett / Munger / Cathie Wood) propose, the portfolio manager decides."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "TraderAlice/OpenAlice",
+      "url": "https://github.com/TraderAlice/OpenAlice",
+      "description": "\"Your one-person Wall Street\"; single agent covering research → entry → hold → exit; Claude Agent SDK + Trading-as-Git approval workflow + cross-asset UTA account design."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "NoFxAiOS/nofx",
+      "url": "https://github.com/NoFxAiOS/nofx",
+      "description": "Self-hosted LLM trading terminal; models decide and explain while a Go runtime enforces hard risk limits across nine exchanges."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "chrisworsey55/atlas-gic",
+      "url": "https://github.com/chrisworsey55/atlas-gic",
+      "description": "General Intelligence Capital's self-improving trading agent; focuses on continuous self-research rather than agent debate."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "Gajesh2007/ai-trading-agent",
+      "url": "https://github.com/Gajesh2007/ai-trading-agent",
+      "description": "AI trading agent on Hyperliquid; single-LLM-driven execution; shows direct Hyperliquid integration."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "kweinmeister/agentic-trading",
+      "url": "https://github.com/kweinmeister/agentic-trading",
+      "description": "Trading-workflow example built on Google ADK + A2A interop; an alternative implementation outside LangGraph."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "danilobatson/ai-trading-agent-gemini",
+      "url": "https://github.com/danilobatson/ai-trading-agent-gemini",
+      "description": "LunarCrush social-sentiment + Google Gemini crypto-trading agent; built with Next.js 15, Inngest, and Supabase."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "alsk1992/CloddsBot",
+      "url": "https://github.com/alsk1992/CloddsBot",
+      "description": "Open-source AI trader across 1000+ markets, including Polymarket, Kalshi, Binance, Hyperliquid, Solana, and several EVM chains."
+    },
+    {
+      "category": "Agents",
+      "section": "Single-agent end-to-end traders",
+      "name": "hkirat/ai-trading-agent",
+      "url": "https://github.com/hkirat/ai-trading-agent",
+      "description": "\"Trade using LLMs\"; minimal TypeScript demo from Harkirat Singh; common on-ramp for TS learners."
+    },
+    {
+      "category": "Agents",
+      "section": "Research / equity-research copilots",
+      "name": "ZhuLinsen/daily_stock_analysis",
+      "url": "https://github.com/ZhuLinsen/daily_stock_analysis",
+      "description": "Daily LLM-driven stock-screening dashboard; multi-channel push (WeChat / Feishu / Telegram / Discord / Slack / email); 11 built-in strategies + agent stock-Q&A; deploy-by-GitHub-Actions."
+    },
+    {
+      "category": "Agents",
+      "section": "Research / equity-research copilots",
+      "name": "AmadeusGB/alpha-arena",
+      "url": "https://github.com/AmadeusGB/alpha-arena",
+      "description": "Live AI-agent competition and research platform; uses real-market conditions to improve agents."
+    },
+    {
+      "category": "Agents",
+      "section": "Research / equity-research copilots",
+      "name": "TNT-Likely/PanWatch",
+      "url": "https://github.com/TNT-Likely/PanWatch",
+      "description": "PanWatch / \"盯盘侠\"; AI-driven stock-monitoring assistant; multi-account positions + agent analysis + PWA mobile."
+    },
+    {
+      "category": "Agents",
+      "section": "Research / equity-research copilots",
+      "name": "YoungCan-Wang/WyckoffTradingAgent",
+      "url": "https://github.com/YoungCan-Wang/WyckoffTradingAgent",
+      "description": "AI stock-analysis assistant for A/HK/US equities; uses Wyckoff price-volume logic and ships CLI, web, and MCP tools."
+    },
+    {
+      "category": "Agents",
+      "section": "Research / equity-research copilots",
+      "name": "HKUSTDial/DeepEar",
+      "url": "https://github.com/HKUSTDial/DeepEar",
+      "description": "DeepEar / \"顺风耳\"; HKUSTDial's open-source deep-research and signal-tracking framework; joint multimodal news + price tracking."
+    },
+    {
+      "category": "Agents",
+      "section": "Research / equity-research copilots",
+      "name": "kamathhrishi/finance-agent",
+      "url": "https://github.com/kamathhrishi/finance-agent",
+      "description": "Earnings-call / SEC-filing / news Q&A agent; clean RAG-over-disclosures implementation."
+    },
+    {
+      "category": "Agents",
+      "section": "Real-money / competition experiments",
+      "name": "LuckyOne7777/LLM-Trading-Lab",
+      "url": "https://github.com/LuckyOne7777/LLM-Trading-Lab",
+      "description": "Real-money six-month experiment; ChatGPT manages a real US-equity micro-cap portfolio under strict pre-defined rules; ships with a 40-page evaluation paper."
+    },
+    {
+      "category": "Agents",
+      "section": "Real-money / competition experiments",
+      "name": "195440/nof1.ai",
+      "url": "https://github.com/195440/nof1.ai",
+      "description": "Open-source autonomous AI trading agent from the nof1 family; TypeScript port."
+    },
+    {
+      "category": "Agents",
+      "section": "Real-money / competition experiments",
+      "name": "oficcejo/alpha-arena-okx",
+      "url": "https://github.com/oficcejo/alpha-arena-okx",
+      "description": "OKX re-implementation of nof1.ai's Alpha Arena; DeepSeek / Qwen3-Max as decision-makers; useful when comparing Chinese-language nof1 projects."
+    },
+    {
+      "category": "Agents",
+      "section": "Real-money / competition experiments",
+      "name": "wquguru/nof0",
+      "url": "https://github.com/wquguru/nof0",
+      "description": "nof1.ai Alpha Arena reimplementation with Go backend, Next.js UI, Hyperliquid, LLM executors, backtests, leaderboards."
+    },
+    {
+      "category": "Agents",
+      "section": "Prediction-market specialists",
+      "name": "ryanfrigo/kalshi-ai-trading-bot",
+      "url": "https://github.com/ryanfrigo/kalshi-ai-trading-bot",
+      "description": "Grok-4-driven Kalshi prediction-market multi-agent trading system; portfolio optimization + 5-gate risk engine."
+    },
+    {
+      "category": "Agents",
+      "section": "Prediction-market specialists",
+      "name": "OctagonAI/kalshi-trading-bot-cli",
+      "url": "https://github.com/OctagonAI/kalshi-trading-bot-cli",
+      "description": "AI-native CLI for Kalshi and Polymarket; researches an event, estimates probability, then compares it with the live order book."
+    },
+    {
+      "category": "Agents",
+      "section": "Prediction-market specialists",
+      "name": "jvnhaoWen/PolyAgent",
+      "url": "https://github.com/jvnhaoWen/PolyAgent",
+      "description": "Polymarket-focused multi-skill trading agent; focused single-venue Polymarket LLM agent."
+    },
+    {
+      "category": "Agents",
+      "section": "Benchmarks & evaluations",
+      "name": "ulab-uiuc/live-trade-bench",
+      "url": "https://github.com/ulab-uiuc/live-trade-bench",
+      "description": "Live-market evaluation for trading agents; UIUC ULab's live-eval benchmark; distinct from backtest-only benchmarks."
+    },
+    {
+      "category": "Agents",
+      "section": "Benchmarks & evaluations",
+      "name": "Open-Finance-Lab/AgenticTrading",
+      "url": "https://github.com/Open-Finance-Lab/AgenticTrading",
+      "description": "Open-Finance-Lab's academic framework + dataset for agent-trading research."
+    },
+    {
+      "category": "Agents",
+      "section": "Benchmarks & evaluations",
+      "name": "vals-ai/finance-agent",
+      "url": "https://github.com/vals-ai/finance-agent",
+      "description": "Finance-agent benchmark / task suite from vals-ai."
+    },
+    {
+      "category": "Agents",
+      "section": "Benchmarks & evaluations",
+      "name": "HKUSTDial/DeepFund",
+      "url": "https://github.com/HKUSTDial/DeepFund",
+      "description": "Multi-agent fund-investment benchmark; LLM analysts evaluate stocks in a unified trading arena with leaderboard."
+    },
+    {
+      "category": "Agents",
+      "section": "Strategy coding / self-improving agents",
+      "name": "HammerGPT/Hyper-Alpha-Arena",
+      "url": "https://github.com/HammerGPT/Hyper-Alpha-Arena",
+      "description": "LLM factor-research and perpetuals platform; mines and validates 86 factors with IC / ICIR, decay, backtests, and attribution."
+    },
+    {
+      "category": "Agents",
+      "section": "Strategy coding / self-improving agents",
+      "name": "paperswithbacktest/pwb-alphaevolve",
+      "url": "https://github.com/paperswithbacktest/pwb-alphaevolve",
+      "description": "DeepMind AlphaEvolve-style agent that uses an LLM to write and improve trading strategies for backtesting."
+    },
+    {
+      "category": "Agents",
+      "section": "Strategy coding / self-improving agents",
+      "name": "Miasyster/QuantGPT",
+      "url": "https://github.com/Miasyster/QuantGPT",
+      "description": "Agent-driven A-share factor research engine; 8 MCP tools span hypothesis → backtest → score → WQ BRAIN submission. *(Distinct from rnikitin/QuantGPT.)*"
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "LLMQuant/data-mcp",
+      "url": "https://github.com/LLMQuant/data-mcp",
+      "description": "LLMQuant Data's official MCP server, positioned as the \"knowledge harness for AI-native finance\"; covers semantic search over a 50k+ quant wiki and 1.2k+ research papers, US equity OHLCV + dividends/splits, crypto klines & snapshots (Binance Spot), 50+ curated macro indicators (FRED, etc.), SEC 10-K/10-Q full-text browse & read, and three-way 13F institutional holdings queries (manager → holdings / ticker → holders / top managers)."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "financial-datasets/mcp-server",
+      "url": "https://github.com/financial-datasets/mcp-server",
+      "description": "Financial Datasets' first-party MCP; US-equity + crypto fundamentals (3 statements + ratios) + prices + news."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "6551Team/opennews-mcp",
+      "url": "https://github.com/6551Team/opennews-mcp",
+      "description": "84+ news-source aggregation (Bloomberg / Reuters / FT / CoinDesk and more) + AI impact-scoring / trading-signal + WebSocket streaming."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "BlockRunAI/blockrun-mcp",
+      "url": "https://github.com/BlockRunAI/blockrun-mcp",
+      "description": "Real-time data MCP with pay-per-call x402 payments; covers search, research, quotes, crypto, X, and Twitter."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "guangxiangdebizi/FinanceMCP",
+      "url": "https://github.com/guangxiangdebizi/FinanceMCP",
+      "description": "Tushare + Binance MCP spanning A-shares / HK / US / funds / bonds / macro / stablecoins / crypto / financial news."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "chengzuopeng/stock-sdk",
+      "url": "https://github.com/chengzuopeng/stock-sdk",
+      "description": "Zero-dependency TypeScript stock-data SDK with built-in MCP for A/H/US equities and funds via browser, Node.js, CLI, Claude Code, or Codex."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "saidsurucu/borsa-mcp",
+      "url": "https://github.com/saidsurucu/borsa-mcp",
+      "description": "Turkish BIST + US-equity + fund data MCP serving regional markets outside China and the US."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "aahl/mcp-aktools",
+      "url": "https://github.com/aahl/mcp-aktools",
+      "description": "Stock and crypto data MCP built on akshare / aktools; broad market-data coverage through the AKShare ecosystem."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "elsejj/mcp-cn-a-stock",
+      "url": "https://github.com/elsejj/mcp-cn-a-stock",
+      "description": "A-share-only data MCP; single-market deep coverage instead of multi-source aggregation."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "massive-com/mcp_massive",
+      "url": "https://github.com/massive-com/mcp_massive",
+      "description": "Massive (formerly Polygon.io) first-party MCP; multi-asset market-data coverage."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "Alex2Yang97/yahoo-finance-mcp",
+      "url": "https://github.com/Alex2Yang97/yahoo-finance-mcp",
+      "description": "Full-feature Yahoo Finance MCP; historical prices + fundamentals + option chains + news; Yahoo wrapper."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "stefanoamorelli/sec-edgar-mcp",
+      "url": "https://github.com/stefanoamorelli/sec-edgar-mcp",
+      "description": "SEC EDGAR MCP; 10-K / 10-Q / 8-K / insider trades / filings reader; common filings entry across awesome-lists."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "zwldarren/akshare-one-mcp",
+      "url": "https://github.com/zwldarren/akshare-one-mcp",
+      "description": "A-share data MCP backed by the AKShare-One normalizer; an alternative implementation within the AKShare ecosystem."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "imbenrabi/Financial-Modeling-Prep-MCP-Server",
+      "url": "https://github.com/imbenrabi/Financial-Modeling-Prep-MCP-Server",
+      "description": "FMP MCP with 250+ tools for fundamentals, market intelligence, and ETFs."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "narumiruna/yfinance-mcp",
+      "url": "https://github.com/narumiruna/yfinance-mcp",
+      "description": "Minimal yfinance MCP; a lightweight Yahoo Finance data option."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "OctagonAI/octagon-mcp-server",
+      "url": "https://github.com/OctagonAI/octagon-mcp-server",
+      "description": "MCP for filings, earnings calls, financials, stock data, private-market deals, and web research."
+    },
+    {
+      "category": "MCPs",
+      "section": "Market data / data providers",
+      "name": "daniel3303/Equibles",
+      "url": "https://github.com/daniel3303/Equibles",
+      "description": "Self-hosted finance data hub; syncs public SEC/FRED/Yahoo/FINRA/CFTC/CBOE data to PostgreSQL and serves it via MCP."
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "alpacahq/alpaca-mcp-server",
+      "url": "https://github.com/alpacahq/alpaca-mcp-server",
+      "description": "Alpaca's official MCP for market data plus paper or live trading in equities, ETFs, options, and crypto. *(← used by: [tradermonty/claude-trading-skills](#skills-claude-trading-skills), [staskh/trading_skills](#skills-trading-skills), [huygiatrng/AlpacaTradingAgent](#agents-tradingagents).)*"
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "krakenfx/kraken-cli",
+      "url": "https://github.com/krakenfx/kraken-cli",
+      "description": "Kraken's official AI-native CLI with an embedded MCP; covers crypto, xStocks, forex, derivatives, paper trading, and bundled SKILL.md packs."
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "koreainvestment/open-trading-api",
+      "url": "https://github.com/koreainvestment/open-trading-api",
+      "description": "Korea Investment & Securities official SDK; includes a Trading MCP, strategy builder, and backtester."
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "okx/agent-trade-kit",
+      "url": "https://github.com/okx/agent-trade-kit",
+      "description": "OKX official MCP for spot, perpetuals, futures, options, and grid bots."
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "ariadng/metatrader-mcp-server",
+      "url": "https://github.com/ariadng/metatrader-mcp-server",
+      "description": "Representative MT5 MCP; lets LLMs trade through any MetaTrader 5 broker; MCP connector for a major retail-forex platform."
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "Qoyyuum/mcp-metatrader5-server",
+      "url": "https://github.com/Qoyyuum/mcp-metatrader5-server",
+      "description": "Alternative MT5 MCP for quotes, trading, and history; uses MCP resources as well as tools."
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "rcontesti/IB_MCP",
+      "url": "https://github.com/rcontesti/IB_MCP",
+      "description": "Representative IBKR MCP; exposes Interactive Brokers TWS / Gateway as MCP tools; aimed at professional-broker workflows."
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "code-rabi/interactive-brokers-mcp",
+      "url": "https://github.com/code-rabi/interactive-brokers-mcp",
+      "description": "Alternative IBKR MCP in TS / JS; complements rcontesti's Python build."
+    },
+    {
+      "category": "MCPs",
+      "section": "Brokerage / exchange trading",
+      "name": "taylorwilsdon/quantconnect-mcp",
+      "url": "https://github.com/taylorwilsdon/quantconnect-mcp",
+      "description": "Independent QuantConnect MCP focused on strategy research and workflow automation."
+    },
+    {
+      "category": "MCPs",
+      "section": "Research tools / analysis",
+      "name": "wshobson/maverick-mcp",
+      "url": "https://github.com/wshobson/maverick-mcp",
+      "description": "Personal stock-analysis MCP for fundamentals, technical indicators, and screening."
+    },
+    {
+      "category": "MCPs",
+      "section": "Research tools / analysis",
+      "name": "mnemox-ai/tradememory-protocol",
+      "url": "https://github.com/mnemox-ai/tradememory-protocol",
+      "description": "Memory MCP for AI trading agents; records decision rationale, outcomes, and review evidence with 17 MCP tools and 35+ REST endpoints."
+    },
+    {
+      "category": "MCPs",
+      "section": "Research tools / analysis",
+      "name": "guangxiangdebizi/TradingAgents-MCPmode",
+      "url": "https://github.com/guangxiangdebizi/TradingAgents-MCPmode",
+      "description": "TradingAgents refactored as MCP tools for multi-agent equity research."
+    },
+    {
+      "category": "MCPs",
+      "section": "Research tools / analysis",
+      "name": "QuantMLResearch/AI-Kline",
+      "url": "https://github.com/QuantMLResearch/AI-Kline",
+      "description": "Stock-analysis tool combining classic technical analysis, AI prediction, and MCP access."
+    },
+    {
+      "category": "MCPs",
+      "section": "Research tools / analysis",
+      "name": "wbsu2003/stock-scanner-mcp",
+      "url": "https://github.com/wbsu2003/stock-scanner-mcp",
+      "description": "Stock scanner MCP for prices, scoring, technical reports, and AI summaries."
+    },
+    {
+      "category": "MCPs",
+      "section": "TradingView bridge",
+      "name": "atilaahmettaner/tradingview-mcp",
+      "url": "https://github.com/atilaahmettaner/tradingview-mcp",
+      "description": "30+-tool TradingView MCP; 6 backtest strategies + Reddit sentiment + news + multi-exchange; many tools work without an API key."
+    },
+    {
+      "category": "MCPs",
+      "section": "Prediction markets",
+      "name": "caiovicentino/polymarket-mcp-server",
+      "url": "https://github.com/caiovicentino/polymarket-mcp-server",
+      "description": "45-tool Polymarket MCP; real-time monitoring and explicit order-safety guards."
+    },
+    {
+      "category": "MCPs",
+      "section": "Prediction markets",
+      "name": "agent-next/polymarket-paper-trader",
+      "url": "https://github.com/agent-next/polymarket-paper-trader",
+      "description": "Polymarket paper-trading simulator; MCP server + real-time order book + strategy backtesting; built for AI agents."
+    },
+    {
+      "category": "MCPs",
+      "section": "Strategy / backtesting platforms",
+      "name": "whchien/ai-trader",
+      "url": "https://github.com/whchien/ai-trader",
+      "description": "Backtrader-based framework with 20+ strategies, multi-market support, CLI tools, and an embedded MCP for agent workflows."
+    },
+    {
+      "category": "Skills",
+      "section": "Equity research",
+      "name": "tradermonty/claude-trading-skills",
+      "url": "https://github.com/tradermonty/claude-trading-skills",
+      "description": "Large Skill pack for US-equity investors, covering market analysis, breadth, regimes, screening methods, options, Alpaca portfolio management, and research workflows. *(→ pairs with: [alpacahq/alpaca-mcp-server](#mcps-alpaca).)*"
+    },
+    {
+      "category": "Skills",
+      "section": "Equity research",
+      "name": "himself65/finance-skills",
+      "url": "https://github.com/himself65/finance-skills",
+      "description": "Skill pack for multiple asset classes, covering valuation, earnings review, option payoffs, ETF checks, liquidity, social research, and geopolitical-risk analysis."
+    },
+    {
+      "category": "Skills",
+      "section": "Equity research",
+      "name": "xbtlin/ai-berkshire",
+      "url": "https://github.com/xbtlin/ai-berkshire",
+      "description": "Value-investing research framework for Claude Code / Codex; combines four investor playbooks with multi-agent analysis."
+    },
+    {
+      "category": "Skills",
+      "section": "Equity research",
+      "name": "JoelLewis/finance_skills",
+      "url": "https://github.com/JoelLewis/finance_skills",
+      "description": "Claude Code financial-services Skill pack; 84 skills across investment management, compliance, advisory workflows, trading operations, and portfolio reporting."
+    },
+    {
+      "category": "Skills",
+      "section": "Equity research",
+      "name": "quant-sentiment-ai/claude-equity-research",
+      "url": "https://github.com/quant-sentiment-ai/claude-equity-research",
+      "description": "Claude Code research Skill for buy / sell / hold reports using fundamentals, technicals, option flow, insider activity, and sector context."
+    },
+    {
+      "category": "Skills",
+      "section": "Equity research",
+      "name": "monarchjuno/tradingcodex",
+      "url": "https://github.com/monarchjuno/tradingcodex",
+      "description": "Codex-native investment workflow team for research, portfolio work, and trading-oriented analysis."
+    },
+    {
+      "category": "Skills",
+      "section": "Equity research",
+      "name": "RKiding/Awesome-finance-skills",
+      "url": "https://github.com/RKiding/Awesome-finance-skills",
+      "description": "Alphaear Skill suite for news, stocks, sentiment, prediction, signal tracking, logic visualization, reporting, and search."
+    },
+    {
+      "category": "Skills",
+      "section": "Crypto / DeFi / on-chain",
+      "name": "okx/onchainos-skills",
+      "url": "https://github.com/okx/onchainos-skills",
+      "description": "OKX official Skills for OnchainOS, covering wallets, token discovery, quotes, DEX swaps, and transaction broadcasting."
+    },
+    {
+      "category": "Skills",
+      "section": "Crypto / DeFi / on-chain",
+      "name": "okx/agent-skills",
+      "url": "https://github.com/okx/agent-skills",
+      "description": "OKX bilingual Skills repo with contribution, review, and security guidance; companion to onchainos-skills."
+    },
+    {
+      "category": "Skills",
+      "section": "Crypto / DeFi / on-chain",
+      "name": "GMGNAI/gmgn-skills",
+      "url": "https://github.com/GMGNAI/gmgn-skills",
+      "description": "GMGN Agent Skills for querying tokens, wallets, and market data, and executing on-chain trades across Solana, BSC, and Base."
+    },
+    {
+      "category": "Skills",
+      "section": "Crypto / DeFi / on-chain",
+      "name": "Polymarket/agent-skills",
+      "url": "https://github.com/Polymarket/agent-skills",
+      "description": "First-party Polymarket Agent Skill for auth, orders, market data, WebSockets, bridging, and gasless flows."
+    },
+    {
+      "category": "Skills",
+      "section": "Strategy coding & backtesting",
+      "name": "marketcalls/vectorbt-backtesting-skills",
+      "url": "https://github.com/marketcalls/vectorbt-backtesting-skills",
+      "description": "Skill for vectorbt backtesting with setup, backtest, optimization, quick stats, strategy comparison, and reusable strategy templates."
+    },
+    {
+      "category": "Skills",
+      "section": "Strategy coding & backtesting",
+      "name": "MobiusQuant/OpenMobius-skill",
+      "url": "https://github.com/MobiusQuant/OpenMobius-skill",
+      "description": "ICT / SMC trading-knowledge Skill for Claude Code, Codex, OpenClaw, and Hermes; includes curated knowledge cards, real-time market data, indicators, and chart generation."
+    },
+    {
+      "category": "Skills",
+      "section": "Strategy coding & backtesting",
+      "name": "Superior-Trade/superior-skills",
+      "url": "https://github.com/Superior-Trade/superior-skills",
+      "description": "Agent Skills and tool schemas for building, backtesting, and deploying Hyperliquid trading strategies."
+    },
+    {
+      "category": "Skills",
+      "section": "Brokerage execution & portfolio",
+      "name": "staskh/trading_skills",
+      "url": "https://github.com/staskh/trading_skills",
+      "description": "Skill pack for option traders, covering market data, analysis, scanners, portfolio work, reports, IBKR integration, and MCP tools. *(→ pairs with: [alpacahq/alpaca-mcp-server](#mcps-alpaca), [rcontesti/IB_MCP](https://github.com/rcontesti/IB_MCP).)*"
+    },
+    {
+      "category": "Skills",
+      "section": "Brokerage execution & portfolio",
+      "name": "koreal6803/finlab-ai",
+      "url": "https://github.com/koreal6803/finlab-ai",
+      "description": "Taiwan-equity CLI Skill for strategy discovery, backtesting, and feature engineering with FinLab data and ready-made strategy examples."
+    },
+    {
+      "category": "Skills",
+      "section": "Brokerage execution & portfolio",
+      "name": "second-state/fintool",
+      "url": "https://github.com/second-state/fintool",
+      "description": "Rust CLI suite for agentic trading and market intelligence; exchange-specific tools for Hyperliquid / Binance / Coinbase / OKX / Polymarket plus quotes, news, SEC filings, and backtests."
+    },
+    {
+      "category": "Resources",
+      "section": "Papers",
+      "name": "LLM-Trading-Lab: Six-Month Real-Money ChatGPT Micro-Cap Experiment",
+      "url": "https://github.com/LuckyOne7777/LLM-Trading-Lab",
+      "description": "Lucky One, 2025; ships with a 40-page evaluation paper. Forward-only audit of ChatGPT managing a real US-equity micro-cap portfolio for six months under strict pre-defined rules. [paper / repo](https://github.com/LuckyOne7777/LLM-Trading-Lab) · [code](#agents-llm-trading-lab)"
+    },
+    {
+      "category": "Resources",
+      "section": "Learn",
+      "name": "Tauric Research GitHub Org",
+      "url": "https://github.com/TauricResearch",
+      "description": "Tauric Research, ongoing 2024–2026. Official org behind the TradingAgents framework; public README / docs / companion technical reports (arXiv 2412.20138 / 2509.11420); a good place to learn how multi-agent trading systems are built. [link](https://github.com/TauricResearch)"
+    },
+    {
+      "category": "Resources",
+      "section": "Learn",
+      "name": "AI4Finance Foundation GitHub Org",
+      "url": "https://github.com/AI4Finance-Foundation",
+      "description": "AI4Finance Foundation, ongoing 2022–2026. Official org behind the FinRobot / FinGPT / FinRL line; ProjectShare / tutorial notebooks / paper companion code; a good place to learn academic finance-AI agents. [link](https://github.com/AI4Finance-Foundation)"
+    },
+    {
+      "category": "Related awesome lists",
+      "section": "Learn",
+      "name": "DataArcTech/Awesome-FinLLMs",
+      "url": "https://github.com/DataArcTech/Awesome-FinLLMs",
+      "description": "Comprehensive finance-LLM paper / model / dataset list (complementary to this list — they cover base models and papers, we cover the application-layer agents · MCPs · Skills)."
+    },
+    {
+      "category": "Related awesome lists",
+      "section": "Learn",
+      "name": "Tom-roujiang/Awesome-LLM-Quantitative-Trading-Papers",
+      "url": "https://github.com/Tom-roujiang/Awesome-LLM-Quantitative-Trading-Papers",
+      "description": "Curated LLM quantitative-trading paper list; complements this repo's application-layer focus with broader research coverage."
+    },
+    {
+      "category": "Related awesome lists",
+      "section": "Learn",
+      "name": "punkpeye/awesome-mcp-servers",
+      "url": "https://github.com/punkpeye/awesome-mcp-servers",
+      "description": "Broad MCP server directory; use this list when you only want trading, research, data, and execution tools."
+    },
+    {
+      "category": "Related awesome lists",
+      "section": "Learn",
+      "name": "georgezouq/awesome-ai-in-finance",
+      "url": "https://github.com/georgezouq/awesome-ai-in-finance",
+      "description": "Traditional AI-in-finance list for deep learning, reinforcement learning, and time-series work."
+    },
+    {
+      "category": "Related awesome lists",
+      "section": "Learn",
+      "name": "wilsonfreitas/awesome-quant",
+      "url": "https://github.com/wilsonfreitas/awesome-quant",
+      "description": "Classical quant-library list; useful, but not the focus here."
+    },
+    {
+      "category": "Related awesome lists",
+      "section": "Learn",
+      "name": "wangzhe3224/awesome-systematic-trading",
+      "url": "https://github.com/wangzhe3224/awesome-systematic-trading",
+      "description": "Systematic-trading list for the broader non-agent trading tools."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "upstream_url": "https://github.com/ltjed/freephdlabor",
+  "upstream_sha": "b8a9ab1a54db8c0502dc3a61dcc3c1fd13c65d5a",
+  "retrieval_date": "2026-08-30",
+  "license": "MIT",
+  "license_sha256": "e7458599e0a642b0000e4410f2234735580e29eb68ffce96844978f100e18dc6",
+  "local_mirror": "D:\\EA_LAB_CONTROL\\external\\20260830\\freephdlabor",
+  "reuse_mode": "ARCHITECTURE_REFERENCE_ONLY",
+  "substantial_upstream_code_copied": false,
+  "full_runtime_adopted": false,
+  "patterns_adapted": ["manager-specialist routing", "shared workspace", "resume", "persistent memory", "bounded iteration", "model routing"]
+}

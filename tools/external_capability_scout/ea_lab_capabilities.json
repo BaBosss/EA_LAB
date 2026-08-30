@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "authority": "RESEARCH_ONLY",
+  "entries": [
+    {"capability":"research orchestration","aliases":["research pod","multi agent research"],"current_solution":"EA Research Pod","status":"BUILDING","authority_class":"RESEARCH_ONLY","owner":"docs/research/EA_RESEARCH_POD.md"},
+    {"capability":"backtest execution","aliases":["mt5 backtest","strategy tester","backtesting"],"current_solution":"EA_LAB deterministic MT5 runner","status":"COVERED","authority_class":"RESEARCH_ONLY","owner":"docs/research/EA_RND_PROTOCOL.md"},
+    {"capability":"regime attribution","aliases":["regime analysis","market regime"],"current_solution":"EA_LAB frozen P4 regime framework","status":"PARTIAL","authority_class":"RESEARCH_ONLY","owner":"docs/research/BOSS19_P4_REGIME_ATTRIBUTION_CONTRACT.md"},
+    {"capability":"portfolio attribution","aliases":["portfolio analysis","portfolio reporting"],"current_solution":"portfolio architecture only","status":"SCOUT","authority_class":"RESEARCH_ONLY","owner":"docs/architecture/EA_LAB_PORTFOLIO_CONTROL_ARCHITECTURE_V1.md"},
+    {"capability":"external research data","aliases":["market data","research data","financial data"],"current_solution":"External Intelligence bounded adapter","status":"PARTIAL","authority_class":"RESEARCH_ONLY","owner":"docs/research/EXTERNAL_INTELLIGENCE_INTEGRATION_PLAN.md"},
+    {"capability":"agent evaluation","aliases":["agent benchmark","trading agent benchmark"],"current_solution":"none canonical","status":"SCOUT","authority_class":"RESEARCH_ONLY","owner":"docs/research/EA_LAB_CAPABILITY_SCOUT.md"},
+    {"capability":"broker execution","aliases":["exchange execution","order placement","mt5 mcp","broker mcp"],"current_solution":"not a research capability","status":"BLOCKED_BY_DESIGN","authority_class":"OWNER_HARD_STOP","owner":"AGENTS.md"}
+  ]
+}
