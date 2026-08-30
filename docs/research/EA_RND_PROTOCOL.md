@@ -16,6 +16,7 @@ Canonical neighbors:
 - family experimental history: family Evolution Ledger;
 - reusable research knowledge: `knowledge/*` Second Brain (non-authoritative research layer);
 - raw/accepted evidence: the existing evidence owners referenced by each experiment.
+- end-to-end numbered stage router: `docs/research/EA_CONVEYOR_BELT_PIPELINE.md` (no new authority; this protocol remains the research-method owner).
 
 ## 1. Family / variant lineage
 
