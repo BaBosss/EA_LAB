@@ -38,7 +38,7 @@ if ($failures.Count -eq 0) {
     Assert-True ($manifest.start_url -match 'index\.html#home') 'Manifest start URL must open the report hub home.'
     Assert-True ($manifest.icons.Count -gt 0 -and $manifest.icons[0].src -eq 'icon.svg') 'Manifest must include a local app icon.'
     Assert-True ($app -match 'REPORT_INDEX_URL\s*=\s*["'']\./report_index\.json') 'App must consume the generated root report_index.json first.'
-    Assert-True (-not ($app -match 'fixture/report_index\.json')) 'App must not load fixture data as a production fallback.'
+    Assert-True ($app -match 'FIXTURE_INDEX_URL\s*=\s*["'']\./fixture/report_index\.json') 'Explicit fixture mode must resolve the local fixture index.'
     Assert-True ($app -match 'fixture_only') 'App must visibly distinguish fixture-only data.'
     Assert-True ($app -match 'URLSearchParams' -and $app -match 'get\("fixture"\) === "1"') 'Fixture data must require explicit ?fixture=1 mode.'
     Assert-True (-not ($app -match 'catch\s*\{[^}]*FIXTURE_INDEX_URL')) 'Production report-index failure must not silently fall back to fixture data.'
@@ -80,6 +80,7 @@ if ($failures.Count -eq 0) {
     Assert-True ($css -match '@media \(max-width: 390px\)' -and $css -match 'orientation: landscape') 'CSS must include 390px portrait and landscape handling.'
     Assert-True ($css -match 'min-height: 44px') 'CSS must include practical 44px touch targets.'
     Assert-True ($app -match 'safeRelativeHref' -and $app -match 'full_report') 'Links must be safe relative report links only.'
+    Assert-True ($app -match 'INVENTORY_ONLY' -and $app -match 'const recent = records\.filter') 'Latest/recent must exclude inventory-only records.'
 }
 
 if ($failures.Count -gt 0) {

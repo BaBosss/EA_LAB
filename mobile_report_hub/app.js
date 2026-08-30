@@ -1,6 +1,7 @@
 "use strict";
 
 const REPORT_INDEX_URL = "./report_index.json";
+const FIXTURE_INDEX_URL = "./fixture/report_index.json";
 const MISSING = "UNAVAILABLE";
 let reportIndex;
 let usedCachedData = false;
@@ -116,10 +117,11 @@ function renderHome() {
     return `<article class="count-card"><span>${escapeHtml(name)}</span><strong>${count}</strong></article>`;
   }).join("");
   const blockers = records.filter((record) => String(record.status).toUpperCase() === "BLOCKED" || String(record.research_state).toUpperCase() === "BLOCKED");
+  const recent = records.filter((record) => record.status !== "INVENTORY_ONLY" && valueOf(record.latest_experiment, "UNKNOWN") !== "UNKNOWN").slice(-3).reverse();
 
   app.innerHTML = `<section class="page-heading"><h2>Research at a glance</h2><p>Canonical report data is rendered read-only from report_index.json.</p></section>
     <section class="count-grid" aria-label="EA counts">${counts}</section>
-    <section class="panel"><h2>Latest / recent</h2><div class="card-list">${records.slice(0, 3).map(recordCard).join("") || "<p class=\"empty-state\">No EA records available.</p>"}</div></section>
+    <section class="panel"><h2>Latest / recent</h2><div class="card-list">${recent.map(recordCard).join("") || "<p class=\"empty-state\">No recent research records available.</p>"}</div></section>
     <section class="panel"><h2>Blockers</h2>${blockers.length ? `<ul class="plain-list">${blockers.map((record) => `<li><strong>${escapeHtml(record.display_name)}</strong>: ${escapeHtml(valueOf(record.blocker_type, "BLOCKED"))} — ${escapeHtml(valueOf(record.blocker_reason, "UNAVAILABLE"))}</li>`).join("")}</ul>` : "<p class=\"empty-state\">No blocked records reported.</p>"}</section>
     <section class="panel"><h2>EA list</h2><div class="filters" aria-label="EA filters"><label>Search<input id="search" type="search" placeholder="Name, family, symbol" autocomplete="off" /></label>${filterSelect("Lifecycle", "lifecycle", availableValues("lifecycle"))}${filterSelect("Family", "family_id", availableValues("family_id"))}${filterSelect("Symbol", "symbol", availableValues("symbol"))}${filterSelect("Timeframe", "timeframe", availableValues("timeframe"))}${filterSelect("Grade", "quality_grade", availableValues("quality_grade"))}${filterSelect("Evidence Confidence", "evidence_confidence", availableValues("evidence_confidence"))}${filterSelect("Research status", "research_state", availableValues("research_state"))}</div><div id="ea-results" class="card-list"></div></section>`;
 
@@ -225,7 +227,6 @@ async function start() {
     const fixtureMode = new URLSearchParams(window.location.search).get("fixture") === "1";
     if (fixtureMode) {
       reportIndex = await fetchIndex(FIXTURE_INDEX_URL);
-      usedFixture = true;
     } else {
       reportIndex = await fetchIndex(REPORT_INDEX_URL);
     }
