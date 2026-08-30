@@ -1,0 +1,16 @@
+{
+  "schema": "ea-lab-r2-config/1",
+  "hypothesis_id": "HYP-B16-XAU-M15-PE-PORT-01",
+  "ea": "B16 / Boss_16_KangarooGrid",
+  "symbol": "XAUUSD",
+  "timeframe": "M15",
+  "canonical_base_sha": "4ad1b15f26644723f2954a1416f3662b58c0b565",
+  "reports": {
+    "MAIN": "D:\\EA_LAB_CONTROL\\worktrees\\bt3-b16-xau-m15-pe-port01\\factory\\runs\\bt3_20260830\\b16_xau_m15_pe_port01\\raw\\BT3_B16_XAU_M15_PE_PORT01_XAUUSD_M15_MAIN_M1.htm.gz",
+    "BWD": "D:\\EA_LAB_CONTROL\\worktrees\\bt3-b16-xau-m15-pe-port01\\factory\\runs\\bt3_20260830\\b16_xau_m15_pe_port01\\raw\\BT3_B16_XAU_M15_PE_PORT01_XAUUSD_M15_BWD_M1.htm.gz"
+  },
+  "parent": {
+    "MAIN": {"trades": 1577, "net": 2643.64, "eqdd_pct": 11.88, "pf": 1.25},
+    "BWD": {"trades": 1463, "net": 1002.69, "eqdd_pct": 14.86, "pf": 1.10}
+  }
+}
