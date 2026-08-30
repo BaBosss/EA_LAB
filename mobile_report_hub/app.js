@@ -202,7 +202,7 @@ function renderQueue() {
   const groups = ["READY", "RUNNING", "BLOCKED", "DONE"];
   app.innerHTML = `<section class="page-heading"><h2>Research queue</h2><p>Queue state is descriptive only; this hub has no execution controls.</p></section>${groups.map((state) => {
     const items = queue.filter((item) => String(item.state).toUpperCase() === state);
-    return `<section class="panel"><h2>${state}</h2>${items.length ? `<ul class="queue-list">${items.map((item) => `<li><strong>${escapeHtml(valueOf(item.id))}</strong><span>${badge(item.state)} ${escapeHtml(valueOf(item.blocker_type, "NOT_APPLICABLE"))}</span><p>${escapeHtml(valueOf(item.summary))}</p></li>`).join("")}</ul>` : "<p class=\"empty-state\">No items.</p>"}</section>`;
+    return `<section class="panel"><h2>${state}</h2>${items.length ? `<ul class="queue-list">${items.map((item) => `<li><strong>${escapeHtml(valueOf(item.id))}</strong><span>${badge(item.state)} ${escapeHtml(valueOf(item.blocker_type, "NOT_APPLICABLE"))} ${badge(valueOf(item.source_kind, "UNKNOWN_SOURCE"))}</span><p>${escapeHtml(valueOf(item.summary))}</p></li>`).join("")}</ul>` : "<p class=\"empty-state\">No items.</p>"}</section>`;
   }).join("")}`;
 }
 

@@ -82,6 +82,7 @@ if ($failures.Count -eq 0) {
     Assert-True ($css -match '\.record-card\s*\{[^}]*min-width:\s*0;[^}]*overflow-wrap:\s*anywhere;' ) 'Record cards must shrink and wrap long canonical state tokens on phone widths.'
     Assert-True ($app -match 'safeRelativeHref' -and $app -match 'full_report') 'Links must be safe relative report links only.'
     Assert-True ($app -match 'INVENTORY_ONLY' -and $app -match 'const recent = records\.filter') 'Latest/recent must exclude inventory-only records.'
+    Assert-True ($app -match 'item\.source_kind' -and $app -match 'UNKNOWN_SOURCE') 'Queue UI must render source provenance so canonical and Lane Registry rows are visually distinct.'
 }
 
 if ($failures.Count -gt 0) {

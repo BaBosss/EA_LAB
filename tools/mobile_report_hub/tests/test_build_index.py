@@ -80,6 +80,18 @@ class MobileReportHubDataTests(unittest.TestCase):
         for forbidden in (b"file:///", b"d:\\", b"463666728", b"146237", b'"password":', b'"api_key":', b'"secret":', b'"token":'):
             self.assertNotIn(forbidden, blob)
 
+    def test_queue_source_kind_distinguishes_canonical_and_lane_registry(self):
+        registry = Path(self.temp.name) / "lanes.json"
+        registry.write_text(json.dumps({"lanes": [{
+            "lane_id": "fixture-dynamic-lane", "state": "RUNNING", "blocker_class": "C",
+            "objective": "fixture dynamic observation"
+        }]}), encoding="utf-8")
+        index = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, registry)
+        canonical = next(item for item in index["queue"] if item["id"] == "BOSS19-P4-REGIME-ATTRIBUTION")
+        dynamic = next(item for item in index["queue"] if item["id"] == "fixture-dynamic-lane")
+        self.assertEqual(canonical["source_kind"], "GIT_CANONICAL")
+        self.assertEqual(dynamic["source_kind"], "LANE_REGISTRY_NONCANONICAL")
+        self.assertEqual(dynamic["blocker_type"], "ENVIRONMENT")
     def test_expected_sha_mismatch_and_missing_source_fail_closed(self):
         with self.assertRaisesRegex(build_index.BuildError, "expected SHA mismatch"):
             build_index.build(ROOT, SHA, self.out, FIXED_TIME, "0" * 40, None)
