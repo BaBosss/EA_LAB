@@ -1,0 +1,91 @@
+{
+  "schema": "ea-lab-r2-evidence/1",
+  "hypothesis_id": "HYP-B16-PE-PORT-01",
+  "ea": "B16 / Boss_16_KangarooGrid",
+  "symbol": "USDJPY",
+  "timeframe": "H1",
+  "canonical_base_sha": "4ad1b15f26644723f2954a1416f3662b58c0b565",
+  "parent": {
+    "MAIN": {
+      "trades": 275,
+      "net": 252.53,
+      "eqdd_pct": 3.85,
+      "pf": 1.53
+    },
+    "BWD": {
+      "trades": 267,
+      "net": 44.1,
+      "eqdd_pct": 2.4,
+      "pf": 1.11
+    }
+  },
+  "child": {
+    "MAIN": {
+      "quality": "100%",
+      "net": "172.87",
+      "eqdd": "57.74 (0.57%)",
+      "pf": "2.87",
+      "trades": "290",
+      "eqdd_pct": 0.57,
+      "pf_num": 2.87,
+      "trades_num": 290,
+      "net_num": 172.87,
+      "report_sha256": "b2eda7a33b93bcadf559f7760715275b375cda86ae2cc0354dba78a2694a8b4c"
+    },
+    "BWD": {
+      "quality": "99%",
+      "net": "33.22",
+      "eqdd": "70.85 (0.70%)",
+      "pf": "1.22",
+      "trades": "260",
+      "eqdd_pct": 0.7,
+      "pf_num": 1.22,
+      "trades_num": 260,
+      "net_num": 33.22,
+      "report_sha256": "15b4fe68a91f59b6d278b0f97071d07615ea82a126af63fe37185107608b2eec"
+    }
+  },
+  "years": {
+    "MAIN": {
+      "2023": {
+        "trades": 108,
+        "pf": 4.204446208813021,
+        "net": 80.72,
+        "balance_dd_pct": 0.24960908779224777
+      },
+      "2024": {
+        "trades": 87,
+        "pf": 4.388535031847134,
+        "net": 63.84,
+        "balance_dd_pct": 0.1862795795460288
+      },
+      "2025": {
+        "trades": 95,
+        "pf": 1.5852801323134176,
+        "net": 28.310000000000002,
+        "balance_dd_pct": 0.4755935086451508
+      }
+    },
+    "BWD": {
+      "2020": {
+        "trades": 91,
+        "pf": 0.6670841398155528,
+        "net": -29.24,
+        "balance_dd_pct": 0.6311321188563945
+      },
+      "2021": {
+        "trades": 79,
+        "pf": 4.140425531914894,
+        "net": 29.52,
+        "balance_dd_pct": 0.3149162322821948
+      },
+      "2022": {
+        "trades": 90,
+        "pf": 1.6287459438824203,
+        "net": 32.94,
+        "balance_dd_pct": 0.5202416606423571
+      }
+    }
+  },
+  "authority": "RESEARCH_ONLY"
+}

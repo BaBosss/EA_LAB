@@ -1,0 +1,22 @@
+{
+  "schema": "ea-lab-bt2-mechanical-acceptance/1",
+  "hypothesis_id": "HYP-B16-PE-PORT-01",
+  "status": "PASS",
+  "preregistration_commit": "b155b5e1318eba871e7deb30d971bf00e9043de1",
+  "canonical_base_sha": "4ad1b15f26644723f2954a1416f3662b58c0b565",
+  "runtime_lane": "MT5-lane2",
+  "install": "D:\\Meta 5b",
+  "model": 1,
+  "optimization": 0,
+  "holdout": "UNSPENT",
+  "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+  "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+  "set_sha256": "07670fdd3da9f7b3e0006c6035bd25422257223403d24b885e7176ae5812d736",
+  "config_fingerprint": "1eb741aa9be22d130d939440a00ff9890e5907c35ff1cbfd76809ee473aeadf8",
+  "source_dependency_bytes_unchanged": true,
+  "stale_detector_resolution": "MTIME_FALSE_POSITIVE_PROVEN_BY_IDENTICAL_GIT_BYTES",
+  "cells": [
+    {"window":"MAIN","report_sha256":"b2eda7a33b93bcadf559f7760715275b375cda86ae2cc0354dba78a2694a8b4c","run_start_utc":"2026-08-30T12:48:10.6948630+00:00","report_mtime_utc":"2026-08-30T12:48:17Z","fresh":true,"leverage_status":"MATCH","actual_leverage":100,"truncated":false,"full_window_eligible":true},
+    {"window":"BWD","report_sha256":"15b4fe68a91f59b6d278b0f97071d07615ea82a126af63fe37185107608b2eec","run_start_utc":"2026-08-30T12:48:23.4593719+00:00","report_mtime_utc":"2026-08-30T12:48:30Z","fresh":true,"leverage_status":"MATCH","actual_leverage":100,"truncated":false,"full_window_eligible":true}
+  ]
+}

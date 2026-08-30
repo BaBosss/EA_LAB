@@ -1,0 +1,16 @@
+{
+  "schema": "ea-lab-r2-config/1",
+  "hypothesis_id": "HYP-B16-PE-PORT-01",
+  "ea": "B16 / Boss_16_KangarooGrid",
+  "symbol": "USDJPY",
+  "timeframe": "H1",
+  "canonical_base_sha": "4ad1b15f26644723f2954a1416f3662b58c0b565",
+  "reports": {
+    "MAIN": "D:\\EA_LAB_CONTROL\\worktrees\\bt2-b16-usdjpy-pe-port01\\factory\\runs\\bt2_20260830\\b16_usdjpy_pe_port01\\raw\\BT2_B16_USDJPY_PE_PORT01_USDJPY_H1_MAIN_M1.htm.gz",
+    "BWD": "D:\\EA_LAB_CONTROL\\worktrees\\bt2-b16-usdjpy-pe-port01\\factory\\runs\\bt2_20260830\\b16_usdjpy_pe_port01\\raw\\BT2_B16_USDJPY_PE_PORT01_USDJPY_H1_BWD_M1.htm.gz"
+  },
+  "parent": {
+    "MAIN": {"trades": 275, "net": 252.53, "eqdd_pct": 3.85, "pf": 1.53},
+    "BWD": {"trades": 267, "net": 44.10, "eqdd_pct": 2.40, "pf": 1.11}
+  }
+}
