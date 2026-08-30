@@ -1,8 +1,9 @@
 # B16 KangarooGrid — Mechanism Characterization Final Report — 2026-08-30
 
-Status: `COMPLETE / AUTHOR-FROZEN / INDEPENDENT REVIEW REQUIRED BEFORE CANONICAL INTEGRATION`
+Status: `COMPLETE / INDEPENDENT REVIEW PASS / READY FOR CANONICAL INTEGRATION`
 Report level: `R2 MECHANISM CHARACTERIZATION`
 Authority: `RESEARCH_ONLY`
+Independent evidence-package review: PASS / HIGH at exact HEAD 8bd5faf8896e725b56906a2fcbffeab54649271e; material findings NONE, required repair NONE.
 Working research verdict: `PARK / MECHANISM_CHARACTERIZED`; strategy/candidate verdict was not reassessed.
 `MECHANISM_VALUE = STRONG` — the batch isolates repeatable depth, direction and spacing interactions, while exit/recovery value remains context-dependent.
 
