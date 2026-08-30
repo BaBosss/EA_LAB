@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="280">
+<text x="20" y="24" font-size="17">HYP-B16-PE-ABL-01 parent vs child</text>
+<text x="20" y="50" font-size="12">Mechanism parent vs one-change child; same install/window</text>
+<text x="20" y="78" font-size="13">MAIN</text>
+<text x="100" y="78" font-size="12">parent PF 4.08 | net +707.78 | EqDD 6.27% | trades 79</text>
+<text x="100" y="100" font-size="12">child  PF 2.41 | net +149.08 | EqDD 1.18% | trades 49</text>
+<text x="20" y="134" font-size="13">BWD</text>
+<text x="100" y="134" font-size="12">parent PF 1.44 | net +512.69 | EqDD 8.29% | trades 148</text>
+<text x="100" y="156" font-size="12">child  PF 0.90 | net -32.09 | EqDD 2.42% | trades 76</text>
+<text x="20" y="260" font-size="11">VISUAL_ONLY_NO_AUTHORITY; exact values are in evidence_summary.json</text>
+</svg>

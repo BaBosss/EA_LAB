@@ -1,0 +1,35 @@
+{
+    "schema":  "ea-lab-bt1-mechanical-acceptance/1",
+    "hypothesis_id":  "HYP-B16-PE-ABL-01",
+    "canonical_base_sha":  "b26af204faf7907fe7e78a2b5f90a5dfa8c6bc02",
+    "preregistration_commit":  "b0d8e940b04fcc5cb6fdfab456533c055a4f4258",
+    "variant_set_sha256":  "07670fdd3da9f7b3e0006c6035bd25422257223403d24b885e7176ae5812d736",
+    "config_fingerprint":  "1eb741aa9be22d130d939440a00ff9890e5907c35ff1cbfd76809ee473aeadf8",
+    "source_dependency_bytes_unchanged":  true,
+    "stale_detector_resolution":  "MTIME_FALSE_POSITIVE_PROVEN_BY_IDENTICAL_GIT_BYTES",
+    "cells":  [
+                  {
+                      "window":  "MAIN",
+                      "report_sha256":  "6b284a80850fca611f1461e32b39990ed671de5ed6a26d584488d8c8da7ac281",
+                      "run_start_utc":  "2026-08-30T11:07:28.8103850+00:00",
+                      "report_mtime_utc":  "2026-08-30T11:07:36.1862669+00:00",
+                      "fresh":  true,
+                      "leverage_status":  "MATCH",
+                      "actual_leverage":  100,
+                      "truncated":  false,
+                      "full_window_eligible":  true
+                  },
+                  {
+                      "window":  "BWD",
+                      "report_sha256":  "41ce438cb2d4b05b158fea84c90b492b6399aae8f6fdec52f70ede32d62686a1",
+                      "run_start_utc":  "2026-08-30T11:07:41.9776790+00:00",
+                      "report_mtime_utc":  "2026-08-30T11:07:48.3013237+00:00",
+                      "fresh":  true,
+                      "leverage_status":  "MATCH",
+                      "actual_leverage":  100,
+                      "truncated":  false,
+                      "full_window_eligible":  true
+                  }
+              ],
+    "mechanical_status":  "PASS"
+}
