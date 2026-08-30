@@ -1,0 +1,8 @@
+﻿BT8 B11 stack ablation source-byte reconciliation
+canonical base: e62001c5a0163c5b65790e13010b3e56bd657714
+Boss_11 source SHA256: 59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672
+parent set SHA256: 5a0cdd3186e924234d4491bdf854966553214ebaaf03ca6793beaedd42ea8efa
+child set SHA256: 39dc0b2b3d1c181e177f7a3919f44393e2661470a3255f5fb368aed46ec704f0
+EX5 SHA256: 2708f46cb31f6c957be360b31e0f2be5678d78280c5bd0f691313d26802c00af
+Source and EX5 hashes match the accepted H01 build-receipt lineage used for this diagnostic.
+
