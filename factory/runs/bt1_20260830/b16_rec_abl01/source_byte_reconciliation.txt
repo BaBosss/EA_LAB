@@ -1,0 +1,15 @@
+B16 RECOVERY ABLATION SOURCE/BINARY RECONCILIATION
+build/source ref: cf32ba8d32a8292e8f7b5ad2ef766e3442b20125
+experiment canonical base: f3f95d6964c3bdff966697439007b6c0b152aecb
+post-run canonical reanchor: 4c4de3636ef9ae79d250f4171e0ebc0f3355a163
+EX5 SHA256: 212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db
+build receipt: br-4fa94d22907b446ebc721d524bdfa5d1
+
+Relevant Git-byte comparison through post-run canonical: NO_RELEVANT_BYTE_CHANGES
+Boss_16_KangarooGrid.mq5 blob: 1e10e093d27e8f6dddcb4eae79a875680f4fdbb0 == 1e10e093d27e8f6dddcb4eae79a875680f4fdbb0
+core/entries/Kangaroo.mqh blob: 12d7a342f8c204edb8186741dedbc9a9a940810f == 12d7a342f8c204edb8186741dedbc9a9a940810f
+core/Inputs.mqh blob: f9f7a52bafa576929de4fd7c3fade037b111ae48 == f9f7a52bafa576929de4fd7c3fade037b111ae48
+core/LabCore.mqh blob: fc8f17c2ff143eba0203863ec4810ccccfa16d78 == fc8f17c2ff143eba0203863ec4810ccccfa16d78
+ea_template/core tree: bdb5834ffe20c74f8f2e33ec6eeecfd03f6680b7 == bdb5834ffe20c74f8f2e33ec6eeecfd03f6680b7
+
+The runner's STALE line is therefore an mtime false-positive caused by fresh worktree materialization, not source/binary drift. The two canonical commits added after the experiment base contain Research Pod/Capability Scout surfaces only and do not invalidate the tester evidence.

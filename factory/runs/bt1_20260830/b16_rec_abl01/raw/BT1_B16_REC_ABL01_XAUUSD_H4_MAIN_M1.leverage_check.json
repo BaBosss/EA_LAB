@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "BT1_B16_REC_ABL01_XAUUSD_H4_MAIN_M1",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

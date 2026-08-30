@@ -1,0 +1,20 @@
+{
+  "schema": "ea-lab-bt1-mechanical-acceptance/1",
+  "hypothesis_id": "HYP-B16-REC-ABL-01",
+  "status": "PASS",
+  "preregistration_commit": "35484a46182e9ae070781417f56676e3fcef6d1b",
+  "canonical_base_sha": "f3f95d6964c3bdff966697439007b6c0b152aecb",
+  "runtime_lane": "MT5-lane2",
+  "install": "D:\\Meta 5b",
+  "model": 1,
+  "optimization": 0,
+  "holdout": "UNSPENT",
+  "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+  "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+  "set_sha256": "a029dec80b7c4d800992595415cb5f06f6f403321a93caa8c9e51b00e21bb213",
+  "config_fingerprint": "1eb741aa9be22d130d939440a00ff9890e5907c35ff1cbfd76809ee473aeadf8",
+  "main": {"exit_code": 0, "fresh_report": true, "leverage_match": true, "truncated": false, "full_window_eligible": true, "report_sha256": "f401bd17d564a984209df4dda069011a3fb98bcf3910ebd32ad2862e5467501e"},
+  "bwd": {"exit_code": 0, "fresh_report": true, "leverage_match": true, "truncated": false, "full_window_eligible": true, "report_sha256": "d819e6b76824961a37a7702c640abe3794485bd2bcfc0b2a1d6a2ec55f57997e"},
+  "mtime_stale_warning": "RECONCILED_FALSE_POSITIVE_BY_IDENTICAL_GIT_BLOBS_AND_CORE_TREE",
+  "source_reconciliation": "source_byte_reconciliation.txt"
+}

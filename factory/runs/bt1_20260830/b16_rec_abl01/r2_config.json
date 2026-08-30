@@ -1,0 +1,16 @@
+{
+  "schema": "ea-lab-r2-config/1",
+  "hypothesis_id": "HYP-B16-REC-ABL-01",
+  "ea": "B16 / Boss_16_KangarooGrid",
+  "symbol": "XAUUSD",
+  "timeframe": "H4",
+  "canonical_base_sha": "f3f95d6964c3bdff966697439007b6c0b152aecb",
+  "reports": {
+    "MAIN": "D:\\EA_LAB_CONTROL\\worktrees\\bt1-b16-rec-abl01\\factory\\runs\\bt1_20260830\\b16_rec_abl01\\raw\\BT1_B16_REC_ABL01_XAUUSD_H4_MAIN_M1.htm.gz",
+    "BWD": "D:\\EA_LAB_CONTROL\\worktrees\\bt1-b16-rec-abl01\\factory\\runs\\bt1_20260830\\b16_rec_abl01\\raw\\BT1_B16_REC_ABL01_XAUUSD_H4_BWD_M1.htm.gz"
+  },
+  "parent": {
+    "MAIN": {"trades": 79, "net": 707.78, "eqdd_pct": 6.27, "pf": 4.08},
+    "BWD": {"trades": 148, "net": 512.69, "eqdd_pct": 8.29, "pf": 1.44}
+  }
+}
