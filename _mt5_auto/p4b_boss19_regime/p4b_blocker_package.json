@@ -1,21 +1,21 @@
 {
-    "schema_version":  "BOSS19_P4B_BLOCKER_PACKAGE_V1",
-    "created_utc":  "2026-08-30T08:35:01.9798086Z",
-    "status":  "BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION;DATA_ENVIRONMENT_MISSING_IMMUTABLE_HISTORICAL_MARKET_INPUTS)",
+    "schema_version":  "BOSS19_P4B_BLOCKER_PACKAGE_V2",
+    "status":  "BLOCKED(DATA_ENVIRONMENT_MISSING_IMMUTABLE_HISTORICAL_MARKET_INPUTS)",
     "base":  "2998339a3b3a76a63723563a849926ee115d4855",
     "timeline_sha256":  null,
+    "h3_identity_gate":  {
+                             "path":  "_mt5_auto/p4b_boss19_regime/h3_identity_gate.json",
+                             "sha256":  "c434940e11153925f434504e71f878ecd1f84b9cf644d8b1a8aeb2b6030a0602"
+                         },
+    "market_input_gap_manifest":  {
+                                      "path":  "_mt5_auto/p4b_boss19_regime/market_input_gap_manifest.json",
+                                      "sha256":  "6aaf19b1255b0add966cbdaaff7026ea04dad6c30388b5e7c4db072f7b63be23"
+                                  },
     "builder":  {
                     "path":  "scripts/research/boss19_p4b/build_blocker_package.ps1",
-                    "sha256":  "fca66d5047734bdbb75023db6940e3e8067228a4b8cdeab8ad91ad8196ba8fe3"
+                    "sha256":  "902a5ef4ba279dae93b492393ad2c2c59d68a5439c7c1800c6a3eb9c2f198833"
                 },
-    "h3_unit_inventory":  {
-                              "path":  "h3_unit_evidence_inventory.json",
-                              "sha256":  "f12664b93464e4a6930ce5458e4e172df8dc5a8d23d2043fff098f88430db94e"
-                          },
-    "market_input_gap_manifest":  {
-                                      "path":  "market_input_gap_manifest.json",
-                                      "sha256":  "9f640c88478b4a0de0593a24f68047e07d800425a33f2e8af77f9f30a12b30d3"
-                                  },
-    "next_safe_action":  "Resolve both recorded prerequisites, then restart at market-input hashing and timeline creation before opening H3 outcome records.",
+    "h3_outcome_or_deal_content_opened":  false,
+    "next_safe_action":  "Provide a versioned immutable raw-market-input manifest satisfying the frozen classifier, then restart at market-input hashing and timeline creation before opening H3 outcome/trade records.",
     "authority_used":  "research-only; HOLDOUT/optimization/runtime/risk/deploy = NONE"
 }

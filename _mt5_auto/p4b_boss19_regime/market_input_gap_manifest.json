@@ -1,254 +1,92 @@
 {
-    "schema_version":  "BOSS19_P4B_MARKET_INPUT_GAP_V1",
-    "created_utc":  "2026-08-30T08:35:01.9402338Z",
+    "schema_version":  "BOSS19_P4B_MARKET_INPUT_GAP_V2",
     "status":  "BLOCKED(DATA_ENVIRONMENT_MISSING_IMMUTABLE_HISTORICAL_MARKET_INPUTS)",
-    "required_by":  {
-                        "classifier_id":  "BOSS19_P4_REGIME_CLASSIFIER_V1",
-                        "classifier_version":  "1.0.0",
-                        "classifier_contract_sha256":  "e247f0304f10e4f8753feeb52b6285478d07781e2643cc781c0f21f3235ca078",
-                        "attribution_contract_sha256":  "1423ab22c88c7c29b3bd8441b4bf8b2ba99013fb2a5d05b8215eb58c59b5c76e"
-                    },
-    "required_raw_inputs":  {
-                                "macro_daily_ohlc":  {
-                                                         "instruments":  [
-                                                                             "AUDJPY",
-                                                                             "USDJPY",
-                                                                             "VIX",
-                                                                             "DXY",
-                                                                             "XAUUSD",
-                                                                             "BTCUSD",
-                                                                             "US10Y_JP10Y",
-                                                                             "COPPER"
-                                                                         ],
-                                                         "per_instrument_requirements":  [
-                                                                                             {
-                                                                                                 "instrument":  "AUDJPY",
-                                                                                                 "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                 "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01"
-                                                                                             },
-                                                                                             {
-                                                                                                 "instrument":  "USDJPY",
-                                                                                                 "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                 "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01"
-                                                                                             },
-                                                                                             {
-                                                                                                 "instrument":  "VIX",
-                                                                                                 "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                 "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01"
-                                                                                             },
-                                                                                             {
-                                                                                                 "instrument":  "DXY",
-                                                                                                 "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                 "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01"
-                                                                                             },
-                                                                                             {
-                                                                                                 "instrument":  "XAUUSD",
-                                                                                                 "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                 "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01"
-                                                                                             },
-                                                                                             {
-                                                                                                 "instrument":  "BTCUSD",
-                                                                                                 "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                 "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01"
-                                                                                             },
-                                                                                             {
-                                                                                                 "instrument":  "US10Y_JP10Y",
-                                                                                                 "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                 "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01"
-                                                                                             },
-                                                                                             {
-                                                                                                 "instrument":  "COPPER",
-                                                                                                 "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                 "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01"
-                                                                                             }
-                                                                                         ],
-                                                         "required_coverage":  "At least 260 completed daily observations before 2020-01-01, plus daily coverage through 2025-12-31.",
-                                                         "required_fields":  [
-                                                                                 "utc_date",
-                                                                                 "open",
-                                                                                 "high",
-                                                                                 "low",
-                                                                                 "close"
-                                                                             ]
-                                                     },
-                                "local_execution_tf_ohlc":  {
-                                                                "cells":  [
-                                                                              "XAUUSD:M15",
-                                                                              "XAUUSD:H1",
-                                                                              "XAUUSD:H4",
-                                                                              "EURUSD:M15",
-                                                                              "EURUSD:H1",
-                                                                              "EURUSD:H4",
-                                                                              "GBPUSD:M15",
-                                                                              "GBPUSD:H1",
-                                                                              "GBPUSD:H4",
-                                                                              "AUDUSD:M15",
-                                                                              "AUDUSD:H1",
-                                                                              "AUDUSD:H4",
-                                                                              "USDJPY:M15",
-                                                                              "USDJPY:H1",
-                                                                              "USDJPY:H4",
-                                                                              "BTCUSD:M15",
-                                                                              "BTCUSD:H1",
-                                                                              "BTCUSD:H4"
-                                                                          ],
-                                                                "per_cell_requirements":  [
-                                                                                              {
-                                                                                                  "symbol":  "XAUUSD",
-                                                                                                  "tf":  "M15",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "XAUUSD",
-                                                                                                  "tf":  "H1",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "XAUUSD",
-                                                                                                  "tf":  "H4",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "EURUSD",
-                                                                                                  "tf":  "M15",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "EURUSD",
-                                                                                                  "tf":  "H1",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "EURUSD",
-                                                                                                  "tf":  "H4",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "GBPUSD",
-                                                                                                  "tf":  "M15",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "GBPUSD",
-                                                                                                  "tf":  "H1",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "GBPUSD",
-                                                                                                  "tf":  "H4",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "AUDUSD",
-                                                                                                  "tf":  "M15",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "AUDUSD",
-                                                                                                  "tf":  "H1",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "AUDUSD",
-                                                                                                  "tf":  "H4",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "USDJPY",
-                                                                                                  "tf":  "M15",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "USDJPY",
-                                                                                                  "tf":  "H1",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "USDJPY",
-                                                                                                  "tf":  "H4",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "BTCUSD",
-                                                                                                  "tf":  "M15",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "BTCUSD",
-                                                                                                  "tf":  "H1",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              },
-                                                                                              {
-                                                                                                  "symbol":  "BTCUSD",
-                                                                                                  "tf":  "H4",
-                                                                                                  "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
-                                                                                                  "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01"
-                                                                                              }
-                                                                                          ],
-                                                                "required_coverage":  "At least 252 calendar days plus 50 closed execution-TF bars before 2020-01-01, plus closed-bar coverage through 2025-12-31.",
-                                                                "required_identity":  "Exported from the same named tester-data identity as the H3 cell; no cross-install substitution.",
-                                                                "required_fields":  [
-                                                                                        "open_time_utc",
-                                                                                        "open",
-                                                                                        "high",
-                                                                                        "low",
-                                                                                        "close"
-                                                                                    ]
-                                                            }
+    "timeline_sha256":  null,
+    "market_input_manifest_provided":  false,
+    "required_macro_daily_ohlc":  {
+                                      "instruments":  [
+                                                          "AUDJPY",
+                                                          "USDJPY",
+                                                          "VIX",
+                                                          "DXY",
+                                                          "XAUUSD",
+                                                          "BTCUSD",
+                                                          "US10Y_JP10Y",
+                                                          "COPPER"
+                                                      ],
+                                      "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
+                                      "warmup_requirement":  "\u003e=260 completed daily observations strictly before 2020-01-01",
+                                      "required_fields":  [
+                                                              "utc_date",
+                                                              "open",
+                                                              "high",
+                                                              "low",
+                                                              "close"
+                                                          ]
+                                  },
+    "required_local_ohlc":  {
+                                "cells":  [
+                                              "XAUUSD:M15",
+                                              "XAUUSD:H1",
+                                              "XAUUSD:H4",
+                                              "EURUSD:M15",
+                                              "EURUSD:H1",
+                                              "EURUSD:H4",
+                                              "GBPUSD:M15",
+                                              "GBPUSD:H1",
+                                              "GBPUSD:H4",
+                                              "AUDUSD:M15",
+                                              "AUDUSD:H1",
+                                              "AUDUSD:H4",
+                                              "USDJPY:M15",
+                                              "USDJPY:H1",
+                                              "USDJPY:H4",
+                                              "BTCUSD:M15",
+                                              "BTCUSD:H1",
+                                              "BTCUSD:H4"
+                                          ],
+                                "classification_range_utc":  "2020-01-01..2025-12-31 inclusive",
+                                "warmup_requirement":  "\u003e=252 calendar days plus 50 closed execution-TF bars strictly before 2020-01-01",
+                                "identity":  "same named tester-data identity as the H3 cell",
+                                "required_fields":  [
+                                                        "open_time_utc",
+                                                        "open",
+                                                        "high",
+                                                        "low",
+                                                        "close"
+                                                    ]
                             },
-    "inspected_local_candidates":  [
-                                       {
-                                           "path":  "D:\\EA_LAB_CONTROL\\worktrees\\rnd-p4b-regime-attribution-2998339a\\portfolio\\mris\\barometer_snapshot.csv",
-                                           "exists":  true,
-                                           "sha256":  "fdd4e7d1a17a062dfbeb03b12e9f450056279c0d7e70420876444263526ea21a",
-                                           "result":  "CURRENT_DERIVED_SNAPSHOT_ONLY: aggregate indicator values, not historical daily OHLC."
-                                       },
-                                       {
-                                           "path":  "D:\\EA_LAB_CONTROL\\worktrees\\rnd-p4b-regime-attribution-2998339a\\portfolio\\mris\\barometer_snapshot_macro.csv",
-                                           "exists":  true,
-                                           "sha256":  "612e9e69398044743ad5223bc74dcb229763bee7279368143641bbda287e730b",
-                                           "result":  "CURRENT_DERIVED_SNAPSHOT_ONLY: aggregate indicator values, not the required eight-barometer historical OHLC."
-                                       },
-                                       {
-                                           "path":  "D:\\EA_LAB_CONTROL\\worktrees\\rnd-p4b-regime-attribution-2998339a\\portfolio\\mris\\regime_state.json",
-                                           "exists":  true,
-                                           "sha256":  "1ac774fe84070d26f78ce52485ebaf56bde3eba13a0fdc75cf17099da6ff8c7b",
-                                           "result":  "DERIVED_CURRENT_REGIME_STATE_ONLY: no raw historical OHLC."
-                                       },
-                                       {
-                                           "path":  "D:\\EA_LAB_CONTROL\\worktrees\\rnd-p4b-regime-attribution-2998339a\\scripts\\mris\\mris_backtest_timeline.ps1",
-                                           "exists":  true,
-                                           "sha256":  "d8c13b4ebcb5288d6ad9b2cb2c48ebf8ecdc87cd0556844254bca39c147d9de0",
-                                           "result":  "NETWORK_FETCH_REPLAY_CODE_ONLY: contract explicitly excludes an unpinned live fetch as immutable P4 input."
-                                       }
-                                   ],
-    "unavailable_inputs":  [
-                               "Pinned raw historical daily OHLC snapshot for all eight macro barometers with provider/instrument mapping, UTC normalization, retrieval timestamp, hashes, and missing-bar policy.",
-                               "Pinned raw closed OHLC exports for all eighteen H3 Symbol x TF cells from the same tester-data identity as each H3 cell."
-                           ],
+    "inspected_bounded_candidates":  [
+                                         {
+                                             "path":  "portfolio/mris/barometer_snapshot.csv",
+                                             "exists":  true,
+                                             "sha256":  "fdd4e7d1a17a062dfbeb03b12e9f450056279c0d7e70420876444263526ea21a",
+                                             "classification":  "CURRENT_DERIVED_SNAPSHOT_NOT_RAW_HISTORICAL_OHLC"
+                                         },
+                                         {
+                                             "path":  "portfolio/mris/barometer_snapshot_macro.csv",
+                                             "exists":  true,
+                                             "sha256":  "612e9e69398044743ad5223bc74dcb229763bee7279368143641bbda287e730b",
+                                             "classification":  "CURRENT_DERIVED_SNAPSHOT_NOT_RAW_HISTORICAL_OHLC"
+                                         },
+                                         {
+                                             "path":  "portfolio/mris/regime_state.json",
+                                             "exists":  true,
+                                             "sha256":  "1ac774fe84070d26f78ce52485ebaf56bde3eba13a0fdc75cf17099da6ff8c7b",
+                                             "classification":  "CURRENT_DERIVED_STATE_NOT_RAW_HISTORICAL_OHLC"
+                                         },
+                                         {
+                                             "path":  "scripts/mris/mris_backtest_timeline.ps1",
+                                             "exists":  true,
+                                             "sha256":  "d8c13b4ebcb5288d6ad9b2cb2c48ebf8ecdc87cd0556844254bca39c147d9de0",
+                                             "classification":  "NETWORK_REPLAY_CODE_NOT_IMMUTABLE_INPUT"
+                                         }
+                                     ],
     "prohibited_substitutions":  [
                                      "unpinned live web response",
-                                     "current MRIS snapshot",
-                                     "derived historical regime CSV",
+                                     "current MRIS derived snapshot/state",
                                      "cross-install terminal history",
                                      "H3 outcome-derived reconstruction"
                                  ],
-    "next_safe_action":  "Provide a versioned, immutable historical-market snapshot and exact tester-data-identity OHLC exports; rerun P4B from input hashing before any H3 outcome join."
+    "next_safe_action":  "Provide a versioned immutable raw-market-input manifest satisfying the frozen classifier, then restart at market-input hashing and timeline creation before opening H3 outcome/trade records."
 }

@@ -1,0 +1,243 @@
+{
+    "schema_version":  "BOSS19_P4B_H3_IDENTITY_GATE_V2",
+    "accepted_h3_contract_head":  "47c7732048406277096c1ccc31734b4122ae7285",
+    "accepted_h3_package":  {
+                                "path":  "D:\\EA_LAB_CONTROL\\jobs\\hermes-h3-run-20260829\\H3_RESULT_PACKAGE.json",
+                                "expected_sha256":  "3d62d6d358831dc3897357d3d2008e9c0f1c9211716844112f8af96f79c7eeb2",
+                                "actual_sha256":  "3d62d6d358831dc3897357d3d2008e9c0f1c9211716844112f8af96f79c7eeb2",
+                                "hash_match":  true
+                            },
+    "manifest":  {
+                     "path":  "D:\\EA_LAB_CONTROL\\worktrees\\hermes-h3-exec-47c77320\\tools\\hermes_ea_lab_pilot\\H3_BROAD_MATRIX_MANIFEST.csv",
+                     "expected_sha256":  "56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd",
+                     "actual_sha256":  "56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd",
+                     "row_count":  36,
+                     "unique_cell_count":  36,
+                     "exact_grid_match":  true
+                 },
+    "reports":  {
+                    "expected_count":  36,
+                    "existing_count":  36,
+                    "inventory":  [
+                                      {
+                                          "cell_id":  "H3-C01-MAIN",
+                                          "report_name":  "H3_B19_XAUUSD_M15_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "e47e67e2466526e3d19f3428c4903eb7aaaf5d2a34cc101c9f13dd34aae68ee1"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C01-BWD",
+                                          "report_name":  "H3_B19_XAUUSD_M15_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "5061b46c61985a462c1b14d78274f159039b3939c79ef37a3dbe218383de14e6"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C02-MAIN",
+                                          "report_name":  "H3_B19_XAUUSD_H1_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "51cc3833eaae04293a110c34718f1fd76ceff59b67daaa52c6871fdb3c5be873"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C02-BWD",
+                                          "report_name":  "H3_B19_XAUUSD_H1_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "a48fe5f937cffa4f7f8eae964edb2c9b72d89d135615a85bbe7c2ec010645873"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C03-MAIN",
+                                          "report_name":  "H3_B19_XAUUSD_H4_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "e98bd8a8d795f553ad686fa6e45eba3c27278bef7080c4156d5c3e4529510ba9"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C03-BWD",
+                                          "report_name":  "H3_B19_XAUUSD_H4_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "535e4861c939f5c8632dc1353b7653d549b7d06c64684c0896197c67c6a0c6bc"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C04-MAIN",
+                                          "report_name":  "H3_B19_EURUSD_M15_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "d7cafd1143b01031713c857f2a99a84dc754efd6aadf2c152108ec748652f9d2"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C04-BWD",
+                                          "report_name":  "H3_B19_EURUSD_M15_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "4be0897a1030bacab4441cc161c1ef35f09f607c99b7a5366664d75e5cc133e1"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C05-MAIN",
+                                          "report_name":  "H3_B19_EURUSD_H1_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "0e22746781bda099e18731351267bf43614a225c012a38b86dfa0b327f9dbcfa"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C05-BWD",
+                                          "report_name":  "H3_B19_EURUSD_H1_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "27c13a6bab5b5af5a268c775c0db889c07f6fd64f688d7f196100e0b338734e1"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C06-MAIN",
+                                          "report_name":  "H3_B19_EURUSD_H4_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "70033b92f2558b30b1b5916f509aee62b9e7d0518f58766e9254c1651621a53f"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C06-BWD",
+                                          "report_name":  "H3_B19_EURUSD_H4_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "4e0c98d14d6fe42163fefed758f27a982cd3d6bac736133e5ecb9351798f4733"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C07-MAIN",
+                                          "report_name":  "H3_B19_GBPUSD_M15_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "34407246e9766e92bc4d388aacf01b41e4a95730eda6f2ea1d3407b5c40f4e0f"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C07-BWD",
+                                          "report_name":  "H3_B19_GBPUSD_M15_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "918c0d45037213549088f268de7d499fce853cb465b5bd0edc4ae307715ebf66"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C08-MAIN",
+                                          "report_name":  "H3_B19_GBPUSD_H1_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "dec484d6e6bbac28bfce554b1abc636da7151100d747c6846dd525546dd6199d"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C08-BWD",
+                                          "report_name":  "H3_B19_GBPUSD_H1_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "b025394304be9fe8e63e78afce574e322664b2f44c010d6a80488c82d70c1ac6"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C09-MAIN",
+                                          "report_name":  "H3_B19_GBPUSD_H4_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "157c30bfd80e709375e07f63a3282e05657d6f18cfb4f3bf636ac8c6a821efd8"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C09-BWD",
+                                          "report_name":  "H3_B19_GBPUSD_H4_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "a4e8b8d51c69059cf387ee6846dcce17873c46ea8c78eff6cda8bf765776855d"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C10-MAIN",
+                                          "report_name":  "H3_B19_AUDUSD_M15_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "23a0b43b5d6a66f99018df2264080d4f27aad459124a2c108a5f53b4123987fc"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C10-BWD",
+                                          "report_name":  "H3_B19_AUDUSD_M15_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "80874621997807053c9a02f8e2231ddfd2bbe83c51a15190a001a6d9bad87847"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C11-MAIN",
+                                          "report_name":  "H3_B19_AUDUSD_H1_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "f4b4adaac46001718e60629b6d6cf31af67e1dfef19067cd952eb39abe8bf938"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C11-BWD",
+                                          "report_name":  "H3_B19_AUDUSD_H1_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "924dbd0cc5b6d0b447ef34ef05ae595f1ffbeab0fcba6f19e64c5ea618d2726f"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C12-MAIN",
+                                          "report_name":  "H3_B19_AUDUSD_H4_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "3a254911ab94ceb1ef135acaa941cca016c2d54c3a65430e768cc443f1456701"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C12-BWD",
+                                          "report_name":  "H3_B19_AUDUSD_H4_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "807403273b578abfb824554c7ca5f3b0158f49e697b3f582c4ce7f7f4d4222b9"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C13-MAIN",
+                                          "report_name":  "H3_B19_USDJPY_M15_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "f3932454566ac5f23fed751250321b30494068cc29bc3e1fcc52f338e9c90fa8"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C13-BWD",
+                                          "report_name":  "H3_B19_USDJPY_M15_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "9ce5d10ed6574a46371c6746d75e90fe32316dcbc570e671ae71b97b821292c6"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C14-MAIN",
+                                          "report_name":  "H3_B19_USDJPY_H1_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "a958546b0c4ec8846ebe6f2bd353e4590751dac85f22273590611afdee9a699f"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C14-BWD",
+                                          "report_name":  "H3_B19_USDJPY_H1_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "b886a84bf6973f3f4b4e6d2f98ad4d1a6402905edbb7cdae8e18703e17b6834b"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C15-MAIN",
+                                          "report_name":  "H3_B19_USDJPY_H4_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "6cacad6d004f184057196bbbb2eb929cc95fb62f375baba12cd4721a01956f27"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C15-BWD",
+                                          "report_name":  "H3_B19_USDJPY_H4_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "d7689bee965ad8bd388cdeb4b8a1e3fd73defae3313e34e958cbccab721eba4c"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C16-MAIN",
+                                          "report_name":  "H3_B19_BTCUSD_M15_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "2c8d90298deebe56629e317f826ee89fe738406d44ece918f40eeff6d4e7c1c6"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C16-BWD",
+                                          "report_name":  "H3_B19_BTCUSD_M15_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "b70530fa81daf3aaf99946076a3cc252388fffa66e118f3ba94495b450c6d8f2"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C17-MAIN",
+                                          "report_name":  "H3_B19_BTCUSD_H1_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "e8ddcd06391ea4374f93f27fb1c77f8889f96b4fd7c067ce09a74e408edef0ec"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C17-BWD",
+                                          "report_name":  "H3_B19_BTCUSD_H1_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "c558cfd84302c2a76097b8b5c6ccaf3cb249c17a38ae8beadc2ec9db46c0ae6a"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C18-MAIN",
+                                          "report_name":  "H3_B19_BTCUSD_H4_MAIN_M1",
+                                          "exists":  true,
+                                          "sha256":  "1afa929411d78ce3ce027116e7ad22f5ce201a752d146e19dacef7d04c9d511b"
+                                      },
+                                      {
+                                          "cell_id":  "H3-C18-BWD",
+                                          "report_name":  "H3_B19_BTCUSD_H4_BWD_M1",
+                                          "exists":  true,
+                                          "sha256":  "cbc0ec198db8c0ff55f6617d3f520c199f3abc6b69aa8647e1567a2713ae8a52"
+                                      }
+                                  ]
+                },
+    "outcome_content_opened":  false,
+    "deal_content_opened":  false,
+    "note":  "Only package bytes were hash-checked; package/report outcome content was not parsed before the immutable timeline gate."
+}
