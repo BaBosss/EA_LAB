@@ -348,3 +348,87 @@ Different strategies may respond differently to the same event. A breakout strat
 Therefore the supervisor should combine event severity with Strategy Thesis / regime sensitivity rather than apply one global news switch blindly.
 
 Any future command interface must be explicit, versioned, logged, acknowledged by the EA, and bounded by local safety rules. Loss of communications must not leave ambiguous ownership or half-applied risk state.
+
+## 33. Owner-operable without coding
+The control system must not require the owner to read, edit, or debug Python during normal operation.
+Python is an implementation detail behind a human-operable control surface.
+Normal owner interaction should be through dashboard states, explanations, alerts, bounded controls, and clear health indicators.
+
+Design implications:
+- no routine CLI requirement,
+- no manual JSON/file editing,
+- no need to inspect Python logs to understand current risk state,
+- every important automated action needs a human-readable reason,
+- dashboard must show command age, heartbeat, current owner of each basket, and whether control is automatic/recommend-only/manual-safe,
+- configuration should use named presets and guarded forms rather than raw code,
+- recovery internals should not expose per-order manual controls as the normal workflow.
+
+The implementation may be built and maintained by AI/worker lanes, but operation must remain understandable without programming knowledge.
+
+## 34. Control State Contract direction
+A common state vocabulary is required between Python, MQL adapters, Recovery, Port Controller, and the Human UI.
+Working states:
+- NORMAL
+- REDUCE
+- BLOCK_NEW
+- NO_ADD
+- PROTECT_1
+- PROTECT_2
+- PROTECT_3
+- LOCK
+- RECOVERY_WAIT
+- RECOVERY_ALLOWED
+- RECOVERY_ACTIVE
+- UNWIND
+- SAFE_LOCAL
+- HARD_FREEZE
+
+State semantics should be explicit and deterministic:
+- NORMAL: ordinary strategy behavior within local cages.
+- REDUCE: lower permitted new risk; existing management continues.
+- BLOCK_NEW: no fresh entries; existing exits/management remain allowed.
+- NO_ADD: existing basket can manage/exit but cannot increase directional exposure.
+- PROTECT_1/2/3: progressively stronger defensive target while offensive risk growth is blocked.
+- LOCK: near/full directional lock under explicit ownership rules.
+- RECOVERY_WAIT: basket protected/owned but recovery entries not yet permitted.
+- RECOVERY_ALLOWED: recovery engine may begin when local ownership and budget gates pass.
+- RECOVERY_ACTIVE: recovery engine owns the defined basket lifecycle.
+- UNWIND: progressively reduce hedge/recovery state after confirmed recovery conditions.
+- SAFE_LOCAL: supervisor command is stale/offline; no risk increase from old external commands.
+- HARD_FREEZE: no new directional risk; only bounded risk-reduction/exit behavior.
+
+These names define intent, not ratified lot/DD values. Exact thresholds and hedge ratios remain unresolved.
+
+## 35. Authority and ownership matrix direction
+Every state must answer five questions:
+1. Can Primary open a new trade?
+2. Can Primary add to an existing basket?
+3. Can Secondary open/add risk?
+4. Can protection/recovery change hedge exposure?
+5. Which component currently owns the basket?
+
+No two components may independently believe they own the same mutable basket.
+Python should normally publish desired policy/state; the local EA executes only actions allowed by its local contract and returns ACK/current state.
+A Python command cannot override a stricter local hard cage.
+
+## 36. Staged supervisor authority
+Automation authority should be introduced progressively rather than jumping directly to autonomous recovery.
+Working progression:
+- MODE 0 MONITOR ONLY: observe and record; no commands.
+- MODE 1 RECOMMEND ONLY: calculate desired state and show it to the owner; no execution authority.
+- MODE 2 AUTO LOW-RISK: automatic non-risk-increasing controls such as BLOCK_NEW/NO_ADD where explicitly approved.
+- MODE 3 AUTO ALLOCATION/REGIME: bounded allocation changes inside a separately ratified policy.
+- MODE 4 AUTO PROTECTION: progressive hedge/protection under ratified limits.
+- MODE 5 AUTO RECOVERY: ownership transfer and recovery lifecycle under ratified limits.
+
+Moving to a higher mode changes runtime/risk authority and therefore requires the applicable owner hard-stop approval.
+The same dashboard/data model should support all modes so research evidence can accumulate before authority is granted.
+
+## 37. Supervisor data-contract direction
+The supervisor needs a stable per-instance telemetry contract rather than scraping terminal UI.
+Candidate EA -> Supervisor fields include identity, symbol, TF, family/variant/preset, magic/account/port, heartbeat, equity/balance context, floating P/L, local DD, BUY/SELL/net exposure, basket age/depth, current local state, recovery ownership, last command acknowledged, and local hard-cage status.
+
+Candidate Supervisor -> EA fields include desired control state, regime classification, event/news state, bounded allocation/risk permission, recovery permission, command sequence/version, issue time, expiry/TTL, and human-readable reason code.
+
+EA acknowledgment should include command sequence received, state accepted/rejected, resulting local state, timestamp, and rejection reason when a stricter local cage prevents execution.
+Transport can start with auditable shared state files and later change without changing the semantic contract.
