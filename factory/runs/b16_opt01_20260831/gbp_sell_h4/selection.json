@@ -1,0 +1,63 @@
+{
+  "baseline_reproduced": true,
+  "bwd_state": "AUTHORIZED_AFTER_LOCK_NOT_RUN",
+  "classification": "MAIN_PLATEAU_FOUND",
+  "grid_complete": true,
+  "grid_rows": 20,
+  "holdout": "UNSPENT",
+  "hypothesis_falsified": false,
+  "hypothesis_revision": "B16-H05-r1",
+  "schema": "ea-lab-b16-opt01-selection/1",
+  "selected": {
+    "cross": [
+      {
+        "eqdd_pct": 1.349,
+        "net": 102.13,
+        "pf": 6.031034,
+        "rsi_high": 70,
+        "rsi_period": 21,
+        "trades": 30
+      },
+      {
+        "eqdd_pct": 1.7184,
+        "net": 283.2,
+        "pf": 7.968504,
+        "rsi_high": 70,
+        "rsi_period": 14,
+        "trades": 80
+      },
+      {
+        "eqdd_pct": 0.3027,
+        "net": 57.57,
+        "pf": 0.0,
+        "rsi_high": 70,
+        "rsi_period": 28,
+        "trades": 22
+      },
+      {
+        "eqdd_pct": 1.7762,
+        "net": 339.95,
+        "pf": 8.038302,
+        "rsi_high": 65,
+        "rsi_period": 21,
+        "trades": 80
+      },
+      {
+        "eqdd_pct": 0.0871,
+        "net": 13.22,
+        "pf": 0.0,
+        "rsi_high": 75,
+        "rsi_period": 21,
+        "trades": 11
+      }
+    ],
+    "distance_steps": 1.0,
+    "eligible": true,
+    "max_eqdd_pct": 1.7762,
+    "min_net": 13.22,
+    "min_trades": 11,
+    "rsi_high": 70,
+    "rsi_period": 21
+  },
+  "xml_sha256": "18ad98f125610bc7f86089c635d49884c875fbbde4d7a435950ed22af68d7211"
+}
