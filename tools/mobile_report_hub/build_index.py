@@ -16,7 +16,7 @@ from pathlib import Path, PurePosixPath
 
 SCHEMA_VERSION = 1
 GENERATOR_NAME = "mobile_report_hub.build_index"
-GENERATOR_VERSION = "1.0.0"
+GENERATOR_VERSION = "1.1.0"
 B16 = "docs/factory/B16_H03_CONFIRMATION_RESULTS.md"
 B19 = "docs/research/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"
 H02 = "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"
@@ -94,7 +94,7 @@ def extract_b16(text: str, provenance: dict) -> dict:
                          "H04 is NOT unlocked."],
         "known_weaknesses": ["Intratrade equity path, exit classification, ATR normalization, and emergency-close attribution are UNKNOWN."]
     }
-    return record(identity="b16-h03-xauusd-h4", family="B16", variant="H03", name="Boss 16 KangarooGrid — XAUUSD H4",
+    return record(identity="b16-h03-xauusd-h4", family="B16", variant="H03", name="Boss 16 KangarooGrid â€” XAUUSD H4",
                   symbol="XAUUSD", timeframe="H4", lifecycle="Research", research_state="DONE",
                   latest="B16 H03 confirmation", verdict="POSITION_ENGINE_DEPENDENT_OR_UNKNOWN",
                   strategy="KangarooGrid", evidence=evidence, status="DONE", links={"full_report": "artifacts/B16_H03_CONFIRMATION_RESULTS.md"}, provenance=[provenance])
@@ -134,7 +134,7 @@ def extract_h02(text: str, provenance: dict) -> list[dict]:
                     "bwd": metric(bpf, bdd, btrades, "UNKNOWN"),
                     "key_findings": ["Dual-window positive PF screening pulse."],
                     "known_weaknesses": ["Screening only; not a candidate or optimizer seed."]}
-        result.append(record(identity=identity, family="B16", variant="H02", name=f"Boss 16 KangarooGrid — {home}",
+        result.append(record(identity=identity, family="B16", variant="H02", name=f"Boss 16 KangarooGrid â€” {home}",
                              symbol=symbol, timeframe=timeframe, lifecycle="Research", research_state="DONE",
                              latest="B16 H02 literal portability", verdict="NON_AUTHORITATIVE_SCREEN", strategy="KangarooGrid",
                              evidence=evidence, status="DONE", links={"full_report": "artifacts/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"}, provenance=[provenance]))
@@ -179,14 +179,31 @@ def lane_registry(path: Path | None) -> list[dict]:
         return []
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
+    except (OSError, json.JSONDecodeError, UnicodeError) as error:
         raise BuildError(f"lane registry unreadable: {error}") from error
-    rows = payload.get("lanes", payload) if isinstance(payload, dict) else payload
+    rows = payload.get("records", payload.get("lanes", payload)) if isinstance(payload, dict) else payload
     if not isinstance(rows, list):
-        raise BuildError("lane registry must be a list or {lanes: list}")
-    allowed = ("lane_id", "state", "blocker_class", "objective", "direct_consumer")
-    return [{key: str(item[key]) for key in allowed if key in item and isinstance(item[key], (str, int, float))}
-            for item in rows if isinstance(item, dict)]
+        raise BuildError("lane registry must be a list or an Audit/List object containing records/lanes")
+    result = []
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        classification = item.get("classification")
+        if not isinstance(classification, str):
+            continue
+        if classification in {"CLOSED", "STALE_NONACTIVE"}:
+            continue
+        if classification != "QUEUED_CURRENT" and not classification.startswith("ACTIVE_"):
+            continue
+        row = {}
+        for key in ("lane_id", "state", "blocker_class", "objective", "direct_consumer", "classification"):
+            value = item.get(key)
+            if isinstance(value, (str, int, float)) and not isinstance(value, bool):
+                row[key] = str(value)
+        if isinstance(item.get("attention_required"), bool):
+            row["attention_required"] = item["attention_required"]
+        result.append(row)
+    return result
 
 
 _LOCAL_WINDOWS_PATH_RE = re.compile(r"(?:[A-Za-z]:[\\/](?![\\/])|\\\\[^\\/\s]+[\\/])")
@@ -202,7 +219,84 @@ def lane_summary(item: dict) -> str:
             return str(value)
     return "[LOCAL_PATH_REDACTED]" if any(candidates) else "UNKNOWN"
 
-def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None) -> dict:
+
+_MONITOR_SOURCE_NAMES = {"live_evidence", "control_room_snapshot", "daily_monitor_success"}
+_MONITOR_STATES = {"CURRENT", "STALE", "MISSING", "INVALID"}
+_MONITOR_BASES = {"latest_filename_date_upper_bound", "snapshot_meta_generated_at", "success_marker_content"}
+_MONITOR_COUNT_FIELDS = ("deal_sensors_total", "deal_sensors_fresh", "floating_sensors_total", "floating_sensors_fresh")
+
+
+def unavailable_monitoring(reason: str = "NOT_PROVIDED") -> dict:
+    return {"status": "UNAVAILABLE", "reported_status": "UNKNOWN",
+            "source_kind": "LOCAL_MONITORING_NONCANONICAL",
+            "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "binding_state": "UNKNOWN",
+            "generated_at_utc": "UNKNOWN", "alert_present": "UNKNOWN", "sources": [],
+            "coverage": {"state": "UNAVAILABLE_STALE_OR_INVALID", "deal_sensors_total": "UNKNOWN",
+                         "deal_sensors_fresh": "UNKNOWN", "floating_sensors_total": "UNKNOWN",
+                         "floating_sensors_fresh": "UNKNOWN"}, "reason": reason}
+
+
+def _monitor_count(value: object) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
+def monitor_health(path: Path | None, canonical_sha: str) -> dict:
+    if path is None:
+        return unavailable_monitoring()
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeError):
+        return unavailable_monitoring("INVALID_INPUT")
+    if not isinstance(raw, dict) or raw.get("schema_version") != "EA_LAB_MONITOR_HEALTH_V1":
+        return unavailable_monitoring("INVALID_SCHEMA")
+    if raw.get("source_kind") != "LOCAL_MONITORING_NONCANONICAL" or raw.get("authority") != "READ_ONLY_NO_RUNTIME_AUTHORITY":
+        return unavailable_monitoring("INVALID_AUTHORITY")
+    reported_status = str(raw.get("status", "UNAVAILABLE"))
+    if reported_status not in {"CURRENT", "DEGRADED"}:
+        return unavailable_monitoring("INVALID_STATUS")
+    repo_head = str(raw.get("repo_head", "UNKNOWN"))
+    binding = "MATCHES_CANONICAL_SHA" if repo_head == canonical_sha else ("DIFFERENT_REPO_HEAD" if re.fullmatch(r"[0-9a-f]{40}", repo_head) else "UNKNOWN")
+    sources = []
+    for item in raw.get("sources", []):
+        if not isinstance(item, dict) or item.get("name") not in _MONITOR_SOURCE_NAMES:
+            continue
+        source_state = str(item.get("state", "INVALID"))
+        basis = str(item.get("timestamp_basis", ""))
+        if source_state not in _MONITOR_STATES or basis not in _MONITOR_BASES:
+            continue
+        age = item.get("age_hours")
+        age = round(float(age), 2) if isinstance(age, (int, float)) and not isinstance(age, bool) and age >= 0 else "UNKNOWN"
+        observed = str(item.get("observed_at_utc", "UNKNOWN"))
+        if observed != "UNKNOWN" and not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", observed):
+            observed = "UNKNOWN"
+        sources.append({"name": item["name"], "state": source_state, "age_hours": age,
+                        "observed_at_utc": observed, "timestamp_basis": basis})
+    sources = sorted(sources, key=lambda x: x["name"])
+    source_by_name = {item["name"]: item for item in sources}
+    all_sources_current = set(source_by_name) == _MONITOR_SOURCE_NAMES and all(item["state"] == "CURRENT" for item in sources)
+    alert_present = raw.get("alert_present") if isinstance(raw.get("alert_present"), bool) else "UNKNOWN"
+    effective_status = "CURRENT" if all_sources_current and alert_present is False and binding == "MATCHES_CANONICAL_SHA" else "DEGRADED"
+    coverage_raw = raw.get("coverage", {}) if isinstance(raw.get("coverage"), dict) else {}
+    requested_coverage = str(coverage_raw.get("state", "UNAVAILABLE_STALE_OR_INVALID"))
+    counts = {name: _monitor_count(coverage_raw.get(name)) for name in _MONITOR_COUNT_FIELDS}
+    counts_valid = all(value is not None for value in counts.values())
+    counts_consistent = counts_valid and counts["deal_sensors_fresh"] <= counts["deal_sensors_total"] and counts["floating_sensors_fresh"] <= counts["floating_sensors_total"]
+    control_room_current = source_by_name.get("control_room_snapshot", {}).get("state") == "CURRENT"
+    coverage_current = requested_coverage == "AVAILABLE_CURRENT_SNAPSHOT" and control_room_current and counts_consistent
+    coverage = {"state": "AVAILABLE_CURRENT_SNAPSHOT" if coverage_current else "UNAVAILABLE_STALE_OR_INVALID"}
+    for name in _MONITOR_COUNT_FIELDS:
+        coverage[name] = counts[name] if coverage_current else "UNKNOWN"
+    generated = str(raw.get("generated_at_utc", "UNKNOWN"))
+    if generated != "UNKNOWN" and not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", generated):
+        generated = "UNKNOWN"
+    return {"status": effective_status, "reported_status": reported_status,
+            "source_kind": "LOCAL_MONITORING_NONCANONICAL",
+            "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "binding_state": binding,
+            "generated_at_utc": generated, "alert_present": alert_present,
+            "sources": sources, "coverage": coverage, "reason": "AVAILABLE"}
+
+
+def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None, monitor: Path | None = None) -> dict:
     sha = resolve_ref(repo, ref)
     if expected_sha and sha != expected_sha:
         raise BuildError(f"expected SHA mismatch: expected {expected_sha}, resolved {sha}")
@@ -230,8 +324,11 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
                       [{"id": item.get("lane_id", "UNKNOWN"),
                         "state": {"WAITING": "READY", "PAUSED": "READY", "REVIEW": "RUNNING", "FROZEN": "RUNNING", "INTEGRATING": "RUNNING"}.get(item.get("state", "UNKNOWN"), item.get("state", "UNKNOWN")),
                         "blocker_type": {"A": "PRODUCT_DEFECT", "B": "HARNESS", "C": "ENVIRONMENT", "D": "EXECUTION", "E": "OWNER_EXTERNAL"}.get(str(item.get("blocker_class", ""))[:1], "NOT_APPLICABLE"),
-                        "summary": lane_summary(item), "source_kind": "LANE_REGISTRY_NONCANONICAL"}
-                       for item in lane_registry(registry) if item.get("state") != "DONE"],
+                        "summary": lane_summary(item), "source_kind": "LANE_REGISTRY_NONCANONICAL",
+                        "registry_classification": item.get("classification", "UNKNOWN"),
+                        "attention_required": item.get("attention_required", False)}
+                       for item in lane_registry(registry)],
+             "monitoring": monitor_health(monitor, sha),
              "compare": {"compatibility_rule": "DIRECT only when basis_id is identical; otherwise DIFFERENT_BASIS / N/A."}}
     (out / "report_index.json").write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return index
@@ -249,9 +346,10 @@ def main() -> int:
     parser.add_argument("--as-of", default=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"))
     parser.add_argument("--lane-registry", type=Path)
     parser.add_argument("--expected-sha")
+    parser.add_argument("--monitor-health", type=Path)
     args = parser.parse_args()
     try:
-        build(args.repo, args.ref, args.out, args.as_of, args.expected_sha, args.lane_registry)
+        build(args.repo, args.ref, args.out, args.as_of, args.expected_sha, args.lane_registry, args.monitor_health)
     except BuildError as error:
         print(f"FAIL_CLOSED: {error}", file=sys.stderr)
         return 2

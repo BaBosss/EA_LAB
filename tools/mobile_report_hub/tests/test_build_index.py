@@ -85,7 +85,8 @@ class MobileReportHubDataTests(unittest.TestCase):
         registry.write_text(json.dumps({"lanes": [{
             "lane_id": "fixture-dynamic-lane", "state": "RUNNING", "blocker_class": "C",
             "objective": r"export exact fixture from D:\Meta 5",
-            "direct_consumer": "fixture dynamic observation"
+            "direct_consumer": "fixture dynamic observation",
+            "classification": "ACTIVE_CURRENT", "attention_required": False
         }]}), encoding="utf-8")
         index = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, registry)
         canonical = next(item for item in index["queue"] if item["id"] == "BOSS19-P4-REGIME-ATTRIBUTION")
@@ -110,6 +111,85 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(build_index.lane_summary({"objective": unsafe[0], "direct_consumer": "safe consumer"}), "safe consumer")
         self.assertEqual(build_index.lane_summary({"objective": "https://example.com/report"}), "https://example.com/report")
         self.assertEqual(build_index.lane_summary({"objective": "http://example.com/report"}), "http://example.com/report")
+    def test_monitor_health_projection_is_whitelisted_and_bound(self):
+        monitor = Path(self.temp.name) / "monitor.json"
+        payload = {
+            "schema_version": "EA_LAB_MONITOR_HEALTH_V1",
+            "source_kind": "LOCAL_MONITORING_NONCANONICAL",
+            "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY",
+            "repo_head": SHA, "status": "DEGRADED",
+            "generated_at_utc": "2026-08-30T00:00:00Z", "alert_present": True,
+            "sources": [{"name": "live_evidence", "state": "STALE", "age_hours": 144.0,
+                         "observed_at_utc": "2026-08-24T23:59:59Z",
+                         "timestamp_basis": "latest_filename_date_upper_bound",
+                         "account": "463666728", "path": r"D:\secret\data.csv"}],
+            "coverage": {"state": "UNAVAILABLE_STALE_OR_INVALID", "deal_sensors_total": 6}
+        }
+        monitor.write_text(json.dumps(payload), encoding="utf-8")
+        index = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, monitor)
+        result = index["monitoring"]
+        self.assertEqual(result["status"], "DEGRADED")
+        self.assertEqual(result["binding_state"], "MATCHES_CANONICAL_SHA")
+        self.assertEqual(result["sources"][0]["age_hours"], 144.0)
+        self.assertEqual(result["coverage"]["deal_sensors_total"], "UNKNOWN")
+        blob = json.dumps(result)
+        self.assertNotIn("463666728", blob)
+        self.assertNotIn(r"D:\secret", blob)
+
+    def test_monitor_health_missing_or_invalid_is_fail_visible_not_fatal(self):
+        index = self.build()
+        self.assertEqual(index["monitoring"]["status"], "UNAVAILABLE")
+        bad = Path(self.temp.name) / "bad-monitor.json"
+        bad.write_text('{"schema_version":"WRONG","status":"CURRENT"}', encoding="utf-8")
+        out = Path(self.temp.name) / "bad-out"
+        index = build_index.build(ROOT, SHA, out, FIXED_TIME, SHA, None, bad)
+        self.assertEqual(index["monitoring"]["status"], "UNAVAILABLE")
+        self.assertEqual(index["monitoring"]["reason"], "INVALID_SCHEMA")
+
+    def test_monitor_health_different_repo_head_is_explicit(self):
+        monitor = Path(self.temp.name) / "monitor-other.json"
+        payload = {"schema_version":"EA_LAB_MONITOR_HEALTH_V1",
+                   "source_kind":"LOCAL_MONITORING_NONCANONICAL",
+                   "authority":"READ_ONLY_NO_RUNTIME_AUTHORITY",
+                   "repo_head":"0"*40,"status":"CURRENT",
+                   "generated_at_utc":"2026-08-30T00:00:00Z","alert_present":False,
+                   "sources":[],"coverage":{"state":"UNAVAILABLE_STALE_OR_INVALID"}}
+        monitor.write_text(json.dumps(payload), encoding="utf-8")
+        index = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, monitor)
+        self.assertEqual(index["monitoring"]["binding_state"], "DIFFERENT_REPO_HEAD")
+
+    def test_lane_registry_audit_filters_stale_and_closed(self):
+        registry = Path(self.temp.name) / "audit.json"
+        records = [
+            {"lane_id":"active","state":"RUNNING","classification":"ACTIVE_CURRENT","attention_required":False,"objective":"active work"},
+            {"lane_id":"aged","state":"FROZEN","classification":"ACTIVE_AGED","attention_required":True,"objective":"aged work"},
+            {"lane_id":"queued","state":"BLOCKED","classification":"QUEUED_CURRENT","attention_required":False,"objective":"queued work"},
+            {"lane_id":"stale","state":"WAITING","classification":"STALE_NONACTIVE","attention_required":True,"objective":"stale work"},
+            {"lane_id":"done","state":"DONE","classification":"CLOSED","attention_required":False,"objective":"done work"},
+        ]
+        registry.write_text(json.dumps({"result":"AUDIT","records":records}), encoding="utf-8")
+        index = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, registry)
+        dynamic = {item["id"]: item for item in index["queue"] if item.get("source_kind") == "LANE_REGISTRY_NONCANONICAL"}
+        self.assertEqual(set(dynamic), {"active", "aged", "queued"})
+        self.assertTrue(dynamic["aged"]["attention_required"])
+        self.assertEqual(dynamic["aged"]["registry_classification"], "ACTIVE_AGED")
+
+    def test_monitor_health_rejects_coercion_and_stale_coverage(self):
+        monitor = Path(self.temp.name) / "monitor-adversarial.json"
+        payload = {"schema_version":"EA_LAB_MONITOR_HEALTH_V1","source_kind":"LOCAL_MONITORING_NONCANONICAL",
+                   "authority":"READ_ONLY_NO_RUNTIME_AUTHORITY","repo_head":SHA,"status":"CURRENT",
+                   "generated_at_utc":"2026-08-30T00:00:00Z","alert_present":"false",
+                   "sources":[{"name":"live_evidence","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"latest_filename_date_upper_bound"},
+                              {"name":"control_room_snapshot","state":"STALE","age_hours":2,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"snapshot_meta_generated_at"},
+                              {"name":"daily_monitor_success","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}],
+                   "coverage":{"state":"AVAILABLE_CURRENT_SNAPSHOT","deal_sensors_total":True,"deal_sensors_fresh":1,"floating_sensors_total":2,"floating_sensors_fresh":1}}
+        monitor.write_text(json.dumps(payload), encoding="utf-8")
+        result = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, monitor)["monitoring"]
+        self.assertEqual(result["status"], "DEGRADED")
+        self.assertEqual(result["alert_present"], "UNKNOWN")
+        self.assertEqual(result["coverage"]["state"], "UNAVAILABLE_STALE_OR_INVALID")
+        self.assertEqual(result["coverage"]["deal_sensors_total"], "UNKNOWN")
+
     def test_expected_sha_mismatch_and_missing_source_fail_closed(self):
         with self.assertRaisesRegex(build_index.BuildError, "expected SHA mismatch"):
             build_index.build(ROOT, SHA, self.out, FIXED_TIME, "0" * 40, None)
