@@ -1,0 +1,16 @@
+{
+  "bwd_role": "validation_only_no_retuning",
+  "coarse_head": "0c0d35d5422e85115947e882694f73740766eebe",
+  "fixed_set_sha256": "e98bc667a5384047991a1bfc674d84caefec381534834500b1a3db40652f6bc5",
+  "holdout": "UNSPENT",
+  "hypothesis_revision": "B16-H05-r1",
+  "optimization_search_closed": true,
+  "parent_sell_set_sha256": "c0e7cfad84236b798dece5b5106d271c708553fb220af370dba913d8610105de",
+  "schema": "ea-lab-b16-opt01-center-lock/1",
+  "selected": {
+    "_16_RsiHigh": 70.0,
+    "_16_RsiPeriod": 21
+  },
+  "selection_basis": "sole preregistered five-cell orthogonal cross with MAIN net>0 in all five cells",
+  "selection_sha256": "8701d2fbe107c8f814875f34456adb34997f89c85b6f1827f9a2a9515ced1622"
+}
