@@ -24,13 +24,22 @@ try{
     $success=Join-Path $portfolio 'daily_monitor_last_success.txt';Write-NoBom $success '2026-08-30 11:00:00Z'
     foreach($p in @($liveFile,$cr,$success)){(Get-Item $p).LastWriteTimeUtc=[datetime]'2026-09-01T00:00:00Z'}
     $out=Join-Path $root 'health.json'
+    $beforeHashes=@{};foreach($p in @($liveFile,$cr,$success)){$beforeHashes[$p]=(Get-FileHash $p -Algorithm SHA256).Hash}
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
     $j=Get-Content $out -Raw|ConvertFrom-Json;$raw=Get-Content $out -Raw
+    foreach($p in @($liveFile,$cr,$success)){Assert-True ((Get-FileHash $p -Algorithm SHA256).Hash -eq $beforeHashes[$p]) "source evidence must remain byte-identical: $p"}
     Assert-True ($j.status -eq 'CURRENT') 'fresh semantic timestamps should be CURRENT'
     Assert-True ($j.coverage.state -eq 'AVAILABLE_CURRENT_SNAPSHOT') 'fresh snapshot coverage should be available'
     Assert-True ($j.coverage.deal_sensors_total -eq 1 -and $j.coverage.deal_sensors_fresh -eq 1) 'deal counts'
     Assert-True ($raw -notmatch 'SECRET_ACCOUNT') 'account identifiers must not leak'
     Assert-True ($raw -notmatch [regex]::Escape($root)) 'local paths must not leak'
+
+    Write-NoBom $success '2026-08-28 00:00:00Z';(Get-Item $success).LastWriteTimeUtc=[datetime]'2026-09-01T00:00:00Z'
+    & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
+    $j=Get-Content $out -Raw|ConvertFrom-Json;$successHealth=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
+    Assert-True ($successHealth.state -eq 'STALE') 'success marker content, not checkout mtime, must drive freshness'
+    Assert-True ($successHealth.timestamp_basis -eq 'success_marker_content') 'success timestamp basis must be explicit'
+    Write-NoBom $success '2026-08-30 11:00:00Z'
 
     Write-Snapshot $cr '2026-08-28T00:00:00Z'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
@@ -55,6 +64,13 @@ try{
     Assert-True ($j.status -eq 'DEGRADED' -and $j.alert_present) 'alert marker must degrade status'
     Assert-True ($raw -notmatch 'sensitive operational prose') 'alert prose must not be copied'
     Remove-Item (Join-Path $portfolio 'MONITOR_ALERT.txt') -Force
+
+    Remove-Item $success -Force
+    & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
+    $j=Get-Content $out -Raw|ConvertFrom-Json;$missingSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
+    Assert-True ($missingSuccess.state -eq 'MISSING') 'missing success marker must be explicit'
+    Assert-True ($j.status -eq 'DEGRADED') 'missing evidence must degrade status'
+    Write-NoBom $success '2026-08-30 11:00:00Z'
 
     Write-NoBom $cr '{broken'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
