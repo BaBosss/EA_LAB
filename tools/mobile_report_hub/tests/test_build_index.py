@@ -189,6 +189,21 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(result["coverage"]["state"], "UNAVAILABLE_STALE_OR_INVALID")
         self.assertEqual(result["coverage"]["deal_sensors_total"], "UNKNOWN")
 
+    def test_monitor_health_rejects_malformed_source_age_or_timestamp(self):
+        monitor = Path(self.temp.name) / "monitor-malformed-row.json"
+        valid = [{"name":"live_evidence","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"latest_filename_date_upper_bound"},
+                 {"name":"control_room_snapshot","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"snapshot_meta_generated_at"},
+                 {"name":"daily_monitor_success","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}]
+        base={"schema_version":"EA_LAB_MONITOR_HEALTH_V1","source_kind":"LOCAL_MONITORING_NONCANONICAL","authority":"READ_ONLY_NO_RUNTIME_AUTHORITY","repo_head":SHA,"status":"CURRENT","generated_at_utc":"2026-08-30T00:00:00Z","alert_present":False,"coverage":{"state":"UNAVAILABLE_STALE_OR_INVALID"}}
+        mutations=(("age_hours","1"),("age_hours",True),("age_hours",-1),("observed_at_utc","not-a-time"))
+        for field,value in mutations:
+            rows=[dict(x) for x in valid]; rows[0][field]=value; payload=dict(base); payload["sources"]=rows; monitor.write_text(json.dumps(payload),encoding="utf-8")
+            result=build_index.build(ROOT,SHA,Path(self.temp.name)/("badrow-"+field+str(value)),FIXED_TIME,SHA,None,monitor)["monitoring"]
+            self.assertEqual(result["status"],"UNAVAILABLE"); self.assertEqual(result["reason"],"INVALID_SOURCE_ROW")
+        rows=[dict(x) for x in valid]; rows[0].update({"state":"MISSING","age_hours":None,"observed_at_utc":None}); payload=dict(base); payload["sources"]=rows; monitor.write_text(json.dumps(payload),encoding="utf-8")
+        result=build_index.build(ROOT,SHA,Path(self.temp.name)/"valid-missing-row",FIXED_TIME,SHA,None,monitor)["monitoring"]
+        self.assertEqual(result["status"],"DEGRADED"); self.assertEqual({x["name"]:x for x in result["sources"]}["live_evidence"]["age_hours"],"UNKNOWN")
+
     def test_monitor_health_rejects_duplicate_or_unknown_sources(self):
         monitor = Path(self.temp.name) / "monitor-source-set.json"
         valid = [{"name":"live_evidence","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"latest_filename_date_upper_bound"},

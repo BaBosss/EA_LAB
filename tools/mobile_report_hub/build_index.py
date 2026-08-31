@@ -271,10 +271,19 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
         basis = str(item.get("timestamp_basis", ""))
         if source_state not in _MONITOR_STATES or basis != expected_basis[item["name"]]:
             return unavailable_monitoring("INVALID_SOURCE_ROW")
-        age = item.get("age_hours")
-        age = round(float(age), 2) if isinstance(age, (int, float)) and not isinstance(age, bool) and age >= 0 else "UNKNOWN"
-        observed = str(item.get("observed_at_utc", "UNKNOWN"))
-        if observed != "UNKNOWN" and not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", observed):
+        raw_age = item.get("age_hours")
+        raw_observed = item.get("observed_at_utc")
+        if source_state in {"CURRENT", "STALE"}:
+            if not isinstance(raw_age, (int, float)) or isinstance(raw_age, bool) or raw_age < 0:
+                return unavailable_monitoring("INVALID_SOURCE_ROW")
+            if not isinstance(raw_observed, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw_observed):
+                return unavailable_monitoring("INVALID_SOURCE_ROW")
+            age = round(float(raw_age), 2)
+            observed = raw_observed
+        else:
+            if raw_age is not None or raw_observed is not None:
+                return unavailable_monitoring("INVALID_SOURCE_ROW")
+            age = "UNKNOWN"
             observed = "UNKNOWN"
         sources.append({"name": item["name"], "state": source_state, "age_hours": age,
                         "observed_at_utc": observed, "timestamp_basis": basis})
