@@ -1,0 +1,19 @@
+{
+  "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+  "cells_completed": 2,
+  "cells_expected": 2,
+  "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+  "exact_symbol_tf_dates_model": true,
+  "full_surface": "173/173",
+  "hard_kill": "0/2",
+  "holdout": "UNSPENT",
+  "leverage_1_100_match": "2/2",
+  "optimization": "NONE",
+  "overall": "PASS",
+  "schema": "ea-lab-b16-h07-depth3-mechanical/1",
+  "set_sha256": "3dbcf63f002a0bfad0371c5f26acf7156a6eabc8820f31a0d67f663f24f3edd5",
+  "source_parser_reconciliation": "PASS",
+  "stale_mtime_warning": "RECONCILED_FALSE_POSITIVE",
+  "tester_exit_zero": true,
+  "truncation_false": "2/2"
+}

@@ -1,0 +1,63 @@
+{
+  "classification": "DEPTH3_RECOVERS_2025_SIGN",
+  "contact_2025_depth3": true,
+  "depth3_2025": {
+    "active_time_share": 0.136149,
+    "cycles": 23,
+    "depth3_contact_cycles": 2,
+    "depth4_contact_cycles": 0,
+    "max_depth": 3,
+    "net": 129.33,
+    "pf": null,
+    "trades": 27,
+    "variant": "DEPTH3",
+    "window": "MAIN",
+    "year": 2025
+  },
+  "depth3_cells": [
+    {
+      "active_time_share": 0.208264,
+      "cycles": 70,
+      "eligible": true,
+      "eqdd_pct": 1.57,
+      "gross_loss": 0.0,
+      "gross_profit": 309.13,
+      "max_depth": 3,
+      "max_lots": 0.03,
+      "multi_entry_gp_share": 0.695759,
+      "net": 309.13,
+      "pf": null,
+      "pf_mt5_field": 0.0,
+      "pf_state": "UNDEFINED_NO_GROSS_LOSS",
+      "report_sha256": "31be0b661c1819d788dafd4de68881e1f20fc70a46532eb039df097e69ea1f08",
+      "trades": 78,
+      "variant": "DEPTH3",
+      "window": "MAIN"
+    },
+    {
+      "active_time_share": 0.089629,
+      "cycles": 69,
+      "eligible": true,
+      "eqdd_pct": 1.23,
+      "gross_loss": 0.0,
+      "gross_profit": 279.79,
+      "max_depth": 3,
+      "max_lots": 0.03,
+      "multi_entry_gp_share": 0.575682,
+      "net": 279.79,
+      "pf": null,
+      "pf_mt5_field": 0.0,
+      "pf_state": "UNDEFINED_NO_GROSS_LOSS",
+      "report_sha256": "6c265598a33590733a2301a231bcd49e116d39bd83e3075f63230c15147f684a",
+      "trades": 75,
+      "variant": "DEPTH3",
+      "window": "BWD"
+    }
+  ],
+  "holdout": "UNSPENT",
+  "hypothesis_falsified": false,
+  "hypothesis_id": "HYP-B16-GBP-SELL-H4-DEPTH3-01",
+  "optimization": "NONE",
+  "prereg_head": "e2cf21e2a0c9f95559b88ebb92d9a520832b7126",
+  "schema": "ea-lab-b16-h07-depth3-evidence/1"
+}

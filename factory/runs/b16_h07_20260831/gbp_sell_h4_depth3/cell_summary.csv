@@ -1,0 +1,3 @@
+variant,window,eligible,pf,pf_mt5_field,pf_state,trades,net,eqdd_pct,cycles,max_depth,max_lots,active_time_share,multi_entry_gp_share,gross_profit,gross_loss,report_sha256
+DEPTH3,MAIN,True,,0.0,UNDEFINED_NO_GROSS_LOSS,78,309.13,1.57,70,3,0.03,0.208264,0.695759,309.13,0.0,31be0b661c1819d788dafd4de68881e1f20fc70a46532eb039df097e69ea1f08
+DEPTH3,BWD,True,,0.0,UNDEFINED_NO_GROSS_LOSS,75,279.79,1.23,69,3,0.03,0.089629,0.575682,279.79,0.0,6c265598a33590733a2301a231bcd49e116d39bd83e3075f63230c15147f684a
