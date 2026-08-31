@@ -1,0 +1,26 @@
+{
+  "schema": "ea-lab-b15-countbars-sens01-execution/1",
+  "canonical_base_sha": "c0e9f5123883e67e7692c702efeefd00318ca781",
+  "prereg_commit": "a10898e21f555f8074c693874bc5ca5cb25941cc",
+  "hypothesis_id": "HYP-B15-COUNTBARS-SENS-01",
+  "expert": "EALabTpl\\Boss_15_ST03",
+  "runtime_lane": "MT5-lane3",
+  "terminal": "D:\\Meta 5c\\terminal64.exe",
+  "model": 1,
+  "deposit": 10000,
+  "leverage": 100,
+  "optimization": 0,
+  "parent_set_sha256": "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+  "count1_set_sha256": "4fb0fc9ba11f0b9f762bd6115c447891447c74cea2021c9958dacbe9ae5df94c",
+  "count3_set_sha256": "6834c47a4f7f43a2679c03dd237101f2b011ea155cb8fd9a4676837ef73d75e1",
+  "accepted_ex5_sha256": "f3dd7c5f2e2c1eb5a9f30a95a120e8977aa071e86f5ea4d9929e84f74940803a",
+  "changed_parameter": "_15_CountBars",
+  "parent_value": 2,
+  "child_values": [
+    1,
+    3
+  ],
+  "holdout": "UNSPENT",
+  "original_prereg_commit": "e3f6d13e3cc3dc1a60882a5d672b33046f02a811",
+  "reanchor_reason": "canonical advanced with reviewed B16-only commits before execution; experiment semantics unchanged"
+}
