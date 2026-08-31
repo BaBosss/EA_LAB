@@ -94,23 +94,17 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(canonical["source_kind"], "GIT_CANONICAL")
         self.assertEqual(dynamic["source_kind"], "LANE_REGISTRY_NONCANONICAL")
         self.assertEqual(dynamic["blocker_type"], "ENVIRONMENT")
-        self.assertEqual(dynamic["summary"], "fixture dynamic observation")
+        self.assertEqual(dynamic["summary"], "Noncanonical Lane Registry status: ACTIVE_CURRENT.")
         self.assertNotRegex(dynamic["summary"], r"[A-Za-z]:\\")
 
-    def test_lane_summary_rejects_common_windows_path_shapes(self):
-        unsafe = [
-            r"path:D:\Meta 5", r"[D:\Meta 5]", r"see=D:\Meta 5",
-            r"objective=D:\Meta 5,direct=ok", r"net:\\server\share",
-            "C:/forward/slash/path exported",
-            r"exported result inD:\Meta 5\logs\out.csv",
-            r"artifactD:\Meta 5\report.html", r"seeD:\Meta 5\notes.txt",
-            r"backupC:\Users\bob\Desktop",
-        ]
-        for text in unsafe:
-            self.assertEqual(build_index.lane_summary({"objective": text}), "[LOCAL_PATH_REDACTED]", text)
-        self.assertEqual(build_index.lane_summary({"objective": unsafe[0], "direct_consumer": "safe consumer"}), "safe consumer")
-        self.assertEqual(build_index.lane_summary({"objective": "https://example.com/report"}), "https://example.com/report")
-        self.assertEqual(build_index.lane_summary({"objective": "http://example.com/report"}), "http://example.com/report")
+    def test_lane_summary_never_exports_registry_free_text(self):
+        hostile = [r"path:D:\Meta 5", "raw alert account 463666728", "https://example.com/report", "safe consumer"]
+        for text in hostile:
+            summary = build_index.lane_summary({"objective":text,"direct_consumer":text,"classification":"ACTIVE_CURRENT"})
+            self.assertEqual(summary, "Noncanonical Lane Registry status: ACTIVE_CURRENT.")
+            self.assertNotIn(text, summary)
+        self.assertEqual(build_index.lane_summary({"classification":"QUEUED_CURRENT"}), "Noncanonical Lane Registry status: QUEUED_CURRENT.")
+
     def test_monitor_health_projection_is_whitelisted_and_bound(self):
         monitor = Path(self.temp.name) / "monitor.json"
         payload = {
@@ -122,7 +116,9 @@ class MobileReportHubDataTests(unittest.TestCase):
             "sources": [{"name": "live_evidence", "state": "STALE", "age_hours": 144.0,
                          "observed_at_utc": "2026-08-24T23:59:59Z",
                          "timestamp_basis": "latest_filename_date_upper_bound",
-                         "account": "463666728", "path": r"D:\secret\data.csv"}],
+                         "account": "463666728", "path": r"D:\secret\data.csv"},
+                        {"name":"control_room_snapshot","state":"STALE","age_hours":144.0,"observed_at_utc":"2026-08-24T23:59:59Z","timestamp_basis":"snapshot_meta_generated_at"},
+                        {"name":"daily_monitor_success","state":"STALE","age_hours":144.0,"observed_at_utc":"2026-08-24T23:59:59Z","timestamp_basis":"success_marker_content"}],
             "coverage": {"state": "UNAVAILABLE_STALE_OR_INVALID", "deal_sensors_total": 6}
         }
         monitor.write_text(json.dumps(payload), encoding="utf-8")
@@ -153,7 +149,10 @@ class MobileReportHubDataTests(unittest.TestCase):
                    "authority":"READ_ONLY_NO_RUNTIME_AUTHORITY",
                    "repo_head":"0"*40,"status":"CURRENT",
                    "generated_at_utc":"2026-08-30T00:00:00Z","alert_present":False,
-                   "sources":[],"coverage":{"state":"UNAVAILABLE_STALE_OR_INVALID"}}
+                   "sources":[{"name":"live_evidence","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"latest_filename_date_upper_bound"},
+                              {"name":"control_room_snapshot","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"snapshot_meta_generated_at"},
+                              {"name":"daily_monitor_success","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}],
+                   "coverage":{"state":"UNAVAILABLE_STALE_OR_INVALID"}}
         monitor.write_text(json.dumps(payload), encoding="utf-8")
         index = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, monitor)
         self.assertEqual(index["monitoring"]["binding_state"], "DIFFERENT_REPO_HEAD")
@@ -189,6 +188,26 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(result["alert_present"], "UNKNOWN")
         self.assertEqual(result["coverage"]["state"], "UNAVAILABLE_STALE_OR_INVALID")
         self.assertEqual(result["coverage"]["deal_sensors_total"], "UNKNOWN")
+
+    def test_monitor_health_rejects_duplicate_or_unknown_sources(self):
+        monitor = Path(self.temp.name) / "monitor-source-set.json"
+        valid = [{"name":"live_evidence","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"latest_filename_date_upper_bound"},
+                 {"name":"control_room_snapshot","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"snapshot_meta_generated_at"},
+                 {"name":"daily_monitor_success","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}]
+        base={"schema_version":"EA_LAB_MONITOR_HEALTH_V1","source_kind":"LOCAL_MONITORING_NONCANONICAL","authority":"READ_ONLY_NO_RUNTIME_AUTHORITY","repo_head":SHA,"status":"CURRENT","generated_at_utc":"2026-08-30T00:00:00Z","alert_present":False,"coverage":{"state":"UNAVAILABLE_STALE_OR_INVALID"}}
+        for sources in (valid+[dict(valid[0])], [valid[0],valid[1],dict(valid[1])], valid[:2]+[{"name":"unknown_source","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}]):
+            payload=dict(base); payload["sources"]=sources; monitor.write_text(json.dumps(payload),encoding="utf-8")
+            result=build_index.build(ROOT,SHA,Path(self.temp.name)/("srcset"+str(len(sources))),FIXED_TIME,SHA,None,monitor)["monitoring"]
+            self.assertEqual(result["status"],"UNAVAILABLE"); self.assertEqual(result["reason"],"INVALID_SOURCE_SET")
+
+    def test_lane_registry_hostile_free_text_and_account_like_id_are_redacted(self):
+        registry=Path(self.temp.name)/"hostile-audit.json"
+        records=[{"lane_id":"account-463666728","state":"RUNNING","classification":"ACTIVE_CURRENT","attention_required":False,"objective":"ALERT account 463666728 at D:\\Meta 5 raw prose","direct_consumer":"secret alert body"}]
+        registry.write_text(json.dumps({"result":"AUDIT","records":records}),encoding="utf-8")
+        index=build_index.build(ROOT,SHA,Path(self.temp.name)/"hostile-out",FIXED_TIME,SHA,registry)
+        blob=json.dumps(index["queue"]); self.assertNotIn("463666728",blob); self.assertNotIn("secret alert body",blob); self.assertNotIn("raw prose",blob); self.assertNotIn(r"D:\Meta 5",blob)
+        dynamic=[x for x in index["queue"] if x.get("source_kind")=="LANE_REGISTRY_NONCANONICAL"][0]
+        self.assertRegex(dynamic["id"],r"^REDACTED_LANE_[0-9a-f]{8}$"); self.assertEqual(dynamic["summary"],"Noncanonical Lane Registry status: ACTIVE_CURRENT.")
 
     def test_expected_sha_mismatch_and_missing_source_fail_closed(self):
         with self.assertRaisesRegex(build_index.BuildError, "expected SHA mismatch"):

@@ -191,12 +191,10 @@ def lane_registry(path: Path | None) -> list[dict]:
         classification = item.get("classification")
         if not isinstance(classification, str):
             continue
-        if classification in {"CLOSED", "STALE_NONACTIVE"}:
-            continue
-        if classification != "QUEUED_CURRENT" and not classification.startswith("ACTIVE_"):
+        if classification not in _LANE_CURRENT_CLASSIFICATIONS:
             continue
         row = {}
-        for key in ("lane_id", "state", "blocker_class", "objective", "direct_consumer", "classification"):
+        for key in ("lane_id", "state", "blocker_class", "classification"):
             value = item.get(key)
             if isinstance(value, (str, int, float)) and not isinstance(value, bool):
                 row[key] = str(value)
@@ -206,18 +204,20 @@ def lane_registry(path: Path | None) -> list[dict]:
     return result
 
 
-_LOCAL_WINDOWS_PATH_RE = re.compile(r"(?:[A-Za-z]:[\\/](?![\\/])|\\\\[^\\/\s]+[\\/])")
+_LANE_CURRENT_CLASSIFICATIONS = {"ACTIVE_CURRENT", "ACTIVE_MISSING_WORKTREE", "ACTIVE_IDENTITY_MISMATCH", "ACTIVE_AGED", "QUEUED_CURRENT"}
+_LANE_ID_SENSITIVE_RE = re.compile(r"(?i)(?:account|acct|login)[._:-]*[0-9]+|(?<![0-9])[0-9]{9,}(?![0-9])")
 
-def contains_local_windows_path(value: object) -> bool:
-    return bool(value and _LOCAL_WINDOWS_PATH_RE.search(str(value)))
-
+def safe_lane_id(value: object) -> str:
+    text = str(value or "UNKNOWN")
+    if _LANE_ID_SENSITIVE_RE.search(text):
+        return "REDACTED_LANE_" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:8]
+    return text
 
 def lane_summary(item: dict) -> str:
-    candidates = [item.get("objective"), item.get("direct_consumer")]
-    for value in candidates:
-        if value and not contains_local_windows_path(value):
-            return str(value)
-    return "[LOCAL_PATH_REDACTED]" if any(candidates) else "UNKNOWN"
+    classification = str(item.get("classification", "UNKNOWN"))
+    if classification not in _LANE_CURRENT_CLASSIFICATIONS:
+        return "Noncanonical Lane Registry status unavailable."
+    return f"Noncanonical Lane Registry status: {classification}."
 
 
 _MONITOR_SOURCE_NAMES = {"live_evidence", "control_room_snapshot", "daily_monitor_success"}
@@ -256,14 +256,21 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
         return unavailable_monitoring("INVALID_STATUS")
     repo_head = str(raw.get("repo_head", "UNKNOWN"))
     binding = "MATCHES_CANONICAL_SHA" if repo_head == canonical_sha else ("DIFFERENT_REPO_HEAD" if re.fullmatch(r"[0-9a-f]{40}", repo_head) else "UNKNOWN")
+    raw_sources = raw.get("sources")
+    if not isinstance(raw_sources, list) or len(raw_sources) != len(_MONITOR_SOURCE_NAMES):
+        return unavailable_monitoring("INVALID_SOURCE_SET")
+    names = [item.get("name") for item in raw_sources if isinstance(item, dict)]
+    if len(names) != len(raw_sources) or set(names) != _MONITOR_SOURCE_NAMES or len(set(names)) != len(names):
+        return unavailable_monitoring("INVALID_SOURCE_SET")
+    expected_basis = {"live_evidence":"latest_filename_date_upper_bound",
+                      "control_room_snapshot":"snapshot_meta_generated_at",
+                      "daily_monitor_success":"success_marker_content"}
     sources = []
-    for item in raw.get("sources", []):
-        if not isinstance(item, dict) or item.get("name") not in _MONITOR_SOURCE_NAMES:
-            continue
+    for item in raw_sources:
         source_state = str(item.get("state", "INVALID"))
         basis = str(item.get("timestamp_basis", ""))
-        if source_state not in _MONITOR_STATES or basis not in _MONITOR_BASES:
-            continue
+        if source_state not in _MONITOR_STATES or basis != expected_basis[item["name"]]:
+            return unavailable_monitoring("INVALID_SOURCE_ROW")
         age = item.get("age_hours")
         age = round(float(age), 2) if isinstance(age, (int, float)) and not isinstance(age, bool) and age >= 0 else "UNKNOWN"
         observed = str(item.get("observed_at_utc", "UNKNOWN"))
@@ -321,7 +328,7 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
                         "summary": "B16 H03 confirmation complete; H04 is not unlocked.", "source_kind": "GIT_CANONICAL"},
                        {"id": "BOSS19-P4-REGIME-ATTRIBUTION", "state": "BLOCKED", "blocker_type": "ENVIRONMENT",
                         "summary": "Immutable tester-data-identity OHLC prerequisite remains missing; not strategy failure.", "source_kind": "GIT_CANONICAL"}] +
-                      [{"id": item.get("lane_id", "UNKNOWN"),
+                      [{"id": safe_lane_id(item.get("lane_id", "UNKNOWN")),
                         "state": {"WAITING": "READY", "PAUSED": "READY", "REVIEW": "RUNNING", "FROZEN": "RUNNING", "INTEGRATING": "RUNNING"}.get(item.get("state", "UNKNOWN"), item.get("state", "UNKNOWN")),
                         "blocker_type": {"A": "PRODUCT_DEFECT", "B": "HARNESS", "C": "ENVIRONMENT", "D": "EXECUTION", "E": "OWNER_EXTERNAL"}.get(str(item.get("blocker_class", ""))[:1], "NOT_APPLICABLE"),
                         "summary": lane_summary(item), "source_kind": "LANE_REGISTRY_NONCANONICAL",
