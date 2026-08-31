@@ -30,11 +30,31 @@ class TimelineTests(unittest.TestCase):
         self.assertEqual(len(ev),320)
         self.assertTrue(all(x[0]==bars[i]["close_time"] for i,x in enumerate(ev)))
 
-    def test_quarantine_conservative_start(self):
+    def test_macro_stale_boundary_is_strictly_older_than_120h(self):
+        eligible=datetime(2025,1,1,tzinfo=timezone.utc)
+        stale=p4.macro_stale_event_time(eligible)
+        self.assertEqual(stale,eligible+timedelta(hours=120,seconds=1))
+        self.assertLess(eligible+timedelta(hours=120),stale)
+
+    def test_quarantine_covers_full_transition_server_dates(self):
         with tempfile.TemporaryDirectory() as td:
             q=Path(td)/"q.csv"
-            q.write_text("time_server,open,high,low,close,tick_volume,spread,real_volume,reason\n2025.03.09 12:00:00,1,1,1,1,0,0,0,UNKNOWN_DST_TRANSITION\n",encoding="utf-8")
-            self.assertEqual(p4.quarantine_starts(q),[datetime(2025,3,8,21,0,tzinfo=timezone.utc)])
+            q.write_text("time_server,open,high,low,close,tick_volume,spread,real_volume,reason\n2025.03.09 12:00:00,1,1,1,1,0,0,0,UNKNOWN_DST_TRANSITION\n2025.11.02 12:00:00,1,1,1,1,0,0,0,UNKNOWN_DST_TRANSITION\n",encoding="utf-8")
+            self.assertEqual(p4.quarantine_intervals(q),[
+                (datetime(2025,3,8,21,0,tzinfo=timezone.utc),datetime(2025,3,9,22,0,tzinfo=timezone.utc)),
+                (datetime(2025,11,1,21,0,tzinfo=timezone.utc),datetime(2025,11,2,22,0,tzinfo=timezone.utc))])
+
+    def test_quarantine_suppresses_internal_events_and_restores_at_end(self):
+        start=datetime(2025,3,8,21,0,tzinfo=timezone.utc); end=datetime(2025,3,9,22,0,tzinfo=timezone.utc)
+        before=start-timedelta(minutes=15); inside=start+timedelta(minutes=15); last_inside=end-timedelta(minutes=15); after=end+timedelta(minutes=15)
+        mk=lambda state:{"local_state":state,"local_bar_close_utc":"x","local_d":1,"local_qtrend":1,"vol_state":"NORMAL","vol_bar_close_utc":"x","vol_natr_pct":1,"vol_q20":1,"vol_q80":1,"vol_q95":1,"local_unknown_reason":""}
+        out=p4.apply_quarantine_intervals([(before,mk("BEFORE")),(inside,mk("INSIDE")),(last_inside,mk("RESTORE")),(after,mk("AFTER"))],[(start,end)])
+        mapping=dict(out)
+        self.assertNotIn(inside,mapping); self.assertNotIn(last_inside,mapping)
+        self.assertEqual(mapping[start]["local_state"],"UNKNOWN")
+        self.assertEqual(mapping[start]["local_unknown_reason"],"DST_QUARANTINE_ENVELOPE")
+        self.assertEqual(mapping[end]["local_state"],"RESTORE")
+        self.assertEqual(mapping[after]["local_state"],"AFTER")
 
     def test_unknown_macro_and_local_are_fail_closed(self):
         self.assertEqual(p4.unknown_macro()["macro_state"],"UNKNOWN")

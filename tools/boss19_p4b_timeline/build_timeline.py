@@ -6,7 +6,7 @@ from pathlib import Path
 
 CLASSIFIER_ID = "BOSS19_P4_REGIME_CLASSIFIER_V1"
 CLASSIFIER_VERSION = "1.0.0"
-BUILDER_VERSION = "1.0.0"
+BUILDER_VERSION = "1.0.1"
 START = datetime(2020, 1, 1, tzinfo=timezone.utc)
 END = datetime(2026, 1, 1, tzinfo=timezone.utc)
 TF_MINUTES = {"M15": 15, "H1": 60, "H4": 240}
@@ -40,6 +40,10 @@ def fnum(value) -> str:
 
 def mris_output_ri(value):
     return None if value is None else round(float(value), 3)
+
+
+def macro_stale_event_time(eligible: datetime) -> datetime:
+    return eligible + timedelta(hours=120, seconds=1)
 
 
 def canonical_json(path: Path, value) -> str:
@@ -165,7 +169,7 @@ def build_macro_events(macro_root: Path, manifest):
     with_expiry = []
     for i, (t, r) in enumerate(events):
         with_expiry.append((t, r)); nxt = events[i + 1][0] if i + 1 < len(events) else END
-        expiry = t + timedelta(hours=120)
+        expiry = macro_stale_event_time(t)
         if r["macro_state"] != "UNKNOWN" and expiry < nxt and expiry < END:
             u = dict(r); u.update({"macro_state":"UNKNOWN", "macro_ri":None, "macro_confidence":"LOW",
                                    "macro_coverage":"0/8", "macro_missing_inputs":"STALE_GT_120H", "macro_partial":True,
@@ -230,13 +234,37 @@ def local_indicator_events(bars):
     return events
 
 
-def quarantine_starts(path: Path):
+def quarantine_intervals(path: Path):
     dates=set()
     with path.open("r",encoding="utf-8-sig",newline="") as f:
         for r in csv.DictReader(f):
             if r.get("reason")!="UNKNOWN_DST_TRANSITION": raise ValueError(f"unexpected quarantine reason {path}")
             dates.add(datetime.strptime(r["time_server"],"%Y.%m.%d %H:%M:%S").date())
-    return [datetime(d.year,d.month,d.day,tzinfo=timezone.utc)-timedelta(hours=3) for d in sorted(dates)]
+    intervals=[]
+    for d in sorted(dates):
+        server_midnight=datetime(d.year,d.month,d.day,tzinfo=timezone.utc)
+        start=server_midnight-timedelta(hours=3)
+        end=server_midnight+timedelta(days=1)-timedelta(hours=2)
+        intervals.append((start,end))
+    return intervals
+
+
+def quarantine_starts(path: Path):
+    return [start for start,_ in quarantine_intervals(path)]
+
+
+def apply_quarantine_intervals(events, intervals):
+    if not intervals: return list(events)
+    original=sorted(events,key=lambda x:x[0]); mapping={t:r for t,r in original}
+    times=[t for t,_ in original]
+    for start,end in intervals:
+        if end<=start: raise ValueError("invalid DST quarantine interval")
+        for t in [t for t in mapping if start<=t<end]: del mapping[t]
+        mapping[start]=unknown_local("DST_QUARANTINE_ENVELOPE")
+        i=bisect.bisect_right(times,end)-1
+        if i>=0: mapping[end]=dict(original[i][1])
+        else: mapping[end]=unknown_local("NO_PRIOR_CLOSED_BAR")
+    return sorted(mapping.items(),key=lambda x:x[0])
 
 FIELDS=["valid_from_utc","valid_to_utc","symbol","tf","macro_state","macro_as_of_utc","macro_source_date","macro_ri","macro_confidence",
         "macro_coverage","macro_missing_inputs","macro_partial","macro_flags","local_state","local_bar_close_utc","local_d","local_qtrend",
@@ -285,9 +313,8 @@ def write_cell(writer, symbol, tf, macro_events, local_events):
 def combined_local_events(local_root:Path, cell):
     norm=local_root/cell["normalized_file"]; q=local_root/cell["quarantine_file"]
     if sha256_file(norm)!=cell["normalized_sha256"] or sha256_file(q)!=cell["quarantine_sha256"]: raise ValueError(f"local hash mismatch {cell['symbol']}/{cell['tf']}")
-    events=local_indicator_events(load_local(norm,cell["tf"])); mapping={t:r for t,r in events}
-    for t in quarantine_starts(q): mapping[t]=unknown_local("DST_QUARANTINE_ENVELOPE")
-    return sorted(mapping.items(),key=lambda x:x[0])
+    events=local_indicator_events(load_local(norm,cell["tf"]))
+    return apply_quarantine_intervals(events,quarantine_intervals(q))
 
 
 def verify_contract_sources(repo:Path):
