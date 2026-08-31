@@ -26,9 +26,9 @@ Canonical owners remain:
 | 6 | Optimization Contract | none | freeze causal parameters, semantics, safe ranges, objective and loop breaker |
 | 7 | WIDE / COARSE Optimization | MAIN only | broad landscape map; normally Fast Genetic when the space is large |
 | 8 | Region → Medium → Fine / Neighbours | accepted MAIN region only | stable plateau center plus local-neighbour evidence |
-| 9 | Robustness Validation | locked center/near neighbours | BWD, year/regime, participation, exposure and risk evidence |
-| 10 | Execution Fidelity | survivor only | required Model-4/real ticks, stress/sensitivity and MC where applicable |
-| 11 | HOLDOUT | one frozen finalist | late untouched evidence; never a tuning surface |
+| 9 | Robustness + Sensitivity Validation | locked center/near neighbours | BWD, year/regime, participation, exposure, risk and pre-HOLDOUT sensitivity/stress evidence |
+| 10 | HOLDOUT | one frozen finalist | late untouched evidence; never a tuning or rescue surface |
+| 11 | Post-HOLDOUT Fidelity | holdout-passed finalist only | MC, required Model-4/real ticks when due, and fill/correlation confirmation |
 | 12 | Candidate Dossier | no search | full report/graphs/workflow plus portfolio/correlation routing |
 | 13 | DEMO Forward | no research search | owner-approved attachment plus pre-registered judge/kill evidence |
 | 14 | LIVE Decision | no search | owner decision after required DEMO evidence and independent review |
@@ -47,7 +47,7 @@ Fast Genetic is preferred for a large preregistered coarse space because it chea
 
 The accepted region is then refined. Final center selection uses bounded complete-grid/neighbour evidence where tractable so local stability is observed directly rather than inferred from a genetic winner.
 
-BWD, regime evidence and HOLDOUT are not iterative optimizer surfaces. BWD validates a frozen center; HOLDOUT is spent only after a genuinely qualified finalist reaches Step 11.
+BWD, regime evidence and HOLDOUT are not iterative optimizer surfaces. BWD and the sensitivity/stress fan validate a locked center before HOLDOUT. HOLDOUT is spent at Step 10 only after a genuinely qualified finalist is frozen; MC and required Model-4 fidelity follow at Step 11.
 
 ## Stage contract template
 
