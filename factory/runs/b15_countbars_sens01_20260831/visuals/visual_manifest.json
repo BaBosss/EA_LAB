@@ -1,0 +1,13 @@
+{
+  "selected_cell": "COUNT3_GBPUSD_H4_MAIN",
+  "native_balance_graph": "visuals/native/B15_COUNTBARS_SENS01_COUNT3_GBPUSD_H4_MAIN_M1.png",
+  "visuals": [
+    "visuals/r2_closed_deal_balance_proxy.svg",
+    "visuals/r2_closed_deal_underwater_proxy.svg",
+    "visuals/r2_year_distribution.svg",
+    "visuals/r2_countbars_mechanism_compare.svg",
+    "visuals/r2_parent_child_pf_delta.svg"
+  ],
+  "native_equity_series": "UNAVAILABLE_IN_EXPORTED_HTML",
+  "authority": "VISUAL_ONLY_NO_AUTHORITY"
+}

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="390">
+<text x="20" y="28" font-size="18">B15 CountBars=3 GBPUSD/H4 — yearly closed-deal net</text>
+<line x1="80" y1="187.5" x2="970" y2="187.5" stroke="black"/>
+<rect x="102.2" y="100.6" width="103.8" height="86.9" fill="none" stroke="black"/>
+<text x="102.2" y="203.5" font-size="10">MAIN-2023</text>
+<text x="102.2" y="95.6" font-size="10">+178.43</text>
+<rect x="250.6" y="187.5" width="103.8" height="9.9" fill="none" stroke="black"/>
+<text x="250.6" y="181.5" font-size="10">MAIN-2024</text>
+<text x="250.6" y="211.4" font-size="10">-20.32</text>
+<rect x="398.9" y="187.5" width="103.8" height="26.0" fill="none" stroke="black"/>
+<text x="398.9" y="181.5" font-size="10">MAIN-2025</text>
+<text x="398.9" y="227.5" font-size="10">-53.30</text>
+<rect x="547.2" y="107.9" width="103.8" height="79.6" fill="none" stroke="black"/>
+<text x="547.2" y="203.5" font-size="10">BWD-2020</text>
+<text x="547.2" y="102.9" font-size="10">+163.36</text>
+<rect x="695.6" y="187.5" width="103.8" height="0.5" fill="none" stroke="black"/>
+<text x="695.6" y="181.5" font-size="10">BWD-2021</text>
+<text x="695.6" y="202.0" font-size="10">-1.10</text>
+<rect x="843.9" y="60.0" width="103.8" height="127.5" fill="none" stroke="black"/>
+<text x="843.9" y="203.5" font-size="10">BWD-2022</text>
+<text x="843.9" y="55.0" font-size="10">+261.74</text>
+<text x="20" y="372" font-size="11">VISUAL_ONLY_NO_AUTHORITY; values from year_split.csv.</text>
+</svg>

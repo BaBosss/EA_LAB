@@ -1,0 +1,18 @@
+{
+  "schema": "ea-lab-b15-countbars-sens01-qa/1",
+  "all_12_eligible": true,
+  "run_starts": 12,
+  "run_ends": 12,
+  "run_ends_code0": 12,
+  "sequence_complete": true,
+  "report_hash_match_count": 12,
+  "report_hash_total": 12,
+  "source_sha256": "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+  "accepted_source_sha256": "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+  "ex5_sha256": "f3dd7c5f2e2c1eb5a9f30a95a120e8977aa071e86f5ea4d9929e84f74940803a",
+  "accepted_ex5_sha256": "f3dd7c5f2e2c1eb5a9f30a95a120e8977aa071e86f5ea4d9929e84f74940803a",
+  "classification": "TIMING_NOT_IMPROVED",
+  "routing": "PARK_COUNTBARS_TIMING_PATH",
+  "holdout": "UNSPENT",
+  "report_md_sha256": "47481febcb1162ba464c4710cdbba43939ec7fe8d0d3507b73046ae519ecb307"
+}

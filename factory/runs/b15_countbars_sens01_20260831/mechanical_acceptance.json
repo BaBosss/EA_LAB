@@ -1,0 +1,101 @@
+{
+  "all_12_eligible": true,
+  "cells": [
+    {
+      "countbars": 1,
+      "symbol": "GBPUSD",
+      "window": "MAIN",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 1,
+      "symbol": "GBPUSD",
+      "window": "BWD",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 1,
+      "symbol": "USDJPY",
+      "window": "MAIN",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 1,
+      "symbol": "USDJPY",
+      "window": "BWD",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 1,
+      "symbol": "EURUSD",
+      "window": "MAIN",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 1,
+      "symbol": "EURUSD",
+      "window": "BWD",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 3,
+      "symbol": "GBPUSD",
+      "window": "MAIN",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 3,
+      "symbol": "GBPUSD",
+      "window": "BWD",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 3,
+      "symbol": "USDJPY",
+      "window": "MAIN",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 3,
+      "symbol": "USDJPY",
+      "window": "BWD",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 3,
+      "symbol": "EURUSD",
+      "window": "MAIN",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    },
+    {
+      "countbars": 3,
+      "symbol": "EURUSD",
+      "window": "BWD",
+      "eligible": true,
+      "leverage": "MATCH",
+      "truncated": false
+    }
+  ]
+}

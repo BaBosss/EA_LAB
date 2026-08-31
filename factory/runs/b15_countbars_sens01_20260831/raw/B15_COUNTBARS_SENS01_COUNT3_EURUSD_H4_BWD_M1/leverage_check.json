@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "B15_COUNTBARS_SENS01_COUNT3_EURUSD_H4_BWD_M1",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

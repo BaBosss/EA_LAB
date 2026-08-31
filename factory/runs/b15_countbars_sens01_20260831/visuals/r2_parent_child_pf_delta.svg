@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="390">
+<text x="20" y="28" font-size="18">B15 CountBars sensitivity — child minus parent PF</text>
+<line x1="80" y1="187.5" x2="970" y2="187.5" stroke="black"/>
+<rect x="91.1" y="187.5" width="51.9" height="11.5" fill="none" stroke="black"/>
+<text x="91.1" y="181.5" font-size="10">C1-GBPUSD-MAIN</text>
+<text x="91.1" y="213.0" font-size="10">-0.09</text>
+<rect x="165.3" y="182.4" width="51.9" height="5.1" fill="none" stroke="black"/>
+<text x="165.3" y="203.5" font-size="10">C1-GBPUSD-BWD</text>
+<text x="165.3" y="177.4" font-size="10">+0.04</text>
+<rect x="239.5" y="187.5" width="51.9" height="17.9" fill="none" stroke="black"/>
+<text x="239.5" y="181.5" font-size="10">C1-USDJPY-MAIN</text>
+<text x="239.5" y="219.3" font-size="10">-0.14</text>
+<rect x="313.6" y="187.5" width="51.9" height="7.6" fill="none" stroke="black"/>
+<text x="313.6" y="181.5" font-size="10">C1-USDJPY-BWD</text>
+<text x="313.6" y="209.2" font-size="10">-0.06</text>
+<rect x="387.8" y="187.5" width="51.9" height="11.5" fill="none" stroke="black"/>
+<text x="387.8" y="181.5" font-size="10">C1-EURUSD-MAIN</text>
+<text x="387.8" y="213.0" font-size="10">-0.09</text>
+<rect x="462.0" y="187.5" width="51.9" height="16.6" fill="none" stroke="black"/>
+<text x="462.0" y="181.5" font-size="10">C1-EURUSD-BWD</text>
+<text x="462.0" y="218.1" font-size="10">-0.13</text>
+<rect x="536.1" y="183.7" width="51.9" height="3.8" fill="none" stroke="black"/>
+<text x="536.1" y="203.5" font-size="10">C3-GBPUSD-MAIN</text>
+<text x="536.1" y="178.7" font-size="10">+0.03</text>
+<rect x="610.3" y="136.5" width="51.9" height="51.0" fill="none" stroke="black"/>
+<text x="610.3" y="203.5" font-size="10">C3-GBPUSD-BWD</text>
+<text x="610.3" y="131.5" font-size="10">+0.40</text>
+<rect x="684.5" y="187.5" width="51.9" height="5.1" fill="none" stroke="black"/>
+<text x="684.5" y="181.5" font-size="10">C3-USDJPY-MAIN</text>
+<text x="684.5" y="206.6" font-size="10">-0.04</text>
+<rect x="758.6" y="187.5" width="51.9" height="15.3" fill="none" stroke="black"/>
+<text x="758.6" y="181.5" font-size="10">C3-USDJPY-BWD</text>
+<text x="758.6" y="216.8" font-size="10">-0.12</text>
+<rect x="832.8" y="187.5" width="51.9" height="5.1" fill="none" stroke="black"/>
+<text x="832.8" y="181.5" font-size="10">C3-EURUSD-MAIN</text>
+<text x="832.8" y="206.6" font-size="10">-0.04</text>
+<rect x="907.0" y="184.9" width="51.9" height="2.6" fill="none" stroke="black"/>
+<text x="907.0" y="203.5" font-size="10">C3-EURUSD-BWD</text>
+<text x="907.0" y="179.9" font-size="10">+0.02</text>
+<text x="20" y="372" font-size="11">PARENT_CHILD_DELTA / VISUAL_ONLY_NO_AUTHORITY; exact values in parent_child.csv.</text>
+</svg>
