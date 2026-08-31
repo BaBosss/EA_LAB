@@ -27,7 +27,8 @@ $assign=@(Get-Content $set | Where-Object {$_ -and -not $_.StartsWith(';') -and 
 $ydims=@($assign | Where-Object {$_ -match '\|\|Y$'})
 if($assign.Count -ne 173 -or $ydims.Count -ne 0){throw "fixed set surface mismatch assignments=$($assign.Count) Y=$($ydims.Count)"}
 if($assign -notcontains '_16_Direction=2' -or $assign -notcontains '_16_RsiPeriod=21' -or $assign -notcontains '_16_RsiHigh=70.0'){throw 'fixed center values missing'}
-if(-not (git -C $wt merge-base --is-ancestor '0c0d35d5422e85115947e882694f73740766eebe' $head)){throw 'coarse evidence head not ancestor of validation head'}
+git -C $wt merge-base --is-ancestor '0c0d35d5422e85115947e882694f73740766eebe' $head | Out-Null
+if($LASTEXITCODE -ne 0){throw 'coarse evidence head not ancestor of validation head'}
 git -C $wt diff --quiet cf32ba8d32a8292e8f7b5ad2ef766e3442b20125 $head -- ea_template/Boss_16_KangarooGrid.mq5 ea_template/core
 if($LASTEXITCODE -ne 0){throw 'relevant B16/core source bytes changed since accepted build ref'}
 if(Test-Path $receipts){throw 'validation receipts already exist; replay is forbidden'}
