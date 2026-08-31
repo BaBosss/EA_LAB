@@ -1,0 +1,16 @@
+RUN_START B16_OPT01_CENTER21_70_GBPUSD_H4_MAIN_M1 2026-08-31T08:41:49.9309708+00:00
+symbol preflight: logical=GBPUSD tester=GBPUSD status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\Meta 5b\bases\ThinkMarkets-Live\symbols\selected-146237.dat; history/ticks metadata under 'D:\Meta 5b\bases\ThinkMarkets-Live'
+surface: FULL -- full surface of build LAB_ENTRY_16: 173 of 173 inputs declared and present. No input is left to the terminal cache.
+identity: PASS -- build_receipt=br-4fa94d22907b446ebc721d524bdfa5d1 ex5_sha256=212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db build=LAB_ENTRY_16 config_fingerprint=1eb741aa9be22d130d939440a00ff9890e5907c35ff1cbfd76809ee473aeadf8 config_scope=surface+constants set_sha256=e98bc667a5384047991a1bfc674d84caefec381534834500b1a3db40652f6bc5
+stale-check: STALE -- D:\Meta 5b\MQL5\Experts\EALabTpl\Boss_16_KangarooGrid.ex5 mtime=2026-08-29T19:18:25 :: binary mtime 2026-08-29 19:18:25 is OLDER than: D:\EA_LAB_CONTROL\worktrees\b16-gbp-sell-opt01-reanchor-20260831\ea_template\Boss_16_KangarooGrid.mq5 (2026-08-31 15:24:00); D:\EA_LAB_CONTROL\worktrees\b16-gbp-sell-opt01-reanchor-20260831\ea_template\core\LabCore.mqh (2026-08-31 15:24:00); D:\EA_LAB_ ...
+launch: EALabTpl\Boss_16_KangarooGrid | logical=GBPUSD tester=GBPUSD H4 | 2023.01.01..2025.12.31 | set=B16_GBP_SELL_H4_OPT01_CENTER_21_70.set [portable]
+OK REPORT: D:\EA_LAB_CONTROL\worktrees\b16-gbp-sell-opt01-reanchor-20260831\_mt5_auto\reports\B16_OPT01_CENTER21_70_GBPUSD_H4_MAIN_M1.htm (leverage verified 1:100)
+RUN_END B16_OPT01_CENTER21_70_GBPUSD_H4_MAIN_M1 code=0 2026-08-31T08:42:01.9774413+00:00
+RUN_START B16_OPT01_CENTER21_70_GBPUSD_H4_BWD_M1 2026-08-31T08:42:01.9944814+00:00
+symbol preflight: logical=GBPUSD tester=GBPUSD status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\Meta 5b\bases\ThinkMarkets-Live\symbols\selected-146237.dat; history/ticks metadata under 'D:\Meta 5b\bases\ThinkMarkets-Live'
+surface: FULL -- full surface of build LAB_ENTRY_16: 173 of 173 inputs declared and present. No input is left to the terminal cache.
+identity: PASS -- build_receipt=br-4fa94d22907b446ebc721d524bdfa5d1 ex5_sha256=212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db build=LAB_ENTRY_16 config_fingerprint=1eb741aa9be22d130d939440a00ff9890e5907c35ff1cbfd76809ee473aeadf8 config_scope=surface+constants set_sha256=e98bc667a5384047991a1bfc674d84caefec381534834500b1a3db40652f6bc5
+stale-check: STALE -- D:\Meta 5b\MQL5\Experts\EALabTpl\Boss_16_KangarooGrid.ex5 mtime=2026-08-29T19:18:25 :: binary mtime 2026-08-29 19:18:25 is OLDER than: D:\EA_LAB_CONTROL\worktrees\b16-gbp-sell-opt01-reanchor-20260831\ea_template\Boss_16_KangarooGrid.mq5 (2026-08-31 15:24:00); D:\EA_LAB_CONTROL\worktrees\b16-gbp-sell-opt01-reanchor-20260831\ea_template\core\LabCore.mqh (2026-08-31 15:24:00); D:\EA_LAB_ ...
+launch: EALabTpl\Boss_16_KangarooGrid | logical=GBPUSD tester=GBPUSD H4 | 2020.01.01..2022.12.31 | set=B16_GBP_SELL_H4_OPT01_CENTER_21_70.set [portable]
+OK REPORT: D:\EA_LAB_CONTROL\worktrees\b16-gbp-sell-opt01-reanchor-20260831\_mt5_auto\reports\B16_OPT01_CENTER21_70_GBPUSD_H4_BWD_M1.htm (leverage verified 1:100)
+RUN_END B16_OPT01_CENTER21_70_GBPUSD_H4_BWD_M1 code=0 2026-08-31T08:42:09.7291959+00:00

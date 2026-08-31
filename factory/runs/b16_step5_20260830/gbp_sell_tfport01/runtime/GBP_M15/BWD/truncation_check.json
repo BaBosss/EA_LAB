@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16S5_GBP_SELL_M15_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.12.28 17:36:40 | window ends 2022.12.31 | idle tail 2.3 days (0.2% of window) | entry deals 748 | eqDD \r\n2.25%\r\n[OK] reached the window end within tolerance - idle tail 2.3 days (0.2% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

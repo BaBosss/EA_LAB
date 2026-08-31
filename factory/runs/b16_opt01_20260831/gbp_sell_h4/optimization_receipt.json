@@ -1,0 +1,23 @@
+{
+    "schema":  "ea-lab-b16-opt01-run/1",
+    "hypothesis_revision":  "B16-H05-r1",
+    "head_sha":  "cef64907d1df45697a0f5e1fa1bc20dca450d447",
+    "started_at":  "2026-08-31T08:18:05.7295128+00:00",
+    "ended_at":  "2026-08-31T08:18:28.3568687+00:00",
+    "exit_code":  0,
+    "logical_symbol":  "GBPUSD",
+    "tester_symbol":  "GBPUSD",
+    "tf":  "H4",
+    "window":  "MAIN",
+    "from":  "2023.01.01",
+    "to":  "2025.12.31",
+    "model":  1,
+    "optimization":  2,
+    "criterion":  7,
+    "set_sha256":  "d582f4d42350aa83f0c01bd5b6b90a1f044f40a61de1347d4952db86b9a521a1",
+    "xml_sha256":  "18ad98f125610bc7f86089c635d49884c875fbbde4d7a435950ed22af68d7211",
+    "build_receipt":  "br-4fa94d22907b446ebc721d524bdfa5d1",
+    "ex5_sha256":  "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+    "receipt_registry_sha256":  "6c5d70ba538123b24984ba9a62f547c66da7ea6353af738b4ebcc374fd28fef8",
+    "holdout":  "UNSPENT"
+}

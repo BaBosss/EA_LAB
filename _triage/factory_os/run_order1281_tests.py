@@ -20,9 +20,10 @@ import evidence  # noqa: E402
 import registry  # noqa: E402
 import run_schema_fixtures as fixtures  # noqa: E402
 
-# Cardinality is an engagement assertion, not a schema limit. B11/12/13/15/16 add five
-# preregistration refs plus 733 definition refs to the previously accepted 434-ref tree.
-EXPECTED_LIVE_OWNERREFS = 1172
+# Cardinality is an engagement assertion, not a schema limit. The accepted B11/12/13/15/16
+# H01 registrations established 1172 refs; B16-H05 adds one preregistration ref plus 161
+# ParameterBinding definition refs, for 1334 governed live OwnerRefs.
+EXPECTED_LIVE_OWNERREFS = 1334
 
 
 def fail(message):

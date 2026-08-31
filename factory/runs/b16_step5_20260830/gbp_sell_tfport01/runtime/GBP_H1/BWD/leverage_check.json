@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "B16S5_GBP_SELL_H1_BWD_M1",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

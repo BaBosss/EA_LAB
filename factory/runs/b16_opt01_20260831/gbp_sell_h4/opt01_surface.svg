@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430">
+<style>text{font-family:Arial,sans-serif;font-size:14px}.t{font-size:18px;font-weight:bold}.s{font-size:12px}.pos{fill:#eeeeee}.neg{fill:#cccccc}.sel{stroke:#000;stroke-width:4}.cell{stroke:#666;stroke-width:1}</style>
+<text x="20" y="28" class="t">B16-H05 GBPUSD/H4 SELL MAIN — RSI entry surface</text>
+<text x="20" y="48" class="s">Net profit per cell; VISUAL_ONLY_NO_AUTHORITY; selection governed by preregistered 5-cell cross rule.</text>
+<text x="180" y="55">High 60</text>
+<text x="295" y="55">High 65</text>
+<text x="410" y="55">High 70</text>
+<text x="525" y="55">High 75</text>
+<text x="640" y="55">High 80</text>
+<text x="20" y="108">Period 7</text>
+<rect x="145" y="70" width="110" height="65" class="cell neg"/>
+<text x="153" y="96">net -209.12</text>
+<text x="153" y="118" class="s">tr 141 · DD 5.36%</text>
+<rect x="260" y="70" width="110" height="65" class="cell neg"/>
+<text x="268" y="96">net -236.48</text>
+<text x="268" y="118" class="s">tr 129 · DD 5.64%</text>
+<rect x="375" y="70" width="110" height="65" class="cell pos"/>
+<text x="383" y="96">net +3.84</text>
+<text x="383" y="118" class="s">tr 96 · DD 4.41%</text>
+<rect x="490" y="70" width="110" height="65" class="cell neg"/>
+<text x="498" y="96">net -62.53</text>
+<text x="498" y="118" class="s">tr 106 · DD 4.43%</text>
+<rect x="605" y="70" width="110" height="65" class="cell pos"/>
+<text x="613" y="96">net +70.12</text>
+<text x="613" y="118" class="s">tr 78 · DD 4.44%</text>
+<text x="20" y="178">Period 14</text>
+<rect x="145" y="140" width="110" height="65" class="cell neg"/>
+<text x="153" y="166">net -3.38</text>
+<text x="153" y="188" class="s">tr 106 · DD 4.41%</text>
+<rect x="260" y="140" width="110" height="65" class="cell neg"/>
+<text x="268" y="166">net -127.74</text>
+<text x="268" y="188" class="s">tr 70 · DD 4.43%</text>
+<rect x="375" y="140" width="110" height="65" class="cell pos"/>
+<text x="383" y="166">net +283.20</text>
+<text x="383" y="188" class="s">tr 80 · DD 1.72%</text>
+<rect x="490" y="140" width="110" height="65" class="cell pos"/>
+<text x="498" y="166">net +105.72</text>
+<text x="498" y="188" class="s">tr 32 · DD 1.35%</text>
+<rect x="605" y="140" width="110" height="65" class="cell pos"/>
+<text x="613" y="166">net +16.58</text>
+<text x="613" y="188" class="s">tr 13 · DD 0.07%</text>
+<text x="20" y="248">Period 21</text>
+<rect x="145" y="210" width="110" height="65" class="cell neg"/>
+<text x="153" y="236">net -4.68</text>
+<text x="153" y="258" class="s">tr 87 · DD 3.71%</text>
+<rect x="260" y="210" width="110" height="65" class="cell pos"/>
+<text x="268" y="236">net +339.95</text>
+<text x="268" y="258" class="s">tr 80 · DD 1.78%</text>
+<rect x="375" y="210" width="110" height="65" class="cell pos sel"/>
+<text x="383" y="236">net +102.13</text>
+<text x="383" y="258" class="s">tr 30 · DD 1.35%</text>
+<rect x="490" y="210" width="110" height="65" class="cell pos"/>
+<text x="498" y="236">net +13.22</text>
+<text x="498" y="258" class="s">tr 11 · DD 0.09%</text>
+<rect x="605" y="210" width="110" height="65" class="cell neg"/>
+<text x="613" y="236">net +0.00</text>
+<text x="613" y="258" class="s">tr 0 · DD 0.00%</text>
+<text x="20" y="318">Period 28</text>
+<rect x="145" y="280" width="110" height="65" class="cell neg"/>
+<text x="153" y="306">net -77.44</text>
+<text x="153" y="328" class="s">tr 86 · DD 4.68%</text>
+<rect x="260" y="280" width="110" height="65" class="cell pos"/>
+<text x="268" y="306">net +199.02</text>
+<text x="268" y="328" class="s">tr 49 · DD 1.34%</text>
+<rect x="375" y="280" width="110" height="65" class="cell pos"/>
+<text x="383" y="306">net +57.57</text>
+<text x="383" y="328" class="s">tr 22 · DD 0.30%</text>
+<rect x="490" y="280" width="110" height="65" class="cell pos"/>
+<text x="498" y="306">net +2.84</text>
+<text x="498" y="328" class="s">tr 2 · DD 0.02%</text>
+<rect x="605" y="280" width="110" height="65" class="cell neg"/>
+<text x="613" y="306">net +0.00</text>
+<text x="613" y="328" class="s">tr 0 · DD 0.00%</text>
+</svg>

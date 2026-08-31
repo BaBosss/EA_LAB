@@ -1,0 +1,5 @@
+context,tf,window,eligible,pf,trades,net,eqdd_pct,report_sha256,truncated,leverage_match
+GBP_H1,H1,MAIN,True,0.81,270,-70.55,3.06,f75d08d7376969edfbd23366971bbebec06cb0d1467dfc05971c534211eacfcc,False,True
+GBP_H1,H1,BWD,True,1.65,268,240.0,2.57,740b5c532c8e740012418a5cef0c61324df5e685f3c47e6039d4bdbacfd9c913,False,True
+GBP_M15,M15,MAIN,True,1.32,724,118.8,0.89,bee4499da1a71f6d5bdfa76848dde045f63a5c891cecd1122b62d61b528f6e64,False,True
+GBP_M15,M15,BWD,True,0.86,748,-89.73,2.25,58d13be0392d0f91f134810ba82c0636e105adec4bc78c5f6e4da99d4f684533,False,True

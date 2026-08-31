@@ -1,0 +1,7 @@
+window,year,center_net,center_trades,center_cycles,center_pf,center_active_share,parent_net,parent_trades,parent_cycles
+MAIN,2023,14.37,10,10,,0.013067,79.53,33,32
+MAIN,2024,74.32,11,7,4.6611,0.081206,84.46,19,15
+MAIN,2025,13.44,9,9,,0.008564,119.21,28,23
+BWD,2020,23.83,18,18,4.9849,0.007149,173.13,35,29
+BWD,2021,7.8,5,5,,0.003031,58.45,23,22
+BWD,2022,5.92,4,4,,0.001284,37.39,18,18
