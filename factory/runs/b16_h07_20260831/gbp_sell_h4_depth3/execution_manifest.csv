@@ -1,0 +1,3 @@
+context,symbol,tf,window,from,to,set,report_name
+GBP_H4,GBPUSD,H4,MAIN,2023.01.01,2025.12.31,factory/runs/b16_h07_20260831/gbp_sell_h4_depth3/B16_GBP_SELL_H4_DEPTH3_01.set,B16H07_GBP_SELL_H4_DEPTH3_MAIN_M1
+GBP_H4,GBPUSD,H4,BWD,2020.01.01,2022.12.31,factory/runs/b16_h07_20260831/gbp_sell_h4_depth3/B16_GBP_SELL_H4_DEPTH3_01.set,B16H07_GBP_SELL_H4_DEPTH3_BWD_M1
