@@ -5,6 +5,7 @@ from pathlib import Path
 
 SCHEMA="P4B_TESTER_OHLC_NORMALIZED_V2"
 UTC_END=datetime(2025,12,31,23,59,59,tzinfo=timezone.utc)
+SERVER_END=datetime(2025,12,31,23,59,59)
 UTC_WARMUP_LATEST_START=datetime(2019,4,24,0,0,0,tzinfo=timezone.utc)
 
 def nth_sunday(year:int, month:int, n:int)->datetime:
@@ -37,6 +38,7 @@ def normalize(src:Path,dst:Path,symbol:str,tf:str)->dict:
         if reader.fieldnames != required: raise ValueError(f"unexpected header: {reader.fieldnames}")
         for row in reader:
             raw_count+=1; raw_dt=datetime.strptime(row['time_server'],"%Y.%m.%d %H:%M:%S")
+            if raw_dt > SERVER_END: raise ValueError(f"HOLDOUT server-date crossing row: {row['time_server']}")
             if is_dst_transition_server_date(raw_dt):
                 q=dict(row); q['reason']='UNKNOWN_DST_TRANSITION'; quarantine.append(q); continue
             utc=server_to_utc(row['time_server'])

@@ -1,6 +1,8 @@
 ﻿#property strict
-#property version   "1.01"
+#property version   "1.03"
 #property description "EA_LAB P4B read-only tester OHLC exporter; never trades."
+
+const string SOURCE_ATTESTATION_SHA256 = "046e7404bad767c8f70f77978be1a41a90aac8f447b950bdad703ffa3fdadcbb";
 
 const datetime EXPORT_FROM_SERVER = D'2019.03.01 00:00:00';
 const datetime EXPORT_TO_SERVER   = D'2025.12.31 00:00:00';
@@ -58,6 +60,10 @@ void OnDeinit(const int reason)
       FileWriteString(mh,"first_server="+TimeToString(g_first,TIME_DATE|TIME_MINUTES|TIME_SECONDS)+"\r\n");
       FileWriteString(mh,"last_server="+TimeToString(g_last,TIME_DATE|TIME_MINUTES|TIME_SECONDS)+"\r\n");
       FileWriteString(mh,"terminal_build="+IntegerToString((int)TerminalInfoInteger(TERMINAL_BUILD))+"\r\n");
+      FileWriteString(mh,"terminal_path="+TerminalInfoString(TERMINAL_PATH)+"\r\n");
+      FileWriteString(mh,"terminal_data_path="+TerminalInfoString(TERMINAL_DATA_PATH)+"\r\n");
+      FileWriteString(mh,"program_path="+MQLInfoString(MQL_PROGRAM_PATH)+"\r\n");
+      FileWriteString(mh,"source_attestation_sha256="+SOURCE_ATTESTATION_SHA256+"\r\n");
       FileWriteString(mh,"account_server="+AccountInfoString(ACCOUNT_SERVER)+"\r\n"); FileWriteString(mh,"deinit_reason="+IntegerToString(reason)+"\r\n");
       FileClose(mh);
    }
