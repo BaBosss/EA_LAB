@@ -65,10 +65,10 @@ Every transition records: exact base SHA; parent/child identity; hypothesis/dire
 9. A stage may PARK a family even when mechanism value is high; evidence quality, strategy quality and portfolio value remain separate axes.
 10. Any deployment/runtime attachment, DEMO→LIVE, trading, risk/default change, or other owner hard stop remains outside automatic conveyor authority.
 
-## B16 mapping at adoption
+## B16 example mapping at canonical adoption
 
-At canonical `b27b6bbdbef76a3076ba5058a8c43f4f1627f2af`, B16 has completed Steps 1–4: identity/baseline, broad MAIN+BWD portability, position-engine confirmation and the reviewed 88-cell mechanism characterization.
+B16 demonstrates both normal progression and an evidence-driven early stop. Steps 1-4 are complete: identity/baseline, broad MAIN+BWD portability, position-engine confirmation, and reviewed mechanism characterization. Step 5 is also complete: fixed GBPUSD SELL H1/M15 portability classified the strong H4 SELL lead as `H4_LOCAL`.
 
-Step 5 is the next consumer: `HYP-B16-GBP-SELL-TFPORT-01`, exact frozen GBPUSD SELL child on H1 and M15 with MAIN+BWD fixed-config evidence. Its purpose is to classify the strong H4 SELL result as multi-timeframe portable, one-adjacent-timeframe portable, H4-local, or mechanically unknown.
+A separate prospective `B16-H05-r1` child then opened Step 6 and a bounded Step-7 entry-surface search on GBPUSD/H4 SELL. Fast Genetic/complete coarse evidence found one preregistered positive interior five-cell RSI cross at 21/70, but fixed MAIN+BWD validation showed materially lower participation and economic output than the accepted 14/70 parent. Decision: `DO_NOT_ADOPT_CENTER_RETAIN_PARENT_RESEARCH_REFERENCE`.
 
-A positive Step-5 classification does **not** itself start optimization. It only permits a separately preregistered Step-6 Optimization Contract. Step 7 then uses the canonical genetic-first coarse workflow on MAIN, followed by region/fine-neighbour validation.
+The B16 child therefore stops before medium/fine adoption, HOLDOUT, Candidate, DEMO, or LIVE. This is a valid conveyor outcome: a stage may close as `PARK / RESEARCH_ONLY` when its direct consumer is satisfied and further search has no current downstream value. Any B16 continuation now requires a new prospective structural-mechanism consumer; it may not reopen the exhausted RSI-entry search, mine BWD for retuning, or spend HOLDOUT automatically.
