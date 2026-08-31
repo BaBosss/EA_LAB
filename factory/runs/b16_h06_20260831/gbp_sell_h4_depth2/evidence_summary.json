@@ -1,0 +1,53 @@
+{
+  "cells": [
+    {
+      "active_time_share": 0.1799,
+      "cycles": 68,
+      "eligible": true,
+      "eqdd_pct": 1.73,
+      "gross_loss": -134.92,
+      "gross_profit": 185.03,
+      "leverage_match": true,
+      "max_depth": 2,
+      "max_lots": 0.02,
+      "multi_entry_gp_share": 0.52759,
+      "net": 50.11,
+      "pf": 1.37,
+      "pf_mt5_field": 1.37,
+      "pf_state": "FINITE",
+      "report_gzip_sha256": "2e39768a98c0875cfe638e0e750bf62675a826dc85d7dd3b9bababbdd592e913",
+      "report_sha256": "90df3817cce71e34bc6afbe778b8d5fd17f51b0876af2911636d839dd0d761fa",
+      "trades": 73,
+      "truncated": false,
+      "window": "MAIN"
+    },
+    {
+      "active_time_share": 0.092866,
+      "cycles": 69,
+      "eligible": true,
+      "eqdd_pct": 1.04,
+      "gross_loss": 0.0,
+      "gross_profit": 247.04,
+      "leverage_match": true,
+      "max_depth": 2,
+      "max_lots": 0.02,
+      "multi_entry_gp_share": 0.51943,
+      "net": 247.04,
+      "pf": null,
+      "pf_mt5_field": 0.0,
+      "pf_state": "UNDEFINED_NO_GROSS_LOSS",
+      "report_gzip_sha256": "2f897ac657f1acadb1d6f1d281b3fc065d4f316d8c4b06649989d2df79b4a409",
+      "report_sha256": "f0b7097a2c721a3a297cfe456e4c31511a255fc049e7186a8bda6352f6dd02a5",
+      "trades": 73,
+      "truncated": false,
+      "window": "BWD"
+    }
+  ],
+  "classification": "DEPTH2_DUAL_WINDOW_POSITIVE",
+  "holdout": "UNSPENT",
+  "hypothesis_falsified": false,
+  "hypothesis_id": "HYP-B16-GBP-SELL-H4-DEPTH2-01",
+  "optimization": "NONE",
+  "prereg_head": "9f6471aaf8c759130a29d9bc215a258dbff51a6f",
+  "schema": "ea-lab-b16-h06-depth2-evidence/1"
+}

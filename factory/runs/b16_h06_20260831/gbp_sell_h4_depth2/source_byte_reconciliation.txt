@@ -1,0 +1,19 @@
+B16 H06 source-byte and re-anchor reconciliation
+build_source_ref=cf32ba8d32a8292e8f7b5ad2ef766e3442b20125
+execution_base=50b263831e85a71a5f2d4bea417dbc00f2483a7e
+reanchor_base=79d159907f8fdd348f5c990bd3303b0b12a4c568
+relevant_execution_paths:
+- ea_template/Boss_16_KangarooGrid.mq5
+- ea_template/core/entries/Kangaroo.mqh
+- ea_template/core/entries/Entry_KangarooRSI.mqh
+- ea_template/core/LabCore.mqh
+- scripts/mt5_run.ps1
+build_ref_to_execution_base_relevant_diff=NONE
+execution_base_to_reanchor_base_B16_runner_diff=NONE
+canonical_movement_only:
+- docs/research/EA_CONVEYOR_BELT_PIPELINE.md added
+- docs/research/EA_RND_PROTOCOL.md linked the conveyor router
+stale_mtime_warning=WORKTREE_MATERIALIZATION_FALSE_POSITIVE
+accepted_build_receipt=br-4fa94d22907b446ebc721d524bdfa5d1
+accepted_ex5_sha256=212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db
+mt5_rerun_on_reanchor=NO

@@ -1,0 +1,3 @@
+window,eligible,pf,pf_mt5_field,pf_state,trades,net,eqdd_pct,cycles,max_depth,max_lots,active_time_share,multi_entry_gp_share,gross_profit,gross_loss,report_sha256,report_gzip_sha256,truncated,leverage_match
+MAIN,True,1.37,1.37,FINITE,73,50.11,1.73,68,2,0.02,0.1799,0.52759,185.03,-134.92,90df3817cce71e34bc6afbe778b8d5fd17f51b0876af2911636d839dd0d761fa,2e39768a98c0875cfe638e0e750bf62675a826dc85d7dd3b9bababbdd592e913,False,True
+BWD,True,,0.0,UNDEFINED_NO_GROSS_LOSS,73,247.04,1.04,69,2,0.02,0.092866,0.51943,247.04,0.0,f0b7097a2c721a3a297cfe456e4c31511a255fc049e7186a8bda6352f6dd02a5,2f897ac657f1acadb1d6f1d281b3fc065d4f316d8c4b06649989d2df79b4a409,False,True
