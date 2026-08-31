@@ -1,0 +1,3 @@
+window,parent_net,center_net,net_delta,parent_pf,center_pf,pf_delta,parent_trades,center_trades,trades_delta,parent_eqdd_pct,center_eqdd_pct,eqdd_delta_pp,parent_cycles,center_cycles,parent_max_depth,center_max_depth,parent_max_lots,center_max_lots,parent_active_share,center_active_share,parent_multi_entry_gp_share,center_multi_entry_gp_share
+MAIN,283.2,102.13,-181.07,7.97,6.03,-1.94,80,30,-50,1.72,1.35,-0.37,70,26,4,4,0.04,0.04,0.197051,0.077198,0.709579,0.734951
+BWD,268.97,37.55,-231.42,14.36,7.28,-7.08,76,27,-49,1.27,0.15,-1.12,69,27,4,1,0.04,0.01,0.089294,0.008606,0.58936,0.0

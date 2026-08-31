@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16_OPT01_CENTER21_70_GBPUSD_H4_MAIN_M1",
+    "truncated":  false,
+    "detail":  "last deal 2025.08.14 16:21:40 | window ends 2025.12.31 | idle tail 138.3 days (12.6% of window) | entry deals 30 | \r\neqDD 1.35%\r\n[INFO] quiet tail: no trades for the last 138.3 days, but eqDD 1.35% never approached the tightest kill threshold \r\n(15%), so the cage did NOT stop this run - the signal simply went quiet. Note the sample is concentrated in part of \r\nthe window."
+}

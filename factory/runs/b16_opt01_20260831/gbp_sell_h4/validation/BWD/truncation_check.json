@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16_OPT01_CENTER21_70_GBPUSD_H4_BWD_M1",
+    "truncated":  false,
+    "detail":  "last deal 2022.11.25 11:52:20 | window ends 2022.12.31 | idle tail 35.5 days (3.2% of window) | entry deals 27 | eqDD \r\n0.15%\r\n[OK] reached the window end within tolerance - idle tail 35.5 days (3.2% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

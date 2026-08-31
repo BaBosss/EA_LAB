@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360">
+<rect width="100%" height="100%" fill="white"/>
+<text x="30" y="35" font-family="Arial" font-size="22" font-weight="bold">B16 OPT01 Parent 14/70 vs Selected Center 21/70</text>
+<text x="30" y="58" font-family="Arial" font-size="12">VISUAL_ONLY_NO_AUTHORITY · Meta5b · Model1 · fixed validation</text>
+<text x="30" y="95" font-family="Arial" font-size="17" font-weight="bold">MAIN</text>
+<text x="55" y="123" font-family="Consolas" font-size="14">Net        parent=283.2   center=102.13</text>
+<text x="55" y="144" font-family="Consolas" font-size="14">Trades     parent=80   center=30</text>
+<text x="55" y="165" font-family="Consolas" font-size="14">PF         parent=7.97   center=6.03</text>
+<text x="55" y="186" font-family="Consolas" font-size="14">EqDD %     parent=1.72   center=1.35</text>
+<text x="55" y="207" font-family="Consolas" font-size="14">Max depth  parent=4   center=4</text>
+<text x="30" y="242" font-family="Arial" font-size="17" font-weight="bold">BWD</text>
+<text x="55" y="270" font-family="Consolas" font-size="14">Net        parent=268.97   center=37.55</text>
+<text x="55" y="291" font-family="Consolas" font-size="14">Trades     parent=76   center=27</text>
+<text x="55" y="312" font-family="Consolas" font-size="14">PF         parent=14.36   center=7.28</text>
+<text x="55" y="333" font-family="Consolas" font-size="14">EqDD %     parent=1.27   center=0.15</text>
+<text x="55" y="354" font-family="Consolas" font-size="14">Max depth  parent=4   center=1</text>
+</svg>
