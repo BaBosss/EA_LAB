@@ -1,0 +1,19 @@
+{
+  "authority": "RESEARCH_ONLY_NO_STRATEGY_DEFAULT_OR_OPTIMIZATION_OR_HOLDOUT_AUTHORITY",
+  "base_sha": "c0e9f5123883e67e7692c702efeefd00318ca781",
+  "classification": "EXIT_OFF_AGGREGATE_IMPROVEMENTS_CONCENTRATED_LONG_HOLD_PATHS",
+  "decision": "RETAIN_CURRENT_EXITS_FROZEN",
+  "holdout": "UNSPENT",
+  "matched_output_behavior_control": "DEEP_SPACING_EQUAL",
+  "mt5_rerun": false,
+  "optimization": "NONE",
+  "overall": "PASS_READ_ONLY",
+  "parent_exact_aggregate_present": true,
+  "parent_raw_available": false,
+  "raw_variants_analyzed": [
+    "SINGLETP_OFF",
+    "BASKETTP_OFF",
+    "DEEP_SPACING_EQUAL"
+  ],
+  "schema": "ea-lab-b16-usdjpy-exitdiag-acceptance/1"
+}

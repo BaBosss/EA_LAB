@@ -1,0 +1,15 @@
+B16 USDJPY/H1 EXIT CONCENTRATION SOURCE RECONCILIATION
+base_sha=c0e9f5123883e67e7692c702efeefd00318ca781
+parser_sha256=c2aa0995705ed63a9c2ae1b0bbb982f2375bd2da3ae9c8bff35e2ad01a005b5e
+parent_owner=factory/runs/b16_characterization_20260830/aggregate/parent_contexts.json
+parent_main_report_sha=45ac54affa7635cf350ba69492102d58557d54373424d802a3e2b57cdc562c64
+parent_bwd_report_sha=745cb0a465fbcb1b864e3e117e4ac1ce3de698606b100eb514adb110739a1893
+parent_raw_tracked_in_current_package=false
+behavior_control=DEEP_SPACING_EQUAL
+behavior_control_reason=canonical R2 plus direct parse reproduce parent headline net/PF/trades/EqDD in both windows; behavior metrics are proxy-only and not byte-identity claims
+SINGLETP_OFF_raw=canonical_tracked
+BASKETTP_OFF_raw=canonical_tracked
+MT5_RERUN=false
+HOLDOUT=UNSPENT
+OPTIMIZATION=NONE
+RESULT=PASS_READ_ONLY
