@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430">
+<style>text{font-family:Arial,sans-serif;font-size:13px}.t{font-size:18px;font-weight:bold}.cell{fill:#eee;stroke:#666}.sel{fill:#ddd;stroke:#000;stroke-width:4}</style>
+<text x="20" y="28" class="t">B16-H08 USDJPY/H1 BUY MAIN RSI surface</text>
+<text x="20" y="48">VISUAL_ONLY_NO_AUTHORITY; net profit / trades; selected center 14/35.</text>
+<text x="163" y="61">Low 20</text>
+<text x="278" y="61">Low 25</text>
+<text x="393" y="61">Low 30</text>
+<text x="508" y="61">Low 35</text>
+<text x="623" y="61">Low 40</text>
+<text x="20" y="113">Period 7</text>
+<rect x="135" y="75" width="110" height="67" class="cell"/>
+<text x="142" y="101">net +321.14</text>
+<text x="142" y="123">tr 289</text>
+<rect x="250" y="75" width="110" height="67" class="cell"/>
+<text x="257" y="101">net +399.05</text>
+<text x="257" y="123">tr 396</text>
+<rect x="365" y="75" width="110" height="67" class="cell"/>
+<text x="372" y="101">net +494.27</text>
+<text x="372" y="123">tr 444</text>
+<rect x="480" y="75" width="110" height="67" class="cell"/>
+<text x="487" y="101">net +349.94</text>
+<text x="487" y="123">tr 529</text>
+<rect x="595" y="75" width="110" height="67" class="cell"/>
+<text x="602" y="101">net +508.43</text>
+<text x="602" y="123">tr 561</text>
+<text x="20" y="185">Period 14</text>
+<rect x="135" y="147" width="110" height="67" class="cell"/>
+<text x="142" y="173">net +43.85</text>
+<text x="142" y="195">tr 61</text>
+<rect x="250" y="147" width="110" height="67" class="cell"/>
+<text x="257" y="173">net +123.94</text>
+<text x="257" y="195">tr 132</text>
+<rect x="365" y="147" width="110" height="67" class="cell"/>
+<text x="372" y="173">net +252.53</text>
+<text x="372" y="195">tr 275</text>
+<rect x="480" y="147" width="110" height="67" class="sel"/>
+<text x="487" y="173">net +415.62</text>
+<text x="487" y="195">tr 420</text>
+<rect x="595" y="147" width="110" height="67" class="cell"/>
+<text x="602" y="173">net +538.06</text>
+<text x="602" y="195">tr 491</text>
+<text x="20" y="257">Period 21</text>
+<rect x="135" y="219" width="110" height="67" class="cell"/>
+<text x="142" y="245">net +112.29</text>
+<text x="142" y="267">tr 21</text>
+<rect x="250" y="219" width="110" height="67" class="cell"/>
+<text x="257" y="245">net +218.32</text>
+<text x="257" y="267">tr 64</text>
+<rect x="365" y="219" width="110" height="67" class="cell"/>
+<text x="372" y="245">net +289.17</text>
+<text x="372" y="267">tr 137</text>
+<rect x="480" y="219" width="110" height="67" class="cell"/>
+<text x="487" y="245">net +169.42</text>
+<text x="487" y="267">tr 277</text>
+<rect x="595" y="219" width="110" height="67" class="cell"/>
+<text x="602" y="245">net +274.68</text>
+<text x="602" y="267">tr 413</text>
+<text x="20" y="329">Period 28</text>
+<rect x="135" y="291" width="110" height="67" class="cell"/>
+<text x="142" y="317">net +11.50</text>
+<text x="142" y="339">tr 7</text>
+<rect x="250" y="291" width="110" height="67" class="cell"/>
+<text x="257" y="317">net +113.25</text>
+<text x="257" y="339">tr 20</text>
+<rect x="365" y="291" width="110" height="67" class="cell"/>
+<text x="372" y="317">net +161.43</text>
+<text x="372" y="339">tr 82</text>
+<rect x="480" y="291" width="110" height="67" class="cell"/>
+<text x="487" y="317">net +51.64</text>
+<text x="487" y="339">tr 165</text>
+<rect x="595" y="291" width="110" height="67" class="cell"/>
+<text x="602" y="317">net +309.14</text>
+<text x="602" y="339">tr 350</text>
+</svg>

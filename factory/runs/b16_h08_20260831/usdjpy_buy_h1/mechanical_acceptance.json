@@ -1,0 +1,20 @@
+{
+  "baseline_reproduced": true,
+  "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+  "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+  "fixed_main_reproduces_optimizer_cell": true,
+  "fixed_set_sha256": "c936bc4d79a85aa481e249a1c7c316bdfdfd34f30c170f4e930e16bf1104ac84",
+  "fixed_validation_cells": 2,
+  "fixed_validation_mechanical_pass": true,
+  "holdout": "UNSPENT",
+  "hypothesis_revision": "B16-H08-r1",
+  "leverage_match_2_of_2": true,
+  "optimizer_grid_complete": true,
+  "optimizer_guard": {
+    "allow": 2,
+    "refuse": 0
+  },
+  "optimizer_rows": 20,
+  "schema": "ea-lab-b16-h08-mechanical-acceptance/1",
+  "truncated_0_of_2": true
+}

@@ -1,0 +1,67 @@
+{
+  "adoption_decision": "DO_NOT_ADOPT_CENTER_RETAIN_PARENT_RESEARCH_REFERENCE",
+  "bwd_failure_basis": "PF 0.66 < preregistered 1.00 validation bar and net profit -229.49; trade count 230 remains above 100",
+  "bwd_validation": "FAIL",
+  "candidate_authority": "NONE",
+  "coarse_classification": "MAIN_PLATEAU_FOUND",
+  "comparison": [
+    {
+      "center_active_time_share": 0.302587,
+      "center_cycles": 372,
+      "center_eqdd_pct": 4.78,
+      "center_max_depth": 7,
+      "center_net": 415.62,
+      "center_pf": 1.68,
+      "center_trades": 420,
+      "eqdd_delta_pp": 0.93,
+      "net_delta": 163.09,
+      "parent_eqdd_pct": 3.85,
+      "parent_net": 252.53,
+      "parent_pf": 1.53,
+      "parent_trades": 275,
+      "pf_delta": 0.15,
+      "trades_delta": 145,
+      "window": "MAIN"
+    },
+    {
+      "center_active_time_share": 0.438563,
+      "center_cycles": 198,
+      "center_eqdd_pct": 3.91,
+      "center_max_depth": 6,
+      "center_net": -229.49,
+      "center_pf": 0.66,
+      "center_trades": 230,
+      "eqdd_delta_pp": 1.51,
+      "net_delta": -273.59,
+      "parent_eqdd_pct": 2.4,
+      "parent_net": 44.1,
+      "parent_pf": 1.11,
+      "parent_trades": 267,
+      "pf_delta": -0.45,
+      "trades_delta": -37,
+      "window": "BWD"
+    }
+  ],
+  "decision_reason": "selected MAIN plateau center improves MAIN net/trades but fails frozen BWD validation materially; BWD is validation-only and cannot retune the lattice",
+  "fine_neighbor": "NOT_RUN_NO_DIRECT_CONSUMER_AFTER_BWD_FAIL",
+  "fixed_main_reproduction": "PASS",
+  "holdout": "UNSPENT",
+  "hypothesis_revision": "B16-H08-r1",
+  "known_unknowns": [
+    "HOLDOUT not run",
+    "Model4 not run",
+    "Monte Carlo not run",
+    "KINT-001 remains OPEN"
+  ],
+  "main_plateau_hypothesis": "NOT_FALSIFIED",
+  "medium_refine": "NOT_RUN_NO_DIRECT_CONSUMER_AFTER_BWD_FAIL",
+  "model4": "NOT_RUN",
+  "monte_carlo": "NOT_RUN",
+  "risk_default_change": "NONE",
+  "schema": "ea-lab-b16-h08-final-summary/1",
+  "search_status": "CLOSED_NO_RETUNING",
+  "selected_center": {
+    "_16_RsiLow": 35.0,
+    "_16_RsiPeriod": 14
+  }
+}

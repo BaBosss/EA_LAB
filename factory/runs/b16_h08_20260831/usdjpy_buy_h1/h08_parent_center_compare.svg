@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="330" viewBox="0 0 860 330">
+<style>text{font-family:Arial,sans-serif;font-size:14px}.t{font-size:19px;font-weight:bold}.h{font-weight:bold}</style>
+<text x="25" y="30" class="t">B16-H08 parent 14/30 vs selected 14/35</text>
+<text x="25" y="52">VISUAL_ONLY_NO_AUTHORITY; accepted parent headline vs fixed validation center.</text>
+<text x="25" y="88" class="h">MAIN</text>
+<text x="50" y="114">PF: parent 1.53 | center 1.68</text>
+<text x="50" y="136">Net: parent 252.53 | center 415.62</text>
+<text x="50" y="158">Trades: parent 275 | center 420</text>
+<text x="50" y="180">EqDD %: parent 3.85 | center 4.78</text>
+<text x="25" y="214" class="h">BWD</text>
+<text x="50" y="240">PF: parent 1.11 | center 0.66</text>
+<text x="50" y="262">Net: parent 44.1 | center -229.49</text>
+<text x="50" y="284">Trades: parent 267 | center 230</text>
+<text x="50" y="306">EqDD %: parent 2.4 | center 3.91</text>
+</svg>
