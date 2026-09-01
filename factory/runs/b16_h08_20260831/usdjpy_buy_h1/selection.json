@@ -1,0 +1,79 @@
+{
+  "baseline_observed": {
+    "custom": 0.0,
+    "eqdd_pct": 3.8549,
+    "expected_payoff": 0.918291,
+    "net": 252.53,
+    "pass": 9,
+    "pf": 1.527489,
+    "recovery_factor": 0.637525,
+    "result": 54.88,
+    "rsi_low": 30,
+    "rsi_period": 14,
+    "sharpe": 0.887097,
+    "trades": 275
+  },
+  "baseline_reproduced": true,
+  "bwd_state": "AUTHORIZED_AFTER_LOCK_NOT_RUN",
+  "classification": "MAIN_PLATEAU_FOUND",
+  "grid_complete": true,
+  "grid_rows": 20,
+  "holdout": "UNSPENT",
+  "hypothesis_falsified": false,
+  "hypothesis_revision": "B16-H08-r1",
+  "missing_cells": [],
+  "participation_floor": 100,
+  "schema": "ea-lab-b16-h08-opt01-selection/1",
+  "selected": {
+    "cross": [
+      {
+        "eqdd_pct": 4.7828,
+        "net": 415.62,
+        "pf": 1.676443,
+        "rsi_low": 35,
+        "rsi_period": 14,
+        "trades": 420
+      },
+      {
+        "eqdd_pct": 4.2096,
+        "net": 349.94,
+        "pf": 1.388857,
+        "rsi_low": 35,
+        "rsi_period": 7,
+        "trades": 529
+      },
+      {
+        "eqdd_pct": 4.8393,
+        "net": 169.42,
+        "pf": 1.288817,
+        "rsi_low": 35,
+        "rsi_period": 21,
+        "trades": 277
+      },
+      {
+        "eqdd_pct": 3.8549,
+        "net": 252.53,
+        "pf": 1.527489,
+        "rsi_low": 30,
+        "rsi_period": 14,
+        "trades": 275
+      },
+      {
+        "eqdd_pct": 4.7489,
+        "net": 538.06,
+        "pf": 1.688831,
+        "rsi_low": 40,
+        "rsi_period": 14,
+        "trades": 491
+      }
+    ],
+    "distance_steps": 1.0,
+    "eligible": true,
+    "max_eqdd_pct": 4.8393,
+    "min_net": 169.42,
+    "min_trades": 275,
+    "rsi_low": 35,
+    "rsi_period": 14
+  },
+  "xml_sha256": "9b92982c85ddc50e35be37b58b70d2982ea0b8b6a662da8c73194af985d93348"
+}

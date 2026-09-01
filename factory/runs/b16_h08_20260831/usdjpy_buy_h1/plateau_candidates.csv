@@ -1,0 +1,7 @@
+rsi_period,rsi_low,eligible,min_net,min_trades,max_eqdd_pct,distance_steps
+14,25,False,43.85,61,3.8967,1.0
+14,30,True,123.94,132,4.7828,0.0
+14,35,True,169.42,275,4.8393,1.0
+21,25,False,112.29,20,3.8656,2.0
+21,30,False,161.43,64,4.8393,1.0
+21,35,True,51.64,137,4.8818,2.0
