@@ -7,6 +7,7 @@ import csv
 import hashlib
 import io
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -16,7 +17,7 @@ from pathlib import Path, PurePosixPath
 
 SCHEMA_VERSION = 1
 GENERATOR_NAME = "mobile_report_hub.build_index"
-GENERATOR_VERSION = "1.0.0"
+GENERATOR_VERSION = "1.1.0"
 B16 = "docs/factory/B16_H03_CONFIRMATION_RESULTS.md"
 B19 = "docs/research/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"
 H02 = "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"
@@ -94,31 +95,53 @@ def extract_b16(text: str, provenance: dict) -> dict:
                          "H04 is NOT unlocked."],
         "known_weaknesses": ["Intratrade equity path, exit classification, ATR normalization, and emergency-close attribution are UNKNOWN."]
     }
-    return record(identity="b16-h03-xauusd-h4", family="B16", variant="H03", name="Boss 16 KangarooGrid — XAUUSD H4",
+    return record(identity="b16-h03-xauusd-h4", family="B16", variant="H03", name="Boss 16 KangarooGrid â€” XAUUSD H4",
                   symbol="XAUUSD", timeframe="H4", lifecycle="Research", research_state="DONE",
                   latest="B16 H03 confirmation", verdict="POSITION_ENGINE_DEPENDENT_OR_UNKNOWN",
                   strategy="KangarooGrid", evidence=evidence, status="DONE", links={"full_report": "artifacts/B16_H03_CONFIRMATION_RESULTS.md"}, provenance=[provenance])
 
 
 def extract_boss19(text: str, provenance: dict) -> dict:
-    needed = ("BLOCKED(DATA_ENVIRONMENT_MISSING_IMMUTABLE_HISTORICAL_MARKET_INPUTS)",
-              "no classifier timeline has been written", "HOLDOUT/optimization/runtime/risk/deploy = NONE")
-    if not all(piece in text for piece in needed):
-        raise BuildError("Boss19 P4B canonical report malformed or missing blocker semantics")
-    evidence = {"basis_id": "BOSS19_P4B_REGIME_ATTRIBUTION", "report_stage": "P4B", "model": "MODEL_1",
-                "holdout_state": "UNSPENT", "main": metric("UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE"),
-                "bwd": metric("UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE"),
-                "key_findings": ["BLOCKED(C DATA / environment prerequisite).", "No timeline or outcome attribution has been produced."],
-                "known_weaknesses": ["Exact tester-data-identity OHLC package is unavailable; this is not a strategy finding."]}
-    item = record(identity="boss19-regime-attribution", family="B19", variant="P4B", name="Boss 19 Regime Attribution",
-                  symbol="MULTI", timeframe="MULTI", lifecycle="Research", research_state="BLOCKED",
-                  latest="Boss19 P4B regime attribution", verdict="BLOCKED(C DATA / environment prerequisite)",
-                  strategy="Regime attribution", evidence=evidence, status="BLOCKED",
-                  links={"full_report": "artifacts/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"}, provenance=[provenance])
-    item["blocker_type"] = "ENVIRONMENT"
-    item["blocker_reason"] = "Exact tester-data-identity closed OHLC remains unavailable; this is a data/environment blocker, not strategy failure."
-    item["next_action"] = "Freeze the exact immutable OHLC prerequisite before any classifier timeline or outcome attribution."
-    return item
+    legacy_needed = ("BLOCKED(DATA_ENVIRONMENT_MISSING_IMMUTABLE_HISTORICAL_MARKET_INPUTS)",
+                     "no classifier timeline has been written", "HOLDOUT/optimization/runtime/risk/deploy = NONE")
+    current_needed = ("BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)",
+                      "1,549 opening `in` deals and 1,549 realized `out` deals",
+                      "no source-emitted Position/opening-link field",
+                      "Opening and closing Order IDs are disjoint",
+                      "UNAVAILABLE_NO_SOURCE_BASKET_ID",
+                      "HOLDOUT remains UNSPENT; optimization/runtime/risk/deployment authority remains NONE")
+    if all(piece in text for piece in current_needed):
+        evidence = {"basis_id": "BOSS19_P4B_REGIME_ATTRIBUTION", "report_stage": "P4B", "model": "MODEL_1",
+                    "holdout_state": "UNSPENT", "main": metric("UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE"),
+                    "bwd": metric("UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE"),
+                    "key_findings": ["Classifier timeline is frozen/reviewed; current H3 reports are unsuitable for source-bound unit attribution.",
+                                     "36/36 reports reconcile 1,549 opening in and 1,549 realized out deals."],
+                    "known_weaknesses": ["No source-emitted realized-deal/position-to-opening identity or basket ID; this is an evidence-shape blocker, not a strategy finding."]}
+        item = record(identity="boss19-regime-attribution", family="B19", variant="P4B", name="Boss 19 Regime Attribution",
+                      symbol="MULTI", timeframe="MULTI", lifecycle="Research", research_state="BLOCKED",
+                      latest="Boss19 P4B unit-attribution suitability", verdict="BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)",
+                      strategy="Regime attribution", evidence=evidence, status="BLOCKED",
+                      links={"full_report": "artifacts/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"}, provenance=[provenance])
+        item["blocker_type"] = "EVIDENCE"
+        item["blocker_reason"] = "Current H3 reports cannot durably link realized deals to opening timestamps; this is an evidence-shape blocker, not strategy failure or a regime conclusion."
+        item["next_action"] = "Hash-pin and independently review a source-bound timestamped H3 unit export with durable realized-deal/position-to-opening identity before P4B attribution."
+        return item
+    if all(piece in text for piece in legacy_needed):
+        evidence = {"basis_id": "BOSS19_P4B_REGIME_ATTRIBUTION", "report_stage": "P4B", "model": "MODEL_1",
+                    "holdout_state": "UNSPENT", "main": metric("UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE"),
+                    "bwd": metric("UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE"),
+                    "key_findings": ["BLOCKED(C DATA / environment prerequisite).", "No timeline or outcome attribution has been produced."],
+                    "known_weaknesses": ["Exact tester-data-identity OHLC package is unavailable; this is not a strategy finding."]}
+        item = record(identity="boss19-regime-attribution", family="B19", variant="P4B", name="Boss 19 Regime Attribution",
+                      symbol="MULTI", timeframe="MULTI", lifecycle="Research", research_state="BLOCKED",
+                      latest="Boss19 P4B regime attribution", verdict="BLOCKED(C DATA / environment prerequisite)",
+                      strategy="Regime attribution", evidence=evidence, status="BLOCKED",
+                      links={"full_report": "artifacts/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"}, provenance=[provenance])
+        item["blocker_type"] = "ENVIRONMENT"
+        item["blocker_reason"] = "Exact tester-data-identity closed OHLC remains unavailable; this is a data/environment blocker, not strategy failure."
+        item["next_action"] = "Freeze the exact immutable OHLC prerequisite before any classifier timeline or outcome attribution."
+        return item
+    raise BuildError("Boss19 P4B canonical report malformed or missing blocker semantics")
 
 
 def extract_h02(text: str, provenance: dict) -> list[dict]:
@@ -134,7 +157,7 @@ def extract_h02(text: str, provenance: dict) -> list[dict]:
                     "bwd": metric(bpf, bdd, btrades, "UNKNOWN"),
                     "key_findings": ["Dual-window positive PF screening pulse."],
                     "known_weaknesses": ["Screening only; not a candidate or optimizer seed."]}
-        result.append(record(identity=identity, family="B16", variant="H02", name=f"Boss 16 KangarooGrid — {home}",
+        result.append(record(identity=identity, family="B16", variant="H02", name=f"Boss 16 KangarooGrid â€” {home}",
                              symbol=symbol, timeframe=timeframe, lifecycle="Research", research_state="DONE",
                              latest="B16 H02 literal portability", verdict="NON_AUTHORITATIVE_SCREEN", strategy="KangarooGrid",
                              evidence=evidence, status="DONE", links={"full_report": "artifacts/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"}, provenance=[provenance]))
@@ -179,30 +202,156 @@ def lane_registry(path: Path | None) -> list[dict]:
         return []
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
+    except (OSError, json.JSONDecodeError, UnicodeError) as error:
         raise BuildError(f"lane registry unreadable: {error}") from error
-    rows = payload.get("lanes", payload) if isinstance(payload, dict) else payload
+    rows = payload.get("records", payload.get("lanes", payload)) if isinstance(payload, dict) else payload
     if not isinstance(rows, list):
-        raise BuildError("lane registry must be a list or {lanes: list}")
-    allowed = ("lane_id", "state", "blocker_class", "objective", "direct_consumer")
-    return [{key: str(item[key]) for key in allowed if key in item and isinstance(item[key], (str, int, float))}
-            for item in rows if isinstance(item, dict)]
+        raise BuildError("lane registry must be a list or an Audit/List object containing records/lanes")
+    result = []
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        classification = item.get("classification")
+        if not isinstance(classification, str):
+            continue
+        if classification not in _LANE_CURRENT_CLASSIFICATIONS:
+            continue
+        row = {"lane_id": safe_lane_id(item.get("lane_id", "UNKNOWN")),
+               "classification": classification}
+        state_value = item.get("state")
+        row["state"] = state_value if isinstance(state_value, str) and state_value in _LANE_STATES else "UNKNOWN"
+        blocker_value = item.get("blocker_class")
+        row["blocker_class"] = blocker_value[:1] if isinstance(blocker_value, str) and blocker_value[:1] in {"A", "B", "C", "D", "E"} else ""
+        if isinstance(item.get("attention_required"), bool):
+            row["attention_required"] = item["attention_required"]
+        result.append(row)
+    return result
 
 
-_LOCAL_WINDOWS_PATH_RE = re.compile(r"(?:[A-Za-z]:[\\/](?![\\/])|\\\\[^\\/\s]+[\\/])")
+_LANE_CURRENT_CLASSIFICATIONS = {"ACTIVE_CURRENT", "ACTIVE_MISSING_WORKTREE", "ACTIVE_IDENTITY_MISMATCH", "ACTIVE_AGED", "QUEUED_CURRENT"}
+_LANE_STATES = {"READY", "RUNNING", "WAITING", "PAUSED", "REVIEW", "FROZEN", "INTEGRATING", "DONE", "BLOCKED"}
+_LANE_ID_SENSITIVE_RE = re.compile(r"(?i)(?:account|acct|login)[._:-]*[0-9]+|(?<![0-9])[0-9]{9,}(?![0-9])")
+_SAFE_LANE_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 
-def contains_local_windows_path(value: object) -> bool:
-    return bool(value and _LOCAL_WINDOWS_PATH_RE.search(str(value)))
-
+def safe_lane_id(value: object) -> str:
+    text = str(value or "UNKNOWN")
+    if not _SAFE_LANE_ID_RE.fullmatch(text) or _LANE_ID_SENSITIVE_RE.search(text):
+        return "REDACTED_LANE_" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:8]
+    return text
 
 def lane_summary(item: dict) -> str:
-    candidates = [item.get("objective"), item.get("direct_consumer")]
-    for value in candidates:
-        if value and not contains_local_windows_path(value):
-            return str(value)
-    return "[LOCAL_PATH_REDACTED]" if any(candidates) else "UNKNOWN"
+    classification = str(item.get("classification", "UNKNOWN"))
+    if classification not in _LANE_CURRENT_CLASSIFICATIONS:
+        return "Noncanonical Lane Registry status unavailable."
+    return f"Noncanonical Lane Registry status: {classification}."
 
-def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None) -> dict:
+
+_MONITOR_SOURCE_NAMES = {"live_evidence", "control_room_snapshot", "daily_monitor_success"}
+_MONITOR_STATES = {"CURRENT", "STALE", "MISSING", "INVALID"}
+_MONITOR_BASES = {"latest_filename_date_upper_bound", "snapshot_meta_generated_at", "success_marker_content"}
+_MONITOR_COUNT_FIELDS = ("deal_sensors_total", "deal_sensors_fresh", "floating_sensors_total", "floating_sensors_fresh")
+_UTC_SECOND_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+
+
+def _valid_utc_second(value: object) -> bool:
+    if not isinstance(value, str) or not _UTC_SECOND_RE.fullmatch(value):
+        return False
+    try:
+        datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return False
+    return True
+
+
+def unavailable_monitoring(reason: str = "NOT_PROVIDED") -> dict:
+    return {"status": "UNAVAILABLE", "reported_status": "UNKNOWN",
+            "source_kind": "LOCAL_MONITORING_NONCANONICAL",
+            "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "binding_state": "UNKNOWN",
+            "generated_at_utc": "UNKNOWN", "alert_present": "UNKNOWN", "sources": [],
+            "coverage": {"state": "UNAVAILABLE_STALE_OR_INVALID", "deal_sensors_total": "UNKNOWN",
+                         "deal_sensors_fresh": "UNKNOWN", "floating_sensors_total": "UNKNOWN",
+                         "floating_sensors_fresh": "UNKNOWN"}, "reason": reason}
+
+
+def _monitor_count(value: object) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
+def monitor_health(path: Path | None, canonical_sha: str) -> dict:
+    if path is None:
+        return unavailable_monitoring()
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeError):
+        return unavailable_monitoring("INVALID_INPUT")
+    if not isinstance(raw, dict) or raw.get("schema_version") != "EA_LAB_MONITOR_HEALTH_V1":
+        return unavailable_monitoring("INVALID_SCHEMA")
+    if raw.get("source_kind") != "LOCAL_MONITORING_NONCANONICAL" or raw.get("authority") != "READ_ONLY_NO_RUNTIME_AUTHORITY":
+        return unavailable_monitoring("INVALID_AUTHORITY")
+    reported_status = str(raw.get("status", "UNAVAILABLE"))
+    if reported_status not in {"CURRENT", "DEGRADED"}:
+        return unavailable_monitoring("INVALID_STATUS")
+    repo_head = str(raw.get("repo_head", "UNKNOWN"))
+    binding = "MATCHES_CANONICAL_SHA" if repo_head == canonical_sha else ("DIFFERENT_REPO_HEAD" if re.fullmatch(r"[0-9a-f]{40}", repo_head) else "UNKNOWN")
+    raw_sources = raw.get("sources")
+    if not isinstance(raw_sources, list) or len(raw_sources) != len(_MONITOR_SOURCE_NAMES):
+        return unavailable_monitoring("INVALID_SOURCE_SET")
+    names = [item.get("name") for item in raw_sources if isinstance(item, dict)]
+    if len(names) != len(raw_sources) or set(names) != _MONITOR_SOURCE_NAMES or len(set(names)) != len(names):
+        return unavailable_monitoring("INVALID_SOURCE_SET")
+    expected_basis = {"live_evidence":"latest_filename_date_upper_bound",
+                      "control_room_snapshot":"snapshot_meta_generated_at",
+                      "daily_monitor_success":"success_marker_content"}
+    sources = []
+    for item in raw_sources:
+        source_state = str(item.get("state", "INVALID"))
+        basis = str(item.get("timestamp_basis", ""))
+        if source_state not in _MONITOR_STATES or basis != expected_basis[item["name"]]:
+            return unavailable_monitoring("INVALID_SOURCE_ROW")
+        raw_age = item.get("age_hours")
+        raw_observed = item.get("observed_at_utc")
+        if source_state in {"CURRENT", "STALE"}:
+            if not isinstance(raw_age, (int, float)) or isinstance(raw_age, bool):
+                return unavailable_monitoring("INVALID_SOURCE_ROW")
+            numeric_age = float(raw_age)
+            if not math.isfinite(numeric_age) or numeric_age < 0:
+                return unavailable_monitoring("INVALID_SOURCE_ROW")
+            if not _valid_utc_second(raw_observed):
+                return unavailable_monitoring("INVALID_SOURCE_ROW")
+            age = round(numeric_age, 2)
+            observed = raw_observed
+        else:
+            if raw_age is not None or raw_observed is not None:
+                return unavailable_monitoring("INVALID_SOURCE_ROW")
+            age = "UNKNOWN"
+            observed = "UNKNOWN"
+        sources.append({"name": item["name"], "state": source_state, "age_hours": age,
+                        "observed_at_utc": observed, "timestamp_basis": basis})
+    sources = sorted(sources, key=lambda x: x["name"])
+    source_by_name = {item["name"]: item for item in sources}
+    all_sources_current = set(source_by_name) == _MONITOR_SOURCE_NAMES and all(item["state"] == "CURRENT" for item in sources)
+    alert_present = raw.get("alert_present") if isinstance(raw.get("alert_present"), bool) else "UNKNOWN"
+    effective_status = "CURRENT" if all_sources_current and alert_present is False and binding == "MATCHES_CANONICAL_SHA" else "DEGRADED"
+    coverage_raw = raw.get("coverage", {}) if isinstance(raw.get("coverage"), dict) else {}
+    requested_coverage = str(coverage_raw.get("state", "UNAVAILABLE_STALE_OR_INVALID"))
+    counts = {name: _monitor_count(coverage_raw.get(name)) for name in _MONITOR_COUNT_FIELDS}
+    counts_valid = all(value is not None for value in counts.values())
+    counts_consistent = counts_valid and counts["deal_sensors_fresh"] <= counts["deal_sensors_total"] and counts["floating_sensors_fresh"] <= counts["floating_sensors_total"]
+    control_room_current = source_by_name.get("control_room_snapshot", {}).get("state") == "CURRENT"
+    coverage_current = requested_coverage == "AVAILABLE_CURRENT_SNAPSHOT" and control_room_current and counts_consistent
+    coverage = {"state": "AVAILABLE_CURRENT_SNAPSHOT" if coverage_current else "UNAVAILABLE_STALE_OR_INVALID"}
+    for name in _MONITOR_COUNT_FIELDS:
+        coverage[name] = counts[name] if coverage_current else "UNKNOWN"
+    generated_raw = raw.get("generated_at_utc", "UNKNOWN")
+    generated = generated_raw if generated_raw == "UNKNOWN" or _valid_utc_second(generated_raw) else "UNKNOWN"
+    return {"status": effective_status, "reported_status": reported_status,
+            "source_kind": "LOCAL_MONITORING_NONCANONICAL",
+            "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "binding_state": binding,
+            "generated_at_utc": generated, "alert_present": alert_present,
+            "sources": sources, "coverage": coverage, "reason": "AVAILABLE"}
+
+
+def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None, monitor: Path | None = None) -> dict:
     sha = resolve_ref(repo, ref)
     if expected_sha and sha != expected_sha:
         raise BuildError(f"expected SHA mismatch: expected {expected_sha}, resolved {sha}")
@@ -218,20 +367,27 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
     selected_artifact(B16, b16_text.encode(), out)
     selected_artifact(B19, b19_text.encode(), out, redact_local_paths=True)
     selected_artifact(H02, h02_text.encode(), out)
-    eas = inventory_records(master_text, sha) + extract_h02(h02_text, h02_p) + [extract_b16(b16_text, b16_p), extract_boss19(b19_text, b19_p)]
+    b16_item = extract_b16(b16_text, b16_p)
+    boss19_item = extract_boss19(b19_text, b19_p)
+    if boss19_item["verdict"] == "BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)" and "EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION" not in taskboard_text:
+        raise BuildError("canonical Boss19 P4 report/taskboard blocker mismatch")
+    eas = inventory_records(master_text, sha) + extract_h02(h02_text, h02_p) + [b16_item, boss19_item]
     index = {"schema_version": SCHEMA_VERSION, "generator": {"name": GENERATOR_NAME, "version": GENERATOR_VERSION},
              "project": {"canonical_sha": sha, "canonical_short_sha": sha[:12], "source_ref": ref,
                          "generated_at": as_of, "data_status": "CURRENT", "freshness": "PINNED_GIT_REF"},
              "sources": [b16_p, b19_p, h02_p, master_p, taskboard_p], "eas": eas,
              "queue": [{"id": "FACTORY-B16-H03-CONFIRMATION", "state": "DONE", "blocker_type": "NOT_APPLICABLE",
                         "summary": "B16 H03 confirmation complete; H04 is not unlocked.", "source_kind": "GIT_CANONICAL"},
-                       {"id": "BOSS19-P4-REGIME-ATTRIBUTION", "state": "BLOCKED", "blocker_type": "ENVIRONMENT",
-                        "summary": "Immutable tester-data-identity OHLC prerequisite remains missing; not strategy failure.", "source_kind": "GIT_CANONICAL"}] +
-                      [{"id": item.get("lane_id", "UNKNOWN"),
+                       {"id": "BOSS19-P4-REGIME-ATTRIBUTION", "state": boss19_item["status"], "blocker_type": boss19_item["blocker_type"],
+                        "summary": boss19_item["blocker_reason"], "source_kind": "GIT_CANONICAL"}] +
+                      [{"id": safe_lane_id(item.get("lane_id", "UNKNOWN")),
                         "state": {"WAITING": "READY", "PAUSED": "READY", "REVIEW": "RUNNING", "FROZEN": "RUNNING", "INTEGRATING": "RUNNING"}.get(item.get("state", "UNKNOWN"), item.get("state", "UNKNOWN")),
                         "blocker_type": {"A": "PRODUCT_DEFECT", "B": "HARNESS", "C": "ENVIRONMENT", "D": "EXECUTION", "E": "OWNER_EXTERNAL"}.get(str(item.get("blocker_class", ""))[:1], "NOT_APPLICABLE"),
-                        "summary": lane_summary(item), "source_kind": "LANE_REGISTRY_NONCANONICAL"}
-                       for item in lane_registry(registry) if item.get("state") != "DONE"],
+                        "summary": lane_summary(item), "source_kind": "LANE_REGISTRY_NONCANONICAL",
+                        "registry_classification": item.get("classification", "UNKNOWN"),
+                        "attention_required": item.get("attention_required", False)}
+                       for item in lane_registry(registry)],
+             "monitoring": monitor_health(monitor, sha),
              "compare": {"compatibility_rule": "DIRECT only when basis_id is identical; otherwise DIFFERENT_BASIS / N/A."}}
     (out / "report_index.json").write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return index
@@ -249,9 +405,10 @@ def main() -> int:
     parser.add_argument("--as-of", default=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"))
     parser.add_argument("--lane-registry", type=Path)
     parser.add_argument("--expected-sha")
+    parser.add_argument("--monitor-health", type=Path)
     args = parser.parse_args()
     try:
-        build(args.repo, args.ref, args.out, args.as_of, args.expected_sha, args.lane_registry)
+        build(args.repo, args.ref, args.out, args.as_of, args.expected_sha, args.lane_registry, args.monitor_health)
     except BuildError as error:
         print(f"FAIL_CLOSED: {error}", file=sys.stderr)
         return 2

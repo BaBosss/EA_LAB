@@ -77,12 +77,16 @@ if ($failures.Count -eq 0) {
     Assert-True ($app -match 'navigator\.onLine' -and $app -match 'CACHED DATA' -and $app -match 'STALE DATA') 'App must show offline/cached/stale warning states.'
     Assert-True ($sw -match 'X-EA-LAB-Cache' -and $sw -match 'report_index\.json' -and $sw -match 'cache\.put') 'Service worker must cache and identify a cached report index.'
     Assert-True ($sw -match 'fixture/' -and $sw -match '!url\.pathname\.includes') 'Service worker must not cache fixture report data as the production index.'
+    Assert-True ($sw -match 'ea-lab-report-hub-v1\.1' -and $sw -match 'caches\.keys' -and $sw -match 'caches\.delete') 'Service worker must bump cache generation and delete older EA_LAB hub caches.'
     Assert-True ($css -match '@media \(max-width: 390px\)' -and $css -match 'orientation: landscape') 'CSS must include 390px portrait and landscape handling.'
     Assert-True ($css -match 'min-height: 44px') 'CSS must include practical 44px touch targets.'
     Assert-True ($css -match '\.record-card\s*\{[^}]*min-width:\s*0;[^}]*overflow-wrap:\s*anywhere;' ) 'Record cards must shrink and wrap long canonical state tokens on phone widths.'
     Assert-True ($app -match 'safeRelativeHref' -and $app -match 'full_report') 'Links must be safe relative report links only.'
     Assert-True ($app -match 'INVENTORY_ONLY' -and $app -match 'const recent = records\.filter') 'Latest/recent must exclude inventory-only records.'
     Assert-True ($app -match 'item\.source_kind' -and $app -match 'UNKNOWN_SOURCE') 'Queue UI must render source provenance so canonical and Lane Registry rows are visually distinct.'
+    Assert-True ($app -match 'registry_classification' -and $app -match 'attention_required' -and $app -match 'ATTENTION') 'Queue UI must expose Lane Registry audit classification and attention state.'
+    Assert-True ($app -match 'renderMonitoring' -and $app -match 'LOCAL MONITORING' -and $app -match 'NONCANONICAL') 'Home must render monitoring health with explicit noncanonical provenance.'
+    Assert-True ($app -match 'Coverage unavailable because the enclosing monitoring snapshot is stale, invalid, or missing') 'Stale monitoring coverage must be fail-visible, never replayed as current.'
 }
 
 if ($failures.Count -gt 0) {

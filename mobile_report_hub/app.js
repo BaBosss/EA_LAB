@@ -109,6 +109,20 @@ function recordCard(record) {
   </article>`;
 }
 
+function renderMonitoring() {
+  const monitoring = reportIndex.monitoring || {};
+  const status = valueOf(monitoring.status, "UNAVAILABLE");
+  const sources = Array.isArray(monitoring.sources) ? monitoring.sources : [];
+  const coverage = monitoring.coverage || {};
+  const sourceRows = sources.length ? `<ul class="plain-list">${sources.map((source) => `<li><strong>${escapeHtml(valueOf(source.name))}</strong>: ${escapeHtml(valueOf(source.state))} · age ${escapeHtml(valueOf(source.age_hours, "UNKNOWN"))}h</li>`).join("")}</ul>` : `<p class="empty-state">Monitoring sources unavailable.</p>`;
+  const coverageText = valueOf(coverage.state) === "AVAILABLE_CURRENT_SNAPSHOT"
+    ? `Deal sensors ${escapeHtml(valueOf(coverage.deal_sensors_fresh))}/${escapeHtml(valueOf(coverage.deal_sensors_total))} · Floating sensors ${escapeHtml(valueOf(coverage.floating_sensors_fresh))}/${escapeHtml(valueOf(coverage.floating_sensors_total))}`
+    : "Coverage unavailable because the enclosing monitoring snapshot is stale, invalid, or missing.";
+  return `<section class="panel monitoring-panel"><div class="card-top"><div><p class="eyebrow">LOCAL MONITORING · NONCANONICAL</p><h2>Monitoring health</h2></div>${badge(status)}</div>
+    <p>${escapeHtml(coverageText)}</p>${sourceRows}
+    <p class="muted">Binding: ${escapeHtml(valueOf(monitoring.binding_state))} · generated ${escapeHtml(valueOf(monitoring.generated_at_utc))} · ${escapeHtml(valueOf(monitoring.authority, "READ_ONLY_NO_RUNTIME_AUTHORITY"))}</p></section>`;
+}
+
 function renderHome() {
   const records = reportIndex.eas || [];
   const groupNames = ["Active", "DEMO", "Candidate", "Research", "Blocked"];
@@ -120,6 +134,7 @@ function renderHome() {
   const recent = records.filter((record) => record.status !== "INVENTORY_ONLY" && valueOf(record.latest_experiment, "UNKNOWN") !== "UNKNOWN").slice(-3).reverse();
 
   app.innerHTML = `<section class="page-heading"><h2>Research at a glance</h2><p>Canonical report data is rendered read-only from report_index.json.</p></section>
+    ${renderMonitoring()}
     <section class="count-grid" aria-label="EA counts">${counts}</section>
     <section class="panel"><h2>Latest / recent</h2><div class="card-list">${recent.map(recordCard).join("") || "<p class=\"empty-state\">No recent research records available.</p>"}</div></section>
     <section class="panel"><h2>Blockers</h2>${blockers.length ? `<ul class="plain-list">${blockers.map((record) => `<li><strong>${escapeHtml(record.display_name)}</strong>: ${escapeHtml(valueOf(record.blocker_type, "BLOCKED"))} — ${escapeHtml(valueOf(record.blocker_reason, "UNAVAILABLE"))}</li>`).join("")}</ul>` : "<p class=\"empty-state\">No blocked records reported.</p>"}</section>
@@ -202,7 +217,7 @@ function renderQueue() {
   const groups = ["READY", "RUNNING", "BLOCKED", "DONE"];
   app.innerHTML = `<section class="page-heading"><h2>Research queue</h2><p>Queue state is descriptive only; this hub has no execution controls.</p></section>${groups.map((state) => {
     const items = queue.filter((item) => String(item.state).toUpperCase() === state);
-    return `<section class="panel"><h2>${state}</h2>${items.length ? `<ul class="queue-list">${items.map((item) => `<li><strong>${escapeHtml(valueOf(item.id))}</strong><span>${badge(item.state)} ${escapeHtml(valueOf(item.blocker_type, "NOT_APPLICABLE"))} ${badge(valueOf(item.source_kind, "UNKNOWN_SOURCE"))}</span><p>${escapeHtml(valueOf(item.summary))}</p></li>`).join("")}</ul>` : "<p class=\"empty-state\">No items.</p>"}</section>`;
+    return `<section class="panel"><h2>${state}</h2>${items.length ? `<ul class="queue-list">${items.map((item) => `<li><strong>${escapeHtml(valueOf(item.id))}</strong><span>${badge(item.state)} ${escapeHtml(valueOf(item.blocker_type, "NOT_APPLICABLE"))} ${badge(valueOf(item.source_kind, "UNKNOWN_SOURCE"))} ${item.registry_classification ? badge(item.registry_classification) : ""} ${item.attention_required === true ? badge("ATTENTION") : ""}</span><p>${escapeHtml(valueOf(item.summary))}</p></li>`).join("")}</ul>` : "<p class=\"empty-state\">No items.</p>"}</section>`;
   }).join("")}`;
 }
 

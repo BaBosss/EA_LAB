@@ -1,4 +1,5 @@
-const CACHE_NAME = "ea-lab-report-hub-v1";
+const CACHE_NAME = "ea-lab-report-hub-v1.1";
+const CACHE_PREFIX = "ea-lab-report-hub-v";
 const SHELL = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -7,7 +8,11 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    const names = await caches.keys();
+    await Promise.all(names.filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME).map((name) => caches.delete(name)));
+    await self.clients.claim();
+  })());
 });
 
 async function cachedResponse(request) {
