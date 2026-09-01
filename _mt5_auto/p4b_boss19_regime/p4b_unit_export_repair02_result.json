@@ -1,0 +1,88 @@
+{
+  "schema_version": "BOSS19_P4B_UNIT_EXPORT_REPAIR02_RESULT_V1",
+  "status": "BLOCKED(MAGIC_FIELD_NOT_SOURCE_BOUND)",
+  "decision": "REPAIR02_BLOCKED_FAIL_CLOSED_NO_BROAD_RERUN",
+  "repair02_runtime_head": "40625eb5beec5d59042645a61f02a62ef53621b3",
+  "repair02_preregistered_head": "58e5ff3ce5551e3408c7b614e80654cbd2943393",
+  "cell_id": "H3-C03-MAIN",
+  "symbol": "XAUUSD",
+  "tf": "H4",
+  "window": "MAIN",
+  "from_date": "2023.01.01",
+  "to_date": "2025.12.31",
+  "model": 1,
+  "holdout": "UNSPENT",
+  "optimization": "NONE",
+  "broad_rerun": "LOCKED",
+  "mechanical_gate": {
+    "status": "PASS_COUNTS_AND_STRATEGY_PARITY_ONLY",
+    "profit_factor": 4.39,
+    "net_profit": 4445.51,
+    "total_trades": 113,
+    "equity_drawdown_percent": 13.34,
+    "bars": 4637,
+    "ticks": 4238991,
+    "history_quality": 98,
+    "leverage": "1:100",
+    "source_in_count": 113,
+    "source_out_count": 113,
+    "source_position_count": 113,
+    "realized_unit_count": 113,
+    "open_position_count": 0,
+    "unknown_time_unit_count": 0,
+    "linkage_basis": "EXACT_DEAL_POSITION_ID_ONE_IN_ONE_OUT",
+    "forbidden_inference_used": false
+  },
+  "evidence_contract_gate": {
+    "status": "BLOCKED",
+    "code": "MAGIC_FIELD_NOT_SOURCE_BOUND",
+    "class": "A_PRODUCT_DEFECT",
+    "detail": "CSV per-deal magic is written from configured _0_Magic rather than HistoryDealGetInteger(deal, DEAL_MAGIC). Admission/linkage counts remain exact, but required per-row magic provenance is not source-bound and cannot attest the emitted deal property.",
+    "admission_linkage_integrity": "PASS_EXACT_DEAL_POSITION_ID",
+    "per_deal_magic_provenance": "FAIL_CONFIGURED_CONSTANT_NOT_DEAL_PROPERTY"
+  },
+  "tester_end_close_rows": [
+    {
+      "deal_id": 225,
+      "position_id": 570,
+      "opening_deal_id": 224,
+      "csv_magic": "990001_UNTRUSTED_AS_DEAL_MAGIC"
+    },
+    {
+      "deal_id": 226,
+      "position_id": 569,
+      "opening_deal_id": 223,
+      "csv_magic": "990001_UNTRUSTED_AS_DEAL_MAGIC"
+    },
+    {
+      "deal_id": 227,
+      "position_id": 568,
+      "opening_deal_id": 222,
+      "csv_magic": "990001_UNTRUSTED_AS_DEAL_MAGIC"
+    }
+  ],
+  "build_identity": {
+    "source_sha256": "fbe3b5086b92ea1d1e3a4344430f66e2b186864bee9caabe42df2e984a2ee734",
+    "ex5_sha256": "553956530f9b945a825a6a6663361ef78034610b575b97100c5a5fee6928f2b9",
+    "build_receipt": "br-11e4a622826d4c62bcbcf1d8ad35c10b",
+    "build_receipt_registry_sha256": "0e74000a2a9c81e255771b53ae99089793e5dabcda8049a45c71890870fbc933",
+    "set_sha256": "671ced2169bdda6812cf1ceb70bbc5a53bcb0985563dcbce92cc64e04f81f0d2"
+  },
+  "evidence_hashes": {
+    "run_manifest_json": "9fac09f1953adadf0831df138a8c04c7b8bc7496ce1bc2365bb843a114348c05",
+    "unit_manifest_json": "d863b2a5a31ff8e4cc5f5a079b091cdf3f2854e0e591229abe12ee426bd596b0",
+    "source_csv": "f61f43f2f2defc2959d3c956b9b1cbf195416a90f762a2e67c767a5084e53734",
+    "units_csv": "fd37938a368de093c01e1a09430dfc36375eb4112f602191b3623d1436da099e",
+    "report_htm": "1584f43442203e8aa868e119e674a61b6a457d649e3e27b8ce8ca4e05337ac11",
+    "report_json": "7258dd0699d8f56ff377546812dfe7201785e3375ac86947fe3ed7b9f0b34226",
+    "runner_log": "af1ba0104cd91f394325a1783e1ecb6e8a4b0dda61e8e79637ebfaa391be1617",
+    "independent_provenance_review": "2745f3ea15e44ee5446af923448d7153aae7f2fb726c98b697fe7b980d7900b6"
+  },
+  "independent_adjudication": {
+    "verdict": "BLOCK_MATERIAL_CONTRACT_DEFECT",
+    "confidence": "HIGH",
+    "reviewed_head": "40625eb5beec5d59042645a61f02a62ef53621b3"
+  },
+  "next_safe_action": "Prospectively preregister Repair03. Separate configured run magic from source per-deal DEAL_MAGIC in exporter/schema/builder/runner identity, preserve exact DEAL_POSITION_ID ownership admission, independently review exact head, then rerun H3-C03-MAIN only. Broad 36-cell execution remains locked until an accepted source-provenance PASS.",
+  "authority": "RESEARCH_ONLY_NO_STRATEGY_VERDICT_NO_HOLDOUT_NO_OPTIMIZATION_NO_RUNTIME_RISK_DEPLOYMENT"
+}

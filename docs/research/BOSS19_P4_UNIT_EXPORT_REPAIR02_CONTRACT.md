@@ -65,3 +65,13 @@ Any failure is fail-closed and must be classified A/B/C/D separately from strate
 Only a reviewed one-cell PASS may make the broad 36-cell source-bound export READY. This contract does not itself run or authorize that broad batch. A broad batch still uses the frozen H3 matrix, serial MT5 lane ownership, Model 1, MAIN/BWD only, and no HOLDOUT.
 
 No P4 regime join, optimization, Candidate/DEMO/LIVE, deployment/runtime attachment, trading, risk/default, Grade, KINT, or owner-attestation authority is created here.
+
+## Repair02 observed result - 2026-09-01
+
+The one-cell runtime mechanically satisfied strategy parity and the preregistered count/linkage targets (`113 IN / 113 OUT / 113 realized units / 0 open`) using exact `DEAL_POSITION_ID` admission. However, post-run independent source-provenance adjudication found a material contract defect: the exporter records per-row `magic` from configured `_0_Magic` rather than the emitted deal's source `DEAL_MAGIC` property.
+
+Accordingly Repair02 closes fail-closed as `BLOCKED(MAGIC_FIELD_NOT_SOURCE_BOUND)`. The accepted exact position-ID admission logic is not rejected, but the emitted evidence does not satisfy the original per-field `HistoryDealGet*` provenance rule. Broad 36-cell execution remains `LOCKED`.
+
+Durable result: `docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md` and `_mt5_auto/p4b_boss19_regime/p4b_unit_export_repair02_result.json`.
+
+Any next repair requires a new prospective contract. It must separate configured run identity from per-deal source magic, keep the accepted exact position-ID ownership rule, receive independent exact-head review, and rerun only `H3-C03-MAIN` before broad execution can be reconsidered.
