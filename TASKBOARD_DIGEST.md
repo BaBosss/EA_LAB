@@ -416,11 +416,11 @@
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
-| ORDER-RND-B16-H03 |  | DONE | B16 XAUUSD/H4 fixed-config confirmation |  | ACTIVE:10055 |
+| ORDER-RND-B16-H03 |  | DONE | B16 XAUUSD/H4 fixed-config confirmation |  | ACTIVE:10056 |
 | ORDER-RND-P0 | 2026-08-29 | DONE + REVIEWED | EA R&D governance/context convergence | PASS / CANONICAL at b7a75016 | ACTIVE:10022 |
 | ORDER-RND-P1 | 2026-08-29 | DONE + REVIEWED | Hermes H1 Golden Replay | H1 PASS / no new MT5 / HOLDOUT UNSPENT | ACTIVE:10029 |
 | ORDER-RND-P2 | 2026-08-29 | DONE + REVIEWED | Hermes H2 small pilot | H2 PASS / H3_READY | ACTIVE:10036 |
 | ORDER-RND-P3 | 2026-08-29 | DONE + REVIEWED | Boss19 19-0 broad fixed-config matrix | H3 PASS / BROAD MATRIX COMPLETE | ACTIVE:10042 |
-| ORDER-RND-P4 |  | P4A FROZEN / P4B BLOCKED | Boss19 regime attribution |  | ACTIVE:10048 |
-| ORDER-RND-P5 |  | BLOCKED | next Boss19 variant hypothesis |  | ACTIVE:10059 |
-| ORDER-RND-P6 |  | BLOCKED | survivor coarse-to-fine funnel |  | ACTIVE:10065 |
+| ORDER-RND-P4 |  | P4A | Boss19 regime attribution |  | ACTIVE:10048 |
+| ORDER-RND-P5 |  | BLOCKED | next Boss19 variant hypothesis |  | ACTIVE:10060 |
+| ORDER-RND-P6 |  | BLOCKED | survivor coarse-to-fine funnel |  | ACTIVE:10066 |
