@@ -45,6 +45,9 @@ class SourceBoundUnitTests(unittest.TestCase):
         self.assertEqual(units[0]["source_deal_id"], "2")
         self.assertEqual(units[0]["entry_utc"], "2023-06-12T09:00:00Z")
         self.assertEqual(units[0]["source_net_realized"], "1.21")
+        self.assertEqual(units[0]["entry_swap"], "0")
+        self.assertEqual(units[0]["entry_profit"], "0")
+        self.assertEqual(meta["window"], "MAIN")
 
     def test_zero_position_id_refuses(self):
         with self.assertRaises(m.UnitSourceError):
@@ -106,6 +109,28 @@ class SourceBoundUnitTests(unittest.TestCase):
         rows[1]["symbol"] = "EURUSD"
         with self.assertRaises(m.UnitSourceError):
             m.read_source(self._source(rows))
+
+    def test_invalid_run_id_refuses(self):
+        parsed = m.read_source(self._source([row(1, 77, m.ENTRY_IN, "2023.01.02 12:00:00")]))
+        with self.assertRaises(m.UnitSourceError):
+            m.build_units(parsed, "FREE_TEXT")
+
+    def test_holdout_date_refuses_main(self):
+        parsed = m.read_source(self._source([
+            row(1, 77, m.ENTRY_IN, "2026.01.02 12:00:00"),
+            row(2, 77, m.ENTRY_OUT, "2026.01.03 12:00:00"),
+        ]))
+        with self.assertRaises(m.UnitSourceError):
+            m.build_units(parsed, "H3-C03-MAIN")
+
+    def test_bwd_window_accepts_only_2020_2022(self):
+        parsed = m.read_source(self._source([
+            row(1, 77, m.ENTRY_IN, "2021.06.01 12:00:00"),
+            row(2, 77, m.ENTRY_OUT, "2021.06.02 12:00:00"),
+        ]))
+        units, meta = m.build_units(parsed, "H3-C03-BWD")
+        self.assertEqual(len(units), 1)
+        self.assertEqual(meta["window"], "BWD")
 
     def _source(self, rows):
         f = tempfile.NamedTemporaryFile(suffix=".csv", delete=False)

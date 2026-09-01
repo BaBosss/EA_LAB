@@ -4,6 +4,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -22,6 +23,11 @@ ENTRY_OUT = 1
 ENTRY_INOUT = 2
 ENTRY_OUT_BY = 3
 TRADING_TYPES = {0, 1}
+RUN_ID_RE = re.compile(r"^H3-C(?:0[1-9]|1[0-8])-(MAIN|BWD)$")
+WINDOWS_SERVER = {
+    "MAIN": (datetime(2023, 1, 1), datetime(2025, 12, 31, 23, 59, 59)),
+    "BWD": (datetime(2020, 1, 1), datetime(2022, 12, 31, 23, 59, 59)),
+}
 
 REQUIRED_HEADER = [
     "schema_version", "symbol", "period", "period_name", "magic", "account_margin_mode",
@@ -119,7 +125,23 @@ def normalized_utc(time_server: str) -> tuple[str | None, str | None]:
     utc = server_to_utc(time_server)
     return utc.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), None
 
+def validate_run_window(rows: list[dict], run_id: str) -> str:
+    match = RUN_ID_RE.fullmatch(run_id)
+    if not match:
+        raise UnitSourceError(f"invalid frozen H3 run_id: {run_id!r}")
+    window = match.group(1)
+    start, end = WINDOWS_SERVER[window]
+    for row in rows:
+        raw = datetime.strptime(row["deal_time_server"], "%Y.%m.%d %H:%M:%S")
+        if raw < start or raw > end:
+            raise UnitSourceError(
+                f"deal outside frozen {window} window: deal={row['deal_id_i']} time={row['deal_time_server']}"
+            )
+    return window
+
+
 def build_units(rows: list[dict], run_id: str) -> tuple[list[dict], dict]:
+    window = validate_run_window(rows, run_id)
     by_position: dict[int, list[dict]] = defaultdict(list)
     for row in rows:
         by_position[row["position_id_i"]].append(row)
@@ -176,6 +198,8 @@ def build_units(rows: list[dict], run_id: str) -> tuple[list[dict], dict]:
             "entry_price": str(entry["price_d"]),
             "exit_price": str(out["price_d"]),
             "entry_commission": str(entry["commission_d"]),
+            "entry_swap": str(entry["swap_d"]),
+            "entry_profit": str(entry["profit_d"]),
             "exit_commission": str(out["commission_d"]),
             "exit_swap": str(out["swap_d"]),
             "exit_profit": str(out["profit_d"]),
@@ -185,6 +209,7 @@ def build_units(rows: list[dict], run_id: str) -> tuple[list[dict], dict]:
     manifest = {
         "schema_version": "BOSS19_P4B_SOURCE_BOUND_UNIT_MANIFEST_V1",
         "h3_run_id": run_id,
+        "window": window,
         "source_row_count": len(rows),
         "source_in_count": sum(r["deal_entry_i"] == ENTRY_IN for r in rows),
         "source_out_count": sum(r["deal_entry_i"] in {ENTRY_OUT, ENTRY_OUT_BY} for r in rows),
@@ -205,7 +230,7 @@ UNIT_FIELDS = [
     "source_position_id", "source_open_deal_id", "source_deal_id", "source_open_order_id", "source_close_order_id",
     "entry_time_server", "exit_time_server", "entry_time_msc", "exit_time_msc", "entry_utc", "exit_utc",
     "time_status", "time_unknown_reason", "entry_volume", "exit_volume", "entry_price", "exit_price",
-    "entry_commission", "exit_commission", "exit_swap", "exit_profit", "source_net_realized",
+    "entry_commission", "entry_swap", "entry_profit", "exit_commission", "exit_swap", "exit_profit", "source_net_realized",
 ]
 
 def write_units(path: Path, units: list[dict]) -> None:

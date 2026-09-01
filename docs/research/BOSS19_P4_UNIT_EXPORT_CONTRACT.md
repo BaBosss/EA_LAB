@@ -87,3 +87,20 @@ The unit builder records both raw server time and normalized `entry_utc`/`exit_u
 ### First-version cost/reconciliation shape
 
 The first unit builder accepts only one source `IN` and one realized `OUT/OUT_BY` per `position_id`. Multiple entry fills or multiple realized exits for one position are `BLOCKED(UNSUPPORTED_MULTI_DEAL_POSITION)` rather than allocating opening commission or P&L across partial fills by an invented rule. Positions with no realized exit are reported as open/unrealized and excluded from realized-unit aggregates.
+
+## Pilot-1 observed blocker and bounded repair
+
+The first exact pilot on canonical `5d25f48fdf1160c68f2dd27973b623a213b0a7d0` reproduced the accepted H3-C03-MAIN strategy evidence exactly: PF `4.39`, net `4445.51`, 113 trades, EqDD `13.34%`, 4,637 bars and 4,238,991 ticks; the child report was full-window eligible.
+
+The live transaction callback exported 113 `IN` rows but only 110 `OUT` rows. The child tester report contained three additional source deal IDs (`225`, `226`, `227`), all at `2025.12.30 23:59:59`, created by tester end-of-window forced closure. Therefore Pilot-1 is `BLOCKED(SOURCE_OUT_COUNT_MISMATCH_END_OF_TEST_CLOSES_NOT_EMITTED)` and never unlocks the broad rerun.
+
+The single permitted bounded repair is instrumentation-only:
+- retain `OnTradeTransaction` as observation during the run;
+- in `OnTester()`, after tester completion, rewrite the Common-Files CSV from MT5 `HistoryDeals` using exact source properties only;
+- the final snapshot, not the streaming callback, is the authoritative source artifact;
+- no strategy/core/set/risk/runtime semantics may change.
+The repaired execution path must use `scripts/research/boss19_p4b/run_unit_export_cell.ps1`. That runner derives symbol/TF/window/dates from the frozen H3 manifest, rejects any HOLDOUT/optimization/model drift, archives/removes any pre-existing colliding Common-Files source before launch, requires a fresh final source after launch, and copies report/source/unit artifacts into a run-scoped evidence directory with hashes.
+
+The unit builder accepts only frozen H3 run IDs and their fixed MAIN/BWD server-date windows. It refuses any source deal outside the declared window, records entry-side commission/swap/profit as well as exit-side accounting, and still links only by exact `DEAL_POSITION_ID`.
+
+Pilot re-entry requires a new exact-head independent review of this repair before MT5 launch. The repaired pilot must again satisfy all six original pilot checks, including tester-report trade-count reconciliation. Only a repaired pilot PASS may unlock serial 36-cell execution.
