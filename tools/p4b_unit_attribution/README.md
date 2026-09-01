@@ -4,7 +4,7 @@ Purpose: deterministically assess whether the accepted H3 MT5 report bytes conta
 
 This tool runs only after the immutable classifier timeline gate is accepted. It does not rebuild the timeline, optimize, spend HOLDOUT, infer baskets, or create runtime/risk/deployment authority.
 
-The audit verifies the frozen H3 package and timeline hashes, rehashes all 36 raw reports, reconciles realized `out` deal counts to `H3_MATRIX.csv`, and inspects the Orders/Deals schemas for source-emitted linkage fields.
+The audit verifies the frozen H3 package and timeline hashes, pins `H3_MATRIX.csv` at SHA-256 `e3f3305c29a837c936a4476d100bf3e1b8b68357ab3a8faac041f9e11402faaa`, semantically cross-checks all 36 matrix rows against the SHA-pinned H3 result-package rows, rehashes all 36 raw reports, reconciles realized `out` deal counts, and inspects the Orders/Deals schemas for source-emitted linkage fields.
 
 Current accepted report shape exposes separate opening `in` deals and realized `out` deals but no Position/opening-link identifier. Opening and closing Order IDs are disjoint. Therefore current evidence is fail-closed as `BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)`.
 

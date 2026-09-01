@@ -24,6 +24,17 @@ def mini_report(position=False, basket=False):
     return html.encode('utf-16')
 
 
+def synthetic_h3_rows():
+    rows = []
+    for i in range(36):
+        rows.append({
+            "cell_id": f"H3-T{i:02d}", "symbol": "XAUUSD", "tf": "H1", "window": "MAIN",
+            "status": "COMPLETE", "full_window": True, "PF": 1.5, "trades": 10.0,
+            "net": 25.0, "eqDD": 2.0, "quality": "99%", "report_sha256": f"{i:064x}",
+        })
+    return rows
+
+
 class SuitabilityTests(unittest.TestCase):
     def test_standard_report_schema_has_no_position_identity(self):
         tables = m.parse_report_tables(mini_report())
@@ -56,8 +67,26 @@ class SuitabilityTests(unittest.TestCase):
 
     def test_frozen_identity_constants(self):
         self.assertEqual(len(m.EXPECTED_H3_SHA), 64)
+        self.assertEqual(len(m.EXPECTED_H3_MATRIX_SHA), 64)
         self.assertEqual(len(m.EXPECTED_TIMELINE_SHA), 64)
         self.assertEqual(m.BLOCKED, 'BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)')
+
+    def test_matrix_rows_bind_to_package_rows(self):
+        rows = synthetic_h3_rows()
+        m.assert_matrix_matches_package(rows, {"rows": [dict(r) for r in rows]})
+
+    def test_matrix_row_substitution_is_rejected(self):
+        rows = synthetic_h3_rows()
+        package_rows = [dict(r) for r in rows]
+        rows[7]["report_sha256"] = "f" * 64
+        with self.assertRaises(SystemExit):
+            m.assert_matrix_matches_package(rows, {"rows": package_rows})
+
+    def test_duplicate_matrix_cell_is_rejected(self):
+        rows = synthetic_h3_rows()
+        rows[-1]["cell_id"] = rows[0]["cell_id"]
+        with self.assertRaises(SystemExit):
+            m.assert_matrix_matches_package(rows, {"rows": synthetic_h3_rows()})
 
 
 if __name__ == '__main__':

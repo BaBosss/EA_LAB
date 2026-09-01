@@ -28,7 +28,7 @@ That manifest binds all 8 frozen P4A mappings, all raw and normalized file hashe
 
 The historical market-data prerequisite is resolved. The exact reviewed timeline is pinned at SHA-256 `5f3a0f8d1accd25cb6cc08ad1c6e291aed6d238d620269102151016dbfaf569d`; its manifest SHA-256 is `858f4d02d1ae30511dd1f38ffab347c85c06a4a25df4bedf901dc169c2847916`, with 1,242,682 rows across all 18 Symbol x TF cells. FinalA/FinalB rebuilt byte-identically and the independent rereview of timeline head `0f2cc63d7ca86a8a3a476faf122141aafb513f5b` returned PASS.
 
-Only after that gate was locked, the accepted H3 outcome/deal bytes were opened. A deterministic audit rehashed all 36 raw H3 reports against `H3_MATRIX.csv` and found 1,549 opening `in` deals and 1,549 realized `out` deals; every realized count reconciles exactly to the H3 trade count. The report schema exposes `Time, Deal, Symbol, Type, Direction, Volume, Price, Order, Commission, Swap, Profit, Balance, Comment`, but no source-emitted Position/opening-link field. Opening and closing Order IDs are disjoint across all 36 reports (`overlap = 0`). Therefore an exit deal cannot be tied to its durable opening timestamp without inventing FIFO, temporal-proximity, volume, order-sequence, or P&L matching.
+Only after that gate was locked, the accepted H3 outcome/deal bytes were opened. The deterministic audit pins `H3_MATRIX.csv` at SHA-256 `e3f3305c29a837c936a4476d100bf3e1b8b68357ab3a8faac041f9e11402faaa` and semantically cross-checks all 36 matrix rows against the SHA-pinned H3 result-package rows before report parsing. It then rehashes all 36 raw H3 reports and finds 1,549 opening `in` deals and 1,549 realized `out` deals; every realized count reconciles exactly to the package-bound H3 trade count. The report schema exposes `Time, Deal, Symbol, Type, Direction, Volume, Price, Order, Commission, Swap, Profit, Balance, Comment`, but no source-emitted Position/opening-link field. Opening and closing Order IDs are disjoint across all 36 reports (`overlap = 0`). Therefore an exit deal cannot be tied to its durable opening timestamp without inventing FIFO, temporal-proximity, volume, order-sequence, or P&L matching.
 
 Per the frozen contract this is `BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)`. `BASKET` is also `UNAVAILABLE_NO_SOURCE_BASKET_ID`. This is an evidence-shape blocker only, not a Boss19 strategy failure or regime conclusion. No regime-performance attribution is published. HOLDOUT remains UNSPENT; optimization/runtime/risk/deployment authority remains NONE.
 
@@ -36,7 +36,7 @@ Per the frozen contract this is `BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTIO
 
 Current post-timeline unit gate:
 
-- [H3 unit-suitability audit](../../_mt5_auto/p4b_boss19_regime/h3_unit_suitability.json) — SHA-256 `604c81751fc3db2f83c5372ed07a4a5f6f1c5a67836e88c56da7123354d2824d`
+- [H3 unit-suitability audit](../../_mt5_auto/p4b_boss19_regime/h3_unit_suitability.json) — SHA-256 `55ba01a52f71e402bcfb960394f59e46ace2638a747f62d763c78babbcb09caa`
 - [Unit-suitability checksum](../../_mt5_auto/p4b_boss19_regime/h3_unit_suitability.sha256)
 - [Deterministic unit-audit tool](../../tools/p4b_unit_attribution/audit_h3_unit_suitability.py)
 

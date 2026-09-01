@@ -29,6 +29,7 @@
   "provenance": {
     "h3_contract_head": "47c7732048406277096c1ccc31734b4122ae7285",
     "h3_manifest_sha256": "56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd",
+    "h3_matrix_sha256": "e3f3305c29a837c936a4476d100bf3e1b8b68357ab3a8faac041f9e11402faaa",
     "h3_result_package_sha256": "3d62d6d358831dc3897357d3d2008e9c0f1c9211716844112f8af96f79c7eeb2",
     "holdout": "UNSPENT",
     "market_input_manifest_sha256": "f836817638116b18ef9cbcf67eae4b9b77e936f1e6cf816c2221e28de87037f5",
@@ -41,7 +42,9 @@
     "all_order_and_deal_schemas_match": true,
     "all_realized_out_counts_match_h3_trade_counts": true,
     "all_report_hashes_match_h3_matrix": true,
+    "h3_matrix_sha256": "e3f3305c29a837c936a4476d100bf3e1b8b68357ab3a8faac041f9e11402faaa",
     "linkage_verdict": "NO_SOURCE_EMITTED_ENTRY_LINK_FIELD",
+    "matrix_rows_match_h3_result_package": true,
     "opening_and_closing_order_id_overlap_count": 0,
     "position_identity_field_present": false,
     "reports_expected": 36,

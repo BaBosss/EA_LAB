@@ -14,6 +14,7 @@ SCHEMA_VERSION = "BOSS19_P4_H3_UNIT_SUITABILITY_V1"
 BLOCKED = "BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)"
 EXPECTED_H3_SHA = "3d62d6d358831dc3897357d3d2008e9c0f1c9211716844112f8af96f79c7eeb2"
 EXPECTED_H3_MANIFEST_SHA = "56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd"
+EXPECTED_H3_MATRIX_SHA = "e3f3305c29a837c936a4476d100bf3e1b8b68357ab3a8faac041f9e11402faaa"
 EXPECTED_TIMELINE_SHA = "5f3a0f8d1accd25cb6cc08ad1c6e291aed6d238d620269102151016dbfaf569d"
 EXPECTED_TIMELINE_MANIFEST_SHA = "858f4d02d1ae30511dd1f38ffab347c85c06a4a25df4bedf901dc169c2847916"
 FORBIDDEN_INFERENCES = ["FIFO", "TEMPORAL_PROXIMITY", "VOLUME_MATCH", "ORDER_SEQUENCE", "P_AND_L_MATCH"]
@@ -135,6 +136,23 @@ def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
+def semantic_h3_row(row: dict[str, Any]) -> tuple[Any, ...]:
+    return (str(row["cell_id"]), str(row["symbol"]), str(row["tf"]), str(row["window"]), str(row["status"]), str(row["full_window"]).lower() == "true", float(row["PF"]), float(row["trades"]), float(row["net"]), float(row["eqDD"]), str(row["quality"]), str(row["report_sha256"]).lower())
+
+
+def assert_matrix_matches_package(matrix: list[dict[str, Any]], package: dict[str, Any]) -> None:
+    rows = package.get("rows")
+    if not isinstance(rows, list) or len(rows) != 36:
+        raise SystemExit("H3 package must contain exactly 36 rows")
+    m = {str(r["cell_id"]): semantic_h3_row(r) for r in matrix}
+    p = {str(r["cell_id"]): semantic_h3_row(r) for r in rows}
+    if len(m) != 36 or len(p) != 36 or set(m) != set(p):
+        raise SystemExit("H3 matrix/package cell identity mismatch")
+    bad = [cell for cell in sorted(m) if m[cell] != p[cell]]
+    if bad:
+        raise SystemExit("H3 matrix/package row mismatch: " + ",".join(bad))
+
+
 def audit(args: argparse.Namespace) -> dict[str, Any]:
     package_path = Path(args.h3_package)
     matrix_path = Path(args.h3_matrix)
@@ -146,8 +164,12 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
     matrix = list(csv.DictReader(matrix_path.open(encoding="utf-8-sig", newline="")))
     if sha256_file(package_path) != EXPECTED_H3_SHA:
         raise SystemExit("H3 package SHA mismatch")
+    if sha256_file(matrix_path) != EXPECTED_H3_MATRIX_SHA:
+        raise SystemExit("H3 matrix SHA mismatch")
     if h3_package.get("manifest_sha256") != EXPECTED_H3_MANIFEST_SHA:
         raise SystemExit("H3 manifest identity mismatch")
+    if h3_package.get("matrix_completeness") != "FULL" or h3_package.get("holdout") != "UNSPENT" or h3_package.get("optimization") != "NONE":
+        raise SystemExit("H3 package authority/status mismatch")
     if sha256_file(timeline_manifest_path) != EXPECTED_TIMELINE_MANIFEST_SHA:
         raise SystemExit("timeline manifest SHA mismatch")
     if timeline_manifest.get("timeline_sha256") != EXPECTED_TIMELINE_SHA:
@@ -156,6 +178,7 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
         raise SystemExit("timeline bytes SHA mismatch")
     if len(matrix) != 36:
         raise SystemExit("expected 36 H3 matrix rows")
+    assert_matrix_matches_package(matrix, h3_package)
     reports: list[dict[str, Any]] = []
     for row in matrix:
         fn = report_filename(row["symbol"], row["tf"], row["window"])
@@ -190,6 +213,7 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
         "provenance": {
             "h3_result_package_sha256": EXPECTED_H3_SHA,
             "h3_manifest_sha256": EXPECTED_H3_MANIFEST_SHA,
+            "h3_matrix_sha256": EXPECTED_H3_MATRIX_SHA,
             "h3_contract_head": h3_package.get("canonical_head"),
             "timeline_sha256": EXPECTED_TIMELINE_SHA,
             "timeline_manifest_sha256": EXPECTED_TIMELINE_MANIFEST_SHA,
@@ -200,6 +224,8 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
         },
         "report_audit": {
             "reports_expected": 36, "reports_verified": len(reports),
+            "h3_matrix_sha256": EXPECTED_H3_MATRIX_SHA,
+            "matrix_rows_match_h3_result_package": True,
             "all_report_hashes_match_h3_matrix": all_hash,
             "all_order_and_deal_schemas_match": all_schema,
             "all_realized_out_counts_match_h3_trade_counts": all_counts,
