@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -13,6 +14,7 @@ import build_index
 
 
 SHA = "b7ac57ce5e1a74dc7d8a0ed5717c4853786fd4fa"
+CURRENT_P4_SHA = "3207b4372a296e1fe6fc60f0b8c1ce3f0e18e4f1"
 FIXED_TIME = "2026-08-30T00:00:00Z"
 
 
@@ -57,6 +59,21 @@ class MobileReportHubDataTests(unittest.TestCase):
         boss19_copy = (self.out / boss19["links"]["full_report"]).read_text(encoding="utf-8")
         self.assertIn("[LOCAL_PATH_REDACTED]", boss19_copy)
         self.assertNotRegex(boss19_copy, r"[A-Za-z]:\\")
+
+    def test_boss19_current_unit_attribution_blocker_and_queue_match(self):
+        out = Path(self.temp.name) / "current-p4"
+        index = build_index.build(ROOT, CURRENT_P4_SHA, out, FIXED_TIME, CURRENT_P4_SHA, None)
+        boss19 = self.by_id(index, "boss19-regime-attribution")
+        self.assertEqual(boss19["verdict"], "BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)")
+        self.assertEqual(boss19["blocker_type"], "EVIDENCE")
+        self.assertIn("evidence-shape blocker", boss19["blocker_reason"])
+        self.assertIn("source-bound timestamped H3 unit export", boss19["next_action"])
+        self.assertEqual(boss19["evidence"]["holdout_state"], "UNSPENT")
+        queue = next(item for item in index["queue"] if item["id"] == "BOSS19-P4-REGIME-ATTRIBUTION")
+        self.assertEqual(queue["state"], "BLOCKED")
+        self.assertEqual(queue["blocker_type"], "EVIDENCE")
+        self.assertEqual(queue["summary"], boss19["blocker_reason"])
+        self.assertNotIn("OHLC prerequisite remains missing", queue["summary"])
 
     def test_h02_pair_is_compatible_and_unknown_not_zero(self):
         index = self.build()
@@ -204,6 +221,28 @@ class MobileReportHubDataTests(unittest.TestCase):
         result=build_index.build(ROOT,SHA,Path(self.temp.name)/"valid-missing-row",FIXED_TIME,SHA,None,monitor)["monitoring"]
         self.assertEqual(result["status"],"DEGRADED"); self.assertEqual({x["name"]:x for x in result["sources"]}["live_evidence"]["age_hours"],"UNKNOWN")
 
+    def test_monitor_health_rejects_nonfinite_age_and_impossible_time_for_current_or_stale(self):
+        monitor = Path(self.temp.name) / "monitor-nonfinite.json"
+        base = {"schema_version":"EA_LAB_MONITOR_HEALTH_V1","source_kind":"LOCAL_MONITORING_NONCANONICAL",
+                "authority":"READ_ONLY_NO_RUNTIME_AUTHORITY","repo_head":SHA,"status":"CURRENT",
+                "generated_at_utc":"2026-08-30T00:00:00Z","alert_present":False,
+                "coverage":{"state":"UNAVAILABLE_STALE_OR_INVALID"}}
+        template = [{"name":"live_evidence","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"latest_filename_date_upper_bound"},
+                    {"name":"control_room_snapshot","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"snapshot_meta_generated_at"},
+                    {"name":"daily_monitor_success","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}]
+        for source_state in ("CURRENT", "STALE"):
+            for case_index, (field, value) in enumerate((("age_hours", float("nan")), ("age_hours", float("inf")),
+                                                        ("observed_at_utc", "2026-99-99T99:99:99Z"))):
+                rows = [dict(x) for x in template]
+                rows[0]["state"] = source_state
+                rows[0][field] = value
+                payload = dict(base); payload["sources"] = rows
+                monitor.write_text(json.dumps(payload), encoding="utf-8")
+                out = Path(self.temp.name) / f"bad-{source_state}-{case_index}"
+                result = build_index.build(ROOT, SHA, out, FIXED_TIME, SHA, None, monitor)["monitoring"]
+                self.assertEqual(result["status"], "UNAVAILABLE")
+                self.assertEqual(result["reason"], "INVALID_SOURCE_ROW")
+
     def test_monitor_health_rejects_duplicate_or_unknown_sources(self):
         monitor = Path(self.temp.name) / "monitor-source-set.json"
         valid = [{"name":"live_evidence","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"latest_filename_date_upper_bound"},
@@ -217,12 +256,16 @@ class MobileReportHubDataTests(unittest.TestCase):
 
     def test_lane_registry_hostile_free_text_and_account_like_id_are_redacted(self):
         registry=Path(self.temp.name)/"hostile-audit.json"
-        records=[{"lane_id":"account-463666728","state":"RUNNING","classification":"ACTIVE_CURRENT","attention_required":False,"objective":"ALERT account 463666728 at D:\\Meta 5 raw prose","direct_consumer":"secret alert body"}]
+        records=[{"lane_id":"account-463666728","state":"RUNNING","classification":"ACTIVE_CURRENT","attention_required":False,"objective":"ALERT account 463666728 at D:\\Meta 5 raw prose","direct_consumer":"secret alert body"},
+                 {"lane_id":"ALERT raw free text","state":"ALERT account 463666728","blocker_class":"SECRET blocker body","classification":"ACTIVE_CURRENT","attention_required":False}]
         registry.write_text(json.dumps({"result":"AUDIT","records":records}),encoding="utf-8")
         index=build_index.build(ROOT,SHA,Path(self.temp.name)/"hostile-out",FIXED_TIME,SHA,registry)
-        blob=json.dumps(index["queue"]); self.assertNotIn("463666728",blob); self.assertNotIn("secret alert body",blob); self.assertNotIn("raw prose",blob); self.assertNotIn(r"D:\Meta 5",blob)
-        dynamic=[x for x in index["queue"] if x.get("source_kind")=="LANE_REGISTRY_NONCANONICAL"][0]
-        self.assertRegex(dynamic["id"],r"^REDACTED_LANE_[0-9a-f]{8}$"); self.assertEqual(dynamic["summary"],"Noncanonical Lane Registry status: ACTIVE_CURRENT.")
+        blob=json.dumps(index["queue"]); self.assertNotIn("463666728",blob); self.assertNotIn("secret alert body",blob.lower()); self.assertNotIn("raw free text",blob); self.assertNotIn("raw prose",blob); self.assertNotIn(r"D:\Meta 5",blob)
+        dynamic=[x for x in index["queue"] if x.get("source_kind")=="LANE_REGISTRY_NONCANONICAL"]
+        self.assertEqual(len(dynamic),2)
+        self.assertTrue(all(re.fullmatch(r"REDACTED_LANE_[0-9a-f]{8}", item["id"]) for item in dynamic))
+        self.assertEqual(dynamic[0]["summary"],"Noncanonical Lane Registry status: ACTIVE_CURRENT.")
+        self.assertIn("UNKNOWN", {item["state"] for item in dynamic})
 
     def test_expected_sha_mismatch_and_missing_source_fail_closed(self):
         with self.assertRaisesRegex(build_index.BuildError, "expected SHA mismatch"):
