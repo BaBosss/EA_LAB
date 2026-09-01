@@ -86,3 +86,11 @@ Evidence is sufficient to retain `HYP-SB-002` as a source-traceable hypothesis c
 ## Authority boundary
 
 This file is Second Brain research synthesis only. It does not create a strategy registry entry, ExperimentResult, Factory order, portfolio allocation rule, risk/default change, HOLDOUT use, deployment, DEMO/LIVE transition or trading authority.
+
+## 2026-09-01 QuantCorner enrichment — Learning-to-Rank is a later child
+
+`RC-ARXIV201207149-001` adds primary-source evidence that pairwise/listwise Learning-to-Rank can improve asset ranking for cross-sectional systematic portfolios in the source study. The paper's demonstrative case is cross-sectional momentum and it reports approximately threefold Sharpe improvement versus traditional ranking approaches in those experiments.
+
+This does **not** change `HYP-SB-002` state or semantics. Learning-to-Rank is a later model child only after the deterministic cross-sectional mechanism is actually testable: the universe, synchronized returns, ranking horizon, rebalance, allocation, costs, benchmark and inference semantics must be frozen first, and a non-ML baseline must exist.
+
+The reported source performance is not an EA_LAB expectation or threshold. This enrichment grants no simulator, Factory, HOLDOUT, portfolio-allocation or runtime authority.
