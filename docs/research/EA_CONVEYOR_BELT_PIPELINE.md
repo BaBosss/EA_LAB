@@ -72,3 +72,15 @@ B16 demonstrates both normal progression and an evidence-driven early stop. Step
 A separate prospective `B16-H05-r1` child then opened Step 6 and a bounded Step-7 entry-surface search on GBPUSD/H4 SELL. Fast Genetic/complete coarse evidence found one preregistered positive interior five-cell RSI cross at 21/70, but fixed MAIN+BWD validation showed materially lower participation and economic output than the accepted 14/70 parent. Decision: `DO_NOT_ADOPT_CENTER_RETAIN_PARENT_RESEARCH_REFERENCE`.
 
 The B16 child therefore stops before medium/fine adoption, HOLDOUT, Candidate, DEMO, or LIVE. This is a valid conveyor outcome: a stage may close as `PARK / RESEARCH_ONLY` when its direct consumer is satisfied and further search has no current downstream value. Any B16 continuation now requires a new prospective structural-mechanism consumer; it may not reopen the exhausted RSI-entry search, mine BWD for retuning, or spend HOLDOUT automatically.
+
+## Execution-efficiency pointers
+
+The conveyor defines stage order; use these execution/reporting fast paths without changing stage authority:
+
+- reliable worktree/worker/reviewer orchestration: `scripts/execution_reliability/` + `docs/LONG_JOB_RUNNER.md`;
+- report generation and evidence packaging: `docs/research/EA_REPORT_AUTHORING_FASTPATH.md`;
+- final methodology/process self-audit: `docs/research/EA_MILESTONE_SCRUTINY_CHECKLIST.md`.
+
+For Step 7, prefer Fast Genetic when the preregistered MAIN coarse space is large; keep the causal surface small enough to interpret, then use bounded complete neighbours at Step 8. The exact number of parameters/ranges remains experiment-contract specific—this router creates no universal range or parameter-count rule.
+
+If a stage already answers its direct consumer with `PARK`, `BLOCKED`, or a non-improving result, stop instead of generating downstream optimization/reporting work with no current consumer.

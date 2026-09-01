@@ -129,3 +129,17 @@ After a lane passes its contract:
 9. only then treat the new decision/evidence as durable project memory.
 
 Operating Context should be refreshed after material milestone/loop closure, but remains a **snapshot**. New sessions must always return here and re-resolve Git before consequential work.
+
+## 9. Fast-path tools after boot
+
+Do not rebuild orchestration helpers ad hoc when the canonical reliability pack already covers the need:
+
+- exact clean worktree verification: `scripts/execution_reliability/bootstrap_worktree.ps1`;
+- linked-worktree portable Python: dot-source `scripts/use_python.ps1`, then `Assert-PortablePython -Root <worktree> -Provision`;
+- bounded Codex worker: `scripts/execution_reliability/launch_worker.ps1`;
+- detached exact-head Claude review: `scripts/execution_reliability/launch_reviewer.ps1`;
+- long-job status/recovery: `docs/LONG_JOB_RUNNER.md` + `scripts/long_jobs/`;
+- report authoring: `docs/research/EA_REPORT_AUTHORING_FASTPATH.md`;
+- milestone self-audit: `docs/research/EA_MILESTONE_SCRUTINY_CHECKLIST.md`.
+
+Prefer file-backed PowerShell scripts over long inline `powershell -Command` expressions when variables, pipelines or `$LASTEXITCODE` matter; shell-wrapper interpolation is a harness risk, not research evidence.

@@ -71,3 +71,28 @@ This module is only an orchestration helper.
 - It does not grant deployment authority.
 - It does not grant trading authority.
 - It does not change risk policy, runtime attachment policy, or any strategy semantics.
+
+## Exact-head Claude reviewer fast path
+
+For consequential review, use `scripts/execution_reliability/launch_reviewer.ps1` instead of ad-hoc shell piping. The launcher:
+
+- verifies the existing review worktree is at the requested 40-character HEAD and tracked-clean via `bootstrap_worktree.ps1`;
+- requires prompt input from a file;
+- runs the reviewer with the review worktree as explicit CWD;
+- constrains Claude tools to `Read Glob Grep` with `--permission-mode dontAsk`;
+- writes reviewer output outside the reviewed worktree;
+- runs through Long Job Runner so status, timeout and duplicate JobId behavior are durable.
+
+The reviewed worktree should normally be a detached clean worktree created from the frozen author/integration HEAD. Review output is evidence about that exact HEAD only; moving HEAD invalidates the review.
+
+Example launch shape:
+
+```powershell
+& .\scripts\execution_reliability\launch_reviewer.ps1 `
+  -ClaudeExecutable 'C:\Users\patip\AppData\Roaming\npm\claude.ps1' `
+  -PromptFile 'D:\EA_LAB_CONTROL\handoffs\review_prompt.txt' `
+  -JobId 'review-example-<sha8>' -Worktree '<detached-review-worktree>' `
+  -ExpectedHead '<40-char-sha>' -OutputFile 'D:\EA_LAB_CONTROL\handoffs\review_result.txt' -Json
+```
+
+Use `status_long_job.ps1` / `wait_long_job.ps1` for intake. Do not start a duplicate reviewer while the recorded job is still live; inspect the job state first.

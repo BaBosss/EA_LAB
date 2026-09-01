@@ -1,7 +1,19 @@
 # EA_LAB Automation Guide — Smart Pipeline v2
-อัพเดท: 2026-06-18
+Updated: 2026-09-01
 
 วิธีทำงานแบบประหยัด token/context + optimize ฉลาดขึ้น
+
+> **Current router:** `docs/research/EA_CONVEYOR_BELT_PIPELINE.md` owns the end-to-end stage order. This guide is operator convenience only; it creates no selection, HOLDOUT, Candidate, risk, deployment or LIVE authority.
+
+### 2026-09-01 fast path
+
+`Steps 1-5 fixed/causal evidence -> Step 6 semantic/range contract -> Step 7 Fast Genetic WIDE/COARSE on MAIN when useful -> Step 8 bounded complete neighbours/lock center -> Step 9 BWD+sensitivity -> Step 10 HOLDOUT late`
+
+- Use `scripts/mt5_optimize.ps1` under a preregistered `-HypothesisRevision`; `scripts/lib/optimize_next_step.ps1` stays contract-driven and generic ranking remains quarantined.
+- Genetic output maps regions; Top-1 PF is never an automatic winner. Final center needs local-neighbour evidence.
+- Do not mine BWD or HOLDOUT for retuning. Stop when no stable region/direct consumer remains, participation collapses, or the child is economically non-improving.
+- Reuse `scripts/execution_reliability/` plus the report/scrutiny fast paths under `docs/research/`.
+
 
 ---
 
