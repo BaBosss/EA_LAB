@@ -1,0 +1,3 @@
+window,parent_pf,center_pf,pf_delta,parent_net,center_net,net_delta,parent_trades,center_trades,trades_delta,parent_eqdd_pct,center_eqdd_pct,eqdd_delta_pp,center_cycles,center_max_depth,center_active_time_share
+MAIN,1.53,1.68,0.15,252.53,415.62,163.09,275,420,145,3.85,4.78,0.93,372,7,0.302587
+BWD,1.11,0.66,-0.45,44.1,-229.49,-273.59,267,230,-37,2.4,3.91,1.51,198,6,0.438563

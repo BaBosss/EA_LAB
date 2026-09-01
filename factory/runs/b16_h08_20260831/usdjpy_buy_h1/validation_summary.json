@@ -1,0 +1,74 @@
+{
+  "accepted_parent_headline": {
+    "BWD": {
+      "eqdd_pct": 2.4,
+      "net": 44.1,
+      "pf": 1.11,
+      "trades": 267
+    },
+    "MAIN": {
+      "eqdd_pct": 3.85,
+      "net": 252.53,
+      "pf": 1.53,
+      "trades": 275
+    }
+  },
+  "bwd_role": "VALIDATION_ONLY_NO_RETUNING",
+  "cells": [
+    {
+      "active_time_share": 0.302587,
+      "cycles": 372,
+      "eligible": true,
+      "eqdd_pct": 4.78,
+      "gross_loss": -614.42,
+      "gross_profit": 1030.04,
+      "leverage_match": true,
+      "max_depth": 7,
+      "max_lots": 0.07,
+      "multi_entry_gp_share": 0.709943,
+      "net": 415.62,
+      "pf": 1.68,
+      "pf_mt5_field": 1.68,
+      "pf_state": "FINITE",
+      "report_sha256": "f185b9f299d957356d3d094a0506ffef4892010caf17582e33d6ec0e7670ba60",
+      "selection_bar_pf_pass": true,
+      "selection_bar_trades_pass": true,
+      "trades": 420,
+      "truncated": false,
+      "window": "MAIN"
+    },
+    {
+      "active_time_share": 0.438563,
+      "cycles": 198,
+      "eligible": true,
+      "eqdd_pct": 3.91,
+      "gross_loss": -671.56,
+      "gross_profit": 442.07,
+      "leverage_match": true,
+      "max_depth": 6,
+      "max_lots": 0.06,
+      "multi_entry_gp_share": 0.71923,
+      "net": -229.49,
+      "pf": 0.66,
+      "pf_mt5_field": 0.66,
+      "pf_state": "FINITE",
+      "report_sha256": "43f6372e59c39b44686dda308bf5b135cf5a3a3af680b75248b6d731ce5deee8",
+      "selection_bar_pf_pass": false,
+      "selection_bar_trades_pass": true,
+      "trades": 230,
+      "truncated": false,
+      "window": "BWD"
+    }
+  ],
+  "classification": "FIXED_VALIDATION_FAIL",
+  "holdout": "UNSPENT",
+  "hypothesis_revision": "B16-H08-r1",
+  "main_reproduces_optimizer_cell": true,
+  "mechanical_validation": true,
+  "schema": "ea-lab-b16-h08-validation-evidence/1",
+  "selected_center": {
+    "_16_RsiLow": 35.0,
+    "_16_RsiPeriod": 14
+  },
+  "selection_bars_pass_both_windows": false
+}

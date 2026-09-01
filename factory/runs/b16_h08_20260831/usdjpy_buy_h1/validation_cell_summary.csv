@@ -1,0 +1,3 @@
+window,eligible,pf,pf_mt5_field,pf_state,trades,net,eqdd_pct,cycles,max_depth,max_lots,active_time_share,multi_entry_gp_share,gross_profit,gross_loss,report_sha256,truncated,leverage_match,selection_bar_pf_pass,selection_bar_trades_pass
+MAIN,True,1.68,1.68,FINITE,420,415.62,4.78,372,7,0.07,0.302587,0.709943,1030.04,-614.42,f185b9f299d957356d3d094a0506ffef4892010caf17582e33d6ec0e7670ba60,False,True,True,True
+BWD,True,0.66,0.66,FINITE,230,-229.49,3.91,198,6,0.06,0.438563,0.71923,442.07,-671.56,43f6372e59c39b44686dda308bf5b135cf5a3a3af680b75248b6d731ce5deee8,False,True,False,True
