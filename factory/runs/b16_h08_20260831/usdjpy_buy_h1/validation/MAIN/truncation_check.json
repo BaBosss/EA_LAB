@@ -1,0 +1,5 @@
+﻿{
+    "report_name":  "B16_H08_CENTER14_35_USDJPY_H1_MAIN_M1",
+    "truncated":  false,
+    "detail":  "last deal 2025.12.26 19:33:40 | window ends 2025.12.31 | idle tail 4.2 days (0.4% of window) | entry deals 420 | eqDD \r\n4.78%\r\n[OK] reached the window end within tolerance - idle tail 4.2 days (0.4% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}
