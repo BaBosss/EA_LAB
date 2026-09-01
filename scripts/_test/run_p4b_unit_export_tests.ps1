@@ -23,10 +23,26 @@ Assert ($source -match 'FILE_COMMON') 'source export writes outside report HTML 
 Assert ($source -notmatch '\bExec_') 'diagnostic wrapper calls no execution helper'
 Assert ($source -notmatch '\bg_trade\b') 'diagnostic wrapper calls no CTrade object'
 Assert ($source -notmatch '\bRiskControl_') 'diagnostic wrapper calls no risk-control helper'
+$finalStart=$source.IndexOf('bool P4B_WriteFinalHistorySnapshot()')
+$finalEnd=$source.IndexOf('void OnTradeTransaction',$finalStart)
+Assert ($finalStart -ge 0 -and $finalEnd -gt $finalStart) 'final snapshot function is statically isolatable'
+$finalText=$source.Substring($finalStart,$finalEnd-$finalStart)
+Assert ($finalText -match 'long ownedPositionIds\[\]') 'final snapshot builds an explicit owned-position set'
+Assert ($finalText -match 'P4B_SelectedDealIsEligible\(deal\)') 'first pass derives ownership only from strict-magic source deals'
+Assert ($finalText -match 'P4B_PositionSetAdd\(ownedPositionIds, positionId\)') 'first pass adds exact DEAL_POSITION_ID ownership'
+Assert ($finalText -match 'P4B_PositionSetContains\(ownedPositionIds, positionId\)') 'second pass admits deals only through exact owned position identity'
+Assert ($finalText -notmatch 'DEAL_ORDER|DEAL_VOLUME|DEAL_PROFIT') 'final admission does not use order, volume, or P&L heuristics'
+Assert ($finalText.IndexOf('P4B_PositionSetAdd(ownedPositionIds, positionId)') -lt $finalText.IndexOf('P4B_PositionSetContains(ownedPositionIds, positionId)')) 'ownership pass precedes emission pass'
 $parentDiff = @(git -C $RepoRoot diff $parentBase -- $parent)
 Assert ($parentDiff.Count -eq 0) 'original Boss19 parent wrapper remains byte-untouched from contract base'
 Assert ($runnerText -match 'H3_BROAD_MATRIX_MANIFEST\.csv') 'runner binds every cell to the frozen H3 manifest'
 Assert ($runnerText -match 'source export is stale') 'runner refuses stale Common-Files source'
+Assert ($runnerText -match '\$startedLocal=Get-Date') 'report freshness keeps a local wall-clock start'
+Assert ($runnerText -match '\$startedUtc=\[DateTime\]::UtcNow') 'source freshness captures an explicit UTC start'
+Assert ($runnerText -match '-RunStart \$startedLocal') 'report freshness compares local-to-local'
+Assert ($runnerText -match 'LastWriteTimeUtc -lt \$startedUtc') 'source freshness compares UTC-to-UTC'
+Assert ($runnerText -notmatch 'LastWriteTimeUtc -lt \$startedLocal') 'source freshness never compares UTC file time with local start'
+Assert ($runnerText -match 'started_utc=\$startedUtc\.ToString\(''o''\)') 'run manifest records the captured UTC start directly'
 Assert ($runnerText -match 'source_out_count.*total_trades') 'runner reconciles source OUT count to tester report trades'
 Assert ($runnerText -match 'HOLDOUT date crossing') 'runner refuses dates beyond the pre-HOLDOUT ceiling'
 Assert ($runnerText -notmatch 'AllowLegacyIdentity') 'runner has no legacy identity bypass'

@@ -40,6 +40,22 @@ bool P4B_SelectedDealIsEligible(const ulong deal)
    return (dealType == DEAL_TYPE_BUY || dealType == DEAL_TYPE_SELL);
 }
 
+bool P4B_PositionSetContains(const long &positionIds[], const long positionId)
+{
+   if(positionId <= 0) return false;
+   for(int i = 0; i < ArraySize(positionIds); i++)
+      if(positionIds[i] == positionId) return true;
+   return false;
+}
+
+void P4B_PositionSetAdd(long &positionIds[], const long positionId)
+{
+   if(positionId <= 0 || P4B_PositionSetContains(positionIds, positionId)) return;
+   const int n = ArraySize(positionIds);
+   ArrayResize(positionIds, n + 1);
+   positionIds[n] = positionId;
+}
+
 void P4B_WriteSelectedDeal(const int fh, const ulong deal)
 {
    const long positionId = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
@@ -107,16 +123,30 @@ bool P4B_WriteFinalHistorySnapshot()
    }
    P4B_WriteHeader(fh);
    int emitted = 0;
-   const int total = HistoryDealsTotal();   for(int i = 0; i < total; i++)
+   const int total = HistoryDealsTotal();
+   long ownedPositionIds[];
+   for(int i = 0; i < total; i++)
    {
       const ulong deal = HistoryDealGetTicket(i);
       if(deal == 0 || !P4B_SelectedDealIsEligible(deal)) continue;
+      const long positionId = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+      P4B_PositionSetAdd(ownedPositionIds, positionId);
+   }
+   for(int i = 0; i < total; i++)
+   {
+      const ulong deal = HistoryDealGetTicket(i);
+      if(deal == 0) continue;
+      if(HistoryDealGetString(deal, DEAL_SYMBOL) != _Symbol) continue;
+      const long dealType = HistoryDealGetInteger(deal, DEAL_TYPE);
+      if(dealType != DEAL_TYPE_BUY && dealType != DEAL_TYPE_SELL) continue;
+      const long positionId = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+      if(!P4B_PositionSetContains(ownedPositionIds, positionId)) continue;
       P4B_WriteSelectedDeal(fh, deal);
       emitted++;
    }
    FileFlush(fh);
    FileClose(fh);
-   PrintFormat("[P4B_UNIT] final snapshot rows=%d history_deals=%d file=%s", emitted, total, fname);
+   PrintFormat("[P4B_UNIT] final snapshot rows=%d owned_positions=%d history_deals=%d file=%s", emitted, ArraySize(ownedPositionIds), total, fname);
    return (emitted > 0);
 }
 

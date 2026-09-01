@@ -51,7 +51,8 @@ if(Test-Path $sourceCommon){
   Remove-Item $sourceCommon -Force
 }
 $reportName="P4B_$($CellId)_UNIT"
-$started=Get-Date
+$startedLocal=Get-Date
+$startedUtc=[DateTime]::UtcNow
 $runner=Join-Path $RepoRoot 'scripts\mt5_run.ps1'
 $runOutput=& $runner -Expert $Expert -Symbol $row.symbol -Period $row.tf `
   -FromDate $row.from_date -ToDate $row.to_date -SetFile $set -Model 1 `
@@ -64,13 +65,13 @@ if($runExit -ne 0){Refuse "mt5_run exit=$runExit"}
 $report=Join-Path $RepoRoot "_mt5_auto\reports\$reportName.htm"
 $trunc=Join-Path $RepoRoot "_mt5_auto\reports\$reportName.truncation_check.json"
 $lev=Join-Path $RepoRoot "_mt5_auto\reports\$reportName.leverage_check.json"
-if(-not (Test-ReportIsFresh -Htm $report -RunStart $started -RunnerExit $runExit -Label $reportName -Quiet)){Refuse 'report freshness/runner-exit gate failed'}
+if(-not (Test-ReportIsFresh -Htm $report -RunStart $startedLocal -RunnerExit $runExit -Label $reportName -Quiet)){Refuse 'report freshness/runner-exit gate failed'}
 if(-not(Test-Path $trunc)){Refuse 'truncation sidecar missing'}
 $t=Get-Content $trunc -Raw|ConvertFrom-Json
 if([bool]$t.truncated){Refuse 'report is truncated'}
 if(-not(Test-Path $sourceCommon)){Refuse "final source export missing: $sourceName"}
 $srcInfo=Get-Item $sourceCommon
-if($srcInfo.LastWriteTimeUtc -lt $started){Refuse 'source export is stale'}
+if($srcInfo.LastWriteTimeUtc -lt $startedUtc){Refuse 'source export is stale'}
 
 $raw=Join-Path $runDir 'source.csv'
 Copy-Item $sourceCommon $raw -Force
@@ -115,7 +116,7 @@ $manifestOut=[ordered]@{
   report_trades=[int]$metrics.total_trades; source_in_count=[int]$um.source_in_count; source_out_count=[int]$um.source_out_count;
   realized_unit_count=[int]$um.realized_unit_count; open_position_count=[int]$um.open_position_count;
   unknown_time_unit_count=[int]$um.unknown_time_unit_count; linkage_basis=$um.linkage_basis;
-  source_file=$sourceName; started_utc=$started.ToUniversalTime().ToString('o'); completed_utc=(Get-Date).ToUniversalTime().ToString('o')
+  source_file=$sourceName; started_utc=$startedUtc.ToString('o'); completed_utc=[DateTime]::UtcNow.ToString('o')
 }
 $out=Join-Path $runDir 'run_manifest.json'
 [IO.File]::WriteAllText($out,(($manifestOut|ConvertTo-Json -Depth 7)+"`n"),(New-Object Text.UTF8Encoding($false)))
