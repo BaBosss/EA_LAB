@@ -1,6 +1,6 @@
 # Boss19 P4B Source-Bound Unit Export Contract
 
-Status: `PREREGISTERED / RESEARCH_ONLY / NO ATTRIBUTION YET`
+Status: `PILOT_BLOCKED / RESEARCH_ONLY / BROAD_RERUN_LOCKED`
 Base: `3207b4372a296e1fe6fc60f0b8c1ce3f0e18e4f1`
 Direct consumer: `ORDER-RND-P4` P4B unit-attribution prerequisite.
 
@@ -104,3 +104,9 @@ The repaired execution path must use `scripts/research/boss19_p4b/run_unit_expor
 The unit builder accepts only frozen H3 run IDs and their fixed MAIN/BWD server-date windows. It refuses any source deal outside the declared window, records entry-side commission/swap/profit as well as exit-side accounting, and still links only by exact `DEAL_POSITION_ID`.
 
 Pilot re-entry requires a new exact-head independent review of this repair before MT5 launch. The repaired pilot must again satisfy all six original pilot checks, including tester-report trade-count reconciliation. Only a repaired pilot PASS may unlock serial 36-cell execution.
+
+## Pilot result - 2026-09-01
+
+The repaired one-cell pilot remained strategy-parity exact but failed the source-bound evidence gate. Canonical result owner: `docs/research/BOSS19_P4_UNIT_EXPORT_PILOT_RESULT.md`; machine-readable package: `_mt5_auto/p4b_boss19_regime/p4b_unit_export_pilot_result.json`.
+
+Decision: `PILOT_BLOCKED_FAIL_CLOSED_NO_BROAD_RERUN`. The current milestone is closed as blocked; any further instrumentation change requires a new preregistered follow-up and another one-cell gate before broad rerun is reconsidered.

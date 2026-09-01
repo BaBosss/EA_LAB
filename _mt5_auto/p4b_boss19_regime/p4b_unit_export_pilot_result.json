@@ -1,0 +1,96 @@
+{
+    "schema_version":  "BOSS19_P4B_UNIT_EXPORT_PILOT_RESULT_V1",
+    "status":  "BLOCKED(TESTER_END_CLOSES_NOT_ADMITTED_BY_CURRENT_SOURCE_FILTER)",
+    "canonical_head":  "691428cb0ee97f2faabff7be88d5d27927785ee3",
+    "cell_id":  "H3-C03-MAIN",
+    "symbol":  "XAUUSD",
+    "tf":  "H4",
+    "window":  "MAIN",
+    "from_date":  "2023.01.01",
+    "to_date":  "2025.12.31",
+    "model":  1,
+    "holdout":  "UNSPENT",
+    "optimization":  "NONE",
+    "broad_rerun":  "LOCKED",
+    "strategy_parity":  {
+                            "status":  "PASS_EXACT_ON_COMPARABLE_FIELDS",
+                            "parent_report_sha256":  "e98bd8a8d795f553ad686fa6e45eba3c27278bef7080c4156d5c3e4529510ba9",
+                            "child_report_sha256":  "1584f43442203e8aa868e119e674a61b6a457d649e3e27b8ce8ca4e05337ac11",
+                            "profit_factor":  4.39,
+                            "net_profit":  4445.51,
+                            "total_trades":  113,
+                            "equity_drawdown_percent":  13.34,
+                            "bars":  4637,
+                            "ticks":  4238991,
+                            "history_quality":  98,
+                            "leverage":  "1:100",
+                            "full_window":  true
+                        },
+    "build_identity":  {
+                           "source_sha256":  "cbf15bcb8d539329cb5a4b58b4b14be0013bf23987d0489c12c6d66dbe1d7b34",
+                           "ex5_sha256":  "4e13ce88fdc17bd00ef55e7f66d3c5e40c8c7e7a096b5279f147c7b2fd58ae35",
+                           "build_receipt":  "br-c46767414fe5491994ad05ef9fd8dd44",
+                           "set_sha256":  "671ced2169bdda6812cf1ceb70bbc5a53bcb0985563dcbce92cc64e04f81f0d2"
+                       },
+    "source_snapshot":  {
+                            "sha256":  "2e079e6fa3d340d2073aad8a819dbf9d2750f88969aa3d2e8695623eccdbb778",
+                            "rows":  223,
+                            "in_count":  113,
+                            "out_count":  110,
+                            "position_count":  113,
+                            "tester_history_deals":  227,
+                            "tester_report_trades":  113,
+                            "finalizer_log":  "[P4B_UNIT] final snapshot rows=223 history_deals=227",
+                            "on_tester_result":  "0"
+                        },
+    "tester_end_closes":  [
+                              {
+                                  "deal_id":  225,
+                                  "time_server":  "2025.12.30 23:59:59",
+                                  "type":  "sell",
+                                  "volume":  0.02,
+                                  "order_id":  571,
+                                  "reason":  "position closed due end of test"
+                              },
+                              {
+                                  "deal_id":  226,
+                                  "time_server":  "2025.12.30 23:59:59",
+                                  "type":  "sell",
+                                  "volume":  0.01,
+                                  "order_id":  572,
+                                  "reason":  "position closed due end of test"
+                              },
+                              {
+                                  "deal_id":  227,
+                                  "time_server":  "2025.12.30 23:59:59",
+                                  "type":  "sell",
+                                  "volume":  0.01,
+                                  "order_id":  573,
+                                  "reason":  "position closed due end of test"
+                              }
+                          ],
+    "blockers":  [
+                     {
+                         "class":  "A_PRODUCT_DEFECT",
+                         "code":  "TESTER_END_CLOSES_NOT_ADMITTED_BY_CURRENT_SOURCE_FILTER",
+                         "detail":  "Three tester-forced XAUUSD sell closing deals are present in terminal history/report but absent from the 223 selected source rows. Current finalizer predicate filters symbol, exact EA magic, and BUY/SELL type. Tester log proves symbol/type for deals 225-227; therefore the magic predicate is the only remaining current predicate consistent with their exclusion. Direct magic values were not exported, so no numeric magic claim is made."
+                     },
+                     {
+                         "class":  "B_HARNESS_TEST",
+                         "code":  "SOURCE_FRESHNESS_UTC_LOCAL_COMPARISON",
+                         "detail":  "run_unit_export_cell.ps1 captures $started=Get-Date (local) but compares source LastWriteTimeUtc against it, causing a false stale refusal in UTC+07. The source was freshly written at local 2026-09-01T18:56:33+07:00."
+                     }
+                 ],
+    "evidence_hashes":  {
+                            "child_metrics_json":  "f7c427939db7905145fa3bda6c8247b6c4c8f6ba8e4f529feb4f8321d6de2c44",
+                            "child_report_htm":  "1584f43442203e8aa868e119e674a61b6a457d649e3e27b8ce8ca4e05337ac11",
+                            "child_truncation_json":  "d67902d90afb633b64ce64e17a80188790fa83d974d376c19f72bf2f60115c18",
+                            "child_leverage_json":  "32bc7710522170ea810b36911b39af7e5aa4dbec4e154c53ee054bc9f8cf1fdc",
+                            "source_snapshot_csv":  "2e079e6fa3d340d2073aad8a819dbf9d2750f88969aa3d2e8695623eccdbb778",
+                            "runner_log":  "178e6dd1812c31c7743e6b4d8da66a8d18712d3de799ddc2ec951b8716b2f8e7",
+                            "tester_finalization_excerpt":  "d229c4eec716cb7b0b46ab25f5bb0fcdbeeb7b916a567bfd9004bae1be3911dd"
+                        },
+    "decision":  "PILOT_BLOCKED_FAIL_CLOSED_NO_BROAD_RERUN",
+    "next_safe_action":  "Open a new preregistered instrumentation follow-up that fixes the runner time-basis bug and explicitly defines source-bound treatment of tester end-of-test closes using exact MT5 position identity; repeat H3-C03-MAIN only before any broad rerun. This result grants no automatic repair, broad-rerun, HOLDOUT, optimization, risk, deployment, or strategy authority.",
+    "authority":  "RESEARCH_ONLY_NO_STRATEGY_VERDICT_NO_HOLDOUT_NO_OPTIMIZATION_NO_RUNTIME_RISK_DEPLOYMENT"
+}
