@@ -1,9 +1,9 @@
 # Boss19 P4B Regime Attribution — Execution Result
 
-Status: `BLOCKED(DATA_ENVIRONMENT_MISSING_IMMUTABLE_HISTORICAL_MARKET_INPUTS)`
+Status: `BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)`
 
-Execution base: `2998339a3b3a76a63723563a849926ee115d4855`
-Timeline SHA-256: `NONE`
+Latest execution base: `21598402def732a9112fd0b189c2bca217875b26`
+Timeline SHA-256: `5f3a0f8d1accd25cb6cc08ad1c6e291aed6d238d620269102151016dbfaf569d`
 Authority used: research-only; HOLDOUT/optimization/runtime/risk/deploy = NONE.
 
 ## Frozen identity gate
@@ -26,11 +26,21 @@ That manifest binds all 8 frozen P4A mappings, all raw and normalized file hashe
 
 ## Current blocker
 
-The macro side of the frozen P4A market-input requirement is now satisfied and pinned as above. The remaining prerequisite is exact tester-data-identity closed OHLC for all 18 H3 Symbol x TF cells over 2020-01-01..2025-12-31 plus the required local warmup, exported from the same named H3 tester-data identity. That local package is not yet available; the pinned `D:\Meta 5` / MT5-lane1 terminal is currently owned by an unresolved running process and is not being killed, forced, or substituted with Meta 5b/5c.
+The historical market-data prerequisite is resolved. The exact reviewed timeline is pinned at SHA-256 `5f3a0f8d1accd25cb6cc08ad1c6e291aed6d238d620269102151016dbfaf569d`; its manifest SHA-256 is `858f4d02d1ae30511dd1f38ffab347c85c06a4a25df4bedf901dc169c2847916`, with 1,242,682 rows across all 18 Symbol x TF cells. FinalA/FinalB rebuilt byte-identically and the independent rereview of timeline head `0f2cc63d7ca86a8a3a476faf122141aafb513f5b` returned PASS.
 
-Therefore no classifier timeline has been written, no H3 P&L/outcome records have been opened, and no regime-performance conclusion or visual has been produced. Unit-attribution suitability remains `UNASSESSED_BEFORE_TIMELINE_GATE`; it must be checked only after an immutable timeline exists.
+Only after that gate was locked, the accepted H3 outcome/deal bytes were opened. A deterministic audit rehashed all 36 raw H3 reports against `H3_MATRIX.csv` and found 1,549 opening `in` deals and 1,549 realized `out` deals; every realized count reconciles exactly to the H3 trade count. The report schema exposes `Time, Deal, Symbol, Type, Direction, Volume, Price, Order, Commission, Swap, Profit, Balance, Comment`, but no source-emitted Position/opening-link field. Opening and closing Order IDs are disjoint across all 36 reports (`overlap = 0`). Therefore an exit deal cannot be tied to its durable opening timestamp without inventing FIFO, temporal-proximity, volume, order-sequence, or P&L matching.
+
+Per the frozen contract this is `BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)`. `BASKET` is also `UNAVAILABLE_NO_SOURCE_BASKET_ID`. This is an evidence-shape blocker only, not a Boss19 strategy failure or regime conclusion. No regime-performance attribution is published. HOLDOUT remains UNSPENT; optimization/runtime/risk/deployment authority remains NONE.
 
 ## Reproducible blocker evidence
+
+Current post-timeline unit gate:
+
+- [H3 unit-suitability audit](../../_mt5_auto/p4b_boss19_regime/h3_unit_suitability.json) — SHA-256 `604c81751fc3db2f83c5372ed07a4a5f6f1c5a67836e88c56da7123354d2824d`
+- [Unit-suitability checksum](../../_mt5_auto/p4b_boss19_regime/h3_unit_suitability.sha256)
+- [Deterministic unit-audit tool](../../tools/p4b_unit_attribution/audit_h3_unit_suitability.py)
+
+Historical pre-timeline blocker artifacts remain preserved below:
 
 - [H3 identity gate](../../_mt5_auto/p4b_boss19_regime/h3_identity_gate.json)
 - [Market-input gap manifest](../../_mt5_auto/p4b_boss19_regime/market_input_gap_manifest.json)
@@ -46,8 +56,6 @@ Two consecutive blocker-builder runs reproduced the same blocker-package SHA-256
 
 ## Next safe action
 
-Acquire and hash-pin the exact 18-cell tester-data-identity local OHLC package, combine it with the pinned macro manifest above, then restart P4B strictly at:
+Do not perform regime attribution from the current H3 HTML reports. The next admissible evidence upgrade is a source-bound timestamped H3 unit export that carries a durable realized-deal/position identity linked to its opening timestamp (and, separately, a source-emitted basket ID if basket-level attribution is desired). Re-enter P4B only after that new unit source is hash-pinned and independently reviewed.
 
-`hash market inputs -> build/hash timeline -> verify H3 package -> inspect H3 units -> deterministic as-of join`.
-
-Only after the timeline hash exists may the H3 realized-unit source be inspected for durable opening timestamps/basket identifiers and reconciliation. Any later unit-evidence deficiency is a separate fail-closed result; it is not inferred at this pre-timeline blocker stage.
+Do not reconstruct entry linkage with FIFO, temporal proximity, volume matching, order sequence, or P&L. Do not spend HOLDOUT, optimize, promote, change risk/defaults, or attach runtime as a side effect of this blocker.
