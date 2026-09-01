@@ -1,0 +1,16 @@
+RUN_START B16_H08_CENTER14_35_USDJPY_H1_MAIN_M1 2026-09-01T03:21:23.4961388+00:00
+symbol preflight: logical=USDJPY tester=USDJPY status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\Meta 5c\bases\ThinkMarkets-Live\symbols\selected-146237.dat; history/ticks metadata under 'D:\Meta 5c\bases\ThinkMarkets-Live'
+surface: FULL -- full surface of build LAB_ENTRY_16: 173 of 173 inputs declared and present. No input is left to the terminal cache.
+identity: PASS -- build_receipt=br-4fa94d22907b446ebc721d524bdfa5d1 ex5_sha256=212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db build=LAB_ENTRY_16 config_fingerprint=1eb741aa9be22d130d939440a00ff9890e5907c35ff1cbfd76809ee473aeadf8 config_scope=surface+constants set_sha256=c936bc4d79a85aa481e249a1c7c316bdfdfd34f30c170f4e930e16bf1104ac84
+stale-check: STALE -- D:\Meta 5c\MQL5\Experts\EALabTpl\Boss_16_KangarooGrid.ex5 mtime=2026-08-29T19:18:25 :: binary mtime 2026-08-29 19:18:25 is OLDER than: D:\EA_LAB_CONTROL\worktrees\b16-h08-usdjpy-buy-opt01-reanchor-20260901\ea_template\Boss_16_KangarooGrid.mq5 (2026-09-01 10:14:52); D:\EA_LAB_CONTROL\worktrees\b16-h08-usdjpy-buy-opt01-reanchor-20260901\ea_template\core\LabCore.mqh (2026-09-01 10:14:52) ...
+launch: EALabTpl\Boss_16_KangarooGrid | logical=USDJPY tester=USDJPY H1 | 2023.01.01..2025.12.31 | set=B16_USDJPY_BUY_H1_OPT01_CENTER_14_35.set [portable]
+OK REPORT: D:\EA_LAB_CONTROL\worktrees\b16-h08-usdjpy-buy-opt01-reanchor-20260901\_mt5_auto\reports\B16_H08_CENTER14_35_USDJPY_H1_MAIN_M1.htm (leverage verified 1:100)
+RUN_END B16_H08_CENTER14_35_USDJPY_H1_MAIN_M1 code=0 2026-09-01T03:21:36.6904893+00:00
+RUN_START B16_H08_CENTER14_35_USDJPY_H1_BWD_M1 2026-09-01T03:21:36.7075379+00:00
+symbol preflight: logical=USDJPY tester=USDJPY status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\Meta 5c\bases\ThinkMarkets-Live\symbols\selected-146237.dat; history/ticks metadata under 'D:\Meta 5c\bases\ThinkMarkets-Live'
+surface: FULL -- full surface of build LAB_ENTRY_16: 173 of 173 inputs declared and present. No input is left to the terminal cache.
+identity: PASS -- build_receipt=br-4fa94d22907b446ebc721d524bdfa5d1 ex5_sha256=212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db build=LAB_ENTRY_16 config_fingerprint=1eb741aa9be22d130d939440a00ff9890e5907c35ff1cbfd76809ee473aeadf8 config_scope=surface+constants set_sha256=c936bc4d79a85aa481e249a1c7c316bdfdfd34f30c170f4e930e16bf1104ac84
+stale-check: STALE -- D:\Meta 5c\MQL5\Experts\EALabTpl\Boss_16_KangarooGrid.ex5 mtime=2026-08-29T19:18:25 :: binary mtime 2026-08-29 19:18:25 is OLDER than: D:\EA_LAB_CONTROL\worktrees\b16-h08-usdjpy-buy-opt01-reanchor-20260901\ea_template\Boss_16_KangarooGrid.mq5 (2026-09-01 10:14:52); D:\EA_LAB_CONTROL\worktrees\b16-h08-usdjpy-buy-opt01-reanchor-20260901\ea_template\core\LabCore.mqh (2026-09-01 10:14:52) ...
+launch: EALabTpl\Boss_16_KangarooGrid | logical=USDJPY tester=USDJPY H1 | 2020.01.01..2022.12.31 | set=B16_USDJPY_BUY_H1_OPT01_CENTER_14_35.set [portable]
+OK REPORT: D:\EA_LAB_CONTROL\worktrees\b16-h08-usdjpy-buy-opt01-reanchor-20260901\_mt5_auto\reports\B16_H08_CENTER14_35_USDJPY_H1_BWD_M1.htm (leverage verified 1:100)
+RUN_END B16_H08_CENTER14_35_USDJPY_H1_BWD_M1 code=0 2026-09-01T03:21:53.0458077+00:00
