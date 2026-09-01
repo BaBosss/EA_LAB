@@ -1,4 +1,4 @@
-﻿---
+---
 card_type: COMPONENT_NOTE
 status: RESEARCH_ONLY
 authority: RESEARCH_ONLY

@@ -2,7 +2,7 @@
 
 Status: `RESEARCH_ONLY / METHOD_GAP_ANALYSIS`
 Source: Pham, Nguyen & Nguyen, *AlgoXpert Alpha Research Framework: A Rigorous ISâ€“WFAâ€“OOS Protocol for Mitigating Overfitting in Quantitative Strategies*, arXiv:2603.09219 (2026).
-EA_LAB base reviewed: canonical `0f2cc63d7ca86a8a3a476faf122141aafb513f5b`.
+EA_LAB base reviewed: canonical `e9a3816775e1e2810ca99c55f349cdabc70d5348`.
 Authority ceiling: research/process proposal only. This document does not change EA_LAB verdict, grade, KINT, optimization, HOLDOUT, risk, runtime, deployment, or trading policy.
 
 ## Why this paper is a high-ROI comparison

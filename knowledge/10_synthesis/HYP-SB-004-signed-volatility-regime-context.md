@@ -4,7 +4,7 @@ hypothesis_id: HYP-SB-004
 status: SEMANTICS_REQUIRED
 authority: RESEARCH_ONLY
 source_bundle: SRC-EALAB-QUANTCORNER-20260901
-canonical_base_sha: 0f2cc63d7ca86a8a3a476faf122141aafb513f5b
+canonical_base_sha: e9a3816775e1e2810ca99c55f349cdabc70d5348
 ---
 
 # Signed-Volatility / Signed-Jump Regime Context

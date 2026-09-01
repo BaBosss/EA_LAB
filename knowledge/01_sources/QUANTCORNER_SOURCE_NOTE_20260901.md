@@ -7,7 +7,7 @@ Authority: source-intake metadata only; no Factory, experiment, optimization, HO
 
 - Owner-supplied Facebook share URL: `https://www.facebook.com/share/p/1Lp2CQXvBd/?mibextid=wwXIfr`
 - Facebook page / author: `QuantCorner`
-- Post title recovered from the rendered page: `à¸£à¸§à¸¡ paper Quant à¸—à¸µà¹ˆà¸œà¸¡à¸­à¹ˆà¸²à¸™à¸•à¸­à¸™à¸—à¸³à¸‡à¸²à¸™`
+- Post title recovered from the rendered page: `รวม paper Quant ที่ผมอ่านตอนทำงาน`
 - Upstream repository referenced by the post: `https://github.com/nutdnuy/quant-investment-papers`
 - Upstream repository commit pinned for this intake: `47bf86ada661e7d016280250138ce99ebf5c40ee`
 - Upstream commit date: `2026-06-29 19:13:57 +0700`
@@ -59,7 +59,7 @@ It does not store or reproduce full copyrighted papers/books.
 - `REUSE_EXISTING_EALAB_FULLTEXT`: EA_LAB already has an accepted Second Brain full-text source card; do not rediscover it.
 - `CATALOG_ONLY`: only the pinned tree path/filename metadata is known here. No substantive paper claim is accepted from the filename alone.
 
-The inventory is deliberately conservative: 262 of 276 catalog entries remain `CATALOG_ONLY`; 11 catalog rows are deep-reviewed in this intake; 3 reuse existing EA_LAB full-text research. The 11 deep-reviewed rows cover 10 unique paper works because the Good Volatility / Bad Volatility paper appears under two upstream file paths. DNN-ForwardTesting is also primary-source reviewed in a research card, but this intake did not prove an exact one-to-one pinned-tree file mapping for it, so it is not counted as a deep-reviewed inventory row.
+The inventory is deliberately conservative: 262 of 276 catalog entries remain `CATALOG_ONLY`; 11 catalog rows are deep-reviewed in this intake; 3 reuse existing EA_LAB full-text research. The 11 deep-reviewed rows cover 10 unique paper works because the Good Volatility / Bad Volatility paper appears under two upstream file paths. DNN-ForwardTesting is also primary-source reviewed in a research card, but this intake did not prove an exact one-to-one pinned-tree file mapping for it, so it is not counted as a deep-reviewed inventory row. The 3 reuse rows cover 2 unique works because Relative Strength Strategies for Investing also appears under two upstream paths.
 
 ## Facebook post â€” highlighted material recovered
 

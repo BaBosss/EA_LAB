@@ -4,7 +4,7 @@ status: RESEARCH_ONLY
 authority: RESEARCH_ONLY
 source_catalog: SRC-EALAB-QUANTCORNER-20260901
 external_repo_commit: 47bf86ada661e7d016280250138ce99ebf5c40ee
-ea_lab_base_sha: 0f2cc63d7ca86a8a3a476faf122141aafb513f5b
+ea_lab_base_sha: e9a3816775e1e2810ca99c55f349cdabc70d5348
 ---
 
 # QuantCorner Paper Intake and EA_LAB Gap Matrix â€” 2026-09-01

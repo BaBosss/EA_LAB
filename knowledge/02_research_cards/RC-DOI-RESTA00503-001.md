@@ -1,4 +1,4 @@
-﻿---
+---
 card_type: RESEARCH_CARD
 card_id: RC-DOI-RESTA00503-001
 source_id: SRC-EALAB-QUANTCORNER-20260901
