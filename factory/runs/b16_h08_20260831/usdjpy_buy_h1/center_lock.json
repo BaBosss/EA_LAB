@@ -1,0 +1,19 @@
+{
+  "bwd_role": "validation_only_no_retuning",
+  "fixed_set_sha256": "c936bc4d79a85aa481e249a1c7c316bdfdfd34f30c170f4e930e16bf1104ac84",
+  "holdout": "UNSPENT",
+  "hypothesis_revision": "B16-H08-r1",
+  "optimization_search_closed": true,
+  "optimizer_xml_sha256": "9b92982c85ddc50e35be37b58b70d2982ea0b8b6a662da8c73194af985d93348",
+  "parent_set_sha256": "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+  "reanchor_canonical_base": "0f2cc63d7ca86a8a3a476faf122141aafb513f5b",
+  "reanchor_head_before_lock": "8952f58171bcb61cb86bf223ae59f1e2f3cfeafc",
+  "schema": "ea-lab-b16-h08-center-lock/1",
+  "selected": {
+    "_16_RsiLow": 35.0,
+    "_16_RsiPeriod": 14
+  },
+  "selection_basis": "preregistered participation-qualified five-cell cross max-min MAIN net rule",
+  "selection_sha256": "be77dc486dddd1d4793aee67db5be8cf6a6309503151c0b9e91693efe9175700",
+  "source_execution_head": "26f672f43c1ffad54231f5d3f07002ca9d8a7720"
+}
