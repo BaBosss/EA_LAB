@@ -1,0 +1,73 @@
+{
+  "authority": "RESEARCH_EXECUTION_ROI_ONLY_NO_STRATEGY_VERDICT_NO_HOLDOUT_NO_OPTIMIZATION_NO_RUNTIME_RISK_DEPLOYMENT_TRADING",
+  "base_sha": "2802903da3d664ecec71a36eba2ce16d77455f8e",
+  "decision": {
+    "action": "PROCEED_BROAD36_SOURCE_BOUND_EXECUTION",
+    "does_not_unlock": [
+      "HOLDOUT",
+      "OPTIMIZATION",
+      "CANDIDATE",
+      "GRADE_KINT",
+      "DEMO_LIVE",
+      "RISK_DEFAULT",
+      "DEPLOYMENT",
+      "TRADING"
+    ],
+    "execution_scope": "ALL_36_FROZEN_CELLS_SERIAL_MODEL1",
+    "no_retry_rule": "NO_AUTOMATIC_RETRY_WITHOUT_CLASSIFYING_PRODUCT_HARNESS_ENVIRONMENT_FAILURE",
+    "postcondition": "FREEZE_AND_INDEPENDENTLY_REVIEW_SOURCE_BOUND_PACKAGE_BEFORE_ANY_REGIME_JOIN",
+    "stop_rule": "STOP_ON_FIRST_FAIL_CLOSED_CELL_AND_PRESERVE_PARTIAL_EVIDENCE"
+  },
+  "direct_consumer": "ORDER-RND-P4 source-bound broad36 execution before deterministic P4B attribution",
+  "evidence": {
+    "fixed_matrix": {
+      "row_count": 36,
+      "unique_cell_count": 36
+    },
+    "historical_deal_count_role": "EVIDENCE_SCALE_ONLY_NOT_BROAD_ACCEPTANCE_TARGET",
+    "historical_h3_realized_deals": 1549,
+    "holdout": "UNSPENT",
+    "optimization": "NONE",
+    "repair03_source_bound_pilot": "PASS",
+    "selection_surface": "NONE_FULL_FROZEN_36_CELL_MATRIX",
+    "timeline_rebuild_required": false,
+    "timeline_rows": 1242682,
+    "timeline_sha256": "5f3a0f8d1accd25cb6cc08ad1c6e291aed6d238d620269102151016dbfaf569d"
+  },
+  "interpretation": {
+    "cost": "One serial Model-1 broad batch; normal observed-rate projections remain within a bounded LONG batch",
+    "downstream_skip": "Avoids rerunning P4A market capture/classifier timeline and avoids speculative subset mining",
+    "uncertainty": "Run time varies by symbol/environment; broker swap economics may drift and must be disclosed, not normalized away",
+    "unique_output": "Source-bound realized DEAL evidence for the complete frozen 36-cell H3 matrix",
+    "value": "Closes the only remaining evidence-shape prerequisite before deterministic P4B regime attribution"
+  },
+  "material_unknowns": [
+    "Exact broad36 wall-clock is unknown until executed; projections are evidence-backed planning estimates only",
+    "Repair03 pilot reuse is not assumed because the frozen contract does not explicitly authorize reuse in the broad package",
+    "Basket attribution remains unavailable without a prospectively source-emitted basket ID"
+  ],
+  "roi_decision": "PROCEED_BROAD36_SOURCE_BOUND_EXECUTION",
+  "runtime_forecast": {
+    "bottleneck": "D:\\Meta 5 serial Model-1 acceptance-critical lineage",
+    "broad_runs_assumed": 36,
+    "faster_mode_benefit": "NONE_WITHOUT_CHANGING_FROZEN_EXECUTION_CONTRACT",
+    "historical_completion_span_minutes": 70.1,
+    "historical_incident_interval_count": 1,
+    "historical_normal_mean_projection_minutes": 47.3,
+    "historical_normal_median_projection_minutes": 36.8,
+    "parallel_safety": "SERIAL_ONLY_ON_ACCEPTANCE_CRITICAL_INSTALL",
+    "pilot_rate_projection_minutes": 22.8,
+    "pilot_reuse": "NOT_ASSUMED_CONTRACT_DOES_NOT_AUTHORIZE_REUSE",
+    "repair03_pilot_seconds": 38.0,
+    "runtime_class": "LONG_TYPICAL_23_TO_48_MINUTES_WITH_INCIDENT_TAIL"
+  },
+  "schema_version": "BOSS19_P4_BROAD36_ROI_GATE_V1",
+  "source_hashes": {
+    "h3_matrix_manifest_sha256": "56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd",
+    "h3_progress_sha256": "af12c3420e1cb7c907c39bde2a192a48eefa238dceac8bb0321a3a6c856db549",
+    "h3_unit_suitability_sha256": "55ba01a52f71e402bcfb960394f59e46ace2638a747f62d763c78babbcb09caa",
+    "repair03_result_sha256": "9b869f5ee60edf6ecfb681980ba52364bd73ef682ec009fcdba7b9e4fdec56e3",
+    "repair03_run_manifest_sha256": "e33c6a3de4fd96548caf2e07b4b70f09fca41ad8befb307570dab23e62aa4720"
+  },
+  "status": "PASS"
+}
