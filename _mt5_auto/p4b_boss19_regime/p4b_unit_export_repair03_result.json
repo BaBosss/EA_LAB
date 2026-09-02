@@ -1,0 +1,128 @@
+{
+  "schema_version": "BOSS19_P4B_UNIT_EXPORT_REPAIR03_RESULT_V1",
+  "status": "PASS",
+  "decision": "REPAIR03_SOURCE_MAGIC_PROVENANCE_PASS_BROAD36_LOCKED",
+  "base_sha": "0dc2bb88ab34f931eca29b84d138caaa2ae9b8fd",
+  "implementation_head": "56b42c931022521417282c4113fd81e25a4fccb5",
+  "reviewed_implementation_head": "56b42c931022521417282c4113fd81e25a4fccb5",
+  "cell_id": "H3-C03-MAIN",
+  "holdout": "UNSPENT",
+  "optimization": "NONE",
+  "broad_rerun": "LOCKED_PENDING_CONTROL_TOWER_ROI_GATE",
+  "mechanical_gate": {
+    "status": "PASS",
+    "report_trades": 113,
+    "source_in_count": 113,
+    "source_out_count": 113,
+    "source_position_count": 113,
+    "source_owned_position_count": 113,
+    "realized_unit_count": 113,
+    "open_position_count": 0,
+    "linkage_basis": "EXACT_DEAL_POSITION_ID_ONE_IN_ONE_OUT",
+    "position_id_sets_equal": true,
+    "forbidden_inference_used": false
+  },
+  "source_magic_gate": {
+    "status": "PASS",
+    "configured_run_magic": 990001,
+    "source_magic_values": [
+      0,
+      990001
+    ],
+    "source_magic_match_count": 223,
+    "source_magic_nonmatch_count": 3,
+    "source_magic_provenance": "PER_DEAL_HISTORY_DEAL_MAGIC",
+    "mql5_source_read": "HistoryDealGetInteger(deal, DEAL_MAGIC)",
+    "mql5_source_line": 62,
+    "tester_forced_close_nonmatches": [
+      {
+        "deal_id": "225",
+        "position_id": "570",
+        "deal_entry": "1",
+        "configured_run_magic": "990001",
+        "source_deal_magic": "0"
+      },
+      {
+        "deal_id": "226",
+        "position_id": "569",
+        "deal_entry": "1",
+        "configured_run_magic": "990001",
+        "source_deal_magic": "0"
+      },
+      {
+        "deal_id": "227",
+        "position_id": "568",
+        "deal_entry": "1",
+        "configured_run_magic": "990001",
+        "source_deal_magic": "0"
+      }
+    ]
+  },
+  "strategy_parity": {
+    "status": "PASS_EXECUTION_BEHAVIOR_WITH_ENVIRONMENT_SWAP_DRIFT_DISCLOSED",
+    "deal_id_set_equal": true,
+    "all_common_non_swap_source_fields_equal": true,
+    "differing_common_source_fields": [
+      "swap"
+    ],
+    "repair02_source_profit_total": "7082.25000000",
+    "repair03_source_profit_total": "7082.25000000",
+    "repair02_swap_total": "-2636.74000000",
+    "repair03_swap_total": "-2575.43000000",
+    "swap_delta_repair03_minus_repair02": "61.31000000",
+    "repair02_headline": {
+      "net_profit": 4445.51,
+      "profit_factor": 4.39,
+      "equity_drawdown_maximal_percent": 13.34,
+      "total_trades": 113,
+      "bars": 4637,
+      "ticks": 4238991
+    },
+    "repair03_headline": {
+      "net_profit": 4506.82,
+      "profit_factor": 4.55,
+      "equity_drawdown_maximal_percent": 13.29,
+      "total_trades": 113,
+      "bars": 4637,
+      "ticks": 4238991
+    },
+    "interpretation": "All source deal identity, timing, volume, price, commission and profit fields are exact; only broker swap differs. The +61.31 swap delta exactly equals the net-profit delta, so strategy execution behavior is preserved while headline economics are not bit-exact across run dates."
+  },
+  "runtime_identity": {
+    "terminal": "D:\\Meta 5",
+    "data_dir": "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355",
+    "model": 1,
+    "manifest_sha256": "56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd",
+    "set_sha256": "671ced2169bdda6812cf1ceb70bbc5a53bcb0985563dcbce92cc64e04f81f0d2",
+    "source_sha256": "dd61c78ca6680fcec64260ea200e04c2faa4824abbbeac218100a2db997f33cf",
+    "ex5_sha256": "8f68ee1cf726f27de0ec5da0f1ad4b5f88f129435f9b2bf9b27d5ba378a9abd2",
+    "build_receipt": "br-6c63129e01ac4458a62d420c5594560f",
+    "build_receipt_registry_sha256": "4aac0ace64c5ddc5c05adbcde394705e365d1b8b50322649da2251d49aa92818",
+    "compile_result": "Result: 0 errors, 0 warnings, 2948 ms elapsed, cpu='X64 Regular'"
+  },
+  "independent_review": {
+    "reviewer": "Claude-Code-2.1.223-independent",
+    "verdict": "PASS",
+    "reviewed_head": "56b42c931022521417282c4113fd81e25a4fccb5",
+    "review_sha256": "668407933c7715e57a8cdc361199eba73d572a9d21b4e4dca105c0264eff9789"
+  },
+  "evidence_hashes": {
+    "runtime_build_json": "a5aa09f31cf47013c28de338e7c7f353a601dff3c0aa17848f4ca4b11a58f151",
+    "build_receipts_jsonl": "4aac0ace64c5ddc5c05adbcde394705e365d1b8b50322649da2251d49aa92818",
+    "compile_log": "2399cef3f4477789409d8667c251d4156c63c8ff0e3c99c8bb049d55cac874fe",
+    "run_manifest_json": "e33c6a3de4fd96548caf2e07b4b70f09fca41ad8befb307570dab23e62aa4720",
+    "unit_manifest_json": "1e73119e0795554067850b7ed12c441a2e0898d796751ba5a920fb5d18022cc9",
+    "source_csv": "344f6208828ceb60dcb01fba3cb488279cadcb65d1ca03839c9727d96701775b",
+    "units_csv": "5d58e9b2ae4c85975196b6c4fe5d9ab7b13da20afa2489f2700ab8c4044b7ccd",
+    "report_htm": "6386f71f2cc05c8ffd931392e3d66ee5b26fb5e526c093adb22bc721894212f5",
+    "report_json": "a0faab8506edc5f34520dfbaa49f2e772422890ec19a3bf0427493eb8a40c7f4",
+    "runner_log": "e9f5a7abf85d2239102ba489ff89319247bc2b10966f0274da52c0a3da9bf3ff",
+    "implementation_review": "668407933c7715e57a8cdc361199eba73d572a9d21b4e4dca105c0264eff9789"
+  },
+  "authority": "RESEARCH_ONLY_NO_P4_INTERPRETATION_NO_HOLDOUT_NO_OPTIMIZATION_NO_DEPLOYMENT_NO_TRADING",
+  "next_dependency": "Main Control Tower ROI gate for any broad36 reconsideration",
+  "canonical_base_at_integration": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+  "runtime_implementation_head": "56b42c931022521417282c4113fd81e25a4fccb5",
+  "reanchored_implementation_head": "ddf53e35328ebe6d25d90560f0043d1840503078",
+  "implementation_byte_equivalence": "FIVE_REPAIR03_FILES_BYTE_IDENTICAL_TO_REVIEWED_RUNTIME_HEAD"
+}
