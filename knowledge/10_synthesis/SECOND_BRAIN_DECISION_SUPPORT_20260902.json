@@ -1,0 +1,212 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "SECOND_BRAIN_DECISION_SUPPORT",
+  "status": "RESEARCH_ONLY",
+  "canonical_base_sha": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+  "as_of_date": "2026-09-02",
+  "authority": {
+    "may_recommend_tests": true,
+    "may_issue_strategy_verdict": false,
+    "may_unlock_optimizer": false,
+    "may_spend_holdout": false,
+    "may_change_risk_or_runtime": false,
+    "may_claim_candidate_or_grade": false
+  },
+  "direct_consumers": [
+    "Boss19 P4/P5 interpretation after Repair03",
+    "B16 R4 execution-fidelity routing and PARK decision",
+    "Future experiment workers avoiding closed negative paths"
+  ],
+  "evidence_cards": [
+    {
+      "card_id": "SB-EVID-BOSS19-P4-REPAIR02-01",
+      "consumer": "Boss19 P4/P5 interpretation after Repair03",
+      "exact_canonical_owner": [
+        "docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md",        "_mt5_auto/p4b_boss19_regime/p4b_unit_export_repair02_result.json",
+        "taskboards/active/P03.md"
+      ],
+      "hypothesis_or_mechanism": "Source-bound unit attribution instrumentation; no strategy change.",
+      "what_was_tested": "Repair02 reran only H3-C03-MAIN after fixing tester-end-close admission and UTC freshness mechanics.",
+      "result": {
+        "classification": "BLOCKED(MAGIC_FIELD_NOT_SOURCE_BOUND)",
+        "evidence_type": "INSTRUMENTATION_FAILURE_NOT_STRATEGY_FAILURE",
+        "strategy_parity": {"pf": 4.39, "net": 4445.51, "trades": 113, "eqdd_pct": 13.34},
+        "unit_linkage": {"in": 113, "out": 113, "distinct_positions": 113, "realized_units": 113, "open": 0},
+        "linkage_basis": "EXACT_DEAL_POSITION_ID_ONE_IN_ONE_OUT"
+      },
+      "mechanism_limit": "Position admission/linkage is source-supported, but exported per-row magic uses configured _0_Magic rather than source DEAL_MAGIC; the CSV cannot independently attest actual per-deal magic.",
+      "selection_hindsight_warning": "Do not use Repair02 to infer regime behavior, strategy quality, or P5 direction. Broad 36-cell export remains locked.",
+      "do_not_repeat": [
+        "Do not rerun the broad 36-cell source-bound export before Repair03 passes one-cell provenance acceptance.",
+        "Do not classify this blocker as a strategy loss.",
+        "Do not infer source DEAL_MAGIC from configured run identity."
+      ],
+      "next_admissible_test": {
+        "status": "PROSPECTIVE_REPAIR03_ONLY",
+        "requirements": [
+          "Separate configured run identity from source per-deal DEAL_MAGIC.",
+          "Preserve exact DEAL_POSITION_ID ownership admission.",          "Update exporter/schema/builder/runner/tests consistently.",
+          "Obtain independent exact-head review before rerun.",
+          "Rerun only H3-C03-MAIN and require exact strategy parity, 113/113/113, and source-property provenance."
+        ]
+      }
+    },
+    {
+      "card_id": "SB-EVID-B16-R2-STRUCTURE-01",
+      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
+      "exact_canonical_owner": [
+        "docs/factory/B16_H03_CONFIRMATION_RESULTS.md",
+        "docs/research/B16_MECHANISM_CHARACTERIZATION_REPORT_20260830.md",
+        "PROJECT_STATE.md"
+      ],
+      "hypothesis_or_mechanism": "B16 economics depend on context-specific position-engine depth, fixed direction, and spacing; exits/recovery are material but context-dependent.",
+      "what_was_tested": "Accepted H03 source-first position-engine confirmation plus R2 prospective mechanism characterization across five Symbol×TF contexts.",
+      "result": {
+        "classification": "PARK / MECHANISM_CHARACTERIZED",
+        "mechanism_value": "STRONG_INFORMATION_VALUE_NOT_GRADE",
+        "r2_new_cells": 88,
+        "full_window_eligible": 84,
+        "hard_cage_kills": 4,
+        "context_evaluations": {"falsified": 18, "not_falsified": 24, "unknown_mechanical_ineligible": 3}
+      },
+      "mechanism_limit": "No universal depth, direction, spacing, exit, or overlap rule is supported across contexts. Mechanism effects interact with Symbol×TF×Window and realized path.",
+      "selection_hindsight_warning": "Do not convert strong mechanism information into default settings, Candidate authority, or optimizer permission.",      "do_not_repeat": [
+        "Do not reopen generic depth search; the bounded 2/3/parent-realized4 question is closed.",
+        "Do not treat USDJPY exit-off aggregate gains as an exit redesign mandate because participation collapses.",
+        "Do not infer one spacing law is portable across XAU and FX contexts."
+      ]
+    },
+    {
+      "card_id": "SB-EVID-B16-H05-H07-01",
+      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
+      "exact_canonical_owner": [
+        "docs/research/B16_GBP_SELL_H4_OPT01_RESULTS.md",
+        "docs/research/B16_GBP_SELL_H4_DEPTH2_01_RESULTS.md",
+        "docs/research/B16_GBP_SELL_H4_DEPTH3_01_RESULTS.md"
+      ],
+      "hypothesis_or_mechanism": "GBPUSD/H4 SELL entry surface and structural depth ladder.",
+      "what_was_tested": "H05 bounded RSI-entry lattice, H06 depth2 ablation, and H07 depth3 ablation against the accepted GBPUSD/H4 SELL parent.",
+      "result": {
+        "h05": "DO_NOT_ADOPT_CENTER_RETAIN_PARENT_RESEARCH_REFERENCE",
+        "h06": "DEPTH2_DUAL_WINDOW_POSITIVE / DEPTH2_NOT_ADOPTED",
+        "h07": "DEPTH3_RECOVERS_2025_SIGN / DEPTH STRUCTURAL MILESTONE CLOSED"
+      },
+      "mechanism_limit": "H05 local sign stability came with material participation/economic shrinkage. Depth3 is a strong context-specific research reference, not a universal max-depth rule or default.",
+      "selection_hindsight_warning": "Do not widen/refine the H05 RSI lattice after seeing BWD; do not add depth4 or search depth values adaptively after H07.",
+      "do_not_repeat": [
+        "GBPUSD/H4 SELL RSI-entry widening/refinement from the H05 result.",
+        "Depth4 child or depth4-9 sequence to search for a better point.",
+        "BWD-guided retuning of the H05/H06/H07 lineage."
+      ]
+    },    {
+      "card_id": "SB-EVID-B16-H08-01",
+      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
+      "exact_canonical_owner": [
+        "docs/research/B16_USDJPY_BUY_H1_OPT01_RESULTS.md",
+        "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_CONTRACT.md",
+        "PROJECT_STATE.md"
+      ],
+      "hypothesis_or_mechanism": "USDJPY/H1 BUY RSI-entry local MAIN plateau versus cross-window robustness.",
+      "what_was_tested": "A complete preregistered 20-cell MAIN RSI lattice selected 14/35, then fixed BWD validation tested the locked center without retuning.",
+      "result": {
+        "classification": "MAIN_PLATEAU_FOUND / CENTER_REJECTED_BWD / CLOSED_NO_RETUNING",
+        "parent_14_30": {"main_pf": 1.53, "main_net": 252.53, "main_trades": 275, "bwd_pf": 1.11, "bwd_net": 44.10, "bwd_trades": 267},
+        "selected_14_35": {"main_pf": 1.68, "main_net": 415.62, "main_trades": 420, "bwd_pf": 0.66, "bwd_net": -229.49, "bwd_trades": 230}
+      },
+      "mechanism_limit": "A qualified MAIN neighborhood exists, but the selected center does not transport backward; the BWD failure is strategy evidence, not harness failure.",
+      "selection_hindsight_warning": "The upper-edge pressure at RsiLow=40 does not authorize range expansion after BWD. Do not mine the same lattice for a replacement center.",
+      "do_not_repeat": [
+        "Widen/refine/reopen the H08 RSI search.",
+        "Use BWD to select another RSI pair.",
+        "Treat 14/35 as a robustness finalist."
+      ],
+      "continuation_reference": "Accepted USDJPY/H1 BUY 14/30 parent is now frozen by preregistered B16-R4-r1; the sole allowed robustness dimension is same-install Strategy Tester model fidelity on D:\\Meta 5, with no parameter search."
+    },
+    {      "card_id": "SB-EVID-B15-COUNTBARS-01",
+      "consumer": "Factory research deduplication and cross-EA mechanism routing",
+      "exact_canonical_owner": [
+        "docs/research/B15_COUNTBARS_SENS_01_RESULTS.md",
+        "PROJECT_STATE.md"
+      ],
+      "hypothesis_or_mechanism": "MACD consecutive-confirmation timing around CountBars=2.",
+      "what_was_tested": "Prospective one-change CountBars 2->1 and 2->3 across GBPUSD/USDJPY/EURUSD H4 MAIN+BWD.",
+      "result": {
+        "classification": "TIMING_NOT_IMPROVED / PARK_COUNTBARS_TIMING_PATH",
+        "dual_positive_homes_parent": "1/3",
+        "dual_positive_homes_count1": "1/3",
+        "dual_positive_homes_count3": "1/3",
+        "mechanism_value": "WEAK"
+      },
+      "mechanism_limit": "CountBars=3 improves the local GBPUSD/H4 aggregate but does not improve cross-home portability; the edge latch itself is not invalidated.",
+      "selection_hindsight_warning": "Local GBP gains must not be used to widen CountBars/MACD or mine BWD after the preregistered cross-home failure.",
+      "do_not_repeat": [
+        "Widen CountBars around the same timing hypothesis.",
+        "Change MACD periods, RearmBars, or EdgeTrigger as a post-result rescue of this path."
+      ]
+    }
+  ],
+  "cross_ea_mechanism_map": [
+    {
+      "mechanism": "LOCAL_PARAMETER_IMPROVEMENT_VS_PORTABILITY",
+      "b16_evidence": "H05 found a positive GBPUSD/H4 RSI center that was economically thinner; H08 found a USDJPY/H1 MAIN plateau whose locked center failed BWD.",      "b15_evidence": "CountBars=3 improved GBPUSD/H4 locally but left the preregistered cross-home dual-positive count unchanged at 1/3.",
+      "reuse_lesson": "A local parameter improvement is not transport evidence. Freeze selection before BWD and close the path when the prospective portability test fails; do not rescue it adaptively."
+    },
+    {
+      "mechanism": "POSITION_ENGINE_DEPTH",
+      "b16_evidence": "Depth is structural and context-specific; GBPUSD/H4 depth2 preserves aggregate sign but loses 2025 utility, while depth3 restores all-six-year positivity and closes the bounded depth question.",
+      "boss19_evidence": "NOT YET ADMISSIBLE FOR CROSS-EA STRATEGY COMPARISON because P4 unit provenance is still blocked at Repair02.",
+      "reuse_lesson": "Do not transfer a B16 depth rule into Boss19. Repair03/P4 must first produce admissible Boss19 mechanism evidence."
+    },
+    {
+      "mechanism": "FAILURE_CLASS_SEPARATION",
+      "b16_evidence": "H08 BWD failure is accepted strategy evidence after mechanical acceptance.",
+      "boss19_evidence": "Repair02 is an instrumentation/provenance defect while strategy parity and DEAL_POSITION_ID linkage remain intact.",
+      "reuse_lesson": "Mechanical/instrumentation failure and strategy failure must remain separate evidence classes; neither can substitute for the other."
+    },
+    {
+      "mechanism": "PARTICIPATION_AND_CONCENTRATION",
+      "b16_evidence": "USDJPY exit-off children improve aggregate net/DD but collapse yearly closures and create very long-lived concentrated episodes; H05 also shrinks participation materially.",
+      "boss19_evidence": "UNKNOWN until source-bound P4 unit attribution is admissible.",
+      "reuse_lesson": "Headline PF/net/DD alone is insufficient when realized participation or holding concentration changes materially."
+    }
+  ],
+  "decision_support": {
+    "boss19_after_repair03": {
+      "if_repair03_passes": "Repair03 may restore one-cell source-provenance acceptance; Control Tower must still decide ROI before broad 36-cell export. P4 interpretation, not this knowledge pack, decides whether a P5 one-change hypothesis is justified.",
+      "if_repair03_fails": "Remain blocked on instrumentation/provenance; do not infer strategy or regime failure.",
+      "p5_gate": "Exactly one logical change only after admissible P4 interpretation identifies a direct mechanism question, parent, expected benefit/cost, and falsifier."
+    },    "b16_park_vs_prospective_robustness": {
+      "evidence_supporting_park": [
+        "R2 mechanism characterization is complete and already holds a PARK / MECHANISM_CHARACTERIZED working research verdict.",
+        "GBPUSD/H4 H05 RSI optimization is exhausted and its only stable center is non-improving in utility/participation.",
+        "GBPUSD/H4 depth milestone is closed after the 2/3/parent-realized4 ladder answered its direct consumer.",
+        "USDJPY/H1 H08 selected 14/35 center failed BWD and the RSI search is CLOSED_NO_RETUNING.",
+        "USDJPY exit-off aggregate gains are confounded by severe participation/holding concentration."
+      ],
+      "r4_preregistered_basis": [
+        "Canonical B16-R4-r1 reuses the accepted USDJPY/H1 BUY 14/30 parent and freezes strategy, position-engine, exits, sizing, safety, and runtime inputs while testing only Strategy Tester model fidelity.",
+        "B16-R4-r1 explicitly preserves the closed H05/H06/H07/H08 boundaries, forbids parameter search and HOLDOUT, and requires one same-install D:\\Meta 5 lineage so historical cross-install numbers remain context only."
+      ],
+      "unknowns": [
+        "B16-R4-r1 is preregistered but has not yet produced accepted execution-fidelity evidence; the result remains UNKNOWN until its mechanically valid same-install lineage completes.",
+        "Model-4 evidence is the active R4 question; Monte Carlo, broader broker/execution portability, and HOLDOUT remain unavailable and outside B16-R4-r1 authority.",
+        "No canonical universal Grade/Confidence mapping exists; KINT-001 remains open."
+      ],
+      "recommended_test_support": "Do not design another robustness axis. Reuse canonical B16-R4-r1 exactly: frozen USDJPY/H1 BUY 14/30 parent, same-install D:\\Meta 5 lineage, Model-1 MAIN/BWD controls followed by Model-4 MAIN/BWD only if controls pass, no parameter search, no HOLDOUT, and no runtime ownership bypass."
+    }
+  },
+  "knowledge_gaps": [
+    "Boss19 regime/mechanism interpretation remains UNKNOWN until Repair03 restores admissible one-cell provenance and Control Tower decides whether a broad source-bound rerun has direct ROI.",
+    "B16-R4-r1 has now canonically chosen the model-fidelity axis, acceptance bars, and same-install lineage; the remaining UNKNOWN is the accepted R4 execution result, not experiment design.",
+    "Accepted B16 Model-4 evidence is not yet available; Monte Carlo, broader broker/execution portability, and HOLDOUT remain outside the current R4 contract.",
+    "KINT-001 remains OPEN and universal numeric Grade/Confidence mapping remains unratified."
+  ],
+  "review_state": "AUTONOMOUS_REANCHOR_REVIEW_REQUIRED_BEFORE_INTEGRATION",
+  "negative_memory_owner": "knowledge/90_negative_knowledge/b16-b15-boss19-closed-paths.md",
+  "duplicated_work_avoided": [
+    "No paper corpus reread or new source intake.",
+    "No replay of accepted B16 or Boss19 tester evidence.",
+    "No duplicate research-card summaries for QuantCorner or existing hypotheses.",
+    "No new strategy hypothesis created without an admissible consumer."
+  ]
+}
