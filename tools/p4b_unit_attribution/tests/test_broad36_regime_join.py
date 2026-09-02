@@ -40,6 +40,7 @@ class RegimeJoinTests(unittest.TestCase):
         self.timeline = self.root / "timeline.csv"
         self.manifest = self.root / "timeline_manifest.json"
         self.prejoin = self.root / "prejoin.json"
+        self.review_receipt = self.root / "package_review_receipt.md"
         self.out = self.root / "out"
 
     def tearDown(self) -> None:
@@ -125,9 +126,17 @@ class RegimeJoinTests(unittest.TestCase):
         }
         write_json(self.manifest, manifest)
         expected = dict(joiner.EXPECTED)
+        reviewed_head = "f" * 40
+        receipt_text = (
+            "VERDICT PASS\n\nCONFIDENCE: HIGH\n\n"
+            "RECOMMENDED ACTION: Accept the package as reviewed/accepted; this package may serve as the evidence input to deterministic P4B regime attribution.\n\n"
+            f"EXACT REVIEWED HEAD: `{reviewed_head}`\n"
+        )
+        self.review_receipt.write_text(receipt_text, encoding="utf-8", newline="\n")
         expected.update({
             "package_sha256": sha256(self.package), "aggregate_units_sha256": sha256(self.units),
             "timeline_sha256": sha256(self.timeline), "timeline_manifest_sha256": sha256(self.manifest),
+            "package_review_receipt_sha256": sha256(self.review_receipt), "package_reviewed_head": reviewed_head,
             "cell_count": 1, "unit_count": len(units),
         })
         prejoin = {
@@ -135,13 +144,14 @@ class RegimeJoinTests(unittest.TestCase):
             "aggregate_units_sha256": expected["aggregate_units_sha256"], "observed_cell_count": 1,
             "total_realized_units": len(units), "unique_deal_join_key_count": len(units),
             "holdout": "UNSPENT", "optimization": "NONE", "prejoin_schema_ready": True,
+            "package_review_required_before_regime_join": True,
         }
         write_json(self.prejoin, prejoin)
         return expected
 
     def run_join(self, expected: dict, out: Path | None = None) -> dict:
         return joiner.execute(
-            self.package, self.units, self.timeline, self.manifest, self.prejoin,
+            self.package, self.units, self.timeline, self.manifest, self.prejoin, self.review_receipt,
             self.out if out is None else out, self.CREATED, expected,
         )
 
@@ -156,6 +166,8 @@ class RegimeJoinTests(unittest.TestCase):
         self.assertEqual(result["detail_unit_count"], 2)
         self.assertEqual(result["classified_unit_count"], 2)
         self.assertEqual(result["unknown_unit_count"], 0)
+        self.assertEqual(result["package_review_verdict"], "PASS")
+        self.assertEqual(result["package_reviewed_head"], expected["package_reviewed_head"])
         detail = self.read_csv(self.out / "regime_attribution_detail.csv")
         self.assertEqual([r["local_state"] for r in detail], ["RANGE", "TREND_UP"])
         recon = json.loads((self.out / "regime_attribution_reconciliation.json").read_text())
@@ -212,6 +224,18 @@ class RegimeJoinTests(unittest.TestCase):
         p["holdout"] = "RUN"
         write_json(self.prejoin, p)
         with self.assertRaisesRegex(joiner.Refusal, "prejoin HOLDOUT drift"):
+            self.run_join(expected)
+
+    def test_package_review_gate_refuses_tamper_or_missing_boundary(self) -> None:
+        expected = self.make_fixture()
+        self.review_receipt.write_text(self.review_receipt.read_text() + "tamper\n", encoding="utf-8")
+        with self.assertRaisesRegex(joiner.Refusal, "package review receipt SHA drift"):
+            self.run_join(expected)
+        expected = self.make_fixture()
+        prejoin = json.loads(self.prejoin.read_text())
+        prejoin["package_review_required_before_regime_join"] = False
+        write_json(self.prejoin, prejoin)
+        with self.assertRaisesRegex(joiner.Refusal, "package-review boundary flag missing"):
             self.run_join(expected)
 
     def test_same_inputs_are_byte_deterministic(self) -> None:

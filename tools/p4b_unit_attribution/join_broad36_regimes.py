@@ -21,6 +21,8 @@ EXPECTED = {
     "classifier_version": "1.0.0",
     "cell_count": 36,
     "unit_count": 1549,
+    "package_review_receipt_sha256": "bb331765f169503ad878223d54a6f45fd2bb6e289609ae671857e298384463a4",
+    "package_reviewed_head": "ecd5c2b3af0791674a7cce18464e632750f37755",
 }
 PACKAGE_SCHEMA = "BOSS19_P4B_BROAD36_SOURCE_BOUND_PACKAGE_V1"
 PACKAGE_STATUS = "SOURCE_BOUND_UNIT_EVIDENCE_READY_FOR_REVIEW"
@@ -133,7 +135,24 @@ def validate_prejoin(path: Path, expected: dict[str, Any]) -> dict[str, Any]:
     require(value.get("holdout") == "UNSPENT", "prejoin HOLDOUT drift")
     require(value.get("optimization") == "NONE", "prejoin optimization drift")
     require(value.get("prejoin_schema_ready") is True, "prejoin schema-ready flag missing")
+    require(value.get("package_review_required_before_regime_join") is True,
+            "prejoin package-review boundary flag missing")
     return value
+
+
+def validate_package_review_receipt(path: Path, expected: dict[str, Any]) -> dict[str, str]:
+    require(path.is_file(), "package review receipt missing")
+    actual = sha256(path)
+    require(actual == expected["package_review_receipt_sha256"], "package review receipt SHA drift")
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    require("VERDICT PASS" in text, "package review verdict is not PASS")
+    require("CONFIDENCE: HIGH" in text, "package review confidence is not HIGH")
+    reviewed = expected["package_reviewed_head"]
+    require(f"EXACT REVIEWED HEAD: `{reviewed}`" in text, "package review head drift")
+    require("RECOMMENDED ACTION: Accept the package as" in text, "package review acceptance missing")
+    require("this package may serve as the evidence input to deterministic P4B regime attribution" in text,
+            "package review regime-attribution authorization missing")
+    return {"sha256": actual, "reviewed_head": reviewed, "verdict": "PASS", "confidence": "HIGH"}
 
 
 def validate_timeline_inputs(timeline: Path, manifest_path: Path, expected: dict[str, Any]) -> dict[str, Any]:
@@ -319,7 +338,7 @@ def make_detail_rows(units: list[dict[str, Any]], identities: dict[str, str], cr
         out.append({
             "schema_version": DETAIL_SCHEMA, "created_utc": created_utc,
             "evidence_package_sha256": identities["package"], "timeline_sha256": identities["timeline"],
-            "timeline_manifest_sha256": identities["timeline_manifest"], "prejoin_readiness_sha256": identities["prejoin"],
+            "timeline_manifest_sha256": identities["timeline_manifest"], "prejoin_readiness_sha256": identities["prejoin"], "package_review_receipt_sha256": identities["package_review_receipt"],
             "classifier_id": EXPECTED["classifier_id"], "classifier_version": EXPECTED["classifier_version"],
             "attribution_unit": "DEAL", "h3_run_id": unit["cell"], "window": unit["window"],
             "year": str(unit["entry_dt"].year), "symbol": unit["symbol"], "tf": unit["tf"],
@@ -446,7 +465,7 @@ def make_affinity_rows(units: list[dict[str, Any]], run_info: dict[str, dict[str
         out.append({
             "schema_version": AFFINITY_SCHEMA, "created_utc": created_utc,
             "evidence_package_sha256": identities["package"], "timeline_sha256": identities["timeline"],
-            "timeline_manifest_sha256": identities["timeline_manifest"], "prejoin_readiness_sha256": identities["prejoin"],
+            "timeline_manifest_sha256": identities["timeline_manifest"], "prejoin_readiness_sha256": identities["prejoin"], "package_review_receipt_sha256": identities["package_review_receipt"],
             "classifier_id": EXPECTED["classifier_id"], "classifier_version": EXPECTED["classifier_version"],
             "h3_run_id": cell, "window": window, "year": year, "symbol": symbol, "tf": tf,
             "attribution_unit": "DEAL", "macro_state": macro, "local_state": local, "vol_state": vol,
@@ -483,7 +502,7 @@ def make_coverage_rows(units: list[dict[str, Any]], run_info: dict[str, dict[str
         out.append({
             "schema_version": COVERAGE_SCHEMA, "created_utc": created_utc,
             "evidence_package_sha256": identities["package"], "timeline_sha256": identities["timeline"],
-            "timeline_manifest_sha256": identities["timeline_manifest"], "prejoin_readiness_sha256": identities["prejoin"],
+            "timeline_manifest_sha256": identities["timeline_manifest"], "prejoin_readiness_sha256": identities["prejoin"], "package_review_receipt_sha256": identities["package_review_receipt"],
             "classifier_id": EXPECTED["classifier_id"], "classifier_version": EXPECTED["classifier_version"],
             "h3_run_id": cell, "window": first["window"], "symbol": first["symbol"], "tf": first["tf"], "attribution_unit": "DEAL",
             "eligible_unit_count": str(info["eligible"]), "classified_unit_count": str(info["classified"]),
@@ -536,7 +555,7 @@ def make_reconciliation(units: list[dict[str, Any]], detail_rows: list[dict[str,
     return {
         "schema_version": RECON_SCHEMA, "status": "PASS_ATTRIBUTION_RECONCILIATION", "created_utc": created_utc,
         "authority": AUTHORITY, "evidence_package_sha256": identities["package"], "timeline_sha256": identities["timeline"],
-        "timeline_manifest_sha256": identities["timeline_manifest"], "prejoin_readiness_sha256": identities["prejoin"],
+        "timeline_manifest_sha256": identities["timeline_manifest"], "prejoin_readiness_sha256": identities["prejoin"], "package_review_receipt_sha256": identities["package_review_receipt"],
         "classifier_id": EXPECTED["classifier_id"], "classifier_version": EXPECTED["classifier_version"],
         "attribution_unit": "DEAL", "basket_status": BASKET_STATUS, "holdout": "UNSPENT", "optimization": "NONE",
         "source_unit_count": source_count, "detail_unit_count": detail_count,
@@ -558,15 +577,18 @@ def write_json(path: Path, value: dict[str, Any]) -> None:
 
 
 def execute(package_path: Path, units_path: Path, timeline_path: Path, manifest_path: Path,
-            prejoin_path: Path, out_dir: Path, created_utc: str, expected: dict[str, Any] | None = None) -> dict[str, Any]:
+            prejoin_path: Path, package_review_receipt_path: Path, out_dir: Path, created_utc: str,
+            expected: dict[str, Any] | None = None) -> dict[str, Any]:
     expected = dict(EXPECTED if expected is None else expected)
     parse_z(created_utc, "created_utc")
     prejoin = validate_prejoin(prejoin_path, expected)
+    package_review = validate_package_review_receipt(package_review_receipt_path, expected)
     manifest = validate_timeline_inputs(timeline_path, manifest_path, expected)
     package, by_cell = validate_package_inputs(package_path, units_path, expected)
     identities = {
         "package": sha256(package_path), "timeline": sha256(timeline_path),
         "timeline_manifest": sha256(manifest_path), "prejoin": sha256(prejoin_path),
+        "package_review_receipt": package_review["sha256"],
     }
     units = load_units(units_path, by_cell, expected)
     join_timeline(units, timeline_path, manifest, expected)
@@ -602,9 +624,12 @@ def execute(package_path: Path, units_path: Path, timeline_path: Path, manifest_
         "aggregate_units_sha256": expected["aggregate_units_sha256"],
         "timeline_sha256": identities["timeline"],
         "timeline_manifest_sha256": identities["timeline_manifest"],
-        "prejoin_readiness_sha256": identities["prejoin"],
+        "prejoin_readiness_sha256": identities["prejoin"], "package_review_receipt_sha256": identities["package_review_receipt"],
         "classifier_id": expected["classifier_id"],
         "classifier_version": expected["classifier_version"],
+        "package_reviewed_head": expected["package_reviewed_head"],
+        "package_review_verdict": "PASS",
+        "package_review_confidence": "HIGH",
         "join_tool_sha256": sha256(Path(__file__)),
         "source_unit_count": len(units),
         "detail_unit_count": len(detail_rows),
@@ -632,12 +657,13 @@ def main() -> int:
     ap.add_argument("--timeline", type=Path, required=True)
     ap.add_argument("--timeline-manifest", type=Path, required=True)
     ap.add_argument("--prejoin-readiness", type=Path, required=True)
+    ap.add_argument("--package-review-receipt", type=Path, required=True)
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--created-utc", required=True)
     args = ap.parse_args()
     try:
         result = execute(args.package_manifest, args.aggregate_units, args.timeline, args.timeline_manifest,
-                         args.prejoin_readiness, args.out_dir, args.created_utc)
+                         args.prejoin_readiness, args.package_review_receipt, args.out_dir, args.created_utc)
         print(json.dumps({
             "status": result["status"], "units": result["detail_unit_count"],
             "classified": result["classified_unit_count"], "unknown": result["unknown_unit_count"],
