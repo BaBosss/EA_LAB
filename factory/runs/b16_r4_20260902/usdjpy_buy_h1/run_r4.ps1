@@ -11,7 +11,8 @@ $set=Join-Path $root 'B16_USDJPY_BUY_H1_R4_PARENT.set'
 $setSha='7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782'
 $ex5Sha='212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db'
 $sourceEx5='D:\Meta 5b\MQL5\Experts\EALabTpl\Boss_16_KangarooGrid.ex5'
-$primaryEx5=Join-Path $dataDir 'MQL5\Experts\EALabTpl\Boss_16_KangarooGrid.ex5'
+$runtimeExpert='EA_LAB_TEST\B16-R4-r1\Boss_16_KangarooGrid'
+$primaryEx5=Join-Path $dataDir ('MQL5\Experts\' + $runtimeExpert + '.ex5')
 $py=Join-Path $wt 'tools\python312\python.exe'
 $manifest=Join-Path $root 'execution_manifest.csv'
 $log=Join-Path $root 'execution_console.log'
@@ -78,7 +79,7 @@ try {
     if(Test-Path $cellDir){throw "cell already exists; replay forbidden: $tag"}
     $started=[DateTimeOffset]::UtcNow
     Add-Content -LiteralPath $log -Value ("RUN_START {0} model={1} {2}" -f $row.report_name,$row.model,$started.ToString('o'))
-    $output=& .\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_16_KangarooGrid' -Symbol $row.symbol -Period $row.tf `
+    $output=& .\scripts\mt5_run.ps1 -Expert $runtimeExpert -Symbol $row.symbol -Period $row.tf `
       -FromDate $row.from -ToDate $row.to -SetFile $set -Model ([int]$row.model) -Deposit 10000 -Leverage 100 `
       -ReportName $row.report_name -Terminal $terminal -DataDir $dataDir -BuildReceiptRegistry $receiptRegistry -LaneId $laneId 2>&1
     $code=$LASTEXITCODE
