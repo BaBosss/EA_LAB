@@ -12,6 +12,11 @@ $ErrorActionPreference='Stop'
 $RepoRoot=(Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 . (Join-Path $RepoRoot 'scripts\lib\report_freshness.ps1')
 $ExpectedSetSha='671ced2169bdda6812cf1ceb70bbc5a53bcb0985563dcbce92cc64e04f81f0d2'
+$ExpectedManifestSha='56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd'
+$ExpectedSourceSha='dd61c78ca6680fcec64260ea200e04c2faa4824abbbeac218100a2db997f33cf'
+$ExpectedEx5Sha='8f68ee1cf726f27de0ec5da0f1ad4b5f88f129435f9b2bf9b27d5ba378a9abd2'
+$ExpectedBuildReceipt='br-6c63129e01ac4458a62d420c5594560f'
+$ExpectedReceiptRegistrySha='4aac0ace64c5ddc5c05adbcde394705e365d1b8b50322649da2251d49aa92818'
 $Expert='EALabTpl\Probe_19_AdaptiveTrendGrid_P4BUnitExport'
 $Manifest=Join-Path $RepoRoot 'tools\hermes_ea_lab_pilot\H3_BROAD_MATRIX_MANIFEST.csv'
 $PeriodCode=@{M15=15;H1=16385;H4=16388}
@@ -24,6 +29,23 @@ if($head -ne $CanonicalHead){Refuse "HEAD $head != reviewed canonical $Canonical
 if((git -C $RepoRoot status --porcelain).Count -ne 0){Refuse 'worktree is dirty before runtime'}
 if(-not(Test-Path $BuildReceiptRegistry)){Refuse 'build receipt registry missing'}
 if(-not(Test-Path $Manifest)){Refuse 'H3 manifest missing'}
+$manifestSha=FileSha $Manifest
+if($manifestSha -ne $ExpectedManifestSha){Refuse "H3 manifest SHA drift $manifestSha"}
+$sourcePath=Join-Path $RepoRoot 'ea_template\Probe_19_AdaptiveTrendGrid_P4BUnitExport.mq5'
+$sourceSha=FileSha $sourcePath
+if($sourceSha -ne $ExpectedSourceSha){Refuse "diagnostic source SHA drift $sourceSha"}
+$receiptRegistrySha=FileSha $BuildReceiptRegistry
+if($receiptRegistrySha -ne $ExpectedReceiptRegistrySha){Refuse "build receipt registry SHA drift $receiptRegistrySha"}
+$receiptRecords=@(Get-Content -LiteralPath $BuildReceiptRegistry | ForEach-Object { try { $_ | ConvertFrom-Json } catch { Refuse 'build receipt registry malformed' } })
+$receiptMatches=@($receiptRecords | Where-Object { $_.build_receipt -eq $ExpectedBuildReceipt })
+if($receiptMatches.Count -ne 1){Refuse "accepted build receipt $ExpectedBuildReceipt is not unique in registry"}
+$receipt=$receiptMatches[0]
+if($receipt.source_sha256 -ne $ExpectedSourceSha -or $receipt.artifact_sha256 -ne $ExpectedEx5Sha){Refuse 'accepted build receipt source/EX5 identity drift'}
+$expertRel=($Expert -replace '\.ex5$','')+'.ex5'
+$artifact=Join-Path (Join-Path $DataDir 'MQL5\Experts') $expertRel
+if(-not(Test-Path $artifact)){Refuse 'installed diagnostic EX5 missing before run'}
+$artifactSha=FileSha $artifact
+if($artifactSha -ne $ExpectedEx5Sha){Refuse "diagnostic EX5 SHA drift $artifactSha"}
 $rows=Import-Csv $Manifest
 $row=@($rows|Where-Object cell_id -eq $CellId)
 if($row.Count -ne 1){Refuse "cell_id $CellId not unique in H3 manifest"}
@@ -103,18 +125,19 @@ $um=Get-Content $unitManifest -Raw|ConvertFrom-Json
 if([int]$um.source_out_count -ne [int]$metrics.total_trades){Refuse "source OUT $($um.source_out_count) != tester trades $($metrics.total_trades)"}
 if([int]$um.realized_unit_count -ne [int]$metrics.total_trades){Refuse "realized units $($um.realized_unit_count) != tester trades $($metrics.total_trades)"}
 if([int]$um.open_position_count -ne 0){Refuse "source has $($um.open_position_count) unrealized positions after tester finalization"}
+if([int]$um.unknown_time_unit_count -ne 0){Refuse "source has $($um.unknown_time_unit_count) unknown-time realized units"}
 if([int]$um.configured_run_magic -ne 990001){Refuse "builder configured run magic $($um.configured_run_magic) != 990001"}
 if($um.source_magic_provenance -ne 'PER_DEAL_HISTORY_DEAL_MAGIC'){Refuse "source magic provenance missing"}
 if([int]$um.source_owned_position_count -ne [int]$um.source_position_count){Refuse "source magic ownership parity failed"}
-$expertRel=($Expert -replace '\.ex5$','')+'.ex5'
-$artifact=Join-Path (Join-Path $DataDir 'MQL5\Experts') $expertRel
 if(-not(Test-Path $artifact)){Refuse 'installed diagnostic EX5 missing after run'}
+$postArtifactSha=FileSha $artifact
+if($postArtifactSha -ne $ExpectedEx5Sha){Refuse "diagnostic EX5 SHA drift after run $postArtifactSha"}
 $manifestOut=[ordered]@{
   schema='BOSS19_P4B_UNIT_EXPORT_RUN_V2'; status='PASS_SOURCE_BOUND_UNIT_RUN';
   canonical_head=$CanonicalHead; cell_id=$CellId; symbol=$row.symbol; tf=$row.tf; window=$row.window;
   from_date=$row.from_date; to_date=$row.to_date; model=1; holdout='UNSPENT'; optimization='NONE';
-  set_sha256=$setSha; build_receipt_registry_sha256=FileSha $BuildReceiptRegistry;
-  diagnostic_ex5_sha256=FileSha $artifact; diagnostic_source_sha256=FileSha (Join-Path $RepoRoot 'ea_template\Probe_19_AdaptiveTrendGrid_P4BUnitExport.mq5');
+  set_sha256=$setSha; h3_manifest_sha256=$manifestSha; build_receipt=$ExpectedBuildReceipt; build_receipt_registry_sha256=$receiptRegistrySha;
+  diagnostic_ex5_sha256=$postArtifactSha; diagnostic_source_sha256=$sourceSha;
   report_sha256=FileSha (Join-Path $runDir 'report.htm'); source_sha256=FileSha $raw; unit_sha256=FileSha $units;
   report_trades=[int]$metrics.total_trades; source_in_count=[int]$um.source_in_count; source_out_count=[int]$um.source_out_count;
   source_position_count=[int]$um.source_position_count; source_owned_position_count=[int]$um.source_owned_position_count;

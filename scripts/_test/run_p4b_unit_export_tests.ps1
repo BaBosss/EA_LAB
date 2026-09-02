@@ -42,6 +42,13 @@ Assert ($finalText.IndexOf('P4B_PositionSetAdd(ownedPositionIds, positionId)') -
 $parentDiff = @(git -C $RepoRoot diff $parentBase -- $parent)
 Assert ($parentDiff.Count -eq 0) 'original Boss19 parent wrapper remains byte-untouched from contract base'
 Assert ($runnerText -match 'H3_BROAD_MATRIX_MANIFEST\.csv') 'runner binds every cell to the frozen H3 manifest'
+Assert ($runnerText -match '\$ExpectedManifestSha=.*56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd' -and $runnerText -match 'manifestSha -ne \$ExpectedManifestSha') 'runner pins frozen H3 manifest SHA before runtime'
+Assert ($runnerText -match '\$ExpectedSourceSha=.*dd61c78ca6680fcec64260ea200e04c2faa4824abbbeac218100a2db997f33cf' -and $runnerText -match 'sourceSha -ne \$ExpectedSourceSha') 'runner pins accepted diagnostic source SHA before runtime'
+Assert ($runnerText -match '\$ExpectedEx5Sha=.*8f68ee1cf726f27de0ec5da0f1ad4b5f88f129435f9b2bf9b27d5ba378a9abd2' -and $runnerText -match 'artifactSha -ne \$ExpectedEx5Sha') 'runner pins accepted diagnostic EX5 SHA before runtime'
+Assert ($runnerText -match '\$ExpectedBuildReceipt=.*br-6c63129e01ac4458a62d420c5594560f' -and $runnerText -match 'receiptMatches.Count -ne 1') 'runner requires exact accepted Repair03 build receipt'
+Assert ($runnerText -match '\$ExpectedReceiptRegistrySha=.*4aac0ace64c5ddc5c05adbcde394705e365d1b8b50322649da2251d49aa92818' -and $runnerText -match 'receiptRegistrySha -ne \$ExpectedReceiptRegistrySha') 'runner pins Repair03 receipt registry SHA'
+Assert ($runnerText -match 'unknown_time_unit_count -ne 0.*unknown-time realized units') 'runner refuses unknown-time units before PASS'
+Assert ($runnerText -match 'h3_manifest_sha256=\$manifestSha.*build_receipt=\$ExpectedBuildReceipt') 'run manifest records pinned H3 manifest and build receipt identity'
 Assert ($runnerText -match 'Select-Object -Unique symbol,period,period_name,configured_run_magic,account_margin_mode') 'runner identity uses configured run magic, not per-deal source magic'
 Assert ($runnerText -match 'source_magic_provenance') 'runner carries source magic provenance into run evidence'
 Assert ($runnerText -match 'source_owned_position_count.*source_position_count') 'runner enforces exact source-magic ownership parity'
