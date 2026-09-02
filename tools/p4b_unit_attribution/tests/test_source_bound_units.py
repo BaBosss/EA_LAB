@@ -10,11 +10,13 @@ import build_source_bound_units as m
 
 
 def row(deal_id, position_id, entry, time_server, *, volume="0.01", deal_type="0",
-        order_id=None, commission="0", swap="0", profit="0"):
+        order_id=None, commission="0", swap="0", profit="0",
+        configured_run_magic="990001", source_deal_magic="990001"):
     return {
         "schema_version": m.SOURCE_SCHEMA,
         "symbol": "XAUUSD", "period": "16388", "period_name": "PERIOD_H4",
-        "magic": "990001", "account_margin_mode": "2",
+        "configured_run_magic": configured_run_magic, "source_deal_magic": source_deal_magic,
+        "account_margin_mode": "2",
         "deal_id": str(deal_id), "position_id": str(position_id),
         "order_id": str(order_id if order_id is not None else deal_id + 100),
         "deal_entry": str(entry), "deal_type": str(deal_type),
@@ -43,11 +45,37 @@ class SourceBoundUnitTests(unittest.TestCase):
         self.assertEqual(units[0]["source_position_id"], "77")
         self.assertEqual(units[0]["source_open_deal_id"], "1")
         self.assertEqual(units[0]["source_deal_id"], "2")
+        self.assertEqual(units[0]["configured_run_magic"], "990001")
+        self.assertEqual(units[0]["source_open_deal_magic"], "990001")
+        self.assertEqual(units[0]["source_close_deal_magic"], "990001")
+        self.assertEqual(meta["source_magic_provenance"], "PER_DEAL_HISTORY_DEAL_MAGIC")
+        self.assertEqual(meta["source_owned_position_count"], 1)
         self.assertEqual(units[0]["entry_utc"], "2023-06-12T09:00:00Z")
         self.assertEqual(units[0]["source_net_realized"], "1.21")
         self.assertEqual(units[0]["entry_swap"], "0")
         self.assertEqual(units[0]["entry_profit"], "0")
         self.assertEqual(meta["window"], "MAIN")
+
+    def test_source_magic_can_differ_on_owned_forced_close(self):
+        rows = [
+            row(1, 77, m.ENTRY_IN, "2025.12.30 12:00:00"),
+            row(2, 77, m.ENTRY_OUT, "2025.12.31 23:59:00", deal_type="1", source_deal_magic="0"),
+        ]
+        units, meta = m.build_units(m.read_source(self._source(rows)), "H3-C03-MAIN")
+        self.assertEqual(units[0]["source_open_deal_magic"], "990001")
+        self.assertEqual(units[0]["source_close_deal_magic"], "0")
+        self.assertEqual(meta["source_magic_values"], [0, 990001])
+        self.assertEqual(meta["source_magic_match_count"], 1)
+        self.assertEqual(meta["source_magic_nonmatch_count"], 1)
+        self.assertEqual(meta["source_owned_position_count"], 1)
+
+    def test_position_without_configured_source_magic_refuses(self):
+        parsed = m.read_source(self._source([
+            row(1, 77, m.ENTRY_IN, "2023.01.02 12:00:00", source_deal_magic="0"),
+            row(2, 77, m.ENTRY_OUT, "2023.01.03 12:00:00", source_deal_magic="0"),
+        ]))
+        with self.assertRaises(m.UnitSourceError):
+            m.build_units(parsed, "H3-C03-MAIN")
 
     def test_zero_position_id_refuses(self):
         with self.assertRaises(m.UnitSourceError):
@@ -109,6 +137,20 @@ class SourceBoundUnitTests(unittest.TestCase):
         rows[1]["symbol"] = "EURUSD"
         with self.assertRaises(m.UnitSourceError):
             m.read_source(self._source(rows))
+
+    def test_mixed_configured_run_magic_refuses(self):
+        rows = [
+            row(1, 77, m.ENTRY_IN, "2023.01.02 12:00:00"),
+            row(2, 77, m.ENTRY_OUT, "2023.01.03 12:00:00", configured_run_magic="990002"),
+        ]
+        with self.assertRaises(m.UnitSourceError):
+            m.read_source(self._source(rows))
+
+    def test_negative_source_magic_refuses(self):
+        with self.assertRaises(m.UnitSourceError):
+            m.read_source(self._source([
+                row(1, 77, m.ENTRY_IN, "2023.01.02 12:00:00", source_deal_magic="-1"),
+            ]))
 
     def test_invalid_run_id_refuses(self):
         parsed = m.read_source(self._source([row(1, 77, m.ENTRY_IN, "2023.01.02 12:00:00")]))

@@ -18,6 +18,12 @@ Assert ($source -match 'void OnTradeTransaction') 'diagnostic child keeps trade-
 Assert ($source -match 'double OnTester\(\)') 'diagnostic child finalizes source after tester completion'
 Assert ($source -match 'HistorySelect\(0, TimeCurrent\(\)\)') 'final snapshot reads terminal-owned history after test'
 Assert ($source -match 'DEAL_POSITION_ID') 'source export reads MT5 source-emitted DEAL_POSITION_ID'
+Assert ($source -match '#define P4B_UNIT_SCHEMA "BOSS19_P4B_UNIT_SOURCE_V2"') 'source export uses Repair03 source schema V2'
+Assert ($source -match '"configured_run_magic","source_deal_magic"') 'source schema separates configured run magic from per-deal source magic'
+$writeStart=$source.IndexOf('void P4B_WriteSelectedDeal'); $writeEnd=$source.IndexOf('void P4B_WriteDeal',$writeStart); Assert ($writeStart -ge 0 -and $writeEnd -gt $writeStart) 'selected-deal writer is statically isolatable'
+$writeText=$source.Substring($writeStart,$writeEnd-$writeStart)
+Assert ($writeText -match 'sourceDealMagic = HistoryDealGetInteger\(deal, DEAL_MAGIC\)') 'per-deal source magic comes from HistoryDealGetInteger DEAL_MAGIC'
+Assert ($writeText -match 'IntegerToString\(\(int\)_0_Magic\)[\s\S]*StringFormat\("%I64d", sourceDealMagic\)') 'configured run magic and source deal magic are emitted as distinct fields'
 Assert ($source -match 'DEAL_TIME_MSC') 'source export preserves source deal time milliseconds'
 Assert ($source -match 'FILE_COMMON') 'source export writes outside report HTML via Common Files'
 Assert ($source -notmatch '\bExec_') 'diagnostic wrapper calls no execution helper'
@@ -36,6 +42,9 @@ Assert ($finalText.IndexOf('P4B_PositionSetAdd(ownedPositionIds, positionId)') -
 $parentDiff = @(git -C $RepoRoot diff $parentBase -- $parent)
 Assert ($parentDiff.Count -eq 0) 'original Boss19 parent wrapper remains byte-untouched from contract base'
 Assert ($runnerText -match 'H3_BROAD_MATRIX_MANIFEST\.csv') 'runner binds every cell to the frozen H3 manifest'
+Assert ($runnerText -match 'Select-Object -Unique symbol,period,period_name,configured_run_magic,account_margin_mode') 'runner identity uses configured run magic, not per-deal source magic'
+Assert ($runnerText -match 'source_magic_provenance') 'runner carries source magic provenance into run evidence'
+Assert ($runnerText -match 'source_owned_position_count.*source_position_count') 'runner enforces exact source-magic ownership parity'
 Assert ($runnerText -match 'source export is stale') 'runner refuses stale Common-Files source'
 Assert ($runnerText -match '\$startedLocal=Get-Date') 'report freshness keeps a local wall-clock start'
 Assert ($runnerText -match '\$startedUtc=\[DateTime\]::UtcNow') 'source freshness captures an explicit UTC start'

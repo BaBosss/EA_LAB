@@ -4,7 +4,7 @@
 //| Strategy/risk mechanics remain owned by the unchanged LabCore.   |
 //+------------------------------------------------------------------+
 #property copyright "EA_LAB / Boss"
-#property version   "2.01"
+#property version   "2.02"
 #property description "Boss19 P4B source-bound unit identity diagnostic"
 #property strict
 
@@ -12,7 +12,7 @@
 #define LAB_ENTRY_TAG "19_AdaptiveTrendGrid"
 #include "core/LabCore.mqh"
 
-#define P4B_UNIT_SCHEMA "BOSS19_P4B_UNIT_SOURCE_V1"
+#define P4B_UNIT_SCHEMA "BOSS19_P4B_UNIT_SOURCE_V2"
 
 string P4B_UnitExportFile()
 {
@@ -26,7 +26,7 @@ string P4B_UnitExportFile()
 
 void P4B_WriteHeader(const int fh)
 {
-   FileWrite(fh,      "schema_version","symbol","period","period_name","magic","account_margin_mode",
+   FileWrite(fh,      "schema_version","symbol","period","period_name","configured_run_magic","source_deal_magic","account_margin_mode",
       "deal_id","position_id","order_id","deal_entry","deal_type",
       "deal_time_server","deal_time_msc","volume","price","commission","swap","profit");
 }
@@ -59,6 +59,7 @@ void P4B_PositionSetAdd(long &positionIds[], const long positionId)
 void P4B_WriteSelectedDeal(const int fh, const ulong deal)
 {
    const long positionId = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+   const long sourceDealMagic = HistoryDealGetInteger(deal, DEAL_MAGIC);
    const long orderId = HistoryDealGetInteger(deal, DEAL_ORDER);
    const long entry = HistoryDealGetInteger(deal, DEAL_ENTRY);
    const long dealType = HistoryDealGetInteger(deal, DEAL_TYPE);
@@ -69,7 +70,9 @@ void P4B_WriteSelectedDeal(const int fh, const ulong deal)
       P4B_UNIT_SCHEMA,
       _Symbol,
       IntegerToString((int)_Period),
-      EnumToString((ENUM_TIMEFRAMES)_Period),      IntegerToString((int)_0_Magic),
+      EnumToString((ENUM_TIMEFRAMES)_Period),
+      IntegerToString((int)_0_Magic),
+      StringFormat("%I64d", sourceDealMagic),
       IntegerToString((int)AccountInfoInteger(ACCOUNT_MARGIN_MODE)),
       StringFormat("%I64u", deal),
       StringFormat("%I64d", positionId),

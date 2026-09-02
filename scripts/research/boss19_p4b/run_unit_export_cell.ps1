@@ -80,9 +80,9 @@ Copy-Item $trunc (Join-Path $runDir 'truncation_check.json') -Force
 if(Test-Path $lev){Copy-Item $lev (Join-Path $runDir 'leverage_check.json') -Force}
 $sourceRows=Import-Csv $raw
 if($sourceRows.Count -eq 0){Refuse 'source export is empty'}
-$ident=@($sourceRows|Select-Object -Unique symbol,period,period_name,magic,account_margin_mode)
-if($ident.Count -ne 1){Refuse 'source export mixed runtime identity'}
-if($ident[0].symbol -ne $row.symbol -or [int]$ident[0].period -ne $period -or $ident[0].period_name -ne "PERIOD_$($row.tf)" -or $ident[0].magic -ne '990001'){
+$ident=@($sourceRows|Select-Object -Unique symbol,period,period_name,configured_run_magic,account_margin_mode)
+if($ident.Count -ne 1){Refuse 'source export mixed configured runtime identity'}
+if($ident[0].symbol -ne $row.symbol -or [int]$ident[0].period -ne $period -or $ident[0].period_name -ne "PERIOD_$($row.tf)" -or $ident[0].configured_run_magic -ne '990001'){
   Refuse 'source export identity does not match manifest cell'
 }
 
@@ -103,19 +103,26 @@ $um=Get-Content $unitManifest -Raw|ConvertFrom-Json
 if([int]$um.source_out_count -ne [int]$metrics.total_trades){Refuse "source OUT $($um.source_out_count) != tester trades $($metrics.total_trades)"}
 if([int]$um.realized_unit_count -ne [int]$metrics.total_trades){Refuse "realized units $($um.realized_unit_count) != tester trades $($metrics.total_trades)"}
 if([int]$um.open_position_count -ne 0){Refuse "source has $($um.open_position_count) unrealized positions after tester finalization"}
+if([int]$um.configured_run_magic -ne 990001){Refuse "builder configured run magic $($um.configured_run_magic) != 990001"}
+if($um.source_magic_provenance -ne 'PER_DEAL_HISTORY_DEAL_MAGIC'){Refuse "source magic provenance missing"}
+if([int]$um.source_owned_position_count -ne [int]$um.source_position_count){Refuse "source magic ownership parity failed"}
 $expertRel=($Expert -replace '\.ex5$','')+'.ex5'
 $artifact=Join-Path (Join-Path $DataDir 'MQL5\Experts') $expertRel
 if(-not(Test-Path $artifact)){Refuse 'installed diagnostic EX5 missing after run'}
 $manifestOut=[ordered]@{
-  schema='BOSS19_P4B_UNIT_EXPORT_RUN_V1'; status='PASS_SOURCE_BOUND_UNIT_RUN';
+  schema='BOSS19_P4B_UNIT_EXPORT_RUN_V2'; status='PASS_SOURCE_BOUND_UNIT_RUN';
   canonical_head=$CanonicalHead; cell_id=$CellId; symbol=$row.symbol; tf=$row.tf; window=$row.window;
   from_date=$row.from_date; to_date=$row.to_date; model=1; holdout='UNSPENT'; optimization='NONE';
   set_sha256=$setSha; build_receipt_registry_sha256=FileSha $BuildReceiptRegistry;
   diagnostic_ex5_sha256=FileSha $artifact; diagnostic_source_sha256=FileSha (Join-Path $RepoRoot 'ea_template\Probe_19_AdaptiveTrendGrid_P4BUnitExport.mq5');
   report_sha256=FileSha (Join-Path $runDir 'report.htm'); source_sha256=FileSha $raw; unit_sha256=FileSha $units;
   report_trades=[int]$metrics.total_trades; source_in_count=[int]$um.source_in_count; source_out_count=[int]$um.source_out_count;
+  source_position_count=[int]$um.source_position_count; source_owned_position_count=[int]$um.source_owned_position_count;
   realized_unit_count=[int]$um.realized_unit_count; open_position_count=[int]$um.open_position_count;
   unknown_time_unit_count=[int]$um.unknown_time_unit_count; linkage_basis=$um.linkage_basis;
+  configured_run_magic=[int]$um.configured_run_magic; source_magic_values=@($um.source_magic_values);
+  source_magic_match_count=[int]$um.source_magic_match_count; source_magic_nonmatch_count=[int]$um.source_magic_nonmatch_count;
+  source_magic_provenance=$um.source_magic_provenance;
   source_file=$sourceName; started_utc=$startedUtc.ToString('o'); completed_utc=[DateTime]::UtcNow.ToString('o')
 }
 $out=Join-Path $runDir 'run_manifest.json'

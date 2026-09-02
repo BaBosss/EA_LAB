@@ -16,8 +16,8 @@ NORMALIZER_DIR = REPO / "tools" / "P4BMarketDataExporter"
 sys.path.insert(0, str(NORMALIZER_DIR))
 from normalize_ohlc import is_dst_transition_server_date, server_to_utc
 
-SOURCE_SCHEMA = "BOSS19_P4B_UNIT_SOURCE_V1"
-UNIT_SCHEMA = "BOSS19_P4B_SOURCE_BOUND_DEAL_V1"
+SOURCE_SCHEMA = "BOSS19_P4B_UNIT_SOURCE_V2"
+UNIT_SCHEMA = "BOSS19_P4B_SOURCE_BOUND_DEAL_V2"
 ENTRY_IN = 0
 ENTRY_OUT = 1
 ENTRY_INOUT = 2
@@ -30,7 +30,7 @@ WINDOWS_SERVER = {
 }
 
 REQUIRED_HEADER = [
-    "schema_version", "symbol", "period", "period_name", "magic", "account_margin_mode",
+    "schema_version", "symbol", "period", "period_name", "configured_run_magic", "source_deal_magic", "account_margin_mode",
     "deal_id", "position_id", "order_id", "deal_entry", "deal_type", "deal_time_server",
     "deal_time_msc", "volume", "price", "commission", "swap", "profit",
 ]
@@ -84,6 +84,8 @@ def read_source(path: Path) -> list[dict]:
         entry = parse_int(raw, "deal_entry")
         deal_type = parse_int(raw, "deal_type")
         time_msc = parse_int(raw, "deal_time_msc")
+        configured_run_magic = parse_int(raw, "configured_run_magic")
+        source_deal_magic = parse_int(raw, "source_deal_magic")
         if deal_id <= 0 or deal_id in seen:
             raise UnitSourceError(f"duplicate/nonzero deal_id violation: {deal_id}")
         if position_id <= 0:
@@ -94,8 +96,12 @@ def read_source(path: Path) -> list[dict]:
             raise UnitSourceError(f"unsupported deal_entry={entry} deal={deal_id}")
         if time_msc <= 0:
             raise UnitSourceError(f"invalid deal_time_msc deal={deal_id}")
+        if configured_run_magic <= 0:
+            raise UnitSourceError(f"invalid configured_run_magic deal={deal_id}")
+        if source_deal_magic < 0:
+            raise UnitSourceError(f"invalid source_deal_magic deal={deal_id}")
 
-        row_identity = (raw["symbol"], raw["period"], raw["period_name"], raw["magic"], raw["account_margin_mode"])
+        row_identity = (raw["symbol"], raw["period"], raw["period_name"], raw["configured_run_magic"], raw["account_margin_mode"])
         if identity is None:
             identity = row_identity
         elif row_identity != identity:
@@ -109,6 +115,8 @@ def read_source(path: Path) -> list[dict]:
             "deal_entry_i": entry,
             "deal_type_i": deal_type,
             "deal_time_msc_i": time_msc,
+            "configured_run_magic_i": configured_run_magic,
+            "source_deal_magic_i": source_deal_magic,
             "volume_d": parse_decimal(raw, "volume"),
             "price_d": parse_decimal(raw, "price"),
             "commission_d": parse_decimal(raw, "commission"),
@@ -146,10 +154,20 @@ def build_units(rows: list[dict], run_id: str) -> tuple[list[dict], dict]:
     for row in rows:
         by_position[row["position_id_i"]].append(row)
 
+    configured_magic_values = {r["configured_run_magic_i"] for r in rows}
+    if len(configured_magic_values) != 1:
+        raise UnitSourceError(f"mixed configured run magic: {sorted(configured_magic_values)}")
+    configured_run_magic = next(iter(configured_magic_values))
+    source_magic_values = sorted({r["source_deal_magic_i"] for r in rows})
+    source_magic_match_count = sum(r["source_deal_magic_i"] == configured_run_magic for r in rows)
+    source_magic_nonmatch_count = len(rows) - source_magic_match_count
+
     units: list[dict] = []
     open_positions = 0
     unknown_time_units = 0
     for position_id, group in sorted(by_position.items()):
+        if not any(r["source_deal_magic_i"] == configured_run_magic for r in group):
+            raise UnitSourceError(f"position lacks configured-magic source ownership position_id={position_id}")
         if any(r["deal_entry_i"] == ENTRY_INOUT for r in group):
             raise UnitSourceError(f"unsupported INOUT/reversal position_id={position_id}")
         ins = [r for r in group if r["deal_entry_i"] == ENTRY_IN]
@@ -178,7 +196,9 @@ def build_units(rows: list[dict], run_id: str) -> tuple[list[dict], dict]:
             "symbol": out["symbol"],
             "period": out["period"],
             "period_name": out["period_name"],
-            "magic": out["magic"],
+            "configured_run_magic": str(configured_run_magic),
+            "source_open_deal_magic": str(entry["source_deal_magic_i"]),
+            "source_close_deal_magic": str(out["source_deal_magic_i"]),
             "account_margin_mode": out["account_margin_mode"],
             "source_position_id": str(position_id),
             "source_open_deal_id": str(entry["deal_id_i"]),
@@ -207,13 +227,22 @@ def build_units(rows: list[dict], run_id: str) -> tuple[list[dict], dict]:
         })
 
     manifest = {
-        "schema_version": "BOSS19_P4B_SOURCE_BOUND_UNIT_MANIFEST_V1",
+        "schema_version": "BOSS19_P4B_SOURCE_BOUND_UNIT_MANIFEST_V2",
         "h3_run_id": run_id,
         "window": window,
+        "configured_run_magic": configured_run_magic,
+        "source_magic_values": source_magic_values,
+        "source_magic_match_count": source_magic_match_count,
+        "source_magic_nonmatch_count": source_magic_nonmatch_count,
+        "source_magic_provenance": "PER_DEAL_HISTORY_DEAL_MAGIC",
         "source_row_count": len(rows),
         "source_in_count": sum(r["deal_entry_i"] == ENTRY_IN for r in rows),
         "source_out_count": sum(r["deal_entry_i"] in {ENTRY_OUT, ENTRY_OUT_BY} for r in rows),
         "source_position_count": len(by_position),
+        "source_owned_position_count": sum(
+            any(r["source_deal_magic_i"] == configured_run_magic for r in group)
+            for group in by_position.values()
+        ),
         "realized_unit_count": len(units),
         "open_position_count": open_positions,
         "unknown_time_unit_count": unknown_time_units,
@@ -226,7 +255,8 @@ def build_units(rows: list[dict], run_id: str) -> tuple[list[dict], dict]:
 
 
 UNIT_FIELDS = [
-    "schema_version", "h3_run_id", "symbol", "period", "period_name", "magic", "account_margin_mode",
+    "schema_version", "h3_run_id", "symbol", "period", "period_name", "configured_run_magic",
+    "source_open_deal_magic", "source_close_deal_magic", "account_margin_mode",
     "source_position_id", "source_open_deal_id", "source_deal_id", "source_open_order_id", "source_close_order_id",
     "entry_time_server", "exit_time_server", "entry_time_msc", "exit_time_msc", "entry_utc", "exit_utc",
     "time_status", "time_unknown_reason", "entry_volume", "exit_volume", "entry_price", "exit_price",
