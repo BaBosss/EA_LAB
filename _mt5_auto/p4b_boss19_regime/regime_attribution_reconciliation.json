@@ -1,0 +1,292 @@
+{
+  "attribution_unit": "DEAL",
+  "authority": "RESEARCH_EVIDENCE_ONLY_NO_STRATEGY_VERDICT_NO_HOLDOUT_NO_OPTIMIZATION_NO_RISK_DEPLOYMENT_TRADING",
+  "basket_status": "UNAVAILABLE_NO_SOURCE_BASKET_ID",
+  "classified_unit_count": 1549,
+  "classifier_id": "BOSS19_P4_REGIME_CLASSIFIER_V1",
+  "classifier_version": "1.0.0",
+  "count_tolerance": 0,
+  "created_utc": "2026-09-02T17:30:00Z",
+  "currency_tolerance": "0.01",
+  "detail_gross_loss": "-16184.34000000",
+  "detail_gross_profit": "33903.12000000",
+  "detail_net_realized": "17718.78000000",
+  "detail_unit_count": 1549,
+  "evidence_package_sha256": "1330a822ed66149ba07d693d8732ced5b9e9ce66d15f34ce8d21ef70894b760c",
+  "holdout": "UNSPENT",
+  "no_timeline_match_count": 0,
+  "optimization": "NONE",
+  "output_sha256": {
+    "regime_affinity.csv": "0ad65c81fd57668d9726baf80a01ceea4dd1048da9dc63e43fd0cf3b45e32b3b",
+    "regime_attribution_coverage.csv": "568f2d523bf409032a93b4bd9184ebe9dc4c217919bdabbf2b4469ae56a2434f",
+    "regime_attribution_detail.csv": "e54f1cfaf58df97acb8fb39c1e6e8bf4614f1ff3a7c9bcbc1b5acff762665dd6"
+  },
+  "package_net_comparison": "UNAVAILABLE_NOT_EXPOSED_IN_BROAD36_PACKAGE",
+  "package_review_receipt_sha256": "bb331765f169503ad878223d54a6f45fd2bb6e289609ae671857e298384463a4",
+  "per_run_reconciliation": {
+    "H3-C01-BWD": {
+      "classified": 44,
+      "eligible": 44,
+      "package_count": 44,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C01-MAIN": {
+      "classified": 80,
+      "eligible": 80,
+      "package_count": 80,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C02-BWD": {
+      "classified": 49,
+      "eligible": 49,
+      "package_count": 49,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C02-MAIN": {
+      "classified": 100,
+      "eligible": 100,
+      "package_count": 100,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C03-BWD": {
+      "classified": 56,
+      "eligible": 56,
+      "package_count": 56,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C03-MAIN": {
+      "classified": 113,
+      "eligible": 113,
+      "package_count": 113,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C04-BWD": {
+      "classified": 26,
+      "eligible": 26,
+      "package_count": 26,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C04-MAIN": {
+      "classified": 23,
+      "eligible": 23,
+      "package_count": 23,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C05-BWD": {
+      "classified": 33,
+      "eligible": 33,
+      "package_count": 33,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C05-MAIN": {
+      "classified": 27,
+      "eligible": 27,
+      "package_count": 27,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C06-BWD": {
+      "classified": 40,
+      "eligible": 40,
+      "package_count": 40,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C06-MAIN": {
+      "classified": 49,
+      "eligible": 49,
+      "package_count": 49,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C07-BWD": {
+      "classified": 12,
+      "eligible": 12,
+      "package_count": 12,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C07-MAIN": {
+      "classified": 26,
+      "eligible": 26,
+      "package_count": 26,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C08-BWD": {
+      "classified": 16,
+      "eligible": 16,
+      "package_count": 16,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C08-MAIN": {
+      "classified": 24,
+      "eligible": 24,
+      "package_count": 24,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C09-BWD": {
+      "classified": 23,
+      "eligible": 23,
+      "package_count": 23,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C09-MAIN": {
+      "classified": 36,
+      "eligible": 36,
+      "package_count": 36,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C10-BWD": {
+      "classified": 20,
+      "eligible": 20,
+      "package_count": 20,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C10-MAIN": {
+      "classified": 6,
+      "eligible": 6,
+      "package_count": 6,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C11-BWD": {
+      "classified": 32,
+      "eligible": 32,
+      "package_count": 32,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C11-MAIN": {
+      "classified": 3,
+      "eligible": 3,
+      "package_count": 3,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C12-BWD": {
+      "classified": 26,
+      "eligible": 26,
+      "package_count": 26,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C12-MAIN": {
+      "classified": 6,
+      "eligible": 6,
+      "package_count": 6,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C13-BWD": {
+      "classified": 68,
+      "eligible": 68,
+      "package_count": 68,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C13-MAIN": {
+      "classified": 47,
+      "eligible": 47,
+      "package_count": 47,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C14-BWD": {
+      "classified": 68,
+      "eligible": 68,
+      "package_count": 68,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C14-MAIN": {
+      "classified": 56,
+      "eligible": 56,
+      "package_count": 56,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C15-BWD": {
+      "classified": 69,
+      "eligible": 69,
+      "package_count": 69,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C15-MAIN": {
+      "classified": 60,
+      "eligible": 60,
+      "package_count": 60,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C16-BWD": {
+      "classified": 25,
+      "eligible": 25,
+      "package_count": 25,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C16-MAIN": {
+      "classified": 91,
+      "eligible": 91,
+      "package_count": 91,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C17-BWD": {
+      "classified": 6,
+      "eligible": 6,
+      "package_count": 6,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C17-MAIN": {
+      "classified": 133,
+      "eligible": 133,
+      "package_count": 133,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C18-BWD": {
+      "classified": 54,
+      "eligible": 54,
+      "package_count": 54,
+      "status": "PASS",
+      "unknown": 0
+    },
+    "H3-C18-MAIN": {
+      "classified": 2,
+      "eligible": 2,
+      "package_count": 2,
+      "status": "PASS",
+      "unknown": 0
+    }
+  },
+  "prejoin_readiness_sha256": "ffa5a59f49cf9099c50520cc95c548ad2d47883a472689dfb58ffc722a44d51e",
+  "schema_version": "BOSS19_P4B_REGIME_ATTRIBUTION_RECONCILIATION_V1",
+  "source_gross_loss": "-16184.34000000",
+  "source_gross_profit": "33903.12000000",
+  "source_net_realized": "17718.78000000",
+  "source_unit_count": 1549,
+  "status": "PASS_ATTRIBUTION_RECONCILIATION",
+  "timeline_asof_match_count": 1549,
+  "timeline_manifest_sha256": "858f4d02d1ae30511dd1f38ffab347c85c06a4a25df4bedf901dc169c2847916",
+  "timeline_sha256": "5f3a0f8d1accd25cb6cc08ad1c6e291aed6d238d620269102151016dbfaf569d",
+  "unique_join_key_check": "PASS",
+  "unknown_unit_count": 0
+}

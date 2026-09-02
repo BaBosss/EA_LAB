@@ -1,0 +1,43 @@
+{
+  "affinity_row_count": 547,
+  "aggregate_units_sha256": "325b6d00709c48982a5981d2d7750a6a18e99f2d77ad52b89fa8d67b50c0b699",
+  "authority": "RESEARCH_EVIDENCE_ONLY_NO_STRATEGY_VERDICT_NO_HOLDOUT_NO_OPTIMIZATION_NO_RISK_DEPLOYMENT_TRADING",
+  "basket_status": "UNAVAILABLE_NO_SOURCE_BASKET_ID",
+  "classified_unit_count": 1549,
+  "classifier_id": "BOSS19_P4_REGIME_CLASSIFIER_V1",
+  "classifier_version": "1.0.0",
+  "coverage_row_count": 36,
+  "created_utc": "2026-09-02T17:30:00Z",
+  "detail_unit_count": 1549,
+  "does_not_authorize": [
+    "STRATEGY_VERDICT",
+    "HOLDOUT",
+    "OPTIMIZATION",
+    "CANDIDATE",
+    "GRADE_KINT",
+    "RISK_DEFAULT",
+    "DEPLOYMENT",
+    "TRADING"
+  ],
+  "evidence_package_sha256": "1330a822ed66149ba07d693d8732ced5b9e9ce66d15f34ce8d21ef70894b760c",
+  "holdout": "UNSPENT",
+  "join_tool_sha256": "cf83ee45f9fb9f450956fa5ad289b19bf9091d7d73ea70cf3a7e9715339a51e6",
+  "optimization": "NONE",
+  "output_sha256": {
+    "regime_affinity.csv": "0ad65c81fd57668d9726baf80a01ceea4dd1048da9dc63e43fd0cf3b45e32b3b",
+    "regime_attribution_coverage.csv": "568f2d523bf409032a93b4bd9184ebe9dc4c217919bdabbf2b4469ae56a2434f",
+    "regime_attribution_detail.csv": "e54f1cfaf58df97acb8fb39c1e6e8bf4614f1ff3a7c9bcbc1b5acff762665dd6",
+    "regime_attribution_reconciliation.json": "1ad19d18bb12503a1b997eab2ab666714e1e786450a03141e0dee4361f2c6f60"
+  },
+  "package_review_confidence": "HIGH",
+  "package_review_receipt_sha256": "bb331765f169503ad878223d54a6f45fd2bb6e289609ae671857e298384463a4",
+  "package_review_verdict": "PASS",
+  "package_reviewed_head": "ecd5c2b3af0791674a7cce18464e632750f37755",
+  "prejoin_readiness_sha256": "ffa5a59f49cf9099c50520cc95c548ad2d47883a472689dfb58ffc722a44d51e",
+  "schema_version": "BOSS19_P4B_REGIME_ATTRIBUTION_PACKAGE_V1",
+  "source_unit_count": 1549,
+  "status": "REGIME_ATTRIBUTION_EVIDENCE_READY_FOR_INDEPENDENT_REVIEW",
+  "timeline_manifest_sha256": "858f4d02d1ae30511dd1f38ffab347c85c06a4a25df4bedf901dc169c2847916",
+  "timeline_sha256": "5f3a0f8d1accd25cb6cc08ad1c6e291aed6d238d620269102151016dbfaf569d",
+  "unknown_unit_count": 0
+}
