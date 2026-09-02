@@ -2,10 +2,10 @@
 card_type: NEGATIVE_KNOWLEDGE
 status: RESEARCH_ONLY
 authority: RESEARCH_ONLY
-canonical_base_sha: feb2143939b5ad1bbb8b3d0293ecf1fc25f45c4f
+canonical_base_sha: 2d333d367a93fa93c2e01c5055edbcca805463b2
 direct_consumers:
   - Boss19 P4/P5 ROI and interpretation after Repair03
-  - B16 R4 execution-fidelity routing and PARK decision
+  - future B16 research routing after accepted R4 closeout
   - future experiment deduplication
 ---
 
@@ -73,7 +73,24 @@ Do not repeat:
 - do not mine the same BWD window for another center;
 - do not treat 14/35 as a robustness finalist.
 
-Continuation is already preregistered as `B16-R4-r1`: use the accepted 14/30 parent exactly and test only same-install Strategy Tester model fidelity on `D:\Meta 5`; do not invent another RSI/depth/exit axis, spend HOLDOUT, or bypass runtime ownership.
+R4 continuation is now complete. The accepted 14/30 parent remains the research reference; do not reopen H08.
+
+## B16 USDJPY/H1 R4 — execution fidelity not falsified; 2020 weakness remains
+
+Canonical owner: `docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_RESULTS.md`.
+
+Accepted evidence: same-install `D:\Meta 5` Model1 MAIN/BWD and Model4 MAIN/BWD all passed the preregistered full-window bars with frozen mechanics. Model1 = MAIN PF 1.54 / +255.30 / 275 trades, BWD PF 1.13 / +50.22 / 267. Model4 = MAIN PF 1.38 / +187.32 / 273, BWD PF 1.20 / +74.73 / 262. No model-switch sign flip or depth/exposure cliff appeared.
+
+Negative/limiting finding: 2020 remains losing under both tester models (Model1 PF 0.7574 / net -40.91; Model4 PF 0.7921 / net -35.06). `R4_EXECUTION_FIDELITY_NOT_FALSIFIED` is therefore execution-fidelity evidence only, not all-year or regime-wide robustness.
+
+Do not repeat:
+- do not rerun the same Model1-to-Model4 fidelity question without a new direct consumer;
+- do not use 2020 as a post-hoc retuning surface;
+- do not reopen H05/H07/H08 from the R4 result;
+- do not infer HOLDOUT, Candidate, DEMO/LIVE, Grade/KINT, risk/default or deployment authority.
+
+Reopen only for a distinct prospectively contracted unresolved robustness question such as Monte Carlo or broader broker/install portability, and only when a direct consumer exists.
+
 ## B16 USDJPY/H1 exit-off paths — aggregate improvement is concentration-sensitive
 
 Canonical owner: `docs/research/B16_USDJPY_H1_EXIT_CONCENTRATION_DIAGNOSTIC.md`.

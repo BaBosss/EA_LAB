@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "artifact_type": "SECOND_BRAIN_DECISION_SUPPORT",
   "status": "RESEARCH_ONLY",
-  "canonical_base_sha": "feb2143939b5ad1bbb8b3d0293ecf1fc25f45c4f",
+  "canonical_base_sha": "2d333d367a93fa93c2e01c5055edbcca805463b2",
   "as_of_date": "2026-09-02",
   "authority": {
     "may_recommend_tests": true,
@@ -14,7 +14,7 @@
   },
   "direct_consumers": [
     "Boss19 P4/P5 ROI and interpretation after Repair03",
-    "B16 R4 execution-fidelity routing and PARK decision",
+    "Future B16 research routing after accepted R4 closeout",
     "Future experiment workers avoiding closed negative paths"
   ],
   "evidence_cards": [
@@ -60,7 +60,7 @@
     },
     {
       "card_id": "SB-EVID-B16-R2-STRUCTURE-01",
-      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
+      "consumer": "Future B16 research routing after accepted R4 closeout",
       "exact_canonical_owner": [
         "docs/factory/B16_H03_CONFIRMATION_RESULTS.md",
         "docs/research/B16_MECHANISM_CHARACTERIZATION_REPORT_20260830.md",
@@ -85,7 +85,7 @@
     },
     {
       "card_id": "SB-EVID-B16-H05-H07-01",
-      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
+      "consumer": "Future B16 research routing after accepted R4 closeout",
       "exact_canonical_owner": [
         "docs/research/B16_GBP_SELL_H4_OPT01_RESULTS.md",
         "docs/research/B16_GBP_SELL_H4_DEPTH2_01_RESULTS.md",
@@ -107,7 +107,7 @@
       ]
     },    {
       "card_id": "SB-EVID-B16-H08-01",
-      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
+      "consumer": "Future B16 research routing after accepted R4 closeout",
       "exact_canonical_owner": [
         "docs/research/B16_USDJPY_BUY_H1_OPT01_RESULTS.md",
         "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_CONTRACT.md",
@@ -127,7 +127,37 @@
         "Use BWD to select another RSI pair.",
         "Treat 14/35 as a robustness finalist."
       ],
-      "continuation_reference": "Accepted USDJPY/H1 BUY 14/30 parent is now frozen by preregistered B16-R4-r1; the sole allowed robustness dimension is same-install Strategy Tester model fidelity on D:\\Meta 5, with no parameter search."
+      "continuation_reference": "B16-R4-r1 is now complete and returned R4_EXECUTION_FIDELITY_NOT_FALSIFIED. Retain the accepted USDJPY/H1 BUY 14/30 parent as the research reference; see SB-EVID-B16-R4-01."
+    },
+    {
+      "card_id": "SB-EVID-B16-R4-01",
+      "consumer": "Future B16 research routing after accepted R4 closeout",
+      "exact_canonical_owner": [
+        "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_CONTRACT.md",
+        "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_RESULTS.md",
+        "factory/runs/b16_r4_20260902/usdjpy_buy_h1/evidence_summary.json",
+        "PROJECT_STATE.md"
+      ],
+      "hypothesis_or_mechanism": "Same-install Strategy Tester model fidelity of the frozen USDJPY/H1 BUY 14/30 parent.",
+      "what_was_tested": "No-search D:\\Meta 5 lineage: Model1 MAIN/BWD controls followed by Model4 MAIN/BWD, with strategy, position-engine, exits, sizing, protection and safety frozen.",
+      "result": {
+        "classification": "R4_EXECUTION_FIDELITY_NOT_FALSIFIED",
+        "model1_main": {"pf": 1.54, "net": 255.30, "trades": 275, "eqdd_pct": 3.85},
+        "model1_bwd": {"pf": 1.13, "net": 50.22, "trades": 267, "eqdd_pct": 2.38},
+        "model4_main": {"pf": 1.38, "net": 187.32, "trades": 273, "eqdd_pct": 3.91},
+        "model4_bwd": {"pf": 1.20, "net": 74.73, "trades": 262, "eqdd_pct": 2.29},
+        "model_switch_sign_flip": false,
+        "holdout": "UNSPENT",
+        "optimization": "NONE"
+      },
+      "mechanism_limit": "R4 answers tester-model execution fidelity only. The 2020 BWD year remains losing under both Model1 and Model4; Monte Carlo, broader broker/install portability and HOLDOUT were not tested.",
+      "selection_hindsight_warning": "Do not convert the Model4 pass into all-year robustness, reopen H05/H07/H08, retune on BWD, or infer Candidate/DEMO/LIVE authority.",
+      "do_not_repeat": [
+        "Do not rerun the same Model1-to-Model4 fidelity question without a new direct consumer.",
+        "Do not use the persistent 2020 loss as a post-hoc retuning surface.",
+        "Do not treat R4_EXECUTION_FIDELITY_NOT_FALSIFIED as a Grade, Candidate, HOLDOUT or deployment decision."
+      ],
+      "continuation_reference": "Retain USDJPY/H1 BUY 14/30 as the B16 research reference. Any later Monte Carlo, broker portability, HOLDOUT or Candidate step requires a separate prospective contract and authority gate."
     },
     {      "card_id": "SB-EVID-B15-COUNTBARS-01",
       "consumer": "Factory research deduplication and cross-EA mechanism routing",
@@ -193,32 +223,34 @@
       "p5_gate": "Exactly one logical change only after admissible P4 interpretation identifies a direct mechanism question, parent, expected benefit/cost, and falsifier."
     },
     "b16_park_vs_prospective_robustness": {
-      "evidence_supporting_park": [
-        "R2 mechanism characterization is complete and already holds a PARK / MECHANISM_CHARACTERIZED working research verdict.",
-        "GBPUSD/H4 H05 RSI optimization is exhausted and its only stable center is non-improving in utility/participation.",
-        "GBPUSD/H4 depth milestone is closed after the 2/3/parent-realized4 ladder answered its direct consumer.",
-        "USDJPY/H1 H08 selected 14/35 center failed BWD and the RSI search is CLOSED_NO_RETUNING.",
-        "USDJPY exit-off aggregate gains are confounded by severe participation/holding concentration."
+      "r4_result": "R4_EXECUTION_FIDELITY_NOT_FALSIFIED",
+      "accepted_reference": "USDJPY/H1 BUY 14/30",
+      "accepted_evidence": [
+        "Same-install D:\\Meta 5 Model1 controls passed: MAIN PF 1.54 / net +255.30 / 275 trades / EqDD 3.85%; BWD PF 1.13 / net +50.22 / 267 / 2.38%.",
+        "Model4 also passed the preregistered full-window bars: MAIN PF 1.38 / net +187.32 / 273 trades / EqDD 3.91%; BWD PF 1.20 / net +74.73 / 262 / EqDD 2.29%.",
+        "No model-switch sign flip or depth/exposure cliff appeared; HOLDOUT remained UNSPENT and optimization remained NONE."
       ],
-      "r4_preregistered_basis": [
-        "Canonical B16-R4-r1 reuses the accepted USDJPY/H1 BUY 14/30 parent and freezes strategy, position-engine, exits, sizing, safety, and runtime inputs while testing only Strategy Tester model fidelity.",
-        "B16-R4-r1 explicitly preserves the closed H05/H06/H07/H08 boundaries, forbids parameter search and HOLDOUT, and requires one same-install D:\\Meta 5 lineage so historical cross-install numbers remain context only."
+      "historical_constraints": [
+        "H08 selected 14/35 remains rejected by BWD and CLOSED_NO_RETUNING.",
+        "H05 RSI and H06/H07 bounded depth work remain closed at their accepted scopes.",
+        "USDJPY exit-off aggregate gains remain concentration-sensitive and do not authorize exit redesign."
       ],
-      "unknowns": [
-        "B16-R4-r1 is preregistered but has not yet produced accepted execution-fidelity evidence; the result remains UNKNOWN until its mechanically valid same-install lineage completes.",
-        "Model-4 evidence is the active R4 question; Monte Carlo, broader broker/execution portability, and HOLDOUT remain unavailable and outside B16-R4-r1 authority.",
+      "limitations": [
+        "2020 BWD remains losing under both tester models: Model1 PF 0.7574 / net -40.91 / 98 trades; Model4 PF 0.7921 / net -35.06 / 96 trades.",
+        "R4 does not establish all-year or regime-wide robustness.",
+        "Monte Carlo, broader broker/install portability and HOLDOUT remain untested.",
         "No canonical universal Grade/Confidence mapping exists; KINT-001 remains open."
       ],
-      "recommended_test_support": "Do not design another robustness axis. Reuse canonical B16-R4-r1 exactly: frozen USDJPY/H1 BUY 14/30 parent, same-install D:\\Meta 5 lineage, Model-1 MAIN/BWD controls followed by Model-4 MAIN/BWD only if controls pass, no parameter search, no HOLDOUT, and no runtime ownership bypass."
+      "decision_support": "Do not PARK the 14/30 parent for execution-fidelity failure. Retain it as the B16 research reference, keep the 2020 weakness explicit, and do not repeat H05/H07/H08 or the same Model1-to-Model4 question. No automatic next experiment is created."
     }
   },
   "knowledge_gaps": [
     "Boss19 source provenance is no longer the blocker. The remaining P4 UNKNOWN is whether broad36 has sufficient ROI to run and, if run, what the frozen classifier produces at unit/regime level.",
-    "B16-R4-r1 has now canonically chosen the model-fidelity axis, acceptance bars, and same-install lineage; the remaining UNKNOWN is the accepted R4 execution result, not experiment design.",
-    "Accepted B16 Model-4 evidence is not yet available; Monte Carlo, broader broker/execution portability, and HOLDOUT remain outside the current R4 contract.",
+    "B16-R4-r1 is now complete and accepted as R4_EXECUTION_FIDELITY_NOT_FALSIFIED; no tester-model fidelity UNKNOWN remains, while the persistent 2020 loss remains an explicit robustness limitation.",
+    "B16 Model4 evidence is now accepted for same-install execution fidelity; Monte Carlo, broader broker/install portability and HOLDOUT remain untested and require separate authority if they ever gain a direct consumer.",
     "KINT-001 remains OPEN and universal numeric Grade/Confidence mapping remains unratified."
   ],
-  "review_state": "AUTHOR_COMPLETE_REPAIR03_INTAKE_REVIEW_REQUIRED_BEFORE_INTEGRATION",
+  "review_state": "AUTHOR_COMPLETE_B16_R4_MILESTONE_REVIEW_REQUIRED_BEFORE_INTEGRATION",
   "negative_memory_owner": "knowledge/90_negative_knowledge/b16-b15-boss19-closed-paths.md",
   "duplicated_work_avoided": [
     "No paper corpus reread or new source intake.",
