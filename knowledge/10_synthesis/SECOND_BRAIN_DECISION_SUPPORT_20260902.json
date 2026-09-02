@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "artifact_type": "SECOND_BRAIN_DECISION_SUPPORT",
   "status": "RESEARCH_ONLY",
-  "canonical_base_sha": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+  "canonical_base_sha": "feb2143939b5ad1bbb8b3d0293ecf1fc25f45c4f",
   "as_of_date": "2026-09-02",
   "authority": {
     "may_recommend_tests": true,
@@ -13,41 +13,48 @@
     "may_claim_candidate_or_grade": false
   },
   "direct_consumers": [
-    "Boss19 P4/P5 interpretation after Repair03",
+    "Boss19 P4/P5 ROI and interpretation after Repair03",
     "B16 R4 execution-fidelity routing and PARK decision",
     "Future experiment workers avoiding closed negative paths"
   ],
   "evidence_cards": [
     {
-      "card_id": "SB-EVID-BOSS19-P4-REPAIR02-01",
-      "consumer": "Boss19 P4/P5 interpretation after Repair03",
+      "card_id": "SB-EVID-BOSS19-P4-REPAIR02-REPAIR03-01",
+      "consumer": "Boss19 P4/P5 ROI and interpretation after Repair03",
       "exact_canonical_owner": [
-        "docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md",        "_mt5_auto/p4b_boss19_regime/p4b_unit_export_repair02_result.json",
+        "docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md",
+        "docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR03_RESULT.md",
+        "_mt5_auto/p4b_boss19_regime/p4b_unit_export_repair03_result.json",
+        "PROJECT_STATE.md",
         "taskboards/active/P03.md"
       ],
-      "hypothesis_or_mechanism": "Source-bound unit attribution instrumentation; no strategy change.",
-      "what_was_tested": "Repair02 reran only H3-C03-MAIN after fixing tester-end-close admission and UTC freshness mechanics.",
+      "hypothesis_or_mechanism": "Source-bound unit attribution instrumentation lifecycle; Repair03 closes the Repair02 provenance defect without changing strategy semantics.",
+      "what_was_tested": "Repair02 established exact DEAL_POSITION_ID linkage but failed per-row magic provenance; Repair03 separated configured run magic from source DEAL_MAGIC and reran only H3-C03-MAIN.",
       "result": {
-        "classification": "BLOCKED(MAGIC_FIELD_NOT_SOURCE_BOUND)",
-        "evidence_type": "INSTRUMENTATION_FAILURE_NOT_STRATEGY_FAILURE",
-        "strategy_parity": {"pf": 4.39, "net": 4445.51, "trades": 113, "eqdd_pct": 13.34},
-        "unit_linkage": {"in": 113, "out": 113, "distinct_positions": 113, "realized_units": 113, "open": 0},
-        "linkage_basis": "EXACT_DEAL_POSITION_ID_ONE_IN_ONE_OUT"
+        "classification": "REPAIR02_PROVENANCE_BLOCKER_RESOLVED_BY_REPAIR03 / BROAD36_LOCKED_PENDING_ROI_GATE",
+        "evidence_type": "INSTRUMENTATION_PROVENANCE_CLOSURE_NOT_STRATEGY_VERDICT",
+        "repair02_historical": {"classification": "BLOCKED(MAGIC_FIELD_NOT_SOURCE_BOUND)", "pf": 4.39, "net": 4445.51, "trades": 113, "eqdd_pct": 13.34},
+        "repair03_current": {"classification": "PASS", "pf": 4.55, "net": 4506.82, "trades": 113, "eqdd_pct": 13.29, "in": 113, "out": 113, "distinct_positions": 113, "realized_units": 113, "open": 0},
+        "linkage_basis": "EXACT_DEAL_POSITION_ID_ONE_IN_ONE_OUT",
+        "configured_run_magic": 990001,
+        "source_deal_magic_values": [0, 990001],
+        "source_magic_provenance": "PER_DEAL_HISTORY_DEAL_MAGIC",
+        "environment_swap_delta": 61.31
       },
-      "mechanism_limit": "Position admission/linkage is source-supported, but exported per-row magic uses configured _0_Magic rather than source DEAL_MAGIC; the CSV cannot independently attest actual per-deal magic.",
-      "selection_hindsight_warning": "Do not use Repair02 to infer regime behavior, strategy quality, or P5 direction. Broad 36-cell export remains locked.",
+      "mechanism_limit": "Repair03 proves one-cell source provenance and exact position linkage only. It does not establish Boss19 regime behavior, broad-matrix attribution, strategy quality, or a P5 change direction.",
+      "selection_hindsight_warning": "Do not convert Repair03 provenance PASS into a strategy/regime PASS or use it to auto-run broad36. Broad36 remains locked pending the separate ROI gate.",
       "do_not_repeat": [
-        "Do not rerun the broad 36-cell source-bound export before Repair03 passes one-cell provenance acceptance.",
-        "Do not classify this blocker as a strategy loss.",
-        "Do not infer source DEAL_MAGIC from configured run identity."
+        "Do not rerun Repair03 H3-C03-MAIN merely to reconfirm source magic provenance.",
+        "Do not infer source DEAL_MAGIC from configured run identity; use the source-bound field directly.",
+        "Do not reinterpret the historical Repair02 defect as strategy failure.",
+        "Do not start broad36 without the canonical ROI gate."
       ],
       "next_admissible_test": {
-        "status": "PROSPECTIVE_REPAIR03_ONLY",
+        "status": "ROI_GATE_ONLY_BEFORE_BROAD36",
         "requirements": [
-          "Separate configured run identity from source per-deal DEAL_MAGIC.",
-          "Preserve exact DEAL_POSITION_ID ownership admission.",          "Update exporter/schema/builder/runner/tests consistently.",
-          "Obtain independent exact-head review before rerun.",
-          "Rerun only H3-C03-MAIN and require exact strategy parity, 113/113/113, and source-property provenance."
+          "Treat Repair03 as evidence-quality closure, not P4 interpretation.",
+          "Require the separate canonical ROI decision before broad 36-cell source-bound execution.",
+          "If broad36 is authorized, reuse the frozen P4 classifier/timeline and Repair03 source-bound instrumentation contract without parameter search or HOLDOUT spend."
         ]
       }
     },
@@ -154,28 +161,38 @@
     {
       "mechanism": "POSITION_ENGINE_DEPTH",
       "b16_evidence": "Depth is structural and context-specific; GBPUSD/H4 depth2 preserves aggregate sign but loses 2025 utility, while depth3 restores all-six-year positivity and closes the bounded depth question.",
-      "boss19_evidence": "NOT YET ADMISSIBLE FOR CROSS-EA STRATEGY COMPARISON because P4 unit provenance is still blocked at Repair02.",
-      "reuse_lesson": "Do not transfer a B16 depth rule into Boss19. Repair03/P4 must first produce admissible Boss19 mechanism evidence."
+      "boss19_evidence": "Repair03 makes one-cell unit provenance admissible, but no Boss19 depth mechanism is established because broad P4 unit attribution has not been executed/interpreted.",
+      "reuse_lesson": "Do not transfer a B16 depth rule into Boss19. Repair03 only restores trustworthy unit provenance; Boss19 mechanism claims still require admissible P4 evidence and interpretation."
     },
     {
       "mechanism": "FAILURE_CLASS_SEPARATION",
       "b16_evidence": "H08 BWD failure is accepted strategy evidence after mechanical acceptance.",
-      "boss19_evidence": "Repair02 is an instrumentation/provenance defect while strategy parity and DEAL_POSITION_ID linkage remain intact.",
+      "boss19_evidence": "Repair02 was a historical instrumentation/provenance failure; Repair03 resolved that defect while preserving non-swap execution identity. Neither event is a Boss19 strategy verdict.",
       "reuse_lesson": "Mechanical/instrumentation failure and strategy failure must remain separate evidence classes; neither can substitute for the other."
     },
     {
       "mechanism": "PARTICIPATION_AND_CONCENTRATION",
       "b16_evidence": "USDJPY exit-off children improve aggregate net/DD but collapse yearly closures and create very long-lived concentrated episodes; H05 also shrinks participation materially.",
-      "boss19_evidence": "UNKNOWN until source-bound P4 unit attribution is admissible.",
+      "boss19_evidence": "UNKNOWN at broad regime/unit level. Repair03 proves one-cell source provenance but does not provide broad participation or concentration attribution.",
       "reuse_lesson": "Headline PF/net/DD alone is insufficient when realized participation or holding concentration changes materially."
     }
   ],
   "decision_support": {
     "boss19_after_repair03": {
-      "if_repair03_passes": "Repair03 may restore one-cell source-provenance acceptance; Control Tower must still decide ROI before broad 36-cell export. P4 interpretation, not this knowledge pack, decides whether a P5 one-change hypothesis is justified.",
-      "if_repair03_fails": "Remain blocked on instrumentation/provenance; do not infer strategy or regime failure.",
+      "repair03_state": "PASS / RESEARCH_ONLY / BROAD36_LOCKED_PENDING_CONTROL_TOWER_ROI_GATE",
+      "evidence": [
+        "Configured run magic is separated from per-deal source DEAL_MAGIC.",
+        "H3-C03-MAIN reconciles 113 IN / 113 OUT / 113 source positions / 113 realized units / 0 open with exact DEAL_POSITION_ID sets.",
+        "Source DEAL_MAGIC values are [0,990001]; tester-forced closes are auditable as source magic 0.",
+        "Repair02-to-Repair03 non-swap execution fields are exact; broker swap +61.31 explains the report-economic drift and is environment evidence, not a strategy semantic change."
+      ],
+      "interpretation": "Repair03 closes the evidence-instrumentation defect only. It does not provide P4 regime interpretation or a strategy verdict.",
+      "current_gate": "BROAD36 remains locked pending a separate ROI decision.",
+      "if_roi_gate_allows_broad36": "Reuse the frozen P4 classifier/timeline and Repair03 source-bound instrumentation contract exactly; do not add parameter search, HOLDOUT, or a new causal hypothesis to the execution step.",
+      "if_roi_gate_declines": "Stop P4 expansion and retain Repair03 as durable evidence-quality closure; do not manufacture another experiment.",
       "p5_gate": "Exactly one logical change only after admissible P4 interpretation identifies a direct mechanism question, parent, expected benefit/cost, and falsifier."
-    },    "b16_park_vs_prospective_robustness": {
+    },
+    "b16_park_vs_prospective_robustness": {
       "evidence_supporting_park": [
         "R2 mechanism characterization is complete and already holds a PARK / MECHANISM_CHARACTERIZED working research verdict.",
         "GBPUSD/H4 H05 RSI optimization is exhausted and its only stable center is non-improving in utility/participation.",
@@ -196,12 +213,12 @@
     }
   },
   "knowledge_gaps": [
-    "Boss19 regime/mechanism interpretation remains UNKNOWN until Repair03 restores admissible one-cell provenance and Control Tower decides whether a broad source-bound rerun has direct ROI.",
+    "Boss19 source provenance is no longer the blocker. The remaining P4 UNKNOWN is whether broad36 has sufficient ROI to run and, if run, what the frozen classifier produces at unit/regime level.",
     "B16-R4-r1 has now canonically chosen the model-fidelity axis, acceptance bars, and same-install lineage; the remaining UNKNOWN is the accepted R4 execution result, not experiment design.",
     "Accepted B16 Model-4 evidence is not yet available; Monte Carlo, broader broker/execution portability, and HOLDOUT remain outside the current R4 contract.",
     "KINT-001 remains OPEN and universal numeric Grade/Confidence mapping remains unratified."
   ],
-  "review_state": "AUTONOMOUS_REANCHOR_REVIEW_REQUIRED_BEFORE_INTEGRATION",
+  "review_state": "AUTHOR_COMPLETE_REPAIR03_INTAKE_REVIEW_REQUIRED_BEFORE_INTEGRATION",
   "negative_memory_owner": "knowledge/90_negative_knowledge/b16-b15-boss19-closed-paths.md",
   "duplicated_work_avoided": [
     "No paper corpus reread or new source intake.",

@@ -2,10 +2,10 @@
 card_type: NEGATIVE_KNOWLEDGE
 status: RESEARCH_ONLY
 authority: RESEARCH_ONLY
-canonical_base_sha: 0dc2bb88ab34f931eca29b84d138caaa2ae9b8fd
+canonical_base_sha: feb2143939b5ad1bbb8b3d0293ecf1fc25f45c4f
 direct_consumers:
-  - Boss19 P4/P5 interpretation after Repair03
-  - Factory B16 PARK versus prospective robustness routing
+  - Boss19 P4/P5 ROI and interpretation after Repair03
+  - B16 R4 execution-fidelity routing and PARK decision
   - future experiment deduplication
 ---
 
@@ -13,19 +13,24 @@ direct_consumers:
 
 Purpose: preserve accepted negative or limiting evidence so later research does not spend runtime re-opening already answered questions. This file does not replace the canonical result owners and does not issue strategy verdicts.
 
-## Boss19 P4 Repair02 — instrumentation blocker, not strategy failure
+## Boss19 P4 Repair02 -> Repair03 -- provenance defect closed; broad36 still ROI-gated
 
-Canonical owner: `docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md`.
+Canonical owners: `docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md` and `docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR03_RESULT.md`.
 
-Accepted evidence: H3-C03-MAIN preserved PF 4.39 / net +4445.51 / 113 trades / EqDD 13.34% and reconciled 113 IN / 113 OUT / 113 realized units with exact `DEAL_POSITION_ID` linkage.
+Historical negative evidence: Repair02 reconciled 113 IN / 113 OUT / 113 realized units through exact `DEAL_POSITION_ID`, but per-row `magic` was configured `_0_Magic` rather than source `DEAL_MAGIC`. This was an instrumentation/provenance failure, not strategy failure.
 
-Negative/limiting finding: per-row exported `magic` is configured `_0_Magic`, not source `DEAL_MAGIC`. Repair02 is therefore `BLOCKED(MAGIC_FIELD_NOT_SOURCE_BOUND)`.
+Accepted closure evidence: Repair03 separates configured run magic `990001` from per-deal source magic read by `HistoryDealGetInteger(deal, DEAL_MAGIC)`. H3-C03-MAIN reconciles 113 IN / 113 OUT / 113 source positions / 113 realized units / 0 open; source magic values are `[0,990001]`, and the three tester-forced closes are auditable as source magic `0`.
+
+Environment limit: Repair02-to-Repair03 non-swap execution fields are exact. Broker swap changed by `+61.31`, exactly explaining net `4445.51 -> 4506.82`; this is environment economics, not a strategy semantic change.
+Current boundary: Repair03 is `PASS / RESEARCH_ONLY / BROAD36_LOCKED_PENDING_CONTROL_TOWER_ROI_GATE`. It closes the provenance blocker only; it does not create P4 regime interpretation or strategy verdict authority.
 
 Do not repeat:
-- do not rerun the broad 36-cell source-bound export before Repair03 passes the one-cell source-provenance gate;
+- do not rerun Repair03 H3-C03-MAIN merely to reconfirm the same source-provenance property;
 - do not infer per-deal source magic from configured run identity;
-- do not reinterpret this instrumentation defect as Boss19 strategy or regime failure.
-Reopen only with new admissible evidence: a prospective Repair03 that separates configured identity from source `DEAL_MAGIC`, preserves exact position ownership, passes independent exact-head review, and reruns only H3-C03-MAIN.
+- do not reinterpret the historical Repair02 instrumentation defect as Boss19 strategy or regime failure;
+- do not start broad36 automatically after Repair03 PASS.
+
+Next admissible continuation: the separate ROI gate. If broad36 is authorized, reuse the frozen P4 classifier/timeline and Repair03 source-bound instrumentation contract exactly; if ROI does not justify it, stop expansion rather than manufacture another experiment.
 
 ## B16 GBPUSD/H4 SELL H05 — RSI entry search exhausted
 
@@ -68,7 +73,7 @@ Do not repeat:
 - do not mine the same BWD window for another center;
 - do not treat 14/35 as a robustness finalist.
 
-Reopen only with new admissible evidence: a distinct prospective robustness contract using the accepted 14/30 parent as frozen reference, if Factory/Control Tower decides continuation has direct value.
+Continuation is already preregistered as `B16-R4-r1`: use the accepted 14/30 parent exactly and test only same-install Strategy Tester model fidelity on `D:\Meta 5`; do not invent another RSI/depth/exit axis, spend HOLDOUT, or bypass runtime ownership.
 ## B16 USDJPY/H1 exit-off paths — aggregate improvement is concentration-sensitive
 
 Canonical owner: `docs/research/B16_USDJPY_H1_EXIT_CONCENTRATION_DIAGNOSTIC.md`.
