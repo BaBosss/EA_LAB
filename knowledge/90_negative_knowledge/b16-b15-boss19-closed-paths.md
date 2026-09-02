@@ -2,9 +2,9 @@
 card_type: NEGATIVE_KNOWLEDGE
 status: RESEARCH_ONLY
 authority: RESEARCH_ONLY
-canonical_base_sha: c6e9458aa276504b29d1107df107744c74d4b9da
+canonical_base_sha: e62c7c6820b5d602be04f0da85a7ef2269a7cc35
 direct_consumers:
-  - Boss19 P4/P5 ROI and interpretation after Repair03
+  - Boss19 P4 prejoin/regime-join routing after accepted broad36 package
   - future B16 research routing after accepted R4 closeout
   - future experiment deduplication
 ---
@@ -13,20 +13,20 @@ direct_consumers:
 
 Purpose: preserve accepted negative or limiting evidence so later research does not spend runtime re-opening already answered questions. This file does not replace the canonical result owners and does not issue strategy verdicts.
 
-## Boss19 P4 Repair02 -> Repair03 -- provenance defect closed; broad36 still ROI-gated
+## Boss19 P4 Repair02 -> Repair03 -- provenance defect closed; broad36 package complete/reviewed
 
-Canonical owners: `docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md` and `docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR03_RESULT.md`.
+Canonical owners: `docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md`, `docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR03_RESULT.md`, `docs/research/BOSS19_P4_BROAD36_ROI_GATE_20260902.md`, and `docs/research/BOSS19_P4_BROAD36_SOURCE_BOUND_RESULT.md`.
 
 Historical negative evidence: Repair02 reconciled 113 IN / 113 OUT / 113 realized units through exact `DEAL_POSITION_ID`, but per-row `magic` was configured `_0_Magic` rather than source `DEAL_MAGIC`. This was an instrumentation/provenance failure, not strategy failure.
 
 Accepted closure evidence: Repair03 separates configured run magic `990001` from per-deal source magic read by `HistoryDealGetInteger(deal, DEAL_MAGIC)`. H3-C03-MAIN reconciles 113 IN / 113 OUT / 113 source positions / 113 realized units / 0 open; source magic values are `[0,990001]`, and the three tester-forced closes are auditable as source magic `0`.
 
 Environment limit: Repair02-to-Repair03 non-swap execution fields are exact. Broker swap changed by `+61.31`, exactly explaining net `4445.51 -> 4506.82`; this is environment economics, not a strategy semantic change.
-Current boundary: Repair03 is `PASS / RESEARCH_ONLY / BROAD36_LOCKED_PENDING_CONTROL_TOWER_ROI_GATE`. It closes the provenance blocker only; it does not create P4 regime interpretation or strategy verdict authority.
+Current boundary: Repair03 is `PASS / RESEARCH_ONLY`; broad36 execution/package are `ACCEPTED / REVIEWED / COMPLETE` at `ecd5c2b3af0791674a7cce18464e632750f37755` with 36/36 cells, 1,549 realized units, 0 open and 0 unknown-time. This closes evidence production only; deterministic prejoin/regime join is next and no P4 strategy interpretation authority exists yet.
 
 ## Boss19 P4 broad36 runner guard -- mechanical review blocker closed
 
-Canonical owners: `scripts/research/boss19_p4b/run_unit_export_cell.ps1` and `scripts/_test/run_p4b_unit_export_tests.ps1`; closure commit `2d333d367a93fa93c2e01c5055edbcca805463b2`.
+Canonical owners: `scripts/research/boss19_p4b/run_unit_export_cell.ps1`, `scripts/_test/run_p4b_unit_export_tests.ps1`, `docs/research/BOSS19_P4_BROAD36_ROI_GATE_20260902.md`, and `docs/research/BOSS19_P4_BROAD36_SOURCE_BOUND_RESULT.md`; closure commit `2d333d367a93fa93c2e01c5055edbcca805463b2`.
 
 Historical limiting finding: the first broad36 ROI-contract review found two real execution-precondition gaps: `unknown_time_unit_count` could pass through to PASS, and the runner did not pin all accepted Repair03 source/EX5/build-receipt/H3 identities before MT5 launch. These were harness/product-guard defects, not strategy evidence.
 
@@ -36,17 +36,17 @@ Do not repeat:
 - do not reopen these exact guard defects without new identity changes or a reproducible regression;
 - do not relax the unknown-time refusal to rescue a broad36 cell;
 - do not treat an identity/joinability refusal as Boss19 strategy failure;
-- do not infer that broad36 ROI is accepted merely because the runner is mechanically ready.
+- do not infer regime edge from runner readiness or from the accepted source-bound package.
 
-Current boundary: runner guard readiness is `PASS / REVIEWED / CANONICAL`; broad36 itself remains separately ROI-gated and no MT5 batch/P4 interpretation/HOLDOUT/optimization/Candidate/risk/deploy authority follows.
+Current boundary: runner guard readiness is `PASS / REVIEWED / CANONICAL`; broad36 execution/package are also complete/reviewed. The next dependency is deterministic prejoin/regime join against the frozen classifier timeline; no P4 interpretation, HOLDOUT, optimization, Candidate/Grade/KINT, risk/default, deployment or trading authority follows from the package itself.
 
 Do not repeat:
 - do not rerun Repair03 H3-C03-MAIN merely to reconfirm the same source-provenance property;
 - do not infer per-deal source magic from configured run identity;
 - do not reinterpret the historical Repair02 instrumentation defect as Boss19 strategy or regime failure;
-- do not start broad36 automatically after Repair03 PASS.
+- do not rerun the accepted broad36 batch merely to rediscover evidence.
 
-Next admissible continuation: the separate ROI gate. If broad36 is authorized, reuse the frozen P4 classifier/timeline and Repair03 source-bound instrumentation contract exactly; if ROI does not justify it, stop expansion rather than manufacture another experiment.
+Next admissible continuation: use the accepted frozen broad36 package as input to the separately authorized deterministic prejoin/regime join. Do not rerun broad36, spend HOLDOUT, optimize, or infer a strategy verdict before that consumer is accepted.
 
 ## B16 GBPUSD/H4 SELL H05 — RSI entry search exhausted
 

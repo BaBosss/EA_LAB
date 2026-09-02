@@ -1,10 +1,12 @@
 # Second Brain Milestone — Boss19 P4 Broad36 Runner Guard
 
-Status: **RESEARCH_ONLY / RUNNER_GUARD_CLOSED / BROAD36 ROI STILL SEPARATE**
+Status: **RESEARCH_ONLY / HISTORICAL RUNNER-GUARD MILESTONE / CURRENT ROUTING UPDATED AT `e62c7c6820b5d602be04f0da85a7ef2269a7cc35`**
 
 Canonical base: `c6e9458aa276504b29d1107df107744c74d4b9da`.
 Accepted guard closure: `2d333d367a93fa93c2e01c5055edbcca805463b2`.
-Direct consumers: Boss19 P4/P5 routing and future worker deduplication.
+Direct consumers: Boss19 P4 prejoin/regime-join routing and future worker deduplication.
+
+Current routing owners: `docs/research/BOSS19_P4_BROAD36_ROI_GATE_20260902.md`, `docs/research/BOSS19_P4_BROAD36_SOURCE_BOUND_RESULT.md`, and `PROJECT_STATE.md`. Broad36 package is `ACCEPTED / REVIEWED / COMPLETE`; deterministic prejoin/regime join is next.
 
 ## Evidence
 
@@ -24,7 +26,7 @@ Focused unit-export regression on current canonical = **53/53 PASS**. The indepe
 
 ## Interpretation
 
-The mechanical execution-precondition defect is closed. This removes one reason broad36 could not safely start, but it does not answer whether broad36 is worth running and does not create P4 regime evidence.
+The mechanical execution-precondition defect is closed. Canonical later accepted the execution gate and completed/reviewed the full broad36 source-bound package; neither event creates P4 regime evidence or a strategy verdict.
 
 Runner refusal remains an instrumentation/provenance event. It must not be promoted into a strategy failure.
 
@@ -32,15 +34,15 @@ Runner refusal remains an instrumentation/provenance event. It must not be promo
 
 - Keep Repair03 provenance PASS as accepted one-cell evidence.
 - Keep the runner-guard closure as durable pre-runtime evidence.
-- Keep broad36 locked until the separate ROI gate itself is accepted.
-- If ROI later passes, reuse the exact fail-closed runner and respect the existing primary MT5-lane1 ownership contract.
-- If ROI declines, do not execute broad36 merely because the runner is ready.
+- The broad36 execution gate and package are accepted; do not rerun either decision/evidence batch.
+- Consume only the frozen accepted package for deterministic prejoin/regime join against the frozen classifier timeline.
+- Keep P4 strategy interpretation locked until that deterministic consumer is accepted.
 
 ## Authority and unknowns
 
-No broad36 MT5 batch has been accepted from this milestone. No P4 classifier join has been executed. HOLDOUT remains UNSPENT; optimization remains NONE. Candidate/Grade/KINT/DEMO-LIVE/risk/default/deployment authority remains absent.
+Broad36 execution/package are now accepted/reviewed after this historical milestone, but no P4 classifier/regime join has been accepted yet. HOLDOUT remains UNSPENT; optimization remains NONE. Candidate/Grade/KINT/DEMO-LIVE/risk/default/deployment authority remains absent.
 
-The active UNKNOWN is the separate accepted ROI decision and, only after an authorized batch, the resulting frozen P4 regime/unit attribution.
+The active UNKNOWN is the deterministic prejoin/regime-join result and its later accepted P4 interpretation; package production/review is no longer UNKNOWN.
 
 ## Milestone scrutiny
 

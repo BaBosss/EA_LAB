@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "artifact_type": "SECOND_BRAIN_DECISION_SUPPORT",
   "status": "RESEARCH_ONLY",
-  "canonical_base_sha": "c6e9458aa276504b29d1107df107744c74d4b9da",
+  "canonical_base_sha": "e62c7c6820b5d602be04f0da85a7ef2269a7cc35",
   "as_of_date": "2026-09-02",
   "authority": {
     "may_recommend_tests": true,
@@ -13,25 +13,25 @@
     "may_claim_candidate_or_grade": false
   },
   "direct_consumers": [
-    "Boss19 P4/P5 ROI and interpretation after Repair03",
+    "Boss19 P4 prejoin/regime-join routing after accepted broad36 package",
     "Future B16 research routing after accepted R4 closeout",
     "Future experiment workers avoiding closed negative paths"
   ],
   "evidence_cards": [
     {
       "card_id": "SB-EVID-BOSS19-P4-REPAIR02-REPAIR03-01",
-      "consumer": "Boss19 P4/P5 ROI and interpretation after Repair03",
+      "consumer": "Boss19 P4 prejoin/regime-join routing after accepted broad36 package",
       "exact_canonical_owner": [
         "docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR02_RESULT.md",
         "docs/research/BOSS19_P4_UNIT_EXPORT_REPAIR03_RESULT.md",
         "_mt5_auto/p4b_boss19_regime/p4b_unit_export_repair03_result.json",
-        "PROJECT_STATE.md",
-        "taskboards/active/P03.md"
+        "docs/research/BOSS19_P4_BROAD36_ROI_GATE_20260902.md",
+        "docs/research/BOSS19_P4_BROAD36_SOURCE_BOUND_RESULT.md"
       ],
       "hypothesis_or_mechanism": "Source-bound unit attribution instrumentation lifecycle; Repair03 closes the Repair02 provenance defect without changing strategy semantics.",
       "what_was_tested": "Repair02 established exact DEAL_POSITION_ID linkage but failed per-row magic provenance; Repair03 separated configured run magic from source DEAL_MAGIC and reran only H3-C03-MAIN.",
       "result": {
-        "classification": "REPAIR02_PROVENANCE_BLOCKER_RESOLVED_BY_REPAIR03 / BROAD36_LOCKED_PENDING_ROI_GATE",
+        "classification": "REPAIR02_PROVENANCE_BLOCKER_RESOLVED_BY_REPAIR03 / BROAD36_PACKAGE_COMPLETE_REVIEWED / PREJOIN_NEXT",
         "evidence_type": "INSTRUMENTATION_PROVENANCE_CLOSURE_NOT_STRATEGY_VERDICT",
         "repair02_historical": {"classification": "BLOCKED(MAGIC_FIELD_NOT_SOURCE_BOUND)", "pf": 4.39, "net": 4445.51, "trades": 113, "eqdd_pct": 13.34},
         "repair03_current": {"classification": "PASS", "pf": 4.55, "net": 4506.82, "trades": 113, "eqdd_pct": 13.29, "in": 113, "out": 113, "distinct_positions": 113, "realized_units": 113, "open": 0},
@@ -42,19 +42,19 @@
         "environment_swap_delta": 61.31
       },
       "mechanism_limit": "Repair03 proves one-cell source provenance and exact position linkage only. It does not establish Boss19 regime behavior, broad-matrix attribution, strategy quality, or a P5 change direction.",
-      "selection_hindsight_warning": "Do not convert Repair03 provenance PASS into a strategy/regime PASS or use it to auto-run broad36. Broad36 remains locked pending the separate ROI gate.",
+      "selection_hindsight_warning": "Do not convert Repair03 provenance PASS, execution-gate PASS, or the accepted broad36 package into a strategy/regime PASS. P4 strategy interpretation remains locked until the deterministic prejoin/regime-join consumer completes.",
       "do_not_repeat": [
         "Do not rerun Repair03 H3-C03-MAIN merely to reconfirm source magic provenance.",
         "Do not infer source DEAL_MAGIC from configured run identity; use the source-bound field directly.",
         "Do not reinterpret the historical Repair02 defect as strategy failure.",
-        "Do not start broad36 without the canonical ROI gate."
+        "Do not rerun broad36 merely to rediscover accepted package evidence."
       ],
-      "next_admissible_test": {
-        "status": "ROI_GATE_ONLY_BEFORE_BROAD36",
+      "next_admissible_step": {
+        "status": "P4_PREJOIN_VALIDATION_NEXT",
         "requirements": [
-          "Treat Repair03 as evidence-quality closure, not P4 interpretation.",
-          "Require the separate canonical ROI decision before broad 36-cell source-bound execution.",
-          "If broad36 is authorized, reuse the frozen P4 classifier/timeline and Repair03 source-bound instrumentation contract without parameter search or HOLDOUT spend."
+          "Treat Repair03 and the accepted broad36 package as evidence-quality inputs, not P4 strategy interpretation.",
+          "Consume exact accepted package ecd5c2b3af0791674a7cce18464e632750f37755; do not rerun the completed 36-cell batch.",
+          "Run only the separately authorized deterministic prejoin/regime join against the frozen classifier timeline; HOLDOUT remains UNSPENT and optimization remains NONE."
         ]
       }
     },
@@ -63,25 +63,27 @@
       "consumer": "Boss19 P4/P5 routing and future worker deduplication",
       "exact_canonical_owner": [
         "scripts/research/boss19_p4b/run_unit_export_cell.ps1",
-        "scripts/_test/run_p4b_unit_export_tests.ps1"
+        "scripts/_test/run_p4b_unit_export_tests.ps1",
+        "docs/research/BOSS19_P4_BROAD36_ROI_GATE_20260902.md",
+        "docs/research/BOSS19_P4_BROAD36_SOURCE_BOUND_RESULT.md"
       ],
       "hypothesis_or_mechanism": "Fail-closed pre-runtime identity and joinability guards for prospective broad36 source-bound execution.",
       "what_was_tested": "Bounded runner repair pinned accepted Repair03 identities and refused unknown-time units before PASS; focused regression covered the repaired guard surface plus existing unit-linkage cages.",
       "result": {
-        "classification": "RUNNER_GUARD_CLOSED / BROAD36_STILL_ROI_GATED",
+        "classification": "RUNNER_GUARD_CLOSED / BROAD36_PACKAGE_COMPLETE_REVIEWED",
         "canonical_commit": "2d333d367a93fa93c2e01c5055edbcca805463b2",
         "focused_tests": "53/53 PASS",
         "unknown_time_fail_closed": true,
         "exact_identity_pins": ["H3_MANIFEST_SHA","DIAGNOSTIC_SOURCE_SHA","DIAGNOSTIC_EX5_SHA","BUILD_RECEIPT_ID","BUILD_RECEIPT_REGISTRY_SHA","SET_SHA"]
       },
-      "mechanism_limit": "This closes the mechanical guard defect only. It does not decide broad36 ROI, execute any MT5 cell, produce P4 regime attribution, or change strategy/risk/runtime authority.",
-      "selection_hindsight_warning": "Do not treat a mechanically hardened runner as evidence that broad36 must run or that Boss19 has regime edge.",
+      "mechanism_limit": "This closes the mechanical guard defect only. Broad36 execution/package are now accepted and reviewed, but they still do not produce P4 regime attribution or change strategy/risk authority.",
+      "selection_hindsight_warning": "Do not treat a mechanically hardened runner or accepted source-bound package as evidence that Boss19 has regime edge.",
       "do_not_repeat": [
         "Do not reopen exact identity pinning unless accepted identities genuinely change under a new bounded contract.",
         "Do not relax unknown_time_unit_count == 0 to rescue a cell.",
         "Do not interpret a future runner refusal as strategy failure."
       ],
-      "continuation_reference": "Broad36 remains separately ROI-gated. If ROI later passes, reuse this fail-closed runner exactly and still respect MT5-lane1 ownership; if ROI declines, do not execute merely because the runner is ready."
+      "continuation_reference": "Broad36 package is complete/reviewed; do not rerun it. The next consumer is deterministic prejoin/regime join against the frozen classifier timeline, with strategy interpretation still locked until that consumer is accepted."
     },
     {
       "card_id": "SB-EVID-B16-R2-STRUCTURE-01",
@@ -216,7 +218,7 @@
     {
       "mechanism": "POSITION_ENGINE_DEPTH",
       "b16_evidence": "Depth is structural and context-specific; GBPUSD/H4 depth2 preserves aggregate sign but loses 2025 utility, while depth3 restores all-six-year positivity and closes the bounded depth question.",
-      "boss19_evidence": "Repair03 makes one-cell unit provenance admissible, but no Boss19 depth mechanism is established because broad P4 unit attribution has not been executed/interpreted.",
+      "boss19_evidence": "The accepted broad36 package makes source-bound unit evidence available across all 36 cells, but no Boss19 depth mechanism is established because P4 regime attribution has not been interpreted.",
       "reuse_lesson": "Do not transfer a B16 depth rule into Boss19. Repair03 only restores trustworthy unit provenance; Boss19 mechanism claims still require admissible P4 evidence and interpretation."
     },
     {
@@ -228,24 +230,24 @@
     {
       "mechanism": "PARTICIPATION_AND_CONCENTRATION",
       "b16_evidence": "USDJPY exit-off children improve aggregate net/DD but collapse yearly closures and create very long-lived concentrated episodes; H05 also shrinks participation materially.",
-      "boss19_evidence": "UNKNOWN at broad regime/unit level. Repair03 proves one-cell source provenance but does not provide broad participation or concentration attribution.",
+      "boss19_evidence": "UNKNOWN at interpreted regime level. Broad36 now provides accepted source-bound units, but no accepted P4 regime attribution or concentration interpretation exists yet.",
       "reuse_lesson": "Headline PF/net/DD alone is insufficient when realized participation or holding concentration changes materially."
     }
   ],
   "decision_support": {
     "boss19_after_repair03": {
-      "repair03_state": "PASS / RESEARCH_ONLY / BROAD36_LOCKED_PENDING_CONTROL_TOWER_ROI_GATE",
+      "repair03_state": "PASS / RESEARCH_ONLY / BROAD36_PACKAGE_COMPLETE_REVIEWED",
       "evidence": [
         "Configured run magic is separated from per-deal source DEAL_MAGIC.",
         "H3-C03-MAIN reconciles 113 IN / 113 OUT / 113 source positions / 113 realized units / 0 open with exact DEAL_POSITION_ID sets.",
         "Source DEAL_MAGIC values are [0,990001]; tester-forced closes are auditable as source magic 0.",
         "Repair02-to-Repair03 non-swap execution fields are exact; broker swap +61.31 explains the report-economic drift and is environment evidence, not a strategy semantic change."
       ],
-      "interpretation": "Repair03 closes the evidence-instrumentation defect only. It does not provide P4 regime interpretation or a strategy verdict.",
+      "interpretation": "Repair03 closes the evidence-instrumentation defect; the accepted broad36 package closes source-bound execution. Neither provides P4 regime interpretation or a strategy verdict by itself.",
       "runner_guard_state": "PASS / REVIEWED / CANONICAL at 2d333d367a93fa93c2e01c5055edbcca805463b2; exact accepted identities and unknown-time joinability are fail-closed before runtime PASS.",
-      "current_gate": "BROAD36 remains locked pending a separate accepted ROI decision; runner mechanical guard closure does not itself unlock runtime.",
-      "if_roi_gate_allows_broad36": "Reuse the frozen P4 classifier/timeline and Repair03 source-bound instrumentation contract exactly; do not add parameter search, HOLDOUT, or a new causal hypothesis to the execution step.",
-      "if_roi_gate_declines": "Stop P4 expansion and retain Repair03 as durable evidence-quality closure; do not manufacture another experiment.",
+      "execution_gate_state": "PASS / PROCEED_BROAD36_SOURCE_BOUND_EXECUTION at 9067fcaa6a2f04fcfdfd7dec76d737524aae8a48.",
+      "broad36_package_state": "ACCEPTED / REVIEWED / COMPLETE at ecd5c2b3af0791674a7cce18464e632750f37755; 36/36 cells, 1,549 realized units, 0 open, 0 unknown-time.",
+      "current_gate": "P4_PREJOIN_VALIDATION_AND_REGIME_JOIN_NEXT. P4 strategy interpretation remains locked until that deterministic consumer is accepted.",
       "p5_gate": "Exactly one logical change only after admissible P4 interpretation identifies a direct mechanism question, parent, expected benefit/cost, and falsifier."
     },
     "b16_park_vs_prospective_robustness": {
@@ -271,12 +273,12 @@
     }
   },
   "knowledge_gaps": [
-    "Boss19 source provenance and the broad36 runner guard defect are no longer blockers. The remaining P4 UNKNOWN is whether the separate ROI gate is accepted and, only if executed, what the frozen classifier produces at unit/regime level.",
+    "Boss19 source provenance, runner guards, execution authorization, and broad36 package acceptance are no longer blockers. The remaining P4 UNKNOWN is the deterministic prejoin/regime-join result and its later accepted interpretation.",
     "B16-R4-r1 is now complete and accepted as R4_EXECUTION_FIDELITY_NOT_FALSIFIED; no tester-model fidelity UNKNOWN remains, while the persistent 2020 loss remains an explicit robustness limitation.",
     "B16 Model4 evidence is now accepted for same-install execution fidelity; Monte Carlo, broader broker/install portability and HOLDOUT remain untested and require separate authority if they ever gain a direct consumer.",
     "KINT-001 remains OPEN and universal numeric Grade/Confidence mapping remains unratified."
   ],
-  "review_state": "AUTHOR_COMPLETE_BOSS19_RUNNER_GUARD_INTAKE_REVIEW_REQUIRED_BEFORE_INTEGRATION",
+  "review_state": "AUTHOR_COMPLETE_CANONICAL_DRIFT_R2_REVIEW_REQUIRED_BEFORE_INTEGRATION",
   "negative_memory_owner": "knowledge/90_negative_knowledge/b16-b15-boss19-closed-paths.md",
   "duplicated_work_avoided": [
     "No paper corpus reread or new source intake.",
