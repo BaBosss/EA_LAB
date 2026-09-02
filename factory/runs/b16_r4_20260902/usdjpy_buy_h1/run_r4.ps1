@@ -1,6 +1,6 @@
 param([ValidateSet('CONTROL','MODEL4')][string]$Stage='CONTROL')
 $ErrorActionPreference='Stop'
-$wt='D:\EA_LAB_CONTROL\worktrees\chat2-b16-routing-0dc2bb88'
+$wt=(Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $root=Join-Path $wt 'factory\runs\b16_r4_20260902\usdjpy_buy_h1'
 $laneId='b16-r4-execfidelity-runtime-20260902'
 $terminal='D:\Meta 5\terminal64.exe'
