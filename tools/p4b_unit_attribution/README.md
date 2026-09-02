@@ -13,3 +13,13 @@ Forbidden substitutes for source identity: FIFO, temporal proximity, volume matc
 `BASKET` remains `UNAVAILABLE_NO_SOURCE_BASKET_ID` unless a later source-bound export carries a durable basket ID.
 
 The canonical audit output is `_mt5_auto/p4b_boss19_regime/h3_unit_suitability.json`; its checksum sidecar is stored beside it.
+
+## Broad36 pre-join readiness
+
+`validate_broad36_prejoin.py` is the deterministic read-only seam between the frozen Boss19 broad36 source-bound package and independent package review / deterministic P4 regime attribution.
+
+The primary frozen-package mode consumes the canonical package JSON, aggregate source-bound unit CSV, frozen H3 manifest, canonical execution result report, and canonical per-cell runner. It pins the accepted runtime head plus H3/set/source/EX5/build-receipt identities, verifies the exact package and aggregate hashes, requires exactly 36 unique H3 cells, reconciles every package cell to the H3 matrix, validates the full source-bound unit schema, and enforces unique `h3_run_id + source_deal_id` / source-position keys with complete entry/exit UTC timestamps.
+
+The earlier raw-evidence-root mode remains available only as a deeper forensic validator when all 36 per-cell directories are present. It rehashes each `report.htm`, `source.csv`, and `units.csv`, reconciles run/unit manifests, and refuses missing or duplicate run manifests. Because that mode does not itself bind the exact frozen package bytes, success is `PASS_FORENSIC_RAW_EVIDENCE_VALIDATION`, sets `prejoin_schema_ready=false`, and cannot satisfy canonical pre-join acceptance. Those raw per-cell manifest bytes are not tracked inside the frozen canonical package, so frozen-package PASS explicitly reports `raw_cell_manifest_rehash = NOT_AVAILABLE_IN_CANONICAL_FROZEN_PACKAGE` rather than claiming a rehash it cannot perform.
+
+Only frozen-package mode may emit `PASS_FROZEN_PACKAGE_PREJOIN_READINESS`. Independent package review remains mandatory before the package may enter the frozen P4 classifier timeline join. The validator does not interpret P&L, choose regimes, spend HOLDOUT, optimize, assign Candidate/Grade/KINT, change risk/defaults, deploy, attach runtime, or trade.
