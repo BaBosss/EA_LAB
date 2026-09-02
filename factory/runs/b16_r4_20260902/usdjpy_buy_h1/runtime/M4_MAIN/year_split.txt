@@ -1,0 +1,5 @@
+=== report.htm
+  FULL   trades= 273  PF= 1.38  net=   +187.32  balDD= 2.17%
+  2023   trades= 104  PF= 2.33  net=   +121.08  balDD= 0.90%
+  2024   trades=  90  PF= 1.19  net=    +44.29  balDD= 1.90%  <-- thin
+  2025   trades=  79  PF= 1.13  net=    +21.95  balDD= 1.52%  <-- thin

@@ -1,0 +1,5 @@
+stage,model,window,mechanical_eligible,pf,pf_state,net,trades,eqdd_pct,gross_profit,gross_loss,largest_closed_ticket_loss,cycles,max_depth,max_aggregate_lots,active_time_share,multi_entry_gp_share,truncated,leverage_match,bar_pass,report_sha256
+CONTROL,1,MAIN,True,1.54,FINITE,255.3,275,3.85,729.86,-474.56,-68.51,239,7,0.07,0.216654,0.744896,False,True,True,a329cc1fed28a98926ef38a07c05750c31d1f47dfd568dd31ac95d38fae64aa0
+CONTROL,1,BWD,True,1.13,FINITE,50.22,267,2.38,450.17,-399.95,-52.57,243,5,0.05,0.239127,0.681276,False,True,True,327e6c9be6ea8569275c7c9a066043ce22e6e6ce1e9590b5cb4b3714cc98bc2a
+MODEL4,4,MAIN,True,1.38,FINITE,187.32,273,3.91,678.37,-491.05,-68.68,238,7,0.07,0.216884,0.76476,False,True,True,03c00a3fe1c61b43aa6d613418dd0973908c83a628ca0c101902fcf2d9984117
+MODEL4,4,BWD,True,1.2,FINITE,74.73,262,2.29,448.34,-373.61,-52.49,236,5,0.05,0.241405,0.731543,False,True,True,7561815ec2fa094176fa1b324a723c96a16dac8f22e74e2411d1503ab0ba85ed

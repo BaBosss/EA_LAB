@@ -1,0 +1,5 @@
+=== report.htm
+  FULL   trades= 267  PF= 1.13  net=    +50.22  balDD= 1.65%
+  2020   trades=  98  PF= 0.76  net=    -40.91  balDD= 1.18%  <-- LOSING YEAR
+  2021   trades=  76  PF= 7.10  net=    +57.24  balDD= 0.09%
+  2022   trades=  93  PF= 1.15  net=    +33.89  balDD= 1.65%  <-- thin

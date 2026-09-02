@@ -1,0 +1,15 @@
+{
+    "schema":  "ea-lab-b16-r4-runtime-preflight/1",
+    "head_sha":  "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+    "runtime_lane":  "MT5-lane1",
+    "terminal":  "D:\\Meta 5\\terminal64.exe",
+    "data_dir":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355",
+    "primary_ex5_preexisting_sha256":  "",
+    "accepted_source_ex5":  "D:\\Meta 5b\\MQL5\\Experts\\EALabTpl\\Boss_16_KangarooGrid.ex5",
+    "accepted_ex5_sha256":  "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+    "primary_ex5_after_sha256":  "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+    "set_sha256":  "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+    "build_receipt":  "br-4fa94d22907b446ebc721d524bdfa5d1",
+    "provisioned_exact_binary":  true,
+    "holdout":  "UNSPENT"
+}

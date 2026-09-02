@@ -1,0 +1,31 @@
+{
+  "cell_count": 4,
+  "checks": [
+    "4 unique preregistered cells",
+    "mechanical+bars pass",
+    "same head/lane/set/ex5",
+    "report hashes match receipts",
+    "Optimization=0",
+    "Leverage=1:100",
+    "no HOLDOUT dates",
+    "12 year rows",
+    "analyzer deterministic"
+  ],
+  "classification": "R4_EXECUTION_FIDELITY_NOT_FALSIFIED",
+  "evidence_summary_sha256": "e260a42c959cd637f8556ab4e873953defaf55d381931316238bbd08e0e23faa",
+  "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+  "head_sha": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+  "holdout": "UNSPENT",
+  "report_sha256": [
+    "a329cc1fed28a98926ef38a07c05750c31d1f47dfd568dd31ac95d38fae64aa0",
+    "327e6c9be6ea8569275c7c9a066043ce22e6e6ce1e9590b5cb4b3714cc98bc2a",
+    "03c00a3fe1c61b43aa6d613418dd0973908c83a628ca0c101902fcf2d9984117",
+    "7561815ec2fa094176fa1b324a723c96a16dac8f22e74e2411d1503ab0ba85ed"
+  ],
+  "run_receipts_sha256": "f6add2ccb287949d7640d90960014e07370f8990783fd2d8b542cbbdffcbfdce",
+  "runtime_preflight_sha256": "ecfb8b24fbcd63720df2f5b1ac3224a21912a6cdf9d4b6c85d2c9f615320cd6a",
+  "schema": "ea-lab-b16-r4-evidence-integrity/1",
+  "set_sha256": "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+  "status": "PASS",
+  "year_row_count": 12
+}
