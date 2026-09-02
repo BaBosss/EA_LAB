@@ -79,6 +79,19 @@ A normal durable result package should contain, as applicable:
 
 The independent reviewer should recompute high-impact claims from these artifacts rather than ask the author to rerun MT5.
 
+### 6.1 Deterministic package-integrity helper
+
+After the package contents are finalized, `tools/reporting/report_package_integrity.py` can bind the declared artifacts into a deterministic integrity manifest:
+
+```text
+python tools/reporting/report_package_integrity.py build --spec <package_spec.json> --out <report_package_manifest.json>
+python tools/reporting/report_package_integrity.py validate --manifest <report_package_manifest.json>
+```
+
+The package spec declares `package_id`, `direct_consumer`, `authority`, optional metadata, and a non-empty artifact list with package-relative `path` plus `role` (and optional `note`). The helper records byte size and SHA-256 for every declared artifact, sorts paths deterministically, and refuses missing files, path escape, duplicates, self-reference, or later byte tampering.
+
+This is an integrity seam, not a second report schema or a research judge. It does **not** decide Report Ladder completeness, validate narrative claims, interpret results, assign Grade/verdict, authorize optimization/HOLDOUT, or grant runtime/risk/deployment authority. The independent reviewer still validates decision-critical claims against the machine evidence and canonical experiment contract.
+
 ## 7. Model ROI rule
 
 Use deterministic/local tools for extraction, joins, arithmetic, reconciliation, plotting and hashing. Use a model only when it produces a unique interpretation/review output with a direct downstream consumer.
