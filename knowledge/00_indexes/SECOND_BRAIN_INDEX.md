@@ -18,6 +18,7 @@
 - [Risk and execution knowledge](../07_risk_execution/)
 - [Decision support pack — Boss19 P4/P5 + B16 routing](../10_synthesis/SECOND_BRAIN_DECISION_SUPPORT_20260902.json)
 - [B16 R4 Second Brain milestone](../10_synthesis/SECOND_BRAIN_MILESTONE_B16_R4_20260902.md)
+- [Boss19 broad36 runner-guard milestone](../10_synthesis/SECOND_BRAIN_MILESTONE_BOSS19_RUNNER_GUARD_20260902.md)
 - [Closed-path negative memory — B16/B15/Boss19](../90_negative_knowledge/b16-b15-boss19-closed-paths.md)
 - [Negative knowledge](../90_negative_knowledge/)
 - [Synthesis](../10_synthesis/)

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "artifact_type": "SECOND_BRAIN_DECISION_SUPPORT",
   "status": "RESEARCH_ONLY",
-  "canonical_base_sha": "2d333d367a93fa93c2e01c5055edbcca805463b2",
+  "canonical_base_sha": "c6e9458aa276504b29d1107df107744c74d4b9da",
   "as_of_date": "2026-09-02",
   "authority": {
     "may_recommend_tests": true,
@@ -57,6 +57,31 @@
           "If broad36 is authorized, reuse the frozen P4 classifier/timeline and Repair03 source-bound instrumentation contract without parameter search or HOLDOUT spend."
         ]
       }
+    },
+    {
+      "card_id": "SB-EVID-BOSS19-P4-RUNNER-GUARD-01",
+      "consumer": "Boss19 P4/P5 routing and future worker deduplication",
+      "exact_canonical_owner": [
+        "scripts/research/boss19_p4b/run_unit_export_cell.ps1",
+        "scripts/_test/run_p4b_unit_export_tests.ps1"
+      ],
+      "hypothesis_or_mechanism": "Fail-closed pre-runtime identity and joinability guards for prospective broad36 source-bound execution.",
+      "what_was_tested": "Bounded runner repair pinned accepted Repair03 identities and refused unknown-time units before PASS; focused regression covered the repaired guard surface plus existing unit-linkage cages.",
+      "result": {
+        "classification": "RUNNER_GUARD_CLOSED / BROAD36_STILL_ROI_GATED",
+        "canonical_commit": "2d333d367a93fa93c2e01c5055edbcca805463b2",
+        "focused_tests": "53/53 PASS",
+        "unknown_time_fail_closed": true,
+        "exact_identity_pins": ["H3_MANIFEST_SHA","DIAGNOSTIC_SOURCE_SHA","DIAGNOSTIC_EX5_SHA","BUILD_RECEIPT_ID","BUILD_RECEIPT_REGISTRY_SHA","SET_SHA"]
+      },
+      "mechanism_limit": "This closes the mechanical guard defect only. It does not decide broad36 ROI, execute any MT5 cell, produce P4 regime attribution, or change strategy/risk/runtime authority.",
+      "selection_hindsight_warning": "Do not treat a mechanically hardened runner as evidence that broad36 must run or that Boss19 has regime edge.",
+      "do_not_repeat": [
+        "Do not reopen exact identity pinning unless accepted identities genuinely change under a new bounded contract.",
+        "Do not relax unknown_time_unit_count == 0 to rescue a cell.",
+        "Do not interpret a future runner refusal as strategy failure."
+      ],
+      "continuation_reference": "Broad36 remains separately ROI-gated. If ROI later passes, reuse this fail-closed runner exactly and still respect MT5-lane1 ownership; if ROI declines, do not execute merely because the runner is ready."
     },
     {
       "card_id": "SB-EVID-B16-R2-STRUCTURE-01",
@@ -217,7 +242,8 @@
         "Repair02-to-Repair03 non-swap execution fields are exact; broker swap +61.31 explains the report-economic drift and is environment evidence, not a strategy semantic change."
       ],
       "interpretation": "Repair03 closes the evidence-instrumentation defect only. It does not provide P4 regime interpretation or a strategy verdict.",
-      "current_gate": "BROAD36 remains locked pending a separate ROI decision.",
+      "runner_guard_state": "PASS / REVIEWED / CANONICAL at 2d333d367a93fa93c2e01c5055edbcca805463b2; exact accepted identities and unknown-time joinability are fail-closed before runtime PASS.",
+      "current_gate": "BROAD36 remains locked pending a separate accepted ROI decision; runner mechanical guard closure does not itself unlock runtime.",
       "if_roi_gate_allows_broad36": "Reuse the frozen P4 classifier/timeline and Repair03 source-bound instrumentation contract exactly; do not add parameter search, HOLDOUT, or a new causal hypothesis to the execution step.",
       "if_roi_gate_declines": "Stop P4 expansion and retain Repair03 as durable evidence-quality closure; do not manufacture another experiment.",
       "p5_gate": "Exactly one logical change only after admissible P4 interpretation identifies a direct mechanism question, parent, expected benefit/cost, and falsifier."
@@ -245,12 +271,12 @@
     }
   },
   "knowledge_gaps": [
-    "Boss19 source provenance is no longer the blocker. The remaining P4 UNKNOWN is whether broad36 has sufficient ROI to run and, if run, what the frozen classifier produces at unit/regime level.",
+    "Boss19 source provenance and the broad36 runner guard defect are no longer blockers. The remaining P4 UNKNOWN is whether the separate ROI gate is accepted and, only if executed, what the frozen classifier produces at unit/regime level.",
     "B16-R4-r1 is now complete and accepted as R4_EXECUTION_FIDELITY_NOT_FALSIFIED; no tester-model fidelity UNKNOWN remains, while the persistent 2020 loss remains an explicit robustness limitation.",
     "B16 Model4 evidence is now accepted for same-install execution fidelity; Monte Carlo, broader broker/install portability and HOLDOUT remain untested and require separate authority if they ever gain a direct consumer.",
     "KINT-001 remains OPEN and universal numeric Grade/Confidence mapping remains unratified."
   ],
-  "review_state": "AUTHOR_COMPLETE_B16_R4_MILESTONE_REVIEW_REQUIRED_BEFORE_INTEGRATION",
+  "review_state": "AUTHOR_COMPLETE_BOSS19_RUNNER_GUARD_INTAKE_REVIEW_REQUIRED_BEFORE_INTEGRATION",
   "negative_memory_owner": "knowledge/90_negative_knowledge/b16-b15-boss19-closed-paths.md",
   "duplicated_work_avoided": [
     "No paper corpus reread or new source intake.",

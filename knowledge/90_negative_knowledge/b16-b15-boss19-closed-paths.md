@@ -2,7 +2,7 @@
 card_type: NEGATIVE_KNOWLEDGE
 status: RESEARCH_ONLY
 authority: RESEARCH_ONLY
-canonical_base_sha: 2d333d367a93fa93c2e01c5055edbcca805463b2
+canonical_base_sha: c6e9458aa276504b29d1107df107744c74d4b9da
 direct_consumers:
   - Boss19 P4/P5 ROI and interpretation after Repair03
   - future B16 research routing after accepted R4 closeout
@@ -23,6 +23,22 @@ Accepted closure evidence: Repair03 separates configured run magic `990001` from
 
 Environment limit: Repair02-to-Repair03 non-swap execution fields are exact. Broker swap changed by `+61.31`, exactly explaining net `4445.51 -> 4506.82`; this is environment economics, not a strategy semantic change.
 Current boundary: Repair03 is `PASS / RESEARCH_ONLY / BROAD36_LOCKED_PENDING_CONTROL_TOWER_ROI_GATE`. It closes the provenance blocker only; it does not create P4 regime interpretation or strategy verdict authority.
+
+## Boss19 P4 broad36 runner guard -- mechanical review blocker closed
+
+Canonical owners: `scripts/research/boss19_p4b/run_unit_export_cell.ps1` and `scripts/_test/run_p4b_unit_export_tests.ps1`; closure commit `2d333d367a93fa93c2e01c5055edbcca805463b2`.
+
+Historical limiting finding: the first broad36 ROI-contract review found two real execution-precondition gaps: `unknown_time_unit_count` could pass through to PASS, and the runner did not pin all accepted Repair03 source/EX5/build-receipt/H3 identities before MT5 launch. These were harness/product-guard defects, not strategy evidence.
+
+Accepted closure evidence: the runner now pins frozen H3 manifest SHA, diagnostic source SHA, diagnostic EX5 SHA, exact build receipt, build-receipt-registry SHA, and set SHA; it refuses identity drift before runtime and refuses `unknown_time_unit_count != 0` before PASS. Focused unit-export regression = 53/53 PASS and the exact-head independent runner-guard review found no material issue.
+
+Do not repeat:
+- do not reopen these exact guard defects without new identity changes or a reproducible regression;
+- do not relax the unknown-time refusal to rescue a broad36 cell;
+- do not treat an identity/joinability refusal as Boss19 strategy failure;
+- do not infer that broad36 ROI is accepted merely because the runner is mechanically ready.
+
+Current boundary: runner guard readiness is `PASS / REVIEWED / CANONICAL`; broad36 itself remains separately ROI-gated and no MT5 batch/P4 interpretation/HOLDOUT/optimization/Candidate/risk/deploy authority follows.
 
 Do not repeat:
 - do not rerun Repair03 H3-C03-MAIN merely to reconfirm the same source-provenance property;
