@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "artifact_type": "SECOND_BRAIN_DECISION_SUPPORT",
   "status": "RESEARCH_ONLY",
-  "canonical_base_sha": "0dc2bb88ab34f931eca29b84d138caaa2ae9b8fd",
+  "canonical_base_sha": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
   "as_of_date": "2026-09-02",
   "authority": {
     "may_recommend_tests": true,
@@ -14,8 +14,8 @@
   },
   "direct_consumers": [
     "Boss19 P4/P5 interpretation after Repair03",
-    "Factory B16 PARK versus prospective robustness routing",
-    "Main Control Tower intake"
+    "B16 R4 execution-fidelity routing and PARK decision",
+    "Future experiment workers avoiding closed negative paths"
   ],
   "evidence_cards": [
     {
@@ -53,7 +53,7 @@
     },
     {
       "card_id": "SB-EVID-B16-R2-STRUCTURE-01",
-      "consumer": "Factory B16 PARK versus prospective robustness routing",
+      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
       "exact_canonical_owner": [
         "docs/factory/B16_H03_CONFIRMATION_RESULTS.md",
         "docs/research/B16_MECHANISM_CHARACTERIZATION_REPORT_20260830.md",
@@ -78,7 +78,7 @@
     },
     {
       "card_id": "SB-EVID-B16-H05-H07-01",
-      "consumer": "Factory B16 PARK versus prospective robustness routing",
+      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
       "exact_canonical_owner": [
         "docs/research/B16_GBP_SELL_H4_OPT01_RESULTS.md",
         "docs/research/B16_GBP_SELL_H4_DEPTH2_01_RESULTS.md",
@@ -100,9 +100,10 @@
       ]
     },    {
       "card_id": "SB-EVID-B16-H08-01",
-      "consumer": "Factory B16 PARK versus prospective robustness routing",
+      "consumer": "B16 R4 execution-fidelity routing and PARK decision",
       "exact_canonical_owner": [
         "docs/research/B16_USDJPY_BUY_H1_OPT01_RESULTS.md",
+        "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_CONTRACT.md",
         "PROJECT_STATE.md"
       ],
       "hypothesis_or_mechanism": "USDJPY/H1 BUY RSI-entry local MAIN plateau versus cross-window robustness.",
@@ -119,7 +120,7 @@
         "Use BWD to select another RSI pair.",
         "Treat 14/35 as a robustness finalist."
       ],
-      "continuation_reference": "Accepted USDJPY/H1 BUY 14/30 parent only, subject to a new prospective robustness contract and applicable runtime/authority gate."
+      "continuation_reference": "Accepted USDJPY/H1 BUY 14/30 parent is now frozen by preregistered B16-R4-r1; the sole allowed robustness dimension is same-install Strategy Tester model fidelity on D:\\Meta 5, with no parameter search."
     },
     {      "card_id": "SB-EVID-B15-COUNTBARS-01",
       "consumer": "Factory research deduplication and cross-EA mechanism routing",
@@ -182,25 +183,25 @@
         "USDJPY/H1 H08 selected 14/35 center failed BWD and the RSI search is CLOSED_NO_RETUNING.",
         "USDJPY exit-off aggregate gains are confounded by severe participation/holding concentration."
       ],
-      "evidence_supporting_a_new_prospective_robustness_contract": [
-        "Accepted USDJPY/H1 BUY 14/30 parent remains positive in both MAIN and BWD with materially higher participation than the rejected H08 center.",
-        "B16 R2 produced strong, source-supported structural mechanism knowledge that can define a non-adaptive robustness question without rediscovering entry/depth paths."
+      "r4_preregistered_basis": [
+        "Canonical B16-R4-r1 reuses the accepted USDJPY/H1 BUY 14/30 parent and freezes strategy, position-engine, exits, sizing, safety, and runtime inputs while testing only Strategy Tester model fidelity.",
+        "B16-R4-r1 explicitly preserves the closed H05/H06/H07/H08 boundaries, forbids parameter search and HOLDOUT, and requires one same-install D:\\Meta 5 lineage so historical cross-install numbers remain context only."
       ],
       "unknowns": [
-        "No stable optimization region has been established for the accepted USDJPY/H1 14/30 parent beyond the closed H08 entry lattice.",
-        "Model-4, Monte Carlo, broker/execution portability, and HOLDOUT evidence are not established by H08; applicable runtime/authority must be resolved prospectively.",
+        "B16-R4-r1 is preregistered but has not yet produced accepted execution-fidelity evidence; the result remains UNKNOWN until its mechanically valid same-install lineage completes.",
+        "Model-4 evidence is the active R4 question; Monte Carlo, broader broker/execution portability, and HOLDOUT remain unavailable and outside B16-R4-r1 authority.",
         "No canonical universal Grade/Confidence mapping exists; KINT-001 remains open."
       ],
-      "recommended_test_support": "If Factory chooses continuation, use the accepted USDJPY/H1 BUY 14/30 parent as the frozen reference. Open one prospective robustness question only; keep current exits/position engine/sizing/safety frozen, forbid RSI/depth/CountBars retuning, protect HOLDOUT, and let the Factory/Control Tower contract choose the exact robustness axis and runtime after authority checks."
+      "recommended_test_support": "Do not design another robustness axis. Reuse canonical B16-R4-r1 exactly: frozen USDJPY/H1 BUY 14/30 parent, same-install D:\\Meta 5 lineage, Model-1 MAIN/BWD controls followed by Model-4 MAIN/BWD only if controls pass, no parameter search, no HOLDOUT, and no runtime ownership bypass."
     }
   },
   "knowledge_gaps": [
     "Boss19 regime/mechanism interpretation remains UNKNOWN until Repair03 restores admissible one-cell provenance and Control Tower decides whether a broad source-bound rerun has direct ROI.",
-    "The exact B16 prospective robustness axis, acceptance bars, runtime lineage, and whether continuation is worth its cost are not canonically chosen; this pack must not invent them.",
-    "B16 Model-4, Monte Carlo, broker/execution portability, and HOLDOUT evidence remain unavailable for the continuation references discussed here.",
+    "B16-R4-r1 has now canonically chosen the model-fidelity axis, acceptance bars, and same-install lineage; the remaining UNKNOWN is the accepted R4 execution result, not experiment design.",
+    "Accepted B16 Model-4 evidence is not yet available; Monte Carlo, broader broker/execution portability, and HOLDOUT remain outside the current R4 contract.",
     "KINT-001 remains OPEN and universal numeric Grade/Confidence mapping remains unratified."
   ],
-  "review_state": "AUTHOR_COMPLETE_UNREVIEWED_SEND_TO_MAIN_CONTROL_TOWER",
+  "review_state": "AUTONOMOUS_REANCHOR_REVIEW_REQUIRED_BEFORE_INTEGRATION",
   "negative_memory_owner": "knowledge/90_negative_knowledge/b16-b15-boss19-closed-paths.md",
   "duplicated_work_avoided": [
     "No paper corpus reread or new source intake.",
