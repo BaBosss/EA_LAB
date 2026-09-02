@@ -61,8 +61,26 @@ def _normalize_rel_path(value: Any) -> str:
     return normalized
 
 
+def _is_reparse_component(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    is_junction = getattr(path, "is_junction", None)
+    if is_junction is not None and is_junction():
+        return True
+    try:
+        attrs = getattr(path.lstat(), "st_file_attributes", 0)
+    except FileNotFoundError:
+        return False
+    return bool(attrs & 0x400)  # Windows FILE_ATTRIBUTE_REPARSE_POINT
+
+
 def _resolve_artifact(base_dir: Path, rel_path: str) -> Path:
     candidate = base_dir.joinpath(*PurePosixPath(rel_path).parts)
+    current = base_dir
+    for part in PurePosixPath(rel_path).parts:
+        current = current / part
+        if _is_reparse_component(current):
+            raise Refusal(f"artifact reparse component is not allowed: {rel_path}")
     try:
         resolved = candidate.resolve(strict=True)
     except FileNotFoundError as exc:
@@ -73,8 +91,6 @@ def _resolve_artifact(base_dir: Path, rel_path: str) -> Path:
         raise Refusal(f"artifact escapes package directory: {rel_path}") from exc
     if not resolved.is_file():
         raise Refusal(f"artifact is not a regular file: {rel_path}")
-    if candidate.is_symlink():
-        raise Refusal(f"artifact symlink is not allowed: {rel_path}")
     return resolved
 
 

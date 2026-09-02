@@ -1,5 +1,7 @@
 import hashlib
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -14,6 +16,25 @@ import report_package_integrity as rpi
 
 
 class ReportPackageIntegrityTests(unittest.TestCase):
+    def make_dir_link(self, target: Path, link: Path) -> None:
+        if os.name == "nt":
+            result = subprocess.run(
+                ["cmd", "/d", "/c", "mklink", "/J", str(link), str(target)],
+                capture_output=True, text=True, check=False,
+            )
+            if result.returncode != 0:
+                self.skipTest(f"cannot create Windows junction: {result.stderr or result.stdout}")
+        else:
+            link.symlink_to(target, target_is_directory=True)
+
+    def remove_dir_link(self, link: Path) -> None:
+        if not link.exists() and not link.is_symlink():
+            return
+        if os.name == "nt":
+            subprocess.run(["cmd", "/d", "/c", "rmdir", str(link)], check=True)
+        else:
+            link.unlink()
+
     def make_package(self, root: Path) -> tuple[Path, Path]:
         (root / "machine").mkdir()
         (root / "visuals").mkdir()
@@ -157,6 +178,56 @@ class ReportPackageIntegrityTests(unittest.TestCase):
             with self.assertRaisesRegex(rpi.Refusal, "not a regular file"):
                 rpi.build_manifest(spec_path, manifest_path)
 
+
+    def test_leaf_symlink_branch_is_fail_closed_when_os_cannot_create_symlinks(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            spec_path, manifest_path = self.make_package(root)
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec["artifacts"] = [{"path": "machine/summary.json", "role": "alias"}]
+            spec_path.write_text(json.dumps(spec), encoding="utf-8")
+            original = rpi._is_reparse_component
+            rpi._is_reparse_component = lambda path: path.name == "summary.json"
+            try:
+                with self.assertRaisesRegex(rpi.Refusal, "reparse component"):
+                    rpi.build_manifest(spec_path, manifest_path)
+            finally:
+                rpi._is_reparse_component = original
+
+    def test_intermediate_directory_link_alias_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            spec_path, manifest_path = self.make_package(root)
+            link = root / "machine-alias"
+            self.make_dir_link(root / "machine", link)
+            try:
+                spec = json.loads(spec_path.read_text(encoding="utf-8"))
+                spec["artifacts"] = [{"path": "machine-alias/summary.json", "role": "alias"}]
+                spec_path.write_text(json.dumps(spec), encoding="utf-8")
+                with self.assertRaisesRegex(rpi.Refusal, "reparse component"):
+                    rpi.build_manifest(spec_path, manifest_path)
+            finally:
+                self.remove_dir_link(link)
+
+    def test_intermediate_directory_link_escape_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            root = base / "pkg"
+            root.mkdir()
+            outside = base / "outside"
+            outside.mkdir()
+            (outside / "secret.txt").write_text("outside", encoding="utf-8")
+            spec_path, manifest_path = self.make_package(root)
+            link = root / "escape"
+            self.make_dir_link(outside, link)
+            try:
+                spec = json.loads(spec_path.read_text(encoding="utf-8"))
+                spec["artifacts"] = [{"path": "escape/secret.txt", "role": "raw"}]
+                spec_path.write_text(json.dumps(spec), encoding="utf-8")
+                with self.assertRaisesRegex(rpi.Refusal, "reparse component"):
+                    rpi.build_manifest(spec_path, manifest_path)
+            finally:
+                self.remove_dir_link(link)
 
 if __name__ == "__main__":
     unittest.main()
