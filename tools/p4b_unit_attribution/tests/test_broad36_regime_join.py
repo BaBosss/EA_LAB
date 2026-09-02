@@ -160,6 +160,12 @@ class RegimeJoinTests(unittest.TestCase):
         with path.open("r", encoding="utf-8-sig", newline="") as fh:
             return list(csv.DictReader(fh))
 
+    def test_default_canonical_review_receipt_is_pinned(self) -> None:
+        self.assertTrue(joiner.DEFAULT_PACKAGE_REVIEW_RECEIPT.is_file())
+        self.assertEqual(sha256(joiner.DEFAULT_PACKAGE_REVIEW_RECEIPT), joiner.EXPECTED["package_review_receipt_sha256"])
+        text = joiner.DEFAULT_PACKAGE_REVIEW_RECEIPT.read_text(encoding="utf-8-sig", errors="replace")
+        self.assertIn(f"EXACT REVIEWED HEAD: `{joiner.EXPECTED["package_reviewed_head"]}`", text)
+
     def test_valid_asof_join_reconciles(self) -> None:
         expected = self.make_fixture()
         result = self.run_join(expected)

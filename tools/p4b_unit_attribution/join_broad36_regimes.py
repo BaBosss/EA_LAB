@@ -12,6 +12,9 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Iterable
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_PACKAGE_REVIEW_RECEIPT = REPO_ROOT / "docs" / "research" / "BOSS19_P4_BROAD36_PACKAGE_REVIEW_20260902.md"
+
 EXPECTED = {
     "package_sha256": "1330a822ed66149ba07d693d8732ced5b9e9ce66d15f34ce8d21ef70894b760c",
     "aggregate_units_sha256": "325b6d00709c48982a5981d2d7750a6a18e99f2d77ad52b89fa8d67b50c0b699",
@@ -657,7 +660,7 @@ def main() -> int:
     ap.add_argument("--timeline", type=Path, required=True)
     ap.add_argument("--timeline-manifest", type=Path, required=True)
     ap.add_argument("--prejoin-readiness", type=Path, required=True)
-    ap.add_argument("--package-review-receipt", type=Path, required=True)
+    ap.add_argument("--package-review-receipt", type=Path, default=DEFAULT_PACKAGE_REVIEW_RECEIPT)
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--created-utc", required=True)
     args = ap.parse_args()
