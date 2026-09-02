@@ -1,6 +1,6 @@
 {
-  "authority": "RESEARCH_EXECUTION_ROI_ONLY_NO_STRATEGY_VERDICT_NO_HOLDOUT_NO_OPTIMIZATION_NO_RUNTIME_RISK_DEPLOYMENT_TRADING",
-  "base_sha": "2802903da3d664ecec71a36eba2ce16d77455f8e",
+  "authority": "RESEARCH_EXECUTION_PRECONDITION_ONLY_NO_STRATEGY_VERDICT_NO_HOLDOUT_NO_OPTIMIZATION_NO_RUNTIME_RISK_DEPLOYMENT_TRADING",
+  "base_sha": "c6e9458aa276504b29d1107df107744c74d4b9da",
   "decision": {
     "action": "PROCEED_BROAD36_SOURCE_BOUND_EXECUTION",
     "does_not_unlock": [
@@ -18,8 +18,11 @@
     "postcondition": "FREEZE_AND_INDEPENDENTLY_REVIEW_SOURCE_BOUND_PACKAGE_BEFORE_ANY_REGIME_JOIN",
     "stop_rule": "STOP_ON_FIRST_FAIL_CLOSED_CELL_AND_PRESERVE_PARTIAL_EVIDENCE"
   },
+  "decision_basis": "ALL_PREREQUISITE_AND_PROVENANCE_CHECKS_PASS_RUNTIME_CONTEXT_IS_NOT_A_NUMERIC_GATE",
   "direct_consumer": "ORDER-RND-P4 source-bound broad36 execution before deterministic P4B attribution",
   "evidence": {
+    "existing_h3_unit_attribution_blocker_reason": "NO_DURABLE_REALIZED_DEAL_TO_OPENING_TIMESTAMP_LINKAGE_IN_H3_REPORT_BYTES",
+    "existing_h3_unit_attribution_status": "BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)",
     "fixed_matrix": {
       "row_count": 36,
       "unique_cell_count": 36
@@ -34,34 +37,48 @@
     "timeline_rows": 1242682,
     "timeline_sha256": "5f3a0f8d1accd25cb6cc08ad1c6e291aed6d238d620269102151016dbfaf569d"
   },
+  "execution_action": "PROCEED_BROAD36_SOURCE_BOUND_EXECUTION",
   "interpretation": {
-    "cost": "One serial Model-1 broad batch; normal observed-rate projections remain within a bounded LONG batch",
+    "cost": "One serial Model-1 broad batch; runtime figures are planning context only and are not a proceed/reject threshold",
     "downstream_skip": "Avoids rerunning P4A market capture/classifier timeline and avoids speculative subset mining",
-    "uncertainty": "Run time varies by symbol/environment; broker swap economics may drift and must be disclosed, not normalized away",
+    "uncertainty": "One Repair03 pilot plus heterogeneous H3 inter-completion intervals do not form a probabilistic runtime estimate; the >300 s incident split is a descriptive heuristic only; broker swap economics may drift and must be disclosed",
     "unique_output": "Source-bound realized DEAL evidence for the complete frozen 36-cell H3 matrix",
-    "value": "Closes the only remaining evidence-shape prerequisite before deterministic P4B regime attribution"
+    "value": "Fresh source-bound execution addresses the accepted H3 report-byte linkage blocker before deterministic P4B regime attribution"
   },
   "material_unknowns": [
-    "Exact broad36 wall-clock is unknown until executed; projections are evidence-backed planning estimates only",
+    "Exact broad36 wall-clock is unknown until executed; rounded projections are planning estimates only, not confidence bounds",
+    "The Repair03 rate is one sample and historical H3 intervals span heterogeneous cells, so neither is a homogeneous runtime population",
+    "The >300-second incident split is a descriptive heuristic selected for planning and has no acceptance or decision authority",
     "Repair03 pilot reuse is not assumed because the frozen contract does not explicitly authorize reuse in the broad package",
     "Basket attribution remains unavailable without a prospectively source-emitted basket ID"
   ],
-  "roi_decision": "PROCEED_BROAD36_SOURCE_BOUND_EXECUTION",
   "runtime_forecast": {
     "bottleneck": "D:\\Meta 5 serial Model-1 acceptance-critical lineage",
     "broad_runs_assumed": 36,
     "faster_mode_benefit": "NONE_WITHOUT_CHANGING_FROZEN_EXECUTION_CONTRACT",
+    "forecast_role": "INFORMATIONAL_PLANNING_ONLY_NOT_A_DECISION_CONDITION",
     "historical_completion_span_minutes": 70.1,
     "historical_incident_interval_count": 1,
-    "historical_normal_mean_projection_minutes": 47.3,
-    "historical_normal_median_projection_minutes": 36.8,
+    "historical_normal_interval_count": 34,
+    "incident_gap_threshold_role": "DESCRIPTIVE_HEURISTIC_ONLY_NOT_A_DECISION_OR_ACCEPTANCE_BAR",
+    "incident_gap_threshold_seconds": 300.0,
     "parallel_safety": "SERIAL_ONLY_ON_ACCEPTANCE_CRITICAL_INSTALL",
-    "pilot_rate_projection_minutes": 22.8,
     "pilot_reuse": "NOT_ASSUMED_CONTRACT_DOES_NOT_AUTHORIZE_REUSE",
+    "planning_band_minutes_nonprobabilistic": [
+      23,
+      47
+    ],
+    "planning_projection_minutes_rounded": {
+      "historical_interval_mean_rate": 47,
+      "historical_interval_median_rate": 37,
+      "single_pilot_rate": 23
+    },
+    "repair03_pilot_sample_count": 1,
     "repair03_pilot_seconds": 38.0,
-    "runtime_class": "LONG_TYPICAL_23_TO_48_MINUTES_WITH_INCIDENT_TAIL"
+    "runtime_class": "LONG_PLANNING_CONTEXT_NONPROBABILISTIC",
+    "sample_heterogeneity": "Inter-completion intervals span heterogeneous H3 cells and are planning context, not homogeneous per-cell runtime samples"
   },
-  "schema_version": "BOSS19_P4_BROAD36_ROI_GATE_V1",
+  "schema_version": "BOSS19_P4_BROAD36_EXECUTION_GATE_V2",
   "source_hashes": {
     "h3_matrix_manifest_sha256": "56e7b996a9c6836e5d7cedcbe3c9a212620b9fcc10c4fe3a750f44c8226cfefd",
     "h3_progress_sha256": "af12c3420e1cb7c907c39bde2a192a48eefa238dceac8bb0321a3a6c856db549",
