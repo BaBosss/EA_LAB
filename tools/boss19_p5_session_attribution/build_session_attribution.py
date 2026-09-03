@@ -21,7 +21,6 @@ NAMED_SESSIONS = ("ASIA", "LONDON", "LONDON_NY_OVERLAP", "NEW_YORK_ONLY")
 ALL_SESSIONS = NAMED_SESSIONS + ("OUTSIDE_DEFINED_SESSION",)
 WINDOWS = ("MAIN", "BWD")
 REVIEW_SCHEMA = "BOSS19_P5_SESSION_SEMANTICS_REVIEW_RECEIPT_V1"
-APPROVED_DIFFERENT_FAMILY_REVIEWERS = {"anthropic", "qwen"}
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_REL = "docs/research/BOSS19_P5_SESSION_CONTEXT_CONTRACT.md"
 CLASSIFIER_REL = "tools/boss19_p5_session_attribution/build_session_attribution.py"
@@ -73,9 +72,8 @@ def validate_review_receipt(path: Path, review_output: Path) -> dict:
         raise ValueError("semantics review receipt missing required fields")
     if receipt["schema_version"] != REVIEW_SCHEMA or receipt["verdict"] != "PASS":
         raise ValueError("semantics review receipt is not PASS")
-    reviewer_family = str(receipt["reviewer_family"]).lower()
-    if reviewer_family not in APPROVED_DIFFERENT_FAMILY_REVIEWERS:
-        raise ValueError("semantics reviewer is not an approved different-family reviewer")
+    if str(receipt["reviewer_family"]).lower() != "anthropic":
+        raise ValueError("semantics reviewer is not different-family")
     reviewed_head = str(receipt["reviewed_head"])
     if not re.fullmatch(r"[0-9a-f]{40}", reviewed_head):
         raise ValueError("invalid reviewed_head")
@@ -104,7 +102,7 @@ def validate_review_receipt(path: Path, review_output: Path) -> dict:
             raise ValueError(f"semantics review binding mismatch: {rel}")
     return {
         "receipt_sha256": sha256(path), "reviewed_head": reviewed_head,
-        "reviewer_family": reviewer_family, "reviewed_utc": receipt["reviewed_utc"],
+        "reviewer_family": receipt["reviewer_family"], "reviewed_utc": receipt["reviewed_utc"],
         "review_output_sha256": receipt["review_output_sha256"],
     }
 
