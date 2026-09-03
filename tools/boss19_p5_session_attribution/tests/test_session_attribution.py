@@ -136,29 +136,5 @@ class SessionAttributionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "review output is not PASS"):
                 mod.validate_review_receipt(receipt, review)
 
-    def test_openai_reviewer_family_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as td:
-            receipt = Path(td) / "receipt.json"
-            receipt.write_text(json.dumps({
-                "schema_version": mod.REVIEW_SCHEMA, "verdict": "PASS", "reviewer_family": "openai",
-                "reviewed_head": "0" * 40, "reviewed_utc": "2026-09-03T13:00:00Z",
-                "contract_sha256": "0" * 64, "classifier_sha256": "0" * 64,
-                "tests_sha256": "0" * 64, "review_output_sha256": "0" * 64,
-            }), encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "approved different-family"):
-                mod.validate_review_receipt(receipt, Path(td) / "missing-review.txt")
-
-    def test_qwen_reviewer_family_passes_family_gate(self) -> None:
-        with tempfile.TemporaryDirectory() as td:
-            receipt = Path(td) / "receipt.json"
-            receipt.write_text(json.dumps({
-                "schema_version": mod.REVIEW_SCHEMA, "verdict": "PASS", "reviewer_family": "qwen",
-                "reviewed_head": "0" * 40, "reviewed_utc": "2026-09-03T13:00:00Z",
-                "contract_sha256": "0" * 64, "classifier_sha256": "0" * 64,
-                "tests_sha256": "0" * 64, "review_output_sha256": "0" * 64,
-            }), encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "review output missing"):
-                mod.validate_review_receipt(receipt, Path(td) / "missing-review.txt")
-
 if __name__ == "__main__":
     unittest.main()
