@@ -35,6 +35,17 @@ Current Map design claims include:
 
 The current Black Tide Map page describes Black Tide Wave as the companion that reads current flow using `VWAP`, the `K2 ribbon`, `opening balance`, the `TPO profile`, and a `Degrees of Power` meter. The separate Black Tide Wave System TradingView page is protected/closed-source and provides little additional methodological detail in its public description.
 
+## SOURCE_CLAIM â€” current default session inputs
+
+The current TradingView public page metadata, captured on 2026-09-03 (transient HTML SHA-256 `c85efca3dc3645c03d0f9f6ab2163ce2bc37104711eee789a9857a20e7191f06`), exposes these Session Key Levels defaults:
+
+- `Session timezone = UTC`;
+- `Asia = 0000-0800`;
+- `London = 0700-1600`;
+- `New York = 1200-2100`.
+
+The Session Clock release note says it has no independent session windows and reads the hours/timezone from Session Key Levels; London/New York overlap is rendered as its own segment. The source does not define a separate Asia/London-overlap output, so any mutually exclusive tie-break for research attribution is an EA_LAB inference and must be preregistered rather than presented as a source claim.
+
 ## Evidence boundary
 
 These sources describe indicator architecture and intended visual interpretation. They do **not** provide controlled evidence that any module improves profitability, robustness, drawdown, or transfer across assets/timeframes.

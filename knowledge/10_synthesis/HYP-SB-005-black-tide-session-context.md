@@ -1,7 +1,7 @@
 ---
 object_type: TESTABLE_HYPOTHESIS_CANDIDATE
 hypothesis_id: HYP-SB-005
-status: SEMANTICS_REQUIRED
+status: PREREGISTERED_READY_FOR_ATTRIBUTION
 authority: RESEARCH_ONLY
 source_bundle: SRC-BLACK-TIDE-MAP-20260903
 canonical_base_sha: 1266795fc49ac88a18c6b93b0fab478718102648
@@ -14,7 +14,7 @@ canonical_base_sha: 1266795fc49ac88a18c6b93b0fab478718102648
 - Family: `SECOND_BRAIN_SESSION_CONTEXT`
 - Variant: `HYP-SB-005`
 - Parent research card: `knowledge/02_research_cards/RC-2026-BLACK-TIDE-MAP-001.md`
-- Current state: `UNTESTED_IN_EA_LAB / SEMANTICS_REQUIRED`
+- Current state: `PREREGISTERED / READY_FOR_DETERMINISTIC_ATTRIBUTION`
 - One logical change: add deterministic **entry-session context attribution** to frozen Boss19 outcome evidence; do not change entries, exits, sizing, risk, or classifier labels.
 - Direct consumer: Boss19 P5 gate after `NO_P5_READY_LEVER_FROM_CURRENT_P4_LABELS`.
 - HOLDOUT: `UNSPENT / NOT AUTHORIZED HERE`
@@ -32,6 +32,10 @@ Black Tide Map supplies that independent motivation by treating Asia, London, Ne
 Once exact session/timezone semantics are prospectively fixed, Boss19 realized outcomes may contain repeatable information by entry-session state that is not explained by the existing P4 classifier labels alone.
 
 This is a **context-attribution hypothesis**, not a session filter and not a strategy change.
+## Semantics resolution â€” 2026-09-03
+
+Owner-authorized preregistration is frozen in `docs/research/BOSS19_P5_SESSION_CONTEXT_CONTRACT.md`. The current Black Tide public metadata pins `UTC`, Asia `0000-0800`, London `0700-1600`, and New York `1200-2100`; the contract prospectively freezes a mutually exclusive later-open-wins partition with dedicated London/New York overlap. Accepted Boss19 `entry_utc` is reused exactly, so no new broker-time inference is introduced.
+
 ## Semantics required before any experiment
 
 Freeze all of the following before reading the session result:
@@ -84,9 +88,9 @@ The Black Tide publication supplies mechanism motivation only. It supplies no Bo
 
 ## Decision
 
-`SEMANTICS_REQUIRED / TESTABLE_HYPOTHESIS_CANDIDATE`
+`PREREGISTERED / READY_FOR_DETERMINISTIC_ATTRIBUTION`
 
-The next admissible action is a separate Boss19 P5 session-semantics/preregistration packet. Do not execute attribution until that packet fixes the required semantics and direct-consumer contract.
+The next admissible action is the deterministic attribution defined by `docs/research/BOSS19_P5_SESSION_CONTEXT_CONTRACT.md`; no MT5 rerun, strategy mutation, optimization, or HOLDOUT access is authorized.
 
 ## Authority boundary
 
