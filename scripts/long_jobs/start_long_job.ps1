@@ -98,13 +98,14 @@ Invoke-LjrAtomicWriteJson -Path (Join-Path $jobRoot 'job.json') -Object ([ordere
 })
 
 $worker = Join-Path $PSScriptRoot 'worker_long_job.ps1'
-$psi = @{
-    FilePath = 'powershell.exe'
-    ArgumentList = @('-NoProfile','-ExecutionPolicy','Bypass','-File',$worker,'-JobRoot',$jobRoot)
-    PassThru = $true
-    WindowStyle = 'Hidden'
-}
-$proc = Start-Process @psi
+$runnerArgs = @('-NoProfile','-ExecutionPolicy','Bypass','-File',$worker,'-JobRoot',$jobRoot)
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = Join-Path $PSHOME 'powershell.exe'
+$psi.Arguments = ConvertTo-LjrProcessArguments -ArgumentList $runnerArgs
+$psi.UseShellExecute = $false
+$psi.CreateNoWindow = $true
+$proc = [System.Diagnostics.Process]::Start($psi)
+if ($null -eq $proc) { throw 'failed to start long-job runner process' }
 
 try {
     $current = Get-Content -LiteralPath (Join-Path $jobRoot 'state.json') -Raw | ConvertFrom-Json

@@ -20,6 +20,7 @@ param(
     [string]$ReviewedHead,
     [string]$DirectConsumer,
     [string]$BlockerClass,
+    [string]$SupersedeOwnLaneId = '',
     [string]$ExpectedState,
     [string]$NewState,
     [int]$LockTimeoutSeconds = 5,
@@ -252,6 +253,17 @@ try {
         $lock=Enter-RegistryLock
         $records=@(Read-LaneRecords)
         if(@($records | Where-Object { $_.lane_id -ceq $LaneId }).Count -gt 0){ Throw-LaneError 'lane_exists' "lane already exists: $LaneId" }
+        $superseded=$null
+        if(-not [string]::IsNullOrWhiteSpace($SupersedeOwnLaneId)){
+            if($Command -cne 'Claim'){ Throw-LaneError 'supersede_check_refused' 'SupersedeOwnLaneId is valid only for Claim' }
+            if($SupersedeOwnLaneId -ceq $LaneId){ Throw-LaneError 'supersede_self' 'a lane cannot supersede itself' }
+            $oldMatches=@($records | Where-Object { $_.lane_id -ceq $SupersedeOwnLaneId })
+            if($oldMatches.Count -ne 1){ Throw-LaneError 'supersede_missing' "expected exactly one superseded lane: $SupersedeOwnLaneId" }
+            $superseded=$oldMatches[0]
+            if([string]$superseded.owner_chat -cne $OwnerChat){ Throw-LaneError 'supersede_foreign' 'superseded lane must belong to the same owner_chat' }
+            if([string]$superseded.state -ceq 'DONE'){ Throw-LaneError 'supersede_done' 'superseded lane is already DONE' }
+            if($ActiveWriterStates -contains [string]$superseded.state){ Throw-LaneError 'supersede_active' "refusing to supersede active lane state=$($superseded.state)" }
+        }
         $conflicts=@(New-ConflictList $records $LaneId $OwnerChat (-not $ReadOnly) $CriticalPaths $RuntimeLane)
         if($Command -ceq 'Check'){
             Write-Result ([pscustomobject]@{result=$(if($conflicts.Count -eq 0){'READY'}else{'WAITING_CONFLICT'});lane_id=$LaneId;conflicts=$conflicts})
@@ -261,7 +273,14 @@ try {
         $record=New-LaneRecord
         Test-LaneRecord $record '<new claim>'
         Write-LaneRecordAtomic $record
-        Write-Result ([pscustomobject]@{result='CLAIMED';lane_id=$LaneId;state=$State;head_sha=$HeadSha;writer=(-not $ReadOnly)})
+        if($null -ne $superseded){
+            $superseded.state='DONE'
+            $superseded | Add-Member -NotePropertyName superseded_by -NotePropertyValue $LaneId -Force
+            $superseded.updated_at=[DateTimeOffset]::UtcNow.ToString('o')
+            Test-LaneRecord $superseded '<superseded own lane>'
+            Write-LaneRecordAtomic $superseded
+        }
+        Write-Result ([pscustomobject]@{result='CLAIMED';lane_id=$LaneId;state=$State;head_sha=$HeadSha;writer=(-not $ReadOnly);superseded_lane=$(if($null -ne $superseded){[string]$superseded.lane_id}else{''})})
         exit 0
     }
     if($Command -ceq 'Transition'){

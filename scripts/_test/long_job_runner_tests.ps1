@@ -29,6 +29,14 @@ try {
     Assert ($s1.state -eq 'COMPLETE') "expected COMPLETE got $($s1.state)"
     $pass++; ReportCase 'complete job' 'PASS'
 
+    # Regression: Start-Process -ArgumentList used to split -JobRoot when its path contained spaces,
+    # leaving state.json stuck at STARTING after the detached runner died before opening the request.
+    $spaceJobsRoot = Join-Path $Root 'jobs with spaces'
+    & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -JobId 'job-space-root' -JobsRoot $spaceJobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
+    $spaceState = & $Wait -JobId 'job-space-root' -JobsRoot $spaceJobsRoot -PollSec 1 -MaxWaitSec 10 -Json | ConvertFrom-Json
+    Assert ($spaceState.state -eq 'COMPLETE') "space-path jobs root expected COMPLETE got $($spaceState.state)"
+    $pass++; ReportCase 'runner launch quotes jobs-root path with spaces' 'PASS'
+
     $child2 = Join-Path $Root 'child2.ps1'
     ChildScript $child2 'exit 7'
     & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$child2) -JobId 'job-002' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null

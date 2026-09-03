@@ -68,6 +68,21 @@ try {
     $x=Invoke-Tool (New-ClaimArgs $r8 'running' 'chat-2' $wtB 'lane-b' $head 'shared')
     Assert-True 'paused writer does not block another writer' ($x.ExitCode -eq 0) $x.Text
 
+    $r8s=New-Reg 'r8-supersede'; [void](Invoke-Tool (New-ClaimArgs $r8s 'old' 'chat-s' $repo $branchA $head 'old/path' 'PAUSED'))
+    $supArgs=New-ClaimArgs $r8s 'new' 'chat-s' $wtB 'lane-b' $head 'new/path'; $supArgs+=@('-SupersedeOwnLaneId','old')
+    $x=Invoke-Tool $supArgs; $oldRec=Get-Content -Raw (Join-Path $r8s 'old.json')|ConvertFrom-Json
+    Assert-True 'claim can close one explicit nonactive own lane' ($x.ExitCode -eq 0 -and $oldRec.state -eq 'DONE' -and $oldRec.superseded_by -eq 'new') ($x.Text+' / '+($oldRec|ConvertTo-Json -Compress))
+
+    $r8a=New-Reg 'r8-active'; [void](Invoke-Tool (New-ClaimArgs $r8a 'old' 'chat-s' $repo $branchA $head 'old/path'))
+    $supArgs=New-ClaimArgs $r8a 'new' 'chat-s' $wtB 'lane-b' $head 'new/path'; $supArgs+=@('-SupersedeOwnLaneId','old')
+    $x=Invoke-Tool $supArgs
+    Assert-True 'claim refuses to supersede an active own lane' ($x.ExitCode -ne 0 -and $x.Text -match 'supersede_active') $x.Text
+
+    $r8f=New-Reg 'r8-foreign'; [void](Invoke-Tool (New-ClaimArgs $r8f 'old' 'chat-a' $repo $branchA $head 'old/path' 'PAUSED'))
+    $supArgs=New-ClaimArgs $r8f 'new' 'chat-b' $wtB 'lane-b' $head 'new/path'; $supArgs+=@('-SupersedeOwnLaneId','old')
+    $x=Invoke-Tool $supArgs
+    Assert-True 'claim cannot supersede a foreign owner lane' ($x.ExitCode -ne 0 -and $x.Text -match 'supersede_foreign') $x.Text
+
     $r9=New-Reg 'r9'; [void](Invoke-Tool (New-ClaimArgs $r9 'lane' 'chat-1' $repo $branchA $head 'alpha'))
     $x=Invoke-Tool @('-Command','Transition','-RegistryRoot',$r9,'-LaneId','lane','-ExpectedState','PAUSED','-NewState','FROZEN','-Json')
     Assert-True 'stale expected state is refused' ($x.ExitCode -ne 0 -and $x.Text -match 'stale_state') $x.Text
