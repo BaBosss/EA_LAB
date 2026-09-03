@@ -46,6 +46,7 @@ import hypothesis_b14 as HB                        # noqa: E402
 import hypothesis_b15 as HB15                      # noqa: E402
 import hypothesis_b16 as HB16                      # noqa: E402
 import hypothesis_b17 as HB17                      # noqa: E402
+import hypothesis_b18 as HB18                      # noqa: E402
 import preset                                      # noqa: E402
 import registry                                    # noqa: E402
 import setfile                                     # noqa: E402
@@ -54,7 +55,7 @@ Refusal = preset.PresetRefusal
 
 HYPOTHESES_REL = 'factory/hypotheses.jsonl'
 BINDINGS_REL = 'factory/parameter_bindings.jsonl'
-PROVIDERS = (HB11, HB12, HB13, HB, HB15, HB16, HB17)
+PROVIDERS = (HB11, HB12, HB13, HB, HB15, HB16, HB17, HB18)
 
 # The role every unreachable input gets, and the surface that follows from it. Not a default in the
 # "we had to pick something" sense: an input the build cannot reach has no dial to show and no

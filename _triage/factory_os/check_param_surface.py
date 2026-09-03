@@ -53,6 +53,7 @@ import hypothesis_b14 as HB                       # noqa: E402
 import hypothesis_b15 as HB15                     # noqa: E402
 import hypothesis_b16 as HB16                     # noqa: E402
 import hypothesis_b17 as HB17                     # noqa: E402
+import hypothesis_b18 as HB18                     # noqa: E402
 import preset                                     # noqa: E402
 import registry                                   # noqa: E402
 
@@ -104,6 +105,7 @@ _GENERATOR_MODULES = (
     '_triage/factory_os/hypothesis_b15.py',
     '_triage/factory_os/hypothesis_b16.py',
     '_triage/factory_os/hypothesis_b17.py',
+    '_triage/factory_os/hypothesis_b18.py',
     '_triage/factory_os/activation.py',
     '_triage/factory_os/architecture.py',
     '_triage/factory_os/capability.py',
@@ -121,6 +123,8 @@ def _import_matches_source(src):
         ('_triage/factory_os/hypothesis_b15.py', HB15, ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
         ('_triage/factory_os/hypothesis_b16.py', HB16, ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
         ('_triage/factory_os/hypothesis_b17.py', HB17,
+         ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
+        ('_triage/factory_os/hypothesis_b18.py', HB18,
          ('HYPOTHESES','DECISIONS','LOCKED_SELECTORS')),
     )
     for rel, module, attrs in specs:
@@ -187,7 +191,7 @@ def check(worktree=False, source=None):
                      if row.get('classification', '').strip().upper() != 'COMPATIBILITY'}
 
     def surface_for_revision(rev):
-        providers = (HB11, HB12, HB13, HB, HB15, HB16, HB17)
+        providers = (HB11, HB12, HB13, HB, HB15, HB16, HB17, HB18)
         provider = next((p for p in providers if rev.startswith('B%d-' % list(p.HYPOTHESES.values())[0]['boss_family'])), None)
         if provider is None:
             raise preset.PresetRefusal('no decision provider for revision %s' % rev)

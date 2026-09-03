@@ -286,8 +286,26 @@ def _registration_specificity():
         problems.append('B17 Operator surface is not exactly 7 rows')
     if any(r.get('role') == 'TUNABLE' for r in b17):
         problems.append('B17 historical frozen registration exposes a TUNABLE row')
-    if any(h.get('boss_family') == 18 for h in hyps) or any(str(r.get('hypothesis_revision','')).startswith('B18-') for r in binds):
-        problems.append('B18 materialized without the missing semantic direction decision')
+    b18h = [h for h in hyps if h.get('revision_id') == 'B18-H01-r1']
+    b18 = [r for r in binds if r.get('hypothesis_revision') == 'B18-H01-r1']
+    if len(b18h) != 1:
+        problems.append('B18-H01-r1 hypothesis count is %d, expected 1' % len(b18h))
+    else:
+        h = b18h[0]; ref = h.get('preregistration_ref') or {}
+        if h.get('architecture_digest') != '7e3ca0ad95500570': problems.append('B18 digest drifted')
+        if ref.get('commit_oid') != '44adcd3fd02b8e5edc77842951f96b017e2a0d59': problems.append('B18 prereg commit drifted')
+        if ref.get('anchor') != 'FACTORY-B18-H01-PREREGISTRATION': problems.append('B18 prereg anchor drifted')
+        if h.get('status') != 'REGISTERED': problems.append('B18 lifecycle status is not REGISTERED')
+    if len(b18) != 147: problems.append('B18 binding count is %d, expected 147 logical rows' % len(b18))
+    counts18 = {}
+    for row in b18: counts18[row.get('role')] = counts18.get(row.get('role'), 0) + 1
+    expected18 = {'INACTIVE':102,'LOCKED':35,'SAFETY':7,'SIZING':1,'RUNTIME':2}
+    if counts18 != expected18: problems.append('B18 role counts %r != %r' % (counts18, expected18))
+    for name in ('_18_DirMode','_18_Direction'):
+        rows18 = [r for r in b18 if r.get('parameter') == name]
+        if len(rows18) != 1 or rows18[0].get('role') != 'LOCKED' or str(rows18[0].get('locked_value')) != '1':
+            problems.append('B18 %s is not exactly LOCKED=1' % name)
+    if any(r.get('role') == 'TUNABLE' for r in b18): problems.append('B18 fixed H01 exposes a TUNABLE row')
     return problems
 
 
@@ -316,7 +334,7 @@ def main(argv):
     if registration:
         print('  [BAD] B11-17/B18 registration specificity failed: %s' % '; '.join(registration))
         return 1
-    print('  [OK ] B11/B12/B13/B15/B16 fixed H01 registrations expose 0 tunables; B17 preserved; B18 remains unregistered')
+    print('  [OK ] B11/B12/B13/B15/B16/B18 fixed H01 registrations expose 0 tunables; B17 preserved')
 
     for label, fn, needle, miss in (
             ('a generator whose COMMITTED bytes are not the ones python imported',
