@@ -60,7 +60,7 @@ def _git_blob(reviewed_head: str, rel: str) -> bytes:
     return proc.stdout
 
 
-def validate_review_receipt(path: Path) -> dict:
+def validate_review_receipt(path: Path, review_output: Path) -> dict:
     if not path.is_file():
         raise ValueError("semantics review receipt missing")
     receipt = json.loads(path.read_text(encoding="utf-8"))
@@ -80,6 +80,17 @@ def validate_review_receipt(path: Path) -> dict:
     parse_z(str(receipt["reviewed_utc"]))
     if not re.fullmatch(r"[0-9a-f]{64}", str(receipt["review_output_sha256"])):
         raise ValueError("invalid review_output_sha256")
+    if not review_output.is_file():
+        raise ValueError("semantics review output missing")
+    if sha256(review_output) != str(receipt["review_output_sha256"]):
+        raise ValueError("semantics review output hash mismatch")
+    review_text = review_output.read_text(encoding="utf-8", errors="strict")
+    if "VERDICT: PASS" not in review_text:
+        raise ValueError("semantics review output is not PASS")
+    if f"REVIEWED_HEAD: {reviewed_head}" not in review_text:
+        raise ValueError("semantics review output head mismatch")
+    if "ATTRIBUTION_EXECUTION_AUTHORIZED: YES" not in review_text:
+        raise ValueError("semantics review output does not authorize attribution")
     bindings = ((CONTRACT_REL, "contract_sha256"), (CLASSIFIER_REL, "classifier_sha256"), (TESTS_REL, "tests_sha256"))
     for rel, field in bindings:
         expected = str(receipt[field])
@@ -316,9 +327,9 @@ def dump_json(path: Path, obj: dict) -> None:
     path.write_text(json.dumps(obj, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
-def run(input_path: Path, out_dir: Path, created_utc: str, review_receipt: Path) -> dict:
+def run(input_path: Path, out_dir: Path, created_utc: str, review_receipt: Path, review_output: Path) -> dict:
     parse_z(created_utc)
-    review = validate_review_receipt(review_receipt)
+    review = validate_review_receipt(review_receipt, review_output)
     source = load_rows(input_path)
     validate_rows(source)
     rows = enrich(source, created_utc)
@@ -405,8 +416,9 @@ def main() -> int:
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--created-utc", required=True)
     ap.add_argument("--review-receipt", type=Path, required=True)
+    ap.add_argument("--review-output", type=Path, required=True)
     args = ap.parse_args()
-    package = run(args.input, args.out_dir, args.created_utc, args.review_receipt)
+    package = run(args.input, args.out_dir, args.created_utc, args.review_receipt, args.review_output)
     print(json.dumps({"status": package["status"], "decision": package["decision"], "candidates": package["candidates"]}, sort_keys=True))
     return 0
 

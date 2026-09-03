@@ -43,9 +43,9 @@ All intervals are half-open. Exact 07:00, 12:00, 16:00, and 21:00 timestamps bel
 
 The causal order is mandatory:
 
-`freeze contract + classifier + fixtures -> independent different-family semantics review -> review receipt -> open outcome-bearing input -> classify -> aggregate -> interpret`.
+`freeze contract + classifier + fixtures -> independent different-family semantics review -> review receipt + bound review output -> open outcome-bearing input -> classify -> aggregate -> interpret`.
 
-Before the review receipt validates, the canonical runner must fail closed **before opening the real input file**. Any outcome-bearing session output produced before a valid review receipt is `INADMISSIBLE_PRE_REVIEW_EXECUTION`; it must be quarantined without interpretation and cannot be reused as evidence even if later bytes happen to match.
+Before the review receipt and its external review output validate, the canonical runner must fail closed **before opening the real input file**. Any outcome-bearing session output produced before a valid review receipt is `INADMISSIBLE_PRE_REVIEW_EXECUTION`; it must be quarantined without interpretation and cannot be reused as evidence even if later bytes happen to match.
 
 Session settings, timezone/DST mode, overlap precedence, boundaries, aggregation views, and falsifier cannot be changed after any session outcome is seen. A semantic change after review creates a new reviewed-head requirement and invalidates the prior receipt.
 
@@ -83,14 +83,14 @@ Do not rank multiple candidates by PF, net, DD, participation, or any post-resul
 Any identity mismatch, duplicate/missing assignment, malformed timestamp, HOLDOUT crossing, review-receipt mismatch, or P&L reconciliation failure is mechanical `BLOCKED(...)`, not strategy evidence. Do not rescue a falsified/ambiguous result by changing hours, timezone, DST mode, overlap precedence, exit-time labels, session combinations, exclusions, or other Black Tide modules.
 ## 8. Semantics review receipt and mechanical acceptance
 
-The real-input runner requires a machine-readable `BOSS19_P5_SESSION_SEMANTICS_REVIEW_RECEIPT_V1` produced only after an independent different-family review returns `PASS` on one frozen semantic HEAD. The receipt binds `reviewed_head`, `reviewer_family`, `reviewed_utc`, exact SHA-256 of this contract, classifier source, classifier tests, and the external review output. The runner verifies those hashes against the reviewed Git commit before opening the outcome-bearing CSV.
+The real-input runner requires a machine-readable `BOSS19_P5_SESSION_SEMANTICS_REVIEW_RECEIPT_V1` produced only after an independent different-family review returns `PASS` on one frozen semantic HEAD, plus the exact external review output file. The receipt binds `reviewed_head`, `reviewer_family`, `reviewed_utc`, exact SHA-256 of this contract, classifier source, classifier tests, and that review output. Before opening the outcome-bearing CSV, the runner verifies the Git-bound semantic blobs, hashes the supplied review output against the receipt, and requires that output to state `VERDICT: PASS`, the same `REVIEWED_HEAD`, and `ATTRIBUTION_EXECUTION_AUTHORIZED: YES`.
 
 Mechanical acceptance requires all of the following:
 
 - semantics receipt `PASS`, different-family reviewer, and exact reviewed-blob binding PASS;
 - exact accepted input SHA-256, package SHA-256, 1,549 unique DEAL keys, and `+17718.78` net reconciliation;
 - zero HOLDOUT/2026 rows, malformed required timestamps, duplicate DEAL keys, missing assignments, or unknown session states;
-- fixture tests covering every exact boundary, malformed timestamps, fixed-UTC/DST invariance, single-year and single-symbol concentration, outside-session non-candidacy, and review-receipt fail-closed behavior;
+- fixture tests covering every exact boundary, malformed timestamps, fixed-UTC/DST invariance, single-year and single-symbol concentration, outside-session non-candidacy, review-receipt fail-closed behavior, and review-output hash/authorization mismatch;
 - two builds from identical input, review receipt, and fixed `created_utc` reproduce all machine outputs byte-identically.
 
 Any failure above is `BLOCKED(A_PRODUCT_DEFECT|B_HARNESS_TEST|C_ENVIRONMENT_DEPENDENCY|D_EXECUTION_INCOMPLETE)` as applicable and carries no session/strategy interpretation.

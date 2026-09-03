@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import tempfile
@@ -91,7 +92,7 @@ class SessionAttributionTests(unittest.TestCase):
             missing_receipt = Path(td) / "missing.json"
             missing_input = Path(td) / "also-missing.csv"
             with self.assertRaisesRegex(ValueError, "semantics review receipt missing"):
-                mod.run(missing_input, Path(td) / "out", "2026-09-03T13:00:00Z", missing_receipt)
+                mod.run(missing_input, Path(td) / "out", "2026-09-03T13:00:00Z", missing_receipt, Path(td) / "missing-review.txt")
 
     def test_nonpass_review_receipt_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -103,8 +104,37 @@ class SessionAttributionTests(unittest.TestCase):
                 "tests_sha256": "0" * 64, "review_output_sha256": "0" * 64,
             }), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "not PASS"):
-                mod.validate_review_receipt(receipt)
+                mod.validate_review_receipt(receipt, Path(td) / "missing-review.txt")
 
+
+    def test_review_output_hash_mismatch_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            review = Path(td) / "review.txt"
+            review.write_text("VERDICT: PASS\nREVIEWED_HEAD: " + "0" * 40 + "\nATTRIBUTION_EXECUTION_AUTHORIZED: YES\n", encoding="utf-8")
+            receipt = Path(td) / "receipt.json"
+            receipt.write_text(json.dumps({
+                "schema_version": mod.REVIEW_SCHEMA, "verdict": "PASS", "reviewer_family": "anthropic",
+                "reviewed_head": "0" * 40, "reviewed_utc": "2026-09-03T13:00:00Z",
+                "contract_sha256": "0" * 64, "classifier_sha256": "0" * 64,
+                "tests_sha256": "0" * 64, "review_output_sha256": "1" * 64,
+            }), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "review output hash mismatch"):
+                mod.validate_review_receipt(receipt, review)
+
+    def test_review_output_must_authorize_attribution(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            review = Path(td) / "review.txt"
+            review.write_text("VERDICT: BLOCKED\nREVIEWED_HEAD: " + "0" * 40 + "\nATTRIBUTION_EXECUTION_AUTHORIZED: NO\n", encoding="utf-8")
+            digest = hashlib.sha256(review.read_bytes()).hexdigest()
+            receipt = Path(td) / "receipt.json"
+            receipt.write_text(json.dumps({
+                "schema_version": mod.REVIEW_SCHEMA, "verdict": "PASS", "reviewer_family": "anthropic",
+                "reviewed_head": "0" * 40, "reviewed_utc": "2026-09-03T13:00:00Z",
+                "contract_sha256": "0" * 64, "classifier_sha256": "0" * 64,
+                "tests_sha256": "0" * 64, "review_output_sha256": digest,
+            }), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "review output is not PASS"):
+                mod.validate_review_receipt(receipt, review)
 
 if __name__ == "__main__":
     unittest.main()
