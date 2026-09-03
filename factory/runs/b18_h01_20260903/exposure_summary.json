@@ -1,0 +1,53 @@
+{
+  "schema": "B18_H01_EXPOSURE_V1",
+  "configured": {
+    "stack_mode": "STACK_GRID_AGAINST (92)",
+    "configured_max_positions": 5,
+    "spacing_rule": "1.0 x current ATR per add; ATR is recomputed per decision",
+    "configured_max_step_intervals": 4,
+    "lot_progression": "PROG_NONE (50)",
+    "first_lot": 0.01,
+    "lot_ladder_L0_L4": [
+      0.01,
+      0.01,
+      0.01,
+      0.01,
+      0.01
+    ],
+    "configured_max_total_lots": 0.05,
+    "RC_MaxLot": 0.2,
+    "static_total_grid_span_atr": "UNAVAILABLE_DYNAMIC_ATR"
+  },
+  "observed": {
+    "MAIN": {
+      "max_concurrent_positions": 3,
+      "max_total_lots": 0.03,
+      "max_observed_level": 2,
+      "entry_count_by_level": {
+        "0": 412,
+        "1": 959,
+        "2": 260
+      },
+      "basket_count_flat_to_flat": 412,
+      "active_months": 36,
+      "active_month_share": 1.0,
+      "ending_active_positions": 0,
+      "ending_active_lots": 0.0
+    },
+    "BWD": {
+      "max_concurrent_positions": 3,
+      "max_total_lots": 0.03,
+      "max_observed_level": 2,
+      "entry_count_by_level": {
+        "0": 391,
+        "1": 969,
+        "2": 223
+      },
+      "basket_count_flat_to_flat": 391,
+      "active_months": 36,
+      "active_month_share": 1.0,
+      "ending_active_positions": 0,
+      "ending_active_lots": 0.0
+    }
+  }
+}
