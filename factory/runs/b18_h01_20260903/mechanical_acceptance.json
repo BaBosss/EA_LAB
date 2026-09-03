@@ -1,0 +1,16 @@
+{
+  "schema": "B18_H01_MECHANICAL_ACCEPTANCE_V1",
+  "status": "PASS",
+  "eligible_cells": 2,
+  "expected_cells": 2,
+  "same_install": true,
+  "full_surface_159_of_159": true,
+  "exact_build_identity": true,
+  "exact_config_identity": true,
+  "exact_symbol": true,
+  "leverage_verified": true,
+  "truncated_cells": 0,
+  "optimization": 0,
+  "holdout": "UNSPENT_FORBIDDEN",
+  "mtime_caveat": "New worktree checkout mtimes are later than the stamped EX5. Exact source SHA, EX5 SHA, set SHA, and build receipt match; no rerun was performed."
+}

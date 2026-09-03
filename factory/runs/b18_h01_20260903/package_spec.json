@@ -1,0 +1,108 @@
+{
+  "package_id": "B18-H01-FIXED-BASELINE-20260903",
+  "direct_consumer": "Independent review and canonical B18 H01 evidence closeout",
+  "authority": "NON_AUTHORITATIVE_SIDECAR",
+  "metadata": {
+    "canonical_source_sha": "64b5fcb37cfe59e05166b18de4e567dd02c01b6d",
+    "holdout": "UNSPENT_FORBIDDEN",
+    "optimization": "NONE"
+  },
+  "artifacts": [
+    {
+      "path": "B18_H01_r1.set",
+      "role": "frozen_config"
+    },
+    {
+      "path": "build_evidence_package.py",
+      "role": "deterministic_analysis"
+    },
+    {
+      "path": "build_receipt.jsonl",
+      "role": "build_identity"
+    },
+    {
+      "path": "build_visuals.py",
+      "role": "deterministic_analysis"
+    },
+    {
+      "path": "BWD/leverage_check.json",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "BWD/report.htm",
+      "role": "raw_evidence"
+    },
+    {
+      "path": "BWD/tester.ini",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "BWD/truncation_check.json",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "EVIDENCE_NOTES.md",
+      "role": "evidence_note"
+    },
+    {
+      "path": "exposure_summary.json",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "MAIN/leverage_check.json",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "MAIN/report.htm",
+      "role": "raw_evidence"
+    },
+    {
+      "path": "MAIN/tester.ini",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "MAIN/truncation_check.json",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "mechanical_acceptance.json",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "run_receipts.jsonl",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "summary.json",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "tester_prep.json",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "validate_result.py",
+      "role": "deterministic_analysis"
+    },
+    {
+      "path": "visuals/dd_window_scatter.svg",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "visuals/participation_heatmap.svg",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "visuals/pf_symbol_tf_heatmap.svg",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "visuals/pf_vs_participation.svg",
+      "role": "machine_evidence"
+    },
+    {
+      "path": "year_split.csv",
+      "role": "machine_evidence"
+    }
+  ]
+}

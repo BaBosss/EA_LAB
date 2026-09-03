@@ -1,0 +1,21 @@
+{
+  "schema": "b18_h01_tester_prep/1",
+  "canonical_sha": "64b5fcb37cfe59e05166b18de4e567dd02c01b6d",
+  "registration_commit": "a016faa9bc0f02ef421d778be49a3cd57f81de52",
+  "package_commit": "848f35f9304b62134a6995b83689ff497da822ec",
+  "semantic_anchor": "e62c7c6820b5d602be04f0da85a7ef2269a7cc35",
+  "install": "D:\\Meta 5",
+  "data_dir": "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355",
+  "expert": "EALabTpl\\Boss_18_JumStoch",
+  "source_sha256": "0307d5b133a2dc6fba8f894c9dd4ad40341e9e6ec16efbf5f3652655cb10b997",
+  "ex5_sha256": "f66101bc54cd167ec5fa3bcfb6b5192a326413c2c1d6cf5c256fa7dee71ec8d0",
+  "build_receipt": "br-d03f750716bd4f5d8b4630d0e9d3d03b",
+  "build_receipt_registry": "D:\\EA_LAB_CONTROL\\handoffs\\B18_H01_BUILD_RECEIPT_a016faa9.jsonl",
+  "build_receipt_registry_sha256": "1b47a2d9d20b0cec96672ed5021d994c344e8f8f48cc0e2c4eb72a31acd848c1",
+  "set_sha256": "67973adaf57211858f8bb615c4a73864adc03fd31e6ad0d16f6a044a8882a1c1",
+  "model": 1,
+  "symbol": "XAUUSD",
+  "period": "H1",
+  "optimization": 0,
+  "holdout": "UNSPENT_FORBIDDEN"
+}
