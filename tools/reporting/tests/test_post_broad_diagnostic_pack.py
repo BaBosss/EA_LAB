@@ -56,8 +56,8 @@ class PackTests(unittest.TestCase):
             {'cell_id':'H3-C02-BWD','index':3,'window':'BWD','symbol':'EURUSD','tf':'H1','realized_unit_count':0,'report_trades':0},
             {'cell_id':'H3-C02-MAIN','index':4,'window':'MAIN','symbol':'EURUSD','tf':'H1','realized_unit_count':2,'report_trades':2},
         ]
-        source_pkg={'aggregate_units_sha256':sha(units_path),'cell_count':len(cells),'cells':cells}
-        regime_pkg={'aggregate_units_sha256':sha(units_path),'output_sha256':{'regime_attribution_detail.csv':sha(detail_path)}}
+        source_pkg={'aggregate_units_sha256':sha(units_path),'holdout':'UNSPENT','cell_count':len(cells),'cells':cells}
+        regime_pkg={'aggregate_units_sha256':sha(units_path),'holdout':'UNSPENT','output_sha256':{'regime_attribution_detail.csv':sha(detail_path)}}
         source_path=self.root/'source_package.json'; regime_path=self.root/'regime_package.json'
         source_path.write_text(json.dumps(source_pkg),encoding='utf-8'); regime_path.write_text(json.dumps(regime_pkg),encoding='utf-8')
         return units_path,source_path,detail_path,regime_path
@@ -116,6 +116,24 @@ class PackTests(unittest.TestCase):
         data['cells'][0]['realized_unit_count']=3
         source.write_text(json.dumps(data),encoding='utf-8')
         with self.assertRaisesRegex(MOD.Refusal,'cell count mismatch'):
+            MOD.build(args)
+
+
+    def test_refuses_non_unspent_holdout_metadata(self):
+        args=self.args(); regime=Path(args.regime_package); data=json.loads(regime.read_text())
+        data['holdout']='SPENT'; regime.write_text(json.dumps(data),encoding='utf-8')
+        with self.assertRaisesRegex(MOD.Refusal,'HOLDOUT must be UNSPENT'):
+            MOD.build(args)
+
+    def test_refuses_holdout_detail_row_even_when_receipt_is_updated(self):
+        args=self.args(); detail=Path(args.regime_detail)
+        with detail.open(encoding='utf-8',newline='') as fh:
+            rows=list(csv.DictReader(fh))
+        fields=list(rows[0]); rows[0]['window']='HOLDOUT'; write_csv(detail,fields,rows)
+        regime=Path(args.regime_package); data=json.loads(regime.read_text())
+        data['output_sha256']['regime_attribution_detail.csv']=sha(detail)
+        regime.write_text(json.dumps(data),encoding='utf-8')
+        with self.assertRaisesRegex(MOD.Refusal,'HOLDOUT rows are not allowed'):
             MOD.build(args)
 
 

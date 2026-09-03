@@ -121,12 +121,18 @@ def reconcile(units: list[dict[str, str]], detail: list[dict[str, str]], source_
         raise Refusal("source package aggregate_units_sha256 does not match units bytes")
     if regime_pkg.get("aggregate_units_sha256") != units_sha:
         raise Refusal("regime package aggregate_units_sha256 does not match units bytes")
+    if source_pkg.get("holdout") != "UNSPENT" or regime_pkg.get("holdout") != "UNSPENT":
+        raise Refusal("HOLDOUT must be UNSPENT for post-broad diagnostics")
+    if any((row.get("window") or "").upper() == "HOLDOUT" for row in detail):
+        raise Refusal("HOLDOUT rows are not allowed in post-broad diagnostics")
     output_sha = regime_pkg.get("output_sha256")
     if not isinstance(output_sha, dict) or output_sha.get("regime_attribution_detail.csv") != detail_sha:
         raise Refusal("regime package does not bind exact regime detail bytes")
     cells = source_pkg.get("cells")
     if not isinstance(cells, list) or source_pkg.get("cell_count") != len(cells):
         raise Refusal("source package cell_count/cells mismatch")
+    if any(str(cell.get("window", "")).upper() == "HOLDOUT" for cell in cells if isinstance(cell, dict)):
+        raise Refusal("HOLDOUT cells are not allowed in post-broad diagnostics")
     cell_map: dict[str, dict[str, Any]] = {}
     for cell in cells:
         if not isinstance(cell, dict) or not cell.get("cell_id"):

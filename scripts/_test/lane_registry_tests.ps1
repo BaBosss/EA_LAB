@@ -83,6 +83,11 @@ try {
     $x=Invoke-Tool $supArgs
     Assert-True 'claim cannot supersede a foreign owner lane' ($x.ExitCode -ne 0 -and $x.Text -match 'supersede_foreign') $x.Text
 
+    $r8r=New-Reg 'r8-ready'; [void](Invoke-Tool (New-ClaimArgs $r8r 'old' 'chat-s' $repo $branchA $head 'old/path' 'READY'))
+    $supArgs=New-ClaimArgs $r8r 'new' 'chat-s' $wtB 'lane-b' $head 'new/path'; $supArgs+=@('-SupersedeOwnLaneId','old')
+    $x=Invoke-Tool $supArgs
+    Assert-True 'claim refuses supersede when READY to DONE is not a legal transition' ($x.ExitCode -ne 0 -and $x.Text -match 'supersede_illegal_transition') $x.Text
+
     $r9=New-Reg 'r9'; [void](Invoke-Tool (New-ClaimArgs $r9 'lane' 'chat-1' $repo $branchA $head 'alpha'))
     $x=Invoke-Tool @('-Command','Transition','-RegistryRoot',$r9,'-LaneId','lane','-ExpectedState','PAUSED','-NewState','FROZEN','-Json')
     Assert-True 'stale expected state is refused' ($x.ExitCode -ne 0 -and $x.Text -match 'stale_state') $x.Text

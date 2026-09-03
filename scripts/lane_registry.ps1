@@ -263,6 +263,8 @@ try {
             if([string]$superseded.owner_chat -cne $OwnerChat){ Throw-LaneError 'supersede_foreign' 'superseded lane must belong to the same owner_chat' }
             if([string]$superseded.state -ceq 'DONE'){ Throw-LaneError 'supersede_done' 'superseded lane is already DONE' }
             if($ActiveWriterStates -contains [string]$superseded.state){ Throw-LaneError 'supersede_active' "refusing to supersede active lane state=$($superseded.state)" }
+            $supersededState=[string]$superseded.state
+            if($Transitions[$supersededState] -notcontains 'DONE'){ Throw-LaneError 'supersede_illegal_transition' "supersede requires a legal $supersededState -> DONE transition" }
         }
         $conflicts=@(New-ConflictList $records $LaneId $OwnerChat (-not $ReadOnly) $CriticalPaths $RuntimeLane)
         if($Command -ceq 'Check'){
