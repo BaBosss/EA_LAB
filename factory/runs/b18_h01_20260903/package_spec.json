@@ -77,6 +77,10 @@
       "role": "machine_evidence"
     },
     {
+      "path": "tester_prep.json",
+      "role": "machine_evidence"
+    },
+    {
       "path": "validate_result.py",
       "role": "deterministic_analysis"
     },

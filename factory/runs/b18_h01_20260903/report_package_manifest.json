@@ -103,10 +103,16 @@
       "size_bytes": 4794
     },
     {
+      "path": "tester_prep.json",
+      "role": "machine_evidence",
+      "sha256": "2937a9e14986722b659723a7d0c8cef88d35436ff44063a47b187d2856f706db",
+      "size_bytes": 1100
+    },
+    {
       "path": "validate_result.py",
       "role": "deterministic_analysis",
-      "sha256": "e185f1c229c4923330240680b3b04f2c8b9a36510814ba0ed19c771b92e1da27",
-      "size_bytes": 4161
+      "sha256": "79455ac6364beecf25e516beb4608568b96aa05e92e1bcde3171397044fafec4",
+      "size_bytes": 4698
     },
     {
       "path": "visuals/dd_window_scatter.svg",

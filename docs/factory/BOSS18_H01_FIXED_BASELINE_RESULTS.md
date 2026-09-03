@@ -103,6 +103,6 @@ R1 classification is therefore `ISOLATED_PULSE`: there is current-window positiv
 Package root: `factory/runs/b18_h01_20260903/`.
 Machine summary: `summary.json`; calendar split: `year_split.csv`; exposure: `exposure_summary.json`; run receipts: `run_receipts.jsonl`; mechanical gate: `mechanical_acceptance.json`.
 Raw source-bound tester evidence is preserved under `MAIN/` and `BWD/`, together with leverage/truncation sidecars and exact tester INI files.
-Package integrity manifest: `report_package_manifest.json`, SHA256 `02475fb3b7082166ef72d8840d4e6ce09bae20aeac02d498a75e053e16384b75`, 23 declared artifacts.
+Package integrity manifest: `report_package_manifest.json`, SHA256 `0971feeb7ef1e0b6b9ea55982cdb5416a84db92bf164dc17c7e58758de1d91af`, 24 declared artifacts, including the pre-run `tester_prep.json` identity receipt.
 
 Evidence, interpretation and routing above are intentionally separate. A valid negative BWD result is retained as evidence and was not used as a search surface.

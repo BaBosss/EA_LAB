@@ -71,4 +71,10 @@ for window in ("MAIN", "BWD"):
             f"{window} observed exposure")
     require(obs["active_months"] == 36 and obs["ending_active_positions"] == 0,
             f"{window} participation/flat end")
+prep = json.loads((PKG / "tester_prep.json").read_text(encoding="utf-8-sig"))
+require(prep["install"] == r"D:\Meta 5", "tester prep install")
+require(prep["canonical_sha"] == "64b5fcb37cfe59e05166b18de4e567dd02c01b6d", "tester prep canonical")
+require(prep["ex5_sha256"] == EX5_SHA and prep["set_sha256"] == SET_SHA, "tester prep hashes")
+require(prep["build_receipt"] == BUILD_RECEIPT, "tester prep receipt")
+require(prep["model"] == 1 and prep["optimization"] == 0 and prep["holdout"] == "UNSPENT_FORBIDDEN", "tester prep boundaries")
 print("B18_H01_RESULT_VALIDATION=PASS")
