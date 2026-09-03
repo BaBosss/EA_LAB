@@ -1,0 +1,61 @@
+{
+  "schema": "ea-lab-r2-evidence/1",
+  "hypothesis_id": "HYP-B15-EDGE-PORT-02",
+  "canonical_base_sha": "ff8b8200f8f789c46bc6f852a8985fc9594127da",
+  "intervention": "_15_EdgeTrigger=true -> false",
+  "authority": "RESEARCH_ONLY",
+  "homes": {
+    "AUDUSD_H4": {
+      "PARENT": {
+        "MAIN": {
+          "pf": 0.88,
+          "net": -75.3,
+          "eqdd_pct": 1.37,
+          "trades": 216,
+          "quality": "100%",
+          "report_sha256": "3a4a67ffc09bf666d47134a05b5ece1bdf2583e04b98b1c725b330a71a268175"
+        },
+        "BWD": {
+          "pf": 0.96,
+          "net": -28.7,
+          "eqdd_pct": 1.53,
+          "trades": 214,
+          "quality": "99%",
+          "report_sha256": "e5b1b8ba856b9eef5bbd7b1edb5767926c0d273fe59a47d8fd47bf3235361403"
+        }
+      },
+      "CHILD": {
+        "MAIN": {
+          "pf": 0.82,
+          "net": -185.01,
+          "eqdd_pct": 2.39,
+          "trades": 334,
+          "quality": "100%",
+          "report_sha256": "56b41d68a13668fdc7ae55027da138dd85c5b16dc49ec9df5488fbd6938fa418"
+        },
+        "BWD": {
+          "pf": 0.94,
+          "net": -76.91,
+          "eqdd_pct": 1.94,
+          "trades": 337,
+          "quality": "99%",
+          "report_sha256": "3aa58d9bcf99b6ec3ed04d35e9d28976aba5f36e33a580273248b8efa9abb751"
+        }
+      },
+      "delta": {
+        "MAIN": {
+          "pf": -0.06000000000000005,
+          "net": -109.71,
+          "eqdd_pp": 1.02,
+          "trades": 118
+        },
+        "BWD": {
+          "pf": -0.020000000000000018,
+          "net": -48.209999999999994,
+          "eqdd_pp": 0.4099999999999999,
+          "trades": 123
+        }
+      }
+    }
+  }
+}

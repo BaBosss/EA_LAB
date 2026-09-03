@@ -1,0 +1,21 @@
+{
+  "schema": "ea-lab-mechanical-acceptance/1",
+  "status": "PASS",
+  "hypothesis_id": "HYP-B15-EDGE-PORT-02",
+  "runtime": "MT5-lane3 / D:\\Meta 5c",
+  "model": 1,
+  "optimization": 0,
+  "holdout": "UNSPENT",
+  "expected_cells": 4,
+  "accepted_cells": 4,
+  "full_surface": "157/157",
+  "build_receipt": "br-58971201f0774c47bf5e6f423c47e1bc",
+  "ex5_sha256": "f3dd7c5f2e2c1eb5a9f30a95a120e8977aa071e86f5ea4d9929e84f74940803a",
+  "parent_set_sha256": "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+  "child_set_sha256": "df109ecc42016bf318f7f3de1bc936b00d9abe258ec58086f9db2152e5a295f8",
+  "leverage": "1:100 all cells",
+  "truncated_cells": 0,
+  "fresh_reports": true,
+  "history_quality": "99-100%",
+  "source_byte_reconciliation": "NO_RELEVANT_BYTE_CHANGES"
+}

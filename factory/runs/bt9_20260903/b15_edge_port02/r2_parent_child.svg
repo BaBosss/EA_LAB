@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="330">
+<text x="20" y="24" font-size="17">HYP-B15-EDGE-PORT-02 parent vs level-mode child</text>
+<text x="20" y="44" font-size="12">AUDUSD/H4 MAIN: PF 0.88â†’0.82 | net -75.30â†’-185.01 | EqDD 1.37%â†’2.39% | trades 216â†’334</text>
+<text x="20" y="78" font-size="12">AUDUSD/H4 BWD: PF 0.96â†’0.94 | net -28.70â†’-76.91 | EqDD 1.53%â†’1.94% | trades 214â†’337</text>
+<text x="20" y="310" font-size="11">VISUAL_ONLY_NO_AUTHORITY; exact values in evidence_summary.json and parent_child.csv</text>
+</svg>

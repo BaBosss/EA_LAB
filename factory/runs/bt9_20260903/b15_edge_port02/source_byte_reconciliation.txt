@@ -1,0 +1,8 @@
+BT9 B15 Edge Portability 02 source-byte reconciliation
+accepted build lineage: cf32ba8d
+preregistered base: ff8b8200f8f789c46bc6f852a8985fc9594127da
+checked paths: ea_template/Boss_15_ST03.mq5; ea_template/core; ea_template/sets/regression/Boss_15_ST03_defaults.set; scripts/mt5_run.ps1
+result: NO_RELEVANT_BYTE_CHANGES
+source SHA256: e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f
+EX5 SHA256: f3dd7c5f2e2c1eb5a9f30a95a120e8977aa071e86f5ea4d9929e84f74940803a
+build receipt: br-58971201f0774c47bf5e6f423c47e1bc
