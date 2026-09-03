@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import tempfile
 import unittest
 from datetime import datetime
 from decimal import Decimal
@@ -34,6 +36,14 @@ class SessionAttributionTests(unittest.TestCase):
         for ts, expected in cases.items():
             self.assertEqual(mod.classify_session(ts), expected)
 
+    def test_malformed_timestamp_fails_closed(self) -> None:
+        with self.assertRaises(ValueError):
+            mod.classify_session("2024-01-01 07:00:00")
+
+    def test_fixed_utc_session_clock_is_season_invariant(self) -> None:
+        self.assertEqual(mod.classify_session("2024-01-15T12:30:00Z"), "LONDON_NY_OVERLAP")
+        self.assertEqual(mod.classify_session("2024-07-15T12:30:00Z"), "LONDON_NY_OVERLAP")
+
     def test_distributed_positive_context_is_candidate(self) -> None:
         rows = []
         for window, years in (("MAIN", (2023, 2024, 2025)), ("BWD", (2020, 2021, 2022))):
@@ -55,11 +65,45 @@ class SessionAttributionTests(unittest.TestCase):
         self.assertEqual(summary["LONDON"]["direction"], "POSITIVE")
         self.assertFalse(summary["LONDON"]["context_candidate"])
 
+    def test_single_symbol_dependence_fails_candidate(self) -> None:
+        rows = []
+        for window, years in (("MAIN", (2023, 2024, 2025)), ("BWD", (2020, 2021, 2022))):
+            for i, year in enumerate(years):
+                rows.append(row(window, year, 1 + i, "XAUUSD|H1", "100", "NEW_YORK_ONLY"))
+                rows.append(row(window, year, 4 + i, "EURUSD|H4", "-80", "NEW_YORK_ONLY"))
+        _, summary = mod.loo_rows(rows, "2026-09-03T13:00:00Z")
+        self.assertEqual(summary["NEW_YORK_ONLY"]["direction"], "POSITIVE")
+        self.assertFalse(summary["NEW_YORK_ONLY"]["context_candidate"])
+
     def test_outside_is_never_named_candidate(self) -> None:
         summary = {s: {"direction": "MIXED_OR_ZERO", "context_candidate": False} for s in mod.NAMED_SESSIONS}
         decision, candidates = mod.decide(summary)
         self.assertEqual(decision, "P5_SESSION_CONTEXT_FALSIFIED_STOP_EXPANSION_PARK")
         self.assertEqual(candidates, [])
+
+    def test_fixed_affinity_views_include_month_and_symbol(self) -> None:
+        rows = [row("MAIN", 2024, 1, "XAUUSD|H1", "10", "ASIA"), row("MAIN", 2024, 1, "EURUSD|H4", "-2", "LONDON")]
+        views = {r["view_type"] for r in mod.affinity_rows(rows, "2026-09-03T13:00:00Z")}
+        self.assertEqual(views, {"ALL", "WINDOW", "YEAR", "ENTRY_MONTH", "SYMBOL", "SYMBOL_TF"})
+
+    def test_missing_review_receipt_blocks_before_input(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            missing_receipt = Path(td) / "missing.json"
+            missing_input = Path(td) / "also-missing.csv"
+            with self.assertRaisesRegex(ValueError, "semantics review receipt missing"):
+                mod.run(missing_input, Path(td) / "out", "2026-09-03T13:00:00Z", missing_receipt)
+
+    def test_nonpass_review_receipt_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            receipt = Path(td) / "receipt.json"
+            receipt.write_text(json.dumps({
+                "schema_version": mod.REVIEW_SCHEMA, "verdict": "BLOCKED", "reviewer_family": "anthropic",
+                "reviewed_head": "0" * 40, "reviewed_utc": "2026-09-03T13:00:00Z",
+                "contract_sha256": "0" * 64, "classifier_sha256": "0" * 64,
+                "tests_sha256": "0" * 64, "review_output_sha256": "0" * 64,
+            }), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "not PASS"):
+                mod.validate_review_receipt(receipt)
 
 
 if __name__ == "__main__":

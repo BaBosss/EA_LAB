@@ -4,6 +4,8 @@ import argparse
 import csv
 import hashlib
 import json
+import re
+import subprocess
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
@@ -18,6 +20,11 @@ EXPECTED_PACKAGE_SHA256 = "1330a822ed66149ba07d693d8732ced5b9e9ce66d15f34ce8d21e
 NAMED_SESSIONS = ("ASIA", "LONDON", "LONDON_NY_OVERLAP", "NEW_YORK_ONLY")
 ALL_SESSIONS = NAMED_SESSIONS + ("OUTSIDE_DEFINED_SESSION",)
 WINDOWS = ("MAIN", "BWD")
+REVIEW_SCHEMA = "BOSS19_P5_SESSION_SEMANTICS_REVIEW_RECEIPT_V1"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CONTRACT_REL = "docs/research/BOSS19_P5_SESSION_CONTEXT_CONTRACT.md"
+CLASSIFIER_REL = "tools/boss19_p5_session_attribution/build_session_attribution.py"
+TESTS_REL = "tools/boss19_p5_session_attribution/tests/test_session_attribution.py"
 
 REQUIRED = {
     "evidence_package_sha256", "h3_run_id", "window", "year", "symbol", "tf",
@@ -37,6 +44,56 @@ def sha256(path: Path) -> str:
 
 def parse_z(text: str) -> datetime:
     return datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ")
+
+
+def _sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _git_blob(reviewed_head: str, rel: str) -> bytes:
+    proc = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "show", f"{reviewed_head}:{rel}"],
+        capture_output=True, check=False,
+    )
+    if proc.returncode != 0:
+        raise ValueError(f"reviewed Git blob unavailable: {rel}")
+    return proc.stdout
+
+
+def validate_review_receipt(path: Path) -> dict:
+    if not path.is_file():
+        raise ValueError("semantics review receipt missing")
+    receipt = json.loads(path.read_text(encoding="utf-8"))
+    required = {
+        "schema_version", "verdict", "reviewer_family", "reviewed_head", "reviewed_utc",
+        "contract_sha256", "classifier_sha256", "tests_sha256", "review_output_sha256",
+    }
+    if not required.issubset(receipt):
+        raise ValueError("semantics review receipt missing required fields")
+    if receipt["schema_version"] != REVIEW_SCHEMA or receipt["verdict"] != "PASS":
+        raise ValueError("semantics review receipt is not PASS")
+    if str(receipt["reviewer_family"]).lower() != "anthropic":
+        raise ValueError("semantics reviewer is not different-family")
+    reviewed_head = str(receipt["reviewed_head"])
+    if not re.fullmatch(r"[0-9a-f]{40}", reviewed_head):
+        raise ValueError("invalid reviewed_head")
+    parse_z(str(receipt["reviewed_utc"]))
+    if not re.fullmatch(r"[0-9a-f]{64}", str(receipt["review_output_sha256"])):
+        raise ValueError("invalid review_output_sha256")
+    bindings = ((CONTRACT_REL, "contract_sha256"), (CLASSIFIER_REL, "classifier_sha256"), (TESTS_REL, "tests_sha256"))
+    for rel, field in bindings:
+        expected = str(receipt[field])
+        if not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise ValueError(f"invalid {field}")
+        current = sha256(REPO_ROOT / rel)
+        reviewed = _sha256_bytes(_git_blob(reviewed_head, rel))
+        if current != expected or reviewed != expected:
+            raise ValueError(f"semantics review binding mismatch: {rel}")
+    return {
+        "receipt_sha256": sha256(path), "reviewed_head": reviewed_head,
+        "reviewer_family": receipt["reviewer_family"], "reviewed_utc": receipt["reviewed_utc"],
+        "review_output_sha256": receipt["review_output_sha256"],
+    }
 
 
 def sign(value: Decimal) -> str:
@@ -171,10 +228,12 @@ def public_detail(rows: list[dict]) -> list[dict]:
 
 def affinity_rows(rows: list[dict], created_utc: str) -> list[dict]:
     specs = [
-        ("ALL", lambda r: (r["session_state"],), lambda r: ("ALL", "ALL", "ALL", "ALL")),
-        ("WINDOW", lambda r: (r["window"], r["session_state"]), lambda r: (r["window"], "ALL", "ALL", "ALL")),
-        ("YEAR", lambda r: (r["window"], r["year"], r["session_state"]), lambda r: (r["window"], r["year"], "ALL", "ALL")),
-        ("SYMBOL_TF", lambda r: (r["window"], r["symbol"], r["tf"], r["session_state"]), lambda r: (r["window"], "ALL", r["symbol"], r["tf"])),
+        ("ALL", lambda r: (r["session_state"],), lambda r: ("ALL", "ALL", "ALL", "ALL", "ALL")),
+        ("WINDOW", lambda r: (r["window"], r["session_state"]), lambda r: (r["window"], "ALL", "ALL", "ALL", "ALL")),
+        ("YEAR", lambda r: (r["window"], r["year"], r["session_state"]), lambda r: (r["window"], r["year"], "ALL", "ALL", "ALL")),
+        ("ENTRY_MONTH", lambda r: (r["window"], r["entry_month"], r["session_state"]), lambda r: (r["window"], "ALL", r["entry_month"], "ALL", "ALL")),
+        ("SYMBOL", lambda r: (r["window"], r["symbol"], r["session_state"]), lambda r: (r["window"], "ALL", "ALL", r["symbol"], "ALL")),
+        ("SYMBOL_TF", lambda r: (r["window"], r["symbol"], r["tf"], r["session_state"]), lambda r: (r["window"], "ALL", "ALL", r["symbol"], r["tf"])),
     ]
     out: list[dict] = []
     for view, key_fn, dims_fn in specs:
@@ -182,18 +241,17 @@ def affinity_rows(rows: list[dict], created_utc: str) -> list[dict]:
         denominators: dict[tuple, int] = defaultdict(int)
         for r in rows:
             groups[key_fn(r)].append(r)
-            dims = dims_fn(r)
-            denominators[dims] += 1
+            denominators[dims_fn(r)] += 1
         for key in sorted(groups):
             g = groups[key]
             sample = g[0]
-            window, year, symbol, tf = dims_fn(sample)
+            window, year, entry_month, symbol, tf = dims_fn(sample)
             rec = {
                 "schema_version": SCHEMA, "created_utc": created_utc, "view_type": view,
-                "window": window, "year": year, "symbol": symbol, "tf": tf,
+                "window": window, "year": year, "entry_month": entry_month, "symbol": symbol, "tf": tf,
                 "session_state": sample["session_state"],
             }
-            rec.update(metrics(g, denominators[(window, year, symbol, tf)]))
+            rec.update(metrics(g, denominators[(window, year, entry_month, symbol, tf)]))
             out.append(rec)
     return out
 
@@ -212,7 +270,7 @@ def cross_window_direction(rows: list[dict], session: str) -> str:
 def loo_rows(rows: list[dict], created_utc: str) -> tuple[list[dict], dict[str, dict]]:
     out: list[dict] = []
     summary: dict[str, dict] = {}
-    dimensions = (("YEAR", "year"), ("ENTRY_MONTH", "entry_month"), ("SYMBOL_TF", "home"))
+    dimensions = (("YEAR", "year"), ("ENTRY_MONTH", "entry_month"), ("SYMBOL", "symbol"), ("SYMBOL_TF", "home"))
     for session in NAMED_SESSIONS:
         direction = cross_window_direction(rows, session)
         checks: dict[str, bool] = {}
@@ -258,8 +316,9 @@ def dump_json(path: Path, obj: dict) -> None:
     path.write_text(json.dumps(obj, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
-def run(input_path: Path, out_dir: Path, created_utc: str) -> dict:
+def run(input_path: Path, out_dir: Path, created_utc: str, review_receipt: Path) -> dict:
     parse_z(created_utc)
+    review = validate_review_receipt(review_receipt)
     source = load_rows(input_path)
     validate_rows(source)
     rows = enrich(source, created_utc)
@@ -282,7 +341,7 @@ def run(input_path: Path, out_dir: Path, created_utc: str) -> dict:
 
     affinity = affinity_rows(rows, created_utc)
     affinity_fields = [
-        "schema_version", "created_utc", "view_type", "window", "year", "symbol", "tf", "session_state",
+        "schema_version", "created_utc", "view_type", "window", "year", "entry_month", "symbol", "tf", "session_state",
         "eligible_unit_count", "participation_share", "gross_profit", "gross_loss", "net_realized", "profit_factor",
         "winning_unit_count", "losing_unit_count", "zero_unit_count", "partition_realized_equity_dd",
     ]
@@ -312,6 +371,8 @@ def run(input_path: Path, out_dir: Path, created_utc: str) -> dict:
         "holdout_row_count": sum(parse_z(r["entry_utc"]).year >= 2026 or parse_z(r["exit_utc"]).year >= 2026 for r in rows),
         "unknown_session_count": sum(r["session_state"] not in ALL_SESSIONS for r in rows),
         "session_timezone": "UTC",
+        "dst_mode": "FIXED_UTC_SOURCE_WINDOWS",
+        "semantics_review": review,
         "exclusive_partition": "ASIA[00,07);LONDON[07,12);LONDON_NY_OVERLAP[12,16);NEW_YORK_ONLY[16,21);OUTSIDE[21,24)",
     }
     dump_json(recon_path, recon)
@@ -328,6 +389,7 @@ def run(input_path: Path, out_dir: Path, created_utc: str) -> dict:
         "outputs": {},
         "holdout": "UNSPENT",
         "optimization": "NONE",
+        "semantics_review": review,
         "does_not_authorize": ["STRATEGY_FILTER", "CANDIDATE", "GRADE_KINT", "RISK_DEFAULT", "RUNTIME", "DEPLOYMENT", "TRADING"],
     }
 
@@ -342,8 +404,9 @@ def main() -> int:
     ap.add_argument("--input", type=Path, required=True)
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--created-utc", required=True)
+    ap.add_argument("--review-receipt", type=Path, required=True)
     args = ap.parse_args()
-    package = run(args.input, args.out_dir, args.created_utc)
+    package = run(args.input, args.out_dir, args.created_utc, args.review_receipt)
     print(json.dumps({"status": package["status"], "decision": package["decision"], "candidates": package["candidates"]}, sort_keys=True))
     return 0
 

@@ -1,7 +1,7 @@
 ---
 object_type: TESTABLE_HYPOTHESIS_CANDIDATE
 hypothesis_id: HYP-SB-005
-status: PREREGISTERED_READY_FOR_ATTRIBUTION
+status: SEMANTICS_FROZEN_REVIEW_REQUIRED
 authority: RESEARCH_ONLY
 source_bundle: SRC-BLACK-TIDE-MAP-20260903
 canonical_base_sha: 1266795fc49ac88a18c6b93b0fab478718102648
@@ -14,7 +14,7 @@ canonical_base_sha: 1266795fc49ac88a18c6b93b0fab478718102648
 - Family: `SECOND_BRAIN_SESSION_CONTEXT`
 - Variant: `HYP-SB-005`
 - Parent research card: `knowledge/02_research_cards/RC-2026-BLACK-TIDE-MAP-001.md`
-- Current state: `PREREGISTERED / READY_FOR_DETERMINISTIC_ATTRIBUTION`
+- Current state: `PREREGISTERED / SEMANTICS_REVIEW_REQUIRED`
 - One logical change: add deterministic **entry-session context attribution** to frozen Boss19 outcome evidence; do not change entries, exits, sizing, risk, or classifier labels.
 - Direct consumer: Boss19 P5 gate after `NO_P5_READY_LEVER_FROM_CURRENT_P4_LABELS`.
 - HOLDOUT: `UNSPENT / NOT AUTHORIZED HERE`
@@ -34,7 +34,7 @@ Once exact session/timezone semantics are prospectively fixed, Boss19 realized o
 This is a **context-attribution hypothesis**, not a session filter and not a strategy change.
 ## Semantics resolution â€” 2026-09-03
 
-Owner-authorized preregistration is frozen in `docs/research/BOSS19_P5_SESSION_CONTEXT_CONTRACT.md`. The current Black Tide public metadata pins `UTC`, Asia `0000-0800`, London `0700-1600`, and New York `1200-2100`; the contract prospectively freezes a mutually exclusive later-open-wins partition with dedicated London/New York overlap. Accepted Boss19 `entry_utc` is reused exactly, so no new broker-time inference is introduced.
+The semantics contract and deterministic classifier are frozen pending independent different-family exact-head review. The Black Tide public metadata pins `UTC`, Asia `0000-0800`, London `0700-1600`, and New York `1200-2100`; the contract prospectively freezes a mutually exclusive later-open-wins partition with dedicated London/New York overlap and fixed UTC source windows across civil DST. Accepted Boss19 `entry_utc` is reused exactly, so no new broker-time inference is introduced.
 
 ## Semantics required before any experiment
 
@@ -88,9 +88,9 @@ The Black Tide publication supplies mechanism motivation only. It supplies no Bo
 
 ## Decision
 
-`PREREGISTERED / READY_FOR_DETERMINISTIC_ATTRIBUTION`
+`SEMANTICS_FROZEN / REVIEW_REQUIRED`
 
-The next admissible action is the deterministic attribution defined by `docs/research/BOSS19_P5_SESSION_CONTEXT_CONTRACT.md`; no MT5 rerun, strategy mutation, optimization, or HOLDOUT access is authorized.
+The next admissible action is independent different-family review of the frozen semantics/classifier. Deterministic attribution is admissible only after a matching PASS review receipt validates; no MT5 rerun, strategy mutation, optimization, or HOLDOUT access is authorized.
 
 ## Authority boundary
 
