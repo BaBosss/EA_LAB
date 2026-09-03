@@ -10,7 +10,7 @@
 ## สิ่งที่ทำได้ตอนนี้ (v1) — single-test อัตโนมัติ ✅
 `scripts/mt5_run.ps1` สั่ง `terminal64.exe /config:<ini>` ให้:
 - โหลด EA + symbol + ช่วงวันที่ + inputs จาก .set
-- รัน single backtest (real ticks) แบบไม่มีหน้าจอ → เขียน HTML report → ปิด terminal เอง
+- รัน single backtest ตาม tester Model ที่ระบุใน config แบบไม่มีหน้าจอ → เขียน HTML report → ปิด terminal เอง. Strategy-performance evidence ต้องเป็น Model 1 / 1 Minute OHLC หรือดีกว่า; Model 2/Open Prices เป็น diagnostic-only; Candidate ทุก EA ต้องผ่าน frozen-config Model 4 MAIN+BWD ก่อน
 - คืน path ของ report → ป้อนเข้า pipeline ที่มี (parse → score → MC) ได้เลย
 
 `scripts/mt5_batch_shortlist.ps1` = วน IS+OOS ให้ shortlist .set ทั้ง 4 ตัวอัตโนมัติ
@@ -36,7 +36,7 @@
 
 ## วงจรเต็มที่นายอยากได้ (optimize → select → single-test)
 ```
-[optimize EA] -> [CONTRACT-DRIVEN selection] -> [gen .set] -> [single-test IS+OOS] -> [MC] -> [registry]
+[Model-1 qualified survivor] -> [CONTRACT-DRIVEN optimize/region map] -> [freeze finalist .set] -> [Model-1 BWD] -> [mandatory Model-4 MAIN+BWD] -> [direct-question robustness / late HOLDOUT as applicable] -> [Candidate decision]
 ```
 ขั้น single-test เป็นต้นไป **อัตโนมัติครบแล้ว** — แต่ **ขั้น select ไม่ใช่ script generic อีกแล้ว**: the two
 legacy selection scripts and the legacy scoring pipeline that used to fill those boxes are quarantined
@@ -68,7 +68,7 @@ python D:\EA_LAB\scripts\swap_adjust_crypto.py --rate-long 14.67 --rate-short 0.
 ## ✅ UPDATE 2026-07-25 — headless OPTIMIZATION ทำได้แล้ว (หัวข้อ "v2 ยังไม่ทำ" ข้างล่าง = ล้าสมัย)
 
 `scripts/mt5_optimize.ps1` รัน genetic headless แล้ว export XML ได้จริง → `scripts/parse_opt_xml.ps1` →
-**contract-driven selection** → `mt5_run.ps1` Model-4 confirm.
+**contract-driven selection** → freeze a finalist → `mt5_run.ps1` mandatory Model-4 MAIN+BWD pre-Candidate confirm on one acceptance-critical installation lineage.
 optimize range เก็บใน .set เป็น `value||start||step||stop||Y`. ตัวอย่างใช้งานจริง = `ORDER-GEN-STANDING`
 MATRIX ชุดที่ 2 ใน `AGENT_TASKBOARD.md`.
 
@@ -80,8 +80,7 @@ NON-AUTHORITATIVE. **Do not run them and do not pass that flag.** Submit the pas
 `-HypothesisRevision <rev>` instead and follow the launcher's own printed `next:` line; with no
 contract bound it prints `SELECTION BLOCKED`, which is the answer rather than something to work
 around. Contract source of truth = `_triage/factory_os/registry.py` + `_triage/factory_os/candidate.py`.
-**⚠️ ผล optimize รันบน Model 1 (เร็ว) = ใช้หา candidate เท่านั้น ห้ามใช้เป็นหลักฐาน** — ตัวเลขที่ใช้ตัดสิน
-ต้องมาจาก Model-4 single-test ของ pass ที่เลือกแล้วเสมอ
+**⚠️ ผล optimize รันบน Model 1 / 1 Minute OHLC = research/search evidence for mapping a stable region and freezing a finalist; it does not create Candidate eligibility by itself.** The frozen finalist must pass Model-4 MAIN+BWD before Candidate. Model-2/Open-Prices and Math Calculations are diagnostic-only and their PF/net/DD/trades cannot support strategy selection.
 
 ## ~~ข้อจำกัด — headless OPTIMIZATION (v2, ยังไม่ทำ)~~ (superseded 2026-07-25 — ดูข้างบน)
 - MT5 **รัน** optimization headless ได้ (`Optimization=2` ใน ini) แต่ผลออกมาเป็น **.opt cache (binary)** ไม่ใช่ XML
