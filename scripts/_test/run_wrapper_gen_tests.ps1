@@ -76,4 +76,15 @@ if ($pkgCode -ne 0) {
     exit 1
 }
 Write-Host '[wrapper-gen] Boss11-16 deterministic first-green package cage green' -ForegroundColor Green
+
+$b18Suite = Join-Path $RepoRoot 'scripts\_test\fixtures\factory_vnext\test_factory_vnext_boss18_first_green.py'
+if (-not (Test-Path -LiteralPath $b18Suite)) { Write-Host "[wrapper-gen] FAIL: Boss18 first-green suite missing at $b18Suite" -ForegroundColor Red; exit 2 }
+$oldEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+$b18Out = & $py $b18Suite 2>&1
+$b18Code = $LASTEXITCODE
+$ErrorActionPreference = $oldEap
+$b18Out | ForEach-Object { Write-Host $_ }
+if ($b18Code -ne 0) { Write-Host "[wrapper-gen] Boss18 first-green package cage FAILED (exit $b18Code)" -ForegroundColor Red; exit 1 }
+Write-Host '[wrapper-gen] Boss18 deterministic first-green package cage green' -ForegroundColor Green
 exit 0

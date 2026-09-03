@@ -154,3 +154,16 @@ run_ziplime_module_tests.ps1|UNMEASURED|Ziplime research module acceptance cage;
 run_factory_vnext_mvp_tests.ps1|UNMEASURED|Factory vNext non-authoritative sidecar focused schema/identity/range/report cage; not yet timed against the pinned full-tier budget.
 run_factory_vnext_operationalization_tests.ps1|UNMEASURED|Factory vNext operationalization runner/dashboard acceptance cage; newly tracked and not yet timed against the pinned full-tier budget.
 run_macrogate_regime_readiness_tests.ps1|UNMEASURED|MacroGate RegimeOnly repository readiness contract cage; deterministic/offline and not yet timed against the pinned full-tier budget.
+run_external_capability_integration_tests.ps1|UNMEASURED|External capability integration cage; tracked but not timed against the pinned full-tier budget.
+run_mobile_report_hub_data_tests.ps1|UNMEASURED|Mobile Report Hub data cage; tracked but not timed against the pinned full-tier budget.
+run_mobile_report_hub_ui_tests.ps1|UNMEASURED|Mobile Report Hub UI cage; tracked but not timed against the pinned full-tier budget.
+run_monitor_health_snapshot_tests.ps1|UNMEASURED|Monitor health snapshot cage; tracked but not timed against the pinned full-tier budget.
+run_p4b_broad36_prejoin_tests.ps1|UNMEASURED|Boss19 P4B broad36 prejoin cage; tracked but not timed against the pinned full-tier budget.
+run_p4b_broad36_roi_gate_tests.ps1|UNMEASURED|Boss19 P4B broad36 ROI gate cage; tracked but not timed against the pinned full-tier budget.
+run_p4b_local_ohlc_export_tests.ps1|UNMEASURED|Boss19 P4B local OHLC export cage; tracked but not timed against the pinned full-tier budget.
+run_p4b_macro_ohlc_tests.ps1|UNMEASURED|Boss19 P4B macro OHLC cage; tracked but not timed against the pinned full-tier budget.
+run_p4b_timeline_tests.ps1|UNMEASURED|Boss19 P4B timeline cage; tracked but not timed against the pinned full-tier budget.
+run_p4b_unit_export_tests.ps1|UNMEASURED|Boss19 P4B unit export cage; tracked but not timed against the pinned full-tier budget.
+run_report_package_validator_tests.ps1|UNMEASURED|Report package validator cage; tracked but not timed against the pinned full-tier budget.
+run_reviewer_launcher_tests.ps1|UNMEASURED|Reviewer launcher cage; tracked but not timed against the pinned full-tier budget.
+run_p4b_regime_join_tests.ps1|UNMEASURED|Boss19 P4B regime join cage; tracked but not timed against the pinned full-tier budget.
