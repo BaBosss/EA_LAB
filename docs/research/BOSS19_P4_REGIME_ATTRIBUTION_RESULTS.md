@@ -5,7 +5,7 @@ Authority: research interpretation only, per `BOSS19_P4_REGIME_ATTRIBUTION_CONTR
 
 Author: Claude Sonnet 5 (Claude Code), acting as author/analyst for this interpretation only.
 Reviewer of the underlying mechanical package: Claude Sonnet 5, independent different-family review of `[chatgpt]`-authored evidence (see below) — VERDICT PASS / CONFIDENCE HIGH, receipt held at `review_p4b_regime_attribution_353ab806.txt`.
-This interpretation itself is authored output and requires its own independent different-family review (Codex) before this document may be treated as canonical/pushed.
+This interpretation completed independent different-family Codex review before canonical push; the initial material findings, bounded repair, targeted re-review, and final wording fixes are recorded below.
 
 ## 1. Frozen evidence chain consumed (do not re-derive)
 
