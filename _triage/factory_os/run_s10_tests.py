@@ -243,9 +243,26 @@ def _journal(run_id, lane='lane1', fingerprint='df1', model=1, terminal='EVIDENC
 RUNS = {'RUN-20260802-001': _journal('RUN-20260802-001', fingerprint='df1'),
         'RUN-20260802-002': _journal('RUN-20260802-002', fingerprint='df2')}
 
+# Historical/read-compatible fixture remains M1-only. A NEW candidate must add the universal
+# frozen Model-4 MAIN+BWD fidelity pair; this separation is the compatibility contract.
+NEW_CANDIDATE_PAYLOAD = copy.deepcopy(PAYLOAD)
+NEW_CANDIDATE_PAYLOAD['evidence'].extend([
+    {'window': 'MAIN', 'pf': 1.29, 'pf_state': 'DEFINED', 'trades': 82, 'dd_pct': 7.6,
+     'run_id': 'RUN-20260802-003', 'lane': 'lane1', 'data_fingerprint': 'df4main', 'model': 4},
+    {'window': 'BWD', 'pf': 1.06, 'pf_state': 'DEFINED', 'trades': 51, 'dd_pct': 2.0,
+     'run_id': 'RUN-20260802-004', 'lane': 'lane1', 'data_fingerprint': 'df4bwd', 'model': 4},
+])
+NEW_RUNS = dict(RUNS)
+NEW_RUNS.update({
+    'RUN-20260802-003': _journal('RUN-20260802-003', fingerprint='df4main', model=4),
+    'RUN-20260802-004': _journal('RUN-20260802-004', fingerprint='df4bwd', model=4),
+})
 
 def manifest():
     return C.build_manifest(copy.deepcopy(PAYLOAD), copy.deepcopy(OWNER))
+
+def new_candidate_manifest():
+    return C.build_manifest(copy.deepcopy(NEW_CANDIDATE_PAYLOAD), copy.deepcopy(OWNER))
 
 
 # =============================================================================================
@@ -541,11 +558,20 @@ def part1c_reader():
     sys.stdout.write('\nPART 1c -- THE ACCEPTANCE: recomputed and compared ON READ, from disk\n')
     tmp = tempfile.mkdtemp(prefix='s10cand_')
     try:
-        m = manifest()
-        path = C.write_manifest(m, root=tmp, run_lookup=RUNS)
-        got = C.read_manifest(path, run_lookup=RUNS)
-        check('a manifest written by build_manifest reads back',
+        m = new_candidate_manifest()
+        path = C.write_manifest(m, root=tmp, run_lookup=NEW_RUNS)
+        got = C.read_manifest(path, run_lookup=NEW_RUNS)
+        check('a NEW manifest with frozen M4 MAIN+BWD writes and reads back',
               got['candidate_digest'] == m['candidate_digest'])
+
+        # Historical M1-only manifests remain readable: they may exist already, but the new
+        # writer gate must not be retroactively applied by read_manifest.
+        legacy = manifest()
+        legacy_path = os.path.join(tmp, 'legacy-m1-only.json')
+        io.open(legacy_path, 'w', encoding='utf-8', newline='\n').write(S.canonical(legacy) + '\n')
+        legacy_got = C.read_manifest(legacy_path, run_lookup=RUNS)
+        check('historical M1-only CandidateManifest remains readable',
+              legacy_got['candidate_digest'] == legacy['candidate_digest'])
 
         # THE ATTACK. Edit the file the way a person edits a file, and read it again.
         raw = io.open(path, encoding='utf-8-sig').read()
@@ -553,7 +579,7 @@ def part1c_reader():
         check('the poison actually changed the bytes', poisoned != raw)
         io.open(path, 'w', encoding='utf-8', newline='\n').write(poisoned)
         try:
-            C.read_manifest(path, run_lookup=RUNS)
+            C.read_manifest(path, run_lookup=NEW_RUNS)
             check('reading a hand-edited manifest is REFUSED', False,
                   'it read cleanly -- the digest is decoration')
         except C.DigestMismatch as exc:
@@ -570,10 +596,61 @@ def part1c_reader():
         # overwriting the file.
         io.open(path, 'w', encoding='utf-8', newline='\n').write(raw)
         try:
-            C.write_manifest(manifest(), root=tmp, run_lookup=RUNS)
+            C.write_manifest(new_candidate_manifest(), root=tmp, run_lookup=NEW_RUNS)
             check('a second write of the same candidate is REFUSED', False, 'it overwrote')
         except C.DigestMismatch as exc:
             check('a second write of the same candidate is REFUSED', 'ONCE' in str(exc), str(exc))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def part1d_model4_candidate_gate():
+    sys.stdout.write('\nPART 1d -- C11: NEW Candidate creation requires frozen Model-4 MAIN+BWD\n')
+    legacy = manifest()
+    accepts('historical M1-only manifest remains valid for read/provenance checks',
+            C.validate_manifest(legacy, run_lookup=RUNS))
+    refuses('NEW Candidate creation with M1-only evidence is blocked',
+            C.new_candidate_gate_problems(legacy, run_lookup=RUNS), 'C11')
+    accepts('NEW Candidate with resolved frozen M4 MAIN+BWD passes the writer-only gate',
+            C.new_candidate_gate_problems(new_candidate_manifest(), run_lookup=NEW_RUNS))
+
+    no_bwd = new_candidate_manifest()
+    no_bwd['payload']['evidence'] = [m for m in no_bwd['payload']['evidence']
+                                    if not (m['window'] == 'BWD' and m['model'] == 4)]
+    refuses('missing Model-4 BWD is blocked',
+            C.new_candidate_gate_problems(no_bwd, run_lookup=NEW_RUNS), 'C11')
+
+    relabeled = new_candidate_manifest()
+    bwd4 = next(m for m in relabeled['payload']['evidence']
+                if m['window'] == 'BWD' and m['model'] == 4)
+    bwd4['run_id'] = 'RUN-20260802-003'; bwd4['data_fingerprint'] = 'df4main'
+    refuses('one Model-4 run relabeled as both MAIN and BWD is blocked',
+            C.new_candidate_gate_problems(relabeled, run_lookup=NEW_RUNS), 'C11')
+
+    lane_split_runs = copy.deepcopy(NEW_RUNS)
+    lane_split_runs['RUN-20260802-004']['execution_key']['lane'] = 'lane2'
+    lane_split_payload = copy.deepcopy(NEW_CANDIDATE_PAYLOAD)
+    next(m for m in lane_split_payload['evidence'] if m['run_id'] == 'RUN-20260802-004')['lane'] = 'lane2'
+    lane_split = C.build_manifest(lane_split_payload, copy.deepcopy(OWNER))
+    accepts('CONTROL: existing provenance validator accepts an internally truthful lane2 M4 BWD row',
+            C.validate_manifest(lane_split, run_lookup=lane_split_runs))
+    refuses('Model-4 MAIN+BWD split across installations is blocked by C11',
+            C.new_candidate_gate_problems(lane_split, run_lookup=lane_split_runs), 'C11')
+
+    retuned_runs = copy.deepcopy(NEW_RUNS)
+    retuned_runs['RUN-20260802-004']['execution_key']['set_hash'] = 'different-set'
+    refuses('Model-4 BWD with a different frozen set is blocked',
+            C.new_candidate_gate_problems(new_candidate_manifest(), run_lookup=retuned_runs), 'C11')
+    refuses('writer gate fails closed without a run store',
+            C.new_candidate_gate_problems(new_candidate_manifest(), run_lookup=None), 'C11')
+
+    tmp = tempfile.mkdtemp(prefix='s10legacywrite_')
+    try:
+        try:
+            C.write_manifest(legacy, root=tmp, run_lookup=RUNS)
+            check('C11 M1-only NEW write is refused', False, 'writer accepted legacy-only evidence')
+        except C.DigestMismatch as exc:
+            check('C11 M1-only NEW write is refused', 'C11' in str(exc), str(exc))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -1586,14 +1663,14 @@ def part8_cli():
                      'wrapping build_manifest/write_manifest with no new gap\n')
     tmp = tempfile.mkdtemp(prefix='s10cli_')
     try:
-        _materialize_runs(tmp, RUNS)
+        _materialize_runs(tmp, NEW_RUNS)
         payload_path = os.path.join(tmp, 'payload.json')
         owner_path = os.path.join(tmp, 'owner.json')
-        io.open(payload_path, 'w', encoding='utf-8').write(json.dumps(PAYLOAD))
+        io.open(payload_path, 'w', encoding='utf-8').write(json.dumps(NEW_CANDIDATE_PAYLOAD))
         io.open(owner_path, 'w', encoding='utf-8').write(json.dumps(OWNER))
         argv_common = ['--payload_file=' + payload_path, '--scorecard_ref_file=' + owner_path,
                        '--root=' + tmp]
-        expected = manifest()
+        expected = new_candidate_manifest()
 
         # -- `build` is a DRY RUN: same id/digest `write` would report, no file touched.
         code, parsed, text = _cli(['build'] + argv_common)
@@ -1627,7 +1704,7 @@ def part8_cli():
 
         # -- SPECIFICITY: an invalid payload is refused by `build` too, for a real reason (C9 --
         #    a cited run this store does not have), and writes nothing.
-        bad = copy.deepcopy(PAYLOAD)
+        bad = copy.deepcopy(NEW_CANDIDATE_PAYLOAD)
         bad['evidence'][0]['run_id'] = 'RUN-NOT-REGISTERED'
         bad_payload_path = os.path.join(tmp, 'payload_bad.json')
         io.open(bad_payload_path, 'w', encoding='utf-8').write(json.dumps(bad))
@@ -1646,6 +1723,7 @@ def main():
     part1_identity()
     part1b_serializer()
     part1c_reader()
+    part1d_model4_candidate_gate()
     part2_attestation()
     part3_magic()
     part4_real()

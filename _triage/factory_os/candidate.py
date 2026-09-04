@@ -189,7 +189,7 @@ def candidate_id_for(digest):
 
 
 # ---------------------------------------------------------------------------------------------
-# THE VALIDATOR. Criterion ids C1-C9 so the cage can be checked for naming each one -- the L2
+# THE VALIDATOR. Criterion ids C1-C11 so the cage can be checked for naming each one -- the L2
 # idea applied to a module L2 does not reach (it globs `check_*.py`).
 # ---------------------------------------------------------------------------------------------
 def owner_ref_problems(ref, where, src=None):
@@ -515,6 +515,93 @@ def validate_manifest(manifest, run_lookup=None):
     return problems
 
 
+# C11 -- NEW-CANDIDATE FIDELITY GATE. Deliberately NOT part of validate_manifest/read_manifest:
+# historical CandidateManifest bytes remain readable under the rules that existed when written.
+# Only a NEW build/write must carry frozen Model-4 MAIN+BWD evidence.
+M4_REQUIRED_WINDOWS = ('MAIN', 'BWD')
+M4_PAIR_IDENTITY_FIELDS = ('lane', 'expert', 'symbol', 'tf', 'ex5_hash', 'set_hash',
+                           'effective_config_hash', 'terminal_build', 'deposit', 'currency',
+                           'account_unit', 'leverage')
+M4_ALL_EVIDENCE_FROZEN_FIELDS = ('ex5_hash', 'set_hash', 'effective_config_hash')
+
+def new_candidate_gate_problems(manifest, run_lookup=None):
+    problems = []
+    if not isinstance(manifest, dict) or not isinstance(manifest.get('payload'), dict):
+        return ['C11 new Candidate creation requires a valid CandidateManifest payload']
+    evidence = manifest['payload'].get('evidence')
+    if not isinstance(evidence, list):
+        return ['C11 new Candidate creation requires an evidence array']
+    if run_lookup is None:
+        return ['C11 new Candidate creation requires the run store so Model-4 MAIN+BWD can be resolved']
+
+    m4_by_window = {}
+    for window in M4_REQUIRED_WINDOWS:
+        rows = [(i, m) for i, m in enumerate(evidence)
+                if isinstance(m, dict) and m.get('window') == window and m.get('model') == 4]
+        m4_by_window[window] = rows
+        if not rows:
+            problems.append('C11 new Candidate requires frozen Model-4 %s evidence' % window)
+    if problems:
+        return problems
+
+    main_ids = set(str(m.get('run_id')) for _, m in m4_by_window['MAIN'])
+    bwd_ids = set(str(m.get('run_id')) for _, m in m4_by_window['BWD'])
+    if main_ids & bwd_ids:
+        problems.append('C11 Model-4 MAIN and BWD must be distinct resolved runs, not one run relabeled twice')
+    main_fp = set(str(m.get('data_fingerprint')) for _, m in m4_by_window['MAIN'])
+    bwd_fp = set(str(m.get('data_fingerprint')) for _, m in m4_by_window['BWD'])
+    if main_fp & bwd_fp:
+        problems.append('C11 Model-4 MAIN and BWD must carry distinct window data fingerprints')
+
+    resolved_m4 = []
+    for window in M4_REQUIRED_WINDOWS:
+        for i, m in m4_by_window[window]:
+            journal = run_lookup.get(m.get('run_id'))
+            key = (journal or {}).get('execution_key') or {}
+            if not key:
+                problems.append('C11 Model-4 %s evidence[%d] run %r cannot be resolved to an ExecutionKey'
+                                % (window, i, m.get('run_id')))
+                continue
+            if key.get('model') != 4:
+                problems.append('C11 Model-4 %s evidence[%d] resolves to model=%r, not 4'
+                                % (window, i, key.get('model')))
+            resolved_m4.append((window, i, m, key))
+    if problems:
+        return problems
+
+    for field in M4_PAIR_IDENTITY_FIELDS:
+        missing = [(w, i) for w, i, m, key in resolved_m4 if field not in key]
+        if missing:
+            problems.append('C11 Model-4 MAIN+BWD ExecutionKey(s) %s record no %s' % (missing, field))
+            continue
+        values = set(S.canonical(S.normalize_numbers(key[field])) for _, _, _, key in resolved_m4)
+        if len(values) != 1:
+            problems.append('C11 Model-4 MAIN+BWD are not one frozen installation/config lineage: %s differs (%s)'
+                            % (field, sorted(values)))
+
+    # No retuning between selected research evidence and M4: every cited MAIN/BWD run must use
+    # the same binary/set/effective configuration. Model/window/fingerprint and dates may differ.
+    relevant = []
+    for i, m in enumerate(evidence):
+        if not isinstance(m, dict) or m.get('window') not in M4_REQUIRED_WINDOWS:
+            continue
+        journal = run_lookup.get(m.get('run_id'))
+        key = (journal or {}).get('execution_key') or {}
+        if key:
+            relevant.append((i, m, key))
+    for field in M4_ALL_EVIDENCE_FROZEN_FIELDS:
+        missing = [i for i, m, key in relevant if field not in key]
+        if missing:
+            problems.append('C11 cited MAIN/BWD run(s) %s record no %s, so no-retuning cannot be proven'
+                            % (missing, field))
+            continue
+        values = set(S.canonical(S.normalize_numbers(key[field])) for _, _, key in relevant)
+        if len(values) != 1:
+            problems.append('C11 M1/M4 MAIN+BWD do not preserve frozen %s (%s)'
+                            % (field, sorted(values)))
+    return problems
+
+
 # ---------------------------------------------------------------------------------------------
 # RESOLUTION AND DISK -- the impure half, kept together and at the edge so the boundary the module
 # docstring describes is a PLACE IN THIS FILE rather than a claim about it. Everything ABOVE this
@@ -731,6 +818,7 @@ def write_manifest(manifest, root=None, run_lookup=None):
     the second write rather than trusting that sentence: a candidate whose manifest can be
     rewritten is a candidate whose digest describes whatever was written last."""
     problems = validate_manifest(manifest, run_lookup=run_lookup)
+    problems.extend(new_candidate_gate_problems(manifest, run_lookup=run_lookup))
     if problems:
         raise DigestMismatch('refusing to write an invalid manifest: %s' % '; '.join(problems))
     path = manifest_path(manifest['candidate_id'], root)
@@ -834,13 +922,14 @@ def main(argv):
         except ValueError as exc:
             return _emit({'action': 'REFUSE', 'why': str(exc)}, 1)
         # build_manifest only refuses a payload whose SHAPE cannot be hashed (canonical_payload).
-        # validate_manifest is the full C1-C9 acceptance -- provenance included, when a run store
+        # validate_manifest is the historical/read-compatible C1-C10 acceptance -- provenance included, when a run store
         # is supplied -- and it is what write_manifest itself calls before it will touch disk.
         # Running it here too means `build` (no filesystem write) reports the SAME problems a
         # `write` of the same inputs would, rather than a lighter check that looks clean and then
         # refuses a moment later.
         lookup = S.load_all_runs(root)
         problems = validate_manifest(manifest, run_lookup=lookup)
+        problems.extend(new_candidate_gate_problems(manifest, run_lookup=lookup))
         if problems:
             return _emit({'action': 'REFUSE', 'why': '; '.join(problems)}, 1)
         if cmd == 'build':
