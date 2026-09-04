@@ -26,19 +26,19 @@ Existing accepted ORDER-353 DEMO binding:
 - E: `PASS`
 - F: `HASHED / OWNER-ATTESTED`
 - G3 target runtime identity: `PASS / WIRED`
-- accepted telemetry state: `FRESH`
-- forward state: `DEMO_DEPLOYED_AWAITING_FIRST_TRADE`
-- accepted 2026-08-24 handoff evidence: `0` qualifying closed deals for magic `990026`
-- `first_trade_epoch = null`
+- current raw deal feed: `FRESH` on 2026-09-04; candidate post-attach entry is present, but current runtime-identity validation is `FAIL / EVIDENCE_TIMESTAMP_STALE`
+- forward state: `FORWARD_TEST_UNTRUSTED / FIRST_TRADE_CANDIDATE_PRESENT`
+- accepted 2026-08-24 handoff evidence: `0` qualifying closed deals for magic `990026`; fresh 2026-09-04 raw feed now contains candidate entry ticket `2227380592` at `time_unix=1788451200`
+- accepted `first_trade_epoch = null`; `judge_date = null` until fresh strategy-emitted runtime identity validates and binds the candidate
 
-The `0` above is a dated accepted evidence point, not a live counter. Current telemetry must come from the canonical monitoring/evidence pipeline.
+The older `0` is superseded as a raw-count observation, but the new entry is not yet accepted as the first-trade transition: canonical Control Room rejects the current identity sidecar as stale (`293.6h > 30h`) and therefore keeps forward evidence untrusted.
 
 **Operational consequence:**
 
 - ORDER-353 deployment/setup acceptance is complete. Do not reopen pre-deployment attachment, attestation, config verification, or target runtime-identity work without a concrete regression.
 - Do not force a trade.
-- Do not start the judge clock until a genuine qualifying post-attach trade establishes `first_trade_epoch`.
-- The next state transition is evidence-driven only.
+- Do not start the judge clock from the raw candidate. Require a fresh strategy-emitted `EA_LAB_identity_463666728_990026.json` that passes canonical runtime-identity validation and binds the candidate to `epoch-1`.
+- Next evidence action: obtain the fresh strategy-VPS identity sidecar read-only; if it is absent on the VPS, stop for owner approval before any reattach/runtime mutation.
 - LIVE / DEMO→LIVE remains a separate owner hard stop.
 - Global monitoring remains `DEGRADED_MONITORING`; target G3 `PASS / WIRED` does not make global monitoring GREEN.
 
@@ -269,7 +269,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 
 ### 5.1 NOW
 
-1. **Observe ORDER-353.** Consume fresh monitoring/runtime evidence only; wait for a genuine qualifying post-attach trade. Do not force one.
+1. **Resolve ORDER-353 first-trade evidence gate.** Raw candidate ticket `2227380592` exists, but canonical identity freshness fails. Obtain the fresh strategy-emitted sidecar; do not force a trade, reattach, or start the judge clock.
 2. **Keep target acceptance closed unless regression evidence appears.** F/G3/config/attestation work is not an open repo task.
 3. **Keep global monitoring honest.** `DEGRADED_MONITORING` remains current until canonical evidence satisfies its actual global criteria.
 4. **Boss19 P4A remains FROZEN; P4B and the bounded P5 session-context milestone are COMPLETE / REVIEWED.** Broad36 is canonical at `ecd5c2b3af0791674a7cce18464e632750f37755`; deterministic join at `353ab806a1ce29046adb249f84c205d0a34a5de8` classified all 1,549 units with 0 unknown; P4 interpretation at `469a2f1c12933f26b256836a4425240cdb84cd3e` is `MIXED_EVIDENCE`. P5 then tested only the independently motivated frozen session-context hypothesis and closed `P5_SESSION_CONTEXT_FALSIFIED_STOP_EXPANSION_PARK` at `dc5c6e35b5b2908587920f8eec3023e33441dfb1`; no named session survives the preregistered robustness cuts. Do not rerun accepted evidence or implement a session filter. HOLDOUT stays UNSPENT; optimization/Candidate/Grade/KINT/risk/runtime/deploy authority remains NONE.
@@ -281,7 +281,7 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 
 ### 5.2 NEXT EVIDENCE-DRIVEN TRANSITIONS
 
-- Genuine ORDER-353 first trade -> record accepted `first_trade_epoch` through the canonical evidence/state path and derive the judge clock from the accepted rule.
+- ORDER-353 candidate first trade -> only after fresh identity validation PASS may the canonical path record `first_trade_epoch` and derive the judge clock. Current candidate is BLOCKED / E OWNER-EXTERNAL pending strategy-VPS sidecar evidence.
 - Reproducible monitoring regression -> open a bounded repair with a direct consumer; do not manufacture monitoring work from historical warnings.
 - Boss11/12/13/15/16 prospective H01 fixed-baseline evidence is COMPLETE and H02 literal portability screening is now COMPLETE. H02 covered 110 new cells plus the 10 H01 XAUUSD/H1 cells = 120 cells / 60 MAIN-BWD pairs; 58 pairs are full-window eligible and 6 show dual-window PF > 1 screening pulses. Strongest pulse: B16 XAUUSD/H4 MAIN PF 4.08 / 79 trades, BWD PF 1.44 / 148 trades. This does **not** unlock automatic optimization, rescaling, promotion, HOLDOUT, or deployment. B14/B17 remain reference molds. B18 semantics are resolved to Mode1 and fresh H01 is closed `ISOLATED_PULSE / MIXED MAIN-BWD` with historical `DEAD-OPTIMIZED / NOT-DEPLOY` preserved and `STOP_EXPANSION_NO_DIRECT_CONSUMER`. See docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md.
 - B16 Step 5 portability, H05 RSI-entry optimization, H06 depth2, and H07 depth3 structural work are CLOSED at their accepted scopes. The bounded depth ladder is complete: depth2 preserves aggregate sign but loses 2025/MAIN utility; depth3 restores all-six-year positivity and improves aggregate net/EqDD versus the accepted max10 parent in the frozen MAIN+BWD evidence, with verified depth3 contact in 2025. Do not run depth4 or adaptively search more depth values: the accepted parent already provides realized depth4 evidence and H07 closed that direct consumer. Parent max10 and depth3 remain research references only. Any later use of depth3 as a frozen revision, robustness finalist or default requires a separate prospective contract at the applicable authority boundary; do not reopen RSI-entry search, use BWD for retuning, spend HOLDOUT, or auto-open H04/Candidate/DEMO/LIVE/risk/default changes.

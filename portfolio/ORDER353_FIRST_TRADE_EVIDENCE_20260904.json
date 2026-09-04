@@ -1,0 +1,37 @@
+{
+    "state":  "BLOCKED",
+    "blocker_class":  "E_OWNER_EXTERNAL",
+    "reason":  "FRESH_DEAL_CANDIDATE_BUT_RUNTIME_IDENTITY_EVIDENCE_STALE",
+    "canonical_base":  "1e3ac118596b0328bc851e1adbe2547b5a397e79",
+    "account":  "463666728",
+    "magic":  "990026",
+    "raw_deal_source":  "portfolio/live_deals/EA_LAB_deals_463666728_20260904.csv",
+    "raw_deal_sha256":  "8a2c1a3b4320fb8a6cea6c68f6aa1bda0085b87db0fffdcd4b5dda1fb27c1198",
+    "raw_deal_rows":  313,
+    "candidate":  {
+                      "ticket":  "2227380592",
+                      "time":  "2026.09.03 16:00:00",
+                      "time_unix":  1788451200,
+                      "symbol":  "BTCUSDm",
+                      "entry":  "0",
+                      "type":  "0",
+                      "volume":  "0.01",
+                      "comment":  "ST_BUY"
+                  },
+    "attach":  {
+                   "epoch":  "epoch-1",
+                   "attach_time_unix":  1787471401
+               },
+    "direct_derive_result":  "VERIFIED_ONLY_WHEN_BYPASSING_CURRENT_IDENTITY_VALIDATION",
+    "canonical_projection":  {
+                                 "runtime_identity_state":  "FAIL",
+                                 "forward_test_state":  "FORWARD_TEST_UNTRUSTED",
+                                 "reason":  "EVIDENCE_TIMESTAMP_STALE",
+                                 "age_hours":  293.6,
+                                 "max_hours":  30
+                             },
+    "accepted_first_trade_epoch":  null,
+    "judge_date":  null,
+    "authority":  "NO_JUDGE_CLOCK_NO_PERFORMANCE_NO_LIVE_RISK_RUNTIME_AUTHORITY",
+    "required_next_evidence":  "Fresh strategy-emitted EA_LAB_identity_463666728_990026.json from the strategy VPS Common Files after the candidate trade; it must validate under canonical runtime_identity.py before the first-trade transition can be accepted."
+}
