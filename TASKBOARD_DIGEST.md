@@ -423,5 +423,5 @@
 | ORDER-RND-P2 | 2026-08-29 | DONE + REVIEWED | Hermes H2 small pilot | H2 PASS / H3_READY | ACTIVE:10036 |
 | ORDER-RND-P3 | 2026-08-29 | DONE + REVIEWED | Boss19 19-0 broad fixed-config matrix | H3 PASS / BROAD MATRIX COMPLETE | ACTIVE:10042 |
 | ORDER-RND-P4 |  | DONE + REVIEWED | Boss19 regime attribution | JOIN + INTERPRETATION COMPLETE / MIXED_EVIDENCE | ACTIVE:10048 |
-| ORDER-RND-P5 |  | BLOCKED | â€” next Boss19 variant hypothesis â€” |  | ACTIVE:10062 |
-| ORDER-RND-P6 |  | BLOCKED | survivor coarse-to-fine funnel |  | ACTIVE:10068 |
+| ORDER-RND-P5 |  | DONE | â€” Boss19 Black Tide session-context attribution â€” |  | ACTIVE:10062 |
+| ORDER-RND-P6 |  | BLOCKED | â€” survivor coarse-to-fine funnel â€” |  | ACTIVE:10068 |
