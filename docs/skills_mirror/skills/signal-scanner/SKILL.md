@@ -82,8 +82,7 @@ mechanics on AUD pairs, not from a clever entry. Sequence (differs from the nake
 2. **One full-window run per symbol** (2023→now, Model 1 — grid/basket EAs are NOT bar-open-pure,
    Model 2 misprices fills) at **reduced sizing** (~0.25×, e.g. `Boss14_GridLog_screen_small.set`)
    so the kill-DD cage can never halt-truncate the sample. Delegate the batch to qwen.
-3. **Per-year split** every report (`scripts
-eport_year_split.py`) — aggregate PF hides losing years. Preserve the distribution; do not manufacture a filter from the bad years.
+3. **Per-year split** every report (`scripts\report_year_split.py`) — aggregate PF hides losing years. Preserve the distribution; do not manufacture a filter from the bad years.
 4. **Only a qualified survivor may enter optimization.** A weak Model-1 base/home is `STOP_EXPANSION / PARK`, not an optimizer rescue target. If a survivor has a preregistered optimization question, map a stable region on Model-1 MAIN and freeze a center; optimizer rows are in-sample research evidence, never Candidate status.
 5. **Hand off a frozen finalist** to backtest-optimize-rigor for fixed BWD → mandatory Model-4 MAIN+BWD → only direct-question final robustness → late HOLDOUT → Candidate decision.
 
