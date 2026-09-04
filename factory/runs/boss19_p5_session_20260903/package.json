@@ -1,0 +1,106 @@
+{
+  "candidates": [],
+  "created_utc": "2026-09-03T23:50:00Z",
+  "decision": "P5_SESSION_CONTEXT_FALSIFIED_STOP_EXPANSION_PARK",
+  "does_not_authorize": [
+    "STRATEGY_FILTER",
+    "CANDIDATE",
+    "GRADE_KINT",
+    "RISK_DEFAULT",
+    "RUNTIME",
+    "DEPLOYMENT",
+    "TRADING"
+  ],
+  "holdout": "UNSPENT",
+  "input": {
+    "path": "D:\\EA_LAB_CONTROL\\worktrees\\boss19-p5-semantics-review-a30ca052\\_mt5_auto\\p4b_boss19_regime\\regime_attribution_detail.csv",
+    "sha256": "e54f1cfaf58df97acb8fb39c1e6e8bf4614f1ff3a7c9bcbc1b5acff762665dd6",
+    "unit_count": 1549
+  },
+  "optimization": "NONE",
+  "outputs": {
+    "reconciliation.json": {
+      "bytes": 1155,
+      "sha256": "2fed8a7cf8fd14afd0027443c9673bbaf624f1e6cfe3b92e1b2b53bed172b440"
+    },
+    "session_affinity.csv": {
+      "bytes": 79234,
+      "sha256": "352aa0622b4432bbcc78654c3b8f175b6766386f66d4b30704a71e28b8e3e08a"
+    },
+    "session_attribution_detail.csv": {
+      "bytes": 381637,
+      "sha256": "5ba0dff75d849742ac6a3a791290c3935d34ea23b6412cb31b5fd791190220bf"
+    },
+    "session_leave_one_out.csv": {
+      "bytes": 59814,
+      "sha256": "8f022843f6f647b27d5ed9bc26868089fe1bf135acf29e4a42700c69c89b24cf"
+    }
+  },
+  "schema_version": "BOSS19_P5_SESSION_ATTRIBUTION_V1",
+  "semantics_review": {
+    "receipt_sha256": "1a5a1adb002af841c04227bc27b0c0c12a5cca61a22f54e0b128aed1e6b72429",
+    "review_output_sha256": "cc6af19243ca653cad3ce0573141fbf4b75ad996770f236825ea61d85cf6560a",
+    "reviewed_head": "a30ca052ca7aa503e00992a18693a7e6e9a792c6",
+    "reviewed_utc": "2026-09-03T23:40:29Z",
+    "reviewer_family": "anthropic"
+  },
+  "session_summary": {
+    "ASIA": {
+      "checks": {
+        "BWD_ENTRY_MONTH": true,
+        "BWD_SYMBOL": true,
+        "BWD_SYMBOL_TF": true,
+        "BWD_YEAR": false,
+        "MAIN_ENTRY_MONTH": true,
+        "MAIN_SYMBOL": true,
+        "MAIN_SYMBOL_TF": true,
+        "MAIN_YEAR": true
+      },
+      "context_candidate": false,
+      "direction": "POSITIVE"
+    },
+    "LONDON": {
+      "checks": {
+        "BWD_ENTRY_MONTH": true,
+        "BWD_SYMBOL": true,
+        "BWD_SYMBOL_TF": true,
+        "BWD_YEAR": false,
+        "MAIN_ENTRY_MONTH": true,
+        "MAIN_SYMBOL": true,
+        "MAIN_SYMBOL_TF": true,
+        "MAIN_YEAR": true
+      },
+      "context_candidate": false,
+      "direction": "POSITIVE"
+    },
+    "LONDON_NY_OVERLAP": {
+      "checks": {
+        "BWD_ENTRY_MONTH": false,
+        "BWD_SYMBOL": false,
+        "BWD_SYMBOL_TF": false,
+        "BWD_YEAR": false,
+        "MAIN_ENTRY_MONTH": false,
+        "MAIN_SYMBOL": false,
+        "MAIN_SYMBOL_TF": false,
+        "MAIN_YEAR": false
+      },
+      "context_candidate": false,
+      "direction": "MIXED_OR_ZERO"
+    },
+    "NEW_YORK_ONLY": {
+      "checks": {
+        "BWD_ENTRY_MONTH": false,
+        "BWD_SYMBOL": false,
+        "BWD_SYMBOL_TF": false,
+        "BWD_YEAR": false,
+        "MAIN_ENTRY_MONTH": false,
+        "MAIN_SYMBOL": false,
+        "MAIN_SYMBOL_TF": false,
+        "MAIN_YEAR": false
+      },
+      "context_candidate": false,
+      "direction": "MIXED_OR_ZERO"
+    }
+  },
+  "status": "PASS"
+}

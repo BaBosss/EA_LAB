@@ -1,7 +1,7 @@
 ---
 object_type: TESTABLE_HYPOTHESIS_CANDIDATE
 hypothesis_id: HYP-SB-005
-status: SEMANTICS_FROZEN_REVIEW_REQUIRED
+status: FALSIFIED_STOP_EXPANSION_PARK
 authority: RESEARCH_ONLY
 source_bundle: SRC-BLACK-TIDE-MAP-20260903
 canonical_base_sha: 1266795fc49ac88a18c6b93b0fab478718102648
@@ -14,7 +14,7 @@ canonical_base_sha: 1266795fc49ac88a18c6b93b0fab478718102648
 - Family: `SECOND_BRAIN_SESSION_CONTEXT`
 - Variant: `HYP-SB-005`
 - Parent research card: `knowledge/02_research_cards/RC-2026-BLACK-TIDE-MAP-001.md`
-- Current state: `PREREGISTERED / SEMANTICS_REVIEW_REQUIRED`
+- Current state: `COMPLETE / FALSIFIED / STOP_EXPANSION_PARK`
 - One logical change: add deterministic **entry-session context attribution** to frozen Boss19 outcome evidence; do not change entries, exits, sizing, risk, or classifier labels.
 - Direct consumer: Boss19 P5 gate after `NO_P5_READY_LEVER_FROM_CURRENT_P4_LABELS`.
 - HOLDOUT: `UNSPENT / NOT AUTHORIZED HERE`
@@ -86,11 +86,21 @@ Current EA_LAB boundary: `docs/research/BOSS19_P4_2022_CONFOUND_DIAGNOSTIC_20260
 
 The Black Tide publication supplies mechanism motivation only. It supplies no Boss19 performance evidence and no preferred session.
 
+## Admissible result — 2026-09-04
+
+The exact-head semantics gate at `a30ca052ca7aa503e00992a18693a7e6e9a792c6` received independent Claude/Anthropic `PASS / HIGH` with `ATTRIBUTION_EXECUTION_AUTHORIZED: YES`. The first admissible attribution then reconciled all 1,549 accepted source-bound units with zero unknown session states, zero HOLDOUT rows, and exact net `+17,718.78`; two deterministic builds were byte-identical.
+
+No named session survived the preregistered robustness falsifier. ASIA and LONDON were positive in MAIN and BWD aggregates, but each failed the BWD YEAR leave-one-out check: excluding 2022 makes ASIA BWD `-66.22`, while excluding 2020 makes LONDON BWD `-228.35`. LONDON_NY_OVERLAP and NEW_YORK_ONLY reverse direction between MAIN and BWD and also show leave-one-out instability. `OUTSIDE_DEFINED_SESSION` remains control-only and cannot become a candidate.
+
+Evidence owner: `docs/research/BOSS19_P5_SESSION_CONTEXT_RESULTS.md` and `factory/runs/boss19_p5_session_20260903/`. Any earlier pre-review execution remains quarantined and was not reused.
+
 ## Decision
 
-`SEMANTICS_FROZEN / REVIEW_REQUIRED`
+`P5_SESSION_CONTEXT_FALSIFIED_STOP_EXPANSION_PARK`
 
-The next admissible action is independent different-family review of the frozen semantics/classifier. Deterministic attribution is admissible only after a matching PASS review receipt validates; no MT5 rerun, strategy mutation, optimization, or HOLDOUT access is authorized.
+Do not implement a session filter from this branch and do not rescue it by changing session hours, DST semantics, overlap precedence, exclusions, or by adding another Black Tide layer. A future continuation requires a genuinely new independently motivated prospective one-change hypothesis with a direct consumer and new preregistration.
+
+HOLDOUT remains `UNSPENT`; optimization remains `NONE`.
 
 ## Authority boundary
 

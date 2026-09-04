@@ -1,0 +1,13 @@
+{
+    "schema":  "BOSS19_P5_ADMISSIBLE_EXECUTION_V1",
+    "semantics_head":  "a30ca052ca7aa503e00992a18693a7e6e9a792c6",
+    "created_utc":  "2026-09-03T23:50:00Z",
+    "review_sha256":  "cc6af19243ca653cad3ce0573141fbf4b75ad996770f236825ea61d85cf6560a",
+    "receipt_sha256":  "1a5a1adb002af841c04227bc27b0c0c12a5cca61a22f54e0b128aed1e6b72429",
+    "build1":  "D:\\EA_LAB_CONTROL\\scratch\\boss19_p5_a30ca052_r3_1",
+    "build2":  "D:\\EA_LAB_CONTROL\\scratch\\boss19_p5_a30ca052_r3_2",
+    "byte_reproduction":  "PASS",
+    "prior_pre_review_execution":  "QUARANTINED_NOT_REUSED",
+    "holdout":  "UNSPENT",
+    "optimization":  "NONE"
+}

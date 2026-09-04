@@ -1,0 +1,30 @@
+{
+  "assigned_unit_count": 1549,
+  "created_utc": "2026-09-03T23:50:00Z",
+  "dst_mode": "FIXED_UTC_SOURCE_WINDOWS",
+  "exclusive_partition": "ASIA[00,07);LONDON[07,12);LONDON_NY_OVERLAP[12,16);NEW_YORK_ONLY[16,21);OUTSIDE[21,24)",
+  "expected_net_realized": "17718.78",
+  "holdout_row_count": 0,
+  "input_net_realized": "17718.78",
+  "input_sha256": "e54f1cfaf58df97acb8fb39c1e6e8bf4614f1ff3a7c9bcbc1b5acff762665dd6",
+  "input_unit_count": 1549,
+  "schema_version": "BOSS19_P5_SESSION_ATTRIBUTION_V1",
+  "semantics_review": {
+    "receipt_sha256": "1a5a1adb002af841c04227bc27b0c0c12a5cca61a22f54e0b128aed1e6b72429",
+    "review_output_sha256": "cc6af19243ca653cad3ce0573141fbf4b75ad996770f236825ea61d85cf6560a",
+    "reviewed_head": "a30ca052ca7aa503e00992a18693a7e6e9a792c6",
+    "reviewed_utc": "2026-09-03T23:40:29Z",
+    "reviewer_family": "anthropic"
+  },
+  "session_counts": {
+    "ASIA": 375,
+    "LONDON": 332,
+    "LONDON_NY_OVERLAP": 429,
+    "NEW_YORK_ONLY": 251,
+    "OUTSIDE_DEFINED_SESSION": 162
+  },
+  "session_timezone": "UTC",
+  "status": "PASS_ATTRIBUTION_RECONCILIATION",
+  "unique_deal_key_count": 1549,
+  "unknown_session_count": 0
+}

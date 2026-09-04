@@ -1,0 +1,11 @@
+{
+    "schema_version":  "BOSS19_P5_SESSION_SEMANTICS_REVIEW_RECEIPT_V1",
+    "verdict":  "PASS",
+    "reviewer_family":  "anthropic",
+    "reviewed_head":  "a30ca052ca7aa503e00992a18693a7e6e9a792c6",
+    "reviewed_utc":  "2026-09-03T23:40:29Z",
+    "contract_sha256":  "55249334c6c867c88fe7554c2fa88e95e400af0cc64eb704b7ac132f88c67e45",
+    "classifier_sha256":  "cffa7617847e620642d083549a9af5ca0ffc0c922f58616099c7118083ebfc5f",
+    "tests_sha256":  "e4e538f33e7435262c828d68451821916db03f3b68470b03241647d8f3b75508",
+    "review_output_sha256":  "cc6af19243ca653cad3ce0573141fbf4b75ad996770f236825ea61d85cf6560a"
+}

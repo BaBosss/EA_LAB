@@ -1,0 +1,21 @@
+Review complete ΓÇö the contract, hypothesis card, source note, classifier, and test suite at exact HEAD `a30ca052` are internally consistent and semantically sound. Key findings:
+
+- Input identity, unit count (1,549), net (+17718.78), and package SHA-256 in the contract match the hard-coded constants in `build_session_attribution.py` exactly.
+- `classify_session()` implements the exact half-open UTC boundaries from ┬º4 (verified against `EXPECTED_INPUT_SHA256`/window math), is entry_utc-only (no lookahead), fails closed on malformed timestamps, and is DST-invariant by construction (raw UTC hour/minute, no tz conversion) ΓÇö matching `FIXED_UTC_SOURCE_WINDOWS`.
+- `run()` calls `validate_review_receipt()` (which never touches the outcome CSV) strictly before `load_rows(input_path)` ΓÇö the real input file is provably unopened until a `PASS` receipt validates, with git-blob-pinned binding of contract/classifier/tests to `reviewed_head`.
+- `OUTSIDE_DEFINED_SESSION` is structurally excluded from `NAMED_SESSIONS`/candidacy, not just test-covered.
+- LOO dimensions (YEAR/ENTRY_MONTH/SYMBOL/SYMBOL_TF) and affinity views (ALL/WINDOW/YEAR/ENTRY_MONTH/SYMBOL/SYMBOL_TF) match ┬º6 exactly; empty-remainder LOO cuts fail-closed (never skipped).
+- Decision tree and candidate ordering follow fixed `NAMED_SESSIONS` order ΓÇö no PF/net/DD-based ranking anywhere.
+- `package.json` explicitly declares `does_not_authorize` for STRATEGY_FILTER/CANDIDATE/GRADE_KINT/RISK_DEFAULT/RUNTIME/DEPLOYMENT/TRADING; no MT5, optimization, or risk logic exists in the tool.
+- The reviewer-family gate at this exact HEAD requires `reviewer_family == "anthropic"` only (the widened `{"anthropic","qwen"}` variant from `7b1e9ae5` was reapplied then fully reverted back out by `a30ca052`; diff against the first revert `4b5de508` is byte-empty, confirming a clean double-revert with no drift). This correctly excludes the `openai` author family from self-review, consistent with `AGENTS.md`'s author/reviewer-separation rule.
+- All 8 fixture categories named in contract ┬º8 are present in the test file.
+
+Nonblocking gaps: `validate_rows()`'s duplicate-DEAL-key, HOLDOUT-year, and package-identity checks aren't directly unit-tested (only exercised implicitly via a real run); LOO concentration tests cover YEAR/SYMBOL explicitly but not ENTRY_MONTH/SYMBOL_TF (same code path, lower risk). Neither is required by the contract's explicit ┬º8 fixture list, and neither affects gate safety.
+
+VERDICT: PASS
+CONFIDENCE: HIGH
+REVIEWED_HEAD: a30ca052ca7aa503e00992a18693a7e6e9a792c6
+BLOCKERS: none
+NONBLOCKING_NOTES: validate_rows() duplicate-DEAL-key/HOLDOUT-year/package-identity checks not directly unit-tested (only the 8 contract-enumerated fixture categories are required and all present); LOO concentration tests exercise YEAR and SYMBOL dimensions explicitly but not ENTRY_MONTH/SYMBOL_TF (shared code path, low risk).
+REQUIRED_REPAIR: none
+ATTRIBUTION_EXECUTION_AUTHORIZED: YES
