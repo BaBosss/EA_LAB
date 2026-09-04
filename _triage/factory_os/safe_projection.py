@@ -280,10 +280,12 @@ def _spelling_pattern(secret):
     KNOWN_SECRET. The live snapshot happens not to carry that lot size, so it is a data-dependent
     breaker of the daily build rather than a live outage -- which is worse to leave, not better.
 
-    So the secret is normalised and the text is NOT. Between the secret's characters goes
-    `[^0-9A-Za-z]*`, which is exactly the evasion ORDER-1267 #1 measured (`9001-12233`,
-    `900 112 233`, `acct#900-11-2233`, `900.112.233` all still fire). At each END goes a
-    SAME-CLASS boundary: a secret that begins with a digit may not be preceded by a digit, one
+    So the secret is normalised and the text is NOT. Generic secrets keep
+    `[^0-9A-Za-z]*` between characters, which preserves the ORDER-1267 #1 account spellings.
+    Numeric decimals keep one semantic boundary: the decimal separator may change (`0.05` ->
+    `0,05`) but may not disappear into contiguous `005`. Deleting it changes the numeric token
+    and otherwise makes short lot/P&L literals false-match unrelated hex build ids. At each END
+    goes a SAME-CLASS boundary: a secret that begins with a digit may not be preceded by a digit, one
     that begins with a letter may not be preceded by a letter. Same class rather than "not
     alphanumeric" on purpose -- `acct900112233` must still fire, because a letter run abutting a
     digit run does not extend the number, and requiring a non-alphanumeric neighbour would have
@@ -300,15 +302,23 @@ def _spelling_pattern(secret):
     Returns None for a secret with no alphanumeric characters at all, because an empty body would
     compile to a pattern that matches every string.
     """
-    norm = _normalised(secret)
+    raw = str(secret)
+    norm = _normalised(raw)
     if not norm:
         return None
-    if norm not in _SPELLING_CACHE:
+    decimal = re.match(r'^[+-]?(\d+)[.,](\d+)$', raw)
+    cache_key = ('decimal', decimal.group(1), decimal.group(2)) if decimal else ('generic', norm)
+    if cache_key not in _SPELLING_CACHE:
         lead = r'(?<![0-9])' if norm[0].isdigit() else r'(?<![A-Za-z])'
         tail = r'(?![0-9])' if norm[-1].isdigit() else r'(?![A-Za-z])'
-        body = r'[^0-9A-Za-z]*'.join(re.escape(c) for c in norm)
-        _SPELLING_CACHE[norm] = re.compile(lead + body + tail, re.IGNORECASE)
-    return _SPELLING_CACHE[norm]
+        if decimal:
+            left = r'[^0-9A-Za-z]*'.join(re.escape(c) for c in decimal.group(1))
+            right = r'[^0-9A-Za-z]*'.join(re.escape(c) for c in decimal.group(2))
+            body = left + r'[^0-9A-Za-z]+' + right
+        else:
+            body = r'[^0-9A-Za-z]*'.join(re.escape(c) for c in norm)
+        _SPELLING_CACHE[cache_key] = re.compile(lead + body + tail, re.IGNORECASE)
+    return _SPELLING_CACHE[cache_key]
 
 
 def scan_forbidden(doc, known_secrets=()):

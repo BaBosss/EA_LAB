@@ -1061,6 +1061,24 @@ def sp20():
     sp.assert_safe(sp.build(poisoned), sp.secrets_of(poisoned))
 
 
+@case('SP27', '2026-09-04 DailyMonitor', 'decimal secrets do not match contiguous build-id hex')
+def sp27():
+    decimal = '0.36'
+    doc = {'entity': 'SafeProjection', 'build_id': 'abcdefabcdefa036',
+           'generated_at': '2026-08-02T00:00:00', 'accounts': [], 'findings': []}
+    hits = fired(sp.scan_forbidden(doc, [decimal]))
+    assert not any(h[1] == 'KNOWN_SECRET' for h in hits), hits
+    formatted = dict(doc, build_id='0,36')
+    assert decimal not in formatted['build_id']
+    assert any(h[1] == 'KNOWN_SECRET' for h in fired(sp.scan_forbidden(formatted, [decimal]))), formatted
+    assert any(h[1] == 'KNOWN_SECRET' for h in fired(sp.scan_forbidden(dict(doc, build_id=decimal), [decimal])))
+    poisoned = snapshot()
+    poisoned['meta']['build_id'] = doc['build_id']
+    poisoned['floating_risk'][0]['magics'][0]['open_lots'] = 0.36
+    assert decimal in sp.secrets_of(poisoned)
+    built = sp.build(poisoned)
+    assert built['build_id'] == doc['build_id']
+
 @case('SP21', 'ORDER-1310 #5', 'a secret used as a dict KEY is masked in the PATH, not only in the detail')
 def sp21():
     """

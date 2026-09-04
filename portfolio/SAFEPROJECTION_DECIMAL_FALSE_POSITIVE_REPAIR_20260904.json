@@ -1,0 +1,27 @@
+{
+  "entity": "SafeProjectionDecimalFalsePositiveRepairEvidence",
+  "date": "2026-09-04",
+  "canonical_base": "7c4898c2fe775e6919782784ae7494d5db99bf14",
+  "state": "TARGET_PASS_GLOBAL_MONITORING_STILL_DEGRADED",
+  "blocker_class_resolved": "A_PRODUCT_DEFECT",
+  "defect": "numeric-decimal KNOWN_SECRET flexible spelling could erase the decimal separator and false-match contiguous characters inside a valid 16-hex SafeProjection build_id",
+  "repair": "numeric decimals retain a mandatory separator boundary while allowing separator substitution; generic secret spelling and literal matching remain unchanged",
+  "red_first": {
+    "case": "SP27",
+    "pre_repair": "FAIL_KNOWN_SECRET_FALSE_POSITIVE",
+    "fixture_build_id": "abcdefabcdefa036",
+    "fixture_decimal": "0.36"
+  },
+  "acceptance": {
+    "s11": "PASS_86_OF_86",
+    "s12": "PASS_80_OF_80",
+    "strict_state": "CLEAN",
+    "diff_check": "PASS",
+    "real_snapshot_projection_build_rc": 0,
+    "real_snapshot_source_sha256": "B1F50BB47816123FE8D7AD3F9017E4D2DB2B6F00E478CC4E8830FE8B735B4A0F",
+    "real_snapshot_source_unchanged": true,
+    "derived_projection_sha256": "696531273B000399476765EAAA7950EEED161B0E404EDBACAE403A848FB0C41A"
+  },
+  "runtime_activation": "PENDING_CANONICAL_REVIEW_AND_RUNTIME_REANCHOR",
+  "authority": "NO_STRATEGY_RUNTIME_RISK_TRADING_LIVE_OR_JUDGE_AUTHORITY"
+}
