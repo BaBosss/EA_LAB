@@ -1,0 +1,28 @@
+{
+  "state": "TARGET_PASS_GLOBAL_DEGRADED",
+  "date": "2026-09-04",
+  "canonical_sha": "a1f0483eed97d148f2cb44d85480107c5a54cde0",
+  "runtime_path": "D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-a1f0483e-20260904",
+  "runtime_audit_commit": "b3cd97a66c2bb680633d54d83976af8c71430929",
+  "scheduled_task": "EA_LAB_DailyMonitor",
+  "scheduled_run_start_local": "2026-09-04T19:14:49+07:00",
+  "task_last_result": 1,
+  "target_acceptance": {
+    "snapshot_failed": false,
+    "notify_projection_failed": false,
+    "safe_projection_accounts": 6,
+    "safe_projection_findings": 4,
+    "telegram_unconfigured_is_non_red": true
+  },
+  "control_room_snapshot_sha256": "CB7FB3AD378BE92AB5A518C7C6E3DB7B5BA35FCF8BEE453032AA555707412AEA",
+  "safe_projection_sha256": "68B207D813DFA5A15D21DDC4B60C90408F02C79F83209B600FD11178753283EA",
+  "remaining_fail_closed": [
+    "runtime-identity-unverified",
+    "first-trade-untrusted",
+    "runtime-identity-coverage-gap",
+    "deployment-unverified-69424711|",
+    "deployment-verification-underived-x58"
+  ],
+  "order353": {"first_trade_epoch": null, "judge_date": null},
+  "authority": "No strategy reattach, trading, LIVE, risk/default, judge, or strategy-semantic authority."
+}
