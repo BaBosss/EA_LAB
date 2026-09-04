@@ -43,7 +43,10 @@ Then read targeted owners only when the task requires them.
 - `StepATR=0.30`: historical reference center, NOT global optimum;
 - HOLDOUT `2026H1`: **UNSPENT**.
 ### Factory Boss17
-`B17-H01-r1` frozen registration and first-green Factory vNext package are canonical at `94b4bc6be58eabd391933a9079532a4c12911272`; exact-head independent review PASS, zero TUNABLE, no optimizer/runtime/risk authority. B18 remains provenance-blocked.
+`B17-H01-r1` frozen registration and first-green Factory vNext package are canonical at `94b4bc6be58eabd391933a9079532a4c12911272`; exact-head independent review PASS, zero TUNABLE, no optimizer/runtime/risk authority. Boss18 semantics are resolved to Mode1 and `B18-H01-r1` is CLOSED/REVIEWED at `3c4512f6`: MAIN PF 1.19 vs BWD PF 0.98, `ISOLATED_PULSE / MIXED MAIN-BWD`, historical `DEAD-OPTIMIZED / NOT-DEPLOY` preserved, `STOP_EXPANSION_NO_DIRECT_CONSUMER`.
+
+### B15 BT9 / Candidate fidelity
+BT9 AUDUSD/H4 edge-latch portability is accepted/reviewed at `ede238fa`: disabling `_15_EdgeTrigger` worsened PF/net/DD in both MAIN and BWD while increasing trades, so the latch mechanism is not falsified but the AUDUSD/H4 home is `STOP_EXPANSION / PARK`; no optimization/Model4/HOLDOUT was spent. New Candidate build/write is machine-gated by C11 at `26171091`: frozen resolved Model-4 MAIN+BWD is mandatory while historical M1-only manifests remain readable.
 
 ## Hermes
 Hermes is a deterministic/mechanical EA R&D factory, not a strategy architect. **H1 GOLDEN REPLAY = PASS**. **H2 SMALL PILOT = PASS**. **H3 BROAD MATRIX = PASS / COMPLETE** on contract head `47c77320`: 36/36 authorized full-window Model-1 cells, no optimization, HOLDOUT UNSPENT, repository clean, independent milestone review PASS. The later source-bound P4B package, deterministic regime join, P4 interpretation, and bounded P5 session-context attribution are complete/reviewed. None grants strategy/risk/candidate/deployment authority.
