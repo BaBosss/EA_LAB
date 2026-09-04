@@ -26,6 +26,21 @@ $publishDashboardGist = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts
 $pythonExe = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'tools\python312\python.exe'
 $safeProjection = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath '_triage\factory_os\safe_projection.py'
 $notifier = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath '_triage\factory_os\notifier.py'
+function Invoke-RepoPythonUtf8 {
+    param([string]$PythonExe,[string]$ScriptPath,[string[]]$Arguments,[string]$RepoRoot)
+    $oldPyIo = $env:PYTHONIOENCODING
+    Push-Location -LiteralPath $RepoRoot
+    try {
+        $env:PYTHONIOENCODING = 'utf-8'
+        $output = @(& $PythonExe $ScriptPath @Arguments 2>&1)
+        $rc = $LASTEXITCODE
+        return [pscustomobject]@{ Output=$output; ExitCode=$rc }
+    } finally {
+        if ($null -eq $oldPyIo) { Remove-Item Env:PYTHONIOENCODING -ErrorAction SilentlyContinue }
+        else { $env:PYTHONIOENCODING = $oldPyIo }
+        Pop-Location
+    }
+}
 # ORDER-128 freshness guard: the task now also fires at logon (to catch up runs the
 # 07:30 trigger missed while logged out / asleep). Skip quietly when the last full
 # success is recent so the logon trigger can't double-run the chain.
@@ -98,16 +113,16 @@ try {
 # bytes with the ANSI codepage, so the message arrives as mojibake and the log stops being
 # readable exactly where it matters most. Measured, not assumed - the first run of this
 # block wrote its Thai as question marks.
-$projOut = powershell -NoProfile -Command "`$env:PYTHONIOENCODING='utf-8'; & '$pythonExe' '$safeProjection' build --repo-root '$RepoRoot'; exit `$LASTEXITCODE"
-$projExit = $LASTEXITCODE
-$projOut | Add-Content $log -Encoding utf8
+$projResult = Invoke-RepoPythonUtf8 -PythonExe $pythonExe -ScriptPath $safeProjection -Arguments @('build','--repo-root',$RepoRoot) -RepoRoot $RepoRoot
+$projExit = [int]$projResult.ExitCode
+$projResult.Output | ForEach-Object { "$_" } | Add-Content $log -Encoding utf8
 if ($projExit -ne 0) {
     $failed += 'notify-projection'
     "ALERT: the SafeProjection could not be built, so NOTHING was sent - the sender has no other document it is allowed to read" | Add-Content $log
 } else {
-    $notifyOut = powershell -NoProfile -Command "`$env:PYTHONIOENCODING='utf-8'; & '$pythonExe' '$notifier' send --confirm --brief --repo-root '$RepoRoot'; exit `$LASTEXITCODE"
-    $notifyExit = $LASTEXITCODE
-    $notifyOut | Add-Content $log -Encoding utf8
+    $notifyResult = Invoke-RepoPythonUtf8 -PythonExe $pythonExe -ScriptPath $notifier -Arguments @('send','--confirm','--brief','--repo-root',$RepoRoot) -RepoRoot $RepoRoot
+    $notifyExit = [int]$notifyResult.ExitCode
+    $notifyResult.Output | ForEach-Object { "$_" } | Add-Content $log -Encoding utf8
     if ($notifyExit -eq 4) {
         "NOTE: a Telegram channel is not configured yet - see ops\delivery_ledger.jsonl. Logged, and deliberately NOT marking the chain unhealthy (ORDER-219 rule: a daily red gets muted)." | Add-Content $log
     } elseif ($notifyExit -ne 0) {

@@ -428,7 +428,34 @@ Write-Host '=== PART 3b (D1/D2): daily_monitor.ps1 actually CONSUMES all of that
 # The rules being right is worthless if the chain does not act on them. These assert the
 # wiring, which is the half that was broken: the old code computed $coverageMsg, logged
 # it, and dropped the verdict on the floor.
-$dm = Get-Content (Join-Path $RepoRoot 'scripts\daily_monitor.ps1') -Raw
+$dmPath = Join-Path $RepoRoot 'scripts\daily_monitor.ps1'
+$dm = Get-Content $dmPath -Raw
+$dmAst = [System.Management.Automation.Language.Parser]::ParseFile($dmPath, [ref]$null, [ref]$null)
+$invokeRepoPython = @($dmAst.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Invoke-RepoPythonUtf8' }, $true))
+Assert-Equal 'daily_monitor exposes exactly one repo-anchored Python invocation helper' 1 $invokeRepoPython.Count
+if ($invokeRepoPython.Count -eq 1) {
+    . ([ScriptBlock]::Create($invokeRepoPython[0].Extent.Text))
+    $probeRoot = Join-Path ([IO.Path]::GetTempPath()) ('dm_cwd_' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $probeRoot -Force | Out-Null
+    $callerCwd = (Get-Location).Path
+    $oldPyIo = $env:PYTHONIOENCODING
+    try {
+        Set-Location (Join-Path $env:SystemRoot 'System32')
+        $outside = (Get-Location).Path
+        $env:PYTHONIOENCODING = 'caller-value'
+        $r = Invoke-RepoPythonUtf8 -PythonExe (Join-Path $env:SystemRoot 'System32\cmd.exe') -ScriptPath '/d' -Arguments @('/c','cd') -RepoRoot $probeRoot
+        Assert-Equal 'repo helper runs child from RepoRoot even when caller starts in System32' $probeRoot (($r.Output | ForEach-Object {"$_"}) -join '')
+        Assert-Equal 'repo helper preserves native exit code' 0 $r.ExitCode
+        Assert-Equal 'repo helper restores caller cwd after child exits' $outside (Get-Location).Path
+        Assert-Equal 'repo helper restores caller PYTHONIOENCODING' 'caller-value' $env:PYTHONIOENCODING
+        $bad = Invoke-RepoPythonUtf8 -PythonExe (Join-Path $env:SystemRoot 'System32\cmd.exe') -ScriptPath '/d' -Arguments @('/c','exit 7') -RepoRoot $probeRoot
+        Assert-Equal 'repo helper propagates a non-zero native exit code' 7 $bad.ExitCode
+    } finally {
+        Set-Location $callerCwd
+        if ($null -eq $oldPyIo) { Remove-Item Env:PYTHONIOENCODING -ErrorAction SilentlyContinue } else { $env:PYTHONIOENCODING = $oldPyIo }
+        Remove-Item $probeRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
 Assert-True 'daily_monitor dot-sources the coverage library rather than inlining the rules' `
     ($dm -match 'monitor_coverage\.ps1')
 Assert-True 'daily_monitor appends the coverage failures into $failed (which drives exit 1)' `

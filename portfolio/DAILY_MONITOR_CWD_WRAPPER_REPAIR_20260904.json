@@ -1,0 +1,23 @@
+{
+  "state": "TARGET_PASS_REPO_SIDE_RUNTIME_REANCHOR_PENDING",
+  "date": "2026-09-04",
+  "canonical_base": "c2e0eb8f99b581b757333432c5df0167dd2307c7",
+  "blocker_class": "A_PRODUCT_DEFECT",
+  "root_cause": "daily_monitor launched SafeProjection/notifier from the Scheduled Task caller cwd; snapshot_validator schema lookup remained cwd-relative despite --repo-root",
+  "production_reproduction": {
+    "caller_cwd": "C:\\Windows\\System32",
+    "pre_repair_exit_code": 3,
+    "pre_repair_reason": "schemas.json not found from caller cwd"
+  },
+  "repair": "Invoke-RepoPythonUtf8 anchors child cwd to RepoRoot, restores caller cwd/PYTHONIOENCODING, captures output, and propagates native exit code; SafeProjection and notifier share the helper",
+  "red_first": "run_monitor_integrity_tests: 100/101 PASS; only missing repo-anchored helper failed",
+  "acceptance": {
+    "monitor_integrity": "106/106 PASS",
+    "guard_feed_pipeline": "PASS",
+    "strict_state": "CLEAN",
+    "diff_check": "PASS",
+    "real_snapshot_from_system32": "RC=0; SafeProjection 6 accounts / 4 findings"
+  },
+  "authority": "NO_STRATEGY_RUNTIME_RISK_TRADING_LIVE_OR_JUDGE_AUTHORITY",
+  "runtime_activation": "PENDING_REANCHOR_AFTER_REVIEWED_CANONICAL_PUSH"
+}
