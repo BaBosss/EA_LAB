@@ -1,0 +1,76 @@
+{
+    "schema_version":  "EA_LAB_DAILY_MONITOR_RUNTIME_REANCHOR_V1",
+    "status":  "PASS_TARGET_RESTORED_GLOBAL_MONITORING_DEGRADED",
+    "date":  "2026-09-04",
+    "canonical_base":  "e2a041ccf28e8a406939e16d68265f836581f160",
+    "owner_approval":  "DAILYMONITOR_PERSISTENT_RUNTIME_REANCHOR_APPROVED",
+    "task":  "EA_LAB_DailyMonitor",
+    "old_runtime":  {
+                        "path":  "D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor",
+                        "status_unchanged":  true,
+                        "head":  "bbea40372c6f990bff5addca50bf744602ab8055",
+                        "preserved":  true
+                    },
+    "new_runtime":  {
+                        "branch":  "runtime/daily-monitor-e2a041cc-20260904",
+                        "path":  "D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-e2a041cc-20260904",
+                        "base_head":  "e2a041ccf28e8a406939e16d68265f836581f160"
+                    },
+    "task_switch":  {
+                        "backup":  "D:\\EA_LAB_CONTROL\\backups\\dailymonitor_reanchor_20260904_161534",
+                        "first_task_probe":  "SKIPPED_BY_FRESHNESS_GUARD_NOT_ACCEPTANCE",
+                        "rollback_script":  "D:\\EA_LAB_CONTROL\\rollback_dailymonitor_reanchor.ps1",
+                        "new_action":  "-NoProfile -ExecutionPolicy Bypass -File D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-e2a041cc-20260904\\scripts\\daily_monitor.ps1"
+                    },
+    "offline_acceptance":  {
+                               "runtime_identity":  "PASS_47_OF_47",
+                               "daily_monitor_paths":  "PASS",
+                               "check_state_strict":  "CLEAN",
+                               "guard_feed_pipeline":  "PASS",
+                               "snapshot_schema":  "PASS_30_OF_30",
+                               "monitor_integrity":  "PASS_100_OF_100"
+                           },
+    "forced_verification":  {
+                                "exit_code":  1,
+                                "snapshot_step_failed":  false,
+                                "snapshot_sha256":  "B1F50BB47816123FE8D7AD3F9017E4D2DB2B6F00E478CC4E8830FE8B735B4A0F",
+                                "snapshot_length":  236731,
+                                "start_local":  "2026-09-04T16:21:06+07:00",
+                                "monitor_terminals_remaining":  0,
+                                "monitor_terminals_started":  6,
+                                "snapshot_mtime":  "2026-09-04T16:28:25.9491713+07:00"
+                            },
+    "remaining_fail_closed":  [
+                                  "notify-projection",
+                                  "runtime-identity-unverified",
+                                  "first-trade-untrusted",
+                                  "runtime-identity-coverage-gap",
+                                  "deployment-unverified-69424711",
+                                  "deployment-verification-underived-x58"
+                              ],
+    "runtime_identity":  {
+                             "max_hours":  30,
+                             "accepted_first_trade_epoch":  null,
+                             "judge_date":  null,
+                             "reason":  "EVIDENCE_TIMESTAMP_STALE",
+                             "age_hours":  296.6,
+                             "state":  "FAIL"
+                         },
+    "success_marker":  {
+                           "mtime_aligned_to_content":  true,
+                           "content":  "2026-07-31 07:37:35",
+                           "checkout_mtime_false_freshness_corrected":  true,
+                           "bytes_changed":  false
+                       },
+    "runtime_audit_commit":  {
+                                 "failed_cages":  [
+                                                      "S11_WIRE2",
+                                                      "S12"
+                                                  ],
+                                 "reason":  "SAFE_PROJECTION_REFUSAL",
+                                 "guard_bypassed":  false,
+                                 "head_remains":  "e2a041ccf28e8a406939e16d68265f836581f160",
+                                 "state":  "BLOCKED_BY_PRECOMMIT"
+                             },
+    "authority":  "MONITOR_RUNTIME_ONLY_NO_STRATEGY_REATTACH_NO_TRADING_NO_LIVE_NO_RISK_DEFAULT_AUTHORITY"
+}
