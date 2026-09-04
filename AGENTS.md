@@ -202,9 +202,9 @@ verdict, order status, or decision-feeding field.</sub>
      · provenance: memory `btc-tick-data-differs-per-mt5-install`</sub>
 3. **Strategy-performance numbers require MT5 Model 1 = 1 Minute OHLC or better.** Canonical labels: `M2_OPEN_PRICE_DIAGNOSTIC_ONLY`, `M1_M1_OHLC_RESEARCH`, `M0_GENERATED_TICK`, `M4_REAL_TICK_FIDELITY`. Model 2/Open Prices and Math Calculations are ad-hoc engineering diagnostics only (for example zero-trade, branch/input firing, or order-plumbing diagnosis); their PF/net/DD/trades may not support a research verdict, portability claim, optimization selection, plateau assessment, or robustness interpretation. Every full-window research run is split by year with `scripts\report_year_split.py`. **Every EA must pass frozen-config Model 4 MAIN+BWD on one acceptance-critical MT5 installation lineage before Candidate eligibility.** No retuning is allowed between M1 selection and M4 fidelity; a mechanical inability to execute M4 makes Candidate evidence incomplete/BLOCKED, not a strategy failure.
 4. **Verdict rules (summarized from the decision log — binding rules in PROJECT_STATE §3, full provenance in PROJECT_HISTORY §E):**
-   never DEAD/REJECT before an optimize probe · a cap breach (DD/margin/ruin) = resize-first, never
-   reject outright · optimizer numbers are always in-sample · backward-OOS is mandatory when IS/OOS sit
-   in the same regime
+   a single weak/default cell may not terminally DEAD/REJECT a concept; however a clearly poor Model-1 base/home may `STOP_EXPANSION / PARK` without an optimizer because optimization is reserved for a qualified survivor · a cap breach (DD/margin/ruin) = resize-first, never
+   reject outright · optimizer numbers are always in-sample · BWD is a frozen robustness/falsification surface, never optimizer round two
+   (no re-pick/retune against BWD)
    — other agents do not have to apply these rules themselves, they just **must not report a summary
    that contradicts them** (reporting the raw numbers is enough)
 5. **Git:** commit often; the commit message starts with your own tag `[codex]` / `[zcode]` / `[oc-*]` · no force push/rebase/amend ·

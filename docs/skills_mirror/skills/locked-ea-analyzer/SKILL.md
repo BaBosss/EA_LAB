@@ -103,8 +103,7 @@ the `ea-screener` subagent or a qwen batch; full single-EA rigor (optimize → I
 
 - **Model 2 ("open prices") can badly misrepresent grid/martingale/basket-exit EAs.** No intrabar path
   simulated. Same params showed PF 0.65/DD 102% under Model 2 vs PF 0.87/DD 79% under Model 0 — same
-  conclusion direction, but Model 2 overstated severity. Model 2 is fine for the first-pass broad
-  screen; never for the final verdict on the 1–2 candidates that matter — confirm under Model 0/every-tick.
+  conclusion direction, but Model 2 overstated severity. Model 2/Open Prices is **diagnostic-only**; its PF/net/DD/trades cannot judge the first-pass broad screen or any strategy outcome. Use Model 1 / 1 Minute OHLC at minimum for the broad screen, and require frozen Model-4 MAIN+BWD before Candidate eligibility.
 - **Headless run without an explicit `-SetFile` does not reliably mean "compiled defaults."** MT4/5 can
   silently carry over whatever params were LAST used on that terminal for that EA. Always pass a fully
   specified `.set` — never rely on omission to mean defaults.

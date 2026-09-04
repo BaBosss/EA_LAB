@@ -38,7 +38,7 @@ EVIDENCE IN
    ⇒ DEAD-STRUCTURAL → EDGE_CATALOG dead pile + scorecard kill-reason
      (course-file rule: extract the entry CONCEPT before discarding the vehicle — [[feedback-course-files-extract-idea]])
 │
-2. else PARAMETRIC — you may not kill it yet.
+2. else PARAMETRIC — you may not kill the concept yet. A clearly poor Model-1 base/home may still `STOP_EXPANSION / PARK` without optimization; optimization is reserved for a qualified survivor and is not owed merely to rescue a negative home.
    RIGHT HOME first (reversion→EURUSD/EURGBP/AUDNZD ranger · momentum→XAU/GBP trender;
    landing in the wrong home ≠ death). Walk the ladder ≥3 levers × ≥2 TF on the correct home.
    │
@@ -88,6 +88,7 @@ EVIDENCE IN
 
 **Canonical verdict vocabulary (retire every other term):**
 `DEAD-STRUCTURAL · DEAD-OPTIMIZED · PARKED-VERIFY(user) · BUILD-ON · CANDIDATE · DEMO · LIVE`
+`FROZEN FINALIST` is a workflow-gate label only, not a canonical verdict/status; freezing a finalist does not by itself trigger the Row-X verdict write-checklist.
 (PASS/CONDITIONAL/ROBUST/MARGINAL/Mode-B from the old skill = retired). **Discard semantics:** STRUCTURAL = the only legitimate death (kill immediately, no optimize owed · the concept may still be extracted) · DEAD-OPTIMIZED = a terminal state that must be *earned* (close the cell/concept after a full ladder + last-optimize) · **everything else must not be discarded.**
 
 **📋 Row-X write-checklist — check these 5 lines before writing any verdict:**

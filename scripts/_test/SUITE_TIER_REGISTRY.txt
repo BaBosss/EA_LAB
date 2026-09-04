@@ -83,6 +83,7 @@ run_s12_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/notifier.py, 
 run_s13_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_pilot_acceptance.py, scripts/_test/run_pilot_verify_tests.py, scripts/pilot_verify_check.py (+30 more)
 run_selection_tests.ps1|FAST|In the fast tier; guards scripts/pilot_probe_select.py, scripts/_test/run_selection_tests.py, factory/coverage.jsonl (+4 more)
 run_work_receipts_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_work_receipts.py, _triage/factory_os/run_work_receipts_tests.py, factory/work_receipts.jsonl (+2 more)
+run_testing_doctrine_tests.ps1|FAST|In the fast tier; guards owner-ratified M1 minimum, Model2 diagnostic-only, universal M4 pre-Candidate doctrine and current live-skill mirror owners.
 run_front_guard_evidence_tests.ps1|FAST|In the fast tier; guards scripts/check_state.ps1, scripts/check_order_collision.ps1, scripts/check_handoff_contract.ps1 (+6 more)
 
 # ---------------------------------------------------------------------------------------
@@ -102,6 +103,7 @@ run_order105_negative_tests.ps1|SLOW|Measured 521s (ORDER-105 Contract D concurr
 run_new_template_entry_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV sync: MEASURED_NOT_WIRED, still parked, full tier already above its pinned budget.
 run_mt5_optimize_launcher_hardening_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV Lane A (1cc31d97, 33/33 PASS); Lane D measurement closed MEASURED_NOT_WIRED, no wiring made.
 run_legacy_quarantine_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV Lane C (aaee37ea, 12/12 PASS); same MEASURED_NOT_WIRED disposition, no budget increase.
+run_post_broad_diagnostic_pack_tests.ps1|NOT_WIRED|Platform post-broad diagnostic focused suite measured 0.55s / 7 tests PASS on current canonical; intentionally not wired by this testing-doctrine repair, so no fast/full-tier budget or scope change.
 
 # ---------------------------------------------------------------------------------------
 # UNMEASURED -- never timed against the pinned 120.0s full-tier budget, so no wiring decision

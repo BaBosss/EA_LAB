@@ -3,7 +3,7 @@
 # source: C:\Users\patip\.claude\skills
 # files: 331
 6569d342b4191d9719686fedde5505324d5778bd3b0cd5cb0ce53c8a43054682  real  adhd-mode/SKILL.md
-eb88b032588d5675afdf49538b27b0e701c5c7e81ecc5190b2f6c28a4b99ed57  real  backtest-optimize-rigor/SKILL.md
+c1c7eb865e5f92acb64ac9fc235683b0477bb7e76e94ff95722beec2e4f3a5b3  real  backtest-optimize-rigor/SKILL.md
 b6ad4012df22101262899de86531a22dd4a3443da6d321a5214e7b7a7aa35d44  real  backtest-report-analyzer/scripts/parse_mt5_report.py
 e843a4a30a5ea9c5b0c70b82db96d4d96d65bc36674ed1bfdb3ac49b0308734c  real  backtest-report-analyzer/SKILL.md
 29179377dd1003e94a14901a563262ce25d6a2383208fc0bd08502f6c79c20bf  real  book-to-skill/.github/dependabot.yml
@@ -315,7 +315,7 @@ b5dae3957c1421e442d2f776f768c6da7c880a65483c5de3e998c002c6dd6a9e  real  ea-live-
 bc4e5cad1370ff92c098ea6293d3ede51add92679bab8f73a41c0e85db72cc8c  link  github-https-repo-auth/agents/openai.yaml
 fc48283f4163a04f235c111dcdd4f8e616d00558638bafb91a01dade3715b5af  link  github-https-repo-auth/SKILL.md
 3b8259eaf4187b00f6ac5f36d92b11fa1bbcee5588584fea66322c2697ba51a6  real  live-deployment-controller/SKILL.md
-7f6d15789ddca2163290a02d771b3ed6ff148f97d1bd8355ce65421521170d12  real  locked-ea-analyzer/SKILL.md
+37ee5fec80926cef260a5c89421a0d038bac23e65aadc1daed3d7897b9ffc8af  real  locked-ea-analyzer/SKILL.md
 79dfaf83a7858d2fee95474bde24080bc12743373d1ee2ea75edbd398beae09d  link  management-talk/SKILL.md
 3d4977d9057a08dc2589cefda0dfb5b37d2ebb49b9f6bb2c9486854a8073e15f  real  mql-code-generator/SKILL.md
 7c8230ddbeb88c883474cec7350c75839bb72b987cc88a09a1b4b5568fcdc81e  real  mql-code-reviewer/SKILL.md
@@ -328,7 +328,7 @@ cbfed004205b87cc058d495651401546765dc37f07f106b01025a6c8bbc532bb  real  README.m
 38f301dfddaae5ccb18b1f53b4081ce430fcd7b3d5bbd8463e4915c9229e74d7  real  robustness-validator/scripts/monte_carlo.py
 2970a2c89729d9531bf974a83e6f8e8d1c9c0bfc932034e6d90a29edd74c9b2c  real  robustness-validator/SKILL.md
 2ffdfb82ea6411b45d97826a349d91318a799609059486bd100b2c5bb1f7fa73  link  scrutinize/SKILL.md
-994c6c262b7e915c852b8694f3a52646a68f38ee2643e80fd33108c7b38cdcd8  real  signal-scanner/SKILL.md
+145845397c6f6fbbf6e2ac4c96709068c9499aec5d51b7b3b356bd8fc0f648dd  real  signal-scanner/SKILL.md
 3caedd8e7f3dce8f0457c565a1e7e1f6f0ecd4b4ff924a9f2f3cc33af8afee52  link  skeptical-research/agents/openai.yaml
 f00c16c01d024a42908daaddfa390cb5898c8dc8be5ca3cdc4702e99b629afee  link  skeptical-research/SKILL.md
 d45ddf304253a6c1b162621cc2167dda0ca8e54f5cdca7841b2a125cdc8e8ce4  real  strategy-and-risk/SKILL.md

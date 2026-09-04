@@ -14,9 +14,9 @@ A profitable-looking backtest is a **claim**, not a result. High PF from a rando
 - **Name the missing regime.** Every backtest covers one regime; state what's absent (no crash? no strong trend? range-only?) — that's where it breaks.
 
 ## Model policy (crisp — see Step 8 of the ladder for the full statement)
-- **Model 2 = zero-trade/broken-config preflight + KILL-direction ONLY.** It may never pass, rank, select, or be shown as a result. **A coarse sweep IS ranking → coarse sweeps run Model 1+, full stop.** (The old "Model 2 throughout optimize for bar-open EAs" line was drift — deleted 2026-07-18; the Model-2 ban decision-log 2026-07-03 is the law, and Model-2 manufactured fake both-window grid plateaus AUDNZD PF 3-4 → M4 0.61/0.75 on 2026-07-17. **For grid EAs, Model-2 numbers are not evidence at all — not even "provisional".**)
-- **Model 1 = minimum fidelity for any number that ranks, selects, or reaches the user;** fine end-to-end for single-position bar-open EAs.
-- **Model 4 (every-tick) MANDATORY before any verdict/deploy** for the cases in the Step-8 table; runs SERIAL on tester lane 1 only. Required for TP < 20 pip. Often data-blocked (shallow M1/tick) — if so, say it; don't substitute control-point confidence.
+- **Model 2 / Open Prices = `M2_OPEN_PRICE_DIAGNOSTIC_ONLY`.** Use only for a specific engineering diagnosis (zero-trade, broken config, branch/input firing, or order plumbing). Its PF/net/DD/trades carry no strategy-performance, ranking, selection, portability, plateau, or robustness authority; there is no routine Model-2 stage.
+- **Model 1 / 1 Minute OHLC = `M1_M1_OHLC_RESEARCH`, the minimum strategy-performance evidence level.** Use it for base screens, mechanism/portability, MAIN search, optimization region mapping, frozen BWD and temporal/concentration reads.
+- **Model 4 / Every tick based on real ticks = `M4_REAL_TICK_FIDELITY`, mandatory for every EA before Candidate eligibility.** Run frozen MAIN+BWD on one acceptance-critical MT5 installation lineage with exact EX5/set/build identity and no retuning. Mechanical inability blocks Candidate evidence; it is not a strategy failure.
 - **⚠️ Fixed-spread blind spot** (unchanged): MT4/MT5 tester holds spread constant for the whole run — never widens on news. An EA whose live risk control leans on a `MaxSpread` filter shows worse backtest DD than live. Flag this on any REJECT of a spread-filter EA.
 - <sub>proof twice same day 2026-07-03: AUDCAD PF 1.80(M2)→0.89(M1), AUDNZD 1.96(M2)→1.06(M1) — both looked like candidates off M2 alone. Cuts both ways: don't reject off a fast screen either.</sub>
 
@@ -24,13 +24,7 @@ A profitable-looking backtest is a **claim**, not a result. High PF from a rando
 
 ## Verdict discipline (added 2026-07-03 — each rule was paid for the same day)
 
-- **No DEAD/REJECT before an optimize probe.** A verdict from ONE param set (even the author's
-  defaults) is always **PARKED-pending-optimize**. A coarse complete-mode probe (54 passes,
-  ATR-relative ranges reusable across symbols) costs ~15 min on Model 1 with parallel agents.
-  Proof it matters: 3 of 4 symbols called DEAD/REJECT off defaults were rescued the same day the
-  rule was set — EURJPY PF 0.83→2.49, EURCAD 0.65→1.82, USDJPY 1.00→1.51. The 4th (EURCHF,
-  0/54 passes ≥1.2 with n≥60) became a *legitimate* DEAD-optimized. Cheap backtests buy the right
-  to say "dead"; skipping them buys missed edges.
+- **Do not terminally DEAD/REJECT a concept from one default cell.** The 2026-07-03 rescue history remains valid evidence against over-generalizing one weak configuration, but it no longer creates an automatic optimizer debt. A clearly poor Model-1 base/home may `STOP_EXPANSION / PARK` when no direct-consumer hypothesis survives; optimization is reserved for a qualified survivor. `DEAD-OPTIMIZED` remains a terminal classification that must be earned only when a contract actually pursues that question.
 - **Backward-OOS is mandatory when IS and OOS sit inside one regime.** IS/OOS both drawn from the
   same 1–2 recent years proves regime-fit, not durability. Zeus GridLog passed IS/OOS (both 2025–26,
   retention 1.09) then died on unseen 2023–24 (one symbol barely traded, the other hit 36% DD).
@@ -77,7 +71,7 @@ Tags: **[C]** = Claude judgment, do not delegate · **[Q]** = menial, delegate t
 2. **Find its home TF/symbol — don't assume.** A swing EA on H1 or an M15 EA on H1 is tested wrong from the start (BRN207 literally said "TF15"). Plan to sweep TF and symbol, not just the one with the deepest data.
 3. **Read the UNIT of every money/risk param:** points (→ depends on digits), money ($), or % of balance. A `TP = 1% of balance` on $10k = $100 target → unreachable at 0.01 lot. Targets must be reachable in the configured regime.
 4. **Split params:** *edge* (signal periods, thresholds, TP/SL) vs *risk-shaping/danger* (lot multiplier, max orders/trades, grid distance, max lot).
-5. **Trading costs (if the EA/broker has them):** note commission per lot + typical spread + slippage assumptions. Some EAs expose a commission/slippage input — set it realistically; if not present, skip. Costs bite hardest on tight-TP/high-frequency EAs and are only fully modelled at the every-tick confirm (LADDER Step 8, Model-4) — until then assume the screen flatters cost-sensitive EAs.
+5. **Trading costs (if the EA/broker has them):** note commission per lot + typical spread + slippage assumptions. Some EAs expose a commission/slippage input — set it realistically; if not present, skip. Costs bite hardest on tight-TP/high-frequency EAs and are only fully modelled at the every-tick fidelity gate (LADDER Step 5, Model-4) — until then assume the screen flatters cost-sensitive EAs.
 
 ### Phase B — Calibrate the operating regime **[C decides / Q runs]**
 *(order vs Phase C / LADDER Step 0-2 is flexible — it's one way to find the answer, do whichever first)*
@@ -121,25 +115,15 @@ Run the relevant diagnostic from the catalog below. Optimizing an artifact waste
   - **Point-test (single runs) may only do 3 jobs:** confirm a locked .set · A/B control-vs-lever probe (1 dim, 2–3 values) · diagnosis. **Selecting params by hand-picked point-tests while ≥2 dims are unexplored is forbidden** — that is the drift this policy exists to kill.
   - **Resources:** local tester agents = **18 of 20 cores** (leave 2 for Claude/Codex/Chrome — one-time terminal agents config). Long runs are fine: est. > ~2 h → run overnight / split batches, never shrink the window. `optimize_guard.ps1` pre-flights every run (unknown non-Boss EA = warn-only; safety params always REFUSE).
   - **One-time assert (first optimize after the 2026-07-25 script changes):** XML DocumentProperties must show `Leverage 1:100` (bare `Leverage=N` was a silent no-op → runs executed at server default 1:2000) and the Result column must be on the Complex scale (~0–100), confirming `Criterion=7` maps to Complex on build 5836.
-- **Step 3 — Surface read:** plateau = neighbours also profitable (high mean AND high min-neighbour) · sane trade count for the type · stable DD. Spike or hole = not passed. Fine grid around the zone → pick the **plateau CENTER, never the peak**. Watch that PF didn't rise by collapsing trades to noise. **On a genetic surface, min-neighbour/plateau stats are a biased hint** (sampling is dense only near optima) — read them to place the fine grid, but the plateau verdict comes from the fine complete grid + Step 5 fan. Optional stability read: split the fine-grid window by year — the plateau should hold every year, not average out of one hot year. **If the locked center later fails BWD (Step 4): ONE logged re-pick from the same MAIN plateau is allowed; a second failure = back to diagnosis** — iterating picks against BWD is intersect-by-installments and burns BWD as evidence.
+- **Step 3 — Surface read:** plateau = neighbours also profitable (high mean AND high min-neighbour) · sane trade count for the type · stable DD. Spike or hole = not passed. Fine grid around the zone → pick the **plateau CENTER, never the peak**. Watch that PF didn't rise by collapsing trades to noise. **On a genetic surface, min-neighbour/plateau stats are a biased hint** (sampling is dense only near optima) — read them to place the fine grid, but the plateau verdict comes from the fine complete grid + Step 6 fan. Optional stability read: split the fine-grid window by year — the plateau should hold every year, not average out of one hot year. **If the locked center later fails BWD (Step 4): PARK/diagnose under the preregistered contract; no re-pick or retune against BWD.** BWD is a falsification surface, not optimizer round two.
 - **Step 4 — Both-window:** every shortlisted config runs **MAIN + BWD at the same settings, simultaneously** — no single-window ranking survives to the next step. **Basket/grid/recovery EAs: ONE continuous span only** (stitched windows lie ~10×; proven 2026-07-08: PF 7.17/3.97/7.64 tiled → 0.58 continuous).
-- **Step 5 — Sensitivity fan:** ±20% single-axis around the center **including frozen axes** (SL, max levels). Bar: most variants hold ≥70% of baseline PF and none flips to a loss. Any variant flipping to a loss = ridge, not plateau.
-- **Step 6 — Holdout:** ONE run on the untouched window/symbol. Collapse ⇒ selection-fit → back to diagnosis, or BUILD-ON if PF>1 elsewhere (the EUR-H4 MacdDiv 1.71/1.15→holdout 0.35 case).
-- **Step 7 — MC + year-split:** reshuffle MC = **optimistic lower bound** (can only kill, never pass). Bars: **ruin ≤2% green · 2–10% ⇒ resize-first then re-measure (cap breach ≠ reject) · >10% after resize = fail · PF-5th ≥1.0 hard floor, ≥1.2 comfortable.** Year-split every full-window run (`scripts/report_year_split.py`): no hidden losing final year; losing years show capped damage. (MC can't exceed the sample's worst loss → blind to regime change; for grids the real gate is trend-stress + every-tick, not MC.)
-- **Step 8 — Model policy (crisp):**
-  - **Model 2** = zero-trade/broken-config preflight + **kill-direction only**. Never passes/ranks/selects/shown. **A coarse sweep IS ranking → coarse sweeps run Model 1+.** For **grid EAs, Model-2 numbers are not evidence at all.**
-  - **Model 1** = minimum fidelity for any number that ranks/selects/reaches the user; fine for single-position bar-open EAs end-to-end.
-  - **Model 4 (every-tick) MANDATORY before any verdict/deploy for:**
-
-    | Case | why |
-    |---|---|
-    | grid / DCA / basket / multi-position | floating-DD + fill sequence only real on ticks |
-    | pending-ladder entries | limit fills are model-sensitive |
-    | TP < 20 pip | tight-TP open-price fill artifact |
-    | any EA whose largest-loss or n shifts hard between models | the fill-artifact tell-tale (Degold M1 PF13 → M4 0.56) |
-
-    M4 runs **SERIAL on tester lane 1 only**, never in parallel.
-- **Step 9 — Enough = the pre-registered bars are answered.** Typical full funnel per EA×home ≈ coarse ~50 + fine ~30 + fan ~12 + both-window ×2 + holdout ×1 + M4 ×2–3 ≈ **~100–150 runs** — budget it; below ~half of that, a kill verdict is probably premature (unless STRUCTURAL).
+- **Step 5 — Mandatory Model-4 fidelity:** frozen finalist only; run MAIN + BWD with `M4_REAL_TICK_FIDELITY` on one acceptance-critical MT5 installation, exact EX5/set/build/config identity, and no retuning from the selected M1 center. Compare PF/net/DD/trades plus relevant path/exposure diagnostics. A material model-switch cliff falsifies Candidate eligibility; a mechanical/environment failure is `BLOCKED / EVIDENCE_INCOMPLETE`, not strategy failure.
+  - **Highest-sensitivity cases (emphasis only, never an exhaustive trigger):** grid/DCA/basket/multi-position, pending-ladder entries, TP < 20 pip, and any EA whose largest-loss or participation shifts hard between models. Every EA still owes the same universal pre-Candidate M4 MAIN+BWD gate.
+  - M4 runs **SERIAL on tester lane 1 only**, never in parallel.
+- **Step 6 — Final robustness, only with a direct question/consumer:** sensitivity fan, concentration/path analysis, MC, exposure/depth diagnostics and year splits are selected because they answer a stated risk/mechanism question, not because compute is available. Where a sensitivity fan is preregistered, vary one axis at a time around the frozen center and disclose any sign flip/ridge. MC remains an optimistic lower bound: ruin ≤2% green; 2–10% resize-first then re-measure; >10% after resize = fail; PF-5th ≥1.0 hard floor under the applicable historical contract. Year-split every full-window run (`scripts/report_year_split.py`).
+- **Step 7 — HOLDOUT late:** ONE untouched finalist window/symbol only after the research/search surface, frozen BWD, mandatory M4 and applicable final-robustness questions are complete. HOLDOUT is never a search or retuning surface.
+- **Step 8 — Candidate readiness / model policy:** Candidate eligibility requires the complete applicable chain. `M2_OPEN_PRICE_DIAGNOSTIC_ONLY` and Math Calculations have no strategy-performance authority; `M1_M1_OHLC_RESEARCH` is the research/search minimum; `M0_GENERATED_TICK` may be named explicitly when used; `M4_REAL_TICK_FIDELITY` MAIN+BWD is universal before Candidate. No M4 result by itself grants DEMO/LIVE/risk/deployment authority.
+- **Step 9 — Enough = the preregistered direct-consumer questions are answered.** There is no universal run-count quota. Stop expansion when evidence answers the question; do not manufacture sensitivity, MC, optimization, HOLDOUT or another axis merely to keep compute busy.
 
 **Anti-overfit invariants (one block):** never move to a sweeter zone after seeing holdout/live data · optimizer output is in-sample · a window used for selection is in-sample forever · optimistic-side fidelity can only kill, never pass · window = 3yr fixed (rolling-36), re-opt every 6 months · momentum>reversion prior RAISES the pass bar (PF≥1.2 post-optimize), never waives steps.
 
@@ -190,7 +174,7 @@ point it at — don't burn the sweep to re-confirm it).
 
 | Illusion | Smell | Test | If it triggers |
 |---|---|---|---|
-| Tight-TP open-price fill artifact | high PF, tiny points-TP, Model 2 | **widen TP ×10**, re-run | REJECT — PF was fake fills (PF 7.77→0.06 = Elephant) |
+| Tight-TP open-price fill artifact | suspicious Model-2/Open-Prices behavior + tiny points-TP | use it only to diagnose the plumbing/fill hypothesis, then re-run the same question at M1/M4 fidelity | Model-2 PF is not verdict evidence; reject only if the higher-fidelity evidence falsifies the edge |
 | Martingale/grid "edge" | high PF + multiplier/averaging | **set multiplier=1**, re-sweep; 0/N pass = no signal | REJECT — the EA *is* the martingale (BRN207 0/9) |
 | no-SL reversion harvester — un-filterable tail | high PF + ~80% win + no SL + averaging legs; **PF<1 in EVERY real crisis** | re-run real crises; try a vol-gate AND an ADX trend-gate | tail is NOT reactively filterable — vol-gate catches only gap spikes, ADX trend-gate is *counterproductive* (it lags → cuts the good reversion trades). **Cannot size up safely → DIVERSIFY, not leverage.** hard SL also kills the edge (ST03 2026-06-26) |
 | Thin sample | trades < expected-for-type | count vs strategy×TF expectation | INCONCLUSIVE, not a number to trust |
@@ -204,7 +188,7 @@ point it at — don't burn the sweep to re-confirm it).
 | Close-time conditioning survivorship | offline bucket-analysis of a trade list against a LAGGING indicator (ADX/trend state) looks spectacular (Trendline: RANGE PF 0.17 vs TREND 2.05, MC 1.011→1.208) | build the gate in-EA and A/B same windows — gate must read the indicator at ENTRY time | real gate made MC WORSE (0.973→0.861): winning trend-entries fire BEFORE the lagging indicator confirms, then push it up by close — the offline bucket was counting winners into TREND automatically. Offline conditioning with entry-time values only; lagging-indicator gates need an in-EA run before believing anything (2026-07-09) |
 
 ## Data discipline (the trap that voids everything)
-- **Reserve a holdout BEFORE any selection/optimization; never touch it until the holdout (LADDER Step 6).** Once a window is used to pick or tune, it's in-sample forever.
+- **Reserve a holdout BEFORE any selection/optimization; never touch it until the holdout (LADDER Step 7).** Once a window is used to pick or tune, it's in-sample forever.
 - **Track what each window was used for.** After optimizing on A, B is only valid OOS if B was never the selection window. (This session: KRAPOOK XAU "OOS" was the original selection window → circular, no independent data left.)
 
 ## Monte Carlo — what it can / can't do
