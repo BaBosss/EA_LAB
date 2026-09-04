@@ -52,27 +52,36 @@ Hypothesis and decision fields must exist **before** the result they are meant t
 Base Concept
  -> Freeze Hypothesis
  -> Build / Compile / Mechanics tests
- -> fixed-config smoke
- -> broad Symbol x TF matrix
- -> regime attribution
- -> parent comparison
- -> survivor-only deep optimization
+ -> Model-1 fixed-config base screen
+ -> mechanism / portability on Model 1
+ -> broad Symbol x TF / temporal-concentration diagnostics as required
+ -> survivor-only deep optimization on Model-1 MAIN
  -> WIDE/COARSE
  -> REGION_SELECT
  -> MEDIUM_REFINE
  -> FINE / neighbor stability
  -> locked center
- -> exposure/risk report
- -> BWD + regime validation
- -> sensitivity / required Model-4 / MC
+ -> fixed BWD + regime validation on Model 1
+ -> mandatory Model-4 MAIN+BWD execution-fidelity gate
+ -> direct-question sensitivity / MC / path robustness only when needed
  -> HOLDOUT late
  -> Candidate
  -> DEMO only under owner authority
 ```
 
-Failure at an intermediate gate does not erase research value. Always record `Observation -> Interpretation -> Next Hypothesis` and preserve mechanical/harness failures separately from strategy evidence.## 3. Broad smoke before deep optimization
+Failure at an intermediate gate does not erase research value. Always record `Observation -> Interpretation -> Next Hypothesis` and preserve mechanical/harness failures separately from strategy evidence.
 
-Broad smoke is a **fixed-configuration research screen**, not candidate ranking and not a parameter search.
+### Tester modelling doctrine — owner-ratified 2026-09-03
+
+- `M1_M1_OHLC_RESEARCH` (MT5 Model 1 / 1 Minute OHLC) is the minimum modelling level for any numerical strategy judgement: PF, net, DD, trades, MAIN/BWD, year splits, mechanism A/B, portability, optimization selection, plateau assessment, and robustness interpretation.
+- `M2_OPEN_PRICE_DIAGNOSTIC_ONLY` and Math Calculations are non-authoritative engineering diagnostics only. There is no routine Open-Prices Step 0 in the research funnel. Their numerical performance fields may not support a strategy/research decision.
+- `M0_GENERATED_TICK` may be named explicitly when a contract uses generated ticks; it does not replace the universal pre-Candidate real-tick gate.
+- `M4_REAL_TICK_FIDELITY` is mandatory for every EA before Candidate eligibility: frozen selected config, MAIN+BWD, one acceptance-critical MT5 installation lineage, exact EX5/set/build identity, and no retuning between M1 and M4.
+- If M4 cannot be executed mechanically, Candidate is `BLOCKED / EVIDENCE_INCOMPLETE`; do not waive the gate and do not convert an environment failure into a strategy failure.
+
+## 3. Broad smoke before deep optimization
+
+Broad smoke is a **fixed-configuration Model-1 / 1 Minute OHLC research screen**, not candidate ranking and not a parameter search.
 
 Current Boss19 research design (family-specific; not a universal project default):
 - Symbols: `XAUUSD, EURUSD, GBPUSD, AUDUSD, USDJPY, BTCUSD`;

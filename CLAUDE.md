@@ -38,7 +38,7 @@ EVIDENCE IN
    ⇒ DEAD-STRUCTURAL → EDGE_CATALOG dead pile + scorecard kill-reason
      (course-file rule: extract the entry CONCEPT before discarding the vehicle — [[feedback-course-files-extract-idea]])
 │
-2. else PARAMETRIC — you may not kill it yet.
+2. else PARAMETRIC — you may not kill the concept yet. A clearly poor Model-1 base/home may still `STOP_EXPANSION / PARK` without optimization; optimization is reserved for a qualified survivor and is not owed merely to rescue a negative home.
    RIGHT HOME first (reversion→EURUSD/EURGBP/AUDNZD ranger · momentum→XAU/GBP trender;
    landing in the wrong home ≠ death). Walk the ladder ≥3 levers × ≥2 TF on the correct home.
    │
@@ -58,11 +58,11 @@ EVIDENCE IN
    │        good idea that still does not pass ⇒ PARKED-VERIFY(user): tag + a 3-line brief
    │        (what it is · which gate killed it · why it is still interesting). It must not die silently.
    │
-   └─ 2c. clears the pre-registered bars ⇒ VALIDATED CANDIDATE → deploy funnel:
-          lock the plateau-center .set → both-window → sensitivity fan → holdout (or declare
-          demo-forward-as-holdout once selection has already eaten BWD — Boss_16 precedent) →
-          MC (resize-first on a cap breach) → Model-4 if fill-sensitive → corr vs cohort
-          ⇒ DEMO  (DEPLOYMENTS.csv row + judge criteria pre-registered at attach time)
+   └─ 2c. clears the pre-registered research bars ⇒ FROZEN FINALIST (not Candidate yet):
+          lock the plateau-center .set → fixed BWD validation → mandatory Model-4 MAIN+BWD on the
+          same acceptance-critical MT5 installation → only direct-question robustness/sensitivity/MC
+          that the contract actually needs → HOLDOUT late when applicable → CANDIDATE decision →
+          corr vs cohort ⇒ DEMO  (DEPLOYMENTS.csv row + judge criteria pre-registered at attach time)
           ⇒ ≥3 months demo forward → judge ⇒ LIVE (real money)
              (owner approval is mandatory; independent review must come from a different model family;
               no author may be the sole final reviewer)
@@ -73,10 +73,10 @@ EVIDENCE IN
 | Transition | Bar |
 |---|---|
 | smoke pulse → PROCEED | one cell, naked PF ≥ **1.2** at an n appropriate to the type (WATCH = 1.0–1.2) |
-| optimize pass → CANDIDATE | **MAIN ≥ 1.2** (hard) AND **BWD ≥ 1.0** (soft-gate) + a plateau, not a spike. **BWD-fail = no auto-kill → PARKED-VERIFY(user): demo-isolate may be approved, but the route to real money is closed automatically** (user Q3 2026-07-18) <br>(TH verbatim: "BWD-fail = ไม่ auto-kill → PARKED-VERIFY(user): เคาะ demo-isolate ได้ แต่ปิดทางเงินจริงอัตโนมัติ") |
+| optimize pass → FROZEN FINALIST (not Candidate) | **MAIN ≥ 1.2** (hard) AND **BWD ≥ 1.0** (soft-gate) + a plateau, not a spike. **BWD-fail = no auto-kill → PARKED-VERIFY(user): demo-isolate may be approved, but the route to real money is closed automatically** (user Q3 2026-07-18). A finalist is not Candidate-eligible until the mandatory Model-4 MAIN+BWD fidelity gate and the remaining applicable evidence chain are complete. <br>(TH verbatim: "BWD-fail = ไม่ auto-kill → PARKED-VERIFY(user): เคาะ demo-isolate ได้ แต่ปิดทางเงินจริงอัตโนมัติ") |
 | holdout | PF ≥ **1.2** at an appropriate n ⇒ deploy track · **1.0–1.2 ⇒ BUILD-ON** (JUMSTOCH precedent) · <1.0 ⇒ selection-fit, go back to diagnosis |
 | MC | ruin ≤ **2%** (resize-first allowed up to 10%) · PF-5th ≥ **1.0** |
-| Model-4 (when it comes due) | both-window PF ≥ **1.0** retained AND largest-loss does not explode (no model-switch cliff) |
+| Model-4 pre-Candidate — **mandatory for every EA** | frozen selected config, same acceptance-critical MT5 installation, MAIN+BWD, no retuning; both-window PF ≥ **1.0** retained AND largest-loss does not explode (no material model-switch cliff). Compare PF/net/DD/trades plus path/exposure diagnostics relevant to the EA. Mechanical/environment inability = Candidate BLOCKED/evidence incomplete, not strategy failure. |
 | demo → LIVE | ≥ **3 months** · judge PF ≥ **1.40** at ≥ **30 trades** · no pre-registered kill tripped |
 | demo → LIVE, **thin EAs only** (expected rate < **0.5 closed trades/week**) — *ratified by the user 2026-07-28, ORDER-235* | the 30-trade count is **replaced**, not waived: **≥ 12 months live** · **net positive over that window** · **no pre-registered kill tripped** · **AND** the both-window backtest evidence was already clear before attach. The price of the weaker statistic is paid in size: this class is **permanently small-lot and may never be sized up on PF** (the NuiIndy `engine-edge` treatment). <br>**Why the trade-count bar had to go rather than the date:** at 0.2–0.3 trades/week the four affected EAs (`991001` **real money** · `991004` · `990205` · `990303`) reach 30 closed trades in **2028–2029**. Sliding the judge date leaves them with no decision criterion for three years, which is not a bar — it is the absence of one. <br>(TH verbatim: "EA thin (<0.5 ไม้/สัปดาห์) → judge ที่ 12 เดือน + net บวก + ไม่มี kill ทริป แทนบาร์ 30 ไม้ · แลกกับ lot เล็กถาวร ห้าม size-up ตาม PF") |
 | demo kill (default; per-EA override allowed at attach time) | eqDD > **12%** · 3-mo PF < **0.8** at ≥ **15 trades** |
@@ -88,6 +88,7 @@ EVIDENCE IN
 
 **Canonical verdict vocabulary (retire every other term):**
 `DEAD-STRUCTURAL · DEAD-OPTIMIZED · PARKED-VERIFY(user) · BUILD-ON · CANDIDATE · DEMO · LIVE`
+`FROZEN FINALIST` is a workflow-gate label only, not a canonical verdict/status; freezing a finalist does not by itself trigger the Row-X verdict write-checklist.
 (PASS/CONDITIONAL/ROBUST/MARGINAL/Mode-B from the old skill = retired). **Discard semantics:** STRUCTURAL = the only legitimate death (kill immediately, no optimize owed · the concept may still be extracted) · DEAD-OPTIMIZED = a terminal state that must be *earned* (close the cell/concept after a full ladder + last-optimize) · **everything else must not be discarded.**
 
 **📋 Row-X write-checklist — check these 5 lines before writing any verdict:**

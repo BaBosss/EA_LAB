@@ -26,8 +26,8 @@ BUILD   chassis-first (Boss V2); standalone needs a stated reason (speed alone i
         independent review; no author is its sole final reviewer.
         CAGE (hard, in order): mql-code-reviewer PASS (on SOURCE, before compile) → compile 0/0 →
         tpl_regression CLEAN (if core/ touched) → run_tests PASS. No stage skipped even under quota pressure.
-TEST + OPTIMIZE   backtest-optimize-rigor LADDER Step 0-9 (owns the method).
-VALIDATE          both-window → plateau fan → holdout → MC → Model-4 if fill-sensitive → year-split.
+TEST + OPTIMIZE   Model-1 / 1 Minute OHLC is the minimum research evidence level; no routine Model-2/Open-Prices stage. Model-2/Math are ad-hoc diagnostics only. Optimize only a qualified survivor on the preregistered Model-1 MAIN search surface.
+VALIDATE          frozen BWD on Model 1 → mandatory Model-4 MAIN+BWD on one installation lineage → only direct-question robustness/MC/sensitivity → HOLDOUT late when applicable → year/concentration checks.
 VERDICT           CLAUDE.md VERDICT GATE supplies the unchanged tree + bars. Codex/Claude may analyze and
                   propose; ChatGPT coordinates the working decision; owner approval gates DEMO/LIVE,
                   real-money, risk-default, and irreversible decisions.
@@ -44,9 +44,9 @@ OPERATE           ea-live-monitor every 1–2 weeks → judge date.
 | 1 | idea → design | signal triage: class (mom/rev), home cell, smoke plan | not already in dead pile (EDGE_CATALOG + signal-landscape check) | ChatGPT creates/routes the contract; assigned specialist analyzes | taskboard order **with pre-registered bars + flat-lot checkbox** |
 | 2 | design → code | Spec Card (new mechanism only) or order spec | L5 refused · L4 user sign-off | ChatGPT routes; owner signs reserved decisions | taskboard |
 | 3 | code → backtest | .mq5 + .ex5 + baseline .set | compile 0/0 · **reviewer PASS (on source, before compile)** · tpl_regression CLEAN (core/) · run_tests PASS | assigned Codex/Claude author; different-family review for high-risk code | commit `[tag]` + taskboard row |
-| 4 | backtest → optimize | smoke table (Model policy) + flat-lot result | pulse bar (PF≥1.2 cell) or reasoned WATCH | qwen/ZCode/batch runs; Codex/Claude analyzes; ChatGPT routes | taskboard raw results |
+| 4 | backtest → optimize | Model-1 / 1 Minute OHLC base-screen table + flat-lot result | pulse bar (PF≥1.2 cell) or reasoned WATCH; Open Prices/Math cannot satisfy this boundary | qwen/ZCode/batch runs; Codex/Claude analyzes; ChatGPT routes | taskboard raw results |
 | 5 | optimize → validate | **locked plateau-center .set** + surface evidence + both-window rows | plateau-not-spike · MAIN≥1.2/BWD≥1.0 | batch agents run; assigned specialist reads surface | working sweep sets = `_mt5_auto/ab_sets/<order>/` · the **locked validation .set** = the exact file later handed to vps-deploy-ops (immutable once verdict written) · evidence = `_triage/ORDERxxx_*_VERDICT.md` |
-| 6 | validate → verdict | holdout + MC + year-split + M4 (if due) | pre-registered bars answered | Codex/Claude proposes; ChatGPT coordinates; owner approves reserved outcomes | scorecard verdict + EA_MASTER_INDEX (same commit) + EDGE_CATALOG mechanism entry + **B1_DATASET.csv row in the REVIEWED commit** |
+| 6 | validate → verdict | frozen Model-1 BWD + **mandatory Model-4 MAIN+BWD for every EA** + applicable direct-question robustness/MC + late HOLDOUT/year-concentration evidence | pre-registered bars answered; no Candidate eligibility without the universal M4 gate | Codex/Claude proposes; ChatGPT coordinates; owner approves reserved outcomes | scorecard verdict + EA_MASTER_INDEX (same commit) + EDGE_CATALOG mechanism entry + **B1_DATASET.csv row in the REVIEWED commit** |
 | 7 | verdict → portfolio | trade list / monthly returns | corr ladder ≤0.40 / 0.40–0.60 reduce / >0.60 reduce-not-cut / same-EA <0.8 | assigned analyst; ChatGPT reviews | scorecard + corr note |
 | 8 | portfolio → deploy | vps bundle (.ex5 + locked .set + README) + judge criteria | **DEPLOYMENTS.csv row FIRST** · check_state green (magic) · S1–S7 checklist | Codex integrates; **owner approves and attaches** | DEPLOYMENTS.csv → DEMO_DEPLOYMENT_PLAN (context) → dashboard (checker-forced) |
 | 9 | demo → live | judge report (ea-live-monitor attribution) | **3-mo** + judge bars + independent different-family review | **owner decides** | Decision log + DEPLOYMENTS.csv |

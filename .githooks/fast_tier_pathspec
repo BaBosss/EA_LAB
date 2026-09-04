@@ -91,10 +91,17 @@ _triage/PARAM_INACTIVE_AUDIT.md
 AGENT_TASKBOARD.md
 AGENTS.md
 ARCHIVE_TASKBOARD_2026-07A.md
+CLAUDE.md
 docs/memory_control/B1_DATASET.csv
+docs/MT5_AUTOMATION.md
 docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv
+docs/PIPELINE.md
+docs/research/EA_RND_PROTOCOL.md
 docs/SESSION_LEDGER.md
+docs/skills_mirror/skills/backtest-optimize-rigor/SKILL.md
+docs/skills_mirror/skills/locked-ea-analyzer/SKILL.md
+docs/skills_mirror/skills/signal-scanner/SKILL.md
 ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1
 ea_projects/(Boss)_NewsGuard/vps_rclone/pull_news.cmd
 ea_projects/(Boss)_NewsGuard/vps_rclone/pull_regime.cmd

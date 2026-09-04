@@ -16,7 +16,7 @@ Building and optimizing an EA costs hours. Most signal ideas are dead on arrival
 **Boundary vs backtest-optimize-rigor (avoid trigger overlap):** this skill is **pre-build triage** — "is this idea worth coding at all?" on default params. The moment you have a coded EA you want to *optimize, forward-test, or judge for deploy*, that's `backtest-optimize-rigor`. Phase A (classify type) and Phase C (artifact screen) there are the *rigorous* versions of what this skill does *cheaply and early*. Use this first; hand off to that.
 
 ## Core stance
-- **Cheap death before expensive life.** A 2023–2026 Model-2 smoke on the right symbol tells you in minutes whether a concept has any naked edge. Do that BEFORE writing a full optimizer sweep.
+- **Cheap diagnosis before expensive optimization.** Use Model 1 / 1 Minute OHLC for any numerical edge judgement. A clearly poor home can `STOP_EXPANSION / PARK` without an optimizer; do not rescue a negative base merely because optimization is available.
 - **Momentum > reversion is the standing prior for this portfolio** (empirically confirmed across 6+ builds). Treat a reversion idea as guilty until proven innocent; demand stronger smoke evidence before building it.
 - **Naked edge or nothing.** Strip recovery (martingale/grid/averaging) to a single naked entry and smoke THAT. If the edge only appears with recovery on, the recovery IS the "edge" — it's a martingale, reject it. (63 MT4 EAs + 9 bucket-D ports all died this way.)
 - **The instrument is part of the signal.** The same logic is alive on XAU and dead on EUR. Don't smoke a momentum signal on a ranging pair and conclude "no edge."
@@ -50,35 +50,23 @@ Building and optimizing an EA costs hours. Most signal ideas are dead on arrival
 
 ### Step 3 — Naked smoke **[C designs / Q runs]**
 - Author the signal in the **standalone template** (see `mql-code-generator`), recovery OFF, naked entry + ATR SL/TP, **tester-gate fix in place** (or smoke falsely shows 0 trades).
-- Smoke window **2023.01.01–2026** (IS-era), **Model 2** (bar-open — fast, identical to Model 1 for bar-open EAs). Default-ish params; this is a triage, not an optimize.
+- Smoke window follows the preregistered experiment; any PF/net/DD/trade judgement uses **Model 1 / 1 Minute OHLC (`M1_M1_OHLC_RESEARCH`)** at minimum. Model 2/Open Prices is skipped unless a specific engineering diagnosis is required, and its performance numbers carry no research authority.
 - Capture per cell: PF, trade count, DD, win%. Delegate the runs to qwen (`mt5_run.ps1` loop → CSV).
 
 ### Step 4 — Smoke verdict **[C judgment]**
 ```
-PROCEED  : at least one (symbol,TF) cell PF ≥ ~1.2 naked with a sane trade count
-           (matches the type's frequency floor) and structurally sane DD
-           → graduate to backtest-optimize-rigor Phase D (optimize)
-           NOTE: an insane DD at smoke sizing is NOT a kill reason by itself —
-           DD is lot-linear; resize first (user rule 2026-07-03). Kill reasons
-           at smoke are edge-based (PF) or structural, never cap-based.
-WATCH    : PF ~1.0–1.2, structurally correct (e.g. momentum on a trender) but
-           below gate → ONE optimize attempt may lift it; cap the effort
-DEAD     : ONLY two ways to write DEAD off a smoke —
-           (1) STRUCTURAL: PF only appears with recovery on (flat-lot < 1), OR
-               uncapped-ruin / cracked / no-source. These are the ONLY concept
-               kills a smoke can make.
-           (2) OPTIMIZE-CONFIRMED: after optimizing ≥3 levers on the RIGHT HOME,
-               the ceiling still stays < 1.0 both-window (SessionBreakout lesson:
-               1,200-pass ceiling 1.20, forward 0.91 — optimize confirmed death).
-           A low default-param PF is NEVER a concept-kill by itself.
+PROCEED : the Model-1 base/home supplies enough preregistered evidence for the next mechanism/portability question; optimization is allowed only after it becomes a qualified survivor.
+WATCH   : evidence is mixed/uncertain; define a new direct-consumer mechanism or portability question before spending optimization compute.
+PARK    : the Model-1 base/home is clearly poor or no direct-consumer hypothesis survives -> STOP_EXPANSION. Do not optimize merely to rescue the home.
+DEAD    : reserved for a genuinely STRUCTURAL concept failure supported by mechanism evidence (for example cracked/no-source or recovery-only framing), never just one weak default home.
 ```
-- **🔴 A low smoke PF ≠ dead concept — it means "not optimized yet."** Do NOT write DEAD/PARKED-concept off default params. This is a repeat failure mode (paid 2026-07-16: SMC×STO killed on a default-param smoke at 0.63-0.89; user pushed → optimizing StoK 5→13 + adding an ADX filter turned it into a real EURUSD both-window candidate PF 1.14-1.39, plateau + Model-4 + holdout. It was nearly killed for nothing).
-- **The momentum>reversion prior raises the PASS BAR (demand PF ≥1.2 AFTER optimize), it does NOT license skipping the optimize.** A reversion idea still gets the full ladder: optimize its core params (oscillators are noisy at default — StoK 5 is not the answer) on its RIGHT HOME (ranging majors EURUSD/EURGBP/AUDNZD, NOT a trender where it fights the trend). Only an optimize-ceiling < 1.0 both-window on the right home kills it.
-- **⚠️ Scope of a smoke-DEAD (user rule 2026-07-03, hardened 2026-07-16):** a smoke may kill only a STRUCTURAL concept (recovery-dependent / uncapped-ruin / cracked / no-source). It may NOT kill a signal that merely smokes ~1.0 — that is PARKED-pending-optimize, and the optimize must be on the RIGHT HOME. Proof both directions: EURJPY 0.83→2.49, EURCAD 0.65→1.82, USDJPY 1.00→1.51 (2026-07-03); SMC×STO EURUSD 0.70→1.24 BWD after opt+filter (2026-07-16). **Default-param verdicts = PARKED-pending-optimize, full stop.**
+- Historical rescues from weak defaults remain evidence against declaring a whole concept dead from one cell; they are **not** an obligation to optimize every weak home.
+- Momentum/reversion priors may guide which prospective home to test, but they do not override Model-1 evidence or create optimizer authority.
+- A default/base result may PARK a home without killing the mechanism family. Optimization requires a separately qualified survivor and a preregistered direct consumer.
 
 ### Step 5 — Hand off **[C]**
-- PROCEED/WATCH → **backtest-optimize-rigor** (Phase D optimize → Phase E forward → Phase F robustness).
-- DEAD → record the death in [[signal-landscape]] so the concept isn't re-hunted, and move to the next idea.
+- PROCEED → **backtest-optimize-rigor** / mechanism-portability work under a new preregistered direct consumer; optimization is not automatic.
+- WATCH/PARK → preserve the evidence and stop until a new direct-consumer hypothesis exists. Structural DEAD only → record the mechanism-level death in [[signal-landscape]].
 
 ---
 
@@ -94,13 +82,9 @@ mechanics on AUD pairs, not from a clever entry. Sequence (differs from the nake
 2. **One full-window run per symbol** (2023→now, Model 1 — grid/basket EAs are NOT bar-open-pure,
    Model 2 misprices fills) at **reduced sizing** (~0.25×, e.g. `Boss14_GridLog_screen_small.set`)
    so the kill-DD cage can never halt-truncate the sample. Delegate the batch to qwen.
-3. **Per-year split** every report (`scripts\report_year_split.py`) — aggregate PF hides losing
-   years. Screen read: full PF ≥1.2 AND no year <1.0 = WATCH; anything else = pending-probe.
-4. **Optimize probe before any kill** (54-pass ATR-relative complete set, reusable across symbols —
-   e.g. `Boss14_GridLog_GBPAUD_opt1.set`). Cells with a plateau (several neighboring passes ≥1.2,
-   n≥60) = CANDIDATE (in-sample); 0-pass cells = legitimately DEAD-optimized.
-5. **Hand off candidates** to backtest-optimize-rigor (plateau-center → IS/OOS → MC) — optimizer
-   numbers are in-sample claims, not results.
+3. **Per-year split** every report (`scripts\report_year_split.py`) — aggregate PF hides losing years. Preserve the distribution; do not manufacture a filter from the bad years.
+4. **Only a qualified survivor may enter optimization.** A weak Model-1 base/home is `STOP_EXPANSION / PARK`, not an optimizer rescue target. If a survivor has a preregistered optimization question, map a stable region on Model-1 MAIN and freeze a center; optimizer rows are in-sample research evidence, never Candidate status.
+5. **Hand off a frozen finalist** to backtest-optimize-rigor for fixed BWD → mandatory Model-4 MAIN+BWD → only direct-question final robustness → late HOLDOUT → Candidate decision.
 
 Known mechanism trait (not a bug): resting-stop entries latched once can go **dormant for years**
 when price trends away from the armed level — long silent stretches in a report are the mechanism
@@ -110,7 +94,7 @@ waiting, not a data hole. Check History Quality before assuming either.
 | | Smoke (this skill) | Optimize (backtest-optimize-rigor) |
 |---|---|---|
 | Purpose | is there ANY naked edge? | lift a real edge to deployable |
-| Window | IS-era 2023–2026, Model 2 | grid sweep + reserved OOS holdout |
+| Window | preregistered Model-1 research window(s) | qualified-survivor Model-1 MAIN search + frozen BWD; M4 mandatory before Candidate |
 | Params | default-ish, throwaway | swept 2–3 at a time, plateau-selected |
 | Bar to proceed | PF ≥ ~1.2 in one cell | OOS PF ≥ 1.40 gate, MC stable |
 
@@ -125,7 +109,7 @@ waiting, not a data hole. Check History Quality before assuming either.
 - Momentum > reversion is the prior — make reversion ideas earn their build time.
 - Smoke naked (recovery OFF); if edge needs recovery, it's a martingale.
 - Right instrument or the smoke lies (momentum on a trender, not a ranger).
-- PF ~1.0 reversion = dead concept; don't optimize it. PF 1.04 momentum-on-trender = maybe a tuning gap, optimize once.
+- Poor Model-1 base/home = STOP/PARK that home unless a new independent direct-consumer hypothesis exists; do not auto-optimize to rescue it, and do not over-generalize it into concept death.
 - Record deaths in signal-landscape so concepts aren't re-hunted.
 
 ## FINAL RULE
