@@ -1,0 +1,127 @@
+{
+  "schema": "ea_lab_monitoring_gap_classification/1",
+  "date": "2026-09-05",
+  "canonical_base_sha": "d4ca297405d32130f1be463cd57b54d86bcd8a2d",
+  "objective": "Classify the current DailyMonitor fail-closed gaps and route only evidence-supported next work without changing strategy runtime, trading, risk, LIVE state, or verification semantics.",
+  "live_snapshot": {
+    "path": "D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-a1f0483e-20260904\\portfolio\\control_room_snapshot.json",
+    "generated_at": "2026-09-05T09:36:31+07:00",
+    "sha256": "08E23576700D0E2FFF063FD81A1B87FDEA66F22CD902AB5297D944CAD638A93F",
+    "length_bytes": 236693,
+    "execution_context": "NON_PRIMARY_WORKSPACE",
+    "deployment_inventory_rows": 64,
+    "deployment_status_counts": {
+      "ACTIVE": 58,
+      "REMOVED": 5,
+      "UNVERIFIED": 1
+    },
+    "deployment_monitoring_states": {
+      "ATTACHED_PENDING_NO_EVIDENCE": 58,
+      "REMOVED_NOT_APPLICABLE": 5,
+      "UNKNOWN_UNVERIFIED": 1
+    },
+    "runtime_identity_coverage": {
+      "state": "GAP",
+      "expected": 58,
+      "mapped": 1,
+      "validated_pass": 0,
+      "fully_bound": 0,
+      "unmapped_count": 57,
+      "unobserved_count": 1,
+      "unobserved": ["463666728|990026"]
+    }
+  },
+  "deployment_verification_contract": {
+    "source": "scripts/lib/deployment_status.ps1 + scripts/lib/monitor_coverage.ps1",
+    "verified_requires": [
+      "attestation_state=HASHED",
+      "attestation_confidence=high",
+      "runtime_identity_state=PASS"
+    ],
+    "underived_token_semantics": "deployment-verification-underived-xN is an aggregate count of ACTIVE rows whose verification resolves PENDING/NO_EVIDENCE; N is not an error code."
+  },
+  "classifications": [
+    {
+      "token": "deployment-verification-underived-x58",
+      "classification": "MISSING_EVIDENCE",
+      "blocker_class": "E OWNER-EXTERNAL / evidence acquisition by deployment",
+      "product_defect": false,
+      "evidence": "DEPLOYMENTS.csv contains exactly 58 ACTIVE rows. Current identity coverage has 57 rows with no RUNTIME_IDENTITY_MAP entry and the only mapped row has no validated PASS runtime record. The strict verifier therefore correctly fails closed instead of deriving VERIFIED from ACTIVE lifecycle text.",
+      "next_action": "Do not patch the verifier and do not bulk-create identity mappings. Add deployment-specific attestation/runtime-identity evidence only when authoritative provenance exists."
+    },
+    {
+      "token": "runtime-identity-coverage-gap",
+      "classification": "MISSING_EVIDENCE",
+      "blocker_class": "E OWNER-EXTERNAL / evidence acquisition",
+      "product_defect": false,
+      "evidence": "RUNTIME_IDENTITY_MAP.csv contains one deployment mapping while the current forward-observed universe expects 58; 57 are unmapped and the mapped ORDER-353 record does not validate PASS.",
+      "next_action": "Preserve fail-closed coverage. Do not infer mappings from deployment names, magic numbers, or lifecycle state."
+    },
+    {
+      "token": "runtime-identity-unverified",
+      "classification": "MISSING_EVIDENCE",
+      "blocker_class": "E OWNER-EXTERNAL",
+      "product_defect": false,
+      "evidence": "ORDER-353 runtime identity validation is FAIL/EVIDENCE_TIMESTAMP_STALE. Current snapshot reports age_hours=313.8 with max_hours=30.",
+      "next_action": "Obtain a fresh strategy-emitted ORDER-353 identity sidecar read-only from the strategy VPS. No reattach or strategy runtime mutation under this milestone."
+    },
+    {
+      "token": "first-trade-untrusted",
+      "classification": "DOWNSTREAM_OF_MISSING_RUNTIME_IDENTITY",
+      "blocker_class": "E OWNER-EXTERNAL",
+      "product_defect": false,
+      "evidence": "The raw candidate entry exists, but current runtime identity does not validate. accepted first_trade_epoch and judge_date therefore remain null.",
+      "next_action": "Do not start the judge clock from raw deal evidence. Re-evaluate only after fresh identity validation PASS binds the candidate to epoch-1."
+    },
+    {
+      "token": "deployment-unverified-69424711|",
+      "classification": "DECLARED_UNVERIFIED / MISSING_EVIDENCE",
+      "blocker_class": "E OWNER-EXTERNAL",
+      "product_defect": false,
+      "evidence": "The inventory contains one UNVERIFIED row with blank magic; monitor coverage deliberately exposes it as UNKNOWN/UNVERIFIED instead of silently omitting it.",
+      "next_action": "Leave fail-visible until authoritative deployment evidence resolves the row."
+    }
+  ],
+  "order353_read_only_intake": {
+    "target": "463666728|990026",
+    "current_local_common_files": "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files",
+    "target_sidecar_present_in_local_common_files": false,
+    "current_runtime_archive_sidecar": "portfolio/live_deals/EA_LAB_identity_463666728_990026_20260823.json",
+    "current_runtime_archive_sidecar_sha256": "DD73B34859C748011605C22C76A8881F87B4241EC633EB8F1B50661021EB1DED",
+    "producer_evidence_timestamp": "2026.08.23 07:50:01",
+    "validation_state": "FAIL",
+    "validation_reason": "EVIDENCE_TIMESTAMP_STALE",
+    "accepted_first_trade_epoch": null,
+    "judge_date": null,
+    "result": "BLOCKED_E_OWNER_EXTERNAL"
+  },
+  "daily_monitor_runtime_lineage": {
+    "scheduled_task": "EA_LAB_DailyMonitor",
+    "scheduled_task_action": "D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-a1f0483e-20260904\\scripts\\daily_monitor.ps1",
+    "scheduled_task_state_after_run": "Ready",
+    "scheduled_task_last_result": 1,
+    "runtime_branch": "runtime/daily-monitor-a1f0483e-20260904",
+    "runtime_head": "b3cd97a66c2bb680633d54d83976af8c71430929",
+    "canonical_at_classification": "d4ca297405d32130f1be463cd57b54d86bcd8a2d",
+    "ahead_of_canonical": 1,
+    "behind_canonical": 1,
+    "runtime_worktree_dirty_after_2026_09_05_generation": true,
+    "data_generation": "PASS_WITH_FAIL_CLOSED_FINDINGS",
+    "safe_projection": "PASS",
+    "auto_commit": "BLOCKED_BY_CANONICALITY_GUARD",
+    "classification": "D EXECUTION_INCOMPLETE / RUNTIME_LINEAGE_CONVERGENCE",
+    "product_defect": false,
+    "note": "The 2026-09-05 run generated fresh collector files, control_room_snapshot.json and SafeProjection, but pre-commit correctly refused a runtime auto-commit from a branch that is 1 ahead / 1 behind origin/master. This is separate from the five monitoring evidence tokens above.",
+    "runtime_mutation_performed": false,
+    "next_action": "Deliberately re-anchor the persistent DailyMonitor runtime to current pushed canonical before expecting durable auto-commit again; preserve the dirty generated runtime bytes and existing rollback evidence."
+  },
+  "overall": {
+    "monitoring_state": "DEGRADED_MONITORING",
+    "reproducible_product_defects_in_current_fail_closed_tokens": 0,
+    "bounded_code_repair_opened": false,
+    "strategy_runtime_changed": false,
+    "trading_or_live_authority_changed": false,
+    "risk_or_default_changed": false,
+    "authority": "READ_ONLY_CLASSIFICATION_PLUS_CANONICAL_STATE_SYNC_ONLY"
+  }
+}
