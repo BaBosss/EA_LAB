@@ -28,12 +28,39 @@
                  },
     "research":  {
                      "selected":  "HYP-B16-XAU-H4-EXITCONC-01",
-                     "status":  "PREREGISTERED_ZERO_NEW_MT5",
+                     "status":  "V1_BLOCKED_CONTROL_MISMATCH_REPAIR01_PREREGISTERED",
                      "optimization":  "NONE",
                      "holdout":  "UNSPENT",
                      "input_package":  "factory/runs/b16_characterization_20260830",
                      "method_source":  "factory/runs/b16_exitdiag_20260831/usdjpy_h1/analyze_exitdiag.py",
-                     "outcome_analysis_performed":  false
+                     "outcome_analysis_performed":  false,
+                     "v1_control_gate":  {
+                                             "performed":  true,
+                                             "result":  "BLOCKED_CONTROL_MISMATCH",
+                                             "child_outcomes_calculated":  false,
+                                             "proxy":  "DEEP_SPACING_EQUAL",
+                                             "proxy_main":  {
+                                                                "trades":  80,
+                                                                "net":  700.92,
+                                                                "eqdd_pct":  7.31,
+                                                                "pf":  4.4
+                                                            },
+                                             "parent_main":  {
+                                                                 "trades":  79,
+                                                                 "net":  707.78,
+                                                                 "eqdd_pct":  6.27,
+                                                                 "pf":  4.08
+                                                             }
+                                         },
+                     "repair01":  {
+                                      "status":  "PREREGISTERED_REPAIR01_MUST_BE_CANONICAL_BEFORE_EXECUTION",
+                                      "bounded_repair_number":  1,
+                                      "parent_parsed_path":  "_mt5_auto/b16_h03/B16_H03_PARSED.json",
+                                      "parent_parsed_sha256":  "3639c9abcc8c299cf11ce1eb310ed9e721f43831870e213baafeb2e59f6a0fb6",
+                                      "main_report_sha256":  "aee6819ba12f929caade4cf1b70915978a3259ec2b7136a1009e077057bb0e7e",
+                                      "bwd_report_sha256":  "df63addd9975b66a9471aafe929d3b7f31377a95a93342cc6f1521728f07cff3",
+                                      "hypothesis_and_verdict_rule":  "UNCHANGED"
+                                  }
                  },
     "source_reviews":  {
                            "claude_ri":  "D:/EA_LAB_CONTROL/review_outputs/msnext_ri_semantics_244c15d5.txt",
@@ -43,7 +70,11 @@
     "file_sha256":  {
                         "freshness_contract":  "90a7700373ae827f5b403455e2a4f4161c4ad3f5aad105c792be13fd7c123027",
                         "coverage_contract":  "c5c7c31d856878f7a68a79e7746fc23fe79d223a9c10756da64abb2ef1fb1173",
-                        "research_preregistration":  "4bd890aedcc6bd35ae6afc9bfa4dd7b4931c052086fdf1eaac28a051d128f419"
+                        "research_preregistration":  "4bd890aedcc6bd35ae6afc9bfa4dd7b4931c052086fdf1eaac28a051d128f419",
+                        "v1_analyzer":  "4f2254f8adc91363603f8d6a745d2697d70839008999cf216ce5354785150918",
+                        "v1_block_result":  "db3036e2056b70f3b02ae65af90d76f7de02fe8308158ba72838766a7d053a0a",
+                        "repair01_prereg":  "085088114f0c49b8319e9fe643e77371a64b349066c7585254b72ec4827093da",
+                        "v1_acceptance":  "702e26d42fdb567c6f8f1355af7410fac99992a0b7072a6a3ffafea901ab2c3e"
                     },
     "current_state":  {
                           "global_monitoring":  "DEGRADED_MONITORING",

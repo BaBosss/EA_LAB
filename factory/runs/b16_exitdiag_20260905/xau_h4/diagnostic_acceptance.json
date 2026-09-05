@@ -1,0 +1,35 @@
+{
+  "expected_parent": {
+    "dd": 6.27,
+    "net": 707.78,
+    "pf": 4.08,
+    "report_sha": "aee6819ba12f929caade4cf1b70915978a3259ec2b7136a1009e077057bb0e7e",
+    "trades": 79
+  },
+  "holdout": "UNSPENT",
+  "mt5_rerun": false,
+  "observed": {
+    "active_time_share": 0.038711,
+    "cycles": 42,
+    "duration_max_days": 16.312962962962963,
+    "duration_p50_days": 0.17511574074074074,
+    "duration_p90_days": 3.7891898148148138,
+    "eqdd": "7.31% (741.86)",
+    "max_depth": 10,
+    "net": 700.92,
+    "pf": 4.4,
+    "pf_mt5_field": 4.4,
+    "pf_state": "FINITE",
+    "report_sha256": "1da440acecc1cb0f309c3c4720df94fea76b83bf32e4056b2a9e1c9ed3025128",
+    "top1_gp_share": 0.14478994376447238,
+    "top3_gp_share": 0.34811996912559273,
+    "trades": 80,
+    "variant": "DEEP_SPACING_EQUAL",
+    "window": "MAIN",
+    "zero_closed_years": 0
+  },
+  "optimization": "NONE",
+  "overall": "BLOCKED_CONTROL_MISMATCH",
+  "schema": "ea-lab-b16-xau-h4-exitdiag-acceptance/1",
+  "window": "MAIN"
+}
