@@ -1,0 +1,113 @@
+{
+    "schema":  "ea_lab/control_tower_parallel_audit/v1",
+    "asof_local":  "2026-09-05",
+    "canonical_sha":  "4c9d161ca046209d308728a7222ea29f2c751553",
+    "authority":  "READ_ONLY_EVIDENCE_AND_QUEUE_RECONCILIATION_NO_RUNTIME_OR_STRATEGY_MUTATION",
+    "sources":  {
+                    "project_state_sha256":  "bf8c8fdf69eccfcc58153285d35f024e85cb54d7d6cfae95c2b385177190f532",
+                    "deployments_sha256":  "aa05d6895d257e56284bdcfbe3fd99b77f2b06735c6e5cb5e6939d54fd52ffe1",
+                    "attestation_map_sha256":  "637df1e81386a8342e608e124256ed13b2bfb80f08db087ae85bdca2f47c9f20",
+                    "runtime_identity_map_sha256":  "26a13adfe5ecd04ef87876871514999960ae0241100bb46f341177ab36b0d3ca",
+                    "control_room_snapshot_sha256":  "7d86bf6ceccbcec580c9ba0f23a2e82d181d6af258f2cf515beee3ebbc90567f",
+                    "runtime_identity_source_sha256":  "16dd6733be752da6150c80f2a9bdbb4086154a9ca83e4308eefa6fca1a1770d4",
+                    "collector_source_sha256":  "670615f16d8b1e19b2c4869baf7aa1e167f41cf4532a2fd8369cf957b7da9451",
+                    "stale_order353_sidecar_sha256":  "dd73b34859c748011605c22c76a8881f87b4241ec633eb8f1b50661021eb1ded"
+                },
+    "lane_a_order353":  {
+                            "result":  "TARGET_REMAINS_BLOCKED",
+                            "blocker_class":  "E_OWNER_EXTERNAL",
+                            "target":  "463666728|990026",
+                            "accepted_first_trade_epoch":  null,
+                            "accepted_judge_date":  null,
+                            "emitter":  {
+                                            "source":  "ea_template/core/RuntimeIdentity.mqh",
+                                            "filename":  "EA_LAB_identity_\u003clogin\u003e_\u003cmagic\u003e.json",
+                                            "storage":  "MT5 FILE_COMMON",
+                                            "writes_on":  [
+                                                              "RuntimeIdentity_Init",
+                                                              "first qualifying DEAL_ENTRY_IN after attach via RuntimeIdentity_Update"
+                                                          ],
+                                            "periodic_heartbeat":  false
+                                        },
+                            "collector":  {
+                                              "source":  "scripts/collect_live_deals.ps1",
+                                              "default_common_files":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files",
+                                              "remote_strategy_vps_fetch_discovered":  false,
+                                              "freshness_hours":  30
+                                          },
+                            "observed":  {
+                                             "local_common_target_sidecar":  false,
+                                             "local_monitor_mql5_files_target_sidecar":  false,
+                                             "archived_target_sidecar":  "portfolio/live_deals/EA_LAB_identity_463666728_990026_20260823.json",
+                                             "archived_evidence_timestamp":  "2026.08.23 07:50:01",
+                                             "raw_candidate_entry_ticket":  "2227380592",
+                                             "raw_candidate_entry_time_unix":  1788451200
+                                         },
+                            "interpretation":  "Local read-only evidence cannot distinguish strategy-VPS producer non-write from a producer write that never reached the local collector. The local collector does not prove strategy-VPS Common Files. Require a fresh strategy-VPS sidecar read; if absent there, stop for owner approval before any reattach/runtime mutation.",
+                            "forbidden":  [
+                                              "blind RDP retry using the already exhausted method",
+                                              "infer first_trade_epoch from raw deal alone",
+                                              "start judge clock",
+                                              "reattach or mutate strategy runtime without owner approval"
+                                          ]
+                        },
+    "lane_b_deployment58":  {
+                                "result":  "EVIDENCE_UNIVERSE_GAP_NOT_STALE_INVENTORY_PROOF",
+                                "deployment_rows":  64,
+                                "active":  58,
+                                "removed":  5,
+                                "unverified":  1,
+                                "runtime_identity_mapped":  1,
+                                "runtime_identity_unmapped":  57,
+                                "validated_pass":  0,
+                                "fully_bound":  0,
+                                "attestation_map_rows_for_active":  46,
+                                "active_with_high_confidence_bundle":  26,
+                                "active_without_attestation_map":  12,
+                                "active_with_attestation_map_but_no_bundle":  20,
+                                "active_notes_lab_does_not_certify":  13,
+                                "active_by_account":  {
+                                                          "463666728":  18,
+                                                          "415573666":  14,
+                                                          "159475669":  13,
+                                                          "141049900":  5,
+                                                          "159503454":  4,
+                                                          "69424711":  4
+                                                      },
+                                "current_full_history_export":  {
+                                                                    "active_keys_present":  54,
+                                                                    "active_keys_absent":  4,
+                                                                    "absent_keys":  [
+                                                                                        "159475669|99000512",
+                                                                                        "159475669|991001",
+                                                                                        "463666728|991005",
+                                                                                        "415573666|990025"
+                                                                                    ],
+                                                                    "authority_note":  "Presence/absence in refreshed full-history exports is activity/history observation only and is not proof of current attachment or detachment."
+                                                                },
+                                "conclusion":  "All 58 ACTIVE rows remain declared lifecycle/forward-observed and PENDING/NO_EVIDENCE under the current verification contract. No row is safely reclassified STALE_INVENTORY from this audit. Do not shrink the expected universe or invent identity evidence to make monitoring green."
+                            },
+    "lane_c_ready_queue":  {
+                               "result":  "NO_READY_DIRECT_CONSUMER_RESEARCH_WORK",
+                               "governing_source":  "PROJECT_STATE.md sections 5.2 and 5.3",
+                               "historical_taskboard_ready_text_is_authority":  false,
+                               "closed_or_blocked":  [
+                                                         "B16 H08 CLOSED_NO_RETUNING",
+                                                         "B16 R4 MILESTONE CLOSED",
+                                                         "Boss19 P5 P5_SESSION_CONTEXT_FALSIFIED_STOP_EXPANSION_PARK",
+                                                         "Boss19 P6 BLOCKED(no P5 survivor; new independently motivated direct consumer required)",
+                                                         "ORDER-353 BLOCKED / E OWNER-EXTERNAL"
+                                                     ],
+                               "lane_d_opened":  false,
+                               "rationale":  "No canonical READY experiment with a direct consumer was found. Do not open backtest/optimization/HOLDOUT/Candidate merely because compute is idle.",
+                               "codex_quota_effect":  "No effect on A/B/C closure. Tasks whose acceptance contract specifically requires Codex different-family review remain unavailable until that reviewer is available; none was promoted from this reconciliation."
+                           },
+    "overall":  {
+                    "status":  "PASS_READ_ONLY_RECONCILIATION",
+                    "canonical_change_needed":  "DURABLE_EVIDENCE_ONLY",
+                    "global_monitoring":  "DEGRADED_MONITORING",
+                    "order353":  "BLOCKED_E_OWNER_EXTERNAL",
+                    "new_product_defect":  false,
+                    "new_research_dispatch":  false
+                }
+}
