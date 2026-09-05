@@ -1,0 +1,42 @@
+{
+    "schema":  "ea_lab/runtime_identity_transport_repair/1",
+    "generated_at":  "2026-09-05T08:08:38.6550826Z",
+    "base_sha":  "36ae699c7bca57d7d22df224ca13c3f34f6d24b9",
+    "classification":  "A_PRODUCT_DEFECT",
+    "objective":  "Transport RuntimeIdentity sidecars through the existing VPS-to-lab rclone path without runtime/deployment mutation.",
+    "defect":  {
+                   "producer":  "EA writes EA_LAB_identity_\u003clogin\u003e_\u003cmagic\u003e.json to FILE_COMMON",
+                   "collector":  "collect_live_deals.ps1 accepts EA_LAB_identity_*.json",
+                   "transport_before":  "push_snap.cmd copied only EA_LAB_snapshot_[1-9]*.csv",
+                   "consequence":  "A fresh VPS identity sidecar could not reach the lab through the canonical automated return path."
+               },
+    "repair":  {
+                   "snapshot":  "unchanged scoped pass, max-age 1h",
+                   "runtime_identity":  "separate scoped pass EA_LAB_identity_[1-9]*_[1-9]*.json, max-age 30h",
+                   "failure":  "aggregate RC remains non-zero if either rclone pass fails",
+                   "authority":  "transport only; collector still validates producer evidence_timestamp and identity binding"
+               },
+    "tests":  {
+                  "red_first":  "FAIL 6/10 after harness correction",
+                  "transport_green":  "PASS 11/11",
+                  "runtime_identity_unit":  "PASS 47/47 + PowerShell bridge PASS",
+                  "runtime_identity_production":  "PASS 18/18",
+                  "git_diff_check":  "PASS"
+              },
+    "file_sha256":  {
+                        "ea_projects/(Boss)_NewsGuard/vps_rclone/push_snap.cmd":  "5b0574f1c675620875b2807c01bf259d433a26a061898eea9fe9f006585aa70c",
+                        "ea_projects/(Boss)_NewsGuard/VPS_TRANSPORT_AND_ATTACH.md":  "fbd0c096db201aa6094a2e52e43d4ea95185ccdc9250105cc34179e17d517b66",
+                        "scripts/_test/run_runtime_identity_transport_tests.ps1":  "ed076aeb4b4a20bf383eb156d4784474185df120cc43c359a1fef6e67af370a2"
+                    },
+    "review":  {
+                   "required":  true,
+                   "result":  null,
+                   "reviewed_head":  null,
+                   "reviewer":  null
+               },
+    "remaining":  {
+                      "order353":  "BLOCKED / E OWNER-EXTERNAL until a fresh strategy-emitted sidecar arrives and validates",
+                      "generic_freshness_semantics":  "SEMANTICS_REQUIRED; not changed by this transport repair",
+                      "vps_activation":  "OWNER HARD STOP: deploying this updated worker or changing the VPS Scheduled Task is not performed"
+                  }
+}

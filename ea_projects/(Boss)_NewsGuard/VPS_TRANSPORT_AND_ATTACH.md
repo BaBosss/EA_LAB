@@ -24,6 +24,7 @@ terminal configuration, or OneDrive token.
 | lab -> VPS | `D:\EA_LAB\portfolio\news_week.csv` | `lab-to-vps\news\EA_LAB_news_week.csv` | VPS MetaQuotes `Terminal\Common\Files\EA_LAB_news_week.csv` |
 | lab -> VPS | `D:\EA_LAB\portfolio\EA_LAB_mris_regime.csv` | `lab-to-vps\news\EA_LAB_mris_regime.csv` | VPS MetaQuotes `Terminal\Common\Files\EA_LAB_mris_regime.csv` |
 | VPS -> lab | VPS MetaQuotes `Terminal\Common\Files\EA_LAB_snapshot_*.csv` | `vps-to-lab\snapshots\` | read directly by `scripts\collect_live_deals.ps1 -CommonFiles <synced snapshots path>` |
+| VPS -> lab | VPS MetaQuotes `Terminal\Common\Files\EA_LAB_identity_*.json` | `vps-to-lab\snapshots\` | read directly by the same collector; producer timestamp and identity binding are revalidated on the lab |
 
 Do not sync a terminal data directory or `Common\Files` wholesale. That would
 copy unrelated account data and can make partially-written files visible.
@@ -97,19 +98,17 @@ on or not`, `Start when available`, and retries as already documented. Do not
 kill or force-close an MT5 terminal.
 ## Scheduled copy: VPS to lab
 
-On the VPS, every 5 minutes enumerate only files matching
-`EA_LAB_snapshot_[1-9][0-9]*.csv`. Reject login `0`, test names, `.tmp` files,
-and sources older than 10 minutes. Copy each through a same-directory `.tmp`
-file and rename into a local staging folder so no partial CSV is ever
-published. Then push the staged snapshots up with rclone:
+On the VPS, the compatibility worker `vps_rclone\push_snap.cmd` runs two independently
+filtered rclone copy passes from MetaQuotes `Terminal\Common\Files` into the private
+`vps-to-lab\snapshots` path. The snapshot pass accepts only
+`EA_LAB_snapshot_[1-9]*.csv` younger than 1 hour. The RuntimeIdentity pass accepts only
+`EA_LAB_identity_[1-9]*_[1-9]*.json` younger than 30 hours. `.tmp` files and unrelated
+Common Files do not match either include filter.
 
-```text
-rclone copy "C:\rclone\staging\vps-to-lab\snapshots" ^
-  "onedrive:vps-to-lab/snapshots" --config C:\rclone\rclone.conf
-```
-
-Because the atomic `.tmp`→rename completes in the staging folder before rclone
-runs, OneDrive never receives a partial CSV.
+The two copy passes share one aggregate return code: either rclone failure keeps the task
+non-zero even if the other pass succeeds. Transport age is not identity authority. The lab
+collector preserves the producer JSON bytes and independently rejects malformed, future, or
+stale `evidence_timestamp` values, so copying a file cannot manufacture fresh identity.
 
 On the lab PC, call:
 
