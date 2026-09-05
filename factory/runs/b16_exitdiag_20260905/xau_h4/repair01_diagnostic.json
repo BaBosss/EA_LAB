@@ -1,0 +1,221 @@
+{
+  "basket_tp_off_bwd": {
+    "eligibility": "MECHANICALLY_INELIGIBLE_HARD_CAGE",
+    "evidence": {
+      "dd_pct": 25.0,
+      "market_time": "2022.07.13 15:41:40",
+      "tester_wallclock": "20:59:14.865"
+    }
+  },
+  "eligible_classification": [
+    {
+      "classification": "CONCENTRATION_SHIFT",
+      "dimensions": {
+        "active_time_share_higher": true,
+        "max_cycle_holding_duration_higher": true,
+        "top1_positive_cycle_gp_share_higher": true,
+        "zero_closed_year_count_higher": true
+      },
+      "higher_count": 4,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "classification": "CONCENTRATION_SHIFT",
+      "dimensions": {
+        "active_time_share_higher": true,
+        "max_cycle_holding_duration_higher": true,
+        "top1_positive_cycle_gp_share_higher": true,
+        "zero_closed_year_count_higher": true
+      },
+      "higher_count": 4,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD"
+    },
+    {
+      "classification": "CONCENTRATION_SHIFT",
+      "dimensions": {
+        "active_time_share_higher": true,
+        "max_cycle_holding_duration_higher": true,
+        "top1_positive_cycle_gp_share_higher": true,
+        "zero_closed_year_count_higher": true
+      },
+      "higher_count": 4,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN"
+    }
+  ],
+  "eligible_shift_count": 3,
+  "holdout": "UNSPENT",
+  "mt5_rerun": false,
+  "new_strategy_test_runs": 0,
+  "optimization": "NONE",
+  "overall": "HYPOTHESIS_NOT_FALSIFIED / EXIT_CONCENTRATION_REPLICATED",
+  "parent_control_sha256": "3639c9abcc8c299cf11ce1eb310ed9e721f43831870e213baafeb2e59f6a0fb6",
+  "parent_control_source": "_mt5_auto/b16_h03/B16_H03_PARSED.json",
+  "parent_controls": {
+    "BWD": {
+      "active_time_share": 0.093408,
+      "cycles": 70,
+      "duration_max_days": 30.300462962962964,
+      "eqdd": 8.29,
+      "net": 512.69,
+      "pf": 1.44,
+      "report_sha256": "df63addd9975b66a9471aafe929d3b7f31377a95a93342cc6f1521728f07cff3",
+      "top1_gp_share": 0.09751247940003344,
+      "trades": 148,
+      "variant": "ACCEPTED_PARENT",
+      "window": "BWD",
+      "zero_closed_years": 0
+    },
+    "MAIN": {
+      "active_time_share": 0.03876,
+      "cycles": 42,
+      "duration_max_days": 16.310185185185187,
+      "eqdd": 6.27,
+      "net": 707.78,
+      "pf": 4.08,
+      "report_sha256": "aee6819ba12f929caade4cf1b70915978a3259ec2b7136a1009e077057bb0e7e",
+      "top1_gp_share": 0.1722467618376971,
+      "trades": 79,
+      "variant": "ACCEPTED_PARENT",
+      "window": "MAIN",
+      "zero_closed_years": 0
+    }
+  },
+  "repair01_preregistration_commit": "f7421ea425d9f15dfa8561045fa88b136313ba58",
+  "rows": [
+    {
+      "active_time_share": 0.580175,
+      "cycles": 8,
+      "duration_max_days": 750.1666550925926,
+      "eqdd": "6.71% (689.15)",
+      "net": 1952.33,
+      "pf": 5.98,
+      "pf_mt5_field": 5.98,
+      "pf_state": "FINITE",
+      "report_sha256": "6d21c76cf14303a137ccb2054e0204174e94b13a8ac0497591369db3a693fd0e",
+      "top1_gp_share": 0.7484687174762417,
+      "trades": 43,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN",
+      "zero_closed_years": 1
+    },
+    {
+      "active_time_share": 0.725716,
+      "cycles": 2,
+      "duration_max_days": 1019.3326273148148,
+      "eqdd": "10.60% (1 119.81)",
+      "net": -399.24,
+      "pf": 0.17,
+      "pf_mt5_field": 0.17,
+      "pf_state": "FINITE",
+      "report_sha256": "0687487caed64405460479d9aab64cf542ef84ede4ef4202c1039586e5875002",
+      "top1_gp_share": 1.0,
+      "trades": 4,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD",
+      "zero_closed_years": 1
+    },
+    {
+      "active_time_share": 0.706907,
+      "cycles": 4,
+      "duration_max_days": 1029.1666550925927,
+      "eqdd": "7.53% (786.76)",
+      "net": 3394.29,
+      "pf": null,
+      "pf_mt5_field": 0.0,
+      "pf_state": "UNDEFINED_NO_GROSS_LOSS",
+      "report_sha256": "d30337e734dfe9c5d9a42582dc533deceaf032b25aec2f9f64a158d5e2e3e063",
+      "top1_gp_share": 0.9971363672520616,
+      "trades": 5,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN",
+      "zero_closed_years": 1
+    }
+  ],
+  "schema": "ea-lab-b16-xau-h4-exitdiag-repair01/1",
+  "years": [
+    {
+      "active_time_share": 0.088402,
+      "cycles": 7,
+      "net": 197.59,
+      "trades": 42,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN",
+      "year": 2023
+    },
+    {
+      "active_time_share": 0.0,
+      "cycles": 0,
+      "net": 0.0,
+      "trades": 0,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN",
+      "year": 2024
+    },
+    {
+      "active_time_share": 0.684459,
+      "cycles": 1,
+      "net": 1754.74,
+      "trades": 1,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN",
+      "year": 2025
+    },
+    {
+      "active_time_share": 0.036691,
+      "cycles": 1,
+      "net": 58.44,
+      "trades": 3,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD",
+      "year": 2020
+    },
+    {
+      "active_time_share": 0.0,
+      "cycles": 0,
+      "net": 0.0,
+      "trades": 0,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD",
+      "year": 2021
+    },
+    {
+      "active_time_share": 0.930048,
+      "cycles": 1,
+      "net": -457.68,
+      "trades": 1,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD",
+      "year": 2022
+    },
+    {
+      "active_time_share": 0.002662,
+      "cycles": 3,
+      "net": 9.72,
+      "trades": 3,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN",
+      "year": 2023
+    },
+    {
+      "active_time_share": 0.0,
+      "cycles": 0,
+      "net": 0.0,
+      "trades": 0,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN",
+      "year": 2024
+    },
+    {
+      "active_time_share": 0.939021,
+      "cycles": 1,
+      "net": 3384.57,
+      "trades": 2,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN",
+      "year": 2025
+    }
+  ]
+}

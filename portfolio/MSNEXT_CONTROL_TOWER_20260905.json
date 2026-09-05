@@ -2,7 +2,7 @@
     "schema":  "ea_lab/msnext_contract_freeze/1",
     "asof":  "2026-09-05",
     "base_sha":  "244c15d5c01dfdf31b3ce11daf578897b0376376",
-    "authority":  "CONTRACT_AND_PREREGISTRATION_ONLY_NO_RUNTIME_NO_MT5_NO_HOLDOUT_NO_OPTIMIZATION",
+    "authority":  "CONTRACT_AND_RESEARCH_EVIDENCE_ONLY_NO_RUNTIME_NO_MT5_NO_HOLDOUT_NO_OPTIMIZATION",
     "runtime_identity_freshness":  {
                                        "result":  "CONTRACT_READY_NOT_IMPLEMENTED",
                                        "heartbeat_seconds":  3600,
@@ -28,12 +28,12 @@
                  },
     "research":  {
                      "selected":  "HYP-B16-XAU-H4-EXITCONC-01",
-                     "status":  "V1_BLOCKED_CONTROL_MISMATCH_REPAIR01_PREREGISTERED",
+                     "status":  "REPAIR01_PASS_EXIT_CONCENTRATION_REPLICATED_RETAIN_CURRENT_EXITS_FROZEN",
                      "optimization":  "NONE",
                      "holdout":  "UNSPENT",
                      "input_package":  "factory/runs/b16_characterization_20260830",
                      "method_source":  "factory/runs/b16_exitdiag_20260831/usdjpy_h1/analyze_exitdiag.py",
-                     "outcome_analysis_performed":  false,
+                     "outcome_analysis_performed":  true,
                      "v1_control_gate":  {
                                              "performed":  true,
                                              "result":  "BLOCKED_CONTROL_MISMATCH",
@@ -53,19 +53,28 @@
                                                              }
                                          },
                      "repair01":  {
-                                      "status":  "PREREGISTERED_REPAIR01_MUST_BE_CANONICAL_BEFORE_EXECUTION",
+                                      "status":  "PASS_READ_ONLY_HYPOTHESIS_NOT_FALSIFIED_EXIT_CONCENTRATION_REPLICATED",
                                       "bounded_repair_number":  1,
                                       "parent_parsed_path":  "_mt5_auto/b16_h03/B16_H03_PARSED.json",
                                       "parent_parsed_sha256":  "3639c9abcc8c299cf11ce1eb310ed9e721f43831870e213baafeb2e59f6a0fb6",
                                       "main_report_sha256":  "aee6819ba12f929caade4cf1b70915978a3259ec2b7136a1009e077057bb0e7e",
                                       "bwd_report_sha256":  "df63addd9975b66a9471aafe929d3b7f31377a95a93342cc6f1521728f07cff3",
-                                      "hypothesis_and_verdict_rule":  "UNCHANGED"
+                                      "hypothesis_and_verdict_rule":  "UNCHANGED",
+                                      "preregistration_commit":  "f7421ea425d9f15dfa8561045fa88b136313ba58",
+                                      "frozen_diagnostic_sha256":  "5194fa5986767d9c47a4c4220b70699e8a21ac6e31aa14457d74837c46acf7b1",
+                                      "eligible_shift_count":  3,
+                                      "eligible_windows":  3,
+                                      "dimensions_higher_each":  "4_OF_4",
+                                      "decision":  "RETAIN_CURRENT_EXITS_FROZEN",
+                                      "packaging_harness":  "B_HARNESS_TEST_SALVAGED_FROM_FROZEN_DIAGNOSTIC_NO_RAW_REANALYSIS",
+                                      "repair02":  "NOT_AUTHORIZED"
                                   }
                  },
     "source_reviews":  {
                            "claude_ri":  "D:/EA_LAB_CONTROL/review_outputs/msnext_ri_semantics_244c15d5.txt",
                            "claude_coverage":  "D:/EA_LAB_CONTROL/review_outputs/msnext_monitor_coverage_244c15d5.txt",
-                           "claude_hypothesis":  "D:/EA_LAB_CONTROL/review_outputs/msnext_hypothesis_244c15d5.txt"
+                           "claude_hypothesis":  "D:/EA_LAB_CONTROL/review_outputs/msnext_hypothesis_244c15d5.txt",
+                           "claude_repair01_prereg":  "D:/EA_LAB_CONTROL/review_outputs/msnext_repair01_f7421ea4.txt"
                        },
     "file_sha256":  {
                         "freshness_contract":  "90a7700373ae827f5b403455e2a4f4161c4ad3f5aad105c792be13fd7c123027",
@@ -74,7 +83,11 @@
                         "v1_analyzer":  "4f2254f8adc91363603f8d6a745d2697d70839008999cf216ce5354785150918",
                         "v1_block_result":  "db3036e2056b70f3b02ae65af90d76f7de02fe8308158ba72838766a7d053a0a",
                         "repair01_prereg":  "085088114f0c49b8319e9fe643e77371a64b349066c7585254b72ec4827093da",
-                        "v1_acceptance":  "702e26d42fdb567c6f8f1355af7410fac99992a0b7072a6a3ffafea901ab2c3e"
+                        "v1_acceptance":  "702e26d42fdb567c6f8f1355af7410fac99992a0b7072a6a3ffafea901ab2c3e",
+                        "repair01_frozen_diagnostic":  "5194fa5986767d9c47a4c4220b70699e8a21ac6e31aa14457d74837c46acf7b1",
+                        "repair01_acceptance":  "a8e9ee7f3ab1d27a1e8a0a78e3c3dacb999ca014212b6d8ea669163befe34f62",
+                        "repair01_results_report":  "3651bbe0ffd762ba05762b07aea167007231a968ef53061664f1cc4a475e7415",
+                        "repair01_packaging_harness":  "7d21c07846d5aecf1445bb403d9aa4c039e203e39cd637970ff5c5fa171e3368"
                     },
     "current_state":  {
                           "global_monitoring":  "DEGRADED_MONITORING",

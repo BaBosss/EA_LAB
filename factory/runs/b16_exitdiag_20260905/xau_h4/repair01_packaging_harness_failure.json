@@ -1,0 +1,11 @@
+{
+  "class": "B_HARNESS_TEST",
+  "error": "ValueError: dict contains fields not in fieldnames: pf_state, pf_mt5_field",
+  "frozen_diagnostic_sha256": "5194fa5986767d9c47a4c4220b70699e8a21ac6e31aa14457d74837c46acf7b1",
+  "partial_csv_sha256": "7d264a8e010b8ff5dde324dc60d7f3b469029dc096869bc362bddb7ea32a3d12",
+  "raw_reanalysis_after_failure": false,
+  "repair02_opened": false,
+  "research_semantics_changed": false,
+  "schema": "ea-lab-b16-xau-h4-exitdiag-packaging-failure/1",
+  "stage": "CSV_PACKAGING_AFTER_FROZEN_DIAGNOSTIC"
+}

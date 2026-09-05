@@ -1,0 +1,18 @@
+{
+  "all_eligible_dimensions_higher": "4_OF_4_EACH",
+  "authority": "RESEARCH_ONLY_NO_EXIT_CHANGE_NO_OPTIMIZATION_NO_HOLDOUT_NO_CANDIDATE_NO_RUNTIME",
+  "basket_tp_off_bwd": "MECHANICALLY_INELIGIBLE_HARD_CAGE",
+  "decision_classification": "HYPOTHESIS_NOT_FALSIFIED / EXIT_CONCENTRATION_REPLICATED",
+  "eligible_shift_count": 3,
+  "eligible_windows": 3,
+  "frozen_diagnostic_sha256": "5194fa5986767d9c47a4c4220b70699e8a21ac6e31aa14457d74837c46acf7b1",
+  "holdout": "UNSPENT",
+  "mt5_rerun": false,
+  "new_strategy_test_runs": 0,
+  "optimization": "NONE",
+  "overall": "PASS_READ_ONLY",
+  "packaging_mode": "SALVAGED_FROM_FROZEN_DIAGNOSTIC_NO_RAW_REANALYSIS",
+  "parent_control": "EXACT_ACCEPTED_H03_PARSED_PARENT",
+  "parent_control_sha256": "3639c9abcc8c299cf11ce1eb310ed9e721f43831870e213baafeb2e59f6a0fb6",
+  "schema": "ea-lab-b16-xau-h4-exitdiag-repair01-acceptance/1"
+}
