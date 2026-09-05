@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "milestone": "DailyMonitor canonical-lineage reanchor",
+  "date_local": "2026-09-05",
+  "status": "ACCEPTED_PASS",
+  "blocker_closed": "D_EXECUTION_INCOMPLETE_RUNTIME_LINEAGE_CONVERGENCE",
+  "base_canonical_sha": "c2fcc1e3aec909a0d41d36b176c6473ad8e2f614",
+  "runtime_evidence_commit": "2f6311d4d06d764967b5759a0b79c17ea3be1135",
+  "runtime_path": "D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-c2fcc1e3-20260905",
+  "scheduled_task": "EA_LAB_DailyMonitor",
+  "scheduled_run_local": "2026-09-05T12:28:34+07:00",
+  "task_final_result": 1,
+  "snapshot_sha256": "7D86BF6CECCBCEC580C9BA0F23A2E82D181D6AF258F2CF515BEEE3EBBC90567F",
+  "safe_projection_sha256": "5EB1DCE925F908BD0D0DA5307023034016FB190332957F64B0A6C8B8776D4106",
+  "preflight": {"monitor_integrity":"106/106 PASS","guard_feed":"PASS","s11":"86/86 PASS","s12":"80/80 PASS","strict_state":"CLEAN"},
+  "run_assertions": {"snapshot_failure":false,"notify_projection_failure":false,"safe_projection_built":true,"auto_commit_succeeded":true},
+  "final_failure_tokens": ["runtime-identity-unverified","first-trade-untrusted","runtime-identity-coverage-gap","deployment-unverified-69424711|","deployment-verification-underived-x58"],
+  "order_353": {"account_magic":"463666728|990026","runtime_identity_state":"FAIL","reason":"EVIDENCE_TIMESTAMP_STALE","first_trade_epoch":null,"judge_date":null,"status":"BLOCKED_E_OWNER_EXTERNAL"},
+  "independent_review": {"reviewer":"Claude","verdict":"PASS","confidence":"HIGH","integration":"ALLOW","material_findings":"NONE"},
+  "preservation": {"older_runtimes_preserved":true,"reset_or_clean_performed":false,"old_a1f_runtime_preserved":true,"new_runtime_trailing_dirty_outputs_preserved":true},
+  "authority": {"global_monitoring":"DEGRADED_MONITORING","strategy_reattach":false,"trading":false,"live":false,"risk_default_change":false,"judge_clock_start":false}
+}
