@@ -1,0 +1,46 @@
+{
+    "schema":  "ea_lab/vps_runtime_identity_transport_activation_attempt/1",
+    "date":  "2026-09-05",
+    "base_sha":  "c4d2cad1419da99a881f40f1aa0f28ca466b72a4",
+    "owner_approval":  "EXPLICIT_APPROVAL_RECEIVED_FOR_VPS_TRANSPORT_ACTIVATION",
+    "objective":  "Activate reviewed RuntimeIdentity VPS-to-lab transport without changing strategy attachment/trading/risk",
+    "result":  "BLOCKED",
+    "blocker_class":  "C ENVIRONMENT-DEPENDENCY",
+    "blocker":  "NO_DETERMINISTIC_VPS_CONTROL_CHANNEL",
+    "control_channels":  {
+                             "desktop_commander_devices":  [
+                                                               "BaBoss_ONLY_NO_VPS_AGENT"
+                                                           ],
+                             "ports":  {
+                                           "rdp_3389":  true,
+                                           "winrm_5985":  false,
+                                           "winrm_5986":  false,
+                                           "smb_445":  false,
+                                           "ssh_22":  false
+                                       },
+                             "smb_probe":  "TIMEOUT",
+                             "remote_schtasks_probe":  "TIMEOUT"
+                         },
+    "rdp_probe":  {
+                      "method":  "SAVED_RDP_PROFILE_PLUS_ALTERNATE_SHELL_FILE_BACKED_MARKER",
+                      "marker_returned":  false,
+                      "sendkeys_used":  false,
+                      "blind_gui_used":  false,
+                      "local_mstsc_process_closed":  true,
+                      "remote_mutation_proven":  false
+                  },
+    "activation":  {
+                       "vps_worker_replaced":  false,
+                       "scheduled_task_changed":  false,
+                       "rclone_execution_verified":  false,
+                       "rollback_required":  false
+                   },
+    "preserved":  {
+                      "order353_first_trade_epoch":  null,
+                      "order353_judge_date":  null,
+                      "order353_state":  "BLOCKED / E OWNER-EXTERNAL",
+                      "global_monitoring":  "DEGRADED_MONITORING"
+                  },
+    "loop_breaker":  "STOP_EXPANSION_AFTER_DETERMINISTIC_CHANNELS_EXHAUSTED_DO_NOT_REPEAT_BLIND_RDP",
+    "next_action":  "Provide a deterministic VPS execution channel (for example connect Desktop Commander on the VPS or perform one manual RDP bootstrap of the reviewed worker); then resume activation verification."
+}
