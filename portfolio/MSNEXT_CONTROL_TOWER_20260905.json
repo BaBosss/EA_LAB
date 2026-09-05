@@ -1,0 +1,55 @@
+{
+    "schema":  "ea_lab/msnext_contract_freeze/1",
+    "asof":  "2026-09-05",
+    "base_sha":  "244c15d5c01dfdf31b3ce11daf578897b0376376",
+    "authority":  "CONTRACT_AND_PREREGISTRATION_ONLY_NO_RUNTIME_NO_MT5_NO_HOLDOUT_NO_OPTIMIZATION",
+    "runtime_identity_freshness":  {
+                                       "result":  "CONTRACT_READY_NOT_IMPLEMENTED",
+                                       "heartbeat_seconds":  3600,
+                                       "stale_hours":  30,
+                                       "future_tolerance_minutes":  5,
+                                       "liveness_clock":  "TimeGMT_UTC_ISO_Z",
+                                       "attach_trade_clock":  "EXISTING_TIMECURRENT_UNCHANGED",
+                                       "timer_failure_mode":  "WARN_FAIL_VISIBLE_STRATEGY_CONTINUES",
+                                       "epoch_semantics":  "UNCHANGED",
+                                       "material_correction":  "TimeCurrent in OnTimer is last-known quote time and cannot be used as weekend liveness clock"
+                                   },
+    "coverage":  {
+                     "result":  "CONTRACT_READY_NOT_IMPLEMENTED_CURRENT_X58_UNCHANGED",
+                     "scope_total_forward_observed":  58,
+                     "mapped":  1,
+                     "unmapped":  57,
+                     "validated_pass":  0,
+                     "fully_bound":  0,
+                     "diagnostic_mt4_active":  9,
+                     "diagnostic_literal_lab_does_not_certify":  12,
+                     "ambiguous_user_mix_high_attestation":  "159475669|990005",
+                     "policy":  "publish subdimensions but do not shrink canonical denominator or global fail-closed state until structured scope owner is implemented and reviewed"
+                 },
+    "research":  {
+                     "selected":  "HYP-B16-XAU-H4-EXITCONC-01",
+                     "status":  "PREREGISTERED_ZERO_NEW_MT5",
+                     "optimization":  "NONE",
+                     "holdout":  "UNSPENT",
+                     "input_package":  "factory/runs/b16_characterization_20260830",
+                     "method_source":  "factory/runs/b16_exitdiag_20260831/usdjpy_h1/analyze_exitdiag.py",
+                     "outcome_analysis_performed":  false
+                 },
+    "source_reviews":  {
+                           "claude_ri":  "D:/EA_LAB_CONTROL/review_outputs/msnext_ri_semantics_244c15d5.txt",
+                           "claude_coverage":  "D:/EA_LAB_CONTROL/review_outputs/msnext_monitor_coverage_244c15d5.txt",
+                           "claude_hypothesis":  "D:/EA_LAB_CONTROL/review_outputs/msnext_hypothesis_244c15d5.txt"
+                       },
+    "file_sha256":  {
+                        "freshness_contract":  "90a7700373ae827f5b403455e2a4f4161c4ad3f5aad105c792be13fd7c123027",
+                        "coverage_contract":  "c5c7c31d856878f7a68a79e7746fc23fe79d223a9c10756da64abb2ef1fb1173",
+                        "research_preregistration":  "4bd890aedcc6bd35ae6afc9bfa4dd7b4931c052086fdf1eaac28a051d128f419"
+                    },
+    "current_state":  {
+                          "global_monitoring":  "DEGRADED_MONITORING",
+                          "order353":  "BLOCKED_E_OWNER_EXTERNAL",
+                          "first_trade_epoch":  null,
+                          "judge_date":  null,
+                          "vps_activation":  "PARKED_WAITING_MANUAL"
+                      }
+}
