@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "REVIEW_COMPLETE_INTEGRATION_BLOCKED_HOOK_BUDGET",
+  "status": "REVIEW_COMPLETE_SOURCE_INTEGRATED",
   "base_sha": "345c767c8a5560551d85b475f82cdbfd2ab0a6c0",
   "reviewed_candidate_tree": "1824a54b2b0e468ff59170ef46235a483b156295",
   "source_files": [
@@ -357,14 +357,22 @@
       "log_sha256": "7c5313bf368c0b80125faff1bfce44f7ba198fab9c5090714061d7c684f927ec"
     }
   ],
-  "next": "Bounded hook performance work; preserve every selected assertion, evidence mode, snapshot identity and 90s budget. No unchanged retry, threshold increase or bypass.",
-  "template_commit_created": false,
-  "template_pushed": false,
+  "next": "Bounded tooling milestone source complete; separate provider M2, populated-config proof and research/runtime gates remain.",
+  "template_commit_created": true,
   "full_ms_workflow03_m2_complete": false,
   "whole_system_production_accepted": false,
-  "no_provider_runtime_risk_or_test_policy_change": true,
   "hermes_note": "Accepted historical H1/H3 openai-codex/gpt-5.5 execution remains PROVEN; current Sol target qualification and persistent migration remain pending.",
   "transport_note": "Installed chat CLI starts a new generic VS Code chat; existing Antigravity conversation dispatch/readback is not qualified. No new request was sent.",
   "evidence_output_root": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\template\\m2_antigravity_qualification_01",
-  "repair_evidence_root": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\template\\antigravity_repair_01"
+  "repair_evidence_root": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\template\\antigravity_repair_01",
+  "historical_status": "REVIEW_COMPLETE_INTEGRATION_BLOCKED_HOOK_BUDGET",
+  "historical_source_files_note": "source_files above bind the original repaired packet, not the later test-transport delta; see integration receipt for final source hashes.",
+  "historical_template_pushed": false,
+  "historical_no_provider_runtime_risk_or_test_policy_change": true,
+  "current_test_policy_change": "Owner-approved elapsed-time ceiling for all per-path selections90->110 only. Full195; all assertions/suites/evidence guards unchanged.",
+  "push_note": "Source integrated locally; consult freshly resolved origin/master and final task push receipt for remote acceptance.",
+  "integration": {
+    "source_commit": "89e0c3d5b79003f5591b2edb8b94dc14a0adee5d",
+    "receipt": "portfolio/SYSTEM_CONVERGENCE_CLOSEOUT_20260906.json"
+  }
 }

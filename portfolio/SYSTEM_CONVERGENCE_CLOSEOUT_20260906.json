@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "status": "SCOPED_TOOLING_MILESTONE_COMPLETE_SOURCE_INTEGRATED",
+  "continuation_base": "d058271a5efb98dee2edea1864227a8e58772f67",
+  "source_commit": "89e0c3d5b79003f5591b2edb8b94dc14a0adee5d",
+  "source_tree": "d8598db8143a6d6b4212890086760562f8b0c439",
+  "source_commits": {
+    "inventory": "08576bc21be5befb4deeae8ccbe1a5776bce7218",
+    "s2a": "0fc652605ddbe4c8193fe61786cc3380ade44296",
+    "schema": "9374e632d1920c0ad0b88673a8e7571c0252948a",
+    "preset": "b3a81130071225b0bee798b28102700e83ad3e66",
+    "budget": "c5cd0eccf4eb210d48bc398c0cd068565102cdd1",
+    "registry": "89e0c3d5b79003f5591b2edb8b94dc14a0adee5d"
+  },
+  "source_files": [
+    {
+      "path": ".githooks/fast_tier_pathspec",
+      "git_blob": "f2b22fe8cbe98698eca99eb486e9cd21bcc693fb",
+      "sha256": "6ec55a2af4855ee8f40ee476de3c9ba69842c484f068107cd121d17341592fd2"
+    },
+    {
+      "path": "_triage/factory_os/CONTRACTS.md",
+      "git_blob": "6669e4b4eaf705b611536c024a3b1b8965c8c01e",
+      "sha256": "2c45c939546c950eacfe890d18ea7da84d7816c25be574eff40a8e1e6944594d"
+    },
+    {
+      "path": "_triage/factory_os/check_registries.py",
+      "git_blob": "1bdd3b684d7e159ec5ef9b8f1340ae10c6ccf0a3",
+      "sha256": "6e6591498e0f4bc5175b07ee6fbab39f33001b43e18fc2f164135cdf444c6c40"
+    },
+    {
+      "path": "_triage/factory_os/check_s2a_attestation.py",
+      "git_blob": "4b2fa046f77377c2507303efde3ad7beff785930",
+      "sha256": "79c8d86af1d4444729626a8bf64e0bd7c6e9102f74218b5d619fcd9c92d34ea9"
+    },
+    {
+      "path": "_triage/factory_os/preset.py",
+      "git_blob": "8cc3a945a139c9125b05e5add383380cb0f90d97",
+      "sha256": "06ad1a7c100720788da6ebbac554850688e7415f5b2e3580ece1b862276476ff"
+    },
+    {
+      "path": "_triage/factory_os/registry.py",
+      "git_blob": "3d87614938bb4a78c7ab206766079c72e1307436",
+      "sha256": "8ebd28dccf6a9b0df63b26a4ebc7683c03a2f3e4d0968707b9793d7d20affd37"
+    },
+    {
+      "path": "_triage/factory_os/run_ajv_batch_tests.py",
+      "git_blob": "5efbabd360ad1c29cdaf799218f9092116e3ec12",
+      "sha256": "a992ad7dfd98644f8d6b910c967eadfef3652b65e05b73c9bfd9fb4bee4f7630"
+    },
+    {
+      "path": "_triage/factory_os/run_contract_binding_tests.py",
+      "git_blob": "7532e87c66700f340f98e52774846ba7f51afac5",
+      "sha256": "44265013146d610315eb813a8b10d4f4d11418b470f27aa0738b31aac1a888a1"
+    },
+    {
+      "path": "_triage/factory_os/run_preset_tests.py",
+      "git_blob": "c38f491cc541e717dd2636d64bc593d813091afe",
+      "sha256": "e9eac1e8f33f58cd95688016a77a0c5842419ab1eacdd0713c45ff1a87ffc6af"
+    },
+    {
+      "path": "_triage/factory_os/run_registry_tests.py",
+      "git_blob": "cb8333a9631915186c588f444d5dcb772742a2de",
+      "sha256": "aa4495b63393567c2ffbcb923ade53651fe364f507260c6ddcea1e744e3d3b7b"
+    },
+    {
+      "path": "_triage/factory_os/run_s2a_attestation_tests.py",
+      "git_blob": "8325370c29af6b432edce47b40ef937c1aa0b197",
+      "sha256": "297edc30297139f2358478c6d63f264ee80b9666dd6012fa33e9905b0ae55972"
+    },
+    {
+      "path": "_triage/factory_os/run_schema_fixtures.py",
+      "git_blob": "2c5ea070fabbab2e02b387e1efa5ecbd71ab8a65",
+      "sha256": "3982c3055fdc72b7eaf089227a1b8ac840b04366c1c15035752bcb3abb379729"
+    },
+    {
+      "path": "_triage/factory_os/schemas.json",
+      "git_blob": "8a90711519933c0dcce986e8c1ab4cd99253dd24",
+      "sha256": "311b207f7e6a362ca94593b0792fda74e5a2fb72f58d83335673f046779449a6"
+    },
+    {
+      "path": "scripts/_test/SUITE_TIER_REGISTRY.txt",
+      "git_blob": "89e402cc07609a159e44812e03818fa4a2998d20",
+      "sha256": "adf2fd021face63b2777aa90d418869cae398b83283d98ea3c2ca7a000f4ae94"
+    },
+    {
+      "path": "scripts/_test/run_fast_cages.ps1",
+      "git_blob": "9e2bf8d893fe3269ab4c7dd2cfc0803d9e4ae940",
+      "sha256": "cee7b15423a485d2a337ea14e7db856df8ec0c21d5c1af16f4f6187c674b9d2f"
+    },
+    {
+      "path": "scripts/_test/run_guard_trigger_tests.ps1",
+      "git_blob": "2c5d73db2b837f4a87ef5ca0e39ca3453c5b0f26",
+      "sha256": "21f48f9a386cd7fd6e4d15b301551418c2695fc57290947794a6c3ed6151c92e"
+    },
+    {
+      "path": "scripts/_test/run_schema_cages.ps1",
+      "git_blob": "eef6d7f1b6676ecb43679b23b0985eab573332ca",
+      "sha256": "514998ea6e34cf510a0966820c508f7e022164f2427c31eba738a9044adf366a"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\PERF_REVIEW.json",
+      "sha256": "f66706fc7fe30da2fc6c35fe0f1b0dd91bc3d13d88768715664ffde0420b7469"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\PERF_REVIEW_FINAL.json",
+      "sha256": "82e6fa5ff882fedcbd48fe44d5dca089cf399fc30efe745661b523958e7d4f47"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\REGISTRY_REVIEW.json",
+      "sha256": "6b25ce826212852529db27018356285df73cadab84eae5e7875dba7d51303f19"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\S2A_CACHE_REVIEW.json",
+      "sha256": "ec92f4c65b72f69066092c14729d29bebe77ce40a33d95b56c3277a36d9b8b51"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\schema_wrapper_final.log",
+      "sha256": "ab9c621122f9aa61b48fd1a0b62dea4654c531b6d156bba85cfd9827f69615b2"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\schema_fixtures_before.log",
+      "sha256": "123f0e24e2b652a305d72471536ed651c941e62f6777aaefa0a627c5365d4d80"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\schema_fixtures_after.log",
+      "sha256": "123f0e24e2b652a305d72471536ed651c941e62f6777aaefa0a627c5365d4d80"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\COMMIT_INVENTORY.log",
+      "sha256": "3b1195e2209a901b5d10193c608381516cdf929b702cd99217045ca3ab2c7030"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\COMMIT_S2A.log",
+      "sha256": "351f0fc6b0a52a0c4c44b01053f3fa1c5b0a0670e08c2513867102b6a0ba5938"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\COMMIT_SCHEMA.log",
+      "sha256": "0f9333e4de70c3f73f3c1c0c35592233e9c4690069fba909d353cb7c843121e9"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\COMMIT_PRESET.log",
+      "sha256": "cdf36ba67ef149e60b046d7a86b08301b3387ac46f3364c647af10242123a1bf"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\COMMIT_BUDGET.log",
+      "sha256": "587d4d26b2a0d0b896a95f81a57ad661f5e2184bb31947c6f21390578ec6f8b5"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\COMMIT_REGISTRY.log",
+      "sha256": "5fa75bf78289832b2d8a77b8f7a3afd9b8262bedd6ed9ade84266dcc7cc194c1"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\COMMIT_SOURCE_FINAL.log",
+      "sha256": "6102bae157c06ccbe9a4fdbd24114b252e85a8cf3a8e123d9c6e9367e079046f"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\S2A_CACHE_FOCUSED_FINAL.log",
+      "sha256": "86d765315acf331e3cb64e8d72bb4e98794fe9296190504f560cc25af4bcbc0a"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\S2A_CACHE_DELTA_MANIFEST.json",
+      "sha256": "fae46c1e8769f953d4163dafc68366768fe2262ae567e57194c54a76182d6e81"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\BUDGET_PROPOSAL_REVIEW.json",
+      "sha256": "629f572d30c1d4756f9585232a8516ff3aa45c0ed1657b56df533cc3c9b4a199"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\OWNER_BUDGET_APPROVAL.json",
+      "sha256": "671099ee6c90e64eeeb9b4518d113d907dc252a76bd3c195626313fcb9dfedf3"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\FINAL_SOURCE_IDENTITY.json",
+      "sha256": "ff2c4145ddc7c47690c9b1da4cd9d8dd66afdad4028213989551bae92acf071f"
+    },
+    {
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\system_convergence_20260906\\hook_performance\\COMMIT_REGISTRY_90S_REFUSED.log",
+      "sha256": "17eaf3fbe7d99fb051a1ea71726cca42727912a72b1397efa73626c821c7657c"
+    }
+  ],
+  "validation": "Each coherent commit passed its normal applicable hooks; no bypass. Owner explicitly approved per-path ceiling90->110 after the98.6s all-green registry selection. Full195 and all suites/assertions remain unchanged.",
+  "owner_budget_amendment": {
+    "approved": true,
+    "owner_message": "อนุมัติ ต่อให้จบที",
+    "scope": "Approval responding to the reviewed proposal: all per-path elapsed-time defaults 90 -> 110 seconds; full-tier 195 seconds and all tests/guards unchanged; continue integration and push.",
+    "patch_sha256": "021b0739f04e01e4522f2b3fcdadea4c15756534204d35c4f6cffe4a70666780",
+    "source": "Owner message in the current Codex task, 2026-09-06 Asia/Bangkok"
+  },
+  "review_binding": "Original Gemini review covers eight unchanged files and schema fixture AST except run_batch; additional test transport, registry inventory and S2a memoization have separately bound normal-tooling reviews.",
+  "performance_limit": "AJV profile improved 14.305s to 6.252s with byte-identical 143-case output. This is not an end-to-end EA speedup or a claim every possible combined per-path commit fits110s. The combined20-suite119.2s attempt failed; coherent commits retain every applicable gate. The110s ceiling is an owner-approved policy amendment, not a measured speedup or variance guarantee.",
+  "full_provider_m2_complete": false,
+  "whole_system_production_ready": false,
+  "no_mt5_optimization_holdout_candidate_runtime_provider_risk_or_cleanup": true,
+  "actual_commit_hook_results": [
+    {
+      "part": "inventory",
+      "commit": "08576bc21be5befb4deeae8ccbe1a5776bce7218",
+      "suites": 33,
+      "failed": 0,
+      "seconds": 168.1,
+      "budget_seconds": 195.0,
+      "tier": "full tier"
+    },
+    {
+      "part": "s2a",
+      "commit": "0fc652605ddbe4c8193fe61786cc3380ade44296",
+      "suites": 2,
+      "failed": 0,
+      "seconds": 19.3,
+      "budget_seconds": 90.0,
+      "tier": "per-path"
+    },
+    {
+      "part": "schema",
+      "commit": "9374e632d1920c0ad0b88673a8e7571c0252948a",
+      "suites": 11,
+      "failed": 0,
+      "seconds": 83.5,
+      "budget_seconds": 90.0,
+      "tier": "per-path"
+    },
+    {
+      "part": "preset",
+      "commit": "b3a81130071225b0bee798b28102700e83ad3e66",
+      "suites": 12,
+      "failed": 0,
+      "seconds": 64.7,
+      "budget_seconds": 90.0,
+      "tier": "per-path"
+    },
+    {
+      "part": "budget",
+      "commit": "c5cd0eccf4eb210d48bc398c0cd068565102cdd1",
+      "suites": 3,
+      "failed": 0,
+      "seconds": 25.2,
+      "budget_seconds": 110.0,
+      "tier": "per-path"
+    },
+    {
+      "part": "registry",
+      "commit": "89e0c3d5b79003f5591b2edb8b94dc14a0adee5d",
+      "suites": 15,
+      "failed": 0,
+      "seconds": 91.4,
+      "budget_seconds": 110.0,
+      "tier": "per-path"
+    }
+  ]
+}
