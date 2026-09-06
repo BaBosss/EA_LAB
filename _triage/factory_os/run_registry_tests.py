@@ -387,7 +387,7 @@ def main():
               not chk.ROLE_PAIR.search(chk.strip_comments(
                   '"""TUNABLE vs LOCKED, explained"""\nx = 1\n', 'x.py')))
 
-        print('\n--- R5: one entity per store ---')
+        print('\n--- R5: closed entity contract per store ---')
         chk.problems[:] = []
         chk.check_r5(reg.load_all(root=root))
         check('R5 holds for a correctly-typed synthetic set',
@@ -401,6 +401,20 @@ def main():
                   any('this store holds' in p for p in chk.problems), str(chk.problems))
         finally:
             shutil.rmtree(wrong, ignore_errors=True)
+
+        union = seed(tempfile.mkdtemp(prefix='s5union_'), universe=[
+            {'entity': 'TestUniverse', 'universe_version': 'v1', 'kind': 'PILOT',
+             'symbols': ['XAUUSD'], 'timeframes': ['H1'], 'created_commit': 'a' * 40},
+            {'entity': 'LogicalSymbol', 'logical': 'XAUUSD', 'asset_class': 'GOLD',
+             'broker_map': {'lane-1': 'XAUUSD'}},
+        ])
+        try:
+            chk.problems[:] = []
+            chk.check_r5(reg.load_all(root=union))
+            check('R5 specificity: the universe store accepts its closed TestUniverse + '
+                  'LogicalSymbol contract', not chk.problems, str(chk.problems))
+        finally:
+            shutil.rmtree(union, ignore_errors=True)
 
         # ROUND-3: the allowlist is exhaustive over the WHOLE role enum, not just the two roles
         # the other cases happen to use. This is what makes "a role added to the enum later is
@@ -835,6 +849,33 @@ def main():
                   not chk.problems, str(chk.problems))
         finally:
             shutil.rmtree(full, ignore_errors=True)
+
+        print('\n--- InstrumentProfile conditional required-field floor ---')
+        profile_base = {'entity': 'InstrumentProfile', 'profile_id': 'P1',
+                        'profile_version': 1, 'content_hash': 'a' * 64, 'values': {}}
+        for layer, selectors in (
+                ('ASSET_CLASS', {'asset_class': 'GOLD'}),
+                ('SYMBOL_OVERRIDE', {'symbol': 'EURUSD'}),
+                ('BROKER_LANE', {'symbol': 'EURUSD', 'lane': '1'})):
+            complete = dict(profile_base, layer=layer, **selectors)
+            for absent in (None,) + tuple(selectors):
+                record = dict(complete)
+                if absent is not None:
+                    record.pop(absent)
+                fixture = seed(tempfile.mkdtemp(prefix='s5profile_'),
+                               instrument_profiles=[record])
+                try:
+                    chk.problems[:] = []
+                    chk.check_r5(reg.load_all(root=fixture))
+                    if absent is None:
+                        check('PROFILE specificity %s complete row accepted' % layer,
+                              not chk.problems, str(chk.problems))
+                    else:
+                        check('PROFILE attack %s missing %s refused' % (layer, absent),
+                              any('missing required field' in p and absent in p
+                                  for p in chk.problems), str(chk.problems))
+                finally:
+                    shutil.rmtree(fixture, ignore_errors=True)
 
         print('\n--- ORDER-670: a checker judges the COMMIT (T1/T2/T3/T5) ---')
         import evidence as evd

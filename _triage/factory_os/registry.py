@@ -45,15 +45,23 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 
-# The stores, and the ONE entity each may contain. A file is not allowed to hold a mixture:
-# a store whose rows can be any entity is a store nothing can validate as a whole.
+# The stores and the CLOSED entity set each may contain. Most stores hold exactly one entity.
+# universe.jsonl is the deliberate exception in the design: TestUniverse names a mandatory set
+# whose members are LogicalSymbol identities, and the existing symbol preflight reads those
+# LogicalSymbol rows from that same file. This remains a closed two-entity union, never "any row".
 STORES = {
-    'factory/universe.jsonl': 'TestUniverse',
-    'factory/instrument_profiles.jsonl': 'InstrumentProfile',
-    'factory/hypotheses.jsonl': 'Hypothesis',
-    'factory/parameter_bindings.jsonl': 'ParameterBinding',
-    'factory/coverage.jsonl': 'CoverageCell',
+    'factory/universe.jsonl': ('TestUniverse', 'LogicalSymbol'),
+    'factory/instrument_profiles.jsonl': ('InstrumentProfile',),
+    'factory/hypotheses.jsonl': ('Hypothesis',),
+    'factory/parameter_bindings.jsonl': ('ParameterBinding',),
+    'factory/coverage.jsonl': ('CoverageCell',),
 }
+
+
+def store_entities(rel):
+    """Return the closed entity tuple for a registered store."""
+    entities = STORES[rel]
+    return entities if isinstance(entities, tuple) else (entities,)
 
 # STORES THAT MAY NOT EXIST YET, each with the gate that blocks it and the condition that lifts it.
 #

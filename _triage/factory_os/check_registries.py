@@ -6,7 +6,7 @@ THE DESIGN'S S5 ACCEPTANCE, ONE CRITERION EACH:
   R2  `NOT_APPLICABLE` is refused without a reason.
   R3  NO VERDICT FIELD in any of these files.
   R4  the generator and optimize_guard provably read ONE resolver.
-  R5  every row carries the ONE entity its store holds, AND that entity's required fields.
+  R5  every row carries an entity from its store's CLOSED contract, AND its required fields.
       (NOT full schema validation -- see the note on it below.)
   R6  a store declared BLOCKED must actually be absent, and its blocker must still hold.
 
@@ -420,7 +420,7 @@ def check_r4(src=None):
             'exemption with a reason.' % (rel, RESOLVER))
 
 
-def _required_fields(entity, src):
+def _required_fields(entity, src, record=None):
     """The entity's `required` list, READ FROM THE SCHEMA rather than re-typed here.
 
     A second copy of a required-field list is the drift this whole module is written against, so
@@ -434,7 +434,18 @@ def _required_fields(entity, src):
     if key not in _SCHEMA_DEFS:
         _SCHEMA_DEFS[key] = json.loads(
             src.read_committed('_triage/factory_os/schemas.json')).get('$defs') or {}
-    return list((_SCHEMA_DEFS[key].get(entity) or {}).get('required') or [])
+    definition = _SCHEMA_DEFS[key].get(entity) or {}
+    fields = list(definition.get('required') or [])
+    # InstrumentProfile adds required selectors by layer. Read the existing layer-const
+    # clauses from the same source-bound schema; do not duplicate the field lists here.
+    # This is still only a presence floor, not an allOf/JSON Schema implementation:
+    # types, null/empty values, unknown keys and other constraints belong to AJV.
+    if entity == 'InstrumentProfile' and record is not None and 'layer' in record:
+        for clause in definition.get('allOf', []):
+            condition = clause.get('if', {}).get('properties', {}).get('layer', {})
+            if 'const' in condition and record['layer'] == condition['const']:
+                fields.extend(clause.get('then', {}).get('required', []))
+    return list(dict.fromkeys(fields))
 
 
 _SCHEMA_DEFS = {}
@@ -442,7 +453,8 @@ _SCHEMA_DEFS = {}
 
 def check_r5(stores, src=None):
     src = src or _default_src()
-    for rel, entity in sorted((k, v) for k, v in reg.STORES.items() if k in stores):
+    for rel in sorted(k for k in reg.STORES if k in stores):
+        allowed = reg.store_entities(rel)
         _meta, rows = stores[rel]
         for n, rec in rows:
             got = rec.get('entity')
@@ -455,11 +467,11 @@ def check_r5(stores, src=None):
                 problems.append('R5 %s line %d has no `entity` discriminator, so nothing can '
                                 'route it to a contract' % (rel, n))
                 continue
-            if got != entity:
+            if got not in allowed:
                 problems.append(
-                    'R5 %s line %d declares entity=%r but this store holds %r. A store whose rows '
-                    'can be any entity is a store nothing validates as a whole.'
-                    % (rel, n, got, entity))
+                    'R5 %s line %d declares entity=%r but this store holds only %r. A row outside '
+                    'the closed store contract cannot be routed to a schema.'
+                    % (rel, n, got, allowed))
                 continue
             # BLIND AUDIT 2026-07-31, reproduced: R5 was described as "every row VALIDATES against
             # the one entity its store is declared to hold" and it checked the DISCRIMINATOR ONLY.
@@ -471,14 +483,14 @@ def check_r5(stores, src=None):
             # validator and it runs in run_schema_fixtures.py; this tier has no node budget. What
             # this adds is the REQUIRED-FIELD floor, read out of schemas.json so there is no second
             # copy of the list. A row that passes here can still be invalid in ways only ajv sees.
-            missing = [f for f in _required_fields(entity, src) if f not in rec]
+            missing = [f for f in _required_fields(got, src, rec) if f not in rec]
             if missing:
                 problems.append(
                     'R5 %s line %d declares entity=%r but is missing required field(s) %s. The '
                     'discriminator alone was the whole check until 2026-07-31, so a row carrying '
                     'nothing but its own name passed. (Required-field floor only -- full schema '
                     'validation is ajv, in run_schema_fixtures.py.)'
-                    % (rel, n, entity, ', '.join(missing)))
+                    % (rel, n, got, ', '.join(missing)))
 
 
 def check_r6(src=None):
@@ -591,7 +603,7 @@ def main():
             print('  - %s' % p)
         return 1
     print('\n=== R1 round-trip - R2 not-applicable reason - R3 no verdict (keys AND values) '
-          '- R4 one resolver - R5 one entity per store: all hold ===')
+          '- R4 one resolver - R5 closed entity contract - R6 blocked-store gate: all hold ===')
     return 0
 
 
