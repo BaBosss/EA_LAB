@@ -141,17 +141,23 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 | column | meaning | scope |
 |---|---|---|
+| name | the exact declared input name, optionally qualified by build tag | global |
 | owner | which module reads this input | global |
-| unit_true | what the CODE does with the number, not what the name claims - the chassis holds two meanings of 'pip' at once | global |
+| unit | the legacy/display unit recorded by the registry | global |
 | context | where in the strategy it applies | global |
 | active_when | the condition under which this input has any effect at all | global |
-| coupled_with | inputs that must move with it or the strategy changes rather than resizes | global |
+| coupled_parameters | inputs that must move with it or the strategy changes rather than resizes | global |
+| default_profile | the documented baseline profile value, not a runtime override | global |
+| optimize_stage | the documented global optimization-stage label; per-hypothesis permission remains in ParameterBinding | global |
+| safe_range | the documented global range; per-hypothesis range constraints remain in ParameterBinding | global |
 | causal_question | the question a sweep of this input answers | global |
-| classification | OPERATOR / TUNING / OVERRIDE / DEAD - OVERRIDE means member of a precedence chain, NOT dead (Stage 0A P0) | global |
-| display_label | the label the generated Inputs page shows | global |
-| enum_name | the enum type when the input is an enum, so a diff table cannot compare a name against a number | global |
-| precedence_owner | which sibling wins when an OVERRIDE chain has more than one member set | global |
-| role | ABSENT FROM THIS TABLE ON PURPOSE - role/locked_value/safe_range/optimize_stage are per-hypothesis and live in factory/parameter_bindings.jsonl | NOT A COLUMN |
+| classification | ACTIVE / OVERRIDE / INACTIVE / COMPATIBILITY - the operational allowlist consumed by registry.py | global |
+| classification_note | evidence and precedence detail supporting classification | global |
+| parameter_pid | stable five-digit parameter identity | global |
+| unit_true | what the code does with the number, independent of a legacy name | global |
+| portability | whether the parameter meaning transfers across symbol, broker, or platform | global |
+| display_label | the label shown by generated parameter surfaces | global |
+| relation_hint | machine-readable hint for documented linkage or precedence | global |
 
 <!-- END GENERATED CONTRACT: META_parameter_registry_columns -->
 

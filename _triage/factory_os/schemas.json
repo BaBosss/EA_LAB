@@ -31,13 +31,18 @@
         ],
         "rows": [
           {
+            "column": "name",
+            "meaning": "the exact declared input name, optionally qualified by build tag",
+            "scope": "global"
+          },
+          {
             "column": "owner",
             "meaning": "which module reads this input",
             "scope": "global"
           },
           {
-            "column": "unit_true",
-            "meaning": "what the CODE does with the number, not what the name claims - the chassis holds two meanings of 'pip' at once",
+            "column": "unit",
+            "meaning": "the legacy/display unit recorded by the registry",
             "scope": "global"
           },
           {
@@ -51,8 +56,23 @@
             "scope": "global"
           },
           {
-            "column": "coupled_with",
+            "column": "coupled_parameters",
             "meaning": "inputs that must move with it or the strategy changes rather than resizes",
+            "scope": "global"
+          },
+          {
+            "column": "default_profile",
+            "meaning": "the documented baseline profile value, not a runtime override",
+            "scope": "global"
+          },
+          {
+            "column": "optimize_stage",
+            "meaning": "the documented global optimization-stage label; per-hypothesis permission remains in ParameterBinding",
+            "scope": "global"
+          },
+          {
+            "column": "safe_range",
+            "meaning": "the documented global range; per-hypothesis range constraints remain in ParameterBinding",
             "scope": "global"
           },
           {
@@ -62,28 +82,38 @@
           },
           {
             "column": "classification",
-            "meaning": "OPERATOR / TUNING / OVERRIDE / DEAD - OVERRIDE means member of a precedence chain, NOT dead (Stage 0A P0)",
+            "meaning": "ACTIVE / OVERRIDE / INACTIVE / COMPATIBILITY - the operational allowlist consumed by registry.py",
+            "scope": "global"
+          },
+          {
+            "column": "classification_note",
+            "meaning": "evidence and precedence detail supporting classification",
+            "scope": "global"
+          },
+          {
+            "column": "parameter_pid",
+            "meaning": "stable five-digit parameter identity",
+            "scope": "global"
+          },
+          {
+            "column": "unit_true",
+            "meaning": "what the code does with the number, independent of a legacy name",
+            "scope": "global"
+          },
+          {
+            "column": "portability",
+            "meaning": "whether the parameter meaning transfers across symbol, broker, or platform",
             "scope": "global"
           },
           {
             "column": "display_label",
-            "meaning": "the label the generated Inputs page shows",
+            "meaning": "the label shown by generated parameter surfaces",
             "scope": "global"
           },
           {
-            "column": "enum_name",
-            "meaning": "the enum type when the input is an enum, so a diff table cannot compare a name against a number",
+            "column": "relation_hint",
+            "meaning": "machine-readable hint for documented linkage or precedence",
             "scope": "global"
-          },
-          {
-            "column": "precedence_owner",
-            "meaning": "which sibling wins when an OVERRIDE chain has more than one member set",
-            "scope": "global"
-          },
-          {
-            "column": "role",
-            "meaning": "ABSENT FROM THIS TABLE ON PURPOSE - role/locked_value/safe_range/optimize_stage are per-hypothesis and live in factory/parameter_bindings.jsonl",
-            "scope": "NOT A COLUMN"
           }
         ]
       },
