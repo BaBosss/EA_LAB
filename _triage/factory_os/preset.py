@@ -866,15 +866,16 @@ def load_unit_classes(src, rel=PARAM_REGISTRY_REL):
     return parse_unit_classes(src.read_committed(rel))
 
 
-def load_instrument_profile(src, symbol, rel=INSTRUMENT_PROFILES_REL):
-    """-> the profile row for `symbol`. REFUSES when there is none (P6).
+def load_instrument_profile(src, symbol, rel=INSTRUMENT_PROFILES_REL, lane=None):
+    """Return the one profile row for an exact logical-symbol/lane selector.
 
-    All three factory registries carry comment rows only today, deliberately: a profile asserts
-    which broker and lane a symbol trades on, and asserting one nobody measured would be a claim
-    about the machine. So this refuses for every symbol right now, and that is the correct
-    answer -- what it must NOT do is invent a default profile so a compile can proceed.
+    LogicalSymbol.broker_map owns the actual broker symbol. InstrumentProfile owns parameter
+    values selected for a symbol/lane and must never infer either selector. All three factory
+    registries carry comment rows only today, deliberately, so this refuses for every symbol
+    until measured rows exist rather than inventing a default profile for a compile.
     """
     rows = []
+    symbol_rows = []
     total_rows = 0
     for line in src.read_committed(rel).split('\n'):
         line = line.strip()
@@ -888,7 +889,21 @@ def load_instrument_profile(src, symbol, rel=INSTRUMENT_PROFILES_REL):
             continue
         total_rows += 1
         if obj.get('symbol') == symbol:
-            rows.append(obj)
+            # Reject malformed lane-specific rows before filtering, including calls that
+            # omit lane. Schema validation is a separate gate; absence of a selector must
+            # never turn a BROKER_LANE record into a generic symbol profile here.
+            if obj.get('layer') == 'BROKER_LANE' and (
+                    not isinstance(obj.get('lane'), str) or not obj['lane']):
+                raise PresetRefusal(
+                    'BROKER_LANE profile for symbol %r in %s requires a non-empty string lane.'
+                    % (symbol, rel))
+            symbol_rows.append(obj)
+            if lane is None or obj.get('lane') == lane:
+                rows.append(obj)
+    if lane is None and any(obj.get('lane') is not None for obj in symbol_rows):
+        raise PresetRefusal(
+            'InstrumentProfile symbol %r has lane-specific rows in %s and requires an explicit '
+            'lane selector; choosing one from file order is refused.' % (symbol, rel))
     if not rows:
         # The explanation is CONDITIONAL on the store actually being empty. An unconditional
         # "empty by design" would become a false statement about the registry the moment its
@@ -897,11 +912,12 @@ def load_instrument_profile(src, symbol, rel=INSTRUMENT_PROFILES_REL):
                       'measured a broker/lane mapping yet.' if not total_rows else
                       ' The registry holds %d row(s) for other symbols.' % total_rows)
         raise PresetRefusal(
-            'no InstrumentProfile row for %r in %s.%s A profile asserts which broker and lane '
-            'a symbol trades on; compiling without one would put an invented broker mapping '
-            'behind a fingerprint.' % (symbol, rel, empty_note))
+            'no InstrumentProfile row for symbol %r%s in %s.%s Compiling without an exact '
+            'profile would put invented parameter values behind a fingerprint.'
+            % (symbol, ' and lane %r' % lane if lane is not None else '', rel, empty_note))
     if len(rows) > 1:
         raise PresetRefusal(
-            '%d InstrumentProfile rows for %r in %s. Two profiles for one symbol is the '
-            'same-layer disagreement of P7 one file up.' % (len(rows), symbol, rel))
+            '%d InstrumentProfile rows for symbol %r%s in %s. Two profiles for one selector is '
+            'the same-layer disagreement of P7 one file up.'
+            % (len(rows), symbol, ' and lane %r' % lane if lane is not None else '', rel))
     return rows[0]

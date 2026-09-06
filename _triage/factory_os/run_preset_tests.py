@@ -23,6 +23,7 @@ EXIT   0 = every case behaved as declared - 1 = one did not
 """
 import io
 import importlib.util
+import json
 import os
 import sys
 import tempfile
@@ -82,7 +83,9 @@ FIXTURE_REGISTRY = (
 
 FIXTURE_PROFILES = (
     '{"_comment": "canonical store, no rows yet"}\n'
-    '{"entity": "InstrumentProfile", "symbol": "EURUSD", "lane": "1"}\n'
+    '{"entity": "InstrumentProfile", "profile_id": "EURUSD_L1", "profile_version": 1, '
+    '"content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", '
+    '"layer": "BROKER_LANE", "symbol": "EURUSD", "lane": "1", "values": {}}\n'
 )
 
 JOB = {'lane': '1', 'symbol': 'EURUSD', 'timeframe': 'H1', 'model': '1',
@@ -407,14 +410,55 @@ def p6_attack(mod):
             return 'the refusal claims the registry is empty while it holds a row'
         if '1 row(s) for other symbols' not in str(exc):
             return 'the refusal does not state what the registry does hold: %s' % str(exc)[:120]
+    omitted = refuses(lambda: mod.load_instrument_profile(fake(), 'EURUSD'),
+                      'lane selector', 'requires an explicit lane')
+    if omitted:
+        return omitted
+    profile = json.loads(FIXTURE_PROFILES.splitlines()[1])
+    for label, value in (('missing', None), ('null', None), ('empty', ''),
+                         ('numeric', 1), ('array', ['1'])):
+        malformed = dict(profile)
+        if label == 'missing':
+            malformed.pop('lane')
+        else:
+            malformed['lane'] = value
+        src = fake(**{mod.INSTRUMENT_PROFILES_REL: json.dumps(malformed) + '\n'})
+        for selector in (None, '1'):
+            err = refuses(lambda: mod.load_instrument_profile(src, 'EURUSD', lane=selector),
+                          'BROKER_LANE', 'non-empty string lane')
+            if err:
+                return '%s lane with selector %r: %s' % (label, selector, err)
+    collision = dict(profile, profile_id='EURUSD_L1_COLLISION')
+    for rows in ((profile, collision), (collision, profile)):
+        src = fake(**{mod.INSTRUMENT_PROFILES_REL:
+                      ''.join(json.dumps(row) + '\n' for row in rows)})
+        err = refuses(lambda: mod.load_instrument_profile(src, 'EURUSD', lane='1'),
+                      'Two profiles for one selector')
+        if err:
+            return err
     return None
 
 
 def p6_specificity(mod):
     """the refusal must not degrade into `everything fails`, which is P6 broken, not passing"""
-    row = mod.load_instrument_profile(fake(), 'EURUSD')
+    row = mod.load_instrument_profile(fake(), 'EURUSD', lane='1')
     if row.get('lane') != '1':
         return 'a declared profile row was not returned'
+    second = dict(row, profile_id='EURUSD_L2', lane='2')
+    for rows in ((row, second), (second, row)):
+        src = fake(**{mod.INSTRUMENT_PROFILES_REL:
+                      ''.join(json.dumps(item) + '\n' for item in rows)})
+        if mod.load_instrument_profile(src, 'EURUSD', lane='2') != second:
+            return 'distinct lanes collided or selection depended on file order'
+    legacy_rel = 'factory/alternate_profiles.jsonl'
+    legacy_src = fake(**{legacy_rel: FIXTURE_PROFILES})
+    legacy = mod.load_instrument_profile(legacy_src, 'EURUSD', legacy_rel, lane='1')
+    if legacy.get('profile_id') != 'EURUSD_L1' or legacy_src.reads[-1] != legacy_rel:
+        return 'the original third positional rel argument no longer selects the caller path'
+    err = refuses(lambda: mod.load_instrument_profile(fake(), 'EURUSD', lane='2'),
+                  'lane', 'no InstrumentProfile row')
+    if err:
+        return err
     bad = accepts(lambda: compile_ok(mod))
     if bad:
         return 'a compile needing no profile was refused: %s' % bad
