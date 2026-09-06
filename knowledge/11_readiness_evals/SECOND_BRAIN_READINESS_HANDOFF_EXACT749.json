@@ -1,0 +1,99 @@
+{
+  "schema_version": "ea_lab_research_handoff/1",
+  "handoff_id": "SB-READINESS-HANDOFF-EXACT749-20260906",
+  "authority": "RESEARCH_ONLY",
+  "source_commit": "749da682d03615761cda7a46b31a663ad0b306f5",
+  "consumer": "SIX_QUESTION_SECOND_BRAIN_READINESS",
+  "execution_requested": false,
+  "auto_registration_requested": false,
+  "requested_actions": [],
+  "execution_readiness_claim": "BLOCKED",
+  "citations": [
+    {"citation_id":"C-KNOWLEDGE-BOUNDARY","path":"knowledge/README.md","anchor_text":"Before proposing a strategy, check negative knowledge and existing experiment evidence.","evidence_depth":"CANONICAL_BOUNDARY"},
+    {"citation_id":"C-XAU-MILESTONE","path":"knowledge/10_synthesis/SECOND_BRAIN_MILESTONE_B16_XAU_H4_REPAIR01_20260905.md","anchor_text":"Decision: `RETAIN_CURRENT_EXITS_FROZEN`","evidence_depth":"ACCEPTED_EVIDENCE_POINTER"},
+    {"citation_id":"C-GBP-PREREG","path":"docs/research/B16_GBP_SELL_H4_EXITCONC_PREREG_20260905.md","anchor_text":"Status: `PREREGISTERED / RESEARCH_ONLY / ZERO_NEW_MT5 / NOT_EXECUTED`","evidence_depth":"PREREGISTERED_SPEC"},
+    {"citation_id":"C-CLOSED-PATHS","path":"knowledge/90_negative_knowledge/b16-b15-boss19-closed-paths.md","anchor_text":"B16 USDJPY/H1 H08","evidence_depth":"RESEARCH_LEVEL_NEGATIVE_MEMORY"},
+    {"citation_id":"C-H08-RESULT","path":"docs/research/B16_USDJPY_BUY_H1_OPT01_RESULTS.md","anchor_text":"CENTER_REJECTED_BWD","evidence_depth":"ACCEPTED_RESULT"},
+    {"citation_id":"C-RSI-ROLE","path":"knowledge/04_components/rsi-role-by-strategy.md","anchor_text":"RSI Role Depends on Strategy Semantics","evidence_depth":"SOURCE_BACKED_SYNTHESIS"},
+    {"citation_id":"C-RSI-POSITIVE","path":"knowledge/02_research_cards/RC-SSRN3412429-001.md","anchor_text":"RSI extremes can encode trend consistency and momentum rather than only reversal","evidence_depth":"FULL_TEXT","source_id":"SRC-GDRIVE-SSRN3412429"},
+    {"citation_id":"C-MOMENTUM-NEGATIVE","path":"knowledge/02_research_cards/RC-SSRN2269045-001.md","anchor_text":"Irish equity momentum provides a counterexample to universal momentum claims","evidence_depth":"FULL_TEXT","source_id":"SRC-GDRIVE-SSRN2269045"},
+    {"citation_id":"C-MOMENTUM-MEMORY","path":"knowledge/90_negative_knowledge/momentum-not-universal.md","anchor_text":"Do not encode \"momentum works\" or \"momentum fails\" as a universal premise.","evidence_depth":"RESEARCH_LEVEL_NEGATIVE_MEMORY"},
+    {"citation_id":"C-PAIRS-HYP","path":"knowledge/10_synthesis/HYP-SB-003-cost-aware-cointegration-pairs-baseline.md","anchor_text":"`SEMANTICS_REQUIRED / DO NOT EXECUTE YET`","evidence_depth":"TESTABLE_HYPOTHESIS_CANDIDATE"},
+    {"citation_id":"C-PAIRS-RISK","path":"knowledge/07_risk_execution/pairs-trading-cost-and-relationship-failure.md","anchor_text":"Cost stack to bind prospectively","evidence_depth":"SOURCE_BACKED_RISK_SYNTHESIS"},
+    {"citation_id":"C-NEGATIVE-BOUNDARY","path":"knowledge/90_negative_knowledge/README.md","anchor_text":"This directory is not QI Negative Experiment Memory.","evidence_depth":"CANONICAL_BOUNDARY"},
+    {"citation_id":"C-QI1-FREEZE","path":"docs/research/QI1_FOUNDATION_DESIGN_FREEZE.md","anchor_text":"This document records a frozen decision only. It does not create schemas,","evidence_depth":"OWNER_APPROVED_DESIGN_FREEZE"},
+    {"citation_id":"C-QUERY-SKILL","path":".agents/skills/ea-knowledge-query/SKILL.md","anchor_text":"say `UNKNOWN` when the source depth does not support a stronger conclusion.","evidence_depth":"QUERY_INSTRUCTION_SURFACE"},
+    {"citation_id":"C-SYNTH-SKILL","path":".agents/skills/ea-strategy-synthesizer/SKILL.md","anchor_text":"Do not write EA source code, launch Factory/MT5, create a strategy registry entry","evidence_depth":"SYNTHESIS_INSTRUCTION_SURFACE"}
+  ],
+  "questions": [
+    {
+      "question_id":"Q1_EXIT_REMOVAL",
+      "answer_code":"RETAIN_CURRENT_EXITS_FROZEN",
+      "answer_summary":"Aggregate PF/net does not overcome the accepted concentration and holding-time finding.",
+      "citation_ids":["C-XAU-MILESTONE","C-CLOSED-PATHS"],
+      "contradiction_citation_ids":["C-XAU-MILESTONE"],
+      "negative_memory_citation_ids":["C-CLOSED-PATHS"],
+      "abstentions":["NO_EXIT_REMOVAL_OR_SEARCH_AUTHORITY"],
+      "required_semantics":[{"name":"future_exit_redesign_contract","status":"UNKNOWN","reason":"No separately preregistered exit-redesign hypothesis exists."}],
+      "legal_next_action":{"code":"KEEP_FROZEN","authority":"RESEARCH_ONLY","execution":false}
+    },
+    {
+      "question_id":"Q2_GBP_ZERO_NEW_MT5",
+      "answer_code":"PREREGISTERED_NOT_EXECUTED",
+      "answer_summary":"Existing reports support a zero-new-MT5 diagnostic specification, but no result exists.",
+      "citation_ids":["C-GBP-PREREG","C-CLOSED-PATHS"],
+      "contradiction_citation_ids":["C-GBP-PREREG"],
+      "negative_memory_citation_ids":["C-CLOSED-PATHS"],
+      "abstentions":["NO_RESULT_CLAIM","NO_EXECUTION_AUTHORITY"],
+      "required_semantics":[{"name":"exact_parent_control_reproduction","status":"NOT_EXECUTED","reason":"The preregistered control gate has not been executed."}],
+      "legal_next_action":{"code":"CREATE_SEPARATE_RESEARCH_CONTRACT","authority":"RESEARCH_ONLY","execution":false}
+    },
+    {
+      "question_id":"Q3_REOPEN_RSI_H08",
+      "answer_code":"REUSE_PRIOR_EVIDENCE",
+      "answer_summary":"The MAIN-selected center failed fixed BWD and the adaptive search path is closed.",
+      "citation_ids":["C-H08-RESULT","C-CLOSED-PATHS"],
+      "contradiction_citation_ids":["C-H08-RESULT"],
+      "negative_memory_citation_ids":["C-CLOSED-PATHS"],
+      "abstentions":["NO_ADAPTIVE_REOPEN"],
+      "required_semantics":[{"name":"prior_h08_scope","status":"CLOSED_PRIOR_EVIDENCE","reason":"The accepted result closes widening and BWD retuning."}],
+      "legal_next_action":{"code":"STOP_CLOSED_PATH","authority":"RESEARCH_ONLY","execution":false}
+    },
+    {
+      "question_id":"Q4_RSI_ABOVE_70",
+      "answer_code":"UNKNOWN_TARGET_SEMANTICS",
+      "answer_summary":"RSI above 70 is context-dependent and cannot be transferred universally from equity studies.",
+      "citation_ids":["C-RSI-ROLE","C-RSI-POSITIVE","C-MOMENTUM-NEGATIVE","C-MOMENTUM-MEMORY"],
+      "contradiction_citation_ids":["C-RSI-POSITIVE","C-MOMENTUM-NEGATIVE"],
+      "negative_memory_citation_ids":["C-MOMENTUM-MEMORY"],
+      "abstentions":["NO_UNIVERSAL_RSI_SEMANTIC","NO_XAU_FX_BTC_TRANSFER_CLAIM"],
+      "required_semantics":[{"name":"target_market_timeframe_and_rsi_role","status":"UNKNOWN","reason":"The target and intended indicator role are not specified."}],
+      "legal_next_action":{"code":"FREEZE_TARGET_SEMANTICS","authority":"RESEARCH_ONLY","execution":false}
+    },
+    {
+      "question_id":"Q5_PAIRS_READY",
+      "answer_code":"SEMANTICS_REQUIRED_DO_NOT_EXECUTE",
+      "answer_summary":"The deterministic pairs baseline has source support but lacks the required prospective data, relationship, execution, cost, and falsifier semantics.",
+      "citation_ids":["C-PAIRS-HYP","C-PAIRS-RISK","C-NEGATIVE-BOUNDARY"],
+      "contradiction_citation_ids":["C-PAIRS-HYP","C-PAIRS-RISK"],
+      "negative_memory_citation_ids":["C-NEGATIVE-BOUNDARY"],
+      "abstentions":["NO_PAIR_SELECTION","NO_DATA_IDENTITY","NO_RISK_DEFAULT","NO_EXPERIMENT_CONTRACT"],
+      "required_semantics":[
+        {"name":"pair_and_immutable_data_identity","status":"SEMANTICS_REQUIRED","reason":"No pair/universe or immutable market-data identity is frozen."},
+        {"name":"two_leg_cost_fill_and_failure_rules","status":"SEMANTICS_REQUIRED","reason":"Execution, cost, exposure, and relationship-break behavior remain unresolved."}
+      ],
+      "legal_next_action":{"code":"CREATE_SEMANTICS_PACKET","authority":"RESEARCH_ONLY","execution":false}
+    },
+    {
+      "question_id":"Q6_AUTO_REGISTER",
+      "answer_code":"REFUSE_AUTO_REGISTRATION_OR_EXECUTION",
+      "answer_summary":"Second Brain output remains research-only and must return an abstention plus canonical-owner pointer.",
+      "citation_ids":["C-KNOWLEDGE-BOUNDARY","C-QI1-FREEZE","C-QUERY-SKILL","C-SYNTH-SKILL","C-NEGATIVE-BOUNDARY"],
+      "contradiction_citation_ids":["C-QUERY-SKILL","C-SYNTH-SKILL","C-QI1-FREEZE"],
+      "negative_memory_citation_ids":["C-NEGATIVE-BOUNDARY"],
+      "abstentions":["NO_STRATEGY_REGISTRY_WRITE","NO_FACTORY_LAUNCH","NO_GRADE_OR_KINT","NO_PROMOTION"],
+      "required_semantics":[{"name":"canonical_owner_and_authority_boundary","status":"RESOLVED","reason":"Existing Second Brain and QI-1 boundaries explicitly prohibit automatic store writes and execution."}],
+      "legal_next_action":{"code":"RETURN_ABSTENTION_AND_OWNER_POINTER","authority":"RESEARCH_ONLY","execution":false}
+    }
+  ]
+}

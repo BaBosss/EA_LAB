@@ -206,13 +206,22 @@ def _read_sidecar(path: Path) -> dict[str, object] | None:
 def full_window_evidence_eligibility(truncation: dict[str, object] | None) -> tuple[bool, str]:
     if truncation is None:
         return False, "TRUNCATION_CHECK_MISSING"
+    if not isinstance(truncation, dict):
+        return False, "TRUNCATION_CHECK_PARSE_ERROR"
     if truncation.get("status") == "SIDECAR_PARSE_ERROR":
         return False, "TRUNCATION_CHECK_PARSE_ERROR"
     truncated = truncation.get("truncated")
     if truncated is True:
         return False, "TRUNCATED_RUN"
-    if truncated is False:
+    if truncation.get("check_status") == "CHECK_ERROR":
+        return False, "TRUNCATION_CHECK_ERROR"
+    if (truncation.get("schema_version") == 2
+            and truncation.get("check_status") == "CHECK_PASS"
+            and type(truncation.get("checker_exit_code")) is int
+            and truncation["checker_exit_code"] == 0 and truncated is False):
         return True, "TRUNCATION_CHECK_PASS"
+    # Legacy false also encoded checker exceptions. It is not sufficient for
+    # NEW admission; this does not rewrite any previously accepted receipt.
     return False, "TRUNCATION_CHECK_UNKNOWN"
 
 

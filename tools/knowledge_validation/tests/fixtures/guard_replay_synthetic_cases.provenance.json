@@ -1,0 +1,9 @@
+{
+  "schema_version": "ea_lab_vendored_fixture_provenance/1",
+  "fixture": "guard_replay_synthetic_cases.json",
+  "source_path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\owner_simplification_20260906\\guard_replay\\guard_replay_synthetic_cases.json",
+  "source_sha256": "7eeb2d51423573be2d4c37bcd9621631c6baace0096943c8bde57c0319c27d01",
+  "accepted_probe_sha256": "70ce92a22dac19f3038635b4a7c5daddbdbaa3c5c3cd35cad1450ea07304c0bb",
+  "copy_is_byte_identical": true,
+  "classification": "SYNTHETIC_CONTRACT_TEST_ONLY"
+}

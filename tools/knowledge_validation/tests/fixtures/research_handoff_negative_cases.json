@@ -1,0 +1,32 @@
+[
+  {
+    "case_id": "MISSING_CITATION_ANCHOR",
+    "mutation": {"path": "citations.0.anchor_text", "value": "ANCHOR_THAT_DOES_NOT_EXIST"},
+    "expected_error": "CITATION_ANCHOR_NOT_FOUND"
+  },
+  {
+    "case_id": "MISSING_CONTRADICTION",
+    "mutation": {"path": "questions.0.contradiction_citation_ids", "value": []},
+    "expected_error": "CONTRADICTIONS_REQUIRED"
+  },
+  {
+    "case_id": "AUTO_REGISTRATION",
+    "mutation": {"path": "auto_registration_requested", "value": true},
+    "expected_error": "AUTO_REGISTRATION_FORBIDDEN"
+  },
+  {
+    "case_id": "UNREGISTERED_SOURCE_ID",
+    "mutation": {"path": "citations.6.source_id", "value": "SRC-DOES-NOT-EXIST"},
+    "expected_error": "SOURCE_ID_UNREGISTERED"
+  },
+  {
+    "case_id": "UNRESOLVED_BUT_READY",
+    "mutation": {"path": "execution_readiness_claim", "value": "READY"},
+    "expected_error": "UNRESOLVED_SEMANTICS_EXECUTION_READY_CONFLICT"
+  },
+  {
+    "case_id": "FACTORY_EXECUTION_REQUEST",
+    "mutation": {"path": "requested_actions", "value": ["FACTORY_EXECUTE"]},
+    "expected_error": "FORBIDDEN_REQUEST"
+  }
+]

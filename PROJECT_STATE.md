@@ -17,6 +17,10 @@
 
 MS-SYSTEM-02 remains **PARTIAL_ACCEPT / A+C+D ACCEPTED / B OWNER-DEFERRED / BLOCKED C_ENVIRONMENT_DEPENDENCY**. No baseline repin/waiver or full-MS PASS is implied.
 
+### 1.0a Whole-system tooling convergence
+
+**Whole-system tooling convergence (owner-directed 2026-09-06): IMPLEMENTED IN SCOPED TOOLING / NO WHOLE-SYSTEM PRODUCTION PASS.** The independent architect continuation adds exact-ref context/source identities, read-only Long Job resume/intake using the existing Harness, typed truncation evidence, source-bound research-handoff and offline news-data validation, dependency-based template applicability, parameter-contract documentation alignment, monitor observation-time handling and Codex CLI argument preflight. Guide/limits: `docs/workflows/EA_LAB_SYSTEM_CONVERGENCE.md`; queue: `OWNER-SYSTEM-CONVERGENCE-20260906` on `AGENT_TASKBOARD.md`. A real local Long Job exercised only offline checks/postconditions. Prepared Profile/Universe selector changes remain outside canonical pending qualified different-family review. Provider M2, historical news/EA replay qualification, unresolved research semantics, Part B heartbeat, ORDER-353 and runtime/delivery activation retain their separate gates. Mobile/PWA work is parked behind system convergence. No existing strategy/verdict, baseline, risk/default, deployment, judge-clock or HOLDOUT authority changed.
+
 ### 1.1 Mainline — VPS DEMO Deployment / Forward-Test
 
 **ACTIVE — setup/acceptance complete; observation continues.**

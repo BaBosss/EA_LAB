@@ -1,0 +1,4 @@
+codex-cli legacy-fixture
+Usage: codex exec [OPTIONS] [PROMPT]
+--ask-for-approval <POLICY>
+--cd <DIR>

@@ -12,6 +12,7 @@ function ReportCase($name) { Write-Host "[PASS] $name" }
 try {
     $bootstrap = Join-Path $RepoRoot 'scripts\execution_reliability\bootstrap_worktree.ps1'
     $launcher = Join-Path $RepoRoot 'scripts\execution_reliability\launch_worker.ps1'
+    $codexHelpFixture = Join-Path $RepoRoot 'scripts\_test\fixtures\codex_exec_help_0_144_2.txt'
     $inspectRetry = Join-Path $RepoRoot 'scripts\execution_reliability\inspect_before_retry.ps1'
     $worktree = Join-Path $Root 'worktree'
     New-Item -ItemType Directory -Path $worktree | Out-Null
@@ -37,18 +38,29 @@ try {
     Set-Content -LiteralPath $prompt -Value 'perform the bounded task' -Encoding utf8
     $postcondition = Join-Path $Root 'postcondition.ps1'
     Set-Content -LiteralPath $postcondition -Value 'exit 0' -Encoding utf8
-    $codexJob = & $launcher -Provider Codex -AccessMode Write -ProviderExecutable (Join-Path $PSHOME 'powershell.exe') -PromptFile $prompt -JobId 'worker-codex' -Worktree $worktree -ExpectedHead (git -C $worktree rev-parse HEAD).Trim() -ExpectedHooksPath '.githooks' -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postcondition) -JobsRoot $jobsRoot -TimeoutSec 30 -HeartbeatSec 1 -Json | ConvertFrom-Json
-    Assert ($codexJob.job_id -eq 'worker-codex') 'launcher did not return long job id'
-    $codexMeta = Get-Content -LiteralPath (Join-Path $jobsRoot 'worker-codex\job.json') -Raw | ConvertFrom-Json
-    Assert ($codexMeta.file_path -eq (Join-Path $PSHOME 'powershell.exe')) 'launcher did not launch the selected Codex executable through Long Job Runner'
-    Assert ($codexMeta.stage -eq 'WORKER_CODEX_WRITE') "unexpected Codex stage: $($codexMeta.stage)"
-    $expectedCodexArgs = @('exec','--sandbox','workspace-write','--ask-for-approval','never','--cd',$worktree,'perform the bounded task')
-    $expectedArgHash = [Convert]::ToBase64String((New-Object System.Security.Cryptography.SHA256Managed).ComputeHash([Text.Encoding]::UTF8.GetBytes(($expectedCodexArgs -join "`u0000"))))
-    Assert ($codexMeta.arg_hash -eq $expectedArgHash) 'Codex launcher arguments are not deterministic noninteractive workspace-write arguments'
-    $duplicateRefused = $false
-    try { & $launcher -Provider Codex -AccessMode Write -ProviderExecutable (Join-Path $PSHOME 'powershell.exe') -PromptFile $prompt -JobId 'worker-codex' -Worktree $worktree -ExpectedHead (git -C $worktree rev-parse HEAD).Trim() -ExpectedHooksPath '.githooks' -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postcondition) -JobsRoot $jobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null } catch { $duplicateRefused = $true }
-    Assert $duplicateRefused 'launcher did not preserve Long Job Runner duplicate prevention'
-    $pass++; ReportCase 'Codex launcher deterministic args and duplicate prevention'
+    $optionPrompt=Join-Path $Root 'option-like-prompt.txt'
+    Set-Content -LiteralPath $optionPrompt -Value '--help' -Encoding utf8
+    $validation=& $launcher -Provider Codex -AccessMode ReadOnly -ProviderExecutable (Join-Path $PSHOME 'powershell.exe') -ProviderHelpFile $codexHelpFixture -ProviderVersion 'codex-cli 0.144.2 fixture' -Model 'gpt-5.6-sol' -ReasoningEffort low -PromptFile $optionPrompt -JobId 'validate-only' -Worktree $worktree -ExpectedHead ('0'*40) -ExpectedHooksPath 'intentionally-not-checked-in-validate-only' -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -JobsRoot $jobsRoot -ValidateOnly -Json|ConvertFrom-Json
+    $expectedReadOnlyArgs=@('exec','--config','approval_policy="never"','--config','model_reasoning_effort="low"','--model','gpt-5.6-sol','--sandbox','read-only','--cd',$worktree,'--','--help')
+    $expectedReadOnlyHash=[Convert]::ToBase64String((New-Object System.Security.Cryptography.SHA256Managed).ComputeHash([Text.Encoding]::UTF8.GetBytes(($expectedReadOnlyArgs -join "`u0000"))))
+    Assert ($validation.argument_hash -eq $expectedReadOnlyHash -and -not $validation.would_launch) 'validate-only must preserve option-like prompts behind -- without launching'
+    Assert ($validation.requested_model -eq 'gpt-5.6-sol' -and $validation.requested_reasoning_effort -eq 'low') 'task-scoped model and reasoning request must remain explicit'
+    $invalidPairRefused=$false
+    try { & $launcher -Provider Codex -AccessMode ReadOnly -ProviderExecutable (Join-Path $PSHOME 'powershell.exe') -ProviderHelpFile $codexHelpFixture -Model 'gpt-5.5' -ReasoningEffort max -PromptFile $prompt -JobId 'invalid-pair' -Worktree $worktree -ExpectedHead ('0'*40) -PostconditionFilePath $postcondition -ValidateOnly | Out-Null } catch { $invalidPairRefused=$_.Exception.Message -match 'CODEX_REASONING_REFUSED' }
+    Assert $invalidPairRefused 'unsupported model/reasoning pair must fail before provider inspection'
+    $fixtureLaunchRefused=$false
+    try { & $launcher -Provider Codex -AccessMode Write -ProviderExecutable (Join-Path $PSHOME 'powershell.exe') -ProviderHelpFile $codexHelpFixture -PromptFile $prompt -JobId 'fixture-launch' -Worktree $worktree -ExpectedHead (git -C $worktree rev-parse HEAD).Trim() -ExpectedHooksPath '.githooks' -PostconditionFilePath $postcondition -JobsRoot $jobsRoot | Out-Null } catch { $fixtureLaunchRefused=$_.Exception.Message -match 'CODEX_HELP_FIXTURE_VALIDATE_ONLY' }
+    Assert $fixtureLaunchRefused 'actual launch must refuse caller-supplied help evidence'
+    Assert (-not (Test-Path -LiteralPath (Join-Path $jobsRoot 'fixture-launch'))) 'help-fixture refusal must occur before Long Job Runner'
+    $wrapperMarker=Join-Path $Root 'shell-wrapper-invoked.txt'
+    $shellWrapper=Join-Path $Root 'codex.cmd'
+    @('@echo off',('echo invoked>"{0}"' -f $wrapperMarker),'exit /b 0') | Set-Content -LiteralPath $shellWrapper -Encoding ascii
+    $shellWrapperRefused=$false
+    try { & $launcher -Provider Codex -AccessMode Write -ProviderExecutable $shellWrapper -PromptFile $prompt -JobId 'shell-wrapper' -Worktree $worktree -ExpectedHead (git -C $worktree rev-parse HEAD).Trim() -ExpectedHooksPath '.githooks' -PostconditionFilePath $postcondition -JobsRoot $jobsRoot | Out-Null } catch { $shellWrapperRefused=$_.Exception.Message -match 'CODEX_NATIVE_EXECUTABLE_REQUIRED' }
+    Assert $shellWrapperRefused 'actual Long Job launch must require native codex.exe'
+    Assert (-not (Test-Path -LiteralPath $wrapperMarker)) 'shell wrapper must be refused before invocation'
+    Assert (-not (Test-Path -LiteralPath (Join-Path $jobsRoot 'shell-wrapper'))) 'shell-wrapper refusal must occur before Long Job Runner'
+    $pass++; ReportCase 'Codex validate-only args and actual-launch help refusal'
 
     $qwenMarker = Join-Path $Root 'qwen-invoked.marker'
     $qwenJobRoot = Join-Path $jobsRoot 'worker-qwen'

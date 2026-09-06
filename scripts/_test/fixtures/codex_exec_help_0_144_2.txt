@@ -1,0 +1,11 @@
+codex-cli 0.144.2
+Run Codex non-interactively
+Usage: codex exec [OPTIONS] [PROMPT]
+-c, --config <key=value>
+-s, --sandbox <SANDBOX_MODE>
+[possible values: read-only, workspace-write, danger-full-access]
+-C, --cd <DIR>
+-m, --model <MODEL>
+--output-schema <FILE>
+--json
+-h, --help

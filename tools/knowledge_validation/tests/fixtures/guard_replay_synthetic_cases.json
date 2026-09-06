@@ -1,0 +1,207 @@
+{
+  "schema_version": "ea_lab_guard_replay_synthetic_contract/1",
+  "suite_id": "GUARD-REPLAY-TIME-DATA-20260906",
+  "classification": "SYNTHETIC_CONTRACT_TEST_ONLY",
+  "repository_base_sha": "749da682d03615761cda7a46b31a663ad0b306f5",
+  "evidence_refs": [
+    {
+      "kind": "ACCEPTED_SYNTHETIC_PROBE",
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\EA_LAB_REPLAY_TIME_CONTRACT_PROBE.json",
+      "sha256": "70ce92a22dac19f3038635b4a7c5daddbdbaa3c5c3cd35cad1450ea07304c0bb"
+    },
+    {
+      "kind": "PRIOR_READINESS_FINDINGS",
+      "path": "C:\\Users\\patip\\Documents\\Codex\\2026-09-05\\plugin-creator-c-users-patip-codex\\outputs\\EA_LAB_EA_READINESS_AND_NEWS_REPLAY_TH.md",
+      "required_anchor": "R03 — Replay ต้องรับรองเวลาที่ข้อมูลรู้ได้จริง ไม่ใช่วันที่ของข้อมูล"
+    }
+  ],
+  "qualification_claims": {
+    "historical_dataset_qualified": false,
+    "ea_replay_qualified": false,
+    "provider_coverage_verified": false,
+    "clock_mapping_qualified_for_real_data": false,
+    "newsguard_policy_changed": false,
+    "macro_policy_changed": false,
+    "all_examples_are_synthetic": true,
+    "close_vs_recovery_semantics": "SEMANTICS_REQUIRED_NAMED_EA_CONTRACT",
+    "missing_feed_trading_semantics": "SEMANTICS_REQUIRED_NAMED_EA_CONTRACT"
+  },
+  "cases": [
+    {
+      "case_id": "T01_AVAILABLE_BEFORE_DECISION",
+      "case_type": "VALUE_TIMELINE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T12:00:00Z",
+        "values": [
+          {"version": "v1", "value_kind": "ORIGINAL", "available_at_utc": "2026-03-02T11:59:59Z", "actual": "4.25", "forecast": "4.50", "surprise": "-0.25"}
+        ]
+      },
+      "expected": {"disposition": "VISIBLE_AS_OF_DECISION", "visible_value_version": "v1"}
+    },
+    {
+      "case_id": "T02_AVAILABLE_EQUAL_DECISION",
+      "case_type": "VALUE_TIMELINE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T12:00:00Z",
+        "values": [
+          {"version": "v1", "value_kind": "ORIGINAL", "available_at_utc": "2026-03-02T12:00:00Z", "actual": "4.25", "forecast": "4.50", "surprise": "-0.25"}
+        ]
+      },
+      "expected": {"disposition": "VISIBLE_AS_OF_DECISION", "visible_value_version": "v1"}
+    },
+    {
+      "case_id": "T03_FUTURE_VALUES_WITHHELD",
+      "case_type": "VALUE_TIMELINE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T12:00:00Z",
+        "values": [
+          {"version": "v1", "value_kind": "ORIGINAL", "available_at_utc": "2026-03-02T12:00:01Z", "actual": "4.25", "forecast": "4.50", "surprise": "-0.25"}
+        ]
+      },
+      "expected": {"disposition": "WITHHOLD_FUTURE_VALUES", "visible_value_version": null}
+    },
+    {
+      "case_id": "T04_FUTURE_REVISION_WITHHELD",
+      "case_type": "VALUE_TIMELINE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T12:30:00Z",
+        "values": [
+          {"version": "v1", "value_kind": "ORIGINAL", "available_at_utc": "2026-03-02T12:00:00Z", "actual": "4.25", "forecast": "4.50", "surprise": "-0.25"},
+          {"version": "v2", "value_kind": "REVISION", "available_at_utc": "2026-03-02T13:00:00Z", "actual": "4.30", "forecast": "4.50", "surprise": "-0.20"}
+        ]
+      },
+      "expected": {"disposition": "VISIBLE_AS_OF_DECISION", "visible_value_version": "v1"}
+    },
+    {
+      "case_id": "T05_AVAILABLE_REVISION_VISIBLE",
+      "case_type": "VALUE_TIMELINE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T13:00:00Z",
+        "values": [
+          {"version": "v1", "value_kind": "ORIGINAL", "available_at_utc": "2026-03-02T12:00:00Z", "actual": "4.25"},
+          {"version": "v2", "value_kind": "REVISION", "available_at_utc": "2026-03-02T13:00:00Z", "actual": "4.30"}
+        ]
+      },
+      "expected": {"disposition": "VISIBLE_AS_OF_DECISION", "visible_value_version": "v2"}
+    },
+    {
+      "case_id": "T06_SAME_DAY_CLOSE_MIDNIGHT_REFUSAL",
+      "case_type": "DAILY_CLOSE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T00:00:00Z",
+        "effective_at_utc": "2026-03-02T00:00:00Z",
+        "available_at_utc": "2026-03-02T23:00:00Z"
+      },
+      "expected": {"disposition": "REFUSE_SAME_DAY_CLOSE_AT_MIDNIGHT"}
+    },
+    {
+      "case_id": "C01_COMPLETE_NO_EVENTS",
+      "case_type": "COVERAGE",
+      "input": {"coverage_state": "COMPLETE_NO_EVENTS", "clock_mapping_version": "SYNTH-CLOCK-v1"},
+      "expected": {"disposition": "QUALIFIED_EMPTY_NO_EVENTS"}
+    },
+    {
+      "case_id": "C02_PARTIAL_REFUSED",
+      "case_type": "COVERAGE",
+      "input": {"coverage_state": "PARTIAL", "clock_mapping_version": "SYNTH-CLOCK-v1"},
+      "expected": {"disposition": "REFUSE_PARTIAL_COVERAGE"}
+    },
+    {
+      "case_id": "C03_MISSING_REFUSED",
+      "case_type": "COVERAGE",
+      "input": {"coverage_state": "MISSING", "clock_mapping_version": "SYNTH-CLOCK-v1"},
+      "expected": {"disposition": "REFUSE_MISSING_COVERAGE"}
+    },
+    {
+      "case_id": "C04_UNKNOWN_REFUSED",
+      "case_type": "COVERAGE",
+      "input": {"coverage_state": "UNKNOWN", "clock_mapping_version": "SYNTH-CLOCK-v1"},
+      "expected": {"disposition": "REFUSE_UNKNOWN_COVERAGE"}
+    },
+    {
+      "case_id": "K01_CLOCK_VERSION_REQUIRED",
+      "case_type": "CLOCK",
+      "input": {"coverage_state": "COMPLETE", "clock_mapping_version": "UNKNOWN"},
+      "expected": {"disposition": "REFUSE_CLOCK_MAPPING_UNVERSIONED"}
+    },
+    {
+      "case_id": "E01_CANCELLATION_VISIBLE",
+      "case_type": "EVENT_STATE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T11:00:00Z",
+        "state_history": [
+          {"state": "SCHEDULED", "available_at_utc": "2026-03-01T08:00:00Z", "scheduled_at_utc": "2026-03-02T12:00:00Z"},
+          {"state": "CANCELLED", "available_at_utc": "2026-03-02T10:00:00Z", "scheduled_at_utc": "2026-03-02T12:00:00Z"}
+        ]
+      },
+      "expected": {"disposition": "EXCLUDE_CANCELLED_EVENT", "visible_state": "CANCELLED"}
+    },
+    {
+      "case_id": "E02_FUTURE_CANCELLATION_WITHHELD",
+      "case_type": "EVENT_STATE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T09:00:00Z",
+        "state_history": [
+          {"state": "SCHEDULED", "available_at_utc": "2026-03-01T08:00:00Z", "scheduled_at_utc": "2026-03-02T12:00:00Z"},
+          {"state": "CANCELLED", "available_at_utc": "2026-03-02T10:00:00Z", "scheduled_at_utc": "2026-03-02T12:00:00Z"}
+        ]
+      },
+      "expected": {"disposition": "VISIBLE_SCHEDULED_EVENT", "visible_state": "SCHEDULED"}
+    },
+    {
+      "case_id": "E03_TENTATIVE_WITHHELD",
+      "case_type": "EVENT_STATE",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "decision_at_utc": "2026-03-02T09:00:00Z",
+        "state_history": [
+          {"state": "TENTATIVE", "available_at_utc": "2026-03-01T08:00:00Z", "scheduled_at_utc": null}
+        ]
+      },
+      "expected": {"disposition": "WITHHOLD_TENTATIVE_EVENT", "visible_state": "TENTATIVE"}
+    },
+    {
+      "case_id": "D01_EXACT_DUPLICATE_DEDUPED",
+      "case_type": "DUPLICATE_SET",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "records": [
+          {"event_id": "SYN-E1", "revision_id": "r1", "state": "SCHEDULED", "available_at_utc": "2026-03-01T08:00:00Z", "scheduled_at_utc": "2026-03-02T12:00:00Z"},
+          {"event_id": "SYN-E1", "revision_id": "r1", "state": "SCHEDULED", "available_at_utc": "2026-03-01T08:00:00Z", "scheduled_at_utc": "2026-03-02T12:00:00Z"}
+        ]
+      },
+      "expected": {"disposition": "DEDUPLICATE_EXACT_RECORD", "deduplicated_count": 1}
+    },
+    {
+      "case_id": "D02_CONFLICTING_DUPLICATE_REFUSED",
+      "case_type": "DUPLICATE_SET",
+      "input": {
+        "coverage_state": "COMPLETE",
+        "clock_mapping_version": "SYNTH-CLOCK-v1",
+        "records": [
+          {"event_id": "SYN-E2", "revision_id": "r1", "state": "SCHEDULED", "available_at_utc": "2026-03-01T08:00:00Z", "scheduled_at_utc": "2026-03-02T12:00:00Z"},
+          {"event_id": "SYN-E2", "revision_id": "r1", "state": "CANCELLED", "available_at_utc": "2026-03-01T08:00:00Z", "scheduled_at_utc": "2026-03-02T12:00:00Z"}
+        ]
+      },
+      "expected": {"disposition": "REFUSE_CONFLICTING_DUPLICATE", "deduplicated_count": 0}
+    }
+  ]
+}

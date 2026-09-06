@@ -224,6 +224,8 @@ $stderr = [string]::Join("`r`n", @($stderrBuffer))
 if ($stdout) { [System.IO.File]::AppendAllText($stdoutPath, ($stdout + "`r`n"), (New-Object System.Text.UTF8Encoding($false))) }
 if ($stderr) { [System.IO.File]::AppendAllText($stderrPath, ($stderr + "`r`n"), (New-Object System.Text.UTF8Encoding($false))) }
 
+# Completion time includes the postcondition phase, not only the child process.
+$state.ended_utc = Get-LjrUtcNowIso
 Invoke-LjrAtomicWriteJson -Path $statePath -Object $state
 Invoke-LjrAtomicWriteJson -Path $resultPath -Object ([ordered]@{
     job_id = $request.job_id
@@ -232,6 +234,6 @@ Invoke-LjrAtomicWriteJson -Path $resultPath -Object ([ordered]@{
     runner_pid = $PID
     child_pid = $child.Id
     ended_utc = $state.ended_utc
-    reason = if ($state.PSObject.Properties['reason']) { $state.reason } else { '' }
-    postcondition_exit_code = if ($state.PSObject.Properties['postcondition_exit_code']) { $state.postcondition_exit_code } else { $null }
+    reason = if ($state.Contains('reason')) { $state.reason } else { '' }
+    postcondition_exit_code = if ($state.Contains('postcondition_exit_code')) { $state.postcondition_exit_code } else { $null }
 })

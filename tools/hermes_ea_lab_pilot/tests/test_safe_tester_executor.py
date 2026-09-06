@@ -167,7 +167,7 @@ class SafeTesterExecutorTests(unittest.TestCase):
         def fake_run(*args, **kwargs):
             report.write_bytes(b"fresh-report")
             (report_dir / "H2_XAU_H4_MAIN.truncation_check.json").write_text(
-                json.dumps({"report_name": "H2_XAU_H4_MAIN", "truncated": False, "detail": "PASS"}),
+                json.dumps({"schema_version": 2, "report_name": "H2_XAU_H4_MAIN", "truncated": False, "detail": "[OK] PASS", "check_status": "CHECK_PASS", "checker_exit_code": 0}),
                 encoding="utf-8",
             )
             return subprocess.CompletedProcess(args[0], 0, stdout="symbol preflight: logical=XAUUSD tester=XAUUSD status=EXACT economics=PINNED source=fixture", stderr="")
@@ -196,7 +196,12 @@ class SafeTesterExecutorTests(unittest.TestCase):
             ({"status": "SIDECAR_PARSE_ERROR"}, False, "TRUNCATION_CHECK_PARSE_ERROR"),
             ({"truncated": True}, False, "TRUNCATED_RUN"),
             ({"truncated": "unknown"}, False, "TRUNCATION_CHECK_UNKNOWN"),
-            ({"truncated": False}, True, "TRUNCATION_CHECK_PASS"),
+            ({"truncated": False}, False, "TRUNCATION_CHECK_UNKNOWN"),
+            ({"schema_version": 2, "truncated": False, "check_status": "CHECK_PASS", "checker_exit_code": 0}, True, "TRUNCATION_CHECK_PASS"),
+            ({"schema_version": 2, "truncated": False, "check_status": "CHECK_ERROR", "checker_exit_code": -1}, False, "TRUNCATION_CHECK_ERROR"),
+            ({"schema_version": 2, "truncated": False, "check_status": "CHECK_PASS", "checker_exit_code": False}, False, "TRUNCATION_CHECK_UNKNOWN"),
+            ({"schema_version": 2, "truncated": False, "check_status": "CHECK_PASS", "checker_exit_code": -1}, False, "TRUNCATION_CHECK_UNKNOWN"),
+            ([], False, "TRUNCATION_CHECK_PARSE_ERROR"),
         ]
         for sidecar, eligible, reason in cases:
             self.assertEqual(module.full_window_evidence_eligibility(sidecar), (eligible, reason))

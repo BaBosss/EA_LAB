@@ -242,12 +242,14 @@ if (Test-Path $srcHtm) {
   # stream - so `2>&1 | Out-String` captured nothing and every one of the 182 sidecars
   # written before 2026-07-26 has detail:"". The sidecar existed, the field existed, and the
   # reason the run was flagged was thrown away at the moment of writing.
-  $truncOut = ""; $truncCode = 0
+  $truncOut = ""; $truncCode = $null
   try {
+    $global:LASTEXITCODE = $null
     $truncOut  = & (Join-Path $PSScriptRoot 'check_truncated_run.ps1') -Report $destHtm -FromDate $FromDate -ToDate $ToDate 2>&1 6>&1 | Out-String
     $truncCode = $LASTEXITCODE
   } catch { $truncOut = "truncation check failed: $_"; $truncCode = -1 }
-  [PSCustomObject]@{ report_name=$ReportName; truncated=($truncCode -eq 2); detail=$truncOut.Trim() } |
+  . (Join-Path $PSScriptRoot 'lib\truncation_evidence.ps1')
+  New-TruncationEvidence -ReportName $ReportName -CheckerExitCode $truncCode -Detail $truncOut |
     ConvertTo-Json | Set-Content "$auto\reports\$ReportName.truncation_check.json" -Encoding utf8
   if ($truncCode -eq 2) {
     Write-Output "WARN TRUNCATED-RUN: $ReportName stopped trading well before its window ended - metrics may cover only part of the window. Detail: $($truncOut.Trim())"

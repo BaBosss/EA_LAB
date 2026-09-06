@@ -149,6 +149,24 @@ if (-not $ps) { $ps = 'powershell.exe' }
 function RunGuard([string]$mode) {
     $old = $env:EA_LAB_EVIDENCE
     $env:EA_LAB_EVIDENCE = $mode
+    # The fast tier launches this suite from a disposable linked worktree. A source worktree
+    # whose per-worktree core.hooksPath is an absolute path is correctly OWN there, but the
+    # inherited value is FOREIGN in the disposable checkout. check_state -Strict then exits 1
+    # before D0/A2 can measure the inventory rule they exist to test. Override only this child
+    # process through Git's environment config; this writes no repository/user configuration,
+    # and A4 below still verifies the staged snapshot's actual hook bytes.
+    $priorConfigCount = $env:GIT_CONFIG_COUNT
+    if ($priorConfigCount -and $priorConfigCount -notmatch '^\d+$') {
+        throw "invalid inherited GIT_CONFIG_COUNT '$priorConfigCount'"
+    }
+    $configSlot = if ($priorConfigCount) { [int]$priorConfigCount } else { 0 }
+    $configKeyName = "GIT_CONFIG_KEY_$configSlot"
+    $configValueName = "GIT_CONFIG_VALUE_$configSlot"
+    $priorConfigKey = [Environment]::GetEnvironmentVariable($configKeyName, 'Process')
+    $priorConfigValue = [Environment]::GetEnvironmentVariable($configValueName, 'Process')
+    $env:GIT_CONFIG_COUNT = [string]($configSlot + 1)
+    [Environment]::SetEnvironmentVariable($configKeyName, 'core.hooksPath', 'Process')
+    [Environment]::SetEnvironmentVariable($configValueName, '.githooks', 'Process')
     # $ErrorActionPreference is dropped to Continue FOR THIS CALL ONLY. Under 'Stop', a native
     # command writing to stderr raises a terminating NativeCommandError -- and case A3 makes the
     # child write to stderr ON PURPOSE (it asserts the reader REFUSES a bogus mode). Under 'Stop'
@@ -161,12 +179,17 @@ function RunGuard([string]$mode) {
         return [pscustomobject]@{ Text = (@($out) -join "`n"); Code = $LASTEXITCODE }
     } finally {
         $ErrorActionPreference = $prevEAP
+        if ($null -eq $priorConfigCount) { Remove-Item Env:GIT_CONFIG_COUNT -ErrorAction SilentlyContinue }
+        else { $env:GIT_CONFIG_COUNT = $priorConfigCount }
+        [Environment]::SetEnvironmentVariable($configKeyName, $priorConfigKey, 'Process')
+        [Environment]::SetEnvironmentVariable($configValueName, $priorConfigValue, 'Process')
         if ($null -eq $old) { Remove-Item Env:EA_LAB_EVIDENCE -ErrorAction SilentlyContinue }
         else { $env:EA_LAB_EVIDENCE = $old }
     }
 }
 
 Write-Host '[front-guards] ORDER-674 -- the guards that run BEFORE the tier judge the commit'
+$hooksConfigBefore = GitText 'config --get core.hooksPath'
 
 # Capture the ORIGINAL index entry first. Everything below restores to this, and the last case
 # asserts it came back -- a suite that can leave the live inventory mutated is not acceptable.
@@ -639,6 +662,13 @@ if ($hook -match '(?m)^\s*export\s+EA_LAB_EVIDENCE=index') {
 } else {
     Bad ('A4 the hook does not export EA_LAB_EVIDENCE=index -- every migration above is INERT ' +
          'in the only place it matters, and nothing else in this tree would notice')
+}
+
+$hooksConfigAfter = GitText 'config --get core.hooksPath'
+if ($hooksConfigAfter -eq $hooksConfigBefore) {
+    Good 'A7 child fixture did not mutate core.hooksPath configuration'
+} else {
+    Bad "A7 core.hooksPath changed from '$hooksConfigBefore' to '$hooksConfigAfter'"
 }
 
 PhaseReport

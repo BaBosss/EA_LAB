@@ -50,6 +50,10 @@ try {
     & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postPass) -JobId 'job-post-pass' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
     $postPassState = & $Wait -JobId 'job-post-pass' -JobsRoot $JobsRoot -PollSec 1 -MaxWaitSec 10 -Json | ConvertFrom-Json
     Assert ($postPassState.state -eq 'COMPLETE') "postcondition pass expected COMPLETE got $($postPassState.state)"
+    $postPassResult = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-pass\result.json') -Raw | ConvertFrom-Json
+    Assert ($null -ne $postPassResult.postcondition_exit_code -and $postPassResult.postcondition_exit_code -eq 0) 'result loses successful postcondition exit code'
+    $postPassDurable = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-pass\state.json') -Raw | ConvertFrom-Json
+    Assert ([datetime]$postPassResult.ended_utc -ge [datetime]$postPassDurable.postcondition_start_utc) 'job end predates postcondition'
     $pass++; ReportCase 'postcondition pass completes job' 'PASS'
 
     $postFail = Join-Path $Root 'post_fail.ps1'
@@ -60,6 +64,8 @@ try {
     $postFailDurable = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-fail\state.json') -Raw | ConvertFrom-Json
     Assert ($postFailDurable.reason -eq 'postcondition exit code 9') "unexpected postcondition reason: $($postFailDurable.reason)"
     Assert ([int]$postFailDurable.exit_code -eq 0) 'child exit code evidence changed after postcondition failure'
+    $postFailResult = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-fail\result.json') -Raw | ConvertFrom-Json
+    Assert ($postFailResult.postcondition_exit_code -eq 9 -and $postFailResult.reason -eq 'postcondition exit code 9') 'result loses failure reason/exit code'
     $pass++; ReportCase 'postcondition failure is non-complete terminal' 'PASS'
 
     $postTimeout = Join-Path $Root 'post_timeout.ps1'
@@ -82,10 +88,13 @@ try {
     ChildScript $postCancel 'Start-Sleep -Seconds 10'
     & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postCancel) -JobId 'job-post-cancel' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
     $postCancelDeadline = (Get-Date).AddSeconds(5)
+    $postCancelRunning = $null
     do {
         Start-Sleep -Milliseconds 100
-        $postCancelRunning = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-cancel\state.json') -Raw | ConvertFrom-Json
-    } while ($postCancelRunning.state -ne 'POSTCONDITION_RUNNING' -and (Get-Date) -lt $postCancelDeadline)
+        try { $postCancelRunning = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-post-cancel\state.json') -Raw | ConvertFrom-Json }
+        catch { $postCancelRunning = $null }
+    } while (($null -eq $postCancelRunning -or $postCancelRunning.state -ne 'POSTCONDITION_RUNNING') -and (Get-Date) -lt $postCancelDeadline)
+    Assert ($null -ne $postCancelRunning) 'postcondition cancellation state never became readable'
     Assert ($postCancelRunning.state -eq 'POSTCONDITION_RUNNING') "postcondition cancel setup expected POSTCONDITION_RUNNING got $($postCancelRunning.state)"
     Assert ($postCancelRunning.postcondition_pid) 'postcondition cancel missing durable postcondition pid'
     & $Cancel -JobId 'job-post-cancel' -JobsRoot $JobsRoot -Json | Out-Null
@@ -99,7 +108,7 @@ try {
     $pass++; ReportCase 'postcondition cancel is terminal and kills owned process' 'PASS'
     $postNested = Join-Path $Root 'post_nested.ps1'
     $postNestedPidFile = Join-Path $Root 'post-nested-child.pid'
-    ChildScript $postNested '$pidFile=$args[0]; $p=Start-Process -FilePath (Join-Path $PSHOME "powershell.exe") -ArgumentList @("-NoProfile","-Command","Start-Sleep -Seconds 30") -PassThru; Set-Content -LiteralPath $pidFile -Value $p.Id -Encoding ascii; Wait-Process -Id $p.Id'
+    ChildScript $postNested '$pidFile=$args[0]; $p=Start-Process -FilePath (Join-Path $PSHOME "powershell.exe") -ArgumentList @("-NoProfile","-Command","Start-Sleep -Seconds 30") -WindowStyle Hidden -PassThru; Set-Content -LiteralPath $pidFile -Value $p.Id -Encoding ascii; Wait-Process -Id $p.Id'
     & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-Command','exit 0') -PostconditionFilePath (Join-Path $PSHOME 'powershell.exe') -PostconditionArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$postNested,$postNestedPidFile) -JobId 'job-post-nested-cancel' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
     $postNestedDeadline=(Get-Date).AddSeconds(6)
     $postNestedState=$null
@@ -208,7 +217,7 @@ try {
 
     $child7 = Join-Path $Root 'child7.ps1'
     $nestedPidFile = Join-Path $Root 'nested-child.pid'
-    ChildScript $child7 '$pidFile=$args[0]; $p=Start-Process -FilePath (Join-Path $PSHOME "powershell.exe") -ArgumentList @("-NoProfile","-Command","Start-Sleep -Seconds 30") -PassThru; Set-Content -LiteralPath $pidFile -Value $p.Id -Encoding ascii; Wait-Process -Id $p.Id'
+    ChildScript $child7 '$pidFile=$args[0]; $p=Start-Process -FilePath (Join-Path $PSHOME "powershell.exe") -ArgumentList @("-NoProfile","-Command","Start-Sleep -Seconds 30") -WindowStyle Hidden -PassThru; Set-Content -LiteralPath $pidFile -Value $p.Id -Encoding ascii; Wait-Process -Id $p.Id'
     & $Start -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$child7,$nestedPidFile) -JobId 'job-007' -JobsRoot $JobsRoot -TimeoutSec 30 -HeartbeatSec 1 | Out-Null
     Start-Sleep -Seconds 2
     $state7 = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-007\state.json') -Raw | ConvertFrom-Json
@@ -282,5 +291,11 @@ try {
     Write-Host "[FAIL] $($_.Exception.Message)"
     exit 1
 } finally {
+    $tempBase = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
+    $fixtureFull = [IO.Path]::GetFullPath($Root)
+    if (-not $fixtureFull.StartsWith($tempBase,[StringComparison]::OrdinalIgnoreCase) -or
+        [IO.Path]::GetFileName($fixtureFull) -notmatch '^ljr_test_[0-9a-f]{32}$') {
+        throw 'Refuse cleanup outside the owned long-job fixture directory'
+    }
     if (Test-Path -LiteralPath $Root) { Remove-Item -LiteralPath $Root -Recurse -Force }
 }
