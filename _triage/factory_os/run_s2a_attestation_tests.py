@@ -257,12 +257,132 @@ def run_order1269_derived_cases():
     return bad
 
 
+def run_immutable_git_bytes_cache_cases():
+    """The history speedup may reuse only immutable, successfully-read Git objects."""
+    original_root, original_subprocess = att._ROOT, att.subprocess
+    calls, attempts = [], {}
+    oid_a, oid_b, oid_c = '1' * 40, '2' * 40, '3' * 64
+    root_a = os.path.join(original_root, '__cache_fixture_a__')
+    root_b = os.path.join(original_root, '__cache_fixture_b__')
+
+    def fake_run(args, **kwargs):
+        ref, cwd = args[2], kwargs.get('cwd')
+        call_key = (cwd, ref)
+        calls.append(call_key)
+        attempts[call_key] = attempts.get(call_key, 0) + 1
+        if ref.endswith(':always-missing'):
+            return subprocess.CompletedProcess(args, 128, stdout=b'', stderr=b'missing')
+        if ref.endswith(':transient') and attempts[call_key] == 1:
+            return subprocess.CompletedProcess(args, 128, stdout=b'', stderr=b'transient')
+        if ref.endswith(':exception') and attempts[call_key] == 1:
+            raise OSError('synthetic process failure')
+        payload = ('%s|%s' % (cwd, ref)).encode('utf-8')
+        return subprocess.CompletedProcess(args, 0, stdout=payload, stderr=b'')
+
+    class FirstGitWorld(object):
+        run = staticmethod(fake_run)
+
+    class SecondGitWorld(object):
+        # Deliberately the same callable: the world object itself must still scope the cache.
+        run = staticmethod(fake_run)
+
+    bad = 0
+    att._IMMUTABLE_GIT_BYTES_CACHE.clear()
+    try:
+        att.subprocess = FirstGitWorld
+        att._ROOT = root_a
+
+        before = len(calls)
+        first = att._git_bytes_at(oid_a, 'same')
+        second = att._git_bytes_at(oid_a, 'same')
+        ok = first == second and len(calls) == before + 1
+        print('  [%s] CACHE same full OID/path/root is read once and reused'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+
+        before = len(calls)
+        other_path = att._git_bytes_at(oid_a, 'other')
+        other_oid = att._git_bytes_at(oid_b, 'same')
+        att._ROOT = root_b
+        other_root = att._git_bytes_at(oid_a, 'same')
+        ok = (len(calls) == before + 3 and len({first, other_path, other_oid, other_root}) == 4)
+        print('  [%s] CACHE path, full OID and repository root remain separate keys'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+
+        before = len(calls)
+        att.subprocess = SecondGitWorld
+        isolated = att._git_bytes_at(oid_a, 'same')
+        ok = isolated == other_root and len(calls) == before + 1
+        print('  [%s] CACHE a monkeypatched Git world cannot reuse another world\'s bytes'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+
+        before = len(calls)
+        head_a = att._git_bytes_at('HEAD', 'mutable')
+        head_b = att._git_bytes_at('HEAD', 'mutable')
+        index_a = att._git_bytes_at('', 'mutable-index')
+        index_b = att._git_bytes_at('', 'mutable-index')
+        short_a = att._git_bytes_at('1234abcd', 'abbreviated')
+        short_b = att._git_bytes_at('1234abcd', 'abbreviated')
+        ok = (head_a == head_b and index_a == index_b and short_a == short_b
+              and len(calls) == before + 6)
+        print('  [%s] CACHE mutable HEAD/index and abbreviated OID syntax are never cached'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+
+        before = len(calls)
+        missing_a = att._git_bytes_at(oid_c, 'always-missing')
+        missing_b = att._git_bytes_at(oid_c, 'always-missing')
+        ok = missing_a is None and missing_b is None and len(calls) == before + 2
+        print('  [%s] CACHE missing-object failures are retried, never cached'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+
+        before = len(calls)
+        transient_a = att._git_bytes_at(oid_c, 'transient')
+        transient_b = att._git_bytes_at(oid_c, 'transient')
+        transient_c = att._git_bytes_at(oid_c, 'transient')
+        ok = (transient_a is None and transient_b == transient_c
+              and transient_b is not None and len(calls) == before + 2)
+        print('  [%s] CACHE a transient nonzero exit can recover, then its success is reusable'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+
+        before = len(calls)
+        raised = False
+        try:
+            att._git_bytes_at(oid_c, 'exception')
+        except OSError:
+            raised = True
+        recovered = att._git_bytes_at(oid_c, 'exception')
+        reused = att._git_bytes_at(oid_c, 'exception')
+        ok = raised and recovered == reused and len(calls) == before + 2
+        print('  [%s] CACHE a process exception propagates without poisoning a later success'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+    finally:
+        att._ROOT, att.subprocess = original_root, original_subprocess
+        att._IMMUTABLE_GIT_BYTES_CACHE.clear()
+    return bad
+
+
 def main():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
     before = (io.open(att.ATTESTATION_PATH, encoding='utf-8').read()
               if os.path.exists(att.ATTESTATION_PATH) else None)
     bad = 0
+
+    print('=== immutable historical Git-object cache boundaries ===')
+    bad += run_immutable_git_bytes_cache_cases()
 
     print('=== THE POINT: a decision is recordable with no guard, generator or proposal edit ===')
     current, problems = run_with([good()])

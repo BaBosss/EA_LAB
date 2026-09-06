@@ -195,6 +195,8 @@ def reported_decision(row, owner):
 # can answer for the wrong one.
 _DIGEST_CACHE = {}
 _LEGACY_MATCH_CACHE = {}
+_IMMUTABLE_GIT_BYTES_CACHE = {}
+_FULL_GIT_OID = re.compile(r'^(?:[0-9a-f]{40}|[0-9a-f]{64})$')
 
 
 def _digest_paths(paths, read_bytes):
@@ -221,10 +223,22 @@ def bundle_digest():
 
 
 def _git_bytes_at(commit, path):
+    # A full object id names immutable Git history; HEAD, branches and index syntax do not.  The
+    # runner is part of the scope because conformance tests replace it with hermetic Git worlds,
+    # while the normalized root prevents one worktree answering for another.  Failed reads are
+    # deliberately absent from the cache: the same return code covers a genuinely missing path
+    # and transient process/repository failures, and neither may become a process-long verdict.
+    cacheable = (isinstance(commit, str) and _FULL_GIT_OID.fullmatch(commit)
+                 and isinstance(path, str))
+    key = (os.path.normcase(os.path.realpath(_ROOT)), subprocess, subprocess.run, commit, path)
+    if cacheable and key in _IMMUTABLE_GIT_BYTES_CACHE:
+        return _IMMUTABLE_GIT_BYTES_CACHE[key]
     p = subprocess.run(['git', 'show', '%s:%s' % (commit, path)],
                        capture_output=True, cwd=_ROOT)
     if p.returncode != 0:
         return None
+    if cacheable:
+        _IMMUTABLE_GIT_BYTES_CACHE[key] = p.stdout
     return p.stdout
 
 
