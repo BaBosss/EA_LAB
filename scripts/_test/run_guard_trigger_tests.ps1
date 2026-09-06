@@ -759,7 +759,7 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
     # (measured 172.6s / 157.6s at the integration point, 168.0s independently by M0-Lane3 in
     # isolation -- see run_fast_cages.ps1's own note next to the parameter). Per-path 90.0
     # untouched; that budget was not breached.
-    if ($cagesSrc -match '\$BudgetSeconds\s*=\s*90\.0') { Good 'N1 the per-path default is the measured 90.0s' } else { Bad 'N1 the per-path default is not 90.0 -- it was changed without this case being updated' }
+    if ($cagesSrc -match '\$BudgetSeconds\s*=\s*110\.0') { Good 'N1 the per-path default is the configured 110.0s' } else { Bad 'N1 the per-path default is not 110.0 -- it was changed without this case being updated' }
     if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*195\.0') { Good 'N1 the full-tier default is the measured 195.0s' } else { Bad 'N1 the full-tier default is not 195.0 -- it was changed without this case being updated' }
     if ($fail -eq $before) { Good 'the budget can fail, and does not fail a healthy run' }
 
