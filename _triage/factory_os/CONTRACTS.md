@@ -36,7 +36,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `ParameterBinding` | `factory/parameter_bindings.jsonl` | claude | check_registries.py: required-field floor and registry resolver reachability; optimize_guard consumes the same resolver |
 | `TestUniverse` | `factory/universe.jsonl` | claude|user | — |
 | `LogicalSymbol` | `factory/universe.jsonl` | — | — |
-| `InstrumentProfile` | `factory/instrument_profiles.jsonl` | — | check_registries.py: required-field floor and profile content-hash/version registry checks |
+| `InstrumentProfile` | `factory/instrument_profiles.jsonl` | — | check_registries.py: required-field floor; run_schema_fixtures.py: closed selector and hash/version shape |
 | `MetricRef` | *embedded in its parent — no file* | — | run_schema_fixtures.py: ajv validates the pf/pf_state conditional in BOTH directions, over the crafted fixtures AND over every live row of every registry store |
 | `CoverageCell` | `factory/coverage.jsonl` | automation for state; claude only for not_applicable_reason | coverage_validator: comparison-group same-lane rule; MASTER_BACKLOG section 2 regenerated from this, never hand-edited |
 | `ExecutionKey` | *embedded in its parent — no file* | — | scheduler.py: canonical execution-key digest and cache/queue identity gate |
@@ -236,7 +236,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`InstrumentProfile`** · stored in `factory/instrument_profiles.jsonl` · enforced by *check_registries.py: required-field floor and profile content-hash/version registry checks*
+**`InstrumentProfile`** · stored in `factory/instrument_profiles.jsonl` · enforced by *check_registries.py: required-field floor; run_schema_fixtures.py: closed selector and hash/version shape*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -245,12 +245,19 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `profile_version` | `integer` | **yes** | min `1` |
 | `content_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` · hash of the RESOLVED profile content. Candidates hash this, not the id. |
 | `layer` | `ASSET_CLASS` \| `SYMBOL_OVERRIDE` \| `BROKER_LANE` | **yes** |  |
+| `symbol` | `string` | — | minLength `1` · Logical symbol selector. The actual lane-to-broker symbol string remains owned by LogicalSymbol.broker_map. |
+| `lane` | `string` | — | minLength `1` · Lane selector for broker/lane-specific parameter values; this is not a broker-symbol mapping. |
 | `asset_class` | `FX_MAJOR` \| `FX_JPY` \| `GOLD` \| `SILVER` \| `CRYPTO` \| `INDEX` \| `ENERGY` | — |  |
 | `account_unit` | `USD` \| `CENT` | — |  |
 | `values` | `object` | — |  |
 | `semantics_ref` | [`OwnerRef`](#ownerref) | — |  |
 
 **Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `layer` = `ASSET_CLASS`** → requires `asset_class`
+- **when `layer` = `SYMBOL_OVERRIDE`** → requires `symbol`
+- **when `layer` = `BROKER_LANE`** → requires `symbol`, `lane`
 
 <!-- END GENERATED CONTRACT: InstrumentProfile -->
 

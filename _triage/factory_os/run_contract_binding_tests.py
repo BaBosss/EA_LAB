@@ -54,7 +54,11 @@ def mut_role_becomes_global(s):
             row['scope'] = 'global'
             row['meaning'] = 'TUNABLE / LOCKED for this parameter'
             return
-    raise AssertionError('no `role` row to mutate')
+    # The canonical table now lists physical CSV columns only. Reintroducing role
+    # is the same forbidden global-ownership regression; an absent row is the
+    # correct baseline, not a reason to leave this mutation probe unexercised.
+    rows.append({'column': 'role', 'scope': 'global',
+                 'meaning': 'TUNABLE / LOCKED for this parameter'})
 
 
 def mut_coverage_gets_flat_lane(s):
@@ -133,7 +137,7 @@ CASES = [
     ('#8  ExecutionKey loses `deposit`', mut_execution_key_drops_deposit,
      '`deposit`', True),
     ('#10 `role` moved to the global registry', mut_role_becomes_global,
-     'NOT A COLUMN', True),
+     'TUNABLE / LOCKED for this parameter', True),
     ('#11 flat `lane` / `best_pf_main` on CoverageCell', mut_coverage_gets_flat_lane,
      '`lane`', True),
     ('#12 parity list shrinks below its stated set', mut_parity_list_shrinks,

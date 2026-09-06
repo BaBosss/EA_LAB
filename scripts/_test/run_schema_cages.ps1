@@ -1,7 +1,7 @@
 <#
     run_schema_cages.ps1 -- ORDER-1252 (BOX 1b of the S13C handoff, owner-ratified 2026-08-03).
 
-    THE SEVEN CHEAP SCHEMA CAGES, SPLIT OUT OF run_contract_binding_tests.ps1 SO THEY CAN STAY
+    THE SCHEMA CAGES, SPLIT OUT OF run_contract_binding_tests.ps1 SO THEY CAN STAY
     IN THE PRE-COMMIT TIER WHILE THE EXPENSIVE PART LEAVES IT.
     (ORDER-1283 returned the enforcement-status cage after moving its mutations to a temporary
     injected schema document.)
@@ -20,6 +20,8 @@
 
     So the entries below stay, and only they do:
 
+      run_ajv_batch_tests.py          bounded command, complete per-case attribution and tool-error
+                                     refusal for the fixture runner's single AJV batch invocation
       run_schema_fixtures.py          5.8-7.2s  ajv over 45 root + 84 per-entity fixtures AND over
                                                 every live registry row. THE reason this suite
                                                 exists: it is what case E is about.
@@ -90,6 +92,7 @@ if (-not (Test-Path -LiteralPath $python)) {
 }
 
 $scripts = @(
+    @{ Path = '_triage\factory_os\run_ajv_batch_tests.py'; Args = @() },
     @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() },
     @{ Path = '_triage\factory_os\check_schema_structure.py'; Args = @() },
     @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },

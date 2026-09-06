@@ -813,11 +813,11 @@
     },
     "InstrumentProfile": {
       "type": "object",
-      "x-enforced-by": "check_registries.py: required-field floor and profile content-hash/version registry checks",
+      "x-enforced-by": "check_registries.py: required-field floor; run_schema_fixtures.py: closed selector and hash/version shape",
       "x-enforcer": "_triage/factory_os/check_registries.py",
       "x-enforcement-status": "BUILT",
       "x-owner-file": "factory/instrument_profiles.jsonl",
-      "description": "PARTLY owned already: baseline semantics and starting values live in ea_template/OPTIMIZATION_PROCEDURE_V2.md section 4. This entity owns only the broker/lane mapping layer and pins the rest by reference. Audit P1: a mutable profile string id let profile CONTENT change under a fixed id while a Candidate still looked valid - hence content_hash + version.",
+      "description": "PARTLY owned already: baseline semantics and starting values live in ea_template/OPTIMIZATION_PROCEDURE_V2.md section 4. This entity owns broker/lane-specific parameter values; the actual broker symbol remains LogicalSymbol.broker_map. Audit P1: a mutable profile string id let profile CONTENT change under a fixed id while a Candidate still looked valid - hence content_hash + version.",
       "required": [
         "entity",
         "profile_id",
@@ -849,6 +849,16 @@
             "BROKER_LANE"
           ]
         },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Logical symbol selector. The actual lane-to-broker symbol string remains owned by LogicalSymbol.broker_map."
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Lane selector for broker/lane-specific parameter values; this is not a broker-symbol mapping."
+        },
         "asset_class": {
           "enum": [
             "FX_MAJOR",
@@ -879,7 +889,61 @@
         "semantics_ref": {
           "$ref": "#/$defs/OwnerRef"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "layer": {
+                "const": "ASSET_CLASS"
+              }
+            },
+            "required": [
+              "layer"
+            ]
+          },
+          "then": {
+            "required": [
+              "asset_class"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "layer": {
+                "const": "SYMBOL_OVERRIDE"
+              }
+            },
+            "required": [
+              "layer"
+            ]
+          },
+          "then": {
+            "required": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "layer": {
+                "const": "BROKER_LANE"
+              }
+            },
+            "required": [
+              "layer"
+            ]
+          },
+          "then": {
+            "required": [
+              "symbol",
+              "lane"
+            ]
+          }
+        }
+      ]
     },
     "MetricRef": {
       "type": "object",

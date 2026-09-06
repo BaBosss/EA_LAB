@@ -748,6 +748,27 @@ epair('InstrumentProfile',
       'profile whose content_hash means nothing to the candidate that pinned it',
       [{'keyword': 'minimum', 'instancePath': '/profile_version'}])
 
+epair('InstrumentProfile',
+      {"entity": "InstrumentProfile", "profile_id": "GOLD_L1", "profile_version": 1,
+       "content_hash": H64, "layer": "BROKER_LANE", "symbol": "XAUUSD", "lane": "lane-1",
+       "values": {}},
+      {"entity": "InstrumentProfile", "profile_id": "GOLD_L1", "profile_version": 1,
+       "content_hash": H64, "layer": "BROKER_LANE", "symbol": "XAUUSD", "values": {}},
+      'a broker/lane profile without a lane selector can be chosen differently by two readers',
+      [{'keyword': 'required', 'instancePath': ''}], name='broker-lane-required')
+
+for label, bad_lane, keyword in (('null', None, 'type'), ('empty', '', 'minLength'),
+                                 ('numeric', 1, 'type'), ('array', ['1'], 'type')):
+    epair('InstrumentProfile',
+          {"entity": "InstrumentProfile", "profile_id": "GOLD_L1", "profile_version": 1,
+           "content_hash": H64, "layer": "BROKER_LANE", "symbol": "XAUUSD", "lane": "1",
+           "values": {}},
+          {"entity": "InstrumentProfile", "profile_id": "GOLD_L1", "profile_version": 1,
+           "content_hash": H64, "layer": "BROKER_LANE", "symbol": "XAUUSD", "lane": bad_lane,
+           "values": {}},
+          'a BROKER_LANE selector must be a non-empty string: %r' % bad_lane,
+          [{'keyword': keyword, 'instancePath': '/lane'}], name='broker-lane-' + label)
+
 epair('LogicalSymbol',
       {"entity": "LogicalSymbol", "logical": "XAUUSD", "asset_class": "GOLD",
        "broker_map": {"MT5-A": "XAUUSD"}, "swap_mode": "POINTS"},
@@ -1235,50 +1256,24 @@ def run_batch(schema, cases):
     tmpdir = tempfile.mkdtemp(prefix='ajvbatch_')
     try:
         names = {}
-        base_cmd = ['ajv', 'validate', '-s', schema, '--spec=draft2020', '--strict=false',
+        base_cmd = ['ajv', 'validate', '-s', os.path.abspath(schema), '--spec=draft2020', '--strict=false',
                     '--errors=line']
-        # 🔴 CHUNKED, because Windows caps a command line at ~8191 characters and this batch is no
-        # longer a fixed 35 fixtures -- it also validates the LIVE registry stores, which went from
-        # 2 rows to 234 the day ORDER-1020 landed. Unchunked, the command reached ~19k characters
-        # and cmd.exe answered "The command line is too long." for the WHOLE batch. The three-state
-        # discipline held -- every case came back ERROR rather than VALID, so the tool failing was
-        # not reported as the contract passing -- but 234 rows were reported as defects when every
-        # one of them validates. The budget is deliberately well under 8191: the paths are absolute
-        # and the temp prefix is host-dependent, so the headroom absorbs a longer TEMP than this
-        # machine's.
-        CMDLINE_BUDGET = 7000
-        _fixed = sum(len(a) + 3 for a in base_cmd)
-        chunks, current, current_len = [], [], _fixed
+        # AJV expands this fixed glob inside the fresh, batch-owned directory. Listing every
+        # absolute filename previously required 7000-character chunks and recompiled the same
+        # schema for each chunk. The command is now bounded independently of fixture count.
+        # Keep the schema absolute before changing the child's cwd, and the glob relative so
+        # spaces or glob metacharacters in TEMP are not interpreted as part of the pattern.
         for i, c in enumerate(cases):
             base = 'case_%03d.json' % i
             p = os.path.join(tmpdir, base)
             with io.open(p, 'w', encoding='utf-8') as fh:
                 fh.write(json.dumps(c['instance']))
             names[base] = c['name']
-            cost = len(p) + 6
-            if current and current_len + cost > CMDLINE_BUDGET:
-                chunks.append(current)
-                current, current_len = [], _fixed
-            current.append(p)
-            current_len += cost
-        if current:
-            chunks.append(current)
-
-        combined_parts = []
-        rc_last = 0
-        for chunk in chunks:
-            cmd = list(base_cmd)
-            for path in chunk:
-                cmd += ['-d', path]
-            proc = subprocess.run(cmd, capture_output=True, text=True, shell=True)
-            combined_parts.append((proc.stdout or '') + '\n' + (proc.stderr or ''))
-            if proc.returncode:
-                rc_last = proc.returncode
-
-        class _BatchProc(object):
-            returncode = rc_last
-        proc = _BatchProc()
-        combined = '\n'.join(combined_parts)
+        if not names:
+            return {}
+        proc = subprocess.run(base_cmd + ['-d', 'case_*.json'], cwd=tmpdir,
+                              capture_output=True, text=True, shell=True)
+        combined = (proc.stdout or '') + '\n' + (proc.stderr or '')
 
         results = {}
         lines = combined.splitlines()
@@ -1340,8 +1335,8 @@ HEADER_COUNTS = {
     'defs': 36,
     'root_branches': 25,
     'root_cases': 45,
-    'entity_cases': 88,
-    'entity_negatives': 46,
+    'entity_cases': 98,
+    'entity_negatives': 51,
     'entities_with_a_negative': 36,
 }
 

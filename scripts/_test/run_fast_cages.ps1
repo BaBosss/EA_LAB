@@ -1107,6 +1107,7 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/setfile.py'
                                         )
     'run_schema_cages.ps1'            = @(
+                                          '_triage/factory_os/run_ajv_batch_tests.py',
                                           # ORDER-702: DERIVED by the import sweep in
                                           # run_guard_trigger_tests PART 4b, not remembered.
                                           # This suite's python imports it, so a commit
