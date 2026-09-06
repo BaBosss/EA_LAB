@@ -3,6 +3,8 @@
 Purpose: deterministic startup router for every new EA_LAB Control Tower or worker session.
 
 > This file is a router, not a second source of truth. Pushed GitHub `origin/master` is canonical. Chat history, copied handoffs, Project Operating Context, local dirty worktrees, and old lane records are context only until reconciled to the current pushed canonical bytes.
+>
+> **Current provider-transition route (2026-09-06):** read `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`. ChatGPT is the one active Control Tower; Codex Primary is the default local author; deterministic tooling comes first. Claude is currently unavailable. GPT-backed Hermes remains mechanical and is the same model family as ChatGPT/Codex. Gemini is not an acceptance-grade different-family reviewer until the bounded M2 qualification passes.
 
 ## 1. Boot sequence — always do this first
 
@@ -136,8 +138,8 @@ Do not rebuild orchestration helpers ad hoc when the canonical reliability pack 
 
 - exact clean worktree verification: `scripts/execution_reliability/bootstrap_worktree.ps1`;
 - linked-worktree portable Python: dot-source `scripts/use_python.ps1`, then `Assert-PortablePython -Root <worktree> -Provision`;
-- bounded Codex worker: `scripts/execution_reliability/launch_worker.ps1`;
-- detached exact-head Claude review: `scripts/execution_reliability/launch_reviewer.ps1`;
+- bounded Codex worker: `scripts/execution_reliability/launch_worker.ps1`; verify its arguments against the installed client before relying on it (`exec-local --ask-for-approval` was absent from observed current help);
+- detached exact-head Claude review: `scripts/execution_reliability/launch_reviewer.ps1` is an unavailable legacy route while Claude is cancelled; preserve it and its historical evidence, and do not pretend it launches Gemini or Codex;
 - long-job status/recovery: `docs/LONG_JOB_RUNNER.md` + `scripts/long_jobs/`;
 - report authoring: `docs/research/EA_REPORT_AUTHORING_FASTPATH.md`;
 - milestone self-audit: `docs/research/EA_MILESTONE_SCRUTINY_CHECKLIST.md`.

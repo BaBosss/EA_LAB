@@ -1,5 +1,7 @@
 # QUOTA FALLBACK PLAYBOOK — ทำอะไรต่อเมื่อ project coordination ไม่พร้อม
 
+> **CURRENT PROVIDER OVERRIDE — 2026-09-06:** ChatGPT is the one active Control Tower and owner reports ChatGPT Pro active, with tier limits unspecified. Claude is cancelled/unavailable, not a temporary quota-wait route. Deterministic local tools come first; Codex Primary is the default local author. GPT-backed Hermes is mechanical and is the same model family as ChatGPT/Codex. Gemini may provide different-family review only after relevant qualification. The dated vendor/quota tactics below are retained as operational history and reusable queue patterns, not current provider availability or billing facts. See `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`.
+
 > owner ของเอกสารนี้ = **วิธีให้เครื่องไม่ว่างตอน ChatGPT/project coordination ไม่พร้อม** · กติกา authority และ agent ทั่วไป → `AGENTS.md` ·
 > คิวงานจริง → `AGENT_TASKBOARD.md` · verdict → VERDICT GATE ใน `CLAUDE.md`
 > สร้าง 2026-07-25 (user: "กลัวว่าเตรียม 10 batch แล้วรันหมดก็ไม่มีอะไรทำอยู่ดี — และผมไม่ได้ใช้ powershell/cmd")

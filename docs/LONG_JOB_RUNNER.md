@@ -72,9 +72,11 @@ This module is only an orchestration helper.
 - It does not grant trading authority.
 - It does not change risk policy, runtime attachment policy, or any strategy semantics.
 
-## Exact-head Claude reviewer fast path
+## Legacy exact-head Claude reviewer fast path — currently unavailable
 
-For consequential review, use `scripts/execution_reliability/launch_reviewer.ps1` instead of ad-hoc shell piping. The launcher:
+Claude is owner-reported cancelled/unavailable as of 2026-09-06. Preserve this launcher and every accepted historical review record, but do not schedule new work through it and do not claim that it launches Gemini or Codex. The current replacement route is specified in `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`: freeze one clean exact HEAD, then use only a reviewer that has passed the relevant boundary/provenance/competence qualification. The generic Codex worker launcher also requires installed-client compatibility verification because `exec-local --ask-for-approval` was absent from observed current help; launcher repair is outside MS-WORKFLOW-03 M1.
+
+When the Claude route is available under a future explicit contract, use `scripts/execution_reliability/launch_reviewer.ps1` instead of ad-hoc shell piping. The launcher:
 
 - verifies the existing review worktree is at the requested 40-character HEAD and tracked-clean via `bootstrap_worktree.ps1`;
 - requires prompt input from a file;

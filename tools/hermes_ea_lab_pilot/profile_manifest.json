@@ -34,5 +34,16 @@
   },
   "forbidden_persistent_toolsets": ["terminal","file","code_execution","computer_use","delegation"],
   "provider_evidence": {"anthropic":"LIVE_PASS","qwen_direct":"LIVE_PASS_EXTERNAL","openai_codex":"AUTH_PASS_QUOTA_429"},
+  "provider_transition": {
+    "target_model": "gpt-5.6-sol",
+    "target_provider": "openai-codex",
+    "target_kind": "INERT_METADATA_NOT_ACTIVE_DEFAULTS",
+    "implementation_status": "BLOCKED_A_PROPOSED_VALIDATOR_DEFECT",
+    "historical_provider_evidence": "HISTORICAL_ONLY",
+    "repo_configuration_status": "REPO_CONFIG_ONLY_NOT_APPLIED",
+    "qualification_status": "QUALIFICATION_PENDING",
+    "persistent_profiles_applied": false,
+    "runtime_live_pass": false
+  },
   "merge_policy": "STOP_BEFORE_MERGE"
 }

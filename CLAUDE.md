@@ -4,6 +4,8 @@ Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_ST
 
 EA-wide R&D method is not owned here. For strategy research use `docs/research/EA_RND_PROTOCOL.md`, regime attribution use `docs/research/EA_REGIME_FRAMEWORK.md`, and mandatory reports use `docs/research/EA_REPORT_SCHEMA.md`; `AGENTS.md` owns authority. The verdict material below remains a Claude operating adapter to current verdict policy and must not override those canonical owners or `PROJECT_STATE.md`.
 
+> **CURRENT ROUTING BANNER — 2026-09-06:** Claude service is owner-reported cancelled/unavailable. This filename and the production verdict gate below remain canonical and must not be renamed, deleted, or weakened; prior Claude review records remain valid historical evidence. Current execution/provider routing is owned by `AGENTS.md` and `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`. Do not route new work to Claude, and do not treat ChatGPT/Codex/GPT-backed Hermes as different-family reviewers of one another.
+
 ## 🌐 LANGUAGE RULE
 
 **All project documents, commit messages, and log entries are written in English. All chat replies to the user are in Thai. New doc entries must be English.**

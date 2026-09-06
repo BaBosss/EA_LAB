@@ -2,6 +2,8 @@
 
 Isolated Hermes Bot Mode pilot for EA_LAB. This module is prepared and reviewed on its own branch before any canonical merge.
 
+> **CURRENT PROVIDER PLAN — 2026-09-06:** `profile_manifest.json.provider_transition` records an inert target `openai-codex / gpt-5.6-sol`. Active repository defaults and all installed profiles remain Anthropic/Sonnet; do not dispatch to cancelled Claude or apply profiles. The proposed generalized provider validator was not accepted after a failed targeted recheck and is preserved outside Git. Existing validator/runtime/SOUL/MCP/toolset bytes are unchanged. M2 must qualify and repair the target route under its own bounded contract before any default/profile switch. GPT Hermes remains mechanical and is the same model family as ChatGPT/Codex. See `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`.
+
 ## Safety boundary
 - Base snapshot: `a3123655a82981a3ddd2fd81aa311affb9159b6e`.
 - Pilot worktree: `C:\ea_lab_tmp\hermes_ea_lab_pilot_final_20260822`.

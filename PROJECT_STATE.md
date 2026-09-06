@@ -1,7 +1,7 @@
 # PROJECT_STATE — EA_LAB current canonical state (AI START HERE)
 
 > **Role:** current status / accepted decisions / forward plan.
-> **Last converged:** 2026-09-04 Asia/Bangkok.
+> **Last converged:** 2026-09-06 Asia/Bangkok.
 > **Canonical bytes:** always verify the current pushed `origin/master`. Do not infer canonical state from a dirty worktree, index, chat transcript, generated dashboard, or this file's historical Git SHA.
 > **History:** `PROJECT_HISTORY.md`. Historical snapshots and incident narratives are not current state unless explicitly restated here.
 > **Authority:** `AGENTS.md` owns roles, permissions, approval boundaries, one-writer rules, review separation, and standing push authority.
@@ -10,6 +10,12 @@
 ---
 
 ## 1. CURRENT PROGRAM STATUS
+
+### 1.0 MS-WORKFLOW-03 provider transition
+
+**M1 ROUTING DOCS + INERT TARGET METADATA ONLY / PROVIDER CODE NOT ACCEPTED / M2 QUALIFICATION PENDING.** Owner cancelled Claude and reports ChatGPT Pro/Gemini usable. ChatGPT remains the one active Control Tower; Codex is the default author. Gemini is an intended different-family reviewer only after relevant qualification; ChatGPT/Codex/GPT Hermes remain the same family. Current Hermes defaults and installed profiles remain Anthropic/Sonnet; proposed GPT values are inert target metadata, not activation. The proposed provider validator passed 25 focused cases and four original adversarial cases after one repair, but targeted recheck found a remaining duplicate-provider false accept across a column-zero YAML comment. That unaccepted code/test patch is preserved outside Git; the shipped validator remains byte-identical to the base. No second repair or automatic profile application occurred. Contract: `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`; handoff/evidence: `docs/handoffs/CONTROL_TOWER_PROVIDER_HANDOFF_20260906.md`.
+
+MS-SYSTEM-02 remains **PARTIAL_ACCEPT / A+C+D ACCEPTED / B OWNER-DEFERRED / BLOCKED C_ENVIRONMENT_DEPENDENCY**. No baseline repin/waiver or full-MS PASS is implied.
 
 ### 1.1 Mainline — VPS DEMO Deployment / Forward-Test
 
@@ -280,6 +286,9 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 ## 5. FORWARD PLAN
 
 ### 5.1 NOW
+
+- **Provider transition next:** reconcile this handoff plus owner/other-chat additions against current pushed Git; preserve the M1 documentation/metadata-only boundary. M2 contains independent bounded Codex client/launcher, Gemini reviewer qualification, and Hermes GPT no-MT5 qualification consumers. Resolve the rejected proposed validator under a new bounded contract before switching repository defaults or persistent profiles; do not retry the exhausted repair cycle.
+- **Owner-deferred work:** B heartbeat and ORDER-353/VPS manual activation stay parked. The existing evidence-only ORDER-353 action below is not a request for blind RDP, reattachment, or activation.
 
 1. **Resolve ORDER-353 first-trade evidence gate.** Raw candidate ticket `2227380592` exists, but canonical identity freshness fails. Obtain the fresh strategy-emitted sidecar; do not force a trade, reattach, or start the judge clock.
 2. **Keep target acceptance closed unless regression evidence appears.** F/G3/config/attestation work is not an open repo task.

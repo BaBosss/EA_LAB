@@ -22,6 +22,12 @@
 | **Hermes** | Deterministic/mechanical EA R&D evidence factory | execute exact approved manifests/backtests/batches, normalize evidence, build smoke/year/regime/parent-child outputs, and run pre-registered optimization stages under the Hermes contract | invent hypotheses, change parent mechanics/risk/defaults, choose HOLDOUT, widen ranges outside contract, deploy/attach runtime, trade, promote a candidate, or reinterpret harness/environment failure as strategy failure |
 | **OpenClaw team (commanded from Telegram)** | Remote execution/coordination lanes mapped to the roles above | perform only the role and task contract assigned to each lane; track via STATUS.md + git log (tag `[oc-*]`) + Telegram | gain extra authority from running remotely or through a manager layer |
 
+### 1.1 Current provider-routing override (owner-ratified 2026-09-06)
+
+ChatGPT is the one active Control Tower and coordinates one project truth. Codex Primary is the default local author/integration worker. Claude service is owner-reported cancelled and unavailable; the Claude role row above remains an abstract capability boundary and old Claude reviews remain valid historical evidence, but no current task may route to Claude or wait for temporary Claude quota recovery.
+
+Deterministic local tools are first choice. GPT-backed Hermes remains a mechanical evidence worker and gains no authority from its provider. ChatGPT, Codex, and GPT-backed Hermes are the same model family and cannot satisfy a different-model-family review requirement for one another. Gemini is the only currently identified different-family review route, and only after task-relevant read-only/tool-boundary/provenance/competence qualification. If that qualification is absent or fails, required different-family review is `BLOCKED`; do not substitute a weaker reviewer or repeat review attempts until PASS. Current provider routing and qualification are owned by `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`.
+
 **Heartbeat (user rule 2026-07-04):** any agent working longer than ~10 minutes must report progress
 every ~10-15 minutes (1 line: what it is doing, ~%, what is blocking) — the OpenClaw team reports in
 Telegram via the manager · Codex/ZCode running on the desktop report in their own console.
@@ -70,11 +76,15 @@ decisions.
 ### 1.5 Current assignment and review rule (owner-ratified 2026-08-07)
 
 - **Normal tooling/documentation:** one scoped author, applicable automated checks, and ChatGPT or another
-  agent reviews when needed.
-- **Core/execution/position/accounting/money/risk code:** one assigned author, Codex or Claude; mandatory
-  independent review by a **different model family**; compile plus every required cage/test; evidence attached;
-  owner approval before any risk-default, live, or irreversible behavior change.
-- No agent may be both the author and the sole final reviewer of high-risk work.
+  qualified agent reviews when needed. Codex Primary is the current default author.
+- **Core/execution/position/accounting/money/risk code:** one explicitly assigned Codex or Claude author under
+  the roles above; Codex is the current available default because Claude is unavailable. Mandatory independent
+  review must come from a **different model family**; compile plus every required cage/test and exact evidence
+  remain required. Gemini may fill that review seat only after the task-relevant qualification in
+  `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`; otherwise the required review is `BLOCKED`. Owner approval
+  remains mandatory before any risk-default, live, or irreversible behavior change.
+- No agent may be both the author and the sole final reviewer of high-risk work. ChatGPT, Codex, and GPT-backed
+  Hermes count as one model family for this rule.
 - Use the cheapest capable execution lane whose output can be verified. Cost/quota is a routing concern,
   never a source of project authority.
 
@@ -256,11 +266,11 @@ verdict, order status, or decision-feeding field.</sub>
 
 | Work type | Author / executor | Required review / approval |
 |---|---|---|
-| project management, priority, task-contract design | ChatGPT with the owner | owner approval where the decision is owner-reserved |
-| local integration, normal application/tooling/docs | Codex Primary by default; Claude when assigned | applicable cages; ChatGPT or another agent reviews when needed |
-| core/execution/position/accounting/money/risk code | Codex or Claude, explicitly assigned | different-model-family independent review + compile/all cages + evidence; owner approval for risk-default/live/irreversible change |
-| architecture/RCA/research/alternative proposal | Claude or Codex as assigned | ChatGPT synthesizes; owner approves owner-reserved direction |
-| batch/backtest/optimize/parse | ZCode/Qwen/batch lane | bounded implementation, deterministic execution, repair, and evidence are allowed under the explicit contract; no scope/risk/owner-reserved decisions |
+| project management, priority, task-contract design | one active ChatGPT Control Tower with the owner | owner approval where the decision is owner-reserved |
+| local integration, normal application/tooling/docs | Codex Primary by default | applicable cages; independent ChatGPT review when needed |
+| core/execution/position/accounting/money/risk code | Codex or Claude, explicitly assigned per the roles above; current default Codex while Claude is unavailable | qualified different-family review; Gemini only after task-relevant qualification, otherwise BLOCKED; compile/all cages/evidence; owner approval for risk-default/live/irreversible change |
+| architecture/RCA/research/alternative proposal | ChatGPT directs; Codex works only under an assigned contract | ChatGPT synthesizes; owner approves owner-reserved direction; different-family review when required |
+| batch/backtest/optimize/parse | deterministic local executor or bounded Hermes/batch lane | reuse accepted mechanical evidence where applicable; no model waiting per tester cell; no scope/risk/owner-reserved decisions |
 
 Every order must state **`Can do: <capable roles> · 👉 Suggested: <default>`**, plus scope, exclusions,
 acceptance criteria, validation, and any independent-review/owner-approval boundary.

@@ -1,5 +1,7 @@
 # AGENT_TASKBOARD — คิวงานกลางของทุก agent
 
+> **MS-WORKFLOW-03 M1 — ROUTING DOCS + INERT TARGET METADATA ONLY / M2 PENDING (2026-09-06).** Lane `ct-provider-transition-20260906`; base `7b52ff0f7b71ad2a9f10065841378a12bbfa43d8`. Proposed provider-validator code is NOT ACCEPTED after one bounded repair and a failing targeted comment-boundary recheck; no active default/profile switch is shipped. Contract, preserved evidence and next bounded consumers: `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md` + `docs/handoffs/CONTROL_TOWER_PROVIDER_HANDOFF_20260906.md`. B heartbeat stays owner-deferred. No runtime/auth/trading/risk authority added.
+
 > ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: **คิวงาน + ผลดิบระหว่างรอ review เท่านั้น** ·
 > กติกาเต็ม → `AGENTS.md` (อ่านก่อน claim) · verdict สุดท้ายไม่อยู่ที่นี่ — อยู่ที่ EA_SCORECARD/PROJECT_STATE
 >
