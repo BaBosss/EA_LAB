@@ -48,6 +48,15 @@
 # ---------------------------------------------------------------------------------------
 run_fast_cages.ps1|HARNESS|The fast-tier runner itself; it holds $FAST_SUITES and cannot be a member of the set it selects.
 
+# 2026-09-06 reverse-inventory repair. Focused execution is not a measurement of
+# incremental cost in the pinned full tier; these rows grant no hook exemption.
+run_certification_scope_tests.ps1|UNMEASURED|Existing focused certification-scope cage; incremental cost in the pinned full tier has not been measured.
+run_context_packet_identity_tests.ps1|UNMEASURED|Exact-ref context identity cage has focused execution evidence; incremental full-tier cost has not been measured.
+run_knowledge_validation_tests.ps1|UNMEASURED|Offline research/news validation cage has focused execution evidence; incremental full-tier cost has not been measured.
+run_provider_cli_preflight_tests.ps1|UNMEASURED|CLI preflight cage has focused execution evidence; incremental full-tier cost has not been measured.
+run_runtime_identity_transport_tests.ps1|UNMEASURED|Existing runtime-identity transport cage; incremental cost in the pinned full tier has not been measured.
+run_truncation_evidence_tests.ps1|UNMEASURED|Typed truncation evidence cage has focused execution evidence; incremental full-tier cost has not been measured.
+
 # ---------------------------------------------------------------------------------------
 # FAST -- in $FAST_SUITES. Cross-checked both ways by PART 8.
 # ---------------------------------------------------------------------------------------
