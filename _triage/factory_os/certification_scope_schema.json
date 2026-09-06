@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ea-lab.local/factory_os/certification_scope_schema.json",
+  "title": "CertificationScopeRow",
+  "description": "One row of portfolio/CERTIFICATION_SCOPE.csv (docs/architecture/RUNTIME_IDENTITY_COVERAGE_CONTRACT_20260905.md). Keyed exact account|magic. This is a standalone schema file rather than an addition to _triage/factory_os/schemas.json's DESIGN_ONLY discriminated-union root, so that adding it carries no risk of widening any existing closed (unevaluatedProperties:false) entity there.",
+  "type": "object",
+  "required": [
+    "account",
+    "magic",
+    "identity_mechanism_capability",
+    "identity_certification_scope",
+    "evidence_ref",
+    "status"
+  ],
+  "unevaluatedProperties": false,
+  "properties": {
+    "account": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+    "magic": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+    "identity_mechanism_capability": {
+      "enum": ["NATIVE_RUNTIME_IDENTITY", "NO_NATIVE_RUNTIME_IDENTITY_MT4", "UNKNOWN"],
+      "description": "UNKNOWN is fail-closed and must never be interpreted as excluded or capable by default. NO_NATIVE_RUNTIME_IDENTITY_MT4 may be transcribed only when the row's platform is proven MT4 in portfolio/DEPLOYMENTS.csv."
+    },
+    "identity_certification_scope": {
+      "enum": ["LAB_CERTIFIED", "USER_OWNED_UNCERTIFIED", "UNKNOWN"],
+      "description": "UNKNOWN is fail-closed. USER_OWNED_UNCERTIFIED may be transcribed only from an explicit self-declared certification-scope statement for that exact row, never inferred from trade history, filenames, account-level prose, or dashboard presence, and never from a note that merely MENTIONS another row's certification fact."
+    },
+    "evidence_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable pointer to the exact explicit fact this row transcribes (e.g. 'DEPLOYMENTS.csv platform=MT4' or 'DEPLOYMENTS.csv notes: literal \"lab does not certify\"'). Never a narrative verdict."
+    },
+    "status": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Row lifecycle marker for this scope owner (e.g. TRANSCRIBED). Independent of DEPLOYMENTS.csv's own status column."
+    }
+  },
+  "x-enforcement-status": "BUILT",
+  "x-enforcer": "_triage/factory_os/certification_scope.py",
+  "x-enforced-by": "certification_scope.py: parse_certification_scope_rows validates shape/enum/key-uniqueness; classify_forward_scope reconciles against the canonical forward-observed deployment universe",
+  "x-owner-file": "portfolio/CERTIFICATION_SCOPE.csv",
+  "x-seed-tool": "scripts/research/seed_certification_scope.py (one-time mechanical transcription; not a runtime dependency)"
+}

@@ -669,6 +669,34 @@ $sum.identity_coverage = [ordered]@{
   reason            = $identityCoverage.Reason
 }
 
+# RUNTIME_IDENTITY_COVERAGE_CONTRACT_20260905. Two scope dimensions were hidden inside the single
+# x58 forward-observed denominator above: mechanism capability (does a native RuntimeIdentity
+# producer exist for this row's platform at all) and certification responsibility (does the lab
+# certify this deployment). Reads the dedicated structured scope owner
+# portfolio\CERTIFICATION_SCOPE.csv only -- never DEPLOYMENTS.csv.notes at runtime. Published
+# alongside identity_coverage on $sum (the same open `summary` object, for the same schema reason
+# documented on identity_coverage above), additively: identity_coverage.expected (the existing
+# x58) and this contract's own current DEGRADED_MONITORING/global state are unchanged by adding
+# this block.
+. (Join-Path $Root 'scripts\lib\certification_scope.ps1')
+$certificationScopeCoverage = Get-CertificationScopeCoverage -RepoRoot $Root -ExpectedScope $identityExpectedScope `
+  -CsvPath (Join-Path $Root 'portfolio\CERTIFICATION_SCOPE.csv') -PythonPath $PY
+$sum.certification_scope_coverage = [ordered]@{
+  state                          = "$($certificationScopeCoverage.state)"
+  source                         = 'portfolio/CERTIFICATION_SCOPE.csv'
+  expected_source                = 'DEPLOYMENTS.csv forward-observed, non-REMOVED rows (same universe as identity_coverage.expected)'
+  scope_total_forward_observed   = [int]$certificationScopeCoverage.scope_total_forward_observed
+  scope_native_identity_capable  = [int]$certificationScopeCoverage.scope_native_identity_capable
+  scope_mechanism_unavailable    = [int]$certificationScopeCoverage.scope_mechanism_unavailable
+  scope_lab_certified            = [int]$certificationScopeCoverage.scope_lab_certified
+  scope_user_owned_uncertified   = [int]$certificationScopeCoverage.scope_user_owned_uncertified
+  scope_unknown                  = [int]$certificationScopeCoverage.scope_unknown
+  missing_scope_fact             = @($certificationScopeCoverage.missing_scope_fact)
+  orphaned_scope_rows            = @($certificationScopeCoverage.orphaned_scope_rows)
+  parse_errors                   = @($certificationScopeCoverage.parse_errors)
+  reason                         = "$($certificationScopeCoverage.reason)"
+}
+
 # Reconciliation is PRODUCED by the builder's own reconcile(root=$Root), run fail-closed here
 # before this document exists: if the builder cannot reconcile this root (missing board, missing
 # coverage store), the build dies and $OutFile is never touched. The ps1 carries the builder's

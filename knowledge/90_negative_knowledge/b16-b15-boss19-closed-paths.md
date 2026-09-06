@@ -119,6 +119,22 @@ Do not repeat:
 - do not promote SingleTP-off or BasketTP-off from headline PF/net/DD alone;
 - do not reopen exit redesign without a prospective consumer that explicitly measures participation/concentration.
 
+## B16 XAUUSD/H4 exit-off paths — Repair01 replicates the exit-concentration mechanism
+
+Canonical owner: `docs/research/B16_XAU_H4_EXIT_CONCENTRATION_REPAIR01_RESULTS_20260905.md`; frozen diagnostic SHA256 `5194fa5986767d9c47a4c4220b70699e8a21ac6e31aa14457d74837c46acf7b1`; acceptance record `factory/runs/b16_exitdiag_20260905/xau_h4/repair01_acceptance.json`.
+
+Accepted evidence: after Repair01 replaced the mismatched control source with the already-accepted H03 parsed parent object, all three mechanically eligible windows (SingleTP-off MAIN, SingleTP-off BWD, BasketTP-off MAIN) satisfied the preregistered `>=3 of 4` concentration rule on all four dimensions (max hold, active share, top-1 positive-cycle GP share, zero-close years) — in fact every eligible window scored higher than its control on all four. `BasketTP-off / BWD` remains mechanically ineligible hard-cage evidence at 25.00% DD and is excluded from the verdict exactly as preregistered. Classification: `HYPOTHESIS_NOT_FALSIFIED / EXIT_CONCENTRATION_REPLICATED`; decision `RETAIN_CURRENT_EXITS_FROZEN`.
+
+Negative/limiting finding: this replicates the previously observed USDJPY/H1 exit-off mechanism pattern (see the entry below) on a second Symbol×TF context. Disabling Single TP or Basket TP can again produce attractive aggregate PF/net in some windows while collapsing realized participation into a few extremely long-lived, highly concentrated cycles (max holds up to ~1,029 days, zero-close years present). Aggregate PF/net alone is therefore not sufficient evidence for removing either exit on XAUUSD/H4, exactly as it was not sufficient on USDJPY/H1.
+
+Do not repeat:
+- do not open an exit-parameter search/removal from XAUUSD/H4 headline PF/net alone;
+- do not treat the BasketTP-off MAIN `UNDEFINED_NO_GROSS_LOSS` PF (MT5 displays 0.00) as a clean result without checking cycle count and concentration;
+- do not rerun Repair01 or open Repair02 — Repair01 is the single bounded research repair for this diagnostic and no automatic follow-up is authorized;
+- do not infer HOLDOUT, Candidate, DEMO/LIVE, Grade/KINT, risk/default, or deployment authority from this replication.
+
+Reopen only with a separately preregistered XAUUSD/H4 exit-redesign hypothesis that explicitly includes participation/holding/concentration guardrails in addition to aggregate PF/net/DD — never a bare PF/net-driven exit search.
+
 ## B15 CountBars timing path — parked
 
 Canonical owner: `docs/research/B15_COUNTBARS_SENS_01_RESULTS.md`.

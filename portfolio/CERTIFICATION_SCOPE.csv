@@ -1,0 +1,59 @@
+account,magic,identity_mechanism_capability,identity_certification_scope,evidence_ref,status
+159503454,990101,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+159503454,991001,UNKNOWN,UNKNOWN,"DEPLOYMENTS.csv notes mentions ""lab does not certify"" only when describing a DIFFERENT deployment (159475669 magic 991001) for cross-reference; this row has no explicit self-certification statement",TRANSCRIBED
+159503454,991004,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+159503454,991002,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+159475669,1524,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,990005,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+159475669,20240001,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,8001,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,8002,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,8005,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,8008,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,8009,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,8012,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,8014,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,8015,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,99000512,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+159475669,991001,UNKNOWN,USER_OWNED_UNCERTIFIED,"DEPLOYMENTS.csv notes: literal ""lab does not certify""",TRANSCRIBED
+141049900,7777,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+141049900,1112,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+141049900,1113,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+141049900,1114,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+141049900,1115,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+415573666,990201,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990202,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990203,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990204,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990205,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990206,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990207,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+69424711,1,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+69424711,2,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+69424711,5888,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+69424711,990,NO_NATIVE_RUNTIME_IDENTITY_MT4,UNKNOWN,DEPLOYMENTS.csv platform=MT4,TRANSCRIBED
+463666728,990301,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990302,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,991003,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,991005,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,999094,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,991070,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990066,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990067,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990069,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990068,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990020,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990110,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990208,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990303,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990984,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990120,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990025,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,990030,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,992004,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,992001,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+415573666,992003,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,992017,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990103,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990016,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED
+463666728,990026,UNKNOWN,UNKNOWN,no explicit certification-scope statement in DEPLOYMENTS.csv notes,TRANSCRIBED

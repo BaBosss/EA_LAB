@@ -198,6 +198,33 @@ function Get-MonitorCoverage {
                 $log.Add("  identity UNMAPPED (no RUNTIME_IDENTITY_MAP.csv row): " + ((@($unmappedList | Select-Object -First 12)) -join ', ') + $(if ($unmappedList.Count -gt 12) { " ... +$($unmappedList.Count - 12) more" } else { '' })) | Out-Null
             }
         }
+
+        # RUNTIME_IDENTITY_COVERAGE_CONTRACT_20260905. Informational only, on purpose: this block
+        # never adds to $failures, so the pre-existing x58/global DEGRADED_MONITORING behavior is
+        # byte-identical to before this sub-reporting existed. It surfaces the two scope dimensions
+        # (mechanism capability, certification responsibility) that used to be invisible inside the
+        # single x58 denominator, reading only the structured portfolio\CERTIFICATION_SCOPE.csv via
+        # $cr.summary.certification_scope_coverage (the builder writes it there for the same closed-
+        # schema reason identity_coverage lives there -- see control_room_snapshot.ps1).
+        $certScope = $null
+        if ($null -ne $cr.summary) { $certScope = $cr.summary.certification_scope_coverage }
+        if ($null -eq $certScope) {
+            $log.Add("coverage note (not red): this snapshot publishes no summary.certification_scope_coverage block (older writer or missing portfolio\CERTIFICATION_SCOPE.csv)") | Out-Null
+        } else {
+            $log.Add("COVERAGE (informational): certification scope $($certScope.state) - total_forward_observed=$($certScope.scope_total_forward_observed) native_identity_capable=$($certScope.scope_native_identity_capable) mechanism_unavailable=$($certScope.scope_mechanism_unavailable) lab_certified=$($certScope.scope_lab_certified) user_owned_uncertified=$($certScope.scope_user_owned_uncertified) unknown=$($certScope.scope_unknown)") | Out-Null
+            $missingScope = @($certScope.missing_scope_fact)
+            if ($missingScope.Count -gt 0) {
+                $log.Add("  certification scope MISSING (no CERTIFICATION_SCOPE.csv row): " + ((@($missingScope | Select-Object -First 12)) -join ', ') + $(if ($missingScope.Count -gt 12) { " ... +$($missingScope.Count - 12) more" } else { '' })) | Out-Null
+            }
+            $orphanedScope = @($certScope.orphaned_scope_rows)
+            if ($orphanedScope.Count -gt 0) {
+                $log.Add("  certification scope ORPHANED (CERTIFICATION_SCOPE.csv row outside current forward-observed scope): " + ($orphanedScope -join ', ')) | Out-Null
+            }
+            $certParseErrors = @($certScope.parse_errors)
+            if ($certParseErrors.Count -gt 0) {
+                $log.Add("  certification scope CSV parse errors (counts above are UNTRUSTED until fixed): " + (($certParseErrors | ForEach-Object { "$($_.code)=$($_.detail)" }) -join '; ')) | Out-Null
+            }
+        }
     }
 
     # ---- 1b. deployment attachment/verification coverage (ORDER-944) ----------------

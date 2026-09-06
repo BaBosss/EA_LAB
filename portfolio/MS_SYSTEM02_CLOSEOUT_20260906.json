@@ -1,0 +1,49 @@
+{
+  "schema": "ea_lab_ms_system02_closeout/1",
+  "milestone": "MS-SYSTEM-02",
+  "status": "PARTIAL_ACCEPT_BLOCKED",
+  "canonical_base": "fc1189277dd9690a1970b8f5f5dd00a75507a3ce",
+  "accepted_parts": {
+    "A_second_brain_convergence": "PASS",
+    "C_structured_monitoring_coverage": "PASS_FAIL_CLOSED_GAP",
+    "D_hypothesis_preregistration": "PASS_RESEARCH_ONLY_NOT_EXECUTED"
+  },
+  "blocked_part": {
+    "part": "B_runtime_identity_heartbeat",
+    "status": "BLOCKED",
+    "blocker_class": "C_ENVIRONMENT_DEPENDENCY",
+    "reason": "Core iron rule requires scripts/tpl_regression.ps1 CLEAN. Current exact Build-6090 environment reproduces historical bars/ticks/trades/deals but not historical swap economics, and the frozen economic baseline cannot be reconstructed from preserved local metadata. No baseline repin or waiver was performed."
+  },
+  "heartbeat_rca": {
+    "tpl_regression": "8_of_8_exact_metric_mismatch",
+    "signal_path": "UNCHANGED_FOR_7_OF_8_FULL_PATHS; B16_ENTRY_PATH_UNCHANGED",
+    "dominant_difference": "SWAP_ECONOMICS",
+    "ab_control": "fc118927_without_heartbeat_and_heartbeat_patch_both_return_Boss12_-154.07_PF0.86_164_trades_in_current_Build6090_environment"
+  },
+  "accepted_evidence": {
+    "second_brain_check": "PASS",
+    "knowledge_integrity": "PASS_WITH_KINT001_OPEN_WARNING",
+    "certification_scope_tests": "PASS",
+    "monitor_integrity": "106/106_PASS",
+    "structured_scope_total": 58,
+    "mt4_mechanism_unavailable": 9,
+    "user_owned_uncertified": 12,
+    "lab_certified": 0,
+    "native_identity_capable": 0,
+    "structured_scope_state": "GAP_FAIL_CLOSED"
+  },
+  "selected_hypothesis": "HYP-B16-GBP-H4-EXITCONC-01",
+  "selected_hypothesis_status": "PREREGISTERED_RESEARCH_ONLY_ZERO_NEW_MT5_NOT_EXECUTED",
+  "authority": {
+    "global_monitoring": "DEGRADED_MONITORING_UNCHANGED",
+    "order_353_vps_activation": "PARKED_WAITING_MANUAL_UNCHANGED",
+    "optimization": "NOT_OPENED",
+    "holdout": "UNSPENT",
+    "candidate_live_risk": "NO_NEW_AUTHORITY"
+  },
+  "heartbeat_patch_handoff": {
+    "path": "D:\\EA_LAB_CONTROL\\handoffs\\MS_SYSTEM02_B_HEARTBEAT_BLOCKED_20260906",
+    "authority": "TRANSIENT_NONCANONICAL_RESTART_AID_ONLY"
+  },
+  "next_action": "A new bounded core lane may restore/reimplement the frozen heartbeat only after an exact tpl_regression-clean environment is available, or after a separately owner-approved baseline-governance change. Do not waive or silently repin the baseline."
+}

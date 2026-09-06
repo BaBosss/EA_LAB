@@ -23,6 +23,8 @@
 - [B16 R4 Second Brain milestone](../10_synthesis/SECOND_BRAIN_MILESTONE_B16_R4_20260902.md)
 - [Boss19 broad36 runner-guard milestone](../10_synthesis/SECOND_BRAIN_MILESTONE_BOSS19_RUNNER_GUARD_20260902.md)
 - [Closed-path negative memory — B16/B15/Boss19](../90_negative_knowledge/b16-b15-boss19-closed-paths.md)
+- [B16 XAUUSD/H4 exit-concentration Repair01 milestone](../10_synthesis/SECOND_BRAIN_MILESTONE_B16_XAU_H4_REPAIR01_20260905.md)
+- [B16 GBPUSD/H4 exit-concentration third-context preregistration (not executed)](../../docs/research/B16_GBP_SELL_H4_EXITCONC_PREREG_20260905.md)
 - [Negative knowledge](../90_negative_knowledge/)
 - [Synthesis](../10_synthesis/)
 - [Tooling provenance](TOOLING_PROVENANCE.md)
