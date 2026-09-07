@@ -1,0 +1,76 @@
+{
+  "schema_version": "ea_lab_historical_macro_ingest_receipt/1",
+  "classification": "REAL_SOURCE_SELECTOR_EVIDENCE_ONLY",
+  "source_series": "PAYEMS",
+  "source_agency": "U.S. Bureau of Labor Statistics",
+  "value_lineage_source": "ALFRED public Download Data form",
+  "download_url": "https://alfred.stlouisfed.org/series/downloaddata?seid=PAYEMS",
+  "download_auth": "NONE_OBSERVED",
+  "download_api_key": false,
+  "request": {
+    "units": "lin",
+    "obs_start_date": "2024-12-01",
+    "obs_end_date": "2025-02-01",
+    "entered_vintage_dates": ["2025-02-07", "2025-03-07"],
+    "file_type": "2",
+    "file_format": "csv"
+  },
+  "raw_zip": {
+    "bytes": 1596,
+    "sha256": "f3ad98c571f9613f2e604ff0a7b75d238bd68b03fee3ed372df18b0e872d7750",
+    "content_type": "application/zip",
+    "filename": "PAYEMS_2.zip"
+  },
+  "inner_files": {
+    "README.txt": "f19433609f91678f7b1ffccd72992cb66ea2a8b977fbd85c1b9728172fa6822b",
+    "vintages_starting_2025-02-07.csv": "8eb65ed8785b75ff1c44ca9df521c4f00eb2597c9f1f893ef033d7684c55b07f"
+  },
+  "observations": [
+    {"observation_date": "2024-12-01", "vintage_2025-02-07": 158926, "vintage_2025-03-07": 158942},
+    {"observation_date": "2025-01-01", "vintage_2025-02-07": 159069, "vintage_2025-03-07": 159067},
+    {"observation_date": "2025-02-01", "vintage_2025-02-07": null, "vintage_2025-03-07": 159218}
+  ],
+  "release_clock_evidence": [
+    {
+      "release": "Employment Situation for January 2025",
+      "release_local": "2025-02-07 08:30 America/New_York",
+      "available_at_utc": "2025-02-07T13:30:00Z",
+      "source": "https://www.bls.gov/schedule/2025/02_sched_list.htm"
+    },
+    {
+      "release": "Employment Situation for February 2025",
+      "release_local": "2025-03-07 08:30 America/New_York",
+      "available_at_utc": "2025-03-07T13:30:00Z",
+      "source": "https://www.bls.gov/news.release/archives/empsit_03072025.htm"
+    }
+  ],
+  "clock_mapping_version": "BLS_ET_2025_V1+THINKMARKETS_P4B_V2",
+  "broker_clock_contract": "docs/research/HISTORICAL_BROKER_CLOCK_CONTRACT_20260907.md",
+  "validator_cases": [
+    {
+      "decision_at_utc": "2025-02-07T13:31:00Z",
+      "status": "QUALIFIED_AS_OF_DECISION",
+      "selected_record_count": 1,
+      "future_record_count": 2,
+      "selected": [{"record_id": "PAYEMS:2025-01-01", "revision_id": "vintage-2025-02-07", "value_thousands": 159069}],
+      "package_sha256": "16f2fd8375ec461f765d73af207075deaeaae88cefdd7ca59ccf4958164f8fd2",
+      "result_sha256": "2134dca4451e7f8a2f34fcee165337c79c1bae576178c64e0ecb61c71d88c598"
+    },
+    {
+      "decision_at_utc": "2025-03-07T13:31:00Z",
+      "status": "QUALIFIED_AS_OF_DECISION",
+      "selected_record_count": 2,
+      "future_record_count": 0,
+      "selected": [
+        {"record_id": "PAYEMS:2025-01-01", "revision_id": "vintage-2025-03-07", "value_thousands": 159067},
+        {"record_id": "PAYEMS:2025-02-01", "revision_id": "vintage-2025-03-07", "value_thousands": 159218}
+      ],
+      "package_sha256": "c59cc6f8910331b6f2d259324bd3194b3aa6f1da57b18332ef3e8cc8f0c73278",
+      "result_sha256": "21acfb91d99e40516e7f37548e66791a3da69601d3ab057dcbdaad074ae3cdc7"
+    }
+  ],
+  "historical_dataset_qualified": false,
+  "ea_replay_qualified": false,
+  "trading_policy_changed": false,
+  "limitations": ["single PAYEMS source set only", "raw external zip is not vendored", "no non-U.S. coverage", "no EA replay", "no promotion/runtime authority"]
+}
