@@ -27,7 +27,7 @@ function Test-HermesProfileProvider {
   $seen = @{}
   $providerCount = 0
   $provider = $null
-  $fieldPattern = '^  (?<key>[A-Za-z_][A-Za-z0-9_-]*):[ ]*(?:"(?<double>[^"#]*)"|''(?<single>[^''#]*)''|(?<plain>[A-Za-z0-9_./+:-]+))[ ]*(?:#.*)?$'
+  $fieldPattern = '^  (?<key>[A-Za-z_][A-Za-z0-9_-]*):[ ]*(?:"(?<double>[^"#]*)"|''(?<single>[^''#]*)''|(?<plain>[A-Za-z0-9_./+:-]+))(?:[ ]+#.*)?[ ]*$'
   for ($i = $modelStart + 1; $i -lt $lines.Count; $i++) {
     $line = $lines[$i]
     if ($line -match '^[ \t]*(?:#.*)?$') { continue }

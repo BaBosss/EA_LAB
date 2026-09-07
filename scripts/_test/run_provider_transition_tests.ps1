@@ -20,6 +20,7 @@ try {
     @{N='missing';T="model:`n  default: gpt-5.6-sol`n";P='openai-codex';W=$false},
     @{N='prefix';T="model:`n  provider: x-openai-codex`n";P='openai-codex';W=$false},
     @{N='suffix';T="model:`n  provider: openai-codex-extra`n";P='openai-codex';W=$false},
+    @{N='unseparated hash is scalar';T="model:`n  provider: anthropic#provider: openai-codex`n";P='anthropic';W=$false},
     @{N='duplicate provider';T="model:`n  provider: openai-codex`n  provider: openai-codex`n";P='openai-codex';W=$false},
     @{N='duplicate across col0 comment';T="model:`n  provider: openai-codex`n# comment does not terminate model`n  provider: anthropic`n";P='openai-codex';W=$false},
     @{N='duplicate model';T="model:`n  provider: openai-codex`nmodel:`n  provider: openai-codex`n";P='openai-codex';W=$false},
