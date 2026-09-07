@@ -1,5 +1,7 @@
 # EA_LabTemplate — dropdown-mode EA chassis
 
+> **Product intent:** read `PRODUCT_CONCEPT.md` + repo-root `VISION.md` before changing Template semantics. This README is a usage entrypoint, not the owner of product intent; `DESIGN_V2.md` describes implementation architecture and `PROJECT_STATE.md` owns current status.
+
 > ⚠️ **DOC STALE-STAMP 2026-07-18:** ข้อความ "tester-only / Recovery-Hedge stub / ยังไม่ demo-live" ด้านล่าง = สถานะเก่า. ปัจจุบัน V2 มี Recovery/Hedge/Stack ใช้จริง + demo bundles staged (`_vps_deploy/`). อ่านสถานะจริงจาก PROJECT_STATE.md · การแก้เนื้อหาเต็มรอ ORDER-130 follow-up.
 
 Standalone MQL5 EA สำหรับ EA_LAB funnel. เสียบ entry หลายแบบเข้า chassis เดียว

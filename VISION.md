@@ -39,6 +39,9 @@
         = EA หนึ่งตัวเข้าพอร์ต
 ```
 
+รายละเอียด Product Intent / module semantics / anti-drift ของแม่พิมพ์อยู่ที่ `ea_template/PRODUCT_CONCEPT.md`.
+`VISION.md` owns ภาพใหญ่; `PRODUCT_CONCEPT.md` owns รายละเอียดความหมายของ EA Template. ถ้า code/design ปัจจุบันขัดกับสองไฟล์นี้ ห้ามนิยาม vision ใหม่ให้เข้ากับ code แบบเงียบๆ — ให้ระบุ `DRIFT` และยก semantic decision กลับหา Owner/Control Tower.
+
 ## บทบาทของแต่ละชั้น (ตกลงกัน 2026-07-03 — supersede การ freeze เดิม)
 
 | ชั้น | บทบาทตามภาพ | ที่อยู่ |

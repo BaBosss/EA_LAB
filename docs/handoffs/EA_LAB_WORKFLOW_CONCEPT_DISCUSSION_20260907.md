@@ -1,6 +1,7 @@
 # EA_LAB Workflow Concept Discussion Snapshot — 2026-09-07
 
 Status: `DISCUSSION_SNAPSHOT / NON_AUTHORITATIVE / DO_NOT_USE_AS_POLICY`
+Consolidated detailed EA Template product-intent candidate: `ea_template/PRODUCT_CONCEPT.md` on this branch. Use that document for the merged Entry/Position/MM/Recovery/Hedge/News/Spread concept; keep this file as discussion history only.
 Base ref when captured: `8eb953d36f8e92b20251e50dafab90c6e5d7f126`
 Purpose: preserve the owner/assistant workflow concept discussed before repository-hygiene and Template-UX changes so the concept can be revisited after those changes.
 

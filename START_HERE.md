@@ -12,10 +12,11 @@ Purpose: deterministic startup router for every new EA_LAB Control Tower or work
 2. Record the exact canonical SHA you are using.
 3. Read this file from that exact ref.
 4. Read `PROJECT_STATE.md` for current status, accepted decisions, blockers, and plan.
-5. Read `AGENTS.md` before claiming or dispatching work.
-6. Read `AGENT_TASKBOARD.md` and the relevant `taskboards/active/*` owner for current queue state.
-7. Inspect Lane Registry before creating a writer/runtime lane: `scripts/lane_registry.ps1` + `D:\EA_LAB_CONTROL\lanes\registry-v1`.
-8. Use an isolated clean worktree/explicit ref for canonical bytes. Never treat a dirty primary worktree/index as canonical.
+5. Read `VISION.md` for the owner's factory/product north star; EA Template is a primary product and this short file is mandatory boot context.
+6. Read `AGENTS.md` before claiming or dispatching work.
+7. Read `AGENT_TASKBOARD.md` and the relevant `taskboards/active/*` owner for current queue state.
+8. Inspect Lane Registry before creating a writer/runtime lane: `scripts/lane_registry.ps1` + `D:\EA_LAB_CONTROL\lanes\registry-v1`.
+9. Use an isolated clean worktree/explicit ref for canonical bytes. Never treat a dirty primary worktree/index as canonical.
 
 If a handoff, Operating Context, or chat says a different SHA/status than pushed `origin/master`, re-anchor to Git first. Preserve the older artifact as history; do not silently promote it over canonical state.
 
@@ -36,6 +37,12 @@ A decision made in chat is transient until it is migrated into its canonical own
 - Roles, permissions, hard stops, review/preservation rules: `AGENTS.md`
 - Queue/intermediate task state: `AGENT_TASKBOARD.md` + `taskboards/active/*`
 - Lane claims, one-writer/runtime ownership: `scripts/lane_registry.ps1`
+
+### EA Template / product concept
+- Project/factory north-star intent: `VISION.md`.
+- Detailed EA Template product intent + anti-drift semantics: `ea_template/PRODUCT_CONCEPT.md`.
+- Human usage entrypoint: `ea_template/README.md`; implementation architecture: `ea_template/DESIGN_V2.md`.
+- Before changing Template/core/entry/MM/stack/recovery/hedge/exit/filter semantics, read `VISION.md` + `ea_template/PRODUCT_CONCEPT.md` first. If implementation conflicts, classify `DRIFT`; do not silently redefine product intent to match current code.
 
 ### EA research / hypothesis / verdict
 - Research method and evidence discipline: `docs/research/EA_RND_PROTOCOL.md`
