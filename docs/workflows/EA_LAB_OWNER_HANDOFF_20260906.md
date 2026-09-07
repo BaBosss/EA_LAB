@@ -16,7 +16,7 @@
 
 ## ขอบเขตที่ยังไม่ผ่าน
 
-งานนี้ยังไม่พิสูจน์ EA end-to-end: ไม่มี MT5/backtest/optimization, ไม่เปลี่ยน MQL/strategy/risk/default, ไม่ attach/deploy และไม่เพิ่ม DEMO/LIVE authority. Profile/Universe patch แก้ contract/selector แต่ยังไม่เลือกสมาชิก universe, symbol mapping, lot หรือ config สำหรับเทรดจริง
+มี non-trading synthetic populated-template proof แล้ว: schema → TestUniverse/LogicalSymbol → exact BROKER_LANE profile → preset compiler → deterministic set/manifest ผ่านโดยไม่สร้าง production `factory/universe.jsonl`. แต่ยังไม่ใช่ EA end-to-end: ไม่มี MT5/backtest/optimization, ไม่เปลี่ยน MQL/strategy/risk/default, ไม่ attach/deploy และยังไม่เลือกสมาชิก universe, symbol mapping, lot หรือ config สำหรับเทรดจริง
 
 Gemini manual-IDE selector **ผ่านเฉพาะ scoped static review ที่บันทึกไว้แล้ว** ไม่ควรเขียนว่า “Gemini ยังไม่เคย qualified” อีก แต่ persistent/unattended provider route, billing/authority path และ provider M2 ทั้งก้อนยังไม่ครบ. Codex read-only smoke ไม่พิสูจน์ write route, reviewer competence หรือ server attestation
 
@@ -40,7 +40,7 @@ ChatGPT บนมือถืออ่าน pushed GitHub ได้เมื่
 ## Dependency ถัดไปตามลำดับ
 
 1. ปิด provider transition: bounded validator + real route ที่พิสูจน์ตาม scope โดยไม่ขยายเป็น unattended authority เอง
-2. ทำ **หนึ่ง non-trading populated template config** ให้ผ่าน schema → registry/profile/universe selector → generated output แบบ end-to-end โดยไม่ต่อ MT5/lot/order
+2. **DONE as synthetic non-trading proof:** schema → TestUniverse/LogicalSymbol → exact profile selector → deterministic generated output; production universe/mapping remains separately gated and no MT5/lot/order was added
 3. ปิด Second Brain semantics ที่เจ้าของต้องเลือก แล้วสร้าง pinned consumer contract ก่อน execution ใด ๆ
 4. Qualify historical news dataset/provenance + broker/DST clock และ replay แบบ available-at/revision จริง
 5. รวม producer/freshness/delivery contract ให้เสร็จ แล้วค่อยรับ existing PWA กลับมาทดสอบและ deploy ตาม contract ใหม่

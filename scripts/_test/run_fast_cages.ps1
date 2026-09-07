@@ -777,7 +777,9 @@ $SUITE_GUARDS = @{
                                           # suite's FIRST run, which is the point:
                                           # a brand-new suite cannot forget them.
                                           '_triage/factory_os/evidence.py',
-                                          '_triage/factory_os/registry.py')
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/schemas.json',
+                                          'scripts/_test/fixtures/populated_template_config.json')
     # ORDER-1020 (S7). The state table reads BOTH stores, the build's input surface, and every
     # module the generator derives a row from -- P5 regenerates and compares, so an edit to any of
     # them changes what this cage proves.

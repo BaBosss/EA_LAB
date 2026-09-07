@@ -27,12 +27,16 @@ import json
 import os
 import sys
 import tempfile
+import hashlib
+import shutil
+import subprocess
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
 
 import preset as P                                                          # noqa: E402
+import registry as R                                                        # noqa: E402
 from evidence import EvidenceSource                                         # noqa: E402
 
 # ---------------------------------------------------------------------------------------------
@@ -667,6 +671,158 @@ def p10_specificity(mod):
     return None
 
 
+POPULATED_FIXTURE_REL = 'scripts/_test/fixtures/populated_template_config.json'
+SCHEMA_REL = '_triage/factory_os/schemas.json'
+
+
+def _schema_accepts(instance, label):
+    """Validate one populated-proof entity through the canonical AJV root schema."""
+    ajv = shutil.which('ajv') or shutil.which('ajv.cmd')
+    if not ajv:
+        return 'AJV is unavailable; schema validation did not run for %s' % label
+    fd, path = tempfile.mkstemp(prefix='populated_%s_' % label.lower(), suffix='.json')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as fh:
+            json.dump(instance, fh, sort_keys=True)
+        proc = subprocess.run(
+            [ajv, 'validate', '-s', os.path.join(ROOT, SCHEMA_REL), '-d', path,
+             '--spec=draft2020', '--strict=false', '--errors=line'],
+            capture_output=True, text=True, shell=True)
+        if proc.returncode != 0:
+            return '%s schema validation failed (exit %d): %s' % (
+                label, proc.returncode, ((proc.stdout or '') + (proc.stderr or '')).strip()[:300])
+        return None
+    finally:
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+
+def _select_universe(rows, universe_version, logical, timeframe, lane):
+    """Exact synthetic selector: one universe, one logical symbol, one lane mapping or refuse."""
+    universes = [rec for _n, rec in rows
+                 if rec.get('entity') == 'TestUniverse'
+                 and rec.get('universe_version') == universe_version]
+    if len(universes) != 1:
+        raise AssertionError('expected exactly one TestUniverse %s; found %d'
+                             % (universe_version, len(universes)))
+    universe = universes[0]
+    if logical not in universe.get('symbols', []):
+        raise AssertionError('logical symbol %s is not a member of universe %s'
+                             % (logical, universe_version))
+    if timeframe not in universe.get('timeframes', []):
+        raise AssertionError('timeframe %s is not a member of universe %s'
+                             % (timeframe, universe_version))
+    logicals = [rec for _n, rec in rows
+                if rec.get('entity') == 'LogicalSymbol' and rec.get('logical') == logical]
+    if len(logicals) != 1:
+        raise AssertionError('expected exactly one LogicalSymbol %s; found %d'
+                             % (logical, len(logicals)))
+    mapping = logicals[0].get('broker_map') or {}
+    if lane not in mapping or not isinstance(mapping[lane], str) or not mapping[lane]:
+        raise AssertionError('LogicalSymbol %s has no non-empty mapping for lane %s'
+                             % (logical, lane))
+    return universe, logicals[0], mapping[lane]
+
+
+def populated_e2e_proof(mod):
+    """Synthetic-only schema -> registry/selectors -> preset -> deterministic output proof."""
+    fixture_path = os.path.join(ROOT, POPULATED_FIXTURE_REL)
+    with io.open(fixture_path, encoding='utf-8') as fh:
+        fx = json.load(fh)
+    if fx.get('authority') != 'NON_TRADING_FIXTURE_ONLY':
+        return 'fixture authority is not NON_TRADING_FIXTURE_ONLY'
+    if fx.get('build_tag') != 'LAB_ENTRY_11':
+        return 'fixture build_tag moved from the synthetic LAB_ENTRY_11 surface'
+
+    profile = fx['profile']
+    value_bytes = json.dumps(profile['values'], sort_keys=True, separators=(',', ':'),
+                             ensure_ascii=False).encode('utf-8')
+    if hashlib.sha256(value_bytes).hexdigest() != profile['content_hash']:
+        return 'profile content_hash does not bind its exact values object'
+    for label, entity in (('TestUniverse', fx['universe']),
+                          ('LogicalSymbol', fx['logical_symbol']),
+                          ('InstrumentProfile', profile)):
+        why = _schema_accepts(entity, label)
+        if why:
+            return why
+
+    tmp = tempfile.mkdtemp(prefix='populated_e2e_')
+    try:
+        factory = os.path.join(tmp, 'factory')
+        os.makedirs(factory)
+        with io.open(os.path.join(factory, 'universe.jsonl'), 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(json.dumps(fx['universe'], sort_keys=True) + '\n')
+            fh.write(json.dumps(fx['logical_symbol'], sort_keys=True) + '\n')
+        with io.open(os.path.join(factory, 'instrument_profiles.jsonl'), 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(json.dumps(profile, sort_keys=True) + '\n')
+        _meta, universe_rows = R.read_store('factory/universe.jsonl', root=tmp)
+        _u, _logical, broker = _select_universe(
+            universe_rows, fx['universe']['universe_version'], profile['symbol'],
+            fx['job']['timeframe'], profile['lane'])
+        if broker != fx['expected_broker_symbol']:
+            return 'exact universe selector returned unexpected broker mapping %r' % broker
+        try:
+            _select_universe(universe_rows + [universe_rows[1]], fx['universe']['universe_version'],
+                             profile['symbol'], fx['job']['timeframe'], profile['lane'])
+        except AssertionError as exc:
+            if 'exactly one LogicalSymbol' not in str(exc):
+                return 'duplicate LogicalSymbol refused for the wrong reason: %s' % exc
+        else:
+            return 'duplicate LogicalSymbol was silently accepted'
+        try:
+            _select_universe(universe_rows, fx['universe']['universe_version'], profile['symbol'],
+                             'M15', profile['lane'])
+        except AssertionError as exc:
+            if 'timeframe M15 is not a member' not in str(exc):
+                return 'out-of-universe timeframe refused for the wrong reason: %s' % exc
+        else:
+            return 'out-of-universe timeframe was silently accepted'
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    profile_text = '{"_comment":"synthetic populated template proof only"}\n' + \
+                   json.dumps(profile, sort_keys=True) + '\n'
+    src = fake(**{mod.INSTRUMENT_PROFILES_REL: profile_text})
+    selected = mod.load_instrument_profile(src, profile['symbol'], lane=profile['lane'])
+    if selected.get('profile_id') != profile['profile_id']:
+        return 'profile selector returned the wrong profile'
+    try:
+        mod.load_instrument_profile(src, profile['symbol'], lane='missing-lane')
+    except mod.PresetRefusal as exc:
+        if 'no InstrumentProfile row' not in str(exc):
+            return 'missing profile lane refused for the wrong reason: %s' % exc
+    else:
+        return 'missing profile lane was silently accepted'
+
+    surface = mod.load_surface(src, fx['build_tag'])
+    defaults = [(name, value) for name, value in fx['fixed_defaults'].items()]
+    instrument = list(selected['values'].items())
+    preset = mod.compile_preset(
+        surface, [mod.Layer('defaults', defaults), mod.Layer('instrument_profile', instrument)],
+        'usd', unit_classes=mod.load_unit_classes(src), enums=mod.load_enums(src),
+        locked_constants={})
+    set_a = mod.render_set(preset, header_note=fx['proof_id'])
+    set_b = mod.render_set(preset, header_note=fx['proof_id'])
+    manifest_a = mod.render_manifest(preset, fx['job'], generated_at='2000-01-01T00:00:00Z')
+    manifest_b = mod.render_manifest(preset, fx['job'], generated_at='2000-01-01T00:00:00Z')
+    if set_a != set_b or manifest_a != manifest_b:
+        return 'generated set/manifest bytes are not deterministic'
+    manifest = json.loads(manifest_a)
+    if manifest.get('job', {}).get('symbol') != profile['symbol'] or manifest.get('job', {}).get('lane') != profile['lane']:
+        return 'generated manifest lost the selected symbol/lane identity'
+    set_hash = hashlib.sha256(set_a.encode('utf-8')).hexdigest()
+    manifest_hash = hashlib.sha256(manifest_a.encode('utf-8')).hexdigest()
+    expected = fx.get('expected_output_sha256') or {}
+    if expected:
+        if expected.get('set') != set_hash or expected.get('manifest') != manifest_hash:
+            return 'generated output hash drift: set=%s manifest=%s' % (set_hash, manifest_hash)
+    print('  [OK ] E2E populated synthetic config set_sha256=%s manifest_sha256=%s'
+          % (set_hash, manifest_hash))
+    return None
+
+
 CASES = (
     # The P1 mutant models the defect that actually happens: silently completing the set from
     # the declared defaults instead of refusing. `if False and missing:` would only make the
@@ -739,6 +895,10 @@ def load_mutant(old, new):
 def main(argv):
     os.chdir(ROOT)
     bad = 0
+    e2e = populated_e2e_proof(P)
+    if e2e is not None:
+        print('  [BAD] E2E populated synthetic config -> %s' % e2e)
+        bad += 1
     print('=== ORDER-700 preset compiler: %d criteria, each with an attack and a specificity '
           'half ===' % len(CASES))
     for cid, label, attack, spec, _mut in CASES:

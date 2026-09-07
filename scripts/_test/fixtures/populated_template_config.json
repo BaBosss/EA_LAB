@@ -1,0 +1,63 @@
+{
+    "authority":  "NON_TRADING_FIXTURE_ONLY",
+    "build_tag":  "LAB_ENTRY_11",
+    "expected_broker_symbol":  "SYNTH_EURUSD_NOT_TRADABLE",
+    "fixed_defaults":  {
+                           "_4_TpUsd":  {
+                                            "unit":  "usd",
+                                            "value":  50
+                                        }
+                       },
+    "job":  {
+                "lane":  "1",
+                "model":  "FIXTURE_ONLY",
+                "symbol":  "EURUSD_FIXTURE",
+                "timeframe":  "H1",
+                "window_from":  "2000.01.01",
+                "window_to":  "2000.01.02"
+            },
+    "logical_symbol":  {
+                           "asset_class":  "FX_MAJOR",
+                           "broker_map":  {
+                                              "1":  "SYNTH_EURUSD_NOT_TRADABLE"
+                                          },
+                           "entity":  "LogicalSymbol",
+                           "logical":  "EURUSD_FIXTURE",
+                           "swap_mode":  "UNKNOWN"
+                       },
+    "profile":  {
+                    "account_unit":  "USD",
+                    "content_hash":  "2ba0acafde0bf957d3730e72cffb18c1a4f00a601851cc61d02ff7be6736f903",
+                    "entity":  "InstrumentProfile",
+                    "lane":  "1",
+                    "layer":  "BROKER_LANE",
+                    "profile_id":  "FIXTURE_EURUSD_L1",
+                    "profile_version":  1,
+                    "symbol":  "EURUSD_FIXTURE",
+                    "values":  {
+                                   "DryRun":  true,
+                                   "ExitMode":  "EXIT_FIXED_TP",
+                                   "StackMode":  22,
+                                   "_9_Bars":  55,
+                                   "_9_Step":  250,
+                                   "_MG_File":  "fixture_only.csv"
+                               }
+                },
+    "proof_id":  "SYSTEM-CONVERGENCE-POPULATED-TEMPLATE-E2E-V1",
+    "universe":  {
+                     "created_commit":  "fcb97bd2a7b104c5d2e8fdffdd826aabe28b6f2a",
+                     "entity":  "TestUniverse",
+                     "kind":  "PILOT",
+                     "symbols":  [
+                                     "EURUSD_FIXTURE"
+                                 ],
+                     "timeframes":  [
+                                        "H1"
+                                    ],
+                     "universe_version":  "v1"
+                 },
+    "expected_output_sha256":  {
+                                   "set":  "efd1cf03749334879e5fa8dc9eb706de19dc39bb6d16430284b223afbb7b4a81",
+                                   "manifest":  "4c24c18d0f2d34a9c05463558fc0d52425b4f28544149e9153acdd539153965a"
+                               }
+}
