@@ -79,6 +79,7 @@ run_monitor_snapshot_schema_repair_tests.ps1|FAST|In the fast tier; guards scrip
 run_registry_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/evidence.py, _triage/factory_os/run_guard_shape_lint.py, _triage/factory_os/gen_coverage.py (+18 more)
 run_guard_trigger_tests.ps1|FAST|In the fast tier; guards scripts/gen_fast_tier_pathspec.ps1, .githooks/fast_tier_pathspec, scripts/_test/run_fast_cages.ps1
 run_preset_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/preset.py, _triage/factory_os/run_preset_tests.py, ea_template/core/Inputs.mqh (+4 more)
+run_new_template_entry_tests.ps1|FAST|Ziplor ZL-EA-067 scaffold prerequisite; outer CLI pass-through + transaction/enum/refusal cage; measured 1.317/1.289/1.293s, median 1.293s.
 run_setfile_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/setfile.py, _triage/factory_os/run_setfile_tests.py, _triage/factory_os/preset.py (+7 more)
 run_activation_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/activation.py, _triage/factory_os/architecture.py, _triage/factory_os/capability.py (+6 more)
 run_param_surface_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_param_surface.py, _triage/factory_os/run_param_surface_tests.py, _triage/factory_os/gen_registry_rows.py (+15 more)
@@ -110,7 +111,6 @@ run_order105_negative_tests.ps1|SLOW|Measured 521s (ORDER-105 Contract D concurr
 # NOT_WIRED -- deliberately unwired, disposition on record. PRESERVED AS-IS by D-F5; this repair
 # does not re-wire any of them and does not raise the budget.
 # ---------------------------------------------------------------------------------------
-run_new_template_entry_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV sync: MEASURED_NOT_WIRED, still parked, full tier already above its pinned budget.
 run_mt5_optimize_launcher_hardening_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV Lane A (1cc31d97, 33/33 PASS); Lane D measurement closed MEASURED_NOT_WIRED, no wiring made.
 run_legacy_quarantine_tests.ps1|NOT_WIRED|PROJECT_STATE 2026-08-19 PREDEV Lane C (aaee37ea, 12/12 PASS); same MEASURED_NOT_WIRED disposition, no budget increase.
 run_post_broad_diagnostic_pack_tests.ps1|NOT_WIRED|Platform post-broad diagnostic focused suite measured 0.55s / 7 tests PASS on current canonical; intentionally not wired by this testing-doctrine repair, so no fast/full-tier budget or scope change.

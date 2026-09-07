@@ -428,6 +428,9 @@ $FAST_SUITES = @(
     # mutation probes and NONE of it ran on any commit -- fully tested and completely
     # unguarded at once, which is the same hole evidence.py was in.
     'run_preset_tests.ps1',
+    # Ziplor canary prerequisite: outer scaffold CLI + transaction/enum/refusal cage.
+    # Measured 1.317 / 1.289 / 1.293s standalone after CLI coverage; median 1.293s.
+    'run_new_template_entry_tests.ps1',
     # ORDER-1020 (S7), added on a MEASUREMENT like the one above it: 0.4s in the hook, almost all of which
     # is parsing the real Inputs.mqh once to build the surface its cases attack. It guards the
     # owner-ratified old-.set policy, which until now existed only as a decision in a design
@@ -780,6 +783,8 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/registry.py',
                                           '_triage/factory_os/schemas.json',
                                           'scripts/_test/fixtures/populated_template_config.json')
+    'run_new_template_entry_tests.ps1' = @('scripts/lib/new_template_entry.ps1',
+                                           'scripts/new_template_entry.ps1')
     # ORDER-1020 (S7). The state table reads BOTH stores, the build's input surface, and every
     # module the generator derives a row from -- P5 regenerates and compares, so an edit to any of
     # them changes what this cage proves.

@@ -119,6 +119,7 @@ The following are accepted/canonical and should not be generically re-audited wi
 - Remote Desktop Commander persistence / zero-touch reboot path.
 - POST-OPUS M0/M1 trust repairs.
 - VPS DEMO preparation/hardening batch and PREDEV generic pre-development hardening.
+- Ziplor ZL-EA-067 scaffold prerequisite: the outer `scripts/new_template_entry.ps1` CLI now requires and forwards explicit `StackMode` / `StackConfirm`; the existing scaffold cage is wired into FAST after fresh 1.317 / 1.289 / 1.293s standalone measurements (median 1.293s). The historical 2026-08-19 PREDEV `MEASURED_NOT_WIRED` disposition is superseded for this suite only; the other PREDEV suites remain parked. This is tooling only: no LAB_ENTRY allocation, strategy code, strategy/risk default, MT5, deployment or trading authority is created.
 - Long Job Runner durable detached execution support.
 - Hermes H1 Golden Replay qualification: **ACCEPTED / PASS** on the exact safe-reader path. Final mechanical check was `OVERALL=PASS`; no new MT5/tester run occurred, no repository mutation occurred, HOLDOUT `2026H1` remained UNSPENT, and Hermes gained no strategy/risk/runtime/deployment authority. The accepted execution lineage is rooted in canonical `f1dd0e9b`.
 - Hermes H2 small-pilot qualification: **ACCEPTED / PASS** after independent exact-head review at `d5dbd31a`; six unique authorized runs were admissible, the one Control-Tower duplicate dispatch was non-evidentiary/non-disqualifying, and downstream status is `H3_READY`.

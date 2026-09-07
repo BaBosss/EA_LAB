@@ -132,6 +132,24 @@ try {
     Check 'Inputs.mqh preserves the pre-existing entry 18 StackMode block' ($inputsAfter.Contains('StackMode    = STACK_GRID_AGAINST'))
     Check 'Inputs.mqh fallback #ifndef/#endif chain stays balanced (9 ifndef, 9 endif around the fallback #define)' ((([regex]::Matches($inputsAfter, '(?m)^#ifndef LAB_ENTRY_\d+\s*$')).Count -eq 2) -and (([regex]::Matches($inputsAfter, '(?m)^#endif\s*$')).Count -ge 2))
 
+    # --- CLI wrapper contract: outer script must expose and forward the two mandatory stack selectors ---
+    $cliRoot = Join-Path ([IO.Path]::GetTempPath()) ('new_template_entry_cli_' + [guid]::NewGuid().ToString('N'))
+    $cliErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        New-Item -ItemType Directory -Path $cliRoot -Force | Out-Null
+        New-FixtureTemplateRoot -Root $cliRoot
+        $cli = Join-Path $RepoRoot 'scripts\new_template_entry.ps1'
+        $cliOut = @(& powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $cli -EntryNumber 19 -Name 'CliFoo' -TemplateRoot $cliRoot -StackMode 'STACK_SINGLE' -StackConfirm 'CONF_DISTANCE' 2>&1)
+        $cliExit = $LASTEXITCODE
+        Check 'outer CLI forwards mandatory StackMode/StackConfirm' ($cliExit -eq 0 -and (Test-Path -LiteralPath (Join-Path $cliRoot 'Boss_19_CliFoo.mq5'))) (($cliOut -join ' | '))
+        $missingOut = @(& powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $cli -EntryNumber 20 -Name 'CliMissing' -TemplateRoot $cliRoot 2>&1)
+        $missingExit = $LASTEXITCODE
+        Check 'outer CLI refuses omitted stack selectors' ($missingExit -ne 0 -and -not (Test-Path -LiteralPath (Join-Path $cliRoot 'Boss_20_CliMissing.mq5'))) (($missingOut -join ' | '))
+    } finally {
+        $ErrorActionPreference = $cliErrorAction
+        Remove-Item -LiteralPath $cliRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
     # --- negative: unknown StackMode / StackConfirm member is refused, not guessed ---
     $badStackMode = New-TemplateEntryScaffold -EntryNumber 22 -Name 'Qux2' -TemplateRoot $tmp -StackMode 'STACK_NOT_REAL' -StackConfirm 'CONF_DISTANCE'
     Check 'unknown StackMode enum member is refused' ((-not $badStackMode.Applied) -and $badStackMode.Reason.StartsWith('INVALID_STACK_MODE')) $badStackMode.Reason

@@ -163,6 +163,7 @@ scripts/lib/deployment_status.ps1
 scripts/lib/evidence.ps1
 scripts/lib/magic_guard.ps1
 scripts/lib/monitor_coverage.ps1
+scripts/lib/new_template_entry.ps1
 scripts/lib/report_freshness.ps1
 scripts/lib/runtime_identity.ps1
 scripts/lib/setfile_surface.ps1
@@ -177,6 +178,7 @@ scripts/mris/mris_macro_feeder.ps1
 scripts/mris/mris_web_feeder.ps1
 scripts/mt5_optimize.ps1
 scripts/mt5_run.ps1
+scripts/new_template_entry.ps1
 scripts/optimize_guard.ps1
 scripts/param_registry_check.ps1
 scripts/parity_run.ps1

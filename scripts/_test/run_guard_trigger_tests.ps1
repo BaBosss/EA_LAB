@@ -876,10 +876,11 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
                     $byTier['NOT_WIRED'], $byTier['UNMEASURED'])
         $exempt = $byTier['SLOW'] + $byTier['NOT_WIRED'] + $byTier['UNMEASURED']
         Write-Host ("  [scope] explicitly EXEMPT-with-reason (not wired, not costing budget): {0}" -f $exempt)
-        # The accepted PREDEV disposition is named, so a future lane that quietly re-wires it has
-        # to change this assertion too. PROJECT_STATE 2026-08-19: MEASURED_NOT_WIRED, still parked.
-        foreach ($predev in @('run_new_template_entry_tests.ps1',
-                              'run_mt5_optimize_launcher_hardening_tests.ps1',
+        # The remaining accepted PREDEV dispositions are named, so a future lane that quietly
+        # re-wires one must change this assertion too. PROJECT_STATE 2026-08-19 remains binding
+        # for these two. run_new_template_entry_tests.ps1 was explicitly reclassified by the
+        # owner-directed ZL-EA-067 canary prerequisite on 2026-09-07 after fresh timing/consumer proof.
+        foreach ($predev in @('run_mt5_optimize_launcher_hardening_tests.ps1',
                               'run_legacy_quarantine_tests.ps1')) {
             if (-not $rows.ContainsKey($predev)) {
                 Bad "PART 8 the accepted PREDEV suite '$predev' has no registry row"
