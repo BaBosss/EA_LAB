@@ -188,4 +188,6 @@ scripts/scheduler_run.ps1
 scripts/status_template.html
 scripts/use_python.ps1
 taskboards/active/*
+tools/hermes_ea_lab_pilot/profile_manifest.json
+tools/hermes_ea_lab_pilot/scripts/validate_profiles.ps1
 VISION.md

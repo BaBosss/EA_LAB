@@ -583,6 +583,8 @@ $FAST_SUITES = @(
     'run_selection_tests.ps1',
     'run_work_receipts_tests.ps1',
     'run_testing_doctrine_tests.ps1',
+    # MS-WORKFLOW-03 M2: fail-closed Hermes profile provider parser (~0.4s focused).
+    'run_provider_transition_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
     # the restore, so it is last in the list: nothing else should be mid-flight around it.
@@ -718,6 +720,8 @@ $SUITE_GUARDS = @{
                                           'docs/skills_mirror/skills/backtest-optimize-rigor/SKILL.md',
                                           'docs/skills_mirror/skills/signal-scanner/SKILL.md',
                                           'docs/skills_mirror/skills/locked-ea-analyzer/SKILL.md')
+    'run_provider_transition_tests.ps1' = @('tools/hermes_ea_lab_pilot/scripts/validate_profiles.ps1',
+                                              'tools/hermes_ea_lab_pilot/profile_manifest.json')
     'run_work_receipts_tests.ps1'     = @('_triage/factory_os/check_work_receipts.py',
                                           '_triage/factory_os/run_work_receipts_tests.py',
                                           'factory/work_receipts.jsonl',

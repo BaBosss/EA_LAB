@@ -2,6 +2,52 @@ param(
   [Parameter(Mandatory=$true)][string]$SafeWorkspace,
   [string]$HermesExe = "$env:LOCALAPPDATA\hermes\hermes-agent\bin\hermes.exe"
 )
+function Test-HermesProfileProvider {
+  [OutputType([bool])]
+  param(
+    [AllowEmptyString()][string]$ConfigText,
+    [AllowEmptyString()][string]$ExpectedProvider
+  )
+  if ([string]::IsNullOrWhiteSpace($ExpectedProvider)) { return $false }
+  $lines = @(($ConfigText -replace "`r`n?", "`n") -split "`n")
+  $modelCount = 0
+  $modelStart = -1
+  $modelShapeValid = $true
+  for ($i = 0; $i -lt $lines.Count; $i++) {
+    $line = $lines[$i]
+    if ($line -match '^[ \t]*(?:#.*)?$') { continue }
+    if ($line -match '^[ \t]') { continue }
+    $m = [regex]::Match($line,'^(?<key>model|''model''|"model")(?<gap>[ \t]*):(?<rest>.*)$')
+    if (-not $m.Success) { continue }
+    $modelCount++
+    if ($line -cmatch '^model:[ ]*(?:#.*)?$') { if ($modelStart -lt 0) { $modelStart = $i } }
+    else { $modelShapeValid = $false }
+  }
+  if ($modelCount -ne 1 -or $modelStart -lt 0 -or -not $modelShapeValid) { return $false }
+  $seen = @{}
+  $providerCount = 0
+  $provider = $null
+  $fieldPattern = '^  (?<key>[A-Za-z_][A-Za-z0-9_-]*):[ ]*(?:"(?<double>[^"#]*)"|''(?<single>[^''#]*)''|(?<plain>[A-Za-z0-9_./+:-]+))[ ]*(?:#.*)?$'
+  for ($i = $modelStart + 1; $i -lt $lines.Count; $i++) {
+    $line = $lines[$i]
+    if ($line -match '^[ \t]*(?:#.*)?$') { continue }
+    if ($line -match '^[^ \t]') { break }
+    if ($line.StartsWith("`t")) { return $false }
+    $fm = [regex]::Match($line,$fieldPattern)
+    if (-not $fm.Success) { return $false }
+    $key = $fm.Groups['key'].Value
+    if ($seen.ContainsKey($key)) { return $false }
+    $seen[$key] = $true
+    if ($key -ceq 'provider') {
+      $providerCount++
+      if ($fm.Groups['double'].Success) { $provider = $fm.Groups['double'].Value }
+      elseif ($fm.Groups['single'].Success) { $provider = $fm.Groups['single'].Value }
+      else { $provider = $fm.Groups['plain'].Value }
+    }
+  }
+  return [bool]($providerCount -eq 1 -and [string]::Equals($provider,$ExpectedProvider,[StringComparison]::Ordinal))
+}
+
 $ErrorActionPreference = 'Stop'
 $moduleRoot = Split-Path -Parent $PSScriptRoot
 $manifest = Get-Content -Raw (Join-Path $moduleRoot 'profile_manifest.json') | ConvertFrom-Json
@@ -40,7 +86,7 @@ foreach ($p in $manifest.profiles) {
   if (-not (Test-Path $marker)) { $failures.Add("$($p.name): bundled-skills opt-out missing") }
   $raw = Get-Content -Raw $cfg
   if ($raw -notmatch [regex]::Escape($manifest.default_model)) { $failures.Add("$($p.name): model pin mismatch") }
-  if ($raw -notmatch 'provider:\s+anthropic') { $failures.Add("$($p.name): provider mismatch") }
+  if (-not (Test-HermesProfileProvider -ConfigText $raw -ExpectedProvider ([string]$manifest.default_provider))) { $failures.Add("$($p.name): provider mismatch") }
   if ($raw -notmatch '(?m)^\s+cwd:\s+\.\s*$') { $failures.Add("$($p.name): terminal.cwd must be task-relative dot") }
   if ($raw -notmatch 'hard_stop_enabled:\s+true') { $failures.Add("$($p.name): loop hard-stop disabled") }
   $template = Join-Path $moduleRoot $p.soul

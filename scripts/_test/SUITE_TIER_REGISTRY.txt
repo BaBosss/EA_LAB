@@ -93,6 +93,7 @@ run_s13_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_pilot_a
 run_selection_tests.ps1|FAST|In the fast tier; guards scripts/pilot_probe_select.py, scripts/_test/run_selection_tests.py, factory/coverage.jsonl (+4 more)
 run_work_receipts_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/check_work_receipts.py, _triage/factory_os/run_work_receipts_tests.py, factory/work_receipts.jsonl (+2 more)
 run_testing_doctrine_tests.ps1|FAST|In the fast tier; guards owner-ratified M1 minimum, Model2 diagnostic-only, universal M4 pre-Candidate doctrine and current live-skill mirror owners.
+run_provider_transition_tests.ps1|FAST|MS-WORKFLOW-03 M2 fail-closed Hermes profile-provider validator; focused suite measured ~0.4s and registered in the fast tier.
 run_front_guard_evidence_tests.ps1|FAST|In the fast tier; guards scripts/check_state.ps1, scripts/check_order_collision.ps1, scripts/check_handoff_contract.ps1 (+6 more)
 
 # ---------------------------------------------------------------------------------------
