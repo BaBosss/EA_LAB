@@ -2,13 +2,16 @@
 
 const REPORT_INDEX_URL = "./report_index.json";
 const FIXTURE_INDEX_URL = "./fixture/report_index.json";
-const MISSING = "UNAVAILABLE";
+const MISSING = "UNKNOWN";
+const KNOWN_DATA_STATES = new Set(["CURRENT", "STALE", "DEGRADED", "MISSING", "UNKNOWN", "UNAVAILABLE"]);
 let reportIndex;
 let usedCachedData = false;
 
 const app = document.querySelector("#app");
 const projectMeta = document.querySelector("#project-meta");
 const dataWarning = document.querySelector("#data-warning");
+const globalStateNode = document.querySelector("#global-state");
+const lastUpdatedNode = document.querySelector("#last-updated");
 
 function valueOf(value, fallback = MISSING) {
   return value === undefined || value === null || value === "" ? fallback : String(value);
@@ -18,6 +21,20 @@ function escapeHtml(value) {
   return valueOf(value).replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
   })[character]);
+}
+
+function stateName(value, fallback = "UNKNOWN") {
+  const state = valueOf(value, fallback).toUpperCase();
+  return /^[A-Z][A-Z0-9_]{0,63}$/.test(state) ? state : fallback;
+}
+
+function stateClass(value) {
+  return `state-${stateName(value).toLowerCase()}`;
+}
+
+function badge(value) {
+  const state = stateName(value);
+  return `<span class="badge ${stateClass(state)}" aria-label="State: ${escapeHtml(state)}">${escapeHtml(state)}</span>`;
 }
 
 function getRecord(id) {
@@ -39,6 +56,32 @@ function safeRelativeHref(href) {
   return normalized;
 }
 
+function validUtcSecond(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value)) return false;
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().replace(".000Z", "Z") === value;
+}
+
+function validateIndex(payload, fixtureMode) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("Invalid report index object");
+  if (fixtureMode) {
+    if (payload.fixture_only !== true) throw new Error("Fixture mode requires fixture-only data");
+    return payload;
+  }
+  if (payload.fixture_only === true) throw new Error("Production view refuses fixture-only data");
+  const project = payload.project;
+  if (!project || typeof project !== "object") throw new Error("Missing project provenance");
+  if (!/^[0-9a-f]{40}$/.test(valueOf(project.canonical_sha, ""))) throw new Error("Invalid canonical SHA");
+  if (project.canonical_short_sha !== project.canonical_sha.slice(0, 12)) throw new Error("Canonical SHA mismatch");
+  if (!validUtcSecond(project.generated_at)) throw new Error("Invalid project timestamp");
+  if (!KNOWN_DATA_STATES.has(stateName(project.data_status))) throw new Error("Invalid project data state");
+  if (!Array.isArray(payload.sources) || payload.sources.some((source) => !source || source.canonical_sha !== project.canonical_sha)) {
+    throw new Error("Canonical source SHA mismatch");
+  }
+  if (!Array.isArray(payload.eas) || !Array.isArray(payload.queue)) throw new Error("Missing report collections");
+  return payload;
+}
+
 function metricValue(value) {
   return valueOf(value, "UNKNOWN");
 }
@@ -52,24 +95,39 @@ function metricCard(label, evidence) {
   return `<article class="metric-card"><h3>${escapeHtml(label)}</h3><dl>${rows.map(([key, value]) => `<div><dt>${key}</dt><dd>${escapeHtml(metricValue(value))}</dd></div>`).join("")}</dl></article>`;
 }
 
-function badge(value) {
-  return `<span class="badge" aria-label="State: ${escapeHtml(valueOf(value))}">${escapeHtml(valueOf(value))}</span>`;
+function globalMonitoringState() {
+  const projectState = stateName(reportIndex.project && reportIndex.project.data_status);
+  const monitoring = reportIndex.monitoring || {};
+  const monitoringState = stateName(monitoring.status, "MISSING");
+  if (!navigator.onLine || usedCachedData || projectState === "STALE") return "STALE";
+  if (["MISSING", "UNAVAILABLE"].includes(monitoringState)) return "MISSING";
+  if (projectState === "DEGRADED" || monitoringState === "DEGRADED" || monitoring.binding_state === "DIFFERENT_REPO_HEAD") return "DEGRADED";
+  if (projectState !== "CURRENT" || monitoringState !== "CURRENT" || monitoring.binding_state !== "MATCHES_CANONICAL_SHA") return "UNKNOWN";
+  return "CURRENT";
 }
 
 function renderWarning() {
-  const status = valueOf(reportIndex.project && reportIndex.project.data_status, "UNKNOWN");
+  const status = stateName(reportIndex.project && reportIndex.project.data_status);
+  const monitoringStatus = stateName(reportIndex.monitoring && reportIndex.monitoring.status, "MISSING");
   const warnings = [];
-  if (reportIndex.fixture_only === true) warnings.push("FIXTURE ONLY — not production SOT");
+  if (reportIndex.fixture_only === true) warnings.push("FIXTURE ONLY - not production SOT");
   if (!navigator.onLine) warnings.push("OFFLINE");
   if (usedCachedData) warnings.push("CACHED DATA");
   if (status === "STALE") warnings.push("STALE DATA");
+  if (["DEGRADED", "MISSING", "UNAVAILABLE", "UNKNOWN"].includes(monitoringStatus)) warnings.push(`MONITORING ${monitoringStatus}`);
   dataWarning.hidden = warnings.length === 0;
   dataWarning.textContent = warnings.join(" · ");
+  const globalState = globalMonitoringState();
+  globalStateNode.textContent = globalState;
+  globalStateNode.className = `state-token ${stateClass(globalState)}`;
 }
 
 function renderProjectMeta() {
   const project = reportIndex.project || {};
-  projectMeta.textContent = `SHA ${valueOf(project.canonical_short_sha, "UNKNOWN")} · ${valueOf(project.generated_at, "UNKNOWN")} · ${valueOf(project.data_status, "UNKNOWN")}`;
+  const monitoring = reportIndex.monitoring || {};
+  const updated = validUtcSecond(monitoring.generated_at_utc) ? monitoring.generated_at_utc : (validUtcSecond(project.generated_at) ? project.generated_at : "UNKNOWN");
+  lastUpdatedNode.textContent = updated;
+  projectMeta.textContent = `Canonical SHA ${valueOf(project.canonical_short_sha, "UNKNOWN")} · ${valueOf(project.freshness, "UNKNOWN")} · READ_ONLY_PRESENTATION`;
   renderWarning();
 }
 
@@ -109,49 +167,127 @@ function recordCard(record) {
   </article>`;
 }
 
+function projectionData() {
+  return reportIndex.safe_projection || { status: "MISSING", accounts: [], findings: [], reason: "NOT_PROVIDED" };
+}
+
+function coverageValue() {
+  const coverage = (reportIndex.monitoring && reportIndex.monitoring.coverage) || {};
+  if (coverage.state !== "AVAILABLE_CURRENT_SNAPSHOT") return { value: "UNKNOWN", detail: "Current coverage evidence unavailable" };
+  return {
+    value: `D ${valueOf(coverage.deal_sensors_fresh)}/${valueOf(coverage.deal_sensors_total)}`,
+    detail: `Floating ${valueOf(coverage.floating_sensors_fresh)}/${valueOf(coverage.floating_sensors_total)}`
+  };
+}
+
+function renderKpis() {
+  const projection = projectionData();
+  const findings = projection.status === "AVAILABLE" && Array.isArray(projection.findings) ? projection.findings : null;
+  const critical = findings ? findings.filter((item) => ["CRITICAL", "REAL_MONEY"].includes(item.severity)).length : "UNKNOWN";
+  const coverage = coverageValue();
+  const projectedCount = projection.status === "AVAILABLE" && Array.isArray(projection.accounts) ? projection.accounts.length : "UNKNOWN";
+  return `<section class="kpi-grid" aria-label="Monitoring KPIs">
+    <article class="kpi-card"><span>Active Accounts</span><strong>UNKNOWN</strong><small>${escapeHtml(projectedCount)} projected; activity not supplied</small></article>
+    <article class="kpi-card"><span>Alerts</span><strong>${escapeHtml(critical)}</strong><small>Critical findings · freshness ${escapeHtml(stateName(projection.freshness))}</small></article>
+    <article class="kpi-card"><span>Coverage</span><strong>${escapeHtml(coverage.value)}</strong><small>${escapeHtml(coverage.detail)}</small></article>
+  </section>`;
+}
+
 function renderMonitoring() {
   const monitoring = reportIndex.monitoring || {};
-  const status = valueOf(monitoring.status, "UNAVAILABLE");
+  const status = stateName(monitoring.status, "MISSING");
   const sources = Array.isArray(monitoring.sources) ? monitoring.sources : [];
   const coverage = monitoring.coverage || {};
-  const sourceRows = sources.length ? `<ul class="plain-list">${sources.map((source) => `<li><strong>${escapeHtml(valueOf(source.name))}</strong>: ${escapeHtml(valueOf(source.state))} · age ${escapeHtml(valueOf(source.age_hours, "UNKNOWN"))}h</li>`).join("")}</ul>` : `<p class="empty-state">Monitoring sources unavailable.</p>`;
+  const sourceRows = sources.length ? `<ul class="monitor-source-list">${sources.map((source) => `<li><div class="source-row"><strong>${escapeHtml(valueOf(source.name))}</strong>${badge(source.state)}</div><small>Age ${escapeHtml(valueOf(source.age_hours, "UNKNOWN"))}h · observed ${escapeHtml(valueOf(source.observed_at_utc, "UNKNOWN"))}</small></li>`).join("")}</ul>` : `<p class="empty-state">Monitoring sources MISSING.</p>`;
   const coverageText = valueOf(coverage.state) === "AVAILABLE_CURRENT_SNAPSHOT"
     ? `Deal sensors ${escapeHtml(valueOf(coverage.deal_sensors_fresh))}/${escapeHtml(valueOf(coverage.deal_sensors_total))} · Floating sensors ${escapeHtml(valueOf(coverage.floating_sensors_fresh))}/${escapeHtml(valueOf(coverage.floating_sensors_total))}`
     : "Coverage unavailable because the enclosing monitoring snapshot is stale, invalid, or missing.";
-  return `<section class="panel monitoring-panel"><div class="card-top"><div><p class="eyebrow">LOCAL MONITORING · NONCANONICAL</p><h2>Monitoring health</h2></div>${badge(status)}</div>
+  return `<section class="panel monitoring-panel"><div class="card-top"><div><p class="eyebrow">LOCAL MONITORING · NONCANONICAL</p><h2>Source health</h2></div>${badge(status)}</div>
     <p>${escapeHtml(coverageText)}</p>${sourceRows}
-    <p class="muted">Binding: ${escapeHtml(valueOf(monitoring.binding_state))} · generated ${escapeHtml(valueOf(monitoring.generated_at_utc))} · ${escapeHtml(valueOf(monitoring.authority, "READ_ONLY_NO_RUNTIME_AUTHORITY"))}</p></section>`;
+    <p class="muted">Binding ${escapeHtml(valueOf(monitoring.binding_state))} · generated ${escapeHtml(valueOf(monitoring.generated_at_utc))} · ${escapeHtml(valueOf(monitoring.authority, "READ_ONLY_NO_RUNTIME_AUTHORITY"))}</p></section>`;
 }
 
-function renderHome() {
+function renderPortfolioOverview() {
+  const monitoring = reportIndex.monitoring || {};
+  const projection = projectionData();
+  const accounts = projection.status === "AVAILABLE" && Array.isArray(projection.accounts) ? projection.accounts : null;
+  const healthy = accounts ? accounts.filter((item) => item.sensor_state === "FRESH").length : "UNKNOWN";
+  const attention = accounts ? accounts.filter((item) => item.sensor_state !== "FRESH").length : "UNKNOWN";
+  return `<section class="dashboard-section"><div class="section-heading"><div><h2>Portfolio Overview</h2><p>SafeProjection summaries only; no money amount or account class is inferred.</p></div>${badge(monitoring.status || "MISSING")}</div>
+    <div class="panel portfolio-grid"><div class="portfolio-stat"><span>Projected accounts</span><strong>${escapeHtml(accounts ? accounts.length : "UNKNOWN")}</strong></div><div class="portfolio-stat"><span>Fresh sensors</span><strong>${escapeHtml(healthy)}</strong></div><div class="portfolio-stat"><span>Needs attention</span><strong>${escapeHtml(attention)}</strong></div><div class="portfolio-stat"><span>P&amp;L / numeric DD</span><strong>UNKNOWN</strong></div></div>
+  </section>`;
+}
+
+function accountCard(account) {
+  const sensorState = stateName(account.sensor_state);
+  return `<article class="account-card ${stateClass(sensorState)}"><div class="account-heading"><div><p class="eyebrow">MASKED ACCOUNT</p><h3>${escapeHtml(valueOf(account.account_masked))}</h3></div>${badge(sensorState)}</div>
+    <div class="account-facts"><div class="account-fact"><span>Account type</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>Activity</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>P&amp;L</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>DD band</span><strong>${escapeHtml(stateName(account.dd_pct_band))}</strong></div></div></article>`;
+}
+
+function renderAccounts(limit) {
+  const projection = projectionData();
+  const accounts = projection.status === "AVAILABLE" && Array.isArray(projection.accounts) ? projection.accounts : null;
+  const shown = accounts && Number.isInteger(limit) ? accounts.slice(0, limit) : accounts;
+  const content = shown && shown.length ? `<div class="account-grid">${shown.map(accountCard).join("")}</div>` : `<article class="panel"><p class="empty-state">Account monitoring ${escapeHtml(stateName(projection.status, "MISSING"))}: ${escapeHtml(valueOf(projection.reason, "UNKNOWN"))}.</p></article>`;
+  return `<section class="dashboard-section"><div class="section-heading"><div><h2>Account cards</h2><p>Masked identifiers and detector-owned bands only.</p></div><div>${badge(projection.status || "MISSING")} ${badge(projection.freshness || "UNKNOWN")}</div></div>${content}</section>`;
+}
+
+function alertCard(item) {
+  const severity = stateName(item.severity);
+  return `<article class="alert-card severity-${severity.toLowerCase()}"><div class="alert-heading"><strong>${escapeHtml(valueOf(item.public_id))}</strong>${badge(severity)}</div><p>Finding state ${escapeHtml(stateName(item.state))} · details remain in the canonical local monitoring owner.</p></article>`;
+}
+
+function renderCriticalAlerts(all = false) {
+  const projection = projectionData();
+  const findings = projection.status === "AVAILABLE" && Array.isArray(projection.findings) ? projection.findings : null;
+  const selected = findings ? (all ? findings : findings.filter((item) => ["CRITICAL", "REAL_MONEY"].includes(item.severity))) : null;
+  let content;
+  if (!selected) content = `<article class="panel"><p class="empty-state">Alerts ${escapeHtml(stateName(projection.status, "MISSING"))}: ${escapeHtml(valueOf(projection.reason, "UNKNOWN"))}.</p></article>`;
+  else if (!selected.length) content = `<article class="panel"><p class="empty-state">No ${all ? "" : "critical "}findings in the supplied SafeProjection.</p></article>`;
+  else content = `<div class="alert-list">${selected.map(alertCard).join("")}</div>`;
+  return `<section class="dashboard-section"><div class="section-heading"><div><h2>${all ? "Alerts" : "Critical Alerts"}</h2><p>Opaque public IDs; no account or strategy identity is exposed.</p></div><div>${badge(projection.status || "MISSING")} ${badge(projection.freshness || "UNKNOWN")}</div></div>${content}</section>`;
+}
+
+function queueItem(item) {
+  return `<li><div class="source-row"><strong>${escapeHtml(valueOf(item.id))}</strong>${badge(item.state)}</div><span>${escapeHtml(valueOf(item.blocker_type, "NOT_APPLICABLE"))} ${badge(valueOf(item.source_kind, "UNKNOWN_SOURCE"))} ${item.registry_classification ? badge(item.registry_classification) : ""} ${item.attention_required === true ? badge("ATTENTION") : ""}</span><p class="muted">${escapeHtml(valueOf(item.summary))}</p></li>`;
+}
+
+function renderQueuePreview() {
+  const queue = Array.isArray(reportIndex.queue) ? reportIndex.queue : [];
+  const items = queue.filter((item) => stateName(item.state) !== "DONE").slice(0, 3);
+  return `<section class="dashboard-section"><div class="section-heading"><div><h2>Queue</h2><p>Presentation only; no execution controls.</p></div><a class="section-action" href="#queue">View all</a></div><div class="panel">${items.length ? `<ul class="queue-list">${items.map(queueItem).join("")}</ul>` : `<p class="empty-state">No active queue rows supplied.</p>`}</div></section>`;
+}
+
+function renderResearch() {
   const records = reportIndex.eas || [];
-  const groupNames = ["Active", "DEMO", "Candidate", "Research", "Blocked"];
-  const counts = groupNames.map((name) => {
-    const count = records.filter((record) => String(record.lifecycle).toLowerCase() === name.toLowerCase() || String(record.research_state).toLowerCase() === name.toLowerCase()).length;
-    return `<article class="count-card"><span>${escapeHtml(name)}</span><strong>${count}</strong></article>`;
-  }).join("");
-  const blockers = records.filter((record) => String(record.status).toUpperCase() === "BLOCKED" || String(record.research_state).toUpperCase() === "BLOCKED");
   const recent = records.filter((record) => record.status !== "INVENTORY_ONLY" && valueOf(record.latest_experiment, "UNKNOWN") !== "UNKNOWN").slice(-3).reverse();
+  return `<section class="dashboard-section"><details><summary>Research reports</summary><div class="panel"><div class="section-heading"><div><h2>Read-only research</h2><p>Canonical report data from report_index.json.</p></div><a class="section-action" href="#compare">Compare</a></div><div class="filters" aria-label="EA filters"><label>Search<input id="search" type="search" placeholder="Name, family, symbol" autocomplete="off" /></label>${filterSelect("Lifecycle", "lifecycle", availableValues("lifecycle"))}${filterSelect("Family", "family_id", availableValues("family_id"))}${filterSelect("Symbol", "symbol", availableValues("symbol"))}${filterSelect("Timeframe", "timeframe", availableValues("timeframe"))}${filterSelect("Grade", "quality_grade", availableValues("quality_grade"))}${filterSelect("Evidence Confidence", "evidence_confidence", availableValues("evidence_confidence"))}${filterSelect("Research status", "research_state", availableValues("research_state"))}</div><div id="ea-results" class="card-list">${recent.map(recordCard).join("")}</div></div></details></section>`;
+}
 
-  app.innerHTML = `<section class="page-heading"><h2>Research at a glance</h2><p>Canonical report data is rendered read-only from report_index.json.</p></section>
-    ${renderMonitoring()}
-    <section class="count-grid" aria-label="EA counts">${counts}</section>
-    <section class="panel"><h2>Latest / recent</h2><div class="card-list">${recent.map(recordCard).join("") || "<p class=\"empty-state\">No recent research records available.</p>"}</div></section>
-    <section class="panel"><h2>Blockers</h2>${blockers.length ? `<ul class="plain-list">${blockers.map((record) => `<li><strong>${escapeHtml(record.display_name)}</strong>: ${escapeHtml(valueOf(record.blocker_type, "BLOCKED"))} — ${escapeHtml(valueOf(record.blocker_reason, "UNAVAILABLE"))}</li>`).join("")}</ul>` : "<p class=\"empty-state\">No blocked records reported.</p>"}</section>
-    <section class="panel"><h2>EA list</h2><div class="filters" aria-label="EA filters"><label>Search<input id="search" type="search" placeholder="Name, family, symbol" autocomplete="off" /></label>${filterSelect("Lifecycle", "lifecycle", availableValues("lifecycle"))}${filterSelect("Family", "family_id", availableValues("family_id"))}${filterSelect("Symbol", "symbol", availableValues("symbol"))}${filterSelect("Timeframe", "timeframe", availableValues("timeframe"))}${filterSelect("Grade", "quality_grade", availableValues("quality_grade"))}${filterSelect("Evidence Confidence", "evidence_confidence", availableValues("evidence_confidence"))}${filterSelect("Research status", "research_state", availableValues("research_state"))}</div><div id="ea-results" class="card-list"></div></section>`;
-
+function bindResearchFilters() {
+  const searchNode = document.querySelector("#search");
+  if (!searchNode) return;
+  const records = reportIndex.eas || [];
   const renderResults = () => {
-    const search = document.querySelector("#search").value.trim().toLowerCase();
+    const search = searchNode.value.trim().toLowerCase();
     const filters = Object.fromEntries([...document.querySelectorAll("[data-filter]")].map((input) => [input.dataset.filter, input.value]));
     const matches = records.filter((record) => {
       const searchable = [record.display_name, record.family_id, record.variant_id, record.home && record.home.symbol, record.home && record.home.timeframe].join(" ").toLowerCase();
       return (!search || searchable.includes(search)) && recordMatchesFilters(record, filters);
     });
-    document.querySelector("#ea-results").innerHTML = matches.length ? matches.map(recordCard).join("") : "<p class=\"empty-state\">No matching EA records.</p>";
+    document.querySelector("#ea-results").innerHTML = matches.length ? matches.map(recordCard).join("") : `<p class="empty-state">No matching EA records.</p>`;
   };
-  document.querySelector("#search").addEventListener("input", renderResults);
+  searchNode.addEventListener("input", renderResults);
   document.querySelectorAll("[data-filter]").forEach((input) => input.addEventListener("change", renderResults));
-  renderResults();
+}
+
+function renderHome() {
+  app.innerHTML = `<section class="page-heading"><h2>Monitoring Home</h2><p>Read-only projection of existing EA_LAB monitoring outputs.</p></section>${renderKpis()}${renderPortfolioOverview()}${renderAccounts(3)}${renderCriticalAlerts()}${renderQueuePreview()}${renderMonitoring()}${renderResearch()}`;
+  bindResearchFilters();
+}
+
+function renderLive() {
+  app.innerHTML = `<section class="page-heading"><h2>Live monitoring</h2><p>“Live” is a navigation label, not LIVE promotion or runtime authority.</p></section>${renderKpis()}${renderAccounts()}${renderMonitoring()}`;
 }
 
 function renderLinks(links) {
@@ -195,7 +331,7 @@ function comparisonRows(left, right) {
 
 function renderCompare() {
   const records = reportIndex.eas || [];
-  app.innerHTML = `<section class="page-heading"><h2>Compare two records</h2><p>Select exactly two EA records. Numeric rows appear only when both records share an evidence basis.</p></section><section class="panel"><fieldset><legend>Choose records</legend><div class="compare-options">${records.map((record) => `<label class="check-card"><input type="checkbox" value="${escapeHtml(record.id)}" /> <span>${escapeHtml(record.display_name)}<small>${escapeHtml(valueOf(record.family_id))} · ${escapeHtml(valueOf(record.variant_id))}</small></span></label>`).join("")}</div></fieldset><p id="compare-note" class="muted">Choose exactly two records.</p><div id="compare-result"></div></section>`;
+  app.innerHTML = `<section class="page-heading"><a class="back-link" href="#home">← Back</a><h2>Compare two records</h2><p>Select exactly two EA records. Numeric rows appear only when both records share an evidence basis.</p></section><section class="panel"><fieldset><legend>Choose records</legend><div class="compare-options">${records.map((record) => `<label class="check-card"><input type="checkbox" value="${escapeHtml(record.id)}" /> <span>${escapeHtml(record.display_name)}<small>${escapeHtml(valueOf(record.family_id))} · ${escapeHtml(valueOf(record.variant_id))}</small></span></label>`).join("")}</div></fieldset><p id="compare-note" class="muted">Choose exactly two records.</p><div id="compare-result"></div></section>`;
   const inputs = [...document.querySelectorAll(".compare-options input")];
   const update = () => {
     const selected = inputs.filter((input) => input.checked);
@@ -205,7 +341,7 @@ function renderCompare() {
     if (selected.length !== 2) { note.textContent = "Choose exactly two records."; result.innerHTML = ""; return; }
     const [left, right] = selected.map((input) => getRecord(input.value));
     const sameBasis = left.evidence && right.evidence && left.evidence.basis_id && left.evidence.basis_id === right.evidence.basis_id && left.evidence.basis_id !== "UNAVAILABLE";
-    if (!sameBasis) { note.textContent = "DIFFERENT BASIS — numeric comparison is not implied."; result.innerHTML = ""; return; }
+    if (!sameBasis) { note.textContent = "DIFFERENT BASIS - numeric comparison is not implied."; result.innerHTML = ""; return; }
     note.textContent = `Compatible basis: ${left.evidence.basis_id}`;
     result.innerHTML = comparisonRows(left, right);
   };
@@ -214,19 +350,26 @@ function renderCompare() {
 
 function renderQueue() {
   const queue = reportIndex.queue || [];
-  const groups = ["READY", "RUNNING", "BLOCKED", "DONE"];
-  app.innerHTML = `<section class="page-heading"><h2>Research queue</h2><p>Queue state is descriptive only; this hub has no execution controls.</p></section>${groups.map((state) => {
-    const items = queue.filter((item) => String(item.state).toUpperCase() === state);
-    return `<section class="panel"><h2>${state}</h2>${items.length ? `<ul class="queue-list">${items.map((item) => `<li><strong>${escapeHtml(valueOf(item.id))}</strong><span>${badge(item.state)} ${escapeHtml(valueOf(item.blocker_type, "NOT_APPLICABLE"))} ${badge(valueOf(item.source_kind, "UNKNOWN_SOURCE"))} ${item.registry_classification ? badge(item.registry_classification) : ""} ${item.attention_required === true ? badge("ATTENTION") : ""}</span><p>${escapeHtml(valueOf(item.summary))}</p></li>`).join("")}</ul>` : "<p class=\"empty-state\">No items.</p>"}</section>`;
+  const groups = ["READY", "RUNNING", "BLOCKED", "DONE", "UNKNOWN"];
+  app.innerHTML = `<section class="page-heading"><h2>Queue</h2><p>Queue state is descriptive only; this hub has no execution controls.</p></section>${groups.map((group) => {
+    const items = queue.filter((item) => stateName(item.state) === group);
+    return `<section class="panel"><div class="section-heading"><h2>${group}</h2>${badge(group)}</div>${items.length ? `<ul class="queue-list">${items.map(queueItem).join("")}</ul>` : `<p class="empty-state">No items.</p>`}</section>`;
   }).join("")}`;
+}
+
+function renderAlerts() {
+  app.innerHTML = `<section class="page-heading"><h2>Alerts</h2><p>SafeProjection finding summaries only.</p></section>${renderCriticalAlerts(true)}${renderMonitoring()}`;
 }
 
 function renderRoute() {
   const current = route();
-  document.querySelectorAll("[data-nav]").forEach((link) => link.classList.toggle("active", link.dataset.nav === current.page));
+  const activePage = ["detail", "compare"].includes(current.page) ? "home" : current.page;
+  document.querySelectorAll("[data-nav]").forEach((link) => link.classList.toggle("active", link.dataset.nav === activePage));
   if (current.page === "detail") renderDetail(current.id);
   else if (current.page === "compare") renderCompare();
+  else if (current.page === "live") renderLive();
   else if (current.page === "queue") renderQueue();
+  else if (current.page === "alerts") renderAlerts();
   else renderHome();
 }
 
@@ -237,25 +380,29 @@ async function fetchIndex(url) {
   return response.json();
 }
 
+function renderUnavailable(error) {
+  projectMeta.textContent = "Canonical provenance UNKNOWN";
+  globalStateNode.textContent = "MISSING";
+  globalStateNode.className = "state-token state-missing";
+  lastUpdatedNode.textContent = "UNKNOWN";
+  dataWarning.hidden = false;
+  dataWarning.textContent = !navigator.onLine ? "OFFLINE - no cached report index is available." : "MISSING - report index could not be loaded or validated.";
+  app.innerHTML = `<section class="panel"><h2>Monitoring unavailable</h2><p>${escapeHtml(error.message)}</p><p class="muted">No account, alert, coverage, queue, freshness, or canonical identity is inferred.</p></section>`;
+}
+
 async function start() {
   try {
     const fixtureMode = new URLSearchParams(window.location.search).get("fixture") === "1";
-    if (fixtureMode) {
-      reportIndex = await fetchIndex(FIXTURE_INDEX_URL);
-    } else {
-      reportIndex = await fetchIndex(REPORT_INDEX_URL);
-    }
+    const payload = await fetchIndex(fixtureMode ? FIXTURE_INDEX_URL : REPORT_INDEX_URL);
+    reportIndex = validateIndex(payload, fixtureMode);
     renderProjectMeta();
     renderRoute();
     window.addEventListener("hashchange", renderRoute);
     window.addEventListener("online", renderWarning);
     window.addEventListener("offline", renderWarning);
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
   } catch (error) {
-    projectMeta.textContent = "Report index unavailable";
-    dataWarning.hidden = false;
-    dataWarning.textContent = !navigator.onLine ? "OFFLINE — no cached report index is available." : "UNAVAILABLE — report index could not be loaded.";
-    app.innerHTML = `<section class="panel"><h2>Report unavailable</h2><p>${escapeHtml(error.message)}</p></section>`;
+    renderUnavailable(error);
   }
 }
 

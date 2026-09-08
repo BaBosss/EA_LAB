@@ -34,8 +34,15 @@ if ($failures.Count -eq 0) {
     Assert-True ($html -match 'manifest\.webmanifest') 'index.html must reference the web manifest.'
     Assert-True ($html -match 'viewport') 'index.html must include a mobile viewport declaration.'
     Assert-True ($html -match 'aria-label') 'index.html must expose accessible navigation labels.'
+    Assert-True ($html -match 'EA_LAB Monitor' -and $html -match 'Global state' -and $html -match 'Last updated' -and $html -match 'READ ONLY') 'Header must identify EA_LAB Monitor, global state, freshness, and read-only status.'
+    foreach ($section in @('Home', 'Live', 'Queue', 'Alerts')) {
+        Assert-True ($html -match ">\s*$section\s*<") "Fixed mobile nav must include $section."
+    }
+    Assert-True ($html -match 'class="bottom-nav"' -and $css -match '\.bottom-nav\s*\{[^}]*position:\s*fixed') 'Bottom navigation must remain fixed on mobile.'
     Assert-True ($manifest.display -eq 'standalone') 'Manifest must support add-to-home-screen standalone display.'
     Assert-True ($manifest.start_url -match 'index\.html#home') 'Manifest start URL must open the report hub home.'
+    Assert-True ($manifest.scope -eq './' -and $manifest.id -eq './index.html') 'Manifest must keep a local, bounded application identity and scope.'
+    Assert-True ($manifest.orientation -eq 'any') 'Manifest must remain usable in phone portrait and landscape.'
     Assert-True ($manifest.icons.Count -gt 0 -and $manifest.icons[0].src -eq 'icon.svg') 'Manifest must include a local app icon.'
     Assert-True ($app -match 'REPORT_INDEX_URL\s*=\s*["'']\./report_index\.json') 'App must consume the generated root report_index.json first.'
     Assert-True ($app -match 'FIXTURE_INDEX_URL\s*=\s*["'']\./fixture/report_index\.json') 'Explicit fixture mode must resolve the local fixture index.'
@@ -45,6 +52,10 @@ if ($failures.Count -eq 0) {
     Assert-True ($fixture.fixture_only -eq $true) 'Fixture must declare fixture_only=true.'
     Assert-True ($fixture.generator -match 'not production SOT') 'Fixture must state that it is not production SOT.'
     Assert-True ($fixture.project.data_status -eq 'STALE') 'Fixture must exercise stale data presentation.'
+    Assert-True ($fixture.monitoring.status -eq 'DEGRADED' -and $fixture.monitoring.coverage.state -eq 'UNAVAILABLE_STALE_OR_INVALID') 'Fixture must exercise degraded monitoring and partial/unavailable coverage.'
+    Assert-True (@($fixture.monitoring.sources | Where-Object { $_.state -eq 'STALE' }).Count -gt 0) 'Fixture must include a stale monitoring source.'
+    Assert-True ($fixture.safe_projection.entity -eq 'SafeProjection' -and $fixture.safe_projection.accounts.Count -gt 0) 'Fixture must exercise the existing SafeProjection account shape.'
+    Assert-True (@($fixture.safe_projection.findings | Where-Object { $_.severity -eq 'CRITICAL' }).Count -gt 0) 'Fixture must include a critical SafeProjection finding.'
 
     $b16 = @($fixture.eas | Where-Object { $_.id -eq 'B16-H03' })[0]
     Assert-True ($null -ne $b16) 'Fixture must include B16 H03.'
@@ -76,17 +87,27 @@ if ($failures.Count -eq 0) {
     Assert-True ($app -match 'record\.next_action') 'Detail view must render a supported next action when present.'
     Assert-True ($app -match 'navigator\.onLine' -and $app -match 'CACHED DATA' -and $app -match 'STALE DATA') 'App must show offline/cached/stale warning states.'
     Assert-True ($sw -match 'X-EA-LAB-Cache' -and $sw -match 'report_index\.json' -and $sw -match 'cache\.put') 'Service worker must cache and identify a cached report index.'
-    Assert-True ($sw -match 'fixture/' -and $sw -match '!url\.pathname\.includes') 'Service worker must not cache fixture report data as the production index.'
-    Assert-True ($sw -match 'ea-lab-report-hub-v1\.1' -and $sw -match 'caches\.keys' -and $sw -match 'caches\.delete') 'Service worker must bump cache generation and delete older EA_LAB hub caches.'
+    Assert-True ($sw -match 'fixture/' -and $sw -match 'return fetch\(request, \{ cache: "no-store" \}\)') 'Service worker must not cache fixture report data as the production index.'
+    Assert-True ($sw -match 'ea-lab-report-hub-v2' -and $sw -match 'caches\.keys' -and $sw -match 'caches\.delete') 'Service worker must bump cache generation and delete older EA_LAB hub caches.'
+    Assert-True ($sw -match 'request\.mode === "navigate"' -and $sw -match 'caches\.match\("\./index\.html"\)') 'Service worker must provide an offline application-shell fallback for navigation.'
     Assert-True ($css -match '@media \(max-width: 390px\)' -and $css -match 'orientation: landscape') 'CSS must include 390px portrait and landscape handling.'
     Assert-True ($css -match 'min-height: 44px') 'CSS must include practical 44px touch targets.'
-    Assert-True ($css -match '\.record-card\s*\{[^}]*min-width:\s*0;[^}]*overflow-wrap:\s*anywhere;' ) 'Record cards must shrink and wrap long canonical state tokens on phone widths.'
+    Assert-True ($css -match '\.record-card' -and $css -match 'min-width:\s*0' -and $css -match 'overflow-wrap:\s*anywhere') 'Cards must shrink and wrap long canonical state tokens on phone widths.'
+    Assert-True ($css -match '\.kpi-grid' -and $css -match '\.account-grid' -and $css -match 'min-width:\s*280px') 'CSS must provide compact KPI/account layouts down to narrow phone widths.'
     Assert-True ($app -match 'safeRelativeHref' -and $app -match 'full_report') 'Links must be safe relative report links only.'
     Assert-True ($app -match 'INVENTORY_ONLY' -and $app -match 'const recent = records\.filter') 'Latest/recent must exclude inventory-only records.'
     Assert-True ($app -match 'item\.source_kind' -and $app -match 'UNKNOWN_SOURCE') 'Queue UI must render source provenance so canonical and Lane Registry rows are visually distinct.'
     Assert-True ($app -match 'registry_classification' -and $app -match 'attention_required' -and $app -match 'ATTENTION') 'Queue UI must expose Lane Registry audit classification and attention state.'
     Assert-True ($app -match 'renderMonitoring' -and $app -match 'LOCAL MONITORING' -and $app -match 'NONCANONICAL') 'Home must render monitoring health with explicit noncanonical provenance.'
     Assert-True ($app -match 'Coverage unavailable because the enclosing monitoring snapshot is stale, invalid, or missing') 'Stale monitoring coverage must be fail-visible, never replayed as current.'
+    Assert-True ($app -match 'Portfolio Overview' -and $app -match 'Active Accounts' -and $app -match 'Critical Alerts' -and $app -match 'Account cards') 'Home must provide the requested monitoring-first card sections.'
+    Assert-True ($app -match 'Active Accounts[\s\S]{0,200}<strong>UNKNOWN</strong>' -and $app -match 'activity not supplied') 'Active-account KPI must remain UNKNOWN because SafeProjection does not supply activity semantics.'
+    Assert-True ($app -match 'Account type[\s\S]{0,80}<strong>UNKNOWN</strong>' -and $app -match 'P&amp;L[\s\S]{0,80}<strong>UNKNOWN</strong>') 'Account cards must not infer account class or P&L.'
+    Assert-True ($app -match 'validateIndex' -and $app -match 'Invalid canonical SHA' -and $app -match 'Canonical SHA mismatch' -and $app -match 'Canonical source SHA mismatch') 'Production index validation must fail closed on canonical provenance mismatch.'
+    Assert-True ($app -match 'validUtcSecond' -and $app -match 'Invalid project timestamp') 'Production index validation must reject invalid timestamps.'
+    Assert-True ($app -match 'Report index unavailable' -and $app -match 'renderUnavailable' -and $app -match 'No account, alert, coverage, queue, freshness, or canonical identity is inferred') 'Missing/invalid JSON must render a fail-closed missing state.'
+    Assert-True ($app -match 'globalMonitoringState' -and $app -match 'return "STALE"' -and $app -match 'return "DEGRADED"' -and $app -match 'return "MISSING"' -and $app -match 'return "UNKNOWN"') 'Global state must visibly preserve stale, degraded, missing, and unknown outcomes.'
+    Assert-True ($app -match 'safe_projection' -and $app -match 'SafeProjection summaries only') 'Account and alert consumers must reuse the existing SafeProjection data contract.'
 }
 
 if ($failures.Count -gt 0) {

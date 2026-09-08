@@ -11,6 +11,65 @@
     "freshness": "FIXTURE_ONLY_STALE"
   },
   "sources": [],
+  "monitoring": {
+    "status": "DEGRADED",
+    "reported_status": "DEGRADED",
+    "source_kind": "LOCAL_MONITORING_NONCANONICAL",
+    "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY",
+    "binding_state": "UNKNOWN",
+    "generated_at_utc": "2026-08-30T00:00:00Z",
+    "alert_present": true,
+    "sources": [
+      {
+        "name": "control_room_snapshot",
+        "state": "STALE",
+        "age_hours": 72,
+        "observed_at_utc": "2026-08-27T00:00:00Z",
+        "timestamp_basis": "snapshot_meta_generated_at"
+      },
+      {
+        "name": "daily_monitor_success",
+        "state": "CURRENT",
+        "age_hours": 1,
+        "observed_at_utc": "2026-08-29T23:00:00Z",
+        "timestamp_basis": "success_marker_content"
+      },
+      {
+        "name": "live_evidence",
+        "state": "DATE_ONLY",
+        "age_hours": "UNKNOWN",
+        "observed_at_utc": "UNKNOWN",
+        "timestamp_basis": "latest_filename_date_only"
+      }
+    ],
+    "coverage": {
+      "state": "UNAVAILABLE_STALE_OR_INVALID",
+      "deal_sensors_total": "UNKNOWN",
+      "deal_sensors_fresh": "UNKNOWN",
+      "floating_sensors_total": "UNKNOWN",
+      "floating_sensors_fresh": "UNKNOWN"
+    },
+    "reason": "FIXTURE_PARTIAL_COVERAGE"
+  },
+  "safe_projection": {
+    "status": "AVAILABLE",
+    "entity": "SafeProjection",
+    "source_kind": "SAFE_PROJECTION_DERIVED",
+    "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY",
+    "freshness": "UNKNOWN",
+    "build_id": "0123456789abcdef",
+    "generated_at": "2026-08-30T00:00:00",
+    "accounts": [
+      { "account_masked": "***728", "sensor_state": "FRESH", "dd_pct_band": "UNKNOWN" },
+      { "account_masked": "***669", "sensor_state": "STALE", "dd_pct_band": "WATCH" },
+      { "account_masked": "***900", "sensor_state": "CONFLICT", "dd_pct_band": "UNKNOWN" }
+    ],
+    "findings": [
+      { "public_id": "FP-0123456789", "severity": "CRITICAL", "state": "OPEN" },
+      { "public_id": "FP-abcdef0123", "severity": "WARN", "state": "OPEN" }
+    ],
+    "reason": "AVAILABLE"
+  },
   "eas": [
     {
       "id": "B16-H03",

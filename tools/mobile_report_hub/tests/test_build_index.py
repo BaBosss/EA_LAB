@@ -15,6 +15,7 @@ import build_index
 
 SHA = "b7ac57ce5e1a74dc7d8a0ed5717c4853786fd4fa"
 CURRENT_P4_SHA = "3207b4372a296e1fe6fc60f0b8c1ce3f0e18e4f1"
+V2_BASE_SHA = "ba666d8a0ed893f017627874835dbfd022033d4f"
 FIXED_TIME = "2026-08-30T00:00:00Z"
 
 
@@ -74,6 +75,17 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(queue["blocker_type"], "EVIDENCE")
         self.assertEqual(queue["summary"], boss19["blocker_reason"])
         self.assertNotIn("OHLC prerequisite remains missing", queue["summary"])
+
+    def test_v2_base_builds_current_boss19_interpretation(self):
+        out = Path(self.temp.name) / "v2-base"
+        index = build_index.build(ROOT, V2_BASE_SHA, out, FIXED_TIME, V2_BASE_SHA, None)
+        boss19 = self.by_id(index, "boss19-regime-attribution")
+        self.assertEqual((boss19["status"], boss19["verdict"]), ("DONE", "MIXED_EVIDENCE"))
+        self.assertEqual(boss19["evidence"]["holdout_state"], "UNSPENT")
+        self.assertEqual(boss19["evidence"]["main"]["trades"], "882")
+        self.assertEqual(boss19["evidence"]["bwd"]["trades"], "667")
+        queue = next(item for item in index["queue"] if item["id"] == "BOSS19-P4-REGIME-ATTRIBUTION")
+        self.assertEqual((queue["state"], queue["blocker_type"]), ("DONE", "NOT_APPLICABLE"))
 
     def test_h02_pair_is_compatible_and_unknown_not_zero(self):
         index = self.build()
@@ -253,6 +265,68 @@ class MobileReportHubDataTests(unittest.TestCase):
             payload=dict(base); payload["sources"]=sources; monitor.write_text(json.dumps(payload),encoding="utf-8")
             result=build_index.build(ROOT,SHA,Path(self.temp.name)/("srcset"+str(len(sources))),FIXED_TIME,SHA,None,monitor)["monitoring"]
             self.assertEqual(result["status"],"UNAVAILABLE"); self.assertEqual(result["reason"],"INVALID_SOURCE_SET")
+
+    def test_current_monitor_date_only_source_is_fail_visible_degraded(self):
+        monitor = Path(self.temp.name) / "monitor-date-only.json"
+        payload = {"schema_version":"EA_LAB_MONITOR_HEALTH_V1","source_kind":"LOCAL_MONITORING_NONCANONICAL",
+                   "authority":"READ_ONLY_NO_RUNTIME_AUTHORITY","repo_head":SHA,"status":"DEGRADED",
+                   "generated_at_utc":"2026-08-30T00:00:00Z","alert_present":False,
+                   "sources":[{"name":"live_evidence","state":"DATE_ONLY","age_hours":None,"observed_at_utc":None,"timestamp_basis":"latest_filename_date_only"},
+                              {"name":"control_room_snapshot","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"snapshot_meta_generated_at"},
+                              {"name":"daily_monitor_success","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}],
+                   "coverage":{"state":"AVAILABLE_CURRENT_SNAPSHOT","deal_sensors_total":6,"deal_sensors_fresh":4,
+                               "floating_sensors_total":6,"floating_sensors_fresh":3}}
+        monitor.write_text(json.dumps(payload), encoding="utf-8")
+        result = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, monitor)["monitoring"]
+        self.assertEqual(result["status"], "DEGRADED")
+        self.assertEqual({row["name"]: row for row in result["sources"]}["live_evidence"]["state"], "DATE_ONLY")
+        self.assertEqual(result["coverage"]["deal_sensors_fresh"], 4)
+
+    def test_invalid_monitor_generated_timestamp_degrades_and_hides_time(self):
+        monitor = Path(self.temp.name) / "monitor-invalid-generated.json"
+        payload = {"schema_version":"EA_LAB_MONITOR_HEALTH_V1","source_kind":"LOCAL_MONITORING_NONCANONICAL",
+                   "authority":"READ_ONLY_NO_RUNTIME_AUTHORITY","repo_head":SHA,"status":"CURRENT",
+                   "generated_at_utc":"2026-99-99T99:99:99Z","alert_present":False,
+                   "sources":[{"name":"live_evidence","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"latest_filename_date_upper_bound"},
+                              {"name":"control_room_snapshot","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"snapshot_meta_generated_at"},
+                              {"name":"daily_monitor_success","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}],
+                   "coverage":{"state":"UNAVAILABLE_STALE_OR_INVALID"}}
+        monitor.write_text(json.dumps(payload), encoding="utf-8")
+        result = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, monitor)["monitoring"]
+        self.assertEqual(result["status"], "DEGRADED")
+        self.assertEqual(result["generated_at_utc"], "UNKNOWN")
+
+    def test_safe_projection_passes_through_only_existing_allowlist(self):
+        projection = Path(self.temp.name) / "safe_projection.json"
+        projection.write_text(json.dumps({
+            "entity":"SafeProjection", "build_id":"0123456789abcdef", "generated_at":"2026-08-30T00:00:00",
+            "accounts":[{"account_masked":"***728","sensor_state":"CONFLICT","dd_pct_band":"UNKNOWN"}],
+            "findings":[{"public_id":"FP-0123456789","severity":"CRITICAL","state":"OPEN"}]
+        }), encoding="utf-8")
+        result = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, None, projection)["safe_projection"]
+        self.assertEqual(result["status"], "AVAILABLE")
+        self.assertEqual(result["freshness"], "UNKNOWN")
+        self.assertEqual(result["accounts"][0]["account_masked"], "***728")
+        self.assertEqual(result["findings"][0]["severity"], "CRITICAL")
+        self.assertEqual(set(result["accounts"][0]), {"account_masked", "sensor_state", "dd_pct_band"})
+
+    def test_safe_projection_missing_invalid_or_extra_fields_fail_visible(self):
+        missing = Path(self.temp.name) / "missing-safe-projection.json"
+        result = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, None, missing)["safe_projection"]
+        self.assertEqual((result["status"], result["reason"]), ("INVALID", "INVALID_INPUT"))
+
+        hostile = Path(self.temp.name) / "hostile-safe-projection.json"
+        hostile.write_text(json.dumps({"entity":"SafeProjection","build_id":"0123456789abcdef",
+                                       "generated_at":"2026-08-30T00:00:00","accounts":[],"findings":[],
+                                       "account":"463666728"}), encoding="utf-8")
+        out = Path(self.temp.name) / "hostile-output"
+        result = build_index.build(ROOT, SHA, out, FIXED_TIME, SHA, None, None, hostile)["safe_projection"]
+        self.assertEqual((result["status"], result["reason"]), ("INVALID", "INVALID_SCHEMA"))
+        self.assertNotIn("463666728", (out / "report_index.json").read_text(encoding="utf-8"))
+
+    def test_builder_rejects_invalid_as_of_timestamp(self):
+        with self.assertRaisesRegex(build_index.BuildError, "as-of"):
+            build_index.build(ROOT, SHA, self.out, "not-a-time", SHA, None)
 
     def test_lane_registry_hostile_free_text_and_account_like_id_are_redacted(self):
         registry=Path(self.temp.name)/"hostile-audit.json"

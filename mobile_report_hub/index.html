@@ -3,33 +3,48 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#111827" />
-    <meta name="description" content="Read-only EA_LAB research report hub" />
+    <meta name="theme-color" content="#080d18" />
+    <meta name="description" content="Read-only EA_LAB monitoring and research home" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
-    <title>EA_LAB Report Hub</title>
+    <title>EA_LAB Monitor</title>
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to reports</a>
+    <a class="skip-link" href="#main-content">Skip to monitoring</a>
     <header class="site-header">
-      <p class="eyebrow">READ-ONLY RESEARCH VIEW</p>
-      <h1>EA_LAB REPORT HUB</h1>
-      <p id="project-meta" class="muted" aria-live="polite">Loading report index…</p>
+      <div class="brand-row">
+        <div>
+          <p class="eyebrow">CONTROL TOWER</p>
+          <h1>EA_LAB Monitor</h1>
+        </div>
+        <span class="readonly-pill" aria-label="Read-only presentation">READ ONLY</span>
+      </div>
+      <div class="status-strip" aria-live="polite">
+        <div><span class="meta-label">Global state</span><strong id="global-state" class="state-token state-unknown">UNKNOWN</strong></div>
+        <div><span class="meta-label">Last updated</span><strong id="last-updated">UNKNOWN</strong></div>
+      </div>
+      <p id="project-meta" class="project-meta">Loading report index...</p>
       <div id="data-warning" class="data-warning" role="status" hidden></div>
     </header>
 
     <main id="main-content" class="shell" tabindex="-1">
-      <nav class="top-nav" aria-label="Report hub sections">
-        <a href="#home" data-nav="home">Home</a>
-        <a href="#queue" data-nav="queue">Queue</a>
-        <a href="#compare" data-nav="compare">Compare</a>
-      </nav>
-      <section id="app" aria-live="polite"></section>
+      <section id="app" aria-live="polite">
+        <p class="empty-state">Loading monitoring home...</p>
+      </section>
     </main>
 
-    <template id="loading-template"><p class="empty-state">Loading report index…</p></template>
-    <noscript><p class="empty-state">This report hub needs JavaScript to render the report index.</p></noscript>
+    <nav class="bottom-nav" aria-label="Monitor sections">
+      <a href="#home" data-nav="home"><span aria-hidden="true">⌂</span><span>Home</span></a>
+      <a href="#live" data-nav="live"><span aria-hidden="true">◉</span><span>Live</span></a>
+      <a href="#queue" data-nav="queue"><span aria-hidden="true">≡</span><span>Queue</span></a>
+      <a href="#alerts" data-nav="alerts"><span aria-hidden="true">!</span><span>Alerts</span></a>
+    </nav>
+
+    <noscript><p class="empty-state noscript">This monitor needs JavaScript to render the report index.</p></noscript>
     <script src="app.js" defer></script>
   </body>
 </html>

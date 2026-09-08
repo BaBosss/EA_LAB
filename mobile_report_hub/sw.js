@@ -1,6 +1,8 @@
-const CACHE_NAME = "ea-lab-report-hub-v1.1";
+"use strict";
+
+const CACHE_NAME = "ea-lab-report-hub-v2";
 const CACHE_PREFIX = "ea-lab-report-hub-v";
-const SHELL = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
+const SHELL = ["./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)));
@@ -26,20 +28,30 @@ async function cachedResponse(request) {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
   event.respondWith((async () => {
-    const url = new URL(request.url);
-    if (url.pathname.endsWith("report_index.json") && !url.pathname.includes("/fixture/")) {
+    if (url.pathname.includes("/fixture/")) return fetch(request, { cache: "no-store" });
+
+    if (url.pathname.endsWith("/report_index.json")) {
       try {
-        const response = await fetch(request);
+        const response = await fetch(request, { cache: "no-store" });
         if (response.ok) {
           const cache = await caches.open(CACHE_NAME);
           await cache.put(request, response.clone());
         }
         return response;
       } catch {
-        return (await cachedResponse(request)) || new Response("Report index unavailable", { status: 503 });
+        return (await cachedResponse(request)) || new Response("Report index unavailable", { status: 503, headers: { "Content-Type": "text/plain" } });
+      }
+    }
+
+    if (request.mode === "navigate") {
+      try {
+        return await fetch(request);
+      } catch {
+        return (await caches.match("./index.html")) || new Response("Monitor shell unavailable", { status: 503 });
       }
     }
 

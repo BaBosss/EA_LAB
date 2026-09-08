@@ -17,7 +17,7 @@ from pathlib import Path, PurePosixPath
 
 SCHEMA_VERSION = 1
 GENERATOR_NAME = "mobile_report_hub.build_index"
-GENERATOR_VERSION = "1.1.0"
+GENERATOR_VERSION = "2.0.0"
 B16 = "docs/factory/B16_H03_CONFIRMATION_RESULTS.md"
 B19 = "docs/research/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"
 H02 = "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"
@@ -110,6 +110,23 @@ def extract_boss19(text: str, provenance: dict) -> dict:
                       "Opening and closing Order IDs are disjoint",
                       "UNAVAILABLE_NO_SOURCE_BASKET_ID",
                       "HOLDOUT remains UNSPENT; optimization/runtime/risk/deployment authority remains NONE")
+    interpreted_needed = ("Status: `INTERPRETED / RESEARCH_ONLY / MIXED_EVIDENCE`",
+                          "HOLDOUT (`2026H1`) is UNSPENT",
+                          "This document supersedes the prior `BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)`")
+    if all(piece in text for piece in interpreted_needed):
+        windows = re.search(r"\*\*By window:\*\* MAIN net .*?\(n=([0-9,]+), PF ([0-9.]+)\) vs BWD net .*?\(n=([0-9,]+), PF ([0-9.]+)\)", text)
+        if not windows:
+            raise BuildError("Boss19 P4 canonical interpretation missing window reconciliation")
+        evidence = {"basis_id": "BOSS19_P4_REGIME_ATTRIBUTION_MODEL1", "report_stage": "P4", "model": "MODEL_1",
+                    "holdout_state": "UNSPENT", "main": metric(windows.group(2), "UNKNOWN", windows.group(1).replace(",", ""), "UNKNOWN"),
+                    "bwd": metric(windows.group(4), "UNKNOWN", windows.group(3).replace(",", ""), "UNKNOWN"),
+                    "key_findings": ["Mixed regime evidence is materially time-confounded; no single-regime edge is established."],
+                    "known_weaknesses": ["Regime labels, calendar years, symbols, and windows remain context-dependent; interpretation is research-only."]}
+        return record(identity="boss19-regime-attribution", family="B19", variant="P4", name="Boss 19 Regime Attribution",
+                      symbol="MULTI", timeframe="MULTI", lifecycle="Research", research_state="DONE",
+                      latest="Boss19 P4 regime attribution interpretation", verdict="MIXED_EVIDENCE",
+                      strategy="Regime attribution", evidence=evidence, status="DONE",
+                      links={"full_report": "artifacts/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"}, provenance=[provenance])
     if all(piece in text for piece in current_needed):
         evidence = {"basis_id": "BOSS19_P4B_REGIME_ATTRIBUTION", "report_stage": "P4B", "model": "MODEL_1",
                     "holdout_state": "UNSPENT", "main": metric("UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE", "UNAVAILABLE"),
@@ -247,10 +264,13 @@ def lane_summary(item: dict) -> str:
 
 
 _MONITOR_SOURCE_NAMES = {"live_evidence", "control_room_snapshot", "daily_monitor_success"}
-_MONITOR_STATES = {"CURRENT", "STALE", "MISSING", "INVALID"}
-_MONITOR_BASES = {"latest_filename_date_upper_bound", "snapshot_meta_generated_at", "success_marker_content"}
+_MONITOR_STATES = {"CURRENT", "STALE", "MISSING", "INVALID", "DATE_ONLY", "FUTURE"}
 _MONITOR_COUNT_FIELDS = ("deal_sensors_total", "deal_sensors_fresh", "floating_sensors_total", "floating_sensors_fresh")
 _UTC_SECOND_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+_LOCAL_SECOND_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
+_SAFE_SENSOR_STATES = {"FRESH", "STALE", "BLIND", "MISSING", "UNKNOWN", "CONFLICT"}
+_SAFE_DD_BANDS = {"OK", "WATCH", "BREACH", "UNKNOWN"}
+_SAFE_FINDING_SEVERITIES = {"INFO", "WARN", "CRITICAL", "REAL_MONEY"}
 
 
 def _valid_utc_second(value: object) -> bool:
@@ -258,6 +278,16 @@ def _valid_utc_second(value: object) -> bool:
         return False
     try:
         datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return False
+    return True
+
+
+def _valid_local_second(value: object) -> bool:
+    if not isinstance(value, str) or not _LOCAL_SECOND_RE.fullmatch(value):
+        return False
+    try:
+        datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
     except ValueError:
         return False
     return True
@@ -271,6 +301,63 @@ def unavailable_monitoring(reason: str = "NOT_PROVIDED") -> dict:
             "coverage": {"state": "UNAVAILABLE_STALE_OR_INVALID", "deal_sensors_total": "UNKNOWN",
                          "deal_sensors_fresh": "UNKNOWN", "floating_sensors_total": "UNKNOWN",
                          "floating_sensors_fresh": "UNKNOWN"}, "reason": reason}
+
+
+def unavailable_safe_projection(reason: str = "NOT_PROVIDED") -> dict:
+    return {"status": "MISSING" if reason == "NOT_PROVIDED" else "INVALID",
+            "entity": "SafeProjection", "source_kind": "SAFE_PROJECTION_DERIVED",
+            "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "freshness": "UNKNOWN",
+            "build_id": "UNKNOWN", "generated_at": "UNKNOWN", "accounts": [],
+            "findings": [], "reason": reason}
+
+
+def safe_projection(path: Path | None) -> dict:
+    """Strictly pass through the existing SafeProjection allowlist; add no new meaning."""
+    if path is None:
+        return unavailable_safe_projection()
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeError):
+        return unavailable_safe_projection("INVALID_INPUT")
+    if not isinstance(raw, dict) or set(raw) != {"entity", "build_id", "generated_at", "accounts", "findings"}:
+        return unavailable_safe_projection("INVALID_SCHEMA")
+    if raw.get("entity") != "SafeProjection":
+        return unavailable_safe_projection("INVALID_ENTITY")
+    if not isinstance(raw.get("build_id"), str) or not re.fullmatch(r"[0-9a-f]{16}", raw["build_id"]):
+        return unavailable_safe_projection("INVALID_BUILD_ID")
+    if not _valid_local_second(raw.get("generated_at")):
+        return unavailable_safe_projection("INVALID_TIMESTAMP")
+    if not isinstance(raw.get("accounts"), list) or not isinstance(raw.get("findings"), list):
+        return unavailable_safe_projection("INVALID_SCHEMA")
+
+    accounts = []
+    for item in raw["accounts"]:
+        if not isinstance(item, dict) or set(item) != {"account_masked", "sensor_state", "dd_pct_band"}:
+            return unavailable_safe_projection("INVALID_ACCOUNT_ROW")
+        if not isinstance(item.get("account_masked"), str) or not re.fullmatch(r"\*{3}[0-9]{3}", item["account_masked"]):
+            return unavailable_safe_projection("INVALID_ACCOUNT_ROW")
+        if item.get("sensor_state") not in _SAFE_SENSOR_STATES or item.get("dd_pct_band") not in _SAFE_DD_BANDS:
+            return unavailable_safe_projection("INVALID_ACCOUNT_ROW")
+        accounts.append({name: item[name] for name in ("account_masked", "sensor_state", "dd_pct_band")})
+
+    findings = []
+    for item in raw["findings"]:
+        if not isinstance(item, dict) or set(item) != {"public_id", "severity", "state"}:
+            return unavailable_safe_projection("INVALID_FINDING_ROW")
+        if not isinstance(item.get("public_id"), str) or not re.fullmatch(r"FP-[0-9a-f]{10}", item["public_id"]):
+            return unavailable_safe_projection("INVALID_FINDING_ROW")
+        if item.get("severity") not in _SAFE_FINDING_SEVERITIES:
+            return unavailable_safe_projection("INVALID_FINDING_ROW")
+        if not isinstance(item.get("state"), str) or not re.fullmatch(r"[A-Z][A-Z0-9_]{0,31}", item["state"]):
+            return unavailable_safe_projection("INVALID_FINDING_ROW")
+        findings.append({name: item[name] for name in ("public_id", "severity", "state")})
+
+    return {"status": "AVAILABLE", "entity": "SafeProjection",
+            "source_kind": "SAFE_PROJECTION_DERIVED",
+            "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY",
+            "freshness": "UNKNOWN", "build_id": raw["build_id"],
+            "generated_at": raw["generated_at"], "accounts": accounts,
+            "findings": findings, "reason": "AVAILABLE"}
 
 
 def _monitor_count(value: object) -> int | None:
@@ -299,14 +386,15 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
     names = [item.get("name") for item in raw_sources if isinstance(item, dict)]
     if len(names) != len(raw_sources) or set(names) != _MONITOR_SOURCE_NAMES or len(set(names)) != len(names):
         return unavailable_monitoring("INVALID_SOURCE_SET")
-    expected_basis = {"live_evidence":"latest_filename_date_upper_bound",
+    expected_basis = {"live_evidence":{"latest_filename_date_only", "latest_filename_date_upper_bound"},
                       "control_room_snapshot":"snapshot_meta_generated_at",
                       "daily_monitor_success":"success_marker_content"}
     sources = []
     for item in raw_sources:
         source_state = str(item.get("state", "INVALID"))
         basis = str(item.get("timestamp_basis", ""))
-        if source_state not in _MONITOR_STATES or basis != expected_basis[item["name"]]:
+        expected = expected_basis[item["name"]]
+        if source_state not in _MONITOR_STATES or basis not in ({expected} if isinstance(expected, str) else expected):
             return unavailable_monitoring("INVALID_SOURCE_ROW")
         raw_age = item.get("age_hours")
         raw_observed = item.get("observed_at_utc")
@@ -320,7 +408,7 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
                 return unavailable_monitoring("INVALID_SOURCE_ROW")
             age = round(numeric_age, 2)
             observed = raw_observed
-        else:
+        elif source_state in {"MISSING", "INVALID", "DATE_ONLY", "FUTURE"}:
             if raw_age is not None or raw_observed is not None:
                 return unavailable_monitoring("INVALID_SOURCE_ROW")
             age = "UNKNOWN"
@@ -331,7 +419,10 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
     source_by_name = {item["name"]: item for item in sources}
     all_sources_current = set(source_by_name) == _MONITOR_SOURCE_NAMES and all(item["state"] == "CURRENT" for item in sources)
     alert_present = raw.get("alert_present") if isinstance(raw.get("alert_present"), bool) else "UNKNOWN"
-    effective_status = "CURRENT" if all_sources_current and alert_present is False and binding == "MATCHES_CANONICAL_SHA" else "DEGRADED"
+    generated_raw = raw.get("generated_at_utc", "UNKNOWN")
+    generated_valid = _valid_utc_second(generated_raw)
+    effective_status = "CURRENT" if (all_sources_current and alert_present is False and
+                                     binding == "MATCHES_CANONICAL_SHA" and generated_valid) else "DEGRADED"
     coverage_raw = raw.get("coverage", {}) if isinstance(raw.get("coverage"), dict) else {}
     requested_coverage = str(coverage_raw.get("state", "UNAVAILABLE_STALE_OR_INVALID"))
     counts = {name: _monitor_count(coverage_raw.get(name)) for name in _MONITOR_COUNT_FIELDS}
@@ -342,8 +433,7 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
     coverage = {"state": "AVAILABLE_CURRENT_SNAPSHOT" if coverage_current else "UNAVAILABLE_STALE_OR_INVALID"}
     for name in _MONITOR_COUNT_FIELDS:
         coverage[name] = counts[name] if coverage_current else "UNKNOWN"
-    generated_raw = raw.get("generated_at_utc", "UNKNOWN")
-    generated = generated_raw if generated_raw == "UNKNOWN" or _valid_utc_second(generated_raw) else "UNKNOWN"
+    generated = generated_raw if generated_valid else "UNKNOWN"
     return {"status": effective_status, "reported_status": reported_status,
             "source_kind": "LOCAL_MONITORING_NONCANONICAL",
             "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "binding_state": binding,
@@ -351,10 +441,13 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
             "sources": sources, "coverage": coverage, "reason": "AVAILABLE"}
 
 
-def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None, monitor: Path | None = None) -> dict:
+def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None,
+          monitor: Path | None = None, projection: Path | None = None) -> dict:
     sha = resolve_ref(repo, ref)
     if expected_sha and sha != expected_sha:
         raise BuildError(f"expected SHA mismatch: expected {expected_sha}, resolved {sha}")
+    if not _valid_utc_second(as_of):
+        raise BuildError("as-of must be a valid UTC timestamp at whole-second precision")
     b16_text, b16_p = text_source(repo, sha, B16)
     b19_text, b19_p = text_source(repo, sha, B19)
     h02_text, h02_p = text_source(repo, sha, H02)
@@ -371,6 +464,8 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
     boss19_item = extract_boss19(b19_text, b19_p)
     if boss19_item["verdict"] == "BLOCKED(EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION)" and "EVIDENCE_UNSUITABLE_FOR_UNIT_ATTRIBUTION" not in taskboard_text:
         raise BuildError("canonical Boss19 P4 report/taskboard blocker mismatch")
+    boss19_queue_blocker = boss19_item.get("blocker_type", "NOT_APPLICABLE")
+    boss19_queue_summary = boss19_item.get("blocker_reason", "Boss19 P4 regime attribution interpretation complete; research-only mixed evidence.")
     eas = inventory_records(master_text, sha) + extract_h02(h02_text, h02_p) + [b16_item, boss19_item]
     index = {"schema_version": SCHEMA_VERSION, "generator": {"name": GENERATOR_NAME, "version": GENERATOR_VERSION},
              "project": {"canonical_sha": sha, "canonical_short_sha": sha[:12], "source_ref": ref,
@@ -378,8 +473,8 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
              "sources": [b16_p, b19_p, h02_p, master_p, taskboard_p], "eas": eas,
              "queue": [{"id": "FACTORY-B16-H03-CONFIRMATION", "state": "DONE", "blocker_type": "NOT_APPLICABLE",
                         "summary": "B16 H03 confirmation complete; H04 is not unlocked.", "source_kind": "GIT_CANONICAL"},
-                       {"id": "BOSS19-P4-REGIME-ATTRIBUTION", "state": boss19_item["status"], "blocker_type": boss19_item["blocker_type"],
-                        "summary": boss19_item["blocker_reason"], "source_kind": "GIT_CANONICAL"}] +
+                       {"id": "BOSS19-P4-REGIME-ATTRIBUTION", "state": boss19_item["status"], "blocker_type": boss19_queue_blocker,
+                        "summary": boss19_queue_summary, "source_kind": "GIT_CANONICAL"}] +
                       [{"id": safe_lane_id(item.get("lane_id", "UNKNOWN")),
                         "state": {"WAITING": "READY", "PAUSED": "READY", "REVIEW": "RUNNING", "FROZEN": "RUNNING", "INTEGRATING": "RUNNING"}.get(item.get("state", "UNKNOWN"), item.get("state", "UNKNOWN")),
                         "blocker_type": {"A": "PRODUCT_DEFECT", "B": "HARNESS", "C": "ENVIRONMENT", "D": "EXECUTION", "E": "OWNER_EXTERNAL"}.get(str(item.get("blocker_class", ""))[:1], "NOT_APPLICABLE"),
@@ -388,6 +483,7 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
                         "attention_required": item.get("attention_required", False)}
                        for item in lane_registry(registry)],
              "monitoring": monitor_health(monitor, sha),
+             "safe_projection": safe_projection(projection),
              "compare": {"compatibility_rule": "DIRECT only when basis_id is identical; otherwise DIFFERENT_BASIS / N/A."}}
     (out / "report_index.json").write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return index
@@ -406,9 +502,11 @@ def main() -> int:
     parser.add_argument("--lane-registry", type=Path)
     parser.add_argument("--expected-sha")
     parser.add_argument("--monitor-health", type=Path)
+    parser.add_argument("--safe-projection", type=Path)
     args = parser.parse_args()
     try:
-        build(args.repo, args.ref, args.out, args.as_of, args.expected_sha, args.lane_registry, args.monitor_health)
+        build(args.repo, args.ref, args.out, args.as_of, args.expected_sha, args.lane_registry,
+              args.monitor_health, args.safe_projection)
     except BuildError as error:
         print(f"FAIL_CLOSED: {error}", file=sys.stderr)
         return 2

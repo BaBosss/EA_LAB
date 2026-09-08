@@ -1,12 +1,15 @@
 {
-  "name": "EA_LAB Report Hub",
-  "short_name": "EA_LAB Hub",
-  "description": "Read-only EA_LAB research report hub",
+  "id": "./index.html",
+  "name": "EA_LAB Monitor",
+  "short_name": "EA Monitor",
+  "description": "Read-only EA_LAB monitoring and research home",
   "start_url": "./index.html#home",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#111827",
+  "orientation": "any",
+  "background_color": "#080d18",
+  "theme_color": "#080d18",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
