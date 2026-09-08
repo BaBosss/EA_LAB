@@ -113,6 +113,12 @@ details > summary { min-height: 44px; cursor: pointer; font-weight: 800; }
 .bottom-nav a.active { background: var(--accent-soft); color: var(--accent); }
 .noscript { margin: 1rem; }
 
+@media (max-width: 560px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi-card:last-child { grid-column: 1 / -1; }
+  .kpi-card > *, .badge, .state-token { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+}
+
 @media (min-width: 640px) {
   .site-header, .shell { padding-inline: 1.5rem; }
   .account-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
