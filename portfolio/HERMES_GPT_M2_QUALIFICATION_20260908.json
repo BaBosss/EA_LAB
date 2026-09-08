@@ -1,0 +1,67 @@
+{
+  "schema": "ea_lab/hermes_gpt_m2_qualification/1",
+  "as_of": "2026-09-08",
+  "status": "PASS / TASK-SCOPED / NO-MT5 / NO PERSISTENT PROFILE CHANGE",
+  "ea_lab_head": "ba666d8a0ed893f017627874835dbfd022033d4f",
+  "route": {
+    "provider": "openai-codex",
+    "model": "gpt-5.5",
+    "runner": "run_profile_task.ps1",
+    "override_scope": "TASK_SCOPED"
+  },
+  "runtime": {
+    "name": "Hermes Agent",
+    "version": "0.20.5",
+    "release": "2026.8.19",
+    "git_commit": "fcbd1076a93841fa88855acce810e342a5b78101",
+    "git_tag": "v2026.8.19",
+    "python": "3.11.16"
+  },
+  "positive_replay": {
+    "exit_code": 0,
+    "accepted_h1_golden_replay_completed": true,
+    "deterministic_evidence_reproduced": true,
+    "new_mt5_or_tester_run": false,
+    "workspace_mutation": false
+  },
+  "negative_boundary": {
+    "exit_code": 0,
+    "result": "BOUNDARY_PASS",
+    "unavailable": [
+      "shell",
+      "write",
+      "MT5"
+    ],
+    "outside_safe_workspace_absolute_access": "DENIED",
+    "exposed_toolset": "safe_reader only",
+    "exact_head_confirmed": true,
+    "mutation": false
+  },
+  "persistent_profile_change": false,
+  "same_family_rule": {
+    "unchanged": true,
+    "different_family_review_satisfied": false,
+    "statement": "Hermes GPT cannot satisfy different-family review for ChatGPT, Codex, or GPT-backed Hermes work."
+  },
+  "provider_m2": {
+    "complete": false,
+    "gemini_qualification": "BLOCKED",
+    "blocker": "E_OWNER_EXTERNAL_BILLING_AUTHORITY",
+    "instruction": "DO NOT REOPEN OR BYPASS"
+  },
+  "authority": "MECHANICAL_PROVIDER_QUALIFICATION_ONLY",
+  "authority_not_granted": [
+    "runtime",
+    "trading",
+    "risk/default",
+    "Candidate",
+    "HOLDOUT",
+    "optimization",
+    "deployment",
+    "persistent profile"
+  ],
+  "external_control_evidence": {
+    "path": "D:\\EA_LAB_CONTROL\\evidence\\hermes-m2-20260908\\HERMES_GPT_M2_QUALIFICATION_RESULT.md",
+    "sha256": "3042206902f540b5d5261879420759b2aaabe00b769b21251877273d134e2f9e"
+  }
+}
