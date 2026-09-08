@@ -12,11 +12,10 @@ Purpose: deterministic startup router for every new EA_LAB Control Tower or work
 2. Record the exact canonical SHA you are using.
 3. Read this file from that exact ref.
 4. Read `PROJECT_STATE.md` for current status, accepted decisions, blockers, and plan.
-5. Read `VISION.md` for the owner's factory/product north star; EA Template is a primary product and this short file is mandatory boot context.
-6. Read `AGENTS.md` before claiming or dispatching work.
-7. Read `AGENT_TASKBOARD.md` and the relevant `taskboards/active/*` owner for current queue state.
-8. Inspect Lane Registry before creating a writer/runtime lane: `scripts/lane_registry.ps1` + `D:\EA_LAB_CONTROL\lanes\registry-v1`.
-9. Use an isolated clean worktree/explicit ref for canonical bytes. Never treat a dirty primary worktree/index as canonical.
+5. Read `AGENTS.md` before claiming or dispatching work.
+6. Read `AGENT_TASKBOARD.md` and the relevant `taskboards/active/*` owner for current queue state.
+7. Inspect Lane Registry before creating a writer/runtime lane: `scripts/lane_registry.ps1` + `D:\EA_LAB_CONTROL\lanes\registry-v1`.
+8. Use an isolated clean worktree/explicit ref for canonical bytes. Never treat a dirty primary worktree/index as canonical.
 
 If a handoff, Operating Context, or chat says a different SHA/status than pushed `origin/master`, re-anchor to Git first. Preserve the older artifact as history; do not silently promote it over canonical state.
 

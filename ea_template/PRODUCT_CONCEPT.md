@@ -1,6 +1,6 @@
 # EA Template Product Concept — Owner Intent and Anti-Drift Contract
 
-Status: `CANDIDATE OWNER PRODUCT CONCEPT / NO RUNTIME OR RISK AUTHORITY`
+Status: `OWNER-RATIFIED PRODUCT CONCEPT / NO RUNTIME OR RISK AUTHORITY`
 Captured from owner discussions + preserved historical EA_LAB concept material on 2026-09-08.
 Base canonical ref at consolidation: `8eb953d36f8e92b20251e50dafab90c6e5d7f126`.
 
@@ -8,7 +8,7 @@ Base canonical ref at consolidation: `8eb953d36f8e92b20251e50dafab90c6e5d7f126`.
 
 EA Template is a primary EA_LAB product, not a side utility and not one strategy EA.
 The project has repeatedly drifted because the owner concept was spread across chat, old handoffs, `_triage/chatgpt_convs`, code comments, and stale README text.
-This file is intended to become the durable detailed owner of EA Template product intent after canonical intake.
+This file is the durable detailed owner of EA Template product intent. It is canonical only when these bytes are present on pushed `origin/master`.
 
 `VISION.md` remains the short project/factory philosophy. `PROJECT_STATE.md` remains status. `AGENTS.md` remains permissions. `DESIGN_V2.md` and source code describe implementation. This file owns what EA Template is supposed to be.
 
