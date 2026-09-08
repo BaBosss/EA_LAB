@@ -1,0 +1,167 @@
+{
+  "schema_version": "factory-vnext-identity-alias-catalog-v1",
+  "authority": "NON_AUTHORITATIVE_SIDECAR",
+  "Aliases": [
+    {
+      "schema_version": "factory-vnext-legacy-identity-alias-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "FamilyID": "B11",
+      "LegacyVariantID": "B11-H01-R1",
+      "VariantSnapshotID": "VAR-e07c154fb8e28708ae820d97",
+      "HypothesisRevision": "B11-H01-r1",
+      "StrategyVersion": "B11-H01-r1",
+      "LogicalVariantID": null,
+      "ResolutionStatus": "SEMANTICS_REQUIRED",
+      "ReasonCode": "LEGACY_H01_FIXED_CONFIG_LOGICAL_VARIANT_SEMANTICS_REQUIRED",
+      "BuildReceipt": null,
+      "RunID": null,
+      "PackageID": "VPKG-3324eb0713e6b7855b694c01",
+      "SourceArtifact": {
+        "path": "factory/vnext/pilots/boss11_h01_first_green/variant_build_package.json",
+        "sha256": "500ee899d9fb927c1d47cc54fb4b8bd8661b535779352afd54e88c3516d73a9a"
+      },
+      "AliasID": "IALIAS-d79974e2f2bf809c6398a991"
+    },
+    {
+      "schema_version": "factory-vnext-legacy-identity-alias-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "FamilyID": "B12",
+      "LegacyVariantID": "B12-H01-R1",
+      "VariantSnapshotID": "VAR-07eee9a4de1aa180ab794993",
+      "HypothesisRevision": "B12-H01-r1",
+      "StrategyVersion": "B12-H01-r1",
+      "LogicalVariantID": null,
+      "ResolutionStatus": "SEMANTICS_REQUIRED",
+      "ReasonCode": "LEGACY_H01_FIXED_CONFIG_LOGICAL_VARIANT_SEMANTICS_REQUIRED",
+      "BuildReceipt": null,
+      "RunID": null,
+      "PackageID": "VPKG-d742e70993a76bfb1c5abc4b",
+      "SourceArtifact": {
+        "path": "factory/vnext/pilots/boss12_h01_first_green/variant_build_package.json",
+        "sha256": "bb95efb2616eca95c47c12ab7f02c2168500255da368b0926c8429d089f944de"
+      },
+      "AliasID": "IALIAS-e69794a18ebf0cd671a762c1"
+    },
+    {
+      "schema_version": "factory-vnext-legacy-identity-alias-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "FamilyID": "B13",
+      "LegacyVariantID": "B13-H01-R1",
+      "VariantSnapshotID": "VAR-5ebb200f4f6d52d790cd68d8",
+      "HypothesisRevision": "B13-H01-r1",
+      "StrategyVersion": "B13-H01-r1",
+      "LogicalVariantID": null,
+      "ResolutionStatus": "SEMANTICS_REQUIRED",
+      "ReasonCode": "LEGACY_H01_FIXED_CONFIG_LOGICAL_VARIANT_SEMANTICS_REQUIRED",
+      "BuildReceipt": null,
+      "RunID": null,
+      "PackageID": "VPKG-6129195f0a3c785af3ae4b66",
+      "SourceArtifact": {
+        "path": "factory/vnext/pilots/boss13_h01_first_green/variant_build_package.json",
+        "sha256": "a9e696b13250e733131cb9587a7987259083e0a89f967525771a42d1cd2071c4"
+      },
+      "AliasID": "IALIAS-83a10afe54a4ef3cb7d4ac69"
+    },
+    {
+      "schema_version": "factory-vnext-legacy-identity-alias-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "FamilyID": "B14",
+      "LegacyVariantID": "B14-H01-R1",
+      "VariantSnapshotID": "VAR-17f676b773e7655394a102e5",
+      "HypothesisRevision": "B14-H01-r1",
+      "StrategyVersion": "B14-H01-r1",
+      "LogicalVariantID": null,
+      "ResolutionStatus": "SEMANTICS_REQUIRED",
+      "ReasonCode": "LEGACY_H01_FIXED_CONFIG_LOGICAL_VARIANT_SEMANTICS_REQUIRED",
+      "BuildReceipt": null,
+      "RunID": null,
+      "PackageID": "VPKG-84cdbe53dc67d26ad078b385",
+      "SourceArtifact": {
+        "path": "factory/vnext/pilots/boss14_h01_first_green/variant_build_package.json",
+        "sha256": "6a035b31b55f17e84761e69c80ebe4c394a0739a290ee8acca2ff307486b229a"
+      },
+      "AliasID": "IALIAS-65555829606e26f6243a5505"
+    },
+    {
+      "schema_version": "factory-vnext-legacy-identity-alias-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "FamilyID": "B15",
+      "LegacyVariantID": "B15-H01-R1",
+      "VariantSnapshotID": "VAR-8c1b1c7fae332352ecdec885",
+      "HypothesisRevision": "B15-H01-r1",
+      "StrategyVersion": "B15-H01-r1",
+      "LogicalVariantID": null,
+      "ResolutionStatus": "SEMANTICS_REQUIRED",
+      "ReasonCode": "LEGACY_H01_FIXED_CONFIG_LOGICAL_VARIANT_SEMANTICS_REQUIRED",
+      "BuildReceipt": null,
+      "RunID": null,
+      "PackageID": "VPKG-9adf47f2ba8928c6fc38341f",
+      "SourceArtifact": {
+        "path": "factory/vnext/pilots/boss15_h01_first_green/variant_build_package.json",
+        "sha256": "740fe39e2c204d595428ce270917e60af8673bef0a71f1815e44135e84c5edf0"
+      },
+      "AliasID": "IALIAS-8af2d3ab9676f039ca01bf8f"
+    },
+    {
+      "schema_version": "factory-vnext-legacy-identity-alias-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "FamilyID": "B16",
+      "LegacyVariantID": "B16-H01-R1",
+      "VariantSnapshotID": "VAR-893921742d54d7ecc55a3dac",
+      "HypothesisRevision": "B16-H01-r1",
+      "StrategyVersion": "B16-H01-r1",
+      "LogicalVariantID": null,
+      "ResolutionStatus": "SEMANTICS_REQUIRED",
+      "ReasonCode": "LEGACY_H01_FIXED_CONFIG_LOGICAL_VARIANT_SEMANTICS_REQUIRED",
+      "BuildReceipt": null,
+      "RunID": null,
+      "PackageID": "VPKG-330158d2284b21d7df4126b6",
+      "SourceArtifact": {
+        "path": "factory/vnext/pilots/boss16_h01_first_green/variant_build_package.json",
+        "sha256": "a81cdfa072578d798b9178534be28a0e6d834b9a26ef5b71624d2cf12e709db3"
+      },
+      "AliasID": "IALIAS-143cf90f6c48107c9fe8222c"
+    },
+    {
+      "schema_version": "factory-vnext-legacy-identity-alias-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "FamilyID": "B17",
+      "LegacyVariantID": "B17-H01-R1",
+      "VariantSnapshotID": "VAR-a050cafe295f041c18551240",
+      "HypothesisRevision": "B17-H01-r1",
+      "StrategyVersion": "B17-H01-r1",
+      "LogicalVariantID": null,
+      "ResolutionStatus": "SEMANTICS_REQUIRED",
+      "ReasonCode": "LEGACY_H01_FIXED_CONFIG_LOGICAL_VARIANT_SEMANTICS_REQUIRED",
+      "BuildReceipt": null,
+      "RunID": null,
+      "PackageID": "VPKG-e1c33fa67926cf7292282065",
+      "SourceArtifact": {
+        "path": "factory/vnext/pilots/boss17_h01_first_green/variant_build_package.json",
+        "sha256": "599e2b695e2d916cfb3d598c63e07285d0002a076eced38e38961a24d1b8caf4"
+      },
+      "AliasID": "IALIAS-759b83b585e59f8178eaba4e"
+    },
+    {
+      "schema_version": "factory-vnext-legacy-identity-alias-v1",
+      "authority": "NON_AUTHORITATIVE_SIDECAR",
+      "FamilyID": "B18",
+      "LegacyVariantID": "B18-H01-R1",
+      "VariantSnapshotID": "VAR-c729b01441c58fb6452e1393",
+      "HypothesisRevision": "B18-H01-r1",
+      "StrategyVersion": "B18-H01-r1",
+      "LogicalVariantID": null,
+      "ResolutionStatus": "SEMANTICS_REQUIRED",
+      "ReasonCode": "LEGACY_H01_FIXED_CONFIG_LOGICAL_VARIANT_SEMANTICS_REQUIRED",
+      "BuildReceipt": null,
+      "RunID": null,
+      "PackageID": "VPKG-0b116e98b619dc06b5baf78a",
+      "SourceArtifact": {
+        "path": "factory/vnext/pilots/boss18_h01_first_green/variant_build_package.json",
+        "sha256": "c5bcd7316e4d90cc95287d26450c812b7f35290ac8af3d4f3f6752e1a0cbd02e"
+      },
+      "AliasID": "IALIAS-98ff23b7e894549ce3e7e8d7"
+    }
+  ],
+  "AliasCatalogID": "IALCAT-0e6f27a0e85a71a9208f899d"
+}
