@@ -59,9 +59,27 @@ class Boss14FirstGreenTests(unittest.TestCase):
             for name, entry in index["files"].items():
                 self.assertEqual(entry["sha256"], one[name])
             checked_in = ROOT / PILOT_RELATIVE_PATH
+            fresh_payloads = {
+                path.name: path.read_bytes()
+                for path in pathlib.Path(first).iterdir()
+                if path.name != "artifact_index.json"
+            }
+            checked_in_payloads = {
+                path.name: path.read_bytes()
+                for path in checked_in.iterdir()
+                if path.name != "artifact_index.json"
+            }
+            self.assertEqual(fresh_payloads, checked_in_payloads)
+
+            checked_in_index = json.loads((checked_in / "artifact_index.json").read_text(encoding="utf-8"))
+            self.assertEqual(set(checked_in_index["files"]), set(checked_in_payloads))
+            for name, entry in checked_in_index["files"].items():
+                self.assertEqual(entry["sha256"], hashlib.sha256(checked_in_payloads[name]).hexdigest())
+                self.assertEqual(entry["bytes"], len(checked_in_payloads[name]))
+            checked_in_package = json.loads(checked_in_payloads["variant_build_package.json"])
             self.assertEqual(
-                {path.name: path.read_bytes() for path in pathlib.Path(first).iterdir()},
-                {path.name: path.read_bytes() for path in checked_in.iterdir()},
+                checked_in_index["PackageID"],
+                checked_in_package["PackageID"],
             )
 
     def test_ambiguous_registry_mapping_refuses(self):
