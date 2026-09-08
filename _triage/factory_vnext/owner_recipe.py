@@ -10,10 +10,13 @@ from __future__ import annotations
 import copy
 import json
 import re
+from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Optional
 
 from .contracts import canonical_json, sha256_bytes, stable_id
-from .identity_model import IDENTITY_SCHEMA_VERSION, validate_identity_projection
+from .identity_model import (
+    IDENTITY_SCHEMA_VERSION, load_alias_catalog, validate_identity_projection,
+)
 from .variant_generator import validate_variant_build_package
 
 
@@ -25,6 +28,7 @@ AUTHORITY = "NON_AUTHORITATIVE_SIDECAR"
 EFFECTIVE_SCHEMA = "factory-vnext-resolved-effective-config-v1"
 RECIPE_SCHEMA = "factory-vnext-owner-recipe-v1"
 CATALOG_SCHEMA = "factory-vnext-owner-recipe-catalog-v1"
+ALIAS_CATALOG_RELATIVE_PATH = "factory/vnext/identity_aliases.json"
 
 EFFECTIVE = "EFFECTIVE"
 LOCKED = "LOCKED"
@@ -196,7 +200,43 @@ def _validate_package_schema(package: Mapping[str, Any]) -> None:
         )
     _projection_rows(package)
 
-def _validate_join(identity: Mapping[str, Any], parameter_set: Mapping[str, Any], package: Mapping[str, Any]) -> None:
+def _validate_identity_alias_resolution(
+    identity: Mapping[str, Any], package: Mapping[str, Any], *, repo_root: Optional[str]
+) -> None:
+    alias_ids = identity.get("LegacyAliasIDs")
+    if not alias_ids:
+        return
+    if repo_root is None:
+        raise OwnerRecipeError(
+            "LegacyAliasIDs require repo_root for canonical alias resolution validation"
+        )
+    root = Path(repo_root).resolve()
+    catalog_path = root / Path(*ALIAS_CATALOG_RELATIVE_PATH.split("/"))
+    try:
+        catalog = load_alias_catalog(str(catalog_path), repo_root=str(root))
+    except (OSError, ValueError) as exc:
+        raise OwnerRecipeError("canonical legacy alias catalog validation failed") from exc
+    by_id = {row["AliasID"]: row for row in catalog["Aliases"]}
+    for alias_id in alias_ids:
+        alias = by_id.get(alias_id)
+        if alias is None:
+            raise OwnerRecipeError("LegacyAliasID is absent from canonical alias catalog")
+        if alias["ResolutionStatus"] != "RESOLVED":
+            raise OwnerRecipeError("LegacyAliasID remains SEMANTICS_REQUIRED / unresolved")
+        if alias["FamilyID"] != identity["FamilyID"]:
+            raise OwnerRecipeError("resolved legacy alias FamilyID mismatch")
+        if alias["LogicalVariantID"] != identity["LogicalVariantID"]:
+            raise OwnerRecipeError("resolved legacy alias LogicalVariantID mismatch")
+        if alias["HypothesisRevision"] != identity["HypothesisRevision"]:
+            raise OwnerRecipeError("resolved legacy alias HypothesisRevision mismatch")
+        if alias["PackageID"] != package.get("PackageID"):
+            raise OwnerRecipeError("resolved legacy alias PackageID mismatch")
+
+
+def _validate_join(
+    identity: Mapping[str, Any], parameter_set: Mapping[str, Any],
+    package: Mapping[str, Any], *, repo_root: Optional[str]
+) -> None:
     try:
         validate_identity_projection(identity)
     except ValueError as exc:
@@ -219,6 +259,7 @@ def _validate_join(identity: Mapping[str, Any], parameter_set: Mapping[str, Any]
         )
     if package_ref != package.get("PackageID"):
         raise OwnerRecipeError("IdentityProjection PackageID mismatch")
+    _validate_identity_alias_resolution(identity, package, repo_root=repo_root)
 
 
 def _projection_rows(package: Mapping[str, Any]) -> list[Dict[str, Any]]:
@@ -273,7 +314,9 @@ def _resolution_index(resolutions: Iterable[Mapping[str, Any]], rows: list[Dict[
     by_pid = {row["parameter_pid"]: row for row in rows}
     by_name = {row["parameter"]: row for row in rows}
     result: Dict[int, Dict[str, Any]] = {}
-    for raw in resolutions:
+    seen_names: set[str] = set()
+    order_keys: list[tuple[int, str]] = []
+    for raw in list(resolutions):
         if not isinstance(raw, Mapping) or set(raw) != RESOLUTION_FIELDS:
             raise OwnerRecipeError("resolution fields do not match schema")
         pid = raw.get("parameter_pid")
@@ -283,6 +326,8 @@ def _resolution_index(resolutions: Iterable[Mapping[str, Any]], rows: list[Dict[
         _need_text(name, "resolution.parameter")
         if pid in result:
             raise OwnerRecipeError("duplicate resolution parameter_pid")
+        if name in seen_names:
+            raise OwnerRecipeError("duplicate resolution parameter")
         if pid not in by_pid or name not in by_name or by_pid[pid]["parameter"] != name:
             raise OwnerRecipeError("resolution does not match ParameterProjection")
         state = _need_text(raw.get("state"), "resolution.state")
@@ -297,6 +342,10 @@ def _resolution_index(resolutions: Iterable[Mapping[str, Any]], rows: list[Dict[
         if state in {IGNORED, SEMANTICS_REQUIRED} and effective is not None:
             raise OwnerRecipeError("ignored/blocked resolution effective_value must be null")
         result[pid] = dict(raw)
+        seen_names.add(name)
+        order_keys.append((pid, name))
+    if order_keys != sorted(order_keys):
+        raise OwnerRecipeError("resolution rows must be deterministically sorted")
     return result
 
 def _control_from_row(row: Mapping[str, Any], params: Mapping[str, Any], override: Optional[Mapping[str, Any]]) -> Dict[str, Any]:
@@ -358,11 +407,11 @@ def _effective_payload(record: Mapping[str, Any]) -> Dict[str, Any]:
 
 def make_resolved_effective_config(
     identity: Mapping[str, Any], parameter_set: Mapping[str, Any], package: Mapping[str, Any],
-    *, resolutions: Iterable[Mapping[str, Any]] = (),
+    *, resolutions: Iterable[Mapping[str, Any]] = (), repo_root: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Build the reason-coded effective-config read model from explicit source facts."""
     params = _validate_parameter_set(parameter_set)
-    _validate_join(identity, parameter_set, package)
+    _validate_join(identity, parameter_set, package, repo_root=repo_root)
     rows = _projection_rows(package)
     overrides = _resolution_index(resolutions, rows)
     controls = [_control_from_row(row, params, overrides.get(row["parameter_pid"])) for row in rows]
@@ -457,11 +506,12 @@ def validate_resolved_effective_config(
     parameter_set: Mapping[str, Any],
     package: Mapping[str, Any],
     resolutions: Iterable[Mapping[str, Any]] = (),
+    repo_root: Optional[str] = None,
 ) -> None:
     """Validate structure and rebuild from mandatory source facts."""
     _validate_resolved_effective_config_structure(record)
     expected_record = make_resolved_effective_config(
-        identity, parameter_set, package, resolutions=resolutions
+        identity, parameter_set, package, resolutions=resolutions, repo_root=repo_root
     )
     if dict(record) != expected_record:
         raise OwnerRecipeError(
@@ -496,6 +546,7 @@ def make_owner_recipe(
     parameter_set: Mapping[str, Any],
     package: Mapping[str, Any],
     resolutions: Iterable[Mapping[str, Any]] = (),
+    repo_root: Optional[str] = None,
 ) -> Dict[str, Any]:
     resolution_rows = list(resolutions)
     try:
@@ -508,6 +559,7 @@ def make_owner_recipe(
         parameter_set=parameter_set,
         package=package,
         resolutions=resolution_rows,
+        repo_root=repo_root,
     )
     for field in ("IdentityProjectionID", "FamilyID", "LogicalVariantID", "HypothesisRevision", "ParameterSetID"):
         if effective_config[field] != identity[field]:
@@ -588,6 +640,7 @@ def validate_owner_recipe(
     parameter_set: Mapping[str, Any],
     package: Mapping[str, Any],
     resolutions: Iterable[Mapping[str, Any]] = (),
+    repo_root: Optional[str] = None,
 ) -> None:
     """Validate a recipe against every source used to resolve it."""
     resolution_rows = list(resolutions)
@@ -598,6 +651,7 @@ def validate_owner_recipe(
         parameter_set=parameter_set,
         package=package,
         resolutions=resolution_rows,
+        repo_root=repo_root,
     )
     expected_record = make_owner_recipe(
         identity,
@@ -605,6 +659,7 @@ def validate_owner_recipe(
         parameter_set=parameter_set,
         package=package,
         resolutions=resolution_rows,
+        repo_root=repo_root,
     )
     if dict(record) != expected_record:
         raise OwnerRecipeError("OwnerRecipe does not match supplied source facts")
@@ -617,6 +672,7 @@ def serialize_resolved_effective_config(
     parameter_set: Mapping[str, Any],
     package: Mapping[str, Any],
     resolutions: Iterable[Mapping[str, Any]] = (),
+    repo_root: Optional[str] = None,
 ) -> bytes:
     """Serialize a source-bound resolved config deterministically."""
     validate_resolved_effective_config(
@@ -625,6 +681,7 @@ def serialize_resolved_effective_config(
         parameter_set=parameter_set,
         package=package,
         resolutions=resolutions,
+        repo_root=repo_root,
     )
     return (canonical_json(dict(record)) + "\n").encode("utf-8")
 
@@ -637,6 +694,7 @@ def serialize_owner_recipe(
     parameter_set: Mapping[str, Any],
     package: Mapping[str, Any],
     resolutions: Iterable[Mapping[str, Any]] = (),
+    repo_root: Optional[str] = None,
 ) -> bytes:
     """Serialize a source-bound owner recipe deterministically."""
     validate_owner_recipe(
@@ -646,6 +704,7 @@ def serialize_owner_recipe(
         parameter_set=parameter_set,
         package=package,
         resolutions=resolutions,
+        repo_root=repo_root,
     )
     return (canonical_json(dict(record)) + "\n").encode("utf-8")
 
@@ -654,7 +713,9 @@ def _catalog_payload(record: Mapping[str, Any]) -> Dict[str, Any]:
     return {"Recipes": record["Recipes"]}
 
 
-def _recipe_from_source_bundle(source: Mapping[str, Any]) -> Dict[str, Any]:
+def _recipe_from_source_bundle(
+    source: Mapping[str, Any], *, repo_root: Optional[str] = None
+) -> Dict[str, Any]:
     if not isinstance(source, Mapping) or set(source) != CATALOG_SOURCE_FIELDS:
         raise OwnerRecipeError("catalog source fields do not match schema")
     resolutions = source.get("Resolutions")
@@ -664,7 +725,7 @@ def _recipe_from_source_bundle(source: Mapping[str, Any]) -> Dict[str, Any]:
     parameter_set = source["ParameterSet"]
     package = source["VariantBuildPackage"]
     effective_config = make_resolved_effective_config(
-        identity, parameter_set, package, resolutions=resolutions
+        identity, parameter_set, package, resolutions=resolutions, repo_root=repo_root
     )
     return make_owner_recipe(
         identity,
@@ -672,14 +733,15 @@ def _recipe_from_source_bundle(source: Mapping[str, Any]) -> Dict[str, Any]:
         parameter_set=parameter_set,
         package=package,
         resolutions=resolutions,
+        repo_root=repo_root,
     )
 
 
 def make_owner_recipe_catalog(
-    sources: Iterable[Mapping[str, Any]],
+    sources: Iterable[Mapping[str, Any]], *, repo_root: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Build a catalog only from exact source-fact bundles."""
-    rows = [_recipe_from_source_bundle(source) for source in sources]
+    rows = [_recipe_from_source_bundle(source, repo_root=repo_root) for source in sources]
     rows.sort(key=lambda recipe: recipe["OwnerRecipeID"])
     recipe_ids = [recipe["OwnerRecipeID"] for recipe in rows]
     if len(recipe_ids) != len(set(recipe_ids)):
@@ -745,10 +807,11 @@ def validate_owner_recipe_catalog(
     record: Mapping[str, Any],
     *,
     sources: Iterable[Mapping[str, Any]],
+    repo_root: Optional[str] = None,
 ) -> None:
     """Validate a catalog by rebuilding it from exact source-fact bundles."""
     _validate_owner_recipe_catalog_structure(record)
-    expected_record = make_owner_recipe_catalog(sources)
+    expected_record = make_owner_recipe_catalog(sources, repo_root=repo_root)
     if dict(record) != expected_record:
         raise OwnerRecipeError("OwnerRecipe catalog does not match supplied source facts")
 
@@ -757,7 +820,8 @@ def serialize_owner_recipe_catalog(
     record: Mapping[str, Any],
     *,
     sources: Iterable[Mapping[str, Any]],
+    repo_root: Optional[str] = None,
 ) -> bytes:
     """Serialize a source-bound recipe catalog deterministically."""
-    validate_owner_recipe_catalog(record, sources=sources)
+    validate_owner_recipe_catalog(record, sources=sources, repo_root=repo_root)
     return (canonical_json(dict(record)) + "\n").encode("utf-8")

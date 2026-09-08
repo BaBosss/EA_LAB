@@ -15,9 +15,9 @@ A recipe requires a valid, already-resolved Identity P0 projection. An unresolve
 1. `IdentityProjection` from `identity_model.py` with explicit `LogicalVariantID`.
 2. Factory `ParameterSet`, whose snapshot SHA-256 and `ParameterSetID` are recomputed.
 3. Factory `VariantBuildPackage`, validated by the existing package validator.
-4. Explicit resolution rows for tunable applicability. Their reasons are uppercase machine reason codes, not free-form labels.
+4. Explicit resolution rows for tunable applicability. Their reasons are uppercase machine reason codes, not free-form labels. Resolution rows are canonical input and must arrive sorted by `(parameter_pid, parameter)`; P1 refuses out-of-order rows rather than silently normalizing them.
 
-The join is fail-closed on Family, HypothesisRevision, ParameterSet and Package references. A package cannot be joined when the IdentityProjection has no matching `PackageID`. Home/build/run references remain owned by Identity P0 and are carried into the owner recipe; this layer does not redefine Home policy. Input and output records use exact schemas: unknown fields, duplicate PID/name identities, non-canonical row ordering, unsupported role/projection pairs, and tampered IDs/hashes are refused.
+The join is fail-closed on Family, HypothesisRevision, ParameterSet and Package references. A package cannot be joined when the IdentityProjection has no matching `PackageID`. If `LegacyAliasIDs` is non-empty, the caller must supply the exact repository root; P1 loads `factory/vnext/identity_aliases.json` from that checkout through Identity P0 validation and requires every referenced alias to be `RESOLVED`, family/logical-variant/hypothesis/package consistent, and source-valid. An unresolved or absent alias refuses before recipe construction. Home/build/run references remain owned by Identity P0 and are carried into the owner recipe; this layer does not redefine Home policy. Input and output records use exact schemas: unknown fields, duplicate PID/name identities, non-canonical row ordering, unsupported role/projection pairs, and tampered IDs/hashes are refused.
 
 ## Requested -> Effective contract
 

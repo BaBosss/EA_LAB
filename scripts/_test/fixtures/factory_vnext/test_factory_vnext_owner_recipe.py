@@ -585,9 +585,16 @@ class FactoryVNextOwnerRecipeTests(unittest.TestCase):
         alias_catalog = json.loads(
             (ROOT / "factory/vnext/identity_aliases.json").read_text(encoding="utf-8")
         )
+        alias = next(row for row in alias_catalog["Aliases"] if row["FamilyID"] == "B14")
+        self.assertEqual(alias["ResolutionStatus"], "SEMANTICS_REQUIRED")
         ps = self._parameter_set()
-        with self.assertRaisesRegex(OwnerRecipeError, "IdentityProjection validation failed"):
-            make_resolved_effective_config(alias_catalog["Aliases"][3], ps, self.package)
+        identity = self._identity(ps, legacy_alias_ids=[alias["AliasID"]])
+        with self.assertRaisesRegex(OwnerRecipeError, "SEMANTICS_REQUIRED / unresolved"):
+            make_resolved_effective_config(
+                identity, ps, self.package, repo_root=str(ROOT)
+            )
+        with self.assertRaisesRegex(OwnerRecipeError, "require repo_root"):
+            make_resolved_effective_config(identity, ps, self.package)
 
     def test_exact_input_schemas_and_duplicate_projection_identity_refuse(self):
         ps = self._parameter_set()
@@ -624,6 +631,17 @@ class FactoryVNextOwnerRecipeTests(unittest.TestCase):
         unsupported_projection["ParameterProjection"][0]["role"] = "UNKNOWN"
         with self.assertRaisesRegex(OwnerRecipeError, "role/projection"):
             make_resolved_effective_config(identity, ps, unsupported_projection)
+
+    def test_resolution_rows_must_be_deterministically_sorted(self):
+        ps = self._parameter_set()
+        identity = self._identity(ps)
+        resolutions = self._effective_resolutions(ps)
+        self.assertGreaterEqual(len(resolutions), 2)
+        reversed_rows = list(reversed(resolutions))
+        with self.assertRaisesRegex(OwnerRecipeError, "deterministically sorted"):
+            make_resolved_effective_config(
+                identity, ps, self.package, resolutions=reversed_rows
+            )
 
     def test_resolution_reasons_are_machine_codes(self):
         ps = self._parameter_set()
