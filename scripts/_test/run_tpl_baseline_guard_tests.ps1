@@ -3,6 +3,10 @@
 param([string]$RepoRoot = '')
 $ErrorActionPreference = 'Continue'
 if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
+$regressionCommand = Get-Command (Join-Path $RepoRoot 'scripts\tpl_regression.ps1')
+if (-not $regressionCommand.Parameters.ContainsKey('AdjacentControlRef')) {
+    throw 'tpl_regression.ps1 does not expose the required AdjacentControlRef public parameter'
+}
 $fixture = Join-Path ([IO.Path]::GetTempPath()) ('tpl_guard_' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force (Join-Path $fixture '.githooks') | Out-Null
 try {
@@ -39,6 +43,6 @@ try {
     [IO.File]::WriteAllText((Join-Path $fixture 'ea_template\regression_baseline.csv'), ($old + 'x'))
     git -C $fixture add .
     & git -C $fixture commit -q -m 're-pin BUILD-6090-PROVENANCE-MIGRATION historical' 2>&1 | Out-Null; if ($LASTEXITCODE -eq 0) { throw 'guard allowed historical CSV mutation' }
-    Write-Host 'TPL BASELINE GUARD TESTS: 4/4 PASS' -ForegroundColor Green
+    Write-Host 'TPL BASELINE GUARD TESTS: 5/5 PASS' -ForegroundColor Green
     exit 0
 } finally { Remove-Item -LiteralPath $fixture -Recurse -Force -ErrorAction SilentlyContinue }

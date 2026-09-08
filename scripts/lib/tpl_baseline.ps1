@@ -40,24 +40,95 @@ function Resolve-TplRepoPath([string]$Root, [string]$RelativePath, [string]$Fiel
     return $resolved
 }
 
-function Get-TplExpectedEas([string]$Root) {
-    # B-F3 (Audit B): this used to gate on `$files.Count -ne 8` -- a literal cardinality check
-    # blind to WHICH 8. That check passes unchanged if one real wrapper is deleted and a
-    # same-count decoy is dropped in next to it (e.g. Boss_15_ST03.mq5 swapped for
-    # Boss_15_Decoy.mq5): the count never moves. The only thing that can catch a swap is
-    # comparing the discovered NAMES against the manifest's declared NAMES as a set, which
-    # Get-TplActiveBaseline already does below (missing/extra) -- so cardinality is no longer
-    # asserted here at all; a wrong SET is asserted there, unconditionally, by identity not count.
+function Get-TplBossEasOnDisk([string]$Root) {
     $files = @(Get-ChildItem -LiteralPath (Join-Path $Root 'ea_template') -Filter 'Boss_*.mq5' -File | Sort-Object Name)
     if ($files.Count -eq 0) { throw 'FAIL: no canonical Boss EA wrappers found on disk under ea_template\' }
-    $seen = @{}
+    $seenNames = @{}
+    $seenTags = @{}
     return @($files | ForEach-Object {
         $match = [regex]::Match($_.BaseName, '^Boss_(\d+)_')
         if (-not $match.Success) { throw "FAIL: malformed Boss EA name $($_.Name)" }
-        if ($seen.ContainsKey($_.BaseName)) { throw "FAIL: duplicate Boss EA wrapper name on disk: $($_.Name)" }
-        $seen[$_.BaseName] = $true
-        [pscustomobject]@{ Name = $_.BaseName; Tag = ('LAB_ENTRY_' + $match.Groups[1].Value); Source = $_ }
+        $tag = 'LAB_ENTRY_' + $match.Groups[1].Value
+        if ($seenNames.ContainsKey($_.BaseName)) { throw "FAIL: duplicate Boss EA wrapper name on disk: $($_.Name)" }
+        if ($seenTags.ContainsKey($tag)) { throw "FAIL: duplicate Boss EA LAB entry on disk: $tag" }
+        $seenNames[$_.BaseName] = $true
+        $seenTags[$tag] = $true
+        [pscustomobject]@{
+            Name = $_.BaseName
+            Tag = $tag
+            Source = $_
+            RelativePath = Get-TplRelativePath -Root $Root -Path $_.FullName
+        }
     })
+}
+
+function Get-TplWrapperOwnerRows([string]$Root) {
+    $path = Join-Path $Root '_triage\factory_os\wrapper_owners.csv'
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "REFUSE: wrapper owner registry missing: $path" }
+    try { $lines = @(Get-Content -LiteralPath $path -Encoding UTF8 -ErrorAction Stop) }
+    catch { throw "REFUSE: wrapper owner registry could not be read: $($_.Exception.Message)" }
+    if ($lines.Count -lt 2 -or $lines[0] -cne 'build_tag,wrapper_rel') { throw 'REFUSE: wrapper owner registry header must be exactly build_tag,wrapper_rel' }
+    $rows = New-Object System.Collections.Generic.List[object]
+    $seenTags = @{}; $seenPaths = @{}
+    for ($i=1; $i -lt $lines.Count; $i++) {
+        $line = [string]$lines[$i]
+        if ([string]::IsNullOrWhiteSpace($line)) { throw "REFUSE: blank wrapper owner row at line $($i+1)" }
+        $parts = @($line.Split(','))
+        if ($parts.Count -ne 2) { throw "REFUSE: wrapper owner row must have exactly 2 fields at line $($i+1)" }
+        $tag=$parts[0].Trim(); $rel=$parts[1].Trim().Replace('\','/')
+        if ($tag -notmatch '^LAB_ENTRY_\d+$') { throw "REFUSE: malformed wrapper build tag at line $($i+1): $tag" }
+        if ($rel -notmatch '^ea_template/[^/]+\.mq5$' -or $rel.Contains('/./') -or $rel.Contains('../')) { throw "REFUSE: malformed wrapper owner path at line $($i+1): $rel" }
+        if ($seenTags.ContainsKey($tag)) { throw "REFUSE: duplicate wrapper build tag: $tag" }
+        if ($seenPaths.ContainsKey($rel.ToLowerInvariant())) { throw "REFUSE: duplicate wrapper owner path: $rel" }
+        $seenTags[$tag]=$true; $seenPaths[$rel.ToLowerInvariant()]=$true
+        $rows.Add([pscustomobject]@{Tag=$tag; RelativePath=$rel})
+    }
+    return $rows.ToArray()
+}
+function Get-TplHistoricalAndUnbaselinedEas([string]$Root, [object[]]$Cases) {
+    $caseNames = @($Cases | ForEach-Object { [string]$_.ea })
+    $caseNameSet = @($caseNames | Select-Object -Unique)
+    if ($caseNameSet.Count -ne $caseNames.Count) {
+        $dupes = @($caseNames | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object Name)
+        throw "FAIL: manifest declares duplicate EA case name(s): $($dupes -join ', ')"
+    }
+
+    $historical = @($Cases | ForEach-Object {
+        $match = [regex]::Match([string]$_.ea, '^Boss_(\d+)_')
+        if (-not $match.Success) { throw "FAIL: malformed manifest Boss EA name $($_.ea)" }
+        [pscustomobject]@{
+            Name = [string]$_.ea
+            Tag = 'LAB_ENTRY_' + $match.Groups[1].Value
+            RelativePath = ([string]$_.source_path).Replace('\','/')
+            SourcePath = ([string]$_.source_path).Replace('\','/')
+        }
+    })
+    $duplicateHistoricalTags = @($historical | Group-Object Tag | Where-Object Count -gt 1 | ForEach-Object Name)
+    if ($duplicateHistoricalTags.Count -gt 0) { throw "FAIL: manifest declares duplicate LAB entry tag(s): $($duplicateHistoricalTags -join ', ')" }
+
+    $disk = @(Get-TplBossEasOnDisk $Root)
+    $diskNames = @($disk | ForEach-Object Name)
+    $missing = @($historical | Where-Object { $diskNames -notcontains $_.Name } | ForEach-Object Name)
+    if ($missing.Count -gt 0) { throw "FAIL: historical manifest Boss wrapper missing or renamed: $($missing -join ', ')" }
+    foreach ($ea in $historical) {
+        $expectedPath = "ea_template/$($ea.Name).mq5"
+        if ($ea.RelativePath -ne $expectedPath) { throw "REFUSE: historical manifest Boss path mismatch for $($ea.Name): $($ea.RelativePath)" }
+        $actual = @($disk | Where-Object Name -eq $ea.Name)[0]
+        if ($actual.Tag -ne $ea.Tag -or $actual.RelativePath -ne $expectedPath) { throw "REFUSE: historical manifest Boss identity mismatch for $($ea.Name)" }
+        $ea | Add-Member -NotePropertyName Source -NotePropertyValue $actual.Source
+    }
+
+    $owners = @(Get-TplWrapperOwnerRows $Root)
+    foreach ($ea in $disk) {
+        $related = @($owners | Where-Object { $_.Tag -eq $ea.Tag -or $_.RelativePath -eq $ea.RelativePath })
+        $exact = @($related | Where-Object { $_.Tag -eq $ea.Tag -and $_.RelativePath -eq $ea.RelativePath })
+        if ($exact.Count -eq 0) { throw "REFUSE: unregistered or mismatched Boss wrapper: $($ea.Tag) $($ea.RelativePath)" }
+        if ($exact.Count -ne 1 -or $related.Count -ne 1) { throw "REFUSE: duplicate or conflicting Boss wrapper owner registration: $($ea.Tag) $($ea.RelativePath)" }
+    }
+    $extras = @($disk | Where-Object { $caseNames -notcontains $_.Name } | ForEach-Object {
+        [pscustomobject]@{ Name = $_.Name; Tag = $_.Tag; SourcePath = $_.RelativePath; RelativePath = $_.RelativePath; Source = $_.Source }
+    })
+    return [pscustomobject]@{ HistoricalEas = $historical; UnbaselinedEas = $extras }
 }
 
 function Assert-TplRequired([object]$Object, [string[]]$Fields, [string]$Label) {
@@ -91,12 +162,17 @@ function Get-TplActiveBaseline {
     if ([int]$manifest.expected_mt5_build -ne 6090) { throw "REFUSE: expected MT5 build is $($manifest.expected_mt5_build), not 6090" }
     if (-not [bool]$manifest.baseline_source_clean) { throw 'REFUSE: baseline source was not clean' }
 
+    $cases = @($manifest.cases)
+    if ($cases.Count -eq 0) { throw 'FAIL: manifest declares zero EA cases' }
+    $cohorts = Get-TplHistoricalAndUnbaselinedEas -Root $Root -Cases $cases
+    $expected = @($cohorts.HistoricalEas)
+
     $metricsPath = Resolve-TplRepoPath $Root ([string]$manifest.metrics_file) 'manifest.metrics_file'
     $metricsHash = Get-TplSha256 $metricsPath
     if ($metricsHash -ne ([string]$manifest.metrics_sha256).ToLowerInvariant()) { throw 'REFUSE: metrics integrity mismatch' }
     try { $metrics = @(Import-Csv -LiteralPath $metricsPath -ErrorAction Stop) }
     catch { throw "REFUSE: metrics file could not be parsed: $($_.Exception.Message)" }
-    $expectedMetricCount = (Get-TplExpectedEas $Root).Count
+    $expectedMetricCount = $cases.Count
     if ($metrics.Count -ne $expectedMetricCount) { throw "FAIL: versioned metrics contains $($metrics.Count) rows, expected $expectedMetricCount" }
     $metricFields = @('ea','net','pf','trades','eqdd')
     foreach ($row in $metrics) { Assert-TplRequired $row $metricFields 'metrics row' }
@@ -107,24 +183,7 @@ function Get-TplActiveBaseline {
         throw 'REFUSE: baseline tester contract is not XAUUSD/H1/2024.01.01-2024.07.01/Model1/$10000/USD/1:100'
     }
 
-    $expected = Get-TplExpectedEas $Root
-    $cases = @($manifest.cases)
-    if ($cases.Count -eq 0) { throw 'FAIL: manifest declares zero EA cases' }
     $caseNames = @($cases | ForEach-Object { [string]$_.ea })
-    # B-F3: the manifest side used to gate on `$cases.Count -ne 8` too -- a second literal
-    # cardinality check, independent of the disk side, equally blind to a same-count rename.
-    # Cardinality is dropped in favor of SET EQUALITY: both sides must be duplicate-free, and
-    # the two name sets must be identical. A swap moves neither count but always breaks this.
-    $caseNameSet = @($caseNames | Select-Object -Unique)
-    if ($caseNameSet.Count -ne $caseNames.Count) {
-        $dupes = @($caseNames | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object Name)
-        throw "FAIL: manifest declares duplicate EA case name(s): $($dupes -join ', ')"
-    }
-    $expectedNames = @($expected | ForEach-Object Name)
-    $missing = @($expectedNames | Where-Object { $caseNames -notcontains $_ })
-    $extra = @($caseNames | Where-Object { $expectedNames -notcontains $_ })
-    if ($missing.Count -gt 0) { throw "FAIL: manifest missing EA(s): $($missing -join ', ')" }
-    if ($extra.Count -gt 0) { throw "FAIL: manifest has extra EA(s): $($extra -join ', ')" }
 
     foreach ($ea in $expected) {
         $case = @($cases | Where-Object { $_.ea -eq $ea.Name })[0]
@@ -146,7 +205,15 @@ function Get-TplActiveBaseline {
         $row = @($metrics | Where-Object { $_.ea -eq $ea.Name })[0]
         if ($null -eq $row -or $row.net -ne $m.net -or $row.pf -ne $m.pf -or $row.trades -ne $m.trades -or $row.eqdd -ne $m.eqdd) { throw "REFUSE: $($ea.Name) metrics file does not match manifest" }
     }
-    return [pscustomobject]@{ Selector = $selector; Manifest = $manifest; Metrics = $metrics; ManifestPath = $manifestPath }
+    return [pscustomobject]@{
+        Selector = $selector
+        Manifest = $manifest
+        Metrics = $metrics
+        ManifestPath = $manifestPath
+        HistoricalEas = $cohorts.HistoricalEas
+        UnbaselinedEas = $cohorts.UnbaselinedEas
+        RegisteredUnbaselinedEas = $cohorts.UnbaselinedEas
+    }
 }
 
 function Assert-TplCommitIdentity {
@@ -162,8 +229,64 @@ function Assert-TplCommitIdentity {
     return $value.ToLowerInvariant()
 }
 
+function Assert-TplAdjacentControlContract {
+    param(
+        [Parameter(Mandatory)][string]$Root,
+        [Parameter(Mandatory)][string]$ControlRef,
+        [Parameter(Mandatory)][object]$Baseline,
+        [object[]]$RegisteredUnbaselinedEas = @()
+    )
+    $control = Assert-TplCommitIdentity -Root $Root -Sha $ControlRef -Label 'AdjacentControlRef'
+    $head = (& git -C $Root rev-parse HEAD 2>$null)
+    if ($LASTEXITCODE -ne 0 -or -not $head) { throw 'REFUSE: current source identity unavailable' }
+    $head = ([string]$head).Trim().ToLowerInvariant()
+    $parent = (& git -C $Root rev-parse 'HEAD^' 2>$null)
+    if ($LASTEXITCODE -ne 0 -or -not $parent -or ([string]$parent).Trim().ToLowerInvariant() -ne $control) {
+        throw "REFUSE: AdjacentControlRef must be the immediate parent of HEAD $head"
+    }
+
+    $pending = if ($RegisteredUnbaselinedEas.Count -gt 0) {
+        @($RegisteredUnbaselinedEas)
+    } elseif ($null -ne $Baseline.PSObject.Properties['RegisteredUnbaselinedEas']) {
+        @($Baseline.RegisteredUnbaselinedEas)
+    } elseif ($null -ne $Baseline.PSObject.Properties['UnbaselinedEas']) {
+        @($Baseline.UnbaselinedEas)
+    } else { @() }
+    if ($pending.Count -eq 0) { throw 'REFUSE: adjacent control requires at least one registered unbaselined Boss wrapper' }
+
+    $historicalPaths = if ($null -ne $Baseline.PSObject.Properties['HistoricalEas']) {
+        @($Baseline.HistoricalEas | ForEach-Object { if ($_.SourcePath) { [string]$_.SourcePath } else { [string]$_.RelativePath } })
+    } else {
+        @($Baseline.Manifest.cases | ForEach-Object { [string]$_.source_path })
+    }
+    foreach ($path in $historicalPaths) {
+        & git -C $Root diff --quiet ($control + '..' + $head) -- $path 2>$null
+        if ($LASTEXITCODE -ne 0) { throw "REFUSE: historical baseline Boss wrapper changed control->HEAD: $path" }
+    }
+
+    $addedPending = @()
+    foreach ($ea in $pending) {
+        $path = if ($ea.SourcePath) { [string]$ea.SourcePath } else { [string]$ea.RelativePath }
+        if ([string]::IsNullOrWhiteSpace($path)) { throw 'REFUSE: registered unbaselined Boss wrapper has no source path' }
+        $status = @(& git -C $Root diff --name-status ($control + '..' + $head) -- $path 2>$null)
+        if ($LASTEXITCODE -ne 0) { throw "REFUSE: unable to reconcile registered unbaselined Boss wrapper against control: $path" }
+        if ($status.Count -eq 1 -and ([string]$status[0]) -match '^A\s+') {
+            $addedPending += $path
+        } elseif ($status.Count -gt 0) {
+            throw "REFUSE: registered unbaselined Boss wrapper has a non-addition change against control: $path"
+        }
+    }
+    if ($addedPending.Count -eq 0) { throw 'REFUSE: adjacent control has no newly added registered unbaselined Boss wrapper' }
+    return $control
+}
+
 function Assert-TplSourceContract {
-    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][object]$Baseline)
+    param(
+        [Parameter(Mandatory)][string]$Root,
+        [Parameter(Mandatory)][object]$Baseline,
+        [string]$AdjacentControlRef = '',
+        [object[]]$RegisteredUnbaselinedEas = @()
+    )
     $git = & git -C $Root rev-parse HEAD 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $git) { throw 'REFUSE: current source identity unavailable' }
     $current = ([string]$git).Trim()
@@ -173,10 +296,14 @@ function Assert-TplSourceContract {
     if ($LASTEXITCODE -ne 0) {
         throw "REFUSE: accepted runtime lineage tip $runtime is not an ancestor of baseline source identity $base"
     }
-    if ($current -eq $base) { return $current }
+    if ($current -eq $base -and -not $AdjacentControlRef) { return $current }
     & git -C $Root merge-base --is-ancestor $base $current 2>$null
     if ($LASTEXITCODE -ne 0) {
         throw "REFUSE: baseline source identity $base is not an ancestor of current source identity $current"
+    }
+    if ($AdjacentControlRef) {
+        Assert-TplAdjacentControlContract -Root $Root -ControlRef $AdjacentControlRef -Baseline $Baseline -RegisteredUnbaselinedEas $RegisteredUnbaselinedEas | Out-Null
+        return $current
     }
     $changed = @(& git -C $Root diff --name-only ($base + '..' + $current) 2>$null)
     if ($LASTEXITCODE -ne 0) { throw "REFUSE: source identity $current is not in the accepted comparison lineage" }
