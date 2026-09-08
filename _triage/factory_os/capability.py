@@ -58,29 +58,14 @@ if HERE not in sys.path:
 
 import architecture                               # noqa: E402  (path set above)
 import preset                                     # noqa: E402  (path set above)
+import wrapper_owners                             # noqa: E402  (path set above)
 
 Refusal = preset.PresetRefusal
-
-WRAPPER_DIR = 'ea_template'
 
 # The two stabilities `schemas.json` allows. Named here so the reason a value is chosen can cite
 # the vocabulary rather than a literal that could drift from the schema unnoticed.
 STABILITY_EXPERIMENTAL = 'EXPERIMENTAL'
 STABILITY_CERTIFIABLE = 'CERTIFIABLE'
-
-# build tag -> the wrapper `.mq5` that declares the chassis version. Derived from the same
-# `#ifdef LAB_ENTRY_nn` model `architecture.ENTRY_MODULE` uses, and CLOSED for the same reason.
-WRAPPER_FILE = {
-    'LAB_ENTRY_11': 'Boss_11_GridTrend.mq5',
-    'LAB_ENTRY_12': 'Boss_12_Breakout.mq5',
-    'LAB_ENTRY_13': 'Boss_13_MeanRev.mq5',
-    'LAB_ENTRY_14': 'Boss_14_GridLog.mq5',
-    'LAB_ENTRY_15': 'Boss_15_ST03.mq5',
-    'LAB_ENTRY_16': 'Boss_16_KangarooGrid.mq5',
-    'LAB_ENTRY_17': 'Boss_17_Wave5.mq5',
-    'LAB_ENTRY_18': 'Boss_18_JumStoch.mq5',
-    'LAB_ENTRY_19': 'Probe_19_AdaptiveTrendGrid.mq5',
-}
 
 # The capability vocabulary. Each entry: token -> (module relpath, selector input, test).
 # `test` is `('NE', value)` -- enabled unless the selector holds that value -- or `('EQ', value)`
@@ -169,10 +154,11 @@ def _canon(value, decl=None, enums=None):
 
 def enabled_tokens(build_tag, config, surface=None):
     """-> sorted tuple of the capability tokens this (build, config) enables."""
-    if build_tag not in WRAPPER_FILE:
+    if build_tag not in architecture.ENTRY_MODULE:
         raise Refusal(
-            'build tag %r is not in WRAPPER_FILE, so this module cannot say which capabilities '
-            'it has. Known: %s' % (build_tag, ', '.join(sorted(WRAPPER_FILE))))
+            'build tag %r has no architecture entry module, so this module cannot say which '
+            'capabilities it has. Known: %s'
+            % (build_tag, ', '.join(sorted(architecture.ENTRY_MODULE))))
     if surface is not None and surface.build_tag != build_tag:
         raise Refusal('the supplied surface is build %s but the capability set asked for is %s'
                       % (surface.build_tag, build_tag))
@@ -210,10 +196,7 @@ def enabled_tokens(build_tag, config, surface=None):
 
 def chassis_version(read, build_tag):
     """-> the version string the build's wrapper declares. `read(relpath) -> text`."""
-    rel = WRAPPER_FILE.get(build_tag)
-    if rel is None:
-        raise Refusal('no wrapper file is known for build %r' % build_tag)
-    rel = '%s/%s' % (WRAPPER_DIR, rel)
+    rel = wrapper_owners.resolve_from_read(read, build_tag)
     text = read(rel)
     found = _VERSION_RE.findall(text)
     if not found:

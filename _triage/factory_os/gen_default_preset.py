@@ -27,6 +27,7 @@ sys.path.insert(0, HERE)
 import evidence     # noqa: E402
 import gen_locked_constants as gen_consts   # noqa: E402
 import preset       # noqa: E402
+import wrapper_owners  # noqa: E402
 
 
 def defaults_layer(surface, unit_classes, account_unit='usd'):
@@ -63,10 +64,11 @@ def build(build_tag, overrides=None, root=ROOT):
     # `surface_only` to `surface+constants`. They come from the SAME EvidenceSource as the surface
     # -- a constant read from the disk while the surface came from the index would fingerprint a
     # configuration no single snapshot has.
-    consts = gen_consts.constants_for(
-        src.read_committed, build_tag,
-        gen_consts._resolve_wrappers(src.read_committed, src.read_committed(preset.INPUTS_REL),
-                                     _wrapper_rels(root))[1][build_tag])
+    owners = wrapper_owners.load(src)
+    if build_tag not in owners.by_tag:
+        raise preset.PresetRefusal('no canonical wrapper owner is declared for %s' % build_tag)
+    consts = gen_consts.constants_for(src.read_committed, build_tag,
+                                     owners.by_tag[build_tag])
     return preset.compile_preset(surface, layers, 'usd',
                                  unit_classes=unit_classes,
                                  locked_constants=consts,
@@ -88,10 +90,6 @@ def read_overlay(path, surface, unit_classes):
                 value = {'value': value, 'unit': 'usd'}
             rows.append((key, value))
     return rows
-
-
-def _wrapper_rels(root):
-    return gen_consts.wrapper_rels_on_disk(root)
 
 
 def main(argv):

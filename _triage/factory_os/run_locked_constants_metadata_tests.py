@@ -10,19 +10,20 @@ sys.path.insert(0, HERE)
 
 import gen_locked_constants as GEN  # noqa: E402
 import preset  # noqa: E402
+import wrapper_owners  # noqa: E402
 
 
 def main():
     inputs_path = os.path.join(ROOT, 'ea_template', 'core', 'Inputs.mqh')
     inputs = io.open(inputs_path, encoding='utf-8-sig').read()
-    wrappers = sorted(os.path.join('ea_template', name).replace(os.sep, '/')
-                      for name in os.listdir(os.path.join(ROOT, 'ea_template'))
-                      if name.startswith('Boss_') and name.endswith('.mq5'))
-
     def read(rel):
         return io.open(os.path.join(ROOT, rel.replace('/', os.sep)), encoding='utf-8-sig').read()
 
-    generated = GEN.emit(read, inputs, wrappers)
+    loaded = wrapper_owners.load_from_read(
+        read, root_listing=sorted('ea_template/' + name
+                                  for name in os.listdir(os.path.join(ROOT, 'ea_template'))
+                                  if name.endswith('.mq5')))
+    generated = GEN.emit(read, inputs, loaded.by_tag)
     committed = io.open(os.path.join(ROOT, GEN.OUT_REL.replace('/', os.sep)), encoding='utf-8-sig').read()
     checks = [
         ('committed LockedConstants equals canonical generator', generated == committed),
@@ -39,7 +40,8 @@ def main():
             '#define CFG_FP_VERSION "cfgfp-v1" // @CFG_METADATA\n'
             '#define ORDINARY 7\n'),
     }
-    fixture_out = GEN.emit(lambda rel: fixture[rel], '#ifndef LAB_ENTRY_11\n', ['ea_template/Boss_11_Fix.mq5'])
+    fixture_out = GEN.emit(lambda rel: fixture[rel], '#ifndef LAB_ENTRY_11\n',
+                           {'LAB_ENTRY_11': 'ea_template/Boss_11_Fix.mq5'})
     checks.extend([
         ('fixture metadata marker excludes build receipt', 'const:LAB_BUILD_RECEIPT=' not in fixture_out),
         ('fixture metadata marker excludes fingerprint version', 'const:CFG_FP_VERSION=' not in fixture_out),

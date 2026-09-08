@@ -40,6 +40,7 @@ import check_input_surface_gen as CHK   # noqa: E402
 import gen_input_surface as GEN         # noqa: E402
 import gen_locked_constants as GCONST   # noqa: E402
 import preset                           # noqa: E402
+import wrapper_owners as OWNERS         # noqa: E402
 
 # A minimal input source with two builds and one of every type this chassis declares. Small on
 # purpose: the REAL Inputs.mqh is exercised by X1's specificity half, and a fixture that is a
@@ -86,6 +87,10 @@ FIXTURE_WRAPPERS = {
         '#define LAB_ENTRY_12\n'
         '#define LAB_ENTRY_TAG "12_Fix"\n'
         '#include "core/FixCore.mqh"\n'),
+}
+FIXTURE_OWNER_MAP = {
+    'LAB_ENTRY_11': 'ea_template/Boss_11_Fix.mq5',
+    'LAB_ENTRY_12': 'ea_template/Boss_12_Fix.mq5',
 }
 FIXTURE_CORE = (
     '#ifndef FIX_CORE_MQH\n'
@@ -142,6 +147,10 @@ class FakeSource(object):
             raise CHK.ToolFailure('%s is not in the fixture source' % rel)
         return self.files[rel]
 
+    def read_committed_bytes(self, rel):
+        value = self.read_committed(rel)
+        return value if isinstance(value, bytes) else value.encode('utf-8')
+
     def list_committed(self, pattern):
         """ORDER-730. Shaped like the real one: `*` stays inside one path segment, because the
         real `list_committed` says so and a fixture that enumerated more generously would let a
@@ -169,14 +178,16 @@ def files_for(M, inputs_text=FIXTURE_INPUTS, gen_text=None, core_text=None, fp_t
               const_text=None, closure=None):
     files = dict(closure if closure is not None else fixture_closure())
     read = lambda rel: files[rel.replace(os.sep, '/')]        # noqa: E731 - a one-line reader
-    wrappers = sorted(f for f in files if f.endswith('.mq5'))
+    manifest = 'build_tag,wrapper_rel\n' + ''.join(
+        '%s,%s\n' % row for row in sorted(FIXTURE_OWNER_MAP.items()))
+    files.setdefault(OWNERS.MANIFEST_REL, manifest)
     files.update({
         M.chk.INPUTS_PATH: inputs_text,
         M.chk.GEN_PATH: M.gen.emit(inputs_text) if gen_text is None else gen_text,
         M.chk.CORE_PATH: real_core_text() if core_text is None else core_text,
         M.chk.FP_PATH: real_file(M.chk.FP_PATH) if fp_text is None else fp_text,
     })
-    files[M.chk.CONST_PATH] = (M.gconst.emit(read, inputs_text, wrappers)
+    files[M.chk.CONST_PATH] = (M.gconst.emit(read, inputs_text, FIXTURE_OWNER_MAP)
                                if const_text is None else const_text)
     return files
 
@@ -390,7 +401,7 @@ def g4_specificity(M):
 def _real_closure(M):
     """Every real file the constant scan reaches, as a fixture dict. Read from the worktree on
     purpose: these are fixture INPUTS, and the verdict under test is the checker's."""
-    files = {}
+    files = {OWNERS.MANIFEST_REL: real_file(OWNERS.MANIFEST_REL)}
     for name in sorted(os.listdir(os.path.join(ROOT, M.gconst.WRAPPER_DIR))):
         if name.endswith('.mq5'):
             rel = '%s/%s' % (M.gconst.WRAPPER_DIR, name)
@@ -625,8 +636,7 @@ def x4_attack(M):
     """the preprocessor decides membership, and an unreducible value is refused BY NAME"""
     files = fixture_closure()
     read = lambda rel: files[rel]                              # noqa: E731
-    wrappers = sorted(f for f in files if f.endswith('.mq5'))
-    _tags, wmap = M.gconst._resolve_wrappers(read, FIXTURE_INPUTS, wrappers)
+    wmap = FIXTURE_OWNER_MAP
 
     names11 = set(c.name for c in M.gconst.scan(read, 'LAB_ENTRY_11', wmap['LAB_ENTRY_11']))
     names12 = set(c.name for c in M.gconst.scan(read, 'LAB_ENTRY_12', wmap['LAB_ENTRY_12']))
@@ -737,8 +747,7 @@ def x4_specificity(M):
     redefinition -- a derivation that refuses everything is not a derivation"""
     files = fixture_closure()
     read = lambda rel: files[rel]                              # noqa: E731
-    wrappers = sorted(f for f in files if f.endswith('.mq5'))
-    _tags, wmap = M.gconst._resolve_wrappers(read, FIXTURE_INPUTS, wrappers)
+    wmap = FIXTURE_OWNER_MAP
     same = FIXTURE_CORE.replace('#define PREFIX "GV_"', '#define PREFIX "GV_"\n#define ONE 3600')
     samefiles = fixture_closure(same)
     try:
@@ -747,10 +756,12 @@ def x4_specificity(M):
         return 'an IDENTICAL redefinition was refused, and it changes nothing: %s' % exc
     real = _real_closure(M)
     try:
-        rt, rw = M.gconst._resolve_wrappers(lambda r: real[r], real_file(M.preset.INPUTS_REL),
-                                            [f for f in real if f.endswith('.mq5')])
-        for tag in rt:
-            if not M.gconst.scan(lambda r: real[r], tag, rw[tag]):
+        loaded = OWNERS.load_from_read(
+            lambda r: real[r],
+            root_listing=[f for f in real if f.startswith('ea_template/')
+                          and f.endswith('.mq5')])
+        for tag in loaded.by_tag:
+            if not M.gconst.scan(lambda r: real[r], tag, loaded.by_tag[tag]):
                 return 'build %s derived ZERO locked constants from the real tree' % tag
     except M.preset.PresetRefusal as exc:
         return 'the REAL tree cannot be scanned: %s' % exc

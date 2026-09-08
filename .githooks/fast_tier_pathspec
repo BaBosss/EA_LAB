@@ -81,6 +81,8 @@ _triage/factory_os/setfile.py
 _triage/factory_os/snapshot_build.py
 _triage/factory_os/snapshot_validator.py
 _triage/factory_os/surface_evidence.py
+_triage/factory_os/wrapper_owners.csv
+_triage/factory_os/wrapper_owners.py
 _triage/factory_vnext/boss_family_first_green.py
 _triage/factory_vnext/boss11_first_green.py
 _triage/factory_vnext/boss12_first_green.py

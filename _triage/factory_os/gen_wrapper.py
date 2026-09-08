@@ -65,6 +65,7 @@ import gen_registry_rows as grr                    # noqa: E402
 import hypothesis_b14 as HB                        # noqa: E402
 import preset                                      # noqa: E402
 import registry                                    # noqa: E402
+import wrapper_owners                              # noqa: E402
 
 Refusal = preset.PresetRefusal
 
@@ -125,7 +126,7 @@ def _slug(revision_id):
 
 def entry_tag(read, build_tag):
     """-> the `LAB_ENTRY_TAG` string the hand-written wrapper declares, e.g. `14_GridLog`."""
-    rel = '%s/%s' % (capability.WRAPPER_DIR, capability.WRAPPER_FILE[build_tag])
+    rel = wrapper_owners.resolve_from_read(read, build_tag)
     for line in read(rel).replace('\r\n', '\n').split('\n'):
         stripped = line.strip()
         if stripped.startswith(_TAG_DEFINE):

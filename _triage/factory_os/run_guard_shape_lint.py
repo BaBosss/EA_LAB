@@ -120,6 +120,9 @@ L1_FILES = (
     # include closure. A read of the wrong vintage here enumerates a build that is not the one
     # being committed.
     '_triage/factory_os/gen_locked_constants.py',
+    # Declarative owner parser: callers supply the EvidenceSource/read seam; the module opens no
+    # path and holds no executable owner table.
+    '_triage/factory_os/wrapper_owners.py',
     # ORDER-710's evidence tool. It compiles the surface the tester run is compared against, so a
     # read of the wrong vintage here would produce a MISMATCH nobody could explain -- the
     # expensive kind of failure, because the first suspect would be the EA.
@@ -369,6 +372,7 @@ CATEGORY = {
     # so the checker drives the whole include-closure walk off its own EvidenceSource. A version
     # that opened paths itself would read the closure from the disk while judging a commit.
     '_triage/factory_os/gen_locked_constants.py': 'LIB',
+    '_triage/factory_os/wrapper_owners.py': 'LIB',
     # B: a BUILDER. It reads in worktree mode on purpose and prints that it did -- the binary
     # under test was compiled from the working tree, so judging the index would compare a binary
     # against bytes it was not built from.

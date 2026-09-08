@@ -58,7 +58,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import evidence                                  # noqa: E402  (path set above)
 import preset                                    # noqa: E402  (path set above)
+import wrapper_owners                            # noqa: E402  (path set above)
 
 OUT_REL = 'ea_template/core/LockedConstants_gen.mqh'
 GENERATOR_REL = '_triage/factory_os/gen_locked_constants.py'
@@ -317,32 +319,6 @@ def _fold_arith(name, node, resolved, txt, origin):
         % (name, origin, txt))
 
 
-def wrapper_map(read, wrapper_rels, known_tags):
-    """-> {build tag: wrapper relpath}, DERIVED by reading each wrapper rather than listed here.
-
-    `known_tags` comes from `preset.known_build_tags(Inputs.mqh)` -- the same derivation the
-    surface half uses, rather than a second regex here deciding independently what a build tag
-    looks like. A tag with two wrappers is refused: two translation units for one build means the
-    closure this module walks is one of two the compiler could build, and picking either makes the
-    fingerprint a coin toss nobody can see. A tag with NONE is refused by the caller, which knows
-    the whole expected set.
-    """
-    found = {}
-    for rel in sorted(wrapper_rels):
-        text = read(rel)
-        for raw in text.replace('\r\n', '\n').split('\n'):
-            m = _DEFINE_RE.match(_strip_comment(raw).strip())
-            if not m or m.group(2).strip() or m.group(1) not in known_tags:
-                continue
-            tag = m.group(1)
-            if tag in found and found[tag] != rel:
-                raise preset.PresetRefusal(
-                    'build tag %s is defined by two wrappers (%s and %s), so there is no single '
-                    'closure to enumerate constants from.' % (tag, found[tag], rel))
-            found[tag] = rel
-    return found
-
-
 def scan(read, build_tag, wrapper_rel):
     """-> ordered list of Constant for exactly one build, with the include closure expanded.
 
@@ -477,26 +453,25 @@ def constants_for(read, build_tag, wrapper_rel):
     return dict((c.name, c.text) for c in scan(read, build_tag, wrapper_rel))
 
 
-def _resolve_wrappers(read, inputs_text, wrapper_rels):
+def _owner_tags(inputs_text, wrappers):
     tags = sorted(preset.known_build_tags(inputs_text))
     if not tags:
         raise preset.PresetRefusal(
             'no LAB_ENTRY_* build tag is declared in the input source, so there is no build to '
             'enumerate constants for.')
-    wrappers = wrapper_map(read, wrapper_rels, set(tags))
-    missing = [t for t in tags if t not in wrappers]
-    if missing:
+    missing = sorted(set(tags) - set(wrappers))
+    extra = sorted(set(wrappers) - set(tags))
+    if missing or extra:
         raise preset.PresetRefusal(
-            'build tag(s) %s are declared in %s but no wrapper under %s/ defines them, so this '
-            'module has no translation unit to walk. Refused rather than skipped: a build silently '
-            'missing from the enumeration is a build whose EA can never match this side.'
-            % (', '.join(missing), preset.INPUTS_REL, WRAPPER_DIR))
-    return tags, wrappers
+            'wrapper-owner tag set differs from %s: missing=%s extra=%s'
+            % (preset.INPUTS_REL, ','.join(missing) or '(none)',
+               ','.join(extra) or '(none)'))
+    return tags
 
 
-def emit(read, inputs_text, wrapper_rels):
+def emit(read, inputs_text, wrappers):
     """-> the full text of LockedConstants_gen.mqh. Deterministic: no clock, no host path."""
-    tags, wrappers = _resolve_wrappers(read, inputs_text, wrapper_rels)
+    tags = _owner_tags(inputs_text, wrappers)
     out = []
     w = out.append
     w('//+------------------------------------------------------------------+')
@@ -562,24 +537,16 @@ def _repo_root():
     return os.path.dirname(os.path.dirname(HERE))
 
 
-def _disk_reader(root):
-    def read(rel):
-        path = os.path.join(root, rel.replace('/', os.sep))
-        return io.open(path, encoding='utf-8-sig').read()      # snapshot: worktree
-    return read
-
-
-def wrapper_rels_on_disk(root):
-    d = os.path.join(root, WRAPPER_DIR)
-    return ['%s/%s' % (WRAPPER_DIR, n) for n in sorted(os.listdir(d))   # snapshot: worktree
-            if n.endswith('.mq5')]
-
-
 def main(argv):
     root = _repo_root()
-    read = _disk_reader(root)
-    inputs_text = read(preset.INPUTS_REL)
-    text = emit(read, inputs_text, wrapper_rels_on_disk(root))
+    src = evidence.EvidenceSource('worktree', root=root)
+    try:
+        owners = wrapper_owners.load(src)
+        inputs_text = src.read_committed(preset.INPUTS_REL)
+        text = emit(src.read_committed, inputs_text, owners.by_tag)
+    except (preset.PresetRefusal, evidence.ToolFailure) as exc:
+        sys.stderr.write('REFUSED: %s\n' % exc)
+        return 1
     if '--write' in argv:
         dst = os.path.join(root, OUT_REL.replace('/', os.sep))
         io.open(dst, 'w', encoding='utf-8', newline='\n').write(text)

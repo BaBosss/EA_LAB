@@ -17,9 +17,9 @@ import tempfile
 import shutil
 
 import candidate as _candidate
-import capability as _capability
 import evidence as _evidence
 import run_journal_validator as _run_journal_validator
+import wrapper_owners as _wrapper_owners
 
 
 EXPERIMENT_ID_RE = re.compile(r"^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
@@ -123,10 +123,12 @@ def _expected_expert(strategy_ref):
     ea_id = strategy_ref.get("ea_id") if isinstance(strategy_ref, dict) else None
     if not isinstance(ea_id, str) or not re.fullmatch(r"E01[1-8]", ea_id):
         return None
-    wrapper = _capability.WRAPPER_FILE.get("LAB_ENTRY_" + ea_id[-2:])
-    if not isinstance(wrapper, str) or not wrapper.endswith(".mq5"):
+    source = _evidence.EvidenceSource("worktree", root=REPO_ROOT)
+    try:
+        wrapper = _wrapper_owners.load(source).by_tag["LAB_ENTRY_" + ea_id[-2:]]
+    except (KeyError, _wrapper_owners.Refusal, _evidence.ToolFailure):
         return None
-    return wrapper[:-4]
+    return os.path.basename(wrapper)[:-4]
 
 
 def _expert_matches(strategy_ref, observed):

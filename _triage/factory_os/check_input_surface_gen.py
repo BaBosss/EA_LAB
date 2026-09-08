@@ -55,6 +55,7 @@ import evidence                     # noqa: E402  (path is set above)
 import gen_input_surface as gen     # noqa: E402  (path is set above)
 import gen_locked_constants as gconst   # noqa: E402  (path is set above)
 import preset                       # noqa: E402  (path is set above)
+import wrapper_owners                # noqa: E402  (path is set above)
 
 ToolFailure = evidence.ToolFailure   # the reader's type, not a look-alike (ORDER-670 9/9)
 
@@ -195,23 +196,22 @@ def check(worktree=False, source=None):
                 {'mode': src.mode, 'tags': [], 'keys': {}, 'consts': {},
                  'enumerated': False, 'scope': '(not reached)'})
 
-    # ORDER-730. The wrapper list is ENUMERATED at the same snapshot, not globbed off the disk:
-    # a wrapper added in this commit has to be part of the closure this commit is judged against,
-    # and a disk glob would answer about a directory rather than about the commit.
+    # ORDER-730. Owner identity comes only from wrapper_owners.csv. The root listing is read by
+    # that parser from this same EvidenceSource solely to validate exact existence and collisions;
+    # no LAB_ENTRY_* token in an unowned sibling can select a translation unit.
     # A PresetRefusal here is a CONTENT problem -- a wrapper deleted, a constant whose value this
     # module cannot reduce, one name defined twice with two values -- and this file's own docstring
     # promises never to raise for one. It did: `main()` catches only ToolFailure, so a commit that
     # removed a wrapper printed a Python traceback at the pre-commit hook instead of a named
     # criterion. A traceback is not a verdict; the reader cannot tell a refusal from a crash in the
     # tool, and the fix for the two is different.
-    wrapper_rels = src.list_committed('%s/*.mq5' % gconst.WRAPPER_DIR)
     const_keys = {}
     expected_const = None
     try:
-        expected_const = gconst.emit(read, inputs_text, wrapper_rels)
-        _tags, wrappers = gconst._resolve_wrappers(read, inputs_text, wrapper_rels)
+        owners = wrapper_owners.load(src, reader=read)
+        expected_const = gconst.emit(read, inputs_text, owners.by_tag)
         for t in tags:
-            const_keys[t] = len(gconst.scan(read, t, wrappers[t]))
+            const_keys[t] = len(gconst.scan(read, t, owners.by_tag[t]))
     except preset.PresetRefusal as exc:
         problems.append(
             'G4 the locked-constant enumeration cannot be derived from this snapshot, so nothing '
@@ -337,7 +337,8 @@ def main(argv):
     out.write('surface      : %s\n'
               % ' '.join('%s=%d' % (t, info['keys'][t]) for t in info['tags']))
     out.write('constants    : %s\n'
-              % ' '.join('%s=%d' % (t, info['consts'][t]) for t in info['tags']))
+              % (' '.join('%s=%d' % (t, info['consts'][t]) for t in info['tags']
+                          if t in info['consts']) or '(unavailable)'))
     out.write('scope label  : %s (both sides; enumerated=%s)\n'
               % (info['scope'], info['enumerated']))
     if problems:
