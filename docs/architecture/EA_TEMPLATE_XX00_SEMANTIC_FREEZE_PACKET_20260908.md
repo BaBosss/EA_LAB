@@ -1,20 +1,20 @@
 # EA Template `xx-00` Semantic Freeze Packet — 2026-09-08
 
-Status: `PARTIAL_OWNER_RATIFICATION / SEMANTICS_REQUIRED / NO IMPLEMENTATION AUTHORITY`
+Status: `OWNER_RATIFIED_BASELINE / FAMILY_NATIVE_MAP_PENDING / NO IMPLEMENTATION AUTHORITY`
 
-Purpose: present only the four unresolved owner decisions required before an `xx-00` entry-family reference can be specified. This packet records no decision, creates no logical-child mapping, and authorizes no implementation.
+Purpose: preserve the owner-ratified generic `xx-00` research/reference baseline, keep per-family applicability/native exceptions explicit, create no logical-child mapping, and authorize no runtime/default implementation.
 ## Owner partial ratification — 2026-09-09
 
 The owner ratifies the following as `xx-00` **research/reference defaults only**, not universal runtime defaults and not implementation authority:
 
 - `StackMode = STACK_GRID_AGAINST` as the generic reference starting mode. A family may use another mode when its strategy hypothesis requires it; that family-specific choice must be explicit.
-- Stack distance uses ATR and reference multiplier `2.0`. ATR timeframe/period/source remain explicit per-family fields because the owner states they depend on timeframe and strategy; no family value is inferred here.
+- Stack distance uses ATR and reference multiplier `2.0`. Initial reference timeframe is `PERIOD_CURRENT`, meaning the timeframe of the test/run under evaluation. Cross-timeframe expansion is separate later research. ATR period/source remain explicit contract fields; this decision does not silently freeze one universal period for all families.
 - `StackConfirm = CONF_DISTANCE` as the generic reference starting confirmation. A later prospective experiment may compare stronger confirmation modes only under a preregistered direct consumer; DD observed after the fact is not itself tuning authority.
 - Reference Exit starts `ATR_BASED`. A family-native exit may override it when changing the exit would change the strategy hypothesis; the exception must be explicit.
-- Proposed `SL = 10%` is ratified as `BASKET_BALANCE_STOP` concept: an EA-owned basket is protected by a 10%-of-account-balance money stop and the basket is closed on breach. The existing shared implementation computes the percent from current `ACCOUNT_BALANCE` and naturally resets basket-cycle state when flat; whether `xx-00` should bind exactly that current-balance timing or a frozen basket-start balance remains explicit until owner-ratified, and no runtime/default change follows from this packet.
+- Proposed `SL = 10%` is ratified as `BASKET_BALANCE_STOP`: an EA-owned basket is protected by a money stop equal to `10%` of the **current** `ACCOUNT_BALANCE`; when basket P/L breaches that negative money threshold, close the EA-owned basket. This matches the current shared percentage resolver semantics and naturally resets basket-cycle state when flat. This is a research/reference semantic decision only and does not change any runtime/default value by itself.
 - Native-mechanic rule is ratified: a mechanic may be part of a family's `xx-00` only when removing it changes what the entry/strategy hypothesis means. Exact Bxx -> mechanic mappings remain to be source-mapped and ratified; current code is not authority to auto-grant an exception.
 
-Status after this ratification remains `PARTIAL_OWNER_RATIFICATION / SEMANTICS_REQUIRED / NO IMPLEMENTATION AUTHORITY` until the per-family ATR binding, exact native-mechanic map, and the remaining SL timing detail are explicit.
+Status after this ratification is `OWNER_RATIFIED_BASELINE / FAMILY_NATIVE_MAP_PENDING / NO IMPLEMENTATION AUTHORITY`. The generic baseline is resolved enough to define a repo-only schema. Per-family native-mechanic applicability and any family-specific ATR-period/native-exit override must still be explicit before instantiating that family reference.
 
 ## Canonical grounding and current boundary
 
