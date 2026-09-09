@@ -427,7 +427,7 @@
 | ORDER-RND-P6 |  | BLOCKED | â€” survivor coarse-to-fine funnel â€” |  | ACTIVE:10068 |
 | ORDER-XX00-B17-DECOUPLE-V1 |  | BLOCKED | [factory/template/core] B17 structural-SL decoupling |  | ACTIVE:10172 |
 | ORDER-XX00-BACKTEST-READINESS-V1 |  | DONE + REVIEWED | [factory/research] xx-00 Model1 screen readiness |  | ACTIVE:10151 |
-| ORDER-XX00-MODEL1-SCREEN-V1 |  | OPEN | [factory/research] B13+B15 xx-00 fast-start Model1 screen |  | ACTIVE:10195 |
+| ORDER-XX00-MODEL1-SCREEN-V1 |  | BLOCKED | [factory/research] B13+B15 xx-00 fast-start Model1 screen |  | ACTIVE:10195 |
 | ORDER-XX00-NATIVE-MAP-V1 |  | DONE + REVIEWED | [factory/template] B11-B18 native-mechanic source map |  | ACTIVE:10106 |
 | ORDER-XX00-SCHEMA-V1 |  | BLOCKED | [factory/template] repo-only generic xx-00 reference schema |  | ACTIVE:10084 |
 | ORDER-XX00-SCHEMA-V2 |  | BLOCKED | [factory/template] closed-structure xx-00 family reference schema |  | ACTIVE:10126 |
