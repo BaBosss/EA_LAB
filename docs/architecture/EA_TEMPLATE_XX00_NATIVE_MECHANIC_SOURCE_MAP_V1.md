@@ -23,9 +23,9 @@ Evidence and interpretation are kept separate below. No performance result is us
 | Family | Classification | Recommendation | Confidence | Owner decision needed |
 | --- | --- | --- | --- | --- |
 | B11 GridTrend | `CANDIDATE` | Lean `NONE`; treat MA direction as the family thesis and shared Stack as chassis unless owner intends “GridTrend” to mean MA+grid as one inseparable product. | MEDIUM | `NONE` vs native Grid/Stack semantics |
-| B12 Breakout | `NONE` | Donchian breakout remains the thesis; Stack is shared post-entry management. | HIGH | Ratify `NONE` |
+| B12 Breakout | `CANDIDATE` | Lean `NONE`: Entry seam and add-scale card call Stack shared, but the family strategy summary explicitly includes ATR grid + basket exits, so owner must decide whether that broader product wording is hypothesis-defining. | MEDIUM | `NONE` vs native Grid/Stack semantics |
 | B13 MeanRev | `NONE` | BB+RSI mean-reversion entry remains the thesis; DCA/grid is shared chassis management. | HIGH | Ratify `NONE` |
-| B14 GridLog | `STRONG_NATIVE` | Grid exposure + LOG-power escalation + basket-target ownership are hypothesis-essential candidates. Exact ATR residual and risk settings are not auto-carried. | HIGH | Ratify exact mechanic list and native Exit override |
+| B14 GridLog | `CANDIDATE` | Lean `NATIVE` for Grid + LOG-power + basket-target concepts, but the strongest causal coupling is explicitly B14-H01-specific; family-level `B14-00` status cannot be inferred from that H01 alone. | MEDIUM | Decide whether H01 coupling defines the family reference; then ratify exact mechanic list |
 | B15 ST03 | `NONE` | MACD consecutive-count edge trigger is explicitly “on the chassis”; Stack/Exit remain shared. | HIGH | Ratify `NONE` |
 | B16 Kangaroo | `STRONG_NATIVE` | Adverse ATR grid + Kangaroo lot law + Kangaroo-owned basket/overlap exits are inseparable pipeline candidates. Safety cages are not promoted as native mechanics. | HIGH | Ratify exact owned mechanic list |
 | B17 Wave5 | `STRONG_NATIVE` | Wave-1 structural invalidation SL is explicitly thesis-defining; SINGLE-only construction while structural levels are active is a required compatibility invariant. Structural TP/exit ownership remains a narrower candidate. | HIGH | Ratify structural SL + SINGLE invariant; decide native target/exit scope |
@@ -49,8 +49,9 @@ Evidence and interpretation are kept separate below. No performance result is us
 
 - `ea_template/core/entries/Entry_Breakout.mqh:2,11` defines a Donchian breakout signal through the common `Entry_Evaluate()` seam.
 - `_triage/factory_os/strategy_catalog.py:29` calls scaling `Shared stack additions with ATR-aware spacing`.
+- The same strategy card describes the broader family as `Donchian breakout + ATR grid + basket exits`, which is broader than the entry seam.
 
-**Interpretation:** removing shared stacking changes position management, not the Donchian breakout condition itself. Recommendation: `NONE`.
+**Interpretation:** the entry architecture leans separable, but the family descriptive card explicitly includes Grid and basket exits. That is the same ambiguity class as B11. Classification: `CANDIDATE`, leaning `NONE`; owner must decide whether B12 means “Donchian entry family” or “Donchian + grid/basket product family”.
 
 ## B13 — MeanRev
 
@@ -70,11 +71,11 @@ Evidence and interpretation are kept separate below. No performance result is us
 - `_triage/factory_os/strategy_catalog.py:44` summarizes B14 as `ATR grid + log-power lots + basket exits`.
 - `ea_template/core/entries/Entry_GridLog.mqh` implements the GridLog distance-arm seed, while shared Stack/MM carry the later grid/progression mechanics.
 
-**Interpretation:** this is the clearest non-owned-pipeline case where source still explicitly couples position mechanics to a registered causal hypothesis. Recommendation: `STRONG_NATIVE` for the *mechanic concepts* `GRID_STACK`, `LOG_POWER_PROGRESSION`, and `BASKET_TARGET_OWNERSHIP`.
+**Interpretation:** B14-H01 provides strong evidence that `GRID_STACK`, `LOG_POWER_PROGRESSION`, and `BASKET_TARGET_OWNERSHIP` are hypothesis-essential **for H01**. The family strategy card is descriptive, not proof that every B14 reference must preserve that coupling. Classification: `CANDIDATE`, leaning `NATIVE`, pending owner decision on whether the H01 coupling is the intended family-level B14 reference semantics.
 
 This does **not** copy B14-H01 into `B14-00`: exact multiplier, ATR period/source, basket target value, lot factor, `SL_NONE`, account-DD values, or any historical optimized center remain configuration/risk semantics and are not auto-inherited. In particular, “no broker SL” in H01 is not promoted here over the already ratified generic basket-balance protection without a separate owner decision.
 
-**Owner choice:** ratify the exact native mechanic list; separately decide whether the native Exit override is basket-target based. Generic ATR ×2 on `PERIOD_CURRENT` can remain the reference spacing unless owner explicitly requires a B14-native distance law.
+**Owner choice:** first decide whether the H01 Grid+LOG-power+basket-target coupling defines B14 family reference semantics or only that historical hypothesis. Only if family-level `NATIVE` is ratified should the exact mechanic list/native Exit override be frozen. Generic ATR ×2 on `PERIOD_CURRENT` remains the reference spacing unless owner separately requires a B14-native distance law.
 
 ## B15 — ST03
 
