@@ -11,7 +11,7 @@ The owner ratifies the following as `xx-00` **research/reference defaults only**
 - Stack distance uses ATR and reference multiplier `2.0`. Initial reference timeframe is `PERIOD_CURRENT`, meaning the timeframe of the test/run under evaluation. Cross-timeframe expansion is separate later research. ATR period/source remain explicit contract fields; this decision does not silently freeze one universal period for all families.
 - `StackConfirm = CONF_DISTANCE` as the generic reference starting confirmation. A later prospective experiment may compare stronger confirmation modes only under a preregistered direct consumer; DD observed after the fact is not itself tuning authority.
 - Reference Exit starts `ATR_BASED`. A family-native exit may override it when changing the exit would change the strategy hypothesis; the exception must be explicit.
-- Proposed `SL = 10%` is ratified as `BASKET_BALANCE_STOP`: an EA-owned basket is protected by a money stop equal to `10%` of the **current** `ACCOUNT_BALANCE`; when basket P/L breaches that negative money threshold, close the EA-owned basket. This matches the current shared percentage resolver semantics and naturally resets basket-cycle state when flat. This is a research/reference semantic decision only and does not change any runtime/default value by itself.
+- Proposed `SL = 10%` is ratified as `BASKET_BALANCE_STOP`: use `10%` of the **current** account balance as the reference loss/drawdown amount for the EA-owned basket; when that basket reaches the reference loss/drawdown amount, close the EA-owned basket. This is a research/reference semantic decision only and does not change any runtime/default value by itself.
 - Native-mechanic rule is ratified: a mechanic may be part of a family's `xx-00` only when removing it changes what the entry/strategy hypothesis means. Exact Bxx -> mechanic mappings remain to be source-mapped and ratified; current code is not authority to auto-grant an exception.
 
 Status after this ratification is `OWNER_RATIFIED_BASELINE / FAMILY_NATIVE_MAP_PENDING / NO IMPLEMENTATION AUTHORITY`. The generic baseline is resolved enough to define a repo-only schema. Per-family native-mechanic applicability and any family-specific ATR-period/native-exit override must still be explicit before instantiating that family reference.
@@ -52,13 +52,12 @@ This is a research/reference starting architecture, not a universal runtime defa
 
 **Owner resolution — 2026-09-09:** `SL_10_PERCENT = BASKET_BALANCE_STOP` with these semantics:
 
-- `BASE = current ACCOUNT_BALANCE` at evaluation time;
-- `SCOPE = positions belonging to the EA-owned basket`, not the whole account;
-- `TRIGGER = basket net P/L <= -(10% of current account balance)`;
-- `ACTION = close the EA-owned basket`;
-- flat basket starts a new basket cycle under the existing shared lifecycle.
+- `BASE = current ACCOUNT_BALANCE`;
+- `SCOPE = the EA-owned basket`, not the whole account;
+- `TRIGGER = the EA-owned basket reaches a loss/drawdown amount equal to 10% of current account balance`;
+- `ACTION = close the EA-owned basket`.
 
-This matches the current shared percent-of-balance basket-stop resolver semantics. It is still only an `xx-00` research/reference decision; it does not change a deployed/default risk value or authorize account-wide liquidation.
+This is only an `xx-00` research/reference decision. It does not define an account-wide DD action, change a deployed/default risk value, or authorize runtime implementation.
 
 ## Decision 4 — native-mechanic exceptions
 
