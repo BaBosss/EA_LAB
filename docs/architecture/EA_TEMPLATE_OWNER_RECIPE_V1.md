@@ -59,20 +59,18 @@ Owner-facing output preserves the current source semantics rather than relabelin
 
 This P1 does not select either mode as the `xx-00` reference.
 
-## Deliberately unresolved
+## `xx-00` semantic input and remaining residuals
 
-P1 does not decide or encode:
+P1 does not make owner semantic decisions. The generic `xx-00` baseline is now an external canonical input owned by `EA_TEMPLATE_XX00_SEMANTIC_FREEZE_PACKET_20260908.md`: `GRID_AGAINST`, signal ATR × `2.0` on `PERIOD_CURRENT`, `DISTANCE` confirmation, `ATR_BASED` Exit, and a `BASKET_BALANCE_STOP` using `10%` of current account balance for the EA-owned basket. These remain research/reference semantics only.
 
-- `xx-00` StackConfirm reference;
-- fixed-distance vs ATR reference Exit;
-- the meaning/owner of the proposed `SL = 10%`;
-- native-mechanic exceptions by family;
-- Hedge/Recovery same-tick precedence or unwind/cancellation behavior;
-- pyramid exit ownership;
-- KINT, Candidate, Grade, risk/default or runtime policy.
+P1 must still surface `SEMANTICS_REQUIRED` when a family has not explicitly resolved:
 
-Those remain `SEMANTICS_REQUIRED` or separately contracted core/risk work. A future source-grounded resolution may feed this projection, but this projection is not authority to make that resolution.
+- its ATR period/source;
+- its native-mechanic exception mapping and causal necessity;
+- any native Stack mode/confirmation or Exit override;
+- its `LogicalVariantID` / accepted legacy alias mapping.
 
+P1 also does not decide Hedge/Recovery same-tick precedence or unwind/cancellation behavior, pyramid exit ownership, KINT, Candidate, Grade, risk/default, or runtime policy. Those remain separately contracted core/risk/governance work. A recipe projection consumes explicit resolution; it is never authority to invent one.
 ## Catalog contract and artifact status
 
 No `factory/vnext/owner_recipe_catalog.json` is instantiated by P1. Current tracked B11-B18 H01 aliases remain unresolved in Identity P0, so populating a real owner catalog would require inventing logical-child semantics. The test suite uses an explicitly labelled in-memory fixture identity only; it creates no canonical family mapping.

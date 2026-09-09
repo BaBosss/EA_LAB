@@ -106,17 +106,20 @@ accepted legacy package
 
 A consumer must surface the blocker rather than fill it. An unresolved alias may still be displayed as accepted legacy evidence, but it cannot be promoted to a resolved recipe identity.
 
-## Explicit blocked semantics
+## `xx-00` semantic status
 
-This P0 does not instantiate `xx-00`. The following remain `SEMANTICS_REQUIRED` under `ea_template/PRODUCT_CONCEPT.md` and the implementation coverage map:
+This P0 still does not instantiate `xx-00`; identity assembly remains separate from product-reference semantics. The generic research/reference baseline is now owner-ratified in `docs/architecture/EA_TEMPLATE_XX00_SEMANTIC_FREEZE_PACKET_20260908.md`:
 
-- baseline `StackConfirm`: SignalValid, a specific Price Action mode, or family-specific;
-- reference Exit: fixed-distance or ATR-based;
-- the meaning and owner of the proposed `SL = 10%`;
-- which families have a native-mechanic exception and which mechanics belong in their reference architecture.
+- generic Stack mode `GRID_AGAINST`;
+- stack spacing = signal ATR × `2.0`, initial timeframe `PERIOD_CURRENT`; ATR period/source stays explicit rather than becoming a universal inferred value;
+- generic StackConfirm `DISTANCE`;
+- generic Exit `ATR_BASED`, with an explicit family-native override permitted only when changing Exit would change the strategy hypothesis;
+- `SL = 10%` means `BASKET_BALANCE_STOP`: `10%` of current account balance is the EA-owned basket reference loss/drawdown amount, and breach closes that EA-owned basket rather than the whole account;
+- native-mechanic rule: include a mechanic only when removing it changes the family strategy hypothesis.
+
+What remains `SEMANTICS_REQUIRED` is family-specific applicability: exact `Bxx -> native mechanic(s) -> causal necessity`, any family ATR period/source, and any native Stack/confirmation/Exit override. Current B11-B18 H01 aliases also remain unresolved for `LogicalVariantID`; the new generic `xx-00` baseline does not turn H01 into `00` and does not resolve legacy alias semantics.
 
 Recovery/Hedge runtime ordering is also out of scope. This identity sidecar does not infer same-tick suppression, cancellation, or unwind semantics and does not touch `ea_template/core/**`.
-
 ## Authority ceiling
 
 All records emitted or accepted here must say `authority=NON_AUTHORITATIVE_SIDECAR`. They are deterministic identity/read-model artifacts only. They do not change current Factory policy, verdicts, optimization authority, risk/defaults, EA source, tester evidence, runtime attachment, deployment, trading, DEMO/LIVE state, Candidate/Grade/KINT status, or owner approval boundaries.
