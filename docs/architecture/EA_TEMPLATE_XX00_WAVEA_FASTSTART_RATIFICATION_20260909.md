@@ -21,7 +21,8 @@ Generic xx-00 semantics remain unchanged: `GRID_AGAINST`, shared Stack distance 
 
 - Home: `GBPUSD / H4`.
 - Entry: MACD `12/26/9`, CountBars `2`, EdgeTrigger=`true`, RearmBars=`0`.
-- ATRPeriod: `14` on current test timeframe.- Derived screen-set SHA256: `405956B20848E1D346654C2EB67140A5BB5A1A71386EC44460C88187B84CAD52`.
+- ATRPeriod: `14` on current test timeframe.
+- Derived screen-set SHA256: `405956B20848E1D346654C2EB67140A5BB5A1A71386EC44460C88187B84CAD52`.
 - Physical baseline source: `Boss_15_ST03_defaults.set`, SHA256 `CA1415F1F7D855FAA51A39E79631B0AD1914CE3EE4D0B0508802D251DE239C3C`.
 
 ## Screen-only chassis controls
