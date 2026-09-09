@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **415** · ยังอยู่บนบอร์ด: **119** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **416** · ยังอยู่บนบอร์ด: **120** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -425,6 +425,7 @@
 | ORDER-RND-P4 |  | DONE + REVIEWED | Boss19 regime attribution | JOIN + INTERPRETATION COMPLETE / MIXED_EVIDENCE | ACTIVE:10048 |
 | ORDER-RND-P5 |  | DONE | â€” Boss19 Black Tide session-context attribution â€” |  | ACTIVE:10062 |
 | ORDER-RND-P6 |  | BLOCKED | â€” survivor coarse-to-fine funnel â€” |  | ACTIVE:10068 |
+| ORDER-XX00-BACKTEST-READINESS-V1 |  | OPEN | [factory/research] xx-00 Model1 screen readiness |  | ACTIVE:10151 |
 | ORDER-XX00-NATIVE-MAP-V1 |  | DONE + REVIEWED | [factory/template] B11-B18 native-mechanic source map |  | ACTIVE:10106 |
 | ORDER-XX00-SCHEMA-V1 |  | BLOCKED | [factory/template] repo-only generic xx-00 reference schema |  | ACTIVE:10084 |
 | ORDER-XX00-SCHEMA-V2 |  | OPEN | [factory/template] closed-structure xx-00 family reference schema |  | ACTIVE:10126 |
