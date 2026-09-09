@@ -182,7 +182,7 @@ No new detailed order is invented here; the Control Tower should bind these phas
 
 - `taskboards/active/P01.md` — 52 orders (ORDER-1462 … ORDER-830), 391574 bytes
 - `taskboards/active/P02.md` — 33 orders (ORDER-941 … ORDER-GEN-STANDING), 445995 bytes
-- `taskboards/active/P03.md` — 30 orders (ORDER-190 … ORDER-XX00-SCHEMA-V1), generated metadata refreshed by `scripts/make_taskboard_digest.ps1`
+- `taskboards/active/P03.md` — 31 orders (ORDER-190 … ORDER-XX00-NATIVE-MAP-V1), generated metadata refreshed by `scripts/make_taskboard_digest.ps1`
 
 <!-- TASKBOARD-ACTIVE-PARTS
 taskboards/active/P01.md
