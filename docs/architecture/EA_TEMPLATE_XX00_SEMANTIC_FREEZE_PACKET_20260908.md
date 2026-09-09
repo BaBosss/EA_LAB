@@ -3,7 +3,7 @@
 Status: `OWNER_RATIFIED_BASELINE / FAMILY_NATIVE_MAP_PENDING / NO IMPLEMENTATION AUTHORITY`
 
 Purpose: preserve the owner-ratified generic `xx-00` research/reference baseline, keep per-family applicability/native exceptions explicit, create no logical-child mapping, and authorize no runtime/default implementation.
-## Owner partial ratification — 2026-09-09
+## Owner baseline ratification — 2026-09-09
 
 The owner ratifies the following as `xx-00` **research/reference defaults only**, not universal runtime defaults and not implementation authority:
 
@@ -30,74 +30,57 @@ The P2 owner presentation is a repository-only `NON_AUTHORITATIVE_SIDECAR` showi
 
 An owner answer to this packet is semantic direction only. A separate bounded downstream contract must encode any ratified answer and pass its applicable gates. Ratification does not itself prove E2E behavior and does not unlock Model 1, optimization, BWD retuning, HOLDOUT, Candidate/Grade/KINT, runtime, deployment, trading, LIVE, or risk/default changes.
 
-## Decision 1 — `xx-00` StackConfirm baseline
+## Decision 1 — `xx-00` Stack / distance / confirmation baseline
 
-Canonical question: should the reference use `SignalValid`, one exact Price Action confirmation, or an explicit family-specific rule?
+**Owner resolution — 2026-09-09:**
 
-Source-supported choices:
-
-1. `SIGNAL_VALID` — an add requires the original entry signal to remain valid.
-2. `PRICE_ACTION(<exact mode>)` — the owner must name the exact confirmation. Current implemented specific modes documented by the coverage map include `CLOSE_BEYOND_LEVEL` and `ENGULFING`; the generic words “Price Action” alone are not a complete freeze.
-3. `FAMILY_SPECIFIC(<explicit family -> rule mapping>)` — the owner must supply every intended family mapping; choosing only the label `FAMILY_SPECIFIC` leaves the item unresolved.
-
-`DISTANCE_ONLY`, `RETRIGGER`, or another confirmation may exist in the product/library, but the canonical unresolved `xx-00` list does not nominate it as the reference answer. For this packet those choices are `UNSUPPORTED / DO NOT INFER` unless the owner explicitly introduces and defines that direction.
-
-No Stack distance, timeframe, period, multiplier, or numeric value is decided here.
+- Generic reference `StackMode = STACK_GRID_AGAINST`.
+- Generic reference spacing = signal ATR × `2.0`.
+- Initial ATR timeframe = `PERIOD_CURRENT`, i.e. the timeframe of the test/run being evaluated. Cross-timeframe expansion is a later research axis, not part of this baseline.
+- ATR period/source remains an explicit family/reference field; no universal period is inferred by this decision.
+- Generic reference `StackConfirm = CONF_DISTANCE`.
+- `SIGNAL_VALID`, `RETRIGGER`, `CLOSE_BEYOND_LEVEL`, `ENGULFING`, or future confirmations remain library alternatives. Comparing them requires a separate prospective hypothesis/range contract; observed DD after the fact is not retuning authority.
+- A family may replace the generic Stack mode/distance/confirmation when that mechanic is native to the strategy hypothesis, but the family mapping must be explicit.
 
 ## Decision 2 — `xx-00` Exit baseline
 
-Canonical question: should the reference Exit be fixed-distance or ATR-based?
+**Owner resolution — 2026-09-09:** generic reference Exit = `ATR_BASED`.
 
-Source-supported choices:
+This is a research/reference starting architecture, not a universal runtime default. A family-native Exit may replace it when changing the exit would change the strategy hypothesis. `FIXED_DISTANCE`, `TRAIL`, `RUN_TREND`, `STRUCTURAL_TARGET`, and other reviewed library modes remain valid alternatives, but no family override is inferred from existing defaults or historical results.
 
-1. `FIXED_DISTANCE` — use the shared fixed-target mechanism as the reference architecture.
-2. `ATR_BASED` — use the shared ATR-target mechanism as the reference architecture.
+## Decision 3 — meaning of `SL = 10%`
 
-The canonical sources do not freeze a TP distance, ATR timeframe/period/multiplier, or other numeric Exit value for this decision. In particular, the discussed `1.0 ATR` grid multiplier is not an Exit value and must not be transferred. `TRAIL`, `RUN_TREND`, `STRUCTURAL_TARGET`, or another implemented Exit mode is `UNSUPPORTED / DO NOT INFER` as the `xx-00` baseline in this packet unless the owner explicitly introduces a new direction.
+**Owner resolution — 2026-09-09:** `SL_10_PERCENT = BASKET_BALANCE_STOP` with these semantics:
 
-## Decision 3 — meaning of the proposed `SL = 10%`
+- `BASE = current ACCOUNT_BALANCE` at evaluation time;
+- `SCOPE = positions belonging to the EA-owned basket`, not the whole account;
+- `TRIGGER = basket net P/L <= -(10% of current account balance)`;
+- `ACTION = close the EA-owned basket`;
+- flat basket starts a new basket cycle under the existing shared lifecycle.
 
-Canonical fact: `10%` is an unresolved owner phrase, not a ratified runtime risk/default. The sources explicitly distinguish account, basket, and per-trade meanings.
-
-Source-named interpretations requiring owner selection and exact definition:
-
-1. `BASKET_BALANCE_STOP` — basket-level money/percentage stop semantics. The sources do not establish the balance/equity base, reset point, included positions, or exact close action.
-2. `PER_TRADE_RISK` — per-trade risk-percent sizing with a valid SL distance and instrument economics. This is not by itself a price-stop placement formula.
-3. `ACCOUNT_DD_CAGE` — account-level drawdown/risk authority. If selected, implementation remains a consequential risk contract outside this packet.
-4. `OTHER_OWNER_CONCEPT(<exact definition>)` — `UNSUPPORTED / DO NOT INFER` until the owner supplies the calculation base, scope, trigger, and action.
-
-To freeze this item, the owner must state whether `10%` itself is ratified as an `xx-00` research-reference value or rejected, plus its exact meaning, calculation base, scope, trigger, and action. Any omitted field stays `SEMANTICS_REQUIRED`. Even a complete research-reference answer does not change a runtime/default value.
+This matches the current shared percent-of-balance basket-stop resolver semantics. It is still only an `xx-00` research/reference decision; it does not change a deployed/default risk value or authorize account-wide liquidation.
 
 ## Decision 4 — native-mechanic exceptions
 
-Canonical rule: a Grid, Stack, or other mechanic may be part of a family's `xx-00` only when removing it changes what that entry hypothesis means. Each exception must be explicit; it is not a blanket permission to preserve every current owned pipeline.
+**Owner rule ratified — 2026-09-09:** a Grid, Stack, structural stop, owned basket/exit path, or other mechanic may be part of a family's `xx-00` only when removing it changes what that strategy hypothesis means. Each exception must be explicit; this is not permission to preserve every current owned pipeline.
 
-The repository identifies B16 and the B19 probe as requiring a conscious exception-versus-architectural-debt decision because their owned `OnTick` paths may return before the shared orchestration. It does not prove that either qualifies. B19 is a probe, not a current B11-B18 Boss/reference alias.
-
-The owner may answer:
-
-- `NONE` — no family is granted an exception; or
-- an explicit mapping `Bxx -> <mechanic(s)> -> <why removal changes the entry hypothesis>` for each exception.
-
-Current sources do not supply a complete exception list or a mechanic mapping for any family. A blanket `ALL CURRENT MECHANICS`, automatic B16/B19 inclusion, or an exception inferred from current code is `UNSUPPORTED / DO NOT INFER`. If the owner chooses family-specific exceptions without a complete mapping, the item remains `SEMANTICS_REQUIRED`.
-
+The exact `Bxx -> mechanic(s) -> why hypothesis changes if removed` mapping remains pending source-map + owner ratification. Current code may support a recommendation but cannot auto-grant an exception. B19 remains a probe, not a current B11-B18 reference family.
 ## Explicitly outside this packet
 
 The product hierarchy remains `Risk > Hedge > Recovery > Signal/Entry`, but current shared runtime calls Recovery before Hedge and the same-tick block/cancel/unwind semantics are unresolved. Pyramid exit ownership also remains unresolved. Both stay outside this packet as separate consequential core/risk work requiring an owner-approved contract, adversarial tests, full template regression, and qualified different-family review. This packet supplies no implementation or review authority for either issue.
 
-## Concise owner response template
+## Remaining family-resolution template
 
-Copy, complete, and ratify all four lines. Placeholders or generic labels keep that item unresolved.
+The generic baseline is ratified. Before instantiating a specific family `Bxx-00`, record only the family-specific residuals that differ from or complete the baseline:
 
 ```text
-EA Template xx-00 semantic decisions — owner ratification
+FAMILY = Bxx
+ATR_PERIOD_OR_SOURCE = <explicit family reference value/source>
+NATIVE_MECHANIC_EXCEPTION = NONE | <mechanic(s) + why removal changes the strategy hypothesis>
+NATIVE_EXIT_OVERRIDE = NONE | <explicit mode + why ATR_BASED would change the hypothesis>
+OTHER_BASELINE_OVERRIDE = NONE | <explicit StackMode/Distance/Confirm override + causal reason>
 
-1. STACK_CONFIRM = SIGNAL_VALID | PRICE_ACTION(CLOSE_BEYOND_LEVEL|ENGULFING) | FAMILY_SPECIFIC(<complete Bxx->rule mapping>)
-2. EXIT = FIXED_DISTANCE | ATR_BASED
-3. SL_10_PERCENT = RATIFY_RESEARCH_REFERENCE | REJECT_PHRASE; MEANING = BASKET_BALANCE_STOP | PER_TRADE_RISK | ACCOUNT_DD_CAGE | OTHER(<exact definition>); BASE = <exact>; SCOPE = <exact>; TRIGGER = <exact>; ACTION = <exact>
-4. NATIVE_MECHANIC_EXCEPTIONS = NONE | <complete Bxx->mechanics->hypothesis-necessity mapping>
-
-I ratify these as xx-00 research/reference semantics only. They do not authorize implementation, runtime/risk/default changes, Model 1, optimization, HOLDOUT, Candidate, deployment, trading, or LIVE: YES
+Authority = RESEARCH_REFERENCE_ONLY / NO RUNTIME_DEFAULT / NO OPTIMIZATION / NO HOLDOUT / NO CANDIDATE / NO DEPLOYMENT / NO TRADING / NO LIVE
 ```
 
-Until every applicable field is explicit and owner-ratified, status remains `OWNER_DECISION_REQUIRED / SEMANTICS_REQUIRED / NO IMPLEMENTATION AUTHORITY`.
+Until those residuals are explicit for a family, the generic schema may be defined but that family reference must stay `SEMANTICS_REQUIRED` rather than inheriting hidden defaults.
