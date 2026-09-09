@@ -61,13 +61,14 @@ This P1 does not select either mode as the `xx-00` reference.
 
 ## `xx-00` semantic input and remaining residuals
 
-P1 does not make owner semantic decisions. The generic `xx-00` baseline is now an external canonical input owned by `EA_TEMPLATE_XX00_SEMANTIC_FREEZE_PACKET_20260908.md`: `GRID_AGAINST`, signal ATR × `2.0` on `PERIOD_CURRENT`, `DISTANCE` confirmation, `ATR_BASED` Exit, and a `BASKET_BALANCE_STOP` using `10%` of current account balance for the EA-owned basket. These remain research/reference semantics only.
+P1 does not make owner semantic decisions. The generic `xx-00` baseline is now an external canonical input owned by `EA_TEMPLATE_XX00_SEMANTIC_FREEZE_PACKET_20260908.md`: `GRID_AGAINST`, ATR x `2.0` on `PERIOD_CURRENT`, `DISTANCE` confirmation, `ATR_BASED` Exit, and a `BASKET_BALANCE_STOP` using `10%` of current account balance for the EA-owned basket. These remain research/reference semantics only.
 
 P1 must still surface `SEMANTICS_REQUIRED` when a family has not explicitly resolved:
 
 - its ATR period/source;
 - its native-mechanic exception mapping and causal necessity;
-- any native Stack mode/confirmation or Exit override;
+- any native Stack mode/distance or Exit override;
+- any stronger StackConfirm experiment remains a separate prospective contract and does not silently replace the DISTANCE reference;
 - its `LogicalVariantID` / accepted legacy alias mapping.
 
 P1 also does not decide Hedge/Recovery same-tick precedence or unwind/cancellation behavior, pyramid exit ownership, KINT, Candidate, Grade, risk/default, or runtime policy. Those remain separately contracted core/risk/governance work. A recipe projection consumes explicit resolution; it is never authority to invent one.

@@ -96,7 +96,7 @@ Owner-ratified research reference baseline as of 2026-09-09:
 - entry: owned by that Boss family;
 - extra filters: OFF unless part of the native entry definition;
 - Position Engine: generic reference = `GRID_AGAINST / DCA`; other modes remain available and a family-native mode may override explicitly;
-- grid distance: signal ATR × `2.0`; initial ATR timeframe = `PERIOD_CURRENT` (the timeframe being tested); ATR period/source remains an explicit family/reference field;
+- grid distance: ATR x `2.0`; initial ATR timeframe = `PERIOD_CURRENT` (the timeframe being tested); ATR period/source remains an explicit family/reference field;
 - StackConfirm generic reference: `DISTANCE`; stronger confirmation modes remain prospective alternatives, not after-the-fact DD retunes;
 - Exit generic reference: `ATR_BASED`; family-native Exit may override explicitly;
 - SL reference: `BASKET_BALANCE_STOP`, using `10%` of current account balance as the EA-owned basket loss/drawdown reference amount; close that EA-owned basket on breach;
@@ -110,7 +110,7 @@ Owner-ratified research reference baseline as of 2026-09-09:
 
 Per-family semantics that must NOT be silently inferred:
 - exact native-mechanic exceptions and why removing each mechanic would change the strategy hypothesis;
-- any family-specific ATR period/source, Stack-mode/confirmation override, or native Exit override;
+- any family-specific ATR period/source, Stack-mode/distance override, or native Exit override;
 - structural S/R SL remains a separate supported concept and is not implied by the generic basket-balance stop.
 
 Native-mechanic exception: if removing Grid/Stack/other mechanics would change what the entry hypothesis actually means, that mechanic may be part of `xx-00`; document it explicitly rather than pretending every reference must be naked/single-order.

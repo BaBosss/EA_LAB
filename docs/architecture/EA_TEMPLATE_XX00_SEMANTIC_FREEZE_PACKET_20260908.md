@@ -35,12 +35,12 @@ An owner answer to this packet is semantic direction only. A separate bounded do
 **Owner resolution — 2026-09-09:**
 
 - Generic reference `StackMode = STACK_GRID_AGAINST`.
-- Generic reference spacing = signal ATR × `2.0`.
+- Generic reference spacing = ATR x `2.0`.
 - Initial ATR timeframe = `PERIOD_CURRENT`, i.e. the timeframe of the test/run being evaluated. Cross-timeframe expansion is a later research axis, not part of this baseline.
 - ATR period/source remains an explicit family/reference field; no universal period is inferred by this decision.
 - Generic reference `StackConfirm = CONF_DISTANCE`.
 - `SIGNAL_VALID`, `RETRIGGER`, `CLOSE_BEYOND_LEVEL`, `ENGULFING`, or future confirmations remain library alternatives. Comparing them requires a separate prospective hypothesis/range contract; observed DD after the fact is not retuning authority.
-- A family may replace the generic Stack mode/distance/confirmation when that mechanic is native to the strategy hypothesis, but the family mapping must be explicit.
+- A family may replace the generic Stack mode/distance when that mechanic is native to the strategy hypothesis, but the family mapping must be explicit. `StackConfirm` does not inherit a family override from this rule; stronger confirmation remains a separate prospective experiment contract.
 
 ## Decision 2 — `xx-00` Exit baseline
 
@@ -77,7 +77,8 @@ FAMILY = Bxx
 ATR_PERIOD_OR_SOURCE = <explicit family reference value/source>
 NATIVE_MECHANIC_EXCEPTION = NONE | <mechanic(s) + why removal changes the strategy hypothesis>
 NATIVE_EXIT_OVERRIDE = NONE | <explicit mode + why ATR_BASED would change the hypothesis>
-OTHER_BASELINE_OVERRIDE = NONE | <explicit StackMode/Distance/Confirm override + causal reason>
+OTHER_BASELINE_OVERRIDE = NONE | <explicit StackMode/Distance override + causal reason>
+STACK_CONFIRM_BASELINE = DISTANCE; CONFIRMATION_EXPERIMENT = NONE | <separate prospective contract reference>
 
 Authority = RESEARCH_REFERENCE_ONLY / NO RUNTIME_DEFAULT / NO OPTIMIZATION / NO HOLDOUT / NO CANDIDATE / NO DEPLOYMENT / NO TRADING / NO LIVE
 ```

@@ -111,13 +111,13 @@ A consumer must surface the blocker rather than fill it. An unresolved alias may
 This P0 still does not instantiate `xx-00`; identity assembly remains separate from product-reference semantics. The generic research/reference baseline is now owner-ratified in `docs/architecture/EA_TEMPLATE_XX00_SEMANTIC_FREEZE_PACKET_20260908.md`:
 
 - generic Stack mode `GRID_AGAINST`;
-- stack spacing = signal ATR × `2.0`, initial timeframe `PERIOD_CURRENT`; ATR period/source stays explicit rather than becoming a universal inferred value;
+- stack spacing = ATR x `2.0`, initial timeframe `PERIOD_CURRENT`; ATR period/source stays explicit rather than becoming a universal inferred value;
 - generic StackConfirm `DISTANCE`;
 - generic Exit `ATR_BASED`, with an explicit family-native override permitted only when changing Exit would change the strategy hypothesis;
 - `SL = 10%` means `BASKET_BALANCE_STOP`: `10%` of current account balance is the EA-owned basket reference loss/drawdown amount, and breach closes that EA-owned basket rather than the whole account;
 - native-mechanic rule: include a mechanic only when removing it changes the family strategy hypothesis.
 
-What remains `SEMANTICS_REQUIRED` is family-specific applicability: exact `Bxx -> native mechanic(s) -> causal necessity`, any family ATR period/source, and any native Stack/confirmation/Exit override. Current B11-B18 H01 aliases also remain unresolved for `LogicalVariantID`; the new generic `xx-00` baseline does not turn H01 into `00` and does not resolve legacy alias semantics.
+What remains `SEMANTICS_REQUIRED` is family-specific applicability: exact `Bxx -> native mechanic(s) -> causal necessity`, any family ATR period/source, and any native Stack mode/distance or Exit override. Stronger StackConfirm modes remain separate prospective experiment scope rather than an inherited family override. Current B11-B18 H01 aliases also remain unresolved for `LogicalVariantID`; the new generic `xx-00` baseline does not turn H01 into `00` and does not resolve legacy alias semantics.
 
 Recovery/Hedge runtime ordering is also out of scope. This identity sidecar does not infer same-tick suppression, cancellation, or unwind semantics and does not touch `ea_template/core/**`.
 ## Authority ceiling
