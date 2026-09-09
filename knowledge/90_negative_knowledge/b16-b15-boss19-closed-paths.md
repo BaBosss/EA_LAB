@@ -135,6 +135,23 @@ Do not repeat:
 
 Reopen only with a separately preregistered XAUUSD/H4 exit-redesign hypothesis that explicitly includes participation/holding/concentration guardrails in addition to aggregate PF/net/DD — never a bare PF/net-driven exit search.
 
+## B16 GBPUSD/H4 SELL exit-concentration attempt — existing child reports are configuration-confounded
+
+Canonical owner: `docs/research/B16_GBP_SELL_H4_EXIT_CONCENTRATION_RESULTS_20260909.md`; machine-readable evidence: `factory/runs/b16_exitdiag_20260909/gbp_h4/diagnostic_acceptance.json` and `source_manifest.json`.
+
+Blocked evidence: `SELL_DIRECTION/GBP_H4` exactly reproduces the accepted SELL `14/70` parent in MAIN and BWD, but neither pre-existing exit-off child is an exit-only child of that control. `SINGLETP_OFF` changes `_16_Direction 2 -> 1` plus `_16_TpSingleAtrMult 0.35 -> 0.0`; `BASKETTP_OFF` changes `_16_Direction 2 -> 1` plus `_16_BasketTpUsdPer01 16.0 -> 0.0`. This violates the EA R&D one-variant/one-logical-change rule. Classification: `BLOCKED_CONFIGURATION_CONFOUND`; `causal_sell_exit_only_attribution=false`.
+
+Descriptive evidence retained: all four mechanically eligible confounded windows satisfy the frozen four-dimension concentration calculation (`C/E = 4/4`). This is `DESCRIPTIVE_NON_CAUSAL` evidence only and must not be counted as a third-context GBP SELL exit-only replication.
+
+Negative-memory disposition: `NO_PRIOR_MATCH` for a valid GBPUSD/H4 SELL exit-only experiment because the required direction/frozen-parent dimension is incompatible.
+
+Do not repeat:
+- do not cite the existing `SINGLETP_OFF/GBP_H4` or `BASKETTP_OFF/GBP_H4` reports as causal SELL exit-only evidence;
+- do not rescue the comparison with a new threshold, retuning, alternate control proxy, or post-hoc attribution;
+- do not auto-run a repair, MT5 rerun, optimization, Model 4, or HOLDOUT from this blocked result.
+
+Only admissible future consumer, if separately authorized: a newly preregistered one-change SELL `14/70` exit-off experiment that retains `_16_Direction=2` and changes only the applicable exit input.
+
 ## B15 CountBars timing path — parked
 
 Canonical owner: `docs/research/B15_COUNTBARS_SENS_01_RESULTS.md`.

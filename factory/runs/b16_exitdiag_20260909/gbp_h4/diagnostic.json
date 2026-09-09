@@ -1,0 +1,407 @@
+{
+  "authority": "RESEARCH_ONLY_NO_EXIT_CHANGE_NO_OPTIMIZATION_NO_HOLDOUT_NO_MODEL4_NO_CANDIDATE_NO_RUNTIME_NO_RISK_DEFAULT_NO_DEPLOYMENT_NO_TRADING_NO_LIVE",
+  "base_sha": "2d298598d859fbbb9c0981e58050b27402405bee",
+  "child_eligibility": [
+    {
+      "cage_event_present": false,
+      "cage_kill_confirmed_source": false,
+      "full_window_eligible_source": true,
+      "leverage_match": true,
+      "mechanically_eligible": true,
+      "parse_error_source": "",
+      "sidecar_truncated_source": false,
+      "truncation_check": false,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "cage_event_present": false,
+      "cage_kill_confirmed_source": false,
+      "full_window_eligible_source": true,
+      "leverage_match": true,
+      "mechanically_eligible": true,
+      "parse_error_source": "",
+      "sidecar_truncated_source": false,
+      "truncation_check": false,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD"
+    },
+    {
+      "cage_event_present": false,
+      "cage_kill_confirmed_source": false,
+      "full_window_eligible_source": true,
+      "leverage_match": true,
+      "mechanically_eligible": true,
+      "parse_error_source": "",
+      "sidecar_truncated_source": false,
+      "truncation_check": false,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "cage_event_present": false,
+      "cage_kill_confirmed_source": false,
+      "full_window_eligible_source": true,
+      "leverage_match": true,
+      "mechanically_eligible": true,
+      "parse_error_source": "",
+      "sidecar_truncated_source": false,
+      "truncation_check": false,
+      "variant": "BASKETTP_OFF",
+      "window": "BWD"
+    }
+  ],
+  "child_rows": [
+    {
+      "active_time_share_full_window": 0.712382,
+      "cycles": 2,
+      "max_cycle_holding_duration_days": 1029.1666550925927,
+      "native_eqdd_pct": 1.33,
+      "net": 175.2,
+      "pf": null,
+      "pf_mt5_field": 0.0,
+      "pf_state": "UNDEFINED_NO_GROSS_LOSS",
+      "report_sha256": "1c2b092939f8f774a28af5439dd646e6ac2eefa72feb14a0d6d71f4b8363753c",
+      "source_variant": "SINGLETP_OFF",
+      "top1_positive_cycle_gp_share": 0.8136986301369864,
+      "trades": 3,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN",
+      "zero_closed_year_count": 1
+    },
+    {
+      "active_time_share_full_window": 0.593384,
+      "cycles": 7,
+      "max_cycle_holding_duration_days": 644.1587962962963,
+      "native_eqdd_pct": 13.16,
+      "net": -802.83,
+      "pf": 0.41,
+      "pf_mt5_field": 0.41,
+      "pf_state": "FINITE",
+      "report_sha256": "9cdf16a83e8aa4cb188be86a6456463ce74d9f9dd6a4ee9e067895bb6db5ba01",
+      "source_variant": "SINGLETP_OFF",
+      "top1_positive_cycle_gp_share": 0.29129579143120227,
+      "trades": 40,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD",
+      "zero_closed_year_count": 1
+    },
+    {
+      "active_time_share_full_window": 0.726941,
+      "cycles": 1,
+      "max_cycle_holding_duration_days": 1061.3333217592592,
+      "native_eqdd_pct": 3.9,
+      "net": 389.29,
+      "pf": null,
+      "pf_mt5_field": 0.0,
+      "pf_state": "UNDEFINED_NO_GROSS_LOSS",
+      "report_sha256": "d37d48c0529456cb2e8bff08ae55b5fca1cb40282a0d67182f82186b8a9f21f3",
+      "source_variant": "BASKETTP_OFF",
+      "top1_positive_cycle_gp_share": 1.0,
+      "trades": 3,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN",
+      "zero_closed_year_count": 2
+    },
+    {
+      "active_time_share_full_window": 0.703944,
+      "cycles": 6,
+      "max_cycle_holding_duration_days": 1023.4965162037037,
+      "native_eqdd_pct": 13.5,
+      "net": -456.59,
+      "pf": 0.56,
+      "pf_mt5_field": 0.56,
+      "pf_state": "FINITE",
+      "report_sha256": "f92532e70cc1b1160b500f20eca19424138070476d47f5e4d53a7bdd39ed7ee3",
+      "source_variant": "BASKETTP_OFF",
+      "top1_positive_cycle_gp_share": 0.9890668389891193,
+      "trades": 24,
+      "variant": "BASKETTP_OFF",
+      "window": "BWD",
+      "zero_closed_year_count": 1
+    }
+  ],
+  "config_comparisons": [
+    {
+      "differences": [
+        {
+          "child": "1",
+          "control": "2",
+          "key": "_16_Direction"
+        },
+        {
+          "child": "0.0",
+          "control": "0.35",
+          "key": "_16_TpSingleAtrMult"
+        }
+      ],
+      "direction_matches_sell_control": false,
+      "observed_child_direction_input": "1",
+      "observed_control_direction_input": "2",
+      "one_logical_change_from_sell_control": false,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "differences": [
+        {
+          "child": "1",
+          "control": "2",
+          "key": "_16_Direction"
+        },
+        {
+          "child": "0.0",
+          "control": "0.35",
+          "key": "_16_TpSingleAtrMult"
+        }
+      ],
+      "direction_matches_sell_control": false,
+      "observed_child_direction_input": "1",
+      "observed_control_direction_input": "2",
+      "one_logical_change_from_sell_control": false,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD"
+    },
+    {
+      "differences": [
+        {
+          "child": "0.0",
+          "control": "16.0",
+          "key": "_16_BasketTpUsdPer01"
+        },
+        {
+          "child": "1",
+          "control": "2",
+          "key": "_16_Direction"
+        }
+      ],
+      "direction_matches_sell_control": false,
+      "observed_child_direction_input": "1",
+      "observed_control_direction_input": "2",
+      "one_logical_change_from_sell_control": false,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "differences": [
+        {
+          "child": "0.0",
+          "control": "16.0",
+          "key": "_16_BasketTpUsdPer01"
+        },
+        {
+          "child": "1",
+          "control": "2",
+          "key": "_16_Direction"
+        }
+      ],
+      "direction_matches_sell_control": false,
+      "observed_child_direction_input": "1",
+      "observed_control_direction_input": "2",
+      "one_logical_change_from_sell_control": false,
+      "variant": "BASKETTP_OFF",
+      "window": "BWD"
+    }
+  ],
+  "control_gate": {
+    "checks": [
+      {
+        "checks": {
+          "native_eqdd_exact_2dp": true,
+          "net_exact_2dp": true,
+          "pf_exact_2dp": true,
+          "rsi_high_70_exact": true,
+          "rsi_period_14_exact": true,
+          "sell_direction_exact": true,
+          "trades_exact": true
+        },
+        "expected": {
+          "eqdd_pct": 1.72,
+          "net": 283.2,
+          "pf": 7.97,
+          "trades": 80
+        },
+        "observed": {
+          "native_eqdd_pct": 1.72,
+          "net": 283.2,
+          "pf_mt5_field": 7.97,
+          "trades": 80
+        },
+        "pass": true,
+        "window": "MAIN"
+      },
+      {
+        "checks": {
+          "native_eqdd_exact_2dp": true,
+          "net_exact_2dp": true,
+          "pf_exact_2dp": true,
+          "rsi_high_70_exact": true,
+          "rsi_period_14_exact": true,
+          "sell_direction_exact": true,
+          "trades_exact": true
+        },
+        "expected": {
+          "eqdd_pct": 1.27,
+          "net": 268.97,
+          "pf": 14.36,
+          "trades": 76
+        },
+        "observed": {
+          "native_eqdd_pct": 1.27,
+          "net": 268.97,
+          "pf_mt5_field": 14.36,
+          "trades": 76
+        },
+        "pass": true,
+        "window": "BWD"
+      }
+    ],
+    "source": "SELL_DIRECTION/GBP_H4",
+    "status": "PASS_EXACT_CANONICAL_HEADLINE"
+  },
+  "descriptive_evidence": {
+    "c_over_e": "4/4",
+    "causal_sell_exit_only_attribution": false,
+    "concentration_shift_windows": 4,
+    "eligible_windows": 4,
+    "frozen_rule_result": "DESCRIPTIVE_NON_CAUSAL_4_OF_4_CONCENTRATION_SHIFT",
+    "scope": "DESCRIPTIVE_NON_CAUSAL"
+  },
+  "descriptive_window_calculations": [
+    {
+      "dimensions": {
+        "active_time_share_higher": true,
+        "max_cycle_holding_duration_higher": true,
+        "top1_positive_cycle_gp_share_higher": true,
+        "zero_closed_year_count_higher": true
+      },
+      "evidence_scope": "DESCRIPTIVE_NON_CAUSAL",
+      "frozen_rule_calculation": "CONCENTRATION_SHIFT",
+      "higher_count": 4,
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "dimensions": {
+        "active_time_share_higher": true,
+        "max_cycle_holding_duration_higher": true,
+        "top1_positive_cycle_gp_share_higher": true,
+        "zero_closed_year_count_higher": true
+      },
+      "evidence_scope": "DESCRIPTIVE_NON_CAUSAL",
+      "frozen_rule_calculation": "CONCENTRATION_SHIFT",
+      "higher_count": 4,
+      "variant": "SINGLETP_OFF",
+      "window": "BWD"
+    },
+    {
+      "dimensions": {
+        "active_time_share_higher": true,
+        "max_cycle_holding_duration_higher": true,
+        "top1_positive_cycle_gp_share_higher": true,
+        "zero_closed_year_count_higher": true
+      },
+      "evidence_scope": "DESCRIPTIVE_NON_CAUSAL",
+      "frozen_rule_calculation": "CONCENTRATION_SHIFT",
+      "higher_count": 4,
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "dimensions": {
+        "active_time_share_higher": true,
+        "max_cycle_holding_duration_higher": true,
+        "top1_positive_cycle_gp_share_higher": true,
+        "zero_closed_year_count_higher": true
+      },
+      "evidence_scope": "DESCRIPTIVE_NON_CAUSAL",
+      "frozen_rule_calculation": "CONCENTRATION_SHIFT",
+      "higher_count": 4,
+      "variant": "BASKETTP_OFF",
+      "window": "BWD"
+    }
+  ],
+  "design_limitation": {
+    "causal_sell_exit_only_attribution": false,
+    "frozen_preregistered_calculation_completed": true,
+    "preregistered_causal_question_answered": false,
+    "reason": "Each frozen exit-off child uses _16_Direction=1 (BUY) while the validated accepted 14/70 control uses _16_Direction=2 (SELL); each comparison therefore differs on direction plus one exit input.",
+    "status": "CONFIGURATION_CONFOUNDED_DIRECTION_PLUS_EXIT",
+    "thresholds_or_formulas_changed": false
+  },
+  "frozen_formulas": {
+    "active_time_share_full_window": "parser exposure.active_time_share_full_window",
+    "max_cycle_holding_duration_days": "max(cycles[].duration_seconds) / 86400",
+    "top1_positive_cycle_gp_share": "max(positive cycles[].gross_profit) / sum(positive cycles[].gross_profit)",
+    "window_classification": ">=3 of 4 dimensions strictly higher than same-window control",
+    "zero_closed_year_count": "count numeric year bins where closed_ticket_count == 0"
+  },
+  "holdout": "UNSPENT",
+  "hypothesis": "HYP-B16-GBP-H4-EXITCONC-01",
+  "model4": "NOT_RUN",
+  "mt5_rerun": false,
+  "new_strategy_test_runs": 0,
+  "optimization": "NONE",
+  "overall": "BLOCKED_CONFIGURATION_CONFOUND",
+  "parent_control_eligibility": {
+    "BWD": {
+      "cage_event_present": false,
+      "cage_kill_confirmed_source": false,
+      "full_window_eligible_source": true,
+      "leverage_match": true,
+      "mechanically_eligible": true,
+      "parse_error_source": "",
+      "sidecar_truncated_source": false,
+      "truncation_check": false
+    },
+    "MAIN": {
+      "cage_event_present": false,
+      "cage_kill_confirmed_source": false,
+      "full_window_eligible_source": true,
+      "leverage_match": true,
+      "mechanically_eligible": true,
+      "parse_error_source": "",
+      "sidecar_truncated_source": false,
+      "truncation_check": false
+    }
+  },
+  "parent_controls": {
+    "BWD": {
+      "active_time_share_full_window": 0.089294,
+      "cycles": 69,
+      "max_cycle_holding_duration_days": 41.54837962962963,
+      "native_eqdd_pct": 1.27,
+      "net": 268.97,
+      "pf": 14.36,
+      "pf_mt5_field": 14.36,
+      "pf_state": "FINITE",
+      "report_sha256": "d87d450e83bd3fd4cf93d13bb30b51238c0eb110a7154fdde2c22205d9b88fc9",
+      "source_variant": "SELL_DIRECTION",
+      "top1_positive_cycle_gp_share": 0.20144581647123933,
+      "trades": 76,
+      "variant": "ACCEPTED_PARENT_CONTROL",
+      "window": "BWD",
+      "zero_closed_year_count": 0
+    },
+    "MAIN": {
+      "active_time_share_full_window": 0.197051,
+      "cycles": 70,
+      "max_cycle_holding_duration_days": 106.91064814814816,
+      "native_eqdd_pct": 1.72,
+      "net": 283.2,
+      "pf": 7.97,
+      "pf_mt5_field": 7.97,
+      "pf_state": "FINITE",
+      "report_sha256": "24fb63c4d163410d37ab60eade7230a9e3488f1bed854d0871cf53b2df0f0a89",
+      "source_variant": "SELL_DIRECTION",
+      "top1_positive_cycle_gp_share": 0.1802433300395257,
+      "trades": 80,
+      "variant": "ACCEPTED_PARENT_CONTROL",
+      "window": "MAIN",
+      "zero_closed_year_count": 0
+    }
+  },
+  "retuning": "NONE",
+  "schema": "ea-lab-b16-gbp-h4-exitdiag/1",
+  "tester_lineage": "MT5 lane2 / D:\\Meta 5b / Model 1"
+}

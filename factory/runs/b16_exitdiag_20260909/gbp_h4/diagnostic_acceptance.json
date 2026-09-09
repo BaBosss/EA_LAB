@@ -1,0 +1,25 @@
+{
+  "authority": "RESEARCH_ONLY_NO_EXIT_CHANGE_NO_OPTIMIZATION_NO_HOLDOUT_NO_MODEL4_NO_CANDIDATE_NO_RUNTIME_NO_RISK_DEFAULT_NO_DEPLOYMENT_NO_TRADING_NO_LIVE",
+  "causal_sell_exit_only_attribution": false,
+  "control_reconciliation": "PASS_EXACT_CANONICAL_HEADLINE",
+  "control_source": "SELL_DIRECTION/GBP_H4",
+  "decision_classification": "BLOCKED_CONFIGURATION_CONFOUND",
+  "descriptive_evidence": {
+    "c_over_e": "4/4",
+    "causal_sell_exit_only_attribution": false,
+    "concentration_shift_windows": 4,
+    "eligible_windows": 4,
+    "frozen_rule_result": "DESCRIPTIVE_NON_CAUSAL_4_OF_4_CONCENTRATION_SHIFT",
+    "scope": "DESCRIPTIVE_NON_CAUSAL"
+  },
+  "design_limitation": "CONFIGURATION_CONFOUNDED_DIRECTION_PLUS_EXIT",
+  "holdout": "UNSPENT",
+  "model4": "NOT_RUN",
+  "mt5_rerun": false,
+  "new_strategy_test_runs": 0,
+  "optimization": "NONE",
+  "overall": "BLOCKED_CONFIGURATION_CONFOUND",
+  "preregistered_causal_question_answered": false,
+  "retuning": "NONE",
+  "schema": "ea-lab-b16-gbp-h4-exitdiag-acceptance/1"
+}

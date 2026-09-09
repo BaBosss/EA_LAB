@@ -1,0 +1,155 @@
+{
+  "aggregate_sources": [
+    {
+      "path": "factory/runs/b16_characterization_20260830/aggregate/cell_summary.csv",
+      "sha256": "55074319169d5f3972dddad2fb0cd80365d2c6dfb62bbe84e4dd6be768b02bd7"
+    },
+    {
+      "path": "factory/runs/b16_characterization_20260830/aggregate/cage_kill_evidence.json",
+      "sha256": "fc604a467b747907dab18bcff3c678a8762258c520950460d3000bc997e23631"
+    },
+    {
+      "path": "factory/runs/b16_characterization_20260830/aggregate/mechanical_acceptance.json",
+      "sha256": "d4ce89d9c233a24b68baa892503e394668974f693695e195472b4988f1c8e228"
+    },
+    {
+      "path": "factory/runs/b16_characterization_20260830/extension_eurgbp_h4/EXTENSION_CONTRACT.md",
+      "sha256": "cece4fe82af2564e03951fce79ffe57d4b88c3152e888964e5b2932323cd2b5f"
+    },
+    {
+      "path": "factory/runs/b16_characterization_20260830/aggregate/extension_run_receipts.jsonl",
+      "sha256": "258698bf65aa3a43c28848ad15b2bc64bd027ec2a3c9a0b4c9f3f9dccbe2e985"
+    }
+  ],
+  "base_sha": "2d298598d859fbbb9c0981e58050b27402405bee",
+  "canonical_parent_result": {
+    "path": "docs/research/B16_GBP_SELL_H4_OPT01_RESULTS.md",
+    "sha256": "d83b362959c4129a5ddcd740296e4a0bffbe8cdce960eba5671035546ccdb554"
+  },
+  "cells": [
+    {
+      "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+      "effective_tester_inputs_sha256": "3b8cb0fe7aabf53339051151bd991c7f276444204527bb29f228d036a7468570",
+      "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+      "leverage_check_path": "factory/runs/b16_characterization_20260830/evidence/SELL_DIRECTION/GBP_H4/MAIN/leverage_check.json",
+      "leverage_check_sha256": "85c93e555bd3127d79b11dd1f6e00b3aa1d7e14454268a2e757f73de6c1a7195",
+      "raw_report_sha256": "24fb63c4d163410d37ab60eade7230a9e3488f1bed854d0871cf53b2df0f0a89",
+      "report_gzip_path": "factory/runs/b16_characterization_20260830/evidence/SELL_DIRECTION/GBP_H4/MAIN/report.htm.gz",
+      "report_gzip_sha256": "d3537d88ddf7d474f3c645ddcccc72d634719f35fd5387e83982d73ae7b0c2e5",
+      "source_set_sha256": "c0e7cfad84236b798dece5b5106d271c708553fb220af370dba913d8610105de",
+      "source_variant": "SELL_DIRECTION",
+      "tester_ini_path": "factory/runs/b16_characterization_20260830/evidence/SELL_DIRECTION/GBP_H4/MAIN/tester.ini",
+      "tester_ini_sha256": "d0e3935d7ff5c53c27b1b6077b976a9ac5150d4095f647033fa91228674a25af",
+      "tester_lineage": "MT5 lane2 / D:\\Meta 5b / Model 1",
+      "truncation_check_path": "factory/runs/b16_characterization_20260830/evidence/SELL_DIRECTION/GBP_H4/MAIN/truncation_check.json",
+      "truncation_check_sha256": "1cc9a7213811d25387ec8e4b5cb7cc42611247f46a95337952a8c3f85da8b3da",
+      "variant": "ACCEPTED_PARENT_CONTROL",
+      "window": "MAIN"
+    },
+    {
+      "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+      "effective_tester_inputs_sha256": "3b8cb0fe7aabf53339051151bd991c7f276444204527bb29f228d036a7468570",
+      "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+      "leverage_check_path": "factory/runs/b16_characterization_20260830/evidence/SELL_DIRECTION/GBP_H4/BWD/leverage_check.json",
+      "leverage_check_sha256": "457dfc98b786f56a5d1d2f888d398f1d446f2c9fedd8cda9412970021cd39c3a",
+      "raw_report_sha256": "d87d450e83bd3fd4cf93d13bb30b51238c0eb110a7154fdde2c22205d9b88fc9",
+      "report_gzip_path": "factory/runs/b16_characterization_20260830/evidence/SELL_DIRECTION/GBP_H4/BWD/report.htm.gz",
+      "report_gzip_sha256": "4a6bafbad8748f47400d06fa71a0b9ec5a1e83498765af34c8f65ac2c0cc5d7b",
+      "source_set_sha256": "c0e7cfad84236b798dece5b5106d271c708553fb220af370dba913d8610105de",
+      "source_variant": "SELL_DIRECTION",
+      "tester_ini_path": "factory/runs/b16_characterization_20260830/evidence/SELL_DIRECTION/GBP_H4/BWD/tester.ini",
+      "tester_ini_sha256": "2f39d05d380f25a12c56ba7610cb5dba44d841c2c213f397b77ba3667872415b",
+      "tester_lineage": "MT5 lane2 / D:\\Meta 5b / Model 1",
+      "truncation_check_path": "factory/runs/b16_characterization_20260830/evidence/SELL_DIRECTION/GBP_H4/BWD/truncation_check.json",
+      "truncation_check_sha256": "42520a950b28bf44b2cfdb0704d215398d4eae98b56bbccd8c15a75e6c680c06",
+      "variant": "ACCEPTED_PARENT_CONTROL",
+      "window": "BWD"
+    },
+    {
+      "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+      "effective_tester_inputs_sha256": "da4eef54436afc67649f10570d0711c34007c7aec37ac368b7b14d73397eefea",
+      "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+      "leverage_check_path": "factory/runs/b16_characterization_20260830/evidence/SINGLETP_OFF/GBP_H4/MAIN/leverage_check.json",
+      "leverage_check_sha256": "3a47d780f51270302e14c8c655d88b932bbc7545d10a42ecaf2f70decd6db785",
+      "raw_report_sha256": "1c2b092939f8f774a28af5439dd646e6ac2eefa72feb14a0d6d71f4b8363753c",
+      "report_gzip_path": "factory/runs/b16_characterization_20260830/evidence/SINGLETP_OFF/GBP_H4/MAIN/report.htm.gz",
+      "report_gzip_sha256": "84e72d21185d80a51fe7d55149b6e4bf994480684df23dc5cee7bd1a1dc40559",
+      "source_set_sha256": "4f900139ae9e8acdff17198e6721028f769da1fb546b4be1415d050658e00fd1",
+      "source_variant": "SINGLETP_OFF",
+      "tester_ini_path": "factory/runs/b16_characterization_20260830/evidence/SINGLETP_OFF/GBP_H4/MAIN/tester.ini",
+      "tester_ini_sha256": "c4971ddce9621c99713609b16fe623b82279a347749c9e2b79ec146bc28c4675",
+      "tester_lineage": "MT5 lane2 / D:\\Meta 5b / Model 1",
+      "truncation_check_path": "factory/runs/b16_characterization_20260830/evidence/SINGLETP_OFF/GBP_H4/MAIN/truncation_check.json",
+      "truncation_check_sha256": "7b72abc2e5222c7e3bea6222c1753645776a9f2c27fdcc20d9cc3468cbdd1109",
+      "variant": "SINGLETP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+      "effective_tester_inputs_sha256": "da4eef54436afc67649f10570d0711c34007c7aec37ac368b7b14d73397eefea",
+      "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+      "leverage_check_path": "factory/runs/b16_characterization_20260830/evidence/SINGLETP_OFF/GBP_H4/BWD/leverage_check.json",
+      "leverage_check_sha256": "5f4e92262abbe456d7e9c10cb6970c6d132f32eddd8315813bc2a6032004e6ff",
+      "raw_report_sha256": "9cdf16a83e8aa4cb188be86a6456463ce74d9f9dd6a4ee9e067895bb6db5ba01",
+      "report_gzip_path": "factory/runs/b16_characterization_20260830/evidence/SINGLETP_OFF/GBP_H4/BWD/report.htm.gz",
+      "report_gzip_sha256": "300fb7753327eb80e48df0b4695be6021af1f881e7f7df282ef6217a5fe61277",
+      "source_set_sha256": "4f900139ae9e8acdff17198e6721028f769da1fb546b4be1415d050658e00fd1",
+      "source_variant": "SINGLETP_OFF",
+      "tester_ini_path": "factory/runs/b16_characterization_20260830/evidence/SINGLETP_OFF/GBP_H4/BWD/tester.ini",
+      "tester_ini_sha256": "7a9f14a7fd621aa46a3c06e845a7b992ab9b67324f7d69fcaadcc061d76277dc",
+      "tester_lineage": "MT5 lane2 / D:\\Meta 5b / Model 1",
+      "truncation_check_path": "factory/runs/b16_characterization_20260830/evidence/SINGLETP_OFF/GBP_H4/BWD/truncation_check.json",
+      "truncation_check_sha256": "edf667af4a019d2e7d42db56a0e4f54f8b31ba79450b4c7f3a0371dcadcaacc3",
+      "variant": "SINGLETP_OFF",
+      "window": "BWD"
+    },
+    {
+      "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+      "effective_tester_inputs_sha256": "8f3642028d6b76ee66bbddb9fd10cc00c774430b851fa6941194d1af604fa87d",
+      "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+      "leverage_check_path": "factory/runs/b16_characterization_20260830/evidence/BASKETTP_OFF/GBP_H4/MAIN/leverage_check.json",
+      "leverage_check_sha256": "ca2db78347cbb493228695cb1966a943a0f0ee4e8a83e53492a88cc108c9e277",
+      "raw_report_sha256": "d37d48c0529456cb2e8bff08ae55b5fca1cb40282a0d67182f82186b8a9f21f3",
+      "report_gzip_path": "factory/runs/b16_characterization_20260830/evidence/BASKETTP_OFF/GBP_H4/MAIN/report.htm.gz",
+      "report_gzip_sha256": "96f191fac97590952dfd5be8e5c09a4223249fd730a18ff1745b2c622ca03da0",
+      "source_set_sha256": "04fbab069a582091f5e9a3833bc9bb4f67b20a079ac35b5c479db65586687eec",
+      "source_variant": "BASKETTP_OFF",
+      "tester_ini_path": "factory/runs/b16_characterization_20260830/evidence/BASKETTP_OFF/GBP_H4/MAIN/tester.ini",
+      "tester_ini_sha256": "ef02db4cd3ad1256bbbb9afa9ea084a83bf6aaaaa7e6220e480b03a2368473f2",
+      "tester_lineage": "MT5 lane2 / D:\\Meta 5b / Model 1",
+      "truncation_check_path": "factory/runs/b16_characterization_20260830/evidence/BASKETTP_OFF/GBP_H4/MAIN/truncation_check.json",
+      "truncation_check_sha256": "b469c45313a3a8fadb84d538c59cfaa86c783f37be3f8ffc058cafca3c8e0d65",
+      "variant": "BASKETTP_OFF",
+      "window": "MAIN"
+    },
+    {
+      "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+      "effective_tester_inputs_sha256": "8f3642028d6b76ee66bbddb9fd10cc00c774430b851fa6941194d1af604fa87d",
+      "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+      "leverage_check_path": "factory/runs/b16_characterization_20260830/evidence/BASKETTP_OFF/GBP_H4/BWD/leverage_check.json",
+      "leverage_check_sha256": "45a20c0b58795e66fb323ecdcefd822ad5ca592628bdd67443b740b323bc2642",
+      "raw_report_sha256": "f92532e70cc1b1160b500f20eca19424138070476d47f5e4d53a7bdd39ed7ee3",
+      "report_gzip_path": "factory/runs/b16_characterization_20260830/evidence/BASKETTP_OFF/GBP_H4/BWD/report.htm.gz",
+      "report_gzip_sha256": "d2644791bd4d803bff931d5bac1c47ab43050339905685f8a53a2a3f93c896ec",
+      "source_set_sha256": "04fbab069a582091f5e9a3833bc9bb4f67b20a079ac35b5c479db65586687eec",
+      "source_variant": "BASKETTP_OFF",
+      "tester_ini_path": "factory/runs/b16_characterization_20260830/evidence/BASKETTP_OFF/GBP_H4/BWD/tester.ini",
+      "tester_ini_sha256": "e61788f88db2876f71e4fd549a654b094e35d3be868138cf398370f1949390f8",
+      "tester_lineage": "MT5 lane2 / D:\\Meta 5b / Model 1",
+      "truncation_check_path": "factory/runs/b16_characterization_20260830/evidence/BASKETTP_OFF/GBP_H4/BWD/truncation_check.json",
+      "truncation_check_sha256": "861d4639685857cc4921d591c3d785e094a1dbcc4fc64497d482aadc3f169273",
+      "variant": "BASKETTP_OFF",
+      "window": "BWD"
+    }
+  ],
+  "parser": {
+    "path": "scripts/research/b16_h03/parse_h02_reports.py",
+    "sha256": "c2aa0995705ed63a9c2ae1b0bbb982f2375bd2da3ae9c8bff35e2ad01a005b5e"
+  },
+  "preregistration": {
+    "path": "docs/research/B16_GBP_SELL_H4_EXITCONC_PREREG_20260905.md",
+    "sha256": "cc59018d5d19f5026426e5488704315ceec761cb5af47fa7da37be2b071b068e"
+  },
+  "schema": "ea-lab-b16-gbp-h4-exitdiag-source-manifest/1",
+  "tester_lineage": "MT5 lane2 / D:\\Meta 5b / Model 1"
+}
