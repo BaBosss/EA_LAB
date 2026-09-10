@@ -35,6 +35,8 @@ const server = http.createServer((req, res) => {
   try {
     const context = await browser.newContext({viewport:{width:390,height:844}, serviceWorkers:'block'});
     const page = await context.newPage();
+    const now = new Date(base.project.generated_at);
+    await page.clock.install({time: now});
     const errors = [];
     page.on('pageerror', error => errors.push(String(error)));
     const url = `http://127.0.0.1:${server.address().port}/index.html`;
@@ -53,6 +55,42 @@ const server = http.createServer((req, res) => {
     await page.goto(url+'#home');
     await page.getByRole('heading',{name:'NEED BOSS',exact:true}).waitFor();
     await page.screenshot({path:path.join(evidence,'overview-390x844.png'),fullPage:false});
+    payload = structuredClone(base);
+    const stamp = now.toISOString();
+    const staleStamp = new Date(now.getTime() - 48 * 3600000).toISOString().replace('.000Z','Z');
+    const lane = (id, state, freshness = 'CURRENT', observed_at = stamp) => ({
+      id, state, freshness, observed_at, source_kind:'LANE_REGISTRY_NONCANONICAL'
+    });
+    payload.control_tower.registry = {
+      status:'AVAILABLE', freshness:'CURRENT', observed_at:stamp,
+      source_kind:'LANE_REGISTRY_NONCANONICAL', reason:'AUDIT_OBSERVATION',
+      rows:[lane('current-running','RUNNING'), lane('current-blocked','BLOCKED'),
+        {...lane('historical','UNKNOWN','STALE',staleStamp), registry_classification:'STALE_NONACTIVE'},
+        lane('conflicting','CONFLICT'), lane('aged-running','RUNNING','CURRENT',staleStamp),
+        lane('stale-blocked','BLOCKED','STALE')]
+    };
+    assert.ok(validate(payload.control_tower), JSON.stringify(validate.errors));
+    const workCount = state => page.locator('.work-counts article').filter({has:page.locator('span', {hasText:new RegExp(`^${state}$`)})}).locator('strong').innerText();
+    await page.reload();
+    await page.getByRole('heading',{name:'Overview',exact:true}).waitFor();
+    assert.equal(await workCount('RUNNING'),'1');
+    assert.equal(await workCount('BLOCKED'),'1');
+    assert.equal(await workCount('PARKED'),'UNKNOWN');
+    await page.getByText('Unresolved observations: 4. Counts exclude these rows. PARKED: unavailable.',{exact:true}).waitFor();
+    results.push('Mixed current/stale/conflicting registry: RUNNING=1, BLOCKED=1, unresolved=4, PARKED=UNKNOWN');
+    const mixed = structuredClone(payload);
+    for (const change of [
+      p => {p.control_tower.registry.status='UNAVAILABLE';},
+      p => {p.control_tower.registry.freshness='UNKNOWN';},
+      p => {p.control_tower.registry.observed_at=staleStamp;},
+      p => {p.project.generated_at=staleStamp;}
+    ]) {
+      payload=structuredClone(mixed); change(payload); await page.reload();
+      await page.getByRole('heading',{name:'Overview',exact:true}).waitFor();
+      assert.equal(await workCount('RUNNING'),'UNKNOWN');
+      assert.equal(await workCount('BLOCKED'),'UNKNOWN');
+    }
+    results.push('Unavailable/unknown/stale registry envelope and stale project suppress WORK counts');
     payload = structuredClone(base);
     payload.control_tower.need_boss = [{id:'OWNER-TEST',state:'BLOCKED',reason:'Explicit test owner blocker',source_kind:'LANE_REGISTRY_NONCANONICAL',owner_action:'UNKNOWN'}];
     await page.reload();
