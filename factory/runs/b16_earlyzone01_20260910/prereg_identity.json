@@ -1,0 +1,21 @@
+{
+    "schema":  "ea-lab-b16-earlyzone01-prereg/1",
+    "base_sha":  "17116aea956da9a169ed2799772c5fd9a30b20d2",
+    "ea":  "EALabTpl\\Boss_16_KangarooGrid",
+    "symbol":  "XAUUSD",
+    "tf":  "M15",
+    "installation":  "D:\\Meta 5c",
+    "model":  1,
+    "optimization":  0,
+    "deposit":  10000,
+    "leverage":  100,
+    "parent_set_sha256":  "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+    "child_set_sha256":  "551385b8a1b16141f3924315988bdf101d12a6aee2246ac1eb59ff1ba16ad88f",
+    "sole_change":  {
+                        "line":  30,
+                        "parent":  "_16_AtrMultFirst4=0.8",
+                        "child":  "_16_AtrMultFirst4=1.4"
+                    },
+    "ex5_sha256":  "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+    "holdout":  "UNSPENT_FORBIDDEN"
+}
