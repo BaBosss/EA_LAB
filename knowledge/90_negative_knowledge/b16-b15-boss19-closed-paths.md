@@ -152,6 +152,23 @@ Do not repeat:
 
 Only admissible future consumer, if separately authorized: a newly preregistered one-change SELL `14/70` exit-off experiment that retains `_16_Direction=2` and changes only the applicable exit input.
 
+## B16 XAUUSD/M15 EARLYZONE-01 — wider early spacing preserves sign but is not an improvement direction
+
+Canonical owners: `docs/research/B16_XAU_M15_EARLY_ZONE_SPACING_CONTRACT_20260910.md` and `factory/runs/b16_earlyzone01_20260910/R2_MECHANISM_REPORT.md`.
+
+Accepted evidence: same-install `D:\Meta 5c` Model1 parent+child changed only `_16_AtrMultFirst4: 0.8 -> 1.4`. The child stayed aggregate-positive in MAIN and BWD, so the preregistered sign-preservation statement was not falsified. However MAIN net/trades fell `2709.57 / 1575 -> 1724.58 / 1289` while EqDD moved only `11.91% -> 11.82%`; BWD net/trades fell `983.57 / 1462 -> 426.33 / 1256` while EqDD moved `14.94% -> 14.27%`. BWD 2021 worsened `-573.56 -> -897.81`; both arms still reached realized depth 10.
+
+Negative/limiting finding: symmetric `1.4 -> 1.4` spacing is mechanically viable for dual-window sign on this XAUUSD/M15 lineage, but it is not a better research direction. The existing `0.8 -> 1.4` two-zone spacing retains materially stronger participation/net evidence in the same installation comparison. This does not establish `0.8` as a production or universal default.
+
+Do not repeat:
+- do not open an optimizer or third spacing value from EARLYZONE-01;
+- do not mine BWD to choose a replacement early-zone multiplier;
+- do not transfer this XAUUSD/M15 result to other symbols/timeframes;
+- do not infer Model4 child robustness, HOLDOUT, Candidate/Grade/KINT, risk/default, deployment or trading authority.
+
+Reopen only if genuinely new evidence creates a distinct prospective spacing/mechanism consumer with its own one-change preregistration; otherwise this direction is closed.
+
+
 ## B15 CountBars timing path — parked
 
 Canonical owner: `docs/research/B15_COUNTBARS_SENS_01_RESULTS.md`.
