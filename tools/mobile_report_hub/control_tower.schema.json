@@ -1,0 +1,55 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "project", "work", "registry", "need_boss", "owner_derivation", "runtime"],
+  "properties": {
+    "version": {"const": 3},
+    "owner_derivation": {"const": "EXPLICIT_CURRENT_E_BLOCKER_ONLY"},
+    "project": {
+      "type": "object",
+      "required": ["global_state", "control_tower_status", "current", "next", "status", "provenance"],
+      "properties": {
+        "global_state": {"type": "string", "pattern": "^[A-Z_]+$"},
+        "control_tower_status": {"const": "UNKNOWN"},
+        "status": {"enum": ["AVAILABLE", "UNAVAILABLE"]},
+        "current": {"type": "array", "items": {"$ref": "#/$defs/row"}},
+        "next": {"type": "array", "items": {"$ref": "#/$defs/row"}},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      }
+    },
+    "work": {"type": "array", "items": {"$ref": "#/$defs/row"}},
+    "need_boss": {"type": "array", "items": {"$ref": "#/$defs/row"}},
+    "runtime": {"type": "array", "items": {"$ref": "#/$defs/row"}},
+    "registry": {
+      "type": "object",
+      "required": ["status", "freshness", "observed_at", "rows", "source_kind", "reason"],
+      "properties": {
+        "status": {"enum": ["AVAILABLE", "UNAVAILABLE"]},
+        "freshness": {"enum": ["CURRENT", "STALE", "FUTURE", "UNKNOWN"]},
+        "observed_at": {"type": "string"},
+        "source_kind": {"const": "LANE_REGISTRY_NONCANONICAL"},
+        "reason": {"type": "string"},
+        "rows": {"type": "array", "items": {"$ref": "#/$defs/row"}}
+      }
+    }
+  },
+  "$defs": {
+    "row": {
+      "type": "object", "required": ["id", "state", "source_kind"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "state": {"enum": ["READY", "RUNNING", "WAITING", "REVIEW", "INTEGRATING", "BLOCKED", "PARKED", "PAUSED", "FROZEN", "DONE", "UNKNOWN", "CONFLICT"]},
+        "source_kind": {"enum": ["GIT_CANONICAL", "LANE_REGISTRY_NONCANONICAL", "UNAVAILABLE"]},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      }
+    },
+    "provenance": {
+      "type": "object", "required": ["path", "canonical_sha", "sha256"],
+      "properties": {
+        "path": {"type": "string"},
+        "canonical_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

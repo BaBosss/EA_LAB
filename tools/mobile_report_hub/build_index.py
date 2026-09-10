@@ -15,9 +15,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from control_tower import build_projection
+
 SCHEMA_VERSION = 1
 GENERATOR_NAME = "mobile_report_hub.build_index"
-GENERATOR_VERSION = "2.0.0"
+GENERATOR_VERSION = "3.0.0"
 B16 = "docs/factory/B16_H03_CONFIRMATION_RESULTS.md"
 B19 = "docs/research/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"
 H02 = "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"
@@ -218,7 +221,7 @@ def lane_registry(path: Path | None) -> list[dict]:
     if path is None:
         return []
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError, UnicodeError) as error:
         raise BuildError(f"lane registry unreadable: {error}") from error
     rows = payload.get("records", payload.get("lanes", payload)) if isinstance(payload, dict) else payload
@@ -316,7 +319,7 @@ def safe_projection(path: Path | None) -> dict:
     if path is None:
         return unavailable_safe_projection()
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError, UnicodeError):
         return unavailable_safe_projection("INVALID_INPUT")
     if not isinstance(raw, dict) or set(raw) != {"entity", "build_id", "generated_at", "accounts", "findings"}:
@@ -368,7 +371,7 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
     if path is None:
         return unavailable_monitoring()
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError, UnicodeError):
         return unavailable_monitoring("INVALID_INPUT")
     if not isinstance(raw, dict) or raw.get("schema_version") != "EA_LAB_MONITOR_HEALTH_V1":
@@ -476,7 +479,7 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
                        {"id": "BOSS19-P4-REGIME-ATTRIBUTION", "state": boss19_item["status"], "blocker_type": boss19_queue_blocker,
                         "summary": boss19_queue_summary, "source_kind": "GIT_CANONICAL"}] +
                       [{"id": safe_lane_id(item.get("lane_id", "UNKNOWN")),
-                        "state": {"WAITING": "READY", "PAUSED": "READY", "REVIEW": "RUNNING", "FROZEN": "RUNNING", "INTEGRATING": "RUNNING"}.get(item.get("state", "UNKNOWN"), item.get("state", "UNKNOWN")),
+                        "state": item.get("state", "UNKNOWN"),
                         "blocker_type": {"A": "PRODUCT_DEFECT", "B": "HARNESS", "C": "ENVIRONMENT", "D": "EXECUTION", "E": "OWNER_EXTERNAL"}.get(str(item.get("blocker_class", ""))[:1], "NOT_APPLICABLE"),
                         "summary": lane_summary(item), "source_kind": "LANE_REGISTRY_NONCANONICAL",
                         "registry_classification": item.get("classification", "UNKNOWN"),
@@ -485,6 +488,19 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
              "monitoring": monitor_health(monitor, sha),
              "safe_projection": safe_projection(projection),
              "compare": {"compatibility_rule": "DIRECT only when basis_id is identical; otherwise DIFFERENT_BASIS / N/A."}}
+    project_text, project_source = text_source(repo, sha, "PROJECT_STATE.md")
+    boards = [(taskboard_text, taskboard_p)]
+    manifest = re.search(r"<!-- TASKBOARD-ACTIVE-PARTS\s*\n(.*?)-->", taskboard_text, re.S)
+    if manifest:
+        paths = [line.strip() for line in manifest[1].splitlines() if line.strip()]
+        if not paths or len(paths) != len(set(paths)):
+            raise BuildError("invalid taskboard manifest")
+        for path in paths:
+            if not re.fullmatch(r"taskboards/active/[A-Za-z0-9_-]+\.md", path):
+                raise BuildError("unsafe taskboard manifest path")
+            boards.append(text_source(repo, sha, path))
+    index["sources"].extend([project_source] + [source for _, source in boards[1:]])
+    index["control_tower"] = build_projection(project_text, project_source, boards, registry, as_of, safe_lane_id)
     (out / "report_index.json").write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return index
 

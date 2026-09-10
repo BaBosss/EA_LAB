@@ -35,7 +35,7 @@ if ($failures.Count -eq 0) {
     Assert-True ($html -match 'viewport') 'index.html must include a mobile viewport declaration.'
     Assert-True ($html -match 'aria-label') 'index.html must expose accessible navigation labels.'
     Assert-True ($html -match 'EA_LAB Monitor' -and $html -match 'Global state' -and $html -match 'Last updated' -and $html -match 'READ ONLY') 'Header must identify EA_LAB Monitor, global state, freshness, and read-only status.'
-    foreach ($section in @('Home', 'Live', 'Queue', 'Alerts')) {
+    foreach ($section in @('Overview', 'Work', 'Runtime', 'EA Lab', 'Alerts')) {
         Assert-True ($html -match ">\s*$section\s*<") "Fixed mobile nav must include $section."
     }
     Assert-True ($html -match 'class="bottom-nav"' -and $css -match '\.bottom-nav\s*\{[^}]*position:\s*fixed') 'Bottom navigation must remain fixed on mobile.'
@@ -88,7 +88,7 @@ if ($failures.Count -eq 0) {
     Assert-True ($app -match 'navigator\.onLine' -and $app -match 'CACHED DATA' -and $app -match 'STALE DATA') 'App must show offline/cached/stale warning states.'
     Assert-True ($sw -match 'X-EA-LAB-Cache' -and $sw -match 'report_index\.json' -and $sw -match 'cache\.put') 'Service worker must cache and identify a cached report index.'
     Assert-True ($sw -match 'fixture/' -and $sw -match 'return fetch\(request, \{ cache: "no-store" \}\)') 'Service worker must not cache fixture report data as the production index.'
-    Assert-True ($sw -match 'ea-lab-report-hub-v2' -and $sw -match 'caches\.keys' -and $sw -match 'caches\.delete') 'Service worker must bump cache generation and delete older EA_LAB hub caches.'
+    Assert-True ($sw -match 'ea-lab-report-hub-v3' -and $sw -match 'caches\.keys' -and $sw -match 'caches\.delete') 'Service worker must bump cache generation and delete older EA_LAB hub caches.'
     Assert-True ($sw -match 'request\.mode === "navigate"' -and $sw -match 'caches\.match\("\./index\.html"\)') 'Service worker must provide an offline application-shell fallback for navigation.'
     Assert-True ($css -match '@media \(max-width: 390px\)' -and $css -match 'orientation: landscape') 'CSS must include 390px portrait and landscape handling.'
     Assert-True ($css -match 'min-height: 44px') 'CSS must include practical 44px touch targets.'

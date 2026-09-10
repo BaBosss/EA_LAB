@@ -107,7 +107,7 @@ legend { margin-bottom: .7rem; font-weight: 750; }
 table { width: 100%; min-width: 34rem; border-collapse: collapse; }
 th, td { border-bottom: 1px solid var(--line); padding: .6rem; text-align: left; vertical-align: top; }
 details > summary { min-height: 44px; cursor: pointer; font-weight: 800; }
-.bottom-nav { position: fixed; z-index: 10; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(4, 1fr); padding: .4rem max(.5rem, env(safe-area-inset-right)) max(.4rem, env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left)); border-top: 1px solid #31415a; background: #0a111ef2; box-shadow: 0 -12px 30px #0007; backdrop-filter: blur(16px); }
+.bottom-nav { position: fixed; z-index: 10; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: .4rem max(.5rem, env(safe-area-inset-right)) max(.4rem, env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left)); border-top: 1px solid #31415a; background: #0a111ef2; box-shadow: 0 -12px 30px #0007; backdrop-filter: blur(16px); }
 .bottom-nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .12rem; border-radius: .55rem; color: var(--muted); font-size: .65rem; font-weight: 750; text-decoration: none; }
 .bottom-nav a > span:first-child { font-size: 1.05rem; line-height: 1; }
 .bottom-nav a.active { background: var(--accent-soft); color: var(--accent); }
@@ -162,3 +162,18 @@ details > summary { min-height: 44px; cursor: pointer; font-weight: 800; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
+
+.work-counts { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.3rem; }
+.work-counts article { min-width:0; padding:.6rem .2rem; background:var(--panel); border-radius:.6rem; text-align:center; }
+.work-counts span { font-size:.57rem; }
+.work-counts strong { display:block; font-size:1.05rem; overflow-wrap:anywhere; }
+.need-boss { border:2px solid var(--stale); background:#302719; }
+.need-boss h2 { color:var(--stale); }
+.bottom-nav a { min-width:0; font-size:.65rem; }
+.state-conflict,.state-future { color:var(--missing); }
+
+.work-counts strong { font-size:.8rem; }
+h1 { font-size:1.25rem; }
+
+.work-counts strong { font-size:.65rem; }
+.state-degraded_monitoring { color:var(--degraded); border-color:var(--degraded); }

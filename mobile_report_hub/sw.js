@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "ea-lab-report-hub-v2";
+const CACHE_NAME = "ea-lab-report-hub-v3";
 const CACHE_PREFIX = "ea-lab-report-hub-v";
 const SHELL = ["./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
 

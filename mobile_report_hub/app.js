@@ -79,6 +79,14 @@ function validateIndex(payload, fixtureMode) {
     throw new Error("Canonical source SHA mismatch");
   }
   if (!Array.isArray(payload.eas) || !Array.isArray(payload.queue)) throw new Error("Missing report collections");
+  const ct = payload.control_tower;
+  const states = new Set(["READY", "RUNNING", "WAITING", "REVIEW", "INTEGRATING", "BLOCKED", "PARKED", "PAUSED", "FROZEN", "DONE", "UNKNOWN", "CONFLICT"]);
+  if (!ct || ct.version !== 3 || !ct.project || !ct.registry) throw new Error("Missing V3 projection");
+  for (const rows of [ct.work, ct.need_boss, ct.runtime, ct.registry.rows, ct.project.current, ct.project.next]) {
+    if (!Array.isArray(rows) || rows.some(item => !item || typeof item.id !== "string" || !states.has(item.state))) throw new Error("Invalid V3 collection");
+    if (rows.some(item => item.source_kind === "GIT_CANONICAL" && (!item.provenance || item.provenance.canonical_sha !== project.canonical_sha))) throw new Error("Canonical V3 source SHA mismatch");
+  }
+  if (!ct.project.provenance || ct.project.provenance.canonical_sha !== project.canonical_sha) throw new Error("Canonical V3 source SHA mismatch");
   return payload;
 }
 
@@ -99,8 +107,10 @@ function globalMonitoringState() {
   const projectState = stateName(reportIndex.project && reportIndex.project.data_status);
   const monitoring = reportIndex.monitoring || {};
   const monitoringState = stateName(monitoring.status, "MISSING");
-  if (!navigator.onLine || usedCachedData || projectState === "STALE") return "STALE";
+  if (!navigator.onLine || usedCachedData || projectState === "STALE" || observedFreshness(reportIndex.project.generated_at) !== "CURRENT") return "STALE";
+  if (tower().project && tower().project.global_state === "DEGRADED_MONITORING") return "DEGRADED_MONITORING";
   if (["MISSING", "UNAVAILABLE"].includes(monitoringState)) return "MISSING";
+  if (observedFreshness(monitoring.generated_at_utc, 30) !== "CURRENT") return "STALE";
   if (projectState === "DEGRADED" || monitoringState === "DEGRADED" || monitoring.binding_state === "DIFFERENT_REPO_HEAD") return "DEGRADED";
   if (projectState !== "CURRENT" || monitoringState !== "CURRENT" || monitoring.binding_state !== "MATCHES_CANONICAL_SHA") return "UNKNOWN";
   return "CURRENT";
@@ -113,7 +123,8 @@ function renderWarning() {
   if (reportIndex.fixture_only === true) warnings.push("FIXTURE ONLY - not production SOT");
   if (!navigator.onLine) warnings.push("OFFLINE");
   if (usedCachedData) warnings.push("CACHED DATA");
-  if (status === "STALE") warnings.push("STALE DATA");
+  if (status === "STALE" || observedFreshness(reportIndex.project.generated_at) !== "CURRENT") warnings.push("STALE DATA / INVALID SNAPSHOT TIME");
+  if (tower().project && tower().project.global_state === "DEGRADED_MONITORING") warnings.push("DEGRADED_MONITORING");
   if (["DEGRADED", "MISSING", "UNAVAILABLE", "UNKNOWN"].includes(monitoringStatus)) warnings.push(`MONITORING ${monitoringStatus}`);
   dataWarning.hidden = warnings.length === 0;
   dataWarning.textContent = warnings.join(" · ");
@@ -168,12 +179,18 @@ function recordCard(record) {
 }
 
 function projectionData() {
-  return reportIndex.safe_projection || { status: "MISSING", accounts: [], findings: [], reason: "NOT_PROVIDED" };
+  const projection = reportIndex.safe_projection || { status: "MISSING", accounts: [], findings: [], reason: "NOT_PROVIDED" };
+  // Existing SafeProjection timestamp has no timezone; never assume local browser time.
+  return { ...projection, freshness: "UNKNOWN" };
+}
+function monitorCurrent() {
+  const monitor = reportIndex.monitoring || {};
+  return observationCurrent() && monitor.binding_state === "MATCHES_CANONICAL_SHA" && observedFreshness(monitor.generated_at_utc, 30) === "CURRENT";
 }
 
 function coverageValue() {
   const coverage = (reportIndex.monitoring && reportIndex.monitoring.coverage) || {};
-  if (coverage.state !== "AVAILABLE_CURRENT_SNAPSHOT") return { value: "UNKNOWN", detail: "Current coverage evidence unavailable" };
+  if (!monitorCurrent() || coverage.state !== "AVAILABLE_CURRENT_SNAPSHOT") return { value: "UNKNOWN", detail: "Current coverage evidence unavailable" };
   return {
     value: `D ${valueOf(coverage.deal_sensors_fresh)}/${valueOf(coverage.deal_sensors_total)}`,
     detail: `Floating ${valueOf(coverage.floating_sensors_fresh)}/${valueOf(coverage.floating_sensors_total)}`
@@ -195,11 +212,11 @@ function renderKpis() {
 
 function renderMonitoring() {
   const monitoring = reportIndex.monitoring || {};
-  const status = stateName(monitoring.status, "MISSING");
+  const status = monitorCurrent() ? stateName(monitoring.status, "MISSING") : "UNKNOWN";
   const sources = Array.isArray(monitoring.sources) ? monitoring.sources : [];
   const coverage = monitoring.coverage || {};
-  const sourceRows = sources.length ? `<ul class="monitor-source-list">${sources.map((source) => `<li><div class="source-row"><strong>${escapeHtml(valueOf(source.name))}</strong>${badge(source.state)}</div><small>Age ${escapeHtml(valueOf(source.age_hours, "UNKNOWN"))}h · observed ${escapeHtml(valueOf(source.observed_at_utc, "UNKNOWN"))}</small></li>`).join("")}</ul>` : `<p class="empty-state">Monitoring sources MISSING.</p>`;
-  const coverageText = valueOf(coverage.state) === "AVAILABLE_CURRENT_SNAPSHOT"
+  const sourceRows = sources.length ? `<ul class="monitor-source-list">${sources.map((source) => `<li><div class="source-row"><strong>${escapeHtml(valueOf(source.name))}</strong>${badge(monitorCurrent() && observedFreshness(source.observed_at_utc, 30) === "CURRENT" ? source.state : "UNKNOWN")}</div><small>Age ${escapeHtml(valueOf(source.age_hours, "UNKNOWN"))}h · observed ${escapeHtml(valueOf(source.observed_at_utc, "UNKNOWN"))}</small></li>`).join("")}</ul>` : `<p class="empty-state">Monitoring sources MISSING.</p>`;
+  const coverageText = monitorCurrent() && valueOf(coverage.state) === "AVAILABLE_CURRENT_SNAPSHOT"
     ? `Deal sensors ${escapeHtml(valueOf(coverage.deal_sensors_fresh))}/${escapeHtml(valueOf(coverage.deal_sensors_total))} · Floating sensors ${escapeHtml(valueOf(coverage.floating_sensors_fresh))}/${escapeHtml(valueOf(coverage.floating_sensors_total))}`
     : "Coverage unavailable because the enclosing monitoring snapshot is stale, invalid, or missing.";
   return `<section class="panel monitoring-panel"><div class="card-top"><div><p class="eyebrow">LOCAL MONITORING · NONCANONICAL</p><h2>Source health</h2></div>${badge(status)}</div>
@@ -211,17 +228,17 @@ function renderPortfolioOverview() {
   const monitoring = reportIndex.monitoring || {};
   const projection = projectionData();
   const accounts = projection.status === "AVAILABLE" && Array.isArray(projection.accounts) ? projection.accounts : null;
-  const healthy = accounts ? accounts.filter((item) => item.sensor_state === "FRESH").length : "UNKNOWN";
-  const attention = accounts ? accounts.filter((item) => item.sensor_state !== "FRESH").length : "UNKNOWN";
+  const healthy = "UNKNOWN";
+  const attention = "UNKNOWN";
   return `<section class="dashboard-section"><div class="section-heading"><div><h2>Portfolio Overview</h2><p>SafeProjection summaries only; no money amount or account class is inferred.</p></div>${badge(monitoring.status || "MISSING")}</div>
     <div class="panel portfolio-grid"><div class="portfolio-stat"><span>Projected accounts</span><strong>${escapeHtml(accounts ? accounts.length : "UNKNOWN")}</strong></div><div class="portfolio-stat"><span>Fresh sensors</span><strong>${escapeHtml(healthy)}</strong></div><div class="portfolio-stat"><span>Needs attention</span><strong>${escapeHtml(attention)}</strong></div><div class="portfolio-stat"><span>P&amp;L / numeric DD</span><strong>UNKNOWN</strong></div></div>
   </section>`;
 }
 
 function accountCard(account) {
-  const sensorState = stateName(account.sensor_state);
+  const sensorState = "UNKNOWN";
   return `<article class="account-card ${stateClass(sensorState)}"><div class="account-heading"><div><p class="eyebrow">MASKED ACCOUNT</p><h3>${escapeHtml(valueOf(account.account_masked))}</h3></div>${badge(sensorState)}</div>
-    <div class="account-facts"><div class="account-fact"><span>Account type</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>Activity</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>P&amp;L</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>DD band</span><strong>${escapeHtml(stateName(account.dd_pct_band))}</strong></div></div></article>`;
+    <div class="account-facts"><div class="account-fact"><span>Account type</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>Activity</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>P&amp;L</span><strong>UNKNOWN</strong></div><div class="account-fact"><span>Observed sensor / DD band</span><strong>${escapeHtml(stateName(account.sensor_state))} / ${escapeHtml(stateName(account.dd_pct_band))}</strong><small>Historical observation; freshness UNKNOWN</small></div></div></article>`;
 }
 
 function renderAccounts(limit) {
@@ -249,7 +266,8 @@ function renderCriticalAlerts(all = false) {
 }
 
 function queueItem(item) {
-  return `<li><div class="source-row"><strong>${escapeHtml(valueOf(item.id))}</strong>${badge(item.state)}</div><span>${escapeHtml(valueOf(item.blocker_type, "NOT_APPLICABLE"))} ${badge(valueOf(item.source_kind, "UNKNOWN_SOURCE"))} ${item.registry_classification ? badge(item.registry_classification) : ""} ${item.attention_required === true ? badge("ATTENTION") : ""}</span><p class="muted">${escapeHtml(valueOf(item.summary))}</p></li>`;
+  const effectiveState = item.source_kind === "LANE_REGISTRY_NONCANONICAL" && (!observationCurrent() || observedFreshness(item.observed_at) !== "CURRENT") ? "UNKNOWN" : item.state;
+  return `<li><div class="source-row"><strong>${escapeHtml(valueOf(item.id))}</strong>${badge(effectiveState)}</div><span>${escapeHtml(valueOf(item.blocker_type, "NOT_APPLICABLE"))} ${badge(valueOf(item.source_kind, "UNKNOWN_SOURCE"))} ${item.registry_classification ? badge(item.registry_classification) : ""} ${item.attention_required === true ? badge("ATTENTION") : ""}</span><p class="muted">${escapeHtml(valueOf(item.summary))}</p><small>Declared: ${escapeHtml(item.declared_state)} · Freshness: ${escapeHtml(item.freshness)} · Observed: ${escapeHtml(item.observed_at)}</small><details><summary>Provenance</summary><p>${escapeHtml(item.provenance && item.provenance.path)}:${escapeHtml(item.provenance && item.provenance.line)} · ${escapeHtml(item.provenance && item.provenance.canonical_sha)}</p></details></li>`;
 }
 
 function renderQueuePreview() {
@@ -281,8 +299,37 @@ function bindResearchFilters() {
   document.querySelectorAll("[data-filter]").forEach((input) => input.addEventListener("change", renderResults));
 }
 
+function observedFreshness(stamp, hours = 24) {
+  if (typeof stamp !== "string" || !/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(stamp)) return "UNKNOWN";
+  const age = (Date.now() - Date.parse(stamp)) / 3600000;
+  if (!Number.isFinite(age)) return "UNKNOWN";
+  return age < -5 / 60 ? "FUTURE" : age > hours ? "STALE" : "CURRENT";
+}
+
+function tower() { return reportIndex.control_tower || {}; }
+function observationCurrent() {
+  return navigator.onLine && !usedCachedData && observedFreshness(reportIndex.project.generated_at) === "CURRENT";
+}
+function ownerCards() {
+  const items = tower().need_boss || [];
+  return `<section class="panel need-boss"><h2>NEED BOSS</h2>${!observationCurrent() ? '<p>Owner attention UNKNOWN — refresh current evidence.</p>' : items.length ? `<ul class="queue-list">${items.map(item => `<li><strong>${escapeHtml(item.id)}</strong> ${badge(item.state)}<p>${escapeHtml(item.reason)}</p><small>${escapeHtml(item.source_kind)}</small><p>Next owner action: ${escapeHtml(item.owner_action)}</p></li>`).join("")}</ul>` : '<p>No owner action currently derived.</p><small>Canonical prose is not a structured owner request. Review the current plan below.</small>'}</section>`;
+}
+function contextCards(items, empty) {
+  return items && items.length ? items.slice(0, 3).map(item => `<article class="panel"><h3>${escapeHtml(item.title || item.id)}</h3><p>${escapeHtml(item.summary)}</p><details><summary>Source / authority</summary><p>${escapeHtml(item.source_kind)} · ${escapeHtml(item.authority || "PLAN_CONTEXT_ONLY")}</p><p>${escapeHtml(item.provenance && item.provenance.path)} · ${escapeHtml(item.provenance && item.provenance.canonical_sha)}</p></details></article>`).join("") : `<p class="empty-state">${empty}</p>`;
+}
 function renderHome() {
-  app.innerHTML = `<section class="page-heading"><h2>Monitoring Home</h2><p>Read-only projection of existing EA_LAB monitoring outputs.</p></section>${renderKpis()}${renderPortfolioOverview()}${renderAccounts(3)}${renderCriticalAlerts()}${renderQueuePreview()}${renderMonitoring()}${renderResearch()}`;
+  const registry = tower().registry || {};
+  const rows = registry.rows || [];
+  const fresh = !rows.some(item => ["UNKNOWN", "CONFLICT"].includes(item.state)) && observationCurrent() && registry.status === "AVAILABLE" && observedFreshness(registry.observed_at) === "CURRENT";
+  app.innerHTML = `<section class="page-heading"><h2>Overview</h2><p>Project: ${escapeHtml(tower().project && tower().project.global_state)} · Control Tower status: UNKNOWN</p></section><section><h2>WORK</h2><p class="muted">Fresh Lane Registry observations · noncanonical</p><div class="work-counts">${["RUNNING", "READY", "WAITING", "BLOCKED", "PARKED"].map(state => `<article><span>${state}</span><strong>${fresh && state !== "PARKED" ? rows.filter(item => item.state === state && item.freshness === "CURRENT" && observedFreshness(item.observed_at) === "CURRENT").length : "UNKNOWN"}</strong></article>`).join("")}</div><small>Unresolved observations: ${rows.filter(item => ["UNKNOWN", "CONFLICT"].includes(item.state)).length}. Counts exclude these rows. PARKED: unavailable.</small></section>${ownerCards()}<section><h2>RUNTIME</h2><p>Workers / jobs, MT5, VPS: UNKNOWN</p><p>Monitoring: ${escapeHtml(globalMonitoringState())} · <a href="#runtime">Source health</a></p></section><section><h2>CURRENT WORK</h2><p class="muted">Canonical plan context; includes completed and constrained work.</p>${contextCards(tower().project && tower().project.current, "Current plan UNAVAILABLE")}</section><section><h2>NEXT</h2>${contextCards(tower().project && tower().project.next, "Next action UNAVAILABLE")}</section>`;
+}
+
+function renderRuntime() {
+  app.innerHTML = `<section class="page-heading"><h2>Runtime</h2><p>Read-only observations; Git state is not process health.</p></section><div class="account-grid">${(tower().runtime || []).map(item => `<article class="panel"><h3>${escapeHtml(item.id)}</h3>${badge(item.state)}<p>${escapeHtml(item.reason)}</p><small>Observed: ${escapeHtml(item.observed_at)} · ${escapeHtml(item.source_kind)}</small></article>`).join("") || '<p>Runtime information UNAVAILABLE</p>'}</div>${renderMonitoring()}`;
+}
+
+function renderEALab() {
+  app.innerHTML = `<section class="page-heading"><h2>EA Lab</h2><p>Portfolio, accounts and canonical research</p></section>${renderKpis()}${renderPortfolioOverview()}${renderAccounts()}${renderCriticalAlerts()}${renderResearch()}`;
   bindResearchFilters();
 }
 
@@ -349,26 +396,26 @@ function renderCompare() {
 }
 
 function renderQueue() {
-  const queue = reportIndex.queue || [];
-  const groups = ["READY", "RUNNING", "BLOCKED", "DONE", "UNKNOWN"];
-  app.innerHTML = `<section class="page-heading"><h2>Queue</h2><p>Queue state is descriptive only; this hub has no execution controls.</p></section>${groups.map((group) => {
-    const items = queue.filter((item) => stateName(item.state) === group);
-    return `<section class="panel"><div class="section-heading"><h2>${group}</h2>${badge(group)}</div>${items.length ? `<ul class="queue-list">${items.map(queueItem).join("")}</ul>` : `<p class="empty-state">No items.</p>`}</section>`;
-  }).join("")}`;
+  const groups = ["READY", "RUNNING", "WAITING", "REVIEW", "INTEGRATING", "BLOCKED", "PARKED", "PAUSED", "FROZEN", "CONFLICT", "UNKNOWN", "DONE"];
+  const registry = tower().registry || {};
+  const sections = [["Canonical taskboard declarations", tower().work || [], "Pinned Git headers; not proof of execution readiness."], ["Lane observations", registry.rows || [], `NONCANONICAL · ${registry.status || "UNAVAILABLE"} · ${registry.freshness || "UNKNOWN"}`]];
+  app.innerHTML = `<section class="page-heading"><h2>Work</h2><p>Canonical declarations and operational observations remain separate.</p></section>${sections.map(([title, rows, note]) => `<section><h2>${title}</h2><p>${escapeHtml(note)}</p>${rows.length ? groups.map(group => { const items = rows.filter(item => stateName(item.state) === group); return items.length ? `<details class="panel" ${["RUNNING", "BLOCKED", "CONFLICT"].includes(group) ? "open" : ""}><summary>${group} (${items.length})</summary><ul class="queue-list">${items.map(queueItem).join("")}</ul></details>` : ""; }).join("") : '<p class="empty-state">No rows supplied; source availability must be checked.</p>'}</section>`).join("")}`;
 }
 
 function renderAlerts() {
-  app.innerHTML = `<section class="page-heading"><h2>Alerts</h2><p>SafeProjection finding summaries only.</p></section>${renderCriticalAlerts(true)}${renderMonitoring()}`;
+  app.innerHTML = `<section class="page-heading"><h2>Alerts</h2><p>SafeProjection finding summaries only.</p></section>${ownerCards()}<section class="panel"><h2>Source warnings</h2><p>Canonical: ${escapeHtml(observedFreshness(reportIndex.project.generated_at))} · Registry: ${escapeHtml(tower().registry && tower().registry.freshness)}</p><p>Conflicting declarations: ${(tower().work || []).filter(item => item.state === "CONFLICT").length}. See Work for provenance.</p></section>${renderCriticalAlerts(true)}${renderMonitoring()}`;
 }
 
 function renderRoute() {
   const current = route();
-  const activePage = ["detail", "compare"].includes(current.page) ? "home" : current.page;
+  const activePage = ["detail", "compare", "live"].includes(current.page) ? "ealab" : current.page === "queue" ? "work" : current.page;
   document.querySelectorAll("[data-nav]").forEach((link) => link.classList.toggle("active", link.dataset.nav === activePage));
   if (current.page === "detail") renderDetail(current.id);
   else if (current.page === "compare") renderCompare();
   else if (current.page === "live") renderLive();
-  else if (current.page === "queue") renderQueue();
+  else if (["queue", "work"].includes(current.page)) renderQueue();
+  else if (current.page === "runtime") renderRuntime();
+  else if (current.page === "ealab") renderEALab();
   else if (current.page === "alerts") renderAlerts();
   else renderHome();
 }
@@ -398,8 +445,10 @@ async function start() {
     renderProjectMeta();
     renderRoute();
     window.addEventListener("hashchange", renderRoute);
-    window.addEventListener("online", renderWarning);
-    window.addEventListener("offline", renderWarning);
+    const refreshView = () => { renderProjectMeta(); renderRoute(); };
+    window.addEventListener("online", refreshView);
+    window.addEventListener("offline", refreshView);
+    window.setInterval(refreshView, 60000);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
   } catch (error) {
     renderUnavailable(error);
