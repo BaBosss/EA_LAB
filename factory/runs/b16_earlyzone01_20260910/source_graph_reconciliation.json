@@ -1,0 +1,221 @@
+{
+    "schema":  "ea-lab-b16-source-graph-reconciliation/1",
+    "build_receipt_head":  "cf32ba8d32a8292e8f7b5ad2ef766e3442b20125",
+    "current_prereg_head":  "9b26192acb54c61c98e055272e0f7b2945b93c4b",
+    "files_compared":  35,
+    "changed_count":  0,
+    "missing_count":  0,
+    "conclusion":  "STALE_BANNER_MTIME_ONLY_SOURCE_GRAPH_BYTE_IDENTICAL",
+    "files":  [
+                  {
+                      "path":  "ea_template/Boss_16_KangarooGrid.mq5",
+                      "build_head_sha256":  "e22f64302ea443c5bec14c22fbb4787002f1c88742b9ca30d416040affe4e8d3",
+                      "current_head_sha256":  "e22f64302ea443c5bec14c22fbb4787002f1c88742b9ca30d416040affe4e8d3",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Basket.mqh",
+                      "build_head_sha256":  "b98e5d6610eb2db29c58cf446e45b818fa232119305a13a5a029f3a73fc47c36",
+                      "current_head_sha256":  "b98e5d6610eb2db29c58cf446e45b818fa232119305a13a5a029f3a73fc47c36",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/BuildReceipt_gen.mqh",
+                      "build_head_sha256":  "ab468838c8fee428a28e44ce50af6e4da94ed0634ba882a14896be3aa7407a15",
+                      "current_head_sha256":  "ab468838c8fee428a28e44ce50af6e4da94ed0634ba882a14896be3aa7407a15",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/ConfigFingerprint.mqh",
+                      "build_head_sha256":  "c4a722bc48c3b8dc5fbc6245f47da969749f029f24993ca0121a94447ba17b4c",
+                      "current_head_sha256":  "c4a722bc48c3b8dc5fbc6245f47da969749f029f24993ca0121a94447ba17b4c",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_AdaptiveTrendGrid.mqh",
+                      "build_head_sha256":  "826bdd71dd82cd95da83b2fd0dbc4dd570037c10e5136f0ccf44d1066df986e6",
+                      "current_head_sha256":  "826bdd71dd82cd95da83b2fd0dbc4dd570037c10e5136f0ccf44d1066df986e6",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_Breakout.mqh",
+                      "build_head_sha256":  "732415998f2752019764751a4a173a3f20c13524f7dd96b72248eb024bff9f9d",
+                      "current_head_sha256":  "732415998f2752019764751a4a173a3f20c13524f7dd96b72248eb024bff9f9d",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_GridLog.mqh",
+                      "build_head_sha256":  "7a1fec373ce818fd09ec2761ee98aba46e33a8c1e30726fd1afd75b727ce85d7",
+                      "current_head_sha256":  "7a1fec373ce818fd09ec2761ee98aba46e33a8c1e30726fd1afd75b727ce85d7",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_GridTrendMA.mqh",
+                      "build_head_sha256":  "c6f61f1574dc5956aca79d21c14840baea815add26042f5d362781854ca6c898",
+                      "current_head_sha256":  "c6f61f1574dc5956aca79d21c14840baea815add26042f5d362781854ca6c898",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_JumStoch.mqh",
+                      "build_head_sha256":  "c396c21546cf53f1979a717eab153bbd4df16d294f2ef8dc076e1418d8f40ac2",
+                      "current_head_sha256":  "c396c21546cf53f1979a717eab153bbd4df16d294f2ef8dc076e1418d8f40ac2",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_KangarooRSI.mqh",
+                      "build_head_sha256":  "e0bdf36e1e9dc581fd1633d96cfee06b81bc49e2e9e73d6036c728912ca8a64f",
+                      "current_head_sha256":  "e0bdf36e1e9dc581fd1633d96cfee06b81bc49e2e9e73d6036c728912ca8a64f",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_MeanReversion.mqh",
+                      "build_head_sha256":  "9ecbc3eec81e43894ceb0b4077dddd8c7df95c3eb935d8183d1e67720314d26c",
+                      "current_head_sha256":  "9ecbc3eec81e43894ceb0b4077dddd8c7df95c3eb935d8183d1e67720314d26c",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_ST03.mqh",
+                      "build_head_sha256":  "440936a4a6700e72fab56a002197f9b8f783f64a52127e53400be4784243375d",
+                      "current_head_sha256":  "440936a4a6700e72fab56a002197f9b8f783f64a52127e53400be4784243375d",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Entry_Wave5.mqh",
+                      "build_head_sha256":  "c4e2045c728c04a561f5d8dfad70b99120ee8c43054d817559d01d69464dbd5d",
+                      "current_head_sha256":  "c4e2045c728c04a561f5d8dfad70b99120ee8c43054d817559d01d69464dbd5d",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/IEntry.mqh",
+                      "build_head_sha256":  "05acf759fbb24f08bf54a58c0dbdce27810d4900689ba44838be418d2f8f35ef",
+                      "current_head_sha256":  "05acf759fbb24f08bf54a58c0dbdce27810d4900689ba44838be418d2f8f35ef",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Kangaroo.mqh",
+                      "build_head_sha256":  "4c1b6388dd29a7b5d390338d0f553b7ea4d69f01a7d4b74f701434c32f5bf7c6",
+                      "current_head_sha256":  "4c1b6388dd29a7b5d390338d0f553b7ea4d69f01a7d4b74f701434c32f5bf7c6",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/entries/Wave5Swings.mqh",
+                      "build_head_sha256":  "c04f62fd62566056e1727cc8512ff615014fe720c85651705dae6a5d22687595",
+                      "current_head_sha256":  "c04f62fd62566056e1727cc8512ff615014fe720c85651705dae6a5d22687595",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Execution.mqh",
+                      "build_head_sha256":  "1c3d89032fe662f4b817d17c6d4d97c39277d0122f42318ddfbda25319d01409",
+                      "current_head_sha256":  "1c3d89032fe662f4b817d17c6d4d97c39277d0122f42318ddfbda25319d01409",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/ExitManager.mqh",
+                      "build_head_sha256":  "d4383f5f7a88e8cd496654f8db4ba62ee3b3a35f2ea6e71316edc305b546066a",
+                      "current_head_sha256":  "d4383f5f7a88e8cd496654f8db4ba62ee3b3a35f2ea6e71316edc305b546066a",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Hedge.mqh",
+                      "build_head_sha256":  "bbd49f9fb11ab5ca41cc631b865d9c8c41221b75f48672545774c2722783ea67",
+                      "current_head_sha256":  "bbd49f9fb11ab5ca41cc631b865d9c8c41221b75f48672545774c2722783ea67",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/HedgeSafety.mqh",
+                      "build_head_sha256":  "75f6b639d1a29ef4bc3dd0741e5fb74cc0d9996293c7cc9e5ae0b1ba1310f0ff",
+                      "current_head_sha256":  "75f6b639d1a29ef4bc3dd0741e5fb74cc0d9996293c7cc9e5ae0b1ba1310f0ff",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Indicators.mqh",
+                      "build_head_sha256":  "4ab9e0a3f99df0dcaf77e5c00eb8add5871a892a0f7e92c48bdb2eedd7256332",
+                      "current_head_sha256":  "4ab9e0a3f99df0dcaf77e5c00eb8add5871a892a0f7e92c48bdb2eedd7256332",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Inputs.mqh",
+                      "build_head_sha256":  "d7e895e04671d58625d25512260d7ae4fce0c1b2d90a5babe37161b30475b963",
+                      "current_head_sha256":  "d7e895e04671d58625d25512260d7ae4fce0c1b2d90a5babe37161b30475b963",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/InputSurface_gen.mqh",
+                      "build_head_sha256":  "1be03fc77b831bff2783846ceee0ae7ae8d254b6efde6c38d2ceabb4e7f9df6a",
+                      "current_head_sha256":  "1be03fc77b831bff2783846ceee0ae7ae8d254b6efde6c38d2ceabb4e7f9df6a",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/LabCore.mqh",
+                      "build_head_sha256":  "c5c0b4a41d1caa4b2f8fae724085a7fa17ebfd938b745912409b281aaf65b2b2",
+                      "current_head_sha256":  "c5c0b4a41d1caa4b2f8fae724085a7fa17ebfd938b745912409b281aaf65b2b2",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/LockedConstants_gen.mqh",
+                      "build_head_sha256":  "d9f0fa0cb413b8da8ff37321c5a4ed269a83d1cc0b25a624323f01889af7ce7b",
+                      "current_head_sha256":  "d9f0fa0cb413b8da8ff37321c5a4ed269a83d1cc0b25a624323f01889af7ce7b",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/MacroGate_Core.mqh",
+                      "build_head_sha256":  "80a71cb73a54bfcfaae49857c2d977f5a6e120e553428035178043dd5717de93",
+                      "current_head_sha256":  "80a71cb73a54bfcfaae49857c2d977f5a6e120e553428035178043dd5717de93",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/MiddlePath.mqh",
+                      "build_head_sha256":  "0964c95010c1c7d3141a2a1228c844d8a112567a72d2f487e5b47f1f25b3d756",
+                      "current_head_sha256":  "0964c95010c1c7d3141a2a1228c844d8a112567a72d2f487e5b47f1f25b3d756",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/MoneyManagement.mqh",
+                      "build_head_sha256":  "9f2dfc7d6781f199620dc0e83cde18784be57ec8926743ea6b7f0e94d46f2180",
+                      "current_head_sha256":  "9f2dfc7d6781f199620dc0e83cde18784be57ec8926743ea6b7f0e94d46f2180",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Persist.mqh",
+                      "build_head_sha256":  "27c0ba47e9dc20ced6dd9ab7a53e4059f62931529494868dcdcf7a3ed506f487",
+                      "current_head_sha256":  "27c0ba47e9dc20ced6dd9ab7a53e4059f62931529494868dcdcf7a3ed506f487",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/PriceAction.mqh",
+                      "build_head_sha256":  "7bd58068e3a2f42e4788e32bde79a3ada706d519e49cb80305aa95e2267f084e",
+                      "current_head_sha256":  "7bd58068e3a2f42e4788e32bde79a3ada706d519e49cb80305aa95e2267f084e",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Recovery.mqh",
+                      "build_head_sha256":  "365cb2a5f9189721c1de1efbbc140f967d6a67bd2d49d4b53fd8dae310a3f4c8",
+                      "current_head_sha256":  "365cb2a5f9189721c1de1efbbc140f967d6a67bd2d49d4b53fd8dae310a3f4c8",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Regime.mqh",
+                      "build_head_sha256":  "5df0ba4c0b3378954cb8f93b1bc4264e9db2b9a87846672d94c3013159b32dd4",
+                      "current_head_sha256":  "5df0ba4c0b3378954cb8f93b1bc4264e9db2b9a87846672d94c3013159b32dd4",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/RiskControl.mqh",
+                      "build_head_sha256":  "ac3710ef991c817803f36038af6af1a8e0870ef52a46198013625888c762c3cf",
+                      "current_head_sha256":  "ac3710ef991c817803f36038af6af1a8e0870ef52a46198013625888c762c3cf",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/RuntimeIdentity.mqh",
+                      "build_head_sha256":  "16dd6733be752da6150c80f2a9bdbb4086154a9ca83e4308eefa6fca1a1770d4",
+                      "current_head_sha256":  "16dd6733be752da6150c80f2a9bdbb4086154a9ca83e4308eefa6fca1a1770d4",
+                      "match":  true
+                  },
+                  {
+                      "path":  "ea_template/core/Stack.mqh",
+                      "build_head_sha256":  "76f504df5b09f6b759df90f1b2a3ad63aa1fd0b668954ae730cfaf8e44fab3bb",
+                      "current_head_sha256":  "76f504df5b09f6b759df90f1b2a3ad63aa1fd0b668954ae730cfaf8e44fab3bb",
+                      "match":  true
+                  }
+              ]
+}

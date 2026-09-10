@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="450">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="28" font-family="sans-serif" font-size="18">Year-by-year net — same-install parent vs child</text>
+<line x1="25" y1="210" x2="1070" y2="210" stroke="black"/>
+<rect x="40" y="192.9" width="55" height="17.1" fill="none" stroke="black"/>
+<text x="67.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2023</text>
+<text x="67.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">P-M</text>
+<text x="67.5" y="188.9" text-anchor="middle" font-family="sans-serif" font-size="8">181</text>
+<rect x="117" y="121.7" width="55" height="88.3" fill="none" stroke="black"/>
+<text x="144.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2024</text>
+<text x="144.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">P-M</text>
+<text x="144.5" y="117.7" text-anchor="middle" font-family="sans-serif" font-size="8">937</text>
+<rect x="194" y="60.0" width="55" height="150.0" fill="none" stroke="black"/>
+<text x="221.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2025</text>
+<text x="221.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">P-M</text>
+<text x="221.5" y="56.0" text-anchor="middle" font-family="sans-serif" font-size="8">1591</text>
+<rect x="271" y="118.0" width="55" height="92.0" fill="none" stroke="black"/>
+<text x="298.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2020</text>
+<text x="298.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">P-B</text>
+<text x="298.5" y="114.0" text-anchor="middle" font-family="sans-serif" font-size="8">976</text>
+<rect x="348" y="210.0" width="55" height="54.1" fill="none" stroke="black"/>
+<text x="375.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2021</text>
+<text x="375.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">P-B</text>
+<text x="375.5" y="276.1" text-anchor="middle" font-family="sans-serif" font-size="8">-574</text>
+<rect x="425" y="155.3" width="55" height="54.7" fill="none" stroke="black"/>
+<text x="452.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2022</text>
+<text x="452.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">P-B</text>
+<text x="452.5" y="151.3" text-anchor="middle" font-family="sans-serif" font-size="8">581</text>
+<rect x="502" y="203.6" width="55" height="6.4" fill="none" stroke="black"/>
+<text x="529.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2023</text>
+<text x="529.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">C-M</text>
+<text x="529.5" y="199.6" text-anchor="middle" font-family="sans-serif" font-size="8">68</text>
+<rect x="579" y="96.4" width="55" height="113.6" fill="none" stroke="black"/>
+<text x="606.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2024</text>
+<text x="606.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">C-M</text>
+<text x="606.5" y="92.4" text-anchor="middle" font-family="sans-serif" font-size="8">1205</text>
+<rect x="656" y="167.4" width="55" height="42.6" fill="none" stroke="black"/>
+<text x="683.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2025</text>
+<text x="683.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">C-M</text>
+<text x="683.5" y="163.4" text-anchor="middle" font-family="sans-serif" font-size="8">452</text>
+<rect x="733" y="137.7" width="55" height="72.3" fill="none" stroke="black"/>
+<text x="760.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2020</text>
+<text x="760.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">C-B</text>
+<text x="760.5" y="133.7" text-anchor="middle" font-family="sans-serif" font-size="8">767</text>
+<rect x="810" y="210.0" width="55" height="84.6" fill="none" stroke="black"/>
+<text x="837.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2021</text>
+<text x="837.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">C-B</text>
+<text x="837.5" y="306.6" text-anchor="middle" font-family="sans-serif" font-size="8">-898</text>
+<rect x="887" y="157.5" width="55" height="52.5" fill="none" stroke="black"/>
+<text x="914.5" y="232" text-anchor="middle" font-family="sans-serif" font-size="9">2022</text>
+<text x="914.5" y="246" text-anchor="middle" font-family="sans-serif" font-size="8">C-B</text>
+<text x="914.5" y="153.5" text-anchor="middle" font-family="sans-serif" font-size="8">557</text>
+<text x="25" y="390" font-family="sans-serif" font-size="10">P=parent, C=child; M=MAIN, B=BWD. BWD 2021 remains negative and worsens in the child.</text>
+<text x="20" y="97%" font-family="sans-serif" font-size="10">VISUAL_ONLY_NO_AUTHORITY</text>
+</svg>

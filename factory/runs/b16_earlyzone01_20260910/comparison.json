@@ -1,0 +1,112 @@
+{
+  "classification": "HYPOTHESIS_NOT_FALSIFIED / DUAL_WINDOW_SIGN_SURVIVES_WIDER_EARLY_ZONE",
+  "decision": "SYMMETRIC_WIDER_SPACING_SIGN_ADMISSIBLE_BUT_NOT_IMPROVEMENT_DIRECTION",
+  "mechanical_state": "PASS",
+  "pareto_nonworse": false,
+  "windows": {
+    "BWD": {
+      "child": {
+        "arm": "CHILD",
+        "checks": {
+          "deposit": true,
+          "ex5_hash": true,
+          "leverage": true,
+          "model": true,
+          "optimization": true,
+          "period": true,
+          "report_hash": true,
+          "set_hash": true,
+          "symbol": true,
+          "truncation": true
+        },
+        "eqdd_pct": 14.27,
+        "max_depth": 10,
+        "net": 426.33,
+        "pf": 1.05,
+        "report_sha256": "124f004d479b14f4a457dd9dac01373fdb93c90fd9ddb32269f1319a2201f19b",
+        "trades": 1256,
+        "window": "BWD"
+      },
+      "delta": {
+        "eqdd_pp": -0.67,
+        "net": -557.24,
+        "pf": -0.05,
+        "trades": -206
+      },
+      "parent": {
+        "arm": "PARENT",
+        "checks": {
+          "deposit": true,
+          "ex5_hash": true,
+          "leverage": true,
+          "model": true,
+          "optimization": true,
+          "period": true,
+          "report_hash": true,
+          "set_hash": true,
+          "symbol": true,
+          "truncation": true
+        },
+        "eqdd_pct": 14.94,
+        "max_depth": 10,
+        "net": 983.57,
+        "pf": 1.1,
+        "report_sha256": "f53d95d83c2b222e90eba6885ebcfeb6b83673ee0f782f0662646e99cc5bd64e",
+        "trades": 1462,
+        "window": "BWD"
+      }
+    },
+    "MAIN": {
+      "child": {
+        "arm": "CHILD",
+        "checks": {
+          "deposit": true,
+          "ex5_hash": true,
+          "leverage": true,
+          "model": true,
+          "optimization": true,
+          "period": true,
+          "report_hash": true,
+          "set_hash": true,
+          "symbol": true,
+          "truncation": true
+        },
+        "eqdd_pct": 11.82,
+        "max_depth": 10,
+        "net": 1724.58,
+        "pf": 1.19,
+        "report_sha256": "fc5e15c1908c25b7dcb1eb90d12c9ebbdfdc372795f0f0ad97d52642e5d4ee34",
+        "trades": 1289,
+        "window": "MAIN"
+      },
+      "delta": {
+        "eqdd_pp": -0.09,
+        "net": -984.99,
+        "pf": -0.06,
+        "trades": -286
+      },
+      "parent": {
+        "arm": "PARENT",
+        "checks": {
+          "deposit": true,
+          "ex5_hash": true,
+          "leverage": true,
+          "model": true,
+          "optimization": true,
+          "period": true,
+          "report_hash": true,
+          "set_hash": true,
+          "symbol": true,
+          "truncation": true
+        },
+        "eqdd_pct": 11.91,
+        "max_depth": 10,
+        "net": 2709.57,
+        "pf": 1.25,
+        "report_sha256": "4817c1255301d3e332b5253a8daaf766570a7499d400fe08217f6cd72adb5f31",
+        "trades": 1575,
+        "window": "MAIN"
+      }
+    }
+  }
+}

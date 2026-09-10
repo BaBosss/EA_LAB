@@ -1,0 +1,8 @@
+﻿{
+    "schema_version":  2,
+    "report_name":  "B16_EARLYZONE01_CHILD_XAUUSD_M15_BWD_M1",
+    "check_status":  "CHECK_PASS",
+    "checker_exit_code":  0,
+    "truncated":  false,
+    "detail":  "last deal 2022.12.30 09:00:40 | window ends 2022.12.31 | idle tail 0.6 days (0.1% of window) | entry deals 1256 | eqDD \r\n14.27%\r\n[OK] traded through to the end of the window"
+}
