@@ -1,0 +1,57 @@
+{
+    "schema":  "ea-lab-b14-gridlog-model1-prereg-identity/1",
+    "status":  "PREREGISTRATION_DRAFT_NO_MT5_RUN",
+    "canonical_base_sha":  "389159d960d312a2a4f304f5becfee699b127b01",
+    "home_symbol":  "EURUSD",
+    "home_tf":  "H1",
+    "model":  1,
+    "optimization":  0,
+    "forward":  0,
+    "deposit":  10000,
+    "currency":  "USD",
+    "leverage":  "1:100",
+    "main":  {
+                 "to":  "2025.12.31",
+                 "from":  "2023.01.01"
+             },
+    "bwd":  {
+                "to":  "2022.12.31",
+                "from":  "2020.01.01"
+            },
+    "installation":  "D:\\Meta 5c",
+    "terminal":  {
+                     "path":  "D:\\Meta 5c\\terminal64.exe",
+                     "sha256":  "dfd977c2885ea3c92bb4e3a5a33faf677283f4c51c2baa0142c393a4ee11b8f2",
+                     "version":  "5.0.0.6140"
+                 },
+    "compiler":  {
+                     "path":  "D:\\Meta 5c\\metaeditor64.exe",
+                     "sha256":  "05718f3fa55f3f59fd2f024d8c433b457fbd58fcf39e947a16ccdad00a614ec7",
+                     "version":  "5.0.0.6140"
+                 },
+    "expert":  "EALabTpl\\Boss_14_GridLog",
+    "wrapper":  {
+                    "sha256":  "69eec0c51b7df5190a3fe0364d11a13629bc16372fcda93513a2882af9076c28",
+                    "repo_path":  "ea_template/Boss_14_GridLog.mq5"
+                },
+    "build":  {
+                  "ex5_sha256":  "a270629a769583db23ca22964323b6f86393676ed0e038866271973260f62a77",
+                  "build_source_graph_sha256":  "5904e6b49ce75d72b4685ef8688fccf47ca1ae5c8df743b91b8c647cce4eecf2",
+                  "receipt_registry_sha256":  "6d8bd2fbb7b16212d339654132808d0f9237f388566ad5fd0315abaa596ad34e",
+                  "receipt_registry":  "factory/runs/b14_gridlog_model1_control_20260910/build_receipt.jsonl",
+                  "staging_root":  "D:\\EA_LAB_CONTROL\\builds\\b14_gridlog_model1_control_20260910_389159d9",
+                  "receipt":  "br-53ed22eb601a4393bfa7399cc8824bfe",
+                  "static_source_files":  83,
+                  "build_source_graph":  "factory/runs/b14_gridlog_model1_control_20260910/build_source_graph.json"
+              },
+    "config":  {
+                   "surface":  154,
+                   "set_sha256":  "3d0a7fc43e3445c9a3a5c574af8a927a192aa10dacf53f2e2cabdb682d00fb43",
+                   "overlay":  "factory/runs/b14_gridlog_model1_control_20260910/B14_GRIDLOG_MODEL1_CONTROL_OVERLAY.set",
+                   "overlay_sha256":  "801274e8578a27a831087b1411997cd03dd9049ca111bf64fad9c8d194f5f6ff",
+                   "set":  "factory/runs/b14_gridlog_model1_control_20260910/B14_GRIDLOG_MODEL1_CONTROL.set",
+                   "fingerprint":  "e1a9d05bcab4a84467ef30ac8f58a5fbf46258ed4dd1264f59a55d8f9f86079c",
+                   "scope":  "surface+constants"
+               },
+    "authority":  "RESEARCH_ONLY / NO OPTIMIZATION / HOLDOUT UNSPENT / NO CANDIDATE / NO GRADE_KINT / NO RUNTIME_DEPLOYMENT_AUTHORITY"
+}

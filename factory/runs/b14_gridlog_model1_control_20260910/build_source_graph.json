@@ -1,0 +1,345 @@
+﻿{
+    "schema":  "ea-lab-b14-build-source-graph/1",
+    "canonical_sha":  "389159d960d312a2a4f304f5becfee699b127b01",
+    "compiler":  "D:\\Meta 5c\\metaeditor64.exe",
+    "compiler_version":  "5.0.0.6140",
+    "build_receipt":  "br-53ed22eb601a4393bfa7399cc8824bfe",
+    "artifact_sha256":  "a270629a769583db23ca22964323b6f86393676ed0e038866271973260f62a77",
+    "wrapper_sha256":  "69eec0c51b7df5190a3fe0364d11a13629bc16372fcda93513a2882af9076c28",
+    "generated_receipt_header_sha256":  "a1688ecf2a397524c696ee6d645e49e3606e35cc18711568f899c39b49dbe0d6",
+    "static_source_files":  83,
+    "static_sources":  [
+                           {
+                               "path":  "Boss_11_GridTrend.mq5",
+                               "sha256":  "59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672"
+                           },
+                           {
+                               "path":  "Boss_12_Breakout.mq5",
+                               "sha256":  "b455e2b36b679ccd5bb17d31ccae29261c9587e83e24775fdc76b63c6de4d349"
+                           },
+                           {
+                               "path":  "Boss_13_MeanRev.mq5",
+                               "sha256":  "733c4e395c3f0e32d3fe960742cba9d6fb98280ad740d369931328a31ae797ee"
+                           },
+                           {
+                               "path":  "Boss_14_GridLog.mq5",
+                               "sha256":  "69eec0c51b7df5190a3fe0364d11a13629bc16372fcda93513a2882af9076c28"
+                           },
+                           {
+                               "path":  "Boss_15_ST03.mq5",
+                               "sha256":  "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f"
+                           },
+                           {
+                               "path":  "Boss_16_KangarooGrid.mq5",
+                               "sha256":  "e22f64302ea443c5bec14c22fbb4787002f1c88742b9ca30d416040affe4e8d3"
+                           },
+                           {
+                               "path":  "Boss_17_Wave5.mq5",
+                               "sha256":  "38c6f100c67ab8689220315c17f770fdfe9f762a182a0f8ea79f5bd3f6b886e6"
+                           },
+                           {
+                               "path":  "Boss_18_JumStoch.mq5",
+                               "sha256":  "0307d5b133a2dc6fba8f894c9dd4ad40341e9e6ec16efbf5f3652655cb10b997"
+                           },
+                           {
+                               "path":  "EA_LabTemplate.mq5",
+                               "sha256":  "dd95e6b13d5857955f9200d400db4dcf8e0e4d93b63973acd6ab6ace9ac1628d"
+                           },
+                           {
+                               "path":  "Probe_19_AdaptiveTrendGrid.mq5",
+                               "sha256":  "765785acaf03b03daa593f3cf3e4fb43df4dded4300384d04784eae5bbd0137b"
+                           },
+                           {
+                               "path":  "Probe_19_AdaptiveTrendGrid_P4BUnitExport.mq5",
+                               "sha256":  "dd61c78ca6680fcec64260ea200e04c2faa4824abbbeac218100a2db997f33cf"
+                           },
+                           {
+                               "path":  "core\\Basket.mqh",
+                               "sha256":  "b98e5d6610eb2db29c58cf446e45b818fa232119305a13a5a029f3a73fc47c36"
+                           },
+                           {
+                               "path":  "core\\ConfigFingerprint.mqh",
+                               "sha256":  "c4a722bc48c3b8dc5fbc6245f47da969749f029f24993ca0121a94447ba17b4c"
+                           },
+                           {
+                               "path":  "core\\Execution.mqh",
+                               "sha256":  "1c3d89032fe662f4b817d17c6d4d97c39277d0122f42318ddfbda25319d01409"
+                           },
+                           {
+                               "path":  "core\\ExitManager.mqh",
+                               "sha256":  "d4383f5f7a88e8cd496654f8db4ba62ee3b3a35f2ea6e71316edc305b546066a"
+                           },
+                           {
+                               "path":  "core\\Hedge.mqh",
+                               "sha256":  "bbd49f9fb11ab5ca41cc631b865d9c8c41221b75f48672545774c2722783ea67"
+                           },
+                           {
+                               "path":  "core\\HedgeSafety.mqh",
+                               "sha256":  "75f6b639d1a29ef4bc3dd0741e5fb74cc0d9996293c7cc9e5ae0b1ba1310f0ff"
+                           },
+                           {
+                               "path":  "core\\Indicators.mqh",
+                               "sha256":  "4ab9e0a3f99df0dcaf77e5c00eb8add5871a892a0f7e92c48bdb2eedd7256332"
+                           },
+                           {
+                               "path":  "core\\Inputs.mqh",
+                               "sha256":  "d7e895e04671d58625d25512260d7ae4fce0c1b2d90a5babe37161b30475b963"
+                           },
+                           {
+                               "path":  "core\\InputSurface_gen.mqh",
+                               "sha256":  "1be03fc77b831bff2783846ceee0ae7ae8d254b6efde6c38d2ceabb4e7f9df6a"
+                           },
+                           {
+                               "path":  "core\\LabCore.mqh",
+                               "sha256":  "c5c0b4a41d1caa4b2f8fae724085a7fa17ebfd938b745912409b281aaf65b2b2"
+                           },
+                           {
+                               "path":  "core\\LockedConstants_gen.mqh",
+                               "sha256":  "d9f0fa0cb413b8da8ff37321c5a4ed269a83d1cc0b25a624323f01889af7ce7b"
+                           },
+                           {
+                               "path":  "core\\MacroGate_Core.mqh",
+                               "sha256":  "80a71cb73a54bfcfaae49857c2d977f5a6e120e553428035178043dd5717de93"
+                           },
+                           {
+                               "path":  "core\\MiddlePath.mqh",
+                               "sha256":  "0964c95010c1c7d3141a2a1228c844d8a112567a72d2f487e5b47f1f25b3d756"
+                           },
+                           {
+                               "path":  "core\\MoneyManagement.mqh",
+                               "sha256":  "9f2dfc7d6781f199620dc0e83cde18784be57ec8926743ea6b7f0e94d46f2180"
+                           },
+                           {
+                               "path":  "core\\Persist.mqh",
+                               "sha256":  "27c0ba47e9dc20ced6dd9ab7a53e4059f62931529494868dcdcf7a3ed506f487"
+                           },
+                           {
+                               "path":  "core\\PriceAction.mqh",
+                               "sha256":  "7bd58068e3a2f42e4788e32bde79a3ada706d519e49cb80305aa95e2267f084e"
+                           },
+                           {
+                               "path":  "core\\Recovery.mqh",
+                               "sha256":  "365cb2a5f9189721c1de1efbbc140f967d6a67bd2d49d4b53fd8dae310a3f4c8"
+                           },
+                           {
+                               "path":  "core\\Regime.mqh",
+                               "sha256":  "5df0ba4c0b3378954cb8f93b1bc4264e9db2b9a87846672d94c3013159b32dd4"
+                           },
+                           {
+                               "path":  "core\\RiskControl.mqh",
+                               "sha256":  "ac3710ef991c817803f36038af6af1a8e0870ef52a46198013625888c762c3cf"
+                           },
+                           {
+                               "path":  "core\\RuntimeIdentity.mqh",
+                               "sha256":  "16dd6733be752da6150c80f2a9bdbb4086154a9ca83e4308eefa6fca1a1770d4"
+                           },
+                           {
+                               "path":  "core\\Stack.mqh",
+                               "sha256":  "76f504df5b09f6b759df90f1b2a3ad63aa1fd0b668954ae730cfaf8e44fab3bb"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_AdaptiveTrendGrid.mqh",
+                               "sha256":  "826bdd71dd82cd95da83b2fd0dbc4dd570037c10e5136f0ccf44d1066df986e6"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_Breakout.mqh",
+                               "sha256":  "732415998f2752019764751a4a173a3f20c13524f7dd96b72248eb024bff9f9d"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_GridLog.mqh",
+                               "sha256":  "7a1fec373ce818fd09ec2761ee98aba46e33a8c1e30726fd1afd75b727ce85d7"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_GridTrendMA.mqh",
+                               "sha256":  "c6f61f1574dc5956aca79d21c14840baea815add26042f5d362781854ca6c898"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_JumStoch.mqh",
+                               "sha256":  "c396c21546cf53f1979a717eab153bbd4df16d294f2ef8dc076e1418d8f40ac2"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_KangarooRSI.mqh",
+                               "sha256":  "e0bdf36e1e9dc581fd1633d96cfee06b81bc49e2e9e73d6036c728912ca8a64f"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_MeanReversion.mqh",
+                               "sha256":  "9ecbc3eec81e43894ceb0b4077dddd8c7df95c3eb935d8183d1e67720314d26c"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_ST03.mqh",
+                               "sha256":  "440936a4a6700e72fab56a002197f9b8f783f64a52127e53400be4784243375d"
+                           },
+                           {
+                               "path":  "core\\entries\\Entry_Wave5.mqh",
+                               "sha256":  "c4e2045c728c04a561f5d8dfad70b99120ee8c43054d817559d01d69464dbd5d"
+                           },
+                           {
+                               "path":  "core\\entries\\IEntry.mqh",
+                               "sha256":  "05acf759fbb24f08bf54a58c0dbdce27810d4900689ba44838be418d2f8f35ef"
+                           },
+                           {
+                               "path":  "core\\entries\\Kangaroo.mqh",
+                               "sha256":  "4c1b6388dd29a7b5d390338d0f553b7ea4d69f01a7d4b74f701434c32f5bf7c6"
+                           },
+                           {
+                               "path":  "core\\entries\\Wave5Swings.mqh",
+                               "sha256":  "c04f62fd62566056e1727cc8512ff615014fe720c85651705dae6a5d22687595"
+                           },
+                           {
+                               "path":  "generated\\B14_H01_r1.mq5",
+                               "sha256":  "408297ff041d752ed2bf7692a71d4858673d4ebe81c9a8bc32048af21fed9657"
+                           },
+                           {
+                               "path":  "generated\\B14_H01_r1_allowlist.mqh",
+                               "sha256":  "edfbc7d66c0e5a8b51f66a922cc92c71e1ec4810fe8e1524f57ae6345ca5746f"
+                           },
+                           {
+                               "path":  "generated\\B14_H02_r1.mq5",
+                               "sha256":  "9dee4b4dd86fc8df216b279a5daa6b26c192f16eeaab0cda7958a5832f32d686"
+                           },
+                           {
+                               "path":  "generated\\B14_H02_r1_allowlist.mqh",
+                               "sha256":  "e4ac8006f6b405bd6d91506913ed4c186a4be7df43d16c406d422a4f85e33745"
+                           },
+                           {
+                               "path":  "modules\\Basket.mqh",
+                               "sha256":  "f1642988ed3803f48f4d7154e2d8d735214708c2f76794e39b2a4ede071bbfa1"
+                           },
+                           {
+                               "path":  "modules\\Execution.mqh",
+                               "sha256":  "8046f4c925fd42b9ea067db87b9c62c545d50d6a681798b381b21ca93d12ec59"
+                           },
+                           {
+                               "path":  "modules\\ExitManager.mqh",
+                               "sha256":  "158f13286ae54a32717f8fdb6f2c7e0b1961a299efa51a8388dde816e6e942d9"
+                           },
+                           {
+                               "path":  "modules\\Hedge.mqh",
+                               "sha256":  "a43beab64701c28ed668039b1b736eab5898736aeb52d0922d260f9bb2a96143"
+                           },
+                           {
+                               "path":  "modules\\Indicators.mqh",
+                               "sha256":  "b4eb3e073c499badd1449cd42195619b4b0cfa1924b3a1cd8b0158cd983c720e"
+                           },
+                           {
+                               "path":  "modules\\Inputs.mqh",
+                               "sha256":  "f3770b9f10e555912a0d19b2ab14b8fa3dcb23efa429ae91843e11ca6a8e531f"
+                           },
+                           {
+                               "path":  "modules\\MoneyManagement.mqh",
+                               "sha256":  "30cb5fe500d1f3e01491dd14198b9b241f83ba3f74d44fde964d4260f509d7af"
+                           },
+                           {
+                               "path":  "modules\\Recovery.mqh",
+                               "sha256":  "a3994dec3bb8966842c6c11df8d62204dd8f84f4ed5bb6f59fba05cb1cf408fb"
+                           },
+                           {
+                               "path":  "modules\\RiskControl.mqh",
+                               "sha256":  "82c121c2a10d9e3023b4df324cdc3ee228bd16ddf667936010e7cd95a26aa320"
+                           },
+                           {
+                               "path":  "modules\\entries\\Entry_Breakout.mqh",
+                               "sha256":  "9ba9926adbd1ede36a25f25ce2cf45cce9ab5dd854e359f6ccc53b16a5eaaebf"
+                           },
+                           {
+                               "path":  "modules\\entries\\Entry_GridTrendMA.mqh",
+                               "sha256":  "6f7584038d56fc64ca47f20699316129aba1420c8e2475a5e34d22cd08af58ec"
+                           },
+                           {
+                               "path":  "modules\\entries\\Entry_MeanReversion.mqh",
+                               "sha256":  "768c174cb78a33e25cf0132dda2888d7e83a4cef457b97836e71bedd6832fcb4"
+                           },
+                           {
+                               "path":  "modules\\entries\\IEntry.mqh",
+                               "sha256":  "187bec9bde38ada3311a098bc7ce4cc41b1b5ce64fd43e2a8174622d0014b2f9"
+                           },
+                           {
+                               "path":  "tests\\AcctGate_Test.mq5",
+                               "sha256":  "2c152c1b747653289d3583a1e6023e0ff3c4f37dddb2a8984ed201bbf4293805"
+                           },
+                           {
+                               "path":  "tests\\AcctSnapshot_Test.mq5",
+                               "sha256":  "e610b9316ed124077de3f6098afe9eec9495ae85698ead7e1dfda8822e8b4581"
+                           },
+                           {
+                               "path":  "tests\\AdaptiveTrendGrid_Test.mq5",
+                               "sha256":  "7cd32b4692b61399a4dd3cc06b6518400417c6cc65918d46648953f0667dfbb1"
+                           },
+                           {
+                               "path":  "tests\\EventBusHeat_Test.mq5",
+                               "sha256":  "bb133ac40f7f1de8621c4ad1d402ef3e94563c030f24d72b67b6ea24bbd87935"
+                           },
+                           {
+                               "path":  "tests\\HedgeOff_Test.mq5",
+                               "sha256":  "b0ea3f6beffdbd043af14e8ca3c4ef46f33e62551b5d13f33f2fb599ec5ba9d0"
+                           },
+                           {
+                               "path":  "tests\\HedgeSafety_Test.mq5",
+                               "sha256":  "b3c9a1847e1fe9c173f9319971f4386285e030d64a1e5adec57fb75d1ccb9cad"
+                           },
+                           {
+                               "path":  "tests\\HedgeSemantic_Test.mq5",
+                               "sha256":  "2368b92d054953b28e320ebcedd18f3fd80e4af84e6f56ca1869c78ca98152c7"
+                           },
+                           {
+                               "path":  "tests\\Hedge_Test.mq5",
+                               "sha256":  "c578ebbc130b052bb7086297d56bbd89b3ceb4d69cc4d7522d7e7c2ffe8a0d91"
+                           },
+                           {
+                               "path":  "tests\\MiddlePath_Test.mq5",
+                               "sha256":  "dfaed983148fd797b7e9984ad0ae7dce3c27d0737815f58e19ddb505d1315bdc"
+                           },
+                           {
+                               "path":  "tests\\NewsGuardHealth_Test.mq5",
+                               "sha256":  "3c59017cfc2b9b4b84de794978ad6b49dfa8854c2432a2f7822bc1f40253a998"
+                           },
+                           {
+                               "path":  "tests\\NewsGuard_Test.mq5",
+                               "sha256":  "d1af74d7e496381aae00d8ff0a8616f936e99291a4fac78365eaf7c4051be511"
+                           },
+                           {
+                               "path":  "tests\\PersistIntent_Test.mq5",
+                               "sha256":  "48f12fb3c060041eda0b5d4eee3a52e87b69d52b4928a54c75d9dd52347ed488"
+                           },
+                           {
+                               "path":  "tests\\PersistMigrate_Test.mq5",
+                               "sha256":  "b02431a5b5b1211c9a02cd9769e2245e930e1bc6a5fa33fd0b7af876b0e87916"
+                           },
+                           {
+                               "path":  "tests\\Persist_Test.mq5",
+                               "sha256":  "4a1749496b7177a5d18b7f4fdd159061aab73adb70ba4a0966825403aec71000"
+                           },
+                           {
+                               "path":  "tests\\Recovery81_Test.mq5",
+                               "sha256":  "22e26d5e1a3b1fbabbbeae9e25abc7e4bafb7daf2e324c99c7d1cfe70cb5599c"
+                           },
+                           {
+                               "path":  "tests\\Recovery82_Test.mq5",
+                               "sha256":  "53f641dd072cdf423eb8be36ca59925759b8ac17af41f3f47b0fe82b17e96587"
+                           },
+                           {
+                               "path":  "tests\\Recovery83_Test.mq5",
+                               "sha256":  "b8e56a8e09d70612e36607afca6a959e15f80018ef074bb2717c8d0de48d8bc3"
+                           },
+                           {
+                               "path":  "tests\\RecoveryOff_Test.mq5",
+                               "sha256":  "659412549de2046bc98ac692a73a6406983c43e7868503a7db08dcf2422e5e77"
+                           },
+                           {
+                               "path":  "tests\\RegimeHysteresis_Test.mq5",
+                               "sha256":  "412cc7786dbca440bd7e561c83c9640c9ed364031add93bc5a951a243002a584"
+                           },
+                           {
+                               "path":  "tests\\StackStep_Test.mq5",
+                               "sha256":  "9e1db81fe19cdc90285112c8bdd052e6aa6d9a4e227dcf54299385904ddaf863"
+                           },
+                           {
+                               "path":  "tests\\StopsLevel_Probe.mq5",
+                               "sha256":  "dfc938f6eff9741371fa62690c632c36a145edc5389cc060cc56f4e643b802ba"
+                           },
+                           {
+                               "path":  "tests\\Wave5G4_Rejection_Test.mq5",
+                               "sha256":  "5e1dd709a76d2afdd5d80ded73b53948a7d2fae2b4a856a2e070468800f8909d"
+                           }
+                       ]
+}
