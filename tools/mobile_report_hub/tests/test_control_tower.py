@@ -121,6 +121,105 @@ class ControlTowerTests(unittest.TestCase):
         self.assertNotIn("463666728", ct.public_text("account 463666728 at D:\\secret\\file"))
         self.assertNotIn("secret", ct.public_text("account 463666728 at D:\\secret\\file"))
 
+    def test_graph_projects_only_consumed_audit_metadata(self):
+        row = self.audit([self.lane(head_sha="a" * 40, writer=True, blocker_class="E_OWNER_EXTERNAL",
+                                   objective="do not export", worker="https://secret", branch="https://secret",
+                                   worktree="https://private/secret", reviewer="<secret>", reviewed_head="b" * 40)])['rows'][0]
+        self.assertEqual(row['head_sha'], 'a' * 40)
+        self.assertEqual(row['role'], 'WRITER')
+        self.assertEqual(row['registry_classification'], 'ACTIVE_CURRENT')
+        self.assertEqual(row['blocker_class'], 'E')
+        self.assertNotIn('secret', json.dumps(row))
+        self.assertNotIn('objective', row)
+
+    def metadata_lane(self, **changes):
+        metadata = dict(worker='Codex-Primary', branch='ct/monitor-v31-final-r2-20260911',
+                        worktree=r'D:\EA_LAB_CONTROL\worktrees\monitor-v31-final-r2-20260911',
+                        reviewer='ChatGPT-Control-Tower', head_sha='a' * 40, reviewed_head='a' * 40)
+        metadata.update(changes)
+        return self.lane(**metadata)
+
+    def test_realistic_structured_metadata_and_review(self):
+        row = self.audit([self.metadata_lane()])['rows'][0]
+        self.assertEqual(row['worker'], 'Codex-Primary')
+        self.assertEqual(row['ref'], 'ct/monitor-v31-final-r2-20260911')
+        self.assertEqual(row['worktree'], 'monitor-v31-final-r2-20260911')
+        self.assertEqual(row['reviewer'], 'ChatGPT-Control-Tower')
+        self.assertEqual(row['reviewed_head'], 'a' * 40)
+        self.assertEqual(row['review_state'], 'REVIEWED_EXACT_HEAD')
+        self.assertNotIn('EA_LAB_CONTROL', json.dumps(row))
+        self.assertEqual(self.audit([self.metadata_lane(state='REVIEW')])['rows'][0]['review_state'], 'REVIEW_ACTIVE')
+        for name in ('monitor-v31-final-integration-20260911', 'monitor-v31-final-r2-20260911'):
+            self.assertEqual(ct.registry_identifier('ct/' + name, branch=True), 'ct/' + name)
+            self.assertEqual(ct.registry_worktree('D:/EA_LAB_CONTROL/worktrees/' + name), name)
+        for field in ('provider', 'model', 'pid', 'session', 'heartbeat', 'log_tail'):
+            self.assertEqual(row.get(field, 'UNKNOWN'), 'UNKNOWN')
+
+    def test_metadata_rejects_unsafe_values_without_truncating(self):
+        bad = ('https://evil.test/a', '//evil.test/a', 'account-1234', 'login-user', 'acct-123',
+               'worker-123456789', '123456789', 'Codex\nPrimary', 'Codex\rPrimary', 'Codex\x00',
+               '<script>', 'worker&tag', 'x' * 161, None, 42, {}, 'Codex\tPrimary')
+        for value in bad:
+            for field in ('worker', 'branch', 'reviewer', 'worktree'):
+                with self.subTest(value=value, field=field):
+                    row = self.audit([self.metadata_lane(**{field: value})])['rows'][0]
+                    self.assertEqual(row['ref' if field == 'branch' else field], 'UNKNOWN')
+        for field in ('worker', 'branch', 'reviewer'):
+            for value in (r'D:\private\worker', '/private/worker'):
+                row = self.audit([self.metadata_lane(**{field: value})])['rows'][0]
+                self.assertEqual(row['ref' if field == 'branch' else field], 'UNKNOWN')
+        for field in ('worker', 'reviewer'):
+            self.assertEqual(self.audit([self.metadata_lane(**{field: 'private/worker'})])['rows'][0][field], 'UNKNOWN')
+        for value in (r'D:\private\account-1234', r'D:\private\worker-123456789', '../worker', 'D:/bad\n/worker'):
+            self.assertEqual(ct.registry_worktree(value), 'UNKNOWN')
+
+    def test_review_claim_requires_eligible_exact_evidence(self):
+        for changes in ({'reviewed_head': 'b' * 40}, {'head_sha': 'bad'}, {'classification': 'ACTIVE_AGED'},
+                        {'classification': 'ACTIVE_IDENTITY_MISMATCH'}, {'updated_at': '2026-09-01T00:00:00Z'}):
+            self.assertEqual(self.audit([self.metadata_lane(**changes)])['rows'][0]['review_state'], 'UNKNOWN')
+        for value in ('A' * 40, 'a' * 39, 'a' * 41, 'a' * 40 + '\n', None, 42, 'UNKNOWN'):
+            row = self.audit([self.metadata_lane(reviewed_head=value)])['rows'][0]
+            self.assertEqual(row['reviewed_head'], 'UNKNOWN')
+            self.assertEqual(row['review_state'], 'UNKNOWN')
+        for state in ('REVIEW', 'FROZEN'):
+            self.assertEqual(self.audit([self.metadata_lane(state=state)], '2026-09-01T00:00:00Z')['rows'][0]['review_state'], 'UNKNOWN')
+        rows = self.audit([self.metadata_lane(), self.metadata_lane()])['rows']
+        self.assertTrue(all(row['review_state'] == 'UNKNOWN' for row in rows))
+
+    def test_git_registry_conflict_suppresses_review_claim(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'audit.json'
+            path.write_text(json.dumps({'result': 'AUDIT', 'generated_at': NOW,
+                                        'records': [self.metadata_lane(lane_id='ORDER-1')]}))
+            result = ct.build_projection('', SOURCE, [('## ORDER-1 - title `DONE`', SOURCE)], path, NOW, str)
+        self.assertEqual(result['registry']['rows'][0]['review_state'], 'UNKNOWN')
+
+    def test_graph_rejects_malformed_sha_and_coerced_writer(self):
+        for sha in ('abc123', 'a' * 41, 'A' * 40, 42, None, 'D:/secret'):
+            row = self.audit([self.lane(head_sha=sha, writer='true')])['rows'][0]
+            self.assertEqual(row['head_sha'], 'UNKNOWN')
+            self.assertEqual(row['role'], 'UNKNOWN')
+        self.assertEqual(self.audit([self.lane(writer=False)])['rows'][0]['role'], 'READ_ONLY')
+
+    def test_graph_dependencies_require_explicit_safe_exact_ids(self):
+        row = self.audit([self.lane(dependencies=['prerequisite', 'missing', 'account-463666728', {'id': 'injected'}])])['rows'][0]
+        self.assertEqual(row['direct_dependencies'], ['prerequisite', 'missing', 'UNKNOWN', 'UNKNOWN'])
+        self.assertEqual(self.audit([self.lane(dependencies=[])])['rows'][0]['direct_dependencies'], [])
+        for value in (None, 'guessed', {}):
+            self.assertEqual(self.audit([self.lane(dependencies=value)])['rows'][0]['direct_dependencies'], 'UNKNOWN')
+
+    def test_duplicate_registry_identifiers_suppress_owner_derivation(self):
+        rows = self.audit([self.lane(blocker_class='E'), self.lane(blocker_class='E')])['rows']
+        self.assertEqual([r['state'] for r in rows], ['CONFLICT', 'CONFLICT'])
+        self.assertFalse(any(r['owner_required'] for r in rows))
+
+    def test_graph_never_exports_blocker_prose_or_unknown_classification(self):
+        row = self.audit([self.lane(blocker_class='E / token=secret', classification='secret')])['rows'][0]
+        self.assertEqual(row['blocker_class'], 'E')
+        self.assertEqual(row['registry_classification'], 'UNKNOWN')
+        self.assertNotIn('secret', json.dumps(row))
+        self.assertFalse(row['owner_required'])
+
 
 if __name__ == "__main__":
     unittest.main()

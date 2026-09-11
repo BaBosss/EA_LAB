@@ -2,6 +2,7 @@
 param(
     [string]$RepoRoot = '',
     [string]$OutFile = '',
+    [string]$ExpectedCanonicalSha = '',
     [datetimeoffset]$AsOf = [datetimeoffset]::Now,
     [double]$StaleHours = 26,
     [double]$FutureToleranceMinutes = 5
@@ -9,6 +10,7 @@ param(
 $ErrorActionPreference='Stop'
 if(-not $RepoRoot){$RepoRoot=Split-Path -Parent $PSScriptRoot}
 $RepoRoot=[IO.Path]::GetFullPath($RepoRoot)
+if($ExpectedCanonicalSha -and $ExpectedCanonicalSha -cnotmatch '^[0-9a-f]{40}$'){throw 'MONITOR_HEALTH_REFUSE: invalid canonical SHA'}
 if($StaleHours -le 0){throw 'MONITOR_HEALTH_REFUSE: StaleHours must be > 0'}
 if($FutureToleranceMinutes -le 0){throw 'MONITOR_HEALTH_REFUSE: FutureToleranceMinutes must be > 0'}
 $asOfUtc=$AsOf.UtcDateTime
@@ -103,7 +105,10 @@ $alertPresent=Test-Path -LiteralPath $alertPath
 $repoHead='UNKNOWN'
 try{$candidate=(& git -C $RepoRoot rev-parse HEAD 2>$null).Trim();if($candidate -match '^[0-9a-f]{40}$'){$repoHead=$candidate}}catch{}
 $revisionState=if($repoHead -eq 'UNKNOWN'){'UNKNOWN'}else{'RESOLVED'}
-$status=if($alertPresent -or $revisionState -ne 'RESOLVED' -or @($sources|Where-Object state -ne 'CURRENT').Count -gt 0){'DEGRADED'}else{'CURRENT'}
+$canonicalBinding=if(-not $ExpectedCanonicalSha -or $repoHead -eq 'UNKNOWN'){'UNKNOWN'}elseif($repoHead -ceq $ExpectedCanonicalSha){'MATCHES_CANONICAL_SHA'}else{'DIFFERENT_REPO_HEAD'}
+$snapshotHead=if($null -ne $cr -and [string]$cr.meta.git_head -cmatch '^[0-9a-f]{40}$'){[string]$cr.meta.git_head}else{'UNKNOWN'}
+$snapshotBinding=if($snapshotHead -eq 'UNKNOWN' -or $repoHead -eq 'UNKNOWN'){'UNKNOWN'}elseif($snapshotHead -ceq $repoHead){'MATCHES_RUNTIME_HEAD'}else{'DIFFERENT_SNAPSHOT_HEAD'}
+$status=if($alertPresent -or $revisionState -ne 'RESOLVED' -or $canonicalBinding -ne 'MATCHES_CANONICAL_SHA' -or $snapshotBinding -ne 'MATCHES_RUNTIME_HEAD' -or @($sources|Where-Object state -ne 'CURRENT').Count -gt 0){'DEGRADED'}else{'CURRENT'}
 $payload=[pscustomobject][ordered]@{
     schema_version='EA_LAB_MONITOR_HEALTH_V1'
     generated_at_utc=$asOfUtc.ToString('yyyy-MM-ddTHH:mm:ssZ')
@@ -111,6 +116,8 @@ $payload=[pscustomobject][ordered]@{
     authority='READ_ONLY_NO_RUNTIME_AUTHORITY'
     repo_head=$repoHead
     runtime_revision=[pscustomobject][ordered]@{state=$revisionState;git_head=if($revisionState -eq 'RESOLVED'){$repoHead}else{$null};basis='git_rev_parse_repo_root'}
+    canonical_binding=$canonicalBinding
+    snapshot_revision=[pscustomobject][ordered]@{git_head=$snapshotHead;binding_state=$snapshotBinding;basis='snapshot_meta_git_head'}
     status=$status;stale_after_hours=$StaleHours;future_tolerance_minutes=$FutureToleranceMinutes
     alert_present=$alertPresent;sources=$sources;coverage=[pscustomobject]$coverage
 }

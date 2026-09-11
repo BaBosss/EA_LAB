@@ -1,0 +1,23 @@
+/* All sizing is local: the host flex/grid item must also permit min-width: 0. */
+.agent-graph { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; overflow-wrap: anywhere; }
+.agent-graph *, .agent-graph *::before, .agent-graph *::after { box-sizing: border-box; min-width: 0; }
+.agent-graph-pan { width: 100%; max-width: 100%; overflow: auto; overscroll-behavior-inline: contain; border: 1px solid #778899; }
+.agent-graph-pan:focus-visible { outline: 3px solid #397bcb; outline-offset: -3px; }
+.agent-graph-columns { display: grid; grid-template-columns: repeat(8, 17rem); gap: .75rem; width: max-content; padding: .75rem; align-items: start; }
+.agent-graph-column h3 { margin: 0 0 .5rem; font-size: 1rem; }
+.agent-graph-node { padding: .65rem; margin-bottom: .75rem; border: 1px solid #778899; border-radius: .4rem; }
+.agent-graph-node h4, .agent-graph-node p { margin: 0 0 .5rem; }
+.agent-graph-node dl { margin: 0; font-size: .8rem; }
+.agent-graph-node dt { font-weight: bold; margin-top: .35rem; }
+.agent-graph-node dd { margin: 0; white-space: pre-wrap; }
+.agent-graph-node strong { display: block; margin-bottom: .5rem; }
+.agent-graph-owner { border: 3px solid #b97900; }
+.agent-graph-issues { border-left: 3px solid #b97900; }
+.agent-graph details { max-width: 100%; padding: .5rem; }
+@media (max-width: 420px) { .agent-graph-columns { grid-template-columns: repeat(8, 15rem); gap: .5rem; padding: .5rem; } }
+
+.agent-graph-source { margin-block: 1.25rem; border-top: 3px solid #778899; }
+.agent-graph-source[data-graph-source="LANE_REGISTRY_NONCANONICAL"] { border-color: #b97900; }
+.agent-graph-select { display: block; width: 100%; min-height: 44px; padding: .5rem; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.agent-graph-select span { display: block; margin-top: .4rem; }
+.agent-graph-select:focus-visible { outline: 3px solid #397bcb; }

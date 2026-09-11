@@ -3132,8 +3132,8 @@
         },
         "generated_at": {
           "type": "string",
-          "description": "ORDER-1267 Part 2, same reasoning and same route as build_id. Shape DERIVED -- control_room_snapshot.ps1 writes $now.ToString('s'): yyyy-MM-ddTHH:mm:ss, no fraction, no zone.",
-          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+          "description": "Monitor V3.1: UTC seconds with Z copied from the verified snapshot. Legacy timezone-less seconds remain accepted for compatibility; their freshness is UNKNOWN.",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z?$"
         },
         "accounts": {
           "type": "array",

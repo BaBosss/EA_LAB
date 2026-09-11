@@ -38,6 +38,17 @@
       "type": "object", "required": ["id", "state", "source_kind"],
       "properties": {
         "id": {"type": "string", "minLength": 1},
+        "head_sha": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|UNKNOWN)$"},
+        "reviewed_head": {"type": "string", "maxLength": 40, "pattern": "^(?:[0-9a-f]{40}|UNKNOWN)$"},
+        "review_state": {"enum": ["UNKNOWN", "REVIEW_ACTIVE", "REVIEWED_EXACT_HEAD"]},
+        "worker": {"type": "string", "maxLength": 96},
+        "ref": {"type": "string", "maxLength": 160},
+        "worktree": {"type": "string", "maxLength": 96},
+        "reviewer": {"type": "string", "maxLength": 96},
+        "role": {"enum": ["WRITER", "READ_ONLY", "UNKNOWN"]},
+        "registry_classification": {"type": "string"},
+        "blocker_class": {"enum": ["A", "B", "C", "D", "E", "UNKNOWN"]},
+        "direct_dependencies": {"anyOf": [{"const": "UNKNOWN"}, {"type": "array", "items": {"type": "string", "minLength": 1}}]},
         "state": {"enum": ["READY", "RUNNING", "WAITING", "REVIEW", "INTEGRATING", "BLOCKED", "PARKED", "PAUSED", "FROZEN", "DONE", "UNKNOWN", "CONFLICT"]},
         "source_kind": {"enum": ["GIT_CANONICAL", "LANE_REGISTRY_NONCANONICAL", "UNAVAILABLE"]},
         "provenance": {"$ref": "#/$defs/provenance"}

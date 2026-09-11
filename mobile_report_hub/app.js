@@ -221,7 +221,8 @@ function renderMonitoring() {
     : "Coverage unavailable because the enclosing monitoring snapshot is stale, invalid, or missing.";
   return `<section class="panel monitoring-panel"><div class="card-top"><div><p class="eyebrow">LOCAL MONITORING · NONCANONICAL</p><h2>Source health</h2></div>${badge(status)}</div>
     <p>${escapeHtml(coverageText)}</p>${sourceRows}
-    <p class="muted">Binding ${escapeHtml(valueOf(monitoring.binding_state))} · generated ${escapeHtml(valueOf(monitoring.generated_at_utc))} · ${escapeHtml(valueOf(monitoring.authority, "READ_ONLY_NO_RUNTIME_AUTHORITY"))}</p></section>`;
+    <p class="muted">Binding ${escapeHtml(valueOf(monitoring.binding_state))} · generated ${escapeHtml(valueOf(monitoring.generated_at_utc))} · ${escapeHtml(valueOf(monitoring.authority, "READ_ONLY_NO_RUNTIME_AUTHORITY"))}</p>
+    <details><summary>Monitoring revision provenance</summary><p>Runtime Git SHA: ${escapeHtml(valueOf(monitoring.repo_head))}</p><p>Snapshot Git SHA: ${escapeHtml(valueOf(monitoring.snapshot_revision && monitoring.snapshot_revision.git_head))}</p><p>${escapeHtml(valueOf(monitoring.snapshot_revision && monitoring.snapshot_revision.binding_state))}</p></details></section>`;
 }
 
 function renderPortfolioOverview() {
@@ -312,7 +313,25 @@ function observationCurrent() {
 }
 function ownerCards() {
   const items = tower().need_boss || [];
-  return `<section class="panel need-boss"><h2>NEED BOSS</h2>${!observationCurrent() ? '<p>Owner attention UNKNOWN — refresh current evidence.</p>' : items.length ? `<ul class="queue-list">${items.map(item => `<li><strong>${escapeHtml(item.id)}</strong> ${badge(item.state)}<p>${escapeHtml(item.reason)}</p><small>${escapeHtml(item.source_kind)}</small><p>Next owner action: ${escapeHtml(item.owner_action)}</p></li>`).join("")}</ul>` : '<p>No owner action currently derived.</p><small>Canonical prose is not a structured owner request. Review the current plan below.</small>'}</section>`;
+  const projection = workProjection();
+  const graph = window.EALabAgentGraph;
+  // Use Work's display-time qualification, including ambiguity and cached/offline gates.
+  // The precomputed list supplies historical context only; it cannot grant current action.
+  const nodes = graph ? graph.buildModel(projection, {cached: usedCachedData, offline: !navigator.onLine, correlateExactIds: true}).nodes : [];
+  const sameEvidence = (a, b) => a.id === b.id && a.source_kind === b.source_kind;
+  const current = nodes.filter(node => node.source_kind === "LANE_REGISTRY_NONCANONICAL" && node.owner_required);
+  const historical = nodes.filter(node => !node.owner_required &&
+    (node.source_kind === "LANE_REGISTRY_NONCANONICAL" && node.blocker === "OWNER_EXTERNAL" || items.some(item => sameEvidence(item, node))));
+  const missing = items.filter(item => !nodes.some(node => sameEvidence(item, node)));
+  const currentHtml = current.map(node => {
+    const item = items.find(item => sameEvidence(item, node)) || {};
+    return `<li><strong>${escapeHtml(node.id)}</strong> ${badge(node.state)} ${badge("CURRENT")}<p>${escapeHtml(item.reason || "Explicit Lane Registry E / OWNER_EXTERNAL blocker")}</p><small>${escapeHtml(node.source_kind)}</small><p>Next owner action: ${escapeHtml(item.owner_action || "UNKNOWN")}</p></li>`;
+  }).join("");
+  const historyHtml = [...historical, ...missing].map(node => {
+    const item = items.find(item => sameEvidence(item, node)) || node;
+    return `<li data-owner-history><strong>${escapeHtml(node.id)}</strong><p>No current owner action — historical / unqualified evidence.</p><p>${escapeHtml(item.reason || "Explicit OWNER_EXTERNAL observation")}</p><small>${escapeHtml(node.source_kind)} · Freshness: ${escapeHtml(node.freshness || "UNKNOWN")} · State: ${escapeHtml(nodes.includes(node) ? node.state : "UNKNOWN")} · Registry: ${escapeHtml(projection.registry.status || "UNAVAILABLE")} / ${escapeHtml(projection.registry.freshness || "UNKNOWN")} · ${escapeHtml(node.evidence_mode || "MISSING_ROW_OR_GRAPH_UNAVAILABLE")} · Observed: ${escapeHtml(node.observed_at || "UNKNOWN")}</small></li>`;
+  }).join("");
+  return `<section class="panel need-boss"><h2>NEED BOSS</h2>${!observationCurrent() ? '<p>Owner attention UNKNOWN — refresh current evidence.</p>' : ""}${currentHtml ? `<ul class="queue-list">${currentHtml}</ul>` : '<p>No owner action currently derived.</p><small>Canonical prose is not a structured owner request. Review the current plan below.</small>'}${historyHtml ? `<h3>Historical / unqualified owner evidence</h3><ul class="queue-list">${historyHtml}</ul>` : ""}</section>`;
 }
 function contextCards(items, empty) {
   return items && items.length ? items.slice(0, 3).map(item => `<article class="panel"><h3>${escapeHtml(item.title || item.id)}</h3><p>${escapeHtml(item.summary)}</p><details><summary>Source / authority</summary><p>${escapeHtml(item.source_kind)} · ${escapeHtml(item.authority || "PLAN_CONTEXT_ONLY")}</p><p>${escapeHtml(item.provenance && item.provenance.path)} · ${escapeHtml(item.provenance && item.provenance.canonical_sha)}</p></details></article>`).join("") : `<p class="empty-state">${empty}</p>`;
@@ -396,11 +415,62 @@ function renderCompare() {
   inputs.forEach((input) => input.addEventListener("change", update));
 }
 
+// Requalify timestamps at display time; never upgrade projected freshness.
+function workProjection() {
+  const registry = tower().registry || {};
+  return {...tower(), registry: {...registry,
+    freshness: !observationCurrent() ? "UNKNOWN" : registry.freshness === "CURRENT" ? observedFreshness(registry.observed_at) : registry.freshness,
+    rows: (registry.rows || []).map(row => ({...row,
+      freshness: row.freshness === "CURRENT" ? observedFreshness(row.observed_at) : row.freshness,
+      owner_required: row.owner_required === true && observationCurrent()
+    }))
+  }};
+}
+
+function mountWorkGraph(projection) {
+  const graph = window.EALabAgentGraph;
+  const host = document.querySelector("#work-agent-graph");
+  if (!graph) { host.textContent = "Agent Graph UNAVAILABLE: local asset missing."; return; }
+  const model = graph.buildModel(projection, {cached: usedCachedData, offline: !navigator.onLine, correlateExactIds: true});
+  graph.render(host, model);
+  const panel = document.querySelector("#agent-inspect");
+  host.querySelectorAll("[data-inspect-key]").forEach(button => button.addEventListener("click", () => {
+    const key = button.dataset.inspectKey;
+    const detail = graph.inspect(model, key), node = detail.node;
+    const fields = [
+      ["Task", node.id], ["Title", node.title], ["Objective", node.objective],
+      ["Worker", node.worker], ["Role", node.role], ["Provider / model / PID / session", "UNKNOWN"],
+      ["State", node.state], ["Declared state", node.declared_state], ["Freshness", node.freshness],
+      ["Evidence mode", node.evidence_mode], ["Ref", node.ref], ["Full head SHA", node.head_sha],
+      ["Worktree basename", node.worktree], ["Blocker class", node.blocker_class], ["Blocker type", node.blocker],
+      ["Review state", node.review_state], ["Reviewer", node.reviewer], ["Reviewed head", node.reviewed_head],
+      ["Registry classification", node.registry_classification], ["Observed at", node.observed_at],
+      ["NEED BOSS", node.owner_required ? "Qualified current owner blocker" : "No current owner action derived"],
+      ["Dependency evidence", node.dependency_evidence], ["Dependencies", JSON.stringify(node.direct_dependencies)],
+      ["Relations", JSON.stringify(detail.relations)], ["Unresolved relations", JSON.stringify(detail.unresolved_relations)], ["Issues", JSON.stringify(detail.issues)],
+      ["Source", node.source_kind], ["Authority", node.authority], ["Provenance", JSON.stringify(node.provenance)]
+    ];
+    panel.innerHTML = `<h3 tabindex="-1">Inspect</h3><dl class="agent-inspect-facts">${fields.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl><div class="agent-context-actions">${["STEERING", "TASK", "REVIEW"].map(mode => `<button type="button" data-context-mode="${mode}">COPY ${mode} CONTEXT</button>`).join("")}</div><p class="agent-copy-status" role="status"></p><label>Generated context<textarea readonly aria-label="Generated context"></textarea></label>`;
+    panel.hidden = false;
+    panel.querySelector("h3").focus();
+    panel.querySelectorAll("[data-context-mode]").forEach(button => button.addEventListener("click", async () => {
+      const current = graph.buildModel(workProjection(), {cached: usedCachedData, offline: !navigator.onLine, correlateExactIds: true});
+      const context = graph.steeringContext(current, key, button.dataset.contextMode);
+      panel.querySelector("textarea").value = context;
+      const status = panel.querySelector(".agent-copy-status");
+      try { await navigator.clipboard.writeText(context); status.textContent = "Context copied. Read-only evidence; no action performed."; }
+      catch { status.textContent = "Clipboard unavailable. Select the generated text to copy."; }
+    }));
+  }));
+}
+
 function renderQueue() {
   const groups = ["READY", "RUNNING", "WAITING", "REVIEW", "INTEGRATING", "BLOCKED", "PARKED", "PAUSED", "FROZEN", "CONFLICT", "UNKNOWN", "DONE"];
-  const registry = tower().registry || {};
-  const sections = [["Canonical taskboard declarations", tower().work || [], "Pinned Git headers; not proof of execution readiness."], ["Lane observations", registry.rows || [], `NONCANONICAL · ${registry.status || "UNAVAILABLE"} · ${registry.freshness || "UNKNOWN"}`]];
-  app.innerHTML = `<section class="page-heading"><h2>Work</h2><p>Canonical declarations and operational observations remain separate.</p></section>${sections.map(([title, rows, note]) => `<section><h2>${title}</h2><p>${escapeHtml(note)}</p>${rows.length ? groups.map(group => { const items = rows.filter(item => stateName(item.state) === group); return items.length ? `<details class="panel" ${["RUNNING", "BLOCKED", "CONFLICT"].includes(group) ? "open" : ""}><summary>${group} (${items.length})</summary><ul class="queue-list">${items.map(queueItem).join("")}</ul></details>` : ""; }).join("") : '<p class="empty-state">No rows supplied; source availability must be checked.</p>'}</section>`).join("")}`;
+  const projection = workProjection();
+  const registry = projection.registry;
+  const sections = [["Canonical taskboard declarations", tower().work || [], "Pinned Git headers; not proof of execution readiness."], ["Lane observations", (registry.rows || []).map(item => ({...item, state: observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && item.freshness === "CURRENT" ? item.state : item.state === "CONFLICT" ? "CONFLICT" : "UNKNOWN"})), `NONCANONICAL · ${registry.status || "UNAVAILABLE"} · ${registry.freshness || "UNKNOWN"}`]];
+  app.innerHTML = `<section class="page-heading"><h2>Work</h2><p>Canonical declarations and operational observations remain separate.</p></section><section class="panel"><h2>Summary</h2><p>${(tower().work || []).length} Git declarations / ${(registry.rows || []).length} lane observations. Process health UNKNOWN.</p><p>Registry: ${escapeHtml(registry.status)} / ${escapeHtml(registry.freshness)}</p></section><section class="work-graph-area"><h2>Agent Graph</h2><p>Tap a task to inspect evidence or copy context. Scroll each source graph horizontally.</p><div id="work-agent-graph"></div><aside id="agent-inspect" class="panel" aria-label="Agent inspection" hidden></aside></section><h2>Detailed lanes</h2>${sections.map(([title, rows, note]) => `<section><h2>${title}</h2><p>${escapeHtml(note)}</p>${rows.length ? groups.map(group => { const items = rows.filter(item => stateName(item.state) === group); return items.length ? `<details class="panel" ${["RUNNING", "BLOCKED", "CONFLICT"].includes(group) ? "open" : ""}><summary>${group} (${items.length})</summary><ul class="queue-list">${items.map(queueItem).join("")}</ul></details>` : ""; }).join("") : '<p class="empty-state">No rows supplied; source availability must be checked.</p>'}</section>`).join("")}`;
+  mountWorkGraph(projection);
 }
 
 function renderAlerts() {

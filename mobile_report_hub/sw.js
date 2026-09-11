@@ -1,8 +1,8 @@
 "use strict";
 
-const CACHE_NAME = "ea-lab-report-hub-v3";
+const CACHE_NAME = "ea-lab-report-hub-v3.1";
 const CACHE_PREFIX = "ea-lab-report-hub-v";
-const SHELL = ["./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
+const SHELL = ["./index.html", "./styles.css", "./app.js", "./agent_graph.js", "./agent_graph.css", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)));

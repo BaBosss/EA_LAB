@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import ntpath
 import re
 from datetime import datetime, timezone
 
@@ -79,6 +80,31 @@ def task_rows(text, provenance):
     return rows
 
 
+def registry_identifier(value, branch=False):
+    """Bounded ASCII metadata, never Registry prose or account/login identities."""
+    if not isinstance(value, str) or len(value) > (160 if branch else 96):
+        return "UNKNOWN"
+    pattern = r"[A-Za-z][A-Za-z0-9_-]*(?:[./][A-Za-z0-9][A-Za-z0-9_-]*)*" if branch else r"[A-Za-z][A-Za-z0-9]*(?:[ ._-][A-Za-z0-9]+)*"
+    if (not re.fullmatch(pattern, value)
+            or re.search(r"(?<![A-Za-z0-9])\d{9,}(?![A-Za-z0-9])", value)
+            or re.search(r"(?:^|[^A-Za-z0-9])(?:account|acct|login)", value, re.I)):
+        return "UNKNOWN"
+    return value
+
+
+def registry_worktree(value):
+    """Accept a bounded path as input; export only its validated basename."""
+    if (not isinstance(value, str) or len(value) > 512
+            or not re.fullmatch(r"(?:[A-Za-z]:[\\/]|/)?[A-Za-z0-9_. -]+(?:[\\/][A-Za-z0-9_. -]+)*", value)
+            or any(part in {".", ".."} for part in re.split(r"[\\/]", value))):
+        return "UNKNOWN"
+    return registry_identifier(ntpath.basename(value))
+
+
+def registry_sha(value):
+    return value if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{40}", value) else "UNKNOWN"
+
+
 def registry_projection(path, now, safe_id):
     missing = {"status": "UNAVAILABLE", "freshness": "UNKNOWN", "observed_at": "UNKNOWN", "rows": [],
                "source_kind": "LANE_REGISTRY_NONCANONICAL", "reason": "NOT_PROVIDED"}
@@ -103,14 +129,36 @@ def registry_projection(path, now, safe_id):
             eligible = envelope_freshness == row_freshness == "CURRENT" and classification in {"ACTIVE_CURRENT", "QUEUED_CURRENT"}
             blocker = item.get("blocker_class", "")
             owner = isinstance(blocker, str) and re.match(r"^E(?:$|[_ /-])", blocker) is not None
+            head = registry_sha(item.get("head_sha"))
+            reviewed_head = registry_sha(item.get("reviewed_head"))
+            review_state = "UNKNOWN"
+            if eligible:
+                if item["state"] == "REVIEW":
+                    review_state = "REVIEW_ACTIVE"
+                elif head != "UNKNOWN" and reviewed_head == head:
+                    review_state = "REVIEWED_EXACT_HEAD"
             rows.append({"id": safe_id(item.get("lane_id")), "state": "CONFLICT" if conflict else item["state"] if eligible else "UNKNOWN",
                          "declared_state": item["state"], "source_kind": "LANE_REGISTRY_NONCANONICAL",
                          "freshness": row_freshness if envelope_freshness == "CURRENT" else envelope_freshness,
                          "observed_at": observed if row_freshness != "UNKNOWN" else "UNKNOWN",
+                         "head_sha": head, "reviewed_head": reviewed_head, "review_state": review_state,
+                         "worker": registry_identifier(item.get("worker")),
+                         "ref": registry_identifier(item.get("branch"), branch=True),
+                         "worktree": registry_worktree(item.get("worktree")),
+                         "reviewer": registry_identifier(item.get("reviewer")),
+                         "role": "WRITER" if item.get("writer") is True else "READ_ONLY" if item.get("writer") is False else "UNKNOWN",
+                         "registry_classification": classification if classification in {"ACTIVE_CURRENT", "QUEUED_CURRENT", "ACTIVE_AGED", "ACTIVE_IDENTITY_MISMATCH", "ACTIVE_MISSING_WORKTREE", "STALE_NONACTIVE", "HISTORICAL_UNRESOLVED"} else "UNKNOWN",
+                         "blocker_class": blocker[0] if isinstance(blocker, str) and re.match(r"^[A-E](?:$|[_ /-])", blocker) else "UNKNOWN",
+                         "direct_dependencies": [dep if isinstance(dep, str) and safe_id(dep) == dep else "UNKNOWN" for dep in item["dependencies"]] if eligible and isinstance(item.get("dependencies"), list) else "UNKNOWN",
                          "blocker_type": "OWNER_EXTERNAL" if owner else "UNKNOWN",
                          "attention_required": item.get("attention_required") is True or conflict,
                          "owner_action": "UNKNOWN", "owner_required": bool(owner and eligible),
                          "summary": "Lane observation only; process health and canonical completion are not established."})
+        for row in rows:
+            if sum(other["id"] == row["id"] for other in rows) > 1:
+                row["state"] = "CONFLICT"
+                row["review_state"] = "UNKNOWN"
+                row["owner_required"] = False
         return dict(missing, status="AVAILABLE" if envelope_freshness == "CURRENT" else "UNAVAILABLE",
                     freshness=envelope_freshness, observed_at=stamp if envelope_freshness != "UNKNOWN" else "UNKNOWN",
                     rows=rows, reason="AUDIT_OBSERVATION")
@@ -131,6 +179,7 @@ def build_projection(project_text, project_source, boards, registry, now, safe_i
         matches = [item for item in canonical if item["id"] == row["id"]]
         if any(item["state"] != row["state"] for item in matches):
             row["state"] = "CONFLICT"
+            row["review_state"] = "UNKNOWN"
             row["owner_required"] = False
             for item in matches:
                 item["state"] = "CONFLICT"

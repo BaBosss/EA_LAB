@@ -396,9 +396,10 @@ def _apply_git_head(inp, root):
     if not isinstance(meta, dict):
         return
     try:
-        p = subprocess.run(['git', '-C', base, 'rev-parse', '--short', 'HEAD'],
+        p = subprocess.run(['git', '-C', base, 'rev-parse', '--verify', 'HEAD^{commit}'],
                            capture_output=True, text=True)
-        derived = p.stdout.strip() if p.returncode == 0 else None
+        candidate = p.stdout.strip()
+        derived = candidate if p.returncode == 0 and re.fullmatch(r'[0-9a-f]{40}', candidate) else None
     except (OSError, ValueError):
         derived = None
     claimed = meta.get('git_head')

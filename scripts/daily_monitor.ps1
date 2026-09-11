@@ -237,6 +237,8 @@ if ($failed.Count -gt 0) {
     exit 1
 }
 if (Test-Path $alertFile) { Remove-Item $alertFile -Force }
-Set-Content $successMarker (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -Encoding ASCII
+# Full-green completion only: the failure branch above must leave the previous success
+# untouched. Existing DateTime readers accept UTC; machine freshness needs an explicit zone.
+Set-Content $successMarker ([DateTimeOffset]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')) -Encoding ASCII
 "done" | Add-Content $log
 exit 0

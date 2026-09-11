@@ -1541,6 +1541,23 @@ def rollups(ran, by_cases, by_probe):
     return problems
 
 
+@case('SP28', 'Monitor V3.1', 'verified UTC timestamp survives safe projection and schema')
+def sp28():
+    source = snapshot()
+    source['meta']['generated_at'] = '2026-08-02T00:00:00Z'
+    doc = sp.build(source)
+    sp.assert_shape(doc, repo_root=REPO)
+    assert doc['generated_at'] == source['meta']['generated_at']
+    sp.assert_safe(doc, sp.secrets_of(source))
+    assert set(doc) == {'entity', 'build_id', 'generated_at', 'accounts', 'findings'}
+    root, out = sandbox(doc)
+    try:
+        assert sp.read_for_sender(out, repo_root=root)['generated_at'] == doc['generated_at']
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+
 def main(argv):
     if '--list' in argv:
         for cid, clause, title, _fn in CASES:

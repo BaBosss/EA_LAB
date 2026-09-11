@@ -177,3 +177,12 @@ h1 { font-size:1.25rem; }
 
 .work-counts strong { font-size:.65rem; }
 .state-degraded_monitoring { color:var(--degraded); border-color:var(--degraded); }
+
+#app, .work-graph-area, #work-agent-graph, #agent-inspect { min-width: 0; max-width: 100%; }
+.work-graph-area { margin-block: 1.5rem; }
+.agent-inspect-facts { overflow-wrap: anywhere; }
+.agent-inspect-facts dt { font-weight: bold; margin-top: .75rem; }
+.agent-inspect-facts dd { margin: .2rem 0 0; white-space: pre-wrap; }
+.agent-context-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: 1rem; }
+.agent-context-actions button { min-height: 44px; white-space: normal; }
+#agent-inspect textarea { width: 100%; min-height: 9rem; margin-top: .5rem; }

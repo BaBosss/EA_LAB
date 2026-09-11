@@ -185,6 +185,7 @@ class MobileReportHubDataTests(unittest.TestCase):
         monitor.write_text(json.dumps(payload), encoding="utf-8")
         index = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, monitor)
         self.assertEqual(index["monitoring"]["binding_state"], "DIFFERENT_REPO_HEAD")
+        self.assertEqual(index["monitoring"]["status"], "DEGRADED")
 
     def test_lane_registry_audit_filters_stale_and_closed(self):
         registry = Path(self.temp.name) / "audit.json"
@@ -276,6 +277,7 @@ class MobileReportHubDataTests(unittest.TestCase):
                               {"name":"daily_monitor_success","state":"CURRENT","age_hours":1,"observed_at_utc":"2026-08-30T00:00:00Z","timestamp_basis":"success_marker_content"}],
                    "coverage":{"state":"AVAILABLE_CURRENT_SNAPSHOT","deal_sensors_total":6,"deal_sensors_fresh":4,
                                "floating_sensors_total":6,"floating_sensors_fresh":3}}
+        payload["snapshot_revision"] = {"git_head": SHA}
         monitor.write_text(json.dumps(payload), encoding="utf-8")
         result = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, monitor)["monitoring"]
         self.assertEqual(result["status"], "DEGRADED")
@@ -309,6 +311,74 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(result["accounts"][0]["account_masked"], "***728")
         self.assertEqual(result["findings"][0]["severity"], "CRITICAL")
         self.assertEqual(set(result["accounts"][0]), {"account_masked", "sensor_state", "dd_pct_band"})
+
+    def test_projection_timestamp_remains_bound_to_existing_schema(self):
+        path = Path(self.temp.name) / "qualified.json"
+        for stamp, expected in ((FIXED_TIME, "AVAILABLE"), ("2026-99-99T00:00:00", "INVALID"),
+                                ("2026-08-30T00:00:00", "AVAILABLE")):
+            with self.subTest(stamp=stamp):
+                path.write_text(json.dumps({"entity":"SafeProjection", "build_id":"0123456789abcdef",
+                                            "generated_at":stamp, "accounts":[], "findings":[]}), encoding="utf-8")
+                result = build_index.safe_projection(path)
+                self.assertEqual(result["status"], expected)
+                self.assertEqual(result["freshness"], "UNKNOWN")
+
+    def test_utc_projection_freshness_uses_pinned_as_of(self):
+        path = Path(self.temp.name) / "utc.json"
+        for stamp, freshness in ((FIXED_TIME, "CURRENT"),
+                                 ("2026-08-28T22:00:00Z", "CURRENT"),
+                                 ("2026-08-28T21:59:59Z", "STALE"),
+                                 ("2026-08-30T00:05:00Z", "CURRENT"),
+                                 ("2026-08-30T00:05:01Z", "FUTURE"),
+                                 ("2026-08-30T00:00:00", "UNKNOWN"),
+                                 ("2026-02-30T00:00:00Z", "UNKNOWN"),
+                                 (None, "UNKNOWN")):
+            with self.subTest(stamp=stamp):
+                path.write_text(json.dumps({"entity":"SafeProjection", "build_id":"0123456789abcdef",
+                                            "generated_at":stamp, "accounts":[], "findings":[]}), encoding="utf-8")
+                result = build_index.build(ROOT, SHA, self.out, FIXED_TIME, SHA, None, None, path)["safe_projection"]
+                self.assertEqual(result["freshness"], freshness)
+                self.assertEqual(result["status"], "INVALID" if stamp is None or stamp.startswith("2026-02-30") else "AVAILABLE")
+
+    def test_monitor_reported_degraded_and_future_observation_survive(self):
+        path = Path(self.temp.name) / "degraded.json"
+        sources = [{"name":name, "state":"CURRENT", "age_hours":1, "observed_at_utc":FIXED_TIME,
+                    "timestamp_basis":basis} for name,basis in (
+                    ("live_evidence", "latest_filename_date_upper_bound"),
+                    ("control_room_snapshot", "snapshot_meta_generated_at"),
+                    ("daily_monitor_success", "success_marker_content"))]
+        payload = {"schema_version":"EA_LAB_MONITOR_HEALTH_V1", "source_kind":"LOCAL_MONITORING_NONCANONICAL",
+                   "authority":"READ_ONLY_NO_RUNTIME_AUTHORITY", "repo_head":SHA, "status":"DEGRADED",
+                   "generated_at_utc":FIXED_TIME, "alert_present":False, "sources":sources}
+        for future in (False, True):
+            with self.subTest(future=future):
+                if future:
+                    sources[1].update(state="FUTURE", age_hours=None, observed_at_utc="2026-08-31T00:00:00Z")
+                path.write_text(json.dumps(payload), encoding="utf-8")
+                result = build_index.monitor_health(path, SHA)
+                self.assertEqual(result["status"], "DEGRADED")
+                if future:
+                    row = next(x for x in result["sources"] if x["name"] == "control_room_snapshot")
+                    self.assertEqual((row["state"], row["observed_at_utc"]), ("FUTURE", "2026-08-31T00:00:00Z"))
+        sources[1].update(state="CURRENT", age_hours=1, observed_at_utc=FIXED_TIME)
+        payload.update(status="CURRENT", snapshot_revision={"git_head":"f"*40, "binding_state":"MATCHES_RUNTIME_HEAD"})
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        result = build_index.monitor_health(path, SHA)
+        self.assertEqual(result["repo_head"], SHA)
+        self.assertEqual(result["snapshot_revision"]["binding_state"], "DIFFERENT_SNAPSHOT_HEAD")
+        self.assertEqual(result["status"], "DEGRADED")
+        for head, expected in ((SHA, "CURRENT"), (SHA[:12], "DEGRADED"), (None, "DEGRADED")):
+            payload['snapshot_revision'] = {'git_head': head}
+            if head is None:
+                del payload['snapshot_revision']
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            self.assertEqual(build_index.monitor_health(path, SHA)['status'], expected)
+        payload['snapshot_revision'] = {}
+        payload["snapshot_revision"]["git_head"] = r"D:\secret\463666728"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        result = build_index.monitor_health(path, SHA)
+        self.assertEqual(result["snapshot_revision"]["git_head"], "UNKNOWN")
+        self.assertNotIn("463666728", json.dumps(result))
 
     def test_safe_projection_missing_invalid_or_extra_fields_fail_visible(self):
         missing = Path(self.temp.name) / "missing-safe-projection.json"

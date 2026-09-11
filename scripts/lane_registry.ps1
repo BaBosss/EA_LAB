@@ -218,6 +218,9 @@ function Get-LaneAuditRecord {
         owner_chat=[string]$Record.owner_chat; classification=$class; attention_required=$attention
         age_hours=$ageHours; worktree_exists=$wtExists; head_matches_record=$headMatch; branch_matches_record=$branchMatch
         canonical_relation=$canonicalRelation; head_sha=[string]$Record.head_sha; runtime_lane=[string]$Record.runtime_lane
+        worker=[string]$Record.worker; branch=[string]$Record.branch; worktree=[string]$Record.worktree
+        reviewer=[string]$Record.reviewer; reviewed_head=[string]$Record.reviewed_head
+        dependencies=$Record.dependencies
         blocker_class=[string]$Record.blocker_class; direct_consumer=[string]$Record.direct_consumer; updated_at=[string]$Record.updated_at
     }
 }

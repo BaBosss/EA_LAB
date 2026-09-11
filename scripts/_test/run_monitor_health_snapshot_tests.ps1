@@ -47,6 +47,18 @@ try{
     Assert-True ($raw -notmatch 'SECRET_ACCOUNT') 'account identifiers must not leak'
     Assert-True ($raw -notmatch [regex]::Escape($root)) 'local paths must not leak'
 
+    & $script -RepoRoot $root -OutFile $out -AsOf $asOf -ExpectedCanonicalSha ('0'*40)
+    $bound=Get-Content $out -Raw|ConvertFrom-Json
+    Assert-True ($bound.repo_head -eq $fixtureHead -and $bound.canonical_binding -eq 'DIFFERENT_REPO_HEAD' -and $bound.status -eq 'DEGRADED') 'canonical mismatch must preserve runtime identity and degradation'
+    Assert-True ($bound.snapshot_revision.binding_state -eq 'UNKNOWN') 'absent exact snapshot revision must not inherit runtime HEAD'
+    $producer=Get-Content $cr -Raw|ConvertFrom-Json
+    $producer.meta | Add-Member -NotePropertyName git_head -NotePropertyValue ('1'*40)
+    Write-NoBom $cr ($producer|ConvertTo-Json -Depth 5)
+    & $script -RepoRoot $root -OutFile $out -AsOf $asOf -ExpectedCanonicalSha $fixtureHead
+    $bound=Get-Content $out -Raw|ConvertFrom-Json
+    Assert-True ($bound.canonical_binding -eq 'MATCHES_CANONICAL_SHA' -and $bound.snapshot_revision.binding_state -eq 'DIFFERENT_SNAPSHOT_HEAD' -and $bound.status -eq 'DEGRADED') 'snapshot mismatch must not inherit current source checkout lineage'
+    Write-Snapshot $cr '2026-08-30T11:00:00Z'
+
     $futureLive=Join-Path $live 'sample_20260831.csv';Write-NoBom $futureLive "h`n1`n"
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
     $j=Get-Content $out -Raw|ConvertFrom-Json;$futureLiveHealth=@($j.sources|Where-Object name -eq 'live_evidence')[0]

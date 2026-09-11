@@ -1,4 +1,4 @@
-# Owner Control Tower Monitor V3
+# Owner Control Tower Monitor V3.1
 
 Read-only, repository-only implementation candidate. Deployment is NOT PERFORMED.
 Independent review is REQUIRED; implementation tests are not independent review.
@@ -7,7 +7,7 @@ This is a presentation extension of V2, not a new Control Tower or monitoring so
 ## Views
 
 - Overview: canonical global monitoring declaration, pinned SHA, snapshot age, lane observation counts, NEED BOSS, current plan and ordered next context.
-- Work: canonical taskboard header declarations and Lane Registry observations in separate groups. WAITING, REVIEW, INTEGRATING, PAUSED and FROZEN retain their names. DONE and other large groups are disclosed on demand.
+- Work: Summary + Agent Graph + Detailed lanes, with touch/keyboard Inspect and three presentation-only copy-context actions. Canonical taskboard header declarations and Lane Registry observations in separate groups. WAITING, REVIEW, INTEGRATING, PAUSED and FROZEN retain their names. DONE and other large groups are disclosed on demand.
 - Runtime: existing monitor-health source observations; workers/jobs, Long Jobs, MT5, VPS and scheduler health remain UNKNOWN without qualified inputs.
 - EA Lab: existing portfolio, masked SafeProjection accounts, research filters, detail pages and compatible comparisons.
 - Alerts: owner attention, conflicts/freshness warnings and unchanged SafeProjection severities.
@@ -83,3 +83,23 @@ and production cache activation remain untested/unperformed.
 
 No trading/core/risk code, research result, registry source record (other than this task's own lane),
 Scheduled Task, VPS, MT5, publication destination or governance file is changed by V3.
+
+## V3.1 Agent Graph integration
+
+Graph JS/CSS are local service-worker shell assets under cache generation v3.1.
+Git and Lane Registry have structurally separate graphs with internal scrolling.
+No whole-page horizontal overflow is accepted at 390x844 or 1280x900. The builder
+adds only consumed allowlisted Audit metadata: full head SHA, writer classification,
+Registry classification, class-only blocker and explicit dependency evidence.
+Missing Audit fields remain UNKNOWN; raw Registry free text is not exported.
+Audit carries explicit dependencies and structured worker/ref/worktree/review
+metadata through the existing safe projection; objective remains UNKNOWN.
+Dependency regression starts from Registry-shaped files through actual Audit,
+safe DTO and graph rendering, including stale/cached/offline and unsafe input.
+
+See `docs/workflows/EA_LAB_MONITOR_AGENT_GRAPH_V31.md` for the exact field contract,
+acceptance coverage and limitations. Run the unchanged foundation suite with
+`node tools/mobile_report_hub/tests/agent_graph_v31.cjs` in addition to the commands
+above. Browser coverage now includes source separation, Inspect, context generation,
+clipboard-denial fallback, stale/cached/offline graph behavior and dependency edges.
+This is an implementation candidate: REVIEW REQUIRED, no deployment or push.

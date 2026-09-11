@@ -314,7 +314,7 @@ def unavailable_safe_projection(reason: str = "NOT_PROVIDED") -> dict:
             "findings": [], "reason": reason}
 
 
-def safe_projection(path: Path | None) -> dict:
+def safe_projection(path: Path | None, as_of: str | None = None) -> dict:
     """Strictly pass through the existing SafeProjection allowlist; add no new meaning."""
     if path is None:
         return unavailable_safe_projection()
@@ -328,7 +328,7 @@ def safe_projection(path: Path | None) -> dict:
         return unavailable_safe_projection("INVALID_ENTITY")
     if not isinstance(raw.get("build_id"), str) or not re.fullmatch(r"[0-9a-f]{16}", raw["build_id"]):
         return unavailable_safe_projection("INVALID_BUILD_ID")
-    if not _valid_local_second(raw.get("generated_at")):
+    if not (_valid_local_second(raw.get("generated_at")) or _valid_utc_second(raw.get("generated_at"))):
         return unavailable_safe_projection("INVALID_TIMESTAMP")
     if not isinstance(raw.get("accounts"), list) or not isinstance(raw.get("findings"), list):
         return unavailable_safe_projection("INVALID_SCHEMA")
@@ -355,10 +355,17 @@ def safe_projection(path: Path | None) -> dict:
             return unavailable_safe_projection("INVALID_FINDING_ROW")
         findings.append({name: item[name] for name in ("public_id", "severity", "state")})
 
+    freshness = "UNKNOWN"
+    if _valid_utc_second(raw["generated_at"]) and _valid_utc_second(as_of):
+        age_seconds = (datetime.strptime(as_of, "%Y-%m-%dT%H:%M:%SZ") -
+                       datetime.strptime(raw["generated_at"], "%Y-%m-%dT%H:%M:%SZ")).total_seconds()
+        # Same 26-hour bar and 5-minute future tolerance as monitor health.
+        freshness = "FUTURE" if age_seconds < -300 else "CURRENT" if age_seconds <= 26 * 3600 else "STALE"
+
     return {"status": "AVAILABLE", "entity": "SafeProjection",
             "source_kind": "SAFE_PROJECTION_DERIVED",
             "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY",
-            "freshness": "UNKNOWN", "build_id": raw["build_id"],
+            "freshness": freshness, "build_id": raw["build_id"],
             "generated_at": raw["generated_at"], "accounts": accounts,
             "findings": findings, "reason": "AVAILABLE"}
 
@@ -383,6 +390,13 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
         return unavailable_monitoring("INVALID_STATUS")
     repo_head = str(raw.get("repo_head", "UNKNOWN"))
     binding = "MATCHES_CANONICAL_SHA" if repo_head == canonical_sha else ("DIFFERENT_REPO_HEAD" if re.fullmatch(r"[0-9a-f]{40}", repo_head) else "UNKNOWN")
+    repo_head = repo_head if re.fullmatch(r"[0-9a-f]{40}", repo_head) else "UNKNOWN"
+    revision = raw.get("snapshot_revision", {})
+    snapshot_head = revision.get("git_head") if isinstance(revision, dict) else None
+    snapshot_head = snapshot_head if isinstance(snapshot_head, str) and re.fullmatch(r"[0-9a-f]{40}", snapshot_head) else "UNKNOWN"
+    snapshot_binding = ("UNKNOWN" if "UNKNOWN" in (repo_head, snapshot_head) else
+                        "MATCHES_RUNTIME_HEAD" if snapshot_head == repo_head else "DIFFERENT_SNAPSHOT_HEAD")
+    snapshot_qualified = snapshot_binding == "MATCHES_RUNTIME_HEAD"
     raw_sources = raw.get("sources")
     if not isinstance(raw_sources, list) or len(raw_sources) != len(_MONITOR_SOURCE_NAMES):
         return unavailable_monitoring("INVALID_SOURCE_SET")
@@ -411,7 +425,12 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
                 return unavailable_monitoring("INVALID_SOURCE_ROW")
             age = round(numeric_age, 2)
             observed = raw_observed
-        elif source_state in {"MISSING", "INVALID", "DATE_ONLY", "FUTURE"}:
+        elif source_state == "FUTURE":
+            if raw_age is not None or (raw_observed is not None and not _valid_utc_second(raw_observed)):
+                return unavailable_monitoring("INVALID_SOURCE_ROW")
+            age = "UNKNOWN"
+            observed = raw_observed if raw_observed is not None else "UNKNOWN"
+        elif source_state in {"MISSING", "INVALID", "DATE_ONLY"}:
             if raw_age is not None or raw_observed is not None:
                 return unavailable_monitoring("INVALID_SOURCE_ROW")
             age = "UNKNOWN"
@@ -424,20 +443,21 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
     alert_present = raw.get("alert_present") if isinstance(raw.get("alert_present"), bool) else "UNKNOWN"
     generated_raw = raw.get("generated_at_utc", "UNKNOWN")
     generated_valid = _valid_utc_second(generated_raw)
-    effective_status = "CURRENT" if (all_sources_current and alert_present is False and
-                                     binding == "MATCHES_CANONICAL_SHA" and generated_valid) else "DEGRADED"
+    effective_status = "CURRENT" if (reported_status == "CURRENT" and all_sources_current and alert_present is False and
+                                     binding == "MATCHES_CANONICAL_SHA" and generated_valid and snapshot_qualified) else "DEGRADED"
     coverage_raw = raw.get("coverage", {}) if isinstance(raw.get("coverage"), dict) else {}
     requested_coverage = str(coverage_raw.get("state", "UNAVAILABLE_STALE_OR_INVALID"))
     counts = {name: _monitor_count(coverage_raw.get(name)) for name in _MONITOR_COUNT_FIELDS}
     counts_valid = all(value is not None for value in counts.values())
     counts_consistent = counts_valid and counts["deal_sensors_fresh"] <= counts["deal_sensors_total"] and counts["floating_sensors_fresh"] <= counts["floating_sensors_total"]
     control_room_current = source_by_name.get("control_room_snapshot", {}).get("state") == "CURRENT"
-    coverage_current = requested_coverage == "AVAILABLE_CURRENT_SNAPSHOT" and control_room_current and counts_consistent
+    coverage_current = requested_coverage == "AVAILABLE_CURRENT_SNAPSHOT" and control_room_current and counts_consistent and snapshot_qualified
     coverage = {"state": "AVAILABLE_CURRENT_SNAPSHOT" if coverage_current else "UNAVAILABLE_STALE_OR_INVALID"}
     for name in _MONITOR_COUNT_FIELDS:
         coverage[name] = counts[name] if coverage_current else "UNKNOWN"
     generated = generated_raw if generated_valid else "UNKNOWN"
     return {"status": effective_status, "reported_status": reported_status,
+            "repo_head": repo_head, "snapshot_revision": {"git_head": snapshot_head, "binding_state": snapshot_binding},
             "source_kind": "LOCAL_MONITORING_NONCANONICAL",
             "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "binding_state": binding,
             "generated_at_utc": generated, "alert_present": alert_present,
@@ -486,7 +506,7 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
                         "attention_required": item.get("attention_required", False)}
                        for item in lane_registry(registry)],
              "monitoring": monitor_health(monitor, sha),
-             "safe_projection": safe_projection(projection),
+             "safe_projection": safe_projection(projection, as_of),
              "compare": {"compatibility_rule": "DIRECT only when basis_id is identical; otherwise DIFFERENT_BASIS / N/A."}}
     project_text, project_source = text_source(repo, sha, "PROJECT_STATE.md")
     boards = [(taskboard_text, taskboard_p)]

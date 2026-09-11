@@ -156,6 +156,7 @@ try {
     $a=@($audit.records|Where-Object lane_id -eq 'audit-active')[0]; $w=@($audit.records|Where-Object lane_id -eq 'audit-wait')[0]; $d=@($audit.records|Where-Object lane_id -eq 'audit-done')[0]
     $aged=@($audit.records|Where-Object lane_id -eq 'audit-aged')[0]; $mm=@($audit.records|Where-Object lane_id -eq 'audit-mismatch')[0]; $miss=@($audit.records|Where-Object lane_id -eq 'audit-missing')[0]; $q=@($audit.records|Where-Object lane_id -eq 'audit-queued')[0]
     Assert-True 'audit classifies live exact lane as ACTIVE_CURRENT' ($x.ExitCode -eq 0 -and $a.classification -eq 'ACTIVE_CURRENT' -and $a.head_matches_record -eq $true) $x.Text
+    Assert-True 'audit carries exact structured record metadata' ($a.worker -ceq 'test-worker' -and $a.branch -ceq 'lane-b' -and $a.worktree -ceq $wtB -and $a.reviewer -ceq '' -and $a.reviewed_head -ceq '') ($a|ConvertTo-Json -Compress)
     Assert-True 'audit classifies aged nonactive lane as STALE_NONACTIVE' ($w.classification -eq 'STALE_NONACTIVE' -and $w.attention_required -eq $true) ($w|ConvertTo-Json -Compress)
     Assert-True 'audit classifies done lane as CLOSED' ($d.classification -eq 'CLOSED' -and $d.attention_required -eq $false) ($d|ConvertTo-Json -Compress)
     Assert-True 'audit classifies aged active lane as ACTIVE_AGED' ($aged.classification -eq 'ACTIVE_AGED' -and $aged.attention_required -eq $true) ($aged|ConvertTo-Json -Compress)

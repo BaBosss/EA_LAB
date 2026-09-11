@@ -735,8 +735,15 @@ $snapshot = [ordered]@{
     # v4 is NOT reused: v4 is a different, incompatible shape that shipped, and two shapes sharing
     # a version number is how a reader picks the wrong parser.
     version = 5
-    generated_at = $now.ToString('s')
-    git_head = (git -C $Root rev-parse --short HEAD 2>$null)
+    generated_at = $now.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+    git_head = $(
+      $resolvedHead = $null
+      try {
+        $candidate = (& git -C $Root rev-parse --verify 'HEAD^{commit}' 2>$null)
+        if ($LASTEXITCODE -eq 0 -and [string]$candidate -cmatch '^[0-9a-f]{40}$') { $resolvedHead = [string]$candidate }
+      } catch {}
+      $resolvedHead
+    )
     stale_bar_hours = $staleBarHours
     decision_bar_trades = $decisionBar
     runtime_identity_required = $true
