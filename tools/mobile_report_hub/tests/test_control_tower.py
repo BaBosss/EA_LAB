@@ -1,7 +1,9 @@
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -135,7 +137,8 @@ class ControlTowerTests(unittest.TestCase):
     def metadata_lane(self, **changes):
         metadata = dict(worker='Codex-Primary', branch='ct/monitor-v31-final-r2-20260911',
                         worktree=r'D:\EA_LAB_CONTROL\worktrees\monitor-v31-final-r2-20260911',
-                        reviewer='ChatGPT-Control-Tower', head_sha='a' * 40, reviewed_head='a' * 40)
+                        reviewer='ChatGPT-Control-Tower', head_sha='a' * 40, reviewed_head='a' * 40,
+                        head_matches_record=True)
         metadata.update(changes)
         return self.lane(**metadata)
 
@@ -193,6 +196,98 @@ class ControlTowerTests(unittest.TestCase):
                                         'records': [self.metadata_lane(lane_id='ORDER-1')]}))
             result = ct.build_projection('', SOURCE, [('## ORDER-1 - title `DONE`', SOURCE)], path, NOW, str)
         self.assertEqual(result['registry']['rows'][0]['review_state'], 'UNKNOWN')
+
+    def test_review_identity_from_actual_audit_through_graph(self):
+        root = Path(__file__).resolve().parents[3]
+        head = subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip()
+        old_head = subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD^'], text=True).strip()
+        branch = subprocess.check_output(['git', '-C', str(root), 'branch', '--show-current'], text=True).strip()
+        self.assertNotEqual(head, old_head)
+        now = datetime.now(timezone.utc).isoformat()
+        with tempfile.TemporaryDirectory() as directory:
+            registry = Path(directory) / 'registry'
+            registry.mkdir()
+            for state in ('BLOCKED', 'WAITING', 'PAUSED', 'FROZEN'):
+                for mode in ('exact', 'moved', 'missing-worktree'):
+                    recorded = old_head if mode == 'moved' else head
+                    lane_id = state.lower() + '-' + mode
+                    record = dict(lane_id=lane_id, owner_chat='review-fixture', worker='Codex',
+                                  objective='Review identity fixture', state=state, base_sha=old_head,
+                                  head_sha=recorded, reviewed_head=recorded, reviewer='Independent-Reviewer',
+                                  worktree=str(Path(directory) / 'absent') if mode == 'missing-worktree' else str(root),
+                                  branch=branch, allowed_paths=[], critical_paths=[], writer=False,
+                                  dependencies=[], direct_consumer='review-test', updated_at=now)
+                    (registry / (lane_id + '.json')).write_text(json.dumps(record), encoding='utf-8')
+            audit_text = subprocess.check_output([
+                'powershell.exe', '-NoProfile', '-File', str(root / 'scripts/lane_registry.ps1'),
+                '-Command', 'Audit', '-RegistryRoot', str(registry), '-RepoRoot', str(root), '-Json'
+            ], text=True)
+            audit = json.loads(audit_text)
+            audit_path = Path(directory) / 'audit.json'
+            audit_path.write_text(audit_text, encoding='utf-8')
+            dto = ct.registry_projection(audit_path, now, build_index.safe_lane_id)
+            graph_code = """
+const g = require('./mobile_report_hub/agent_graph.js');
+let input = '';
+process.stdin.on('data', chunk => input += chunk).on('end', () => {
+  const model = g.buildModel({registry: JSON.parse(input)});
+  console.log(JSON.stringify(model.nodes.map(node => ({
+    node: g.inspect(model, node.key).node,
+    context: g.steeringContext(model, node.key, 'REVIEW')
+  }))));
+});
+"""
+            graph = json.loads(subprocess.check_output(['node', '-e', graph_code], cwd=root,
+                                                      input=json.dumps(dto), text=True))
+        for state in ('BLOCKED', 'WAITING', 'PAUSED', 'FROZEN'):
+            for mode in ('exact', 'moved', 'missing-worktree'):
+                with self.subTest(state=state, mode=mode):
+                    lane_id = state.lower() + '-' + mode
+                    source = next(row for row in audit['records'] if row['lane_id'] == lane_id)
+                    row = next(row for row in dto['rows'] if row['id'] == lane_id)
+                    rendered = next(item for item in graph if item['node']['id'] == lane_id)
+                    self.assertIs(source['head_matches_record'],
+                                  True if mode == 'exact' else False if mode == 'moved' else None)
+                    if state != 'FROZEN':
+                        self.assertEqual(source['classification'], 'QUEUED_CURRENT')
+                    expected = 'REVIEWED_EXACT_HEAD' if mode == 'exact' else 'UNKNOWN'
+                    self.assertEqual(row['review_state'], expected)
+                    self.assertEqual(rendered['node']['review_state'], expected)
+                    for projected in (row, rendered['node']):
+                        self.assertEqual(projected['reviewer'], 'Independent-Reviewer')
+                        self.assertEqual(projected['reviewed_head'], source['head_sha'])
+                    self.assertIn(source['head_sha'], rendered['context'])
+
+    def test_review_identity_requires_explicit_boolean_true(self):
+        for state in ('BLOCKED', 'WAITING', 'PAUSED', 'FROZEN'):
+            for identity in (False, None, 'true', 'false', 1, 0):
+                with self.subTest(state=state, identity=identity):
+                    row = self.audit([self.metadata_lane(state=state, head_matches_record=identity)])['rows'][0]
+                    self.assertEqual(row['review_state'], 'UNKNOWN')
+                    self.assertEqual(row['reviewed_head'], 'a' * 40)
+            record = self.metadata_lane(state=state)
+            del record['head_matches_record']
+            self.assertEqual(self.audit([record])['rows'][0]['review_state'], 'UNKNOWN')
+        # Queued classification never proved branch identity; do not add that requirement.
+        row = self.audit([self.metadata_lane(state='WAITING', classification='QUEUED_CURRENT',
+                                            branch_matches_record=False)])['rows'][0]
+        self.assertEqual(row['review_state'], 'REVIEWED_EXACT_HEAD')
+
+    def test_review_requires_qualified_reviewer_and_reviewed_head(self):
+        for state in ('BLOCKED', 'WAITING', 'PAUSED', 'FROZEN'):
+            for reviewer in (None, '', 'UNKNOWN', '<reviewer>', 'account-1234'):
+                with self.subTest(state=state, reviewer=reviewer):
+                    row = self.audit([self.metadata_lane(state=state, reviewer=reviewer)])['rows'][0]
+                    self.assertEqual(row['review_state'], 'UNKNOWN')
+                    self.assertEqual(row['reviewer'], 'UNKNOWN')
+                    self.assertEqual(row['reviewed_head'], 'a' * 40)
+            for field in ('reviewer', 'reviewed_head'):
+                record = self.metadata_lane(state=state)
+                del record[field]
+                self.assertEqual(self.audit([record])['rows'][0]['review_state'], 'UNKNOWN')
+            row = self.audit([self.metadata_lane(state=state, reviewed_head='b' * 40)])['rows'][0]
+            self.assertEqual(row['review_state'], 'UNKNOWN')
+            self.assertEqual(row['reviewed_head'], 'b' * 40)
 
     def test_graph_rejects_malformed_sha_and_coerced_writer(self):
         for sha in ('abc123', 'a' * 41, 'A' * 40, 42, None, 'D:/secret'):

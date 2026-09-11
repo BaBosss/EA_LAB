@@ -57,6 +57,23 @@ test('structured Registry review claims require current exact evidence', () => {
   assert.equal(graph.buildModel(projection([], [{...row,state:'REVIEW',review_state:'REVIEW_ACTIVE'}])).nodes[0].review_state,'REVIEW_ACTIVE');
   assert.equal(graph.buildModel(projection([], [{...row,review_state:'REVIEW_ACTIVE'}])).nodes[0].review_state,'UNKNOWN');
 });
+test('unqualified current review keeps historical metadata without re-deriving acceptance', () => {
+  for (const state of ['BLOCKED', 'WAITING', 'PAUSED', 'FROZEN']) {
+    const metadata = {state, reviewer:'Independent-Reviewer', head_sha:'a'.repeat(40),
+      reviewed_head:'a'.repeat(40), review_state:'UNKNOWN',
+      registry_classification:state === 'FROZEN' ? 'ACTIVE_CURRENT' : 'QUEUED_CURRENT'};
+    const model = graph.buildModel(projection([], [lane('historical-review', metadata)]));
+    const node = graph.inspect(model, model.nodes[0].key).node;
+    assert.equal(node.review_state, 'UNKNOWN');
+    assert.equal(node.reviewer, metadata.reviewer);
+    assert.equal(node.reviewed_head, metadata.reviewed_head);
+    const context = JSON.parse(graph.steeringContext(model, node.key, 'REVIEW').split('\n').slice(4).join('\n'));
+    assert.equal(context.node.review_state, 'UNKNOWN');
+    assert.equal(context.node.reviewed_head, metadata.reviewed_head);
+    const current = graph.buildModel(projection([], [lane('current-review', {...metadata, review_state:'REVIEWED_EXACT_HEAD'})]));
+    assert.equal(current.nodes[0].review_state, 'REVIEWED_EXACT_HEAD');
+  }
+});
 test('exact Git/Lane identity correlates visually without merging authority', () => {
   const input = projection([git('A', {authority: 'HEADER_DECLARATION_ONLY'})], [lane('A')]);
   assert.equal(graph.buildModel(input).edges.length, 0);

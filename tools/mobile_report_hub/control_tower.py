@@ -131,11 +131,14 @@ def registry_projection(path, now, safe_id):
             owner = isinstance(blocker, str) and re.match(r"^E(?:$|[_ /-])", blocker) is not None
             head = registry_sha(item.get("head_sha"))
             reviewed_head = registry_sha(item.get("reviewed_head"))
+            reviewer = registry_identifier(item.get("reviewer"))
             review_state = "UNKNOWN"
             if eligible:
                 if item["state"] == "REVIEW":
                     review_state = "REVIEW_ACTIVE"
-                elif head != "UNKNOWN" and reviewed_head == head:
+                # QUEUED_CURRENT describes recency, not the observed worktree HEAD.
+                elif (reviewer != "UNKNOWN" and head != "UNKNOWN" and reviewed_head == head
+                      and item.get("head_matches_record") is True):
                     review_state = "REVIEWED_EXACT_HEAD"
             rows.append({"id": safe_id(item.get("lane_id")), "state": "CONFLICT" if conflict else item["state"] if eligible else "UNKNOWN",
                          "declared_state": item["state"], "source_kind": "LANE_REGISTRY_NONCANONICAL",
@@ -145,7 +148,7 @@ def registry_projection(path, now, safe_id):
                          "worker": registry_identifier(item.get("worker")),
                          "ref": registry_identifier(item.get("branch"), branch=True),
                          "worktree": registry_worktree(item.get("worktree")),
-                         "reviewer": registry_identifier(item.get("reviewer")),
+                         "reviewer": reviewer,
                          "role": "WRITER" if item.get("writer") is True else "READ_ONLY" if item.get("writer") is False else "UNKNOWN",
                          "registry_classification": classification if classification in {"ACTIVE_CURRENT", "QUEUED_CURRENT", "ACTIVE_AGED", "ACTIVE_IDENTITY_MISMATCH", "ACTIVE_MISSING_WORKTREE", "STALE_NONACTIVE", "HISTORICAL_UNRESOLVED"} else "UNKNOWN",
                          "blocker_class": blocker[0] if isinstance(blocker, str) and re.match(r"^[A-E](?:$|[_ /-])", blocker) else "UNKNOWN",
