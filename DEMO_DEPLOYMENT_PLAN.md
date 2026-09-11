@@ -45,7 +45,7 @@ Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื
 - บทเรียนกลับเข้า bundle: `README_ATTACH.md` ต้องมีบรรทัด "verify `_06_AllowLive=true` หลัง load .set"
   เป็น step บังคับ ไม่ใช่หมายเหตุ — แท็บ Common ติ๊ก Allow live trading แล้วยัง**ไม่พอ** เพราะ EA กั้นสองชั้น
 
-### 🧪 A/B PAIR — `990026` จับคู่กับ `990025` · judge **2027-01-28** (ชั่วคราว) · เปิด 2026-07-28 (ORDER-353)
+### 🧪 A/B PAIR — `990026` จับคู่กับ `990025` · judge unset (see `portfolio/DEPLOYMENTS.csv`) · เปิด 2026-07-28 (ORDER-353)
 
 `990026` = `(TRD)_SuperTrendFlip_rev05` config ที่ optimize แล้ว (pyramid 1→**7 ชั้นที่ 1.0 ATR** + **ER gate 0.25**)
 symbol **BTCUSDm H4** lot **0.01** · bundle = `_vps_deploy/STF_BTC_H4_ORDER353/`
