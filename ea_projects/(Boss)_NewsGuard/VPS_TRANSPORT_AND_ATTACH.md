@@ -110,6 +110,19 @@ non-zero even if the other pass succeeds. Transport age is not identity authorit
 collector preserves the producer JSON bytes and independently rejects malformed, future, or
 stale `evidence_timestamp` values, so copying a file cannot manufacture fresh identity.
 
+### Tiny-evidence OneDrive compatibility workaround
+
+The worker explicitly passes `--onedrive-upload-cutoff 10M` on both copy passes. This is a
+bounded compatibility workaround for the current tiny snapshot and RuntimeIdentity evidence
+payloads: measured VPS evidence showed `rclone about onedrive:` metadata succeeding while an
+833-byte `copyto` failed on the multipart path with `Unauthenticated`. With the 10M cutoff,
+current sub-10M evidence uses OneDrive single-part upload rather than that failing chunked path.
+
+This does **not** repair OAuth and does **not** prove end-to-end delivery. Files at or above
+10M use chunked upload; if that path remains broken, the existing aggregate non-zero return
+code must make its failure visible. Keep the same destination, filters, freshness limits,
+identity validation, and task cadence; verify delivery at the final consumer as below.
+
 On the lab PC, the DailyMonitor calls `scripts\collect_vps_transport.ps1` before
 building the Control Room snapshot. It resolves the Personal OneDrive `UserFolder`
 from `HKCU\Software\Microsoft\OneDrive\Accounts\Personal` (or a bounded explicit

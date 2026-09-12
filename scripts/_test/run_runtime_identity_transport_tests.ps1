@@ -25,6 +25,9 @@ Check 'snapshot transport remains present' ($snapshot.Count -eq 1) "count=$($sna
 Check 'runtime identity transport remains present' ($identity.Count -eq 1) "count=$($identity.Count)"
 if($snapshot.Count -eq 1){ Check 'snapshot freshness stays 1h' ($snapshot[0] -match '--max-age 1h') $snapshot[0] }
 if($identity.Count -eq 1){ Check 'runtime identity freshness aligns to 30h validator' ($identity[0] -match '--max-age 30h') $identity[0] }
+if($snapshot.Count -eq 1){ Check 'snapshot transport forces the explicit 10M OneDrive single-part cutoff' ($snapshot[0] -match '--onedrive-upload-cutoff 10M') $snapshot[0] }
+if($identity.Count -eq 1){ Check 'runtime identity transport forces the explicit 10M OneDrive single-part cutoff' ($identity[0] -match '--onedrive-upload-cutoff 10M') $identity[0] }
+Check 'transport has exactly two explicit 10M OneDrive upload cutoffs' (([regex]::Matches($text,'--onedrive-upload-cutoff 10M')).Count -eq 2) "count=$(([regex]::Matches($text,'--onedrive-upload-cutoff 10M')).Count)"
 Check 'transport uses no mixed include/exclude filters' (-not ($copyLines -match '\s--exclude\s')) 'unexpected --exclude on copy command'
 Check 'aggregate return code initialized' ($text -match '(?m)^set RC=0\r?$') 'missing set RC=0'
 $guards=[regex]::Matches($text,'(?m)^if errorlevel 1 set RC=1\r?$').Count

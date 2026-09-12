@@ -11,8 +11,8 @@ set SRC=C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files
 set DEST=onedrive:EA_LAB_VPS_SYNC/vps-to-lab/snapshots
 set LOG=C:\rclone\logs\push_snap.log
 set RC=0
-"%RCLONE%" copy "%SRC%" "%DEST%" --config "%CONF%" --include "EA_LAB_snapshot_[1-9]*.csv" --max-age 1h --min-size 1 --log-file "%LOG%" --log-level INFO
+"%RCLONE%" copy "%SRC%" "%DEST%" --config "%CONF%" --include "EA_LAB_snapshot_[1-9]*.csv" --max-age 1h --min-size 1 --onedrive-upload-cutoff 10M --log-file "%LOG%" --log-level INFO
 if errorlevel 1 set RC=1
-"%RCLONE%" copy "%SRC%" "%DEST%" --config "%CONF%" --include "EA_LAB_identity_[1-9]*_[1-9]*.json" --max-age 30h --min-size 1 --log-file "%LOG%" --log-level INFO
+"%RCLONE%" copy "%SRC%" "%DEST%" --config "%CONF%" --include "EA_LAB_identity_[1-9]*_[1-9]*.json" --max-age 30h --min-size 1 --onedrive-upload-cutoff 10M --log-file "%LOG%" --log-level INFO
 if errorlevel 1 set RC=1
 exit /b %RC%
