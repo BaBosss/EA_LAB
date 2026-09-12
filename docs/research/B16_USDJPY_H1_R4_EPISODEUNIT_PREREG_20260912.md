@@ -33,9 +33,9 @@ Analyze each of the four reports independently; never pool Model1 with Model4 or
 Ticket arm: with N realized closed tickets, draw N ticket cashflows with replacement and sum them.
 Episode arm: with K complete flat-to-flat episodes, draw K entire episode cashflows with replacement and sum them.
 Cashflow unit is source `Profit + Swap + Commission`; no post-hoc swap adjustment belongs in this hypothesis.
-Replications: exactly `5000` per arm per report. Deterministic random seed: exactly `20260912`, reinitialized identically for each arm/report.
-Report the observed total, N, K, episode-size distribution, bootstrap median, 2.5th percentile, 97.5th percentile and central-95% interval width for each arm.
-Percentiles use the implementation language's deterministic linear percentile interpolation and must be documented in the result artifact.
+Replications: exactly `5000` per arm per report. There is no library RNG. Sampling is frozen to a SHA-256 counter sampler: for each draw compute SHA256 over UTF-8 text `20260912|<CELL>|<ARM>|<REPLICATION_0_BASED>|<DRAW_0_BASED>`, where CELL is exactly one of `M1_MAIN`, `M1_BWD`, `M4_MAIN`, `M4_BWD` and ARM is exactly `TICKET` or `EPISODE`; interpret the first 8 digest bytes as one unsigned big-endian integer and select `index = integer mod unit_count`.
+All source cashflows and bootstrap sums use exact decimal values parsed from the report strings; binary floating-point is not used for cashflow arithmetic. Report the observed total, N, K, episode-size distribution, bootstrap median, 2.5th percentile, 97.5th percentile and central-95% interval width for each arm.
+Quantiles are frozen to this exact linear rule over the sorted 5000 bootstrap sums `x[0..4999]`: for probability `p`, compute `h=(4999)*p`, `j=floor(h)`, `g=h-j`, and `q(p)=x[j]+g*(x[j+1]-x[j])`; use exact decimal `p=0.025`, `0.5`, and `0.975`. Central-95% width is exactly `q(0.975)-q(0.025)`.
 
 ## Falsifier and limitations
 The directional claim `TICKET_SAMPLING_UNDERSTATES_UNCERTAINTY` is supported only if episode-sampled central-95% width is strictly greater than ticket-sampled width in both MAIN and BWD within each tester model.
