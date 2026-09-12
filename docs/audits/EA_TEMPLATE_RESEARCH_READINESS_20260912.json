@@ -1,0 +1,943 @@
+{
+  "artifacts": [
+    {
+      "path": "EA_TEMPLATE_RESEARCH_READINESS_20260912.md",
+      "role": "research_readiness_audit",
+      "sha256": "d1547e341a1ca3f8328ddd98e75c156ff591668c21af1bcad99309bb439f317e",
+      "size_bytes": 34486
+    }
+  ],
+  "authority": "READ_ONLY_DECISION_SUPPORT_NO_EXECUTION_AUTHORITY",
+  "direct_consumer": "Control Tower source-bound research routing and exact next blockers",
+  "manifest_version": "EA_LAB_REPORT_PACKAGE_INTEGRITY_V1",
+  "metadata": {
+    "audit_date": "2026-09-12",
+    "authority": "READ_ONLY_DECISION_SUPPORT_NO_EXECUTION_AUTHORITY",
+    "base_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+    "canonical_status_owner": "PROJECT_STATE.md",
+    "device": {
+      "id": "bbb88aa0-1598-43f6-b56c-a7db22af086a",
+      "local_hostname_verified": true,
+      "name": "BaBoss"
+    },
+    "lane": "QRESET-02-TEMPLATE-READINESS",
+    "new_mt5_dispatch_authorized": false,
+    "preserved_constraints": [
+      "KINT-001 OPEN",
+      "No H01 alias or numeric value promoted into family-native semantics",
+      "B17 core implementation blocked until qualified different-family reviewer exists",
+      "ZL-EA-067 core acceptance blocked; technical acceptance is not core review",
+      "Old B13/B15 and B14 package repair budgets exhausted; no Repair02",
+      "Schema V2 timing failure is not proof of schema defect",
+      "No MT5 runs, compile, strategy/risk/default changes, runtime activation, optimization, HOLDOUT, Candidate or deployment"
+    ],
+    "rows": [
+      {
+        "canonical_owner": {
+          "anchor_text": "| B11 GridTrend |",
+          "line": 31,
+          "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+          "source_id": "readiness"
+        },
+        "compile_readiness": "Historical B11-B18 cage evidence only; new exact-reference compile UNKNOWN",
+        "current_blocker_class": "OWNER_PARAMETER_HOME_DECISION",
+        "current_canonical_stage": "READY_FOR_OWNER_RATIFICATION_ONLY",
+        "different_family_review_dependency": "No core change required by current source map; any later core change needs qualified review",
+        "evidence_ids": [
+          "readiness",
+          "family",
+          "state"
+        ],
+        "evidence_packaging_readiness": "No new xx-00 run package; accepted H01/H02 are separate evidence",
+        "family": "B11 GridTrend",
+        "id": "B11-00",
+        "model1_readiness": "NOT_AUTHORIZED; prospective freeze and screen contract required",
+        "model4_readiness": "NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED; no xx-00 tunables/ranges",
+        "semantic_completeness": "Native NONE ratified; entry values, ATRPeriod and Home symbol/TF not frozen",
+        "set_generation_readiness": "Compiler exists; reference inputs unresolved",
+        "single_next_action": "Owner prospectively freezes B11 entry controls, ATRPeriod and Home in a new bounded reference contract.",
+        "template_completeness": "Existing Boss V2; no executable Bxx-00 instance accepted",
+        "track": "xx-00 reference"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "| B12 Breakout |",
+          "line": 32,
+          "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+          "source_id": "readiness"
+        },
+        "compile_readiness": "Historical B11-B18 cage evidence only; new exact-reference compile UNKNOWN",
+        "current_blocker_class": "OWNER_PARAMETER_HOME_DECISION",
+        "current_canonical_stage": "READY_FOR_OWNER_RATIFICATION_ONLY",
+        "different_family_review_dependency": "No core change required by current source map; any later core change needs qualified review",
+        "evidence_ids": [
+          "readiness",
+          "family",
+          "state"
+        ],
+        "evidence_packaging_readiness": "No new xx-00 run package; accepted H01/H02 are separate evidence",
+        "family": "B12 Breakout",
+        "id": "B12-00",
+        "model1_readiness": "NOT_AUTHORIZED; prospective freeze and screen contract required",
+        "model4_readiness": "NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED; no xx-00 tunables/ranges",
+        "semantic_completeness": "Native NONE ratified; entry values, ATRPeriod and Home symbol/TF not frozen",
+        "set_generation_readiness": "Compiler exists; reference inputs unresolved",
+        "single_next_action": "Owner prospectively freezes B12 entry controls, ATRPeriod and Home in a new bounded reference contract.",
+        "template_completeness": "Existing Boss V2; no executable Bxx-00 instance accepted",
+        "track": "xx-00 reference"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "## ORDER-XX00-MODEL1-SCREEN-V1",
+          "line": 1356,
+          "path": "taskboards/active/P03.md",
+          "source_id": "queue"
+        },
+        "compile_readiness": "Execution/compile lineage reported by canonical owner; no fresh compile in this audit",
+        "current_blocker_class": "B_EVIDENCE_PACKAGING_REPAIR_EXHAUSTED",
+        "current_canonical_stage": "EXECUTION_COMPLETE / ACCEPTANCE_BLOCKED / REPAIR_BUDGET_EXHAUSTED",
+        "different_family_review_dependency": "Packaging-only review is not core review; no core changes proposed",
+        "evidence_ids": [
+          "queue",
+          "screen",
+          "faststart",
+          "state"
+        ],
+        "evidence_packaging_readiness": "BLOCKED: per-cell explicit tester INI path/name and symbol/period/leverage missing after targeted recheck",
+        "family": "B13 MeanRev",
+        "id": "B13-00",
+        "model1_readiness": "EXECUTED on Meta5c; MAIN hard-kill truncated; no rerun",
+        "model4_readiness": "NOT_AUTHORIZED; screen contract forbids Model4",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED; packaging failure does not unlock search",
+        "semantic_completeness": "Reference entry+ATR14+XAUUSD/M15 ratified; physical snapshot controls remain screen-only",
+        "set_generation_readiness": "Frozen derived SHA exists in contract; unpushed emitted bytes not revalidated here",
+        "single_next_action": "CT must open a NEW bounded packaging-only contract for preserved evidence before any further edit; old Repair02 is forbidden.",
+        "template_completeness": "Existing canonical wrapper used; formal Schema V2 remains separate",
+        "track": "xx-00 fast-start"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "| B14 GridLog |",
+          "line": 34,
+          "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+          "source_id": "readiness"
+        },
+        "compile_readiness": "Existing source/baseline evidence; exact new reference compile UNKNOWN",
+        "current_blocker_class": "OWNER_NATIVE_NUMERIC_DECISION",
+        "current_canonical_stage": "NATIVE_NUMERIC_RATIFICATION_REQUIRED",
+        "different_family_review_dependency": "Any core/native behavior change requires qualified different-family review",
+        "evidence_ids": [
+          "readiness",
+          "family",
+          "b14",
+          "state"
+        ],
+        "evidence_packaging_readiness": "No B14-00 package; separate EURUSD/H1 control is not B14-00",
+        "family": "B14 GridLog",
+        "id": "B14-00",
+        "model1_readiness": "NOT_AUTHORIZED for B14-00",
+        "model4_readiness": "NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED",
+        "semantic_completeness": "GRID_STACK + LOG_POWER_PROGRESSION + BASKET_TARGET_OWNERSHIP ratified; native numbers/Home remain unresolved",
+        "set_generation_readiness": "Compiler and H01 package exist; neither instantiates B14-00",
+        "single_next_action": "Owner freezes native arm/grid, progression, basket target, direction, ATRPeriod and Home specifically for B14-00.",
+        "template_completeness": "Native arm distance is distinct from shared Stack ATR x2",
+        "track": "xx-00 reference"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "- B14 GridLog fixed Model1 control:",
+          "line": 323,
+          "path": "PROJECT_STATE.md",
+          "source_id": "state"
+        },
+        "compile_readiness": "Compile receipt tracked; no fresh compile performed",
+        "current_blocker_class": "B_HARNESS_TEST_REPAIR_EXHAUSTED",
+        "current_canonical_stage": "EXECUTION_COMPLETE / RESULT_PACKAGE_BLOCKED / REPAIR_EXHAUSTED",
+        "different_family_review_dependency": "Packaging-only work uses normal tooling/docs review",
+        "evidence_ids": [
+          "state",
+          "b14",
+          "ladder"
+        ],
+        "evidence_packaging_readiness": "BLOCKED: R1 visuals omit independent-basket samples (40 MAIN / 25 BWD)",
+        "family": "B14 GridLog",
+        "id": "B14-CONTROL",
+        "model1_readiness": "EXECUTED on Meta5c; NO_RERUN / NO_RETUNE",
+        "model4_readiness": "NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED; owner records NO_USEFUL_CONTROL_PULSE",
+        "semantic_completeness": "Exact native control prospectively frozen; does not ratify B14-00 values",
+        "set_generation_readiness": "Canonical full set/prereg identities exist",
+        "single_next_action": "CT opens a NEW bounded package-only contract if intake is still desired; preserve the fixed-control classification and existing raw evidence.",
+        "template_completeness": "Accepted source used; no source repair indicated",
+        "track": "EURUSD/H1 fixed Model1 control; NOT xx-00"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "## ORDER-XX00-MODEL1-SCREEN-V1",
+          "line": 1356,
+          "path": "taskboards/active/P03.md",
+          "source_id": "queue"
+        },
+        "compile_readiness": "Execution/compile lineage reported by canonical owner; no fresh compile in this audit",
+        "current_blocker_class": "B_EVIDENCE_PACKAGING_REPAIR_EXHAUSTED",
+        "current_canonical_stage": "EXECUTION_COMPLETE / ACCEPTANCE_BLOCKED / REPAIR_BUDGET_EXHAUSTED",
+        "different_family_review_dependency": "Packaging-only review is not core review; no core changes proposed",
+        "evidence_ids": [
+          "queue",
+          "screen",
+          "faststart",
+          "state"
+        ],
+        "evidence_packaging_readiness": "BLOCKED: per-cell explicit tester INI path/name and symbol/period/leverage missing after targeted recheck",
+        "family": "B15 ST03",
+        "id": "B15-00",
+        "model1_readiness": "EXECUTED on Meta5c; metrics unaccepted; no rerun",
+        "model4_readiness": "NOT_AUTHORIZED; screen contract forbids Model4",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED; packaging failure does not unlock search",
+        "semantic_completeness": "Reference entry+ATR14+GBPUSD/H4 ratified; physical snapshot controls remain screen-only",
+        "set_generation_readiness": "Frozen derived SHA exists in contract; unpushed emitted bytes not revalidated here",
+        "single_next_action": "CT must open a NEW bounded packaging-only contract for preserved evidence before any further edit; old Repair02 is forbidden.",
+        "template_completeness": "Existing canonical wrapper used; formal Schema V2 remains separate",
+        "track": "xx-00 fast-start"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "| B16 Kangaroo |",
+          "line": 36,
+          "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+          "source_id": "readiness"
+        },
+        "compile_readiness": "Existing source/baseline evidence; exact new reference compile UNKNOWN",
+        "current_blocker_class": "OWNER_NATIVE_NUMERIC_DECISION",
+        "current_canonical_stage": "NATIVE_NUMERIC_RATIFICATION_REQUIRED",
+        "different_family_review_dependency": "Any owned-pipeline change requires qualified different-family review",
+        "evidence_ids": [
+          "readiness",
+          "family",
+          "state",
+          "coverage"
+        ],
+        "evidence_packaging_readiness": "Accepted B16 research packages are separate references",
+        "family": "B16 Kangaroo",
+        "id": "B16-00",
+        "model1_readiness": "NOT_AUTHORIZED for B16-00",
+        "model4_readiness": "NOT_AUTHORIZED for B16-00; existing R4 belongs to USDJPY parent only",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED for B16-00",
+        "semantic_completeness": "ADVERSE_ATR_GRID + KANGAROO_LOT_LAW + OWNED_BASKET_OVERLAP_EXITS ratified; numeric reference unresolved",
+        "set_generation_readiness": "Existing compiler/package; native numeric binding not frozen for B16-00",
+        "single_next_action": "Owner freezes B16-00 native grid, lot-law and exit numbers plus entry, ATRPeriod and Home.",
+        "template_completeness": "Owned pipeline bypasses shared Stack/Exit; generic overlays cannot be assumed effective",
+        "track": "xx-00 reference"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "- `HYP-B16-GBP-H4-EXITCONC-01`",
+          "line": 328,
+          "path": "PROJECT_STATE.md",
+          "source_id": "state"
+        },
+        "compile_readiness": "Historical accepted build evidence; new consumer compile UNKNOWN",
+        "current_blocker_class": "NEW_PROSPECTIVE_CONSUMER_REQUIRED",
+        "current_canonical_stage": "BOUNDED_ENTRY_SEARCH_AND_DEPTH_MILESTONE_CLOSED",
+        "different_family_review_dependency": "New core exit change would require qualified different-family review",
+        "evidence_ids": [
+          "state",
+          "b16gbp"
+        ],
+        "evidence_packaging_readiness": "Accepted H05/H06/H07; exit-concentration diagnostic is accepted blocked evidence",
+        "family": "B16 Kangaroo",
+        "id": "B16-GBP",
+        "model1_readiness": "Accepted Model1 MAIN+BWD; no repeat depth2/3/4 search",
+        "model4_readiness": "NOT_RUN for H05/H07; no automatic Model4",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "H05 exhausted; do not reopen RSI search",
+        "semantic_completeness": "Parent max10 and depth3 research references; no default adoption",
+        "set_generation_readiness": "Exact accepted parent/child sets exist; no new revision frozen",
+        "single_next_action": "CT may open the separately preregistered one-change SELL 14/70 exit-off consumer only if it explicitly chooses that unresolved question.",
+        "template_completeness": "Existing accepted mechanism; no new core work",
+        "track": "GBPUSD/H4 SELL / H05-H07"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "# B16 USDJPY/H1 BUY R4 Execution-Fidelity Results",
+          "line": 1,
+          "path": "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_RESULTS.md",
+          "source_id": "b16r4"
+        },
+        "compile_readiness": "Accepted EX5/source identity in R4; no fresh compile",
+        "current_blocker_class": "NEW_PROSPECTIVE_CONSUMER_REQUIRED",
+        "current_canonical_stage": "R4_EXECUTION_FIDELITY_NOT_FALSIFIED / MILESTONE_CLOSED",
+        "different_family_review_dependency": "Historical required review recorded; no new core work",
+        "evidence_ids": [
+          "state",
+          "b16r4"
+        ],
+        "evidence_packaging_readiness": "R4 accepted/reviewed package",
+        "family": "B16 Kangaroo",
+        "id": "B16-USDJPY",
+        "model1_readiness": "Accepted Model1 control MAIN+BWD on Meta5 (lane1)",
+        "model4_readiness": "COMPLETED MAIN+BWD on Meta5 for this parent only; no Candidate authority",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "H08 CLOSED_NO_RETUNING; no new optimization",
+        "semantic_completeness": "Accepted 14/30 research parent frozen; H08 14/35 center rejected BWD",
+        "set_generation_readiness": "Parent set SHA bound in R4 owner",
+        "single_next_action": "CT first states a distinct unresolved question using accepted R4 evidence; keep current exits/14-30 parent frozen and do not reopen H08.",
+        "template_completeness": "Accepted existing parent; no source gap for reuse",
+        "track": "USDJPY/H1 BUY parent / H08 / R4"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "- B16 XAUUSD/M15 `B16-EARLYZONE-01`",
+          "line": 327,
+          "path": "PROJECT_STATE.md",
+          "source_id": "state"
+        },
+        "compile_readiness": "Accepted source graph reconciliation; no fresh compile",
+        "current_blocker_class": "NEW_DISTINCT_HYPOTHESIS_REQUIRED",
+        "current_canonical_stage": "CLOSED_NO_SPACING_SEARCH_EXPANSION / RESEARCH_ONLY",
+        "different_family_review_dependency": "Existing Gemini research review is scope-specific; no general core qualification",
+        "evidence_ids": [
+          "state",
+          "b16xau",
+          "provider"
+        ],
+        "evidence_packaging_readiness": "Accepted/reviewed result; task-scoped Gemini review does not qualify all core reviews",
+        "family": "B16 Kangaroo",
+        "id": "B16-XAU",
+        "model1_readiness": "Four accepted Model1 parent/child cells on Meta5c",
+        "model4_readiness": "No Model4 child claim; NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "Spacing direction CLOSED; no widen/optimize",
+        "semantic_completeness": "0.8 parent retained only as stronger research reference; 1.4 widening not improvement direction",
+        "set_generation_readiness": "Exact parent/child frozen sets in existing experiment",
+        "single_next_action": "CT defines a distinct independently motivated prospective consumer; do not reopen the closed wider-spacing direction.",
+        "template_completeness": "Accepted owned pipeline; no new source gap indicated",
+        "track": "XAUUSD/M15 EARLYZONE-01"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "# B17 xx-00 Structural-SL Decoupling Contract V1",
+          "line": 1,
+          "path": "docs/architecture/EA_TEMPLATE_B17_XX00_STRUCTURAL_SL_DECOUPLING_CONTRACT_V1.md",
+          "source_id": "b17"
+        },
+        "compile_readiness": "Future changed wrapper/test compile and tpl_regression required; not run",
+        "current_blocker_class": "E_REQUIRED_DIFFERENT_FAMILY_REVIEWER_UNAVAILABLE + CORE_COUPLING",
+        "current_canonical_stage": "CONTRACT_FROZEN / NO_IMPLEMENTATION_YET",
+        "different_family_review_dependency": "MANDATORY / UNAVAILABLE for this core scope; same-family cannot substitute",
+        "evidence_ids": [
+          "b17",
+          "queue",
+          "provider",
+          "state"
+        ],
+        "evidence_packaging_readiness": "Contract/source-bound blocker exists; no executable xx-00 package",
+        "family": "B17 Wave5",
+        "id": "B17-00",
+        "model1_readiness": "NOT_AUTHORIZED",
+        "model4_readiness": "NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED",
+        "semantic_completeness": "Structural SL + SINGLE native; structural target is not native; parameters/Home still unratified",
+        "set_generation_readiness": "Parameter freeze alone cannot represent ratified behavior",
+        "single_next_action": "Qualify a competent different-family reviewer for this core scope before CT opens the bounded decoupling implementation.",
+        "template_completeness": "BLOCKED: structural TP overrides generic ATR Exit when structural levels active",
+        "track": "xx-00 structural-SL"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "| B18 JumStoch |",
+          "line": 38,
+          "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+          "source_id": "readiness"
+        },
+        "compile_readiness": "Historical B11-B18 cage evidence only; new exact-reference compile UNKNOWN",
+        "current_blocker_class": "OWNER_PARAMETER_HOME_DECISION",
+        "current_canonical_stage": "READY_FOR_OWNER_RATIFICATION_ONLY",
+        "different_family_review_dependency": "No core change required by current source map; any later core change needs qualified review",
+        "evidence_ids": [
+          "readiness",
+          "family",
+          "state"
+        ],
+        "evidence_packaging_readiness": "No new xx-00 run package; accepted H01/H02 are separate evidence",
+        "family": "B18 JumStoch",
+        "id": "B18-00",
+        "model1_readiness": "NOT_AUTHORIZED; prospective freeze and screen contract required",
+        "model4_readiness": "NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED; no xx-00 tunables/ranges",
+        "semantic_completeness": "Native NONE ratified; entry values, ATRPeriod and Home symbol/TF not frozen",
+        "set_generation_readiness": "Compiler exists; reference inputs unresolved",
+        "single_next_action": "Owner prospectively freezes B18 entry controls, ATRPeriod and Home in a new bounded reference contract.",
+        "template_completeness": "Existing Boss V2; no executable Bxx-00 instance accepted",
+        "track": "xx-00 reference"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "- Boss19 V0 strategy verdict remains",
+          "line": 330,
+          "path": "PROJECT_STATE.md",
+          "source_id": "state"
+        },
+        "compile_readiness": "Existing source acceptance only; no new compile",
+        "current_blocker_class": "NEW_INDEPENDENT_HYPOTHESIS_REQUIRED",
+        "current_canonical_stage": "PARKED-VERIFY(user) / P5_FALSIFIED_STOP_EXPANSION_PARK",
+        "different_family_review_dependency": "Core/redesign implementation requires qualified different-family review",
+        "evidence_ids": [
+          "state"
+        ],
+        "evidence_packaging_readiness": "P4 join and P5 reviewed; old source-unit blocker is closed",
+        "family": "Boss19 AdaptiveTrendGrid",
+        "id": "B19",
+        "model1_readiness": "Historical Model1 evidence complete",
+        "model4_readiness": "NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "P6/optimization NOT_UNLOCKED",
+        "semantic_completeness": "Existing probe/reference semantics; no supported P5 session rule",
+        "set_generation_readiness": "Accepted frozen historical package; no new consumer config",
+        "single_next_action": "CT must supply a genuinely new independently motivated one-change hypothesis and direct consumer before any continuation.",
+        "template_completeness": "Probe/owned pipeline; outside B11-B18 xx-00 map",
+        "track": "V0 / H3 / P4 / P5"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "# BT0 - H02 Pulse Model-4 Execution-Fidelity Results",
+          "line": 1,
+          "path": "docs/research/BT0_H02_MODEL4_FIDELITY_RESULTS.md",
+          "source_id": "bt0"
+        },
+        "compile_readiness": "No fresh compile or tester execution",
+        "current_blocker_class": "E_OWNER_EXTERNAL_RUNTIME_SCOPE_CONFLICT",
+        "current_canonical_stage": "BLOCKED / E_OWNER_EXTERNAL / 0_OF_12_RUNS",
+        "different_family_review_dependency": "Not a missing core implementation review; runtime authorization conflict",
+        "evidence_ids": [
+          "bt0",
+          "state",
+          "authority"
+        ],
+        "evidence_packaging_readiness": "Blocked/no-run evidence exists",
+        "family": "B11-B16 H02 pulses",
+        "id": "BT0",
+        "model1_readiness": "Existing H02 Model1 evidence only",
+        "model4_readiness": "NO_LEGAL_RUNTIME: contract forbids Meta5, policy requires lane1 and forbids Meta5c M4",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED",
+        "semantic_completeness": "Frozen H02 pulse evidence is separate from xx-00",
+        "set_generation_readiness": "No new set generation authorized",
+        "single_next_action": "Owner/CT must reconcile the exact runtime scope prospectively before any Model4 dispatch; do not switch installs to evade the contract.",
+        "template_completeness": "No product defect established by runtime restriction",
+        "track": "legacy Model4 fidelity contract"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "- EA Template Owner Recipe P1:",
+          "line": 116,
+          "path": "PROJECT_STATE.md",
+          "source_id": "state"
+        },
+        "compile_readiness": "N/A: presentation/tooling only",
+        "current_blocker_class": "EXPLICIT_IDENTITY_RESOLUTION_REQUIRED",
+        "current_canonical_stage": "ACCEPTED NON_AUTHORITATIVE_SIDECAR / CATALOG_NOT_INSTANTIATED",
+        "different_family_review_dependency": "No core review for rendering; runtime semantic verification would be separate",
+        "evidence_ids": [
+          "state",
+          "identity",
+          "recipe",
+          "view"
+        ],
+        "evidence_packaging_readiness": "Can display validated sources; no accepted unified executable xx-00 catalog",
+        "family": "B11-B18",
+        "id": "OWNER-RECIPE",
+        "model1_readiness": "NO_AUTHORITY",
+        "model4_readiness": "NO_AUTHORITY",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NO_AUTHORITY",
+        "semantic_completeness": "Logical identity and effective-view contracts exist; H01 aliases remain SEMANTICS_REQUIRED",
+        "set_generation_readiness": "Reuses ParameterSet + VariantBuildPackage; no H01 alias auto-conversion",
+        "single_next_action": "CT identifies one explicit owner-resolved logical identity bundle for the existing recipe view; leave every unresolved H01 alias unchanged.",
+        "template_completeness": "Identity/recipe/view tooling accepted; runtime cfgfp remains distinct",
+        "track": "Identity P0 / Recipe P1-P2"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "## ORDER-XX00-SCHEMA-V2",
+          "line": 1287,
+          "path": "taskboards/active/P03.md",
+          "source_id": "queue"
+        },
+        "compile_readiness": "N/A: Python only; canonical owner reports focused tests and py_compile green",
+        "current_blocker_class": "B_HARNESS_TEST_FULL_TIER_RUNTIME_REGRESSION",
+        "current_canonical_stage": "SOURCE_TESTS_GREEN / INTEGRATION_BLOCKED / LOCAL_UNPUSHED",
+        "different_family_review_dependency": "Normal tooling review allowed; no core-family review required",
+        "evidence_ids": [
+          "queue",
+          "state",
+          "family"
+        ],
+        "evidence_packaging_readiness": "Contract/test observations canonical; implementation remains local",
+        "family": "B11-B18",
+        "id": "SCHEMA-V2",
+        "model1_readiness": "N/A: does not grant MT5 readiness",
+        "model4_readiness": "NO_AUTHORITY",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NO_AUTHORITY; source schema alone cannot register tunables",
+        "semantic_completeness": "Closed family constants and explicit positive ATRPeriod; PERIOD_CURRENT fixed",
+        "set_generation_readiness": "N/A: schema deliberately cannot emit executable sets/catalog",
+        "single_next_action": "Consume QRESET-01 harness RCA via CT, then revalidate preserved V2 through unchanged acceptance gates before integration.",
+        "template_completeness": "Non-executable sidecar implementation reported green; absent from canonical",
+        "track": "xx-00 schema"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "- Factory vNext MT5 Set Consumer Pilot:",
+          "line": 68,
+          "path": "PROJECT_STATE.md",
+          "source_id": "state"
+        },
+        "compile_readiness": "N/A for refused sidecar; no fresh compile",
+        "current_blocker_class": "SEMANTICS_REQUIRED + MISSING_VARIANT_BUILD_PACKAGE",
+        "current_canonical_stage": "EXPECTED_REFUSAL_ACCEPTED / KINT-001_OPEN",
+        "different_family_review_dependency": "Core/semantic changes remain separately reviewed and owner-gated",
+        "evidence_ids": [
+          "state",
+          "compat"
+        ],
+        "evidence_packaging_readiness": "Accepted refusal manifest; no terminal/tester touch",
+        "family": "SuperTrend rev05",
+        "id": "SUPERTREND",
+        "model1_readiness": "NOT_AUTHORIZED by set-consumer pilot",
+        "model4_readiness": "NO_NEW_AUTHORITY from pilot",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED; Range Generator semantics unresolved",
+        "semantic_completeness": "Affected parameter metadata SEMANTICS_REQUIRED",
+        "set_generation_readiness": "FAIL_CLOSED before proposed set emission",
+        "single_next_action": "CT resolves the explicit semantic/package prerequisites under their owner contracts; keep KINT-001 OPEN in this lane.",
+        "template_completeness": "Standalone/runtime evidence is separate; no canonical VariantBuildPackage for consumer",
+        "track": "Factory vNext set-consumer sidecar"
+      },
+      {
+        "canonical_owner": {
+          "anchor_text": "# CONTROL TOWER HANDOFF — ZL-EA-067 Wick Displacement — 2026-09-08",
+          "line": 1,
+          "path": "docs/handoffs/CONTROL_TOWER_ZL_EA_067_HANDOFF_20260908.md",
+          "source_id": "zl"
+        },
+        "compile_readiness": "Canonical handoff reports Boss20/test 0 errors/0 warnings and fixture 9 cases on Meta5b",
+        "current_blocker_class": "E_REQUIRED_DIFFERENT_FAMILY_REVIEWER_UNAVAILABLE",
+        "current_canonical_stage": "TECHNICAL_SOURCE_ACCEPTANCE_COMPLETE / LOCAL_UNPUSHED / NOT_CORE_REVIEWED",
+        "different_family_review_dependency": "MANDATORY / UNAVAILABLE for core acceptance",
+        "evidence_ids": [
+          "zl",
+          "provider",
+          "state"
+        ],
+        "evidence_packaging_readiness": "Technical receipt exists; core review receipt missing",
+        "family": "B20 WickDisplacement V0",
+        "id": "ZL-EA-067",
+        "model1_readiness": "BLOCKED until reviewed source integration and separate preregistered fixed screen",
+        "model4_readiness": "NOT_AUTHORIZED",
+        "new_mt5_dispatch_authorized": false,
+        "optimization_readiness": "NOT_AUTHORIZED",
+        "semantic_completeness": "Frozen independent-child V0 contract; no proprietary formula fidelity claim",
+        "set_generation_readiness": "Same-snapshot generators stable per canonical handoff; future screen set identity must be frozen",
+        "single_next_action": "Qualify a competent different-family core reviewer; re-anchor preserved canary only as needed before frozen exact-head review.",
+        "template_completeness": "Canary head 2da4d027ffdbcdddd77956a58dca0c352a6c0949 not integrated",
+        "track": "new-entry canary"
+      }
+    ],
+    "schema_version": "ea_lab_template_readiness_audit/1",
+    "source_paths": {
+      "authority": "AGENTS.md",
+      "b14": "docs/research/B14_GRIDLOG_FIXED_CONFIG_MODEL1_CONTRACT_20260910.md",
+      "b16gbp": "docs/research/B16_GBP_SELL_H4_DEPTH3_01_RESULTS.md",
+      "b16r4": "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_RESULTS.md",
+      "b16xau": "docs/research/B16_XAU_M15_EARLY_ZONE_SPACING_CONTRACT_20260910.md",
+      "b17": "docs/architecture/EA_TEMPLATE_B17_XX00_STRUCTURAL_SL_DECOUPLING_CONTRACT_V1.md",
+      "bootstrap": "scripts/execution_reliability/bootstrap_worktree.ps1",
+      "bt0": "docs/research/BT0_H02_MODEL4_FIDELITY_RESULTS.md",
+      "build": "scripts/lib/build_receipt.ps1",
+      "compat": "_triage/factory_vnext/mt5_set_compat.py",
+      "concept": "ea_template/PRODUCT_CONCEPT.md",
+      "coverage": "ea_template/IMPLEMENTATION_COVERAGE_MAP.md",
+      "default_preset": "_triage/factory_os/gen_default_preset.py",
+      "design": "ea_template/DESIGN_V2.md",
+      "family": "docs/architecture/EA_TEMPLATE_XX00_FAMILY_RATIFICATION_V1.md",
+      "faststart": "docs/architecture/EA_TEMPLATE_XX00_WAVEA_FASTSTART_RATIFICATION_20260909.md",
+      "guard": "scripts/optimize_guard.ps1",
+      "handoff": "tools/knowledge_validation/research_handoff_validator.py",
+      "identity": "_triage/factory_vnext/identity_model.py",
+      "integrity": "tools/reporting/report_package_integrity.py",
+      "ladder": "docs/research/EA_REPORT_LADDER.md",
+      "optimization": "ea_template/OPTIMIZATION_PROCEDURE_V2.md",
+      "preset": "_triage/factory_os/preset.py",
+      "provider": "docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md",
+      "python": "scripts/use_python.ps1",
+      "queue": "taskboards/active/P03.md",
+      "range": "_triage/factory_vnext/range_generator.py",
+      "readiness": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+      "readme": "ea_template/README.md",
+      "recipe": "_triage/factory_vnext/owner_recipe.py",
+      "report_fastpath": "docs/research/EA_REPORT_AUTHORING_FASTPATH.md",
+      "report_schema": "docs/research/EA_REPORT_SCHEMA.md",
+      "scaffold": "scripts/new_template_entry.ps1",
+      "screen": "docs/research/XX00_B13_B15_MODEL1_SCREEN_CONTRACT_20260909.md",
+      "start": "START_HERE.md",
+      "state": "PROJECT_STATE.md",
+      "surface": "scripts/lib/setfile_surface.ps1",
+      "taskboard": "AGENT_TASKBOARD.md",
+      "view": "_triage/factory_vnext/owner_recipe_view.py",
+      "vision": "VISION.md",
+      "zl": "docs/handoffs/CONTROL_TOWER_ZL_EA_067_HANDOFF_20260908.md"
+    },
+    "source_pins": [
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "ac7848a142baab74ce3afe252a1ad62453a96e4e",
+        "path": "PROJECT_STATE.md",
+        "sha256": "97effa3233a65527061183e13d142a6208cf2985c85950d898054dd377b2734f",
+        "size_bytes": 102027,
+        "source_id": "state"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "e9df78fb8dd35e7664a3b784731129899805ea9b",
+        "path": "AGENTS.md",
+        "sha256": "ad7fda9114c7c07cbd161b88120ad58d70eee3728264bd1944876d9a7b0bc29f",
+        "size_bytes": 44406,
+        "source_id": "authority"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "eb421aac4475a6fbda15f7e07498060bc9e8e3d3",
+        "path": "taskboards/active/P03.md",
+        "sha256": "5e54d8525396b590dab240e97fcbbe72209b80c63ac22db06578ea031c144f97",
+        "size_bytes": 216957,
+        "source_id": "queue"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "30a99e469a03902b307718d651c7ab09e2ff265a",
+        "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+        "sha256": "d7db998d85951a412c34108872b8334817ac7980d23426fa06092b9069ce2ae1",
+        "size_bytes": 10021,
+        "source_id": "readiness"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "e0270670fafea64519038bea220efa569c1b3526",
+        "path": "docs/architecture/EA_TEMPLATE_XX00_FAMILY_RATIFICATION_V1.md",
+        "sha256": "bf0cee451aea116bb5e72e7cc22dadc055318e04853a0f5e6b4f6f6f8b7bd501",
+        "size_bytes": 3784,
+        "source_id": "family"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "527c2885b4c533868c1d03a9ad99aa37a86c1d32",
+        "path": "docs/architecture/EA_TEMPLATE_XX00_WAVEA_FASTSTART_RATIFICATION_20260909.md",
+        "sha256": "987af844ba683e0e641a2d9cfb1cc33dae6d95dd89ee6d3c29f6c6afa16d7719",
+        "size_bytes": 2365,
+        "source_id": "faststart"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "c8fe83181001529abf22fcdbc707223e3f7fddb2",
+        "path": "docs/research/XX00_B13_B15_MODEL1_SCREEN_CONTRACT_20260909.md",
+        "sha256": "c4d6c4ec69c1ec2959e2687d136539314948811a9833ccec618195cecb904d1d",
+        "size_bytes": 2789,
+        "source_id": "screen"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "051e681e0c47870b787dd37061266bfb6f373d1f",
+        "path": "docs/architecture/EA_TEMPLATE_B17_XX00_STRUCTURAL_SL_DECOUPLING_CONTRACT_V1.md",
+        "sha256": "bd125a395ab9060b4422ca8bf5d8c7610276b64726648fe44c67705150a80c6e",
+        "size_bytes": 3890,
+        "source_id": "b17"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "b908e2e08f8ab2bc90751d55b297cfcea2f3a1b8",
+        "path": "docs/handoffs/CONTROL_TOWER_ZL_EA_067_HANDOFF_20260908.md",
+        "sha256": "8a7fb488cc3ebae4a9c161ce972d6719570607ab923cf0100011dd7f0c19be24",
+        "size_bytes": 3454,
+        "source_id": "zl"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "aa5e040b1b404914dd0cbb2b4d37b9bcd97aaacb",
+        "path": "docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md",
+        "sha256": "f12f6d2d24d9342fd9d87a0f5f5d3196bf7cf3a9118ab0896e1f2614feb021a1",
+        "size_bytes": 9958,
+        "source_id": "provider"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "ea6cde38715ffda590f7bd90d3e0f1c5905fe199",
+        "path": "ea_template/IMPLEMENTATION_COVERAGE_MAP.md",
+        "sha256": "f307011a10dc0c0197b88a85ce35f4e3ffb6dc7315f39a56e5e3742889277802",
+        "size_bytes": 33006,
+        "source_id": "coverage"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "9cf5a66019e9abe05f70d2b3d9afcef1f7fcf408",
+        "path": "ea_template/PRODUCT_CONCEPT.md",
+        "sha256": "cdda6333e4fa23f38b9f31e98c96c3130e5f6a87aeb00024bf7c1f1b0b42146d",
+        "size_bytes": 21090,
+        "source_id": "concept"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "9945e1cc2a61bd7cd6f57e74eed0d16e94542858",
+        "path": "ea_template/OPTIMIZATION_PROCEDURE_V2.md",
+        "sha256": "6b0e91c7596dc9387a277fe6fc3bc5c953e19bfe018f26f6719f09092d8e0991",
+        "size_bytes": 47107,
+        "source_id": "optimization"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "a44761fcf31c83d109fe1db48accf84a187e5eee",
+        "path": "docs/research/B14_GRIDLOG_FIXED_CONFIG_MODEL1_CONTRACT_20260910.md",
+        "sha256": "dc5b120137a414f926627965a770af39d6fd7e26a2eda08cd55ccaf37b94afb4",
+        "size_bytes": 10935,
+        "source_id": "b14"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "b79fdb3ac8d7a80c92f24547e7c92825502c4df0",
+        "path": "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_RESULTS.md",
+        "sha256": "eff1ae3630261a8b9cc1c16205ca4c7960c93691aeaf528bd237f356f48f2ef6",
+        "size_bytes": 6162,
+        "source_id": "b16r4"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "79630e5a6b4b6818698bb476ea49694ba5644936",
+        "path": "docs/research/B16_GBP_SELL_H4_DEPTH3_01_RESULTS.md",
+        "sha256": "8fcbf4e269f16ba80ef89a52fc3237f1fd6a40d2e3cee6bc32d37a0a3efb082b",
+        "size_bytes": 6656,
+        "source_id": "b16gbp"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "ca66257a5425b1f7bc0c71a5ba63e9ce28a159df",
+        "path": "docs/research/B16_XAU_M15_EARLY_ZONE_SPACING_CONTRACT_20260910.md",
+        "sha256": "80a7254078054336c7b9f277f0322cc9190751f2e22bf6e69e1ef1f36d716c8f",
+        "size_bytes": 6047,
+        "source_id": "b16xau"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "5d3cbcf4f82ec3d5224605e50057596336baec64",
+        "path": "docs/research/BT0_H02_MODEL4_FIDELITY_RESULTS.md",
+        "sha256": "24593c9a7f0fb48b6606e0afea8fe01728df348671c19724eb272a3c10bd9140",
+        "size_bytes": 6265,
+        "source_id": "bt0"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "0bbd836ee9b0800dcf0d3cc7b4a91554a5f5f6b6",
+        "path": "docs/research/EA_REPORT_LADDER.md",
+        "sha256": "5902bff8fd6d18d98d153bc654d06e20826254310f8e41f00fc6d3646097c31c",
+        "size_bytes": 8858,
+        "source_id": "ladder"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "757b40dca5f91dd76f16b6408894557d8075d4f8",
+        "path": "docs/research/EA_REPORT_SCHEMA.md",
+        "sha256": "6feebcc13139dba51df5d403a25ab11b5d0c4b5d41549859091ab9c2cc324c37",
+        "size_bytes": 6710,
+        "source_id": "report_schema"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "99a881514d534123cccb20aa0dc7f09f43233df8",
+        "path": "docs/research/EA_REPORT_AUTHORING_FASTPATH.md",
+        "sha256": "8915324a846293256aa65ef1373b8a94c48ff3dd2493783add7be16e74c7cb63",
+        "size_bytes": 5862,
+        "source_id": "report_fastpath"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "8cc3a945a139c9125b05e5add383380cb0f90d97",
+        "path": "_triage/factory_os/preset.py",
+        "sha256": "06ad1a7c100720788da6ebbac554850688e7415f5b2e3580ece1b862276476ff",
+        "size_bytes": 47286,
+        "source_id": "preset"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "dc0d31946bbddf728cb48205b1deeeab262b106e",
+        "path": "_triage/factory_os/gen_default_preset.py",
+        "sha256": "da610af19490518e191d575b191a91f36c726c5e11b0cd5557605566f816352b",
+        "size_bytes": 7066,
+        "source_id": "default_preset"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "a368985e4b6b2aaac59b44a6a9b6a1078e5312d0",
+        "path": "_triage/factory_vnext/mt5_set_compat.py",
+        "sha256": "b3eebae879330149c6c4387667dd55f8a3a7f235fb21b15501645740ed614a2f",
+        "size_bytes": 17314,
+        "source_id": "compat"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "6e7fe79a4bc897a854add099673722d904aef486",
+        "path": "_triage/factory_vnext/identity_model.py",
+        "sha256": "f2b304852c450875e62f5803062789f6a2b7ea050068e5dfd50dfc155c6c8020",
+        "size_bytes": 18244,
+        "source_id": "identity"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "a64126c96544e7cc34ffeb3da4467904c2d5dcd3",
+        "path": "_triage/factory_vnext/owner_recipe.py",
+        "sha256": "d6de2c8496cdbe6ae9a2af3f5b836fe464421d62bc96a41d9ea18367790d5db4",
+        "size_bytes": 37537,
+        "source_id": "recipe"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "57773a57405a239a3461224bb12bd56d72e749f2",
+        "path": "_triage/factory_vnext/owner_recipe_view.py",
+        "sha256": "40f21597eb95aee54005fdde4fcb9b42bed6048273aaa6180a1746e133439dbd",
+        "size_bytes": 16716,
+        "source_id": "view"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "a5b909f85d2f9ecb47a324fb1f24265a60c9372b",
+        "path": "tools/reporting/report_package_integrity.py",
+        "sha256": "c4d0e4c64eaf923a2621af62b800edbc656cc15847c1db723c8d5f29210fa604",
+        "size_bytes": 10630,
+        "source_id": "integrity"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "a303b1e932999cd06c8e2b2872094b3687b48f89",
+        "path": "tools/knowledge_validation/research_handoff_validator.py",
+        "sha256": "ac556b5535b7b05db7ca7af12badd48fe3d30cce14cbd55e6bf6cbe449ec5731",
+        "size_bytes": 11819,
+        "source_id": "handoff"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "9a9d99b087c9d49e0653dcf1fd736614a9e9dd15",
+        "path": "scripts/new_template_entry.ps1",
+        "sha256": "75bd1c8c947212db44a9f5bd3c541fa78f6d10e2372372b257d64ee52fad7ffa",
+        "size_bytes": 3391,
+        "source_id": "scaffold"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "fffe31d3ee525a9c0177a79af5f01f4e7daa1ec4",
+        "path": "scripts/lib/setfile_surface.ps1",
+        "sha256": "2feb78a0a294e1f828aa40de25f26c4ceea23fb25424534c2afbdb70a12e2aca",
+        "size_bytes": 6958,
+        "source_id": "surface"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "9519d2b89b2bde2e72da322e3292f3eb4f66b429",
+        "path": "scripts/lib/build_receipt.ps1",
+        "sha256": "0e3cd0cc21ffcb0e64ae5cc2cc765912c9b46a18315b803f5318b46d9ffb8ff0",
+        "size_bytes": 13076,
+        "source_id": "build"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "3f38d8fec910f075b355389f5e7b4c2a6e3038d5",
+        "path": "scripts/optimize_guard.ps1",
+        "sha256": "67d0a40c1a35058dbe60411cd36df9a064823511fbe56130cb263505eca13331",
+        "size_bytes": 45614,
+        "source_id": "guard"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "b09b2465240a0e9d92099f20a2d24f641846b593",
+        "path": "_triage/factory_vnext/range_generator.py",
+        "sha256": "83a70c1161f3bb9f24b4dd30ab9c67f134289a394b41d682212a433739628605",
+        "size_bytes": 12360,
+        "source_id": "range"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "62b9950a53a31576e4376aa0baf853689027c322",
+        "path": "scripts/execution_reliability/bootstrap_worktree.ps1",
+        "sha256": "94b38c17df6bac9dfc3751fe3a41623575cc76c42d65cdef1c3d2c14973bfe28",
+        "size_bytes": 5435,
+        "source_id": "bootstrap"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "790486b8670b76606d33182d090af18fcae0ea32",
+        "path": "scripts/use_python.ps1",
+        "sha256": "575f84a6824e50a9b63c23fa8cc604fe20ff6661119daf8f1209bf9bf4bcbccf",
+        "size_bytes": 2668,
+        "source_id": "python"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "16fb1d1f58f02b93365668f0e5a645b0e6c374f5",
+        "path": "ea_template/README.md",
+        "sha256": "0ca1b318976b1b571315320152ed97bdc73c717df9424dc617cf2b4ed9180792",
+        "size_bytes": 4146,
+        "source_id": "readme"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "d64702701368c794e8ddb8aba396920e3ef54df3",
+        "path": "ea_template/DESIGN_V2.md",
+        "sha256": "5f2866751185272f971b20ae1a661888e920fa16add03e55bb4d0eecafff680c",
+        "size_bytes": 30198,
+        "source_id": "design"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "5eaa99eccdcaede2bfbb2e00018af99dbcce3b50",
+        "path": "VISION.md",
+        "sha256": "df58b36ec72b96b2e186af98e0a0578cbcbc59989d71c0a92e54bc62ab583258",
+        "size_bytes": 11494,
+        "source_id": "vision"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "3bb9e261ba00b1df8bffc34556af470b5a7e5967",
+        "path": "START_HERE.md",
+        "sha256": "8e6d82a6d8d3cef6000cd719bb2be2518c12f49dad6eb34fdda5cf4991d49e78",
+        "size_bytes": 9570,
+        "source_id": "start"
+      },
+      {
+        "commit": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "git_blob_oid": "e517a7b44d4533ba9de8f43d53740af9ebe941e9",
+        "path": "AGENT_TASKBOARD.md",
+        "sha256": "9cbc4687728ca3795daa27a5e8290ed34dfe8dc6f6038c2cb163e7696319cc89",
+        "size_bytes": 42298,
+        "source_id": "taskboard"
+      }
+    ],
+    "sources_observation_scope": "Git blob bytes at BASE; external unpushed outcomes are reported by canonical owners, not independently revalidated by this audit",
+    "tool_added": null,
+    "validation": {
+      "matrix_shape": "PASS: 18 unique tracks; 14 requested fields and cited owner per row; no new MT5 authorization",
+      "package_integrity": "PASS: accepted helper build/validate; deterministic rebuild; isolated tamper refusal",
+      "reused_integrity_focused_tests": "13/13 PASS (includes negative tests)",
+      "source_pins": "PASS: 41 raw Git blobs hashed at BASE"
+    }
+  },
+  "package_id": "QRESET-02-TEMPLATE-READINESS-20260912"
+}
