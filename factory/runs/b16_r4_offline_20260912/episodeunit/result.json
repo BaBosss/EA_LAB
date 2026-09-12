@@ -1,0 +1,277 @@
+{
+  "author_base_head": "e3254868d482096a009e38c81c80ebae96a64207",
+  "authority": "OFFLINE_INFERENCE_METHOD_DIAGNOSTIC_ONLY",
+  "blockers": [],
+  "cells": {
+    "M1_BWD": {
+      "EPISODE": {
+        "draws_per_replication": 243,
+        "median": "67.395",
+        "q025": "-393.11600",
+        "q975": "383.17425",
+        "replications": 5000,
+        "width": "776.29025"
+      },
+      "K": 243,
+      "N": 267,
+      "TICKET": {
+        "draws_per_replication": 267,
+        "median": "59.390",
+        "q025": "-232.06825",
+        "q975": "316.61075",
+        "replications": 5000,
+        "width": "548.67900"
+      },
+      "components": {
+        "commission": "0.00",
+        "profit": "-14.98",
+        "swap": "65.20"
+      },
+      "deal_count": 534,
+      "episode_ledger_sha256": "c7ef15ddb7b757406ecee323a6079d6ad477527d62f1ffef2c3ba695332c3ab4",
+      "episode_size_distribution": {
+        "1": 234,
+        "2": 5,
+        "3": 2,
+        "5": 1,
+        "12": 1
+      },
+      "episode_width_strictly_greater": true,
+      "lane": "MT5-lane1",
+      "model": 1,
+      "model_label": "M1_M1_OHLC_RESEARCH",
+      "observed_total": "50.22",
+      "reconciliation": "EXACT: native net = all deal cashflows = ticket sum = episode sum = final balance - deposit; components/footer, gross P/L, counts and accepted N/K/net agree",
+      "runtime_identity": {
+        "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+        "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+        "from": "2020.01.01",
+        "head_sha": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+        "runtime_lane": "MT5-lane1",
+        "set_sha256": "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+        "to": "2022.12.31"
+      },
+      "source": {
+        "expected_sha256": "327e6c9be6ea8569275c7c9a066043ce22e6e6ce1e9590b5cb4b3714cc98bc2a",
+        "path": "factory/runs/b16_r4_20260902/usdjpy_buy_h1/runtime/M1_BWD/report.htm",
+        "sha256": "327e6c9be6ea8569275c7c9a066043ce22e6e6ce1e9590b5cb4b3714cc98bc2a"
+      },
+      "status": "PASS",
+      "window": "BWD"
+    },
+    "M1_MAIN": {
+      "EPISODE": {
+        "draws_per_replication": 239,
+        "median": "270.775",
+        "q025": "-187.13175",
+        "q975": "629.40375",
+        "replications": 5000,
+        "width": "816.53550"
+      },
+      "K": 239,
+      "N": 275,
+      "TICKET": {
+        "draws_per_replication": 275,
+        "median": "260.430",
+        "q025": "-91.06825",
+        "q975": "566.03975",
+        "replications": 5000,
+        "width": "657.10800"
+      },
+      "components": {
+        "commission": "0.00",
+        "profit": "207.61",
+        "swap": "47.69"
+      },
+      "deal_count": 550,
+      "episode_ledger_sha256": "79e0096de5dac964dd5bffe342a99410c242f975875eb6cd779b88305d686752",
+      "episode_size_distribution": {
+        "1": 227,
+        "2": 6,
+        "3": 3,
+        "5": 1,
+        "11": 2
+      },
+      "episode_width_strictly_greater": true,
+      "lane": "MT5-lane1",
+      "model": 1,
+      "model_label": "M1_M1_OHLC_RESEARCH",
+      "observed_total": "255.30",
+      "reconciliation": "EXACT: native net = all deal cashflows = ticket sum = episode sum = final balance - deposit; components/footer, gross P/L, counts and accepted N/K/net agree",
+      "runtime_identity": {
+        "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+        "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+        "from": "2023.01.01",
+        "head_sha": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+        "runtime_lane": "MT5-lane1",
+        "set_sha256": "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+        "to": "2025.12.31"
+      },
+      "source": {
+        "expected_sha256": "a329cc1fed28a98926ef38a07c05750c31d1f47dfd568dd31ac95d38fae64aa0",
+        "path": "factory/runs/b16_r4_20260902/usdjpy_buy_h1/runtime/M1_MAIN/report.htm",
+        "sha256": "a329cc1fed28a98926ef38a07c05750c31d1f47dfd568dd31ac95d38fae64aa0"
+      },
+      "status": "PASS",
+      "window": "MAIN"
+    },
+    "M4_BWD": {
+      "EPISODE": {
+        "draws_per_replication": 236,
+        "median": "83.470",
+        "q025": "-259.04200",
+        "q975": "368.60675",
+        "replications": 5000,
+        "width": "627.64875"
+      },
+      "K": 236,
+      "N": 262,
+      "TICKET": {
+        "draws_per_replication": 262,
+        "median": "78.130",
+        "q025": "-201.87350",
+        "q975": "326.76500",
+        "replications": 5000,
+        "width": "528.63850"
+      },
+      "components": {
+        "commission": "0.00",
+        "profit": "8.13",
+        "swap": "66.60"
+      },
+      "deal_count": 524,
+      "episode_ledger_sha256": "790c0d95305c4d60f1315bf88b5017080dde14cd25908a4ad8a25236cf7092a0",
+      "episode_size_distribution": {
+        "1": 227,
+        "2": 5,
+        "3": 2,
+        "6": 1,
+        "13": 1
+      },
+      "episode_width_strictly_greater": true,
+      "lane": "MT5-lane1",
+      "model": 4,
+      "model_label": "M4_REAL_TICK_FIDELITY",
+      "observed_total": "74.73",
+      "reconciliation": "EXACT: native net = all deal cashflows = ticket sum = episode sum = final balance - deposit; components/footer, gross P/L, counts and accepted N/K/net agree",
+      "runtime_identity": {
+        "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+        "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+        "from": "2020.01.01",
+        "head_sha": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+        "runtime_lane": "MT5-lane1",
+        "set_sha256": "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+        "to": "2022.12.31"
+      },
+      "source": {
+        "expected_sha256": "7561815ec2fa094176fa1b324a723c96a16dac8f22e74e2411d1503ab0ba85ed",
+        "path": "factory/runs/b16_r4_20260902/usdjpy_buy_h1/runtime/M4_BWD/report.htm",
+        "sha256": "7561815ec2fa094176fa1b324a723c96a16dac8f22e74e2411d1503ab0ba85ed"
+      },
+      "status": "PASS",
+      "window": "BWD"
+    },
+    "M4_MAIN": {
+      "EPISODE": {
+        "draws_per_replication": 238,
+        "median": "202.230",
+        "q025": "-275.45150",
+        "q975": "574.38050",
+        "replications": 5000,
+        "width": "849.83200"
+      },
+      "K": 238,
+      "N": 273,
+      "TICKET": {
+        "draws_per_replication": 273,
+        "median": "191.100",
+        "q025": "-157.08750",
+        "q975": "503.61550",
+        "replications": 5000,
+        "width": "660.70300"
+      },
+      "components": {
+        "commission": "0.00",
+        "profit": "138.57",
+        "swap": "48.75"
+      },
+      "deal_count": 546,
+      "episode_ledger_sha256": "eb9f57a1ee98d7e3e38f8ee0fc2737ceaf90d0da283b348e4a1042887d30ee21",
+      "episode_size_distribution": {
+        "1": 226,
+        "2": 6,
+        "3": 3,
+        "5": 1,
+        "10": 1,
+        "11": 1
+      },
+      "episode_width_strictly_greater": true,
+      "lane": "MT5-lane1",
+      "model": 4,
+      "model_label": "M4_REAL_TICK_FIDELITY",
+      "observed_total": "187.32",
+      "reconciliation": "EXACT: native net = all deal cashflows = ticket sum = episode sum = final balance - deposit; components/footer, gross P/L, counts and accepted N/K/net agree",
+      "runtime_identity": {
+        "build_receipt": "br-4fa94d22907b446ebc721d524bdfa5d1",
+        "ex5_sha256": "212de9f292f2b90c24a71875352d81f39878148c57563b7d23b7a76216eb37db",
+        "from": "2023.01.01",
+        "head_sha": "dcb5dd1dfd9b3df68a270985272b13fc5fee0890",
+        "runtime_lane": "MT5-lane1",
+        "set_sha256": "7a8e8c78bfbcd245e039a629cceb8914a91531b86db23a2b5bf7c45f5778a782",
+        "to": "2025.12.31"
+      },
+      "source": {
+        "expected_sha256": "03c00a3fe1c61b43aa6d613418dd0973908c83a628ca0c101902fcf2d9984117",
+        "path": "factory/runs/b16_r4_20260902/usdjpy_buy_h1/runtime/M4_MAIN/report.htm",
+        "sha256": "03c00a3fe1c61b43aa6d613418dd0973908c83a628ca0c101902fcf2d9984117"
+      },
+      "status": "PASS",
+      "window": "MAIN"
+    }
+  },
+  "classification": "TICKET_SAMPLING_UNDERSTATES_UNCERTAINTY",
+  "holdout": "UNSPENT",
+  "hypothesis": "HYP-Q09R2-B16-EPISODEUNIT-01",
+  "installation": "D:\\Meta 5",
+  "lane": "MT5-lane1",
+  "method": {
+    "cashflow": "Profit+Swap+Commission, exact Decimal; JSON decimal strings",
+    "episode": "complete FIFO flat-to-nonflat-to-flat inventory episode",
+    "pooling": false,
+    "quantile": "h=4999*p; j=floor(h); g=h-j; x[j]+g*(x[j+1]-x[j]); p=0.025,0.5,0.975",
+    "replications_per_arm_report": 5000,
+    "sampler": "SHA256 UTF-8 20260912|CELL|ARM|replication|draw; first 8 bytes unsigned big-endian modulo unit_count",
+    "seed_text": "20260912",
+    "ticket": "realized exit deal (including partial-close out-deals)"
+  },
+  "new_mt5_cells": 0,
+  "schema": "ea-lab-b16-r4-episodeunit/1",
+  "status": "PASS",
+  "support_sources": {
+    "docs/research/B16_USDJPY_H1_R4_EPISODEUNIT_PREREG_20260912.md": {
+      "expected_sha256": "c6c8ea5afbdb7e6aeac967ac289153d3900691987e2bc53c10f79569307eba70",
+      "path": "docs/research/B16_USDJPY_H1_R4_EPISODEUNIT_PREREG_20260912.md",
+      "sha256": "c6c8ea5afbdb7e6aeac967ac289153d3900691987e2bc53c10f79569307eba70"
+    },
+    "factory/runs/b16_r4_20260902/usdjpy_buy_h1/evidence_integrity.json": {
+      "expected_sha256": "9fc2c651ddb34689a6ffccfb8f904ec6aec57f7b373f555b08687faa764354d4",
+      "path": "factory/runs/b16_r4_20260902/usdjpy_buy_h1/evidence_integrity.json",
+      "sha256": "9fc2c651ddb34689a6ffccfb8f904ec6aec57f7b373f555b08687faa764354d4"
+    },
+    "factory/runs/b16_r4_20260902/usdjpy_buy_h1/evidence_summary.json": {
+      "expected_sha256": "e260a42c959cd637f8556ab4e873953defaf55d381931316238bbd08e0e23faa",
+      "path": "factory/runs/b16_r4_20260902/usdjpy_buy_h1/evidence_summary.json",
+      "sha256": "e260a42c959cd637f8556ab4e873953defaf55d381931316238bbd08e0e23faa"
+    },
+    "factory/runs/b16_r4_20260902/usdjpy_buy_h1/run_receipts.jsonl": {
+      "expected_sha256": "f6add2ccb287949d7640d90960014e07370f8990783fd2d8b542cbbdffcbfdce",
+      "path": "factory/runs/b16_r4_20260902/usdjpy_buy_h1/run_receipts.jsonl",
+      "sha256": "f6add2ccb287949d7640d90960014e07370f8990783fd2d8b542cbbdffcbfdce"
+    },
+    "scripts/research/b16_h03/parse_h02_reports.py": {
+      "expected_sha256": "c2aa0995705ed63a9c2ae1b0bbb982f2375bd2da3ae9c8bff35e2ad01a005b5e",
+      "path": "scripts/research/b16_h03/parse_h02_reports.py",
+      "sha256": "c2aa0995705ed63a9c2ae1b0bbb982f2375bd2da3ae9c8bff35e2ad01a005b5e"
+    }
+  }
+}
