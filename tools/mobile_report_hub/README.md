@@ -103,3 +103,105 @@ acceptance coverage and limitations. Run the unchanged foundation suite with
 above. Browser coverage now includes source separation, Inspect, context generation,
 clipboard-denial fallback, stale/cached/offline graph behavior and dependency edges.
 This is an implementation candidate: REVIEW REQUIRED, no deployment or push.
+
+## Report V3 native MT5 EA Detail
+
+Phase B extends this same index and EA Detail with `READ_ONLY_PRESENTATION`
+authority. Implementation gates are not independent milestone review. No MT5
+execution, report regeneration, promotion, or research verdict change is performed.
+
+Detail order: tested setup; separate MAIN/BWD graphs and compact metrics;
+evidence/execution/research/package status; source explanation; changed parameters;
+key parameters; searchable full parameters. Model2/unknown/diagnostic models do not
+expose research performance cards. `eqdd_pct` explicitly labels equity DD; legacy
+DD retains its original label. Cycles are not relabeled as source-emitted baskets.
+
+### Binding contract in the existing pipeline
+
+The builder discovers existing `factory/runs/**/report_package_manifest.json`
+objects at the exact requested Git commit. A manifest opts an **existing EA
+record** into graph presentation through its existing metadata field:
+
+```json
+{"metadata":{"native_graphs":{
+  "ea_id":"exact-existing-record-id",
+  "basis_id":"exact-existing-evidence-basis",
+  "main":{"role":"MAIN","from":"2023.01.01","to":"2025.12.31",
+          "report":"MAIN/report.htm","report_sha256":"<64 lowercase hex>",
+          "asset_ref":"exact-img-src.png"},
+  "bwd":{"role":"BWD","from":"2020.01.01","to":"2022.12.31",
+         "report":"BWD/report.htm","report_sha256":"<64 lowercase hex>",
+         "asset_ref":"exact-img-src.png"}
+}}}
+```
+
+Report paths are package-relative; asset_ref is relative to that report. There is
+no filename search or positional selection. Report and available dependencies
+must be manifest artifacts. MAIN/BWD cannot share a report or resolved asset path.
+Multiple packages claiming one EA are refused. Metadata cannot create EA records,
+metrics or conclusions. Legacy records without graph fields remain compatible.
+
+Regular Git blobs are copied into a private temporary closure, inspected through
+the unchanged Phase A helper, then validated by the existing authority
+`tools/reporting/report_package_integrity.py`. Missing expected images display
+`GRAPH ASSET MISSING`; unsafe references, untrusted identity or failed package
+integrity display `GRAPH ASSET REFUSED`. A declared artifact absent from Git fails
+integrity and is REFUSED. Unidentifiable malformed manifests are never attached
+by a guess. Git symlinks, traversal, absolute/external references, hostile paths,
+output reparse components, overwrite collisions and hash mismatch fail closed.
+
+Per-record `native_graphs.main/bwd` has state/reason and, when bound, role/window,
+EA/basis, canonical SHA, package identity/hash, report hash and closure counts.
+AVAILABLE adds asset_ref, asset_sha256, allowlisted media_type and href:
+
+`artifacts/native/<canonical SHA>/<128-bit package+EA digest>/<role>/<full asset SHA256>.<raster extension>`
+
+Full package hashes remain in the DTO. The shortened directory digest avoids
+Windows path-length failures in normal preview roots. The browser validates this
+binding and namespace, fetches without redirects, checks the full SHA256, and
+requires successful decoding before exposing a raster Blob URL. Tapping opens
+that verified image larger. Wrong HTTP/cache bytes and signature-only undecodable
+images remain visible REFUSED/unavailable; no image interpretation is performed.
+
+`sw.js` needs the `v3.2-native` generation to replace the old cached UI; native
+asset requests bypass cached shell responses. Only isolated loopback tests activate
+it. No production rollout occurs. Existing Monitor cached/offline semantics stay
+unchanged. A stale snapshot may show its own pinned historical report only; missing
+offline asset bytes remain visible and never substitute another package/version.
+
+### B16 H08 legacy adapter
+
+The explicit adapter reads the existing `final_artifacts.sha256` and its canonical
+artifact bytes. Declared hashes feed a temporary manifest for the same package
+validator; no new index/SOT is persisted. Window/report/set hashes join the existing
+validation manifest, run receipts, metric summary, center lock and tester inputs.
+Both MAIN and BWD have four references and zero assets at canonical base
+`346175b42e68405aea0bc099a67009090bfedc0e`: two `GRAPH ASSET MISSING` panels and
+graph evidence `INCOMPLETE`. No H08 graph selection is invented; merely adding
+images does not authorize selecting one without a future explicit binding.
+
+Canonical metrics and `DO_NOT_ADOPT_CENTER_RETAIN_PARENT_RESEARCH_REFERENCE` remain
+unchanged. Package integrity and unknown independent review status are separate.
+The explicit center/parent set hashes permit the textual diff
+`_16_RsiLow: 30.0 -> 35.0`; source-selected RSI fields supply key parameters.
+All frozen set parameters remain searchable. Neither parameter effectiveness nor
+strategy explanation is inferred from parameter names.
+
+### Phase B acceptance
+
+Run the existing data/UI, reporting and Monitor V3.1 cages, plus:
+
+```text
+python -m unittest discover -s tools/mobile_report_hub/tests -p test_native_graphs.py -v
+python tools/mobile_report_hub/tests/test_native_graphs.py --export-browser-fixture <evidence>/preview
+node tools/mobile_report_hub/tests/browser_native_graphs.cjs <evidence>
+```
+
+Build the normal index into `<evidence>/preview` first. The fixture exporter uses
+the existing native B15 PNG with two explicit test-role bindings in a disposable
+Git repository. Metrics/parameters in that clearly labeled fixture are test values,
+never production H08 evidence. Coverage includes valid/missing permutations,
+identity/window/hash refusals, unsafe paths, integrity failures, Git links,
+output reparse/collision refusal, legacy records, H08 preservation, decoding,
+390x844 and 1280x900 rendering, larger inspection, search, and an actual service
+worker with a poisoned old cache. No test launches MT5.

@@ -97,7 +97,7 @@ function metricValue(value) {
 function metricCard(label, evidence) {
   if (!evidence || !Object.keys(evidence).length) return "";
   const rows = [
-    ["PF", evidence.pf], ["DD %", evidence.dd_pct], ["Trades", evidence.trades], ["Cycles", evidence.cycles]
+    ["PF", evidence.pf], ["Net", evidence.net], [evidence.eqdd_pct === undefined ? "DD %" : "EqDD %", evidence.eqdd_pct ?? evidence.dd_pct], ["Trades", evidence.trades], ["Cycles", evidence.cycles]
   ].filter(([, value]) => value !== undefined && value !== null && value !== "");
   if (!rows.length) return "";
   return `<article class="metric-card"><h3>${escapeHtml(label)}</h3><dl>${rows.map(([key, value]) => `<div><dt>${key}</dt><dd>${escapeHtml(metricValue(value))}</dd></div>`).join("")}</dl></article>`;
@@ -364,6 +364,88 @@ function renderLinks(links) {
   return `<section class="panel"><h2>Source links</h2><div class="link-row">${entries.map(([key, href]) => `<a class="button-link secondary" href="${escapeHtml(href)}">${escapeHtml(labels[key] || key)}</a>`).join("")}</div></section>`;
 }
 
+const nativeObjectUrls = new Set();
+function ownerText(value) {
+  return escapeHtml(valueOf(value).replace(/(?:[A-Za-z]:[\\/]|https?:\/\/|file:\/\/|\\\\)\S+/gi, "[LOCAL OR EXTERNAL REFERENCE OMITTED]"));
+}
+
+function graphBinding(record, role) {
+  const graph = record.native_graphs?.[role];
+  if (!graph || graph.state === "MISSING") return {state: "MISSING"};
+  if (graph.state !== "AVAILABLE") return {state: "REFUSED"};
+  const hash = /^[0-9a-f]{64}$/;
+  const match = /^artifacts\/native\/([0-9a-f]{40})\/([0-9a-f]{32})\/(main|bwd)\/([0-9a-f]{64})\.(png|gif|jpg)$/.exec(graph.href || "");
+  const other = record.native_graphs?.[role === "main" ? "bwd" : "main"];
+  if (!match || match[1] !== reportIndex.project.canonical_sha || match[3] !== role || match[4] !== graph.asset_sha256 ||
+      graph.canonical_sha !== reportIndex.project.canonical_sha || graph.ea_id !== record.id || graph.basis_id !== record.evidence?.basis_id ||
+      graph.role !== role.toUpperCase() || !hash.test(graph.package_sha256) || !hash.test(graph.report_sha256) ||
+      !/^[A-Za-z0-9_.-]{1,128}$/.test(graph.package_id || "") ||
+      !/^\d{4}\.\d{2}\.\d{2}$/.test(graph.window?.from || "") || !/^\d{4}\.\d{2}\.\d{2}$/.test(graph.window?.to || "") ||
+      graph.window.from >= graph.window.to || other?.href === graph.href ||
+      !["image/png", "image/gif", "image/jpeg"].includes(graph.media_type)) return {state: "REFUSED"};
+  return graph;
+}
+
+function renderNativeWindow(record, role) {
+  const graph = graphBinding(record, role);
+  const source = record.native_graphs?.[role];
+  const label = role.toUpperCase();
+  const eligible = ["MODEL_0", "MODEL_1", "MODEL_4"].includes(record.evidence?.model);
+  return `<section class="panel native-window" data-role="${role}"><h2>${label}</h2>
+    <p class="muted">${ownerText(source?.window?.from)} → ${ownerText(source?.window?.to)}</p>
+    <div class="native-graph" data-native-role="${role}"><p class="graph-state" role="status">${graph.state === "AVAILABLE" ? "GRAPH ASSET VERIFYING" : `GRAPH ASSET ${graph.state}`}</p></div>
+    ${eligible ? metricCard(`${label} metrics`, record.evidence?.[role]) : '<p>Research performance unavailable for this diagnostic or unknown model.</p>'}
+    <details><summary>Graph source</summary><dl class="facts"><div><dt>Report SHA256</dt><dd>${ownerText(source?.report_sha256)}</dd></div><div><dt>Package</dt><dd>${ownerText(source?.package_id)}</dd></div><div><dt>References / available assets</dt><dd>${ownerText(source?.references)} / ${ownerText(source?.available_assets)}</dd></div></dl></details></section>`;
+}
+
+async function digestHex(bytes) {
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function mountNativeGraphs(record) {
+  for (const role of ["main", "bwd"]) {
+    const graph = graphBinding(record, role);
+    if (graph.state !== "AVAILABLE") continue;
+    const slot = app.querySelector(`[data-native-role="${role}"]`);
+    try {
+      const namespace = (await digestHex(new TextEncoder().encode(graph.package_id + graph.package_sha256 + record.id))).slice(0,32);
+      if (!graph.href.includes(`/${namespace}/${role}/`)) throw new Error("binding mismatch");
+      const response = await fetch(graph.href, {cache: "no-store", redirect: "error"});
+      if (!response.ok) throw new Error("unavailable");
+      const bytes = await response.arrayBuffer();
+      if (await digestHex(bytes) !== graph.asset_sha256) throw new Error("content mismatch");
+      if (!slot.isConnected) continue;
+      const blobUrl = URL.createObjectURL(new Blob([bytes], {type: graph.media_type}));
+      const img = new Image();
+      img.alt = `${role.toUpperCase()} source-bound native MT5 graph`;
+      img.src = blobUrl;
+      try { await img.decode(); } catch (error) { URL.revokeObjectURL(blobUrl); throw error; }
+      if (!slot.isConnected) { URL.revokeObjectURL(blobUrl); continue; }
+      nativeObjectUrls.add(blobUrl);
+      const link = document.createElement("a");
+      link.href = blobUrl; link.target = "_blank"; link.rel = "noopener";
+      link.setAttribute("aria-label", `Open ${role.toUpperCase()} graph larger`);
+      link.append(img);
+      slot.querySelector(".graph-state").textContent = "GRAPH ASSET AVAILABLE";
+      slot.append(link);
+    } catch {
+      if (slot.isConnected) {
+        slot.querySelector(".graph-state").textContent = "GRAPH ASSET REFUSED";
+        app.querySelector("#graph-evidence-status").textContent = "INCOMPLETE";
+      }
+    }
+  }
+}
+
+function renderParameters(record) {
+  const parameters = record.parameters || {};
+  const rows = (items, changed = false) => Array.isArray(items) && items.length ? `<dl class="facts parameter-rows">${items.map(p => `<div data-parameter><dt>${ownerText(p.name)}</dt><dd>${changed ? `${ownerText(p.parent)} → ` : ""}${ownerText(p.value)}</dd></div>`).join("")}</dl>` : '<p class="muted">UNAVAILABLE</p>';
+  const boundParent = /^[0-9a-f]{64}$/.test(parameters.parent_sha256 || "") && parameters.parent;
+  return `<section class="panel"><h2>Changed from parent</h2>${boundParent ? `<p>${ownerText(parameters.parent)}</p>${rows(parameters.changed, true)}` : '<p>Parent relationship UNAVAILABLE</p>'}</section>
+    <section class="panel"><h2>Key parameters</h2>${rows(parameters.key)}</section>
+    <section class="panel"><details><summary>Full parameters</summary><p class="muted">Set SHA256: ${ownerText(parameters.source_sha256)}</p><label for="parameter-search">Search parameters</label><input id="parameter-search" type="search" placeholder="Name or value" /><div id="full-parameters">${rows(parameters.all)}</div><p id="parameter-count" role="status"></p></details></section>`;
+}
+
 function renderDetail(id) {
   const record = getRecord(id);
   if (!record) {
@@ -373,10 +455,28 @@ function renderDetail(id) {
   const evidence = record.evidence || {};
   const findings = Array.isArray(evidence.key_findings) ? evidence.key_findings : [];
   const weaknesses = Array.isArray(evidence.known_weaknesses) ? evidence.known_weaknesses : [];
+  const setup = record.tested_setup || {};
+  const setupRows = [["EA / strategy", record.display_name], ["Symbol", record.home?.symbol], ["Timeframe", record.home?.timeframe], ["Model", evidence.model], ["Set", setup.set], ["Leverage", setup.leverage], ["Install / lane", setup.lane], ["Package", setup.package_id], ["Evidence basis", evidence.basis_id], ["Source SHA", reportIndex.project.canonical_sha]];
+  const graphsReady = ["main", "bwd"].every(role => graphBinding(record, role).state === "AVAILABLE");
+  for (const url of nativeObjectUrls) URL.revokeObjectURL(url);
+  nativeObjectUrls.clear();
   app.innerHTML = `<section class="page-heading"><a class="back-link" href="#home">← Back</a><p class="eyebrow">${escapeHtml(valueOf(record.family_id))} · ${escapeHtml(valueOf(record.variant_id))}</p><h2>${escapeHtml(record.display_name)}</h2><p>${badge(record.lifecycle)} ${badge(record.status || record.research_state)}</p></section>
+    <section class="panel tested-setup"><h2>Exact tested setup</h2><dl class="facts">${setupRows.map(([k,v]) => `<div><dt>${k}</dt><dd>${ownerText(v)}</dd></div>`).join("")}</dl></section>
+    <div class="native-windows">${renderNativeWindow(record, "main")}${renderNativeWindow(record, "bwd")}</div>
+    <section class="panel report-status"><h2>Evidence status</h2><dl class="facts"><div><dt>Graph evidence</dt><dd id="graph-evidence-status">${graphsReady ? "VERIFYING" : "INCOMPLETE"}</dd></div><div><dt>Execution status</dt><dd>${ownerText(record.status)}</dd></div><div><dt>Research conclusion</dt><dd>${ownerText(record.verdict)}</dd></div><div><dt>Package / review status</dt><dd>${ownerText(record.package_status)}</dd></div></dl><p class="muted">READ_ONLY_PRESENTATION · Graph availability does not change the research conclusion.</p></section>
+    ${record.explanation ? `<section class="panel"><h2>Source explanation</h2>${["evidence", "interpretation", "decision"].map(k => `<h3>${k[0].toUpperCase()+k.slice(1)}</h3><p>${ownerText(record.explanation[k])}</p>`).join("")}</section>` : ""}
+    ${renderParameters(record)}
     <section class="summary-grid"><article class="panel"><h3>Summary</h3><dl class="facts"><div><dt>Verdict</dt><dd>${escapeHtml(valueOf(record.verdict))}</dd></div><div><dt>Latest</dt><dd>${escapeHtml(valueOf(record.latest_experiment))}</dd></div><div><dt>Holdout</dt><dd>${escapeHtml(valueOf(evidence.holdout_state))}</dd></div><div><dt>Evidence basis</dt><dd>${escapeHtml(valueOf(evidence.basis_id))}</dd></div></dl></article><article class="panel"><h3>Quality / evidence</h3><dl class="facts"><div><dt>Grade</dt><dd>${escapeHtml(valueOf(record.quality_grade))}</dd></div><div><dt>Confidence</dt><dd>${escapeHtml(valueOf(record.evidence_confidence))}</dd></div><div><dt>Model</dt><dd>${escapeHtml(valueOf(evidence.model))}</dd></div><div><dt>Stage</dt><dd>${escapeHtml(valueOf(evidence.report_stage))}</dd></div></dl></article></section>
-    <section class="metric-grid">${metricCard("MAIN", evidence.main)}${metricCard("BWD", evidence.bwd)}</section>
     ${(findings.length || weaknesses.length || record.blocker_reason || record.next_action) ? `<section class="panel"><h2>Finding / blocker / next action</h2>${findings.length ? `<h3>Key findings</h3><ul class="plain-list">${findings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}${weaknesses.length ? `<h3>Known weaknesses</h3><ul class="plain-list">${weaknesses.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}${record.blocker_reason ? `<p><strong>${escapeHtml(valueOf(record.blocker_type, "BLOCKED"))}:</strong> ${escapeHtml(record.blocker_reason)}</p>` : ""}${record.next_action ? `<p><strong>Next action:</strong> ${escapeHtml(record.next_action)}</p>` : ""}</section>` : ""}${renderLinks(record.links)}`;
+  app.querySelector("#parameter-search")?.addEventListener("input", event => {
+    const query = event.target.value.toLowerCase();
+    const rows = [...app.querySelectorAll("#full-parameters [data-parameter]")];
+    rows.forEach(row => { row.hidden = !row.textContent.toLowerCase().includes(query); });
+    app.querySelector("#parameter-count").textContent = `${rows.filter(row => !row.hidden).length} / ${rows.length} parameters`;
+  });
+  mountNativeGraphs(record).then(() => {
+    if (getRecord(route().id) === record && graphsReady && app.querySelectorAll('.graph-state').length === 2 && [...app.querySelectorAll('.graph-state')].every(n => n.textContent === "GRAPH ASSET AVAILABLE")) app.querySelector("#graph-evidence-status").textContent = "AVAILABLE";
+  });
 }
 
 function comparisonRows(left, right) {

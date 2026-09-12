@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "ea-lab-report-hub-v3.1";
+const CACHE_NAME = "ea-lab-report-hub-v3.2-native";
 const CACHE_PREFIX = "ea-lab-report-hub-v";
 const SHELL = ["./index.html", "./styles.css", "./app.js", "./agent_graph.js", "./agent_graph.css", "./manifest.webmanifest", "./icon.svg"];
 
@@ -33,6 +33,11 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith((async () => {
     if (url.pathname.includes("/fixture/")) return fetch(request, { cache: "no-store" });
+
+    // Native graph paths contain canonical/package/role/content identity.
+    // Never use ignoreSearch or an old shell-cache entry for these evidence bytes.
+    // app.js also verifies the SHA256 and decoding before exposing an image.
+    if (url.pathname.includes("/artifacts/native/")) return fetch(request, { cache: "no-store" });
 
     if (url.pathname.endsWith("/report_index.json")) {
       try {

@@ -186,3 +186,15 @@ h1 { font-size:1.25rem; }
 .agent-context-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: 1rem; }
 .agent-context-actions button { min-height: 44px; white-space: normal; }
 #agent-inspect textarea { width: 100%; min-height: 9rem; margin-top: .5rem; }
+/* Report V3: native images retain their full aspect ratio at phone widths. */
+.native-windows { display: grid; gap: 1rem; min-width: 0; }
+.native-window, .tested-setup, .report-status { min-width: 0; overflow-wrap: anywhere; }
+.native-graph { min-height: 9rem; display: grid; align-content: center; background: #0d1722; border-radius: .7rem; padding: .6rem; }
+.native-graph a { display: block; min-width: 0; }
+.native-graph img { display: block; width: 100%; max-width: 100%; height: auto; object-fit: contain; }
+.graph-state { font-weight: 700; letter-spacing: .03em; }
+.parameter-rows div { overflow-wrap: anywhere; }
+.parameter-rows [hidden] { display: none; }
+.tested-setup .facts div, .report-status .facts div { display: grid; grid-template-columns: minmax(6.5rem, 1fr) minmax(0, 2fr); }
+.tested-setup .facts dd, .report-status .facts dd { margin: 0; }
+#parameter-search { width: 100%; max-width: 100%; box-sizing: border-box; margin-block: .7rem; }

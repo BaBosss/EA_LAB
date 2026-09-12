@@ -12,15 +12,19 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from control_tower import build_projection
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "reporting"))
+import mt5_report_assets as native_assets
+import report_package_integrity as integrity
 
 SCHEMA_VERSION = 1
 GENERATOR_NAME = "mobile_report_hub.build_index"
-GENERATOR_VERSION = "3.0.0"
+GENERATOR_VERSION = "3.2.0"
 B16 = "docs/factory/B16_H03_CONFIRMATION_RESULTS.md"
 B19 = "docs/research/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"
 H02 = "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"
@@ -490,6 +494,7 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
     boss19_queue_blocker = boss19_item.get("blocker_type", "NOT_APPLICABLE")
     boss19_queue_summary = boss19_item.get("blocker_reason", "Boss19 P4 regime attribution interpretation complete; research-only mixed evidence.")
     eas = inventory_records(master_text, sha) + extract_h02(h02_text, h02_p) + [b16_item, boss19_item]
+    add_native_reports(repo, sha, out, eas)
     index = {"schema_version": SCHEMA_VERSION, "generator": {"name": GENERATOR_NAME, "version": GENERATOR_VERSION},
              "project": {"canonical_sha": sha, "canonical_short_sha": sha[:12], "source_ref": ref,
                          "generated_at": as_of, "data_status": "CURRENT", "freshness": "PINNED_GIT_REF"},
@@ -523,6 +528,256 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
     index["control_tower"] = build_projection(project_text, project_source, boards, registry, as_of, safe_lane_id)
     (out / "report_index.json").write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return index
+
+
+def graph_state(state="MISSING", reason="NO_SOURCE_BINDING", **binding) -> dict:
+    return {"state": state, "reason": reason, **binding}
+
+
+def safe_package_path(value: str) -> str:
+    # Restrict materialized names on Windows as well as POSIX. Never follow Git links.
+    if not isinstance(value, str) or not value or "\\" in value:
+        raise BuildError("unsafe package path")
+    for part in value.split("/"):
+        if (not re.fullmatch(r"[A-Za-z0-9_(). -]+", part) or part in {".", ".."}
+                or part.endswith((" ", ".")) or part != part.strip()
+                or re.match(r"^(CON|PRN|AUX|NUL|COM\d|LPT\d)(\.|$)", part, re.I)):
+            raise BuildError("unsafe package path")
+    return value
+
+
+def regular_blob(repo: Path, sha: str, path: str) -> bytes:
+    safe_package_path(path)
+    entry = git(repo, "ls-tree", sha, "--", path).decode().strip()
+    if not re.match(r"^100(?:644|755) blob [0-9a-f]{40}\t", entry):
+        raise BuildError("missing or non-regular Git artifact")
+    return source_bytes(repo, sha, path)
+
+
+def project_native_graphs(repo: Path, sha: str, item: dict, package_root: str,
+                          manifest: dict, manifest_hash: str, out: Path) -> dict:
+    """Inspect exact Git bytes, then defer package validation to its existing authority.
+
+    metadata.native_graphs binds ea_id/basis_id and each role's report, asset_ref,
+    from/to. No positional/filename graph selection, and no checkout file reads.
+    """
+    result = {role: graph_state() for role in ("main", "bwd")}
+    try:
+        metadata = manifest["metadata"]["native_graphs"]
+        if metadata["ea_id"] != item["id"] or metadata["basis_id"] != item["evidence"]["basis_id"]:
+            raise BuildError("package identity mismatch")
+        package_id = manifest["package_id"]
+        if not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", package_id):
+            raise BuildError("unsafe package identity")
+        with tempfile.TemporaryDirectory(prefix="ea-native-") as temp:
+            root = Path(temp)
+            declared = {}
+            for artifact in manifest["artifacts"]:
+                path = safe_package_path(artifact["path"])
+                if path == "_validated_manifest.json" or path.casefold() in declared:
+                    raise BuildError("duplicate package artifact")
+                declared[path.casefold()] = artifact
+                raw = regular_blob(repo, sha, f"{package_root}/{path}" if package_root else path)
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(raw)
+            closures = {}
+            reports = []
+            assets = []
+            for role in result:
+                binding = metadata.get(role)
+                if binding is None:
+                    continue
+                if binding["role"] != role.upper():
+                    raise BuildError("window role mismatch")
+                for field in ("from", "to"):
+                    datetime.strptime(binding[field], "%Y.%m.%d")
+                if binding["from"] >= binding["to"]:
+                    raise BuildError("invalid window")
+                report = safe_package_path(binding["report"])
+                if report.casefold() not in declared:
+                    raise BuildError("unbound report")
+                reports.append(report.casefold())
+                closure = native_assets.inspect_report(root / report)
+                if binding["report_sha256"] != closure["report_sha256"]:
+                    raise BuildError("report/window hash binding mismatch")
+                closures[role] = closure
+                selected = binding.get("asset_ref")
+                if selected is not None:
+                    selected = native_assets._normalize_ref(selected)
+                    assets.append((PurePosixPath(report).parent / selected).as_posix().casefold())
+                result[role] = graph_state("MISSING", "NATIVE_CLOSURE_INCOMPLETE",
+                    role=role.upper(), window={"from": binding["from"], "to": binding["to"]},
+                    report_sha256=closure["report_sha256"], package_sha256=manifest_hash,
+                    package_id=package_id, canonical_sha=sha, ea_id=item["id"],
+                    basis_id=item["evidence"]["basis_id"],
+                    references=closure["image_references_found"], available_assets=closure["unique_local_images"])
+            if len(reports) != len(set(reports)) or len(assets) != len(set(assets)):
+                raise BuildError("MAIN/BWD cross-binding")
+            manifest_path = root / "_validated_manifest.json"
+            integrity.write_manifest(manifest, manifest_path)
+            integrity.validate_manifest(manifest_path)
+            for role, closure in closures.items():
+                binding = metadata[role]
+                if closure["status"] == "REFUSED":
+                    result[role].update(state="REFUSED", reason="UNSAFE_NATIVE_CLOSURE")
+                    continue
+                if closure["status"] != "PASS":
+                    continue
+                selected = binding.get("asset_ref")
+                matched = next((a for a in closure["assets"] if a["path"] == selected), None)
+                if not matched:
+                    result[role].update(state="REFUSED", reason="NO_EXPLICIT_GRAPH_SELECTION")
+                    continue
+                source = (PurePosixPath(binding["report"]).parent / selected).as_posix()
+                declared_asset = declared.get(source.casefold())
+                if not declared_asset or declared_asset["sha256"] != matched["sha256"]:
+                    raise BuildError("graph outside validated package")
+                # Full source identity and content digest in pathname, never a query cache key.
+                namespace = hashlib.sha256((package_id + manifest_hash + item["id"]).encode()).hexdigest()[:32]
+                ext = {"image/png": ".png", "image/gif": ".gif", "image/jpeg": ".jpg"}[matched["media_type"]]
+                href = f"artifacts/native/{sha}/{namespace}/{role}/{matched['sha256']}{ext}"
+                target = out / href
+                current = out.absolute()
+                for part in Path(href).parts:
+                    current = current / part
+                    if integrity._is_reparse_component(current):
+                        raise BuildError("unsafe static output")
+                if integrity._is_reparse_component(out) or any(integrity._is_reparse_component(p) for p in out.absolute().parents):
+                    raise BuildError("unsafe static output root")
+                raw = (root / source).read_bytes()
+                target.parent.mkdir(parents=True, exist_ok=True)
+                if target.exists() and target.read_bytes() != raw:
+                    raise BuildError("static content collision")
+                if not target.exists():
+                    with target.open("xb") as handle:
+                        handle.write(raw)
+                result[role].update(state="AVAILABLE", reason="VALIDATED_SOURCE_BOUND_NATIVE_ASSET",
+                                    asset_ref=selected, asset_sha256=matched["sha256"],
+                                    media_type=matched["media_type"], href=href)
+        return result
+    except (BuildError, ValueError, OSError, KeyError, TypeError, AttributeError):
+        return {role: graph_state("REFUSED", "PACKAGE_OR_BINDING_INVALID") for role in result}
+
+
+def parse_set(raw: bytes) -> dict:
+    text = raw.decode("utf-16") if raw.startswith((b"\xff\xfe", b"\xfe\xff")) else raw.decode("utf-8-sig")
+    result = {}
+    for line in text.splitlines():
+        if not line.strip() or line.lstrip().startswith(";"):
+            continue
+        key, value = line.split("=", 1)
+        if key in result or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+            raise BuildError("invalid set parameter")
+        result[key] = value.split("||", 1)[0]
+    return result
+
+
+H08_ROOT = "factory/runs/b16_h08_20260831/usdjpy_buy_h1"
+
+
+def b16_h08_record(repo: Path, sha: str, out: Path) -> dict | None:
+    """Explicit legacy adapter: existing receipt hashes feed package authority unchanged."""
+    receipt_path = f"{H08_ROOT}/final_artifacts.sha256"
+    if not git(repo, "ls-tree", sha, "--", receipt_path).strip():
+        return None  # Older canonical refs predate H08.
+    raw_receipt = regular_blob(repo, sha, receipt_path)
+    source = {"path": receipt_path, "sha256": hashlib.sha256(raw_receipt).hexdigest(), "canonical_sha": sha}
+    item = record(identity="b16-h08-usdjpy-h1", family="B16", variant="H08", name="Boss 16 KangarooGrid — USDJPY H1 H08",
+                  symbol="USDJPY", timeframe="H1", lifecycle="Research", provenance=[source])
+    try:
+        declared = []
+        raw_files = {}
+        for line in raw_receipt.decode("utf-8-sig").splitlines():
+            digest, path = line.split("  ", 1)
+            raw = regular_blob(repo, sha, path)
+            if not re.fullmatch(r"[0-9a-f]{64}", digest) or hashlib.sha256(raw).hexdigest() != digest:
+                raise BuildError("H08 receipt mismatch")
+            raw_files[path] = raw
+            declared.append({"path": path, "sha256": digest, "size_bytes": len(raw), "role": "canonical_evidence"})
+        def read(name):
+            return raw_files[f"{H08_ROOT}/{name}"]
+        summary = json.loads(read("final_summary.json"))
+        lock = json.loads(read("center_lock.json"))
+        windows = list(csv.DictReader(io.StringIO(read("validation_manifest.csv").decode("utf-8-sig"))))
+        metrics = list(csv.DictReader(io.StringIO(read("validation_cell_summary.csv").decode("utf-8-sig"))))
+        receipts = [json.loads(line) for line in read("validation_run_receipts.jsonl").decode("utf-8-sig").splitlines()]
+        if any(len(rows) != 2 or {r["window"] for r in rows} != {"MAIN", "BWD"} for rows in [windows, metrics, receipts]):
+            raise BuildError("H08 window ambiguity")
+        preset = "B16_USDJPY_BUY_H1_OPT01_CENTER_14_35.set"
+        parent = "B16_USDJPY_BUY_H1_PARENT.set"
+        if hashlib.sha256(read(preset)).hexdigest() != lock["fixed_set_sha256"] or hashlib.sha256(read(parent)).hexdigest() != lock["parent_set_sha256"]:
+            raise BuildError("H08 set identity mismatch")
+        params, parents = parse_set(read(preset)), parse_set(read(parent))
+        graph_bindings = {"ea_id": item["id"], "basis_id": summary["hypothesis_revision"]}
+        evidence = {"basis_id": summary["hypothesis_revision"], "report_stage": "H08", "model": "MODEL_1", "holdout_state": summary["holdout"], "key_findings": [], "known_weaknesses": summary["known_unknowns"]}
+        for w in windows:
+            role = w["window"]
+            r = next(r for r in receipts if r["window"] == role)
+            m = next(m for m in metrics if m["window"] == role)
+            report = f"{H08_ROOT}/validation/{role}/report.htm"
+            if (hashlib.sha256(raw_files[report]).hexdigest() != r["report_sha256"] or m["report_sha256"] != r["report_sha256"]
+                    or r["set_sha256"] != lock["fixed_set_sha256"] or any(r[k] != w[k] for k in ("from", "to", "symbol", "tf", "report_name"))):
+                raise BuildError("H08 report identity mismatch")
+            ini = read(f"validation/{role}/tester.ini").decode("utf-8-sig")
+            for expected in ("Model=1", "Optimization=0", "Symbol=USDJPY", "Period=H1", "Leverage=1:100", f"FromDate={w['from']}", f"ToDate={w['to']}"):
+                if expected not in ini.splitlines():
+                    raise BuildError("H08 tested setup mismatch")
+            leverage = json.loads(read(f"validation/{role}/leverage_check.json"))
+            if leverage["match"] is not True or leverage["actual_leverage"] != 100:
+                raise BuildError("H08 leverage mismatch")
+            graph_bindings[role.lower()] = {"role": role, "report": report, "report_sha256": r["report_sha256"], "from": w["from"], "to": w["to"]}
+            evidence[role.lower()] = {"pf": m["pf"], "net": m["net"], "eqdd_pct": m["eqdd_pct"], "dd_pct": m["eqdd_pct"], "trades": m["trades"], "cycles": m["cycles"]}
+        item.update(evidence=evidence, verdict=summary["adoption_decision"], research_state=summary["search_status"], status=summary["search_status"], latest_experiment=summary["hypothesis_revision"])
+        manifest = {"manifest_version": integrity.MANIFEST_VERSION, "package_id": "B16-H08-r1", "direct_consumer": "Existing EA Detail", "authority": "READ_ONLY_PRESENTATION", "metadata": {"native_graphs": graph_bindings}, "artifacts": declared}
+        item["native_graphs"] = project_native_graphs(repo, sha, item, "", manifest, source["sha256"], out)
+        if any(g["state"] == "REFUSED" for g in item["native_graphs"].values()):
+            raise BuildError("H08 package refused")
+        item["package_status"] = "INTEGRITY_VALIDATED_REVIEW_UNKNOWN"
+        item["tested_setup"] = {"set": preset, "set_sha256": lock["fixed_set_sha256"], "package_id": "B16-H08-r1", "leverage": "1:100", "lane": "MT5-lane3"}
+        # Lane source is the frozen validation runner, not the optimizer or current Registry.
+        if "'MT5-lane3'" not in read("run_h08_validation.ps1").decode("utf-8-sig"):
+            item["tested_setup"].pop("lane")
+        item["parameters"] = {"source_sha256": lock["fixed_set_sha256"], "parent_sha256": lock["parent_set_sha256"], "parent": parent,
+            "changed": [{"name": k, "parent": parents.get(k, "ABSENT"), "value": v} for k, v in params.items() if parents.get(k) != v],
+            "key": [{"name": k, "value": params[k]} for k in lock["selected"]],
+            "all": [{"name": k, "value": v} for k, v in params.items()]}
+        item["explanation"] = {"evidence": "Fixed MAIN reproduction: " + summary["fixed_main_reproduction"], "interpretation": summary["decision_reason"], "decision": summary["adoption_decision"]}
+        report_path = "docs/research/B16_USDJPY_BUY_H1_OPT01_RESULTS.md"
+        item["links"] = {"full_report": selected_artifact(report_path, raw_files[report_path], out, redact_local_paths=True)}
+    except (BuildError, ValueError, OSError, KeyError, TypeError):
+        item["native_graphs"] = {r: graph_state("REFUSED", "PACKAGE_OR_BINDING_INVALID") for r in ("main", "bwd")}
+        item["package_status"] = "REFUSED"
+    return item
+
+
+def add_native_reports(repo: Path, sha: str, out: Path, eas: list[dict]) -> None:
+    h08 = b16_h08_record(repo, sha, out)
+    if h08:
+        eas.append(h08)
+    # Reuse manifests, never create a second persisted report catalog.
+    paths = git(repo, "ls-tree", "-r", "--name-only", sha, "--", "factory/runs").decode().splitlines()
+    matches = {}
+    for path in paths:
+        if not path.endswith("/report_package_manifest.json"):
+            continue
+        try:
+            raw = regular_blob(repo, sha, path)
+            manifest = json.loads(raw)
+            binding = manifest.get("metadata", {}).get("native_graphs")
+            if binding:
+                matches.setdefault(binding["ea_id"], []).append((path, raw, manifest))
+        except (BuildError, ValueError, KeyError, TypeError, AttributeError):
+            continue  # No trusted EA identity; never attach by filename.
+    for item in eas:
+        packages = matches.get(item["id"], [])
+        if len(packages) > 1 or (packages and "native_graphs" in item):
+            item["native_graphs"] = {r: graph_state("REFUSED", "AMBIGUOUS_PACKAGE") for r in ("main", "bwd")}
+        elif packages:
+            path, raw, manifest = packages[0]
+            item["native_graphs"] = project_native_graphs(repo, sha, item, str(PurePosixPath(path).parent), manifest, hashlib.sha256(raw).hexdigest(), out)
+            item["package_status"] = "INTEGRITY_VALIDATED_REVIEW_UNKNOWN" if all(g["state"] != "REFUSED" for g in item["native_graphs"].values()) else "REFUSED"
+        item.setdefault("native_graphs", {r: graph_state() for r in ("main", "bwd")})
 
 
 def classify_current(index: dict, current_sha: str) -> str:

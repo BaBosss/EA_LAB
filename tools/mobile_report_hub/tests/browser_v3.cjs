@@ -230,7 +230,7 @@ const server = http.createServer((req, res) => {
       assert.ok(sw.includes('"./'+asset+'"') && html.includes('"'+asset+'"'));
       assert.ok(fs.existsSync(path.join(hub, asset)));
     }
-    assert.match(sw, /ea-lab-report-hub-v3\.1/);
+    assert.match(sw, /ea-lab-report-hub-v3\.2-native/);
     results.push('V3.1 local shell JS/CSS references and cache generation PASS');
     const badSha=structuredClone(base.control_tower);badSha.work[0].head_sha='short';
     assert.equal(validate(badSha),false,'Schema rejects malformed full SHA');
