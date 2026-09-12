@@ -1,0 +1,850 @@
+{
+  "schema": "ea_lab_research_acceleration_audit/1",
+  "lane": "QRESET-05-ACCELERATION-AUDIT",
+  "authority": "READ_ONLY_DECISION_SUPPORT",
+  "status": "COMPLETE_LOCAL_UNCOMMITTED",
+  "base_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+  "initial_base_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+  "created_at": "2026-09-12T07:31:03.4958620+00:00",
+  "artifact": {
+    "path": "docs/audits/EA_LAB_RESEARCH_ACCELERATION_AUDIT_20260912.md",
+    "sha256": "e2990e89934aced817809365915cf07b8a623c8a610cecb5dea488f33f964f5c",
+    "size_bytes": 39695
+  },
+  "improvements": [
+    {
+      "rank": 1,
+      "problem": "Evidence packages fail after valid execution",
+      "current_cost": "Two result packages held: four B13/B15 cells and two B14 cells already executed; two exhausted packaging repair cycles",
+      "frequency": "Two recent campaigns; future cost per result batch",
+      "root_blocker_class": "B/D evidence completeness, not strategy loss",
+      "exact_evidence_source": "S01 §1.3/§5.2; S02 SCREEN-V1 closing note; S06; S07",
+      "proposed_change": "Extend the existing reporting seam with contract-specific completeness checks: per-cell INI/name/symbol/TF/leverage, truncation, basket denominators, source assets and required ladder views. Check readiness before running, completeness before review",
+      "expected_downstream_skip": "Avoid another MT5 run for a packaging omission; catch missing fields/visual denominators before spending independent review",
+      "direct_consumer": "Research author, reviewer, Report V3",
+      "implementation_risk": "Medium: avoid proxy/native confusion or accidental verdict logic",
+      "review_type": "Normal tooling + independent evidence/report review; retain any underlying high-risk review",
+      "can_run_in_parallel": "Yes; offline on preserved evidence",
+      "owner_approval_needed": "Tool development needs bounded CT scope; reopening exhausted results needs explicit owner-ratified successor scope, no silent second repair",
+      "estimated_complexity": "NORMAL"
+    },
+    {
+      "rank": 2,
+      "problem": "Full-tier gate is both incomplete in inventory and environment-sensitive",
+      "current_cost": "Four current runner omissions; historical 232.84/237.05/236.69s vs 195s; latest local run 189.4s still assertion-red",
+      "frequency": "Every affected full-tier integration",
+      "root_blocker_class": "B_HARNESS_TEST plus launch environment",
+      "exact_evidence_source": "S02 SCHEMA-V2; S12; L01",
+      "proposed_change": "Classify/register the four missing suites in one tested change; add an atomic runner-registration check to creation/commit path. Reproduce exact hook shell/module context and gate the preserved Schema V2 only after all assertions pass. Investigate immutable-tree batched reads separately if still justified",
+      "expected_downstream_skip": "Skip repeated knowingly-red full-tier attempts and speculative cache/budget changes",
+      "direct_consumer": "Schema V2 author, all source integrators",
+      "implementation_risk": "Medium; incorrect selection can omit safety tests",
+      "review_type": "Normal tooling; negative inventory/selection/snapshot checks and actual full-tier commit path",
+      "can_run_in_parallel": "Yes for diagnosis; serialize comparable timing runs",
+      "owner_approval_needed": "No budget/waiver requested; any budget change would require owner approval",
+      "estimated_complexity": "NORMAL"
+    },
+    {
+      "rank": 3,
+      "problem": "Family reference freeze still requires scattered manual decisions",
+      "current_cost": "B11/B12/B18 lack prospective entry/ATR/Home decisions; B14-00/B16-00 retain native numeric residuals; B13/B15 and separate B14 control already ran",
+      "frequency": "Every new reference/Home",
+      "root_blocker_class": "E semantics + D contract assembly",
+      "exact_evidence_source": "S01 §1.3/§5; S03; S04; L02",
+      "proposed_change": "Intake lane 2's source-pinned matrix and prepare one exact decision packet for remaining values, with source facts distinct from suggestions. After ratification, compose existing identity, recipe, full-set and build tools into one frozen family handoff",
+      "expected_downstream_skip": "Skip rediscovering defaults, alias guessing and repeated owner clarification; preserve completed screens",
+      "direct_consumer": "Owner, CT, first Model1 worker",
+      "implementation_risk": "Medium: H01 is not xx-00, Home is not a new logical child",
+      "review_type": "Normal docs/tooling review; core changes retain different-family requirement",
+      "can_run_in_parallel": "Yes; B11/B12/B18 independent of B17",
+      "owner_approval_needed": "Yes for remaining research semantics/parameters/Home; not for re-approving already-ratified generic/family mechanics",
+      "estimated_complexity": "NORMAL"
+    },
+    {
+      "rank": 4,
+      "problem": "Qualified different-family core review unavailable",
+      "current_cost": "One implementation-ready track, ZL-EA-067; one pre-implementation track, B17; neither is dozens of distinct blocked lanes",
+      "frequency": "Current two named consumers; repeats for new core work",
+      "root_blocker_class": "E_REQUIRED_DIFFERENT_FAMILY_REVIEWER_UNAVAILABLE",
+      "exact_evidence_source": "S01 §1.0/§1.3/§5; S02 B17; S08; S09",
+      "proposed_change": "Resolve the billing/auth boundary, then one bounded seeded read-only Gemini qualification with provenance and task-relevant competence. Review frozen ZL first; open B17 implementation only after route qualification",
+      "expected_downstream_skip": "Skip same-family pseudo-independence, unqualified review retries and idle finished source",
+      "direct_consumer": "Core author and CT acceptance",
+      "implementation_risk": "High acceptance consequence; qualification can fail",
+      "review_type": "Qualification must not be self-graded; exact-head different-family core review",
+      "can_run_in_parallel": "Yes, after external authority; no interference with ordinary tooling lanes",
+      "owner_approval_needed": "Yes for unresolved external billing/auth; no automatic paid fallback",
+      "estimated_complexity": "NORMAL; then B17 LONG"
+    },
+    {
+      "rank": 5,
+      "problem": "Accepted deterministic batch engine has no qualified production adapter",
+      "current_cost": "V2-A is accepted fixture-only; V2-B unopened; per-campaign orchestration still connects existing tools manually",
+      "frequency": "Every new campaign using the future V2 path",
+      "root_blocker_class": "D adapter qualification / contract dependency",
+      "exact_evidence_source": "S01 §1.0b; S10; S15",
+      "proposed_change": "Open V2-B as the already-described no-MT5 injected adapter qualification: lane/build/config/report identity, year splits, truncation, interruption and retained receipts. Only later connect an explicitly approved tester campaign",
+      "expected_downstream_skip": "Skip model-per-cell dispatch and repeated ad hoc orchestration; retain no-replay reconciliation",
+      "direct_consumer": "Hermes supervisory lane, research runner",
+      "implementation_risk": "Medium/high if resume replays ambiguous work",
+      "review_type": "Normal adapter review plus boundary/negative tests; runtime authority separate",
+      "can_run_in_parallel": "Yes offline; real runs constrained by tester locks",
+      "owner_approval_needed": "Bounded CT contract required; runtime/scheduler activation separately owner-gated",
+      "estimated_complexity": "LONG"
+    },
+    {
+      "rank": 6,
+      "problem": "Optimization region machinery is experiment-specific; new generic helper is fixture-only",
+      "current_cost": "H05/H08 duplicate coordinate/plateau logic; total orchestration share unmeasured; local helper audits 160k synthetic rows in 2.116s median",
+      "frequency": "Each newly authorized optimization family",
+      "root_blocker_class": "D reusable parser/provenance integration",
+      "exact_evidence_source": "S05; S13; L03",
+      "proposed_change": "Intake lane 3's optional helper, then qualify authenticated native report normalization and exact experiment policy binding. Supply missing B16 distance tie-break semantics and fixed-MAIN reproduction checks before claiming B16 parity",
+      "expected_downstream_skip": "Skip hand-coded lattice/neighbour scans and manual missing-cell enumeration; no skip of complete neighbours or BWD",
+      "direct_consumer": "Optimization author, Hermes, R3 report generator",
+      "implementation_risk": "Medium: an attractive but wrongly bound center corrupts selection",
+      "review_type": "Normal tooling with adversarial provenance/policy fixtures; strategy interpretation separate",
+      "can_run_in_parallel": "Yes offline; Complete/Genetic execution under frozen same-install contract",
+      "owner_approval_needed": "No new universal threshold; any new search/range needs prospective authority",
+      "estimated_complexity": "NORMAL"
+    },
+    {
+      "rank": 7,
+      "problem": "Moving integration heads and stale lane/worktree records inflate coordination work",
+      "current_cost": "540 registered worktrees; primary 26 commits ahead/652 behind BASE and 149 status entries; 106 stale nonactive lane records",
+      "frequency": "Every boot/intake; 18/45 recent titles match state/sync/reanchor/formatting keywords",
+      "root_blocker_class": "D integration lineage / stale navigation",
+      "exact_evidence_source": "S11; S16; S18; inventory in JSON",
+      "proposed_change": "Use the existing Audit projection and immutable intake packets with source HEAD, review HEAD, scope and superseding acceptance link. Batch related state convergence through the single integration writer; prepare lifecycle dispositions without deleting anything",
+      "expected_downstream_skip": "Skip reviewing wrong snapshots, treating old attempts as active blockers, and repeated full-context re-anchors",
+      "direct_consumer": "CT, integrator, Monitor Work view",
+      "implementation_risk": "Low for read-only projection; medium for workflow adoption",
+      "review_type": "Normal tooling/docs; exact-head review remains intact",
+      "can_run_in_parallel": "Yes; canonical integration itself serialized",
+      "owner_approval_needed": "No cleanup proposed; destructive cleanup or governance change would need approval",
+      "estimated_complexity": "NORMAL"
+    },
+    {
+      "rank": 8,
+      "problem": "Current-state conclusions coexist with stale workflow/status prose",
+      "current_cost": "Hermes workflow still says unpushed while state says accepted; taskboard digest/provider notes lag; conveyor puts M4 after HOLDOUT while research protocol requires M4 before late HOLDOUT",
+      "frequency": "Each new worker bootstrap",
+      "root_blocker_class": "D documentation/source-owner drift",
+      "exact_evidence_source": "S01 vs S10; S14 vs S15; S18",
+      "proposed_change": "Add a targeted owner-reference/contradiction report and ask CT to converge only current routing statements. Link source acceptance once; keep dated evidence as history. Flag stage-order conflict for authoritative reconciliation",
+      "expected_downstream_skip": "Skip duplicate acceptance runs, wrong provider waits and HOLDOUT-order misrouting",
+      "direct_consumer": "CT, task author, worker boot",
+      "implementation_risk": "Low for diagnostics; consequential if policy is changed",
+      "review_type": "Normal docs review; owner if a genuine policy decision is needed",
+      "can_run_in_parallel": "Yes; no governance edits by this audit",
+      "owner_approval_needed": "Existing owner precedence can be applied; new governance/semantics require approval",
+      "estimated_complexity": "QUICK"
+    },
+    {
+      "rank": 9,
+      "problem": "Monitoring evidence gaps consume attention as if all were product defects",
+      "current_cost": "Fresh canonical snapshot: 6/6 account collectors fresh but 58 pending deployment verifications; identity 1 mapped/57 unmapped/0 fully bound",
+      "frequency": "Each daily observation/owner health view",
+      "root_blocker_class": "E evidence + C transport; separate unresolved freshness semantics",
+      "exact_evidence_source": "S01 §1.1/§1.4; S17; S19",
+      "proposed_change": "Preserve producer/transport/freshness/epoch/attachment as separate evidence states. Acquire fresh epoch-2 identity and later qualifying trade through approved paths; show the exact missing input and responsible lane. Do not infer fleet attachments from deal exports",
+      "expected_downstream_skip": "Skip parser repairs and blanket re-attachments that cannot supply missing evidence; keep research independent of monitor GREEN",
+      "direct_consumer": "Forward-test reviewer and owner",
+      "implementation_risk": "Medium; falsely trusted identity can start judge early",
+      "review_type": "Evidence reconciliation; producer/core changes require applicable high-risk review",
+      "can_run_in_parallel": "Yes; no research dependency on global GREEN",
+      "owner_approval_needed": "New VPS/runtime/producer activation or attestation remains owner-gated; read-only acquisition within prior scope does not",
+      "estimated_complexity": "NORMAL; external wait UNKNOWN"
+    },
+    {
+      "rank": 10,
+      "problem": "Owner-facing evidence exists but delivery and some assets remain unqualified",
+      "current_cost": "Report V3 accepted; H08 MAIN/BWD native graph assets explicitly missing; runtime DTOs UNKNOWN; private delivery target unresolved",
+      "frequency": "Every affected owner review",
+      "root_blocker_class": "D presentation integration + E delivery target",
+      "exact_evidence_source": "S01 Report V3; S06/S07; S16; S19",
+      "proposed_change": "Extend existing Report/Monitor with source-bound setup, changed parameters, missing-asset reasons and exact next consumer. Recover preserved native assets if available; use lane 4 prototype only as design input. Choose private delivery separately",
+      "expected_downstream_skip": "Skip repository spelunking and duplicate dashboards; avoid rerunning a strategy just for a graph",
+      "direct_consumer": "Owner and research reviewer",
+      "implementation_risk": "Low/medium; stale cross-record image binding must remain refused",
+      "review_type": "Normal UI/data review at mobile/desktop sizes, source/hash/navigation negatives",
+      "can_run_in_parallel": "Yes offline; no public deploy",
+      "owner_approval_needed": "Owner choice/approval for hosting or persistent delivery; no second dashboard needed",
+      "estimated_complexity": "NORMAL"
+    }
+  ],
+  "canonical_source_pins": [
+    {
+      "path": "START_HERE.md",
+      "git_blob": "3bb9e261ba00b1df8bffc34556af470b5a7e5967",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "PROJECT_STATE.md",
+      "git_blob": "ac7848a142baab74ce3afe252a1ad62453a96e4e",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "AGENTS.md",
+      "git_blob": "e9df78fb8dd35e7664a3b784731129899805ea9b",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "AGENT_TASKBOARD.md",
+      "git_blob": "e517a7b44d4533ba9de8f43d53740af9ebe941e9",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "taskboards/active/P01.md",
+      "git_blob": "cff7de10c499d7f49754fa652e5f2b5c77c35868",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "taskboards/active/P02.md",
+      "git_blob": "bd7e79558d0ee6e5bd867d641dcf2242fb24a73b",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "taskboards/active/P03.md",
+      "git_blob": "eb421aac4475a6fbda15f7e07498060bc9e8e3d3",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "EA_RND_DIGEST.md",
+      "git_blob": "038fa954690aafcd48678893ff97f98eaeedc8c7",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "VISION.md",
+      "git_blob": "5eaa99eccdcaede2bfbb2e00018af99dbcce3b50",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "ea_template/PRODUCT_CONCEPT.md",
+      "git_blob": "9cf5a66019e9abe05f70d2b3d9afcef1f7fcf408",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "ea_template/IMPLEMENTATION_COVERAGE_MAP.md",
+      "git_blob": "ea6cde38715ffda590f7bd90d3e0f1c5905fe199",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "ea_template/OPTIMIZATION_PROCEDURE_V2.md",
+      "git_blob": "9945e1cc2a61bd7cd6f57e74eed0d16e94542858",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+      "git_blob": "30a99e469a03902b307718d651c7ab09e2ff265a",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/architecture/EA_TEMPLATE_XX00_WAVEA_FASTSTART_RATIFICATION_20260909.md",
+      "git_blob": "527c2885b4c533868c1d03a9ad99aa37a86c1d32",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/research/EA_RND_PROTOCOL.md",
+      "git_blob": "dabdf9aa998f81b160be8e1d4ae8fd4826453bd3",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/research/EA_CONVEYOR_BELT_PIPELINE.md",
+      "git_blob": "1a32cdd499190d660d6090c9b5b6ca3836fe05e6",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/research/EA_REPORT_LADDER.md",
+      "git_blob": "0bbd836ee9b0800dcf0d3cc7b4a91554a5f5f6b6",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/research/EA_REPORT_SCHEMA.md",
+      "git_blob": "757b40dca5f91dd76f16b6408894557d8075d4f8",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/research/EA_REPORT_AUTHORING_FASTPATH.md",
+      "git_blob": "99a881514d534123cccb20aa0dc7f09f43233df8",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md",
+      "git_blob": "aa5e040b1b404914dd0cbb2b4d37b9bcd97aaacb",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/handoffs/CONTROL_TOWER_ZL_EA_067_HANDOFF_20260908.md",
+      "git_blob": "b908e2e08f8ab2bc90751d55b297cfcea2f3a1b8",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/workflows/HERMES_EA_LAB_V2_20260911.md",
+      "git_blob": "e0465ea686ed39818e2f45273bc74a59ab4fcfe6",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "tools/hermes_ea_lab_pilot/scripts/batch_executor.py",
+      "git_blob": "d5cf19adcc7c6b581a8193e2f3a2a313b046a15a",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "tools/reporting/report_package_integrity.py",
+      "git_blob": "a5b909f85d2f9ecb47a324fb1f24265a60c9372b",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "scripts/lane_registry.ps1",
+      "git_blob": "8563e8f243c1be8200a76f922541b60386d240d5",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "scripts/_test/SUITE_TIER_REGISTRY.txt",
+      "git_blob": "4c35aab31db8d51d0370d98c500ed108e01861c8",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "factory/runs/b16_opt01_20260831/gbp_sell_h4/analyze_opt01.py",
+      "git_blob": "5fc3b95d4faf3af450bba9df7ee472da6163c0f7",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "factory/runs/b16_h08_20260831/usdjpy_buy_h1/analyze_h08_opt01.py",
+      "git_blob": "52c2a6a2bab039ca943d411365cad3bdea0098a5",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "_triage/factory_os/candidate.py",
+      "git_blob": "5ad77a687ece51fbd670bbfa1b6bbe3d496c488d",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "tools/mobile_report_hub/README.md",
+      "git_blob": "04f31853a3d56b8eadc3668452995122948140d2",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/workflows/EA_LAB_MONITOR_V3_OPERATIONALIZATION.md",
+      "git_blob": "4801280a9288c6931c24c4de6bee919465613396",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "portfolio/control_room_snapshot.json",
+      "git_blob": "b43d780a693d22cdc50c1c805790647aebce7dd2",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/audits/EA_TEMPLATE_RESEARCH_READINESS_20260912.md",
+      "git_blob": "63bd5dee5a8ef02be7df830ab497482ce310a135",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    },
+    {
+      "path": "docs/audits/EA_TEMPLATE_RESEARCH_READINESS_20260912.json",
+      "git_blob": "9d4f520579244eb7f7bb1be13e8e1982f0a61885",
+      "commit": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+    }
+  ],
+  "local_evidence": [
+    {
+      "path": "D:\\EA_LAB\\_WORKSPACE\\worktrees\\qreset01-harness-perf-20260912\\docs\\audits\\EA_LAB_FULL_TIER_PERF_RCA_20260912.md",
+      "sha256": "717e80435421ae4640dc0b13eca02e1fa1b384f8d3c74231ed76d10f5ed410f8",
+      "size_bytes": 13371,
+      "observed_at": "2026-09-12T07:31:03.4241139+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB\\_WORKSPACE\\worktrees\\qreset01-harness-perf-20260912\\docs\\audits\\qreset01-harness-perf-20260912\\timing-tables.md",
+      "sha256": "6bdd251e36bcf4e0378fa098a493513c7da44b6a2aeae38069306ba45ef613ed",
+      "size_bytes": 2810,
+      "observed_at": "2026-09-12T07:31:03.4265510+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_WORKSPACE\\worktrees\\qreset02-template-readiness-20260912\\docs\\audits\\EA_TEMPLATE_RESEARCH_READINESS_20260912.md",
+      "sha256": "d1547e341a1ca3f8328ddd98e75c156ff591668c21af1bcad99309bb439f317e",
+      "size_bytes": 34486,
+      "observed_at": "2026-09-12T07:31:03.4269822+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_WORKSPACE\\worktrees\\qreset03-opt-tooling-20260912\\docs\\audits\\EA_LAB_OPTIMIZATION_PIPELINE_AUDIT_20260912.md",
+      "sha256": "8aa1a401d19c11585e63dd66a62abfbe462f8f3e041c26b644b437665a6cdf07",
+      "size_bytes": 18007,
+      "observed_at": "2026-09-12T07:31:03.4274251+00:00"
+    }
+  ],
+  "registry_evidence": [
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\ct-provider-m2-gemini-preflight-20260907.json",
+      "sha256": "5011e49ed961af6bac7f965770c092cb60e03ec35b11aef378d5240a81561a70",
+      "record": {
+        "lane_id": "ct-provider-m2-gemini-preflight-20260907",
+        "owner_chat": "main-control-tower",
+        "worker": "Gemini-preflight",
+        "objective": "MS-WORKFLOW-03 Gemini reviewer preflight: verify CLI/read-only surface and billing authority before any model request",
+        "state": "BLOCKED",
+        "base_sha": "fcb97bd2a7b104c5d2e8fdffdd826aabe28b6f2a",
+        "head_sha": "fcb97bd2a7b104c5d2e8fdffdd826aabe28b6f2a",
+        "worktree": "D:\\EA_LAB_CONTROL\\worktrees\\ct-ro-fcb97-20260907",
+        "branch": "ct/ro-fcb97-20260907",
+        "allowed_paths": [],
+        "critical_paths": [],
+        "runtime_lane": "",
+        "writer": false,
+        "dependencies": [],
+        "reviewer": "",
+        "reviewed_head": "",
+        "direct_consumer": "MS-WORKFLOW-03 Gemini different-family reviewer qualification gate",
+        "blocker_class": "E_OWNER_EXTERNAL_BILLING_AUTHORITY",
+        "updated_at": "2026-09-07T12:11:23.2891251+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4476182+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\codex-owner-mobile-20260906.json",
+      "sha256": "39059c7aaf82c74e40a7c58241b9391de9ddbfd578a2b4599a629c9c5790eb63",
+      "record": {
+        "lane_id": "codex-owner-mobile-20260906",
+        "owner_chat": "EA_LAB owner simplification continuation",
+        "worker": "Codex Primary",
+        "objective": "Simple Thai read-only owner PWA on existing Mobile Report Hub",
+        "state": "WAITING",
+        "base_sha": "749da682d03615761cda7a46b31a663ad0b306f5",
+        "head_sha": "749da682d03615761cda7a46b31a663ad0b306f5",
+        "worktree": "D:\\EA_LAB_CONTROL\\worktrees\\codex-owner-mobile-20260906",
+        "branch": "codex/owner-mobile-20260906",
+        "allowed_paths": [
+          "mobile_report_hub/",
+          "tools/mobile_report_hub/",
+          "scripts/_test/run_mobile_report_hub_ui_tests.ps1",
+          "scripts/_test/run_mobile_report_hub_data_tests.ps1"
+        ],
+        "critical_paths": [
+          "mobile_report_hub/",
+          "tools/mobile_report_hub/"
+        ],
+        "runtime_lane": "",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "",
+        "reviewed_head": "",
+        "direct_consumer": "Owner mobile read-only status and report readers",
+        "blocker_class": "E_OWNER_EXTERNAL_PRIVATE_HTTPS_TARGET",
+        "updated_at": "2026-09-06T13:01:39.7156628+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4487561+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\ct-runtime-transport-activate-20260912.json",
+      "sha256": "64224f2fafb9dd9a43f2011aecb71d189231d3184cce405f5d57efb886239478",
+      "record": {
+        "lane_id": "ct-runtime-transport-activate-20260912",
+        "owner_chat": "EA_LAB-MAIN-CONTROL-TOWER",
+        "worker": "ChatGPT-GPT-5.6-Sol",
+        "objective": "Activate reviewed canonical DailyMonitor transport wiring and verify BaBoss runtime",
+        "state": "BLOCKED",
+        "base_sha": "b0df07ee776acd8450c1d06deba37cb63fbeb02f",
+        "head_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "worktree": "D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-b0df07e-20260912",
+        "branch": "runtime/daily-monitor-b0df07e-20260912",
+        "allowed_paths": [
+          "runtime/daily-monitor"
+        ],
+        "critical_paths": [
+          "runtime/daily-monitor"
+        ],
+        "runtime_lane": "BABOSS_DAILY_MONITOR_VPS_RETURN_TRANSPORT",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "",
+        "reviewed_head": "",
+        "direct_consumer": "EA_LAB_DailyMonitor_ORDER353",
+        "blocker_class": "C_ENVIRONMENT_DEPENDENCY",
+        "updated_at": "2026-09-12T12:46:25.4200238+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4494617+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\ct-zl-ea-067-canary-v3-20260908.json",
+      "sha256": "39f5f60b623a546b63188aa1cf28b858d408065fde10d65fda00a738eff5ec55",
+      "record": {
+        "lane_id": "ct-zl-ea-067-canary-v3-20260908",
+        "owner_chat": "main-control-tower-20260908-lockedconst",
+        "worker": "control-tower-mechanical-replay",
+        "objective": "Re-anchor exact tested ZL-EA-067 source as immediate child of canonical adjacent-regression harness and complete acceptance to mandatory different-family review gate",
+        "state": "BLOCKED",
+        "base_sha": "4f727aec7dbacabc8d7c9222e63658c74993d241",
+        "head_sha": "2da4d027ffdbcdddd77956a58dca0c352a6c0949",
+        "worktree": "D:\\EA_LAB_CONTROL\\worktrees\\ct-zl-ea-067-canary-v3-20260908",
+        "branch": "ct/zl-ea-067-canary-v3-20260908",
+        "allowed_paths": [
+          "docs/PARAM_REGISTRY.csv",
+          "ea_template/core/InputSurface_gen.mqh",
+          "ea_template/core/Inputs.mqh",
+          "ea_template/core/LabCore.mqh",
+          "docs/research/ZL_EA_067_WICK_DISPLACEMENT_V0.md",
+          "ea_template/Boss_20_WickDisplacement.mq5",
+          "ea_template/core/entries/Entry_WickDisplacement.mqh",
+          "ea_template/tests/WickDisplacement_Test.mq5",
+          "_triage/factory_os/wrapper_owners.csv",
+          "ea_template/core/LockedConstants_gen.mqh"
+        ],
+        "critical_paths": [
+          "ea_template/Boss_20_WickDisplacement.mq5",
+          "ea_template/core/entries/Entry_WickDisplacement.mqh",
+          "ea_template/core/Inputs.mqh",
+          "ea_template/core/LabCore.mqh",
+          "_triage/factory_os/wrapper_owners.csv",
+          "ea_template/core/LockedConstants_gen.mqh"
+        ],
+        "runtime_lane": "",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "",
+        "reviewed_head": "",
+        "direct_consumer": "Produce exact frozen tested ZL-EA-067 source head for mandatory different-family core review",
+        "blocker_class": "E_REQUIRED_DIFFERENT_FAMILY_REVIEWER_UNAVAILABLE",
+        "updated_at": "2026-09-08T15:13:15.1443471+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4501367+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\ct-zl-ea-067-reanchor-20260909.json",
+      "sha256": "88ea18330c423c144663defc5ab8893903d8df7bbdb661bab4d425c1fb25d324",
+      "record": {
+        "lane_id": "ct-zl-ea-067-reanchor-20260909",
+        "owner_chat": "main-control-tower-20260909",
+        "worker": "control-tower-mechanical-reanchor",
+        "objective": "Re-anchor exact frozen ZL-EA-067 source bytes from 2da4d027 onto pushed canonical 8d6941cd and rerun only impacted acceptance before mandatory different-family review",
+        "state": "BLOCKED",
+        "base_sha": "8d6941cd94b67fee5590de6baec573c54ed8046e",
+        "head_sha": "14b3181af77c52cb66b4cd30db132239d826f1ef",
+        "worktree": "D:\\EA_LAB_CONTROL\\worktrees\\ct-zl-ea-067-reanchor-20260909",
+        "branch": "ct/zl-ea-067-reanchor-20260909",
+        "allowed_paths": [
+          "docs/PARAM_REGISTRY.csv",
+          "ea_template/core/InputSurface_gen.mqh",
+          "ea_template/core/Inputs.mqh",
+          "ea_template/core/LabCore.mqh",
+          "docs/research/ZL_EA_067_WICK_DISPLACEMENT_V0.md",
+          "ea_template/Boss_20_WickDisplacement.mq5",
+          "ea_template/core/entries/Entry_WickDisplacement.mqh",
+          "ea_template/tests/WickDisplacement_Test.mq5",
+          "_triage/factory_os/wrapper_owners.csv",
+          "ea_template/core/LockedConstants_gen.mqh"
+        ],
+        "critical_paths": [
+          "ea_template/Boss_20_WickDisplacement.mq5",
+          "ea_template/core/entries/Entry_WickDisplacement.mqh",
+          "ea_template/core/Inputs.mqh",
+          "ea_template/core/LabCore.mqh",
+          "_triage/factory_os/wrapper_owners.csv",
+          "ea_template/core/LockedConstants_gen.mqh"
+        ],
+        "runtime_lane": "",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "",
+        "reviewed_head": "",
+        "direct_consumer": "Produce current-origin exact frozen ZL-EA-067 head for mandatory different-family core review without rerunning unaffected MT5 evidence",
+        "blocker_class": "E_REQUIRED_DIFFERENT_FAMILY_REVIEWER_UNAVAILABLE",
+        "updated_at": "2026-09-09T09:53:47.7034896+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4507364+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\ct-xx00-v2-impl-r2-20260909.json",
+      "sha256": "ebccb649798b18577521d7d6e75f31a5de01b1ac992636e07e4bfa10e39a9b96",
+      "record": {
+        "lane_id": "ct-xx00-v2-impl-r2-20260909",
+        "owner_chat": "main-control-tower-20260909",
+        "worker": "ControlTower-local-implementation",
+        "objective": "Re-anchor preserved exact XX00 V2 bytes and complete acceptance/review after transient full-tier environment slowdown",
+        "state": "BLOCKED",
+        "base_sha": "d50ed77ce2217f517c5eb8291ed77fc80e09b8cb",
+        "head_sha": "d50ed77ce2217f517c5eb8291ed77fc80e09b8cb",
+        "worktree": "D:\\EA_LAB_CONTROL\\worktrees\\ct-xx00-v2-impl-r2-20260909",
+        "branch": "ct/xx00-v2-impl-r2-20260909",
+        "allowed_paths": [
+          "_triage/factory_vnext/xx00_reference_v2.py,scripts/_test/fixtures/factory_vnext/test_factory_vnext_xx00_reference_v2.py,docs/architecture/EA_TEMPLATE_XX00_REFERENCE_SCHEMA_V2.md"
+        ],
+        "critical_paths": [
+          "_triage/factory_vnext/xx00_reference_v2.py,scripts/_test/fixtures/factory_vnext/test_factory_vnext_xx00_reference_v2.py,docs/architecture/EA_TEMPLATE_XX00_REFERENCE_SCHEMA_V2.md"
+        ],
+        "runtime_lane": "",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "Codex-gpt-5.6-sol-independent-tooling-review",
+        "reviewed_head": "",
+        "direct_consumer": "Canonical ORDER-XX00-SCHEMA-V2 repo-only sidecar; exact preserved bytes; no runtime/MT5 authority",
+        "blocker_class": "B_HARNESS_TEST_FULL_TIER_236S_GT_195S_STABLE_SYSTEMWIDE",
+        "updated_at": "2026-09-09T17:22:02.4156093+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4513703+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\ct-xx00-model1-runtime-20260909.json",
+      "sha256": "49107bf5dd50aac801b3bd9ccb5184b706ebd84bfe1f31a76d0e2f39da15873f",
+      "record": {
+        "lane_id": "ct-xx00-model1-runtime-20260909",
+        "owner_chat": "main-control-tower-20260909",
+        "worker": "ControlTower-MT5-Model1",
+        "objective": "Execute exactly four owner-approved B13/B15 xx00 Model1 MAIN/BWD screen cells on Meta5c with frozen sets and no retune",
+        "state": "BLOCKED",
+        "base_sha": "24125ea69ad8f4410f8501d3ea005a60fb92936b",
+        "head_sha": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+        "worktree": "D:\\EA_LAB_CONTROL\\worktrees\\ct-xx00-wavea-screen-contract-20260909",
+        "branch": "ct/xx00-wavea-screen-contract-20260909",
+        "allowed_paths": [
+          "factory/runs/xx00_b13_b15_screen_20260909,docs/research/XX00_B13_B15_MODEL1_SCREEN_RESULTS_20260909.md"
+        ],
+        "critical_paths": [
+          "factory/runs/xx00_b13_b15_screen_20260909,docs/research/XX00_B13_B15_MODEL1_SCREEN_RESULTS_20260909.md"
+        ],
+        "runtime_lane": "MT5-lane3",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "Codex-gpt-5.6-sol-independent-research-review",
+        "reviewed_head": null,
+        "direct_consumer": "Four-cell Model1 research screen result only; no optimization/HOLDOUT/Model4/Candidate authority",
+        "blocker_class": "D_EVIDENCE_PACKAGING_REVIEW_FAIL_REPAIR_BUDGET_EXHAUSTED",
+        "updated_at": "2026-09-09T21:07:15.2106095+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4519567+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\QRESET-01-HARNESS-PERF.json",
+      "sha256": "53e9cd38bc1edcaace2767ee9ef7ccc9b3269e262e57546dc6bbeb2b34a46819",
+      "record": {
+        "lane_id": "QRESET-01-HARNESS-PERF",
+        "owner_chat": "QRESET-01",
+        "worker": "Codex",
+        "objective": "Full-tier 195s RCA and at most one evidenced tooling repair",
+        "state": "RUNNING",
+        "base_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "head_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "worktree": "D:\\EA_LAB\\_WORKSPACE\\worktrees\\qreset01-harness-perf-20260912",
+        "branch": "codex/qreset01-harness-perf-20260912",
+        "allowed_paths": [
+          "scripts/_test",
+          "scripts/lib",
+          "_triage/factory_os",
+          "docs/audits/EA_LAB_FULL_TIER_PERF_RCA_20260912.md",
+          "docs/audits/qreset01-harness-perf-20260912"
+        ],
+        "critical_paths": [
+          "scripts/_test/run_fast_cages.ps1",
+          "scripts/_test/run_guard_trigger_tests.ps1",
+          "docs/audits/EA_LAB_FULL_TIER_PERF_RCA_20260912.md",
+          "docs/audits/qreset01-harness-perf-20260912"
+        ],
+        "runtime_lane": "",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "",
+        "reviewed_head": "",
+        "direct_consumer": "Control Tower: xx-00 Schema V2 integration blocker",
+        "blocker_class": "",
+        "updated_at": "2026-09-12T13:53:37.4970502+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4525534+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\QRESET-02-TEMPLATE-READINESS.json",
+      "sha256": "ac10457603b24274798eae46935da499f3aefc161889feb4f4ace0337179d908",
+      "record": {
+        "lane_id": "QRESET-02-TEMPLATE-READINESS",
+        "owner_chat": "QRESET-02-TEMPLATE-READINESS-20260912",
+        "worker": "Codex-gpt-6-astra",
+        "objective": "Exact-ref template research-readiness audit and at most one additive non-core tool",
+        "state": "DONE",
+        "base_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "head_sha": "73daab1c6a1d8736d6227c913f712a2c34d7a199",
+        "worktree": "D:\\EA_LAB_WORKSPACE\\worktrees\\qreset02-template-readiness-20260912",
+        "branch": "HEAD",
+        "allowed_paths": [
+          "docs/audits/EA_TEMPLATE_RESEARCH_READINESS_20260912.md",
+          "docs/audits/EA_TEMPLATE_RESEARCH_READINESS_20260912.json",
+          "tools/template_research_readiness"
+        ],
+        "critical_paths": [
+          "docs/audits/EA_TEMPLATE_RESEARCH_READINESS_20260912.md",
+          "docs/audits/EA_TEMPLATE_RESEARCH_READINESS_20260912.json",
+          "tools/template_research_readiness"
+        ],
+        "runtime_lane": "",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "ChatGPT-CT-GPT-5.6-Sol",
+        "reviewed_head": "73daab1c6a1d8736d6227c913f712a2c34d7a199",
+        "direct_consumer": "Control Tower identifies permitted next research and exact unblock actions",
+        "blocker_class": "",
+        "updated_at": "2026-09-12T14:18:30.1028811+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4531740+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\QRESET-03-OPTIMIZATION-TOOLING-R2.json",
+      "sha256": "fc8dce063b55db14ba5b05b643f00015509fa1bcd0483305f7c66e14eb87b160",
+      "record": {
+        "lane_id": "QRESET-03-OPTIMIZATION-TOOLING-R2",
+        "owner_chat": "QRESET-03-OPTIMIZATION-TOOLING",
+        "worker": "Codex-gpt-6-astra",
+        "objective": "Same scoped fixture-only optimization tooling contract; correct worktree location to exact owner path",
+        "state": "DONE",
+        "base_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "head_sha": "f775227faf0e37a99b12bbe0851f8e110802ab52",
+        "worktree": "D:\\EA_LAB_WORKSPACE\\worktrees\\qreset03-opt-tooling-20260912",
+        "branch": "HEAD",
+        "allowed_paths": [
+          "tools/optimization_region_audit",
+          "docs/audits/EA_LAB_OPTIMIZATION_PIPELINE_AUDIT_20260912.md"
+        ],
+        "critical_paths": [
+          "tools/optimization_region_audit",
+          "docs/audits/EA_LAB_OPTIMIZATION_PIPELINE_AUDIT_20260912.md"
+        ],
+        "runtime_lane": "",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": null,
+        "reviewed_head": null,
+        "direct_consumer": "Future Control Tower and Hermes fixture preflight before authorized optimizer interpretation",
+        "blocker_class": "",
+        "updated_at": "2026-09-12T14:14:11.187696+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4537473+00:00"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\QRESET-04-OWNER-WEB.json",
+      "sha256": "578fbf4f6980a3be802ae3f74ca3b1bf31364dcc465e9faef2ed3bafd3c024a5",
+      "record": {
+        "lane_id": "QRESET-04-OWNER-WEB",
+        "owner_chat": "QRESET-04-OWNER-WEB",
+        "worker": "Codex",
+        "objective": "Isolated presentation-only static owner cockpit prototype",
+        "state": "RUNNING",
+        "base_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "head_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "worktree": "D:\\EA_LAB\\_WORKSPACE\\worktrees\\qreset04-owner-web-20260912",
+        "branch": "HEAD",
+        "allowed_paths": [
+          "prototypes/owner_research_cockpit_v1"
+        ],
+        "critical_paths": [
+          "prototypes/owner_research_cockpit_v1"
+        ],
+        "runtime_lane": "",
+        "writer": true,
+        "dependencies": [],
+        "reviewer": "",
+        "reviewed_head": "",
+        "direct_consumer": "Owner prototype review",
+        "blocker_class": "",
+        "updated_at": "2026-09-12T13:56:48.6090981+07:00"
+      },
+      "observed_at": "2026-09-12T07:31:03.4543320+00:00"
+    }
+  ],
+  "registry_audit_snapshot": {
+    "observed_at": "2026-09-12T14:17:29.0789884+07:00",
+    "total": 601,
+    "CLOSED": 484,
+    "STALE_NONACTIVE": 106,
+    "QUEUED_CURRENT": 8,
+    "ACTIVE_CURRENT": 2,
+    "ACTIVE_IDENTITY_MISMATCH": 1,
+    "stale_after_hours": 24
+  },
+  "workspace_snapshot": {
+    "initial_base_sha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+    "registered_worktrees": 540,
+    "primary_head": "295cc71b011f2cd7fb1eac047a6dc27c01d45344",
+    "primary_ahead": 26,
+    "primary_behind": 652,
+    "primary_porcelain_entries_before_audit": 149,
+    "disk_cost": "UNKNOWN",
+    "all_worktree_dirty_count": "NOT_MEASURED"
+  },
+  "recent_commits": [
+    "728dbcb215e10c4be799ed1c4f6443bd7bdf0727 2026-09-12 [chatgpt] integrate template research-readiness audit",
+    "74dac79aadd1210c09b77e644f507a42bae1f570 2026-09-12 [auto] daily monitor snapshot 2026-09-12",
+    "b0df07ee776acd8450c1d06deba37cb63fbeb02f 2026-09-12 [codex] validate VPS transport snapshots",
+    "e68ef8fcef78a69264f31f67269a3fbf3780258c 2026-09-12 [codex] fail-close VPS snapshot transport evidence",
+    "81a1c3b2c05fc461273c905089a866efcdeae255 2026-09-12 [codex] repair BaBoss VPS return transport wiring",
+    "5c155cb0700db611afcac7f176753dc75c891e0e 2026-09-12 [codex] close Hermes and Monitor V3.1 canonical state",
+    "cb6ad60cac273222a0c7aec6b3b179adeaa2ae1d 2026-09-12 [codex] close Report V3 canonical state wording",
+    "5cafa9d915b1f4bca2b93e5d8c6881b2d6364dd7 2026-09-12 [codex] Keep Report source acceptance status durable",
+    "2043286d64aa5334f95d4666033d61965efb71ce 2026-09-12 [codex] Record reviewed Report V3 navigation source acceptance",
+    "5f72a2045d338ba4a9fe7c828aa15eaef2133c0d 2026-09-12 [codex] Fix Report V3 stale graph navigation binding",
+    "0457cf04c281852b2f9e4d0578e8886ee125e832 2026-09-12 [codex] Re-anchor exact Report V3 Phase B source on current canonical master",
+    "bb2fd5e754b2a46debb2cf0b96c1915cd85b99c1 2026-09-12 [codex] Bind generated STATUS deployment claims to canonical inventory",
+    "d8270d70d2fbf168ef44dc27f27466d053be3779 2026-09-11 [chatgpt] Capture ORDER-353 VPS evidence lessons",
+    "346175b42e68405aea0bc099a67009090bfedc0e 2026-09-11 [codex] Re-anchor ORDER-353 epoch-2 state after Monitor V3.1",
+    "c68340a5a0a049d0fd527aea1b79c1d2859e381e 2026-09-11 [codex] Converge Monitor V3.1 canonical state",
+    "7b4cab1103362cc7e683684bfc3191ded42b48dc 2026-09-11 [codex] Fix moved-head Monitor review qualification",
+    "fba2c71f9a5106c5f99f5ebc3e17bfa8df8ea965 2026-09-11 [codex] Re-anchor Monitor V3.1 with stale NEED BOSS fix",
+    "ce88bbb323994f6988cb21ac434b084a78916c58 2026-09-11 [codex] Converge Hermes V2-A canonical state",
+    "a1d5037d15980c02517e4a9796f31a9cd97fbae4 2026-09-11 [codex] Converge Hermes V2 foundation state",
+    "ca94623050da1818a06a62c00281a945aa3a1b0c 2026-09-11 [codex] Add Hermes V2 deterministic batch foundation",
+    "f46bb53a142c8b87ac7b79e3f58dbc1068d2be62 2026-09-10 [codex] state: bind B14 result metrics to Meta5c lane",
+    "dd2c78129802b8771082dddd98fce37a65b34808 2026-09-10 [codex] state: close B14 fixed Model1 control",
+    "327d01f7a4074b93b824a7b9bec9bc48aa02eea7 2026-09-10 [ct] Record Owner Control Tower Monitor V3",
+    "c72fd3bcbf3d093920e4dd5e7dbb55f917b3dcf8 2026-09-10 [codex] Fix Monitor V3 mixed-registry summary",
+    "baaaf6dddb80c1cff025a640f7a5435d343b3278 2026-09-10 [codex] Add read-only owner control tower Monitor V3",
+    "f7def5bf31cdc12e1e6755b7bc8e8c55c4337bb9 2026-09-10 [codex] research: preregister B14 fixed Model1 control",
+    "389159d960d312a2a4f304f5becfee699b127b01 2026-09-10 research: converge B16 B14 strategy factory state",
+    "a7e4eef20aea4948858b91a68ca614de22b86d70 2026-09-10 research: integrate reviewed B14 source-native prereg",
+    "0a44618b53c211c413bd36efdaf63a93214fa90d 2026-09-10 research: prereg B14 source-native control",
+    "4e3b766d527446f85e661cacf0a8b2dfe3191b62 2026-09-10 research: sync B16 early-zone closure state",
+    "2496b59cc61e51408098c91c8251788a2971d8d9 2026-09-10 research: complete B16 early-zone spacing evidence",
+    "9b26192acb54c61c98e055272e0f7b2945b93c4b 2026-09-10 research: prereg B16 XAU M15 early-zone spacing",
+    "17116aea956da9a169ed2799772c5fd9a30b20d2 2026-09-09 [ct] close xx00 screen at evidence packaging blocker",
+    "24125ea69ad8f4410f8501d3ea005a60fb92936b 2026-09-09 [ct] repair B15 fast-start ratification formatting",
+    "b4a2b508fb5b95a934ef7379f811f5399f3cc03b 2026-09-09 [ct] ratify B13 B15 fast-start and freeze Model1 screen",
+    "95238bb0c2b3f2b8c0689ad411a864f8b3e9cba5 2026-09-09 [ct] repair b17 decoupling routing wording",
+    "e05c410515caa5780f98a441b7d847c11404b163 2026-09-09 [ct] close xx00 readiness and freeze b17 decoupling contract",
+    "fecad6daa3da9eaa00cc8420ecb77311566ded43 2026-09-09 [ct] repair xx00 readiness manifest formatting",
+    "46ae73f9bf2a248dfe6c6ff7f201e3e834cf20a4 2026-09-09 [ct] map xx00 backtest readiness",
+    "e721f1da8871508b9861bf1d08d4f54585ea520d 2026-09-09 [ct] repair xx00 readiness status wording",
+    "315f3bc90b7fec92e5650e0b0ffa06ae08a64f39 2026-09-09 [ct] open xx00 backtest readiness and record v2 harness blocker",
+    "d50ed77ce2217f517c5eb8291ed77fc80e09b8cb 2026-09-09 [ct] ratify xx-00 families and freeze schema v2",
+    "d815c22d264aa5265495c15b78b4d08490fbba10 2026-09-09 [ct] repair native map state sync wording",
+    "8d313f50d4a91dc5f2183df565e3c1090ab70f52 2026-09-09 [ct] sync xx-00 native map status",
+    "7fea5aad8fd5e863aa2358e1fd12d37bb74ec686 2026-09-09 [ct] narrow native map family claims",
+    "99c03e0edc19aec0de7814faa2868a37979a5091 2026-09-09 [ct] add xx-00 native mechanic source map"
+  ],
+  "coordination_title_sample": {
+    "base": "74dac79aadd1210c09b77e644f507a42bae1f570",
+    "commits": 45,
+    "regex": "(?i)re-anchor|reanchor|converg|wording|formatting|state|sync",
+    "matching_titles": 18,
+    "labour_cost": "NOT_MEASURED"
+  },
+  "review_census": {
+    "technically_complete_review_only": 1,
+    "preimplementation_route_blocked": 1,
+    "tracks": [
+      "ZL-EA-067",
+      "B17-00"
+    ],
+    "provider_qualification_not_extra_ea": true,
+    "scope": "Current named consumers, deduplicated historical attempts"
+  },
+  "validation": {
+    "canonical_delta": "One added readiness-audit commit; prior source owners unchanged",
+    "new_mt5_runs": 0,
+    "source_changes": 0,
+    "governance_changes": 0,
+    "registry_mutations": 0,
+    "pushes": 0,
+    "independent_review": "NOT_PERFORMED_BY_THIS_AUDIT",
+    "tests": "No production tests rerun; structural artifact/source-pin checks only"
+  },
+  "limitations": [
+    "No monetary ROI",
+    "No measured end-to-end tester/orchestration ratio",
+    "No universal completion percentage",
+    "No new execution/strategy/risk/runtime authority",
+    "Local worker claims are not canonical acceptance",
+    "Registry records are sampled observations and can change after read"
+  ]
+}
