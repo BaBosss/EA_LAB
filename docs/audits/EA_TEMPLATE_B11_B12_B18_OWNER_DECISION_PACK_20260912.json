@@ -1,0 +1,1055 @@
+{
+  "schema": "ea-lab-family-owner-decision-packet/1",
+  "authority": "NON_AUTHORITATIVE_PROPOSAL",
+  "base_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+  "device": "BaBoss",
+  "device_id": "bbb88aa0-1598-43f6-b56c-a7db22af086a",
+  "lane_id": "QRESET-07-FAMILY-DECISION-PACKS",
+  "owner_ratification": false,
+  "experiment_execution": false,
+  "source_manifest": [
+    {
+      "path": "START_HERE.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "3bb9e261ba00b1df8bffc34556af470b5a7e5967",
+      "sha256": "8e6d82a6d8d3cef6000cd719bb2be2518c12f49dad6eb34fdda5cf4991d49e78",
+      "bytes": 9570
+    },
+    {
+      "path": "PROJECT_STATE.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "ac7848a142baab74ce3afe252a1ad62453a96e4e",
+      "sha256": "97effa3233a65527061183e13d142a6208cf2985c85950d898054dd377b2734f",
+      "bytes": 102027
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "e9df78fb8dd35e7664a3b784731129899805ea9b",
+      "sha256": "ad7fda9114c7c07cbd161b88120ad58d70eee3728264bd1944876d9a7b0bc29f",
+      "bytes": 44406
+    },
+    {
+      "path": "AGENT_TASKBOARD.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "e517a7b44d4533ba9de8f43d53740af9ebe941e9",
+      "sha256": "9cbc4687728ca3795daa27a5e8290ed34dfe8dc6f6038c2cb163e7696319cc89",
+      "bytes": 42298
+    },
+    {
+      "path": "taskboards/active/P03.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "eb421aac4475a6fbda15f7e07498060bc9e8e3d3",
+      "sha256": "5e54d8525396b590dab240e97fcbbe72209b80c63ac22db06578ea031c144f97",
+      "bytes": 216957
+    },
+    {
+      "path": "VISION.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "5eaa99eccdcaede2bfbb2e00018af99dbcce3b50",
+      "sha256": "df58b36ec72b96b2e186af98e0a0578cbcbc59989d71c0a92e54bc62ab583258",
+      "bytes": 11494
+    },
+    {
+      "path": "ea_template/PRODUCT_CONCEPT.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "9cf5a66019e9abe05f70d2b3d9afcef1f7fcf408",
+      "sha256": "cdda6333e4fa23f38b9f31e98c96c3130e5f6a87aeb00024bf7c1f1b0b42146d",
+      "bytes": 21090
+    },
+    {
+      "path": "docs/architecture/EA_TEMPLATE_XX00_FAMILY_RATIFICATION_V1.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "e0270670fafea64519038bea220efa569c1b3526",
+      "sha256": "bf0cee451aea116bb5e72e7cc22dadc055318e04853a0f5e6b4f6f6f8b7bd501",
+      "bytes": 3784
+    },
+    {
+      "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "30a99e469a03902b307718d651c7ab09e2ff265a",
+      "sha256": "d7db998d85951a412c34108872b8334817ac7980d23426fa06092b9069ce2ae1",
+      "bytes": 10021
+    },
+    {
+      "path": "docs/audits/EA_TEMPLATE_RESEARCH_READINESS_20260912.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "63bd5dee5a8ef02be7df830ab497482ce310a135",
+      "sha256": "d1547e341a1ca3f8328ddd98e75c156ff591668c21af1bcad99309bb439f317e",
+      "bytes": 34486
+    },
+    {
+      "path": "docs/architecture/EA_TEMPLATE_XX00_WAVEA_FASTSTART_RATIFICATION_20260909.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "527c2885b4c533868c1d03a9ad99aa37a86c1d32",
+      "sha256": "987af844ba683e0e641a2d9cfb1cc33dae6d95dd89ee6d3c29f6c6afa16d7719",
+      "bytes": 2365
+    },
+    {
+      "path": "ea_template/core/Inputs.mqh",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "f9f7a52bafa576929de4fd7c3fade037b111ae48",
+      "sha256": "d7e895e04671d58625d25512260d7ae4fce0c1b2d90a5babe37161b30475b963",
+      "bytes": 73774
+    },
+    {
+      "path": "ea_template/core/Indicators.mqh",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "b913a254ee4971ef7de147fff4f9c7b4bb7b59e2",
+      "sha256": "4ab9e0a3f99df0dcaf77e5c00eb8add5871a892a0f7e92c48bdb2eedd7256332",
+      "bytes": 8054
+    },
+    {
+      "path": "docs/PARAM_REGISTRY.csv",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "ed2c272f9e64843bb195a63d264591ed8141c94f",
+      "sha256": "1905f83b67e5eb28735277d395229e17eefa0dcbbfc13d934a3a99f159405456",
+      "bytes": 111140
+    },
+    {
+      "path": "docs/factory/BOSS11_16_H01_FIXED_BASELINE_RESULTS.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "93662795a9d836a89a29b7b77127d29058f31c62",
+      "sha256": "9dfa26c874644c1eddf481e602dafe0ef10213ea4b2cac6d9f32ecc021f0e991",
+      "bytes": 2678
+    },
+    {
+      "path": "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "76eeafd3ab75c3aa152761916a170df5b02625e7",
+      "sha256": "0db34a81b3779125eeaf4e805d4e056ecba84168b7d2fc9c4da53fe30dc8cb19",
+      "bytes": 3961
+    },
+    {
+      "path": "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_CONTRACT.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "f402390e8e3518ba27a34b018d522e1e417bf13e",
+      "sha256": "f772aac9e6ed03c03fa9c889c9298378efb157f4424a85d0183d78e982d5e5fe",
+      "bytes": 1727
+    },
+    {
+      "path": "docs/factory/BOSS11_16_H02_PAIR_MATRIX.csv",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "e64e8b215fee98fb58859ad85fb67c6de9666cb7",
+      "sha256": "d938d9d7b154226387cde12ef4571d179df00ee1c1a2dace2f626f873c944c47",
+      "bytes": 4828
+    },
+    {
+      "path": "docs/research/BT8_B11_STACK_ABL_01_RESULTS.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "a27da2d469b9b086509bad245361d9eb8a0c3444",
+      "sha256": "9cde9930574fe13e7997f97eeaf28821bd6d71482bde3ac545b2204cea205799",
+      "bytes": 2392
+    },
+    {
+      "path": "docs/research/BT8_B11_STACK_ABL_01_CONTRACT.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "6622dd5a39d3965422909378470d8effca2d3b44",
+      "sha256": "8541f2c1a446729526f8fb4790cd79df5404d8ca1325859056378ccd898af709",
+      "bytes": 2675
+    },
+    {
+      "path": "docs/research/BT5_B12_CONFIRM_ABL_01_RESULTS.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "1756817554f2da4a2e685efb74352621e449f70e",
+      "sha256": "4020a0d3f9f9526582ee275364b952c40fdc906e19247f549ddd1f82c4b15624",
+      "bytes": 3957
+    },
+    {
+      "path": "docs/research/BT5_B12_CONFIRM_ABL_01_CONTRACT.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "62c2376e2729e464672146751f6846ce3c2ce19b",
+      "sha256": "bcce5aacc9b095f05daf3f40c536828770c4f2aa76ab4ca26f936917debbce58",
+      "bytes": 4058
+    },
+    {
+      "path": "docs/factory/BOSS18_SEMANTIC_DECISION_PACKET.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "e305ef1253d752b227c9cba891e5e75c88fede9b",
+      "sha256": "b66755545016f07e9b984254ac3734692f15260e71af42a0b3df820143c88cdb",
+      "bytes": 9866
+    },
+    {
+      "path": "docs/factory/B18_H01_PROSPECTIVE_REGISTRATION_CONTRACT.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "eedf992df1dbabedb7f8fcbf584f1be39d575462",
+      "sha256": "e43c208cd9d996f817106c764795b4e6760e89881d0cdb10af7a06ba829770b6",
+      "bytes": 5094
+    },
+    {
+      "path": "docs/factory/BOSS18_H01_FIXED_BASELINE_RESULTS.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "5e0464d89d2fc5fc90044d6c5217fc1c8e07cb2e",
+      "sha256": "a3bd9e84e021e5386f04131f1def93d5746f5a43e97287378b43a37f5468109a",
+      "bytes": 7349
+    },
+    {
+      "path": "_triage/_archive/verdicts/ORDER_LANEA_JUMSTOCH_VERDICT.md",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "b40d1d227963bf7020036ef3d4cbe4e6ad8e8ba0",
+      "sha256": "5487231bdc86409e2ba49339a58c03e46ee9c48ddd1707983aa9cd876a13fb35",
+      "bytes": 3255
+    },
+    {
+      "path": "ea_template/Boss_11_GridTrend.mq5",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "93cac91d1d6d6fb361c541441c1d5021ae3d8e1c",
+      "sha256": "59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672",
+      "bytes": 548
+    },
+    {
+      "path": "ea_template/core/entries/Entry_GridTrendMA.mqh",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "b3ef70a23a33b457b6f5acf0e3b85e609544aa0b",
+      "sha256": "c6f61f1574dc5956aca79d21c14840baea815add26042f5d362781854ca6c898",
+      "bytes": 1519
+    },
+    {
+      "path": "ea_template/sets/regression/Boss_11_GridTrend_defaults.set",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "3bd771ca7316fd005d4347eeb473bbec291e6990",
+      "sha256": "5a0cdd3186e924234d4491bdf854966553214ebaaf03ca6793beaedd42ea8efa",
+      "bytes": 3198
+    },
+    {
+      "path": "ea_template/Boss_12_Breakout.mq5",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "3105d193416b0e7a4f02b4473c0075a4459e833a",
+      "sha256": "b455e2b36b679ccd5bb17d31ccae29261c9587e83e24775fdc76b63c6de4d349",
+      "bytes": 541
+    },
+    {
+      "path": "ea_template/core/entries/Entry_Breakout.mqh",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "2d0a4b279aeef6bd8461458212cc950e15f07d5c",
+      "sha256": "732415998f2752019764751a4a173a3f20c13524f7dd96b72248eb024bff9f9d",
+      "bytes": 3019
+    },
+    {
+      "path": "ea_template/sets/regression/Boss_12_Breakout_defaults.set",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "08df6da4472052b5a9a766bdfb35c9eb11267645",
+      "sha256": "62ffa4e95a08a483617046694309a8082c1d07bece39a778704f67cb389626c1",
+      "bytes": 3256
+    },
+    {
+      "path": "ea_template/Boss_18_JumStoch.mq5",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "032cbd2ed3eb3f925a8da92051ad0eed1aa5e6c7",
+      "sha256": "0307d5b133a2dc6fba8f894c9dd4ad40341e9e6ec16efbf5f3652655cb10b997",
+      "bytes": 913
+    },
+    {
+      "path": "ea_template/core/entries/Entry_JumStoch.mqh",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "b57483b61c7b7cc69c70a9603186451cf63fbb82",
+      "sha256": "c396c21546cf53f1979a717eab153bbd4df16d294f2ef8dc076e1418d8f40ac2",
+      "bytes": 3818
+    },
+    {
+      "path": "ea_template/sets/regression/Boss_18_JumStoch_defaults.set",
+      "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727",
+      "git_blob_oid": "84bfdf187e2267fa2168faa1ce19898e3743a801",
+      "sha256": "67973adaf57211858f8bb615c4a73864adc03fd31e6ad0d16f6a044a8882a1c1",
+      "bytes": 3323
+    }
+  ],
+  "families": [
+    {
+      "family": "B11",
+      "purpose_mechanism": "Shift0 fast/slow MA direction state; not one-shot crossover",
+      "accepted_native_semantics": "NONE",
+      "source_entry": {
+        "path": "ea_template/core/entries/Entry_GridTrendMA.mqh",
+        "line": 11,
+        "needle": "EntrySignal Entry_Evaluate()",
+        "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+      },
+      "parameters_requiring_prospective_freeze": [
+        {
+          "field": "_0_FastMA",
+          "candidate": 20,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer; intentional fast/slow ordering, no optimizer range",
+          "effect": "Fast signal MA horizon",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 838,
+            "needle": "_0_FastMA",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_0_SlowMA",
+          "candidate": 50,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer; equal fast/slow removes strict directional difference",
+          "effect": "Slow reference horizon",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 844,
+            "needle": "_0_SlowMA",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_0_MAMethod",
+          "candidate": 1,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "MODE_SMA / MODE_EMA / MODE_SMMA / MODE_LWMA",
+          "effect": "Shared MA smoothing method",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 850,
+            "needle": "_0_MAMethod",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_0_MA_TF",
+          "candidate": 0,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "PERIOD_CURRENT or explicit supported timeframe; distinct from signal ATR TF",
+          "effect": "Signal timeframe",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 856,
+            "needle": "_0_MA_TF",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_0_ATR_Period",
+          "candidate": 14,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer; _0_ATR_TF=PERIOD_CURRENT is fixed",
+          "effect": "Signal ATR scaling of reference chassis",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 1169,
+            "needle": "_0_ATR_Period",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "HOME_SYMBOL",
+          "candidate": null,
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": [
+            "XAUUSD",
+            "USDJPY",
+            "XAUUSD"
+          ],
+          "effect": "Exact market identity; no implicit broker suffix mapping"
+        },
+        {
+          "field": "HOME_TF",
+          "candidate": null,
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": [
+            "H1",
+            "H4"
+          ],
+          "effect": "Entry/history cadence; current-TF indicators follow Home"
+        }
+      ],
+      "owner_summary_options": [
+        {
+          "id": "A",
+          "status": "UNSELECTED",
+          "action": "PROPOSE_REFERENCE_FREEZE",
+          "entry_bundle": {
+            "_0_FastMA": 20,
+            "_0_SlowMA": 50,
+            "_0_MAMethod": 1,
+            "_0_MA_TF": 0
+          },
+          "ATRPeriod": 14,
+          "Home": {
+            "symbol": "XAUUSD",
+            "timeframe": "H1"
+          },
+          "rationale": "Historical H01 reference context",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        },
+        {
+          "id": "B",
+          "status": "UNSELECTED",
+          "action": "PROPOSE_REFERENCE_FREEZE",
+          "entry_bundle": {
+            "_0_FastMA": 20,
+            "_0_SlowMA": 50,
+            "_0_MAMethod": 1,
+            "_0_MA_TF": 0
+          },
+          "ATRPeriod": 14,
+          "Home": {
+            "symbol": "USDJPY",
+            "timeframe": "H4"
+          },
+          "rationale": "Accepted BT8 mechanism context",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        },
+        {
+          "id": "C",
+          "status": "UNSELECTED",
+          "action": "PROPOSE_REFERENCE_FREEZE",
+          "entry_bundle": {
+            "_0_FastMA": 20,
+            "_0_SlowMA": 50,
+            "_0_MAMethod": 1,
+            "_0_MA_TF": 0
+          },
+          "ATRPeriod": 14,
+          "Home": {
+            "symbol": "XAUUSD",
+            "timeframe": "H4"
+          },
+          "rationale": "BT8 contrary BWD context",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        }
+      ],
+      "parameter_owner_choice_required": true,
+      "Home_owner_choice_required": true,
+      "historical_evidence_status": "CONTEXT_ONLY_NOT_BXX00_AUTHORITY",
+      "known_negative_evidence": [
+        "H01 BWD negative",
+        "H02 no dual-positive pair; M15 truncation exceptions",
+        "BT8 stack material weakness; entry-only not qualified"
+      ],
+      "unknowns": [
+        "New xx-00 source/build/full-set identity",
+        "Screen-only account unit/deposit/lot/progression/TP/depth/effective caps",
+        "New reference performance or uniquely best Home",
+        "Current symbol history/economics readiness"
+      ],
+      "smallest_following_Model1_contract": {
+        "status": "NON_AUTHORITATIVE_PROPOSAL",
+        "new_cells": 2,
+        "homes": 1,
+        "directions": "EXPLICIT_SHARED_DIRECTION_CONTROL",
+        "model": "1 / 1 Minute OHLC",
+        "main_window_proposal": [
+          "2023.01.01",
+          "2025.12.31"
+        ],
+        "bwd_window_proposal": [
+          "2020.01.01",
+          "2022.12.31"
+        ],
+        "one_install_required": true,
+        "optimization": 0,
+        "holdout": "UNSPENT_FORBIDDEN",
+        "repair_maximum": 1,
+        "ready_after_owner_freeze": "NEW_CONTRACT_MATERIALIZATION_ONLY_NOT_IMMEDIATE_MT5"
+      },
+      "full_packet_text": "## B11 \u2014 GridTrend decision packet\n\n### 1. Purpose and accepted semantics\n\nB11 supplies a moving-average direction signal to the common chassis. Its source compares fast and slow MA **at shift0**: fast above slow yields BUY, fast below slow SELL, equal/unready values no signal. It is a directional-state test, not a detected one-time MA crossover event despite the file header's shorthand. Shared `TradeDir` can restrict direction; optional shared ATR-expansion or MA-slope filters may suppress signals. The clean generic reference keeps extra filters OFF unless separately defined.\n\nSignal source: `ea_template/core/entries/Entry_GridTrendMA.mqh:11`; MA construction: `ea_template/core/Indicators.mqh:37`; wrapper: `ea_template/Boss_11_GridTrend.mq5:10`. Native map=NONE; historical `GRID_TREND` is not a native exception and must not replace xx-00 `GRID_AGAINST`.\n\n### 2. Prospective fields and source-supported options\n\n| Field | Listed candidate | Safe semantic option set | What a different choice changes | Source |\n|---|---|---|---|---|\n| `_0_FastMA` |20| Explicit positive MA period; preserve an intentional fast/slow ordering | Responsiveness of the fast signal average | Inputs.mqh:838 |\n| `_0_SlowMA` |50| Explicit positive MA period; equal periods create no strict directional difference | Slow reference horizon; fast<slow is a sensible named-role constraint, not an optimizer range | Inputs.mqh:844 |\n| `_0_MAMethod` |EMA/1| SMA, EMA, SMMA or LWMA enum supported by the shared MA handles | Weighting of both MA series | Inputs.mqh:850; PARAM_REGISTRY.csv `_0_MAMethod` |\n| `_0_MA_TF` |PERIOD_CURRENT/0| Current Home TF or explicit supported MT5 timeframe, with source-consumer rationale | Signal horizon; this is distinct from the fixed current-TF signal ATR rule | Inputs.mqh:856; Indicators.mqh:33 |\n| `_0_ATR_Period` |14| Explicit positive integer; current TF remains fixed | Shared ATR scaling for the reference grid; not a change to MA entry periods | Inputs.mqh:1169 |\n| Home symbol/TF |Unselected| Three summary choices; H02 additionally supplies EURUSD/GBPUSD/USDJPY/XAUUSD on M15/H1/H4 as historical contexts | Market, cadence and evidence identity | H01/H02 owners; BT8 contract |\n\nNo custom MA period or smoothing method is selected here. A custom bundle is `OWNER_CHOICE_REQUIRED`; an ordinary integer accepted by source is not a qualified research parameter merely because it compiles. B11's MA shift0 behavior is preserved. A closed-bar-only signal rewrite would be a different implementation/causal contract.\n\n### 3. Historical and negative context\n\nH01 XAUUSD/H1 on **MT5-lane3 / D:\\Meta 5c**, Model1: MAIN PF1.02, net+529.17,2822 trades, native EqDD19.57%; BWD PF0.88, net-2031.99,2657 trades, EqDD22.88%. These are frozen historical H01 controls, not predicted B11-00 behavior.\n\nH02 found no B11 dual-window positive PF pair. B11 XAUUSD/M15 and GBPUSD/M15 MAIN/BWD were the two ineligible pairs because four cells were suspected truncated near the hard cage. This is not a reason to tune a risk cap from the packet.\n\nBT8 on **MT5-lane3 / D:\\Meta 5c**, Model1 changed only `GRID_TREND91 -> SINGLE90`. USDJPY/H4 PF parent\u2192child was0.97\u21921.10 MAIN and1.05\u21921.11 BWD; XAUUSD/H4 was1.02\u21921.04 MAIN and0.81\u21920.82 BWD. EqDD improved in all four comparisons, but XAU BWD still lost. Accepted conclusion: `GRID_STACK_MATERIAL_WEAKNESS / ENTRY_ONLY_NOT_YET_QUALIFIED`. This is evidence about those two engines under frozen historical controls, not direct evidence about prospective `GRID_AGAINST92`.\n\n### 4. Choice effects, unknowns and next contract\n\nA preserves historical Home context; B/C place the reference beside existing mechanism context without reusing the old experiment as a new result. All preserve the candidate MA bundle; only the proposed Home differs. They authorize neither SINGLE, GRID_TREND, filters, optimization nor a risk/default change.\n\nUNKNOWN: useful MA periods/method/Home for the generic reference; B11-00 performance under ATRx2 plus basket stop; exact new build/set/effective caps; whether any separately motivated MA change improves cross-window behavior. The closed BT8 task is not reopened.\n\nSmallest following experiment proposal: **one frozen B11-00 Home/config, MAIN+BWD, two Model1 cells**, after complete owner/reference and screen-control freeze. Direct consumer: create the first honest generic-reference evidence record at that Home. This is fixed-reference characterization, not a one-change attribution claim against H01 (the chassis may differ on several specified controls). Stop after the pair; no automatic expansion or optimizer. Full common contract requirements below apply.\n"
+    },
+    {
+      "family": "B12",
+      "purpose_mechanism": "Donchian channel before N-bar confirmation window; optional entry session",
+      "accepted_native_semantics": "NONE",
+      "source_entry": {
+        "path": "ea_template/core/entries/Entry_Breakout.mqh",
+        "line": 11,
+        "needle": "EntrySignal Entry_Evaluate()",
+        "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+      },
+      "parameters_requiring_prospective_freeze": [
+        {
+          "field": "_12_Bars",
+          "candidate": 20,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit integer >=2; source clamps lower values to2",
+          "effect": "Donchian lookback before confirmation window",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 446,
+            "needle": "_12_Bars",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_12_ConfirmBars",
+          "candidate": 1,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "1 candidate; explicit N>=1 with prospective rationale;0 only separate scope, BT5 says do not switch",
+          "effect": "Closed-bar confirmation count and channel anchor",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 452,
+            "needle": "_12_ConfirmBars",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_12_HourFrom",
+          "candidate": 0,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "0..23, jointly with HourTo; equality disables session",
+          "effect": "Entry session start",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 458,
+            "needle": "_12_HourFrom",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_12_HourTo",
+          "candidate": 0,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "0..23 end-exclusive; wrap when From>To; require clock semantics for restricted sessions",
+          "effect": "Entry session end",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 464,
+            "needle": "_12_HourTo",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_0_ATR_Period",
+          "candidate": 14,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer; _0_ATR_TF=PERIOD_CURRENT is fixed",
+          "effect": "Signal ATR scaling of reference chassis",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 1169,
+            "needle": "_0_ATR_Period",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "HOME_SYMBOL",
+          "candidate": null,
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": [
+            "XAUUSD",
+            "XAUUSD",
+            "USDJPY"
+          ],
+          "effect": "Exact market identity; no implicit broker suffix mapping"
+        },
+        {
+          "field": "HOME_TF",
+          "candidate": null,
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": [
+            "H1",
+            "H4"
+          ],
+          "effect": "Entry/history cadence; current-TF indicators follow Home"
+        }
+      ],
+      "owner_summary_options": [
+        {
+          "id": "A",
+          "status": "UNSELECTED",
+          "action": "PROPOSE_REFERENCE_FREEZE",
+          "entry_bundle": {
+            "_12_Bars": 20,
+            "_12_ConfirmBars": 1,
+            "_12_HourFrom": 0,
+            "_12_HourTo": 0
+          },
+          "ATRPeriod": 14,
+          "Home": {
+            "symbol": "XAUUSD",
+            "timeframe": "H1"
+          },
+          "rationale": "Historical H01 reference context",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        },
+        {
+          "id": "B",
+          "status": "UNSELECTED",
+          "action": "PROPOSE_REFERENCE_FREEZE",
+          "entry_bundle": {
+            "_12_Bars": 20,
+            "_12_ConfirmBars": 1,
+            "_12_HourFrom": 0,
+            "_12_HourTo": 0
+          },
+          "ATRPeriod": 14,
+          "Home": {
+            "symbol": "XAUUSD",
+            "timeframe": "H4"
+          },
+          "rationale": "Accepted BT5 MAIN-positive/window-dependent context",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        },
+        {
+          "id": "C",
+          "status": "UNSELECTED",
+          "action": "PROPOSE_REFERENCE_FREEZE",
+          "entry_bundle": {
+            "_12_Bars": 20,
+            "_12_ConfirmBars": 1,
+            "_12_HourFrom": 0,
+            "_12_HourTo": 0
+          },
+          "ATRPeriod": 14,
+          "Home": {
+            "symbol": "USDJPY",
+            "timeframe": "H1"
+          },
+          "rationale": "Accepted BT5 opposite window-sign context",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        }
+      ],
+      "parameter_owner_choice_required": true,
+      "Home_owner_choice_required": true,
+      "historical_evidence_status": "CONTEXT_ONLY_NOT_BXX00_AUTHORITY",
+      "known_negative_evidence": [
+        "H01 both windows negative",
+        "H02 no dual-positive pair",
+        "BT5 tick0 worsens outcomes under all four same-install windows; no switch"
+      ],
+      "unknowns": [
+        "New xx-00 source/build/full-set identity",
+        "Screen-only account unit/deposit/lot/progression/TP/depth/effective caps",
+        "New reference performance or uniquely best Home",
+        "Current symbol history/economics readiness"
+      ],
+      "smallest_following_Model1_contract": {
+        "status": "NON_AUTHORITATIVE_PROPOSAL",
+        "new_cells": 2,
+        "homes": 1,
+        "directions": "EXPLICIT_SHARED_DIRECTION_CONTROL",
+        "model": "1 / 1 Minute OHLC",
+        "main_window_proposal": [
+          "2023.01.01",
+          "2025.12.31"
+        ],
+        "bwd_window_proposal": [
+          "2020.01.01",
+          "2022.12.31"
+        ],
+        "one_install_required": true,
+        "optimization": 0,
+        "holdout": "UNSPENT_FORBIDDEN",
+        "repair_maximum": 1,
+        "ready_after_owner_freeze": "NEW_CONTRACT_MATERIALIZATION_ONLY_NOT_IMMEDIATE_MT5"
+      },
+      "full_packet_text": "## B12 \u2014 Breakout decision packet\n\n### 1. Purpose and accepted semantics\n\nB12 supplies a Donchian breakout seed. The lookback channel starts **before** the confirmation window: `channelStart=ConfirmBars+1`. With confirmation1, the last closed bar must close beyond the channel. With N>=1, all N closed bars must remain beyond the same channel. With0, current ask above the high or bid below the low supplies the signal. Session gating is optional; shared direction/filter controls can also suppress entry.\n\nSource: `ea_template/core/entries/Entry_Breakout.mqh:11`, confirmation branch:34, session branch:51; wrapper: `ea_template/Boss_12_Breakout.mq5:10`. Native map=NONE. Closed-bar confirmation is source-supported and has accepted mechanism evidence; replacing it is not automatically authorized by presenting the input.\n\n### 2. Prospective fields and source-supported options\n\n| Field | Listed candidate | Safe semantic option set | What a different choice changes | Source |\n|---|---|---|---|---|\n| `_12_Bars` |20| Explicit integer>=2 for an unambiguous lookback; source clamps smaller values to2 | Channel horizon, excluding confirmation bars | Inputs.mqh:446; Entry_Breakout.mqh:13 |\n| `_12_ConfirmBars` |1|1 preserves accepted candidate; explicit N>=1 requires prospective rationale;0 exists but is excluded from an ordinary continuation by BT5's no-switch conclusion | Number/timing of closed-bar confirmations;0 uses live ask/bid | Inputs.mqh:452; Entry_Breakout.mqh:14 |\n| `_12_HourFrom` |0| Pair with HourTo: equal valid hours disable the filter; otherwise explicit0..23 start | Entry session only | Inputs.mqh:458 |\n| `_12_HourTo` |0| End-exclusive0..23; From<To same-day interval; From>To wraps midnight | Entry session only, not automatic flattening or exit schedule | Inputs.mqh:464; Entry_Breakout.mqh:56 |\n| `_0_ATR_Period` |14| Explicit positive integer on PERIOD_CURRENT | Reference ATR scale, separate from channel lookback | Inputs.mqh:1169 |\n| Home symbol/TF |Unselected| XAUUSD/H1, XAUUSD/H4 or USDJPY/H1 highlighted; other exact H02 contexts require explicit selection | Market/TF evidence identity | H01/H02 and BT5 owners |\n\nThe session code calls `TimeGMT()` and is documented as UTC hours. This packet verifies that source call, not a qualified historical UTC conversion in Strategy Tester. Choosing a restricted session requires explicit clock/evidence semantics before execution;0/0 avoids that additional session-selection question. Do not guess a profitable session or introduce a session filter from recent outcomes.\n\n### 3. Historical and negative context\n\nH01 XAUUSD/H1 on **MT5-lane2 / D:\\Meta 5b**, Model1: MAIN PF0.95, net-399.07,965 trades, EqDD7.72%; BWD PF0.92, net-446.56,929 trades, EqDD6.25%. H02 found no dual-window positive PF B12 pair. The family does not become robust by preserving its default confirmation count.\n\nBT5 ran all comparisons on **MT5-lane3 / D:\\Meta 5c**, Model1, changing only confirmation1\u21920. XAUUSD/H4 parent\u2192child PF:1.26\u21921.05 MAIN and0.91\u21920.79 BWD; USDJPY/H1:0.93\u21920.85 MAIN and1.15\u21920.99 BWD. Trade count increased in all four windows while PF/net/DD worsened. The parent itself remained window-dependent: XAU positive only MAIN, USDJPY positive only BWD. The accepted result says not to switch to tick mode or open optimization from this result.\n\nNo numerical comparison is made between the lane2 H01 and lane3 BT5 values. They describe different experiments and installation histories. BT5's same-install parent/child contrast is the mechanism evidence.\n\n### 4. Choice effects, unknowns and next contract\n\nA retains historical H01 Home context; B/C retain exact contexts of the accepted confirmation diagnostic. They do not select a better Home by PF. All retain confirmation1 and session OFF. The observations justify making confirmation semantics visible, not copying a historical winner or reopening the ablation on more homes.\n\nUNKNOWN: which generic-reference Home/bundle has useful cross-window behavior; whether any new session choice is causally justified and clock-qualified; appropriate custom N/lookback; exact screen build/set/effective controls. Numeric options remain prospective owner choices.\n\nSmallest following proposal: **one frozen B12-00 Home/config, two Model1 MAIN+BWD cells**, with its new generic-reference consumer. Do not rerun BT5 confirmation1\u21920. A later causal change needs one logical change and a distinct unresolved cross-window question, not an optimizer inferred from the packet.\n"
+    },
+    {
+      "family": "B18",
+      "purpose_mechanism": "Closed-bar LWMA displacement and Stochastic main-line seed, fixed direction and owner-set Mode1",
+      "accepted_native_semantics": "NONE",
+      "source_entry": {
+        "path": "ea_template/core/entries/Entry_JumStoch.mqh",
+        "line": 41,
+        "needle": "EntrySignal Entry_Evaluate()",
+        "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+      },
+      "parameters_requiring_prospective_freeze": [
+        {
+          "field": "_18_Direction",
+          "candidate": 1,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "1 BUY or2 SELL with explicit per-instance decision; no BOTH",
+          "effect": "Chosen fixed direction",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 786,
+            "needle": "_18_Direction",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_18_DirMode",
+          "candidate": 1,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "RECORD_CURRENT_MODE1_IN_NEW_REFERENCE_NOT_NEW_MODE_SELECTION",
+          "safe_semantic_options": "1 only for current faithful identity;2 separate alternate hypothesis authority",
+          "effect": "Settled Mode1 explicitly recorded, not reopened",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 792,
+            "needle": "_18_DirMode",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_18_MaPeriod",
+          "candidate": 25,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer; LWMA method/current TF fixed by source",
+          "effect": "Displacement reference",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 798,
+            "needle": "_18_MaPeriod",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_18_KPeriod",
+          "candidate": 32,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer",
+          "effect": "Stochastic construction horizon",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 804,
+            "needle": "_18_KPeriod",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_18_DPeriod",
+          "candidate": 12,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer; main buffer is consumed, not K/D crossing",
+          "effect": "Indicator construction parameter; effect not asserted",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 810,
+            "needle": "_18_DPeriod",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_18_Slowing",
+          "candidate": 12,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer",
+          "effect": "Stochastic smoothing",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 816,
+            "needle": "_18_Slowing",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_18_LoLevel",
+          "candidate": 25,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "0..100 with intentional Lo<Up band; opposite-side activity must be distinguished",
+          "effect": "Mode1 SELL threshold",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 822,
+            "needle": "_18_LoLevel",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_18_UpLevel",
+          "candidate": 75,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "0..100 with intentional Lo<Up band; no range selected",
+          "effect": "Mode1 BUY threshold",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 828,
+            "needle": "_18_UpLevel",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "_0_ATR_Period",
+          "candidate": 14,
+          "candidate_status": "UNSELECTED_NOT_AUTHORITY",
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": "Explicit positive integer; _0_ATR_TF=PERIOD_CURRENT is fixed",
+          "effect": "Signal ATR scaling of reference chassis",
+          "source": {
+            "path": "ea_template/core/Inputs.mqh",
+            "line": 1169,
+            "needle": "_0_ATR_Period",
+            "source_sha": "728dbcb215e10c4be799ed1c4f6443bd7bdf0727"
+          },
+          "regression_candidate_verified": true
+        },
+        {
+          "field": "HOME_SYMBOL",
+          "candidate": null,
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": [
+            "XAUUSD",
+            "EURUSD"
+          ],
+          "effect": "Exact market identity; no implicit broker suffix mapping"
+        },
+        {
+          "field": "HOME_TF",
+          "candidate": null,
+          "owner_action": "EXPLICIT_PROSPECTIVE_FREEZE",
+          "safe_semantic_options": [
+            "H1"
+          ],
+          "effect": "Entry/history cadence; current-TF indicators follow Home"
+        }
+      ],
+      "owner_summary_options": [
+        {
+          "id": "A",
+          "status": "UNSELECTED",
+          "action": "PROPOSE_REFERENCE_FREEZE",
+          "entry_bundle": {
+            "_18_Direction": 1,
+            "_18_DirMode": 1,
+            "_18_MaPeriod": 25,
+            "_18_KPeriod": 32,
+            "_18_DPeriod": 12,
+            "_18_Slowing": 12,
+            "_18_LoLevel": 25,
+            "_18_UpLevel": 75
+          },
+          "ATRPeriod": 14,
+          "Home": {
+            "symbol": "XAUUSD",
+            "timeframe": "H1"
+          },
+          "rationale": "Accepted H01 context; distinct new consumer required",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        },
+        {
+          "id": "B",
+          "status": "UNSELECTED",
+          "action": "PROPOSE_REFERENCE_FREEZE",
+          "entry_bundle": {
+            "_18_Direction": 1,
+            "_18_DirMode": 1,
+            "_18_MaPeriod": 25,
+            "_18_KPeriod": 32,
+            "_18_DPeriod": 12,
+            "_18_Slowing": 12,
+            "_18_LoLevel": 25,
+            "_18_UpLevel": 75
+          },
+          "ATRPeriod": 14,
+          "Home": {
+            "symbol": "EURUSD",
+            "timeframe": "H1"
+          },
+          "rationale": "Original source and historical seed-failure context",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        },
+        {
+          "id": "C",
+          "status": "UNSELECTED",
+          "action": "DEFER",
+          "entry_bundle": null,
+          "ATRPeriod": null,
+          "Home": null,
+          "rationale": "DEFER until distinct direct consumer justifies a new reference",
+          "performance_recommendation": false,
+          "does_not_authorize": [
+            "MT5",
+            "H01_RELABELLING",
+            "OPTIMIZATION",
+            "HOLDOUT",
+            "RISK_DEFAULT",
+            "MODE2",
+            "CANDIDATE",
+            "DEPLOYMENT"
+          ]
+        }
+      ],
+      "parameter_owner_choice_required": true,
+      "Home_owner_choice_required": true,
+      "historical_evidence_status": "CONTEXT_ONLY_NOT_BXX00_AUTHORITY",
+      "known_negative_evidence": [
+        "Standing DEAD-OPTIMIZED / NOT-DEPLOY port/cell context",
+        "H01 mixed MAIN/BWD; 2023/2021/2022 losing years",
+        "STOP_EXPANSION_NO_DIRECT_CONSUMER; Mode2 not auto-open"
+      ],
+      "unknowns": [
+        "New xx-00 source/build/full-set identity",
+        "Screen-only account unit/deposit/lot/progression/TP/depth/effective caps",
+        "New reference performance or uniquely best Home",
+        "Current symbol history/economics readiness",
+        "Distinct worthwhile consumer after closed H01"
+      ],
+      "smallest_following_Model1_contract": {
+        "status": "NON_AUTHORITATIVE_PROPOSAL",
+        "new_cells": 2,
+        "homes": 1,
+        "directions": 1,
+        "model": "1 / 1 Minute OHLC",
+        "main_window_proposal": [
+          "2023.01.01",
+          "2025.12.31"
+        ],
+        "bwd_window_proposal": [
+          "2020.01.01",
+          "2022.12.31"
+        ],
+        "one_install_required": true,
+        "optimization": 0,
+        "holdout": "UNSPENT_FORBIDDEN",
+        "repair_maximum": 1,
+        "ready_after_owner_freeze": "NEW_CONTRACT_MATERIALIZATION_ONLY_NOT_IMMEDIATE_MT5"
+      },
+      "full_packet_text": "## B18 \u2014 JumStoch decision packet\n\n### 1. Purpose and settled semantics\n\nB18 ports only the JUMSTOCH Trend **seed**: closed-bar price relative to LWMA plus the main Stochastic line. It does not port the standalone's four-basket engine, BEP shift or trailing composition. The common chassis owns grid, sizing, protection and exits. Native map=NONE.\n\nThe owner already selected **Mode1 / FAITHFUL_MOMENTUM_JOIN** on2026-09-02. Mode2 is `ALTERNATE_REVERSION_HYPOTHESIS_ONLY`; stale wrapper/header/parameter-registry comments saying the decision remains open do not reopen it. Readiness still asks for the field to be explicitly frozen in a new reference, but that does not make Mode1 versus2 a new unrestricted choice.\n\nSource: `ea_template/core/entries/Entry_JumStoch.mqh:41`; indicator construction: `ea_template/core/Indicators.mqh:62`; semantic decision: `docs/factory/BOSS18_SEMANTIC_DECISION_PACKET.md`, OWNER DECISION section; H01 closure: `docs/factory/BOSS18_H01_FIXED_BASELINE_RESULTS.md`.\n\nMode1 BUY condition: Close[1]>LWMA[1] and Stoch main[1]<UpLevel. SELL: the source uses `!above` and Stoch>LoLevel; therefore exact equality Close==LWMA follows the non-above branch, even though older prose abbreviates it as below. `_18_Direction` chooses one fixed direction per instance; there is no single dual-engine option. This packet records the source edge case without changing it.\n\n### 2. Prospective fields and source-supported options\n\n| Field | Listed candidate | Safe semantic option set | What a different choice changes | Source |\n|---|---|---|---|---|\n| `_18_Direction` |1 BUY|1 BUY or2 SELL in a separately explicit reference choice; never BOTH in one instance | Which Mode1 condition can seed this instance | Inputs.mqh:786; Entry_JumStoch.mqh:43 |\n| `_18_DirMode` |1| Explicitly freeze1 for the current faithful identity;2 requires a separate alternate causal/semantic contract | Mode2 mirrors the signal meaning and is not ordinary tuning | Inputs.mqh:792; current semantic owner |\n| `_18_MaPeriod` |25| Explicit positive integer; MA method remains hardcoded LWMA on current Home TF | Displacement reference horizon | Inputs.mqh:798; Indicators.mqh:62 |\n| `_18_KPeriod` |32| Explicit positive integer | Stochastic calculation horizon | Inputs.mqh:804 |\n| `_18_DPeriod` |12| Explicit positive integer for indicator construction; no automatic causal benefit asserted | %D construction parameter; seed reads main buffer, not a %K/%D cross | Inputs.mqh:810; Indicators.mqh:63,180 |\n| `_18_Slowing` |12| Explicit positive integer | Smoothing inside stochastic construction | Inputs.mqh:816 |\n| `_18_LoLevel` |25| Explicit oscillator-level value in0..100; choose intentional ordered Lo<Up band for faithful interpretation | Mode1 SELL-side threshold; BUY-only reference may not consume it materially | Inputs.mqh:822; Entry_JumStoch.mqh:59 |\n| `_18_UpLevel` |75| Explicit oscillator-level value in0..100; no chosen optimizer lattice | Mode1 BUY-side threshold; SELL-only reference may not consume it materially | Inputs.mqh:828; Entry_JumStoch.mqh:58 |\n| `_0_ATR_Period` |14| Explicit positive integer; signal ATR TF remains current | Generic chassis reference scale, not LWMA/Stoch period | Inputs.mqh:1169 |\n| Home symbol/TF |Unselected| XAUUSD/H1 accepted H01 context; EURUSD/H1 original-source/historical context; AUDUSD/H1 exists as historical A/B context but is not highlighted for new spend | Market/TF identity; no inference of standalone-engine portability | H01, semantic packet, historical Lane-A verdict |\n\nThese domains prevent ambiguous input choices; they do not promise valid execution at every possible value. No custom K/D/slowing/threshold value is selected. Freeze every physical key, but distinguish constructed indicators from parameters demonstrably active in the chosen direction; do not optimize an inactive opposite-side threshold.\n\n### 3. Historical and negative context\n\nAccepted Mode1 BUY H01 on **MT5-lane1 / D:\\Meta 5**, Model1, XAUUSD/H1: MAIN PF1.19, net+2347.58,1631 trades, native EqDD5.11%,412 baskets; BWD PF0.98, net-154.55,1583 trades, EqDD7.82%,391 baskets. Both windows had36/36 active months. MAIN2023 and BWD2021/2022 were losing years. Participation does not explain away the mixed-window result.\n\nH01 used historical grid ATRx1, fixed0.01, no progression, ATR TPx3 and ATR SLx2. Those are not the generic xx-00 reference's ATRx2/basket-balance-stop semantics. Its result cannot validate the unbuilt B18-00 config, and accepting the listed entry bundle does not authorize importing those historical management controls.\n\nStanding historical status remains **DEAD-OPTIMIZED / NOT-DEPLOY at the chassis-seed port/cell level**; it does not kill the separate standalone JUMSTOCH artifact. The older Lane-A campaign already tested the seed on EURUSD/AUDUSD and H1/H4 with both mode/direction variants and exit changes. No numeric Lane-A metric is reproduced here because its precise install identity was not established in this packet. The qualitative standing verdict is retained through the current canonical semantic/H01 owners, not independently re-adjudicated.\n\nCurrent H01 routing is **STOP_EXPANSION_NO_DIRECT_CONSUMER**, `NEXT_ADMISSIBLE_QUESTION=NONE_FROM_H01`. \u201cFirst B18-00 reference\u201d must have a concrete owner/Control Tower consumer distinct from rerunning a closed H01 or the old seed optimization ladder. Cosmetic renaming is not a consumer.\n\n### 4. Choice effects, unknowns and next contract\n\nA can create a distinct generic-reference comparison context only after the new account/chassis/test-control package and its purpose are prospectively frozen. B is a source-provenance context with prior contrary seed evidence, not a recommended rescue. C intentionally defers tester work while the useful consumer is unresolved. All preserve Mode1; none authorizes Mode2, new exits, H02 expansion or a reversal of the standing status.\n\nUNKNOWN: whether the generic reference adds useful new information after prior seed/H01 results; B18-00 behavior under its future full control set; a justified custom Home or entry setting; exact new source/build/set and runtime profile. No evidence uniquely narrows the choice. **OWNER CHOICE REQUIRED**, including whether to defer.\n\nSmallest possible following proposal: **one direction, one Mode1 B18-00 Home/config, two Model1 MAIN+BWD cells**, only if Control Tower first names a genuinely distinct consumer and owner freezes the reference. The old H01 contract remains closed. A BUY+SELL comparison would be at least two configuration pairs under another explicit scope, not a free addition to this pair.\n"
+    }
+  ],
+  "common_home_options": [
+    {
+      "symbol": "XAUUSD",
+      "timeframe": "H1",
+      "support": "Accepted separate H01 context for all three; not a shared-install comparison"
+    },
+    {
+      "symbol": "EURUSD",
+      "timeframe": "H1",
+      "support": "B11/B12 H02 research context and B18 original-source/failed seed context; not proven new reference performance"
+    }
+  ],
+  "common_contract_text": "## Proposed smallest common Model1 contract shell\n\n**NON_AUTHORITATIVE_PROPOSAL \u2014 no taskboard order, preregistration, set or experiment was created.**\n\nCan do: Codex Primary / explicitly bounded deterministic research executor. Suggested: deterministic source/materialization/preflight and runner; model only for contract design and final interpretation/review.\n\nObjective: produce one exact frozen generic family reference on one explicitly selected Home, without selecting parameters from outcomes. Parent/reference: the family source and ratified xx-00 architecture; H01/BT evidence is context, not falsely relabelled same-config control. If multiple chassis controls differ from H01, do not call the result a one-change causal experiment.\n\nRequired before READY:\n\n1. Current canonical BASE plus explicit owner decision record for every family entry field, ATR period and Home. B18 keeps Mode1 and a distinct consumer.\n2. Explicit experiment-only account unit/deposit/currency/leverage, lot/progression, TP multiplier, max depth, safety caps, direction/cadence and all other full-surface controls, with requested/effective/ignored/reason distinctions. No B13/B15 exception is inherited.\n3. Exact wrapper and transitive source graph, compiled EX5/build receipt, full set SHA/effective fingerprint, tester INI absolute launch and preserved paths/hashes, and literal model/symbol/TF/windows/Optimization/ForwardMode values.\n4. Fresh runtime lane claim on one legal install; both cells stay there. No cross-install H01 A/B or outcome ranking. Resolve missing history/symbol economics before launch.\n5. Source-bound report-package outputs, four R1 view roles, independent-basket participation evidence where valid, native image capture/missing/refused state, log/year/parser/identity receipts and integrity manifest specified before tester time.\n\nProposed matrix: exactly MAIN `2023.01.01..2025.12.31` and BWD `2020.01.01..2022.12.31`, Model1 /1 Minute OHLC minimum, Optimization0 and Forward0. These windows are historical research precedent offered for a **new prospective contract**, not silently adopted execution authority. HOLDOUT stays unspent and forbidden.\n\nMechanical acceptance: both source-bound cells prove the frozen identities and exact requested interval; no stale/reused/truncated/config-mismatched evidence; raw source, set, INI, report, graph-state, log, year split and machine summaries reconcile. A cage firing is a mechanical/path observation, never an invitation to enlarge it. Empty/mechanical/UNKNOWN cells stay explicit; missing native graphs are not reconstructed as native evidence.\n\nEvidence fields: MAIN/BWD and year PF/net/trades/baskets, exact native EqDD field, exposure/lot/depth/active-time diagnostics or source-qualified UNKNOWN, history quality, hard-kill/truncation state, source/build/config/install identity, full requested/effective controls, known unknowns. R1 PF/opportunity/PF-versus-participation/DD views identify exact cell and sample unit.\n\nDecision rule: characterize the frozen reference and stop after two cells; any quantitative pulse/falsifier bar must be declared by the new contract before evidence. This packet introduces no universal trade floor, Grade, PF target or winner rule. A valid losing result cannot be repaired. No automatic optimization, Model4, alternate Home, retuning or expansion follows.\n\nBudget: one bounded mechanical repair maximum, then one targeted recheck. Only a genuinely failed/missing observation may be rerun under its new explicit contract; packaging-only defects consume preserved evidence without Strategy Tester. Repeated failure, moving origin, unratified semantics or missing required provenance freezes the branch. No old-contract reopening or PASS-shopping.\n\nReview/authority: normal package/tooling review and applicable deterministic checks; any source/core/risk behavior change exits this scope and needs the mandated qualified different-family review plus its own contract. No runtime attachment, deployment, trading, production risk/default change, HOLDOUT, Candidate/DEMO/LIVE, KINT/Grade or owner attestation is granted.\n\n",
+  "shared_screen_control_blockers": [
+    "Account unit cent versus USD cannot be inferred",
+    "B13/B15 fast-start exception is family-specific",
+    "First lot/progression, TP multiplier, depth and effective safety caps need explicit prospective control",
+    "Shared TradeDir/TrendFilter/cadence require full-surface frozen treatment"
+  ],
+  "negative_knowledge_search": {
+    "scope": "knowledge/90_negative_knowledge/*.md",
+    "terms": [
+      "B11",
+      "B12",
+      "B18",
+      "GridTrend",
+      "Breakout",
+      "JumStoch"
+    ],
+    "direct_matches": 0,
+    "fallback": "Canonical family/result owners plus exact targeted B18 historical verdict"
+  },
+  "validation": {
+    "candidate_fields_verified_against_regression": 19,
+    "source_blobs_hashed": 35,
+    "all_three_packets": true,
+    "three_owner_options_each": true,
+    "Mode2_selected_or_offered_as_current_reference": false,
+    "all_options_unselected": true,
+    "MT5_runs": 0,
+    "compile_runs": 0,
+    "source_edits": 0,
+    "verdict_changes": 0,
+    "source_anchor_checks": "PASS",
+    "json_parses": "PASS",
+    "markdown_json_packet_text_match": "PASS"
+  }
+}
