@@ -145,15 +145,15 @@ establish independence between episodes or model future execution paths.
 - Both Python sources: `py_compile` PASS; compiled artifacts used a temporary
   directory outside the repository. Imports ran with bytecode writing disabled.
 - `scripts/check_state.ps1 -Strict`: CLEAN, exit 0.
-- Normal staged diff/commit hooks remain required on the actual commit path;
-  **BLOCKED: staging could not create
-  `D:/EA_LAB/.git/worktrees/b16-episodeunit-20260912/index.lock` (Permission denied)**.
-  Linked-worktree Git metadata is outside the writable sandbox and this session
-  has no escalation permission. No staged-snapshot/commit-hook PASS is claimed;
-  no commit was created, HEAD remains the author base, and nothing was pushed.
-  `SAFE_TO_INTEGRATE=NO` until normal staging/hooks/commit and required intake
-  review complete in an authorized environment. This environment blocker does
-  not change the evidence classification.
+- The bounded author result was subsequently committed at exact HEAD
+  `775b5a29ad8c013a889aa83d6b587325b998dcea`; this supersedes the earlier
+  sandbox-local staging failure message. That transient Git-metadata permission
+  issue did not change analyzer bytes, frozen sampling semantics, measured
+  results, classification, or authority.
+- This document-only review repair requires its own fresh targeted recheck and
+  normal commit hooks on the repaired exact HEAD. Review/integration/push status
+  is recorded by the external review/control-plane evidence, not self-attested
+  by this result report.
 - Existing `analyze_r4.py` was not run. Source evidence and preregistration were
   read only. No state/taskboard, EA/core/runtime, registry or config edits.
 
