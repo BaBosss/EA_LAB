@@ -110,16 +110,23 @@ non-zero even if the other pass succeeds. Transport age is not identity authorit
 collector preserves the producer JSON bytes and independently rejects malformed, future, or
 stale `evidence_timestamp` values, so copying a file cannot manufacture fresh identity.
 
-On the lab PC, call:
+On the lab PC, the DailyMonitor calls `scripts\collect_vps_transport.ps1` before
+building the Control Room snapshot. It resolves the Personal OneDrive `UserFolder`
+from `HKCU\Software\Microsoft\OneDrive\Accounts\Personal` (or a bounded explicit
+override), then inspects `EA_LAB_VPS_SYNC\vps-to-lab\snapshots`. It fails visibly
+when no valid `EA_LAB_snapshot_[1-9]*.csv` exists or its newest source write is
+older than 10 minutes. Do not substitute a guessed profile-relative OneDrive path.
 
-```powershell
-powershell -NoProfile -File D:\EA_LAB\scripts\collect_live_deals.ps1 `
-  -CommonFiles '<local OneDrive>\EA_LAB_VPS_SYNC\vps-to-lab\snapshots'
-```
-
-The collector's 30-hour guard is a final audit guard, not the operational
-freshness target. A VPS exporter normally rewrites every 60 seconds; alert when
-the newest snapshot is more than 10 minutes old. Keep one writer per direction.
+Fresh transport imports only RuntimeIdentity JSON through
+`collect_live_deals.ps1 -IdentityOnly`; it never imports VPS snapshots into
+`portfolio\live_deals`, so local monitor rotation remains the sole snapshot
+telemetry authority. The collector's 30-hour producer-timestamp guard is a final
+RuntimeIdentity evidence guard, not the operational transport target. Therefore a
+fresh snapshot with absent, malformed, future, or stale RuntimeIdentity is
+**transport PASS** but remains a downstream identity-evidence failure; a fresh
+identity does not make a stale/missing snapshot healthy. A VPS exporter normally
+rewrites every 60 seconds; alert when the newest snapshot is more than 10 minutes
+old. Keep one writer per direction.
 
 ## Attach checklist (repeat for every live/demo terminal)
 

@@ -16,7 +16,8 @@ which stays keyed to the closed-history exporters exactly as before.
 [CmdletBinding()]
 param(
   [string]$CommonFiles = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files",
-  [string]$DestDir = ''
+  [string]$DestDir = '',
+  [switch]$IdentityOnly
 )
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
@@ -37,6 +38,7 @@ if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Force $DestDir | 
 # below are the contract daily_monitor.ps1 depends on).
 # ---------------------------------------------------------------------------
 $snapStaleH = 30
+if (-not $IdentityOnly) {
 $snaps = @(Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_snapshot_*.csv') -ErrorAction SilentlyContinue |
            Where-Object { $_.Extension -eq '.csv' })
 foreach ($s in @($snaps | Where-Object { $_.BaseName -notmatch '^EA_LAB_snapshot_[1-9]\d*$' })) {
@@ -58,15 +60,18 @@ if (-not $snaps) {
     Write-Host ("collected snapshot -> {0} (age {1:n1} h; exporter rewrites every 60s when attached)" -f $dest, $ageH)
   }
 }
+}
 
+function Import-EaLabRuntimeIdentity {
+param([string]$SourceDir,[string]$ArchiveDir)
 # Runtime identity sidecars (VPS DEMO / Forward-Test identity blocker). These are the
 # per-chart records emitted by the EA itself. Collection is additive: a missing or malformed
 # sidecar is carried as a monitoring finding later, never silently upgraded to healthy here.
-$identityFiles = @(Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_identity_*.json') -ErrorAction SilentlyContinue)
+$identityFiles = @(Get-ChildItem (Join-Path $SourceDir 'EA_LAB_identity_*.json') -ErrorAction SilentlyContinue)
 $identityStaleH = 30  # canonical collector freshness bar; keep aligned with runtime_identity.py
 $identityFutureToleranceMinutes = 5
 if (-not $identityFiles) {
-  Write-Host "no EA_LAB_identity_*.json in $CommonFiles (runtime identity not attached yet)"
+  Write-Host "no EA_LAB_identity_*.json in $SourceDir (runtime identity not attached yet)"
 } else {
   foreach ($f in $identityFiles) {
     if ($f.Name -notmatch '^EA_LAB_identity_[1-9]\d*_[1-9]\d*\.json$') {
@@ -95,13 +100,17 @@ if (-not $identityFiles) {
       continue
     }
     $stamp = Get-Date -Format 'yyyyMMdd'
-    $dest = Join-Path $DestDir ($f.BaseName + "_$stamp.json")
+    $dest = Join-Path $ArchiveDir ($f.BaseName + "_$stamp.json")
     # The date in the archive filename is collection provenance only. Copy the producer JSON
     # byte-for-byte so evidence_timestamp remains the authoritative producer time.
     Copy-Item -LiteralPath $f.FullName -Destination $dest -Force
     Write-Host "collected runtime identity -> $dest"
   }
 }
+}
+
+Import-EaLabRuntimeIdentity -SourceDir $CommonFiles -ArchiveDir $DestDir
+if ($IdentityOnly) { exit 0 }
 
 $found = @()
 $found += Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_deals_*.csv') -ErrorAction SilentlyContinue

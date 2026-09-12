@@ -14,6 +14,7 @@ $successMarker = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\dail
 $alertFile = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\MONITOR_ALERT.txt'
 $monitorRotation = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\monitor_rotation.ps1'
 $collectLiveDeals = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\collect_live_deals.ps1'
+$collectVpsTransport = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\collect_vps_transport.ps1'
 $newsCalendar = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\news_calendar.ps1'
 $mrisRun = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\mris\mris_run.ps1'
 $publishGuards = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'scripts\publish_guard_feeds_to_vps.ps1'
@@ -63,6 +64,9 @@ function Step([string]$name, [scriptblock]$body) {
 # 0) rotate read-only logins through the monitor terminals so exporters snapshot all 5 accounts
 Step 'rotation'  { powershell -NoProfile -File $monitorRotation *>> $log }
 Step 'collect'   { powershell -NoProfile -File $collectLiveDeals *>> $log }
+# VPS snapshots establish return-path health; only fresh, canonical RuntimeIdentity
+# sidecars are imported, and local Common\\Files snapshot collection remains untouched.
+Step 'vps-return' { powershell -NoProfile -File $collectVpsTransport *>> $log }
 Step 'news'      { powershell -NoProfile -File $newsCalendar *>> $log }
 # ORDER-073: refresh the MRIS macro-regime whisper (barometers -> regime -> brief) BEFORE
 # the dashboard so it embeds the fresh whisper_brief.html. Its own stages are non-fatal and

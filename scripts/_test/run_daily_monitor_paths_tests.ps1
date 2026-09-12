@@ -53,6 +53,8 @@ $chain = @(
     'scripts\daily_monitor.ps1',
     'scripts\monitor_rotation.ps1',
     'scripts\collect_live_deals.ps1',
+    'scripts\collect_vps_transport.ps1',
+    'scripts\lib\onedrive_paths.ps1',
     'scripts\news_calendar.ps1',
     'scripts\mris\mris_run.ps1',
     'scripts\mris\mris_web_feeder.ps1',
@@ -126,8 +128,14 @@ if (@($resolverErrors).Count -gt 0) {
 Assert-Equal 'execution chain and resolver parse without PowerShell errors' 0 $parseErrors.Count
 
 Assert-True 'MetaQuotes Common Files remains an explicit external path' (($allSource.Values -join "`n") -match 'MetaQuotes\\Terminal\\Common\\Files')
-Assert-True 'OneDrive VPS staging remains an explicit external path' (($allSource.Values -join "`n") -match 'OneDrive\\EA_LAB_VPS_SYNC')
+Assert-True 'OneDrive VPS staging resolves through the Personal UserFolder contract' `
+    ($allSource['scripts\lib\onedrive_paths.ps1'] -match 'Accounts\\Personal' -and
+     $allSource['scripts\lib\onedrive_paths.ps1'] -match 'EA_LAB_VPS_SYNC' -and
+     $allSource['scripts\publish_guard_feeds_to_vps.ps1'] -match 'Resolve-EaLabPersonalOneDriveRoot')
 Assert-True 'DailyMonitor still owns its generated audit commit surface' ($allSource['scripts\daily_monitor.ps1'] -match "portfolio/live_deals" -and $allSource['scripts\daily_monitor.ps1'] -match 'git commit')
+Assert-True 'DailyMonitor invokes VPS return ingest before snapshot build' `
+    ($allSource['scripts\daily_monitor.ps1'].IndexOf("Step 'vps-return'") -ge 0 -and
+     $allSource['scripts\daily_monitor.ps1'].IndexOf("Step 'vps-return'") -lt $allSource['scripts\daily_monitor.ps1'].IndexOf("Step 'snapshot'"))
 
 Write-Host "RESULT: $script:pass passed, $script:fail failed"
 if ($script:fail -gt 0) { exit 1 }

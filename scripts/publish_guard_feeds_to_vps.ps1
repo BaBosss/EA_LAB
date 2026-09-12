@@ -6,15 +6,21 @@ param(
   [string]$NewsCsv = '',
   [string]$RegimeCsv = '',
   [string]$CommonDir = 'C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files',
-  [string]$StagingDir = 'C:\Users\patip\OneDrive\EA_LAB_VPS_SYNC\lab-to-vps\news',
+  [string]$StagingDir = '',
+  [string]$PersonalOneDriveRoot = '',
   [int]$NewsMaxAgeHours = 26,
   [int]$RegimeMaxAgeHours = 30
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
+. (Join-Path $PSScriptRoot 'lib\onedrive_paths.ps1')
 $RepoRoot = Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath
 if (-not $NewsCsv) { $NewsCsv = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\news_week.csv' }
 if (-not $RegimeCsv) { $RegimeCsv = Get-EaLabPath -RepoRoot $RepoRoot -RelativePath 'portfolio\EA_LAB_mris_regime.csv' }
+if (-not $StagingDir) {
+  $oneDriveRoot = Resolve-EaLabPersonalOneDriveRoot -Override $PersonalOneDriveRoot
+  $StagingDir = Get-EaLabVpsSyncPath -PersonalOneDriveRoot $oneDriveRoot -RelativePath 'lab-to-vps\news'
+}
 $ci = [Globalization.CultureInfo]::InvariantCulture
 $failures = @()
 
