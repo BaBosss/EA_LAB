@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {AUTHORITY,validatePack,freshness,project,ownerActions} from './model.mjs';
+const pack=JSON.parse(readFileSync(new URL('./fixtures.json',import.meta.url)));
+const now=Date.parse('2026-09-12T07:05:00Z');
+const opt={now};
+test('fixture envelope and every row retain no-authority/source/status binding',()=>{assert.equal(validatePack(pack),pack);for(const k of ['research','lanes','templates','optimizations','blockers','actions'])for(const [i,r]of pack[k].entries()){assert.equal(r.authority,AUTHORITY);assert.equal(r.source,`fixtures.json#/${k}/${i}`);assert.ok(r.observedAt);}});
+test('only fresh bound rows contribute READY; stale and unbound hide data',()=>{const rr=project(pack,pack.research,opt);assert.equal(rr.filter(r=>r.state==='READY').length,1);for(const id of ['FX-14','FX-18']){assert.equal(rr.find(r=>r.id===id).state,'UNKNOWN');assert.deepEqual(rr.find(r=>r.id===id).display,{});}});
+test('owner action requires explicit qualification; stale/expired/unbound/generic excluded',()=>{assert.deepEqual(ownerActions(pack,opt).map(r=>r.id),['FX-A01']);for(const scenario of ['stale','unbound','offline'])assert.equal(ownerActions(pack,{now,scenario}).length,0);assert.equal(ownerActions(pack,{now,online:false}).length,0);assert.equal(ownerActions(pack,{now:now+86400000}).length,0);});
+test('future, malformed and ambiguous observations fail closed',()=>{for(const stamp of [null,'yesterday','2026-09-12','2026-09-12T08:00:00Z'])assert.equal(freshness(stamp,now),'UNKNOWN');const changed=structuredClone(pack);changed.actions.push(changed.actions[0]);assert.equal(ownerActions(changed,opt).length,0);changed.research[0].authority='CANONICAL';assert.equal(project(changed,changed.research,opt)[0].state,'UNKNOWN');});
+test('action expiration and exact binding evaluated at render time',()=>{const changed=structuredClone(pack);changed.actions[0].data.expiresAt=new Date(now).toISOString();assert.equal(ownerActions(changed,opt).length,0);changed.actions[0].data.expiresAt='2027-01-01T00:00:00Z';changed.actions[0].data.boundTo='0'.repeat(40);assert.equal(ownerActions(changed,opt).length,0);});
+test('authority escalation and missing collection rejected',()=>{assert.throws(()=>validatePack({...pack,authority:'CANONICAL'}));assert.throws(()=>validatePack({...pack,lanes:null}));});
+test('native asset is byte-identical to pinned Git; source document hashes match',()=>{const root=fileURLToPath(new URL('../../',import.meta.url));const hash=b=>createHash('sha256').update(b).digest('hex');const git=p=>execFileSync('git',['show',`${pack.baseSha}:${p}`],{cwd:root,maxBuffer:20*1024*1024});assert.deepEqual(readFileSync(new URL(pack.native.href,import.meta.url)),git(pack.native.source));assert.equal(hash(git(pack.native.source)),pack.native.sha256);for(const s of pack.sources)assert.equal(hash(git(s.path)),s.sha256,s.path);});

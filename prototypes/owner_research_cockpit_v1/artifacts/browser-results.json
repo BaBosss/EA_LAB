@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "browser": "Microsoft Edge / Playwright",
+  "viewports": [
+    "390x844",
+    "1280x900"
+  ],
+  "fixtureClock": "2026-09-12T07:05:00Z",
+  "baseSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+  "authority": "TEST_EVIDENCE_ONLY",
+  "results": [
+    {
+      "name": "Seven screens at 390x844 and 1280x900; no page overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Research search and status filter intersect; empty state",
+      "status": "PASS"
+    },
+    {
+      "name": "Evidence drawer provenance and keyboard dismissal",
+      "status": "PASS"
+    },
+    {
+      "name": "EXACT native graph, MISSING / REFUSED placeholders, parameter search",
+      "status": "PASS"
+    },
+    {
+      "name": "NEED BOSS suppresses stale, offline, unbound and hidden requests",
+      "status": "PASS"
+    },
+    {
+      "name": "Time passing expires owner action and closes open drawer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real asset hash mismatch refuses original image",
+      "status": "PASS"
+    },
+    {
+      "name": "Malformed fixture and authority escalation fail closed",
+      "status": "PASS"
+    },
+    {
+      "name": "No console errors, external connections, or mutation requests",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "mutations": []
+}

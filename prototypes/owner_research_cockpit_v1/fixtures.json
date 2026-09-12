@@ -1,0 +1,694 @@
+{
+  "schemaVersion": 1,
+  "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+  "baseSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+  "observedAt": "2026-09-12T07:00:00Z",
+  "description": "Fictional UX fixture observations. baseSha binds the design snapshot, not project facts. The native artifact alone is copied from pinned Git.",
+  "sources": [
+    {
+      "path": "START_HERE.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "8e6d82a6d8d3cef6000cd719bb2be2518c12f49dad6eb34fdda5cf4991d49e78",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/START_HERE.md"
+    },
+    {
+      "path": "PROJECT_STATE.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "97effa3233a65527061183e13d142a6208cf2985c85950d898054dd377b2734f",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/PROJECT_STATE.md"
+    },
+    {
+      "path": "AGENTS.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "ad7fda9114c7c07cbd161b88120ad58d70eee3728264bd1944876d9a7b0bc29f",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/AGENTS.md"
+    },
+    {
+      "path": "AGENT_TASKBOARD.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "9cbc4687728ca3795daa27a5e8290ed34dfe8dc6f6038c2cb163e7696319cc89",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/AGENT_TASKBOARD.md"
+    },
+    {
+      "path": "taskboards/active/P03.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "5e54d8525396b590dab240e97fcbbe72209b80c63ac22db06578ea031c144f97",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/taskboards/active/P03.md"
+    },
+    {
+      "path": "tools/mobile_report_hub/README.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "da894a16b3acde70d87ec9fd41216eb851d8673dab5e30327281aed71ca674a1",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/tools/mobile_report_hub/README.md"
+    },
+    {
+      "path": "tools/mobile_report_hub/control_tower.py",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "3491cf0fdba8827275d5a9c464ee9eeb7cfce8ce3a3452b22835acce84a4078a",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/tools/mobile_report_hub/control_tower.py"
+    },
+    {
+      "path": "mobile_report_hub/app.js",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "e9bfeaf0ebbe7d102d0fa6c9380166b4808dbe3be6269e36d759539163419c56",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/mobile_report_hub/app.js"
+    },
+    {
+      "path": "docs/workflows/EA_LAB_MONITOR_AGENT_GRAPH_V31.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "d6ee58c7ed7de95aa641a566af938f92f835d733a165d0e3562a1edae2a077d9",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/docs/workflows/EA_LAB_MONITOR_AGENT_GRAPH_V31.md"
+    },
+    {
+      "path": "docs/workflows/EA_LAB_MONITOR_V3_OPERATIONALIZATION.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "aaacad960a4581ec4e5e40624aefa45f72d8f6fd89ec0e224a38d6221fe21847",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/docs/workflows/EA_LAB_MONITOR_V3_OPERATIONALIZATION.md"
+    },
+    {
+      "path": "docs/research/EA_REPORT_SCHEMA.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "6feebcc13139dba51df5d403a25ab11b5d0c4b5d41549859091ab9c2cc324c37",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/docs/research/EA_REPORT_SCHEMA.md"
+    },
+    {
+      "path": "docs/research/EA_REPORT_LADDER.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "5902bff8fd6d18d98d153bc654d06e20826254310f8e41f00fc6d3646097c31c",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/docs/research/EA_REPORT_LADDER.md"
+    },
+    {
+      "path": "docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "d7db998d85951a412c34108872b8334817ac7980d23426fa06092b9069ce2ae1",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/docs/architecture/EA_TEMPLATE_XX00_BACKTEST_READINESS_V1.md"
+    },
+    {
+      "path": "scripts/lane_registry.ps1",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "7ddc7fbf09e5f818126c624a1379eb31a93cb3c6a7f681bb82b13f82451c7545",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/scripts/lane_registry.ps1"
+    },
+    {
+      "path": "docs/research/B15_COUNTBARS_SENS_01_RESULTS.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "47481febcb1162ba464c4710cdbba43939ec7fe8d0d3507b73046ae519ecb307",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/docs/research/B15_COUNTBARS_SENS_01_RESULTS.md"
+    }
+  ],
+  "research": [
+    {
+      "id": "FX-13",
+      "title": "Mean reversion · study A",
+      "data": {
+        "family": "B13 / illustrative",
+        "setup": "EURUSD · H1 · Model1",
+        "state": "READY",
+        "stage": "Template",
+        "evidence": "Build + complete set fixture present",
+        "main": "PENDING",
+        "bwd": "NOT RUN",
+        "optimization": "NOT STARTED",
+        "model4": "GATED",
+        "next": "Review the preregistered Model1 plan",
+        "blocker": "None declared in this fixture",
+        "blockerClass": null
+      },
+      "source": "fixtures.json#/research/0",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-16",
+      "title": "Kangaroo · study B",
+      "data": {
+        "family": "B16 / illustrative",
+        "setup": "USDJPY · H1 · Model1",
+        "state": "RUNNING",
+        "stage": "Optimize",
+        "evidence": "Search receipt fixture · 12 of 20 cells",
+        "main": "SEARCH / IS ONLY",
+        "bwd": "NOT RUN",
+        "optimization": "REGION SELECT",
+        "model4": "GATED",
+        "next": "Map stable neighbors before freezing a center",
+        "blocker": "Execution incomplete",
+        "blockerClass": "D"
+      },
+      "source": "fixtures.json#/research/1",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-17",
+      "title": "Wave5 · study C",
+      "data": {
+        "family": "B17 / illustrative",
+        "setup": "Home / timeframe UNKNOWN",
+        "state": "BLOCKED",
+        "stage": "Template",
+        "evidence": "Source-review fixture remains pending",
+        "main": "NOT RUN",
+        "bwd": "NOT RUN",
+        "optimization": "LOCKED",
+        "model4": "GATED",
+        "next": "Resolve the structural SL / TP coupling contract",
+        "blocker": "A · Product semantics unresolved",
+        "blockerClass": "A"
+      },
+      "source": "fixtures.json#/research/2",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-15",
+      "title": "ST03 · study D",
+      "data": {
+        "family": "B15 / illustrative",
+        "setup": "GBPUSD · H4 · Model1",
+        "state": "PARKED",
+        "stage": "Report",
+        "evidence": "Parent comparison fixture packaged",
+        "main": "PACKAGED",
+        "bwd": "PACKAGED",
+        "optimization": "NONE",
+        "model4": "NOT RUN",
+        "next": "Await a separately contracted research question",
+        "blocker": "Parked path; no automatic optimizer rescue",
+        "blockerClass": null
+      },
+      "source": "fixtures.json#/research/3",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-14",
+      "title": "GridLog · study E",
+      "data": {
+        "family": "B14 / illustrative",
+        "setup": "Identity incomplete",
+        "state": "READY",
+        "stage": "Model1",
+        "evidence": "Unbound fixture",
+        "next": "This must never be actionable"
+      },
+      "source": "fixtures.json#/research/4",
+      "refSha": null,
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PENDING",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-18",
+      "title": "JumStoch · study F",
+      "data": {
+        "family": "B18 / illustrative",
+        "state": "READY",
+        "stage": "Template",
+        "next": "Expired readiness must never be actionable"
+      },
+      "source": "fixtures.json#/research/5",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-09T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    }
+  ],
+  "lanes": [
+    {
+      "id": "FX-L01",
+      "title": "Research worker",
+      "data": {
+        "state": "RUNNING",
+        "activity": "Region mapping · sample receipt 12/20",
+        "process": "UNKNOWN",
+        "runtime": "Fixture lane only",
+        "next": "Package remaining cell receipts"
+      },
+      "source": "fixtures.json#/lanes/0",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-L02",
+      "title": "Packaging worker",
+      "data": {
+        "state": "BLOCKED",
+        "activity": "Native graph binding incomplete",
+        "process": "UNKNOWN",
+        "runtime": "Fixture lane only",
+        "next": "Repair report asset identity"
+      },
+      "source": "fixtures.json#/lanes/1",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-L03",
+      "title": "Old lane observation",
+      "data": {
+        "state": "RUNNING",
+        "activity": "Old worker observation"
+      },
+      "source": "fixtures.json#/lanes/2",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-09T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    }
+  ],
+  "templates": [
+    {
+      "id": "FX-B11",
+      "title": "B11 · GridTrend",
+      "data": {
+        "state": "BLOCKED",
+        "semantics": "PENDING",
+        "build": "PENDING",
+        "review": "PASS",
+        "packaging": "PENDING",
+        "missing": "Entry values + Home not bound"
+      },
+      "source": "fixtures.json#/templates/0",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-B12",
+      "title": "B12 · Breakout",
+      "data": {
+        "state": "READY",
+        "semantics": "PASS",
+        "build": "PASS",
+        "review": "PASS",
+        "packaging": "PASS",
+        "missing": "None in fixture"
+      },
+      "source": "fixtures.json#/templates/1",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-B13",
+      "title": "B13 · MeanRev",
+      "data": {
+        "state": "READY",
+        "semantics": "PASS",
+        "build": "PASS",
+        "review": "PASS",
+        "packaging": "PASS",
+        "missing": "None in fixture"
+      },
+      "source": "fixtures.json#/templates/2",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-B14",
+      "title": "B14 · GridLog",
+      "data": {
+        "state": "BLOCKED",
+        "semantics": "PENDING",
+        "build": "PENDING",
+        "review": "PENDING",
+        "packaging": "UNKNOWN",
+        "missing": "Native numeric semantics missing"
+      },
+      "source": "fixtures.json#/templates/3",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-B15",
+      "title": "B15 · ST03",
+      "data": {
+        "state": "READY",
+        "semantics": "PASS",
+        "build": "PASS",
+        "review": "PASS",
+        "packaging": "PASS",
+        "missing": "None in fixture"
+      },
+      "source": "fixtures.json#/templates/4",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-B16",
+      "title": "B16 · Kangaroo",
+      "data": {
+        "state": "BLOCKED",
+        "semantics": "PASS",
+        "build": "PASS",
+        "review": "PASS",
+        "packaging": "BLOCKED",
+        "missing": "Evidence manifest closure incomplete"
+      },
+      "source": "fixtures.json#/templates/5",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-B17",
+      "title": "B17 · Wave5",
+      "data": {
+        "state": "BLOCKED",
+        "semantics": "BLOCKED",
+        "build": "PENDING",
+        "review": "BLOCKED",
+        "packaging": "PENDING",
+        "missing": "Structural SL / TP coupling + review"
+      },
+      "source": "fixtures.json#/templates/6",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-B18",
+      "title": "B18 · JumStoch",
+      "data": {
+        "state": "BLOCKED",
+        "semantics": "UNKNOWN",
+        "build": "UNKNOWN",
+        "review": "PENDING",
+        "packaging": "UNKNOWN",
+        "missing": "Home and source identity unbound"
+      },
+      "source": "fixtures.json#/templates/7",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    }
+  ],
+  "optimizations": [
+    {
+      "id": "FX-OPT16",
+      "title": "Kangaroo · study B",
+      "data": {
+        "state": "RUNNING",
+        "prerequisites": "PASS",
+        "search": "12 / 20 fixture cells",
+        "region": "PENDING",
+        "center": "NOT FROZEN",
+        "bwd": "NOT SPENT",
+        "holdout": "UNTOUCHED",
+        "model4": "GATED",
+        "next": "Finish MAIN map; then assess the preregistered region"
+      },
+      "source": "fixtures.json#/optimizations/0",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-OPT13",
+      "title": "Mean reversion · study A",
+      "data": {
+        "state": "BLOCKED",
+        "prerequisites": "PENDING",
+        "search": "NOT STARTED",
+        "region": "UNKNOWN",
+        "center": "NOT FROZEN",
+        "bwd": "NOT SPENT",
+        "holdout": "UNTOUCHED",
+        "model4": "GATED",
+        "next": "Model1 and evidence package prerequisites remain open"
+      },
+      "source": "fixtures.json#/optimizations/1",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "FX-BA",
+      "title": "Product",
+      "data": {
+        "state": "BLOCKED",
+        "category": "A",
+        "reason": "Structural SL / TP coupling",
+        "affected": "FX-17",
+        "next": "Separate semantic contract and source review"
+      },
+      "source": "fixtures.json#/blockers/0",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-BB",
+      "title": "Harness",
+      "data": {
+        "state": "BLOCKED",
+        "category": "B",
+        "reason": "Package manifest has a mismatched asset hash",
+        "affected": "FX-L02",
+        "next": "Repair binding; retain REFUSED graph state"
+      },
+      "source": "fixtures.json#/blockers/1",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-BC",
+      "title": "Environment",
+      "data": {
+        "state": "BLOCKED",
+        "category": "C",
+        "reason": "No qualified current runtime observation",
+        "affected": "FX-L03",
+        "next": "Obtain fresh, bound telemetry through an authorized lane"
+      },
+      "source": "fixtures.json#/blockers/2",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-BD",
+      "title": "Execution incomplete",
+      "data": {
+        "state": "BLOCKED",
+        "category": "D",
+        "reason": "Remaining search receipts are not packaged",
+        "affected": "FX-16",
+        "next": "Complete the contracted receipt bundle"
+      },
+      "source": "fixtures.json#/blockers/3",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-BE",
+      "title": "Owner / external",
+      "data": {
+        "state": "BLOCKED",
+        "category": "E",
+        "reason": "Fixture Home choice needs an explicit answer",
+        "affected": "FX-A01",
+        "next": "Owner chooses a Home for this fictional preregistration"
+      },
+      "source": "fixtures.json#/blockers/4",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    }
+  ],
+  "actions": [
+    {
+      "id": "FX-A01",
+      "title": "Choose a research Home · sample action",
+      "data": {
+        "state": "BLOCKED",
+        "blockerClass": "E",
+        "explicit": true,
+        "qualified": true,
+        "boundTo": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "expiresAt": "2026-09-13T07:00:00Z",
+        "action": "Specify the symbol and timeframe for fictional study A before its preregistration is frozen.",
+        "scope": "Research planning only. No tester launch or default change."
+      },
+      "source": "fixtures.json#/actions/0",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-A02",
+      "title": "Expired owner request",
+      "data": {
+        "state": "BLOCKED",
+        "blockerClass": "E",
+        "explicit": true,
+        "qualified": true,
+        "boundTo": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "expiresAt": "2026-09-11T07:00:00Z",
+        "action": "EXPIRED_ACTION_MUST_NOT_APPEAR"
+      },
+      "source": "fixtures.json#/actions/1",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-09T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-A03",
+      "title": "Attention without a qualified action",
+      "data": {
+        "state": "BLOCKED",
+        "blockerClass": "E",
+        "attentionRequired": true,
+        "explicit": false,
+        "qualified": false,
+        "action": "GENERIC_ATTENTION_MUST_NOT_APPEAR"
+      },
+      "source": "fixtures.json#/actions/2",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    },
+    {
+      "id": "FX-A04",
+      "title": "Unbound owner request",
+      "data": {
+        "state": "BLOCKED",
+        "blockerClass": "E",
+        "explicit": true,
+        "qualified": true,
+        "boundTo": "74dac79aadd1210c09b77e644f507a42bae1f570",
+        "expiresAt": "2026-09-13T07:00:00Z",
+        "action": "UNBOUND_ACTION_MUST_NOT_APPEAR"
+      },
+      "source": "fixtures.json#/actions/3",
+      "refSha": null,
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "OBSERVED",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY"
+    }
+  ],
+  "native": {
+    "id": "B15_COUNTBARS_SENS01_COUNT3_GBPUSD_H4_MAIN_M1",
+    "title": "B15 CountBars=3 · GBPUSD / H4",
+    "source": "factory/runs/b15_countbars_sens01_20260831/visuals/native/B15_COUNTBARS_SENS01_COUNT3_GBPUSD_H4_MAIN_M1.png",
+    "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+    "observedAt": "2026-09-12T07:00:00Z",
+    "status": "PINNED_HISTORICAL",
+    "freshness": "PINNED_NOT_LIVE",
+    "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+    "sha256": "7569a2f09c3afc42a203f05ea5d965eba418908ac95fcfbd8f82a8b9ff858627",
+    "href": "assets/b15-native-main.png",
+    "role": "MAIN",
+    "lane": "Meta5c",
+    "model": "Model1",
+    "window": "2023–2025",
+    "reportSource": {
+      "path": "docs/research/B15_COUNTBARS_SENS_01_RESULTS.md",
+      "refSha": "74dac79aadd1210c09b77e644f507a42bae1f570",
+      "sha256": "47481febcb1162ba464c4710cdbba43939ec7fe8d0d3507b73046ae519ecb307",
+      "observedAt": "2026-09-12T07:00:00Z",
+      "status": "PINNED_HISTORICAL",
+      "freshness": "PINNED_NOT_LIVE",
+      "authority": "PRESENTATION_ONLY_NO_AUTHORITY",
+      "href": "https://github.com/BaBosss/EA_LAB/blob/74dac79aadd1210c09b77e644f507a42bae1f570/docs/research/B15_COUNTBARS_SENS_01_RESULTS.md"
+    }
+  }
+}
