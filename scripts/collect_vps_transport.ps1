@@ -24,26 +24,61 @@ if (-not (Test-Path -LiteralPath $SnapshotDir -PathType Container)) {
 
 $valid = @(Get-ChildItem -LiteralPath $SnapshotDir -Filter 'EA_LAB_snapshot_*.csv' -File -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -match '^EA_LAB_snapshot_[1-9]\d*\.csv$' })
+
+function Test-EaLabSnapshotShape {
+    param([System.IO.FileInfo]$File)
+    $expectedHeader = @(
+        'row_type', 'login', 'server_time', 'currency', 'equity', 'balance',
+        'margin', 'free_margin', 'margin_level_pct', 'stopout_mode', 'stopout_level',
+        'magic', 'symbols', 'float_pl', 'open_lots', 'open_positions',
+        'oldest_open_hours', 'pending_orders'
+    )
+    $expectedLogin = [regex]::Match($File.Name, '^EA_LAB_snapshot_([1-9]\d*)\.csv$').Groups[1].Value
+    try {
+        $rows = @(Import-Csv -LiteralPath $File.FullName -ErrorAction Stop)
+        $header = @((Get-Content -LiteralPath $File.FullName -TotalCount 1 -ErrorAction Stop) -split ',')
+        if ($header.Count -ne $expectedHeader.Count -or (Compare-Object $expectedHeader $header -SyncWindow 0)) {
+            return @{ Valid = $false; Detail = 'header is not the AccountSnapshotExporter shape' }
+        }
+        $account = @($rows | Where-Object {
+            $_.row_type -eq 'ACCOUNT' -and $_.login -match '^[1-9]\d*$' -and $_.login -eq $expectedLogin
+        } | Select-Object -First 1)
+        if (-not $account) {
+            return @{ Valid = $false; Detail = "no parseable ACCOUNT row for filename login $expectedLogin" }
+        }
+        return @{ Valid = $true; Detail = '' }
+    } catch {
+        return @{ Valid = $false; Detail = "unreadable CSV: $($_.Exception.Message)" }
+    }
+}
+
 $now = Get-Date
-# A zero-byte file and a materially future-dated timestamp are not freshness
-# proof.  Keep the canonical five-minute skew allowance used by RuntimeIdentity.
-$fresh = @($valid | Where-Object {
-    $ageMinutes = ($now - $_.LastWriteTime).TotalMinutes
-    $_.Length -gt 0 -and $ageMinutes -ge -5 -and $ageMinutes -le $SnapshotMaxAgeMinutes
+# A snapshot must prove both exporter shape and filesystem freshness. Keep the
+# canonical five-minute future-skew allowance used by RuntimeIdentity.
+$candidates = @($valid | ForEach-Object {
+    $shape = Test-EaLabSnapshotShape -File $_
+    [pscustomobject]@{
+        File = $_
+        AgeMinutes = ($now - $_.LastWriteTime).TotalMinutes
+        ShapeValid = $shape.Valid
+        Detail = $shape.Detail
+    }
+})
+$fresh = @($candidates | Where-Object {
+    $_.ShapeValid -and $_.AgeMinutes -ge -5 -and $_.AgeMinutes -le $SnapshotMaxAgeMinutes
 })
 if (-not $fresh) {
-    $newest = @($valid | Sort-Object LastWriteTime -Descending | Select-Object -First 1)
+    $newest = @($candidates | Sort-Object { $_.File.LastWriteTime } -Descending | Select-Object -First 1)
     $detail = if ($newest) {
-        $ageMinutes = ($now - $newest[0].LastWriteTime).TotalMinutes
-        if ($newest[0].Length -eq 0) { "newest valid snapshot $($newest[0].Name) is zero bytes" }
-        elseif ($ageMinutes -lt -5) { "newest valid snapshot $($newest[0].Name) is $([math]::Round(-$ageMinutes,1)) minutes in the future" }
-        else { "newest valid snapshot $($newest[0].Name) is $([math]::Round($ageMinutes,1)) minutes old" }
+        if (-not $newest[0].ShapeValid) { "newest candidate $($newest[0].File.Name) is invalid: $($newest[0].Detail)" }
+        elseif ($newest[0].AgeMinutes -lt -5) { "newest valid snapshot $($newest[0].File.Name) is $([math]::Round(-$newest[0].AgeMinutes,1)) minutes in the future" }
+        else { "newest valid snapshot $($newest[0].File.Name) is $([math]::Round($newest[0].AgeMinutes,1)) minutes old" }
     } else { 'no valid EA_LAB_snapshot_[1-9]*.csv found' }
     Write-Host "VPS transport FAILED: $detail (limit $SnapshotMaxAgeMinutes minutes)" -ForegroundColor Red
     exit 1
 }
-$newestFresh = @($fresh | Sort-Object LastWriteTime -Descending | Select-Object -First 1)[0]
-Write-Host "VPS transport PASS: $($newestFresh.Name) is $([math]::Round(((Get-Date) - $newestFresh.LastWriteTime).TotalMinutes,1)) minutes old"
+$newestFresh = @($fresh | Sort-Object { $_.File.LastWriteTime } -Descending | Select-Object -First 1)[0]
+Write-Host "VPS transport PASS: $($newestFresh.File.Name) is $([math]::Round($newestFresh.AgeMinutes,1)) minutes old"
 
 # Identity absence/staleness is deliberately not a transport failure.  The canonical
 # collector owns shape, producer timestamp, and archive naming checks; IdentityOnly

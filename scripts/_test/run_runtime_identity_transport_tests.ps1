@@ -59,7 +59,9 @@ try {
     (Test-Path -LiteralPath (Join-Path $oneDrive 'EA_LAB_VPS_SYNC\lab-to-vps\news\EA_LAB_mris_regime.csv'))) "exit=$LASTEXITCODE"
 
   $snapshotPath = Join-Path $returnDir 'EA_LAB_snapshot_463666728.csv'
-  Set-Content -LiteralPath $snapshotPath -Value 'login,equity' -Encoding ASCII
+  $snapshotHeader = 'row_type,login,server_time,currency,equity,balance,margin,free_margin,margin_level_pct,stopout_mode,stopout_level,magic,symbols,float_pl,open_lots,open_positions,oldest_open_hours,pending_orders'
+  $snapshotAccount = 'ACCOUNT,463666728,2026.09.12 10:00:00,USD,1000.00,1000.00,0.00,1000.00,0.0,PERCENT,50.0,,,,,,,'
+  Set-Content -LiteralPath $snapshotPath -Value @($snapshotHeader,$snapshotAccount) -Encoding ASCII
   $identityPath = Join-Path $returnDir 'EA_LAB_identity_463666728_990026.json'
   $freshIdentity = [ordered]@{ schema='runtime_identity/1'; account_login='463666728'; magic='990026'; evidence_timestamp=(Get-Date).ToString('s') } | ConvertTo-Json
   Set-Content -LiteralPath $identityPath -Value $freshIdentity -Encoding UTF8
@@ -82,10 +84,20 @@ try {
   (Get-Item -LiteralPath $snapshotPath).LastWriteTime = (Get-Date).AddMinutes(-11)
   & $transport -SnapshotDir $returnDir -DestDir $archive
   Check 'stale VPS snapshot is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"
-  Set-Content -LiteralPath $snapshotPath -Value 'login,equity' -Encoding ASCII
+  Set-Content -LiteralPath $snapshotPath -Value @($snapshotHeader,$snapshotAccount) -Encoding ASCII
   (Get-Item -LiteralPath $snapshotPath).LastWriteTime = (Get-Date).AddMinutes(6)
   & $transport -SnapshotDir $returnDir -DestDir $archive
   Check 'snapshot more than five minutes in the future is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"
+  Set-Content -LiteralPath $snapshotPath -Value $snapshotHeader -Encoding ASCII
+  (Get-Item -LiteralPath $snapshotPath).LastWriteTime = Get-Date
+  & $transport -SnapshotDir $returnDir -DestDir $archive
+  Check 'header-only fresh VPS snapshot is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"
+  Set-Content -LiteralPath $snapshotPath -Value @($snapshotHeader,'ACCOUNT,999999999,2026.09.12 10:00:00,USD,1000.00,1000.00,0.00,1000.00,0.0,PERCENT,50.0,,,,,,,') -Encoding ASCII
+  & $transport -SnapshotDir $returnDir -DestDir $archive
+  Check 'wrong-login fresh VPS snapshot is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"
+  Set-Content -LiteralPath $snapshotPath -Value 'garbage' -Encoding ASCII
+  & $transport -SnapshotDir $returnDir -DestDir $archive
+  Check 'garbage fresh VPS snapshot is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"
   Clear-Content -LiteralPath $snapshotPath
   (Get-Item -LiteralPath $snapshotPath).LastWriteTime = Get-Date
   & $transport -SnapshotDir $returnDir -DestDir $archive
