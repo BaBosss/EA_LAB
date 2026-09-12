@@ -118,7 +118,7 @@ payloads: measured VPS evidence showed `rclone about onedrive:` metadata succeed
 833-byte `copyto` failed on the multipart path with `Unauthenticated`. With the 10M cutoff,
 current sub-10M evidence uses OneDrive single-part upload rather than that failing chunked path.
 
-This does **not** repair OAuth and does **not** prove end-to-end delivery. Files at or above
+This does **not** repair OAuth and does **not** prove end-to-end delivery. Files larger than
 10M use chunked upload; if that path remains broken, the existing aggregate non-zero return
 code must make its failure visible. Keep the same destination, filters, freshness limits,
 identity validation, and task cadence; verify delivery at the final consumer as below.
