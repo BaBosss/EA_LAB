@@ -1,0 +1,43 @@
+{
+  "schema": "control_center_source_map/1",
+  "canonical_sha": "b0df07ee776acd8450c1d06deba37cb63fbeb02f",
+  "authority": "READ_ONLY_SOURCE_INVENTORY",
+  "sources": [
+    {
+      "path": "tools/mobile_report_hub/build_index.py",
+      "sha256": "2474f8404a0b51dac1f5ed56b81e7cafed5f7faae3e722523632ea33ae1e1393"
+    },
+    {
+      "path": "tools/reporting/report_package_integrity.py",
+      "sha256": "c4d0e4c64eaf923a2621af62b800edbc656cc15847c1db723c8d5f29210fa604"
+    },
+    {
+      "path": "tools/reporting/mt5_report_assets.py",
+      "sha256": "ce0fa598235c1bb6c01a7c75c41239f7dbcb0578d37c761a46d407719870c486"
+    },
+    {
+      "path": "scripts/news_calendar.ps1",
+      "sha256": "e8af5b7c5cf824c7ebd80400bb0f2e269a8da1a7aba6f00b47cdc7e1deb40012"
+    },
+    {
+      "path": "scripts/mris/mris_classify.ps1",
+      "sha256": "84a20e03e5babebc95a116fa808d808316c2df3b55d0d9f82e28a44b693a0da0"
+    },
+    {
+      "path": "scripts/mris/mris_export_regime.ps1",
+      "sha256": "e549322640d976bffd00f51e1e4b3970464aa4818948df1442157d3b60385cf0"
+    },
+    {
+      "path": "ea_projects/(Boss)_NewsGuard/NewsGuard_Core.mqh",
+      "sha256": "9136b83cab408f03aaa5534619c854cc45045ae0cad755a2f681e35842148dbc"
+    },
+    {
+      "path": "ea_template/core/MacroGate_Core.mqh",
+      "sha256": "80a71cb73a54bfcfaae49857c2d977f5a6e120e553428035178043dd5717de93"
+    },
+    {
+      "path": "ea_template/core/Execution.mqh",
+      "sha256": "1c3d89032fe662f4b817d17c6d4d97c39277d0122f42318ddfbda25319d01409"
+    }
+  ]
+}
