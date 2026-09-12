@@ -82,6 +82,14 @@ try {
   (Get-Item -LiteralPath $snapshotPath).LastWriteTime = (Get-Date).AddMinutes(-11)
   & $transport -SnapshotDir $returnDir -DestDir $archive
   Check 'stale VPS snapshot is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"
+  Set-Content -LiteralPath $snapshotPath -Value 'login,equity' -Encoding ASCII
+  (Get-Item -LiteralPath $snapshotPath).LastWriteTime = (Get-Date).AddMinutes(6)
+  & $transport -SnapshotDir $returnDir -DestDir $archive
+  Check 'snapshot more than five minutes in the future is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"
+  Clear-Content -LiteralPath $snapshotPath
+  (Get-Item -LiteralPath $snapshotPath).LastWriteTime = Get-Date
+  & $transport -SnapshotDir $returnDir -DestDir $archive
+  Check 'zero-byte fresh VPS snapshot is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"
   Remove-Item -LiteralPath $snapshotPath -Force
   & $transport -SnapshotDir $returnDir -DestDir $archive
   Check 'missing VPS snapshot is a visible transport failure' ($LASTEXITCODE -ne 0) "exit=$LASTEXITCODE"

@@ -24,10 +24,21 @@ if (-not (Test-Path -LiteralPath $SnapshotDir -PathType Container)) {
 
 $valid = @(Get-ChildItem -LiteralPath $SnapshotDir -Filter 'EA_LAB_snapshot_*.csv' -File -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -match '^EA_LAB_snapshot_[1-9]\d*\.csv$' })
-$fresh = @($valid | Where-Object { ((Get-Date) - $_.LastWriteTime).TotalMinutes -le $SnapshotMaxAgeMinutes })
+$now = Get-Date
+# A zero-byte file and a materially future-dated timestamp are not freshness
+# proof.  Keep the canonical five-minute skew allowance used by RuntimeIdentity.
+$fresh = @($valid | Where-Object {
+    $ageMinutes = ($now - $_.LastWriteTime).TotalMinutes
+    $_.Length -gt 0 -and $ageMinutes -ge -5 -and $ageMinutes -le $SnapshotMaxAgeMinutes
+})
 if (-not $fresh) {
     $newest = @($valid | Sort-Object LastWriteTime -Descending | Select-Object -First 1)
-    $detail = if ($newest) { "newest valid snapshot $($newest[0].Name) is $([math]::Round(((Get-Date) - $newest[0].LastWriteTime).TotalMinutes,1)) minutes old" } else { 'no valid EA_LAB_snapshot_[1-9]*.csv found' }
+    $detail = if ($newest) {
+        $ageMinutes = ($now - $newest[0].LastWriteTime).TotalMinutes
+        if ($newest[0].Length -eq 0) { "newest valid snapshot $($newest[0].Name) is zero bytes" }
+        elseif ($ageMinutes -lt -5) { "newest valid snapshot $($newest[0].Name) is $([math]::Round(-$ageMinutes,1)) minutes in the future" }
+        else { "newest valid snapshot $($newest[0].Name) is $([math]::Round($ageMinutes,1)) minutes old" }
+    } else { 'no valid EA_LAB_snapshot_[1-9]*.csv found' }
     Write-Host "VPS transport FAILED: $detail (limit $SnapshotMaxAgeMinutes minutes)" -ForegroundColor Red
     exit 1
 }
