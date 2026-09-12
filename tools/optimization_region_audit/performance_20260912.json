@@ -1,0 +1,54 @@
+{
+  "grids": [
+    {
+      "audit_median_seconds": 0.124762,
+      "audit_samples_seconds": [
+        0.124762,
+        0.129078,
+        0.121382
+      ],
+      "audit_sha256": "c91bcd26c75802a95d29f5740a60f33ef410845483993206e316ccd671d640e9",
+      "cells": 10000,
+      "eligible_centers": 9604,
+      "freeze_seconds": 0.172383,
+      "freeze_sha256": "f3c4b75cb3e1d5e92658a431027f1f9f821bde3b3510c0933a4cb8acfb7847c6",
+      "neighbor_lookups": 38416,
+      "side": 100
+    },
+    {
+      "audit_median_seconds": 0.509018,
+      "audit_samples_seconds": [
+        0.509018,
+        0.510113,
+        0.507921
+      ],
+      "audit_sha256": "ba9a58d751bae613729358dd4ee13c0361b599ae7d7983e7c1a62dedfa5504dc",
+      "cells": 40000,
+      "eligible_centers": 39204,
+      "freeze_seconds": 0.669907,
+      "freeze_sha256": "9ba48cf65c49950f2a5ee55764068ce14057184ed7fb5dae245cf81ca0f949be",
+      "neighbor_lookups": 156816,
+      "side": 200
+    },
+    {
+      "audit_median_seconds": 2.116001,
+      "audit_samples_seconds": [
+        2.097741,
+        2.116001,
+        2.146267
+      ],
+      "audit_sha256": "8175a7a7523d57fca44231e47ad47b47aa5a6569a566920546dea720b1f4df4d",
+      "cells": 160000,
+      "eligible_centers": 158404,
+      "freeze_seconds": 2.81054,
+      "freeze_sha256": "aed9549547272b959edb35c9986524e14068ad5d22ac0119991c1e8c438f16dd",
+      "neighbor_lookups": 633616,
+      "side": 400
+    }
+  ],
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.10",
+  "repeats": 3,
+  "scope": "FIXTURE_ONLY",
+  "timing": "median seconds; generation excluded; audit includes row identity validation"
+}
