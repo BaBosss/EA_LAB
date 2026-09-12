@@ -51,6 +51,7 @@
 <header>
   <h1>🏭 EA_LAB — Dashboard</h1>
   <div class="sub">generated {{GENERATED}} · branch {{BRANCH}} · commit {{COMMIT}} · <b>ห้ามแก้ไฟล์นี้มือ</b> (regenerate ทุก commit)</div>
+  <div class="sub">READ_ONLY_PRESENTATION - generation time is not runtime observation time. Git canonical owners outrank this generated copy.</div>
 </header>
 <div class="wrap">
 
@@ -59,7 +60,7 @@
     <div class="stat"><div class="n" style="color:var(--amber)">{{DAYS_TO_JUDGE}}</div><div class="l">วันถึง Judge ({{JUDGE_DATE}})</div></div>
     <div class="stat"><div class="n" style="color:var(--red)">{{USER_ACTION_COUNT}}</div><div class="l">งานรอมือคุณ</div></div>
     <div class="stat"><div class="n" style="color:var(--blue)">{{OPEN_COUNT}}</div><div class="l">order เปิดค้าง</div></div>
-    <div class="stat"><div class="n" style="color:var(--green)">{{LIVE_COUNT}} + {{DEMO_COUNT}}</div><div class="l">EA live + demo</div></div>
+    <div class="stat"><div class="n" style="color:var(--green)">{{LIVE_COUNT}} / {{DEMO_COUNT}}</div><div class="l">Registered non-removed / removed (not runtime verification)</div></div>
   </div>
 
   <div class="card">
@@ -81,7 +82,7 @@
   <div class="card">
     <h2>📅 ปฏิทิน</h2>
     <table class="cal">
-      <tr><td>{{JUDGE_DATE}}</td><td><b>Judge day</b> — ตัดสิน keep/kill 9 EA live + ประกอบพอร์ต #1 → live micro</td></tr>
+      <tr><td>{{JUDGE_DATE}}</td><td><b>Judge reference</b> - consult canonical per-deployment judge dates; no LIVE promotion implied.</td></tr>
       <tr><td>ทุก 2 สัปดาห์</td><td>รอบ monitor: <span class="mono">collect_live_deals.ps1</span> → <span class="mono">/ea-monitor</span></td></tr>
       <tr><td>ต้นเดือน</td><td>บำรุงรักษา: memory compaction + นับ metrics (<span class="mono">AGENTS.md §6</span>)</td></tr>
       <tr><td>รายไตรมาส</td><td>blind verdict audit + กวาดกฎ regime + ซ้อม restore</td></tr>
@@ -90,18 +91,19 @@
   </div>
 
   <div class="card">
-    <h2>🧪 Demo cohort — Boss_14 family (60k cent · judge ตัดสิน)</h2>
+    <h2>Historical / REMOVED deployments (noncurrent)</h2>
     <div class="scroll"><table>
-      <tr><th>#</th><th>Symbol</th><th>Magic</th><th>PF</th><th>ธง/หมายเหตุ</th></tr>
+      <tr><th>Account</th><th>EA</th><th>Symbol</th><th>Magic</th><th>Type</th><th>Registry status</th></tr>
       {{DEMO_ROWS}}
     </table></div>
-    <div class="note">sizing 0.25x = วัดพฤติกรรม ไม่ใช่ผลตอบแทน · รายละเอียดเต็ม → DEMO_DEPLOYMENT_PLAN.md</div>
+    <div class="note">Historical deployment prose cannot override current inventory status.</div>
   </div>
 
   <div class="card">
-    <h2>🟢 Live portfolio (10k cent · เริ่ม 2026-06-22)</h2>
+    <h2>Current registered deployment inventory (runtime unverified)</h2>
+    <div class="note">{{DEPLOYMENT_SOURCE}}. Account + magic identify each leg. ACTIVE is a registry declaration, not observed LIVE health or promotion authority. Verify current origin/master before relying on this copy.</div>
     <div class="scroll"><table>
-      <tr><th>#</th><th>EA</th><th>Symbol/TF</th><th>Magic</th><th>OOS PF</th><th>สถานะ</th></tr>
+      <tr><th>Account</th><th>EA</th><th>Symbol</th><th>Magic</th><th>Type</th><th>Registry status</th></tr>
       {{LIVE_ROWS}}
     </table></div>
   </div>

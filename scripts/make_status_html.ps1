@@ -84,7 +84,6 @@ $branch = git -C $repo rev-parse --abbrev-ref HEAD
 $commit = git -C $repo rev-parse --short HEAD
 
 $psLines   = Get-Content (Join-Path $repo "PROJECT_STATE.md") -Encoding UTF8
-$demoLines = Get-Content (Join-Path $repo "DEMO_DEPLOYMENT_PLAN.md") -Encoding UTF8
 $boardFiles = @("AGENT_TASKBOARD.md","AGENT_TASKBOARD_MERGE.md") |
   ForEach-Object { Join-Path $repo $_ } | Where-Object { Test-Path $_ }
 
@@ -112,39 +111,44 @@ if ($judge) {
   $daysToJudge = 0
 }
 
-# ---- live portfolio table (PROJECT_STATE section 4) --------------------------
-$liveRows = @(); $inLive = $false
-foreach ($l in $psLines) {
-  if ($l -match '^## 4\.') { $inLive = $true; continue }
-  if ($inLive -and $l -match '^## ') { break }
-  if ($inLive -and $l -match '^\|\s*\d+\s*\|') {
-    $c = ($l.Trim('|') -split '\|') | ForEach-Object { StripMd $_ }
-    if ($c.Count -ge 6) {
-      $st = $c[5]
-      $cls = 't-live'; if ($st -match 'WATCH') { $cls = 't-watch' }
-      $liveRows += ("<tr><td>" + (HtmlEnc $c[0]) + "</td><td>" + (HtmlEnc $c[1]) + "</td><td>" +
-                    (HtmlEnc $c[2]) + "</td><td class='mono'>" + (HtmlEnc $c[3]) + "</td><td>" +
-                    (HtmlEnc $c[4]) + "</td><td><span class='tag " + $cls + "'>" + (HtmlEnc $st) + "</span></td></tr>")
-    }
+# ---- deployment inventory: one owner, account + magic identity ----------------
+# Historical prose is never a current deployment source. ACTIVE is a registry
+# status, not observed runtime health or LIVE promotion. Render REMOVED separately.
+$liveRows = @(); $demoRows = @()
+$deploymentSource = 'UNAVAILABLE - no deployment status asserted'
+$deploymentCount = 'UNKNOWN'; $removedCount = 'UNKNOWN'
+$savedDeploymentEap = $ErrorActionPreference
+$ErrorActionPreference = 'Stop'
+try {
+  $deploymentBytes = [System.IO.File]::ReadAllBytes((Join-Path $repo 'portfolio\DEPLOYMENTS.csv'))
+  $inventory = @([System.Text.Encoding]::UTF8.GetString($deploymentBytes).TrimStart([char]0xFEFF) | ConvertFrom-Csv)
+  if ($inventory.Count -eq 0) { throw 'empty deployment inventory' }
+  $keys = @{}
+  foreach ($row in $inventory) {
+    $unverifiedWithoutMagic = $row.status -ceq 'UNVERIFIED' -and [string]::IsNullOrEmpty($row.magic)
+    if ($row.account -notmatch '^\d+$' -or ($row.magic -notmatch '^\d+$' -and -not $unverifiedWithoutMagic) -or
+        $row.status -cnotin @('ACTIVE','REMOVED','UNVERIFIED') -or
+        -not $row.ea_name -or -not $row.symbol -or -not $row.type) { throw 'invalid deployment row' }
+    $key = "$($row.account)|$($row.magic)"
+    if ($keys.ContainsKey($key)) { throw 'duplicate account/magic identity' }
+    $keys[$key] = $true
   }
-}
-
-# ---- demo cohort table (first table in DEMO_DEPLOYMENT_PLAN) -----------------
-$demoRows = @(); $seenHeader = $false
-foreach ($l in $demoLines) {
-  if (-not $seenHeader) {
-    if ($l -match '^\|\s*#\s*\|\s*Symbol\s*\|\s*Magic') { $seenHeader = $true }
-    continue
+  foreach ($row in $inventory) {
+    $cells = @($row.account, $row.ea_name, $row.symbol, $row.magic, $row.type, $row.status) |
+      ForEach-Object { '<td>' + (HtmlEnc $_) + '</td>' }
+    $rendered = '<tr data-account="' + $row.account + '" data-magic="' + $row.magic +
+      '" data-status="' + $row.status + '">' + ($cells -join '') + '</tr>'
+    if ($row.status -ceq 'REMOVED') { $demoRows += $rendered } else { $liveRows += $rendered }
   }
-  if ($l -match '^\|---') { continue }
-  if ($l -notmatch '^\|\s*\d+\s*\|') { break }
-  $c = ($l.Trim('|') -split '\|') | ForEach-Object { StripMd $_ }
-  if ($c.Count -ge 6) {
-    $demoRows += ("<tr><td>" + (HtmlEnc $c[0]) + "</td><td>" + (HtmlEnc $c[1]) + "</td><td class='mono'>" +
-                  (HtmlEnc $c[2]) + "</td><td>" + (HtmlEnc $c[4]) + "</td><td>" +
-                  (HtmlEnc (Trunc $c[5] 110)) + "</td></tr>")
-  }
-}
+  $sha = [System.Security.Cryptography.SHA256]::Create()
+  try { $digest = ([BitConverter]::ToString($sha.ComputeHash($deploymentBytes))).Replace('-','').ToLowerInvariant() }
+  finally { $sha.Dispose() }
+  $deploymentSource = 'portfolio/DEPLOYMENTS.csv SHA256 ' + $digest
+  $deploymentCount = "$($liveRows.Count)"; $removedCount = "$($demoRows.Count)"
+} catch {
+  $liveRows = @('<tr><td colspan="6">UNKNOWN - deployment inventory unavailable or invalid</td></tr>')
+  $demoRows = @('<tr><td colspan="6">UNKNOWN - no historical status asserted</td></tr>')
+} finally { $ErrorActionPreference = $savedDeploymentEap }
 
 # ---- order queues from both boards -------------------------------------------
 $openRows = @(); $reviewedCount = 0
@@ -210,8 +214,9 @@ $map = @{
   '{{USER_ACTION_COUNT}}' = "$userActionCount"
   '{{OPEN_COUNT}}'        = "$($openRows.Count)"
   '{{REVIEWED_COUNT}}'    = "$reviewedCount"
-  '{{LIVE_COUNT}}'        = "$($liveRows.Count)"
-  '{{DEMO_COUNT}}'        = "$($demoRows.Count)"
+  '{{LIVE_COUNT}}'        = $deploymentCount
+  '{{DEMO_COUNT}}'        = $removedCount
+  '{{DEPLOYMENT_SOURCE}}' = $deploymentSource
   '{{USER_ACTIONS}}'      = ($userActions -join "`n")
   '{{LIVE_ROWS}}'         = ($liveRows -join "`n")
   '{{DEMO_ROWS}}'         = ($demoRows -join "`n")
