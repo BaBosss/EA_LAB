@@ -365,6 +365,14 @@ function renderLinks(links) {
 }
 
 const nativeObjectUrls = new Set();
+let nativeRenderGeneration = 0;
+let activeNativeRender = null;
+
+function currentNativeRender(render) {
+  const current = route();
+  return activeNativeRender === render && render.generation === nativeRenderGeneration &&
+    current.page === "detail" && current.id === render.record.id && getRecord(current.id) === render.record;
+}
 function ownerText(value) {
   return escapeHtml(valueOf(value).replace(/(?:[A-Za-z]:[\\/]|https?:\/\/|file:\/\/|\\\\)\S+/gi, "[LOCAL OR EXTERNAL REFERENCE OMITTED]"));
 }
@@ -402,25 +410,33 @@ async function digestHex(bytes) {
   return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), b => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function mountNativeGraphs(record) {
-  for (const role of ["main", "bwd"]) {
+async function mountNativeGraphs(record, render) {
+  // Capture BOTH role slots before yielding. An old MAIN completion must never
+  // acquire the next record's BWD slot, even when that record has no graph.
+  await Promise.all(["main", "bwd"].map(async role => {
     const graph = graphBinding(record, role);
-    if (graph.state !== "AVAILABLE") continue;
-    const slot = app.querySelector(`[data-native-role="${role}"]`);
+    if (graph.state !== "AVAILABLE") return;
+    const slot = render.slots[role];
+    const binding = JSON.stringify(graph);
+    const ownsSlot = () => currentNativeRender(render) && slot.isConnected &&
+      app.querySelector(`[data-native-role="${role}"]`) === slot &&
+      JSON.stringify(graphBinding(record, role)) === binding;
     try {
       const namespace = (await digestHex(new TextEncoder().encode(graph.package_id + graph.package_sha256 + record.id))).slice(0,32);
+      if (!ownsSlot()) return;
       if (!graph.href.includes(`/${namespace}/${role}/`)) throw new Error("binding mismatch");
       const response = await fetch(graph.href, {cache: "no-store", redirect: "error"});
+      if (!ownsSlot()) return;
       if (!response.ok) throw new Error("unavailable");
       const bytes = await response.arrayBuffer();
       if (await digestHex(bytes) !== graph.asset_sha256) throw new Error("content mismatch");
-      if (!slot.isConnected) continue;
+      if (!ownsSlot()) return;
       const blobUrl = URL.createObjectURL(new Blob([bytes], {type: graph.media_type}));
       const img = new Image();
       img.alt = `${role.toUpperCase()} source-bound native MT5 graph`;
       img.src = blobUrl;
       try { await img.decode(); } catch (error) { URL.revokeObjectURL(blobUrl); throw error; }
-      if (!slot.isConnected) { URL.revokeObjectURL(blobUrl); continue; }
+      if (!ownsSlot()) { URL.revokeObjectURL(blobUrl); return; }
       nativeObjectUrls.add(blobUrl);
       const link = document.createElement("a");
       link.href = blobUrl; link.target = "_blank"; link.rel = "noopener";
@@ -429,12 +445,12 @@ async function mountNativeGraphs(record) {
       slot.querySelector(".graph-state").textContent = "GRAPH ASSET AVAILABLE";
       slot.append(link);
     } catch {
-      if (slot.isConnected) {
+      if (ownsSlot()) {
         slot.querySelector(".graph-state").textContent = "GRAPH ASSET REFUSED";
-        app.querySelector("#graph-evidence-status").textContent = "INCOMPLETE";
+        render.status.textContent = "INCOMPLETE";
       }
     }
-  }
+  }));
 }
 
 function renderParameters(record) {
@@ -458,8 +474,6 @@ function renderDetail(id) {
   const setup = record.tested_setup || {};
   const setupRows = [["EA / strategy", record.display_name], ["Symbol", record.home?.symbol], ["Timeframe", record.home?.timeframe], ["Model", evidence.model], ["Set", setup.set], ["Leverage", setup.leverage], ["Install / lane", setup.lane], ["Package", setup.package_id], ["Evidence basis", evidence.basis_id], ["Source SHA", reportIndex.project.canonical_sha]];
   const graphsReady = ["main", "bwd"].every(role => graphBinding(record, role).state === "AVAILABLE");
-  for (const url of nativeObjectUrls) URL.revokeObjectURL(url);
-  nativeObjectUrls.clear();
   app.innerHTML = `<section class="page-heading"><a class="back-link" href="#home">← Back</a><p class="eyebrow">${escapeHtml(valueOf(record.family_id))} · ${escapeHtml(valueOf(record.variant_id))}</p><h2>${escapeHtml(record.display_name)}</h2><p>${badge(record.lifecycle)} ${badge(record.status || record.research_state)}</p></section>
     <section class="panel tested-setup"><h2>Exact tested setup</h2><dl class="facts">${setupRows.map(([k,v]) => `<div><dt>${k}</dt><dd>${ownerText(v)}</dd></div>`).join("")}</dl></section>
     <div class="native-windows">${renderNativeWindow(record, "main")}${renderNativeWindow(record, "bwd")}</div>
@@ -474,8 +488,12 @@ function renderDetail(id) {
     rows.forEach(row => { row.hidden = !row.textContent.toLowerCase().includes(query); });
     app.querySelector("#parameter-count").textContent = `${rows.filter(row => !row.hidden).length} / ${rows.length} parameters`;
   });
-  mountNativeGraphs(record).then(() => {
-    if (getRecord(route().id) === record && graphsReady && app.querySelectorAll('.graph-state').length === 2 && [...app.querySelectorAll('.graph-state')].every(n => n.textContent === "GRAPH ASSET AVAILABLE")) app.querySelector("#graph-evidence-status").textContent = "AVAILABLE";
+  const render = {generation: nativeRenderGeneration, record,
+    slots: Object.fromEntries(["main", "bwd"].map(role => [role, app.querySelector(`[data-native-role="${role}"]`)])),
+    status: app.querySelector("#graph-evidence-status")};
+  activeNativeRender = render;
+  mountNativeGraphs(record, render).then(() => {
+    if (currentNativeRender(render) && graphsReady && Object.values(render.slots).every(slot => slot.querySelector('.graph-state').textContent === "GRAPH ASSET AVAILABLE")) render.status.textContent = "AVAILABLE";
   });
 }
 
@@ -578,6 +596,12 @@ function renderAlerts() {
 }
 
 function renderRoute() {
+  // Invalidate pending success/error callbacks on every navigation, including
+  // leaving detail and A -> B -> A. The route replaces graph DOM synchronously.
+  nativeRenderGeneration++;
+  activeNativeRender = null;
+  for (const url of nativeObjectUrls) URL.revokeObjectURL(url);
+  nativeObjectUrls.clear();
   const current = route();
   const activePage = ["detail", "compare", "live"].includes(current.page) ? "ealab" : current.page === "queue" ? "work" : current.page;
   document.querySelectorAll("[data-nav]").forEach((link) => link.classList.toggle("active", link.dataset.nav === activePage));
