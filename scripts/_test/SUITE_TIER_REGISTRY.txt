@@ -57,6 +57,13 @@ run_provider_cli_preflight_tests.ps1|UNMEASURED|CLI preflight cage has focused e
 run_runtime_identity_transport_tests.ps1|UNMEASURED|Existing runtime-identity transport cage; incremental cost in the pinned full tier has not been measured.
 run_truncation_evidence_tests.ps1|UNMEASURED|Typed truncation evidence cage has focused execution evidence; incremental full-tier cost has not been measured.
 
+# QRESET-11, 2026-09-12: standalone attempts are recorded in
+# docs/audits/EA_LAB_SUITE_REGISTRY_REPAIR_20260912.md; full-tier admission is unmeasured.
+run_hermes_v2_tests.ps1|UNMEASURED|Hermes MCP fixture runner could not complete with its configured interpreter; successful suite cost and incremental full-tier cost remain unmeasured (QRESET-11 audit).
+run_mobile_monitor_operationalization_tests.ps1|UNMEASURED|Offline mobile-monitor fixture has standalone timing evidence; incremental cost and dependency qualification in the pinned full tier remain unmeasured (QRESET-11 audit).
+run_mt5_report_asset_tests.ps1|UNMEASURED|Native report-asset fixture has standalone timing evidence; incremental cost in the pinned full tier remains unmeasured (QRESET-11 audit).
+run_status_deployment_authority_tests.ps1|UNMEASURED|Deployment-authority presentation fixture has standalone timing evidence; incremental cost in the pinned full tier remains unmeasured (QRESET-11 audit).
+
 # ---------------------------------------------------------------------------------------
 # FAST -- in $FAST_SUITES. Cross-checked both ways by PART 8.
 # ---------------------------------------------------------------------------------------
