@@ -1,0 +1,2 @@
+row_type,login,server_time,currency,equity,balance,margin,free_margin,margin_level_pct,stopout_mode,stopout_level,magic,symbols,float_pl,open_lots,open_positions,oldest_open_hours,pending_orders
+ACCOUNT,415573666,2026.08.29 07:57:36,USD,0.00,0.00,0.00,0.00,0.0,PERCENT,0.0,,,,,,,
