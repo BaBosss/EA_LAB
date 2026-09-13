@@ -205,3 +205,13 @@ identity/window/hash refusals, unsafe paths, integrity failures, Git links,
 output reparse/collision refusal, legacy records, H08 preservation, decoding,
 390x844 and 1280x900 rendering, larger inspection, search, and an actual service
 worker with a poisoned old cache. No test launches MT5.
+
+## Control Dashboard merge (V3.3 repo-only)
+
+The existing Monitor remains the only owner-facing application. `build_index.py` now projects canonical Factory pilot evidence completeness into `factory_pilots` and reuses the existing Control Tower/Lane Registry projection for Work; it does not import the Control Dashboard's duplicate Registry parser.
+
+`factory_pilots` is `READ_ONLY_PRESENTATION_NO_STRATEGY_AUTHORITY`. Missing artifacts remain explicit evidence gaps and must not be interpreted as trading loss, EA failure, runtime health, deployment state, Grade or Candidate status. Safe report copies are emitted under relative content-addressed `artifacts/factory/...` paths with local filesystem references redacted.
+
+Work labels Registry totals as cumulative history, not concurrent agents. Alerts add blocked/stale/evidence-gap presentation only and explicitly separate these conditions from P&L or abnormal-trading claims.
+
+The integration contract is `docs/workflows/EA_LAB_MONITOR_CONTROL_DASHBOARD_INTEGRATION_V1.md`. This milestone does not change Scheduled Tasks, OneDrive delivery, hosting, runtime attachment, MT5, risk/defaults or trading.

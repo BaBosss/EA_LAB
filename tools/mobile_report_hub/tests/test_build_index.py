@@ -17,6 +17,7 @@ SHA = "b7ac57ce5e1a74dc7d8a0ed5717c4853786fd4fa"
 CURRENT_P4_SHA = "3207b4372a296e1fe6fc60f0b8c1ce3f0e18e4f1"
 V2_BASE_SHA = "ba666d8a0ed893f017627874835dbfd022033d4f"
 FIXED_TIME = "2026-08-30T00:00:00Z"
+DASHBOARD_MERGE_SHA = "5725dd2655a7730f702d6551ae80a78b6888ab89"
 
 
 class MobileReportHubDataTests(unittest.TestCase):
@@ -411,6 +412,38 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(dynamic[0]["summary"],"Noncanonical Lane Registry status: ACTIVE_CURRENT.")
         self.assertIn("UNKNOWN", {item["state"] for item in dynamic})
 
+    def test_factory_pilot_projection_preserves_one_valid_and_eight_missing(self):
+        out = Path(self.temp.name) / "factory-current"
+        index = build_index.build(ROOT, DASHBOARD_MERGE_SHA, out, "2026-09-13T10:30:00Z", DASHBOARD_MERGE_SHA, None)
+        factory = index["factory_pilots"]
+        self.assertEqual(factory["schema"], "factory_pilot_projection/1")
+        self.assertEqual(factory["authority"], "READ_ONLY_PRESENTATION_NO_STRATEGY_AUTHORITY")
+        self.assertEqual(factory["canonical_sha"], DASHBOARD_MERGE_SHA)
+        self.assertEqual(factory["summary"], {"pilot_directories": 9, "valid_pilots": 1, "issue_count": 8})
+        missing = [row for row in factory["rows"] if row["state"] == "MISSING_ARTIFACT"]
+        valid = [row for row in factory["rows"] if row["state"] == "VALID"]
+        self.assertEqual(len(missing), 8)
+        self.assertTrue(all(row["missing_artifacts"] == ["pilot_manifest.json", "report.html"] for row in missing))
+        self.assertEqual(len(valid), 1)
+        row = valid[0]
+        self.assertEqual(row["id"], "supertrend_rev05_btcusd_h4_holdout26h1")
+        self.assertEqual(row["source_authority"], "NON_AUTHORITATIVE_SIDECAR")
+        self.assertEqual(row["quality_grade"], "UNRATIFIED")
+        self.assertEqual(row["evidence_confidence"], "UNKNOWN")
+        self.assertTrue(row["report"]["local_paths_redacted"])
+        self.assertTrue((out / row["report"]["href"]).is_file())
+        blob = json.dumps(factory)
+        self.assertNotRegex(blob, r"[A-Za-z]:\\")
+        self.assertNotIn("file:///", blob.lower())
+        self.assertIn("not strategy, trading, PnL, runtime or deployment health", factory["limitations"][0])
+
+    def test_factory_projection_missing_artifacts_do_not_become_strategy_failure(self):
+        out = Path(self.temp.name) / "factory-state"
+        factory = build_index.build(ROOT, DASHBOARD_MERGE_SHA, out, "2026-09-13T10:30:00Z", DASHBOARD_MERGE_SHA, None)["factory_pilots"]
+        self.assertEqual(factory["status"], "INCOMPLETE_EVIDENCE")
+        self.assertNotEqual(factory["status"], "RED")
+        self.assertTrue(all(row["state"] != "RED" for row in factory["rows"]))
+        self.assertNotIn("LOSS", json.dumps(factory).upper())
     def test_expected_sha_mismatch_and_missing_source_fail_closed(self):
         with self.assertRaisesRegex(build_index.BuildError, "expected SHA mismatch"):
             build_index.build(ROOT, SHA, self.out, FIXED_TIME, "0" * 40, None)

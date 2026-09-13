@@ -46,6 +46,10 @@ const server = http.createServer((req, res) => {
     const navTops = await page.locator('.bottom-nav a').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().top));
     assert.equal(new Set(navTops).size,1,'All five navigation items must share one row');
     results.push('V3 JSON schema positive/negative PASS; canonical degraded state visible; five-tab single row');
+    assert.equal(base.factory_pilots.summary.pilot_directories,9);
+    assert.equal(base.factory_pilots.summary.valid_pilots,1);
+    assert.equal(base.factory_pilots.summary.issue_count,8);
+    results.push('Factory projection: 1 valid / 8 missing-artifact issues source-bound');
     payload = structuredClone(base);
     payload.monitoring = {...payload.monitoring, status:'DEGRADED', repo_head:'a'.repeat(40),
       binding_state:'DIFFERENT_REPO_HEAD', snapshot_revision:{git_head:'b'.repeat(40),binding_state:'DIFFERENT_SNAPSHOT_HEAD'}};
@@ -64,6 +68,15 @@ const server = http.createServer((req, res) => {
       await page.getByRole('heading',{name:heading,exact:true}).first().waitFor();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth),390, `${label} overflow`);
       results.push(`${label}: rendered, scrollWidth=390`);
+      if (label === 'EA Lab') {
+        await page.getByRole('heading',{name:'Factory evidence completeness',exact:true}).waitFor();
+        await page.getByText(/1 complete \/ 9 pilot directories/).waitFor();
+        await page.getByText(/8 explicit evidence issue/).waitFor();
+      }
+      if (label === 'Alerts') {
+        await page.getByRole('heading',{name:'Work / evidence alerts',exact:true}).waitFor();
+        await page.getByText(/do not imply trading loss, abnormal market behavior, EA malfunction or runtime failure/).waitFor();
+      }
     }
     await page.goto(url+'#home');
     await page.getByRole('heading',{name:'NEED BOSS',exact:true}).waitFor();
@@ -89,7 +102,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await workCount('RUNNING'),'1');
     assert.equal(await workCount('BLOCKED'),'1');
     assert.equal(await workCount('PARKED'),'UNKNOWN');
-    await page.getByText('Unresolved observations: 4. Counts exclude these rows. PARKED: unavailable.',{exact:true}).waitFor();
+    await page.getByText(/Unresolved observations: 4\. Counts exclude these rows\. Registry rows are cumulative history, not concurrent agents\. PARKED: unavailable\./).waitFor();
     results.push('Mixed current/stale/conflicting registry: RUNNING=1, BLOCKED=1, unresolved=4, PARKED=UNKNOWN');
     const mixed = structuredClone(payload);
     for (const change of [
@@ -230,7 +243,7 @@ const server = http.createServer((req, res) => {
       assert.ok(sw.includes('"./'+asset+'"') && html.includes('"'+asset+'"'));
       assert.ok(fs.existsSync(path.join(hub, asset)));
     }
-    assert.match(sw, /ea-lab-report-hub-v3\.2-native/);
+    assert.match(sw, /ea-lab-report-hub-v3\.3-dashboard-merge/);
     results.push('V3.1 local shell JS/CSS references and cache generation PASS');
     const badSha=structuredClone(base.control_tower);badSha.work[0].head_sha='short';
     assert.equal(validate(badSha),false,'Schema rejects malformed full SHA');

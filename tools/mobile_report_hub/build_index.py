@@ -24,12 +24,13 @@ import report_package_integrity as integrity
 
 SCHEMA_VERSION = 1
 GENERATOR_NAME = "mobile_report_hub.build_index"
-GENERATOR_VERSION = "3.2.0"
+GENERATOR_VERSION = "3.3.0"
 B16 = "docs/factory/B16_H03_CONFIRMATION_RESULTS.md"
 B19 = "docs/research/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"
 H02 = "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"
 MASTER = "EA_MASTER_INDEX.csv"
 TASKBOARD = "AGENT_TASKBOARD.md"
+FACTORY_PILOTS = "factory/vnext/pilots"
 
 
 class BuildError(RuntimeError):
@@ -220,6 +221,110 @@ def selected_artifact(path: str, content: bytes, out: Path, redact_local_paths: 
     target.write_bytes(rendered)
     return target.relative_to(out).as_posix()
 
+
+def _factory_safe_text(value: object, fallback: str = "UNKNOWN") -> str:
+    if not isinstance(value, str) or not value or len(value) > 200:
+        return fallback
+    if re.search(r"(?:[A-Za-z]:[\\/]|file://|\\\\)", value) or any(ch in value for ch in "\r\n<>"):
+        return fallback
+    return value
+
+
+def _factory_report_artifact(pilot_dir: str, raw: bytes, out: Path) -> dict:
+    if not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", pilot_dir):
+        raise BuildError("unsafe factory pilot directory")
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise BuildError("factory report is not UTF-8") from error
+    text = re.sub(r"[A-Za-z]:\\[^<\"'\s]+", "[LOCAL_PATH_REDACTED]", text)
+    text = re.sub(r"file:///[^<\"'\s]+", "[LOCAL_PATH_REDACTED]", text, flags=re.I)
+    text = re.sub(r"\\\\[^<\"'\s]+", "[LOCAL_PATH_REDACTED]", text)
+    rendered = text.encode("utf-8")
+    digest = hashlib.sha256(rendered).hexdigest()
+    href = f"artifacts/factory/{pilot_dir}/{digest}.html"
+    target = out / href
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists() and target.read_bytes() != rendered:
+        raise BuildError("factory report static content collision")
+    if not target.exists():
+        target.write_bytes(rendered)
+    return {"href": href, "source_sha256": hashlib.sha256(raw).hexdigest(),
+            "rendered_sha256": digest, "local_paths_redacted": True}
+
+
+def factory_pilot_projection(repo: Path, sha: str, out: Path, observed_at: str) -> dict:
+    paths = sorted(p for p in git(repo, "ls-tree", "-r", "--name-only", sha, "--", FACTORY_PILOTS).decode().splitlines()
+                   if p.startswith(FACTORY_PILOTS + "/"))
+    listing = "\n".join(paths).encode("utf-8")
+    provenance = {"path": FACTORY_PILOTS, "sha256": hashlib.sha256(listing).hexdigest(), "canonical_sha": sha,
+                  "source_kind": "GIT_CANONICAL_TREE_LISTING"}
+    dirs = sorted({p[len(FACTORY_PILOTS)+1:].split("/", 1)[0] for p in paths if "/" in p[len(FACTORY_PILOTS)+1:]})
+    rows, issues = [], []
+    required = ("pilot_manifest.json", "artifact_index.json", "report.html")
+    for name in dirs:
+        if not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", name):
+            issues.append({"pilot": "REDACTED_UNSAFE_ID", "state": "INVALID_ARTIFACT", "missing": [], "reason": "UNSAFE_PILOT_DIRECTORY"})
+            continue
+        root = f"{FACTORY_PILOTS}/{name}"
+        owned = {p[len(root)+1:] for p in paths if p.startswith(root + "/") and "/" not in p[len(root)+1:]}
+        missing = [item for item in required if item not in owned]
+        row = {"id": name, "state": "MISSING_ARTIFACT" if missing else "UNKNOWN",
+               "source_kind": "GIT_CANONICAL", "authority": "READ_ONLY_PRESENTATION_NO_STRATEGY_AUTHORITY",
+               "evidence_completeness": "INCOMPLETE" if missing else "UNKNOWN", "missing_artifacts": missing,
+               "report": None, "provenance": {"path": root, "canonical_sha": sha}}
+        if missing:
+            issues.append({"pilot": name, "state": "MISSING_ARTIFACT", "missing": missing,
+                           "reason": "REQUIRED_FACTORY_PILOT_ARTIFACT_MISSING"})
+            rows.append(row)
+            continue
+        try:
+            manifest_raw = regular_blob(repo, sha, f"{root}/pilot_manifest.json")
+            index_raw = regular_blob(repo, sha, f"{root}/artifact_index.json")
+            report_raw = regular_blob(repo, sha, f"{root}/report.html")
+            manifest, artifact_index = json.loads(manifest_raw), json.loads(index_raw)
+            if not isinstance(manifest, dict) or not isinstance(artifact_index, dict):
+                raise BuildError("invalid factory pilot JSON shape")
+            pilot_id = manifest.get("PilotID")
+            run_id = manifest.get("RunManifest", {}).get("RunID")
+            if not isinstance(pilot_id, str) or not isinstance(run_id, str) or pilot_id != artifact_index.get("PilotID") or run_id != artifact_index.get("RunID"):
+                raise BuildError("factory pilot identity mismatch")
+            entries = artifact_index.get("files")
+            if not isinstance(entries, dict):
+                raise BuildError("factory artifact index missing files")
+            for filename, raw in (("pilot_manifest.json", manifest_raw), ("report.html", report_raw)):
+                entry = entries.get(filename)
+                if not isinstance(entry, dict) or entry.get("bytes") != len(raw) or entry.get("sha256") != hashlib.sha256(raw).hexdigest():
+                    raise BuildError("factory artifact index hash/size mismatch")
+            grade = manifest.get("GradeEvidence", {}) if isinstance(manifest.get("GradeEvidence"), dict) else {}
+            home = manifest.get("HomeContract", {}) if isinstance(manifest.get("HomeContract"), dict) else {}
+            variant = manifest.get("Architecture", {}).get("Variant", {}) if isinstance(manifest.get("Architecture"), dict) else {}
+            params = manifest.get("ParameterSet", {}) if isinstance(manifest.get("ParameterSet"), dict) else {}
+            window = manifest.get("WindowContract", {}) if isinstance(manifest.get("WindowContract"), dict) else {}
+            row.update(state="VALID", evidence_completeness="COMPLETE_REQUIRED_TRIO",
+                       pilot_id=_factory_safe_text(pilot_id), run_id=_factory_safe_text(run_id),
+                       strategy=_factory_safe_text(home.get("ConceptID")), variant=_factory_safe_text(variant.get("VariantID")),
+                       symbol=_factory_safe_text(home.get("LogicalSymbol")), timeframe=_factory_safe_text(home.get("ExecutionTF")),
+                       profile=_factory_safe_text(params.get("ProfileID")),
+                       window=_factory_safe_text(f"{window.get('WindowClass', 'UNKNOWN')} {window.get('StartDate', 'UNKNOWN')} -> {window.get('EndDate', 'UNKNOWN')}", "UNKNOWN"),
+                       evidence_home_status=_factory_safe_text(grade.get("home_status")),
+                       quality_grade=_factory_safe_text((grade.get("top_level") or {}).get("QUALITY_GRADE"), "UNRATIFIED") if isinstance(grade.get("top_level"), dict) else "UNRATIFIED",
+                       evidence_confidence=_factory_safe_text((grade.get("top_level") or {}).get("EVIDENCE_CONFIDENCE"), "UNKNOWN") if isinstance(grade.get("top_level"), dict) else "UNKNOWN",
+                       source_authority=_factory_safe_text(manifest.get("authority"), "UNKNOWN"),
+                       report=_factory_report_artifact(name, report_raw, out))
+        except (BuildError, ValueError, OSError, KeyError, TypeError, AttributeError):
+            row.update(state="INVALID_ARTIFACT", evidence_completeness="INVALID", report=None)
+            issues.append({"pilot": name, "state": "INVALID_ARTIFACT", "missing": [], "reason": "FACTORY_PILOT_VALIDATION_REFUSED"})
+        rows.append(row)
+    valid_count = sum(row["state"] == "VALID" for row in rows)
+    issue_count = len(issues)
+    return {"schema": "factory_pilot_projection/1", "status": "UNAVAILABLE" if not dirs else "INCOMPLETE_EVIDENCE" if issue_count else "COMPLETE_EVIDENCE",
+            "authority": "READ_ONLY_PRESENTATION_NO_STRATEGY_AUTHORITY", "source_kind": "GIT_CANONICAL",
+            "canonical_sha": sha, "observed_at_utc": observed_at, "timestamp_basis": "MONITOR_BUILD_AS_OF",
+            "summary": {"pilot_directories": len(dirs), "valid_pilots": valid_count, "issue_count": issue_count},
+            "rows": rows, "issues": issues, "provenance": provenance,
+            "limitations": ["Evidence completeness only; not strategy, trading, PnL, runtime or deployment health.",
+                            "Missing artifacts remain explicit and are not inferred from neighboring files."]}
 
 def lane_registry(path: Path | None) -> list[dict]:
     if path is None:
@@ -495,10 +600,12 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
     boss19_queue_summary = boss19_item.get("blocker_reason", "Boss19 P4 regime attribution interpretation complete; research-only mixed evidence.")
     eas = inventory_records(master_text, sha) + extract_h02(h02_text, h02_p) + [b16_item, boss19_item]
     add_native_reports(repo, sha, out, eas)
+    factory_pilots = factory_pilot_projection(repo, sha, out, as_of)
     index = {"schema_version": SCHEMA_VERSION, "generator": {"name": GENERATOR_NAME, "version": GENERATOR_VERSION},
              "project": {"canonical_sha": sha, "canonical_short_sha": sha[:12], "source_ref": ref,
                          "generated_at": as_of, "data_status": "CURRENT", "freshness": "PINNED_GIT_REF"},
-             "sources": [b16_p, b19_p, h02_p, master_p, taskboard_p], "eas": eas,
+             "sources": [b16_p, b19_p, h02_p, master_p, taskboard_p, factory_pilots["provenance"]], "eas": eas,
+             "factory_pilots": factory_pilots,
              "queue": [{"id": "FACTORY-B16-H03-CONFIRMATION", "state": "DONE", "blocker_type": "NOT_APPLICABLE",
                         "summary": "B16 H03 confirmation complete; H04 is not unlocked.", "source_kind": "GIT_CANONICAL"},
                        {"id": "BOSS19-P4-REGIME-ATTRIBUTION", "state": boss19_item["status"], "blocker_type": boss19_queue_blocker,
