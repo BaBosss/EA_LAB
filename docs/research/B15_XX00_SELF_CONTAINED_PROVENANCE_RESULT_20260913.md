@@ -1,15 +1,16 @@
 # B15 self-contained provenance result - 2026-09-13
 
-PACKAGE STATUS: CANDIDATE_COMMITTED_LOCAL / BOUNDED_FRESH_CLONE_REPAIR_1_OF_1 / TARGETED_RECHECK_PENDING.
-SAFE_FOR_TARGETED_RECHECK: YES.
+PACKAGE STATUS: PASS_TECHNICAL_ACCEPTANCE / FRESH_CLONE_PASS / READY_FOR_INDEPENDENT_REVIEW.
+SAFE_FOR_INDEPENDENT_REVIEW: YES.
 Independent exact-head review: PENDING_CONTROL_TOWER.
-Fresh-clone status: initial candidate `ba40ea8505a072b4a6ce69b4f8c7444e2375af81` exposed a B_HARNESS_TEST fixture-location defect; repair 1/1 moves the temporary bundle/clone outside the package inventory. Targeted fresh-clone recheck is pending.
+Fresh-clone status: PASS at technical package head `00109fd0548362dc1143487c30c215e2fc31fce1`. The candidate-only bundle exposed only HEAD, used no shared object database, did not contain rejected object `a0a3b5b...`, and passed package validation plus 26/26 negative tests.
 
-Lane: `b15-selfcontained-provenance-v1-20260913`; device BaBoss.
+Author lane: `b15-selfcontained-provenance-v1-20260913`; Control Tower re-anchor lane: `b15-selfcontained-provenance-reanchor-20260913`; device BaBoss.
 Exact base and read-only remote master observation:
 `a1a0965b4ca6fef05340b810fdc6b09adbe560f8`.
 One implementation pass; `MT5_runs=0`; `repair_budget=1/1` used only for the fresh-clone harness fixture-location defect. Package evidence/strategy bytes and semantics were not changed by the repair.
-No staging, commit or push. No tester/terminal/process invocation for MT5,
+The package validator's epair_budget=0/1 field preserves the worker implementation baseline; order-level Control Tower repair authority is now exhausted at 1/1 and no further repair is authorized under this contract.
+Technical package and repair commits are local only; no push yet. No tester/terminal/process invocation for MT5,
 compile, optimization, rerun, retune, HOLDOUT, deployment or trading.
 
 STRATEGY STATUS: unchanged. This new package does not repair/reopen
