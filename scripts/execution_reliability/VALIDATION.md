@@ -2,8 +2,8 @@
 
 Status: **PASS / TRUSTED-ROOT SMOKE PASS / REPO-ONLY**.
 
-Canonical re-anchor base: `baacfa79bee6a313028ee9ca42614ccf0d03e186`.
-Worktree: `D:\EA_LAB_CONTROL\worktrees\norton-ps-hardening-reanchor-20260913`.
+Final canonical re-anchor base: `a1a0965b4ca6fef05340b810fdc6b09adbe560f8`.
+Final acceptance worktree: `D:\EA_LAB_CONTROL\worktrees\norton-ps-hardening-final-20260913`.
 Original six-file author bytes were copied from the prior `45319cd...` worktree with SHA-256 equality before revalidation. `origin/master` had moved, so acceptance was repeated on the fresh base.
 
 ## Environment
@@ -21,7 +21,7 @@ Original six-file author bytes were copied from the prior `45319cd...` worktree 
 | Check | Result |
 | --- | --- |
 | Python `py_compile` for runner/job/tests | PASS |
-| Default trusted-root integration suite | **10/10 PASS** |
+| Default trusted-root integration suite | **11/11 PASS** — 9 tests launch real PowerShell; 2 are pure policy/cleanup tests |
 | Trusted-root production smoke | **PASS / SUCCESS / exit 0** |
 | Owned timeout descendant cleanup | PASS |
 | Ordinary nonzero script failure: no retry | PASS |
@@ -31,8 +31,8 @@ Original six-file author bytes were copied from the prior `45319cd...` worktree 
 | Containment-assignment failure: target never runs | PASS |
 | Cleanup boundary / sibling preservation | PASS |
 
-Final smoke run ID: `b530e25266de4101810a394d44c8ee7c`.
-Its child PowerShell used `D:\EA_LAB_CONTROL\trusted_exec\temp\attempt-b530e25266de4101810a394d44c8ee7c-0` for TEMP/TMP/TMPDIR, exited `0`, confirmed owned process-tree cleanup, produced complete redacted output digests, and removed only its own attempt temp. Duration: `0.297s`.
+Final smoke run ID: `36e40575f5ef4f30b73d84e8d60b18ec`.
+Its child PowerShell used `D:\EA_LAB_CONTROL\trusted_exec\temp\attempt-36e40575f5ef4f30b73d84e8d60b18ec-0` for TEMP/TMP/TMPDIR, exited `0`, confirmed owned process-tree cleanup, produced complete redacted output digests, and removed only its own attempt temp. Duration: `0.313s`.
 
 The earlier Codex sandbox `PermissionError / WinError 5` against the external trusted log root was an execution-environment limitation, not a product failure. Re-running from the authorized BaBoss RDC execution context closed that blocker without changing ACLs or widening paths.
 
@@ -44,5 +44,7 @@ The earlier Codex sandbox `PermissionError / WinError 5` against the external tr
 - `smoke_temp.ps1` — harmless trusted-root inheritance probe.
 - `POWERSHELL_WATCHDOG.md` — operator runbook and Norton boundary.
 - `VALIDATION.md` — acceptance record.
+
+Canonical source implementation commit: `373e0bd0e42fbed3563bbfd3f2dd57e3a4193aec`.
 
 The final runner intentionally omits `-ExecutionPolicy Bypass`; normal machine/user policy remains in force. No MT5, trading, deployment, risk/default, Scheduled Task, provider profile, or Norton setting changed.
