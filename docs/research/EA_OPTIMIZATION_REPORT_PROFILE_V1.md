@@ -48,7 +48,8 @@ Prefer visuals that reveal topology rather than only rank:
 - plateau/stability region map;
 - selected-center plus immediate neighbour table;
 - boundary-pressure markers;
-- trade-off views such as PF vs DD, net vs participation, or stability vs exposure when useful.
+- mandatory R3 PF/return-versus-DD view required by EA_REPORT_LADDER.md;
+- additional trade-off views such as net vs participation or stability vs exposure when useful.
 
 Genetic output is a region map. It may narrow the region, but the report must distinguish sampled genetic cells from completed bounded neighbours.
 ## Selection and downstream validation

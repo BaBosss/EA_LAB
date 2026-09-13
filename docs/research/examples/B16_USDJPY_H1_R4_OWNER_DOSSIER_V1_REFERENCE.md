@@ -4,6 +4,11 @@ Status: `REPORTING REFERENCE / EXAMPLE ONLY / NO NEW AUTHORITY`
 
 This reference records the reporting lessons from the first owner-facing B16 USDJPY/H1 R4 dossier. The accepted research truth remains in the canonical R4, Episode-unit and Swap-credit result owners; this file does not duplicate or supersede them.
 
+Accepted result owners:
+- docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_RESULTS.md;
+- docs/research/B16_USDJPY_H1_R4_EPISODEUNIT_RESULTS_20260912.md;
+- docs/research/B16_USDJPY_H1_R4_SWAPCREDIT_RESULTS_20260912.md.
+
 ## Report role
 
 Report type: `SINGLE_CONFIG`.
