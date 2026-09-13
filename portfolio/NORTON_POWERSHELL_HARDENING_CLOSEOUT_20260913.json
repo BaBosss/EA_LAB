@@ -1,0 +1,118 @@
+{
+  "schema": "ea_lab_norton_powershell_hardening_closeout/1",
+  "date": "2026-09-13",
+  "status": "ACCEPTED_REVIEWED_CANONICAL_TOOLING_ONLY_CLOSED",
+  "host": "BaBoss",
+  "device_id": "bbb88aa0-1598-43f6-b56c-a7db22af086a",
+  "repository": "https://github.com/BaBosss/EA_LAB.git",
+  "source_commit": "373e0bd0e42fbed3563bbfd3f2dd57e3a4193aec",
+  "final_convergence_commit": "cb530b5c8b2ac18dff3555cd3f2277af220e64da",
+  "incident": {
+    "observed_signature": "IDP.HELU.PSE90",
+    "observed_effect": "powershell.exe termination and __PSScriptPolicyTest_*.ps1 deletion",
+    "classification_rule": "environment interference evidence only; not every PowerShell failure is Norton"
+  },
+  "trusted_execution": {
+    "temp_root": "D:\\EA_LAB_CONTROL\\trusted_exec\\temp",
+    "logs_root": "D:\\EA_LAB_CONTROL\\trusted_exec\\logs",
+    "persistent_environment_changed": false,
+    "norton_settings_changed": false
+  },
+  "behavior": {
+    "child_temp_set_before_powershell_initialization": true,
+    "windows_job_object_owned_tree": true,
+    "finite_timeout": true,
+    "ordinary_nonzero_retried": false,
+    "abrupt_retry_max": 1,
+    "unresolved_environment_failure": "BLOCKED_C_ENVIRONMENT_DEPENDENCY"
+  },
+  "validation": {
+    "py_compile": "PASS",
+    "suite": "11/11 PASS",
+    "suite_real_powershell_tests": 9,
+    "suite_policy_cleanup_tests": 2,
+    "trusted_temp_smoke": "PASS_SUCCESS_EXIT_0",
+    "accepted_smoke_run_id": "36e40575f5ef4f30b73d84e8d60b18ec",
+    "accepted_smoke_duration_seconds": 0.313,
+    "owned_timeout_descendant_cleanup": "PASS",
+    "argument_and_output_privacy": "PASS",
+    "containment_assignment_failure": "PASS_FAIL_CLOSED",
+    "cleanup_boundary": "PASS",
+    "git_diff_check": "PASS",
+    "normal_commit_hooks": "PASS"
+  },
+  "review": {
+    "targeted_rereview": "PASS",
+    "severity": "NONE",
+    "allow_ff_push": true,
+    "receipt_path": "D:\\EA_LAB_CONTROL\\evidence\\norton-powershell-hardening-20260913\\TARGETED_REREVIEW.txt",
+    "receipt_sha256": "4b050334cdb3be28e3445d8a9cb69fb0999b748f72be12dc2ece5359692ee0fe"
+  },
+  "external_evidence": {
+    "accepted_smoke_summary_path": "D:\\EA_LAB_CONTROL\\trusted_exec\\logs\\run-36e40575f5ef4f30b73d84e8d60b18ec\\summary.json",
+    "accepted_smoke_summary_sha256": "ab2892f45fab93211111dcc833652aa4788205f8c7e28099003223d11f274b79",
+    "final_convergence_lane_path": "D:\\EA_LAB_CONTROL\\lanes\\registry-v1\\ct-final-convergence-20260913.json",
+    "final_convergence_lane_sha256": "010e4d29f96c9c580e49f252b21596bd3bce0c1590ce1bdbb7e505fcfdb6d1ef"
+  },
+  "source_files": [
+    {
+      "path": "scripts/execution_reliability/run_powershell.py",
+      "git_blob": "f2c28344ee50100bfbc00f368e41ceb892398420",
+      "sha256": "3a1895f64298762de5e5084899b1a78e5a4e2b3806d030385c6ff6279cb43c6f"
+    },
+    {
+      "path": "scripts/execution_reliability/windows_job.py",
+      "git_blob": "777945a17b8124e009334b67d732120c5d2fb62a",
+      "sha256": "dcf633398e06dde8bcee363379a172704dc07f6bc0c2fa3327dc7bfe1b2e6086"
+    },
+    {
+      "path": "scripts/execution_reliability/test_run_powershell.py",
+      "git_blob": "064e19035079928892e976d9a8e883af8efb1bc2",
+      "sha256": "1e726476ad0502b13ace61fb802b5f686bc99e6a86e26c4128ce107881cbbcd2"
+    },
+    {
+      "path": "scripts/execution_reliability/smoke_temp.ps1",
+      "git_blob": "2162abef21fda59e961301e26b4dbdc3d1c264e5",
+      "sha256": "7566d733a988ec9893be71a645238adb9bdba3aca487b7407e52274488a22ede"
+    },
+    {
+      "path": "scripts/execution_reliability/POWERSHELL_WATCHDOG.md",
+      "git_blob": "0ee643c4382e51da7d6d37dd23eefefc081f7d23",
+      "sha256": "3c93d71b9f7b97cd955fc9f18fce633790053e442a23ed7c5ee8268588b5ef34"
+    },
+    {
+      "path": "scripts/execution_reliability/VALIDATION.md",
+      "git_blob": "eb12a167281f763e9d9b881a239788a890a8eb2c",
+      "sha256": "97dd207136fe46b05b257c9c323cfa5437923d9cfecf644299a33dbda1980df5"
+    }
+  ],
+  "canonical_state": {
+    "project_state_records_closed_status": true,
+    "taskboard_new_norton_item": false,
+    "final_convergence_lane": "DONE",
+    "source_commit_is_ancestor_of_final_convergence": true
+  },
+  "superseded_local_lines": [
+    "5ab3131264a8eb1834a9fccd91d8932def417f28",
+    "4b5f779ac23216f729e334e98de255bfd9df93de",
+    "05bd1ebed16dd0cfd7f78d986d1c69bfbe9895b6"
+  ],
+  "security_boundary": {
+    "recommended_manual_exclusion": "D:\\EA_LAB_CONTROL\\trusted_exec\\temp",
+    "exclusion_applied_by_repo": false,
+    "exclude_whole_repo": false,
+    "exclude_powershell_exe": false,
+    "exclude_all_user_temp": false
+  },
+  "authority": {
+    "tooling_only": true,
+    "mt5_runtime_deployment_trading_risk_default_authority": false,
+    "norton_security_setting_authority": false
+  },
+  "handoff": {
+    "path": "docs/handoffs/CONTROL_TOWER_NORTON_POWERSHELL_HARDENING_20260913.md",
+    "direct_consumer": "one active EA_LAB Control Tower",
+    "reopen_rule": "only for reproducible regression or new direct consumer"
+  },
+  "next_action": "Control Tower should consume the canonical handoff and continue the highest-priority READY EA_LAB work; no Norton-hardening continuation is READY by default."
+}
