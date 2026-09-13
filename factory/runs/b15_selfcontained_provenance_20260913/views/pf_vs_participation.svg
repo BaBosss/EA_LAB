@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+<rect width="1200" height="760" fill="#f7f9fc"/>
+<style>text{font-family:Arial,sans-serif;fill:#183049} .small{font-size:13px} .label{font-size:17px}</style>
+<text x="35" y="42" font-size="25">B15 XX00 | GBPUSD / H4 | PF versus entry-active months / 36</text>
+<text x="35" y="72" font-size="15">MT5-lane3 / D:\Meta 5c | Model 1 | MAIN 2023.01.01-2025.12.31 | BWD 2020.01.01-2022.12.31</text>
+<text x="35" y="100" font-size="15">Derived R1 presentation only. Native images: 8 MISSING / closure INCOMPLETE. Strategy assessment not assigned.</text>
+<path d="M110 160 V430 H940" fill="none" stroke="#536a80"/>
+<text x="105.0" y="453" font-size="13">0</text>
+<text x="243.33333333333331" y="453" font-size="13">6</text>
+<text x="381.66666666666663" y="453" font-size="13">12</text>
+<text x="520.0" y="453" font-size="13">18</text>
+<text x="658.3333333333333" y="453" font-size="13">24</text>
+<text x="796.6666666666667" y="453" font-size="13">30</text>
+<text x="935.0" y="453" font-size="13">36</text>
+<text x="72" y="435.0" font-size="13">0</text>
+<text x="72" y="345.0" font-size="13">1</text>
+<text x="72" y="255.0" font-size="13">2</text>
+<text x="72" y="165.0" font-size="13">3</text>
+<text x="450" y="480" font-size="16">Entry-active calendar months (denominator 36)</text>
+<text x="40" y="160" font-size="16">PF</text>
+<circle cx="179.16666666666666" cy="404.8" r="7" fill="#22759c"/>
+<text x="193.16666666666666" y="394.8" font-size="16">MAIN: PF 0.28; entry months 3/36</text>
+<text x="193.16666666666666" y="418.8" font-size="14">tickets 13; L0 tags 5; baskets/episodes UNKNOWN</text>
+<circle cx="294.44444444444446" cy="239.2" r="7" fill="#aa5f1d"/>
+<text x="308.44444444444446" y="229.2" font-size="16">BWD: PF 2.12; entry months 8/36</text>
+<text x="308.44444444444446" y="253.2" font-size="14">tickets 24; L0 tags 6; baskets/episodes UNKNOWN</text>
+<text x="35" y="528" font-size="15">No sample floor or adequacy verdict. Zero activity/zero closes do not establish zero exposure.</text>
+<text x="35" y="560" font-size="13">Run: factory/runs/xx00_b13_b15_screen_20260909/</text>
+<text x="35" y="582" font-size="13">Rejected input head: a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2</text>
+<text x="35" y="604" font-size="13">EA source commit: 24125ea69ad8f4410f8501d3ea005a60fb92936b</text>
+<text x="35" y="630" font-size="13">XX00_B15_GBPUSD_H4_MAIN_M1 | report SHA256:</text>
+<text x="35" y="649" font-size="13">97c89bdd82bfb6ed4e256440547022585f185df3366f3edd952e5c1c44f87d7d</text>
+<text x="35" y="672" font-size="13">XX00_B15_GBPUSD_H4_BWD_M1 | report SHA256:</text>
+<text x="35" y="691" font-size="13">10d9edf6a661aaf25e9cbb962cd6f5d3a5c4bb1ffab91a204f6556da5a99a105</text>
+<text x="35" y="730" font-size="13">Exact cell records, input maps, years and native missing references: cells.json | Authority: PACKAGING_ONLY</text>
+</svg>

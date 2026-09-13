@@ -1,0 +1,18 @@
+{
+  "assets": [],
+  "graph_asset_state": "GRAPH ASSET MISSING",
+  "image_references_found": 4,
+  "missing": [
+    "XX00_B15_GBPUSD_H4_BWD_M1-holding.png",
+    "XX00_B15_GBPUSD_H4_BWD_M1-hst.png",
+    "XX00_B15_GBPUSD_H4_BWD_M1-mfemae.png",
+    "XX00_B15_GBPUSD_H4_BWD_M1.png"
+  ],
+  "refused": [],
+  "report": "XX00_B15_GBPUSD_H4_BWD_M1.htm",
+  "report_sha256": "10d9edf6a661aaf25e9cbb962cd6f5d3a5c4bb1ffab91a204f6556da5a99a105",
+  "require_images": true,
+  "schema_version": "EA_LAB_MT5_NATIVE_ASSET_CLOSURE_V1",
+  "status": "INCOMPLETE",
+  "unique_local_images": 0
+}

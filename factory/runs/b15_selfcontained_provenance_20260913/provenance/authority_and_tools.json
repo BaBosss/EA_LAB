@@ -1,0 +1,88 @@
+{
+  "base": "45319cd5941607403279aeed2c100aab78e9bc65",
+  "contract": {
+    "path": "docs/research/B15_XX00_PRESERVED_EVIDENCE_SALVAGE_CONTRACT_20260912.md",
+    "sha256": "35c1d5faef01ee5339415822a62c57718e05c95d0118a97f0f68ff3b5a77d95e"
+  },
+  "environment_note": "Worktree stdlib missing; dot-sourced scripts/use_python.ps1, then used existing D:/EA_LAB/tools/python312/python.exe read-only with -B. No runtime provisioning or external writes.",
+  "portable_python": "D:\\EA_LAB\\tools\\python312\\python.exe",
+  "python_version": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "references": [
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "docs/research/XX00_B13_B15_MODEL1_SCREEN_CONTRACT_20260909.md",
+      "sha256": "c4d6c4ec69c1ec2959e2687d136539314948811a9833ccec618195cecb904d1d",
+      "size_bytes": 2789
+    },
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "docs/research/EA_RND_PROTOCOL.md",
+      "sha256": "1cef658a17ac04a0d943b870e55bc704f2c2748eae9a250dc094c940c39a3856",
+      "size_bytes": 9851
+    },
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "docs/research/EA_REPORT_SCHEMA.md",
+      "sha256": "6feebcc13139dba51df5d403a25ab11b5d0c4b5d41549859091ab9c2cc324c37",
+      "size_bytes": 6710
+    },
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "docs/research/EA_REPORT_LADDER.md",
+      "sha256": "5902bff8fd6d18d98d153bc654d06e20826254310f8e41f00fc6d3646097c31c",
+      "size_bytes": 8858
+    },
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "docs/audits/EA_LAB_EVIDENCE_SALVAGE_FORENSICS_20260912.md",
+      "sha256": "aa5f32cb5a1fea109a6ce022ab95879f15f8107725f8004bc2e1d90597673d24",
+      "size_bytes": 26728
+    },
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "docs/audits/EA_LAB_EVIDENCE_SALVAGE_FORENSICS_20260912.json",
+      "sha256": "68ae558bd7e8fa372f246276c0602d40af8f9917d545b766697ba64da0f03cab",
+      "size_bytes": 124085
+    }
+  ],
+  "reviews": [
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\template-xx00-20260909\\XX00_B13_B15_SCREEN_RESULT_REVIEW.txt",
+      "sha256": "701b1c62d359b0f24d4dd448795da13f4f9efd88b2d36d76b863105a923bb287",
+      "status": "AVAILABLE",
+      "text": "VERDICT=FAIL\nSEVERITY=HIGH\nMATERIAL_FINDINGS=Evidence package does not raw-bind the four reports to the declared EX5/build receipts or prove the claimed FULL 157/157 identity PASS; additionally, the report invents a canonical >=100-trades-per-window floor despite the contract explicitly defining no universal trade floor.\nSAFE_TO_INTEGRATE=NO"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\template-xx00-20260909\\XX00_B13_B15_SCREEN_TARGETED_RECHECK_RESULT_R2.txt",
+      "sha256": "346abf939fc731e2c0819f2be3a135852c3e7825b967c43a0c6303bce6d7a70d",
+      "status": "AVAILABLE",
+      "text": "VERDICT=FAIL\nSEVERITY=HIGH\nMATERIAL_FINDINGS=Identity repair remains incomplete: each reconciliation cell lacks an explicit tester INI name/path and explicit symbol, period, and leverage values; boolean checks and an INI hash do not raw-bind the required chain.\nSAFE_TO_INTEGRATE=NO"
+    }
+  ],
+  "tools": [
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "scripts/parse_mt5_report.py",
+      "sha256": "72f120caac4002f3a2df0344387f3cd3de8484b5becfed7eb7c66fe4ec4b00c1",
+      "size_bytes": 5280
+    },
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "scripts/report_year_split.py",
+      "sha256": "38fbd67afb509a1c998e3d6d804baaf1b47575c32fb77f2d8f19b0b065c73133",
+      "size_bytes": 2806
+    },
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "tools/reporting/mt5_report_assets.py",
+      "sha256": "ce0fa598235c1bb6c01a7c75c41239f7dbcb0578d37c761a46d407719870c486",
+      "size_bytes": 9910
+    },
+    {
+      "git_ref": "45319cd5941607403279aeed2c100aab78e9bc65",
+      "path": "tools/reporting/report_package_integrity.py",
+      "sha256": "c4d0e4c64eaf923a2621af62b800edbc656cc15847c1db723c8d5f29210fa604",
+      "size_bytes": 10630
+    }
+  ]
+}

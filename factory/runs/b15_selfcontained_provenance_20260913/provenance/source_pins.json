@@ -1,0 +1,48 @@
+{
+  "B15_identity": {
+    "build_receipt": "br-7ee5343c5278419fa6dfafbd3a1db100",
+    "config_fingerprint": "D3D548B77D96037FBEE8A483BD25206F2D323600F2E00CF8AD012C7F566C2456",
+    "ex5_sha256": "2C8CE48431DEA995661E149EDF064D4B33FAEC9C883A0EB9E0209625BB7FFA9F",
+    "set_sha256": "405956B20848E1D346654C2EB67140A5BB5A1A71386EC44460C88187B84CAD52"
+  },
+  "B15_manifest_entries": {
+    "B15_set": "405956B20848E1D346654C2EB67140A5BB5A1A71386EC44460C88187B84CAD52",
+    "Boss_15_ST03.mq5": "E235105DEAC8C975093A920B34B84565D2D6E355FA64A7802B05DD6592C1D88F",
+    "build_receipts": "75CAA6B7358C8AD49945FEE9AF6B9DC88F9F90CF47B7ABB81EE0168F4471161D"
+  },
+  "build_registry": {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/build_receipts.jsonl",
+    "sha256": "75caa6b7358c8ad49945fee9af6b9dc88f9f90cf47b7abb81ee0168f4471161d",
+    "size_bytes": 1135
+  },
+  "coverage": "Wrapper/set/receipt registry pins only; not a complete transitive compiled source graph.",
+  "excerpt_method": "Only original SOURCE headings and Boss_15_ST03 (GBPUSD,H4) lines; full original log not retained.",
+  "historical_loaded_EX5_memory": "UNKNOWN",
+  "immutable_Bases_snapshot": "UNKNOWN",
+  "log_excerpt_origin": {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/tester_log_extract.txt",
+    "sha256": "e4349c64d93d345ae1b718afe220e5f1fd7935e920dad32dbcfe22d38203b0c4",
+    "size_bytes": 1686
+  },
+  "run_identity": {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/run_identity.json",
+    "sha256": "b4f72018a75b2a6c3414c860a76df778de97878f8990dfe369319080d7871c60",
+    "size_bytes": 1124
+  },
+  "source_manifest": {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/source_manifest.json",
+    "sha256": "582f843d9997a631627e55f799e3afaafc1c2330297138f8e8cfa2290017f233",
+    "size_bytes": 441
+  },
+  "source_sha": "24125ea69ad8f4410f8501d3ea005a60fb92936b",
+  "wrapper": {
+    "git_ref": "24125ea69ad8f4410f8501d3ea005a60fb92936b",
+    "path": "ea_template/Boss_15_ST03.mq5",
+    "sha256": "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+    "size_bytes": 776
+  }
+}

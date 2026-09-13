@@ -1,0 +1,9 @@
+{
+  "artifact": "raw/retained/Boss_15_ST03.ex5",
+  "declared_sha256": "2c8ce48431dea995661e149edf064d4b33faec9c883a0eb9e0209625bb7ffa9f",
+  "historical_loaded_memory": "UNKNOWN",
+  "historical_source_path": "D:\\Meta 5c\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-XX00-MODEL1-SCREEN-V1\\EALabTpl\\Boss_15_ST03.ex5",
+  "observed_at_utc": "2026-09-13T02:35:20.832649+00:00",
+  "observed_sha256": "2c8ce48431dea995661e149edf064d4b33faec9c883a0eb9e0209625bb7ffa9f",
+  "status": "PACKAGING_TIME_RETAINED_ARTIFACT_MATCH"
+}

@@ -1,0 +1,23 @@
+﻿{
+    "canonical_source_commit":  "24125ea69ad8f4410f8501d3ea005a60fb92936b",
+    "optimization":  0,
+    "forward":  0,
+    "leverage":  "1:100",
+    "runtime":  "D:\\Meta 5c",
+    "deposit":  10000,
+    "model":  1,
+    "schema":  "xx00_screen_identity/1",
+    "B13":  {
+                "build_receipt":  "br-d86b7340b4a945309e98ce1c5fc965ad",
+                "set_sha256":  "889ACCB0A703521C03B7526055F3D4EB97259F4DA25DC954A3DF859DD1C5FAFE",
+                "config_fingerprint":  "3AE41CF329FF437F719CAD16984AA8516D325F8B78AB6528DD319DF734321AFA",
+                "ex5_sha256":  "4AED2F851DFC56F50A5AE21E8F667DEF753DA7759797663F261D5D25D4106A0E"
+            },
+    "B15":  {
+                "build_receipt":  "br-7ee5343c5278419fa6dfafbd3a1db100",
+                "set_sha256":  "405956B20848E1D346654C2EB67140A5BB5A1A71386EC44460C88187B84CAD52",
+                "config_fingerprint":  "D3D548B77D96037FBEE8A483BD25206F2D323600F2E00CF8AD012C7F566C2456",
+                "ex5_sha256":  "2C8CE48431DEA995661E149EDF064D4B33FAEC9C883A0EB9E0209625BB7FFA9F"
+            },
+    "lane":  "MT5-lane3"
+}

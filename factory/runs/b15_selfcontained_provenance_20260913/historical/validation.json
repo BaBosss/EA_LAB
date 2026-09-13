@@ -1,0 +1,38 @@
+{
+  "basket_episode_semantics": "UNKNOWN",
+  "checks": [
+    "9 raw blob equality checks",
+    "2 unique cells",
+    "INI/report/contract identities",
+    "157/157/157 maps with duplicate/key/value refusal",
+    "source/receipt/retained EX5/set pins",
+    "unchanged sidecars and original statuses",
+    "canonical parser/year/participation reconciliation",
+    "8 explicit native missing refs",
+    "4 SVG XML/determinism/provenance checks",
+    "report determinism",
+    "4 negative refusal controls",
+    "source-bound historical INI path; current relative path/hash",
+    "original and bounded repair author-scope receipt",
+    "author-lineage git diff --check"
+  ],
+  "independent_acceptance": "PENDING",
+  "missing_images": [
+    "XX00_B15_GBPUSD_H4_MAIN_M1-holding.png",
+    "XX00_B15_GBPUSD_H4_MAIN_M1-hst.png",
+    "XX00_B15_GBPUSD_H4_MAIN_M1-mfemae.png",
+    "XX00_B15_GBPUSD_H4_MAIN_M1.png",
+    "XX00_B15_GBPUSD_H4_BWD_M1-holding.png",
+    "XX00_B15_GBPUSD_H4_BWD_M1-hst.png",
+    "XX00_B15_GBPUSD_H4_BWD_M1-mfemae.png",
+    "XX00_B15_GBPUSD_H4_BWD_M1.png"
+  ],
+  "native_graph_closure": "INCOMPLETE",
+  "packaging_passes": 1,
+  "repair_budget_max": 1,
+  "repair_budget_used": 1,
+  "safe_for_review": true,
+  "sample_adequacy": "UNKNOWN_NOT_ASSESSED",
+  "status": "PASS_DETERMINISTIC_PACKAGING_CHECKS",
+  "strategy_status": "NOT_ASSESSED_NO_VERDICT_CHANGE"
+}

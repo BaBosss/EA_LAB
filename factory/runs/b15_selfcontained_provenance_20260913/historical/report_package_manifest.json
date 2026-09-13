@@ -1,0 +1,230 @@
+{
+  "artifacts": [
+    {
+      "path": "cells.json",
+      "role": "packaging_evidence",
+      "sha256": "4ae66e0f731d97e180e8459d0e5492a9fc279972d21eeb474d7b78cf35c9b27d",
+      "size_bytes": 24528
+    },
+    {
+      "path": "derived/BWD_deal_rows.json",
+      "role": "packaging_evidence",
+      "sha256": "fb5b4029d889c40179a2af89d6f2858d59f9973e3d06023d34fe9c070f7ec757",
+      "size_bytes": 10764
+    },
+    {
+      "path": "derived/BWD_input_maps.json",
+      "role": "packaging_evidence",
+      "sha256": "cd824b5b026925cbc763d04a247b4098908e2b2a3bdd01e07eb16f964cca8a5d",
+      "size_bytes": 13833
+    },
+    {
+      "path": "derived/BWD_native_assets.json",
+      "role": "packaging_evidence",
+      "sha256": "e42cd8f72be98594ad47525457e029e9d6896518995416a824ae7352cae08973",
+      "size_bytes": 569
+    },
+    {
+      "path": "derived/BWD_parser.json",
+      "role": "packaging_evidence",
+      "sha256": "e3e2ddd6657753749c159ff484bf694409d3a0c97e90df5711d1397f5f4cd1bd",
+      "size_bytes": 1473
+    },
+    {
+      "path": "derived/BWD_participation.json",
+      "role": "packaging_evidence",
+      "sha256": "4777122d260a9eb311cc9831c13c8b3d1488ec889b9349591df40ccf99ebd108",
+      "size_bytes": 1414
+    },
+    {
+      "path": "derived/BWD_year_split.json",
+      "role": "packaging_evidence",
+      "sha256": "c48c3129003a6007dad976e564c37d145c709c0872ecf9ea0d533fa0f114a6eb",
+      "size_bytes": 1703
+    },
+    {
+      "path": "derived/MAIN_deal_rows.json",
+      "role": "packaging_evidence",
+      "sha256": "0338429704095b939fbd7fded7e983d399d6e75abff26bb94ed8bd2535adea8f",
+      "size_bytes": 5931
+    },
+    {
+      "path": "derived/MAIN_input_maps.json",
+      "role": "packaging_evidence",
+      "sha256": "cd824b5b026925cbc763d04a247b4098908e2b2a3bdd01e07eb16f964cca8a5d",
+      "size_bytes": 13833
+    },
+    {
+      "path": "derived/MAIN_native_assets.json",
+      "role": "packaging_evidence",
+      "sha256": "4911de0dd5dfed3ece91fb55f2fa5f86dd8a5f7ab0bea5b1eb36c59145414da2",
+      "size_bytes": 574
+    },
+    {
+      "path": "derived/MAIN_parser.json",
+      "role": "packaging_evidence",
+      "sha256": "518ab4d177489bd2f333632cc736c2f068161bf8825b880439224491f8312b27",
+      "size_bytes": 1489
+    },
+    {
+      "path": "derived/MAIN_participation.json",
+      "role": "packaging_evidence",
+      "sha256": "abb55e931f48a75682ac9963d62f4a3d7eaa6d002da876a1e42941d0e10a383c",
+      "size_bytes": 1205
+    },
+    {
+      "path": "derived/MAIN_year_split.json",
+      "role": "packaging_evidence",
+      "sha256": "cd3fe8e21f57a165fc91ec1e954376c1f56eb6409c642206105aa8eb3329826a",
+      "size_bytes": 1685
+    },
+    {
+      "path": "package.py",
+      "role": "packaging_evidence",
+      "sha256": "59514a27aea556fb9a60c8bc8659e83a8cb61bd35b7f2c9c9d18d2b6d32e6628",
+      "size_bytes": 43536
+    },
+    {
+      "path": "provenance/author_scope.json",
+      "role": "packaging_evidence",
+      "sha256": "6d51af661951444806fd7446b53e6513ebb2cc91281214d264b5357d5282c86d",
+      "size_bytes": 4064
+    },
+    {
+      "path": "provenance/authority_and_tools.json",
+      "role": "packaging_evidence",
+      "sha256": "3ed29381c1b39d0500a2abb04c1ca9878cb34d7a2fb3eb09fa4bf7dfd9209752",
+      "size_bytes": 4250
+    },
+    {
+      "path": "provenance/build_receipt_b15.json",
+      "role": "packaging_evidence",
+      "sha256": "883d8422827ed267e191cc6ffc1c586b00db89c46524b7f97b590f49a49aea71",
+      "size_bytes": 595
+    },
+    {
+      "path": "provenance/raw_origins.json",
+      "role": "packaging_evidence",
+      "sha256": "ea0e65eea5a0660c4437fd60f83d61e7fc1f39faa8130becd818fe8267ba1ee9",
+      "size_bytes": 3046
+    },
+    {
+      "path": "provenance/source_pins.json",
+      "role": "packaging_evidence",
+      "sha256": "5b923c06619a9045455543e9735fec884a471822c3f56ce1fab52bbdee53b8a7",
+      "size_bytes": 2327
+    },
+    {
+      "path": "provenance/tester_log_b15_excerpt.txt",
+      "role": "packaging_evidence",
+      "sha256": "f21a91a7a3b3fa4cb25cb1755b696cc45393d8888b794f2a0e4e3a62c203bac1",
+      "size_bytes": 749
+    },
+    {
+      "path": "raw/B15_00_SCREEN_GBPUSD_H4.set",
+      "role": "preserved_raw",
+      "sha256": "405956b20848e1d346654c2eb67140a5bb5a1a71386ec44460c88187b84cad52",
+      "size_bytes": 3461
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.htm",
+      "role": "preserved_raw",
+      "sha256": "10d9edf6a661aaf25e9cbb962cd6f5d3a5c4bb1ffab91a204f6556da5a99a105",
+      "size_bytes": 121996
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.ini",
+      "role": "preserved_raw",
+      "sha256": "e1fffc64f04b08147adc9c42f1fa05e08c738c4779e56dfcfd283cd2cf1eafe3",
+      "size_bytes": 3628
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.leverage_check.json",
+      "role": "preserved_raw",
+      "sha256": "cd73e8c48f71b540626c117d5767b5710d19fb581c7a2796227d88238c2a5849",
+      "size_bytes": 167
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.truncation_check.json",
+      "role": "preserved_raw",
+      "sha256": "db06c98b8d76e0f4fa2380a349bc4eed5880aa271b096d70f7898e87ab8bee4f",
+      "size_bytes": 363
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.htm",
+      "role": "preserved_raw",
+      "sha256": "97c89bdd82bfb6ed4e256440547022585f185df3366f3edd952e5c1c44f87d7d",
+      "size_bytes": 100352
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.ini",
+      "role": "preserved_raw",
+      "sha256": "2beb5d8d768e5d093bcdc581db27cf3c4a0bfe7eb37a86047c1538ccd4031f66",
+      "size_bytes": 3629
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.leverage_check.json",
+      "role": "preserved_raw",
+      "sha256": "22a4b8b854d60670e639e73dbbcdaa9bc4e5ae317423eee25b5da796e8cdcdbc",
+      "size_bytes": 168
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.truncation_check.json",
+      "role": "preserved_raw",
+      "sha256": "696ed445f14068fe579fa6c8d8b13648edc0ed142ede1b5cdb4e650d1948fdf2",
+      "size_bytes": 364
+    },
+    {
+      "path": "REPORT.md",
+      "role": "packaging_evidence",
+      "sha256": "b1fc5ea454d4b9980a5843f514e3c8577c756e2eacbc71a530d1ac78da869b6e",
+      "size_bytes": 7026
+    },
+    {
+      "path": "test_portability.py",
+      "role": "packaging_evidence",
+      "sha256": "b47423af4e61df55b971843623e96a75575757ad12e3016145bcd7468e5c5213",
+      "size_bytes": 6010
+    },
+    {
+      "path": "validation.json",
+      "role": "packaging_evidence",
+      "sha256": "09f4e98d02a18cc5c8e605391a92de6a0a8f5e9a825264398d784b5d44823a94",
+      "size_bytes": 1371
+    },
+    {
+      "path": "views/native_eqdd.svg",
+      "role": "packaging_evidence",
+      "sha256": "3c863140b0370f9474a863967f9310a3057a542b7d5f9b8704d3aa6f2e72de0d",
+      "size_bytes": 2428
+    },
+    {
+      "path": "views/opportunity_participation.svg",
+      "role": "packaging_evidence",
+      "sha256": "8bdfb2bf8a291a7e19f40ba2ee3c7104ad3ae4f5b038c7e96c73c2dc7f5548d4",
+      "size_bytes": 2940
+    },
+    {
+      "path": "views/pf_home_window.svg",
+      "role": "packaging_evidence",
+      "sha256": "87c9d8202e64f3cf60a808ce7054e7cefc09fb318daff44283d21ec4ea753449",
+      "size_bytes": 2296
+    },
+    {
+      "path": "views/pf_vs_participation.svg",
+      "role": "packaging_evidence",
+      "sha256": "d50ef975378c1ef55419514595695bb420870ecd6b33fc74839a8a033e169d50",
+      "size_bytes": 2931
+    }
+  ],
+  "authority": "PACKAGING_ONLY_NO_STRATEGY_AUTHORITY",
+  "direct_consumer": "Control Tower exact-head packaging review",
+  "manifest_version": "EA_LAB_REPORT_PACKAGE_INTEGRITY_V1",
+  "metadata": {
+    "base": "45319cd5941607403279aeed2c100aab78e9bc65",
+    "independent_baskets": "UNKNOWN",
+    "input_head": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "native_closure": "INCOMPLETE"
+  },
+  "package_id": "salvage_b15_xx00_20260912"
+}

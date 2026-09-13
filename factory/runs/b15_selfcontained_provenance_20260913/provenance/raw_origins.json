@@ -1,0 +1,65 @@
+[
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/B15_00_SCREEN_GBPUSD_H4.set",
+    "preserved_path": "raw/B15_00_SCREEN_GBPUSD_H4.set",
+    "sha256": "405956b20848e1d346654c2eb67140a5bb5a1a71386ec44460c88187b84cad52",
+    "size_bytes": 3461
+  },
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/raw/XX00_B15_GBPUSD_H4_MAIN_M1.htm",
+    "preserved_path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.htm",
+    "sha256": "97c89bdd82bfb6ed4e256440547022585f185df3366f3edd952e5c1c44f87d7d",
+    "size_bytes": 100352
+  },
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/raw/XX00_B15_GBPUSD_H4_MAIN_M1.ini",
+    "preserved_path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.ini",
+    "sha256": "2beb5d8d768e5d093bcdc581db27cf3c4a0bfe7eb37a86047c1538ccd4031f66",
+    "size_bytes": 3629
+  },
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/raw/XX00_B15_GBPUSD_H4_MAIN_M1.leverage_check.json",
+    "preserved_path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.leverage_check.json",
+    "sha256": "22a4b8b854d60670e639e73dbbcdaa9bc4e5ae317423eee25b5da796e8cdcdbc",
+    "size_bytes": 168
+  },
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/raw/XX00_B15_GBPUSD_H4_MAIN_M1.truncation_check.json",
+    "preserved_path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.truncation_check.json",
+    "sha256": "696ed445f14068fe579fa6c8d8b13648edc0ed142ede1b5cdb4e650d1948fdf2",
+    "size_bytes": 364
+  },
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/raw/XX00_B15_GBPUSD_H4_BWD_M1.htm",
+    "preserved_path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.htm",
+    "sha256": "10d9edf6a661aaf25e9cbb962cd6f5d3a5c4bb1ffab91a204f6556da5a99a105",
+    "size_bytes": 121996
+  },
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/raw/XX00_B15_GBPUSD_H4_BWD_M1.ini",
+    "preserved_path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.ini",
+    "sha256": "e1fffc64f04b08147adc9c42f1fa05e08c738c4779e56dfcfd283cd2cf1eafe3",
+    "size_bytes": 3628
+  },
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/raw/XX00_B15_GBPUSD_H4_BWD_M1.leverage_check.json",
+    "preserved_path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.leverage_check.json",
+    "sha256": "cd73e8c48f71b540626c117d5767b5710d19fb581c7a2796227d88238c2a5849",
+    "size_bytes": 167
+  },
+  {
+    "git_ref": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "path": "factory/runs/xx00_b13_b15_screen_20260909/raw/XX00_B15_GBPUSD_H4_BWD_M1.truncation_check.json",
+    "preserved_path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.truncation_check.json",
+    "sha256": "db06c98b8d76e0f4fa2380a349bc4eed5880aa271b096d70f7898e87ab8bee4f",
+    "size_bytes": 363
+  }
+]

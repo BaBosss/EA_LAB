@@ -1,0 +1,9 @@
+Validation passes in the author's current worktree, but read-only simulations reproduce failures after checkout relocation and unrelated repository changes. These defects prevent the packaged evidence from remaining independently verifiable during canonical intake.
+
+Full review comments:
+
+- [P2] Separate the recorded preservation path from the current checkout — D:\EA_LAB_CONTROL\worktrees\salvage-b15-20260912\factory\runs\salvage_b15_xx00_20260912\package.py:462-462
+  Checking out this unchanged package under `D:\EA_LAB` or another review worktree makes `--validate` fail with `explicit preserved INI path`: the committed absolute path names the author's worktree, but this check requires it to equal the consumer's location. This blocks the [contracted canonical intake](docs/research/B15_XX00_PRESERVED_EVIDENCE_SALVAGE_CONTRACT_20260912.md#L22). Keep the original preservation location as provenance and validate current files through their package-relative paths and hashes.
+
+- [P2] Scope the allowlist check to the packaging change — D:\EA_LAB_CONTROL\worktrees\salvage-b15-20260912\factory\runs\salvage_b15_xx00_20260912\package.py:510-513
+  After an unrelated commit changes `PROJECT_STATE.md`, this validator rejects the unchanged package with `diff write allowlist`, because it examines every repository change since `BASE`. That makes repeatable validation fail after normal canonical integration. The [write allowlist](docs/research/B15_XX00_PRESERVED_EVIDENCE_SALVAGE_CONTRACT_20260912.md#L20) bounds this worker's changes, not all subsequent repository history; enforce it during packaging or against the exact packaging commit rather than the consumer's current checkout.

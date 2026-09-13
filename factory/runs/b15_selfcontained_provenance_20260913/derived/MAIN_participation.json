@@ -1,0 +1,43 @@
+{
+  "basket_semantics_status": "UNKNOWN_NOT_INDEPENDENTLY_PROVEN",
+  "buy_sell_deal_count": 26,
+  "close_active_month_count": 4,
+  "close_active_month_fraction": 0.1111111111111111,
+  "close_active_months": [
+    "2023.01",
+    "2023.02",
+    "2023.03",
+    "2025.12"
+  ],
+  "closed_ticket_count": 13,
+  "deal_active_month_count": 4,
+  "deal_active_month_fraction": 0.1111111111111111,
+  "deal_active_months": [
+    "2023.01",
+    "2023.02",
+    "2023.03",
+    "2025.12"
+  ],
+  "entry_active_month_count": 3,
+  "entry_active_month_fraction": 0.08333333333333333,
+  "entry_active_months": [
+    "2023.01",
+    "2023.02",
+    "2023.03"
+  ],
+  "entry_deal_count": 13,
+  "exposure_active_months": "UNKNOWN",
+  "independent_baskets": "UNKNOWN",
+  "independent_episodes": "UNKNOWN",
+  "l0_entry_tag_active_month_count": 3,
+  "l0_entry_tag_active_month_fraction": 0.08333333333333333,
+  "l0_entry_tag_active_months": [
+    "2023.01",
+    "2023.02",
+    "2023.03"
+  ],
+  "method": "Exact 13-column buy/sell Deals rows; L0 requires Direction=in and Comment=15_ST03 L0. No order-ticket-to-position or basket grouping.",
+  "raw_l0_entry_tag_count": 5,
+  "time_in_market": "UNKNOWN",
+  "window_calendar_months": 36
+}

@@ -1,0 +1,541 @@
+[
+  {
+    "build_receipt_id": "br-7ee5343c5278419fa6dfafbd3a1db100",
+    "cell_id": "XX00_B15_GBPUSD_H4_MAIN_M1",
+    "entry_family": "ST03",
+    "evidence": {
+      "build_receipt_extracted": {
+        "path": "provenance/build_receipt_b15.json",
+        "sha256": "883d8422827ed267e191cc6ffc1c586b00db89c46524b7f97b590f49a49aea71",
+        "size_bytes": 595
+      },
+      "build_registry": {
+        "path": "provenance/acquired/build_receipts.jsonl",
+        "sha256": "75caa6b7358c8ad49945fee9af6b9dc88f9f90cf47b7abb81ee0168f4471161d",
+        "size_bytes": 1135
+      },
+      "deals": {
+        "path": "derived/MAIN_deal_rows.json",
+        "sha256": "0338429704095b939fbd7fded7e983d399d6e75abff26bb94ed8bd2535adea8f",
+        "size_bytes": 5931
+      },
+      "input_maps": {
+        "path": "derived/MAIN_input_maps.json",
+        "sha256": "cd824b5b026925cbc763d04a247b4098908e2b2a3bdd01e07eb16f964cca8a5d",
+        "size_bytes": 13833
+      },
+      "leverage_sidecar": {
+        "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.leverage_check.json",
+        "sha256": "22a4b8b854d60670e639e73dbbcdaa9bc4e5ae317423eee25b5da796e8cdcdbc",
+        "size_bytes": 168
+      },
+      "log_excerpt": {
+        "path": "provenance/tester_log_b15_excerpt.txt",
+        "sha256": "f21a91a7a3b3fa4cb25cb1755b696cc45393d8888b794f2a0e4e3a62c203bac1",
+        "size_bytes": 749
+      },
+      "native_scan": {
+        "path": "derived/MAIN_native_assets.json",
+        "sha256": "4911de0dd5dfed3ece91fb55f2fa5f86dd8a5f7ab0bea5b1eb36c59145414da2",
+        "size_bytes": 574
+      },
+      "parser_output": {
+        "path": "derived/MAIN_parser.json",
+        "sha256": "518ab4d177489bd2f333632cc736c2f068161bf8825b880439224491f8312b27",
+        "size_bytes": 1489
+      },
+      "participation_output": {
+        "path": "derived/MAIN_participation.json",
+        "sha256": "abb55e931f48a75682ac9963d62f4a3d7eaa6d002da876a1e42941d0e10a383c",
+        "size_bytes": 1205
+      },
+      "report": {
+        "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.htm",
+        "sha256": "97c89bdd82bfb6ed4e256440547022585f185df3366f3edd952e5c1c44f87d7d",
+        "size_bytes": 100352
+      },
+      "run_identity": {
+        "path": "provenance/acquired/run_identity.json",
+        "sha256": "b4f72018a75b2a6c3414c860a76df778de97878f8990dfe369319080d7871c60",
+        "size_bytes": 1124
+      },
+      "set": {
+        "path": "raw/B15_00_SCREEN_GBPUSD_H4.set",
+        "sha256": "405956b20848e1d346654c2eb67140a5bb5a1a71386ec44460c88187b84cad52",
+        "size_bytes": 3461
+      },
+      "source_manifest": {
+        "path": "provenance/acquired/source_manifest.json",
+        "sha256": "582f843d9997a631627e55f799e3afaafc1c2330297138f8e8cfa2290017f233",
+        "size_bytes": 441
+      },
+      "source_wrapper": {
+        "path": "provenance/acquired/Boss_15_ST03.mq5",
+        "sha256": "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+        "size_bytes": 776
+      },
+      "tester_ini": {
+        "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.ini",
+        "sha256": "2beb5d8d768e5d093bcdc581db27cf3c4a0bfe7eb37a86047c1538ccd4031f66",
+        "size_bytes": 3629
+      },
+      "truncation_sidecar": {
+        "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.truncation_check.json",
+        "sha256": "696ed445f14068fe579fa6c8d8b13648edc0ed142ede1b5cdb4e650d1948fdf2",
+        "size_bytes": 364
+      },
+      "year_split": {
+        "path": "derived/MAIN_year_split.json",
+        "sha256": "cd3fe8e21f57a165fc91ec1e954376c1f56eb6409c642206105aa8eb3329826a",
+        "size_bytes": 1685
+      }
+    },
+    "ex5_observation": {
+      "path": "ex5_observation.json",
+      "sha256": "3a7b9ec3e56fe84327bc96e7808d42f2507aba4dd4463c8fcec2d4f2537f4bb2",
+      "size_bytes": 508
+    },
+    "family": "B15",
+    "historical_device": "BaBoss",
+    "historical_install": "D:\\Meta 5c",
+    "input_counts": {
+      "ini": 157,
+      "report": 157,
+      "set": 157
+    },
+    "lane": "MT5-lane3",
+    "mechanical_status": "PRESERVED_NON_TRUNCATED_IDENTITY_RECONCILED",
+    "metrics": {
+      "ahpr": 0,
+      "avg_consecutive_losses": 0,
+      "avg_consecutive_wins": 0,
+      "avg_loss_trade": 0,
+      "avg_profit_trade": 0,
+      "balance_drawdown_abs": 357.84,
+      "balance_drawdown_maximal_abs": 496.57,
+      "balance_drawdown_maximal_pct": 4.9,
+      "balance_drawdown_relative_pct": 4.9,
+      "bars": 4656.0,
+      "company": "TF Global Markets (Aust) Pty Ltd",
+      "currency": "USD",
+      "ea_name": "Boss_15_ST03",
+      "equity_drawdown_abs": 447.72,
+      "equity_drawdown_maximal_abs": 591.01,
+      "equity_drawdown_maximal_pct": 5.83,
+      "equity_drawdown_relative_pct": 5.83,
+      "expected_payoff": -27.53,
+      "from_date": "2023.01.01",
+      "ghpr": 0,
+      "gross_loss": -496.57,
+      "gross_profit": 138.73,
+      "history_quality": "99%",
+      "initial_deposit": 10000.0,
+      "largest_loss_trade": -173.75,
+      "largest_profit_trade": 17.77,
+      "leverage": "1:100",
+      "long_trades": 4,
+      "long_won_pct": 100.0,
+      "loss_trades": 3,
+      "loss_trades_pct": 23.08,
+      "lr_correlation": -0.44,
+      "margin_level": "26689.80%",
+      "max_consecutive_losses": 0,
+      "max_consecutive_wins": 0,
+      "net_profit": -357.84,
+      "ontester_result": 0,
+      "period": "H4",
+      "profit_factor": 0.28,
+      "profit_trades": 10,
+      "profit_trades_pct": 76.92,
+      "quality": "99%",
+      "recovery_factor": -0.61,
+      "report_build": 6140,
+      "sharpe_ratio": -0.14,
+      "short_trades": 9,
+      "short_won_pct": 66.67,
+      "symbol": "GBPUSD",
+      "symbols_count": 0,
+      "ticks": 4410411.0,
+      "to_date": "2025.12.31",
+      "total_deals": 26.0,
+      "total_trades": 13.0,
+      "z_score": "-2.64 (99.17%)"
+    },
+    "model_label": "M1_M1_OHLC_RESEARCH",
+    "native_graphs": {
+      "asset_scan": {
+        "path": "derived/MAIN_native_assets.json",
+        "sha256": "4911de0dd5dfed3ece91fb55f2fa5f86dd8a5f7ab0bea5b1eb36c59145414da2",
+        "size_bytes": 574
+      },
+      "references": [
+        {
+          "reference": "XX00_B15_GBPUSD_H4_MAIN_M1-holding.png",
+          "status": "MISSING"
+        },
+        {
+          "reference": "XX00_B15_GBPUSD_H4_MAIN_M1-hst.png",
+          "status": "MISSING"
+        },
+        {
+          "reference": "XX00_B15_GBPUSD_H4_MAIN_M1-mfemae.png",
+          "status": "MISSING"
+        },
+        {
+          "reference": "XX00_B15_GBPUSD_H4_MAIN_M1.png",
+          "status": "MISSING"
+        }
+      ],
+      "status": "INCOMPLETE"
+    },
+    "original_launch_ini_path": "UNKNOWN",
+    "participation": {
+      "basket_semantics_status": "UNKNOWN_NOT_INDEPENDENTLY_PROVEN",
+      "buy_sell_deal_count": 26,
+      "close_active_month_count": 4,
+      "close_active_month_fraction": 0.1111111111111111,
+      "close_active_months": [
+        "2023.01",
+        "2023.02",
+        "2023.03",
+        "2025.12"
+      ],
+      "closed_ticket_count": 13,
+      "deal_active_month_count": 4,
+      "deal_active_month_fraction": 0.1111111111111111,
+      "deal_active_months": [
+        "2023.01",
+        "2023.02",
+        "2023.03",
+        "2025.12"
+      ],
+      "entry_active_month_count": 3,
+      "entry_active_month_fraction": 0.08333333333333333,
+      "entry_active_months": [
+        "2023.01",
+        "2023.02",
+        "2023.03"
+      ],
+      "entry_deal_count": 13,
+      "exposure_active_months": "UNKNOWN",
+      "independent_baskets": "UNKNOWN",
+      "independent_episodes": "UNKNOWN",
+      "l0_entry_tag_active_month_count": 3,
+      "l0_entry_tag_active_month_fraction": 0.08333333333333333,
+      "l0_entry_tag_active_months": [
+        "2023.01",
+        "2023.02",
+        "2023.03"
+      ],
+      "method": "Exact 13-column buy/sell Deals rows; L0 requires Direction=in and Comment=15_ST03 L0. No order-ticket-to-position or basket grouping.",
+      "raw_l0_entry_tag_count": 5,
+      "time_in_market": "UNKNOWN",
+      "window_calendar_months": 36
+    },
+    "report": {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.htm",
+      "sha256": "97c89bdd82bfb6ed4e256440547022585f185df3366f3edd952e5c1c44f87d7d",
+      "size_bytes": 100352
+    },
+    "source_sha": "24125ea69ad8f4410f8501d3ea005a60fb92936b",
+    "strategy_status": "NOT_ASSESSED_NO_VERDICT_CHANGE",
+    "tester": {
+      "Currency": "USD",
+      "Deposit": "10000",
+      "ExecutionMode": "0",
+      "Expert": "EA_LAB_TEST\\ORDER-XX00-MODEL1-SCREEN-V1\\EALabTpl\\Boss_15_ST03",
+      "ForwardMode": "0",
+      "FromDate": "2023.01.01",
+      "Leverage": "1:100",
+      "Model": "1",
+      "Optimization": "0",
+      "Period": "H4",
+      "ReplaceReport": "1",
+      "Report": "XX00_B15_GBPUSD_H4_MAIN_M1",
+      "ShutdownTerminal": "1",
+      "Symbol": "GBPUSD",
+      "ToDate": "2025.12.31",
+      "Visual": "0"
+    },
+    "tester_ini_name": "XX00_B15_GBPUSD_H4_MAIN_M1.ini",
+    "variant": "xx-00",
+    "window": "MAIN"
+  },
+  {
+    "build_receipt_id": "br-7ee5343c5278419fa6dfafbd3a1db100",
+    "cell_id": "XX00_B15_GBPUSD_H4_BWD_M1",
+    "entry_family": "ST03",
+    "evidence": {
+      "build_receipt_extracted": {
+        "path": "provenance/build_receipt_b15.json",
+        "sha256": "883d8422827ed267e191cc6ffc1c586b00db89c46524b7f97b590f49a49aea71",
+        "size_bytes": 595
+      },
+      "build_registry": {
+        "path": "provenance/acquired/build_receipts.jsonl",
+        "sha256": "75caa6b7358c8ad49945fee9af6b9dc88f9f90cf47b7abb81ee0168f4471161d",
+        "size_bytes": 1135
+      },
+      "deals": {
+        "path": "derived/BWD_deal_rows.json",
+        "sha256": "fb5b4029d889c40179a2af89d6f2858d59f9973e3d06023d34fe9c070f7ec757",
+        "size_bytes": 10764
+      },
+      "input_maps": {
+        "path": "derived/BWD_input_maps.json",
+        "sha256": "cd824b5b026925cbc763d04a247b4098908e2b2a3bdd01e07eb16f964cca8a5d",
+        "size_bytes": 13833
+      },
+      "leverage_sidecar": {
+        "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.leverage_check.json",
+        "sha256": "cd73e8c48f71b540626c117d5767b5710d19fb581c7a2796227d88238c2a5849",
+        "size_bytes": 167
+      },
+      "log_excerpt": {
+        "path": "provenance/tester_log_b15_excerpt.txt",
+        "sha256": "f21a91a7a3b3fa4cb25cb1755b696cc45393d8888b794f2a0e4e3a62c203bac1",
+        "size_bytes": 749
+      },
+      "native_scan": {
+        "path": "derived/BWD_native_assets.json",
+        "sha256": "e42cd8f72be98594ad47525457e029e9d6896518995416a824ae7352cae08973",
+        "size_bytes": 569
+      },
+      "parser_output": {
+        "path": "derived/BWD_parser.json",
+        "sha256": "e3e2ddd6657753749c159ff484bf694409d3a0c97e90df5711d1397f5f4cd1bd",
+        "size_bytes": 1473
+      },
+      "participation_output": {
+        "path": "derived/BWD_participation.json",
+        "sha256": "4777122d260a9eb311cc9831c13c8b3d1488ec889b9349591df40ccf99ebd108",
+        "size_bytes": 1414
+      },
+      "report": {
+        "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.htm",
+        "sha256": "10d9edf6a661aaf25e9cbb962cd6f5d3a5c4bb1ffab91a204f6556da5a99a105",
+        "size_bytes": 121996
+      },
+      "run_identity": {
+        "path": "provenance/acquired/run_identity.json",
+        "sha256": "b4f72018a75b2a6c3414c860a76df778de97878f8990dfe369319080d7871c60",
+        "size_bytes": 1124
+      },
+      "set": {
+        "path": "raw/B15_00_SCREEN_GBPUSD_H4.set",
+        "sha256": "405956b20848e1d346654c2eb67140a5bb5a1a71386ec44460c88187b84cad52",
+        "size_bytes": 3461
+      },
+      "source_manifest": {
+        "path": "provenance/acquired/source_manifest.json",
+        "sha256": "582f843d9997a631627e55f799e3afaafc1c2330297138f8e8cfa2290017f233",
+        "size_bytes": 441
+      },
+      "source_wrapper": {
+        "path": "provenance/acquired/Boss_15_ST03.mq5",
+        "sha256": "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+        "size_bytes": 776
+      },
+      "tester_ini": {
+        "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.ini",
+        "sha256": "e1fffc64f04b08147adc9c42f1fa05e08c738c4779e56dfcfd283cd2cf1eafe3",
+        "size_bytes": 3628
+      },
+      "truncation_sidecar": {
+        "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.truncation_check.json",
+        "sha256": "db06c98b8d76e0f4fa2380a349bc4eed5880aa271b096d70f7898e87ab8bee4f",
+        "size_bytes": 363
+      },
+      "year_split": {
+        "path": "derived/BWD_year_split.json",
+        "sha256": "c48c3129003a6007dad976e564c37d145c709c0872ecf9ea0d533fa0f114a6eb",
+        "size_bytes": 1703
+      }
+    },
+    "ex5_observation": {
+      "path": "ex5_observation.json",
+      "sha256": "3a7b9ec3e56fe84327bc96e7808d42f2507aba4dd4463c8fcec2d4f2537f4bb2",
+      "size_bytes": 508
+    },
+    "family": "B15",
+    "historical_device": "BaBoss",
+    "historical_install": "D:\\Meta 5c",
+    "input_counts": {
+      "ini": 157,
+      "report": 157,
+      "set": 157
+    },
+    "lane": "MT5-lane3",
+    "mechanical_status": "PRESERVED_NON_TRUNCATED_IDENTITY_RECONCILED",
+    "metrics": {
+      "ahpr": 0,
+      "avg_consecutive_losses": 0,
+      "avg_consecutive_wins": 0,
+      "avg_loss_trade": 0,
+      "avg_profit_trade": 0,
+      "balance_drawdown_abs": 0,
+      "balance_drawdown_maximal_abs": 122.84,
+      "balance_drawdown_maximal_pct": 1.2,
+      "balance_drawdown_relative_pct": 1.2,
+      "bars": 4674.0,
+      "company": "TF Global Markets (Aust) Pty Ltd",
+      "currency": "USD",
+      "ea_name": "Boss_15_ST03",
+      "equity_drawdown_abs": 532.9,
+      "equity_drawdown_maximal_abs": 654.16,
+      "equity_drawdown_maximal_pct": 6.37,
+      "equity_drawdown_relative_pct": 6.37,
+      "expected_payoff": 5.75,
+      "from_date": "2020.01.01",
+      "ghpr": 0,
+      "gross_loss": -122.84,
+      "gross_profit": 260.8,
+      "history_quality": "99%",
+      "initial_deposit": 10000.0,
+      "largest_loss_trade": -48.98,
+      "largest_profit_trade": 21.3,
+      "leverage": "1:100",
+      "long_trades": 17,
+      "long_won_pct": 82.35,
+      "loss_trades": 3,
+      "loss_trades_pct": 12.5,
+      "lr_correlation": 0.92,
+      "margin_level": "23961.28%",
+      "max_consecutive_losses": 0,
+      "max_consecutive_wins": 0,
+      "net_profit": 137.96,
+      "ontester_result": 0,
+      "period": "H4",
+      "profit_factor": 2.12,
+      "profit_trades": 21,
+      "profit_trades_pct": 87.5,
+      "quality": "99%",
+      "recovery_factor": 0.21,
+      "report_build": 6140,
+      "sharpe_ratio": 0.11,
+      "short_trades": 7,
+      "short_won_pct": 100.0,
+      "symbol": "GBPUSD",
+      "symbols_count": 0,
+      "ticks": 4399594.0,
+      "to_date": "2022.12.31",
+      "total_deals": 48.0,
+      "total_trades": 24.0,
+      "z_score": "-3.81 (99.74%)"
+    },
+    "model_label": "M1_M1_OHLC_RESEARCH",
+    "native_graphs": {
+      "asset_scan": {
+        "path": "derived/BWD_native_assets.json",
+        "sha256": "e42cd8f72be98594ad47525457e029e9d6896518995416a824ae7352cae08973",
+        "size_bytes": 569
+      },
+      "references": [
+        {
+          "reference": "XX00_B15_GBPUSD_H4_BWD_M1-holding.png",
+          "status": "MISSING"
+        },
+        {
+          "reference": "XX00_B15_GBPUSD_H4_BWD_M1-hst.png",
+          "status": "MISSING"
+        },
+        {
+          "reference": "XX00_B15_GBPUSD_H4_BWD_M1-mfemae.png",
+          "status": "MISSING"
+        },
+        {
+          "reference": "XX00_B15_GBPUSD_H4_BWD_M1.png",
+          "status": "MISSING"
+        }
+      ],
+      "status": "INCOMPLETE"
+    },
+    "original_launch_ini_path": "UNKNOWN",
+    "participation": {
+      "basket_semantics_status": "UNKNOWN_NOT_INDEPENDENTLY_PROVEN",
+      "buy_sell_deal_count": 48,
+      "close_active_month_count": 8,
+      "close_active_month_fraction": 0.2222222222222222,
+      "close_active_months": [
+        "2020.08",
+        "2020.09",
+        "2020.10",
+        "2020.11",
+        "2022.04",
+        "2022.05",
+        "2022.06",
+        "2022.12"
+      ],
+      "closed_ticket_count": 24,
+      "deal_active_month_count": 9,
+      "deal_active_month_fraction": 0.25,
+      "deal_active_months": [
+        "2020.01",
+        "2020.08",
+        "2020.09",
+        "2020.10",
+        "2020.11",
+        "2022.04",
+        "2022.05",
+        "2022.06",
+        "2022.12"
+      ],
+      "entry_active_month_count": 8,
+      "entry_active_month_fraction": 0.2222222222222222,
+      "entry_active_months": [
+        "2020.01",
+        "2020.08",
+        "2020.09",
+        "2020.10",
+        "2020.11",
+        "2022.04",
+        "2022.05",
+        "2022.06"
+      ],
+      "entry_deal_count": 24,
+      "exposure_active_months": "UNKNOWN",
+      "independent_baskets": "UNKNOWN",
+      "independent_episodes": "UNKNOWN",
+      "l0_entry_tag_active_month_count": 4,
+      "l0_entry_tag_active_month_fraction": 0.1111111111111111,
+      "l0_entry_tag_active_months": [
+        "2020.01",
+        "2020.09",
+        "2020.10",
+        "2022.04"
+      ],
+      "method": "Exact 13-column buy/sell Deals rows; L0 requires Direction=in and Comment=15_ST03 L0. No order-ticket-to-position or basket grouping.",
+      "raw_l0_entry_tag_count": 6,
+      "time_in_market": "UNKNOWN",
+      "window_calendar_months": 36
+    },
+    "report": {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.htm",
+      "sha256": "10d9edf6a661aaf25e9cbb962cd6f5d3a5c4bb1ffab91a204f6556da5a99a105",
+      "size_bytes": 121996
+    },
+    "source_sha": "24125ea69ad8f4410f8501d3ea005a60fb92936b",
+    "strategy_status": "NOT_ASSESSED_NO_VERDICT_CHANGE",
+    "tester": {
+      "Currency": "USD",
+      "Deposit": "10000",
+      "ExecutionMode": "0",
+      "Expert": "EA_LAB_TEST\\ORDER-XX00-MODEL1-SCREEN-V1\\EALabTpl\\Boss_15_ST03",
+      "ForwardMode": "0",
+      "FromDate": "2020.01.01",
+      "Leverage": "1:100",
+      "Model": "1",
+      "Optimization": "0",
+      "Period": "H4",
+      "ReplaceReport": "1",
+      "Report": "XX00_B15_GBPUSD_H4_BWD_M1",
+      "ShutdownTerminal": "1",
+      "Symbol": "GBPUSD",
+      "ToDate": "2022.12.31",
+      "Visual": "0"
+    },
+    "tester_ini_name": "XX00_B15_GBPUSD_H4_BWD_M1.ini",
+    "variant": "xx-00",
+    "window": "BWD"
+  }
+]

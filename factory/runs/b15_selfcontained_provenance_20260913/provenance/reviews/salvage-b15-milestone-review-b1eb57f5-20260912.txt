@@ -1,0 +1,9 @@
+Local validation passes and the integrity manifest reproduces, but validation still depends on an unpushed Git history and an author-local runtime binary. These dependencies prevent reliable validation of the preserved package from a fresh canonical clone.
+
+Full review comments:
+
+- [P2] Remove validation's dependency on the unpushed rejected commit — D:/EA_LAB_CONTROL/worktrees/salvage-b15-integration-20260912/factory/runs/salvage_b15_xx00_20260912/package.py:491-493
+  In a fresh canonical clone, `--validate` fails when this call reads `a0a3b5b...`: that commit is not reachable from the reviewed HEAD and is retained only by the local `ct/xx00-wavea-screen-contract-20260909` branch. The portability fixture masks this dependency by cloning with `--shared`, exposing the author's object database. Preserve the necessary provenance in the accepted package and validate against reachable, pinned evidence without requiring the rejected branch.
+
+- [P2] Separate historical EX5 evidence from current runtime availability — D:/EA_LAB_CONTROL/worktrees/salvage-b15-integration-20260912/factory/runs/salvage_b15_xx00_20260912/package.py:504-506
+  On a consumer machine without the author's `D:\Meta 5c\...\Boss_15_ST03.ex5`, `--validate` raises `FileNotFoundError` despite the committed package remaining intact; replacing that runtime binary also invalidates historical package validation. Both cells record `HASH_MATCH`, so this filesystem dependency is unconditional for the shipped evidence. Validate the saved observation against its pinned receipt, and report any optional current-file verification separately without rewriting historical status.

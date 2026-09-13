@@ -1,0 +1,38 @@
+[
+  {
+    "closed_deal_balance_dd_pct": 0.0,
+    "closed_deal_net": 138.73,
+    "closed_deal_pf": null,
+    "closed_ticket_count": 10,
+    "coverage": "Frozen full-window dates; complete buy/sell deal counts and net reconcile; unchanged truncation sidecar CHECK_PASS. Zero closes do not establish zero exposure.",
+    "dd_definition": "Canonical year stats: closed-deal balance drawdown; each year resets to USD10000; NOT native floating EqDD.",
+    "exposure": "UNKNOWN",
+    "pf_status": "UNDEFINED_NO_GROSS_LOSS",
+    "year": 2023,
+    "zero_close_year": false
+  },
+  {
+    "closed_deal_balance_dd_pct": 0.0,
+    "closed_deal_net": 0.0,
+    "closed_deal_pf": null,
+    "closed_ticket_count": 0,
+    "coverage": "Frozen full-window dates; complete buy/sell deal counts and net reconcile; unchanged truncation sidecar CHECK_PASS. Zero closes do not establish zero exposure.",
+    "dd_definition": "Canonical year stats: closed-deal balance drawdown; each year resets to USD10000; NOT native floating EqDD.",
+    "exposure": "UNKNOWN",
+    "pf_status": "UNDEFINED_NO_GROSS_LOSS",
+    "year": 2024,
+    "zero_close_year": true
+  },
+  {
+    "closed_deal_balance_dd_pct": 4.9657,
+    "closed_deal_net": -496.57,
+    "closed_deal_pf": 0.0,
+    "closed_ticket_count": 3,
+    "coverage": "Frozen full-window dates; complete buy/sell deal counts and net reconcile; unchanged truncation sidecar CHECK_PASS. Zero closes do not establish zero exposure.",
+    "dd_definition": "Canonical year stats: closed-deal balance drawdown; each year resets to USD10000; NOT native floating EqDD.",
+    "exposure": "UNKNOWN",
+    "pf_status": "DEFINED",
+    "year": 2025,
+    "zero_close_year": false
+  }
+]

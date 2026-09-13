@@ -1,0 +1,6 @@
+# SOURCE D:\Meta 5c\Tester\Agent-127.0.0.1-3000\logs\20260909.log
+CS	0	20:22:58.184	Boss_15_ST03 (GBPUSD,H4)	2023.01.01 00:00:00   [CFG] caps: RC_MaxLot 0.20 | ProtectLevel 2 (killDD 25% / depositLoad 30% / recSteps 3) | maxLevels 3
+CS	0	20:22:58.184	Boss_15_ST03 (GBPUSD,H4)	2023.01.01 00:00:00   [CFG] basket STOP: _32_SL_BalPct 10.000% = 1000.00 money -- IGNORING _32_SL_Money 0.00
+CS	0	20:23:42.585	Boss_15_ST03 (GBPUSD,H4)	2020.01.01 00:00:00   [CFG] caps: RC_MaxLot 0.20 | ProtectLevel 2 (killDD 25% / depositLoad 30% / recSteps 3) | maxLevels 3
+CS	0	20:23:42.585	Boss_15_ST03 (GBPUSD,H4)	2020.01.01 00:00:00   [CFG] basket STOP: _32_SL_BalPct 10.000% = 1000.00 money -- IGNORING _32_SL_Money 0.00
+# SOURCE D:\Meta 5c\Tester\logs\20260909.log

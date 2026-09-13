@@ -1,0 +1,25 @@
+{
+  "MT5_runs": 0,
+  "acquired_artifacts": 52,
+  "baskets_episodes": "UNKNOWN",
+  "canonical_parser_year_participation": "PASS",
+  "fresh_clone": "PENDING_COMMIT",
+  "headline_reconciliation": "PASS",
+  "identity": "157/157/157 PASS x2",
+  "implementation_passes": 1,
+  "independent_review": "PENDING_CONTROL_TOWER",
+  "initial_authoring_observations": [
+    "Helper adapter initially lacked hashlib import; corrected before freeze.",
+    "Deal rows are serialized in a columns/rows object; comparison corrected to rows before freeze.",
+    "Strict audit initially intercepted lazy stdlib codec reads; codecs explicitly initialized before evidence audit."
+  ],
+  "native_graph_closure": "INCOMPLETE",
+  "native_refs_missing": 8,
+  "package_status": "PASS_DETERMINISTIC_WORKER_CHECKS",
+  "repair_budget": "0/1",
+  "runtime_external_evidence_read_guard": "PASS",
+  "safe_for_control_tower_commit": "YES; independent review and post-commit fresh-clone gate remain separate",
+  "static_external_evidence_check": "PASS",
+  "strategy_status": "UNCHANGED",
+  "tests_passed": 26
+}

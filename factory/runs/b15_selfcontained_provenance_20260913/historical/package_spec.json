@@ -1,0 +1,157 @@
+{
+  "artifacts": [
+    {
+      "path": "cells.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/BWD_deal_rows.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/BWD_input_maps.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/BWD_native_assets.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/BWD_parser.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/BWD_participation.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/BWD_year_split.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/MAIN_deal_rows.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/MAIN_input_maps.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/MAIN_native_assets.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/MAIN_parser.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/MAIN_participation.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "derived/MAIN_year_split.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "package.py",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "provenance/author_scope.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "provenance/authority_and_tools.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "provenance/build_receipt_b15.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "provenance/raw_origins.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "provenance/source_pins.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "provenance/tester_log_b15_excerpt.txt",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "raw/B15_00_SCREEN_GBPUSD_H4.set",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.htm",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.ini",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.leverage_check.json",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_BWD_M1.truncation_check.json",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.htm",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.ini",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.leverage_check.json",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "raw/XX00_B15_GBPUSD_H4_MAIN_M1.truncation_check.json",
+      "role": "preserved_raw"
+    },
+    {
+      "path": "REPORT.md",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "test_portability.py",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "validation.json",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "views/native_eqdd.svg",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "views/opportunity_participation.svg",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "views/pf_home_window.svg",
+      "role": "packaging_evidence"
+    },
+    {
+      "path": "views/pf_vs_participation.svg",
+      "role": "packaging_evidence"
+    }
+  ],
+  "authority": "PACKAGING_ONLY_NO_STRATEGY_AUTHORITY",
+  "direct_consumer": "Control Tower exact-head packaging review",
+  "metadata": {
+    "base": "45319cd5941607403279aeed2c100aab78e9bc65",
+    "independent_baskets": "UNKNOWN",
+    "input_head": "a0a3b5b13cb5b1f4b9585954b91ee89ac17f5dc2",
+    "native_closure": "INCOMPLETE"
+  },
+  "package_id": "salvage_b15_xx00_20260912"
+}

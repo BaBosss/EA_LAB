@@ -1,0 +1,2 @@
+# Preserve package bytes across Git checkout; evidence hashes include CRLF.
+* -text
