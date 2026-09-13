@@ -1,14 +1,14 @@
 # B15 self-contained provenance result - 2026-09-13
 
-PACKAGE STATUS: PASS_DETERMINISTIC_WORKER_CHECKS / READY_FOR_CONTROL_TOWER_INTAKE.
-SAFE_FOR_CONTROL_TOWER_COMMIT: YES.
+PACKAGE STATUS: CANDIDATE_COMMITTED_LOCAL / BOUNDED_FRESH_CLONE_REPAIR_1_OF_1 / TARGETED_RECHECK_PENDING.
+SAFE_FOR_TARGETED_RECHECK: YES.
 Independent exact-head review: PENDING_CONTROL_TOWER.
-Fresh-clone status: PENDING_COMMIT. No committed-candidate/fresh-clone PASS claimed.
+Fresh-clone status: initial candidate `ba40ea8505a072b4a6ce69b4f8c7444e2375af81` exposed a B_HARNESS_TEST fixture-location defect; repair 1/1 moves the temporary bundle/clone outside the package inventory. Targeted fresh-clone recheck is pending.
 
 Lane: `b15-selfcontained-provenance-v1-20260913`; device BaBoss.
 Exact base and read-only remote master observation:
 `a1a0965b4ca6fef05340b810fdc6b09adbe560f8`.
-One implementation pass; `MT5_runs=0`; `repair_budget=0/1` (independent-review repair unused).
+One implementation pass; `MT5_runs=0`; `repair_budget=1/1` used only for the fresh-clone harness fixture-location defect. Package evidence/strategy bytes and semantics were not changed by the repair.
 No staging, commit or push. No tester/terminal/process invocation for MT5,
 compile, optimization, rerun, retune, HOLDOUT, deployment or trading.
 

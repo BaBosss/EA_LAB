@@ -4,7 +4,7 @@ python -B test_fresh_clone.py <full-candidate-HEAD-SHA>
 
 Creates a bundle of candidate HEAD only, then a non-shared clone. Requires the
 historical rejected object to be absent, and runs validator plus negative tests.
-Temporary bundle/clone are bounded new fixtures inside the invoking package.
+Temporary bundle/clone are bounded fixtures outside the package inventory.
 Git and Python are the only child programs. Does not stage, commit, push or MT5.
 """
 import json
@@ -38,7 +38,7 @@ def main():
     tracked = run(['git', 'ls-tree', '-r', '--name-only', candidate, '--', PACKAGE]).splitlines()
     if PACKAGE + '/validate.py' not in tracked or PACKAGE + '/test_package.py' not in tracked:
         raise ValueError('candidate has no committed package')
-    with tempfile.TemporaryDirectory(prefix='.b15-fresh-', dir=OUT) as tmp:
+    with tempfile.TemporaryDirectory(prefix='ea-lab-b15-fresh-') as tmp:
         base = Path(tmp); bundle = base / 'candidate.bundle'; clone = base / 'clone'
         run(['git', 'bundle', 'create', str(bundle), 'HEAD'])
         if run(['git', 'bundle', 'list-heads', str(bundle)]) != candidate + ' HEAD':
