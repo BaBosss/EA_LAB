@@ -1,15 +1,15 @@
 # B15 self-contained provenance result - 2026-09-13
 
-PACKAGE STATUS: PASS_TECHNICAL_ACCEPTANCE / FRESH_CLONE_PASS / READY_FOR_INDEPENDENT_REVIEW.
-SAFE_FOR_INDEPENDENT_REVIEW: YES.
-Independent exact-head review: PENDING_CONTROL_TOWER.
-Fresh-clone status: PASS at technical package head `00109fd0548362dc1143487c30c215e2fc31fce1`. The candidate-only bundle exposed only HEAD, used no shared object database, did not contain rejected object `a0a3b5b...`, and passed package validation plus 26/26 negative tests.
+PACKAGE STATUS: ACCEPTED / REVIEWED / CANONICAL / PACKAGING_ONLY / NO_STRATEGY_AUTHORITY.
+SAFE_FOR_CANONICAL_CONSUMPTION: YES, within package-only authority.
+Independent exact-head review: PASS / no actionable defects at `28b8db50cb6935ead6526f5d0ce0e5722d3e28f0`; receipt `D:\EA_LAB_CONTROL\evidence\review_b15_selfcontained_28b8db50_20260913.txt`.
+Fresh-clone status: PASS at final reviewed package head `28b8db50cb6935ead6526f5d0ce0e5722d3e28f0`. The candidate-only bundle exposed only HEAD, used no shared object database, did not contain rejected object `a0a3b5b...`, and passed package validation plus 26/26 negative tests.
 
 Author lane: `b15-selfcontained-provenance-v1-20260913`; Control Tower re-anchor lane: `b15-selfcontained-provenance-reanchor-20260913`; device BaBoss.
 Original authoring base: `a1a0965b4ca6fef05340b810fdc6b09adbe560f8`. Control Tower re-anchor base after the disjoint Norton-watchdog origin move: `373e0bd0e42fbed3563bbfd3f2dd57e3a4193aec`.
 One implementation pass; `MT5_runs=0`; `repair_budget=1/1` used only for the fresh-clone harness fixture-location defect. Package evidence/strategy bytes and semantics were not changed by the repair.
 The package validator's `repair_budget=0/1` field preserves the worker implementation baseline; order-level Control Tower repair authority is now exhausted at 1/1 and no further repair is authorized under this contract.
-Technical package and repair commits are local only; no push yet. No tester/terminal/process invocation for MT5,
+Package head `28b8db50cb6935ead6526f5d0ce0e5722d3e28f0` was fast-forward pushed and remote-SHA verified canonical. No tester/terminal/process invocation for MT5,
 compile, optimization, rerun, retune, HOLDOUT, deployment or trading.
 
 STRATEGY STATUS: unchanged. This new package does not repair/reopen

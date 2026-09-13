@@ -425,7 +425,7 @@
 | ORDER-RND-P4 |  | DONE + REVIEWED | Boss19 regime attribution | JOIN + INTERPRETATION COMPLETE / MIXED_EVIDENCE | ACTIVE:10048 |
 | ORDER-RND-P5 |  | DONE | â€” Boss19 Black Tide session-context attribution â€” |  | ACTIVE:10062 |
 | ORDER-RND-P6 |  | BLOCKED | â€” survivor coarse-to-fine funnel â€” |  | ACTIVE:10068 |
-| ORDER-XX00-B15-PROVENANCE-V1 |  | READY | [factory/research-tooling] self-contained preserved-evidence provenance package |  | ACTIVE:10217 |
+| ORDER-XX00-B15-PROVENANCE-V1 |  | DONE + REVIEWED | [factory/research-tooling] self-contained preserved-evidence provenance package |  | ACTIVE:10217 |
 | ORDER-XX00-B17-DECOUPLE-V1 |  | BLOCKED | [factory/template/core] B17 structural-SL decoupling |  | ACTIVE:10173 |
 | ORDER-XX00-BACKTEST-READINESS-V1 |  | DONE + REVIEWED | [factory/research] xx-00 Model1 screen readiness |  | ACTIVE:10152 |
 | ORDER-XX00-MODEL1-SCREEN-V1 |  | BLOCKED | [factory/research] B13+B15 xx-00 fast-start Model1 screen |  | ACTIVE:10196 |
