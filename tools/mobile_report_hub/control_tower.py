@@ -120,8 +120,7 @@ def registry_projection(path, now, safe_id):
         for item in raw["records"]:
             if not isinstance(item, dict) or item.get("state") not in STATES:
                 raise ValueError("invalid lane row")
-            if item["state"] == "DONE":
-                continue
+            is_done = item["state"] == "DONE"
             observed = item.get("updated_at", "UNKNOWN")
             row_freshness = freshness(observed, now)
             classification = item.get("classification")
@@ -140,7 +139,8 @@ def registry_projection(path, now, safe_id):
                 elif (reviewer != "UNKNOWN" and head != "UNKNOWN" and reviewed_head == head
                       and item.get("head_matches_record") is True):
                     review_state = "REVIEWED_EXACT_HEAD"
-            rows.append({"id": safe_id(item.get("lane_id")), "state": "CONFLICT" if conflict else item["state"] if eligible else "UNKNOWN",
+            projected_state = "DONE" if is_done else "CONFLICT" if conflict else item["state"] if eligible else "UNKNOWN"
+            rows.append({"id": safe_id(item.get("lane_id")), "state": projected_state,
                          "declared_state": item["state"], "source_kind": "LANE_REGISTRY_NONCANONICAL",
                          "freshness": row_freshness if envelope_freshness == "CURRENT" else envelope_freshness,
                          "observed_at": observed if row_freshness != "UNKNOWN" else "UNKNOWN",
@@ -150,7 +150,7 @@ def registry_projection(path, now, safe_id):
                          "worktree": registry_worktree(item.get("worktree")),
                          "reviewer": reviewer,
                          "role": "WRITER" if item.get("writer") is True else "READ_ONLY" if item.get("writer") is False else "UNKNOWN",
-                         "registry_classification": classification if classification in {"ACTIVE_CURRENT", "QUEUED_CURRENT", "ACTIVE_AGED", "ACTIVE_IDENTITY_MISMATCH", "ACTIVE_MISSING_WORKTREE", "STALE_NONACTIVE", "HISTORICAL_UNRESOLVED"} else "UNKNOWN",
+                         "registry_classification": classification if classification in {"ACTIVE_CURRENT", "QUEUED_CURRENT", "ACTIVE_AGED", "ACTIVE_IDENTITY_MISMATCH", "ACTIVE_MISSING_WORKTREE", "STALE_NONACTIVE", "HISTORICAL_UNRESOLVED", "CLOSED"} else "UNKNOWN",
                          "blocker_class": blocker[0] if isinstance(blocker, str) and re.match(r"^[A-E](?:$|[_ /-])", blocker) else "UNKNOWN",
                          "direct_dependencies": [dep if isinstance(dep, str) and safe_id(dep) == dep else "UNKNOWN" for dep in item["dependencies"]] if eligible and isinstance(item.get("dependencies"), list) else "UNKNOWN",
                          "blocker_type": "OWNER_EXTERNAL" if owner else "UNKNOWN",

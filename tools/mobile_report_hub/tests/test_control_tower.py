@@ -29,6 +29,15 @@ class ControlTowerTests(unittest.TestCase):
         for state in ("WAITING", "READY", "REVIEW", "INTEGRATING", "PAUSED", "BLOCKED"):
             self.assertEqual(self.audit([self.lane(state=state)])["rows"][0]["state"], state)
 
+    def test_done_closed_rows_remain_sanitized_history(self):
+        value = self.audit([self.lane(state="DONE", classification="CLOSED", updated_at="2026-09-01T00:00:00Z", blocker_class="E_OWNER_EXTERNAL")])
+        row = value["rows"][0]
+        self.assertEqual(row["state"], "DONE")
+        self.assertEqual(row["registry_classification"], "CLOSED")
+        self.assertEqual(row["freshness"], "STALE")
+        self.assertFalse(row["owner_required"])
+        self.assertEqual(row["direct_dependencies"], "UNKNOWN")
+
     def test_missing_registry_is_not_empty_current(self):
         value = ct.registry_projection(None, NOW, build_index.safe_lane_id)
         self.assertEqual(value["status"], "UNAVAILABLE")

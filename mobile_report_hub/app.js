@@ -327,6 +327,7 @@ function observationCurrent() {
 function ownerCards() {
   const items = tower().need_boss || [];
   const projection = workProjection();
+  projection.registry = {...projection.registry, rows: (projection.registry.rows || []).filter(item => item.state !== "DONE")};
   const graph = window.EALabAgentGraph;
   // Use Work's display-time qualification, including ambiguity and cached/offline gates.
   // The precomputed list supplies historical context only; it cannot grant current action.
@@ -353,8 +354,9 @@ function renderHome() {
   const registry = tower().registry || {};
   const rows = registry.rows || [];
   const fresh = observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && observedFreshness(registry.observed_at) === "CURRENT";
-  const currentRows = rows.filter(item => !["UNKNOWN", "CONFLICT"].includes(item.state) && item.freshness === "CURRENT" && observedFreshness(item.observed_at) === "CURRENT");
-  app.innerHTML = `<section class="page-heading"><h2>Overview</h2><p>Project: ${escapeHtml(tower().project && tower().project.global_state)} · Control Tower status: UNKNOWN</p></section><section><h2>WORK</h2><p class="muted">Fresh Lane Registry observations · noncanonical</p><div class="work-counts">${["RUNNING", "READY", "WAITING", "BLOCKED", "PARKED"].map(state => `<article><span>${state}</span><strong>${fresh && state !== "PARKED" ? currentRows.filter(item => item.state === state).length : "UNKNOWN"}</strong></article>`).join("")}</div><small>Unresolved observations: ${rows.length - currentRows.length}. Counts exclude these rows. Registry rows are cumulative history, not concurrent agents. PARKED: unavailable.</small></section>${ownerCards()}<section><h2>RUNTIME</h2><p>Workers / jobs, MT5, VPS: UNKNOWN</p><p>Monitoring: ${escapeHtml(globalMonitoringState())} · <a href="#runtime">Source health</a></p></section><section><h2>CURRENT WORK</h2><p class="muted">Canonical plan context; includes completed and constrained work.</p>${contextCards(tower().project && tower().project.current, "Current plan UNAVAILABLE")}</section><section><h2>NEXT</h2>${contextCards(tower().project && tower().project.next, "Next action UNAVAILABLE")}</section>`;
+  const unfinishedRows = rows.filter(item => item.state !== "DONE");
+  const currentRows = unfinishedRows.filter(item => !["UNKNOWN", "CONFLICT"].includes(item.state) && item.freshness === "CURRENT" && observedFreshness(item.observed_at) === "CURRENT");
+  app.innerHTML = `<section class="page-heading"><h2>Overview</h2><p>Project: ${escapeHtml(tower().project && tower().project.global_state)} · Control Tower status: UNKNOWN</p></section><section><h2>WORK</h2><p class="muted">Fresh Lane Registry observations · noncanonical</p><div class="work-counts">${["RUNNING", "READY", "WAITING", "BLOCKED", "PARKED"].map(state => `<article><span>${state}</span><strong>${fresh && state !== "PARKED" ? currentRows.filter(item => item.state === state).length : "UNKNOWN"}</strong></article>`).join("")}</div><small>Unresolved observations: ${unfinishedRows.length - currentRows.length}. Counts exclude these rows. Registry rows are cumulative history, not concurrent agents. PARKED: unavailable.</small></section>${ownerCards()}<section><h2>RUNTIME</h2><p>Workers / jobs, MT5, VPS: UNKNOWN</p><p>Monitoring: ${escapeHtml(globalMonitoringState())} · <a href="#runtime">Source health</a></p></section><section><h2>CURRENT WORK</h2><p class="muted">Canonical plan context; includes completed and constrained work.</p>${contextCards(tower().project && tower().project.current, "Current plan UNAVAILABLE")}</section><section><h2>NEXT</h2>${contextCards(tower().project && tower().project.next, "Next action UNAVAILABLE")}</section>`;
 }
 
 function renderRuntime() {
@@ -380,9 +382,9 @@ function renderFactoryPilots() {
 function operationalPresentationAlerts() {
   const registry = tower().registry || {};
   const rows = registry.rows || [];
-  const current = observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT";
-  const blocked = current ? rows.filter(row => row.freshness === "CURRENT" && observedFreshness(row.observed_at) === "CURRENT" && row.state === "BLOCKED").length : "UNKNOWN";
-  const unqualified = rows.filter(row => row.freshness !== "CURRENT" || observedFreshness(row.observed_at) !== "CURRENT" || ["UNKNOWN", "CONFLICT"].includes(row.state)).length;
+  const current = observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && observedFreshness(registry.observed_at) === "CURRENT";
+  const blocked = current ? rows.filter(row => row.state !== "DONE" && row.freshness === "CURRENT" && observedFreshness(row.observed_at) === "CURRENT" && row.state === "BLOCKED").length : "UNKNOWN";
+  const unqualified = current ? rows.filter(row => row.state !== "DONE" && (row.freshness !== "CURRENT" || observedFreshness(row.observed_at) !== "CURRENT" || ["UNKNOWN", "CONFLICT"].includes(row.state))).length : "UNKNOWN";
   const factory = reportIndex.factory_pilots || {};
   const issues = factory.summary && Number.isInteger(factory.summary.issue_count) ? factory.summary.issue_count : "UNKNOWN";
   return `<section class="panel"><h2>Work / evidence alerts</h2><p><strong>Current blocked lane observations:</strong> ${escapeHtml(blocked)}</p><p><strong>Stale / unqualified lane observations:</strong> ${escapeHtml(unqualified)}</p><p><strong>Factory evidence issues:</strong> ${escapeHtml(issues)}</p><p class="muted">These are work/evidence conditions only. They do not imply trading loss, abnormal market behavior, EA malfunction or runtime failure.</p></section>`;
@@ -625,12 +627,13 @@ function renderQueue() {
   const groups = ["READY", "RUNNING", "WAITING", "REVIEW", "INTEGRATING", "BLOCKED", "PARKED", "PAUSED", "FROZEN", "CONFLICT", "UNKNOWN", "DONE"];
   const projection = workProjection();
   const registry = projection.registry;
-  const sections = [["Canonical taskboard declarations", tower().work || [], "Pinned Git headers; not proof of execution readiness."], ["Lane observations", (registry.rows || []).map(item => ({...item, state: observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && item.freshness === "CURRENT" ? item.state : item.state === "CONFLICT" ? "CONFLICT" : "UNKNOWN"})), `NONCANONICAL · ${registry.status || "UNAVAILABLE"} · ${registry.freshness || "UNKNOWN"}`]];
-  const qualifiedRows = (registry.rows || []).filter(item => observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && item.freshness === "CURRENT" && observedFreshness(item.observed_at) === "CURRENT");
-  const unfinishedRows = qualifiedRows.filter(item => item.state !== "DONE");
+  const sections = [["Canonical taskboard declarations", tower().work || [], "Pinned Git headers; not proof of execution readiness."], ["Lane observations", (registry.rows || []).map(item => ({...item, state: item.state === "DONE" ? "DONE" : observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && observedFreshness(registry.observed_at) === "CURRENT" && item.freshness === "CURRENT" ? item.state : item.state === "CONFLICT" ? "CONFLICT" : "UNKNOWN"})), `NONCANONICAL · ${registry.status || "UNAVAILABLE"} · ${registry.freshness || "UNKNOWN"}`]];
+  const qualifiedRows = (registry.rows || []).filter(item => observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && observedFreshness(registry.observed_at) === "CURRENT" && item.state !== "DONE" && !["UNKNOWN", "CONFLICT"].includes(item.state) && item.freshness === "CURRENT" && observedFreshness(item.observed_at) === "CURRENT");
+  const unfinishedRows = qualifiedRows;
   const doneRows = (registry.rows || []).filter(item => item.state === "DONE");
   app.innerHTML = `<section class="page-heading"><h2>Work</h2><p>Canonical declarations and operational observations remain separate.</p></section><section class="panel"><h2>Summary</h2><p><strong>${unfinishedRows.length}</strong> qualified unfinished lane observation(s) · <strong>${doneRows.length}</strong> DONE historical record(s) · ${(registry.rows || []).length} cumulative Registry record(s).</p><p class="muted">Registry row count is accumulated work history, not the number of agents running concurrently. Process health remains UNKNOWN unless separately evidenced.</p><p>Registry: ${escapeHtml(registry.status)} / ${escapeHtml(registry.freshness)}</p></section><section class="work-graph-area"><h2>Agent Graph</h2><p>Tap a task to inspect evidence or copy context. Scroll each source graph horizontally.</p><div id="work-agent-graph"></div><aside id="agent-inspect" class="panel" aria-label="Agent inspection" hidden></aside></section><h2>Detailed lanes</h2>${sections.map(([title, rows, note]) => `<section><h2>${title}</h2><p>${escapeHtml(note)}</p>${rows.length ? groups.map(group => { const items = rows.filter(item => stateName(item.state) === group); return items.length ? `<details class="panel" ${["RUNNING", "BLOCKED", "CONFLICT"].includes(group) ? "open" : ""}><summary>${group} (${items.length})</summary><ul class="queue-list">${items.map(queueItem).join("")}</ul></details>` : ""; }).join("") : '<p class="empty-state">No rows supplied; source availability must be checked.</p>'}</section>`).join("")}`;
-  mountWorkGraph(projection);
+  const graphProjection = {...projection, registry: {...registry, rows: (registry.rows || []).filter(item => item.state !== "DONE")}};
+  mountWorkGraph(graphProjection);
 }
 
 function renderAlerts() {

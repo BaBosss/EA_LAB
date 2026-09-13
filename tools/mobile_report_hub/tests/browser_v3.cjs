@@ -93,7 +93,7 @@ const server = http.createServer((req, res) => {
       rows:[lane('current-running','RUNNING'), lane('current-blocked','BLOCKED'),
         {...lane('historical','UNKNOWN','STALE',staleStamp), registry_classification:'STALE_NONACTIVE'},
         lane('conflicting','CONFLICT'), lane('aged-running','RUNNING','CURRENT',staleStamp),
-        lane('stale-blocked','BLOCKED','STALE')]
+        lane('stale-blocked','BLOCKED','STALE'), lane('done-history','DONE','STALE',staleStamp)]
     };
     assert.ok(validate(payload.control_tower), JSON.stringify(validate.errors));
     const workCount = state => page.locator('.work-counts article').filter({has:page.locator('span', {hasText:new RegExp(`^${state}$`)})}).locator('strong').innerText();
@@ -104,6 +104,14 @@ const server = http.createServer((req, res) => {
     assert.equal(await workCount('PARKED'),'UNKNOWN');
     await page.getByText(/Unresolved observations: 4\. Counts exclude these rows\. Registry rows are cumulative history, not concurrent agents\. PARKED: unavailable\./).waitFor();
     results.push('Mixed current/stale/conflicting registry: RUNNING=1, BLOCKED=1, unresolved=4, PARKED=UNKNOWN');
+    await page.locator('.bottom-nav').getByText('Work',{exact:true}).click();
+    await page.getByRole('heading', {name:'Work', exact:true}).waitFor();
+    const workSummary = await page.locator('.page-heading + .panel').innerText();
+    assert.match(workSummary, /2 qualified unfinished lane observation\(s\)/);
+    assert.match(workSummary, /1 DONE historical record\(s\)/);
+    assert.match(workSummary, /7 cumulative Registry record\(s\)/);
+    await page.getByText('DONE (1)', {exact:true}).waitFor();
+    results.push('DONE history retained separately while unfinished work remains primary');
     const mixed = structuredClone(payload);
     for (const change of [
       p => {p.control_tower.registry.status='UNAVAILABLE';},
@@ -111,12 +119,17 @@ const server = http.createServer((req, res) => {
       p => {p.control_tower.registry.observed_at=staleStamp;},
       p => {p.project.generated_at=staleStamp;}
     ]) {
-      payload=structuredClone(mixed); change(payload); await page.reload();
+      payload=structuredClone(mixed); change(payload); await page.goto(url+'#home'); await page.reload();
       await page.getByRole('heading',{name:'Overview',exact:true}).waitFor();
       assert.equal(await workCount('RUNNING'),'UNKNOWN');
       assert.equal(await workCount('BLOCKED'),'UNKNOWN');
     }
     results.push('Unavailable/unknown/stale registry envelope and stale project suppress WORK counts');
+    payload=structuredClone(mixed); payload.control_tower.registry.observed_at=staleStamp;
+    await page.goto(url+'#alerts'); await page.reload();
+    await page.getByText(/Current blocked lane observations:\s*UNKNOWN/).waitFor();
+    await page.getByText(/Stale \/ unqualified lane observations:\s*UNKNOWN/).waitFor();
+    results.push('Stale Registry envelope makes work/evidence alert counts UNKNOWN');
     const ownerRow = id => ({...lane(id,'BLOCKED'), declared_state:'BLOCKED',
       owner_required:true, blocker_class:'E', blocker_type:'OWNER_EXTERNAL',
       reason:'Explicit Lane Registry E / OWNER_EXTERNAL blocker', owner_action:'UNKNOWN'});
