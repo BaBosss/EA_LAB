@@ -339,8 +339,8 @@
     {
       "path": "test_fresh_clone.py",
       "role": "package_artifact",
-      "sha256": "a21ebf3089e22e03d4697552a7c0d902c3b9e68e3f9e684b6f8d27df0da3246b",
-      "size_bytes": 3444
+      "sha256": "b6afea103f1483365fd58b8d28c06a6e02ca1a043cc1262f47857164158e5838",
+      "size_bytes": 3439
     },
     {
       "path": "test_package.py",
