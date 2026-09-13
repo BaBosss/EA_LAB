@@ -67,6 +67,16 @@ Negative experiments remain evidence. Mechanical/harness/environment failures re
 
 Do not generate a full Candidate dossier for an experiment that has already PARKed at R1-R3.
 
+## 5.1 Choose the report profile before layout work
+
+After the Report Ladder stage is known, choose the presentation profile explicitly:
+
+- **One frozen configuration / fixed-config robustness / owner dossier:** use `EA_SINGLE_CONFIG_REPORT_PROFILE_V1.md`.
+- **Optimization/search surface / plateau / center selection:** use `EA_OPTIMIZATION_REPORT_PROFILE_V1.md`.
+
+Do not force optimization topology into a single-config dossier, and do not reduce an optimization report to a selected-cell summary. The optimization report owns the search surface; a selected frozen center may later receive a separate Single-Config report.
+
+Before final delivery of either profile, run `EA_REPORT_VISUAL_QA_CHECKLIST_V1.md`. A visual/rendering failure is report-package execution incompleteness, not strategy failure.
 ## 6. Package once for review and reuse
 
 A normal durable result package should contain, as applicable:
