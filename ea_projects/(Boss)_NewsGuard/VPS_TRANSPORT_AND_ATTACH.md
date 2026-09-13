@@ -112,14 +112,14 @@ stale `evidence_timestamp` values, so copying a file cannot manufacture fresh id
 
 ### Tiny-evidence OneDrive compatibility workaround
 
-The worker explicitly passes `--onedrive-upload-cutoff 10M` on both copy passes. This is a
+The worker uses the side-by-side `C:\rclone\rclone70.exe` and explicitly passes `--onedrive-upload-cutoff 4Mi` on both copy passes. This is a
 bounded compatibility workaround for the current tiny snapshot and RuntimeIdentity evidence
 payloads: measured VPS evidence showed `rclone about onedrive:` metadata succeeding while an
-833-byte `copyto` failed on the multipart path with `Unauthenticated`. With the 10M cutoff,
-current sub-10M evidence uses OneDrive single-part upload rather than that failing chunked path.
+833-byte `copyto` failed on the multipart path with `Unauthenticated`; a subsequent 10Mi cutoff attempt was rejected by rclone70 because the OneDrive backend caps this cutoff at 4Mi. With the 4Mi cutoff,
+current sub-4Mi evidence uses OneDrive single-part upload rather than that failing chunked path.
 
 This does **not** repair OAuth and does **not** prove end-to-end delivery. Files larger than
-10M use chunked upload; if that path remains broken, the existing aggregate non-zero return
+4Mi use chunked upload; if that path remains broken, the existing aggregate non-zero return
 code must make its failure visible. Keep the same destination, filters, freshness limits,
 identity validation, and task cadence; verify delivery at the final consumer as below.
 
