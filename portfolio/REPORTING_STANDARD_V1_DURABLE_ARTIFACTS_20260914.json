@@ -1,0 +1,116 @@
+{
+  "schema": "ea_lab_reporting_durable_artifacts/1",
+  "status": "VISUAL_QA_PASS_EXTERNAL_DURABLE",
+  "authority": "REPORTING_ONLY_NO_NEW_AUTHORITY",
+  "canonical_source_sha": "758ff8006346df9a6370ffa7636519a4eff1c854",
+  "storage_policy": "EXTERNAL_DURABLE_BINARIES_GIT_MANIFEST_ONLY",
+  "durable_root": "D:\\EA_LAB_CONTROL\\evidence\\reporting-standard-v1-20260914",
+  "generator": {
+    "path": "build_reporting_artifacts_v4.ps1",
+    "sha256": "e79d6d3e16ab5a222b37aabb8f218b2d26913630c40e19ed7c9b4d210ea68e9f"
+  },
+  "converter": {
+    "path": "convert_html_word.ps1",
+    "sha256": "4f41b24e1350155f00675f3a6ed76d1c9f64addf2e8a66787afe73ae9e971c86"
+  },
+  "final_artifacts": [
+    {
+      "path": "final/EA_LAB_B16_USDJPY_H1_R4_OWNER_DOSSIER_VISUAL_V4_FINAL_20260914.docx",
+      "bytes": 30514,
+      "sha256": "35116c280da93dd7e915081c81ba0653844941097ca7196296287e11963e7b7d",
+      "role": "EDITABLE_SINGLE_CONFIG_DOSSIER"
+    },
+    {
+      "path": "final/EA_LAB_B16_USDJPY_H1_R4_OWNER_DOSSIER_VISUAL_V4_FINAL_20260914.pdf",
+      "bytes": 345997,
+      "sha256": "9160535f3c6459a55cc255130f313982dd4ec4d0c4bd89b0839fd249b218f8bc",
+      "role": "OWNER_DELIVERY_SINGLE_CONFIG_PDF"
+    },
+    {
+      "path": "final/EA_LAB_OPTIMIZATION_REPORT_TEMPLATE_V1.docx",
+      "bytes": 20741,
+      "sha256": "df6f9ba2f01bb047fc5a4a531a0be5f24d2df31f29c30b2884307c3bb6e0270f",
+      "role": "EDITABLE_OPTIMIZATION_TEMPLATE"
+    },
+    {
+      "path": "final/EA_LAB_OPTIMIZATION_REPORT_TEMPLATE_V1_QA.pdf",
+      "bytes": 126107,
+      "sha256": "3a2e37e8f5fd9216a4b981fdb3da0d2aee3fc52b601ba67c5f8077dd4af39379",
+      "role": "QA_RENDER_ONLY"
+    }
+  ],
+  "visual_qa": {
+    "dossier_pages_inspected": 9,
+    "dossier_pages_total": 9,
+    "optimization_pages_inspected": 3,
+    "optimization_pages_total": 3,
+    "blank_pages": 0,
+    "clipped_pages": 0,
+    "glyph_corruption_pages": 0,
+    "table_overflow_pages": 0,
+    "accepted_native_equity_image": "UNAVAILABLE_FAIL_VISIBLE",
+    "result": "PASS"
+  },
+  "reproduction": {
+    "canonical_source_sha": "758ff8006346df9a6370ffa7636519a4eff1c854",
+    "dossier_page_count": 9,
+    "dossier_render_pages_identical": "9/9",
+    "optimization_page_count": 3,
+    "optimization_normalized_text_equal": true,
+    "optimization_page1_render_identical": true,
+    "optimization_page2_3_note": "WORD_PAGINATION_JITTER_ONLY_BWD_ROW_MOVES_ACROSS_PAGE_BOUNDARY",
+    "binary_hash_equality_claimed": false
+  },
+  "superseded_artifacts": [
+    {
+      "path": "superseded/EA_LAB_B16_USDJPY_H1_R4_OWNER_DOSSIER_20260913_v1.pdf",
+      "bytes": 423061,
+      "sha256": "93a8a491f843327a2127ce490275bdc6e884246aa745de957ae4e1ee06e9000c",
+      "status": "SUPERSEDED"
+    },
+    {
+      "path": "superseded/EA_LAB_B16_USDJPY_H1_R4_OWNER_DOSSIER_VISUAL_V3_FINAL_20260913.pdf",
+      "bytes": 689014,
+      "sha256": "7c4f856f362ae43d916e921233a156d5d8f5e6acfa5a883f653e79d7d5a7418d",
+      "status": "SUPERSEDED_VISUAL_QA_INCOMPLETE_MATCHING_V3_DOCX_NOT_RECOVERED"
+    }
+  ],
+  "source_owners": [
+    {
+      "path": "docs/research/B16_USDJPY_H1_R4_EXECUTION_FIDELITY_RESULTS.md",
+      "git_blob": "b79fdb3ac8d7a80c92f24547e7c92825502c4df0",
+      "sha256": "eff1ae3630261a8b9cc1c16205ca4c7960c93691aeaf528bd237f356f48f2ef6"
+    },
+    {
+      "path": "docs/research/B16_USDJPY_H1_R4_EPISODEUNIT_RESULTS_20260912.md",
+      "git_blob": "7aab21163195e192c1a0505cacc3c0fd27b8ac1f",
+      "sha256": "2e82bf9b3f1247694e1992ea6ed897e82450adad4b28bb1757b2877c327c9285"
+    },
+    {
+      "path": "docs/research/B16_USDJPY_H1_R4_SWAPCREDIT_RESULTS_20260912.md",
+      "git_blob": "04add31e498dbcba37d0057b64c98fb9bdb0369b",
+      "sha256": "317209d2cf24d210bc04ce00d8aa9b4b972900365b26f1894aea9bbdbec8597e"
+    },
+    {
+      "path": "docs/research/EA_SINGLE_CONFIG_REPORT_PROFILE_V1.md",
+      "git_blob": "4aea10e0dc5a5ef74485f5de43b2aab43a1c0480",
+      "sha256": "2d79f703579bd52616889dd6c9d3e1294e4d6f8e7334c42e42359097fb21da53"
+    },
+    {
+      "path": "docs/research/EA_OPTIMIZATION_REPORT_PROFILE_V1.md",
+      "git_blob": "ee2938c8eb6197513474f8fa5ca5aaf532c58ba7",
+      "sha256": "095e438b25ed61edfa0329e6af25e974820ba4949d3f9cb1be620a05a997e6de"
+    },
+    {
+      "path": "docs/research/EA_REPORT_VISUAL_QA_CHECKLIST_V1.md",
+      "git_blob": "c3fbdc7af2ef227896b2cb5ddd2f69aa05f31d32",
+      "sha256": "ef29a06a2f7302b94471ed83d4d399ecf31bbfa306ff3e9dbcc992758bfc431f"
+    }
+  ],
+  "limits": [
+    "PRESENTATION_ARTIFACTS_DO_NOT_REWRITE_ACCEPTED_RESEARCH_TRUTH",
+    "NO_ACCEPTED_NATIVE_EQUITY_GRAPH_WAS_AVAILABLE",
+    "NO_MT5_RERUN_OR_OPTIMIZATION_WAS_PERFORMED",
+    "NO_GRADE_KINT_CANDIDATE_HOLDOUT_RUNTIME_RISK_DEPLOYMENT_OR_TRADING_AUTHORITY"
+  ]
+}
