@@ -138,6 +138,8 @@ After a lane passes its contract:
 
 Operating Context should be refreshed after material milestone/loop closure, but remains a **snapshot**. New sessions must always return here and re-resolve Git before consequential work.
 
+Latest dated rotation snapshot and applied lessons (2026-09-14): `docs/handoffs/CONTROL_TOWER_ROTATION_20260914.md` + `docs/workflows/CONTROL_TOWER_LESSONS_20260914.md`. Carried-work intake has its queue home in `ORDER-CT-POSTMONITOR-INTAKE-20260914`; these locators do not override fresh Git, current subject owners or Lane Registry.
+
 ## 9. Fast-path tools after boot
 
 Do not rebuild orchestration helpers ad hoc when the canonical reliability pack already covers the need:
