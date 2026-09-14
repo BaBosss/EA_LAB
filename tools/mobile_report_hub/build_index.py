@@ -237,9 +237,11 @@ def _factory_report_artifact(pilot_dir: str, raw: bytes, out: Path) -> dict:
         text = raw.decode("utf-8")
     except UnicodeDecodeError as error:
         raise BuildError("factory report is not UTF-8") from error
-    text = re.sub(r"[A-Za-z]:\\[^<\"'\s]+", "[LOCAL_PATH_REDACTED]", text)
-    text = re.sub(r"file:///[^<\"'\s]+", "[LOCAL_PATH_REDACTED]", text, flags=re.I)
+    text = re.sub(r"[A-Za-z]:[\\/][^<\"'\s]+", "[LOCAL_PATH_REDACTED]", text)
+    text = re.sub(r"file://[^<\"'\s]+", "[LOCAL_PATH_REDACTED]", text, flags=re.I)
     text = re.sub(r"\\\\[^<\"'\s]+", "[LOCAL_PATH_REDACTED]", text)
+    if re.search(r"(?:[A-Za-z]:[\\/]|file://|\\\\)", text, flags=re.I):
+        raise BuildError("factory report local path redaction incomplete")
     rendered = text.encode("utf-8")
     digest = hashlib.sha256(rendered).hexdigest()
     href = f"artifacts/factory/{pilot_dir}/{digest}.html"

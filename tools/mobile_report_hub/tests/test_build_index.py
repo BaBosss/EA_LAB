@@ -412,6 +412,16 @@ class MobileReportHubDataTests(unittest.TestCase):
         self.assertEqual(dynamic[0]["summary"],"Noncanonical Lane Registry status: ACTIVE_CURRENT.")
         self.assertIn("UNKNOWN", {item["state"] for item in dynamic})
 
+    def test_factory_report_redacts_forward_slash_windows_path(self):
+        out = Path(self.temp.name) / "factory-redaction"
+        raw = b"<html><body>D:/EA_LAB/private/report.html</body></html>"
+        meta = build_index._factory_report_artifact("pilot", raw, out)
+        rendered = (out / meta["href"]).read_text(encoding="utf-8")
+        self.assertTrue(meta["local_paths_redacted"])
+        self.assertIn("[LOCAL_PATH_REDACTED]", rendered)
+        self.assertNotRegex(rendered, r"[A-Za-z]:[\\/]")
+        self.assertNotIn("file://", rendered.lower())
+
     def test_factory_pilot_projection_preserves_one_valid_and_eight_missing(self):
         out = Path(self.temp.name) / "factory-current"
         index = build_index.build(ROOT, DASHBOARD_MERGE_SHA, out, "2026-09-13T10:30:00Z", DASHBOARD_MERGE_SHA, None)
