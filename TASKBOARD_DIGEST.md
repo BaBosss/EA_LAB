@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **424** · ยังอยู่บนบอร์ด: **128** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **425** · ยังอยู่บนบอร์ด: **129** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -416,6 +416,7 @@
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | PARENT | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb |  | ACTIVE:10294 |
 | ORDER-CT-POSTMONITOR-INTAKE-20260914 |  | DONE | [control-tower] carried-work reconciliation |  | ACTIVE:10235 |
 | ORDER-CT-STRATEGY-SOURCE-RECOVERY-20260915 |  | DONE | [control-tower/research] Boss/custom source recovery + strategy-family port prep |  | ACTIVE:10281 |
+| ORDER-DEMO-SAMEPERIOD-REPLAY-20260915 |  | CONTRACT | [research/diagnostic] Demo vs same-period frozen-bundle replay |  | ACTIVE:10332 |
 | ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:8336 |
 | ORDER-HERMES-V2B-REAL-ADAPTER-QUAL-20260915 |  | CONTRACT | [hermes/tooling] real-adapter qualification |  | ACTIVE:10314 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
