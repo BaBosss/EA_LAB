@@ -412,7 +412,7 @@
 | ORDER-1462 | 2026-08-16 | DONE 2026-08-16 | [factory/S2a] 👤 The s2a attestation gate was RED at the pre-owner-confirmation snapshot;… |  | ACTIVE:1 |
 | ORDER-1500 | 2026-08-17 | DONE / REVIEWED | [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows… |  | ARCHIVE:12801 |
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
-| ORDER-CT-POSTMONITOR-INTAKE-20260914 |  | OPEN | [control-tower] carried-work reconciliation |  | ACTIVE:10235 |
+| ORDER-CT-POSTMONITOR-INTAKE-20260914 |  | DONE | [control-tower] carried-work reconciliation |  | ACTIVE:10235 |
 | ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:8336 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
