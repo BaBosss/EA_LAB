@@ -1,11 +1,12 @@
 # Boss Recovered Port Prep + Streaming Backtest Queue — 2026-09-15
 
-Canonical integration head: `e943c05fb4c01a3e2611df02eadffa0958d40c02`  
-Authority ceiling: `PORT_PREP_ONLY / NO CODEGEN / NO MT5 / NO FAMILY ALLOCATION`
+Canonical integration base for this update: `0287a3d1b466d9183e23f6687126479681cb74e5`
+Authority ceiling: `PORT_PREP + DF02 PARENT_FROZEN / DF02 IMPLEMENTATION_CONTRACT_FROZEN / NO MT5`
 
 ## Queue state
 - `READY_FOR_MT5`: **NONE**. Every recovered family still has `mt5_ready=false`.
-- 8 source-complete candidates need an explicit owner parent-revision freeze plus FamilyID/LAB_ENTRY allocation and compile/regression/review before implementation: **DF02, DF03, DF07, DF15, DF16, DF18, DF19, DF20**.
+- DF02 parent revision is owner-directed/frozen at SHA256 `795c446093bc0ef888bad84f162646f94d303831e8becf10955d7e016ed1f93c`; prospective `B20 / LAB_ENTRY_20` and its bounded implementation contract are frozen. It remains blocked on implementation, compile/regression, required different-family review, and later Home/TF/settings freeze.
+- 7 remaining source-complete candidates still need explicit owner parent-revision freeze plus FamilyID/LAB_ENTRY allocation and compile/regression/review before implementation: **DF03, DF07, DF15, DF16, DF18, DF19, DF20**.
 - 2 candidates require semantics/lineage prep before even that owner freeze: **DF08, DF12**.
 - 10 families remain historical-closed/reject or explicit-reopen-only and must not enter the queue implicitly: **DF01, DF04, DF05, DF06, DF09, DF10, DF11, DF13, DF14, DF17**.
 
@@ -15,7 +16,7 @@ Authority ceiling: `PORT_PREP_ONLY / NO CODEGEN / NO MT5 / NO FAMILY ALLOCATION`
 | ID | Family | Parent candidate | Approach | Blockers |
 |---|---|---|---|---:|
 | DF01 | Dynamic RSI / Highest-Lowest RSI | `(Boss) Dynamic  break and SW RSI rev 4.mq5` | `FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER` | 4 |
-| DF02 | Gold Robot Scalping Time Bomb | `(Boss) Gold Robot Scalping Time Bomb rev1.mq5` | `FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER` | 3 |
+| DF02 | Gold Robot Scalping Time Bomb | `(Boss) Gold Robot Scalping Time Bomb rev1.mq5` **FROZEN** | `FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER` | implementation/review/Home-TF gates remain |
 | DF03 | Grid Horizontal Line / Fibonacci | `(Boss) Grid Horizontal Line Trailing by Fibo rev 4(Config lot ,TF , Hedging).mq5` | `FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER` | 3 |
 | DF04 | Hedging Balance | `(Boss) Hedging Balance (XauM1 30,000) rev 1.mq5` | `FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER` | 4 |
 | DF05 | Infinix | `(Boss) Infinix EA.mq5` | `FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER` | 3 |
@@ -38,5 +39,7 @@ Authority ceiling: `PORT_PREP_ONLY / NO CODEGEN / NO MT5 / NO FAMILY ALLOCATION`
 ## Gate to actual tester execution
 A recovered family may enter MT5 only after: exact parent revision owner-freeze → canonical FamilyID/LAB_ENTRY/implementation contract → source-parity tests → compile/regression + required review → Home/TF/settings freeze → fixed MAIN+BWD contract. No BWD retuning or HOLDOUT discovery.
 
+DF02 has completed the first two gates only: exact parent freeze plus prospective `B20 / LAB_ENTRY_20` implementation contract. `READY_FOR_MT5` remains empty.
+
 ## Direct consumer
-EA Template planning lane / future owner-ratified bounded port contract. Until then the streaming tester queue remains empty for recovered families.
+DF02 routes next to the bounded Codex implementation lane named by its contract. Other recovered families remain in port-prep. No backtest queue cell exists yet.
