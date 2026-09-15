@@ -1,0 +1,23 @@
+{
+  "schema": "ea-lab-b16-xx00-model1-prereg/1",
+  "family": "B16",
+  "logical_variant": "B16-00",
+  "status": "PREREGISTERED_RESEARCH_ONLY",
+  "canonical_base": "d1d79e337808a98c01ff8c64c8a7d7c6371e3bca",
+  "owner_ratified_at": "2026-09-15",
+  "wrapper_path": "ea_template/Boss_16_KangarooGrid.mq5",
+  "wrapper_sha256": "E22F64302EA443C5BEC14C22FBB4787002F1C88742B9CA30D416040AFFE4E8D3",
+  "set_path": "factory/runs/b16_xx00_model1_control_20260915/B16_XX00_MODEL1_CONTROL.set",
+  "set_sha256": "B9CD05F2B728C48E1095FB0EA113486E78EE264AD9D2464B46BC9B889A56F9C9",
+  "set_source": "byte-identical copy of current canonical Boss_16_KangarooGrid_regression_full.set",
+  "home": {"symbol": "USDJPY", "timeframe": "H1"},
+  "model": "M1_M1_OHLC_RESEARCH",
+  "terminal_lane": "D:\\Meta 5c",
+  "main_window": "2023.01.01..2025.12.31",
+  "bwd_window": "2020.01.01..2022.12.31",
+  "holdout": "UNSPENT_FORBIDDEN",
+  "optimization": 0,
+  "forward": 0,
+  "deposit_usd": 10000,
+  "leverage": "1:100"
+}
