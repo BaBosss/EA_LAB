@@ -143,6 +143,7 @@ const server = http.createServer((req,res) => {
     await openOwner();
     const cardText=await page.locator('#chat-report-card').inputValue();
     assert.match(cardText,/MAIN exposure: SOURCE_BOUND_OBSERVATION/);
+    assert.match(cardText,/Execution lane: MT5-lane3/);
     assert.match(cardText,/Observed max total lots: 0.07/);
     assert.match(cardText,/Observed max total lots: 0.06/);
     assert.match(cardText,/_16_RsiLow: 35.0 -> UNKNOWN -> SEMANTICS_REQUIRED -> EXPLICIT_RESOLUTION_REQUIRED/);
@@ -202,7 +203,7 @@ const server = http.createServer((req,res) => {
     await swPage.waitForFunction(()=>!!navigator.serviceWorker.controller);
     const graphHref=fixture.item.native_graphs.main.href;
     await swPage.evaluate(async href=>{
-      const cache=await caches.open('ea-lab-report-hub-v3.1');
+      const cache=await caches.open('ea-lab-report-hub-v3.3-dashboard-merge');
       await cache.put(href,new Response('wrong graph from old cache',{headers:{'Content-Type':'image/png'}}));
     },graphHref);
     graphRequests=0;
@@ -210,7 +211,7 @@ const server = http.createServer((req,res) => {
     await swPage.waitForFunction(()=>document.querySelectorAll('.native-graph img').length===2);
     assert.ok(graphRequests>=2,'Native evidence fetched despite poisoned cache');
     const names=await swPage.evaluate(()=>caches.keys());
-    assert.ok(names.includes('ea-lab-report-hub-v3.3-dashboard-merge'));
+    assert.ok(names.includes('ea-lab-report-hub-v3.4-owner-report'));
     results.push('Actual service worker new generation + poisoned old native-cache bypass PASS');
     await swContext.close();
     fs.writeFileSync(path.join(evidence,'browser-native-results.json'),JSON.stringify({status:'PASS',results},null,2));

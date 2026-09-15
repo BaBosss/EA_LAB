@@ -244,6 +244,7 @@ binding and the existing research-model allowlist. Execution, research conclusio
 and package/review status stay separate. Copy is local clipboard only, with a
 selectable read-only text fallback; navigation invalidates pending copy feedback.
 It is a pinned historical report summary, not current monitoring health.
+The service-worker shell generation is `v3.4-owner-report`, replacing the prior V3.3 shell so existing cached clients receive these presentation controls.
 
 Focused coverage is in `test_native_graphs.py` and `browser_native_graphs.cjs`,
 alongside the unchanged `browser_navigation_binding.cjs` race suite. Browser

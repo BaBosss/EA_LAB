@@ -554,7 +554,7 @@ function chatReportCard(record) {
   const lines = ["Chat Report Card | READ_ONLY_PRESENTATION", `Record: ${record.id}`, `Source SHA: ${reportIndex.project.canonical_sha}`,
     `EA: ${valueOf(record.display_name)}`, `Home: ${valueOf(record.home?.symbol)} / ${valueOf(record.home?.timeframe)}`,
     `Basis: ${valueOf(record.evidence?.basis_id)}`, `Model: ${valueOf(record.evidence?.model)}`,
-    `Execution status: ${valueOf(record.status)}`, `Research conclusion: ${valueOf(record.verdict)}`, `Package / review status: ${valueOf(record.package_status)}`];
+    `Execution lane: ${valueOf(record.tested_setup?.lane)}`, `Execution status: ${valueOf(record.status)}`, `Research conclusion: ${valueOf(record.verdict)}`, `Package / review status: ${valueOf(record.package_status)}`];
   for (const role of ["main", "bwd"]) {
     const g = boundReportRole(record, role);
     lines.push(`${role.toUpperCase()} window: ${g ? `${g.window.from} -> ${g.window.to}` : "UNAVAILABLE: role/window binding missing or refused"}`);
