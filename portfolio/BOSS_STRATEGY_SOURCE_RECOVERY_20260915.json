@@ -1,0 +1,708 @@
+{
+  "schema": "ea-lab-boss-source-recovery-canonical-summary/1",
+  "source_capture_anchor": "4d5325c00ca1f31a48db5dd6c499fec4882ba520",
+  "canonical_integration_head": "e943c05fb4c01a3e2611df02eadffa0958d40c02",
+  "capture_summary": {
+    "schema": "strategy-source-recovery-summary/1",
+    "created_utc": "2026-09-15T07:23:54.7675709+00:00",
+    "roots": [
+      "D:\\Forex\\10_EA_LIBRARY\\BOSS_CUSTOM",
+      "D:\\Forex\\10_EA_LIBRARY\\LEGACY\\Claude_EA\\EA MQL5 AI gen"
+    ],
+    "terminal_roots": [
+      "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal",
+      "D:\\Meta 5",
+      "D:\\Meta 5c"
+    ],
+    "rows": 477,
+    "mq4": 289,
+    "mq5": 188,
+    "mqh": 0,
+    "unique_mq_hashes": 404,
+    "duplicate_mq_hash_groups": 57,
+    "boss_custom_mq": 438,
+    "legacy_ai_mq": 24,
+    "targeted_terminal_mq": 15,
+    "safety": {
+      "source_modifications": 0,
+      "deletes": 0,
+      "moves": 0,
+      "compiled_binaries_copied": 0
+    },
+    "canonical_anchor": "4d5325c00ca1f31a48db5dd6c499fec4882ba520"
+  },
+  "validation": {
+    "status": "PASS",
+    "all_26_groups_accounted_once": true,
+    "draft_families": 20,
+    "port_contracts": 20,
+    "canonical_strategy_catalog_modified": false,
+    "all_mt5_ready_false": true
+  },
+  "queue": {
+    "ready_for_mt5": [],
+    "owner_parent_freeze_candidates": [
+      "DF02",
+      "DF03",
+      "DF07",
+      "DF15",
+      "DF16",
+      "DF18",
+      "DF19",
+      "DF20"
+    ],
+    "semantics_or_lineage_prep": [
+      "DF08",
+      "DF12"
+    ],
+    "historical_closed_or_explicit_reopen_only": [
+      "DF01",
+      "DF04",
+      "DF05",
+      "DF06",
+      "DF09",
+      "DF10",
+      "DF11",
+      "DF13",
+      "DF14",
+      "DF17"
+    ],
+    "recommended_first_owner_freeze_target": "DF02",
+    "recommendation_basis": "lowest-friction high-confidence MQ5 source family among non-closed candidates; not a performance ranking"
+  },
+  "families": [
+    {
+      "id": "DF01",
+      "family": "Dynamic RSI / Highest-Lowest RSI",
+      "source_groups": [
+        "(Boss) Dynamic RSI",
+        "(Boss) Highest lowest RSI"
+      ],
+      "platforms": [
+        "MQ4",
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) Dynamic  break and SW RSI rev 4.mq5",
+        "(Boss) Dynamic RSI SW + Break rev 5-3 near atr,bb trend macd.mq4"
+      ],
+      "historical_disposition": "CLOSED_BUCKET_D_D2_NO_SURVIVOR",
+      "template_fit": "NATIVE_GRID_FAMILY / potential B13-adjacent entry only after comparator review",
+      "recommended_action": "PRESERVE_NEGATIVE_KNOWLEDGE; no port/test unless a new prospective contract explicitly reopens one frozen branch",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF01",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Dynamic  break and SW RSI rev 4.mq5",
+        "sha256": "c00f7ffdb5773d3b2c1ba0da59baba102b728472a266cda0dcfe626afa4e3d85",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF02",
+      "family": "Gold Robot Scalping Time Bomb",
+      "source_groups": [
+        "(Boss) Gold Robot Scalping Time Bomb"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) Gold Robot Scalping Time Bomb rev1.mq5"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "NATIVE_TIMED_SCALPER",
+      "recommended_action": "CARD_COMPLETE; PORT_PREP_ONLY; no new test authority",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF02",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Gold Robot Scalping Time Bomb rev1.mq5",
+        "sha256": "795c446093bc0ef888bad84f162646f94d303831e8becf10955d7e016ed1f93c",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF03",
+      "family": "Grid Horizontal Line / Fibonacci",
+      "source_groups": [
+        "(Boss) Grid Horizontal Line Trailing Fibo"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) Grid Horizontal Line Trailing by Fibo rev 4(Config lot ,TF , Hedging).mq5"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "NATIVE_FIB_GRID_HEDGE",
+      "recommended_action": "CARD_COMPLETE; PORT_PREP_ONLY; preserve native basket ownership",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF03",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Grid Horizontal Line Trailing by Fibo rev 4(Config lot ,TF , Hedging).mq5",
+        "sha256": "2aba9437319e214c82b63313a049f73da364052eddfa24f7f1661279593ffd89",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF04",
+      "family": "Hedging Balance",
+      "source_groups": [
+        "(Boss) Hedging Balance (XauM1 30,000)"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) Hedging Balance (XauM1 30,000) rev 1.mq5"
+      ],
+      "historical_disposition": "HISTORICAL_REJECT",
+      "template_fit": "NATIVE_HEDGE_REBALANCE",
+      "recommended_action": "PRESERVE_REJECT; inventory only; no auto-port",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF04",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Hedging Balance (XauM1 30,000) rev 1.mq5",
+        "sha256": "10f5d5ad2524e0ba175f27d4f04a00a8bdbdcd26197d08c165aae33944b2a5b9",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF05",
+      "family": "Infinix",
+      "source_groups": [
+        "(Boss) Infinix"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) Infinix EA.mq5"
+      ],
+      "historical_disposition": "CLOSED_BUCKET_D_D7_NO_REPORT",
+      "template_fit": "NATIVE_PENDING_GRID",
+      "recommended_action": "PRESERVE_CLOSED_RESULT; no auto-port/test",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF05",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Infinix EA.mq5",
+        "sha256": "f59e82e6813e287b7f9b4be4ed626be8574c1c3646a035a0e69f534c586a12ec",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF06",
+      "family": "PSAR Follow Trend",
+      "source_groups": [
+        "(Boss) PSAR follow Trend"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) PSAR follow trend rev 1.2 lot plus .mq5"
+      ],
+      "historical_disposition": "CLOSED_BUCKET_D_D4_NO_SURVIVOR",
+      "template_fit": "ENTRY_PLUS_NATIVE_GRID",
+      "recommended_action": "PRESERVE_NEGATIVE_KNOWLEDGE; card only unless prospectively reopened",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF06",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) PSAR follow trend rev 1.2 lot plus .mq5",
+        "sha256": "36656d2b790705aabeb4a089d0a7a728dfcdbad0763ef4b1f1bb1c908190d2fc",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF07",
+      "family": "Price Action + Trendline + Fibonacci",
+      "source_groups": [
+        "(Boss) Price Action - Trend Line -Fibo-Advance MM",
+        "(Boss) Price action and MM",
+        "(Boss) Price Action - Trend Line -Fibo -Martingale v3.1 Hedging + atr + nearby"
+      ],
+      "platforms": [
+        "MQ4",
+        "MQ5"
+      ],
+      "representatives": [
+        "(BOSS) Price Action - Trend Line -Fibo-Advance MM .mq5",
+        "(Boss) Price Action MM rev 1.mq4",
+        "(Jobot) Price Action - Trend Line -Fibo -Martingale v3.2 Hedging + atr + nearby.mq5"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "STATEFUL_PA_STRUCTURAL_NATIVE",
+      "recommended_action": "ONE DRAFT FAMILY WITH SOURCE VARIANTS; do not allocate three canonical families from folders alone",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF07",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(BOSS) Price Action - Trend Line -Fibo-Advance MM .mq5",
+        "sha256": "edc5b0ae26821a34b9bf84aa9d28b7c147f2d5d3de292050a533a94cb6f52998",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF08",
+      "family": "Price Action + Martingale + TMA",
+      "source_groups": [
+        "(Boss) Price Action -Martingale +TMA"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss)Trend ema+adx V6.15 mt4 atr nearby.mq5"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "MIXED_CONTAINER_SPLIT",
+      "recommended_action": "SPLIT container: retain MQ4 PA+TMA card; route misfiled MQ5 to DF14",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF08",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "MIXED_CONTAINER_REQUIRES_SOURCE_SPLIT",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss)Trend ema+adx V6.15 mt4 atr nearby.mq5",
+        "sha256": "c2f2a02834284741c2e5a2841ba8c82dab77d387f588dd318426046d21182a04",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "SPLIT_SOURCE_LINEAGES_BEFORE_IMPLEMENTATION",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF09",
+      "family": "RSI OBOS / RSI-BB",
+      "source_groups": [
+        "(Boss) RSI OBOS"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss)RSI_BB rev 3.1 (complete).mq5"
+      ],
+      "historical_disposition": "CLOSED_BUCKET_D_D3_NO_SURVIVOR",
+      "template_fit": "POTENTIAL_B13_ENTRY_RELATION_REQUIRES_PARITY",
+      "recommended_action": "PRESERVE_NEGATIVE_KNOWLEDGE; do not merge into B13 without source comparator parity",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF09",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "EXISTING_CANONICAL_FAMILY_PARITY_NOT_PROVEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss)RSI_BB rev 3.1 (complete).mq5",
+        "sha256": "ec24c85bd5ef9bf16975381c509068dc2c3ed067430a84f62a860db2f7703355",
+        "encoding": "UTF16LE_HEURISTIC"
+      },
+      "implementation_approach": "COMPARE_EXISTING_ENTRY_FIRST_THEN_NATIVE_ENGINE_OR_CHILD",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF10",
+      "family": "RSI Scalping Gold Low Spread",
+      "source_groups": [
+        "(Boss) RSI Scalping Gold Low Spread"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "RSI Scalping  Gold Low Spread Ver 1.5.mq5"
+      ],
+      "historical_disposition": "CLOSED_BUCKET_D_D6_ARTIFACT_THIN",
+      "template_fit": "ENTRY_PLUS_GRID_TRAIL",
+      "recommended_action": "PRESERVE_CLOSED_RESULT; no auto-port/test",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF10",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "RSI Scalping  Gold Low Spread Ver 1.5.mq5",
+        "sha256": "989e8827cc40d035d29e0dec4560407ff6519725b9f6529aada4c896faa164d4",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF11",
+      "family": "Redbull Racing / Redbull Following",
+      "source_groups": [
+        "(Boss) Redbull Racing",
+        "(Boss) Redbull following"
+      ],
+      "platforms": [
+        "MQ4",
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) Redbull Racing add hedging lot_rev4.3_add lot hedging multi_fix_bug.mq5",
+        "(Boss) Redbull Racing add hedging lot_rev 10.3 safety time and once per bar add PSAR + SL.mq4"
+      ],
+      "historical_disposition": "CLOSED_BUCKET_D_D5_NO_REPORT_PLUS_MQ4_ARCHIVE",
+      "template_fit": "NATIVE_EVOLUTION_FAMILY",
+      "recommended_action": "ONE FAMILY ARCHIVE WITH BRANCH MAP; do not promote individual revisions automatically",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF11",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Redbull Racing add hedging lot_rev4.3_add lot hedging multi_fix_bug.mq5",
+        "sha256": "71a5b45e9d32f444f42b968c71c76d447c9c552328ced20119aa823e0724827f",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF12",
+      "family": "Grow Up",
+      "source_groups": [
+        "(Boss) grow up"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) grow up rev 1.44 dynamic lot with hedging.mq5"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "ROLE_SEMANTICS_REQUIRED",
+      "recommended_action": "CARD DRAFT ONLY; resolve role before any Template port",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF12",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "CAUSAL_ROLE_OR_SEMANTICS_UNRESOLVED",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) grow up rev 1.44 dynamic lot with hedging.mq5",
+        "sha256": "510d09a19b9ce531c6af24f0b026bb2361a44a3c44e404b025ac3af63e284d41",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "SEMANTICS_FIRST_NO_CODEGEN",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF13",
+      "family": "Supermax",
+      "source_groups": [
+        "(Boss) supermax"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss) Supermax .mq5"
+      ],
+      "historical_disposition": "CLOSED_BUCKET_D_D8_NO_REPORT",
+      "template_fit": "SEMANTICS_REQUIRED",
+      "recommended_action": "PRESERVE_CLOSED_RESULT; no implementation until causal rule is source-reviewed",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF13",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "CAUSAL_ROLE_OR_SEMANTICS_UNRESOLVED",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Supermax .mq5",
+        "sha256": "69c6c98c3982108800ceee04445bb5238a757718a109deee70a1db5f1aa1b872",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "SEMANTICS_FIRST_NO_CODEGEN",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF14",
+      "family": "Trend EMA + ADX",
+      "source_groups": [
+        "(Boss) trend ema +adx"
+      ],
+      "platforms": [
+        "MQ5"
+      ],
+      "representatives": [
+        "(Boss)Trend ema+adx V6.41 mt4 dynamic atr TP MM.mq5"
+      ],
+      "historical_disposition": "CLOSED_BUCKET_D_D1_NO_SURVIVOR",
+      "template_fit": "POTENTIAL_B11_ADJACENT_ENTRY_REQUIRES_PARITY",
+      "recommended_action": "CONSOLIDATE misfiled MQ5 from PA+TMA here; preserve closed result; no new test",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF14",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "EXISTING_CANONICAL_FAMILY_PARITY_NOT_PROVEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss)Trend ema+adx V6.41 mt4 dynamic atr TP MM.mq5",
+        "sha256": "9f3c64ac031136434e1dae94ecaf85ac39422513a75548fa7e0c2e2624de844b",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "COMPARE_EXISTING_ENTRY_FIRST_THEN_NATIVE_ENGINE_OR_CHILD",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF15",
+      "family": "EA No-Way / Two-Way Grid",
+      "source_groups": [
+        "(Boss) EA no way",
+        "(Boss) EA two way"
+      ],
+      "platforms": [
+        "MQ4"
+      ],
+      "representatives": [
+        "EA  NO WAY  3.2 lot plus.mq4",
+        "EA  TWO WAY  1.0.mq4"
+      ],
+      "historical_disposition": "MT4_BUCKET_E_DEPRIORITIZED",
+      "template_fit": "MQ4_NATIVE_GRID_FAMILY",
+      "recommended_action": "ONE DRAFT FAMILY WITH DIRECTIONAL VARIANTS; no MT5 port until explicitly reopened",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF15",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "EA  NO WAY  3.2 lot plus.mq4",
+        "sha256": "7eb834c831cda57efcd5ea3b56b87f806fe9517795cf5acf0cc2bf9fcd9f8d2a",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF16",
+      "family": "Gold Time Bomb Martingale ATR",
+      "source_groups": [
+        "(Boss) Gold Time bomb martingale rev 1.1 with ATR"
+      ],
+      "platforms": [
+        "MQ4"
+      ],
+      "representatives": [
+        "(Boss) Gold Time bomb martingale rev 1 with ATR.mq4"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "MQ4_NATIVE_GRID_FAMILY",
+      "recommended_action": "CARD COMPLETE; PORT_PREP_ONLY; no new test authority",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF16",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Gold Time bomb martingale rev 1 with ATR.mq4",
+        "sha256": "ec9c22a8a736b3c221cfadaf1d130d490c44c31f813198f753f285763afbd272",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF17",
+      "family": "Gold Trading Reversion",
+      "source_groups": [
+        "(Boss) gold trading",
+        "(Boss) gold trading (not work)"
+      ],
+      "platforms": [
+        "MQ4"
+      ],
+      "representatives": [
+        "(Boss) gold trading rev 2.mq4",
+        "(Boss) gold trading rev 2.mq4"
+      ],
+      "historical_disposition": "ARCHIVE_NOT_WORK_DUPLICATE",
+      "template_fit": "MQ4_REVERSION_NATIVE_BASKET",
+      "recommended_action": "MERGE folder identities; preserve not-work label; no auto-port",
+      "port_gate": "BLOCKED_BY_HISTORICAL_CLOSURE_OR_EXPLICIT_NEW_CONTRACT",
+      "port_contract": "PORT-DF17",
+      "port_blockers": [
+        "HISTORICAL_CLOSURE_OR_REJECT_MUST_NOT_BE_REOPENED_IMPLICITLY",
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) gold trading rev 2.mq4",
+        "sha256": "65b345234c77de9f12b0af414e43f8483ea9fa2eed952eaef67377db2e3df85e",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF18",
+      "family": "Grid Dynamic Buy Only",
+      "source_groups": [
+        "(Boss) Grid dynamic buy only"
+      ],
+      "platforms": [
+        "MQ4"
+      ],
+      "representatives": [
+        "(Boss) Grid buy only rev1.31 add comment.mq4"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "MQ4_BUY_ONLY_GRID",
+      "recommended_action": "CARD COMPLETE; PORT PREP ONLY",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF18",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) Grid buy only rev1.31 add comment.mq4",
+        "sha256": "e47e6ccf93380ffac42cff9ba859875799f3f0d47e32a02b4e47dad699451623",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF19",
+      "family": "Master GRID ATR Dynamic-RSI",
+      "source_groups": [
+        "(Boss) Master GRID ATR Accumulative Deduction -B (martingale)"
+      ],
+      "platforms": [
+        "MQ4"
+      ],
+      "representatives": [
+        "(Boss) ATR.mq4"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "MQ4_NATIVE_ATR_RSI_GRID",
+      "recommended_action": "EXCLUDE Infinix-like misfile; choose an exact Dynamic-RSI/ATRTP revision before any port",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF19",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) ATR.mq4",
+        "sha256": "e3e1704286cfb807655342fd9f93df3fef059ff118b15fa91bc335b043b9e314",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    },
+    {
+      "id": "DF20",
+      "family": "PSAR MM",
+      "source_groups": [
+        "(Boss) PSAR MM"
+      ],
+      "platforms": [
+        "MQ4"
+      ],
+      "representatives": [
+        "(Boss) PSAR mm.mq4"
+      ],
+      "historical_disposition": "HISTORICAL_BUCKET_C_LOW_PRIORITY",
+      "template_fit": "MQ4_PSAR_HEDGE_NATIVE",
+      "recommended_action": "CARD COMPLETE; PORT PREP ONLY; do not merge with DF06/DF11 without comparator parity",
+      "port_gate": "PREPARED_NOT_AUTHORIZED",
+      "port_contract": "PORT-DF20",
+      "port_blockers": [
+        "EXACT_IMPLEMENTATION_PARENT_REVISION_NOT_FROZEN",
+        "NO_CANONICAL_FAMILY_ID_OR_LAB_ENTRY_ALLOCATED",
+        "NO_REQUIRED_COMPILE_REGRESSION_REVIEW_YET"
+      ],
+      "parent_candidate": {
+        "filename": "(Boss) PSAR mm.mq4",
+        "sha256": "7b7e599b0f900ef03f2961fc4b00746577879e16cc781a92490e5f35fa982c94",
+        "encoding": "UTF8"
+      },
+      "implementation_approach": "FAMILY_NATIVE_PIPELINE_OR_EXPLICIT_ADAPTER",
+      "mt5_ready": false
+    }
+  ],
+  "external_evidence": {
+    "root": "D:\\EA_LAB_CONTROL\\evidence\\strategy-source-recovery-20260915-r1",
+    "source_manifest_sha256": "462a7648430dc0188d3507beae10ed2c7e24a07c7390082879de75d37cbb8592",
+    "family_cards_sha256": "e618f18d1e29c7ef0e714d97a5843c28074c37289ab02bc03af12f604cf26d3b",
+    "port_contracts_sha256": "d088a2c3870eacf6a0b4d927eeeb26f68b2371e8ef183348344a275c234ff878"
+  }
+}
