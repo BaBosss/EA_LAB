@@ -1,0 +1,8 @@
+﻿{
+    "schema_version":  2,
+    "report_name":  "B16_XX00_USDJPY_H1_MAIN_M1",
+    "check_status":  "CHECK_PASS",
+    "checker_exit_code":  0,
+    "truncated":  false,
+    "detail":  "last deal 2025.12.26 18:13:40 | window ends 2025.12.31 | idle tail 4.2 days (0.4% of window) | entry deals 275 | eqDD \r\n3.86%\r\n[OK] reached the window end within tolerance - idle tail 4.2 days (0.4% of window), below the flag threshold (7 days \r\nAND 10% of window)."
+}

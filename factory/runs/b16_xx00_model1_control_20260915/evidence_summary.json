@@ -1,0 +1,121 @@
+{
+  "authority_granted": false,
+  "build_receipt": "br-ed5d1cbd99514b7fac56dd78997e81d8",
+  "canonical_contract_head": "4d5325c00ca1f31a48db5dd6c499fec4882ba520",
+  "cells": [
+    {
+      "active_time_share": 0.216821,
+      "cycles": 239,
+      "eqdd_pct": 3.86,
+      "ini_sha256": "d0a3c4cf0c2b54851f2e6d3ea21e71ca29bc424b4c7519290c5debb80c21c54d",
+      "largest_cycle_loss": -148.33,
+      "largest_ticket_loss": -68.67,
+      "leverage_match": true,
+      "max_aggregate_lots": 0.07,
+      "max_depth": 7,
+      "max_entry_price_span": 15.627,
+      "max_positions": 7,
+      "mechanical_eligible": true,
+      "multi_entry_gp_share": 0.746467,
+      "net": 248.99,
+      "pf": 1.52,
+      "quality": "100%",
+      "report_sha256": "bb8b87fc73bbf92b903b84c7c5ddfc8b62aadcab1cac2638e06dfe58014e7c62",
+      "trades": 275,
+      "truncated": false,
+      "window": "MAIN"
+    },
+    {
+      "active_time_share": 0.368248,
+      "cycles": 161,
+      "eqdd_pct": 2.41,
+      "ini_sha256": "36138c3082fa730336de8319f9f965870c1557c92da1f55695e07abd5b8051a5",
+      "largest_cycle_loss": -151.78,
+      "largest_ticket_loss": -53.27,
+      "leverage_match": true,
+      "max_aggregate_lots": 0.05,
+      "max_depth": 5,
+      "max_entry_price_span": 13.105,
+      "max_positions": 5,
+      "mechanical_eligible": true,
+      "multi_entry_gp_share": 0.755039,
+      "net": 11.31,
+      "pf": 1.03,
+      "quality": "99%",
+      "report_sha256": "9f87321fb3ce3f2331c8cf656821f4e9c4d0742a4277ca2eea0461295e72db7c",
+      "trades": 186,
+      "truncated": false,
+      "window": "BWD"
+    }
+  ],
+  "classification": "AGGREGATE_DUAL_WINDOW_POSITIVE_BWD_THIN_YEAR_UNSTABLE",
+  "decision": "REFERENCE_ESTABLISHED_STOP_NO_DIRECT_CONSUMER",
+  "ex5_sha256": "dd8f6170d6375b415d4522af9fdd78e9466b565e41cfb4cc7a5c6dbbcbb03014",
+  "family": "B16",
+  "holdout": "UNSPENT",
+  "home": "USDJPY/H1",
+  "logical_variant": "B16-00",
+  "model": "M1_M1_OHLC_RESEARCH",
+  "model4": "NOT_RUN",
+  "notes": [
+    "BWD aggregate PF 1.03/net +11.31 is barely positive.",
+    "BWD 2020 is losing (PF 0.34/net -116.34).",
+    "Cross-install historical R4/H02 numbers are not acceptance comparators."
+  ],
+  "optimization": "NONE",
+  "quality_grade": "UNRATIFIED",
+  "same_install": "D:\\Meta 5c",
+  "schema": "ea-lab-b16-xx00-model1-result/1",
+  "set_sha256": "b9cd05f2b728c48e1095fb0ea113486e78ee264ad9d2464b46bc9b889a56f9c9",
+  "source_contract": "docs/research/B16_XX00_REFERENCE_AND_MODEL1_CONTRACT_20260915.md",
+  "year_split": [
+    {
+      "baldd_pct": 0.9,
+      "net": 136.21,
+      "pf": 2.5,
+      "trades": 104,
+      "window": "MAIN",
+      "year": 2023
+    },
+    {
+      "baldd_pct": 1.91,
+      "net": 53.83,
+      "pf": 1.23,
+      "trades": 90,
+      "window": "MAIN",
+      "year": 2024
+    },
+    {
+      "baldd_pct": 1.23,
+      "net": 58.95,
+      "pf": 1.37,
+      "trades": 81,
+      "window": "MAIN",
+      "year": 2025
+    },
+    {
+      "baldd_pct": 1.24,
+      "net": -116.34,
+      "pf": 0.34,
+      "trades": 24,
+      "window": "BWD",
+      "year": 2020
+    },
+    {
+      "baldd_pct": 0.09,
+      "net": 99.27,
+      "pf": 11.54,
+      "trades": 69,
+      "window": "BWD",
+      "year": 2021
+    },
+    {
+      "baldd_pct": 1.69,
+      "net": 28.38,
+      "pf": 1.13,
+      "trades": 93,
+      "window": "BWD",
+      "year": 2022
+    }
+  ]
+}

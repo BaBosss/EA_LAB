@@ -1,0 +1,185 @@
+{
+  "files": [
+    {
+      "bytes": 3664,
+      "path": "B16_XX00_MODEL1_CONTROL.set",
+      "sha256": "b9cd05f2b728c48e1095fb0ea113486e78ee264ad9d2464b46bc9b889a56f9c9"
+    },
+    {
+      "bytes": 186074,
+      "path": "Boss_16_KangarooGrid.ex5",
+      "sha256": "dd8f6170d6375b415d4522af9fdd78e9466b565e41cfb4cc7a5c6dbbcbb03014"
+    },
+    {
+      "bytes": 1109,
+      "path": "build_identity_check.json",
+      "sha256": "f723d84666d660ef692fa3fd33371fbcef7bfaa60cd50ae038f611482fb3ab35"
+    },
+    {
+      "bytes": 528,
+      "path": "build_receipt.jsonl",
+      "sha256": "6db1a03ef585321402bc538815719bd2e8d922903027768d959b7f6fc9f83558"
+    },
+    {
+      "bytes": 21085,
+      "path": "build_source_graph.json",
+      "sha256": "58587ff5f16795b61c52b17487948a00466dfe6ad5169448409d8e862f08c03d"
+    },
+    {
+      "bytes": 163,
+      "path": "BuildReceipt_gen.mqh",
+      "sha256": "0667dc65c18fe963fd385245fac350d3471be462472d5d779680f30e42d2420a"
+    },
+    {
+      "bytes": 717,
+      "path": "cell_summary.csv",
+      "sha256": "c2c72e22847386c1a06f1f6719fa2e31fcf96cb890ae0ec856ca121c2625bb61"
+    },
+    {
+      "bytes": 17866,
+      "path": "compile_Boss_16_KangarooGrid.log",
+      "sha256": "b81c23096329ccc8f374fa938004af96159e92a81aca4ec91c79afa8b7b7aace"
+    },
+    {
+      "bytes": 3464,
+      "path": "evidence_summary.json",
+      "sha256": "3540da685ed74f50715d98b534c68d3f02060a1934e2cffaf3c47cb78ae00398"
+    },
+    {
+      "bytes": 314018,
+      "path": "exposure_diagnostics.json",
+      "sha256": "b9598f2c1506cd0eb5a75a4e1165e52586b394bc5c07c58ee01a1c4f6f4d5c00"
+    },
+    {
+      "bytes": 987,
+      "path": "prereg_identity.json",
+      "sha256": "cae705daf61ec008547f48127f9a7455ccc1e490c1a90aee26a0ce1a39720c8a"
+    },
+    {
+      "bytes": 11805,
+      "path": "runtime/BWD/B16_XX00_USDJPY_H1_BWD_M1-holding.png",
+      "sha256": "da3b8b20d9b44745e4eafa22b527733a205153f5cde5cf1d5cf9044d33b64f64"
+    },
+    {
+      "bytes": 32437,
+      "path": "runtime/BWD/B16_XX00_USDJPY_H1_BWD_M1-hst.png",
+      "sha256": "2f0e2c6c4f5d29ef0c81d476846735edff78da1b29ee4c682fa4cbf2f03f1067"
+    },
+    {
+      "bytes": 26083,
+      "path": "runtime/BWD/B16_XX00_USDJPY_H1_BWD_M1-mfemae.png",
+      "sha256": "5d88ed09287729a37f350d6b04e612346f39689520e19228c5f40a1f2f58bcc0"
+    },
+    {
+      "bytes": 7840,
+      "path": "runtime/BWD/B16_XX00_USDJPY_H1_BWD_M1.png",
+      "sha256": "213a3994cf70a939210004c833aabc83215839d3f7ab9a614d45115df2fae6e4"
+    },
+    {
+      "bytes": 167,
+      "path": "runtime/BWD/leverage_check.json",
+      "sha256": "2dbfce7c8e015aa333713d1a19b9325daa02ab821f2ccc04e1a653699f9c336f"
+    },
+    {
+      "bytes": 1551,
+      "path": "runtime/BWD/metrics.json",
+      "sha256": "c2c6dd83989909b63c07baa77db7e030a88450df7b55e981b043c1d86e6ae388"
+    },
+    {
+      "bytes": 445470,
+      "path": "runtime/BWD/report.htm",
+      "sha256": "9f87321fb3ce3f2331c8cf656821f4e9c4d0742a4277ca2eea0461295e72db7c"
+    },
+    {
+      "bytes": 3975,
+      "path": "runtime/BWD/tester.ini",
+      "sha256": "36138c3082fa730336de8319f9f965870c1557c92da1f55695e07abd5b8051a5"
+    },
+    {
+      "bytes": 364,
+      "path": "runtime/BWD/truncation_check.json",
+      "sha256": "99d5997751539efdbe6bc0e693bd7b2ef3dae4eec0f5730d672ae62e858591c7"
+    },
+    {
+      "bytes": 294,
+      "path": "runtime/BWD/year_split.txt",
+      "sha256": "13d77b8629bd2dba861e9d97e608d971421686b63f6bbedd13496a8074bd61b4"
+    },
+    {
+      "bytes": 12476,
+      "path": "runtime/MAIN/B16_XX00_USDJPY_H1_MAIN_M1-holding.png",
+      "sha256": "cdcbef5aa2c61614734cad3ee8a238425dd35098e4a89ad75f994a578728f412"
+    },
+    {
+      "bytes": 35183,
+      "path": "runtime/MAIN/B16_XX00_USDJPY_H1_MAIN_M1-hst.png",
+      "sha256": "194ff7aa445c3b75a357714f624e50550bfcf0dfeb35409429a8e6edfe90721d"
+    },
+    {
+      "bytes": 26538,
+      "path": "runtime/MAIN/B16_XX00_USDJPY_H1_MAIN_M1-mfemae.png",
+      "sha256": "d74a50c5512286af9a504cf8b6c60b074375116a7eaac5f29a13da6f49666d7d"
+    },
+    {
+      "bytes": 9400,
+      "path": "runtime/MAIN/B16_XX00_USDJPY_H1_MAIN_M1.png",
+      "sha256": "dc6da7e13952debf277e3b89264d439f89d404a7c4ab32990afd883dd0c9f520"
+    },
+    {
+      "bytes": 168,
+      "path": "runtime/MAIN/leverage_check.json",
+      "sha256": "19c791398c373e1cf3ae8865a12a98fa577e0a3864bf6cf42dc24bbe50cf1080"
+    },
+    {
+      "bytes": 1549,
+      "path": "runtime/MAIN/metrics.json",
+      "sha256": "f0657bbe666ef179c2a0f12860c8ed345d8bb9848c063e78e356701eb44fd81c"
+    },
+    {
+      "bytes": 620638,
+      "path": "runtime/MAIN/report.htm",
+      "sha256": "bb8b87fc73bbf92b903b84c7c5ddfc8b62aadcab1cac2638e06dfe58014e7c62"
+    },
+    {
+      "bytes": 3976,
+      "path": "runtime/MAIN/tester.ini",
+      "sha256": "d0a3c4cf0c2b54851f2e6d3ea21e71ca29bc424b4c7519290c5debb80c21c54d"
+    },
+    {
+      "bytes": 469,
+      "path": "runtime/MAIN/truncation_check.json",
+      "sha256": "e8276af329d77215d2b290bde86f80a13b244ee1c51402333aed84c68b94c9e2"
+    },
+    {
+      "bytes": 267,
+      "path": "runtime/MAIN/year_split.txt",
+      "sha256": "77bb21c48d37402352a3cae32036eafb3f1b828681251f6ae2a9c8beef8ca28f"
+    },
+    {
+      "bytes": 1032,
+      "path": "views/01_pf_by_window.svg",
+      "sha256": "73686a5af21be9109f25fea1c064a20b3cacc0d20640bcb5362d7dfea795e1ad"
+    },
+    {
+      "bytes": 1030,
+      "path": "views/02_participation.svg",
+      "sha256": "5197470d234c0063a5934e3471d6e76259bce33f7d08d0b7cf861a0b86eb12e7"
+    },
+    {
+      "bytes": 905,
+      "path": "views/03_pf_vs_participation.svg",
+      "sha256": "e4104d680a4fefbd0d46b69bb63ab756bcf5c6fcb3f28eb5468aa8a192519b7a"
+    },
+    {
+      "bytes": 1027,
+      "path": "views/04_eqdd.svg",
+      "sha256": "3fd4d5c6493763346a1453783a77ff40689457c61b4637cc6c9ec35257dade87"
+    },
+    {
+      "bytes": 217,
+      "path": "year_split.csv",
+      "sha256": "87f33c57b565d3318e44401b8a99550e6aad660730ab44ee635fbffd679541d1"
+    }
+  ],
+  "schema": "ea-lab-report-package-manifest/1"
+}

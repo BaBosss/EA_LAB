@@ -1,0 +1,18 @@
+﻿{
+    "State":  "PASS",
+    "Valid":  true,
+    "Reason":  "stamped receipt br-ed5d1cbd99514b7fac56dd78997e81d8",
+    "ArtifactPath":  "D:\\Meta 5c\\MQL5\\Experts\\EALabTpl\\Boss_16_KangarooGrid.ex5",
+    "ArtifactSha256":  "dd8f6170d6375b415d4522af9fdd78e9466b565e41cfb4cc7a5c6dbbcbb03014",
+    "BuildReceipt":  "br-ed5d1cbd99514b7fac56dd78997e81d8",
+    "Record":  {
+                   "schema":  "build_receipt/1",
+                   "build_receipt":  "br-ed5d1cbd99514b7fac56dd78997e81d8",
+                   "ea_logical_identity":  "16_KangarooGrid",
+                   "artifact_path":  "D:\\Meta 5c\\MQL5\\Experts\\EALabTpl\\Boss_16_KangarooGrid.ex5",
+                   "artifact_sha256":  "dd8f6170d6375b415d4522af9fdd78e9466b565e41cfb4cc7a5c6dbbcbb03014",
+                   "source_path":  "D:\\EA_LAB_CONTROL\\worktrees\\b16-xx00-exec-20260915\\ea_template\\Boss_16_KangarooGrid.mq5",
+                   "source_sha256":  "e22f64302ea443c5bec14c22fbb4787002f1c88742b9ca30d416040affe4e8d3",
+                   "generated_at":  "2026-09-15T07:08:29.0487550Z"
+               }
+}
