@@ -1,7 +1,7 @@
 # Boss Recovered Strategy Family Cards — Canonical Research-Only Intake — 2026-09-15
 
-Source capture anchor: `4d5325c00ca1f31a48db5dd6c499fec4882ba520`  
-Canonical integration head: `{current}`  
+Source capture anchor: `4d5325c00ca1f31a48db5dd6c499fec4882ba520`
+Canonical integration head: `e943c05fb4c01a3e2611df02eadffa0958d40c02`
 Authority: `RESEARCH_ONLY / SOURCE_BOUND_DOCUMENTATION / NO FAMILYID / NO LAB_ENTRY / NO MT5`
 
 Recovered **477** source files: 289 MQ4 + 188 MQ5, 404 unique hashes. 26 source folders reconcile to **20 draft families**. Existing canonical E011–E018 remain untouched.
