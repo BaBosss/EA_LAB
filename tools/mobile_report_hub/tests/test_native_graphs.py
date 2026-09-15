@@ -200,6 +200,36 @@ class NativeGraphsTests(unittest.TestCase):
         self.assertGreater(len(item["parameters"]["all"]), 150)
         self.assertNotRegex(json.dumps(item), r"[A-Za-z]:[\\/]")
 
+    def test_exposure_is_existing_receipt_bound_per_window(self):
+        item = b.b16_h08_record(ROOT, CANONICAL, self.out)
+        self.assertEqual(item, b.b16_h08_record(ROOT, CANONICAL, self.out))
+        for role, depth, lots in [("main", "7", "0.07"), ("bwd", "6", "0.06")]:
+            exposure = item["exposure"][role]
+            self.assertEqual({"max_depth": depth, "max_lots": lots}, exposure["values"])
+            for key in ("ea_id", "basis_id", "role", "window", "report_sha256", "package_id", "package_sha256", "canonical_sha"):
+                self.assertEqual(item["native_graphs"][role][key], exposure[key])
+            self.assertIn(exposure["source"], item["provenance"])
+            self.assertEqual(hashlib.sha256(b.regular_blob(ROOT, CANONICAL, exposure["source"]["path"])).hexdigest(), exposure["source"]["sha256"])
+        self.assertNotIn("owner_recipe", item)  # No validated P1 source bundle exists here.
+
+    def test_generic_grid_name_and_lot_inputs_do_not_create_exposure(self):
+        self.fixture()
+        self.item["display_name"] = "Grid multi-position"
+        self.item["parameters"] = {"all": [{"name": "BaseLot", "value": "99"}]}
+        items = [self.item]
+        b.add_native_reports(self.repo, self.sha, self.out, items)
+        self.assertNotIn("exposure", items[0])
+
+    def test_exposure_absent_when_receipt_source_is_tampered(self):
+        original = b.regular_blob
+        def tamper(repo, sha, path):
+            raw = original(repo, sha, path)
+            return raw + b"tampered" if path.endswith("validation_cell_summary.csv") else raw
+        with patch.object(b, "regular_blob", side_effect=tamper):
+            item = b.b16_h08_record(ROOT, CANONICAL, self.out)
+        self.assertNotIn("exposure", item)
+        self.assertEqual("REFUSED", item["package_status"])
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 3 and sys.argv[1] == "--export-browser-fixture":

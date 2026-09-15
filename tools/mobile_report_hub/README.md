@@ -215,3 +215,38 @@ The existing Monitor remains the only owner-facing application. `build_index.py`
 Work labels Registry totals as cumulative history, not concurrent agents. Alerts add blocked/stale/evidence-gap presentation only and explicitly separate these conditions from P&L or abnormal-trading claims.
 
 The integration contract is `docs/workflows/EA_LAB_MONITOR_CONTROL_DASHBOARD_INTEGRATION_V1.md`. This milestone does not change Scheduled Tasks, OneDrive delivery, hosting, runtime attachment, MT5, risk/defaults or trading.
+
+## Report owner presentation gaps
+
+EA Detail adds Owner Recipe, Grid / exposure, and a copyable deterministic Chat
+Report Card to the existing record. No separate catalog, model call or verdict
+calculation is introduced.
+
+Owner Recipe shows `Requested -> Effective -> State -> Reason`. The current
+report adapters carry no validated P1 Owner Recipe bundle. Receipt-bound H08 set
+values can therefore appear only as requested controls, with effective `UNKNOWN`
+and `SEMANTICS_REQUIRED / EXPLICIT_RESOLUTION_REQUIRED`. Missing set binding or
+duplicate control names make requested controls unavailable. Neither input names
+nor parameter presence establishes applicability, locked controls or defaults.
+
+H08 exposure projects only `max_depth` and `max_lots` from its already
+receipt-validated `validation_cell_summary.csv`, joined to each existing
+MAIN/BWD report hash/window. These are observed maxima. Source path/hash and
+canonical SHA remain inspectable. The browser checks EA, basis, package, report,
+role, window and record provenance before showing them. Lot ladder, span and
+explicit concurrent-position count remain unavailable; no values are derived
+from strategy names, base lots, images or other records. Unqualified records
+show `NO_QUALIFIED_EXPOSURE_FOR_BOUND_ROLE`.
+
+The card uses the same presentation functions and current record, fixed field
+order and no observation clock. Role metrics require qualified report/window
+binding and the existing research-model allowlist. Execution, research conclusion
+and package/review status stay separate. Copy is local clipboard only, with a
+selectable read-only text fallback; navigation invalidates pending copy feedback.
+It is a pinned historical report summary, not current monitoring health.
+
+Focused coverage is in `test_native_graphs.py` and `browser_native_graphs.cjs`,
+alongside the unchanged `browser_navigation_binding.cjs` race suite. Browser
+coverage includes mismatched provenance/roles/windows, ambiguous requested
+controls, unavailable exposure, repeatable card bytes and clipboard/navigation
+refusals. Existing Monitor and global degraded-state behavior remain unchanged.

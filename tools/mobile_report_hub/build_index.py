@@ -851,10 +851,29 @@ def b16_h08_record(repo: Path, sha: str, out: Path) -> dict | None:
             "changed": [{"name": k, "parent": parents.get(k, "ABSENT"), "value": v} for k, v in params.items() if parents.get(k) != v],
             "key": [{"name": k, "value": params[k]} for k in lock["selected"]],
             "all": [{"name": k, "value": v} for k, v in params.items()]}
+        # Already receipt-checked summary, joined above to exact report/window hashes.
+        # These are observed maxima, never a configured cap or a computed lot ladder.
+        exposure_path = f"{H08_ROOT}/validation_cell_summary.csv"
+        item["provenance"].append({"path": exposure_path, "sha256": hashlib.sha256(raw_files[exposure_path]).hexdigest(), "canonical_sha": sha})
+        item["exposure"] = {}
+        for role in ("main", "bwd"):
+            row = next(m for m in metrics if m["window"] == role.upper())
+            graph = item["native_graphs"][role]
+            values = {}
+            for key in ("max_depth", "max_lots"):
+                value = row.get(key, "")
+                if re.fullmatch(r"\d+(?:\.\d+)?", value) and math.isfinite(float(value)):
+                    values[key] = value
+            item["exposure"][role] = {
+                **{k: graph[k] for k in ("ea_id", "basis_id", "canonical_sha", "role", "window", "report_sha256", "package_id", "package_sha256")},
+                "source": {"path": exposure_path, "sha256": hashlib.sha256(raw_files[exposure_path]).hexdigest(), "canonical_sha": sha},
+                "values": values,
+            }
         item["explanation"] = {"evidence": "Fixed MAIN reproduction: " + summary["fixed_main_reproduction"], "interpretation": summary["decision_reason"], "decision": summary["adoption_decision"]}
         report_path = "docs/research/B16_USDJPY_BUY_H1_OPT01_RESULTS.md"
         item["links"] = {"full_report": selected_artifact(report_path, raw_files[report_path], out, redact_local_paths=True)}
     except (BuildError, ValueError, OSError, KeyError, TypeError):
+        item.pop("exposure", None)
         item["native_graphs"] = {r: graph_state("REFUSED", "PACKAGE_OR_BINDING_INVALID") for r in ("main", "bwd")}
         item["package_status"] = "REFUSED"
     return item

@@ -133,6 +133,63 @@ const server = http.createServer((req,res) => {
     payload=testIndex();payload.eas[0].evidence.model='MODEL_2';await openFixture();
     assert.equal(await page.locator('.native-window .metric-card').count(),0);
     results.push('Model2 metrics excluded from research performance PASS');
+    // Owner presentation consumes only the current report, including missing images.
+    const real = structuredClone(base.eas.find(r=>r.id==='b16-h08-usdjpy-h1'));
+    async function openOwner(record=real) {
+      payload={...structuredClone(base),eas:[structuredClone(record)]};
+      await page.goto(url+`/index.html?case=${++serial}#detail/${record.id}`);
+      await page.locator('#chat-report-card').waitFor();
+    }
+    await openOwner();
+    const cardText=await page.locator('#chat-report-card').inputValue();
+    assert.match(cardText,/MAIN exposure: SOURCE_BOUND_OBSERVATION/);
+    assert.match(cardText,/Observed max total lots: 0.07/);
+    assert.match(cardText,/Observed max total lots: 0.06/);
+    assert.match(cardText,/_16_RsiLow: 35.0 -> UNKNOWN -> SEMANTICS_REQUIRED -> EXPLICIT_RESOLUTION_REQUIRED/);
+    assert.match(cardText,/Max grid span \/ unit: UNAVAILABLE/);
+    assert.match(cardText,/L1...Ln lot ladder: UNAVAILABLE/);
+    await openOwner();
+    assert.equal(await page.locator('#chat-report-card').inputValue(),cardText);
+    await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw Error('denied');}}}));
+    await page.locator('#copy-report-card').click();
+    assert.match(await page.locator('#copy-report-status').innerText(),/Copy the selected text/);
+    assert.equal(await page.locator('#chat-report-card').evaluate(n=>n.selectionEnd-n.selectionStart),cardText.length);
+    results.push('Owner requested-only semantics, exact H08 role exposure, unavailable span/ladder, deterministic card and copy fallback PASS');
+    for (const mutate of [
+      r=>{r.exposure.main.ea_id='other';}, r=>{r.exposure.main.role='BWD';},
+      r=>{r.exposure.main.window=structuredClone(r.exposure.bwd.window);},
+      r=>{r.exposure.main.report_sha256='0'.repeat(64);}, r=>{r.exposure.main.package_sha256='0'.repeat(64);},
+      r=>{r.exposure.main.source.sha256='0'.repeat(64);}, r=>{r.exposure.main.canonical_sha='0'.repeat(40);},
+      r=>{r.exposure.main.source.path='../../unrelated.csv';}, r=>{r.provenance=[];},
+      r=>{r.native_graphs.main.state='REFUSED';}, r=>{delete r.exposure;},
+    ]) {
+      const r=structuredClone(real);mutate(r);await openOwner(r);
+      const text=await page.locator('#chat-report-card').inputValue();
+      assert.match(text,/MAIN exposure: NO_QUALIFIED_EXPOSURE_FOR_BOUND_ROLE/);
+      assert.doesNotMatch(text,/Observed max total lots: 0.07/);
+    }
+    for (const mutate of [r=>{r.parameters.source_sha256='0'.repeat(64);},r=>{r.parameters.all.push(r.parameters.all[0]);},r=>{r.native_graphs.main.ea_id='other';}]) {
+      const r=structuredClone(real);mutate(r);await openOwner(r);
+      assert.match(await page.locator('.owner-recipe').innerText(),/REQUEST_SOURCE_UNAVAILABLE_OR_AMBIGUOUS/);
+    }
+    results.push('Cross-record/role/window/report/package/source/SHA exposure and ambiguous requested-control refusals PASS');
+    // A deferred clipboard completion must not write into the next detail.
+    payload={...structuredClone(base),eas:[structuredClone(real),{id:'empty-grid',display_name:'Grid with lot defaults',evidence:{model:'MODEL_1'},parameters:{all:[{name:'Lot',value:'99'}]}}]};
+    await page.goto(url+`/index.html?case=${++serial}#detail/${real.id}`);
+    await page.locator('#chat-report-card').waitFor();
+    await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:()=>new Promise(resolve=>{window.finishCopy=resolve;})}}));
+    await page.locator('#copy-report-card').click();
+    await page.evaluate(()=>{location.hash='#detail/empty-grid';});
+    await page.waitForFunction(()=>document.querySelector('#chat-report-card')?.value.includes('Record: empty-grid'));
+    await page.evaluate(()=>window.finishCopy());
+    assert.equal(await page.locator('#copy-report-status').innerText(),'');
+    const emptyText=await page.locator('#chat-report-card').inputValue();
+    assert.doesNotMatch(emptyText,/0.07|_16_RsiLow|B16-H08|f185b9/);
+    assert.match(emptyText,/NO_QUALIFIED_EXPOSURE_FOR_BOUND_ROLE/);
+    assert.match(emptyText,/REQUEST_SOURCE_UNAVAILABLE_OR_AMBIGUOUS/);
+    await page.evaluate(()=>{location.hash='#home';});
+    await page.waitForFunction(()=>!document.querySelector('#chat-report-card'));
+    results.push('Same-document navigation clears card/recipe/exposure; deferred copy cannot bleed; grid name/defaults yield no exposure PASS');
     assert.deepEqual(errors,[]);
     await context.close();
     // Exercise actual SW in an isolated context, including a poisoned old cache.
@@ -153,7 +210,7 @@ const server = http.createServer((req,res) => {
     await swPage.waitForFunction(()=>document.querySelectorAll('.native-graph img').length===2);
     assert.ok(graphRequests>=2,'Native evidence fetched despite poisoned cache');
     const names=await swPage.evaluate(()=>caches.keys());
-    assert.ok(names.includes('ea-lab-report-hub-v3.2-native'));
+    assert.ok(names.includes('ea-lab-report-hub-v3.3-dashboard-merge'));
     results.push('Actual service worker new generation + poisoned old native-cache bypass PASS');
     await swContext.close();
     fs.writeFileSync(path.join(evidence,'browser-native-results.json'),JSON.stringify({status:'PASS',results},null,2));

@@ -503,6 +503,75 @@ function renderParameters(record) {
     <section class="panel"><details><summary>Full parameters</summary><p class="muted">Set SHA256: ${ownerText(parameters.source_sha256)}</p><label for="parameter-search">Search parameters</label><input id="parameter-search" type="search" placeholder="Name or value" /><div id="full-parameters">${rows(parameters.all)}</div><p id="parameter-count" role="status"></p></details></section>`;
 }
 
+function recipePresentation(record) {
+  const p = record.parameters;
+  const hash = p?.source_sha256;
+  const bound = /^[0-9a-f]{64}$/.test(hash || "") && hash === record.tested_setup?.set_sha256 &&
+    record.package_status === "INTEGRITY_VALIDATED_REVIEW_UNKNOWN" &&
+    ["main", "bwd"].every(role => boundReportRole(record, role)?.package_id === record.tested_setup?.package_id);
+  const rows = p?.all;
+  const valid = bound && Array.isArray(rows) && rows.length &&
+    rows.every(r => r && typeof r.name === "string" && r.name && ["string", "number", "boolean"].includes(typeof r.value)) &&
+    new Set(rows.map(r => r.name)).size === rows.length;
+  return {source: valid ? hash : "UNAVAILABLE", reason: valid ? "EXPLICIT_RESOLUTION_REQUIRED" : "REQUEST_SOURCE_UNAVAILABLE_OR_AMBIGUOUS",
+    rows: valid ? rows.map(r => ({name:r.name, requested:r.value, effective:"UNKNOWN", state:"SEMANTICS_REQUIRED", reason:"EXPLICIT_RESOLUTION_REQUIRED"})) : []};
+}
+
+function boundReportRole(record, role) {
+  const g = record.native_graphs?.[role];
+  const other = record.native_graphs?.[role === "main" ? "bwd" : "main"];
+  return g && ["AVAILABLE", "MISSING"].includes(g.state) && g.ea_id === record.id &&
+    g.basis_id === record.evidence?.basis_id && g.canonical_sha === reportIndex.project.canonical_sha &&
+    g.role === role.toUpperCase() && /^[0-9a-f]{64}$/.test(g.report_sha256 || "") &&
+    /^[0-9a-f]{64}$/.test(g.package_sha256 || "") && typeof g.package_id === "string" && g.package_id &&
+    /^\d{4}\.\d{2}\.\d{2}$/.test(g.window?.from || "") && /^\d{4}\.\d{2}\.\d{2}$/.test(g.window?.to || "") &&
+    g.window.from < g.window.to && g.report_sha256 !== other?.report_sha256 ? g : null;
+}
+
+function exposurePresentation(record, role) {
+  const g = boundReportRole(record, role), e = record.exposure?.[role];
+  const keys = ["ea_id", "basis_id", "canonical_sha", "role", "report_sha256", "package_id", "package_sha256"];
+  const bound = g && e && keys.every(k => e[k] === g[k]) && e.window?.from === g.window.from && e.window?.to === g.window.to &&
+    e.source?.canonical_sha === g.canonical_sha && /^[0-9a-f]{64}$/.test(e.source?.sha256 || "") && safeRelativeHref(e.source?.path) &&
+    record.provenance?.some(p => p.path === e.source.path && p.sha256 === e.source.sha256 && p.canonical_sha === e.source.canonical_sha);
+  const numeric = k => bound && typeof e.values?.[k] === "string" && /^\d+(?:\.\d+)?$/.test(e.values[k]) && Number.isFinite(Number(e.values[k])) ? e.values[k] : "UNAVAILABLE";
+  return {reason: bound ? "SOURCE_BOUND_OBSERVATION" : "NO_QUALIFIED_EXPOSURE_FOR_BOUND_ROLE", source: bound ? `${e.source.path} SHA256 ${e.source.sha256}` : "UNAVAILABLE",
+    rows: [["Observed max depth", numeric("max_depth")], ["Observed max total lots", numeric("max_lots")],
+      ["Max concurrent positions", "UNAVAILABLE: no explicit position-count evidence"],
+      ["Max grid span / unit", "UNAVAILABLE: no qualified span evidence"], ["L1...Ln lot ladder", "UNAVAILABLE: no qualified ladder evidence"]]};
+}
+
+function renderOwnerPresentations(record) {
+  const recipe = recipePresentation(record);
+  return `<section class="panel owner-recipe"><h2>Owner Recipe</h2><p>Requested → Effective → State → Reason</p><p>${ownerText(recipe.reason)} · Set SHA256: ${ownerText(recipe.source)}</p>
+    <p>Effective controls UNKNOWN: no validated Owner Recipe source bundle is bound to this report.</p>
+    <details><summary>Requested controls (${recipe.rows.length})</summary>${recipe.rows.map(r => `<article><h3>${ownerText(r.name)}</h3><dl class="facts">${["requested", "effective", "state", "reason"].map(k => `<div><dt>${k}</dt><dd>${ownerText(r[k])}</dd></div>`).join("")}</dl></article>`).join("") || "UNAVAILABLE"}</details></section>
+    <section class="panel exposure"><h2>Grid / exposure</h2>${["main", "bwd"].map(role => { const e = exposurePresentation(record, role); return `<h3>${role.toUpperCase()} exposure</h3><p>${ownerText(e.reason)}</p><dl class="facts">${e.rows.map(([k,v]) => `<div><dt>${k}</dt><dd>${ownerText(v)}</dd></div>`).join("")}</dl><p class="muted">${ownerText(e.source)}</p>`; }).join("")}</section>
+    <section class="panel"><h2>Chat Report Card</h2><p>Deterministic source summary · READ_ONLY_PRESENTATION</p><textarea id="chat-report-card" aria-label="Chat Report Card" readonly rows="14"></textarea><button id="copy-report-card" type="button">Copy report card</button><p id="copy-report-status" role="status"></p></section>`;
+}
+
+function chatReportCard(record) {
+  const lines = ["Chat Report Card | READ_ONLY_PRESENTATION", `Record: ${record.id}`, `Source SHA: ${reportIndex.project.canonical_sha}`,
+    `EA: ${valueOf(record.display_name)}`, `Home: ${valueOf(record.home?.symbol)} / ${valueOf(record.home?.timeframe)}`,
+    `Basis: ${valueOf(record.evidence?.basis_id)}`, `Model: ${valueOf(record.evidence?.model)}`,
+    `Execution status: ${valueOf(record.status)}`, `Research conclusion: ${valueOf(record.verdict)}`, `Package / review status: ${valueOf(record.package_status)}`];
+  for (const role of ["main", "bwd"]) {
+    const g = boundReportRole(record, role);
+    lines.push(`${role.toUpperCase()} window: ${g ? `${g.window.from} -> ${g.window.to}` : "UNAVAILABLE: role/window binding missing or refused"}`);
+    if (g) {
+      lines.push(`Report SHA256: ${g.report_sha256}`, `Package: ${g.package_id} SHA256 ${g.package_sha256}`);
+      if (["MODEL_0", "MODEL_1", "MODEL_4"].includes(record.evidence?.model))
+        for (const k of ["pf", "net", "eqdd_pct", "dd_pct", "trades", "cycles"]) lines.push(`${role.toUpperCase()} ${k}: ${valueOf(record.evidence?.[role]?.[k])}`);
+    }
+    const e = exposurePresentation(record, role);
+    lines.push(`${role.toUpperCase()} exposure: ${e.reason}`, ...e.rows.map(([k,v]) => `${k}: ${v}`), `Exposure source: ${e.source}`);
+  }
+  const recipe = recipePresentation(record);
+  lines.push(`Owner Recipe: ${recipe.reason}`, `Set SHA256: ${recipe.source}`, "Requested -> Effective -> State -> Reason",
+    ...recipe.rows.map(r => `${r.name}: ${r.requested} -> ${r.effective} -> ${r.state} -> ${r.reason}`));
+  return lines.join("\n").replace(/(?:[A-Za-z]:[\\/]|https?:\/\/|file:\/\/|\\\\)\S+/gi, "[LOCAL OR EXTERNAL REFERENCE OMITTED]");
+}
+
 function renderDetail(id) {
   const record = getRecord(id);
   if (!record) {
@@ -520,6 +589,7 @@ function renderDetail(id) {
     <div class="native-windows">${renderNativeWindow(record, "main")}${renderNativeWindow(record, "bwd")}</div>
     <section class="panel report-status"><h2>Evidence status</h2><dl class="facts"><div><dt>Graph evidence</dt><dd id="graph-evidence-status">${graphsReady ? "VERIFYING" : "INCOMPLETE"}</dd></div><div><dt>Execution status</dt><dd>${ownerText(record.status)}</dd></div><div><dt>Research conclusion</dt><dd>${ownerText(record.verdict)}</dd></div><div><dt>Package / review status</dt><dd>${ownerText(record.package_status)}</dd></div></dl><p class="muted">READ_ONLY_PRESENTATION · Graph availability does not change the research conclusion.</p></section>
     ${record.explanation ? `<section class="panel"><h2>Source explanation</h2>${["evidence", "interpretation", "decision"].map(k => `<h3>${k[0].toUpperCase()+k.slice(1)}</h3><p>${ownerText(record.explanation[k])}</p>`).join("")}</section>` : ""}
+    ${renderOwnerPresentations(record)}
     ${renderParameters(record)}
     <section class="summary-grid"><article class="panel"><h3>Summary</h3><dl class="facts"><div><dt>Verdict</dt><dd>${escapeHtml(valueOf(record.verdict))}</dd></div><div><dt>Latest</dt><dd>${escapeHtml(valueOf(record.latest_experiment))}</dd></div><div><dt>Holdout</dt><dd>${escapeHtml(valueOf(evidence.holdout_state))}</dd></div><div><dt>Evidence basis</dt><dd>${escapeHtml(valueOf(evidence.basis_id))}</dd></div></dl></article><article class="panel"><h3>Quality / evidence</h3><dl class="facts"><div><dt>Grade</dt><dd>${escapeHtml(valueOf(record.quality_grade))}</dd></div><div><dt>Confidence</dt><dd>${escapeHtml(valueOf(record.evidence_confidence))}</dd></div><div><dt>Model</dt><dd>${escapeHtml(valueOf(evidence.model))}</dd></div><div><dt>Stage</dt><dd>${escapeHtml(valueOf(evidence.report_stage))}</dd></div></dl></article></section>
     ${(findings.length || weaknesses.length || record.blocker_reason || record.next_action) ? `<section class="panel"><h2>Finding / blocker / next action</h2>${findings.length ? `<h3>Key findings</h3><ul class="plain-list">${findings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}${weaknesses.length ? `<h3>Known weaknesses</h3><ul class="plain-list">${weaknesses.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}${record.blocker_reason ? `<p><strong>${escapeHtml(valueOf(record.blocker_type, "BLOCKED"))}:</strong> ${escapeHtml(record.blocker_reason)}</p>` : ""}${record.next_action ? `<p><strong>Next action:</strong> ${escapeHtml(record.next_action)}</p>` : ""}</section>` : ""}${renderLinks(record.links)}`;
@@ -533,6 +603,18 @@ function renderDetail(id) {
     slots: Object.fromEntries(["main", "bwd"].map(role => [role, app.querySelector(`[data-native-role="${role}"]`)])),
     status: app.querySelector("#graph-evidence-status")};
   activeNativeRender = render;
+  const card = app.querySelector("#chat-report-card"), copyStatus = app.querySelector("#copy-report-status");
+  card.value = chatReportCard(record);
+  app.querySelector("#copy-report-card").addEventListener("click", async () => {
+    if (!currentNativeRender(render)) return;
+    try {
+      await navigator.clipboard.writeText(card.value);
+      if (currentNativeRender(render)) copyStatus.textContent = "Copied";
+    } catch {
+      if (!currentNativeRender(render)) return;
+      card.focus(); card.select(); copyStatus.textContent = "Clipboard unavailable. Copy the selected text.";
+    }
+  });
   mountNativeGraphs(record, render).then(() => {
     if (currentNativeRender(render) && graphsReady && Object.values(render.slots).every(slot => slot.querySelector('.graph-state').textContent === "GRAPH ASSET AVAILABLE")) render.status.textContent = "AVAILABLE";
   });

@@ -198,3 +198,6 @@ h1 { font-size:1.25rem; }
 .tested-setup .facts div, .report-status .facts div { display: grid; grid-template-columns: minmax(6.5rem, 1fr) minmax(0, 2fr); }
 .tested-setup .facts dd, .report-status .facts dd { margin: 0; }
 #parameter-search { width: 100%; max-width: 100%; box-sizing: border-box; margin-block: .7rem; }
+/* Copyable report text stays within the existing detail panel on narrow screens. */
+#chat-report-card { box-sizing: border-box; width: 100%; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+.owner-recipe article { border-top: 1px solid currentColor; padding-block: .5rem; }
