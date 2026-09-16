@@ -296,6 +296,10 @@ def _fold_arith(name, node, resolved, txt, origin):
         if isinstance(node.op, ast.Mod) and right != 0:
             return left % right
     if isinstance(node, ast.Name):
+        # Exact MQL boolean literals canonicalise as longs, including inside arithmetic.
+        # Do not translate source text or admit Python's True/False or other identifiers.
+        if node.id in ('true', 'false'):
+            return 1 if node.id == 'true' else 0
         ref = resolved.get(node.id)
         if ref is None:
             raise preset.PresetRefusal(
