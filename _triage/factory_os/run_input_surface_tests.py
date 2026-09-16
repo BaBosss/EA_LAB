@@ -31,6 +31,7 @@ import re
 import shutil
 import sys
 import tempfile
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
@@ -399,19 +400,69 @@ def g4_specificity(M):
 
 
 def _real_closure(M):
-    """Every real file the constant scan reaches, as a fixture dict. Read from the worktree on
-    purpose: these are fixture INPUTS, and the verdict under test is the checker's."""
+    """Make wrappers and all template headers available; the scan decides include reachability.
+    Read from the worktree on purpose: these are fixture INPUTS, not a repository verdict."""
     files = {OWNERS.MANIFEST_REL: real_file(OWNERS.MANIFEST_REL)}
     for name in sorted(os.listdir(os.path.join(ROOT, M.gconst.WRAPPER_DIR))):
         if name.endswith('.mq5'):
             rel = '%s/%s' % (M.gconst.WRAPPER_DIR, name)
             files[rel] = real_file(rel)
-    for dirpath, _dirs, names in os.walk(os.path.join(ROOT, 'ea_template', 'core')):
+    for dirpath, _dirs, names in os.walk(os.path.join(ROOT, 'ea_template')):
         for name in names:
             if name.endswith('.mqh'):
                 rel = os.path.relpath(os.path.join(dirpath, name), ROOT).replace(os.sep, '/')
                 files[rel] = real_file(rel)
     return files
+
+
+def real_closure_regression(M):
+    """Available headers are not reached constants; only actual includes select them."""
+    files = fixture_closure()
+    files[M.chk.INPUTS_PATH] = FIXTURE_INPUTS
+    header = 'ea_template/extensions/nested/Extra.mqh'
+    unused = 'ea_template/extensions/Unused.mqh'
+    files[header] = '#define OUTSIDE_CORE 73\n'
+    files[unused] = '#define UNREACHED UnknownFunction()\n'
+    files['ea_template/extensions/Unowned.mq5'] = '#define LAB_ENTRY_99\n'
+    files[OWNERS.MANIFEST_REL] = 'build_tag,wrapper_rel\n' + ''.join(
+        '%s,%s\n' % row for row in sorted(FIXTURE_OWNER_MAP.items()))
+    wrapper = FIXTURE_OWNER_MAP['LAB_ENTRY_11']
+    files[wrapper] += '#include "extensions/nested/Extra.mqh"\n'
+    with tempfile.TemporaryDirectory(prefix='surfclosure_') as tmp:
+        for rel, text in files.items():
+            path = os.path.join(tmp, rel.replace('/', os.sep))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with io.open(path, 'w', encoding='utf-8', newline='\n') as out:
+                out.write(text)
+        with patch.dict(globals(), ROOT=tmp):
+            real = _real_closure(M)
+    if header not in real or unused not in real:
+        return 'non-core headers were omitted from the real fixture source'
+    source = FakeSource(real)
+    if sorted(f for f in real if f.endswith('.mq5')) != sorted(FIXTURE_WRAPPERS):
+        return 'collecting headers changed the root wrapper population'
+    if real[OWNERS.MANIFEST_REL] != files[OWNERS.MANIFEST_REL]:
+        return 'collecting headers changed the wrapper owner manifest'
+    owners = OWNERS.load(source)
+    if owners.by_tag != FIXTURE_OWNER_MAP:
+        return 'collecting headers changed build ownership'
+    for tag, rel in owners.by_tag.items():
+        expected = {c.name: c.text for c in M.gconst.scan(
+            lambda r: fixture_closure()[r], tag, rel)}
+        if tag == 'LAB_ENTRY_11':
+            expected['OUTSIDE_CORE'] = '73'
+        actual = {c.name: c.text for c in M.gconst.scan(source.read_committed, tag, rel)}
+        if actual != expected:
+            return 'non-core include changed unrelated constants for %s: %s' % (tag, actual)
+    del source.files[header]
+    try:
+        M.gconst.scan(source.read_committed, 'LAB_ENTRY_11', wrapper)
+    except CHK.ToolFailure as exc:
+        if header not in str(exc):
+            return 'missing-include refusal did not name the missing non-core header'
+    else:
+        return 'a missing non-core include was silently accepted'
+    return None
 
 
 # -- G5 the label and the enumeration may not move apart (ORDER-730) ---------------------------
@@ -887,6 +938,12 @@ def main(argv):
     print('=== ORDER-710 input-surface enumeration: %d criteria, attack + specificity ==='
           % len(CASES))
     live = Mods(CHK, GEN, preset)
+    why = real_closure_regression(live)
+    bad += 0 if why is None else 1
+    print('  [%s] real fixture header availability and include reachability'
+          % ('OK ' if why is None else 'BAD'))
+    if why is not None:
+        print('        -> %s' % why)
     for cid, label, attack, spec, _mut in CASES:
         for kind, fn in (('attack', attack), ('specificity', spec)):
             why = fn(live)

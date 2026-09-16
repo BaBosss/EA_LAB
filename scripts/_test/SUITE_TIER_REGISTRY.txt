@@ -67,6 +67,7 @@ run_status_deployment_authority_tests.ps1|UNMEASURED|Deployment-authority presen
 # ---------------------------------------------------------------------------------------
 # FAST -- in $FAST_SUITES. Cross-checked both ways by PART 8.
 # ---------------------------------------------------------------------------------------
+run_input_surface_contract_tests.ps1|FAST|Runs real input-surface mutation probes and requires explicit acceptance by the real worktree checker.
 run_statusclass_tests.ps1|FAST|In the fast tier; guards scripts/check_taskboard_archive.ps1
 run_order_collision_tests.ps1|FAST|In the fast tier; guards scripts/check_order_collision.ps1, docs/SESSION_LEDGER.md
 run_handoff_contract_tests.ps1|FAST|In the fast tier; guards scripts/check_handoff_contract.ps1
@@ -127,6 +128,7 @@ run_post_broad_diagnostic_pack_tests.ps1|NOT_WIRED|Platform post-broad diagnosti
 # is available. Listed so each one is VISIBLE. Promoting any of these to FAST requires a fresh
 # current-canonical measurement, which is exactly the trade PROJECT_STATE's PREDEV sync records.
 # ---------------------------------------------------------------------------------------
+run_forward_alpha_tests.ps1|UNMEASURED|Focused Forward Alpha deterministic cage exists; incremental cost in the pinned full tier has not been measured. Real source/runtime qualification remains separately blocked; grants no wiring/runtime/market-data authority.
 run_hook_safety_fixture_tests.ps1|UNMEASURED|D-F3/D-F2/D-F4 hook fixture cage (Lane 3, 2026-08-20); drives real git ops, not timed against the pinned budget.
 run_reverse_completeness_negative_tests.ps1|UNMEASURED|D-F5 PART 8 negative-direction cage (Lane 3, 2026-08-20); spawns 6 child PowerShell processes, not timed against the pinned budget.
 run_taskboard_digest_terminal_tests.ps1|UNMEASURED|D-F10/D-F9 digest strongest-terminal + -Check staleness cage (Lane 3, 2026-08-20); not timed against the pinned budget.

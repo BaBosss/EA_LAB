@@ -330,6 +330,8 @@ $FAST_SUITES = @(
     # its closing lines). Run the wrapper directly at any session boundary:
     #   powershell -File scripts\_test\run_contract_binding_tests.ps1
     'run_schema_cages.ps1',
+    # Restore the real input-surface cage displaced with ORDER-1252's larger wrapper.
+    'run_input_surface_contract_tests.ps1',
     # ORDER-1269 #1 (owner-ratified as ORDER-1257 option (b)). run_s2a_gate.py (5.4s) and
     # check_coverage_transfer.py (1.3s) return to the tier, and ONLY those two of the fourteen
     # entries ORDER-1252 moved off it. That order's reason was the WRAPPER -- 18 entries, 42.6s,
@@ -612,6 +614,32 @@ $FAST_SUITES = @(
 #
 # Every suite implicitly guards itself, this file, and the hook; the generator adds those.
 $SUITE_GUARDS = @{
+    'run_input_surface_contract_tests.ps1' = @(
+        '_triage/factory_os/run_input_surface_tests.py',
+        '_triage/factory_os/check_input_surface_gen.py',
+        '_triage/factory_os/gen_input_surface.py',
+        '_triage/factory_os/gen_locked_constants.py',
+        '_triage/factory_os/preset.py',
+        '_triage/factory_os/registry.py',
+        '_triage/factory_os/evidence.py',
+        '_triage/factory_os/wrapper_owners.py',
+        '_triage/factory_os/wrapper_owners.csv',
+        # Root wrappers and every template header are read by the real fixture closure.
+        # Includes decide reachability; headers outside core must also trigger the cage.
+        'ea_template/*.mq5',
+        'ea_template/*.mqh',
+        'ea_template/core/Inputs.mqh',
+        'ea_template/core/InputSurface_gen.mqh',
+        'ea_template/core/LockedConstants_gen.mqh',
+        'ea_template/core/LabCore.mqh',
+        'ea_template/core/ConfigFingerprint.mqh',
+        'scripts/use_python.ps1',
+        'tools/python312/*',
+        # Enforcement owners: changing admission, selection or trigger reruns this cage.
+        'scripts/_test/run_fast_cages.ps1',
+        'scripts/_test/SUITE_TIER_REGISTRY.txt',
+        '.githooks/fast_tier_pathspec'
+    )
     'run_statusclass_tests.ps1'       = @('scripts/check_taskboard_archive.ps1')
     'run_order_collision_tests.ps1'   = @('scripts/check_order_collision.ps1', 'docs/SESSION_LEDGER.md')
     'run_handoff_contract_tests.ps1'  = @('scripts/check_handoff_contract.ps1')

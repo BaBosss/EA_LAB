@@ -11,6 +11,7 @@ _triage/factory_os/candidate.py
 _triage/factory_os/capability.py
 _triage/factory_os/check_attested_pin_staged.py
 _triage/factory_os/check_coverage_transfer.py
+_triage/factory_os/check_input_surface_gen.py
 _triage/factory_os/check_param_surface.py
 _triage/factory_os/check_pilot_acceptance.py
 _triage/factory_os/check_registries.py
@@ -24,6 +25,8 @@ _triage/factory_os/control_center.py
 _triage/factory_os/evidence.py
 _triage/factory_os/gen_coverage.py
 _triage/factory_os/gen_design_contracts.py
+_triage/factory_os/gen_input_surface.py
+_triage/factory_os/gen_locked_constants.py
 _triage/factory_os/gen_magic_allocations.py
 _triage/factory_os/gen_pilot_cells.py
 _triage/factory_os/gen_registry_rows.py
@@ -48,6 +51,7 @@ _triage/factory_os/run_activation_tests.py
 _triage/factory_os/run_ajv_batch_tests.py
 _triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_guard_shape_lint.py
+_triage/factory_os/run_input_surface_tests.py
 _triage/factory_os/run_journal_validator.py
 _triage/factory_os/run_order1281_tests.py
 _triage/factory_os/run_param_surface_tests.py
@@ -109,8 +113,14 @@ ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1
 ea_projects/(Boss)_NewsGuard/vps_rclone/pull_news.cmd
 ea_projects/(Boss)_NewsGuard/vps_rclone/pull_regime.cmd
 EA_SCORECARD_AND_REGISTRY.md
+ea_template/*.mq5
+ea_template/*.mqh
 ea_template/Boss_14_GridLog.mq5
+ea_template/core/ConfigFingerprint.mqh
 ea_template/core/Inputs.mqh
+ea_template/core/InputSurface_gen.mqh
+ea_template/core/LabCore.mqh
+ea_template/core/LockedConstants_gen.mqh
 ea_template/generated/B14_H01_r1.mq5
 ea_template/generated/B14_H01_r1_allowlist.mqh
 ea_template/generated/B14_H02_r1.mq5
@@ -150,6 +160,7 @@ scripts/_test/run_order1290_tests.py
 scripts/_test/run_order1500_tests.py
 scripts/_test/run_pilot_verify_tests.py
 scripts/_test/run_selection_tests.py
+scripts/_test/SUITE_TIER_REGISTRY.txt
 scripts/check_handoff_contract.ps1
 scripts/check_order_collision.ps1
 scripts/check_precommit_staged.ps1
@@ -195,4 +206,5 @@ scripts/use_python.ps1
 taskboards/active/*
 tools/hermes_ea_lab_pilot/profile_manifest.json
 tools/hermes_ea_lab_pilot/scripts/validate_profiles.ps1
+tools/python312/*
 VISION.md
