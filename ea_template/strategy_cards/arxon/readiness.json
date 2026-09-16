@@ -1,0 +1,151 @@
+{
+    "schema_version":  "ARXON_COMPONENT_READINESS_V1",
+    "as_of":  "2026-09-16",
+    "authority":  "DOCUMENTARY_READINESS_ONLY_NO_TRADING_AUTHORITY",
+    "canonical_parent":  "eed2c48455cb14cb0fd16ad0f687148f332fc3cf",
+    "milestone":  "ARXON_STRATEGY_CARD_TEMPLATE_PREPARATION",
+    "milestone_status":  "COMPLETE",
+    "implemented_order_free":  [
+                                   "O02"
+                               ],
+    "components":  [
+                       {
+                           "id":  "W01",
+                           "name":  "VWAP / AVWAP / bands",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "target version/source binding + variance/volume/reset parity"
+                       },
+                       {
+                           "id":  "W02",
+                           "name":  "K2 ribbon / base cross",
+                           "readiness":  "SEMANTIC_FREEZE",
+                           "next_gate":  "EMA source/seed/warmup/equality parity"
+                       },
+                       {
+                           "id":  "W03",
+                           "name":  "Initial Balance",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "qualified home/session clock mapping"
+                       },
+                       {
+                           "id":  "W04",
+                           "name":  "TPO / Market Profile",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "bin/POC/VA/calendar parity"
+                       },
+                       {
+                           "id":  "W05",
+                           "name":  "Degrees of Power",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "exact ordered predicates + direct consumer"
+                       },
+                       {
+                           "id":  "W06",
+                           "name":  "Alerts",
+                           "readiness":  "INFRA_ONLY",
+                           "next_gate":  "event namespace/restart/dedup contract"
+                       },
+                       {
+                           "id":  "W07",
+                           "name":  "embedded OBV",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "embedded config + parity to O01 if shared"
+                       },
+                       {
+                           "id":  "W08",
+                           "name":  "embedded MFI",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "embedded config + parity to O02 if shared"
+                       },
+                       {
+                           "id":  "M01",
+                           "name":  "Trend Path",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "pivot/finality + oscillator parity"
+                       },
+                       {
+                           "id":  "M02",
+                           "name":  "Order Blocks / breakers",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "bounds/lifecycle/HTF parity"
+                       },
+                       {
+                           "id":  "M03",
+                           "name":  "Market Structure",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "tie/bias/break predicate freeze"
+                       },
+                       {
+                           "id":  "M04",
+                           "name":  "FVG / IFVG",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "filter thresholds + lifecycle parity"
+                       },
+                       {
+                           "id":  "M05",
+                           "name":  "Naked Key Levels",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "period/calendar/history contract"
+                       },
+                       {
+                           "id":  "M06",
+                           "name":  "Session Key Levels",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "timezone/DST/home clock"
+                       },
+                       {
+                           "id":  "M07",
+                           "name":  "D/W/M Key Levels + Fib",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "calendar + fib recipe"
+                       },
+                       {
+                           "id":  "M08",
+                           "name":  "Daily Zones",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "daily calendar + boundary lifecycle"
+                       },
+                       {
+                           "id":  "M09",
+                           "name":  "Anchor Candles",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "exact pattern thresholds/priority"
+                       },
+                       {
+                           "id":  "M10",
+                           "name":  "Session Clock",
+                           "readiness":  "INFRA_ONLY",
+                           "next_gate":  "reuse qualified M06 clock contract"
+                       },
+                       {
+                           "id":  "M11",
+                           "name":  "Consolidation",
+                           "readiness":  "SOURCE_PARTIAL",
+                           "next_gate":  "range/ATR/grace/reconfirm parameters"
+                       },
+                       {
+                           "id":  "O01",
+                           "name":  "Arxon OBV+",
+                           "readiness":  "SEMANTIC_FREEZE",
+                           "next_gate":  "slope/smoothing/divergence exact semantics"
+                       },
+                       {
+                           "id":  "O02",
+                           "name":  "Arxon MFI+",
+                           "readiness":  "IMPLEMENTED_ORDER_FREE",
+                           "next_gate":  "same-feed parity; trading role separate"
+                       },
+                       {
+                           "id":  "O03",
+                           "name":  "Stochastic Dual Zone",
+                           "readiness":  "SEMANTIC_FREEZE",
+                           "next_gate":  "K/D computation, equality and finality parity"
+                       },
+                       {
+                           "id":  "O04",
+                           "name":  "RSI Cross Alert",
+                           "readiness":  "BLOCKED_VERSION_CONFLICT",
+                           "next_gate":  "authoritative timing/version selection"
+                       }
+                   ]
+}
