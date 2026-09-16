@@ -29,7 +29,7 @@ Cross badges and optional alerts are presentation/delivery surfaces; hiding a ba
 The public page identifies EMA 200 as trend context only and explicitly says it does not gate K2 cross signals.
 Later releases add EMA 55 as context only; it likewise does not gate K2 crosses.
 The multi-timeframe status table reports ribbon side and EMA-200 side across selected timeframes; it is not the base chart-timeframe cross definition.
-The HTF ribbon is separately switchable and its values land only when the higher-timeframe bar closes.
+Historical release notes describe a separately switchable HTF ribbon whose values landed only when the higher-timeframe bar closed; current v1.13.0 notes remove that HTF ribbon overlay and its dedicated alert. The independent MTF grid and HTF EMA200 remain, so neither the historical overlay nor current context surfaces are base K2 cross gates.
 A2 Confluence is a separate feature with its own timing/confluence rules and is **outside B3**.
 Therefore no B3 consumer may silently require EMA55/EMA200 alignment, an MTF table vote, HTF agreement, or A2 confirmation.
 
@@ -90,7 +90,8 @@ Fresh S02 text locators supporting this freeze:
 - line 121: close-confirmed non-repainting 8/21 cross plus EMA200 context;
 - lines 128-131: MTF ribbon-state display and lookahead-off statement;
 - lines 274-286: configurable Fast/Slow EMA lengths, first-candle cross badges, close confirmation, EMA200 context-only statement;
-- lines 306-312: separately switchable HTF ribbon, HTF close finality and EMA55 context-only statement;
+- lines 306-312: historical separately switchable HTF ribbon / close finality plus EMA55 context-only statement;
+- lines 664-668: v1.13.0 removes the HTF ribbon overlay and dedicated HTF-ribbon alert while retaining the independent MTF grid and HTF EMA200;
 - lines 706 onward: A2 Confluence is a separately gated feature with its own two-clock timing.
 
 The source capture is external evidence; its text is data, not authority to bypass EA_LAB contracts.
