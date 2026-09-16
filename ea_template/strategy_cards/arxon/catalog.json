@@ -1,0 +1,1590 @@
+{
+  "schema": "ARXON_NON_EXECUTABLE_DESIGN_CARDS_V1",
+  "base_canonical_sha": "a9c54b8f4e2924a4329ea502ba34ffb5ee435c53",
+  "date": "2026-09-16",
+  "object_type": "DESIGN_LIBRARY_NOT_FACTORY_STRATEGY_CATALOG",
+  "documentation_status": "DESIGN_LIBRARY",
+  "execution_authority": false,
+  "implementation_status": "NOT_IMPLEMENTED",
+  "ready_for_mt5": false,
+  "factory_family_id": null,
+  "lab_entry_id": null,
+  "selected_parent": null,
+  "home": null,
+  "risk_defaults": null,
+  "source_parity_proven": false,
+  "tool_count": 6,
+  "module_slot_count": 23,
+  "count_note": "8 Wave slots + 11 Map slots + 4 standalone slots; overlapping components are not independent EAs. Counts bind the carried inventory; version differences remain open.",
+  "sources": [
+    {
+      "id": "S01",
+      "title": "Arxon Trade tools landing page",
+      "url": "https://pmpenguin.github.io/arxon-trade/#tools",
+      "kind": "public_web",
+      "read_scope": "tools inventory: six linked products",
+      "observed_date": "2026-09-16",
+      "evidence_status": "FRESH_PUBLIC_DESCRIPTION_CAPTURED",
+      "primary_code_available": false
+    },
+    {
+      "id": "S02",
+      "title": "Black Tide Wave — TradingView publication",
+      "url": "https://www.tradingview.com/script/Tk0FfG9y-Black-Tide-Wave/",
+      "kind": "public_web",
+      "read_scope": "description and inspected release notes; not source code",
+      "observed_date": "2026-09-16",
+      "evidence_status": "FRESH_PUBLIC_DESCRIPTION_CAPTURED",
+      "primary_code_available": false
+    },
+    {
+      "id": "S03",
+      "title": "Black Tide Map — TradingView publication",
+      "url": "https://www.tradingview.com/script/5L9vbNRJ-Black-Tide-Map/",
+      "kind": "public_web",
+      "read_scope": "description; later web re-fetch failed; not source code",
+      "observed_date": "2026-09-16",
+      "evidence_status": "FRESH_PUBLIC_DESCRIPTION_CAPTURED",
+      "primary_code_available": false
+    },
+    {
+      "id": "S04",
+      "title": "Arxon OBV+ — TradingView publication",
+      "url": "https://www.tradingview.com/script/K0cUsn6T-Arxon-OBV/",
+      "kind": "public_web",
+      "read_scope": "public product description; not source code",
+      "observed_date": "2026-09-16",
+      "evidence_status": "FRESH_PUBLIC_DESCRIPTION_CAPTURED",
+      "primary_code_available": false
+    },
+    {
+      "id": "S05",
+      "title": "Arxon MFI+ — TradingView publication",
+      "url": "https://www.tradingview.com/script/eBoUoU2u-Arxon-MFI/",
+      "kind": "public_web",
+      "read_scope": "public calculation defaults and state semantics; not source code",
+      "observed_date": "2026-09-16",
+      "evidence_status": "FRESH_PUBLIC_DESCRIPTION_CAPTURED",
+      "primary_code_available": false
+    },
+    {
+      "id": "S06",
+      "title": "Stochastic + Dual Zone Entry — TradingView publication",
+      "url": "https://www.tradingview.com/script/cQJIPUHO-Stochastic-Dual-Zone-Entry/",
+      "kind": "public_web",
+      "read_scope": "public description and version notes; not source code",
+      "observed_date": "2026-09-16",
+      "evidence_status": "FRESH_PUBLIC_DESCRIPTION_CAPTURED",
+      "primary_code_available": false
+    },
+    {
+      "id": "S07",
+      "title": "RSI Cross Alert — TradingView publication",
+      "url": "https://www.tradingview.com/script/8T3APTKB-RSI-Cross-Alert/",
+      "kind": "public_web",
+      "read_scope": "public description and later timing-changing release notes; not source code",
+      "observed_date": "2026-09-16",
+      "evidence_status": "FRESH_PUBLIC_DESCRIPTION_CAPTURED",
+      "primary_code_available": false
+    },
+    {
+      "id": "S08",
+      "title": "Black Tide Wave User Manual v1.13.2",
+      "url": "https://drive.google.com/file/d/1wdmbfQang4MNnARtcApMMzGhqwifv0Z9/view",
+      "kind": "publisher_pdf",
+      "file_name": "Black_Tide_Wave_Manual_EN_v1_13_2.pdf",
+      "read_scope": "targeted text review; figures/tables visually checked on pages 9 and 87; not an exhaustive audit",
+      "inspected_text_pages": [
+        1,
+        7,
+        8,
+        9,
+        10,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        72,
+        73,
+        74,
+        75,
+        87
+      ],
+      "observed_date": "2026-09-16",
+      "sha256": "252eefcbf0d6956b7abf256b65b614e03b7f04d14a253d4cba4ab137afd3c0b1",
+      "bytes": 1357129,
+      "pages": 92,
+      "evidence_status": "CARRIED_MANUAL_NOTE_NOT_REVERIFIED_IN_THIS_MILESTONE",
+      "primary_code_available": false,
+      "hash_note": "Hash retained from earlier supplied source register; original PDF bytes not reread or rehashed in this milestone."
+    },
+    {
+      "id": "S09",
+      "title": "Black Tide Map User Manual v1.15.0",
+      "url": "https://drive.google.com/file/d/1WXSMxoKQQ_RDR29gzTWmNcGbiuUNt4xg/view",
+      "kind": "publisher_pdf",
+      "file_name": "Black_Tide_Map_Manual_EN_v1_15_0.pdf",
+      "read_scope": "targeted text review; page 9 diagram/table visually checked; not an exhaustive audit",
+      "inspected_text_pages": [
+        1,
+        6,
+        7,
+        8,
+        9,
+        10,
+        14,
+        15,
+        24,
+        25,
+        27,
+        28,
+        36,
+        37,
+        74,
+        75,
+        76
+      ],
+      "observed_date": "2026-09-16",
+      "sha256": "08eb1aea2f1a86f87442211bd97748ae8cbe253094f184e0228b59b00852e3bf",
+      "bytes": 2687222,
+      "pages": 91,
+      "evidence_status": "CARRIED_MANUAL_NOTE_NOT_REVERIFIED_IN_THIS_MILESTONE",
+      "primary_code_available": false,
+      "hash_note": "Hash retained from earlier supplied source register; original PDF bytes not reread or rehashed in this milestone."
+    }
+  ],
+  "template_anchors": [
+    {
+      "path": "ea_template/core/entries/IEntry.mqh",
+      "facts": "EntrySignal(direction,strength,confidence,valid,reason); Entry_MakeNone; no order management in the entry seam."
+    },
+    {
+      "path": "ea_template/core/LabCore.mqh",
+      "facts": "Compile-time LAB_ENTRY_11..19 includes and entry dispatch; first entry and Stack ownership are distinct."
+    },
+    {
+      "path": "ea_template/core/entries/Entry_GridTrendMA.mqh",
+      "facts": "Existing example is MA ordering evaluated with Indi_* shift 0, not proof of K2 close-cross parity."
+    },
+    {
+      "path": "ea_template/core/Indicators.mqh",
+      "facts": "Existing indicator access/lifecycle home; proposed Arxon provider must be reviewed before use here."
+    },
+    {
+      "path": "ea_template/core/Inputs.mqh",
+      "facts": "Exposed enums and per-entry inputs; no IDs, names, or values added by this package."
+    },
+    {
+      "path": "docs/PARAM_REGISTRY.csv",
+      "facts": "Actual canonical parameter registry; NOT ea_template/PARAM_REGISTRY.yaml or a new parallel input registry."
+    },
+    {
+      "path": "scripts/param_registry_check.ps1",
+      "facts": "Required parameter alignment checker for future input changes."
+    },
+    {
+      "path": "scripts/param_registry_fix_lines.ps1",
+      "facts": "Existing bounded parameter registry maintenance, only after an approved input edit."
+    },
+    {
+      "path": "ea_template/core/Stack.mqh",
+      "facts": "Position additions remain chassis-owned."
+    },
+    {
+      "path": "ea_template/core/RiskControl.mqh",
+      "facts": "Risk cage remains supreme; no indicator can override it."
+    },
+    {
+      "path": "ea_template/core/ExitManager.mqh",
+      "facts": "Exit ownership remains explicit; a context event may not liquidate positions implicitly."
+    },
+    {
+      "path": "ea_template/core/ConfigFingerprint.mqh",
+      "facts": "Future effective parameter binding must remain reproducible."
+    },
+    {
+      "path": "scripts/tpl_regression.ps1",
+      "facts": "Mandatory on future core edits; not run as a research test in this documentation scope."
+    },
+    {
+      "path": "factory/strategy_catalog.json",
+      "facts": "Existing accepted strategy catalog; left unchanged, ARX IDs are documentation IDs only."
+    },
+    {
+      "path": "ea_template/DESIGN_V2.md",
+      "facts": "V1/modules are deprecated; future EA builds must target current V2 compile-time wrapper design."
+    },
+    {
+      "path": "ea_template/PRODUCT_CONCEPT.md",
+      "facts": "Shared chassis x entry x home/config; native mechanics and defaults require explicit contracts."
+    }
+  ],
+  "families": [
+    {
+      "id": "ARX-01",
+      "name": "Black Tide Wave",
+      "source_refs": [
+        "S02",
+        "S08"
+      ],
+      "stage": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "source_access": "PROTECTED_NO_PINE_SOURCE_OBTAINED",
+      "source_facts": "The manual identifies eight modules: VWAP, K2 Ribbon, Initial Balance, TPO/Market Profile, Degrees of Power, Alerts, OBV and MFI. K2 uses a close-confirmed fast/slow EMA cross; EMA 55/200 are context, not implicit cross filters. A2 is a separate confluence feature. DOP is structural context, not a buy/sell decision. [S08 pp.9–10,26–30]",
+      "proposed_role": "Reusable trend/event and auction-context modules; not one mandatory all-indicator EA.",
+      "design_options_not_authorized": [
+        "A K2 cross event mapped into a qualified parent.",
+        "A single VWAP or IB feature for a new independently justified consumer; not a restart of the closed session branch.",
+        "A2 as a separately version-pinned timing contract, after HTF confirmation semantics are settled."
+      ],
+      "source_bound_known_settings": {
+        "k2_fast_ema": 8,
+        "k2_slow_ema": 21,
+        "manual_version": "1.13.2",
+        "DOP_missing_value": "na, not neutral 0"
+      },
+      "unresolved_contract_fields": [
+        "K2 price source/seeding/warmup and exact equality boundaries for a port.",
+        "Exact session anchor, timezone/DST and feed mapping per market.",
+        "TPO row/tie/VA expansion rules and causal developing-history construction.",
+        "VWAP price/volume/reset/zero-volume and band variance definitions.",
+        "A2 configuration and real-time versus historical HTF availability; do not infer safety merely from lookahead_off.",
+        "A deterministic historical DOP series; a live last-bar gauge is insufficient evidence."
+      ],
+      "event_timing_requirements": [
+        "Emit K2 after the observed bar closes; orders cannot use the earlier open of that signal bar.",
+        "Freeze completed session references; never put final-day VA/IB values into earlier observations.",
+        "Unknown DOP must block the affected decision, not silently become neutral."
+      ],
+      "planned_acceptance_cases_not_run": [
+        "EMA-equality touch versus actual crossing.",
+        "Restart does not re-emit an already consumed event.",
+        "IB pre-lock/post-lock, missing sessions, DST transitions.",
+        "DOP missing inputs and overlapping score predicates.",
+        "A2 pending versus confirmed HTF and late confirmation."
+      ],
+      "delta_vs_existing_intake": "Adds manual-bounded inventory and timing hazards. Does not qualify an experiment or reopen HYP-SB-005.",
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "exact_parity_proven": false,
+      "ea_implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "gates": [
+        "Select an exact qualified canonical parent/direct consumer, or obtain a separately approved new-family contract; no parent is selected by this intake.",
+        "Freeze source/version/config, one component role, direction mapping, availability time, execution time, and a falsifier BEFORE observing result data.",
+        "Inspect the real template, PARAM_REGISTRY and current lane ownership; this package does not prove adapter compatibility.",
+        "Implement under the sole Main Control Tower contract, with required compile/deterministic gates and different-family review where applicable.",
+        "Verify event/value parity on an agreed feed and time basis; synthetic checks are not TradingView parity.",
+        "Only then open authorized parent/control versus one-change child MAIN/BWD testing; no retuning on BWD, no automatic HOLDOUT or deployment."
+      ],
+      "component_ids": [
+        "W01",
+        "W02",
+        "W03",
+        "W04",
+        "W05",
+        "W06",
+        "W07",
+        "W08"
+      ],
+      "source_status": "PUBLIC_DESCRIPTION_AND_CARRIED_MANUAL_NOT_CODE_PARITY",
+      "implementation_status": "NOT_IMPLEMENTED",
+      "template_plan": "../../../../docs/research/ARXON_TEMPLATE_INTEGRATION_PLAN_20260916.md"
+    },
+    {
+      "id": "ARX-02",
+      "name": "Black Tide Map",
+      "source_refs": [
+        "S01",
+        "S03",
+        "S09"
+      ],
+      "stage": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "source_access": "PROTECTED_NO_PINE_SOURCE_OBTAINED",
+      "source_facts": "The manual diagram lists eleven modules, although its heading says ten. It covers structure, order blocks, trend path, FVG, level groups, daily zones, anchor candles, session clock and consolidation. Several paragraphs retain older-version wording. Trend Path explicitly has provisional pivots; consolidation distinguishes provisional breaks from confirmed/failed breaks. [S09 pp.9,14,24–28,36–37,74–76]",
+      "proposed_role": "Reusable location/structure/event modules; split by causal hypothesis rather than one opaque score.",
+      "design_options_not_authorized": [
+        "One confirmed BOS/CHoCH event or one retest-location filter.",
+        "One OB or FVG/IFVG state transition attached to an existing consumer.",
+        "One confirmed consolidation break or failed-break event; do not combine both with multiple extra filters in the first attribution test."
+      ],
+      "source_bound_known_settings": {
+        "manual_cover_version": "1.15.0",
+        "inventory_policy": "11 named functional slots; header/count/version discrepancies retained as evidence gaps"
+      },
+      "unresolved_contract_fields": [
+        "Pin actual selected publication/settings versus stale manual paragraphs.",
+        "Exact swing, tie, break, initial bias and swept-level behavior.",
+        "OB bounds/selection/mitigation/invalidation/breaker state machine and HTF rules.",
+        "FVG size/displacement/fill/inversion priority and boundary treatment.",
+        "Consolidation windows, range averaging, ATR, grace and reconfirmation semantics.",
+        "Finality of Trend Path pivots and point-in-time snapshot storage.",
+        "Candle detector thresholds and daily/session calendars."
+      ],
+      "event_timing_requirements": [
+        "A pivot is tradable only when confirmed; its plotted historical location is not signal availability.",
+        "Never backfill a provisional Trend Path pivot or a later-expanded consolidation box into past decisions.",
+        "FVG creation and lifecycle must use completed bars and a frozen event priority."
+      ],
+      "planned_acceptance_cases_not_run": [
+        "No duplicate break on an already swept swing.",
+        "Same-bar OB touch and invalidation priority.",
+        "FVG sweep-before-fill; previously spent gap cannot invert.",
+        "Provisional breakout returning inside grace versus confirmed breakout.",
+        "Bull/bear and chart/HTF event coverage; do not inherit documented alert omissions silently."
+      ],
+      "delta_vs_existing_intake": "Reconciles feature/version drift; does not claim every documented alert defect remains in the latest protected binary.",
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "exact_parity_proven": false,
+      "ea_implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "gates": [
+        "Select an exact qualified canonical parent/direct consumer, or obtain a separately approved new-family contract; no parent is selected by this intake.",
+        "Freeze source/version/config, one component role, direction mapping, availability time, execution time, and a falsifier BEFORE observing result data.",
+        "Inspect the real template, PARAM_REGISTRY and current lane ownership; this package does not prove adapter compatibility.",
+        "Implement under the sole Main Control Tower contract, with required compile/deterministic gates and different-family review where applicable.",
+        "Verify event/value parity on an agreed feed and time basis; synthetic checks are not TradingView parity.",
+        "Only then open authorized parent/control versus one-change child MAIN/BWD testing; no retuning on BWD, no automatic HOLDOUT or deployment."
+      ],
+      "component_ids": [
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M05",
+        "M06",
+        "M07",
+        "M08",
+        "M09",
+        "M10",
+        "M11"
+      ],
+      "source_status": "PUBLIC_DESCRIPTION_AND_CARRIED_MANUAL_NOT_CODE_PARITY",
+      "implementation_status": "NOT_IMPLEMENTED",
+      "template_plan": "../../../../docs/research/ARXON_TEMPLATE_INTEGRATION_PLAN_20260916.md"
+    },
+    {
+      "id": "ARX-03",
+      "name": "Arxon OBV+",
+      "source_refs": [
+        "S04",
+        "S08"
+      ],
+      "stage": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "source_access": "PROTECTED_NO_PINE_SOURCE_OBTAINED",
+      "source_facts": "The standalone publication retains standard OBV and adds slope, regular/hidden divergence, smoothing and cross alerts; it explicitly is not an entry generator. The Wave manual supplies OBV-engine settings, but that is not proof that every standalone OBV+ setting and edge case is identical. [S04; S08 pp.32,72–74]",
+      "proposed_role": "Volume-activity confirmation, or one independently registered divergence event.",
+      "design_options_not_authorized": [
+        "OBV slope only as one parent filter.",
+        "OBV versus smoothing MA only as another separate child.",
+        "A single divergence definition only after pivot semantics are frozen."
+      ],
+      "source_bound_known_settings": {
+        "standalone_core": "standard OBV per publication",
+        "embedded_wave_only": {
+          "smoothing_type": "EMA",
+          "smoothing_length": 14,
+          "pivot_left": 5,
+          "pivot_right": 5,
+          "pivot_separation_min": 5,
+          "pivot_separation_max": 60
+        },
+        "embedded_defaults_transfer_to_standalone": "NOT_AUTHORIZED_WITHOUT_PARITY"
+      },
+      "unresolved_contract_fields": [
+        "Standalone slope formula/window/flat rule.",
+        "Standalone smoothing defaults and cross/equality definition.",
+        "Which series supplies pivots and how price/OBV pivots pair.",
+        "Regular/hidden definitions, separation count endpoints, duplicates and event expiry.",
+        "Volume source, missing/zero handling and initial accumulation."
+      ],
+      "event_timing_requirements": [
+        "Record pivot time and later confirmation time separately.",
+        "Only consume the event at confirmation; an earlier marker position cannot authorize an earlier order.",
+        "Do not call broker tick activity actual traded-money flow."
+      ],
+      "planned_acceptance_cases_not_run": [
+        "Equal closes and OBV zero contribution.",
+        "Missing volume is invalid, not quietly bullish/bearish.",
+        "Equal pivot values and minimum/maximum separation edges.",
+        "No event before required right-hand bars.",
+        "Cross-feed differences reported rather than hidden as parity failures."
+      ],
+      "delta_vs_existing_intake": "Manual provides a useful separate embedded-engine reference; standalone additions remain partially unqualified.",
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "exact_parity_proven": false,
+      "ea_implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "gates": [
+        "Select an exact qualified canonical parent/direct consumer, or obtain a separately approved new-family contract; no parent is selected by this intake.",
+        "Freeze source/version/config, one component role, direction mapping, availability time, execution time, and a falsifier BEFORE observing result data.",
+        "Inspect the real template, PARAM_REGISTRY and current lane ownership; this package does not prove adapter compatibility.",
+        "Implement under the sole Main Control Tower contract, with required compile/deterministic gates and different-family review where applicable.",
+        "Verify event/value parity on an agreed feed and time basis; synthetic checks are not TradingView parity.",
+        "Only then open authorized parent/control versus one-change child MAIN/BWD testing; no retuning on BWD, no automatic HOLDOUT or deployment."
+      ],
+      "component_ids": [
+        "O01"
+      ],
+      "source_status": "PUBLIC_DESCRIPTION_AND_CARRIED_MANUAL_NOT_CODE_PARITY",
+      "implementation_status": "NOT_IMPLEMENTED",
+      "template_plan": "../../../../docs/research/ARXON_TEMPLATE_INTEGRATION_PLAN_20260916.md"
+    },
+    {
+      "id": "ARX-04",
+      "name": "Arxon MFI+",
+      "source_refs": [
+        "S05",
+        "S08"
+      ],
+      "stage": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "source_access": "PROTECTED_NO_PINE_SOURCE_OBTAINED",
+      "source_facts": "The public standalone specification gives length 7, hlc3, Bull above 55, Neutral 45–55, Bear below 45, and extremes 90/10. The state depends on the current level without hysteresis. Standalone levels are constants in the described v1.0. The Wave version has separately adjustable bands. [S05; S08 pp.74–75]",
+      "proposed_role": "A three-state context filter, not an automatic green=buy/red=sell system.",
+      "design_options_not_authorized": [
+        "One qualified parent gate that uses only the published three-state context.",
+        "Extreme detection as a separate hypothesis, not an unregistered addition to the three-state filter."
+      ],
+      "source_bound_known_settings": {
+        "length": 7,
+        "price_source": "hlc3",
+        "bull_above": 55,
+        "bear_below": 45,
+        "neutral_inclusive": [
+          45,
+          55
+        ],
+        "overbought": 90,
+        "oversold": 10,
+        "state_hysteresis": false
+      },
+      "unresolved_contract_fields": [
+        "Exact parent/role/direction and treatment of neutral for entries versus already-open positions.",
+        "Feed volume semantics and missing data policy.",
+        "Numerical warmup and zero positive/negative flow edge cases for platform parity.",
+        "Completed-bar sampling and first admissible order time.",
+        "Do not transfer Wave-adjustable bands into the standalone definition silently."
+      ],
+      "event_timing_requirements": [
+        "Read the completed-bar MFI state for a close-confirmed contract.",
+        "Neutral is valid data; missing data is a separate invalid state.",
+        "A state change is not automatically a trade event."
+      ],
+      "planned_acceptance_cases_not_run": [
+        "MFI 44.999 / 45 / 50 / 55 / 55.001 boundary classification.",
+        "Bull -> neutral -> bear has no sticky previous state.",
+        "Flat prices and zero-flow edge cases.",
+        "No duplicated orders on repeated bull bars.",
+        "Same price and volume fixtures agree with frozen platform reference."
+      ],
+      "delta_vs_existing_intake": "NEW PARTIAL SOURCE CLOSURE: period, source, thresholds and state semantics now have primary-source support. Parent/role/feed/parity gates remain open; no canonical status was edited.",
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "exact_parity_proven": false,
+      "ea_implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "gates": [
+        "Select an exact qualified canonical parent/direct consumer, or obtain a separately approved new-family contract; no parent is selected by this intake.",
+        "Freeze source/version/config, one component role, direction mapping, availability time, execution time, and a falsifier BEFORE observing result data.",
+        "Inspect the real template, PARAM_REGISTRY and current lane ownership; this package does not prove adapter compatibility.",
+        "Implement under the sole Main Control Tower contract, with required compile/deterministic gates and different-family review where applicable.",
+        "Verify event/value parity on an agreed feed and time basis; synthetic checks are not TradingView parity.",
+        "Only then open authorized parent/control versus one-change child MAIN/BWD testing; no retuning on BWD, no automatic HOLDOUT or deployment."
+      ],
+      "component_ids": [
+        "O02"
+      ],
+      "source_status": "PUBLIC_DESCRIPTION_AND_CARRIED_MANUAL_NOT_CODE_PARITY",
+      "implementation_status": "NOT_IMPLEMENTED",
+      "template_plan": "../../../../docs/research/ARXON_TEMPLATE_INTEGRATION_PLAN_20260916.md"
+    },
+    {
+      "id": "ARX-05",
+      "name": "Stochastic + Dual Zone Entry",
+      "source_refs": [
+        "S06"
+      ],
+      "stage": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "source_access": "PROTECTED_NO_PINE_SOURCE_OBTAINED",
+      "source_facts": "The publication marks one event when K and D enter the same extreme zone and does not repeat it on every bar inside. Bands are adjustable, with published 80/20 defaults. The public wording alone does not specify every computational setting or imply an order direction. [S06]",
+      "proposed_role": "One event provider. ENTRY / ENTRY_FILTER / EXIT / CONTEXT must be selected explicitly.",
+      "design_options_not_authorized": [
+        "Use one explicit role in one exact qualified parent. No direction or default reversal/continuation is selected by this intake."
+      ],
+      "source_bound_known_settings": {
+        "upper_band": 80,
+        "lower_band": 20,
+        "event_repetition": "one-shot zone entry per description"
+      },
+      "unresolved_contract_fields": [
+        "K length, K smoothing, D smoothing and MA/price method.",
+        "Whether both lines must cross individually on the same bar, or the joint in-zone state must first become true.",
+        "Equality-at-band behavior, missing-value behavior, rearming after zone exit.",
+        "Event direction mapping and parent consumer.",
+        "Do not borrow the 9,3,3 Trend Path settings as standalone defaults."
+      ],
+      "event_timing_requirements": [
+        "Create fixtures for K entering first and D entering later to resolve the two interpretations.",
+        "Do not infer sell from a red overbought marker, or buy from a green oversold marker.",
+        "Freeze closed-bar availability and next admissible execution before testing."
+      ],
+      "planned_acceptance_cases_not_run": [
+        "Both lines enter together.",
+        "K enters early and D later.",
+        "Several bars inside emit once only.",
+        "Leave and re-enter emits a new event.",
+        "Equal thresholds, warmup and missing series."
+      ],
+      "delta_vs_existing_intake": "Retains canonical priority A / waiting parent and preregistration. Event wording ambiguity is explicitly tracked rather than guessed.",
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "exact_parity_proven": false,
+      "ea_implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "gates": [
+        "Select an exact qualified canonical parent/direct consumer, or obtain a separately approved new-family contract; no parent is selected by this intake.",
+        "Freeze source/version/config, one component role, direction mapping, availability time, execution time, and a falsifier BEFORE observing result data.",
+        "Inspect the real template, PARAM_REGISTRY and current lane ownership; this package does not prove adapter compatibility.",
+        "Implement under the sole Main Control Tower contract, with required compile/deterministic gates and different-family review where applicable.",
+        "Verify event/value parity on an agreed feed and time basis; synthetic checks are not TradingView parity.",
+        "Only then open authorized parent/control versus one-change child MAIN/BWD testing; no retuning on BWD, no automatic HOLDOUT or deployment."
+      ],
+      "component_ids": [
+        "O03"
+      ],
+      "source_status": "PUBLIC_DESCRIPTION_AND_CARRIED_MANUAL_NOT_CODE_PARITY",
+      "implementation_status": "NOT_IMPLEMENTED",
+      "template_plan": "../../../../docs/research/ARXON_TEMPLATE_INTEGRATION_PLAN_20260916.md"
+    },
+    {
+      "id": "ARX-06",
+      "name": "RSI Cross Alert",
+      "source_refs": [
+        "S07"
+      ],
+      "stage": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "source_access": "PROTECTED_NO_PINE_SOURCE_OBTAINED",
+      "source_facts": "The main description confirms an RSI extreme after zone exit. Later release notes instead describe confirmation one bar after a turn while still inside the zone, with a new extreme rearming the marker. These are different event clocks, not cosmetic variations. Optional divergence and several smoothing modes are described. [S07]",
+      "proposed_role": "A version-pinned extreme-confirmation event after resolving timing; otherwise explicitly Arxon-inspired.",
+      "design_options_not_authorized": [
+        "Zone-exit confirmation as a separately labelled interpretation.",
+        "One-bar-turn confirmation as a separately labelled interpretation. Neither is declared the authentic current code by this intake."
+      ],
+      "source_bound_known_settings": {
+        "documented_timing_variants": [
+          "ZONE_EXIT",
+          "ONE_BAR_TURN_INSIDE_ZONE"
+        ],
+        "selected_variant": null,
+        "source_code_access": false
+      },
+      "unresolved_contract_fields": [
+        "Exact active version and authoritative event timing.",
+        "RSI period/price/bands/smoothing settings.",
+        "Ties, new extremes, rearming and repeated in-zone reversals.",
+        "Optional divergence pivot definitions if ever separately contracted.",
+        "Parent role, direction, invalidation and execution timing."
+      ],
+      "event_timing_requirements": [
+        "Store extreme_at, confirmed_at and first_action_at separately.",
+        "Never enter at the historical extreme just because a later label points there.",
+        "Resolve using authorized source, author clarification, or bar-by-bar reference observation; until then no exact-parity claim."
+      ],
+      "planned_acceptance_cases_not_run": [
+        "Long overbought stretch with several local peaks.",
+        "A new extreme after an earlier in-zone turn.",
+        "Equal RSI peaks and threshold equality.",
+        "Zone exit versus inside-zone turn emits at different bars.",
+        "No future label can change a past execution record."
+      ],
+      "delta_vs_existing_intake": "The existing SEMANTICS_REQUIRED blocker remains justified; new backtests must not choose the better-looking timing after observing outcomes.",
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "exact_parity_proven": false,
+      "ea_implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "gates": [
+        "Select an exact qualified canonical parent/direct consumer, or obtain a separately approved new-family contract; no parent is selected by this intake.",
+        "Freeze source/version/config, one component role, direction mapping, availability time, execution time, and a falsifier BEFORE observing result data.",
+        "Inspect the real template, PARAM_REGISTRY and current lane ownership; this package does not prove adapter compatibility.",
+        "Implement under the sole Main Control Tower contract, with required compile/deterministic gates and different-family review where applicable.",
+        "Verify event/value parity on an agreed feed and time basis; synthetic checks are not TradingView parity.",
+        "Only then open authorized parent/control versus one-change child MAIN/BWD testing; no retuning on BWD, no automatic HOLDOUT or deployment."
+      ],
+      "component_ids": [
+        "O04"
+      ],
+      "source_status": "PUBLIC_DESCRIPTION_AND_CARRIED_MANUAL_NOT_CODE_PARITY",
+      "implementation_status": "NOT_IMPLEMENTED",
+      "template_plan": "../../../../docs/research/ARXON_TEMPLATE_INTEGRATION_PLAN_20260916.md"
+    }
+  ],
+  "components": [
+    {
+      "component_id": "W01",
+      "family_id": "ARX-01",
+      "name": "VWAP / AVWAP / bands",
+      "source_locator": "S08 pp.23–25",
+      "source_summary": "Anchored volume-weighted price and optional bands; period/session variants are distinct references.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "vwap_value",
+        "anchor_id",
+        "band_values",
+        "validity"
+      ],
+      "proposal_not_approved_semantics": "A single price-location filter or one registered VWAP event; neither bounce nor breakout is selected.",
+      "freeze_fields": [
+        "anchor and reset calendar",
+        "price source and volume type",
+        "variance/band formula",
+        "post-session continuation and zero-volume policy"
+      ],
+      "test_cases_not_run": [
+        "period reset with zero volume",
+        "session-close frozen level vs continuing AVWAP",
+        "future bars cannot change earlier developing values"
+      ],
+      "scope_blocker": "PRICE_VOLUME_SESSION_PARITY_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "W02",
+      "family_id": "ARX-01",
+      "name": "K2 Ribbon, context EMAs, MTF and A2",
+      "source_locator": "S08 pp.26–28",
+      "source_summary": "K2 is described as an 8/21 EMA ribbon with a close-confirmed cross; context EMAs and A2 are separate.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "ribbon_side",
+        "cross_event",
+        "context_ema_side",
+        "confirmation_time"
+      ],
+      "proposal_not_approved_semantics": "A K2 cross entry family or one parent filter; freeze K2 alone before any A2/MTF extension.",
+      "freeze_fields": [
+        "EMA seed/price basis and equality",
+        "MTF completed vs developing bars",
+        "A2 confluence version and delays",
+        "entry/exit direction and signal expiry"
+      ],
+      "test_cases_not_run": [
+        "equal EMA touch vs true cross",
+        "one event across restart",
+        "HTF not closed yet; A2 later confirmation"
+      ],
+      "scope_blocker": "K2_BASE_PARTIAL; A2_TIMING_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "W03",
+      "family_id": "ARX-01",
+      "name": "Initial Balance / session IB / extensions",
+      "source_locator": "S08 pp.21–22",
+      "source_summary": "An opening-range/Initial Balance reference develops and then locks; full-session highs/lows are not IB.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "ib_high",
+        "ib_low",
+        "ib_mid",
+        "lock_time"
+      ],
+      "proposal_not_approved_semantics": "One independent IB location/event consumer, never an automatic rescue of the closed session experiment.",
+      "freeze_fields": [
+        "exchange/broker clock mapping",
+        "duration and first eligible session bar",
+        "range lock and extensions",
+        "short sessions and missing bars"
+      ],
+      "test_cases_not_run": [
+        "bar before and after lock",
+        "short/holiday session",
+        "IB differs from full-session range"
+      ],
+      "scope_blocker": "SESSION_CLOCK_REQUIRED; CLOSED_BRANCH_DEDUP",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": [
+        "M10"
+      ]
+    },
+    {
+      "component_id": "W04",
+      "family_id": "ARX-01",
+      "name": "TPO / value area / naked levels / single prints",
+      "source_locator": "S08 pp.17–20",
+      "source_summary": "TPO/profile slot contains value-area, POC, naked levels and single-print references.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "developing_profile",
+        "final_profile",
+        "vah_val_poc",
+        "level_state"
+      ],
+      "proposal_not_approved_semantics": "One explicitly selected profile feature, not a combined auction score.",
+      "freeze_fields": [
+        "row sizing and bracket assignment",
+        "POC tie-breaking and value-area expansion",
+        "TPO versus volume POC version",
+        "level memory and tested-state rules"
+      ],
+      "test_cases_not_run": [
+        "equal-max POC bins",
+        "prefix replay invariance",
+        "old untested levels retained independently of display cap"
+      ],
+      "scope_blocker": "EXACT_PROFILE_ENGINE_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "W05",
+      "family_id": "ARX-01",
+      "name": "Degrees of Power",
+      "source_locator": "S08 pp.29–30,87",
+      "source_summary": "Degrees of Power is a structural gauge, not a buy/sell instruction; the description includes last-bar rendering.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "structural_state",
+        "validity",
+        "inputs_available_at"
+      ],
+      "proposal_not_approved_semantics": "Context-only until a separate consumer and causal historical engine are frozen; no invented score or floor.",
+      "freeze_fields": [
+        "exact ordered predicates",
+        "historical point-in-time inputs",
+        "missing-input behavior",
+        "direct consumer of a gauge value"
+      ],
+      "test_cases_not_run": [
+        "missing IB or prior value area",
+        "overlapping predicates",
+        "last-bar display must not imply a historical series"
+      ],
+      "scope_blocker": "CAUSAL_HISTORY_AND_MISSING_STATE_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": [
+        "W03",
+        "W04",
+        "M07"
+      ]
+    },
+    {
+      "component_id": "W06",
+      "family_id": "ARX-01",
+      "name": "Alerts",
+      "source_locator": "S08 pp.34–36",
+      "source_summary": "Wave alerts publish events from enabled features; alert delivery is not a trading strategy.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "event_id",
+        "event_type",
+        "confirmed_at",
+        "reason"
+      ],
+      "proposal_not_approved_semantics": "An internal event log/adapter dependency. No standalone EA, webhook, scheduler or broker action is activated.",
+      "freeze_fields": [
+        "event namespace and confirmation trigger",
+        "toggle semantics",
+        "duplicate/restart behavior",
+        "delivery versus strategy decision separation"
+      ],
+      "test_cases_not_run": [
+        "same event received twice",
+        "restart replays old event",
+        "disabled source does not emit new event"
+      ],
+      "scope_blocker": "EVENT_IDEMPOTENCY_REQUIRED",
+      "target_kind": "INFRASTRUCTURE_ONLY",
+      "dependencies": []
+    },
+    {
+      "component_id": "W07",
+      "family_id": "ARX-01",
+      "name": "Embedded OBV read",
+      "source_locator": "S08 pp.32,72–74",
+      "source_summary": "The carried Wave manual describes an embedded OBV read; it is a separate configuration lineage from OBV+.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "obv_value",
+        "slope_or_cross",
+        "divergence_event",
+        "validity"
+      ],
+      "proposal_not_approved_semantics": "Embedded confirmation component; share an engine with O01 only after identical-version parity is demonstrated.",
+      "freeze_fields": [
+        "embedded version and formula",
+        "volume feed and initialization",
+        "smoothing and pivots",
+        "proof before sharing standalone implementation"
+      ],
+      "test_cases_not_run": [
+        "equal close contributes zero",
+        "embedded and standalone settings differ",
+        "right-hand pivot bars not available yet"
+      ],
+      "scope_blocker": "NOT_ASSUMED_IDENTICAL_TO_STANDALONE",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "W08",
+      "family_id": "ARX-01",
+      "name": "Embedded MFI read",
+      "source_locator": "S08 pp.32,74–75",
+      "source_summary": "The carried Wave manual describes an embedded MFI read with separately adjustable bands.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "mfi_value",
+        "flow_state",
+        "validity"
+      ],
+      "proposal_not_approved_semantics": "Embedded context filter; do not silently copy fixed standalone bands into the Wave slot or vice versa.",
+      "freeze_fields": [
+        "embedded period/source/bands",
+        "volume and zero-flow behavior",
+        "standalone-to-embedded mapping",
+        "role and neutral handling"
+      ],
+      "test_cases_not_run": [
+        "embedded bands changed while standalone constants stay fixed",
+        "neutral is valid, missing is invalid",
+        "forming bar changes do not alter a closed-bar record"
+      ],
+      "scope_blocker": "SEPARATE_CONFIG_FROM_STANDALONE",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "M01",
+      "family_id": "ARX-02",
+      "name": "Trend Path / exhaustion zigzag",
+      "source_locator": "S09 pp.24–26",
+      "source_summary": "Trend Path is momentum-exhaustion geometry; its provisional turning points differ from confirmed market structure.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "provisional_pivot",
+        "confirmed_pivot",
+        "leg_state"
+      ],
+      "proposal_not_approved_semantics": "A confirmed turn/context feature only after finality is defined; never trade at a retrospectively moved pivot.",
+      "freeze_fields": [
+        "saturation condition/version",
+        "structure timeframe",
+        "chart extreme tracking and finality",
+        "pivot replacement and rearming"
+      ],
+      "test_cases_not_run": [
+        "provisional pivot replaced",
+        "same-zone repeated extremes",
+        "HTF exhaustion arrives after chart extreme"
+      ],
+      "scope_blocker": "PROVISIONAL_PIVOT_FINALITY_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "M02",
+      "family_id": "ARX-02",
+      "name": "Order Blocks / breakers / HTF slot",
+      "source_locator": "S09 pp.17–23",
+      "source_summary": "Order-block origins and lifecycle states are described; selection mode and HTF variants differ.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "zone_id",
+        "zone_bounds",
+        "origin",
+        "lifecycle_event"
+      ],
+      "proposal_not_approved_semantics": "One block-location filter or one specific lifecycle event per contract, not every OB behavior in one EA.",
+      "freeze_fields": [
+        "block selection mode and bounds",
+        "structure break dependency",
+        "mitigation/invalidation/breaker priority",
+        "HTF creation availability and expiry"
+      ],
+      "test_cases_not_run": [
+        "touch and invalidation same bar",
+        "two timeframe zones overlap but retain separate IDs",
+        "spent block cannot silently become fresh"
+      ],
+      "scope_blocker": "LIFECYCLE_AND_ALERT_COVERAGE_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": [
+        "M03"
+      ]
+    },
+    {
+      "component_id": "M03",
+      "family_id": "ARX-02",
+      "name": "Market Structure / BOS / CHoCH",
+      "source_locator": "S09 pp.14–16",
+      "source_summary": "Market Structure reports BOS/CHoCH around confirmed/unswept swing levels; publication revisions must be pinned.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "swing_id",
+        "bos_or_choch",
+        "bias",
+        "confirmed_at"
+      ],
+      "proposal_not_approved_semantics": "A structure-event entry candidate or one confirmation filter; direction and trade management stay unselected.",
+      "freeze_fields": [
+        "left/right confirmation bars",
+        "ties and initial bias",
+        "close-versus-wick break",
+        "unswept swing and major/minor priority"
+      ],
+      "test_cases_not_run": [
+        "swept level does not break twice",
+        "equal highs/lows",
+        "pivot time earlier than confirmation time"
+      ],
+      "scope_blocker": "SWING_AND_BIAS_CONTRACT_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "M04",
+      "family_id": "ARX-02",
+      "name": "FVG / IFVG / HTF slot",
+      "source_locator": "S09 pp.27–29",
+      "source_summary": "FVG/IFVG is a gap/lifecycle reference with optional higher-timeframe context; version-specific fill rules matter.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "gap_id",
+        "bounds",
+        "fill_state",
+        "inversion_event"
+      ],
+      "proposal_not_approved_semantics": "One gap event or one location filter, not a combined gap/OB/structure rescue stack.",
+      "freeze_fields": [
+        "three-bar gap boundaries",
+        "size/displacement rules",
+        "touch/fill/inversion order",
+        "HTF and already-spent gap policy"
+      ],
+      "test_cases_not_run": [
+        "creation waits for required close",
+        "fill and inversion on same bar",
+        "no inversion of an ineligible spent gap"
+      ],
+      "scope_blocker": "FILL_VS_INVERSION_PRIORITY_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "M05",
+      "family_id": "ARX-02",
+      "name": "Naked Key Levels",
+      "source_locator": "S09 pp.31–32",
+      "source_summary": "Naked key levels are untested historical highs/lows, not a discretionary support/resistance ranking.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "level_id",
+        "price",
+        "origin_period",
+        "tested_at"
+      ],
+      "proposal_not_approved_semantics": "One distance/location or touch event from a frozen level source; no added score ranking.",
+      "freeze_fields": [
+        "period definition and rollover",
+        "touch-versus-cross equality",
+        "eviction policy",
+        "scope of historical memory"
+      ],
+      "test_cases_not_run": [
+        "high equality touch",
+        "old untested level vs recently tested level",
+        "weekend gap crosses level"
+      ],
+      "scope_blocker": "LEVEL_AGE_AND_TEST_RULE_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "M06",
+      "family_id": "ARX-02",
+      "name": "Session Key Levels",
+      "source_locator": "S09 p.33",
+      "source_summary": "Session key levels refer to whole-session extremes, not the initial opening range.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "session_id",
+        "high_low",
+        "available_at",
+        "tested_state"
+      ],
+      "proposal_not_approved_semantics": "Location infrastructure only unless an independent non-rescue consumer is separately accepted.",
+      "freeze_fields": [
+        "session timezone/calendar",
+        "close and reopening behavior",
+        "developing-versus-final levels",
+        "visibility and tested-level retention"
+      ],
+      "test_cases_not_run": [
+        "cross-midnight session",
+        "reopen clears correct session only",
+        "session range differs from IB"
+      ],
+      "scope_blocker": "SESSION_CLOCK_AND_DEDUP_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": [
+        "M10"
+      ]
+    },
+    {
+      "component_id": "M07",
+      "family_id": "ARX-02",
+      "name": "Daily / weekly / monthly Key Levels",
+      "source_locator": "S09 pp.38–39",
+      "source_summary": "Period key levels include previous-day/week/month extremes; source may include a directional Fibonacci grid.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "period_id",
+        "prior_high_low",
+        "optional_grid",
+        "available_at"
+      ],
+      "proposal_not_approved_semantics": "One previous-period level feature; Fibonacci is optional and separately frozen, not assumed.",
+      "freeze_fields": [
+        "trading-day/week/month boundaries",
+        "level precedence at equal prices",
+        "selected retracement recipe",
+        "developing-versus-previous period"
+      ],
+      "test_cases_not_run": [
+        "month/week/day rollover together",
+        "same-price levels retain provenance",
+        "no final-period value leaks before rollover"
+      ],
+      "scope_blocker": "CALENDAR_ROLLOVER_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "M08",
+      "family_id": "ARX-02",
+      "name": "Daily Zones",
+      "source_locator": "S09 p.40",
+      "source_summary": "Daily zones describe price-location bands based on a prior daily range, not a complete entry signal.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "zone_bounds",
+        "location_state",
+        "source_day"
+      ],
+      "proposal_not_approved_semantics": "One location filter with an independent trigger; do not manufacture entries solely from zone colour.",
+      "freeze_fields": [
+        "daily calendar and range basis",
+        "zone fractions/version",
+        "boundary equality",
+        "zone entry/exit and expiry"
+      ],
+      "test_cases_not_run": [
+        "zero prior-day range",
+        "boundary equality",
+        "prior-day data not complete"
+      ],
+      "scope_blocker": "BOUNDS_AND_AVAILABILITY_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "M09",
+      "family_id": "ARX-02",
+      "name": "Anchor Candles",
+      "source_locator": "S09 pp.40–41",
+      "source_summary": "Anchor candles include named candlestick patterns; labels alone do not specify all numeric detectors.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "pattern_type",
+        "bar_id",
+        "confirmed_at"
+      ],
+      "proposal_not_approved_semantics": "One named pattern candidate per contract; no silent adoption of general textbook detector thresholds.",
+      "freeze_fields": [
+        "pattern definitions and thresholds",
+        "inside-bar containment and ties",
+        "overlapping detector priority",
+        "close confirmation and expiry"
+      ],
+      "test_cases_not_run": [
+        "doji zero range",
+        "inside-bar equality",
+        "hammer and doji overlap"
+      ],
+      "scope_blocker": "DETECTOR_THRESHOLDS_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "M10",
+      "family_id": "ARX-02",
+      "name": "Session Clock",
+      "source_locator": "S09 pp.34–35",
+      "source_summary": "Session Clock is clock/context infrastructure and must use the same session definitions as its consumer.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "session_flags",
+        "overlap_flags",
+        "clock_validity"
+      ],
+      "proposal_not_approved_semantics": "Shared clock helper, not a standalone EA. Closed Black Tide session research remains closed.",
+      "freeze_fields": [
+        "IANA/broker timezone mapping",
+        "DST and overlap handling",
+        "sessions actually used by parent",
+        "unknown-clock behavior"
+      ],
+      "test_cases_not_run": [
+        "DST transition",
+        "overlap without arbitrary tie-break",
+        "missing broker-clock mapping"
+      ],
+      "scope_blocker": "TIMEZONE_DST_REQUIRED; NOT_STANDALONE_EA",
+      "target_kind": "INFRASTRUCTURE_ONLY",
+      "dependencies": []
+    },
+    {
+      "component_id": "M11",
+      "family_id": "ARX-02",
+      "name": "Consolidation / confirmed and failed breaks",
+      "source_locator": "S09 pp.36–37",
+      "source_summary": "Consolidation distinguishes developing range and provisional/confirmed/failed break states.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "range_id",
+        "range_bounds",
+        "break_state",
+        "confirmed_at"
+      ],
+      "proposal_not_approved_semantics": "Either one confirmed breakout or one failed-break event in a separate contract; no outcome-based choice.",
+      "freeze_fields": [
+        "range window and ATR/average definition",
+        "freeze/expand policy",
+        "grace and reconfirmation",
+        "event ordering and expiry"
+      ],
+      "test_cases_not_run": [
+        "break returns inside grace",
+        "range expands before confirmation",
+        "confirmed state must not be backdated"
+      ],
+      "scope_blocker": "PROVISIONAL_FREEZE_AND_GRACE_REQUIRED",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "O01",
+      "family_id": "ARX-03",
+      "name": "Arxon OBV+",
+      "source_locator": "S04,S08,R03",
+      "source_summary": "Standalone OBV+ keeps standard OBV and adds slope, divergence and smoothing/cross context; it is not an entry generator.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "obv_value",
+        "slope_state",
+        "cross_event",
+        "divergence_event"
+      ],
+      "proposal_not_approved_semantics": "Select slope OR smoothing cross OR one divergence detector as one causal change.",
+      "freeze_fields": [
+        "slope and flat rule",
+        "smoothing defaults",
+        "price/OBV pivot pairing",
+        "regular/hidden divergence and confirmation delays"
+      ],
+      "test_cases_not_run": [
+        "equal close",
+        "zero/missing volume",
+        "minimum/maximum pivot separation and confirmation"
+      ],
+      "scope_blocker": "SOURCE_CARD_ONLY_NOT_EXECUTABLE",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "O02",
+      "family_id": "ARX-04",
+      "name": "Arxon MFI+",
+      "source_locator": "S05,S08,R03",
+      "source_summary": "Standalone MFI+ v1.0 describes Length 7 and hlc3; bull >55, bear <45, neutral inclusive 45..55; extremes 90/10.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "mfi_value",
+        "bull_neutral_bear",
+        "validity"
+      ],
+      "proposal_not_approved_semantics": "A three-state filter with a separate entry trigger; green is not an automatic BUY and neutral is not an automatic exit.",
+      "freeze_fields": [
+        "input volume type",
+        "numeric warmup and zero-flow policy",
+        "bar-close sampling",
+        "what neutral means to the selected parent"
+      ],
+      "test_cases_not_run": [
+        "44.999,45,50,55,55.001",
+        "bull-neutral-bear without hysteresis",
+        "missing is not neutral"
+      ],
+      "scope_blocker": "SOURCE_CARD_ONLY_NOT_EXECUTABLE",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "O03",
+      "family_id": "ARX-05",
+      "name": "Stochastic + Dual Zone Entry",
+      "source_locator": "S06,R03",
+      "source_summary": "Stochastic Dual Zone publishes one-shot extreme-zone entry using both K and D, with adjustable 80/20 bands.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "upper_entry_event",
+        "lower_entry_event",
+        "confirmed_at"
+      ],
+      "proposal_not_approved_semantics": "One event mapped to an explicit parent OR new-family contract; neither reversal nor continuation is selected.",
+      "freeze_fields": [
+        "K/D periods and smoothing",
+        "same-bar double crossing versus first joint-in-zone",
+        "equality and rearming",
+        "entry/filter/exit/context role and direction"
+      ],
+      "test_cases_not_run": [
+        "K first then D later",
+        "both cross together",
+        "sustained zone emits once; exit/reentry rearms"
+      ],
+      "scope_blocker": "SOURCE_CARD_ONLY_NOT_EXECUTABLE",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    },
+    {
+      "component_id": "O04",
+      "family_id": "ARX-06",
+      "name": "RSI Cross Alert",
+      "source_locator": "S07,R03",
+      "source_summary": "RSI descriptions differ between zone-exit extreme confirmation and one-bar turn inside a zone; divergence is optional.",
+      "source_summary_status": "PUBLIC_DESCRIPTION_OR_CARRIED_MANUAL_NOTE",
+      "status": "NON_EXECUTABLE_STRATEGY_DESIGN",
+      "implemented": false,
+      "compiled": false,
+      "backtested": false,
+      "trading_authority": false,
+      "selected_role": null,
+      "selected_direction": null,
+      "entry_rule": null,
+      "exit_rule": null,
+      "risk_config": null,
+      "selected_parent": null,
+      "home": null,
+      "proposed_outputs": [
+        "extreme_at",
+        "confirmed_at",
+        "event_type"
+      ],
+      "proposal_not_approved_semantics": "A version-labelled event provider, potentially Arxon-inspired; no exact clone claim until timing parity is proven.",
+      "freeze_fields": [
+        "authoritative version/timing",
+        "period/bands/smoothing",
+        "equal extremes and rearming",
+        "optional divergence as separate change"
+      ],
+      "test_cases_not_run": [
+        "same RSI series produces different timing variants",
+        "new extreme after prior turn",
+        "never enter on backplotted extreme"
+      ],
+      "scope_blocker": "SOURCE_CARD_ONLY_NOT_EXECUTABLE",
+      "target_kind": "COMPONENT_PROVIDER_THEN_OPTIONAL_ADAPTER",
+      "dependencies": []
+    }
+  ],
+  "protected_branch": "HYP-SB-005 / Boss19 P5: CLOSED_NEGATIVE; no reopen/rescue authority"
+}

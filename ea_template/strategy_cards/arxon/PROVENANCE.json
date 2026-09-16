@@ -1,0 +1,16 @@
+{
+  "prior_zip_sha256": "a37f47df734ece28ca7490ff28b53929fe5175c7db1c82b7909747ec9f938490",
+  "prior_inventory_sha256": "75945d78ee5585be5ee25e31b55a54073c9db94322c2782590f4f07eb3f8b255",
+  "prior_sources_sha256": "e232fcf37749c38c9e5601591ec4f2b88c0352641fbcdae1d44aa4bf2cf14424",
+  "base_canonical_sha": "a9c54b8f4e2924a4329ea502ba34ffb5ee435c53",
+  "source_handling": "Published design paraphrases, no Pine source or publisher PDF binaries redistributed. Source HTML/text stays in external evidence. Manual-specific source claims are carried, not independently reverified.",
+  "fresh_capture_location": "D:\\EA_LAB_CONTROL\\evidence\\arxon-strategy-cards-20260916",
+  "claims_not_made": [
+    "exact protected-script parity",
+    "compiled EA",
+    "MT5 results",
+    "qualified parent",
+    "complete architecture acceptance",
+    "new family registration"
+  ]
+}

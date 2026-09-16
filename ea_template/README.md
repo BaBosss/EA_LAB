@@ -52,3 +52,12 @@ Expert name สำหรับ tester = `EALabTpl\EA_LabTemplate`
 
 ## นอกขอบเขตเฟสนี้
 Recovery/Hedge/Basket เต็ม · entry เพิ่ม (Breakout/Swing/MeanRev/GSMC) · demo/live + safety review · ยก Entry_* เข้า EA_CORE_V1 เป็น StrategySignal_v2
+
+
+## Arxon strategy-design library (2026-09-16)
+
+[Six Arxon family cards and 23 module cards](strategy_cards/arxon/README.md).
+[EA development and Template integration plan](../docs/research/ARXON_TEMPLATE_INTEGRATION_PLAN_20260916.md).
+
+This is a non-executable design library targeting the V2 compile-time entry seams.
+Do not extend deprecated V1/modules. No FamilyID, LAB_ENTRY, risk/default, trading module, or runtime activation is installed by these cards.

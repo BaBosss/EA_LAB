@@ -1,0 +1,58 @@
+[
+  {
+    "id": "S01",
+    "bytes": 81695,
+    "sha256": "d5c32af8ee1d76afbe39c43cd196078d448aef0809f8bfd6b65bfeca19e5cb5a",
+    "observed_at": "2026-09-16T13:22:17.1633633+07:00",
+    "url": "https://pmpenguin.github.io/arxon-trade/",
+    "status": "CAPTURED"
+  },
+  {
+    "id": "S02",
+    "bytes": 1476877,
+    "sha256": "ffbc3d2374d8be65dc3c6447bcc70cb4c3e027499af5df283889a77aaef74a58",
+    "observed_at": "2026-09-16T13:22:18.8639204+07:00",
+    "url": "https://www.tradingview.com/script/Tk0FfG9y-Black-Tide-Wave/",
+    "status": "CAPTURED"
+  },
+  {
+    "id": "S03",
+    "bytes": 1363585,
+    "sha256": "11c3ce3a717744bf965a9442abd6eebc37ac87c3727e6b4b64e6205c8ac1ff01",
+    "observed_at": "2026-09-16T13:22:20.4758021+07:00",
+    "url": "https://www.tradingview.com/script/5L9vbNRJ-Black-Tide-Map/",
+    "status": "CAPTURED"
+  },
+  {
+    "id": "S04",
+    "bytes": 922288,
+    "sha256": "30898923146e56d53c979bf1866b9fe37a1ace6cad4d2a5e44f39fcb85dae4a4",
+    "observed_at": "2026-09-16T13:22:22.0323899+07:00",
+    "url": "https://www.tradingview.com/script/K0cUsn6T-Arxon-OBV/",
+    "status": "CAPTURED"
+  },
+  {
+    "id": "S05",
+    "bytes": 935592,
+    "sha256": "51633b3bd68ffc4b1ac95e0dc31ed724a7ade1f9e0de7c2d65e7567cb219be43",
+    "observed_at": "2026-09-16T13:22:23.2691702+07:00",
+    "url": "https://www.tradingview.com/script/eBoUoU2u-Arxon-MFI/",
+    "status": "CAPTURED"
+  },
+  {
+    "id": "S06",
+    "bytes": 341678,
+    "sha256": "542d72568fadcd9f85de5b653d982bfbc24615c8bf12b3dd83ed80e9966d40dc",
+    "observed_at": "2026-09-16T13:22:24.1030559+07:00",
+    "url": "https://www.tradingview.com/script/cQJIPUHO-Stochastic-Dual-Zone-Entry/",
+    "status": "CAPTURED"
+  },
+  {
+    "id": "S07",
+    "bytes": 369593,
+    "sha256": "e78799f92b1656719a6095a84f3b93fe743efa0f1427448d613ee6686cf90604",
+    "observed_at": "2026-09-16T13:22:25.0143679+07:00",
+    "url": "https://www.tradingview.com/script/8T3APTKB-RSI-Cross-Alert/",
+    "status": "CAPTURED"
+  }
+]
