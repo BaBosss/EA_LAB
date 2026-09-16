@@ -62,7 +62,7 @@ This separation is mechanically sufficient to alter the open-position set. Once 
 
 ## 5. Broker-bar comparison
 
-Four descriptive M1 examples aligned by the observed +3 hour trade-time offset show small OHLC differences at L0/L1/L2/L3-relevant minutes. The largest absolute OHLC component difference among these four examples is about `0.521`.
+Four descriptive M1 examples aligned by the observed +3 hour trade-time offset show small OHLC differences at L0/L1/L2/L3-relevant minutes. The largest absolute OHLC component difference among these four examples is about `0.523`.
 
 The +3 hour shift is post-outcome descriptive alignment only; it is not promoted into a qualified broker-clock model. The finding therefore does **not** claim universal Exness/ThinkMarkets bar equivalence.
 
