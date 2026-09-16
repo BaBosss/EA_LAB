@@ -412,13 +412,13 @@
 | ORDER-1462 | 2026-08-16 | DONE 2026-08-16 | [factory/S2a] 👤 The s2a attestation gate was RED at the pre-owner-confirmation snapshot;… |  | ACTIVE:1 |
 | ORDER-1500 | 2026-08-17 | DONE / REVIEWED | [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows… |  | ARCHIVE:12801 |
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
-| ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10263 |
-| ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | PARENT | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb |  | ACTIVE:10294 |
+| ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10265 |
+| ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | PARENT | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb |  | ACTIVE:10296 |
 | ORDER-CT-POSTMONITOR-INTAKE-20260914 |  | DONE | [control-tower] carried-work reconciliation |  | ACTIVE:10235 |
-| ORDER-CT-STRATEGY-SOURCE-RECOVERY-20260915 |  | DONE | [control-tower/research] Boss/custom source recovery + strategy-family port prep |  | ACTIVE:10281 |
-| ORDER-DEMO-SAMEPERIOD-REPLAY-20260915 |  | EXECUTED | [research/diagnostic] Demo vs same-period frozen-bundle replay |  | ACTIVE:10334 |
+| ORDER-CT-STRATEGY-SOURCE-RECOVERY-20260915 |  | DONE | [control-tower/research] Boss/custom source recovery + strategy-family port prep |  | ACTIVE:10283 |
+| ORDER-DEMO-SAMEPERIOD-REPLAY-20260915 |  | EXECUTED | [research/diagnostic] Demo vs same-period frozen-bundle replay |  | ACTIVE:10336 |
 | ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:8336 |
-| ORDER-HERMES-V2B-REAL-ADAPTER-QUAL-20260915 |  | TECHNICAL | [hermes/tooling] real-adapter qualification |  | ACTIVE:10314 |
+| ORDER-HERMES-V2B-REAL-ADAPTER-QUAL-20260915 |  | TECHNICAL | [hermes/tooling] real-adapter qualification |  | ACTIVE:10316 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
