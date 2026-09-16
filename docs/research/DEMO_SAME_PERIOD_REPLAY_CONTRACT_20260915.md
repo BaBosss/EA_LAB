@@ -56,3 +56,15 @@ Do not change terminal login/server merely to chase broker parity. A broker-envi
 
 ## Acceptance
 The milestone closes when all five cells are either mechanically complete or explicitly blocked with preserved evidence, Demo-vs-replay comparison is source-bound, and the owner-facing report is updated without overstating parity or strategy verdict.
+
+## Prospective pre-run amendment 1 — legacy bundle identity
+This amendment was frozen before any `DSPR-*` tester outcome was observed. Preflight found that none of the four exact Demo EX5 hashes is present in the current stamped `portfolio/build_receipts.jsonl` registry, and all five frozen deployment sets are `UNDECLARED` under the modern set-surface parser. Assignment counts are 13 (MacdDiv), 14/14 (Ichi H1/H4), 42 (Boss16), and 9 (Wave5); these counts do not prove a complete effective input surface.
+
+These are legacy-deployment identity limitations, not strategy failures. The frozen binary/set hashes and test windows above are unchanged. No replacement set, rebuild, source compile, parameter completion, or post-outcome repair is authorized.
+
+For this diagnostic only, the runner may use the existing explicit `-AllowLegacyIdentity` path, but every resulting cell is non-green identity evidence and MUST carry `LEGACY_IDENTITY_CONFUND / FULL_CONFIG_PARITY_NOT_CERTIFIABLE`. This allowance cannot support Candidate, promotion, strategy PASS, baseline repin, or any later acceptance-grade performance claim.
+Isolation control: copy each exact EX5 to a unique order-owned expert alias under `MQL5\Experts\EA_LAB_TEST\ORDER-DEMO-SAMEPERIOD-20260915\`; before launch, prove the alias has no pre-existing tester-profile cache and verify copied EX5/set SHA256 against the frozen hashes. A unique alias is used only to prevent prior tester-cache inputs from contaminating this run; it does not prove that every unlisted live-chart input was at compiled default on the Demo terminal.
+
+If a unique cache-free alias cannot be established, hash equality fails, or the modern runner refuses for a reason beyond the explicitly accepted legacy receipt/surface condition, stop that cell `BLOCKED_IDENTITY_OR_HARNESS`; do not weaken another gate. Preserve the runner's `LEGACY_ALLOWED` line and all hash/cache preflight evidence in the result package.
+
+The existing broker rule remains higher-level and cumulative: a cell may simultaneously be `LEGACY_IDENTITY_CONFUND` and `BROKER_ENVIRONMENT_CONFUND`. Exact parity is therefore not certifiable under this amendment; the direct consumer is only gross signal/economic divergence diagnosis from the same date window.
