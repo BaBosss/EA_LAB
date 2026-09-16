@@ -1,0 +1,15 @@
+{
+  "repair_number": 1,
+  "repair_budget": 1,
+  "reviewed_parent": "7f72c30bedaf7868880061e2cf870a71f4744975",
+  "issues": [
+    "Reviewer P2 historical pre/postcheck auditability",
+    "Intake P2 typed UNKNOWN truncation",
+    "Intake P2 aggregate versus original-row identity"
+  ],
+  "raw_reports_unchanged": true,
+  "numeric_metrics_unchanged": true,
+  "new_mt5_runs": 0,
+  "postchecks_reconstructed": false,
+  "original_findings_preserved": true
+}

@@ -1,0 +1,47 @@
+﻿[
+    {
+        "cell":  "DSPR-C01",
+        "alias":  "DSPR_C01_999094_20260916A",
+        "source":  "D:\\EA_LAB\\_vps_deploy\\MACDDIV_XAU\\MacdDiv_Naked.ex5",
+        "source_sha256":  "56D2FCF6F74B7E8909AFB4C7CA24B41A0A5B120D3097C445ADB4C104303C9C93",
+        "destination":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-DEMO-SAMEPERIOD-20260915\\DSPR_C01_999094_20260916A.ex5",
+        "destination_sha256":  "56D2FCF6F74B7E8909AFB4C7CA24B41A0A5B120D3097C445ADB4C104303C9C93",
+        "preexisting_cache_matches":  0
+    },
+    {
+        "cell":  "DSPR-C02",
+        "alias":  "DSPR_C02_990068_20260916A",
+        "source":  "D:\\EA_LAB\\_vps_deploy\\ICHIADX_XAU\\(EXP)_IchiADX_Naked_rev00.ex5",
+        "source_sha256":  "299E24DF5BABE9EB85AB25BAACF5633E6608D133F546176A8C3CD5940D8E8CF4",
+        "destination":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-DEMO-SAMEPERIOD-20260915\\DSPR_C02_990068_20260916A.ex5",
+        "destination_sha256":  "299E24DF5BABE9EB85AB25BAACF5633E6608D133F546176A8C3CD5940D8E8CF4",
+        "preexisting_cache_matches":  0
+    },
+    {
+        "cell":  "DSPR-C03",
+        "alias":  "DSPR_C03_990069_20260916A",
+        "source":  "D:\\EA_LAB\\_vps_deploy\\ICHIADX_XAU\\(EXP)_IchiADX_Naked_rev00.ex5",
+        "source_sha256":  "299E24DF5BABE9EB85AB25BAACF5633E6608D133F546176A8C3CD5940D8E8CF4",
+        "destination":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-DEMO-SAMEPERIOD-20260915\\DSPR_C03_990069_20260916A.ex5",
+        "destination_sha256":  "299E24DF5BABE9EB85AB25BAACF5633E6608D133F546176A8C3CD5940D8E8CF4",
+        "preexisting_cache_matches":  0
+    },
+    {
+        "cell":  "DSPR-C04",
+        "alias":  "DSPR_C04_990016_20260916A",
+        "source":  "D:\\EA_LAB\\_vps_deploy\\BOSS16_KANGAROO_XAU\\Boss_16_KangarooGrid.ex5",
+        "source_sha256":  "B5001606FCBB30FF419A45DB7F9D477185E22DCDB5B6B1B7DCDAEB7CC0127CFC",
+        "destination":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-DEMO-SAMEPERIOD-20260915\\DSPR_C04_990016_20260916A.ex5",
+        "destination_sha256":  "B5001606FCBB30FF419A45DB7F9D477185E22DCDB5B6B1B7DCDAEB7CC0127CFC",
+        "preexisting_cache_matches":  0
+    },
+    {
+        "cell":  "DSPR-C05",
+        "alias":  "DSPR_C05_990301_20260916A",
+        "source":  "D:\\EA_LAB\\_vps_deploy\\WAVE5_XAU\\Boss_17_Wave5.ex5",
+        "source_sha256":  "653482D450D8BA29EE4D57BBBFC7B747C64A16B5BCFA08C164187CAB9121BA3C",
+        "destination":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-DEMO-SAMEPERIOD-20260915\\DSPR_C05_990301_20260916A.ex5",
+        "destination_sha256":  "653482D450D8BA29EE4D57BBBFC7B747C64A16B5BCFA08C164187CAB9121BA3C",
+        "preexisting_cache_matches":  0
+    }
+]

@@ -1,0 +1,14 @@
+Found **one actionable P2 evidence-packaging defect** in exact commit `7f72c30bedaf7868880061e2cf870a71f4744975`.
+
+- **P2 — Historical pre/post checks are not fully evidenced.** [Results lines 12–13](D:/EA_LAB_CONTROL/worktrees/ct-demo-replay-results-20260916/docs/research/DEMO_SAME_PERIOD_REPLAY_RESULTS_20260916.md:12) assert unchanged hashes, cache-free aliases and zero terminal processes after each run. `source_manifest.json` → `execution_receipt.cells[]` binds reports/logs/truncation artifacts, but omits the existing `ALIAS_PREFLIGHT.json`; no preserved postcheck outcomes were found. The contract requires preserved hash/cache evidence. Bind the existing preflight evidence and any retained postcheck outcomes, or narrow the unsupported assertions. This is an auditability defect, **not an observed hash mismatch**.
+
+Other validation:
+
+- **Arithmetic passes**, including Ichi basket: Demo **−957.55 / PF 0.623766**; BT **−163.82 / PF 0.905120**. PF correctly uses combined gross profits/losses.
+- All **16 referenced artifact hashes** checked against local bytes match: five reports, five logs, five truncation artifacts and the Demo subset.
+- Timing counts reproduce. Matching is same-direction, one-to-one, within 20 minutes after a best-fit hourly offset. Existing wording appropriately limits this to descriptive alignment.
+- C03/C04 retain **`UNKNOWN` / `truncated:null`**. Quiet-tail detail explains the checker output but does not independently prove complete execution coverage. This is a known limitation, not confirmed truncation.
+- Missing original Demo bytes, legacy configuration identity and broker mismatch are disclosed. Aggregate reconciliation cannot prove original row identity.
+- Parity/no-authority ceilings and state/taskboard/digest are consistent.
+
+No files modified.

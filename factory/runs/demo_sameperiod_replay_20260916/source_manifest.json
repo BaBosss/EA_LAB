@@ -1,0 +1,146 @@
+{
+  "execution_receipt": {
+    "schema": "demo_sameperiod_replay_execution/1",
+    "execution_head": "8059b227b318d6997846e8d7866fea5e05d5282b",
+    "terminal": "D:\\Meta 5",
+    "runtime_lane": "MT5-lane1",
+    "cells": [
+      {
+        "cell": "DSPR-C01",
+        "magic": "999094",
+        "report": "D:\\EA_LAB_CONTROL\\worktrees\\ct-demo-replay-exec-20260916\\_mt5_auto\\reports\\DSPR_C01_999094_20260716_20260914.htm",
+        "report_sha256": "CD21FD0B1B03DEF6403A01FCE7E7E10FA4A50AC9FD6A9DEAC1C2F0C57A9CA849",
+        "truncation": "CHECK_PASS",
+        "truncated": false,
+        "truncation_sha256": "A245C1EE8082A2A9FFBF146A4E33848E4A3F2BD3562522FA8549CFD552160087",
+        "run_log": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\DSPR_C01_RUN.log",
+        "run_log_sha256": "2DB0415FA6F88E58041F5F78AD50BFEBE136EBBAE339ED8CDC2948F88C6FB4C3",
+        "preflight_evidence": "evidence/ALIAS_PREFLIGHT.json",
+        "historical_postcheck_status": "NOT_DURABLY_PRESERVED",
+        "full_window_eligible_under_truncation_gate": true
+      },
+      {
+        "cell": "DSPR-C02",
+        "magic": "990068",
+        "report": "D:\\EA_LAB_CONTROL\\worktrees\\ct-demo-replay-exec-20260916\\_mt5_auto\\reports\\DSPR_C02_990068_20260716_20260914.htm",
+        "report_sha256": "28870FAAF3A903B7EEAC0E1D165F23F04088589A9E8E3CE0E792D0F6BBD7525B",
+        "truncation": "CHECK_PASS",
+        "truncated": false,
+        "truncation_sha256": "24B3DD81E7F30EF4974F01FEA5D1724D33B7E31C7E888354FBF885BF3912AF57",
+        "run_log": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\DSPR_C02_RUN.log",
+        "run_log_sha256": "BA1E63543DF012079BB36549DE2194140262AB1F821470C99A50B3C5F2FDD727",
+        "preflight_evidence": "evidence/ALIAS_PREFLIGHT.json",
+        "historical_postcheck_status": "NOT_DURABLY_PRESERVED",
+        "full_window_eligible_under_truncation_gate": true
+      },
+      {
+        "cell": "DSPR-C03",
+        "magic": "990069",
+        "report": "D:\\EA_LAB_CONTROL\\worktrees\\ct-demo-replay-exec-20260916\\_mt5_auto\\reports\\DSPR_C03_990069_20260716_20260914.htm",
+        "report_sha256": "A40964D70A65ABFCC7417BD2C1D2047E3383925FB501BC8D2C238022BA82F173",
+        "truncation": "UNKNOWN",
+        "truncated": null,
+        "truncation_sha256": "14B5224AE63161BD257AEDBED2E733FB696F91F5C8440875CD39E6CF12BFE81A",
+        "run_log": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\DSPR_C03_RUN.log",
+        "run_log_sha256": "0978469EA861F16DB383B6D3072D64787108BFF778A474D042A6E73567FE96B5",
+        "preflight_evidence": "evidence/ALIAS_PREFLIGHT.json",
+        "historical_postcheck_status": "NOT_DURABLY_PRESERVED",
+        "full_window_eligible_under_truncation_gate": false
+      },
+      {
+        "cell": "DSPR-C04",
+        "magic": "990016",
+        "report": "D:\\EA_LAB_CONTROL\\worktrees\\ct-demo-replay-exec-20260916\\_mt5_auto\\reports\\DSPR_C04_990016_20260728_20260914.htm",
+        "report_sha256": "07B8242E8902C06AA2EE2CB9EA86F3F2EB5320CC436ED8412B6B22C509507327",
+        "truncation": "UNKNOWN",
+        "truncated": null,
+        "truncation_sha256": "31FC24729AD6C2E6EB9CF03C78823BB3BD934271A35E843FD04B64F4764BA520",
+        "run_log": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\DSPR_C04_RUN.log",
+        "run_log_sha256": "CC6987F9C97A4FC34B3D0A3E63DD71B835F7691406FBD4A3A4481EB410CFABF1",
+        "preflight_evidence": "evidence/ALIAS_PREFLIGHT.json",
+        "historical_postcheck_status": "NOT_DURABLY_PRESERVED",
+        "full_window_eligible_under_truncation_gate": false
+      },
+      {
+        "cell": "DSPR-C05",
+        "magic": "990301",
+        "report": "D:\\EA_LAB_CONTROL\\worktrees\\ct-demo-replay-exec-20260916\\_mt5_auto\\reports\\DSPR_C05_990301_20260716_20260914.htm",
+        "report_sha256": "7FD48297D26628BA21C000395567F9D94F34D56955C942865EF8F5C9B5A38026",
+        "truncation": "CHECK_PASS",
+        "truncated": false,
+        "truncation_sha256": "D6E15904C413C29C5CA99DD349CABB6CADFCC0A70AA3170A598204B4938C145A",
+        "run_log": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\DSPR_C05_RUN.log",
+        "run_log_sha256": "0604880364B82CD29026542E24CA6DABB759C0A4A474B8233870AD131675769E",
+        "preflight_evidence": "evidence/ALIAS_PREFLIGHT.json",
+        "historical_postcheck_status": "NOT_DURABLY_PRESERVED",
+        "full_window_eligible_under_truncation_gate": true
+      }
+    ]
+  },
+  "external_evidence_root": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916",
+  "demo_subset_sha256": "26C3B30C8BE6C49EF1C5649DC62F37FDC5D622BE2392BB9E2A8FC7B2D40046CD",
+  "note": "Raw reports/logs remain external evidence; canonical package binds them by SHA256.",
+  "preserved_evidence": [
+    {
+      "path": "evidence/ALIAS_PREFLIGHT.json",
+      "source_path": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\ALIAS_PREFLIGHT.json",
+      "sha256": "f8b4b8042b70854226cb3b63f9b28502384d4322d1cc594c125fb14d33b21113",
+      "bytes": 3135
+    },
+    {
+      "path": "evidence/INDEPENDENT_RESULT_REVIEW.txt",
+      "source_path": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\INDEPENDENT_RESULT_REVIEW.txt",
+      "sha256": "99b6894645c521b57dd9bf548bd61d39d195c0359316dc1e9a59f3021544407e",
+      "bytes": 1812
+    },
+    {
+      "path": "evidence/DEMO_OWNER_INTAKE_FINDINGS.md",
+      "source_path": "D:\\EA_LAB_CONTROL\\evidence\\ct-mainline-acceptance-20260916\\DEMO_OWNER_INTAKE_FINDINGS.md",
+      "sha256": "02a60450002d7abd931f45d6830aa2586d597d666c9f356dbe998776d1910c85",
+      "bytes": 2950
+    },
+    {
+      "path": "evidence/DEMO_INTAKE_CHECKS.json",
+      "source_path": "D:\\EA_LAB_CONTROL\\evidence\\ct-mainline-acceptance-20260916\\DEMO_INTAKE_CHECKS.json",
+      "sha256": "666501f59f5263e74527accc17da8c2c2952beddba46e217cce295abf61e8e0d",
+      "bytes": 9940
+    },
+    {
+      "path": "evidence/demo_5magic_rows_through_20260914.csv",
+      "source_path": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\demo_5magic_rows_through_20260914.csv",
+      "sha256": "26c3b30c8be6c49ef1c5649dc62f37fdc5d622be2392bb9e2a8fc7b2d40046cd",
+      "bytes": 12863
+    }
+  ],
+  "preflight": {
+    "path": "evidence/ALIAS_PREFLIGHT.json",
+    "sha256": "f8b4b8042b70854226cb3b63f9b28502384d4322d1cc594c125fb14d33b21113",
+    "status": "HISTORICAL_PREFLIGHT_RECEIPT_PRESERVED"
+  },
+  "historical_postcheck": {
+    "status": "NOT_DURABLY_PRESERVED",
+    "per_cell_outcomes": null,
+    "note": "Chat observations are not durable per-cell postcheck receipts. No historical outcomes were reconstructed; no new check is represented as historical."
+  },
+  "demo_subset_path": "evidence/demo_5magic_rows_through_20260914.csv",
+  "original_review_head": "7f72c30bedaf7868880061e2cf870a71f4744975",
+  "repair1_scope": "Bind actual preflight; narrow unpreserved postchecks; carry typed truncation blockers, aggregate-only provenance and exploratory timing. No numeric change or tester rerun.",
+  "method_sources": [
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\parse_compare.py",
+      "sha256": "8b09766e6288f85521e377e18deb61074e3fefca0eb3de57b4ad8ad3a60b554e"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\reconcile_demo_rows.py",
+      "sha256": "927cc0c3fef2df3ec5048af8777fb023e0f78b56f1fd863708995ef17ebcf5ce"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\repair1_package.py",
+      "sha256": "be7b3879d0ce642ae04e3fdcfa5348d8231894bd24537d1089577bf91c446652"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\demo-sameperiod-replay-20260916\\repair1_state.py",
+      "sha256": "0bd7ab665eee90d6dc15951ca8382ff1188f2be581c5a8a97df434ace9a68abe"
+    }
+  ]
+}
