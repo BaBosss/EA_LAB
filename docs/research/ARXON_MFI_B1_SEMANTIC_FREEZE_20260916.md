@@ -40,8 +40,8 @@ The standalone v1.0 description supports the following component reference value
 | State memory | none; level-based each bar, no hysteresis |
 | Trading role | none in the publisher description |
 
-The publisher explicitly describes the forming-bar colour as able to change while the bar is live and settling at close.
-For this component contract, v1 therefore exposes **completed-bar values only**. Developing-bar output is out of scope.
+For this component contract, completed-bar-only sampling is a **provider safety choice** that avoids using developing-bar state.
+This is not claimed as a protected-script parity fact; v1 exposes **completed-bar values only** and developing-bar output is out of scope.
 
 ## 4. Deterministic computation contract
 Input is an ordered sequence of completed bars with `high`, `low`, `close`, `volume`, and source-bar time.
@@ -70,8 +70,8 @@ The provider receives a bound `volume` series plus a declared `volume_basis`; it
 Permitted provenance labels for a future implementation must distinguish at least `REAL`, `TICK`, and `UNKNOWN/INVALID`.
 `UNKNOWN/INVALID` may not produce a valid MFI output.
 
-The Arxon publication notes that spot FX lacks true exchange volume and commonly exposes tick volume; crypto volume depends on exchange feed.
-Therefore a later EA/home contract must bind broker/symbol/feed and volume basis explicitly before any parity or research claim.
+B1 does not bind an instrument home or data feed, so volume provenance remains configuration rather than an assumed source default.
+A later EA/home contract must bind broker/symbol/feed and volume basis explicitly before any parity or research claim.
 A value produced on one feed is not evidence of parity on another feed.
 
 ## 6. Output contract
