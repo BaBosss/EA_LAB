@@ -1,0 +1,58 @@
+{
+  "schema": "boss16_demo_path_rca_sources/1",
+  "observed_at_utc": "2026-09-16T13:27:23.489368+00:00",
+  "canonical_head": "eed2c48455cb14cb0fd16ad0f687148f332fc3cf",
+  "external_sources": [
+    {
+      "role": "EXNESS_HCC_MUTABLE_CACHE",
+      "path": "D:\\Monitor\\MT5 - 463666728\\Bases\\Exness-MT5Trial17\\history\\XAUUSDm\\2026.hcc",
+      "sha256": "6882af6e0d75e1fd94e0b15d4a7da197d1a05b688d4544a9c83069d5f70267d7",
+      "bytes": 15105309,
+      "mtime_unix": 1789526249.4609964
+    },
+    {
+      "role": "THINKMARKETS_HCC_MUTABLE_CACHE",
+      "path": "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\Bases\\ThinkMarkets-Live\\history\\XAUUSD\\2026.hcc",
+      "sha256": "3df66732cf7671ae0bc88476df0d444172db5ecbeaca401d96b539513d339179",
+      "bytes": 41067168,
+      "mtime_unix": 1789529095.850212
+    },
+    {
+      "role": "C04_TESTER_REPORT",
+      "path": "D:\\EA_LAB_CONTROL\\worktrees\\ct-demo-replay-exec-20260916\\_mt5_auto\\reports\\DSPR_C04_990016_20260728_20260914.htm",
+      "sha256": "07b8242e8902c06aa2ee2cb9ea86f3f2eb5320cc436ed8412b6b22c509507327",
+      "bytes": 87420
+    },
+    {
+      "role": "MT5_ATR_EXAMPLE_SOURCE",
+      "path": "D:\\Meta 5\\MQL5\\Indicators\\Examples\\ATR.mq5",
+      "sha256": "20e53e1857a0aa342c97f312a6f3f273ece06fe742079fda01e87f231d7f9e80",
+      "bytes": 3880
+    },
+    {
+      "role": "EXNESS_TICK_CACHE_OBSERVED",
+      "path": "D:\\Monitor\\MT5 - 463666728\\Bases\\Exness-MT5Trial17\\ticks\\XAUUSDm\\ticks.dat",
+      "sha256": "8a4775571c5a9970e20e88c7852f13f823f7252f74eb83078a9daf27b618caee",
+      "bytes": 123312,
+      "mtime_unix": 1789389182.2020347
+    }
+  ],
+  "repo_sources": [
+    {
+      "role": "DEMO_FROZEN_ROWS_SOURCE",
+      "path": "factory\\runs\\demo_sameperiod_replay_20260916\\evidence\\demo_5magic_rows_through_20260914.csv",
+      "sha256": "26c3b30c8be6c49ef1c5649dc62f37fdc5d622be2392bb9e2a8fc7b2d40046cd"
+    },
+    {
+      "role": "BOSS16_SET",
+      "path": "ea_template\\sets\\Boss16_Kangaroo_XAU_21_30.set",
+      "sha256": "37c6da42c674c15cd17aa73633e332d1e115b7452524fa04ea6910c97f0c4f6b"
+    },
+    {
+      "role": "KANGAROO_MECHANICS",
+      "path": "ea_template\\core\\entries\\Kangaroo.mqh",
+      "git_blob": "12d7a342f8c204edb8186741dedbc9a9a940810f",
+      "deploy_ref_blob": "12d7a342f8c204edb8186741dedbc9a9a940810f"
+    }
+  ]
+}

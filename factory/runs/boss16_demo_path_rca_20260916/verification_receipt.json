@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "errors": [],
+  "negative_mutants_rejected": 4,
+  "negative_mutants_total": 4,
+  "external_hash_check": true,
+  "classification": "MODEL1_INTRAMINUTE_FILL_PATH_CONFOUND_SUPPORTED_NOT_CAUSALLY_CERTIFIED",
+  "no_new_mt5": true
+}

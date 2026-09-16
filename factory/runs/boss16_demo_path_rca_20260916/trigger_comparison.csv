@@ -1,0 +1,3 @@
+﻿surface,l2_fill,atr14,step,trigger,observed_value,test,result
+DEMO_EXNESS,4426.138,33.53607142857144,26.828857142857153,4399.309142857142,4398.916,actual L3 fill <= trigger,True
+MODEL1_THINKMARKETS,4418.58,33.57857142857139,26.86285714285711,4391.717142857143,4396.39,M1 bid low > trigger over same elapsed window,True

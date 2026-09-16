@@ -1,0 +1,33 @@
+{
+  "schema": "boss16_exness_tick_source_preflight/1",
+  "tick_dir": "D:\\Monitor\\MT5 - 463666728\\Bases\\Exness-MT5Trial17\\ticks\\XAUUSDm",
+  "files": [
+    "ticks.dat"
+  ],
+  "tkc_count": 0,
+  "ticks_dat_sha256": "8a4775571c5a9970e20e88c7852f13f823f7252f74eb83078a9daf27b618caee",
+  "ticks_dat_bytes": 123312,
+  "probes": [
+    {
+      "time_unix": 1787936400,
+      "seconds_hits": 0,
+      "milliseconds_hits": 0
+    },
+    {
+      "time_unix": 1787941039,
+      "seconds_hits": 0,
+      "milliseconds_hits": 0
+    },
+    {
+      "time_unix": 1788141791,
+      "seconds_hits": 0,
+      "milliseconds_hits": 0
+    },
+    {
+      "time_unix": 1788144514,
+      "seconds_hits": 0,
+      "milliseconds_hits": 0
+    }
+  ],
+  "classification": "NO_QUALIFIED_HISTORICAL_EXNESS_TICK_STREAM_FROM_OBSERVED_CACHE"
+}

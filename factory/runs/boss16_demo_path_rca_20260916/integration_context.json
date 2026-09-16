@@ -1,0 +1,9 @@
+{
+  "schema": "boss16_demo_path_rca_integration_context/1",
+  "evidence_extraction_head": "eed2c48455cb14cb0fd16ad0f687148f332fc3cf",
+  "integration_base_head": "2cb99c13f4b1eba0dd8762140b3ecad6be8cbd7d",
+  "reanchor_reason": "canonical advanced on paths orthogonal to Boss16 RCA package and source bindings",
+  "evidence_numbers_changed_by_reanchor": false,
+  "new_mt5_runs_after_extraction": 0,
+  "authority": "RESEARCH_DIAGNOSTIC_ONLY_ZERO_NEW_MT5"
+}

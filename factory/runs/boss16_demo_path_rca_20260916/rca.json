@@ -1,0 +1,508 @@
+{
+  "schema": "boss16_demo_model1_path_rca/2",
+  "authority": "RESEARCH_DIAGNOSTIC_ONLY_ZERO_NEW_MT5",
+  "classification": "MODEL1_INTRAMINUTE_FILL_PATH_CONFOUND_SUPPORTED_NOT_CAUSALLY_CERTIFIED",
+  "demo": {
+    "account": "463666728",
+    "magic": "990016",
+    "symbol": "XAUUSDm",
+    "tf": "H1",
+    "episodes": [
+      {
+        "start": "2026.08.28 17:00:00",
+        "entries": 4,
+        "exits": 4,
+        "net": 34.21,
+        "max_open": 4,
+        "end": "2026.08.31 11:02:15"
+      },
+      {
+        "start": "2026.09.01 09:00:01",
+        "entries": 1,
+        "exits": 1,
+        "net": 6.44,
+        "max_open": 1,
+        "end": "2026.09.01 09:17:07"
+      },
+      {
+        "start": "2026.09.01 10:00:00",
+        "entries": 1,
+        "exits": 1,
+        "net": 6.48,
+        "max_open": 1,
+        "end": "2026.09.01 10:07:02"
+      },
+      {
+        "start": "2026.09.01 13:00:00",
+        "entries": 2,
+        "exits": 2,
+        "net": 32.45,
+        "max_open": 2,
+        "end": "2026.09.01 13:52:09"
+      },
+      {
+        "start": "2026.09.01 19:00:00",
+        "entries": 4,
+        "exits": 4,
+        "net": 37.98,
+        "max_open": 4,
+        "end": "2026.09.02 05:49:52"
+      }
+    ],
+    "net": 117.56
+  },
+  "model1": {
+    "symbol": "XAUUSD",
+    "tf": "H1",
+    "episodes": [
+      {
+        "start": "2026.08.28 20:00:00",
+        "entries": 10,
+        "exits": 10,
+        "net": -318.44,
+        "max_open": 5,
+        "end": "2026.09.02 16:25:40"
+      }
+    ],
+    "net": -318.44,
+    "pf": 0.26,
+    "trades": 10
+  },
+  "identity": {
+    "set_overrides": 42,
+    "set_overrides_matching_report": 42,
+    "set_mismatches": {},
+    "report_BaseLotMode": "0",
+    "kangaroo_blob_equal_to_deploy_ref": true,
+    "legacy_identity_ceiling": "Full Demo effective input surface was not durably captured; exact configuration continuity is not certified."
+  },
+  "hcc_decode": {
+    "layout": "empirical local 60-byte record <qddddqiq>; not asserted as an official HCC specification",
+    "dedup": "latest valid record per minute offset within local scan",
+    "selected_h1_min_m1_records": 58,
+    "exness_anchor_offset": 14057307,
+    "thinkmarkets_anchor_offset": 39827697,
+    "exness_local_valid_hits": 9655,
+    "exness_local_duplicates": 8,
+    "thinkmarkets_local_valid_hits": 12730,
+    "thinkmarkets_local_duplicates": 3751
+  },
+  "atr14": {
+    "algorithm": "MT5 rolling SMA of True Range; formula independently checked against installed Examples/ATR.mq5",
+    "exness": 33.53607142857144,
+    "thinkmarkets": 33.57857142857139,
+    "exness_step": 26.828857142857153,
+    "thinkmarkets_step": 26.86285714285711,
+    "exness_tr14": [
+      {
+        "hour": 1787914800,
+        "open": 4600.045,
+        "high": 4601.386,
+        "low": 4591.106,
+        "close": 4593.461,
+        "m1_count": 60,
+        "prev_close": 4599.905,
+        "tr": 10.280000000000655
+      },
+      {
+        "hour": 1787918400,
+        "open": 4593.339,
+        "high": 4603.838,
+        "low": 4588.949,
+        "close": 4601.45,
+        "m1_count": 60,
+        "prev_close": 4593.461,
+        "tr": 14.889000000000124
+      },
+      {
+        "hour": 1787922000,
+        "open": 4601.39,
+        "high": 4627.489,
+        "low": 4593.547,
+        "close": 4605.148,
+        "m1_count": 60,
+        "prev_close": 4601.45,
+        "tr": 33.94200000000001
+      },
+      {
+        "hour": 1787925600,
+        "open": 4604.456,
+        "high": 4632.24,
+        "low": 4529.591,
+        "close": 4576.651,
+        "m1_count": 60,
+        "prev_close": 4605.148,
+        "tr": 102.64899999999943
+      },
+      {
+        "hour": 1787929200,
+        "open": 4576.593,
+        "high": 4583.081,
+        "low": 4523.759,
+        "close": 4524.629,
+        "m1_count": 60,
+        "prev_close": 4576.651,
+        "tr": 59.322000000000116
+      },
+      {
+        "hour": 1787932800,
+        "open": 4524.23,
+        "high": 4529.576,
+        "low": 4463.962,
+        "close": 4479.497,
+        "m1_count": 60,
+        "prev_close": 4524.629,
+        "tr": 65.61399999999958
+      },
+      {
+        "hour": 1787936400,
+        "open": 4479.563,
+        "high": 4486.63,
+        "low": 4460.304,
+        "close": 4469.232,
+        "m1_count": 60,
+        "prev_close": 4479.497,
+        "tr": 26.326000000000022
+      },
+      {
+        "hour": 1787940000,
+        "open": 4469.175,
+        "high": 4471.772,
+        "low": 4445.343,
+        "close": 4456.906,
+        "m1_count": 60,
+        "prev_close": 4469.232,
+        "tr": 26.429000000000087
+      },
+      {
+        "hour": 1787943600,
+        "open": 4456.688,
+        "high": 4467.004,
+        "low": 4452.793,
+        "close": 4458.431,
+        "m1_count": 60,
+        "prev_close": 4456.906,
+        "tr": 14.21100000000024
+      },
+      {
+        "hour": 1787947200,
+        "open": 4458.376,
+        "high": 4462.628,
+        "low": 4452.972,
+        "close": 4456.134,
+        "m1_count": 58,
+        "prev_close": 4458.431,
+        "tr": 9.655999999999949
+      },
+      {
+        "hour": 1788127200,
+        "open": 4439.04,
+        "high": 4466.004,
+        "low": 4439.04,
+        "close": 4461.374,
+        "m1_count": 59,
+        "prev_close": 4456.134,
+        "tr": 26.963999999999942
+      },
+      {
+        "hour": 1788130800,
+        "open": 4461.589,
+        "high": 4466.891,
+        "low": 4435.62,
+        "close": 4458.24,
+        "m1_count": 60,
+        "prev_close": 4461.374,
+        "tr": 31.27099999999973
+      },
+      {
+        "hour": 1788134400,
+        "open": 4458.301,
+        "high": 4472.423,
+        "low": 4452.093,
+        "close": 4456.443,
+        "m1_count": 60,
+        "prev_close": 4458.24,
+        "tr": 20.329999999999927
+      },
+      {
+        "hour": 1788138000,
+        "open": 4456.227,
+        "high": 4463.395,
+        "low": 4435.773,
+        "close": 4440.261,
+        "m1_count": 60,
+        "prev_close": 4456.443,
+        "tr": 27.6220000000003
+      }
+    ],
+    "thinkmarkets_tr14": [
+      {
+        "hour": 1787925600,
+        "open": 4600.02,
+        "high": 4601.44,
+        "low": 4591.45,
+        "close": 4593.31,
+        "m1_count": 60,
+        "prev_close": 4600.03,
+        "tr": 9.989999999999782
+      },
+      {
+        "hour": 1787929200,
+        "open": 4593.27,
+        "high": 4604.01,
+        "low": 4589.03,
+        "close": 4601.71,
+        "m1_count": 60,
+        "prev_close": 4593.31,
+        "tr": 14.980000000000473
+      },
+      {
+        "hour": 1787932800,
+        "open": 4601.61,
+        "high": 4627.33,
+        "low": 4593.69,
+        "close": 4605.49,
+        "m1_count": 60,
+        "prev_close": 4601.71,
+        "tr": 33.64000000000033
+      },
+      {
+        "hour": 1787936400,
+        "open": 4605.65,
+        "high": 4631.54,
+        "low": 4529.96,
+        "close": 4576.57,
+        "m1_count": 60,
+        "prev_close": 4605.49,
+        "tr": 101.57999999999993
+      },
+      {
+        "hour": 1787940000,
+        "open": 4576.63,
+        "high": 4582.95,
+        "low": 4523.95,
+        "close": 4524.5,
+        "m1_count": 60,
+        "prev_close": 4576.57,
+        "tr": 59.0
+      },
+      {
+        "hour": 1787943600,
+        "open": 4524.52,
+        "high": 4529.31,
+        "low": 4464.04,
+        "close": 4479.45,
+        "m1_count": 60,
+        "prev_close": 4524.5,
+        "tr": 65.27000000000044
+      },
+      {
+        "hour": 1787947200,
+        "open": 4479.47,
+        "high": 4486.7,
+        "low": 4460.42,
+        "close": 4469.28,
+        "m1_count": 60,
+        "prev_close": 4479.45,
+        "tr": 26.279999999999745
+      },
+      {
+        "hour": 1787950800,
+        "open": 4469.38,
+        "high": 4471.74,
+        "low": 4445.37,
+        "close": 4456.77,
+        "m1_count": 60,
+        "prev_close": 4469.28,
+        "tr": 26.36999999999989
+      },
+      {
+        "hour": 1787954400,
+        "open": 4456.77,
+        "high": 4467.15,
+        "low": 4453.0,
+        "close": 4458.23,
+        "m1_count": 60,
+        "prev_close": 4456.77,
+        "tr": 14.149999999999636
+      },
+      {
+        "hour": 1787958000,
+        "open": 4458.38,
+        "high": 4462.62,
+        "low": 4453.3,
+        "close": 4454.98,
+        "m1_count": 59,
+        "prev_close": 4458.23,
+        "tr": 9.319999999999709
+      },
+      {
+        "hour": 1788138000,
+        "open": 4436.33,
+        "high": 4466.19,
+        "low": 4435.04,
+        "close": 4461.46,
+        "m1_count": 59,
+        "prev_close": 4454.98,
+        "tr": 31.149999999999636
+      },
+      {
+        "hour": 1788141600,
+        "open": 4461.48,
+        "high": 4466.8,
+        "low": 4435.79,
+        "close": 4458.31,
+        "m1_count": 60,
+        "prev_close": 4461.46,
+        "tr": 31.01000000000022
+      },
+      {
+        "hour": 1788145200,
+        "open": 4458.32,
+        "high": 4472.16,
+        "low": 4452.14,
+        "close": 4456.17,
+        "m1_count": 60,
+        "prev_close": 4458.31,
+        "tr": 20.019999999999527
+      },
+      {
+        "hour": 1788148800,
+        "open": 4456.16,
+        "high": 4463.29,
+        "low": 4435.95,
+        "close": 4440.37,
+        "m1_count": 60,
+        "prev_close": 4456.17,
+        "tr": 27.340000000000146
+      }
+    ]
+  },
+  "path_test": {
+    "demo_l2_fill": 4426.138,
+    "model1_l2_fill": 4418.58,
+    "l2_fill_delta_demo_minus_model1": 7.557999999999993,
+    "demo_trigger_after_l2": 4399.309142857142,
+    "model1_trigger_after_l2": 4391.717142857143,
+    "demo_l3_fill": 4398.916,
+    "demo_l3_fill_crosses_trigger": true,
+    "exness_m1_min_low_l2_to_l3": 4396.361,
+    "thinkmarkets_m1_min_low_same_elapsed": 4396.39,
+    "thinkmarkets_bid_low_stays_above_trigger": true,
+    "aligned_m1_examples": [
+      {
+        "demo_time": "2026.08.28 17:00:00",
+        "demo_comment": "16_KangarooGrid L0",
+        "exness_m1_time": 1787936400,
+        "thinkmarkets_m1_time": 1787947200,
+        "exness_ohlc": [
+          4479.563,
+          4480.123,
+          4473.507,
+          4474.894
+        ],
+        "thinkmarkets_ohlc": [
+          4479.47,
+          4480.16,
+          4473.73,
+          4474.86
+        ],
+        "abs_ohlc_delta": [
+          0.0929999999998472,
+          0.037000000000261934,
+          0.22299999999995634,
+          0.03400000000056025
+        ]
+      },
+      {
+        "demo_time": "2026.08.28 18:17:19",
+        "demo_comment": "16_KangarooGrid L1",
+        "exness_m1_time": 1787941020,
+        "thinkmarkets_m1_time": 1787951820,
+        "exness_ohlc": [
+          4460.147,
+          4460.735,
+          4453.299,
+          4458.692
+        ],
+        "thinkmarkets_ohlc": [
+          4460.35,
+          4460.78,
+          4453.82,
+          4458.63
+        ],
+        "abs_ohlc_delta": [
+          0.20300000000042928,
+          0.04500000000007276,
+          0.5209999999997308,
+          0.06199999999989814
+        ]
+      },
+      {
+        "demo_time": "2026.08.31 02:03:11",
+        "demo_comment": "16_KangarooGrid L2",
+        "exness_m1_time": 1788141780,
+        "thinkmarkets_m1_time": 1788152580,
+        "exness_ohlc": [
+          4430.394,
+          4430.669,
+          4418.273,
+          4424.013
+        ],
+        "thinkmarkets_ohlc": [
+          4430.31,
+          4430.51,
+          4418.39,
+          4423.49
+        ],
+        "abs_ohlc_delta": [
+          0.08399999999983265,
+          0.15899999999965075,
+          0.11700000000018917,
+          0.5230000000001382
+        ]
+      },
+      {
+        "demo_time": "2026.08.31 02:48:34",
+        "demo_comment": "16_KangarooGrid L3",
+        "exness_m1_time": 1788144480,
+        "thinkmarkets_m1_time": 1788155280,
+        "exness_ohlc": [
+          4404.377,
+          4404.664,
+          4396.361,
+          4401.182
+        ],
+        "thinkmarkets_ohlc": [
+          4404.36,
+          4404.77,
+          4396.39,
+          4401.36
+        ],
+        "abs_ohlc_delta": [
+          0.01700000000073487,
+          0.10600000000067666,
+          0.02900000000045111,
+          0.17799999999988358
+        ]
+      }
+    ]
+  },
+  "limitations": [
+    "C04 typed truncation remains UNKNOWN / truncated=null.",
+    "No qualified historical Exness tick stream was replayed.",
+    "The +3h alignment is descriptive from observed trade timing, not a qualified broker-clock model.",
+    "HCC caches are mutable; the package binds source hashes at extraction time and freezes only the decision-critical extracted records.",
+    "This RCA does not grant strategy PASS/FAIL, Candidate, DEMO->LIVE, risk/default, runtime or trading authority."
+  ],
+  "next": "QUALIFY_HISTORICAL_EXNESS_REAL_TICK_SOURCE_BEFORE_ANY_MODEL4_GRADE_DIAGNOSTIC",
+  "integration_context": {
+    "schema": "boss16_demo_path_rca_integration_context/1",
+    "evidence_extraction_head": "eed2c48455cb14cb0fd16ad0f687148f332fc3cf",
+    "integration_base_head": "2cb99c13f4b1eba0dd8762140b3ecad6be8cbd7d",
+    "reanchor_reason": "canonical advanced on paths orthogonal to Boss16 RCA package and source bindings",
+    "evidence_numbers_changed_by_reanchor": false,
+    "new_mt5_runs_after_extraction": 0,
+    "authority": "RESEARCH_DIAGNOSTIC_ONLY_ZERO_NEW_MT5"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "boss16_demo_path_rca_package/1",
+  "authority": "RESEARCH_DIAGNOSTIC_ONLY_ZERO_NEW_MT5",
+  "direct_consumer": "Boss16 Demo-vs-Model1 divergence RCA and real-tick source qualification routing",
+  "artifacts": [
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/bt_c04_deals.csv",
+      "bytes": 1924,
+      "sha256": "0a6070be6b2510fa80189d1110a8bfd0ff5c375cd4266e4b1bc69e221f6bfac0"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/build_rca.py",
+      "bytes": 16230,
+      "sha256": "d2cab4faf23778678d64b63650a090cc749a52c91ce0b166a24bc0a70cbc4918"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/demo_990016.csv",
+      "bytes": 2575,
+      "sha256": "94d9ffd4e4cfa38b91f9258ba2eedc71152b05d8fed1b3e7e20fa306355d548c"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/hcc_extract.json",
+      "bytes": 25314,
+      "sha256": "405cde7a5f083ed18f2636e8153c98b60dd92b25560c8481f5fde4b38ff0a065"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/input_surface.json",
+      "bytes": 2610,
+      "sha256": "154c21309d1cdb139178704d5d2ac168308f55b071714e5119f73c28c3541302"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/integration_context.json",
+      "bytes": 463,
+      "sha256": "416ee1fa9f5dffe6a4f1546215e39aefb76431fd8bc83e8f95bdd4945118ef69"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/make_package_manifest.py",
+      "bytes": 1621,
+      "sha256": "bb12301b1afba03988f345252c6d68ec7c7041879ac5afa6cfad10a6527d5e62"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/rca.json",
+      "bytes": 13710,
+      "sha256": "3f9473d2287c33520ea99ea1e27cbc95bbc01342805d999ca5eb8c9456611079"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/source_manifest.json",
+      "bytes": 2433,
+      "sha256": "0cf0b7e41fdbb3de4d833ddea92a9ff51bdb72e3deb45cbc2a9f5a105bc8dd9b"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/tick_source_preflight.json",
+      "bytes": 842,
+      "sha256": "5aa996cc00ddddebc71ba75efb0cf393d29fb3f7e298a133b66b713291aee1a6"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/trigger_comparison.csv",
+      "bytes": 325,
+      "sha256": "20784b9bbea4f6c460ca8d0f2929f71e93e15d59f973bf4d2b2efb81e365a5cc"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/verification_receipt.json",
+      "bytes": 258,
+      "sha256": "1a011e098daeded6a406118878f6350a1b698022bc5dc7f3832f4d6669453ca4"
+    },
+    {
+      "path": "factory/runs/boss16_demo_path_rca_20260916/verify_package.py",
+      "bytes": 5743,
+      "sha256": "2fee6c2dc6c0d2800620d6fd3197b63dce9242c48a3db773b554cbd0a7919667"
+    },
+    {
+      "path": "docs/research/BOSS16_DEMO_MODEL1_PATH_RCA_20260916.md",
+      "bytes": 7103,
+      "sha256": "c32ff79493c899f9c4dfd97b9633ca77c22b154ef2feb64bba4ce2b5016c82f8"
+    }
+  ]
+}
