@@ -267,7 +267,8 @@ function Get-IdentityEvidence {
         [Parameter(Mandatory = $true)][ValidateSet('runner','child','postcondition')][string]$Role,
         [AllowNull()]$PidValue,
         [AllowNull()]$ExpectedCreationUtc,
-        [bool]$PostconditionNotConfigured = $false
+        [bool]$PostconditionNotConfigured = $false,
+        [bool]$PostconditionNotStarted = $false
     )
     $checked = [DateTime]::UtcNow.ToString('o')
     if ($null -eq $PidValue) {
@@ -276,6 +277,13 @@ function Get-IdentityEvidence {
                 lane_id = $LaneId; job_id = $JobId; role = $Role; pid = $null
                 expected_creation_utc = $null; current_creation_utc = $null
                 identity = 'RECORDED_PROCESS_NOT_PRESENT'; query_status = 'NOT_CONFIGURED'; checked_utc = $checked
+            }
+        }
+        if ($Role -eq 'postcondition' -and $PostconditionNotStarted -and $null -eq $ExpectedCreationUtc) {
+            return [ordered]@{
+                lane_id = $LaneId; job_id = $JobId; role = $Role; pid = $null
+                expected_creation_utc = $null; current_creation_utc = $null
+                identity = 'RECORDED_PROCESS_NOT_PRESENT'; query_status = 'NOT_STARTED'; checked_utc = $checked
             }
         }
         return [ordered]@{
@@ -504,14 +512,19 @@ foreach ($laneId in $safeLaneIds) {
 
 $processChecks = New-Object Collections.Generic.List[object]
 foreach ($context in $laneContexts) {
-    $postNotConfigured = [string]::IsNullOrWhiteSpace([string]$context.Job.postcondition_file_path)
+    $postNotConfigured = [string]$context.Job.postcondition_file_path -ceq ''
+    $postPidValue = if ($context.State.PSObject.Properties.Name -contains 'postcondition_pid') { $context.State.postcondition_pid } else { $null }
+    $postStartValue = if ($context.State.PSObject.Properties.Name -contains 'postcondition_start_utc') { $context.State.postcondition_start_utc } else { $null }
+    $postNotStarted = -not $postNotConfigured -and $null -eq $postPidValue -and $null -eq $postStartValue -and `
+        [string]$context.State.state -cne 'POSTCONDITION_RUNNING'
     foreach ($role in @('runner','child','postcondition')) {
         $pidName = $role + '_pid'
         $startName = $role + '_start_utc'
         $pidValue = if ($context.State.PSObject.Properties.Name -contains $pidName) { $context.State.$pidName } else { $null }
         $startValue = if ($context.State.PSObject.Properties.Name -contains $startName) { $context.State.$startName } else { $null }
         $processChecks.Add((Get-IdentityEvidence -LaneId $context.LaneId -JobId $context.JobId -Role $role `
-            -PidValue $pidValue -ExpectedCreationUtc $startValue -PostconditionNotConfigured:$postNotConfigured))
+            -PidValue $pidValue -ExpectedCreationUtc $startValue -PostconditionNotConfigured:$postNotConfigured `
+            -PostconditionNotStarted:$postNotStarted))
     }
 }
 

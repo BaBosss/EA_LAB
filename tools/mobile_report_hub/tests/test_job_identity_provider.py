@@ -177,6 +177,29 @@ class JobIdentityProviderTests(unittest.TestCase):
         manifest = manifest or self.fixture.write()
         return adapt_bundle(manifest, self.root / name)
 
+    def configure_not_started(self, state_name):
+        self.fixture.job["postcondition_file_path"] = "C:\\private\\check.exe"
+        self.fixture.state.update({
+            "state": state_name,
+            "postcondition_pid": None,
+            "postcondition_start_utc": None,
+        })
+        self.fixture.checks[2] = self.fixture.check(
+            "postcondition", None, None, "RECORDED_PROCESS_NOT_PRESENT", "NOT_STARTED"
+        )
+
+    def configure_active_processes(self):
+        self.fixture.state.pop("ended_utc", None)
+        self.fixture.state.pop("exit_code", None)
+        self.fixture.state.pop("postcondition_exit_code", None)
+        self.fixture.result = None
+        self.fixture.checks[0] = self.fixture.check(
+            "runner", 101, self.fixture.state["runner_start_utc"], "MATCHING_RECORDED_PROCESS", "PRESENT"
+        )
+        self.fixture.checks[1] = self.fixture.check(
+            "child", 102, self.fixture.state["child_start_utc"], "MATCHING_RECORDED_PROCESS", "PRESENT"
+        )
+
     def test_terminal_complete_absent_processes_preserves_history(self):
         dto, receipt = self.adapt()
         row = dto["observations"][0]
@@ -206,6 +229,78 @@ class JobIdentityProviderTests(unittest.TestCase):
         self.assertTrue(row["runner_alive"])
         self.assertTrue(row["child_alive"])
         self.assertEqual("UNKNOWN", row["retry_decision"])
+
+    def test_running_configured_postcondition_not_started_is_available_and_false(self):
+        self.configure_not_started("RUNNING")
+        self.configure_active_processes()
+        dto, receipt = self.adapt()
+        row = dto["observations"][0]
+        self.assertEqual("RUNNING", row["observed_state"])
+        self.assertFalse(row["postcondition_alive"])
+        self.assertEqual("NOT_STARTED", receipt["process_identity_evidence"][0]["roles"][2]["query_status"])
+
+    def test_starting_configured_postcondition_not_started_obeys_existing_identity_rules(self):
+        self.configure_not_started("STARTING")
+        self.configure_active_processes()
+        dto, _ = self.adapt()
+        row = dto["observations"][0]
+        self.assertEqual("STARTING", row["observed_state"])
+        self.assertFalse(row["postcondition_alive"])
+
+    def test_terminal_before_postcondition_maps_false_and_preserves_unknown_result(self):
+        cases = {
+            "TIMED_OUT": None,
+            "FAILED": 1,
+            "CANCELLED": None,
+            "LOST_PROCESS": None,
+        }
+        for index, (state_name, exit_code) in enumerate(cases.items()):
+            with self.subTest(state=state_name):
+                self.fixture = BundleFixture(self.root / f"terminal-{index}")
+                self.configure_not_started(state_name)
+                self.fixture.state["exit_code"] = exit_code
+                self.fixture.state["postcondition_exit_code"] = None
+                self.fixture.result["state"] = state_name
+                self.fixture.result["exit_code"] = exit_code
+                self.fixture.result["postcondition_exit_code"] = None
+                dto, _ = self.adapt(name=f"publication-terminal-{index}")
+                row = dto["observations"][0]
+                self.assertFalse(row["postcondition_alive"])
+                self.assertEqual("UNKNOWN", row["result"]["postcondition"])
+
+    def test_complete_or_postcondition_failed_refuses_not_started(self):
+        for index, state_name in enumerate(("COMPLETE", "POSTCONDITION_FAILED")):
+            with self.subTest(state=state_name):
+                self.fixture = BundleFixture(self.root / f"refused-terminal-{index}")
+                self.configure_not_started(state_name)
+                post_exit = 0 if state_name == "COMPLETE" else 1
+                self.fixture.state["exit_code"] = 0
+                self.fixture.state["postcondition_exit_code"] = post_exit
+                self.fixture.result["state"] = state_name
+                self.fixture.result["exit_code"] = 0
+                self.fixture.result["postcondition_exit_code"] = post_exit
+                with self.assertRaisesRegex(ProviderError, "NOT_STARTED|not started"):
+                    self.adapt(name=f"publication-refused-terminal-{index}")
+
+    def test_postcondition_running_without_identity_refuses(self):
+        self.configure_not_started("POSTCONDITION_RUNNING")
+        self.configure_active_processes()
+        with self.assertRaisesRegex(ProviderError, "NOT_STARTED|postcondition|metadata"):
+            self.adapt()
+
+    def test_half_present_postcondition_identity_refuses(self):
+        cases = ((103, None), (None, "2026-09-18T11:09:00.0000001Z"))
+        for index, (pid, started) in enumerate(cases):
+            with self.subTest(pid=pid, started=started):
+                self.fixture = BundleFixture(self.root / f"half-present-{index}")
+                self.fixture.job["postcondition_file_path"] = "C:\\private\\check.exe"
+                self.fixture.state["postcondition_pid"] = pid
+                self.fixture.state["postcondition_start_utc"] = started
+                identity = "RECORDED_PROCESS_NOT_PRESENT" if pid is not None else "UNKNOWN"
+                query = "NOT_PRESENT" if pid is not None else "ERROR"
+                self.fixture.checks[2] = self.fixture.check("postcondition", pid, started, identity, query)
+                with self.assertRaises(ProviderError):
+                    self.adapt(name=f"publication-half-present-{index}")
 
     def test_active_missing_process_maps_lost_process(self):
         self.fixture.state.update({"state": "RUNNING"})

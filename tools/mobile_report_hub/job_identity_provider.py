@@ -77,7 +77,8 @@ _IDENTITIES = {
     "MATCHING_RECORDED_PROCESS", "RECORDED_PROCESS_NOT_PRESENT",
     "DIFFERENT_CREATION_IDENTITY", "UNKNOWN",
 }
-_QUERY = {"PRESENT", "NOT_PRESENT", "INACCESSIBLE", "ERROR", "NOT_CONFIGURED"}
+_QUERY = {"PRESENT", "NOT_PRESENT", "INACCESSIBLE", "ERROR", "NOT_CONFIGURED", "NOT_STARTED"}
+_POSTCONDITION_NOT_STARTED_STATES = {"STARTING", "RUNNING", "FAILED", "TIMED_OUT", "CANCELLED", "LOST_PROCESS"}
 
 
 class ProviderError(ValueError):
@@ -447,7 +448,25 @@ def _validated_checks(lane: str, job_id: str, state: dict[str, Any], job: dict[s
                 raise ProviderError("process-check/state identity mismatch")
         if pid is None:
             not_configured = role == "postcondition" and job["postcondition_file_path"] == ""
-            if not not_configured or identity != "RECORDED_PROCESS_NOT_PRESENT" or query != "NOT_CONFIGURED" or current is not None:
+            not_started = (
+                role == "postcondition"
+                and job["postcondition_file_path"] != ""
+                and state["state"] != "POSTCONDITION_RUNNING"
+                and state_pid is None
+                and state_expected is None
+            )
+            valid_missing = (
+                not_configured
+                and identity == "RECORDED_PROCESS_NOT_PRESENT"
+                and query == "NOT_CONFIGURED"
+                and current is None
+            ) or (
+                not_started
+                and identity == "RECORDED_PROCESS_NOT_PRESENT"
+                and query == "NOT_STARTED"
+                and current is None
+            )
+            if not valid_missing:
                 raise ProviderError("missing essential process or postcondition metadata")
         else:
             expected_time = _parse_time(expected, "expected creation")
@@ -509,6 +528,8 @@ def _row(lane: str, lease: dict[str, Any], job: dict[str, Any], state: dict[str,
     if any(value is None for value in alive.values()):
         raise ProviderError("unknown process identity")
     state_name = state["state"]
+    if checks["postcondition"]["query_status"] == "NOT_STARTED" and state_name not in _POSTCONDITION_NOT_STARTED_STATES:
+        raise ProviderError(f"postcondition NOT_STARTED is invalid for {state_name}")
     if state_name in _TERMINAL and (alive["child"] is True or alive["postcondition"] is True):
         raise ProviderError("terminal child or postcondition is still the recorded live process")
     if state_name == "RUNNING":

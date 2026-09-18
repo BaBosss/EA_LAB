@@ -92,6 +92,22 @@ try {
         -PidValue $null -ExpectedCreationUtc $null -PostconditionNotConfigured:$true
     Assert-True ($notConfigured.query_status -ceq 'NOT_CONFIGURED') 'NOT_CONFIGURED evidence was not retained'
 
+    # A configured postcondition that has not started has no PID to query. Prove the
+    # classifier returns before the process helper and preserves half-present refusal.
+    $originalSnapshot = (Get-Command Get-LjrProcessSnapshot).ScriptBlock
+    try {
+        function Get-LjrProcessSnapshot { param([int]$ProcessId); throw 'null PID reached process helper' }
+        $notStarted = Get-IdentityEvidence -LaneId 'fixture-lane' -JobId 'fixture-job' -Role postcondition `
+            -PidValue $null -ExpectedCreationUtc $null -PostconditionNotStarted:$true
+        Assert-True ($notStarted.query_status -ceq 'NOT_STARTED') 'configured postcondition was not classified NOT_STARTED'
+        Assert-True ($notStarted.identity -ceq 'RECORDED_PROCESS_NOT_PRESENT') 'NOT_STARTED identity was not conservatively false'
+        $halfPresent = Get-IdentityEvidence -LaneId 'fixture-lane' -JobId 'fixture-job' -Role postcondition `
+            -PidValue $null -ExpectedCreationUtc '2026-09-18T11:00:00.0000001Z' -PostconditionNotStarted:$true
+        Assert-True ($halfPresent.query_status -ceq 'ERROR') 'half-present postcondition identity did not remain fail-closed'
+    } finally {
+        Set-Item -Path Function:Get-LjrProcessSnapshot -Value $originalSnapshot
+    }
+
     # JIPV1-001/JIPV1-007: real-format eleven-field lease, untrusted path fields,
     # and a self-process query flow through collector and adapter end to end.
     $laneId = 'fixture-lane'
@@ -143,6 +159,28 @@ try {
     Assert-True ($public.canonical_observed_sha -ceq $canonicalSha) 'candidate source head was mislabeled canonical'
     Assert-True ($private.candidate_source_head -ceq $fixtureHead) 'candidate source provenance was not retained'
     Assert-True ($public.observations[0].observed_state -ceq 'RUNNING') 'self-process fixture did not remain RUNNING'
+
+    # The same real eleven-field lease shape with a configured, not-yet-started
+    # postcondition must flow through collector and adapter without a PID query.
+    $job.postcondition_file_path = 'Z:\private\postcondition.ps1'
+    $state.postcondition_file_path = $job.postcondition_file_path
+    $state.postcondition_pid = $null
+    $state.postcondition_start_utc = $null
+    Write-FixtureJson (Join-Path $jobRoot 'job.json') $job
+    Write-FixtureJson $statePath $state
+    $notStartedBundle = Join-Path $tempRoot 'not-started-bundle'
+    . $capture -RepoRoot $fixtureRepo -ExpectedHead $fixtureHead -CanonicalObservedHead $canonicalSha `
+        -LeaseRoot $leaseRoot -JobsRoot $jobsRoot -LaneIds @($laneId) -OutputRoot $notStartedBundle | Out-Null
+    $notStartedManifest = Get-Content -LiteralPath (Join-Path $notStartedBundle 'manifest.json') -Raw | ConvertFrom-Json
+    $postconditionCheck = @($notStartedManifest.process_checks | Where-Object { $_.role -ceq 'postcondition' })
+    Assert-True ($postconditionCheck.Count -eq 1) 'configured postcondition identity coverage was not singular'
+    Assert-True ($postconditionCheck[0].query_status -ceq 'NOT_STARTED') 'collector did not emit private NOT_STARTED'
+    $notStartedPublication = Join-Path $tempRoot 'not-started-publication'
+    & python (Join-Path $repo 'tools\mobile_report_hub\job_identity_provider.py') `
+        --bundle-manifest (Join-Path $notStartedBundle 'manifest.json') --output-root $notStartedPublication | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "configured NOT_STARTED adapter failed: $LASTEXITCODE" }
+    $notStartedPublic = Get-Content -LiteralPath (Join-Path $notStartedPublication 'job_observations.json') -Raw | ConvertFrom-Json
+    Assert-True ($notStartedPublic.observations[0].postcondition_alive -eq $false) 'configured NOT_STARTED was not mapped false'
 
     # Duplicate and extra keys refuse before any output is created. The hostile duplicate
     # PID is last so a non-strict parser would attempt to use it.
