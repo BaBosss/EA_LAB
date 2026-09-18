@@ -1,0 +1,3 @@
+# Generator identity is byte-pinned by the generated manifest.
+*.py -text
+*.ps1 -text

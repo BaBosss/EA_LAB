@@ -18,13 +18,22 @@ void Exec_Init()
    g_trade.LogLevel(LOG_LEVEL_ERRORS);
 }
 
+bool Exec_IdentityIsMine(const string symbol, const long magic)
+{
+   if(symbol != _Symbol) return false;
+#ifdef LAB_ENTRY_21
+   // Cast before arithmetic: source groups occupy base+1 through base+5.
+   return magic > (long)_21_DF03_MagicStart && magic <= (long)_21_DF03_MagicStart + 5;
+#else
+   return magic == _0_Magic;
+#endif
+}
+
 bool Exec_PosIsMine(const int index)
 {
    ulong tk = PositionGetTicket(index);
    if(tk == 0) return false;
-   if(PositionGetString(POSITION_SYMBOL) != _Symbol) return false;
-   if((long)PositionGetInteger(POSITION_MAGIC) != _0_Magic) return false;
-   return true;
+   return Exec_IdentityIsMine(PositionGetString(POSITION_SYMBOL), (long)PositionGetInteger(POSITION_MAGIC));
 }
 
 // Hedge legs use the same magic as the directional basket, so magic/symbol
@@ -335,9 +344,7 @@ bool Exec_OrdIsMine(const int index)
 {
    ulong tk = OrderGetTicket(index);
    if(tk == 0) return false;
-   if(OrderGetString(ORDER_SYMBOL) != _Symbol) return false;
-   if((long)OrderGetInteger(ORDER_MAGIC) != _0_Magic) return false;
-   return true;
+   return Exec_IdentityIsMine(OrderGetString(ORDER_SYMBOL), (long)OrderGetInteger(ORDER_MAGIC));
 }
 
 int Exec_CountPending()

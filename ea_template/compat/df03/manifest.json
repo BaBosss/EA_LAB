@@ -1,0 +1,2300 @@
+{
+  "schema": "df03-compat/1",
+  "parent_sha256": "2aba9437319e214c82b63313a049f73da364052eddfa24f7f1661279593ffd89",
+  "parent_bytes": 535962,
+  "generated_sha256": "564099a9e48abffcfbeceb43b3558f9212ece603309eaf15e6947834aa957115",
+  "generator_sha256": "0f5f502eac501f10257f2a2196dbe77a0be01adf67e3b96df38272f01dc01e2e",
+  "transform_counts": {
+    "Bars": 13,
+    "Digits": 1,
+    "OnChartEvent": 1,
+    "OnDeinit": 1,
+    "OnInit": 1,
+    "OnTick": 2,
+    "OnTimer": 1,
+    "OnTrade": 7,
+    "Point": 1,
+    "__OnTick__": 2
+  },
+  "changes": [
+    {
+      "parent_offset": 8165,
+      "generated_offset": 8165,
+      "line": 268,
+      "old": "OnInit",
+      "new": "DF03_SourceOnInit"
+    },
+    {
+      "parent_offset": 16138,
+      "generated_offset": 16149,
+      "line": 555,
+      "old": "__OnTick__",
+      "new": "DF03_Source__OnTick__"
+    },
+    {
+      "parent_offset": 16729,
+      "generated_offset": 16751,
+      "line": 575,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 17270,
+      "generated_offset": 17303,
+      "line": 596,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 17837,
+      "generated_offset": 17881,
+      "line": 618,
+      "old": "OnTimer",
+      "new": "DF03_SourceOnTimer"
+    },
+    {
+      "parent_offset": 18071,
+      "generated_offset": 18126,
+      "line": 623,
+      "old": "OnTick",
+      "new": "DF03_SourceOnTick"
+    },
+    {
+      "parent_offset": 18120,
+      "generated_offset": 18186,
+      "line": 626,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 18726,
+      "generated_offset": 18803,
+      "line": 663,
+      "old": "OnChartEvent",
+      "new": "DF03_SourceOnChartEvent"
+    },
+    {
+      "parent_offset": 19334,
+      "generated_offset": 19422,
+      "line": 683,
+      "old": "OnDeinit",
+      "new": "DF03_SourceOnDeinit"
+    },
+    {
+      "parent_offset": 271072,
+      "generated_offset": 271171,
+      "line": 10024,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 275246,
+      "generated_offset": 275356,
+      "line": 10227,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 317658,
+      "generated_offset": 317779,
+      "line": 11584,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 346634,
+      "generated_offset": 346766,
+      "line": 12764,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 387260,
+      "generated_offset": 387403,
+      "line": 14060,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 387307,
+      "generated_offset": 387461,
+      "line": 14061,
+      "old": "Digits",
+      "new": "DF03_CompatDigits"
+    },
+    {
+      "parent_offset": 387335,
+      "generated_offset": 387500,
+      "line": 14062,
+      "old": "Point",
+      "new": "DF03_CompatPoint"
+    },
+    {
+      "parent_offset": 387443,
+      "generated_offset": 387619,
+      "line": 14067,
+      "old": "OnTick",
+      "new": "DF03_SourceOnTick"
+    },
+    {
+      "parent_offset": 387481,
+      "generated_offset": 387668,
+      "line": 14070,
+      "old": "__OnTick__",
+      "new": "DF03_Source__OnTick__"
+    },
+    {
+      "parent_offset": 466205,
+      "generated_offset": 466403,
+      "line": 16066,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466370,
+      "generated_offset": 466579,
+      "line": 16070,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466386,
+      "generated_offset": 466606,
+      "line": 16070,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466551,
+      "generated_offset": 466782,
+      "line": 16072,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466586,
+      "generated_offset": 466828,
+      "line": 16073,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466621,
+      "generated_offset": 466874,
+      "line": 16074,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466655,
+      "generated_offset": 466919,
+      "line": 16075,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466691,
+      "generated_offset": 466966,
+      "line": 16076,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466728,
+      "generated_offset": 467014,
+      "line": 16077,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466800,
+      "generated_offset": 467097,
+      "line": 16080,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 467595,
+      "generated_offset": 467903,
+      "line": 16107,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 467705,
+      "generated_offset": 468024,
+      "line": 16111,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    }
+  ],
+  "causal": {
+    "inputs": [
+      "input double Lot1 = 0.05 ;",
+      "input double Lot2 = 0.1 ;",
+      "input double Lot3 = 0.15 ;",
+      "input double Lot4 = 0.2 ;",
+      "input double Lot5 = 0.3 ;",
+      "input double Pull_Back = 20.0 ;",
+      "input double Nearby_PIP = 20.0 ;",
+      "input double Close_All_Percent = 2.0 ;",
+      "input ENUM_TIMEFRAMES Timeframe = PERIOD_D1 ;",
+      "input double Hedging_mode_1_on_0_off = 1.0 ;",
+      "input double TP_pip = 40.0 ;",
+      "input double SL_pip = 20.0 ;",
+      "input int MagicStart = 4023 ;",
+      "input string inp430_Lo_ModeCandleFindBy = \"id\" ;"
+    ],
+    "blocks": [
+      {
+        "id": 0,
+        "user_id": "2",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "8c0084f6b90b9ba28a17048b31b7c49ed448d47519c81e46ac18bdac4b1a3c80"
+      },
+      {
+        "id": 1,
+        "user_id": "3",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "50b59a8a62c59e5d5e3b3165e2bedfa8117926d6c1d2af34a550c0f66c0d91f8"
+      },
+      {
+        "id": 2,
+        "user_id": "4",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "0b62ceee2045561a0eada9508eb5ab07f5d97f322a5de435f8cc0aca839eee42"
+      },
+      {
+        "id": 3,
+        "user_id": "5",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "311ba28b4998c8187167ec0f23d2542ea45c5f523caa1dcd008d6c034d710452"
+      },
+      {
+        "id": 4,
+        "user_id": "6",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "4b794618681715321a468684535b37f4ddddc2660a40f4129f15400aa6c220e5"
+      },
+      {
+        "id": 5,
+        "user_id": "7",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "5e40e15f6478dcaa3fb6396e7157e5362f8b332f4eeaeee7911fcdee37691ddc"
+      },
+      {
+        "id": 6,
+        "user_id": "8",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "e80ca4e6b321cb16bbc11e8cc98d5feebcbfc0b956cdf98abd3e0daf6430ccb2"
+      },
+      {
+        "id": 7,
+        "user_id": "9",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "3e5a9890db5d1b26da163ed065eb7dd19887fc020fb30f9b3ee49fb33759752c"
+      },
+      {
+        "id": 8,
+        "user_id": "141",
+        "type": "MDL_Pass",
+        "outbound_array": [
+          0,
+          1,
+          10,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          9
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 0,
+            "caller": 8
+          },
+          {
+            "target": 1,
+            "caller": 8
+          },
+          {
+            "target": 2,
+            "caller": 8
+          },
+          {
+            "target": 3,
+            "caller": 8
+          },
+          {
+            "target": 4,
+            "caller": 8
+          },
+          {
+            "target": 5,
+            "caller": 8
+          },
+          {
+            "target": 6,
+            "caller": 8
+          },
+          {
+            "target": 7,
+            "caller": 8
+          },
+          {
+            "target": 9,
+            "caller": 8
+          },
+          {
+            "target": 10,
+            "caller": 8
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 0 ] . run ( 8 ) ; _blocks_ [ 1 ] . run ( 8 ) ; _blocks_ [ 2 ] . run ( 8 ) ; _blocks_ [ 3 ] . run ( 8 ) ; _blocks_ [ 4 ] . run ( 8 ) ; _blocks_ [ 5 ] . run ( 8 ) ; _blocks_ [ 6 ] . run ( 8 ) ; _blocks_ [ 7 ] . run ( 8 ) ; _blocks_ [ 9 ] . run ( 8 ) ; _blocks_ [ 10 ] . run ( 8 ) ; } }",
+        "body_token_sha256": "f0a47a3ba10d8a047e038138aa8be4e43686611be69d18d8aa0b02aa68cabe3a"
+      },
+      {
+        "id": 9,
+        "user_id": "413",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "315aef4d390f60db3b680c974a9bfb07b947dbfb71125578ad39510ae1c416be"
+      },
+      {
+        "id": 10,
+        "user_id": "414",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "25b9738fd9fbf438b79de7acc1297c4c1c4ed7bf28bb6ca55e018f73509e9cd8"
+      },
+      {
+        "id": 11,
+        "user_id": "415",
+        "type": "MDL_eTrade_TradeNew < string , string , string , string , string >",
+        "outbound_array": [
+          13
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 13,
+            "caller": 11
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 13 ] . run ( 11 ) ; } }",
+        "body_token_sha256": "b5f3a9b2910bc5604a71f3d125dbc6951e9e725867869e847d8554594b5563c4"
+      },
+      {
+        "id": 12,
+        "user_id": "416",
+        "type": "MDL_eTrade_TradeClosed < string , string , string , string , string , string , int >",
+        "outbound_array": [
+          13
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 13,
+            "caller": 12
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 13 ] . run ( 12 ) ; } }",
+        "body_token_sha256": "aedbb2815fd214f60124d916a6ef281a48cc80daa8ec1df3c828c38628ea7391"
+      },
+      {
+        "id": 13,
+        "user_id": "417",
+        "type": "MDL_Formula_1 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "58013018e307eb89951fc861d01978af8016a16259810ed062c93bfdf0bdf740"
+      },
+      {
+        "id": 14,
+        "user_id": "418",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          15
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 15,
+            "caller": 14
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 15 ] . run ( 14 ) ; } }",
+        "body_token_sha256": "233960392b5e1c221a2d6506250de2bb3da9a9bf33e89cb9d23a4d6b7a2a6131"
+      },
+      {
+        "id": 15,
+        "user_id": "419",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [
+          63,
+          64,
+          65,
+          66,
+          95
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 63,
+            "caller": 15
+          },
+          {
+            "target": 64,
+            "caller": 15
+          },
+          {
+            "target": 65,
+            "caller": 15
+          },
+          {
+            "target": 66,
+            "caller": 15
+          },
+          {
+            "target": 95,
+            "caller": 15
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 63 ] . run ( 15 ) ; _blocks_ [ 64 ] . run ( 15 ) ; _blocks_ [ 65 ] . run ( 15 ) ; _blocks_ [ 66 ] . run ( 15 ) ; _blocks_ [ 95 ] . run ( 15 ) ; } }",
+        "body_token_sha256": "c780bfd10bec3b567fc726adf64efe7e848b42d7e257211ef783aa8c8a5a39a3"
+      },
+      {
+        "id": 16,
+        "user_id": "420",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          17
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 17,
+            "caller": 16
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 17 ] . run ( 16 ) ; } }",
+        "body_token_sha256": "a85b28a1b96b950bf3a2d8988d5e3936450bec5a098e25542260dc58d549bb17"
+      },
+      {
+        "id": 17,
+        "user_id": "421",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [
+          67,
+          68,
+          69,
+          70,
+          94
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 67,
+            "caller": 17
+          },
+          {
+            "target": 68,
+            "caller": 17
+          },
+          {
+            "target": 69,
+            "caller": 17
+          },
+          {
+            "target": 70,
+            "caller": 17
+          },
+          {
+            "target": 94,
+            "caller": 17
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 67 ] . run ( 17 ) ; _blocks_ [ 68 ] . run ( 17 ) ; _blocks_ [ 69 ] . run ( 17 ) ; _blocks_ [ 70 ] . run ( 17 ) ; _blocks_ [ 94 ] . run ( 17 ) ; } }",
+        "body_token_sha256": "a5a244768f53efdc772ad7da7317d4ce5f914808dc27fd722af2787989b54dda"
+      },
+      {
+        "id": 18,
+        "user_id": "422",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          21
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 21,
+            "caller": 18
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 21 ] . run ( 18 ) ; } }",
+        "body_token_sha256": "77af870c130b4f369c28d26ec6c7f6ccb464d38cc0986a41cb575738bf11788b"
+      },
+      {
+        "id": 19,
+        "user_id": "423",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          22
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 22,
+            "caller": 19
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 22 ] . run ( 19 ) ; } }",
+        "body_token_sha256": "c1388a843ac3fa858b6d53141a9a2b081266f7359e96675fb57d028946ba5bc7"
+      },
+      {
+        "id": 20,
+        "user_id": "424",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          120
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 120,
+            "caller": 20
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 120 ] . run ( 20 ) ; } }",
+        "body_token_sha256": "7ddc2efc1bf13b0eced40233a61c226caeaaed7a86faa59e8628fba45dfd9885"
+      },
+      {
+        "id": 21,
+        "user_id": "425",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          20
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 20,
+            "caller": 21
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 20 ] . run ( 21 ) ; } }",
+        "body_token_sha256": "700023be2a2a1bcbaa8c8edf1424d051f4aca61d4ef249f756588c1a5074b295"
+      },
+      {
+        "id": 22,
+        "user_id": "426",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          23
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 23,
+            "caller": 22
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 23 ] . run ( 22 ) ; } }",
+        "body_token_sha256": "3232827396a38f21e0f8aac3938fa234c6bdae2b8533fe816ac9cef60b019935"
+      },
+      {
+        "id": 23,
+        "user_id": "427",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          121
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 121,
+            "caller": 23
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 121 ] . run ( 23 ) ; } }",
+        "body_token_sha256": "95516725682eb75f5f2a3674d0fa239164b8eb31c9aff3f61a0c0630db9d7a33"
+      },
+      {
+        "id": 24,
+        "user_id": "428",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          25
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 25,
+            "caller": 24
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 25 ] . run ( 24 ) ; } }",
+        "body_token_sha256": "a61fa5e0bacf2fe23514b8834c8e881ad8007b6e7164607bc9011bf9e9042bac"
+      },
+      {
+        "id": 25,
+        "user_id": "429",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "66c68fa255afaf5467ec29d602f7fd063e067132e1ab026cc8259c28d3b07f4e"
+      },
+      {
+        "id": 26,
+        "user_id": "430",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          27
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 27,
+            "caller": 26
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 27 ] . run ( 26 ) ; } }",
+        "body_token_sha256": "d865165962ca01b3cd341ecf3aba638fd376ef7266c62cc001df349131fa74a1"
+      },
+      {
+        "id": 27,
+        "user_id": "431",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "17dbbc1522f7455964e8ea9d5e5622d82ca2547370817ffbf1705856f48f3413"
+      },
+      {
+        "id": 28,
+        "user_id": "432",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          31
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 31,
+            "caller": 28
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 31 ] . run ( 28 ) ; } }",
+        "body_token_sha256": "e5416853dcb944c9cc7846c9a53bbeba49e1cb4a5c8440259e309c2418665e6a"
+      },
+      {
+        "id": 29,
+        "user_id": "433",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          32
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 32,
+            "caller": 29
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 32 ] . run ( 29 ) ; } }",
+        "body_token_sha256": "9f09a6b47050ac7f35de81c65fc912933f7485ed819fbaf703f06842f27b4803"
+      },
+      {
+        "id": 30,
+        "user_id": "434",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          118
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 118,
+            "caller": 30
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 118 ] . run ( 30 ) ; } }",
+        "body_token_sha256": "f53da233a4932074c54df9b2af3372afb5df43fee1926a1c1f32ac4792dd9d14"
+      },
+      {
+        "id": 31,
+        "user_id": "435",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          30
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 30,
+            "caller": 31
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 30 ] . run ( 31 ) ; } }",
+        "body_token_sha256": "30217a8dbf7372067def0bfb1079a9eeb78e1927ae017dfb1594392ae94336d4"
+      },
+      {
+        "id": 32,
+        "user_id": "436",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          33
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 33,
+            "caller": 32
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 33 ] . run ( 32 ) ; } }",
+        "body_token_sha256": "c863f592f143fd5e14e4ad911b297af226dbe20cf639954d954f1d5d2a9c5388"
+      },
+      {
+        "id": 33,
+        "user_id": "437",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          122
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 122,
+            "caller": 33
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 122 ] . run ( 33 ) ; } }",
+        "body_token_sha256": "c57386e36a25c6fea3fd96aed770233e5c753c8af1cc8d5f110ea0c65642aed0"
+      },
+      {
+        "id": 34,
+        "user_id": "438",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          35
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 35,
+            "caller": 34
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 35 ] . run ( 34 ) ; } }",
+        "body_token_sha256": "a0c24670425a592af12baec81f3a0a68c716149a34b701a55de614873efac419"
+      },
+      {
+        "id": 35,
+        "user_id": "439",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "1e8bdcafd52db68fcb84eca469f321a2056806d71c86733c6680e8df4915f016"
+      },
+      {
+        "id": 36,
+        "user_id": "440",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          37
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 37,
+            "caller": 36
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 37 ] . run ( 36 ) ; } }",
+        "body_token_sha256": "1bb9683b799a63d0fc0ed89bcb838f58d4084b45d4dfde7ec27b3bc519ef6232"
+      },
+      {
+        "id": 37,
+        "user_id": "441",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "4582467f206f0241cc54d412798b06917790daf4b1e21e76e5c35dee224563a9"
+      },
+      {
+        "id": 38,
+        "user_id": "442",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          41
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 41,
+            "caller": 38
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 41 ] . run ( 38 ) ; } }",
+        "body_token_sha256": "ac0550931be24d229a7e5b555aca0c90e113f5c646ad5bea820ec518f17d2feb"
+      },
+      {
+        "id": 39,
+        "user_id": "443",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          42
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 42,
+            "caller": 39
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 42 ] . run ( 39 ) ; } }",
+        "body_token_sha256": "6c1126ef224600cbfd74cae15ea5c1a631c8bdb0359618c9b352aff2b323fb8a"
+      },
+      {
+        "id": 40,
+        "user_id": "444",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          119
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 119,
+            "caller": 40
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 119 ] . run ( 40 ) ; } }",
+        "body_token_sha256": "226d7d93a7b7a80337cb2ed7f721ee6676a0472a7fdf345b311e2bfb931f43d4"
+      },
+      {
+        "id": 41,
+        "user_id": "445",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          40
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 40,
+            "caller": 41
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 40 ] . run ( 41 ) ; } }",
+        "body_token_sha256": "a07cfd5e0b4eaee628beedb8479e16e4fded1d13d062a6ec6648a1a04ed84bc1"
+      },
+      {
+        "id": 42,
+        "user_id": "446",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          43
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 43,
+            "caller": 42
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 43 ] . run ( 42 ) ; } }",
+        "body_token_sha256": "2d450a3ed01c33ac86dccf368e8757160f06f963bba53b2a5b2209a9f19fb41c"
+      },
+      {
+        "id": 43,
+        "user_id": "447",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          124
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 124,
+            "caller": 43
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 124 ] . run ( 43 ) ; } }",
+        "body_token_sha256": "b9b98744f8c1f9995f28adb39092706097bed6c981f0a7e5f5d8f41425ea39f9"
+      },
+      {
+        "id": 44,
+        "user_id": "448",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          45
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 45,
+            "caller": 44
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 45 ] . run ( 44 ) ; } }",
+        "body_token_sha256": "aa5f433b6ff41c309c639c1dcae96dd03edcfdcda883afbcb410045c5a172863"
+      },
+      {
+        "id": 45,
+        "user_id": "449",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "1d4f82d84fadea11d09f7425fd1be64296a3788ce404880848b7f68f7347c3c9"
+      },
+      {
+        "id": 46,
+        "user_id": "450",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          47
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 47,
+            "caller": 46
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 47 ] . run ( 46 ) ; } }",
+        "body_token_sha256": "936f4e0ca075aaec7dd98c2767336ed4ba1459b1b60f43283bdf6fdb2ce7c53e"
+      },
+      {
+        "id": 47,
+        "user_id": "451",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "328db148e773a6dfa742305a54127f43912f50e5e45f2f05d8602df29c1331f1"
+      },
+      {
+        "id": 48,
+        "user_id": "452",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          51
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 51,
+            "caller": 48
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 51 ] . run ( 48 ) ; } }",
+        "body_token_sha256": "3939e3fc8e075a996efdea8e2902d33f0ed9bd759b5e6aa51cdb6fbe91290991"
+      },
+      {
+        "id": 49,
+        "user_id": "453",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          52
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 52,
+            "caller": 49
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 52 ] . run ( 49 ) ; } }",
+        "body_token_sha256": "b3fa163df9f2536fe347d42d135ba846442bebfda9e26aa8af4f86379232e6e9"
+      },
+      {
+        "id": 50,
+        "user_id": "454",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          117
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 117,
+            "caller": 50
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 117 ] . run ( 50 ) ; } }",
+        "body_token_sha256": "68cc6c91d8dc67ddcb2da006dca38138d0c8907044364d2458e1eb9ed0e4fc37"
+      },
+      {
+        "id": 51,
+        "user_id": "455",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          50
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 50,
+            "caller": 51
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 50 ] . run ( 51 ) ; } }",
+        "body_token_sha256": "cec3754714c66817e210302efdf426862f604af209156cfbc66eaf82fc92aa75"
+      },
+      {
+        "id": 52,
+        "user_id": "456",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          53
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 53,
+            "caller": 52
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 53 ] . run ( 52 ) ; } }",
+        "body_token_sha256": "a589822aeecd56facba0e8fb647c64a6e0b171ba4cb26eb2cfd9fc8272bf106c"
+      },
+      {
+        "id": 53,
+        "user_id": "457",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          123
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 123,
+            "caller": 53
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 123 ] . run ( 53 ) ; } }",
+        "body_token_sha256": "315193d729ec230b5347a49e5b979a74ce52b7388cff217e56516d76cecf9cc0"
+      },
+      {
+        "id": 54,
+        "user_id": "459",
+        "type": "MDL_CloseOpened < string , string , string , string , string , int , ulong , color >",
+        "outbound_array": [
+          81,
+          82,
+          89
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 81,
+            "caller": 54
+          },
+          {
+            "target": 82,
+            "caller": 54
+          },
+          {
+            "target": 89,
+            "caller": 54
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 81 ] . run ( 54 ) ; _blocks_ [ 82 ] . run ( 54 ) ; _blocks_ [ 89 ] . run ( 54 ) ; } }",
+        "body_token_sha256": "eba5c1a1a62b3c1ec48a2a3c22b8abd8b554c475aa4795ac378b58235b8a60da"
+      },
+      {
+        "id": 55,
+        "user_id": "515",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          48
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 48,
+            "caller": 55
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 48 ] . run ( 55 ) ; } }",
+        "body_token_sha256": "6de6be01336c8e99cf1355a42b259d317e2d2ef23b62b7b1bb8ebdeb52014990"
+      },
+      {
+        "id": 56,
+        "user_id": "516",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          18
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 18,
+            "caller": 56
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 18 ] . run ( 56 ) ; } }",
+        "body_token_sha256": "ca8de91a78539f8ee84c6d63749ea31aeef245795b605c5ee36698345e92032f"
+      },
+      {
+        "id": 57,
+        "user_id": "518",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          19
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 19,
+            "caller": 57
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 19 ] . run ( 57 ) ; } }",
+        "body_token_sha256": "add0947636048cd38f88c281d67c02c609452586f4a73c3f54a83b64a32e4159"
+      },
+      {
+        "id": 58,
+        "user_id": "526",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          28
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 28,
+            "caller": 58
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 28 ] . run ( 58 ) ; } }",
+        "body_token_sha256": "464eba23d779b7320657bbbd42dd1e0637bb6f703fb7aa9ab2dd30d5c856721b"
+      },
+      {
+        "id": 59,
+        "user_id": "528",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          29
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 29,
+            "caller": 59
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 29 ] . run ( 59 ) ; } }",
+        "body_token_sha256": "43769f1b3b51bb376e9aa8e1e21f6e258f866b9d93334d9dae1dd7a520acca48"
+      },
+      {
+        "id": 60,
+        "user_id": "536",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          38
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 38,
+            "caller": 60
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 38 ] . run ( 60 ) ; } }",
+        "body_token_sha256": "8f2762bca7098bb747a1881210cceb26ad72e1651c7d2c381dbfaec183209ce0"
+      },
+      {
+        "id": 61,
+        "user_id": "538",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          39
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 39,
+            "caller": 61
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 39 ] . run ( 61 ) ; } }",
+        "body_token_sha256": "9ffd95443940bad753085d01f5a96a6440eca1f3b9e24596bf1edfcbd6e3cb4f"
+      },
+      {
+        "id": 62,
+        "user_id": "548",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          49
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 49,
+            "caller": 62
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 49 ] . run ( 62 ) ; } }",
+        "body_token_sha256": "c35fc17d06244b89860b6933b272a7b887f14da05acd92519d917c43b28d3fff"
+      },
+      {
+        "id": 63,
+        "user_id": "550",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "ca94108b5c78b7cf15daaed54a9baf2b4a12a16a64ca97f478afae734ae410cb"
+      },
+      {
+        "id": 64,
+        "user_id": "560",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "e946740a6ff9eae658ba01c9400e0384fa663802db900a991302b6d7acd258f8"
+      },
+      {
+        "id": 65,
+        "user_id": "570",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "8cbb365cb7e162970040998580f95836ba3da8cfede84073626c8f8bdfdae90b"
+      },
+      {
+        "id": 66,
+        "user_id": "580",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "89e296d562e488cef03d9671836d84473fbbec6b29251e7e1ab0eb130dc7510c"
+      },
+      {
+        "id": 67,
+        "user_id": "581",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "3b3afe027cceb8da7669ae0088a1c96414ef31719d332ecd193ed0f2cbce28da"
+      },
+      {
+        "id": 68,
+        "user_id": "591",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "1efea2d2b6160fbed32ae0ef1208f709a85fc49afd466d29391e12aef37abb7d"
+      },
+      {
+        "id": 69,
+        "user_id": "601",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "79bee067c14b9cb878dc3c48f073632216db4397484abf20c877140d1ae11a3e"
+      },
+      {
+        "id": 70,
+        "user_id": "611",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "b9b085e41064778f97d8ba00677300eaedd7a3fd034b82580a1a94166ca66a5e"
+      },
+      {
+        "id": 71,
+        "user_id": "612",
+        "type": "MDL_IfOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          105,
+          72,
+          73,
+          74,
+          75
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 72,
+            "caller": 71
+          },
+          {
+            "target": 73,
+            "caller": 71
+          },
+          {
+            "target": 74,
+            "caller": 71
+          },
+          {
+            "target": 75,
+            "caller": 71
+          },
+          {
+            "target": 105,
+            "caller": 71
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 72 ] . run ( 71 ) ; _blocks_ [ 73 ] . run ( 71 ) ; _blocks_ [ 74 ] . run ( 71 ) ; _blocks_ [ 75 ] . run ( 71 ) ; _blocks_ [ 105 ] . run ( 71 ) ; } }",
+        "body_token_sha256": "8836e2fba32eded381ddbd6bb723944cd3969da51cc39fece43e05f23db07c93"
+      },
+      {
+        "id": 72,
+        "user_id": "613",
+        "type": "MDL_Formula_2 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "a15d6f14e1e8552a2646e368dc74deaebca9aebb71f7c107764795a1cd74f8b1"
+      },
+      {
+        "id": 73,
+        "user_id": "614",
+        "type": "MDL_Formula_3 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "c9fe931ef4c2fbbb67895e5eee0d87c11cbcea32de072b8307d382e59e021556"
+      },
+      {
+        "id": 74,
+        "user_id": "615",
+        "type": "MDL_Formula_4 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "9147d509556c6058880031e05a7aff1acb4669414c8d4d91ce77e1b0344efe83"
+      },
+      {
+        "id": 75,
+        "user_id": "616",
+        "type": "MDL_Formula_5 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "144efc29744a08b865f9f2835cba3d06ddf9563bfcec6f3ac5bdc3d96ccd03b9"
+      },
+      {
+        "id": 76,
+        "user_id": "617",
+        "type": "MDL_IfOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          104,
+          77,
+          78,
+          79,
+          80
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 77,
+            "caller": 76
+          },
+          {
+            "target": 78,
+            "caller": 76
+          },
+          {
+            "target": 79,
+            "caller": 76
+          },
+          {
+            "target": 80,
+            "caller": 76
+          },
+          {
+            "target": 104,
+            "caller": 76
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 77 ] . run ( 76 ) ; _blocks_ [ 78 ] . run ( 76 ) ; _blocks_ [ 79 ] . run ( 76 ) ; _blocks_ [ 80 ] . run ( 76 ) ; _blocks_ [ 104 ] . run ( 76 ) ; } }",
+        "body_token_sha256": "cab7c1039d068ab49400fa3440ae8dfdb66cf5c01be3ca16a0ca5eb6240ed7b4"
+      },
+      {
+        "id": 77,
+        "user_id": "618",
+        "type": "MDL_Formula_6 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "7720804a22c8724cecbc303dc7f91dc6ead3870a5063ed0c38acdf3cdc1a7f16"
+      },
+      {
+        "id": 78,
+        "user_id": "619",
+        "type": "MDL_Formula_7 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "e7e6a23e9afe59bbec8774beb8b3cee3d157527170bda729c523a98828dd9566"
+      },
+      {
+        "id": 79,
+        "user_id": "620",
+        "type": "MDL_Formula_8 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "1c33ebfa123946fa7ad5a28135f39f9b28728b4b1050838fff838a169e666c9e"
+      },
+      {
+        "id": 80,
+        "user_id": "621",
+        "type": "MDL_Formula_9 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "f1c377fd6d9dd1c6e426cf29c86c107ab46ae6538d8be9a99ca8503709ee7f48"
+      },
+      {
+        "id": 81,
+        "user_id": "622",
+        "type": "MDL_ModifyVariables < int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "e201e8f89eb54321cbc97029ddd5f2e36cb6ade0243d3e620e80fbf2bde0a507"
+      },
+      {
+        "id": 82,
+        "user_id": "623",
+        "type": "MDL_ModifyVariables < int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "b60817ce79ca45c2c25adddd3cadd8b0198b47fdef0da76a772f77126149160a"
+      },
+      {
+        "id": 83,
+        "user_id": "624",
+        "type": "MDL_NoNearbyRunning < string , string , string , string , string , MDLIC_value_time , datetime , MDLIC_value_time , datetime , string , MDLIC_prices_prices , double , string , double , double , int >",
+        "outbound_array": [
+          55,
+          56,
+          58,
+          60,
+          99
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 55,
+            "caller": 83
+          },
+          {
+            "target": 56,
+            "caller": 83
+          },
+          {
+            "target": 58,
+            "caller": 83
+          },
+          {
+            "target": 60,
+            "caller": 83
+          },
+          {
+            "target": 99,
+            "caller": 83
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 55 ] . run ( 83 ) ; _blocks_ [ 56 ] . run ( 83 ) ; _blocks_ [ 58 ] . run ( 83 ) ; _blocks_ [ 60 ] . run ( 83 ) ; _blocks_ [ 99 ] . run ( 83 ) ; } }",
+        "body_token_sha256": "a408de38a259259ed505b4457726b93751fe50473b9f5d3e1909ef6ed0fd8655"
+      },
+      {
+        "id": 84,
+        "user_id": "625",
+        "type": "MDL_NoNearbyRunning < string , string , string , string , string , MDLIC_value_time , datetime , MDLIC_value_time , datetime , string , MDLIC_prices_prices , double , string , double , double , int >",
+        "outbound_array": [
+          103,
+          57,
+          59,
+          61,
+          62
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 57,
+            "caller": 84
+          },
+          {
+            "target": 59,
+            "caller": 84
+          },
+          {
+            "target": 61,
+            "caller": 84
+          },
+          {
+            "target": 62,
+            "caller": 84
+          },
+          {
+            "target": 103,
+            "caller": 84
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 57 ] . run ( 84 ) ; _blocks_ [ 59 ] . run ( 84 ) ; _blocks_ [ 61 ] . run ( 84 ) ; _blocks_ [ 62 ] . run ( 84 ) ; _blocks_ [ 103 ] . run ( 84 ) ; } }",
+        "body_token_sha256": "d77c142ede4d380ab3138452ab5bcc946f0318c977205e5a68bb555fc9efd9d6"
+      },
+      {
+        "id": 85,
+        "user_id": "640",
+        "type": "MDL_CheckAvgProfitFromNtrades < string , string , string , string , string , string , double , double , int , int , int , string , string , double , double >",
+        "outbound_array": [
+          54
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 54,
+            "caller": 85
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 54 ] . run ( 85 ) ; } }",
+        "body_token_sha256": "edd701c31deb68d21e732cd9210af0271aa0da1924a80a8e768ef2f8b8a10b8b"
+      },
+      {
+        "id": 86,
+        "user_id": "641",
+        "type": "MDL_Formula_10 < MDLIC_account_AccountBalance , double , string , MDLIC_value_value , double >",
+        "outbound_array": [
+          87
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 87,
+            "caller": 86
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 87 ] . run ( 86 ) ; } }",
+        "body_token_sha256": "c39787b60a50ed031629612f48655f751c109cdf763e5682cba007a2933bc52c"
+      },
+      {
+        "id": 87,
+        "user_id": "650",
+        "type": "MDL_Formula_11 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [
+          85
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 85,
+            "caller": 87
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 85 ] . run ( 87 ) ; } }",
+        "body_token_sha256": "bd6336fa5f004aec3d4f51e190794fa2461a7a5ade0d4e6c6198ac229711c69b"
+      },
+      {
+        "id": 88,
+        "user_id": "651",
+        "type": "MDL_IfOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          86
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 86,
+            "caller": 88
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 86 ] . run ( 88 ) ; } }",
+        "body_token_sha256": "887e1bc28eca6ecdedf6de2df4e8fb8c52a222285bb175cc4e31650977f316ac"
+      },
+      {
+        "id": 89,
+        "user_id": "652",
+        "type": "MDL_ModifyVariables < int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double , int , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "55afdc1c77b6cf3e1704909ebd30b5a4ecc9afa00aaffc2ce0935e4c1c8d53f1"
+      },
+      {
+        "id": 90,
+        "user_id": "653",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          91
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 91,
+            "caller": 90
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 91 ] . run ( 90 ) ; } }",
+        "body_token_sha256": "7f67d3c33d76b0b3b0161c9dacc4d54d38c428c09bd6501d3f4a5a34de8a04ac"
+      },
+      {
+        "id": 91,
+        "user_id": "654",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "05393efd6b82f794e16c5bec5a341cb493aabecb4e9a7f978df02bb2e7eee584"
+      },
+      {
+        "id": 92,
+        "user_id": "655",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          93
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 93,
+            "caller": 92
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 93 ] . run ( 92 ) ; } }",
+        "body_token_sha256": "2af917122e25889caea575b1435ced244f1a2662606e5c52fcb3469bc8cb07b8"
+      },
+      {
+        "id": 93,
+        "user_id": "656",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_candles_candles , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "69656ab03e77ee017d3f322c6bc6ce3ddaa1c20c0e03b0748b6dca8cc12d4971"
+      },
+      {
+        "id": 94,
+        "user_id": "657",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "d2e8bacb9b7577a7f02f1a6523e65effc0677d00b2aefca90b23d1ab4a06646c"
+      },
+      {
+        "id": 95,
+        "user_id": "658",
+        "type": "MDL_ChartDrawLine < bool , bool , string , ENUM_OBJECT , MDLIC_value_time , datetime , MDLIC_market_PivotPoint , double , MDLIC_value_time , datetime , MDLIC_candles_candles , double , double , bool , bool , bool , color , ENUM_LINE_STYLE , int , bool , bool , bool , bool , int , string >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "4b5ad61cbc571e86ee7c64b1ad6bb33e44d81dee3f76e27a01c462664b8dd4eb"
+      },
+      {
+        "id": 96,
+        "user_id": "659",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          98
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 98,
+            "caller": 96
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 98 ] . run ( 96 ) ; } }",
+        "body_token_sha256": "bf7586332db9ef906215ec951e4c82bd106cffd8783c9c5eadfea208480ac8f8"
+      },
+      {
+        "id": 97,
+        "user_id": "661",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          116
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 116,
+            "caller": 97
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 116 ] . run ( 97 ) ; } }",
+        "body_token_sha256": "96bde6f0e2f982cab635310654d2f6a39fa711fe840c0633947bf8f8373531a6"
+      },
+      {
+        "id": 98,
+        "user_id": "662",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          97
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 97,
+            "caller": 98
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 97 ] . run ( 98 ) ; } }",
+        "body_token_sha256": "0331dfbd6a8944bd86bda841b114c5245bb36ff8de4a78498ae4d97069ea2605"
+      },
+      {
+        "id": 99,
+        "user_id": "722",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          96
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 96,
+            "caller": 99
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 96 ] . run ( 99 ) ; } }",
+        "body_token_sha256": "bf266cbdc3f2e700aed2d2dc856142110b25ea1c0907779a8b373862c163528d"
+      },
+      {
+        "id": 100,
+        "user_id": "723",
+        "type": "MDL_CheckDistance < MDLIC_objectattributes_OBJECT , double , MDLIC_prices_prices , double , bool , string , MDLIC_value_points , double >",
+        "outbound_array": [
+          101
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 101,
+            "caller": 100
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 101 ] . run ( 100 ) ; } }",
+        "body_token_sha256": "97088c6306857b7db73da2bfb1bfcbf9a221f5490e466df0fbaf585e809b30b2"
+      },
+      {
+        "id": 101,
+        "user_id": "726",
+        "type": "MDL_NoOpenedOrders < string , string , string , string , string >",
+        "outbound_array": [
+          102
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 102,
+            "caller": 101
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 102 ] . run ( 101 ) ; } }",
+        "body_token_sha256": "af0f53a680886e3338a4a5311ac810749e289616e008cedd9e2698bfc73973c0"
+      },
+      {
+        "id": 102,
+        "user_id": "727",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_objectattributes_OBJECT , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [
+          125
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 125,
+            "caller": 102
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 125 ] . run ( 102 ) ; } }",
+        "body_token_sha256": "afbfc85c51b03cf8c762fd573c7c8418b493169e24aab777d51a19f39ee410b4"
+      },
+      {
+        "id": 103,
+        "user_id": "818",
+        "type": "MDL_Condition < MDLIC_candles_candles , double , string , MDLIC_objectattributes_OBJECT , double , int >",
+        "outbound_array": [
+          100
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 100,
+            "caller": 103
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 100 ] . run ( 103 ) ; } }",
+        "body_token_sha256": "2110f44393673674d1026d836ebcf6a76d7fce6e696bf6d53466d2687d16edef"
+      },
+      {
+        "id": 104,
+        "user_id": "819",
+        "type": "MDL_Formula_12 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "f6039daa716721b0c3c54950198c7096e5f957bfeb8f5c29be0747ebc6127e65"
+      },
+      {
+        "id": 105,
+        "user_id": "820",
+        "type": "MDL_Formula_13 < MDLIC_value_value , double , string , MDLIC_value_value , double >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "5f16b8c563602875ea773507911a3f4c231d68f7cc128b65572d1f828259000b"
+      },
+      {
+        "id": 106,
+        "user_id": "821",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "b43787f5bbed0271a3cbf923a0b863dfe6565fbd025f82084eb2d535f6963706"
+      },
+      {
+        "id": 107,
+        "user_id": "822",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "d335758ee4c526041291f543b6875c1505b4243d810ccdfd2458fccff60aba39"
+      },
+      {
+        "id": 108,
+        "user_id": "823",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "13813e52c05a610e712c3186d18e23a599ad1f3b1a455fb5a3dbae21736d4dac"
+      },
+      {
+        "id": 109,
+        "user_id": "824",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "5b99e14b5dd97ce3e202fb368a3d50735a97ac6b4cb5c465cd5cbdf28cf78fb1"
+      },
+      {
+        "id": 110,
+        "user_id": "825",
+        "type": "MDL_BuyNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "d7d0909661542be31beab756c96483c96b6e8b002c0a53177ec7201c8d4584e4"
+      },
+      {
+        "id": 111,
+        "user_id": "826",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "f2fe95c7b085d622b42dfbdf5bbb19cca341d3b432c182c1f1c1a600cdce6576"
+      },
+      {
+        "id": 112,
+        "user_id": "827",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "82dfe4ea688c4bc51c7085d76fd41eb2afb468f15a3a38e61b165800951a6675"
+      },
+      {
+        "id": 113,
+        "user_id": "828",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "ad3724513421e7569e6e8f9fab5667ab89f51954aba4c35c5f6d2d90760131bc"
+      },
+      {
+        "id": 114,
+        "user_id": "829",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "a3924755f2a94827998d67d4853a97104e279f1ec8f08180494d525ff294c563"
+      },
+      {
+        "id": 115,
+        "user_id": "830",
+        "type": "MDL_SellNow < string , string , string , double , double , double , double , double , MDLIC_value_value , double , double , double , int , double , double , double , double , double , int , int , double , bool , double , double , bool , double , string , bool , double , string , string , bool , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , double , double , double , MDLIC_value_value , double , MDLIC_value_value , double , MDLIC_value_value , double , string , int , int , int , MDLIC_value_time , datetime , ulong , string , color >",
+        "outbound_array": [],
+        "ordered_callback_edges": [],
+        "callback_tokens": "{ }",
+        "body_token_sha256": "b810fc6773c80853e72ddaf77b99f13dab62add8d220e41b484564a1c5d2fb60"
+      },
+      {
+        "id": 116,
+        "user_id": "831",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          106
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 106,
+            "caller": 116
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 106 ] . run ( 116 ) ; } }",
+        "body_token_sha256": "ee582d7776a9142c31a40b116b596a4fcebd68f25531defe4f3fbebd47d61397"
+      },
+      {
+        "id": 117,
+        "user_id": "832",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          107
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 107,
+            "caller": 117
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 107 ] . run ( 117 ) ; } }",
+        "body_token_sha256": "6a80476af60abdc0685e29a852e9b99ae007f1ba614f4b8dcb96b96111813dfe"
+      },
+      {
+        "id": 118,
+        "user_id": "833",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          109
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 109,
+            "caller": 118
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 109 ] . run ( 118 ) ; } }",
+        "body_token_sha256": "04d5355272994642a82246e5580d70624d141c9dd2c9af6764d947594cc60f6b"
+      },
+      {
+        "id": 119,
+        "user_id": "834",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          108
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 108,
+            "caller": 119
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 108 ] . run ( 119 ) ; } }",
+        "body_token_sha256": "ba75077a6ad0f9a013f8d56a626d2879619e3bfdc88ff999c2df973138ffc39c"
+      },
+      {
+        "id": 120,
+        "user_id": "835",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          110
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 110,
+            "caller": 120
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 110 ] . run ( 120 ) ; } }",
+        "body_token_sha256": "375b765f44340e431c23ff9993f46a0fab9765f9d27989d92a7399c765fea5b1"
+      },
+      {
+        "id": 121,
+        "user_id": "836",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          111
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 111,
+            "caller": 121
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 111 ] . run ( 121 ) ; } }",
+        "body_token_sha256": "bd11eb412de9c24feb1fbaffc474517ce283277aab20155bf077908e27fc09da"
+      },
+      {
+        "id": 122,
+        "user_id": "837",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          112
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 112,
+            "caller": 122
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 112 ] . run ( 122 ) ; } }",
+        "body_token_sha256": "1d7f5478c5985002b707c1a044d72e225a1e17c32d5abb4ab9998903b811e673"
+      },
+      {
+        "id": 123,
+        "user_id": "838",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          114
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 114,
+            "caller": 123
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 114 ] . run ( 123 ) ; } }",
+        "body_token_sha256": "3dd5682696f896d813fe236fb9f8921407d0cd89e7b0b11a1aadc3e3077a95cc"
+      },
+      {
+        "id": 124,
+        "user_id": "839",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          113
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 113,
+            "caller": 124
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 113 ] . run ( 124 ) ; } }",
+        "body_token_sha256": "4054824293656f314b10d5a7c411ece2093b2b36776c7cb90c244a1bfa64c73c"
+      },
+      {
+        "id": 125,
+        "user_id": "840",
+        "type": "MDL_Condition < MDLIC_value_value , double , string , MDLIC_value_value , double , int >",
+        "outbound_array": [
+          115
+        ],
+        "ordered_callback_edges": [
+          {
+            "target": 115,
+            "caller": 125
+          }
+        ],
+        "callback_tokens": "{ if ( value == 1 ) { _blocks_ [ 115 ] . run ( 125 ) ; } }",
+        "body_token_sha256": "c3679f0620a1313add591e83872e0696763c1e943ff58cbf5f027eb89100810c"
+      }
+    ],
+    "event_roots": {
+      "OnInit": [
+        8
+      ],
+      "OnTrade": [
+        11,
+        12
+      ],
+      "__OnTick__": [
+        14,
+        16,
+        24,
+        26,
+        34,
+        36,
+        44,
+        46,
+        71,
+        76,
+        83,
+        84,
+        88,
+        90,
+        92
+      ]
+    },
+    "root_closures": {
+      "OnInit": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "OnTrade": [
+        11,
+        12,
+        13
+      ],
+      "__OnTick__": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125
+      ]
+    },
+    "lifecycle": {
+      "OnInit": {
+        "signature": "void OnInit ( )",
+        "body_token_sha256": "7425776c1a5a8d6ea15126d2c6800a76954b655a7d7466ac3185d669eb17c403",
+        "ordered_native_calls": []
+      },
+      "OnTick": {
+        "signature": "void OnTick ( )",
+        "body_token_sha256": "d98e9e99506599002dbe47700ef44d2324ea634e2a570898eb8405aa784ed78e",
+        "ordered_native_calls": [
+          "__OnTick__"
+        ]
+      },
+      "OnTrade": {
+        "signature": "void OnTrade ( )",
+        "body_token_sha256": "cb8b4d5b694de0f4a386fd4ef86f5c09e12cde3daca514e8366e4d0203ac942b",
+        "ordered_native_calls": []
+      },
+      "OnTimer": {
+        "signature": "void OnTimer ( )",
+        "body_token_sha256": "f910ce3092249f1bbf2972238755c101bdb1ca562929dadaf710044b4cea4ed5",
+        "ordered_native_calls": [
+          "OnTick",
+          "OnTrade"
+        ]
+      },
+      "OnChartEvent": {
+        "signature": "void OnChartEvent ( const int id , const long & lparam , const double & dparam , const string & sparam )",
+        "body_token_sha256": "c82cc6593a893acced1f2fd7cdf4392308e5ef956db522e00d173a6998e67b94",
+        "ordered_native_calls": []
+      },
+      "OnDeinit": {
+        "signature": "void OnDeinit ( const int reason )",
+        "body_token_sha256": "ecfd0d2d037a02e6994a508af28dc28f2fa4a3e533928c094fe68ac09406c49c",
+        "ordered_native_calls": []
+      },
+      "__OnTick__": {
+        "signature": "void __OnTick__ ( )",
+        "body_token_sha256": "c4ce82d8d7e1f4693a7b2f30b8c241ec6cdbe3cd370f758957accb3e83d93552",
+        "ordered_native_calls": [
+          "OnTrade"
+        ]
+      }
+    },
+    "hedge_gate_blocks": [
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125
+    ],
+    "hedge_rhs": "MDLIC_value_value constructor: Value = (double)1.0; no block override",
+    "period_d1_tokens": 2,
+    "current_timeframe_calls": 47,
+    "swapped_stop_assignments": 10,
+    "swapped_target_assignments": 10,
+    "enum_to_candle_find_assignments": 1
+  }
+}

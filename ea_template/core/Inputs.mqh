@@ -18,7 +18,9 @@
 #ifndef LAB_ENTRY_17
 #ifndef LAB_ENTRY_18
 #ifndef LAB_ENTRY_19
+#ifndef LAB_ENTRY_21
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -353,6 +355,10 @@ input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;   // [P50201] Stack Confi
 #ifdef LAB_CONST_StackConfirm
 const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
 #endif
+#endif
+#ifdef LAB_ENTRY_21
+const ENUM_STACK_MODE StackMode = STACK_SINGLE; // HIDDEN_INACTIVE: native DF03 owner
+const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE; // HIDDEN_INACTIVE
 #endif
 #ifndef LAB_CONST__9_StepUseATR
 input bool   _9_StepUseATR  = true;   // [P50210] Step Use ATR | with P50211
@@ -1800,6 +1806,95 @@ const int _0_MaxSpread = LAB_CONSTVAL__0_MaxSpread;
 double g_wave5_sl_price = 0.0;   // structural SL price (wave-1 top/bottom +/- ATR buffer)
 double g_wave5_tp_price = 0.0;   // 100% expansion target (entry_ref +/- |wave1|) - reference zone, not a hard broker TP
 double g_wave5_entry_ref = 0.0;  // price at signal time (0 = unset)
+#endif
+
+
+#ifdef LAB_ENTRY_21
+input group "21 DF03 source-native parameters (source-bound)"
+#ifndef LAB_CONST__21_DF03_Lot1
+input double _21_DF03_Lot1 = 0.05; // [P12100] DF03 Lot1 | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_Lot1
+const double _21_DF03_Lot1 = LAB_CONSTVAL__21_DF03_Lot1;
+#endif
+#ifndef LAB_CONST__21_DF03_Lot2
+input double _21_DF03_Lot2 = 0.1; // [P12101] DF03 Lot2 | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_Lot2
+const double _21_DF03_Lot2 = LAB_CONSTVAL__21_DF03_Lot2;
+#endif
+#ifndef LAB_CONST__21_DF03_Lot3
+input double _21_DF03_Lot3 = 0.15; // [P12102] DF03 Lot3 | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_Lot3
+const double _21_DF03_Lot3 = LAB_CONSTVAL__21_DF03_Lot3;
+#endif
+#ifndef LAB_CONST__21_DF03_Lot4
+input double _21_DF03_Lot4 = 0.2; // [P12103] DF03 Lot4 | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_Lot4
+const double _21_DF03_Lot4 = LAB_CONSTVAL__21_DF03_Lot4;
+#endif
+#ifndef LAB_CONST__21_DF03_Lot5
+input double _21_DF03_Lot5 = 0.3; // [P12104] DF03 Lot5 | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_Lot5
+const double _21_DF03_Lot5 = LAB_CONSTVAL__21_DF03_Lot5;
+#endif
+#ifndef LAB_CONST__21_DF03_PullBack
+input double _21_DF03_PullBack = 20.0; // [P12105] DF03 PullBack | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_PullBack
+const double _21_DF03_PullBack = LAB_CONSTVAL__21_DF03_PullBack;
+#endif
+#ifndef LAB_CONST__21_DF03_NearbyPip
+input double _21_DF03_NearbyPip = 20.0; // [P12106] DF03 NearbyPip | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_NearbyPip
+const double _21_DF03_NearbyPip = LAB_CONSTVAL__21_DF03_NearbyPip;
+#endif
+#ifndef LAB_CONST__21_DF03_CloseAllPercent
+input double _21_DF03_CloseAllPercent = 2.0; // [P12107] DF03 CloseAllPercent | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_CloseAllPercent
+const double _21_DF03_CloseAllPercent = LAB_CONSTVAL__21_DF03_CloseAllPercent;
+#endif
+#ifndef LAB_CONST__21_DF03_Timeframe
+input ENUM_TIMEFRAMES _21_DF03_Timeframe = PERIOD_D1; // [P12108] DF03 Timeframe | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_Timeframe
+const ENUM_TIMEFRAMES _21_DF03_Timeframe = LAB_CONSTVAL__21_DF03_Timeframe;
+#endif
+#ifndef LAB_CONST__21_DF03_HedgingMode
+input double _21_DF03_HedgingMode = 1.0; // [P12109] DF03 HedgingMode | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_HedgingMode
+const double _21_DF03_HedgingMode = LAB_CONSTVAL__21_DF03_HedgingMode;
+#endif
+#ifndef LAB_CONST__21_DF03_TPPip
+input double _21_DF03_TPPip = 40.0; // [P12110] DF03 TPPip | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_TPPip
+const double _21_DF03_TPPip = LAB_CONSTVAL__21_DF03_TPPip;
+#endif
+#ifndef LAB_CONST__21_DF03_SLPip
+input double _21_DF03_SLPip = 20.0; // [P12111] DF03 SLPip | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_SLPip
+const double _21_DF03_SLPip = LAB_CONSTVAL__21_DF03_SLPip;
+#endif
+#ifndef LAB_CONST__21_DF03_MagicStart
+input int _21_DF03_MagicStart = 4023; // [P12112] DF03 MagicStart | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_MagicStart
+const int _21_DF03_MagicStart = LAB_CONSTVAL__21_DF03_MagicStart;
+#endif
+#ifndef LAB_CONST__21_DF03_CandleFindBy
+input string _21_DF03_CandleFindBy = "id"; // [P12113] DF03 CandleFindBy | source-bound
+#endif
+#ifdef LAB_CONST__21_DF03_CandleFindBy
+const string _21_DF03_CandleFindBy = LAB_CONSTVAL__21_DF03_CandleFindBy;
+#endif
 #endif
 
 #endif // BOSS_LAB_INPUTS_MQH

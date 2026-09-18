@@ -1,0 +1,48 @@
+﻿{
+    "classification":  "AUTHOR_COMPILE_ONLY_NO_RUNTIME_OR_DIFFERENT_FAMILY_ACCEPTANCE",
+    "metaeditor":  "D:\\Meta 5\\metaeditor64.exe",
+    "metaeditor_version":  "5.0.0.6182",
+    "metaeditor_sha256":  "197ca3dd8d1971831366f54cb57bf3f120b420700e573135509d406e4e23709e",
+    "stage":  "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa",
+    "compiles":  [
+                     {
+                         "name":  "b21_wrapper",
+                         "source":  "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\Boss_21_GridFibo.mq5",
+                         "source_sha256":  "85a50448dee8cd8bba9fa5ca4222a01aae446baf2822f42da868b9566764aa8f",
+                         "log":  "D:\\EA_LAB_CONTROL\\worktrees\\ct-df03-b21-integration-r2-20260916\\tools\\df03_compat\\evidence\\b21_wrapper.log",
+                         "log_sha256":  "e751e81016eefc30cc8ae043303f632a67cb7fb0768c51f40e7146bbc1655514",
+                         "started_utc":  "2026-09-16T12:35:56.7823473Z",
+                         "exit_code":  0,
+                         "errors":  6,
+                         "warnings":  24,
+                         "ex5":  "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\Boss_21_GridFibo.ex5",
+                         "ex5_exists":  false,
+                         "warning_lines":  [
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(4570,35) : warning 94: implicit conversion from \u0027ENUM_TIMEFRAMES\u0027 to \u0027string\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(1838,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(1873,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(1908,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(1943,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(1978,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(2013,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(2048,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(2083,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7031,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7032,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7033,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7034,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7035,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7070,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7071,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7072,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7073,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(7074,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(2488,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(2523,9) : warning 43: possible loss of data due to type conversion from \u0027double\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(11083,16) : warning 43: possible loss of data due to type conversion from \u0027long\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(11627,28) : warning 43: possible loss of data due to type conversion from \u0027long\u0027 to \u0027int\u0027",
+                                               "C:\\Users\\patip\\AppData\\Local\\Temp\\df03-b21-compile-0d12f941cd24440c86071a9b22b55dfa\\ea_template\\compat\\df03\\DF03_TemplateEngine.mqh(13756,14) : warning 43: possible loss of data due to type conversion from \u0027long\u0027 to \u0027int\u0027"
+                                           ]
+                     }
+                 ]
+}

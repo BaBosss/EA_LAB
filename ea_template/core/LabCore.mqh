@@ -55,6 +55,9 @@
 #ifdef LAB_ENTRY_19
    #include "entries/Entry_AdaptiveTrendGrid.mqh"
 #endif
+#ifdef LAB_ENTRY_21
+   #include "entries/Entry_GridFibo.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -281,6 +284,17 @@ int OnInit()
                   Persist_Key("exit_closeall"));
       return INIT_FAILED;
    }
+#ifdef LAB_ENTRY_21
+   if(!DF03_B21ConfigValid()) return INIT_FAILED;
+   Exec_Init();
+   if(!RiskControl_Init()) return INIT_FAILED;
+   DF03_AdapterInit();
+   g_df03_ready = true;
+   Print("[CFG] B21 source-native grid/hedge/exit owners; shared Stack/Recovery/Hedge/Exit/Basket management and generic entry/regime/MM filters are HIDDEN_INACTIVE");
+   Print("[CFG] B21 shared hard risk, new-order gates and heat enabled by their existing controls; _MG_SelfGate unsupported (init refuses); external GVs use base _0_Magic");
+   RuntimeIdentity_Init();
+   return INIT_SUCCEEDED;
+#else
    // MM-SAFETY-001 (Codex review 2026-07-24): a sizing mode whose ingredients are missing
    // used to degrade to _41_FixedLot silently at the first order. Config errors now die
    // here instead; only runtime data failures are handled (as skipped orders) in MM_FirstLot.
@@ -436,11 +450,15 @@ int OnInit()
    }
 #endif
    return INIT_SUCCEEDED;
+#endif // LAB_ENTRY_21
 }
 
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+#ifdef LAB_ENTRY_21
+   if(g_df03_ready) { g_df03_ready = false; DF03_AdapterDeinit(reason); }
+#else
 #ifdef LAB_ENTRY_17
    // ORDER-432 finding 6: print the Wave5 guard fire counts. Without this a report of
    // zero trades cannot distinguish "no eligible signal" from "a guard rejected
@@ -455,6 +473,7 @@ void OnDeinit(const int reason)
    if(_MG_SelfGate) MG_Deinit();   // clear any MACROGATE_* GVs we set
    Regime_Deinit();
    Indi_Deinit();
+#endif // LAB_ENTRY_21
 }
 
 //+------------------------------------------------------------------+
@@ -481,6 +500,13 @@ void Lab_OpenOrder(const int dir, const int level)
 void OnTick()
 {
    RuntimeIdentity_Update();  // binds the first observed entry to this attach epoch
+#ifdef LAB_ENTRY_21
+   if(!g_df03_ready) return;
+   if(RiskControl_CheckDD()) return;
+   if(RiskControl_IsHalted()) return;
+   DF03_AdapterTick();
+   return;
+#else
    if(_MG_SelfGate)
    {
       // refresh the macro gate once per M1 bar (regime is daily; this runs BEFORE any
@@ -578,6 +604,7 @@ void OnTick()
    if(!Stack_DecideAdd(dir, have, sig)) return;
    if(!RiskControl_AllowNewOrder()) return;
    Lab_OpenOrder(dir, have);   // level = current count
+#endif // LAB_ENTRY_21
 }
 //+------------------------------------------------------------------+
 

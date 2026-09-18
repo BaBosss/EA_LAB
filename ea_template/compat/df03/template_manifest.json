@@ -1,0 +1,495 @@
+{
+  "schema": "df03-template/1",
+  "parent_sha256": "2aba9437319e214c82b63313a049f73da364052eddfa24f7f1661279593ffd89",
+  "raw_sha256": "564099a9e48abffcfbeceb43b3558f9212ece603309eaf15e6947834aa957115",
+  "engine_sha256": "9d8c00497b822022ec8e0af0a5e9d2ae5e3f64603c87f19ab4cd1a32b12a17af",
+  "mappings": [
+    {
+      "type": "double",
+      "name": "Lot1",
+      "default": "0.05",
+      "target": "_21_DF03_Lot1",
+      "pid": 12100
+    },
+    {
+      "type": "double",
+      "name": "Lot2",
+      "default": "0.1",
+      "target": "_21_DF03_Lot2",
+      "pid": 12101
+    },
+    {
+      "type": "double",
+      "name": "Lot3",
+      "default": "0.15",
+      "target": "_21_DF03_Lot3",
+      "pid": 12102
+    },
+    {
+      "type": "double",
+      "name": "Lot4",
+      "default": "0.2",
+      "target": "_21_DF03_Lot4",
+      "pid": 12103
+    },
+    {
+      "type": "double",
+      "name": "Lot5",
+      "default": "0.3",
+      "target": "_21_DF03_Lot5",
+      "pid": 12104
+    },
+    {
+      "type": "double",
+      "name": "Pull_Back",
+      "default": "20.0",
+      "target": "_21_DF03_PullBack",
+      "pid": 12105
+    },
+    {
+      "type": "double",
+      "name": "Nearby_PIP",
+      "default": "20.0",
+      "target": "_21_DF03_NearbyPip",
+      "pid": 12106
+    },
+    {
+      "type": "double",
+      "name": "Close_All_Percent",
+      "default": "2.0",
+      "target": "_21_DF03_CloseAllPercent",
+      "pid": 12107
+    },
+    {
+      "type": "ENUM_TIMEFRAMES",
+      "name": "Timeframe",
+      "default": "PERIOD_D1",
+      "target": "_21_DF03_Timeframe",
+      "pid": 12108
+    },
+    {
+      "type": "double",
+      "name": "Hedging_mode_1_on_0_off",
+      "default": "1.0",
+      "target": "_21_DF03_HedgingMode",
+      "pid": 12109
+    },
+    {
+      "type": "double",
+      "name": "TP_pip",
+      "default": "40.0",
+      "target": "_21_DF03_TPPip",
+      "pid": 12110
+    },
+    {
+      "type": "double",
+      "name": "SL_pip",
+      "default": "20.0",
+      "target": "_21_DF03_SLPip",
+      "pid": 12111
+    },
+    {
+      "type": "int",
+      "name": "MagicStart",
+      "default": "4023",
+      "target": "_21_DF03_MagicStart",
+      "pid": 12112
+    },
+    {
+      "type": "string",
+      "name": "inp430_Lo_ModeCandleFindBy",
+      "default": "\"id\"",
+      "target": "_21_DF03_CandleFindBy",
+      "pid": 12113
+    }
+  ],
+  "patches": [
+    {
+      "offset": 4325,
+      "old": "input double Lot1 = 0.05;",
+      "new": ""
+    },
+    {
+      "offset": 4327,
+      "old": "input double Lot2 = 0.1;",
+      "new": ""
+    },
+    {
+      "offset": 4329,
+      "old": "input double Lot3 = 0.15;",
+      "new": ""
+    },
+    {
+      "offset": 4331,
+      "old": "input double Lot4 = 0.2;",
+      "new": ""
+    },
+    {
+      "offset": 4333,
+      "old": "input double Lot5 = 0.3;",
+      "new": ""
+    },
+    {
+      "offset": 4335,
+      "old": "input double Pull_Back = 20.0;",
+      "new": ""
+    },
+    {
+      "offset": 4337,
+      "old": "input double Nearby_PIP = 20.0;",
+      "new": ""
+    },
+    {
+      "offset": 4339,
+      "old": "input double Close_All_Percent = 2.0;",
+      "new": ""
+    },
+    {
+      "offset": 4341,
+      "old": "input ENUM_TIMEFRAMES Timeframe = PERIOD_D1;",
+      "new": ""
+    },
+    {
+      "offset": 4343,
+      "old": "input double Hedging_mode_1_on_0_off = 1.0;",
+      "new": ""
+    },
+    {
+      "offset": 4345,
+      "old": "input double TP_pip = 40.0;",
+      "new": ""
+    },
+    {
+      "offset": 4347,
+      "old": "input double SL_pip = 20.0;",
+      "new": ""
+    },
+    {
+      "offset": 4349,
+      "old": "input int MagicStart = 4023;",
+      "new": ""
+    },
+    {
+      "offset": 5810,
+      "old": "input string inp430_Lo_ModeCandleFindBy = \"id\";",
+      "new": ""
+    },
+    {
+      "offset": 7790,
+      "old": "Lot1",
+      "new": "_21_DF03_Lot1"
+    },
+    {
+      "offset": 7817,
+      "old": "Lot2",
+      "new": "_21_DF03_Lot2"
+    },
+    {
+      "offset": 7844,
+      "old": "Lot3",
+      "new": "_21_DF03_Lot3"
+    },
+    {
+      "offset": 7871,
+      "old": "Lot4",
+      "new": "_21_DF03_Lot4"
+    },
+    {
+      "offset": 7898,
+      "old": "Lot5",
+      "new": "_21_DF03_Lot5"
+    },
+    {
+      "offset": 7930,
+      "old": "Pull_Back",
+      "new": "_21_DF03_PullBack"
+    },
+    {
+      "offset": 7967,
+      "old": "Nearby_PIP",
+      "new": "_21_DF03_NearbyPip"
+    },
+    {
+      "offset": 8012,
+      "old": "Close_All_Percent",
+      "new": "_21_DF03_CloseAllPercent"
+    },
+    {
+      "offset": 8055,
+      "old": "Timeframe",
+      "new": "_21_DF03_Timeframe"
+    },
+    {
+      "offset": 8106,
+      "old": "Hedging_mode_1_on_0_off",
+      "new": "_21_DF03_HedgingMode"
+    },
+    {
+      "offset": 8142,
+      "old": "TP_pip",
+      "new": "_21_DF03_TPPip"
+    },
+    {
+      "offset": 8172,
+      "old": "SL_pip",
+      "new": "_21_DF03_SLPip"
+    },
+    {
+      "offset": 8206,
+      "old": "MagicStart",
+      "new": "_21_DF03_MagicStart"
+    },
+    {
+      "offset": 8298,
+      "old": "inp430_Lo_ModeCandleFindBy",
+      "new": "_21_DF03_CandleFindBy"
+    },
+    {
+      "offset": 17784,
+      "old": "DF03_SourceOnTick();",
+      "new": "if (DF03_B21PreTick()) DF03_SourceOnTick();"
+    },
+    {
+      "offset": 44101,
+      "old": "MagicStart",
+      "new": "_21_DF03_MagicStart"
+    },
+    {
+      "offset": 53690,
+      "old": "MagicStart",
+      "new": "_21_DF03_MagicStart"
+    },
+    {
+      "offset": 307599,
+      "old": "MagicStart",
+      "new": "_21_DF03_MagicStart"
+    },
+    {
+      "offset": 308075,
+      "old": "MagicStart",
+      "new": "_21_DF03_MagicStart"
+    },
+    {
+      "offset": 344283,
+      "old": "",
+      "new": "// B21: retry from native lots; never compound the macro reduction.\n\t\tdouble df03_safe_lots = lots;\n\t\tif (!DF03_B21NewOrder(symbol, magic, type, df03_safe_lots)) return -1;\n\t\t"
+    },
+    {
+      "offset": 344507,
+      "old": "lots",
+      "new": "df03_safe_lots"
+    }
+  ],
+  "compatibility_changes": [
+    {
+      "parent_offset": 8165,
+      "generated_offset": 8165,
+      "line": 268,
+      "old": "OnInit",
+      "new": "DF03_SourceOnInit"
+    },
+    {
+      "parent_offset": 16138,
+      "generated_offset": 16149,
+      "line": 555,
+      "old": "__OnTick__",
+      "new": "DF03_Source__OnTick__"
+    },
+    {
+      "parent_offset": 16729,
+      "generated_offset": 16751,
+      "line": 575,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 17270,
+      "generated_offset": 17303,
+      "line": 596,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 17837,
+      "generated_offset": 17881,
+      "line": 618,
+      "old": "OnTimer",
+      "new": "DF03_SourceOnTimer"
+    },
+    {
+      "parent_offset": 18071,
+      "generated_offset": 18126,
+      "line": 623,
+      "old": "OnTick",
+      "new": "DF03_SourceOnTick"
+    },
+    {
+      "parent_offset": 18120,
+      "generated_offset": 18186,
+      "line": 626,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 18726,
+      "generated_offset": 18803,
+      "line": 663,
+      "old": "OnChartEvent",
+      "new": "DF03_SourceOnChartEvent"
+    },
+    {
+      "parent_offset": 19334,
+      "generated_offset": 19422,
+      "line": 683,
+      "old": "OnDeinit",
+      "new": "DF03_SourceOnDeinit"
+    },
+    {
+      "parent_offset": 271072,
+      "generated_offset": 271171,
+      "line": 10024,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 275246,
+      "generated_offset": 275356,
+      "line": 10227,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 317658,
+      "generated_offset": 317779,
+      "line": 11584,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 346634,
+      "generated_offset": 346766,
+      "line": 12764,
+      "old": "OnTrade",
+      "new": "DF03_SourceOnTrade"
+    },
+    {
+      "parent_offset": 387260,
+      "generated_offset": 387403,
+      "line": 14060,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 387307,
+      "generated_offset": 387461,
+      "line": 14061,
+      "old": "Digits",
+      "new": "DF03_CompatDigits"
+    },
+    {
+      "parent_offset": 387335,
+      "generated_offset": 387500,
+      "line": 14062,
+      "old": "Point",
+      "new": "DF03_CompatPoint"
+    },
+    {
+      "parent_offset": 387443,
+      "generated_offset": 387619,
+      "line": 14067,
+      "old": "OnTick",
+      "new": "DF03_SourceOnTick"
+    },
+    {
+      "parent_offset": 387481,
+      "generated_offset": 387668,
+      "line": 14070,
+      "old": "__OnTick__",
+      "new": "DF03_Source__OnTick__"
+    },
+    {
+      "parent_offset": 466205,
+      "generated_offset": 466403,
+      "line": 16066,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466370,
+      "generated_offset": 466579,
+      "line": 16070,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466386,
+      "generated_offset": 466606,
+      "line": 16070,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466551,
+      "generated_offset": 466782,
+      "line": 16072,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466586,
+      "generated_offset": 466828,
+      "line": 16073,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466621,
+      "generated_offset": 466874,
+      "line": 16074,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466655,
+      "generated_offset": 466919,
+      "line": 16075,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466691,
+      "generated_offset": 466966,
+      "line": 16076,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466728,
+      "generated_offset": 467014,
+      "line": 16077,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 466800,
+      "generated_offset": 467097,
+      "line": 16080,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 467595,
+      "generated_offset": 467903,
+      "line": 16107,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    },
+    {
+      "parent_offset": 467705,
+      "generated_offset": 468024,
+      "line": 16111,
+      "old": "Bars",
+      "new": "DF03_CompatBars"
+    }
+  ]
+}

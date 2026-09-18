@@ -1,0 +1,7 @@
+# Immutable imported source and its byte-reversible generated artifact retain
+# inherited vendor whitespace. Authored code is NOT exempt. Exact parent SHA
+# and independent full-byte equality are the preservation gates for these two.
+parent.mq5 -text whitespace=-blank-at-eol,-space-before-tab,cr-at-eol
+DF03_Generated.mqh -text whitespace=-blank-at-eol,-space-before-tab,cr-at-eol
+# Same byte-reversible source whitespace rule for the B21 generated derivative.
+DF03_TemplateEngine.mqh -text whitespace=-blank-at-eol,-space-before-tab,cr-at-eol

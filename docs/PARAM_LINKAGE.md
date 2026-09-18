@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 222.
+Rows in source registry: 236.
 
 ## Override pairs
 
@@ -96,6 +96,20 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_18_MaPeriod` | build 18 only | none | LWMA period for the displacement reference line. |
 | `_18_Slowing` | build 18 only | _18_KPeriod; _18_DPeriod | Stochastic slowing period. |
 | `_18_UpLevel` | build 18 only | _18_DirMode | Upper Stochastic band used by both DirMode readings. |
+| `_21_DF03_CandleFindBy` | build 21 only | source-native DF03 | Exact frozen DF03 CandleFindBy binding; no optimization authority |
+| `_21_DF03_CloseAllPercent` | build 21 only | source-native DF03 | Exact frozen DF03 CloseAllPercent binding; no optimization authority |
+| `_21_DF03_HedgingMode` | build 21 only | source-native DF03 | Exact frozen DF03 HedgingMode binding; no optimization authority |
+| `_21_DF03_Lot1` | build 21 only | source-native DF03 | Exact frozen DF03 Lot1 binding; no optimization authority |
+| `_21_DF03_Lot2` | build 21 only | source-native DF03 | Exact frozen DF03 Lot2 binding; no optimization authority |
+| `_21_DF03_Lot3` | build 21 only | source-native DF03 | Exact frozen DF03 Lot3 binding; no optimization authority |
+| `_21_DF03_Lot4` | build 21 only | source-native DF03 | Exact frozen DF03 Lot4 binding; no optimization authority |
+| `_21_DF03_Lot5` | build 21 only | source-native DF03 | Exact frozen DF03 Lot5 binding; no optimization authority |
+| `_21_DF03_MagicStart` | build 21 only | _0_Magic | Exact frozen DF03 MagicStart binding; no optimization authority |
+| `_21_DF03_NearbyPip` | build 21 only | source-native DF03 | Exact frozen DF03 NearbyPip binding; no optimization authority |
+| `_21_DF03_PullBack` | build 21 only | source-native DF03 | Exact frozen DF03 PullBack binding; no optimization authority |
+| `_21_DF03_SLPip` | build 21 only | source-native DF03 | Exact frozen DF03 SLPip binding; no optimization authority |
+| `_21_DF03_Timeframe` | build 21 only | source-native DF03 | Exact frozen DF03 Timeframe binding; no optimization authority |
+| `_21_DF03_TPPip` | build 21 only | source-native DF03 | Exact frozen DF03 TPPip binding; no optimization authority |
 | `TradeDir` | builds 11/12/13/15 only (checked explicitly in those 4 Entry_Evaluate() functions); builds 14/16/18 use their own fixed-direction input instead and never read this; build17 is bidirectional by design and never reads this | per-entry: none direct, but functionally overlaps with _14_Direction/_16_Direction/_18_Direction on builds that ignore it | Restricts a symmetric entry signal to long-only, short-only, or both; has zero effect on builds 14/16/17/18. |
 | `TrendFilter` | builds 11/12/13 only; no effect on 14/15/16/17/18 | _71_ATRMA+_71_ATRRatio(71); _72_SlopeBar(72) | Adds a confirming filter (ATR-expansion or MA-slope) before the entry signal is allowed to fire; only wired into 3 of the 8 entry modules. |
 
@@ -384,6 +398,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 222 (must equal the source registry's 222 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 236 (must equal the source registry's 236 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
 Override pairs found: 15.
