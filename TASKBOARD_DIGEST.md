@@ -414,7 +414,7 @@
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
 | ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10265 |
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | PARENT | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb |  | ACTIVE:10296 |
-| ORDER-CT-OWNER-CONTROL-ROOM-V0-20260918 |  | LOCAL | [monitor/tooling] optional durable job observations |  | ACTIVE:10363 |
+| ORDER-CT-OWNER-CONTROL-ROOM-V0-20260918 | 2026-09-18 | DONE | [monitor/tooling] optional durable job observations | SOURCE_ACCEPTED_REPO_ONLY / PROVIDER_NOT_ACTIVATED | ACTIVE:10363 |
 | ORDER-CT-POSTMONITOR-INTAKE-20260914 |  | DONE | [control-tower] carried-work reconciliation |  | ACTIVE:10235 |
 | ORDER-CT-STRATEGY-SOURCE-RECOVERY-20260915 |  | DONE | [control-tower/research] Boss/custom source recovery + strategy-family port prep |  | ACTIVE:10283 |
 | ORDER-DEMO-SAMEPERIOD-REPLAY-20260915 |  | EXECUTED | [research/diagnostic] Demo vs same-period frozen-bundle replay |  | ACTIVE:10336 |

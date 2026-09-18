@@ -3,7 +3,7 @@
 Date: 2026-09-18
 Owner contract: `EA_LAB-NEW-MAIN-CT-20260917`
 Base: `f9a9906f45418303e43345141cf8c6f81f15007a`
-Status: `LOCAL_IMPLEMENTATION_PENDING_ACCEPTANCE`
+Status: `SOURCE_ACCEPTED / REPO_ONLY / READ_ONLY_PRESENTATION / NO_JOB_PROVIDER_ACTIVATION`
 Authority ceiling: `REPO_ONLY / READ_ONLY_PRESENTATION`
 
 ## Purpose and non-authority
@@ -19,7 +19,7 @@ it does not qualify a production scheduler, host survival, runtime hookup or una
 head `d47b9a6e9bd407c7996ccceffd541387ae32f931` remains `BLOCKED` after `FAIL / HIGH / DOC-001..003`.
 No bytes, repair budget or inference are carried from that rejected package.
 
-Source implementation alone does not change the deployed Monitor. The existing
+Source acceptance alone does not establish delivery of the optional job-observation provider. The existing
 `EA_LAB_MonitorV31_Refresh` task remains unchanged and pinned to tooling `e88ed119`. Provider hookup,
 runtime tooling migration, Scheduled Tasks, OneDrive/VPS, public hosting and deployment remain separate
 gates.
@@ -137,8 +137,14 @@ attestation is authorized or performed.
 
 ## Bounded V0 repair
 
-The first independent review of 541f4e6982c59141e0a5eccc7b8363e06859543c returned FAIL/HIGH with OCRV0-001 through009. One repair addresses relational validation, effective freshness, blocker qualification, empty snapshots, process coherence and the committed-diff whitespace check. Acceptance remains pending targeted recheck.
+The first independent review of 541f4e6982c59141e0a5eccc7b8363e06859543c returned FAIL/HIGH with OCRV0-001 through009. One repair addresses relational validation, effective freshness, blocker qualification, empty snapshots, process coherence and the committed-diff whitespace check. At repair time acceptance was pending targeted recheck; its later accepted result is recorded below.
 
 The original browser-v3 harness is preserved. An external source-bound copy adapts only its workspace/schema paths and obsolete cache expectation to the deliberate v3.5 generation, retaining every assertion. Its result is reported separately from the unchanged original harness.
 
 A terminal runner can still be publishing its receipt. Known-live terminal child/postcondition facts, LOST_PROCESS with a known-live runner, and ALLOW_RETRY with any known-live recorded process are refused. Unknown observations remain UNKNOWN. No process-control or runtime capability is added.
+
+## Accepted source and delivery boundary
+
+Source `3feef393c261624130ac9f6b194a311010fbf4c0` passed its single targeted recheck (HIGH confidence, ALLOW), then normal FF push and exact fetch/ls-remote verification. Review SHA256 `704f117b096cfeb6ad5c4dfea00cf05adbdf0a523ad86ce5822539a86546bc47`; receipts under the existing V0 evidence root. All eleven named check groups passed, including105 data tests,15 focused tests and15+7+64 browser checks. This is source acceptance only, not all ten Owner Control Room requirements or production workflow qualification.
+
+Existing Monitor refresh can export new canonical static assets without changing its old e88ed119 tooling pin. Its optional job provider remains unwired by this scope; the CT changed no runtime wrapper, task action/triggers, service or installed tool root. Current installed UI must be checked from its actual timestamped output, not assumed from Git. A separate source-bound provider/delivery contract is the next dependency.
