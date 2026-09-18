@@ -256,5 +256,86 @@ class OwnerOperationsTests(unittest.TestCase):
         self.assertIn("--job-observations", help_text)
 
 
+    def test_process_coherence_refuses_contradictory_known_facts(self):
+        cases = []
+        for key in ("child_alive", "postcondition_alive"):
+            p = self.payload()
+            p["observations"][0][key] = True
+            cases.append(p)
+        lost = self.payload()
+        lost["observations"][0].update(durable_state="RUNNING", observed_state="LOST_PROCESS", runner_alive=True,
+            result={"state": "UNKNOWN", "exit": None, "postcondition": "UNKNOWN", "ended": None})
+        cases.append(lost)
+        retry = self.payload()
+        retry["observations"][0].update(runner_alive=True, retry_decision="ALLOW_RETRY")
+        cases.append(retry)
+        for p in cases:
+            self.assertEqual(self.project(p)["reason"], "INVALID_INPUT")
+        p = self.payload()
+        p["observations"][0]["runner_alive"] = True
+        self.assertEqual(self.project(p)["status"], "AVAILABLE")  # terminal runner may still be publishing
+
+    def test_current_empty_snapshot_is_available_not_absent(self):
+        r = self.project(self.payload(observations=[]))
+        self.assertEqual((r["status"], r["reason"], r["observations"]), ("AVAILABLE", "AVAILABLE_SNAPSHOT", []))
+
+    def test_python_chronology_and_sensitive_job_id_refusals(self):
+        for target, field, value in (("row", "checked_utc", "2026-09-18T11:59:30Z"),
+                ("result", "ended", "2026-09-18T11:58:40Z"), ("row", "job_id", "api_key-private")):
+            p = self.payload(); row = p["observations"][0]
+            (row if target == "row" else row["result"])[field] = value
+            self.assertEqual(self.project(p)["reason"], "INVALID_INPUT")
+
+    def test_browser_relational_boundary_matches_producer(self):
+        valid = self.project()
+        variants = [("valid", copy.deepcopy(valid), False), ("absent", self.project(path=False), False)]
+        variants.append(("empty", self.project(self.payload(observations=[])), False))
+        mutations = [
+            ("pin", "envelope", "canonical_observed_sha", "0" * 40),
+            ("source", "envelope", "source_sha256", "UNKNOWN"),
+            ("extra-envelope", "envelope", "extra", "unexpected"),
+            ("extra-row", "row", "extra", "unexpected"),
+            ("extra-result", "result", "extra", "unexpected"),
+            ("id", "row", "job_id", "api_key-private"),
+            ("checked", "row", "checked_utc", "2026-09-18T11:59:30Z"),
+            ("ended", "result", "ended", "2026-09-18T11:58:40Z"),
+            ("state", "result", "state", "RUNNING"),
+            ("exit", "result", "exit", 1),
+            ("postcondition", "result", "postcondition", "FAILED"),
+            ("child", "row", "child_alive", True),
+            ("postcondition-process", "row", "postcondition_alive", True),
+            ("availability", "envelope", "status", "UNAVAILABLE"),
+        ]
+        for name, target, key, value in mutations:
+            candidate = copy.deepcopy(valid)
+            destination = candidate if target == "envelope" else candidate["observations"][0]
+            if target == "result": destination = destination["result"]
+            destination[key] = value
+            variants.append((name, candidate, True))
+        script = r'''
+const fs = require('node:fs'), vm = require('node:vm'), assert = require('node:assert/strict');
+const input = JSON.parse(fs.readFileSync(0, 'utf8')), app = fs.readFileSync(input.path, 'utf8');
+function extract(name) {
+  const start = app.indexOf('function ' + name + '(');
+  assert.ok(start >= 0, 'missing function ' + name);
+  let end = app.indexOf('\nfunction ', start + 1);
+  if (end < 0) end = app.length;
+  return app.slice(start, end);
+}
+const ctx = {}; vm.createContext(ctx);
+vm.runInContext(extract('validUtcSecond') + '\n' + extract('validateOwnerObservationRelations'), ctx);
+for (const [name, value, mustReject] of input.cases) {
+  let rejected = false;
+  try { ctx.validateOwnerObservationRelations(value, input.sha); } catch { rejected = true; }
+  assert.equal(rejected, mustReject, name);
+}
+console.log('PASS browser relational cases=' + input.cases.length);
+'''
+        completed = subprocess.run(["node", "-e", script], input=json.dumps({
+            "path": str(ROOT / "mobile_report_hub" / "app.js"), "sha": CANONICAL_SHA,
+            "cases": variants}), text=True, capture_output=True)
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

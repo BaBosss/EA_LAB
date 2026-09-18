@@ -62,6 +62,63 @@ function validUtcSecond(value) {
   return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().replace(".000Z", "Z") === value;
 }
 
+// Cross-field validation mirrors the producer; display-time freshness is a separate gate.
+function validateOwnerObservationRelations(operations, canonicalSha) {
+  const exactObject = (value, keys) => value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
+  const envelopeKeys = ["schema_version", "status", "freshness", "source_kind", "timestamp_basis", "authority", "binding_state", "observed_at_utc", "canonical_observed_sha", "source_sha256", "observations", "reason"];
+  const rowKeys = ["lane_id", "job_id", "checked_utc", "freshness", "observed_state", "durable_state", "runner_alive", "child_alive", "postcondition_alive", "heartbeat_age_sec", "retry_decision", "result", "local_head", "deliverable_status", "review_status", "canonical_status"];
+  const active = new Set(["STARTING", "RUNNING", "POSTCONDITION_RUNNING", "CANCEL_REQUESTED"]);
+  const fail = () => { throw new Error("Invalid owner operations relationship"); };
+  if (!exactObject(operations, envelopeKeys) || !Array.isArray(operations.observations)) fail();
+  const knownPin = typeof operations.canonical_observed_sha === "string" && /^[0-9a-f]{40}$/.test(operations.canonical_observed_sha);
+  const knownSource = typeof operations.source_sha256 === "string" && /^[0-9a-f]{64}$/.test(operations.source_sha256);
+  if (operations.binding_state === "UNKNOWN") {
+    const missing = ["NOT_PROVIDED", "UNREADABLE_INPUT"].includes(operations.reason);
+    if (operations.status !== "UNAVAILABLE" || operations.freshness !== "UNKNOWN" || operations.observed_at_utc !== "UNKNOWN" || operations.canonical_observed_sha !== "UNKNOWN" || operations.observations.length || !(missing || operations.reason === "INVALID_INPUT") || (missing ? operations.source_sha256 !== "UNKNOWN" : !knownSource)) fail();
+    return;
+  }
+  if (!knownPin || !knownSource || !validUtcSecond(operations.observed_at_utc)) fail();
+  const binding = operations.canonical_observed_sha === canonicalSha ? "MATCHES_CANONICAL_SHA" : "DIFFERENT_CANONICAL_SHA";
+  if (operations.binding_state !== binding) fail();
+  const available = binding === "MATCHES_CANONICAL_SHA" && operations.freshness === "CURRENT" && operations.observations.every(row => row && row.freshness === "CURRENT");
+  const reason = available ? "AVAILABLE_SNAPSHOT" : binding !== "MATCHES_CANONICAL_SHA" ? "CANONICAL_BINDING_MISMATCH" : operations.freshness === "FUTURE" || operations.observations.some(row => row && row.freshness === "FUTURE") ? "FUTURE_OBSERVATION" : operations.freshness === "STALE" || operations.observations.some(row => row && row.freshness === "STALE") ? "STALE_OBSERVATION" : "UNQUALIFIED_OBSERVATION";
+  if (operations.status !== (available ? "AVAILABLE" : "UNAVAILABLE") || operations.reason !== reason) fail();
+  for (const row of operations.observations) {
+    if (!exactObject(row, rowKeys) || !exactObject(row.result, ["state", "exit", "postcondition", "ended"])) fail();
+    const sensitive = /(?:^|[._-])(?:account|acct|login|password|credential|secret|token|api[_-]?key)(?:$|[._-])|(?<![0-9])[0-9]{9,}(?![0-9])/i;
+    if ([row.lane_id, row.job_id].some(id => typeof id !== "string" || !/^[A-Za-z][A-Za-z0-9._-]{0,127}$/.test(id) || sensitive.test(id))) fail();
+    if (!validUtcSecond(row.checked_utc) || Date.parse(row.checked_utc) > Date.parse(operations.observed_at_utc)) fail();
+    const result = row.result;
+    if (result.ended !== "UNKNOWN" && (!validUtcSecond(result.ended) || Date.parse(result.ended) > Date.parse(row.checked_utc))) fail();
+    if (active.has(row.durable_state)) {
+      if (![row.durable_state, "LOST_PROCESS", "UNKNOWN"].includes(row.observed_state)) fail();
+    } else if (row.durable_state !== "UNKNOWN" && row.observed_state !== row.durable_state) fail();
+    if (active.has(row.durable_state) || row.durable_state === "UNKNOWN") {
+      if (result.state !== "UNKNOWN" || result.exit !== "UNKNOWN" || result.ended !== "UNKNOWN" || !["UNKNOWN", "RUNNING"].includes(result.postcondition)) fail();
+    } else {
+      if (result.state !== row.durable_state || !validUtcSecond(result.ended)) fail();
+      if (result.state === "COMPLETE" && (result.exit !== 0 || !["PASSED", "NOT_CONFIGURED"].includes(result.postcondition))) fail();
+      if (result.state === "FAILED" && result.exit === 0) fail();
+      if (result.state === "POSTCONDITION_FAILED" && result.postcondition !== "FAILED") fail();
+      if (row.child_alive === true || row.postcondition_alive === true) fail();
+    }
+    if (row.observed_state === "LOST_PROCESS" && row.runner_alive === true) fail();
+    if (row.retry_decision === "ALLOW_RETRY" && [row.runner_alive, row.child_alive, row.postcondition_alive].includes(true)) fail();
+  }
+}
+
+function ownerObservationDisplay(operations) {
+  if (!navigator.onLine) return {status: "UNAVAILABLE", freshness: "OFFLINE"};
+  if (usedCachedData) return {status: "UNAVAILABLE", freshness: "CACHED"};
+  const projectFreshness = observedFreshness(reportIndex.project.generated_at);
+  if (projectFreshness !== "CURRENT") return {status: "UNAVAILABLE", freshness: projectFreshness};
+  const envelopeFreshness = observedFreshness(operations.observed_at_utc);
+  if (envelopeFreshness !== "CURRENT") return {status: "UNAVAILABLE", freshness: envelopeFreshness};
+  const bound = operations.status === "AVAILABLE" && operations.binding_state === "MATCHES_CANONICAL_SHA" && operations.canonical_observed_sha === reportIndex.project.canonical_sha && /^[0-9a-f]{64}$/.test(operations.source_sha256) && operations.freshness === "CURRENT";
+  const rowsCurrent = operations.observations.every(row => row.freshness === "CURRENT" && observedFreshness(row.checked_utc) === "CURRENT");
+  return bound && rowsCurrent ? {status: "AVAILABLE", freshness: "CURRENT"} : {status: "UNAVAILABLE", freshness: "UNKNOWN"};
+}
+
 function validateIndex(payload, fixtureMode) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("Invalid report index object");
   if (fixtureMode) {
@@ -146,6 +203,7 @@ function validateIndex(payload, fixtureMode) {
       jobIds.add(row.job_id);
     }
   }
+  if (operations !== undefined) validateOwnerObservationRelations(operations, project.canonical_sha);
   return payload;
 }
 
@@ -379,17 +437,17 @@ function observationCurrent() {
   return navigator.onLine && !usedCachedData && observedFreshness(reportIndex.project.generated_at) === "CURRENT";
 }
 function jobObservationQualified(operations, row) {
-  return observationCurrent() && operations.status === "AVAILABLE" &&
-    operations.binding_state === "MATCHES_CANONICAL_SHA" && operations.freshness === "CURRENT" &&
-    observedFreshness(operations.observed_at_utc) === "CURRENT" && row.freshness === "CURRENT" &&
+  return ownerObservationDisplay(operations).status === "AVAILABLE" && row.freshness === "CURRENT" &&
     observedFreshness(row.checked_utc) === "CURRENT";
 }
+
 function observedProcess(value, qualified) {
   if (!qualified || typeof value !== "boolean") return "UNKNOWN";
   return value ? "OBSERVED_ALIVE" : "OBSERVED_NOT_ALIVE";
 }
 function renderObservedJobs() {
   const operations = ownerOperations();
+  const display = ownerObservationDisplay(operations);
   const rows = Array.isArray(operations.observations) ? operations.observations : [];
   const body = rows.map(row => {
     const qualified = jobObservationQualified(operations, row);
@@ -398,12 +456,15 @@ function renderObservedJobs() {
     const localHead = qualified && /^[0-9a-f]{40}$/.test(valueOf(row.local_head, "")) ? row.local_head : "UNKNOWN";
     return `<tr><td><strong>${escapeHtml(row.lane_id)}</strong><br><span class="muted">${escapeHtml(row.job_id)}</span></td><td>${escapeHtml(observedProcess(row.runner_alive, qualified))}</td><td>${escapeHtml(observedProcess(row.child_alive, qualified))}<br><span class="muted">postcondition ${escapeHtml(observedProcess(row.postcondition_alive, qualified))}</span></td><td>${escapeHtml(row.checked_utc)}<br>${badge(qualified ? "CURRENT" : "UNKNOWN")}</td><td>${escapeHtml(heartbeat)}</td><td class="mono">${escapeHtml(localHead)}</td><td>${escapeHtml(result)}<br><span class="muted">retry ${escapeHtml(qualified ? stateName(row.retry_decision) : "UNKNOWN")}</span></td><td>${escapeHtml(row.deliverable_status)} / ${escapeHtml(row.review_status)} / ${escapeHtml(row.canonical_status)}</td></tr>`;
   }).join("");
-  const unavailable = rows.length ? "" : '<p class="empty-state">Job observations UNAVAILABLE. No caller-supplied snapshot was projected.</p>';
-  return `<section class="panel observed-jobs"><div class="section-heading"><div><h2>Observed jobs</h2><p>Snapshot / last observed only. This is not continuous live monitoring.</p></div><div>${badge(operations.status)} ${badge(operations.freshness)}</div></div>${unavailable}${rows.length ? `<div class="table-wrap"><table class="job-observation-table"><thead><tr><th>Lane / job</th><th>Runner</th><th>Child / postcondition</th><th>Checked</th><th>Heartbeat age (sec)</th><th>Local head</th><th>Process result</th><th>Deliverable / review / canonical</th></tr></thead><tbody>${body}</tbody></table></div>` : ""}<details><summary>Source / authority / limits</summary><p>${escapeHtml(operations.source_kind)} · ${escapeHtml(operations.timestamp_basis)} · ${escapeHtml(operations.authority)}</p><p>Observed ${escapeHtml(operations.observed_at_utc)} · binding ${escapeHtml(operations.binding_state)} · reason ${escapeHtml(operations.reason)}</p><p>Source SHA256 <span class="mono">${escapeHtml(operations.source_sha256)}</span></p><p>Process booleans describe only checked_utc. Exit 0 / COMPLETE does not establish deliverable, review, or canonical PASS.</p></details></section>`;
+  const unavailable = rows.length ? "" : display.status === "AVAILABLE" ? '<p class="empty-state">No job rows in the supplied current snapshot.</p>' : '<p class="empty-state">Job observations UNAVAILABLE. No qualified current snapshot is available.</p>';
+  return `<section class="panel observed-jobs"><div class="section-heading"><div><h2>Observed jobs</h2><p>Snapshot / last observed only. This is not continuous live monitoring.</p></div><div>${badge(display.status)} ${badge(display.freshness)}</div></div>${unavailable}${rows.length ? `<div class="table-wrap"><table class="job-observation-table"><thead><tr><th>Lane / job</th><th>Runner</th><th>Child / postcondition</th><th>Checked</th><th>Heartbeat age (sec)</th><th>Local head</th><th>Process result</th><th>Deliverable / review / canonical</th></tr></thead><tbody>${body}</tbody></table></div>` : ""}<details><summary>Source / authority / limits</summary><p>${escapeHtml(operations.source_kind)} · ${escapeHtml(operations.timestamp_basis)} · ${escapeHtml(operations.authority)}</p><p>Observed ${escapeHtml(operations.observed_at_utc)} · binding ${escapeHtml(operations.binding_state)} · reason ${escapeHtml(operations.reason)}</p><p>Source SHA256 <span class="mono">${escapeHtml(operations.source_sha256)}</span></p><p>Process booleans describe only checked_utc. Exit 0 / COMPLETE does not establish deliverable, review, or canonical PASS.</p></details></section>`;
 }
 function renderBlockerGroups() {
-  const rows = ((workProjection().registry || {}).rows || []).filter(row => row.state !== "DONE" && /^[A-E]$/.test(valueOf(row.blocker_class, "")));
-  if (!rows.length) return '<section class="panel"><h2>Observed blocker classes</h2><p class="empty-state">No safe blocker-class observations available.</p></section>';
+  const registry = workProjection().registry || {};
+  const currentEnvelope = observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && observedFreshness(registry.observed_at) === "CURRENT";
+  if (!currentEnvelope) return '<section class="panel"><h2>Observed blocker classes</h2><p class="empty-state">Current blocker classes UNAVAILABLE. The Registry snapshot is unqualified; historical evidence remains in Detailed lanes.</p></section>';
+  const rows = (registry.rows || []).filter(row => !["DONE", "UNKNOWN", "CONFLICT"].includes(row.state) && row.freshness === "CURRENT" && observedFreshness(row.observed_at) === "CURRENT" && /^[A-E]$/.test(valueOf(row.blocker_class, "")));
+  if (!rows.length) return '<section class="panel"><h2>Observed blocker classes</h2><p class="empty-state">No qualified current blocker-class observations. Historical or unresolved rows remain in Detailed lanes.</p></section>';
   const labels = {A: "PRODUCT_DEFECT", B: "HARNESS_TEST", C: "ENVIRONMENT_DEPENDENCY", D: "EXECUTION_INCOMPLETE", E: "WAIT_EXTERNAL"};
   const groups = [...new Set(rows.map(row => row.blocker_class))].sort();
   return `<section class="panel"><h2>Observed blocker classes</h2><p class="muted">Lane Registry observations only. Literal dependency IDs are shown without interpreting worker prose. E-class is WAIT_EXTERNAL and does not create a NEED BOSS action.</p>${groups.map(group => `<details ${group === "A" ? "open" : ""}><summary>${escapeHtml(group)} · ${escapeHtml(labels[group])} (${rows.filter(row => row.blocker_class === group).length})</summary><ul class="queue-list">${rows.filter(row => row.blocker_class === group).map(row => `<li><strong>${escapeHtml(row.id)}</strong>${badge(row.state)}<span>Dependencies: ${Array.isArray(row.direct_dependencies) ? row.direct_dependencies.map(escapeHtml).join(", ") || "NONE_DECLARED" : "UNKNOWN"}</span></li>`).join("")}</ul></details>`).join("")}</section>`;

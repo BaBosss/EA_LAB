@@ -179,6 +179,17 @@ def _row(raw: object, envelope_time: datetime, as_of: str) -> dict:
     if local_head is not None and (not isinstance(local_head, str) or not _SHA_RE.fullmatch(local_head)):
         raise ValueError("invalid local head")
 
+    runner_alive = _strict_bool_or_unknown(raw.get("runner_alive"))
+    child_alive = _strict_bool_or_unknown(raw.get("child_alive"))
+    postcondition_alive = _strict_bool_or_unknown(raw.get("postcondition_alive"))
+    # Contradictory known facts are unqualified. A terminal runner may still be publishing.
+    if durable_state in _TERMINAL_STATES and (child_alive is True or postcondition_alive is True):
+        raise ValueError("terminal result with live child or postcondition")
+    if observed_state == "LOST_PROCESS" and runner_alive is True:
+        raise ValueError("lost runner is observed live")
+    if retry_decision == "ALLOW_RETRY" and any(value is True for value in (runner_alive, child_alive, postcondition_alive)):
+        raise ValueError("retry contradicts live process evidence")
+
     return {
         "lane_id": lane_id,
         "job_id": job_id,
@@ -186,9 +197,9 @@ def _row(raw: object, envelope_time: datetime, as_of: str) -> dict:
         "freshness": _freshness(checked_value, as_of),
         "observed_state": observed_state,
         "durable_state": durable_state,
-        "runner_alive": _strict_bool_or_unknown(raw.get("runner_alive")),
-        "child_alive": _strict_bool_or_unknown(raw.get("child_alive")),
-        "postcondition_alive": _strict_bool_or_unknown(raw.get("postcondition_alive")),
+        "runner_alive": runner_alive,
+        "child_alive": child_alive,
+        "postcondition_alive": postcondition_alive,
         "heartbeat_age_sec": _heartbeat(raw.get("heartbeat_age_sec")),
         "retry_decision": retry_decision,
         "result": _result(raw.get("result"), durable_state, checked),

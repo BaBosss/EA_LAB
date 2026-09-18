@@ -1,9 +1,9 @@
 # EA_LAB Owner Control Room V0 — first Monitor increment
 
-Date: 2026-09-18  
-Owner contract: `EA_LAB-NEW-MAIN-CT-20260917`  
-Base: `f9a9906f45418303e43345141cf8c6f81f15007a`  
-Status: `LOCAL_IMPLEMENTATION_PENDING_ACCEPTANCE`  
+Date: 2026-09-18
+Owner contract: `EA_LAB-NEW-MAIN-CT-20260917`
+Base: `f9a9906f45418303e43345141cf8c6f81f15007a`
+Status: `LOCAL_IMPLEMENTATION_PENDING_ACCEPTANCE`
 Authority ceiling: `REPO_ONLY / READ_ONLY_PRESENTATION`
 
 ## Purpose and non-authority
@@ -134,3 +134,11 @@ No database, collector, network call, process enumeration/control, runner change
 scheduler, runtime-provider hookup, timing/uptime guarantee, MT5/MetaEditor, research ranking, Alpha fixture,
 EA Detail/Report redesign, risk/default change, deployment, trading, DEMO/LIVE promotion, push or owner
 attestation is authorized or performed.
+
+## Bounded V0 repair
+
+The first independent review of 541f4e6982c59141e0a5eccc7b8363e06859543c returned FAIL/HIGH with OCRV0-001 through009. One repair addresses relational validation, effective freshness, blocker qualification, empty snapshots, process coherence and the committed-diff whitespace check. Acceptance remains pending targeted recheck.
+
+The original browser-v3 harness is preserved. An external source-bound copy adapts only its workspace/schema paths and obsolete cache expectation to the deliberate v3.5 generation, retaining every assertion. Its result is reported separately from the unchanged original harness.
+
+A terminal runner can still be publishing its receipt. Known-live terminal child/postcondition facts, LOST_PROCESS with a known-live runner, and ALLOW_RETRY with any known-live recorded process are refused. Unknown observations remain UNKNOWN. No process-control or runtime capability is added.
