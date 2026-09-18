@@ -414,15 +414,15 @@
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
 | ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10267 |
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | PARENT | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb |  | ACTIVE:10298 |
-| ORDER-CT-DF03-B21-IMPLEMENTATION-20260918 |  | CONTRACT | [template/recovered-family] DF03 Grid Horizontal Line / Fibonacci |  | ACTIVE:10318 |
-| ORDER-CT-JOB-IDENTITY-PROVIDER-V1-20260918 | 2026-09-18 | DONE | [monitor/tooling] identity-aware V0 input provider | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_RUNTIME_HOOKUP | ACTIVE:10418 |
-| ORDER-CT-OWNER-CONTROL-ROOM-V0-20260918 | 2026-09-18 | DONE | [monitor/tooling] optional durable job observations | SOURCE_ACCEPTED_REPO_ONLY / PROVIDER_NOT_ACTIVATED | ACTIVE:10395 |
+| ORDER-CT-DF03-B21-IMPLEMENTATION-20260918 |  | DONE | - [template/recovered-family] DF03 Grid Horizontal Line / Fibonacci - |  | ACTIVE:10318 |
+| ORDER-CT-JOB-IDENTITY-PROVIDER-V1-20260918 | 2026-09-18 | DONE | [monitor/tooling] identity-aware V0 input provider | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_RUNTIME_HOOKUP | ACTIVE:10414 |
+| ORDER-CT-OWNER-CONTROL-ROOM-V0-20260918 | 2026-09-18 | DONE | [monitor/tooling] optional durable job observations | SOURCE_ACCEPTED_REPO_ONLY / PROVIDER_NOT_ACTIVATED | ACTIVE:10391 |
 | ORDER-CT-POSTMONITOR-INTAKE-20260914 |  | DONE | [control-tower] carried-work reconciliation |  | ACTIVE:10237 |
 | ORDER-CT-STRATEGY-SOURCE-RECOVERY-20260915 |  | DONE | [control-tower/research] Boss/custom source recovery + strategy-family port prep |  | ACTIVE:10285 |
-| ORDER-CT-ZL-EA-067-B22-REALLOCATION-20260918 |  | CONTRACT | [template/research] WickDisplacement identity-only regeneration |  | ACTIVE:10335 |
-| ORDER-DEMO-SAMEPERIOD-REPLAY-20260915 |  | EXECUTED | [research/diagnostic] Demo vs same-period frozen-bundle replay |  | ACTIVE:10368 |
+| ORDER-CT-ZL-EA-067-B22-REALLOCATION-20260918 |  | CONTRACT | [template/research] WickDisplacement identity-only regeneration |  | ACTIVE:10331 |
+| ORDER-DEMO-SAMEPERIOD-REPLAY-20260915 |  | EXECUTED | [research/diagnostic] Demo vs same-period frozen-bundle replay |  | ACTIVE:10364 |
 | ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:8336 |
-| ORDER-HERMES-V2B-REAL-ADAPTER-QUAL-20260915 |  | IMPLEMENTATION | [hermes/tooling] real-adapter qualification |  | ACTIVE:10348 |
+| ORDER-HERMES-V2B-REAL-ADAPTER-QUAL-20260915 |  | IMPLEMENTATION | [hermes/tooling] real-adapter qualification |  | ACTIVE:10344 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
