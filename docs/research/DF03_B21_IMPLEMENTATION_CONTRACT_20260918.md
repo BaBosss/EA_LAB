@@ -1,10 +1,10 @@
 # DF03 Grid Horizontal Line / Fibonacci — B21 Prospective Implementation Contract — 2026-09-18
 
-Status: `PROSPECTIVE / IDENTITY_ALLOCATED / SOURCE_BOUND / EXISTING_IMPLEMENTATION_REVIEW_PENDING / NO_MT5 / B21_SOURCE_NOT_CANONICAL`.
+Status: `PROSPECTIVE / IDENTITY_ALLOCATED / SOURCE_BOUND / SCRUTINY_REPAIR_REQUIRED / NO_MT5 / B21_SOURCE_NOT_CANONICAL`.
 
 Contract base: `bc2e4afe09ca3309b091a032c020140ea1c5a858`.
 
-Can do: `Codex Primary` bounded source author/re-anchor worker under this exact contract; deterministic compile/test tooling; Control Tower acceptance/integration only after all gates pass. Suggested: `Codex Primary` for the one bounded exact-byte re-anchor/repair lane. Required final reviewer: a qualified different-model-family reviewer; ChatGPT, Codex, GPT-backed Hermes, and GPT `/scrutinize` cannot fill that seat.
+Can do: `Codex Primary` bounded source author/re-anchor worker under this exact contract; deterministic compile/test tooling; Control Tower acceptance/integration only after all gates pass. Suggested: `Codex Primary` for the one bounded repair lane. Required final review: a separate read-only acceptance-grade GPT Scrutiny job/lane/contract against the exact clean frozen head and isolated evidence; the author job cannot self-approve.
 
 ## Authority reconciliation
 
@@ -22,7 +22,7 @@ The allocation describes only this DF03 implementation. It does not create Strat
 
 ## Frozen source-native scope
 
-The admissible implementation is the source-native adapter lineage frozen at exact local head `16d737080a6ff668bb1b2b98df42f622595d867a`. It must retain the immutable parent and compatibility control, the reversible TemplateEngine mapping, B21 wrapper/registration, source-bound inputs and permanent parameter identities, generated input/locked-constant fingerprints, B21-specific execution ownership, LabCore dispatch, focused compile/static tests, compatibility tooling, and evidence already present in that lineage.
+The admissible implementation is the source-native adapter lineage first frozen at exact local head `16d737080a6ff668bb1b2b98df42f622595d867a` and currently frozen for scrutiny at exact local candidate `7c8b3f9f552795405265fce3fea7ac356fb73b3a`. Neither head is canonical B21 source. The lineage must retain the immutable parent and compatibility control, the reversible TemplateEngine mapping, B21 wrapper/registration, source-bound inputs and permanent parameter identities, generated input/locked-constant fingerprints, B21-specific execution ownership, LabCore dispatch, focused compile/static tests, compatibility tooling, and evidence already present in that lineage.
 
 The strategy engine remains sole owner of all 126 source blocks, 15 OnTick roots, 2 OnTrade roots, internal `PERIOD_D1` plus `CurrentTimeframe()` dual semantics, ten `Hedging_mode_1_on_0_off == 1.0` gates, native group topology, native order/modify/close behavior, and source SL/TP assignments. The source magic range remains `_21_DF03_MagicStart+1 .. +5`, with `_0_Magic == _21_DF03_MagicStart` required for Template identity. Existing shared safety gates may only veto or clamp a new native order at the already-defined hook; they may not replace or duplicate native Stack/Grid/Hedge/Exit lifecycle semantics. Shared Stack/Recovery/Hedge/Exit remain inactive for B21. No semantic normalization into generic chassis behavior is allowed.
 
@@ -108,18 +108,28 @@ The previously missing post-fix input-surface evidence is now supplied externall
 
 This closes the identified missing-evidence item only. It is not canonical source acceptance or the mandatory independent review.
 
+## Current acceptance-grade scrutiny evidence — exact head 7c8b3f9f552795405265fce3fea7ac356fb73b3a
+
+The external read-only scrutiny result at `D:\EA_LAB_CONTROL\evidence\ct-b21-gpt-scrutiny-ro-20260918\SCRUTINY_RESULT.json` is current evidence and must not be modified or rerun merely because governance changed. It returned `SCRUTINY_REPAIR_REQUIRED` and found one material event-path defect: `Boss_21_GridFibo.mq5` forwards `OnTimer` to `DF03_AdapterTimer`, whose offline-chart path can invoke `DF03_SourceOnTick` without traversing the contemporaneous `LabCore` runtime-identity update and current-DD hard-kill evaluation used by terminal `OnTick`. The existing focused wrapper test proved immediate forwarding but did not trace this nested timer-to-native-tick path.
+
+The same result preserves the remaining source-static parity findings, all earlier failed logs, and the external post-fix fixture receipt as history. Its prior statements that same-family scrutiny was non-approving and that qualified different-family review remained mandatory were accurate under the policy then in force; the 2026-09-18 owner policy supersedes only that routing conclusion, not the technical defect, evidence, hashes, or authority ceiling. The exact `7c8b3f9f...` source remains unaccepted and non-canonical.
+
+The next action is exactly one bounded repair within the frozen implementation allowlist so the offline timer-to-native-tick path receives the same current-DD/halt protection and first-trade identity-observation guarantees as terminal `OnTick`, while native timer/trade/cleanup behavior and inactive generic Stack/Recovery/Hedge/Exit ownership remain unchanged. Add one focused adversarial fixture that proves the nested path is caged. Preserve the original scrutiny result and negative logs; create only superseding evidence for the repaired head.
+
+The existing deterministic receipt whose status says `FROZEN_CANDIDATE_PENDING_QWEN_REVIEW` remains preserved historical evidence and must not imply Candidate/source acceptance or a mandatory Qwen route. The repair must add a superseding deterministic receipt that says the source artifact is frozen but non-canonical, records the current acceptance-grade GPT Scrutiny route and outstanding Build-6090 adjacent parity if applicable, and grants no Candidate, runtime, risk/default, deployment, or trading authority.
+
 ## Exact validation and review boundary
 
-Before integration consideration, one bounded lane must:
+Before integration consideration, the bounded repair lane must:
 
 1. reverify the exact parent hash and exact source/compatibility control identities;
 2. re-check that `B21`, `LAB_ENTRY_21`, `Boss_21_GridFibo`, and `P12100..P12113` remain collision-free on the current canonical base;
-3. re-anchor the exact tested B21 bytes onto current canonical without rebase, force push, history rewrite, semantic rewrite, or loss of canonical changes;
+3. preserve the already re-anchored candidate lineage and repair only the exact scrutiny finding on a new frozen head, without rebase, force push, history rewrite, unrelated semantic rewrite, or loss of canonical changes;
 4. prove the declared reversible parent -> compatibility control -> TemplateEngine mapping, all 126 blocks, 15 tick roots, 2 trade roots, ten hedge gates, D1/current-TF separation, native group/magic ownership, new-order-only safety hook, untouched native close/modify paths, magic/DryRun/self-gate refusal, and wrapper event forwarding;
-5. run the existing 33 compatibility tests, B21 focused positive/adversarial tests, input-surface and locked-constant generators/checkers, wrapper ownership/registration/generation checks, parameter registry/linkage checks, impacted fast cages, required B21/raw-probe compile checks with zero errors and warnings reported truthfully, `tpl_regression.ps1 -ValidateOnly` plus every current mandatory impacted non-tester cage, normal hooks, exact changed-path audit, and `git diff --check`;
-6. freeze one clean exact head and obtain qualified different-model-family exact-head review of the execution/position/money integration;
+5. preserve the complete deterministic acceptance set: the existing 33 compatibility tests, B21 focused positive/adversarial tests, input-surface and locked-constant generators/checkers, wrapper ownership/registration/generation checks, parameter registry/linkage checks, impacted fast cages, required B21/raw-probe compile checks with zero errors and warnings reported truthfully, `tpl_regression.ps1 -ValidateOnly`, every current mandatory impacted non-tester cage, normal hooks, exact changed-path audit, and `git diff --check`. Existing exact-head evidence may satisfy an unchanged/unimpacted gate only where its identity remains valid; rerun every gate impacted by the repair and add the focused nested timer-path adversarial fixture. If the repaired dependency graph still requires the Build-6090 adjacent control/current exact comparison, route it through its separately authorized existing no-search runtime-adjacent contract using control `f40c5c4484a99208319f5c3624978ea4054a9889` versus the repaired frozen head on one installation lineage—this contract grants no MT5/terminal authority;
+6. freeze one clean exact repaired head and obtain one targeted read-only acceptance-grade GPT Scrutiny recheck under `EA_MILESTONE_SCRUTINY_CHECKLIST.md`, with a separate reviewer job/lane and isolated evidence;
 7. only after review PASS may the Control Tower accept and integrate the source.
 
-GPT `/scrutinize` is analytical/process QA and may surface defects or routing gaps; it is not the mandatory review. Gemini qualification V2 timed out without a response or grade, so its competence result is `NO_CONCLUSION`, not PASS or failure. Until a reviewer is positively qualified and reviews the exact frozen head, status remains `BLOCKED_REQUIRED_DIFFERENT_FAMILY_REVIEWER`.
+Historical provider evidence remains preserved: Gemini qualification V2 timed out without a response or grade, so its competence result is `NO_CONCLUSION`, not PASS or failure. Under the current owner policy, Gemini/Qwen are optional/support only and provider qualification cannot block the targeted GPT Scrutiny recheck. Independence is procedural/evidentiary, and the author job cannot self-approve.
 
 One bounded repair is allowed only for a concrete current-canonical re-anchor or review finding inside this frozen scope. No MT5/terminal/Strategy Tester run is authorized. After reviewed canonical source integration, Home/TF/settings and any fixed MAIN+BWD screen still require separate prospective contracts.

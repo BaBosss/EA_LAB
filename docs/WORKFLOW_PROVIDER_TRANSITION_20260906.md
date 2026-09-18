@@ -6,13 +6,19 @@ MS-WORKFLOW-03 M1 remains routing documentation plus inert Hermes target metadat
 
 This document owns provider-transition routing and its qualification checklist. `AGENTS.md` owns roles and authority; `PROJECT_STATE.md` owns current status; `AGENT_TASKBOARD.md` points to the bounded contract; `START_HERE.md` routes startup. `CLAUDE.md` remains the canonical production verdict gate despite its filename and current service cancellation. Historical Claude reviews remain valid evidence.
 
+## Current owner policy — 2026-09-18
+
+Gemini and Qwen are optional/support providers only; neither is a mandatory reviewer or critical-path dependency. Provider/model family is not an independence criterion, and provider qualification cannot block core/high-risk acceptance. The canonical final path is a separate read-only GPT Scrutiny job/lane/contract against one exact clean frozen head and isolated evidence, after deterministic and task-relevant adversarial/negative gates complete. The author job cannot self-approve. The reviewer may not mutate source and must fail closed on ambiguous or conflicting provenance. One bounded repair remains available only where the underlying contract grants it, followed by one targeted exact-head recheck; no duplicate reviewers or PASS-shopping.
+
+All dated Gemini/Qwen/Claude qualification attempts, timeouts, cancellations, grades, and completed reviews below remain preserved historical facts. They may support later analysis but do not gate the current canonical review path.
+
 ## Evidence classification
 
 ### OWNER_REPORTED
 
 - Claude subscription/service is cancelled and unavailable; this is not temporary quota waiting.
 - ChatGPT Pro is active. Exact tier limits are unspecified.
-- Gemini is usable, but is not yet qualified as an acceptance-grade different-family core reviewer.
+- Historical 2026-09-06 intake: Gemini was reported usable but had not yet qualified as an acceptance-grade different-family core reviewer under the then-current policy.
 
 Owner reports are project inputs, not billing-provider verification.
 
@@ -41,8 +47,8 @@ The transition intake records these local observations from Control Tower withou
 2. Codex Primary is the default local implementation/test/integration author. A bounded Codex session is a worker, not another Control Tower or its own reviewer.
 3. Use deterministic local tooling first. Do not keep an LLM waiting for every tester cell. Reuse accepted Hermes H1/H2/H3 mechanical evidence and deterministic executors when the direct consumer does not require a new observation.
 4. GPT-backed Hermes remains a mechanical EA R&D evidence factory. Provider changes grant no strategy, risk, HOLDOUT, deployment, trading, promotion, or review authority.
-5. ChatGPT, Codex, and GPT-backed Hermes are the same model family. They never satisfy a different-family core review requirement for one another.
-6. Gemini is the only identified different-family route and may be used for such review only after the relevant M2 qualification. If unavailable or unqualified, the required review is `BLOCKED`; do not weaken the reviewer requirement or review repeatedly until PASS.
+5. Core/high-risk final review uses the acceptance-grade exact-head GPT Scrutiny path in `AGENTS.md` and `docs/research/EA_MILESTONE_SCRUTINY_CHECKLIST.md`. Independence is established by separate author/reviewer jobs and lanes, read-only evidence isolation, exact-head identity, deterministic/adversarial gates, and fail-closed authority handling—not provider family.
+6. Gemini and Qwen may be used only as optional/support workers where independently useful and authorized. Their qualification state cannot block core review, and they must not be dispatched as mandatory reviewers under the current owner policy.
 7. Claude-specific launchers are unavailable legacy routes. Preserve them and historical evidence; do not rename them or pretend they invoke Gemini/Codex.
 
 ## Subscription, OAuth, and paid API boundary
@@ -69,7 +75,7 @@ All qualification uses a clean exact pushed HEAD, task-scoped overrides, capture
 - Run a bounded no-mutation fixture and record exact client version, auth class, requested/resolved model, exit, and output identity.
 - Do not silently update global Codex configuration.
 
-### Gemini different-family reviewer
+### Historical/optional Gemini reviewer qualification
 
 - Verify billing/free-tier authority before making a new model request.
 - Use a read-only exact-head review fixture with seeded positive and negative findings.
@@ -86,9 +92,11 @@ All qualification uses a clean exact pushed HEAD, task-scoped overrides, capture
 - Do not rerun accepted H2/H3 backtests merely to qualify the provider.
 - A provider/auth failure is an environment/provider qualification blocker, not strategy failure.
 
+The checklist above records the former qualification objective and remains useful only for optional support-route qualification. It no longer controls core/high-risk acceptance or creates a mandatory different-family dependency.
+
 ## Exact-head and device rules
 
-Keep one writer. Freeze a clean exact commit before one independent review; if HEAD moves, rerun impacted checks before review/integration.
+Keep one writer. Freeze a clean exact commit before one separate read-only GPT Scrutiny job; if HEAD moves, rerun impacted checks and bind review to the new exact head. The author job cannot self-approve.
 
 For device execution, select BaBoss deviceId `bbb88aa0-1598-43f6-b56c-a7db22af086a`, then verify hostname and repository origin. `MOC-NB-4432NKM` deviceId `fa2a5704-038f-4aba-b539-c1d5d7adde70` is not an EA_LAB execution target without explicit mapping. Never select the first online device implicitly.
 
@@ -102,7 +110,7 @@ Preserve ORDER-353/VPS `PARKED_WAITING_MANUAL`, `first_trade_epoch=null`, `judge
 
 1. Re-anchor to fresh pushed Git and merge user additions/other-chat handoffs using an accepted/pending/contradicted source map.
 2. Verify M1 documentation/metadata reachability and review evidence; reuse the accepted scope without resurrecting its rejected validator. Local commit/freeze precedes independent review; normal FF push follows successful review and reconciliation.
-3. Execute M2 qualification in three separate bounded consumers: Codex launcher/client compatibility; Gemini exact-head read-only review qualification with negative tests; Hermes same-boundary GPT no-MT5 replay through task overrides.
+3. Treat remaining M2 qualification as optional provider/tooling capability work with direct consumers: Codex launcher/client compatibility; optional Gemini read-only support-route qualification with negative tests; Hermes same-boundary GPT no-MT5 replay through task overrides. None gates the canonical core/high-risk scrutiny path.
 4. Do not apply persistent profiles or activate schedulers without explicit runtime approval.
 5. Keep runtime identity B deferred and separate later system/audit/research work by direct consumer; do not rewrite the whole repository.
 6. Use the replacement Project Instructions/Operating Context package produced after the reviewed M1 push as snapshots; merge owner additions before producing the next full-replacement version. Project UI application is not automatic.

@@ -55,12 +55,14 @@ All fixtures must be synthetic or copied inert evidence. They must not claim PF/
 ## Acceptance and review
 Normal tooling tests and V2-A regression must remain green. The adapter qualification suite must prove zero MT5 processes were launched. `git diff --check`, applicable hooks and exact frozen-head review are required.
 
-Because this adapter can later launch execution/tester work, canonical adapter implementation/integration requires the high-risk execution-tooling review seat defined by `AGENTS.md`. ChatGPT/Codex/GPT-backed Hermes are one model family and cannot satisfy a required different-model-family review. If qualified Gemini review remains unavailable, preserve the local reviewed/tool-tested head as `BLOCKED_REQUIRED_DIFFERENT_FAMILY_REVIEWER`; do not substitute, repin or PASS-shop.
+Implementation is already complete at exact local tested head `db1054d3e962bdfd6d37d27cef917a0df796b697`; do not rerun or redispatch it. Preserve V2-A 83/83 and V2-B 30/30 PASS, strict state/diff/hooks evidence, the blocked subprocess/shell-launch seams and unchanged pre/post terminal/MetaEditor process set. Preserve the initial same-family scrutiny finding, bounded repair 1/1 for incomplete year-split reconciliation, and targeted same-family re-scrutiny with no remaining actionable defect as historical technical evidence. The repair budget is not reset.
+
+Because this adapter can later launch execution/tester work, canonical adapter integration requires one fresh, separate, read-only acceptance-grade GPT Scrutiny job/lane/contract against exact head `db1054d3e962bdfd6d37d27cef917a0df796b697` and isolated frozen evidence under `EA_MILESTONE_SCRUTINY_CHECKLIST.md`. The author job cannot self-approve. Provider/model family is not an independence criterion and provider qualification cannot block this review. Gemini/Qwen are optional/support only; do not dispatch them as mandatory reviewers or PASS-shop.
 ## Authority ceiling and next transition
 This contract grants implementation authority only for the isolated **NO-MT5 qualification adapter and its tests**. It does not grant real tester execution.
 
-After implementation tests pass and the required exact-head review is available, a separate Control Tower acceptance may classify the adapter `QUALIFIED_NO_MT5`. Only then may another separately frozen tester contract bind a real campaign, exact lane, source/build/set/config identities and MAIN+BWD cells.
+After the fresh acceptance-grade exact-head scrutiny returns `SCRUTINY_PASS`, a separate Control Tower acceptance may classify the adapter `QUALIFIED_NO_MT5`. Only then may another separately frozen tester contract bind a real campaign, exact lane, source/build/set/config identities and MAIN+BWD cells.
 
 That later tester contract must still obey all current Model1/Model4, same-install, BWD non-search, HOLDOUT, concurrency, report/year-split and strategy-authority rules. V2-B qualification cannot itself select an EA, Home, parameters, optimization ranges or verdict.
 
-Current direct consumer: one bounded implementation lane under this contract. If required different-family review cannot be satisfied, the direct consumer stops local/blocking before core integration; unrelated Control Tower work continues.
+Current direct consumer: the fresh acceptance-grade read-only GPT Scrutiny of exact head `db1054d3e962bdfd6d37d27cef917a0df796b697`. Do not rerun implementation. If scrutiny fails or blocks, preserve the exact local tested head and evidence before integration; unrelated Control Tower work continues.

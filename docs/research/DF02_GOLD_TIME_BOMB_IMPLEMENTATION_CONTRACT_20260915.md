@@ -3,7 +3,7 @@
 Status: `CONTRACT_FROZEN / IMPLEMENTATION_NEXT / NO_MT5 / REVIEW_GATED`
 
 Can do: `Codex Primary` author under this exact contract; deterministic local tooling for compile/tests · Suggested: `Codex Primary`.
-Required final reviewer for execution/position/money code: qualified different-model-family reviewer. ChatGPT/Codex/GPT-Hermes do not satisfy that seat.
+Required final review for execution/position/money code: a separate read-only acceptance-grade GPT Scrutiny job/lane/contract against the exact clean frozen head and isolated evidence. The author job cannot self-approve; provider qualification is not a blocker.
 
 ## Identity and parent
 
@@ -55,6 +55,8 @@ If the existing new-entry scaffold is used, its mandatory shared-stack values ar
 
 ## Acceptance and validation
 
+Preserve exact local implementation head `a5389cc780f832e522c1335922ca5fd71c093085` and all frozen source semantics/gates. Before final review, re-anchor that child onto current canonical without semantic rewrite or history rewrite, then complete the existing acceptance set below.
+
 Before any MT5 tester execution is considered, the implementation lane must provide all of the following on one clean frozen head:
 
 - exact parent hash check against `795c446093bc0ef888bad84f162646f94d303831e8becf10955d7e016ed1f93c`;
@@ -64,7 +66,7 @@ Before any MT5 tester execution is considered, the implementation lane must prov
 - MetaEditor compile of the B20 wrapper/test expert with `0 errors / 0 warnings`;
 - impacted Template deterministic tests plus `tpl_regression.ps1` or its current canonical equivalent, with existing accepted B11-B18 behavior unchanged unless a test is explicitly inapplicable to a fully native B20 path;
 - `git diff --check`, normal hooks, clean-head verification, and exact changed-path review;
-- independent qualified different-family review of the execution/position/money implementation. If that reviewer remains unavailable, classification is `BLOCKED_REQUIRED_DIFFERENT_FAMILY_REVIEWER`, not PASS.
+- after current-canonical child re-anchor and all compile/deterministic/regression/adversarial gates pass, one acceptance-grade exact-head GPT Scrutiny review under `EA_MILESTONE_SCRUTINY_CHECKLIST.md`; ambiguity, missing gates, or conflicting provenance fail closed, and only `SCRUTINY_PASS` permits Control Tower acceptance.
 
 One bounded repair is permitted only for an implementation/review finding under this new contract. It does not reset repair budgets of other exhausted work.
 
@@ -74,4 +76,4 @@ Implementation acceptance does not itself authorize a backtest. Tester execution
 
 ## Direct consumer
 
-A bounded Codex implementation lane for DF02/B20. If implementation and required review pass, the next consumer is Home/TF/settings freeze and then one fixed MAIN+BWD screen contract. If review cannot be satisfied, preserve the implementation head/evidence locally and stop before canonical core integration.
+A bounded Codex implementation lane for DF02/B20. If implementation and the separate acceptance-grade scrutiny pass, the next consumer is Home/TF/settings freeze and then one fixed MAIN+BWD screen contract. If scrutiny fails or blocks, preserve the implementation head/evidence locally and stop before canonical core integration.

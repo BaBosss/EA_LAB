@@ -1,6 +1,6 @@
 # B17 xx-00 Structural-SL Decoupling Contract V1
 
-Status: `CONTRACT_ONLY / OWNER_SEMANTICS_ALREADY_RATIFIED / CORE_IMPLEMENTATION_BLOCKED_PENDING_DIFFERENT_FAMILY_REVIEW`
+Status: `CONTRACT_ONLY / OWNER_SEMANTICS_ALREADY_RATIFIED / IMPLEMENTATION_NOT_STARTED / REVIEW_ROUTE_READY`
 Date: 2026-09-09
 Canonical parent: `fecad6daa3da9eaa00cc8420ecb77311566ded43`
 
@@ -44,12 +44,12 @@ The LabCore allowance is reporting-only and B17-only; it must not change executi
 6. Existing B17 structural safety invariants (`SINGLE`, Recovery OFF, Hedge OFF where applicable) remain fail-closed.
 7. Impacted B17 regression plus mandatory project cages pass on one frozen exact HEAD.
 8. No H01/config/Home/Package identity is relabelled as `B17-00`.
-9. Independent competent DIFFERENT-MODEL-FAMILY review is mandatory because this touches strategy/execution semantics. ChatGPT, Codex, GPT Hermes, and GPT `/scrutinize` cannot fill that seat.
+9. After bounded implementation and every gate above passes on one clean frozen exact head, run a separate read-only acceptance-grade GPT Scrutiny job/lane/contract under `EA_MILESTONE_SCRUTINY_CHECKLIST.md`. The author job cannot self-approve; provider/model family is not an independence criterion and provider qualification cannot block review.
 
 ## Authority / hard stops
 
 This clarification creates no implementation authority. The contract still authorizes no source implementation by itself, no MT5 backtest, no optimization, no HOLDOUT, no Candidate/Grade/KINT, no risk/default change, no runtime/deployment/trading/LIVE action, and no owner attestation.
 
-If a qualified different-family reviewer is unavailable, implementation acceptance remains `BLOCKED`; no same-family substitute or PASS-shopping is allowed.
+Gemini/Qwen are optional/support only. Review ambiguity, incomplete gates, or conflicting provenance remains fail-closed, and no duplicate reviewer or PASS-shopping is allowed. This governance update does not implement B17 and does not create or reset any repair allowance when an implementation lane is later opened.
 
 Direct consumer after an accepted implementation: owner parameter/Home ratification for `B17-00`, followed only then by a separately preregistered Model1 MAIN+BWD screen contract.

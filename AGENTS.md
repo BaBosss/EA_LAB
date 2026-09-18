@@ -22,11 +22,11 @@
 | **Hermes** | Deterministic/mechanical EA R&D evidence factory | execute exact approved manifests/backtests/batches, normalize evidence, build smoke/year/regime/parent-child outputs, and run pre-registered optimization stages under the Hermes contract | invent hypotheses, change parent mechanics/risk/defaults, choose HOLDOUT, widen ranges outside contract, deploy/attach runtime, trade, promote a candidate, or reinterpret harness/environment failure as strategy failure |
 | **OpenClaw team (commanded from Telegram)** | Remote execution/coordination lanes mapped to the roles above | perform only the role and task contract assigned to each lane; track via STATUS.md + git log (tag `[oc-*]`) + Telegram | gain extra authority from running remotely or through a manager layer |
 
-### 1.1 Current provider-routing override (owner-ratified 2026-09-06)
+### 1.1 Current provider-routing and scrutiny override (owner-ratified 2026-09-18)
 
 ChatGPT is the one active Control Tower and coordinates one project truth. Codex Primary is the default local author/integration worker. Claude service is owner-reported cancelled and unavailable; the Claude role row above remains an abstract capability boundary and old Claude reviews remain valid historical evidence, but no current task may route to Claude or wait for temporary Claude quota recovery.
 
-Deterministic local tools are first choice. GPT-backed Hermes remains a mechanical evidence worker and gains no authority from its provider. ChatGPT, Codex, and GPT-backed Hermes are the same model family and cannot satisfy a different-model-family review requirement for one another. Gemini is the only currently identified different-family review route, and only after task-relevant read-only/tool-boundary/provenance/competence qualification. If that qualification is absent or fails, required different-family review is `BLOCKED`; do not substitute a weaker reviewer or repeat review attempts until PASS. Current provider routing and qualification are owned by `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`.
+Deterministic local tools are first choice. GPT-backed Hermes remains a mechanical evidence worker and gains no authority from its provider. For core/high-risk acceptance, provider or model family is **not** an independence criterion and provider qualification cannot block review. The canonical final path is acceptance-grade GPT Scrutiny: a separate read-only reviewer job/lane/contract inspects one exact clean frozen head and isolated frozen evidence after deterministic and task-relevant adversarial/negative gates complete. The author job cannot self-approve, the reviewer cannot mutate source, and ambiguity or conflicting provenance must fail closed. One bounded repair maximum applies only where the underlying contract permits it, followed by one targeted exact-head recheck; do not dispatch duplicate reviewers or PASS-shop. Gemini and Qwen are optional/support routes only. Their prior qualifications, timeouts, cancellations, grades and reviews remain historical evidence. Current routing and qualification history are owned by `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`; the acceptance checklist is `docs/research/EA_MILESTONE_SCRUTINY_CHECKLIST.md`.
 
 **Heartbeat (user rule 2026-07-04):** any agent working longer than ~10 minutes must report progress
 every ~10-15 minutes (1 line: what it is doing, ~%, what is blocking) — the OpenClaw team reports in
@@ -73,18 +73,19 @@ changes to these approval boundaries, consequential scope promotion, QI-2+, dest
 outside explicitly authorized bounded fixtures, force push, history rewrite, and irreversible strategic
 decisions.
 
-### 1.5 Current assignment and review rule (owner-ratified 2026-08-07)
+### 1.5 Current assignment and review rule (owner-ratified 2026-09-18)
 
 - **Normal tooling/documentation:** one scoped author, applicable automated checks, and ChatGPT or another
   qualified agent reviews when needed. Codex Primary is the current default author.
 - **Core/execution/position/accounting/money/risk code:** one explicitly assigned Codex or Claude author under
-  the roles above; Codex is the current available default because Claude is unavailable. Mandatory independent
-  review must come from a **different model family**; compile plus every required cage/test and exact evidence
-  remain required. Gemini may fill that review seat only after the task-relevant qualification in
-  `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`; otherwise the required review is `BLOCKED`. Owner approval
-  remains mandatory before any risk-default, live, or irreversible behavior change.
-- No agent may be both the author and the sole final reviewer of high-risk work. ChatGPT, Codex, and GPT-backed
-  Hermes count as one model family for this rule.
+  the roles above; Codex is the current available default because Claude is unavailable. Canonical final review
+  is a separate acceptance-grade, read-only GPT Scrutiny job against the exact clean frozen head and isolated
+  evidence after compile, every required cage/regression, and task-relevant adversarial/negative fixtures pass.
+  Provider/model family does not establish or defeat independence, and provider qualification is not a blocker.
+  Owner approval remains mandatory before any risk-default, live, or irreversible behavior change.
+- No author job may self-approve or act as the sole final reviewer of its high-risk output. Independence is
+  procedural and evidentiary: separate contract/job/lane, exact-head binding, evidence isolation, no reviewer
+  source mutation, explicit authority ceiling, and fail-closed handling of ambiguity or conflicting provenance.
 - Use the cheapest capable execution lane whose output can be verified. Cost/quota is a routing concern,
   never a source of project authority.
 
@@ -268,8 +269,8 @@ verdict, order status, or decision-feeding field.</sub>
 |---|---|---|
 | project management, priority, task-contract design | one active ChatGPT Control Tower with the owner | owner approval where the decision is owner-reserved |
 | local integration, normal application/tooling/docs | Codex Primary by default | applicable cages; independent ChatGPT review when needed |
-| core/execution/position/accounting/money/risk code | Codex or Claude, explicitly assigned per the roles above; current default Codex while Claude is unavailable | qualified different-family review; Gemini only after task-relevant qualification, otherwise BLOCKED; compile/all cages/evidence; owner approval for risk-default/live/irreversible change |
-| architecture/RCA/research/alternative proposal | ChatGPT directs; Codex works only under an assigned contract | ChatGPT synthesizes; owner approves owner-reserved direction; different-family review when required |
+| core/execution/position/accounting/money/risk code | Codex or Claude, explicitly assigned per the roles above; current default Codex while Claude is unavailable | separate exact-frozen-head read-only GPT Scrutiny under the acceptance checklist; compile/all deterministic and adversarial gates/evidence; author job cannot self-approve; owner approval for risk-default/live/irreversible change |
+| architecture/RCA/research/alternative proposal | ChatGPT directs; Codex works only under an assigned contract | ChatGPT synthesizes; owner approves owner-reserved direction; separate acceptance-grade scrutiny when required |
 | batch/backtest/optimize/parse | deterministic local executor or bounded Hermes/batch lane | reuse accepted mechanical evidence where applicable; no model waiting per tester cell; no scope/risk/owner-reserved decisions |
 
 Every order must state **`Can do: <capable roles> · 👉 Suggested: <default>`**, plus scope, exclusions,
@@ -401,8 +402,8 @@ a way for the user to pick a branch from their phone.
   cheapest tier reworks >~30%, either the cage is too coarse or the work was on the wrong tier
 - **Quarterly:** (1) **verdict audit** — pick 3-5 old verdicts at random from the taskboard/scorecard and
   have an auditor read only the raw evidence (never the original verdict), then decide again blind ·
-  auditor must be independent of the original author/reviewer where practical, and high-risk review must
-  use a different model family · frequent disagreement = the problem is
+  auditor must be independent of the original author and reviewer where practical, and high-risk review must
+  use the exact-head, read-only, evidence-isolated scrutiny path in §1.5 · frequent disagreement = the problem is
   in the judging layer, not the labour layer (2) sweep the Decision log for regime rules (rules tied to
   a tool/market/time, e.g. the 3-year window, 6-month re-opt) to see whether they are due for review —
   physics rules (epistemic lessons such as the Model-2 ban, no-DEAD-before-optimize) never expire and

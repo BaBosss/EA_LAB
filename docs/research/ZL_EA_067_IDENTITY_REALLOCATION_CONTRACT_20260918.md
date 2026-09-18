@@ -4,7 +4,7 @@ Status: `PROSPECTIVE / IDENTITY_ONLY / B22_RESERVED / IMPLEMENTATION_NOT_STARTED
 
 Contract base: `bc2e4afe09ca3309b091a032c020140ea1c5a858`.
 
-Can do: `Codex Primary` bounded identity-only author using the preserved ZL lineage; deterministic generation/compile/test tooling; Control Tower acceptance/integration only after all gates pass. Suggested: `Codex Primary` for one mechanical regeneration/revalidation lane. Required final reviewer: a qualified different-model-family reviewer; ChatGPT, Codex, GPT-backed Hermes, and GPT `/scrutinize` cannot fill that seat.
+Can do: `Codex Primary` bounded identity-only author using the preserved ZL lineage; deterministic generation/compile/test tooling; Control Tower acceptance/integration only after all gates pass. Suggested: `Codex Primary` for one mechanical regeneration/revalidation lane. Required final review: a separate read-only acceptance-grade GPT Scrutiny job/lane/contract against the exact clean frozen head and isolated evidence; the author job cannot self-approve.
 
 ## Collision and reservation
 
@@ -67,8 +67,8 @@ Before mutation, re-run current-canonical collision checks for B20/B21/B22, buil
 4. `Boss_22_WickDisplacement` and the focused Wick test compile with `0 errors / 0 warnings` unless current canonical compilation introduces a separately explained environment blocker;
 5. the existing nine-case Wick runtime fixture rerun only because identity binding changed, with identical signal outcomes; impacted adjacent regression rerun only where the identity-bound wrapper or generated surfaces require it, on one named installation and without cross-install comparison;
 6. applicable `tpl_regression.ps1`, normal hooks, exact changed-path audit, clean-head verification, and `git diff --check` PASS;
-7. qualified different-model-family exact-head review of the core source; only review PASS permits Control Tower acceptance/integration.
+7. acceptance-grade exact-head GPT Scrutiny of the core source under `EA_MILESTONE_SCRUTINY_CHECKLIST.md`, after every identity-equality, fixture, compile, regression, and adversarial gate above passes; only `SCRUTINY_PASS` permits Control Tower acceptance/integration.
 
-Gemini qualification V2 timed out with no response or grade and is `NO_CONCLUSION`; it is neither competence failure nor qualification PASS. Same-family scrutiny cannot substitute. If no reviewer is qualified, preserve the B22 head and evidence as `BLOCKED_REQUIRED_DIFFERENT_FAMILY_REVIEWER`.
+Gemini qualification V2 timed out with no response or grade and is `NO_CONCLUSION`; it is neither competence failure nor qualification PASS. That remains historical provider evidence. Under current policy Gemini/Qwen are optional/support only, provider qualification cannot block core review, and independence is established procedurally through the separate read-only exact-head scrutiny job and evidence isolation.
 
 No optimization, BWD retune, HOLDOUT, Candidate/Grade/KINT, performance claim, Home/TF/settings freeze, deployment, runtime attachment, DEMO/LIVE, trading, risk/default change, or Strategy Catalog record follows. Only after reviewed B22 source integration may a separate fixed-config Model1 MAIN+BWD screen contract be considered.
