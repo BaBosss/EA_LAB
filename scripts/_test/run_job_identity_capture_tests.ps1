@@ -160,6 +160,18 @@ try {
     Assert-True ($private.candidate_source_head -ceq $fixtureHead) 'candidate source provenance was not retained'
     Assert-True ($public.observations[0].observed_state -ceq 'RUNNING') 'self-process fixture did not remain RUNNING'
 
+    # A null postcondition_file_path is invalid metadata, not NOT_CONFIGURED.
+    $job.postcondition_file_path = $null
+    Write-FixtureJson (Join-Path $jobRoot 'job.json') $job
+    $nullPostconditionOutput = Join-Path $tempRoot 'null-postcondition-output'
+    $nullPostconditionRefused = $false
+    try {
+        . $capture -RepoRoot $fixtureRepo -ExpectedHead $fixtureHead -CanonicalObservedHead $canonicalSha `
+            -LeaseRoot $leaseRoot -JobsRoot $jobsRoot -LaneIds @($laneId) -OutputRoot $nullPostconditionOutput | Out-Null
+    } catch { $nullPostconditionRefused = $_.Exception.Message -match 'invalid job postcondition_file_path type' }
+    Assert-True $nullPostconditionRefused 'null postcondition_file_path was not refused as a type error'
+    Assert-True (-not (Test-Path -LiteralPath $nullPostconditionOutput)) 'null postcondition path refusal created output'
+
     # The same real eleven-field lease shape with a configured, not-yet-started
     # postcondition must flow through collector and adapter without a PID query.
     $job.postcondition_file_path = 'Z:\private\postcondition.ps1'

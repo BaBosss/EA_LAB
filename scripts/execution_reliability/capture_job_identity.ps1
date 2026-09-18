@@ -485,6 +485,7 @@ foreach ($laneId in $safeLaneIds) {
         }
     }
     $jobObject = ConvertFrom-StrictJsonBytes ([byte[]]$initialBytes.job) 'job' $jobKeys $jobKeys
+    if ($jobObject.postcondition_file_path -isnot [string]) { throw 'invalid job postcondition_file_path type' }
     $stateObject = ConvertFrom-StrictJsonBytes ([byte[]]$initialBytes.state) 'state' $stateKeys @('job_id','state')
     $heartbeatObject = if ($null -ne $initialBytes.heartbeat) {
         ConvertFrom-StrictJsonBytes ([byte[]]$initialBytes.heartbeat) 'heartbeat' $heartbeatKeys @('job_id','state','updated_utc')
@@ -512,7 +513,7 @@ foreach ($laneId in $safeLaneIds) {
 
 $processChecks = New-Object Collections.Generic.List[object]
 foreach ($context in $laneContexts) {
-    $postNotConfigured = [string]$context.Job.postcondition_file_path -ceq ''
+    $postNotConfigured = $context.Job.postcondition_file_path -ceq ''
     $postPidValue = if ($context.State.PSObject.Properties.Name -contains 'postcondition_pid') { $context.State.postcondition_pid } else { $null }
     $postStartValue = if ($context.State.PSObject.Properties.Name -contains 'postcondition_start_utc') { $context.State.postcondition_start_utc } else { $null }
     $postNotStarted = -not $postNotConfigured -and $null -eq $postPidValue -and $null -eq $postStartValue -and `
