@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 236.
+Rows in source registry: 244.
 
 ## Override pairs
 
@@ -96,6 +96,10 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_18_MaPeriod` | build 18 only | none | LWMA period for the displacement reference line. |
 | `_18_Slowing` | build 18 only | _18_KPeriod; _18_DPeriod | Stochastic slowing period. |
 | `_18_UpLevel` | build 18 only | _18_DirMode | Upper Stochastic band used by both DirMode readings. |
+| `_20_Grid_Distance` | build 20 only; source-owned favorable/adverse add branches write 2x this value and later initial helpers can consume the retained offset | none direct; internal g_gt_grid.offset stores 2x this value and is restart-sensitive | Defines the source grid unit whose doubled retained state controls same-side add spacing/nearby exclusion and can turn a later flat-cycle initial helper into stop-pending placement. |
+| `_20_Pips_to_fall` | build 20 only, SELL side flat (no selected SELL positions) | _20_Time_to_wait; _20_Pips_to_raise (mirrored BUY threshold) | Minimum downward Bid move, in source pips, required within the TimeBomb window before the current-timeframe once-per-bar initial helper may fire. |
+| `_20_Pips_to_raise` | build 20 only, BUY side flat (no selected BUY positions) | _20_Time_to_wait; _20_Pips_to_fall (mirrored SELL threshold) | Minimum upward Ask move, in source pips, required within the TimeBomb window before the current-timeframe once-per-bar initial helper may fire. |
+| `_20_Time_to_wait` | build 20 only, while the evaluated BUY or SELL side is flat | _20_Pips_to_raise; _20_Pips_to_fall | Maximum elapsed seconds allowed between the TimeBomb anchor quote and the qualifying directional move; elapsed time also resets the anchor. |
 | `_21_DF03_CandleFindBy` | build 21 only | source-native DF03 | Exact frozen DF03 CandleFindBy binding; no optimization authority |
 | `_21_DF03_CloseAllPercent` | build 21 only | source-native DF03 | Exact frozen DF03 CloseAllPercent binding; no optimization authority |
 | `_21_DF03_HedgingMode` | build 21 only | source-native DF03 | Exact frozen DF03 HedgingMode binding; no optimization authority |
@@ -191,6 +195,7 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_0_BarOpenOnly` | always | none direct - gates the whole management/entry/stack/recovery/hedge cadence to bar-open only; hard-kill(RiskControl_CheckDD)/halt-check/Exit_SafetyMoneyStop remain intrabar regardless of this flag | When true, evaluates the signal/management/stack/recovery/hedge pipeline once per bar-open instead of every tick (Zeus-style cadence); safety kill and the basket money-stop always stay intrabar. |
 | `_0_MaxSpread` | this value >0 (0=ignore/off, the historical no-op default) | none direct | Blocks NEW market/pending order placement (not management/exits) when the current spread exceeds this many points; an already-accepted GTC pending can still fill later at a wider spread. |
 | `_0_Slippage` | always - applied to every live order via CTrade | none direct | Maximum allowed slippage in points for every order sent through CTrade. |
+| `_20_MagicStart` | build 20 only | none direct | Tags new DF02 trade requests and selects the source-owned symbol/magic position group used by adds, trailing and ownership checks. |
 
 ### execution (macro gate)
 
@@ -242,6 +247,8 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_2_PartialPct1` | StackMode != STACK_PYRAMID(93) AND a basket target(_2_BasketTP_Money/ATRmult) is set >0 AND this value >0 | _2_PartialFrac1; _2_BasketTP_Money/_2_BasketTP_ATRmult(needs a target to measure % against) | % of the basket-TP target at which the first partial-close milestone fires. |
 | `_2_PartialPct2` | same gating pattern as _2_PartialPct1, independently gated on its own >0 value | _2_PartialFrac2 | % of the basket-TP target at which the second partial-close milestone fires. |
 | `_2_SuppressLegTP` | always checked; effect is real whenever true | ExitMode(21/22 leg TP is the thing being suppressed); _2_BasketTP_Money/_2_BasketTP_ATRmult(the basket-level exit that becomes the only TP mechanism when this is true) | When true, forces every leg to carry NO per-order broker TP, relying solely on the basket-money exit to close the whole basket together (needed for GridLog(14) parity with the standalone, which used TP=0 per leg). |
+| `_20_Trailing_step` | build 20 only, when at least one selected source-owned position exists | _20_Trailing_Stop | Fixed source trailing step that determines how much additional favorable movement is required before the group stop advances again. |
+| `_20_Trailing_Stop` | build 20 only, when at least one selected source-owned position exists | _20_Trailing_step | Fixed source-owned group trailing-stop distance used for SL-only trailing across the selected symbol/magic basket. |
 | `_21_TP_Pip` | ExitMode==EXIT_FIXED_TP(21) | none direct | Fixed take-profit distance in raw points for a single order. |
 | `_22_TP_ATRmult` | ExitMode==EXIT_ATR_TP(22) | _33_AdaptiveON/_33_AdaptiveN(both scale the underlying Risk-ATR this multiplies) | Take-profit distance as a multiple of (optionally regime-adaptive) Risk-ATR. |
 | `_23_TrailStart` | ExitMode==EXIT_TRAIL(23) | _23_TrailStep | Minimum point gain before the trailing stop starts moving. |
@@ -306,6 +313,7 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_16_BaseLotMode` | build 16 only - Kangaroo owns the entry-16 lot law and LabCore short-circuits before MM_FirstLot, so the chassis FirstLotMode never applies here | _16_BaseLot(mode 0); _43_LotPerAnchor + _43_BalanceAnchor(mode 1, shared with chassis FirstLotMode=43); _16_LadderMult and _16_MaxLotPerOrder(applied AFTER this); RC_MaxLot(final clamp) | Chooses the entry-16 BASE order size: 0 = flat _16_BaseLot (default, unchanged), 1 = balance-scaled via the mode-43 anchor pair so the base order tracks account size. The ladder and the cage still apply on top either way. |
 | `_16_LadderMult` | build 16 only, AND have>=4 | _16_BaseLot; _16_MaxLotPerOrder | >1.0 enables a capped ladder: order N = current max open lot x this multiplier; the first 4 orders on a side are always _16_BaseLot. |
 | `_16_MaxLotPerOrder` | build 16 only, AND _16_LadderMult>1.0 | _16_LadderMult; RC_MaxLot(clamps after this) | Per-order lot ceiling for the ladder (original 'Max_Lot_Martingale'); RC_MaxLot still clamps after this. |
+| `_20_Freeze_lot` | build 20 only, on every source-owned order attempt | none direct; broker free margin, one-lot margin, volume step/min/max complete the source formula | Value term in (value/100)*free_margin/margin_required_for_1_lot before nearest-step and broker min/max normalization; it is not a literal fixed lot. |
 | `_4_DdAdaptiveOn` | always checked; no-op (multiplier stays 1.0) when false | _4_DdTier1Pct/_4_DdTier1Mult; _4_DdTier2Pct/_4_DdTier2Mult; _4_DdHardCapMult | Enables a DD-tiered first-lot multiplier applied only to a NEW basket's level-0 order (Zeus GridLog _05_DdAdaptive port). |
 | `_4_DdHardCapMult` | _4_DdAdaptiveOn=true | _4_DdTier1Mult; _4_DdTier2Mult | Hard ceiling the DD-adaptive multiplier can never exceed, regardless of DD depth. |
 | `_4_DdTier1Mult` | _4_DdAdaptiveOn=true, AND DD >= _4_DdTier1Pct (and < _4_DdTier2Pct) | _4_DdTier1Pct; _4_DdHardCapMult(final clamp) | Level-0 lot multiplier applied at the first DD tier. |
@@ -398,6 +406,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 236 (must equal the source registry's 236 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 244 (must equal the source registry's 244 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
 Override pairs found: 15.

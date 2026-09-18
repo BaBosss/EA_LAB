@@ -7,6 +7,7 @@
 #define BOSS_LAB_CORE_MQH
 
 #include "Inputs.mqh"
+#ifndef LAB_ENTRY_20
 #include "HedgeSafety.mqh"
 // ORDER-710: must come AFTER Inputs.mqh -- it enumerates that file's inputs per build tag, and
 // Inputs.mqh is where the fallback tag is defined when a wrapper defines none.
@@ -607,5 +608,22 @@ void OnTick()
 #endif // LAB_ENTRY_21
 }
 //+------------------------------------------------------------------+
+
+#endif // non-DF02 shared chassis
+
+#ifdef LAB_ENTRY_20
+// DF02 owns init/tick/deinit entirely: generic gates and lifecycle cannot act.
+#include "InputSurface_gen.mqh"
+#include "entries/Entry_GoldTimeBomb.mqh"
+#include "LockedConstants_gen.mqh"
+int OnInit()
+{
+   GoldTimeBomb_Reset();
+   PrintFormat("[DF02] source-native pipeline; shared selectors inert; config=%s", CFG_Fingerprint());
+   return INIT_SUCCEEDED;
+}
+void OnTick() { GoldTimeBomb_OnTick(); }
+void OnDeinit(const int reason) {}
+#endif
 
 #endif // BOSS_LAB_CORE_MQH

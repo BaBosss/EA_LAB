@@ -71,6 +71,14 @@ try {
     [IO.File]::WriteAllText($inputsPath, $inputsWith50, $utf8NoBom)
     $nowRegistered = Test-TemplateEntryWrapperRegistered -WrapperPath $unregisteredWrapper -InputsPath $inputsPath
     Check 'the same wrapper flips to registered once Inputs.mqh actually knows the tag' ($nowRegistered.Ok) ($nowRegistered | ConvertTo-Json)
+
+    # DF02 bounded repair: the real wrapper must be registered in BOTH canonical
+    # directions. The fixture tests above remain unchanged for unknown tags.
+    $df02 = Test-TemplateEntryWrapperRegistered -WrapperPath (Join-Path $RepoRoot 'ea_template/Boss_20_GoldTimeBomb.mq5') -InputsPath (Join-Path $RepoRoot 'ea_template/core/Inputs.mqh')
+    Check 'DF02 LAB_ENTRY_20 is registered without fallback' ($df02.Ok -and $df02.EntryNumber -eq 20) ($df02 | ConvertTo-Json)
+    $owners = @(Import-Csv -LiteralPath (Join-Path $RepoRoot '_triage/factory_os/wrapper_owners.csv'))
+    $related = @($owners | Where-Object { $_.build_tag -eq 'LAB_ENTRY_20' -or $_.wrapper_rel -eq 'ea_template/Boss_20_GoldTimeBomb.mq5' })
+    Check 'DF02 has one exact canonical wrapper owner' ($related.Count -eq 1 -and $related[0].build_tag -eq 'LAB_ENTRY_20' -and $related[0].wrapper_rel -eq 'ea_template/Boss_20_GoldTimeBomb.mq5')
 }
 finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue

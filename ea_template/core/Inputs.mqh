@@ -18,8 +18,10 @@
 #ifndef LAB_ENTRY_17
 #ifndef LAB_ENTRY_18
 #ifndef LAB_ENTRY_19
+#ifndef LAB_ENTRY_20
 #ifndef LAB_ENTRY_21
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -351,6 +353,21 @@ const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
 #endif
 #ifndef LAB_CONST_StackConfirm
 input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;   // [P50201] Stack Confirm | with P50240
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+// DF02: shared stack selectors are inert registration values.
+#ifdef LAB_ENTRY_20
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE StackMode = STACK_SINGLE;
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;
 #endif
 #ifdef LAB_CONST_StackConfirm
 const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
@@ -1806,6 +1823,59 @@ const int _0_MaxSpread = LAB_CONSTVAL__0_MaxSpread;
 double g_wave5_sl_price = 0.0;   // structural SL price (wave-1 top/bottom +/- ATR buffer)
 double g_wave5_tp_price = 0.0;   // 100% expansion target (entry_ref +/- |wave1|) - reference zone, not a hard broker TP
 double g_wave5_entry_ref = 0.0;  // price at signal time (0 = unset)
+#endif
+
+// DF02 frozen source defaults; current chart symbol and timeframe remain unbound.
+#ifdef LAB_ENTRY_20
+input group "=== 20 DF02 source-owned lifecycle ==="
+#ifndef LAB_CONST__20_Pips_to_raise
+input int _20_Pips_to_raise = 10;
+#endif
+#ifdef LAB_CONST__20_Pips_to_raise
+const int _20_Pips_to_raise = LAB_CONSTVAL__20_Pips_to_raise;
+#endif
+#ifndef LAB_CONST__20_Pips_to_fall
+input int _20_Pips_to_fall = 10;
+#endif
+#ifdef LAB_CONST__20_Pips_to_fall
+const int _20_Pips_to_fall = LAB_CONSTVAL__20_Pips_to_fall;
+#endif
+#ifndef LAB_CONST__20_Time_to_wait
+input int _20_Time_to_wait = 10;
+#endif
+#ifdef LAB_CONST__20_Time_to_wait
+const int _20_Time_to_wait = LAB_CONSTVAL__20_Time_to_wait;
+#endif
+#ifndef LAB_CONST__20_Grid_Distance
+input int _20_Grid_Distance = 60;
+#endif
+#ifdef LAB_CONST__20_Grid_Distance
+const int _20_Grid_Distance = LAB_CONSTVAL__20_Grid_Distance;
+#endif
+#ifndef LAB_CONST__20_Trailing_Stop
+input int _20_Trailing_Stop = 30;
+#endif
+#ifdef LAB_CONST__20_Trailing_Stop
+const int _20_Trailing_Stop = LAB_CONSTVAL__20_Trailing_Stop;
+#endif
+#ifndef LAB_CONST__20_Trailing_step
+input double _20_Trailing_step = 1.0;
+#endif
+#ifdef LAB_CONST__20_Trailing_step
+const double _20_Trailing_step = LAB_CONSTVAL__20_Trailing_step;
+#endif
+#ifndef LAB_CONST__20_Freeze_lot
+input double _20_Freeze_lot = 0.0001;
+#endif
+#ifdef LAB_CONST__20_Freeze_lot
+const double _20_Freeze_lot = LAB_CONSTVAL__20_Freeze_lot;
+#endif
+#ifndef LAB_CONST__20_MagicStart
+input int _20_MagicStart = 7292;
+#endif
+#ifdef LAB_CONST__20_MagicStart
+const int _20_MagicStart = LAB_CONSTVAL__20_MagicStart;
+#endif
 #endif
 
 

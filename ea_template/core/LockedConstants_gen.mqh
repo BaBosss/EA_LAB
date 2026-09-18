@@ -328,6 +328,18 @@ string CFG_ConstPreimage()
   }
 #endif
 
+#ifdef LAB_ENTRY_20
+#define CFG_CONSTANTS_ENUMERATED
+int    CFG_ConstKeys() { return(2); }
+string CFG_ConstPreimage()
+  {
+   string s = "";
+   s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
+   s += "\nconst:LAB_ENTRY_TAG=" + CFG_CanonString(LAB_ENTRY_TAG);
+   return(s);
+  }
+#endif
+
 #ifdef LAB_ENTRY_21
 #define CFG_CONSTANTS_ENUMERATED
 int    CFG_ConstKeys() { return(78); }
