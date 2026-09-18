@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 244.
+Rows in source registry: 246.
 
 ## Override pairs
 
@@ -114,6 +114,8 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_21_DF03_SLPip` | build 21 only | source-native DF03 | Exact frozen DF03 SLPip binding; no optimization authority |
 | `_21_DF03_Timeframe` | build 21 only | source-native DF03 | Exact frozen DF03 Timeframe binding; no optimization authority |
 | `_21_DF03_TPPip` | build 21 only | source-native DF03 | Exact frozen DF03 TPPip binding; no optimization authority |
+| `_22_DisplacementBodyFraction` | build 22 only | _22_WickBodyRatio | Minimum confirmation-candle body divided by full range before the close beyond the rejection extreme can signal. |
+| `_22_WickBodyRatio` | build 22 only | _22_DisplacementBodyFraction | Minimum dominant rejection-wick length as a multiple of rejection-candle body. |
 | `TradeDir` | builds 11/12/13/15 only (checked explicitly in those 4 Entry_Evaluate() functions); builds 14/16/18 use their own fixed-direction input instead and never read this; build17 is bidirectional by design and never reads this | per-entry: none direct, but functionally overlaps with _14_Direction/_16_Direction/_18_Direction on builds that ignore it | Restricts a symmetric entry signal to long-only, short-only, or both; has zero effect on builds 14/16/17/18. |
 | `TrendFilter` | builds 11/12/13 only; no effect on 14/15/16/17/18 | _71_ATRMA+_71_ATRRatio(71); _72_SlopeBar(72) | Adds a confirming filter (ATR-expansion or MA-slope) before the entry signal is allowed to fire; only wired into 3 of the 8 entry modules. |
 
@@ -406,6 +408,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 244 (must equal the source registry's 244 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 246 (must equal the source registry's 246 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
 Override pairs found: 15.

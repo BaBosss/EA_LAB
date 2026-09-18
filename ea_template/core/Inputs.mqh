@@ -20,7 +20,9 @@
 #ifndef LAB_ENTRY_19
 #ifndef LAB_ENTRY_20
 #ifndef LAB_ENTRY_21
+#ifndef LAB_ENTRY_22
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -376,6 +378,20 @@ const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
 #ifdef LAB_ENTRY_21
 const ENUM_STACK_MODE StackMode = STACK_SINGLE; // HIDDEN_INACTIVE: native DF03 owner
 const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE; // HIDDEN_INACTIVE
+#endif
+#ifdef LAB_ENTRY_22
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;   // [P50200] Stack Mode | with P80012
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;   // [P50201] Stack Confirm | with P50240
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
 #endif
 #ifndef LAB_CONST__9_StepUseATR
 input bool   _9_StepUseATR  = true;   // [P50210] Step Use ATR | with P50211
@@ -1964,6 +1980,22 @@ input string _21_DF03_CandleFindBy = "id"; // [P12113] DF03 CandleFindBy | sourc
 #endif
 #ifdef LAB_CONST__21_DF03_CandleFindBy
 const string _21_DF03_CandleFindBy = LAB_CONSTVAL__21_DF03_CandleFindBy;
+#endif
+#endif
+
+#ifdef LAB_ENTRY_22
+input group "=== E022 WickDisplacement | EA_LAB independent V0 OHLC signal ==="
+#ifndef LAB_CONST__22_WickBodyRatio
+input double _22_WickBodyRatio = 2.0;   // [P12200] Wick/Body Ratio | with P12201
+#endif
+#ifdef LAB_CONST__22_WickBodyRatio
+const double _22_WickBodyRatio = LAB_CONSTVAL__22_WickBodyRatio;
+#endif
+#ifndef LAB_CONST__22_DisplacementBodyFraction
+input double _22_DisplacementBodyFraction = 0.65;   // [P12201] Displacement Body/Range | with P12200
+#endif
+#ifdef LAB_CONST__22_DisplacementBodyFraction
+const double _22_DisplacementBodyFraction = LAB_CONSTVAL__22_DisplacementBodyFraction;
 #endif
 #endif
 
