@@ -17,6 +17,7 @@ import owner_operations  # noqa: E402
 
 
 HEAD = "a" * 40
+CANONICAL = "c" * 40
 BASE = "b" * 40
 LANE = "lane-one"
 JOB = "job-one"
@@ -38,10 +39,17 @@ class BundleFixture:
         for path in (self.repo, self.leases, self.jobs):
             path.mkdir()
         self.lease = {
-            "schema_version": "EA_LAB_JOB_IDENTITY_LEASE_V1",
             "lane_id": LANE,
             "job_id": JOB,
+            "created_utc": "2026-09-18T10:59:00.0000000Z",
+            "job_root": "Z:\\untrusted\\job-root",
+            "status_script": "Z:\\untrusted\\status.ps1",
+            "runner_root": "Z:\\untrusted\\runner-root",
+            "requested_file": "Z:\\untrusted\\request.ps1",
+            "launch_file": "Z:\\untrusted\\powershell.exe",
+            "worktree": "Z:\\untrusted\\worktree",
             "base_sha": BASE,
+            "stage": "DISPOSABLE_FIXTURE",
         }
         self.job = {
             "job_id": JOB,
@@ -142,6 +150,7 @@ class BundleFixture:
             "captured_at_utc": CAPTURED,
             "repo_root": str(self.repo.resolve()),
             "expected_head": HEAD,
+            "canonical_observed_sha": CANONICAL,
             "lease_root": str(self.leases.resolve()),
             "jobs_root": str(self.jobs.resolve()),
             "requested_lane_ids": [LANE],
@@ -178,6 +187,12 @@ class JobIdentityProviderTests(unittest.TestCase):
         self.assertEqual("REFUSE_RETRY", row["retry_decision"])
         self.assertEqual(receipt["public_output_sha256"], hashlib.sha256((self.root / "publication" / "job_observations.json").read_bytes()).hexdigest())
 
+    def test_actual_eleven_field_dispatch_lease_is_consumed_without_trusting_paths(self):
+        dto, receipt = self.adapt()
+        self.assertEqual(CANONICAL, dto["canonical_observed_sha"])
+        self.assertEqual(HEAD, receipt["candidate_source_head"])
+        self.assertEqual(BASE, receipt["process_identity_evidence"][0]["base_sha"])
+
     def test_matching_active_processes(self):
         self.fixture.state.update({"state": "RUNNING"})
         self.fixture.state.pop("ended_utc")
@@ -199,6 +214,18 @@ class JobIdentityProviderTests(unittest.TestCase):
         self.fixture.result = None
         dto, _ = self.adapt()
         self.assertEqual("LOST_PROCESS", dto["observations"][0]["observed_state"])
+
+    def test_running_live_runner_missing_child_refuses_instead_of_emitting_v0_invalid_lost(self):
+        self.fixture.state.update({"state": "RUNNING"})
+        self.fixture.state.pop("ended_utc")
+        self.fixture.state.pop("exit_code")
+        self.fixture.result = None
+        self.fixture.checks[0] = self.fixture.check(
+            "runner", 101, self.fixture.state["runner_start_utc"], "MATCHING_RECORDED_PROCESS", "PRESENT"
+        )
+        with self.assertRaisesRegex(ProviderError, "ambiguous|runner"):
+            self.adapt()
+        self.assertFalse((self.root / "publication").exists())
 
     def test_reused_pid_is_not_old_job_liveness(self):
         self.fixture.checks[2] = self.fixture.check(
@@ -271,6 +298,24 @@ class JobIdentityProviderTests(unittest.TestCase):
         with self.assertRaisesRegex(ProviderError, "future|chronology"):
             self.adapt()
 
+    def test_full_precision_result_end_must_not_follow_latest_check(self):
+        ended = "2026-09-18T11:10:01.1000000Z"
+        checked = "2026-09-18T11:10:00.9000000Z"
+        self.fixture.result["ended_utc"] = ended
+        self.fixture.state["ended_utc"] = ended
+        for check in self.fixture.checks:
+            check["checked_utc"] = checked
+        with self.assertRaisesRegex(ProviderError, "ends after|chronology"):
+            self.adapt()
+        self.assertFalse((self.root / "publication").exists())
+
+    def test_full_precision_check_must_not_follow_envelope(self):
+        for check in self.fixture.checks:
+            check["checked_utc"] = "2026-09-18T12:00:00.0000001Z"
+        with self.assertRaisesRegex(ProviderError, "future|envelope"):
+            self.adapt()
+        self.assertFalse((self.root / "publication").exists())
+
     def test_forged_future_process_start_refuses(self):
         self.fixture.checks[0]["current_creation_utc"] = "2026-09-19T11:00:00.0000001Z"
         self.fixture.checks[0]["identity"] = "DIFFERENT_CREATION_IDENTITY"
@@ -306,6 +351,25 @@ class JobIdentityProviderTests(unittest.TestCase):
     def test_extra_keys_and_bad_types_refuse(self):
         self.fixture.state["surprise"] = True
         with self.assertRaisesRegex(ProviderError, "keys"):
+            self.adapt()
+
+    def test_sensitive_public_identifiers_refuse(self):
+        self.fixture.lease["job_id"] = "account-123456789"
+        self.fixture.job["job_id"] = "account-123456789"
+        self.fixture.state["job_id"] = "account-123456789"
+        self.fixture.result["job_id"] = "account-123456789"
+        for check in self.fixture.checks:
+            check["job_id"] = "account-123456789"
+        with self.assertRaisesRegex(ProviderError, "sensitive|unsafe"):
+            self.adapt()
+
+    def test_public_exit_must_be_v0_safe_integer(self):
+        unsafe = 9_007_199_254_740_992
+        self.fixture.state["state"] = "FAILED"
+        self.fixture.state["exit_code"] = unsafe
+        self.fixture.result["state"] = "FAILED"
+        self.fixture.result["exit_code"] = unsafe
+        with self.assertRaisesRegex(ProviderError, "integer|exit"):
             self.adapt()
 
     def test_nonfinite_or_invalid_json_refuses(self):
@@ -359,6 +423,25 @@ class JobIdentityProviderTests(unittest.TestCase):
         with self.assertRaisesRegex(ProviderError, "overlap"):
             adapt_bundle(manifest, self.fixture.bundle / "nested")
 
+    def test_manifest_declared_source_overlap_refuses_before_output_creation(self):
+        output = self.fixture.repo / "publication"
+        manifest = self.fixture.write(lambda value: value.update(repo_root=str(self.fixture.repo.resolve())))
+        with self.assertRaisesRegex(ProviderError, "overlap"):
+            adapt_bundle(manifest, output)
+        self.assertFalse(output.exists())
+
+    def test_hardlinked_frozen_source_refuses_before_output_creation(self):
+        manifest = self.fixture.write()
+        source = self.fixture.bundle / f"sources/{LANE}/state.json"
+        link = self.fixture.bundle / "state-hardlink.json"
+        try:
+            os.link(source, link)
+        except OSError as error:
+            self.skipTest(f"hardlink unavailable: {error}")
+        with self.assertRaisesRegex(ProviderError, "hardlink"):
+            self.adapt(manifest)
+        self.assertFalse((self.root / "publication").exists())
+
     def test_relative_manifest_or_output_path_refuses(self):
         manifest = self.fixture.write()
         with self.assertRaisesRegex(ProviderError, "absolute"):
@@ -383,7 +466,7 @@ class JobIdentityProviderTests(unittest.TestCase):
             self.adapt(manifest, "refused-publication")
         refused = self.root / "refused-publication"
         self.assertFalse((refused / "job_observations.json").exists())
-        self.assertTrue((refused / "INCOMPLETE.json").exists())
+        self.assertFalse(refused.exists())
 
     def test_deterministic_byte_reproduction(self):
         manifest = self.fixture.write()
@@ -409,7 +492,7 @@ class JobIdentityProviderTests(unittest.TestCase):
             set(dto["observations"][0]),
         )
         projected = owner_operations.project(
-            self.root / "publication" / "job_observations.json", HEAD, "2026-09-18T12:01:00Z"
+            self.root / "publication" / "job_observations.json", CANONICAL, "2026-09-18T12:01:00Z"
         )
         self.assertEqual("AVAILABLE", projected["status"])
         self.assertEqual("EA_LAB_JOB_OBSERVATIONS_V1", dto["schema_version"])
@@ -417,7 +500,7 @@ class JobIdentityProviderTests(unittest.TestCase):
     def test_v0_existing_freshness_policy_marks_stale(self):
         self.adapt()
         projected = owner_operations.project(
-            self.root / "publication" / "job_observations.json", HEAD, "2026-09-20T12:00:00Z"
+            self.root / "publication" / "job_observations.json", CANONICAL, "2026-09-20T12:00:00Z"
         )
         self.assertEqual("UNAVAILABLE", projected["status"])
         self.assertEqual("STALE_OBSERVATION", projected["reason"])

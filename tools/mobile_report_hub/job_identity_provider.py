@@ -14,16 +14,21 @@ from typing import Any
 
 
 CAPTURE_SCHEMA = "EA_LAB_JOB_IDENTITY_CAPTURE_V1"
-LEASE_SCHEMA = "EA_LAB_JOB_IDENTITY_LEASE_V1"
 PUBLIC_SCHEMA = "EA_LAB_JOB_OBSERVATIONS_V1"
 SOURCE_KIND = "LOCAL_DURABLE_JOB_STATUS"
 PRIVATE_SCHEMA = "EA_LAB_JOB_IDENTITY_PROVENANCE_V1"
 PUBLICATION_SCHEMA = "EA_LAB_JOB_IDENTITY_PUBLICATION_V1"
 
 _ID_RE = re.compile(r"[A-Za-z][A-Za-z0-9._-]{0,127}")
-_JOB_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{2,79}")
+_JOB_ID_RE = re.compile(r"[A-Za-z][A-Za-z0-9._-]{2,79}")
+_SENSITIVE_ID_RE = re.compile(
+    r"(?:^|[._-])(?:account|acct|login|password|credential|secret|token|api[_-]?key)(?:$|[._-])"
+    r"|(?<![0-9])[0-9]{9,}(?![0-9])",
+    re.IGNORECASE,
+)
 _SHA_RE = re.compile(r"[0-9a-f]{40}")
 _SHA256_RE = re.compile(r"[0-9a-f]{64}")
+_MAX_SAFE_INTEGER = 9_007_199_254_740_991
 _TIME_RE = re.compile(
     r"(?P<date>\d{4}-\d{2}-\d{2})T(?P<clock>\d{2}:\d{2}:\d{2})"
     r"(?:\.(?P<fraction>\d{1,7}))?(?P<zone>Z|[+-]\d{2}:\d{2})"
@@ -31,7 +36,7 @@ _TIME_RE = re.compile(
 
 _MANIFEST_KEYS = {
     "schema_version", "status", "captured_at_utc", "repo_root", "expected_head",
-    "lease_root", "jobs_root", "requested_lane_ids", "sources", "process_checks",
+    "canonical_observed_sha", "lease_root", "jobs_root", "requested_lane_ids", "sources", "process_checks",
 }
 _SOURCE_KEYS = {
     "lane_id", "kind", "presence", "relative_path", "sha256", "length",
@@ -42,7 +47,10 @@ _CHECK_KEYS = {
     "lane_id", "job_id", "role", "pid", "expected_creation_utc",
     "current_creation_utc", "identity", "query_status", "checked_utc",
 }
-_LEASE_KEYS = {"schema_version", "lane_id", "job_id", "base_sha"}
+_LEASE_KEYS = {
+    "lane_id", "job_id", "created_utc", "job_root", "status_script", "runner_root",
+    "requested_file", "launch_file", "worktree", "base_sha", "stage",
+}
 _JOB_KEYS = {
     "job_id", "file_path", "arg_count", "arg_hash", "timeout_sec", "heartbeat_sec",
     "worktree", "base_sha", "stage", "postcondition_file_path",
@@ -126,7 +134,7 @@ def _string(value: Any, label: str) -> str:
 def _integer(value: Any, label: str, *, nullable: bool = False, positive: bool = False) -> int | None:
     if value is None and nullable:
         return None
-    if type(value) is not int or (positive and value <= 0):
+    if type(value) is not int or (positive and value <= 0) or abs(value) > _MAX_SAFE_INTEGER:
         raise ProviderError(f"invalid {label} type")
     return value
 
@@ -159,7 +167,7 @@ def _parse_time(value: Any, label: str) -> PreciseTime:
 
 def _safe_id(value: Any, label: str, *, job: bool = False) -> str:
     pattern = _JOB_ID_RE if job else _ID_RE
-    if not isinstance(value, str) or pattern.fullmatch(value) is None:
+    if not isinstance(value, str) or pattern.fullmatch(value) is None or _SENSITIVE_ID_RE.search(value):
         raise ProviderError(f"unsafe {label}")
     return value
 
@@ -181,6 +189,15 @@ def _assert_no_reparse(path: Path, label: str) -> None:
         current /= part
         if current.exists() and _is_reparse(current):
             raise ProviderError(f"{label} contains symlink or reparse component")
+
+
+def _assert_single_link(path: Path, label: str) -> None:
+    try:
+        links = path.stat(follow_symlinks=False).st_nlink
+    except OSError as error:
+        raise ProviderError(f"cannot inspect {label} hardlink identity") from error
+    if links != 1:
+        raise ProviderError(f"{label} is hardlinked")
 
 
 def _within(path: Path, root: Path) -> bool:
@@ -273,6 +290,7 @@ def _validate_source_records(manifest: dict[str, Any], bundle_root: Path, captur
         _assert_no_reparse(target, "source path")
         if not target.is_file():
             raise ProviderError("declared source is missing")
+        _assert_single_link(target, "declared source")
         data = target.read_bytes()
         if len(data) != source["length"] or _sha256(data) != source["sha256"]:
             raise ProviderError("source length or hash mismatch")
@@ -312,14 +330,19 @@ def _validate_raw_records(lane: str, sources: dict[tuple[str | None, str], bytes
     heartbeat = None if heartbeat_raw is None else _keys(heartbeat_raw, _HEARTBEAT_KEYS, {"job_id", "state", "updated_utc"}, "heartbeat")
     result = None if result_raw is None else _keys(result_raw, _RESULT_KEYS, _RESULT_KEYS, "result")
 
-    if lease["schema_version"] != LEASE_SCHEMA:
-        raise ProviderError("invalid lease schema")
     lease_lane = _safe_id(lease["lane_id"], "lease lane_id")
     lease_job = _safe_id(lease["job_id"], "lease job_id", job=True)
     if lease_lane != lane:
         raise ProviderError("mismatched lane ID")
     if not isinstance(lease["base_sha"], str) or _SHA_RE.fullmatch(lease["base_sha"]) is None:
         raise ProviderError("invalid lease base")
+    lease_created = _parse_time(lease["created_utc"], "lease created")
+    if lease_created.ticks_100ns > captured.ticks_100ns:
+        raise ProviderError("lease timestamp is in the future")
+    # Installed leases carry operational paths. Validate only their scalar type; never resolve,
+    # open, or use them. All source locations are derived from the explicit trusted roots.
+    for name in ("job_root", "status_script", "runner_root", "requested_file", "launch_file", "worktree", "stage"):
+        _string(lease[name], f"lease {name}")
     for label, record in (("job", job), ("state", state), ("heartbeat", heartbeat), ("result", result)):
         if record is not None and record.get("job_id") != lease_job:
             raise ProviderError(f"mismatched {label} ID")
@@ -414,8 +437,8 @@ def _validated_checks(lane: str, job_id: str, state: dict[str, Any], job: dict[s
         if identity not in _IDENTITIES or query not in _QUERY:
             raise ProviderError("invalid process identity classification")
         checked = _parse_time(check["checked_utc"], "process checked")
-        if checked.ticks_100ns > captured.ticks_100ns + 3_000_000_000:
-            raise ProviderError("process check is in the future")
+        if checked.ticks_100ns > captured.ticks_100ns:
+            raise ProviderError("process check follows the capture envelope")
         latest = checked if checked.ticks_100ns > latest.ticks_100ns else latest
         state_pid = state.get(f"{role}_pid")
         state_expected = state.get(f"{role}_start_utc")
@@ -489,7 +512,12 @@ def _row(lane: str, lease: dict[str, Any], job: dict[str, Any], state: dict[str,
     if state_name in _TERMINAL and (alive["child"] is True or alive["postcondition"] is True):
         raise ProviderError("terminal child or postcondition is still the recorded live process")
     if state_name == "RUNNING":
-        observed = "RUNNING" if alive["runner"] and alive["child"] else "LOST_PROCESS"
+        if alive["runner"] and alive["child"]:
+            observed = "RUNNING"
+        elif not alive["runner"]:
+            observed = "LOST_PROCESS"
+        else:
+            raise ProviderError("ambiguous RUNNING state: live runner with missing child")
     elif state_name == "STARTING":
         if state.get("child_pid") is None:
             raise ProviderError("unsupported STARTING state with incomplete child identity")
@@ -503,6 +531,10 @@ def _row(lane: str, lease: dict[str, Any], job: dict[str, Any], state: dict[str,
             raise ProviderError("ambiguous active postcondition state")
     else:
         observed = state_name
+    if result is not None:
+        ended = _parse_time(result["ended_utc"], "result ended")
+        if ended.ticks_100ns > checked.ticks_100ns:
+            raise ProviderError("result ends after process observation")
     heartbeat_age: float | None = None
     if heartbeat is not None:
         heartbeat_time = _parse_time(heartbeat["updated_utc"], "heartbeat updated")
@@ -510,7 +542,7 @@ def _row(lane: str, lease: dict[str, Any], job: dict[str, Any], state: dict[str,
         if delta < -3_000_000_000:
             raise ProviderError("heartbeat is in the future")
         heartbeat_age = max(0, delta) / 10_000_000
-        if not math.isfinite(heartbeat_age):
+        if not math.isfinite(heartbeat_age) or heartbeat_age > _MAX_SAFE_INTEGER:
             raise ProviderError("invalid heartbeat age")
     row = {
         "lane_id": lane,
@@ -542,6 +574,7 @@ def _prepare_output(manifest_path: Path, output_root: Path) -> tuple[Path, Path]
     _assert_no_reparse(manifest_path, "manifest path")
     if not manifest_path.is_file() or manifest_path.name != "manifest.json":
         raise ProviderError("manifest path is not the bundle manifest")
+    _assert_single_link(manifest_path, "manifest")
     if output_root.exists():
         raise ProviderError("output root must be fresh")
     if _overlap(output_root, bundle_root):
@@ -555,10 +588,6 @@ def adapt_bundle(manifest_path: Path, output_root: Path) -> tuple[dict[str, Any]
     manifest_path = Path(manifest_path)
     output_root = Path(output_root)
     bundle_root, output_root = _prepare_output(manifest_path, output_root)
-    output_root.mkdir()
-    incomplete = output_root / "INCOMPLETE.json"
-    _write_exclusive(incomplete, _canonical_bytes({"schema_version": PUBLICATION_SCHEMA, "status": "INCOMPLETE"}))
-
     manifest_bytes = manifest_path.read_bytes()
     manifest = _keys(_json_bytes(manifest_bytes, "manifest"), _MANIFEST_KEYS, _MANIFEST_KEYS, "manifest")
     if manifest["schema_version"] != CAPTURE_SCHEMA:
@@ -569,10 +598,14 @@ def adapt_bundle(manifest_path: Path, output_root: Path) -> tuple[dict[str, Any]
     expected_head = manifest["expected_head"]
     if not isinstance(expected_head, str) or _SHA_RE.fullmatch(expected_head) is None:
         raise ProviderError("invalid expected head")
+    canonical_observed_sha = manifest["canonical_observed_sha"]
+    if not isinstance(canonical_observed_sha, str) or _SHA_RE.fullmatch(canonical_observed_sha) is None:
+        raise ProviderError("invalid canonical observed head")
     for root_name in ("repo_root", "lease_root", "jobs_root"):
         raw_root = manifest[root_name]
         if not isinstance(raw_root, str) or not Path(raw_root).is_absolute():
             raise ProviderError(f"invalid {root_name}")
+        _assert_no_reparse(Path(raw_root), root_name)
         if _overlap(output_root, Path(raw_root)):
             raise ProviderError("output root overlaps a source root")
         if _overlap(bundle_root, Path(raw_root)):
@@ -610,7 +643,7 @@ def adapt_bundle(manifest_path: Path, output_root: Path) -> tuple[dict[str, Any]
         "schema_version": PUBLIC_SCHEMA,
         "source_kind": SOURCE_KIND,
         "observed_at_utc": captured.whole_second_utc(),
-        "canonical_observed_sha": expected_head,
+        "canonical_observed_sha": canonical_observed_sha,
         "observations": sorted(rows, key=lambda item: (item["lane_id"], item["job_id"])),
     }
     public_bytes = _canonical_bytes(dto)
@@ -623,6 +656,8 @@ def adapt_bundle(manifest_path: Path, output_root: Path) -> tuple[dict[str, Any]
         "status": "SOURCE_VALIDATED_PENDING_INDEPENDENT_REVIEW",
         "capture_manifest_sha256": _sha256(manifest_bytes),
         "expected_head": expected_head,
+        "candidate_source_head": expected_head,
+        "canonical_observed_sha": canonical_observed_sha,
         "captured_at_utc_precise": manifest["captured_at_utc"],
         "requested_lane_ids": safe_lanes,
         "source_receipts": source_receipts,
@@ -640,6 +675,9 @@ def adapt_bundle(manifest_path: Path, output_root: Path) -> tuple[dict[str, Any]
         "private_receipt_sha256": _sha256(private_bytes),
         "runtime_activation": False,
     }
+    output_root.mkdir()
+    incomplete = output_root / "INCOMPLETE.json"
+    _write_exclusive(incomplete, _canonical_bytes({"schema_version": PUBLICATION_SCHEMA, "status": "INCOMPLETE"}))
     _write_exclusive(output_root / "job_observations.json", public_bytes)
     _write_exclusive(output_root / "private_provenance_receipt.json", private_bytes)
     _write_exclusive(output_root / "publication_receipt.json", _canonical_bytes(final_receipt))

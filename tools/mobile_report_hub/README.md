@@ -249,14 +249,17 @@ The ten-requirement coverage/gap matrix and next gates are owned by
 
 The bounded provider source is `scripts/execution_reliability/capture_job_identity.ps1` plus
 `tools/mobile_report_hub/job_identity_provider.py`. The collector requires a clean explicit repository/head,
-explicit lease/jobs roots, explicit safe lane IDs and a fresh absolute external bundle root. Each
-`EA_LAB_JOB_IDENTITY_LEASE_V1` binds one lane ID to one job ID and job base SHA; roots are never read from
-the lease. The adapter validates frozen exact bytes and publishes `job_observations.json`, a private
+explicit lease/jobs roots, explicit safe lane IDs and a fresh absolute external bundle root. Each actual
+installed eleven-field dispatcher lease binds one lane ID to one job ID and job base SHA; its operational
+path fields are never trusted. Exact-head/reparse/clean trust checks precede repository helper loading, and
+strict raw JSON plus overlap/reparse/hardlink refusal precedes PID reads/output creation. The adapter
+validates frozen exact bytes and publishes `job_observations.json`, a private
 provenance receipt and a final publication receipt into another fresh external root.
 
 ```powershell
 powershell -NoProfile -File scripts/execution_reliability/capture_job_identity.ps1 `
-  -RepoRoot <clean-absolute-repo> -ExpectedHead <40-hex-head> `
+  -RepoRoot <clean-absolute-repo> -ExpectedHead <candidate-source-40-hex-head> `
+  -CanonicalObservedHead <current-canonical-40-hex-head> `
   -LeaseRoot <absolute-lease-root> -JobsRoot <absolute-jobs-root> `
   -LaneIds <lane-a>,<lane-b> -OutputRoot <fresh-absolute-private-bundle>
 
@@ -267,7 +270,8 @@ python tools/mobile_report_hub/job_identity_provider.py `
   --output-root <fresh-absolute-publication-root>
 ```
 
-The public output is still exactly `EA_LAB_JOB_OBSERVATIONS_V1`; precise PID creation identities and raw
+The public output is still exactly `EA_LAB_JOB_OBSERVATIONS_V1`; the candidate provider head stays private
+and distinct from its explicit current-canonical observation binding. Precise PID creation identities and raw
 source hashes stay private. `UNKNOWN`, concurrent source changes, unsafe paths, mismatched bindings and
 unsupported states refuse the whole requested snapshot. The provider never emits `ALLOW_RETRY` and never
 starts, stops or enumerates a process. Full contract:
