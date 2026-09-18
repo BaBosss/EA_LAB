@@ -201,3 +201,7 @@ h1 { font-size:1.25rem; }
 /* Copyable report text stays within the existing detail panel on narrow screens. */
 #chat-report-card { box-sizing: border-box; width: 100%; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
 .owner-recipe article { border-top: 1px solid currentColor; padding-block: .5rem; }
+.job-observation-table { min-width: 78rem; }
+.job-observation-table td, .job-observation-table th { font-size: .72rem; }
+.mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; overflow-wrap: anywhere; }
+.observed-jobs .section-heading { align-items: center; }

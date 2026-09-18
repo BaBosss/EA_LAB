@@ -216,6 +216,35 @@ Work labels Registry totals as cumulative history, not concurrent agents. Alerts
 
 The integration contract is `docs/workflows/EA_LAB_MONITOR_CONTROL_DASHBOARD_INTEGRATION_V1.md`. This milestone does not change Scheduled Tasks, OneDrive delivery, hosting, runtime attachment, MT5, risk/defaults or trading.
 
+## Owner Control Room V0 job observations (source-only increment)
+
+`build_index.py` accepts one optional `--job-observations <json>` input. The caller, not the builder,
+creates this frozen `EA_LAB_JOB_OBSERVATIONS_V1` snapshot from existing durable Long Job status helpers.
+The builder never enumerates, probes, starts, retries or stops a process. Omit the option to preserve the
+previous build flow; the emitted `owner_operations` field then says `UNAVAILABLE / NOT_PROVIDED`.
+
+The input envelope is exact: `schema_version`, `source_kind=LOCAL_DURABLE_JOB_STATUS`,
+`observed_at_utc`, `canonical_observed_sha`, and `observations`. Each row has `lane_id`, `job_id`,
+`checked_utc`, `observed_state`, `durable_state`, three nullable observation booleans
+(`runner_alive`, `child_alive`, `postcondition_alive`), nullable nonnegative `heartbeat_age_sec`,
+`retry_decision`, a result object (`state`, nullable integer `exit`, `postcondition`, nullable UTC
+`ended`), and optional lowercase 40-hex `local_head`. Null process booleans, heartbeat age, result exit
+and result end time mean unqualified and project as `UNKNOWN`.
+Missing required fields, extra fields, unsafe IDs, paths/prose, malformed types/times/hashes,
+duplicate lane/job identities, negative ages and terminal/result contradictions make the optional source
+unavailable. No raw path, command, credential, account ID or worker prose is projected.
+
+The output is `EA_LAB_OWNER_OPERATIONS_V1` (`owner_operations.schema.json`). It exposes full source
+SHA256, timestamp basis, canonical binding and read-only authority. Runtime and Work show a compact
+snapshot/last-observed table; Work and Alerts group only existing safe Lane Registry blocker classes and
+literal dependency IDs. Browser display-time guards suppress process/head/result claims when the snapshot
+is stale, future, cached, offline or canonical-unbound. `COMPLETE` plus exit 0 remains only a process result:
+deliverable, review and canonical status are explicitly `UNKNOWN`. There are no action, retry or dispatch
+controls. Cache generation `v3.5-owner-operations` is source-only; deployment is not performed.
+
+The ten-requirement coverage/gap matrix and next gates are owned by
+`docs/workflows/EA_LAB_OWNER_CONTROL_ROOM_V0_CONTRACT_20260918.md`.
+
 ## Report owner presentation gaps
 
 EA Detail adds Owner Recipe, Grid / exposure, and a copyable deterministic Chat

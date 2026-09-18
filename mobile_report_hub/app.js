@@ -100,6 +100,52 @@ function validateIndex(payload, fixtureMode) {
     if (rows.some(item => item.source_kind === "GIT_CANONICAL" && (!item.provenance || item.provenance.canonical_sha !== project.canonical_sha))) throw new Error("Canonical V3 source SHA mismatch");
   }
   if (!ct.project.provenance || ct.project.provenance.canonical_sha !== project.canonical_sha) throw new Error("Canonical V3 source SHA mismatch");
+  const operations = payload.owner_operations;
+  if (operations !== undefined) {
+    const jobStates = new Set(["STARTING", "RUNNING", "POSTCONDITION_RUNNING", "CANCEL_REQUESTED", "COMPLETE", "FAILED", "POSTCONDITION_FAILED", "TIMED_OUT", "CANCELLED", "LOST_PROCESS", "UNKNOWN"]);
+    const freshnessStates = new Set(["CURRENT", "STALE", "FUTURE", "UNKNOWN"]);
+    const retryStates = new Set(["ALLOW_RETRY", "REFUSE_RETRY", "WAIT_EXTERNAL", "NOT_APPLICABLE", "UNKNOWN"]);
+    const postconditionStates = new Set(["PASSED", "FAILED", "NOT_CONFIGURED", "RUNNING", "UNKNOWN"]);
+    const operationReasons = new Set(["NOT_PROVIDED", "UNREADABLE_INPUT", "INVALID_INPUT", "AVAILABLE_SNAPSHOT", "CANONICAL_BINDING_MISMATCH", "FUTURE_OBSERVATION", "STALE_OBSERVATION", "UNQUALIFIED_OBSERVATION"]);
+    const safeId = /^[A-Za-z][A-Za-z0-9._-]{0,127}$/;
+    if (!operations || operations.schema_version !== "EA_LAB_OWNER_OPERATIONS_V1" ||
+        !["AVAILABLE", "UNAVAILABLE"].includes(operations.status) ||
+        !freshnessStates.has(operations.freshness) ||
+        operations.source_kind !== "LOCAL_DURABLE_JOB_STATUS" ||
+        operations.timestamp_basis !== "CALLER_SUPPLIED_SNAPSHOT_AT_CHECKED_UTC" ||
+        operations.authority !== "READ_ONLY_PRESENTATION_NO_PROCESS_CONTROL" ||
+        !["MATCHES_CANONICAL_SHA", "DIFFERENT_CANONICAL_SHA", "UNKNOWN"].includes(operations.binding_state) ||
+        !(validUtcSecond(operations.observed_at_utc) || operations.observed_at_utc === "UNKNOWN") ||
+        !(/^[0-9a-f]{40}$/.test(operations.canonical_observed_sha) || operations.canonical_observed_sha === "UNKNOWN") ||
+        !Array.isArray(operations.observations) ||
+        !(/^[0-9a-f]{64}$/.test(operations.source_sha256) || operations.source_sha256 === "UNKNOWN") ||
+        !operationReasons.has(operations.reason) ||
+        /[A-Za-z]:[\\/]|https?:\/\/|(?:account|acct|login|password|credential|secret|token)[._=-]/i.test(JSON.stringify(operations))) {
+      throw new Error("Invalid owner operations projection");
+    }
+    const laneIds = new Set();
+    const jobIds = new Set();
+    for (const row of operations.observations) {
+      if (!row || !safeId.test(row.lane_id) || !safeId.test(row.job_id) || !validUtcSecond(row.checked_utc) ||
+          /(?:account|acct|login)[._-]*[0-9]+|(^|[^0-9])[0-9]{9,}([^0-9]|$)/i.test(`${row.lane_id} ${row.job_id}`) ||
+          laneIds.has(row.lane_id) || jobIds.has(row.job_id) || !freshnessStates.has(row.freshness) ||
+          !jobStates.has(row.observed_state) || !jobStates.has(row.durable_state) ||
+          ![true, false, "UNKNOWN"].includes(row.runner_alive) ||
+          ![true, false, "UNKNOWN"].includes(row.child_alive) ||
+          ![true, false, "UNKNOWN"].includes(row.postcondition_alive) ||
+          !(row.heartbeat_age_sec === "UNKNOWN" || typeof row.heartbeat_age_sec === "number" && Number.isFinite(row.heartbeat_age_sec) && row.heartbeat_age_sec >= 0 && row.heartbeat_age_sec <= Number.MAX_SAFE_INTEGER) ||
+          !retryStates.has(row.retry_decision) || !row.result || !jobStates.has(row.result.state) ||
+          !(row.result.exit === "UNKNOWN" || Number.isSafeInteger(row.result.exit)) ||
+          !postconditionStates.has(row.result.postcondition) ||
+          !(validUtcSecond(row.result.ended) || row.result.ended === "UNKNOWN") ||
+          !(/^[0-9a-f]{40}$/.test(row.local_head) || row.local_head === "UNKNOWN") ||
+          row.deliverable_status !== "UNKNOWN" || row.review_status !== "UNKNOWN" || row.canonical_status !== "UNKNOWN") {
+        throw new Error("Invalid owner operations row");
+      }
+      laneIds.add(row.lane_id);
+      jobIds.add(row.job_id);
+    }
+  }
   return payload;
 }
 
@@ -321,8 +367,46 @@ function observedFreshness(stamp, hours = 24) {
 }
 
 function tower() { return reportIndex.control_tower || {}; }
+function ownerOperations() {
+  return reportIndex.owner_operations || {
+    status: "UNAVAILABLE", freshness: "UNKNOWN", binding_state: "UNKNOWN",
+    observed_at_utc: "UNKNOWN", source_sha256: "UNKNOWN", observations: [],
+    source_kind: "LOCAL_DURABLE_JOB_STATUS", timestamp_basis: "CALLER_SUPPLIED_SNAPSHOT_AT_CHECKED_UTC",
+    authority: "READ_ONLY_PRESENTATION_NO_PROCESS_CONTROL", reason: "NOT_PROVIDED"
+  };
+}
 function observationCurrent() {
   return navigator.onLine && !usedCachedData && observedFreshness(reportIndex.project.generated_at) === "CURRENT";
+}
+function jobObservationQualified(operations, row) {
+  return observationCurrent() && operations.status === "AVAILABLE" &&
+    operations.binding_state === "MATCHES_CANONICAL_SHA" && operations.freshness === "CURRENT" &&
+    observedFreshness(operations.observed_at_utc) === "CURRENT" && row.freshness === "CURRENT" &&
+    observedFreshness(row.checked_utc) === "CURRENT";
+}
+function observedProcess(value, qualified) {
+  if (!qualified || typeof value !== "boolean") return "UNKNOWN";
+  return value ? "OBSERVED_ALIVE" : "OBSERVED_NOT_ALIVE";
+}
+function renderObservedJobs() {
+  const operations = ownerOperations();
+  const rows = Array.isArray(operations.observations) ? operations.observations : [];
+  const body = rows.map(row => {
+    const qualified = jobObservationQualified(operations, row);
+    const result = qualified && row.result ? `${stateName(row.result.state)} / exit ${valueOf(row.result.exit)} / ${stateName(row.result.postcondition)} / ended ${valueOf(row.result.ended)}` : "UNKNOWN";
+    const heartbeat = qualified ? valueOf(row.heartbeat_age_sec) : "UNKNOWN";
+    const localHead = qualified && /^[0-9a-f]{40}$/.test(valueOf(row.local_head, "")) ? row.local_head : "UNKNOWN";
+    return `<tr><td><strong>${escapeHtml(row.lane_id)}</strong><br><span class="muted">${escapeHtml(row.job_id)}</span></td><td>${escapeHtml(observedProcess(row.runner_alive, qualified))}</td><td>${escapeHtml(observedProcess(row.child_alive, qualified))}<br><span class="muted">postcondition ${escapeHtml(observedProcess(row.postcondition_alive, qualified))}</span></td><td>${escapeHtml(row.checked_utc)}<br>${badge(qualified ? "CURRENT" : "UNKNOWN")}</td><td>${escapeHtml(heartbeat)}</td><td class="mono">${escapeHtml(localHead)}</td><td>${escapeHtml(result)}<br><span class="muted">retry ${escapeHtml(qualified ? stateName(row.retry_decision) : "UNKNOWN")}</span></td><td>${escapeHtml(row.deliverable_status)} / ${escapeHtml(row.review_status)} / ${escapeHtml(row.canonical_status)}</td></tr>`;
+  }).join("");
+  const unavailable = rows.length ? "" : '<p class="empty-state">Job observations UNAVAILABLE. No caller-supplied snapshot was projected.</p>';
+  return `<section class="panel observed-jobs"><div class="section-heading"><div><h2>Observed jobs</h2><p>Snapshot / last observed only. This is not continuous live monitoring.</p></div><div>${badge(operations.status)} ${badge(operations.freshness)}</div></div>${unavailable}${rows.length ? `<div class="table-wrap"><table class="job-observation-table"><thead><tr><th>Lane / job</th><th>Runner</th><th>Child / postcondition</th><th>Checked</th><th>Heartbeat age (sec)</th><th>Local head</th><th>Process result</th><th>Deliverable / review / canonical</th></tr></thead><tbody>${body}</tbody></table></div>` : ""}<details><summary>Source / authority / limits</summary><p>${escapeHtml(operations.source_kind)} · ${escapeHtml(operations.timestamp_basis)} · ${escapeHtml(operations.authority)}</p><p>Observed ${escapeHtml(operations.observed_at_utc)} · binding ${escapeHtml(operations.binding_state)} · reason ${escapeHtml(operations.reason)}</p><p>Source SHA256 <span class="mono">${escapeHtml(operations.source_sha256)}</span></p><p>Process booleans describe only checked_utc. Exit 0 / COMPLETE does not establish deliverable, review, or canonical PASS.</p></details></section>`;
+}
+function renderBlockerGroups() {
+  const rows = ((workProjection().registry || {}).rows || []).filter(row => row.state !== "DONE" && /^[A-E]$/.test(valueOf(row.blocker_class, "")));
+  if (!rows.length) return '<section class="panel"><h2>Observed blocker classes</h2><p class="empty-state">No safe blocker-class observations available.</p></section>';
+  const labels = {A: "PRODUCT_DEFECT", B: "HARNESS_TEST", C: "ENVIRONMENT_DEPENDENCY", D: "EXECUTION_INCOMPLETE", E: "WAIT_EXTERNAL"};
+  const groups = [...new Set(rows.map(row => row.blocker_class))].sort();
+  return `<section class="panel"><h2>Observed blocker classes</h2><p class="muted">Lane Registry observations only. Literal dependency IDs are shown without interpreting worker prose. E-class is WAIT_EXTERNAL and does not create a NEED BOSS action.</p>${groups.map(group => `<details ${group === "A" ? "open" : ""}><summary>${escapeHtml(group)} · ${escapeHtml(labels[group])} (${rows.filter(row => row.blocker_class === group).length})</summary><ul class="queue-list">${rows.filter(row => row.blocker_class === group).map(row => `<li><strong>${escapeHtml(row.id)}</strong>${badge(row.state)}<span>Dependencies: ${Array.isArray(row.direct_dependencies) ? row.direct_dependencies.map(escapeHtml).join(", ") || "NONE_DECLARED" : "UNKNOWN"}</span></li>`).join("")}</ul></details>`).join("")}</section>`;
 }
 function ownerCards() {
   const items = tower().need_boss || [];
@@ -360,7 +444,7 @@ function renderHome() {
 }
 
 function renderRuntime() {
-  app.innerHTML = `<section class="page-heading"><h2>Runtime</h2><p>Read-only observations; Git state is not process health.</p></section><div class="account-grid">${(tower().runtime || []).map(item => `<article class="panel"><h3>${escapeHtml(item.id)}</h3>${badge(item.state)}<p>${escapeHtml(item.reason)}</p><small>Observed: ${escapeHtml(item.observed_at)} · ${escapeHtml(item.source_kind)}</small></article>`).join("") || '<p>Runtime information UNAVAILABLE</p>'}</div>${renderMonitoring()}`;
+  app.innerHTML = `<section class="page-heading"><h2>Runtime</h2><p>Read-only observations; Git state is not process health.</p></section><div class="account-grid">${(tower().runtime || []).map(item => `<article class="panel"><h3>${escapeHtml(item.id)}</h3>${badge(item.state)}<p>${escapeHtml(item.reason)}</p><small>Observed: ${escapeHtml(item.observed_at)} · ${escapeHtml(item.source_kind)}</small></article>`).join("") || '<p>Runtime information UNAVAILABLE</p>'}</div>${renderObservedJobs()}${renderMonitoring()}`;
 }
 
 function renderFactoryPilots() {
@@ -713,13 +797,13 @@ function renderQueue() {
   const qualifiedRows = (registry.rows || []).filter(item => observationCurrent() && registry.status === "AVAILABLE" && registry.freshness === "CURRENT" && observedFreshness(registry.observed_at) === "CURRENT" && item.state !== "DONE" && !["UNKNOWN", "CONFLICT"].includes(item.state) && item.freshness === "CURRENT" && observedFreshness(item.observed_at) === "CURRENT");
   const unfinishedRows = qualifiedRows;
   const doneRows = (registry.rows || []).filter(item => item.state === "DONE");
-  app.innerHTML = `<section class="page-heading"><h2>Work</h2><p>Canonical declarations and operational observations remain separate.</p></section><section class="panel"><h2>Summary</h2><p><strong>${unfinishedRows.length}</strong> qualified unfinished lane observation(s) · <strong>${doneRows.length}</strong> DONE historical record(s) · ${(registry.rows || []).length} cumulative Registry record(s).</p><p class="muted">Registry row count is accumulated work history, not the number of agents running concurrently. Process health remains UNKNOWN unless separately evidenced.</p><p>Registry: ${escapeHtml(registry.status)} / ${escapeHtml(registry.freshness)}</p></section><section class="work-graph-area"><h2>Agent Graph</h2><p>Tap a task to inspect evidence or copy context. Scroll each source graph horizontally.</p><div id="work-agent-graph"></div><aside id="agent-inspect" class="panel" aria-label="Agent inspection" hidden></aside></section><h2>Detailed lanes</h2>${sections.map(([title, rows, note]) => `<section><h2>${title}</h2><p>${escapeHtml(note)}</p>${rows.length ? groups.map(group => { const items = rows.filter(item => stateName(item.state) === group); return items.length ? `<details class="panel" ${["RUNNING", "BLOCKED", "CONFLICT"].includes(group) ? "open" : ""}><summary>${group} (${items.length})</summary><ul class="queue-list">${items.map(queueItem).join("")}</ul></details>` : ""; }).join("") : '<p class="empty-state">No rows supplied; source availability must be checked.</p>'}</section>`).join("")}`;
+  app.innerHTML = `<section class="page-heading"><h2>Work</h2><p>Canonical declarations, lane observations and job snapshots remain separate.</p></section><section class="panel"><h2>Summary</h2><p><strong>${unfinishedRows.length}</strong> qualified unfinished lane observation(s) · <strong>${doneRows.length}</strong> DONE historical record(s) · ${(registry.rows || []).length} cumulative Registry record(s).</p><p class="muted">Registry row count is accumulated work history, not the number of agents running concurrently. Process health remains UNKNOWN unless separately evidenced.</p><p>Registry: ${escapeHtml(registry.status)} / ${escapeHtml(registry.freshness)}</p></section>${renderObservedJobs()}${renderBlockerGroups()}<section class="work-graph-area"><h2>Agent Graph</h2><p>Tap a task to inspect evidence or copy context. Scroll each source graph horizontally.</p><div id="work-agent-graph"></div><aside id="agent-inspect" class="panel" aria-label="Agent inspection" hidden></aside></section><h2>Detailed lanes</h2>${sections.map(([title, rows, note]) => `<section><h2>${title}</h2><p>${escapeHtml(note)}</p>${rows.length ? groups.map(group => { const items = rows.filter(item => stateName(item.state) === group); return items.length ? `<details class="panel" ${["RUNNING", "BLOCKED", "CONFLICT"].includes(group) ? "open" : ""}><summary>${group} (${items.length})</summary><ul class="queue-list">${items.map(queueItem).join("")}</ul></details>` : ""; }).join("") : '<p class="empty-state">No rows supplied; source availability must be checked.</p>'}</section>`).join("")}`;
   const graphProjection = {...projection, registry: {...registry, rows: (registry.rows || []).filter(item => item.state !== "DONE")}};
   mountWorkGraph(graphProjection);
 }
 
 function renderAlerts() {
-  app.innerHTML = `<section class="page-heading"><h2>Alerts</h2><p>Source freshness, work blockers and missing evidence. No trading-loss inference.</p></section>${ownerCards()}${operationalPresentationAlerts()}<section class="panel"><h2>Source warnings</h2><p>Canonical: ${escapeHtml(observedFreshness(reportIndex.project.generated_at))} · Registry: ${escapeHtml(tower().registry && tower().registry.freshness)} · Factory: ${escapeHtml(reportIndex.factory_pilots && reportIndex.factory_pilots.status)}</p><p>Conflicting declarations: ${(tower().work || []).filter(item => item.state === "CONFLICT").length}. See Work for provenance.</p></section>${renderCriticalAlerts(true)}${renderMonitoring()}`;
+  app.innerHTML = `<section class="page-heading"><h2>Alerts</h2><p>Source freshness, work blockers and missing evidence. No trading-loss inference.</p></section>${ownerCards()}${operationalPresentationAlerts()}${renderBlockerGroups()}<section class="panel"><h2>Source warnings</h2><p>Canonical: ${escapeHtml(observedFreshness(reportIndex.project.generated_at))} · Registry: ${escapeHtml(tower().registry && tower().registry.freshness)} · Factory: ${escapeHtml(reportIndex.factory_pilots && reportIndex.factory_pilots.status)}</p><p>Conflicting declarations: ${(tower().work || []).filter(item => item.state === "CONFLICT").length}. See Work for provenance.</p></section>${renderCriticalAlerts(true)}${renderMonitoring()}`;
 }
 
 function renderRoute() {

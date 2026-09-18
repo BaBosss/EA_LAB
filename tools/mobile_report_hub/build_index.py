@@ -18,13 +18,14 @@ from pathlib import Path, PurePosixPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from control_tower import build_projection
+from owner_operations import project as owner_operations_projection
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "reporting"))
 import mt5_report_assets as native_assets
 import report_package_integrity as integrity
 
 SCHEMA_VERSION = 1
 GENERATOR_NAME = "mobile_report_hub.build_index"
-GENERATOR_VERSION = "3.3.0"
+GENERATOR_VERSION = "3.5.0"
 B16 = "docs/factory/B16_H03_CONFIRMATION_RESULTS.md"
 B19 = "docs/research/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"
 H02 = "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"
@@ -576,7 +577,8 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
 
 
 def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None,
-          monitor: Path | None = None, projection: Path | None = None) -> dict:
+          monitor: Path | None = None, projection: Path | None = None,
+          job_observations: Path | None = None) -> dict:
     sha = resolve_ref(repo, ref)
     if expected_sha and sha != expected_sha:
         raise BuildError(f"expected SHA mismatch: expected {expected_sha}, resolved {sha}")
@@ -621,6 +623,7 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
                        for item in lane_registry(registry)],
              "monitoring": monitor_health(monitor, sha),
              "safe_projection": safe_projection(projection, as_of),
+             "owner_operations": owner_operations_projection(job_observations, sha, as_of),
              "compare": {"compatibility_rule": "DIRECT only when basis_id is identical; otherwise DIFFERENT_BASIS / N/A."}}
     project_text, project_source = text_source(repo, sha, "PROJECT_STATE.md")
     boards = [(taskboard_text, taskboard_p)]
@@ -922,10 +925,11 @@ def main() -> int:
     parser.add_argument("--expected-sha")
     parser.add_argument("--monitor-health", type=Path)
     parser.add_argument("--safe-projection", type=Path)
+    parser.add_argument("--job-observations", type=Path)
     args = parser.parse_args()
     try:
         build(args.repo, args.ref, args.out, args.as_of, args.expected_sha, args.lane_registry,
-              args.monitor_health, args.safe_projection)
+              args.monitor_health, args.safe_projection, args.job_observations)
     except BuildError as error:
         print(f"FAIL_CLOSED: {error}", file=sys.stderr)
         return 2

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "EA_LAB_OWNER_OPERATIONS_V1",
+  "title": "EA_LAB Owner Operations Monitor projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "freshness",
+    "source_kind",
+    "timestamp_basis",
+    "authority",
+    "binding_state",
+    "observed_at_utc",
+    "canonical_observed_sha",
+    "source_sha256",
+    "observations",
+    "reason"
+  ],
+  "properties": {
+    "schema_version": {"const": "EA_LAB_OWNER_OPERATIONS_V1"},
+    "status": {"enum": ["AVAILABLE", "UNAVAILABLE"]},
+    "freshness": {"enum": ["CURRENT", "STALE", "FUTURE", "UNKNOWN"]},
+    "source_kind": {"const": "LOCAL_DURABLE_JOB_STATUS"},
+    "timestamp_basis": {"const": "CALLER_SUPPLIED_SNAPSHOT_AT_CHECKED_UTC"},
+    "authority": {"const": "READ_ONLY_PRESENTATION_NO_PROCESS_CONTROL"},
+    "binding_state": {"enum": ["MATCHES_CANONICAL_SHA", "DIFFERENT_CANONICAL_SHA", "UNKNOWN"]},
+    "observed_at_utc": {"$ref": "#/$defs/utcOrUnknown"},
+    "canonical_observed_sha": {"$ref": "#/$defs/shaOrUnknown"},
+    "source_sha256": {"oneOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"}, {"const": "UNKNOWN"}]},
+    "observations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/observation"}
+    },
+    "reason": {
+      "enum": [
+        "NOT_PROVIDED",
+        "UNREADABLE_INPUT",
+        "INVALID_INPUT",
+        "AVAILABLE_SNAPSHOT",
+        "CANONICAL_BINDING_MISMATCH",
+        "FUTURE_OBSERVATION",
+        "STALE_OBSERVATION",
+        "UNQUALIFIED_OBSERVATION"
+      ]
+    }
+  },
+  "$defs": {
+    "utc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "utcOrUnknown": {"oneOf": [{"$ref": "#/$defs/utc"}, {"const": "UNKNOWN"}]},
+    "shaOrUnknown": {
+      "oneOf": [{"type": "string", "pattern": "^[0-9a-f]{40}$"}, {"const": "UNKNOWN"}]
+    },
+    "knownOrUnknownBoolean": {
+      "oneOf": [{"type": "boolean"}, {"const": "UNKNOWN"}]
+    },
+    "knownOrUnknownNumber": {
+      "oneOf": [{"type": "number", "minimum": 0, "maximum": 9007199254740991}, {"const": "UNKNOWN"}]
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lane_id",
+        "job_id",
+        "checked_utc",
+        "freshness",
+        "observed_state",
+        "durable_state",
+        "runner_alive",
+        "child_alive",
+        "postcondition_alive",
+        "heartbeat_age_sec",
+        "retry_decision",
+        "result",
+        "local_head",
+        "deliverable_status",
+        "review_status",
+        "canonical_status"
+      ],
+      "properties": {
+        "lane_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"},
+        "job_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"},
+        "checked_utc": {"$ref": "#/$defs/utc"},
+        "freshness": {"enum": ["CURRENT", "STALE", "FUTURE", "UNKNOWN"]},
+        "observed_state": {"$ref": "#/$defs/jobState"},
+        "durable_state": {"$ref": "#/$defs/jobState"},
+        "runner_alive": {"$ref": "#/$defs/knownOrUnknownBoolean"},
+        "child_alive": {"$ref": "#/$defs/knownOrUnknownBoolean"},
+        "postcondition_alive": {"$ref": "#/$defs/knownOrUnknownBoolean"},
+        "heartbeat_age_sec": {"$ref": "#/$defs/knownOrUnknownNumber"},
+        "retry_decision": {"enum": ["ALLOW_RETRY", "REFUSE_RETRY", "WAIT_EXTERNAL", "NOT_APPLICABLE", "UNKNOWN"]},
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state", "exit", "postcondition", "ended"],
+          "properties": {
+            "state": {"$ref": "#/$defs/jobState"},
+            "exit": {"oneOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"const": "UNKNOWN"}]},
+            "postcondition": {"enum": ["PASSED", "FAILED", "NOT_CONFIGURED", "RUNNING", "UNKNOWN"]},
+            "ended": {"$ref": "#/$defs/utcOrUnknown"}
+          }
+        },
+        "local_head": {"$ref": "#/$defs/shaOrUnknown"},
+        "deliverable_status": {"const": "UNKNOWN"},
+        "review_status": {"const": "UNKNOWN"},
+        "canonical_status": {"const": "UNKNOWN"}
+      }
+    },
+    "jobState": {
+      "enum": [
+        "STARTING",
+        "RUNNING",
+        "POSTCONDITION_RUNNING",
+        "CANCEL_REQUESTED",
+        "COMPLETE",
+        "FAILED",
+        "POSTCONDITION_FAILED",
+        "TIMED_OUT",
+        "CANCELLED",
+        "LOST_PROCESS",
+        "UNKNOWN"
+      ]
+    }
+  }
+}
