@@ -245,6 +245,35 @@ controls. Cache generation `v3.5-owner-operations` is source-only; deployment is
 The ten-requirement coverage/gap matrix and next gates are owned by
 `docs/workflows/EA_LAB_OWNER_CONTROL_ROOM_V0_CONTRACT_20260918.md`.
 
+### Job identity provider V1 (repo-only, not hooked up)
+
+The bounded provider source is `scripts/execution_reliability/capture_job_identity.ps1` plus
+`tools/mobile_report_hub/job_identity_provider.py`. The collector requires a clean explicit repository/head,
+explicit lease/jobs roots, explicit safe lane IDs and a fresh absolute external bundle root. Each
+`EA_LAB_JOB_IDENTITY_LEASE_V1` binds one lane ID to one job ID and job base SHA; roots are never read from
+the lease. The adapter validates frozen exact bytes and publishes `job_observations.json`, a private
+provenance receipt and a final publication receipt into another fresh external root.
+
+```powershell
+powershell -NoProfile -File scripts/execution_reliability/capture_job_identity.ps1 `
+  -RepoRoot <clean-absolute-repo> -ExpectedHead <40-hex-head> `
+  -LeaseRoot <absolute-lease-root> -JobsRoot <absolute-jobs-root> `
+  -LaneIds <lane-a>,<lane-b> -OutputRoot <fresh-absolute-private-bundle>
+
+. scripts/use_python.ps1
+Assert-PortablePython -Root (Get-Location)
+python tools/mobile_report_hub/job_identity_provider.py `
+  --bundle-manifest <absolute-private-bundle>/manifest.json `
+  --output-root <fresh-absolute-publication-root>
+```
+
+The public output is still exactly `EA_LAB_JOB_OBSERVATIONS_V1`; precise PID creation identities and raw
+source hashes stay private. `UNKNOWN`, concurrent source changes, unsafe paths, mismatched bindings and
+unsupported states refuse the whole requested snapshot. The provider never emits `ALLOW_RETRY` and never
+starts, stops or enumerates a process. Full contract:
+`docs/workflows/EA_LAB_JOB_IDENTITY_PROVIDER_V1_20260918.md`. Status is
+`IMPLEMENTATION_PENDING_REVIEW / REPO_ONLY / NO_RUNTIME_HOOKUP`; no refresh task or runtime uses it.
+
 ## Report owner presentation gaps
 
 EA Detail adds Owner Recipe, Grid / exposure, and a copyable deterministic Chat

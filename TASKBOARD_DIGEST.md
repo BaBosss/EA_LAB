@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **426** · ยังอยู่บนบอร์ด: **130** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **427** · ยังอยู่บนบอร์ด: **131** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -414,6 +414,7 @@
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
 | ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10265 |
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | PARENT | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb |  | ACTIVE:10296 |
+| ORDER-CT-JOB-IDENTITY-PROVIDER-V1-20260918 |  | IMPLEMENTATION | [monitor/tooling] identity-aware V0 input provider |  | ACTIVE:10386 |
 | ORDER-CT-OWNER-CONTROL-ROOM-V0-20260918 | 2026-09-18 | DONE | [monitor/tooling] optional durable job observations | SOURCE_ACCEPTED_REPO_ONLY / PROVIDER_NOT_ACTIVATED | ACTIVE:10363 |
 | ORDER-CT-POSTMONITOR-INTAKE-20260914 |  | DONE | [control-tower] carried-work reconciliation |  | ACTIVE:10235 |
 | ORDER-CT-STRATEGY-SOURCE-RECOVERY-20260915 |  | DONE | [control-tower/research] Boss/custom source recovery + strategy-family port prep |  | ACTIVE:10283 |
