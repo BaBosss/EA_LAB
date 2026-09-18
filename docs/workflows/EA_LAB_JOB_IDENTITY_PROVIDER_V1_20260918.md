@@ -4,9 +4,11 @@ Date: 2026-09-18
 
 Owner contract: `EA_LAB-NEW-MAIN-CT-20260917`
 
-Base: `da2b396f345dbbefa62f7cad07206a5a4185efc0`
+Implementation base: `da2b396f345dbbefa62f7cad07206a5a4185efc0`
 
-Status: `IMPLEMENTATION_PENDING_REVIEW / REPO_ONLY / NO_RUNTIME_HOOKUP`
+Accepted source head: `bc2e4afe09ca3309b091a032c020140ea1c5a858`
+
+Status: `SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_RUNTIME_HOOKUP`
 
 Authority: read-only source capture and deterministic adaptation only
 
@@ -175,8 +177,20 @@ deterministic bytes; and V0 positive/refusal
 compatibility. The PowerShell harness observes only its own process and a deliberately absent PID. It does
 not control a process or inspect production inputs.
 
-Author tests are not independent acceptance. Status remains
-`IMPLEMENTATION_PENDING_REVIEW / REPO_ONLY / NO_RUNTIME_HOOKUP` until the Control Tower freezes exact source,
-runs its prescribed one-shot capture and impacted checks, commits normally, and obtains the one independent
-exact-head normal-tooling review. A fixture or sampled capture is not production readiness, and a real
-capture may honestly be `UNAVAILABLE`.
+Author tests were not independent acceptance. The first independent review at
+`293c3ef13bc47f70f7ef3e7064ad80ed4e97647a` returned `FAIL / HIGH / BLOCK` with
+`JIPV1-001..008`. One bounded repair fixed exactly those findings. Targeted independent recheck of exact
+head `bc2e4afe09ca3309b091a032c020140ea1c5a858` returned `PASS / HIGH / ALLOW`; all eight findings are
+closed and no material regression was found.
+
+Accepted repair evidence is: focused provider tests `36/36 PASS` plus one privilege-dependent symlink
+skip covered by the PowerShell reparse harness; capture harness PASS; full Monitor data tests `141/141
+PASS` with the same privilege-dependent skip; Python compile, digest check, diff check, source/hash
+preservation, and normal commit hooks PASS. Canonical push and remote readback bind the accepted repo
+source to `bc2e4afe09ca3309b091a032c020140ea1c5a858`.
+
+Acceptance is source-only. No production-root capture, provider hookup, refresh-task change, scheduler,
+process control, runtime activation, deployment, Registry operation, MT5 action, or core-reviewer
+qualification occurred. A fixture or sampled capture is not production readiness, and a future real
+capture may honestly be `UNAVAILABLE`. Existing refresh/runtime hookup remains a later separately frozen
+contract with rollback and compatibility evidence.

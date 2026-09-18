@@ -19,6 +19,7 @@ This contract does not ratify a new strategy idea. It exists because current sou
 - Structural SL calculation and validation remain available exactly as a B17-native mechanism.
 - B17 structural mode remains compatible only with `STACK_SINGLE`; Recovery remains OFF and Hedge remains OFF under the existing safety compatibility rules.
 - Generic `ATR_BASED` Exit must be able to operate without a structural-TP override when the `B17-00` reference selects generic Exit.
+- Every non-ATR legacy B17 exit behavior remains unchanged. This contract does not alter, reinterpret, enable, disable, or ratify any legacy non-ATR ExitMode or its existing structural-target interaction.
 - A future separately ratified structural-target mode may exist, but this contract must not create or silently authorize one.
 - No historical H01 ExitMode, target value, EntryFib value, or risk/default number is inherited into `B17-00` by this contract.
 ## Implementation boundary
@@ -28,23 +29,26 @@ A future implementation lane may touch only the minimum B17/Exit source and focu
 Expected source candidates, to be re-verified at implementation dispatch:
 - `ea_template/core/entries/Entry_Wave5.mqh`
 - `ea_template/core/ExitManager.mqh`
+- `ea_template/core/LabCore.mqh`, only for a B17-specific effective-config reporting branch that truthfully distinguishes structural SL, structural-TP override, and generic ATR Exit ownership
 - the smallest focused B17 test fixture(s) required to prove the seam
 
-Any need to modify broader execution/risk code is scope expansion and returns to the Control Tower.
+The LabCore allowance is reporting-only and B17-only; it must not change execution order, entry, exit, risk, sizing, or any other family's log output. Any need to modify broader execution/risk code is scope expansion and returns to the Control Tower.
 
 ## Acceptance gates for any future implementation
 
 1. Compile affected B17 wrapper/tests with 0 errors; warnings must be reviewed.
 2. Positive fixture: structural SL remains active and valid while generic ATR Exit is selected without structural-TP override.
 3. Negative/adversarial fixture: a structural TP cannot leak into the generic ATR Exit path.
-4. Existing B17 structural safety invariants (`SINGLE`, Recovery OFF, Hedge OFF where applicable) remain fail-closed.
-5. Impacted B17 regression plus mandatory project cages pass on one frozen exact HEAD.
-6. No H01/config/Home/Package identity is relabelled as `B17-00`.
-7. Independent competent DIFFERENT-MODEL-FAMILY review is mandatory because this touches strategy/execution semantics. ChatGPT, Codex, and GPT Hermes cannot fill that seat.
+4. Legacy-equivalence fixtures prove every non-ATR B17 exit branch remains unchanged.
+5. A truthful-log fixture proves the B17-only effective-config report states structural SL active, structural-TP override inactive, and generic ATR Exit active for the target configuration; it must not report generic Stack/Recovery/Hedge/Exit ownership that is not actually effective.
+6. Existing B17 structural safety invariants (`SINGLE`, Recovery OFF, Hedge OFF where applicable) remain fail-closed.
+7. Impacted B17 regression plus mandatory project cages pass on one frozen exact HEAD.
+8. No H01/config/Home/Package identity is relabelled as `B17-00`.
+9. Independent competent DIFFERENT-MODEL-FAMILY review is mandatory because this touches strategy/execution semantics. ChatGPT, Codex, GPT Hermes, and GPT `/scrutinize` cannot fill that seat.
 
 ## Authority / hard stops
 
-This contract authorizes no source implementation by itself, no MT5 backtest, no optimization, no HOLDOUT, no Candidate/Grade/KINT, no risk/default change, no runtime/deployment/trading/LIVE action, and no owner attestation.
+This clarification creates no implementation authority. The contract still authorizes no source implementation by itself, no MT5 backtest, no optimization, no HOLDOUT, no Candidate/Grade/KINT, no risk/default change, no runtime/deployment/trading/LIVE action, and no owner attestation.
 
 If a qualified different-family reviewer is unavailable, implementation acceptance remains `BLOCKED`; no same-family substitute or PASS-shopping is allowed.
 
