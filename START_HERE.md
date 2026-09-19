@@ -4,7 +4,7 @@ Purpose: deterministic startup router for every new EA_LAB Control Tower or work
 
 > This file is a router, not a second source of truth. Pushed GitHub `origin/master` is canonical. Chat history, copied handoffs, Project Operating Context, local dirty worktrees, and old lane records are context only until reconciled to the current pushed canonical bytes.
 >
-> **Current provider-transition route (2026-09-06):** read `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md`. ChatGPT is the one active Control Tower; Codex Primary is the default local author; deterministic tooling comes first. Claude is currently unavailable. GPT-backed Hermes remains mechanical and is the same model family as ChatGPT/Codex. Gemini is not an acceptance-grade different-family reviewer until the bounded M2 qualification passes.
+> **Current provider/scrutiny route (owner-ratified 2026-09-18):** read `AGENTS.md` and `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md` for current routing. ChatGPT is the one active Control Tower; Codex Primary is the default local author; deterministic tooling comes first. Claude remains unavailable and GPT-backed Hermes remains mechanical. Core/high-risk acceptance requires a separate read-only exact-head GPT Scrutiny job/lane/contract after every contract-required deterministic, compile, regression, adversarial and negative gate. The author cannot self-approve; independence is procedural and evidentiary, not model-family based. Gemini/Qwen are optional, not mandatory reviewer dependencies. Existing repair budgets and owner hard stops remain unchanged.
 
 ## 1. Boot sequence — always do this first
 
@@ -150,6 +150,6 @@ Do not rebuild orchestration helpers ad hoc when the canonical reliability pack 
 - detached exact-head Claude review: `scripts/execution_reliability/launch_reviewer.ps1` is an unavailable legacy route while Claude is cancelled; preserve it and its historical evidence, and do not pretend it launches Gemini or Codex;
 - long-job status/recovery: `docs/LONG_JOB_RUNNER.md` + `scripts/long_jobs/`;
 - report authoring: `docs/research/EA_REPORT_AUTHORING_FASTPATH.md`;
-- milestone self-audit: `docs/research/EA_MILESTONE_SCRUTINY_CHECKLIST.md`.
+- acceptance-grade independent milestone review (not author self-approval): `docs/research/EA_MILESTONE_SCRUTINY_CHECKLIST.md`.
 
 Prefer file-backed PowerShell scripts over long inline `powershell -Command` expressions when variables, pipelines or `$LASTEXITCODE` matter; shell-wrapper interpolation is a harness risk, not research evidence.
