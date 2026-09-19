@@ -130,7 +130,8 @@ def validate_result(state, cell, result):
         raise ValueError("result schema/identity mismatch")
     if result["status"] not in {"COMPLETE", "MECHANICAL_FAIL"}:
         raise ValueError("nonmechanical terminal status denied")
-    if result["reason"] not in {"FIXTURE_OK", "FIXTURE_ENVIRONMENT_FAILURE", "RUNNER_EXCEPTION"}:
+    if result["reason"] not in {"FIXTURE_OK", "FIXTURE_ENVIRONMENT_FAILURE", "RUNNER_EXCEPTION",
+                                "ADAPTER_OK", "ADAPTER_EVIDENCE_FAILURE"}:
         raise ValueError("unqualified result reason")
     artifacts = result["artifacts"]
     if not isinstance(artifacts, list) or (result["status"] == "COMPLETE" and not artifacts):
@@ -145,14 +146,26 @@ def validate_result(state, cell, result):
 
 def run_batch(root, contract, state, *, runner, resume_sha=None, replay_cells=(),
               head_reader=git_head, on_checkpoint=None):
-    """Trusted Python fixture seam only. Manifest order owns every dispatch.
+    """Trusted injected qualification seam. CLI remains fixture-only.
 
     Resume SHA must come from the controller's retained checkpoint receipt, not
     a hash recomputed from untrusted state. STARTED is never automatically retried.
     """
     root = safe.workspace_root(root)
     contract = json.loads(encoded(contract))
-    rows = validate_contract(root, contract, head_reader)
+    adapter = None
+    if contract.get("mode") != "FIXTURE_ONLY":
+        from real_adapter import QualificationAdapter
+        if type(runner) is not QualificationAdapter:
+            raise ValueError("non-fixture mode requires trusted QualificationAdapter")
+        adapter = runner
+
+    def validate_inputs():
+        if adapter is not None:
+            return adapter.validate_batch(root, contract, head_reader)
+        return validate_contract(root, contract, head_reader)
+
+    rows = validate_inputs()
     state = Path(state).resolve()
     state.relative_to(root)
     if state == root:
@@ -164,9 +177,21 @@ def run_batch(root, contract, state, *, runner, resume_sha=None, replay_cells=()
         pass
     try:
         checkpoint = state / "checkpoint.jsonl"
-        fingerprint = digest({"contract": contract, "workspace": str(root),
-                              "state": str(state), "executor_sha256": safe.sha256_path(Path(__file__)),
-                              "safe_executor_sha256": safe.sha256_path(Path(safe.__file__))})
+        def current_fingerprint():
+            pins = {"contract": contract, "workspace": str(root),
+                    "state": str(state), "executor_sha256": safe.sha256_path(Path(__file__)),
+                    "safe_executor_sha256": safe.sha256_path(Path(safe.__file__))}
+            if adapter is not None:
+                pins["adapter"] = adapter.fingerprint()
+            return digest(pins)
+
+        fingerprint = current_fingerprint()
+
+        def revalidate():
+            if validate_inputs() != rows:
+                raise ValueError("frozen manifest rows changed")
+            if current_fingerprint() != fingerprint:
+                raise ValueError("executor/adapter fingerprint changed")
         events, statuses = [], {}
         if resume_sha is not None:
             events, statuses = read_checkpoint(checkpoint, fingerprint, rows, state, resume_sha)
@@ -202,11 +227,14 @@ def run_batch(root, contract, state, *, runner, resume_sha=None, replay_cells=()
         for row in rows:
             if row["cell_id"] in statuses:
                 continue
-            validate_contract(root, contract, head_reader)
+            revalidate()
             cell = row["cell_id"]
+            dispatched = adapter.freeze(row) if adapter is not None else dict(row)
             append(cell, "STARTED")
+            if current_fingerprint() != fingerprint:
+                raise ValueError("executor/adapter fingerprint changed before dispatch")
             try:
-                result = runner(dict(row), state)
+                result = runner(dispatched, state)
             except Exception:
                 result = {"cell_id": cell, "status": "MECHANICAL_FAIL",
                           "reason": "RUNNER_EXCEPTION", "artifacts": []}
@@ -215,7 +243,7 @@ def run_batch(root, contract, state, *, runner, resume_sha=None, replay_cells=()
             durable_write(output, encoded(result))
             append(cell, result["status"], safe.sha256_path(output))
             statuses[cell] = result["status"]
-        validate_contract(root, contract, head_reader)
+        revalidate()
         verified_events, verified_statuses = read_checkpoint(checkpoint, fingerprint, rows, state, retained_sha)
         if verified_events != events or verified_statuses != statuses:
             raise ValueError("checkpoint changed during execution")
