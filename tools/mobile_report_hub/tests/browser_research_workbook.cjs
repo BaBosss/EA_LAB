@@ -115,6 +115,26 @@ async function main() {
     assert.equal(await page.locator('#rw-graphs svg[aria-label*="proportional UTC time"]').first().isVisible(),true);
     const timePoints = (await page.locator('#rw-graphs svg[aria-label*="proportional UTC time"] polyline').first().getAttribute("points")).split(" ").map(point => Number(point.split(",")[0]));
     assert.equal(Math.round((timePoints[1]-timePoints[0])/(timePoints[2]-timePoints[1])),2,"time axis must use proportional UTC spacing, not row index spacing");
+    const sourceHash = page.locator('[data-table="results"][data-row="0"][data-key="source_sha256"]');
+    await sourceHash.fill("x");
+    await page.waitForTimeout(50);
+    assert.match(await page.locator("#rw-graphs .rw-diagnostics").textContent(),/invalid source\/build provenance.*UNAVAILABLE/);
+    assert.equal(await page.locator("#rw-result-group option").count(),1,"invalid result provenance must remove the result graph group");
+    await sourceHash.fill("a".repeat(64));
+    await page.waitForTimeout(50);
+    assert.equal(await page.locator("#rw-result-group option").count() >= 2,true);
+    const grossLoss = page.locator('[data-table="results"][data-row="0"][data-key="gross_loss"]');
+    const profitFactorInput = page.locator('[data-table="results"][data-row="0"][data-key="profit_factor"]');
+    await grossLoss.fill("0");
+    await profitFactorInput.fill("999");
+    await page.locator("#rw-validate").click();
+    assert.match(await page.locator("#rw-status").textContent(),/profit_factor must be blank.*UNDEFINED_ZERO_LOSS/);
+    const zeroLossPrint = await page.locator(".rw-print-projection").textContent();
+    assert.match(zeroLossPrint,/UNDEFINED_ZERO_LOSS/);
+    assert.match(zeroLossPrint,/INVALID_SUPPLIED_PF_ZERO_LOSS/);
+    await grossLoss.fill("-60");
+    await profitFactorInput.fill("2");
+    await page.waitForTimeout(50);
     const focus = page.locator('[data-path="identity.hypothesis"]');
     await focus.focus();
     await context.setOffline(true);
@@ -165,8 +185,18 @@ async function main() {
     assert.equal(await page.locator('[data-path="document.campaign_id"]').inputValue(),"BOSS-TH-01");
 
     await page.locator("#rw-revision").click();
-    assert.match(await page.locator("#rw-status").textContent(),/previous draft preserved locally/);
-    assert.equal(await page.evaluate(() => Object.keys(localStorage).some(key => key.startsWith("ea_lab.research_workbook.v1.history."))),true);
+    const firstRevisionStatus = await page.locator("#rw-status").textContent();
+    assert.match(firstRevisionStatus,/previous draft preserved locally/);
+    const firstRevision = firstRevisionStatus.match(/New revision ([^;]+);/)?.[1];
+    assert.ok(firstRevision);
+    await page.locator("#rw-revision").click();
+    const secondRevisionStatus = await page.locator("#rw-status").textContent();
+    assert.match(secondRevisionStatus,/previous draft preserved locally/);
+    const secondRevision = secondRevisionStatus.match(/New revision ([^;]+);/)?.[1];
+    assert.ok(secondRevision);
+    assert.notEqual(firstRevision,secondRevision,"rapid consecutive revisions must receive unique IDs");
+    assert.match(secondRevisionStatus,new RegExp(`previous draft preserved locally as ${firstRevision.replace(/[.*+?^$()|[\\]\\\\]/g,"\\$&")}`));
+    assert.equal(await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith("ea_lab.research_workbook.v1.history.")).length >= 2),true);
 
     const printText = await page.locator(".rw-print-projection").textContent();
     assert.match(printText,/LONG-LOGIC-PRINT/);

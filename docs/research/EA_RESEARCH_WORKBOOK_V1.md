@@ -1,6 +1,6 @@
 # EA Research Workbook V1
 
-Status: `OWNER_SUPPLEMENTAL_CORRECTION_RENDERED_PASS_PENDING_INDEPENDENT_REVIEW / REPO_ONLY / PLANNING_PRESENTATION_ONLY`
+Status: `OWNER_AUTHORIZED_3_FINDING_CORRECTION_RENDERED_PASS_PENDING_INDEPENDENT_REVIEW / REPO_ONLY / PLANNING_PRESENTATION_ONLY`
 
 The Research Workbook is one owner-editable planning document inside the existing Mobile Report Hub. It does not execute a tester, create an executable `.set`, change canonical research evidence, approve a stage, unlock HOLDOUT, deploy an EA, or attest an owner decision.
 
@@ -54,6 +54,6 @@ The module uses no dynamic code execution, remote scripts, backend, runner, shel
 
 ## Repair 1/1 status
 
-The original bounded repair closed the pure/static defects and spent its 1/1 repair budget. A separately owner-authorized same-lane supplemental correction then fixed the remaining rendered file-import hit-area defect and delayed autosave status race; native-navigation fixture preparation was moved to a bounded short path after the long evidence path caused fail-closed package refusal. The strengthened Workbook browser flow now passes at 390x844 and 1280x900 with three screenshots, existing Monitor rendered regression passes, and source-bound native-navigation regression passes on both viewports. Exact-head independent GPT Scrutiny remains mandatory; these passes are not acceptance, execution authority, deployment, or an owner signature.
+The original bounded repair and the first owner-supplemental correction remain permanently spent. The first exact-head GPT Scrutiny then failed HIGH on three material product findings: revision-ID collisions during rapid revision creation, acceptance of a supplied PF when gross loss is zero, and chart eligibility that did not require valid source/build SHA256 provenance. Boss explicitly authorized one further bounded same-lane correction for exactly those three findings. The correction now generates millisecond-resolution revision IDs with collision suffixes and no self-links, refuses supplied PF for zero-loss rows while the printable report shows derived PF/status, and suppresses invalid-provenance result groups with explicit UNAVAILABLE diagnostics. Focused checks pass 89/89 and the strengthened rendered Workbook flow plus existing Monitor regression pass. A new independent exact-head GPT Scrutiny remains mandatory before integration.
 
 Independent exact-head GPT Scrutiny and Control Tower integration remain required. This implementation grants no research result, optimization execution, performance, risk/default, HOLDOUT, Candidate/Grade/KINT, runtime, deployment, DEMO/LIVE, trading, owner-signature or production-hosting authority.

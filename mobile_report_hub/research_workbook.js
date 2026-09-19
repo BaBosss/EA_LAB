@@ -84,6 +84,7 @@
     return value.includes(".") ? canonical === value : canonical.replace(".000Z","Z") === value;
   }
   function supplied(value) { return value !== null && value !== undefined && value !== ""; }
+  function validSha256(value) { return typeof value === "string" && /^[0-9a-fA-F]{64}$/.test(value); }
   function normalizeLocator(value) { return String(value || "").trim().replaceAll("\\", "/").replace(/\/+/g, "/").toLowerCase(); }
   function emptyRow(name) { return Object.fromEntries(TABLES[name].map(key => [key, key === "risk_owner_reserved" ? false : null])); }
 
@@ -206,6 +207,7 @@
       for (const key of ["trades","wins","losses","episodes"]) if (finite(row[key]) && !Number.isInteger(Number(row[key]))) errors.push(`Result ${idx + 1} ${key} must be an integer`);
       const computed = profitFactor(row.gross_profit, row.gross_loss);
       if (finite(row.profit_factor) && computed.value !== null && Math.abs(Number(row.profit_factor) - computed.value) > 1e-9) errors.push(`Result ${idx + 1} PF conflicts with gross values`);
+      if (supplied(row.profit_factor) && finite(row.gross_profit) && finite(row.gross_loss) && computed.value === null) errors.push(`Result ${idx + 1} profit_factor must be blank when gross loss is zero; PF is UNDEFINED_ZERO_LOSS`);
       if (row.model && !ALLOWED_MODELS.has(row.model)) errors.push(`Result ${idx + 1} has unknown model`);
       if (row.window_role && !["MAIN","BWD","HOLDOUT"].includes(row.window_role)) errors.push(`Result ${idx + 1} has unknown window role`);
       for (const key of ["campaign_id","variant_id","parent_id","run_id","pass_id"]) if (supplied(row[key]) && typeof row[key] !== "string") errors.push(`Result ${idx + 1} ${key} must be a string ID`);
@@ -326,6 +328,7 @@
   function resultIdentity(row) {
     const fields = ["installation_lineage","data_identity","symbol","timeframe","model","window_role","window_from","window_to","currency","source_ref","source_sha256","build_ref","build_sha256"];
     if (!fields.every(key => supplied(row?.[key]))) return null;
+    if (!validSha256(row.source_sha256) || !validSha256(row.build_sha256)) return null;
     return fields.map(key => String(row[key])).join("¦");
   }
 
@@ -334,7 +337,8 @@
     const resultMap = new Map();
     for (const [index,row] of (Array.isArray(book?.results) ? book.results : []).entries()) {
       const key = resultIdentity(row);
-      if (!key || row.verification_state !== "OWNER_ENTERED_UNVERIFIED") { diagnostics.push(`Result row ${index + 1}: incomplete identity or invalid verification state; charts UNAVAILABLE for this row.`); continue; }
+      if (!key) { diagnostics.push(`Result row ${index + 1}: incomplete or invalid source/build provenance; charts UNAVAILABLE for this row.`); continue; }
+      if (row.verification_state !== "OWNER_ENTERED_UNVERIFIED") { diagnostics.push(`Result row ${index + 1}: invalid verification state; charts UNAVAILABLE for this row.`); continue; }
       if (!resultMap.has(key)) resultMap.set(key,{key,label:`${row.installation_lineage} · ${row.symbol}/${row.timeframe} · ${row.model} · ${row.window_role} · ${row.currency} · ${row.source_ref} · ${row.build_ref} · OWNER_ENTERED_UNVERIFIED`,rows:[]});
       resultMap.get(key).rows.push({...row,_index:index,_pf:profitFactor(row.gross_profit,row.gross_loss),_dd:finite(row.equity_dd_native)?Number(row.equity_dd_native):null});
     }
@@ -378,8 +382,19 @@
   function spreadsheetSafe(value) { return typeof value === "string" && /^[=+\-@]/.test(value) ? `'${value}` : value; }
   function revisionCopy(book, stamp = nowUtc()) {
     const next = clone(book);
-    next.document.previous_revision_id = book.document.revision_id || null;
-    next.document.revision_id = `rev-${stamp.replace(/[^0-9]/g, "").slice(0, 14)}`;
+    const previousId = String(book.document.revision_id || "");
+    const baseId = `rev-${stamp.replace(/[^0-9]/g, "").slice(0, 17)}`;
+    let candidate = baseId;
+    if (previousId === baseId) candidate = `${baseId}-1`;
+    else if (previousId.startsWith(`${baseId}-`)) {
+      const suffix = previousId.slice(baseId.length + 1);
+      if (/^\d+$/.test(suffix)) candidate = `${baseId}-${Number(suffix) + 1}`;
+    }
+    const occupied = new Set([previousId, String(book.document.previous_revision_id || "")].filter(Boolean));
+    let suffix = 1;
+    while (occupied.has(candidate)) candidate = `${baseId}-${suffix++}`;
+    next.document.previous_revision_id = previousId || null;
+    next.document.revision_id = candidate;
     next.document.created_at_utc = stamp;
     next.document.updated_at_utc = stamp;
     next.document.status = "OWNER_DRAFT_UNVERIFIED";
@@ -514,11 +529,21 @@
   function printRows(titleText, rows, keys) {
     return `<section class="rw-print-section"><h2>${escapeHtml(titleText)} (${rows.length})</h2>${rows.length?rows.map((row,index)=>`<article class="rw-print-record"><h3>${escapeHtml(titleText)} row ${index+1}</h3><dl>${keys.map(key=>`<div><dt>${escapeHtml(title(key))}</dt><dd>${escapeHtml(safeText(row?.[key]))}</dd></div>`).join("")}</dl></article>`).join(""):'<p>UNAVAILABLE - no rows supplied.</p>'}</section>`;
   }
+  function printableResults(rows) {
+    return rows.map(row => {
+      const derived = profitFactor(row.gross_profit,row.gross_loss);
+      let status = "OWNER_ENTERED_UNVERIFIED";
+      if (derived.label === "UNDEFINED_ZERO_LOSS") status = supplied(row.profit_factor) ? "INVALID_SUPPLIED_PF_ZERO_LOSS" : "UNDEFINED_ZERO_LOSS";
+      else if (derived.value !== null && supplied(row.profit_factor) && finite(row.profit_factor) && Math.abs(Number(row.profit_factor)-derived.value)>1e-9) status = "INVALID_SUPPLIED_PF_CONFLICT";
+      else if (derived.value !== null) status = "DERIVED_FROM_GROSS_VALUES";
+      return {...row,profit_factor_derived:derived.label,profit_factor_status:status};
+    });
+  }
   function renderPrintProjection() {
     const strategyKeys=STRATEGY_FIELDS.map(([key])=>key).concat(["flow_source_label"]);
     const groups=chartGroups(state);
     const estimates=state.optimizer_sets.map((row,index)=>{const estimate=combinationEstimate(state,row);return {name:row.name||`Optimizer plan ${index+1}`,prospective_cartesian_estimate:estimate.label,axes:estimate.axes.map(axis=>`${axis.name}=${axis.count}`).join(", ")||"UNAVAILABLE",authority:"PLANNING_ESTIMATE_ONLY_NOT_ACTUAL_PASSES"};});
-    return `<article class="rw-print-projection" aria-label="Complete printable workbook report"><header><p>EA LAB RESEARCH WORKBOOK V1</p><h1>Complete owner-draft printable report</h1><p>OWNER_DRAFT_UNVERIFIED / PLANNING_PRESENTATION_ONLY. This report does not verify evidence or authorize execution.</p><p>Schema: ${escapeHtml(state.schema_version)}</p></header>${printFields("Document",state.document,["campaign_id","revision_id","previous_revision_id","created_at_utc","updated_at_utc","status","authority"])}${printFields("Identity and intent",state.identity,IDENTITY_FIELDS.filter(key=>!["campaign_id","revision_id"].includes(key)))}${printFields("Strategy and logic",state.strategy,strategyKeys)}${printRows("Strategy flow steps",state.strategy.flow_steps.map(step=>({step})),["step"])}${printRows("Parameters",state.parameters,TABLES.parameters)}${printFields("Environment",state.environment,ENV_FIELDS)}${printRows("Windows",state.windows,["role","from","to","purpose","state"])}${printRows("Optimizer-set plans",state.optimizer_sets,TABLES.optimizer_sets)}${printRows("Prospective combination estimates",estimates,["name","prospective_cartesian_estimate","axes","authority"])}${printRows("Filters and modules",state.filters_modules,TABLES.filters_modules)}${printRows("Stage roadmap",state.stage_plan,TABLES.stage_plan)}${printRows("Results",state.results,TABLES.results)}${printRows("Typed time series",state.timeseries,TABLES.timeseries)}${printRows("Sensitivity",state.sensitivity,TABLES.sensitivity)}${printRows("Published evidence declarations",state.published_evidence,TABLES.published_evidence)}<section class="rw-print-section rw-print-charts"><h2>Current charts and diagnostics</h2>${renderGraphBody(groups)}</section>${printFields("Observations, interpretations, decisions and limits",state.report,["observations","interpretations","decisions","missing_gates","next_action","limitations","review_request"])}<footer data-print-end="true">END OF COMPLETE WORKBOOK REPORT</footer></article>`;
+    return `<article class="rw-print-projection" aria-label="Complete printable workbook report"><header><p>EA LAB RESEARCH WORKBOOK V1</p><h1>Complete owner-draft printable report</h1><p>OWNER_DRAFT_UNVERIFIED / PLANNING_PRESENTATION_ONLY. This report does not verify evidence or authorize execution.</p><p>Schema: ${escapeHtml(state.schema_version)}</p></header>${printFields("Document",state.document,["campaign_id","revision_id","previous_revision_id","created_at_utc","updated_at_utc","status","authority"])}${printFields("Identity and intent",state.identity,IDENTITY_FIELDS.filter(key=>!["campaign_id","revision_id"].includes(key)))}${printFields("Strategy and logic",state.strategy,strategyKeys)}${printRows("Strategy flow steps",state.strategy.flow_steps.map(step=>({step})),["step"])}${printRows("Parameters",state.parameters,TABLES.parameters)}${printFields("Environment",state.environment,ENV_FIELDS)}${printRows("Windows",state.windows,["role","from","to","purpose","state"])}${printRows("Optimizer-set plans",state.optimizer_sets,TABLES.optimizer_sets)}${printRows("Prospective combination estimates",estimates,["name","prospective_cartesian_estimate","axes","authority"])}${printRows("Filters and modules",state.filters_modules,TABLES.filters_modules)}${printRows("Stage roadmap",state.stage_plan,TABLES.stage_plan)}${printRows("Results",printableResults(state.results),TABLES.results.concat(["profit_factor_derived","profit_factor_status"]))}${printRows("Typed time series",state.timeseries,TABLES.timeseries)}${printRows("Sensitivity",state.sensitivity,TABLES.sensitivity)}${printRows("Published evidence declarations",state.published_evidence,TABLES.published_evidence)}<section class="rw-print-section rw-print-charts"><h2>Current charts and diagnostics</h2>${renderGraphBody(groups)}</section>${printFields("Observations, interpretations, decisions and limits",state.report,["observations","interpretations","decisions","missing_gates","next_action","limitations","review_request"])}<footer data-print-end="true">END OF COMPLETE WORKBOOK REPORT</footer></article>`;
   }
   function renderReport() {
     const fields=["observations","interpretations","decisions","missing_gates","next_action","limitations","review_request"];
