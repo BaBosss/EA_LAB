@@ -1,0 +1,26 @@
+{
+  "schemas": {
+    "orderflow_fixture/v1": {
+      "record_class": "FIXTURE",
+      "synthetic_must_equal": true,
+      "permits_compact_history_generator": true,
+      "qualified_market_data": false,
+      "purpose": "deterministic component tests only"
+    },
+    "orderflow_qualified/v1": {
+      "record_class": "QUALIFIED",
+      "synthetic_must_equal": false,
+      "permits_compact_history_generator": false,
+      "qualified_market_data": true,
+      "requires": [
+        "explicit chronological bars",
+        "source_qualified=true",
+        "TRUE_ORDERFLOW",
+        "EXECUTED_ASK_BID",
+        "all upstream profile/session/timezone/algorithm/instrument pins"
+      ]
+    }
+  },
+  "identity_rule": "PRICE_ACTION_PROXY can never satisfy TRUE_ORDERFLOW",
+  "fallback_rule": "no automatic proxy fallback"
+}

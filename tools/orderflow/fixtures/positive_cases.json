@@ -1,0 +1,102 @@
+{
+  "schema_id": "orderflow_fixture/v1",
+  "record_class": "FIXTURE",
+  "synthetic": true,
+  "contract": {
+    "dataset_id": "fixture-orderflow-positive-v1",
+    "source_id": "fixture-exchange-feed",
+    "source_revision": "fixture-r1",
+    "signal_instrument_id": "FIXTURE.INSTRUMENT",
+    "profile_instrument_id": "FIXTURE.INSTRUMENT",
+    "instrument_mapping_id": "",
+    "instrument_mapping_qualified": false,
+    "session_definition_id": "fixture-session-v1",
+    "timezone_ruleset_id": "fixture-utc-v1",
+    "profile_algorithm_id": "fixture-profile-v1",
+    "value_area_algorithm_id": "fixture-va-v1",
+    "volume_provenance_id": "fixture-executed-sides-v1",
+    "source_qualified": false,
+    "data_identity": "TRUE_ORDERFLOW",
+    "volume_provenance": "EXECUTED_ASK_BID"
+  },
+  "freshness_policy": {
+    "max_m5_age_seconds": 3600,
+    "max_m15_age_seconds": 7200,
+    "max_profile_age_seconds": 86400,
+    "max_quote_age_seconds": 60,
+    "required_record_class": "FIXTURE"
+  },
+  "profile": {
+    "record_id": "profile-1",
+    "profile_id": "prior-session-profile",
+    "profile_revision": "profile-r1",
+    "source_revision": "fixture-r1",
+    "session_start": 1699980000,
+    "session_end": 1699992000,
+    "available_at": 1699992100,
+    "completed": true,
+    "val": 100.0,
+    "poc": 106.0,
+    "vah": 112.0
+  },
+  "history": {
+    "start_time": 1699994000,
+    "count": 20,
+    "open": 106.0,
+    "high": 106.5,
+    "low": 105.5,
+    "close": 106.0,
+    "executed_ask_volume": 50.0,
+    "executed_bid_volume": 50.0
+  },
+  "cases": [
+    {
+      "id": "OF01_LONG",
+      "component": "OF01",
+      "context": {"record_id":"m15-of01-long","sequence":1,"period_seconds":900,"open_time":1699998500,"close_time":1699999400,"available_at":1699999410,"completed":true,"open":105.0,"high":106.0,"low":104.0,"close":105.0},
+      "events": [
+        {"open":100.4,"high":101.0,"low":99.5,"close":100.3,"executed_ask_volume":70.0,"executed_bid_volume":130.0},
+        {"open":100.4,"high":101.8,"low":100.1,"close":101.5,"executed_ask_volume":60.0,"executed_bid_volume":50.0}
+      ],
+      "quote": {"record_id":"q-of01-long","bid":101.5,"ask":101.6,"all_in_cost_price":0.05},
+      "expected": {"decision":"SIGNAL","direction":1,"stop_price":99.3,"target_price":106.0}
+    },
+    {
+      "id": "OF01_SHORT",
+      "component": "OF01",
+      "context": {"record_id":"m15-of01-short","sequence":2,"period_seconds":900,"open_time":1699998500,"close_time":1699999400,"available_at":1699999410,"completed":true,"open":107.0,"high":108.0,"low":106.0,"close":107.0},
+      "events": [
+        {"open":111.6,"high":112.5,"low":111.0,"close":111.7,"executed_ask_volume":130.0,"executed_bid_volume":70.0},
+        {"open":111.6,"high":111.8,"low":110.2,"close":110.5,"executed_ask_volume":50.0,"executed_bid_volume":60.0}
+      ],
+      "quote": {"record_id":"q-of01-short","bid":110.4,"ask":110.5,"all_in_cost_price":0.05},
+      "expected": {"decision":"SIGNAL","direction":-1,"stop_price":112.7,"target_price":106.0}
+    },
+    {
+      "id": "OF02_LONG",
+      "component": "OF02",
+      "context": {"record_id":"m15-of02-long","sequence":3,"period_seconds":900,"open_time":1699998500,"close_time":1699999400,"available_at":1699999410,"completed":true,"open":111.0,"high":113.0,"low":110.5,"close":112.4},
+      "events": [
+        {"open":112.1,"high":112.6,"low":112.0,"close":112.4,"executed_ask_volume":55.0,"executed_bid_volume":45.0},
+        {"open":112.3,"high":112.8,"low":112.2,"close":112.6,"executed_ask_volume":120.0,"executed_bid_volume":60.0},
+        {"open":112.4,"high":112.5,"low":111.9,"close":112.2,"executed_ask_volume":55.0,"executed_bid_volume":55.0},
+        {"open":112.2,"high":112.9,"low":112.1,"close":112.7,"executed_ask_volume":70.0,"executed_bid_volume":50.0}
+      ],
+      "quote": {"record_id":"q-of02-long","bid":112.7,"ask":112.8,"all_in_cost_price":0.05},
+      "expected": {"decision":"SIGNAL","direction":1,"stop_price":111.7,"target_price":115.0}
+    },
+    {
+      "id": "OF02_SHORT",
+      "component": "OF02",
+      "context": {"record_id":"m15-of02-short","sequence":4,"period_seconds":900,"open_time":1699998500,"close_time":1699999400,"available_at":1699999410,"completed":true,"open":101.0,"high":101.5,"low":99.0,"close":99.6},
+      "events": [
+        {"open":99.9,"high":100.0,"low":99.4,"close":99.6,"executed_ask_volume":45.0,"executed_bid_volume":55.0},
+        {"open":99.7,"high":99.8,"low":99.2,"close":99.4,"executed_ask_volume":60.0,"executed_bid_volume":120.0},
+        {"open":99.6,"high":100.1,"low":99.5,"close":99.8,"executed_ask_volume":55.0,"executed_bid_volume":55.0},
+        {"open":99.8,"high":99.9,"low":99.1,"close":99.3,"executed_ask_volume":50.0,"executed_bid_volume":70.0}
+      ],
+      "quote": {"record_id":"q-of02-short","bid":99.2,"ask":99.3,"all_in_cost_price":0.05},
+      "expected": {"decision":"SIGNAL","direction":-1,"stop_price":100.3,"target_price":97.0}
+    }
+  ]
+}
