@@ -490,6 +490,29 @@ class OrderFlowReferenceTests(unittest.TestCase):
         self.assertEqual("SIGNAL", result["decision"])
         self.assertEqual("m15-setup", result["setup_context_record_id"])
 
+    def test_m15_context_history_rejects_overlap_and_accepts_adjacency(self) -> None:
+        adjacent_case = self.case("OF01_LONG")
+        first = copy.deepcopy(adjacent_case.pop("context"))
+        adjacent = copy.deepcopy(first)
+        adjacent["record_id"] = "m15-adjacent"
+        adjacent["sequence"] += 1
+        adjacent["open_time"] = first["close_time"]
+        adjacent["close_time"] = adjacent["open_time"] + adjacent["period_seconds"]
+        adjacent["available_at"] = adjacent["close_time"] + 1
+        adjacent_case["contexts"] = [first, adjacent]
+        validate_records(adjacent_case)
+
+        overlapping_case = self.case("OF01_LONG")
+        first = copy.deepcopy(overlapping_case.pop("context"))
+        overlapping = copy.deepcopy(first)
+        overlapping["record_id"] = "m15-overlapping"
+        overlapping["sequence"] += 1
+        overlapping["open_time"] = first["close_time"] - 600
+        overlapping["close_time"] = overlapping["open_time"] + overlapping["period_seconds"]
+        overlapping["available_at"] = overlapping["close_time"] + 1
+        overlapping_case["contexts"] = [first, overlapping]
+        self.assert_rejected(overlapping_case, "M15_NON_MONOTONIC_OR_DUPLICATE")
+
     def test_of02_chronological_context_progression_does_not_reset(self) -> None:
         case = self.case("OF02_LONG")
         setup_context = copy.deepcopy(case.pop("context"))

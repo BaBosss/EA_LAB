@@ -515,6 +515,39 @@ void TestChronologicalAvailabilityAndProgression()
               "OF02 ordinary M15 progression preserves armed setup provenance");
 }
 
+void TestM15ContextHistoryOverlapAndAdjacency()
+{
+   OFDataContract contract;
+   OFFreshnessPolicy policy;
+   OFProfile profile;
+   BuildContract(contract, policy);
+   BuildProfile(profile);
+
+   OFContextBar contexts[];
+   ArrayResize(contexts, 2);
+   SetContext(contexts[0], "m15-first", 50, 105.0, 106.0, 104.0, 105.0);
+   contexts[1] = contexts[0];
+   contexts[1].record_id = "m15-adjacent";
+   contexts[1].sequence = contexts[0].sequence + 1;
+   contexts[1].open_time = contexts[0].close_time;
+   contexts[1].close_time = contexts[1].open_time + contexts[1].period_seconds;
+   contexts[1].available_at = contexts[1].close_time + 1;
+   string reason = "";
+   AssertTrue(OF_ValidateContexts(contexts, contract, profile,
+                                  contexts[1].available_at, reason),
+              "adjacent M15 context records remain accepted");
+
+   contexts[1].record_id = "m15-overlapping";
+   contexts[1].open_time = contexts[0].close_time - 600;
+   contexts[1].close_time = contexts[1].open_time + contexts[1].period_seconds;
+   contexts[1].available_at = contexts[1].close_time + 1;
+   reason = "";
+   AssertTrue(!OF_ValidateContexts(contexts, contract, profile,
+                                   contexts[1].available_at, reason) &&
+              reason == "M15_NON_MONOTONIC_OR_DUPLICATE",
+              "overlapping M15 context records fail closed");
+}
+
 void TestQuoteExecutionAndDecisionEnvelope()
 {
    OFDataContract contract;
@@ -578,6 +611,7 @@ void OnStart()
    TestRevisionReset();
    TestOF01ZoneOverlapWithoutCenterTouch();
    TestChronologicalAvailabilityAndProgression();
+   TestM15ContextHistoryOverlapAndAdjacency();
    TestQuoteExecutionAndDecisionEnvelope();
    PrintFormat("ORDERFLOW_COMPONENTS_TEST_SUMMARY passed=%d failed=%d", g_passed, g_failed);
    if(g_failed > 0)

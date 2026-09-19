@@ -288,9 +288,10 @@ bool OF_ValidateContexts(const OFContextBar &contexts[],
          }
       }
       if(i > 0 &&
-         (contexts[i].sequence <= contexts[i-1].sequence ||
-          contexts[i].close_time <= contexts[i-1].close_time ||
-          contexts[i].available_at <= contexts[i-1].available_at))
+          (contexts[i].sequence <= contexts[i-1].sequence ||
+           contexts[i].open_time < contexts[i-1].close_time ||
+           contexts[i].close_time <= contexts[i-1].close_time ||
+           contexts[i].available_at <= contexts[i-1].available_at))
       {
          reason = "M15_NON_MONOTONIC_OR_DUPLICATE";
          return false;

@@ -383,6 +383,7 @@ def validate_records(case: dict[str, Any]) -> None:
         seen_context_ids.add(context["record_id"])
         if previous_context is not None and not (
             context["sequence"] > previous_context["sequence"]
+            and context["open_time"] >= previous_context["close_time"]
             and context["close_time"] > previous_context["close_time"]
             and context["available_at"] > previous_context["available_at"]
         ):
