@@ -177,6 +177,8 @@ Lane Registry owns current writer/reviewer lineage. Do not copy live lane states
 
 **Global state: `DEGRADED_MONITORING`.**
 
+**EA Research Workbook V1 (2026-09-19): `SOURCE_ACCEPTED_REVIEWED_REPO_ONLY_NOT_DEPLOYED / PLANNING_PRESENTATION_ONLY / PRIOR_FAILURES_PRESERVED`.** Exact source `ce5f057c1f5472a686fb1e9006551a9e402c617b` passed the existing separate read-only GPT Scrutiny with `SCRUTINY_PASS / HIGH / ALLOW_SOURCE_ONLY_INTEGRATION` (review SHA256 `6217064a8a355d21b0bf97b5192ead2ca5e56c8aeca7fe30165f8687c4c5d7a9`). Revision collisions/self-links, zero-loss or unavailable PF handling, and invalid source/build graph provenance are closed on that head. Accepted evidence includes 93/93 focused checks, Workbook Edge flow at 390x844 and 1280x900 with three screenshots, existing Monitor rendered regression, and unchanged native-navigation 52/52 evidence. Initial three-finding FAIL and the narrower PF counterexample FAIL remain preserved; their repair allocations are not reset. This entry records source acceptance and factual repository convergence only: no production Monitor publishing, runtime activation, tester/optimizer execution, owner parent/Home/settings freeze, risk/default, HOLDOUT, Candidate/Grade/KINT or trading authority follows. Browser drafts/results remain unverified and browser-local; global `DEGRADED_MONITORING` is unchanged. Acceptance detail: `docs/research/EA_RESEARCH_WORKBOOK_V1.md`.
+
 Monitoring is fail-visible. Stale/unreadable/unbound evidence must not be presented as current measured truth. ORDER-353 historical epoch-1 target G3 setup was `PASS / WIRED`; current epoch-2 freshness remains untrusted (see §1.1), and target setup acceptance does not override the global G2 state.
 
 ---

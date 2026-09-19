@@ -6,6 +6,8 @@ const MISSING = "UNKNOWN";
 const KNOWN_DATA_STATES = new Set(["CURRENT", "STALE", "DEGRADED", "MISSING", "UNKNOWN", "UNAVAILABLE"]);
 let reportIndex;
 let usedCachedData = false;
+let startError = null;
+let researchMountGeneration = 0;
 
 const app = document.querySelector("#app");
 const projectMeta = document.querySelector("#project-meta");
@@ -535,8 +537,27 @@ function operationalPresentationAlerts() {
   return `<section class="panel"><h2>Work / evidence alerts</h2><p><strong>Current blocked lane observations:</strong> ${escapeHtml(blocked)}</p><p><strong>Stale / unqualified lane observations:</strong> ${escapeHtml(unqualified)}</p><p><strong>Factory evidence issues:</strong> ${escapeHtml(issues)}</p><p class="muted">These are work/evidence conditions only. They do not imply trading loss, abnormal market behavior, EA malfunction or runtime failure.</p></section>`;
 }
 function renderEALab() {
-  app.innerHTML = `<section class="page-heading"><h2>EA Lab</h2><p>Portfolio, accounts, canonical research and source-bound Factory evidence completeness</p></section>${renderKpis()}${renderPortfolioOverview()}${renderAccounts()}${renderFactoryPilots()}${renderCriticalAlerts()}${renderResearch()}`;
+  app.innerHTML = `<section class="page-heading"><h2>EA Lab</h2><p>Portfolio, accounts, canonical research and source-bound Factory evidence completeness</p><a class="button-link" href="#research">Open Research Workbook · เปิดสมุดวิจัย</a></section>${renderKpis()}${renderPortfolioOverview()}${renderAccounts()}${renderFactoryPilots()}${renderCriticalAlerts()}${renderResearch()}`;
   bindResearchFilters();
+}
+
+async function renderResearchWorkbook(generation) {
+  const workbook = window.EALabResearchWorkbook;
+  if (!workbook) {
+    app.innerHTML = '<section class="panel"><h2>Research Workbook unavailable</h2><p>The local workbook module did not load.</p></section>';
+    return;
+  }
+  const monitor = {
+    available: !!reportIndex,
+    state: reportIndex ? globalMonitoringState() : "UNKNOWN",
+    records: reportIndex && Array.isArray(reportIndex.eas) ? reportIndex.eas : []
+  };
+  if (workbook.isMounted(app)) workbook.updateMonitor(monitor);
+  else {
+    app.innerHTML = '<p class="empty-state">Loading local owner workbook...</p>';
+    try { await workbook.mount(app, {monitor, isCurrent: () => generation === researchMountGeneration && route().page === "research"}); }
+    catch (error) { if (generation === researchMountGeneration && route().page === "research") app.innerHTML = `<section class="panel"><h2>Research Workbook unavailable</h2><p>${escapeHtml(error.message)}</p><p>Monitor truth remains ${reportIndex ? escapeHtml(globalMonitoringState()) : "UNKNOWN"}.</p></section>`; }
+  }
 }
 
 function renderLive() {
@@ -871,12 +892,15 @@ function renderRoute() {
   // Invalidate pending success/error callbacks on every navigation, including
   // leaving detail and A -> B -> A. The route replaces graph DOM synchronously.
   nativeRenderGeneration++;
+  researchMountGeneration++;
   activeNativeRender = null;
   for (const url of nativeObjectUrls) URL.revokeObjectURL(url);
   nativeObjectUrls.clear();
   const current = route();
-  const activePage = ["detail", "compare", "live"].includes(current.page) ? "ealab" : current.page === "queue" ? "work" : current.page;
+  const activePage = ["detail", "compare", "live", "research"].includes(current.page) ? "ealab" : current.page === "queue" ? "work" : current.page;
   document.querySelectorAll("[data-nav]").forEach((link) => link.classList.toggle("active", link.dataset.nav === activePage));
+  if (current.page === "research") { renderResearchWorkbook(researchMountGeneration); return; }
+  if (!reportIndex) { renderUnavailable(startError || new Error("Report index unavailable")); return; }
   if (current.page === "detail") renderDetail(current.id);
   else if (current.page === "compare") renderCompare();
   else if (current.page === "live") renderLive();
@@ -901,24 +925,25 @@ function renderUnavailable(error) {
   lastUpdatedNode.textContent = "UNKNOWN";
   dataWarning.hidden = false;
   dataWarning.textContent = !navigator.onLine ? "OFFLINE - no cached report index is available." : "MISSING - report index could not be loaded or validated.";
-  app.innerHTML = `<section class="panel"><h2>Monitoring unavailable</h2><p>${escapeHtml(error.message)}</p><p class="muted">No account, alert, coverage, queue, freshness, or canonical identity is inferred.</p></section>`;
+  app.innerHTML = `<section class="panel"><h2>Monitoring unavailable</h2><p>${escapeHtml(error.message)}</p><p class="muted">No account, alert, coverage, queue, freshness, or canonical identity is inferred.</p><a class="button-link" href="#research">Open local Research Workbook · เปิดสมุดวิจัย</a></section>`;
 }
 
 async function start() {
+  window.addEventListener("hashchange", renderRoute);
+  const refreshView = () => { if (reportIndex) renderProjectMeta(); renderRoute(); };
+  window.addEventListener("online", refreshView);
+  window.addEventListener("offline", refreshView);
+  window.setInterval(refreshView, 60000);
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
   try {
     const fixtureMode = new URLSearchParams(window.location.search).get("fixture") === "1";
     const payload = await fetchIndex(fixtureMode ? FIXTURE_INDEX_URL : REPORT_INDEX_URL);
     reportIndex = validateIndex(payload, fixtureMode);
     renderProjectMeta();
     renderRoute();
-    window.addEventListener("hashchange", renderRoute);
-    const refreshView = () => { renderProjectMeta(); renderRoute(); };
-    window.addEventListener("online", refreshView);
-    window.addEventListener("offline", refreshView);
-    window.setInterval(refreshView, 60000);
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
   } catch (error) {
-    renderUnavailable(error);
+    startError = error;
+    renderRoute();
   }
 }
 
