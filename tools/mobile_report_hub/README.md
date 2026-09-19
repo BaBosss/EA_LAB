@@ -313,3 +313,24 @@ alongside the unchanged `browser_navigation_binding.cjs` race suite. Browser
 coverage includes mismatched provenance/roles/windows, ambiguous requested
 controls, unavailable exposure, repeatable card bytes and clipboard/navigation
 refusals. Existing Monitor and global degraded-state behavior remain unchanged.
+
+## EA Research Workbook V1 (repo-only increment)
+
+EA Lab now links to `#research`, an owner-editable browser-local planning workbook implemented by `research_workbook.js`, `research_workbook.css` and the blank `research_workbook.template.json`. It is part of this Monitor, not a new dashboard or backend. The EA Lab bottom tab remains active.
+
+The workbook exports/imports one complete typed JSON plan. Debounced autosave uses a separate `ea_lab.research_workbook.v1.*` local-storage namespace and preserves partial drafts. Denied storage leaves the draft in memory; corrupt stored bytes are retained without silent overwrite; invalid imports never replace the current state. New revision preserves the former bytes in an immutable local history key or refuses the revision. No cloud/cross-device sync is claimed.
+
+Canonical Monitor observations stay read-only. Owner-entered results and imported/manual series are `UNVERIFIED`; existing published records open through their current `#detail/<id>` renderer. Result/metric/series/sensitivity selectors isolate compatible run, installation, data, source/build, unit and scale groups. Currency curves never share a scale with percent DD, UTC positions are proportional, and missing/incompatible data remains `UNAVAILABLE`. The route also opens when `report_index.json` is missing/malformed, while the Monitor truth stays `UNKNOWN`/`MISSING`; a late template response cannot overwrite a newer route.
+
+V1 has no Run/Optimize/Approve/Deploy action, runner, command export or executable `.set` output. BWD/HOLDOUT selection, forged approval/readiness, unsafe imports/links, non-finite or boolean numerics, malformed series, non-64-hex SHA256 fields and same-kind identity conflicts fail validation. Source and built-binary hashes are separate bindings. Prospective Cartesian combination counts are derived only from determinate named axes. Filter interactions require named components and a baseline while readiness stays unresolved. Review requests are plain local text, not attestations; print uses a complete wrapped text projection and the browser print dialog.
+
+Focused checks:
+
+```text
+node tools/mobile_report_hub/tests/research_workbook.test.cjs
+node tools/mobile_report_hub/tests/browser_research_workbook.cjs <external-evidence-root>
+powershell -File scripts/_test/run_mobile_report_hub_data_tests.ps1
+powershell -File scripts/_test/run_mobile_report_hub_ui_tests.ps1
+```
+
+Build the preview index from the exact canonical base with `build_index.py`, then overlay the candidate static assets into that external preview. The browser harness uses installed `playwright-core` and Edge; it does not install packages or activate production service workers. Full contract and authority ceiling: `docs/research/EA_RESEARCH_WORKBOOK_V1.md`.

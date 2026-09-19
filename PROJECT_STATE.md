@@ -177,6 +177,8 @@ Lane Registry owns current writer/reviewer lineage. Do not copy live lane states
 
 **Global state: `DEGRADED_MONITORING`.**
 
+**EA Research Workbook V1 (2026-09-19): `REPAIRED_PENDING_CT_RENDERED_GATES_AND_INDEPENDENT_REVIEW / REPO_ONLY / PLANNING_PRESENTATION_ONLY / REPAIR_1_OF_1_SPENT`.** The sole bounded repair adds safe partial-draft autosave, strict source/build/hash/numeric/time-series/authority validation, unit- and lineage-separated selectable graphs, determinate prospective combination estimates, named filter interactions, complete wrapped print projection, mobile containment and late-route protection. Focused pure/static author checks are complete; the separately authorized Control Tower rendered Edge gates and exact-head independent GPT Scrutiny remain required, so no acceptance is claimed. It performs no tester/optimizer execution, runtime activation, deployment, canonical evidence mutation, approval/readiness transition, owner freeze or risk/default/HOLDOUT/Candidate/Grade/KINT decision; current Monitor `DEGRADED_MONITORING` remains unchanged. Contract/order: `docs/research/EA_RESEARCH_WORKBOOK_V1.md` / `ORDER-EA-RESEARCH-WORKBOOK-V1-20260919`.
+
 Monitoring is fail-visible. Stale/unreadable/unbound evidence must not be presented as current measured truth. ORDER-353 historical epoch-1 target G3 setup was `PASS / WIRED`; current epoch-2 freshness remains untrusted (see §1.1), and target setup acceptance does not override the global G2 state.
 
 ---
