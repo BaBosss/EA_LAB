@@ -282,6 +282,63 @@ class BatchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "fixture"):
             self.run_batch()
 
+    def test_duck_typed_adapter_denied_before_dispatch(self):
+        class PretendAdapter:
+            def validate_batch(self, *args):
+                raise AssertionError("untrusted validation executed")
+            def __call__(self, *args):
+                raise AssertionError("untrusted executor dispatched")
+        self.contract["mode"] = "QUALIFICATION_NO_MT5"
+        with self.assertRaisesRegex(ValueError, "trusted QualificationAdapter"):
+            self.run_batch(runner=PretendAdapter())
+        self.assertFalse(self.state.exists())
+
+    def test_changed_executor_bytes_invalidate_resume(self):
+        from unittest.mock import patch
+        result = self.run_batch()
+        for module in (batch, batch.safe):
+            with self.subTest(module=module.__name__):
+                replacement = self.root / "changed_module.py"
+                replacement.write_text("# different source bytes")
+                with patch.object(module, "__file__", str(replacement)):
+                    with self.assertRaisesRegex(ValueError, "checkpoint identity/hash"):
+                        self.run_batch(resume_sha=result["checkpoint_sha256"])
+        self.assertEqual(self.calls, ["C0", "C1", "C2"])
+
+    def test_changed_executor_bytes_invalidate_final_accounting(self):
+        from unittest.mock import patch
+        replacement = self.root / "changed_module.py"
+        replacement.write_text("# different source bytes")
+        def mutate(receipt):
+            if receipt["cell_id"] == "C2" and receipt["status"] == "COMPLETE":
+                batch.__file__ = str(replacement)
+        with patch.object(batch, "__file__", batch.__file__):
+            with self.assertRaisesRegex(ValueError, "fingerprint changed"):
+                self.run_batch(on_checkpoint=mutate)
+        self.assertEqual(self.calls, ["C0", "C1", "C2"])
+
+    def test_changed_executor_before_dispatch_prevents_next_cell(self):
+        from unittest.mock import patch
+        replacement = self.root / "changed_module.py"
+        replacement.write_text("# different source bytes")
+        def mutate(receipt):
+            if receipt["status"] == "STARTED":
+                batch.safe.__file__ = str(replacement)
+        with patch.object(batch.safe, "__file__", batch.safe.__file__):
+            with self.assertRaisesRegex(ValueError, "fingerprint changed before dispatch"):
+                self.run_batch(on_checkpoint=mutate)
+        self.assertEqual(self.calls, [])
+        with self.assertRaisesRegex(ValueError, "AMBIGUOUS_STARTED"):
+            self.run_batch(resume_sha=self.checkpoint_sha())
+
+    def test_fixture_injected_head_never_launches_subprocess(self):
+        from unittest.mock import patch
+        with patch.object(batch.subprocess, "Popen", side_effect=AssertionError("process launch forbidden")) as launch:
+            result = self.run_batch()
+            self.run_batch(resume_sha=result["checkpoint_sha256"])
+        launch.assert_not_called()
+        self.assertEqual(self.calls, ["C0", "C1", "C2"])
+
     def test_state_escape_denied(self):
         self.state = self.root.parent / "outside"
         with self.assertRaises(ValueError):

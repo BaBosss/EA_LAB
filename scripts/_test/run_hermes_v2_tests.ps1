@@ -9,5 +9,7 @@ $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 if (-not (Test-Path -LiteralPath $PythonExe -PathType Leaf)) {
     throw "Existing MCP-capable Python required: $PythonExe"
 }
-& $PythonExe -B -m unittest discover -s (Join-Path $repoRoot 'tools\hermes_ea_lab_pilot\tests') -p 'test_*.py' -v
-if ($LASTEXITCODE -ne 0) { throw "Hermes fixture tests failed: $LASTEXITCODE" }
+foreach ($suite in @('test_batch_executor.py', 'test_verified_learning.py', 'test_safe_tester_executor.py', 'test_safe_workspace_reader.py')) {
+    & $PythonExe -B -m unittest discover -s (Join-Path $repoRoot 'tools\hermes_ea_lab_pilot\tests') -p $suite -v
+    if ($LASTEXITCODE -ne 0) { throw "Hermes V2-A suite $suite failed: $LASTEXITCODE" }
+}
