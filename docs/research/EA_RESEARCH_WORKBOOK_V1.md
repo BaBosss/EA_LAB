@@ -1,6 +1,6 @@
 # EA Research Workbook V1
 
-Status: `WB_METRIC_EDGECASE_CORRECTED_RENDERED_PASS_PENDING_FINAL_INDEPENDENT_REVIEW / REPO_ONLY / PLANNING_PRESENTATION_ONLY`
+Status: `SOURCE_ACCEPTED_REVIEWED_REPO_ONLY_NOT_DEPLOYED / PLANNING_PRESENTATION_ONLY`
 
 The Research Workbook is one owner-editable planning document inside the existing Mobile Report Hub. It does not execute a tester, create an executable `.set`, change canonical research evidence, approve a stage, unlock HOLDOUT, deploy an EA, or attest an owner decision.
 
@@ -54,6 +54,15 @@ The module uses no dynamic code execution, remote scripts, backend, runner, shel
 
 ## Repair 1/1 status
 
-The original bounded repair and earlier owner-supplemental corrections remain preserved as spent historical evidence. The first exact-head GPT Scrutiny failed HIGH on revision-ID collisions, zero-loss PF handling, and invalid graph provenance. The first bounded correction closed the revision and graph findings; the next exact-head recheck failed HIGH only on a narrower `WB-METRIC-001` case where gross profit was unavailable but gross loss was exactly zero and a PF was supplied. Under Boss's explicit instruction to finish those findings, the final same-finding correction now detects zero loss before gross-profit availability, refuses supplied PF whenever PF cannot be numerically derived, prevents invalid exports from reimporting as valid, and prints explicit `UNDEFINED_ZERO_LOSS` / invalid-PF status. Focused checks pass 93/93; the updated Workbook rendered flow and existing Monitor regression pass. One final independent exact-head GPT Scrutiny remains mandatory before integration.
+The original bounded repair and earlier owner-supplemental corrections remain preserved as spent historical evidence. The first exact-head GPT Scrutiny failed HIGH on revision-ID collisions, zero-loss PF handling, and invalid graph provenance. The first bounded correction closed the revision and graph findings; the next exact-head recheck failed HIGH only on a narrower `WB-METRIC-001` case where gross profit was unavailable but gross loss was exactly zero and a PF was supplied. Under Boss's explicit instruction to finish those findings, the final same-finding correction now detects zero loss before gross-profit availability, refuses supplied PF whenever PF cannot be numerically derived, prevents invalid exports from reimporting as valid, and prints explicit `UNDEFINED_ZERO_LOSS` / invalid-PF status. Focused checks pass 93/93; the updated Workbook rendered flow and existing Monitor regression pass. Final independent exact-head GPT Scrutiny returned `SCRUTINY_PASS / HIGH / ALLOW_SOURCE_ONLY_INTEGRATION` at `ce5f057c1f5472a686fb1e9006551a9e402c617b`; it explicitly confirmed all three findings closed and no directly related material regression.
 
-Independent exact-head GPT Scrutiny and Control Tower integration remain required. This implementation grants no research result, optimization execution, performance, risk/default, HOLDOUT, Candidate/Grade/KINT, runtime, deployment, DEMO/LIVE, trading, owner-signature or production-hosting authority.
+Source acceptance is complete; this documentation records the accepted state for normal FF repository integration only. Production Monitor publishing has not been performed. The accepted source remains a planning/presentation workbook, not a research result, optimization executor, performance claim, risk/default policy, HOLDOUT permission, Candidate/Grade/KINT decision, runtime deployment, DEMO/LIVE or trading action, or owner signature.
+
+## Exact acceptance evidence
+
+- Accepted source: `ce5f057c1f5472a686fb1e9006551a9e402c617b`.
+- Final source review: `D:\EA_LAB_CONTROL\evidence\ct-ea-research-workbook-review3-ro-20260919\REVIEW_RESULT.json`; SHA256 `6217064a8a355d21b0bf97b5192ead2ca5e56c8aeca7fe30165f8687c4c5d7a9`; `SCRUTINY_PASS / HIGH`.
+- Frozen manifest: same directory `EVIDENCE_MANIFEST.json`; SHA256 `d61d9bce144d467f872b64607ee44fe116a3f6e115bfa2017ff1c58548562ad8`; binds 13 source files and 20 final evidence files.
+- Final reviewer job: `ct-ea-research-workbook-review3-ro-20260-20260919T122320Z-944fe954`; terminal `COMPLETE`, exit/postcondition 0. Runner completion alone is not acceptance; the explicit review verdict controls.
+- Existing initial failure and narrower PF recheck failure remain in their original evidence roots. No other exhausted package is reopened.
+- Use the accepted Monitor source/isolated preview via `EA Lab -> Open Research Workbook` or `#research`. Older running/hosted Monitor versions do not acquire this feature merely because source is accepted. Drafts and saved revisions are local to the current browser; use Download plan/Import plan to transfer them.
