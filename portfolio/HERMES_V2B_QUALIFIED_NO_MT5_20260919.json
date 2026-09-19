@@ -1,0 +1,63 @@
+{
+  "schema": "EA_LAB_HERMES_V2B_QUALIFIED_NO_MT5_ACCEPTANCE_V1",
+  "status": "QUALIFIED_NO_MT5_SOURCE_CANONICAL_NO_RUNTIME_CAMPAIGN_AUTHORITY",
+  "source_head": "2810be33fde22aac63c32ade37bc4fdf225146e2",
+  "reviewed_head": "2810be33fde22aac63c32ade37bc4fdf225146e2",
+  "prospectively_requalified_source_head": "db1054d3e962bdfd6d37d27cef917a0df796b697",
+  "qualified_no_mt5": true,
+  "historical_blocker_preserved": true,
+  "historical_repair_budget": "1/1_SPENT_NO_RESET",
+  "runtime_campaign_authority": false,
+  "deployment_authority": false,
+  "trading_authority": false,
+  "byte_identity_preserved": true,
+  "v2b_tests": "PASS_30_OF_30",
+  "v2a_tests": "PASS_83_OF_83",
+  "prospective_process_binding": {
+    "new_mt5_process_identities": 0,
+    "pre_post_process_set_equal": true,
+    "mt5_started": false
+  },
+  "final_review": {
+    "scope": "HERMES_V2B_FINAL_CHILD_EXACT_HEAD_SCRUTINY",
+    "verdict": "SCRUTINY_PASS",
+    "confidence": "HIGH",
+    "decision": "ALLOW_INTEGRATION",
+    "findings_are_informational_only": true
+  },
+  "historical_review": {
+    "reviewed_head": "db1054d3e962bdfd6d37d27cef917a0df796b697",
+    "verdict": "SCRUTINY_BLOCKED",
+    "confidence": "HIGH",
+    "decision": "BLOCK_INTEGRATION",
+    "blocker": "HISTORICAL_PRE_POST_TERMINAL_AND_METAEDITOR_PROCESS_SET_BINDING_ABSENT",
+    "source_defect_found": false,
+    "rewritten_or_reset": false
+  },
+  "evidence": [
+    {"kind": "final_review", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-hermes-v2b-final-review-20260919\\REVIEW_RESULT.json", "sha256": "088b749ff54f816c4d79b436dec7d9b6d5b04f2199acf3265f32df01726b139e"},
+    {"kind": "source_push", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-hermes-v2b-final-child-20260919\\PUSH_VERIFIED.json", "sha256": "b1fa54f81ef6597d976e72cba43efcd0117987e5106da30d62ec4ebf0de428af"},
+    {"kind": "freeze", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-hermes-v2b-final-child-20260919\\FREEZE.json", "sha256": "a56d78d6379ff529a4417069db295c9e74fa1abd6502e9a69b58e68b1c732f85"},
+    {"kind": "final_gates", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-hermes-v2b-final-child-20260919\\FINAL_GATES.json", "sha256": "6d2d67034efc410c2a8f69574aa20714dc793c4d44ae0a586f66677757da7f1f"},
+    {"kind": "historical_blocked_review", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-hermes-v2b-scrutiny-20260919\\REVIEW_RESULT.json", "sha256": "f1e84a95cf28412c6c0a341dcdc40d7e1cd98a3e9943684230fff035fbcf94da"},
+    {"kind": "historical_blocked_disposition", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-hermes-v2b-scrutiny-20260919\\FINAL_DISPOSITION_20260919.json", "sha256": "e3a14498aaa33e0d27b5a19352650ffebafe5be683a200076f75bae47a198ad1"}
+  ],
+  "authority": {
+    "source_accepted": true,
+    "canonical_repo_source": true,
+    "mt5_execution": false,
+    "runtime_campaign": false,
+    "runtime_or_profile_activation": false,
+    "ea_home_tf_settings_selection": false,
+    "strategy_performance_evidence": false,
+    "performance_interpretation": false,
+    "optimization": false,
+    "holdout_spent": false,
+    "candidate_or_grade_or_kint": false,
+    "risk_or_default_change": false,
+    "deployment_authority": false,
+    "demo_or_live_authority": false,
+    "trading_authority": false,
+    "whole_pipeline_pass": false
+  }
+}

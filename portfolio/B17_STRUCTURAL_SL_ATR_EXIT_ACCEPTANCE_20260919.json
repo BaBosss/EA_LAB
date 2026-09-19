@@ -1,0 +1,83 @@
+{
+  "schema": "EA_LAB_B17_STRUCTURAL_SL_ATR_EXIT_SOURCE_ACCEPTANCE_V1",
+  "status": "SOURCE_ACCEPTED_REVIEWED_CANONICAL_REPO_ONLY_NO_PERFORMANCE_SCREEN",
+  "source_head": "2a1c8587a294380752ba3f48b478ab486504dec3",
+  "reviewed_head": "2a1c8587a294380752ba3f48b478ab486504dec3",
+  "implementation_source_head": "eff567e2675458090037d566ab78f9180225eb4e",
+  "canonical_composition_parent": "2810be33fde22aac63c32ade37bc4fdf225146e2",
+  "source_repair_count": 0,
+  "source_repair_budget": 1,
+  "engineering_fixture_status": "PASS_ENGINEERING_ONLY",
+  "unaffected_adjacent_regression_status": "PASS_7_OF_7_EXACT_RECONCILED_BY_FINAL_SCRUTINY_WITH_BLOCKED_ATTEMPT2_HARNESS_RECORDS_PRESERVED",
+  "performance_tested": false,
+  "home_tf_settings_frozen": false,
+  "holdout_spent": false,
+  "runtime_activation": false,
+  "deployment_authority": false,
+  "trading_authority": false,
+  "accepted_behavior": {
+    "structural_sl_source_native": true,
+    "exit_atr_tp_uses_generic_atr_tp": true,
+    "fixed_and_structural_target_legacy_behavior_preserved": true,
+    "trail_and_run_trend_no_hard_structural_tp_preserved": true,
+    "suppress_leg_tp_precedence_preserved": true,
+    "stack_single_recovery_off_hedge_off_guards_preserved": true,
+    "entry_wave5_inputs_defaults_wrapper_unchanged": true
+  },
+  "review": {
+    "scope": "B17_STRUCTURAL_SL_ATR_EXIT_EXACT_HEAD_SCRUTINY",
+    "verdict": "SCRUTINY_PASS",
+    "confidence": "HIGH",
+    "decision": "ALLOW_INTEGRATION",
+    "findings": []
+  },
+  "compile": {
+    "Boss_17_Wave5": {"errors": 0, "warnings": 0},
+    "B17_StructSL_ATRExit_Test": {"errors": 0, "warnings": 0}
+  },
+  "engineering_fixture": {
+    "status": "PASS",
+    "performance_test": false,
+    "runtime_attachment": false,
+    "engineering_carrier_only": true
+  },
+  "adjacent_regression": {
+    "scope": "UNAFFECTED_B11_TO_B16_AND_B18_REGRESSION_ONLY",
+    "status": "PASS_7_OF_7_EXACT_RECONCILED_BY_FINAL_SCRUTINY",
+    "installation": "D:\\Meta 5b",
+    "terminal_build": 6090,
+    "b17_metric_parity_excluded": true,
+    "historical_attempt2_result": "BLOCKED_SCOPED_TPL_EXECUTION_FAILED_EXIT99",
+    "historical_attempt2_records_preserved": true,
+    "strategy_performance_evidence": false
+  },
+  "evidence": [
+    {"kind": "review", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-scrutiny-20260919\\REVIEW_RESULT.json", "sha256": "e74b6080423a7bfe455ae2c7606f5f2750e3806317bd107260b4d084b89e5f0c"},
+    {"kind": "source_push", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-scrutiny-20260919\\PUSH_VERIFIED.json", "sha256": "94c49d343777d86b7adf37145f59e037dad8008623b8803816935cae4d5e2daf"},
+    {"kind": "author_checks", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-structural-sl-decouple-20260919\\AUTHOR_CHECKS.json", "sha256": "2c8e99dfaa31fffec57fd81cfadf93ac53b07757ed1d157567c72f2ed581626a"},
+    {"kind": "freeze", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-structural-sl-decouple-20260919\\FREEZE.json", "sha256": "ffcc702270c7f4fa19f77b3d3656083f349999f423c76bc19edf7a6ce882b91e"},
+    {"kind": "reanchor", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-structural-sl-decouple-20260919\\REANCHOR_RESULT.json", "sha256": "016dd5ba344fb23c631403e7a0a65134c24ca762acd111650af70509a0f24186"},
+    {"kind": "commit_hooks", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-structural-sl-decouple-20260919\\COMMIT_HOOKS.log", "sha256": "9a01a11ed9d4990e918d4faa09ec584a5171a275703147b5f05e8e6faf515dfd"},
+    {"kind": "engineering_fixture", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-engineering-validation-20260919\\FIXTURE_RESULT.json", "sha256": "596585d11b46457fee28fe5011a4b7dc27b7eb254b46d722d7004af41973278e"},
+    {"kind": "attempt2_result_preserved", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-adjacent-regression-20260919\\attempt2\\RESULT.json", "sha256": "1d699f8ae4c6587e1070c6a4a8d53959853250ba6fc54c4afc006e93edfec808"},
+    {"kind": "attempt2_execution_preserved", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-adjacent-regression-20260919\\attempt2\\EXECUTION.json", "sha256": "8e7cc8b833ff826e491f895aefccc0b3f08b7852db8827d26cd5ad152db32636"},
+    {"kind": "harness_correction", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b17-adjacent-regression-20260919\\attempt2\\HARNESS_CORRECTION.json", "sha256": "3e584cdb80b55b02de7f4475a013fdee85f7c8c2bfda0ed9c954427259094f73"}
+  ],
+  "authority": {
+    "source_accepted": true,
+    "canonical_repo_source": true,
+    "strategy_performance_evidence": false,
+    "home_tf_settings_frozen": false,
+    "h01_inherited": false,
+    "optimization_authorized": false,
+    "holdout_spent": false,
+    "model4_authorized": false,
+    "candidate_or_grade_or_kint": false,
+    "risk_or_default_change": false,
+    "runtime_activation": false,
+    "deployment_authority": false,
+    "demo_or_live_authority": false,
+    "trading_authority": false,
+    "whole_pipeline_pass": false
+  }
+}

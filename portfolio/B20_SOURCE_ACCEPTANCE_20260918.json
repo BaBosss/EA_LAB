@@ -1,0 +1,106 @@
+{
+  "schema": "EA_LAB_B20_SOURCE_ACCEPTANCE_V1",
+  "status": "SOURCE_ACCEPTED_REVIEWED_CANONICAL_REPO_ONLY_NO_PERFORMANCE_SCREEN",
+  "family": "DF02",
+  "family_id": "B20",
+  "build_token": "LAB_ENTRY_20",
+  "wrapper": "Boss_20_GoldTimeBomb",
+  "source_head": "5c85eba937968f80e558f11d583be85a2969c41e",
+  "source_parent": "1b5ed52fd895d904b1eb3340bfd15619ed7d119a",
+  "frozen_parent_sha256": "795c446093bc0ef888bad84f162646f94d303831e8becf10955d7e016ed1f93c",
+  "alternate_lineage_sha256": "a4290bfe419d0c3660fd2e4dc3ed0a40448ae4d677eccb0206279c44a3623c64",
+  "author_reanchor": "MECHANICAL_CURRENT_CANONICAL_COMPOSITION",
+  "source_repair_count": 0,
+  "reviewed_head": "5c85eba937968f80e558f11d583be85a2969c41e",
+  "review_scope": "B20_DF02_ACCEPTANCE_GRADE_GPT_SCRUTINY",
+  "review_verdict": "SCRUTINY_PASS",
+  "review_confidence": "HIGH",
+  "review_decision": "ALLOW_INTEGRATION",
+  "review_findings": [],
+  "renewed_gates": {
+    "df02": "PASS_90_OF_90",
+    "wrapper_registration": "PASS_8_OF_8",
+    "scaffold": "PASS_84_OF_84",
+    "locked_constants": "PASS_31_OF_31",
+    "wrapper_owner": "PASS_25_OF_25_WITH_ADVERSARIAL_MUTATIONS",
+    "generated_registry_parameter_surfaces": "PASS",
+    "boss20_compile": "PASS_0_ERRORS_0_WARNINGS",
+    "test_compile": "PASS_0_ERRORS_0_WARNINGS",
+    "normal_hooks": "PASS_10_SUITES"
+  },
+  "compile_policy": "B21 exact accepted inherited 24-warning set on both arms; B20 and all other discovered targets zero/zero; generic deploy policy unchanged",
+  "adjacent_parity": {
+    "scope": "REGRESSION_ONLY_NOT_B20_PERFORMANCE",
+    "status": "PASS_8_OF_8_EXACT",
+    "source_head": "5c85eba937968f80e558f11d583be85a2969c41e",
+    "control_head": "1b5ed52fd895d904b1eb3340bfd15619ed7d119a",
+    "regression_eas": [
+      "Boss_11_GridTrend",
+      "Boss_12_Breakout",
+      "Boss_13_MeanRev",
+      "Boss_14_GridLog",
+      "Boss_15_ST03",
+      "Boss_16_KangarooGrid",
+      "Boss_17_Wave5",
+      "Boss_18_JumStoch"
+    ],
+    "installation": "D:\\Meta 5b",
+    "terminal_build": 6090,
+    "terminal_sha256": "20dfefd944ae482781ac1e83a736a976ecf0315661e54b5771e327f1ffb2b35c",
+    "compiler_sha256": "197ca3dd8d1971831366f54cb57bf3f120b420700e573135509d406e4e23709e"
+  },
+  "HomeSymbol": null,
+  "HomeChartTF": null,
+  "settings": null,
+  "next_consumer": "PROSPECTIVE_OWNER_HOME_TF_SETTINGS_FREEZE",
+  "following_consumer_if_separately_frozen": "FIXED_MAIN_BWD_SCREEN_CONTRACT",
+  "authority": {
+    "source_accepted": true,
+    "canonical_repo_source": true,
+    "strategy_performance_evidence": false,
+    "b20_performance_tested": false,
+    "home_tf_settings_frozen": false,
+    "fixed_main_bwd_screen_authorized": false,
+    "e020_created": false,
+    "optimization_authorized": false,
+    "holdout_spent": false,
+    "model4_authorized": false,
+    "candidate_or_grade_authority": false,
+    "risk_or_default_change": false,
+    "runtime_activation": false,
+    "deployment_authority": false,
+    "demo_or_live_authority": false,
+    "trading_authority": false
+  },
+  "historical_evidence_preserved": true,
+  "evidence": [
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-df02-b20-final-child-20260918\\AUTHOR_CHECKS.json",
+      "sha256": "9af85afd89d345e653a416885def8ca0ce4bf8a7327de621986fbebd991e3422"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-df02-b20-final-child-20260918\\COMMIT_HOOKS.log",
+      "sha256": "9e7a58348318b2db9c33b74e4e03728287c33fa1999e96a76b6f3881187bd291"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-df02-b20-final-child-20260918\\TPL_VALIDATE_RECEIPT.json",
+      "sha256": "30eef91029d300f5e15216f81c6d1cc5ba7adfc82bba1401ca1fc6b41862a26a"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-df02-b20-final-child-20260918\\REVIEW_RESULT.json",
+      "sha256": "c4ac333f7ea5740a192ee32744b4edfadbec7b079783c42df637f1814695b5a4"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-df02-b20-final-child-20260918\\PUSH_VERIFIED.json",
+      "sha256": "a52079d01ccac90f4183b40fabc77534220a6ee55ae93c42e3d40d575c3597f9"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-df02-b20-runtime-parity-20260918\\RESULT.json",
+      "sha256": "c26b96be1d48e74586dee5307494f1fd3fdeced887ac33cff125f1d4a2d0b6a6"
+    },
+    {
+      "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-df02-b20-runtime-parity-20260918\\EXECUTION.json",
+      "sha256": "ee9fec7a8b74f88d89a79575d51f2b25813d3021fad2cbb71dc5a53eac84479c"
+    }
+  ]
+}
