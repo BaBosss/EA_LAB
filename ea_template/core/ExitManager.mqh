@@ -211,6 +211,26 @@ bool Exit_StructSLMissing(const double sl)
    return false;
 }
 
+#ifdef LAB_ENTRY_17
+// B17-only ownership seam. Structural SL ownership remains independent of
+// whether the published Wave5 target owns the broker TP for this ExitMode.
+// Keep this pure so execution and effective-config reporting share one truth.
+bool Exit_B17StructTPOverridesMode(const ENUM_EXIT_MODE exitMode)
+{
+   switch(exitMode)
+   {
+      case EXIT_FIXED_TP:
+      case EXIT_STRUCTURAL_TARGET:
+         return true;
+      case EXIT_ATR_TP:
+      case EXIT_TRAIL:
+      case EXIT_RUN_TREND:
+      default:
+         return false;
+   }
+}
+#endif
+
 // initial TP price (0 = managed dynamically)
 double Exit_InitialTP(const int dir, const double entryPrice)
 {
@@ -224,12 +244,10 @@ double Exit_InitialTP(const int dir, const double entryPrice)
    if(_2_SuppressLegTP) return 0.0;
    double pt = Exit_Point();
 #ifdef LAB_ENTRY_17
-   // guard G2: g_wave5_tp_price is a REFERENCE zone (100% expansion), not a
-   // hard broker TP per user answer 3 (Task 4: trailing-from-start owns the
-   // exit). Still published here so a downstream reader can attach it if a
-   // future variant wants a hard TP; probe leaves ExitMode=EXIT_TRAIL so this
-   // branch is not reached in the naked-probe run (defensive parity only).
-   if(_17_UseStructLevels && g_wave5_tp_price > 0.0 && ExitMode != EXIT_TRAIL && ExitMode != EXIT_RUN_TREND)
+   // Structural SL stays active independently. The published Wave5 target
+   // overrides only legacy modes that explicitly retain structural TP ownership;
+   // generic ATR, Trail, and RunTrend keep their own exit ownership.
+   if(_17_UseStructLevels && g_wave5_tp_price > 0.0 && Exit_B17StructTPOverridesMode(ExitMode))
       return NormalizeDouble(g_wave5_tp_price, _Digits);
 #endif
    switch(ExitMode)

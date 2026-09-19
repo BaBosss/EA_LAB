@@ -232,22 +232,22 @@ void Lab_LogEffectiveConfig()
                   _33_SL_MaxATRmult, _33_SL_MaxPips);
 
 #ifdef LAB_ENTRY_17
-   // ORDER-195: _17_UseStructLevels supersedes BOTH SLMode and ExitMode's per-order
-   // SL/TP output (ExitManager.mqh Exit_InitialSL / Exit_InitialTP). SL: unconditional
-   // whenever a valid structural level is published for the order. TP: only when
-   // _2_SuppressLegTP has not already blanked it (checked first in Exit_InitialTP) AND
-   // ExitMode is not TRAIL/RUN_TREND -- those two modes own the exit themselves, and
-   // Exit_InitialTP explicitly skips the structural TP for them (the wave-1 TP anchor
-   // is published only as a reference zone in that case, never a broker TP).
+   // Structural SL ownership is independent of structural TP ownership. Use the
+   // same pure B17 routing truth as Exit_InitialTP so runtime and config logs cannot
+   // drift. _2_SuppressLegTP remains the first/higher-precedence TP decision.
    if(_17_UseStructLevels)
    {
       PrintFormat("[CFG] entry-17 structural SL ON: every order's SL comes from the wave-1/wave-3 structural level, not the SLMode switch -- IGNORING SLMode %d", SLMode);
       if(_2_SuppressLegTP)
          Print("[CFG] entry-17 structural TP: moot -- _2_SuppressLegTP=true already blanked every leg's TP to 0.0 above the structural-TP check");
+      else if(Exit_B17StructTPOverridesMode(ExitMode))
+         PrintFormat("[CFG] entry-17 structural TP override ACTIVE: every order's TP comes from the wave-1/wave-3 structural level, not the ExitMode switch -- IGNORING ExitMode %d", ExitMode);
+      else if(ExitMode == EXIT_ATR_TP)
+         Print("[CFG] entry-17 structural TP override INACTIVE: generic ATR Exit ACTIVE; the wave-1 TP anchor remains a published reference only");
       else if(ExitMode == EXIT_TRAIL || ExitMode == EXIT_RUN_TREND)
          PrintFormat("[CFG] entry-17 structural TP: not applied -- ExitMode %d owns the exit (TRAIL/RUN_TREND); the wave-1 TP anchor is published as a reference zone only, no broker TP is set from it", ExitMode);
       else
-         PrintFormat("[CFG] entry-17 structural TP ON: every order's TP comes from the wave-1/wave-3 structural level, not the ExitMode switch -- IGNORING ExitMode %d", ExitMode);
+         PrintFormat("[CFG] entry-17 structural TP override INACTIVE: ExitMode %d retains generic exit ownership; the wave-1 TP anchor remains a published reference only", ExitMode);
    }
 #endif
 
