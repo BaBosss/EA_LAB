@@ -61,9 +61,14 @@ class OrderFlowReferenceTests(unittest.TestCase):
             "total_executed_volume": ask_volume + bid_volume,
         }
         case["bars"].append(bar)
-        case["quote"]["observed_at"] = bar["close_time"]
-        case["quote"]["available_at"] = bar["close_time"] + 1
+        case["quote"]["observed_at"] = bar["close_time"] + 1
+        case["quote"]["available_at"] = bar["close_time"] + 2
         case["as_of"] = case["quote"]["available_at"]
+        case["decision_envelope"] = {
+            "evaluation_time": case["as_of"],
+            "current_closed_bar_record_id": bar["record_id"],
+            "current_closed_bar_close_time": bar["close_time"],
+        }
 
     def test_all_four_mirrored_positive_cases(self) -> None:
         for case_id, direction in (
@@ -110,6 +115,32 @@ class OrderFlowReferenceTests(unittest.TestCase):
         package["freshness_policy"]["max_m5_age_seconds"] = 0
         with self.assertRaisesRegex(ContractError, "MISSING_EXPLICIT_FRESHNESS_POLICY"):
             validate_contract(package, "FIXTURE")
+
+    def test_freshness_numeric_types_are_strict(self) -> None:
+        for invalid in (True, False, 60.0, "60", None):
+            with self.subTest(invalid=invalid):
+                package = copy.deepcopy(self.package)
+                package["freshness_policy"]["max_m5_age_seconds"] = invalid
+                with self.assertRaisesRegex(ContractError, "MISSING_EXPLICIT_FRESHNESS_POLICY"):
+                    validate_contract(package, "FIXTURE")
+
+        package = copy.deepcopy(self.package)
+        package["freshness_policy"]["max_m5_age_seconds"] = 60
+        validate_contract(package, "FIXTURE")
+
+    def test_other_integer_contract_fields_reject_boolean_values(self) -> None:
+        package = copy.deepcopy(self.package)
+        package["history"]["count"] = True
+        with self.assertRaisesRegex(ContractError, "INVALID_FIXTURE_HISTORY"):
+            validate_contract(package, "FIXTURE")
+
+        case = self.case("OF01_LONG")
+        case["context"]["sequence"] = True
+        self.assert_rejected(case, "M15_PIN_MISMATCH")
+
+        case = self.case("OF01_LONG")
+        case["profile"]["session_start"] = True
+        self.assert_rejected(case, "PROFILE_SESSION_NOT_COMPLETED")
 
     def test_unqualified_instrument_mapping_fails_closed(self) -> None:
         package = copy.deepcopy(self.package)
@@ -243,6 +274,7 @@ class OrderFlowReferenceTests(unittest.TestCase):
         case = self.case("OF01_LONG")
         case["freshness_policy"]["max_quote_age_seconds"] = 1
         case["as_of"] += 100
+        case["decision_envelope"]["evaluation_time"] = case["as_of"]
         case["freshness_policy"]["max_m5_age_seconds"] = 1000
         self.assert_rejected(case, "STALE_QUOTE")
 
@@ -251,6 +283,54 @@ class OrderFlowReferenceTests(unittest.TestCase):
         case["quote"]["observed_at"] = case["bars"][-1]["close_time"] - 1
         case["quote"]["available_at"] = case["bars"][-1]["close_time"]
         with self.assertRaisesRegex(ContractError, "QUOTE_FUTURE_OR_PRE_TRIGGER"):
+            replay_case(case)
+
+    def test_quote_requires_explicit_execution_identity_and_units(self) -> None:
+        case = self.case("OF01_LONG")
+        replay_case(case)
+        case["quote"]["instrument_id"] = "OTHER.INSTRUMENT"
+        with self.assertRaisesRegex(ContractError, "QUOTE_EXECUTION_PIN_MISMATCH"):
+            replay_case(case)
+
+    def test_cross_instrument_quote_requires_qualified_normalization_mapping(self) -> None:
+        package = copy.deepcopy(self.package)
+        package["contract"]["execution_instrument_id"] = "OTHER.INSTRUMENT"
+        with self.assertRaisesRegex(ContractError, "UNQUALIFIED_EXECUTION_MAPPING"):
+            validate_contract(package, "FIXTURE")
+
+        package["contract"]["execution_mapping_id"] = "fixture-execution-map-v1"
+        package["contract"]["execution_mapping_qualified"] = True
+        package["contract"]["execution_normalization_id"] = "fixture-normalization-v1"
+        package["contract"]["execution_normalization_qualified"] = True
+        validate_contract(package, "FIXTURE")
+
+    def test_quote_price_and_cost_units_must_match_signal_unit(self) -> None:
+        case = self.case("OF02_SHORT")
+        case["quote"]["cost_price_unit_id"] = "OTHER.UNIT"
+        with self.assertRaisesRegex(ContractError, "QUOTE_PRICE_COST_UNIT_MISMATCH"):
+            replay_case(case)
+
+    def test_quote_after_confirmation_within_current_bar_envelope_is_accepted(self) -> None:
+        case = self.case("OF01_LONG")
+        self.assertGreater(case["quote"]["observed_at"], case["bars"][-1]["close_time"])
+        self.assertEqual("SIGNAL", replay_case(case)["decision"])
+
+    def test_late_quote_with_omitted_closed_bar_is_rejected(self) -> None:
+        for delay in (300, 301):
+            with self.subTest(delay=delay):
+                case = self.case("OF01_LONG")
+                trigger_close = case["bars"][-1]["close_time"]
+                case["quote"]["observed_at"] = trigger_close + delay
+                case["quote"]["available_at"] = trigger_close + delay + 1
+                case["as_of"] = case["quote"]["available_at"]
+                case["decision_envelope"]["evaluation_time"] = case["as_of"]
+                with self.assertRaisesRegex(ContractError, "DECISION_WINDOW_MISSING_CLOSED_BAR"):
+                    replay_case(case)
+
+    def test_decision_envelope_must_bind_current_closed_bar(self) -> None:
+        case = self.case("OF02_LONG")
+        case["decision_envelope"]["current_closed_bar_record_id"] = case["bars"][-2]["record_id"]
+        with self.assertRaisesRegex(ContractError, "DECISION_ENVELOPE_MISMATCH"):
             replay_case(case)
 
     def test_of01_threshold_boundaries_are_inclusive(self) -> None:
@@ -266,6 +346,25 @@ class OrderFlowReferenceTests(unittest.TestCase):
         )
         result = replay_case(case)
         self.assertEqual("SIGNAL", result["decision"])
+
+    def test_of01_zone_overlap_does_not_require_exact_edge_center_touch(self) -> None:
+        long_case = self.case("OF01_LONG")
+        long_case["bars"][-2].update({"open": 100.5, "high": 100.6, "low": 100.1, "close": 100.35})
+        self.assertEqual("SIGNAL", replay_case(long_case)["decision"])
+
+        short_case = self.case("OF01_SHORT")
+        short_case["bars"][-2].update({"open": 111.5, "high": 111.9, "low": 111.4, "close": 111.65})
+        self.assertEqual("SIGNAL", replay_case(short_case)["decision"])
+
+    def test_of01_bar_outside_zone_still_does_not_arm(self) -> None:
+        for case_id, update in (
+            ("OF01_LONG", {"open": 100.7, "high": 100.8, "low": 100.3, "close": 100.55}),
+            ("OF01_SHORT", {"open": 111.3, "high": 111.7, "low": 111.2, "close": 111.45}),
+        ):
+            with self.subTest(case_id=case_id):
+                case = self.case(case_id)
+                case["bars"][-2].update(update)
+                self.assertEqual("NONE", replay_case(case)["decision"])
 
     def test_of01_context_is_strictly_inside_value(self) -> None:
         case = self.case("OF01_LONG")
@@ -354,7 +453,7 @@ class OrderFlowReferenceTests(unittest.TestCase):
         case["profile"]["profile_revision"] = "profile-r2"
         self.assertTrue(pinned_state_changed(pins, case))
 
-    def test_context_record_change_invalidates_armed_pins(self) -> None:
+    def test_context_record_progression_does_not_invalidate_armed_pins(self) -> None:
         case = self.case("OF02_SHORT")
         pins = (
             case["contract"]["dataset_id"],
@@ -364,7 +463,55 @@ class OrderFlowReferenceTests(unittest.TestCase):
             case["context"]["record_id"],
         )
         case["context"]["record_id"] = "m15-new"
-        self.assertTrue(pinned_state_changed(pins, case))
+        case["context"]["sequence"] += 1
+        self.assertFalse(pinned_state_changed(pins, case))
+
+    def test_late_context_and_profile_do_not_retroactively_create_setup(self) -> None:
+        for case_id, setup_offset in (("OF01_LONG", -2), ("OF02_LONG", -4)):
+            for field in ("context", "profile"):
+                with self.subTest(case_id=case_id, field=field):
+                    case = self.case(case_id)
+                    case[field]["available_at"] = case["bars"][setup_offset]["available_at"] + 1
+                    self.assertEqual("NONE", replay_case(case)["decision"])
+
+    def test_chronological_context_progression_is_causal_and_does_not_reset(self) -> None:
+        case = self.case("OF01_LONG")
+        setup_context = copy.deepcopy(case.pop("context"))
+        setup_context["record_id"] = "m15-setup"
+        setup_context["available_at"] = case["bars"][-2]["available_at"] - 1
+        progressed = copy.deepcopy(setup_context)
+        progressed["record_id"] = "m15-next-completed"
+        progressed["sequence"] += 1
+        progressed["open_time"] += 900
+        progressed["close_time"] += 900
+        progressed["available_at"] = case["bars"][-1]["available_at"] - 1
+        case["contexts"] = [setup_context, progressed]
+        result = replay_case(case)
+        self.assertEqual("SIGNAL", result["decision"])
+        self.assertEqual("m15-setup", result["setup_context_record_id"])
+
+    def test_of02_chronological_context_progression_does_not_reset(self) -> None:
+        case = self.case("OF02_LONG")
+        setup_context = copy.deepcopy(case.pop("context"))
+        setup_context["record_id"] = "m15-of02-setup"
+        setup_context["available_at"] = case["bars"][-4]["available_at"] - 1
+        progressed = copy.deepcopy(setup_context)
+        progressed["record_id"] = "m15-of02-next-completed"
+        progressed["sequence"] += 1
+        progressed["open_time"] += 900
+        progressed["close_time"] += 900
+        progressed["available_at"] = case["bars"][-2]["available_at"] - 1
+        case["contexts"] = [setup_context, progressed]
+        result = replay_case(case)
+        self.assertEqual("SIGNAL", result["decision"])
+        self.assertEqual("m15-of02-setup", result["setup_context_record_id"])
+
+    def test_unknown_historical_context_is_not_copied_backward(self) -> None:
+        case = self.case("OF02_LONG")
+        latest = copy.deepcopy(case.pop("context"))
+        latest["available_at"] = case["bars"][-1]["available_at"] - 1
+        case["contexts"] = [latest]
+        self.assertEqual("NONE", replay_case(case)["decision"])
 
 
 if __name__ == "__main__":

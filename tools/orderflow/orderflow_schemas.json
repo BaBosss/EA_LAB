@@ -14,13 +14,18 @@
       "qualified_market_data": true,
       "requires": [
         "explicit chronological bars",
+        "chronological M15 contexts with decision-time availability",
+        "explicit current-closed-bar decision envelope",
         "source_qualified=true",
         "TRUE_ORDERFLOW",
         "EXECUTED_ASK_BID",
+        "explicit quote execution source/instrument and common signal-price/cost units",
         "all upstream profile/session/timezone/algorithm/instrument pins"
       ]
     }
   },
   "identity_rule": "PRICE_ACTION_PROXY can never satisfy TRUE_ORDERFLOW",
-  "fallback_rule": "no automatic proxy fallback"
+  "fallback_rule": "no automatic proxy fallback",
+  "quote_rule": "quote source is independent of order-flow source; cross-instrument execution requires explicit qualified mapping and normalization",
+  "chronology_rule": "unknown historical M15 context is unavailable and later records are never copied backward"
 }

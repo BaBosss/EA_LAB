@@ -73,13 +73,14 @@ bool OF02_BuildGeometry(const OFBar &bars[],
                         const OFQuote &quote,
                         const OFDataContract &contract,
                         const OFFreshnessPolicy &policy,
-                        const datetime as_of,
+                        const OFDecisionEnvelope &envelope,
                         OFState &state,
                         OFDecision &out)
 {
    string reason = "";
    if(!OF_ValidateQuote(quote, contract, policy,
-                        bars[trigger_index].close_time, as_of, reason))
+                        bars[trigger_index].record_id,
+                        bars[trigger_index].close_time, envelope, reason))
    {
       OF_SetDecision(out, OF_DECISION_INVALID, reason,
                      "OF02 confirmation had no valid caller-supplied prospective quote/cost");
@@ -127,6 +128,7 @@ bool OF02_BuildGeometry(const OFBar &bars[],
    out.geometry.confirmation_window_completed_m5_bars = OF02_CONFIRM_BARS;
    out.geometry.consumer_time_exit_m5_bars_after_fill = 12;
    out.geometry.quote_record_id            = quote.record_id;
+   out.geometry.setup_context_record_id    = state.context_record_id;
    out.geometry.prospective_quote_not_fill = true;
    return true;
 }
@@ -138,7 +140,7 @@ void OF02_ProcessBar(const OFDataContract &contract,
                      const OFBar &bars[],
                      const int index,
                      const OFQuote &quote,
-                     const datetime as_of,
+                     const OFDecisionEnvelope &envelope,
                      OFState &state,
                      OFDecision &out)
 {
@@ -299,24 +301,25 @@ void OF02_ProcessBar(const OFDataContract &contract,
    if(!directional_delta || !beyond_retest)
       return;
 
-   OF02_BuildGeometry(bars, index, quote, contract, policy, as_of, state, out);
+   OF02_BuildGeometry(bars, index, quote, contract, policy, envelope, state, out);
    OF_ResetState(state);
 }
 
-bool OF02_Replay(const OFDataContract &contract,
-                 const OFFreshnessPolicy &policy,
-                 const OFProfile &profile,
-                 const OFContextBar &context,
-                 const OFBar &bars[],
-                 const OFQuote &quote,
-                 const datetime as_of,
-                 OFDecision &out)
+bool OF02_ReplayChronological(const OFDataContract &contract,
+                              const OFFreshnessPolicy &policy,
+                              const OFProfile &profile,
+                              const OFContextBar &contexts[],
+                              const OFBar &bars[],
+                              const OFQuote &quote,
+                              const OFDecisionEnvelope &envelope,
+                              OFDecision &out)
 {
    string reason = "";
    if(!OF_ValidateContract(contract, policy, reason) ||
-      !OF_ValidateProfile(profile, contract, policy, as_of, reason) ||
-      !OF_ValidateContext(context, contract, profile, policy, as_of, reason) ||
-      !OF_ValidateBars(bars, contract, policy, as_of, reason))
+      !OF_ValidateProfile(profile, contract, policy, envelope.evaluation_time, reason) ||
+      !OF_ValidateContexts(contexts, contract, profile, envelope.evaluation_time, reason) ||
+      !OF_ValidateBars(bars, contract, policy, envelope.evaluation_time, reason) ||
+      !OF_ValidateDecisionEnvelope(bars, envelope, reason))
    {
       OF_SetDecision(out, OF_DECISION_INVALID, reason,
                      "OF02 input contract rejected before replay");
@@ -328,8 +331,24 @@ bool OF02_Replay(const OFDataContract &contract,
    OFDecision step;
    for(int i = 0; i < ArraySize(bars); ++i)
    {
+      OFContextBar context;
+      bool causal_profile = OF_ProfileAvailableAtDecision(profile, policy, bars[i].available_at);
+      bool causal_context = OF_SelectContextForDecision(contexts, policy,
+                                                        bars[i].available_at, context);
+      if(!causal_profile || !causal_context)
+      {
+         if(state.phase != OF_PHASE_IDLE)
+         {
+            OF_ResetState(state);
+            OF_SetDecision(out, OF_DECISION_CANCELLED,
+                           "OF02_CONTEXT_UNAVAILABLE_AT_DECISION",
+                           "profile/M15 context unavailable at historical decision time");
+            return false;
+         }
+         continue;
+      }
       OF02_ProcessBar(contract, policy, profile, context, bars, i,
-                      quote, as_of, state, step);
+                      quote, envelope, state, step);
       if(step.decision == OF_DECISION_SIGNAL ||
          step.decision == OF_DECISION_INVALID ||
          step.decision == OF_DECISION_REJECTED)
@@ -340,6 +359,24 @@ bool OF02_Replay(const OFDataContract &contract,
       out = step;
    }
    return false;
+}
+
+// Compatibility wrapper for a single context record.  It is causally visible
+// only from its own available_at forward.
+bool OF02_Replay(const OFDataContract &contract,
+                 const OFFreshnessPolicy &policy,
+                 const OFProfile &profile,
+                 const OFContextBar &context,
+                 const OFBar &bars[],
+                 const OFQuote &quote,
+                 const OFDecisionEnvelope &envelope,
+                 OFDecision &out)
+{
+   OFContextBar contexts[];
+   ArrayResize(contexts, 1);
+   contexts[0] = context;
+   return OF02_ReplayChronological(contract, policy, profile, contexts,
+                                   bars, quote, envelope, out);
 }
 
 #endif // EA_LAB_OF02_CONTINUATION_MQH

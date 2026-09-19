@@ -26,7 +26,7 @@ It does **not** establish the exact numeric rules implemented here. The followin
 | OF01 rejection delta | long `<= -0.20`; short `>= +0.20` |
 | OF01 wick | relevant rejection wick / full bar range `>= 0.40` |
 | OF01 trigger window | next 3 completed M5 bars; close strictly beyond the test high/low |
-| OF01 risk gate | caller-observed quote and caller-supplied all-in price cost; net RR `>= 1.50`; frozen POC target |
+| OF01 risk gate | caller-observed post-confirmation quote and caller-supplied all-in price cost in the pinned signal-price unit; net RR `>= 1.50`; frozen POC target |
 | OF02 breakout | two consecutive completed M5 closes beyond the frozen outer zone; second bar meets volume and directional `|delta| >= 0.20` |
 | OF02 retest / confirm | retest within 6 completed M5 bars; confirmation within next 3, close beyond retest extreme and delta strictly directional |
 | OF02 target | prospective 2R geometry from the supplied quote and structural stop |
@@ -36,43 +36,49 @@ All comparisons above are exact/inclusive where written `>=`/`<=`, and strict wh
 
 ## 2. Typed upstream contract
 
-The component never selects or derives these policies. Every call is pinned by `OFDataContract`, `OFFreshnessPolicy`, `OFProfile`, one completed M15 context bar, chronological completed M5 bars, and a prospective `OFQuote`.
+The component never selects or derives these policies. Every call is pinned by `OFDataContract`, `OFFreshnessPolicy`, `OFProfile`, chronological completed M15 context records (or the causally gated single-record compatibility wrapper), chronological completed M5 bars, a prospective `OFQuote`, and an explicit `OFDecisionEnvelope` binding evaluation time to the current completed M5 record.
 
 Required upstream pins:
 
-- dataset, source, source revision, signal instrument, profile instrument;
+- dataset, order-flow source/revision, signal instrument, and profile instrument;
+- independent execution/quote source and revision, execution instrument, signal-price unit, execution-price unit, and cost-price unit;
 - session-definition ID and timezone/DST ruleset ID;
 - profile algorithm ID and value-area algorithm ID;
 - volume-provenance ID;
 - profile ID/revision and prior-session clocks;
 - caller-chosen positive freshness ceilings for M5, M15, profile, and quote;
-- same instrument, or a non-empty explicitly qualified mapping ID.
+- same profile/signal instrument, or a non-empty explicitly qualified profile mapping ID;
+- same signal/execution instrument, or explicit qualified execution mapping **and** normalization contract IDs; V1 still requires supplied quote and cost numbers to share the signal-price unit.
 
-No broker, Home, symbol suffix, signal/execution mapping, session boundary, timezone, DST rule, profile binning/tie/value-area algorithm, roll/basis rule, incomplete-bar policy, fill model, or cost model is inferred.
+No broker, Home, symbol suffix, signal/execution mapping, session boundary, timezone, DST rule, profile binning/tie/value-area algorithm, roll/basis rule, rounding, transform, incomplete-bar policy, fill model, or cost model is inferred. The quote source is never inferred from the order-flow source.
+
+At each historical M5 decision, the replay selects only a completed M15 context whose `available_at` is no later than that M5 record's `available_at`, and applies the caller's M15/profile freshness ceilings at that decision. Older M5 records may still contribute ATR/median warmup when they were themselves available. A later M15 record is ordinary progression, not a revision reset; the armed setup retains its actual context record ID as provenance. A source revision or profile revision still invalidates the armed state. A single supplied context is visible only from its own `available_at`; unknown earlier context remains unavailable and is never copied backward.
+
+The decision envelope must name the final supplied completed M5 record and its close time. Its evaluation time must be after that record became available and before the next close boundary derived from the record's declared `period_seconds`. The quote must be observed strictly after the confirmation close, become available by evaluation, and bind the explicit execution instrument/source and price/cost units. Therefore a quote first observed at confirmation `+300` or `+301` seconds without the intervening completed M5 record is rejected; this is history-completeness binding, not a new latency parameter or freshness default.
 
 `TRUE_ORDERFLOW` requires genuine executed ask-side and bid-side volume with qualified provenance. Tick volume and up/down-tick classification have separate proxy identities and are rejected. There is no automatic proxy fallback. The test schema is `orderflow_fixture/v1` / `FIXTURE`; qualified external data must use `orderflow_qualified/v1` / `QUALIFIED`, explicit bars, and `source_qualified=true`. Fixture acceptance is never data qualification.
 
-The validator rejects missing pins, stale/future clocks, incomplete bars, non-monotonic or duplicate records, source/profile contradictions, invalid OHLC, zero/negative/NaN volume, ask+bid/total contradictions, invalid profile geometry, unqualified mappings, stale/pre-trigger quotes, proxy-as-real claims, and missing explicit freshness policy.
+The validator rejects missing pins, booleans/floats/strings in integer freshness fields, stale/future clocks, incomplete bars, non-monotonic or duplicate records, source/profile contradictions, invalid OHLC, zero/negative/NaN volume, ask+bid/total contradictions, invalid profile geometry, unqualified mappings/normalizations, quote execution-identity or unit contradictions, stale/pre-trigger/late-window quotes, proxy-as-real claims, and missing explicit freshness policy.
 
 ## 3. OF01 — value-edge rejection / reversal
 
 Long and short are mirrored:
 
-1. The latest completed M15 context close is strictly inside `[VAL, VAH]` (strictly greater than VAL and strictly less than VAH).
-2. A completed M5 test overlaps the `edge +/- frozen buffer` zone, actually reaches/crosses the edge, and closes back inside value.
+1. The completed M15 context available at that decision closes strictly inside `[VAL, VAH]` (strictly greater than VAL and strictly less than VAH).
+2. A completed M5 test overlaps the `edge +/- frozen buffer` zone and closes back inside value. Exact contact with the VAL/VAH center line is not required.
 3. The test meets relative executed volume, opposing signed delta, and relevant rejection-wick rules.
 4. The component arms for the next three completed M5 bars. A long requires a close above the test high; a short requires a close below the test low.
-5. Two consecutive completed closes beyond the value-exterior side of the frozen zone cancel the setup. Source/profile/context revision changes also cancel it.
+5. Two consecutive completed closes beyond the value-exterior side of the frozen zone cancel the setup. Source or profile revision changes also cancel it; an ordinary newly completed M15 record does not.
 6. Stop geometry is beyond the most adverse extreme from test through confirmation plus the frozen buffer. Target is the frozen prior-session POC.
 7. Entry is the caller's observed ask for long or bid for short. Caller-supplied round-trip price cost is added to risk and subtracted from reward. A signal is returned only when net RR is at least 1.5.
 
-The quote is labeled prospective and never represented as a fill.
+The quote is labeled prospective and never represented as a fill. It is observed strictly after confirmation and before the next derived M5 close boundary, under the explicit decision envelope.
 
 ## 4. OF02 — value-edge acceptance / continuation
 
 Long and short are mirrored:
 
-1. The latest completed M15 context close is strictly beyond VAH (long) or VAL (short).
+1. The completed M15 context available at that decision closes strictly beyond VAH (long) or VAL (short).
 2. The first completed M5 close beyond the exterior edge of the `edge +/- frozen buffer` zone freezes ATR and buffer.
 3. The immediately following M5 bar must also close beyond that same exterior edge. The second bar must meet relative executed volume and directional signed delta.
 4. Within the next six completed bars, the retest must overlap the frozen zone and close on the breakout side of the profile edge.

@@ -51,6 +51,12 @@ bool OF_ValidateContract(const OFDataContract &contract,
       !OF_HasText(contract.source_revision) ||
       !OF_HasText(contract.signal_instrument_id) ||
       !OF_HasText(contract.profile_instrument_id) ||
+      !OF_HasText(contract.execution_source_id) ||
+      !OF_HasText(contract.execution_source_revision) ||
+      !OF_HasText(contract.execution_instrument_id) ||
+      !OF_HasText(contract.signal_price_unit_id) ||
+      !OF_HasText(contract.execution_price_unit_id) ||
+      !OF_HasText(contract.cost_price_unit_id) ||
       !OF_HasText(contract.session_definition_id) ||
       !OF_HasText(contract.timezone_ruleset_id) ||
       !OF_HasText(contract.profile_algorithm_id) ||
@@ -100,6 +106,33 @@ bool OF_ValidateContract(const OFDataContract &contract,
            !OF_HasText(contract.instrument_mapping_id))
    {
       reason = "CONTRADICTORY_MAPPING_PIN";
+      return false;
+   }
+
+   if(contract.signal_instrument_id != contract.execution_instrument_id)
+   {
+      if(!contract.execution_mapping_qualified ||
+         !OF_HasText(contract.execution_mapping_id) ||
+         !contract.execution_normalization_qualified ||
+         !OF_HasText(contract.execution_normalization_id))
+      {
+         reason = "UNQUALIFIED_EXECUTION_MAPPING";
+         return false;
+      }
+   }
+   else if((contract.execution_mapping_qualified ||
+            contract.execution_normalization_qualified) &&
+           (!OF_HasText(contract.execution_mapping_id) ||
+            !OF_HasText(contract.execution_normalization_id)))
+   {
+      reason = "CONTRADICTORY_EXECUTION_MAPPING_PIN";
+      return false;
+   }
+
+   if(contract.signal_price_unit_id != contract.execution_price_unit_id ||
+      contract.signal_price_unit_id != contract.cost_price_unit_id)
+   {
+      reason = "INCONSISTENT_PRICE_COST_UNITS";
       return false;
    }
 
@@ -198,6 +231,100 @@ bool OF_ValidateContext(const OFContextBar &bar,
    return true;
 }
 
+bool OF_ValidateContextRecord(const OFContextBar &bar,
+                              const OFDataContract &contract,
+                              const OFProfile &profile,
+                              const datetime as_of,
+                              string &reason)
+{
+   if(!OF_HasText(bar.record_id) || bar.source_revision != contract.source_revision ||
+      bar.sequence == 0)
+   {
+      reason = "M15_PIN_MISMATCH";
+      return false;
+   }
+   if(bar.period_seconds != 900 || !bar.completed ||
+      bar.open_time <= 0 || bar.close_time - bar.open_time != bar.period_seconds ||
+      bar.available_at < bar.close_time || bar.available_at > as_of)
+   {
+      reason = "M15_INCOMPLETE_OR_FUTURE";
+      return false;
+   }
+   if(profile.session_end >= bar.close_time)
+   {
+      reason = "PROFILE_NOT_PRIOR_TO_CONTEXT";
+      return false;
+   }
+   if(!OF_ValidOHLC(bar.open, bar.high, bar.low, bar.close))
+   {
+      reason = "INVALID_M15_OHLC";
+      return false;
+   }
+   return true;
+}
+
+bool OF_ValidateContexts(const OFContextBar &contexts[],
+                         const OFDataContract &contract,
+                         const OFProfile &profile,
+                         const datetime as_of,
+                         string &reason)
+{
+   int count = ArraySize(contexts);
+   if(count <= 0)
+   {
+      reason = "MISSING_M15_CONTEXT_HISTORY";
+      return false;
+   }
+   for(int i = 0; i < count; ++i)
+   {
+      if(!OF_ValidateContextRecord(contexts[i], contract, profile, as_of, reason))
+         return false;
+      for(int j = 0; j < i; ++j)
+      {
+         if(contexts[i].record_id == contexts[j].record_id)
+         {
+            reason = "M15_DUPLICATE_RECORD_ID";
+            return false;
+         }
+      }
+      if(i > 0 &&
+         (contexts[i].sequence <= contexts[i-1].sequence ||
+          contexts[i].close_time <= contexts[i-1].close_time ||
+          contexts[i].available_at <= contexts[i-1].available_at))
+      {
+         reason = "M15_NON_MONOTONIC_OR_DUPLICATE";
+         return false;
+      }
+   }
+   return true;
+}
+
+bool OF_SelectContextForDecision(const OFContextBar &contexts[],
+                                 const OFFreshnessPolicy &policy,
+                                 const datetime decision_time,
+                                 OFContextBar &selected)
+{
+   int selected_index = -1;
+   for(int i = 0; i < ArraySize(contexts); ++i)
+   {
+      if(contexts[i].available_at <= decision_time &&
+         (long)(decision_time - contexts[i].available_at) <= policy.max_m15_age_seconds)
+         selected_index = i;
+   }
+   if(selected_index < 0)
+      return false;
+   selected = contexts[selected_index];
+   return true;
+}
+
+bool OF_ProfileAvailableAtDecision(const OFProfile &profile,
+                                   const OFFreshnessPolicy &policy,
+                                   const datetime decision_time)
+{
+   return profile.available_at <= decision_time &&
+          (long)(decision_time - profile.available_at) <= policy.max_profile_age_seconds;
+}
+
 bool OF_ValidateBars(const OFBar &bars[],
                      const OFDataContract &contract,
                      const OFFreshnessPolicy &policy,
@@ -277,26 +404,73 @@ bool OF_ValidateBars(const OFBar &bars[],
    return true;
 }
 
+bool OF_ValidateDecisionEnvelope(const OFBar &bars[],
+                                 const OFDecisionEnvelope &envelope,
+                                 string &reason)
+{
+   int count = ArraySize(bars);
+   if(count <= 0 || envelope.evaluation_time <= 0 ||
+      !OF_HasText(envelope.current_closed_bar_record_id) ||
+      envelope.current_closed_bar_close_time <= 0)
+   {
+      reason = "INVALID_DECISION_ENVELOPE";
+      return false;
+   }
+   OFBar last = bars[count-1];
+   if(envelope.current_closed_bar_record_id != last.record_id ||
+      envelope.current_closed_bar_close_time != last.close_time ||
+      envelope.evaluation_time < last.available_at)
+   {
+      reason = "DECISION_ENVELOPE_MISMATCH";
+      return false;
+   }
+   datetime next_close_boundary = last.close_time + last.period_seconds;
+   if(envelope.evaluation_time >= next_close_boundary)
+   {
+      reason = "DECISION_WINDOW_MISSING_CLOSED_BAR";
+      return false;
+   }
+   return true;
+}
+
 bool OF_ValidateQuote(const OFQuote &quote,
                       const OFDataContract &contract,
                       const OFFreshnessPolicy &policy,
+                      const string trigger_record_id,
                       const datetime trigger_close_time,
-                      const datetime as_of,
+                      const OFDecisionEnvelope &envelope,
                       string &reason)
 {
-   if(!OF_HasText(quote.record_id) || quote.source_id != contract.source_id ||
-      quote.source_revision != contract.source_revision)
+   if(!OF_HasText(quote.record_id) ||
+      quote.execution_source_id != contract.execution_source_id ||
+      quote.execution_source_revision != contract.execution_source_revision ||
+      quote.instrument_id != contract.execution_instrument_id)
    {
-      reason = "QUOTE_PIN_MISMATCH";
+      reason = "QUOTE_EXECUTION_PIN_MISMATCH";
       return false;
    }
-   if(quote.observed_at < trigger_close_time ||
-      quote.available_at < quote.observed_at || quote.available_at > as_of)
+   if(quote.price_unit_id != contract.execution_price_unit_id ||
+      quote.cost_price_unit_id != contract.cost_price_unit_id ||
+      quote.price_unit_id != contract.signal_price_unit_id ||
+      quote.cost_price_unit_id != contract.signal_price_unit_id)
+   {
+      reason = "QUOTE_PRICE_COST_UNIT_MISMATCH";
+      return false;
+   }
+   if(trigger_record_id != envelope.current_closed_bar_record_id)
+   {
+      reason = "QUOTE_NOT_BOUND_TO_CURRENT_CONFIRMATION";
+      return false;
+   }
+   if(quote.observed_at <= trigger_close_time ||
+      quote.observed_at > envelope.evaluation_time ||
+      quote.available_at < quote.observed_at ||
+      quote.available_at > envelope.evaluation_time)
    {
       reason = "QUOTE_FUTURE_OR_PRE_TRIGGER";
       return false;
    }
-   if((long)(as_of - quote.available_at) > policy.max_quote_age_seconds)
+   if((long)(envelope.evaluation_time - quote.available_at) > policy.max_quote_age_seconds)
    {
       reason = "STALE_QUOTE";
       return false;
@@ -382,8 +556,7 @@ bool OF_StatePinsMatch(const OFState &state,
    return state.dataset_id == contract.dataset_id &&
           state.source_revision == contract.source_revision &&
           state.profile_id == profile.profile_id &&
-          state.profile_revision == profile.profile_revision &&
-          state.context_record_id == context.record_id;
+          state.profile_revision == profile.profile_revision;
 }
 
 void OF_PinState(OFState &state,

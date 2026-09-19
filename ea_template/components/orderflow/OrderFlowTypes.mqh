@@ -64,6 +64,16 @@ struct OFDataContract
    string                    profile_instrument_id;
    string                    instrument_mapping_id;
    bool                      instrument_mapping_qualified;
+   string                    execution_source_id;
+   string                    execution_source_revision;
+   string                    execution_instrument_id;
+   string                    signal_price_unit_id;
+   string                    execution_price_unit_id;
+   string                    cost_price_unit_id;
+   string                    execution_mapping_id;
+   bool                      execution_mapping_qualified;
+   string                    execution_normalization_id;
+   bool                      execution_normalization_qualified;
    string                    session_definition_id;
    string                    timezone_ruleset_id;
    string                    profile_algorithm_id;
@@ -142,13 +152,25 @@ struct OFBar
 struct OFQuote
 {
    string   record_id;
-   string   source_id;
-   string   source_revision;
+   string   execution_source_id;
+   string   execution_source_revision;
+   string   instrument_id;
+   string   price_unit_id;
+   string   cost_price_unit_id;
    datetime observed_at;
    datetime available_at;
    double   bid;
    double   ask;
    double   all_in_cost_price;
+};
+
+// The envelope binds quote evaluation to the latest supplied completed M5
+// record.  The next boundary is derived from that record's period_seconds.
+struct OFDecisionEnvelope
+{
+   datetime evaluation_time;
+   string   current_closed_bar_record_id;
+   datetime current_closed_bar_close_time;
 };
 
 struct OFGeometry
@@ -167,6 +189,7 @@ struct OFGeometry
    int      confirmation_window_completed_m5_bars;
    int      consumer_time_exit_m5_bars_after_fill;
    string   quote_record_id;
+   string   setup_context_record_id;
    bool     prospective_quote_not_fill;
 };
 
@@ -216,6 +239,7 @@ void OF_ClearGeometry(OFGeometry &g)
    g.confirmation_window_completed_m5_bars = 0;
    g.consumer_time_exit_m5_bars_after_fill = 0;
    g.quote_record_id           = "";
+   g.setup_context_record_id   = "";
    g.prospective_quote_not_fill = true;
 }
 

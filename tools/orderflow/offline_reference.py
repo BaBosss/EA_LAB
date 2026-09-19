@@ -35,6 +35,10 @@ def _finite(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
+def _strict_int(value: Any, *, positive: bool = False) -> bool:
+    return type(value) is int and (not positive or value > 0)
+
+
 def _required_text(record: dict[str, Any], names: tuple[str, ...]) -> None:
     if any(not isinstance(record.get(name), str) or not record[name] for name in names):
         raise ContractError("MISSING_REQUIRED_PIN")
@@ -56,6 +60,24 @@ def validate_contract(package: dict[str, Any], expected_class: str | None = None
         raise ContractError("RECORD_CLASS_MISMATCH")
     if schema_class == "QUALIFIED" and "history" in package:
         raise ContractError("QUALIFIED_DATA_CANNOT_USE_FIXTURE_GENERATOR")
+    if schema_class == "FIXTURE" and "history" in package:
+        history = package["history"]
+        if not isinstance(history, dict) or not _strict_int(history.get("count"), positive=True) or not _strict_int(
+            history.get("start_time"), positive=True
+        ):
+            raise ContractError("INVALID_FIXTURE_HISTORY")
+        if not all(
+            _finite(history.get(name))
+            for name in (
+                "open",
+                "high",
+                "low",
+                "close",
+                "executed_ask_volume",
+                "executed_bid_volume",
+            )
+        ):
+            raise ContractError("INVALID_FIXTURE_HISTORY")
 
     _required_text(
         contract,
@@ -65,6 +87,12 @@ def validate_contract(package: dict[str, Any], expected_class: str | None = None
             "source_revision",
             "signal_instrument_id",
             "profile_instrument_id",
+            "execution_source_id",
+            "execution_source_revision",
+            "execution_instrument_id",
+            "signal_price_unit_id",
+            "execution_price_unit_id",
+            "cost_price_unit_id",
             "session_definition_id",
             "timezone_ruleset_id",
             "profile_algorithm_id",
@@ -80,7 +108,7 @@ def validate_contract(package: dict[str, Any], expected_class: str | None = None
         "max_profile_age_seconds",
         "max_quote_age_seconds",
     ):
-        if not isinstance(policy.get(name), int) or policy[name] <= 0:
+        if not _strict_int(policy.get(name), positive=True):
             raise ContractError("MISSING_EXPLICIT_FRESHNESS_POLICY")
     if schema_class == "QUALIFIED" and contract.get("source_qualified") is not True:
         raise ContractError("UNQUALIFIED_SOURCE")
@@ -102,6 +130,35 @@ def validate_contract(package: dict[str, Any], expected_class: str | None = None
         "instrument_mapping_id"
     ):
         raise ContractError("CONTRADICTORY_MAPPING_PIN")
+
+    same_execution_instrument = (
+        contract["signal_instrument_id"] == contract["execution_instrument_id"]
+    )
+    if not same_execution_instrument and not (
+        contract.get("execution_mapping_qualified") is True
+        and isinstance(contract.get("execution_mapping_id"), str)
+        and contract["execution_mapping_id"]
+        and contract.get("execution_normalization_qualified") is True
+        and isinstance(contract.get("execution_normalization_id"), str)
+        and contract["execution_normalization_id"]
+    ):
+        raise ContractError("UNQUALIFIED_EXECUTION_MAPPING")
+    if same_execution_instrument and (
+        contract.get("execution_mapping_qualified") is True
+        or contract.get("execution_normalization_qualified") is True
+    ) and not (
+        isinstance(contract.get("execution_mapping_id"), str)
+        and contract["execution_mapping_id"]
+        and isinstance(contract.get("execution_normalization_id"), str)
+        and contract["execution_normalization_id"]
+    ):
+        raise ContractError("CONTRADICTORY_EXECUTION_MAPPING_PIN")
+    if not (
+        contract["signal_price_unit_id"]
+        == contract["execution_price_unit_id"]
+        == contract["cost_price_unit_id"]
+    ):
+        raise ContractError("INCONSISTENT_PRICE_COST_UNITS")
 
 
 def _validate_ohlc(record: dict[str, Any], prefix: str) -> None:
@@ -179,15 +236,105 @@ def expand_case(package: dict[str, Any], case: dict[str, Any]) -> dict[str, Any]
     quote = copy.deepcopy(case["quote"])
     quote.update(
         {
-            "source_id": contract["source_id"],
-            "source_revision": contract["source_revision"],
-            "observed_at": bars[-1]["close_time"],
-            "available_at": bars[-1]["close_time"] + 1,
+            "execution_source_id": contract["execution_source_id"],
+            "execution_source_revision": contract["execution_source_revision"],
+            "instrument_id": contract["execution_instrument_id"],
+            "price_unit_id": contract["execution_price_unit_id"],
+            "cost_price_unit_id": contract["cost_price_unit_id"],
+            "observed_at": bars[-1]["close_time"] + 1,
+            "available_at": bars[-1]["close_time"] + 2,
         }
     )
     expanded["quote"] = quote
     expanded["as_of"] = quote["available_at"]
+    expanded["decision_envelope"] = {
+        "evaluation_time": quote["available_at"],
+        "current_closed_bar_record_id": bars[-1]["record_id"],
+        "current_closed_bar_close_time": bars[-1]["close_time"],
+    }
     return expanded
+
+
+def _context_records(case: dict[str, Any]) -> list[dict[str, Any]]:
+    if "contexts" in case:
+        contexts = case["contexts"]
+        if not isinstance(contexts, list) or not contexts:
+            raise ContractError("MISSING_M15_CONTEXT_HISTORY")
+        return contexts
+    context = case.get("context")
+    if not isinstance(context, dict):
+        raise ContractError("MISSING_M15_CONTEXT_HISTORY")
+    return [context]
+
+
+def _validate_context_record(
+    context: dict[str, Any], contract: dict[str, Any], profile: dict[str, Any], as_of: int
+) -> None:
+    if (
+        not context.get("record_id")
+        or context.get("source_revision") != contract["source_revision"]
+        or not _strict_int(context.get("sequence"), positive=True)
+    ):
+        raise ContractError("M15_PIN_MISMATCH")
+    if (
+        context.get("period_seconds") != 900
+        or context.get("completed") is not True
+        or not all(
+            _strict_int(context.get(name), positive=True)
+            for name in ("open_time", "close_time", "available_at")
+        )
+        or context["close_time"] - context["open_time"] != context["period_seconds"]
+        or context["available_at"] < context["close_time"]
+        or context["available_at"] > as_of
+    ):
+        raise ContractError("M15_INCOMPLETE_OR_FUTURE")
+    if profile["session_end"] >= context["close_time"]:
+        raise ContractError("PROFILE_NOT_PRIOR_TO_CONTEXT")
+    _validate_ohlc(context, "M15")
+
+
+def _select_context(
+    contexts: list[dict[str, Any]], decision_time: int, max_age_seconds: int
+) -> dict[str, Any] | None:
+    eligible = [
+        context
+        for context in contexts
+        if context["available_at"] <= decision_time
+        and decision_time - context["available_at"] <= max_age_seconds
+    ]
+    if not eligible:
+        return None
+    return max(eligible, key=lambda item: (item["available_at"], item["sequence"]))
+
+
+def _profile_available_at(
+    profile: dict[str, Any], decision_time: int, max_age_seconds: int
+) -> bool:
+    return (
+        profile["available_at"] <= decision_time
+        and decision_time - profile["available_at"] <= max_age_seconds
+    )
+
+
+def _validate_decision_envelope(case: dict[str, Any]) -> None:
+    bars = case["bars"]
+    envelope = case.get("decision_envelope")
+    if not isinstance(envelope, dict) or not all(
+        _strict_int(envelope.get(name), positive=True)
+        for name in ("evaluation_time", "current_closed_bar_close_time")
+    ) or not isinstance(envelope.get("current_closed_bar_record_id"), str):
+        raise ContractError("INVALID_DECISION_ENVELOPE")
+    last = bars[-1]
+    if (
+        envelope["evaluation_time"] != case.get("as_of")
+        or envelope["current_closed_bar_record_id"] != last["record_id"]
+        or envelope["current_closed_bar_close_time"] != last["close_time"]
+        or envelope["evaluation_time"] < last["available_at"]
+    ):
+        raise ContractError("DECISION_ENVELOPE_MISMATCH")
+    next_close_boundary = last["close_time"] + last["period_seconds"]
+    if envelope["evaluation_time"] >= next_close_boundary:
+        raise ContractError("DECISION_WINDOW_MISSING_CLOSED_BAR")
 
 
 def validate_records(case: dict[str, Any]) -> None:
@@ -195,10 +342,12 @@ def validate_records(case: dict[str, Any]) -> None:
     contract = case["contract"]
     policy = case["freshness_policy"]
     profile = case["profile"]
-    context = case["context"]
+    contexts = _context_records(case)
     bars = case["bars"]
     quote = case["quote"]
     as_of = case["as_of"]
+    if not _strict_int(as_of, positive=True):
+        raise ContractError("INVALID_DECISION_ENVELOPE")
 
     if (
         not profile.get("record_id")
@@ -209,7 +358,10 @@ def validate_records(case: dict[str, Any]) -> None:
         raise ContractError("PROFILE_PIN_MISMATCH")
     if (
         profile.get("completed") is not True
-        or profile.get("session_start", 0) <= 0
+        or not all(
+            _strict_int(profile.get(name), positive=True)
+            for name in ("session_start", "session_end", "available_at")
+        )
         or profile.get("session_end", 0) <= profile.get("session_start", 0)
     ):
         raise ContractError("PROFILE_SESSION_NOT_COMPLETED")
@@ -222,25 +374,22 @@ def validate_records(case: dict[str, Any]) -> None:
     ):
         raise ContractError("CONTRADICTORY_PROFILE_LEVELS")
 
-    if (
-        not context.get("record_id")
-        or context.get("source_revision") != contract["source_revision"]
-        or context.get("sequence", 0) <= 0
-    ):
-        raise ContractError("M15_PIN_MISMATCH")
-    if (
-        context.get("period_seconds") != 900
-        or context.get("completed") is not True
-        or context.get("close_time", 0) - context.get("open_time", 0) != context.get("period_seconds")
-        or context.get("available_at", 0) < context.get("close_time", 0)
-        or context.get("available_at", 0) > as_of
-    ):
-        raise ContractError("M15_INCOMPLETE_OR_FUTURE")
-    if profile["session_end"] >= context["close_time"]:
-        raise ContractError("PROFILE_NOT_PRIOR_TO_CONTEXT")
-    if as_of - context["available_at"] > policy["max_m15_age_seconds"]:
+    previous_context: dict[str, Any] | None = None
+    seen_context_ids: set[str] = set()
+    for context in contexts:
+        _validate_context_record(context, contract, profile, as_of)
+        if context["record_id"] in seen_context_ids:
+            raise ContractError("M15_DUPLICATE_RECORD_ID")
+        seen_context_ids.add(context["record_id"])
+        if previous_context is not None and not (
+            context["sequence"] > previous_context["sequence"]
+            and context["close_time"] > previous_context["close_time"]
+            and context["available_at"] > previous_context["available_at"]
+        ):
+            raise ContractError("M15_NON_MONOTONIC_OR_DUPLICATE")
+        previous_context = context
+    if _select_context(contexts, as_of, policy["max_m15_age_seconds"]) is None:
         raise ContractError("STALE_M15_CONTEXT")
-    _validate_ohlc(context, "M15")
 
     if not bars:
         raise ContractError("MISSING_M5_HISTORY")
@@ -250,7 +399,7 @@ def validate_records(case: dict[str, Any]) -> None:
         if (
             not bar.get("record_id")
             or bar.get("source_revision") != contract["source_revision"]
-            or bar.get("sequence", 0) <= 0
+            or not _strict_int(bar.get("sequence"), positive=True)
         ):
             raise ContractError("M5_PIN_MISMATCH")
         if bar["record_id"] in seen:
@@ -259,6 +408,10 @@ def validate_records(case: dict[str, Any]) -> None:
         if (
             bar.get("period_seconds") != 300
             or bar.get("completed") is not True
+            or not all(
+                _strict_int(bar.get(name), positive=True)
+                for name in ("open_time", "close_time", "available_at")
+            )
             or bar.get("close_time", 0) - bar.get("open_time", 0) != bar.get("period_seconds")
             or bar.get("available_at", 0) < bar.get("close_time", 0)
             or bar.get("available_at", 0) > as_of
@@ -287,13 +440,24 @@ def validate_records(case: dict[str, Any]) -> None:
     if as_of - bars[-1]["available_at"] > policy["max_m5_age_seconds"]:
         raise ContractError("STALE_M5_HISTORY")
 
+    _validate_decision_envelope(case)
     if (
         not quote.get("record_id")
-        or quote.get("source_id") != contract["source_id"]
-        or quote.get("source_revision") != contract["source_revision"]
+        or quote.get("execution_source_id") != contract["execution_source_id"]
+        or quote.get("execution_source_revision") != contract["execution_source_revision"]
+        or quote.get("instrument_id") != contract["execution_instrument_id"]
     ):
-        raise ContractError("QUOTE_PIN_MISMATCH")
-    if quote.get("available_at", 0) < quote.get("observed_at", 0) or quote.get("available_at", 0) > as_of:
+        raise ContractError("QUOTE_EXECUTION_PIN_MISMATCH")
+    if (
+        quote.get("price_unit_id") != contract["execution_price_unit_id"]
+        or quote.get("cost_price_unit_id") != contract["cost_price_unit_id"]
+        or quote.get("price_unit_id") != contract["signal_price_unit_id"]
+        or quote.get("cost_price_unit_id") != contract["signal_price_unit_id"]
+    ):
+        raise ContractError("QUOTE_PRICE_COST_UNIT_MISMATCH")
+    if not all(_strict_int(quote.get(name), positive=True) for name in ("observed_at", "available_at")):
+        raise ContractError("QUOTE_FUTURE_OR_PRE_TRIGGER")
+    if quote["available_at"] < quote["observed_at"] or quote["available_at"] > as_of:
         raise ContractError("QUOTE_FUTURE_OR_PRE_TRIGGER")
     if as_of - quote["available_at"] > policy["max_quote_age_seconds"]:
         raise ContractError("STALE_QUOTE")
@@ -336,17 +500,32 @@ def _overlap(low_a: float, high_a: float, low_b: float, high_b: float) -> bool:
 
 def _validate_quote_trigger(case: dict[str, Any], trigger: dict[str, Any]) -> None:
     quote = case["quote"]
-    if quote["observed_at"] < trigger["close_time"]:
+    envelope = case["decision_envelope"]
+    if trigger["record_id"] != envelope["current_closed_bar_record_id"]:
+        raise ContractError("QUOTE_NOT_BOUND_TO_CURRENT_CONFIRMATION")
+    if not (trigger["close_time"] < quote["observed_at"] <= envelope["evaluation_time"]):
         raise ContractError("QUOTE_FUTURE_OR_PRE_TRIGGER")
 
 
 def replay_of01(case: dict[str, Any]) -> dict[str, Any]:
-    bars, profile, context, quote = case["bars"], case["profile"], case["context"], case["quote"]
-    if not profile["val"] < context["close"] < profile["vah"]:
-        return {"decision": "NONE", "code": "OF01_CONTEXT_NOT_INSIDE_VALUE"}
+    bars, profile, quote = case["bars"], case["profile"], case["quote"]
+    contexts = _context_records(case)
+    policy = case["freshness_policy"]
     state: dict[str, Any] | None = None
     for index, bar in enumerate(bars):
+        decision_time = bar["available_at"]
+        if not _profile_available_at(profile, decision_time, policy["max_profile_age_seconds"]):
+            if state is not None:
+                return {"decision": "CANCELLED", "code": "OF01_CONTEXT_UNAVAILABLE_AT_DECISION"}
+            continue
+        context = _select_context(contexts, decision_time, policy["max_m15_age_seconds"])
+        if context is None:
+            if state is not None:
+                return {"decision": "CANCELLED", "code": "OF01_CONTEXT_UNAVAILABLE_AT_DECISION"}
+            continue
         if state is None:
+            if not profile["val"] < context["close"] < profile["vah"]:
+                continue
             median, atr = _median20(bars, index), _atr14_preceding(bars, index)
             if median is None or atr is None or bar["total_executed_volume"] < 1.5 * median:
                 continue
@@ -354,14 +533,12 @@ def replay_of01(case: dict[str, Any]) -> dict[str, Any]:
             range_ = bar["high"] - bar["low"]
             long_test = (
                 _overlap(bar["low"], bar["high"], profile["val"] - buffer, profile["val"] + buffer)
-                and bar["low"] <= profile["val"]
                 and profile["val"] < bar["close"] < profile["vah"]
                 and _delta(bar) <= -0.2
                 and (min(bar["open"], bar["close"]) - bar["low"]) / range_ >= 0.4
             )
             short_test = (
                 _overlap(bar["low"], bar["high"], profile["vah"] - buffer, profile["vah"] + buffer)
-                and bar["high"] >= profile["vah"]
                 and profile["val"] < bar["close"] < profile["vah"]
                 and _delta(bar) >= 0.2
                 and (bar["high"] - max(bar["open"], bar["close"])) / range_ >= 0.4
@@ -375,6 +552,7 @@ def replay_of01(case: dict[str, Any]) -> dict[str, Any]:
                     "test_low": bar["low"],
                     "test_high": bar["high"],
                     "outside": 0,
+                    "context_record_id": context["record_id"],
                 }
             continue
         elapsed = index - state["setup"]
@@ -419,6 +597,7 @@ def replay_of01(case: dict[str, Any]) -> dict[str, Any]:
             "target_price": profile["poc"],
             "net_rr": net_rr,
             "quote_record_id": quote["record_id"],
+            "setup_context_record_id": state["context_record_id"],
             "prospective_quote_not_fill": True,
             "confirmation_window_completed_m5_bars": 3,
             "template_exit_binding": "TEMPLATE_EXIT_BINDING_REQUIRED",
@@ -427,22 +606,41 @@ def replay_of01(case: dict[str, Any]) -> dict[str, Any]:
 
 
 def replay_of02(case: dict[str, Any]) -> dict[str, Any]:
-    bars, profile, context, quote = case["bars"], case["profile"], case["context"], case["quote"]
-    direction = 1 if context["close"] > profile["vah"] else -1 if context["close"] < profile["val"] else 0
-    if direction == 0:
-        return {"decision": "NONE", "code": "OF02_CONTEXT_NOT_BEYOND_EDGE"}
-    edge = profile["vah"] if direction == 1 else profile["val"]
+    bars, profile, quote = case["bars"], case["profile"], case["quote"]
+    contexts = _context_records(case)
+    policy = case["freshness_policy"]
     phase, state = "IDLE", {}
     for index, bar in enumerate(bars):
+        decision_time = bar["available_at"]
+        if not _profile_available_at(profile, decision_time, policy["max_profile_age_seconds"]):
+            if phase != "IDLE":
+                return {"decision": "CANCELLED", "code": "OF02_CONTEXT_UNAVAILABLE_AT_DECISION"}
+            continue
+        context = _select_context(contexts, decision_time, policy["max_m15_age_seconds"])
+        if context is None:
+            if phase != "IDLE":
+                return {"decision": "CANCELLED", "code": "OF02_CONTEXT_UNAVAILABLE_AT_DECISION"}
+            continue
         if phase == "IDLE":
+            direction = 1 if context["close"] > profile["vah"] else -1 if context["close"] < profile["val"] else 0
+            if direction == 0:
+                continue
+            edge = profile["vah"] if direction == 1 else profile["val"]
             atr = _atr14_preceding(bars, index)
             if atr is None:
                 continue
             buffer = 0.2 * atr
             beyond = bar["close"] > edge + buffer if direction == 1 else bar["close"] < edge - buffer
             if beyond:
-                phase, state = "SECOND", {"first": index, "buffer": buffer}
+                phase, state = "SECOND", {
+                    "first": index,
+                    "buffer": buffer,
+                    "direction": direction,
+                    "edge": edge,
+                    "context_record_id": context["record_id"],
+                }
             continue
+        direction, edge = state["direction"], state["edge"]
         opposite = bar["close"] < edge - state["buffer"] if direction == 1 else bar["close"] > edge + state["buffer"]
         if opposite:
             return {"decision": "CANCELLED", "code": "OF02_CLOSE_PAST_OPPOSITE_OUTER_EDGE"}
@@ -455,7 +653,13 @@ def replay_of02(case: dict[str, Any]) -> dict[str, Any]:
                 continue
             if beyond:
                 atr = _atr14_preceding(bars, index)
-                state = {"first": index, "buffer": 0.2 * atr}
+                state = {
+                    "first": index,
+                    "buffer": 0.2 * atr,
+                    "direction": direction,
+                    "edge": edge,
+                    "context_record_id": context["record_id"],
+                }
             else:
                 phase, state = "IDLE", {}
             continue
@@ -500,6 +704,7 @@ def replay_of02(case: dict[str, Any]) -> dict[str, Any]:
             "target_price": target,
             "net_rr": net_reward / net_risk,
             "quote_record_id": quote["record_id"],
+            "setup_context_record_id": state["context_record_id"],
             "prospective_quote_not_fill": True,
             "retest_window_completed_m5_bars": 6,
             "confirmation_window_completed_m5_bars": 3,
@@ -528,9 +733,8 @@ def pinned_state_changed(
         contract["source_revision"],
         profile["profile_id"],
         profile["profile_revision"],
-        context["record_id"],
     )
-    return current != state_pins
+    return current != state_pins[:4]
 
 
 def load_fixture(path: Path) -> dict[str, Any]:
