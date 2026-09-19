@@ -70,28 +70,38 @@ def load_json_blob(repo, ref, rel):
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise BridgeRefusal(f"invalid JSON blob {rel}: {exc}") from exc
 
-def validate_workbook_with_canonical_js(repo, ref, workbook_path):
+def validate_workbook_payload_with_canonical_js(repo, ref, payload):
+    if not isinstance(payload, (bytes, bytearray)):
+        raise BridgeRefusal("Workbook payload must be immutable bytes")
+    raw = bytes(payload)
     canonical = git_blob(repo, ref, "mobile_report_hub/research_workbook.js")
-    local = (Path(repo) / "mobile_report_hub/research_workbook.js").read_bytes()
-    if canonical != local:
-        raise BridgeRefusal("canonical Workbook validator bytes differ from worktree")
     validator = Path(repo) / "tools/research_workbook_bridge/validate_workbook.cjs"
-    proc = subprocess.run(["node", str(validator), str(Path(workbook_path).resolve())],
-                          cwd=repo, capture_output=True, text=True)
+    proc = subprocess.run(["node", str(validator), str(Path(repo).resolve()), ref],
+                          cwd=repo, input=raw, capture_output=True)
     try:
-        receipt = json.loads(proc.stdout.strip())
-    except json.JSONDecodeError as exc:
+        receipt = json.loads(proc.stdout.decode("utf-8").strip())
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise BridgeRefusal("Workbook validator did not emit JSON") from exc
     if proc.returncode != 0 or receipt.get("status") != "PASS":
         raise BridgeRefusal("Workbook planning schema validation failed: " + str(receipt.get("reason")))
-    receipt["validator_sha256"] = sha256_bytes(canonical)
+    expected_payload_sha = sha256_bytes(raw)
+    expected_validator_sha = sha256_bytes(canonical)
+    if receipt.get("workbook_sha256") != expected_payload_sha:
+        raise BridgeRefusal("Workbook validator payload digest mismatch")
+    if receipt.get("validator_sha256") != expected_validator_sha or receipt.get("validator_ref") != ref:
+        raise BridgeRefusal("Workbook validator exact-ref digest mismatch")
     return receipt
 
-def load_workbook(path):
+def parse_validated_workbook(payload, validation_receipt):
+    if not isinstance(payload, (bytes, bytearray)):
+        raise BridgeRefusal("Workbook payload must be immutable bytes")
+    raw = bytes(payload)
+    if validation_receipt.get("workbook_sha256") != sha256_bytes(raw):
+        raise BridgeRefusal("Validated Workbook receipt does not bind these payload bytes")
     try:
-        book = json.loads(Path(path).read_text(encoding="utf-8-sig"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise BridgeRefusal(f"cannot parse workbook: {exc}") from exc
+        book = json.loads(raw.decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise BridgeRefusal(f"cannot parse validated workbook payload: {exc}") from exc
     if not isinstance(book, dict) or book.get("schema_version") != WORKBOOK_SCHEMA:
         raise BridgeRefusal("unsupported workbook schema")
     doc = book.get("document") or {}
@@ -471,8 +481,12 @@ def main():
         raise BridgeRefusal("output root must be fresh or empty")
     out.mkdir(parents=True, exist_ok=True)
 
-    workbook_validation = validate_workbook_with_canonical_js(repo, args.ref, args.workbook)
-    book = load_workbook(args.workbook)
+    try:
+        workbook_payload = Path(args.workbook).read_bytes()
+    except OSError as exc:
+        raise BridgeRefusal(f"cannot read workbook payload: {exc}") from exc
+    workbook_validation = validate_workbook_payload_with_canonical_js(repo, args.ref, workbook_payload)
+    book = parse_validated_workbook(workbook_payload, workbook_validation)
     plan = build_plan_export(book, args.ref)
     plan["planning_schema_validation"] = workbook_validation
     proposal = build_execution_proposal(repo, args.ref, book, plan, args.factory_pilot_dir)

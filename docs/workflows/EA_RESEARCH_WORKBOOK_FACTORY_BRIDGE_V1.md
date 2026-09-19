@@ -25,6 +25,9 @@ Workbook Draft
 
 V1 stops before the owner/canonical freeze. It has no UI or command that launches MT5.
 
+### Exact-byte validation binding
+The bridge reads Workbook bytes once, sends that exact immutable payload to the CommonJS validator compiled from the exact Git blob `<ref>:mobile_report_hub/research_workbook.js`, verifies both payload and validator SHA256 receipts, and builds the planning export from the same already-bound payload bytes. A validation receipt cannot be paired with later-mutated Workbook bytes; that mismatch fails closed. No mutable worktree copy of the accepted Workbook validator is treated as canonical.
+
 ## 2. Typed artifacts
 
 ### WORKBOOK_PLAN_EXPORT

@@ -21,8 +21,9 @@ spec.loader.exec_module(bridge)
 class BridgeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.book = bridge.load_workbook(WORKBOOK)
-        cls.validation = bridge.validate_workbook_with_canonical_js(ROOT, REF, WORKBOOK)
+        cls.payload = WORKBOOK.read_bytes()
+        cls.validation = bridge.validate_workbook_payload_with_canonical_js(ROOT, REF, cls.payload)
+        cls.book = bridge.parse_validated_workbook(cls.payload, cls.validation)
         cls.plan = bridge.build_plan_export(cls.book, REF)
         cls.plan["planning_schema_validation"] = cls.validation
         cls.proposal = bridge.build_execution_proposal(ROOT, REF, cls.book, cls.plan, PILOT)
@@ -30,7 +31,11 @@ class BridgeTests(unittest.TestCase):
 
     def test_canonical_workbook_validator_reused(self):
         self.assertEqual("PASS", self.validation["status"])
-        self.assertEqual("mobile_report_hub/research_workbook.js", self.validation["validator"])
+        self.assertEqual(f"git:{REF}:mobile_report_hub/research_workbook.js", self.validation["validator"])
+        self.assertEqual(REF, self.validation["validator_ref"])
+        expected = bridge.sha256_bytes(bridge.git_blob(ROOT, REF, "mobile_report_hub/research_workbook.js"))
+        self.assertEqual(expected, self.validation["validator_sha256"])
+        self.assertEqual(bridge.sha256_bytes(self.payload), self.validation["workbook_sha256"])
         self.assertEqual("STRUCTURAL_VALIDATION_ONLY_NO_EXECUTION_AUTHORITY", self.validation["authority"])
 
     def test_exact_source_identity_retained(self):
@@ -106,13 +111,18 @@ class BridgeTests(unittest.TestCase):
         self.assertIsNone(row["execution_range"])
 
     def test_holdout_forgery_refused_by_canonical_planning_validator(self):
-        with tempfile.TemporaryDirectory(prefix="bridge-book-") as td:
-            p = Path(td) / "bad.json"
-            book = copy.deepcopy(self.book)
-            book["windows"][2]["state"] = "READY"
-            p.write_text(json.dumps(book), encoding="utf-8")
-            with self.assertRaises(bridge.BridgeRefusal):
-                bridge.validate_workbook_with_canonical_js(ROOT, REF, p)
+        book = copy.deepcopy(self.book)
+        book["windows"][2]["state"] = "READY"
+        payload = json.dumps(book).encode("utf-8")
+        with self.assertRaises(bridge.BridgeRefusal):
+            bridge.validate_workbook_payload_with_canonical_js(ROOT, REF, payload)
+
+    def test_validated_receipt_rejects_mutated_payload_bytes(self):
+        receipt = bridge.validate_workbook_payload_with_canonical_js(ROOT, REF, self.payload)
+        mutated = self.payload.replace(b"BRIDGE-FIXTURE-B11", b"BRIDGE-FIXTURE-X11", 1)
+        self.assertNotEqual(bridge.sha256_bytes(self.payload), bridge.sha256_bytes(mutated))
+        with self.assertRaises(bridge.BridgeRefusal):
+            bridge.parse_validated_workbook(mutated, receipt)
 
     def test_typed_artifact_contract_required_fields(self):
         schema = json.loads((TOOL / "artifact_schemas.json").read_text(encoding="utf-8"))
