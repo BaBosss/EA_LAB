@@ -1,0 +1,12 @@
+{
+  "entity": "TestUniverse",
+  "universe_version": "v1",
+  "kind": "PILOT",
+  "symbols": [
+    "XAUUSD"
+  ],
+  "timeframes": [
+    "H1"
+  ],
+  "created_commit": "018ed2f7379ebaf404444f0d203711379e8f2f22"
+}

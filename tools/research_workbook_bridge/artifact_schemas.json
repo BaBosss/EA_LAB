@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EA Research Workbook Factory Bridge V1 typed artifacts",
+  "$defs": {
+    "WORKBOOK_PLAN_EXPORT": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "authority",
+        "canonical_ref",
+        "workbook_schema_version",
+        "revision_id",
+        "identity",
+        "strategy",
+        "parameters",
+        "universe_proposals",
+        "optimization_proposals",
+        "filter_module_proposals",
+        "windows",
+        "unresolved_owner_decisions",
+        "authority_ceiling",
+        "planning_schema_validation"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "EA_LAB_WORKBOOK_PLAN_EXPORT_V1"
+        },
+        "authority": {
+          "const": "PLANNING_PRESENTATION_ONLY"
+        },
+        "canonical_ref": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "parameters": {
+          "type": "array"
+        },
+        "universe_proposals": {
+          "type": "array"
+        },
+        "optimization_proposals": {
+          "type": "array"
+        },
+        "windows": {
+          "type": "array"
+        }
+      }
+    },
+    "EXECUTION_PROPOSAL": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "authority",
+        "canonical_ref",
+        "workbook_revision_id",
+        "factory",
+        "source_identity",
+        "build_identity",
+        "home",
+        "parameters",
+        "optimization",
+        "windows",
+        "holdout",
+        "set_output",
+        "can_execute",
+        "blockers",
+        "reason",
+        "downstream_consumer",
+        "forbidden_inferences"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "EA_LAB_EXECUTION_PROPOSAL_V1"
+        },
+        "authority": {
+          "const": "NON_EXECUTABLE_PROPOSAL_ONLY"
+        },
+        "can_execute": {
+          "type": "boolean"
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "set_output": {
+          "type": "object"
+        }
+      }
+    },
+    "RESULT_BINDING": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "authority",
+        "canonical_ref",
+        "workbook_revision_id",
+        "run_id",
+        "cell_id",
+        "manifest_sha256",
+        "set_sha256",
+        "source_sha256",
+        "build_sha256",
+        "installation_lineage",
+        "model",
+        "window_role",
+        "symbol",
+        "timeframe",
+        "metrics",
+        "year_split",
+        "report_ref",
+        "graph_refs",
+        "evidence_refs",
+        "verification_status",
+        "interpretation",
+        "decision"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "EA_LAB_RESULT_BINDING_V1"
+        },
+        "authority": {
+          "enum": [
+            "NO_RESULT_EVIDENCE",
+            "VERIFIED_EVIDENCE_BINDING"
+          ]
+        },
+        "verification_status": {
+          "type": "string"
+        },
+        "metrics": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
