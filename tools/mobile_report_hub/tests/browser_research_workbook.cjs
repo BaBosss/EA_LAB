@@ -122,6 +122,24 @@ async function main() {
     assert.equal(await focus.inputValue(),"SYNTHETIC-HYPOTHESIS-UNVERIFIED");
     assert.equal(await focus.evaluate(node => document.activeElement === node),true);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth),true);
+    const importHitArea = await page.evaluate(() => {
+      const input = document.querySelector("#rw-import").getBoundingClientRect();
+      const label = document.querySelector("#rw-import").closest(".rw-file").getBoundingClientRect();
+      const validate = document.querySelector("#rw-validate").getBoundingClientRect();
+      const overlapsValidate = !(input.right <= validate.left || input.left >= validate.right || input.bottom <= validate.top || input.top >= validate.bottom);
+      const validateHit = document.elementFromPoint(validate.left + validate.width / 2, validate.top + validate.height / 2);
+      const belowLabelHit = document.elementFromPoint(label.left + label.width / 2, label.bottom + 0.5);
+      const rect = value => ({left:value.left,top:value.top,right:value.right,bottom:value.bottom,width:value.width,height:value.height});
+      return {
+        overlapsValidate,
+        validateReceivesPointer:Boolean(validateHit?.closest?.("#rw-validate")),
+        clippedOutsideLabel:belowLabelHit?.id !== "rw-import",
+        input:rect(input),label:rect(label),validate:rect(validate)
+      };
+    });
+    assert.equal(importHitArea.overlapsValidate,false,"file import hit area must never cover Validate");
+    assert.equal(importHitArea.validateReceivesPointer,true,JSON.stringify(importHitArea));
+    assert.equal(importHitArea.clippedOutsideLabel,true,JSON.stringify(importHitArea));
     await page.locator("#rw-validate").click();
     assert.match(await page.locator("#rw-status").textContent(),/Validation PASS for workbook structure only/);
     await page.locator("#rw-save").click();

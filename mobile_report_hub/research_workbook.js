@@ -392,6 +392,7 @@
   function storageSet(key, value) { try { if (!storage) throw new Error(); storage.setItem(key, value); storageStatus = "AVAILABLE"; return true; } catch { storageStatus = "DENIED"; return false; } }
   function saveDraft() {
     if (!state) return false;
+    if (autosaveTimer) { clearTimeout(autosaveTimer); autosaveTimer = null; }
     if (corruptDraftBlocked) { storageStatus = "CORRUPT_PRESERVED"; updateStatus(); return false; }
     state.document.updated_at_utc = nowUtc();
     const ok = storageSet(STORAGE_KEY, exportText(state));

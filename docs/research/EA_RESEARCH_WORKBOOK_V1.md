@@ -1,6 +1,6 @@
 # EA Research Workbook V1
 
-Status: `REPAIRED_PENDING_CT_RENDERED_GATES_AND_INDEPENDENT_REVIEW / REPO_ONLY / PLANNING_PRESENTATION_ONLY`
+Status: `OWNER_SUPPLEMENTAL_CORRECTION_RENDERED_PASS_PENDING_INDEPENDENT_REVIEW / REPO_ONLY / PLANNING_PRESENTATION_ONLY`
 
 The Research Workbook is one owner-editable planning document inside the existing Mobile Report Hub. It does not execute a tester, create an executable `.set`, change canonical research evidence, approve a stage, unlock HOLDOUT, deploy an EA, or attest an owner decision.
 
@@ -54,6 +54,6 @@ The module uses no dynamic code execution, remote scripts, backend, runner, shel
 
 ## Repair 1/1 status
 
-The sole bounded source repair closes the pure/static defects and strengthens the rendered harness for blank/populated 390x844 and 1280x900 layouts, autosave/reload, corrupt/denied storage, late async navigation, grouped graphs and complete print content. The authored browser harness still requires the separately authorized Control Tower Playwright-core + Edge execution. Exact-head independent GPT Scrutiny remains mandatory after those rendered gates; no acceptance is claimed here and no further author repair budget remains.
+The original bounded repair closed the pure/static defects and spent its 1/1 repair budget. A separately owner-authorized same-lane supplemental correction then fixed the remaining rendered file-import hit-area defect and delayed autosave status race; native-navigation fixture preparation was moved to a bounded short path after the long evidence path caused fail-closed package refusal. The strengthened Workbook browser flow now passes at 390x844 and 1280x900 with three screenshots, existing Monitor rendered regression passes, and source-bound native-navigation regression passes on both viewports. Exact-head independent GPT Scrutiny remains mandatory; these passes are not acceptance, execution authority, deployment, or an owner signature.
 
 Independent exact-head GPT Scrutiny and Control Tower integration remain required. This implementation grants no research result, optimization execution, performance, risk/default, HOLDOUT, Candidate/Grade/KINT, runtime, deployment, DEMO/LIVE, trading, owner-signature or production-hosting authority.
