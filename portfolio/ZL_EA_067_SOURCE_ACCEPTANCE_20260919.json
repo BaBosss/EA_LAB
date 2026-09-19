@@ -1,0 +1,96 @@
+{
+  "schema": "EA_LAB_ZL_EA_067_B22_SOURCE_ACCEPTANCE_V1",
+  "status": "SOURCE_ACCEPTED_REVIEWED_CANONICAL_REPO_ONLY_NO_PERFORMANCE_SCREEN",
+  "source_head": "57aed8a5235f871fcdaf198433dd66f2c4ebaa11",
+  "source_parent": "5c85eba937968f80e558f11d583be85a2969c41e",
+  "reviewed_head": "57aed8a5235f871fcdaf198433dd66f2c4ebaa11",
+  "identity": {
+    "family_id": "B22",
+    "lab_entry": "LAB_ENTRY_22",
+    "wrapper": "Boss_22_WickDisplacement",
+    "parameters": [
+      {"name": "_22_WickBodyRatio", "pid": "P12200", "default": 2.0},
+      {"name": "_22_DisplacementBodyFraction", "pid": "P12201", "default": 0.65}
+    ],
+    "historical_lineage": "ZL-EA-067 identity-only from historical B20 technical lineage",
+    "semantics_changed": false
+  },
+  "author_allowlist_count": 11,
+  "author_allowlist": [
+    "_triage/factory_os/wrapper_owners.csv",
+    "docs/PARAM_LINKAGE.md",
+    "docs/PARAM_REGISTRY.csv",
+    "docs/research/ZL_EA_067_WICK_DISPLACEMENT_V0.md",
+    "ea_template/Boss_22_WickDisplacement.mq5",
+    "ea_template/core/InputSurface_gen.mqh",
+    "ea_template/core/Inputs.mqh",
+    "ea_template/core/LabCore.mqh",
+    "ea_template/core/LockedConstants_gen.mqh",
+    "ea_template/core/entries/Entry_WickDisplacement.mqh",
+    "ea_template/tests/WickDisplacement_Test.mq5"
+  ],
+  "source_repair_used": 0,
+  "source_repair_budget": 1,
+  "review": {
+    "scope": "B22_IDENTITY_ONLY_EXACT_HEAD_SCRUTINY",
+    "author_lane": "ct-zl-ea-067-b22-identity-20260919",
+    "reviewer_lane": "ct-zl-ea-067-b22-scrutiny-ro-20260919",
+    "reviewer_source_mutation": false,
+    "verdict": "SCRUTINY_PASS",
+    "confidence": "HIGH",
+    "decision": "ALLOW_INTEGRATION",
+    "findings": []
+  },
+  "compile": {
+    "Boss_22_WickDisplacement": {"errors": 0, "warnings": 0},
+    "WickDisplacement_Test": {"errors": 0, "warnings": 0}
+  },
+  "adjacent_regression": {
+    "scope": "REGRESSION_ONLY",
+    "status": "PASS_8_OF_8_EXACT",
+    "terminal": "D:\\Meta 5b\\terminal64.exe",
+    "terminal_build": 6090,
+    "terminal_sha256": "20dfefd944ae482781ac1e83a736a976ecf0315661e54b5771e327f1ffb2b35c",
+    "compiler_sha256": "197ca3dd8d1971831366f54cb57bf3f120b420700e573135509d406e4e23709e",
+    "strategy_performance_evidence": false
+  },
+  "wick_fixture": {
+    "scope": "NINE_CASE_ENGINEERING_FIXTURE_ONLY",
+    "status": "PASS",
+    "assertion_count": 9,
+    "model": 1,
+    "symbol": "XAUUSD",
+    "period": "H1",
+    "allow_legacy_identity": true,
+    "engineering_carrier_only": true,
+    "performance_test": false,
+    "home_or_timeframe_authority": false
+  },
+  "canonical_push": {
+    "status": "NORMAL_FF_PUSH_VERIFIED",
+    "canonical_sha": "57aed8a5235f871fcdaf198433dd66f2c4ebaa11"
+  },
+  "evidence": [
+    {"kind": "review", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-zl-ea-067-b22-scrutiny-20260919\\REVIEW_RESULT.json", "sha256": "30650621e3756c2e4f2cbcfbd13fc101e76831390b9ba6abebfb2e51021d0cf5"},
+    {"kind": "source_push", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-zl-ea-067-b22-scrutiny-20260919\\PUSH_VERIFIED.json", "sha256": "8d40706d9b707f772df44e49f814964ea9c124ee3b310b3b8dceef234447d5f5"},
+    {"kind": "author_result", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-zl-ea-067-b22-identity-20260919\\AUTHOR_RESULT.json", "sha256": "d4918c41b1ec671372f64d531c183002a8a70372915fc33f58368b40bd4c7591"},
+    {"kind": "freeze", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-zl-ea-067-b22-identity-20260919\\FREEZE.json", "sha256": "0e7cddf6c17f4afa98fc81415446eb37c2c4726ebc1c2357406d0032d6bb3f5c"},
+    {"kind": "commit_hooks", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-zl-ea-067-b22-identity-20260919\\COMMIT_HOOKS.log", "sha256": "67731ef22acecba1fbf558265e06376d526cbd79596c79068cdbe0f699b8fc5e"},
+    {"kind": "adjacent_regression", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b22-runtime-parity-20260919\\RESULT.json", "sha256": "2f1c849a3bb3ad488e19148aabe55032f86bd68928c3c288cfd234824f00a3f6"},
+    {"kind": "wick_fixture", "path": "D:\\EA_LAB_CONTROL\\evidence\\ct-b22-runtime-parity-20260919\\WICK_FIXTURE_RESULT.json", "sha256": "9768c4db8ed413b0a4ba60d4022c5da2acea881c564f0ec63156d8686be758dd"}
+  ],
+  "authority": {
+    "strategy_catalog_e022": false,
+    "home_or_timeframe_or_settings": false,
+    "performance_screen": false,
+    "optimization": false,
+    "bwd_retune": false,
+    "holdout_spent": false,
+    "candidate_or_grade_or_kint": false,
+    "risk_or_default_change": false,
+    "runtime_activation": false,
+    "deployment": false,
+    "demo_or_live": false,
+    "trading": false
+  }
+}
