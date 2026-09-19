@@ -207,7 +207,7 @@
       for (const key of ["trades","wins","losses","episodes"]) if (finite(row[key]) && !Number.isInteger(Number(row[key]))) errors.push(`Result ${idx + 1} ${key} must be an integer`);
       const computed = profitFactor(row.gross_profit, row.gross_loss);
       if (finite(row.profit_factor) && computed.value !== null && Math.abs(Number(row.profit_factor) - computed.value) > 1e-9) errors.push(`Result ${idx + 1} PF conflicts with gross values`);
-      if (supplied(row.profit_factor) && finite(row.gross_profit) && finite(row.gross_loss) && computed.value === null) errors.push(`Result ${idx + 1} profit_factor must be blank when gross loss is zero; PF is UNDEFINED_ZERO_LOSS`);
+      if (supplied(row.profit_factor) && computed.value === null) errors.push(`Result ${idx + 1} profit_factor must be blank when PF is ${computed.label}`);
       if (row.model && !ALLOWED_MODELS.has(row.model)) errors.push(`Result ${idx + 1} has unknown model`);
       if (row.window_role && !["MAIN","BWD","HOLDOUT"].includes(row.window_role)) errors.push(`Result ${idx + 1} has unknown window role`);
       for (const key of ["campaign_id","variant_id","parent_id","run_id","pass_id"]) if (supplied(row[key]) && typeof row[key] !== "string") errors.push(`Result ${idx + 1} ${key} must be a string ID`);
@@ -312,9 +312,10 @@
   }
 
   function profitFactor(grossProfit, grossLoss) {
-    if (!finite(grossProfit) || !finite(grossLoss)) return { value: null, label: "UNAVAILABLE", denominator: null };
+    if (!finite(grossLoss)) return { value: null, label: "UNAVAILABLE", denominator: null };
     const loss = Math.abs(Number(grossLoss));
     if (loss === 0) return { value: null, label: "UNDEFINED_ZERO_LOSS", denominator: 0 };
+    if (!finite(grossProfit)) return { value: null, label: "UNAVAILABLE", denominator: loss };
     const value = Number(grossProfit) / loss;
     return { value, label: String(value), denominator: loss };
   }
@@ -534,6 +535,7 @@
       const derived = profitFactor(row.gross_profit,row.gross_loss);
       let status = "OWNER_ENTERED_UNVERIFIED";
       if (derived.label === "UNDEFINED_ZERO_LOSS") status = supplied(row.profit_factor) ? "INVALID_SUPPLIED_PF_ZERO_LOSS" : "UNDEFINED_ZERO_LOSS";
+      else if (derived.value === null && supplied(row.profit_factor)) status = "INVALID_SUPPLIED_PF_UNAVAILABLE_GROSS";
       else if (derived.value !== null && supplied(row.profit_factor) && finite(row.profit_factor) && Math.abs(Number(row.profit_factor)-derived.value)>1e-9) status = "INVALID_SUPPLIED_PF_CONFLICT";
       else if (derived.value !== null) status = "DERIVED_FROM_GROSS_VALUES";
       return {...row,profit_factor_derived:derived.label,profit_factor_status:status};

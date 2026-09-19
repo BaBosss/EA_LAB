@@ -1,6 +1,6 @@
 # EA Research Workbook V1
 
-Status: `OWNER_AUTHORIZED_3_FINDING_CORRECTION_RENDERED_PASS_PENDING_INDEPENDENT_REVIEW / REPO_ONLY / PLANNING_PRESENTATION_ONLY`
+Status: `WB_METRIC_EDGECASE_CORRECTED_RENDERED_PASS_PENDING_FINAL_INDEPENDENT_REVIEW / REPO_ONLY / PLANNING_PRESENTATION_ONLY`
 
 The Research Workbook is one owner-editable planning document inside the existing Mobile Report Hub. It does not execute a tester, create an executable `.set`, change canonical research evidence, approve a stage, unlock HOLDOUT, deploy an EA, or attest an owner decision.
 
@@ -54,6 +54,6 @@ The module uses no dynamic code execution, remote scripts, backend, runner, shel
 
 ## Repair 1/1 status
 
-The original bounded repair and the first owner-supplemental correction remain permanently spent. The first exact-head GPT Scrutiny then failed HIGH on three material product findings: revision-ID collisions during rapid revision creation, acceptance of a supplied PF when gross loss is zero, and chart eligibility that did not require valid source/build SHA256 provenance. Boss explicitly authorized one further bounded same-lane correction for exactly those three findings. The correction now generates millisecond-resolution revision IDs with collision suffixes and no self-links, refuses supplied PF for zero-loss rows while the printable report shows derived PF/status, and suppresses invalid-provenance result groups with explicit UNAVAILABLE diagnostics. Focused checks pass 89/89 and the strengthened rendered Workbook flow plus existing Monitor regression pass. A new independent exact-head GPT Scrutiny remains mandatory before integration.
+The original bounded repair and earlier owner-supplemental corrections remain preserved as spent historical evidence. The first exact-head GPT Scrutiny failed HIGH on revision-ID collisions, zero-loss PF handling, and invalid graph provenance. The first bounded correction closed the revision and graph findings; the next exact-head recheck failed HIGH only on a narrower `WB-METRIC-001` case where gross profit was unavailable but gross loss was exactly zero and a PF was supplied. Under Boss's explicit instruction to finish those findings, the final same-finding correction now detects zero loss before gross-profit availability, refuses supplied PF whenever PF cannot be numerically derived, prevents invalid exports from reimporting as valid, and prints explicit `UNDEFINED_ZERO_LOSS` / invalid-PF status. Focused checks pass 93/93; the updated Workbook rendered flow and existing Monitor regression pass. One final independent exact-head GPT Scrutiny remains mandatory before integration.
 
 Independent exact-head GPT Scrutiny and Control Tower integration remain required. This implementation grants no research result, optimization execution, performance, risk/default, HOLDOUT, Candidate/Grade/KINT, runtime, deployment, DEMO/LIVE, trading, owner-signature or production-hosting authority.

@@ -123,8 +123,10 @@ async function main() {
     await sourceHash.fill("a".repeat(64));
     await page.waitForTimeout(50);
     assert.equal(await page.locator("#rw-result-group option").count() >= 2,true);
+    const grossProfit = page.locator('[data-table="results"][data-row="0"][data-key="gross_profit"]');
     const grossLoss = page.locator('[data-table="results"][data-row="0"][data-key="gross_loss"]');
     const profitFactorInput = page.locator('[data-table="results"][data-row="0"][data-key="profit_factor"]');
+    await grossProfit.fill("");
     await grossLoss.fill("0");
     await profitFactorInput.fill("999");
     await page.locator("#rw-validate").click();
@@ -132,6 +134,7 @@ async function main() {
     const zeroLossPrint = await page.locator(".rw-print-projection").textContent();
     assert.match(zeroLossPrint,/UNDEFINED_ZERO_LOSS/);
     assert.match(zeroLossPrint,/INVALID_SUPPLIED_PF_ZERO_LOSS/);
+    await grossProfit.fill("120");
     await grossLoss.fill("-60");
     await profitFactorInput.fill("2");
     await page.waitForTimeout(50);

@@ -421,7 +421,7 @@
 | ORDER-CT-STRATEGY-SOURCE-RECOVERY-20260915 |  | DONE | [control-tower/research] Boss/custom source recovery + strategy-family port prep |  | ACTIVE:10285 |
 | ORDER-CT-ZL-EA-067-B22-REALLOCATION-20260918 |  | DONE | [template/research] WickDisplacement identity-only regeneration | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_PERFORMANCE_SCREEN | ACTIVE:10333 |
 | ORDER-DEMO-SAMEPERIOD-REPLAY-20260915 |  | EXECUTED | [research/diagnostic] Demo vs same-period frozen-bundle replay |  | ACTIVE:10370 |
-| ORDER-EA-RESEARCH-WORKBOOK-V1-20260919 |  | OWNER | [monitor/research-planning] one owner workbook inside existing Mobile Report Hub |  | ACTIVE:10445 |
+| ORDER-EA-RESEARCH-WORKBOOK-V1-20260919 |  | WB | [monitor/research-planning] one owner workbook inside existing Mobile Report Hub |  | ACTIVE:10445 |
 | ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:8336 |
 | ORDER-HERMES-V2B-REAL-ADAPTER-QUAL-20260915 |  | DONE | [hermes/tooling] real-adapter qualification | QUALIFIED_NO_MT5 / SOURCE_CANONICAL / NO_RUNTIME_CAMPAIGN_AUTHORITY | ACTIVE:10350 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
