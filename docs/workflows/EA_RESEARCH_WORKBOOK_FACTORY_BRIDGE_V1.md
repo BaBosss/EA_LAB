@@ -1,6 +1,6 @@
 # EA Research Workbook -> EA Template / Factory Bridge V1
 
-Status: `PROSPECTIVE / NON-EXECUTABLE / NON-TRADING / NO NEW AUTHORITY`
+Status: `SOURCE_ACCEPTED / REVIEWED / CANONICAL / NON-EXECUTABLE / NON-TRADING / NO NEW AUTHORITY`
 
 This bridge converts an accepted owner-editable Research Workbook draft into deterministic planning artifacts. It does **not** convert browser input into an MT5 `.set`, run the tester, freeze Home/Symbol/TF/settings, authorize optimization, spend HOLDOUT, change risk/defaults, deploy, or trade.
 
@@ -121,3 +121,9 @@ This fixture is `NON_TRADING_FIXTURE_ONLY` and is not permission to backtest B11
 ## 7. Future transition condition
 
 A later real execution proposal may become eligible only after the existing canonical owners supply all required facts: exact family/source/build, frozen Home/Symbol/TF/settings, accepted parameter classifications and values/ranges, exact MAIN/BWD contract, tester installation/model/data identity and explicit optimization authority where applicable. The downstream implementation must then use the existing Factory/preset/tester/report paths and preserve BWD/HOLDOUT rules. Workbook UI alone can never satisfy that gate.
+
+## 8. Source acceptance and recovery closeout — 2026-09-20
+
+Exact source `f8699c27809e18fe6d10bc30c29b0f5a5515e10f` is canonically pushed and remains the immutable source-review identity. Initial `fd239dea59517219c15b22b7a900ab0a3701e1f6` failed WBFBV1-001/HIGH; Repair1 1/1 closed that exact-byte binding defect. The sole targeted independent GPT recheck returned `SCRUTINY_PASS / HIGH / ALLOW_SOURCE_ONLY_INTEGRATION`, review SHA256 `d67e2767c9eba39cd03d4ec2f82bb0ce094af956a775d327c00571ae516cef17`, with A-O contract checks satisfied. The original failure and exhausted repair allocation are preserved.
+
+Existing 13/13 targeted checks, fixture A/B and their manifest `387774c0d7e314659fd569058b9a63094b207b0fa9b49d0fb5c233611addeb1c`, strict-state/digest/diff and source hooks were verified from frozen evidence, not rerun for chat recovery. `can_execute=false`; canonical TestUniverse/build/Home/parameter/optimization and prospective MAIN/BWD gates remain unresolved. This is source-only acceptance, not backtest, runtime, deployment or trading qualification. The existing lane owns serialized state closure; normal documentation checks do not reopen the source review or grant a new repair.

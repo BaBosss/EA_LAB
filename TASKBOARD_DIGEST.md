@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **430** · ยังอยู่บนบอร์ด: **134** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **431** · ยังอยู่บนบอร์ด: **135** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -436,6 +436,7 @@
 | ORDER-RND-P4 |  | DONE + REVIEWED | Boss19 regime attribution | JOIN + INTERPRETATION COMPLETE / MIXED_EVIDENCE | ACTIVE:10048 |
 | ORDER-RND-P5 |  | DONE | â€” Boss19 Black Tide session-context attribution â€” |  | ACTIVE:10062 |
 | ORDER-RND-P6 |  | BLOCKED | â€” survivor coarse-to-fine funnel â€” |  | ACTIVE:10068 |
+| ORDER-WORKBOOK-FACTORY-BRIDGE-V1-20260919 |  | DONE | [research/planning-bridge] Workbook to existing Template/Factory bridge |  | ACTIVE:10462 |
 | ORDER-XX00-B15-PROVENANCE-V1 |  | DONE + REVIEWED | [factory/research-tooling] self-contained preserved-evidence provenance package |  | ACTIVE:10219 |
 | ORDER-XX00-B17-DECOUPLE-V1 |  | DONE | [factory/template/core] B17 structural-SL decoupling | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_PERFORMANCE_SCREEN | ACTIVE:10173 |
 | ORDER-XX00-BACKTEST-READINESS-V1 |  | DONE + REVIEWED | [factory/research] xx-00 Model1 screen readiness |  | ACTIVE:10152 |
