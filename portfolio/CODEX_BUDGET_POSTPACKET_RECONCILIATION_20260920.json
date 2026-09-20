@@ -25,10 +25,5 @@
     "runtime_or_profile_authority": false,
     "not_repair2": true
   },
-  "durable_jobs_reconciled_observation": {
-    "active_count": 1,
-    "active_lane": "ct-ofp-scr002-followup-20260920",
-    "budget_lane_active": false
-  },
   "generated_utc": "2026-09-20T10:18:30.446Z"
 }
