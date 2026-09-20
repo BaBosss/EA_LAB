@@ -16,13 +16,14 @@ from tools.orderflow_proxy.research_presentation import projection
 from tools.orderflow_proxy.research_presentation.cli import main
 
 
-BASE_REF = "d5e23b5d91421c98e069d5db5b089c3203c8f02c"
+HISTORICAL_PINNED_REF = "d5e23b5d91421c98e069d5db5b089c3203c8f02c"
+ACCEPTED_SOURCE_STATUS_COMMIT = "5436833f3791049655f3ab44b90582c73d222e1d"
 
 
 def valid_observation(manifest_sha: str) -> dict:
     return {
         "schema": projection.OBSERVATION_SCHEMA,
-        "source_ref": BASE_REF,
+        "source_ref": HISTORICAL_PINNED_REF,
         "source_artifact_path": projection.MANIFEST_PATH,
         "source_artifact_sha256": manifest_sha,
         "observed_at_utc": "2026-09-20T01:00:00Z",
@@ -52,8 +53,35 @@ class ProjectionTests(unittest.TestCase):
         html_bytes = projection.render_html(self.bound)
         self.assertIn(b"PREPARATION REPORT / NOT A BACKTEST REPORT", html_bytes)
         self.assertIn(b"WAITING_GATE", html_bytes)
-        self.assertIn(BASE_REF.encode(), html_bytes)
+        self.assertIn(self.current_head.encode(), html_bytes)
+        self.assertIn(ACCEPTED_SOURCE_STATUS_COMMIT.encode(), html_bytes)
         self.assertNotIn(b"<script", html_bytes.lower())
+
+    def test_requested_historical_ref_stays_distinct_from_current_head(self) -> None:
+        historical = projection.build_projection(
+            self.manifest,
+            self.bindings,
+            self.source_set_sha,
+            HISTORICAL_PINNED_REF,
+        )
+        self.assertEqual(self.bound["source_binding"]["projection_source_ref"], self.current_head)
+        self.assertEqual(historical["source_binding"]["projection_source_ref"], HISTORICAL_PINNED_REF)
+        self.assertNotEqual(self.current_head, HISTORICAL_PINNED_REF)
+        self.assertEqual(
+            self.bound["source_binding"]["accepted_source_status_commit"],
+            ACCEPTED_SOURCE_STATUS_COMMIT,
+        )
+        self.assertEqual(
+            historical["source_binding"]["accepted_source_status_commit"],
+            ACCEPTED_SOURCE_STATUS_COMMIT,
+        )
+
+    def test_rendered_css_contains_mobile_overflow_guards(self) -> None:
+        html_text = projection.render_html(self.bound).decode("utf-8")
+        self.assertIn("main{max-width:1120px;margin:auto;padding:24px;min-width:0}", html_text)
+        self.assertIn(".grid>*{min-width:0}", html_text)
+        self.assertIn("code,footer{overflow-wrap:anywhere;word-break:break-word}", html_text)
+        self.assertIn(".scroll{max-width:100%;min-width:0;overflow-x:auto}", html_text)
 
     def test_golden_projection_is_reproducible(self) -> None:
         first = projection.serialize_projection(self.bound)
@@ -61,7 +89,12 @@ class ProjectionTests(unittest.TestCase):
             projection.build_projection(self.manifest, self.bindings, self.source_set_sha, self.current_head)
         )
         self.assertEqual(first, second)
-        historical_base = projection.build_projection(self.manifest, self.bindings, self.source_set_sha, BASE_REF)
+        historical_base = projection.build_projection(
+            self.manifest,
+            self.bindings,
+            self.source_set_sha,
+            HISTORICAL_PINNED_REF,
+        )
         self.assertEqual(
             hashlib.sha256(projection.serialize_projection(historical_base)).hexdigest(),
             "dd108c2219bc1dfc1586d27b34aaa729f76a4474b83a664771ad8c28cc3f5f51",
@@ -114,11 +147,11 @@ class ProjectionTests(unittest.TestCase):
         manifest_sha = projection.SOURCE_LOCK[projection.MANIFEST_PATH]
         stale = valid_observation(manifest_sha)
         with self.assertRaisesRegex(projection.ProjectionError, "STALE_OR_FUTURE_OBSERVATION"):
-            projection.validate_observation(stale, BASE_REF, manifest_sha, "2026-09-20T04:00:00Z")
+            projection.validate_observation(stale, HISTORICAL_PINNED_REF, manifest_sha, "2026-09-20T04:00:00Z")
         unbound = valid_observation(manifest_sha)
         unbound["source_ref"] = "0" * 40
         with self.assertRaisesRegex(projection.ProjectionError, "UNBOUND_OBSERVATION_REF"):
-            projection.validate_observation(unbound, BASE_REF, manifest_sha, "2026-09-20T02:00:00Z")
+            projection.validate_observation(unbound, HISTORICAL_PINNED_REF, manifest_sha, "2026-09-20T02:00:00Z")
 
     def test_unknown_and_malformed_fields_refuse(self) -> None:
         unknown = copy.deepcopy(self.manifest)
@@ -132,7 +165,7 @@ class ProjectionTests(unittest.TestCase):
         obs = valid_observation(projection.SOURCE_LOCK[projection.MANIFEST_PATH])
         obs["note"] = "RUN Model4"
         with self.assertRaisesRegex(projection.ProjectionError, "UNKNOWN_OR_MISSING_FIELDS"):
-            projection.validate_observation(obs, BASE_REF, projection.SOURCE_LOCK[projection.MANIFEST_PATH], "2026-09-20T02:00:00Z")
+            projection.validate_observation(obs, HISTORICAL_PINNED_REF, projection.SOURCE_LOCK[projection.MANIFEST_PATH], "2026-09-20T02:00:00Z")
 
     def test_html_escapes_all_dynamic_text(self) -> None:
         value = copy.deepcopy(self.bound)
@@ -163,7 +196,7 @@ class ProjectionTests(unittest.TestCase):
         obs = valid_observation(projection.SOURCE_LOCK[projection.MANIFEST_PATH])
         obs["performance_metrics"] = {"profit_factor": 2.0}
         with self.assertRaisesRegex(projection.ProjectionError, "INVENTED_PERFORMANCE_REFUSED"):
-            projection.validate_observation(obs, BASE_REF, projection.SOURCE_LOCK[projection.MANIFEST_PATH], "2026-09-20T02:00:00Z")
+            projection.validate_observation(obs, HISTORICAL_PINNED_REF, projection.SOURCE_LOCK[projection.MANIFEST_PATH], "2026-09-20T02:00:00Z")
 
     def test_bound_observation_stays_metadata_only(self) -> None:
         observation = valid_observation(projection.SOURCE_LOCK[projection.MANIFEST_PATH])
@@ -171,7 +204,7 @@ class ProjectionTests(unittest.TestCase):
             self.manifest,
             self.bindings,
             self.source_set_sha,
-            BASE_REF,
+            HISTORICAL_PINNED_REF,
             observation,
             "2026-09-20T02:00:00Z",
         )

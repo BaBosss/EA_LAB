@@ -1,15 +1,106 @@
 {
+  "bridge_sources": [
+    {
+      "bytes": 8478,
+      "path": "docs/research/ORDERFLOW_PROXY_NATIVE_FIXTURE_PARITY_V1_20260920.md",
+      "sha256": "23c7f2fe4b7b22d2bb84ee99958adfa4b3bc2aba1406c0e993bf113ddc5cc578"
+    },
+    {
+      "bytes": 5243,
+      "path": "tools/orderflow_proxy/native_parity/OFPNativeFixtureParity.mq5",
+      "sha256": "e014dfcaf35b5e5a710e7e9769144840905f57fdb51f301296f45577c01b9ce5"
+    },
+    {
+      "bytes": 22481,
+      "path": "tools/orderflow_proxy/native_parity/generate_native_fixture.py",
+      "sha256": "a076448fb473cdb095fe23cb48d7497ead4686779b161a773efd4368426048ea"
+    },
+    {
+      "bytes": 18723,
+      "path": "tools/orderflow_proxy/native_parity/parse_native_ledger.py",
+      "sha256": "d0e4ea1da05a0f439ed67d78e032439a8205916175fc851d1c91c3516c0285b9"
+    },
+    {
+      "bytes": 18088,
+      "path": "tools/orderflow_proxy/native_parity/receipt_validation.py",
+      "sha256": "78266db7bc9e64c6620300dfff997b71ba299f480e0fe90da1320c5caf919e1d"
+    },
+    {
+      "bytes": 20077,
+      "path": "tools/orderflow_proxy/native_parity/test_native_parity.py",
+      "sha256": "1f5209b9eb7f33a0d022a6a0a0ff2ed87084eb63896a0db99062d56cd3f6f9e6"
+    }
+  ],
   "case_count": 24,
   "classification": "SOURCE_ONLY_SYNTHETIC_FIXTURE_PARITY_PREPARATION",
   "execution_status": "NOT_EXECUTED",
-  "fixture_sha256": "55ad678178f4606da64091cb5853b043fb76a89b9ea799970db5c847212f2732",
-  "outputs": [
-    "NativeFixtureData.mqh",
-    "expected_python_ledger.json",
-    "runtime_request.NOT_EXECUTED.json"
+  "fixture": {
+    "bytes": 3395,
+    "path": "tools/orderflow_proxy/fixtures/mirrored_cases.json",
+    "sha256": "55ad678178f4606da64091cb5853b043fb76a89b9ea799970db5c847212f2732"
+  },
+  "generated_outputs": [
+    {
+      "bytes": 522203,
+      "path": "tools/orderflow_proxy/native_parity/generated/NativeFixtureData.mqh",
+      "sha256": "eda14b96829f5d6dc5c3db27461d4aa619ab361358d4e106b21ba0951aa3ae5b"
+    },
+    {
+      "bytes": 17197,
+      "path": "tools/orderflow_proxy/native_parity/generated/expected_python_ledger.json",
+      "sha256": "60da74d8f5c1516f749d577f03b99c5a0d9e402ed033a28cde19824cc19b7a3e"
+    },
+    {
+      "bytes": 1341,
+      "path": "tools/orderflow_proxy/native_parity/generated/runtime_request.NOT_EXECUTED.json",
+      "sha256": "a909af067943d060a819a2753b3063037b35c89898f8c67091a782bda5215504"
+    }
   ],
-  "schema": "orderflow_proxy_native_fixture_package/v1",
-  "source_graph_sha256": "7361de6148638cb85e28d15a962e98e4266a5077e2fdc443189660d7f35f5b3a",
+  "manifest_self_exclusion": {
+    "excluded": true,
+    "reason": "SELF_HASH_RECURSION"
+  },
+  "schema": "orderflow_proxy_native_fixture_package/v2",
+  "source_graph": {
+    "files": [
+      {
+        "bytes": 56829,
+        "path": "tools/orderflow_proxy/offline_reference.py",
+        "sha256": "aa14180736f11e9f9a1497bf13ec306945be5d6f937095a803b12e33bcc61b6d"
+      },
+      {
+        "bytes": 6334,
+        "path": "ea_template/components/orderflow_proxy/OrderFlowProxyTypes.mqh",
+        "sha256": "ccf0c1b1a13f9bf57723a631cfd004bcb85cf78cd3127338a14b1050587033d8"
+      },
+      {
+        "bytes": 16084,
+        "path": "ea_template/components/orderflow_proxy/OrderFlowProxyValidation.mqh",
+        "sha256": "3e61dbc1e79ca5f3008f5bb8e0cc9d630380c2da068effefb79d31dbe000e906"
+      },
+      {
+        "bytes": 7028,
+        "path": "ea_template/components/orderflow_proxy/TickActivityProfile.mqh",
+        "sha256": "882792c4c861412352981203bd896eff1240ed18d6754b3a7e2f52182f978527"
+      },
+      {
+        "bytes": 10962,
+        "path": "ea_template/components/orderflow_proxy/OFPRReversal.mqh",
+        "sha256": "978d7b932d242d612a4da51c5a1a2600c7613cfc69bc311fe7a441cd28faa644"
+      },
+      {
+        "bytes": 12730,
+        "path": "ea_template/components/orderflow_proxy/OFPCContinuation.mqh",
+        "sha256": "906705a5cdc468297ad11d55808330f855d9f99662db6e4fb83fca3c1382b65b"
+      },
+      {
+        "bytes": 485,
+        "path": "ea_template/components/orderflow_proxy/OrderFlowProxyComponents.mqh",
+        "sha256": "a0f05cb253d5a5690173be12b67a6576549bbcf678fcce302223c2b2d6b8c1a7"
+      }
+    ],
+    "sha256": "7361de6148638cb85e28d15a962e98e4266a5077e2fdc443189660d7f35f5b3a"
+  },
   "variant_counts": {
     "OFPC-00": 4,
     "OFPC-01": 4,

@@ -70,10 +70,20 @@ SOURCE_GRAPH_EDGES = (
     "NAMED_BROKER_HISTORY->M15_RATE_ROWS",
     "NAMED_BROKER_HISTORY->M5_RATE_ROWS",
 )
+RAW_QUOTE_ORDERING_CONTRACT = {
+    "native_time_field": "time_msc",
+    "native_time_unit": "EXACT_MILLISECONDS_AS_EXPORTED",
+    "source_order_field": "source_row_ordinal",
+    "source_order_origin": "ONE_BASED_ACQUISITION_FILE_ROW_NOT_EXCHANGE_NATIVE_SEQUENCE",
+    "broker_fraction_binding": "TIME_MSC_MOD_1000_EQUALS_BROKER_CLOCK_MILLISECOND_NO_OFFSET_INFERENCE",
+}
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _HEAD_RE = re.compile(r"^[0-9a-f]{40}$")
 _BROKER_TIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
+_BROKER_MILLISECOND_TIME_RE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{3}))?$"
+)
 _UTC_TIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 
@@ -152,6 +162,22 @@ def _broker_time(value: Any, field: str) -> str:
     except ValueError as exc:
         raise Refusal(f"{field} is not a valid broker-clock timestamp") from exc
     return text
+
+
+def _broker_millisecond_time(value: Any, field: str) -> tuple[str, dt.datetime, int]:
+    text = _text(value, field)
+    match = _BROKER_MILLISECOND_TIME_RE.fullmatch(text)
+    if match is None:
+        raise Refusal(
+            f"{field} must use broker-clock whole seconds or exact three-digit millisecond precision"
+        )
+    whole_seconds, fraction = match.groups()
+    try:
+        parsed = dt.datetime.strptime(whole_seconds, "%Y-%m-%dT%H:%M:%S")
+    except ValueError as exc:
+        raise Refusal(f"{field} is not a valid broker-clock timestamp") from exc
+    milliseconds = int(fraction) if fraction is not None else 0
+    return text, parsed + dt.timedelta(milliseconds=milliseconds), milliseconds
 
 
 def _safe_relative_path(value: Any) -> str:
@@ -415,6 +441,10 @@ def build_acquisition_request(
         },
         "clock_requirement": "NAMED_BROKER_CLOCK_CONTRACT_REQUIRED_NO_LOCAL_CONVERSION",
         "raw_quote_requirement": "TIMESTAMPED_BID_ASK_FLAGS_ROWS_REQUIRED_RECEIPTS_ARE_INSUFFICIENT",
+        "raw_quote_required_fields": {
+            "historical_market_time_broker": "BROKER_CLOCK_WITH_OPTIONAL_EXACT_THREE_DIGIT_MILLISECONDS",
+            **RAW_QUOTE_ORDERING_CONTRACT,
+        },
         "request_count": len(requests),
         "requests": requests,
         "network_action": "NONE",
@@ -447,7 +477,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 def _validate_row(
     row: dict[str, Any], artifact: dict[str, Any], source_identity: dict[str, Any], classification: str
-) -> str:
+) -> tuple[dt.datetime, int | None, int | None]:
     symbol = artifact["logical_symbol"]
     expected_identity = {
         "broker": source_identity["broker"],
@@ -466,19 +496,47 @@ def _validate_row(
         raise Refusal("fixture row is not marked synthetic_fixture")
     if classification == "BROKER_HISTORY_EXPORT" and fixture_flag:
         raise Refusal("fixture substitution cannot satisfy BROKER_HISTORY_EXPORT")
-    market_time = _broker_time(
-        row.get("historical_market_time_broker"), "historical_market_time_broker"
-    )
+    role = artifact["role"]
+    broker_millisecond = 0
+    if role == "RAW_QUOTE_ROWS":
+        _, market_datetime, broker_millisecond = _broker_millisecond_time(
+            row.get("historical_market_time_broker"), "historical_market_time_broker"
+        )
+    else:
+        market_time = _broker_time(
+            row.get("historical_market_time_broker"), "historical_market_time_broker"
+        )
+        market_datetime = dt.datetime.strptime(market_time, "%Y-%m-%dT%H:%M:%S")
     interval = artifact["requested_interval"]
-    if not interval["start_broker_time"] <= market_time < interval["end_broker_time"]:
+    interval_start = dt.datetime.strptime(
+        _broker_time(interval["start_broker_time"], "requested_interval.start_broker_time"),
+        "%Y-%m-%dT%H:%M:%S",
+    )
+    interval_end = dt.datetime.strptime(
+        _broker_time(interval["end_broker_time"], "requested_interval.end_broker_time"),
+        "%Y-%m-%dT%H:%M:%S",
+    )
+    if not interval_start <= market_datetime < interval_end:
         raise Refusal(
             f"record outside requested half-open interval: {symbol}/{artifact['window_id']}/{artifact['role']}"
         )
     if "decision_time_broker" in row:
         decision_time = _broker_time(row.get("decision_time_broker"), "decision_time_broker")
-        if market_time >= decision_time:
+        decision_datetime = dt.datetime.strptime(decision_time, "%Y-%m-%dT%H:%M:%S")
+        if market_datetime >= decision_datetime:
             raise Refusal("post-decision data is not admissible")
-    if artifact["role"] == "RAW_QUOTE_ROWS":
+    time_msc: int | None = None
+    source_row_ordinal: int | None = None
+    if role == "RAW_QUOTE_ROWS":
+        time_msc = _strict_int(row.get("time_msc"), "time_msc")
+        source_row_ordinal = _strict_int(
+            row.get("source_row_ordinal"), "source_row_ordinal", minimum=1
+        )
+        if time_msc % 1000 != broker_millisecond:
+            raise Refusal(
+                "time_msc millisecond residue must equal broker-clock millisecond residue; "
+                "no epoch, UTC, timezone, or DST offset is inferred"
+            )
         bid = _finite_number(row.get("bid"), "bid", positive=True)
         ask = _finite_number(row.get("ask"), "ask", positive=True)
         if ask < bid:
@@ -502,7 +560,7 @@ def _validate_row(
         if low > min(open_value, close) or high < max(open_value, close) or high < low:
             raise Refusal("invalid OHLC relationship")
         _strict_int(row.get("tick_volume"), "tick_volume")
-    return market_time
+    return market_datetime, time_msc, source_row_ordinal
 
 
 def _validate_raw_manifest(
@@ -572,6 +630,11 @@ def _validate_raw_manifest(
         raise Refusal(f"clock contract status must be {allowed_clock_status}")
     if clock.get("timezone_conversion") != "NONE_INFERRED":
         raise Refusal("clock contract cannot infer a local timezone conversion")
+    if manifest.get("raw_quote_ordering") != RAW_QUOTE_ORDERING_CONTRACT:
+        raise Refusal(
+            "raw_quote_ordering must document exact time_msc and the acquisition-file "
+            "source_row_ordinal origin without claiming an exchange-native sequence"
+        )
     if manifest.get("repeatability_claim") != "REVISED_HISTORY_REPEATABLE":
         raise Refusal("repeatability claim must be REVISED_HISTORY_REPEATABLE")
 
@@ -621,12 +684,44 @@ def _validate_raw_manifest(
         rows = _read_jsonl(resolved)
         if len(rows) != _strict_int(artifact.get("record_count"), "record_count", minimum=1):
             raise Refusal(f"record_count mismatch for {relative}")
-        previous_time: str | None = None
+        quote_role = role == "RAW_QUOTE_ROWS"
+        previous_market_time: dt.datetime | None = None
+        previous_time_msc: int | None = None
+        previous_source_row_ordinal: int | None = None
+        temporal_identities: set[tuple[int, int]] = set()
         for row in rows:
-            market_time = _validate_row(row, artifact, source, classification)
-            if previous_time is not None and market_time <= previous_time:
+            market_time, time_msc, source_row_ordinal = _validate_row(
+                row, artifact, source, classification
+            )
+            if quote_role:
+                if time_msc is None or source_row_ordinal is None:
+                    raise Refusal(f"raw quote temporal fields missing in {relative}")
+                temporal_identity = (time_msc, source_row_ordinal)
+                if temporal_identity in temporal_identities:
+                    raise Refusal(f"duplicate raw quote temporal identity in {relative}")
+                if previous_market_time is not None and market_time < previous_market_time:
+                    raise Refusal(f"decreasing broker-clock quote time in {relative}")
+                if previous_time_msc is not None and time_msc < previous_time_msc:
+                    raise Refusal(f"decreasing native time_msc in {relative}")
+                if (
+                    previous_time_msc is not None
+                    and time_msc == previous_time_msc
+                    and market_time != previous_market_time
+                ):
+                    raise Refusal(
+                        f"equal time_msc must carry identical broker-clock event time in {relative}"
+                    )
+                if (
+                    previous_source_row_ordinal is not None
+                    and source_row_ordinal <= previous_source_row_ordinal
+                ):
+                    raise Refusal(f"source_row_ordinal must be strictly increasing in {relative}")
+                temporal_identities.add(temporal_identity)
+                previous_time_msc = time_msc
+                previous_source_row_ordinal = source_row_ordinal
+            elif previous_market_time is not None and market_time <= previous_market_time:
                 raise Refusal(f"non-increasing or duplicate market time in {relative}")
-            previous_time = market_time
+            previous_market_time = market_time
         total_rows += len(rows)
     if observed_identities != expected_identities:
         missing = sorted(expected_identities - observed_identities)
@@ -672,6 +767,7 @@ def preflight(
         "raw_record_count": observed["raw_record_count"],
         "source_identity": observed["source_identity"],
         "raw_quote_payload_present": True,
+        "raw_quote_ordering": dict(RAW_QUOTE_ORDERING_CONTRACT),
         "a2_receipts_treated_as_quote_stream": False,
         "repeatability_claim": "REVISED_HISTORY_REPEATABLE",
         "exchange_completeness_claim": None,

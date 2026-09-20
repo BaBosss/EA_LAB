@@ -63,7 +63,23 @@ The manifest binds:
 - causal decision partitioning as `NOT_IMPLEMENTED`;
 - relative artifact path, byte size, exact SHA-256, record count, role, symbol and interval identity.
 
-Quote payload rows contain timestamped `bid`, `ask`, and `flags`. A2 envelopes, count/hash receipts, or quote-stream hashes are not quote rows and cannot substitute for them. Rate rows contain timestamped OHLC and integer `tick_volume`; a copied quote count is not presumed equal to bar tick volume. Bool counts, non-finite values, malformed JSONL, invalid OHLC, invalid quotes, non-increasing timestamps, out-of-window/future rows, hash or size mismatch, missing per-interval evidence, duplicate identities, path escapes/reparse components, source/symbol/build mixing, unknown clocks, and synthetic fixture substitution all fail closed.
+Quote payload rows contain `historical_market_time_broker`, exact integer `time_msc`, exact integer `source_row_ordinal`, `bid`, `ask`, and `flags`. `historical_market_time_broker` is the named broker clock with either whole-second form or exactly three fractional digits. Its millisecond residue must equal `time_msc % 1000`; this residue check does not infer or validate any epoch, UTC offset, timezone, or DST mapping. `source_row_ordinal` is one-based acquisition-file row order. It is required deterministic source order and is explicitly **not** an exchange-native sequence.
+
+The manifest must include this exact `raw_quote_ordering` contract:
+
+```json
+{
+  "native_time_field": "time_msc",
+  "native_time_unit": "EXACT_MILLISECONDS_AS_EXPORTED",
+  "source_order_field": "source_row_ordinal",
+  "source_order_origin": "ONE_BASED_ACQUISITION_FILE_ROW_NOT_EXCHANGE_NATIVE_SEQUENCE",
+  "broker_fraction_binding": "TIME_MSC_MOD_1000_EQUALS_BROKER_CLOCK_MILLISECOND_NO_OFFSET_INFERENCE"
+}
+```
+
+Raw quote file order is preserved, never sorted or deduplicated by the validator. Broker-clock time and `time_msc` must be nondecreasing, while `source_row_ordinal` must be strictly increasing. Thus multiple distinct rows in one second, and multiple ordered rows with the same `time_msc`, are valid. An exact repeated `(time_msc, source_row_ordinal)` identity, source-order reversal, decreasing broker or native time, invalid millisecond precision, or inconsistent residues fails closed. `time_msc` and `source_row_ordinal` reject bool, negative, fractional, and non-finite values.
+
+Rate rows remain whole-second broker-clock records and contain timestamped OHLC plus integer `tick_volume`; a copied quote count is not presumed equal to bar tick volume. A2 envelopes, count/hash receipts, or quote-stream hashes are not quote rows and cannot substitute for them. Bool counts, non-finite values, malformed JSONL, invalid OHLC, invalid quotes, non-increasing rate timestamps, out-of-window/future rows, hash or size mismatch, missing per-interval evidence, duplicate identities, path escapes/reparse components, source/symbol/build mixing, unknown clocks, and synthetic fixture substitution all fail closed.
 
 A repeated broker-history export may claim only `REVISED_HISTORY_REPEATABLE`. Preflight does not establish exchange-wide completeness, historical point-in-time/as-of availability, or immutable broker history.
 

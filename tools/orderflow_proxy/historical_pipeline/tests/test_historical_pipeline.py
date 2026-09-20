@@ -28,6 +28,18 @@ def _write_json(path: Path, value: object) -> None:
     )
 
 
+def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "".join(
+            json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+            for row in rows
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -59,7 +71,15 @@ def _fixture_manifest(root: Path) -> tuple[Path, dict[str, object]]:
                     "synthetic_fixture": True,
                 }
                 if role == "RAW_QUOTE_ROWS":
-                    row = {**common, "bid": 100.0, "ask": 100.1, "flags": 3}
+                    row = {
+                        **common,
+                        "historical_market_time_broker": f"{sample_time}.000",
+                        "time_msc": 1000,
+                        "source_row_ordinal": 1,
+                        "bid": 100.0,
+                        "ask": 100.1,
+                        "flags": 3,
+                    }
                 else:
                     timeframe = {
                         "D1_RATE_ROWS": "D1",
@@ -120,12 +140,33 @@ def _fixture_manifest(root: Path) -> tuple[Path, dict[str, object]]:
             "status": "FIXTURE_ONLY",
             "timezone_conversion": "NONE_INFERRED",
         },
+        "raw_quote_ordering": dict(pipeline.RAW_QUOTE_ORDERING_CONTRACT),
         "repeatability_claim": "REVISED_HISTORY_REPEATABLE",
         "artifacts": artifacts,
     }
     path = root / "raw_manifest.json"
     _write_json(path, manifest)
     return path, manifest
+
+
+def _first_quote_artifact(
+    root: Path, manifest: dict[str, object]
+) -> tuple[dict[str, object], Path, dict[str, object]]:
+    artifact = next(
+        item for item in manifest["artifacts"] if item["role"] == "RAW_QUOTE_ROWS"
+    )
+    artifact_path = root / artifact["path"]
+    row = json.loads(artifact_path.read_text(encoding="utf-8"))
+    return artifact, artifact_path, row
+
+
+def _replace_artifact_rows(
+    artifact: dict[str, object], artifact_path: Path, rows: list[dict[str, object]]
+) -> None:
+    _write_jsonl(artifact_path, rows)
+    artifact["sha256"] = _sha256(artifact_path)
+    artifact["size_bytes"] = artifact_path.stat().st_size
+    artifact["record_count"] = len(rows)
 
 
 class PlanTests(unittest.TestCase):
@@ -167,6 +208,14 @@ class PlanTests(unittest.TestCase):
             {item["artifact_role"] for item in request["requests"]},
             set(pipeline.REQUIRED_ARTIFACT_ROLES),
         )
+        self.assertEqual(
+            request["raw_quote_required_fields"]["source_order_origin"],
+            "ONE_BASED_ACQUISITION_FILE_ROW_NOT_EXCHANGE_NATIVE_SEQUENCE",
+        )
+        self.assertEqual(
+            request["raw_quote_required_fields"]["broker_fraction_binding"],
+            "TIME_MSC_MOD_1000_EQUALS_BROKER_CLOCK_MILLISECOND_NO_OFFSET_INFERENCE",
+        )
 
 
 class PreflightTests(unittest.TestCase):
@@ -181,8 +230,163 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(result["status"], "VALIDATED_FIXTURE_INPUT")
         self.assertFalse(result["real_data_qualified"])
         self.assertFalse(result["execution_allowed"])
+        self.assertEqual(result["raw_quote_ordering"], pipeline.RAW_QUOTE_ORDERING_CONTRACT)
         self.assertIn("HISTORICAL_SEAM_CONSUMER_NOT_IMPLEMENTED", result["unresolved_gates"])
         self.assertIn("SIGNAL_INPUT_FIDELITY_UNQUALIFIED", result["unresolved_gates"])
+
+    def test_distinct_millisecond_quotes_within_one_second_are_retained(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            manifest_path, manifest = _fixture_manifest(root)
+            artifact, artifact_path, first = _first_quote_artifact(root, manifest)
+            rows = [
+                {
+                    **first,
+                    "historical_market_time_broker": "2020-01-01T00:00:01.100",
+                    "time_msc": 1100,
+                    "source_row_ordinal": 1,
+                    "bid": 100.01,
+                    "ask": 100.11,
+                },
+                {
+                    **first,
+                    "historical_market_time_broker": "2020-01-01T00:00:01.200",
+                    "time_msc": 1200,
+                    "source_row_ordinal": 2,
+                    "bid": 100.02,
+                    "ask": 100.12,
+                },
+            ]
+            _replace_artifact_rows(artifact, artifact_path, rows)
+            _write_json(manifest_path, manifest)
+            result = pipeline.preflight(manifest_path, _sha256(manifest_path), PREREGISTRATION)
+            retained = [json.loads(line) for line in artifact_path.read_text().splitlines()]
+        self.assertEqual(result["raw_record_count"], 49)
+        self.assertEqual(len(retained), 2)
+        self.assertEqual([row["bid"] for row in retained], [100.01, 100.02])
+
+    def test_equal_time_msc_quotes_are_retained_when_source_order_advances(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            manifest_path, manifest = _fixture_manifest(root)
+            artifact, artifact_path, first = _first_quote_artifact(root, manifest)
+            rows = [
+                {
+                    **first,
+                    "historical_market_time_broker": "2020-01-01T00:00:01.100",
+                    "time_msc": 1100,
+                    "source_row_ordinal": 1,
+                    "bid": 100.01,
+                },
+                {
+                    **first,
+                    "historical_market_time_broker": "2020-01-01T00:00:01.100",
+                    "time_msc": 1100,
+                    "source_row_ordinal": 2,
+                    "bid": 100.02,
+                },
+            ]
+            _replace_artifact_rows(artifact, artifact_path, rows)
+            _write_json(manifest_path, manifest)
+            result = pipeline.preflight(manifest_path, _sha256(manifest_path), PREREGISTRATION)
+            retained = [json.loads(line) for line in artifact_path.read_text().splitlines()]
+        self.assertEqual(result["raw_record_count"], 49)
+        self.assertEqual(
+            [(row["time_msc"], row["source_row_ordinal"]) for row in retained],
+            [(1100, 1), (1100, 2)],
+        )
+
+    def test_duplicate_and_out_of_order_quote_temporal_identities_are_refused(self) -> None:
+        mutations = {
+            "exact_duplicate": (
+                [
+                    ("2020-01-01T00:00:01.100", 1100, 1),
+                    ("2020-01-01T00:00:01.100", 1100, 1),
+                ],
+                "duplicate raw quote temporal identity",
+            ),
+            "source_sequence_reversal": (
+                [
+                    ("2020-01-01T00:00:01.100", 1100, 2),
+                    ("2020-01-01T00:00:01.200", 1200, 1),
+                ],
+                "source_row_ordinal must be strictly increasing",
+            ),
+            "decreasing_native_time": (
+                [
+                    ("2020-01-01T00:00:01.200", 1200, 1),
+                    ("2020-01-01T00:00:02.100", 1100, 2),
+                ],
+                "decreasing native time_msc",
+            ),
+            "decreasing_broker_time": (
+                [
+                    ("2020-01-01T00:00:02.100", 2100, 1),
+                    ("2020-01-01T00:00:01.100", 3100, 2),
+                ],
+                "decreasing broker-clock quote time",
+            ),
+            "equal_native_different_broker_second": (
+                [
+                    ("2020-01-01T00:00:01.100", 1100, 1),
+                    ("2020-01-01T00:00:02.100", 1100, 2),
+                ],
+                "equal time_msc must carry identical broker-clock event time",
+            ),
+        }
+        for mutation, (values, expected) in mutations.items():
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                manifest_path, manifest = _fixture_manifest(root)
+                artifact, artifact_path, first = _first_quote_artifact(root, manifest)
+                rows = [
+                    {
+                        **first,
+                        "historical_market_time_broker": broker_time,
+                        "time_msc": time_msc,
+                        "source_row_ordinal": ordinal,
+                        "bid": 100.0 + ordinal / 100.0,
+                    }
+                    for broker_time, time_msc, ordinal in values
+                ]
+                _replace_artifact_rows(artifact, artifact_path, rows)
+                _write_json(manifest_path, manifest)
+                with self.assertRaisesRegex(pipeline.Refusal, expected):
+                    pipeline.preflight(manifest_path, _sha256(manifest_path), PREREGISTRATION)
+
+    def test_inconsistent_quote_clock_precision_and_residue_are_refused(self) -> None:
+        mutations = {
+            "fractional_tenths": ("2020-01-01T00:00:01.1", 1100),
+            "fractional_four_digits": ("2020-01-01T00:00:01.1000", 1100),
+            "residue_mismatch": ("2020-01-01T00:00:01.100", 1200),
+        }
+        for mutation, (broker_time, time_msc) in mutations.items():
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                manifest_path, manifest = _fixture_manifest(root)
+                artifact, artifact_path, row = _first_quote_artifact(root, manifest)
+                row["historical_market_time_broker"] = broker_time
+                row["time_msc"] = time_msc
+                _replace_artifact_rows(artifact, artifact_path, [row])
+                _write_json(manifest_path, manifest)
+                with self.assertRaisesRegex(
+                    pipeline.Refusal, "millisecond precision|millisecond residue"
+                ):
+                    pipeline.preflight(manifest_path, _sha256(manifest_path), PREREGISTRATION)
+
+    def test_quote_time_and_ordinal_types_are_strict_nonnegative_integers(self) -> None:
+        invalid_values = (True, -1, 1.5, float("nan"))
+        for field in ("time_msc", "source_row_ordinal"):
+            for value in invalid_values:
+                with self.subTest(field=field, value=repr(value)), tempfile.TemporaryDirectory() as temp:
+                    root = Path(temp)
+                    manifest_path, manifest = _fixture_manifest(root)
+                    artifact, artifact_path, row = _first_quote_artifact(root, manifest)
+                    row[field] = value
+                    _replace_artifact_rows(artifact, artifact_path, [row])
+                    _write_json(manifest_path, manifest)
+                    with self.assertRaisesRegex(pipeline.Refusal, field):
+                        pipeline.preflight(manifest_path, _sha256(manifest_path), PREREGISTRATION)
 
     def test_a2_receipt_role_cannot_substitute_for_raw_quotes(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -257,7 +461,7 @@ class PreflightTests(unittest.TestCase):
                         row["historical_market_time_broker"] = artifact["requested_interval"]["end_broker_time"]
                         expected = "outside requested half-open interval"
                     elif mutation == "post_decision":
-                        row["decision_time_broker"] = row["historical_market_time_broker"]
+                        row["decision_time_broker"] = row["historical_market_time_broker"].split(".")[0]
                         expected = "post-decision data"
                     else:
                         manifest["classification"] = "BROKER_HISTORY_EXPORT"

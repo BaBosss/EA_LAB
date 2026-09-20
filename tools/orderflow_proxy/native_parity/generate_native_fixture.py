@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA = "orderflow_proxy_native_fixture_package/v1"
+SCHEMA = "orderflow_proxy_native_fixture_package/v2"
 LEDGER_SCHEMA = "orderflow_proxy_native_expected_ledger/v1"
 RUNTIME_SCHEMA = "orderflow_proxy_native_runtime_request/v1"
 FLOAT_DECIMAL_PLACES = 12
@@ -42,6 +42,14 @@ SOURCE_GRAPH_PATHS = (
     "ea_template/components/orderflow_proxy/OFPRReversal.mqh",
     "ea_template/components/orderflow_proxy/OFPCContinuation.mqh",
     "ea_template/components/orderflow_proxy/OrderFlowProxyComponents.mqh",
+)
+BRIDGE_SOURCE_PATHS = (
+    "docs/research/ORDERFLOW_PROXY_NATIVE_FIXTURE_PARITY_V1_20260920.md",
+    "tools/orderflow_proxy/native_parity/OFPNativeFixtureParity.mq5",
+    "tools/orderflow_proxy/native_parity/generate_native_fixture.py",
+    "tools/orderflow_proxy/native_parity/parse_native_ledger.py",
+    "tools/orderflow_proxy/native_parity/receipt_validation.py",
+    "tools/orderflow_proxy/native_parity/test_native_parity.py",
 )
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "generated"
 
@@ -72,6 +80,18 @@ def _source_graph() -> tuple[list[dict[str, Any]], str]:
         f"{row['path']}\0{row['bytes']}\0{row['sha256']}\n".encode("utf-8") for row in rows
     )
     return rows, _sha256_bytes(binding)
+
+
+def _file_rows(paths: tuple[str, ...]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for relative in paths:
+        data = (REPO_ROOT / relative).read_bytes()
+        rows.append({"path": relative, "bytes": len(data), "sha256": _sha256_bytes(data)})
+    return rows
+
+
+def _output_binding(relative: str, data: bytes) -> dict[str, Any]:
+    return {"path": relative, "bytes": len(data), "sha256": _sha256_bytes(data)}
 
 
 def _mql_string(value: str) -> str:
@@ -397,7 +417,14 @@ def build_outputs() -> dict[str, bytes]:
             "EXCLUSIVE_PRIMARY_TESTER_LANE_VERIFIED",
             "FROZEN_SYNTHETIC_DIAGNOSTIC_RUNTIME_CONTRACT",
             "ELIGIBLE_EXISTING_SAFE_RUNNER_PARAMETERS_FROZEN",
+            "TRUSTED_CONTROLLER_RECEIPT_FROZEN_AFTER_EXECUTION",
+            "INDEPENDENT_CONTROLLER_EVIDENCE_PINS_RECEIPT_DIGEST_OUT_OF_BAND",
         ],
+        "receipt_status": "ABSENT_NOT_EXECUTED",
+        "trust_boundary": (
+            "This inert descriptor is not a runtime receipt or trust root. Matching self-supplied "
+            "names and hashes cannot prove execution."
+        ),
         "forbidden_claims": [
             "REAL_DATA_PARITY",
             "REAL_QUOTE_HISTORY",
@@ -409,26 +436,47 @@ def build_outputs() -> dict[str, bytes]:
         "auto_launch": False,
         "deployment": False,
     }
+    include_bytes = _render_mql_include(
+        reference, descriptors, expanded_cases, fixture_sha256, source_graph_sha256
+    )
+    ledger_bytes = _canonical_json(ledger)
+    runtime_request_bytes = _canonical_json(runtime_request)
     manifest = {
         "schema": SCHEMA,
         "classification": "SOURCE_ONLY_SYNTHETIC_FIXTURE_PARITY_PREPARATION",
         "execution_status": "NOT_EXECUTED",
-        "fixture_sha256": fixture_sha256,
-        "source_graph_sha256": source_graph_sha256,
+        "fixture": {
+            "path": FIXTURE_PATH.relative_to(REPO_ROOT).as_posix(),
+            "bytes": len(fixture_bytes),
+            "sha256": fixture_sha256,
+        },
+        "source_graph": {"sha256": source_graph_sha256, "files": source_rows},
         "case_count": EXPECTED_CASE_COUNT,
         "variant_counts": ledger["variant_counts"],
-        "outputs": [
-            "NativeFixtureData.mqh",
-            "expected_python_ledger.json",
-            "runtime_request.NOT_EXECUTED.json",
+        "generated_outputs": [
+            _output_binding(
+                "tools/orderflow_proxy/native_parity/generated/NativeFixtureData.mqh",
+                include_bytes,
+            ),
+            _output_binding(
+                "tools/orderflow_proxy/native_parity/generated/expected_python_ledger.json",
+                ledger_bytes,
+            ),
+            _output_binding(
+                "tools/orderflow_proxy/native_parity/generated/runtime_request.NOT_EXECUTED.json",
+                runtime_request_bytes,
+            ),
         ],
+        "manifest_self_exclusion": {
+            "excluded": True,
+            "reason": "SELF_HASH_RECURSION",
+        },
+        "bridge_sources": _file_rows(BRIDGE_SOURCE_PATHS),
     }
     return {
-        "NativeFixtureData.mqh": _render_mql_include(
-            reference, descriptors, expanded_cases, fixture_sha256, source_graph_sha256
-        ),
-        "expected_python_ledger.json": _canonical_json(ledger),
-        "runtime_request.NOT_EXECUTED.json": _canonical_json(runtime_request),
+        "NativeFixtureData.mqh": include_bytes,
+        "expected_python_ledger.json": ledger_bytes,
+        "runtime_request.NOT_EXECUTED.json": runtime_request_bytes,
         "manifest.json": _canonical_json(manifest),
     }
 

@@ -13,15 +13,19 @@
     "STRATEGY_PERFORMANCE",
     "PRODUCTION_RUNTIME"
   ],
+  "receipt_status": "ABSENT_NOT_EXECUTED",
   "requested_lane": "MT5_PRIMARY_EXCLUSIVE",
   "required_preconditions": [
     "SEPARATE_EXACT_HEAD_SOURCE_SCRUTINY_PASS",
     "EXCLUSIVE_PRIMARY_TESTER_LANE_VERIFIED",
     "FROZEN_SYNTHETIC_DIAGNOSTIC_RUNTIME_CONTRACT",
-    "ELIGIBLE_EXISTING_SAFE_RUNNER_PARAMETERS_FROZEN"
+    "ELIGIBLE_EXISTING_SAFE_RUNNER_PARAMETERS_FROZEN",
+    "TRUSTED_CONTROLLER_RECEIPT_FROZEN_AFTER_EXECUTION",
+    "INDEPENDENT_CONTROLLER_EVIDENCE_PINS_RECEIPT_DIGEST_OUT_OF_BAND"
   ],
   "runtime_contract_id": "NOT_EXECUTED_UNFROZEN",
   "schema": "orderflow_proxy_native_runtime_request/v1",
   "source_graph_sha256": "7361de6148638cb85e28d15a962e98e4266a5077e2fdc443189660d7f35f5b3a",
-  "terminal_path": "D:/Meta 5/terminal64.exe"
+  "terminal_path": "D:/Meta 5/terminal64.exe",
+  "trust_boundary": "This inert descriptor is not a runtime receipt or trust root. Matching self-supplied names and hashes cannot prove execution."
 }
