@@ -429,7 +429,7 @@
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R2-20260920 |  | CLOSED | [tooling/reporting] parser adversarial hardening after Repair1 review fail |  | ACTIVE:10503 |
-| ORDER-MT5-REPORT-PARSER-HARDENING-R3-20260920 |  | RUNNING | [tooling/reporting] isolate HTML-table vs plain-text parser modes |  | ACTIVE:10516 |
+| ORDER-MT5-REPORT-PARSER-HARDENING-R3-20260920 |  | CLOSED | [tooling/reporting] isolate HTML-table vs plain-text parser modes |  | ACTIVE:10516 |
 | ORDER-MT5-REPORT-PARSER-SPACE-GROUPING-REPAIR-20260920 |  | CLOSED | [tooling/reporting] repair canonical MT5 report numeric parser |  | ACTIVE:10490 |
 | ORDER-PLATFORM-POST-BROAD-DIAG-20260903 |  | DONE | ? platform reliability + post-broad diagnostics ? |  | ACTIVE:10076 |
 | ORDER-RND-B16-H03 |  | DONE | B16 XAUUSD/H4 fixed-config confirmation |  | ACTIVE:10060 |
