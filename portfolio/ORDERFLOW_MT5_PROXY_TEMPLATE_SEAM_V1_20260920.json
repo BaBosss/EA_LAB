@@ -1,0 +1,91 @@
+{
+  "schema": "ea_lab_orderflow_mt5_proxy_template_seam_v1/v1",
+  "date": "2026-09-20",
+  "status": "SOURCE_ACCEPTED_REVIEWED_CANONICAL_RESEARCH_INPUT_ONLY",
+  "canonical_head": "5436833f3791049655f3ab44b90582c73d222e1d",
+  "provider_qualification": {
+    "provider": "ThinkMarkets-Live",
+    "terminal_build": 6182,
+    "status": "PARTIALLY_QUALIFIED_CURRENT_WINDOW",
+    "basis": "MT5_SYNCED_COPY_TICKS_INFO_EXACT_REPEAT_PER_INTERVAL",
+    "qualified_symbols": [
+      "XAUUSD",
+      "EURUSD",
+      "GBPUSD",
+      "EURGBP",
+      "USDJPY",
+      "EURJPY"
+    ],
+    "blocked_symbols": {
+      "BTCUSD": "RATE_SNAPSHOT_CHANGED",
+      "ETHUSD": "RATE_SNAPSHOT_CHANGED"
+    },
+    "review": "SCRUTINY_PASS / HIGH",
+    "true_exchange_orderflow": false,
+    "executed_volume_or_delta_qualified": false,
+    "standing_future_window_qualification": false,
+    "evidence_root": "D:\\EA_LAB_CONTROL\\evidence\\ct-ofp-thinkmarkets-sync-basis-20260920",
+    "evidence_manifest_sha256": "1b33325e46aceee5f80041e599cc1c20f71124adbbc726721b89bef83664ff0f",
+    "review_sha256": "76be643e0344b35a7307b8bd64de9b0fbf6d45d8cc2128502592fee96f583c68"
+  },
+  "template_seam": {
+    "initial_head": "654cdf6d4e7bfd35b6e4fb4d8847e20c9ea6b50d",
+    "initial_review": "SCRUTINY_REPAIR_REQUIRED / HIGH / OFP-SEAM-V1-001",
+    "repair_budget": "1/1_USED",
+    "accepted_head": "5436833f3791049655f3ab44b90582c73d222e1d",
+    "targeted_recheck": "SCRUTINY_PASS / HIGH / ALLOW_INTEGRATION",
+    "accepted_symbols": [
+      "XAUUSD",
+      "EURUSD",
+      "GBPUSD",
+      "EURGBP",
+      "USDJPY",
+      "EURJPY"
+    ],
+    "blocked_symbols": {
+      "BTCUSD": "RATE_SNAPSHOT_CHANGED",
+      "ETHUSD": "RATE_SNAPSHOT_CHANGED"
+    },
+    "bundle_sha256": {
+      "XAUUSD": "eb4ae690ae9c8cbe32e5ca3b69baef1e1ce42ebe63e1fa3eba560ab95da71a8d",
+      "EURUSD": "776df940030826e6dc60389c0b2fe731999d66b8853a8651231947f73d1de75c",
+      "GBPUSD": "3fa11f7c2db87873dcf809dafa344a487b9869fb091c351d68a3da7da7383046",
+      "EURGBP": "330fb9d2e0cdbd4d82ab7fa25c998c47a51a0f1f520cbfe1f14fadc807966c92",
+      "USDJPY": "26f6af2bba8bfa786e1940b1f818d4a84d2c7cec3c332ebe65267e5226953287",
+      "EURJPY": "e9c2d00c7d193e5e488e0b30bb25418f6f506db7933eb33233ede02c73f10576"
+    },
+    "source_acceptance_sha256": "625e20448bf5132e6de6ebf1abe3b904b637af5254cf356f5412f53a6b4719f5",
+    "targeted_recheck_sha256": "83dfd5172a220318f94e34f6a4d37829cb5c9c4bc3427658c8e283a12c7c2119"
+  },
+  "semantics": {
+    "geometry_preserved": true,
+    "current_entry_signal_compatible": false,
+    "order_execution_authorized": false,
+    "true_orderflow": false,
+    "executed_volume_delta_qualified": false,
+    "time_exit_consumer_owned": true
+  },
+  "gates": {
+    "provider_bundle": "16/16 PASS after repair",
+    "existing_proxy": "47/47 PASS",
+    "mirrored_fixtures": "24/24 PASS consumed unchanged",
+    "template_seam_compile": "0 errors / 0 warnings",
+    "proxy_components_compile": "0 errors / 0 warnings",
+    "native_execution": "NOT_EXECUTED",
+    "protected_tracked_files": 95,
+    "byte_mismatches": 0
+  },
+  "authority": {
+    "research_input_only": true,
+    "backtest": false,
+    "performance": false,
+    "optimization": false,
+    "model4": false,
+    "holdout": false,
+    "candidate": false,
+    "runtime": false,
+    "deployment": false,
+    "trading": false
+  },
+  "next_gate": "Separately frozen research experiment consuming only the six exact current-window bundles; fresh A2 revalidation/new bundle required for every future window."
+}
