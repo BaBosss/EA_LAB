@@ -1,0 +1,54 @@
+{
+  "schema": "CODEX_USAGE_REPORTER_V3_ACCEPTANCE_V1",
+  "status": "SOURCE_ACCEPTED_REVIEWED_CANONICAL_READ_ONLY_MODES_NOT_ACTIVATED",
+  "canonical_source_head": "2f0d18059e2c77957c313bdc4130791fe3a26156",
+  "source_paths": [
+    {
+      "path": "docs/workflows/EA_LAB_CODEX_BUDGET_MODES.md",
+      "blob": "8173106e8d9ac3cadeea8b56c5f73a4a04d79a20"
+    },
+    {
+      "path": "tools/codex_budget/usage_report.schema.json",
+      "blob": "2bdce1bd33f69b1e1167815ff2de9dfca131e571"
+    },
+    {
+      "path": "tools/codex_budget/usage_reporter.py",
+      "blob": "629a6d2d8313b7f90a9e0e783302bb85bde58a0a"
+    },
+    {
+      "path": "tools/codex_budget/tests/test_usage_reporter.py",
+      "blob": "1577be57cfe8800ef9936a5bc74ed7d028c83229"
+    }
+  ],
+  "lineage": {
+    "v2_failed_head": "e38921c86f6b37240cc6eabbb19df5e95d7ba1a2",
+    "v2_repair_spent": "1/1",
+    "v3_historical_failed_head": "76f439f93e981456336514436c79aed4c01d74b3",
+    "v3_historical_finding": "CURV3-001_AUTHORITY_PROVENANCE_CONTRADICTION",
+    "authority_binding_head": "0bba1252fbba4bfa8c79a16ec7b14887b470bb1d",
+    "frozen_reviewed_head": "3da26cc956bc7da9c9a75740c81c5487fef1fc6a"
+  },
+  "evidence": {
+    "owner_authority_sha256": "7d1756f99750aee4d5de6b2022e12936f8d0094c93735f5fa8b5ef01087774e6",
+    "authority_review_sha256": "79918e37befe65f11708fd1454c5a9110ba0e91f89119837a81a4cce55f39bdc",
+    "frozen_binding_review_sha256": "36bf1674f272e54ddea31f603ec41e472b315a11c46aecab7a487ab20c26f5bc",
+    "final_binding_review_sha256": "8412e5fe6455228af06215fcabad484bc51febb99ea4b06911ec51d5eea5d31a",
+    "final_handoff_sha256": "7d10a025701bfe018088e303c889bd4c03a9fbcbcf3d1e45f0e3b301a9d55a8f",
+    "freeze_sha256": "574292dd2640f7a671294b1e82dd2d4be2b5ad6e442917b238645e55eb6636f7",
+    "focused_tests": "20/20 PASS",
+    "schema_coverage": "34/34 ZERO_UNCOVERED",
+    "schema_parse": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "history_preserved": true,
+  "source_repair_reset": false,
+  "authority": {
+    "normal_economy_activated": false,
+    "runtime_profile_model_routing": false,
+    "subscription_detection": false,
+    "quota_billing_savings_claim": false,
+    "mt5_deployment_trading_risk": false
+  },
+  "next": "No Reporter V3 source action absent drift. NORMAL/ECONOMY hookup or observational calibration requires a separate later contract.",
+  "generated_utc": "2026-09-20T14:55:32.608616+00:00"
+}
