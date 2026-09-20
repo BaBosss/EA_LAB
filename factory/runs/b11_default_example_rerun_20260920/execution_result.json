@@ -1,0 +1,120 @@
+{
+  "authority": "EXAMPLE_ONLY_NO_PROMOTION_NO_OPTIMIZATION_NO_HOLDOUT_NO_RUNTIME_DEPLOYMENT_TRADING",
+  "build_receipt": "br-c9756db16758437a903c725976a5bd65",
+  "bwd": {
+    "copied_files": [
+      "B11_RERUN_BWD_20260920-holding.png",
+      "B11_RERUN_BWD_20260920-hst.png",
+      "B11_RERUN_BWD_20260920-mfemae.png",
+      "B11_RERUN_BWD_20260920.htm",
+      "B11_RERUN_BWD_20260920.leverage_check.json",
+      "B11_RERUN_BWD_20260920.png",
+      "B11_RERUN_BWD_20260920.truncation_check.json"
+    ],
+    "from": "2020.01.01",
+    "label": "BWD",
+    "leverage_check": {
+      "actual_leverage": 100,
+      "match": true,
+      "report_name": "B11_RERUN_BWD_20260920",
+      "requested_leverage": 100,
+      "status": "MATCH"
+    },
+    "metrics": {
+      "equity_drawdown_maximal_abs": 2214.7,
+      "equity_drawdown_maximal_pct": 21.67,
+      "from_date": "2020.01.01",
+      "history_quality": "99%",
+      "leverage": "1:100",
+      "net_profit": -1878.63,
+      "period": "H1",
+      "profit_factor": 0.89,
+      "report_build": 6090,
+      "symbol": "XAUUSD",
+      "to_date": "2022.12.31",
+      "total_trades": 2657.0
+    },
+    "parse_exit": 0,
+    "report_exists": true,
+    "report_sha256": "4eb6d4c19a7bc77b7c75878ba80c337790e8ee609ae8db5647fc05c1261ecc40",
+    "runner_exit": 0,
+    "started_utc": "2026-09-20T06:46:57.4317140Z",
+    "to": "2022.12.31",
+    "truncation": {
+      "check_status": "CHECK_PASS",
+      "checker_exit_code": 0,
+      "detail": "last deal 2022.12.30 23:58:59 | window ends 2022.12.31 | idle tail 0 days (0% of window) | entry deals 2657 | eqDD \r\n21.67%\r\n[OK] traded through to the end of the window",
+      "report_name": "B11_RERUN_BWD_20260920",
+      "schema_version": 2,
+      "truncated": false
+    }
+  },
+  "compile_errors": 0,
+  "compile_warnings": 0,
+  "compiled_ex5_sha256": "532d6bfe0ea679a5a783516646a7c75905d2f39b5fea93849a9277acb6e0ceee",
+  "contract_head": "bd2d99e5c8beec809e2ab2f8cf5b94237d9803a3",
+  "example_carrier": "XAUUSD/H1",
+  "holdout_used": false,
+  "home_ratified": false,
+  "main": {
+    "copied_files": [
+      "B11_RERUN_MAIN_20260920-holding.png",
+      "B11_RERUN_MAIN_20260920-hst.png",
+      "B11_RERUN_MAIN_20260920-mfemae.png",
+      "B11_RERUN_MAIN_20260920.htm",
+      "B11_RERUN_MAIN_20260920.leverage_check.json",
+      "B11_RERUN_MAIN_20260920.png",
+      "B11_RERUN_MAIN_20260920.truncation_check.json"
+    ],
+    "from": "2023.01.01",
+    "label": "MAIN",
+    "leverage_check": {
+      "actual_leverage": 100,
+      "match": true,
+      "report_name": "B11_RERUN_MAIN_20260920",
+      "requested_leverage": 100,
+      "status": "MATCH"
+    },
+    "metrics": {
+      "equity_drawdown_maximal_abs": 1878.51,
+      "equity_drawdown_maximal_pct": 18.63,
+      "from_date": "2023.01.01",
+      "history_quality": "98%",
+      "leverage": "1:100",
+      "net_profit": 696.95,
+      "period": "H1",
+      "profit_factor": 1.03,
+      "report_build": 6090,
+      "symbol": "XAUUSD",
+      "to_date": "2025.12.31",
+      "total_trades": 2822.0
+    },
+    "parse_exit": 0,
+    "report_exists": true,
+    "report_sha256": "527391187527e1ef85b521564e4928f104db235da05e4bb1fcc548575703b72d",
+    "runner_exit": 0,
+    "started_utc": "2026-09-20T06:46:27.6357442Z",
+    "to": "2025.12.31",
+    "truncation": {
+      "check_status": "CHECK_PASS",
+      "checker_exit_code": 0,
+      "detail": "last deal 2025.12.30 23:59:59 | window ends 2025.12.31 | idle tail 0 days (0% of window) | entry deals 2822 | eqDD \r\n18.63%\r\n[OK] traded through to the end of the window",
+      "report_name": "B11_RERUN_MAIN_20260920",
+      "schema_version": 2,
+      "truncated": false
+    }
+  },
+  "model": "Model1",
+  "mt5b_processes_remaining": 0,
+  "optimization": 0,
+  "owner_authorized_example": true,
+  "prior_test_ex5_sha256": "0a6154996aaaf69de317d93dc0103408751318defc2ce2085e86e39957b95ff3",
+  "repo_dirty_entries": [],
+  "scope": "B11_DEFAULT_EXAMPLE_RERUN",
+  "set_sha256": "5a0cdd3186e924234d4491bdf854966553214ebaaf03ca6793beaedd42ea8efa",
+  "source_sha256": "59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672",
+  "status": "EXECUTION_COMPLETE",
+  "terminal_build": "5.0.0.6090",
+  "terminal_sha256": "20dfefd944ae482781ac1e83a736a976ecf0315661e54b5771e327f1ffb2b35c",
+  "test_surface_restored": true
+}

@@ -1,0 +1,58 @@
+{
+  "configured": {
+    "configured_stack_max_levels": 5,
+    "effective_max_levels": "min(5,3)=3",
+    "exit_mode": "EXIT_ATR_TP(22)",
+    "first_lot_mode": "FIXED(41)",
+    "fixed_lot": 0.01,
+    "hard_kill_dd_pct": 25.0,
+    "hedge_mode": 0,
+    "lot_progression": "PROG_NONE(50)",
+    "max_deposit_load_pct": 30.0,
+    "nominal_effective_max_aggregate_lots": 0.03,
+    "nominal_lot_ladder": [
+      0.01,
+      0.01,
+      0.01
+    ],
+    "protect_level": "PROTECT_NORMAL(2)",
+    "rc_max_lot": 0.2,
+    "recovery_mode": 80,
+    "risk_atr_period": 14,
+    "risk_control_max_steps": 3,
+    "sl_atr_mult": 2.0,
+    "sl_mode": "SL_ATR(33)",
+    "stack_confirm": "CONF_SIG_VALID(1)",
+    "stack_mode": "STACK_GRID_TREND(91)",
+    "step": "ATR x 1.0",
+    "tp_atr_mult": 3.0
+  },
+  "derivation": "flat-to-nonflat-to-flat deal-ledger reconstruction; exact raw report bytes preserved",
+  "observed": {
+    "BWD": {
+      "active_time_share_full_window": 0.749286,
+      "flat_lots_observed": true,
+      "hard_kill_or_emergency_close": "UNKNOWN_NOT_IDENTIFIABLE_FROM_REPORT_HISTORY",
+      "intratrade_equity_series": "UNKNOWN_NOT_PRESENT_IN_HTML_TABLES",
+      "largest_realized_cycle_loss": -89.68,
+      "max_aggregate_lots": 0.03,
+      "max_basket_depth": 3,
+      "max_entry_price_span_price_units": 159.54,
+      "max_simultaneous_positions": 3,
+      "source_largest_ticket_loss": -41.59
+    },
+    "MAIN": {
+      "active_time_share_full_window": 0.748601,
+      "flat_lots_observed": true,
+      "hard_kill_or_emergency_close": "UNKNOWN_NOT_IDENTIFIABLE_FROM_REPORT_HISTORY",
+      "intratrade_equity_series": "UNKNOWN_NOT_PRESENT_IN_HTML_TABLES",
+      "largest_realized_cycle_loss": -243.24,
+      "max_aggregate_lots": 0.03,
+      "max_basket_depth": 3,
+      "max_entry_price_span_price_units": 260.97,
+      "max_simultaneous_positions": 3,
+      "source_largest_ticket_loss": -81.86
+    }
+  },
+  "schema": "b11-default-example-exposure/1"
+}

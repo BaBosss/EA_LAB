@@ -1,0 +1,8 @@
+﻿{
+    "schema_version":  2,
+    "report_name":  "B11_RERUN_MAIN_20260920",
+    "check_status":  "CHECK_PASS",
+    "checker_exit_code":  0,
+    "truncated":  false,
+    "detail":  "last deal 2025.12.30 23:59:59 | window ends 2025.12.31 | idle tail 0 days (0% of window) | entry deals 2822 | eqDD \r\n18.63%\r\n[OK] traded through to the end of the window"
+}

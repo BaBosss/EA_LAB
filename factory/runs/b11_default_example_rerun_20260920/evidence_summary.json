@@ -1,0 +1,260 @@
+{
+  "build_receipt": "br-c9756db16758437a903c725976a5bd65",
+  "candidate": false,
+  "canonical_contract_head": "bd2d99e5c8beec809e2ab2f8cf5b94237d9803a3",
+  "compiler": {
+    "errors": 0,
+    "terminal_build": "5.0.0.6090",
+    "warnings": 0
+  },
+  "effective_config_hash": "e092c814807e755d41a90c7ca4bf9dd06abc98f8145070db60f2749099848b2a",
+  "ex5_sha256": "532d6bfe0ea679a5a783516646a7c75905d2f39b5fea93849a9277acb6e0ceee",
+  "example_carrier": "XAUUSD/H1",
+  "exposure": {
+    "configured": {
+      "configured_stack_max_levels": 5,
+      "effective_max_levels": "min(5,3)=3",
+      "exit_mode": "EXIT_ATR_TP(22)",
+      "first_lot_mode": "FIXED(41)",
+      "fixed_lot": 0.01,
+      "hard_kill_dd_pct": 25.0,
+      "hedge_mode": 0,
+      "lot_progression": "PROG_NONE(50)",
+      "max_deposit_load_pct": 30.0,
+      "nominal_effective_max_aggregate_lots": 0.03,
+      "nominal_lot_ladder": [
+        0.01,
+        0.01,
+        0.01
+      ],
+      "protect_level": "PROTECT_NORMAL(2)",
+      "rc_max_lot": 0.2,
+      "recovery_mode": 80,
+      "risk_atr_period": 14,
+      "risk_control_max_steps": 3,
+      "sl_atr_mult": 2.0,
+      "sl_mode": "SL_ATR(33)",
+      "stack_confirm": "CONF_SIG_VALID(1)",
+      "stack_mode": "STACK_GRID_TREND(91)",
+      "step": "ATR x 1.0",
+      "tp_atr_mult": 3.0
+    },
+    "derivation": "flat-to-nonflat-to-flat deal-ledger reconstruction; exact raw report bytes preserved",
+    "observed": {
+      "BWD": {
+        "active_time_share_full_window": 0.749286,
+        "flat_lots_observed": true,
+        "hard_kill_or_emergency_close": "UNKNOWN_NOT_IDENTIFIABLE_FROM_REPORT_HISTORY",
+        "intratrade_equity_series": "UNKNOWN_NOT_PRESENT_IN_HTML_TABLES",
+        "largest_realized_cycle_loss": -89.68,
+        "max_aggregate_lots": 0.03,
+        "max_basket_depth": 3,
+        "max_entry_price_span_price_units": 159.54,
+        "max_simultaneous_positions": 3,
+        "source_largest_ticket_loss": -41.59
+      },
+      "MAIN": {
+        "active_time_share_full_window": 0.748601,
+        "flat_lots_observed": true,
+        "hard_kill_or_emergency_close": "UNKNOWN_NOT_IDENTIFIABLE_FROM_REPORT_HISTORY",
+        "intratrade_equity_series": "UNKNOWN_NOT_PRESENT_IN_HTML_TABLES",
+        "largest_realized_cycle_loss": -243.24,
+        "max_aggregate_lots": 0.03,
+        "max_basket_depth": 3,
+        "max_entry_price_span_price_units": 260.97,
+        "max_simultaneous_positions": 3,
+        "source_largest_ticket_loss": -81.86
+      }
+    },
+    "schema": "b11-default-example-exposure/1"
+  },
+  "family": "B11",
+  "holdout": "UNSPENT",
+  "home_ratified": false,
+  "hypothesis": "corrected-parser end-to-end rerun with unchanged B11 defaults; no strategy hypothesis promoted",
+  "interpretation": {
+    "BWD": "negative aggregate net, PF 0.89, all three calendar years negative",
+    "MAIN": "positive aggregate net but PF 1.03 and two of three calendar years negative",
+    "scope": "negative/weak outcomes are retained as successful plumbing evidence; no family verdict, Home selection, retune, optimization or promotion"
+  },
+  "kint": "OPEN",
+  "model": "Model1 / 1 Minute OHLC",
+  "mt5_processes_remaining": 0,
+  "optimization": 0,
+  "quality_grade": "UNRATIFIED",
+  "robustness": {
+    "HOLDOUT": "UNSPENT",
+    "Model4": "NOT_RUN",
+    "MonteCarlo": "NOT_RUN",
+    "broker_portability": "NOT_RUN",
+    "optimization": "NOT_RUN"
+  },
+  "runtime_authority": false,
+  "schema": "b11-default-example-rerun/1",
+  "set_sha256": "5a0cdd3186e924234d4491bdf854966553214ebaaf03ca6793beaedd42ea8efa",
+  "source_sha256": "59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672",
+  "status": "EXECUTION_COMPLETE_PENDING_REVIEW",
+  "test_surface_restored": true,
+  "trading_authority": false,
+  "variant": "DEFAULT_EXAMPLE_RERUN_CORRECTED_PARSER",
+  "windows": {
+    "BWD": {
+      "copied_files": [
+        "B11_RERUN_BWD_20260920-holding.png",
+        "B11_RERUN_BWD_20260920-hst.png",
+        "B11_RERUN_BWD_20260920-mfemae.png",
+        "B11_RERUN_BWD_20260920.htm",
+        "B11_RERUN_BWD_20260920.leverage_check.json",
+        "B11_RERUN_BWD_20260920.png",
+        "B11_RERUN_BWD_20260920.truncation_check.json"
+      ],
+      "from": "2020.01.01",
+      "label": "BWD",
+      "leverage_check": {
+        "actual_leverage": 100,
+        "match": true,
+        "report_name": "B11_RERUN_BWD_20260920",
+        "requested_leverage": 100,
+        "status": "MATCH"
+      },
+      "metrics": {
+        "equity_drawdown_maximal_abs": 2214.7,
+        "equity_drawdown_maximal_pct": 21.67,
+        "from_date": "2020.01.01",
+        "history_quality": "99%",
+        "leverage": "1:100",
+        "net_profit": -1878.63,
+        "period": "H1",
+        "profit_factor": 0.89,
+        "report_build": 6090,
+        "symbol": "XAUUSD",
+        "to_date": "2022.12.31",
+        "total_trades": 2657.0
+      },
+      "parse_exit": 0,
+      "report_exists": true,
+      "report_sha256": "4eb6d4c19a7bc77b7c75878ba80c337790e8ee609ae8db5647fc05c1261ecc40",
+      "runner_exit": 0,
+      "started_utc": "2026-09-20T06:46:57.4317140Z",
+      "to": "2022.12.31",
+      "truncation": {
+        "check_status": "CHECK_PASS",
+        "checker_exit_code": 0,
+        "detail": "last deal 2022.12.30 23:58:59 | window ends 2022.12.31 | idle tail 0 days (0% of window) | entry deals 2657 | eqDD \r\n21.67%\r\n[OK] traded through to the end of the window",
+        "report_name": "B11_RERUN_BWD_20260920",
+        "schema_version": 2,
+        "truncated": false
+      }
+    },
+    "MAIN": {
+      "copied_files": [
+        "B11_RERUN_MAIN_20260920-holding.png",
+        "B11_RERUN_MAIN_20260920-hst.png",
+        "B11_RERUN_MAIN_20260920-mfemae.png",
+        "B11_RERUN_MAIN_20260920.htm",
+        "B11_RERUN_MAIN_20260920.leverage_check.json",
+        "B11_RERUN_MAIN_20260920.png",
+        "B11_RERUN_MAIN_20260920.truncation_check.json"
+      ],
+      "from": "2023.01.01",
+      "label": "MAIN",
+      "leverage_check": {
+        "actual_leverage": 100,
+        "match": true,
+        "report_name": "B11_RERUN_MAIN_20260920",
+        "requested_leverage": 100,
+        "status": "MATCH"
+      },
+      "metrics": {
+        "equity_drawdown_maximal_abs": 1878.51,
+        "equity_drawdown_maximal_pct": 18.63,
+        "from_date": "2023.01.01",
+        "history_quality": "98%",
+        "leverage": "1:100",
+        "net_profit": 696.95,
+        "period": "H1",
+        "profit_factor": 1.03,
+        "report_build": 6090,
+        "symbol": "XAUUSD",
+        "to_date": "2025.12.31",
+        "total_trades": 2822.0
+      },
+      "parse_exit": 0,
+      "report_exists": true,
+      "report_sha256": "527391187527e1ef85b521564e4928f104db235da05e4bb1fcc548575703b72d",
+      "runner_exit": 0,
+      "started_utc": "2026-09-20T06:46:27.6357442Z",
+      "to": "2025.12.31",
+      "truncation": {
+        "check_status": "CHECK_PASS",
+        "checker_exit_code": 0,
+        "detail": "last deal 2025.12.30 23:59:59 | window ends 2025.12.31 | idle tail 0 days (0% of window) | entry deals 2822 | eqDD \r\n18.63%\r\n[OK] traded through to the end of the window",
+        "report_name": "B11_RERUN_MAIN_20260920",
+        "schema_version": 2,
+        "truncated": false
+      }
+    }
+  },
+  "year_split": [
+    {
+      "active_time_share_full_window": 0.32834,
+      "cycles": 225,
+      "net": -590.76,
+      "pf": 0.8828,
+      "realized_balance_dd": 1025.9,
+      "trades": 952,
+      "window": "MAIN",
+      "year": 2023
+    },
+    {
+      "active_time_share_full_window": 0.336512,
+      "cycles": 206,
+      "net": -1105.54,
+      "pf": 0.8432,
+      "realized_balance_dd": 1239.36,
+      "trades": 924,
+      "window": "MAIN",
+      "year": 2024
+    },
+    {
+      "active_time_share_full_window": 0.332372,
+      "cycles": 183,
+      "net": 2393.25,
+      "pf": 1.2033,
+      "realized_balance_dd": 805.35,
+      "trades": 946,
+      "window": "MAIN",
+      "year": 2025
+    },
+    {
+      "active_time_share_full_window": 0.329862,
+      "cycles": 189,
+      "net": -715.52,
+      "pf": 0.885,
+      "realized_balance_dd": 941.38,
+      "trades": 840,
+      "window": "BWD",
+      "year": 2020
+    },
+    {
+      "active_time_share_full_window": 0.335373,
+      "cycles": 222,
+      "net": -847.49,
+      "pf": 0.8304,
+      "realized_balance_dd": 915.99,
+      "trades": 869,
+      "window": "BWD",
+      "year": 2021
+    },
+    {
+      "active_time_share_full_window": 0.332901,
+      "cycles": 223,
+      "net": -315.62,
+      "pf": 0.9422,
+      "realized_balance_dd": 544.35,
+      "trades": 948,
+      "window": "BWD",
+      "year": 2022
+    }
+  ]
+}

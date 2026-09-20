@@ -1,0 +1,6 @@
+﻿symbol preflight: logical=XAUUSD tester=XAUUSD status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\Meta 5b\bases\ThinkMarkets-Live\symbols\selected-146237.dat; history/ticks metadata under 'D:\Meta 5b\bases\ThinkMarkets-Live'
+surface: FULL -- full surface of build LAB_ENTRY_11: 151 of 151 inputs declared and present. No input is left to the terminal cache.
+identity: PASS -- build_receipt=br-c9756db16758437a903c725976a5bd65 ex5_sha256=532d6bfe0ea679a5a783516646a7c75905d2f39b5fea93849a9277acb6e0ceee build=LAB_ENTRY_11 config_fingerprint=e092c814807e755d41a90c7ca4bf9dd06abc98f8145070db60f2749099848b2a config_scope=surface+constants set_sha256=5a0cdd3186e924234d4491bdf854966553214ebaaf03ca6793beaedd42ea8efa
+stale-check: OK -- D:\Meta 5b\MQL5\Experts\EALabTpl\Boss_11_GridTrend.ex5 mtime=2026-09-20T13:46:26 :: best-effort include resolution could not find: Trade/Trade.mqh (may be a standard-library <...> include outside this repo - not counted as a staleness signal)
+launch: EALabTpl\Boss_11_GridTrend | logical=XAUUSD tester=XAUUSD H1 | 2023.01.01..2025.12.31 | set=Boss_11_GridTrend_defaults.set [portable]
+OK REPORT: D:\EA_LAB_CONTROL\worktrees\ct-b11-default-example-rerun-20260920\_mt5_auto\reports\B11_RERUN_MAIN_20260920.htm (leverage verified 1:100)
