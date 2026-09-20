@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **439** · ยังอยู่บนบอร์ด: **143** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **440** · ยังอยู่บนบอร์ด: **144** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -435,6 +435,7 @@
 | ORDER-MT5-REPORT-PARSER-HARDENING-R4-20260920 |  | DONE | [tooling/reporting] tri-state alias + inline-label guard |  | ACTIVE:10529 |
 | ORDER-MT5-REPORT-PARSER-SPACE-GROUPING-REPAIR-20260920 |  | CLOSED | [tooling/reporting] repair canonical MT5 report numeric parser |  | ACTIVE:10490 |
 | ORDER-OFP-SCR002-FOLLOWUP-20260920 |  | DONE | [research/tooling] MT5 order-flow proxy completeness follow-up |  | ACTIVE:10571 |
+| ORDER-OFP-TEMPLATE-SEAM-V1-20260920 |  | DONE | [research/tooling] ThinkMarkets A2 provider evidence + geometry-preserving Template seam |  | ACTIVE:10581 |
 | ORDER-PLATFORM-POST-BROAD-DIAG-20260903 |  | DONE | ? platform reliability + post-broad diagnostics ? |  | ACTIVE:10076 |
 | ORDER-RND-B16-H03 |  | DONE | B16 XAUUSD/H4 fixed-config confirmation |  | ACTIVE:10060 |
 | ORDER-RND-P0 | 2026-08-29 | DONE + REVIEWED | EA R&D governance/context convergence | PASS / CANONICAL at b7a75016 | ACTIVE:10024 |
