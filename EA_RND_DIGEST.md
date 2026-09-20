@@ -48,6 +48,11 @@ Then read targeted owners only when the task requires them.
 ### B15 BT9 / Candidate fidelity
 BT9 AUDUSD/H4 edge-latch portability is accepted/reviewed at `ede238fa`: disabling `_15_EdgeTrigger` worsened PF/net/DD in both MAIN and BWD while increasing trades, so the latch mechanism is not falsified but the AUDUSD/H4 home is `STOP_EXPANSION / PARK`; no optimization/Model4/HOLDOUT was spent. New Candidate build/write is machine-gated by C11 at `26171091`: frozen resolved Model-4 MAIN+BWD is mandatory while historical M1-only manifests remain readable.
 
+### Order Flow MT5 proxy — OFPR / OFPC
+- source-only proxy package is **SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY** at `86143b433293e5b3acfbb4c037c37e931d68b766`; the accepted follow-up closed `OFP-SCR-002` while preserving the earlier Repair1/targeted-recheck failures and exhausted budget;
+- source acceptance does **not** qualify true exchange Order Flow, executed-volume provenance, native runtime parity or strategy performance. Retained MT5 observations are `DATA_PRESENT_NOT_QUALIFIED`;
+- exact next gate: a separate provider-specific native `CopyTicks`/D1/M5 completeness/count-basis qualification before any geometry-preserving Template execution binding or performance contract; no optimization/HOLDOUT/Candidate/runtime/trading authority is open.
+
 ## Hermes
 Hermes is a deterministic/mechanical EA R&D factory, not a strategy architect. **H1 GOLDEN REPLAY = PASS**. **H2 SMALL PILOT = PASS**. **H3 BROAD MATRIX = PASS / COMPLETE** on contract head `47c77320`: 36/36 authorized full-window Model-1 cells, no optimization, HOLDOUT UNSPENT, repository clean, independent milestone review PASS. The later source-bound P4B package, deterministic regime join, P4 interpretation, and bounded P5 session-context attribution are complete/reviewed. None grants strategy/risk/candidate/deployment authority.
 ## Visual layer
