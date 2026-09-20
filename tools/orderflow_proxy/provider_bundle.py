@@ -22,9 +22,29 @@ PROVIDER_SERVER = "ThinkMarkets-Live"
 TERMINAL_BUILD = 6182
 REVIEWED_REPO_HEAD = "041178539fe07a306af2b68b3209b8401822534c"
 EVIDENCE_MANIFEST_SHA256 = "1b33325e46aceee5f80041e599cc1c20f71124adbbc726721b89bef83664ff0f"
+BUNDLE_SCHEMA = "orderflow_proxy_provider_bundle/v1"
+NATIVE_PAYLOAD_INTEGRITY_SCHEMA = "orderflow_proxy_native_payload_integrity/v1"
 ACCEPTED_SYMBOLS = ("XAUUSD", "EURUSD", "GBPUSD", "EURGBP", "USDJPY", "EURJPY")
 BLOCKED_SYMBOLS = ("BTCUSD", "ETHUSD")
 ALL_SYMBOLS = ACCEPTED_SYMBOLS + BLOCKED_SYMBOLS
+
+EXPECTED_BUNDLE_SHA256 = {
+    "XAUUSD": "eb4ae690ae9c8cbe32e5ca3b69baef1e1ce42ebe63e1fa3eba560ab95da71a8d",
+    "EURUSD": "776df940030826e6dc60389c0b2fe731999d66b8853a8651231947f73d1de75c",
+    "GBPUSD": "3fa11f7c2db87873dcf809dafa344a487b9869fb091c351d68a3da7da7383046",
+    "EURGBP": "330fb9d2e0cdbd4d82ab7fa25c998c47a51a0f1f520cbfe1f14fadc807966c92",
+    "USDJPY": "26f6af2bba8bfa786e1940b1f818d4a84d2c7cec3c332ebe65267e5226953287",
+    "EURJPY": "e9c2d00c7d193e5e488e0b30bb25418f6f506db7933eb33233ede02c73f10576",
+}
+
+EXPECTED_NATIVE_PAYLOAD_INTEGRITY_SHA256 = {
+    "XAUUSD": "217efde6f0f1e9528fb22fe26c8ed0921d97e595fe0c8a0d69f72bb25dba8381",
+    "EURUSD": "3c898de1e43fa4e703b0a9f2b2adf9304d8269dbfd5624faba239ec666686228",
+    "GBPUSD": "ce455c8bf7f22bc3830f7791b5136992e0196d332d24e8aa1787bf1413d7fde5",
+    "EURGBP": "468be594fc8f89a938add1e6673ce9f0f6a88206bd2e01c8d5733059a1739d24",
+    "USDJPY": "6059ab6923f47699d305085055c996e699cab487fc06e5640def01c7c3162a28",
+    "EURJPY": "f10d000ac11fcb96f99cf0e9d9ea4624661405f6331859b5fa64ad6580743885",
+}
 
 EXPECTED_WINDOWS = {
     "XAUUSD": (1789603200, 1789689600, 1789775400),
@@ -438,6 +458,115 @@ def canonical_json_bytes(value: dict[str, Any]) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True) + "\n").encode("ascii")
 
 
+def _integrity_scalar(name: str, type_tag: str, value: Any) -> bytes:
+    """Serialize one native-integrity scalar as an unambiguous ASCII record."""
+
+    if type_tag == "s":
+        _require(isinstance(value, str), f"MALFORMED_INTEGRITY_STRING:{name}")
+        rendered = value
+    elif type_tag == "i":
+        _require(_strict_int(value), f"MALFORMED_INTEGRITY_INTEGER:{name}")
+        rendered = str(value)
+    elif type_tag == "b":
+        _require(isinstance(value, bool), f"MALFORMED_INTEGRITY_BOOLEAN:{name}")
+        rendered = "true" if value else "false"
+    else:  # pragma: no cover - the field table below is static source.
+        raise AssertionError(f"unsupported integrity type tag: {type_tag}")
+    try:
+        encoded = rendered.encode("ascii")
+    except UnicodeEncodeError as error:
+        raise ProviderEvidenceError(f"NON_ASCII_INTEGRITY_VALUE:{name}") from error
+    return f"{name}|{type_tag}|{len(encoded)}|".encode("ascii") + encoded + b"\n"
+
+
+def native_payload_integrity_preimage(payload: dict[str, Any]) -> bytes:
+    """Canonical native payload serialization shared with ThinkMarketsA2Evidence.mqh.
+
+    The fixed-order, length-prefixed ASCII records bind every accepted envelope
+    field and every field of all 22 interval receipts. ``bundle_sha256`` is
+    intentionally excluded because it is independently pinned per symbol;
+    the integrity digest itself is not carried in the caller-owned payload.
+    """
+
+    _require(isinstance(payload, dict), "MALFORMED_NATIVE_PAYLOAD")
+    receipts = payload.get("interval_receipts")
+    _require(isinstance(receipts, list), "MALFORMED_NATIVE_RECEIPTS")
+    chunks = [NATIVE_PAYLOAD_INTEGRITY_SCHEMA.encode("ascii") + b"\n"]
+    envelope_fields = (
+        ("schema", "s"),
+        ("policy_id", "s"),
+        ("classification", "s"),
+        ("provider_server", "s"),
+        ("terminal_build", "i"),
+        ("logical_symbol", "s"),
+        ("broker_symbol", "s"),
+        ("reviewed_repo_head", "s"),
+        ("evidence_manifest_sha256", "s"),
+        ("profile_interval_start", "i"),
+        ("profile_interval_end", "i"),
+        ("candidate_m5_open", "i"),
+        ("true_orderflow", "b"),
+        ("executed_volume_delta_qualified", "b"),
+        ("current_entry_signal_compatible", "b"),
+        ("order_execution_authorized", "b"),
+        ("time_exit_consumer_owned", "b"),
+    )
+    for name, type_tag in envelope_fields:
+        chunks.append(_integrity_scalar(name, type_tag, payload.get(name)))
+    chunks.append(_integrity_scalar("receipt_count", "i", len(receipts)))
+
+    receipt_fields = (
+        ("kind", "s"),
+        ("ordinal", "i"),
+        ("role", "s"),
+        ("interval_start_msc", "i"),
+        ("interval_end_msc", "i"),
+        ("pass1_count", "i"),
+        ("pass2_count", "i"),
+        ("pass1_first_time_msc", "i"),
+        ("pass2_first_time_msc", "i"),
+        ("pass1_last_time_msc", "i"),
+        ("pass2_last_time_msc", "i"),
+        ("pass1_valid_bid_ask_count", "i"),
+        ("pass2_valid_bid_ask_count", "i"),
+        ("pass1_quote_stream_sha256", "s"),
+        ("pass2_quote_stream_sha256", "s"),
+        ("pass1_api_success", "b"),
+        ("pass2_api_success", "b"),
+        ("repeat_identity", "b"),
+        ("rate_snapshot_stable", "b"),
+    )
+    for index, receipt in enumerate(receipts):
+        _require(isinstance(receipt, dict), f"MALFORMED_NATIVE_RECEIPT:{index}")
+        prefix = f"receipt[{index:02d}]."
+        for name, type_tag in receipt_fields:
+            chunks.append(_integrity_scalar(prefix + name, type_tag, receipt.get(name)))
+    return b"".join(chunks)
+
+
+def native_payload_integrity_sha256(payload: dict[str, Any]) -> str:
+    return hashlib.sha256(native_payload_integrity_preimage(payload)).hexdigest()
+
+
+def validate_native_payload_binding(payload: dict[str, Any]) -> str:
+    """Refuse any payload whose caller-owned fields differ from the reviewed pins."""
+
+    _require(isinstance(payload, dict), "MALFORMED_NATIVE_PAYLOAD")
+    symbol = payload.get("logical_symbol")
+    _require(isinstance(symbol, str) and symbol in ACCEPTED_SYMBOLS, "SYMBOL_NOT_REVIEWED_QUALIFIED")
+    _require(payload.get("broker_symbol") == symbol, "SYMBOL_MAPPING_MISMATCH")
+    _require(
+        payload.get("bundle_sha256") == EXPECTED_BUNDLE_SHA256[symbol],
+        "BUNDLE_SHA256_MISMATCH",
+    )
+    actual = native_payload_integrity_sha256(payload)
+    _require(
+        actual == EXPECTED_NATIVE_PAYLOAD_INTEGRITY_SHA256[symbol],
+        "NATIVE_PAYLOAD_INTEGRITY_MISMATCH",
+    )
+    return actual
+
+
 def derive_bundle(documents: dict[str, Any], symbol: str) -> dict[str, Any]:
     """Validate one reviewed symbol and derive its deterministic typed bundle."""
 
@@ -447,7 +576,7 @@ def derive_bundle(documents: dict[str, Any], symbol: str) -> dict[str, Any]:
     frozen_symbol, receipts = _validate_symbol_evidence(documents, symbol)
     profile_start, profile_end, candidate_open = EXPECTED_WINDOWS[symbol]
     payload: dict[str, Any] = {
-        "schema": "orderflow_proxy_provider_bundle/v1",
+        "schema": BUNDLE_SCHEMA,
         "policy_id": POLICY_ID,
         "classification": CLASSIFICATION,
         "provider_server": PROVIDER_SERVER,
@@ -467,6 +596,7 @@ def derive_bundle(documents: dict[str, Any], symbol: str) -> dict[str, Any]:
         "time_exit_consumer_owned": True,
     }
     payload["bundle_sha256"] = _bundle_hash(payload)
+    validate_native_payload_binding(payload)
     return payload
 
 

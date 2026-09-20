@@ -90,6 +90,7 @@ class ProviderBundleTests(unittest.TestCase):
     def test_only_exact_six_current_windows_emit(self) -> None:
         bundles = provider_bundle.derive_bundles(self.documents)
         self.assertEqual(tuple(bundles), ACCEPTED)
+        self.assertEqual(provider_bundle.EXPECTED_BUNDLE_SHA256, EXPECTED_BUNDLE_SHA256)
         self.assertEqual(
             {symbol: bundle["bundle_sha256"] for symbol, bundle in bundles.items()},
             EXPECTED_BUNDLE_SHA256,
@@ -102,6 +103,80 @@ class ProviderBundleTests(unittest.TestCase):
             self.assertFalse(bundle["true_orderflow"])
             self.assertFalse(bundle["executed_volume_delta_qualified"])
             self.assertFalse(bundle["order_execution_authorized"])
+
+    def test_all_six_native_integrity_pins_bind_exact_reviewed_payloads(self) -> None:
+        bundles = provider_bundle.derive_bundles(self.documents)
+        self.assertEqual(
+            {
+                symbol: provider_bundle.validate_native_payload_binding(bundle)
+                for symbol, bundle in bundles.items()
+            },
+            provider_bundle.EXPECTED_NATIVE_PAYLOAD_INTEGRITY_SHA256,
+        )
+        self.assertEqual(
+            set(provider_bundle.EXPECTED_NATIVE_PAYLOAD_INTEGRITY_SHA256),
+            set(ACCEPTED),
+        )
+
+    def test_native_binding_refuses_field_and_boolean_mutations(self) -> None:
+        original = provider_bundle.derive_bundle(self.documents, "EURUSD")
+        mutations = (
+            (
+                "count",
+                lambda b: b["interval_receipts"][0].__setitem__(
+                    "pass1_count", b["interval_receipts"][0]["pass1_count"] + 1
+                ),
+            ),
+            (
+                "timestamp",
+                lambda b: b["interval_receipts"][0].__setitem__(
+                    "pass1_first_time_msc", b["interval_receipts"][0]["pass1_first_time_msc"] + 1
+                ),
+            ),
+            (
+                "quote_hash",
+                lambda b: b["interval_receipts"][0].__setitem__(
+                    "pass1_quote_stream_sha256", "0" + b["interval_receipts"][0]["pass1_quote_stream_sha256"][1:]
+                ),
+            ),
+            (
+                "snapshot_state",
+                lambda b: b["interval_receipts"][0].__setitem__("rate_snapshot_stable", False),
+            ),
+            (
+                "api_boolean",
+                lambda b: b["interval_receipts"][0].__setitem__("pass1_api_success", False),
+            ),
+            (
+                "claim_boolean",
+                lambda b: b.__setitem__("true_orderflow", True),
+            ),
+        )
+        for label, mutate in mutations:
+            with self.subTest(field=label):
+                changed = copy.deepcopy(original)
+                mutate(changed)
+                with self.assertRaisesRegex(
+                    provider_bundle.ProviderEvidenceError,
+                    "NATIVE_PAYLOAD_INTEGRITY_MISMATCH",
+                ):
+                    provider_bundle.validate_native_payload_binding(changed)
+
+    def test_shape_valid_or_recomputed_caller_bundle_digest_cannot_bypass_pins(self) -> None:
+        original = provider_bundle.derive_bundle(self.documents, "EURUSD")
+
+        changed = copy.deepcopy(original)
+        changed["bundle_sha256"] = "b" * 64
+        with self.assertRaisesRegex(provider_bundle.ProviderEvidenceError, "BUNDLE_SHA256_MISMATCH"):
+            provider_bundle.validate_native_payload_binding(changed)
+
+        changed = copy.deepcopy(original)
+        changed["interval_receipts"][0]["pass1_count"] += 1
+        without_digest = {key: value for key, value in changed.items() if key != "bundle_sha256"}
+        changed["bundle_sha256"] = provider_bundle._bundle_hash(without_digest)
+        self.assertRegex(changed["bundle_sha256"], r"^[0-9a-f]{64}$")
+        with self.assertRaisesRegex(provider_bundle.ProviderEvidenceError, "BUNDLE_SHA256_MISMATCH"):
+            provider_bundle.validate_native_payload_binding(changed)
 
     def test_blocked_and_unsupported_symbols_are_refused(self) -> None:
         for symbol in (*BLOCKED, "AUDUSD"):

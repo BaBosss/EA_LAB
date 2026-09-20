@@ -39,6 +39,23 @@ Qualification means only that the provider-local `COPY_TICKS_INFO` quote stream 
 
 Malformed, missing, duplicate, reordered, future, mismatched, unstable, unsupported, or broadened evidence fails closed.
 
+### Native cryptographic payload binding
+
+Structural validation is followed by two independent exact pins. First, `bundle_sha256` must equal the reviewed Python bundle hash for the named symbol; a merely shape-valid or caller-recomputed digest is refused. Second, native MQL reconstructs a canonical payload preimage from the received envelope and all fields of all 22 receipts, hashes its UTF-8/ASCII bytes with `CryptEncode(CRYPT_HASH_SHA256)`, and compares the result with a separate per-symbol integrity pin. No integrity digest is accepted from the caller.
+
+The canonical serialization is `orderflow_proxy_native_payload_integrity/v1\n` followed by fixed-order records of the form `name|type|ASCII-byte-length|value\n`. Type is `s`, `i`, or `b`; integers use unsigned decimal with no leading zeros and booleans are lowercase `true`/`false`. Envelope order is schema, policy, classification, provider, build, logical/broker symbols, reviewed head, evidence manifest, three current-window timestamps, the two provider claim booleans, the three fixed seam-authority booleans, and receipt count. Each receipt then serializes, in array order, kind, ordinal, role, start/end, both counts, both first/last timestamps, both valid-bid/ask counts, both quote-stream hashes, both API-success booleans, repeat identity, and snapshot stability. Accepted values are ASCII, so MQL `StringLen` equals the encoded byte length.
+
+`bundle_sha256` is explicitly excluded from that preimage because it is separately pinned and including it would couple two digest domains; the native integrity digest is not a payload field, avoiding recursion. The exact reviewed pins are:
+
+| Symbol | bundle_sha256 | native payload integrity SHA-256 |
+|---|---|---|
+| XAUUSD | `eb4ae690ae9c8cbe32e5ca3b69baef1e1ce42ebe63e1fa3eba560ab95da71a8d` | `217efde6f0f1e9528fb22fe26c8ed0921d97e595fe0c8a0d69f72bb25dba8381` |
+| EURUSD | `776df940030826e6dc60389c0b2fe731999d66b8853a8651231947f73d1de75c` | `3c898de1e43fa4e703b0a9f2b2adf9304d8269dbfd5624faba239ec666686228` |
+| GBPUSD | `3fa11f7c2db87873dcf809dafa344a487b9869fb091c351d68a3da7da7383046` | `ce455c8bf7f22bc3830f7791b5136992e0196d332d24e8aa1787bf1413d7fde5` |
+| EURGBP | `330fb9d2e0cdbd4d82ab7fa25c998c47a51a0f1f520cbfe1f14fadc807966c92` | `468be594fc8f89a938add1e6673ce9f0f6a88206bd2e01c8d5733059a1739d24` |
+| USDJPY | `26f6af2bba8bfa786e1940b1f818d4a84d2c7cec3c332ebe65267e5226953287` | `6059ab6923f47699d305085055c996e699cab487fc06e5640def01c7c3162a28` |
+| EURJPY | `e9c2d00c7d193e5e488e0b30bb25418f6f506db7933eb33233ede02c73f10576` | `f10d000ac11fcb96f99cf0e9d9ea4624661405f6331859b5fa64ad6580743885` |
+
 ## Geometry-preserving result
 
 `OrderFlowProxyTemplateSeam.mqh` copies the complete `OFPDecision`, its complete `OFPGeometry`, and the provider evidence identity into `OFPTemplateSeamResult`. It exposes:
