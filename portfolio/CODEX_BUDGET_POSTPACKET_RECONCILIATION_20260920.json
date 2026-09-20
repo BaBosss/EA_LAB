@@ -1,0 +1,34 @@
+{
+  "schema": "EA_LAB_CODEX_BUDGET_POSTPACKET_RECONCILIATION_V1",
+  "basis_canonical": "7348a40b2e42e20d5864eccdc64550efa7eae5b3",
+  "budget_packet": {
+    "status": "SOURCE_ACCEPTED_REVIEWED_CANONICAL_PACKET_ONLY",
+    "head": "7348a40b2e42e20d5864eccdc64550efa7eae5b3",
+    "registry_lane": "ct-codex-budget-packets-r1-final2-20260920",
+    "blocker": "",
+    "modes_activated": false
+  },
+  "reporter_v2": {
+    "status": "SCRUTINY_FAIL_HIGH_BLOCK_INTEGRATION_LOCAL_UNPUSHED_REPAIR_EXHAUSTED",
+    "head": "e38921c86f6b37240cc6eabbb19df5e95d7ba1a2",
+    "finding": "CURV2-001_RUNTIME_VALIDATOR_TYPED_SCHEMA_GAP",
+    "registry_lane": "ct-codex-budget-reporter-v2-20260920",
+    "integration_authorized": false,
+    "rerun_authorized": false
+  },
+  "successor": {
+    "name": "CODEX_USAGE_REPORTER_V3_SCHEMA_VALIDATION",
+    "justified_direct_consumer": true,
+    "status": "PROSPECTIVE_BLOCKED_OWNER_AUTHORITY_CONTRACT_ONLY",
+    "contract": "docs/workflows/CODEX_USAGE_REPORTER_V3_SCHEMA_VALIDATION_CONTRACT_20260920.md",
+    "implementation_authorized": false,
+    "runtime_or_profile_authority": false,
+    "not_repair2": true
+  },
+  "durable_jobs_reconciled_observation": {
+    "active_count": 1,
+    "active_lane": "ct-ofp-scr002-followup-20260920",
+    "budget_lane_active": false
+  },
+  "generated_utc": "2026-09-20T10:18:30.446Z"
+}

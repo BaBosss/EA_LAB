@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **437** · ยังอยู่บนบอร์ด: **141** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **438** · ยังอยู่บนบอร์ด: **142** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -415,6 +415,7 @@
 | ORDER-B11-DEFAULT-EXAMPLE-LOOP-20260920 |  | CLOSED | [template/research] one complete default B11 loop |  | ACTIVE:10477 |
 | ORDER-B11-DEFAULT-EXAMPLE-RERUN-20260920 |  | DONE | [template/research] fixed rerun after parser Repair4 |  | ACTIVE:10544 |
 | ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10269 |
+| ORDER-CODEX-USAGE-REPORTER-V3-SCHEMA-VALIDATION-20260920 |  | BLOCKED | -- [tooling/cost-control] prospective successor -- | OWNER_DECISION / CONTRACT_ONLY / NO_IMPLEMENTATION | ACTIVE:10558 |
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | DONE | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_PERFORMANCE_SCREEN | ACTIVE:10300 |
 | ORDER-CT-DF03-B21-IMPLEMENTATION-20260918 |  | DONE | - [template/recovered-family] DF03 Grid Horizontal Line / Fibonacci - |  | ACTIVE:10322 |
 | ORDER-CT-JOB-IDENTITY-PROVIDER-V1-20260918 | 2026-09-18 | DONE | [monitor/tooling] identity-aware V0 input provider | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_RUNTIME_HOOKUP | ACTIVE:10422 |
