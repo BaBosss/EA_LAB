@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import copy
+import os
+try:
+    from .binding import AUTHORITY, seal_built_index, require_verified, public_binding, stable_json
+except ImportError:
+    from binding import AUTHORITY, seal_built_index, require_verified, public_binding, stable_json
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -15,7 +21,7 @@ SCHEMA = "ea-lab-second-brain-reader/1"
 PACKET_SCHEMA = "ea-lab-knowledge-query-packet/1"
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
-SOURCE_ID = re.compile(r"\bSRC-[A-Z0-9][A-Z0-9-]*\b")
+SOURCE_ID = re.compile(r"SRC-[A-Z0-9]+(?:-[A-Z0-9]+)*")
 MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 URL = re.compile(r"https?://[^\s)>\]]+", re.I)
 EN_TOKEN = re.compile(r"[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*")
@@ -41,7 +47,8 @@ class ReaderError(RuntimeError):
 
 def _run(repo: Path, *args: str, text: bool = False) -> bytes | str:
     proc = subprocess.run(["git", "-C", str(repo), *args], stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, text=text, check=False)
+                          stderr=subprocess.PIPE, text=text, check=False,
+                          creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
     if proc.returncode:
         message = proc.stderr.strip() if text else proc.stderr.decode("utf-8", "replace").strip()
         raise ReaderError(f"git {' '.join(args)} failed: {message}")
@@ -252,7 +259,9 @@ def make_document(path: str, raw: bytes, registry: dict[str, dict[str, Any]], au
                   tree: dict[str, str] | None = None) -> dict[str, Any]:
     text = decode_markdown(raw, path)
     meta = frontmatter(text)
-    ids = sorted(set(SOURCE_ID.findall(text)) | ({meta["source_id"]} if meta.get("source_id") else set()))
+    declared = meta.get("source_id")
+    if declared and not SOURCE_ID.fullmatch(declared): raise ReaderError(f"invalid declared source_id: {path}")
+    ids = [declared] if declared else sorted(row["source_id"] for row in registry.values() if row.get("locator") == path)
     bindings = [registry.get(item) for item in ids]
     broken = [item for item, binding in zip(ids, bindings) if not binding or binding.get("binding_state") not in ("MATCH", "EXTERNAL_NOT_VERIFIED")]
     is_locator = any(row and row.get("locator") == path for row in registry.values())
@@ -282,7 +291,11 @@ def make_document(path: str, raw: bytes, registry: dict[str, dict[str, Any]], au
 def load_drafts(packet: Path, manifest_expected: str, registry: dict[str, dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
     if not HEX64.fullmatch(manifest_expected):
         raise ReaderError("--prepared-manifest-sha256 must be lowercase 64-hex")
-    packet = packet.resolve(strict=True)
+    original = Path(os.path.abspath(packet))
+    for part in [original, *original.parents]:
+        if part.is_symlink() or (hasattr(part,"is_junction") and part.is_junction()):
+            raise ReaderError("prepared root/ancestor symlink or junction refused before manifest read")
+    packet = original.resolve(strict=True)
     manifest_path = packet / "MANIFEST_SHA256.json"
     if manifest_path.is_symlink() or not manifest_path.is_file():
         raise ReaderError("prepared manifest missing or symlinked")
@@ -364,9 +377,9 @@ def build_index(repo: Path, ref: str, expected: str, packet: Path | None = None,
     problems.extend(link_problems)
     for doc in documents:
         if doc["provenance_problems"]: problems.append({"kind":"DOCUMENT_SOURCE_BINDING", "path":doc["path"], "source_ids":doc["provenance_problems"]})
-    return {
+    return seal_built_index({
         "schema_version": SCHEMA,
-        "authority": "READ_ONLY_RESEARCH_NAVIGATION_NO_RUNTIME_OR_STRATEGY_AUTHORITY",
+        "authority": AUTHORITY,
         "canonical": {"ref": canonical, "sha": canonical, "build_timestamp": commit_time, "timestamp_basis": "GIT_COMMIT_TIME_NON_AUTHORITY", "generated_at_utc":datetime.now(timezone.utc).isoformat()},
         "health": {"status": "PROBLEMS" if problems else "OK", "canonical_documents": len(documents),
                    "source_notes": source_notes, "research_cards": cards, "draft_documents": len(draft_documents),
@@ -375,7 +388,7 @@ def build_index(repo: Path, ref: str, expected: str, packet: Path | None = None,
                    "registry_binding_problem_count": sum(p["kind"] == "REGISTRY_BINDING" for p in problems)},
         "registry": [registry[key] for key in sorted(registry)],
         "documents": all_docs,
-    }
+    })
 
 
 def _tokens(query: str) -> tuple[list[str], list[str]]:
@@ -411,6 +424,10 @@ def excerpt(document: dict[str, Any], query: str, limit: int = 420) -> str:
 
 
 def query_packet(index: dict[str, Any], question: str, intake: dict[str, Any]) -> dict[str, Any]:
+    try: require_verified(index)
+    except ValueError as exc: raise ReaderError(str(exc)) from exc
+    if not isinstance(question,str) or not question.strip(): raise ReaderError("A nonblank question is required for an evidence packet")
+    question = question.strip()
     results = [doc for doc in index["documents"] if matches(doc, question)]
     results.sort(key=lambda doc: (doc["authority_class"] == "DRAFT_NOT_IMPORTED", doc["title"].casefold(), doc["id"]))
     negative = [doc for doc in index["documents"] if doc["document_type"] == "NEGATIVE_KNOWLEDGE" and matches(doc, question)]
@@ -439,8 +456,11 @@ def query_packet(index: dict[str, Any], question: str, intake: dict[str, Any]) -
 
 
 def offline_html(index: dict[str, Any], js: str, css: str) -> str:
+    try: require_verified(index)
+    except ValueError as exc: raise ReaderError(str(exc)) from exc
+    binding = json.dumps(public_binding(index),ensure_ascii=True,separators=(",",":"))
     payload = json.dumps(index, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
-    return """<!doctype html><html lang=\"th\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"referrer\" content=\"no-referrer\"><title>EA_LAB Second Brain — Frozen Reader</title><style>""" + css + """</style></head><body><main id=\"knowledge-reader\"></main><script type=\"application/json\" id=\"knowledge-data\">""" + payload + """</script><script>""" + js + """\nwindow.EALabKnowledgeReader.mount(document.querySelector('#knowledge-reader'),{data:JSON.parse(document.querySelector('#knowledge-data').textContent),offline:true});</script></body></html>"""
+    return """<!doctype html><html lang=\"th\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"referrer\" content=\"no-referrer\"><title>EA_LAB Second Brain — Frozen Reader</title><style>""" + css + """</style></head><body><main id=\"knowledge-reader\"></main><script type=\"application/json\" id=\"knowledge-data\">""" + payload + """</script><script>window.EALabKnowledgeBinding=""" + binding + ";" + js + """\nwindow.EALabKnowledgeReader.mount(document.querySelector('#knowledge-reader'),{data:JSON.parse(document.querySelector('#knowledge-data').textContent),binding:window.EALabKnowledgeBinding,offline:true});</script></body></html>"""
 
 
 def write_json(path: Path, value: Any) -> None:
@@ -459,12 +479,28 @@ def parser() -> argparse.ArgumentParser:
     export.add_argument("--repo", required=True, type=Path); export.add_argument("--ref", required=True)
     export.add_argument("--expected-sha", required=True); export.add_argument("--index", required=True, type=Path)
     export.add_argument("--output", required=True, type=Path)
+    export.add_argument("--prepared-packet", type=Path); export.add_argument("--prepared-manifest-sha256")
     query = sub.add_parser("query")
     query.add_argument("--index", required=True, type=Path); query.add_argument("--question", required=True)
+    query.add_argument("--repo",required=True,type=Path);query.add_argument("--ref",required=True);query.add_argument("--expected-sha",required=True)
+    query.add_argument("--prepared-packet",type=Path);query.add_argument("--prepared-manifest-sha256")
     query.add_argument("--output", required=True, type=Path)
     for field in ("ea", "variant", "build", "config", "symbol", "timeframe", "window", "data-source"):
         query.add_argument(f"--{field}")
     return root
+
+
+def load_verified_index(args) -> dict[str, Any]:
+    supplied = json.loads(args.index.read_text(encoding="utf-8"))
+    if not isinstance(supplied,dict): raise ReaderError("index must be an object")
+    rebuilt = build_index(args.repo.resolve(),args.ref,args.expected_sha,args.prepared_packet,args.prepared_manifest_sha256)
+    expected = copy.deepcopy(dict(rebuilt)); observed = copy.deepcopy(supplied)
+    for value in (expected,observed):
+        if not isinstance(value.get("canonical"),dict): raise ReaderError("index canonical binding missing")
+        value["canonical"].pop("generated_at_utc",None)
+    if stable_json(expected) != stable_json(observed):
+        raise ReaderError("index content/provenance differs from independently reconstructed exact sources")
+    return rebuilt
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -473,11 +509,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "build":
             result = build_index(args.repo.resolve(), args.ref, args.expected_sha, args.prepared_packet, args.prepared_manifest_sha256)
             write_json(args.output, result)
+            binding_path=args.output.with_name("knowledge_binding.js")
+            binding_path.write_text("window.EALabKnowledgeBinding=Object.freeze("+json.dumps(public_binding(result),ensure_ascii=True)+");\n",encoding="utf8")
         elif args.command == "export":
             canonical = resolve_ref(args.repo.resolve(), args.ref, args.expected_sha)
-            index = json.loads(args.index.read_text(encoding="utf-8"))
-            if index.get("canonical", {}).get("sha") != canonical:
-                raise ReaderError("index pin does not match export pin")
+            index = load_verified_index(args)
             tree = git_tree(args.repo.resolve(), canonical)
             assets = []
             for path in ASSET_PATHS:
@@ -487,12 +523,10 @@ def main(argv: list[str] | None = None) -> int:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(offline_html(index, assets[0], assets[1]), encoding="utf-8")
         else:
-            index = json.loads(args.index.read_text(encoding="utf-8"))
-            if index.get("schema_version") != SCHEMA:
-                raise ReaderError("unsupported or malformed index")
+            index = load_verified_index(args)
             intake = vars(args).copy(); intake["data_source"] = intake.pop("data_source", None)
             write_json(args.output, query_packet(index, args.question, intake))
-    except (ReaderError, OSError, json.JSONDecodeError) as exc:
+    except (ReaderError, OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
     print(json.dumps({"status": "OK", "command": args.command, "output": str(args.output)}, ensure_ascii=False))

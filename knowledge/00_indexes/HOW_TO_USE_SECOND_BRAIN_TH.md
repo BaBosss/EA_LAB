@@ -45,3 +45,11 @@ packet เป็นหลักฐานสำหรับตั้งคำถ�
 - Knowledge view เสีย: view อื่นต้องยังใช้ได้ ตรวจ `knowledge_index.json` และ console
 - offline ว่าง: ใช้ `READ_SECOND_BRAIN.html` ที่สร้างคู่กับ pin เดียวกัน; ไฟล์ไม่ fetch และไม่ต้อง login
 - `EA` ต้องไม่ match `Seafood`: อังกฤษใช้ token boundary; ไทยใช้ substring
+
+
+## การตรวจยืนยันดัชนีและคำถาม
+
+ไฟล์อ่านใช้ข้อมูลและ binding ที่สร้างคู่กันจาก Git/manifest ที่ตรวจแล้ว ไม่รับ JSON ที่อ้าง SHA ถูกแต่เนื้อหาเปลี่ยน
+หน้าที่ฝังใน Monitor ต้องมี canonical pin ของ Monitor ที่ตรวจได้ ส่วนไฟล์ออฟไลน์ตรวจด้วย binding ที่ฝังจากตัว exporter
+การส่งออก evidence packet ต้องมีคำถามหรือคำค้นก่อน ปล่อยช่อง EA/build/config ที่ไม่ทราบเป็น null ได้ แต่ไม่ส่งคำถามว่างเป็นผลค้นทั้งคลัง
+CLI export/query ต้องให้ --repo --ref --expected-sha; เมื่อมี Draft ให้ระบุ prepared packet และ manifest SHA เดิมด้วย

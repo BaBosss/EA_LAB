@@ -897,7 +897,7 @@ async function renderKnowledgeReader(generation) {
     return;
   }
   try {
-    await reader.mount(app, {url: "./knowledge_index.json", getExpectedSha: () => reportIndex && reportIndex.project.canonical_sha, isCurrent: () => generation === knowledgeMountGeneration && route().page === "knowledge"});
+    await reader.mount(app, {url: "./knowledge_index.json", binding:window.EALabKnowledgeBinding, getExpectedSha: () => reportIndex && reportIndex.project.canonical_sha, isCurrent: () => generation === knowledgeMountGeneration && route().page === "knowledge"});
   } catch (error) {
     if (generation === knowledgeMountGeneration && route().page === "knowledge" && !app.querySelector(".kr-failure")) {
       app.innerHTML = `<section class="panel"><h2>Second Brain Reader unavailable</h2><p>${escapeHtml(error.message)}</p><p>Monitor views remain available.</p></section>`;
@@ -918,7 +918,7 @@ function renderRoute() {
   if (current.page !== "knowledge") app.classList.remove("kr-root");
   const activePage = ["detail", "compare", "live", "research"].includes(current.page) ? "ealab" : current.page === "queue" ? "work" : current.page;
   document.querySelectorAll("[data-nav]").forEach((link) => link.classList.toggle("active", link.dataset.nav === activePage));
-  if (current.page === "knowledge") { renderKnowledgeReader(knowledgeMountGeneration); return; }
+  if (current.page === "knowledge") { if (!reportIndex) { app.innerHTML='<section class="kr-failure" role="alert"><h2>Second Brain unavailable</h2><p>Monitor canonical pin unavailable. ใช้ไฟล์อ่านออฟไลน์ที่มี binding ครบแทนได้</p></section>'; return; } renderKnowledgeReader(knowledgeMountGeneration); return; }
   if (current.page === "research") { renderResearchWorkbook(researchMountGeneration); return; }
   if (!reportIndex) { renderUnavailable(startError || new Error("Report index unavailable")); return; }
   if (current.page === "detail") renderDetail(current.id);

@@ -2,6 +2,22 @@
 
 (function (global) {
   const SCHEMA = "ea-lab-second-brain-reader/1";
+  const AUTHORITY = "READ_ONLY_RESEARCH_NAVIGATION_NO_RUNTIME_OR_STRATEGY_AUTHORITY";
+  const verifiedData = new WeakMap();
+  function stableJSON(value) {
+    if (Array.isArray(value)) return "["+value.map(stableJSON).join(",")+"]";
+    if (value && typeof value === "object") return "{"+Object.keys(value).sort().map(k=>JSON.stringify(k)+":"+stableJSON(value[k])).join(",")+"}";
+    return JSON.stringify(value);
+  }
+  async function verifyIndex(data,binding) {
+    validate(data,binding);
+    if (!global.crypto || !global.crypto.subtle) throw new Error("Integrity verification unavailable; refusing unverified index");
+    const payload=stableJSON(data);
+    const bytes=await global.crypto.subtle.digest("SHA-256",new TextEncoder().encode(payload));
+    const actual=Array.from(new Uint8Array(bytes)).map(x=>x.toString(16).padStart(2,"0")).join("");
+    if (actual!==binding.data_sha256) throw new Error("Knowledge index content hash mismatch against generated trusted binding");
+    verifiedData.set(data,payload);return data;
+  }
   const EN_TOKEN = /[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*/g;
   const INTAKE_FIELDS = ["ea", "variant", "build", "config", "symbol", "timeframe", "window", "data_source"];
 
@@ -103,6 +119,10 @@
   }
 
   function packet(data, question, docs, intake) {
+    if (verifiedData.get(data)!==stableJSON(data)) throw new Error("Unverified or modified knowledge index");
+    if (typeof question!=="string" || !question.trim()) throw new Error("ระบุคำถามหรือคำค้นก่อนส่งออก evidence packet");
+    question=question.trim();
+    if (!Array.isArray(docs) || docs.some(d=>!data.documents.includes(d))) throw new Error("Packet documents must come from the verified index");
     const negative = data.documents.filter(doc => doc.document_type === "NEGATIVE_KNOWLEDGE" && matches(doc, question, "", "ALL"));
     const caveats = ["Keyword NO_MATCH does not prove no historical equivalent; read current PROJECT_STATE and exact family/experiment owners before proposing action.", "Snapshot documents can contain historical plans; document content is not current execution authority."];
     if (!docs.length) caveats.push("NO_MATCH: no title/body/topic/source match at the pinned export");
@@ -120,7 +140,9 @@
     };
   }
 
-  function validate(data) {
+  function validate(data,binding) {
+    if (!binding || binding.schema_version!=="ea-lab-knowledge-binding/1" || !/^[0-9a-f]{64}$/.test(binding.data_sha256 || "")) throw new Error("Trusted generated knowledge binding missing");
+    if (!data || data.authority!==AUTHORITY || binding.canonical_sha!==data.canonical?.sha) throw new Error("Malformed knowledge authority or trusted pin mismatch");
     if (!data || data.schema_version !== SCHEMA || !data.canonical || !/^[0-9a-f]{40}$/.test(data.canonical.sha || "") || !Array.isArray(data.documents) || !data.health) throw new Error("Malformed or pinless Second Brain index");
     if (data.canonical.ref !== data.canonical.sha || !data.documents.length || !Array.isArray(data.registry) || !Array.isArray(data.health.problems)) throw new Error("Malformed knowledge metadata");
     const classes = new Set(["REGISTERED_RESEARCH", "OTHER_CANONICAL_DOCUMENT", "DRAFT_NOT_IMPORTED", "BROKEN_PROVENANCE"]);
@@ -130,16 +152,19 @@
     data.documents.forEach(doc => {
       if (!doc || typeof doc.id !== "string" || typeof doc.title !== "string" || typeof doc.body !== "string" || !/^[0-9a-f]{64}$/.test(doc.sha256 || "")) throw new Error("Malformed Second Brain document row");
       if (!classes.has(doc.authority_class) || typeof doc.portable_id !== "string" || !Array.isArray(doc.source_ids) || !Array.isArray(doc.topics) || !Array.isArray(doc.line_refs)) throw new Error("Malformed source metadata");
+      if (doc.authority_class==="DRAFT_NOT_IMPORTED") { if (doc.path!==null) throw new Error("Draft path must be withheld"); }
+      else if (typeof doc.path!=="string" || !/^knowledge\/(?:README\.md|(?:00_indexes|01_sources|02_research_cards|03_strategy_mechanisms|04_components|05_regimes|06_validation|07_risk_execution|10_synthesis|90_negative_knowledge)\/.+\.md)$/.test(doc.path) || doc.path.split("/").some(x=>x===".."||x===".") || /[:\\]/.test(doc.path)) throw new Error("Unsafe or non-curated document path");
+      if (doc.source_ids.some(id=>typeof id!=="string" || !/^SRC-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(id))) throw new Error("Invalid source identifier");
       const key = `${doc.authority_class}:${doc.id}`; if (seen.has(key)) throw new Error(`Duplicate document identity: ${key}`); seen.add(key);
     });
     return data;
   }
 
   async function loadData(options) {
-    if (options.data) return validate(options.data);
+    if (options.data) return verifyIndex(options.data, options.binding);
     const response = await fetch(options.url || "./knowledge_index.json", {cache: "no-store"});
     if (!response.ok) throw new Error(`Second Brain index unavailable (${response.status})`);
-    return validate(await response.json());
+    return verifyIndex(await response.json(),options.binding);
   }
 
   async function copyOrDownload(value, status) {
@@ -177,7 +202,7 @@
       input.addEventListener("input", () => { intake[field] = input.value.trim(); });
       return el("label", {text: field.replace("_", " ")}, input);
     });
-    const packetButton = el("button", {type: "button", text: "คัดลอก / ดาวน์โหลด context packet"});
+    const packetButton = el("button", {type: "button", disabled:true, text: "คัดลอก / ดาวน์โหลด context packet"});
     const packetStatus = el("p", {className: "kr-packet-status", role: "status"});
     packetForm.append(el("summary", {text: "ปัญหา EA → evidence packet (read-only)"}), el("p", {text: "ช่องที่ไม่ทราบให้เว้นว่าง; จะคงค่า null ไม่ตีความเป็นศูนย์"}), el("div", {className: "kr-intake"}, packetFields), packetButton, packetStatus);
 
@@ -197,6 +222,7 @@
       reading.append(markdown(doc.body)); if (focus) heading.focus();
     }
     function draw() {
+      packetButton.disabled = !state.query.trim();
       const rows = filtered(); resultCount.textContent = `พบ ${rows.length} เอกสาร · ${state.scope} · การค้นหาเป็น exact token สำหรับอังกฤษ`;
       list.replaceChildren();
       if (!rows.length) list.append(el("p", {className: "kr-empty", text: "ไม่พบผลลัพธ์ที่ pin นี้ · NO_MATCH (ไม่ใช่หลักฐานว่าไม่มีความรู้ในโลกภายนอก)"}));
@@ -211,7 +237,7 @@
     query.addEventListener("input", () => { state.query = query.value; draw(); });
     scope.addEventListener("change", () => { state.scope = scope.value; draw(); });
     topic.addEventListener("change", () => { state.topic = topic.value; draw(); });
-    packetButton.addEventListener("click", () => copyOrDownload(packet(data, state.query, filtered(), intake), packetStatus));
+    packetButton.addEventListener("click", () => { try { copyOrDownload(packet(data, state.query, filtered(), intake), packetStatus); } catch(error) { packetStatus.textContent=error.message; } });
     root.append(el("header", {className: "kr-header"}, [title, notice]), health, controls, resultCount, el("div", {className: "kr-layout"}, [el("aside", {className: "kr-master"}, list), reading]), packetForm);
     const requested = decodeURIComponent((location.hash.match(/^#knowledge\/(.+)$/) || [])[1] || "");
     const selected = requested && data.documents.find(doc => doc.portable_id === requested || doc.id === requested);
@@ -226,6 +252,7 @@
     try {
       const data = await loadData(options);
       const expected = typeof options.getExpectedSha === "function" ? options.getExpectedSha() : options.expectedSha;
+      if (!options.offline && !/^[0-9a-f]{40}$/.test(expected || "")) throw new Error("Monitor canonical pin unavailable");
       if (expected && expected !== data.canonical.sha) throw new Error("Knowledge / Monitor canonical pin mismatch");
       if (typeof options.isCurrent === "function" && !options.isCurrent()) return null;
       return renderApp(root, data, options);
@@ -237,5 +264,5 @@
     }
   }
 
-  global.EALabKnowledgeReader = {mount, matches, validate, packet, safeHttp};
+  global.EALabKnowledgeReader = {mount, matches, validate, verifyIndex, packet, safeHttp};
 })(window);
