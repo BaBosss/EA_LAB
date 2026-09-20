@@ -413,7 +413,7 @@
 | ORDER-1500 | 2026-08-17 | DONE / REVIEWED | [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows… |  | ARCHIVE:12801 |
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
 | ORDER-B11-DEFAULT-EXAMPLE-LOOP-20260920 |  | CLOSED | [template/research] one complete default B11 loop |  | ACTIVE:10477 |
-| ORDER-B11-DEFAULT-EXAMPLE-RERUN-20260920 |  | EXECUTION | [template/research] fixed rerun after parser Repair4 |  | ACTIVE:10542 |
+| ORDER-B11-DEFAULT-EXAMPLE-RERUN-20260920 |  | DONE | [template/research] fixed rerun after parser Repair4 |  | ACTIVE:10544 |
 | ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10269 |
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | DONE | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_PERFORMANCE_SCREEN | ACTIVE:10300 |
 | ORDER-CT-DF03-B21-IMPLEMENTATION-20260918 |  | DONE | - [template/recovered-family] DF03 Grid Horizontal Line / Fibonacci - |  | ACTIVE:10322 |
@@ -431,7 +431,7 @@
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R2-20260920 |  | CLOSED | [tooling/reporting] parser adversarial hardening after Repair1 review fail |  | ACTIVE:10503 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R3-20260920 |  | CLOSED | [tooling/reporting] isolate HTML-table vs plain-text parser modes |  | ACTIVE:10516 |
-| ORDER-MT5-REPORT-PARSER-HARDENING-R4-20260920 |  | REPAIR4 | [tooling/reporting] tri-state alias + inline-label guard |  | ACTIVE:10529 |
+| ORDER-MT5-REPORT-PARSER-HARDENING-R4-20260920 |  | DONE | [tooling/reporting] tri-state alias + inline-label guard |  | ACTIVE:10529 |
 | ORDER-MT5-REPORT-PARSER-SPACE-GROUPING-REPAIR-20260920 |  | CLOSED | [tooling/reporting] repair canonical MT5 report numeric parser |  | ACTIVE:10490 |
 | ORDER-PLATFORM-POST-BROAD-DIAG-20260903 |  | DONE | ? platform reliability + post-broad diagnostics ? |  | ACTIVE:10076 |
 | ORDER-RND-B16-H03 |  | DONE | B16 XAUUSD/H4 fixed-config confirmation |  | ACTIVE:10060 |
