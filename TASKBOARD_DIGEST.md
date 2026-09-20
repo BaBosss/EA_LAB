@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **440** · ยังอยู่บนบอร์ด: **144** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **441** · ยังอยู่บนบอร์ด: **145** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -414,8 +414,9 @@
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
 | ORDER-B11-DEFAULT-EXAMPLE-LOOP-20260920 |  | CLOSED | [template/research] one complete default B11 loop |  | ACTIVE:10477 |
 | ORDER-B11-DEFAULT-EXAMPLE-RERUN-20260920 |  | DONE | [template/research] fixed rerun after parser Repair4 |  | ACTIVE:10544 |
+| ORDER-B11-EXAMPLE-MONITOR-ADAPTER-V1-20260920 |  | DONE | [monitor/presentation] B11 canonical example projection into existing Mobile Report Hub |  | ACTIVE:10558 |
 | ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10269 |
-| ORDER-CODEX-USAGE-REPORTER-V3-SCHEMA-VALIDATION-20260920 |  | DONE | -- [tooling/cost-control] | SOURCE_ACCEPTED / REVIEWED / CANONICAL / READ_ONLY / MODES_NOT_ACTIVATED | ACTIVE:10558 |
+| ORDER-CODEX-USAGE-REPORTER-V3-SCHEMA-VALIDATION-20260920 |  | DONE | -- [tooling/cost-control] | SOURCE_ACCEPTED / REVIEWED / CANONICAL / READ_ONLY / MODES_NOT_ACTIVATED | ACTIVE:10573 |
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | DONE | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_PERFORMANCE_SCREEN | ACTIVE:10300 |
 | ORDER-CT-DF03-B21-IMPLEMENTATION-20260918 |  | DONE | - [template/recovered-family] DF03 Grid Horizontal Line / Fibonacci - |  | ACTIVE:10322 |
 | ORDER-CT-JOB-IDENTITY-PROVIDER-V1-20260918 | 2026-09-18 | DONE | [monitor/tooling] identity-aware V0 input provider | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_RUNTIME_HOOKUP | ACTIVE:10422 |
@@ -434,8 +435,8 @@
 | ORDER-MT5-REPORT-PARSER-HARDENING-R3-20260920 |  | CLOSED | [tooling/reporting] isolate HTML-table vs plain-text parser modes |  | ACTIVE:10516 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R4-20260920 |  | DONE | [tooling/reporting] tri-state alias + inline-label guard |  | ACTIVE:10529 |
 | ORDER-MT5-REPORT-PARSER-SPACE-GROUPING-REPAIR-20260920 |  | CLOSED | [tooling/reporting] repair canonical MT5 report numeric parser |  | ACTIVE:10490 |
-| ORDER-OFP-SCR002-FOLLOWUP-20260920 |  | DONE | [research/tooling] MT5 order-flow proxy completeness follow-up |  | ACTIVE:10571 |
-| ORDER-OFP-TEMPLATE-SEAM-V1-20260920 |  | DONE | [research/tooling] ThinkMarkets A2 provider evidence + geometry-preserving Template seam |  | ACTIVE:10581 |
+| ORDER-OFP-SCR002-FOLLOWUP-20260920 |  | DONE | [research/tooling] MT5 order-flow proxy completeness follow-up |  | ACTIVE:10586 |
+| ORDER-OFP-TEMPLATE-SEAM-V1-20260920 |  | DONE | [research/tooling] ThinkMarkets A2 provider evidence + geometry-preserving Template seam |  | ACTIVE:10596 |
 | ORDER-PLATFORM-POST-BROAD-DIAG-20260903 |  | DONE | ? platform reliability + post-broad diagnostics ? |  | ACTIVE:10076 |
 | ORDER-RND-B16-H03 |  | DONE | B16 XAUUSD/H4 fixed-config confirmation |  | ACTIVE:10060 |
 | ORDER-RND-P0 | 2026-08-29 | DONE + REVIEWED | EA R&D governance/context convergence | PASS / CANONICAL at b7a75016 | ACTIVE:10024 |

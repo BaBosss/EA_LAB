@@ -25,13 +25,21 @@ import report_package_integrity as integrity
 
 SCHEMA_VERSION = 1
 GENERATOR_NAME = "mobile_report_hub.build_index"
-GENERATOR_VERSION = "3.5.0"
+GENERATOR_VERSION = "3.6.0"
 B16 = "docs/factory/B16_H03_CONFIRMATION_RESULTS.md"
 B19 = "docs/research/BOSS19_P4_REGIME_ATTRIBUTION_RESULTS.md"
 H02 = "docs/factory/BOSS11_16_H02_LITERAL_PORTABILITY_RESULTS.md"
 MASTER = "EA_MASTER_INDEX.csv"
 TASKBOARD = "AGENT_TASKBOARD.md"
 FACTORY_PILOTS = "factory/vnext/pilots"
+B11_EXAMPLE_ROOT = "factory/runs/b11_default_example_rerun_20260920"
+B11_EXAMPLE_MANIFEST = B11_EXAMPLE_ROOT + "/package_manifest.json"
+B11_EXAMPLE_SUMMARY = B11_EXAMPLE_ROOT + "/evidence_summary.json"
+B11_EXAMPLE_REPORT = "docs/research/B11_DEFAULT_EXAMPLE_RERUN_RESULTS_20260920.md"
+B11_EXAMPLE_PACKAGE_HEAD = "9fb9779d26b607b5a5271fbf543e23130ae88792"
+B11_EXAMPLE_STATE_HEAD = "9a1e4eab556318fd82aa4935a4573c9d8016665a"
+B11_EXAMPLE_PACKAGE_ID = "B11-DEFAULT-EXAMPLE-RERUN-20260920"
+B11_EXAMPLE_RECORD_ID = "b11-default-example-rerun"
 
 
 class BuildError(RuntimeError):
@@ -602,13 +610,14 @@ def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None,
         raise BuildError("canonical Boss19 P4 report/taskboard blocker mismatch")
     boss19_queue_blocker = boss19_item.get("blocker_type", "NOT_APPLICABLE")
     boss19_queue_summary = boss19_item.get("blocker_reason", "Boss19 P4 regime attribution interpretation complete; research-only mixed evidence.")
-    eas = inventory_records(master_text, sha) + extract_h02(h02_text, h02_p) + [b16_item, boss19_item]
+    b11_item = b11_example_record(repo, sha, out) if _b11_is_ancestor(repo, B11_EXAMPLE_STATE_HEAD, sha) else None
+    eas = inventory_records(master_text, sha) + extract_h02(h02_text, h02_p) + [b16_item, boss19_item] + ([b11_item] if b11_item else [])
     add_native_reports(repo, sha, out, eas)
     factory_pilots = factory_pilot_projection(repo, sha, out, as_of)
     index = {"schema_version": SCHEMA_VERSION, "generator": {"name": GENERATOR_NAME, "version": GENERATOR_VERSION},
              "project": {"canonical_sha": sha, "canonical_short_sha": sha[:12], "source_ref": ref,
                          "generated_at": as_of, "data_status": "CURRENT", "freshness": "PINNED_GIT_REF"},
-             "sources": [b16_p, b19_p, h02_p, master_p, taskboard_p, factory_pilots["provenance"]], "eas": eas,
+             "sources": [b16_p, b19_p, h02_p, master_p, taskboard_p, factory_pilots["provenance"]] + (b11_item["provenance"] if b11_item else []), "eas": eas,
              "factory_pilots": factory_pilots,
              "queue": [{"id": "FACTORY-B16-H03-CONFIRMATION", "state": "DONE", "blocker_type": "NOT_APPLICABLE",
                         "summary": "B16 H03 confirmation complete; H04 is not unlocked.", "source_kind": "GIT_CANONICAL"},
@@ -664,6 +673,281 @@ def regular_blob(repo: Path, sha: str, path: str) -> bytes:
     if not re.match(r"^100(?:644|755) blob [0-9a-f]{40}\t", entry):
         raise BuildError("missing or non-regular Git artifact")
     return source_bytes(repo, sha, path)
+
+
+def _b11_is_ancestor(repo: Path, ancestor: str, descendant: str) -> bool:
+    return subprocess.run(
+        ["git", "-C", str(repo), "merge-base", "--is-ancestor", ancestor, descendant],
+        capture_output=True,
+    ).returncode == 0
+
+
+def _b11_require_ancestor(repo: Path, ancestor: str, descendant: str) -> None:
+    if not _b11_is_ancestor(repo, ancestor, descendant):
+        raise BuildError("B11 accepted lineage is not an ancestor of requested canonical SHA")
+
+
+def _b11_package(repo: Path, sha: str) -> tuple[dict, dict[str, dict], str]:
+    _b11_require_ancestor(repo, B11_EXAMPLE_PACKAGE_HEAD, sha)
+    _b11_require_ancestor(repo, B11_EXAMPLE_STATE_HEAD, sha)
+    current_tree = git(repo, "rev-parse", f"{sha}:{B11_EXAMPLE_ROOT}").decode().strip()
+    accepted_tree = git(repo, "rev-parse", f"{B11_EXAMPLE_PACKAGE_HEAD}:{B11_EXAMPLE_ROOT}").decode().strip()
+    if current_tree != accepted_tree:
+        raise BuildError("B11 accepted package tree drifted after reviewed package head")
+
+    raw = regular_blob(repo, sha, B11_EXAMPLE_MANIFEST)
+    try:
+        manifest = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise BuildError("B11 package manifest is invalid JSON") from exc
+    if not isinstance(manifest, dict) or set(manifest) != {"contract_head", "file_count", "files", "schema"}:
+        raise BuildError("B11 package manifest shape mismatch")
+    if manifest.get("schema") != "b11-default-example-rerun-package-manifest/1":
+        raise BuildError("B11 package manifest schema mismatch")
+    if manifest.get("contract_head") != "bd2d99e5c8beec809e2ab2f8cf5b94237d9803a3":
+        raise BuildError("B11 package contract-head mismatch")
+    files = manifest.get("files")
+    if manifest.get("file_count") != 29 or not isinstance(files, list) or len(files) != 29:
+        raise BuildError("B11 package manifest file-count mismatch")
+
+    declared: dict[str, dict] = {}
+    for row in files:
+        if not isinstance(row, dict) or set(row) != {"bytes", "path", "sha256"}:
+            raise BuildError("B11 package manifest entry shape mismatch")
+        path = safe_package_path(row.get("path"))
+        key = path.casefold()
+        if key in declared or path == "package_manifest.json":
+            raise BuildError("B11 package manifest has duplicate/self path")
+        size = row.get("bytes")
+        digest = row.get("sha256")
+        if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+            raise BuildError("B11 package manifest byte size is invalid")
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            raise BuildError("B11 package manifest SHA256 is invalid")
+        declared[key] = {"path": path, "bytes": size, "sha256": digest}
+
+    prefix = B11_EXAMPLE_ROOT + "/"
+    actual = {
+        path[len(prefix):].casefold()
+        for path in git(repo, "ls-tree", "-r", "--name-only", sha, "--", B11_EXAMPLE_ROOT).decode().splitlines()
+        if path.startswith(prefix) and path != B11_EXAMPLE_MANIFEST
+    }
+    if actual != set(declared):
+        raise BuildError("B11 package manifest does not exactly cover package tree")
+    for row in declared.values():
+        artifact = regular_blob(repo, sha, f"{B11_EXAMPLE_ROOT}/{row['path']}")
+        if len(artifact) != row["bytes"] or hashlib.sha256(artifact).hexdigest() != row["sha256"]:
+            raise BuildError("B11 package artifact integrity mismatch")
+    return manifest, declared, hashlib.sha256(raw).hexdigest()
+
+
+def _b11_summary(repo: Path, sha: str, declared: dict[str, dict]) -> tuple[dict, bytes]:
+    entry = declared.get("evidence_summary.json")
+    if entry is None:
+        raise BuildError("B11 package has no evidence summary")
+    raw = regular_blob(repo, sha, B11_EXAMPLE_SUMMARY)
+    try:
+        summary = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise BuildError("B11 evidence summary is invalid JSON") from exc
+    required_exact = {
+        "schema": "b11-default-example-rerun/1",
+        "family": "B11",
+        "variant": "DEFAULT_EXAMPLE_RERUN_CORRECTED_PARSER",
+        "example_carrier": "XAUUSD/H1",
+        "model": "Model1 / 1 Minute OHLC",
+        "holdout": "UNSPENT",
+        "quality_grade": "UNRATIFIED",
+        "canonical_contract_head": "bd2d99e5c8beec809e2ab2f8cf5b94237d9803a3",
+        "source_sha256": "59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672",
+        "set_sha256": "5a0cdd3186e924234d4491bdf854966553214ebaaf03ca6793beaedd42ea8efa",
+        "ex5_sha256": "532d6bfe0ea679a5a783516646a7c75905d2f39b5fea93849a9277acb6e0ceee",
+    }
+    if not isinstance(summary, dict) or any(summary.get(k) != v for k, v in required_exact.items()):
+        raise BuildError("B11 evidence identity/authority mismatch")
+    if summary.get("candidate") is not False or summary.get("home_ratified") is not False:
+        raise BuildError("B11 example cannot acquire Candidate or Home authority")
+    if summary.get("runtime_authority") is not False or summary.get("trading_authority") is not False:
+        raise BuildError("B11 example cannot acquire runtime/trading authority")
+    if summary.get("optimization") != 0:
+        raise BuildError("B11 example optimization drift")
+    compiler = summary.get("compiler")
+    if not isinstance(compiler, dict) or compiler.get("errors") != 0 or compiler.get("warnings") != 0 or compiler.get("terminal_build") != "5.0.0.6090":
+        raise BuildError("B11 build identity mismatch")
+    if summary.get("test_surface_restored") is not True or summary.get("mt5_processes_remaining") != 0:
+        raise BuildError("B11 test-surface restoration mismatch")
+
+    windows = summary.get("windows")
+    expected_windows = {"MAIN": ("2023.01.01", "2025.12.31"), "BWD": ("2020.01.01", "2022.12.31")}
+    if not isinstance(windows, dict) or set(windows) != set(expected_windows):
+        raise BuildError("B11 window set mismatch")
+    for role, (start, end) in expected_windows.items():
+        window = windows.get(role)
+        metrics = window.get("metrics") if isinstance(window, dict) else None
+        if not isinstance(metrics, dict) or window.get("from") != start or window.get("to") != end:
+            raise BuildError("B11 fixed window identity mismatch")
+        if window.get("report_exists") is not True or window.get("runner_exit") != 0 or window.get("parse_exit") != 0:
+            raise BuildError("B11 window execution/package mismatch")
+        if window.get("leverage_check", {}).get("status") != "MATCH" or window.get("truncation", {}).get("check_status") != "CHECK_PASS":
+            raise BuildError("B11 window qualification mismatch")
+        for name in ("profit_factor", "net_profit", "equity_drawdown_maximal_pct", "total_trades"):
+            value = metrics.get(name)
+            if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(float(value)):
+                raise BuildError("B11 metric is missing or non-finite")
+        if not isinstance(window.get("report_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", window["report_sha256"]):
+            raise BuildError("B11 report hash is invalid")
+    return summary, raw
+
+
+def _b11_cycles(summary: dict) -> dict[str, int]:
+    rows = summary.get("year_split")
+    expected = {"MAIN": {2023, 2024, 2025}, "BWD": {2020, 2021, 2022}}
+    if not isinstance(rows, list) or len(rows) != 6:
+        raise BuildError("B11 year split mismatch")
+    found = {"MAIN": set(), "BWD": set()}
+    cycles = {"MAIN": 0, "BWD": 0}
+    for row in rows:
+        if not isinstance(row, dict) or row.get("window") not in expected:
+            raise BuildError("B11 year split row invalid")
+        role = row["window"]
+        year = row.get("year")
+        count = row.get("cycles")
+        if year not in expected[role] or year in found[role] or not isinstance(count, int) or isinstance(count, bool) or count < 0:
+            raise BuildError("B11 year split chronology/count invalid")
+        found[role].add(year)
+        cycles[role] += count
+    if any(found[role] != expected[role] for role in expected):
+        raise BuildError("B11 year split coverage mismatch")
+    return cycles
+
+
+def _b11_static_asset(out: Path, href: str, raw: bytes) -> None:
+    target = out / href
+    if integrity._is_reparse_component(out) or any(integrity._is_reparse_component(p) for p in out.absolute().parents):
+        raise BuildError("unsafe Monitor output root")
+    current = out.absolute()
+    for part in Path(href).parts:
+        current = current / part
+        if integrity._is_reparse_component(current):
+            raise BuildError("unsafe Monitor output path")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        if target.read_bytes() != raw:
+            raise BuildError("Monitor static content collision")
+        return
+    with target.open("xb") as handle:
+        handle.write(raw)
+
+
+def b11_example_record(repo: Path, sha: str, out: Path) -> dict:
+    _manifest, declared, package_sha = _b11_package(repo, sha)
+    summary, _summary_raw = _b11_summary(repo, sha, declared)
+    cycles = _b11_cycles(summary)
+    state_text = regular_blob(repo, sha, "PROJECT_STATE.md").decode("utf-8")
+    if (B11_EXAMPLE_PACKAGE_HEAD not in state_text
+            or "b523ed6023b1213dea5b46a879e47103fa07b31ff121b66d47c98c14f9fafe67" not in state_text
+            or "B11 corrected-parser default example rerun" not in state_text):
+        raise BuildError("B11 reviewed/canonical state binding missing")
+
+    report_raw = regular_blob(repo, sha, B11_EXAMPLE_REPORT)
+    accepted_report_raw = regular_blob(repo, B11_EXAMPLE_PACKAGE_HEAD, B11_EXAMPLE_REPORT)
+    if report_raw != accepted_report_raw:
+        raise BuildError("B11 human report drifted after reviewed package head")
+    out.mkdir(parents=True, exist_ok=True)
+    report_href = selected_artifact(B11_EXAMPLE_REPORT, report_raw, out, redact_local_paths=True)
+
+    basis = "B11_DEFAULT_EXAMPLE_RERUN_CORRECTED_PARSER"
+    item = record(
+        identity=B11_EXAMPLE_RECORD_ID, family="B11", variant="DEFAULT_EXAMPLE_RERUN_CORRECTED_PARSER",
+        name="B11 GridTrend — XAUUSD/H1 Example Conveyor",
+        symbol="XAUUSD [EXAMPLE_ONLY_NOT_HOME]", timeframe="H1 [EXAMPLE_ONLY_NOT_HOME]",
+        lifecycle="Research Example", research_state="DONE",
+        latest="Corrected-parser full conveyor proof",
+        verdict="EXAMPLE_ONLY_NO_FAMILY_OR_HOME_VERDICT", strategy="GridTrend",
+        evidence={
+            "basis_id": basis, "report_stage": "DEFAULT_EXAMPLE_RERUN", "model": "MODEL_1",
+            "holdout_state": "UNSPENT", "main": {}, "bwd": {},
+            "key_findings": [
+                "End-to-end parser/report/graph conveyor completed and independently reviewed.",
+                "MAIN is weak; BWD is negative. The plumbing proof does not promote B11.",
+            ],
+            "known_weaknesses": [
+                "XAUUSD/H1 is an example carrier, not B11 Home authority.",
+                "No optimization, Model4, Monte Carlo or HOLDOUT evidence is opened by this record.",
+            ],
+        },
+        status="DONE", links={"full_report": report_href}, provenance=[],
+    )
+    item.update(
+        quality_grade="UNRATIFIED", evidence_confidence="PACKAGE_REVIEW_HIGH",
+        package_status="REVIEWED_CANONICAL_EXAMPLE_ONLY", candidate=False,
+        home_authority=False, runtime_authority=False, trading_authority=False,
+        example_carrier=summary["example_carrier"],
+        tested_setup={
+            "set": "SHA256 " + summary["set_sha256"], "leverage": "1:100",
+            "lane": "CANONICAL_PACKAGE_ONLY", "package_id": B11_EXAMPLE_PACKAGE_ID,
+        },
+        explanation={
+            "evidence": "Reviewed canonical MAIN/BWD package with exact parser, build, report, year and exposure evidence.",
+            "interpretation": "MAIN is weak and BWD is negative; this remains useful as an end-to-end conveyor proof.",
+            "decision": "EXAMPLE_ONLY. No B11 family verdict, Home selection or promotion.",
+        },
+    )
+    for role, key in (("main", "MAIN"), ("bwd", "BWD")):
+        metrics = summary["windows"][key]["metrics"]
+        item["evidence"][role] = {
+            "pf": f"{float(metrics['profit_factor']):.2f}",
+            "net": f"{float(metrics['net_profit']):.2f}",
+            "eqdd_pct": f"{float(metrics['equity_drawdown_maximal_pct']):.2f}",
+            "dd_pct": f"{float(metrics['equity_drawdown_maximal_pct']):.2f}",
+            "trades": str(int(metrics["total_trades"])), "cycles": str(cycles[key]),
+        }
+
+    provenance = [
+        {"path": B11_EXAMPLE_MANIFEST, "sha256": hashlib.sha256(regular_blob(repo, sha, B11_EXAMPLE_MANIFEST)).hexdigest(), "canonical_sha": sha},
+        {"path": B11_EXAMPLE_SUMMARY, "sha256": declared["evidence_summary.json"]["sha256"], "canonical_sha": sha},
+        {"path": B11_EXAMPLE_REPORT, "sha256": hashlib.sha256(report_raw).hexdigest(), "canonical_sha": sha},
+    ]
+    item["provenance"] = provenance
+
+    namespace = hashlib.sha256((B11_EXAMPLE_PACKAGE_ID + package_sha + item["id"]).encode()).hexdigest()[:32]
+    graphs, exposure = {}, {}
+    observed = summary.get("exposure", {}).get("observed", {})
+    for role, key, asset in (("main", "MAIN", "visuals/MAIN.png"), ("bwd", "BWD", "visuals/BWD.png")):
+        asset_entry = declared.get(asset.casefold())
+        if asset_entry is None:
+            raise BuildError("B11 selected native graph is not manifest-bound")
+        raw = regular_blob(repo, sha, f"{B11_EXAMPLE_ROOT}/{asset}")
+        if not raw.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise BuildError("B11 selected graph is not a PNG")
+        href = f"artifacts/native/{sha}/{namespace}/{role}/{asset_entry['sha256']}.png"
+        _b11_static_asset(out, href, raw)
+        window = summary["windows"][key]
+        graph = graph_state(
+            "AVAILABLE", "VALIDATED_SOURCE_BOUND_B11_EXAMPLE_ASSET",
+            role=role.upper(), window={"from": window["from"], "to": window["to"]},
+            report_sha256=window["report_sha256"], package_sha256=package_sha,
+            package_id=B11_EXAMPLE_PACKAGE_ID, canonical_sha=sha, ea_id=item["id"], basis_id=basis,
+            references=1, available_assets=1, asset_ref=asset, asset_sha256=asset_entry["sha256"],
+            media_type="image/png", href=href,
+        )
+        graphs[role] = graph
+        obs = observed.get(key)
+        if not isinstance(obs, dict):
+            raise BuildError("B11 exposure observation missing")
+        depth, lots = obs.get("max_basket_depth"), obs.get("max_aggregate_lots")
+        if not isinstance(depth, int) or isinstance(depth, bool) or depth < 0:
+            raise BuildError("B11 exposure depth invalid")
+        if not isinstance(lots, (int, float)) or isinstance(lots, bool) or not math.isfinite(float(lots)) or lots < 0:
+            raise BuildError("B11 exposure lots invalid")
+        exposure[role] = {
+            "ea_id": graph["ea_id"], "basis_id": graph["basis_id"], "canonical_sha": graph["canonical_sha"],
+            "role": graph["role"], "window": dict(graph["window"]), "report_sha256": graph["report_sha256"],
+            "package_id": graph["package_id"], "package_sha256": graph["package_sha256"],
+            "source": dict(provenance[1]), "values": {"max_depth": str(depth), "max_lots": f"{float(lots):.2f}"},
+        }
+    item["native_graphs"], item["exposure"] = graphs, exposure
+    return item
 
 
 def project_native_graphs(repo: Path, sha: str, item: dict, package_root: str,

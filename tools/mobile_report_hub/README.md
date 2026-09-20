@@ -206,6 +206,32 @@ output reparse/collision refusal, legacy records, H08 preservation, decoding,
 390x844 and 1280x900 rendering, larger inspection, search, and an actual service
 worker with a poisoned old cache. No test launches MT5.
 
+## B11 corrected-parser example conveyor adapter (V3.6)
+
+The canonical B11 corrected-parser example is projected into the existing EA Lab research view without
+creating a second report catalog. The adapter accepts only the reviewed package lineage
+`9fb9779d26b607b5a5271fbf543e23130ae88792` plus state convergence
+`9a1e4eab556318fd82aa4935a4573c9d8016665a`. It reads the package and all 29 declared
+artifacts from exact Git objects and requires the current package subtree to remain byte-identical
+to the reviewed package head.
+
+The package's native `package_manifest.json` schema is validated directly: exact schema/contract,
+file count, safe unique paths, sizes and SHA256 are required. `evidence_summary.json` remains the
+research evidence source. The adapter does not rewrite it into `report_package_manifest.json`.
+
+The Monitor record is explicitly `EXAMPLE_ONLY_NO_FAMILY_OR_HOME_VERDICT`. XAUUSD/H1 is rendered
+as `EXAMPLE_ONLY_NOT_HOME`, Candidate/Home/runtime/trading authority remain false, Optimization=0
+and HOLDOUT remains UNSPENT. Weak MAIN and negative BWD are preserved.
+
+Existing MAIN/BWD PNGs are emitted into the existing content-addressed native-asset namespace with
+the reviewed package hash, report hash, asset hash, canonical SHA, record identity and evidence basis.
+The existing human report is copied through the sanitized artifact path. Package drift, manifest
+tamper, duplicate/traversal paths, authority drift, graph hash drift, output collision or reparse
+components fail closed.
+
+This is repository-only read-only presentation. It does not rerun MT5, change strategy/settings,
+select Home, activate hosting/Scheduled Tasks, or publish a production Monitor.
+
 ## Control Dashboard merge (V3.3 repo-only)
 
 The existing Monitor remains the only owner-facing application. `build_index.py` now projects canonical Factory pilot evidence completeness into `factory_pilots` and reuses the existing Control Tower/Lane Registry projection for Work; it does not import the Control Dashboard's duplicate Registry parser.
