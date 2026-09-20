@@ -6,6 +6,9 @@ import os
 try:
     from .binding import AUTHORITY, seal_built_index, require_verified, public_binding, stable_json
 except ImportError:
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     from binding import AUTHORITY, seal_built_index, require_verified, public_binding, stable_json
 from datetime import datetime, timezone
 import hashlib
