@@ -1,0 +1,101 @@
+{
+    "schema":  "ea_lab_orderflow_mt5_proxy_followup_state/v1",
+    "date":  "2026-09-20",
+    "status":  "SOURCE_ACCEPTED_REVIEWED_CANONICAL_REPO_ONLY",
+    "canonical_source_head":  "86143b433293e5b3acfbb4c037c37e931d68b766",
+    "reviewed_source_head":  "74df9dfe5f8038ece0af490b419a0d279c212236",
+    "review":  {
+                   "decision":  "SCRUTINY_PASS",
+                   "confidence":  "HIGH",
+                   "material_findings":  [
+
+                                         ],
+                   "sha256":  "f1ee7ef32c0df84d889cdd0789e07867b7d79926b9eee2e625b230eefe391866"
+               },
+    "source_push":  {
+                        "status":  "SOURCE_PUSH_VERIFIED",
+                        "source_head":  "86143b433293e5b3acfbb4c037c37e931d68b766",
+                        "sha256":  "493d1b61015eeb00826a54605223c87bd2a3b22011e1dd438668ceafe8df08ea"
+                    },
+    "gates":  {
+                  "python":  "47/47 PASS",
+                  "mirrored_fixtures":  "24/24 PASS",
+                  "external_copy_mql_compile_targets":  3,
+                  "compile_errors":  0,
+                  "compile_warnings":  0,
+                  "native_execution":  "NOT_EXECUTED"
+              },
+    "historical_negative_lineage":  {
+                                        "initial_rejected":  "ac32b0ffb5b444e64648cce0225e1298e7f623d4",
+                                        "repair1_rejected":  "471cd701fcc1b08d77f44b0af3de853eedc6b8d1",
+                                        "repair1_budget":  "1/1_EXHAUSTED_PRESERVED",
+                                        "targeted_recheck":  "1/1_CONSUMED_PRESERVED"
+                                    },
+    "finding_status":  [
+                           {
+                               "id":  "OFP-SCR-001",
+                               "status":  "CLOSED_RETAINED",
+                               "evidence":  [
+                                                "tools/orderflow_proxy/tests/test_orderflow_proxy.py:543",
+                                                "tools/orderflow_proxy/tests/test_orderflow_proxy.py:555"
+                                            ],
+                               "details":  "Historical expiry/cancellation replay regressions remain green, and all OFPR/OFPC component bytes are unchanged from rejected parent 471cd701fcc1b08d77f44b0af3de853eedc6b8d1."
+                           },
+                           {
+                               "id":  "OFP-SCR-002",
+                               "status":  "CLOSED",
+                               "evidence":  [
+                                                "tools/orderflow_proxy/mt5_audit/OrderFlowProxyCopyEvidence.mqh:71",
+                                                "tools/orderflow_proxy/mt5_audit/OrderFlowProxyAvailabilityAudit.mq5:424",
+                                                "tools/orderflow_proxy/mt5_audit/OrderFlowProxyAvailabilityAudit.mq5:540",
+                                                "tools/orderflow_proxy/mt5_audit/OrderFlowProxyAvailabilityAudit.mq5:597",
+                                                "tools/orderflow_proxy/mt5_audit/OrderFlowProxyAvailabilityAudit.mq5:697",
+                                                "tools/orderflow_proxy/offline_reference.py:141",
+                                                "tools/orderflow_proxy/offline_reference.py:298",
+                                                "tools/orderflow_proxy/tests/test_orderflow_proxy.py:696"
+                                            ],
+                               "details":  "D1 and all 21 M5 intervals now carry independent count/error/boundary/provenance/timestamp/price/synchronization/snapshot evidence. Zero, partial, excess, positive-count-with-error and malformed evidence fail closed. Native observations remain BLOCKED_DATA because the provider count basis is unqualified."
+                           },
+                           {
+                               "id":  "OFP-SCR-003",
+                               "status":  "CLOSED_RETAINED",
+                               "evidence":  [
+                                                "tools/orderflow_proxy/tests/test_orderflow_proxy.py:571",
+                                                "tools/orderflow_proxy/tests/test_orderflow_proxy.py:577",
+                                                "tools/orderflow_proxy/tests/test_orderflow_proxy.py:584"
+                                            ],
+                               "details":  "Cross-instrument/source, stale-session and overlapping-D1 regression coverage remains green; protected provenance/component bytes are unchanged."
+                           }
+                       ],
+    "market_data":  {
+                        "status":  "DATA_PRESENT_NOT_QUALIFIED",
+                        "superseded_claim_only":  "ALL_8_P2_READY_AT_AUDITED_INTERVALS",
+                        "retained_count_mismatches":  7,
+                        "future_profile_symbols":  [
+                                                       "GBPUSD"
+                                                   ],
+                        "true_exchange_orderflow_qualified":  false,
+                        "source_qualified_market_data_capability":  false
+                    },
+    "authority":  {
+                      "source_only":  true,
+                      "repo_only":  true,
+                      "backtest":  false,
+                      "performance":  false,
+                      "optimization":  false,
+                      "model4":  false,
+                      "holdout":  false,
+                      "candidate":  false,
+                      "runtime":  false,
+                      "deployment":  false,
+                      "trading":  false
+                  },
+    "next_gate":  "Separate provider-specific native CopyTicks/D1/M5 completeness/count-basis qualification before geometry-preserving Template execution binding or any performance contract.",
+    "external_evidence":  {
+                              "root":  "D:\\EA_LAB_CONTROL\\evidence\\ofp-scr002-followup-20260920",
+                              "contract_sha256":  "b2ac26d844b8e1a09dfd43b603b32ebb72c851f3bd089cdba081a02632a85795",
+                              "review_freeze_sha256":  "23d50745199685d3eed6fa52da61d5d90c6cdccad5cc51cdf532a38238516d83",
+                              "historical_claim_correction_sha256":  "6b2a9e29e3f34b840ebc5690db147423ab0253379bb43cad45ab49572cf64b19"
+                          },
+    "state_convergence_parent":  "0bba1252fbba4bfa8c79a16ec7b14887b470bb1d"
+}
