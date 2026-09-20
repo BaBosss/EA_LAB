@@ -1,0 +1,21 @@
+{
+  "case_count": 24,
+  "classification": "SOURCE_ONLY_SYNTHETIC_FIXTURE_PARITY_PREPARATION",
+  "execution_status": "NOT_EXECUTED",
+  "fixture_sha256": "55ad678178f4606da64091cb5853b043fb76a89b9ea799970db5c847212f2732",
+  "outputs": [
+    "NativeFixtureData.mqh",
+    "expected_python_ledger.json",
+    "runtime_request.NOT_EXECUTED.json"
+  ],
+  "schema": "orderflow_proxy_native_fixture_package/v1",
+  "source_graph_sha256": "7361de6148638cb85e28d15a962e98e4266a5077e2fdc443189660d7f35f5b3a",
+  "variant_counts": {
+    "OFPC-00": 4,
+    "OFPC-01": 4,
+    "OFPC-02": 4,
+    "OFPR-00": 4,
+    "OFPR-01": 4,
+    "OFPR-02": 4
+  }
+}
