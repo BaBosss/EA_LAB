@@ -1,6 +1,6 @@
 # CODEX Usage Reporter V3 — Schema Validation Prospective Contract
 
-Status: **PROSPECTIVE / BLOCKED_OWNER_AUTHORITY / CONTRACT_ONLY / NO_IMPLEMENTATION**
+Status: **OWNER_AUTHORIZED / AUTHORITY_BINDING_RECORDED / SOURCE_REANCHOR_PENDING / NO_RUNTIME_HOOKUP**
 
 ## Basis
 
@@ -8,12 +8,14 @@ Status: **PROSPECTIVE / BLOCKED_OWNER_AUTHORITY / CONTRACT_ONLY / NO_IMPLEMENTAT
 - The Codex Budget Packet component is already accepted/reviewed/canonical at that parent. Do not reopen or repeat packet repair/review absent actual drift.
 - Reporter V2 local head `e38921c86f6b37240cc6eabbb19df5e95d7ba1a2` remains **SCRUTINY_FAIL / HIGH / BLOCK_INTEGRATION** with `CURV2-001_RUNTIME_VALIDATOR_TYPED_SCHEMA_GAP`; its source repair budget is spent. V3 is a new prospective milestone, not Repair2 and not a budget reset.
 - V2 negative evidence/history remains immutable and must be consumed, not rewritten.
+- Owner approval was subsequently observed in the Control Tower conversation and is bound by external receipt SHA256 `7d1756f99750aee4d5de6b2022e12936f8d0094c93735f5fa8b5ef01087774e6`. That approval authorizes V3 schema-validation source work and the necessary authority-binding/state correction only; it does not authorize Reporter V2 rerun/reset or runtime/profile/quota authority.
+- Technical source head `76f439f93e981456336514436c79aed4c01d74b3` was implemented after that owner approval. Its exact-head scrutiny verified the technical CURV2-001 closure but returned `SCRUTINY_FAIL / HIGH / BLOCK_INTEGRATION` solely on `CURV3-001_AUTHORITY_PROVENANCE_CONTRADICTION` because canonical state had not yet recorded the approval. The 76f head remains historical/local and is not retroactively accepted.
 
 ## Qualified direct consumer
 
 The canonical Budget Modes workflow still states usage reporting and full operating-mode activation are incomplete. A truthful read-only usage observation is required before a later separately authorized NORMAL/ECONOMY hookup and observational calibration can be evaluated. Therefore this successor has a direct consumer. This contract itself grants **no** hookup/profile/runtime/model-routing authority.
 
-## Future implementation scope, only after explicit owner authorization
+## Owner-authorized source scope and next binding step
 
 Allowed source paths are limited to:
 
@@ -22,7 +24,7 @@ Allowed source paths are limited to:
 - `tools/codex_budget/usage_reporter.py`
 - `tools/codex_budget/tests/test_usage_reporter.py`
 
-The implementation must bind this exact parent or a mechanically reanchored current-canonical child before author work begins. No source work is authorized by this contract-only commit.
+The original prospective contract required explicit owner authorization before source work. That authorization is now durably bound by this state transaction. Because the technically reviewed 76f head was based on canonical state that still said BLOCKED_OWNER_AUTHORITY, it remains unintegrated. The only eligible next source action is a mechanical current-canonical child that copies the exact four reviewed V3 blobs unchanged, followed by a targeted authority/source binding recheck. This does not allocate a new V3 source repair.
 
 ## Required behavior
 

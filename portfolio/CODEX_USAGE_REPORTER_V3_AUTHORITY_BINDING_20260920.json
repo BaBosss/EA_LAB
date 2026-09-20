@@ -1,0 +1,33 @@
+{
+  "schema": "CODEX_USAGE_REPORTER_V3_AUTHORITY_BINDING_V1",
+  "canonical_basis": "86143b433293e5b3acfbb4c037c37e931d68b766",
+  "owner_authority": {
+    "external_path": "D:\\EA_LAB_CONTROL\\evidence\\ct-codex-usage-reporter-v3-20260920\\OWNER_AUTHORITY_20260920.json",
+    "sha256": "7d1756f99750aee4d5de6b2022e12936f8d0094c93735f5fa8b5ef01087774e6",
+    "message": "อนุมัติทั้งหมดแก้ไขเลย"
+  },
+  "v2": {
+    "head": "e38921c86f6b37240cc6eabbb19df5e95d7ba1a2",
+    "status": "BLOCKED_REPAIR_EXHAUSTED_NO_INTEGRATION",
+    "finding": "CURV2-001_RUNTIME_VALIDATOR_TYPED_SCHEMA_GAP"
+  },
+  "v3_technical": {
+    "head": "76f439f93e981456336514436c79aed4c01d74b3",
+    "tests": "20/20 PASS",
+    "schema_coverage": "34/34 ZERO_UNCOVERED",
+    "review": "SCRUTINY_FAIL_HIGH_BLOCK_INTEGRATION",
+    "review_sha256": "aed754c9fa70e2c8a18915d4d939462d073eac02bf5de423ada0f8bf07ba4613",
+    "only_finding": "CURV3-001_AUTHORITY_PROVENANCE_CONTRADICTION",
+    "technical_defect_remaining": false
+  },
+  "next": {
+    "action": "MECHANICAL_CURRENT_CANONICAL_EXACT_BYTE_REANCHOR_THEN_TARGETED_BINDING_RECHECK",
+    "source_repair_allocated": false
+  },
+  "authority": {
+    "runtime_profile_activation": false,
+    "quota_billing_savings_claim": false,
+    "mt5_deployment_trading": false
+  },
+  "utc": "2026-09-20T11:12:44.825657+00:00"
+}
