@@ -412,7 +412,7 @@
 | ORDER-1462 | 2026-08-16 | DONE 2026-08-16 | [factory/S2a] 👤 The s2a attestation gate was RED at the pre-owner-confirmation snapshot;… |  | ACTIVE:1 |
 | ORDER-1500 | 2026-08-17 | DONE / REVIEWED | [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows… |  | ARCHIVE:12801 |
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |
-| ORDER-B11-DEFAULT-EXAMPLE-LOOP-20260920 |  | RUNNING | [template/research] one complete default B11 loop |  | ACTIVE:10477 |
+| ORDER-B11-DEFAULT-EXAMPLE-LOOP-20260920 |  | CLOSED | [template/research] one complete default B11 loop |  | ACTIVE:10477 |
 | ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10269 |
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | DONE | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_PERFORMANCE_SCREEN | ACTIVE:10300 |
 | ORDER-CT-DF03-B21-IMPLEMENTATION-20260918 |  | DONE | - [template/recovered-family] DF03 Grid Horizontal Line / Fibonacci - |  | ACTIVE:10322 |
