@@ -1,8 +1,10 @@
-# EA_LAB Codex Budget Modes V1 — packet/mode tooling only
+# EA_LAB Codex Budget Modes V3 — packet/mode tooling plus read-only reporter
 
-Status: **partial source-only packet/mode tooling; pending deterministic checks and separate exact-head GPT Scrutiny**.
+Status: **source-only packet/mode tooling plus bounded read-only Reporter V3; pending deterministic checks and separate exact-head GPT Scrutiny**.
 
-This component creates compact, deterministic `TASK_PACKET` and `REVIEW_PACKET` JSON plus a navigation-only `BOOT_MINI`. It does not implement or accept the usage reporter. The safety-blocked reporter proposal remains unaccepted with its historical repair `1/1` spent; this component neither transfers that code nor allocates another repair. It also does not change installed Codex settings, detect a subscription, route or launch a model, activate a profile, read a Codex database, or touch MT5/runtime.
+This component creates compact, deterministic `TASK_PACKET` and `REVIEW_PACKET` JSON plus a navigation-only `BOOT_MINI`. Reporter V3 is a separate read-only observer authorized by its 2026-09-20 contract with `source_repair_used=0`; it is a new milestone that closes only `CURV2-001` and does not reset or rewrite Reporter V2's failed review or spent repair. It does not change installed Codex settings, detect a subscription, route or launch a model, activate a profile, use the network, or touch MT5/runtime.
+
+The packet schema remains authoritative for compact task/review contracts. Reporter V3 does not create replacement loose task/review schemas and does not change `NORMAL`/`ECONOMY` acceptance requirements.
 
 `NORMAL` is the default recommendation. `ECONOMY` is an explicit alternative recommendation. Their author-reasoning, WIP, subagent, compactness, and advisory alert metadata differ, but their acceptance requirements are byte-equivalent and cannot waive a contract-owned gate. The alert values are advisory local-efficiency signals—not quotas, acceptance bars, or operational controls. No measured token or quota saving is claimed. The public library accepts only the exact packaged `mode_policy.json` bytes; caller-supplied policy bytes are permitted only when byte-identical to that canonical file.
 
@@ -36,6 +38,20 @@ On success stdout is compact JSON with `CREATED`, the output path, output SHA-25
 
 The input schema is [packet.schema.json](../../tools/codex_budget/packet.schema.json). `mode` may be omitted only to select the `NORMAL` default. Every other listed field is required; `REVIEW_PACKET` requires its additional author/reviewer/head/evidence fields. Runtime validation intentionally enforces semantic constraints JSON Schema cannot express portably, including cross-array case-insensitive locator uniqueness, locator normalization, canonical base64, supplied-byte digest equality, repair ordering, author/reviewer separation, and reviewed-head equality.
 
+## Read-only Reporter V3
+
+`usage_reporter.py` selects `RECENTLY_UPDATED_THREADS`: threads whose `updated_at_ms` lies in the inclusive interval `[as_of_ms - hours, as_of_ms]`. `--hours` must be finite and greater than zero and is validated before any database existence check or open. `--as-of-ms` is an optional positive integer observation cutoff; omitting it uses current UTC milliseconds. The default Codex home is `~/.codex`; tests and callers may pass an explicit `--codex-home`.
+
+Selected `tokens_used` values are lifetime counters observed on recently updated threads, not token consumption within the time window. The report exposes their known sum and completeness while `window_delta_tokens` remains `null` with `UNAVAILABLE_NO_BOUNDED_COUNTER_DELTAS`. A NULL counter remains unknown, never zero. Local counters and packaged thresholds are efficiency observations only—not quota, billing, credits, plan allowance, percent savings, or token-to-quota conversion.
+
+Both databases are opened exclusively through SQLite URI `mode=ro`. Output goes to stdout unless `--out` is supplied; file output is create-only. The reporter accepts no alternate policy bytes or path and reads thresholds only from packaged canonical `mode_policy.json`. Its closed output contract is `usage_report.schema.json`; Reporter V3 adds equivalent standard-library validation for every reachable schema type, const, enum, bound, pattern, nullability, array item, and closed-object rule without changing the existing `codex_budget_usage_report/2` wire identity or adding a `jsonschema` dependency.
+
+```powershell
+. .\scripts\use_python.ps1
+$budgetPython = Assert-PortablePython -Provision
+& $budgetPython .\tools\codex_budget\usage_reporter.py --hours 24 --as-of-ms 1789862400000 --codex-home C:\path\to\synthetic-codex-home
+```
+
 ## Acceptance boundary
 
-This source is not accepted merely because it parses or its focused tests pass. The direct consumers are Control Tower deterministic checks and a separate read-only exact-head GPT Scrutiny review. Downstream work must skip already-accepted EA source/runtime suites, MT5, and all old usage-reporter tests. NORMAL/ECONOMY remain recommendations only until a separately authorized hookup exists; usage reporting and full operating-mode activation remain incomplete.
+This source is not accepted merely because it parses or its focused tests pass. The direct consumers are Control Tower deterministic checks and a separate read-only exact-head GPT Scrutiny review. Downstream work must skip already-accepted EA source/runtime suites and MT5; the focused Reporter V2 behavioral suite remains regression coverage inside the V3 suite. NORMAL/ECONOMY remain recommendations only until a separately authorized hookup exists; usage reporting and full operating-mode activation remain incomplete.
