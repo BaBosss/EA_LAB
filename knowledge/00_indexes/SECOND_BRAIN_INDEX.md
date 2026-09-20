@@ -5,6 +5,7 @@
 ## Start here
 
 - [Second Brain boundary](../README.md)
+- [วิธีอ่าน ค้น และใช้ Second Brain](HOW_TO_USE_SECOND_BRAIN_TH.md)
 - [Source registry](../01_sources/source_registry.jsonl)
 - [Google Drive intake snapshot](../01_sources/drive_intake_20260829.csv)
 - [QuantCorner pinned source note](../01_sources/QUANTCORNER_SOURCE_NOTE_20260901.md)
@@ -27,7 +28,7 @@
 - [Boss19 broad36 runner-guard milestone](../10_synthesis/SECOND_BRAIN_MILESTONE_BOSS19_RUNNER_GUARD_20260902.md)
 - [Closed-path negative memory — B16/B15/Boss19](../90_negative_knowledge/b16-b15-boss19-closed-paths.md)
 - [B16 XAUUSD/H4 exit-concentration Repair01 milestone](../10_synthesis/SECOND_BRAIN_MILESTONE_B16_XAU_H4_REPAIR01_20260905.md)
-- [B16 GBPUSD/H4 exit-concentration third-context preregistration (not executed)](../../docs/research/B16_GBP_SELL_H4_EXITCONC_PREREG_20260905.md)
+- [B16 GBPUSD/H4 exit-concentration historical preregistration (current result: consult PROJECT_STATE)](../../docs/research/B16_GBP_SELL_H4_EXITCONC_PREREG_20260905.md)
 - [Negative knowledge](../90_negative_knowledge/)
 - [Synthesis](../10_synthesis/)
 - [Tooling provenance](TOOLING_PROVENANCE.md)
@@ -47,3 +48,9 @@
 3. Separate `SOURCE_CLAIM` from `EA_LAB_INFERENCE`.
 4. Search negative knowledge and existing experiment evidence before proposing another test.
 5. Stop at `TESTABLE_HYPOTHESIS`; Factory execution requires its existing contract/authorization path.
+
+## Reader access
+
+The read-only reader exports this curated tree from one exact 40-hex Git commit. `DRAFT_NOT_IMPORTED`
+material is shown separately and is never promoted by appearing in the reader. See the Thai guide above
+and `docs/workflows/SECOND_BRAIN_READER_V1_20260920.md` for CLI, folder, intake, and troubleshooting details.

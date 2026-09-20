@@ -1,8 +1,8 @@
 "use strict";
 
-const CACHE_NAME = "ea-lab-report-hub-v3.7-research-workbook-repair1";
+const CACHE_NAME = "ea-lab-report-hub-v3.8-second-brain-reader-v1";
 const CACHE_PREFIX = "ea-lab-report-hub-v";
-const SHELL = ["./index.html", "./styles.css", "./app.js", "./agent_graph.js", "./agent_graph.css", "./research_workbook.js", "./research_workbook.css", "./research_workbook.template.json", "./manifest.webmanifest", "./icon.svg"];
+const SHELL = ["./index.html", "./styles.css", "./app.js", "./agent_graph.js", "./agent_graph.css", "./research_workbook.js", "./research_workbook.css", "./research_workbook.template.json", "./knowledge_reader.js", "./knowledge_reader.css", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)));
@@ -39,7 +39,7 @@ self.addEventListener("fetch", (event) => {
     // app.js also verifies the SHA256 and decoding before exposing an image.
     if (url.pathname.includes("/artifacts/native/")) return fetch(request, { cache: "no-store" });
 
-    if (url.pathname.endsWith("/report_index.json")) {
+    if (url.pathname.endsWith("/report_index.json") || url.pathname.endsWith("/knowledge_index.json")) {
       try {
         const response = await fetch(request, { cache: "no-store" });
         if (response.ok) {

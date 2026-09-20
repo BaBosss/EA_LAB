@@ -8,6 +8,7 @@ let reportIndex;
 let usedCachedData = false;
 let startError = null;
 let researchMountGeneration = 0;
+let knowledgeMountGeneration = 0;
 
 const app = document.querySelector("#app");
 const projectMeta = document.querySelector("#project-meta");
@@ -888,17 +889,36 @@ function renderAlerts() {
   app.innerHTML = `<section class="page-heading"><h2>Alerts</h2><p>Source freshness, work blockers and missing evidence. No trading-loss inference.</p></section>${ownerCards()}${operationalPresentationAlerts()}${renderBlockerGroups()}<section class="panel"><h2>Source warnings</h2><p>Canonical: ${escapeHtml(observedFreshness(reportIndex.project.generated_at))} · Registry: ${escapeHtml(tower().registry && tower().registry.freshness)} · Factory: ${escapeHtml(reportIndex.factory_pilots && reportIndex.factory_pilots.status)}</p><p>Conflicting declarations: ${(tower().work || []).filter(item => item.state === "CONFLICT").length}. See Work for provenance.</p></section>${renderCriticalAlerts(true)}${renderMonitoring()}`;
 }
 
+async function renderKnowledgeReader(generation) {
+  app.innerHTML = '<p class="empty-state">กำลังเปิด Second Brain Reader…</p>';
+  const reader = window.EALabKnowledgeReader;
+  if (!reader) {
+    app.innerHTML = '<section class="panel"><h2>Second Brain Reader unavailable</h2><p>Reader module did not load. Monitor views remain available.</p></section>';
+    return;
+  }
+  try {
+    await reader.mount(app, {url: "./knowledge_index.json", getExpectedSha: () => reportIndex && reportIndex.project.canonical_sha, isCurrent: () => generation === knowledgeMountGeneration && route().page === "knowledge"});
+  } catch (error) {
+    if (generation === knowledgeMountGeneration && route().page === "knowledge" && !app.querySelector(".kr-failure")) {
+      app.innerHTML = `<section class="panel"><h2>Second Brain Reader unavailable</h2><p>${escapeHtml(error.message)}</p><p>Monitor views remain available.</p></section>`;
+    }
+  }
+}
+
 function renderRoute() {
   // Invalidate pending success/error callbacks on every navigation, including
   // leaving detail and A -> B -> A. The route replaces graph DOM synchronously.
   nativeRenderGeneration++;
   researchMountGeneration++;
+  knowledgeMountGeneration++;
   activeNativeRender = null;
   for (const url of nativeObjectUrls) URL.revokeObjectURL(url);
   nativeObjectUrls.clear();
   const current = route();
+  if (current.page !== "knowledge") app.classList.remove("kr-root");
   const activePage = ["detail", "compare", "live", "research"].includes(current.page) ? "ealab" : current.page === "queue" ? "work" : current.page;
   document.querySelectorAll("[data-nav]").forEach((link) => link.classList.toggle("active", link.dataset.nav === activePage));
+  if (current.page === "knowledge") { renderKnowledgeReader(knowledgeMountGeneration); return; }
   if (current.page === "research") { renderResearchWorkbook(researchMountGeneration); return; }
   if (!reportIndex) { renderUnavailable(startError || new Error("Report index unavailable")); return; }
   if (current.page === "detail") renderDetail(current.id);
