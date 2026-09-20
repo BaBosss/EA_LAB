@@ -1,0 +1,39 @@
+{
+  "schema_version": "codex_budget_mode_policy/1",
+  "default_mode": "NORMAL",
+  "advisory_signals": {
+    "NORMAL": {"alert_tokens": [4000000, 6000000]},
+    "ECONOMY": {"alert_tokens": [2000000, 3000000]}
+  },
+  "acceptance_requirements": [
+    "exact frozen clean HEAD",
+    "all contract-required deterministic, compile, regression, adversarial, and negative gates",
+    "preserved source and evidence locators with declared hashes",
+    "independent read-only GPT Scrutiny",
+    "preserved repair budget and one targeted exact-head recheck only if the contract allows it",
+    "EA-specific compile and regression applicability remains contract-owned and cannot be waived by this tool"
+  ],
+  "modes": {
+    "NORMAL": {
+      "recommendation_only": true,
+      "author_reasoning": "MEDIUM",
+      "high_reasoning_when": ["justified core scrutiny", "hard root-cause analysis", "semantics"],
+      "model_wip": {"normal": 4, "maximum": 4},
+      "subagents": "INDEPENDENT_ONLY",
+      "compact_packets": "PREFERRED"
+    },
+    "ECONOMY": {
+      "recommendation_only": true,
+      "author_reasoning": "MEDIUM",
+      "high_reasoning_when": ["final core scrutiny", "consequential semantics", "architecture", "hard root-cause analysis after MEDIUM is insufficient"],
+      "model_wip": {"normal": 1, "maximum": 2},
+      "subagents": "OFF",
+      "compact_packets": "MANDATORY"
+    }
+  },
+  "limits": [
+    "Mode metadata is advisory and does not route work, detect a subscription, launch a model, or activate runtime settings.",
+    "Alert values are local-efficiency signals, not quotas, acceptance bars, or operational controls.",
+    "No measured token or quota saving is claimed."
+  ]
+}
