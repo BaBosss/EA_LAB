@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ea-lab.local/schemas/codex-budget-usage-report-v2.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version","population","as_of_ms","window_start_ms","hours","mode","policy_sha256","efficiency_observation_note","thread_counts","recently_updated_thread_lifetime_tokens_known_sum","recently_updated_thread_lifetime_tokens_total","token_counter_known_count","token_counter_unknown_count","token_counter_completeness","window_delta_tokens","window_delta_status","model_counts","reasoning_effort_counts","initial_prompt_chars","thread_history_item_type_counts","heaviest_top_level_threads"],
+  "properties": {
+    "schema_version": {"const": "codex_budget_usage_report/2"},
+    "population": {"const": "RECENTLY_UPDATED_THREADS"},
+    "as_of_ms": {"type": "integer", "minimum": 1},
+    "window_start_ms": {"type": "integer", "minimum": 0},
+    "hours": {"type": "number", "exclusiveMinimum": 0},
+    "mode": {"enum": ["NORMAL", "ECONOMY"]},
+    "policy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "efficiency_observation_note": {"type": "string", "minLength": 1},
+    "thread_counts": {"$ref": "#/$defs/threadCounts"},
+    "recently_updated_thread_lifetime_tokens_known_sum": {"type": "integer", "minimum": 0},
+    "recently_updated_thread_lifetime_tokens_total": {"type": ["integer", "null"], "minimum": 0},
+    "token_counter_known_count": {"type": "integer", "minimum": 0},
+    "token_counter_unknown_count": {"type": "integer", "minimum": 0},
+    "token_counter_completeness": {"enum": ["COMPLETE", "PARTIAL"]},
+    "window_delta_tokens": {"type": "null"},
+    "window_delta_status": {"const": "UNAVAILABLE_NO_BOUNDED_COUNTER_DELTAS"},
+    "model_counts": {"type": "array", "items": {"$ref": "#/$defs/valueCount"}},
+    "reasoning_effort_counts": {"type": "array", "items": {"$ref": "#/$defs/valueCount"}},
+    "initial_prompt_chars": {"$ref": "#/$defs/promptCounts"},
+    "thread_history_item_type_counts": {"type": "array", "items": {"$ref": "#/$defs/itemTypeCount"}},
+    "heaviest_top_level_threads": {"type": "array", "maxItems": 10, "items": {"$ref": "#/$defs/heaviestThread"}}
+  },
+  "$defs": {
+    "threadCounts": {"type":"object","additionalProperties":false,"required":["total","top_level","subagent"],"properties":{"total":{"type":"integer","minimum":0},"top_level":{"type":"integer","minimum":0},"subagent":{"type":"integer","minimum":0}}},
+    "promptCounts": {"type":"object","additionalProperties":false,"required":["known_sum","known_count","unknown_count"],"properties":{"known_sum":{"type":"integer","minimum":0},"known_count":{"type":"integer","minimum":0},"unknown_count":{"type":"integer","minimum":0}}},
+    "valueCount": {"type":"object","additionalProperties":false,"required":["value","count"],"properties":{"value":{"type":"string","minLength":1},"count":{"type":"integer","minimum":0}}},
+    "itemTypeCount": {"type":"object","additionalProperties":false,"required":["item_type","count"],"properties":{"item_type":{"type":"string","minLength":1},"count":{"type":"integer","minimum":0}}},
+    "heaviestThread": {
+      "type":"object","additionalProperties":false,
+      "required":["thread_id","updated_at_ms","local_tokens","budget_signal","model","reasoning_effort","initial_prompt_chars"],
+      "properties":{"thread_id":{"type":"string","minLength":1},"updated_at_ms":{"type":"integer","minimum":0},"local_tokens":{"type":["integer","null"],"minimum":0},"budget_signal":{"enum":["WITHIN_ADVISORY","ELEVATED","HIGH","UNKNOWN"]},"model":{"type":"string","minLength":1},"reasoning_effort":{"type":"string","minLength":1},"initial_prompt_chars":{"type":["integer","null"],"minimum":0}}
+    }
+  }
+}
