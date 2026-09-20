@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **435** · ยังอยู่บนบอร์ด: **139** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **436** · ยังอยู่บนบอร์ด: **140** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -430,6 +430,7 @@
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R2-20260920 |  | CLOSED | [tooling/reporting] parser adversarial hardening after Repair1 review fail |  | ACTIVE:10503 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R3-20260920 |  | CLOSED | [tooling/reporting] isolate HTML-table vs plain-text parser modes |  | ACTIVE:10516 |
+| ORDER-MT5-REPORT-PARSER-HARDENING-R4-20260920 |  | RUNNING | [tooling/reporting] tri-state alias + inline-label guard |  | ACTIVE:10529 |
 | ORDER-MT5-REPORT-PARSER-SPACE-GROUPING-REPAIR-20260920 |  | CLOSED | [tooling/reporting] repair canonical MT5 report numeric parser |  | ACTIVE:10490 |
 | ORDER-PLATFORM-POST-BROAD-DIAG-20260903 |  | DONE | ? platform reliability + post-broad diagnostics ? |  | ACTIVE:10076 |
 | ORDER-RND-B16-H03 |  | DONE | B16 XAUUSD/H4 fixed-config confirmation |  | ACTIVE:10060 |
