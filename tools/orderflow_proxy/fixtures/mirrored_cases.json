@@ -1,0 +1,36 @@
+{
+  "schema": "orderflow_proxy_fixture/v1",
+  "record_class": "FIXTURE",
+  "description": "Mirrored positive and one-change negative replay cases for all six MT5 proxy variants.",
+  "cases": [
+    {"id": "OFPR-00-LONG-POS", "variant": "OFPR-00", "direction": "long", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPR-00-SHORT-POS", "variant": "OFPR-00", "direction": "short", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPR-00-LONG-NEG", "variant": "OFPR-00", "direction": "long", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+    {"id": "OFPR-00-SHORT-NEG", "variant": "OFPR-00", "direction": "short", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+
+    {"id": "OFPR-01-LONG-POS", "variant": "OFPR-01", "direction": "long", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPR-01-SHORT-POS", "variant": "OFPR-01", "direction": "short", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPR-01-LONG-NEG", "variant": "OFPR-01", "direction": "long", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+    {"id": "OFPR-01-SHORT-NEG", "variant": "OFPR-01", "direction": "short", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+
+    {"id": "OFPR-02-LONG-POS", "variant": "OFPR-02", "direction": "long", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPR-02-SHORT-POS", "variant": "OFPR-02", "direction": "short", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPR-02-LONG-NEG", "variant": "OFPR-02", "direction": "long", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+    {"id": "OFPR-02-SHORT-NEG", "variant": "OFPR-02", "direction": "short", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+
+    {"id": "OFPC-00-LONG-POS", "variant": "OFPC-00", "direction": "long", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPC-00-SHORT-POS", "variant": "OFPC-00", "direction": "short", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPC-00-LONG-NEG", "variant": "OFPC-00", "direction": "long", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+    {"id": "OFPC-00-SHORT-NEG", "variant": "OFPC-00", "direction": "short", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+
+    {"id": "OFPC-01-LONG-POS", "variant": "OFPC-01", "direction": "long", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPC-01-SHORT-POS", "variant": "OFPC-01", "direction": "short", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPC-01-LONG-NEG", "variant": "OFPC-01", "direction": "long", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+    {"id": "OFPC-01-SHORT-NEG", "variant": "OFPC-01", "direction": "short", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+
+    {"id": "OFPC-02-LONG-POS", "variant": "OFPC-02", "direction": "long", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPC-02-SHORT-POS", "variant": "OFPC-02", "direction": "short", "scenario": "positive", "expected_status": "SIGNAL"},
+    {"id": "OFPC-02-LONG-NEG", "variant": "OFPC-02", "direction": "long", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"},
+    {"id": "OFPC-02-SHORT-NEG", "variant": "OFPC-02", "direction": "short", "scenario": "gate_negative", "expected_status": "NO_SIGNAL"}
+  ]
+}
