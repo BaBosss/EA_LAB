@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **441** · ยังอยู่บนบอร์ด: **145** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **444** · ยังอยู่บนบอร์ด: **148** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -416,6 +416,7 @@
 | ORDER-B11-DEFAULT-EXAMPLE-RERUN-20260920 |  | DONE | [template/research] fixed rerun after parser Repair4 |  | ACTIVE:10544 |
 | ORDER-B11-EXAMPLE-MONITOR-ADAPTER-V1-20260920 |  | DONE | [monitor/presentation] B11 canonical example projection into existing Mobile Report Hub |  | ACTIVE:10558 |
 | ORDER-B16-XX00-MODEL1-CONTROL-20260915 |  | DONE | [factory/research] owner-ratified B16-00 USDJPY/H1 fixed Model1 confirmation |  | ACTIVE:10269 |
+| ORDER-CODEX-BUDGET-MODE-HOOKUP-V1-20260921 |  | BLOCKED | [tooling/cost-control] NORMAL/ECONOMY active-mode hookup |  | ACTIVE:10619 |
 | ORDER-CODEX-USAGE-REPORTER-V3-SCHEMA-VALIDATION-20260920 |  | DONE | -- [tooling/cost-control] | SOURCE_ACCEPTED / REVIEWED / CANONICAL / READ_ONLY / MODES_NOT_ACTIVATED | ACTIVE:10573 |
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | DONE | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_PERFORMANCE_SCREEN | ACTIVE:10300 |
 | ORDER-CT-DF03-B21-IMPLEMENTATION-20260918 |  | DONE | - [template/recovered-family] DF03 Grid Horizontal Line / Fibonacci - |  | ACTIVE:10322 |
@@ -431,10 +432,12 @@
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
+| ORDER-LOCAL-CONTROL-COLLECTOR-V1-20260921 |  | DONE | [tooling/control] deterministic local observation collector |  | ACTIVE:10613 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R2-20260920 |  | CLOSED | [tooling/reporting] parser adversarial hardening after Repair1 review fail |  | ACTIVE:10503 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R3-20260920 |  | CLOSED | [tooling/reporting] isolate HTML-table vs plain-text parser modes |  | ACTIVE:10516 |
 | ORDER-MT5-REPORT-PARSER-HARDENING-R4-20260920 |  | DONE | [tooling/reporting] tri-state alias + inline-label guard |  | ACTIVE:10529 |
 | ORDER-MT5-REPORT-PARSER-SPACE-GROUPING-REPAIR-20260920 |  | CLOSED | [tooling/reporting] repair canonical MT5 report numeric parser |  | ACTIVE:10490 |
+| ORDER-OFP-PIPELINE-PACKAGE-STATE-20260921 |  | DONE | [research/tooling/state] joint prerequisite package convergence |  | ACTIVE:10605 |
 | ORDER-OFP-SCR002-FOLLOWUP-20260920 |  | DONE | [research/tooling] MT5 order-flow proxy completeness follow-up |  | ACTIVE:10586 |
 | ORDER-OFP-TEMPLATE-SEAM-V1-20260920 |  | DONE | [research/tooling] ThinkMarkets A2 provider evidence + geometry-preserving Template seam |  | ACTIVE:10596 |
 | ORDER-PLATFORM-POST-BROAD-DIAG-20260903 |  | DONE | ? platform reliability + post-broad diagnostics ? |  | ACTIVE:10076 |
