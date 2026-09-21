@@ -1,0 +1,118 @@
+{
+  "schema_version": "news_macro_workplan/1",
+  "base_sha": "24b463395356f422d6ae6885e9cf148b63e27b69",
+  "owner_request_date": "2026-09-21",
+  "lane_id": "ct-news-macro-lab-v1-20260921",
+  "scope": "Non-Codex, offline, normal-tooling preparation only. Not a new Main Control Tower.",
+  "nodes": [
+    {
+      "id": "N0",
+      "name": "Canonical and ownership reconciliation",
+      "depends": [],
+      "deliverable": "exact-ref read receipts; no duplicate Monitor writer"
+    },
+    {
+      "id": "N1",
+      "name": "Source catalog + clock/revision contracts",
+      "depends": [
+        "N0"
+      ],
+      "deliverable": "global_source_catalog.json; reuse canonical source contract"
+    },
+    {
+      "id": "N2",
+      "name": "Causal record selection + contact/feature preparation",
+      "depends": [
+        "N1"
+      ],
+      "deliverable": "core.py using existing offline_replay_validator"
+    },
+    {
+      "id": "N3",
+      "name": "Anti-bias experiment preflight",
+      "depends": [
+        "N1"
+      ],
+      "deliverable": "planning.py + experiment_proposal.json; never executable"
+    },
+    {
+      "id": "N4",
+      "name": "Provider-neutral text shadow contract",
+      "depends": [
+        "N1"
+      ],
+      "deliverable": "typed annotation validation only; providers NOT_CONFIGURED"
+    },
+    {
+      "id": "N5",
+      "name": "Deterministic adversarial tests + freeze",
+      "depends": [
+        "N2",
+        "N3",
+        "N4"
+      ],
+      "deliverable": "source-bound results and manifest"
+    },
+    {
+      "id": "N6",
+      "name": "Independent exact-head GPT Scrutiny",
+      "depends": [
+        "N5"
+      ],
+      "deliverable": "separate reviewer; WAIT_FOR_AVAILABLE_REVIEW_CAPACITY"
+    },
+    {
+      "id": "N7",
+      "name": "First finite historical source qualification",
+      "depends": [
+        "N1",
+        "N6"
+      ],
+      "deliverable": "approved real raw data, complete interval, vintage and schedule clocks; no broad fetch"
+    },
+    {
+      "id": "N8",
+      "name": "Native NewsGuard/MacroGate parity adapter",
+      "depends": [
+        "N3",
+        "N6",
+        "N7"
+      ],
+      "deliverable": "Codex/core owner, explicit broker clock, same tester/install, mechanical fixture first"
+    },
+    {
+      "id": "N9",
+      "name": "Pre-registered fixed A/B and placebo execution",
+      "depends": [
+        "N8"
+      ],
+      "deliverable": "parent+one change; report all arms/seeds; no optimization/holdout"
+    },
+    {
+      "id": "N10",
+      "name": "Existing Monitor read-only integration",
+      "depends": [
+        "N6"
+      ],
+      "deliverable": "handoff to existing UI lane, separate observed/requested/effective and backtest evidence"
+    },
+    {
+      "id": "N11",
+      "name": "EA environment affinity and later prospective shadow",
+      "depends": [
+        "N9",
+        "N10"
+      ],
+      "deliverable": "accepted source-bound comparisons, no automatic strategy routing"
+    }
+  ],
+  "deferred": [
+    "persistent collection/scheduling",
+    "VPS task changes",
+    "REAL guard changes",
+    "provider installation/inference",
+    "automatic EA routing"
+  ],
+  "codex_calls_authorized_this_stage": 0,
+  "paid_fallback_authorized": false
+}
