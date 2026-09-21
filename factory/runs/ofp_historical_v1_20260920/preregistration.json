@@ -1,0 +1,151 @@
+{
+  "authority": {
+    "allowed": [
+      "DETERMINISTIC_OFFLINE_PLAN",
+      "INERT_ACQUISITION_REQUEST",
+      "RAW_ARTIFACT_INTEGRITY_PREFLIGHT"
+    ],
+    "ceiling": "RESEARCH_PREPARATION_ONLY",
+    "forbidden": [
+      "MT5_EXECUTION",
+      "NETWORK_ACQUISITION",
+      "BACKTEST",
+      "PERFORMANCE_ASSESSMENT",
+      "OPTIMIZATION",
+      "HOLDOUT_USE",
+      "CANDIDATE_OR_GRADE",
+      "RISK_DEFAULT_CHANGE",
+      "DEPLOYMENT",
+      "TRADING"
+    ]
+  },
+  "base_head": "d5e23b5d91421c98e069d5db5b089c3203c8f02c",
+  "data_semantics": {
+    "d1": "completed broker-D1 records bound to the named broker clock contract; profile interval is the adjacent half-open [previous_d1.open,current_d1.open)",
+    "m15": "chronological completed M15 context records only",
+    "m5": "chronological completed M5 signal records only, including the prior 20 completed records required by the frozen activity recipe",
+    "raw_quotes": "timestamped bid/ask/flags rows; count/hash receipts are not quote rows",
+    "timezone_rule": "NO_LOCAL_TIMEZONE_CONVERSION_INFERRED"
+  },
+  "direct_consumer": "next raw-history qualification and report projection",
+  "execution_prerequisites": {
+    "all_in_cost_units": "UNRESOLVED_SEMANTICS_REQUIRED",
+    "entry_timing_and_fill_mechanism": "UNRESOLVED_SEMANTICS_REQUIRED",
+    "historical_consumer": "HISTORICAL_SEAM_CONSUMER_NOT_IMPLEMENTED",
+    "lot_balance_leverage": "UNRESOLVED_SEMANTICS_REQUIRED",
+    "position_arbitration": "UNRESOLVED_SEMANTICS_REQUIRED",
+    "post_fill_12_m5_exit_boundary": "UNRESOLVED_SEMANTICS_REQUIRED",
+    "safety_and_holdover": "UNRESOLVED_SEMANTICS_REQUIRED",
+    "sl_tp_rounding_and_rejections": "UNRESOLVED_SEMANTICS_REQUIRED"
+  },
+  "experiment_id": "OFP_HISTORICAL_V1_20260920",
+  "flat_lot_probe": "NOT_APPLICABLE_NO_EXECUTION_YET",
+  "holdout": {
+    "state": "UNSPENT",
+    "window": "2026H1"
+  },
+  "hypothesis": "Across the frozen six-symbol universe, the accepted OFPR and OFPC one-change variant chains can be evaluated only after source-bound historical D1/M15/M5 rates and raw quote rows are qualified and a tested geometry-aware historical consumer exists.",
+  "measurements": {
+    "assessment_state": "NOT_ASSESSABLE_UNTIL_QUALIFIED_INPUT_AND_EXECUTION_CONTRACTS",
+    "numeric_grade_floors": null,
+    "performance_metrics": [
+      "profit_factor",
+      "net_profit",
+      "drawdown",
+      "trades",
+      "opportunities"
+    ],
+    "reporting": "all performance values remain null before execution"
+  },
+  "model_contract": {
+    "model1": "SIGNAL_INPUT_FIDELITY_UNQUALIFIED_UNLESS_SOURCE_BOUND_REAL_QUOTES_AND_TESTED_CONSUMER_EXIST",
+    "model4": "PLANNED_NOT_EXECUTED",
+    "preferred_performance_model": "M4_REAL_TICK_FIDELITY"
+  },
+  "parents": {
+    "accepted_proxy_source": "86143b433293e5b3acfbb4c037c37e931d68b766",
+    "accepted_template_seam": "5436833f3791049655f3ab44b90582c73d222e1d"
+  },
+  "requested_source_identity": {
+    "broker": "ThinkMarkets",
+    "broker_symbol_mapping": "EXACT_NAME",
+    "server": "ThinkMarkets-Live",
+    "terminal_build": 6182
+  },
+  "schema": "ofp_historical_preregistration/v1",
+  "stop_conditions": [
+    "STOP_BLOCKED_IF_RAW_MANIFEST_MISSING_OR_HASH_UNBOUND",
+    "STOP_BLOCKED_ON_SOURCE_OR_SYMBOL_IDENTITY_MIXING",
+    "STOP_BLOCKED_ON_UNKNOWN_CLOCK_CONTRACT",
+    "STOP_BLOCKED_ON_MISSING_D1_M15_M5_OR_RAW_QUOTE_INTERVAL_EVIDENCE",
+    "STOP_BLOCKED_ON_FUTURE_OR_OUT_OF_INTERVAL_RECORD",
+    "STOP_BEFORE_EXECUTION_WHILE_HISTORICAL_SEAM_CONSUMER_NOT_IMPLEMENTED",
+    "STOP_BEFORE_PERFORMANCE_WHILE_SIGNAL_INPUT_FIDELITY_UNQUALIFIED",
+    "STOP_BEFORE_EXECUTION_WHILE_EXECUTION_SEMANTICS_ARE_UNRESOLVED"
+  ],
+  "timeframes": [
+    "D1",
+    "M15",
+    "M5"
+  ],
+  "universe": [
+    "XAUUSD",
+    "EURUSD",
+    "GBPUSD",
+    "EURGBP",
+    "USDJPY",
+    "EURJPY"
+  ],
+  "variants": [
+    {
+      "change": "profile, price, wick, trigger and geometry control; still requires quote ticks for the activity profile",
+      "parent": null,
+      "variant_id": "OFPR-00"
+    },
+    {
+      "change": "adds only the frozen test-bar relative tick-activity gate",
+      "parent": "OFPR-00",
+      "variant_id": "OFPR-01"
+    },
+    {
+      "change": "adds only the frozen test-bar quote-direction imbalance gate",
+      "parent": "OFPR-01",
+      "variant_id": "OFPR-02"
+    },
+    {
+      "change": "profile, price, breakout/retest/confirmation and geometry control; still requires quote ticks for the activity profile",
+      "parent": null,
+      "variant_id": "OFPC-00"
+    },
+    {
+      "change": "adds only the frozen second-breakout relative tick-activity gate",
+      "parent": "OFPC-00",
+      "variant_id": "OFPC-01"
+    },
+    {
+      "change": "adds only the frozen second-breakout and confirmation quote-direction imbalance gates",
+      "parent": "OFPC-01",
+      "variant_id": "OFPC-02"
+    }
+  ],
+  "windows": [
+    {
+      "requested_interval": {
+        "basis": "BROKER_SERVER_CLOCK_CONTRACT_REQUIRED",
+        "end_broker_time": "2023-01-01T00:00:00",
+        "interval": "HALF_OPEN",
+        "start_broker_time": "2020-01-01T00:00:00"
+      },
+      "window_id": "BWD"
+    },
+    {
+      "requested_interval": {
+        "basis": "BROKER_SERVER_CLOCK_CONTRACT_REQUIRED",
+        "end_broker_time": "2026-01-01T00:00:00",
+        "interval": "HALF_OPEN",
+        "start_broker_time": "2023-01-01T00:00:00"
+      },
+      "window_id": "MAIN"
+    }
+  ]
+}
