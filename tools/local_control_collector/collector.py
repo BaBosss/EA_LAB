@@ -267,7 +267,7 @@ def collect_registry(repo: Path, registry_root: Path, skip: bool, focus_lanes: I
             audit_status = "UNAVAILABLE"
     parsed = parse_registry({"result": "AUDIT", "records": raw_records, "audit_status": audit_status})
     parsed["malformed_count"] = malformed
-    parsed["status"] = "PARTIAL" if malformed else parsed["status"]
+    parsed["status"] = ("UNAVAILABLE" if not raw_records else "PARTIAL") if malformed else parsed["status"]
     parsed["reason"] = f"MALFORMED_RECORDS:{malformed}" if malformed else "NONE"
     parsed["audit_status"] = audit_status
     selected_ids = set(focus_lanes)
@@ -464,7 +464,7 @@ def collect_one_codex_home(home: Path, mappings: dict[str, list[Identity]], prio
                 counts[str(record[0])] = int(record[1])
             optional = [name for name in ("git_branch", "cwd") if name in state_columns]
             records = state.execute(
-                "SELECT id AS thread_id,updated_at_ms,tokens_used,model,reasoning_effort,title,source,thread_source"
+                "SELECT id AS thread_id,updated_at_ms,tokens_used,model,reasoning_effort,source,thread_source"
                 + ("," + ",".join(optional) if optional else "") + " FROM threads"
             ).fetchall()
             layout = "V3"
@@ -508,9 +508,7 @@ def collect_one_codex_home(home: Path, mappings: dict[str, list[Identity]], prio
         parent_thread_id = None
         if layout == "V2":
             parent_thread_id = row["parent_thread_id"] if isinstance(row["parent_thread_id"], str) and row["parent_thread_id"] else None
-            database_label = None
         else:
-            database_label = row["title"] if isinstance(row["title"], str) else None
             if row["thread_source"] == "subagent" and isinstance(row["source"], str):
                 try:
                     source = json.loads(row["source"])
@@ -520,7 +518,7 @@ def collect_one_codex_home(home: Path, mappings: dict[str, list[Identity]], prio
                 except (json.JSONDecodeError, KeyError, TypeError):
                     parent_thread_id = None
         label = (exact_identity.milestone if exact_identity and exact_identity.milestone
-                 else exact_identity.lane_id if exact_identity else database_label or f"THREAD:{thread_id[:12]}")
+                 else exact_identity.lane_id if exact_identity else f"THREAD:{thread_id[:12]}")
         output.append({
             "thread_id": thread_id,
             "label": safe_label(label, 96),
@@ -748,24 +746,45 @@ def validate_packet(packet: Any) -> None:
 
 
 def read_prior_snapshot(root: Path | None) -> dict[str, int | None] | None:
+    """Read JSONL and preserved legacy pretty-JSON streams; never skip corruption."""
     if root is None:
         return None
-    ledger = root / "snapshots.jsonl"
     try:
-        lines = ledger.read_text(encoding="utf-8").splitlines()
+        text = (root / "snapshots.jsonl").read_text(encoding="utf-8")
     except FileNotFoundError:
         return None
     except OSError:
         refuse("cannot read prior snapshot ledger")
-    for line in reversed(lines):
+    def unique_pairs(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                refuse("duplicate key in prior snapshot ledger")
+            result[key] = value
+        return result
+    decoder = json.JSONDecoder(object_pairs_hook=unique_pairs)
+    offset, previous_time, counters = 0, None, None
+    while offset < len(text):
+        while offset < len(text) and text[offset].isspace():
+            offset += 1
+        if offset == len(text):
+            break
         try:
-            value = json.loads(line)
-            counters = value.get("counters")
-            if value.get("schema_version") == SNAPSHOT_SCHEMA_VERSION and isinstance(counters, dict):
-                return {str(k): v for k, v in counters.items() if v is None or (type(v) is int and v >= 0)}
-        except (json.JSONDecodeError, AttributeError):
-            continue
-    return None
+            value, offset = decoder.raw_decode(text, offset)
+        except json.JSONDecodeError:
+            refuse("malformed prior snapshot ledger; no stale fallback")
+        if (not isinstance(value, dict) or set(value) != {"schema_version", "observed_at", "counters"}
+                or value["schema_version"] != SNAPSHOT_SCHEMA_VERSION or not isinstance(value["counters"], dict)):
+            refuse("invalid prior snapshot contract")
+        instant = parse_time(value["observed_at"])
+        if previous_time is not None and instant <= previous_time:
+            refuse("non-increasing prior snapshot timestamps")
+        previous_time = instant
+        counters = value["counters"]
+        if any(not isinstance(k, str) or not k or not (v is None or type(v) is int and v >= 0)
+               for k, v in counters.items()):
+            refuse("invalid prior snapshot counters")
+    return counters
 
 
 def assert_output_root(root: Path, repo: Path) -> None:
@@ -799,7 +818,7 @@ def write_outputs(root: Path, repo: Path, packet: dict[str, Any]) -> None:
     except FileExistsError:
         refuse("packet output already exists")
     counters = {row["thread_id"]: row["current_lifetime_tokens"] for row in packet["codex_usage"]["threads"]}
-    snapshot = canonical_bytes({"schema_version": SNAPSHOT_SCHEMA_VERSION, "observed_at": packet["observed_at"], "counters": counters})
+    snapshot = (json.dumps({"schema_version": SNAPSHOT_SCHEMA_VERSION, "observed_at": packet["observed_at"], "counters": counters}, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
     descriptor = os.open(root / "snapshots.jsonl", os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
     with os.fdopen(descriptor, "ab") as stream:
         stream.write(snapshot)
