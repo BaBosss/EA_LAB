@@ -1,0 +1,46 @@
+{
+  "family": "B11",
+  "logical_variant": "B11-00",
+  "date": "2026-09-21",
+  "base_canonical": "4e44e7a2e5302200f4ea88e348b762a3f8d64f7c",
+  "status": "BLOCKED_OWNER_DECISION",
+  "source_sha256": "59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672",
+  "source_facts": {
+    "entry": "FAST_MA_VS_SLOW_MA_DIRECTIONAL_STATE_SHIFT0",
+    "native_map": "NONE"
+  },
+  "owner_ratified_generic": {
+    "position_engine": "GRID_AGAINST",
+    "stack_distance": "ATR_X_2_CURRENT_TF",
+    "stack_confirm": "DISTANCE",
+    "exit": "ATR_BASED",
+    "basket_protection": "BASKET_BALANCE_STOP_10PCT_CURRENT_BALANCE_EA_SCOPE"
+  },
+  "historical_candidate": {
+    "FastMA": 20,
+    "SlowMA": 50,
+    "MAMethod": 1,
+    "MA_TF": 0,
+    "ATRPeriod": 14
+  },
+  "owner_choice_required": {
+    "entry": "LISTED_OR_EXPLICIT_CUSTOM",
+    "atr_period": "POSITIVE_INTEGER",
+    "home": "EXPLICIT_SYMBOL_TF"
+  },
+  "documented_home_contexts": ["XAUUSD/H1", "USDJPY/H4", "XAUUSD/H4"],
+  "negative_evidence": {
+    "H01": "MAIN_PF_1.02_BWD_PF_0.88",
+    "H02": "NO_B11_DUAL_WINDOW_POSITIVE_PAIR",
+    "BT8": "GRID_STACK_MATERIAL_WEAKNESS_ENTRY_ONLY_NOT_YET_QUALIFIED",
+    "corrected_example": "XAUUSD_H1_EXAMPLE_ONLY_NOT_HOME_MAIN_PF_1.03_BWD_PF_0.89"
+  },
+  "workbook_check": "EA_LAB_OWNER_DECISIONS_20260920_rev1.xlsx_HAS_NO_B11_SHEET",
+  "model1": "NOT_STARTED",
+  "optimization": "NOT_AUTHORIZED",
+  "model4": "NOT_STARTED",
+  "robustness": "NOT_STARTED",
+  "holdout": "UNSPENT",
+  "candidate_grade_kint": "NOT_ELIGIBLE",
+  "next_owner_answer_format": "B11_ENTRY=LISTED(20,50,EMA,PERIOD_CURRENT)|CUSTOM(...); B11_ATR_PERIOD=<positive integer>; B11_HOME=<SYMBOL>/<TF>"
+}
