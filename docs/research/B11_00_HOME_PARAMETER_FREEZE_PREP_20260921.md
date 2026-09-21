@@ -1,6 +1,6 @@
-# B11-00 Home / Parameter Freeze Prep — 2026-09-21
+# B11-00 Home / Parameter Freeze Prep ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 2026-09-21
 
-Status: `BLOCKED_OWNER_DECISION / SOURCE_BOUND / NO_MT5 / HOLDOUT_UNSPENT`
+Status: `OWNER_RATIFIED / READY_FOR_MODEL1_CONTRACT / NO_MT5_YET / HOLDOUT_UNSPENT`
 Base canonical: `4e44e7a2e5302200f4ea88e348b762a3f8d64f7c`
 Lane: `ct-b11-00-home-parameter-freeze-20260921`
 
@@ -54,9 +54,9 @@ A different explicit source-supported symbol/TF may be supplied prospectively; i
 
 ## Gate status
 
-- Home/config freeze: `BLOCKED_OWNER_DECISION`
-- Model1 MAIN+BWD: `NOT_STARTED`
-- Optimization: `NOT_AUTHORIZED`
+- Home/config freeze: `OWNER_RATIFIED`
+- Model1 MAIN+BWD: `READY_FOR_CONTRACT_MATERIALIZATION`
+- Optimization: `RANGE_PREREGISTERED_NOT_AUTHORIZED`
 - Model4: `NOT_STARTED`
 - Robustness / Monte Carlo: `NOT_STARTED`
 - HOLDOUT: `UNSPENT`
@@ -65,5 +65,21 @@ A different explicit source-supported symbol/TF may be supplied prospectively; i
 
 ## Next lawful action
 
-After the owner supplies the one-line freeze, preregister exactly one fixed B11-00 Model1 MAIN+BWD pair on the chosen Home with the full effective configuration identity bound before tester execution.
+The owner freeze is now explicit. The next lawful action is to preregister exactly one fixed B11-00 Model1 MAIN+BWD pair on XAUUSD/H1 with the full effective configuration identity bound before tester execution.
 Stop after that pair unless a separate prospective continuation contract becomes satisfied.
+
+## Owner ratification - 2026-09-21
+
+The owner explicitly selected the initial B11-00 fixed reference as:
+
+- Home: `XAUUSD / H1`.
+- Entry: `_0_FastMA=20`, `_0_SlowMA=50`, `_0_MAMethod=EMA/1`, `_0_MA_TF=PERIOD_CURRENT/0`.
+- ATR: `_0_ATR_Period=14`, `_0_ATR_TF=PERIOD_CURRENT/0`.
+- Entry semantics remain the accepted shift0 fast-MA-versus-slow-MA directional state.
+- Native map remains `NONE`; generic xx-00 chassis remains in force.
+
+The owner also prospectively named a later optimization lattice: `FastMA=5..30 step5` and `SlowMA=50..100 step10`. This lattice is **not** the fixed Model1 reference and is **not yet authorized to run**. It may be consumed only if the fixed Model1 MAIN+BWD contract truthfully unlocks optimization under a separate prospective contract. `MAMethod=EMA`, `MA_TF=PERIOD_CURRENT`, `ATRPeriod=14`, and Home `XAUUSD/H1` remain frozen unless a future separately authorized contract changes them.
+
+Owner intent: perform this as an initial experiment and continue autonomously through lawful downstream gates. This does not waive preregistration, review, no-BWD-mining, no-HOLDOUT-mining, or other existing hard stops.
+
+Current canonical observed before recording this ratification: `d481e5eb8d04761bd918185be77e53625699506b`.
