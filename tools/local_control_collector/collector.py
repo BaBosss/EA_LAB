@@ -30,7 +30,11 @@ SENSITIVE_RE = re.compile(
     r"(?i)(token|secret|password|passwd|credential|api[_-]?key|account|login)\s*[:=]\s*[^\s,;]+"
 )
 ABS_PATH_RE = re.compile(r"(?i)(?:[A-Z]:\\[^\s]+|/(?:home|users|root)/[^\s]+)")
-ACTIVE_STATES = {"READY", "RUNNING", "REVIEW", "FROZEN", "INTEGRATING"}
+ACTIVE_STATES = {"READY", "RUNNING", "WAITING", "REVIEW", "FROZEN", "INTEGRATING"}
+ROUTE_THREAD_LIMIT = 30
+ROUTE_FOCUS_LIMIT = 10
+ROUTE_TOP_DELTA_LIMIT = 10
+ROUTE_ACTIVE_EXACT_LIMIT = 5
 
 
 class Refusal(ValueError):
@@ -164,13 +168,15 @@ def paths_overlap(left: str, right: str) -> bool:
 
 
 REGISTRY_REQUIRED = {
-    "lane_id", "state", "writer", "owner_chat", "classification", "head_sha", "reviewed_head",
-    "blocker_class", "updated_at", "worktree", "allowed_paths", "critical_paths",
+    "lane_id", "state", "writer", "owner_chat", "head_sha", "reviewed_head", "blocker_class",
+    "updated_at", "worktree", "branch", "allowed_paths", "critical_paths",
 }
 
 
 def parse_registry(raw: Any) -> dict[str, Any]:
-    unavailable = {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "MALFORMED_OR_UNAVAILABLE"}
+    unavailable = {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "MALFORMED_OR_UNAVAILABLE",
+                   "state_counts": {}, "total_count": 0, "selected_count": 0, "omitted_count": 0,
+                   "malformed_count": 0, "audit_status": "NOT_REQUESTED"}
     if not isinstance(raw, dict) or raw.get("result") != "AUDIT" or not isinstance(raw.get("records"), list):
         return unavailable
     rows = []
@@ -180,71 +186,108 @@ def parse_registry(raw: Any) -> dict[str, Any]:
         lane_id = safe_id(item["lane_id"])
         if lane_id == "UNKNOWN" or not isinstance(item["writer"], bool):
             return unavailable
+        string_fields = ("state", "owner_chat", "head_sha", "blocker_class",
+                         "updated_at", "worktree", "branch")
+        if any(not isinstance(item[name], str) for name in string_fields):
+            return unavailable
+        if not SHA_RE.fullmatch(item["head_sha"]):
+            return unavailable
+        if item["reviewed_head"] is not None and not isinstance(item["reviewed_head"], str):
+            return unavailable
+        if item["reviewed_head"] and not SHA_RE.fullmatch(item["reviewed_head"]):
+            return unavailable
         allowed = item["allowed_paths"]
         critical = item["critical_paths"]
         if not isinstance(allowed, list) or not isinstance(critical, list) or not all(isinstance(x, str) for x in allowed + critical):
             return unavailable
         scopes = allowed + critical
-        if any(re.match(r"(?i)^[A-Z]:[/\\]", scope) or scope.startswith(("/", "\\"))
-               or ".." in PurePosixPath(scope.replace("\\", "/")).parts for scope in scopes):
+        if any(".." in PurePosixPath(scope.replace("\\", "/")).parts for scope in scopes):
             return unavailable
         rows.append({
             "lane_id": lane_id,
-            "state": safe_label(item["state"], 40),
+            "state": item["state"],
             "role": "WRITER" if item["writer"] else "READ_ONLY",
-            "owner_chat": safe_label(item["owner_chat"], 80),
-            "head": item["head_sha"] if isinstance(item["head_sha"], str) and SHA_RE.fullmatch(item["head_sha"]) else "UNKNOWN",
-            "reviewed_head": item["reviewed_head"] if isinstance(item["reviewed_head"], str) and SHA_RE.fullmatch(item["reviewed_head"]) else "UNKNOWN",
-            "blocker_class": safe_label(item["blocker_class"], 80),
-            "updated_at": safe_label(item["updated_at"], 40),
-            "worktree": Path(str(item["worktree"])).name or "UNKNOWN",
-            "classification": safe_label(item["classification"], 60),
-            "allowed_paths": sorted(allowed),
-            "critical_paths": sorted(critical),
+            "owner_chat": item["owner_chat"],
+            "head": item["head_sha"],
+            "reviewed_head": item["reviewed_head"],
+            "blocker_class": item["blocker_class"],
+            "updated_at": item["updated_at"],
+            "worktree": item["worktree"],
+            "branch": item["branch"],
+            "classification": item.get("classification") if isinstance(item.get("classification"), str) else "UNKNOWN",
+            "attention": item.get("attention") if isinstance(item.get("attention"), bool) else None,
+            "allowed_paths": list(allowed),
+            "critical_paths": list(critical),
         })
-    return {"status": "AVAILABLE", "records": sorted(rows, key=lambda x: x["lane_id"]), "conflicts": [], "reason": "NONE"}
+    counts = Counter(row["state"] for row in rows)
+    return {"status": "AVAILABLE", "records": sorted(rows, key=lambda x: x["lane_id"]), "conflicts": [],
+            "reason": "NONE", "state_counts": dict(sorted(counts.items())), "total_count": len(rows),
+            "selected_count": len(rows), "omitted_count": 0, "malformed_count": 0,
+            "audit_status": "AVAILABLE" if raw.get("audit_status") == "AVAILABLE" else "NOT_REQUESTED"}
 
 
-def collect_registry(repo: Path, registry_root: Path, skip: bool) -> dict[str, Any]:
+def collect_registry(repo: Path, registry_root: Path, skip: bool, focus_lanes: Iterable[str] = (),
+                     current_lane: str | None = None, deep_audit: bool = False,
+                     compact: bool = True) -> dict[str, Any]:
     if skip:
-        return {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "NOT_REQUESTED"}
-    script = repo / "scripts" / "lane_registry.ps1"
-    code, out, err = run([
-        "powershell", "-NoProfile", "-File", str(script), "-Command", "Audit",
-        "-RegistryRoot", str(registry_root), "-RepoRoot", str(repo), "-Json",
-    ], timeout=60)
-    if code != 0:
-        return {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": safe_label(err, 160)}
+        return {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "NOT_REQUESTED",
+                "state_counts": {}, "total_count": 0, "selected_count": 0, "omitted_count": 0,
+                "malformed_count": 0, "audit_status": "NOT_REQUESTED"}
+    raw_records, malformed = [], 0
     try:
-        audit = json.loads(out)
-    except (json.JSONDecodeError, ValueError):
-        return {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "MALFORMED_OR_UNAVAILABLE"}
-    if not isinstance(audit, dict) or not isinstance(audit.get("records"), list):
-        return {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "MALFORMED_OR_UNAVAILABLE"}
-    enriched = []
-    for audit_row in audit["records"]:
-        lane_id = audit_row.get("lane_id") if isinstance(audit_row, dict) else None
-        if safe_id(lane_id) == "UNKNOWN":
-            return {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "MALFORMED_OR_UNAVAILABLE"}
-        get_code, get_out, get_err = run([
-            "powershell", "-NoProfile", "-File", str(script), "-Command", "Get",
-            "-RegistryRoot", str(registry_root), "-LaneId", lane_id, "-Json",
-        ], timeout=30)
-        if get_code != 0:
-            return {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": safe_label(get_err, 160)}
-        record = json_object(get_out)
-        if record is None:
-            return {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "MALFORMED_OR_UNAVAILABLE"}
-        record["classification"] = audit_row.get("classification")
-        enriched.append(record)
-    return parse_registry({"result": "AUDIT", "records": enriched})
+        files = sorted(registry_root.glob("*.json"), key=lambda path: path.name.lower())
+    except OSError:
+        files = []
+    if not files:
+        result = parse_registry(None)
+        result["reason"] = "REGISTRY_ROOT_UNAVAILABLE_OR_EMPTY"
+        return result
+    for path in files:
+        record = load_optional_json(path)
+        parsed = parse_registry({"result": "AUDIT", "records": [record]}) if record is not None else parse_registry(None)
+        if parsed["status"] != "AVAILABLE":
+            malformed += 1
+        else:
+            raw_records.append(record)
+    audit_status = "NOT_REQUESTED"
+    if deep_audit:
+        script = repo / "scripts" / "lane_registry.ps1"
+        code, out, _ = run(["powershell", "-NoProfile", "-File", str(script), "-Command", "Audit",
+                            "-RegistryRoot", str(registry_root), "-RepoRoot", str(repo), "-Json"], timeout=300)
+        audit = json_object(out) if code == 0 else None
+        if audit and isinstance(audit.get("records"), list):
+            exact = {row.get("lane_id"): row for row in audit["records"] if isinstance(row, dict) and safe_id(row.get("lane_id")) != "UNKNOWN"}
+            for record in raw_records:
+                audited = exact.get(record["lane_id"])
+                if audited:
+                    record["classification"] = audited.get("classification")
+                    record["attention"] = audited.get("attention_required")
+            audit_status = "AVAILABLE"
+        else:
+            audit_status = "UNAVAILABLE"
+    parsed = parse_registry({"result": "AUDIT", "records": raw_records, "audit_status": audit_status})
+    parsed["malformed_count"] = malformed
+    parsed["status"] = "PARTIAL" if malformed else parsed["status"]
+    parsed["reason"] = f"MALFORMED_RECORDS:{malformed}" if malformed else "NONE"
+    parsed["audit_status"] = audit_status
+    selected_ids = set(focus_lanes)
+    if current_lane:
+        selected_ids.add(current_lane)
+    all_rows = parsed["records"]
+    parsed["records"] = ([row for row in all_rows if row["state"] in ACTIVE_STATES or row["lane_id"] in selected_ids]
+                         if compact else all_rows)
+    parsed["selected_count"] = len(parsed["records"])
+    parsed["omitted_count"] = parsed["total_count"] - parsed["selected_count"]
+    return parsed
 
 
-def add_overlap(git: dict[str, Any], registry: dict[str, Any], current_lane: str | None) -> None:
+def add_overlap(git: dict[str, Any], registry: dict[str, Any], current_lane: str | None,
+                focus_lanes: Iterable[str] = ()) -> None:
     conflicts = []
+    focused = set(focus_lanes)
     for changed in git["changed_paths"]:
         for lane in registry["records"]:
-            if lane["lane_id"] == current_lane or lane["state"] not in ACTIVE_STATES:
+            if lane["lane_id"] == current_lane or (lane["role"] != "WRITER" and lane["lane_id"] not in focused):
                 continue
             allowed = sorted(scope for scope in lane["allowed_paths"] if paths_overlap(changed, scope))
             critical = sorted(scope for scope in lane["critical_paths"] if paths_overlap(changed, scope))
@@ -380,7 +423,33 @@ def choose_identity(thread_id: str, mappings: dict[str, list[Identity]]) -> tupl
     return None, "AMBIGUOUS" if choices else "UNKNOWN"
 
 
-def collect_one_codex_home(home: Path, mappings: dict[str, list[Identity]], prior: dict[str, int | None] | None) -> list[dict[str, Any]]:
+def normalize_branch(value: Any) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    branch = value.strip().replace("\\", "/")
+    return branch[11:] if branch.startswith("refs/heads/") else branch
+
+
+def normalize_worktree(value: Any) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return os.path.normcase(os.path.normpath(value.strip()))
+
+
+def inferred_identity(branch: Any, cwd: Any, registry_records: list[dict[str, Any]]) -> tuple[Identity | None, str]:
+    branch_key, cwd_key = normalize_branch(branch), normalize_worktree(cwd)
+    matches = {
+        row["lane_id"] for row in registry_records
+        if (branch_key is not None and normalize_branch(row["branch"]) == branch_key)
+        or (cwd_key is not None and normalize_worktree(row["worktree"]) == cwd_key)
+    }
+    if len(matches) == 1:
+        return Identity(next(iter(matches)), None, None), "EXACT"
+    return None, "AMBIGUOUS" if len(matches) > 1 else "UNKNOWN"
+
+
+def collect_one_codex_home(home: Path, mappings: dict[str, list[Identity]], prior: dict[str, int | None] | None,
+                           registry_records: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     state_path, history_path = home / "state_5.sqlite", home / "thread_history_1.sqlite"
     state = readonly_connection(state_path)
     history: sqlite3.Connection | None = None
@@ -393,8 +462,10 @@ def collect_one_codex_home(home: Path, mappings: dict[str, list[Identity]], prio
         if v3_state.issubset(state_columns) and {"thread_id", "turn_id"}.issubset(db_columns(history, "thread_turns")):
             for record in history.execute("SELECT thread_id,COUNT(*) FROM thread_turns GROUP BY thread_id"):
                 counts[str(record[0])] = int(record[1])
+            optional = [name for name in ("git_branch", "cwd") if name in state_columns]
             records = state.execute(
-                "SELECT id AS thread_id,updated_at_ms,tokens_used,model,reasoning_effort,title,source,thread_source FROM threads"
+                "SELECT id AS thread_id,updated_at_ms,tokens_used,model,reasoning_effort,title,source,thread_source"
+                + ("," + ",".join(optional) if optional else "") + " FROM threads"
             ).fetchall()
             layout = "V3"
         elif v2_state.issubset(state_columns) and {"thread_id", "item_type"}.issubset(db_columns(history, "thread_history")):
@@ -427,6 +498,12 @@ def collect_one_codex_home(home: Path, mappings: dict[str, list[Identity]], prio
         else:
             delta, delta_status = current - previous, "DELTA_OK"
         exact_identity, mapping_status = choose_identity(thread_id, mappings)
+        if mapping_status == "UNKNOWN" and layout == "V3":
+            exact_identity, mapping_status = inferred_identity(
+                row["git_branch"] if "git_branch" in row.keys() else None,
+                row["cwd"] if "cwd" in row.keys() else None,
+                registry_records or [],
+            )
         role = exact_identity.role if exact_identity and exact_identity.role in {"AUTHOR", "REVIEWER"} else "UNKNOWN"
         parent_thread_id = None
         if layout == "V2":
@@ -466,12 +543,13 @@ def collect_one_codex_home(home: Path, mappings: dict[str, list[Identity]], prio
 
 
 def collect_codex_usage(homes: list[Path], as_of: str, mappings: dict[str, list[Identity]],
-                        prior: dict[str, int | None] | None) -> dict[str, Any]:
+                        prior: dict[str, int | None] | None,
+                        registry_records: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     unavailable = 0
     for home in homes:
         try:
-            rows.extend(collect_one_codex_home(home, mappings, prior))
+            rows.extend(collect_one_codex_home(home, mappings, prior, registry_records))
         except (OSError, sqlite3.Error, ValueError):
             unavailable += 1
     deduplicated: dict[str, dict[str, Any]] = {}
@@ -486,7 +564,68 @@ def collect_codex_usage(homes: list[Path], as_of: str, mappings: dict[str, list[
     final = sorted(deduplicated.values(), key=lambda row: row["thread_id"])
     status = "UNAVAILABLE" if not final and unavailable else "PARTIAL" if unavailable or duplicate_ids else "AVAILABLE"
     return {"status": status, "captured_at": normalized_time(as_of), "truth_note": TRUTH_NOTE, "threads": final,
+            "total_count": len(final), "selected_count": len(final), "omitted_count": 0,
             "unavailable_database_count": unavailable, "ambiguous_duplicate_thread_count": len(duplicate_ids)}
+
+
+def compact_usage(usage: dict[str, Any], limit: int = ROUTE_THREAD_LIMIT,
+                  focus_lanes: Iterable[str] = (), current_lane: str | None = None,
+                  active_lanes: Iterable[str] = ()) -> dict[str, Any]:
+    """Bound route-facing detail while preserving full durable observation elsewhere."""
+    if type(limit) is not int or limit < 1 or limit > 100:
+        refuse("route thread limit must be an integer in [1,100]")
+    rows = list(usage["threads"])
+    focus = set(focus_lanes)
+    if current_lane:
+        focus.add(current_lane)
+    active = set(active_lanes)
+
+    def recent_key(row: dict[str, Any]) -> tuple[int, str]:
+        updated = row["updated_at_ms"] if isinstance(row["updated_at_ms"], int) else -1
+        return (-updated, row["thread_id"])
+
+    def delta_key(row: dict[str, Any]) -> tuple[int, int, str]:
+        delta = row["delta_tokens"] if row["delta_status"] == "DELTA_OK" and isinstance(row["delta_tokens"], int) else -1
+        updated = row["updated_at_ms"] if isinstance(row["updated_at_ms"], int) else -1
+        return (-delta, -updated, row["thread_id"])
+
+    focus_rows = sorted([row for row in rows if row["lane_id"] in focus], key=recent_key)
+    top_delta = sorted(
+        [row for row in rows if row["delta_status"] == "DELTA_OK" and isinstance(row["delta_tokens"], int)],
+        key=delta_key,
+    )
+    active_exact = sorted(
+        [row for row in rows if row["mapping_status"] == "EXACT" and row["lane_id"] in active],
+        key=recent_key,
+    )
+    recent = sorted(rows, key=recent_key)
+
+    chosen: list[dict[str, Any]] = []
+    chosen_ids: set[str] = set()
+
+    def add(candidates: Iterable[dict[str, Any]], cap: int | None = None) -> None:
+        added = 0
+        for row in candidates:
+            if len(chosen) >= limit:
+                return
+            if row["thread_id"] in chosen_ids:
+                continue
+            chosen.append(row)
+            chosen_ids.add(row["thread_id"])
+            added += 1
+            if cap is not None and added >= cap:
+                return
+
+    add(focus_rows, min(ROUTE_FOCUS_LIMIT, limit))
+    add(top_delta, min(ROUTE_TOP_DELTA_LIMIT, limit))
+    add(active_exact, min(ROUTE_ACTIVE_EXACT_LIMIT, limit))
+    add(recent)
+
+    compact = dict(usage)
+    compact["threads"] = sorted(chosen, key=lambda row: row["thread_id"])
+    compact["selected_count"] = len(chosen)
+    compact["omitted_count"] = compact["total_count"] - compact["selected_count"]
+    return compact
 
 
 def aggregate_usage(rows: list[dict[str, Any]], thresholds: list[int], observed_at: str = "1970-01-01T00:00:00Z") -> dict[str, Any]:
@@ -525,10 +664,14 @@ def empty_packet(as_of: str) -> dict[str, Any]:
         "schema_version": SCHEMA_VERSION,
         "observed_at": normalized_time(as_of),
         "git": {"status": "UNAVAILABLE", "fetch": "NOT_REQUESTED", "head": "UNKNOWN", "origin_master": "UNKNOWN", "ls_remote_master": "UNKNOWN", "clean": None, "ancestry": "UNKNOWN", "changed_paths": [], "overlap": []},
-        "registry": {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "NOT_REQUESTED"},
+        "registry": {"status": "UNAVAILABLE", "records": [], "conflicts": [], "reason": "NOT_REQUESTED",
+                     "state_counts": {}, "total_count": 0, "selected_count": 0, "omitted_count": 0,
+                     "malformed_count": 0, "audit_status": "NOT_REQUESTED"},
         "jobs": [],
         "evidence": [],
-        "codex_usage": {"status": "UNAVAILABLE", "captured_at": normalized_time(as_of), "truth_note": TRUTH_NOTE, "threads": [], "unavailable_database_count": 0, "ambiguous_duplicate_thread_count": 0},
+        "codex_usage": {"status": "UNAVAILABLE", "captured_at": normalized_time(as_of), "truth_note": TRUTH_NOTE,
+                        "threads": [], "total_count": 0, "selected_count": 0, "omitted_count": 0,
+                        "unavailable_database_count": 0, "ambiguous_duplicate_thread_count": 0},
         "daily_aggregation": aggregate_usage([], [1_000_000, 3_000_000], as_of),
         "bindings": {"collector_sha256": sha256_bytes(Path(__file__).read_bytes()), "schema_sha256": sha256_bytes(SCHEMA_PATH.read_bytes()) if SCHEMA_PATH.exists() else "UNKNOWN"},
         "limitations": [],
@@ -540,15 +683,15 @@ def empty_packet(as_of: str) -> dict[str, Any]:
 TOP_KEYS = {"schema_version", "observed_at", "git", "registry", "jobs", "evidence", "codex_usage", "daily_aggregation", "bindings", "limitations", "runtime_mutation", "installation_actions"}
 SECTION_KEYS = {
     "git": {"status", "fetch", "head", "origin_master", "ls_remote_master", "clean", "ancestry", "changed_paths", "overlap"},
-    "registry": {"status", "records", "conflicts", "reason"},
-    "codex_usage": {"status", "captured_at", "truth_note", "threads", "unavailable_database_count", "ambiguous_duplicate_thread_count"},
+    "registry": {"status", "records", "conflicts", "reason", "state_counts", "total_count", "selected_count", "omitted_count", "malformed_count", "audit_status"},
+    "codex_usage": {"status", "captured_at", "truth_note", "threads", "total_count", "selected_count", "omitted_count", "unavailable_database_count", "ambiguous_duplicate_thread_count"},
     "daily_aggregation": {"date", "valid_delta_tokens", "valid_delta_thread_count", "observed_thread_count", "observed_invocation_count", "observation_thresholds", "observation_signal", "by_lane", "by_milestone", "by_model", "by_reasoning_effort", "by_role", "top_delta_threads"},
     "bindings": {"collector_sha256", "schema_sha256"},
 }
 THREAD_KEYS = {"thread_id", "label", "model", "reasoning_effort", "current_lifetime_tokens", "previous_lifetime_tokens", "delta_tokens", "delta_status", "updated_at_ms", "parent_thread_id", "identity", "lane_id", "milestone", "role", "mapping_status", "invocation_count"}
 JOB_KEYS = {"status", "lane_id", "job_id", "durable_state", "result", "runner_alive", "child_alive", "postcondition_alive", "heartbeat_age_sec", "retry_decision", "lease_identity", "job_identity"}
 EVIDENCE_OUTPUT_KEYS = {"status", "contract", "verdict", "confidence", "decision", "findings", "reviewed_head", "sha256", "source"}
-LANE_KEYS = {"lane_id", "state", "role", "owner_chat", "head", "reviewed_head", "blocker_class", "updated_at", "worktree", "classification", "allowed_paths", "critical_paths"}
+LANE_KEYS = {"lane_id", "state", "role", "owner_chat", "head", "reviewed_head", "blocker_class", "updated_at", "worktree", "branch", "classification", "attention", "allowed_paths", "critical_paths"}
 OVERLAP_KEYS = {"changed_path", "lane_id", "allowed_paths", "critical_paths", "classification"}
 
 
@@ -566,6 +709,11 @@ def validate_packet(packet: Any) -> None:
         exact_keys(packet[name], keys, name)
     if packet["codex_usage"]["truth_note"] != TRUTH_NOTE:
         refuse("Codex counter truth note changed")
+    for section in (packet["registry"], packet["codex_usage"]):
+        if section["selected_count"] + section["omitted_count"] != section["total_count"]:
+            refuse("collection counts do not reconcile")
+    if sum(packet["registry"]["state_counts"].values()) != packet["registry"]["total_count"]:
+        refuse("Registry state counts do not reconcile")
     for index, row in enumerate(packet["codex_usage"]["threads"]):
         exact_keys(row, THREAD_KEYS, f"thread[{index}]")
         if row["delta_status"] not in {"INITIAL", "DELTA_OK", "COUNTER_DECREASED_UNKNOWN", "UNKNOWN"}:
@@ -642,7 +790,7 @@ def write_outputs(root: Path, repo: Path, packet: dict[str, Any]) -> None:
     assert_output_root(root, repo)
     root.mkdir(parents=True, exist_ok=True)
     stamp = packet["observed_at"].replace(":", "").replace("-", "")
-    packet_path = root / f"packet-{stamp}.json"
+    packet_path = root / f"observation-{stamp}.json"
     try:
         with packet_path.open("xb") as stream:
             stream.write(canonical_bytes(packet))
@@ -697,6 +845,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--registry-root", type=Path, default=Path(r"D:\EA_LAB_CONTROL\lanes\registry-v1"))
     parser.add_argument("--skip-registry", action="store_true")
     parser.add_argument("--current-lane")
+    parser.add_argument("--focus-lane", action="append", default=[])
+    parser.add_argument("--deep-registry-audit", action="store_true")
     parser.add_argument("--jobs-root", type=Path, default=Path(r"D:\EA_LAB_CONTROL\jobs"))
     parser.add_argument("--lease-root", type=Path, default=Path(r"D:\EA_LAB_CONTROL\leases"))
     parser.add_argument("--lane-job", action="append", default=[])
@@ -705,6 +855,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--thread-identity", action="append", default=[])
     parser.add_argument("--observation-threshold", action="append", type=int, default=[])
     parser.add_argument("--output-root", type=Path)
+    parser.add_argument("--full-detail", action="store_true", help="emit all Registry and Codex rows to stdout")
     return parser
 
 
@@ -718,12 +869,13 @@ def main(argv: list[str] | None = None) -> int:
         prior = read_prior_snapshot(args.output_root)
         packet = empty_packet(as_of)
         packet["git"] = collect_git(repo, not args.skip_remote_observe, args.fetch)
-        packet["registry"] = collect_registry(repo, args.registry_root, args.skip_registry)
-        add_overlap(packet["git"], packet["registry"], args.current_lane)
+        packet["registry"] = collect_registry(repo, args.registry_root, args.skip_registry, args.focus_lane,
+                                                args.current_lane, args.deep_registry_audit, compact=False)
+        full_registry_records = packet["registry"]["records"]
         packet["jobs"] = collect_jobs(repo, args.jobs_root, args.lease_root, parse_job_requests(args.lane_job), as_of)
         packet["evidence"] = [parse_evidence(path) for path in sorted(args.evidence, key=lambda p: str(p))]
         homes = args.codex_home or [Path.home() / ".codex"]
-        packet["codex_usage"] = collect_codex_usage(homes, as_of, mappings, prior)
+        packet["codex_usage"] = collect_codex_usage(homes, as_of, mappings, prior, full_registry_records)
         packet["daily_aggregation"] = aggregate_usage(packet["codex_usage"]["threads"], thresholds, as_of)
         if packet["registry"]["status"] != "AVAILABLE":
             packet["limitations"].append("Lane Registry observation unavailable; no Registry state is inferred.")
@@ -734,7 +886,29 @@ def main(argv: list[str] | None = None) -> int:
         validate_packet(packet)
         if args.output_root:
             write_outputs(args.output_root, repo, packet)
-        sys.stdout.buffer.write(canonical_bytes(packet))
+        route_packet = packet
+        if not args.full_detail:
+            route_packet = json.loads(json.dumps(packet))
+            selected_ids = set(args.focus_lane)
+            if args.current_lane:
+                selected_ids.add(args.current_lane)
+            all_rows = route_packet["registry"]["records"]
+            route_packet["registry"]["records"] = [row for row in all_rows if row["state"] in ACTIVE_STATES or row["lane_id"] in selected_ids]
+            route_packet["registry"]["selected_count"] = len(route_packet["registry"]["records"])
+            route_packet["registry"]["omitted_count"] = route_packet["registry"]["total_count"] - route_packet["registry"]["selected_count"]
+            active_lane_ids = {
+                row["lane_id"] for row in full_registry_records
+                if row["state"] in ACTIVE_STATES
+            }
+            route_packet["codex_usage"] = compact_usage(
+                route_packet["codex_usage"],
+                focus_lanes=args.focus_lane,
+                current_lane=args.current_lane,
+                active_lanes=active_lane_ids,
+            )
+        add_overlap(route_packet["git"], route_packet["registry"], args.current_lane, args.focus_lane)
+        validate_packet(route_packet)
+        sys.stdout.buffer.write(canonical_bytes(route_packet))
         return 0
     except Refusal as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
