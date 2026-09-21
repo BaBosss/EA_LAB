@@ -1,4 +1,4 @@
-# B11-00 Home / Parameter Freeze Prep ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 2026-09-21
+# B11-00 Home / Parameter Freeze Prep ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â 2026-09-21
 
 Status: `OWNER_RATIFIED / READY_FOR_MODEL1_CONTRACT / NO_MT5_YET / HOLDOUT_UNSPENT`
 Base canonical: `4e44e7a2e5302200f4ea88e348b762a3f8d64f7c`
@@ -24,12 +24,12 @@ This packet reduces the owner decision surface without choosing consequential va
 | NEGATIVE EVIDENCE | H02 | No B11 dual-window-positive parent pair; XAUUSD/M15 and GBPUSD/M15 were ineligible due suspected truncation. |
 | NEGATIVE EVIDENCE | BT8 | SINGLE improved PF/EqDD in USDJPY/H4 and XAUUSD/H4, but XAUUSD/H4 BWD stayed below PF 1; accepted classification `GRID_STACK_MATERIAL_WEAKNESS / ENTRY_ONLY_NOT_YET_QUALIFIED`. |
 | NEGATIVE EVIDENCE | Corrected-parser example | XAUUSD/H1 example MAIN PF 1.03 and BWD PF 0.89; authority remains `EXAMPLE_ONLY_NOT_HOME`. |
-| UNKNOWN | Entry freeze | No prospective owner-ratified FastMA / SlowMA / MAMethod / MA_TF found. |
-| UNKNOWN | ATRPeriod | No prospective owner-ratified value found. |
-| UNKNOWN | Home | No prospective owner-ratified HomeSymbol / HomeTF found. |
-| UNAVOIDABLE OWNER CHOICE | Entry reference | Accept listed bundle or provide explicit custom source-valid values. |
-| UNAVOIDABLE OWNER CHOICE | ATRPeriod | Provide one explicit positive integer. |
-| UNAVOIDABLE OWNER CHOICE | Home | Select one explicit symbol/timeframe; historical contexts cannot choose it automatically. |
+| PRE-RATIFICATION HISTORY | Entry freeze | Before the 2026-09-21 owner response, no prospective owner-ratified FastMA / SlowMA / MAMethod / MA_TF was found. Resolved below. |
+| PRE-RATIFICATION HISTORY | ATRPeriod | Before the 2026-09-21 owner response, no prospective owner-ratified value was found. Resolved to 14 below. |
+| PRE-RATIFICATION HISTORY | Home | Before the 2026-09-21 owner response, no prospective owner-ratified HomeSymbol / HomeTF was found. Resolved to XAUUSD/H1 below. |
+| PRE-RATIFICATION OWNER CHOICE (RESOLVED) | Entry reference | Resolved to LISTED 20/50/EMA/PERIOD_CURRENT on 2026-09-21. |
+| PRE-RATIFICATION OWNER CHOICE (RESOLVED) | ATRPeriod | Resolved to 14 on 2026-09-21. |
+| PRE-RATIFICATION OWNER CHOICE (RESOLVED) | Home | Resolved to XAUUSD/H1 on 2026-09-21. |
 
 ## Documentary reconciliation
 
@@ -39,15 +39,15 @@ This packet reduces the owner decision surface without choosing consequential va
 - `EA_LAB_OWNER_DECISIONS_20260920_rev1.xlsx` exists on BaBoss but has no B11 sheet, so it supplies no B11 freeze.
 - Current B11 Monitor/example evidence remains presentation/example only and cannot supply Home authority.
 
-## Deterministic reduction result
+## Pre-ratification deterministic reduction result (historical)
 
 The prospective B11-00 identity must preserve shift0 MA-state entry semantics and the already ratified generic xx-00 chassis.
 Evidence does not authorize choosing SINGLE, reusing historical GRID_TREND management, or selecting Home from PF history.
-No unique lawful B11-00 Home/config can be derived without owner ratification.
+At that pre-ratification stage, no unique lawful B11-00 Home/config could be derived without owner ratification. This blocker is now resolved by the explicit 2026-09-21 owner freeze below.
 
-## Smallest exact owner decision
+## Pre-ratification owner question (resolved)
 
-`B11_ENTRY = LISTED(20,50,EMA,PERIOD_CURRENT) | CUSTOM(...); B11_ATR_PERIOD = <positive integer>; B11_HOME = <SYMBOL>/<TF>`
+Historical question: `B11_ENTRY = LISTED(20,50,EMA,PERIOD_CURRENT) | CUSTOM(...); B11_ATR_PERIOD = <positive integer>; B11_HOME = <SYMBOL>/<TF>`. It was answered on 2026-09-21; the authoritative fixed values are in Owner ratification below.
 
 Source-backed Home contexts already documented for quick selection: `XAUUSD/H1`, `USDJPY/H4`, `XAUUSD/H4`.
 A different explicit source-supported symbol/TF may be supplied prospectively; it must not be inferred from historical PF.
