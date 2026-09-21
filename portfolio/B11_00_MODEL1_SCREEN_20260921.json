@@ -2,7 +2,7 @@
     "schema":  "b11-00-model1-screen-state/1",
     "family":  "B11",
     "logical_variant":  "B11-00",
-    "status":  "PREREGISTERED_NOT_EXECUTED",
+    "status":  "EXECUTION_CONSUMED_MECHANICALLY_INELIGIBLE_REVIEW_PENDING",
     "owner_freeze_canonical":  "2f3770b279a173141ea051124d72110be261fde3",
     "contract":  "docs/research/B11_00_MODEL1_SCREEN_CONTRACT_20260921.md",
     "run_root":  "factory/runs/b11_00_model1_20260921",
@@ -24,18 +24,51 @@
                     "BWD":  "2020-2022"
                 },
     "holdout":  "UNSPENT",
-    "execution":  "NOT_STARTED",
-    "classification":  "PENDING",
+    "execution":  "COMPLETE",
+    "classification":  "MECHANICALLY_INELIGIBLE_HARD_KILL_TRUNCATION",
     "optimization":  {
                          "status":  "NOT_AUTHORIZED",
                          "future_lattice":  "FastMA 5..30 step5; SlowMA 50..100 step10",
                          "activation":  "accepted dual-positive screen pulse + separate canonical contract only"
                      },
-    "model4":  "NOT_STARTED",
-    "robustness":  "NOT_STARTED",
+    "model4":  "NOT_AUTHORIZED",
+    "robustness":  "NOT_AUTHORIZED",
     "candidate":  "NOT_ELIGIBLE",
     "grade_kint":  "NOT_ELIGIBLE",
     "runtime_deployment_trading":  "NOT_AUTHORIZED",
     "contract_sha256":  "03866a9d9528bfafd5a13ddadca3ece537d38529873940dc246194225cc8dbb0",
-    "control_resolution_sha256":  "001c251ac664843cc33f1b9c73acdf7d5c0722188e48d280436bae12c5782f06"
+    "control_resolution_sha256":  "001c251ac664843cc33f1b9c73acdf7d5c0722188e48d280436bae12c5782f06",
+    "execution_contract_head":  "5becccb5f0316f067d9cfce6e0826dab6ab74c10",
+    "execution_job":  "ct-b11-00-model1-execution-20260921-20260921T053011Z-43ce3209",
+    "execution_job_result_sha256":  "66017cb03a324800e54a66e2186dbd40df6bcbaf52655e4d24c4318c8e6332c2",
+    "execution_result_sha256":  "80da23f2d5e91c5c575acc12bf08b876cdd80460198db74b177dccd8cbc3c850",
+    "truncation_diagnostic_sha256":  "a6276c475691bc6ddd1753f8f97fdd7e01334216ad5bbad726b00f688d0dc842",
+    "mechanical_result":  {
+                              "MAIN":  {
+                                           "status":  "TRUNCATED",
+                                           "reason":  "PROTECT_NORMAL_HARD_KILL",
+                                           "trigger":  "2023.01.03 01:14:40 DD 29.58% \u003e= 25.00%",
+                                           "terminal_action":  "BROKER_FLAT_VERIFIED_HALT_PERSISTED"
+                                       },
+                              "BWD":  {
+                                          "status":  "TRUNCATED",
+                                          "prior_safety_exit":  "2020.01.02 01:29:20 BASKET_STOP -10.00 \u003c= -10.00",
+                                          "reason":  "PROTECT_NORMAL_HARD_KILL_ON_SECOND_BASKET",
+                                          "trigger":  "2020.01.02 01:35:40 DD 25.46% \u003e= 25.00%",
+                                          "terminal_action":  "BROKER_FLAT_VERIFIED_HALT_PERSISTED"
+                                      }
+                          },
+    "performance":  {
+                        "eligible":  false,
+                        "pass_claim":  false,
+                        "reason":  "BOTH_WINDOWS_TRUNCATED_BY_PERSISTENT_HARD_KILL; metrics are not full-window performance evidence"
+                    },
+    "diagnostic":  {
+                       "mt5_rerun_performed":  false,
+                       "tester_log_sha256":  "761e0c6e292fddb4916c8da5a8df65ec9cbd34997534881fb2049867c289661f",
+                       "source":  "existing D:\\Meta 5b\\Tester\\logs\\20260921.log",
+                       "source_trace":  "RiskControl_CheckDD precedes Exit_SafetyMoneyStop; successful hard kill sets persistent halted state",
+                       "packaging_repair":  "1/1 CONSUMED_FOR_EXISTING_TESTER_LOG_DIAGNOSTIC_ONLY"
+                   },
+    "final_review":  "PENDING_SEPARATE_READ_ONLY_GPT_SCRUTINY; no new reviewer lane created by owner instruction"
 }

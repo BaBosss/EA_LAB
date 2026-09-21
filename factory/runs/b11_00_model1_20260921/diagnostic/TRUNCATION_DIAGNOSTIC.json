@@ -1,0 +1,58 @@
+{
+    "schema":  "b11-00-truncation-diagnostic/1",
+    "observed_at":  "2026-09-21T13:07:59.9441937Z",
+    "source_tester_log":  "D:\\Meta 5b\\Tester\\logs\\20260921.log",
+    "source_tester_log_sha256":  "761e0c6e292fddb4916c8da5a8df65ec9cbd34997534881fb2049867c289661f",
+    "preserved_tester_log":  "factory/runs/b11_00_model1_20260921/diagnostic/MT5_TESTER_20260921.log",
+    "preserved_tester_log_sha256":  "761e0c6e292fddb4916c8da5a8df65ec9cbd34997534881fb2049867c289661f",
+    "execution_job":  "ct-b11-00-model1-execution-20260921-20260921T053011Z-43ce3209",
+    "execution_contract_head":  "5becccb5f0316f067d9cfce6e0826dab6ab74c10",
+    "config_fingerprint":  "9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b",
+    "build_receipt":  "br-65cf1caf297d4d4cb6588c887a0aaca7",
+    "main":  {
+                 "window":  "2023.01.01..2025.12.31",
+                 "report_sha256":  "65bb345d65f57d5495e91c82b3904e77fff92a59497665fddf7b58308710fc0c",
+                 "truncation":  "TRUNCATED",
+                 "first_entry":  "2023.01.03 01:01:00 buy 0.10",
+                 "terminal_reason":  "HARD_KILL",
+                 "trigger":  "2023.01.03 01:14:40 DD 29.58% \u003e= 25.00% PROTECT_NORMAL",
+                 "terminal_action":  "close all; broker flat verified; halt persisted",
+                 "exact_log_markers":  [
+                                           "[RISK] HARD KILL: DD 29.58% \u003e= 25.00% (profile 2) -\u003e closing all",
+                                           "[RISK] HARD KILL complete: broker flat verified -\u003e halt (persisted)"
+                                       ]
+             },
+    "bwd":  {
+                "window":  "2020.01.01..2022.12.31",
+                "report_sha256":  "e2fecb877e73471268fcc6cb5bf5bceebf0f1af11584904a01895bf33f502f62",
+                "truncation":  "TRUNCATED",
+                "first_entry":  "2020.01.02 01:01:00 buy 0.10",
+                "prior_safety_exit":  "2020.01.02 01:29:20 basket money-stop net -10.00 \u003c= -10.00; close all",
+                "second_entry":  "2020.01.02 01:29:40 buy 0.10",
+                "terminal_reason":  "HARD_KILL",
+                "trigger":  "2020.01.02 01:35:40 DD 25.46% \u003e= 25.00% PROTECT_NORMAL",
+                "terminal_action":  "close all; broker flat verified; halt persisted",
+                "exact_log_markers":  [
+                                          "[EXIT] basket money-stop (safety, intrabar): net -10.00 \u003c= -10.00 -\u003e close all",
+                                          "[RISK] HARD KILL: DD 25.46% \u003e= 25.00% (profile 2) -\u003e closing all",
+                                          "[RISK] HARD KILL complete: broker flat verified -\u003e halt (persisted)"
+                                      ]
+            },
+    "source_trace":  {
+                         "protect_normal_kill_dd_pct":  25,
+                         "on_tick_order":  [
+                                               "RiskControl_CheckDD",
+                                               "RiskControl_IsHalted",
+                                               "Exit_SafetyMoneyStop"
+                                           ],
+                         "hard_kill_precedes_basket_stop":  true,
+                         "halt_blocks_future_entries":  true
+                     },
+    "classification":  "MECHANICALLY_INELIGIBLE_HARD_KILL_TRUNCATION",
+    "performance_pass":  false,
+    "optimization_authorized":  false,
+    "model4_authorized":  false,
+    "holdout":  "UNSPENT",
+    "mt5_rerun_performed":  false,
+    "diagnostic_scope":  "EXISTING_TESTER_JOURNAL_PLUS_PRESERVED_SOURCE_ONLY"
+}
