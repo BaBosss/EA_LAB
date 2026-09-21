@@ -1,0 +1,30 @@
+{
+  "schema_version": "news_macro_causal_source_contract/1",
+  "status": "PREPARATION_ONLY_NOT_QUALIFIED",
+  "can_execute": false,
+  "historical_dataset_qualified": false,
+  "scope": "first finite causal input package for NewsGuard/MacroGate research",
+  "required": {
+    "raw_source_bytes_preserved": false,
+    "raw_to_normalized_derivation_reproducible": false,
+    "source_rights_or_redistribution_checked": false,
+    "series_or_instrument_identity_frozen": false,
+    "coverage_interval_frozen": false,
+    "available_at_clock_source_bound": false,
+    "revision_or_correction_policy_frozen": false,
+    "timezone_dst_mapping_versioned": false,
+    "broker_clock_bound": false,
+    "independent_review": false
+  },
+  "candidate_first_consumers": [
+    "MacroGate existing _MG_SelfGate causal timeline",
+    "NewsGuard historical schedule archive and later native tester seam"
+  ],
+  "explicitly_not_accepted_sources": [
+    "current news_week.csv as historical archive",
+    "legacy mris_backtest_timeline.ps1 D-close exported at D 00:00",
+    "current revised macro values without vintage/release clocks"
+  ],
+  "holdout_used": false,
+  "performance": "NOT_RUN"
+}

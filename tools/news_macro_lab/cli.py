@@ -16,6 +16,7 @@ def main() -> int:
     parser.add_argument('--decision')
     parser.add_argument('--synthetic-mechanics', action='store_true')
     parser.add_argument('--currencies', nargs='+')
+    parser.add_argument('--importance-levels', nargs='+')
     parser.add_argument('--pre-minutes', type=int)
     parser.add_argument('--post-minutes', type=int)
     parser.add_argument('--series-id')
@@ -41,6 +42,7 @@ def main() -> int:
                 result = select_asof(data, raw, args.decision, **kw)
             elif args.operation == 'news-contact':
                 result = news_contact(data, raw, args.decision, currencies=args.currencies,
+                    importance_levels=args.importance_levels,
                     pre_minutes=args.pre_minutes, post_minutes=args.post_minutes, **kw)
             elif args.operation == 'macro-context':
                 result = macro_context(data, raw, args.decision, series_id=args.series_id,

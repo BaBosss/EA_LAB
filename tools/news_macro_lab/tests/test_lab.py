@@ -38,7 +38,8 @@ def package(rows=None):
 
 
 def news(p=None, decision=D, **overrides):
-    opts = dict(currencies=['USD'], pre_minutes=30, post_minutes=15, synthetic=True)
+    opts = dict(currencies=['USD'], importance_levels=['High'],
+                pre_minutes=30, post_minutes=15, synthetic=True)
     opts.update(overrides)
     return news_contact(p or package(), RAW, decision, **opts)
 
@@ -174,6 +175,10 @@ class NewsTests(unittest.TestCase):
         self.assertEqual(news(currencies=['EUR'])['contact_status'],'NO_CONTACT')
     def test_non_high_not_contact(self):
         self.assertEqual(news(package([event(importance='Low')]))['contact_status'],'NO_CONTACT')
+    def test_importance_is_explicit_input(self):
+        r=news(package([event(importance='Low')]),importance_levels=['Low'])
+        self.assertEqual(r['contact_status'],'CONTACT')
+        self.assertEqual(r['contact_filter']['importance_levels'],['Low'])
     def test_reschedule_does_not_retroactively_move_old_window(self):
         p=package([event(),event(revision_id='v2',available_at_utc='2025-03-04T11:50:00Z',scheduled_at_utc='2025-03-04T14:00:00Z')])
         self.assertEqual(news(p,decision='2025-03-04T11:45:00Z')['contact_status'],'CONTACT')
@@ -376,6 +381,10 @@ for i, value in enumerate([[], ['USD','USD'], ['usd'], 'USD']):
     def bad_ccy(self, value=value):
         with self.assertRaises(Refused):news(currencies=value)
     add_case(NewsTests,f'bad_currencies_{i}',bad_ccy)
+for i, value in enumerate([[], ['High','High'], ['HIGH'], 'High']):
+    def bad_importance(self, value=value):
+        with self.assertRaises(Refused):news(importance_levels=value)
+    add_case(NewsTests,f'bad_importance_{i}',bad_importance)
 for i, state in enumerate(['UNKNOWN','PARTIAL','MISSING']):
     def coverage(self, state=state):
         p=package();p['coverage']['state']=state

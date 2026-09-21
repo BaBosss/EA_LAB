@@ -163,7 +163,8 @@ def select_asof(package: dict, source_raw: bytes, decision: str, *,
 
 
 def news_contact(package: dict, source_raw: bytes, decision: str, *,
-                 currencies: list[str], pre_minutes: int, post_minutes: int,
+                 currencies: list[str], importance_levels: list[str],
+                 pre_minutes: int, post_minutes: int,
                  synthetic: bool, root: Path = ROOT) -> dict:
     """Observe [event-pre,event+post), using the latest KNOWN schedule version.
 
@@ -178,10 +179,17 @@ def news_contact(package: dict, source_raw: bytes, decision: str, *,
         any(not isinstance(c, str) or re.fullmatch('[A-Z]{3}', c) is None for c in currencies) or
         len(set(currencies)) != len(currencies)):
         raise Refused('EXPLICIT_UNIQUE_CURRENCIES_REQUIRED')
+    allowed_importance = {'High', 'Medium', 'Low'}
+    if (not isinstance(importance_levels, list) or not importance_levels or
+        any(i not in allowed_importance for i in importance_levels) or
+        len(set(importance_levels)) != len(importance_levels)):
+        raise Refused('EXPLICIT_UNIQUE_IMPORTANCE_LEVELS_REQUIRED')
     result = select_asof(package, source_raw, decision, synthetic=synthetic, root=root)
     result.update(contact_status='UNKNOWN', contact_event_ids=[],
                   contact_window={'pre_minutes': pre_minutes, 'post_minutes': post_minutes,
                                   'boundary': 'LEFT_CLOSED_RIGHT_OPEN'},
+                  contact_filter={'currencies': list(currencies),
+                                  'importance_levels': list(importance_levels)},
                   policy_parity='NOT_CERTIFIED')
     selection = result['selection']
     if selection['status'] == 'REFUSED':
@@ -203,7 +211,8 @@ def news_contact(package: dict, source_raw: bytes, decision: str, *,
             start, end = event - timedelta(minutes=pre_minutes), event + timedelta(minutes=post_minutes)
         except OverflowError as exc:
             raise Refused('WINDOW_OVERFLOW') from exc
-        if row['currency'] in currencies and row['importance'] == 'High' and start <= now < end:
+        if (row['currency'] in currencies and row['importance'] in importance_levels
+                and start <= now < end):
             contacts.append(row['record_id'])
     result['contact_event_ids'] = sorted(contacts)
     # Canonical selector omits tentative rows; aggregate tentative coverage cannot

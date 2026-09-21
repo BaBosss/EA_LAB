@@ -99,3 +99,18 @@ No external model calls, no paid fallback, no retry loop seeking quota, no revie
 - BIS effective exchange rates: https://data.bis.org/topics/EER — source candidate, no ingest/qualification performed.
 - MSCI ACWI: https://www.msci.com/indexes/index/892400 — index identity; no free dataset/redistribution licence inferred.
 - TypeSafe Jev: https://typesafe.ai/blog/introducing-system-one-models-and-jev — vendor description of typed outputs; not EA_LAB model qualification.
+
+## 11. Continuation after optional Qwen support review — 2026-09-22
+
+Qwen 3.8 was used once as **OPTIONAL SUPPORT ONLY**, not as the canonical final reviewer. Its read-only support review found no blocking issue and one MINOR: the first implementation hardcoded `High` importance inside `news_contact`. That knob is now an explicit required `importance_levels` input. The Qwen review is historical support evidence only; changing source after that review makes it non-acceptance evidence. Gemini was not dispatched because Qwen returned a usable conclusion; there is no duplicate-review/PASS-shopping loop.
+
+A separate read-only inspection also found an important blocker in the historical MacroGate proof path: `scripts/mris/mris_backtest_timeline.ps1` builds the state for calendar date D using D's daily close, then exports that state at `D 00:00`. That artifact therefore cannot support a new causal intraday MacroGate claim without a source/clock repair. Existing ORDER-203/211 history remains preserved; no old result is relabeled.
+
+The continuation adds four offline preparation components:
+
+- `causal.py`: binds each precomputed regime state to all required source hashes and refuses visibility before the latest input `available_at_utc`; it does not certify the classifier or derivation.
+- `placebo.py`: builds all preregistered whole-week-shift placebo schedules, preserving weekday/UTC clock and refusing collisions with real/placebo contact windows; it never selects a favorable seed.
+- `results.py`: validates same-identity BASE / REAL_GUARD / every PLACEBO-seed result family and emits descriptive deltas only. No verdict, significance claim or promotion is synthesized.
+- `monitor_handoff.py`: builds a payload for the existing Monitor owner only when readiness remains UNKNOWN and preflight remains non-executable. It cannot claim live guard effectiveness or a global regime.
+
+This still does **not** qualify Yahoo/FRED/index history, a source licence, broker clocks, NewsGuard tester parity or an EA parent. Those remain independent gates. MacroGate can reuse the existing `_MG_SelfGate` only after a causal timeline package is accepted. NewsGuard has no equivalent Strategy-Tester self-gate; performance testing needs a separately reviewed native test seam that reuses current NewsGuard semantics. That MQL5/order-path work waits for the approved core author/reviewer path rather than being improvised in this tooling lane.

@@ -51,7 +51,16 @@
         "N3",
         "N4"
       ],
-      "deliverable": "source-bound results and manifest"
+      "deliverable": "deterministic adversarial tests + exact source manifest; support review does not replace N6"
+    },
+    {
+      "id": "N5A",
+      "name": "Causal clocks + placebo + result + Monitor handoff contracts",
+      "depends": [
+        "N2",
+        "N3"
+      ],
+      "deliverable": "causal.py, placebo.py, results.py, monitor_handoff.py; no performance/runtime authority"
     },
     {
       "id": "N6",
@@ -62,23 +71,34 @@
       "deliverable": "separate reviewer; WAIT_FOR_AVAILABLE_REVIEW_CAPACITY"
     },
     {
+      "id": "N7P",
+      "name": "Finite raw source capture preparation",
+      "depends": [
+        "N1"
+      ],
+      "deliverable": "external raw bytes + request/hash/coverage receipt only; no historical qualification by capture alone"
+    },
+    {
       "id": "N7",
       "name": "First finite historical source qualification",
       "depends": [
         "N1",
-        "N6"
+        "N5A",
+        "N6",
+        "N7P"
       ],
-      "deliverable": "approved real raw data, complete interval, vintage and schedule clocks; no broad fetch"
+      "deliverable": "accepted finite raw/normalized data, complete interval, revision/correction policy and available-at clocks; no broad fetch"
     },
     {
       "id": "N8",
-      "name": "Native NewsGuard/MacroGate parity adapter",
+      "name": "Native guard parity and tester seams",
       "depends": [
         "N3",
+        "N5A",
         "N6",
         "N7"
       ],
-      "deliverable": "Codex/core owner, explicit broker clock, same tester/install, mechanical fixture first"
+      "deliverable": "MacroGate: reuse existing _MG_SelfGate after causal data acceptance; NewsGuard: separately reviewed native test seam; mechanics fixtures first"
     },
     {
       "id": "N9",
@@ -114,5 +134,13 @@
     "automatic EA routing"
   ],
   "codex_calls_authorized_this_stage": 0,
-  "paid_fallback_authorized": false
+  "paid_fallback_authorized": false,
+  "continuation_2026_09_22": {
+    "qwen_support_review": "CONSUMED_SUPPORT_ONLY_NO_BLOCKER_F1_REPAIRED",
+    "gemini_fallback": "NOT_USED_NO_DUPLICATE_REVIEW",
+    "legacy_macro_timeline": "BLOCKED_FOR_NEW_CAUSAL_CLAIMS_SAME_DAY_CLOSE_EXPORTED_AT_00_00",
+    "final_gpt_scrutiny": "PENDING",
+    "native_mt5": "NOT_RUN",
+    "holdout": "UNSPENT"
+  }
 }
