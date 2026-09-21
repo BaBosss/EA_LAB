@@ -1,0 +1,41 @@
+{
+    "schema":  "b11-00-model1-screen-state/1",
+    "family":  "B11",
+    "logical_variant":  "B11-00",
+    "status":  "PREREGISTERED_NOT_EXECUTED",
+    "owner_freeze_canonical":  "2f3770b279a173141ea051124d72110be261fde3",
+    "contract":  "docs/research/B11_00_MODEL1_SCREEN_CONTRACT_20260921.md",
+    "run_root":  "factory/runs/b11_00_model1_20260921",
+    "home":  "XAUUSD/H1",
+    "fixed_entry":  {
+                        "FastMA":  20,
+                        "SlowMA":  50,
+                        "MAMethod":  "EMA",
+                        "MA_TF":  "PERIOD_CURRENT",
+                        "ATRPeriod":  14
+                    },
+    "set_sha256":  "fe5a94806694c2342acb21c40d9e8618ddd550b2d0bb1c2e11306c82fbe604ca",
+    "effective_config_hash":  "9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b",
+    "account_proxy":  "USD100_FOR_10000_CENT",
+    "leverage":  "1:1000",
+    "model":  "Model1",
+    "windows":  {
+                    "MAIN":  "2023-2025",
+                    "BWD":  "2020-2022"
+                },
+    "holdout":  "UNSPENT",
+    "execution":  "NOT_STARTED",
+    "classification":  "PENDING",
+    "optimization":  {
+                         "status":  "NOT_AUTHORIZED",
+                         "future_lattice":  "FastMA 5..30 step5; SlowMA 50..100 step10",
+                         "activation":  "accepted dual-positive screen pulse + separate canonical contract only"
+                     },
+    "model4":  "NOT_STARTED",
+    "robustness":  "NOT_STARTED",
+    "candidate":  "NOT_ELIGIBLE",
+    "grade_kint":  "NOT_ELIGIBLE",
+    "runtime_deployment_trading":  "NOT_AUTHORIZED",
+    "contract_sha256":  "03866a9d9528bfafd5a13ddadca3ece537d38529873940dc246194225cc8dbb0",
+    "control_resolution_sha256":  "001c251ac664843cc33f1b9c73acdf7d5c0722188e48d280436bae12c5782f06"
+}

@@ -1,0 +1,99 @@
+{
+    "schema":  "b11-00-model1-preregistration/1",
+    "status":  "PREREGISTERED_NOT_EXECUTED",
+    "base_canonical":  "2f3770b279a173141ea051124d72110be261fde3",
+    "family":  "B11",
+    "logical_variant":  "B11-00",
+    "source":  {
+                   "path":  "ea_template/Boss_11_GridTrend.mq5",
+                   "sha256":  "59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672",
+                   "entry_sha256":  "c6f61f1574dc5956aca79d21c14840baea815add26042f5d362781854ca6c898"
+               },
+    "home":  {
+                 "symbol":  "XAUUSD",
+                 "tf":  "H1"
+             },
+    "entry":  {
+                  "FastMA":  20,
+                  "SlowMA":  50,
+                  "MAMethod":  1,
+                  "MA_TF":  0,
+                  "ATRPeriod":  14,
+                  "ATR_TF":  0,
+                  "semantics":  "FAST_MA_VS_SLOW_MA_DIRECTIONAL_STATE_SHIFT0"
+              },
+    "set":  {
+                "path":  "factory/runs/b11_00_model1_20260921/B11_00_FIXED.set",
+                "sha256":  "fe5a94806694c2342acb21c40d9e8618ddd550b2d0bb1c2e11306c82fbe604ca",
+                "build":  "LAB_ENTRY_11",
+                "surface":  151,
+                "effective_config_hash":  "9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b",
+                "scope":  "surface+constants"
+            },
+    "controls_manifest":  "factory/runs/b11_00_model1_20260921/control_resolution.json",
+    "tester":  {
+                   "terminal":  "D:\\Meta 5b\\terminal64.exe",
+                   "data_dir":  "D:\\Meta 5b",
+                   "portable":  true,
+                   "runtime_lane":  "MT5-lane2",
+                   "terminal_build":  "5.0.0.6090",
+                   "terminal_sha256":  "20dfefd944ae482781ac1e83a736a976ecf0315661e54b5771e327f1ffb2b35c",
+                   "model":  1,
+                   "optimization":  0,
+                   "forward_mode":  0,
+                   "currency":  "USD",
+                   "deposit":  100,
+                   "leverage":  1000,
+                   "account_proxy":  "USD100_ECONOMIC_PROXY_FOR_10000_CENT"
+               },
+    "windows":  {
+                    "MAIN":  "2023.01.01..2025.12.31",
+                    "BWD":  "2020.01.01..2022.12.31",
+                    "HOLDOUT":  "2026H1_UNSPENT_FORBIDDEN"
+                },
+    "execution_order":  [
+                            "MAIN",
+                            "BWD_REGARDLESS_OF_MAIN"
+                        ],
+    "classification":  {
+                           "definition_source":  "H02_DUAL_POSITIVE_SCREENING",
+                           "dual_positive":  "MAIN_PF_GT_1_AND_BWD_PF_GT_1_AFTER_MECHANICAL_ACCEPTANCE",
+                           "otherwise":  "NO_DUAL_POSITIVE_SCREEN_PULSE",
+                           "mechanical_failure":  "MECHANICALLY_INELIGIBLE"
+                       },
+    "future_optimization":  {
+                                "status":  "NOT_AUTHORIZED",
+                                "activation":  "ONLY_AFTER_ACCEPTED_DUAL_POSITIVE_SCREEN_PULSE_AND_SEPARATE_CANONICAL_OPTIMIZATION_CONTRACT",
+                                "FastMA":  [
+                                               5,
+                                               10,
+                                               15,
+                                               20,
+                                               25,
+                                               30
+                                           ],
+                                "SlowMA":  [
+                                               50,
+                                               60,
+                                               70,
+                                               80,
+                                               90,
+                                               100
+                                           ],
+                                "MAMethod":  1,
+                                "MA_TF":  0,
+                                "ATRPeriod":  14,
+                                "Home":  "XAUUSD/H1"
+                            },
+    "authority":  {
+                      "holdout":  "UNSPENT",
+                      "model4":  "NOT_AUTHORIZED",
+                      "robustness":  "NOT_AUTHORIZED",
+                      "candidate":  "NOT_AUTHORIZED",
+                      "grade_kint":  "NOT_AUTHORIZED",
+                      "runtime_deployment_trading":  "NOT_AUTHORIZED"
+                  },
+    "repair_budget":  "ONE_MECHANICAL_OR_PACKAGING_REPAIR_ONLY_NO_CONFIG_CHANGE",
+    "contract_sha256":  "03866a9d9528bfafd5a13ddadca3ece537d38529873940dc246194225cc8dbb0",
+    "control_resolution_sha256":  "001c251ac664843cc33f1b9c73acdf7d5c0722188e48d280436bae12c5782f06"
+}

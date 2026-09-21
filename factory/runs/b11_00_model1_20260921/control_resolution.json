@@ -1,0 +1,934 @@
+{
+    "schema":  "b11-00-model1-control-resolution/1",
+    "surface_count":  151,
+    "explicit_count":  38,
+    "source_default_count":  113,
+    "set_sha256":  "fe5a94806694c2342acb21c40d9e8618ddd550b2d0bb1c2e11306c82fbe604ca",
+    "effective_config_hash":  "9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b",
+    "account_profile":  {
+                            "requested":  "10000 cent research reference",
+                            "effective":  "USD 100 economic proxy",
+                            "currency":  "USD",
+                            "deposit":  100,
+                            "leverage":  1000,
+                            "reason":  "current canonical mt5_run.ps1 freezes tester currency to USD; fixed lots and balance-percentage stop preserve economic scale under 100x account-unit proxy; denomination-specific absolute-money fields stay inactive"
+                        },
+    "effective_safety":  {
+                             "ProtectLevel":  "NORMAL/2",
+                             "kill_dd_pct":  25,
+                             "max_deposit_load_pct":  30,
+                             "requested_stack_max_levels":  5,
+                             "cage_max_levels":  3,
+                             "effective_max_levels":  3,
+                             "RC_MaxLot":  0.2,
+                             "basket_balance_stop_pct":  10
+                         },
+    "rows":  [
+                 {
+                     "name":  "ExitMode",
+                     "effective":  "22",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "SLMode",
+                     "effective":  "32",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "FirstLotMode",
+                     "effective":  "41",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "LotProg",
+                     "effective":  "53",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "TradeDir",
+                     "effective":  "60",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "TrendFilter",
+                     "effective":  "70",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "RecoveryMode",
+                     "effective":  "80",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "HedgeMode",
+                     "effective":  "0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "DryRun",
+                     "effective":  "false",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_0_BarOpenOnly",
+                     "effective":  "false",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "StackMode",
+                     "effective":  "92",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "StackConfirm",
+                     "effective":  "0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_9_StepUseATR",
+                     "effective":  "true",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_9_StepATRmult",
+                     "effective":  "2.0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_9_StepPoints",
+                     "effective":  "300.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_9_StepMinPips",
+                     "effective":  "0.0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_9_StepATRShift",
+                     "effective":  "0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_9_MaxLevels",
+                     "effective":  "5",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_9_RegimeGateAdds",
+                     "effective":  "false",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_9_PA_MinBodyRatio",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_9_PendingMode",
+                     "effective":  "0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_9_PendingLegs",
+                     "effective":  "0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_0_FastMA",
+                     "effective":  "20",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_0_SlowMA",
+                     "effective":  "50",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_0_MAMethod",
+                     "effective":  "1",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_0_MA_TF",
+                     "effective":  "0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_71_ATRMA",
+                     "effective":  "20",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_71_ATRRatio",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_72_SlopeBar",
+                     "effective":  "3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_RegimeMode",
+                     "effective":  "0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_50_AllowTrendUp",
+                     "effective":  "true",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_AllowTrendDown",
+                     "effective":  "true",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_AllowRange",
+                     "effective":  "true",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_Regime_TF",
+                     "effective":  "16388",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_ADX_Period",
+                     "effective":  "14",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_ADX_TrendMin",
+                     "effective":  "25.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_ADX_TrendMin_Exit",
+                     "effective":  "20.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_RegimeConfirmBars",
+                     "effective":  "3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_StormATRmult",
+                     "effective":  "2.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_50_StormLookback",
+                     "effective":  "100",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_21_TP_Pip",
+                     "effective":  "500.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_22_TP_ATRmult",
+                     "effective":  "3.0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_2_BasketTP_Money",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_2_BasketTP_ATRmult",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_2_BasketTP_BalPct",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_23_TrailStart",
+                     "effective":  "300.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_23_TrailStep",
+                     "effective":  "100.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_2_PartialPct1",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_2_PartialFrac1",
+                     "effective":  "0.3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_2_PartialPct2",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_2_PartialFrac2",
+                     "effective":  "0.3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_2_SuppressLegTP",
+                     "effective":  "false",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_2_MaxHoldBars",
+                     "effective":  "0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_57_DynCloseOn",
+                     "effective":  "false",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_57_DynCloseBase",
+                     "effective":  "10.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_57_DynCloseBalPct",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_57_DynCloseDivisor",
+                     "effective":  "4.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_31_SL_Pip",
+                     "effective":  "1000.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_33_SL_ATRmult",
+                     "effective":  "2.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_33_SL_MaxPips",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_33_SL_MaxATRmult",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_33_AdaptiveON",
+                     "effective":  "false",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_33_AdaptiveN",
+                     "effective":  "50",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_32_SL_Money",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_32_SL_BalPct",
+                     "effective":  "10.0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_34_DonchianBars",
+                     "effective":  "50",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_35_SRBars",
+                     "effective":  "20",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_36_SD_Mult",
+                     "effective":  "2.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_36_SD_Period",
+                     "effective":  "20",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_0_ATR_Period",
+                     "effective":  "14",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_0_ATR_TF",
+                     "effective":  "0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_3_RiskATR_Period",
+                     "effective":  "14",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_3_RiskATR_TF",
+                     "effective":  "0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_41_FixedLot",
+                     "effective":  "0.1",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_42_RiskPct",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_43_LotPerAnchor",
+                     "effective":  "0.01",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_43_BalanceAnchor",
+                     "effective":  "1000.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_51_ProgFactor",
+                     "effective":  "0.5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_52_ProgMult",
+                     "effective":  "1.3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_53_PlusLot",
+                     "effective":  "0.01",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_55_LogPowerFactor",
+                     "effective":  "1.3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_55_UseLnNotLog10",
+                     "effective":  "true",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_56_FibMaxStep",
+                     "effective":  "5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_4_DdAdaptiveOn",
+                     "effective":  "false",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_4_DdTier1Pct",
+                     "effective":  "10.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_4_DdTier1Mult",
+                     "effective":  "1.2",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_4_DdTier2Pct",
+                     "effective":  "20.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_4_DdTier2Mult",
+                     "effective":  "1.5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_4_DdHardCapMult",
+                     "effective":  "1.5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "ProtectLevel",
+                     "effective":  "2",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "RC_MaxLot",
+                     "effective":  "0.2",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "RC_RecMultMax",
+                     "effective":  "1.3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "RC_MaxLevelsOverride",
+                     "effective":  "0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "RC_AcctDDLimitPct",
+                     "effective":  "0.0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "RC_PersistHalt",
+                     "effective":  "true",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "RC_AdoptLegacyHalt",
+                     "effective":  "false",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_8_TriggerATR",
+                     "effective":  "1.5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_8_StepATR",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_8_RecMult",
+                     "effective":  "1.3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_8_DDRefMoney",
+                     "effective":  "100.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_8_DDRefBalPct",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_H_TriggerDDPct",
+                     "effective":  "8.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_H_ReleaseDDPct",
+                     "effective":  "3.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_H_Ratio",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_H_MaxLot",
+                     "effective":  "0.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MG_SelfGate",
+                     "effective":  "false",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_MG_RegimeFile",
+                     "effective":  "EA_LAB_mris_regime.csv",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MG_InCommon",
+                     "effective":  "true",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MG_LotMult",
+                     "effective":  "0.5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MG_BlockNew",
+                     "effective":  "true",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MG_TriggerRiskOff",
+                     "effective":  "true",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MG_OffsetHours",
+                     "effective":  "0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_EVT_BucketATRmult",
+                     "effective":  "0.25",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_EVT_BucketSeconds",
+                     "effective":  "900",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_EVT_PreemptMargin",
+                     "effective":  "1.3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_EVT_RevengeBlockBars",
+                     "effective":  "5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_HEAT_Enable",
+                     "effective":  "false",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_HEAT_MaxClusterLots",
+                     "effective":  "2.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_HEAT_MaxPortfolioLots",
+                     "effective":  "4.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_HEAT_ClusterCorr",
+                     "effective":  "0.7",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_HEAT_DefaultCorr",
+                     "effective":  "0.15",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_HEAT_UseDynamicCorr",
+                     "effective":  "false",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_HEAT_CorrWindowBars",
+                     "effective":  "200",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "UseMiddlePathVeto",
+                     "effective":  "false",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_MID_LineSource",
+                     "effective":  "0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "MID_LOW",
+                     "effective":  "0.35",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "MID_HIGH",
+                     "effective":  "0.65",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "MIN_CHANNEL_ATR",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "MIN_LINE_WEIGHT",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MID_DonchianBars",
+                     "effective":  "20",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MID_PivotDepth",
+                     "effective":  "3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MID_LineLookbackBars",
+                     "effective":  "300",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MID_MaxLines",
+                     "effective":  "40",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MID_ClusterATRmult",
+                     "effective":  "0.25",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MID_UseRoomCheck",
+                     "effective":  "false",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_MID_MinRR",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5A_UseSMCVeto",
+                     "effective":  "false",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 },
+                 {
+                     "name":  "_5A_PivotDepth",
+                     "effective":  "3",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5A_SwingLookback",
+                     "effective":  "200",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5A_MaxSwings",
+                     "effective":  "8",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5A_BreakLookbackBars",
+                     "effective":  "20",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5A_ChochRecentBars",
+                     "effective":  "5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5A_SweepMinATR",
+                     "effective":  "0.15",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5A_MinScore",
+                     "effective":  "2.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5A_HighScore",
+                     "effective":  "1.0",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5B_ExtendMinRR",
+                     "effective":  "0.8",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5B_LockStepR",
+                     "effective":  "0.5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_5B_MaxChain",
+                     "effective":  "5",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_0_Magic",
+                     "effective":  "990001",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_0_Slippage",
+                     "effective":  "20",
+                     "role":  "SOURCE_DECLARED_TEST_CONTROL",
+                     "reason":  "current declared default; held fixed as non-semantic test control"
+                 },
+                 {
+                     "name":  "_0_MaxSpread",
+                     "effective":  "0",
+                     "role":  "EXPLICIT_SCREEN_CONTROL",
+                     "reason":  "bound prospectively by B11-00 owner/generic-screen contract"
+                 }
+             ]
+}
