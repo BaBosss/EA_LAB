@@ -70,7 +70,7 @@ class Server(http.server.ThreadingHTTPServer):
     allow_reuse_address=False
 def config_from_args(args):
     return {'repo':args.repo,'assets':args.assets,'monitor':args.monitor,'registry':args.registry,
-            'jobs':args.jobs,'leases':args.leases,'runtime':args.runtime,'snapshots':args.snapshots,
+            'jobs':args.jobs,'leases':args.leases,'lane_status':args.lane_status,'runtime':args.runtime,'snapshots':args.snapshots,
             'knowledge':args.knowledge}
 def parser():
     here=pathlib.Path(__file__).resolve().parent
@@ -80,6 +80,7 @@ def parser():
     p.add_argument('--registry',default='D:/EA_LAB_CONTROL/lanes/registry-v1')
     p.add_argument('--jobs',default='D:/EA_LAB_CONTROL/jobs')
     p.add_argument('--leases',default='D:/EA_LAB_CONTROL/runtime/chat-stall/leases')
+    p.add_argument('--lane-status',default='D:/EA_LAB_CONTROL/runtime/chat-stall/lane_status.ps1')
     p.add_argument('--runtime',default='D:/EA_LAB_WORKSPACE/runtime/daily-monitor-aec3dd24-20260914')
     p.add_argument('--snapshots',default='D:/EA_LAB_WORKSPACE/runtime/daily-monitor-aec3dd24-20260914/portfolio/live_deals')
     p.add_argument('--knowledge',default='D:/EA_LAB_CONTROL/readers/second-brain/versions/8298da26f570ba30654fd31bb9bf66e53dd4051f')
