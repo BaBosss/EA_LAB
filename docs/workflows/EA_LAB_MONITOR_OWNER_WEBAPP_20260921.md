@@ -49,3 +49,13 @@ MRIS regime/barometer rows retain their producer timestamp and freshness. They d
 ## Extension contract
 
 Future feeds must arrive through a named read-only adapter with: exact source owner, schema/version, entity identity, source timestamp/clock basis, stable-before/after read or immutable hash, freshness rule, missing/malformed/future handling, redaction rules, and a direct UI consumer. Missing fields remain `UNKNOWN`/`UNAVAILABLE`; no adapter may silently create strategy, risk, runtime, promotion or trading authority.
+
+## Observation V1.1 additions — 2026-09-21
+
+The owner view now consumes the existing `control_room_snapshot.json` as an explicitly separate observation source. It projects masked account identity, deployment/magic name, closed-deal-row count, observed/expected trade rate, judge-readiness state, current floating P/L/open lots/open positions where present, verification state, producer timestamp, producer Git head and reconciliation verdict.
+
+These rows keep the producer's own binding visible. `DIFFERENT_REPO_HEAD`, stale mandatory inputs, failed runtime identity coverage, or `reconciliation_clear=false` are not converted into a green Monitor status. The UI labels this section **Forward / live decision readiness** instead of scoring an EA good/bad.
+
+NewsGuard now exposes the dated canonical runbook reference `PreNewsMin=30` and `PostNewsMin=15`. The same runbook explicitly says to regenerate/re-verify when `DEPLOYMENTS.csv` changes, therefore Monitor marks the reference configuration historical and leaves **effective live guard state = UNKNOWN** without attachment/log evidence. Calendar rows still do not receive invented impact labels.
+
+No VPS attach, NewsGuard/MacroGate activation, terminal global-variable mutation, news fetch, trading change, scheduler change or public/private hosting change is performed by this addition.

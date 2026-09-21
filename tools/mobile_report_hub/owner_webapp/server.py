@@ -92,6 +92,9 @@ def self_test(config):
     assert all(a['id'].startswith('acct-') and a['label'].startswith('***') for a in snap['accounts']['rows'])
     assert all('login' not in json.dumps(a).lower() for a in snap['accounts']['rows'])
     assert snap['knowledge']['binding'] in ('HASH_VERIFIED_PINNED_READER_NOT_CURRENT_PROJECT_STATUS','UNAVAILABLE')
+    assert snap['news_policy']['pre_news_min']==30.0 and snap['news_policy']['post_news_min']==15.0
+    assert snap['news_policy']['effective_runtime']=='UNKNOWN'
+    assert len(snap['control_room']['rows'])>0 and snap['control_room']['binding'] in ('MATCH','DIFFERENT_REPO_HEAD')
     html=render(config,snap); assert b'EA_LAB Monitor' in html and b'11,432' not in html
     print(json.dumps({'result':'PASS','accounts':len(snap['accounts']['rows']),'work':len(snap['work']['rows']),
       'templates':len(snap['templates']),'knowledge':len(snap['knowledge']['documents']),'news':len(snap['news']['events']),

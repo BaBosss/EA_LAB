@@ -146,6 +146,49 @@ class Model:
     def macro(self):
         root=pathlib.Path(self.c['runtime']); raw=safe_bytes(root/'portfolio/mris/regime_state.json',root); x=json.loads(raw.decode('utf-8-sig'))
         return {'state':clean(x.get('state'),40),'time':x.get('generated_utc'),'freshness':age_state(x.get('generated_utc')),'bias':clean(x.get('bias'),180),'barometers':[{k:(number(v) if k in ['spot','chg5d_pct','signal'] else clean(v,300)) for k,v in b.items() if k in ['symbol','spot','chg5d_pct','signal','reason']} for b in x.get('barometers',[])],'source_hash':digest(raw),'effective':'UNKNOWN','source':'MRIS existing producer; not EA effective-state evidence'}
+
+    def control_room(self):
+        root=pathlib.Path(self.c['runtime']); raw=safe_bytes(root/'portfolio/control_room_snapshot.json',root,2_000_000)
+        x=json.loads(raw.decode('utf-8-sig')); meta=x.get('meta',{})
+        if x.get('entity')!='ControlRoomSnapshotV5' or meta.get('schema')!='ControlRoomSnapshot' or meta.get('version')!=5:
+            raise Refused('CONTROL_ROOM_SCHEMA')
+        generated=meta.get('generated_at'); binding='MATCH' if meta.get('git_head')==self.sha else 'DIFFERENT_REPO_HEAD'
+        floating={}
+        for acc in x.get('floating_risk',[]):
+            account=str(acc.get('account',''))
+            for m in acc.get('magics',[]):
+                floating[(account,str(m.get('magic','')))]=m
+        rows=[]
+        for r in x.get('judge_readiness',[]):
+            account=str(r.get('account','')); magic=str(r.get('magic','')); f=floating.get((account,magic),{})
+            rows.append({'account_id':'acct-'+digest(account.encode())[:12],'account_label':'***'+account[-3:] if account else 'UNKNOWN',
+                'magic':clean(magic,40),'ea':clean(r.get('ea'),180),'symbol':clean(r.get('symbol'),40),'status':clean(r.get('status'),50),
+                'operational_status':clean(r.get('operational_status'),50),'verification_state':clean(r.get('verification_state'),60),
+                'attention':clean(r.get('attention'),50),'closed_deal_rows':r.get('closed_trades'),'readiness':clean(r.get('readiness'),60),
+                'forecast':clean(r.get('forecast'),60),'judge_date':clean(r.get('judge_date'),30),'observation_start_date':clean(r.get('observation_start_date'),30),
+                'observed_trades_per_week':number(r.get('observed_trades_per_week')),'expected_trades_per_week':number(r.get('expected_trades_per_week')),
+                'rate_flag':clean(r.get('rate_flag'),60),'expectation_status_reason':clean(r.get('expectation_status_reason'),400),
+                'floating_pl':number(f.get('floating_pl')),'open_lots':number(f.get('open_lots')),'open_positions':number(f.get('pos_count')),
+                'oldest_open_hours':number(f.get('oldest_age_h'))})
+        src=[{'name':clean(s.get('name'),80),'fresh':bool(s.get('fresh')),'age_hours':number(s.get('age_hours'))} for s in meta.get('sources',[])]
+        rid=x.get('runtime_identity_summary',{})
+        return {'generated_at':generated,'freshness':age_state(generated,30),'git_head':meta.get('git_head'),'binding':binding,
+            'execution_context':clean(meta.get('execution_context'),80),'rows':rows,'summary':x.get('summary',{}),'source_health':src,
+            'reconciliation_clear':bool(x.get('verdict',{}).get('reconciliation_clear',False)),
+            'verdict_reasons':[{'code':clean(v.get('code'),80),'detail':clean(v.get('detail'),180)} for v in x.get('verdict',{}).get('reasons',[])],
+            'runtime_identity':{'state':clean(rid.get('state'),40),'forward_test_state':clean(rid.get('forward_test_state'),80),
+                'reasons':[{'code':clean(v.get('code'),80),'detail':clean(v.get('detail'),180)} for v in rid.get('reasons',[])]},
+            'source_hash':digest(raw),'basis':clean(meta.get('counting_method'),300)}
+
+    def news_policy(self):
+        raw=self.blob('ea_projects/(Boss)_NewsGuard/GUARDCONFIG_2026-07-17.md'); text=raw.decode('utf-8-sig',errors='replace')
+        def val(name):
+            m=re.search(r'\|\s*`?'+re.escape(name)+r'`?\s*\|\s*`?([^|\n`]+)',text)
+            return clean(m.group(1).strip(),80) if m else 'UNKNOWN'
+        return {'reference_date':'2026-07-17','pre_news_min':number(val('PreNewsMin')),'post_news_min':number(val('PostNewsMin')),
+            'news_file':val('NewsFile'),'use_common_files':val('UseCommonFiles'),'effective_runtime':'UNKNOWN',
+            'coverage_state':'HISTORICAL_CONFIG_SNAPSHOT_REVERIFY_DEPLOYMENTS','source_hash':digest(raw),'canonical_sha':self.sha,
+            'basis':'Canonical runbook reference only. It explicitly requires regeneration when DEPLOYMENTS.csv changes; attachment/effective guard state is not inferred.'}
     def snapshot(self):
         self.errors=[]; self.sha=self.git('rev-parse','refs/remotes/origin/master').decode().strip()
         if not re.fullmatch('[0-9a-f]{40}',self.sha): raise Refused('INVALID_TRACKING_REF')
@@ -161,6 +204,8 @@ class Model:
         knowledge=self.section('knowledge',self.knowledge,{'documents':[],'health':{},'binding':'UNAVAILABLE'})
         news=self.section('news',self.news,{'events':[],'guard_effective':'UNKNOWN','freshness':'UNAVAILABLE'})
         macro=self.section('macro',self.macro,{'state':'UNAVAILABLE','barometers':[],'freshness':'UNAVAILABLE'})
+        control_room=self.section('control_room',self.control_room,{'rows':[],'summary':{},'freshness':'UNAVAILABLE','binding':'UNAVAILABLE','runtime_identity':{'state':'UNKNOWN','forward_test_state':'UNKNOWN'}})
+        news_policy=self.section('news_policy',self.news_policy,{'pre_news_min':None,'post_news_min':None,'effective_runtime':'UNKNOWN','coverage_state':'UNAVAILABLE'})
         templates=self.section('templates',self.templates,[])
         safe=index.get('safe_projection',{}); findings=[]
         for x in safe.get('findings',[]): findings.append({k:clean(x.get(k),80) for k in ['public_id','severity','state']})
@@ -169,4 +214,4 @@ class Model:
         for drive in ['C:/','D:/']:
             if pathlib.Path(drive).exists():
                 v=shutil.disk_usage(drive); disks.append({'drive':drive[:2],'free_gb':round(v.free/1073741824,1),'total_gb':round(v.total/1073741824,1)})
-        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.0.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'macro':macro,'templates':templates,'research':eas,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No per-EA realized-return / profit-factor / win-rate is inferred.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}
+        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.1.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'templates':templates,'research':eas,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA score or unqualified realized-return attribution is inferred.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}
