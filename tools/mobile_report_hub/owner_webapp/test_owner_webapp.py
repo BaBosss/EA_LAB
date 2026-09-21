@@ -100,9 +100,9 @@ class OwnerWebAppUnitTests(unittest.TestCase):
                 'worker':'chat-ui-text-only','blocker_class':'','head_sha':'a'*40,'reviewed_head':None,'reviewer':None,'dependencies':[]}
         (registry/(lane+'.json')).write_text(json.dumps(record),encoding='utf-8')
         if with_job:
-            (leases/(lane+'.json')).write_text(json.dumps({'job_id':'job-one'}),encoding='utf-8')
+            (leases/(lane+'.json')).write_text(json.dumps({'lane_id':lane,'job_id':'job-one'}),encoding='utf-8')
             job=jobs/'job-one'; job.mkdir()
-            (job/'state.json').write_text(json.dumps({'state':'RUNNING','runner_pid':os.getpid(),'child_pid':os.getpid()}),encoding='utf-8')
+            (job/'state.json').write_text(json.dumps({'job_id':'job-one','state':'RUNNING','runner_pid':os.getpid(),'child_pid':os.getpid()}),encoding='utf-8')
         cfg={'repo':'.','registry':str(registry),'leases':str(leases),'jobs':str(jobs),'lane_status':str(base/'missing_lane_status.ps1')}
         return Model(cfg)
     def test_running_registry_without_durable_job_is_stale_not_chat_liveness(self):
@@ -135,4 +135,26 @@ class OwnerWebAppUnitTests(unittest.TestCase):
                 self.assertEqual(row['display_state'],expected,health)
                 self.assertEqual(row['process_health'],health,health)
                 self.assertEqual(row['progress'],'UNKNOWN',health)
+    def test_work_refuses_internal_lease_lane_identity_mismatch(self):
+        with tempfile.TemporaryDirectory() as td:
+            model=self._make_work_roots(td,with_job=True)
+            lease=pathlib.Path(model.c['leases'])/'ct-test-lane.json'
+            lease.write_text(json.dumps({'lane_id':'ct-other-lane','job_id':'job-one'}),encoding='utf-8')
+            out=model.work()
+        self.assertEqual(out['rows'],[])
+        self.assertIn({'source':'lane_observation','reason':'LEASE_LANE_IDENTITY'},model.errors)
+    def test_work_refuses_state_and_result_job_identity_mismatch(self):
+        for which in ('state','result'):
+            with self.subTest(which=which), tempfile.TemporaryDirectory() as td:
+                model=self._make_work_roots(td,with_job=True)
+                job=pathlib.Path(model.c['jobs'])/'job-one'
+                if which=='state':
+                    (job/'state.json').write_text(json.dumps({'job_id':'job-other','state':'RUNNING'}),encoding='utf-8')
+                    expected='JOB_STATE_IDENTITY'
+                else:
+                    (job/'result.json').write_text(json.dumps({'job_id':'job-other','state':'COMPLETE'}),encoding='utf-8')
+                    expected='JOB_RESULT_IDENTITY'
+                out=model.work()
+                self.assertEqual(out['rows'],[])
+                self.assertIn({'source':'lane_observation','reason':expected},model.errors)
 if __name__=="__main__": unittest.main()

@@ -164,11 +164,17 @@ class Model:
                 if state=='DONE': continue
                 lease=lease_root/(lane+'.json'); job={}; terminal=None; jobid=None
                 if lease.is_file():
-                    l=read_json(lease,lease_root); jobid=l.get('job_id')
+                    l=read_json(lease,lease_root)
+                    if l.get('lane_id')!=lane: raise Refused('LEASE_LANE_IDENTITY')
+                    jobid=l.get('job_id')
                     if not isinstance(jobid,str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,160}',jobid): raise Refused('JOB_ID')
                     jroot=jobs_root/jobid
-                    if (jroot/'state.json').is_file(): job=read_json(jroot/'state.json',jobs_root)
-                    if (jroot/'result.json').is_file(): terminal=read_json(jroot/'result.json',jobs_root)
+                    if (jroot/'state.json').is_file():
+                        job=read_json(jroot/'state.json',jobs_root)
+                        if job.get('job_id')!=jobid: raise Refused('JOB_STATE_IDENTITY')
+                    if (jroot/'result.json').is_file():
+                        terminal=read_json(jroot/'result.json',jobs_root)
+                        if terminal.get('job_id')!=jobid: raise Refused('JOB_RESULT_IDENTITY')
                 js=job.get('state','NOT_OBSERVED'); end=None
                 if isinstance(terminal,dict): js=terminal.get('state',js); end=terminal.get('ended_utc')
                 cls='TERMINAL_RECONCILE' if js in ['COMPLETE','FAILED','TIMED_OUT','CANCELLED'] else 'BLOCKED_REVIEW' if state in ['REVIEW','FROZEN'] else 'WAITING_OWNER' if state=='BLOCKED' and str(x.get('blocker_class','')).startswith('E_') else state
