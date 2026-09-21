@@ -123,6 +123,37 @@ class Model:
             latest=kept[-1]; meta=metadata.get(login,{})
             result.append({'id':'acct-'+digest(login.encode())[:12],'label':'***'+login[-3:],'currency':currency,'environment':clean(meta.get('environment','UNKNOWN'),40),'points':[{k:v for k,v in p.items() if k!='eas'} for p in kept],'latest':latest,'sample_count':len(kept),'clock':'BROKER_SERVER_TIME_TZ_UNQUALIFIED','freshness':'UNKNOWN','identity':'ACCOUNT_SNAPSHOT_NOT_STRATEGY_ATTESTATION'})
         return {'rows':sorted(result,key=lambda r:r['label']),'files_read':source_count,'conflicting_samples':len(conflicts),'basis':'Observed samples only; line joins samples, not continuous equity. No FX conversion or deposit-adjusted return.'}
+    def lane_status(self,lane_id,expected_job_id):
+        script=pathlib.Path(self.c.get('lane_status',''))
+        if not script.is_file() or script.is_symlink(): raise Refused('LANE_STATUS_UNAVAILABLE')
+        p=subprocess.run(['powershell.exe','-NoLogo','-NoProfile','-NonInteractive','-File',str(script),'-LaneId',lane_id,'-Json'],
+                         capture_output=True,timeout=10)
+        if p.returncode: raise Refused('LANE_STATUS_REFUSED')
+        raw=p.stdout
+        text=raw.decode('utf-16' if raw[:2] in (bytes([255,254]),bytes([254,255])) else 'utf-8-sig',errors='strict')
+        x=json.loads(text)
+        required={'lane_id','job_id','health','observed_state','durable_state','runner_alive','child_alive','postcondition_alive','heartbeat_age_sec','retry_decision','checked_utc'}
+        if not isinstance(x,dict) or not required.issubset(x): raise Refused('LANE_STATUS_SCHEMA')
+        if x['lane_id']!=lane_id or x['job_id']!=expected_job_id: raise Refused('LANE_STATUS_IDENTITY')
+        if not all(isinstance(x[k],bool) for k in ['runner_alive','child_alive','postcondition_alive']): raise Refused('LANE_STATUS_PROCESS_TYPES')
+        health=str(x['health']); observed=str(x['observed_state']); durable=x['durable_state']
+        allowed_health={'ACTIVE','STALLED','COMPLETE','RECOVERY_REQUIRED','TERMINAL_NONCOMPLETE','UNKNOWN'}
+        allowed_observed={'STARTING','RUNNING','POSTCONDITION_RUNNING','CANCEL_REQUESTED','COMPLETE','FAILED','POSTCONDITION_FAILED','TIMED_OUT','CANCELLED','LOST_PROCESS','UNKNOWN'}
+        if health not in allowed_health or observed not in allowed_observed: raise Refused('LANE_STATUS_ENUM')
+        if durable is not None and (not isinstance(durable,str) or len(durable)>60): raise Refused('LANE_STATUS_DURABLE_STATE')
+        heartbeat=x.get('heartbeat_age_sec')
+        if heartbeat is not None and (number(heartbeat) is None or number(heartbeat)<0): raise Refused('LANE_STATUS_HEARTBEAT')
+        if x.get('retry_decision') not in ('ALLOW_RETRY','REFUSE_RETRY'): raise Refused('LANE_STATUS_RETRY')
+        if stamp(x.get('checked_utc')) is None: raise Refused('LANE_STATUS_CHECKED_TIME')
+        if health=='ACTIVE' and not (x['runner_alive'] or x['child_alive'] or x['postcondition_alive']): raise Refused('LANE_STATUS_ACTIVE_WITHOUT_PROCESS')
+        if health=='COMPLETE' and observed!='COMPLETE': raise Refused('LANE_STATUS_COHERENCE')
+        if health=='RECOVERY_REQUIRED' and observed!='LOST_PROCESS': raise Refused('LANE_STATUS_COHERENCE')
+        if health=='TERMINAL_NONCOMPLETE' and observed not in {'FAILED','POSTCONDITION_FAILED','TIMED_OUT','CANCELLED'}: raise Refused('LANE_STATUS_COHERENCE')
+        return {'health':health,'observed_state':observed,'durable_state':clean(durable,60),
+                'runner_alive':x['runner_alive'],'child_alive':x['child_alive'],'postcondition_alive':x['postcondition_alive'],
+                'heartbeat_age_sec':number(heartbeat),'retry_decision':x['retry_decision'],
+                'checked_utc':clean(x.get('checked_utc'),60),'status_source':'ACCEPTED_CHAT_STALL_LANE_STATUS'}
+
     def work(self):
         root=pathlib.Path(self.c['registry']); lease_root=pathlib.Path(self.c['leases']); jobs_root=pathlib.Path(self.c['jobs']); result=[]; totals={}
         for p in sorted(root.glob('*.json')):
@@ -141,10 +172,30 @@ class Model:
                 js=job.get('state','NOT_OBSERVED'); end=None
                 if isinstance(terminal,dict): js=terminal.get('state',js); end=terminal.get('ended_utc')
                 cls='TERMINAL_RECONCILE' if js in ['COMPLETE','FAILED','TIMED_OUT','CANCELLED'] else 'BLOCKED_REVIEW' if state in ['REVIEW','FROZEN'] else 'WAITING_OWNER' if state=='BLOCKED' and str(x.get('blocker_class','')).startswith('E_') else state
-                result.append({'id':lane,'title':lane.removeprefix('ct-').replace('-',' '),'state':state,'display_state':cls,'owner':clean(x.get('owner_chat'),100),'worker':clean(x.get('worker'),140),'updated_at':updated,'freshness':age_state(updated,24),'job_id':jobid,'job_state':js,'ended_at':end,'process_state':'NOT_PROBED','progress':'UNKNOWN','blocker':clean(x.get('blocker_class'),180),'head':x.get('head_sha'),'reviewed_head':x.get('reviewed_head'),'reviewer':clean(x.get('reviewer'),140),'dependencies':[clean(d,128) for d in x.get('dependencies',[]) if isinstance(d,str)]})
+                process_state='NOT_PROBED'; process_health='NOT_PROBED'
+                if state=='RUNNING' and not jobid:
+                    cls='STALE_REGISTRY'; process_state='NOT_OBSERVED'; process_health='NO_DURABLE_JOB'
+                result.append({'id':lane,'title':lane.removeprefix('ct-').replace('-',' '),'state':state,'display_state':cls,'owner':clean(x.get('owner_chat'),100),'worker':clean(x.get('worker'),140),'updated_at':updated,'freshness':age_state(updated,24),'job_id':jobid,'job_state':js,'ended_at':end,'process_state':process_state,'process_health':process_health,'runner_alive':None,'child_alive':None,'postcondition_alive':None,'heartbeat_age_sec':None,'retry_decision':'UNKNOWN','process_checked_utc':None,'progress':'UNKNOWN','blocker':clean(x.get('blocker_class'),180),'head':x.get('head_sha'),'reviewed_head':x.get('reviewed_head'),'reviewer':clean(x.get('reviewer'),140),'dependencies':[clean(d,128) for d in x.get('dependencies',[]) if isinstance(d,str)]})
             except (OSError,ValueError,KeyError,TypeError) as e: self.issue('lane_observation',e)
         result.sort(key=lambda r:(r['freshness']=='CURRENT',r['updated_at'] or ''),reverse=True)
-        return {'rows':result,'totals':totals,'observed_at':utcnow(),'basis':'Registry declarations + existing lease/result bytes; no PID-only liveness or ChatGPT-window inference.'}
+        probe_states={'RUNNING','REVIEW','FROZEN','INTEGRATING','WAITING','BLOCKED'}
+        candidates=[r for r in result if r['freshness']=='CURRENT' and r['job_id'] and r['state'] in probe_states][:12]
+        for row in candidates:
+            try:
+                live=self.lane_status(row['id'],row['job_id'])
+                row['process_state']=live['observed_state']; row['process_health']=live['health']
+                row['runner_alive']=live['runner_alive']; row['child_alive']=live['child_alive']; row['postcondition_alive']=live['postcondition_alive']
+                row['heartbeat_age_sec']=live['heartbeat_age_sec']; row['retry_decision']=live['retry_decision']; row['process_checked_utc']=live['checked_utc']
+                if live['health']=='ACTIVE': row['display_state']='ACTIVE_PROCESS'
+                elif live['health']=='STALLED': row['display_state']='STALLED'
+                elif live['health']=='RECOVERY_REQUIRED': row['display_state']='RECOVERY_REQUIRED'
+                elif live['health'] in ('COMPLETE','TERMINAL_NONCOMPLETE'): row['display_state']='TERMINAL_RECONCILE'
+            except (OSError,ValueError,KeyError,TypeError,subprocess.SubprocessError,UnicodeError) as e:
+                row['process_state']='UNKNOWN'; row['process_health']='UNAVAILABLE'
+                if row['state']=='RUNNING': row['display_state']='LIVENESS_UNAVAILABLE'
+                self.issue('lane_status:'+row['id'],e)
+        return {'rows':result,'totals':totals,'observed_at':utcnow(),'process_probed_count':len(candidates),
+                'basis':'Registry declarations + existing lease/result bytes. Fresh leased lanes additionally consume accepted chat-stall lane_status process identity; heartbeat is liveness evidence, not work-progress proof.'}
     def knowledge(self):
         root=pathlib.Path(self.c['knowledge']); manifest=read_json(root/'MANIFEST_SHA256.json',root)
         entry=next((r for r in manifest['files'] if r['path']=='knowledge_index.json'),None)
