@@ -59,3 +59,11 @@ These rows keep the producer's own binding visible. `DIFFERENT_REPO_HEAD`, stale
 NewsGuard now exposes the dated canonical runbook reference `PreNewsMin=30` and `PostNewsMin=15`. The same runbook explicitly says to regenerate/re-verify when `DEPLOYMENTS.csv` changes, therefore Monitor marks the reference configuration historical and leaves **effective live guard state = UNKNOWN** without attachment/log evidence. Calendar rows still do not receive invented impact labels.
 
 No VPS attach, NewsGuard/MacroGate activation, terminal global-variable mutation, news fetch, trading change, scheduler change or public/private hosting change is performed by this addition.
+
+## Live performance projection V1 — 2026-09-21
+
+The owner view now consumes the already-generated `portfolio/LIVE_DASHBOARD.html` from the accepted DailyMonitor runtime instead of independently redefining live P/L semantics. The reader requires its SHA-256 to match the `live_dashboard` source receipt embedded in the same `ControlRoomSnapshotV5` before any per-EA metrics are shown.
+
+The projected fields are account-masked EA/magic, symbol, producer closed-trade count, net P/L, profit factor, max DD%, kill-DD reference, days idle, operational/verification state and the producer risk flag. The producer semantics remain authoritative: MT5 closes are OUT/INOUT/OUT_BY rows; net P/L is profit + swap + commission; account analysis windows exclude documented earlier hand experiments; DD% stays UNKNOWN when base equity is not recorded. `INFINITY` PF is rendered as `∞` and is not turned into a score.
+
+The UI maps producer flags to descriptive labels (`DD BREACH`, `DD WARN`, `BELOW WARN`, `NO CLOSED DATA`, `UNMAPPED`, `DD UNKNOWN`) and explicitly does **not** make a universal good/bad EA verdict. The source currently remains bound to an older producer Git head, so `DIFFERENT_REPO_HEAD` stays visible even when the generated live dashboard itself is fresh.

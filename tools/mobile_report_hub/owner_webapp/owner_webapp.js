@@ -103,6 +103,21 @@ function knowledgePage(){const docs=DATA.knowledge?.documents||[],kinds=['ALL',.
  bindCommon();
 }
 function openKnowledge(id){const d=(DATA.knowledge?.documents||[]).find(x=>x.id===id);if(!d)return;drawer(d.title,'<p><span class="source-pill '+(d.authority==='DRAFT_NOT_IMPORTED'?'bad':'')+'">'+esc(d.authority)+'</span> '+esc(d.kind)+'</p><div class="prose">'+esc((d.body||'').slice(0,12000))+'</div><hr><dl class="kv"><dt>Document ID</dt><dd>'+esc(d.id)+'</dd><dt>SHA256</dt><dd>'+esc(d.sha256)+'</dd><dt>Sources</dt><dd>'+esc((d.sources||[]).join(', ')||'None listed')+'</dd></dl>')}
+function livePerfFlag(row){
+ const m={'st-red':'DD BREACH','st-yellow':'DD WARN','st-green':'BELOW WARN','st-white':'NO CLOSED DATA','st-grey':'UNMAPPED','st-nobase':'DD UNKNOWN','st-blue':'DD UNKNOWN'};
+ return m[row.flag_class]||'OBSERVED';
+}
+function livePerformanceTable(a){
+ const lp=DATA.live_performance||{},acct=(lp.accounts||[]).find(x=>a&&x.account_id===a.id);
+ const banner='<div class="notice">Existing LIVE_DASHBOARD producer · source '+(lp.source_fresh?'FRESH':'NOT FRESH')+' · binding '+esc(lp.binding||'UNKNOWN')+'. Net P/L = profit + swap + commission under the producer analysis window. PF/DD are not recomputed by this UI.</div>';
+ if(!acct)return banner+'<div class="empty">No source-bound live performance card for this selected account</div>';
+ const rows=acct.rows||[]; if(!rows.length)return banner+'<div class="empty">No performance rows in producer output</div>';
+ return banner+'<div class="summary-grid"><div class="summary-box"><label>Producer account net</label><strong class="'+(n(acct.account_net_pl)<0?'num-neg':n(acct.account_net_pl)>0?'num-pos':'')+'">'+esc(fmt(acct.account_net_pl))+' '+esc(acct.currency)+'</strong><small>window '+esc(acct.window_start)+'</small></div><div class="summary-box"><label>Closed deal rows</label><strong>'+esc(acct.account_trades??'UNKNOWN')+'</strong><small>'+esc(acct.account_label)+' · producer aggregate</small></div></div><div class="table-wrap"><table><thead><tr><th>EA / magic</th><th>Trades</th><th>Net P/L</th><th>PF</th><th>Max DD</th><th>Kill DD</th><th>Risk flag</th><th>Idle d</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><button class="linkbtn row-title" data-open-liveperf="'+esc(acct.account_id)+'|'+esc(r.magic)+'">'+esc(r.ea)+'</button><span class="row-sub">'+esc(r.symbol)+' · '+esc(r.magic)+' · '+esc(r.operational)+'</span></td><td>'+esc(r.trades)+'</td><td class="'+(n(r.net_pl)<0?'num-neg':n(r.net_pl)>0?'num-pos':'')+'">'+esc(fmt(r.net_pl))+'</td><td>'+esc(r.profit_factor==='INFINITY'?'∞':fmt(r.profit_factor,2))+'</td><td>'+esc(r.max_dd_pct==null?'UNKNOWN':fmt(r.max_dd_pct,2)+'%')+'</td><td>'+esc(r.kill_dd_pct==null?'—':fmt(r.kill_dd_pct,2)+'%')+'</td><td>'+status(livePerfFlag(r))+'</td><td>'+esc(r.days_idle==null?'—':fmt(r.days_idle,0))+'</td></tr>').join('')+'</tbody></table></div>';
+}
+function openLivePerformance(key){
+ const [accountId,magic]=key.split('|'),acct=(DATA.live_performance?.accounts||[]).find(x=>x.account_id===accountId),r=acct?.rows?.find(x=>x.magic===magic); if(!acct||!r)return;
+ drawer(r.ea,'<p>'+status(livePerfFlag(r))+' <span class="source-pill">LIVE_DASHBOARD producer</span></p><dl class="kv"><dt>Account</dt><dd>'+esc(acct.account_label+' · '+acct.currency)+'</dd><dt>Magic</dt><dd>'+esc(r.magic)+'</dd><dt>Symbol</dt><dd>'+esc(r.symbol)+'</dd><dt>Closed deal rows</dt><dd>'+esc(r.trades)+'</dd><dt>Net P/L</dt><dd>'+esc(fmt(r.net_pl)+' '+acct.currency)+'</dd><dt>Profit factor</dt><dd>'+esc(r.profit_factor==='INFINITY'?'∞':fmt(r.profit_factor,2))+'</dd><dt>Max DD</dt><dd>'+esc(r.max_dd_pct==null?'UNKNOWN':fmt(r.max_dd_pct,2)+'%')+'</dd><dt>Kill DD reference</dt><dd>'+esc(r.kill_dd_pct==null?'UNKNOWN':fmt(r.kill_dd_pct,2)+'%')+'</dd><dt>Verification</dt><dd>'+esc(r.verification)+'</dd><dt>Detail</dt><dd>'+esc(r.detail)+'</dd></dl><div class="notice">'+esc(DATA.live_performance?.basis||'')+'</div>');
+}
 function controlRoomTable(a){
  const cr=DATA.control_room||{},rows=(cr.rows||[]).filter(r=>!a||r.account_id===a.id);
  const banner='<div class="notice">Control Room source '+esc(cr.freshness||'UNKNOWN')+' · binding '+esc(cr.binding||'UNKNOWN')+' · reconciliation '+(cr.reconciliation_clear?'CLEAR':'NOT CLEAR')+'. Closed-deal rows and rates are observations from the existing producer, not a universal EA grade.</div>';
@@ -121,8 +136,9 @@ function performancePageV2(){const a=account(),p=a?.latest||{},eas=latestEA(a);l
  const summary='<div class="summary-grid">'+values.map(x=>'<div class="summary-box"><label>'+esc(x[0])+'</label><strong>'+esc(x[1])+'</strong></div>').join('')+'</div><div class="notice">No deposit/withdrawal adjustment and no per-EA realized attribution is claimed. Lines connect observed account snapshots only.</div>';
  const top='<div class="grid performance-top">'+panel('Balance vs Equity',chartControls()+chart(a)+metricStrip(a))+panel('Performance Summary',summary)+'</div>';
  const live='<div class="grid performance-lower">'+panel('Observed EA / deployment rows',eaLiveTable(a),'<span class="source-pill">latest account snapshot</span>')+panel('Open lots by symbol',lotsBySymbol(a))+'</div>';
+ const realized=panel('Source-bound live performance',livePerformanceTable(a),'<span class="source-pill">existing LIVE_DASHBOARD producer</span>');
  const readiness=panel('Forward / live decision readiness',controlRoomTable(a),'<span class="source-pill">existing Control Room producer</span>');
- main.innerHTML=shellHead('EA Performance / Live Tracking','Observed live account evidence, deployment readiness and separate source-bound research records','chart',true)+top+live+readiness+panel('Research evidence / MAIN-BWD',researchTable(),'<span class="source-pill">separate from live</span>');
+ main.innerHTML=shellHead('EA Performance / Live Tracking','Observed account equity, source-bound EA performance, deployment readiness and separate research evidence','chart',true)+top+live+realized+readiness+panel('Research evidence / MAIN-BWD',researchTable(),'<span class="source-pill">separate from live</span>');
  bindCommon();
 }
 function toastMsg(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toast.classList.remove('show'),2400)}
@@ -134,6 +150,7 @@ function bindCommon(){
  document.querySelectorAll('[data-open-work]').forEach(b=>b.addEventListener('click',()=>openWork(b.dataset.openWork)));
  document.querySelectorAll('[data-open-template]').forEach(b=>b.addEventListener('click',()=>openTemplate(b.dataset.openTemplate)));
  document.querySelectorAll('[data-open-research]').forEach(b=>b.addEventListener('click',()=>openResearch(b.dataset.openResearch)));
+ document.querySelectorAll('[data-open-liveperf]').forEach(b=>b.addEventListener('click',()=>openLivePerformance(b.dataset.openLiveperf)));
  document.querySelectorAll('[data-open-knowledge]').forEach(b=>b.addEventListener('click',()=>openKnowledge(b.dataset.openKnowledge)));
  document.querySelectorAll('[data-work-filter]').forEach(b=>b.addEventListener('click',()=>{workFilter=b.dataset.workFilter;workPage()}));
  document.querySelectorAll('[data-news-tab]').forEach(b=>b.addEventListener('click',()=>{newsTab=b.dataset.newsTab;newsPage()}));

@@ -1,6 +1,7 @@
 """Read-only presentation of existing EA_LAB evidence."""
 from __future__ import annotations
 import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess
+from html.parser import HTMLParser
 UTC = dt.timezone.utc
 class Refused(ValueError):
     pass
@@ -45,6 +46,34 @@ def read_json(path, root):
 def csv_rows(raw):
     text=raw.decode('utf-16' if raw[:2] in (bytes([255,254]),bytes([254,255])) else 'utf-8-sig')
     return list(csv.DictReader(io.StringIO(text)))
+
+class _DashboardParser(HTMLParser):
+    """Extract only account-card tables from the accepted generated dashboard."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True); self.stack=[]; self.cards=[]; self.card=None
+        self.in_head=False; self.in_table=False; self.row=None; self.cell=None
+    def handle_starttag(self,tag,attrs):
+        a=dict(attrs); self.stack.append((tag,a))
+        if tag=='div' and 'acct-card' in a.get('class','').split():
+            self.card={'head':'','rows':[]}; self.cards.append(self.card)
+        if self.card and tag=='div' and 'acct-head' in a.get('class','').split(): self.in_head=True
+        if self.card and tag=='table': self.in_table=True
+        if self.in_table and tag=='tr':
+            self.row={'class':a.get('class',''),'cells':[]}; self.card['rows'].append(self.row)
+        if self.row is not None and tag in ('th','td'):
+            self.cell={'tag':tag,'class':a.get('class',''),'text':''}; self.row['cells'].append(self.cell)
+    def handle_endtag(self,tag):
+        closing=self.stack[-1] if self.stack else (None,{})
+        if tag in ('th','td'): self.cell=None
+        if tag=='tr': self.row=None
+        if tag=='table': self.in_table=False
+        if tag=='div' and self.in_head and 'acct-head' in closing[1].get('class','').split(): self.in_head=False
+        if tag=='div' and self.card and 'acct-card' in closing[1].get('class','').split(): self.card=None
+        if self.stack: self.stack.pop()
+    def handle_data(self,data):
+        if self.card and self.in_head: self.card['head']+=data
+        if self.cell is not None: self.cell['text']+=data
+
 class Model:
     def __init__(self, config):
         self.c=config; self.repo=pathlib.Path(config['repo']); self.errors=[]
@@ -172,13 +201,59 @@ class Model:
                 'oldest_open_hours':number(f.get('oldest_age_h'))})
         src=[{'name':clean(s.get('name'),80),'fresh':bool(s.get('fresh')),'age_hours':number(s.get('age_hours'))} for s in meta.get('sources',[])]
         rid=x.get('runtime_identity_summary',{})
+        raw_summary=x.get('summary',{})
+        summary={k:v for k,v in raw_summary.items() if isinstance(v,(int,float,bool,str)) and k not in ('expectation_baskets',)}
         return {'generated_at':generated,'freshness':age_state(generated,30),'git_head':meta.get('git_head'),'binding':binding,
-            'execution_context':clean(meta.get('execution_context'),80),'rows':rows,'summary':x.get('summary',{}),'source_health':src,
+            'execution_context':clean(meta.get('execution_context'),80),'rows':rows,'summary':summary,'source_health':src,
             'reconciliation_clear':bool(x.get('verdict',{}).get('reconciliation_clear',False)),
             'verdict_reasons':[{'code':clean(v.get('code'),80),'detail':clean(v.get('detail'),180)} for v in x.get('verdict',{}).get('reasons',[])],
             'runtime_identity':{'state':clean(rid.get('state'),40),'forward_test_state':clean(rid.get('forward_test_state'),80),
                 'reasons':[{'code':clean(v.get('code'),80),'detail':clean(v.get('detail'),180)} for v in rid.get('reasons',[])]},
             'source_hash':digest(raw),'basis':clean(meta.get('counting_method'),300)}
+
+    def live_performance(self):
+        root=pathlib.Path(self.c['runtime']); raw=safe_bytes(root/'portfolio/LIVE_DASHBOARD.html',root,2_000_000)
+        control=read_json(root/'portfolio/control_room_snapshot.json',root)
+        source=next((s for s in control.get('meta',{}).get('sources',[]) if s.get('name')=='live_dashboard'),None)
+        if not source or source.get('sha256')!=digest(raw): raise Refused('LIVE_DASHBOARD_BINDING_MISMATCH')
+        parser=_DashboardParser(); parser.feed(raw.decode('utf-8-sig',errors='strict'))
+        currencies={r.get('account',''):r.get('currency','UNKNOWN') for r in csv_rows(self.blob('portfolio/ACCOUNTS.csv'))}
+        def numtext(value):
+            s=str(value or '').strip().replace(',','').replace('%','')
+            if s in ('','UNKNOWN','N/A','—'): return None
+            if s in ('∞','Infinity','+Infinity'): return 'INFINITY'
+            return number(s)
+        accounts=[]
+        for card in parser.cards:
+            perf_header=None
+            for row in card['rows']:
+                headers=[c['text'].strip() for c in row['cells'] if c['tag']=='th']
+                if 'Net P&L' in headers and 'PF' in headers and 'Trades' in headers:
+                    perf_header=headers; break
+            if not perf_header: continue
+            m=re.match(r'\s*(\d{5,12})\s*·\s*(.*)',card['head'],re.S)
+            if not m: raise Refused('LIVE_DASHBOARD_ACCOUNT_HEADER')
+            account=m.group(1); head=clean(m.group(2),900); rows=[]
+            for row in card['rows']:
+                cells=row['cells']
+                if not cells or cells[0]['tag']=='th': continue
+                vals=[c['text'].strip() for c in cells]
+                if len(vals)!=len(perf_header): raise Refused('LIVE_DASHBOARD_ROW_WIDTH')
+                obj=dict(zip(perf_header,vals))
+                rows.append({'flag_class':clean(row.get('class'),40),'operational':clean(obj.get('Operational'),60),
+                    'verification':clean(obj.get('Verification'),60),'ea':clean(obj.get('EA'),220),'magic':clean(obj.get('Magic'),40),
+                    'symbol':clean(obj.get('Symbol'),50),'trades':int(numtext(obj.get('Trades')) or 0),
+                    'net_pl':numtext(obj.get('Net P&L')),'profit_factor':numtext(obj.get('PF')),
+                    'max_dd_pct':numtext(obj.get('Max DD%')),'kill_dd_pct':numtext(obj.get('Kill DD%')),
+                    'days_idle':numtext(obj.get('Days idle')),'detail':clean(obj.get('Detail'),500)})
+            hm=re.search(r'window:\s*from\s*([^·]+)\s*·\s*net\s*([+\-0-9,.]+)\s*·\s*(\d+)\s*trades',card['head'])
+            accounts.append({'account_id':'acct-'+digest(account.encode())[:12],'account_label':'***'+account[-3:],
+                'currency':clean(currencies.get(account,'UNKNOWN'),10),'header':head,'window_start':clean(hm.group(1).strip(),30) if hm else 'UNKNOWN',
+                'account_net_pl':numtext(hm.group(2)) if hm else None,'account_trades':int(hm.group(3)) if hm else None,'rows':rows})
+        return {'accounts':accounts,'source_hash':digest(raw),'source_age_hours':number(source.get('age_hours')),
+            'source_fresh':bool(source.get('fresh')),'source_mtime':clean(source.get('mtime'),40),
+            'producer_git_head':control.get('meta',{}).get('git_head'),'binding':'MATCH' if control.get('meta',{}).get('git_head')==self.sha else 'DIFFERENT_REPO_HEAD',
+            'basis':'Existing scripts/live_dashboard.ps1 output. MT5 closes use entry OUT/INOUT/OUT_BY; net P/L includes profit+swap+commission; PF and DD preserve producer semantics.'}
 
     def news_policy(self):
         raw=self.blob('ea_projects/(Boss)_NewsGuard/GUARDCONFIG_2026-07-17.md'); text=raw.decode('utf-8-sig',errors='replace')
@@ -205,6 +280,7 @@ class Model:
         news=self.section('news',self.news,{'events':[],'guard_effective':'UNKNOWN','freshness':'UNAVAILABLE'})
         macro=self.section('macro',self.macro,{'state':'UNAVAILABLE','barometers':[],'freshness':'UNAVAILABLE'})
         control_room=self.section('control_room',self.control_room,{'rows':[],'summary':{},'freshness':'UNAVAILABLE','binding':'UNAVAILABLE','runtime_identity':{'state':'UNKNOWN','forward_test_state':'UNKNOWN'}})
+        live_performance=self.section('live_performance',self.live_performance,{'accounts':[],'source_fresh':False,'binding':'UNAVAILABLE','basis':'UNAVAILABLE'})
         news_policy=self.section('news_policy',self.news_policy,{'pre_news_min':None,'post_news_min':None,'effective_runtime':'UNKNOWN','coverage_state':'UNAVAILABLE'})
         templates=self.section('templates',self.templates,[])
         safe=index.get('safe_projection',{}); findings=[]
@@ -214,4 +290,4 @@ class Model:
         for drive in ['C:/','D:/']:
             if pathlib.Path(drive).exists():
                 v=shutil.disk_usage(drive); disks.append({'drive':drive[:2],'free_gb':round(v.free/1073741824,1),'total_gb':round(v.total/1073741824,1)})
-        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.1.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'templates':templates,'research':eas,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA score or unqualified realized-return attribution is inferred.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}
+        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.2.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'live_performance':live_performance,'templates':templates,'research':eas,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA good/bad score is inferred. Live P/L/PF/DD preserve the existing dashboard producer semantics and source binding.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}

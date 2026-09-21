@@ -95,7 +95,14 @@ def self_test(config):
     assert snap['news_policy']['pre_news_min']==30.0 and snap['news_policy']['post_news_min']==15.0
     assert snap['news_policy']['effective_runtime']=='UNKNOWN'
     assert len(snap['control_room']['rows'])>0 and snap['control_room']['binding'] in ('MATCH','DIFFERENT_REPO_HEAD')
+    assert len(snap['live_performance']['accounts'])>0 and snap['live_performance']['source_fresh'] is True
+    assert all(a['account_id'].startswith('acct-') and a['account_label'].startswith('***') for a in snap['live_performance']['accounts'])
+    assert snap['live_performance']['binding'] in ('MATCH','DIFFERENT_REPO_HEAD')
+    assert sum(len(a['rows']) for a in snap['live_performance']['accounts'])>0
     html=render(config,snap); assert b'EA_LAB Monitor' in html and b'11,432' not in html
+    raw_accounts=Model(config).git('show',snap['canonical_sha']+':portfolio/ACCOUNTS.csv').decode('utf-8-sig').splitlines()[1:]
+    raw_ids=[line.split(',',1)[0].strip('"') for line in raw_accounts if line.strip()]
+    assert all(not ident or ident.encode() not in html for ident in raw_ids)
     print(json.dumps({'result':'PASS','accounts':len(snap['accounts']['rows']),'work':len(snap['work']['rows']),
       'templates':len(snap['templates']),'knowledge':len(snap['knowledge']['documents']),'news':len(snap['news']['events']),
       'errors':snap['errors']},ensure_ascii=False))
