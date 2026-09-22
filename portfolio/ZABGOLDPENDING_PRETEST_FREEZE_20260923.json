@@ -1,0 +1,122 @@
+{
+    "schema":  "zabgoldpending_pretest_freeze/1",
+    "status":  "PARTIALLY_FROZEN_BLOCKED_OWNER_AND_INPUT_SURFACE",
+    "authority":  "RESEARCH_ONLY_DOCUMENTARY_NO_MT5",
+    "canonical_base_sha":  "ec91a858aea97ee1563bc73992136cca37c58109",
+    "lane":  "ct-zabgoldpending-pretest-freeze-v1-20260923",
+    "family":  "ZABgoldpending",
+    "source":  {
+                   "selected_file":  "ZABgoldpending.ex5",
+                   "sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                   "bytes":  53368,
+                   "source_post_id":  "725024260297268",
+                   "source_post_content_sha256":  "9b818b646503247d7dda3a653c4d5a2301f95c944ff22d266b029c3acc5f96bb",
+                   "source_claims":  [
+                                         "breakout bot",
+                                         "Gold",
+                                         "M5",
+                                         "lot or risk-percent selectable",
+                                         "other settings described by source as prepared",
+                                         "demo recommended first"
+                                     ],
+                   "source_code_available":  false,
+                   "opaque_binary":  true
+               },
+    "frozen":  {
+                   "role":  "EA",
+                   "home_symbol":  {
+                                       "value":  "XAUUSD",
+                                       "basis":  "EA_LAB prospective broker mapping of source claim Gold; ThinkMarkets-Live XAUUSD history/ticks observed locally on D:\\Meta 5 and D:\\Meta 5b",
+                                       "source_claim_exact_symbol":  false,
+                                       "revalidate_before_run":  true
+                                   },
+                   "timeframe":  {
+                                     "value":  "M5",
+                                     "basis":  "SOURCE_CLAIM"
+                                 },
+                   "research_model":  {
+                                          "value":  "M1_M1_OHLC_RESEARCH",
+                                          "basis":  "EA_RND_PROTOCOL minimum for numerical strategy judgement"
+                                      },
+                   "main_window":  "2023-01-01..2025-12-31",
+                   "bwd_window":  "2020-01-01..2022-12-31",
+                   "holdout":  {
+                                   "window":  "2026H1",
+                                   "state":  "UNSPENT_DO_NOT_DISCOVER"
+                               },
+                   "optimization":  "NOT_AUTHORIZED_FIXED_CONFIG_FIRST",
+                   "model4":  "NOT_RUN_REQUIRED_LATER_BEFORE_CANDIDATE",
+                   "cost_policy":  {
+                                       "mode":  "TESTER_NATIVE_BROKER_ECONOMICS",
+                                       "broker_surface":  "ThinkMarkets-Live",
+                                       "spread":  "CAPTURE_EFFECTIVE_TESTER_VALUE_DO_NOT_FAKE_INI_OVERRIDE",
+                                       "commission":  "CAPTURE_EFFECTIVE_TESTER_VALUE_OR_FAIL_CLOSED_IF_UNAVAILABLE",
+                                       "swap":  "CAPTURE_EFFECTIVE_TESTER_VALUE_OR_FAIL_CLOSED_IF_UNAVAILABLE",
+                                       "rule":  "record actual effective economics from exact accepted installation; do not claim ini controls that current build ignores"
+                                   },
+                   "candidate_install":  {
+                                             "path":  "D:\\Meta 5",
+                                             "terminal":  "D:\\Meta 5\\terminal64.exe",
+                                             "observed_product_version":  "5.0.0.6182",
+                                             "lane_role":  "MT5 lane 1 primary / acceptance-critical lineage candidate",
+                                             "xauusd_history_observed":  true,
+                                             "xauusd_ticks_observed":  true,
+                                             "state":  "PROSPECTIVE_REVALIDATE_BEFORE_RUN"
+                                         }
+               },
+    "unresolved":  {
+                       "owner_money_mode":  {
+                                                "state":  "OWNER_REQUIRED",
+                                                "allowed_source_options":  [
+                                                                               "FIXED_LOT",
+                                                                               "RISK_PERCENT"
+                                                                           ],
+                                                "value":  "UNRESOLVED",
+                                                "note":  "Do not infer mode or value from owner risk preference or source wording."
+                                            },
+                       "ex5_input_surface":  {
+                                                 "state":  "INPUT_SURFACE_REQUIRED",
+                                                 "defaults":  "UNKNOWN",
+                                                 "parameter_names":  "UNKNOWN",
+                                                 "binary_probe":  "ASCII/UTF16 printable-string probe did not recover trustworthy input names/defaults",
+                                                 "required_method":  "separately authorized input-surface capture without running performance test"
+                                             },
+                       "entry_semantics":  "SOURCE_CLAIM_BREAKOUT_ONLY_EXACT_RULE_UNKNOWN",
+                       "exit_semantics":  "UNKNOWN",
+                       "money_management_formula":  "UNKNOWN_BEYOND_LOT_OR_RISK_PERCENT_OPTION",
+                       "grid_martingale_hedge":  "UNKNOWN_ABSENCE_NOT_INFERRED",
+                       "external_dependencies":  "UNKNOWN",
+                       "account_identity":  {
+                                                "server_candidate":  "ThinkMarkets-Live",
+                                                "login":  "PRE_RUN_CAPTURE_REQUIRED",
+                                                "leverage":  "PRE_RUN_CAPTURE_REQUIRED"
+                                            },
+                       "tester_build_identity":  "REVALIDATE_EXACT_TERMINAL_BUILD_IMMEDIATELY_BEFORE_RUN"
+                   },
+    "readiness":  {
+                      "before":  "READY_FOR_SETTINGS_FREEZE",
+                      "after_this_document":  "PARTIAL_SETTINGS_FREEZE_OWNER_AND_INPUT_SURFACE_REQUIRED",
+                      "ready_for_test":  false,
+                      "mt5_started":  false,
+                      "backtest_started":  false
+                  },
+    "next_gate":  {
+                      "required":  [
+                                       "owner selects FIXED_LOT or RISK_PERCENT and exact value",
+                                       "capture exact EX5 input surface/defaults without guessing",
+                                       "bind exact account/login/leverage and revalidate terminal build",
+                                       "verify selected EX5 loads on XAUUSD M5 without external dependency failure"
+                                   ],
+                      "after_gate":  "freeze one fixed-config Model1 MAIN+BWD execution contract; no optimization and no HOLDOUT"
+                  },
+    "prohibitions":  [
+                         "no MT5 performance run under this document",
+                         "no backtest",
+                         "no optimization",
+                         "no HOLDOUT",
+                         "no risk/default invention",
+                         "no strategy implementation",
+                         "no deployment/runtime/LIVE",
+                         "no SET attachment by filename similarity"
+                     ]
+}
