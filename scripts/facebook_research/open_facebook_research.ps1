@@ -32,21 +32,53 @@ if(-not (Test-FacebookUrl $Url)){
 $endpoint = "http://127.0.0.1:$DebugPort"
 $versionUri = "$endpoint/json/version"
 $profileFull = [IO.Path]::GetFullPath($ProfileRoot)
-$escapedProfile = [Regex]::Escape($profileFull)
-$portLiteral = [Regex]::Escape("--remote-debugging-port=$DebugPort")
 
 function Get-DebugVersion {
     try { return Invoke-RestMethod -Uri $versionUri -TimeoutSec 3 }
     catch { return $null }
 }
 
+function Get-ChromeArgumentValue {
+    param([string]$CommandLine,[string]$Name)
+    if([string]::IsNullOrWhiteSpace($CommandLine)){ return $null }
+    $pattern = '(?i)(?:^|\s)--' + [Regex]::Escape($Name) + '(?:=|\s+)(?:"([^"]*)"|([^\s]+))(?=\s|$)'
+    $match = [Regex]::Match($CommandLine,$pattern)
+    if(-not $match.Success){ return $null }
+    if($match.Groups[1].Success){ return $match.Groups[1].Value }
+    return $match.Groups[2].Value
+}
+
+function Test-ExactProfileProcess {
+    param($Process,[switch]$RequireDebugPort)
+    $profileArg = Get-ChromeArgumentValue -CommandLine ([string]$Process.CommandLine) -Name 'user-data-dir'
+    if([string]::IsNullOrWhiteSpace($profileArg)){ return $false }
+    try { $actualProfile = [IO.Path]::GetFullPath($profileArg) }
+    catch { return $false }
+    if(-not $actualProfile.TrimEnd('\').Equals($profileFull.TrimEnd('\'),[StringComparison]::OrdinalIgnoreCase)){ return $false }
+    if($RequireDebugPort){
+        $portArg = Get-ChromeArgumentValue -CommandLine ([string]$Process.CommandLine) -Name 'remote-debugging-port'
+        if([string]::IsNullOrWhiteSpace($portArg) -or $portArg -cne ([string]$DebugPort)){ return $false }
+    }
+    return $true
+}
+
 function Get-DedicatedDebugOwners {
     return @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-        Where-Object {
-            $_.Name -eq 'chrome.exe' -and
-            $_.CommandLine -match $escapedProfile -and
-            $_.CommandLine -match $portLiteral
-        })
+        Where-Object { $_.Name -eq 'chrome.exe' -and (Test-ExactProfileProcess -Process $_ -RequireDebugPort) })
+}
+
+function Get-DedicatedProfileUsers {
+    return @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -eq 'chrome.exe' -and (Test-ExactProfileProcess -Process $_) })
+}
+
+function Get-SafeFacebookLogUrl {
+    param([string]$Value)
+    $uri=[Uri]$Value
+    $builder=[UriBuilder]$uri
+    $builder.Query=''
+    $builder.Fragment=''
+    return $builder.Uri.AbsoluteUri
 }
 
 $version = Get-DebugVersion
@@ -85,20 +117,19 @@ if($version){
     try {
         Invoke-RestMethod -Method Put -Uri "$endpoint/json/new?$encoded" -TimeoutSec 5 | Out-Null
     } catch {
-        throw "FACEBOOK_RESEARCH[existing_browser_target_open_failed] $($_.Exception.Message)"
+        throw 'FACEBOOK_RESEARCH[existing_browser_target_open_failed] failed to open target in dedicated browser'
     }
     Write-Result @{
         state='REUSED_RUNNING_PROFILE'
         browser=$version.Browser
-        opened_url=$Url
+        opened_url=(Get-SafeFacebookLogUrl $Url)
         session_persistence='CHROME_PROFILE_ONLY'
         login_state='CHECK_IN_PAGE'
     }
     exit 0
 }
 
-$profileUsers = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -eq 'chrome.exe' -and $_.CommandLine -match $escapedProfile })
+$profileUsers = @(Get-DedicatedProfileUsers)
 
 if($profileUsers.Count -gt 0){
     Write-Result @{
@@ -144,7 +175,7 @@ if($debugOwners.Count -eq 0){
 Write-Result @{
     state='STARTED_PERSISTENT_PROFILE'
     browser=$version.Browser
-    opened_url=$Url
+    opened_url=(Get-SafeFacebookLogUrl $Url)
     session_persistence='CHROME_PROFILE_ONLY'
     login_state='CHECK_IN_PAGE'
     security='NO_PASSWORD_COOKIE_OR_TOKEN_EXPORT'
