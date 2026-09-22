@@ -5,6 +5,40 @@
 - Authority: **PRODUCT/IMPLEMENTATION AUDIT ONLY / NO RUNTIME OR RISK AUTHORITY**.
 - This document neither changes defaults nor grants Factory, tester, runtime, deployment, trading, DEMO/LIVE, Candidate, Grade, KINT, or promotion authority.
 
+## Forward reconciliation overlay — 2026-09-22
+
+This forward-only overlay is source-bound to current canonical ancestry at
+`5e84dd3e7c662e80e631d7f9e72903d0ba2420c6`. It reconciles facts accepted after the frozen audit base;
+it does **not** recalculate the 36-capability classification, rewrite the rows below as though these facts
+were available at `2935c3205f67799b4b7939116e264143bf902e05`, or alter the historical remediation record.
+
+### Current accepted native-pipeline coverage
+
+| Family | Current accepted source | Pipeline coverage at the accepted source | Source-only boundary |
+| --- | --- | --- | --- |
+| B20 / DF02 | [`B20_SOURCE_ACCEPTANCE_20260918.md`](../docs/research/B20_SOURCE_ACCEPTANCE_20260918.md), exact accepted/reviewed source `5c85eba937968f80e558f11d583be85a2969c41e` | **Family-native lifecycle.** `LAB_ENTRY_20` owns init/tick/deinit and the frozen TimeBomb timing, retained grid state, initial market-vs-pending behavior, favorable/adverse same-side adds, nearby exclusion, block-freemargin sizing, and source-owned SL-only group trailing. Generic Stack/Recovery/Hedge do not substitute for this lifecycle. | Source accepted only; B20 was not performance-tested. Home/TF/settings remain unresolved. |
+| B21 / DF03 | [`B21_SOURCE_ACCEPTANCE_20260918.md`](../docs/research/B21_SOURCE_ACCEPTANCE_20260918.md), exact accepted/reviewed source `19bafeec7d75339e166bafc23913a168dac3bc38` | **Source-native adapter lifecycle.** DF03 retains its 126 source blocks, native tick/trade roots, D1/current-TF semantics, hedge gates, group/magic topology, and native order/modify/close behavior. The accepted runtime-identity/current-DD/halt and new-order safety seams do not transfer lifecycle ownership to generic Stack/Recovery/Hedge/Exit. | Source accepted only; B21 was compiled and regression-checked, not performance-tested. Home/TF/settings remain unresolved. |
+| B22 / ZL-EA-067 | [`ZL_EA_067_SOURCE_ACCEPTANCE_20260919.md`](../docs/research/ZL_EA_067_SOURCE_ACCEPTANCE_20260919.md), exact accepted/reviewed source `57aed8a5235f871fcdaf198433dd66f2c4ebaa11` | **Entry-only shared-chassis child.** `LAB_ENTRY_22` owns the accepted closed-bar WickDisplacement signal and its two source-bound inputs; it returns `EntrySignal` under `STACK_SINGLE / CONF_DISTANCE` and owns no order, position, recovery, hedge, exit, money-management, or risk lifecycle. | Source accepted only. The engineering fixture and adjacent B11-B18 comparison are not B22 performance evidence and select no Home/TF/settings. |
+
+### Current Factory identity and owner-recipe reconciliation
+
+- Factory Identity P0 is accepted at `87f56992970578d8d0b109e34e49c81b2fd21a9a`; its canonical owner is
+  [`EA_TEMPLATE_IDENTITY_MODEL_V1.md`](../docs/architecture/EA_TEMPLATE_IDENTITY_MODEL_V1.md). It separates
+  `FamilyID`, explicit `LogicalVariantID`, `HypothesisRevision`, `HomeContractID`, `ParameterSetID`, build,
+  run, package, and legacy-alias references without rewriting accepted artifacts. Current B11-B18 H01 aliases
+  remain `LogicalVariantID=null / ResolutionStatus=SEMANTICS_REQUIRED`.
+- Owner Recipe P1 is accepted at `c89a2a0b115112532b01f13b36725c0dbb02a30c`; its canonical owner is
+  [`EA_TEMPLATE_OWNER_RECIPE_V1.md`](../docs/architecture/EA_TEMPLATE_OWNER_RECIPE_V1.md). It provides the
+  deterministic `Requested -> Effective -> State -> Reason` read model on validated Identity P0,
+  ParameterSet, package, and explicit-resolution inputs. It remains an additive non-authoritative sidecar;
+  unresolved aliases prevent a tracked owner-recipe catalog and must remain visible blockers.
+
+The authority ceiling is explicit: **source acceptance is not performance authority; source acceptance is
+not Home/TF/settings authority; source acceptance is not deployment/runtime authority.** None of the accepted
+B20/B21/B22 source heads creates E020/E021/E022, optimization, HOLDOUT, Candidate/Grade/KINT, risk/default,
+DEMO/LIVE, deployment, trading, or whole-pipeline authority. The coverage map below remains historical evidence
+at its frozen audit base; this overlay is the forward reader path for the later accepted facts only.
+
 ## Executive summary
 
 The current repository contains a substantial, tested Boss V2 chassis, but it is not yet an owner-easy product flow. Its strongest areas are the shared position, sizing, exit, risk, full-set, fingerprint, and build-evidence mechanisms. Its largest product gaps sit above and between those mechanisms: logical identity, the absent `xx-00` control artifact, complete effective-configuration projection, per-family applicability, and an end-to-end recipe/catalog view.

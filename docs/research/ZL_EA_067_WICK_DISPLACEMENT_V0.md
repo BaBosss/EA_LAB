@@ -1,5 +1,16 @@
 # ZL-EA-067 Wick Displacement — EA_LAB Independent Child V0
 
+> **Forward-only status supersession — source accepted 2026-09-19.** The current canonical owner is
+> [`ZL_EA_067_SOURCE_ACCEPTANCE_20260919.md`](ZL_EA_067_SOURCE_ACCEPTANCE_20260919.md):
+> `B22 / LAB_ENTRY_22 / Boss_22_WickDisplacement` is **SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY /
+> NO_PERFORMANCE_SCREEN** at exact accepted and reviewed source
+> `57aed8a5235f871fcdaf198433dd66f2c4ebaa11`. This supersedes the bounded-author pending-gate status below
+> for current routing only. The V0 design, original author-stage status, and acceptance evidence remain preserved
+> as historical source-bound evidence. Source acceptance selects no performance, Home/TF/settings, runtime,
+> deployment, DEMO/LIVE, Candidate/Grade/KINT, risk/default, or trading authority.
+
+## Historical bounded-author snapshot — superseded for active status
+
 Status: `B22 IDENTITY-ONLY IMPLEMENTED / AUTHOR DETERMINISTIC+COMPILE GATES PASS / CONTROL-TOWER RUNTIME+REGRESSION+HOOKS+SCRUTINY PENDING / RESEARCH_ONLY / NO_ORIGINAL_ZIPLOR_FIDELITY_CLAIM`
 Canonical implementation base: `5c85eba937968f80e558f11d583be85a2969c41e`
 Historical B20 canary head: `14b3181af77c52cb66b4cd30db132239d826f1ef` (technical evidence only; non-integratable under B20)
