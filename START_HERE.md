@@ -150,6 +150,7 @@ Do not rebuild orchestration helpers ad hoc when the canonical reliability pack 
 - detached exact-head Claude review: `scripts/execution_reliability/launch_reviewer.ps1` is an unavailable legacy route while Claude is cancelled; preserve it and its historical evidence, and do not pretend it launches Gemini or Codex;
 - long-job status/recovery: `docs/LONG_JOB_RUNNER.md` + `scripts/long_jobs/`;
 - report authoring: `docs/research/EA_REPORT_AUTHORING_FASTPATH.md`;
+- owner-authorized Facebook research session reuse: `docs/workflows/FACEBOOK_RESEARCH_SESSION_V1_20260922.md` + `scripts/facebook_research/open_facebook_research.ps1`; reuse the dedicated profile before requesting another login;
 - acceptance-grade independent milestone review (not author self-approval): `docs/research/EA_MILESTONE_SCRUTINY_CHECKLIST.md`.
 
 Prefer file-backed PowerShell scripts over long inline `powershell -Command` expressions when variables, pipelines or `$LASTEXITCODE` matter; shell-wrapper interpolation is a harness risk, not research evidence.
