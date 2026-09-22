@@ -1,0 +1,1985 @@
+{
+    "schema":  "facebook_member_hub_backtest_qualification/1",
+    "authority":  "RESEARCH_ONLY_DOCUMENTARY_QUALIFICATION",
+    "canonical_base_sha":  "db6cdccb1f4b5e1b90d5f10ef5741dbfebcec9bb",
+    "source_bundle":  "facebook-member-hub-intake-ro-20260922",
+    "source_closeout_checked_utc":  "2026-09-22T01:03:24.9975086Z",
+    "source_artifacts":  [
+                             {
+                                 "name":  "FINAL_INTAKE_INVENTORY.json",
+                                 "bytes":  34604,
+                                 "sha256":  "923c4c7a4e882260c6ecf3689ccbd97e24bf58b0052710b7bcf7be8d1d666eb6"
+                             },
+                             {
+                                 "name":  "SELECTED_DOWNLOAD_MANIFEST.json",
+                                 "bytes":  45741,
+                                 "sha256":  "1fe7844c0f74675456b9fc0fef248690e62e772f2e261712a40346c7f5a6008d"
+                             },
+                             {
+                                 "name":  "BACKTEST_CONTRACT_QUEUE.json",
+                                 "bytes":  3875,
+                                 "sha256":  "b12a126f72d2b7c1ef41cffe31210f24d2bc03575423227d2d1609e8ed123e6e"
+                             },
+                             {
+                                 "name":  "FACEBOOK_HUB_CLOSEOUT.md",
+                                 "bytes":  4743,
+                                 "sha256":  "4e7ad0329a7b8a240888b84490082bd549c0a7cb66d9cf74d6954335d65160e6"
+                             },
+                             {
+                                 "name":  "FINAL_LANE_RECEIPT.json",
+                                 "bytes":  988,
+                                 "sha256":  "199943916df2e942f68a0a26f591289782ebc4b063358a28d69392d7d763c6f8"
+                             },
+                             {
+                                 "name":  "COVERAGE_CROSSCHECK.json",
+                                 "bytes":  34209,
+                                 "sha256":  "1b2b9c9260ff729cce773e8a619c5b48209b4a420384f2c4d188ba68c337e04b"
+                             },
+                             {
+                                 "name":  "TARGETED_CONTEXT_RESULT.json",
+                                 "bytes":  3892,
+                                 "sha256":  "cb9291d99bc44aced9c18294903884ba2f24ece6a5c85d543e01422904ed43ed"
+                             },
+                             {
+                                 "name":  "SEARCH_POSTS_ENRICHED.json",
+                                 "bytes":  122910,
+                                 "sha256":  "b6cd2c6fbaaf90823a2d9e217b532164abb2cd1643e461686c493c63082dae19"
+                             },
+                             {
+                                 "name":  "STATIC_BINARY_SCAN.json",
+                                 "bytes":  31558,
+                                 "sha256":  "f6f4a4340582e42035178bf40be171d427fb8d747cbfa61ed0f2f3075d018b07"
+                             },
+                             {
+                                 "name":  "FAMILY_SELECTION_DRAFT.json",
+                                 "bytes":  79102,
+                                 "sha256":  "73c7778da920d660dfbe726a5530ebc8bb0b5e8891b2d35c7015ec9835f3f5cf"
+                             }
+                         ],
+    "coverage":  {
+                     "file_rows":  124,
+                     "selected_latest_families":  48,
+                     "downloaded_with_sha256":  48,
+                     "ex5":  39,
+                     "set":  6,
+                     "xlsx":  2,
+                     "pdf":  1,
+                     "bounded_post_corpus":  83,
+                     "exact_selected_version_context":  19,
+                     "source_context_unknown":  29,
+                     "idea_only_posts":  28,
+                     "external_links":  5,
+                     "same_method_name_context_search":  "SATURATED",
+                     "full_group_historical_completeness":  "UNKNOWN"
+                 },
+    "classification_counts":  {
+                                  "total":  48,
+                                  "ea":  10,
+                                  "indicator":  4,
+                                  "utility_or_scanner":  5,
+                                  "set_config":  6,
+                                  "research_artifact":  3,
+                                  "unknown":  20,
+                                  "ready_for_settings_freeze":  1,
+                                  "ready_for_test":  0,
+                                  "confirmed_ea_pretest_blocked":  9,
+                                  "unknown_context_required":  20,
+                                  "not_an_ea":  18
+                              },
+    "ambiguous_family_relationships":  [
+                                           {
+                                               "a":  "PairsTradeEA",
+                                               "b":  "PairsTradeEA_MultiAuto",
+                                               "status":  "POSSIBLE_RELATION_NOT_AUTO_DEDUPED"
+                                           },
+                                           {
+                                               "a":  "TradeAssistant_v2.5Fix",
+                                               "b":  "ZAB_TradeAssistant_v2.5",
+                                               "status":  "POSSIBLE_RELATION_NOT_AUTO_DEDUPED"
+                                           },
+                                           {
+                                               "a":  "ZoneRecovery3",
+                                               "b":  "ZoneRecoverV2.5",
+                                               "status":  "POSSIBLE_RELATION_NOT_AUTO_DEDUPED"
+                                           },
+                                           {
+                                               "a":  "lootv3",
+                                               "b":  "loter4",
+                                               "status":  "POSSIBLE_RELATION_NOT_AUTO_DEDUPED"
+                                           }
+                                       ],
+    "family_records":  [
+                           {
+                               "family":  "RealtimeTrend",
+                               "selected_filename":  "RealtimeTrend.ex5",
+                               "selected_sha256":  "56620cd26c5d092af7bc50295f9006eb205a02f78a33af6d9e724cf8fa0b2d8d",
+                               "selected_bytes":  33490,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1069140209219003/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "UTILITY_OR_SCANNER",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  2,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "RealtimeTrend.ex5",
+                                                           "date":  "15 กันยายน 2026 19:10",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1069140209219003/",
+                                                           "inventory_index":  1
+                                                       },
+                                                       {
+                                                           "filename":  "RealtimeTrend.ex5",
+                                                           "date":  "2 กันยายน 2026 10:25",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1057716170361407/",
+                                                           "inventory_index":  4
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "DynamicGrid",
+                               "selected_filename":  "DynamicGrid12.ex5",
+                               "selected_sha256":  "442ad0b021d8f021bcabe60a880734f2eb8e10a8b9779d51574d5437e6d87f4e",
+                               "selected_bytes":  600234,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1060666050066419/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "EA",
+                               "qualification_state":  "SEMANTICS_REQUIRED",
+                               "qualification_basis":  "v12 exact post plus family post describes Grid + Martingale bot",
+                               "blockers":  [
+                                                "Home symbol/TF",
+                                                "entry/exit/grid distance",
+                                                "martingale/sizing/kill semantics",
+                                                "exact default contract"
+                                            ],
+                               "version_count":  56,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "DynamicGrid12.ex5",
+                                                           "date":  "5 กันยายน 2026 20:01",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1060666050066419/",
+                                                           "inventory_index":  2
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGrid11.ex5",
+                                                           "date":  "2 กันยายน 2026 15:44",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1057915007008190/",
+                                                           "inventory_index":  3
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGrid10.ex5",
+                                                           "date":  "7 กรกฎาคม 2026 10:13",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1008615785271446/",
+                                                           "inventory_index":  11
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.9fix.ex5",
+                                                           "date":  "28 พฤษภาคม 2026 14:15",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/974420225357669/",
+                                                           "inventory_index":  12
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.9.ex5",
+                                                           "date":  "26 พฤษภาคม 2026 18:01",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/972839638849061/",
+                                                           "inventory_index":  13
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.8.ex5",
+                                                           "date":  "19 พฤษภาคม 2026 11:21",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/966820249451000/",
+                                                           "inventory_index":  16
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.7.ex5",
+                                                           "date":  "17 พฤษภาคม 2026 23:43",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/965604479572577/",
+                                                           "inventory_index":  17
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.6.ex5",
+                                                           "date":  "11 พฤษภาคม 2026 18:44",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/960398656759826/",
+                                                           "inventory_index":  22
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.5.ex5",
+                                                           "date":  "30 เมษายน 2026 12:45",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/951104274355931/",
+                                                           "inventory_index":  24
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.4.ex5",
+                                                           "date":  "26 เมษายน 2026 10:28",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/947626928036999/",
+                                                           "inventory_index":  27
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.3.ex5",
+                                                           "date":  "21 เมษายน 2026 17:17",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/943707481762277/",
+                                                           "inventory_index":  28
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.2.ex5",
+                                                           "date":  "1 มีนาคม 2026 15:10",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/902812072518485/",
+                                                           "inventory_index":  51
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.1.ex5",
+                                                           "date":  "24 กุมภาพันธ์ 2026 09:59",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/898393179627041/",
+                                                           "inventory_index":  53
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT9.0Fix.ex5",
+                                                           "date":  "22 กุมภาพันธ์ 2026 10:24",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/896775119788847/",
+                                                           "inventory_index":  54
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.9.ex5",
+                                                           "date":  "19 กุมภาพันธ์ 2026 20:11",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/894572250009134/",
+                                                           "inventory_index":  57
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.8.ex5",
+                                                           "date":  "18 กุมภาพันธ์ 2026 19:07",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/893689530097406/",
+                                                           "inventory_index":  59
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.7fix.ex5",
+                                                           "date":  "17 กุมภาพันธ์ 2026 19:50",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/892851516847874/",
+                                                           "inventory_index":  60
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.7.ex5",
+                                                           "date":  "17 กุมภาพันธ์ 2026 13:57",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/892642630202096/",
+                                                           "inventory_index":  61
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.6.ex5",
+                                                           "date":  "15 กุมภาพันธ์ 2026 05:46",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/890590087074017/",
+                                                           "inventory_index":  63
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.5.ex5",
+                                                           "date":  "13 กุมภาพันธ์ 2026 13:03",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/889060093893683/",
+                                                           "inventory_index":  64
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.3.ex5",
+                                                           "date":  "12 กุมภาพันธ์ 2026 23:25",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/888602327272793/",
+                                                           "inventory_index":  65
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.2fix.ex5",
+                                                           "date":  "11 กุมภาพันธ์ 2026 19:08",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/887599080706451/",
+                                                           "inventory_index":  66
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.1.ex5",
+                                                           "date":  "10 กุมภาพันธ์ 2026 15:18",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/886621787470847/",
+                                                           "inventory_index":  67
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT8.0.ex5",
+                                                           "date":  "10 กุมภาพันธ์ 2026 09:43",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/886422087490817/",
+                                                           "inventory_index":  68
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.9.ex5",
+                                                           "date":  "9 กุมภาพันธ์ 2026 07:04",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/885478757585150/",
+                                                           "inventory_index":  69
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.8Fix.ex5",
+                                                           "date":  "9 กุมภาพันธ์ 2026 06:43",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/885467527586273/",
+                                                           "inventory_index":  70
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.7.ex5",
+                                                           "date":  "6 กุมภาพันธ์ 2026 19:41",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/883284881137871/",
+                                                           "inventory_index":  73
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.6.ex5",
+                                                           "date":  "6 กุมภาพันธ์ 2026 15:58",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/883141121152247/",
+                                                           "inventory_index":  74
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.5.ex5",
+                                                           "date":  "5 กุมภาพันธ์ 2026 17:23",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/882279211238438/",
+                                                           "inventory_index":  75
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.4Promax.ex5",
+                                                           "date":  "5 กุมภาพันธ์ 2026 13:47",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/882146224585070/",
+                                                           "inventory_index":  76
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.4.ex5",
+                                                           "date":  "5 กุมภาพันธ์ 2026 12:32",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/882092154590477/",
+                                                           "inventory_index":  77
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.3.ex5",
+                                                           "date":  "4 กุมภาพันธ์ 2026 13:20",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/881241301342229/",
+                                                           "inventory_index":  78
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.2.ex5",
+                                                           "date":  "4 กุมภาพันธ์ 2026 11:25",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/881175818015444/",
+                                                           "inventory_index":  79
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.1.ex5",
+                                                           "date":  "3 กุมภาพันธ์ 2026 22:51",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/880732444726448/",
+                                                           "inventory_index":  80
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT7.ex5",
+                                                           "date":  "3 กุมภาพันธ์ 2026 16:41",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/880490864750606/",
+                                                           "inventory_index":  81
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT6.9.ex5",
+                                                           "date":  "3 กุมภาพันธ์ 2026 08:10",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/880187908114235/",
+                                                           "inventory_index":  82
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT6.3.ex5",
+                                                           "date":  "3 กุมภาพันธ์ 2026 00:07",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/879964174803275/",
+                                                           "inventory_index":  83
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT6.2.ex5",
+                                                           "date":  "2 กุมภาพันธ์ 2026 19:28",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/879790571487302/",
+                                                           "inventory_index":  84
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT6.1.ex5",
+                                                           "date":  "2 กุมภาพันธ์ 2026 09:14",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/879493984850294/",
+                                                           "inventory_index":  85
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT6fix.ex5",
+                                                           "date":  "30 มกราคม 2026 23:32",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/877673481699011/",
+                                                           "inventory_index":  88
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT6.ex5",
+                                                           "date":  "30 มกราคม 2026 21:48",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/877601405039552/",
+                                                           "inventory_index":  89
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT54.ex5",
+                                                           "date":  "30 มกราคม 2026 13:14",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/877288155070877/",
+                                                           "inventory_index":  90
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT53fix.ex5",
+                                                           "date":  "29 มกราคม 2026 14:32",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/876480035151689/",
+                                                           "inventory_index":  91
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridMT52.ex5",
+                                                           "date":  "27 มกราคม 2026 22:15",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/875088941957465/",
+                                                           "inventory_index":  92
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold5.1.ex5",
+                                                           "date":  "22 มกราคม 2026 15:48",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/870660975733595/",
+                                                           "inventory_index":  94
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold5.ex5",
+                                                           "date":  "18 มกราคม 2026 15:02",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/867454526054240/",
+                                                           "inventory_index":  95
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold45.ex5",
+                                                           "date":  "18 มกราคม 2026 09:35",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/867298046069888/",
+                                                           "inventory_index":  96
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold44.ex5",
+                                                           "date":  "18 มกราคม 2026 00:02",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/867038106095882/",
+                                                           "inventory_index":  97
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold4.ex5",
+                                                           "date":  "13 มกราคม 2026 18:02",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/863740643092295/",
+                                                           "inventory_index":  98
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold33.ex5",
+                                                           "date":  "12 มกราคม 2026 09:49",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/862800613186298/",
+                                                           "inventory_index":  99
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold32.ex5",
+                                                           "date":  "11 มกราคม 2026 21:47",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/862470183219341/",
+                                                           "inventory_index":  100
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold31.ex5",
+                                                           "date":  "8 มกราคม 2026 21:57",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/860244380108588/",
+                                                           "inventory_index":  102
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold3.ex5",
+                                                           "date":  "8 มกราคม 2026 11:13",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/859896456810047/",
+                                                           "inventory_index":  103
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold26.ex5",
+                                                           "date":  "7 มกราคม 2026 14:23",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/859237640209262/",
+                                                           "inventory_index":  104
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold25.ex5",
+                                                           "date":  "7 มกราคม 2026 13:00",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/859198826879810/",
+                                                           "inventory_index":  105
+                                                       },
+                                                       {
+                                                           "filename":  "DynamicGridGold2.ex5",
+                                                           "date":  "7 มกราคม 2026 11:16",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/859149230218103/",
+                                                           "inventory_index":  106
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "IndicatorLicenseChecker",
+                               "selected_filename":  "IndicatorLicenseChecker.ex5",
+                               "selected_sha256":  "3891a403218ab2cc89ad958574f4510a206c2fe590bd3666f57c274d7ca5c98b",
+                               "selected_bytes":  49560,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1057711910361833/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "UTILITY_OR_SCANNER",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "IndicatorLicenseChecker.ex5",
+                                                           "date":  "2 กันยายน 2026 10:17",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1057711910361833/",
+                                                           "inventory_index":  5
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "PairsTradeEA_MultiAuto",
+                               "selected_filename":  "PairsTradeEA_MultiAuto.ex5",
+                               "selected_sha256":  "b88199c956fc6e5279ec6cb456e8d304b2c54fed827b8ffc3144d354f3efc66d",
+                               "selected_bytes":  103044,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1049637147835976/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "EA",
+                               "qualification_state":  "SEMANTICS_REQUIRED",
+                               "qualification_basis":  "exact post says automatic selection of advantageous pair",
+                               "blockers":  [
+                                                "pair universe",
+                                                "selection timing",
+                                                "anchor chart/multi-symbol mechanics",
+                                                "settings"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "PairsTradeEA_MultiAuto.ex5",
+                                                           "date":  "25 สิงหาคม 2026 10:49",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1049637147835976/",
+                                                           "inventory_index":  6
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "PairsTradeEA",
+                               "selected_filename":  "PairsTradeEA.ex5",
+                               "selected_sha256":  "c44ce6a4645cb98e1c51571755f0ed85bad180a7cde9749a2662b99243ebd8f7",
+                               "selected_bytes":  88332,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1048139381319086/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "PairsTradeEA.ex5",
+                                                           "date":  "23 สิงหาคม 2026 17:09",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1048139381319086/",
+                                                           "inventory_index":  7
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "EngulfingRSI",
+                               "selected_filename":  "EngulfingRSI.ex5",
+                               "selected_sha256":  "4ee5864e7ead621d46f6dec99be61788dcdb01d1c051b0967e94febf6a7597c0",
+                               "selected_bytes":  33836,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1041984218601269/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "INDICATOR",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "EngulfingRSI.ex5",
+                                                           "date":  "16 สิงหาคม 2026 11:54",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1041984218601269/",
+                                                           "inventory_index":  8
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "VolumesMTF",
+                               "selected_filename":  "VolumesMTF.ex5",
+                               "selected_sha256":  "83a409883d4edb48b0596162faced133ffc6598bb4beaf9788a711c45f269488",
+                               "selected_bytes":  32720,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1026409186825439/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "INDICATOR",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "VolumesMTF.ex5",
+                                                           "date":  "29 กรกฎาคม 2026 10:54",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1026409186825439/",
+                                                           "inventory_index":  9
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "StablePassiveMT5",
+                               "selected_filename":  "StablePassiveMT5.ex5",
+                               "selected_sha256":  "30be9686c3fada91acb52d07190ddb3b1f49ecc693b9ec6f19d28876f8f97217",
+                               "selected_bytes":  129744,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1011176131682078/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "StablePassiveMT5.ex5",
+                                                           "date":  "10 กรกฎาคม 2026 12:23",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/1011176131682078/",
+                                                           "inventory_index":  10
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ConfirmedFib",
+                               "selected_filename":  "ConfirmedFib.ex5",
+                               "selected_sha256":  "adc3d75f065aa4916e98a83cc1d129a92c2345d894b52f3102590aec12838d7e",
+                               "selected_bytes":  57284,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/972165725583119/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ConfirmedFib.ex5",
+                                                           "date":  "25 พฤษภาคม 2026 21:07",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/972165725583119/",
+                                                           "inventory_index":  14
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "SpreadTradeOil",
+                               "selected_filename":  "SpreadTradeOil.ex5",
+                               "selected_sha256":  "a2562dbaee22d0a8b31140c3f3d2250eddf2ad3e6b748aa450c7974419d9f8f0",
+                               "selected_bytes":  102980,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/967859352680423/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "SpreadTradeOil.ex5",
+                                                           "date":  "20 พฤษภาคม 2026 16:39",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/967859352680423/",
+                                                           "inventory_index":  15
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "CandlestickPatterns",
+                               "selected_filename":  "CandlestickPatterns.ex5",
+                               "selected_sha256":  "fc835bca262343432fba50f1a87be1a823a564a758d19e4b5096a594a065a2a3",
+                               "selected_bytes":  37390,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/964223893043969/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "CandlestickPatterns.ex5",
+                                                           "date":  "16 พฤษภาคม 2026 09:01",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/964223893043969/",
+                                                           "inventory_index":  18
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ATR_VolatilityRegime",
+                               "selected_filename":  "ATR_VolatilityRegime.ex5",
+                               "selected_sha256":  "79306fc86126ef6ac5306efb78e5ff79690aef16f0604e8a7a28060eb22caccc",
+                               "selected_bytes":  65722,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/964202989712726/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ATR_VolatilityRegime.ex5",
+                                                           "date":  "16 พฤษภาคม 2026 08:22",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/964202989712726/",
+                                                           "inventory_index":  19
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZABGoldScaling",
+                               "selected_filename":  "ZABGoldScaling.ex5",
+                               "selected_sha256":  "ec17aa25ac41c62e79057907baa224811cc88bbd45453ff5993f62f41dd886da",
+                               "selected_bytes":  95534,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/962959616503730/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZABGoldScaling.ex5",
+                                                           "date":  "14 พฤษภาคม 2026 20:28",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/962959616503730/",
+                                                           "inventory_index":  20
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "SMC_LuxAlgo",
+                               "selected_filename":  "SMC_LuxAlgo.ex5",
+                               "selected_sha256":  "1b20649b7d31031c42cc227036d8df4323d7c5dc63746df666746de8819e7574",
+                               "selected_bytes":  70518,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/960916876708004/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "SMC_LuxAlgo.ex5",
+                                                           "date":  "12 พฤษภาคม 2026 09:56",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/960916876708004/",
+                                                           "inventory_index":  21
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZABDailyVolumeProfile",
+                               "selected_filename":  "ZABDailyVolumeProfile.ex5",
+                               "selected_sha256":  "5c9443a20c89a468a154047a4f05f0528208be153f2554d7e271af865be075f1",
+                               "selected_bytes":  21098,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/954381504028208/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZABDailyVolumeProfile.ex5",
+                                                           "date":  "4 พฤษภาคม 2026 11:27",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/954381504028208/",
+                                                           "inventory_index":  23
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "RiskPerTradeสอบกองทุน",
+                               "selected_filename":  "RiskPerTradeสอบกองทุน.ex5",
+                               "selected_sha256":  "cc7d899b267eebb63a28cba8986257f2599fe3f5ef60a96a414f8e96dbbd6f38",
+                               "selected_bytes":  92434,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/950517834414575/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "EA",
+                               "qualification_state":  "SEMANTICS_REQUIRED",
+                               "qualification_basis":  "exact post says one-position EA with configurable risk for prop-style use",
+                               "blockers":  [
+                                                "symbol/TF",
+                                                "entry/exit",
+                                                "risk value",
+                                                "session/cost assumptions"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "RiskPerTradeสอบกองทุน.ex5",
+                                                           "date":  "29 เมษายน 2026 20:20",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/950517834414575/",
+                                                           "inventory_index":  25
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "EmaGridRecovery",
+                               "selected_filename":  "EmaGridRecovery3fix.ex5",
+                               "selected_sha256":  "afdaa5460a51cca7c3a6e311377564cf5be026caa4c84a9eee77afe132569453",
+                               "selected_bytes":  129320,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/949362704530088/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  3,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "EmaGridRecovery3fix.ex5",
+                                                           "date":  "28 เมษายน 2026 11:16",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/949362704530088/",
+                                                           "inventory_index":  26
+                                                       },
+                                                       {
+                                                           "filename":  "EmaGridRecovery.ex5",
+                                                           "date":  "20 เมษายน 2026 10:45",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/942699975196361/",
+                                                           "inventory_index":  30
+                                                       },
+                                                       {
+                                                           "filename":  "EmaGridRecovery.ex5",
+                                                           "date":  "14 เมษายน 2026 13:07",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/937965639003128/",
+                                                           "inventory_index":  34
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "FVGFinderPro",
+                               "selected_filename":  "FVGFinderPro.ex5",
+                               "selected_sha256":  "3e84716b4d531f93195c7f44efc535f3853be98b4387da1f313f5cb4593113ab",
+                               "selected_bytes":  54386,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/943072788492413/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "FVGFinderPro.ex5",
+                                                           "date":  "20 เมษายน 2026 21:38",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/943072788492413/",
+                                                           "inventory_index":  29
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "CloseSystem",
+                               "selected_filename":  "closesystem146fix.ex5",
+                               "selected_sha256":  "dd9c2ba7659a484ee5c5b3024094d723b0eea38496f54763842dd4de84bcd23a",
+                               "selected_bytes":  440112,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/942379815228377/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "EA",
+                               "qualification_state":  "VERSION_COMPATIBILITY_REQUIRED",
+                               "qualification_basis":  "family post describes user-defined zone/count/distance/TP without Martingale; older V10 Gold HFT and Oil set posts exist",
+                               "blockers":  [
+                                                "prove old V10/set compatibility with selected 146fix",
+                                                "exact selected-version context",
+                                                "Home/settings contract"
+                                            ],
+                               "version_count":  9,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "closesystem146fix.ex5",
+                                                           "date":  "20 เมษายน 2026 00:06",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/942379815228377/",
+                                                           "inventory_index":  31
+                                                       },
+                                                       {
+                                                           "filename":  "closesystem146.ex5",
+                                                           "date":  "19 เมษายน 2026 20:32",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/942243871908638/",
+                                                           "inventory_index":  32
+                                                       },
+                                                       {
+                                                           "filename":  "closesystem145.ex5",
+                                                           "date":  "19 เมษายน 2026 11:19",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/941936905272668/",
+                                                           "inventory_index":  33
+                                                       },
+                                                       {
+                                                           "filename":  "closesystem13.ex5",
+                                                           "date":  "13 เมษายน 2026 10:05",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/937133412419684/",
+                                                           "inventory_index":  35
+                                                       },
+                                                       {
+                                                           "filename":  "closesystemv12.ex5",
+                                                           "date":  "8 มีนาคม 2026 18:00",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/908194191980273/",
+                                                           "inventory_index":  46
+                                                       },
+                                                       {
+                                                           "filename":  "closesystemv11.ex5",
+                                                           "date":  "15 กุมภาพันธ์ 2026 08:11",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/890666130399746/",
+                                                           "inventory_index":  62
+                                                       },
+                                                       {
+                                                           "filename":  "closesystemv10.ex5",
+                                                           "date":  "29 กรกฎาคม 2025 10:06",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/729345889865105/",
+                                                           "inventory_index":  119
+                                                       },
+                                                       {
+                                                           "filename":  "closesystem9.ex5",
+                                                           "date":  "26 กรกฎาคม 2025 13:19",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/727103736755987/",
+                                                           "inventory_index":  121
+                                                       },
+                                                       {
+                                                           "filename":  "closesystemoptimize.ex5",
+                                                           "date":  "19 กรกฎาคม 2025 09:16",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/721564840643210/",
+                                                           "inventory_index":  123
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "SwingHL",
+                               "selected_filename":  "SwingHL.ex5",
+                               "selected_sha256":  "da7f363cef625ad0e11f33ad4e76b978eecb08081dbb130881fca2cf3170e166",
+                               "selected_bytes":  25245,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/933353196131039/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  2,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "SwingHL.ex5",
+                                                           "date":  "8 เมษายน 2026 11:14",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/933353196131039/",
+                                                           "inventory_index":  36
+                                                       },
+                                                       {
+                                                           "filename":  "SwingHL.ex5",
+                                                           "date":  "1 เมษายน 2026 22:35",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/928189679980724/",
+                                                           "inventory_index":  37
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZABSupplyDemand",
+                               "selected_filename":  "ZABSupplyDemand.ex5",
+                               "selected_sha256":  "416ed6c1690da04045b0c12aecbf7d04a9659efdbd9c1683c3c5ebaa7c7eb7be",
+                               "selected_bytes":  50110,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/926952566771102/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "INDICATOR",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  2,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZABSupplyDemand.ex5",
+                                                           "date":  "31 มีนาคม 2026 09:52",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/926952566771102/",
+                                                           "inventory_index":  38
+                                                       },
+                                                       {
+                                                           "filename":  "ZABSupplyDemand.ex5",
+                                                           "date":  "26 มีนาคม 2026 12:34",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/922869610512731/",
+                                                           "inventory_index":  42
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZoneRecovery3",
+                               "selected_filename":  "ZoneRecovery3.ex5",
+                               "selected_sha256":  "2cb13c8b6e88c80ef0c30f3e3ea98e946bf070f6354077e686e12e8a48bc6e42",
+                               "selected_bytes":  92104,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/926942440105448/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "EA",
+                               "qualification_state":  "SEMANTICS_REQUIRED",
+                               "qualification_basis":  "exact post identifies Zone Recovery bot",
+                               "blockers":  [
+                                                "entry trigger",
+                                                "zone geometry",
+                                                "recovery sequence",
+                                                "sizing/termination",
+                                                "Home"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZoneRecovery3.ex5",
+                                                           "date":  "31 มีนาคม 2026 09:33",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/926942440105448/",
+                                                           "inventory_index":  39
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "HybridHedgingGold",
+                               "selected_filename":  "HybridHedgingGold3.2.ex5",
+                               "selected_sha256":  "75a8cdc57fd8876c82b6c367490808b8daa9e191ae3e9c7f610379f7aea5bd02",
+                               "selected_bytes":  140634,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/926226086843750/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "EA",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "family post describes hybrid Grid + Hedge + Close System",
+                               "blockers":  [
+                                                "exact selected-version provenance",
+                                                "Home/TF",
+                                                "hedge/grid/sizing/exit semantics"
+                                            ],
+                               "version_count":  5,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "HybridHedgingGold3.2.ex5",
+                                                           "date":  "30 มีนาคม 2026 10:51",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/926226086843750/",
+                                                           "inventory_index":  40
+                                                       },
+                                                       {
+                                                           "filename":  "HybridHedgingGold3.ex5",
+                                                           "date":  "28 มีนาคม 2026 12:32",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/924603880339304/",
+                                                           "inventory_index":  41
+                                                       },
+                                                       {
+                                                           "filename":  "HybridHedgingGoldV21.ex5",
+                                                           "date":  "4 มีนาคม 2026 07:17",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/904915978974761/",
+                                                           "inventory_index":  47
+                                                       },
+                                                       {
+                                                           "filename":  "HybridHedgingGoldV2.ex5",
+                                                           "date":  "3 มีนาคม 2026 19:24",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/904554045677621/",
+                                                           "inventory_index":  48
+                                                       },
+                                                       {
+                                                           "filename":  "HybridHedgingGold.ex5",
+                                                           "date":  "3 มีนาคม 2026 13:04",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/904360742363618/",
+                                                           "inventory_index":  49
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "SmartTrendPro",
+                               "selected_filename":  "SmartTrend Pro.ex5",
+                               "selected_sha256":  "11745ea7997e8da7776efcaa281cf7127422999ccadeed90e6d5d79fb1565894",
+                               "selected_bytes":  40592,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/917500341049658/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  2,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "SmartTrend Pro.ex5",
+                                                           "date":  "20 มีนาคม 2026 13:09",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/917500341049658/",
+                                                           "inventory_index":  43
+                                                       },
+                                                       {
+                                                           "filename":  "SmartTrend Pro.ex5",
+                                                           "date":  "17 มีนาคม 2026 08:45",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/914970001302692/",
+                                                           "inventory_index":  45
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "GoldRushBreakout",
+                               "selected_filename":  "GoldRushBreakout3.2.ex5",
+                               "selected_sha256":  "11bfd1b30dfde88702739b501a7b237ab8663ff0a6ce81b65418ff356ab17de0",
+                               "selected_bytes":  98172,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/916572197809139/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "EA",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "family post describes precision single-trade bot; separate group post references Gold Rush 3.2 settings video",
+                               "blockers":  [
+                                                "exact selected-version post/settings extraction",
+                                                "risk freeze",
+                                                "Home/timeframe"
+                                            ],
+                               "version_count":  2,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "GoldRushBreakout3.2.ex5",
+                                                           "date":  "19 มีนาคม 2026 10:42",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/916572197809139/",
+                                                           "inventory_index":  44
+                                                       },
+                                                       {
+                                                           "filename":  "GoldRushBreakout.ex5",
+                                                           "date":  "1 มีนาคม 2026 15:14",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/902813492518343/",
+                                                           "inventory_index":  50
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "DashboardScanner",
+                               "selected_filename":  "DashboardScanner.ex5",
+                               "selected_sha256":  "4be835e46cce5a1f439682268fcd76e954fe7a2264cce6ad6afd5b4acd24a754",
+                               "selected_bytes":  106722,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/898685836264442/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "DashboardScanner.ex5",
+                                                           "date":  "24 กุมภาพันธ์ 2026 18:29",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/898685836264442/",
+                                                           "inventory_index":  52
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "89like61RacingCloseMA",
+                               "selected_filename":  "89like61RacingCloseMA.set",
+                               "selected_sha256":  "39c9ef9737390b9b5e90f6e33dae043affc6030400c3742e4b51016c04a7d538",
+                               "selected_bytes":  26862,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/895076119958747/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "SET_CONFIG",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "89like61RacingCloseMA.set",
+                                                           "date":  "20 กุมภาพันธ์ 2026 10:05",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/895076119958747/",
+                                                           "inventory_index":  55
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "89like61Racing",
+                               "selected_filename":  "89like61Racing.set",
+                               "selected_sha256":  "6f417f97c60884ad085cc053a9df49cd1075f591a7e0a86dc94112973d1af6af",
+                               "selected_bytes":  26842,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/895075923292100/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "SET_CONFIG",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "89like61Racing.set",
+                                                           "date":  "20 กุมภาพันธ์ 2026 10:05",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/895075923292100/",
+                                                           "inventory_index":  56
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "StochScanner",
+                               "selected_filename":  "StochScanner.ex5",
+                               "selected_sha256":  "e29f01bcae004cb8c88ca67ca8d8d9fb4ce5741b0ebdbe1e46ab5348bd1fe92f",
+                               "selected_bytes":  131156,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/894138870052472/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "UTILITY_OR_SCANNER",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "StochScanner.ex5",
+                                                           "date":  "19 กุมภาพันธ์ 2026 07:44",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/894138870052472/",
+                                                           "inventory_index":  58
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "all_lot_modes_comparison",
+                               "selected_filename":  "all_lot_modes_comparison.xlsx",
+                               "selected_sha256":  "505f9b87d0f0b6ecfd49be4203558819608bcc236cc7e99e2853713cdaa17ad7",
+                               "selected_bytes":  14861,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/885084160957943/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "RESEARCH_ARTIFACT",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "all_lot_modes_comparison.xlsx",
+                                                           "date":  "8 กุมภาพันธ์ 2026 20:50",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/885084160957943/",
+                                                           "inventory_index":  71
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "โปรแกรมคำนวน lot_mode_comparison",
+                               "selected_filename":  "โปรแกรมคำนวน lot_mode_comparison.xlsx",
+                               "selected_sha256":  "f503bb84894b97b9bcf1b6caab59589f60b5a16ce5b6fd3ce6fda95442791f1f",
+                               "selected_bytes":  11350,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/885073574292335/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "RESEARCH_ARTIFACT",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "โปรแกรมคำนวน lot_mode_comparison.xlsx",
+                                                           "date":  "8 กุมภาพันธ์ 2026 20:35",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/885073574292335/",
+                                                           "inventory_index":  72
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "SetFileDynamicGridV6bangzeed",
+                               "selected_filename":  "SetFileDynamicGridV6bangzeed.set",
+                               "selected_sha256":  "62c3f9ea5f6e4635cb923b7152ae69af2b4e702a937bfcee0b52aca43261634d",
+                               "selected_bytes":  12194,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/879039868229039/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "SET_CONFIG",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "SetFileDynamicGridV6bangzeed.set",
+                                                           "date":  "1 กุมภาพันธ์ 2026 18:16",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/879039868229039/",
+                                                           "inventory_index":  86
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "TradeAssistant_v2.5Fix",
+                               "selected_filename":  "TradeAssistant_v2.5Fix.ex5",
+                               "selected_sha256":  "f3d9fb820c77599285e4def70c3380546a71947340f3ec91e74539995f27fe7b",
+                               "selected_bytes":  145124,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/877674365032256/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "UTILITY_OR_SCANNER",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "TradeAssistant_v2.5Fix.ex5",
+                                                           "date":  "30 มกราคม 2026 23:34",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/877674365032256/",
+                                                           "inventory_index":  87
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZAB_TradeAssistant_v2.5",
+                               "selected_filename":  "ZAB_TradeAssistant_v2.5.ex5",
+                               "selected_sha256":  "f5cd28c875487f0e4e5e6151144897c3f7a964bfdc22e4b1876b7ef076b38cef",
+                               "selected_bytes":  193402,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/874929581973401/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "UTILITY_OR_SCANNER",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZAB_TradeAssistant_v2.5.ex5",
+                                                           "date":  "27 มกราคม 2026 18:26",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/874929581973401/",
+                                                           "inventory_index":  93
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "AutoLot_CentVantageCloseByCombine_3.1",
+                               "selected_filename":  "AutoLot_CentVantageCloseByCombine_3.1.set",
+                               "selected_sha256":  "f6b685932443f2be9bb5a3fd2908221f3a35d58d5903dd45a2c3b681f1d0bc26",
+                               "selected_bytes":  4484,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/860600423406317/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "SET_CONFIG",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "AutoLot_CentVantageCloseByCombine_3.1.set",
+                                                           "date":  "9 มกราคม 2026 08:59",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/860600423406317/",
+                                                           "inventory_index":  101
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZABStochGoldRecoveryEA",
+                               "selected_filename":  "ZABStochGoldRecoveryEAV4.ex5",
+                               "selected_sha256":  "9a872f67ffd95968932ffe5d64d9150407cb189c90a55369efc4634aa32edb7c",
+                               "selected_bytes":  84159,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/857565530376473/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "EA",
+                               "qualification_state":  "SEMANTICS_REQUIRED_HIGH_RISK_MM",
+                               "qualification_basis":  "exact V4 post names trend filter and recovery lot and warns doubling after loss",
+                               "blockers":  [
+                                                "Home/TF from source",
+                                                "exact recovery multiplier/cap/reset",
+                                                "risk contract",
+                                                "entry/exit"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZABStochGoldRecoveryEAV4.ex5",
+                                                           "date":  "5 มกราคม 2026 09:07",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/857565530376473/",
+                                                           "inventory_index":  107
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "EAช่วยตั้งSLช่วยเก็บกำไร",
+                               "selected_filename":  "EAช่วยตั้งSLช่วยเก็บกำไร.ex5",
+                               "selected_sha256":  "3991c4a2e02b4e49105983fdbeb1c0404f738c8421ee2df0da7c710b63c7f053",
+                               "selected_bytes":  46659,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/853990784067281/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "EAช่วยตั้งSLช่วยเก็บกำไร.ex5",
+                                                           "date":  "31 ธันวาคม 2025 10:46",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/853990784067281/",
+                                                           "inventory_index":  108
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZABStochGoldEA",
+                               "selected_filename":  "ZABStochGoldEAV31.ex5",
+                               "selected_sha256":  "edceb572fec775563bcc0f67c87150ad936d3fa48a9302dd693b907dd25cbfc7",
+                               "selected_bytes":  71844,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/851800967619596/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  2,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZABStochGoldEAV31.ex5",
+                                                           "date":  "28 ธันวาคม 2025 09:59",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/851800967619596/",
+                                                           "inventory_index":  109
+                                                       },
+                                                       {
+                                                           "filename":  "ZABStochGoldEA.ex5",
+                                                           "date":  "26 ธันวาคม 2025 13:46",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/850487467750946/",
+                                                           "inventory_index":  110
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "hedgegoldmodern",
+                               "selected_filename":  "hedgegoldmodern.ex5",
+                               "selected_sha256":  "723b9f863868bf71253e40e4a7aa1d77eb7ac41665397c195dea7e0f53316929",
+                               "selected_bytes":  45472,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/788127870653573/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "hedgegoldmodern.ex5",
+                                                           "date":  "9 ตุลาคม 2025 22:35",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/788127870653573/",
+                                                           "inventory_index":  111
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZoneRecoverV2.5",
+                               "selected_filename":  "ZoneRecoverV2.5.ex5",
+                               "selected_sha256":  "53e71cdeec8c36d52df13af212d63814034e02789733ed2d202fc3fd56a58a63",
+                               "selected_bytes":  80186,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/786874137445613/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZoneRecoverV2.5.ex5",
+                                                           "date":  "8 ตุลาคม 2025 13:42",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/786874137445613/",
+                                                           "inventory_index":  112
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "setclosesystemoil72-50",
+                               "selected_filename":  "setclosesystemoil72-50.set",
+                               "selected_sha256":  "16a25074a2d2db8a2f4943b78729cc1b3b1e1320abf40f287fdc4b19a45fc34d",
+                               "selected_bytes":  4564,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/748647947934899/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "SET_CONFIG",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "setclosesystemoil72-50.set",
+                                                           "date":  "22 สิงหาคม 2025 11:25",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/748647947934899/",
+                                                           "inventory_index":  113
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "EUStable",
+                               "selected_filename":  "EUStable.ex5",
+                               "selected_sha256":  "ed3c13fa43a45c5b624cd2e1062063df728c39b1859065335efc3190cc3ea7e4",
+                               "selected_bytes":  62096,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/745483371584690/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  2,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "EUStable.ex5",
+                                                           "date":  "18 สิงหาคม 2025 13:19",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/745483371584690/",
+                                                           "inventory_index":  114
+                                                       },
+                                                       {
+                                                           "filename":  "EUStable.ex5",
+                                                           "date":  "3 สิงหาคม 2025 11:11",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/733373949462299/",
+                                                           "inventory_index":  117
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "EMAREsistance",
+                               "selected_filename":  "EMAREsistance.ex5",
+                               "selected_sha256":  "9decceb8a5c6ed6d8aa7c6b2dff6f764077a07cc71bff7162d4c9f3aff4ec6b1",
+                               "selected_bytes":  11858,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/745387381594289/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "INDICATOR",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "EMAREsistance.ex5",
+                                                           "date":  "18 สิงหาคม 2025 10:13",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/745387381594289/",
+                                                           "inventory_index":  115
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "loter4",
+                               "selected_filename":  "loter4.ex5",
+                               "selected_sha256":  "c5737dbb429b2dcd4bd698cabe8fcc713082de8407e2477bdd563f25d425f2c6",
+                               "selected_bytes":  64671,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/743883535078007/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "UNKNOWN",
+                               "qualification_state":  "CONTEXT_REQUIRED",
+                               "qualification_basis":  "opaque EX5 identity exists but source role/behavior evidence is insufficient",
+                               "blockers":  [
+                                                "role/behavior context not qualified",
+                                                "exact Home/TF/settings/entry/exit/MM semantics not qualified"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "loter4.ex5",
+                                                           "date":  "16 สิงหาคม 2025 13:35",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/743883535078007/",
+                                                           "inventory_index":  116
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "goldhft3500-2800",
+                               "selected_filename":  "goldhft3500-2800.set",
+                               "selected_sha256":  "983c028a63214507d289e399b7c4aec11368cba18c113a41427ebaba946f0fa3",
+                               "selected_bytes":  4570,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/729528646513496/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "SET_CONFIG",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "goldhft3500-2800.set",
+                                                           "date":  "29 กรกฎาคม 2025 15:52",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/729528646513496/",
+                                                           "inventory_index":  118
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "lootv3",
+                               "selected_filename":  "lootv3.ex5",
+                               "selected_sha256":  "795578c2e2ae4276e21ac31da4c2523a30cfc0106c9f7688d515c6a86453370f",
+                               "selected_bytes":  39188,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/727240796742281/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "EA",
+                               "qualification_state":  "SEMANTICS_REQUIRED",
+                               "qualification_basis":  "exact post identifies lot-building bot; buy emphasis in rising product; 0.0075 distance example",
+                               "blockers":  [
+                                                "symbol/TF",
+                                                "trend definition",
+                                                "exit/termination",
+                                                "risk cap"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "lootv3.ex5",
+                                                           "date":  "26 กรกฎาคม 2025 17:45",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/727240796742281/",
+                                                           "inventory_index":  120
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ZABgoldpending",
+                               "selected_filename":  "ZABgoldpending.ex5",
+                               "selected_sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                               "selected_bytes":  53368,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/725024260297268/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  true,
+                               "role_classification":  "EA",
+                               "qualification_state":  "READY_FOR_SETTINGS_FREEZE",
+                               "qualification_basis":  "source post says breakout bot for Gold M5; lot or risk-percent configurable; defaults otherwise prepared",
+                               "blockers":  [
+                                                "freeze lot/risk mode without inventing risk",
+                                                "exact tester identity/window/data contract"
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ZABgoldpending.ex5",
+                                                           "date":  "23 กรกฎาคม 2025 20:40",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/725024260297268/",
+                                                           "inventory_index":  122
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           },
+                           {
+                               "family":  "ลงทุนอย่างเข้าใจ",
+                               "selected_filename":  "ลงทุนอย่างเข้าใจ.pdf",
+                               "selected_sha256":  "73f87d77ff4a4db6f61bd8eb3943e6c93aa428ba1702e1cfc3fc1e727d4e2f4a",
+                               "selected_bytes":  10424362,
+                               "selected_permalink":  "https://www.facebook.com/groups/717049681094726/permalink/717795847686776/",
+                               "selected_latest":  true,
+                               "exact_selected_context_available":  false,
+                               "role_classification":  "RESEARCH_ARTIFACT",
+                               "qualification_state":  "NOT_AN_EA",
+                               "qualification_basis":  "source/file role excludes this artifact from EA backtest execution",
+                               "blockers":  [
+
+                                            ],
+                               "version_count":  1,
+                               "selection_basis":  "newest upload row in Files surface",
+                               "version_lineage":  [
+                                                       {
+                                                           "filename":  "ลงทุนอย่างเข้าใจ.pdf",
+                                                           "date":  "14 กรกฎาคม 2025 11:03",
+                                                           "permalink":  "https://www.facebook.com/groups/717049681094726/permalink/717795847686776/",
+                                                           "inventory_index":  124
+                                                       }
+                                                   ],
+                               "tested_performance":  "NONE"
+                           }
+                       ],
+    "set_compatibility":  [
+                              {
+                                  "family":  "89like61RacingCloseMA",
+                                  "filename":  "89like61RacingCloseMA.set",
+                                  "sha256":  "39c9ef9737390b9b5e90f6e33dae043affc6030400c3742e4b51016c04a7d538",
+                                  "compatibility_state":  "UNQUALIFIED_DO_NOT_ATTACH",
+                                  "reason":  "same-family + exact input-surface + version-lineage compatibility not proven"
+                              },
+                              {
+                                  "family":  "89like61Racing",
+                                  "filename":  "89like61Racing.set",
+                                  "sha256":  "6f417f97c60884ad085cc053a9df49cd1075f591a7e0a86dc94112973d1af6af",
+                                  "compatibility_state":  "UNQUALIFIED_DO_NOT_ATTACH",
+                                  "reason":  "same-family + exact input-surface + version-lineage compatibility not proven"
+                              },
+                              {
+                                  "family":  "SetFileDynamicGridV6bangzeed",
+                                  "filename":  "SetFileDynamicGridV6bangzeed.set",
+                                  "sha256":  "62c3f9ea5f6e4635cb923b7152ae69af2b4e702a937bfcee0b52aca43261634d",
+                                  "compatibility_state":  "UNQUALIFIED_DO_NOT_ATTACH",
+                                  "reason":  "same-family + exact input-surface + version-lineage compatibility not proven"
+                              },
+                              {
+                                  "family":  "AutoLot_CentVantageCloseByCombine_3.1",
+                                  "filename":  "AutoLot_CentVantageCloseByCombine_3.1.set",
+                                  "sha256":  "f6b685932443f2be9bb5a3fd2908221f3a35d58d5903dd45a2c3b681f1d0bc26",
+                                  "compatibility_state":  "UNQUALIFIED_DO_NOT_ATTACH",
+                                  "reason":  "same-family + exact input-surface + version-lineage compatibility not proven"
+                              },
+                              {
+                                  "family":  "setclosesystemoil72-50",
+                                  "filename":  "setclosesystemoil72-50.set",
+                                  "sha256":  "16a25074a2d2db8a2f4943b78729cc1b3b1e1320abf40f287fdc4b19a45fc34d",
+                                  "compatibility_state":  "UNQUALIFIED_DO_NOT_ATTACH",
+                                  "reason":  "same-family + exact input-surface + version-lineage compatibility not proven"
+                              },
+                              {
+                                  "family":  "goldhft3500-2800",
+                                  "filename":  "goldhft3500-2800.set",
+                                  "sha256":  "983c028a63214507d289e399b7c4aec11368cba18c113a41427ebaba946f0fa3",
+                                  "compatibility_state":  "UNQUALIFIED_DO_NOT_ATTACH",
+                                  "reason":  "same-family + exact input-surface + version-lineage compatibility not proven"
+                              }
+                          ],
+    "set_policy":  {
+                       "rule":  "DO_NOT_ATTACH_OLD_SET_TO_SELECTED_EX5_WITHOUT_PROOF",
+                       "required_proof":  [
+                                              "same family",
+                                              "same input surface",
+                                              "compatible version lineage",
+                                              "role/settings match"
+                                          ],
+                       "close_system_note":  "Selected closesystem146fix remains VERSION_COMPATIBILITY_REQUIRED; older CloseSystem set/post context does not prove compatibility."
+                   },
+    "first_test_candidate":  {
+                                 "family":  "ZABgoldpending",
+                                 "file":  "ZABgoldpending.ex5",
+                                 "sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                                 "bytes":  53368,
+                                 "source_post_id":  "725024260297268",
+                                 "source_post_content_sha256":  "9b818b646503247d7dda3a653c4d5a2301f95c944ff22d266b029c3acc5f96bb",
+                                 "source_post_text":  "บังซี๊ส ซิมเพิ้ล\u0027แมน\n23 กรกฎาคม 2025\n \n·\nบอทเทรดเบคเอ้า ทองคำ M5 นะครับเอาไปใช้ได้เลยตั้งค่าให้ ครบหมดแล้ว\nตั้งแค่ lot หรือ risk เป็น % เอาครับแนะนำลองกับ demo ก่อนชอบไม่ชอบยังไง บอกได้เสมอ ดูน้อยลง\nเอกสาร\nZABgoldpending.ex5\nโพสต์ที่แชร์\n6\n6",
+                                 "SOURCE_CLAIM":  [
+                                                      "breakout bot",
+                                                      "Gold",
+                                                      "M5",
+                                                      "user chooses lot or risk percent",
+                                                      "post says settings otherwise prepared",
+                                                      "post recommends demo first"
+                                                  ],
+                                 "EA_LAB_INFERENCE":  [
+                                                          "strongest current candidate for a prospective fixed-config test contract",
+                                                          "Gold is not yet an exact broker Symbol binding",
+                                                          "opaque EX5 prevents exact internal entry/exit/MM dependency semantics from being inferred"
+                                                      ],
+                                 "TESTED_EVIDENCE":  "NO_STRATEGY_PERFORMANCE_TESTED; only file/download/hash and source-context collection are verified",
+                                 "readiness":  "READY_FOR_SETTINGS_FREEZE",
+                                 "ready_for_test":  false,
+                                 "settings_freeze_required":  [
+                                                                  "owner selects lot mode or risk-percent mode and value; do not invent risk",
+                                                                  "exact EX5 input surface/default values must be frozen without guessing",
+                                                                  "exact MT5 installation/build/account/tester identity",
+                                                                  "exact broker symbol binding for Gold",
+                                                                  "MAIN/BWD windows",
+                                                                  "data/model/spread/commission/swap assumptions"
+                                                              ],
+                                 "semantics":  {
+                                                   "entry":  "SOURCE_CLAIM: breakout; exact internal rule UNKNOWN",
+                                                   "exit":  "UNKNOWN",
+                                                   "money_management":  "SOURCE_CLAIM: lot or risk-percent selectable; exact formula/value UNKNOWN",
+                                                   "grid_martingale_hedge":  "UNKNOWN; absence not inferred",
+                                                   "external_dependencies":  "UNKNOWN",
+                                                   "home":  "Gold source claim; exact broker symbol UNRESOLVED",
+                                                   "timeframe":  "M5 source-supported"
+                                               },
+                                 "optimization":  "NOT_AUTHORIZED",
+                                 "holdout":  "UNSPENT_DO_NOT_DISCOVER",
+                                 "mt5_started":  false
+                             },
+    "evidence_boundary":  {
+                              "SOURCE_CLAIM":  "Facebook author/file metadata/post text; may include performance/safety/setup assertions but they are not EA_LAB-tested facts",
+                              "EA_LAB_INFERENCE":  "role/readiness/dedup/context classification only where evidence supports it; ambiguous equivalence remains unresolved",
+                              "TESTED_EVIDENCE":  "collection/download/hash integrity only; no Facebook strategy profitability/safety/Grade/Candidate result"
+                          },
+    "negative_knowledge":  [
+                               "same-method Facebook filename/context search is saturated; do not rerun it absent a new source method",
+                               "29/48 selected families lack exact selected-version post context",
+                               "all 39 EX5 binaries are opaque; static strings are hints, not semantic/security parity",
+                               "four similar-name relationships remain unresolved",
+                               "SET compatibility is unqualified",
+                               "file identity does not imply profitability, safety, Home, TF, or tester eligibility"
+                           ],
+    "prohibitions":  [
+                         "no invented semantics",
+                         "no silent SET attachment",
+                         "no arbitrary Grade/KINT floor",
+                         "no optimization before fixed-config qualification",
+                         "no HOLDOUT discovery",
+                         "no risk/default change",
+                         "no deployment/LIVE",
+                         "no fake source data"
+                     ]
+}
