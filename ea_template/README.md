@@ -61,3 +61,11 @@ Recovery/Hedge/Basket เต็ม · entry เพิ่ม (Breakout/Swing/Mean
 
 This is a non-executable design library targeting the V2 compile-time entry seams.
 Do not extend deprecated V1/modules. No FamilyID, LAB_ENTRY, risk/default, trading module, or runtime activation is installed by these cards.
+
+## Zone-Compressed Adaptive Grid design (2026-09-22)
+
+[ZCAG strategy-design library](strategy_cards/zone_compressed_grid/README.md) captures the owner's Adaptive Grid + Zone Recovery concept as a non-executable Template V2 design.
+
+V0 uses a virtual adverse grid while flat, then one bounded long entry only after bull-regime + mean-reversion + structural-support + reversal gates align. It is intentionally separate from `STACK_GRID_AGAINST`, so existing grid families are not changed.
+
+The current artifact grants no LAB_ENTRY, risk/default, MT5, optimization, runtime or trading authority. See [integration plan](../docs/research/ZONE_COMPRESSED_ADAPTIVE_GRID_TEMPLATE_INTEGRATION_20260922.md).
