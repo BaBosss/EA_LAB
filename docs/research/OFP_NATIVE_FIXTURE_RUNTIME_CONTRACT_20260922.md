@@ -52,9 +52,11 @@ These carrier values cannot be interpreted as Order Flow strategy settings or ma
 Set file: `factory/runs/ofp_native_fixture_20260922/OFP_NATIVE_FIXTURE_20260922.set`
 
 - declared full surface: 1/1
-- only input: `InpEmitCompletionSentinel=true`
-- effective config hash: `b71a174adc27b284089ab83f5c4f028041147648c68db037d66c71545a495a5a`
-- set SHA256: `2d3a5320d493de1b83e07bfd317a07bc6fe55dd82df537feb3e4edc4fd536be4`
+- only input: `InpRuntimeContractId=OFP-NATIVE-FIXTURE-PARITY-20260922-001`
+- effective config hash: `c8320b7b5ebdad53f708c8facb616dcb09e45349f643e3011f8bb3499eae397f`
+- set SHA256: `66a3f9758589ec6bd21f31ce3f7c30d2476dcc1bd071f31227aabb45b2c5388b`
+
+`InpRuntimeContractId` is the EA's only declared input. The completion sentinel is unconditional after all 24 cases complete; it is not controlled by a separate input.
 
 No input may be added, omitted, optimized or changed after freeze.
 ## Preflight and execution gate
