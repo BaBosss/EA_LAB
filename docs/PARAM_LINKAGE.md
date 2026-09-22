@@ -22,21 +22,17 @@ phrasing. **SILENT** means the losing input's own row carries no note warning th
 reader that it can be overridden - the reader would only discover this by reading the
 *winner's* row. See `_triage/PARAM_INACTIVE_AUDIT.md` for why each silent case matters.
 
-- **`_17_UseStructLevels`** beats **`ExitMode`** -- OVERRIDDEN on build 17 by _17_UseStructLevels=true only for EXIT_FIXED_TP/EXIT_STRUCTURAL_TARGET (per-order TP taken from the published wave target); generic ATR TP remains owned by ExitMode, TRAIL/RUN_TREND keep no hard structural TP; also OVERRIDDEN on any build by _2_SuppressLegTP=true (blanks every leg's TP to 0.0 before ExitMode's switch is reached)
+- **`_17_UseStructLevels`** beats **`ExitMode`** -- OVERRIDDEN on build 17 by _17_UseStructLevels=true only for EXIT_FIXED_TP/EXIT_STRUCTURAL_TARGET (per-order TP taken from the published wave target)
 - **`_17_UseStructLevels`** beats **`SLMode`** -- overridden per-order by _17_UseStructLevels on build17 when a valid structural SL is published
-- **`_2_BasketTP_ATRmult`** beats **`_2_BasketTP_BalPct`** **[SILENT]** -- supersedes _2_BasketTP_Money whenever this is set >0 (Exit_BasketTargetMoney checks this first); but this input is itself OVERRIDDEN by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct before this)
 - **`_2_BasketTP_ATRmult`** beats **`_2_BasketTP_Money`** -- OVERRIDDEN by _2_BasketTP_ATRmult when that is >0, and by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct first, then ATRmult, falling through to this only when both are 0)
-- **`_2_BasketTP_BalPct`** beats **`_2_BasketTP_ATRmult`** -- supersedes _2_BasketTP_Money whenever this is set >0 (Exit_BasketTargetMoney checks this first); but this input is itself OVERRIDDEN by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct before this)
+- **`_2_BasketTP_BalPct`** beats **`_2_BasketTP_ATRmult`** -- but this input is itself OVERRIDDEN by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct before this)
 - **`_2_BasketTP_BalPct`** beats **`_2_BasketTP_Money`** -- OVERRIDDEN by _2_BasketTP_ATRmult when that is >0, and by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct first, then ATRmult, falling through to this only when both are 0)
-- **`_2_BasketTP_Money`** beats **`_2_BasketTP_ATRmult`** -- supersedes _2_BasketTP_Money whenever this is set >0 (Exit_BasketTargetMoney checks this first); but this input is itself OVERRIDDEN by _2_BasketTP_BalPct when that is >0 (Exit_BasketTargetMoney checks BalPct before this)
-- **`_2_SuppressLegTP`** beats **`ExitMode`** -- OVERRIDDEN on build 17 by _17_UseStructLevels=true only for EXIT_FIXED_TP/EXIT_STRUCTURAL_TARGET (per-order TP taken from the published wave target); generic ATR TP remains owned by ExitMode, TRAIL/RUN_TREND keep no hard structural TP; also OVERRIDDEN on any build by _2_SuppressLegTP=true (blanks every leg's TP to 0.0 before ExitMode's switch is reached)
-- **`_32_SL_BalPct`** beats **`_32_SL_Money`** -- the SL_MONEY(32) enum value on SLMode does not itself read this input - it is genuinely a separate, always-live check; OVERRIDDEN by _32_SL_BalPct when that is >0 (Exit_BasketStopMoney checks BalPct first)
+- **`_2_SuppressLegTP`** beats **`ExitMode`** -- also OVERRIDDEN on any build by _2_SuppressLegTP=true (blanks every leg's TP to 0.0 before ExitMode's switch is reached)
+- **`_32_SL_BalPct`** beats **`_32_SL_Money`** -- OVERRIDDEN by _32_SL_BalPct when that is >0 (Exit_BasketStopMoney checks BalPct first)
 - **`_33_SL_MaxATRmult`** beats **`_33_SL_MaxPips`** -- superseded by _33_SL_MaxATRmult whenever that is set >0
 - **`_57_DynCloseBalPct`** beats **`_57_DynCloseBase`** -- OVERRIDDEN by _57_DynCloseBalPct when that is >0 (Exit_DynCloseTargetMoney resolves BalPct first, falling through to this only when it is 0)
-- **`_8_DDRefBalPct`** beats **`_8_DDRefMoney`** -- feeds the RecoveryMode=82 ENGINE-EDGE escalation formula directly; OVERRIDDEN by _8_DDRefBalPct when that is >0 (same resolver checks BalPct first)
-- **`RC_MaxLevelsOverride`** beats **`ProtectLevel`** -- the step-count component (RC_MaxRecSteps) is OVERRIDDEN by RC_MaxLevelsOverride when that is >0 (RiskControl_MaxLevels checks it first); KillDD and DepositLoad are never affected by RC_MaxLevelsOverride
-- **`RecoveryMode`** beats **`_8_DDRefMoney`** -- feeds the RecoveryMode=82 ENGINE-EDGE escalation formula directly; OVERRIDDEN by _8_DDRefBalPct when that is >0 (same resolver checks BalPct first)
-- **`SLMode`** beats **`_32_SL_Money`** -- the SL_MONEY(32) enum value on SLMode does not itself read this input - it is genuinely a separate, always-live check; OVERRIDDEN by _32_SL_BalPct when that is >0 (Exit_BasketStopMoney checks BalPct first)
+- **`_8_DDRefBalPct`** beats **`_8_DDRefMoney`** -- OVERRIDDEN by _8_DDRefBalPct when that is >0 (same resolver checks BalPct first)
+- **`RC_MaxLevelsOverride`** beats **`ProtectLevel`** -- the step-count component (RC_MaxRecSteps) is OVERRIDDEN by RC_MaxLevelsOverride when that is >0 (RiskControl_MaxLevels checks it first)
 
 ## Parameters by context
 
@@ -410,4 +406,4 @@ reader that it can be overridden - the reader would only discover this by readin
 
 Total parameter rows across the context sections above: 246 (must equal the source registry's 246 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
-Override pairs found: 15.
+Override pairs found: 11.

@@ -44,7 +44,7 @@ if (-not (Test-Path $guard)) { Write-Host "[FAIL] guard not found: $guard" -Fore
 $cases = @(
   # --- classification: an OVERRIDE winner is a live dial, not a dead one -----
   @{ id='ovr-winner-basketATR-allowed';  param='_2_BasketTP_ATRmult'; build=14
-     args=@('_2_BasketTP_ATRmult','_2_BasketTP_BalPct=0')
+     args=@('_2_BasketTP_ATRmult','_2_BasketTP_Money=20','_2_BasketTP_BalPct=0')
      expect='ALLOW'; why='OVERRIDE winner with no higher-precedence value active' }
   @{ id='ovr-winner-structlevels-allowed'; param='_17_UseStructLevels'; build=17
      args=@('_17_UseStructLevels')
@@ -153,6 +153,80 @@ foreach ($c in $cases) {
         foreach ($l in ($r.Text -split "`r?`n" | Where-Object { $_ -match '^\s*-\s' })) { Write-Host "       $l" }
         $fail++
     }
+}
+
+# =============================================================================================
+# PART 1B - B-001: clause-local precedence graph and cycle rejection.
+# =============================================================================================
+Write-Host ""
+Write-Host "=== PART 1B: B-001 generated precedence graph ===" -ForegroundColor Cyan
+$generator = Join-Path $root 'scripts\gen_param_linkage.ps1'
+$linkage = Join-Path $root 'docs\PARAM_LINKAGE.md'
+function Check1B {
+    param([string]$Id, [bool]$Ok, [string]$Detail = '')
+    if ($Ok) { Write-Host ("[PASS] {0}" -f $Id) -ForegroundColor Green; $script:pass++ }
+    else     { Write-Host ("[FAIL] {0}  {1}" -f $Id, $Detail) -ForegroundColor Red; $script:fail++ }
+}
+function Has-Edge {
+    param([string]$Text,[string]$Winner,[string]$Loser)
+    $bt=[char]96
+    $needle = '- **' + $bt + $Winner + $bt + '** beats **' + $bt + $Loser + $bt + '**'
+    return ($Text -split [Environment]::NewLine | Where-Object { $_.StartsWith($needle) }).Count -gt 0
+}
+$linkageText = Get-Content -LiteralPath $linkage -Raw -Encoding UTF8
+$basket = @('_2_BasketTP_BalPct','_2_BasketTP_ATRmult','_2_BasketTP_Money')
+$basketLines = @([regex]::Split($linkageText, '\r?\n') | Where-Object {
+    $line = $_
+    $hits = @($basket | Where-Object { $line.Contains($_) })
+    $line -match '^- \*\*' -and $hits.Count -ge 2
+})
+Check1B 'b001-basket-bal-over-atr' (Has-Edge $linkageText '_2_BasketTP_BalPct' '_2_BasketTP_ATRmult')
+Check1B 'b001-basket-bal-over-money' (Has-Edge $linkageText '_2_BasketTP_BalPct' '_2_BasketTP_Money')
+Check1B 'b001-basket-atr-over-money' (Has-Edge $linkageText '_2_BasketTP_ATRmult' '_2_BasketTP_Money')
+Check1B 'b001-basket-no-atr-over-bal' (-not (Has-Edge $linkageText '_2_BasketTP_ATRmult' '_2_BasketTP_BalPct'))
+Check1B 'b001-basket-no-money-over-atr' (-not (Has-Edge $linkageText '_2_BasketTP_Money' '_2_BasketTP_ATRmult'))
+Check1B 'b001-basket-graph-exact-three' ($basketLines.Count -eq 3) ("got {0}: {1}" -f $basketLines.Count, ($basketLines -join ' | '))
+Check1B 'b001-sl-maxatr-over-maxpips-control' (Has-Edge $linkageText '_33_SL_MaxATRmult' '_33_SL_MaxPips')
+Check1B 'b001-recovery-bal-over-money' (Has-Edge $linkageText '_8_DDRefBalPct' '_8_DDRefMoney')
+Check1B 'b001-recovery-no-mode-over-money' (-not (Has-Edge $linkageText 'RecoveryMode' '_8_DDRefMoney'))
+Check1B 'b001-exit-struct-over-exitmode' (Has-Edge $linkageText '_17_UseStructLevels' 'ExitMode')
+Check1B 'b001-exit-suppress-over-exitmode' (Has-Edge $linkageText '_2_SuppressLegTP' 'ExitMode')
+Check1B 'b001-dynclose-bal-over-base-control' (Has-Edge $linkageText '_57_DynCloseBalPct' '_57_DynCloseBase')
+
+$tmpB001 = Join-Path ([IO.Path]::GetTempPath()) ('b001_clause_' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $tmpB001 -Force | Out-Null
+try {
+    $regMixed = Join-Path $tmpB001 'mixed.csv'
+    $outMixed = Join-Path $tmpB001 'mixed.md'
+    @(
+        [pscustomobject]@{name='Money';classification_note='';coupled_parameters='';context='x';active_when='x';causal_question='x'},
+        [pscustomobject]@{name='ATR';classification_note='supersedes Money whenever positive; but this input is itself OVERRIDDEN by BalPct when positive';coupled_parameters='';context='x';active_when='x';causal_question='x'},
+        [pscustomobject]@{name='BalPct';classification_note='';coupled_parameters='';context='x';active_when='x';causal_question='x'}
+    ) | Export-Csv -LiteralPath $regMixed -NoTypeInformation -Encoding UTF8
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $generator -RegistryPath $regMixed -OutPath $outMixed 2>&1 | Out-Null
+    $mixedRc=$LASTEXITCODE
+    $mixed = if(Test-Path $outMixed){Get-Content $outMixed -Raw -Encoding UTF8}else{''}
+    Check1B 'b001-mixed-clause-generator-runs' ($mixedRc -eq 0)
+    Check1B 'b001-mixed-clause-atr-over-money' (Has-Edge $mixed 'ATR' 'Money')
+    Check1B 'b001-mixed-clause-bal-over-atr' (Has-Edge $mixed 'BalPct' 'ATR')
+    Check1B 'b001-mixed-clause-no-atr-over-bal' (-not (Has-Edge $mixed 'ATR' 'BalPct'))
+    Check1B 'b001-mixed-clause-no-money-over-atr' (-not (Has-Edge $mixed 'Money' 'ATR'))
+
+    $regCycle = Join-Path $tmpB001 'cycle.csv'
+    $outCycle = Join-Path $tmpB001 'cycle.md'
+    @(
+        [pscustomobject]@{name='A';classification_note='supersedes B';coupled_parameters='';context='x';active_when='x';causal_question='x'},
+        [pscustomobject]@{name='B';classification_note='supersedes A';coupled_parameters='';context='x';active_when='x';causal_question='x'}
+    ) | Export-Csv -LiteralPath $regCycle -NoTypeInformation -Encoding UTF8
+    $prevCycleEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $cycleOut = (& powershell -NoProfile -ExecutionPolicy Bypass -File $generator -RegistryPath $regCycle -OutPath $outCycle 2>&1 | Out-String)
+    $cycleRc = $LASTEXITCODE
+    $ErrorActionPreference = $prevCycleEap
+    Check1B 'b001-cycle-refused' (($cycleRc -ne 0) -and ($cycleOut -match 'contains a cycle')) ("rc={0}" -f $cycleRc)
+}
+finally {
+    Remove-Item -LiteralPath $tmpB001 -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # =============================================================================================
@@ -346,7 +420,7 @@ foreach ($c in $wrapperCases) {
 }
 
 Write-Host ""
-Write-Host ("--- part 1: {0} passed / {1} failed / {2} total ---" -f $pass, $fail, $cases.Count)
+Write-Host ("--- parts 1+1B: {0} passed / {1} failed ---" -f $pass, $fail)
 Write-Host ("--- parts 2+3: {0} passed / {1} failed ---" -f $p2pass, $p2fail)
 if ($fail -gt 0 -or $p2fail -gt 0) { Write-Host "=== OPTIMIZE-GUARD CAGE RED ===" -ForegroundColor Red; exit 1 }
 Write-Host "=== OPTIMIZE-GUARD CAGE GREEN ===" -ForegroundColor Green

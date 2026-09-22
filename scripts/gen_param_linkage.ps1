@@ -100,24 +100,37 @@ function Get-KnownNameMatches {
 # ---------------------------------------------------------------------------
 $pairs = New-Object System.Collections.Generic.List[object]
 
+function Get-RelationClauses {
+    param([string]$Text)
+    if ([string]::IsNullOrWhiteSpace($Text)) { return @() }
+    # Precedence prose often describes both directions in one registry field, e.g.
+    # "ATR supersedes Money; but ATR is overridden by BalPct".  A verb governs only
+    # its local clause, never every parameter name elsewhere in the field.
+    return @($Text -split '(?i)\s*;\s*|\s+\bbut\b\s+' |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_.Length -gt 0 })
+}
+
 foreach ($r in $rows) {
     $name    = $r.name
     $note    = [string]$r.classification_note
     $coupled = [string]$r.coupled_parameters
 
-    if ($note -match '(?i)\bsupersedes(/blanks)?\b') {
-        foreach ($l in (Get-KnownNameMatches -Text $note -AllNames $allNames -Exclude $name)) {
-            $pairs.Add([pscustomobject]@{ Winner = $name; Loser = $l; Condition = $note.Trim(); Source = 'note:supersedes' })
+    foreach ($clause in (Get-RelationClauses -Text $note)) {
+        if ($clause -match '(?i)\bsupersedes(/blanks)?\b') {
+            foreach ($l in (Get-KnownNameMatches -Text $clause -AllNames $allNames -Exclude $name)) {
+                $pairs.Add([pscustomobject]@{ Winner = $name; Loser = $l; Condition = $clause; Source = 'note:supersedes' })
+            }
         }
-    }
-    if ($note -match '(?i)\boverridden\b.*\bby\b') {
-        foreach ($w in (Get-KnownNameMatches -Text $note -AllNames $allNames -Exclude $name)) {
-            $pairs.Add([pscustomobject]@{ Winner = $w; Loser = $name; Condition = $note.Trim(); Source = 'note:overridden-by' })
+        if ($clause -match '(?i)\boverridden\b.*\bby\b') {
+            foreach ($w in (Get-KnownNameMatches -Text $clause -AllNames $allNames -Exclude $name)) {
+                $pairs.Add([pscustomobject]@{ Winner = $w; Loser = $name; Condition = $clause; Source = 'note:overridden-by' })
+            }
         }
-    }
-    if ($note -match '(?i)\bsuperseded\b.*\bby\b') {
-        foreach ($w in (Get-KnownNameMatches -Text $note -AllNames $allNames -Exclude $name)) {
-            $pairs.Add([pscustomobject]@{ Winner = $w; Loser = $name; Condition = $note.Trim(); Source = 'note:superseded-by' })
+        if ($clause -match '(?i)\bsuperseded\b.*\bby\b') {
+            foreach ($w in (Get-KnownNameMatches -Text $clause -AllNames $allNames -Exclude $name)) {
+                $pairs.Add([pscustomobject]@{ Winner = $w; Loser = $name; Condition = $clause; Source = 'note:superseded-by' })
+            }
         }
     }
 
@@ -161,7 +174,39 @@ foreach ($p in $pairs) {
     $key = "$($p.Winner)||$($p.Loser)"
     if (-not $dedup.Contains($key)) { $dedup[$key] = $p }
 }
-$overridePairs = $dedup.Values | Sort-Object Winner, Loser
+$overridePairs = @($dedup.Values | Sort-Object Winner, Loser)
+
+# A precedence map is a directed acyclic graph.  A generated cycle means the prose
+# was interpreted inconsistently; refuse the artifact rather than hand a contradictory
+# graph to optimize_guard.
+$nodes = @($overridePairs | ForEach-Object { $_.Winner; $_.Loser } | Sort-Object -Unique)
+$adj = @{}
+$inDegree = @{}
+foreach ($n in $nodes) {
+    $adj[$n] = New-Object System.Collections.Generic.List[string]
+    $inDegree[$n] = 0
+}
+foreach ($p in $overridePairs) {
+    if ($p.Winner -eq $p.Loser) { throw "Override precedence graph contains a self-cycle at $($p.Winner)" }
+    if (-not $adj[$p.Winner].Contains($p.Loser)) {
+        [void]$adj[$p.Winner].Add($p.Loser)
+        $inDegree[$p.Loser] = [int]$inDegree[$p.Loser] + 1
+    }
+}
+$q = New-Object 'System.Collections.Generic.Queue[string]'
+foreach ($n in $nodes) { if ([int]$inDegree[$n] -eq 0) { $q.Enqueue($n) } }
+$visited = 0
+while ($q.Count -gt 0) {
+    $n = $q.Dequeue()
+    $visited++
+    foreach ($m in $adj[$n]) {
+        $inDegree[$m] = [int]$inDegree[$m] - 1
+        if ([int]$inDegree[$m] -eq 0) { $q.Enqueue($m) }
+    }
+}
+if ($visited -ne $nodes.Count) {
+    throw "Override precedence graph contains a cycle; refusing generated PARAM_LINKAGE.md"
+}
 
 # "Silent" flag: the LOSER's own classification_note contains no acknowledgement
 # (overridden / superseded / OVERRIDDEN) that IT can be overridden.
