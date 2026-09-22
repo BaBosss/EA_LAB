@@ -63,12 +63,13 @@
     "attempts_blocked",
     "contact_time",
     "time_in_market",
-    "max_exposure",
+    "max_exposure_with_definition",
     "hard_kills",
-    "tail_losses",
-    "year_split",
-    "regime_split",
-    "source_coverage"
+    "tail_loss_value_and_definition",
+    "year_split_artifact_sha256",
+    "regime_split_artifact_sha256",
+    "source_coverage_artifact_sha256",
+    "transaction_economics_artifact_sha256"
   ],
   "native_guard_parity_receipt_sha256": null,
   "independent_gpt_scrutiny_receipt_sha256": null,

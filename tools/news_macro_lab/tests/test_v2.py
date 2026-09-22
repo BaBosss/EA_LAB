@@ -200,9 +200,13 @@ def metrics(**changes):
         "pf_value": 1.2,
         "pf_status": "FINITE",
         "eq_dd_pct": 10.0,
+        "eq_dd_definition": "MAX_EQUITY_PEAK_TO_TROUGH_PCT",
         "closed_trades": 200,
         "episodes": 150,
         "max_exposure": 0.2,
+        "max_exposure_definition": "MAX_AGGREGATE_LOTS",
+        "tail_loss_value": 50.0,
+        "tail_loss_definition": "WORST_EPISODE_NET_LOSS_ABS",
         "hard_kills": 0,
         "guard_firings": 2,
         "attempts_blocked": 3,
@@ -221,6 +225,10 @@ def arm(arm_id, kind, seed=None, **metric_changes):
         "placebo_seed": seed,
         "report_sha256": sha256(("report-" + arm_id).encode()),
         "native_receipt_sha256": sha256(("receipt-" + arm_id).encode()),
+        "year_split_sha256": sha256(("year-" + arm_id).encode()),
+        "regime_split_sha256": sha256(("regime-" + arm_id).encode()),
+        "source_coverage_sha256": sha256(("coverage-" + arm_id).encode()),
+        "transaction_economics_sha256": sha256(("economics-" + arm_id).encode()),
         "metrics": metrics(**metric_changes),
     }
 
@@ -278,7 +286,43 @@ class ResultContractTests(unittest.TestCase):
         p = result_package()
         p["arms"][1]["metrics"]["pf_status"] = "UNDEFINED_NO_GROSS_LOSS"
         p["arms"][1]["metrics"]["pf_value"] = None
-        self.assertIsNone(compare_guard_ab(p)["real_pf_delta_vs_base"])
+        r = compare_guard_ab(p)
+        self.assertEqual(r["real_pf_delta_vs_base"],
+                         {"status": "UNAVAILABLE_NONFINITE_PF", "value": None})
+        self.assertEqual(r["arms"][1]["metrics"]["pf_status"], "UNDEFINED_NO_GROSS_LOSS")
+        self.assertIsNone(r["arms"][1]["metrics"]["pf_value"])
+
+    def test_placebo_pf_status_and_evidence_are_preserved(self):
+        p = result_package()
+        p["arms"][2]["metrics"]["pf_status"] = "UNAVAILABLE"
+        p["arms"][2]["metrics"]["pf_value"] = None
+        r = compare_guard_ab(p)
+        p11 = next(a for a in r["arms"] if a["arm_id"] == "p11")
+        self.assertEqual(p11["metrics"]["pf_status"], "UNAVAILABLE")
+        self.assertIsNone(p11["metrics"]["pf_value"])
+        self.assertEqual(r["placebo_deltas"][0]["pf_delta_vs_base"],
+                         {"status": "UNAVAILABLE_NONFINITE_PF", "value": None})
+        self.assertEqual(p11["source_coverage_sha256"], p["arms"][2]["source_coverage_sha256"])
+        self.assertEqual(p11["transaction_economics_sha256"],
+                         p["arms"][2]["transaction_economics_sha256"])
+
+    def test_tail_metric_and_definition_are_preserved(self):
+        r = compare_guard_ab(result_package())
+        self.assertEqual(r["arms"][0]["metrics"]["tail_loss_definition"],
+                         "WORST_EPISODE_NET_LOSS_ABS")
+        self.assertEqual(r["real_delta_vs_base"]["tail_loss_value"], 0.0)
+
+    def test_metric_definition_drift_refused(self):
+        p = result_package()
+        p["arms"][1]["metrics"]["tail_loss_definition"] = "OTHER_TAIL_RULE"
+        with self.assertRaisesRegex(Refused, "METRIC_DEFINITION_DRIFT"):
+            compare_guard_ab(p)
+
+    def test_missing_required_evidence_hash_refused(self):
+        p = result_package()
+        del p["arms"][2]["year_split_sha256"]
+        with self.assertRaisesRegex(Refused, "RESULT_ARM_SCHEMA_MISMATCH"):
+            compare_guard_ab(p)
 
 
 class MonitorHandoffTests(unittest.TestCase):

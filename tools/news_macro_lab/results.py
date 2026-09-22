@@ -13,10 +13,15 @@ _LABEL_KEYS = {
     "window_id", "config_id",
 }
 _IDENTITY_KEYS = _HASH_KEYS | _LABEL_KEYS
+_EVIDENCE_KEYS = {
+    "year_split_sha256", "regime_split_sha256",
+    "source_coverage_sha256", "transaction_economics_sha256",
+}
 _METRIC_KEYS = {
-    "net", "pf_value", "pf_status", "eq_dd_pct", "closed_trades",
-    "episodes", "max_exposure", "hard_kills", "guard_firings",
-    "attempts_blocked", "contact_seconds", "time_in_market_seconds",
+    "net", "pf_value", "pf_status", "eq_dd_pct", "eq_dd_definition",
+    "closed_trades", "episodes", "max_exposure", "max_exposure_definition",
+    "hard_kills", "guard_firings", "attempts_blocked", "contact_seconds",
+    "time_in_market_seconds", "tail_loss_value", "tail_loss_definition",
 }
 _PF_STATES = {"FINITE", "UNDEFINED_NO_GROSS_LOSS", "UNAVAILABLE"}
 _ARM_KINDS = {"BASE", "REAL_GUARD", "PLACEBO"}
@@ -33,7 +38,11 @@ def _validate_metrics(metrics: Any) -> dict[str, Any]:
     out["net"] = _metric_number(metrics, "net")
     out["eq_dd_pct"] = _metric_number(metrics, "eq_dd_pct")
     out["max_exposure"] = _metric_number(metrics, "max_exposure")
-    if out["eq_dd_pct"] < 0 or out["max_exposure"] < 0:
+    out["tail_loss_value"] = _metric_number(metrics, "tail_loss_value")
+    out["eq_dd_definition"] = text(metrics["eq_dd_definition"])
+    out["max_exposure_definition"] = text(metrics["max_exposure_definition"])
+    out["tail_loss_definition"] = text(metrics["tail_loss_definition"])
+    if out["eq_dd_pct"] < 0 or out["max_exposure"] < 0 or out["tail_loss_value"] < 0:
         raise Refused("NEGATIVE_RISK_METRIC")
     for key in ("closed_trades", "episodes", "hard_kills", "guard_firings",
                 "attempts_blocked", "contact_seconds", "time_in_market_seconds"):
@@ -92,7 +101,7 @@ def compare_guard_ab(package: dict[str, Any]) -> dict[str, Any]:
     arm_fields = {
         "arm_id", "arm_kind", "frozen_identity_sha256",
         "placebo_seed", "report_sha256", "native_receipt_sha256", "metrics",
-    }
+    } | _EVIDENCE_KEYS
     for arm in arms:
         if not isinstance(arm, dict) or set(arm) != arm_fields:
             raise Refused("RESULT_ARM_SCHEMA_MISMATCH")
@@ -106,6 +115,8 @@ def compare_guard_ab(package: dict[str, Any]) -> dict[str, Any]:
         if arm["frozen_identity_sha256"] != identity_sha:
             raise Refused("ARM_IDENTITY_MISMATCH")
         checksum(arm["report_sha256"]); checksum(arm["native_receipt_sha256"])
+        for key in _EVIDENCE_KEYS:
+            checksum(arm[key])
         seed = arm["placebo_seed"]
         if kind == "PLACEBO":
             if type(seed) is not int or seed not in seeds:
@@ -126,21 +137,37 @@ def compare_guard_ab(package: dict[str, Any]) -> dict[str, Any]:
     real = by_kind["REAL_GUARD"][0]
     if base["metrics"]["guard_firings"] != 0 or base["metrics"]["attempts_blocked"] != 0:
         raise Refused("BASE_ARM_GUARD_ACTION_PRESENT")
+    definition_keys = ("eq_dd_definition", "max_exposure_definition", "tail_loss_definition")
+    for arm in normalized:
+        if any(arm["metrics"][key] != base["metrics"][key] for key in definition_keys):
+            raise Refused("METRIC_DEFINITION_DRIFT")
 
     delta_keys = ("net", "eq_dd_pct", "closed_trades", "episodes",
                   "max_exposure", "hard_kills", "guard_firings",
-                  "attempts_blocked", "contact_seconds", "time_in_market_seconds")
+                  "attempts_blocked", "contact_seconds", "time_in_market_seconds",
+                  "tail_loss_value")
     def delta(a, b):
         return {key: a["metrics"][key] - b["metrics"][key] for key in delta_keys}
 
     real_delta = delta(real, base)
+    def pf_delta(a, b):
+        if a["metrics"]["pf_status"] == "FINITE" and b["metrics"]["pf_status"] == "FINITE":
+            return {"status": "FINITE", "value": a["metrics"]["pf_value"] - b["metrics"]["pf_value"]}
+        return {"status": "UNAVAILABLE_NONFINITE_PF", "value": None}
+
     placebo_deltas = [
-        {"seed": arm["placebo_seed"], "delta_vs_base": delta(arm, base)}
+        {
+            "seed": arm["placebo_seed"],
+            "delta_vs_base": delta(arm, base),
+            "pf_delta_vs_base": pf_delta(arm, base),
+        }
         for arm in sorted(by_kind["PLACEBO"], key=lambda a: a["placebo_seed"])
     ]
-    pf_delta = None
-    if real["metrics"]["pf_status"] == "FINITE" and base["metrics"]["pf_status"] == "FINITE":
-        pf_delta = real["metrics"]["pf_value"] - base["metrics"]["pf_value"]
+    normalized.sort(key=lambda a: (
+        {"BASE": 0, "REAL_GUARD": 1, "PLACEBO": 2}[a["arm_kind"]],
+        -1 if a["placebo_seed"] is None else a["placebo_seed"],
+        a["arm_id"],
+    ))
 
     mechanism = (
         "UNTESTED_NO_GUARD_FIRINGS"
@@ -153,8 +180,9 @@ def compare_guard_ab(package: dict[str, Any]) -> dict[str, Any]:
         "frozen_identity_sha256": identity_sha,
         "evaluation_unit": package["evaluation_unit"],
         "mechanism_status": mechanism,
+        "arms": normalized,
         "real_delta_vs_base": real_delta,
-        "real_pf_delta_vs_base": pf_delta,
+        "real_pf_delta_vs_base": pf_delta(real, base),
         "placebo_deltas": placebo_deltas,
         "all_placebo_seeds_reported": True,
         "selection_performed": False,
