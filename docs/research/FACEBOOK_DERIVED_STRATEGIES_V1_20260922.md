@@ -2,8 +2,8 @@
 
 Status: **OWNER-APPROVED STRATEGY DESIGN / NON-EXECUTABLE**
 Date: 2026-09-22
-Design lane: `ct-fb-derived-strategies-v1-20260922`
-Design base: `94cfcaaa5f3344a7b09ca3917af7c9d6749fe8dd`
+Final reanchored design lane: `ct-fb-derived-strategies-v1-r1-20260922` (initial drafting lane: `ct-fb-derived-strategies-v1-20260922`).
+Final package base: `10956fe1a6f3d50d38b87c8acfa222c5e9bffbc2` (historical initial drafting anchor: `94cfcaaa5f3344a7b09ca3917af7c9d6749fe8dd`).
 Source basis: owner-supplied Facebook screenshots only; no external source code was ingested by this lane.
 
 ## Objective
