@@ -1,0 +1,146 @@
+{
+  "schema_version": "news_macro_workplan/1",
+  "base_sha": "24b463395356f422d6ae6885e9cf148b63e27b69",
+  "owner_request_date": "2026-09-21",
+  "lane_id": "ct-news-macro-lab-v1-20260921",
+  "scope": "Non-Codex, offline, normal-tooling preparation only. Not a new Main Control Tower.",
+  "nodes": [
+    {
+      "id": "N0",
+      "name": "Canonical and ownership reconciliation",
+      "depends": [],
+      "deliverable": "exact-ref read receipts; no duplicate Monitor writer"
+    },
+    {
+      "id": "N1",
+      "name": "Source catalog + clock/revision contracts",
+      "depends": [
+        "N0"
+      ],
+      "deliverable": "global_source_catalog.json; reuse canonical source contract"
+    },
+    {
+      "id": "N2",
+      "name": "Causal record selection + contact/feature preparation",
+      "depends": [
+        "N1"
+      ],
+      "deliverable": "core.py using existing offline_replay_validator"
+    },
+    {
+      "id": "N3",
+      "name": "Anti-bias experiment preflight",
+      "depends": [
+        "N1"
+      ],
+      "deliverable": "planning.py + experiment_proposal.json; never executable"
+    },
+    {
+      "id": "N4",
+      "name": "Provider-neutral text shadow contract",
+      "depends": [
+        "N1"
+      ],
+      "deliverable": "typed annotation validation only; providers NOT_CONFIGURED"
+    },
+    {
+      "id": "N5",
+      "name": "Deterministic adversarial tests + freeze",
+      "depends": [
+        "N2",
+        "N3",
+        "N4"
+      ],
+      "deliverable": "deterministic adversarial tests + exact source manifest; support review does not replace N6"
+    },
+    {
+      "id": "N5A",
+      "name": "Causal clocks + placebo + result + Monitor handoff contracts",
+      "depends": [
+        "N2",
+        "N3"
+      ],
+      "deliverable": "causal.py, placebo.py, results.py, monitor_handoff.py; no performance/runtime authority"
+    },
+    {
+      "id": "N6",
+      "name": "Independent exact-head GPT Scrutiny",
+      "depends": [
+        "N5"
+      ],
+      "deliverable": "separate reviewer; WAIT_FOR_AVAILABLE_REVIEW_CAPACITY"
+    },
+    {
+      "id": "N7P",
+      "name": "Finite raw source capture preparation",
+      "depends": [
+        "N1"
+      ],
+      "deliverable": "external raw bytes + request/hash/coverage receipt only; no historical qualification by capture alone"
+    },
+    {
+      "id": "N7",
+      "name": "First finite historical source qualification",
+      "depends": [
+        "N1",
+        "N5A",
+        "N6",
+        "N7P"
+      ],
+      "deliverable": "accepted finite raw/normalized data, complete interval, revision/correction policy and available-at clocks; no broad fetch"
+    },
+    {
+      "id": "N8",
+      "name": "Native guard parity and tester seams",
+      "depends": [
+        "N3",
+        "N5A",
+        "N6",
+        "N7"
+      ],
+      "deliverable": "MacroGate: reuse existing _MG_SelfGate after causal data acceptance; NewsGuard: separately reviewed native test seam; mechanics fixtures first"
+    },
+    {
+      "id": "N9",
+      "name": "Pre-registered fixed A/B and placebo execution",
+      "depends": [
+        "N8"
+      ],
+      "deliverable": "parent+one change; report all arms/seeds; no optimization/holdout"
+    },
+    {
+      "id": "N10",
+      "name": "Existing Monitor read-only integration",
+      "depends": [
+        "N6"
+      ],
+      "deliverable": "handoff to existing UI lane, separate observed/requested/effective and backtest evidence"
+    },
+    {
+      "id": "N11",
+      "name": "EA environment affinity and later prospective shadow",
+      "depends": [
+        "N9",
+        "N10"
+      ],
+      "deliverable": "accepted source-bound comparisons, no automatic strategy routing"
+    }
+  ],
+  "deferred": [
+    "persistent collection/scheduling",
+    "VPS task changes",
+    "REAL guard changes",
+    "provider installation/inference",
+    "automatic EA routing"
+  ],
+  "codex_calls_authorized_this_stage": 0,
+  "paid_fallback_authorized": false,
+  "continuation_2026_09_22": {
+    "qwen_support_review": "CONSUMED_SUPPORT_ONLY_NO_BLOCKER_F1_REPAIRED",
+    "gemini_fallback": "NOT_USED_NO_DUPLICATE_REVIEW",
+    "legacy_macro_timeline": "BLOCKED_FOR_NEW_CAUSAL_CLAIMS_SAME_DAY_CLOSE_EXPORTED_AT_00_00",
+    "final_gpt_scrutiny": "PENDING",
+    "native_mt5": "NOT_RUN",
+    "holdout": "UNSPENT"
+  }
+}

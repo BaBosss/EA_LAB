@@ -1,0 +1,3 @@
+; OFP synthetic native fixture parity V1; one input, full declared surface
+; build=OFP_NATIVE_FIXTURE_V1 surface=1 effective_config_hash=c8320b7b5ebdad53f708c8facb616dcb09e45349f643e3011f8bb3499eae397f (synthetic-fixture-runtime)
+InpRuntimeContractId=OFP-NATIVE-FIXTURE-PARITY-20260922-001
