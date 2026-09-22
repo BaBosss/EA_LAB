@@ -1,0 +1,15 @@
+{
+  "schema_version": "news_macro_dependency_pins/1",
+  "observed_base_sha": "24b463395356f422d6ae6885e9cf148b63e27b69",
+  "basis": "Exact file bytes in isolated Windows worktree, not fabricated remote-current state",
+  "executed_dependencies": {
+    "tools/knowledge_validation/offline_replay_validator.py": "f0c502b437b77c381e76f8c0c0c6e933b488234250b7482b6b3db60badce62bb"
+  },
+  "reused_documentary_owners": [
+    "tools/control_center/guard_adapters/feeds.py",
+    "docs/research/EA_REGIME_FRAMEWORK.md",
+    "docs/research/HISTORICAL_MACRO_REPLAY_SOURCE_CONTRACT_20260907.md",
+    "docs/research/HISTORICAL_BROKER_CLOCK_CONTRACT_20260907.md"
+  ],
+  "rule": "Changed effective dependency refuses and requires scoped review. Do not automatically repin."
+}

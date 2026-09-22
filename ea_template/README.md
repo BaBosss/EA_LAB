@@ -69,3 +69,14 @@ Do not extend deprecated V1/modules. No FamilyID, LAB_ENTRY, risk/default, tradi
 V0 uses a virtual adverse grid while flat, then one bounded long entry only after bull-regime + mean-reversion + structural-support + reversal gates align. It is intentionally separate from `STACK_GRID_AGAINST`, so existing grid families are not changed.
 
 The current artifact grants no LAB_ENTRY, risk/default, MT5, optimization, runtime or trading authority. See [integration plan](../docs/research/ZONE_COMPRESSED_ADAPTIVE_GRID_TEMPLATE_INTEGRATION_20260922.md).
+
+## Facebook-derived strategy designs (2026-09-22)
+
+[Facebook-derived strategy library](strategy_cards/facebook_derived/README.md) records two owner-approved, non-executable strategy designs from supplied Facebook screenshots:
+
+- `FB-A01` Adaptive Donchian Trend Flip — Donchian breakout + SuperTrend confirm + ATR-percentile gate + close/flat/reverse.
+- `FB-G01` Persistent Adaptive Donchian Grid — physical bounded grid + Donchian regime director + adaptive spacing + persistence/basket reset.
+
+These are derived EA_LAB strategies, not claims of source-code parity with the external EAs. Exact original formulas/parameters not visible in the screenshots remain unresolved unless a future executable contract defines an EA_LAB choice.
+
+No Boss/LAB_ENTRY identity, source implementation, MT5 run, optimizer, HOLDOUT, runtime, risk-default or trading authority is created by this design package. See [design and execution route](../docs/research/FACEBOOK_DERIVED_STRATEGIES_V1_20260922.md).

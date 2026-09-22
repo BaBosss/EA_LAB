@@ -1,0 +1,996 @@
+{
+  "schema_version": "news_macro_source_plan/1",
+  "base_sha": "24b463395356f422d6ae6885e9cf148b63e27b69",
+  "classification": "SOURCE_PLAN_NOT_LIVE_DATA",
+  "scope": "Incremental extension of existing MRIS/CC02, not a new registry/control plane",
+  "weight_policy": "UNRATIFIED_NO_AUTOMATIC_AGGREGATION",
+  "sources": [
+    {
+      "source_id": "mris-audjpy",
+      "region": "GLOBAL",
+      "axis": "CARRY",
+      "instrument_or_series": "AUDJPY",
+      "dependency_group": "JPY_CARRY",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "mris-usdjpy",
+      "region": "JAPAN",
+      "axis": "CARRY",
+      "instrument_or_series": "USDJPY",
+      "dependency_group": "JPY_CARRY",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "mris-dxy",
+      "region": "US",
+      "axis": "LIQUIDITY",
+      "instrument_or_series": "DXY",
+      "dependency_group": "USD_FX",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "mris-vix",
+      "region": "US",
+      "axis": "EQUITY",
+      "instrument_or_series": "VIX",
+      "dependency_group": "US_EQUITY_VOL",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "mris-gold",
+      "region": "GLOBAL",
+      "axis": "LIQUIDITY",
+      "instrument_or_series": "Gold future proxy, not broker XAUUSD",
+      "dependency_group": "COMMODITY_METALS",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "mris-copper",
+      "region": "GLOBAL",
+      "axis": "GROWTH",
+      "instrument_or_series": "Copper future proxy",
+      "dependency_group": "COMMODITY_METALS",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "mris-btc",
+      "region": "GLOBAL",
+      "axis": "LIQUIDITY",
+      "instrument_or_series": "BTCUSD",
+      "dependency_group": "CRYPTO_RISK",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "mris-us10y-proxy",
+      "region": "GLOBAL",
+      "axis": "CARRY",
+      "instrument_or_series": "US10Y only, NOT measured US10Y minus JP10Y",
+      "dependency_group": "US_RATES",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "crisis-us2y",
+      "region": "US",
+      "axis": "POLICY",
+      "instrument_or_series": "US2Y",
+      "dependency_group": "US_RATES",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "crisis-wti",
+      "region": "GLOBAL",
+      "axis": "INFLATION",
+      "instrument_or_series": "WTI future proxy",
+      "dependency_group": "COMMODITY_ENERGY",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "crisis-sp500",
+      "region": "US",
+      "axis": "EQUITY",
+      "instrument_or_series": "S&P 500",
+      "dependency_group": "US_EQUITY",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "crisis-move",
+      "region": "US",
+      "axis": "LIQUIDITY",
+      "instrument_or_series": "MOVE",
+      "dependency_group": "US_RATES_VOL",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "crisis-hyoas",
+      "region": "US",
+      "axis": "CREDIT",
+      "instrument_or_series": "HY OAS",
+      "dependency_group": "US_CREDIT",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "crisis-ycurve",
+      "region": "US",
+      "axis": "POLICY",
+      "instrument_or_series": "10Y minus 2Y",
+      "dependency_group": "US_RATES",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "crisis-creditpx",
+      "region": "US",
+      "axis": "CREDIT",
+      "instrument_or_series": "HYG/IEF ratio; rates duration confound",
+      "dependency_group": "US_CREDIT",
+      "source_owner_or_candidate": "scripts/mris/ existing producer",
+      "status": "EXISTING_SOURCE_NOT_REPLAY_QUALIFIED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Repository producer presence does not qualify current data, intraday availability or EA replay."
+    },
+    {
+      "source_id": "equity-us-breadth",
+      "region": "US",
+      "axis": "EQUITY",
+      "instrument_or_series": "S&P 500 / Nasdaq, alternatives not independent votes",
+      "dependency_group": "US_EQUITY",
+      "source_owner_or_candidate": "Index owner + licensed historical source required",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "equity-euro",
+      "region": "EUROZONE",
+      "axis": "EQUITY",
+      "instrument_or_series": "Euro-area equity basket; STOXX Europe is a DIFFERENT geography",
+      "dependency_group": "EUROPE_EQUITY",
+      "source_owner_or_candidate": "Index owner + licensed historical source required",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "equity-europe",
+      "region": "GLOBAL",
+      "axis": "EQUITY",
+      "instrument_or_series": "STOXX Europe 600 regional basket, includes non-Eurozone markets",
+      "dependency_group": "EUROPE_EQUITY",
+      "source_owner_or_candidate": "STOXX",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "equity-uk",
+      "region": "UK",
+      "axis": "EQUITY",
+      "instrument_or_series": "FTSE 100 or broader UK basket; multinational revenue exposure",
+      "dependency_group": "UK_EQUITY",
+      "source_owner_or_candidate": "FTSE Russell",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "equity-japan",
+      "region": "JAPAN",
+      "axis": "EQUITY",
+      "instrument_or_series": "TOPIX / Nikkei alternatives, not independent votes",
+      "dependency_group": "JAPAN_EQUITY",
+      "source_owner_or_candidate": "JPX / Nikkei",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "equity-china",
+      "region": "CHINA",
+      "axis": "EQUITY",
+      "instrument_or_series": "CSI 300 and separate Hong Kong listed China exposure",
+      "dependency_group": "CHINA_EQUITY",
+      "source_owner_or_candidate": "CSI / Hang Seng Indexes",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "equity-india",
+      "region": "INDIA",
+      "axis": "EQUITY",
+      "instrument_or_series": "Nifty 50 or broader India basket",
+      "dependency_group": "INDIA_EQUITY",
+      "source_owner_or_candidate": "NSE Indices",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "equity-em",
+      "region": "EM",
+      "axis": "EQUITY",
+      "instrument_or_series": "EM basket with fixed geographic/constituent convention",
+      "dependency_group": "EM_EQUITY",
+      "source_owner_or_candidate": "MSCI or FTSE index owner",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "equity-global",
+      "region": "GLOBAL",
+      "axis": "EQUITY",
+      "instrument_or_series": "ACWI; not a GDP-weighted world-economy measure",
+      "dependency_group": "GLOBAL_EQUITY",
+      "source_owner_or_candidate": "MSCI",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze price vs total return, local vs USD currency, component overlap, trading calendar and actual close availability. Do not mix simultaneous date labels across timezones."
+    },
+    {
+      "source_id": "payems-vintage",
+      "region": "US",
+      "axis": "GROWTH",
+      "instrument_or_series": "PAYEMS bounded 2025 vintages",
+      "dependency_group": "US_LABOUR",
+      "source_owner_or_candidate": "ALFRED + BLS",
+      "status": "BOUNDED_SELECTOR_ONLY",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Existing portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json; two selector decision points only, no broad historical/EA qualification."
+    },
+    {
+      "source_id": "growth-us",
+      "region": "US",
+      "axis": "GROWTH",
+      "instrument_or_series": "Output/labour indicators; exact series not chosen",
+      "dependency_group": "US_REAL_GROWTH",
+      "source_owner_or_candidate": "BLS/BEA",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Observation period is not release time. GDP level/direction, growth rate and growth acceleration are distinct."
+    },
+    {
+      "source_id": "inflation-us",
+      "region": "US",
+      "axis": "INFLATION",
+      "instrument_or_series": "Consumer prices; exact headline/core/seasonal treatment not chosen",
+      "dependency_group": "US_INFLATION",
+      "source_owner_or_candidate": "BLS/BEA",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Inflation slowing is not price deflation. Preserve revisions and seasonal-adjustment vintage."
+    },
+    {
+      "source_id": "growth-eurozone",
+      "region": "EUROZONE",
+      "axis": "GROWTH",
+      "instrument_or_series": "Output/labour indicators; exact series not chosen",
+      "dependency_group": "EUROZONE_REAL_GROWTH",
+      "source_owner_or_candidate": "Eurostat",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Observation period is not release time. GDP level/direction, growth rate and growth acceleration are distinct."
+    },
+    {
+      "source_id": "inflation-eurozone",
+      "region": "EUROZONE",
+      "axis": "INFLATION",
+      "instrument_or_series": "Consumer prices; exact headline/core/seasonal treatment not chosen",
+      "dependency_group": "EUROZONE_INFLATION",
+      "source_owner_or_candidate": "Eurostat",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Inflation slowing is not price deflation. Preserve revisions and seasonal-adjustment vintage."
+    },
+    {
+      "source_id": "growth-uk",
+      "region": "UK",
+      "axis": "GROWTH",
+      "instrument_or_series": "Output/labour indicators; exact series not chosen",
+      "dependency_group": "UK_REAL_GROWTH",
+      "source_owner_or_candidate": "ONS",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Observation period is not release time. GDP level/direction, growth rate and growth acceleration are distinct."
+    },
+    {
+      "source_id": "inflation-uk",
+      "region": "UK",
+      "axis": "INFLATION",
+      "instrument_or_series": "Consumer prices; exact headline/core/seasonal treatment not chosen",
+      "dependency_group": "UK_INFLATION",
+      "source_owner_or_candidate": "ONS",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Inflation slowing is not price deflation. Preserve revisions and seasonal-adjustment vintage."
+    },
+    {
+      "source_id": "growth-japan",
+      "region": "JAPAN",
+      "axis": "GROWTH",
+      "instrument_or_series": "Output/labour indicators; exact series not chosen",
+      "dependency_group": "JAPAN_REAL_GROWTH",
+      "source_owner_or_candidate": "Statistics Bureau / Cabinet Office",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Observation period is not release time. GDP level/direction, growth rate and growth acceleration are distinct."
+    },
+    {
+      "source_id": "inflation-japan",
+      "region": "JAPAN",
+      "axis": "INFLATION",
+      "instrument_or_series": "Consumer prices; exact headline/core/seasonal treatment not chosen",
+      "dependency_group": "JAPAN_INFLATION",
+      "source_owner_or_candidate": "Statistics Bureau / Cabinet Office",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Inflation slowing is not price deflation. Preserve revisions and seasonal-adjustment vintage."
+    },
+    {
+      "source_id": "growth-china",
+      "region": "CHINA",
+      "axis": "GROWTH",
+      "instrument_or_series": "Output/labour indicators; exact series not chosen",
+      "dependency_group": "CHINA_REAL_GROWTH",
+      "source_owner_or_candidate": "NBS",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Observation period is not release time. GDP level/direction, growth rate and growth acceleration are distinct."
+    },
+    {
+      "source_id": "inflation-china",
+      "region": "CHINA",
+      "axis": "INFLATION",
+      "instrument_or_series": "Consumer prices; exact headline/core/seasonal treatment not chosen",
+      "dependency_group": "CHINA_INFLATION",
+      "source_owner_or_candidate": "NBS",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Inflation slowing is not price deflation. Preserve revisions and seasonal-adjustment vintage."
+    },
+    {
+      "source_id": "growth-india",
+      "region": "INDIA",
+      "axis": "GROWTH",
+      "instrument_or_series": "Output/labour indicators; exact series not chosen",
+      "dependency_group": "INDIA_REAL_GROWTH",
+      "source_owner_or_candidate": "MoSPI",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Observation period is not release time. GDP level/direction, growth rate and growth acceleration are distinct."
+    },
+    {
+      "source_id": "inflation-india",
+      "region": "INDIA",
+      "axis": "INFLATION",
+      "instrument_or_series": "Consumer prices; exact headline/core/seasonal treatment not chosen",
+      "dependency_group": "INDIA_INFLATION",
+      "source_owner_or_candidate": "MoSPI",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Inflation slowing is not price deflation. Preserve revisions and seasonal-adjustment vintage."
+    },
+    {
+      "source_id": "policy-us",
+      "region": "US",
+      "axis": "POLICY",
+      "instrument_or_series": "Official policy rate and statement; exact instrument not chosen",
+      "dependency_group": "US_POLICY",
+      "source_owner_or_candidate": "Federal Reserve",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Rate rising/falling is not enough to identify restrictive/accommodative stance. Keep statement publication clock separate."
+    },
+    {
+      "source_id": "policy-eurozone",
+      "region": "EUROZONE",
+      "axis": "POLICY",
+      "instrument_or_series": "Official policy rate and statement; exact instrument not chosen",
+      "dependency_group": "EUROZONE_POLICY",
+      "source_owner_or_candidate": "ECB",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Rate rising/falling is not enough to identify restrictive/accommodative stance. Keep statement publication clock separate."
+    },
+    {
+      "source_id": "policy-uk",
+      "region": "UK",
+      "axis": "POLICY",
+      "instrument_or_series": "Official policy rate and statement; exact instrument not chosen",
+      "dependency_group": "UK_POLICY",
+      "source_owner_or_candidate": "Bank of England",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Rate rising/falling is not enough to identify restrictive/accommodative stance. Keep statement publication clock separate."
+    },
+    {
+      "source_id": "policy-japan",
+      "region": "JAPAN",
+      "axis": "POLICY",
+      "instrument_or_series": "Official policy rate and statement; exact instrument not chosen",
+      "dependency_group": "JAPAN_POLICY",
+      "source_owner_or_candidate": "Bank of Japan",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Rate rising/falling is not enough to identify restrictive/accommodative stance. Keep statement publication clock separate."
+    },
+    {
+      "source_id": "policy-china",
+      "region": "CHINA",
+      "axis": "POLICY",
+      "instrument_or_series": "Official policy rate and statement; exact instrument not chosen",
+      "dependency_group": "CHINA_POLICY",
+      "source_owner_or_candidate": "PBOC",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Rate rising/falling is not enough to identify restrictive/accommodative stance. Keep statement publication clock separate."
+    },
+    {
+      "source_id": "policy-india",
+      "region": "INDIA",
+      "axis": "POLICY",
+      "instrument_or_series": "Official policy rate and statement; exact instrument not chosen",
+      "dependency_group": "INDIA_POLICY",
+      "source_owner_or_candidate": "RBI",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Rate rising/falling is not enough to identify restrictive/accommodative stance. Keep statement publication clock separate."
+    },
+    {
+      "source_id": "oecd-cli",
+      "region": "GLOBAL",
+      "axis": "GROWTH",
+      "instrument_or_series": "OECD CLI and revisions snapshots",
+      "dependency_group": "GLOBAL_REAL_GROWTH",
+      "source_owner_or_candidate": "OECD",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Multi-country qualitative turning-point indicator. Monthly snapshots cannot supply an exact intraday release clock by themselves."
+    },
+    {
+      "source_id": "bis-eer",
+      "region": "GLOBAL",
+      "axis": "LIQUIDITY",
+      "instrument_or_series": "BIS effective exchange rates",
+      "dependency_group": "GLOBAL_FX",
+      "source_owner_or_candidate": "BIS",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Broad FX context, not a standalone measure of tradable intraday dollar funding stress."
+    },
+    {
+      "source_id": "jgb10y",
+      "region": "JAPAN",
+      "axis": "POLICY",
+      "instrument_or_series": "JGB 10Y, exact source to qualify",
+      "dependency_group": "JAPAN_RATES",
+      "source_owner_or_candidate": "Japanese official rate/debt source candidate",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Must replace only a qualified input; do not keep treating US10Y alone as a measured two-country spread."
+    },
+    {
+      "source_id": "cnh",
+      "region": "CHINA",
+      "axis": "LIQUIDITY",
+      "instrument_or_series": "USDCNH, offshore instrument distinct from CNY",
+      "dependency_group": "CHINA_FX",
+      "source_owner_or_candidate": "Licensed FX data candidate",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Freeze offshore/onshore instrument identity and first available quote/bar clock."
+    },
+    {
+      "source_id": "funding",
+      "region": "GLOBAL",
+      "axis": "LIQUIDITY",
+      "instrument_or_series": "Funding/financial conditions series, not chosen",
+      "dependency_group": "GLOBAL_FUNDING",
+      "source_owner_or_candidate": "Official source candidate",
+      "status": "CANDIDATE_SOURCE_REQUIRED",
+      "historical_qualified": false,
+      "missing_gates": [
+        "source_bytes_and_rights",
+        "series_and_units",
+        "source_release_clock",
+        "historical_vintages_or_revision_policy",
+        "coverage",
+        "normalization",
+        "independent_review"
+      ],
+      "caveat": "Credit, equity volatility, FX and funding cannot be counted as identical measurements."
+    }
+  ],
+  "references": [
+    {
+      "url": "https://www.oecd.org/en/data/datasets/oecd-composite-leading-indicators-clis.html",
+      "checked": "2026-09-21",
+      "supports": "CLI and revisions snapshots exist; exact ingestion/clock/rights NOT qualified"
+    },
+    {
+      "url": "https://data.bis.org/topics/EER",
+      "checked": "2026-09-21",
+      "supports": "Official effective exchange rate source candidate, no ingest performed"
+    },
+    {
+      "url": "https://www.msci.com/indexes/index/892400",
+      "checked": "2026-09-21",
+      "supports": "ACWI official index identity candidate; licence/time-series not granted"
+    },
+    {
+      "url": "https://alfred.stlouisfed.org/help",
+      "checked": "2026-09-21",
+      "supports": "Vintage history and source availability limitations"
+    },
+    {
+      "url": "https://www.mql5.com/en/book/advanced/calendar/calendar_cache_tester",
+      "checked": "2026-09-21",
+      "supports": "Tester needs explicit calendar replay and historical timezone handling"
+    }
+  ]
+}

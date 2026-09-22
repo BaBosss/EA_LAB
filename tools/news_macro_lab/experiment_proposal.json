@@ -1,0 +1,58 @@
+{
+  "schema_version": "guard_experiment_proposal/1",
+  "can_execute": false,
+  "optimization": "NONE",
+  "bwd_role": "VALIDATION_ONLY",
+  "holdout_policy": "SEPARATE_OWNER_GATE_NO_USE",
+  "changed_dimensions": [
+    "NEWS_FIXED_WINDOW"
+  ],
+  "gate_receipt_sha256": {
+    "parent_source_and_build": null,
+    "parent_home_and_config": null,
+    "source_coverage_and_vintages": null,
+    "schedule_publication_history": null,
+    "broker_clock": null,
+    "classifier_and_calibration": null,
+    "policy_and_pending_semantics": null,
+    "primary_metric_and_falsifier": null,
+    "placebo_design_and_seeds": null,
+    "native_guard_parity": null,
+    "independent_gpt_scrutiny": null,
+    "tester_reservation_and_controller": null
+  },
+  "windows": {
+    "MAIN": null,
+    "BWD": null
+  },
+  "placebo_seeds": null,
+  "evaluation_unit": null,
+  "classification": "PROSPECTIVE_SKELETON_NOT_EXECUTION_CONTRACT",
+  "candidate_window_convention": "MAIN 2023-2025, BWD 2020-2022 are inherited discussion context only; exact eligible parent/contract must freeze UTC/server windows before any run.",
+  "policy_numbers": "NONE_FROZEN: pre/post/lot/threshold/currencies/action semantics need the exact next contract",
+  "required_measurements": [
+    "net",
+    "PF",
+    "equity_DD_with_definition",
+    "closed_trades",
+    "baskets_episodes",
+    "guard_firing_events",
+    "attempts_blocked",
+    "time_contact",
+    "time_in_market",
+    "max_exposure",
+    "hard_kills",
+    "tail_losses",
+    "year_split",
+    "regime_split",
+    "source_data_coverage",
+    "actual_spread_commission_swap_slippage_assumptions"
+  ],
+  "prohibited_shortcuts": [
+    "No deleting losing trades from an existing report to fake a gated run",
+    "No interpreting equal time blocked as equal exposure",
+    "No BWD tuning or historical-holdout reuse for discovery",
+    "No auto-enabling historical CLOSE_ALL policies",
+    "No historical AI OOS claim from a model with unknown training data"
+  ]
+}

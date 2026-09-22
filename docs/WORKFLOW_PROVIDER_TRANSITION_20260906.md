@@ -12,6 +12,14 @@ Gemini and Qwen are optional/support providers only; neither is a mandatory revi
 
 All dated Gemini/Qwen/Claude qualification attempts, timeouts, cancellations, grades, and completed reviews below remain preserved historical facts. They may support later analysis but do not gate the current canonical review path.
 
+### Owner review-cost reduction addendum - 2026-09-22
+
+The 2026-09-18 GPT-Scrutiny governance remains intact, with an efficiency overlay for **new** dispatches. Deterministic/local evidence is completed first; packages already failing deterministically are not sent for acceptance review. Normal acceptance uses one exact-head GPT Scrutiny at **MEDIUM reasoning by default**. HIGH is an exception that must carry a concrete complexity/risk rationale. If one authorized bounded repair is used, the only follow-up review is one targeted exact-head recheck focused on the original findings, changed hunks/files, affected requirements and impacted deterministic evidence.
+
+An already accepted independent review receipt is reused when exact reviewed commit/tree or frozen bytes, acceptance-relevant evidence hashes, review contract and impacted deterministic results are unchanged. Chat rotation, state rereads, lane-label changes, wrapper ambiguity and unchanged evidence copying/repackaging do not themselves trigger a new review. Any acceptance-relevant change requires exact-delta analysis first. Qwen or other providers remain optional advisory/precheck routes only; Gemini is not a mandatory reviewer. Review telemetry should use existing reporting surfaces and distinguish local thread-token workload observations from subscription quota/billing. Production NORMAL/ECONOMY remains inactive until its own hookup is accepted.
+
+This addendum grants no Repair3, no reopening of rejected/exhausted work, no self-approval, no reduced acceptance criteria, and no trading/runtime/risk/default authority.
+
 ## Evidence classification
 
 ### OWNER_REPORTED

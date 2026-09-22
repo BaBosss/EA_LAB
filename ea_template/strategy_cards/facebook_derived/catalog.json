@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "library": "facebook_derived",
+  "updated": "2026-09-22",
+  "source_basis": "owner_supplied_facebook_screenshots_no_original_source",
+  "cards": [
+    {
+      "id": "FB-A01",
+      "name": "Adaptive Donchian Trend Flip",
+      "status": "DESIGN_ONLY_NON_EXECUTABLE",
+      "style": "TREND_BREAKOUT_STOP_REVERSE",
+      "position_model": "SINGLE_DIRECTIONAL_POSITION",
+      "implementation_authority": false,
+      "backtest_authority": false,
+      "runtime_authority": false
+    },
+    {
+      "id": "FB-G01",
+      "name": "Persistent Adaptive Donchian Grid",
+      "status": "DESIGN_ONLY_NON_EXECUTABLE",
+      "style": "PHYSICAL_GRID_BASKET",
+      "position_model": "MULTI_POSITION_BASKET",
+      "implementation_authority": false,
+      "backtest_authority": false,
+      "runtime_authority": false
+    }
+  ]
+}
