@@ -28,6 +28,9 @@ _integrity_spec.loader.exec_module(_integrity)
 build_manifest = _integrity.build_manifest
 validate_manifest = _integrity.validate_manifest
 write_manifest = _integrity.write_manifest
+portable_path = _integrity.portable_path
+portable_error = _integrity.portable_error
+REPO_ROOT = _integrity.REPO_ROOT
 
 SCHEMA = "EA_LAB_POST_BROAD_DIAGNOSTIC_PACK_V1"
 AUTHORITY = "DIAGNOSTIC_ONLY_NO_THRESHOLDS_NO_VERDICT_NO_FILTER_NO_OPTIMIZATION_NO_HOLDOUT_NO_RISK_DEPLOYMENT_TRADING"
@@ -51,10 +54,18 @@ def sha256_file(path: Path) -> str:
 def read_json(path: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise Refusal(f"cannot read JSON {path}: {exc}") from exc
+    except OSError as exc:
+        raise Refusal(
+            f"cannot read JSON {portable_path(path, repo_root=REPO_ROOT)}: "
+            f"{portable_error(exc, repo_root=REPO_ROOT)}"
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise Refusal(
+            f"cannot read JSON {portable_path(path, repo_root=REPO_ROOT)}: "
+            f"invalid JSON at line {exc.lineno} column {exc.colno}"
+        ) from exc
     if not isinstance(data, dict):
-        raise Refusal(f"JSON root must be an object: {path}")
+        raise Refusal(f"JSON root must be an object: {portable_path(path, repo_root=REPO_ROOT)}")
     return data
 
 
@@ -65,10 +76,15 @@ def read_csv_rows(path: Path, required: Iterable[str]) -> list[dict[str, str]]:
             headers = reader.fieldnames or []
             missing = [name for name in required if name not in headers]
             if missing:
-                raise Refusal(f"missing CSV columns in {path}: {missing}")
+                raise Refusal(f"missing CSV columns in {portable_path(path, repo_root=REPO_ROOT)}: {missing}")
             return [dict(row) for row in reader]
     except OSError as exc:
-        raise Refusal(f"cannot read CSV {path}: {exc}") from exc
+        raise Refusal(
+            f"cannot read CSV {portable_path(path, repo_root=REPO_ROOT)}: "
+            f"{portable_error(exc, repo_root=REPO_ROOT)}"
+        ) from exc
+
+
 def dec(value: str, label: str) -> Decimal:
     try:
         return Decimal(value)
@@ -425,7 +441,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     manifest=build_manifest(spec_path,manifest_path)
     write_manifest(manifest,manifest_path)
     validate_manifest(manifest_path)
-    return {"status":"PASS","schema_version":SCHEMA,"output_dir":str(out_dir),
+    return {"status":"PASS","schema_version":SCHEMA,"output_dir":portable_path(out_dir, repo_root=REPO_ROOT),
             "source_unit_count":len(units),"cell_count":len(source_pkg["cells"]),
             "output_count":len(OUTPUT_NAMES)+2,"manifest_sha256":sha256_file(manifest_path)}
 
@@ -445,8 +461,8 @@ def main() -> int:
     args=parser().parse_args()
     try:
         result=build(args)
-    except (Refusal, FileNotFoundError) as exc:
-        print(f"REFUSED: {exc}",file=sys.stderr)
+    except (Refusal, OSError) as exc:
+        print(f"REFUSED: {portable_error(exc, repo_root=REPO_ROOT)}",file=sys.stderr)
         return 2
     print(json.dumps(result,sort_keys=True))
     return 0

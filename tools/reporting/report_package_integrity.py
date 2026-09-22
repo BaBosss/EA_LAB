@@ -22,20 +22,264 @@ from typing import Any
 
 MANIFEST_VERSION = "EA_LAB_REPORT_PACKAGE_INTEGRITY_V1"
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_REDACTED_PATH_RE = re.compile(r"^(<[A-Z0-9_]+>)(?:[\\/](.*))?$")
+_EMBEDDED_ABSOLUTE_PATH_START_RE = re.compile(
+    r"(?i)(?:\\\\|//|[A-Z]:[\\/]|(?<![\w>?.])/(?!/))"
+)
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Refusal(ValueError):
     """Fail-closed input or integrity refusal."""
 
+
+def _canonicalize_windows_namespace(text: str) -> str:
+    """Collapse Windows namespace aliases and lexical path segments before classification."""
+    original = text
+    if text.casefold().startswith("//?/unc/"):
+        text = "//" + text[8:]
+    elif text.startswith("//?/"):
+        remainder = text[4:]
+        if re.match(r"^[A-Za-z]:/", remainder):
+            text = remainder
+    for prefix in ("/??/", "//??/"):
+        if text.casefold().startswith(prefix + "unc/"):
+            text = "//" + text[len(prefix) + 4:]
+            break
+        if text.startswith(prefix):
+            remainder = text[len(prefix):]
+            if re.match(r"^[A-Za-z]:/", remainder):
+                text = remainder
+                break
+
+    def unsafe() -> str:
+        digest = hashlib.sha256(original.casefold().encode("utf-8")).hexdigest()
+        return f"//?/UNSAFE/{digest}"
+
+    def normalized_parts(values: list[str]) -> list[str] | None:
+        result: list[str] = []
+        for part in values:
+            if part in ("", "."):
+                continue
+            if part == "..":
+                if not result:
+                    return None
+                result.pop()
+                continue
+            result.append(part)
+        return result
+
+    if text.casefold().startswith(("//./", "//?/", "/??/", "//??/")):
+        return text
+
+    drive = re.match(r"^(?P<root>[A-Za-z]:)/+(?P<tail>.*)$", text)
+    if drive:
+        parts = normalized_parts(drive.group("tail").split("/"))
+        if parts is None:
+            return unsafe()
+        suffix = "/".join(parts)
+        return drive.group("root") + "/" + suffix
+
+    if text.startswith("//"):
+        unc_parts = [part for part in text.lstrip("/").split("/") if part]
+        if len(unc_parts) < 2 or any(part in (".", "..") for part in unc_parts[:2]):
+            return unsafe()
+        tail = normalized_parts(unc_parts[2:])
+        if tail is None:
+            return unsafe()
+        return "//" + "/".join(unc_parts[:2] + tail)
+
+    if text.startswith("/"):
+        parts = normalized_parts(text.split("/"))
+        if parts is None:
+            return unsafe()
+        return "/" + "/".join(parts)
+    return text
+
+
+def _is_windows_device_absolute(text: str) -> bool:
+    folded = text.casefold()
+    return folded.startswith(("//./", "//?/", "/??/", "//??/"))
+
+
+def _absolute_path_kind(text: str) -> str | None:
+    if _is_windows_device_absolute(text):
+        return "device"
+    if text.startswith("//"):
+        return "unc"
+    if re.match(r"^[A-Za-z]:/", text):
+        return "drive"
+    if text.startswith("/"):
+        return "posix"
+    return None
+
+
+def _opaque_path_label(kind: str, value: str) -> str:
+    digest = hashlib.sha256(value.casefold().encode("utf-8")).hexdigest()[:10].upper()
+    return f"<{kind}_{digest}>"
+
+
+def portable_path(value: str | Path, *, repo_root: str | Path | None = None) -> str:
+    """Return a deterministic display path without exposing machine/user roots.
+
+    This is presentation-only. Artifact hashes and the paths used for filesystem access are
+    untouched. Relative tails are retained so two files with the same basename remain distinct.
+    """
+    text = _canonicalize_windows_namespace(str(value).strip().replace("\\", "/"))
+    already_redacted = _REDACTED_PATH_RE.fullmatch(text)
+    if already_redacted:
+        label, tail = already_redacted.group(1), already_redacted.group(2)
+        if not tail:
+            return label
+        nested = "//" + tail.lstrip("/") if tail.startswith("/") else tail
+        nested = _canonicalize_windows_namespace(nested)
+        if _absolute_path_kind(nested) or _REDACTED_PATH_RE.fullmatch(nested):
+            return f"{label}/{portable_path(nested, repo_root=repo_root)}"
+        parts = nested.split("/")
+        if any(part in ("", ".", "..") or ":" in part for part in parts):
+            return f"{label}/{_opaque_path_label('UNSAFE_TAIL', nested)}"
+        return f"{label}/{nested}"
+
+    path_kind = _absolute_path_kind(text)
+    if path_kind is None:
+        while text.startswith("./"):
+            text = text[2:]
+        return text
+
+    if path_kind == "device":
+        return _opaque_path_label("DEVICE_PATH", text)
+
+    def below(root_value: str | Path | None) -> str | None:
+        if root_value is None:
+            return None
+        root = _canonicalize_windows_namespace(
+            str(root_value).strip().replace("\\", "/")
+        ).rstrip("/")
+        if not root:
+            return None
+        if text.casefold() == root.casefold():
+            return ""
+        prefix = root + "/"
+        if text.casefold().startswith(prefix.casefold()):
+            return text[len(prefix):]
+        return None
+
+    repo_relative = below(repo_root)
+    if repo_relative is not None:
+        return repo_relative or "<REPO_ROOT>"
+
+    evidence = re.match(r"(?i)^[A-Z]:/EA_LAB_CONTROL/evidence(?:/(.*))?$", text)
+    if evidence:
+        tail = evidence.group(1)
+        return "<EVIDENCE_ROOT>" if not tail else f"<EVIDENCE_ROOT>/{tail}"
+
+    def labelled_root(kind: str, root: str) -> str:
+        return _opaque_path_label(kind, root)
+
+    worktree = re.match(
+        r"(?i)^(?P<root>[A-Z]:/EA_LAB_CONTROL/(?:worktrees|w)/[^/]+)(?:/(?P<tail>.*))?$",
+        text,
+    )
+    if worktree:
+        label = labelled_root("WORKTREE", worktree.group("root"))
+        tail = worktree.group("tail")
+        return label if not tail else f"{label}/{tail}"
+
+    user_worktree = re.match(
+        r"(?i)^(?P<root>[A-Z]:/Users/[^/]+/\.codex/worktrees/[^/]+(?:/EA_LAB)?)(?:/(?P<tail>.*))?$",
+        text,
+    )
+    if user_worktree:
+        label = labelled_root("WORKTREE", user_worktree.group("root"))
+        tail = user_worktree.group("tail")
+        return label if not tail else f"{label}/{tail}"
+
+    user_home = re.match(r"(?i)^(?P<root>[A-Z]:/Users/[^/]+)(?:/(?P<tail>.*))?$", text)
+    if user_home:
+        label = labelled_root("USER_HOME", user_home.group("root"))
+        tail = user_home.group("tail")
+        return label if not tail else f"{label}/{tail}"
+
+    if path_kind == "unc":
+        parts = [part for part in text[2:].split("/") if part]
+        root = "//" + "/".join(parts[:2])
+        label = labelled_root("UNC_ROOT", root)
+        tail = "/".join(parts[2:]) if len(parts) > 2 else ""
+        return label if not tail else f"{label}/{tail}"
+
+    if path_kind == "drive":
+        label = labelled_root("ABSOLUTE_ROOT", text[:2])
+        tail = text[3:]
+        return label if not tail else f"{label}/{tail}"
+
+    tail = text.lstrip("/")
+    return "<ABSOLUTE_ROOT>" if not tail else f"<ABSOLUTE_ROOT>/{tail}"
+
+
+def _sanitize_error_text(
+    message: str, *, repo_root: str | Path | None = None
+) -> str:
+    """Replace every embedded absolute path while allowing spaces inside path segments."""
+    rendered: list[str] = []
+    cursor = 0
+    while True:
+        match = _EMBEDDED_ABSOLUTE_PATH_START_RE.search(message, cursor)
+        if match is None:
+            rendered.append(message[cursor:])
+            break
+
+        rendered.append(message[cursor:match.start()])
+        end = len(message)
+        next_match = _EMBEDDED_ABSOLUTE_PATH_START_RE.search(message, match.end())
+        namespace_prefix = message[match.start():match.start() + 4]
+        if (
+            namespace_prefix in ("\\\\?\\", "\\\\.\\", "//?/", "//./")
+            and next_match is not None
+            and next_match.start() == match.start() + 4
+        ):
+            next_match = _EMBEDDED_ABSOLUTE_PATH_START_RE.search(
+                message, next_match.end()
+            )
+        if next_match is not None:
+            end = min(end, next_match.start())
+        for delimiter in (" -> ", "\r", "\n"):
+            delimiter_at = message.find(delimiter, match.end())
+            if delimiter_at >= 0:
+                end = min(end, delimiter_at)
+        if match.start() > 0 and message[match.start() - 1] in ("'", '"'):
+            closing_at = message.find(message[match.start() - 1], match.end())
+            if closing_at >= 0:
+                end = min(end, closing_at)
+
+        candidate = message[match.start():end].rstrip()
+        rendered.append(portable_path(candidate, repo_root=repo_root))
+        cursor = match.start() + len(candidate)
+    return "".join(rendered)
+
+
+def portable_error(exc: Exception, *, repo_root: str | Path | None = None) -> str:
+    """Render OS errors without copying their machine-local filename into an export."""
+    if isinstance(exc, OSError):
+        detail = _sanitize_error_text(
+            exc.strerror or exc.__class__.__name__, repo_root=repo_root
+        )
+        names = [name for name in (exc.filename, exc.filename2) if name]
+        if names:
+            refs = " -> ".join(portable_path(name, repo_root=repo_root) for name in names)
+            return f"{detail}: {refs}"
+        return detail
+    return _sanitize_error_text(str(exc), repo_root=repo_root)
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
     except FileNotFoundError as exc:
-        raise Refusal(f"file not found: {path}") from exc
+        raise Refusal(f"file not found: {portable_path(path, repo_root=REPO_ROOT)}") from exc
     except json.JSONDecodeError as exc:
-        raise Refusal(f"invalid JSON in {path}: {exc}") from exc
+        raise Refusal(f"invalid JSON in {portable_path(path, repo_root=REPO_ROOT)}: {exc}") from exc
     if not isinstance(data, dict):
-        raise Refusal(f"top-level JSON must be an object: {path}")
+        raise Refusal(f"top-level JSON must be an object: {portable_path(path, repo_root=REPO_ROOT)}")
     return data
 
 
@@ -47,17 +291,18 @@ def _nonempty_text(value: Any, label: str) -> str:
 
 def _normalize_rel_path(value: Any) -> str:
     text = _nonempty_text(value, "artifact path").replace("\\", "/")
+    display = portable_path(text, repo_root=REPO_ROOT)
     if text.startswith("/") or re.match(r"^[A-Za-z]:", text):
-        raise Refusal(f"artifact path must be relative: {value}")
+        raise Refusal(f"artifact path must be relative: {display}")
     p = PurePosixPath(text)
     parts = p.parts
     if not parts or any(part in ("", ".", "..") for part in parts):
-        raise Refusal(f"artifact path contains unsafe segment: {value}")
+        raise Refusal(f"artifact path contains unsafe segment: {display}")
     if any(":" in part for part in parts):
-        raise Refusal(f"artifact path contains unsupported colon segment: {value}")
+        raise Refusal(f"artifact path contains unsupported colon segment: {display}")
     normalized = p.as_posix()
     if normalized in ("", "."):
-        raise Refusal(f"artifact path is empty after normalization: {value}")
+        raise Refusal(f"artifact path is empty after normalization: {display}")
     return normalized
 
 
@@ -247,18 +492,22 @@ def main(argv: list[str] | None = None) -> int:
                 "operation": "build",
                 "package_id": manifest["package_id"],
                 "artifact_count": len(manifest["artifacts"]),
-                "manifest": str(args.out),
+                "manifest": portable_path(args.out, repo_root=REPO_ROOT),
             }
         else:
             result = validate_manifest(args.manifest)
             result["operation"] = "validate"
-            result["manifest"] = str(args.manifest)
+            result["manifest"] = portable_path(args.manifest, repo_root=REPO_ROOT)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))
         return 0
     except (Refusal, OSError) as exc:
         print(
             json.dumps(
-                {"status": "BLOCKED", "operation": args.command, "error": str(exc)},
+                {
+                    "status": "BLOCKED",
+                    "operation": args.command,
+                    "error": portable_error(exc, repo_root=REPO_ROOT),
+                },
                 ensure_ascii=False,
                 sort_keys=True,
             ),

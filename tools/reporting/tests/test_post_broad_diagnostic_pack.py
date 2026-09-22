@@ -67,8 +67,15 @@ class PackTests(unittest.TestCase):
                                   regime_package=str(regime),out_dir=str(self.root/out_name),direct_consumer='fixture consumer')
 
     def test_outputs_no_entry_reversals_and_integrity(self):
-        args=self.args(); result=MOD.build(args)
+        args=self.args()
+        inputs={Path(value):Path(value).read_bytes() for value in
+                (args.units,args.source_package,args.regime_detail,args.regime_package)}
+        result=MOD.build(args)
         self.assertEqual(result['status'],'PASS')
+        self.assertEqual(MOD.portable_path(Path(args.out_dir),repo_root=MOD.REPO_ROOT),result['output_dir'])
+        self.assertNotRegex(result['output_dir'],r'(?i)^[a-z]:[/\\]')
+        self.assertNotRegex(json.dumps(result),r'(?i)C:\\\\Users\\\\|D:\\\\EA_LAB_CONTROL\\\\')
+        self.assertEqual(inputs,{path:path.read_bytes() for path in inputs})
         out=Path(args.out_dir)
         with (out/'participation_no_entry.csv').open(encoding='utf-8',newline='') as fh:
             rows=list(csv.DictReader(fh))
