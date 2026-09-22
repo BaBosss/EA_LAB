@@ -1,0 +1,90 @@
+{
+    "schema":  "ofp_native_fixture_runtime_contract/1",
+    "contract_id":  "OFP-NATIVE-FIXTURE-PARITY-20260922-001",
+    "classification":  "SYNTHETIC_FIXTURE_PARITY_DIAGNOSTIC_ONLY",
+    "lane":  "ct-ofp-native-fixture-exec-v1-20260922",
+    "frozen_from_canonical":  "6e73c7f8ef0c5d3664a263510a2ee57163e81cd0",
+    "accepted_source_head":  "4e44e7a2e5302200f4ea88e348b762a3f8d64f7c",
+    "source_drift_to_contract_base":  false,
+    "accepted":  {
+                     "manifest_sha256":  "a4195efa72d7aee7f35bc319ec61bd4e765f9b4b6f996ae5a4f2ee152904a24e",
+                     "fixture_sha256":  "55ad678178f4606da64091cb5853b043fb76a89b9ea799970db5c847212f2732",
+                     "expected_python_ledger_sha256":  "60da74d8f5c1516f749d577f03b99c5a0d9e402ed033a28cde19824cc19b7a3e",
+                     "source_graph_sha256":  "7361de6148638cb85e28d15a962e98e4266a5077e2fdc443189660d7f35f5b3a",
+                     "ea_source_sha256":  "e014dfcaf35b5e5a710e7e9769144840905f57fdb51f301296f45577c01b9ce5",
+                     "parse_native_ledger_sha256":  "d0e4ea1da05a0f439ed67d78e032439a8205916175fc851d1c91c3516c0285b9",
+                     "receipt_validation_sha256":  "78266db7bc9e64c6620300dfff997b71ba299f480e0fe90da1320c5caf919e1d",
+                     "compile_receipt_sha256":  "ab81ee676f2d89ccbdd9f0264fc882eae6860fe8082c39d726086d58817d9b7e",
+                     "ex5_sha256":  "e0f7cc00c6b2cf41a7fa72f4e2ac08d56ec70238f7dbd40410057f48a7e3a800",
+                     "ex5_bytes":  358526,
+                     "case_count":  24
+                 },
+    "runtime":  {
+                    "runtime_lane":  "MT5_PRIMARY_EXCLUSIVE",
+                    "terminal":  "D:/Meta 5/terminal64.exe",
+                    "terminal_sha256":  "f61ecfad618a4577df6743eb10e21cfeb2c374ea66ba8d4813c2c0ccca784d33",
+                    "terminal_version":  "5.0.0.6182",
+                    "metaeditor":  "D:/Meta 5/metaeditor64.exe",
+                    "metaeditor_sha256":  "197ca3dd8d1971831366f54cb57bf3f120b420700e573135509d406e4e23709e",
+                    "metaeditor_version":  "5.0.0.6182",
+                    "portable":  true,
+                    "data_dir":  "D:/Meta 5",
+                    "runner":  "scripts/mt5_run.ps1",
+                    "runner_sha256":  "122bb936f4452957e68c935832b493ddf5a1151778465a640a1629275c707d03",
+                    "set_surface_helper_sha256":  "60ef88f2f2c370b9acf773caadfb16e333923cf9d89060222097948e3e53b59d",
+                    "expert_relative":  "EALabOFP/OFPNativeFixtureParity",
+                    "expert_target":  "D:/Meta 5/MQL5/Experts/EALabOFP/OFPNativeFixtureParity.ex5",
+                    "target_existed_at_freeze":  false,
+                    "carrier_symbol":  "XAUUSD",
+                    "carrier_period":  "H1",
+                    "tester_model":  1,
+                    "from_date":  "2025.01.02",
+                    "to_date":  "2025.01.03",
+                    "deposit_usd":  10000,
+                    "leverage":  100,
+                    "optimization":  0,
+                    "forward_mode":  0,
+                    "execution_mode":  0,
+                    "visual":  0,
+                    "timeout_sec":  180,
+                    "reserve_cores":  4,
+                    "report_name":  "OFP_NATIVE_FIXTURE_20260922_001"
+                },
+    "setfile":  {
+                    "path":  "factory/runs/ofp_native_fixture_20260922/OFP_NATIVE_FIXTURE_20260922.set",
+                    "sha256":  "66a3f9758589ec6bd21f31ce3f7c30d2476dcc1bd071f31227aabb45b2c5388b",
+                    "surface":  1,
+                    "effective_config_hash":  "c8320b7b5ebdad53f708c8facb616dcb09e45349f643e3011f8bb3499eae397f",
+                    "input":  {
+                                  "InpRuntimeContractId":  "OFP-NATIVE-FIXTURE-PARITY-20260922-001"
+                              }
+                },
+    "expected_native":  {
+                            "record_prefix":  "[OFP_NATIVE] ",
+                            "record_count":  24,
+                            "completion_prefix":  "[OFP_NATIVE_COMPLETE] ",
+                            "completion_case_count":  24,
+                            "compare_target":  "tools/orderflow_proxy/native_parity/generated/expected_python_ledger.json",
+                            "parity_requires_exact_case_id_variant_direction_entry_trigger_geometry":  true
+                        },
+    "evidence":  {
+                     "tester_log":  "D:/Meta 5/Tester/logs/20260922.log",
+                     "pre_log_exists":  false,
+                     "trusted_controller_receipt_root":  "D:/EA_LAB_CONTROL/evidence/ct-ofp-native-fixture-exec-v1-20260922",
+                     "out_of_band_receipt_digest_required":  true
+                 },
+    "prohibited":  [
+                       "REAL_MARKET_PERFORMANCE",
+                       "REAL_DATA_PARITY",
+                       "REAL_QUOTE_HISTORY",
+                       "FILL_FIDELITY",
+                       "RISK_OR_PNL",
+                       "OPTIMIZATION",
+                       "MODEL4",
+                       "HOLDOUT",
+                       "CANDIDATE_GRADE_KINT",
+                       "DEMO_LIVE",
+                       "TRADING_RUNTIME_DEPLOYMENT"
+                   ],
+    "authority":  "ONE_SYNTHETIC_STRATEGY_TESTER_FIXTURE_ONLY_NO_PERFORMANCE_MARKETDATA_PROMOTION_HOLDOUT_DEMO_LIVE_TRADING"
+}

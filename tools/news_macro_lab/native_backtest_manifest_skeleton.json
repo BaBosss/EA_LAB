@@ -1,0 +1,78 @@
+{
+  "schema_version": "guard_native_backtest_manifest/1",
+  "status": "SKELETON_BLOCKED_NOT_EXECUTABLE",
+  "can_execute": false,
+  "guard_kind": null,
+  "changed_dimension": null,
+  "parent": {
+    "family": null,
+    "variant": null,
+    "home_symbol": null,
+    "home_timeframe": null,
+    "source_sha256": null,
+    "ex5_sha256": null,
+    "set_sha256": null,
+    "config_id": null
+  },
+  "tester": {
+    "install_id": null,
+    "model": null,
+    "terminal_build": null,
+    "account_identity": null,
+    "leverage": null
+  },
+  "windows": {
+    "MAIN": null,
+    "BWD": null,
+    "HOLDOUT": "LOCKED_UNSPENT"
+  },
+  "data": {
+    "dataset_sha256": null,
+    "source_contract_sha256": null,
+    "broker_clock_sha256": null,
+    "classifier_sha256": null,
+    "coverage_receipt_sha256": null
+  },
+  "policy": {
+    "currencies": null,
+    "importance_levels": null,
+    "pre_minutes": null,
+    "post_minutes": null,
+    "news_action": null,
+    "macro_trigger_states": null,
+    "macro_lot_mult": null,
+    "pending_order_semantics": null
+  },
+  "arms": [
+    "BASE_OFF",
+    "REAL_GUARD",
+    "PLACEBO_ALL_FROZEN_SEEDS"
+  ],
+  "placebo": {
+    "seeds": null,
+    "allowed_shift_weeks": null,
+    "construction_receipt_sha256": null
+  },
+  "required_measurements": [
+    "net",
+    "PF_with_status",
+    "equity_DD_with_definition",
+    "closed_trades",
+    "baskets_or_episodes",
+    "guard_firings",
+    "attempts_blocked",
+    "contact_time",
+    "time_in_market",
+    "max_exposure_with_definition",
+    "hard_kills",
+    "tail_loss_value_and_definition",
+    "year_split_artifact_sha256",
+    "regime_split_artifact_sha256",
+    "source_coverage_artifact_sha256",
+    "transaction_economics_artifact_sha256"
+  ],
+  "native_guard_parity_receipt_sha256": null,
+  "independent_gpt_scrutiny_receipt_sha256": null,
+  "performance": "NOT_RUN",
+  "holdout_used": false
+}

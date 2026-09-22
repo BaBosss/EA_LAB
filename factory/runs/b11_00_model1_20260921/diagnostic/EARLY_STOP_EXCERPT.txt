@@ -1,0 +1,45 @@
+CJ	0	12:30:21.974	Tester	"EALabTpl\Boss_11_GridTrend.ex5" X64
+EI	0	12:30:22.881	Tester	XAUUSD,H1 (ThinkMarkets-Live): testing of Experts\EALabTpl\Boss_11_GridTrend.ex5 from 2023.01.01 00:00 to 2025.12.31 00:00
+JI	0	12:30:23.339	Core 01	expert file added: Experts\EALabTpl\Boss_11_GridTrend.ex5. 213446 bytes loaded
+RM	0	12:30:23.339	Core 01	XAUUSD,H1: testing of Experts\EALabTpl\Boss_11_GridTrend.ex5 from 2023.01.01 00:00 to 2025.12.31 00:00 started with inputs:
+LH	0	12:30:23.339	Core 01	2023.01.01 00:00:00   [INIT] Boss_11_GridTrend | exit=22 sl=32 stack=92 conf=0 firstLot=41 prog=53 protect=2 dry=N
+DG	0	12:30:23.339	Core 01	2023.01.01 00:00:00   [CFG] input surface: build=LAB_ENTRY_11 keys=151 scope=surface+constants effective_config_hash=9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b
+QK	0	12:30:23.339	Core 01	2023.01.01 00:00:00   [IDENTITY] account=146237 magic=990001 ea=11_GridTrend build_receipt=br-65cf1caf297d4d4cb6588c887a0aaca7 cfg=9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b epoch=epoch-1 attach_time_unix=1672531200 first_trade_epoch=null
+QL	0	12:30:23.339	Core 01	2023.01.03 01:01:00   market buy 0.1 XAUUSD tp: 1840.57 (1827.03 / 1827.23 / 1827.03)
+CM	0	12:30:23.339	Core 01	2023.01.03 01:01:00   deal #2 buy 0.1 XAUUSD at 1827.23 done (based on order #2)
+CD	0	12:30:23.339	Core 01	2023.01.03 01:01:00   deal performed [#2 buy 0.1 XAUUSD at 1827.23]
+JI	0	12:30:23.339	Core 01	2023.01.03 01:01:00   order performed buy 0.1 at 1827.23 [#2 buy 0.1 XAUUSD at 1827.23]
+QJ	0	12:30:23.339	Core 01	2023.01.03 01:01:20   [IDENTITY] account=146237 magic=990001 ea=11_GridTrend build_receipt=br-65cf1caf297d4d4cb6588c887a0aaca7 cfg=9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b epoch=epoch-1 attach_time_unix=1672531200 first_trade_epoch=epoch-1
+PK	0	12:30:23.339	Core 01	2023.01.03 01:14:40   [RISK] HARD KILL: DD 29.58% >= 25.00% (profile 2) -> closing all
+LI	0	12:30:23.339	Core 01	2023.01.03 01:14:40   market sell 0.1 XAUUSD, close #2 (1826.49 / 1827.31 / 1826.49)
+RI	0	12:30:23.339	Core 01	2023.01.03 01:14:40   deal #3 sell 0.1 XAUUSD at 1826.49 done (based on order #3)
+OS	0	12:30:23.339	Core 01	2023.01.03 01:14:40   deal performed [#3 sell 0.1 XAUUSD at 1826.49]
+OQ	0	12:30:23.339	Core 01	2023.01.03 01:14:40   order performed sell 0.1 at 1826.49 [#3 sell 0.1 XAUUSD at 1826.49]
+HL	0	12:30:23.339	Core 01	2023.01.03 01:14:40   [RISK] HARD KILL complete: broker flat verified -> halt (persisted)
+II	0	12:30:34.088	Tester	"EALabTpl\Boss_11_GridTrend.ex5" X64
+DI	0	12:30:34.779	Tester	XAUUSD,H1 (ThinkMarkets-Live): testing of Experts\EALabTpl\Boss_11_GridTrend.ex5 from 2020.01.01 00:00 to 2022.12.31 00:00
+DH	0	12:30:35.213	Core 01	expert file added: Experts\EALabTpl\Boss_11_GridTrend.ex5. 213446 bytes loaded
+PL	0	12:30:35.213	Core 01	XAUUSD,H1: testing of Experts\EALabTpl\Boss_11_GridTrend.ex5 from 2020.01.01 00:00 to 2022.12.31 00:00 started with inputs:
+OK	0	12:30:35.213	Core 01	2020.01.01 00:00:00   [INIT] Boss_11_GridTrend | exit=22 sl=32 stack=92 conf=0 firstLot=41 prog=53 protect=2 dry=N
+GG	0	12:30:35.213	Core 01	2020.01.01 00:00:00   [CFG] input surface: build=LAB_ENTRY_11 keys=151 scope=surface+constants effective_config_hash=9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b
+PK	0	12:30:35.213	Core 01	2020.01.01 00:00:00   [IDENTITY] account=146237 magic=990001 ea=11_GridTrend build_receipt=br-65cf1caf297d4d4cb6588c887a0aaca7 cfg=9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b epoch=epoch-1 attach_time_unix=1577836800 first_trade_epoch=null
+KL	0	12:30:35.213	Core 01	2020.01.02 01:01:00   market buy 0.1 XAUUSD tp: 1528.75 (1520.01 / 1520.20 / 1520.01)
+HM	0	12:30:35.213	Core 01	2020.01.02 01:01:00   deal #2 buy 0.1 XAUUSD at 1520.20 done (based on order #2)
+HD	0	12:30:35.213	Core 01	2020.01.02 01:01:00   deal performed [#2 buy 0.1 XAUUSD at 1520.20]
+NI	0	12:30:35.213	Core 01	2020.01.02 01:01:00   order performed buy 0.1 at 1520.20 [#2 buy 0.1 XAUUSD at 1520.20]
+GJ	0	12:30:35.213	Core 01	2020.01.02 01:01:20   [IDENTITY] account=146237 magic=990001 ea=11_GridTrend build_receipt=br-65cf1caf297d4d4cb6588c887a0aaca7 cfg=9411859142dcad9364d712f5d4348e32c70699139d57666d2c2908d84751e29b epoch=epoch-1 attach_time_unix=1577836800 first_trade_epoch=epoch-1
+LF	0	12:30:35.213	Core 01	2020.01.02 01:29:20   [EXIT] basket money-stop (safety, intrabar): net -10.00 <= -10.00 -> close all
+CK	0	12:30:35.213	Core 01	2020.01.02 01:29:20   market sell 0.1 XAUUSD, close #2 (1519.20 / 1519.38 / 1519.20)
+DG	0	12:30:35.213	Core 01	2020.01.02 01:29:20   deal #3 sell 0.1 XAUUSD at 1519.20 done (based on order #3)
+EE	0	12:30:35.213	Core 01	2020.01.02 01:29:20   deal performed [#3 sell 0.1 XAUUSD at 1519.20]
+OO	0	12:30:35.213	Core 01	2020.01.02 01:29:20   order performed sell 0.1 at 1519.20 [#3 sell 0.1 XAUUSD at 1519.20]
+LS	0	12:30:35.213	Core 01	2020.01.02 01:29:40   market buy 0.1 XAUUSD tp: 1528.54 (1519.66 / 1519.84 / 1519.66)
+JN	0	12:30:35.213	Core 01	2020.01.02 01:29:40   deal #4 buy 0.1 XAUUSD at 1519.84 done (based on order #4)
+DD	0	12:30:35.213	Core 01	2020.01.02 01:29:40   deal performed [#4 buy 0.1 XAUUSD at 1519.84]
+NI	0	12:30:35.213	Core 01	2020.01.02 01:29:40   order performed buy 0.1 at 1519.84 [#4 buy 0.1 XAUUSD at 1519.84]
+FG	0	12:30:35.213	Core 01	2020.01.02 01:35:40   [RISK] HARD KILL: DD 25.46% >= 25.00% (profile 2) -> closing all
+KE	0	12:30:35.213	Core 01	2020.01.02 01:35:40   market sell 0.1 XAUUSD, close #4 (1519.01 / 1519.19 / 1519.01)
+RM	0	12:30:35.213	Core 01	2020.01.02 01:35:40   deal #5 sell 0.1 XAUUSD at 1519.01 done (based on order #5)
+IP	0	12:30:35.213	Core 01	2020.01.02 01:35:40   deal performed [#5 sell 0.1 XAUUSD at 1519.01]
+NR	0	12:30:35.213	Core 01	2020.01.02 01:35:40   order performed sell 0.1 at 1519.01 [#5 sell 0.1 XAUUSD at 1519.01]
+KH	0	12:30:35.213	Core 01	2020.01.02 01:35:40   [RISK] HARD KILL complete: broker flat verified -> halt (persisted)

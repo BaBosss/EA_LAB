@@ -11,12 +11,22 @@ The sequence is mandatory:
 
 1. freeze one exact clean head and immutable evidence set;
 2. finish every contract-required deterministic, compile, regression, adversarial, and negative gate;
-3. launch a separate read-only GPT Scrutiny job/lane/contract that did not author the submitted change;
+3. prove whether a prior accepted independent exact-head review receipt is reusable under the identity rules below; if not reusable, launch one separate read-only GPT Scrutiny job/lane/contract that did not author the submitted change;
 4. bind the review to the exact head and isolated evidence;
 5. return one explicit result from section G with an authority ceiling;
 6. if the underlying contract permits repair, allow at most one bounded repair and one targeted exact-head recheck; never dispatch duplicate reviewers or repeat reviews until PASS.
 
 Provider/model family is not an independence criterion. Provider qualification cannot block this review. Independence is procedural and evidentiary: author/reviewer job separation, exact-head binding, evidence isolation, read-only review, deterministic/adversarial gates, and fail-closed ambiguity handling. The author job cannot self-approve.
+
+## Review-efficiency overlay - owner-ratified 2026-09-22
+
+- **Deterministic admission first:** do not dispatch substantive GPT Scrutiny while an applicable deterministic/compile/schema/hash/adversarial/source-identity gate is failing or missing. Terminal result consumption and exact local identity checks should be resolved without an LLM when sufficient.
+- **One acceptance review:** one general acceptance-grade Scrutiny per milestone exact head. Do not repeat a general review against unchanged reviewed bytes/evidence.
+- **Exact-head review reuse:** reuse a prior accepted independent receipt only when exact commit/tree or frozen source bytes, acceptance-relevant evidence hashes, review contract, and impacted deterministic results are unchanged. Record the receipt and identity proof. A chat/control-tower rotation, lane-label change, wrapper ambiguity, reread, or unchanged repackaging is not an acceptance-relevant delta.
+- **Reasoning level:** MEDIUM is the default for normal acceptance Scrutiny. HIGH requires a recorded concrete rationale tied to complexity/risk that deterministic gates do not adequately cover. LOW/MEDIUM may handle optional advisory/precheck work where sufficient.
+- **Targeted recheck:** after the one authorized repair, review primarily the original findings, exact changed hunks/files, affected requirements and targeted evidence. Expand only when a concrete dependency requires it; never use reduced context to omit an impacted invariant.
+- **Telemetry:** when available through existing read-only reporting, capture lane/job, model, reasoning effort, review type, exact head, reuse decision, HIGH rationale and local thread-token counter. Counters are efficiency observations, not billing/quota/credits.
+- These efficiency rules never weaken sections A-G, reset repair budgets, permit self-approval, substitute optional Qwen/Gemini advice for required acceptance, or grant runtime/trading/risk/deployment authority.
 
 ## Admission gate — all items required before substantive review
 
