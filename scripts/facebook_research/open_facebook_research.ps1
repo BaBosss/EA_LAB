@@ -19,6 +19,7 @@ function Test-FacebookUrl([string]$Value) {
     try {
         $uri = [Uri]$Value
         if($uri.Scheme -ne 'https'){ return $false }
+        if(-not [string]::IsNullOrWhiteSpace($uri.UserInfo)){ return $false }
         return ($uri.Host -eq 'facebook.com' -or
                 $uri.Host -eq 'www.facebook.com' -or
                 $uri.Host.EndsWith('.facebook.com'))
@@ -76,6 +77,8 @@ function Get-SafeFacebookLogUrl {
     param([string]$Value)
     $uri=[Uri]$Value
     $builder=[UriBuilder]$uri
+    $builder.UserName=''
+    $builder.Password=''
     $builder.Query=''
     $builder.Fragment=''
     return $builder.Uri.AbsoluteUri
