@@ -1,6 +1,7 @@
 """Read-only presentation of existing EA_LAB evidence."""
 from __future__ import annotations
 import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess
+from html.parser import HTMLParser
 UTC = dt.timezone.utc
 class Refused(ValueError):
     pass
@@ -45,6 +46,34 @@ def read_json(path, root):
 def csv_rows(raw):
     text=raw.decode('utf-16' if raw[:2] in (bytes([255,254]),bytes([254,255])) else 'utf-8-sig')
     return list(csv.DictReader(io.StringIO(text)))
+
+class _DashboardParser(HTMLParser):
+    """Extract only account-card tables from the accepted generated dashboard."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True); self.stack=[]; self.cards=[]; self.card=None
+        self.in_head=False; self.in_table=False; self.row=None; self.cell=None
+    def handle_starttag(self,tag,attrs):
+        a=dict(attrs); self.stack.append((tag,a))
+        if tag=='div' and 'acct-card' in a.get('class','').split():
+            self.card={'head':'','rows':[]}; self.cards.append(self.card)
+        if self.card and tag=='div' and 'acct-head' in a.get('class','').split(): self.in_head=True
+        if self.card and tag=='table': self.in_table=True
+        if self.in_table and tag=='tr':
+            self.row={'class':a.get('class',''),'cells':[]}; self.card['rows'].append(self.row)
+        if self.row is not None and tag in ('th','td'):
+            self.cell={'tag':tag,'class':a.get('class',''),'text':''}; self.row['cells'].append(self.cell)
+    def handle_endtag(self,tag):
+        closing=self.stack[-1] if self.stack else (None,{})
+        if tag in ('th','td'): self.cell=None
+        if tag=='tr': self.row=None
+        if tag=='table': self.in_table=False
+        if tag=='div' and self.in_head and 'acct-head' in closing[1].get('class','').split(): self.in_head=False
+        if tag=='div' and self.card and 'acct-card' in closing[1].get('class','').split(): self.card=None
+        if self.stack: self.stack.pop()
+    def handle_data(self,data):
+        if self.card and self.in_head: self.card['head']+=data
+        if self.cell is not None: self.cell['text']+=data
+
 class Model:
     def __init__(self, config):
         self.c=config; self.repo=pathlib.Path(config['repo']); self.errors=[]
@@ -94,6 +123,37 @@ class Model:
             latest=kept[-1]; meta=metadata.get(login,{})
             result.append({'id':'acct-'+digest(login.encode())[:12],'label':'***'+login[-3:],'currency':currency,'environment':clean(meta.get('environment','UNKNOWN'),40),'points':[{k:v for k,v in p.items() if k!='eas'} for p in kept],'latest':latest,'sample_count':len(kept),'clock':'BROKER_SERVER_TIME_TZ_UNQUALIFIED','freshness':'UNKNOWN','identity':'ACCOUNT_SNAPSHOT_NOT_STRATEGY_ATTESTATION'})
         return {'rows':sorted(result,key=lambda r:r['label']),'files_read':source_count,'conflicting_samples':len(conflicts),'basis':'Observed samples only; line joins samples, not continuous equity. No FX conversion or deposit-adjusted return.'}
+    def lane_status(self,lane_id,expected_job_id):
+        script=pathlib.Path(self.c.get('lane_status',''))
+        if not script.is_file() or script.is_symlink(): raise Refused('LANE_STATUS_UNAVAILABLE')
+        p=subprocess.run(['powershell.exe','-NoLogo','-NoProfile','-NonInteractive','-File',str(script),'-LaneId',lane_id,'-Json'],
+                         capture_output=True,timeout=10)
+        if p.returncode: raise Refused('LANE_STATUS_REFUSED')
+        raw=p.stdout
+        text=raw.decode('utf-16' if raw[:2] in (bytes([255,254]),bytes([254,255])) else 'utf-8-sig',errors='strict')
+        x=json.loads(text)
+        required={'lane_id','job_id','health','observed_state','durable_state','runner_alive','child_alive','postcondition_alive','heartbeat_age_sec','retry_decision','checked_utc'}
+        if not isinstance(x,dict) or not required.issubset(x): raise Refused('LANE_STATUS_SCHEMA')
+        if x['lane_id']!=lane_id or x['job_id']!=expected_job_id: raise Refused('LANE_STATUS_IDENTITY')
+        if not all(isinstance(x[k],bool) for k in ['runner_alive','child_alive','postcondition_alive']): raise Refused('LANE_STATUS_PROCESS_TYPES')
+        health=str(x['health']); observed=str(x['observed_state']); durable=x['durable_state']
+        allowed_health={'ACTIVE','STALLED','COMPLETE','RECOVERY_REQUIRED','TERMINAL_NONCOMPLETE','UNKNOWN'}
+        allowed_observed={'STARTING','RUNNING','POSTCONDITION_RUNNING','CANCEL_REQUESTED','COMPLETE','FAILED','POSTCONDITION_FAILED','TIMED_OUT','CANCELLED','LOST_PROCESS','UNKNOWN'}
+        if health not in allowed_health or observed not in allowed_observed: raise Refused('LANE_STATUS_ENUM')
+        if durable is not None and (not isinstance(durable,str) or len(durable)>60): raise Refused('LANE_STATUS_DURABLE_STATE')
+        heartbeat=x.get('heartbeat_age_sec')
+        if heartbeat is not None and (number(heartbeat) is None or number(heartbeat)<0): raise Refused('LANE_STATUS_HEARTBEAT')
+        if x.get('retry_decision') not in ('ALLOW_RETRY','REFUSE_RETRY'): raise Refused('LANE_STATUS_RETRY')
+        if stamp(x.get('checked_utc')) is None: raise Refused('LANE_STATUS_CHECKED_TIME')
+        if health=='ACTIVE' and not (x['runner_alive'] or x['child_alive'] or x['postcondition_alive']): raise Refused('LANE_STATUS_ACTIVE_WITHOUT_PROCESS')
+        if health=='COMPLETE' and observed!='COMPLETE': raise Refused('LANE_STATUS_COHERENCE')
+        if health=='RECOVERY_REQUIRED' and observed!='LOST_PROCESS': raise Refused('LANE_STATUS_COHERENCE')
+        if health=='TERMINAL_NONCOMPLETE' and observed not in {'FAILED','POSTCONDITION_FAILED','TIMED_OUT','CANCELLED'}: raise Refused('LANE_STATUS_COHERENCE')
+        return {'health':health,'observed_state':observed,'durable_state':clean(durable,60),
+                'runner_alive':x['runner_alive'],'child_alive':x['child_alive'],'postcondition_alive':x['postcondition_alive'],
+                'heartbeat_age_sec':number(heartbeat),'retry_decision':x['retry_decision'],
+                'checked_utc':clean(x.get('checked_utc'),60),'status_source':'ACCEPTED_CHAT_STALL_LANE_STATUS'}
+
     def work(self):
         root=pathlib.Path(self.c['registry']); lease_root=pathlib.Path(self.c['leases']); jobs_root=pathlib.Path(self.c['jobs']); result=[]; totals={}
         for p in sorted(root.glob('*.json')):
@@ -104,18 +164,44 @@ class Model:
                 if state=='DONE': continue
                 lease=lease_root/(lane+'.json'); job={}; terminal=None; jobid=None
                 if lease.is_file():
-                    l=read_json(lease,lease_root); jobid=l.get('job_id')
+                    l=read_json(lease,lease_root)
+                    if l.get('lane_id')!=lane: raise Refused('LEASE_LANE_IDENTITY')
+                    jobid=l.get('job_id')
                     if not isinstance(jobid,str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,160}',jobid): raise Refused('JOB_ID')
                     jroot=jobs_root/jobid
-                    if (jroot/'state.json').is_file(): job=read_json(jroot/'state.json',jobs_root)
-                    if (jroot/'result.json').is_file(): terminal=read_json(jroot/'result.json',jobs_root)
+                    if (jroot/'state.json').is_file():
+                        job=read_json(jroot/'state.json',jobs_root)
+                        if job.get('job_id')!=jobid: raise Refused('JOB_STATE_IDENTITY')
+                    if (jroot/'result.json').is_file():
+                        terminal=read_json(jroot/'result.json',jobs_root)
+                        if terminal.get('job_id')!=jobid: raise Refused('JOB_RESULT_IDENTITY')
                 js=job.get('state','NOT_OBSERVED'); end=None
                 if isinstance(terminal,dict): js=terminal.get('state',js); end=terminal.get('ended_utc')
                 cls='TERMINAL_RECONCILE' if js in ['COMPLETE','FAILED','TIMED_OUT','CANCELLED'] else 'BLOCKED_REVIEW' if state in ['REVIEW','FROZEN'] else 'WAITING_OWNER' if state=='BLOCKED' and str(x.get('blocker_class','')).startswith('E_') else state
-                result.append({'id':lane,'title':lane.removeprefix('ct-').replace('-',' '),'state':state,'display_state':cls,'owner':clean(x.get('owner_chat'),100),'worker':clean(x.get('worker'),140),'updated_at':updated,'freshness':age_state(updated,24),'job_id':jobid,'job_state':js,'ended_at':end,'process_state':'NOT_PROBED','progress':'UNKNOWN','blocker':clean(x.get('blocker_class'),180),'head':x.get('head_sha'),'reviewed_head':x.get('reviewed_head'),'reviewer':clean(x.get('reviewer'),140),'dependencies':[clean(d,128) for d in x.get('dependencies',[]) if isinstance(d,str)]})
+                process_state='NOT_PROBED'; process_health='NOT_PROBED'
+                if state=='RUNNING' and not jobid:
+                    cls='STALE_REGISTRY'; process_state='NOT_OBSERVED'; process_health='NO_DURABLE_JOB'
+                result.append({'id':lane,'title':lane.removeprefix('ct-').replace('-',' '),'state':state,'display_state':cls,'owner':clean(x.get('owner_chat'),100),'worker':clean(x.get('worker'),140),'updated_at':updated,'freshness':age_state(updated,24),'job_id':jobid,'job_state':js,'ended_at':end,'process_state':process_state,'process_health':process_health,'runner_alive':None,'child_alive':None,'postcondition_alive':None,'heartbeat_age_sec':None,'retry_decision':'UNKNOWN','process_checked_utc':None,'progress':'UNKNOWN','blocker':clean(x.get('blocker_class'),180),'head':x.get('head_sha'),'reviewed_head':x.get('reviewed_head'),'reviewer':clean(x.get('reviewer'),140),'dependencies':[clean(d,128) for d in x.get('dependencies',[]) if isinstance(d,str)]})
             except (OSError,ValueError,KeyError,TypeError) as e: self.issue('lane_observation',e)
         result.sort(key=lambda r:(r['freshness']=='CURRENT',r['updated_at'] or ''),reverse=True)
-        return {'rows':result,'totals':totals,'observed_at':utcnow(),'basis':'Registry declarations + existing lease/result bytes; no PID-only liveness or ChatGPT-window inference.'}
+        probe_states={'RUNNING','REVIEW','FROZEN','INTEGRATING','WAITING','BLOCKED'}
+        candidates=[r for r in result if r['freshness']=='CURRENT' and r['job_id'] and r['state'] in probe_states][:12]
+        for row in candidates:
+            try:
+                live=self.lane_status(row['id'],row['job_id'])
+                row['process_state']=live['observed_state']; row['process_health']=live['health']
+                row['runner_alive']=live['runner_alive']; row['child_alive']=live['child_alive']; row['postcondition_alive']=live['postcondition_alive']
+                row['heartbeat_age_sec']=live['heartbeat_age_sec']; row['retry_decision']=live['retry_decision']; row['process_checked_utc']=live['checked_utc']
+                if live['health']=='ACTIVE': row['display_state']='ACTIVE_PROCESS'
+                elif live['health']=='STALLED': row['display_state']='STALLED'
+                elif live['health']=='RECOVERY_REQUIRED': row['display_state']='RECOVERY_REQUIRED'
+                elif live['health'] in ('COMPLETE','TERMINAL_NONCOMPLETE'): row['display_state']='TERMINAL_RECONCILE'
+            except (OSError,ValueError,KeyError,TypeError,subprocess.SubprocessError,UnicodeError) as e:
+                row['process_state']='UNKNOWN'; row['process_health']='UNAVAILABLE'
+                if row['state']=='RUNNING': row['display_state']='LIVENESS_UNAVAILABLE'
+                self.issue('lane_status:'+row['id'],e)
+        return {'rows':result,'totals':totals,'observed_at':utcnow(),'process_probed_count':len(candidates),
+                'basis':'Registry declarations + existing lease/result bytes. Fresh leased lanes additionally consume accepted chat-stall lane_status process identity; heartbeat is liveness evidence, not work-progress proof.'}
     def knowledge(self):
         root=pathlib.Path(self.c['knowledge']); manifest=read_json(root/'MANIFEST_SHA256.json',root)
         entry=next((r for r in manifest['files'] if r['path']=='knowledge_index.json'),None)
@@ -146,6 +232,95 @@ class Model:
     def macro(self):
         root=pathlib.Path(self.c['runtime']); raw=safe_bytes(root/'portfolio/mris/regime_state.json',root); x=json.loads(raw.decode('utf-8-sig'))
         return {'state':clean(x.get('state'),40),'time':x.get('generated_utc'),'freshness':age_state(x.get('generated_utc')),'bias':clean(x.get('bias'),180),'barometers':[{k:(number(v) if k in ['spot','chg5d_pct','signal'] else clean(v,300)) for k,v in b.items() if k in ['symbol','spot','chg5d_pct','signal','reason']} for b in x.get('barometers',[])],'source_hash':digest(raw),'effective':'UNKNOWN','source':'MRIS existing producer; not EA effective-state evidence'}
+
+    def control_room(self):
+        root=pathlib.Path(self.c['runtime']); raw=safe_bytes(root/'portfolio/control_room_snapshot.json',root,2_000_000)
+        x=json.loads(raw.decode('utf-8-sig')); meta=x.get('meta',{})
+        if x.get('entity')!='ControlRoomSnapshotV5' or meta.get('schema')!='ControlRoomSnapshot' or meta.get('version')!=5:
+            raise Refused('CONTROL_ROOM_SCHEMA')
+        generated=meta.get('generated_at'); binding='MATCH' if meta.get('git_head')==self.sha else 'DIFFERENT_REPO_HEAD'
+        floating={}
+        for acc in x.get('floating_risk',[]):
+            account=str(acc.get('account',''))
+            for m in acc.get('magics',[]):
+                floating[(account,str(m.get('magic','')))]=m
+        rows=[]
+        for r in x.get('judge_readiness',[]):
+            account=str(r.get('account','')); magic=str(r.get('magic','')); f=floating.get((account,magic),{})
+            rows.append({'account_id':'acct-'+digest(account.encode())[:12],'account_label':'***'+account[-3:] if account else 'UNKNOWN',
+                'magic':clean(magic,40),'ea':clean(r.get('ea'),180),'symbol':clean(r.get('symbol'),40),'status':clean(r.get('status'),50),
+                'operational_status':clean(r.get('operational_status'),50),'verification_state':clean(r.get('verification_state'),60),
+                'attention':clean(r.get('attention'),50),'closed_deal_rows':r.get('closed_trades'),'readiness':clean(r.get('readiness'),60),
+                'forecast':clean(r.get('forecast'),60),'judge_date':clean(r.get('judge_date'),30),'observation_start_date':clean(r.get('observation_start_date'),30),
+                'observed_trades_per_week':number(r.get('observed_trades_per_week')),'expected_trades_per_week':number(r.get('expected_trades_per_week')),
+                'rate_flag':clean(r.get('rate_flag'),60),'expectation_status_reason':clean(r.get('expectation_status_reason'),400),
+                'floating_pl':number(f.get('floating_pl')),'open_lots':number(f.get('open_lots')),'open_positions':number(f.get('pos_count')),
+                'oldest_open_hours':number(f.get('oldest_age_h'))})
+        src=[{'name':clean(s.get('name'),80),'fresh':bool(s.get('fresh')),'age_hours':number(s.get('age_hours'))} for s in meta.get('sources',[])]
+        rid=x.get('runtime_identity_summary',{})
+        raw_summary=x.get('summary',{})
+        summary={k:v for k,v in raw_summary.items() if isinstance(v,(int,float,bool,str)) and k not in ('expectation_baskets',)}
+        return {'generated_at':generated,'freshness':age_state(generated,30),'git_head':meta.get('git_head'),'binding':binding,
+            'execution_context':clean(meta.get('execution_context'),80),'rows':rows,'summary':summary,'source_health':src,
+            'reconciliation_clear':bool(x.get('verdict',{}).get('reconciliation_clear',False)),
+            'verdict_reasons':[{'code':clean(v.get('code'),80),'detail':clean(v.get('detail'),180)} for v in x.get('verdict',{}).get('reasons',[])],
+            'runtime_identity':{'state':clean(rid.get('state'),40),'forward_test_state':clean(rid.get('forward_test_state'),80),
+                'reasons':[{'code':clean(v.get('code'),80),'detail':clean(v.get('detail'),180)} for v in rid.get('reasons',[])]},
+            'source_hash':digest(raw),'basis':clean(meta.get('counting_method'),300)}
+
+    def live_performance(self):
+        root=pathlib.Path(self.c['runtime']); raw=safe_bytes(root/'portfolio/LIVE_DASHBOARD.html',root,2_000_000)
+        control=read_json(root/'portfolio/control_room_snapshot.json',root)
+        source=next((s for s in control.get('meta',{}).get('sources',[]) if s.get('name')=='live_dashboard'),None)
+        if not source or source.get('sha256')!=digest(raw): raise Refused('LIVE_DASHBOARD_BINDING_MISMATCH')
+        parser=_DashboardParser(); parser.feed(raw.decode('utf-8-sig',errors='strict'))
+        currencies={r.get('account',''):r.get('currency','UNKNOWN') for r in csv_rows(self.blob('portfolio/ACCOUNTS.csv'))}
+        def numtext(value):
+            s=str(value or '').strip().replace(',','').replace('%','')
+            if s in ('','UNKNOWN','N/A','—'): return None
+            if s in ('∞','Infinity','+Infinity'): return 'INFINITY'
+            return number(s)
+        accounts=[]
+        for card in parser.cards:
+            perf_header=None
+            for row in card['rows']:
+                headers=[c['text'].strip() for c in row['cells'] if c['tag']=='th']
+                if 'Net P&L' in headers and 'PF' in headers and 'Trades' in headers:
+                    perf_header=headers; break
+            if not perf_header: continue
+            m=re.match(r'\s*(\d{5,12})\s*·\s*(.*)',card['head'],re.S)
+            if not m: raise Refused('LIVE_DASHBOARD_ACCOUNT_HEADER')
+            account=m.group(1); head=clean(m.group(2),900); rows=[]
+            for row in card['rows']:
+                cells=row['cells']
+                if not cells or cells[0]['tag']=='th': continue
+                vals=[c['text'].strip() for c in cells]
+                if len(vals)!=len(perf_header): raise Refused('LIVE_DASHBOARD_ROW_WIDTH')
+                obj=dict(zip(perf_header,vals))
+                rows.append({'flag_class':clean(row.get('class'),40),'operational':clean(obj.get('Operational'),60),
+                    'verification':clean(obj.get('Verification'),60),'ea':clean(obj.get('EA'),220),'magic':clean(obj.get('Magic'),40),
+                    'symbol':clean(obj.get('Symbol'),50),'trades':int(numtext(obj.get('Trades')) or 0),
+                    'net_pl':numtext(obj.get('Net P&L')),'profit_factor':numtext(obj.get('PF')),
+                    'max_dd_pct':numtext(obj.get('Max DD%')),'kill_dd_pct':numtext(obj.get('Kill DD%')),
+                    'days_idle':numtext(obj.get('Days idle')),'detail':clean(obj.get('Detail'),500)})
+            hm=re.search(r'window:\s*from\s*([^·]+)\s*·\s*net\s*([+\-0-9,.]+)\s*·\s*(\d+)\s*trades',card['head'])
+            accounts.append({'account_id':'acct-'+digest(account.encode())[:12],'account_label':'***'+account[-3:],
+                'currency':clean(currencies.get(account,'UNKNOWN'),10),'header':head,'window_start':clean(hm.group(1).strip(),30) if hm else 'UNKNOWN',
+                'account_net_pl':numtext(hm.group(2)) if hm else None,'account_trades':int(hm.group(3)) if hm else None,'rows':rows})
+        return {'accounts':accounts,'source_hash':digest(raw),'source_age_hours':number(source.get('age_hours')),
+            'source_fresh':bool(source.get('fresh')),'source_mtime':clean(source.get('mtime'),40),
+            'producer_git_head':control.get('meta',{}).get('git_head'),'binding':'MATCH' if control.get('meta',{}).get('git_head')==self.sha else 'DIFFERENT_REPO_HEAD',
+            'basis':'Existing scripts/live_dashboard.ps1 output. MT5 closes use entry OUT/INOUT/OUT_BY; net P/L includes profit+swap+commission; PF and DD preserve producer semantics.'}
+
+    def news_policy(self):
+        raw=self.blob('ea_projects/(Boss)_NewsGuard/GUARDCONFIG_2026-07-17.md'); text=raw.decode('utf-8-sig',errors='replace')
+        def val(name):
+            m=re.search(r'\|\s*`?'+re.escape(name)+r'`?\s*\|\s*`?([^|\n`]+)',text)
+            return clean(m.group(1).strip(),80) if m else 'UNKNOWN'
+        return {'reference_date':'2026-07-17','pre_news_min':number(val('PreNewsMin')),'post_news_min':number(val('PostNewsMin')),
+            'news_file':val('NewsFile'),'use_common_files':val('UseCommonFiles'),'effective_runtime':'UNKNOWN',
+            'coverage_state':'HISTORICAL_CONFIG_SNAPSHOT_REVERIFY_DEPLOYMENTS','source_hash':digest(raw),'canonical_sha':self.sha,
+            'basis':'Canonical runbook reference only. It explicitly requires regeneration when DEPLOYMENTS.csv changes; attachment/effective guard state is not inferred.'}
     def snapshot(self):
         self.errors=[]; self.sha=self.git('rev-parse','refs/remotes/origin/master').decode().strip()
         if not re.fullmatch('[0-9a-f]{40}',self.sha): raise Refused('INVALID_TRACKING_REF')
@@ -161,6 +336,9 @@ class Model:
         knowledge=self.section('knowledge',self.knowledge,{'documents':[],'health':{},'binding':'UNAVAILABLE'})
         news=self.section('news',self.news,{'events':[],'guard_effective':'UNKNOWN','freshness':'UNAVAILABLE'})
         macro=self.section('macro',self.macro,{'state':'UNAVAILABLE','barometers':[],'freshness':'UNAVAILABLE'})
+        control_room=self.section('control_room',self.control_room,{'rows':[],'summary':{},'freshness':'UNAVAILABLE','binding':'UNAVAILABLE','runtime_identity':{'state':'UNKNOWN','forward_test_state':'UNKNOWN'}})
+        live_performance=self.section('live_performance',self.live_performance,{'accounts':[],'source_fresh':False,'binding':'UNAVAILABLE','basis':'UNAVAILABLE'})
+        news_policy=self.section('news_policy',self.news_policy,{'pre_news_min':None,'post_news_min':None,'effective_runtime':'UNKNOWN','coverage_state':'UNAVAILABLE'})
         templates=self.section('templates',self.templates,[])
         safe=index.get('safe_projection',{}); findings=[]
         for x in safe.get('findings',[]): findings.append({k:clean(x.get(k),80) for k in ['public_id','severity','state']})
@@ -169,4 +347,4 @@ class Model:
         for drive in ['C:/','D:/']:
             if pathlib.Path(drive).exists():
                 v=shutil.disk_usage(drive); disks.append({'drive':drive[:2],'free_gb':round(v.free/1073741824,1),'total_gb':round(v.total/1073741824,1)})
-        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.0.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'macro':macro,'templates':templates,'research':eas,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No per-EA realized-return / profit-factor / win-rate is inferred.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}
+        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.2.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'live_performance':live_performance,'templates':templates,'research':eas,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA good/bad score is inferred. Live P/L/PF/DD preserve the existing dashboard producer semantics and source binding.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}

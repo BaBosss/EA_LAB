@@ -70,7 +70,7 @@ class Server(http.server.ThreadingHTTPServer):
     allow_reuse_address=False
 def config_from_args(args):
     return {'repo':args.repo,'assets':args.assets,'monitor':args.monitor,'registry':args.registry,
-            'jobs':args.jobs,'leases':args.leases,'runtime':args.runtime,'snapshots':args.snapshots,
+            'jobs':args.jobs,'leases':args.leases,'lane_status':args.lane_status,'runtime':args.runtime,'snapshots':args.snapshots,
             'knowledge':args.knowledge}
 def parser():
     here=pathlib.Path(__file__).resolve().parent
@@ -80,6 +80,7 @@ def parser():
     p.add_argument('--registry',default='D:/EA_LAB_CONTROL/lanes/registry-v1')
     p.add_argument('--jobs',default='D:/EA_LAB_CONTROL/jobs')
     p.add_argument('--leases',default='D:/EA_LAB_CONTROL/runtime/chat-stall/leases')
+    p.add_argument('--lane-status',default='D:/EA_LAB_CONTROL/runtime/chat-stall/lane_status.ps1')
     p.add_argument('--runtime',default='D:/EA_LAB_WORKSPACE/runtime/daily-monitor-aec3dd24-20260914')
     p.add_argument('--snapshots',default='D:/EA_LAB_WORKSPACE/runtime/daily-monitor-aec3dd24-20260914/portfolio/live_deals')
     p.add_argument('--knowledge',default='D:/EA_LAB_CONTROL/readers/second-brain/versions/8298da26f570ba30654fd31bb9bf66e53dd4051f')
@@ -92,7 +93,17 @@ def self_test(config):
     assert all(a['id'].startswith('acct-') and a['label'].startswith('***') for a in snap['accounts']['rows'])
     assert all('login' not in json.dumps(a).lower() for a in snap['accounts']['rows'])
     assert snap['knowledge']['binding'] in ('HASH_VERIFIED_PINNED_READER_NOT_CURRENT_PROJECT_STATUS','UNAVAILABLE')
+    assert snap['news_policy']['pre_news_min']==30.0 and snap['news_policy']['post_news_min']==15.0
+    assert snap['news_policy']['effective_runtime']=='UNKNOWN'
+    assert len(snap['control_room']['rows'])>0 and snap['control_room']['binding'] in ('MATCH','DIFFERENT_REPO_HEAD')
+    assert len(snap['live_performance']['accounts'])>0 and snap['live_performance']['source_fresh'] is True
+    assert all(a['account_id'].startswith('acct-') and a['account_label'].startswith('***') for a in snap['live_performance']['accounts'])
+    assert snap['live_performance']['binding'] in ('MATCH','DIFFERENT_REPO_HEAD')
+    assert sum(len(a['rows']) for a in snap['live_performance']['accounts'])>0
     html=render(config,snap); assert b'EA_LAB Monitor' in html and b'11,432' not in html
+    raw_accounts=Model(config).git('show',snap['canonical_sha']+':portfolio/ACCOUNTS.csv').decode('utf-8-sig').splitlines()[1:]
+    raw_ids=[line.split(',',1)[0].strip('"') for line in raw_accounts if line.strip()]
+    assert all(not ident or ident.encode() not in html for ident in raw_ids)
     print(json.dumps({'result':'PASS','accounts':len(snap['accounts']['rows']),'work':len(snap['work']['rows']),
       'templates':len(snap['templates']),'knowledge':len(snap['knowledge']['documents']),'news':len(snap['news']['events']),
       'errors':snap['errors']},ensure_ascii=False))
