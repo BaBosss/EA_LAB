@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **444** · ยังอยู่บนบอร์ด: **148** · เข้าคลังแล้ว: **296**
+- order ทั้งหมด: **445** · ยังอยู่บนบอร์ด: **149** · เข้าคลังแล้ว: **296**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -421,6 +421,7 @@
 | ORDER-CT-DF02-PARENT-FREEZE-IMPLEMENTATION-20260915 |  | DONE | [template/recovered-family] DF02 Gold Robot Scalping Time Bomb | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_PERFORMANCE_SCREEN | ACTIVE:10300 |
 | ORDER-CT-DF03-B21-IMPLEMENTATION-20260918 |  | DONE | - [template/recovered-family] DF03 Grid Horizontal Line / Fibonacci - |  | ACTIVE:10322 |
 | ORDER-CT-JOB-IDENTITY-PROVIDER-V1-20260918 | 2026-09-18 | DONE | [monitor/tooling] identity-aware V0 input provider | SOURCE_ACCEPTED / REVIEWED / CANONICAL / REPO_ONLY / NO_RUNTIME_HOOKUP | ACTIVE:10422 |
+| ORDER-CT-LNWJUD-REVIEW-COST-CONTEXT-20260922 |  | CURRENT | [control/review/transport/state] owner context sync |  | ACTIVE:10625 |
 | ORDER-CT-OWNER-CONTROL-ROOM-V0-20260918 | 2026-09-18 | DONE | [monitor/tooling] optional durable job observations | SOURCE_ACCEPTED_REPO_ONLY / PROVIDER_NOT_ACTIVATED | ACTIVE:10399 |
 | ORDER-CT-POSTMONITOR-INTAKE-20260914 |  | DONE | [control-tower] carried-work reconciliation |  | ACTIVE:10239 |
 | ORDER-CT-STRATEGY-SOURCE-RECOVERY-20260915 |  | DONE | [control-tower/research] Boss/custom source recovery + strategy-family port prep |  | ACTIVE:10287 |
