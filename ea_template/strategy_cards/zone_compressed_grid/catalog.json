@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "library": "zone_compressed_grid",
+  "updated": "2026-09-22",
+  "cards": [
+    {
+      "id": "ZCAG-01",
+      "name": "Zone-Compressed Adaptive Grid",
+      "status": "DESIGN_ONLY_NON_EXECUTABLE",
+      "direction_v0": "LONG_ONLY",
+      "stack_mode_v0": "STACK_SINGLE",
+      "physical_adds_after_entry": false,
+      "max_notional_rule": "COMPRESSED_LE_COMPARATOR_MAX",
+      "primary_exit": "NEXT_VIRTUAL_GRID",
+      "prospective_consumer": "Boss_23_ZoneCompressedGrid/LAB_ENTRY_23",
+      "implementation_authority": false,
+      "backtest_authority": false,
+      "runtime_authority": false
+    }
+  ]
+}
