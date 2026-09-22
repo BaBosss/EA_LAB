@@ -176,6 +176,14 @@ if [ -z "$ps" ]; then
   exit 1
 fi
 
+# Windows PowerShell must discover its own built-in modules. A hook launched from
+# PowerShell 7 can inherit Core PSModulePath entries; Windows PowerShell may then
+# bind the wrong Utility metadata and lose Get-FileHash. Clear only this hook
+# process environment so powershell.exe reconstructs its native module path.
+case "$(basename "$ps" | tr '[:upper:]' '[:lower:]')" in
+  powershell.exe) unset PSModulePath PSMODULEPATH ;;
+esac
+
 # ORDER-674: THE FRONT GUARDS JUDGE THE COMMIT TOO, and until now they judged the working
 # tree. Proved before the fix: a duplicate account|magic STAGED into portfolio/DEPLOYMENTS.csv
 # with a clean worktree copy left check_state printing "[OK] no duplicate account|magic" and
