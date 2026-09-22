@@ -4,7 +4,7 @@ Status: `OWNER_APPROVED_CONTEXT_SYNC / READ_ONLY_TRANSPORT_BOUNDARY / NO NEW RUN
 
 ## Current source of truth
 
-Fresh reconciliation at intake verified BaBoss and `origin/master == ls-remote refs/heads/master == 0e3e2d90645a248137bb94cbd65f7c54bd6360aa`. Future sessions must fresh-fetch again; this SHA is an observation, not a permanent pin.
+Fresh reconciliation for this convergence verified BaBoss and current B11 evidence/result canonical lineage `694343941579d7945791b0c8e15ad684fe5e133b`. Future sessions must fresh-fetch again; this SHA is an observation, not a permanent pin.
 
 The one active Main Control Tower remains the coordinator. Existing lnwjud, Monitor, Registry and state ownership must be consumed rather than duplicated.
 
@@ -37,11 +37,8 @@ Canonical independence is procedural, not provider-family based. A current ChatG
 
 Concrete accepted example: B11-00 result scrutiny. Reviewer lane `ct-b11-00-result-scrutiny-ro-20260921` independently reviewed exact diagnostic head `389789a7d0f16a2b98f2ed92b95c4608c69c1d81` and returned `SCRUTINY_PASS / HIGH / ALLOW_INTEGRATION`. Accepted classification is only `MECHANICALLY_INELIGIBLE_HARD_KILL_TRUNCATION`; no PF/net/trade-count strategy verdict follows. Review receipt SHA256: `e5af6c0cfeb7eea3e681d7153650291cbf5dd962203eaf4e44d1be9e2c424992`.
 
-After an orthogonal current-canonical re-anchor, B11 local result head `f7bf85c5e645fe7bf2cfbdde074519e7242a1b4d` preserves every acceptance-critical source/log/diagnostic blob. Review-reuse binding SHA256: `e76a022cd4f36cc30a81e717a35a95bdb5934debd37a3884dc43d343c8502df6`. No second general review or MT5 rerun is required for that unchanged evidence.
-This does **not** permit self-review. Current Main CT authored or materially repaired:
-- Review-Cost governance head `a0672f9a779394ca2c6b342d66425c1b5517bcee`;
-- BMH-004 local head `1e120c8d98259d59f7a0bf663b50ab9d2afd3809`.
-Those still require a separate independent reviewer before integration. BMH-004 deterministic gates are green but NORMAL/ECONOMY remains inactive.
+B11 evidence/result integration is canonical at `694343941579d7945791b0c8e15ad684fe5e133b`. Review-reuse binding R3 SHA256 `3567773444e59adeebe16470191d9bf4017c5adcc14b7735c0c9213cb7bbd994` proves all acceptance-critical source/log/diagnostic blobs remain byte-identical to the accepted review; no second general review or MT5 rerun is required.
+This does **not** permit self-review. Review-Cost Reduction V1 is now accepted/canonical at `6d581616a3e4421a104535349b27dc14fc0dab2f` after targeted SCR-001 recheck PASS and exact-head review reuse. BMH-004 local head `1e120c8d98259d59f7a0bf663b50ab9d2afd3809` remains `SCRUTINY_REPAIR_REQUIRED / HIGH` for `BMH-004-DOC-IDENTITY`; its source identity fix is not integrated and NORMAL/ECONOMY remains inactive.
 
 ## DPAPI one-click convenience path
 
