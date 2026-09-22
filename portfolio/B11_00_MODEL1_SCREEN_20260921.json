@@ -2,7 +2,7 @@
     "schema":  "b11-00-model1-screen-state/1",
     "family":  "B11",
     "logical_variant":  "B11-00",
-    "status":  "EXECUTION_CONSUMED_MECHANICALLY_INELIGIBLE_REVIEW_PENDING",
+    "status":  "EXECUTION_CONSUMED_MECHANICALLY_INELIGIBLE_REVIEW_ACCEPTED",
     "owner_freeze_canonical":  "2f3770b279a173141ea051124d72110be261fde3",
     "contract":  "docs/research/B11_00_MODEL1_SCREEN_CONTRACT_20260921.md",
     "run_root":  "factory/runs/b11_00_model1_20260921",
@@ -70,5 +70,5 @@
                        "source_trace":  "RiskControl_CheckDD precedes Exit_SafetyMoneyStop; successful hard kill sets persistent halted state",
                        "packaging_repair":  "1/1 CONSUMED_FOR_EXISTING_TESTER_LOG_DIAGNOSTIC_ONLY"
                    },
-    "final_review":  "PENDING_SEPARATE_READ_ONLY_GPT_SCRUTINY; no new reviewer lane created by owner instruction"
+    "final_review":  "SCRUTINY_PASS_HIGH_ALLOW_INTEGRATION reviewed_head=389789a7d0f16a2b98f2ed92b95c4608c69c1d81 receipt_sha256=e5af6c0cfeb7eea3e681d7153650291cbf5dd962203eaf4e44d1be9e2c424992; mechanical truncation classification only; no performance verdict or downstream authority"
 }

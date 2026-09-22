@@ -1,6 +1,6 @@
 # B11-00 Fixed-Reference Model1 Screen Results — 2026-09-21
 
-Status: `EXECUTION_CONSUMED / MECHANICALLY_INELIGIBLE_HARD_KILL_TRUNCATION / REVIEW_PENDING`
+Status: `EXECUTION_CONSUMED / MECHANICALLY_INELIGIBLE_HARD_KILL_TRUNCATION / SCRUTINY_PASS_HIGH_ALLOW_INTEGRATION`
 Execution contract head: `5becccb5f0316f067d9cfce6e0826dab6ab74c10`
 Lane: `ct-b11-00-model1-execution-20260921`
 Authority: research evidence only. No optimization, Model4, HOLDOUT, Candidate/Grade/KINT, runtime, deployment or trading authority.
@@ -57,4 +57,4 @@ The contract permits no cage widening or semantic/config rescue after seeing thi
 
 Packaging repair usage is 1/1 and is limited to consuming/preserving the existing tester journal and diagnosing the early stop. No MT5 rerun occurred.
 
-Final acceptance still requires a separate exact-head read-only GPT Scrutiny review. No new reviewer lane was created because the owner explicitly instructed this continuation not to create a new lane or duplicate reviewer. Until such review is lawfully available, this result must remain `REVIEW_PENDING` and unintegrated.
+Independent exact-head read-only GPT Scrutiny at `389789a7d0f16a2b98f2ed92b95c4608c69c1d81` returned `SCRUTINY_PASS / HIGH / ALLOW_INTEGRATION`; review receipt SHA256 `e5af6c0cfeb7eea3e681d7153650291cbf5dd962203eaf4e44d1be9e2c424992`. The review accepted only `MECHANICALLY_INELIGIBLE_HARD_KILL_TRUNCATION`; it made no PF/net/trade-count performance verdict and granted no optimization, Model4, HOLDOUT, Candidate/Grade/KINT, runtime, deployment or trading authority. Current canonical movement through `0e3e2d90645a248137bb94cbd65f7c54bd6360aa` was Monitor-only for the B11 acceptance surface; source/log/diagnostic bytes remained unchanged during re-anchor.
