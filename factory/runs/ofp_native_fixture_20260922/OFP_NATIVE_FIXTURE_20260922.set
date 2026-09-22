@@ -1,0 +1,3 @@
+; OFP synthetic native fixture parity V1; one input, full declared surface
+; build=OFP_NATIVE_FIXTURE_V1 surface=1 effective_config_hash=b71a174adc27b284089ab83f5c4f028041147648c68db037d66c71545a495a5a (synthetic-fixture-runtime)
+InpEmitCompletionSentinel=true
