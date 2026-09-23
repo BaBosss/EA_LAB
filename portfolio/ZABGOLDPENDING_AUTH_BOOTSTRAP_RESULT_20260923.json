@@ -1,0 +1,57 @@
+{
+    "schema":  "zabgoldpending_auth_bootstrap_result/1",
+    "status":  "AUTH_BOOTSTRAP_PASS_DLL_EXECUTION_BLOCKED_PLATFORM_SAFETY",
+    "authority":  "AUTH_ONLY_NO_PERFORMANCE_AUTHORITY",
+    "canonical_base_sha":  "372c73e5f33f39fa445c748f40cbfed5565c6831",
+    "family":  "ZABgoldpending",
+    "auth_bootstrap":  {
+                           "profile":  "EA_LAB_ZAB_AUTH_20260923",
+                           "internet_during_auth":  true,
+                           "ex5_present_during_auth":  false,
+                           "auth_success":  true,
+                           "accounts_cache_created":  true,
+                           "accounts_cache_sha256":  "3e5283dd65993591e357393f25b2d45e9999b348adc1e14e628d028f0a30c31b",
+                           "private_identifier_in_git":  false
+                       },
+    "post_auth_isolation":  {
+                                "launcher":  "registryRead only",
+                                "sandbox_write":  "OK",
+                                "external_repo_read":  "BLOCKED",
+                                "registry_read":  "OK",
+                                "network":  "BLOCKED",
+                                "accounts_cache_visible":  "YES"
+                            },
+    "opaque_execution_attempt":  {
+                                     "network_disabled":  true,
+                                     "ex5_sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                                     "sandbox_dll_only":  true,
+                                     "host_dll_setting_changed":  false,
+                                     "process_started":  false,
+                                     "platform_execution_guard":  "BLOCKED_BEFORE_PROCESS_START",
+                                     "mt5_process_remaining":  false
+                                 },
+    "public_provenance":  {
+                              "exact_filename_result":  "NO_RESULTS",
+                              "sha256_result":  "NO_RESULTS",
+                              "post_id_result":  "NO_RESULTS",
+                              "dll_guidance_result":  "NO_RESULTS"
+                          },
+    "decision":  {
+                     "money_mode_semantics_resolved":  false,
+                     "ready_for_test":  false,
+                     "strategy_failure":  false,
+                     "blocker_class":  "C_ENVIRONMENT_DEPENDENCY_EXECUTION_LAYER_SAFETY_GUARD_OPAQUE_DLL",
+                     "reason":  "Safe auth/no-network preparation succeeded, but the execution layer refused launching the opaque DLL-enabled EX5 before process start. Bypassing that guard is not permitted."
+                 },
+    "prohibitions_preserved":  [
+                                   "no bypass of execution safety guard",
+                                   "no host DLL enable",
+                                   "no network-enabled opaque EX5",
+                                   "no B/C run",
+                                   "no performance interpretation",
+                                   "no optimization",
+                                   "no HOLDOUT",
+                                   "no deployment/runtime/LIVE"
+                               ],
+    "next_gate":  "Obtain trusted source/dependency identity or execute the previously accepted no-network semantic probe in an independently controlled disposable Windows VM outside this execution layer. Then import only the resulting first-entry semantic evidence, not performance outcomes."
+}
