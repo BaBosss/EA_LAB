@@ -1,0 +1,62 @@
+{
+    "schema":  "zabgoldpending_dll_sandbox_result/1",
+    "status":  "SEMANTICS_UNRESOLVED_BLOCKED_SAFE_SANDBOX_ACCOUNT_CONTEXT",
+    "authority":  "OWNER_APPROVED_SANDBOXED_DLL_SEMANTIC_ONLY",
+    "contract_head":  "d9a35b4403a85e989071c4032a4d5a22e1375c01",
+    "family":  "ZABgoldpending",
+    "owner_decision":  {
+                           "mode":  "RISK_PERCENT",
+                           "value_percent":  1,
+                           "field_binding":  "Risk_Percent=1.0"
+                       },
+    "security_boundary":  {
+                              "isolation":  "WINDOWS_APPCONTAINER",
+                              "network":  "BLOCKED_SELFTEST",
+                              "external_repo_read":  "BLOCKED_SELFTEST",
+                              "registryRead":  "ALLOWED_MINIMAL",
+                              "sandbox_local_write":  "ALLOWED",
+                              "host_dll_setting_changed":  false,
+                              "host_mt5_used":  false,
+                              "unknown_dll_enabled_on_host":  false
+                          },
+    "execution":  {
+                      "a_zero_capabilities":  "ACCOUNT_CONTEXT_REMOVED_BEFORE_TESTER",
+                      "chart_init_zero_capabilities":  "CHART_CONTEXT_UNAVAILABLE_NO_EA_INIT_EVIDENCE",
+                      "a_registryRead":  "ACCOUNT_CONTEXT_REMOVED_BEFORE_TESTER",
+                      "b_run":  false,
+                      "c_run":  false,
+                      "first_entry_observed":  false,
+                      "tester_started":  false,
+                      "performance_metrics_consumed":  false
+                  },
+    "observed":  {
+                     "terminal_build":  6182,
+                     "ex5_sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                     "account_security_message":  "Accounts deleted due security reason",
+                     "tester_message":  "tester not started because the account is not specified",
+                     "accounts_file_after_attempt":  "ABSENT",
+                     "startup_password_credential_found":  false
+                 },
+    "decision":  {
+                     "money_mode_semantics_resolved":  false,
+                     "precedence":  "UNKNOWN",
+                     "ready_for_test":  false,
+                     "blocker_class":  "C_ENVIRONMENT_DEPENDENCY_SAFE_DLL_SANDBOX_NO_TESTER_ACCOUNT_CONTEXT",
+                     "reason":  "Security boundary works, but MT5 refuses copied account context inside AppContainer before tester execution. Relaxing to host DLL execution or network-enabled unknown binary would violate the accepted sandbox boundary."
+                 },
+    "prohibitions_preserved":  [
+                                   "no host DLL enable",
+                                   "no outbound network for opaque EX5",
+                                   "no B/C after A cannot reach tester",
+                                   "no performance interpretation",
+                                   "no optimization",
+                                   "no HOLDOUT",
+                                   "no deployment/runtime/LIVE",
+                                   "no automatic fixed-config MAIN/BWD run"
+                               ],
+    "evidence":  {
+                     "external_receipt":  "D:/EA_LAB_CONTROL/evidence/zabgoldpending-mm-semantic-20260923/DLL_SANDBOX_EXECUTION_RECEIPT.json",
+                     "external_receipt_sha256":  "48a3f1dfa9e8087487ae5b86aacbfd47e102fa0dd5a8c93eccdc51137b6fa6c5"
+                 },
+    "next_gate":  "Provide a disposable Windows VM/sandbox in which MT5 can be freshly authenticated, then disconnect network before importing/enabling the opaque EX5 DLL path; or otherwise provide a trusted dependency/source path. Do not weaken host isolation."
+}
