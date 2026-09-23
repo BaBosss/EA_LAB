@@ -1,0 +1,64 @@
+{
+    "schema":  "zabgoldpending_money_mode_semantic_result/1",
+    "status":  "SEMANTICS_UNRESOLVED_BLOCKED_DEPENDENCY_TRUST",
+    "authority":  "SEMANTIC_DIAGNOSTIC_ONLY_NO_PERFORMANCE_VERDICT",
+    "contract_head":  "38da78a2f4d46496093e76945af28bf5e5b437db",
+    "family":  "ZABgoldpending",
+    "owner_decision":  {
+                           "mode":  "RISK_PERCENT",
+                           "value_percent":  1,
+                           "field_binding":  "Risk_Percent=1.0"
+                       },
+    "execution":  {
+                      "variant_attempted":  "A_OWNER",
+                      "variants_not_run":  [
+                                               "B_FIXED_ONLY",
+                                               "C_RISK_ONLY"
+                                           ],
+                      "terminal_build":  6182,
+                      "home":  "XAUUSD M5",
+                      "model":  "M1_M1_OHLC_RESEARCH",
+                      "window":  "2023-01-01..2023-03-31",
+                      "tester_identity":  "PRIVATE_BOUND_EXTERNAL_EVIDENCE",
+                      "tester_invocation_started":  true,
+                      "ea_global_initialization":  "FAILED",
+                      "error":  "DLL loading is not allowed",
+                      "first_entry_observed":  false,
+                      "first_entry_evidence_count":  0,
+                      "performance_metrics_consumed":  false
+                  },
+    "decision":  {
+                     "money_mode_semantics_resolved":  false,
+                     "precedence":  "UNKNOWN",
+                     "reason":  "A failed initialization before first entry; prereg fail-closed rule forbids B/C continuation or inference",
+                     "blocker_class":  "BLOCKED_C_DEPENDENCY_TRUST_DLL_REQUIRED_OPAQUE_BINARY",
+                     "ready_for_test":  false
+                 },
+    "dependency_triage":  {
+                              "dll_enabled":  false,
+                              "dll_files_in_intake":  0,
+                              "dll_name_from_static_scan":  "NOT_RECOVERED",
+                              "exact_source_dll_guidance":  "NOT_FOUND",
+                              "opaque_binary":  true,
+                              "trust_decision":  "NOT_AUTHORIZED_TO_ENABLE_UNKNOWN_DLL_AUTOMATICALLY"
+                          },
+    "evidence":  {
+                     "execution_receipt":  "D:/EA_LAB_CONTROL/evidence/zabgoldpending-mm-semantic-20260923/SEMANTIC_EXECUTION_RECEIPT.json",
+                     "execution_receipt_sha256":  "4618f67384cb6b1f75f7ae10e8c3691f8d2e6885b572772c59a1e3c9c7a0bdb3",
+                     "private_identity_sha256":  "bc30f4ca55d77436ab3e7f3e871a09ef419eb2610ed9e3f2b93b9c2f92d9f1e0",
+                     "tester_log_sha256":  "d3c1a1e81f0dccff230be0e6e0eec9cfd47dd5594a077325e7991e7138fe7dad",
+                     "report_sha256":  "697072e633c84ef372903420af2b14ac8504aa1b643d23dbfb0fe9e34daa36e9",
+                     "a_set_sha256":  "4de80df7352a0857bb8e760799582807fbf208271a1762aa34e82c1c166067b9",
+                     "a_ini_sha256":  "5616783c7520b780d6adae9de88b5868d31601e0b7a2b69d19da6c0ee24df0d5"
+                 },
+    "prohibitions_preserved":  [
+                                   "B/C not run after prereg init failure",
+                                   "no DLL enable",
+                                   "no PF/net/DD/win-rate/exit interpretation",
+                                   "no optimization",
+                                   "no HOLDOUT",
+                                   "no Candidate/Grade/KINT",
+                                   "no deployment/runtime/LIVE"
+                               ],
+    "next_gate":  "Obtain trustworthy DLL dependency identity/source/vendor guidance or explicit owner trust approval for a sandboxed DLL-enabled semantic probe; otherwise remain blocked. Do not open fixed-config performance testing."
+}
