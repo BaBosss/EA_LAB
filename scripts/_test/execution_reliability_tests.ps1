@@ -8,6 +8,19 @@ New-Item -ItemType Directory -Path $Root -Force | Out-Null
 $pass = 0
 function Assert($condition, $message) { if (-not $condition) { throw $message } }
 function ReportCase($name) { Write-Host "[PASS] $name" }
+function Write-RetryFixture($Path, $State, [string]$Postcondition = '') {
+    foreach ($role in @('runner','child','postcondition')) {
+        $key = $role + '_pid'
+        if ($State.Contains($key)) {
+            $State[($role + '_start_utc')] = if ($State[$key] -eq $PID) {
+                (Get-Process -Id $PID).StartTime.ToUniversalTime().ToString('o')
+            } else { '2000-01-01T00:00:00.0000000Z' }
+        }
+    }
+    $State | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $Path 'state.json') -Encoding utf8
+    @{ job_id=$State.job_id; postcondition_file_path=$Postcondition } | ConvertTo-Json |
+        Set-Content -LiteralPath (Join-Path $Path 'job.json') -Encoding utf8
+}
 
 try {
     $bootstrap = Join-Path $RepoRoot 'scripts\execution_reliability\bootstrap_worktree.ps1'
@@ -73,28 +86,30 @@ try {
 
     $liveJobRoot = Join-Path $jobsRoot 'retry-live'
     New-Item -ItemType Directory -Path $liveJobRoot | Out-Null
-    [ordered]@{ job_id = 'retry-live'; state = 'RUNNING'; runner_pid = $PID; child_pid = 999999 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $liveJobRoot 'state.json') -Encoding utf8
+    Write-RetryFixture $liveJobRoot ([ordered]@{ job_id = 'retry-live'; state = 'RUNNING'; runner_pid = $PID; child_pid = 2147483646 })
     $liveRetry = & $inspectRetry -JobId 'retry-live' -JobsRoot $jobsRoot -Json | ConvertFrom-Json
     Assert ($liveRetry.retry_decision -eq 'REFUSE_RETRY') "live job retry decision was $($liveRetry.retry_decision)"
     $postconditionJobRoot = Join-Path $jobsRoot 'retry-postcondition'
     New-Item -ItemType Directory -Path $postconditionJobRoot | Out-Null
-    [ordered]@{ job_id = 'retry-postcondition'; state = 'POSTCONDITION_RUNNING'; runner_pid = 999999; child_pid = 999998; postcondition_pid = 999997 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $postconditionJobRoot 'state.json') -Encoding utf8
+    Write-RetryFixture $postconditionJobRoot ([ordered]@{ job_id = 'retry-postcondition'; state = 'POSTCONDITION_RUNNING'; runner_pid = 2147483647; child_pid = 2147483646; postcondition_pid = 2147483645 }) 'configured.exe'
     $postconditionRetry = & $inspectRetry -JobId 'retry-postcondition' -JobsRoot $jobsRoot -Json | ConvertFrom-Json
     Assert ($postconditionRetry.state -eq 'LOST_PROCESS') "dead postcondition state was $($postconditionRetry.state)"
     Assert ($postconditionRetry.retry_decision -eq 'ALLOW_RETRY') "dead postcondition retry decision was $($postconditionRetry.retry_decision)"
     $postconditionLiveJobRoot = Join-Path $jobsRoot 'retry-postcondition-live'
     New-Item -ItemType Directory -Path $postconditionLiveJobRoot | Out-Null
-    [ordered]@{ job_id = 'retry-postcondition-live'; state = 'POSTCONDITION_RUNNING'; runner_pid = 999999; child_pid = 999998; postcondition_pid = $PID } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $postconditionLiveJobRoot 'state.json') -Encoding utf8
+    Write-RetryFixture $postconditionLiveJobRoot ([ordered]@{ job_id = 'retry-postcondition-live'; state = 'POSTCONDITION_RUNNING'; runner_pid = 2147483647; child_pid = 2147483646; postcondition_pid = $PID }) 'configured.exe'
     $postconditionLiveRetry = & $inspectRetry -JobId 'retry-postcondition-live' -JobsRoot $jobsRoot -Json | ConvertFrom-Json
     Assert ($postconditionLiveRetry.retry_decision -eq 'REFUSE_RETRY') "live postcondition retry decision was $($postconditionLiveRetry.retry_decision)"
     $safeJobRoot = Join-Path $jobsRoot 'retry-safe'
     New-Item -ItemType Directory -Path $safeJobRoot | Out-Null
-    [ordered]@{ job_id = 'retry-safe'; state = 'POSTCONDITION_FAILED'; runner_pid = 999997; child_pid = 999996 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $safeJobRoot 'state.json') -Encoding utf8
+    Write-RetryFixture $safeJobRoot ([ordered]@{ job_id = 'retry-safe'; state = 'POSTCONDITION_FAILED'; runner_pid = 2147483647; child_pid = 2147483646; postcondition_pid = 2147483645 }) 'configured.exe'
     $safeRetry = & $inspectRetry -JobId 'retry-safe' -JobsRoot $jobsRoot -Json | ConvertFrom-Json
     Assert ($safeRetry.retry_decision -eq 'ALLOW_RETRY') "safe terminal retry decision was $($safeRetry.retry_decision)"
     $unknownRetry = & $inspectRetry -JobId 'retry-unknown' -JobsRoot $jobsRoot -Json | ConvertFrom-Json
     Assert ($unknownRetry.retry_decision -eq 'REFUSE_RETRY') "missing state retry decision was $($unknownRetry.retry_decision)"
     $pass++; ReportCase 'inspect before retry postcondition recovery, live refusal, safe terminal allow and unknown fail closed'
+
+    & (Join-Path $RepoRoot 'scripts\_test\retry_identity_tests.ps1') -RepoRoot $RepoRoot
 
     Set-Content -LiteralPath (Join-Path $worktree 'tracked.txt') -Value 'dirty' -Encoding ascii
     $dirtyRefused = $false

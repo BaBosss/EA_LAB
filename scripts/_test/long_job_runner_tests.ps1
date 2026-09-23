@@ -11,6 +11,7 @@ $Start = Join-Path $RepoRoot 'scripts\long_jobs\start_long_job.ps1'
 $Status = Join-Path $RepoRoot 'scripts\long_jobs\status_long_job.ps1'
 $Wait = Join-Path $RepoRoot 'scripts\long_jobs\wait_long_job.ps1'
 $Cancel = Join-Path $RepoRoot 'scripts\long_jobs\cancel_long_job.ps1'
+$InspectRetry = Join-Path $RepoRoot 'scripts\execution_reliability\inspect_before_retry.ps1'
 
 $fail = 0
 $pass = 0
@@ -43,6 +44,8 @@ try {
     Start-Sleep -Seconds 2
     $s2 = & $Status -JobId 'job-002' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
     Assert ($s2.state -eq 'FAILED') "expected FAILED got $($s2.state)"
+    $retry2 = & $InspectRetry -JobId 'job-002' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
+    Assert ($retry2.retry_decision -eq 'ALLOW_RETRY') 'naturally exited failed job with recorded creation identities is not retry eligible'
     $pass++; ReportCase 'failed job' 'PASS'
 
     $postPass = Join-Path $Root 'post_pass.ps1'
@@ -116,6 +119,9 @@ try {
     Assert ($null -ne $postNestedState -and $postNestedState.state -eq 'POSTCONDITION_RUNNING') 'postcondition nested child did not reach POSTCONDITION_RUNNING'
     Assert (Test-Path -LiteralPath $postNestedPidFile) 'postcondition nested child pid evidence missing'
     $postNestedPid=[int](Get-Content -LiteralPath $postNestedPidFile -Raw)
+    $nestedRetry = & $InspectRetry -JobId 'job-post-nested-cancel' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
+    Assert ($nestedRetry.retry_decision -eq 'REFUSE_RETRY') 'live postcondition descendant admitted retry'
+    Assert ([bool](Get-Process -Id $postNestedPid -ErrorAction Stop)) 'retry inspection disturbed postcondition descendant'
     & $Cancel -JobId 'job-post-nested-cancel' -JobsRoot $JobsRoot -Json | Out-Null
     $postNestedTerminal=& $Wait -JobId 'job-post-nested-cancel' -JobsRoot $JobsRoot -PollSec 1 -MaxWaitSec 8 -Json | ConvertFrom-Json
     Assert ($postNestedTerminal.state -eq 'CANCELLED') "postcondition nested cancel expected CANCELLED got $($postNestedTerminal.state)"
@@ -223,6 +229,9 @@ try {
     $state7 = Get-Content -LiteralPath (Join-Path $JobsRoot 'job-007\state.json') -Raw | ConvertFrom-Json
     Assert (Test-Path -LiteralPath $nestedPidFile) 'nested child pid evidence missing'
     $nestedPid = [int](Get-Content -LiteralPath $nestedPidFile -Raw)
+    $nestedRetry = & $InspectRetry -JobId 'job-007' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
+    Assert ($nestedRetry.retry_decision -eq 'REFUSE_RETRY') 'live child descendant admitted retry'
+    Assert ([bool](Get-Process -Id $nestedPid -ErrorAction Stop)) 'retry inspection disturbed child descendant'
     & $Cancel -JobId 'job-007' -JobsRoot $JobsRoot -Json | Out-Null
     Start-Sleep -Seconds 3
     $s7 = & $Status -JobId 'job-007' -JobsRoot $JobsRoot -Json | ConvertFrom-Json
