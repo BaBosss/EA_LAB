@@ -1,6 +1,6 @@
 {
     "schema":  "zabgoldpending_pretest_freeze/1",
-    "status":  "PARTIALLY_FROZEN_BLOCKED_OWNER_AND_INPUT_SURFACE",
+    "status":  "INPUT_SURFACE_QUALIFIED_OWNER_RISK_FROZEN_SEMANTICS_REQUIRED",
     "authority":  "RESEARCH_ONLY_DOCUMENTARY_NO_MT5",
     "canonical_base_sha":  "ec91a858aea97ee1563bc73992136cca37c58109",
     "lane":  "ct-zabgoldpending-pretest-freeze-v1-20260923",
@@ -66,24 +66,27 @@
                },
     "unresolved":  {
                        "owner_money_mode":  {
-                                                "state":  "OWNER_REQUIRED",
+                                                "state":  "OWNER_FROZEN",
                                                 "allowed_source_options":  [
                                                                                "FIXED_LOT",
                                                                                "RISK_PERCENT"
                                                                            ],
-                                                "value":  "UNRESOLVED",
-                                                "note":  "Do not infer mode or value from owner risk preference or source wording."
+                                                "value":  "1.0",
+                                                "note":  "Owner selected RISK_PERCENT=1.0 on 2026-09-23. This binds the value but does not prove how the EA disables/overrides Fixed_Lot_Size.",
+                                                "chosen_mode":  "RISK_PERCENT",
+                                                "decision_source":  "OWNER_DIRECT_CHAT_20260923_RISK_PERCENT_1PCT"
                                             },
                        "ex5_input_surface":  {
-                                                 "state":  "INPUT_SURFACE_REQUIRED",
-                                                 "defaults":  "UNKNOWN",
-                                                 "parameter_names":  "UNKNOWN",
-                                                 "binary_probe":  "ASCII/UTF16 printable-string probe did not recover trustworthy input names/defaults",
-                                                 "required_method":  "separately authorized input-surface capture without running performance test"
+                                                 "state":  "QUALIFIED_CROSS_BUILD_6090_6182",
+                                                 "defaults":  "CAPTURED_12_INPUTS",
+                                                 "parameter_names":  "CAPTURED_12_INPUTS",
+                                                 "binary_probe":  "Superseded by isolated MT5 metadata capture; parameter surface identical across builds 6090 and 6182.",
+                                                 "required_method":  "COMPLETE; see portfolio/ZABGOLDPENDING_INPUT_SURFACE_QUALIFICATION_20260923.json",
+                                                 "parameter_lines_sha256":  "d518cdbf844b23d22ca2c8250fa9ad4af2a7b5f9d6a37df79f991118aa200a16"
                                              },
                        "entry_semantics":  "SOURCE_CLAIM_BREAKOUT_ONLY_EXACT_RULE_UNKNOWN",
                        "exit_semantics":  "UNKNOWN",
-                       "money_management_formula":  "UNKNOWN_BEYOND_LOT_OR_RISK_PERCENT_OPTION",
+                       "money_management_formula":  "OWNER_RISK_PERCENT_1PCT_FROZEN_BUT_FIXED_LOT_PRECEDENCE_UNKNOWN",
                        "grid_martingale_hedge":  "UNKNOWN_ABSENCE_NOT_INFERRED",
                        "external_dependencies":  "UNKNOWN",
                        "account_identity":  {
@@ -91,23 +94,24 @@
                                                 "login":  "PRE_RUN_CAPTURE_REQUIRED",
                                                 "leverage":  "PRE_RUN_CAPTURE_REQUIRED"
                                             },
-                       "tester_build_identity":  "REVALIDATE_EXACT_TERMINAL_BUILD_IMMEDIATELY_BEFORE_RUN"
+                       "tester_build_identity":  "REVALIDATE_EXACT_TERMINAL_BUILD_IMMEDIATELY_BEFORE_RUN",
+                       "money_mode_precedence":  "SEMANTICS_REQUIRED_EXACT_POST_AND_LOADED_COMMENTS_RECHECK_FOUND_NO_RULE"
                    },
     "readiness":  {
                       "before":  "READY_FOR_SETTINGS_FREEZE",
-                      "after_this_document":  "PARTIAL_SETTINGS_FREEZE_OWNER_AND_INPUT_SURFACE_REQUIRED",
+                      "after_this_document":  "INPUT_SURFACE_QUALIFIED_OWNER_RISK_FROZEN_SEMANTICS_REQUIRED",
                       "ready_for_test":  false,
-                      "mt5_started":  false,
-                      "backtest_started":  false
+                      "mt5_started":  true,
+                      "backtest_started":  false,
+                      "mt5_scope":  "ISOLATED_METADATA_PROBE_ONLY_TESTER_NOT_STARTED"
                   },
     "next_gate":  {
                       "required":  [
-                                       "owner selects FIXED_LOT or RISK_PERCENT and exact value",
-                                       "capture exact EX5 input surface/defaults without guessing",
-                                       "bind exact account/login/leverage and revalidate terminal build",
-                                       "verify selected EX5 loads on XAUUSD M5 without external dependency failure"
+                                       "prove Risk_Percent versus Fixed_Lot_Size precedence/disable semantics without inference",
+                                       "bind accepted tester/account identity privately and revalidate exact terminal build",
+                                       "verify selected EX5 load/init on XAUUSD M5 without external dependency failure"
                                    ],
-                      "after_gate":  "freeze one fixed-config Model1 MAIN+BWD execution contract; no optimization and no HOLDOUT"
+                      "after_gate":  "only after semantics and identity gates resolve: freeze one fixed-config Model1 MAIN+BWD execution contract; no optimization and no HOLDOUT"
                   },
     "prohibitions":  [
                          "no MT5 performance run under this document",
@@ -118,5 +122,7 @@
                          "no strategy implementation",
                          "no deployment/runtime/LIVE",
                          "no SET attachment by filename similarity"
-                     ]
+                     ],
+    "latest_qualification_base_sha":  "b7da7a93d7024bb002a1ee84868cc047309dc9a9",
+    "input_surface_qualification_ref":  "portfolio/ZABGOLDPENDING_INPUT_SURFACE_QUALIFICATION_20260923.json"
 }

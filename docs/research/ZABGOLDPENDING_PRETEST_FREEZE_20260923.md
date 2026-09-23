@@ -1,8 +1,8 @@
 # ZABgoldpending — prospective pretest freeze — 2026-09-23
 
-Status: `PARTIALLY_FROZEN / OWNER_AND_INPUT_SURFACE_REQUIRED / NO_MT5`
+Status: `OWNER_RISK_FROZEN / INPUT_SURFACE_QUALIFIED / MONEY_MODE_SEMANTICS_REQUIRED / READY_FOR_TEST=false`
 
-Authority: `RESEARCH_ONLY_DOCUMENTARY`. This freezes only source-grounded and current-governance pretest fields. It does not authorize MT5 execution, backtesting, optimization, HOLDOUT, risk/default changes, deployment, runtime, DEMO/LIVE, or trading.
+Authority: `RESEARCH_ONLY_DOCUMENTARY`. This freezes source-grounded and current-governance pretest fields only. It does not authorize a performance backtest, optimization, HOLDOUT use, Candidate/Grade/KINT decision, deployment, runtime, DEMO/LIVE, or trading.
 
 ## Source identity
 
@@ -10,63 +10,70 @@ Authority: `RESEARCH_ONLY_DOCUMENTARY`. This freezes only source-grounded and cu
 - Selected binary: `ZABgoldpending.ex5` — 53,368 bytes — SHA256 `f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90`.
 - Exact source post: `725024260297268` / content SHA256 `9b818b646503247d7dda3a653c4d5a2301f95c944ff22d266b029c3acc5f96bb`.
 - `SOURCE_CLAIM`: Gold M5 breakout bot; user chooses lot or risk-percent; source says remaining settings are prepared; demo is recommended first.
-- EX5 source code is unavailable. The binary is opaque. A read-only ASCII/UTF-16 string probe did not recover trustworthy input names/defaults.
+- Source code is unavailable and EX5 remains opaque. Static binary strings did not expose trustworthy inputs/defaults.
 
-## Prospectively frozen now
+## Prospectively frozen
 
 - Role: `EA`.
-- Home mapping: `XAUUSD` on ThinkMarkets-Live as an **EA_LAB experiment mapping** of the source term Gold, not a claim that the Facebook post literally named `XAUUSD`. Current filesystem observation shows XAUUSD history + ticks under both `D:\Meta 5` and `D:\Meta 5b`; this must be revalidated before any run.
+- Home mapping: `XAUUSD` on ThinkMarkets-Live is an **EA_LAB prospective experiment mapping** of source term Gold, not a claim that the Facebook source literally named `XAUUSD`.
 - Timeframe: `M5` (`SOURCE_CLAIM`).
+- Owner money choice: `RISK_PERCENT = 1%`, bound to the exposed input `Risk_Percent=1.0`.
 - First numerical research model: `M1_M1_OHLC_RESEARCH`.
 - MAIN: `2023-01-01..2025-12-31`.
 - BWD: `2020-01-01..2022-12-31`.
 - HOLDOUT: `2026H1 = UNSPENT_DO_NOT_DISCOVER`.
 - Optimization: `NOT_AUTHORIZED`; fixed-config qualification must come first.
-- Candidate path: Model-4 MAIN+BWD remains mandatory later, with no M1→M4 retuning.
+- Model-4 MAIN+BWD remains mandatory later before Candidate eligibility, with no M1→M4 retuning.
+
+## Input-surface qualification
+
+A separately bounded isolated metadata probe recovered the tester input surface without starting Strategy Tester performance execution. No account configuration was copied into the isolates. MT5 builds `6090` and `6182` generated the same 12 parameter lines with SHA256 `d518cdbf844b23d22ca2c8250fa9ad4af2a7b5f9d6a37df79f991118aa200a16`.
+
+Both terminal logs state `tester not started because the account is not specified`. Performance report count is `0`; backtest started is `false`; tested performance is `NONE`.
+
+Exact details are in `docs/research/ZABGOLDPENDING_INPUT_SURFACE_QUALIFICATION_20260923.md` and `portfolio/ZABGOLDPENDING_INPUT_SURFACE_QUALIFICATION_20260923.json`.
 
 ## Prospective tester lineage
 
-- Acceptance-critical candidate install: `D:\Meta 5\terminal64.exe`.
+- Acceptance-critical candidate install remains `D:\Meta 5\terminal64.exe`.
 - Observed terminal product/file version: `5.0.0.6182`.
-- Current role in governance: MT5 lane 1 primary; Model-4 is serial and remains a later gate.
-- This build observation is **not standing identity**: exact terminal build, account login, leverage, server and effective economics must be captured immediately before a future run.
+- Current governance role: MT5 lane 1 primary; Model-4 is serial and remains a later gate.
+- The build observation is not standing identity. Exact terminal build, account identity, leverage, server, and effective economics must be captured immediately before a future run. Account identifiers remain private local data and must not be copied into Git.
 
 ## Cost/data policy
 
 - Use tester-native broker economics from the exact accepted ThinkMarkets-Live installation.
-- Capture effective spread/commission/swap evidence; if a required economic field is unavailable, mark it unavailable/block rather than inventing a number.
-- Do not rely on historical INI spread/leverage knobs where current MT5 builds have shown silent no-op behavior; verify effective report identity instead.
-- Never compare acceptance numbers across MT5 installs as if they were one lineage.
+- Capture effective spread/commission/swap evidence; unavailable required economics must fail closed rather than be invented.
+- Do not rely on historical INI controls that current MT5 builds may silently ignore; verify effective report identity instead.
+- Never compare acceptance numbers across MT5 installations as if they were one lineage.
 
 ## Unresolved — intentionally not invented
 
-1. **Owner money mode/value:** choose exactly one: `FIXED_LOT = <value>` or `RISK_PERCENT = <value>`. No value is inferred from prior risk preferences or Facebook prose.
-2. **EX5 input surface/defaults:** parameter names, exact defaults and which field selects lot-vs-risk remain `UNKNOWN`; a separately authorized input-surface capture is required.
-3. **Exact breakout mechanics:** trigger level/lookback/confirmation/pending-order logic remain unknown.
-4. **Exit semantics:** TP/SL/trailing/time exit/basket exit remain unknown.
-5. **MM mechanics:** risk-percent formula, stop basis, lot normalization/caps remain unknown.
-6. **Grid/martingale/hedge:** absence is not inferred from filename or strings.
-7. **External dependencies:** indicators/files/network/license requirements remain unknown.
-8. **Account identity:** exact login/leverage and final effective tester economics require pre-run capture.
+1. **Money-mode selection semantics:** the surface exposes both `Risk_Percent=1.0` and `Fixed_Lot_Size=0.1`, both non-zero, with no explicit money-mode selector. The source says the user can choose lot or risk-percent but does not state the precedence/disable rule. Do not infer it.
+2. **Exact breakout mechanics:** trigger level/lookback/confirmation/pending-order logic remain unknown.
+3. **Exit semantics:** TP/SL/trailing/time exit/basket exit remain unknown.
+4. **MM mechanics:** risk-percent calculation, stop basis, lot normalization/caps and fixed-lot/risk-percent precedence remain unknown.
+5. **Grid/martingale/hedge:** absence is not inferred from filename, source prose or strings.
+6. **External dependencies:** indicators/files/network/license requirements remain unknown.
+7. **Account identity:** exact account/leverage and final effective tester economics require private pre-run capture.
 
 ## Readiness decision
 
 Previous state: `READY_FOR_SETTINGS_FREEZE`.
 
-After this bounded work: `PARTIAL_SETTINGS_FREEZE_OWNER_AND_INPUT_SURFACE_REQUIRED / READY_FOR_TEST = false`.
+Current state: `INPUT_SURFACE_QUALIFIED_OWNER_RISK_FROZEN_SEMANTICS_REQUIRED / READY_FOR_TEST = false`.
 
-This is progress, not a test contract. The source identity, XAUUSD/M5 carrier, M1 model, MAIN/BWD windows, HOLDOUT protection, no-optimization rule, and tester/cost policy are now explicit. The money choice and exact input surface remain blocking.
+The owner value and exact input surface are now resolved. The material blocker is the unproven selection/disable semantics between `Risk_Percent=1.0` and `Fixed_Lot_Size=0.1`, followed by private tester/account binding and EX5 load/init qualification.
 
 ## Exact next gate
 
 Before any MT5 performance run:
 
-1. owner freezes `FIXED_LOT` or `RISK_PERCENT` and an exact value;
-2. capture the EX5 input surface/defaults without guessing and without using outcome data;
-3. bind exact terminal build + account/login/leverage + broker symbol economics;
-4. verify the binary loads on `XAUUSD M5` and identify any dependency failure;
-5. only then create one fixed-config Model-1 MAIN+BWD execution contract.
+1. prove how the EA selects/disables `Risk_Percent` versus `Fixed_Lot_Size` without guessing or using outcome data;
+2. bind exact terminal build + account/leverage + broker economics privately;
+3. verify the binary loads/initializes on `XAUUSD M5` and identify any external-dependency failure;
+4. only then create one fixed-config Model-1 MAIN+BWD execution contract.
 
-No optimization, BWD retuning, HOLDOUT discovery, Grade/KINT/Candidate decision, runtime/deployment or LIVE action follows automatically.
+No optimization, BWD retuning, HOLDOUT discovery, Grade/KINT/Candidate decision, deployment, runtime, or LIVE action follows automatically.
 
-Machine-readable owner: `portfolio/ZABGOLDPENDING_PRETEST_FREEZE_20260923.json`.
+Machine-readable pretest owner: `portfolio/ZABGOLDPENDING_PRETEST_FREEZE_20260923.json`.

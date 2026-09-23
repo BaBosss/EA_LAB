@@ -1,0 +1,170 @@
+{
+    "schema":  "zabgoldpending_input_surface_qualification/1",
+    "status":  "INPUT_SURFACE_QUALIFIED_OWNER_RISK_FROZEN_SEMANTICS_BLOCKED",
+    "authority":  "RESEARCH_ONLY_DOCUMENTARY_NO_PERFORMANCE_TEST",
+    "canonical_base_sha":  "b7da7a93d7024bb002a1ee84868cc047309dc9a9",
+    "lane":  "ct-zabgoldpending-inputsurface-v1-20260923",
+    "family":  "ZABgoldpending",
+    "selected_ex5":  {
+                         "sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                         "bytes":  53368
+                     },
+    "owner_decision":  {
+                           "money_mode":  "RISK_PERCENT",
+                           "value_percent":  1,
+                           "field_binding":  "Risk_Percent=1.0",
+                           "source":  "OWNER_DIRECT_CHAT_20260923",
+                           "state":  "FROZEN"
+                       },
+    "capture":  {
+                    "method":  "ISOLATED_PORTABLE_MT5_METADATA_PROBE",
+                    "builds":  [
+                                   6090,
+                                   6182
+                               ],
+                    "surface_equal":  true,
+                    "parameter_count":  12,
+                    "parameter_lines_sha256":  "d518cdbf844b23d22ca2c8250fa9ad4af2a7b5f9d6a37df79f991118aa200a16",
+                    "tester_started":  false,
+                    "backtest_started":  false,
+                    "performance_report_count":  0,
+                    "tested_performance":  "NONE",
+                    "external_evidence":  "D:/EA_LAB_CONTROL/evidence/zabgoldpending-inputsurface-20260923/INPUT_SURFACE_CAPTURE.json"
+                },
+    "parameters":  [
+                       {
+                           "name":  "tp_sl_points",
+                           "value":  "400.0",
+                           "start":  "400.0",
+                           "step":  "40.000000",
+                           "stop":  "4000.000000",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Fixed_Lot_Size",
+                           "value":  "0.1",
+                           "start":  "0.1",
+                           "step":  "0.010000",
+                           "stop":  "1.000000",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Risk_Percent",
+                           "value":  "1.0",
+                           "start":  "1.0",
+                           "step":  "0.100000",
+                           "stop":  "10.000000",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Magic_Number",
+                           "value":  "123456",
+                           "start":  "123456",
+                           "step":  "1",
+                           "stop":  "1234560",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Trailing_Start",
+                           "value":  "70",
+                           "start":  "70",
+                           "step":  "1",
+                           "stop":  "700",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Trailing_Step",
+                           "value":  "50",
+                           "start":  "50",
+                           "step":  "1",
+                           "stop":  "500",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Slipage",
+                           "value":  "3",
+                           "start":  "3",
+                           "step":  "1",
+                           "stop":  "30",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Show_Debug_Info",
+                           "value":  "true",
+                           "start":  "false",
+                           "step":  "0",
+                           "stop":  "true",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Swing_Period",
+                           "value":  "7",
+                           "start":  "7",
+                           "step":  "1",
+                           "stop":  "70",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Min_Swing_Distance",
+                           "value":  "50",
+                           "start":  "50",
+                           "step":  "1",
+                           "stop":  "500",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Use_Volume_Filter",
+                           "value":  "true",
+                           "start":  "false",
+                           "step":  "0",
+                           "stop":  "true",
+                           "optimize_enabled":  "N"
+                       },
+                       {
+                           "name":  "Max_Lookback",
+                           "value":  "100",
+                           "start":  "100",
+                           "step":  "1",
+                           "stop":  "1000",
+                           "optimize_enabled":  "N"
+                       }
+                   ],
+    "money_mode_semantics":  {
+                                 "risk_percent_field":  "Risk_Percent",
+                                 "risk_percent_default":  "1.0",
+                                 "fixed_lot_field":  "Fixed_Lot_Size",
+                                 "fixed_lot_default":  "0.1",
+                                 "explicit_mode_selector_present":  false,
+                                 "source_claim":  "user chooses lot or risk percent",
+                                 "precedence_or_disable_rule":  "UNKNOWN",
+                                 "decision":  "SEMANTICS_REQUIRED_DO_NOT_INFER",
+                                 "owner_choice_applied_to_execution":  false
+                             },
+    "readiness":  {
+                      "input_surface_qualified":  true,
+                      "owner_risk_frozen":  true,
+                      "ready_for_fixed_config_contract":  false,
+                      "ready_for_test":  false
+                  },
+    "remaining_gates":  [
+                            "prove how Risk_Percent is selected relative to Fixed_Lot_Size because both defaults are non-zero and no explicit mode selector exists",
+                            "bind exact accepted account/tester identity privately without placing account identifiers in Git",
+                            "verify EX5 load/init on XAUUSD M5 without external dependency failure after money-mode semantics resolve"
+                        ],
+    "prohibitions":  [
+                         "no performance backtest",
+                         "no optimization",
+                         "no HOLDOUT",
+                         "no inferred money-mode precedence",
+                         "no deployment/runtime/LIVE"
+                     ],
+    "source_semantics_recheck":  {
+                                     "method":  "EXACT_FACEBOOK_POST_DOM_AND_LOADED_COMMENTS_READ_ONLY",
+                                     "post_id":  "725024260297268",
+                                     "artifact_sha256":  "a35ddafade4f9979615facec4b0c95df44a88676e04042bc7ac1e6dde83454de",
+                                     "post_support":  "ตั้งแค่ lot หรือ risk เป็น %",
+                                     "comments_support":  "MT5 confirmation, test/help/install comments only; no lot-vs-risk precedence or disable rule",
+                                     "money_mode_precedence_found":  false,
+                                     "result":  "SEMANTICS_STILL_UNRESOLVED"
+                                 }
+}
