@@ -1,0 +1,86 @@
+{
+    "schema":  "zabgoldpending_money_mode_semantic_probe/1",
+    "status":  "PREREGISTERED_NOT_RUN",
+    "authority":  "SEMANTIC_DIAGNOSTIC_ONLY_NO_PERFORMANCE_VERDICT",
+    "canonical_base_sha":  "524c628ec5f52b1a06010fa673999eb0e1ce5482",
+    "family":  "ZABgoldpending",
+    "artifact":  {
+                     "sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                     "bytes":  53368
+                 },
+    "home":  {
+                 "symbol":  "XAUUSD",
+                 "timeframe":  "M5",
+                 "model":  "M1_M1_OHLC_RESEARCH",
+                 "window":  "2023-01-01..2023-03-31",
+                 "window_role":  "MAIN_SUBWINDOW_SEMANTIC_ONLY"
+             },
+    "fixed_common":  {
+                         "Deposit":  10000,
+                         "Leverage":  "1:100",
+                         "tp_sl_points":  400,
+                         "Magic_Number":  123456,
+                         "Trailing_Start":  70,
+                         "Trailing_Step":  50,
+                         "Slipage":  3,
+                         "Show_Debug_Info":  true,
+                         "Swing_Period":  7,
+                         "Min_Swing_Distance":  50,
+                         "Use_Volume_Filter":  true,
+                         "Max_Lookback":  100
+                     },
+    "variants":  [
+                     {
+                         "id":  "A_OWNER",
+                         "Risk_Percent":  1,
+                         "Fixed_Lot_Size":  0.1,
+                         "change_from_A":  "NONE"
+                     },
+                     {
+                         "id":  "B_FIXED_ONLY",
+                         "Risk_Percent":  1,
+                         "Fixed_Lot_Size":  0.2,
+                         "change_from_A":  "Fixed_Lot_Size only"
+                     },
+                     {
+                         "id":  "C_RISK_ONLY",
+                         "Risk_Percent":  2,
+                         "Fixed_Lot_Size":  0.1,
+                         "change_from_A":  "Risk_Percent only"
+                     }
+                 ],
+    "observables":  [
+                        "first entry timestamp",
+                        "first entry side",
+                        "first entry requested/executed volume",
+                        "EA init/error log",
+                        "dependency/init failure"
+                    ],
+    "forbidden_observables":  [
+                                  "profit factor",
+                                  "net profit",
+                                  "drawdown",
+                                  "ending balance",
+                                  "win rate",
+                                  "exit outcome",
+                                  "grade",
+                                  "candidate decision"
+                              ],
+    "comparability":  [
+                          "same exact EX5 SHA",
+                          "same isolated terminal build and account identity",
+                          "same symbol/timeframe/model/window",
+                          "same all non-money inputs",
+                          "first entry timestamp and side must match across compared variants"
+                      ],
+    "decision_rule":  {
+                          "risk_active":  "A vs B first-entry volume unchanged AND C changes first-entry volume with same first signal",
+                          "fixed_active":  "A vs C first-entry volume unchanged AND B changes first-entry volume with same first signal",
+                          "hybrid_or_unknown":  "both axes change volume, neither changes volume, first signal differs, no first entry, or init/dependency failure =\u003e UNKNOWN",
+                          "no_result_reinterpretation":  "No P/L or later trade path may resolve ambiguity"
+                      },
+    "holdout":  "UNSPENT_DO_NOT_DISCOVER",
+    "optimization":  "NOT_AUTHORIZED",
+    "runtime":  "TESTER_ONLY_NO_LIVE",
+    "next":  "If precedence resolves, bind private tester/account economics + init dependency and freeze fixed-config Model1 MAIN+BWD contract; otherwise BLOCKED_SEMANTICS_REQUIRED"
+}
