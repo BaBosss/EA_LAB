@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Claim','Check','Transition','List','Get','Validate','Audit')][string]$Command = 'List',
+    [ValidateSet('Claim','Check','Transition','List','Get','Validate','Audit','AmendScope')][string]$Command = 'List',
     [string]$RegistryRoot = 'D:\EA_LAB_CONTROL\lanes\registry-v1',
     [string]$LaneId,
     [string]$OwnerChat,
@@ -22,6 +22,10 @@ param(
     [string]$BlockerClass,
     [string]$SupersedeOwnLaneId = '',
     [string]$ExpectedState,
+    [string]$ExpectedHead,
+    [AllowEmptyCollection()][AllowEmptyString()][string[]]$AddPaths = @(),
+    [string]$AuthorityRef,
+    [string]$AuthoritySha256,
     [string]$NewState,
     [int]$LockTimeoutSeconds = 5,
     [string]$RepoRoot = 'D:\EA_LAB',
@@ -119,11 +123,18 @@ function Read-LaneRecords {
 }
 function Write-LaneRecordAtomic {
     param($Record)
+    # Every full-record writer shares the serializer's supported ceiling. Inspect
+    # first: ConvertTo-Json can otherwise silently replace deep objects by strings.
+    Assert-RegistryJsonDepth $Record
+    $text=(ConvertTo-Json -InputObject $Record -Depth 100 -WarningAction Stop) + "`n"
+    $roundtrip=$text | ConvertFrom-Json
+    if((ConvertTo-Json -InputObject $roundtrip -Depth 100 -WarningAction Stop) + "`n" -cne $text){
+        Throw-LaneError 'preservation_failed' 'record JSON cannot round-trip losslessly'
+    }
     if(-not (Test-Path -LiteralPath $RegistryRoot)){ New-Item -ItemType Directory -Force -Path $RegistryRoot | Out-Null }
     $target=Join-Path $RegistryRoot ($Record.lane_id + '.json')
     $tmp=Join-Path $RegistryRoot ('.lane-tmp-' + [guid]::NewGuid().ToString('N') + '.tmp')
     $backup=Join-Path $RegistryRoot ('.lane-backup-' + [guid]::NewGuid().ToString('N') + '.tmp')
-    $text=($Record | ConvertTo-Json -Depth 10) + "`n"
     try {
         [IO.File]::WriteAllText($tmp,$text,$Utf8NoBom)
         $fs=[IO.File]::Open($tmp,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
@@ -155,7 +166,7 @@ function Assert-WorktreeIdentity {
     }
 }
 function New-ConflictList {
-    param([object[]]$Records,[string]$RequestedLane,[string]$RequestedOwner,[bool]$RequestedWriter,[string[]]$RequestedCritical,[string]$RequestedRuntime)
+    param([object[]]$Records,[string]$RequestedLane,[string]$RequestedOwner,[bool]$RequestedWriter,[string[]]$RequestedCritical,[string]$RequestedRuntime,[switch]$AmendLiteralIdentity)
     $conflicts=New-Object Collections.Generic.List[object]
     if(-not $RequestedWriter){ return $conflicts.ToArray() }
     foreach($r in @($Records)){
@@ -166,7 +177,13 @@ function New-ConflictList {
             continue
         }
         $hit=$false
-        foreach($a in @($RequestedCritical)){ foreach($b in @($r.critical_paths)){ if(Test-PathOverlap $a $b){ $hit=$true; break } }; if($hit){ break } }
+        foreach($a in @($RequestedCritical)){
+            foreach($b in @($r.critical_paths)){
+                $overlap=if($AmendLiteralIdentity){ Test-AmendPathOverlap $a $b }else{ Test-PathOverlap $a $b }
+                if($overlap){ $hit=$true; break }
+            }
+            if($hit){ break }
+        }
         if($hit){ $conflicts.Add([pscustomobject]@{lane_id=$r.lane_id;reason='critical_path_overlap';state=$r.state}); continue }
         if(-not [string]::IsNullOrWhiteSpace($RequestedRuntime) -and $RequestedRuntime -ceq [string]$r.runtime_lane){
             $conflicts.Add([pscustomobject]@{lane_id=$r.lane_id;reason='runtime_lane_overlap';state=$r.state})
@@ -225,6 +242,237 @@ function Get-LaneAuditRecord {
     }
 }
 
+# AmendScope deliberately does not change historical Claim/Transition path semantics.
+function Get-AmendPathKey([string]$Value) {
+    # Windows separators and a terminal directory separator are identity aliases;
+    # Unicode whitespace/normalization forms are literal filename characters.
+    return $Value.Replace('\','/').TrimEnd('/')
+}
+function Test-AmendPathOverlap([string]$A,[string]$B) {
+    $a1=Get-AmendPathKey $A; $b1=Get-AmendPathKey $B
+    return [string]::Equals($a1,$b1,[StringComparison]::OrdinalIgnoreCase) -or
+        $a1.StartsWith($b1+'/',[StringComparison]::OrdinalIgnoreCase) -or
+        $b1.StartsWith($a1+'/',[StringComparison]::OrdinalIgnoreCase)
+}
+function Assert-RegistryJsonDepth($Value,[int]$Depth=0,[int]$Limit=100) {
+    if($Depth -gt $Limit){ Throw-LaneError 'registry_malformed' 'record JSON exceeds safe lossless depth' }
+    if($Value -is [Collections.IDictionary]){ foreach($key in $Value.Keys){ Assert-RegistryJsonDepth $Value[$key] ($Depth+1) $Limit } }
+    elseif($Value -is [array]){ foreach($item in $Value){ Assert-RegistryJsonDepth $item ($Depth+1) $Limit } }
+    elseif($Value -is [pscustomobject]){ foreach($prop in $Value.PSObject.Properties){ Assert-RegistryJsonDepth $prop.Value ($Depth+1) $Limit } }
+}
+function Assert-AmendJsonDepth($Value,[int]$Depth=0) {
+    # Retain V1's admission bound; the common writer also supports deeper legacy
+    # records up to the JSON serializer ceiling, never a smaller writer default.
+    Assert-RegistryJsonDepth $Value $Depth 80
+}
+function Get-AmendJson($Value) {
+    Assert-AmendJsonDepth $Value
+    return (ConvertTo-Json -InputObject $Value -Depth 100 -Compress)
+}
+function Get-AmendDigest($Value) {
+    $sha=[Security.Cryptography.SHA256]::Create()
+    try { return ([BitConverter]::ToString($sha.ComputeHash($Utf8NoBom.GetBytes((Get-AmendJson $Value))))).Replace('-','').ToLowerInvariant() }
+    finally { $sha.Dispose() }
+}
+function Get-PreservedFields($Record) {
+    $fields=[ordered]@{}
+    foreach($p in $Record.PSObject.Properties){
+        if($p.Name -cnotin @('allowed_paths','critical_paths','scope_amendments')){ $fields[$p.Name]=$p.Value }
+    }
+    return $fields
+}
+function Assert-LiteralAncestor([string]$FullPath) {
+    # Reject every reparse ancestor (including in-repo links) rather than guessing at
+    # junction/symlink/provider-specific resolution. New suffixes need a real directory.
+    $cursor=[IO.Path]::GetFullPath($FullPath); $missing=$false
+    while($cursor){
+        $item=$null
+        try { $item=Get-Item -LiteralPath $cursor -Force -ErrorAction Stop }
+        catch [System.Management.Automation.ItemNotFoundException] {
+            # Only the filesystem provider's explicit PathNotFound establishes
+            # absence. Access, IO and other provider failures are not absence.
+            if($_.CategoryInfo.Category -ne [Management.Automation.ErrorCategory]::ObjectNotFound -or
+                ($_.FullyQualifiedErrorId -split ',')[0] -cne 'PathNotFound'){
+                Throw-LaneError 'unsafe_path' "cannot inspect ancestor: $cursor"
+            }
+        }
+        catch { Throw-LaneError 'unsafe_path' "cannot inspect ancestor: $cursor ($($_.Exception.Message))" }
+        if($null -ne $item){
+            if(($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0){ Throw-LaneError 'unsafe_path' "reparse ancestor: $cursor" }
+            if($missing -and -not $item.PSIsContainer){ Throw-LaneError 'unsafe_path' "new suffix below non-directory: $cursor" }
+            $missing=$false
+        } else { $missing=$true }
+        $parent=[IO.Path]::GetDirectoryName($cursor)
+        if(-not $parent){
+            if($null -eq $item){ Throw-LaneError 'unsafe_path' "unverifiable path root: $cursor" }
+            break
+        }
+        $cursor=$parent
+    }
+}
+function Convert-AmendPath([string]$Value,[string]$Root) {
+    if([string]::IsNullOrWhiteSpace($Value) -or $Value -match '[\p{Cc}:*?\[\]<>|"~]' -or $Value -match '^[/\\]'){
+        Throw-LaneError 'unsafe_path' "not a literal repository-relative path: $Value"
+    }
+    $rel=$Value.Replace('\','/')
+    foreach($part in $rel.Split('/')){
+        if(-not $part -or $part -in @('.','..') -or $part -match '^[ .]|[ .]$' -or
+            $part -match '^(?i:CON|PRN|AUX|NUL|COM[1-9\u00b9\u00b2\u00b3]|LPT[1-9\u00b9\u00b2\u00b3]|CONIN\$|CONOUT\$)(\.|$)' -or $part -ieq '.git'){
+            Throw-LaneError 'unsafe_path' "ambiguous Windows component: $Value"
+        }
+    }
+    $full=[IO.Path]::GetFullPath((Join-Path $Root $rel))
+    $prefix=[IO.Path]::GetFullPath($Root).TrimEnd('\','/') + [IO.Path]::DirectorySeparatorChar
+    if(-not $full.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)){ Throw-LaneError 'unsafe_path' "path escapes repository: $Value" }
+    Assert-LiteralAncestor $full
+    return $rel
+}
+function Resolve-AmendAuthority([string]$Value) {
+    # IsPathRooted also accepts C:relative and UNC. V1 requires a drive-qualified
+    # local filesystem path and excludes device namespaces and alternate streams.
+    if($Value -notmatch '^[A-Za-z]:[/\\]' -or $Value.Substring(2) -match '[:\p{Cc}*?<>|\"]'){
+        Throw-LaneError 'authority_reference' 'AuthorityRef must be a fully qualified local file path'
+    }
+    $full=[IO.Path]::GetFullPath($Value)
+    $drive=New-Object IO.DriveInfo ([IO.Path]::GetPathRoot($full))
+    if($drive.DriveType -in @([IO.DriveType]::Network,[IO.DriveType]::Unknown,[IO.DriveType]::NoRootDirectory)){
+        Throw-LaneError 'authority_reference' 'AuthorityRef must use a local filesystem drive'
+    }
+    Assert-LiteralAncestor $full
+    if(-not (Test-Path -LiteralPath $full -PathType Leaf)){
+        Throw-LaneError 'authority_reference' 'AuthorityRef must name an existing local file'
+    }
+    return (Get-Item -LiteralPath $full -Force -ErrorAction Stop).FullName
+}
+function Get-AmendNamespace([string]$Value,[string]$Root) {
+    # Legacy absolute entries stay stored verbatim. Resolve only for this admission.
+    if(-not (Test-Path -LiteralPath $Root -PathType Container)){ Throw-LaneError 'unsafe_namespace' "unverifiable worktree namespace: $Root" }
+    Assert-LiteralAncestor $Root
+    if([IO.Path]::IsPathRooted($Value)){
+        if($Value -notmatch '^[A-Za-z]:[/\\]' -or $Value.Substring(2) -match '[:*?\[\]\x00-\x1f\x7f]' -or $Value -match '[/\\]\.\.?([/\\]|$)'){
+            Throw-LaneError 'unsafe_namespace' "unresolved absolute scope: $Value"
+        }
+        $full=[IO.Path]::GetFullPath($Value)
+        Assert-LiteralAncestor $full
+        foreach($anchor in @($script:AmendNamespaceRoots)+@($Root)){
+            $prefix=[IO.Path]::GetFullPath($anchor).TrimEnd('\','/')
+            if($full -ieq $prefix){ return '.' }
+            if($full.StartsWith($prefix+'\',[StringComparison]::OrdinalIgnoreCase)){
+                return (Convert-AmendPath $full.Substring($prefix.Length+1) $anchor)
+            }
+        }
+        # Check Windows components even for safely disjoint external namespaces.
+        [void](Convert-AmendPath $full.Substring(3) $full.Substring(0,3))
+        return $full.Replace('\','/')
+    }
+    return (Convert-AmendPath $Value $Root)
+}
+function Assert-AmendIdentity($Record) {
+    Assert-LiteralAncestor ([string]$Record.worktree)
+    Assert-WorktreeIdentity ([string]$Record.worktree) ([string]$Record.branch) $ExpectedHead $false
+    $top=Invoke-GitText $Record.worktree @('rev-parse','--show-toplevel')
+    if([IO.Path]::GetFullPath($top).TrimEnd('\','/') -ine [IO.Path]::GetFullPath($Record.worktree).TrimEnd('\','/')){
+        Throw-LaneError 'repository_mismatch' 'lane worktree must be the repository top level'
+    }
+    $common=Invoke-GitText $Record.worktree @('rev-parse','--path-format=absolute','--git-common-dir')
+    $expectedCommon=Invoke-GitText $RepoRoot @('rev-parse','--path-format=absolute','--git-common-dir')
+    if([IO.Path]::GetFullPath($common) -ine [IO.Path]::GetFullPath($expectedCommon)){
+        Throw-LaneError 'repository_mismatch' 'lane and RepoRoot are different repositories'
+    }
+}
+function Invoke-AmendScope([object[]]$Records,$Bound) {
+    $permitted=@('Command','RegistryRoot','RepoRoot','LaneId','ExpectedState','ExpectedHead','AddPaths','AuthorityRef','AuthoritySha256','LockTimeoutSeconds','Json')
+    foreach($key in $Bound.Keys){ if($key -notin $permitted){ Throw-LaneError 'amend_parameter' "AmendScope does not accept $key" } }
+    foreach($key in @('LaneId','ExpectedState','ExpectedHead','AuthorityRef','AuthoritySha256')){
+        if(-not $Bound.ContainsKey($key) -or [string]::IsNullOrWhiteSpace([string]$Bound[$key])){ Throw-LaneError 'missing_argument' "AmendScope requires $key" }
+    }
+    if(-not (Test-Sha $ExpectedHead)){ Throw-LaneError 'bad_sha' 'ExpectedHead must be a full lowercase 40-hex SHA' }
+    if($AuthoritySha256 -cnotmatch '^[0-9a-fA-F]{64}$'){ Throw-LaneError 'authority_hash' 'AuthoritySha256 must be 64 hex characters' }
+    # Also refuse duplicate identity/file aliases before selecting a mutation target.
+    $ids=@{}
+    foreach($file in @(Get-LaneFiles)){
+        $row=Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+        if($ids.ContainsKey([string]$row.lane_id) -or $file.BaseName -cne [string]$row.lane_id){ Throw-LaneError 'registry_malformed' 'duplicate or misnamed lane record' }
+        $ids[[string]$row.lane_id]=$true
+    }
+    $matches=@($Records | Where-Object { $_.lane_id -ceq $LaneId })
+    if($matches.Count -ne 1){ Throw-LaneError 'lane_missing' "expected exactly one lane: $LaneId" }
+    $r=$matches[0]
+    if(-not $r.writer){ Throw-LaneError 'not_writer' 'AmendScope requires an existing writer lane' }
+    if([string]$r.state -cne $ExpectedState){ Throw-LaneError 'stale_state' 'ExpectedState does not match' }
+    if($ExpectedState -cnotin @('BLOCKED','WAITING','PAUSED','READY')){ Throw-LaneError 'amend_state' 'state does not permit scope amendment' }
+    if([string]$r.head_sha -cne $ExpectedHead){ Throw-LaneError 'stale_head' 'ExpectedHead does not match' }
+    if(-not [string]::IsNullOrEmpty([string]$r.reviewed_head)){ Throw-LaneError 'review_present' 'reviewed_head must be empty' }
+    Assert-AmendIdentity $r
+    # Absolute historical paths may name ANY linked checkout of this repository,
+    # not only the competitor's own worktree. Longest prefix handles nested roots.
+    $worktrees=Invoke-GitText $RepoRoot @('-c','core.quotePath=false','worktree','list','--porcelain')
+    $script:AmendNamespaceRoots=@($worktrees -split "`n" | Where-Object { $_.StartsWith('worktree ') } | ForEach-Object { $_.Substring(9).TrimEnd("`r") } | Sort-Object Length -Descending)
+    if(@($AddPaths).Count -eq 0){ Throw-LaneError 'missing_scope' 'AddPaths must not be empty' }
+    $requested=@($AddPaths | ForEach-Object { Convert-AmendPath $_ ([string]$r.worktree) })
+    $resolvedAuthority=Resolve-AmendAuthority $AuthorityRef
+    if((Get-FileHash -LiteralPath $resolvedAuthority -Algorithm SHA256).Hash -ine $AuthoritySha256){ Throw-LaneError 'authority_hash' 'authority reference content hash mismatch' }
+    foreach($field in @('allowed_paths','critical_paths')){
+        if($r.$field -isnot [array]){ Throw-LaneError 'registry_malformed' "$field must be an array" }
+    }
+    if($r.PSObject.Properties.Name -contains 'scope_amendments' -and $r.scope_amendments -isnot [array]){
+        Throw-LaneError 'registry_malformed' 'scope_amendments must be an array'
+    }
+    $before=[ordered]@{allowed_paths=@($r.allowed_paths);critical_paths=@($r.critical_paths)}
+    $preservedDigest=Get-AmendDigest (Get-PreservedFields $r)
+    $additions=[ordered]@{allowed_paths=@();critical_paths=@()}
+    foreach($field in @('allowed_paths','critical_paths')){
+        $existing=@($r.$field)
+        $normalized=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach($path in $existing){ [void]$normalized.Add((Get-AmendPathKey $path)) }
+        foreach($path in $requested){
+            if($normalized.Add((Get-AmendPathKey $path))){ $existing+=@($path); $additions[$field]+= @($path) }
+        }
+        $r.$field=$existing
+    }
+    # Namespace resolution is scoped to this command. Preserve legacy conflict rules,
+    # then check full resulting allowed AND critical scope against active competitors.
+    $conflicts=@(New-ConflictList $Records $LaneId ([string]$r.owner_chat) $true @($r.critical_paths) ([string]$r.runtime_lane) -AmendLiteralIdentity)
+    if($conflicts.Count){ Throw-LaneError 'conflict' (Get-AmendJson $conflicts) }
+    $targetScope=@(@($r.allowed_paths)+@($r.critical_paths) | ForEach-Object { Get-AmendNamespace $_ ([string]$r.worktree) })
+    foreach($other in $Records){
+        if($other.lane_id -ceq $LaneId -or -not $other.writer -or $other.state -notin $ActiveWriterStates){ continue }
+        if($other.critical_paths -isnot [array] -or $other.critical_paths.Count -eq 0){ Throw-LaneError 'unsafe_namespace' "active writer has no resolvable critical scope: $($other.lane_id)" }
+        foreach($path in @($other.critical_paths)){
+            $competitor=Get-AmendNamespace $path ([string]$other.worktree)
+            foreach($candidate in $targetScope){
+                if($candidate -eq '.' -or $competitor -eq '.' -or (Test-AmendPathOverlap $candidate $competitor)){
+                    Throw-LaneError 'conflict' "critical_path_overlap: $($other.lane_id)"
+                }
+            }
+        }
+    }
+    if($additions.allowed_paths.Count + $additions.critical_paths.Count -eq 0){
+        Write-Result ([pscustomobject]@{result='NO_CHANGE';lane_id=$LaneId;state=$r.state;head_sha=$r.head_sha})
+        return
+    }
+    $after=[ordered]@{allowed_paths=@($r.allowed_paths);critical_paths=@($r.critical_paths)}
+    $receipt=[pscustomobject][ordered]@{
+        authority_ref=$resolvedAuthority;authority_sha256=$AuthoritySha256.ToLowerInvariant()
+        lane_identity=[ordered]@{lane_id=$r.lane_id;owner_chat=$r.owner_chat;worker=$r.worker;objective=$r.objective;base_sha=$r.base_sha;worktree=$r.worktree;branch=$r.branch}
+        state=$r.state;head_sha=$r.head_sha;requested_paths=@($requested);actual_additions=$additions
+        before_scope_sha256=(Get-AmendDigest $before);after_scope_sha256=(Get-AmendDigest $after)
+        timestamp=[DateTimeOffset]::UtcNow.ToString('o');preserved_non_scope_sha256=$preservedDigest
+    }
+    $history=@(); if($r.PSObject.Properties.Name -contains 'scope_amendments'){ $history=@($r.scope_amendments) }
+    $r | Add-Member -NotePropertyName scope_amendments -NotePropertyValue @($history+@($receipt)) -Force
+    $serialized=Get-AmendJson $r
+    $roundtrip=$serialized | ConvertFrom-Json
+    if((Get-AmendDigest (Get-PreservedFields $roundtrip)) -cne $preservedDigest -or (Get-AmendJson $roundtrip) -cne $serialized){
+        Throw-LaneError 'preservation_failed' 'candidate cannot preserve lane fields losslessly'
+    }
+    Test-LaneRecord $roundtrip '<scope amendment>'
+    Write-LaneRecordAtomic $roundtrip
+    $readback=Get-Content -LiteralPath (Join-Path $RegistryRoot ($LaneId+'.json')) -Raw -Encoding UTF8 | ConvertFrom-Json
+    if((Get-AmendJson $readback) -cne $serialized){ Throw-LaneError 'readback_failed' 'atomic amendment readback differs from candidate' }
+    Write-Result ([pscustomobject]@{result='AMENDED';lane_id=$LaneId;state=$r.state;head_sha=$r.head_sha;receipt=$receipt})
+}
+
 function Assert-ClaimInput {
     $required=@{'LaneId'=$LaneId;'OwnerChat'=$OwnerChat;'Worker'=$Worker;'Objective'=$Objective;'BaseSha'=$BaseSha;'Worktree'=$Worktree;'Branch'=$Branch;'DirectConsumer'=$DirectConsumer}
     foreach($k in $required.Keys){ if([string]::IsNullOrWhiteSpace([string]$required[$k])){ Throw-LaneError 'missing_argument' "$k is required" } }
@@ -251,6 +499,12 @@ function New-LaneRecord {
 }
 $lock=$null
 try {
+    if($Command -ieq 'AmendScope'){
+        $lock=Enter-RegistryLock
+        $records=@(Read-LaneRecords)
+        Invoke-AmendScope $records $PSBoundParameters
+        exit 0
+    }
     if($Command -in @('Claim','Check')){
         Assert-ClaimInput
         $lock=Enter-RegistryLock
