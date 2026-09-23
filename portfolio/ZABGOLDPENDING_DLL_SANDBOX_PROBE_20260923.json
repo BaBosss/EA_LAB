@@ -1,0 +1,79 @@
+{
+    "schema":  "zabgoldpending_dll_sandbox_probe/1",
+    "status":  "PREREGISTERED_NOT_RUN",
+    "authority":  "OWNER_APPROVED_SANDBOXED_DLL_SEMANTIC_ONLY",
+    "canonical_base_sha":  "66dd2b3b1987c47876760e123fa20981ab7b821f",
+    "owner_approval":  "DIRECT_CHAT_20260923_CONTINUE_APPROVED",
+    "parent_contract":  "38da78a2f4d46496093e76945af28bf5e5b437db",
+    "parent_result":  "66dd2b3b1987c47876760e123fa20981ab7b821f",
+    "security_boundary":  {
+                              "isolation":  "WINDOWS_APPCONTAINER",
+                              "network_capabilities":  [
+
+                                                       ],
+                              "network":  "BLOCKED_SELFTEST",
+                              "external_repo_read":  "BLOCKED_SELFTEST",
+                              "sandbox_write":  "ALLOWED_ONLY_EXPLICIT_ACL_ROOT",
+                              "dll_enable_scope":  "SANDBOX_TERMINAL_CONFIG_ONLY",
+                              "host_terminal_dll_setting_unchanged":  true,
+                              "host_mt5_not_used":  true
+                          },
+    "semantic_contract":  {
+                              "artifact_sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                              "symbol":  "XAUUSD",
+                              "timeframe":  "M5",
+                              "model":  "M1_M1_OHLC_RESEARCH",
+                              "window":  "2023-01-01..2023-03-31",
+                              "deposit":  10000,
+                              "leverage":  "1:100",
+                              "variants":  [
+                                               {
+                                                   "id":  "A_OWNER",
+                                                   "Risk_Percent":  1,
+                                                   "Fixed_Lot_Size":  0.1
+                                               },
+                                               {
+                                                   "id":  "B_FIXED_ONLY",
+                                                   "Risk_Percent":  1,
+                                                   "Fixed_Lot_Size":  0.2
+                                               },
+                                               {
+                                                   "id":  "C_RISK_ONLY",
+                                                   "Risk_Percent":  2,
+                                                   "Fixed_Lot_Size":  0.1
+                                               }
+                                           ],
+                              "allowed_evidence":  [
+                                                       "first entry timestamp",
+                                                       "first entry side",
+                                                       "first entry requested/executed volume",
+                                                       "init/dependency errors"
+                                                   ],
+                              "forbidden_evidence":  [
+                                                         "profit factor",
+                                                         "net profit",
+                                                         "drawdown",
+                                                         "ending balance",
+                                                         "win rate",
+                                                         "exit outcome",
+                                                         "later trade path",
+                                                         "grade",
+                                                         "candidate decision"
+                                                     ],
+                              "same_signal_required":  true,
+                              "decision_rule":  {
+                                                    "risk_active":  "A vs B volume unchanged and C changes with same first signal",
+                                                    "fixed_active":  "A vs C volume unchanged and B changes with same first signal",
+                                                    "unknown":  "init failure, no first entry, first signal mismatch, both axes change, or neither changes"
+                                                }
+                          },
+    "prohibitions":  [
+                         "no host DLL enable",
+                         "no external network",
+                         "no optimization",
+                         "no HOLDOUT",
+                         "no deployment/runtime/LIVE",
+                         "no performance verdict",
+                         "no automatic MAIN/BWD run after this probe"
+                     ]
+}
