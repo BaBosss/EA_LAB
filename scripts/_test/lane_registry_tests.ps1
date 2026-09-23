@@ -453,6 +453,71 @@ $p=Import-Clixml -LiteralPath $InputFile
     Assert-True 'repair1 confirmed nonexistent suffix under inspected directory succeeds' ($x.ExitCode -eq 0 -and $x.Text -match 'AMENDED') $x.Text
     Write-Host "REPAIR1_MATRIX PASS=$($pass-$repairStart) FAIL=$($fail-$repairFailStart)"
 
+    # Owner additional repair: Finding 1 only. Run identical identity cases through
+    # all three public writers, including byte-preserving rejection/activation.
+    $ownerStart=$pass; $ownerFailStart=$fail
+    $nbsp='dir/name'+[char]0xA0
+    $emspace='dir/name'+[char]0x2003
+    $thai='dir/'+[char]0xE01+[char]0xE32
+    $identityCases=@(
+        @{Name='NBSP parent';Existing=$nbsp;Requested=($nbsp+'/child');Conflict=$true},
+        @{Name='NBSP child';Existing=($nbsp+'/child');Requested=$nbsp;Conflict=$true},
+        @{Name='case alias';Existing=$nbsp;Requested=$nbsp.ToUpperInvariant();Conflict=$true},
+        @{Name='separator alias';Existing=$nbsp;Requested=$nbsp.Replace('/','\');Conflict=$true},
+        @{Name='terminal separator alias';Existing=($nbsp+'/');Requested=$nbsp;Conflict=$true},
+        @{Name='distinct NBSP vs plain';Existing=$nbsp;Requested='dir/name';Conflict=$false},
+        @{Name='distinct NBSP vs plain child';Existing=$nbsp;Requested='dir/name/child';Conflict=$false},
+        @{Name='EM SPACE parent';Existing=$emspace;Requested=($emspace+'/child');Conflict=$true},
+        @{Name='distinct EM SPACE vs plain';Existing=$emspace;Requested='dir/name';Conflict=$false},
+        @{Name='Thai literal parent';Existing=$thai;Requested=($thai+'/child');Conflict=$true},
+        @{Name='distinct Thai literal';Existing=$thai;Requested='dir/name';Conflict=$false},
+        @{Name='distinct Unicode composition';Existing=('dir/'+[char]0xE9);Requested=('dir/e'+[char]0x301);Conflict=$false}
+    )
+    foreach($operation in @('Claim','Transition','AmendScope')){
+        foreach($case in $identityCases){
+            Reset-Amend
+            Add-Competitor $case.Existing
+            $competitorFile=Join-Path $amendRoot 'competitor.json'
+            $competitorBytes=[IO.File]::ReadAllText($competitorFile)
+            if($operation -eq 'Claim'){
+                Remove-Item -LiteralPath $laneFile
+                $p=@{Command='Claim';RegistryRoot=$amendRoot;LaneId='amend-lane';OwnerChat='amend-owner';Worker='test-worker';Objective='literal conflict fixture';State='RUNNING';BaseSha=$head;HeadSha=$head;Worktree=$wtC;Branch='lane-c';AllowedPaths=@($case.Requested);CriticalPaths=@($case.Requested);DirectConsumer='test-consumer';Json=$true}
+            } elseif($operation -eq 'Transition'){
+                $obj=$baseline|ConvertFrom-Json; $obj.state='PAUSED'; $obj.worktree=$wtC; $obj.branch='lane-c'
+                $obj.allowed_paths=@($case.Requested); $obj.critical_paths=@($case.Requested)
+                [IO.File]::WriteAllText($laneFile,($obj|ConvertTo-Json -Depth 100))
+                $p=@{Command='Transition';RegistryRoot=$amendRoot;LaneId='amend-lane';ExpectedState='PAUSED';NewState='RUNNING';Json=$true}
+            } else {
+                $p=Amend-Params; $p.AddPaths=@($case.Requested)
+            }
+            $fp=Registry-Fingerprint
+            $x=Invoke-Amend $p
+            $ok=if($case.Conflict){
+                $x.ExitCode -ne 0 -and $x.Text -match 'critical_path_overlap' -and (Registry-Fingerprint) -ceq $fp
+            } else {
+                $stored=if(Test-Path -LiteralPath $laneFile){Get-Content -Raw -Encoding UTF8 $laneFile|ConvertFrom-Json}else{$null}
+                $x.ExitCode -eq 0 -and $stored.state -ceq $(if($operation -eq 'AmendScope'){'BLOCKED'}else{'RUNNING'}) -and
+                    @($stored.allowed_paths|Where-Object {[string]::Equals($_,$case.Requested,[StringComparison]::Ordinal)}).Count -eq 1 -and
+                    @($stored.critical_paths|Where-Object {[string]::Equals($_,$case.Requested,[StringComparison]::Ordinal)}).Count -eq 1
+            }
+            Assert-True "owner Finding1 $operation $($case.Name)" ($ok -and [IO.File]::ReadAllText($competitorFile) -ceq $competitorBytes) $x.Text
+        }
+        Reset-Amend
+        $historical=(Join-Path $external ('Historical'+[char]0xA0)).Replace('\','/')
+        if($operation -eq 'Claim'){
+            Remove-Item -LiteralPath $laneFile
+            $p=@{Command='Claim';RegistryRoot=$amendRoot;LaneId='amend-lane';OwnerChat='amend-owner';Worker='test-worker';Objective='historical scope fixture';State='RUNNING';BaseSha=$head;HeadSha=$head;Worktree=$wtC;Branch='lane-c';AllowedPaths=@($historical);CriticalPaths=@($historical);DirectConsumer='test-consumer';Json=$true}
+        } else {
+            $obj=$baseline|ConvertFrom-Json; $obj.allowed_paths=@($historical); $obj.critical_paths=@($historical)
+            if($operation -eq 'Transition'){ $obj.state='PAUSED'; $obj.worktree=$wtC; $obj.branch='lane-c' }
+            [IO.File]::WriteAllText($laneFile,($obj|ConvertTo-Json -Depth 100))
+            $p=if($operation -eq 'Transition'){@{Command='Transition';RegistryRoot=$amendRoot;LaneId='amend-lane';ExpectedState='PAUSED';NewState='RUNNING';Json=$true}}else{Amend-Params}
+        }
+        $x=Invoke-Amend $p; $stored=Get-Content -Raw -Encoding UTF8 $laneFile|ConvertFrom-Json
+        Assert-True "owner Finding1 $operation historical external absolute scope preserved" ($x.ExitCode -eq 0 -and [string]::Equals($stored.allowed_paths[0],$historical,[StringComparison]::Ordinal) -and [string]::Equals($stored.critical_paths[0],$historical,[StringComparison]::Ordinal)) $x.Text
+    }
+    Write-Host "OWNER_FINDING1_MATRIX PASS=$($pass-$ownerStart) FAIL=$($fail-$ownerFailStart)"
+
     Write-Host "AMENDSCOPE_MATRIX PASS=$($pass-$oldPass) FAIL=$fail"
 } catch {
     Fail 'test harness' $_.Exception.Message

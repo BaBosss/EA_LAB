@@ -40,7 +40,8 @@ Only BLOCKED, WAITING, PAUSED and READY writer records are eligible. State and
 registered/actual HEAD must match exactly; worktree top level, branch and Git
 common directory must identify the intended repository. reviewed_head must be
 empty. Dirty worktrees are allowed: this operation neither certifies dirty bytes
-nor activates the lane. Existing Claim and Transition lifecycle/scope rules are unchanged.
+nor activates the lane. Existing Claim and Transition lifecycle/scope rules are unchanged,
+except for the owner-authorized shared literal conflict identity repair below.
 Their complete-record writes now use the same depth-checked, lossless atomic writer.
 
 Every requested path is appended to both allowed_paths and critical_paths when
@@ -48,7 +49,8 @@ absent (ordinal case-insensitive, slash-normalized membership). Only separators
 and a terminal directory separator normalize; no Unicode whitespace trimming,
 linguistic comparison or Unicode composition normalization occurs. NBSP, EM SPACE,
 Thai characters and composed/decomposed names remain literal. This comparison is
-local to AmendScope; the historical global path normalizer is unchanged. Existing spelling, order,
+shared by Claim, Transition and AmendScope conflict checks; historical input
+validation remains unchanged. Existing spelling, order,
 scope, identity, budget, arbitrary extension fields and updated_at are preserved.
 There is no removal, replacement or non-scope mutation interface. The receipt's
 timestamp records amendment time without repurposing updated_at.
@@ -163,3 +165,63 @@ with deterministic Get-Item errors; they do not depend on ACL/admin privileges.
 Later harness/green logs preserve every observed outcome. The final report binds
 final test counts, source hashes, live-TPL preservation, hook outcome and staged
 state. Canonical divergence is left to Main CT; no rebase, merge or push occurs.
+
+## Owner-authorized additional repair: latest Finding 1 (2026-09-23)
+
+Existing lane: `ct-registry-amendscope-v1-20260923`. Exact local reanchor start:
+`7794cee84adcb19311ea271df622c108b210f0b1`, tree
+`839e57db9ee1e9f34adf341cd81fc6686b3db68d`. The owner's current chat contract
+authorizes only the latest open Claim/Transition literal Unicode conflict finding
+in these same three files. Historical Repair1 remains **1/1 consumed**. The
+additional owner repair became **1/1 consumed** at the first test-file mutation;
+there is no second additional repair or pass-shopping authority.
+
+Claim, Transition and AmendScope now share `Test-PathOverlap` and its separator-only
+path key. Exact equality and parent/child prefix comparisons use
+`OrdinalIgnoreCase`; no whitespace trimming, linguistic equality, lowercasing or
+composition normalization participates in conflict identity. The AmendScope-only
+comparison switch and duplicate overlap helper are removed. Stored historical
+paths, input validation, namespace admission, lifecycle and Registry design remain
+unchanged.
+
+Red-first evidence: unchanged baseline **168/168 PASS** (37 original Registry,
+106 initial AmendScope, 25 Repair1). With only the new tests added and before
+source repair, the 39-check owner matrix returned **23 PASS / 16 FAIL**, total
+**191 PASS / 16 FAIL**. The failures were eight Claim and eight Transition cases:
+NBSP parent/child, terminal separator alias, distinct NBSP/plain (exact and child),
+EM SPACE parent, distinct EM SPACE/plain, and distinct Unicode composition.
+Case/separator aliases, Thai literal names and historical external absolute scope
+preservation are also covered for each of Claim, Transition and AmendScope.
+After the single source repair, full suite **207/207 PASS**: original Registry
+37/37, initial AmendScope 106/106, Repair1 25/25 and owner Finding1 39/39.
+Deep-extension, AuthorityRef and ancestor fail-closed gates remain green.
+PowerShell parsing of both scripts and `git diff --check` pass.
+
+The initial baseline attempt was blocked by a sandbox Git global-ignore access
+warning; an attempted `NUL` excludes-file override also failed before useful
+tests. The completed runs use a process-local `XDG_CONFIG_HOME` pointing to an
+absent temporary directory; no persistent Git configuration changed.
+
+Copied current TPL Registry admission: **PASS**, 1,006 records; target arrays
+4 -> 5, one receipt, other 1,005 fixture records unchanged. Live TPL JSON SHA256
+remains `8874AEED1449CCAA2684C9D2EE9E61703282C6440295EFAD0B5622AE2DCB0837`;
+four protected WIP files and the index are byte-identical before/after. TPL repair
+usage stays **0/1 unchanged**. The first fixture attempt hit Git safe-directory
+ownership checking; the successful run used process-only trust for the two exact
+owner repositories and a read-only lock handle while copying. No live TPL mutation.
+
+Fresh fetch was attempted and blocked by the session environment: normal fetch
+cannot write `D:/EA_LAB/.git/worktrees/registry-amendscope-reanchor-0923/FETCH_HEAD`;
+`--no-write-fetch-head` fetch and `ls-remote` fail GitHub authentication with
+`SEC_E_NO_CREDENTIALS`. Cached `origin/master` is
+`c24eec92edd5f30d715478cb2cf6eac38cf0f4ee`; it is **not fresh canonical evidence**.
+No reconciliation, reset, stash, cleanup, amend, force operation or push is authorized.
+Targeted independent recheck is **NOT STARTED**; author validation is not acceptance.
+
+Commit outcome: **BLOCKED_GIT_METADATA_PERMISSION**. Normal staging of exactly the
+three authorized files refused with `Permission denied` creating
+`D:/EA_LAB/.git/worktrees/registry-amendscope-reanchor-0923/index.lock`.
+Normal commit hooks were **NOT REACHED**; this is not a canonical-divergence hook
+rejection. No commit was created; HEAD/tree remain the pinned start identities
+above, and the three-file repair is unstaged in the working tree. No hook bypass,
+Git metadata relocation or alternate commit mechanism was used.

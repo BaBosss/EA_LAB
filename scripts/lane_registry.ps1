@@ -65,8 +65,10 @@ function Normalize-CriticalPath {
 }
 function Test-PathOverlap {
     param([string]$A,[string]$B)
-    $a1=Normalize-CriticalPath $A; $b1=Normalize-CriticalPath $B
-    if ($a1 -ceq $b1) { return $true }
+    # Validation is separate from identity: never trim literal Unicode whitespace
+    # or use linguistic equality when comparing already-admitted scope paths.
+    $a1=Get-AmendPathKey $A; $b1=Get-AmendPathKey $B
+    if ([string]::Equals($a1,$b1,[System.StringComparison]::OrdinalIgnoreCase)) { return $true }
     if ($a1.StartsWith($b1 + '/',[System.StringComparison]::OrdinalIgnoreCase)) { return $true }
     if ($b1.StartsWith($a1 + '/',[System.StringComparison]::OrdinalIgnoreCase)) { return $true }
     return $false
@@ -166,7 +168,7 @@ function Assert-WorktreeIdentity {
     }
 }
 function New-ConflictList {
-    param([object[]]$Records,[string]$RequestedLane,[string]$RequestedOwner,[bool]$RequestedWriter,[string[]]$RequestedCritical,[string]$RequestedRuntime,[switch]$AmendLiteralIdentity)
+    param([object[]]$Records,[string]$RequestedLane,[string]$RequestedOwner,[bool]$RequestedWriter,[string[]]$RequestedCritical,[string]$RequestedRuntime)
     $conflicts=New-Object Collections.Generic.List[object]
     if(-not $RequestedWriter){ return $conflicts.ToArray() }
     foreach($r in @($Records)){
@@ -179,8 +181,7 @@ function New-ConflictList {
         $hit=$false
         foreach($a in @($RequestedCritical)){
             foreach($b in @($r.critical_paths)){
-                $overlap=if($AmendLiteralIdentity){ Test-AmendPathOverlap $a $b }else{ Test-PathOverlap $a $b }
-                if($overlap){ $hit=$true; break }
+                if(Test-PathOverlap $a $b){ $hit=$true; break }
             }
             if($hit){ break }
         }
@@ -242,17 +243,11 @@ function Get-LaneAuditRecord {
     }
 }
 
-# AmendScope deliberately does not change historical Claim/Transition path semantics.
+# Shared literal identity for conflict checks and AmendScope membership only.
 function Get-AmendPathKey([string]$Value) {
     # Windows separators and a terminal directory separator are identity aliases;
     # Unicode whitespace/normalization forms are literal filename characters.
     return $Value.Replace('\','/').TrimEnd('/')
-}
-function Test-AmendPathOverlap([string]$A,[string]$B) {
-    $a1=Get-AmendPathKey $A; $b1=Get-AmendPathKey $B
-    return [string]::Equals($a1,$b1,[StringComparison]::OrdinalIgnoreCase) -or
-        $a1.StartsWith($b1+'/',[StringComparison]::OrdinalIgnoreCase) -or
-        $b1.StartsWith($a1+'/',[StringComparison]::OrdinalIgnoreCase)
 }
 function Assert-RegistryJsonDepth($Value,[int]$Depth=0,[int]$Limit=100) {
     if($Depth -gt $Limit){ Throw-LaneError 'registry_malformed' 'record JSON exceeds safe lossless depth' }
@@ -430,9 +425,9 @@ function Invoke-AmendScope([object[]]$Records,$Bound) {
         }
         $r.$field=$existing
     }
-    # Namespace resolution is scoped to this command. Preserve legacy conflict rules,
+    # Namespace resolution is scoped to this command. Use shared literal conflicts,
     # then check full resulting allowed AND critical scope against active competitors.
-    $conflicts=@(New-ConflictList $Records $LaneId ([string]$r.owner_chat) $true @($r.critical_paths) ([string]$r.runtime_lane) -AmendLiteralIdentity)
+    $conflicts=@(New-ConflictList $Records $LaneId ([string]$r.owner_chat) $true @($r.critical_paths) ([string]$r.runtime_lane))
     if($conflicts.Count){ Throw-LaneError 'conflict' (Get-AmendJson $conflicts) }
     $targetScope=@(@($r.allowed_paths)+@($r.critical_paths) | ForEach-Object { Get-AmendNamespace $_ ([string]$r.worktree) })
     foreach($other in $Records){
@@ -441,7 +436,7 @@ function Invoke-AmendScope([object[]]$Records,$Bound) {
         foreach($path in @($other.critical_paths)){
             $competitor=Get-AmendNamespace $path ([string]$other.worktree)
             foreach($candidate in $targetScope){
-                if($candidate -eq '.' -or $competitor -eq '.' -or (Test-AmendPathOverlap $candidate $competitor)){
+                if($candidate -eq '.' -or $competitor -eq '.' -or (Test-PathOverlap $candidate $competitor)){
                     Throw-LaneError 'conflict' "critical_path_overlap: $($other.lane_id)"
                 }
             }
