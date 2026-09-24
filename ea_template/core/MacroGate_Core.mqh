@@ -36,6 +36,7 @@
 #define MG_ST_RISK_OFF (-1)
 #define MG_ST_STRESS   (-2)
 #define MG_ST_UNKNOWN  (-99)
+#define MG_ST_INVALID  (-100)
 
 // ---- settings -------------------------------------------------------------
 double mg_lotMult          = 0.5;    // new-order lot multiplier while gated (0<..<1)
@@ -94,7 +95,8 @@ int MG_StateFromString(const string s0)
    if(s == "NEUTRAL")  return MG_ST_NEUTRAL;
    if(s == "RISK_OFF") return MG_ST_RISK_OFF;
    if(s == "STRESS")   return MG_ST_STRESS;
-   return MG_ST_UNKNOWN;
+   if(s == "UNKNOWN")  return MG_ST_UNKNOWN;
+   return MG_ST_INVALID;
 }
 
 string MG_StateName(const int st)
@@ -103,7 +105,8 @@ string MG_StateName(const int st)
    if(st == MG_ST_NEUTRAL)  return "NEUTRAL";
    if(st == MG_ST_RISK_OFF) return "RISK_OFF";
    if(st == MG_ST_STRESS)   return "STRESS";
-   return "UNKNOWN";
+   if(st == MG_ST_UNKNOWN)  return "UNKNOWN";
+   return "INVALID";
 }
 
 //+------------------------------------------------------------------+
@@ -203,7 +206,10 @@ bool MG_LoadRegime(const string fname, const bool common)
       if(t <= 0) { skipped++; continue; }
       t += (datetime)(mg_offsetHours * 3600);
       int st = MG_StateFromString(f[1]);
-      if(st == MG_ST_UNKNOWN) { skipped++; continue; }
+      if(st == MG_ST_INVALID) { skipped++; continue; }
+      // Explicit UNKNOWN is a selectable quarantine marker only in the tester.
+      // Live/non-tester loading keeps the historical skip behavior.
+      if(st == MG_ST_UNKNOWN && !MQLInfoInteger(MQL_TESTER)) { skipped++; continue; }
       if(mg_rowCount > 0 && t < prevT) ascending = false;
       mg_rowTime[mg_rowCount]  = t;
       mg_rowState[mg_rowCount] = st;
@@ -315,6 +321,13 @@ void MG_Tick(const datetime nowServer)
    }
 
    int st = mg_rowState[r];
+   if(st == MG_ST_UNKNOWN)
+   {
+      // Tester-only explicit quarantine marker: clear only MacroGate-owned state.
+      // This does not inspect, close, cancel, or modify any position or order.
+      MG_ClearAll("explicit UNKNOWN quarantine marker");
+      return;
+   }
    bool trig = MG_StateTriggers(st);
    for(int i = 0; i < mg_count; i++)
    {

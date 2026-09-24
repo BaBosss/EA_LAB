@@ -23,7 +23,7 @@
 
 #ifdef LAB_ENTRY_11
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -37,6 +37,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -57,7 +58,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_12
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -71,6 +72,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -91,7 +93,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_13
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -105,6 +107,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -125,7 +128,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_14
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -139,6 +142,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -159,7 +163,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_15
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -173,6 +177,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -193,7 +198,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_16
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -207,6 +212,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -227,7 +233,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_17
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(25); }
+int    CFG_ConstKeys() { return(26); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -241,6 +247,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -262,7 +269,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_18
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -276,6 +283,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -296,7 +304,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_19
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -310,6 +318,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -342,7 +351,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_21
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(78); }
+int    CFG_ConstKeys() { return(79); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -364,6 +373,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
@@ -430,7 +440,7 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_22
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(24); }
+int    CFG_ConstKeys() { return(25); }
 string CFG_ConstPreimage()
   {
    string s = "";
@@ -444,6 +454,7 @@ string CFG_ConstPreimage()
    s += "\nconst:MG_LOTMULT_PREFIX=" + CFG_CanonString(MG_LOTMULT_PREFIX);
    s += "\nconst:MG_MAX_MAGICS=" + CFG_CanonLong((long)MG_MAX_MAGICS);
    s += "\nconst:MG_MAX_ROWS=" + CFG_CanonLong((long)MG_MAX_ROWS);
+   s += "\nconst:MG_ST_INVALID=" + CFG_CanonLong((long)MG_ST_INVALID);
    s += "\nconst:MG_ST_NEUTRAL=" + CFG_CanonLong((long)MG_ST_NEUTRAL);
    s += "\nconst:MG_ST_RISK_OFF=" + CFG_CanonLong((long)MG_ST_RISK_OFF);
    s += "\nconst:MG_ST_RISK_ON=" + CFG_CanonLong((long)MG_ST_RISK_ON);
