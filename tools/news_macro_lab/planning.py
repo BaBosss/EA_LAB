@@ -1,6 +1,7 @@
 """Dependency/readiness contracts. No provider call, regime guessing or run launch."""
 from __future__ import annotations
 from .core import Refused, checksum, finite, sha256, stable_hash, text, utc
+from .results import bind_experiment_identity
 
 REGIONS = ('US', 'EUROZONE', 'UK', 'JAPAN', 'CHINA', 'INDIA', 'EM', 'GLOBAL')
 AXES = ('GROWTH', 'INFLATION', 'POLICY', 'LIQUIDITY', 'CREDIT', 'EQUITY', 'CARRY')
@@ -62,6 +63,7 @@ def experiment_preflight(proposal: dict) -> dict:
     if proposal.get('holdout_policy') != 'SEPARATE_OWNER_GATE_NO_USE':
         raise Refused('HOLDOUT_AUTHORITY_REFUSED')
     missing, reasons = [], []
+    proposal_sha = stable_hash(proposal)
     changes = proposal.get('changed_dimensions')
     if not isinstance(changes, list) or len(changes) != 1 or not isinstance(changes[0], str):
         raise Refused('ONE_LOGICAL_CHANGE_REQUIRED')
@@ -102,12 +104,20 @@ def experiment_preflight(proposal: dict) -> dict:
         raise Refused('UNKNOWN_EVALUATION_UNIT')
     if proposal.get('evaluation_unit') is None:
         missing.append('EVALUATION_UNIT_FREEZE')
+    declared_identity = proposal.get('frozen_identity')
+    if declared_identity is None:
+        missing.append('EXPERIMENTAL_IDENTITY_FREEZE')
+        frozen_identity = None
+    else:
+        frozen_identity = bind_experiment_identity(declared_identity, proposal_sha)
     reasons.append('RECEIPT_HASH_PRESENCE_IS_NOT_RECEIPT_ACCEPTANCE')
-    return {'schema_version': 'guard_experiment_preflight/1', 'proposal_sha256': stable_hash(proposal),
+    return {'schema_version': 'guard_experiment_preflight/2', 'proposal_sha256': proposal_sha,
             'status': 'BLOCKED_CONTRACT_INCOMPLETE' if missing else 'DECLARED_FIELDS_COMPLETE_REVIEW_REQUIRED',
             'missing_gates': sorted(missing), 'reason_codes': reasons,
             'can_execute': False, 'native_runs': 0, 'performance': 'NOT_RUN',
-            'holdout_used': False, 'historical_dataset_qualified': False}
+            'holdout_used': False, 'historical_dataset_qualified': False,
+            'changed_dimension': changes[0], 'evaluation_unit': proposal.get('evaluation_unit'),
+            'frozen_identity': frozen_identity}
 
 
 def validate_shadow_annotation(annotation: dict, *, labels: tuple[str, ...],

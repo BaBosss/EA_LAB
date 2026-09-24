@@ -1,0 +1,20 @@
+{
+  "source_head": "3888865a8f551159fbcadbe130137361aadae589",
+  "canonical_sha": "5e84dd3e7c662e80e631d7f9e72903d0ba2420c6",
+  "declared_identity": {
+    "ea_source_sha256": "db8830662b79e7703cf35a5e81f4ee7e9fac24f3a98cc012bc7c5116df68c018",
+    "ex5_sha256": "6b5f7df04355761ca1efb89a1540cb1a12ceef08d50a57dc1ce89b50eadea0a1",
+    "set_sha256": "ec26a7c90fa76eb687677c5cb48375d7902c30e16a99ae0aa170e9b5527f2191",
+    "dataset_sha256": "115bb4dea4ccce7c27e93cf17a5f3729b09f6e4799ad2ab86ba150ff5b7ce90c",
+    "source_contract_sha256": "55454367cdd759232e6ca91577e20b25f2e8b81b4b67d975bd67f40ad961b4f0",
+    "classifier_sha256": "be2c42fed7dfd5e504aff1316723a33b3ad18d548c69dc82640d1fc4cd9a8be0",
+    "guard_policy_sha256": "ca8eca1709268808c719a2bd1e0aec9f00bdde50b17166a5ceb18afca6172a6d",
+    "broker_clock_sha256": "3e094380e86626f21f7a050590615ebb8023d53a795a9b544d1751509694aa1b",
+    "install_id": "D:/Meta 5",
+    "tester_model": "M1_M1_OHLC_RESEARCH",
+    "symbol": "XAUUSD",
+    "timeframe": "H1",
+    "window_id": "MAIN-2023-2025",
+    "config_id": "CFG-NEWS-001"
+  }
+}

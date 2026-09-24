@@ -291,6 +291,8 @@ class PlanningTests(unittest.TestCase):
         p['windows']={'MAIN':{'start_utc':'2023-01-01T00:00:00Z','end_utc':'2026-01-01T00:00:00Z'},
                       'BWD':{'start_utc':'2020-01-01T00:00:00Z','end_utc':'2023-01-01T00:00:00Z'}}
         p['placebo_seeds']=[1,2];p['evaluation_unit']='BASKET_EPISODE'
+        fixture=json.loads((ROOT / 'tools/news_macro_lab/tests/fixtures/monitor_handoff_valid.json').read_text('utf-8'))
+        p['frozen_identity']=fixture['declared_identity']
         r=experiment_preflight(p);self.assertEqual(r['status'],'DECLARED_FIELDS_COMPLETE_REVIEW_REQUIRED')
         self.assertFalse(r['can_execute'])
     def test_overlap_refused(self):

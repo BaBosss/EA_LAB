@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
-from .core import Refused, checksum, count, finite, stable_hash, text
+from .core import Refused, checksum, count, finite, sha256, stable_hash, text
 
 _HASH_KEYS = {
     "ea_source_sha256", "ex5_sha256", "set_sha256",
-    "dataset_sha256", "broker_clock_sha256",
+    "dataset_sha256", "source_contract_sha256",
+    "experiment_contract_sha256", "classifier_sha256",
+    "guard_policy_sha256", "broker_clock_sha256",
 }
 _LABEL_KEYS = {
     "install_id", "tester_model", "symbol", "timeframe",
@@ -25,6 +28,52 @@ _METRIC_KEYS = {
 }
 _PF_STATES = {"FINITE", "UNDEFINED_NO_GROSS_LOSS", "UNAVAILABLE"}
 _ARM_KINDS = {"BASE", "REAL_GUARD", "PLACEBO"}
+_PLACEHOLDER_LABELS = {
+    "", "UNKNOWN", "PLACEHOLDER", "FAKE", "TODO", "TBD", "TBC",
+    "NONE", "NULL", "UNSET", "NOT_SET", "DUMMY",
+}
+_PLACEHOLDER_HASHES = {
+    sha256(value) for value in (
+        b"", b"unknown", b"placeholder", b"fake", b"todo", b"tbd",
+        b"none", b"null", b"unset", b"dummy",
+    )
+}
+
+
+def _placeholder_hash(value: str) -> bool:
+    if value in _PLACEHOLDER_HASHES:
+        return True
+    return any(value == value[:width] * (64 // width)
+               for width in (1, 2, 4, 8, 16))
+
+
+def validate_frozen_identity(identity: Any) -> dict[str, Any]:
+    """Validate the complete immutable identity carried across result seams."""
+    if not isinstance(identity, dict) or set(identity) != _IDENTITY_KEYS:
+        raise Refused("FROZEN_IDENTITY_SCHEMA_MISMATCH")
+    normalized = dict(identity)
+    for key in _HASH_KEYS:
+        value = checksum(identity[key])
+        if _placeholder_hash(value):
+            raise Refused("PLACEHOLDER_IDENTITY_REFUSED")
+        normalized[key] = value
+    for key in _LABEL_KEYS:
+        value = text(identity[key])
+        label_tokens = set(re.split(r"[^A-Z0-9]+", value.strip().upper()))
+        if label_tokens & _PLACEHOLDER_LABELS:
+            raise Refused("PLACEHOLDER_IDENTITY_REFUSED")
+        normalized[key] = value
+    return normalized
+
+
+def bind_experiment_identity(identity: Any, experiment_contract_sha256: Any) -> dict[str, Any]:
+    """Bind declared artifact identity to the hash of its containing contract."""
+    expected = _IDENTITY_KEYS - {"experiment_contract_sha256"}
+    if not isinstance(identity, dict) or set(identity) != expected:
+        raise Refused("DECLARED_IDENTITY_SCHEMA_MISMATCH")
+    bound = dict(identity)
+    bound["experiment_contract_sha256"] = checksum(experiment_contract_sha256)
+    return validate_frozen_identity(bound)
 
 
 def _metric_number(metrics: dict[str, Any], key: str) -> float:
@@ -69,7 +118,7 @@ def compare_guard_ab(package: dict[str, Any]) -> dict[str, Any]:
     }
     if not isinstance(package, dict) or set(package) != fields:
         raise Refused("RESULT_PACKAGE_SCHEMA_MISMATCH")
-    if package["schema_version"] != "guard_ab_result_package/1":
+    if package["schema_version"] != "guard_ab_result_package/2":
         raise Refused("RESULT_PACKAGE_SCHEMA_MISMATCH")
     changed = text(package["changed_dimension"])
     if package["evaluation_unit"] not in ("TRADE", "BASKET_EPISODE"):
@@ -77,13 +126,7 @@ def compare_guard_ab(package: dict[str, Any]) -> dict[str, Any]:
     if package["holdout_used"] is not False:
         raise Refused("HOLDOUT_AUTHORITY_REFUSED")
 
-    identity = package["frozen_identity"]
-    if not isinstance(identity, dict) or set(identity) != _IDENTITY_KEYS:
-        raise Refused("FROZEN_IDENTITY_SCHEMA_MISMATCH")
-    for key in _HASH_KEYS:
-        checksum(identity[key])
-    for key in _LABEL_KEYS:
-        text(identity[key])
+    identity = validate_frozen_identity(package["frozen_identity"])
     identity_sha = stable_hash(identity)
 
     seeds = package["placebo_seeds"]
@@ -175,8 +218,9 @@ def compare_guard_ab(package: dict[str, Any]) -> dict[str, Any]:
         else "OBSERVED_GUARD_FIRINGS"
     )
     return {
-        "schema_version": "guard_ab_descriptive_comparison/1",
+        "schema_version": "guard_ab_descriptive_comparison/2",
         "changed_dimension": changed,
+        "frozen_identity": identity,
         "frozen_identity_sha256": identity_sha,
         "evaluation_unit": package["evaluation_unit"],
         "mechanism_status": mechanism,
