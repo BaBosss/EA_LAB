@@ -252,6 +252,14 @@ class OwnerWebAppUnitTests(unittest.TestCase):
             (job/'state.json').write_text(json.dumps({'job_id':'job-one','state':'RUNNING','runner_pid':os.getpid(),'child_pid':os.getpid()}),encoding='utf-8')
         cfg={'repo':'.','registry':str(registry),'leases':str(leases),'jobs':str(jobs),'lane_status':str(base/'missing_lane_status.ps1')}
         return Model(cfg)
+    def _update_work_record(self,model,**changes):
+        path=pathlib.Path(model.c['registry'])/'ct-test-lane.json'
+        record=json.loads(path.read_text(encoding='utf-8'))
+        record.update(changes)
+        path.write_text(json.dumps(record),encoding='utf-8')
+    def _write_terminal_result(self,model,state):
+        path=pathlib.Path(model.c['jobs'])/'job-one'/'result.json'
+        path.write_text(json.dumps({'job_id':'job-one','state':state}),encoding='utf-8')
     def test_running_registry_without_durable_job_is_stale_not_chat_liveness(self):
         with tempfile.TemporaryDirectory() as td:
             rows=self._make_work_roots(td,with_job=False).work()['rows']
@@ -304,6 +312,53 @@ class OwnerWebAppUnitTests(unittest.TestCase):
                 out=model.work()
                 self.assertEqual(out['rows'],[])
                 self.assertIn({'source':'lane_observation','reason':expected},model.errors)
+    def test_terminal_result_never_erases_explicit_work_gate(self):
+        cases=(
+            ('COMPLETE','WAITING_GPT_SCRUTINY_EXACT_HEAD','WAITING_REVIEW'),
+            ('FAILED','SERIALIZED_STATE_CONVERGENCE','WAITING_STATE_SYNC'),
+            ('TIMED_OUT','REPAIR_1_1_EXHAUSTED','REPAIR_LIMIT'),
+            ('CANCELLED','E_OWNER_DECISION_REQUIRED','OWNER_OR_SOURCE_GATE'),
+        )
+        for terminal,blocker,expected in cases:
+            with self.subTest(terminal=terminal,blocker=blocker), tempfile.TemporaryDirectory() as td:
+                model=self._make_work_roots(td)
+                self._update_work_record(model,state='BLOCKED',blocker_class=blocker)
+                self._write_terminal_result(model,terminal)
+                row=model.work()['rows'][0]
+                self.assertEqual(row['display_state'],expected)
+                self.assertEqual(row['category'],expected)
+                self.assertEqual(row['job_state'],terminal)
+                self.assertTrue(row['unresolved'])
+                self.assertEqual(row['acceptance'],'UNKNOWN')
+                self.assertEqual(row['canonical'],'NOT_ASSESSED')
+                self.assertEqual(row['consumption'],'UNKNOWN')
+    def test_done_historical_blocker_is_history_not_unresolved(self):
+        with tempfile.TemporaryDirectory() as td:
+            model=self._make_work_roots(td,with_job=False)
+            self._update_work_record(model,state='DONE',blocker_class='HISTORICAL_REVIEW_FAILURE')
+            row=model.work()['rows'][0]
+        self.assertEqual(row['state'],'DONE')
+        self.assertFalse(row['unresolved'])
+        self.assertEqual(row['display_state'],'OWNER_OR_SOURCE_GATE')
+        self.assertEqual(row['acceptance'],'UNKNOWN')
+    def test_done_without_gate_records_scope_closure_not_pass(self):
+        with tempfile.TemporaryDirectory() as td:
+            model=self._make_work_roots(td,with_job=False)
+            self._update_work_record(model,state='DONE',blocker_class='',reviewed_head='a'*40,reviewer='reviewer')
+            row=model.work()['rows'][0]
+        self.assertEqual(row['display_state'],'RECORDED_SCOPE_CLOSURE')
+        self.assertFalse(row['unresolved'])
+        self.assertEqual(row['acceptance'],'UNKNOWN')
+        self.assertEqual(row['canonical'],'NOT_ASSESSED')
+    def test_superseded_by_is_claim_only_and_never_pass(self):
+        with tempfile.TemporaryDirectory() as td:
+            model=self._make_work_roots(td,with_job=False)
+            self._update_work_record(model,state='DONE',blocker_class='',superseded_by='ct-successor')
+            row=model.work()['rows'][0]
+        self.assertEqual(row['superseded_by_claim'],'ct-successor')
+        self.assertEqual(row['acceptance'],'UNKNOWN')
+        self.assertEqual(row['canonical'],'NOT_ASSESSED')
+        self.assertFalse(row['unresolved'])
 if __name__=="__main__":
     if '--browser-fixtures' in sys.argv: print(json.dumps(browser_fixtures(),ensure_ascii=True))
     else: unittest.main()

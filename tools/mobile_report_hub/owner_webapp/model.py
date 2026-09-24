@@ -60,6 +60,52 @@ def projection_view(value):
         if not isinstance(r['public_id'],str) or not re.fullmatch('FP-[0-9a-f]{10}',r['public_id']): return empty
         if r['severity'] not in ('INFO','WARN','CRITICAL','REAL_MONEY') or not isinstance(r['state'],str) or not re.fullmatch('[A-Z][A-Z0-9_]{0,31}',r['state']): return empty
     return {k:value[k] for k in ('status','entity','build_id','generated_at','accounts','findings')} | {'freshness':age_state(when)}
+
+def work_presentation(row):
+    """Return derived owner-facing routing without changing source observations."""
+    state=str(row.get('state') or 'UNKNOWN'); blocker=str(row.get('blocker') or '')
+    code=blocker.upper(); health=str(row.get('process_health') or 'UNKNOWN'); job_state=str(row.get('job_state') or 'UNKNOWN')
+    if 'REPAIR_LIMIT' in code or ('REPAIR' in code and ('SPENT' in code or 'EXHAUST' in code)):
+        category='REPAIR_LIMIT'; display='REPAIR_LIMIT'
+    elif any(token in code for token in ('WAITING_STATE_SYNC','SERIALIZED_STATE_CONVERGENCE')) or state=='WAITING_STATE_SYNC':
+        category='WAITING_STATE_SYNC'; display='WAITING_STATE_SYNC'
+    elif any(token in code for token in ('WAITING_REVIEW','WAITING_INDEPENDENT','WAITING_GPT_SCRUTINY')) or state in ('WAITING_REVIEW','REVIEW','FROZEN'):
+        category='WAITING_REVIEW'; display='WAITING_REVIEW'
+    elif blocker:
+        category='OWNER_OR_SOURCE_GATE'; display='OWNER_OR_SOURCE_GATE'
+    elif state=='DONE':
+        category='RECORDED_SCOPE_CLOSURE'; display='RECORDED_SCOPE_CLOSURE'
+    elif health in ('STALLED','RECOVERY_REQUIRED','NO_DURABLE_JOB','UNAVAILABLE'):
+        category='PROCESS_RECOVERY'
+        display={'STALLED':'STALLED','RECOVERY_REQUIRED':'RECOVERY_REQUIRED','NO_DURABLE_JOB':'STALE_REGISTRY','UNAVAILABLE':'LIVENESS_UNAVAILABLE'}[health]
+    elif job_state in ('COMPLETE','FAILED','TIMED_OUT','CANCELLED','POSTCONDITION_FAILED') or health in ('COMPLETE','TERMINAL_NONCOMPLETE'):
+        category='RESULT_TO_RECONCILE'; display='TERMINAL_RECONCILE'
+    elif health=='ACTIVE':
+        category='ACTIVE_PROCESS'; display='ACTIVE_PROCESS'
+    else:
+        category=state if state!='UNKNOWN' else 'UNKNOWN'; display=state if state!='UNKNOWN' else 'UNKNOWN'
+    descriptions={
+        'REPAIR_LIMIT':('สิทธิ์ซ่อมตามสัญญาถูกใช้ครบแล้ว','ให้เจ้าของหรือ Control Tower กำหนดสัญญาหรือทางเดินถัดไป'),
+        'WAITING_STATE_SYNC':('รอปรับสถานะจากหลักฐานที่ยอมรับแล้ว','ตรวจหลักฐานและบันทึกสถานะ canonical โดยผู้มีสิทธิ์'),
+        'WAITING_REVIEW':('รอการตรวจอิสระ ไม่ใช่ผล PASS','ส่งหัวและหลักฐานที่ตรึงไว้ให้ผู้ตรวจตามสัญญา'),
+        'OWNER_OR_SOURCE_GATE':('มี blocker ที่ระบุไว้','ตรวจ blocker และหลักฐานก่อนเปิด gate'),
+        'RECORDED_SCOPE_CLOSURE':('ปิดขอบเขตงานใน Registry เท่านั้น ไม่ใช่ PASS','ดูผลตรวจและสถานะ canonical ก่อนนำไปใช้'),
+        'PROCESS_RECOVERY':('สถานะ process ต้องตรวจสอบหรือกู้คืน','ตรวจหลักฐาน process และนโยบายเริ่มงานก่อนดำเนินการ'),
+        'RESULT_TO_RECONCILE':('มีผลจบงาน แต่ยังไม่ใช่การยอมรับผล','ตรวจผล review และ state sync แยกกัน'),
+        'ACTIVE_PROCESS':('พบ process จากหลักฐานที่ตรวจสอบแล้ว','ติดตามผลและ gate ตามสัญญาเดิม'),
+        'UNKNOWN':('ข้อมูลยังไม่พอระบุ gate ปัจจุบัน','ตรวจ Registry blocker และหลักฐานที่เกี่ยวข้อง'),
+    }
+    reason,action=descriptions.get(category,(f'สถานะ Registry: {state}','ตรวจหลักฐานและ gate ตามสัญญา'))
+    notes=[]
+    if row.get('superseded_by_claim'): notes.append('superseded_by เป็นเพียงคำอ้างอิง ต้องตรวจหลักฐานของงานถัดไป')
+    terminal=job_state in ('COMPLETE','FAILED','TIMED_OUT','CANCELLED','POSTCONDITION_FAILED') or health in ('COMPLETE','TERMINAL_NONCOMPLETE')
+    if terminal and category in ('REPAIR_LIMIT','WAITING_STATE_SYNC','WAITING_REVIEW','OWNER_OR_SOURCE_GATE'):
+        notes.append('ผลจบ job ไม่ลบ gate ที่ระบุไว้')
+    if state=='DONE' and terminal and job_state!='COMPLETE':
+        notes.append('DONE ปิดเฉพาะขอบเขต Registry; ผล job เดิมยังคงถูกแสดง')
+    return {'display_state':display,'category':category,'reason_th':reason,'next_action_th':action,
+            'reconciliation':notes,'unresolved':state!='DONE'}
+
 def safe_bytes(path, root, limit=6_000_000):
     p=pathlib.Path(path).absolute(); root=pathlib.Path(root).absolute()
     if not p.is_relative_to(root): raise Refused('PATH_OUTSIDE_SOURCE')
@@ -196,7 +242,6 @@ class Model:
                 x=read_json(p,root); lane=x['lane_id']; state=x['state']; updated=x.get('updated_at')
                 if not re.fullmatch(r'[A-Za-z0-9_.-]{1,128}',lane): raise Refused('LANE_ID')
                 totals[state]=totals.get(state,0)+1
-                if state=='DONE': continue
                 lease=lease_root/(lane+'.json'); job={}; terminal=None; jobid=None
                 if lease.is_file():
                     l=read_json(lease,lease_root)
@@ -212,11 +257,10 @@ class Model:
                         if terminal.get('job_id')!=jobid: raise Refused('JOB_RESULT_IDENTITY')
                 js=job.get('state','NOT_OBSERVED'); end=None
                 if isinstance(terminal,dict): js=terminal.get('state',js); end=terminal.get('ended_utc')
-                cls='TERMINAL_RECONCILE' if js in ['COMPLETE','FAILED','TIMED_OUT','CANCELLED'] else 'BLOCKED_REVIEW' if state in ['REVIEW','FROZEN'] else 'WAITING_OWNER' if state=='BLOCKED' and str(x.get('blocker_class','')).startswith('E_') else state
                 process_state='NOT_PROBED'; process_health='NOT_PROBED'
                 if state=='RUNNING' and not jobid:
-                    cls='STALE_REGISTRY'; process_state='NOT_OBSERVED'; process_health='NO_DURABLE_JOB'
-                result.append({'id':lane,'title':lane.removeprefix('ct-').replace('-',' '),'state':state,'display_state':cls,'owner':clean(x.get('owner_chat'),100),'worker':clean(x.get('worker'),140),'updated_at':updated,'freshness':age_state(updated,24),'job_id':jobid,'job_state':js,'ended_at':end,'process_state':process_state,'process_health':process_health,'runner_alive':None,'child_alive':None,'postcondition_alive':None,'heartbeat_age_sec':None,'retry_decision':'UNKNOWN','process_checked_utc':None,'progress':'UNKNOWN','blocker':clean(x.get('blocker_class'),180),'head':x.get('head_sha'),'reviewed_head':x.get('reviewed_head'),'reviewer':clean(x.get('reviewer'),140),'dependencies':[clean(d,128) for d in x.get('dependencies',[]) if isinstance(d,str)]})
+                    process_state='NOT_OBSERVED'; process_health='NO_DURABLE_JOB'
+                result.append({'id':lane,'title':lane.removeprefix('ct-').replace('-',' '),'state':state,'owner':clean(x.get('owner_chat'),100),'worker':clean(x.get('worker'),140),'updated_at':updated,'freshness':age_state(updated,24),'job_id':jobid,'job_state':js,'ended_at':end,'process_state':process_state,'process_health':process_health,'runner_alive':None,'child_alive':None,'postcondition_alive':None,'heartbeat_age_sec':None,'retry_decision':'UNKNOWN','process_checked_utc':None,'progress':'UNKNOWN','blocker':clean(x.get('blocker_class'),1400),'head':x.get('head_sha'),'reviewed_head':x.get('reviewed_head'),'reviewer':clean(x.get('reviewer'),140),'dependencies':[clean(d,128) for d in x.get('dependencies',[]) if isinstance(d,str)],'acceptance':'UNKNOWN','canonical':'NOT_ASSESSED','consumption':'UNKNOWN','superseded_by_claim':clean(x.get('superseded_by'),180) or None,'source_status':'REGISTRY_RECORD_AVAILABLE','evidence_basis':'Registry declaration + available lease/job/process observations; each remains a separate source.'})
             except (OSError,ValueError,KeyError,TypeError) as e: self.issue('lane_observation',e)
         result.sort(key=lambda r:(r['freshness']=='CURRENT',r['updated_at'] or ''),reverse=True)
         probe_states={'RUNNING','REVIEW','FROZEN','INTEGRATING','WAITING','BLOCKED'}
@@ -227,14 +271,10 @@ class Model:
                 row['process_state']=live['observed_state']; row['process_health']=live['health']
                 row['runner_alive']=live['runner_alive']; row['child_alive']=live['child_alive']; row['postcondition_alive']=live['postcondition_alive']
                 row['heartbeat_age_sec']=live['heartbeat_age_sec']; row['retry_decision']=live['retry_decision']; row['process_checked_utc']=live['checked_utc']
-                if live['health']=='ACTIVE': row['display_state']='ACTIVE_PROCESS'
-                elif live['health']=='STALLED': row['display_state']='STALLED'
-                elif live['health']=='RECOVERY_REQUIRED': row['display_state']='RECOVERY_REQUIRED'
-                elif live['health'] in ('COMPLETE','TERMINAL_NONCOMPLETE'): row['display_state']='TERMINAL_RECONCILE'
             except (OSError,ValueError,KeyError,TypeError,subprocess.SubprocessError,UnicodeError) as e:
                 row['process_state']='UNKNOWN'; row['process_health']='UNAVAILABLE'
-                if row['state']=='RUNNING': row['display_state']='LIVENESS_UNAVAILABLE'
                 self.issue('lane_status:'+row['id'],e)
+        for row in result: row.update(work_presentation(row))
         return {'status':'INVALID' if any(e['source']=='lane_observation' for e in self.errors) else 'AVAILABLE' if root.is_dir() else 'MISSING','rows':result,'totals':totals,'observed_at':utcnow(),'process_probed_count':len(candidates),
                 'basis':'Registry declarations + existing lease/result bytes. Fresh leased lanes additionally consume accepted chat-stall lane_status process identity; heartbeat is liveness evidence, not work-progress proof.'}
     def knowledge(self):
