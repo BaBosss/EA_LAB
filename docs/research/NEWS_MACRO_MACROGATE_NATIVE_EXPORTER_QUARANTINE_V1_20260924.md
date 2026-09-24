@@ -75,3 +75,39 @@ At most one bounded Repair1 is available for a genuine in-scope material defect,
 ## Downstream gate
 
 Only when both `NATIVE_EXPORTER_QUARANTINE_ACCEPTED` and `NATIVE_PARITY_QUALIFIED` are established may Control Tower consider a separate prospective BASE / REAL_GUARD / PLACEBO preregistration. This document does not select an EA parent or authorize that experiment.
+
+## Recovery and deterministic qualification - 2026-09-25
+
+The prospective sections above remain unchanged. Their exact pre-implementation commit is `e1693a8f25d13915a8c3db1ef30b43d1b4e7caa6`.
+
+Author job `ct-news-macro-mg-native-exporter-quarantine-author-r4-20260924` reached durable `TIMED_OUT` without an author result or commit. On reconnection, its runner/child/postcondition were dead and no matching Codex descendant remained. The controller preserved the two source files and diff, then consumed the completed implementation rather than relaunching an author. Earlier CLI/model-launch failures and the timeout remain historical evidence; this milestone's source Repair1 is UNUSED.
+
+Current implementation identities:
+
+- exporter SHA256: `ec22220fb7995518fd71c694dca43008638bd8692386cba54283002c9a9163d1`
+- exporter tests SHA256: `91a7aa5101f49eac48af871af7da006c6f1c53a96c5a6eaa0511ce27052558b3`
+- native CSV SHA256: `6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a`
+- quarantine CSV SHA256: `545c4e5f684ea8a5c4b231bf57360e65551f2acb8ef4bf3fd685dd211faa59d9`
+- qualification evidence manifest SHA256: `59818dcb7363c89d9c476f74a2a49d01df2317bdf3e94643dd5ec3ad5d01b6ed`
+
+Evidence root: `D:\EA_LAB_CONTROL\evidence\news-macro-mg-native-exporter-quarantine-v1-20260924\qualification-20260925`.
+
+Actual deterministic results: News/Macro 196/196 tests, zero failures/errors/skips; 2,192 native rows = 2,180 stable exact round-trips plus 12 UNKNOWN markers; 12/12 transition cases; 19,092 independent interval/edge probes; 6/6 actual dependency-byte drift refusals; two fresh regenerations byte-identical to each other and the preserved r4 regeneration_c/regeneration_d artifacts. Every source interval is traced in SOURCE_NATIVE_TRACE.json. The independent checker reads actual CSV rows rather than accepting author PASS booleans.
+
+Every March quarantine resumes on the next server date at 03:00; every November quarantine resumes at 02:00. The interval is inclusive at the transition's 00:00 marker and exclusive at that next stable row. On 2024-11-03, prior NEUTRAL is replaced by UNKNOWN, then RISK_OFF resumes at 2024-11-04 02:00.
+
+### Native proof reuse and limitations
+
+REUSED_NATIVE_BINDING.json binds the prior independent `SCRUTINY_PASS / HIGH` review of core seam head `5d6713cdc6b81191dc199f269bbc78789155c388`, its focused static/compile/no-trade PASS, and its hash-verified TPL Contract1 8/8 receipt. MacroGate_Core.mqh, MacroGate_UnknownSeam_Test.mq5 and its runner remain byte-identical to that accepted head. LabCore.mqh is separately bound to current canonical bytes. No new compiler/tester/live run was performed by recovery, and no existing MT5 owner was interrupted.
+
+The qualification combines the new exporter/clock/CSV proof with the unchanged accepted native parser/action seam; Python checks are not represented as newly executed native MT5 assertions. The original native fixture exercised one magic; multi-magic clearing remains source-verified through the unchanged loop. Live preservation is source-verified, not a new live run. UNKNOWN means MacroGate inactive/ungated, not a trading-safety certification. RI/flags in UNKNOWN rows are source-provenance-only auxiliaries ignored by the bound native core, not contemporaneously available macro signals or an available_at claim.
+
+The raw input/core/clock/normalizer hashes fail closed on drift. The manifest also binds the exporter/test implementation bytes and generated artifacts. Tool-emitted `native_parity_qualified=true` describes the bounded deterministic candidate; project acceptance additionally requires the one independent exact-head review and eligible canonical integration. At this candidate commit, those final controller steps are pending.
+
+### Reproduction and evidence consumption
+
+Use the installed portable Python via `scripts/use_python.ps1` and `Assert-PortablePython -Provision`. Run the namespace-compatible News/Macro tests with the preserved recovery_tests_v2_20260925.py external runner. For actual exports use `python -m tools.news_macro_lab.macrogate_native --timeline <accepted CSV> --manifest <accepted manifest> --repo <exact worktree> --out <fresh output directory>`. Preserve existing output directories; never overwrite accepted or negative evidence.
+
+The qualification manifest includes the executed independent checker, all 12 case results, full source/native trace, raw generated CSV/manifests, six mutated-dependency refusal cases, the 196-test log, and copied upstream native review/TPL/focused evidence. Controller freeze/review/push receipts remain in the same milestone evidence root. They must bind the actual clean candidate HEAD; a prose readiness label or historical author success is not an acceptance receipt.
+
+Authority remains source/parity-only: performance NOT_RUN, probability null, can_execute=false, HOLDOUT unspent, no EA parent selected and no A/B execution. Only after both independent exporter acceptance and native parity qualification may a separate prospective A/B contract be considered.
