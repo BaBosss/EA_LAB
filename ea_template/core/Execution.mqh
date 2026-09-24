@@ -191,6 +191,272 @@ double Exec_MacroLotMult()
    return m;
 }
 
+// ---- Prepared market-open seam (ZCAG Phase A, additive) -----------------
+// Existing Exec_Open callers deliberately remain on the legacy path below.
+// This seam allows a caller to prepare one final lot, run heat and margin
+// checks against that exact value, and submit it without a second MacroGate
+// multiplier or volume normalization.
+struct Exec_MacroSnapshot
+{
+   bool     valid;
+   bool     block_exists;
+   double   block_value;
+   datetime block_time;
+   bool     mult_exists;
+   double   mult_value;
+   datetime mult_time;
+   bool     effective_block;
+   double   effective_mult;
+};
+
+struct Exec_PreparedOpen
+{
+   bool               valid;
+   int                direction;
+   double             final_checked_lot;
+   Exec_MacroSnapshot macro;
+};
+
+enum Exec_PreparedOpenOutcome
+{
+   EXEC_PREPARED_REFUSED=0,
+   EXEC_PREPARED_INTENT_ONLY=1,
+   EXEC_PREPARED_MARKET_DONE=2
+};
+
+bool Exec_MacroEffectiveMultiplier(const bool exists,const double identity_value,
+                                   double &effective_mult)
+{
+   effective_mult=1.0;
+   if(!exists) return true;
+   if(!MathIsValidNumber(identity_value)) return false;
+   // Preserve the existing MacroGate policy: finite values outside (0,1)
+   // are identity-bearing no-ops, never an upscale or zero-lot command.
+   if(identity_value > 0.0 && identity_value < 1.0)
+      effective_mult=identity_value;
+   return true;
+}
+
+bool Exec_MacroIdentityEqual(const Exec_MacroSnapshot &left,
+                             const Exec_MacroSnapshot &right)
+{
+   if(!left.valid || !right.valid) return false;
+   return (left.block_exists == right.block_exists &&
+           left.block_value  == right.block_value &&
+           left.block_time   == right.block_time &&
+           left.mult_exists  == right.mult_exists &&
+           left.mult_value   == right.mult_value &&
+           left.mult_time    == right.mult_time &&
+           left.effective_block == right.effective_block &&
+           left.effective_mult  == right.effective_mult);
+}
+
+bool Exec_ReadMacroSnapshot(Exec_MacroSnapshot &snapshot)
+{
+   snapshot.valid=false;
+   snapshot.block_exists=false;
+   snapshot.block_value=0.0;
+   snapshot.block_time=0;
+   snapshot.mult_exists=false;
+   snapshot.mult_value=1.0;
+   snapshot.mult_time=0;
+   snapshot.effective_block=false;
+   snapshot.effective_mult=1.0;
+
+   string block_gv="MACROGATE_BLOCK_"+IntegerToString(_0_Magic);
+   snapshot.block_exists=GlobalVariableCheck(block_gv);
+   if(snapshot.block_exists)
+   {
+      snapshot.block_value=GlobalVariableGet(block_gv);
+      snapshot.block_time=GlobalVariableTime(block_gv);
+      if(!MathIsValidNumber(snapshot.block_value) || snapshot.block_time <= 0)
+         return false;
+   }
+
+   string mult_gv="MACROGATE_LOTMULT_"+IntegerToString(_0_Magic);
+   snapshot.mult_exists=GlobalVariableCheck(mult_gv);
+   if(snapshot.mult_exists)
+   {
+      snapshot.mult_value=GlobalVariableGet(mult_gv);
+      snapshot.mult_time=GlobalVariableTime(mult_gv);
+      if(!MathIsValidNumber(snapshot.mult_value) ||
+         snapshot.mult_time <= 0) return false;
+   }
+
+   bool block_fresh=snapshot.block_exists;
+   bool mult_fresh=snapshot.mult_exists;
+   if(!MQLInfoInteger(MQL_TESTER))
+   {
+      datetime now=TimeCurrent();
+      if(block_fresh && now-snapshot.block_time > MACROGATE_GV_MAX_AGE_SEC)
+         block_fresh=false;
+      if(mult_fresh && now-snapshot.mult_time > MACROGATE_GV_MAX_AGE_SEC)
+         mult_fresh=false;
+   }
+
+   snapshot.effective_block=(block_fresh && snapshot.block_value >= 0.5);
+   if(!Exec_MacroEffectiveMultiplier(mult_fresh,snapshot.mult_value,
+                                     snapshot.effective_mult))
+      return false;
+   snapshot.valid=true;
+   return true;
+}
+
+// Pure normalization seam used by prepared opens and deterministic tests.
+// Invalid broker properties fail closed. The requested lot is multiplied,
+// capped and rounded exactly once.
+bool Exec_CheckedNormalizeLot(const double requested_lot,const double macro_mult,
+                              const double min_volume,const double max_volume,
+                              const double volume_step,const double hard_cap,
+                              double &final_checked_lot)
+{
+   final_checked_lot=0.0;
+   if(!MathIsValidNumber(requested_lot) || requested_lot <= 0.0 ||
+      !MathIsValidNumber(macro_mult) || macro_mult <= 0.0 || macro_mult > 1.0 ||
+      !MathIsValidNumber(min_volume) || min_volume <= 0.0 ||
+      !MathIsValidNumber(max_volume) || max_volume < min_volume ||
+      !MathIsValidNumber(volume_step) || volume_step <= 0.0 ||
+      !MathIsValidNumber(hard_cap) || hard_cap < 0.0)
+      return false;
+
+   double lot=requested_lot*macro_mult;
+   if(!MathIsValidNumber(lot) || lot <= 0.0) return false;
+   if(hard_cap > 0.0 && lot > hard_cap) lot=hard_cap;
+   if(lot > max_volume) lot=max_volume;
+   lot=MathFloor(lot/volume_step+0.0000001)*volume_step;
+
+   int step_digits=0;
+   double scaled_step=volume_step;
+   while(step_digits < 8 &&
+         MathAbs(scaled_step-MathRound(scaled_step)) > 1.0e-9)
+   {
+      scaled_step*=10.0;
+      step_digits++;
+   }
+   lot=NormalizeDouble(lot,step_digits);
+   if(!MathIsValidNumber(lot) || lot < min_volume || lot > max_volume)
+      return false;
+   final_checked_lot=lot;
+   return true;
+}
+
+bool Exec_CheckedLotIdentity(const double final_checked_lot,
+                             const double heat_checked_lot,
+                             const double margin_checked_lot,
+                             const double submission_lot)
+{
+   return (MathIsValidNumber(final_checked_lot) && final_checked_lot > 0.0 &&
+           final_checked_lot == heat_checked_lot &&
+           final_checked_lot == margin_checked_lot &&
+           final_checked_lot == submission_lot);
+}
+
+// Pure assessment seam: a CTrade transport boolean is not proof that a
+// market order executed. DryRun is deliberately a distinct intent-only
+// outcome; live success requires one complete, exact-volume deal.
+Exec_PreparedOpenOutcome Exec_AssessPreparedOpenResult(
+   const bool dry_run,const bool transport_ok,const uint retcode,
+   const ulong deal,const double result_volume,
+   const double submission_lot,const double volume_step)
+{
+   if(dry_run) return EXEC_PREPARED_INTENT_ONLY;
+   if(!transport_ok || retcode != TRADE_RETCODE_DONE || deal == 0)
+      return EXEC_PREPARED_REFUSED;
+   if(!MathIsValidNumber(result_volume) || result_volume <= 0.0 ||
+      !MathIsValidNumber(submission_lot) || submission_lot <= 0.0 ||
+      !MathIsValidNumber(volume_step) || volume_step <= 0.0)
+      return EXEC_PREPARED_REFUSED;
+
+   // Broker volumes are step-quantized. Tolerate only floating-point noise,
+   // never a material fraction of one volume step or a partial fill.
+   double tolerance=MathMax(1.0e-12,volume_step*1.0e-8);
+   if(MathAbs(result_volume-submission_lot) > tolerance)
+      return EXEC_PREPARED_REFUSED;
+   return EXEC_PREPARED_MARKET_DONE;
+}
+
+bool Exec_PreparedOpenAcceptsChecks(const Exec_PreparedOpen &prepared,
+                                    const double heat_checked_lot,
+                                    const double margin_checked_lot,
+                                    const Exec_MacroSnapshot &current_macro,
+                                    double &submission_lot)
+{
+   submission_lot=0.0;
+   if(!prepared.valid || (prepared.direction != 1 && prepared.direction != 2))
+      return false;
+   if(!Exec_MacroIdentityEqual(prepared.macro,current_macro))
+      return false;
+   if(current_macro.effective_block) return false;
+   if(!Exec_CheckedLotIdentity(prepared.final_checked_lot,
+                               heat_checked_lot,margin_checked_lot,
+                               prepared.final_checked_lot))
+      return false;
+   submission_lot=prepared.final_checked_lot;
+   return true;
+}
+
+bool Exec_PrepareOpen(const int direction,const double requested_lot,
+                      Exec_PreparedOpen &prepared)
+{
+   prepared.valid=false;
+   prepared.direction=direction;
+   prepared.final_checked_lot=0.0;
+   if(direction != 1 && direction != 2) return false;
+   if(Exec_NewsBlocked() || !Exec_SpreadOK()) return false;
+   if(!Exec_ReadMacroSnapshot(prepared.macro) ||
+      prepared.macro.effective_block)
+      return false;
+
+   double min_volume=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   double max_volume=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MAX);
+   double volume_step=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_STEP);
+   if(!Exec_CheckedNormalizeLot(requested_lot,prepared.macro.effective_mult,
+                                min_volume,max_volume,volume_step,RC_MaxLot,
+                                prepared.final_checked_lot))
+      return false;
+   prepared.valid=true;
+   return true;
+}
+
+bool Exec_SubmitPreparedOpen(const Exec_PreparedOpen &prepared,
+                             const double heat_checked_lot,
+                             const double margin_checked_lot,
+                             const double sl,const double tp,
+                             const string comment)
+{
+   // All choke-point guards are rechecked immediately before submission.
+   if(Exec_NewsBlocked() || !Exec_SpreadOK()) return false;
+   Exec_MacroSnapshot current_macro;
+   if(!Exec_ReadMacroSnapshot(current_macro)) return false;
+
+   double submission_lot=0.0;
+   if(!Exec_PreparedOpenAcceptsChecks(prepared,heat_checked_lot,
+                                      margin_checked_lot,current_macro,
+                                      submission_lot))
+      return false;
+
+   g_exec_open_intents++;
+   if(DryRun)
+   {
+      PrintFormat("[DRYRUN] prepared open dir=%d lot=%.2f sl=%.5f tp=%.5f %s",
+                  prepared.direction,submission_lot,sl,tp,comment);
+      return (Exec_AssessPreparedOpenResult(true,false,0,0,0.0,
+                                            submission_lot,0.0) ==
+              EXEC_PREPARED_INTENT_ONLY);
+   }
+   bool transport_ok=false;
+   if(prepared.direction == 1)
+      transport_ok=g_trade.Buy(submission_lot,_Symbol,0.0,sl,tp,comment);
+   else if(prepared.direction == 2)
+      transport_ok=g_trade.Sell(submission_lot,_Symbol,0.0,sl,tp,comment);
+
+   Exec_PreparedOpenOutcome outcome=Exec_AssessPreparedOpenResult(
+      false,transport_ok,g_trade.ResultRetcode(),g_trade.ResultDeal(),
+      g_trade.ResultVolume(),submission_lot,
+      SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_STEP));
+   return (outcome == EXEC_PREPARED_MARKET_DONE);
+}
+
 bool Exec_Open(const int direction, double lot, const double sl, const double tp, const string comment)
 {
    if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;   // news + macro veto (new orders only)
