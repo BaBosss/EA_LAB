@@ -12,6 +12,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import preflight as p
+sys.path.insert(0, str(p.REPO / 'scripts' / '_test'))
+from test_mt5_input_qualification import report_html
 
 SOURCE = b'fixture source only'
 REF = '1' * 40
@@ -55,9 +57,8 @@ class Fixture:
             inp['identity'] = self.write_json(f'{window}/identity.json', dict(source_sha=ref, source_path=source_path,
                             identity=expected, lane_state='RUNNING', runtime_legal=True,
                             requested_config=cell['parameters'], effective_config=cell['effective_config']))
-            report = ('<html>Expert:\nFixture\nSymbol:\nXAUUSD\nCurrency:\nUSD\nPeriod:\n'
-                      f'H1 ({start} - {end})\nInitial Deposit:\n10000\nLeverage:\n1:100\n'
-                      '<img src="graph.png"></html>').encode('utf-16-le')
+            report = report_html({'Period:': f'H1 ({start} - {end})'}).replace(
+                '</body>', '<img src="graph.png"></body>').encode('utf-16-le')
             post = self.observation['cells'][window] = {}
             post['report'] = self.write(cell['outputs']['report'], report)
             # Signature fixture only: no claim to be an MT5-generated equity curve.
@@ -110,6 +111,11 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual('REFUSE', result['status'], result)
         self.assertIn(code, {x['code'] for x in result['issues']}, result)
         self.assertFalse(result['authority_granted'])
+
+    def test_wrong_report_fails_closed(self):
+        for text in ('# not a report', '<html><body>random</body></html>', report_html()[:-20]):
+            self.post['report'].update(self.f.write(self.post['report']['path'], text.encode()))
+            self.refusal('MALFORMED_OR_UNREADABLE_EVIDENCE')
 
     def test_positive_pre_and_post(self):
         for mode in ['pre-run','post-run']:

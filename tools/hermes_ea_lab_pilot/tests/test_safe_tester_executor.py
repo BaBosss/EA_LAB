@@ -159,6 +159,25 @@ class SafeTesterExecutorTests(unittest.TestCase):
         self.assertEqual(result["status"], "MECHANICAL_FAIL")
         self.assertEqual(result["reason"], "STALE_OR_MISSING_REPORT")
 
+    def test_wrong_file_real_parser_refused_before_metrics(self) -> None:
+        # Actual canonical parser, fake runner only: this test never starts MT5.
+        repo = Path(__file__).resolve().parents[3]
+        (self.root / 'scripts/parse_mt5_report.py').write_bytes(
+            (repo / 'scripts/parse_mt5_report.py').read_bytes())
+        report_dir = self.root / '_mt5_auto/reports'
+        report_dir.mkdir(parents=True)
+        report = report_dir / 'H2_XAU_H4_MAIN.htm'
+        def fake_run(*args, **kwargs):
+            report.write_text('# wrong file', encoding='utf-8')
+            return subprocess.CompletedProcess(args[0], 0, stdout='', stderr='')
+        result = module.run_cell_impl(
+            self.root, self.manifest, self.manifest_sha, self.receipt, self.receipt_sha,
+            'H2-C01-MAIN', self.set_sha, run_process=fake_run, start_time_ns=0)
+        self.assertEqual(result['status'], 'MECHANICAL_FAIL')
+        self.assertEqual(result['reason'], 'REPORT_PARSE_ERROR')
+        self.assertNotIn('metrics', result)
+        self.assertNotIn('full_window_evidence_eligible', result)
+
     def test_fresh_report_is_hash_bound_and_parsed(self) -> None:
         report_dir = self.root / "_mt5_auto" / "reports"
         report_dir.mkdir(parents=True)

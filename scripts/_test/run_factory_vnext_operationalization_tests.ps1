@@ -13,21 +13,30 @@ New-Item -ItemType Directory -Path $tmp -Force | Out-Null
 try {
   $source = Join-Path $tmp '(TRD)_SuperTrendFlip_rev05.mq5'
   $preset = Join-Path $tmp 'STF_BTC_H4_rev05_off.set'
-  $report = Join-Path $tmp 'HOLDOUT26H1_rev05_off.htm'
+  $report = Join-Path $tmp 'SYNTHETIC_MAIN_rev05_off.htm'
   Copy-Item -LiteralPath (Join-Path $RepoRoot 'ea_projects\(TRD)_SuperTrendFlip\(TRD)_SuperTrendFlip_rev05.mq5') -Destination $source
   Copy-Item -LiteralPath (Join-Path $RepoRoot '_mt5_auto\ab_sets\genstanding_stf\STF_BTC_H4_rev05_off.set') -Destination $preset
   $manifest = Get-Content -Raw (Join-Path $RepoRoot 'factory\vnext\pilots\supertrend_rev05_btcusd_h4_holdout26h1\pilot_manifest.json') | ConvertFrom-Json
   $summary = $manifest.RawReportSummary
-  $fromDate = ($summary.from_date -replace '-', '.')
-  $toDate = ($summary.to_date -replace '-', '.')
+  $fromDate = '2023.01.01' # Synthetic MAIN fixture; no historical report is consumed
+  $toDate = '2025.12.31'
   $window = $manifest.RunManifest
   $reportText = @"
-Build $($summary.report_build)
-<html><body><table>
+<html><head><title>Strategy Tester Report Build $($summary.report_build)</title></head><body><table>
 <tr><td>Expert:</td><td>$($manifest.HomeContract.ConceptID)_$($manifest.HomeContract.StrategyVersion)</td></tr>
 <tr><td>Symbol:</td><td>$($manifest.RunManifest.PhysicalSymbol)</td></tr>
 <tr><td>Company:</td><td>$($manifest.RunManifest.BrokerDataEnvironment.Split('|')[0])</td></tr>
 <tr><td>Period:</td><td>$($manifest.RunManifest.ExecutionTF) ($fromDate - $toDate)</td></tr>
+<tr><td>Currency:</td><td>USD</td></tr>
+<tr><td>Leverage:</td><td>1:100</td></tr>
+<tr><td>Initial Deposit:</td><td>10000</td></tr>
+<tr><td>Symbols:</td><td>1</td></tr>
+<tr><td>Gross Profit:</td><td>0</td></tr>
+<tr><td>Gross Loss:</td><td>0</td></tr>
+<tr><td>Balance Drawdown Absolute:</td><td>0</td></tr>
+<tr><td>Equity Drawdown Absolute:</td><td>0</td></tr>
+<tr><td>Balance Drawdown Maximal:</td><td>0 (0%)</td></tr>
+<tr><td>Equity Drawdown Maximal:</td><td>0 (0%)</td></tr>
 <tr><td>History Quality:</td><td>$($summary.history_quality)</td></tr>
 <tr><td>Bars:</td><td>$([int]$summary.bars)</td></tr>
 <tr><td>Ticks:</td><td>$([int64]$summary.ticks)</td></tr>
@@ -100,6 +109,13 @@ Build $($summary.report_build)
   $samePublished = Get-PublishedPilotDir (Join-Path $out 'first')
   if ((Split-Path -Leaf $samePublished) -ne $pilotId1) { throw 'T02b identical collision changed PilotID' }
   if (@(Get-ChildItem -LiteralPath (Join-Path $out 'first') -Directory | Where-Object { $_.Name -like '*.staging' }).Count -ne 0) { throw 'T02b successful runner left staging directory behind' }
+
+  $wrongFile = Join-Path $tmp 'not_a_report.htm'
+  [IO.File]::WriteAllText($wrongFile, '# Markdown, not an MT5 report')
+  $wrongOutput = Join-Path $out 'wrong_file'
+  $wrongResult = Invoke-Runner $wrongFile $wrongOutput
+  if ($wrongResult.Exit -eq 0 -or $wrongResult.Text -notmatch 'MT5_REPORT_INVALID') { throw 'D001 wrong-file refusal missing' }
+  if (@(Get-ChildItem -LiteralPath $wrongOutput -Recurse -Filter pilot_manifest.json).Count) { throw 'D001 produced evidence for wrong file' }
 
   $wrongSymbol = Join-Path $tmp 'wrong_symbol.htm'
   [IO.File]::WriteAllText($wrongSymbol, $reportText.Replace('BTCUSD','XAUUSD'), (New-Object System.Text.UnicodeEncoding($false, $false)))

@@ -10,6 +10,9 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT))
 
+sys.path.insert(0, str(ROOT / 'scripts' / '_test'))
+from test_mt5_input_qualification import report_html
+
 from _triage.factory_vnext.pilot import (
     PilotError,
     build_supertrend_report_pilot,
@@ -30,33 +33,14 @@ class FactoryVNextPilotTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def _write_report(self, *, symbol="BTCUSD", tf="H4", bars=1074, quality="100% real ticks", net=219.18):
-        report = self.root / "HOLDOUT26H1_rev05_off.htm"
-        text = f"""Build 6061
-Expert:
-(TRD)_SuperTrendFlip_rev05
-Symbol:
-{symbol}
-Company:
-TF Global Markets (Aust) Pty Ltd
-Period:
-{tf} (2026.01.01 - 2026.06.30)
-History Quality:
-{quality}
-Bars:
-{bars}
-Ticks:
-29309891
-Total Net Profit:
-{net}
-Profit Factor:
-3.74
-Equity Drawdown Relative:
-2.53%
-Total Trades:
-9
-Total Deals:
-18
-"""
+        report = self.root / "SYNTHETIC_MAIN_rev05_off.htm"
+        text = report_html({'Expert:': '(TRD)_SuperTrendFlip_rev05', 'Symbol:': symbol,
+                            'Period:': f'{tf} (2023.01.01 - 2025.12.31)',
+                            'Company:': 'TF Global Markets (Aust) Pty Ltd',
+                            'History Quality:': quality, 'Bars:': str(bars),
+                            'Ticks:': '29309891', 'Total Net Profit:': str(net),
+                            'Profit Factor:': '3.74', 'Equity Drawdown Relative:': '2.53%',
+                            'Total Trades:': '9', 'Total Deals:': '18'})
         report.write_bytes(text.encode("utf-16-le"))
         return report
 
@@ -114,6 +98,14 @@ Total Deals:
         p2 = self._build(report)
         self.assertNotEqual(p1["RawReportRef"]["sha256"], p2["RawReportRef"]["sha256"])
         self.assertNotEqual(p1["PilotID"], p2["PilotID"])
+
+    def test_wrong_file_refused_before_artifact_creation(self):
+        report = self.root / 'wrong.htm'
+        for text in ('# not a report', '<html><body>random</body></html>', report_html()[:-20]):
+            report.write_text(text, encoding='utf-8')
+            with self.assertRaisesRegex(PilotError, 'MT5 report parse failed'):
+                write_pilot_artifacts(self._build(report), str(self.root / 'out'))
+            self.assertFalse((self.root / 'out').exists())
 
     def test_artifact_writer_hashes_exact_bytes(self):
         record = self._build(self._write_report())
