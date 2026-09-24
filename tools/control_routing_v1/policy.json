@@ -1,0 +1,25 @@
+{
+  "schema_version": "ea_lab_control_routing_policy/1",
+  "authority_ceiling": "SOURCE_ONLY_NO_RUNTIME",
+  "activation": false,
+  "completion_scope": "SOURCE_SCOPE_CANDIDATE_NOT_CANONICAL",
+  "escalate_after_failed_attempts": 2,
+  "default_routes": {
+    "DETERMINISTIC": {"lane": "LOCAL_DETERMINISTIC", "model": null, "reasoning_effort": null},
+    "MECHANICAL": {"lane": "LUNA_LOW", "model": "gpt-6-luna", "reasoning_effort": "low"},
+    "BOUNDED": {"lane": "LUNA_MEDIUM", "model": "gpt-6-luna", "reasoning_effort": "medium"},
+    "COMPLEX": {"lane": "LUNA_HIGH", "model": "gpt-6-luna", "reasoning_effort": "high"},
+    "HARD": {"lane": "SOL_HIGH", "model": "gpt-6-sol", "reasoning_effort": "high"}
+  },
+  "sol_escalation_flags": ["ARCHITECTURE_UNCERTAINTY", "CORE_EXECUTION", "SECURITY"],
+  "owner_hard_stop_flags": [
+    "DESTRUCTIVE",
+    "GOVERNANCE",
+    "LIVE",
+    "OWNER_ATTESTATION",
+    "QI2_PLUS",
+    "RISK_DEFAULT",
+    "RUNTIME",
+    "TRADING"
+  ]
+}
