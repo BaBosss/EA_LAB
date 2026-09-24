@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 246.
+Rows in source registry: 262.
 
 ## Override pairs
 
@@ -112,6 +112,9 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_21_DF03_TPPip` | build 21 only | source-native DF03 | Exact frozen DF03 TPPip binding; no optimization authority |
 | `_22_DisplacementBodyFraction` | build 22 only | _22_WickBodyRatio | Minimum confirmation-candle body divided by full range before the close beyond the rejection extreme can signal. |
 | `_22_WickBodyRatio` | build 22 only | _22_DisplacementBodyFraction | Minimum dominant rejection-wick length as a multiple of rejection-candle body. |
+| `_24_BufferATR_High` | build 24 only in HIGH regime | _24_ATRPeriod; _24_DonchianBars | Strict Donchian breakout buffer in HIGH volatility. |
+| `_24_BufferATR_Normal` | build 24 only in NORMAL regime | _24_ATRPeriod; _24_DonchianBars | Strict Donchian breakout buffer in NORMAL volatility. |
+| `_24_DonchianBars` | build 24 only | _24_BufferATR_Normal; _24_BufferATR_High | Prior closed-bar channel length; the decision bar is excluded. |
 | `TradeDir` | builds 11/12/13/15 only (checked explicitly in those 4 Entry_Evaluate() functions); builds 14/16/18 use their own fixed-direction input instead and never read this; build17 is bidirectional by design and never reads this | per-entry: none direct, but functionally overlaps with _14_Direction/_16_Direction/_18_Direction on builds that ignore it | Restricts a symmetric entry signal to long-only, short-only, or both; has zero effect on builds 14/16/17/18. |
 | `TrendFilter` | builds 11/12/13 only; no effect on 14/15/16/17/18 | _71_ATRMA+_71_ATRRatio(71); _72_SlopeBar(72) | Adds a confirming filter (ATR-expansion or MA-slope) before the entry signal is allowed to fire; only wired into 3 of the 8 entry modules. |
 
@@ -151,6 +154,14 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_50_StormATRmult` | _50_RegimeMode != 0, AND this value >0 (0 disables the storm overlay) | _50_StormLookback | ATR spike multiple (vs its own lookback SMA) that classifies the bar as STORM (blocks all new entries), overriding the trend/range read for that bar. |
 | `_50_StormLookback` | _50_RegimeMode != 0, AND _50_StormATRmult >0 | _50_StormATRmult | Lookback window for the ATR SMA the storm spike is measured against. |
 
+### entry guard
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_24_SpreadATRCap` | build 24 only | _24_ATRPeriod | Absolute current-spread ceiling as a fraction of closed-bar ATR. |
+| `_24_SpreadMedianMult` | build 24 only | _24_SpreadSamples | Relative current-spread ceiling against the positive-sample median. |
+| `_24_SpreadSamples` | build 24 only | _24_SpreadMedianMult; _24_SpreadATRCap | Required positive tick-spread window before any new entry is eligible. |
+
 ### entry/exit (shared)
 
 | parameter | active when | coupled with | what it does |
@@ -176,6 +187,19 @@ reader that it can be overridden - the reader would only discover this by readin
 | parameter | active when | coupled with | what it does |
 |---|---|---|---|
 | `_0_ATR_Period` | handle always built; functionally consumed wherever Indi_ATR()/Indi_ATR_Points() is read: Stack_StepPrice, Entry_GridLog's arm distance, Kangaroo's grid step, the TrendFilter=71 ATR-expand check | _0_ATR_TF | Period for the 'Signal-ATR' context (entry/stack timing), distinct from the separate Risk-ATR context used for SL/TP/sizing. |
+
+### entry/stop/spread
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_24_ATRPeriod` | build 24 only | _24_ATRPctLookback; _24_BufferATR_Normal; _24_BufferATR_High; _24_SL_ATR_Normal; _24_SL_ATR_High; _24_SpreadATRCap | ATR period for percentile rank, breakout buffers, initial SL, and absolute spread cap. |
+
+### entry/trail
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_24_ST_ATRPeriod` | build 24 only | _24_ST_Mult | ATR period for the closed-bar SuperTrend confirmation and trail. |
+| `_24_ST_Mult` | build 24 only | _24_ST_ATRPeriod | SuperTrend basic-band distance from HL2. |
 
 ### event context
 
@@ -303,6 +327,13 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_H_TriggerDDPct` | HedgeMode != HEDGE_OFF(0) | _H_ReleaseDDPct(hysteresis pair) | Basket floating DD% (of balance) that opens the defensive hedge leg. |
 | `HedgeMode` | HedgeMode != HEDGE_OFF(0) AND StackMode != STACK_PYRAMID(93, LabCore.mqh skips Hedge_OnTick under mode 93) | _H_TriggerDDPct; _H_ReleaseDDPct; _H_Ratio; _H_MaxLot; RC_MaxLot(final clamp via Exec_Open) | Enables an opposite-direction defensive hedge leg once basket floating DD% breaches the trigger; releases on DD recovery. |
 
+### initial stop
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_24_SL_ATR_High` | build 24 only in HIGH regime | _24_ATRPeriod | Initial protective SL distance from the fill request price in HIGH volatility. |
+| `_24_SL_ATR_Normal` | build 24 only in NORMAL regime | _24_ATRPeriod | Initial protective SL distance from the fill request price in NORMAL volatility. |
+
 ### mm
 
 | parameter | active when | coupled with | what it does |
@@ -312,6 +343,7 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_16_LadderMult` | build 16 only, AND have>=4 | _16_BaseLot; _16_MaxLotPerOrder | >1.0 enables a capped ladder: order N = current max open lot x this multiplier; the first 4 orders on a side are always _16_BaseLot. |
 | `_16_MaxLotPerOrder` | build 16 only, AND _16_LadderMult>1.0 | _16_LadderMult; RC_MaxLot(clamps after this) | Per-order lot ceiling for the ladder (original 'Max_Lot_Martingale'); RC_MaxLot still clamps after this. |
 | `_20_Freeze_lot` | build 20 only, on every source-owned order attempt | none direct; broker free margin, one-lot margin, volume step/min/max complete the source formula | Value term in (value/100)*free_margin/margin_required_for_1_lot before nearest-step and broker min/max normalization; it is not a literal fixed lot. |
+| `_24_FixedLot` | build 24 only | RC_MaxLot; broker volume min/max/step | Fixed research order volume before broker normalization and shared hard cap. |
 | `_4_DdAdaptiveOn` | always checked; no-op (multiplier stays 1.0) when false | _4_DdTier1Pct/_4_DdTier1Mult; _4_DdTier2Pct/_4_DdTier2Mult; _4_DdHardCapMult | Enables a DD-tiered first-lot multiplier applied only to a NEW basket's level-0 order (Zeus GridLog _05_DdAdaptive port). |
 | `_4_DdHardCapMult` | _4_DdAdaptiveOn=true | _4_DdTier1Mult; _4_DdTier2Mult | Hard ceiling the DD-adaptive multiplier can never exceed, regardless of DD depth. |
 | `_4_DdTier1Mult` | _4_DdAdaptiveOn=true, AND DD >= _4_DdTier1Pct (and < _4_DdTier2Pct) | _4_DdTier1Pct; _4_DdHardCapMult(final clamp) | Level-0 lot multiplier applied at the first DD tier. |
@@ -353,6 +385,15 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_8_StepATR` | RecoveryMode != REC_NONE(80) | _8_TriggerATR | Further adverse distance (in Risk-ATR multiples) per additional recovery add once triggered. |
 | `_8_TriggerATR` | RecoveryMode != REC_NONE(80) | RecoveryMode; _3_RiskATR_Period/_3_RiskATR_TF(the ATR this multiplies) | Adverse excursion (in Risk-ATR multiples) beyond the worst entry required before Recovery starts adding. |
 | `RecoveryMode` | RecoveryMode != REC_NONE(80) AND basket exists+losing AND StackMode != STACK_PYRAMID(93, LabCore.mqh skips Recovery_OnTick under mode 93) | _8_TriggerATR; _8_StepATR; _8_RecMult(83 only); _8_DDRefMoney(82 only); RC_RecMultMax(cage clamp on both 82 and 83); RC_MaxLevelsOverride/_9_MaxLevels(depth cap shared with Stack) | Enables offensive add-into-loss escalation: 81=flat add (no escalation), 82=DD-scaled multiplier add, 83=geometric MathPow(mult,step) escalation. |
+
+### regime
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_24_ATRPctExtreme` | build 24 only | _24_ATRPctHigh | Boundary at/above which new entries are blocked as EXTREME volatility. |
+| `_24_ATRPctHigh` | build 24 only | _24_ATRPctLow; _24_ATRPctExtreme | Boundary selecting HIGH buffer and initial-stop policy. |
+| `_24_ATRPctLookback` | build 24 only | _24_ATRPeriod; _24_ATRPctLow; _24_ATRPctHigh; _24_ATRPctExtreme | Prior ATR population excluding ATR[1] used for deterministic percentile rank. |
+| `_24_ATRPctLow` | build 24 only | _24_ATRPctHigh; _24_ATRPctExtreme | Boundary below which new entries are blocked as LOW volatility. |
 
 ### safety
 
@@ -404,6 +445,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 246 (must equal the source registry's 246 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 262 (must equal the source registry's 262 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
 Override pairs found: 11.

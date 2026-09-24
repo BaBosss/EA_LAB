@@ -21,7 +21,9 @@
 #ifndef LAB_ENTRY_20
 #ifndef LAB_ENTRY_21
 #ifndef LAB_ENTRY_22
+#ifndef LAB_ENTRY_24
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -392,6 +394,12 @@ input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;   // [P50201] Stack Confi
 #ifdef LAB_CONST_StackConfirm
 const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
 #endif
+#endif
+#ifdef LAB_ENTRY_24
+// FB-A01 owns its complete single-position lifecycle. Generic stack controls
+// are compile-time hidden and cannot be re-enabled by a .set.
+const ENUM_STACK_MODE StackMode = STACK_SINGLE;
+const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;
 #endif
 #ifndef LAB_CONST__9_StepUseATR
 input bool   _9_StepUseATR  = true;   // [P50210] Step Use ATR | with P50211
@@ -1996,6 +2004,106 @@ input double _22_DisplacementBodyFraction = 0.65;   // [P12201] Displacement Bod
 #endif
 #ifdef LAB_CONST__22_DisplacementBodyFraction
 const double _22_DisplacementBodyFraction = LAB_CONSTVAL__22_DisplacementBodyFraction;
+#endif
+#endif
+
+#ifdef LAB_ENTRY_24
+input group "=== E024 AdaptiveDonchianFlip | FB-A01 research V0 ==="
+#ifndef LAB_CONST__24_DonchianBars
+input int _24_DonchianBars = 20; // [P12400] Donchian Bars | excludes decision bar
+#endif
+#ifdef LAB_CONST__24_DonchianBars
+const int _24_DonchianBars = LAB_CONSTVAL__24_DonchianBars;
+#endif
+#ifndef LAB_CONST__24_ST_ATRPeriod
+input int _24_ST_ATRPeriod = 10; // [P12401] SuperTrend ATR Period | with P12402
+#endif
+#ifdef LAB_CONST__24_ST_ATRPeriod
+const int _24_ST_ATRPeriod = LAB_CONSTVAL__24_ST_ATRPeriod;
+#endif
+#ifndef LAB_CONST__24_ST_Mult
+input double _24_ST_Mult = 3.0; // [P12402] SuperTrend Mult | with P12401
+#endif
+#ifdef LAB_CONST__24_ST_Mult
+const double _24_ST_Mult = LAB_CONSTVAL__24_ST_Mult;
+#endif
+#ifndef LAB_CONST__24_ATRPeriod
+input int _24_ATRPeriod = 14; // [P12403] Entry/SL ATR Period | with P12404
+#endif
+#ifdef LAB_CONST__24_ATRPeriod
+const int _24_ATRPeriod = LAB_CONSTVAL__24_ATRPeriod;
+#endif
+#ifndef LAB_CONST__24_ATRPctLookback
+input int _24_ATRPctLookback = 100; // [P12404] ATR Percentile Lookback | excludes ATR[1]
+#endif
+#ifdef LAB_CONST__24_ATRPctLookback
+const int _24_ATRPctLookback = LAB_CONSTVAL__24_ATRPctLookback;
+#endif
+#ifndef LAB_CONST__24_ATRPctLow
+input double _24_ATRPctLow = 20.0; // [P12405] ATR Percentile Low | with P12406
+#endif
+#ifdef LAB_CONST__24_ATRPctLow
+const double _24_ATRPctLow = LAB_CONSTVAL__24_ATRPctLow;
+#endif
+#ifndef LAB_CONST__24_ATRPctHigh
+input double _24_ATRPctHigh = 80.0; // [P12406] ATR Percentile High | with P12405,P12407
+#endif
+#ifdef LAB_CONST__24_ATRPctHigh
+const double _24_ATRPctHigh = LAB_CONSTVAL__24_ATRPctHigh;
+#endif
+#ifndef LAB_CONST__24_ATRPctExtreme
+input double _24_ATRPctExtreme = 95.0; // [P12407] ATR Percentile Extreme | with P12406
+#endif
+#ifdef LAB_CONST__24_ATRPctExtreme
+const double _24_ATRPctExtreme = LAB_CONSTVAL__24_ATRPctExtreme;
+#endif
+#ifndef LAB_CONST__24_BufferATR_Normal
+input double _24_BufferATR_Normal = 0.10; // [P12408] NORMAL Breakout Buffer ATR
+#endif
+#ifdef LAB_CONST__24_BufferATR_Normal
+const double _24_BufferATR_Normal = LAB_CONSTVAL__24_BufferATR_Normal;
+#endif
+#ifndef LAB_CONST__24_BufferATR_High
+input double _24_BufferATR_High = 0.20; // [P12409] HIGH Breakout Buffer ATR
+#endif
+#ifdef LAB_CONST__24_BufferATR_High
+const double _24_BufferATR_High = LAB_CONSTVAL__24_BufferATR_High;
+#endif
+#ifndef LAB_CONST__24_SL_ATR_Normal
+input double _24_SL_ATR_Normal = 2.0; // [P12410] NORMAL Initial SL ATR
+#endif
+#ifdef LAB_CONST__24_SL_ATR_Normal
+const double _24_SL_ATR_Normal = LAB_CONSTVAL__24_SL_ATR_Normal;
+#endif
+#ifndef LAB_CONST__24_SL_ATR_High
+input double _24_SL_ATR_High = 2.5; // [P12411] HIGH Initial SL ATR
+#endif
+#ifdef LAB_CONST__24_SL_ATR_High
+const double _24_SL_ATR_High = LAB_CONSTVAL__24_SL_ATR_High;
+#endif
+#ifndef LAB_CONST__24_FixedLot
+input double _24_FixedLot = 0.01; // [P12412] Research Fixed Lot
+#endif
+#ifdef LAB_CONST__24_FixedLot
+const double _24_FixedLot = LAB_CONSTVAL__24_FixedLot;
+#endif
+#ifndef LAB_CONST__24_SpreadSamples
+input int _24_SpreadSamples = 50; // [P12413] Positive Spread Samples
+#endif
+#ifdef LAB_CONST__24_SpreadSamples
+const int _24_SpreadSamples = LAB_CONSTVAL__24_SpreadSamples;
+#endif
+#ifndef LAB_CONST__24_SpreadMedianMult
+input double _24_SpreadMedianMult = 3.0; // [P12414] Spread Median Mult
+#endif
+#ifdef LAB_CONST__24_SpreadMedianMult
+const double _24_SpreadMedianMult = LAB_CONSTVAL__24_SpreadMedianMult;
+#endif
+#ifndef LAB_CONST__24_SpreadATRCap
+input double _24_SpreadATRCap = 0.10; // [P12415] Spread ATR Cap
+#endif
+#ifdef LAB_CONST__24_SpreadATRCap
+const double _24_SpreadATRCap = LAB_CONSTVAL__24_SpreadATRCap;
 #endif
 #endif
 

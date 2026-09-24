@@ -62,6 +62,9 @@
 #ifdef LAB_ENTRY_22
    #include "entries/Entry_WickDisplacement.mqh"
 #endif
+#ifdef LAB_ENTRY_24
+   #include "entries/Entry_AdaptiveDonchianFlip.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -288,6 +291,18 @@ int OnInit()
                   Persist_Key("exit_closeall"));
       return INIT_FAILED;
    }
+#ifdef LAB_ENTRY_24
+   if(!AdaptiveDonchianFlip_ConfigValid())
+      return INIT_FAILED;
+   Exec_Init();
+   if(!RiskControl_Init())
+      return INIT_FAILED;
+   if(!AdaptiveDonchianFlip_Init())
+      return INIT_FAILED;
+   Print("[CFG] FB-A01 owns signal, fixed-lot entry, initial SL, SuperTrend trail, and close/flat/reverse; generic Entry/Stack/Recovery/Hedge/Exit/Basket paths are HIDDEN_INACTIVE");
+   RuntimeIdentity_Init();
+   return INIT_SUCCEEDED;
+#else
 #ifdef LAB_ENTRY_21
    if(!DF03_B21ConfigValid()) return INIT_FAILED;
    Exec_Init();
@@ -458,11 +473,15 @@ int OnInit()
 #endif
    return INIT_SUCCEEDED;
 #endif // LAB_ENTRY_21
+#endif // LAB_ENTRY_24
 }
 
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+#ifdef LAB_ENTRY_24
+   AdaptiveDonchianFlip_Deinit();
+#else
 #ifdef LAB_ENTRY_21
    if(g_df03_ready) { g_df03_ready = false; DF03_AdapterDeinit(reason); }
 #else
@@ -481,6 +500,7 @@ void OnDeinit(const int reason)
    Regime_Deinit();
    Indi_Deinit();
 #endif // LAB_ENTRY_21
+#endif // LAB_ENTRY_24
 }
 
 //+------------------------------------------------------------------+
@@ -507,6 +527,15 @@ void Lab_OpenOrder(const int dir, const int level)
 void OnTick()
 {
    RuntimeIdentity_Update();  // binds the first observed entry to this attach epoch
+#ifdef LAB_ENTRY_24
+   if(RiskControl_CheckDD() || RiskControl_IsHalted())
+   {
+      AdaptiveDonchianFlip_SharedHalt();
+      return;
+   }
+   AdaptiveDonchianFlip_OnTick();
+   return;
+#else
 #ifdef LAB_ENTRY_21
    if(!g_df03_ready) return;
    if(RiskControl_CheckDD()) return;
@@ -612,6 +641,7 @@ void OnTick()
    if(!RiskControl_AllowNewOrder()) return;
    Lab_OpenOrder(dir, have);   // level = current count
 #endif // LAB_ENTRY_21
+#endif // LAB_ENTRY_24
 }
 //+------------------------------------------------------------------+
 
