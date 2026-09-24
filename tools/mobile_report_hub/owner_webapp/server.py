@@ -2,20 +2,51 @@
 from __future__ import annotations
 import argparse, hashlib, http.server, json, pathlib, socket, sys, threading, time, urllib.parse, urllib.request, webbrowser
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
-from model import Model, Refused, safe_bytes, digest
-APP_ID='EA_LAB_OWNER_WEBAPP_20260921'
+from model import Model, Refused, safe_bytes, digest, utcnow, LOADED_SOURCE_SHA256
+APP_ID='EA_LAB_OWNER_WEBAPP_CONVERGENCE_V1'
+SERVER_SOURCE_SHA256=digest(pathlib.Path(__file__).read_bytes())
+ASSETS=('owner_webapp.html','owner_webapp.css','truth.js','owner_webapp.js')
+
+def serialize(data):
+    return json.dumps(data,ensure_ascii=False,allow_nan=False).replace('<','\\u003c').replace('\u2028','\\u2028').replace('\u2029','\\u2029').encode('utf-8')
+
+def identity(config):
+    here=pathlib.Path(__file__).resolve().parent
+    if digest(safe_bytes(here/'model.py',here))!=LOADED_SOURCE_SHA256 or digest(safe_bytes(here/'server.py',here))!=SERVER_SOURCE_SHA256:
+        raise Refused('LOADED_SOURCE_CHANGED')
+    root=pathlib.Path(config['assets'])
+    hashes={name:digest(safe_bytes(root/name,root)) for name in ASSETS}
+    hashes.update({'model.py':LOADED_SOURCE_SHA256,'server.py':SERVER_SOURCE_SHA256})
+    return {'build_sha256':digest(serialize(hashes)), 'files':hashes,
+            'sources_sha256':digest(serialize({k:str(pathlib.Path(v).absolute()) for k,v in sorted(config.items())}))}
+
+def reusable(health, expected):
+    return isinstance(health,dict) and health.get('app')==APP_ID and health.get('status')=='OK' and health.get('read_only') is True and health.get('identity')==expected
 def render(config,data):
     root=pathlib.Path(config['assets']); html=safe_bytes(root/'owner_webapp.html',root).decode('utf-8')
-    css=safe_bytes(root/'owner_webapp.css',root).decode('utf-8'); js=safe_bytes(root/'owner_webapp.js',root).decode('utf-8')
-    payload=json.dumps(data,ensure_ascii=False,allow_nan=False).replace('<','\\u003c').replace('\u2028','\\u2028').replace('\u2029','\\u2029')
+    css=safe_bytes(root/'owner_webapp.css',root).decode('utf-8'); js=safe_bytes(root/'truth.js',root).decode('utf-8')+'\n'+safe_bytes(root/'owner_webapp.js',root).decode('utf-8')
+    payload=serialize(data).decode('utf-8')
     return html.replace('/* APP_CSS */',css).replace('/* APP_JS */',js).replace('null/* APP_DATA */',payload).encode('utf-8')
 class Application:
-    def __init__(self,config): self.config=config; self.lock=threading.Lock(); self.cache=None; self.cached_at=0
+    def __init__(self,config):
+        self.config=dict(config); self.lock=threading.Lock(); self.cache=None; self.cached_at=0
+        self.startup_identity=identity(self.config); self.started_at=utcnow()
+    def check_identity(self):
+        if identity(self.config)!=self.startup_identity: raise Refused('STARTUP_IDENTITY_CHANGED')
+    def health(self):
+        self.check_identity()
+        return {'app':APP_ID,'read_only':True,'status':'OK','identity':self.startup_identity,'started_at':self.started_at}
     def snapshot(self, force=False):
         with self.lock:
+            self.check_identity()
+            hit=not force and self.cache is not None and time.monotonic()-self.cached_at<30
             if force or self.cache is None or time.monotonic()-self.cached_at>=30:
                 fresh=Model(self.config).snapshot(); self.cache=fresh; self.cached_at=time.monotonic()
-            return self.cache
+            return {**self.cache,'server_identity':self.startup_identity,'transport':{'serialized_at':utcnow(),'cache_hit':hit,'cache_age_seconds':time.monotonic()-self.cached_at}}
+    def page(self):
+        data=render(self.config,self.snapshot())
+        self.check_identity()
+        return data
     def asset(self,key):
         if len(key)!=64 or any(c not in '0123456789abcdef' for c in key): raise Refused('ASSET_ID')
         for ea in self.snapshot()['research']:
@@ -43,14 +74,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         path=urllib.parse.urlsplit(self.path).path
         try:
             if path in ('/','/index.html'):
-                data=render(self.app.config,self.app.snapshot())
+                data=self.app.page()
                 return self._send(data,'text/html; charset=utf-8')
             if path=='/api/snapshot':
                 query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
-                data=json.dumps(self.app.snapshot(force=query.get('refresh')==['1']),ensure_ascii=False,allow_nan=False).encode('utf-8')
+                data=serialize(self.app.snapshot(force=query.get('refresh')==['1']))
                 return self._send(data)
             if path=='/health':
-                data=json.dumps({'app':APP_ID,'read_only':True,'status':'OK'}).encode()
+                data=serialize(self.app.health())
                 return self._send(data)
             if path=='/favicon.ico':
                 return self._send(b'', 'image/x-icon', 204)
@@ -120,7 +151,7 @@ def main():
         if probe.connect_ex(('127.0.0.1',args.port))==0:
             try:
                 with urllib.request.urlopen(f'http://127.0.0.1:{args.port}/health',timeout=2) as r:
-                    if json.load(r).get('app')==APP_ID:
+                    if reusable(json.load(r),app.startup_identity):
                         if not args.no_open: webbrowser.open(f'http://127.0.0.1:{args.port}/')
                         print('REUSED '+APP_ID); return
             except Exception: pass

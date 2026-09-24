@@ -211,7 +211,7 @@ const server = http.createServer((req,res) => {
     await swPage.waitForFunction(()=>document.querySelectorAll('.native-graph img').length===2);
     assert.ok(graphRequests>=2,'Native evidence fetched despite poisoned cache');
     const names=await swPage.evaluate(()=>caches.keys());
-    assert.ok(names.includes('ea-lab-report-hub-v3.4-owner-report'));
+    assert.ok(names.includes('ea-lab-report-hub-v3.9-second-brain-reader-repair1'));
     results.push('Actual service worker new generation + poisoned old native-cache bypass PASS');
     await swContext.close();
     fs.writeFileSync(path.join(evidence,'browser-native-results.json'),JSON.stringify({status:'PASS',results},null,2));

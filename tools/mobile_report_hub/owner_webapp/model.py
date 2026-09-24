@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess
 from html.parser import HTMLParser
 UTC = dt.timezone.utc
+LOADED_SOURCE_SHA256 = hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest()
 class Refused(ValueError):
     pass
 def utcnow():
@@ -21,15 +22,44 @@ def number(value):
     except (ValueError, TypeError): return None
     return n if math.isfinite(n) else None
 def stamp(value):
+    if not isinstance(value,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})',value): return None
     try:
-        t = dt.datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        if value[-1]!='Z' and (int(value[-5:-3])>23 or int(value[-2:])>59): return None
+        t = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
         return t if t.tzinfo else None
     except (TypeError, ValueError): return None
 def age_state(value, hours=26):
     t = stamp(value)
     if t is None: return 'UNKNOWN'
     age = (dt.datetime.now(UTC)-t).total_seconds()
-    return 'FUTURE' if age < -300 else 'STALE' if age > hours*3600 else 'CURRENT'
+    return 'FUTURE' if age < 0 else 'STALE' if age > hours*3600 else 'CURRENT'
+
+def projection_view(value):
+    """Consume build_index.safe_projection's envelope, preserving availability.
+
+    Its producer has no version/confidence/process/acceptance fields. Local
+    generated_at is legal producer data but cannot establish UTC freshness.
+    """
+    state=value.get('status') if isinstance(value,dict) else 'MISSING' if value is None else 'INVALID'
+    empty={'status':state if state in ('MISSING','INVALID') else 'INVALID','findings':[], 'accounts':[], 'freshness':'UNKNOWN','generated_at':None}
+    if state!='AVAILABLE': return empty
+    if value.get('entity')!='SafeProjection' or value.get('source_kind')!='SAFE_PROJECTION_DERIVED' or value.get('authority')!='READ_ONLY_NO_RUNTIME_AUTHORITY': return empty
+    if not isinstance(value.get('build_id'),str) or not re.fullmatch('[0-9a-f]{16}',value['build_id']): return empty
+    when=value.get('generated_at')
+    try:
+        if not isinstance(when,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z?',when): return empty
+        dt.datetime.fromisoformat(when.replace('Z','+00:00'))
+    except ValueError: return empty
+    if not isinstance(value.get('accounts'),list) or not isinstance(value.get('findings'),list): return empty
+    for r in value['accounts']:
+        if not isinstance(r,dict) or set(r)!={'account_masked','sensor_state','dd_pct_band'}: return empty
+        if not isinstance(r['account_masked'],str) or not re.fullmatch(r'\*{3}[0-9]{3}',r['account_masked']): return empty
+        if r['sensor_state'] not in ('FRESH','STALE','BLIND','MISSING','UNKNOWN','CONFLICT') or r['dd_pct_band'] not in ('OK','WATCH','BREACH','UNKNOWN'): return empty
+    for r in value['findings']:
+        if not isinstance(r,dict) or set(r)!={'public_id','severity','state'}: return empty
+        if not isinstance(r['public_id'],str) or not re.fullmatch('FP-[0-9a-f]{10}',r['public_id']): return empty
+        if r['severity'] not in ('INFO','WARN','CRITICAL','REAL_MONEY') or not isinstance(r['state'],str) or not re.fullmatch('[A-Z][A-Z0-9_]{0,31}',r['state']): return empty
+    return {k:value[k] for k in ('status','entity','build_id','generated_at','accounts','findings')} | {'freshness':age_state(when)}
 def safe_bytes(path, root, limit=6_000_000):
     p=pathlib.Path(path).absolute(); root=pathlib.Path(root).absolute()
     if not p.is_relative_to(root): raise Refused('PATH_OUTSIDE_SOURCE')
@@ -91,11 +121,12 @@ class Model:
         root=pathlib.Path(self.c['snapshots']); files=sorted(root.glob('EA_LAB_snapshot_*.csv'))
         if len(files)>1000: raise Refused('SNAPSHOT_SET_TOO_LARGE')
         metadata={r['account']:r for r in csv_rows(self.blob('portfolio/ACCOUNTS.csv'))}
-        deployments=csv_rows(self.blob('portfolio/DEPLOYMENTS.csv')); grouped={}; conflicts=set(); source_count=0
+        deployments=csv_rows(self.blob('portfolio/DEPLOYMENTS.csv')); grouped={}; conflicts=set(); source_count=0; gaps=[]
         for path in files:
+            login=None
             try:
                 match=re.fullmatch(r'EA_LAB_snapshot_(\d+)(?:_\d{8})?\.csv',path.name)
-                if not match: continue
+                if not match: raise Refused('SNAPSHOT_FILENAME')
                 login=match.group(1); raw=safe_bytes(path,root,1_000_000); rows=csv_rows(raw)
                 acc=[r for r in rows if r.get('row_type')=='ACCOUNT']
                 if len(acc)!=1 or acc[0].get('login')!=login: raise Refused('SNAPSHOT_IDENTITY')
@@ -115,14 +146,18 @@ class Model:
                 if previous and {k:v for k,v in previous.items() if k!='source_hash'}!={k:v for k,v in point.items() if k!='source_hash'}: conflicts.add((key,when))
                 else: book[when]=point
                 source_count+=1
-            except (OSError,ValueError,KeyError,UnicodeError) as e: self.issue('account_snapshot',e)
+            except (OSError,ValueError,KeyError,UnicodeError) as e:
+                self.issue('account_snapshot',e)
+                gaps.append({'account_id':'acct-'+digest(login.encode())[:12] if login else None, 'state':'INVALID', 'balance':None,'equity':None})
         result=[]
         for (login,currency),points in grouped.items():
-            kept=[p for t,p in sorted(points.items()) if ((login,currency),t) not in conflicts]
+            kept=[p if ((login,currency),t) not in conflicts else {'time':t,'balance':None,'equity':None,'eas':[],'state':'INVALID'} for t,p in sorted(points.items())]
             if not kept: continue
             latest=kept[-1]; meta=metadata.get(login,{})
+            # An unplaceable malformed sample might be newer than the last good one.
+            if any(g['account_id'] in (None,'acct-'+digest(login.encode())[:12]) for g in gaps): latest={'balance':None,'equity':None,'eas':[],'state':'INVALID'}
             result.append({'id':'acct-'+digest(login.encode())[:12],'label':'***'+login[-3:],'currency':currency,'environment':clean(meta.get('environment','UNKNOWN'),40),'points':[{k:v for k,v in p.items() if k!='eas'} for p in kept],'latest':latest,'sample_count':len(kept),'clock':'BROKER_SERVER_TIME_TZ_UNQUALIFIED','freshness':'UNKNOWN','identity':'ACCOUNT_SNAPSHOT_NOT_STRATEGY_ATTESTATION'})
-        return {'rows':sorted(result,key=lambda r:r['label']),'files_read':source_count,'conflicting_samples':len(conflicts),'basis':'Observed samples only; line joins samples, not continuous equity. No FX conversion or deposit-adjusted return.'}
+        return {'status':'INVALID' if gaps or conflicts else 'AVAILABLE' if source_count else 'MISSING','rows':sorted(result,key=lambda r:r['label']),'gaps':gaps,'files_read':source_count,'conflicting_samples':len(conflicts),'basis':'Discrete observed samples only; no interpolation across missing or invalid samples. No FX conversion or deposit-adjusted return.'}
     def lane_status(self,lane_id,expected_job_id):
         script=pathlib.Path(self.c.get('lane_status',''))
         if not script.is_file() or script.is_symlink(): raise Refused('LANE_STATUS_UNAVAILABLE')
@@ -200,7 +235,7 @@ class Model:
                 row['process_state']='UNKNOWN'; row['process_health']='UNAVAILABLE'
                 if row['state']=='RUNNING': row['display_state']='LIVENESS_UNAVAILABLE'
                 self.issue('lane_status:'+row['id'],e)
-        return {'rows':result,'totals':totals,'observed_at':utcnow(),'process_probed_count':len(candidates),
+        return {'status':'INVALID' if any(e['source']=='lane_observation' for e in self.errors) else 'AVAILABLE' if root.is_dir() else 'MISSING','rows':result,'totals':totals,'observed_at':utcnow(),'process_probed_count':len(candidates),
                 'basis':'Registry declarations + existing lease/result bytes. Fresh leased lanes additionally consume accepted chat-stall lane_status process identity; heartbeat is liveness evidence, not work-progress proof.'}
     def knowledge(self):
         root=pathlib.Path(self.c['knowledge']); manifest=read_json(root/'MANIFEST_SHA256.json',root)
@@ -256,13 +291,13 @@ class Model:
                 'rate_flag':clean(r.get('rate_flag'),60),'expectation_status_reason':clean(r.get('expectation_status_reason'),400),
                 'floating_pl':number(f.get('floating_pl')),'open_lots':number(f.get('open_lots')),'open_positions':number(f.get('pos_count')),
                 'oldest_open_hours':number(f.get('oldest_age_h'))})
-        src=[{'name':clean(s.get('name'),80),'fresh':bool(s.get('fresh')),'age_hours':number(s.get('age_hours'))} for s in meta.get('sources',[])]
+        src=[{'name':clean(s.get('name'),80),'fresh':s.get('fresh') if isinstance(s.get('fresh'),bool) else None,'age_hours':number(s.get('age_hours'))} for s in meta.get('sources',[])]
         rid=x.get('runtime_identity_summary',{})
         raw_summary=x.get('summary',{})
         summary={k:v for k,v in raw_summary.items() if isinstance(v,(int,float,bool,str)) and k not in ('expectation_baskets',)}
         return {'generated_at':generated,'freshness':age_state(generated,30),'git_head':meta.get('git_head'),'binding':binding,
             'execution_context':clean(meta.get('execution_context'),80),'rows':rows,'summary':summary,'source_health':src,
-            'reconciliation_clear':bool(x.get('verdict',{}).get('reconciliation_clear',False)),
+            'reconciliation_clear':x.get('verdict',{}).get('reconciliation_clear') if isinstance(x.get('verdict',{}).get('reconciliation_clear'),bool) else None,
             'verdict_reasons':[{'code':clean(v.get('code'),80),'detail':clean(v.get('detail'),180)} for v in x.get('verdict',{}).get('reasons',[])],
             'runtime_identity':{'state':clean(rid.get('state'),40),'forward_test_state':clean(rid.get('forward_test_state'),80),
                 'reasons':[{'code':clean(v.get('code'),80),'detail':clean(v.get('detail'),180)} for v in rid.get('reasons',[])]},
@@ -299,7 +334,7 @@ class Model:
                 obj=dict(zip(perf_header,vals))
                 rows.append({'flag_class':clean(row.get('class'),40),'operational':clean(obj.get('Operational'),60),
                     'verification':clean(obj.get('Verification'),60),'ea':clean(obj.get('EA'),220),'magic':clean(obj.get('Magic'),40),
-                    'symbol':clean(obj.get('Symbol'),50),'trades':int(numtext(obj.get('Trades')) or 0),
+                    'symbol':clean(obj.get('Symbol'),50),'trades':number(obj.get('Trades')),
                     'net_pl':numtext(obj.get('Net P&L')),'profit_factor':numtext(obj.get('PF')),
                     'max_dd_pct':numtext(obj.get('Max DD%')),'kill_dd_pct':numtext(obj.get('Kill DD%')),
                     'days_idle':numtext(obj.get('Days idle')),'detail':clean(obj.get('Detail'),500)})
@@ -308,7 +343,7 @@ class Model:
                 'currency':clean(currencies.get(account,'UNKNOWN'),10),'header':head,'window_start':clean(hm.group(1).strip(),30) if hm else 'UNKNOWN',
                 'account_net_pl':numtext(hm.group(2)) if hm else None,'account_trades':int(hm.group(3)) if hm else None,'rows':rows})
         return {'accounts':accounts,'source_hash':digest(raw),'source_age_hours':number(source.get('age_hours')),
-            'source_fresh':bool(source.get('fresh')),'source_mtime':clean(source.get('mtime'),40),
+            'source_fresh':source.get('fresh') if isinstance(source.get('fresh'),bool) else None,'source_mtime':clean(source.get('mtime'),40),
             'producer_git_head':control.get('meta',{}).get('git_head'),'binding':'MATCH' if control.get('meta',{}).get('git_head')==self.sha else 'DIFFERENT_REPO_HEAD',
             'basis':'Existing scripts/live_dashboard.ps1 output. MT5 closes use entry OUT/INOUT/OUT_BY; net P/L includes profit+swap+commission; PF and DD preserve producer semantics.'}
 
@@ -331,8 +366,8 @@ class Model:
         eas=[]
         for ea in index['eas']:
             ev=ea.get('evidence',{}); eas.append({'id':clean(ea.get('id'),180),'name':clean(ea.get('display_name'),220),'family':clean(ea.get('family_id'),60),'status':clean(ea.get('status'),100),'strategy':clean(ea.get('strategy'),1000),'home':{k:clean(v,80) for k,v in ea.get('home',{}).items()},'evidence':ev,'native_graphs':ea.get('native_graphs',{}),'verdict':clean(ea.get('verdict'),500),'links':ea.get('links',{}),'provenance':ea.get('provenance',[])})
-        account_data=self.section('account_history',self.accounts,{'rows':[],'files_read':0,'basis':'UNAVAILABLE'})
-        work_data=self.section('work',self.work,{'rows':[],'totals':{},'basis':'UNAVAILABLE'})
+        account_data=self.section('account_history',self.accounts,{'status':'INVALID','rows':[],'files_read':None,'basis':'UNAVAILABLE'})
+        work_data=self.section('work',self.work,{'status':'INVALID','rows':[],'totals':{},'basis':'UNAVAILABLE'})
         knowledge=self.section('knowledge',self.knowledge,{'documents':[],'health':{},'binding':'UNAVAILABLE'})
         news=self.section('news',self.news,{'events':[],'guard_effective':'UNKNOWN','freshness':'UNAVAILABLE'})
         macro=self.section('macro',self.macro,{'state':'UNAVAILABLE','barometers':[],'freshness':'UNAVAILABLE'})
@@ -340,11 +375,11 @@ class Model:
         live_performance=self.section('live_performance',self.live_performance,{'accounts':[],'source_fresh':False,'binding':'UNAVAILABLE','basis':'UNAVAILABLE'})
         news_policy=self.section('news_policy',self.news_policy,{'pre_news_min':None,'post_news_min':None,'effective_runtime':'UNKNOWN','coverage_state':'UNAVAILABLE'})
         templates=self.section('templates',self.templates,[])
-        safe=index.get('safe_projection',{}); findings=[]
+        safe=projection_view(index.get('safe_projection')); findings=[]
         for x in safe.get('findings',[]): findings.append({k:clean(x.get(k),80) for k in ['public_id','severity','state']})
         monitoring=index.get('monitoring',{}); import shutil
         disks=[]
         for drive in ['C:/','D:/']:
             if pathlib.Path(drive).exists():
                 v=shutil.disk_usage(drive); disks.append({'drive':drive[:2],'free_gb':round(v.free/1073741824,1),'total_gb':round(v.total/1073741824,1)})
-        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.2.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'live_performance':live_performance,'templates':templates,'research':eas,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA good/bad score is inferred. Live P/L/PF/DD preserve the existing dashboard producer semantics and source binding.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}
+        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.2.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'live_performance':live_performance,'templates':templates,'research':eas,'safe_projection':safe,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA good/bad score is inferred. Live P/L/PF/DD preserve the existing dashboard producer semantics and source binding.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}

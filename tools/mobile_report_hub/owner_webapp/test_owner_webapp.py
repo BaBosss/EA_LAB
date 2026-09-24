@@ -2,7 +2,154 @@ import json, os, pathlib, sys, tempfile, unittest
 from types import SimpleNamespace
 from unittest import mock
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
-from model import Model, Refused, _DashboardParser, clean, safe_bytes, digest, number, age_state, utcnow
+from model import Model, Refused, _DashboardParser, clean, safe_bytes, digest, number, age_state, utcnow, stamp, projection_view
+from server import Application, Handler, render, serialize, reusable, identity
+import datetime as dt
+import shutil
+
+HERE=pathlib.Path(__file__).resolve().parent
+sys.path.insert(0,str(HERE.parent))
+from build_index import safe_projection, unavailable_safe_projection, _SAFE_SENSOR_STATES, _SAFE_DD_BANDS, _SAFE_FINDING_SEVERITIES
+
+def model_fixture(root, mode='available'):
+    """Real file readers and Model.snapshot; only Git blob I/O uses fixture bytes.
+
+    No production registry, lane probe, MT5, hosting or runtime inputs are used.
+    """
+    config={k:str(root/k) for k in ('repo','monitor','snapshots','registry','leases','jobs','knowledge','runtime')}
+    for p in config.values(): pathlib.Path(p).mkdir(parents=True,exist_ok=True)
+    config['assets']=str(HERE); config['lane_status']=str(root/'absent.ps1')
+    if mode=='work_missing': pathlib.Path(config['registry']).rmdir()
+    if mode=='work_invalid': (root/'registry/bad.json').write_text('{',encoding='utf-8')
+    if mode.startswith('aging'):
+        (root/'registry/ct-aging.json').write_text(json.dumps({
+            'lane_id':'ct-aging','state':'RUNNING','updated_at':'2026-09-24T00:00:00Z',
+            'worker':'fixture','owner_chat':'fixture','dependencies':[]}),encoding='utf-8')
+    when={'stale':'2026-09-20T00:00:00Z','future':'2026-09-25T00:00:00Z',
+          'unqualified':'2026-09-24T00:00:00','malformed_time':'2026-02-30T00:00:00Z'}.get(mode,'2026-09-24T00:00:00Z')
+    raw={'entity':'SafeProjection','build_id':'a'*16,'generated_at':when,'accounts':[],
+         'findings':[{'public_id':'FP-'+'a'*10,'severity':'WARN','state':'OPEN'}]}
+    source=root/'projection.json'; source.write_text(json.dumps(raw),encoding='utf-8')
+    projection=safe_projection(source,'2026-09-24T00:00:00Z')
+    if mode=='missing': projection=unavailable_safe_projection()
+    if mode=='invalid': projection=unavailable_safe_projection('INVALID_INPUT')
+    if mode=='empty': projection['findings']=[]
+    index={'schema_version':1,'project':{'canonical_sha':'a'*40},'eas':[], 'safe_projection':projection,
+           'monitoring':{'status':'CURRENT','generated_at_utc':when,'sources':[]}}
+    (root/'monitor/report_index.json').write_text(json.dumps(index),encoding='utf-8')
+    header='row_type,login,server_time,balance,equity,currency,margin\n'
+    if mode!='missing':
+        for day,value in ((22,'100'),(23,'BAD' if mode in ('invalid','malformed_account','gaps') else '101'),(24,'102')):
+            if mode=='malformed_account' and day!=23: continue
+            (root/f'snapshots/EA_LAB_snapshot_123456789_{20260900+day}.csv').write_text(header+f'ACCOUNT,123456789,2026.09.{day} 00:00:00,{value},{value},USD,\n',encoding='utf-8')
+    if mode=='conflict':
+        (root/'snapshots/EA_LAB_snapshot_123456789.csv').write_text(header+'ACCOUNT,123456789,2026.09.24 00:00:00,999,999,USD,\n',encoding='utf-8')
+    blobs={'PROJECT_STATE.md':b'Global state: `DEGRADED_MONITORING`',
+           'portfolio/ACCOUNTS.csv':b'account,currency,environment\n123456789,USD,DEMO\n',
+           'portfolio/DEPLOYMENTS.csv':b'account,magic,ea_name,status\n',
+           'ea_projects/(Boss)_NewsGuard/GUARDCONFIG_2026-07-17.md':b''}
+    def git(_self,*args):
+        if args[0]=='rev-parse': return b'a'*40
+        if args[0]=='ls-tree': return b''
+        if args[0]=='show': return blobs[args[1].split(':',1)[1]]
+        raise AssertionError(args)
+    with mock.patch.object(Model,'git',git):
+        app=Application(config)
+        first=app.snapshot(); cached=app.snapshot()
+        page=render(config,cached).decode('utf-8')
+    return {'snapshot':json.loads(serialize(cached)), 'html':page,'health':app.health(), 'config':config,'first':first}
+
+def browser_fixtures():
+    result={}
+    for mode in ('available','empty','missing','invalid','stale','future','unqualified','malformed_time','malformed_account','gaps','conflict','work_missing','work_invalid','aging','aging_offline'):
+        with tempfile.TemporaryDirectory() as td:
+            fixture=model_fixture(pathlib.Path(td),mode)
+            result[mode]={k:fixture[k] for k in ('snapshot','html','health')}
+    return result
+
+class ConvergenceTests(unittest.TestCase):
+    def test_strict_z_offsets_and_calendar(self):
+        self.assertEqual(stamp('2026-09-24T07:00:00+07:00'),stamp('2026-09-24T00:00:00Z'))
+        for value in (None,[],{},True,'','2026-09-24','2026-09-24T00:00:00','2026-02-30T00:00:00Z','2026-09-24T24:00:00Z','2026-09-24T00:00:00+07:99','2026-09-24T00:00:00+24:00','2026-09-24X00:00:00Z'):
+            with self.subTest(value=value): self.assertIsNone(stamp(value)); self.assertEqual(age_state(value),'UNKNOWN')
+    def test_future_is_never_current(self):
+        self.assertEqual(age_state((dt.datetime.now(dt.timezone.utc)+dt.timedelta(seconds=20)).isoformat()),'FUTURE')
+    def test_producer_enum_contract(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=pathlib.Path(td)/'projection.json'
+            for sensor in _SAFE_SENSOR_STATES:
+                for band in _SAFE_DD_BANDS:
+                    for severity in _SAFE_FINDING_SEVERITIES:
+                        raw={'entity':'SafeProjection','build_id':'a'*16,'generated_at':'2026-09-24T00:00:00Z',
+                             'accounts':[{'account_masked':'***789','sensor_state':sensor,'dd_pct_band':band}],
+                             'findings':[{'public_id':'FP-'+'a'*10,'severity':severity,'state':'OPEN'}]}
+                        p.write_text(json.dumps(raw),encoding='utf-8')
+                        produced=safe_projection(p)
+                        self.assertEqual(produced['status'],'AVAILABLE')
+                        self.assertEqual(projection_view(produced)['accounts'],raw['accounts'])
+                        self.assertEqual(projection_view(produced)['findings'],raw['findings'])
+    def test_projection_missing_invalid_and_forged(self):
+        for value,expected in ((None,'MISSING'),({},'INVALID'),([], 'INVALID'),(unavailable_safe_projection(),'MISSING'),(unavailable_safe_projection('bad'),'INVALID')):
+            self.assertEqual(projection_view(value)['status'],expected)
+        value=unavailable_safe_projection(); value.update(status='AVAILABLE',findings=[{'public_id':'fake'}])
+        self.assertEqual(projection_view(value)['status'],'INVALID')
+    def test_projection_malformed_enum_types_are_invalid(self):
+        base={'status':'AVAILABLE','entity':'SafeProjection','source_kind':'SAFE_PROJECTION_DERIVED',
+              'authority':'READ_ONLY_NO_RUNTIME_AUTHORITY','build_id':'a'*16,'generated_at':'2026-09-24T00:00:00Z',
+              'accounts':[{'account_masked':'***789','sensor_state':[],'dd_pct_band':'OK'}],'findings':[]}
+        self.assertEqual(projection_view(base)['status'],'INVALID')
+        base['accounts']=[];base['findings']=[{'public_id':'FP-'+'a'*10,'severity':{},'state':'OPEN'}]
+        self.assertEqual(projection_view(base)['status'],'INVALID')
+    def test_malformed_only_and_missing_accounts(self):
+        for mode,status in (('malformed_account','INVALID'),('missing','MISSING')):
+            with tempfile.TemporaryDirectory() as td:
+                accounts=model_fixture(pathlib.Path(td),mode)['snapshot']['accounts']
+                self.assertEqual(accounts['status'],status); self.assertEqual(accounts['rows'],[])
+                if status=='INVALID': self.assertEqual(len(accounts['gaps']),1)
+    def test_gaps_and_conflicts_never_substitute_previous_balance(self):
+        for mode in ('gaps','conflict'):
+            with tempfile.TemporaryDirectory() as td:
+                accounts=model_fixture(pathlib.Path(td),mode)['snapshot']['accounts']
+                self.assertEqual(accounts['status'],'INVALID')
+                self.assertIsNone(accounts['rows'][0]['latest']['balance'])
+    def test_model_serialization_truth_order_and_cache_separation(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=model_fixture(pathlib.Path(td),'stale')
+            self.assertTrue(f['snapshot']['transport']['cache_hit'])
+            self.assertFalse(f['first']['transport']['cache_hit'])
+            self.assertEqual(f['snapshot']['monitoring']['generated_at_utc'],'2026-09-20T00:00:00Z')
+            self.assertLess(f['html'].index('root.EALabTruth=api'),f['html'].index('const truth=window.EALabTruth'))
+            self.assertNotIn('123456789',f['html'])
+    def test_serialization_escape_and_nonfinite_rejection(self):
+        self.assertNotIn(b'</script>',serialize({'x':'</script>\u2028'}))
+        with self.assertRaises(ValueError): serialize({'x':float('nan')})
+    def test_health_identity_rejects_legacy_version_and_wrong_source(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=model_fixture(pathlib.Path(td)); expected=f['health']['identity']
+            self.assertTrue(reusable(f['health'],expected))
+            self.assertFalse(reusable({'app':f['health']['app'],'status':'OK','read_only':True},expected))
+            config={**f['config'],'monitor':str(pathlib.Path(td)/'other')}
+            self.assertFalse(reusable(f['health'],identity(config)))
+            self.assertEqual(set(expected['files']),{'model.py','server.py','truth.js','owner_webapp.js','owner_webapp.html','owner_webapp.css'})
+    def test_health_route_serializes_actual_startup_identity(self):
+        app=Application({'assets':str(HERE)})
+        handler=Handler.__new__(Handler); handler.app=app; handler.path='/health'; handler._send=mock.Mock()
+        handler.do_GET()
+        got=json.loads(handler._send.call_args.args[0])
+        self.assertTrue(reusable(got,app.startup_identity))
+        self.assertEqual(got['started_at'],app.started_at)
+    def test_changed_loaded_source_is_refused(self):
+        with mock.patch('server.SERVER_SOURCE_SHA256','0'*64):
+            with self.assertRaisesRegex(Refused,'LOADED_SOURCE_CHANGED'): Application({'assets':str(HERE)})
+    def test_startup_asset_change_refused_not_relabelled(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=pathlib.Path(td); assets=root/'assets'; assets.mkdir()
+            for name in ('owner_webapp.html','owner_webapp.css','owner_webapp.js','truth.js'): shutil.copyfile(HERE/name,assets/name)
+            config={'assets':str(assets)}; app=Application(config); before=app.startup_identity
+            (assets/'truth.js').write_text('// changed',encoding='utf-8')
+            self.assertEqual(before,app.startup_identity)
+            with self.assertRaisesRegex(Refused,'STARTUP_IDENTITY_CHANGED'): app.health()
+            self.assertFalse(reusable({'app':'EA_LAB_OWNER_WEBAPP_CONVERGENCE_V1','status':'OK','read_only':True,'identity':before},identity(config)))
 class OwnerWebAppUnitTests(unittest.TestCase):
     def test_clean_redacts_local_paths_and_private_numbers(self):
         out=clean(r"see D:\secret\thing.txt account 1234567890")
@@ -157,4 +304,6 @@ class OwnerWebAppUnitTests(unittest.TestCase):
                 out=model.work()
                 self.assertEqual(out['rows'],[])
                 self.assertIn({'source':'lane_observation','reason':expected},model.errors)
-if __name__=="__main__": unittest.main()
+if __name__=="__main__":
+    if '--browser-fixtures' in sys.argv: print(json.dumps(browser_fixtures(),ensure_ascii=True))
+    else: unittest.main()
