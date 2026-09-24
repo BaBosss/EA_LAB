@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 262.
+Rows in source registry: 273.
 
 ## Override pairs
 
@@ -363,6 +363,22 @@ reader that it can be overridden - the reader would only discover this by readin
 | `FirstLotMode` | always - decides first-order sizing. Build 16 EXCEPTED: Kangaroo owns its lot law (_16_BaseLot) and LabCore short-circuits before MM_FirstLot, so every mode is inert there (MM_ConfigValid prints an INIT WARN) | _41_FixedLot(41); _42_RiskPct + SLMode(42 - SLMode must yield a distance; the combination is validated at OnInit, not at order time); _43_LotPerAnchor + _43_BalanceAnchor(43); _4_DdAdaptiveOn+tiers(multiplies the result of ALL three modes); RC_MaxLot(final clamp) | Switches level-0 lot sizing between a fixed lot, risk%-of-balance sized off the SL distance, and balance-anchored linear scaling. Since MM-SAFETY-001 (2026-07-24) an unusable config FAILS the attach (INIT_FAILED) and a runtime data failure SKIPS the order - it no longer degrades to _41_FixedLot silently. |
 | `LotProg` | have>0 (stacked/added orders only - level-0 lot is untouched by this) | _51_ProgFactor(51,54); _52_ProgMult(52, clamped by RC_RecMultMax); _53_PlusLot(53); _55_LogPowerFactor+_55_UseLnNotLog10(55); _56_FibMaxStep(56) | Chooses how lot size grows across stacked orders: flat, linear, multiplier(martingale, cage-clamped), additive-plus, log, log-power, or capped Fibonacci. |
 
+### physical grid cycle
+
+| parameter | active when | coupled with | what it does |
+|---|---|---|---|
+| `_25_ATRPeriod` | build 25 only | _25_GridATRMult; _25_SpreadATRCap | Closed-bar ATR period for spacing and current spread cap. |
+| `_25_BasketTargetBalancePct` | build 25 only |  | Frozen cycle-start balance percentage; owned profit plus swap trigger. |
+| `_25_DonchianBars` | build 25 only |  | Channel uses High/Low shifts 2 through N+1; decision Close shift 1. |
+| `_25_FixedLot` | build 25 only |  | One broker-normalized flat lot for every rung in the cycle. |
+| `_25_GridATRMult` | build 25 only | _25_GridPct; _25_ATRPeriod | ATR component of frozen cycle spacing. |
+| `_25_GridPct` | build 25 only | _25_GridATRMult | Percent component of frozen anchor spacing. |
+| `_25_MaxRungsPerSide` | build 25 only | _25_FixedLot | Hard physical zone clamp; at most 16 bitmask slots per side. |
+| `_25_OpenCooldownSec` | build 25 only |  | Minimum seconds between successful new physical rung opens. |
+| `_25_SpreadATRCap` | build 25 only | _25_ATRPeriod; _25_SpreadMedianMult | Request spread absolute ceiling as fraction of closed-bar ATR. |
+| `_25_SpreadMedianMult` | build 25 only | _25_SpreadSamples; _25_SpreadATRCap | Request spread ceiling relative to the rolling median. |
+| `_25_SpreadSamples` | build 25 only | _25_SpreadMedianMult | Positive-spread rolling sample window; full warmup required. |
+
 ### portfolio safety gate
 
 | parameter | active when | coupled with | what it does |
@@ -445,6 +461,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 262 (must equal the source registry's 262 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 273 (must equal the source registry's 273 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
 Override pairs found: 11.

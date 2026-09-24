@@ -65,6 +65,9 @@
 #ifdef LAB_ENTRY_24
    #include "entries/Entry_AdaptiveDonchianFlip.mqh"
 #endif
+#ifdef LAB_ENTRY_25
+   #include "entries/Entry_PersistentAdaptiveGrid.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -291,6 +294,15 @@ int OnInit()
                   Persist_Key("exit_closeall"));
       return INIT_FAILED;
    }
+#ifdef LAB_ENTRY_25
+   if(!PersistentAdaptiveGrid_ConfigValid()) return INIT_FAILED;
+   Exec_Init();
+   if(!RiskControl_Init()) return INIT_FAILED;
+   if(!PersistentAdaptiveGrid_Init()) return INIT_FAILED;
+   Print("[CFG] FB-G01 owns physical fixed-lot grid, persistent cycle, basket target and reset; generic Stack/Recovery/Hedge/Exit/Basket paths are HIDDEN_INACTIVE");
+   RuntimeIdentity_Init();
+   return INIT_SUCCEEDED;
+#else
 #ifdef LAB_ENTRY_24
    if(!AdaptiveDonchianFlip_ConfigValid())
       return INIT_FAILED;
@@ -474,11 +486,15 @@ int OnInit()
    return INIT_SUCCEEDED;
 #endif // LAB_ENTRY_21
 #endif // LAB_ENTRY_24
+#endif // LAB_ENTRY_25
 }
 
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+#ifdef LAB_ENTRY_25
+   PersistentAdaptiveGrid_Deinit();
+#else
 #ifdef LAB_ENTRY_24
    AdaptiveDonchianFlip_Deinit();
 #else
@@ -501,6 +517,7 @@ void OnDeinit(const int reason)
    Indi_Deinit();
 #endif // LAB_ENTRY_21
 #endif // LAB_ENTRY_24
+#endif // LAB_ENTRY_25
 }
 
 //+------------------------------------------------------------------+
@@ -527,6 +544,15 @@ void Lab_OpenOrder(const int dir, const int level)
 void OnTick()
 {
    RuntimeIdentity_Update();  // binds the first observed entry to this attach epoch
+#ifdef LAB_ENTRY_25
+   if(RiskControl_CheckDD() || RiskControl_IsHalted())
+   {
+      PersistentAdaptiveGrid_SharedHalt();
+      return;
+   }
+   PersistentAdaptiveGrid_OnTick();
+   return;
+#else
 #ifdef LAB_ENTRY_24
    if(RiskControl_CheckDD() || RiskControl_IsHalted())
    {
@@ -642,6 +668,7 @@ void OnTick()
    Lab_OpenOrder(dir, have);   // level = current count
 #endif // LAB_ENTRY_21
 #endif // LAB_ENTRY_24
+#endif // LAB_ENTRY_25
 }
 //+------------------------------------------------------------------+
 

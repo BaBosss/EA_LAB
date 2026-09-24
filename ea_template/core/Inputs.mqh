@@ -22,7 +22,9 @@
 #ifndef LAB_ENTRY_21
 #ifndef LAB_ENTRY_22
 #ifndef LAB_ENTRY_24
+#ifndef LAB_ENTRY_25
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -399,6 +401,10 @@ const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
 // FB-A01 owns its complete single-position lifecycle. Generic stack controls
 // are compile-time hidden and cannot be re-enabled by a .set.
 const ENUM_STACK_MODE StackMode = STACK_SINGLE;
+const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;
+#endif
+#ifdef LAB_ENTRY_25
+const ENUM_STACK_MODE StackMode = STACK_SINGLE; // HIDDEN_INACTIVE: dedicated physical cycle owner
 const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;
 #endif
 #ifndef LAB_CONST__9_StepUseATR
@@ -2104,6 +2110,76 @@ input double _24_SpreadATRCap = 0.10; // [P12415] Spread ATR Cap
 #endif
 #ifdef LAB_CONST__24_SpreadATRCap
 const double _24_SpreadATRCap = LAB_CONSTVAL__24_SpreadATRCap;
+#endif
+#endif
+
+#ifdef LAB_ENTRY_25
+input group "=== E025 PersistentAdaptiveGrid | FB-G01 research V0 ==="
+#ifndef LAB_CONST__25_GridPct
+input double _25_GridPct = 0.25; // [P12500] Grid Percent
+#endif
+#ifdef LAB_CONST__25_GridPct
+const double _25_GridPct = LAB_CONSTVAL__25_GridPct;
+#endif
+#ifndef LAB_CONST__25_GridATRMult
+input double _25_GridATRMult = 0.75; // [P12501] Grid ATR Mult
+#endif
+#ifdef LAB_CONST__25_GridATRMult
+const double _25_GridATRMult = LAB_CONSTVAL__25_GridATRMult;
+#endif
+#ifndef LAB_CONST__25_ATRPeriod
+input int _25_ATRPeriod = 14; // [P12502] ATR Period
+#endif
+#ifdef LAB_CONST__25_ATRPeriod
+const int _25_ATRPeriod = LAB_CONSTVAL__25_ATRPeriod;
+#endif
+#ifndef LAB_CONST__25_DonchianBars
+input int _25_DonchianBars = 20; // [P12503] Donchian Bars
+#endif
+#ifdef LAB_CONST__25_DonchianBars
+const int _25_DonchianBars = LAB_CONSTVAL__25_DonchianBars;
+#endif
+#ifndef LAB_CONST__25_MaxRungsPerSide
+input int _25_MaxRungsPerSide = 5; // [P12504] Max Rungs Per Side
+#endif
+#ifdef LAB_CONST__25_MaxRungsPerSide
+const int _25_MaxRungsPerSide = LAB_CONSTVAL__25_MaxRungsPerSide;
+#endif
+#ifndef LAB_CONST__25_FixedLot
+input double _25_FixedLot = 0.01; // [P12505] Fixed Rung Lot
+#endif
+#ifdef LAB_CONST__25_FixedLot
+const double _25_FixedLot = LAB_CONSTVAL__25_FixedLot;
+#endif
+#ifndef LAB_CONST__25_BasketTargetBalancePct
+input double _25_BasketTargetBalancePct = 0.25; // [P12506] Basket Target Balance Percent
+#endif
+#ifdef LAB_CONST__25_BasketTargetBalancePct
+const double _25_BasketTargetBalancePct = LAB_CONSTVAL__25_BasketTargetBalancePct;
+#endif
+#ifndef LAB_CONST__25_SpreadSamples
+input int _25_SpreadSamples = 50; // [P12507] Spread Samples
+#endif
+#ifdef LAB_CONST__25_SpreadSamples
+const int _25_SpreadSamples = LAB_CONSTVAL__25_SpreadSamples;
+#endif
+#ifndef LAB_CONST__25_SpreadMedianMult
+input double _25_SpreadMedianMult = 2.5; // [P12508] Spread Median Mult
+#endif
+#ifdef LAB_CONST__25_SpreadMedianMult
+const double _25_SpreadMedianMult = LAB_CONSTVAL__25_SpreadMedianMult;
+#endif
+#ifndef LAB_CONST__25_SpreadATRCap
+input double _25_SpreadATRCap = 0.10; // [P12509] Spread ATR Cap
+#endif
+#ifdef LAB_CONST__25_SpreadATRCap
+const double _25_SpreadATRCap = LAB_CONSTVAL__25_SpreadATRCap;
+#endif
+#ifndef LAB_CONST__25_OpenCooldownSec
+input int _25_OpenCooldownSec = 1; // [P12510] Open Cooldown Seconds
+#endif
+#ifdef LAB_CONST__25_OpenCooldownSec
+const int _25_OpenCooldownSec = LAB_CONSTVAL__25_OpenCooldownSec;
 #endif
 #endif
 
