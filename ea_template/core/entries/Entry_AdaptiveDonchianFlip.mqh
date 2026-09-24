@@ -73,7 +73,7 @@ bool ADF_Donchian(const double &highs[],const double &lows[],const int count,
    for(int i=0;i<count;i++)
    {
       if(!MathIsValidNumber(highs[i]) || !MathIsValidNumber(lows[i]) ||
-         highs[i] < lows[i])
+         highs[i] <= 0.0 || lows[i] <= 0.0 || highs[i] < lows[i])
          return false;
       if(highs[i] > upper) upper = highs[i];
       if(lows[i] < lower) lower = lows[i];
@@ -517,13 +517,12 @@ bool ADF_LoadDecision(ADF_Decision &decision)
    if(regime==ADF_REGIME_INVALID) return false;
 
    double highs[],lows[];
-   ArrayResize(highs,_24_DonchianBars);
-   ArrayResize(lows,_24_DonchianBars);
-   for(int i=0;i<_24_DonchianBars;i++)
-   {
-      highs[i]=iHigh(_Symbol,_Period,i+2);
-      lows[i]=iLow(_Symbol,_Period,i+2);
-   }
+   ArraySetAsSeries(highs,false);
+   ArraySetAsSeries(lows,false);
+   // Exact closed-bar window: shifts 2..N+1, excluding the decision bar.
+   if(CopyHigh(_Symbol,_Period,2,_24_DonchianBars,highs) != _24_DonchianBars ||
+      CopyLow(_Symbol,_Period,2,_24_DonchianBars,lows) != _24_DonchianBars)
+      return false;
    double upper=0.0,lower=0.0;
    if(!ADF_Donchian(highs,lows,_24_DonchianBars,upper,lower)) return false;
 
@@ -565,7 +564,16 @@ bool ADF_Open(const int direction,const double atr,const int regime)
       !RiskControl_AllowNewOrder())
       return false;
    MqlTick tick;
-   if(!SymbolInfoTick(_Symbol,tick)) return false;
+   // Revalidate the exact request quote; do not sample it a second time.
+   if(!SymbolInfoTick(_Symbol,tick) ||
+      !ADF_SpreadPass(tick.ask-tick.bid,g_adf_spreads,
+                      g_adf_spread_count,_24_SpreadSamples,
+                      _24_SpreadMedianMult,_24_SpreadATRCap,atr))
+   {
+      g_adf_open_refusals++;
+      Print("[FB-A01] request quote unavailable or spread gate refused; no same-bar retry");
+      return false;
+   }
    const double request_price=(direction==1 ? tick.ask : tick.bid);
    double mult=(regime==ADF_REGIME_NORMAL ? _24_SL_ATR_Normal
                                          : _24_SL_ATR_High);

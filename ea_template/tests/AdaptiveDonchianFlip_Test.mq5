@@ -30,6 +30,24 @@ int OnInit()
    ADF_Check(ADF_Donchian(highs,lows,3,upper,lower) &&
              upper==12.0 && lower==5.0,
              "Donchian uses supplied prior bars only (decision bar excluded)");
+   for(int missing=0;missing<3;missing++)
+   {
+      double saved_high=highs[missing],saved_low=lows[missing];
+      highs[missing]=0.0;
+      lows[missing]=0.0;
+      ADF_Check(!ADF_Donchian(highs,lows,3,upper,lower),
+                "Donchian missing zero pair fails closed at every window position");
+      highs[missing]=saved_high;
+      ADF_Check(!ADF_Donchian(highs,lows,3,upper,lower),
+                "Donchian missing zero low fails closed");
+      lows[missing]=saved_low;
+   }
+   double short_highs[2]={10.0,11.0};
+   ADF_Check(!ADF_Donchian(short_highs,lows,3,upper,lower),
+             "Donchian incomplete window fails closed");
+   double inverted_highs[3]={10.0,4.0,12.0};
+   ADF_Check(!ADF_Donchian(inverted_highs,lows,3,upper,lower),
+             "Donchian inverted high-low pair fails closed");
    ADF_Check(ADF_Breakout(12.0,12.0,5.0,0.0,ADF_TREND_UP)==0,
              "Donchian equality is not a BUY breakout");
    ADF_Check(ADF_Breakout(5.0,12.0,5.0,0.0,ADF_TREND_DOWN)==0,
@@ -107,6 +125,30 @@ int OnInit()
              "ownership is isolated by chart symbol and strategy magic");
 
    ADF_Fsm fsm;
+   // Request quote may widen after the earlier OnTick gate. Production ADF_Open
+   // acquisition/order calls are exercised by the host cage; here bind the gate
+   // to the real FSM for flat and reverse attempts in both directions.
+   double request_samples[50];
+   for(int i=0;i<50;i++) request_samples[i]=1.0;
+   for(int request_direction=1;request_direction<=2;request_direction++)
+   {
+      for(int reverse=0;reverse<=1;reverse++)
+      {
+         ADF_FsmReset(fsm);
+         if(reverse==1)
+            ADF_Check(ADF_FsmStep(fsm,90,true,request_direction,true,1,
+                                  3-request_direction,0,false)==ADF_ACTION_CLOSE,
+                      "request spread fixture closes before reverse");
+         ADF_Check(ADF_FsmStep(fsm,90,reverse==0,request_direction,true,0,0,0,false)==ADF_ACTION_OPEN,
+                   "request spread fixture consumes open attempt");
+         ADF_Check(ADF_SpreadPass(1.0,request_samples,50,50,3.0,0.10,20.0) &&
+                   !ADF_SpreadPass(2.01,request_samples,50,50,3.0,0.10,20.0) &&
+                   !ADF_SpreadPass(3.01,request_samples,50,50,3.0,0.10,100.0),
+                   "earlier quote passes but widened request breaches ATR or median");
+         ADF_Check(ADF_FsmStep(fsm,90,false,0,true,0,0,0,false)==ADF_ACTION_NONE,
+                   "request spread refusal preserves no same-bar retry");
+      }
+   }
    ADF_FsmReset(fsm);
    fsm.state=ADF_STATE_LONG;
    ADF_Check(ADF_FsmStep(fsm,100,true,1,true,1,1,0,false)==ADF_ACTION_NONE,
