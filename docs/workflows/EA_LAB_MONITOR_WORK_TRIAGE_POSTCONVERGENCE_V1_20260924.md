@@ -4,16 +4,17 @@ Classification: `READ_ONLY_PRESENTATION / SOURCE_CANDIDATE / NO_RUNTIME_OR_DEPLO
 
 ## Frozen base and authority
 
-This bounded author change starts from exact accepted base
-`1df924b1ac7e112148dd8a70773c8c63b0b9a893`. That base contains the accepted
-Monitor truth/freshness Repair1 invariants. This change does not modify
+This bounded author change was first authored from exact accepted truth/freshness base
+`1df924b1ac7e112148dd8a70773c8c63b0b9a893`, then mechanically reanchored without
+path overlap onto canonical parent `4c3b6509ff399ac49e22af5614dd999cc8774575`.
+The accepted Monitor truth/freshness Repair1 invariants remain the non-regression base. This change does not modify
 `truth.js`, `server.py`, HTML/CSS, Registry, PROJECT_STATE, taskboards, runtime,
 scheduled tasks, services, OneDrive, MT5, EA/core, research strategy, trading, or
 risk/default state.
 
-The source remains uncommitted and pending Main Control Tower freeze plus one
-separate exact-head acceptance-grade GPT Scrutiny. This author does not approve
-or accept the candidate.
+The reanchored source is committed only as a clean candidate for Main Control Tower freeze
+and one separate exact-head acceptance-grade GPT Scrutiny. Commit presence is not
+acceptance or integration; this author does not self-approve the candidate.
 
 ## Inputs consumed
 
@@ -103,5 +104,6 @@ escaping, and offline no-fetch.
   static UI wrapper is claimed for this successor.
 - No runtime, deployment, service, scheduler, hosting, OneDrive, MT5, trading,
   risk/default, or promotion authority is granted.
-- Main CT must freeze the exact source candidate, rerun any required exact-head
-  gates, and obtain independent GPT Scrutiny before acceptance or integration.
+- Main CT must bind the reanchored exact candidate head, reuse only hash-identical prior
+  deterministic evidence where valid, run any required exact-head checks, and obtain
+  independent GPT Scrutiny before acceptance or integration.
