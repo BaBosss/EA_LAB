@@ -1,0 +1,20 @@
+{
+  "schema": "fb_g01_model1_contract/1",
+  "lane_id": "ct-fb-g01-model1-main-bwd-v1-20260924",
+  "owner_freeze": {"symbol":"XAUUSD","timeframe":"H1","config":"V0_DECLARED_DEFAULTS"},
+  "canonical_head": "4219785c6f4cc6c0f38ec3cdf92869160eb522ca",
+  "accepted_source_head": "8da04fc789ca55e6c673d41899e9136cfa72a75e",
+  "source_path_drift_since_acceptance": false,
+  "build": "LAB_ENTRY_25",
+  "set_sha256": "a9d434bf37ddc3a4ed8a906a6b1e640ef71e7abde286fcd9f9b194eb95bc5a57",
+  "config_fingerprint": "c9a9f95094d8d92e059ec7c894de76f57dce5d25a9b97792e3acd3ea3927d6d8",
+  "ex5_sha256": "fbd0ff95b2b063c48902b5f6e35043c094761d5e7f300f6ab4102c1a8ca13101",
+  "build_receipt": "br-63f00daebfff4386908a1c936d71897b",
+  "tester": {"terminal":"D:\\Meta 5\\terminal64.exe","model":1,"deposit":10000,"currency":"USD","leverage":"1:100"},
+  "main": {"from":"2023.01.01","to":"2025.12.31"},
+  "bwd": {"from":"2020.01.01","to":"2022.12.31"},
+  "holdout": "UNSPENT",
+  "optimizer": false,
+  "retuning_between_windows": false,
+  "promotion_authority": false
+}
