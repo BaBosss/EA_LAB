@@ -1835,7 +1835,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::B1 = formula(compare, lo, ro);
+		v::B1 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -1870,7 +1870,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::B2 = formula(compare, lo, ro);
+		v::B2 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -1905,7 +1905,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::B3 = formula(compare, lo, ro);
+		v::B3 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -1940,7 +1940,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::B4 = formula(compare, lo, ro);
+		v::B4 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -1975,7 +1975,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::S1 = formula(compare, lo, ro);
+		v::S1 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -2010,7 +2010,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::S2 = formula(compare, lo, ro);
+		v::S2 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -2045,7 +2045,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::S3 = formula(compare, lo, ro);
+		v::S3 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -2080,7 +2080,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::S4 = formula(compare, lo, ro);
+		v::S4 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -2485,7 +2485,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::S5 = formula(compare, lo, ro);
+		v::S5 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -2520,7 +2520,7 @@ return NULL;
 		_T3_ ro = _Ro_();
 		if (typename(_T3_) != "string" && MathAbs(ro) == EMPTY_VALUE) {return;}
 		
-		v::B5 = formula(compare, lo, ro);
+		v::B5 = (int)(formula(compare, lo, ro));
 		
 		_callback_(1);
 	}
@@ -4567,7 +4567,7 @@ class Block25: public MDL_ChartDrawLine<bool,bool,string,ENUM_OBJECT,MDLIC_value
 	public: /* Custom methods */
 	virtual datetime _ObjTime1_() {return ObjTime1._execute_();}
 	virtual double _ObjPrice1_() {
-		ObjPrice1.ModeCandleFindBy = c::Timeframe;
+		ObjPrice1.ModeCandleFindBy = (string)(c::Timeframe);
 		ObjPrice1.Symbol = CurrentSymbol();
 		ObjPrice1.Period = CurrentTimeframe();
 
@@ -7028,11 +7028,11 @@ class Block81: public MDL_ModifyVariables<int,MDLIC_value_value,double,int,MDLIC
 	virtual void _beforeExecute_()
 	{
 
-		v::S1 = _Value1_();
-		v::S2 = _Value2_();
-		v::S3 = _Value3_();
-		v::S4 = _Value4_();
-		v::S5 = _Value5_();
+		v::S1 = (int)(_Value1_());
+		v::S2 = (int)(_Value2_());
+		v::S3 = (int)(_Value3_());
+		v::S4 = (int)(_Value4_());
+		v::S5 = (int)(_Value5_());
 	}
 };
 
@@ -7067,11 +7067,11 @@ class Block82: public MDL_ModifyVariables<int,MDLIC_value_value,double,int,MDLIC
 	virtual void _beforeExecute_()
 	{
 
-		v::B1 = _Value1_();
-		v::B2 = _Value2_();
-		v::B3 = _Value3_();
-		v::B4 = _Value4_();
-		v::B5 = _Value5_();
+		v::B1 = (int)(_Value1_());
+		v::B2 = (int)(_Value2_());
+		v::B3 = (int)(_Value3_());
+		v::B4 = (int)(_Value4_());
+		v::B5 = (int)(_Value5_());
 	}
 };
 
@@ -11080,7 +11080,7 @@ bool FilterOrderBy(
 	if (onTrade == false)
 	{
 		type         = EEFD::OrderType();
-		magic_number = EEFD::OrderMagicNumber();
+		magic_number = (int)(EEFD::OrderMagicNumber());
 		symbol       = EEFD::OrderSymbol();
 	}
 	else
@@ -11624,7 +11624,7 @@ int OCODriver()
          //--
          if (EEFD::StringSubstr(EEFD::OrderComment(), 0, 5) == "[oco:")
          {
-            int ticket_oco = EEFD::StrToInteger(EEFD::StringSubstr(EEFD::OrderComment(), 5, StringLen(EEFD::OrderComment())-1)); 
+            int ticket_oco = (int)(EEFD::StrToInteger(EEFD::StringSubstr(EEFD::OrderComment(), 5, StringLen(EEFD::OrderComment())-1))); 
             
             bool found = false;
             size = ArraySize(orders2);
@@ -13753,7 +13753,7 @@ long attrTicketParent(long ticket)
 	double OP   = EEFD::OrderOpenPrice();
 	datetime OT = EEFD::OrderOpenTime();
 	string S    = EEFD::OrderSymbol();
-	int M       = EEFD::OrderMagicNumber();
+	int M       = (int)(EEFD::OrderMagicNumber());
 	int T       = EEFD::OrderType(); 
 	double L    = EEFD::OrderLots();
 	int D       = (int)EEFD::MarketInfo(S, MODE_DIGITS);

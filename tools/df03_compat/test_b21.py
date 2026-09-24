@@ -161,6 +161,96 @@ class B21Tests(unittest.TestCase):
         self.assertEqual(read('ea_template/compat/df03/DF03_TemplateEngine.mqh'), self.engine)
         self.assertEqual(json.loads(read('ea_template/compat/df03/template_manifest.json')), self.manifest)
 
+    def test_warning_compat_exact_24_and_accepted_engine_preserved(self):
+        sites = self.manifest.get('warning_conversions', [])
+        self.assertEqual(len(sites), 24)
+        self.assertEqual([s['line'] for s in sites],
+                         [1838,1873,1908,1943,1978,2013,2048,2083,2488,2523,
+                          4570,7031,7032,7033,7034,7035,7070,7071,7072,7073,
+                          7074,11083,11627,13756])
+        restored = self.engine
+        for s in reversed(sites):
+            self.assertEqual(s['new'], '(' + s['cast'] + ')(' + s['old'] + ')')
+            at = s['engine_offset']
+            new = s['new'].encode()
+            self.assertEqual(restored[at:at+len(new)], new)
+            restored = restored[:at] + s['old'].encode() + restored[at+len(new):]
+        self.assertEqual(g.sha(restored),
+                         '9d8c00497b822022ec8e0af0a5e9d2ae5e3f64603c87f19ab4cd1a32b12a17af')
+
+    def test_conversion_fixture_is_source_bound_and_no_trade(self):
+        fixture = read('ea_template/tests/DF03_ConversionCompat_Test.mq5')
+        self.assertIn(te.fixture_region(self.raw), fixture)
+        self.assertNotRegex(g.code(fixture),
+                            r'\b(?:OrderSend|OrderSendAsync|CTrade|OrderSelect|PositionSelect|Sleep)\b')
+        self.assertNotIn(b'#include', fixture)
+        self.assertIn(b'DF03_IMPLICIT_ORACLE', fixture)
+
+    def test_conversion_fixture_static_members_defined_once_in_both_arms(self):
+        members = ('B1', 'B2', 'B3', 'B4', 'B5', 'S1', 'S2', 'S3', 'S4', 'S5')
+        for member in members:
+            self.assertIn(('static int ' + member + ';').encode(), self.raw)
+        self.assertIn(b'static ENUM_TIMEFRAMES Timeframe;', self.raw)
+        expected = [('int', 'v::' + member, '0') for member in members]
+        expected.append(('ENUM_TIMEFRAMES', 'c::Timeframe', 'PERIOD_CURRENT'))
+
+        def assert_definitions(data):
+            definitions = re.findall(
+                r'(?m)^\s*(int|long|double|ENUM_TIMEFRAMES)\s+'
+                r'((?:v|c)::\w+)\s*(?:=\s*([^;]+))?;',
+                data.decode())
+            self.assertCountEqual(definitions, expected)
+
+        generated = te.fixture_bytes(self.raw)
+        self.assertEqual(read('ea_template/tests/DF03_ConversionCompat_Test.mq5'), generated)
+        for prefix in (b'', b'#define DF03_IMPLICIT_ORACLE\n'):
+            with self.subTest(arm='implicit' if prefix else 'explicit'):
+                selected = active(prefix + generated)
+                assert_definitions(selected)
+                # Missing, duplicate and widened definitions must each fail.
+                for typename, member, value in expected:
+                    definition = f'{typename} {member} = {value};'.encode()
+                    for bad in (selected.replace(definition, b'', 1),
+                                selected + b'\n' + definition,
+                                selected.replace(definition, definition.replace(
+                                    typename.encode(), b'long', 1), 1)):
+                        with self.assertRaises(AssertionError):
+                            assert_definitions(bad)
+
+    def test_conversion_missing_duplicate_context_drift_refused(self):
+        for site in te.warning_sites(self.raw):
+            start = site['raw_offset']
+            for changed in (self.raw[:start] + self.raw[start+len(site['old']):],
+                            self.raw + (site['lhs']+' = '+site['old']+';').encode(),
+                            self.raw.replace(b'static int B1;', b'static long B1;', 1)):
+                with self.subTest(line=site['line']), self.assertRaises(ValueError):
+                    te.warning_sites(changed)
+
+    def test_conversion_manifest_tamper_refused(self):
+        for key in ('old', 'new', 'raw_offset', 'engine_offset', 'cast', 'line'):
+            changed = copy.deepcopy(self.manifest)
+            changed['warning_conversions'][0][key] = 'tampered'
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                te.verify(self.parent, self.engine, changed)
+
+    def test_differential_log_refuses_missing_duplicate_or_boundary_difference(self):
+        keys = te.fixture_keys()
+        rows = ['DF03_ROW|' + key + '|0' for key in sorted(keys)]
+        def log(arm, data):
+            return '\n'.join(['DF03_ARM|' + arm, 'DF03_RUNTIME|6090'] + data +
+                             ['DF03_DONE|' + str(len(data))])
+        oracle = log('IMPLICIT_TEST_CONTROL', rows)
+        explicit = log('EXPLICIT', rows)
+        self.assertEqual(te.compare_fixture_logs(oracle, explicit)['rows'], len(keys))
+        self.assertEqual(te.compare_fixture_logs('tester DF03_ConversionCompat_Test started\n' + oracle,
+                                                explicit)['rows'], len(keys))
+        for bad in (log('EXPLICIT', rows[:-1]), log('EXPLICIT', rows + rows[:1]),
+                    explicit.replace(rows[0], rows[0] + 'DIFFERENCE'),
+                    explicit.replace('6090', '6182'), explicit + '\nDF03_DONE|1',
+                    explicit.replace('EXPLICIT', 'IMPLICIT_TEST_CONTROL')):
+            with self.assertRaises(ValueError):
+                te.compare_fixture_logs(oracle, bad)
+
     def test_wrong_parent_refuses(self):
         with self.assertRaisesRegex(ValueError, 'SHA256'):
             te.build(self.parent + b' ')
@@ -213,12 +303,14 @@ class B21Tests(unittest.TestCase):
             at, new = p['offset'], p['new'].encode()
             data = data[:at] + p['old'].encode() + data[at+len(new):]
         self.assertEqual(data, self.raw)
-        self.assertEqual(len(self.manifest['patches']), 35)
+        self.assertEqual(len(self.manifest['patches']), 35 + 24)
+        conversions = {(s['old'], s['new']) for s in self.manifest['warning_conversions']}
         for p in self.manifest['patches']:
             self.assertTrue(p['old'].startswith('input ') or p['new'].startswith('_21_DF03_') or
                             p['new'] == te.HOOK.decode() or
                             p['new'] == te.TIMER_TICK_HOOK.decode() or
-                            (p['old'], p['new']) == ('lots', 'df03_safe_lots'))
+                            (p['old'], p['new']) == ('lots', 'df03_safe_lots') or
+                            (p['old'], p['new']) in conversions)
 
     def test_seam_accepts_lf_crlf_and_mixed_trivia(self):
         for raw in (self.raw.replace(b'\r\n', b'\n'),

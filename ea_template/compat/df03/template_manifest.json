@@ -2,7 +2,7 @@
   "schema": "df03-template/1",
   "parent_sha256": "2aba9437319e214c82b63313a049f73da364052eddfa24f7f1661279593ffd89",
   "raw_sha256": "564099a9e48abffcfbeceb43b3558f9212ece603309eaf15e6947834aa957115",
-  "engine_sha256": "9d8c00497b822022ec8e0af0a5e9d2ae5e3f64603c87f19ab4cd1a32b12a17af",
+  "engine_sha256": "1b25b04d84607aa82dff2d03d2c898aa686c430ae1577f8234c32b55f7c996c8",
   "mappings": [
     {
       "type": "double",
@@ -260,24 +260,144 @@
       "new": "_21_DF03_MagicStart"
     },
     {
-      "offset": 307599,
+      "offset": 56863,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 57636,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 58409,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 59182,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 59955,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 60728,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 61501,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 62274,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 73040,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 73815,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))"
+    },
+    {
+      "offset": 131069,
+      "old": "c::Timeframe",
+      "new": "(string)(c::Timeframe)"
+    },
+    {
+      "offset": 193552,
+      "old": "_Value1_()",
+      "new": "(int)(_Value1_())"
+    },
+    {
+      "offset": 193582,
+      "old": "_Value2_()",
+      "new": "(int)(_Value2_())"
+    },
+    {
+      "offset": 193612,
+      "old": "_Value3_()",
+      "new": "(int)(_Value3_())"
+    },
+    {
+      "offset": 193642,
+      "old": "_Value4_()",
+      "new": "(int)(_Value4_())"
+    },
+    {
+      "offset": 193672,
+      "old": "_Value5_()",
+      "new": "(int)(_Value5_())"
+    },
+    {
+      "offset": 194629,
+      "old": "_Value1_()",
+      "new": "(int)(_Value1_())"
+    },
+    {
+      "offset": 194659,
+      "old": "_Value2_()",
+      "new": "(int)(_Value2_())"
+    },
+    {
+      "offset": 194689,
+      "old": "_Value3_()",
+      "new": "(int)(_Value3_())"
+    },
+    {
+      "offset": 194719,
+      "old": "_Value4_()",
+      "new": "(int)(_Value4_())"
+    },
+    {
+      "offset": 194749,
+      "old": "_Value5_()",
+      "new": "(int)(_Value5_())"
+    },
+    {
+      "offset": 306142,
+      "old": "EEFD::OrderMagicNumber()",
+      "new": "(int)(EEFD::OrderMagicNumber())"
+    },
+    {
+      "offset": 307756,
       "old": "MagicStart",
       "new": "_21_DF03_MagicStart"
     },
     {
-      "offset": 308075,
+      "offset": 308232,
       "old": "MagicStart",
       "new": "_21_DF03_MagicStart"
     },
     {
-      "offset": 344283,
+      "offset": 318665,
+      "old": "EEFD::StrToInteger(EEFD::StringSubstr(EEFD::OrderComment(), 5, StringLen(EEFD::OrderComment())-1))",
+      "new": "(int)(EEFD::StrToInteger(EEFD::StringSubstr(EEFD::OrderComment(), 5, StringLen(EEFD::OrderComment())-1)))"
+    },
+    {
+      "offset": 344447,
       "old": "",
       "new": "// B21: retry from native lots; never compound the macro reduction.\n\t\tdouble df03_safe_lots = lots;\n\t\tif (!DF03_B21NewOrder(symbol, magic, type, df03_safe_lots)) return -1;\n\t\t"
     },
     {
-      "offset": 344507,
+      "offset": 344671,
       "old": "lots",
       "new": "df03_safe_lots"
+    },
+    {
+      "offset": 365519,
+      "old": "EEFD::OrderMagicNumber()",
+      "new": "(int)(EEFD::OrderMagicNumber())"
     }
   ],
   "compatibility_changes": [
@@ -491,5 +611,248 @@
       "old": "Bars",
       "new": "DF03_CompatBars"
     }
-  ]
+  ],
+  "warning_conversions": [
+    {
+      "line": 1838,
+      "raw_line": 1838,
+      "lhs": "v::B1",
+      "cast": "int",
+      "raw_offset": 57164,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 56863
+    },
+    {
+      "line": 1873,
+      "raw_line": 1873,
+      "lhs": "v::B2",
+      "cast": "int",
+      "raw_offset": 57930,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 57636
+    },
+    {
+      "line": 1908,
+      "raw_line": 1908,
+      "lhs": "v::B3",
+      "cast": "int",
+      "raw_offset": 58696,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 58409
+    },
+    {
+      "line": 1943,
+      "raw_line": 1943,
+      "lhs": "v::B4",
+      "cast": "int",
+      "raw_offset": 59462,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 59182
+    },
+    {
+      "line": 1978,
+      "raw_line": 1978,
+      "lhs": "v::S1",
+      "cast": "int",
+      "raw_offset": 60228,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 59955
+    },
+    {
+      "line": 2013,
+      "raw_line": 2013,
+      "lhs": "v::S2",
+      "cast": "int",
+      "raw_offset": 60994,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 60728
+    },
+    {
+      "line": 2048,
+      "raw_line": 2048,
+      "lhs": "v::S3",
+      "cast": "int",
+      "raw_offset": 61760,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 61501
+    },
+    {
+      "line": 2083,
+      "raw_line": 2083,
+      "lhs": "v::S4",
+      "cast": "int",
+      "raw_offset": 62526,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 62274
+    },
+    {
+      "line": 2488,
+      "raw_line": 2488,
+      "lhs": "v::S5",
+      "cast": "int",
+      "raw_offset": 73285,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 73040
+    },
+    {
+      "line": 2523,
+      "raw_line": 2523,
+      "lhs": "v::B5",
+      "cast": "int",
+      "raw_offset": 74053,
+      "old": "formula(compare, lo, ro)",
+      "new": "(int)(formula(compare, lo, ro))",
+      "engine_offset": 73815
+    },
+    {
+      "line": 4570,
+      "raw_line": 4570,
+      "lhs": "ObjPrice1.ModeCandleFindBy",
+      "cast": "string",
+      "raw_offset": 131300,
+      "old": "c::Timeframe",
+      "new": "(string)(c::Timeframe)",
+      "engine_offset": 131069
+    },
+    {
+      "line": 7031,
+      "raw_line": 7031,
+      "lhs": "v::S1",
+      "cast": "int",
+      "raw_offset": 193773,
+      "old": "_Value1_()",
+      "new": "(int)(_Value1_())",
+      "engine_offset": 193552
+    },
+    {
+      "line": 7032,
+      "raw_line": 7032,
+      "lhs": "v::S2",
+      "cast": "int",
+      "raw_offset": 193796,
+      "old": "_Value2_()",
+      "new": "(int)(_Value2_())",
+      "engine_offset": 193582
+    },
+    {
+      "line": 7033,
+      "raw_line": 7033,
+      "lhs": "v::S3",
+      "cast": "int",
+      "raw_offset": 193819,
+      "old": "_Value3_()",
+      "new": "(int)(_Value3_())",
+      "engine_offset": 193612
+    },
+    {
+      "line": 7034,
+      "raw_line": 7034,
+      "lhs": "v::S4",
+      "cast": "int",
+      "raw_offset": 193842,
+      "old": "_Value4_()",
+      "new": "(int)(_Value4_())",
+      "engine_offset": 193642
+    },
+    {
+      "line": 7035,
+      "raw_line": 7035,
+      "lhs": "v::S5",
+      "cast": "int",
+      "raw_offset": 193865,
+      "old": "_Value5_()",
+      "new": "(int)(_Value5_())",
+      "engine_offset": 193672
+    },
+    {
+      "line": 7070,
+      "raw_line": 7070,
+      "lhs": "v::B1",
+      "cast": "int",
+      "raw_offset": 194815,
+      "old": "_Value1_()",
+      "new": "(int)(_Value1_())",
+      "engine_offset": 194629
+    },
+    {
+      "line": 7071,
+      "raw_line": 7071,
+      "lhs": "v::B2",
+      "cast": "int",
+      "raw_offset": 194838,
+      "old": "_Value2_()",
+      "new": "(int)(_Value2_())",
+      "engine_offset": 194659
+    },
+    {
+      "line": 7072,
+      "raw_line": 7072,
+      "lhs": "v::B3",
+      "cast": "int",
+      "raw_offset": 194861,
+      "old": "_Value3_()",
+      "new": "(int)(_Value3_())",
+      "engine_offset": 194689
+    },
+    {
+      "line": 7073,
+      "raw_line": 7073,
+      "lhs": "v::B4",
+      "cast": "int",
+      "raw_offset": 194884,
+      "old": "_Value4_()",
+      "new": "(int)(_Value4_())",
+      "engine_offset": 194719
+    },
+    {
+      "line": 7074,
+      "raw_line": 7074,
+      "lhs": "v::B5",
+      "cast": "int",
+      "raw_offset": 194907,
+      "old": "_Value5_()",
+      "new": "(int)(_Value5_())",
+      "engine_offset": 194749
+    },
+    {
+      "line": 11083,
+      "raw_line": 11083,
+      "lhs": "magic_number",
+      "cast": "int",
+      "raw_offset": 306293,
+      "old": "EEFD::OrderMagicNumber()",
+      "new": "(int)(EEFD::OrderMagicNumber())",
+      "engine_offset": 306142
+    },
+    {
+      "line": 11627,
+      "raw_line": 11627,
+      "lhs": "int ticket_oco",
+      "cast": "int",
+      "raw_offset": 318791,
+      "old": "EEFD::StrToInteger(EEFD::StringSubstr(EEFD::OrderComment(), 5, StringLen(EEFD::OrderComment())-1))",
+      "new": "(int)(EEFD::StrToInteger(EEFD::StringSubstr(EEFD::OrderComment(), 5, StringLen(EEFD::OrderComment())-1)))",
+      "engine_offset": 318665
+    },
+    {
+      "line": 13756,
+      "raw_line": 13753,
+      "lhs": "int M",
+      "cast": "int",
+      "raw_offset": 365453,
+      "old": "EEFD::OrderMagicNumber()",
+      "new": "(int)(EEFD::OrderMagicNumber())",
+      "engine_offset": 365519
+    }
+  ],
+  "generator_sha256": "55247cc07b2a9cf0f0f3dc28b61751ad572a7042d3d08e6e6594bcc86ed00237"
 }
