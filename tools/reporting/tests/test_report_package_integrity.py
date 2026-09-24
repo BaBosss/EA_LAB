@@ -21,6 +21,180 @@ import report_package_integrity as rpi
 
 
 class ReportPackageIntegrityTests(unittest.TestCase):
+    @staticmethod
+    def owner_additional_2_delimiter_paths():
+        roots = ("<EVIDENCE_ROOT>/", "/home/", "Z:/Users/",
+                 "//private-server/private-share/")
+        tails = ("O'Brien/alice/private-root/file.json",
+                 'D"Angelo/tenant/hidden-tree/file.json',
+                 "segment\nalice/private-root/file.json",
+                 "segment\r\nline\ntenant/hidden-tree/file.json",
+                 "segment -> alice/private-root/file.json",
+                 "segment' tenant/hidden-tree/file.json",
+                 "segment'\nalice/private-root/file.json")
+        return [root + tail for root in roots for tail in tails]
+
+    def test_owner_additional_2_delimiter_tails_are_never_released(self):
+        for raw in self.owner_additional_2_delimiter_paths():
+            for separator in ("/", "\\"):
+                path = raw.replace("/", separator)
+                for wrapper in ("{}", "cannot read '{}'", 'cannot read "{}"'):
+                    message = wrapper.format(path)
+                    for exc in (rpi.Refusal(message), OSError(5, message),
+                                OSError(5, "denied", path)):
+                        with self.subTest(path=path, wrapper=wrapper, kind=type(exc).__name__):
+                            shown = rpi.portable_error(exc)
+                            for secret in ("brien", "angelo", "alice", "tenant", "private-root",
+                                           "hidden-tree", "file.json", "private-server", "private-share"):
+                                self.assertNotIn(secret, shown.casefold())
+                            self.assertEqual(shown, rpi.portable_error(rpi.Refusal(shown)))
+                            self.assertEqual(shown, rpi.portable_error(exc))
+
+    def test_owner_additional_2_comparisons_with_relative_paths_stay_readable(self):
+        for operator in ("<", ">", "<=", ">="):
+            for reference in ("reports/result.json", r"reports\result.json"):
+                message = f"expected {operator} 5 for {reference}"
+                for exc in (rpi.Refusal(message), OSError(5, message)):
+                    with self.subTest(message=message, kind=type(exc).__name__):
+                        self.assertEqual(message, rpi.portable_error(exc))
+        for message in ("a < b and c > d for reports/result.json",
+                        "value > threshold for reports/result.json",
+                        "expected < count for reports/result.json",
+                        "a<b and c>d for reports/result.json"):
+            self.assertEqual(message, rpi.portable_error(rpi.Refusal(message)))
+
+    def test_owner_additional_2_known_roots_and_generated_labels(self):
+        for root in ("Z:/qualified/repo", "/qualified/repo", "//qualified/share/repo"):
+            for tail in ("reports/result.json", "folder with spaces/result.json"):
+                for wrapper in ("cannot read {}", "cannot read '{}'", 'cannot read "{}"'):
+                    with self.subTest(root=root, tail=tail, wrapper=wrapper):
+                        shown = rpi.portable_error(rpi.Refusal(wrapper.format(root + "/" + tail)),
+                                                   repo_root=root)
+                        self.assertEqual(wrapper.format(tail), shown)
+                        self.assertEqual(shown, rpi.portable_error(rpi.Refusal(shown), repo_root=root))
+        for raw in self.owner_additional_2_delimiter_paths():
+            label = rpi.portable_path(raw)
+            for message in (label, "denied: " + label, "denied: " + label + " -> " + label,
+                            "cannot read '" + label + "'\n"):
+                with self.subTest(message=message):
+                    self.assertEqual(message, rpi.portable_error(rpi.Refusal(message)))
+
+    def test_owner_additional_3_malformed_placeholder_privacy_boundary(self):
+        tail = "subject'quoted/restricted-tree/file.json"
+        windows_tail = tail.replace("/", "\\")
+        cases = (
+            "< EVIDENCE_ROOT " + tail,
+            "cannot read '/srv/" + tail + "'",
+            'cannot read "Q:/Users/' + tail + '"',
+            'cannot read "\\\\node\\share\\' + windows_tail + '"',
+            "< EVIDENCE_ROOT\nsubject/restricted-tree/file.json",
+            "< EVIDENCE_ROOT <ANYTHING>/subject/restricted-tree/file.json",
+            "< EVIDENCE_ROOT <EVIDENCE_ROOT>/subject/restricted-tree/file.json",
+        )
+        for message in cases:
+            for exc in (rpi.Refusal(message), OSError(5, message)):
+                with self.subTest(message=message, kind=type(exc).__name__):
+                    shown = rpi.portable_error(exc)
+                    self.assertNotIn("restricted-tree", shown.casefold())
+                    self.assertNotIn("subject", shown.casefold())
+                    self.assertEqual(shown, rpi.portable_error(rpi.Refusal(shown)))
+        for message in ("expected < 5 for reports/result.json",
+                        "expected > 5 for reports/result.json"):
+            for exc in (rpi.Refusal(message), OSError(5, message)):
+                self.assertEqual(message, rpi.portable_error(exc))
+
+    @staticmethod
+    def owner_repair_private_paths():
+        paths = []
+        # Labels cannot attest to the origin of a syntactically relative tail.
+        for label in ("<EVIDENCE_ROOT>", "<REPO_ROOT>", "<ABSOLUTE_ROOT>",
+                      "<USER_HOME_012345ABCD>", "<WORKTREE_012345ABCD>"):
+            for tail in ("Users/alice/private-root/file.json",
+                         "home/alice/private-root/file.json",
+                         "arbitrary/alice/private-root/file.json"):
+                for separator in ("/", "\\"):
+                    paths.append(label + separator + tail.replace("/", separator))
+        paths += [
+            "/home/alice/private-root/file.json", r"\Users\alice\private-root\file.json",
+            r"Z:\Users\alice\private-root\file.json", r"Z:\arbitrary\alice\private-root\file.json",
+            r"\\server-alice\share-secret\private-root\file.json",
+            r"\\?\UNC\server-alice\share-secret\private-root\file.json",
+            r"\\?\Z:\Users\alice\private-root\file.json",
+            r"\??\Z:\Users\alice\private-root\file.json", r"\\.\pipe\private-root",
+            "~/alice/private-root/file.json", "~alice/private-root/file.json",
+        ]
+        return paths
+
+    def test_owner_repair_private_tail_opacity_and_error_agreement(self):
+        for raw in self.owner_repair_private_paths():
+            with self.subTest(raw=raw):
+                shown = rpi.portable_path(raw)
+                for secret in ("alice", "private-root", "home/alice", "server-alice", "share-secret"):
+                    self.assertNotIn(secret, shown.casefold())
+                self.assertNotIn("/", shown)
+                self.assertEqual(shown, rpi.portable_path(shown))
+                self.assertEqual(shown, rpi.portable_path(raw))
+                for exc in (rpi.Refusal(raw), OSError(5, raw)):
+                    self.assertEqual(shown, rpi.portable_error(exc))
+                self.assertEqual("denied: " + shown, rpi.portable_error(OSError(5, "denied", raw)))
+
+    def test_owner_repair_ordinary_angle_diagnostics(self):
+        for message in ("expected < 5", "value > threshold", "a < b and c > d",
+                        "expected <= 5", "value >= threshold", "a<b and c>d"):
+            for exc in (rpi.Refusal(message), OSError(5, message)):
+                with self.subTest(message=message, exception=type(exc).__name__):
+                    self.assertEqual(message, rpi.portable_error(exc))
+
+    def test_owner_repair_rendered_json_text_leakage_scan(self):
+        payload = [{"path": rpi.portable_path(raw),
+                    "error": rpi.portable_error(rpi.Refusal("cannot read '" + raw + "'"))}
+                   for raw in self.owner_repair_private_paths()]
+        rendered = json.dumps(payload) + "\n" + "\n".join(row["error"] for row in payload)
+        for secret in ("alice", "private-root", "server-alice", "share-secret", "home/alice"):
+            self.assertNotIn(secret, rendered.casefold())
+
+    def test_owner_repair_known_root_relative_positive_controls(self):
+        for root in ("Z:/qualified/repo", "/qualified/repo", "//qualified/share/repo"):
+            for tail in ("reports/packet.json", "folder with spaces/file.json"):
+                for separator in ("/", "\\"):
+                    raw = (root + "/" + tail).replace("/", separator)
+                    self.assertEqual(tail, rpi.portable_path(raw, repo_root=root))
+        # Evidence references keep a deterministic identity, without an untrusted tail.
+        for raw in ("D:/EA_LAB_CONTROL/evidence/lane-a/packet.json",
+                    "D:/EA_LAB_CONTROL/evidence/lane-b/packet.json"):
+            shown = rpi.portable_path(raw)
+            self.assertRegex(shown, r"^<EVIDENCE_ROOT_[0-9A-F]{10}>$")
+            self.assertEqual(shown, rpi.portable_path(shown))
+
+    def test_owner_repair_placeholder_near_collision_matrix(self):
+        paths = ["<EVIDENCE_ROOT>" + separator + "arbitrary/alice/private-root"
+                 for separator in ("/", "\\", "//", "\\\\", "/\\", "\\/")]
+        paths += ["<ANYTHING>/alice/private-root", "<EVIDENCE_ROOT/alice/private-root",
+                  "<<EVIDENCE_ROOT>>/alice/private-root", ">alice/private-root",
+                  "<EVIDENCE_ROOT><EVIDENCE_ROOT>/alice/private-root"]
+        shown = [rpi.portable_path(raw) for raw in paths]
+        self.assertEqual(len(paths), len(set(shown)))
+        for raw, result in zip(paths, shown):
+            self.assertRegex(result, r"^<UNSAFE_PATH_[0-9A-F]{64}>$")
+            self.assertEqual(result, rpi.portable_error(rpi.Refusal(raw)))
+            self.assertEqual(result, rpi.portable_path(result))
+
+    def test_owner_repair_angle_placeholder_context_matrix(self):
+        attacks = ["< EVIDENCE_ROOT >/Users/alice/private-root/file.json",
+                   "< EVIDENCE_ROOT /alice/private-root/file.json",
+                   "> alice/private-root/file.json", "<ANYTHING>/alice/private-root",
+                   "<EVIDENCE_ROOT>/<ANYTHING>/alice/private-root",
+                   "<EVIDENCE_ROOT><EVIDENCE_ROOT>/alice/private-root"]
+        for raw in attacks:
+            with self.subTest(raw=raw):
+                shown = rpi.portable_path(raw)
+                self.assertRegex(shown, r"^<UNSAFE_PATH_[0-9A-F]{64}>$")
+                self.assertEqual(shown, rpi.portable_error(rpi.Refusal(raw)))
+                self.assertNotIn("alice", shown.casefold())
+                self.assertNotIn("private-root", shown.casefold())
+        for token in ("<ANYTHING>", "< ANYTHING >", "<EVIDENCE_ROOT", "<<EVIDENCE_ROOT>>"):
+            self.assertRegex(rpi.portable_error(rpi.Refusal(token)), r"^<UNSAFE_PATH_[0-9A-F]{64}>$")
+
     def make_dir_link(self, target: Path, link: Path) -> None:
         if os.name == "nt":
             result = subprocess.run(
@@ -90,9 +264,7 @@ class ReportPackageIntegrityTests(unittest.TestCase):
     def test_portable_path_rules_cover_windows_user_control_repo_and_unc_inputs(self):
         repo_root = Path(r"D:\portable\EA_LAB")
         cases = {
-            r"D:\EA_LAB_CONTROL\evidence\lane-a\packet.json": "<EVIDENCE_ROOT>/lane-a/packet.json",
             r"factory\runs\cell-a\packet.json": "factory/runs/cell-a/packet.json",
-            r"<EVIDENCE_ROOT>\lane-b\packet.json": "<EVIDENCE_ROOT>/lane-b/packet.json",
             r"D:\portable\EA_LAB\factory\runs\cell-b\packet.json": "factory/runs/cell-b/packet.json",
         }
         for raw, expected in cases.items():
@@ -102,14 +274,14 @@ class ReportPackageIntegrityTests(unittest.TestCase):
                 self.assertNotIn("bob", rpi.portable_path(raw, repo_root=repo_root).casefold())
 
         labelled_cases = {
-            r"C:\Users\alice\Desktop\packet.json": (r"^<USER_HOME_[0-9A-F]{10}>/Desktop/packet\.json$", "alice"),
-            r"C:\Users\bob\Downloads\packet.json": (r"^<USER_HOME_[0-9A-F]{10}>/Downloads/packet\.json$", "bob"),
+            r"C:\Users\alice\Desktop\packet.json": (r"^<USER_HOME_[0-9A-F]{10}>$", "alice"),
+            r"C:\Users\bob\Downloads\packet.json": (r"^<USER_HOME_[0-9A-F]{10}>$", "bob"),
             r"D:\EA_LAB_CONTROL\w\lane-a\tools\reporting\packet.json": (
-                r"^<WORKTREE_[0-9A-F]{10}>/tools/reporting/packet\.json$",
+                r"^<WORKTREE_[0-9A-F]{10}>$",
                 "lane-a",
             ),
             r"\\server-a\share-a\research\packet.json": (
-                r"^<UNC_ROOT_[0-9A-F]{10}>/research/packet\.json$",
+                r"^<UNC_ROOT_[0-9A-F]{10}>$",
                 "server-a",
             ),
         }
@@ -124,25 +296,25 @@ class ReportPackageIntegrityTests(unittest.TestCase):
             (
                 r"C:\Users\alice\private\packet.json",
                 r"\\?\C:\Users\alice\private\packet.json",
-                r"^<USER_HOME_[0-9A-F]{10}>/private/packet\.json$",
+                r"^<USER_HOME_[0-9A-F]{10}>$",
                 ("alice",),
             ),
             (
                 r"D:\EA_LAB_CONTROL\evidence\lane-a\packet.json",
                 r"\\?\D:\EA_LAB_CONTROL\evidence\lane-a\packet.json",
-                r"^<EVIDENCE_ROOT>/lane-a/packet\.json$",
+                r"^<EVIDENCE_ROOT_[0-9A-F]{10}>$",
                 (),
             ),
             (
                 r"D:\EA_LAB_CONTROL\w\private-lane\tools\packet.json",
                 r"\\?\D:\EA_LAB_CONTROL\w\private-lane\tools\packet.json",
-                r"^<WORKTREE_[0-9A-F]{10}>/tools/packet\.json$",
+                r"^<WORKTREE_[0-9A-F]{10}>$",
                 ("private-lane",),
             ),
             (
                 r"\\server-a\share-a\research\packet.json",
                 r"\\?\UNC\server-a\share-a\research\packet.json",
-                r"^<UNC_ROOT_[0-9A-F]{10}>/research/packet\.json$",
+                r"^<UNC_ROOT_[0-9A-F]{10}>$",
                 ("server-a", "share-a"),
             ),
         ]
@@ -155,26 +327,26 @@ class ReportPackageIntegrityTests(unittest.TestCase):
                 for secret in secrets:
                     self.assertNotIn(secret, extended_rendered.casefold())
 
-    def test_portable_path_recursively_sanitizes_placeholder_tails(self):
-        self.assertEqual(
-            "<EVIDENCE_ROOT>/lane-b/packet.json",
+    def test_portable_path_fails_closed_for_placeholder_absolute_tails(self):
+        self.assertRegex(
             rpi.portable_path(r"<EVIDENCE_ROOT>\lane-b\packet.json"),
+            r"^<UNSAFE_PATH_[0-9A-F]{64}>$",
         )
 
         cases = [
             (
                 r"<EVIDENCE_ROOT>/\\?\C:\Users\alice\private\packet.json",
-                r"^<EVIDENCE_ROOT>/<USER_HOME_[0-9A-F]{10}>/private/packet\.json$",
+                r"^<UNSAFE_PATH_[0-9A-F]{64}>$",
                 ("alice", "C:"),
             ),
             (
                 r"<EVIDENCE_ROOT>/\\?\UNC\server-a\share-a\private\packet.json",
-                r"^<EVIDENCE_ROOT>/<UNC_ROOT_[0-9A-F]{10}>/private/packet\.json$",
+                r"^<UNSAFE_PATH_[0-9A-F]{64}>$",
                 ("server-a", "share-a"),
             ),
             (
                 r"<EVIDENCE_ROOT>/\\.\pipe\private-channel",
-                r"^<EVIDENCE_ROOT>/<DEVICE_PATH_[0-9A-F]{10}>$",
+                r"^<UNSAFE_PATH_[0-9A-F]{64}>$",
                 ("pipe", "private-channel"),
             ),
         ]
@@ -185,21 +357,105 @@ class ReportPackageIntegrityTests(unittest.TestCase):
                 for secret in secrets:
                     self.assertNotIn(secret.casefold(), rendered.casefold())
 
+    def test_successor_recognizes_only_explicit_placeholder_grammar(self):
+        labels = ["<REPO_ROOT>", "<EVIDENCE_ROOT>", "<ABSOLUTE_ROOT>"]
+        labels += [f"<{kind}_012345ABCD>" for kind in (
+            "WORKTREE", "USER_HOME", "UNC_ROOT", "ABSOLUTE_ROOT", "DEVICE_PATH", "UNSAFE_TAIL"
+        )]
+        labels.append("<UNSAFE_PATH_" + "A" * 64 + ">")
+        for label in labels:
+            for tail in ("", "/reports/packet.json", "/folder with spaces/file.json"):
+                with self.subTest(label=label, tail=tail):
+                    expected = label + tail
+                    if not tail:
+                        self.assertEqual(expected, rpi.portable_path(expected))
+                    else:
+                        self.assertRegex(rpi.portable_path(expected), r"^<UNSAFE_PATH_[0-9A-F]{64}>$")
+                    self.assertEqual(rpi.portable_path(expected), rpi.portable_path(rpi.portable_path(expected)))
+                    if tail:
+                        self.assertRegex(rpi.portable_path(expected.replace("/", "\\")), r"^<UNSAFE_PATH_[0-9A-F]{64}>$")
+
+    def test_successor_later_defect_red_first_regression(self):
+        for label in ("<ANYTHING>", "<evidence_root>", "<USER_HOME>",
+                      "<USER_HOME_ALICE>", "<USER_HOME_012345ABCD0>", "<USER_HOME_012345abcd>"):
+            with self.subTest(label=label):
+                result = rpi.portable_path(label + "/Users/alice/private-root/file.json")
+                self.assertRegex(result, r"^<UNSAFE_PATH_[0-9A-F]{64}>$")
+                self.assertNotIn("alice", result.casefold())
+                self.assertNotIn("private-root", result.casefold())
+
+    @staticmethod
+    def successor_malformed_paths():
+        tails = [
+            "/Users/alice/private-root/file.json", "//Users/alice/private-root/file.json",
+            "C:/Users/alice/private-root/file.json", "C:private-root/file.json",
+            r"\\server-alice\private-root\file.json", r"\\?\C:\Users\alice\private-root\file.json",
+            r"\\?\UNC\server-alice\private-root\file.json", r"\\.\pipe\private-root",
+            r"\??\C:\Users\alice\private-root\file.json", "/home/alice/private-root/file.json",
+            "../alice/private-root", "safe/../../alice/private-root", "safe//alice/private-root",
+            "safe/./alice/private-root", "safe/C:/Users/alice/private-root",
+            "<EVIDENCE_ROOT>/alice/private-root", "<ANYTHING>/alice/private-root",
+            "safe/<ANYTHING>/alice/private-root", "alice/private-root/", "alice/private-root/.",
+            "alice/private-root/file:stream", "alice/private-root\x00/file", "alice/private-root\n/file",
+            "alice/private-root/.. ", "alice/private-root/file.", "alice/private-root/ file",
+            "alice/private-root/fi?le", "alice/private-root/fi*le",
+        ]
+        paths = [label + "/" + tail for label in ("<EVIDENCE_ROOT>", "<USER_HOME_012345ABCD>") for tail in tails]
+        paths += ["<<EVIDENCE_ROOT>>/alice/private-root", "<EVIDENCE_ROOT><EVIDENCE_ROOT>/alice/private-root",
+                  "<EVIDENCE_ROOT/alice/private-root", ">alice/private-root", "<ANYTHING>/alice/private-root",
+                  "<EVIDENCE_ROOT>/" * 2000 + "alice/private-root"]
+        return paths
+
+    def test_successor_adversarial_malformed_paths_and_idempotence(self):
+        for index, raw in enumerate(self.successor_malformed_paths()):
+            with self.subTest(case=index):
+                result = rpi.portable_path(raw)
+                self.assertRegex(result, r"^<UNSAFE_PATH_[0-9A-F]{64}>$")
+                self.assertNotIn("alice", result.casefold())
+                self.assertNotIn("private-root", result.casefold())
+                self.assertEqual(result, rpi.portable_path(result))
+                self.assertEqual(result, rpi.portable_path(raw))
+
+    def test_successor_near_collision_separators_preserve_distinct_identity(self):
+        paths = ["<EVIDENCE_ROOT>" + "/" * n + "Users/alice/private-root/file.json" for n in range(2, 12)]
+        paths += ["<EVIDENCE_ROOT>/<ANYTHING>/alice/private-root", "<EVIDENCE_ROOT><ANYTHING>/alice/private-root"]
+        results = [rpi.portable_path(raw) for raw in paths]
+        self.assertEqual(len(paths), len(set(results)))
+
+    def test_successor_error_and_oserror_no_placeholder_tail_leakage(self):
+        for index, raw in enumerate(self.successor_malformed_paths()):
+            for exc in (rpi.Refusal("cannot read '" + raw + "'"), OSError(5, "denied", raw),
+                        OSError(5, "cannot read '" + raw + "'")):
+                with self.subTest(case=index, exception=type(exc).__name__):
+                    rendered = rpi.portable_error(exc)
+                    self.assertNotIn("alice", rendered.casefold())
+                    self.assertNotIn("private-root", rendered.casefold())
+                    self.assertEqual(rendered, rpi.portable_error(rpi.Refusal(rendered)))
+
+    def test_successor_idempotence_for_unlabelled_inputs(self):
+        for raw in (r"C:\Users\alice\Desktop\file.json", r"\\server-alice\share\file.json",
+                    r"\\.\pipe\private-root", "./C:/Users/alice/file.json", "/var/reports/file.json",
+                    "D:/EA_LAB_CONTROL/evidence/lane/file.json", "relative/file.json",
+                    "C:/Users/alice/folder:stream/file.json"):
+            with self.subTest(raw=raw):
+                result = rpi.portable_path(raw)
+                self.assertEqual(result, rpi.portable_path(result))
+
     def test_portable_path_normalizes_repeated_separators_and_dot_segments(self):
         cases = [
             (
                 r"\\?\C:\\Users\decoy\..\alice\private\packet.json",
-                r"^<USER_HOME_[0-9A-F]{10}>/private/packet\.json$",
+                r"^<USER_HOME_[0-9A-F]{10}>$",
                 ("alice", "decoy"),
             ),
             (
                 r"\\?\D:\\EA_LAB_CONTROL\evidence\discard\..\lane-a\packet.json",
-                r"^<EVIDENCE_ROOT>/lane-a/packet\.json$",
+                r"^<EVIDENCE_ROOT_[0-9A-F]{10}>$",
                 ("discard",),
             ),
             (
                 r"\\?\UNC\server-a\\share-a\discard\..\research\packet.json",
-                r"^<UNC_ROOT_[0-9A-F]{10}>/research/packet\.json$",
+                r"^<UNC_ROOT_[0-9A-F]{10}>$",
                 ("server-a", "share-a", "discard"),
             ),
         ]
@@ -231,8 +487,8 @@ class ReportPackageIntegrityTests(unittest.TestCase):
                 first = rpi.portable_path(raw_first)
                 second = rpi.portable_path(raw_second)
                 self.assertNotEqual(first, second)
-                self.assertEqual("result.json", first.rsplit("/", 1)[-1])
-                self.assertEqual("result.json", second.rsplit("/", 1)[-1])
+                self.assertNotIn("/", first)
+                self.assertNotIn("/", second)
 
     def test_cli_reports_portable_manifest_path_without_changing_hashes_or_inputs(self):
         historical_before = HISTORICAL_RECEIPT.read_bytes()
@@ -280,14 +536,14 @@ class ReportPackageIntegrityTests(unittest.TestCase):
             self.assertEqual(2, rc)
             result = json.loads(output.getvalue())
             self.assertEqual("BLOCKED", result["status"])
-            self.assertRegex(result["error"], r"<USER_HOME_[0-9A-F]{10}>/private/result\.json")
+            self.assertRegex(result["error"], r"<USER_HOME_[0-9A-F]{10}>$")
             self.assertNotIn("alice", json.dumps(result).casefold())
             self.assertNotRegex(json.dumps(result), r"(?i)C:\\\\Users\\\\")
 
     def test_os_error_rendering_does_not_expose_username(self):
         exc = FileNotFoundError(2, "file not found", r"C:\Users\alice\private\missing.json")
         rendered = rpi.portable_error(exc)
-        self.assertRegex(rendered, r"^file not found: <USER_HOME_[0-9A-F]{10}>/private/missing\.json$")
+        self.assertRegex(rendered, r"^file not found: <USER_HOME_[0-9A-F]{10}>$")
         self.assertNotIn("alice", rendered.casefold())
 
         strerror_path = OSError(5, r"cannot open C:\Users\Alice Smith\private\missing.json")
@@ -302,7 +558,7 @@ class ReportPackageIntegrityTests(unittest.TestCase):
         rendered = rpi.portable_error(exc)
         self.assertRegex(
             rendered,
-            r"^invalid source path: <USER_HOME_[0-9A-F]{10}>/private/missing\.json$",
+            r"^invalid source path: <USER_HOME_[0-9A-F]{10}>$",
         )
         self.assertNotIn("alice", rendered.casefold())
         self.assertNotRegex(rendered, r"(?i)(?:\\\\\?\\)?[a-z]:[/\\]")

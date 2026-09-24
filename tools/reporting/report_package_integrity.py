@@ -22,9 +22,19 @@ from typing import Any
 
 MANIFEST_VERSION = "EA_LAB_REPORT_PACKAGE_INTEGRITY_V1"
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
-_REDACTED_PATH_RE = re.compile(r"^(<[A-Z0-9_]+>)(?:[\\/](.*))?$")
+_REDACTED_PATH_RE = re.compile(
+    r"^(<(?:REPO_ROOT|EVIDENCE_ROOT|ABSOLUTE_ROOT|"
+    r"(?:EVIDENCE_ROOT|WORKTREE|USER_HOME|UNC_ROOT|ABSOLUTE_ROOT|DEVICE_PATH|UNSAFE_TAIL)_[0-9A-F]{10}|"
+    r"UNSAFE_PATH_[0-9A-F]{64})>)$"
+)
 _EMBEDDED_ABSOLUTE_PATH_START_RE = re.compile(
-    r"(?i)(?:\\\\|//|[A-Z]:[\\/]|(?<![\w>?.])/(?!/))"
+    r"(?i)(?:\\\\|//|[A-Z]:[\\/]|(?<![\w>?.])[\\/]|(?<!\w)~[^\s/\\]*[\\/])"
+)
+_PLACEHOLDER_START_RE = re.compile(
+    r"(?<!\w)<(?=[A-Za-z_<\\/])|"
+    r"[<>](?=\s*[A-Za-z_][A-Za-z0-9_-]*\s+(?:[<>]|\S*[\\/]))|"
+    r"<(?=\s*[A-Za-z_][A-Za-z0-9_-]*\s*(?:>|[\\/]))|"
+    r"[<>](?=\s*[^\s<>\"'\\/]*[\\/])"
 )
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -123,27 +133,39 @@ def portable_path(value: str | Path, *, repo_root: str | Path | None = None) -> 
     """Return a deterministic display path without exposing machine/user roots.
 
     This is presentation-only. Artifact hashes and the paths used for filesystem access are
-    untouched. Relative tails are retained so two files with the same basename remain distinct.
+    untouched. Absolute paths yield readable tails only under a qualified repository root.
+    Labels do not attest to tail provenance; opaque identities bind the whole path.
     """
-    text = _canonicalize_windows_namespace(str(value).strip().replace("\\", "/"))
-    already_redacted = _REDACTED_PATH_RE.fullmatch(text)
-    if already_redacted:
-        label, tail = already_redacted.group(1), already_redacted.group(2)
-        if not tail:
-            return label
-        nested = "//" + tail.lstrip("/") if tail.startswith("/") else tail
-        nested = _canonicalize_windows_namespace(nested)
-        if _absolute_path_kind(nested) or _REDACTED_PATH_RE.fullmatch(nested):
-            return f"{label}/{portable_path(nested, repo_root=repo_root)}"
-        parts = nested.split("/")
-        if any(part in ("", ".", "..") or ":" in part for part in parts):
-            return f"{label}/{_opaque_path_label('UNSAFE_TAIL', nested)}"
-        return f"{label}/{nested}"
+    raw = str(value)
+
+    def closed_placeholder(text: str) -> str:
+        match = _REDACTED_PATH_RE.fullmatch(text)
+        if match:
+            return text
+        # No string-only provenance check can distinguish a generated readable tail
+        # from a forged one. Accept bare labels only, even for known-root labels.
+        # Bind the entire original spelling, before separator/namespace collapse.
+        # Never retain any tail from malformed, unknown, repeated or nested labels.
+        digest = hashlib.sha256(raw.encode("utf-8")).hexdigest().upper()
+        return f"<UNSAFE_PATH_{digest}>"
+
+    text = raw.strip().replace("\\", "/")
+    if "<" in text or ">" in text:
+        return closed_placeholder(text)
+    result = _portable_unlabelled_path(text, repo_root=repo_root)
+    # Generated labels obey the same grammar, making presentation idempotent.
+    return closed_placeholder(result) if "<" in result or ">" in result else result
+
+
+def _portable_unlabelled_path(text: str, *, repo_root: str | Path | None) -> str:
+    while text.startswith("./"):
+        text = text[2:]
+    text = _canonicalize_windows_namespace(text)
 
     path_kind = _absolute_path_kind(text)
     if path_kind is None:
-        while text.startswith("./"):
-            text = text[2:]
+        if re.match(r"^~[^/]*/", text):
+            return _opaque_path_label("USER_HOME", text)
         return text
 
     if path_kind == "device":
@@ -155,7 +177,7 @@ def portable_path(value: str | Path, *, repo_root: str | Path | None = None) -> 
         root = _canonicalize_windows_namespace(
             str(root_value).strip().replace("\\", "/")
         ).rstrip("/")
-        if not root:
+        if not root or _absolute_path_kind(root) is None:
             return None
         if text.casefold() == root.casefold():
             return ""
@@ -170,91 +192,68 @@ def portable_path(value: str | Path, *, repo_root: str | Path | None = None) -> 
 
     evidence = re.match(r"(?i)^[A-Z]:/EA_LAB_CONTROL/evidence(?:/(.*))?$", text)
     if evidence:
-        tail = evidence.group(1)
-        return "<EVIDENCE_ROOT>" if not tail else f"<EVIDENCE_ROOT>/{tail}"
-
-    def labelled_root(kind: str, root: str) -> str:
-        return _opaque_path_label(kind, root)
+        return "<EVIDENCE_ROOT>" if not evidence.group(1) else _opaque_path_label("EVIDENCE_ROOT", text)
 
     worktree = re.match(
         r"(?i)^(?P<root>[A-Z]:/EA_LAB_CONTROL/(?:worktrees|w)/[^/]+)(?:/(?P<tail>.*))?$",
         text,
     )
     if worktree:
-        label = labelled_root("WORKTREE", worktree.group("root"))
-        tail = worktree.group("tail")
-        return label if not tail else f"{label}/{tail}"
+        return _opaque_path_label("WORKTREE", text)
 
     user_worktree = re.match(
         r"(?i)^(?P<root>[A-Z]:/Users/[^/]+/\.codex/worktrees/[^/]+(?:/EA_LAB)?)(?:/(?P<tail>.*))?$",
         text,
     )
     if user_worktree:
-        label = labelled_root("WORKTREE", user_worktree.group("root"))
-        tail = user_worktree.group("tail")
-        return label if not tail else f"{label}/{tail}"
+        return _opaque_path_label("WORKTREE", text)
 
     user_home = re.match(r"(?i)^(?P<root>[A-Z]:/Users/[^/]+)(?:/(?P<tail>.*))?$", text)
     if user_home:
-        label = labelled_root("USER_HOME", user_home.group("root"))
-        tail = user_home.group("tail")
-        return label if not tail else f"{label}/{tail}"
+        return _opaque_path_label("USER_HOME", text)
 
     if path_kind == "unc":
-        parts = [part for part in text[2:].split("/") if part]
-        root = "//" + "/".join(parts[:2])
-        label = labelled_root("UNC_ROOT", root)
-        tail = "/".join(parts[2:]) if len(parts) > 2 else ""
-        return label if not tail else f"{label}/{tail}"
+        return _opaque_path_label("UNC_ROOT", text)
 
-    if path_kind == "drive":
-        label = labelled_root("ABSOLUTE_ROOT", text[:2])
-        tail = text[3:]
-        return label if not tail else f"{label}/{tail}"
-
-    tail = text.lstrip("/")
-    return "<ABSOLUTE_ROOT>" if not tail else f"<ABSOLUTE_ROOT>/{tail}"
+    return _opaque_path_label("ABSOLUTE_ROOT", text)
 
 
 def _sanitize_error_text(
     message: str, *, repo_root: str | Path | None = None
 ) -> str:
-    """Replace every embedded absolute path while allowing spaces inside path segments."""
-    rendered: list[str] = []
-    cursor = 0
-    while True:
-        match = _EMBEDDED_ABSOLUTE_PATH_START_RE.search(message, cursor)
-        if match is None:
-            rendered.append(message[cursor:])
-            break
+    """Keep diagnostic prefixes; never trust delimiters to end a private reference.
 
-        rendered.append(message[cursor:match.start()])
-        end = len(message)
-        next_match = _EMBEDDED_ABSOLUTE_PATH_START_RE.search(message, match.end())
-        namespace_prefix = message[match.start():match.start() + 4]
-        if (
-            namespace_prefix in ("\\\\?\\", "\\\\.\\", "//?/", "//./")
-            and next_match is not None
-            and next_match.start() == match.start() + 4
-        ):
-            next_match = _EMBEDDED_ABSOLUTE_PATH_START_RE.search(
-                message, next_match.end()
-            )
-        if next_match is not None:
-            end = min(end, next_match.start())
-        for delimiter in (" -> ", "\r", "\n"):
-            delimiter_at = message.find(delimiter, match.end())
-            if delimiter_at >= 0:
-                end = min(end, delimiter_at)
-        if match.start() > 0 and message[match.start() - 1] in ("'", '"'):
-            closing_at = message.find(message[match.start() - 1], match.end())
-            if closing_at >= 0:
-                end = min(end, closing_at)
+    Free text has no filename boundary: quotes, line breaks and arrows can all
+    belong to a malformed path. Once a reference begins, its entire remaining
+    span is untrusted. Only outer terminal quoting/whitespace and an exact chain
+    of bare opaque labels can be retained without releasing a readable tail.
+    Structured OSError filenames are handled separately by portable_error.
+    """
+    starts = [match for pattern in (_EMBEDDED_ABSOLUTE_PATH_START_RE, _PLACEHOLDER_START_RE)
+              if (match := pattern.search(message)) is not None]
+    if not starts:
+        return message
+    match = min(starts, key=lambda item: item.start())
+    start = match.start()
+    candidate = message[start:].rstrip()
+    suffix = message[start + len(candidate):]
+    if start and message[start - 1] in ("'", '"') and candidate.endswith(message[start - 1]):
+        suffix = candidate[-1] + suffix
+        candidate = candidate[:-1]
 
-        candidate = message[match.start():end].rstrip()
-        rendered.append(portable_path(candidate, repo_root=repo_root))
-        cursor = match.start() + len(candidate)
-    return "".join(rendered)
+    # This is the complete output grammar of structured two-filename errors,
+    # not permission to retain arbitrary text following a recognizable label.
+    if all(_REDACTED_PATH_RE.fullmatch(part) for part in candidate.split(" -> ")):
+        return message
+
+    # A qualified root permits relative output only for one unambiguous path.
+    # Do not let a second reference or delimiter-bearing tail inherit that trust.
+    ambiguous = any(char in candidate for char in ("'", '"', "\r", "\n", " -> "))
+    ambiguous = ambiguous or _EMBEDDED_ABSOLUTE_PATH_START_RE.search(
+        candidate, match.end() - start
+    ) is not None
+    shown = portable_path(candidate, repo_root=None if ambiguous else repo_root)
+    return message[:start] + shown + suffix
 
 
 def portable_error(exc: Exception, *, repo_root: str | Path | None = None) -> str:

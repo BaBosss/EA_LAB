@@ -5,7 +5,10 @@ import importlib.util
 import json
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 TOOL = Path(__file__).resolve().parents[1] / 'post_broad_diagnostic_pack.py'
 SPEC = importlib.util.spec_from_file_location('post_broad_diagnostic_pack', TOOL)
@@ -24,11 +27,132 @@ def sha(path):
 
 
 class PackTests(unittest.TestCase):
+    def test_owner_additional_2_delimiters_at_diagnostic_exception_boundary(self):
+        roots = ("<EVIDENCE_ROOT>/", "/home/", "Z:/Users/",
+                 "//private-server/private-share/")
+        tails = ("O'Brien/alice/private-root/file.json",
+                 'D"Angelo/tenant/hidden-tree/file.json',
+                 "segment\nalice/private-root/file.json",
+                 "segment\r\nline\ntenant/hidden-tree/file.json",
+                 "segment -> alice/private-root/file.json")
+        for root in roots:
+            for tail in tails:
+                for separator in ("/", "\\"):
+                    raw = (root + tail).replace("/", separator)
+                    for wrapper in ("{}", "cannot read '{}'", 'cannot read "{}"'):
+                        message = wrapper.format(raw)
+                        for exc in (MOD.Refusal(message), OSError(5, message), OSError(5, "denied", raw)):
+                            with self.subTest(raw=raw, wrapper=wrapper, kind=type(exc).__name__):
+                                out, err = StringIO(), StringIO()
+                                with patch.object(MOD, 'parser') as parser, patch.object(MOD, 'build', side_effect=exc):
+                                    parser.return_value.parse_args.return_value = argparse.Namespace()
+                                    with redirect_stdout(out), redirect_stderr(err):
+                                        self.assertEqual(2, MOD.main())
+                                self.assertEqual('', out.getvalue())
+                                for secret in ('brien', 'angelo', 'alice', 'tenant', 'private-root',
+                                               'hidden-tree', 'file.json', 'private-server', 'private-share'):
+                                    self.assertNotIn(secret, err.getvalue().casefold())
+                                self.assertEqual(err.getvalue(), MOD.portable_error(MOD.Refusal(err.getvalue())))
+
+    def test_owner_additional_2_comparisons_at_diagnostic_exception_boundary(self):
+        for operator in ('<', '>', '<=', '>='):
+            message = f'expected {operator} 5 for reports/result.json'
+            for exc in (MOD.Refusal(message), OSError(5, message)):
+                with self.subTest(message=message, kind=type(exc).__name__):
+                    out, err = StringIO(), StringIO()
+                    with patch.object(MOD, 'parser') as parser, patch.object(MOD, 'build', side_effect=exc):
+                        parser.return_value.parse_args.return_value = argparse.Namespace()
+                        with redirect_stdout(out), redirect_stderr(err):
+                            self.assertEqual(2, MOD.main())
+                    self.assertEqual('', out.getvalue())
+                    self.assertEqual('REFUSED: ' + message + '\n', err.getvalue())
+
+    def test_owner_additional_3_malformed_placeholder_at_cli_boundary(self):
+        tail = "subject'quoted/restricted-tree/file.json"
+        windows_tail = tail.replace("/", "\\")
+        cases = (
+            "< EVIDENCE_ROOT " + tail,
+            "cannot read '/srv/" + tail + "'",
+            'cannot read "Q:/Users/' + tail + '"',
+            'cannot read "\\\\node\\share\\' + windows_tail + '"',
+            "< EVIDENCE_ROOT\nsubject/restricted-tree/file.json",
+            "< EVIDENCE_ROOT <ANYTHING>/subject/restricted-tree/file.json",
+            "< EVIDENCE_ROOT <EVIDENCE_ROOT>/subject/restricted-tree/file.json",
+        )
+        for message in cases:
+            for exc in (MOD.Refusal(message), OSError(5, message)):
+                with self.subTest(message=message, kind=type(exc).__name__):
+                    out, err = StringIO(), StringIO()
+                    with patch.object(MOD, 'parser') as parser, patch.object(MOD, 'build', side_effect=exc):
+                        parser.return_value.parse_args.return_value = argparse.Namespace()
+                        with redirect_stdout(out), redirect_stderr(err):
+                            self.assertEqual(2, MOD.main())
+                    self.assertEqual('', out.getvalue())
+                    rendered = err.getvalue()
+                    self.assertNotIn('restricted-tree', rendered.casefold())
+                    self.assertNotIn('subject', rendered.casefold())
+                    self.assertEqual(rendered, MOD.portable_error(MOD.Refusal(rendered)))
+        for message in ('expected < 5 for reports/result.json',
+                        'expected > 5 for reports/result.json'):
+            for exc in (MOD.Refusal(message), OSError(5, message)):
+                out, err = StringIO(), StringIO()
+                with patch.object(MOD, 'parser') as parser, patch.object(MOD, 'build', side_effect=exc):
+                    parser.return_value.parse_args.return_value = argparse.Namespace()
+                    with redirect_stdout(out), redirect_stderr(err):
+                        self.assertEqual(2, MOD.main())
+                self.assertEqual('REFUSED: ' + message + '\n', err.getvalue())
+
+    def test_owner_repair_cli_private_tails_and_ordinary_angles(self):
+        paths = ["<EVIDENCE_ROOT>/Users/alice/private-root/file.json",
+                 r"<EVIDENCE_ROOT>\Users\alice\private-root\file.json",
+                 "/home/alice/private-root/file.json", r"\Users\alice\private-root\file.json",
+                 r"Z:\Users\alice\private-root\file.json",
+                 r"\\server-alice\share-secret\private-root\file.json"]
+        for raw in paths:
+            for exc in (MOD.Refusal("cannot read '" + raw + "'"), OSError(5, "denied", raw)):
+                with self.subTest(raw=raw, exception=type(exc).__name__):
+                    out, err = StringIO(), StringIO()
+                    with patch.object(MOD, 'parser') as parser, patch.object(MOD, 'build', side_effect=exc):
+                        parser.return_value.parse_args.return_value = argparse.Namespace()
+                        with redirect_stdout(out), redirect_stderr(err):
+                            self.assertEqual(2, MOD.main())
+                    for secret in ('alice', 'private-root', 'server-alice', 'share-secret'):
+                        self.assertNotIn(secret, err.getvalue().casefold())
+                    self.assertEqual('', out.getvalue())
+                    self.assertEqual(err.getvalue(), MOD.portable_error(MOD.Refusal(err.getvalue())))
+        for message in ('expected < 5', 'value > threshold', 'a < b and c > d'):
+            self.assertEqual(message, MOD.portable_error(MOD.Refusal(message)))
+
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(prefix='post broad pack ')
         self.root=Path(self.tmp.name)
     def tearDown(self):
         self.tmp.cleanup()
+
+    def test_placeholder_refusals_are_closed_at_cli_boundary(self):
+        paths = [
+            "<ANYTHING>/Users/alice/private-root/file.json",
+            "<EVIDENCE_ROOT>//Users/alice/private-root/file.json",
+            "<EVIDENCE_ROOT>/<EVIDENCE_ROOT>/alice/private-root",
+            r"<EVIDENCE_ROOT>/C:\Users\alice\private-root\file.json",
+            r"<EVIDENCE_ROOT>/\\server-alice\private-root\file.json",
+            r"<EVIDENCE_ROOT>/\\.\pipe\private-root",
+            "<<EVIDENCE_ROOT>>/alice/private-root",
+        ]
+        for index, raw in enumerate(paths):
+            for exc in (MOD.Refusal("cannot read '" + raw + "'"), OSError(5, "denied", raw)):
+                with self.subTest(case=index, exception=type(exc).__name__):
+                    out, err = StringIO(), StringIO()
+                    with patch.object(MOD, 'parser') as parser, patch.object(MOD, 'build', side_effect=exc):
+                        parser.return_value.parse_args.return_value = argparse.Namespace()
+                        with redirect_stdout(out), redirect_stderr(err):
+                            rc = MOD.main()
+                    self.assertEqual(2, rc)
+                    self.assertEqual('', out.getvalue())
+                    self.assertIn('<UNSAFE_PATH_', err.getvalue())
+                    self.assertNotIn('alice', err.getvalue().casefold())
+                    self.assertNotIn('private-root', err.getvalue().casefold())
+                    self.assertEqual(err.getvalue(), MOD.portable_error(MOD.Refusal(err.getvalue())))
 
     def make_fixture(self):
         unit_fields=['h3_run_id','symbol','period_name','source_position_id','source_deal_id','entry_utc','exit_utc','source_net_realized']
