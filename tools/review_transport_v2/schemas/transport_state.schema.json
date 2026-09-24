@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "2"
+    },
+    "transport_version": {
+      "const": "2"
+    },
+    "transport_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}"
+    },
+    "contract_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}"
+    },
+    "contract_sha256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "[0-9a-f]{64}"
+    },
+    "implementation_manifest_sha256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "[0-9a-f]{64}"
+    },
+    "endpoint_identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "status": {
+      "const": "READY"
+    }
+  },
+  "required": [
+    "schema_version",
+    "transport_version",
+    "transport_id",
+    "contract_id",
+    "contract_sha256",
+    "implementation_manifest_sha256",
+    "endpoint_identity",
+    "status"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "2"
+    },
+    "reviewed_head": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "(?:[0-9a-f]{40}|[0-9a-f]{64})"
+    },
+    "bundle_manifest_sha256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "[0-9a-f]{64}"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "REPAIR_REQUIRED",
+        "REJECT"
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      },
+      "minItems": 0,
+      "maxItems": 100
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}"
+      },
+      "minItems": 0,
+      "maxItems": 4096
+    }
+  },
+  "required": [
+    "schema_version",
+    "reviewed_head",
+    "bundle_manifest_sha256",
+    "verdict",
+    "findings",
+    "citations"
+  ],
+  "additionalProperties": false
+}
