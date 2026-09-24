@@ -17,7 +17,11 @@ param(
     [switch]$Portable,
     [switch]$ValidateOnly,
     [string]$ActiveSelectorPath = '',
-    [string]$AdjacentControlRef = ''
+    [string]$AdjacentControlRef = '',
+    [switch]$DeclaredCoreDelta,
+    [string]$ControlCommit = '',
+    [string]$SourceCommit = '',
+    [string[]]$BehavioralDeltaPaths = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -76,8 +80,19 @@ function Assert-TplMetricMatch([object]$Expected, [object]$Actual, [string]$Expe
 }
 
 try {
+    $explicitDelta = @('DeclaredCoreDelta','ControlCommit','SourceCommit','BehavioralDeltaPaths') | Where-Object { $PSBoundParameters.ContainsKey($_) }
+    $useDeclaredDelta = @($explicitDelta).Count -gt 0
+    if ($useDeclaredDelta) {
+        if (-not $DeclaredCoreDelta -or $PSBoundParameters.ContainsKey('AdjacentControlRef')) { throw 'REFUSE: declared delta requires explicit mode and cannot mix with legacy AdjacentControlRef' }
+        if ($ActiveSelectorPath -and $ActiveSelectorPath -cne (Join-Path $root 'ea_template\regression_baseline.active.json')) {
+            throw 'REFUSE: declared delta requires the canonical baseline selector path'
+        }
+    }
     $baseline = Get-TplActiveBaseline -Root $root -ActiveSelectorPath $ActiveSelectorPath
-    if ($AdjacentControlRef) {
+    if ($useDeclaredDelta) {
+        $sourceCommit = Assert-TplSourceContract -Root $root -Baseline $baseline -DeclaredCoreDelta -ControlCommit $ControlCommit -SourceCommit $SourceCommit -BehavioralDeltaPaths $BehavioralDeltaPaths
+        $controlCommit = $ControlCommit
+    } elseif ($AdjacentControlRef) {
         $sourceCommit = Assert-TplSourceContract -Root $root -Baseline $baseline -AdjacentControlRef $AdjacentControlRef -RegisteredUnbaselinedEas @($baseline.RegisteredUnbaselinedEas)
         $controlCommit = Assert-TplCommitIdentity -Root $root -Sha $AdjacentControlRef -Label 'AdjacentControlRef'
     } else {
@@ -88,7 +103,7 @@ try {
         throw 'REFUSE: requested tester contract does not match the active Build-6090 baseline'
     }
     if ($ValidateOnly) {
-        if ($AdjacentControlRef) {
+        if ($AdjacentControlRef -or $useDeclaredDelta) {
             Write-Host "=== ADJACENT CONTROL STRUCTURALLY READY; RUNTIME CONTROL+CURRENT RUN REQUIRED (control $controlCommit, source $sourceCommit) ===" -ForegroundColor Yellow
         } else {
             Write-Host "=== BASELINE CONTRACT CLEAN (Build 6090, source $sourceCommit) ===" -ForegroundColor Green
@@ -111,7 +126,7 @@ try {
         $sets[$case.ea] = $setPath
     }
 
-    if (-not $AdjacentControlRef) {
+    if (-not $AdjacentControlRef -and -not $useDeclaredDelta) {
         Invoke-TplCompile -SourceRoot $root -Label 'current'
         $fail = 0
         foreach ($case in $cases) {

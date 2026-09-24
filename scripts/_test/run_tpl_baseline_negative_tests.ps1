@@ -12,11 +12,18 @@ function New-Fixture {
     New-Item -ItemType Directory -Force (Join-Path $dir 'ea_template\sets\regression') | Out-Null
     New-Item -ItemType Directory -Force (Join-Path $dir 'ea_template\regression_reports\build6090') | Out-Null
     New-Item -ItemType Directory -Force (Join-Path $dir '_triage\factory_os') | Out-Null
-    Get-ChildItem (Join-Path $RepoRoot 'ea_template\Boss_*.mq5') | Copy-Item -Destination (Join-Path $dir 'ea_template')
+    # The synthetic new-Boss cases own their new tags. Do not import unrelated live
+    # unbaselined wrappers (e.g. a real Boss20) into the historical fixture cohort.
+    $historical = (Get-Content (Join-Path $RepoRoot 'ea_template\regression_baseline_build6090.manifest.json') -Raw | ConvertFrom-Json).cases
+    foreach ($case in $historical) { Copy-Item -LiteralPath (Join-Path $RepoRoot $case.source_path) -Destination (Join-Path $dir 'ea_template') }
     Get-ChildItem (Join-Path $RepoRoot 'ea_template\sets\regression\*.set') | Copy-Item -Destination (Join-Path $dir 'ea_template\sets\regression')
     Get-ChildItem (Join-Path $RepoRoot 'ea_template\regression_reports\build6090\*.htm') | Copy-Item -Destination (Join-Path $dir 'ea_template\regression_reports\build6090')
     Get-ChildItem (Join-Path $RepoRoot 'ea_template\regression_baseline*.json'), (Join-Path $RepoRoot 'ea_template\regression_baseline_build6090.csv') | Copy-Item -Destination (Join-Path $dir 'ea_template')
-    Copy-Item (Join-Path $RepoRoot '_triage\factory_os\wrapper_owners.csv') (Join-Path $dir '_triage\factory_os\wrapper_owners.csv')
+    $owners = @('build_tag,wrapper_rel') + @($historical | ForEach-Object {
+        if ($_.ea -notmatch '^Boss_(\d+)_') { throw 'malformed historical fixture identity' }
+        'LAB_ENTRY_' + $Matches[1] + ',' + $_.source_path
+    })
+    [IO.File]::WriteAllLines((Join-Path $dir '_triage\factory_os\wrapper_owners.csv'), $owners)
     return $dir
 }
 function Read-Json([string]$Path) { Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json }
@@ -87,6 +94,146 @@ function Expect-SourceAllowed([string]$Name, [string]$Root, [string]$Tip, [strin
     try { Assert-TplSourceContract -Root $Root -Baseline (New-LineageBaseline $Tip $Base) | Out-Null; Write-Host "[PASS] $Name" }
     catch { throw "FAIL: $Name unexpectedly refused: $($_.Exception.Message)" }
 }
+function New-DeclaredDeltaFixture {
+    $dir = New-Fixture
+    New-Item -ItemType Directory -Force (Join-Path $dir 'ea_template/core'), (Join-Path $dir 'scripts/lib') | Out-Null
+    [IO.File]::WriteAllText((Join-Path $dir 'ea_template/core/Seed.mqh'), '// control')
+    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts/tpl_regression.ps1') -Destination (Join-Path $dir 'scripts')
+    foreach ($lib in @('tpl_baseline.ps1','evidence.ps1','setfile_surface.ps1')) {
+        Copy-Item -LiteralPath (Join-Path $RepoRoot "scripts/lib/$lib") -Destination (Join-Path $dir 'scripts/lib')
+    }
+    & git -C $dir init --quiet
+    & git -C $dir config user.name 'TPL declared delta fixture'
+    & git -C $dir config user.email 'tpl-delta@example.invalid'
+    & git -C $dir config core.autocrlf false
+    & git -C $dir add .
+    & git -C $dir commit --quiet -m 'synthetic baseline source'
+    if ($LASTEXITCODE -ne 0) { throw 'delta fixture seed commit failed' }
+    $seed = Get-LineageHead $dir
+    $manifestPath = Join-Path $dir 'ea_template/regression_baseline_build6090.manifest.json'
+    $manifest = Read-Json $manifestPath
+    $manifest.baseline_source_commit = $seed
+    $manifest.accepted_runtime_lineage_tip = $seed
+    foreach ($case in $manifest.cases) { $case.source_commit = $seed }
+    Write-Json $manifestPath $manifest
+    & git -C $dir add .
+    & git -C $dir commit --quiet -m 'synthetic canonical provenance control'
+    if ($LASTEXITCODE -ne 0) { throw 'delta fixture control commit failed' }
+    return [pscustomobject]@{ Root=$dir; Seed=$seed; Control=(Get-LineageHead $dir) }
+}
+function Invoke-DeclaredDeltaCase([string]$Name, [scriptblock]$Arrange, [string]$Refusal = '') {
+    $fixture = New-DeclaredDeltaFixture
+    $d = $fixture.Root
+    try {
+        $source = Commit-LineageFile $d 'ea_template/core/Seed.mqh' '// declared change' 'exact declared delta'
+        $call = @{ Root=$d; Baseline=(Get-TplActiveBaseline $d); DeclaredCoreDelta=$true;
+            ControlCommit=$fixture.Control; SourceCommit=$source; BehavioralDeltaPaths=@('ea_template/core/Seed.mqh') }
+        & $Arrange $fixture $call
+        $failure = ''
+        try { $actual = Assert-TplSourceContract @call }
+        catch { $failure = $_.Exception.Message }
+        if ($Refusal) {
+            if (-not $failure -or $failure -notmatch $Refusal) { throw "FAIL: $Name expected '$Refusal', got '$failure'" }
+        } elseif ($failure -or $actual -cne $call.SourceCommit) { throw "FAIL: $Name unexpectedly refused: $failure" }
+        $script:deltaPass++
+        Write-Host "[PASS] Contract1 $Name :: $failure"
+    } finally {
+        $resolved = [IO.Path]::GetFullPath($d)
+        $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\') + '\'
+        if (-not $resolved.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path $resolved -Leaf) -notlike 'tpl_baseline_case_*') { throw 'unsafe delta fixture cleanup' }
+        Remove-Item -LiteralPath $resolved -Recurse -Force
+    }
+}
+function Add-DeltaCommit([object]$Fixture, [hashtable]$Call, [string]$Path) {
+    # Keep an exact adjacent pair while introducing the extra change in that pair.
+    $Call.ControlCommit = $Call.SourceCommit
+    [IO.File]::WriteAllText((Join-Path $Fixture.Root 'ea_template/core/Seed.mqh'), '// next declared change')
+    $target = Join-Path $Fixture.Root $Path
+    New-Item -ItemType Directory -Force (Split-Path $target -Parent) | Out-Null
+    [IO.File]::WriteAllText($target, '// undeclared change')
+    & git -C $Fixture.Root add .
+    & git -C $Fixture.Root commit --quiet -m 'extra behavioral delta'
+    if ($LASTEXITCODE -ne 0) { throw 'extra delta fixture commit failed' }
+    $Call.SourceCommit = Get-LineageHead $Fixture.Root
+}
+function Test-DeclaredDeltaCases {
+    $script:deltaPass = 0
+    Invoke-DeclaredDeltaCase 'C exact declared core delta' { }
+    Invoke-DeclaredDeltaCase 'D undeclared core' { param($f,$c) Add-DeltaCommit $f $c 'ea_template/core/Extra.mqh' } 'undeclared behavioral delta'
+    Invoke-DeclaredDeltaCase 'E extra Boss' { param($f,$c) Add-DeltaCommit $f $c 'ea_template/Boss_11_GridTrend.mq5' } 'source hash mismatch'
+    Invoke-DeclaredDeltaCase 'F extra entry' { param($f,$c) Add-DeltaCommit $f $c 'ea_template/EA_LabTemplate.mq5' } 'undeclared behavioral delta'
+    Invoke-DeclaredDeltaCase 'G expected delta absent' { param($f,$c) $c.BehavioralDeltaPaths += 'ea_template/core/Absent.mqh' } 'delta absent'
+    Invoke-DeclaredDeltaCase 'H wrong control SHA' { param($f,$c) $c.ControlCommit=$f.Seed } 'single immediate parent'
+    Invoke-DeclaredDeltaCase 'I wrong source SHA' { param($f,$c) $c.SourceCommit=$f.Control } 'exact HEAD'
+    Invoke-DeclaredDeltaCase 'J empty declaration' { param($f,$c) $c.BehavioralDeltaPaths=@() } 'nonempty behavioral'
+    Invoke-DeclaredDeltaCase 'K duplicate declaration' { param($f,$c) $c.BehavioralDeltaPaths += $c.BehavioralDeltaPaths[0] } 'duplicate behavioral'
+    Invoke-DeclaredDeltaCase 'L traversal' { param($f,$c) $c.BehavioralDeltaPaths=@('ea_template/core/../core/Seed.mqh') } 'noncanonical literal'
+    Invoke-DeclaredDeltaCase 'M absolute path' { param($f,$c) $c.BehavioralDeltaPaths=@((Join-Path $f.Root 'ea_template/core/Seed.mqh')) } 'noncanonical literal'
+    Invoke-DeclaredDeltaCase 'N outside repository' { param($f,$c) $c.BehavioralDeltaPaths=@('../elsewhere/Seed.mqh') } 'noncanonical literal'
+    Invoke-DeclaredDeltaCase 'O selector mismatch' { param($f,$c) Add-Content -LiteralPath (Join-Path $f.Root 'ea_template/regression_baseline.active.json') ' ' } 'working source bytes'
+    Invoke-DeclaredDeltaCase 'O baseline source mismatch' { param($f,$c) $c.Baseline.Manifest.baseline_source_commit=$c.SourceCommit } 'canonical selector/source'
+    Invoke-DeclaredDeltaCase 'P deterministic repeat and ValidateOnly public route' {
+        param($f,$c)
+        $first = Assert-TplSourceContract @c
+        $second = Assert-TplSourceContract @c
+        $treeBefore = (& git -C $f.Root rev-parse 'HEAD^{tree}').Trim()
+        $command = Join-Path $f.Root 'scripts/tpl_regression.ps1'
+        $output = & powershell -NoProfile -File $command -ValidateOnly -DeclaredCoreDelta -ControlCommit $c.ControlCommit -SourceCommit $c.SourceCommit -BehavioralDeltaPaths 'ea_template/core/Seed.mqh' 2>&1
+        $code = $LASTEXITCODE
+        $treeAfter = (& git -C $f.Root rev-parse 'HEAD^{tree}').Trim()
+        $dirty = @(& git -C $f.Root status --porcelain --untracked-files=all)
+        if ($code -ne 0 -or ($output | Out-String) -notmatch 'STRUCTURALLY READY; RUNTIME CONTROL\+CURRENT RUN REQUIRED' -or $first -cne $second -or $treeBefore -cne $treeAfter -or $dirty.Count) {
+            throw "FAIL: repeat/ValidateOnly identity mismatch: exit=$code output=$output"
+        }
+        Write-Host ('REPEATABILITY ' + (@{ control=$c.ControlCommit; source=$first; tree_before=$treeBefore; tree_after=$treeAfter; invocations=3; validate_only_exit=$code; clean=$true } | ConvertTo-Json -Compress))
+    }
+    Invoke-DeclaredDeltaCase 'Q matching output arbitrary control' {
+        param($f,$c)
+        # Both refs contain byte-identical archived metrics. That cannot select a control.
+        $metric='ea_template/regression_baseline_build6090.csv'
+        $a=& git -C $f.Root rev-parse ($f.Seed + ':' + $metric)
+        $b=& git -C $f.Root rev-parse ($c.SourceCommit + ':' + $metric)
+        if ($a -cne $b) { throw 'matching-output fixture did not match' }
+        $c.ControlCommit=$f.Seed
+    } 'single immediate parent'
+    Invoke-DeclaredDeltaCase 'case-alias duplicate' { param($f,$c) $c.BehavioralDeltaPaths += 'EA_TEMPLATE/CORE/SEED.MQH' } 'duplicate behavioral'
+    Invoke-DeclaredDeltaCase 'case alias' { param($f,$c) $c.BehavioralDeltaPaths=@('ea_template/core/seed.mqh') } 'case-aliased'
+    Invoke-DeclaredDeltaCase 'backslash spelling' { param($f,$c) $c.BehavioralDeltaPaths=@('ea_template\core\Seed.mqh') } 'noncanonical literal'
+    Invoke-DeclaredDeltaCase 'wildcard declaration' { param($f,$c) $c.BehavioralDeltaPaths=@('ea_template/core/*.mqh') } 'noncanonical literal'
+    Invoke-DeclaredDeltaCase 'undeclared generated' { param($f,$c) Add-DeltaCommit $f $c 'ea_template/generated/Extra.mqh' } 'undeclared behavioral delta'
+    Invoke-DeclaredDeltaCase 'undeclared module' { param($f,$c) Add-DeltaCommit $f $c 'ea_template/modules/Extra.mqh' } 'undeclared behavioral delta'
+    Invoke-DeclaredDeltaCase 'dirty source bytes' { param($f,$c) Add-Content -LiteralPath (Join-Path $f.Root 'ea_template/core/Seed.mqh') '// hidden' } 'working source bytes'
+    Invoke-DeclaredDeltaCase 'assume unchanged cannot hide bytes' { param($f,$c) & git -C $f.Root update-index --assume-unchanged ea_template/core/Seed.mqh; Add-Content -LiteralPath (Join-Path $f.Root 'ea_template/core/Seed.mqh') '// hidden' } 'working source bytes'
+    Invoke-DeclaredDeltaCase 'staged source with clean disk' {
+        param($f,$c)
+        $p=Join-Path $f.Root 'ea_template/core/Seed.mqh'; $bytes=[IO.File]::ReadAllBytes($p)
+        Add-Content -LiteralPath $p '// staged'; & git -C $f.Root add -- ea_template/core/Seed.mqh
+        [IO.File]::WriteAllBytes($p,$bytes)
+    } 'staged source/provenance'
+    Invoke-DeclaredDeltaCase 'untracked behavioral' { param($f,$c) [IO.File]::WriteAllText((Join-Path $f.Root 'ea_template/core/Hidden.mqh'),'// hidden') } 'untracked/case-aliased'
+    Invoke-DeclaredDeltaCase 'ignored behavioral' { param($f,$c) [IO.File]::WriteAllText((Join-Path $f.Root '.git/info/exclude'),'ea_template/core/Hidden.mqh'); [IO.File]::WriteAllText((Join-Path $f.Root 'ea_template/core/Hidden.mqh'),'// hidden') } 'untracked/case-aliased'
+    Invoke-DeclaredDeltaCase 'unrelated nonbehavioral allowance' { param($f,$c) [IO.File]::WriteAllText((Join-Path $f.Root 'notes.txt'),'notes') }
+    Invoke-DeclaredDeltaCase 'missing mode never falls back' { param($f,$c) $c.Remove('DeclaredCoreDelta') } 'explicit mode'
+    Invoke-DeclaredDeltaCase 'invalid mode never enters legacy' { param($f,$c) $c.DeclaredCoreDelta=$false; $c.AdjacentControlRef=$f.Control } 'explicit mode'
+    Invoke-DeclaredDeltaCase 'mixed legacy and declared' { param($f,$c) $c.AdjacentControlRef=$f.Control } 'cannot mix'
+    Invoke-DeclaredDeltaCase 'revision expression' { param($f,$c) $c.ControlCommit='HEAD^' } 'exact lowercase 40-hex'
+    Invoke-DeclaredDeltaCase 'abbreviated source' { param($f,$c) $c.SourceCommit=$c.SourceCommit.Substring(0,12) } 'exact lowercase 40-hex'
+    Invoke-DeclaredDeltaCase 'whitespace SHA' { param($f,$c) $c.ControlCommit=' '+$c.ControlCommit } 'exact lowercase 40-hex'
+    Invoke-DeclaredDeltaCase 'nonbehavioral declaration' { param($f,$c) $c.BehavioralDeltaPaths=@('README.md') } 'outside behavioral source'
+    Invoke-DeclaredDeltaCase 'committed selector replacement' {
+        param($f,$c)
+        $c.ControlCommit=$c.SourceCommit
+        Add-Content -LiteralPath (Join-Path $f.Root 'ea_template/regression_baseline.active.json') ' '
+        $c.SourceCommit=Commit-LineageFile $f.Root 'ea_template/core/Seed.mqh' '// next' 'next delta'
+        & git -C $f.Root add .
+        & git -C $f.Root commit --quiet -m 'changed selector'
+        if ($LASTEXITCODE -ne 0) { throw 'selector fixture commit failed' }
+        $c.ControlCommit=(& git -C $f.Root rev-parse 'HEAD^').Trim()
+        $c.SourceCommit=Get-LineageHead $f.Root
+    } 'canonical baseline provenance changed'
+    Write-Host "TPL DECLARED DELTA TESTS: $script:deltaPass/$script:deltaPass PASS (A/B covered by unchanged legacy assertions)"
+}
+
 function Invoke-GeneratorLineageProbe([string]$Root, [string]$SourceCommit, [string]$AcceptedTip) {
     $script = Join-Path $RepoRoot 'scripts\generate_tpl_baseline.ps1'
     $missingTerminal = Join-Path $Root 'missing-terminal.exe'
@@ -280,6 +427,7 @@ try {
         } finally { Remove-Item -LiteralPath $generatorH -Recurse -Force -ErrorAction SilentlyContinue }
     } finally { Remove-Item -LiteralPath $lineage -Recurse -Force -ErrorAction SilentlyContinue }
 
+    Test-DeclaredDeltaCases
     $ownerFiles = @(
         (Join-Path $RepoRoot 'ea_template\regression_baseline_build6090.manifest.json'),
         (Join-Path $RepoRoot 'scripts\generate_tpl_baseline.ps1'),

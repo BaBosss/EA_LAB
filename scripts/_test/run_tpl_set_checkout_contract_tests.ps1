@@ -87,13 +87,21 @@ Assert-True ((Get-ParameterMapFromUtf8Bytes $boss11Bytes).Count -eq $expectedBos
 Write-Host ("[PASS] Boss_11 hash {0}; CRLF hash {1}; logical map unchanged" -f $boss11Hash, $crlfHash)
 
 $manifestCases = @($manifest.cases)
-$expectedBossCount = @(& git -C $RepoRoot ls-files -- 'ea_template/Boss_*.mq5' | Where-Object { $_ }).Count
-Assert-True ($manifestCases.Count -eq $expectedBossCount) 'active Build-6090 manifest case count matches canonical Boss wrappers'
+. (Join-Path $RepoRoot 'scripts\lib\tpl_baseline.ps1')
+# Historical cases stay frozen; additional wrappers need their own owner registration.
+$cohorts = Get-TplHistoricalAndUnbaselinedEas -Root $RepoRoot -Cases $manifestCases
+$trackedBossPaths = @(& git -C $RepoRoot ls-files -- 'ea_template/Boss_*.mq5' | Where-Object { $_ })
+Assert-True ($LASTEXITCODE -eq 0) 'tracked Boss inventory is readable'
+$cohortPaths = @(@($cohorts.HistoricalEas) + @($cohorts.UnbaselinedEas) | ForEach-Object { $_.RelativePath })
+Assert-True ($cohortPaths.Count -eq $trackedBossPaths.Count) 'historical and registered unbaselined cohorts cover tracked Boss wrappers'
+foreach ($relative in $trackedBossPaths) {
+    Assert-True ($cohortPaths -ccontains $relative) "tracked Boss wrapper has an exact registered cohort identity: $relative"
+}
 foreach ($case in $manifestCases) {
     $path = Join-Path $RepoRoot (([string]$case.declared_set_path) -replace '/', '\')
     Assert-True ((Get-ByteSha ([IO.File]::ReadAllBytes($path))) -eq ([string]$case.declared_set_sha256).ToLowerInvariant()) "manifest hash matches: $($case.ea)"
 }
-Write-Host '[PASS] all active-manifest set hashes match canonical Boss wrappers'
+Write-Host ("[PASS] all {0} historical case identities and set hashes preserved; {1} registered unbaselined wrappers; {2} tracked wrappers" -f $manifestCases.Count, @($cohorts.UnbaselinedEas).Count, $trackedBossPaths.Count)
 
 $unrelatedPaths = @(& git -C $RepoRoot ls-files -- '*.set' | Where-Object { $_ -and $_ -notlike 'ea_template/sets/regression/*.set' })
 Assert-True ($unrelatedPaths.Count -gt 0) 'unrelated set inventory is non-empty'

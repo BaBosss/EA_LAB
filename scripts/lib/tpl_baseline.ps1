@@ -280,13 +280,176 @@ function Assert-TplAdjacentControlContract {
     return $control
 }
 
+function Test-TplBehavioralPath([string]$Path) {
+    # Frozen ordinary source classifier, also used by the explicit adjacent mode.
+    return $Path -match '^(ea_template/(core|modules|generated)/|ea_template/Boss_.*\.mq5$|ea_template/EA_LabTemplate\.mq5$)'
+}
+
+function Assert-TplLiteralPath([string]$Path) {
+    # Validate, never repair spelling. Git pathspecs, Win32 aliases and ADS are not paths.
+    if ($Path -cnotmatch '^[A-Za-z0-9_-][A-Za-z0-9_./ -]*$' -or $Path.Contains('//')) {
+        throw "REFUSE: noncanonical literal repository path: $Path"
+    }
+    foreach ($part in $Path.Split('/')) {
+        if (-not $part -or $part -in @('.', '..') -or $part -ne $part.Trim() -or $part.EndsWith('.') -or
+            $part -match '^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)') {
+            throw "REFUSE: noncanonical literal repository path: $Path"
+        }
+    }
+}
+
+function Get-TplTree([string]$Root, [string]$Commit) {
+    if (-not (Get-Command Invoke-EvidenceGitBytes -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'evidence.ps1') }
+    $result = Invoke-EvidenceGitBytes -RepoRoot $Root -Arguments "ls-tree -r -z $Commit"
+    if ($result.ExitCode -ne 0) { throw "REFUSE: cannot read source tree $Commit" }
+    $tree = New-Object 'System.Collections.Generic.Dictionary[string,object]' ([StringComparer]::Ordinal)
+    $folded = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+    $utf8 = New-Object Text.UTF8Encoding($false, $true)
+    foreach ($row in $utf8.GetString($result.Bytes).Split([char]0)) {
+        if (-not $row) { continue }
+        if ($row -notmatch '^(\d{6}) (blob|commit) ([0-9a-f]{40})\t(.+)$') { throw 'REFUSE: noncomparable Git tree entry' }
+        $path = $Matches[4]
+        if (-not $folded.Add($path)) { throw "REFUSE: case-ambiguous source tree path: $path" }
+        $tree.Add($path, [pscustomobject]@{ Mode=$Matches[1]; Type=$Matches[2]; Blob=$Matches[3] })
+    }
+    return ,$tree
+}
+
+function Assert-TplDiskIdentity([string]$Root, [string]$Path, [object]$Entry) {
+    Assert-TplLiteralPath $Path
+    if ($null -eq $Entry -or $Entry.Type -ne 'blob' -or $Entry.Mode -notin @('100644','100755')) {
+        throw "REFUSE: missing/nonregular source identity: $Path"
+    }
+    $cursor = $Root
+    foreach ($part in $Path.Split('/')) {
+        $cursor = Join-Path $cursor $part
+        if (-not (Test-Path -LiteralPath $cursor)) { throw "REFUSE: source file missing: $Path" }
+        $item = Get-Item -LiteralPath $cursor -Force
+        if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or $item.Name -cne $part) {
+            throw "REFUSE: reparse or case-aliased source path: $Path"
+        }
+    }
+    # Raw bytes: no clean filters, ignore flags, assume-unchanged or skip-worktree trust.
+    $hash = & git -C $Root hash-object --no-filters -- $cursor
+    if ($LASTEXITCODE -ne 0 -or $hash -cne $Entry.Blob) { throw "REFUSE: working source bytes differ from HEAD: $Path" }
+}
+
+function Assert-TplDeclaredCoreDeltaContract {
+    param([string]$Root, [object]$Baseline, [string]$ControlCommit, [string]$SourceCommit, [string[]]$BehavioralDeltaPaths)
+    foreach ($sha in @($ControlCommit, $SourceCommit)) {
+        if ($sha -cnotmatch '^[0-9a-f]{40}$') { throw 'REFUSE: declared delta requires exact lowercase 40-hex control and source SHAs' }
+    }
+    $control = Assert-TplCommitIdentity $Root $ControlCommit 'ControlCommit'
+    $source = Assert-TplCommitIdentity $Root $SourceCommit 'SourceCommit'
+    $head = & git -C $Root rev-parse HEAD
+    if ($LASTEXITCODE -ne 0 -or $head -cne $source) { throw 'REFUSE: SourceCommit must equal exact HEAD' }
+    $parents = @((& git -C $Root rev-list --parents -n 1 $source) -split ' ')
+    if ($LASTEXITCODE -ne 0 -or $parents.Count -ne 2 -or $parents[1] -cne $control) {
+        throw 'REFUSE: ControlCommit must be the single immediate parent of SourceCommit'
+    }
+    $rootFull = (Resolve-Path -LiteralPath $Root).Path
+    $top = & git -C $Root rev-parse --show-toplevel
+    if ($LASTEXITCODE -ne 0 -or [IO.Path]::GetFullPath($top) -ine $rootFull) { throw 'REFUSE: Root must be the repository root' }
+    $ancestor = Get-Item -LiteralPath $rootFull -Force
+    while ($null -ne $ancestor) {
+        if (($ancestor.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'REFUSE: reparse repository root' }
+        $ancestor = $ancestor.Parent
+    }
+    if (@($BehavioralDeltaPaths).Count -eq 0) { throw 'REFUSE: nonempty behavioral delta declarations required' }
+    $declared = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+    foreach ($path in $BehavioralDeltaPaths) {
+        Assert-TplLiteralPath $path
+        if (-not (Test-TplBehavioralPath $path)) { throw "REFUSE: declaration is outside behavioral source: $path" }
+        if (-not $declared.Add($path)) { throw "REFUSE: duplicate behavioral declaration: $path" }
+    }
+    $currentTree = Get-TplTree $Root $source
+    $controlTree = Get-TplTree $Root $control
+    $canonical = Get-TplActiveBaseline -Root $Root
+    if (($Baseline.Manifest | ConvertTo-Json -Depth 20 -Compress) -cne ($canonical.Manifest | ConvertTo-Json -Depth 20 -Compress) -or
+        ($Baseline.Selector | ConvertTo-Json -Depth 20 -Compress) -cne ($canonical.Selector | ConvertTo-Json -Depth 20 -Compress)) {
+        throw 'REFUSE: baseline is not the canonical selector/source identity'
+    }
+    $base = Assert-TplCommitIdentity $Root ([string]$canonical.Manifest.baseline_source_commit) 'baseline_source_commit'
+    $runtime = Assert-TplCommitIdentity $Root ([string]$canonical.Manifest.accepted_runtime_lineage_tip) 'accepted_runtime_lineage_tip'
+    & git -C $Root merge-base --is-ancestor $runtime $base
+    if ($LASTEXITCODE -ne 0) { throw 'REFUSE: runtime lineage is not ancestor of baseline source' }
+    & git -C $Root merge-base --is-ancestor $base $control
+    if ($LASTEXITCODE -ne 0) { throw 'REFUSE: baseline source is not ancestor of control' }
+    $baseTree = Get-TplTree $Root $base
+    $pinned = @('ea_template/regression_baseline.active.json', [string]$canonical.Selector.active_manifest,
+        [string]$canonical.Selector.historical_manifest, [string]$canonical.Manifest.metrics_file,
+        '_triage/factory_os/wrapper_owners.csv')
+    foreach ($case in $canonical.Manifest.cases) {
+        $path = [string]$case.source_path
+        Assert-TplLiteralPath $path
+        if (-not $baseTree.ContainsKey($path) -or -not $controlTree.ContainsKey($path) -or
+            $baseTree[$path].Blob -cne $controlTree[$path].Blob -or $baseTree[$path].Mode -cne $controlTree[$path].Mode) {
+            throw "REFUSE: baseline source identity mismatch: $path"
+        }
+        $pinned += @($path, [string]$case.declared_set_path, [string]$case.report_path)
+    }
+    foreach ($path in @($pinned | Select-Object -Unique)) {
+        Assert-TplLiteralPath $path
+        if (-not $currentTree.ContainsKey($path) -or -not $controlTree.ContainsKey($path) -or
+            $currentTree[$path].Blob -cne $controlTree[$path].Blob -or $currentTree[$path].Mode -cne $controlTree[$path].Mode) {
+            throw "REFUSE: canonical baseline provenance changed: $path"
+        }
+        Assert-TplDiskIdentity $Root $path $currentTree[$path]
+    }
+    $observed = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    foreach ($path in @(@($currentTree.Keys) + @($controlTree.Keys) | Select-Object -Unique)) {
+        if (-not (Test-TplBehavioralPath $path)) { continue }
+        Assert-TplLiteralPath $path
+        $before = $controlTree[$path]; $after = $currentTree[$path]
+        if ($null -eq $before -or $null -eq $after -or $before.Blob -cne $after.Blob -or $before.Mode -cne $after.Mode) {
+            [void]$observed.Add($path)
+            if (-not $declared.Contains($path)) { throw "REFUSE: undeclared behavioral delta: $path" }
+        }
+        if ($null -ne $before -and ($before.Type -ne 'blob' -or $before.Mode -notin @('100644','100755'))) {
+            throw "REFUSE: nonregular control source: $path"
+        }
+        # Deletions are noncomparable for this first explicit mode.
+        Assert-TplDiskIdentity $Root $path $after
+    }
+    foreach ($path in $BehavioralDeltaPaths) {
+        if (-not $observed.Contains($path)) { throw "REFUSE: declared behavioral delta absent or case-aliased: $path" }
+    }
+    # Enumerate even ignored files, without traversing reparse directories.
+    $directories = New-Object 'System.Collections.Generic.Queue[string]'
+    $directories.Enqueue((Join-Path $Root 'ea_template'))
+    while ($directories.Count -gt 0) {
+        foreach ($item in Get-ChildItem -LiteralPath $directories.Dequeue() -Force) {
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw "REFUSE: reparse source surface: $($item.FullName)" }
+            if ($item.PSIsContainer) { $directories.Enqueue($item.FullName); continue }
+            $path = Get-TplRelativePath $Root $item.FullName
+            if ((Test-TplBehavioralPath $path) -and -not $currentTree.ContainsKey($path)) { throw "REFUSE: untracked/case-aliased behavioral source: $path" }
+        }
+    }
+    if (-not (Get-Command Invoke-EvidenceGitBytes -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'evidence.ps1') }
+    $index = Invoke-EvidenceGitBytes -RepoRoot $Root -Arguments "diff --cached --no-renames --name-only -z $source"
+    if ($index.ExitCode -ne 0) { throw 'REFUSE: cannot compare staged source' }
+    foreach ($path in ([Text.Encoding]::UTF8.GetString($index.Bytes)).Split([char]0)) {
+        if ((Test-TplBehavioralPath $path) -or $pinned -contains $path) { throw "REFUSE: staged source/provenance differs from HEAD: $path" }
+    }
+    return $source
+}
+
 function Assert-TplSourceContract {
     param(
         [Parameter(Mandatory)][string]$Root,
         [Parameter(Mandatory)][object]$Baseline,
         [string]$AdjacentControlRef = '',
-        [object[]]$RegisteredUnbaselinedEas = @()
+        [object[]]$RegisteredUnbaselinedEas = @(),
+        [switch]$DeclaredCoreDelta,
+        [string]$ControlCommit = '',
+        [string]$SourceCommit = '',
+        [string[]]$BehavioralDeltaPaths = @()
     )
+    $explicitDelta = @('DeclaredCoreDelta','ControlCommit','SourceCommit','BehavioralDeltaPaths') | Where-Object { $PSBoundParameters.ContainsKey($_) }
+    if (@($explicitDelta).Count -gt 0) {
+        if (-not $DeclaredCoreDelta -or $PSBoundParameters.ContainsKey('AdjacentControlRef')) { throw 'REFUSE: declared delta requires explicit mode and cannot mix with legacy AdjacentControlRef' }
+        return Assert-TplDeclaredCoreDeltaContract -Root $Root -Baseline $Baseline -ControlCommit $ControlCommit -SourceCommit $SourceCommit -BehavioralDeltaPaths $BehavioralDeltaPaths
+    }
     $git = & git -C $Root rev-parse HEAD 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $git) { throw 'REFUSE: current source identity unavailable' }
     $current = ([string]$git).Trim()
@@ -307,7 +470,7 @@ function Assert-TplSourceContract {
     }
     $changed = @(& git -C $Root diff --name-only ($base + '..' + $current) 2>$null)
     if ($LASTEXITCODE -ne 0) { throw "REFUSE: source identity $current is not in the accepted comparison lineage" }
-    $forbidden = @($changed | Where-Object { $_ -match '^(ea_template/(core|modules|generated)/|ea_template/Boss_.*\.mq5$|ea_template/EA_LabTemplate\.mq5$)' })
+    $forbidden = @($changed | Where-Object { Test-TplBehavioralPath $_ })
     if ($forbidden.Count -gt 0) { throw "REFUSE: source/build identity changed behavioral EA source: $($forbidden -join ', ')" }
     return $current
 }

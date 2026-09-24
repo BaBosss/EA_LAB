@@ -7,6 +7,11 @@ $regressionCommand = Get-Command (Join-Path $RepoRoot 'scripts\tpl_regression.ps
 if (-not $regressionCommand.Parameters.ContainsKey('AdjacentControlRef')) {
     throw 'tpl_regression.ps1 does not expose the required AdjacentControlRef public parameter'
 }
+foreach ($name in @('DeclaredCoreDelta', 'ControlCommit', 'SourceCommit', 'BehavioralDeltaPaths')) {
+    if (-not $regressionCommand.Parameters.ContainsKey($name)) {
+        throw "tpl_regression.ps1 does not expose the declared delta parameter $name"
+    }
+}
 $fixture = Join-Path ([IO.Path]::GetTempPath()) ('tpl_guard_' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force (Join-Path $fixture '.githooks') | Out-Null
 try {
