@@ -1,6 +1,6 @@
 """Read-only presentation of existing EA_LAB evidence."""
 from __future__ import annotations
-import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess, sys
+import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess, sys, uuid
 from html.parser import HTMLParser
 UTC = dt.timezone.utc
 LOADED_SOURCE_SHA256 = hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest()
@@ -227,7 +227,15 @@ class Model:
             f"if len(encoded)>{SOURCE_ADAPTER_STDOUT_LIMIT}: raise SystemExit(86)\n"
             "sys.stdout.write(encoded)\n"
         )
-        command=[sys.executable,'-I','-B','-c',launcher,str(self.adapter_root),str(self.repo),self.sha,
+        pycache_prefix=None
+        for _ in range(4):
+            candidate=self.adapter_root.absolute().parent/('.ea_lab_monitor_pycache_'+uuid.uuid4().hex)
+            if not candidate.exists():
+                pycache_prefix=candidate
+                break
+        if pycache_prefix is None: raise Refused('SOURCE_ADAPTER_PYCACHE_PREFIX_COLLISION')
+        command=[sys.executable,'-I','-B','-X',f'pycache_prefix={pycache_prefix}','-c',launcher,
+                 str(self.adapter_root),str(self.repo),self.sha,
                  str(self.c['snapshots']),str(self.c['snapshots']),str(self.c['runtime'])]
         try:
             result=subprocess.run(command,capture_output=True,timeout=SOURCE_ADAPTER_TIMEOUT_SECONDS,
@@ -236,6 +244,7 @@ class Model:
             raise Refused('SOURCE_ADAPTER_TIMEOUT') from None
         except OSError:
             raise Refused('SOURCE_ADAPTER_EXECUTION_FAILED') from None
+        if pycache_prefix.exists(): raise Refused('SOURCE_ADAPTER_PYCACHE_PREFIX_TOUCHED')
         if len(result.stdout)>SOURCE_ADAPTER_STDOUT_LIMIT or len(result.stderr)>65_536:
             raise Refused('SOURCE_ADAPTER_OUTPUT_TOO_LARGE')
         if result.returncode: raise Refused('SOURCE_ADAPTER_PROCESS_FAILED')

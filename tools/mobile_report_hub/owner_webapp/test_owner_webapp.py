@@ -187,10 +187,14 @@ class SourceAdapterIntegrationTests(unittest.TestCase):
             self.assertEqual(model._run_source_adapter(),good)
             command=run.call_args.args[0]
             self.assertEqual(command[0],sys.executable); self.assertIn('-I',command); self.assertIn('-B',command)
+            self.assertIn('-X',command); x_index=command.index('-X')
+            self.assertRegex(command[x_index+1],r'^pycache_prefix=.*\\.ea_lab_monitor_pycache_[0-9a-f]{32}$')
+            self.assertFalse(pathlib.Path(command[x_index+1].split('=',1)[1]).exists())
             self.assertNotIn('shell',run.call_args.kwargs)
             self.assertEqual(command[-6:],[str(model.adapter_root),str(model.repo),model.sha,model.c['snapshots'],model.c['snapshots'],model.c['runtime']])
-            self.assertIn('sys.path.insert(0,import_root)',command[4])
-            self.assertIn('BuildRequest(repo=pathlib.Path(repo)',command[4])
+            launcher_arg=command[command.index('-c')+1]
+            self.assertIn('sys.path.insert(0,import_root)',launcher_arg)
+            self.assertIn('BuildRequest(repo=pathlib.Path(repo)',launcher_arg)
         for result,code in ((completed(2,b''),'SOURCE_ADAPTER_PROCESS_FAILED'),
                             (completed(0,b'{'),'SOURCE_ADAPTER_JSON_INVALID'),
                             (completed(0,b'x'*4_000_001),'SOURCE_ADAPTER_OUTPUT_TOO_LARGE')):
