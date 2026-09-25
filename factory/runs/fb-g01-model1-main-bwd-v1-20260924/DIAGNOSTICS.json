@@ -1,0 +1,37 @@
+﻿{
+    "schema":  "fb_g01_model1_diagnostics/1",
+    "main":  {
+                 "start_line":  3316,
+                 "end_line":  3870,
+                 "counts":  {
+                                "PERSISTENCE_MISMATCH_HALT":  0,
+                                "ACCOUNT_BASELINE_DISCONTINUITY":  0,
+                                "INIT REFUSED":  0,
+                                "unconfirmed/partial order":  0,
+                                "\\[RISK\\] HARD KILL:":  1,
+                                "\\[RISK\\] HARD KILL complete":  1,
+                                "deposit-load cap":  0,
+                                "OPEN_INTENT":  0,
+                                "\\[EXEC\\] close FAILED":  0,
+                                "\\[market closed\\]":  0,
+                                "position closed due end of test":  0
+                            }
+             },
+    "bwd":  {
+                "start_line":  3904,
+                "end_line":  4556,
+                "counts":  {
+                               "PERSISTENCE_MISMATCH_HALT":  0,
+                               "ACCOUNT_BASELINE_DISCONTINUITY":  0,
+                               "INIT REFUSED":  0,
+                               "unconfirmed/partial order":  0,
+                               "\\[RISK\\] HARD KILL:":  0,
+                               "\\[RISK\\] HARD KILL complete":  0,
+                               "deposit-load cap":  0,
+                               "OPEN_INTENT":  0,
+                               "\\[EXEC\\] close FAILED":  4,
+                               "\\[market closed\\]":  8,
+                               "position closed due end of test":  3
+                           }
+            }
+}

@@ -1,0 +1,758 @@
+﻿{
+  "main": {
+    "label": "MAIN",
+    "deal_rows": 92,
+    "entry_deals": 46,
+    "exit_deals": 46,
+    "cycles_total": 16,
+    "strategy_flat_cycles": 15,
+    "safety_halt_cycles": 1,
+    "late_window_cycles": 0,
+    "max_concurrent_positions": 3,
+    "max_aggregate_lots": 0.03,
+    "max_buy_rungs_in_cycle": 3,
+    "max_sell_rungs_in_cycle": 3,
+    "target_money_met_by_realized_profit_swap_count": 15,
+    "strategy_flat_cycle_count_for_target_check": 15,
+    "wait_new_bar_transitions": [
+      {
+        "close": "2023-01-03 17:37:40",
+        "next_entry": "2023-01-03 19:59:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-01-05 15:53:40",
+        "next_entry": "2023-01-05 17:17:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-01-06 15:30:40",
+        "next_entry": "2023-01-06 16:08:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-01-06 17:06:40",
+        "next_entry": "2023-01-06 20:40:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-02-03 17:06:40",
+        "next_entry": "2023-02-03 21:00:00",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-02-07 20:27:40",
+        "next_entry": "2023-02-07 23:50:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-02-08 15:25:20",
+        "next_entry": "2023-02-08 16:24:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-02-09 18:02:40",
+        "next_entry": "2023-02-09 19:34:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-03-13 15:48:40",
+        "next_entry": "2023-03-13 17:13:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-03-14 16:48:40",
+        "next_entry": "2023-03-14 17:53:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-03-15 13:34:20",
+        "next_entry": "2023-03-15 14:31:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-03-15 21:31:40",
+        "next_entry": "2023-03-16 03:18:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-03-16 17:54:40",
+        "next_entry": "2023-03-16 18:20:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-09-29 20:29:20",
+        "next_entry": "2023-10-02 03:51:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2023-10-09 21:55:40",
+        "next_entry": "2023-10-10 01:51:40",
+        "same_h1_bar": false
+      }
+    ],
+    "wait_same_h1_bar_violations": 0,
+    "first_entry": "2023-01-03 04:33:40",
+    "last_deal": "2025-02-05 12:31:40",
+    "cycles": [
+      {
+        "start": "2023-01-03 04:33:40",
+        "close": "2023-01-03 17:37:40",
+        "start_balance": 10000.0,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.0,
+        "realized_profit_swap": 27.29,
+        "realized_net": 27.29,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-01-03 19:59:40",
+        "close": "2023-01-05 15:53:40",
+        "start_balance": 10027.29,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.0682,
+        "realized_profit_swap": 31.6,
+        "realized_net": 31.6,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-01-05 17:17:40",
+        "close": "2023-01-06 15:30:40",
+        "start_balance": 10058.89,
+        "buy_in": 2,
+        "sell_in": 1,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.1472,
+        "realized_profit_swap": 26.64,
+        "realized_net": 26.64,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-01-06 16:08:40",
+        "close": "2023-01-06 17:06:40",
+        "start_balance": 10085.53,
+        "buy_in": 2,
+        "sell_in": 0,
+        "positions": 2,
+        "in_lots": 0.02,
+        "target_money": 25.2138,
+        "realized_profit_swap": 25.76,
+        "realized_net": 25.76,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-01-06 20:40:40",
+        "close": "2023-02-03 17:06:40",
+        "start_balance": 10111.29,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.2782,
+        "realized_profit_swap": 29.0,
+        "realized_net": 29.0,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-02-03 21:00:00",
+        "close": "2023-02-07 20:27:40",
+        "start_balance": 10140.29,
+        "buy_in": 1,
+        "sell_in": 2,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.3507,
+        "realized_profit_swap": 25.41,
+        "realized_net": 25.41,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-02-07 23:50:40",
+        "close": "2023-02-08 15:25:20",
+        "start_balance": 10165.7,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.4143,
+        "realized_profit_swap": 25.9,
+        "realized_net": 25.9,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-02-08 16:24:40",
+        "close": "2023-02-09 18:02:40",
+        "start_balance": 10191.6,
+        "buy_in": 1,
+        "sell_in": 2,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.479,
+        "realized_profit_swap": 27.31,
+        "realized_net": 27.31,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-02-09 19:34:40",
+        "close": "2023-03-13 15:48:40",
+        "start_balance": 10218.91,
+        "buy_in": 3,
+        "sell_in": 0,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.5473,
+        "realized_profit_swap": 26.48,
+        "realized_net": 26.48,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-03-13 17:13:40",
+        "close": "2023-03-14 16:48:40",
+        "start_balance": 10245.39,
+        "buy_in": 0,
+        "sell_in": 2,
+        "positions": 2,
+        "in_lots": 0.02,
+        "target_money": 25.6135,
+        "realized_profit_swap": 29.42,
+        "realized_net": 29.42,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-03-14 17:53:40",
+        "close": "2023-03-15 13:34:20",
+        "start_balance": 10274.81,
+        "buy_in": 2,
+        "sell_in": 1,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.687,
+        "realized_profit_swap": 25.7,
+        "realized_net": 25.7,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-03-15 14:31:40",
+        "close": "2023-03-15 21:31:40",
+        "start_balance": 10300.51,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.7513,
+        "realized_profit_swap": 31.58,
+        "realized_net": 31.58,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-03-16 03:18:40",
+        "close": "2023-03-16 17:54:40",
+        "start_balance": 10332.09,
+        "buy_in": 1,
+        "sell_in": 2,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.8302,
+        "realized_profit_swap": 26.15,
+        "realized_net": 26.15,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-03-16 18:20:40",
+        "close": "2023-09-29 20:29:20",
+        "start_balance": 10358.24,
+        "buy_in": 1,
+        "sell_in": 2,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.8956,
+        "realized_profit_swap": 26.16,
+        "realized_net": 26.16,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-10-02 03:51:40",
+        "close": "2023-10-09 21:55:40",
+        "start_balance": 10384.4,
+        "buy_in": 3,
+        "sell_in": 0,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.961,
+        "realized_profit_swap": 28.56,
+        "realized_net": 28.56,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2023-10-10 01:51:40",
+        "close": "2025-02-05 12:31:40",
+        "start_balance": 10412.96,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.0324,
+        "realized_profit_swap": -2601.82,
+        "realized_net": -2601.82,
+        "close_class": "SAFETY_HALT"
+      }
+    ]
+  },
+  "bwd": {
+    "label": "BWD",
+    "deal_rows": 114,
+    "entry_deals": 57,
+    "exit_deals": 57,
+    "cycles_total": 24,
+    "strategy_flat_cycles": 23,
+    "safety_halt_cycles": 0,
+    "late_window_cycles": 1,
+    "max_concurrent_positions": 3,
+    "max_aggregate_lots": 0.03,
+    "max_buy_rungs_in_cycle": 3,
+    "max_sell_rungs_in_cycle": 3,
+    "target_money_met_by_realized_profit_swap_count": 23,
+    "strategy_flat_cycle_count_for_target_check": 23,
+    "wait_new_bar_transitions": [
+      {
+        "close": "2020-03-13 18:45:40",
+        "next_entry": "2020-03-13 20:00:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-16 01:05:00",
+        "next_entry": "2020-03-16 02:45:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-16 04:04:40",
+        "next_entry": "2020-03-16 12:36:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-16 18:15:40",
+        "next_entry": "2020-03-16 20:29:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-16 21:58:40",
+        "next_entry": "2020-03-17 05:10:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-17 16:30:40",
+        "next_entry": "2020-03-17 17:04:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-18 09:41:40",
+        "next_entry": "2020-03-18 10:40:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-18 13:15:40",
+        "next_entry": "2020-03-18 14:29:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-18 15:58:40",
+        "next_entry": "2020-03-18 16:23:20",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-18 20:29:40",
+        "next_entry": "2020-03-18 21:56:20",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-19 01:02:40",
+        "next_entry": "2020-03-19 02:50:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-19 05:58:40",
+        "next_entry": "2020-03-19 09:16:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2020-03-20 01:09:40",
+        "next_entry": "2020-03-20 03:27:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-07-13 15:30:40",
+        "next_entry": "2022-07-13 16:05:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-07-14 10:06:40",
+        "next_entry": "2022-07-14 12:32:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-07-18 10:24:40",
+        "next_entry": "2022-07-18 12:30:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-07-22 16:46:40",
+        "next_entry": "2022-07-22 17:30:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-07-25 12:57:40",
+        "next_entry": "2022-07-25 13:25:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-07-27 21:54:40",
+        "next_entry": "2022-07-28 02:42:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-08-22 10:00:40",
+        "next_entry": "2022-08-22 14:35:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-08-23 16:49:40",
+        "next_entry": "2022-08-24 11:38:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-08-26 18:14:40",
+        "next_entry": "2022-08-29 04:05:40",
+        "same_h1_bar": false
+      },
+      {
+        "close": "2022-08-29 15:53:20",
+        "next_entry": "2022-08-29 16:49:40",
+        "same_h1_bar": false
+      }
+    ],
+    "wait_same_h1_bar_violations": 0,
+    "first_entry": "2020-01-02 15:19:40",
+    "last_deal": "2022-12-30 23:58:59",
+    "cycles": [
+      {
+        "start": "2020-01-02 15:19:40",
+        "close": "2020-03-13 18:45:40",
+        "start_balance": 10000.0,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.0,
+        "realized_profit_swap": 30.51,
+        "realized_net": 30.51,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-13 20:00:40",
+        "close": "2020-03-16 01:05:00",
+        "start_balance": 10030.51,
+        "buy_in": 1,
+        "sell_in": 0,
+        "positions": 1,
+        "in_lots": 0.01,
+        "target_money": 25.0763,
+        "realized_profit_swap": 30.99,
+        "realized_net": 30.99,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-16 02:45:40",
+        "close": "2020-03-16 04:04:40",
+        "start_balance": 10061.5,
+        "buy_in": 0,
+        "sell_in": 1,
+        "positions": 1,
+        "in_lots": 0.01,
+        "target_money": 25.1538,
+        "realized_profit_swap": 29.82,
+        "realized_net": 29.82,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-16 12:36:40",
+        "close": "2020-03-16 18:15:40",
+        "start_balance": 10091.32,
+        "buy_in": 3,
+        "sell_in": 0,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.2283,
+        "realized_profit_swap": 36.3,
+        "realized_net": 36.3,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-16 20:29:40",
+        "close": "2020-03-16 21:58:40",
+        "start_balance": 10127.62,
+        "buy_in": 1,
+        "sell_in": 0,
+        "positions": 1,
+        "in_lots": 0.01,
+        "target_money": 25.3191,
+        "realized_profit_swap": 25.32,
+        "realized_net": 25.32,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-17 05:10:40",
+        "close": "2020-03-17 16:30:40",
+        "start_balance": 10152.94,
+        "buy_in": 2,
+        "sell_in": 0,
+        "positions": 2,
+        "in_lots": 0.02,
+        "target_money": 25.3824,
+        "realized_profit_swap": 27.55,
+        "realized_net": 27.55,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-17 17:04:40",
+        "close": "2020-03-18 09:41:40",
+        "start_balance": 10180.49,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.4512,
+        "realized_profit_swap": 26.64,
+        "realized_net": 26.64,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-18 10:40:40",
+        "close": "2020-03-18 13:15:40",
+        "start_balance": 10207.13,
+        "buy_in": 2,
+        "sell_in": 0,
+        "positions": 2,
+        "in_lots": 0.02,
+        "target_money": 25.5178,
+        "realized_profit_swap": 29.2,
+        "realized_net": 29.2,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-18 14:29:40",
+        "close": "2020-03-18 15:58:40",
+        "start_balance": 10236.33,
+        "buy_in": 0,
+        "sell_in": 2,
+        "positions": 2,
+        "in_lots": 0.02,
+        "target_money": 25.5908,
+        "realized_profit_swap": 31.34,
+        "realized_net": 31.34,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-18 16:23:20",
+        "close": "2020-03-18 20:29:40",
+        "start_balance": 10267.67,
+        "buy_in": 2,
+        "sell_in": 1,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.6692,
+        "realized_profit_swap": 25.96,
+        "realized_net": 25.96,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-18 21:56:20",
+        "close": "2020-03-19 01:02:40",
+        "start_balance": 10293.63,
+        "buy_in": 0,
+        "sell_in": 1,
+        "positions": 1,
+        "in_lots": 0.01,
+        "target_money": 25.7341,
+        "realized_profit_swap": 30.12,
+        "realized_net": 30.12,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-19 02:50:40",
+        "close": "2020-03-19 05:58:40",
+        "start_balance": 10323.75,
+        "buy_in": 0,
+        "sell_in": 1,
+        "positions": 1,
+        "in_lots": 0.01,
+        "target_money": 25.8094,
+        "realized_profit_swap": 27.67,
+        "realized_net": 27.67,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-19 09:16:40",
+        "close": "2020-03-20 01:09:40",
+        "start_balance": 10351.42,
+        "buy_in": 0,
+        "sell_in": 1,
+        "positions": 1,
+        "in_lots": 0.01,
+        "target_money": 25.8786,
+        "realized_profit_swap": 30.11,
+        "realized_net": 30.11,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2020-03-20 03:27:40",
+        "close": "2022-07-13 15:30:40",
+        "start_balance": 10381.53,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 25.9538,
+        "realized_profit_swap": 28.15,
+        "realized_net": 28.15,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-07-13 16:05:40",
+        "close": "2022-07-14 10:06:40",
+        "start_balance": 10409.68,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.0242,
+        "realized_profit_swap": 27.36,
+        "realized_net": 27.36,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-07-14 12:32:40",
+        "close": "2022-07-18 10:24:40",
+        "start_balance": 10437.04,
+        "buy_in": 3,
+        "sell_in": 0,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.0926,
+        "realized_profit_swap": 27.9,
+        "realized_net": 27.9,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-07-18 12:30:40",
+        "close": "2022-07-22 16:46:40",
+        "start_balance": 10464.94,
+        "buy_in": 2,
+        "sell_in": 1,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.1624,
+        "realized_profit_swap": 26.58,
+        "realized_net": 26.58,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-07-22 17:30:40",
+        "close": "2022-07-25 12:57:40",
+        "start_balance": 10491.52,
+        "buy_in": 3,
+        "sell_in": 0,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.2288,
+        "realized_profit_swap": 28.28,
+        "realized_net": 28.28,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-07-25 13:25:40",
+        "close": "2022-07-27 21:54:40",
+        "start_balance": 10519.8,
+        "buy_in": 3,
+        "sell_in": 0,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.2995,
+        "realized_profit_swap": 29.67,
+        "realized_net": 29.67,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-07-28 02:42:40",
+        "close": "2022-08-22 10:00:40",
+        "start_balance": 10549.47,
+        "buy_in": 0,
+        "sell_in": 3,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.3737,
+        "realized_profit_swap": 26.79,
+        "realized_net": 26.79,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-08-22 14:35:40",
+        "close": "2022-08-23 16:49:40",
+        "start_balance": 10576.26,
+        "buy_in": 2,
+        "sell_in": 1,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.4407,
+        "realized_profit_swap": 26.84,
+        "realized_net": 26.84,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-08-24 11:38:40",
+        "close": "2022-08-26 18:14:40",
+        "start_balance": 10603.1,
+        "buy_in": 1,
+        "sell_in": 2,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.5078,
+        "realized_profit_swap": 26.71,
+        "realized_net": 26.71,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-08-29 04:05:40",
+        "close": "2022-08-29 15:53:20",
+        "start_balance": 10629.81,
+        "buy_in": 3,
+        "sell_in": 0,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.5745,
+        "realized_profit_swap": 26.68,
+        "realized_net": 26.68,
+        "close_class": "STRATEGY_FLAT_CLOSE"
+      },
+      {
+        "start": "2022-08-29 16:49:40",
+        "close": "2022-12-30 23:58:59",
+        "start_balance": 10656.49,
+        "buy_in": 2,
+        "sell_in": 1,
+        "positions": 3,
+        "in_lots": 0.03,
+        "target_money": 26.6412,
+        "realized_profit_swap": -84.76,
+        "realized_net": -84.76,
+        "close_class": "WINDOW_END_OR_LATE_STRATEGY_CLOSE"
+      }
+    ]
+  }
+}

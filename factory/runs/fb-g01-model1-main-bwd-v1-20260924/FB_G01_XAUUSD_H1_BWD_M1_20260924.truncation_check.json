@@ -1,0 +1,8 @@
+﻿{
+    "schema_version":  2,
+    "report_name":  "FB_G01_XAUUSD_H1_BWD_M1_20260924",
+    "check_status":  "CHECK_PASS",
+    "checker_exit_code":  0,
+    "truncated":  false,
+    "detail":  "last deal 2022.12.30 23:58:59 | window ends 2022.12.31 | idle tail 0 days (0% of window) | entry deals 57 | eqDD 16.01%\r\n[OK] traded through to the end of the window"
+}

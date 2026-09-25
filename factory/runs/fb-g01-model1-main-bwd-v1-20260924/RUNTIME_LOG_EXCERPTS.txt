@@ -1,0 +1,46 @@
+﻿source_log=D:\MetaTraderData\Roaming\MetaQuotes\Tester\9CA16B8382AE4CF692710FB36B9DA355\Agent-127.0.0.1-3000\logs\20260924.log
+source_log_sha256=7c60944d073472d0009d66432ba05a257a4eb3241a2d615cb86c5b1d4c5cc15e
+
+=== MAIN HARD-KILL / SAFETY-HALT (lines 3856..3869) ===
+3856: CS	0	22:54:15.170	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2025.02.05 12:31:40   [RISK] HARD KILL: DD 25.05% >= 25.00% (profile 2) -> closing all
+3857: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   market buy 0.01 XAUUSD, close #90 (2874.02 / 2874.22 / 2874.02)
+3858: CS	0	22:54:15.170	Trades	2025.02.05 12:31:40   deal #91 buy 0.01 XAUUSD at 2874.22 done (based on order #91)
+3859: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   deal performed [#91 buy 0.01 XAUUSD at 2874.22]
+3860: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   order performed buy 0.01 at 2874.22 [#91 buy 0.01 XAUUSD at 2874.22]
+3861: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   market buy 0.01 XAUUSD, close #89 (2874.02 / 2874.22 / 2874.02)
+3862: CS	0	22:54:15.170	Trades	2025.02.05 12:31:40   deal #92 buy 0.01 XAUUSD at 2874.22 done (based on order #92)
+3863: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   deal performed [#92 buy 0.01 XAUUSD at 2874.22]
+3864: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   order performed buy 0.01 at 2874.22 [#92 buy 0.01 XAUUSD at 2874.22]
+3865: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   market buy 0.01 XAUUSD, close #88 (2874.02 / 2874.22 / 2874.02)
+3866: CS	0	22:54:15.170	Trades	2025.02.05 12:31:40   deal #93 buy 0.01 XAUUSD at 2874.22 done (based on order #93)
+3867: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   deal performed [#93 buy 0.01 XAUUSD at 2874.22]
+3868: CS	0	22:54:15.170	Trade	2025.02.05 12:31:40   order performed buy 0.01 at 2874.22 [#93 buy 0.01 XAUUSD at 2874.22]
+3869: CS	0	22:54:15.170	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2025.02.05 12:31:40   [RISK] HARD KILL complete: broker flat verified -> halt (persisted)
+
+=== BWD CLOSE-INTENT RETRY ACROSS MARKET CLOSED (lines 4118..4129) ===
+4118: CS	0	22:57:49.954	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2020.03.16 01:04:00   [EXEC] close FAILED 8 retcode=10018
+4119: CS	2	22:57:49.954	Trades	2020.03.16 01:04:20   failed market sell 0.01 XAUUSD, close #8 buy 0.01 XAUUSD 1519.30 [Market closed]
+4120: CS	0	22:57:49.954	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2020.03.16 01:04:20   CTrade::OrderSend: market sell 0.01 position #8 XAUUSD [market closed]
+4121: CS	0	22:57:49.954	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2020.03.16 01:04:20   [EXEC] close FAILED 8 retcode=10018
+4122: CS	2	22:57:49.954	Trades	2020.03.16 01:04:40   failed market sell 0.01 XAUUSD, close #8 buy 0.01 XAUUSD 1519.30 [Market closed]
+4123: CS	0	22:57:49.954	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2020.03.16 01:04:40   CTrade::OrderSend: market sell 0.01 position #8 XAUUSD [market closed]
+4124: CS	0	22:57:49.954	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2020.03.16 01:04:40   [EXEC] close FAILED 8 retcode=10018
+4125: CS	2	22:57:49.954	Trades	2020.03.16 01:04:59   failed market sell 0.01 XAUUSD, close #8 buy 0.01 XAUUSD 1519.30 [Market closed]
+4126: CS	0	22:57:49.954	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2020.03.16 01:04:59   CTrade::OrderSend: market sell 0.01 position #8 XAUUSD [market closed]
+4127: CS	0	22:57:49.954	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2020.03.16 01:04:59   [EXEC] close FAILED 8 retcode=10018
+4128: CS	0	22:57:49.954	Trade	2020.03.16 01:05:00   market sell 0.01 XAUUSD, close #8 (1551.21 / 1551.99 / 1551.21)
+4129: CS	0	22:57:49.954	Trades	2020.03.16 01:05:00   deal #9 sell 0.01 XAUUSD at 1551.21 done (based on order #9)
+
+=== BWD END-OF-TEST FORCED CLOSE (lines 4544..4555) ===
+4544: CS	0	23:09:44.201	Trade	2022.12.30 23:58:59   position closed due end of test at 1823.86 [#112 buy 0.01 XAUUSD 1726.60]
+4545: CS	0	23:09:44.201	Trades	2022.12.30 23:58:59   deal #113 sell 0.01 XAUUSD at 1823.86 done (based on order #113)
+4546: CS	0	23:09:44.201	Trade	2022.12.30 23:58:59   deal performed [#113 sell 0.01 XAUUSD at 1823.86]
+4547: CS	0	23:09:44.201	Trade	2022.12.30 23:58:59   order performed sell 0.01 at 1823.86 [#113 sell 0.01 XAUUSD at 1823.86]
+4548: CS	0	23:09:44.201	Trade	2022.12.30 23:58:59   position closed due end of test at 1823.86 [#111 buy 0.01 XAUUSD 1731.99]
+4549: CS	0	23:09:44.202	Trades	2022.12.30 23:58:59   deal #114 sell 0.01 XAUUSD at 1823.86 done (based on order #114)
+4550: CS	0	23:09:44.202	Trade	2022.12.30 23:58:59   deal performed [#114 sell 0.01 XAUUSD at 1823.86]
+4551: CS	0	23:09:44.202	Trade	2022.12.30 23:58:59   order performed sell 0.01 at 1823.86 [#114 sell 0.01 XAUUSD at 1823.86]
+4552: CS	0	23:09:44.202	Trade	2022.12.30 23:58:59   position closed due end of test at 1824.05 [#110 sell 0.01 XAUUSD 1741.71]
+4553: CS	0	23:09:44.202	Trades	2022.12.30 23:58:59   deal #115 buy 0.01 XAUUSD at 1824.05 done (based on order #115)
+4554: CS	0	23:09:44.202	Trade	2022.12.30 23:58:59   deal performed [#115 buy 0.01 XAUUSD at 1824.05]
+4555: CS	0	23:09:44.202	Trade	2022.12.30 23:58:59   order performed buy 0.01 at 1824.05 [#115 buy 0.01 XAUUSD at 1824.05]

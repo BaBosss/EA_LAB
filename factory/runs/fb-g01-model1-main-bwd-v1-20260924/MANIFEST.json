@@ -1,0 +1,124 @@
+﻿{
+    "schema":  "fb_g01_model1_evidence_manifest/1",
+    "lane_id":  "ct-fb-g01-model1-main-bwd-v1-20260924",
+    "run_base_head":  "4219785c6f4cc6c0f38ec3cdf92869160eb522ca",
+    "accepted_source_head":  "8da04fc789ca55e6c673d41899e9136cfa72a75e",
+    "source_tester_agent_log_sha256":  "7c60944d073472d0009d66432ba05a257a4eb3241a2d615cb86c5b1d4c5cc15e",
+    "files":  [
+                  {
+                      "path":  "Boss_25_PersistentAdaptiveGrid_XAUUSD_H1_V0_defaults_full.set",
+                      "sha256":  "a9d434bf37ddc3a4ed8a906a6b1e640ef71e7abde286fcd9f9b194eb95bc5a57",
+                      "bytes":  3406
+                  },
+                  {
+                      "path":  "build_receipts.jsonl",
+                      "sha256":  "849ddb77ddc7148e8f7cfde07ac2e90e5c6d8edc3bfa684683144ae9f652aaec",
+                      "bytes":  672
+                  },
+                  {
+                      "path":  "BWD.json",
+                      "sha256":  "15ae838598dc6d76998738f224fddea6b14eb21023605015dab09c1350ff77e2",
+                      "bytes":  1584
+                  },
+                  {
+                      "path":  "DIAGNOSTICS.json",
+                      "sha256":  "e9de1bdaf70636610f87728139b13c9cf2108043a78c3decd38de8a44d2892f4",
+                      "bytes":  1764
+                  },
+                  {
+                      "path":  "FB_G01_XAUUSD_H1_BWD_M1_20260924.leverage_check.json",
+                      "sha256":  "205dd746fd159532e6501be4b17bea90a60ab8b28050f293e492840a64049c5c",
+                      "bytes":  174
+                  },
+                  {
+                      "path":  "FB_G01_XAUUSD_H1_BWD_M1_20260924.truncation_check.json",
+                      "sha256":  "4858683fbd6b2ce7d49fb17ff8288af51394ca6da9b5e8f7510c64f2a1b1be4f",
+                      "bytes":  371
+                  },
+                  {
+                      "path":  "FB_G01_XAUUSD_H1_MAIN_M1_20260924.leverage_check.json",
+                      "sha256":  "f9d6cd61c3d0c1c499c4de3331bc2a6312ba7baea3e1aa53641dcb672c2dc8d8",
+                      "bytes":  175
+                  },
+                  {
+                      "path":  "FB_G01_XAUUSD_H1_MAIN_M1_20260924.truncation_check.json",
+                      "sha256":  "3e2bb47970da40e3acdc40dea44848842d7d4d68222644d4c89008427e585fe7",
+                      "bytes":  538
+                  },
+                  {
+                      "path":  "graphs/FB_G01_XAUUSD_H1_BWD_M1_20260924.png",
+                      "sha256":  "cec219f10ef141b67ef92fae9267b2b231b36e9606b1c8ea7b31c2fe362166e6",
+                      "bytes":  7221
+                  },
+                  {
+                      "path":  "graphs/FB_G01_XAUUSD_H1_BWD_M1_20260924-holding.png",
+                      "sha256":  "cf767528abdb8d5ea2a25300f0f7b56b3a1cca7b2824bb921281c231e02caa95",
+                      "bytes":  10267
+                  },
+                  {
+                      "path":  "graphs/FB_G01_XAUUSD_H1_BWD_M1_20260924-hst.png",
+                      "sha256":  "7accb9d6cf761a62a451dafb301f28ed11cc27cce513ae66ae9b067dd552785a",
+                      "bytes":  32620
+                  },
+                  {
+                      "path":  "graphs/FB_G01_XAUUSD_H1_BWD_M1_20260924-mfemae.png",
+                      "sha256":  "0ea9c57c5155fea26c4b2bf665a2906bd7fa8f12db40495338b49978cba09a78",
+                      "bytes":  24240
+                  },
+                  {
+                      "path":  "graphs/FB_G01_XAUUSD_H1_MAIN_M1_20260924.png",
+                      "sha256":  "be004216199d4010b92e0fd08b47d5dfc786f9f62fdd6159212940a64efdd4d8",
+                      "bytes":  6604
+                  },
+                  {
+                      "path":  "graphs/FB_G01_XAUUSD_H1_MAIN_M1_20260924-holding.png",
+                      "sha256":  "30fd55019c8f4d4d8e47f337f7775322d830018dd580439050dd08b01c8f7c46",
+                      "bytes":  10022
+                  },
+                  {
+                      "path":  "graphs/FB_G01_XAUUSD_H1_MAIN_M1_20260924-hst.png",
+                      "sha256":  "a9d16d84f75d90de7a6c3b0e56f6cdfc74ee0ea27c3f85df3a2060575c59b19a",
+                      "bytes":  27305
+                  },
+                  {
+                      "path":  "graphs/FB_G01_XAUUSD_H1_MAIN_M1_20260924-mfemae.png",
+                      "sha256":  "18e9831dc51d6dfbdbc3e35ca9c09f32aed434e9c8efed8efbce5e3510066543",
+                      "bytes":  23796
+                  },
+                  {
+                      "path":  "GRID_CYCLE_ANALYSIS.json",
+                      "sha256":  "4075adf1cbb391fc49e43e89c73bbc2270cdefde68f09a7493a2630ad9b22647",
+                      "bytes":  21894
+                  },
+                  {
+                      "path":  "MAIN.json",
+                      "sha256":  "14b982ce742a18574c1251e51f3774af127690f61e7e82733095a985880f696f",
+                      "bytes":  1604
+                  },
+                  {
+                      "path":  "MODEL1_CONTRACT.json",
+                      "sha256":  "c3a9af907d8011a9193cd64ff11cd0a1f113adb0fdce57afd56835497cf463f5",
+                      "bytes":  1044
+                  },
+                  {
+                      "path":  "raw/FB_G01_XAUUSD_H1_BWD_M1_20260924.htm",
+                      "sha256":  "0dffe4ef089b64c893fcf918f7043a3f4febd40435ef878368b91149c19f827b",
+                      "bytes":  187992
+                  },
+                  {
+                      "path":  "raw/FB_G01_XAUUSD_H1_MAIN_M1_20260924.htm",
+                      "sha256":  "b50e3a6deae03fde291d268b5e2c0bfa423617e9e0851f0a81624872d44a8e25",
+                      "bytes":  166218
+                  },
+                  {
+                      "path":  "RESULT.json",
+                      "sha256":  "62b80123512bdd8c679561314b31060b119ba8dfff5df61b08d29dbd80d03181",
+                      "bytes":  6288
+                  },
+                  {
+                      "path":  "RUNTIME_LOG_EXCERPTS.txt",
+                      "sha256":  "d21bcaa00929983a84354b3a499fb03a4ae6571b87105cb2e3768e204eec5913",
+                      "bytes":  5131
+                  }
+              ]
+}
