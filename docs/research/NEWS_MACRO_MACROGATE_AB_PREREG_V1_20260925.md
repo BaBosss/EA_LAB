@@ -1,6 +1,6 @@
 # News/Macro — MacroGate BASE / REAL_GUARD / PLACEBO Preregistration V1 — 2026-09-25
 
-Status: PROSPECTIVE / SOURCE-AND-METHODOLOGY FREEZE / NO PERFORMANCE EXECUTED.
+Status: PROSPECTIVE_R1 / PRE-OUTCOME SEMANTICS CORRECTED AND REFROZEN / NO PERFORMANCE EXECUTED.
 
 Lane: `ct-news-macro-mg-ab-prereg-v1-20260925`.
 
@@ -79,13 +79,14 @@ Each seed produces one synthetic MacroGate schedule independently for MAIN and B
 Macro-specific placebo method:
 1. Use only accepted causal timeline rows inside that exact evaluation window. Never draw donor states across MAIN/BWD or from HOLDOUT.
 2. Candidate shifts are signed whole weeks `-52..-8` and `+8..+52`, inclusive. This preserves weekday and UTC clock while excluding near-zero shifts.
-3. For each seed, deterministically order candidate shifts by SHA256 of `"<seed>:<shift>"`; choose the first effective circular rotation not already assigned to another frozen seed. Resolve/freeze all five shift values before any tester outcome.
-4. Rotate the full daily macro-state payload circularly within the same window by the chosen whole-week offset. Target timestamps stay fixed. Each row records its donor interval identity and is explicitly `SYNTHETIC_PLACEBO_ONLY / causal_state_qualified=false`.
-5. Render target timestamps through the same accepted ThinkMarkets clock mapping as REAL_GUARD. Transition **target server dates** remain explicit `UNKNOWN` at server 00:00 regardless of the rotated donor state; next stable target row resumes at its actual mapped server time.
-6. Preserve and report donor state/RI/flags/provenance separately; no shifted donor availability timestamp is relabeled as a real causal observation.
-7. Generated native rows must be strictly ascending/unique, cover every target interval exactly once, use `_MG_OffsetHours=0`, and carry `probability=null`, `performance=NOT_RUN` until tester results exist.
+3. For each seed, deterministically order candidate shifts by SHA256 of `"<seed>:<shift>"`; choose the first shift not already assigned to another frozen seed and non-identity for every weekday stratum. Resolve/freeze all five shift values before any tester outcome.
+4. Partition each window's target rows by UTC weekday (Monday through Sunday), preserving chronological order within each stratum. For each weekday stratum independently, map target local index `j` to donor local index `(j - shift_weeks) mod n_weekday` using the same seed shift across all seven strata. Target timestamps stay fixed. This is a full-window bijection: every target has exactly one donor, every donor is used exactly once, donor and target always share weekday, and no donor leaves its MAIN/BWD window or touches HOLDOUT. Each row records donor identity and is explicitly `SYNTHETIC_PLACEBO_ONLY / causal_state_qualified=false`.
+5. At weekday-stratum wrap seams the donor displacement is not claimed to be one uniform calendar shift; exact regime run-length preservation is therefore not guaranteed at those synthetic seams. Report seam/displacement evidence explicitly. The placebo preserves target coverage, weekday, UTC clock, marginal source-state counts and within-window donor uniqueness—not historical causality.
+6. Render target timestamps through the same accepted ThinkMarkets clock mapping as REAL_GUARD. Transition **target server dates** remain explicit `UNKNOWN` at server 00:00 regardless of the rotated donor state; next stable target row resumes at its actual mapped server time.
+7. Preserve and report donor state/RI/flags/provenance separately; no shifted donor availability timestamp is relabeled as a real causal observation.
+8. Generated native rows must be strictly ascending/unique, cover every target interval exactly once, use `_MG_OffsetHours=0`, and carry `probability=null`, `performance=NOT_RUN` until tester results exist.
 
-Circular placebo schedules are deliberately synthetic controls, not historical causal macro reconstructions. A placebo PASS never qualifies a data source or global regime.
+Weekday-stratified circular placebo schedules are deliberately synthetic controls, not historical causal macro reconstructions. A placebo PASS never qualifies a data source or global regime.
 
 Tester-only harness identity may use the default tester magic because `LabCore` rejects compiled-default magic only outside `MQL_TESTER`. Feed location/name may differ mechanically per arm to avoid collision, but those filenames are harness identity, not strategy parameters. No live/global runtime file may be overwritten.
 ## 5. Primary question, metric and falsifiers
@@ -145,3 +146,22 @@ No current step authorizes Model4, optimization, HOLDOUT, runtime activation, at
 - Do not reopen B15 CountBars/BT9 parameter searches. Current B15 entry parameters remain exactly the canonical default snapshot.
 - Do not import B16, Boss19, Black Tide or other closed experiment settings into this parent.
 - Do not use BWD or HOLDOUT to choose seeds, shifts, state triggers, lot multiplier, block policy or parent parameters.
+## 9. Pre-outcome semantics correction R1
+
+The original prospective contract commit `685538d8b12d764896464cdf8bbeaad79a3fdfb5` is preserved as R0 history but its row-index circular formula is superseded **before any tester/performance outcome**.
+
+The first bounded tooling author stopped with `SEMANTICS_CONFLICT_CIRCULAR_ROTATION_VS_WEEKDAY_PRESERVATION`: MAIN and BWD each contain 1,096 daily intervals, and `1096 mod 7 = 4`. Therefore a whole-series circular index rotation by a nonzero multiple of seven days necessarily changes weekday on wrapped rows. That job made zero Git changes, ran zero MT5 cells, generated no performance artifact, and left source Repair1 `UNUSED`.
+
+R1 keeps the frozen parent, windows, seeds, shift candidate pool, primary metric, falsifiers and all authority boundaries unchanged. Only the inconsistent donor-mapping rule is replaced by the weekday-stratified circular permutation in Section 4.
+
+A pre-outcome calendar-only validation resolved the same seed mapping:
+- `2026092501 -> +38 weeks`
+- `2026092502 -> -23 weeks`
+- `2026092503 -> -8 weeks`
+- `2026092504 -> -32 weeks`
+- `2026092505 -> +36 weeks`
+
+For every seed in both 1,096-day windows the corrected mapping covers 1,096/1,096 targets, uses 1,096 unique in-window donors, has zero donor/target weekday mismatch, zero cross-window donor, and zero HOLDOUT contact. These are methodology checks only, not EA outcomes.
+Canonical moved during the stopped author job to `069e2f34f543456a00da9b2f6ba775f111aceafc` through Monitor/state-sync commits only. B15 wrapper/set, `LabCore.mqh`, `MacroGate_Core.mqh`, accepted `macrogate_native.py`, and the accepted native-exporter contract blobs are byte-identical across that movement. The isolated lane was merged normally (no rebase/reset) at `ded5efef9b792be7ecaab6ecf46d2c8e1c2b108a` before this R1 refreeze.
+
+R1 does not consume the source/tooling Repair1 budget and does not authorize implementation or performance until committed, tested and independently reviewed.
