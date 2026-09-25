@@ -1,0 +1,8 @@
+﻿{
+    "schema_version":  2,
+    "report_name":  "MACROGATE_AB_B15_GBPUSD_H4_REAL_GUARD_MAIN_20260925",
+    "check_status":  "CHECK_PASS",
+    "checker_exit_code":  0,
+    "truncated":  false,
+    "detail":  "last deal 2025.12.30 23:59:59 | window ends 2025.12.31 | idle tail 0 days (0% of window) | entry deals 214 | eqDD 0.97%\r\n[OK] traded through to the end of the window"
+}
