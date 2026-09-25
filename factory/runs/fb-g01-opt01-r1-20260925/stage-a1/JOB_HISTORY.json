@@ -1,0 +1,25 @@
+﻿{
+    "schema":  "fb_g01_opt01_r1_stage_a1_job_history/1",
+    "entries":  [
+                    {
+                        "job":  "ct-fb-g01-opt01-r1-stage-a1-run-20260925",
+                        "state":  "FAILED",
+                        "exit_code":  1,
+                        "classification":  "B_HARNESS_TEST_PRE_MT5",
+                        "strategy_evidence_created":  false
+                    },
+                    {
+                        "job":  "ct-fb-g01-opt01-r1-stage-a1-run-recovery1-20260925",
+                        "state":  "FAILED",
+                        "exit_code":  1,
+                        "classification":  "HISTORICAL_RECOVERY_FAILURE_PRESERVED"
+                    },
+                    {
+                        "job":  "ct-fb-g01-opt01-r1-stage-a1-run-recovery2-20260925",
+                        "state":  "COMPLETE",
+                        "exit_code":  0,
+                        "postcondition_exit_code":  0,
+                        "classification":  "AUTHORITATIVE_COMPLETE_BATCH"
+                    }
+                ]
+}

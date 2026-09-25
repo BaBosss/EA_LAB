@@ -1,0 +1,93 @@
+﻿{
+  "schema": "fb_g01_opt01_r1_stage_a1_selection/1",
+  "status": "COARSE_SPACING_REGION_NOT_ESTABLISHED",
+  "blocks": [
+    {
+      "grid_pct": [
+        0.1,
+        0.3
+      ],
+      "grid_atr_mult": [
+        0.25,
+        0.75
+      ],
+      "cells": [
+        "GP010_ATR025",
+        "GP010_ATR075",
+        "GP030_ATR025",
+        "GP030_ATR075"
+      ],
+      "admissible": false,
+      "min_net": -2298.97,
+      "min_trades": 30,
+      "max_dd_pct": 25.08,
+      "v0_normalized_aggregate_distance": 4.0
+    },
+    {
+      "grid_pct": [
+        0.1,
+        0.3
+      ],
+      "grid_atr_mult": [
+        0.75,
+        1.25
+      ],
+      "cells": [
+        "GP010_ATR075",
+        "GP010_ATR125",
+        "GP030_ATR075",
+        "GP030_ATR125"
+      ],
+      "admissible": false,
+      "min_net": -2297.49,
+      "min_trades": 30,
+      "max_dd_pct": 25.08,
+      "v0_normalized_aggregate_distance": 4.0
+    },
+    {
+      "grid_pct": [
+        0.3,
+        0.5
+      ],
+      "grid_atr_mult": [
+        0.25,
+        0.75
+      ],
+      "cells": [
+        "GP030_ATR025",
+        "GP030_ATR075",
+        "GP050_ATR025",
+        "GP050_ATR075"
+      ],
+      "admissible": false,
+      "min_net": -2298.97,
+      "min_trades": 30,
+      "max_dd_pct": 25.08,
+      "v0_normalized_aggregate_distance": 5.0
+    },
+    {
+      "grid_pct": [
+        0.3,
+        0.5
+      ],
+      "grid_atr_mult": [
+        0.75,
+        1.25
+      ],
+      "cells": [
+        "GP030_ATR075",
+        "GP030_ATR125",
+        "GP050_ATR075",
+        "GP050_ATR125"
+      ],
+      "admissible": false,
+      "min_net": -2297.49,
+      "min_trades": 30,
+      "max_dd_pct": 25.08,
+      "v0_normalized_aggregate_distance": 5.0
+    }
+  ],
+  "selected_block": null,
+  "a2_execution_authorized": false,
+  "next_gate": "STOP_OPT01_R1"
+}

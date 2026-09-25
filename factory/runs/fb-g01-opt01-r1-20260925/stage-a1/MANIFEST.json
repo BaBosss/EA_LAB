@@ -1,0 +1,553 @@
+﻿{
+    "schema":  "fb_g01_opt01_r1_stage_a1_manifest/1",
+    "source_head":  "f043a8a430d17288be80be5ff084730b89432f83",
+    "package_file_count":  109,
+    "files":  [
+                  {
+                      "path":  "BATCH_RESULT.json",
+                      "sha256":  "92a77adcf03a7ead7e224a6dc518c2d2a79cfb7ebab79a1c63dff5da2950897d",
+                      "bytes":  18300
+                  },
+                  {
+                      "path":  "build_receipts.jsonl",
+                      "sha256":  "7ff1e0bd42c2e114399d838c3eb2d6b065f3c326c7fd0991c4f418f3d812189c",
+                      "bytes":  672
+                  },
+                  {
+                      "path":  "CELL_MANIFEST.json",
+                      "sha256":  "5d89c4d17a597169c2ae51f75eff254b233edcbf53ca733e4c3c64b3938e7321",
+                      "bytes":  3131
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/agent_segment.log",
+                      "sha256":  "a055e5fc96539b1c50a623f8128505e81caa637d4d8877a3a2690e0d3f334877",
+                      "bytes":  47970
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/CELL_RESULT.json",
+                      "sha256":  "a2b1b4def8c80dc1dcde99cf66eec85f7b2bb775d6b9e63052a8b39d546a1aa4",
+                      "bytes":  1315
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN.htm",
+                      "sha256":  "57465b4e053ccb27584711b28c899302a244edb9c7132219127ed9acde7b3699",
+                      "bytes":  156650
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN.leverage_check.json",
+                      "sha256":  "feb4557c753df64dfc7c13f541e4213b8f2ef3ddc09e74edc6da10e3dbd42e05",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN.png",
+                      "sha256":  "8abca9597e654da9a5b5f981164ae0715254a6568af73fae5c5582fb50cc0666",
+                      "bytes":  6715
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN.truncation_check.json",
+                      "sha256":  "570fe12d2b5b1d47caabfd7b6d04640943d045d759fad3517fbffaea5cca3bd2",
+                      "bytes":  375
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN-holding.png",
+                      "sha256":  "de607a6f1b2aa534d392794c57e2eccda3f1ad0c51fc660d05dff4ac09d07a48",
+                      "bytes":  10477
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN-hst.png",
+                      "sha256":  "db2f97df317e37ad25262327f9e0005b6268f94bc894f03ba6401f08adcae106",
+                      "bytes":  27242
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN-mfemae.png",
+                      "sha256":  "616da117a47d9c730f492dce90b29c04d342cbfdda2c9d871787937e57680922",
+                      "bytes":  25253
+                  },
+                  {
+                      "path":  "cells/GP010_ATR025/metrics.json",
+                      "sha256":  "4b42b1490dd026fa5bdd8e6d33b72b27710ba4dad74902d4fbc94fdd6bbf3356",
+                      "bytes":  1609
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/agent_segment.log",
+                      "sha256":  "c4ac84a02efe27122458c504530782add26fa7980c4eb05d1d989df7e460f64d",
+                      "bytes":  63776
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/CELL_RESULT.json",
+                      "sha256":  "133d79817bc59483bb8bd5a1e1f788be08d311e4f389455595e97ab3766b9d50",
+                      "bytes":  1483
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/FB_G01_OPT01_R1_A1_GP010_ATR075_MAIN.htm",
+                      "sha256":  "2227c5d6a253c97f6b39f6934bd78f57b57f4e2d687203019df34c613e0fb055",
+                      "bytes":  191956
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/FB_G01_OPT01_R1_A1_GP010_ATR075_MAIN.leverage_check.json",
+                      "sha256":  "fa00b0df116c7914b8aff0b6fe826104a56d56d4413699cf2fe2fe48baa04c86",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/FB_G01_OPT01_R1_A1_GP010_ATR075_MAIN.png",
+                      "sha256":  "ea282ae60810dd12b37b18aa2508cbf8749e91a4cd639907005f1dd4e5e2596d",
+                      "bytes":  6439
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/FB_G01_OPT01_R1_A1_GP010_ATR075_MAIN.truncation_check.json",
+                      "sha256":  "22a0f92b1af5bee386799030f2c6f677e647afaf585d20646be0146edc6019b0",
+                      "bytes":  543
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/FB_G01_OPT01_R1_A1_GP010_ATR075_MAIN-holding.png",
+                      "sha256":  "043f1f4bc11969246c5fc7b1c7ccf727e71876f1282a9eea20ffee6b8af23f23",
+                      "bytes":  10341
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/FB_G01_OPT01_R1_A1_GP010_ATR075_MAIN-hst.png",
+                      "sha256":  "435efd357b60cfae3af7595dce8978deabe7643592ab9228353108a08d6ebd40",
+                      "bytes":  25685
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/FB_G01_OPT01_R1_A1_GP010_ATR075_MAIN-mfemae.png",
+                      "sha256":  "6ff53e6e6331d41ea04282efdbe44a00d0648837d92954a21358a66586184bb8",
+                      "bytes":  23555
+                  },
+                  {
+                      "path":  "cells/GP010_ATR075/metrics.json",
+                      "sha256":  "177062ced9f61e622e186b2aaf5d8f65be5e9b7d26f5851d48bdd100323b5eee",
+                      "bytes":  1606
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/agent_segment.log",
+                      "sha256":  "85682cf8d8b1a67c2addb5495e64219073810442c0d7f317a4babd5cab64debf",
+                      "bytes":  139205
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/CELL_RESULT.json",
+                      "sha256":  "2565cbd9bca423b7527a23215c22dbf65461aaba72837b45e9f70e40af6d8beb",
+                      "bytes":  1485
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/FB_G01_OPT01_R1_A1_GP010_ATR125_MAIN.htm",
+                      "sha256":  "6427be2cd21ac04de80a496d3e9ad33aa1e80451210472b7564fcdda5733639a",
+                      "bytes":  363878
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/FB_G01_OPT01_R1_A1_GP010_ATR125_MAIN.leverage_check.json",
+                      "sha256":  "a1c9ffac40d9acb08d9b6a8e6a28fda8b507b0f3ca9569470bb3e915ec4960cb",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/FB_G01_OPT01_R1_A1_GP010_ATR125_MAIN.png",
+                      "sha256":  "7e137c2e3577bb6a6f3bd803c9a3212852c3563a6dcef6d64945da43ba95f7f6",
+                      "bytes":  6978
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/FB_G01_OPT01_R1_A1_GP010_ATR125_MAIN.truncation_check.json",
+                      "sha256":  "55c7c95fd760fc274633bfa38b26e4902703ab0ea6c18db17ff0f558d569cf1b",
+                      "bytes":  544
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/FB_G01_OPT01_R1_A1_GP010_ATR125_MAIN-holding.png",
+                      "sha256":  "9bc034a9d39b07ecd1dfe30c9ee4438722eb40c9733c28866e3732bc2ab36ac4",
+                      "bytes":  10383
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/FB_G01_OPT01_R1_A1_GP010_ATR125_MAIN-hst.png",
+                      "sha256":  "f2308b20760072e27d07bd2d3fa49eb23e36874db01627d3417f587f4e5a2441",
+                      "bytes":  28268
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/FB_G01_OPT01_R1_A1_GP010_ATR125_MAIN-mfemae.png",
+                      "sha256":  "ae66f2120ec6edd1a411879d082de7721eef488c32a02adbfc0fd0d983919b06",
+                      "bytes":  24208
+                  },
+                  {
+                      "path":  "cells/GP010_ATR125/metrics.json",
+                      "sha256":  "89f97bf9cf33328ae108b6ad0784cf904e9ca44c56badedaccee55229303ae5f",
+                      "bytes":  1605
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/agent_segment.log",
+                      "sha256":  "760ce19092e91c013097a326366db6562b55de3c14c4830e599f66fefbf69fb9",
+                      "bytes":  38805
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/CELL_RESULT.json",
+                      "sha256":  "ab75284cc0bbceef4512b64eb4dfe006a44509bf4c119e2653151cf73ef92b84",
+                      "bytes":  1481
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/FB_G01_OPT01_R1_A1_GP030_ATR025_MAIN.htm",
+                      "sha256":  "5fff8329617ceed6a3a148d534b49a67f47191706640042356e5fdaa69cf967a",
+                      "bytes":  134800
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/FB_G01_OPT01_R1_A1_GP030_ATR025_MAIN.leverage_check.json",
+                      "sha256":  "32b53e05878fed7e678e0fe8ac8709f8429942e64b8c74bb197ca554043f92f5",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/FB_G01_OPT01_R1_A1_GP030_ATR025_MAIN.png",
+                      "sha256":  "712678ecc9b4ff5cf1a94cd2a37af33560ab5a30236a94a51ac7ed426c8a5ed5",
+                      "bytes":  6828
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/FB_G01_OPT01_R1_A1_GP030_ATR025_MAIN.truncation_check.json",
+                      "sha256":  "39e6a6f4579f59da77d55e988e770ca03727b55d6d5a542823c65a43864698c1",
+                      "bytes":  541
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/FB_G01_OPT01_R1_A1_GP030_ATR025_MAIN-holding.png",
+                      "sha256":  "982505047e08ffceebf3f932afeaffa983302abc7db5f70e17f4ea20c1f93152",
+                      "bytes":  9821
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/FB_G01_OPT01_R1_A1_GP030_ATR025_MAIN-hst.png",
+                      "sha256":  "bb5d1c0a350323c42ff33246dce5787195d58771856ebdd2f514b9d5556c28d7",
+                      "bytes":  26161
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/FB_G01_OPT01_R1_A1_GP030_ATR025_MAIN-mfemae.png",
+                      "sha256":  "afb016365f6b69f44f9cf63ca93499b0b5463d053584d6da9150354987e064d0",
+                      "bytes":  22550
+                  },
+                  {
+                      "path":  "cells/GP030_ATR025/metrics.json",
+                      "sha256":  "8e4a4d630bfe506a9fb673f675b85ee5a9a26c5bd20a38b2f9df39dcfa8045e5",
+                      "bytes":  1600
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/agent_segment.log",
+                      "sha256":  "51a4352e58e25e256a51e7a13ef91762fb42c5d37ca810c8b0ea85bea17fe4a5",
+                      "bytes":  38805
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/CELL_RESULT.json",
+                      "sha256":  "96e40d52e999765a6cf9395b3b48025c0d971428f1b3e3f872acb3843c1d7ebd",
+                      "bytes":  1481
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/FB_G01_OPT01_R1_A1_GP030_ATR075_MAIN.htm",
+                      "sha256":  "c08574204b7de032bab39577e743a649339a015f6b3fdcc23a3df24e3872e996",
+                      "bytes":  134800
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/FB_G01_OPT01_R1_A1_GP030_ATR075_MAIN.leverage_check.json",
+                      "sha256":  "404e027a78315142527375d5304093b3e0ce20cec7e98f1b69c6870d7fa69496",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/FB_G01_OPT01_R1_A1_GP030_ATR075_MAIN.png",
+                      "sha256":  "85ed06ab8bf99968e74b318b5c96b7faaf8afc5dac504886189c97d605ef0bb1",
+                      "bytes":  6859
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/FB_G01_OPT01_R1_A1_GP030_ATR075_MAIN.truncation_check.json",
+                      "sha256":  "ac5b2e91de2d0c33b3bbc71aabf18f3b921437192a5785138469b69845fc8874",
+                      "bytes":  541
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/FB_G01_OPT01_R1_A1_GP030_ATR075_MAIN-holding.png",
+                      "sha256":  "982505047e08ffceebf3f932afeaffa983302abc7db5f70e17f4ea20c1f93152",
+                      "bytes":  9821
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/FB_G01_OPT01_R1_A1_GP030_ATR075_MAIN-hst.png",
+                      "sha256":  "c1ac06c665dacac5b16497d52d7716b07fe6de7986d2c196f68a393e90985b34",
+                      "bytes":  26268
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/FB_G01_OPT01_R1_A1_GP030_ATR075_MAIN-mfemae.png",
+                      "sha256":  "8469f05681852815dd8f1b5744a8a59280c3630425db9c3b1a0ba99cf61e6ca8",
+                      "bytes":  22561
+                  },
+                  {
+                      "path":  "cells/GP030_ATR075/metrics.json",
+                      "sha256":  "994f9db7ae55132ac6b64df175d1cbabfc60893cfa4617f3474936b1e97b1157",
+                      "bytes":  1599
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/agent_segment.log",
+                      "sha256":  "accebe07d9d032e9e26bd0313fe8e67c4e0686d5e9d49eec952d956e60d7d5ae",
+                      "bytes":  98457
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/CELL_RESULT.json",
+                      "sha256":  "f5a477a8c4dbe8276d3b565d968308579ee4b970f6a747952b2cdeac9312c988",
+                      "bytes":  1480
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/FB_G01_OPT01_R1_A1_GP030_ATR125_MAIN.htm",
+                      "sha256":  "9fcff0300869bb722867a8359c4350e289f26f9b1e06f36a16f3bc06d2c0f3c1",
+                      "bytes":  270956
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/FB_G01_OPT01_R1_A1_GP030_ATR125_MAIN.leverage_check.json",
+                      "sha256":  "b1054b203c5d8a884472ba56d395a623080513a94e0b29fa2726d4ce9cc7f001",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/FB_G01_OPT01_R1_A1_GP030_ATR125_MAIN.png",
+                      "sha256":  "bd5850d1faf34a6aa545d6c029056d376715d45ae130b44beab36b78445397a2",
+                      "bytes":  6565
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/FB_G01_OPT01_R1_A1_GP030_ATR125_MAIN.truncation_check.json",
+                      "sha256":  "d98741bf2068632a1d42a1e2dcf968de57b5d346a83ba2113500a8adaf6e3b04",
+                      "bytes":  541
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/FB_G01_OPT01_R1_A1_GP030_ATR125_MAIN-holding.png",
+                      "sha256":  "e1e29c142087b4e65e0247419db65306e1d6fada1772813430c02b5190c68791",
+                      "bytes":  10319
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/FB_G01_OPT01_R1_A1_GP030_ATR125_MAIN-hst.png",
+                      "sha256":  "c32e059a8e2c34e805c7b0d5f25da797fd4b885270aee9ca9a81a2652ac5aca1",
+                      "bytes":  27357
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/FB_G01_OPT01_R1_A1_GP030_ATR125_MAIN-mfemae.png",
+                      "sha256":  "b46aceb9bdec193593a06c1126483b824cf0d6628f9af6ccc877add0c9be2eca",
+                      "bytes":  24872
+                  },
+                  {
+                      "path":  "cells/GP030_ATR125/metrics.json",
+                      "sha256":  "0b26eff8cd16404dd0742e4a5d6e9de371b6705db25cceb051bf7e13a2903b3e",
+                      "bytes":  1604
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/agent_segment.log",
+                      "sha256":  "cebeb65595af4eacee22dc0dedd39a70d52db7a72d87ee2438c1df2605a2a1c3",
+                      "bytes":  97589
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/CELL_RESULT.json",
+                      "sha256":  "db0231432147b8181c2da3490007d03a406769354b67a614065aa8aedaaaec6c",
+                      "bytes":  1483
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/FB_G01_OPT01_R1_A1_GP050_ATR025_MAIN.htm",
+                      "sha256":  "7dafe96c843ae8223562155fe9c6aabf55e3959d764beddb93f6b4f41113640f",
+                      "bytes":  269004
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/FB_G01_OPT01_R1_A1_GP050_ATR025_MAIN.leverage_check.json",
+                      "sha256":  "db0fcaa1604649988384286ef687519231663af01904539b082caa3686298a9d",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/FB_G01_OPT01_R1_A1_GP050_ATR025_MAIN.png",
+                      "sha256":  "2595c278e1590803bbdc0d8be5aad1d19a2a752e7a465e5ad70bb96b29125ebc",
+                      "bytes":  6549
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/FB_G01_OPT01_R1_A1_GP050_ATR025_MAIN.truncation_check.json",
+                      "sha256":  "8e5d8fc29588819e83b0ec439b8f760c31b7591ea1e6d52f4e8acded45da57e1",
+                      "bytes":  543
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/FB_G01_OPT01_R1_A1_GP050_ATR025_MAIN-holding.png",
+                      "sha256":  "2a70871b8d4423161a8c6d0ebe73c2e455b637c21a0914263c129a0012e8af68",
+                      "bytes":  10308
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/FB_G01_OPT01_R1_A1_GP050_ATR025_MAIN-hst.png",
+                      "sha256":  "3128d965ac491780838e5dee640371f788e083c09d8716cdf52c93acb67d6fbe",
+                      "bytes":  27158
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/FB_G01_OPT01_R1_A1_GP050_ATR025_MAIN-mfemae.png",
+                      "sha256":  "394404d1ad4c03fad4ae136b5832d39515d0f852c85eccd4154809dcb111b34b",
+                      "bytes":  23715
+                  },
+                  {
+                      "path":  "cells/GP050_ATR025/metrics.json",
+                      "sha256":  "77dcfb5beb6e89037c7adcc941b3bb640e228bc1b82588be27a371afde7e1a84",
+                      "bytes":  1607
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/agent_segment.log",
+                      "sha256":  "d091554a0746d85333631ec90705c8dedc0a78e7391f6d10c3daae5dd613909a",
+                      "bytes":  97589
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/CELL_RESULT.json",
+                      "sha256":  "694b692cad5744a57e1b5fafc83e089a5c38207fed4ca73503c61471ab2a31d2",
+                      "bytes":  1483
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/FB_G01_OPT01_R1_A1_GP050_ATR075_MAIN.htm",
+                      "sha256":  "5c5fee3ac1ac72a5ba9976ea5dad0d8dca38934ca59511b5b59eee55a01de4cb",
+                      "bytes":  269004
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/FB_G01_OPT01_R1_A1_GP050_ATR075_MAIN.leverage_check.json",
+                      "sha256":  "503e64d192e4475893b0bdabb2d7a09a84734ff54368cfe006a840886c13906d",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/FB_G01_OPT01_R1_A1_GP050_ATR075_MAIN.png",
+                      "sha256":  "2595c278e1590803bbdc0d8be5aad1d19a2a752e7a465e5ad70bb96b29125ebc",
+                      "bytes":  6549
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/FB_G01_OPT01_R1_A1_GP050_ATR075_MAIN.truncation_check.json",
+                      "sha256":  "e4f6bd57e1a66e1f6d4bfc0ae568f97a1e0153d965cecd3b62f6e9f036a69e84",
+                      "bytes":  543
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/FB_G01_OPT01_R1_A1_GP050_ATR075_MAIN-holding.png",
+                      "sha256":  "2a70871b8d4423161a8c6d0ebe73c2e455b637c21a0914263c129a0012e8af68",
+                      "bytes":  10308
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/FB_G01_OPT01_R1_A1_GP050_ATR075_MAIN-hst.png",
+                      "sha256":  "3128d965ac491780838e5dee640371f788e083c09d8716cdf52c93acb67d6fbe",
+                      "bytes":  27158
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/FB_G01_OPT01_R1_A1_GP050_ATR075_MAIN-mfemae.png",
+                      "sha256":  "394404d1ad4c03fad4ae136b5832d39515d0f852c85eccd4154809dcb111b34b",
+                      "bytes":  23715
+                  },
+                  {
+                      "path":  "cells/GP050_ATR075/metrics.json",
+                      "sha256":  "77dcfb5beb6e89037c7adcc941b3bb640e228bc1b82588be27a371afde7e1a84",
+                      "bytes":  1607
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/agent_segment.log",
+                      "sha256":  "6abef420157fdf0077bf2dfccbdf1a56eaa2853783f04901885ccb94b186a387",
+                      "bytes":  95855
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/CELL_RESULT.json",
+                      "sha256":  "c6259fbf0f3357bcfc9583bfc465a9198778116d7d90f66ddd744eb38236f9dd",
+                      "bytes":  1479
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/FB_G01_OPT01_R1_A1_GP050_ATR125_MAIN.htm",
+                      "sha256":  "6d11ec8ce9aebfc8747638c27a029aaa1e2818f190b4a704e86cdc6ee2c30ad4",
+                      "bytes":  265048
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/FB_G01_OPT01_R1_A1_GP050_ATR125_MAIN.leverage_check.json",
+                      "sha256":  "c30aa3305cb80fa45099f1874f3f2f306d8843845ac8deed5ae994f24a02bd5a",
+                      "bytes":  178
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/FB_G01_OPT01_R1_A1_GP050_ATR125_MAIN.png",
+                      "sha256":  "7a355a0ad1eedfe8b89f6134a3cc5f258d81693c61be366a2010d239c95cf36c",
+                      "bytes":  6599
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/FB_G01_OPT01_R1_A1_GP050_ATR125_MAIN.truncation_check.json",
+                      "sha256":  "2c0f68c740f490a8b01d88124324cae4f8b9daa039dbc3a129c074f1f8bd67ba",
+                      "bytes":  540
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/FB_G01_OPT01_R1_A1_GP050_ATR125_MAIN-holding.png",
+                      "sha256":  "5740561d26fdb4c291a2db837840706c3cded198001a536df471c122eb3840b2",
+                      "bytes":  10332
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/FB_G01_OPT01_R1_A1_GP050_ATR125_MAIN-hst.png",
+                      "sha256":  "22c3873e107f1931cea359269ad63630c7da19ce4e9027e24817393d70d16386",
+                      "bytes":  26532
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/FB_G01_OPT01_R1_A1_GP050_ATR125_MAIN-mfemae.png",
+                      "sha256":  "2690b1be1caae395852c715cf9100772445c40193de42a1b63d4eb55e9c6b47b",
+                      "bytes":  23801
+                  },
+                  {
+                      "path":  "cells/GP050_ATR125/metrics.json",
+                      "sha256":  "8a6737182968a4bc9f475aff5e3baf73f424a8ca33f4840da6141ab0f4354b0e",
+                      "bytes":  1603
+                  },
+                  {
+                      "path":  "JOB_HISTORY.json",
+                      "sha256":  "a2091110fc5e99a367044425a7d48e608849b1657034299556e3949b12998f43",
+                      "bytes":  1105
+                  },
+                  {
+                      "path":  "PRE_MT5_HARNESS_FAILURE.json",
+                      "sha256":  "862b44141b6396c19070192a06e8001ba57f2c483fd523d82ecbc846c44e233e",
+                      "bytes":  671
+                  },
+                  {
+                      "path":  "PREP_RECEIPT.json",
+                      "sha256":  "cd33e1219d68482c7dd53528966c0ba30d74e8960fbe13a2be2900a8e296007a",
+                      "bytes":  500
+                  },
+                  {
+                      "path":  "RESULT.json",
+                      "sha256":  "9fc7239f4a873c29fbbc2cbf9f8f735b687081c6c3ec374fc320ce974cb3dcef",
+                      "bytes":  1166
+                  },
+                  {
+                      "path":  "SELECTOR_RESULT.json",
+                      "sha256":  "f364c865458ee4cc4551f2d37ffe2bc6a908c4812fd0581c2bc42f6860e2a064",
+                      "bytes":  1916
+                  },
+                  {
+                      "path":  "sets/BASE_FULL.set",
+                      "sha256":  "a9d434bf37ddc3a4ed8a906a6b1e640ef71e7abde286fcd9f9b194eb95bc5a57",
+                      "bytes":  3406
+                  },
+                  {
+                      "path":  "sets/GP010_ATR025.set",
+                      "sha256":  "1aec21d6f195023b1f88ce8b780d6bfe7af8f175260a545e67dd8d316f5b8204",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "sets/GP010_ATR075.set",
+                      "sha256":  "dd378960d66f3f7761e505ddfda3835f80cee59cd6c4f3b0a5db64c2bb3a283a",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "sets/GP010_ATR125.set",
+                      "sha256":  "ab7ab7150b909e390c263ddc9df673d336432d4fe8ead1c32bb9ea0926b4a088",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "sets/GP030_ATR025.set",
+                      "sha256":  "b061f4fc834015d89a95cf70d878611b3efe9fb305d1df83a661b5488c615c3c",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "sets/GP030_ATR075.set",
+                      "sha256":  "e1d708c07593d857977d6c96b55b25543d28a8f70286f1e42af66c30d70afe91",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "sets/GP030_ATR125.set",
+                      "sha256":  "1fb9e8ac40c0f8285895eb08f252c3528c0fe544035c0615b890933dc9e9eb43",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "sets/GP050_ATR025.set",
+                      "sha256":  "5f33ac024ab85f9ed89bd54c789f55247cd406bbdc11cf27e29f97af1b936434",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "sets/GP050_ATR075.set",
+                      "sha256":  "25a47eadc5e1a91296f554c4ddf15445f56f6f2c338c8c1f50ea938879164500",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "sets/GP050_ATR125.set",
+                      "sha256":  "e70e40f703cb744e47b8e1f4a39165439da5b5f4c8d89f9d13ba571a4f2e4a7e",
+                      "bytes":  3569
+                  },
+                  {
+                      "path":  "VALIDATION.json",
+                      "sha256":  "5b401809c3aa9b4e06709ec2c7847f7c4f77c80990c8c46c36b0c7d14b8fe729",
+                      "bytes":  1529
+                  }
+              ],
+    "result_doc_sha256":  "5fe66b31ea957227a07e184e6dfc4a56a3157439614f37017ea923d7dd57fe42"
+}

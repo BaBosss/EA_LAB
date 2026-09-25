@@ -1,0 +1,29 @@
+﻿{
+    "cell":  "GP030_ATR125",
+    "grid_pct":  0.3,
+    "grid_atr_mult":  1.25,
+    "set_sha256":  "1fb9e8ac40c0f8285895eb08f252c3528c0fe544035c0615b890933dc9e9eb43",
+    "rc":  0,
+    "started_utc":  "2026-09-25T03:11:11.9727205Z",
+    "ended_utc":  "2026-09-25T03:18:33.2277028Z",
+    "profit_factor":  0.37,
+    "net_profit":  -1768.9,
+    "trades":  99,
+    "eqdd_pct":  25.05,
+    "history_quality":  "98%",
+    "report_build":  6182,
+    "hard_kill_count":  1,
+    "hard_kill_complete_count":  1,
+    "end_test_forced_close_count":  0,
+    "truncation":  {
+                       "schema_version":  2,
+                       "report_name":  "FB_G01_OPT01_R1_A1_GP030_ATR125_MAIN",
+                       "check_status":  "TRUNCATED",
+                       "checker_exit_code":  2,
+                       "truncated":  true,
+                       "detail":  "last deal 2025.04.11 16:32:40 | window ends 2025.12.31 | idle tail 263.3 days (24% of window) | entry deals 99 | eqDD \r\n25.05%\r\n[SUSPECT] stopped trading well before the window ended, AND the drawdown reached kill territory. Re-run with \r\n-TesterLog to confirm whether the cage killed it; do not use these metrics until you know."
+                   },
+    "report_sha256":  "9fcff0300869bb722867a8359c4350e289f26f9b1e06f36a16f3bc06d2c0f3c1",
+    "agent_segment_sha256":  "accebe07d9d032e9e26bd0313fe8e67c4e0686d5e9d49eec952d956e60d7d5ae",
+    "strategy_qualified":  false
+}

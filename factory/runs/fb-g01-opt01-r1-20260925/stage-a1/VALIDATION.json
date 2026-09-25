@@ -1,0 +1,35 @@
+﻿{
+    "schema":  "fb_g01_opt01_r1_stage_a1_validation/1",
+    "source_head":  "f043a8a430d17288be80be5ff084730b89432f83",
+    "accepted_source":  "8da04fc789ca55e6c673d41899e9136cfa72a75e",
+    "build_receipt":  "br-5427f03ea8684ea7a842c0efa6a5ca95",
+    "ex5_sha256":  "80f0356b13c522730e746ac97693aea491df55acaee42b61d681943a3cdd2b8a",
+    "requested_cells":  9,
+    "completed_cells":  9,
+    "unique_expected_cells":  9,
+    "all_report_hashes_present":  true,
+    "all_set_hashes_bound":  true,
+    "exact_lattice":  true,
+    "qualification_recomputed_all_false":  true,
+    "strategy_qualified_cells":  0,
+    "admissible_2x2_blocks":  0,
+    "selector_status":  "COARSE_SPACING_REGION_NOT_ESTABLISHED",
+    "errors":  [
+
+               ],
+    "all_pass":  true,
+    "batch_result_sha256":  "92a77adcf03a7ead7e224a6dc518c2d2a79cfb7ebab79a1c63dff5da2950897d",
+    "selector_result_sha256":  "f364c865458ee4cc4551f2d37ffe2bc6a908c4812fd0581c2bc42f6860e2a064",
+    "lattice_values":  {
+                           "GridPct":  [
+                                           0.1,
+                                           0.3,
+                                           0.5
+                                       ],
+                           "GridATRMult":  [
+                                               0.25,
+                                               0.75,
+                                               1.25
+                                           ]
+                       }
+}
