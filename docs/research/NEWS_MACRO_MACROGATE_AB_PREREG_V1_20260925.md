@@ -165,3 +165,26 @@ For every seed in both 1,096-day windows the corrected mapping covers 1,096/1,09
 Canonical moved during the stopped author job to `069e2f34f543456a00da9b2f6ba775f111aceafc` through Monitor/state-sync commits only. B15 wrapper/set, `LabCore.mqh`, `MacroGate_Core.mqh`, accepted `macrogate_native.py`, and the accepted native-exporter contract blobs are byte-identical across that movement. The isolated lane was merged normally (no rebase/reset) at `ded5efef9b792be7ecaab6ecf46d2c8e1c2b108a` before this R1 refreeze.
 
 R1 does not consume the source/tooling Repair1 budget and does not authorize implementation or performance until committed, tested and independently reviewed.
+
+## Implementation evidence — pre-outcome R1
+
+The bounded R1 author implementation materialized the weekday-stratified method without changing the frozen parent, windows, arms, primary metric, falsifiers, authority ceiling, or Repair1 status.
+
+Implemented source identities before the author commit:
+- `tools/news_macro_lab/macro_placebo.py` SHA256 `f045f59f2032d2e65a4b2d0e8d376ce5b73ef083bff44554af7d0053f6cfa5ca`;
+- `tools/news_macro_lab/tests/test_macro_placebo.py` SHA256 `9d98894a2fcd5d56c5fe334da6cee86020159f4ae93aaa2e43c2801c5ed21ca1`;
+- `tools/news_macro_lab/macrogate_ab_prereg_v1_20260925.json` SHA256 `57594c5c21b5f7330490740d0a746afd86a6c39a54c1f54477ce2fea020b1042`;
+- accepted unchanged `tools/news_macro_lab/macrogate_native.py` SHA256 `ec22220fb7995518fd71c694dca43008638bd8692386cba54283002c9a9163d1`.
+
+Deterministic checks completed before any performance outcome:
+- focused R1 tests: 11/11 PASS;
+- complete existing-plus-R1 `tools/news_macro_lab/tests` suite: 207/207 PASS, zero failures/errors/skips;
+- portable-Python `py_compile`: PASS;
+- JSON parse and `git diff --check`: PASS;
+- exact seed map: `2026092501 -> +38`, `2026092502 -> -23`, `2026092503 -> -8`, `2026092504 -> -32`, `2026092505 -> +36` weeks.
+
+Actual final generation used the accepted causal timeline and manifest hashes from Section 1. Two fresh output directories each contained the same 21 filenames (ten native CSVs, ten provenance CSVs, and one source-bound manifest), with zero byte/hash mismatches. The common generated manifest SHA256 is `95caa20a890e2ad0561a5ccf41b0ac83bce7795f9cf22c3577e3e547197e4dea`.
+
+For every MAIN/BWD × seed cell, evidence records 1,096/1,096 targets, 1,096 unique in-window donors, zero weekday mismatch, zero cross-window donor, zero HOLDOUT contact, preserved marginal donor-state counts, strictly ascending/unique native timestamps, and explicit weekday-stratum wrap/displacement counts. The artifacts explicitly decline a uniform-calendar-shift claim and exact run-length preservation at synthetic seams. Target transition server dates remain `UNKNOWN` at server `00:00`; the required 2024-11-03 marker is explicit and the next stable target resumes at its actual `2024-11-04 02:00` server time. Donor availability fields remain provenance-only and are never promoted to causal truth.
+
+No MT5/compiler/tester/optimization/HOLDOUT/Model4/runtime/deployment/trading action was performed. `can_execute=false`, `performance=NOT_RUN`, `holdout_used=false`, `probability=null`, `selection_performed=false`, `all_seeds_retained=true`, and source/tooling Repair1=`UNUSED` remain controlling. The only eligible next gate after author commit and evidence closeout is separate exact-head read-only GPT Scrutiny.
