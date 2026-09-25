@@ -1,9 +1,9 @@
-import json, os, pathlib, sys, tempfile, unittest
+import json, os, pathlib, subprocess, sys, tempfile, unittest
 from types import SimpleNamespace
 from unittest import mock
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
-from model import Model, Refused, _DashboardParser, clean, safe_bytes, digest, number, age_state, utcnow, stamp, projection_view
-from server import Application, Handler, render, serialize, reusable, identity
+from model import Model, Refused, SOURCE_ADAPTER_IMPORT_ALLOWLIST, _DashboardParser, clean, safe_bytes, digest, number, age_state, utcnow, stamp, projection_view
+from server import Application, Handler, config_from_args, parser, render, serialize, reusable, identity
 import datetime as dt
 import shutil
 
@@ -67,6 +67,188 @@ def browser_fixtures():
             result[mode]={k:fixture[k] for k in ('snapshot','html','health')}
     return result
 
+def adapter_payload(sha):
+    section=lambda availability,reasons,data,errors=[]:{'implementation':'IMPLEMENTED_READER','availability':availability,
+        'reasons':reasons,'data':data,'provenance':[],'errors':errors}
+    finding={'owner':'ledger','code':'ACCOUNT_METADATA_MISSING_OR_AMBIGUOUS','source_id':None,
+             'finding_id':'finding-'+'d'*64,'next_action':'INSPECT_DECLARED_SOURCE_EVIDENCE'}
+    return {'schema_version':'ea_observation_adapters/1','canonical_ref':sha,'read_at_utc':'2026-09-24T13:35:13Z',
+        'authority':'READ_ONLY_SOURCE_OBSERVATIONS','integration':{
+            'consumer':'tools.mobile_report_hub.owner_webapp.model.Model.snapshot','ui_wired':False,
+            'activated':False,'real_data_qualified':False},
+        'sections':{
+            'accounts':section('PARTIAL',['BROKER_SERVER_NOT_EXPORTED','BROKER_TIME_UNQUALIFIED'],{
+                'accounts':[{'account_key':'account-'+'a'*64,'currency':'USD','availability':'PARTIAL',
+                             'currency_binding_conflict':False,'qualified_series':None,'samples':[{},{}]},
+                            {'account_key':'account-'+'b'*64,'currency':'EUR','availability':'PARTIAL',
+                             'currency_binding_conflict':True,'qualified_series':None,'samples':[{}]}],
+                'cross_currency_total':None,'broker_qualified_series_available':False}),
+            'ledger':section('PARTIAL',['FEE_CYCLE_IDS_NOT_EXPORTED','BROKER_TIME_UNQUALIFIED'],{
+                'accounts':[{'account_key':'account-'+'a'*64,'availability':'PARTIAL',
+                             'reason':'COST_CYCLE_CLOCK_AND_RUNTIME_GAPS','deal_count':7,'quarantined':[],
+                             'components':[{'stream_id':'stream-'+'c'*64,'deal_count':7,
+                                            'gross_realized_profit_component':'999.00','fee_availability':'NOT_EXPORTED',
+                                            'all_costs_complete':False,'window_latest':'2026-09-24T12:30:00',
+                                            'clock_basis':'BROKER_TIME_UNQUALIFIED'}]},
+                            {'account_key':'account-'+'b'*64,'availability':'UNAVAILABLE','reason':'LEDGER_MISSING',
+                             'deal_count':None,'quarantined':[],'components':[]}],
+                'raw_rows_read':9,'unit':'DEAL_EVENTS_NOT_TRADE_CYCLES','account_totals_across_currencies':None}),
+            'deployments':section('PARTIAL',['DESCRIPTIVE_ONLY'],{
+                'deployments':[{'deployment_id':'deployment-'+'e'*64,'expected_identity_present':True,
+                                'comparison':'DIFFERENCES_OR_GAPS'},
+                               {'deployment_id':'deployment-'+'f'*64,'expected_identity_present':False,
+                                'comparison':'FIELDS_MATCH_ONLY'}],
+                'authority':'DESCRIPTIVE_ONLY','first_trade_or_judge_claim':None,
+                'producer':{'generated_at':'2026-09-24T13:35:13Z','canonical_binding':'DIFFERENT_REPO_HEAD',
+                            'producer_identity_state':'FAIL','producer_head':'1'*40}}),
+            'guards':section('PARTIAL',['NO_QUALIFIED_EFFECTIVE_EVENT_SOURCE'],{
+                'contexts':[{'kind':'NEWS_CALENDAR','availability':'PARTIAL','observed_at':None,
+                             'reason':'CONTEXT_NOT_EFFECTIVE_EVIDENCE'},
+                            {'kind':'MRIS','availability':'PARTIAL','observed_at':'2026-09-24T13:35:09Z',
+                             'reason':'CONTEXT_NOT_EFFECTIVE_EVIDENCE'}],
+                'effective':None,'reason':'CALENDAR_MRIS_AND_CONFIG_CANNOT_PROVE_EA_APPLICATION'}),
+            'access_provenance':section('UNAVAILABLE',['NO_ACCESS_QUALIFICATION_EVIDENCE'],{}),
+        },'provenance':[],'errors':[finding],'budget_usage':{'files':4,'bytes':1234,'rows':9}}
+
+class SourceAdapterIntegrationTests(unittest.TestCase):
+    def model(self, adapter_root=None):
+        repo=HERE.parents[2]
+        config={'repo':str(repo),'snapshots':'S:/snapshots','runtime':'R:/runtime'}
+        if adapter_root is not None: config['adapter_root']=str(adapter_root)
+        model=Model(config)
+        model.sha=model.git('rev-parse','HEAD').decode().strip()
+        return model
+
+    def adapter_bundle(self, root):
+        repo=HERE.parents[2]
+        for relative in SOURCE_ADAPTER_IMPORT_ALLOWLIST:
+            destination=root.joinpath(*pathlib.PurePosixPath(relative).parts)
+            destination.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copyfile(repo.joinpath(*pathlib.PurePosixPath(relative).parts),destination)
+        return root
+
+    def test_adapter_root_cli_fallback_explicit_and_identity_binding(self):
+        fallback=config_from_args(parser().parse_args(['--repo','R:/canonical']))
+        explicit=config_from_args(parser().parse_args(['--repo','R:/canonical','--adapter-root','A:/bundle']))
+        self.assertEqual(fallback['adapter_root'],'R:/canonical')
+        self.assertEqual(explicit['adapter_root'],'A:/bundle')
+        first=identity({**explicit,'assets':str(HERE)})
+        second=identity({**explicit,'assets':str(HERE),'adapter_root':'B:/other-bundle'})
+        self.assertNotEqual(first['sources_sha256'],second['sources_sha256'])
+
+    def test_distinct_accepted_adapter_bundle_executes_against_git_repo(self):
+        with tempfile.TemporaryDirectory() as td:
+            bundle=self.adapter_bundle(pathlib.Path(td)/'bundle')
+            model=self.model(bundle)
+            self.assertNotEqual(model.repo.absolute(),bundle.absolute())
+            before=model._verified_adapter_files()
+            raw=model._run_source_adapter()
+            self.assertEqual(before,model._verified_adapter_files())
+            observation=json.loads(raw)
+            self.assertEqual(observation['schema_version'],'ea_observation_adapters/1')
+            self.assertEqual(observation['canonical_ref'],model.sha)
+
+    def test_exact_git_bound_local_imports_allow_accepted_invocation(self):
+        model=self.model(); payload=adapter_payload(model.sha)
+        with mock.patch.object(model,'_run_source_adapter',return_value=json.dumps(payload).encode()):
+            got=model.source_observations()
+        self.assertEqual(got['status'],'AVAILABLE')
+        self.assertEqual(got['canonical_ref'],model.sha)
+
+    def test_pre_read_hash_mismatch_is_optional_unavailable(self):
+        model=self.model()
+        with mock.patch.object(model,'_verified_adapter_files',side_effect=Refused('SOURCE_ADAPTER_BYTE_MISMATCH')):
+            got=model.source_observations()
+        self.assertEqual(got['status'],'UNAVAILABLE')
+        self.assertEqual(got['overall'],'UNAVAILABLE')
+
+    def test_missing_or_mismatched_adapter_bundle_is_optional_unavailable(self):
+        for defect in ('missing','mismatch'):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as td:
+                bundle=self.adapter_bundle(pathlib.Path(td)/'bundle')
+                target=bundle.joinpath(*pathlib.PurePosixPath(SOURCE_ADAPTER_IMPORT_ALLOWLIST[0]).parts)
+                if defect=='missing': target.unlink()
+                else: target.write_bytes(target.read_bytes()+b'\n# drift\n')
+                got=self.model(bundle).source_observations()
+                self.assertEqual(got['status'],'UNAVAILABLE')
+                self.assertEqual(got['overall'],'UNAVAILABLE')
+
+    def test_post_read_mutation_discards_result(self):
+        model=self.model(); payload=adapter_payload(model.sha); before={'x':'1'}
+        with mock.patch.object(model,'_verified_adapter_files',side_effect=[before,{'x':'2'}]), \
+             mock.patch.object(model,'_run_source_adapter',return_value=json.dumps(payload).encode()):
+            got=model.source_observations()
+        self.assertEqual(got['status'],'UNAVAILABLE')
+
+    def test_subprocess_contract_and_failure_modes(self):
+        model=self.model(); good=json.dumps(adapter_payload(model.sha)).encode()
+        completed=lambda code=0,out=good: SimpleNamespace(returncode=code,stdout=out,stderr=b'')
+        with mock.patch('model.subprocess.run',return_value=completed()) as run:
+            self.assertEqual(model._run_source_adapter(),good)
+            command=run.call_args.args[0]
+            self.assertEqual(command[0],sys.executable); self.assertIn('-I',command); self.assertIn('-B',command)
+            self.assertNotIn('shell',run.call_args.kwargs)
+            self.assertEqual(command[-6:],[str(model.adapter_root),str(model.repo),model.sha,model.c['snapshots'],model.c['snapshots'],model.c['runtime']])
+            self.assertIn('sys.path.insert(0,import_root)',command[4])
+            self.assertIn('BuildRequest(repo=pathlib.Path(repo)',command[4])
+        for result,code in ((completed(2,b''),'SOURCE_ADAPTER_PROCESS_FAILED'),
+                            (completed(0,b'{'),'SOURCE_ADAPTER_JSON_INVALID'),
+                            (completed(0,b'x'*4_000_001),'SOURCE_ADAPTER_OUTPUT_TOO_LARGE')):
+            with self.subTest(code=code), mock.patch('model.subprocess.run',return_value=result):
+                if code=='SOURCE_ADAPTER_JSON_INVALID':
+                    raw=model._run_source_adapter()
+                    with self.assertRaisesRegex(Refused,code): model._project_source_observations(raw)
+                else:
+                    with self.assertRaisesRegex(Refused,code): model._run_source_adapter()
+        with mock.patch('model.subprocess.run',side_effect=subprocess.TimeoutExpired(['python'],40)):
+            with self.assertRaisesRegex(Refused,'SOURCE_ADAPTER_TIMEOUT'): model._run_source_adapter()
+
+    def test_wrong_schema_ref_authority_and_integration_are_unavailable(self):
+        model=self.model()
+        cases=(('schema_version','wrong'),('canonical_ref','0'*40),('authority','WRITE_AUTHORITY'))
+        for key,value in cases:
+            payload=adapter_payload(model.sha); payload[key]=value
+            with self.subTest(key=key), mock.patch.object(model,'_verified_adapter_files',return_value={'x':'1'}), \
+                 mock.patch.object(model,'_run_source_adapter',return_value=json.dumps(payload).encode()):
+                self.assertEqual(model.source_observations()['status'],'UNAVAILABLE')
+        payload=adapter_payload(model.sha); payload['integration']['activated']=True
+        with mock.patch.object(model,'_verified_adapter_files',return_value={'x':'1'}), \
+             mock.patch.object(model,'_run_source_adapter',return_value=json.dumps(payload).encode()):
+            self.assertEqual(model.source_observations()['status'],'UNAVAILABLE')
+
+    def test_partial_projection_preserves_gaps_identity_guards_and_no_money(self):
+        model=self.model(); got=model._project_source_observations(json.dumps(adapter_payload(model.sha)).encode())
+        self.assertEqual(got['overall'],'PARTIAL')
+        self.assertEqual(got['sections']['ledger']['account_count'],2)
+        self.assertEqual(got['sections']['ledger']['accounts_with_ledger'],1)
+        self.assertEqual(got['sections']['ledger']['missing_ledger_count'],1)
+        self.assertEqual(got['sections']['ledger']['deal_events'],7)
+        self.assertEqual(got['sections']['ledger']['deal_event_unit'],'DEAL_EVENTS_NOT_TRADE_CYCLES')
+        self.assertFalse(got['sections']['ledger']['all_costs_complete'])
+        self.assertEqual(got['sections']['deployments']['producer_identity_state'],'FAIL')
+        self.assertEqual(got['sections']['deployments']['canonical_binding'],'DIFFERENT_REPO_HEAD')
+        self.assertIsNone(got['sections']['guards']['effective'])
+        self.assertEqual(got['sections']['guards']['effective_state'],'UNKNOWN')
+        serialized=json.dumps(got)
+        self.assertNotIn('gross_realized_profit_component',serialized)
+        self.assertNotIn('999.00',serialized)
+        self.assertNotIn('account-',serialized)
+        self.assertEqual(got['finding_count'],1)
+
+    def test_legitimate_unavailable_section_remains_section_unavailable(self):
+        model=self.model(); payload=adapter_payload(model.sha)
+        payload['sections']['ledger'].update(availability='UNAVAILABLE',reasons=['SOURCE_MISSING'],data={})
+        got=model._project_source_observations(json.dumps(payload).encode())
+        self.assertEqual(got['status'],'AVAILABLE')
+        self.assertEqual(got['sections']['ledger']['availability'],'UNAVAILABLE')
+        self.assertIsNone(got['sections']['ledger']['deal_events'])
+        self.assertIsNone(got['sections']['ledger']['missing_ledger_count'])
+
+    def test_invalid_diagnostic_code_is_rejected_not_rendered(self):
+        model=self.model(); payload=adapter_payload(model.sha); payload['errors'][0]['code']='<img onerror=alert(1)>'
+        with self.assertRaisesRegex(Refused,'SOURCE_ADAPTER_FINDING_SCHEMA'):
+            model._project_source_observations(json.dumps(payload).encode())
+
 class ConvergenceTests(unittest.TestCase):
     def test_strict_z_offsets_and_calendar(self):
         self.assertEqual(stamp('2026-09-24T07:00:00+07:00'),stamp('2026-09-24T00:00:00Z'))
@@ -118,6 +300,7 @@ class ConvergenceTests(unittest.TestCase):
             self.assertTrue(f['snapshot']['transport']['cache_hit'])
             self.assertFalse(f['first']['transport']['cache_hit'])
             self.assertEqual(f['snapshot']['monitoring']['generated_at_utc'],'2026-09-20T00:00:00Z')
+            self.assertEqual(f['snapshot']['source_observations']['status'],'UNAVAILABLE')
             self.assertLess(f['html'].index('root.EALabTruth=api'),f['html'].index('const truth=window.EALabTruth'))
             self.assertNotIn('123456789',f['html'])
     def test_serialization_escape_and_nonfinite_rejection(self):

@@ -1,9 +1,21 @@
 """Read-only presentation of existing EA_LAB evidence."""
 from __future__ import annotations
-import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess
+import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess, sys
 from html.parser import HTMLParser
 UTC = dt.timezone.utc
 LOADED_SOURCE_SHA256 = hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest()
+SOURCE_ADAPTER_IMPORT_ALLOWLIST = (
+    'tools/mobile_report_hub/source_adapters/__init__.py',
+    'tools/mobile_report_hub/source_adapters/builder.py',
+    'tools/mobile_report_hub/source_adapters/safe.py',
+    'tools/mobile_report_hub/source_adapters/readers.py',
+    'tools/mobile_report_hub/source_adapters/coverage.py',
+    '_triage/factory_os/runtime_identity.py',
+    'tools/control_center/contracts/__init__.py',
+    'tools/control_center/contracts/observations.py',
+)
+SOURCE_ADAPTER_STDOUT_LIMIT = 4_000_000
+SOURCE_ADAPTER_TIMEOUT_SECONDS = 40
 class Refused(ValueError):
     pass
 def utcnow():
@@ -123,6 +135,23 @@ def csv_rows(raw):
     text=raw.decode('utf-16' if raw[:2] in (bytes([255,254]),bytes([254,255])) else 'utf-8-sig')
     return list(csv.DictReader(io.StringIO(text)))
 
+def unavailable_source_observations(reason='SOURCE_ADAPTER_UNAVAILABLE'):
+    section=lambda **fields:{'availability':'UNAVAILABLE','reasons':[reason],**fields}
+    return {'status':'UNAVAILABLE','schema':None,'canonical_ref':None,'read_at_utc':None,'authority':None,
+        'overall':'UNAVAILABLE','budget_usage':{'files':None,'bytes':None,'rows':None},
+        'sections':{
+            'accounts':section(account_count=None,sample_count=None,conflict_count=None,qualified_series_count=None),
+            'ledger':section(account_count=None,accounts_with_ledger=None,missing_ledger_count=None,
+                             deal_events=None,deal_event_unit='DEAL_EVENTS_NOT_TRADE_CYCLES',stream_count=None,
+                             quarantined_count=None,latest_broker_time=None,clock_basis='BROKER_TIME_UNQUALIFIED',
+                             all_costs_complete=None),
+            'deployments':section(deployment_count=None,expected_identity_present=None,fields_match_only=None,
+                                  producer_identity_state='UNKNOWN',canonical_binding='UNKNOWN',generated_at=None),
+            'guards':section(contexts=[],effective=None,effective_state='UNKNOWN',reason=reason),
+            'access_provenance':section(),
+        },'finding_count':None,'findings':[],
+        'basis':'Read-only adapter observation unavailable. No runtime, trading, guard-effectiveness, identity, freshness, or acceptance claim follows.'}
+
 class _DashboardParser(HTMLParser):
     """Extract only account-card tables from the accepted generated dashboard."""
     def __init__(self):
@@ -152,7 +181,8 @@ class _DashboardParser(HTMLParser):
 
 class Model:
     def __init__(self, config):
-        self.c=config; self.repo=pathlib.Path(config['repo']); self.errors=[]
+        self.c=config; self.repo=pathlib.Path(config['repo'])
+        self.adapter_root=pathlib.Path(config.get('adapter_root') or config['repo']); self.errors=[]
     def git(self,*args):
         p=subprocess.run(['git','-C',str(self.repo),*args],capture_output=True,timeout=12,env={**os.environ,'GIT_OPTIONAL_LOCKS':'0','GIT_TERMINAL_PROMPT':'0'})
         if p.returncode: raise Refused('GIT_READ_UNAVAILABLE')
@@ -163,6 +193,217 @@ class Model:
         try: return fn()
         except (OSError,ValueError,KeyError,TypeError,subprocess.SubprocessError) as e:
             self.issue(name,e); return default
+
+    def _verified_adapter_files(self):
+        listing=self.git('ls-tree',self.sha,'--',*SOURCE_ADAPTER_IMPORT_ALLOWLIST).decode('utf-8',errors='strict')
+        entries={}
+        for line in listing.splitlines():
+            match=re.fullmatch(r'(100644|100755) blob ([0-9a-f]{40})\t(.+)',line)
+            if not match or match.group(3) in entries: raise Refused('SOURCE_ADAPTER_GIT_ENTRY_INVALID')
+            entries[match.group(3)]=match.group(2)
+        if set(entries)!=set(SOURCE_ADAPTER_IMPORT_ALLOWLIST): raise Refused('SOURCE_ADAPTER_GIT_ENTRY_INVALID')
+        hashes={}
+        for relative in SOURCE_ADAPTER_IMPORT_ALLOWLIST:
+            local=self.adapter_root.joinpath(*pathlib.PurePosixPath(relative).parts)
+            raw=safe_bytes(local,self.adapter_root,2_000_000)
+            try:
+                if local.stat().st_nlink!=1: raise Refused('SOURCE_ADAPTER_LINK_REFUSED')
+            except OSError:
+                raise Refused('SOURCE_ADAPTER_LOCAL_UNREADABLE') from None
+            pinned=self.blob(relative)
+            if raw!=pinned: raise Refused('SOURCE_ADAPTER_BYTE_MISMATCH')
+            hashes[relative]=digest(raw)
+        return hashes
+
+    def _run_source_adapter(self):
+        launcher=(
+            "import json,pathlib,sys\n"
+            "import_root,repo,ref,ledgers,snapshots,runtime=sys.argv[1:]\n"
+            "sys.path.insert(0,import_root)\n"
+            "from tools.mobile_report_hub.source_adapters import BuildRequest,build_observations\n"
+            "value=build_observations(BuildRequest(repo=pathlib.Path(repo),ref=ref,ledgers=pathlib.Path(ledgers),"
+            "snapshots=pathlib.Path(snapshots),runtime=pathlib.Path(runtime))).to_dict()\n"
+            "encoded=json.dumps(value,separators=(',',':'),ensure_ascii=True,allow_nan=False)\n"
+            f"if len(encoded)>{SOURCE_ADAPTER_STDOUT_LIMIT}: raise SystemExit(86)\n"
+            "sys.stdout.write(encoded)\n"
+        )
+        command=[sys.executable,'-I','-B','-c',launcher,str(self.adapter_root),str(self.repo),self.sha,
+                 str(self.c['snapshots']),str(self.c['snapshots']),str(self.c['runtime'])]
+        try:
+            result=subprocess.run(command,capture_output=True,timeout=SOURCE_ADAPTER_TIMEOUT_SECONDS,
+                                  env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'})
+        except subprocess.TimeoutExpired:
+            raise Refused('SOURCE_ADAPTER_TIMEOUT') from None
+        except OSError:
+            raise Refused('SOURCE_ADAPTER_EXECUTION_FAILED') from None
+        if len(result.stdout)>SOURCE_ADAPTER_STDOUT_LIMIT or len(result.stderr)>65_536:
+            raise Refused('SOURCE_ADAPTER_OUTPUT_TOO_LARGE')
+        if result.returncode: raise Refused('SOURCE_ADAPTER_PROCESS_FAILED')
+        return result.stdout
+
+    def _project_source_observations(self, raw):
+        def obj(value,code):
+            if not isinstance(value,dict): raise Refused(code)
+            return value
+        def array(value,code,limit=2000):
+            if not isinstance(value,list) or len(value)>limit: raise Refused(code)
+            return value
+        def code(value,error='SOURCE_ADAPTER_SCHEMA'):
+            if not isinstance(value,str) or not re.fullmatch(r'[A-Z][A-Z0-9_]{0,95}',value): raise Refused(error)
+            return value
+        def codes(value,error='SOURCE_ADAPTER_SCHEMA'):
+            return [code(item,error) for item in array(value,error,32)]
+        def availability(value):
+            if value not in ('REAL_DATA_QUALIFIED','PARTIAL','UNAVAILABLE'): raise Refused('SOURCE_ADAPTER_AVAILABILITY')
+            return value
+        def count(value,error='SOURCE_ADAPTER_COUNT',limit=1_000_000):
+            if type(value) is not int or value<0 or value>limit: raise Refused(error)
+            return value
+        def opaque(value,prefix,error='SOURCE_ADAPTER_SCHEMA'):
+            if not isinstance(value,str) or not re.fullmatch(re.escape(prefix)+r'[0-9a-f]{64}',value): raise Refused(error)
+        try: value=json.loads(raw.decode('utf-8'))
+        except (UnicodeError,json.JSONDecodeError): raise Refused('SOURCE_ADAPTER_JSON_INVALID') from None
+        value=obj(value,'SOURCE_ADAPTER_SCHEMA')
+        if value.get('schema_version')!='ea_observation_adapters/1': raise Refused('SOURCE_ADAPTER_SCHEMA')
+        if value.get('canonical_ref')!=self.sha: raise Refused('SOURCE_ADAPTER_CANONICAL_REF')
+        read_at=value.get('read_at_utc')
+        if stamp(read_at) is None or not read_at.endswith('Z'): raise Refused('SOURCE_ADAPTER_READ_TIME')
+        if value.get('authority')!='READ_ONLY_SOURCE_OBSERVATIONS': raise Refused('SOURCE_ADAPTER_AUTHORITY')
+        integration=obj(value.get('integration'),'SOURCE_ADAPTER_INTEGRATION')
+        expected_integration={'consumer':'tools.mobile_report_hub.owner_webapp.model.Model.snapshot',
+                              'ui_wired':False,'activated':False,'real_data_qualified':False}
+        if integration!=expected_integration: raise Refused('SOURCE_ADAPTER_INTEGRATION')
+        raw_sections=obj(value.get('sections'),'SOURCE_ADAPTER_SECTIONS')
+        required={'accounts','ledger','deployments','guards','access_provenance'}
+        if not required<=set(raw_sections): raise Refused('SOURCE_ADAPTER_SECTIONS')
+        def section(name):
+            item=obj(raw_sections.get(name),'SOURCE_ADAPTER_SECTION_SCHEMA')
+            return availability(item.get('availability')),codes(item.get('reasons')),obj(item.get('data'),'SOURCE_ADAPTER_SECTION_SCHEMA')
+
+        account_avail,account_reasons,account_data=section('accounts')
+        accounts=[]; account_count=sample_count=conflicts=qualified=None
+        if account_avail!='UNAVAILABLE' or account_data:
+            accounts=array(account_data.get('accounts'),'SOURCE_ADAPTER_ACCOUNTS',800)
+            account_count=len(accounts); sample_count=conflicts=qualified=0
+            for item in accounts:
+                item=obj(item,'SOURCE_ADAPTER_ACCOUNTS'); opaque(item.get('account_key'),'account-','SOURCE_ADAPTER_ACCOUNTS')
+                availability(item.get('availability'))
+                if type(item.get('currency_binding_conflict')) is not bool: raise Refused('SOURCE_ADAPTER_ACCOUNTS')
+                samples=array(item.get('samples'),'SOURCE_ADAPTER_ACCOUNTS',1000)
+                if any(not isinstance(sample,dict) for sample in samples): raise Refused('SOURCE_ADAPTER_ACCOUNTS')
+                series=item.get('qualified_series')
+                if series is not None and not isinstance(series,dict): raise Refused('SOURCE_ADAPTER_ACCOUNTS')
+                sample_count+=len(samples); conflicts+=int(item['currency_binding_conflict']); qualified+=int(series is not None)
+
+        ledger_avail,ledger_reasons,ledger_data=section('ledger')
+        ledger_accounts=[]; ledger_account_count=accounts_with_ledger=missing_ledgers=deal_events=stream_count=quarantined_count=None
+        latest_broker_time=None; cost_states=[]
+        if ledger_avail!='UNAVAILABLE' or ledger_data:
+            ledger_accounts=array(ledger_data.get('accounts'),'SOURCE_ADAPTER_LEDGER',800)
+            ledger_account_count=len(ledger_accounts); accounts_with_ledger=missing_ledgers=deal_events=stream_count=quarantined_count=0
+            for item in ledger_accounts:
+                item=obj(item,'SOURCE_ADAPTER_LEDGER'); opaque(item.get('account_key'),'account-','SOURCE_ADAPTER_LEDGER')
+                availability(item.get('availability')); code(item.get('reason'),'SOURCE_ADAPTER_LEDGER')
+                deal_count=item.get('deal_count')
+                if deal_count is None: missing_ledgers+=1
+                else: deal_events+=count(deal_count,'SOURCE_ADAPTER_LEDGER'); accounts_with_ledger+=1
+                components=array(item.get('components'),'SOURCE_ADAPTER_LEDGER',2000)
+                quarantined=array(item.get('quarantined'),'SOURCE_ADAPTER_LEDGER',2000)
+                quarantined_count+=len(quarantined); stream_count+=len(components)
+                for component in components:
+                    component=obj(component,'SOURCE_ADAPTER_LEDGER'); opaque(component.get('stream_id'),'stream-','SOURCE_ADAPTER_LEDGER')
+                    count(component.get('deal_count'),'SOURCE_ADAPTER_LEDGER')
+                    if type(component.get('all_costs_complete')) is not bool: raise Refused('SOURCE_ADAPTER_LEDGER')
+                    cost_states.append(component['all_costs_complete'])
+                    when=component.get('window_latest')
+                    if not isinstance(when,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',when): raise Refused('SOURCE_ADAPTER_LEDGER')
+                    try: dt.datetime.fromisoformat(when)
+                    except ValueError: raise Refused('SOURCE_ADAPTER_LEDGER') from None
+                    if component.get('clock_basis')!='BROKER_TIME_UNQUALIFIED': raise Refused('SOURCE_ADAPTER_LEDGER')
+                    latest_broker_time=max(latest_broker_time or when,when)
+
+        deployment_avail,deployment_reasons,deployment_data=section('deployments')
+        deployments=[]; deployment_count=expected_identity=fields_match=None
+        generated_at=None; canonical_binding=identity_state='UNKNOWN'
+        if deployment_avail!='UNAVAILABLE' or deployment_data:
+            deployments=array(deployment_data.get('deployments'),'SOURCE_ADAPTER_DEPLOYMENTS',2000)
+            deployment_count=len(deployments); expected_identity=fields_match=0
+            for item in deployments:
+                item=obj(item,'SOURCE_ADAPTER_DEPLOYMENTS'); opaque(item.get('deployment_id'),'deployment-','SOURCE_ADAPTER_DEPLOYMENTS')
+                if type(item.get('expected_identity_present')) is not bool: raise Refused('SOURCE_ADAPTER_DEPLOYMENTS')
+                expected_identity+=int(item['expected_identity_present'])
+                fields_match+=int(code(item.get('comparison'),'SOURCE_ADAPTER_DEPLOYMENTS')=='FIELDS_MATCH_ONLY')
+            producer=obj(deployment_data.get('producer'),'SOURCE_ADAPTER_DEPLOYMENTS')
+            generated_at=producer.get('generated_at')
+            if generated_at is not None and stamp(generated_at) is None: raise Refused('SOURCE_ADAPTER_DEPLOYMENTS')
+            canonical_binding=code(producer.get('canonical_binding'),'SOURCE_ADAPTER_DEPLOYMENTS')
+            identity_state=code(producer.get('producer_identity_state'),'SOURCE_ADAPTER_DEPLOYMENTS')
+            producer_head=producer.get('producer_head')
+            if not isinstance(producer_head,str) or not re.fullmatch(r'[0-9a-f]{40}',producer_head): raise Refused('SOURCE_ADAPTER_DEPLOYMENTS')
+
+        guard_avail,guard_reasons,guard_data=section('guards')
+        contexts=[]
+        guard_reason=guard_reasons[0] if guard_reasons else 'SOURCE_UNAVAILABLE'
+        if guard_avail!='UNAVAILABLE' or guard_data:
+            for item in array(guard_data.get('contexts'),'SOURCE_ADAPTER_GUARDS',8):
+                item=obj(item,'SOURCE_ADAPTER_GUARDS'); observed=item.get('observed_at')
+                if observed is not None and stamp(observed) is None: raise Refused('SOURCE_ADAPTER_GUARDS')
+                contexts.append({'kind':code(item.get('kind'),'SOURCE_ADAPTER_GUARDS'),
+                                 'availability':availability(item.get('availability')),
+                                 'observed_at':observed,'reason':code(item.get('reason'),'SOURCE_ADAPTER_GUARDS')})
+            if guard_data.get('effective') is not None: raise Refused('SOURCE_ADAPTER_GUARDS')
+            guard_reason=code(guard_data.get('reason'),'SOURCE_ADAPTER_GUARDS')
+        access_avail,access_reasons,_=section('access_provenance')
+
+        budget=obj(value.get('budget_usage'),'SOURCE_ADAPTER_BUDGET')
+        budget_usage={'files':count(budget.get('files'),'SOURCE_ADAPTER_BUDGET',800),
+                      'bytes':count(budget.get('bytes'),'SOURCE_ADAPTER_BUDGET',128_000_000),
+                      'rows':count(budget.get('rows'),'SOURCE_ADAPTER_BUDGET',1_000_000)}
+        raw_findings=array(value.get('errors'),'SOURCE_ADAPTER_FINDING_SCHEMA',1000); findings=[]
+        for finding in raw_findings:
+            finding=obj(finding,'SOURCE_ADAPTER_FINDING_SCHEMA')
+            finding_code=code(finding.get('code'),'SOURCE_ADAPTER_FINDING_SCHEMA')
+            finding_id=finding.get('finding_id'); action=code(finding.get('next_action'),'SOURCE_ADAPTER_FINDING_SCHEMA')
+            if not isinstance(finding_id,str) or not re.fullmatch(r'finding-[0-9a-f]{64}',finding_id): raise Refused('SOURCE_ADAPTER_FINDING_SCHEMA')
+            if len(findings)<12: findings.append({'code':finding_code,'finding_id':finding_id,'next_action':action})
+        states=[account_avail,ledger_avail,deployment_avail,guard_avail,access_avail]
+        overall='REAL_DATA_QUALIFIED' if integration['real_data_qualified'] is True and all(x=='REAL_DATA_QUALIFIED' for x in states) else ('PARTIAL' if any(x in ('PARTIAL','REAL_DATA_QUALIFIED') for x in states) else 'UNAVAILABLE')
+        return {'status':'AVAILABLE','schema':value['schema_version'],'canonical_ref':self.sha,'read_at_utc':read_at,
+            'authority':value['authority'],'overall':overall,'budget_usage':budget_usage,
+            'sections':{
+                'accounts':{'availability':account_avail,'reasons':account_reasons,'account_count':account_count,
+                            'sample_count':sample_count,'conflict_count':conflicts,'qualified_series_count':qualified},
+                'ledger':{'availability':ledger_avail,'reasons':ledger_reasons,'account_count':ledger_account_count,
+                          'accounts_with_ledger':accounts_with_ledger,'missing_ledger_count':missing_ledgers,
+                          'deal_events':deal_events if accounts_with_ledger else None,
+                          'deal_event_unit':'DEAL_EVENTS_NOT_TRADE_CYCLES','stream_count':stream_count,
+                          'quarantined_count':quarantined_count,'latest_broker_time':latest_broker_time,
+                          'clock_basis':'BROKER_TIME_UNQUALIFIED','all_costs_complete':all(cost_states) if cost_states else None},
+                'deployments':{'availability':deployment_avail,'reasons':deployment_reasons,
+                               'deployment_count':deployment_count,'expected_identity_present':expected_identity,
+                               'fields_match_only':fields_match,'producer_identity_state':identity_state,
+                               'canonical_binding':canonical_binding,'generated_at':generated_at},
+                'guards':{'availability':guard_avail,'reasons':guard_reasons,'contexts':contexts,
+                          'effective':None,'effective_state':'UNKNOWN','reason':guard_reason},
+                'access_provenance':{'availability':access_avail,'reasons':access_reasons},
+            },'finding_count':len(raw_findings),'findings':findings,
+            'basis':'Read-only adapter observation only. Broker time may be unqualified; no runtime, trading, guard-effectiveness, identity, freshness, or acceptance claim follows.'}
+
+    def source_observations(self):
+        try:
+            before=self._verified_adapter_files()
+            after=None
+            try: raw=self._run_source_adapter()
+            finally: after=self._verified_adapter_files()
+            if before!=after: raise Refused('SOURCE_ADAPTER_POST_READ_DRIFT')
+            return self._project_source_observations(raw)
+        except Refused as error:
+            reason=str(error) if re.fullmatch(r'[A-Z][A-Z0-9_]{0,95}',str(error)) else 'SOURCE_ADAPTER_UNAVAILABLE'
+            self.issue('source_observations',Refused(reason))
+            return unavailable_source_observations(reason)
+        except (OSError,ValueError,KeyError,TypeError,UnicodeError,subprocess.SubprocessError):
+            self.issue('source_observations',Refused('SOURCE_ADAPTER_UNAVAILABLE'))
+            return unavailable_source_observations()
     def accounts(self):
         root=pathlib.Path(self.c['snapshots']); files=sorted(root.glob('EA_LAB_snapshot_*.csv'))
         if len(files)>1000: raise Refused('SNAPSHOT_SET_TOO_LARGE')
@@ -414,6 +655,7 @@ class Model:
         control_room=self.section('control_room',self.control_room,{'rows':[],'summary':{},'freshness':'UNAVAILABLE','binding':'UNAVAILABLE','runtime_identity':{'state':'UNKNOWN','forward_test_state':'UNKNOWN'}})
         live_performance=self.section('live_performance',self.live_performance,{'accounts':[],'source_fresh':False,'binding':'UNAVAILABLE','basis':'UNAVAILABLE'})
         news_policy=self.section('news_policy',self.news_policy,{'pre_news_min':None,'post_news_min':None,'effective_runtime':'UNKNOWN','coverage_state':'UNAVAILABLE'})
+        source_observations=self.source_observations()
         templates=self.section('templates',self.templates,[])
         safe=projection_view(index.get('safe_projection')); findings=[]
         for x in safe.get('findings',[]): findings.append({k:clean(x.get(k),80) for k in ['public_id','severity','state']})
@@ -422,4 +664,4 @@ class Model:
         for drive in ['C:/','D:/']:
             if pathlib.Path(drive).exists():
                 v=shutil.disk_usage(drive); disks.append({'drive':drive[:2],'free_gb':round(v.free/1073741824,1),'total_gb':round(v.total/1073741824,1)})
-        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.2.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'live_performance':live_performance,'templates':templates,'research':eas,'safe_projection':safe,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA good/bad score is inferred. Live P/L/PF/DD preserve the existing dashboard producer semantics and source binding.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}
+        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.2.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'live_performance':live_performance,'source_observations':source_observations,'templates':templates,'research':eas,'safe_projection':safe,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA good/bad score is inferred. Live P/L/PF/DD preserve the existing dashboard producer semantics and source binding.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}

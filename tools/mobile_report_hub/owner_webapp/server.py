@@ -100,13 +100,13 @@ class Server(http.server.ThreadingHTTPServer):
     daemon_threads=True
     allow_reuse_address=False
 def config_from_args(args):
-    return {'repo':args.repo,'assets':args.assets,'monitor':args.monitor,'registry':args.registry,
+    return {'repo':args.repo,'adapter_root':args.adapter_root or args.repo,'assets':args.assets,'monitor':args.monitor,'registry':args.registry,
             'jobs':args.jobs,'leases':args.leases,'lane_status':args.lane_status,'runtime':args.runtime,'snapshots':args.snapshots,
             'knowledge':args.knowledge}
 def parser():
     here=pathlib.Path(__file__).resolve().parent
     p=argparse.ArgumentParser(description='EA_LAB read-only owner Monitor web app')
-    p.add_argument('--repo',default='D:/EA_LAB'); p.add_argument('--assets',default=str(here))
+    p.add_argument('--repo',default='D:/EA_LAB'); p.add_argument('--adapter-root'); p.add_argument('--assets',default=str(here))
     p.add_argument('--monitor',default='D:/EA_LAB_CONTROL/mobile_report_hub_current')
     p.add_argument('--registry',default='D:/EA_LAB_CONTROL/lanes/registry-v1')
     p.add_argument('--jobs',default='D:/EA_LAB_CONTROL/jobs')
