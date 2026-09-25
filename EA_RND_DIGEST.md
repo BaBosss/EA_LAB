@@ -55,6 +55,11 @@ BT9 AUDUSD/H4 edge-latch portability is accepted/reviewed at `ede238fa`: disabli
 
 - Order Flow joint pipeline package is **SOURCE_ACCEPTED / REVIEWED / CANONICAL / SOURCE_ONLY_RESEARCH_PREPARATION** at `4e44e7a2e5302200f4ea88e348b762a3f8d64f7c`. A/B/C repairs and the joint targeted recheck are consumed; 25 source files and 37 frozen evidence entries rehash clean. Historical data remains unqualified; native execution/parity/performance remain NOT_EXECUTED/false/NOT_RUN and Monitor is UNWIRED. Next is only a separately frozen one-run synthetic-native fixture contract; do not launch the inert planned 72 cells.
 
+### Facebook-derived FB-G01 - Persistent Adaptive Donchian Grid
+- Source acceptance is canonical at `8da04fc789ca55e6c673d41899e9136cfa72a75e`; fixed Model1 XAUUSD/H1 V0-default evidence is canonical from `1ff86cb8fd8fca6eae747ea7a9457dfde4653624`.
+- MAIN 2023-2025 reached the existing shared hard-risk boundary at DD 25.05% and is classified `SAFETY_HALT`; BWD 2020-2022 completed the window with PF 5.54 / net +571.73 / EqDD 16.01%, but its final live cycle was tester-liquidated at end of test.
+- Evidence is mechanically valid, with max observed 3 positions / 0.03 lots and no persistence/account-baseline fault. It is not a whole-strategy PASS: MAIN has 46 trades and BWD 57, both below the canonical 100-trade selection floor.
+- Owner direction 2026-09-25: **do not PARK/REJECT FB-G01 yet**. Next eligible research is a **separate prospectively frozen optimization contract**. Do not infer tunable parameters/ranges from this digest; optimization selection must be MAIN-only, BWD remains validation-only, and HOLDOUT remains UNSPENT.
 ## Hermes
 Hermes is a deterministic/mechanical EA R&D factory, not a strategy architect. **H1 GOLDEN REPLAY = PASS**. **H2 SMALL PILOT = PASS**. **H3 BROAD MATRIX = PASS / COMPLETE** on contract head `47c77320`: 36/36 authorized full-window Model-1 cells, no optimization, HOLDOUT UNSPENT, repository clean, independent milestone review PASS. The later source-bound P4B package, deterministic regime join, P4 interpretation, and bounded P5 session-context attribution are complete/reviewed. None grants strategy/risk/candidate/deployment authority.
 ## Visual layer
