@@ -72,7 +72,16 @@
     "require_no_other_mt5_job": true,
     "require_durable_owner_release": true,
     "metaeditor_allowed": false,
-    "automatic_start_allowed": false
+    "automatic_start_allowed": false,
+    "evidence_receipts": {
+      "observed_utc": "2026-09-25T05:35:39.7047318Z",
+      "fb_a1_registry_receipt": "D:/EA_LAB_CONTROL/evidence/zabgoldpending-hostdirect-20260924/repair1/FB_G01_A1_REGISTRY_RECEIPT.json",
+      "fb_a1_registry_receipt_sha256": "2e681dbadd347dcd3fdc256e2279bb3f5ecb22fc674b830a528fd9011c924f94",
+      "macrogate_runtime_lease_registry_receipt": "D:/EA_LAB_CONTROL/evidence/zabgoldpending-hostdirect-20260924/repair1/MACROGATE_RUNTIME_LEASE_REGISTRY_RECEIPT.json",
+      "macrogate_runtime_lease_registry_receipt_sha256": "fa88fb7de0ea254d539cb181329ea74b1f7f05bda2253e4b789baa8c8a58d17a",
+      "binding_receipt": "D:/EA_LAB_CONTROL/evidence/zabgoldpending-hostdirect-20260924/repair1/ZAB_HD_001_RESOURCE_BINDING.json",
+      "binding_receipt_sha256": "2aaf82f45986e2bb024866be4ca46c1c8e38e8d57b2092ef68d7b7334138db45"
+    }
   },
   "trust_boundary": {
     "dll_trust_established": false,

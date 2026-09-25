@@ -63,6 +63,14 @@ FB-G01 OPT01 A1 has durably released the tester resource: its Registry state is 
 
 Main Control Tower serializes this opaque-DLL manual probe **behind MacroGate A/B**, which is the next controlled tester consumer. This ZAB lane therefore remains non-executing until MacroGate releases its separately registered runtime reservation.
 
+## ZAB-HD-001 frozen Registry evidence repair
+
+Review finding `ZAB-HD-001` is repaired by frozen, timestamped Registry receipts captured before any ZAB execution:
+- FB-G01 A1 release receipt: `D:\EA_LAB_CONTROL\evidence\zabgoldpending-hostdirect-20260924\repair1\FB_G01_A1_REGISTRY_RECEIPT.json`, SHA256 `2e681dbadd347dcd3fdc256e2279bb3f5ecb22fc674b830a528fd9011c924f94`, recording lane `ct-fb-g01-opt01-r1-stage-a1-20260925` as `WAITING` with blocker `RUNTIME_EXECUTION_COMPLETE_9_OF_9__POSTPROCESS_PENDING_OWNER__MT5_RELEASED`.
+- MacroGate lease receipt: `D:\EA_LAB_CONTROL\evidence\zabgoldpending-hostdirect-20260924\repair1\MACROGATE_RUNTIME_LEASE_REGISTRY_RECEIPT.json`, SHA256 `fa88fb7de0ea254d539cb181329ea74b1f7f05bda2253e4b789baa8c8a58d17a`, recording lane `ct-news-macro-mg-ab-runtime-lease-v1-20260925` as `RUNNING` on `MT5-lane1`.
+- Binding receipt: `D:\EA_LAB_CONTROL\evidence\zabgoldpending-hostdirect-20260924\repair1\ZAB_HD_001_RESOURCE_BINDING.json`, SHA256 `2aaf82f45986e2bb024866be4ca46c1c8e38e8d57b2092ef68d7b7334138db45`, observed `2026-09-25T05:35:39.7047318Z`.
+
+These receipts close reproducibility of the resource-serialization facts only. `can_execute=false`, A_OWNER-only semantics, DLL trust=false, and the prohibition on ZAB terminal execution while MacroGate owns the tester remain unchanged.
 Until then:
 - do not open MetaEditor;
 - do not start terminal64/metatester64 for ZAB;
