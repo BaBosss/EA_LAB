@@ -1,23 +1,6 @@
 # MacroGate A/B Execution V1 — 2026-09-25
 
-Status: `BLOCKED_C_ENVIRONMENT_DEPENDENCY / BASE_HOST_GATE_QUALIFIED / VALID_GUARDED_OUTCOMES_0`.
-
-## Current blocked closeout (supersedes Phase-A status below)
-
-BASE MAIN completed and was accepted by identity recovery without rerun: PF 1.10, net +81.25 USD, 214 trades, native maximal EqDD 0.97%. BASE BWD completed: PF 1.07, net +73.31 USD, 218 trades, EqDD 1.83%. Both are full-window Model1 runs on the same `D:\Meta 5` install, Build 6182, `Boss_15_ST03 / GBPUSD / H4`, deposit 10,000 USD and leverage 1:100. These qualify only the preregistered BASE host gate; they are not MacroGate timing evidence or promotion evidence.
-
-`MGAB-DEN-001`: BWD has 218 successful entry lines **and two failed new-entry attempts** (four corresponding failure log markers). Under the frozen zero-failure rule its BASE attempt denominator is `UNAVAILABLE_NOT_CERTIFIED` / null, not 218 and not an invented 220. MAIN denominator remains 214. BWD blocked-entry share and timing interpretation remain unavailable.
-
-Guarded attempts produced zero valid outcomes: the first failed HEAD binding; recovery1 and recovery2 reported `EA_LAB_MGAB_ACTIVE.csv NOT FOUND` and guard INACTIVE. `_MG_InCommon=false`, original source/build/set and feed bytes remain unchanged. `MGAB-RECOVERY2-001`: recovery2 prelaunch dual-staging/hash verification is **unverified** because the reviewed package has no standalone immutable receipt. The runtime failure is supported; automatic sandbox cleanup is not independently proven. No new backdated receipt is created.
-
-Current evidence owners: `BLOCKER_CLOSEOUT.json`, `BASE_ATTEMPT_DENOMINATORS.json`, `ARM_MANIFEST_CORRECTED.json` and `GUARDED_EXECUTION_BLOCKER.json` under `factory/runs/news_macro_macrogate_ab_v1_20260925/`. Original frozen manifests, sandbox plan and failed raw attempts remain historical evidence; the misleading directory name `raw_valid/REAL_GUARD_MAIN` does not make that failed report valid. The evidence correction and original review are preserved under `review_history/5665f1b9289072371bb9227bd9d339ab5e6a57a4/` and `EVIDENCE_REPAIR1.json`.
-
-`can_execute=false`. No REAL_GUARD/PLACEBO continuation, recovery3, source/EX5/set/feed change, optimizer, Model4, HOLDOUT, BWD retuning, parent switch, deployment or trading is authorized. HOLDOUT remains `LOCKED_UNSPENT`; probability and timing verdict remain null. The next legal boundary is separately prospective qualification of tester input-file transfer and the denominator/evidence dependency, with all affected identities refrozen before any new outcome. This closeout does not implement that follow-up.
-
-## Historical prospective execution contract (Phase A; no current-status authority)
-
-The following sections preserve the original pre-outcome plan, including then-pending build/resource facts. They do not override the blocked closeout above.
-
+Status: `PREPARED_WAITING_TESTER_RESOURCE_AND_FRESH_BUILD_IDENTITY / NO PERFORMANCE RUN`.
 
 Lane: `ct-news-macro-mg-ab-exec-v1-20260925`.
 Direct consumer: accepted preregistration `ct-news-macro-mg-ab-prereg-v1-20260925`, canonical head `3d6941ab0f0edbacffbb60022cd84113d6a288b6`. This document binds execution identity only and does not modify preregistered semantics.

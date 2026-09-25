@@ -1,0 +1,26 @@
+﻿{
+    "schema":  "macrogate_ab_base_attempt_denominators/1",
+    "frozen_utc":  "2026-09-25T13:56:03.4649598Z",
+    "definition":  "BASE_new_entry_attempts = market buy/sell entry request lines in the cell-owned agent segment, excluding closes; must equal truncation checker entry-deal count and report total_trades, with zero transport/order failure markers",
+    "guard_numerator_definition":  "affected_new_entry_attempts = explicit [EXEC] MACROGATE block active (...) - new order skipped lines in the guarded cell-owned agent segment",
+    "blocked_entry_share":  "affected_new_entry_attempts / matching-window BASE_new_entry_attempts",
+    "MAIN":  {
+                 "agent_segment_sha256":  "6a6dbbaff1bc5bde3dd092aa4bf86e9c9058acf091e94c3b5c21d62b88e29ac9",
+                 "entry_requests":  214,
+                 "truncation_entry_deals":  214,
+                 "report_total_trades":  214,
+                 "transport_order_failure_markers":  0,
+                 "certified":  true
+             },
+    "BWD":  {
+                "agent_segment_sha256":  "6a9151dd3472c2686e0405076b7567d4cdbfdd9e25d95e5723a7a69fc61fa005",
+                "entry_requests":  218,
+                "truncation_entry_deals":  218,
+                "report_total_trades":  218,
+                "transport_order_failure_markers":  0,
+                "certified":  true
+            },
+    "same_definition_all_arms":  true,
+    "unknown_to_zero_forbidden":  true,
+    "holdout":  "LOCKED_UNSPENT"
+}

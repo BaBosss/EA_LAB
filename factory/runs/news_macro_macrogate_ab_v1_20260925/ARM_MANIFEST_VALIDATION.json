@@ -1,6 +1,6 @@
 {
   "schema": "macrogate_ab_arm_manifest_validation/1",
-  "status": "PASS",
+  "status": "RETRACTED_BWD_DENOMINATOR_CERTIFICATION",
   "manifest_sha256": "928e739a7382b5eac2b91a8878dd1dda082a7dab6a88265eb31a67289be55781",
   "cell_count": 12,
   "real_cells": 2,
@@ -12,7 +12,12 @@
   "guard_config_hash": "e95081ded3a8637ec6fd099a010d2b26dbe8da2125cf1f14ef28b9f6ecdfcf70",
   "broker_clock_hash_match": true,
   "base_pair_qualified": true,
-  "denominators_certified": true,
+  "denominators_certified": false,
   "guarded_outcomes_seen_before_freeze": false,
-  "holdout": "LOCKED_UNSPENT"
+  "holdout": "LOCKED_UNSPENT",
+  "bwd_denominator_status": "UNAVAILABLE_NOT_CERTIFIED",
+  "current_corrected_manifest": "ARM_MANIFEST_CORRECTED.json",
+  "current_corrected_manifest_sha256": "d5cd18d8b59b84c6aadf82e16f5e77db03209bc4af34d7048a6d92e4bdb02201",
+  "can_execute": false,
+  "review_finding": "MGAB-DEN-001"
 }

@@ -1,0 +1,32 @@
+﻿{
+    "schema":  "macrogate_ab_parent_viability/1",
+    "decided_utc":  "2026-09-25T13:57:29.4476731+00:00",
+    "base_main":  {
+                      "pf":  1.1,
+                      "net":  81.25,
+                      "trades":  214,
+                      "eqdd_pct":  0.97,
+                      "full_window":  true,
+                      "mechanically_eligible":  true,
+                      "pass":  true
+                  },
+    "base_bwd":  {
+                     "pf":  1.07,
+                     "net":  73.31,
+                     "trades":  218,
+                     "eqdd_pct":  1.83,
+                     "full_window":  true,
+                     "mechanically_eligible":  true,
+                     "pass":  true
+                 },
+    "disposition":  "BASE_BOTH_PASS__REMAINING_PREREG_ARMS_UNLOCKED",
+    "real_guard_authorized":  true,
+    "all_five_placebos_authorized":  true,
+    "holdout":  "LOCKED_UNSPENT",
+    "optimization":  "NONE",
+    "model4":  false,
+    "bwd_retuning":  false,
+    "canonical_base_pair_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/BASE_PAIR_RESULT.json",
+    "canonical_base_pair_sha256":  "0de4d50497cf58d3d859e5db8cd4d663af5787e977764906fd7affc33a2cf902",
+    "corrected_projection":  true
+}

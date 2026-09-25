@@ -1,0 +1,60 @@
+{
+  "schema": "macrogate_ab_evidence_repair1/1",
+  "corrected_utc": "2026-09-25T15:59:53.281184+00:00",
+  "original_reviewed_head": "5665f1b9289072371bb9227bd9d339ab5e6a57a4",
+  "original_review_sha256": "2ff1d2e75f6fc43803b4f1a2d8b306410f1f3622f6b7be12b3acf928421596a8",
+  "findings": [
+    "MGAB-DEN-001",
+    "MGAB-RECOVERY2-001",
+    "MGAB-DOC-001"
+  ],
+  "repair_scope": "EVIDENCE_ONLY_NO_TESTER_NO_SOURCE_CONFIG_FEED_CHANGE",
+  "repair1_spent": true,
+  "recovery3_authorized": false,
+  "changed_existing_files": [
+    {
+      "path": "docs/research/NEWS_MACRO_MACROGATE_AB_EXECUTION_V1_20260925.md",
+      "before_sha256": "5eba36e81871fd673ecec375682bdfa1cd7c02b147e08b97993c5cf05b01a149",
+      "after_sha256": "f910041eb94394a37a893e21e4990964e3c8e91e578e471f5d1d5f5995eebcc9"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/ARM_MANIFEST.json",
+      "before_sha256": "97f6f158e6eb0b65156240f2009a2a7f98138b18e0b3ca03bbff73fc5d43ffc6",
+      "after_sha256": "dc4258a535361bf68d33919ffb066dc91b5713c292d0fcd99219753bf386a741"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/ARM_MANIFEST_VALIDATION.json",
+      "before_sha256": "c909704b6c31ac8286f7b6802db2a3c1e176969db84cdbf5ba8af78c898dc5e9",
+      "after_sha256": "7ef1e47df907646deeb881edb1991934456108a5be39a107fd8b3cc115a5f726"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/BASE_ATTEMPT_DENOMINATORS.json",
+      "before_sha256": "fb40d90d369d72828012bb2518afd108a1d85a8069c3e0cbe1d26a1b33ad61e0",
+      "after_sha256": "cfc9d1b66f44bcd95741f35d579a59c2da0debffd54215476ca25fce264aa23c"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/BASE_PAIR_RESULT.json",
+      "before_sha256": "0de4d50497cf58d3d859e5db8cd4d663af5787e977764906fd7affc33a2cf902",
+      "after_sha256": "eaececfb7ec9c6c86adfaf826bba9474c90648a7fe1b5e1ae8d3a6d054d474b8"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/GUARDED_BATCH_FAILURE_HISTORY.json",
+      "before_sha256": "87fefa7a1bcc22683504cea48e993a64c7d7d837884ab15ac2ea59d62907ad90",
+      "after_sha256": "50c43d2685d27ba1f7e6f588552996f5b234d475c5db3ff5f9e17598d0e627f3"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/GUARDED_EXECUTION_BLOCKER.json",
+      "before_sha256": "040fd452587056b1c685d80c67bbca059769a91dff7153d3d51dd89ebc0b77ad",
+      "after_sha256": "1dd1539eeb0102394d9ab84f738f95d53882bfb24f1d036a951a17e0db564b05"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/PARENT_VIABILITY.json",
+      "before_sha256": "dc0a0cd71666e36721c6bcab6efb494a58d43375482123d089c10d0dd26df3df",
+      "after_sha256": "2e8d4f067805285339a61df872d0af120e05b7077ed2aba062615124b3af2bc8"
+    }
+  ],
+  "protected_existing_files_unchanged": 80,
+  "frozen_original_manifest_sha256": "928e739a7382b5eac2b91a8878dd1dda082a7dab6a88265eb31a67289be55781",
+  "blocked_closeout_sha256": "0990cf2eb16536bcc3f226615ebe379d7a93783cceb93097821f37d3bbc01407",
+  "corrected_manifest_sha256": "d5cd18d8b59b84c6aadf82e16f5e77db03209bc4af34d7048a6d92e4bdb02201"
+}

@@ -1,0 +1,136 @@
+{
+  "VERDICT": "SCRUTINY_REPAIR_REQUIRED",
+  "CONFIDENCE": "HIGH",
+  "REVIEWED_HEAD": "5665f1b9289072371bb9227bd9d339ab5e6a57a4",
+  "SCOPE_ASSESSMENT": {
+    "status": "EXACT_HEAD_AND_SEMANTIC_SCOPE_PASS__EVIDENCE_PACKAGE_REPAIR_REQUIRED",
+    "exact_head": true,
+    "clean_worktree": true,
+    "hidden_strategy_source_config_feed_mutation_found": false,
+    "details": "Boss15, LabCore and MacroGate source match the accepted preregistration identities. BASE matches the parent set; GUARD differs only by the three declared MacroGate routing assignments. All frozen feed and provenance hashes rehash correctly. The execution document contains stale current-status claims."
+  },
+  "BASE_QUALIFICATION_ASSESSMENT": {
+    "status": "PASS",
+    "MAIN": {
+      "pf": 1.1,
+      "net": 81.25,
+      "trades": 214,
+      "eqdd_pct": 0.97,
+      "full_window": true
+    },
+    "BWD": {
+      "pf": 1.07,
+      "net": 73.31,
+      "trades": 218,
+      "eqdd_pct": 1.83,
+      "full_window": true
+    }
+  },
+  "DENOMINATOR_ASSESSMENT": {
+    "status": "REPAIR_REQUIRED",
+    "MAIN": {
+      "claimed": 214,
+      "supported": true,
+      "transport_or_order_failure_markers": 0
+    },
+    "BWD": {
+      "claimed": 218,
+      "supported": false,
+      "successful_market_entry_lines": 218,
+      "failed_new_entry_attempts": 2,
+      "failure_evidence": [
+        "agent_segment.log lines 235-236: failed market sell and corresponding OrderSend market-closed marker",
+        "agent_segment.log lines 389-390: failed market sell and corresponding OrderSend market-closed marker"
+      ],
+      "required_frozen_disposition": "UNAVAILABLE_NOT_CERTIFIED"
+    },
+    "unknown_failure_state_preserved": false,
+    "impact": "BASE_ATTEMPT_DENOMINATORS incorrectly records BWD transport_order_failure_markers=0 and certified=true. ARM_MANIFEST_VALIDATION.denominators_certified=true and every BWD base_denominator=218 inherit the unsupported certification."
+  },
+  "ARM_FREEZE_ASSESSMENT": {
+    "status": "TEMPORAL_AND_IDENTITY_FREEZE_PASS__DENOMINATOR_BINDING_REPAIR_REQUIRED",
+    "cell_count": 12,
+    "composition": "REAL MAIN/BWD plus five frozen placebo seeds across MAIN/BWD",
+    "frozen_before_guarded_attempts": true,
+    "feed_hash_mismatches": 0,
+    "provenance_hash_mismatches": 0,
+    "seed_shifts": [
+      38,
+      -23,
+      -8,
+      -32,
+      36
+    ],
+    "holdout": "LOCKED_UNSPENT",
+    "defect": "BWD cells bind an uncertifiable denominator of 218."
+  },
+  "GUARDED_FAILURE_ASSESSMENT": {
+    "status": "ZERO_VALID_OUTCOMES_SUPPORTED__RECOVERY2_PRESTAGE_PROVENANCE_REPAIR_REQUIRED",
+    "valid_guarded_outcomes": 0,
+    "attempts_supported": [
+      {
+        "attempt": "initial",
+        "classification": "PRE_EXECUTION_HEAD_BINDING_FAILURE",
+        "state": "FAILED",
+        "interpretable": false
+      },
+      {
+        "attempt": "recovery1",
+        "classification": "WRONG_TESTER_SANDBOX_PATH",
+        "state": "FAILED",
+        "runtime_marker": "NOT FOUND; guard INACTIVE",
+        "interpretable": false
+      },
+      {
+        "attempt": "recovery2",
+        "classification": "RUNTIME_INPUT_STILL_NOT_FOUND",
+        "state": "FAILED",
+        "runtime_marker": "NOT FOUND; guard INACTIVE",
+        "gate_on_count": 0,
+        "blocked_attempt_count": 0,
+        "interpretable": false,
+        "dual_prestage_claim": "No standalone immutable prelaunch staging/hash receipt is present in the reviewed package; the runtime failure and post-run absence are supported, but the prelaunch dual-stage/hash assertion is not independently bound."
+      }
+    ]
+  },
+  "ROOT_CAUSE_ASSESSMENT": {
+    "status": "SOURCE_MECHANISM_SUPPORTED",
+    "details": "_MG_RegimeFile and _MG_InCommon are runtime inputs passed to MG_LoadRegime. With _MG_InCommon=false, cflag is zero and FileOpen/FileIsExist omit FILE_COMMON. No #property tester_file exists in the reviewed Boss15/EA-template source. The frozen run therefore lacked a source/config-bound tester transfer mechanism for the dynamic file."
+  },
+  "AUTHORITY_ASSESSMENT": {
+    "status": "PASS",
+    "silent_retry_authorized": false,
+    "recovery3_authorized": false,
+    "details": "The one bounded harness-path recovery is consumed. Any continuation requires a separately prospective contract and refreezing of every affected identity. Adding tester_file changes source/build; setting _MG_InCommon=true changes the frozen set/config. Neither may be introduced as a silent retry."
+  },
+  "BLOCKER_DISPOSITION": {
+    "status": "ZERO_VALID_GUARDED_OUTCOME_BLOCK_SUPPORTED__PACKAGE_REPAIR_REQUIRED",
+    "classification": "BLOCKED_C_ENVIRONMENT_DEPENDENCY",
+    "valid_guarded_outcomes": 0,
+    "timing_classification": null,
+    "strategy_performance_conclusion": null,
+    "base_only_conclusion": "Boss_15_ST03 GBPUSD/H4 qualifies the preregistered BASE host gate in MAIN and BWD.",
+    "invalid_guard_reports_usable": false
+  },
+  "HOLDOUT": "LOCKED_UNSPENT",
+  "PROBABILITY": null,
+  "NEW_MATERIAL_FINDINGS": [
+    {
+      "id": "MGAB-DEN-001",
+      "severity": "HIGH",
+      "finding": "The BWD denominator is certified as 218 with zero order failures despite two preserved failed new-entry attempts. Frozen rules require the denominator to be unavailable and interpretation to stop."
+    },
+    {
+      "id": "MGAB-RECOVERY2-001",
+      "severity": "MEDIUM",
+      "finding": "Recovery2's runtime NOT FOUND/inactive result is supported, but the claimed prelaunch dual-stage and hash verification lacks a standalone immutable receipt in the reviewed package."
+    },
+    {
+      "id": "MGAB-DOC-001",
+      "severity": "MEDIUM",
+      "finding": "The execution document still presents NO PERFORMANCE RUN and pending build/tester identity as current status, contradicting the committed build, BASE runs and blocker evidence. Historical Phase-A statements must be explicitly marked superseded or the status updated."
+    }
+  ],
+  "INTEGRATION_DISPOSITION": "HOLD_FOR_REPAIR",
+  "NEXT": "Perform evidence-only repair on a new exact clean head: preserve the original frozen manifest as history, supersede the BWD denominator certification with UNAVAILABLE, cascade the correction through validation and derived claims, bind an already-existing immutable recovery2 prelaunch receipt or narrow that claim to what the package proves, and correct the execution document's current status. Then run one targeted exact-head scrutiny recheck. No MT5 rerun, recovery3, source/build/config/feed change, HOLDOUT use, Model4, optimization, retuning, parent switch, deployment or trading is authorized."
+}

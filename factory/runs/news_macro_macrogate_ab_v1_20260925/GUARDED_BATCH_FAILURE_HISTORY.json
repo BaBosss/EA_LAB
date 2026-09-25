@@ -1,53 +1,56 @@
-﻿{
-    "schema":  "macrogate_ab_guarded_batch_failure_history/1",
-    "preserved_utc":  "2026-09-25T14:12:41.2991591+00:00",
-    "valid_guarded_outcomes":  0,
-    "attempts":  [
-                     {
-                         "job":  "ct-news-macro-mg-ab-guarded-batch-20260925",
-                         "state":  "FAILED",
-                         "exit_code":  1,
-                         "classification":  "PRE_EXECUTION_HEAD_BINDING_FAILURE",
-                         "exact_failure":  "WORKTREE_HEAD_MISMATCH REAL_GUARD_MAIN",
-                         "mt5_result_interpretable":  false
-                     },
-                     {
-                         "job":  "ct-news-macro-mg-ab-guarded-batch-recovery1-20260925",
-                         "state":  "FAILED",
-                         "exit_code":  1,
-                         "classification":  "HARNESS_FEED_STAGING_PATH_DEFECT",
-                         "exact_failure":  "MACRO_FEED_RUNTIME_FAILURE REAL_GUARD_MAIN",
-                         "mt5_result_interpretable":  false,
-                         "failed_raw_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/raw/REAL_GUARD_MAIN",
-                         "macro_fail_markers_sha256":  "30f9b18a15e1bca065194908269ee3da21d6260a60360393b6d28f9a5840f5bd"
-                     },
-                     {
-                         "job":  "ct-news-macro-mg-ab-guarded-batch-recovery2-20260925",
-                         "state":  "FAILED",
-                         "exit_code":  1,
-                         "classification":  "HARNESS_FEED_AGENT_SANDBOX_CLEANUP_PERSISTS_AFTER_DUAL_STAGE",
-                         "exact_failure":  "MACRO_FEED_RUNTIME_FAILURE REAL_GUARD_MAIN",
-                         "mt5_execution_completed":  true,
-                         "mt5_result_interpretable":  false,
-                         "raw_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/raw_valid/REAL_GUARD_MAIN",
-                         "macro_fail_markers_sha256":  "a8345a13c7568bc992ac8efe18b38cefac4a449aaca3d13dbf00526891d63e36",
-                         "terminal_feed_present_after_run":  true,
-                         "terminal_feed_sha256":  "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
-                         "tester_agent_feed_present_after_run":  false,
-                         "recovery2_consumed":  true
-                     }
-                 ],
-    "root_cause":  "Helper staged EA_LAB_MGAB_ACTIVE.csv under terminal data MQL5/Files while Strategy Tester non-common FileOpen reads the local agent sandbox MQL5/Files.",
-    "incorrect_stage_path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\EA_LAB_MGAB_ACTIVE.csv",
-    "corrected_stage_path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Tester\\9CA16B8382AE4CF692710FB36B9DA355\\Agent-127.0.0.1-3000\\MQL5\\Files\\EA_LAB_MGAB_ACTIVE.csv",
-    "repair_scope":  "EXTERNAL_HARNESS_PATH_ONLY",
-    "source_changed":  false,
-    "set_changed":  false,
-    "feeds_changed":  false,
-    "semantics_changed":  false,
-    "recovery2_authority":  "ONE_BOUNDED_HARNESS_PATH_REPAIR",
-    "holdout":  "LOCKED_UNSPENT",
-    "recovery2_consumed":  true,
-    "recovery3_authorized":  false,
-    "current_blocker":  "TESTER_NONCOMMON_INPUT_FILE_NOT_MATERIALIZED_TO_AGENT_SANDBOX__SOURCE_OR_CONFIG_CHANGE_REQUIRED"
+{
+  "schema": "macrogate_ab_guarded_batch_failure_history/1",
+  "preserved_utc": "2026-09-25T14:12:41.2991591+00:00",
+  "valid_guarded_outcomes": 0,
+  "attempts": [
+    {
+      "job": "ct-news-macro-mg-ab-guarded-batch-20260925",
+      "state": "FAILED",
+      "exit_code": 1,
+      "classification": "PRE_EXECUTION_HEAD_BINDING_FAILURE",
+      "exact_failure": "WORKTREE_HEAD_MISMATCH REAL_GUARD_MAIN",
+      "mt5_result_interpretable": false
+    },
+    {
+      "job": "ct-news-macro-mg-ab-guarded-batch-recovery1-20260925",
+      "state": "FAILED",
+      "exit_code": 1,
+      "classification": "HARNESS_FEED_STAGING_PATH_DEFECT",
+      "exact_failure": "MACRO_FEED_RUNTIME_FAILURE REAL_GUARD_MAIN",
+      "mt5_result_interpretable": false,
+      "failed_raw_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/raw/REAL_GUARD_MAIN",
+      "macro_fail_markers_sha256": "30f9b18a15e1bca065194908269ee3da21d6260a60360393b6d28f9a5840f5bd"
+    },
+    {
+      "job": "ct-news-macro-mg-ab-guarded-batch-recovery2-20260925",
+      "state": "FAILED",
+      "exit_code": 1,
+      "classification": "RUNTIME_INPUT_NOT_FOUND__PRELAUNCH_DUAL_STAGE_NOT_INDEPENDENTLY_BOUND",
+      "exact_failure": "MACRO_FEED_RUNTIME_FAILURE REAL_GUARD_MAIN",
+      "mt5_execution_completed": true,
+      "mt5_result_interpretable": false,
+      "raw_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/raw_valid/REAL_GUARD_MAIN",
+      "macro_fail_markers_sha256": "a8345a13c7568bc992ac8efe18b38cefac4a449aaca3d13dbf00526891d63e36",
+      "terminal_feed_present_after_run": true,
+      "terminal_feed_sha256": "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+      "tester_agent_feed_present_after_run": false,
+      "recovery2_consumed": true,
+      "prelaunch_dual_stage_status": "UNVERIFIED_NO_IMMUTABLE_RECEIPT",
+      "automatic_sandbox_cleanup_proven": false
+    }
+  ],
+  "root_cause": "Recovery1 runtime could not read tester-local feed. Recovery2 also reported NOT FOUND; a standalone immutable dual-prestage receipt is absent, so automatic agent cleanup is not proven. The frozen source/config has no qualified tester input-transfer binding.",
+  "incorrect_stage_path": "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\EA_LAB_MGAB_ACTIVE.csv",
+  "corrected_stage_path": "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Tester\\9CA16B8382AE4CF692710FB36B9DA355\\Agent-127.0.0.1-3000\\MQL5\\Files\\EA_LAB_MGAB_ACTIVE.csv",
+  "repair_scope": "EXTERNAL_HARNESS_PATH_ONLY",
+  "source_changed": false,
+  "set_changed": false,
+  "feeds_changed": false,
+  "semantics_changed": false,
+  "recovery2_authority": "ONE_BOUNDED_HARNESS_PATH_REPAIR",
+  "holdout": "LOCKED_UNSPENT",
+  "recovery2_consumed": true,
+  "recovery3_authorized": false,
+  "current_blocker": "TESTER_NONCOMMON_INPUT_FILE_NOT_MATERIALIZED_TO_AGENT_SANDBOX__SOURCE_OR_CONFIG_CHANGE_REQUIRED",
+  "corrected_stage_path_role": "INTENDED_STAGING_PATH_ONLY__NOT_PROOF_OF_RECOVERY2_PRELAUNCH_PRESENCE"
 }

@@ -1,0 +1,62 @@
+﻿{
+    "schema":  "macrogate_ab_guarded_execution_blocker/1",
+    "recorded_utc":  "2026-09-25T14:28:19.5393412Z",
+    "status":  "BLOCKED_C_ENVIRONMENT_DEPENDENCY",
+    "classification":  "TESTER_NONCOMMON_INPUT_FILE_TRANSFER_NOT_AVAILABLE_UNDER_FROZEN_SOURCE_CONFIG",
+    "valid_guarded_outcomes":  0,
+    "base_parent_qualified":  true,
+    "base_main":  {
+                      "pf":  1.1,
+                      "net":  81.25,
+                      "trades":  214,
+                      "eqdd_pct":  0.97,
+                      "full_window":  true
+                  },
+    "base_bwd":  {
+                     "pf":  1.07,
+                     "net":  73.31,
+                     "trades":  218,
+                     "eqdd_pct":  1.83,
+                     "full_window":  true
+                 },
+    "frozen_guard":  {
+                         "_MG_InCommon":  false,
+                         "_MG_RegimeFile":  "EA_LAB_MGAB_ACTIVE.csv",
+                         "set_sha256":  "099f2039b430cc340d5c7eaae0c54567c155f78a05de33ec04639d18c5607cec",
+                         "config_hash":  "e95081ded3a8637ec6fd099a010d2b26dbe8da2125cf1f14ef28b9f6ecdfcf70"
+                     },
+    "observed":  {
+                     "recovery1":  "terminal MQL5/Files staged; tester reports NOT FOUND",
+                     "recovery2":  "terminal + active agent MQL5/Files staged prelaunch and hash-verified; tester still reports NOT FOUND",
+                     "tester_agent_file_present_after_recovery2":  false,
+                     "terminal_file_present_after_recovery2":  true,
+                     "terminal_file_sha256":  "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+                     "exact_runtime_marker":  "[MACROGATE] regime file \u0027EA_LAB_MGAB_ACTIVE.csv\u0027 NOT FOUND (MQL5\\\\Files) - guard INACTIVE"
+                 },
+    "repo_inspection":  {
+                            "tester_file_directive_for_macrogate_present":  false,
+                            "macro_file_open":  "ea_template/core/MacroGate_Core.mqh FileOpen(fname, FILE_READ|FILE_TXT|FILE_ANSI|cflag)",
+                            "frozen_common_flag":  false
+                        },
+    "repair_budget":  {
+                          "authorized_recovery":  "ONE_BOUNDED_HARNESS_PATH_REPAIR",
+                          "recovery2_consumed":  true,
+                          "additional_retry_authorized":  false
+                      },
+    "forbidden_under_current_contract":  [
+                                             "interpret invalid REAL_GUARD_MAIN as timing evidence",
+                                             "run REAL_GUARD_BWD",
+                                             "run any placebo",
+                                             "change _MG_InCommon to true",
+                                             "change frozen guard set",
+                                             "change Boss_15_ST03 source or EX5",
+                                             "add tester_file directive without a new prospective source/build identity contract",
+                                             "regenerate feeds",
+                                             "use HOLDOUT",
+                                             "retune BWD",
+                                             "switch parent"
+                                         ],
+    "next_legal_action":  "SEPARATE_PROSPECTIVE_FOLLOWUP_TO_QUALIFY_TESTER_INPUT_FILE_TRANSFER_AND_REFREEZE_SOURCE_BUILD_OR_CONFIG_IDENTITY",
+    "holdout":  "LOCKED_UNSPENT",
+    "probability":  null
+}
