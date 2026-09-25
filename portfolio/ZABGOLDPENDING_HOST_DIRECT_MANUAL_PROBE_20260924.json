@@ -1,0 +1,92 @@
+{
+  "schema": "zabgoldpending_host_direct_manual_probe/1",
+  "status": "PREPARED_WAITING_SERIALIZED_TESTER",
+  "can_execute": false,
+  "execution_mode": "A_OWNER_ONLY_MANUAL_START_AFTER_DURABLE_RESOURCE_RELEASE",
+  "canonical_at_preparation": "ece3dbb2b7a99178c1a416254028fbfc82d192d1",
+  "upstream_contract": "ZABGOLDPENDING_MONEY_MODE_SEMANTIC_PROBE_20260923",
+  "authority": "SEMANTIC_DIAGNOSTIC_ONLY_NO_PERFORMANCE_VERDICT",
+  "home": {
+    "symbol": "XAUUSD",
+    "timeframe": "M5",
+    "model": "M1_M1_OHLC_RESEARCH",
+    "window": "2023-01-01..2023-03-31",
+    "deposit": 10000,
+    "currency": "USD",
+    "leverage": "1:100"
+  },
+  "bundle": {
+    "external_root": "D:/EA_LAB_CONTROL/evidence/zabgoldpending-hostdirect-20260924/portable",
+    "terminal64_sha256": "f61ecfad618a4577df6743eb10e21cfeb2c374ea66ba8d4813c2c0ccca784d33",
+    "metatester64_sha256": "dc54ac9265f693b2e469f06ddd7cc7a083f0a44f00b4a1ce199b98db3aa15e97",
+    "ex5_sha256": "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+    "set_sha256": "4de80df7352a0857bb8e760799582807fbf208271a1762aa34e82c1c166067b9"
+  },
+  "A_OWNER": {
+    "Risk_Percent": 1,
+    "Fixed_Lot_Size": 0.1,
+    "tp_sl_points": 400,
+    "Magic_Number": 123456,
+    "Trailing_Start": 70,
+    "Trailing_Step": 50,
+    "Slipage": 3,
+    "Show_Debug_Info": true,
+    "Swing_Period": 7,
+    "Min_Swing_Distance": 50,
+    "Use_Volume_Filter": true,
+    "Max_Lookback": 100
+  },
+  "downstream_preregistered_only": {
+    "B_FIXED_ONLY": {
+      "Risk_Percent": 1,
+      "Fixed_Lot_Size": 0.2
+    },
+    "C_RISK_ONLY": {
+      "Risk_Percent": 2,
+      "Fixed_Lot_Size": 0.1
+    },
+    "execution_authorized": false
+  },
+  "admissible_observables": [
+    "init/dependency errors",
+    "first entry timestamp",
+    "first entry side",
+    "first entry requested/executed volume"
+  ],
+  "forbidden_observables": [
+    "profit factor",
+    "net profit",
+    "drawdown",
+    "ending balance",
+    "win rate",
+    "exit outcome",
+    "grade",
+    "candidate decision"
+  ],
+  "resource_gate": {
+    "blocker": "SERIALIZED_BEHIND_MACROGATE_AB_EXECUTION",
+    "fb_a1_release_observed": true,
+    "fb_a1_registry_state": "WAITING",
+    "fb_a1_blocker": "RUNTIME_EXECUTION_COMPLETE_9_OF_9__POSTPROCESS_PENDING_OWNER__MT5_RELEASED",
+    "next_tester_owner": "MacroGate A/B runtime reservation",
+    "require_no_other_mt5_job": true,
+    "require_durable_owner_release": true,
+    "metaeditor_allowed": false,
+    "automatic_start_allowed": false
+  },
+  "trust_boundary": {
+    "dll_trust_established": false,
+    "host_global_dll_setting_change_allowed": false,
+    "source_reverse_engineering_authorized": false,
+    "private_account_material_in_git": false
+  },
+  "decision": {
+    "on_init_or_dependency_failure": "A_OWNER_INELIGIBLE__SEMANTICS_UNRESOLVED__DO_NOT_RUN_B_OR_C",
+    "on_no_first_entry": "A_OWNER_INELIGIBLE__SEMANTICS_UNRESOLVED__DO_NOT_RUN_B_OR_C",
+    "on_valid_first_entry": "PRESERVE_FIRST_ENTRY_AND_STOP_FOR_CONTROL_TOWER_RECONCILIATION"
+  },
+  "holdout": "UNSPENT_DO_NOT_DISCOVER",
+  "optimization": "NOT_AUTHORIZED",
+  "performance": "NOT_RUN",
+  "next": "Wait behind MacroGate A/B. After its runtime reservation is released, revalidate exact bundle/tester identity, then owner-performed manual A_OWNER Start only."
+}
