@@ -125,8 +125,8 @@ Maximum cells if all stages reached:
 A1 9 + A2 9 + B1 6 + B2 3 + C 7 + D 9 + fixed MAIN 1 + fixed BWD 1 = 45.
 
 Owner approval in current chat authorizes execution of A1 only after this R1 contract is reviewed and canonical.
-Later stages are mechanically eligible only if their predecessor's preregistered selector passes; they do not require new ranges.
+Later stages remain NOT AUTHORIZED after A1. A passing A1 result may only support a fresh explicit owner/Control-Tower continuation decision for A2; the frozen later-stage ranges/selectors remain design context and do not self-authorize execution.
 
 Current execution ceiling:
 STAGE_A1_EXECUTION_AUTHORIZED=true
-STAGE_A2_PLUS_EXECUTION_AUTHORIZED=conditional_on_prior_stage
+STAGE_A2_PLUS_EXECUTION_AUTHORIZED=false

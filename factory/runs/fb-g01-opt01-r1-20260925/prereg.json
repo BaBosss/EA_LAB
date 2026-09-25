@@ -1,19 +1,91 @@
-{
-  "schema":"fb_g01_opt01_r1_prereg/1",
-  "status":"PREREGISTERED_OWNER_APPROVED_STAGE_A1_ONLY",
-  "base_canonical":"3d6941ab0f0edbacffbb60022cd84113d6a288b6",
-  "accepted_source":"8da04fc789ca55e6c673d41899e9136cfa72a75e",
-  "symbol":"XAUUSD","tf":"H1","model":1,
-  "main":"2023-01-01..2025-12-31","bwd":"2020-01-01..2022-12-31",
-  "holdout":"UNSPENT_FORBIDDEN",
-  "stage_a1":{"cells":9,"GridPct":[0.10,0.30,0.50],"GridATRMult":[0.25,0.75,1.25],"target":0.25,"DonchianBars":20,"authorized":true},
-  "stage_a2":{"cells":9,"GridPct_step":0.10,"GridATRMult_step":0.25,"authorized":"CONDITIONAL_A1_PASS"},
-  "stage_b1":{"cells":6,"BasketTarget":[0.10,0.30,0.50,0.70,0.90,1.00],"one_is_boundary_probe":true,"authorized":"CONDITIONAL_A2_PASS"},
-  "stage_b2":{"cells":3,"BasketTarget_step":0.10,"authorized":"CONDITIONAL_B1_PASS"},
-  "stage_c":{"cells":7,"DonchianBars":[10,15,20,25,30,35,40],"authorized":"CONDITIONAL_B2_PASS"},
-  "stage_d":{"cells":9,"orthogonal_offsets":{"GridPct":0.05,"GridATRMult":0.25,"BasketTarget":0.05,"DonchianBars":5},"trade_floor":100,"center_pf_floor":1.20,"authorized":"CONDITIONAL_C_PASS"},
-  "fixed_main_cells":1,"fixed_bwd_cells":1,
-  "max_cells":45,
-  "frozen_risk":{"ProtectLevel":2,"RC_MaxLevelsOverride":0,"FixedLot":0.01,"MaxRungsPerSide":5},
-  "range_expansion":false,"bwd_search":false,"retuning":false,"holdout_authorized":false
+﻿{
+    "schema":  "fb_g01_opt01_r1_prereg/1",
+    "status":  "PREREGISTERED_OWNER_APPROVED_STAGE_A1_ONLY",
+    "base_canonical":  "3d6941ab0f0edbacffbb60022cd84113d6a288b6",
+    "accepted_source":  "8da04fc789ca55e6c673d41899e9136cfa72a75e",
+    "symbol":  "XAUUSD",
+    "tf":  "H1",
+    "model":  1,
+    "main":  "2023-01-01..2025-12-31",
+    "bwd":  "2020-01-01..2022-12-31",
+    "holdout":  "UNSPENT_FORBIDDEN",
+    "stage_a1":  {
+                     "cells":  9,
+                     "GridPct":  [
+                                     0.10,
+                                     0.30,
+                                     0.50
+                                 ],
+                     "GridATRMult":  [
+                                         0.25,
+                                         0.75,
+                                         1.25
+                                     ],
+                     "target":  0.25,
+                     "DonchianBars":  20,
+                     "authorized":  true
+                 },
+    "stage_a2":  {
+                     "cells":  9,
+                     "GridPct_step":  0.10,
+                     "GridATRMult_step":  0.25,
+                     "authorized":  false
+                 },
+    "stage_b1":  {
+                     "cells":  6,
+                     "BasketTarget":  [
+                                          0.10,
+                                          0.30,
+                                          0.50,
+                                          0.70,
+                                          0.90,
+                                          1.00
+                                      ],
+                     "one_is_boundary_probe":  true,
+                     "authorized":  false
+                 },
+    "stage_b2":  {
+                     "cells":  3,
+                     "BasketTarget_step":  0.10,
+                     "authorized":  false
+                 },
+    "stage_c":  {
+                    "cells":  7,
+                    "DonchianBars":  [
+                                         10,
+                                         15,
+                                         20,
+                                         25,
+                                         30,
+                                         35,
+                                         40
+                                     ],
+                    "authorized":  false
+                },
+    "stage_d":  {
+                    "cells":  9,
+                    "orthogonal_offsets":  {
+                                               "GridPct":  0.05,
+                                               "GridATRMult":  0.25,
+                                               "BasketTarget":  0.05,
+                                               "DonchianBars":  5
+                                           },
+                    "trade_floor":  100,
+                    "center_pf_floor":  1.20,
+                    "authorized":  false
+                },
+    "fixed_main_cells":  1,
+    "fixed_bwd_cells":  1,
+    "max_cells":  45,
+    "frozen_risk":  {
+                        "ProtectLevel":  2,
+                        "RC_MaxLevelsOverride":  0,
+                        "FixedLot":  0.01,
+                        "MaxRungsPerSide":  5
+                    },
+    "range_expansion":  false,
+    "bwd_search":  false,
+    "retuning":  false,
+    "holdout_authorized":  false,
+    "continuation_rule":  "A1_PASS_ONLY_MAKES_A2_ELIGIBLE_FOR_NEW_EXPLICIT_OWNER_CT_APPROVAL;NO_LATER_STAGE_SELF_AUTHORIZATION"
 }
