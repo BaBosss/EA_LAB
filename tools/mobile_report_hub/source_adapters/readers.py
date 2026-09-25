@@ -10,10 +10,17 @@ from _triage.factory_os.runtime_identity import TRADE_DEAL_TYPES, VALID_DEAL_TYP
 from .safe import Sources, Refused, broker_time, currency, decimal, integer, opaque, symbol
 
 DEAL_FIELDS = set("ticket time symbol magic type entry volume price profit swap commission comment".split())
+MT4_ORDER_FIELDS = set("ticket open_time close_time symbol magic type lots open_price close_price profit swap commission comment".split())
 SNAP_FIELDS = set("row_type login server_time currency equity balance margin free_margin margin_level_pct stopout_mode stopout_level magic symbols float_pl open_lots open_positions oldest_open_hours pending_orders".split())
 ACCOUNT_VALUES = "equity balance margin free_margin margin_level_pct stopout_level".split()
 MAGIC_VALUES = "float_pl open_lots open_positions oldest_open_hours pending_orders".split()
 CLOCK = "BROKER_TIME_UNQUALIFIED"
+
+
+def mt4_integer(value: str) -> str:
+    if not isinstance(value, str) or not re.fullmatch(r"0|-?[1-9][0-9]{0,19}", value):
+        raise Refused("INVALID_INTEGER")
+    return value
 
 
 def rejected_filename_account(name: str, kind: str) -> str | None:
@@ -64,6 +71,15 @@ class Metadata:
         currency(row.get("currency"))
         if row.get("platform") not in ({"MT4", "MT5"} if snapshot else {"MT5"}):
             raise Refused("ACCOUNT_PLATFORM_NOT_MT5")
+        return row
+
+    def mt4_account(self, login: str) -> dict:
+        rows = self.accounts.get(login, [])
+        if len(rows) != 1:
+            raise Refused("ACCOUNT_METADATA_MISSING_OR_AMBIGUOUS")
+        row = rows[0]
+        if row.get("platform") != "MT4":
+            raise Refused("ACCOUNT_PLATFORM_NOT_MT4")
         return row
 
     def mapping(self, login: str, magic: str, sym: str) -> dict:
@@ -196,6 +212,117 @@ def read_ledgers(sources: Sources, root: Path, meta: Metadata) -> dict:
             "enum_contract": "tools/DealsExporter/DealsExporter.mq5 + _triage/factory_os/runtime_identity.py",
             "deal_filter": "DEAL_TYPE_BUY_0_SELL_1_ALL_ENTRY_0_1_2_3_INCLUDING_ENTRY_COSTS",
             "unit": "DEAL_EVENTS_NOT_TRADE_CYCLES", "account_totals_across_currencies": None}
+
+
+def read_mt4_orders(sources: Sources, root: Path, meta: Metadata) -> dict:
+    """Read whole closed MT4 orders without projecting them as MT5 deal events."""
+    accounts = {login: {"source_refs": [], "file_count": 0, "file_errors": False}
+                for login, rows in meta.accounts.items()
+                if len(rows) == 1 and rows[0].get("platform") == "MT4"}
+    quarantine: dict[tuple[str, str], set[str]] = defaultdict(set)
+    seen: dict[tuple[str, str], dict] = {}
+    all_refs: dict[tuple[str, str], set[str]] = defaultdict(set)
+    total_rows = 0
+    for name in sources.discover(root, "EA_LAB_mt4_orders_"):
+        login, ref, counted = rejected_filename_account(name, "mt4_orders"), None, False
+        try:
+            login = filename_account(name, "mt4_orders")
+            meta.mt4_account(login)
+            account = accounts[login]
+            account["file_count"] += 1
+            counted = True
+            raw, ref = sources.read(root, name, "MT4_ORDER_EXPORT")
+            account["source_refs"].append(ref)
+            rows = sources.csv(raw, MT4_ORDER_FIELDS)
+            for row in rows:
+                total_rows += 1
+                ticket = None
+                try:
+                    ticket = integer(row["ticket"], positive=True)
+                    key = (login, ticket)
+                    all_refs[key].add(ref)
+                    order_type = mt4_integer(row["type"])
+                    normalized = {
+                        "open_time": broker_time(row["open_time"]),
+                        "close_time": broker_time(row["close_time"]),
+                        "symbol": symbol(row["symbol"], empty=order_type not in {"0", "1"}),
+                        "magic": mt4_integer(row["magic"]),
+                        "type": order_type,
+                        "comment": row["comment"],
+                    }
+                    for field in ("lots", "open_price", "close_price", "profit", "swap", "commission"):
+                        normalized[field] = decimal(row[field])
+                    if order_type in {"0", "1"}:
+                        if normalized["lots"] <= Decimal(0):
+                            raise Refused("MT4_MARKET_LOTS_NOT_POSITIVE")
+                        if normalized["open_price"] <= Decimal(0):
+                            raise Refused("MT4_MARKET_OPEN_PRICE_NOT_POSITIVE")
+                        if normalized["close_price"] <= Decimal(0):
+                            raise Refused("MT4_MARKET_CLOSE_PRICE_NOT_POSITIVE")
+                        if normalized["open_time"] > normalized["close_time"]:
+                            raise Refused("MT4_MARKET_TIME_ORDER_INVALID")
+                    prior = seen.get(key)
+                    if prior is not None and prior != normalized:
+                        quarantine[key].add("SHARED_FIELD_CONFLICT")
+                    if prior is None:
+                        seen[key] = normalized
+                except Refused as exc:
+                    if ticket:
+                        quarantine[(login, ticket)].add(str(exc))
+                    else:
+                        account["file_errors"] = True
+                    sources.error("mt4_orders", str(exc), ref)
+        except Refused as exc:
+            if login:
+                try:
+                    meta.mt4_account(login)
+                    account = accounts[login]
+                    if not counted:
+                        account["file_count"] += 1
+                    account["file_errors"] = True
+                except Refused:
+                    pass
+            sources.error("mt4_orders", str(exc), ref)
+
+    results = []
+    for login in sorted(accounts):
+        account = accounts[login]
+        missing = account["file_count"] == 0
+        withheld = missing or account["file_errors"]
+        market = []
+        excluded = 0
+        for key, row in seen.items():
+            if key[0] != login or key in quarantine:
+                continue
+            if row["type"] in {"0", "1"}:
+                market.append((key, row))
+            else:
+                excluded += 1
+        times = sorted(row["close_time"] for _, row in market)
+        conflicts = [{"order_key": opaque("mt4-order", *key), "reasons": sorted(codes),
+                      "source_refs": sorted(all_refs[key])}
+                     for key, codes in sorted(quarantine.items()) if key[0] == login]
+        results.append({
+            "account_key": opaque("account", login),
+            "platform": "MT4",
+            "availability": "UNAVAILABLE" if withheld else "PARTIAL",
+            "reason": ("MT4_ORDER_HISTORY_MISSING" if missing else
+                       "INVALID_EXPORT_WITHHELD" if withheld else
+                       "MT4_CLOSED_ORDER_HISTORY_PARTIAL"),
+            "file_count": account["file_count"],
+            "source_refs": sorted(set(account["source_refs"])),
+            "closed_trade_orders": None if withheld else len(market),
+            "excluded_non_market_orders": None if withheld else excluded,
+            "quarantined_count": len(conflicts),
+            "quarantined": conflicts,
+            "window_first_close": None if withheld or not times else times[0],
+            "window_latest_close": None if withheld or not times else times[-1],
+            "clock_basis": CLOCK,
+            "history_completeness": "EXPORT_WINDOW_NOT_LIFETIME_PROOF",
+        })
+    return {"accounts": results, "raw_rows_read": total_rows,
+            "unit": "MT4_CLOSED_ORDER_RECORDS_NOT_MT5_DEALS",
+            "account_totals_across_currencies": None}
 
 
 def read_snapshots(sources: Sources, root: Path, meta: Metadata) -> dict:
