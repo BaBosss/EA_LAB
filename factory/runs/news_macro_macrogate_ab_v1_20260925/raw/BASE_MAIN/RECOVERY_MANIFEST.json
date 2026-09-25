@@ -1,0 +1,66 @@
+﻿{
+    "schema":  "macrogate_ab_base_main_recovery_manifest/1",
+    "head_before_commit":  "80e2addf088c155c3cc43bc5fb9412ec8e70cdc8",
+    "file_count":  11,
+    "files":  [
+                  {
+                      "path":  "agent_segment.log",
+                      "sha256":  "6a6dbbaff1bc5bde3dd092aa4bf86e9c9058acf091e94c3b5c21d62b88e29ac9",
+                      "bytes":  212830
+                  },
+                  {
+                      "path":  "CELL_CAPTURE.json",
+                      "sha256":  "1517d443eb885fc5eb811cac38068b450941d694e9cca240d265bf5bcbceddf1",
+                      "bytes":  1704
+                  },
+                  {
+                      "path":  "compiler_regen_current.set",
+                      "sha256":  "ae75782c5fad1e4bf136b23854a7486b583c5d598bcaa886e32f7780d97a3a5e",
+                      "bytes":  3300
+                  },
+                  {
+                      "path":  "FAILED_ATTEMPT_RECEIPT.json",
+                      "sha256":  "b1eeb8a91f49f035984fba4292f81281087e6f214507c2586c5d5cc541a3af35",
+                      "bytes":  811
+                  },
+                  {
+                      "path":  "IDENTITY_RECOVERY.json",
+                      "sha256":  "c9ce7127b8103daabd5e045054e3827dc88d44a05c721005244c25fbd30f7bed",
+                      "bytes":  1518
+                  },
+                  {
+                      "path":  "leverage_check.json",
+                      "sha256":  "ded452fed64f2793ce8a8c127e756c748f687d102ee16f20453739fa68c31faa",
+                      "bytes":  187
+                  },
+                  {
+                      "path":  "mt5_run.log",
+                      "sha256":  "a56a41b538e015a75c7b634b08664fc9f604e9a183d5a3473af538b070498211",
+                      "bytes":  1617
+                  },
+                  {
+                      "path":  "parsed_report.json",
+                      "sha256":  "a8c30066c12b861b1453005dd5507f47428c32b07f0cb94e4cf955801cb487a7",
+                      "bytes":  1557
+                  },
+                  {
+                      "path":  "report.htm",
+                      "sha256":  "d888947e4f3f3f956bc519889265dbc2a7b2cb9e9a65f2febf8f6d77ad18bbc0",
+                      "bytes":  501468
+                  },
+                  {
+                      "path":  "tester.ini",
+                      "sha256":  "1bf83105ad2f61de78d3917c55e0c544d2153338bc29d84602111d22ff697fc4",
+                      "bytes":  3607
+                  },
+                  {
+                      "path":  "truncation_check.json",
+                      "sha256":  "dd5eb16751f803d3a17139238dec34d3247f37138cdb27c431a901bba3c1ee5b",
+                      "bytes":  384
+                  }
+              ],
+    "execution_identity_recovery_sha256":  "80cf72e8491f5a7e02ad52d4add4bbc1acfc08baf087fa6a2fcddb1390f61144",
+    "failed_job":  "ct-news-macro-mg-ab-base-main-20260925",
+    "failed_job_preserved":  true,
+    "rerun_performed":  false
+}

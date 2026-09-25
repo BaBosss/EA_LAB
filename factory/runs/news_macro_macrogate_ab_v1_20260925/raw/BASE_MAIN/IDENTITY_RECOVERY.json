@@ -1,0 +1,24 @@
+﻿{
+    "schema":  "macrogate_ab_identity_recovery/1",
+    "cell":  "BASE_MAIN",
+    "recovered_utc":  "2026-09-25T05:43:00.6294358+00:00",
+    "root_cause":  "STALE_SET_HEADER_FINGERPRINT_TRUSTED_BY_ACCEPTANCE_HARNESS",
+    "frozen_expected_hash":  "d3d548b77d96037fbee8a483bd25206f2d323600f2e00cf8ad012c7f566c2456",
+    "current_compiler_hash":  "7dfd909aa23a659dbf41b3bf4004e764b96fd62a4f106d53fb8290ac8efe92cc",
+    "runtime_cfg_hash":  "7dfd909aa23a659dbf41b3bf4004e764b96fd62a4f106d53fb8290ac8efe92cc",
+    "set_sha256":  "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+    "compiler_regen_sha256":  "ae75782c5fad1e4bf136b23854a7486b583c5d598bcaa886e32f7780d97a3a5e",
+    "assignment_count":  157,
+    "assignments_byte_equal":  true,
+    "strategy_input_change":  false,
+    "source_change":  false,
+    "ex5_change":  false,
+    "evidence":  {
+                     "runtime_cfg_marker":  "7dfd909aa23a659dbf41b3bf4004e764b96fd62a4f106d53fb8290ac8efe92cc",
+                     "build_receipt":  "br-df0645c3b8814d99a8ccfa3e179d8acb",
+                     "ex5_sha256":  "35dab15a7b67873a8318697997f16b9ad4e06002a76053085d6fdf741b663b9e",
+                     "report_sha256":  "d888947e4f3f3f956bc519889265dbc2a7b2cb9e9a65f2febf8f6d77ad18bbc0",
+                     "agent_segment_sha256":  "6a6dbbaff1bc5bde3dd092aa4bf86e9c9058acf091e94c3b5c21d62b88e29ac9"
+                 },
+    "disposition":  "RECOVER_EXISTING_RUN_NO_RERUN__BASE_MAIN_MECHANICALLY_ELIGIBLE"
+}

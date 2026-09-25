@@ -1,0 +1,28 @@
+﻿{
+    "schema":  "macrogate_ab_base_main_recovery_validation/1",
+    "status":  "PASS",
+    "exact_failure":  "RUN_IDENTITY_MARKER_MISSING expected stale d3d548... while runtime marker present with 7dfd909...",
+    "tester_execution_completed":  true,
+    "report_present":  true,
+    "full_window":  true,
+    "runtime_identity_marker_present":  true,
+    "stale_header_hash":  "d3d548b77d96037fbee8a483bd25206f2d323600f2e00cf8ad012c7f566c2456",
+    "compiler_hash":  "7dfd909aa23a659dbf41b3bf4004e764b96fd62a4f106d53fb8290ac8efe92cc",
+    "runtime_hash":  "7dfd909aa23a659dbf41b3bf4004e764b96fd62a4f106d53fb8290ac8efe92cc",
+    "assignments_equal_157":  true,
+    "source_changed":  false,
+    "ex5_changed":  false,
+    "strategy_inputs_changed":  false,
+    "base_main_rerun":  false,
+    "base_main":  {
+                      "net":  81.25,
+                      "pf":  1.1,
+                      "trades":  214,
+                      "eqdd_pct":  0.97,
+                      "full_window":  true
+                  },
+    "authorized_next":  "BASE_BWD_ONLY",
+    "real_guard_authorized":  false,
+    "placebo_authorized":  false,
+    "holdout":  "LOCKED_UNSPENT"
+}

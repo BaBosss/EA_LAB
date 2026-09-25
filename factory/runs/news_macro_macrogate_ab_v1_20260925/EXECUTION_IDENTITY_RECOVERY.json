@@ -1,0 +1,29 @@
+﻿{
+    "schema":  "macrogate_ab_execution_identity_recovery_freeze/1",
+    "created_utc":  "2026-09-25T05:43:00.6409597+00:00",
+    "original_identity":  "EXECUTION_IDENTITY_FROZEN.json",
+    "original_identity_preserved":  true,
+    "correction_scope":  "ACCEPTANCE_FINGERPRINT_METADATA_ONLY",
+    "set_assignments_changed":  false,
+    "source_changed":  false,
+    "ex5_changed":  false,
+    "base_set_sha256":  "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+    "stale_header_hash":  "d3d548b77d96037fbee8a483bd25206f2d323600f2e00cf8ad012c7f566c2456",
+    "current_compiler_runtime_hash":  "7dfd909aa23a659dbf41b3bf4004e764b96fd62a4f106d53fb8290ac8efe92cc",
+    "base_main":  {
+                      "accepted_from_existing_failed_attempt":  true,
+                      "rerun":  false,
+                      "mechanically_full_window_eligible":  true,
+                      "pf":  1.1,
+                      "net":  81.25,
+                      "trades":  214,
+                      "eqdd_pct":  0.97
+                  },
+    "authorized_next":  "BASE_BWD_ONLY",
+    "real_guard_authorized":  false,
+    "placebo_authorized":  false,
+    "holdout":  "LOCKED_UNSPENT",
+    "optimization":  "NONE",
+    "model4":  false,
+    "bwd_retuning":  false
+}

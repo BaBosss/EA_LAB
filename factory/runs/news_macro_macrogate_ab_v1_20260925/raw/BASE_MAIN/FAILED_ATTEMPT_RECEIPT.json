@@ -1,0 +1,13 @@
+﻿{
+    "schema":  "macrogate_ab_failed_attempt_receipt/1",
+    "job_id":  "ct-news-macro-mg-ab-base-main-20260925",
+    "state":  "FAILED",
+    "exit_code":  1,
+    "exact_failure":  "RUN_IDENTITY_MARKER_MISSING effective_config_hash=d3d548b77d96037fbee8a483bd25206f2d323600f2e00cf8ad012c7f566c2456",
+    "classification":  "EXECUTION_COMPLETED_ACCEPTANCE_SURFACE_FALSE_NEGATIVE",
+    "rerun_performed":  false,
+    "report_sha256":  "d888947e4f3f3f956bc519889265dbc2a7b2cb9e9a65f2febf8f6d77ad18bbc0",
+    "agent_segment_sha256":  "6a6dbbaff1bc5bde3dd092aa4bf86e9c9058acf091e94c3b5c21d62b88e29ac9",
+    "mt5_run_log_sha256":  "a56a41b538e015a75c7b634b08664fc9f604e9a183d5a3473af538b070498211",
+    "failed_job_result_sha256":  "b8f14cc0c2e89910d64a29b320781c0edabfe9f70d4557a5300d3e91957e8c25"
+}
