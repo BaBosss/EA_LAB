@@ -1,0 +1,18 @@
+{
+    "job_id":  "ct-news-macro-mg-ab-base-bwd-20260925",
+    "state":  "COMPLETE",
+    "runner_pid":  22908,
+    "runner_start_utc":  "2026-09-25T13:51:22.7207434Z",
+    "child_pid":  28768,
+    "started_utc":  "2026-09-25T13:51:23.0966555Z",
+    "timeout_sec":  2400,
+    "heartbeat_sec":  5,
+    "file_path":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "child_start_utc":  "2026-09-25T13:51:23.1755559Z",
+    "ended_utc":  "2026-09-25T13:51:39.8709559Z",
+    "exit_code":  0,
+    "postcondition_file_path":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "postcondition_pid":  27908,
+    "postcondition_start_utc":  "2026-09-25T13:51:39.4146035Z",
+    "postcondition_exit_code":  0
+}

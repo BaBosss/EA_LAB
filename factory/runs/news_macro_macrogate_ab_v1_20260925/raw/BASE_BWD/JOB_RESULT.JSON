@@ -1,0 +1,10 @@
+{
+    "job_id":  "ct-news-macro-mg-ab-base-bwd-20260925",
+    "state":  "COMPLETE",
+    "exit_code":  0,
+    "runner_pid":  22908,
+    "child_pid":  28768,
+    "ended_utc":  "2026-09-25T13:51:39.8709559Z",
+    "reason":  "",
+    "postcondition_exit_code":  0
+}

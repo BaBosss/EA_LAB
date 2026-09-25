@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "MACROGATE_AB_B15_GBPUSD_H4_BASE_BWD_20260925",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

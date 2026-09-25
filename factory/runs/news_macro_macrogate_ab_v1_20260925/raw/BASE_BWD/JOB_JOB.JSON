@@ -1,0 +1,15 @@
+{
+    "job_id":  "ct-news-macro-mg-ab-base-bwd-20260925",
+    "file_path":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "arg_count":  5,
+    "arg_hash":  "jX3kgLv3LB74UCef9OlEjLvwZowwY8xdPyAbZGs7wn8=",
+    "timeout_sec":  2400,
+    "heartbeat_sec":  5,
+    "worktree":  "D:\\EA_LAB_CONTROL\\w\\news-macro-mg-ab-exec-v1-0925",
+    "base_sha":  "d2f75b9908adbe60b10bdb05a8ba9c5882020471",
+    "stage":  "MACROGATE_AB_BASE_BWD",
+    "postcondition_file_path":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "postcondition_arg_count":  5,
+    "postcondition_arg_hash":  "AD+TArwcwwrsyEfgSIR/kYMCMdrZ7GI03OPDG1iLg5E=",
+    "created_utc":  "2026-09-25T13:51:22.6906010Z"
+}
