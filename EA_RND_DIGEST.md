@@ -60,6 +60,12 @@ BT9 AUDUSD/H4 edge-latch portability is accepted/reviewed at `ede238fa`: disabli
 - MAIN 2023-2025 reached the existing shared hard-risk boundary at DD 25.05% and is classified `SAFETY_HALT`; BWD 2020-2022 completed the window with PF 5.54 / net +571.73 / EqDD 16.01%, but its final live cycle was tester-liquidated at end of test.
 - Evidence is mechanically valid, with max observed 3 positions / 0.03 lots and no persistence/account-baseline fault. It is not a whole-strategy PASS: MAIN has 46 trades and BWD 57, both below the canonical 100-trade selection floor.
 - Owner direction 2026-09-25: **do not PARK/REJECT FB-G01 yet**. Next eligible research is a **separate prospectively frozen optimization contract**. Do not infer tunable parameters/ranges from this digest; optimization selection must be MAIN-only, BWD remains validation-only, and HOLDOUT remains UNSPENT.
+### MacroGate A/B - blocked evidence accepted; no execution
+- Accepted closeout: `73a46848937e637bb4e025b8e8985a7d714462dc`; source of truth: `factory/runs/news_macro_macrogate_ab_v1_20260925/BLOCKER_CLOSEOUT.json` and `PROJECT_STATE.md`.
+- BASE MAIN+BWD passes the parent host gate only. Guarded valid outcomes = 0; full A/B is NOT COMPLETE. BWD blocked-entry denominator/share remain `null / UNAVAILABLE_NOT_CERTIFIED`; tester input transfer is unqualified. No timing/performance conclusion, recovery3 or new repair authority.
+- Existing MacroGate runtime lease is DONE/released. ZAB preparation is DONE but A_OWNER remains owner-manual-start only after immediate exact portable/tester/account/resource revalidation; `can_execute=false`, B/C not authorized, DLL trust unchanged. Do not reopen FB or alter its owner.
+- Future MacroGate tester-transfer and denominator qualification requires a separate prospective contract with refrozen affected identities; none is opened by this state update. HOLDOUT `LOCKED_UNSPENT`, Model4/optimizer/deployment/trading not authorized.
+
 ## Hermes
 Hermes is a deterministic/mechanical EA R&D factory, not a strategy architect. **H1 GOLDEN REPLAY = PASS**. **H2 SMALL PILOT = PASS**. **H3 BROAD MATRIX = PASS / COMPLETE** on contract head `47c77320`: 36/36 authorized full-window Model-1 cells, no optimization, HOLDOUT UNSPENT, repository clean, independent milestone review PASS. The later source-bound P4B package, deterministic regime join, P4 interpretation, and bounded P5 session-context attribution are complete/reviewed. None grants strategy/risk/candidate/deployment authority.
 ## Visual layer
