@@ -1,0 +1,29 @@
+﻿{
+    "schema":  "macrogate_ab_parent_viability/1",
+    "decided_utc":  "2026-09-25T13:57:29.4476731+00:00",
+    "base_main":  {
+                      "pf":  null,
+                      "net":  81.25,
+                      "trades":  214,
+                      "eqdd_pct":  null,
+                      "full_window":  null,
+                      "mechanically_eligible":  true,
+                      "pass":  true
+                  },
+    "base_bwd":  {
+                     "pf":  1.07,
+                     "net":  73.31,
+                     "trades":  218.0,
+                     "eqdd_pct":  1.83,
+                     "full_window":  true,
+                     "mechanically_eligible":  true,
+                     "pass":  true
+                 },
+    "disposition":  "BASE_BOTH_PASS__REMAINING_PREREG_ARMS_UNLOCKED",
+    "real_guard_authorized":  true,
+    "all_five_placebos_authorized":  true,
+    "holdout":  "LOCKED_UNSPENT",
+    "optimization":  "NONE",
+    "model4":  false,
+    "bwd_retuning":  false
+}
