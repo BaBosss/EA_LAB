@@ -1,0 +1,205 @@
+﻿{
+    "schema":  "fb_g01_opt01_prereg/1",
+    "status":  "PREREGISTERED_NOT_EXECUTED",
+    "family":  "FB-G01",
+    "expert":  "Boss_25_PersistentAdaptiveGrid",
+    "build":  "LAB_ENTRY_25",
+    "accepted_source_head":  "8da04fc789ca55e6c673d41899e9136cfa72a75e",
+    "prereg_base_canonical":  "069e2f34f543456a00da9b2f6ba775f111aceafc",
+    "home_symbol":  "XAUUSD",
+    "home_tf":  "H1",
+    "model":  1,
+    "main_window":  "2023-01-01..2025-12-31",
+    "bwd_window":  "2020-01-01..2022-12-31",
+    "holdout":  "UNSPENT_FORBIDDEN",
+    "deposit_usd":  10000,
+    "leverage":  "1:100",
+    "parent_set_sha256":  "a9d434bf37ddc3a4ed8a906a6b1e640ef71e7abde286fcd9f9b194eb95bc5a57",
+    "parent_config_fingerprint":  "c9a9f95094d8d92e059ec7c894de76f57dce5d25a9b97792e3acd3ea3927d6d8",
+    "parent_main":  {
+                        "pf":  0.23,
+                        "net":  -2188.86,
+                        "trades":  46,
+                        "eqdd_pct":  25.05,
+                        "classification":  "SAFETY_HALT"
+                    },
+    "parent_bwd":  {
+                       "pf":  5.54,
+                       "net":  571.73,
+                       "trades":  57,
+                       "eqdd_pct":  16.01,
+                       "classification":  "VALID_FULL_WINDOW_WITH_END_TEST_FORCED_CLOSE"
+                   },
+    "frozen_parameters":  {
+                              "_25_ATRPeriod":  14,
+                              "_25_MaxRungsPerSide":  5,
+                              "_25_FixedLot":  0.01,
+                              "_25_SpreadSamples":  50,
+                              "_25_SpreadMedianMult":  2.5,
+                              "_25_SpreadATRCap":  0.10,
+                              "_25_OpenCooldownSec":  1,
+                              "ProtectLevel":  2,
+                              "RC_MaxLevelsOverride":  0
+                          },
+    "stages":  [
+                   {
+                       "id":  "A_SPACING_COMPLETE",
+                       "window":  "MAIN",
+                       "mode":  "COMPLETE_OPTIMIZATION",
+                       "cells":  54,
+                       "dimensions":  {
+                                          "_25_GridPct":  {
+                                                              "start":  0.10,
+                                                              "step":  0.05,
+                                                              "stop":  0.50,
+                                                              "count":  9
+                                                          },
+                                          "_25_GridATRMult":  {
+                                                                  "start":  0.25,
+                                                                  "step":  0.25,
+                                                                  "stop":  1.50,
+                                                                  "count":  6
+                                                              }
+                                      },
+                       "frozen":  {
+                                      "_25_BasketTargetBalancePct":  0.25,
+                                      "_25_DonchianBars":  20
+                                  },
+                       "plateau_cross":  5,
+                       "cell_requirements":  [
+                                                 "MECHANICAL_ACCEPT",
+                                                 "FULL_MAIN_NO_HARD_KILL",
+                                                 "FINITE_METRICS",
+                                                 "NET_GT_0"
+                                             ],
+                       "participation_floor_applied":  false,
+                       "stop_if_none":  "SPACING_PLATEAU_NOT_ESTABLISHED"
+                   },
+                   {
+                       "id":  "B_TARGET_COMPLETE",
+                       "window":  "MAIN",
+                       "mode":  "COMPLETE_OPTIMIZATION",
+                       "cells":  7,
+                       "dimension":  {
+                                         "_25_BasketTargetBalancePct":  {
+                                                                            "start":  0.10,
+                                                                            "step":  0.05,
+                                                                            "stop":  0.40,
+                                                                            "count":  7
+                                                                        }
+                                     },
+                       "plateau_line":  3,
+                       "cell_requirements":  [
+                                                 "MECHANICAL_ACCEPT",
+                                                 "FULL_MAIN_NO_HARD_KILL",
+                                                 "FINITE_METRICS",
+                                                 "NET_GT_0"
+                                             ],
+                       "participation_floor_applied":  false,
+                       "stop_if_none":  "TARGET_PLATEAU_NOT_ESTABLISHED"
+                   },
+                   {
+                       "id":  "C_DONCHIAN_COMPLETE",
+                       "window":  "MAIN",
+                       "mode":  "COMPLETE_OPTIMIZATION",
+                       "cells":  7,
+                       "dimension":  {
+                                         "_25_DonchianBars":  {
+                                                                  "start":  10,
+                                                                  "step":  5,
+                                                                  "stop":  40,
+                                                                  "count":  7
+                                                              }
+                                     },
+                       "plateau_line":  3,
+                       "cell_requirements":  [
+                                                 "MECHANICAL_ACCEPT",
+                                                 "FULL_MAIN_NO_HARD_KILL",
+                                                 "FINITE_METRICS",
+                                                 "NET_GT_0"
+                                             ],
+                       "participation_floor_applied":  false,
+                       "stop_if_none":  "DONCHIAN_PLATEAU_NOT_ESTABLISHED"
+                   },
+                   {
+                       "id":  "D_FINAL_ORTHOGONAL_CROSS",
+                       "window":  "MAIN",
+                       "mode":  "FIXED_SINGLE_TESTS",
+                       "cells":  9,
+                       "neighbors":  [
+                                         "GridPctÂ±0.05",
+                                         "GridATRMultÂ±0.25",
+                                         "BasketTargetBalancePctÂ±0.05",
+                                         "DonchianBarsÂ±5"
+                                     ],
+                       "all_cell_requirements":  [
+                                                     "MECHANICAL_ACCEPT",
+                                                     "FULL_MAIN_NO_HARD_KILL",
+                                                     "FINITE_METRICS",
+                                                     "NET_GT_0",
+                                                     "TRADES_GTE_100"
+                                                 ],
+                       "center_additional_requirements":  [
+                                                              "PF_GTE_1_20"
+                                                          ],
+                       "stop_if_fail":  "FINAL_NEIGHBOR_STABILITY_FAIL"
+                   },
+                   {
+                       "id":  "CENTER_MAIN_REPRODUCTION",
+                       "window":  "MAIN",
+                       "mode":  "FIXED_SINGLE_TEST",
+                       "cells":  1,
+                       "requirements":  [
+                                            "MECHANICAL_ACCEPT",
+                                            "FULL_MAIN_NO_HARD_KILL",
+                                            "PF_GTE_1_20",
+                                            "TRADES_GTE_100",
+                                            "REPRODUCES_CENTER_WITHIN_REPORT_ROUNDING"
+                                        ]
+                   },
+                   {
+                       "id":  "CENTER_BWD_VALIDATION",
+                       "window":  "BWD",
+                       "mode":  "FIXED_SINGLE_TEST",
+                       "cells":  1,
+                       "requirements":  [
+                                            "MECHANICAL_ACCEPT",
+                                            "FULL_BWD",
+                                            "PF_GTE_1_00",
+                                            "TRADES_GTE_100"
+                                        ],
+                       "on_fail":  "CENTER_REJECTED_BWD_NO_RETUNING",
+                       "on_pass":  "FROZEN_FINALIST_NOT_CANDIDATE"
+                   }
+               ],
+    "selector":  [
+                     "MAXIMIZE_MINIMUM_NET_ACROSS_LOCAL_CROSS",
+                     "HIGHER_MINIMUM_TRADES",
+                     "LOWER_MAXIMUM_NATIVE_EQDD_PCT",
+                     "SMALLER_DISTANCE_FROM_V0",
+                     "LOWER_VALUE_DETERMINISTIC_TIEBREAK"
+                 ],
+    "range_expansion_authorized":  false,
+    "bwd_search_authorized":  false,
+    "post_result_retuning_authorized":  false,
+    "model4_authorized":  false,
+    "holdout_authorized":  false,
+    "candidate_authorized":  false,
+    "risk_default_change_authorized":  false,
+    "optimizer_execution_authorized":  false,
+    "max_model1_cells":  79,
+    "next_gate":  "EXPLICIT_EXECUTION_APPROVAL_FOR_THIS_EXACT_CONTRACT",
+    "optimize_guard_preflight":  {
+                                     "build":  25,
+                                     "checked":  4,
+                                     "allow":  4,
+                                     "refuse":  0,
+                                     "skip_guard":  false,
+                                     "dimensions":  [
+                                                        "_25_GridPct",
+                                                        "_25_GridATRMult",
+                                                        "_25_BasketTargetBalancePct",
+                                                        "_25_DonchianBars"
+                                                    ]
+                                 }
+}
