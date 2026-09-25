@@ -1,0 +1,30 @@
+﻿{
+    "schema":  "macrogate_ab_pre_base_reanchor/1",
+    "created_utc":  "2026-09-25T03:51:51.0633815Z",
+    "current_origin_master":  "0ccc6ef3d14ed76000a3a30fce4b8418b472cc8a",
+    "experiment_head":  "9859d5015b131f43f3a1fe9c3f2fbe627f4c7154",
+    "frozen_identity_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/EXECUTION_IDENTITY_FROZEN.json",
+    "frozen_identity_sha256":  "5a6b9d21e5042d7fd63b43eb4ec4aaa6922c2e074503bf9ea7c9c786a440ed08",
+    "prior_canonical_in_frozen_identity":  "ece3dbb2b7a99178c1a416254028fbfc82d192d1",
+    "origin_movement_paths":  [
+                                  "docs/workflows/EA_MONITOR_SOURCE_ADAPTER_MT4_EXTENSION_V1_20260925.md",
+                                  "tools/mobile_report_hub/source_adapters/builder.py",
+                                  "tools/mobile_report_hub/source_adapters/readers.py",
+                                  "tools/mobile_report_hub/source_adapters/test_adapters.py"
+                              ],
+    "critical_paths_changed":  false,
+    "wrapper_sha256":  "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+    "parent_set_sha256":  "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+    "labcore_sha256":  "92625d564f3eb461bd7d603c33633b0932e873d15267fb01cb94a98f4377039d",
+    "macrogate_core_sha256":  "afb74e22f75af3053d56ef6e8a485987fdc951f0995e44e91af91e6142778a0a",
+    "machine_prereg_sha256":  "57594c5c21b5f7330490740d0a746afd86a6c39a54c1f54477ce2fea020b1042",
+    "tracked_ex5_sha256":  "35dab15a7b67873a8318697997f16b9ad4e06002a76053085d6fdf741b663b9e",
+    "build_receipt":  "br-df0645c3b8814d99a8ccfa3e179d8acb",
+    "exact_byte_reuse_allowed":  true,
+    "compile_rerun_required":  false,
+    "authorized_next":  "BASE_MAIN_ONLY",
+    "performance":  "NOT_RUN",
+    "mt5_runs":  0,
+    "holdout":  "LOCKED_UNSPENT",
+    "probability":  null
+}
