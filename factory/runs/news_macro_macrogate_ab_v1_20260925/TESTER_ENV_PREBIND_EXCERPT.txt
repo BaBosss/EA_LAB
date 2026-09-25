@@ -1,0 +1,5 @@
+﻿CS	0	09:34:14.814	Startup	MetaTester 5 build 6182, 5 Sep 2026
+CS	0	09:34:15.184	127.0.0.1	login (build 6182)
+CS	0	09:34:15.197	Network	16516 bytes of account info loaded
+CS	0	09:34:15.201	Tester	initial deposit 10000.00 USD, leverage 1:100
+CS	0	09:34:15.242	Boss_25_PersistentAdaptiveGrid (XAUUSD,H1)	2023.01.01 00:00:00   [IDENTITY] account=146237 magic=990001 ea=25_PersistentAdaptiveGrid build_receipt=br-5427f03ea8684ea7a842c0efa6a5ca95 cfg=4b15ada33ef2ad8ae0e91eba9036e3e9621c00f6f59aa32b9f48c279942b0b5a epoch=epoch-1 attach_time_unix=1672531200 first_trade_epoch=null
