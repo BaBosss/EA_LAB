@@ -7,7 +7,9 @@
                      "agent_log":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Tester\\9CA16B8382AE4CF692710FB36B9DA355\\Agent-127.0.0.1-3000\\logs\\20260925.log",
                      "agent_sandbox_directory":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Tester\\9CA16B8382AE4CF692710FB36B9DA355\\Agent-127.0.0.1-3000\\MQL5\\Files",
                      "agent_directory_exists":  true,
-                     "failed_attempt_receipt":  "factory/runs/news_macro_macrogate_ab_v1_20260925/attempts/REAL_GUARD_MAIN_ATTEMPT1_FEED_SANDBOX_MISSING/ATTEMPT_RECEIPT.json"
+                     "failed_attempt_receipt":  "factory/runs/news_macro_macrogate_ab_v1_20260925/GUARDED_BATCH_FAILURE_HISTORY.json",
+                     "failed_raw_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/raw/REAL_GUARD_MAIN",
+                     "failure_history_sha256":  "8af151d54aafdf34c564d21bd055edb4c77c9fdc73c4e4683d8b91ca91b70227"
                  },
     "frozen_semantics":  {
                              "_MG_InCommon":  false,
@@ -26,5 +28,7 @@
     "strategy_change":  false,
     "feed_regeneration":  false,
     "source_repair1_consumed":  false,
-    "next":  "RERUN_REAL_GUARD_MAIN_SAME_FROZEN_CELL_ONLY_THEN_RESUME_MANIFEST_SEQUENCE_IF_VALID"
+    "next":  "RERUN_REAL_GUARD_MAIN_SAME_FROZEN_CELL_ONLY_THEN_RESUME_MANIFEST_SEQUENCE_IF_VALID",
+    "recovery2_scope":  "RERUN_REAL_GUARD_MAIN_SAME_FROZEN_CELL_ONLY__IF_VALID_RESUME_REMAINING_MANIFEST_SEQUENCE",
+    "prior_guarded_outcome_valid":  false
 }
