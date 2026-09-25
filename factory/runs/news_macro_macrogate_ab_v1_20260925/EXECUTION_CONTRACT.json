@@ -1,0 +1,268 @@
+﻿{
+    "schema":  "macrogate_ab_execution_contract/1",
+    "contract_id":  "NEWS_MACRO_MACROGATE_AB_EXECUTION_V1_20260925",
+    "status":  "PREPARED_WAITING_TESTER_RESOURCE_AND_FRESH_BUILD_IDENTITY",
+    "can_execute":  false,
+    "current_canonical_head":  "e2f8a8e2eb2efa67aa1efa642b8e49b8f0697ee5",
+    "accepted_prereg":  {
+                            "canonical_head":  "3d6941ab0f0edbacffbb60022cd84113d6a288b6",
+                            "reviewed_head":  "cc4ad0a612817efe58c0f142c60ccac700e106bb",
+                            "contract_sha256":  "68c3a87ae4894732bd2095ed64fdfa95d0a4b0bc229f059c4f45fa247948d319",
+                            "machine_prereg_sha256":  "57594c5c21b5f7330490740d0a746afd86a6c39a54c1f54477ce2fea020b1042",
+                            "semantics_rewritten":  false
+                        },
+    "parent":  {
+                   "family":  "B15",
+                   "ea":  "Boss_15_ST03",
+                   "symbol":  "GBPUSD",
+                   "timeframe":  "H4",
+                   "wrapper":  "ea_template/Boss_15_ST03.mq5",
+                   "wrapper_sha256":  "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+                   "set":  "ea_template/sets/regression/Boss_15_ST03_defaults.set",
+                   "set_sha256":  "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+                   "current_source_verified_unchanged_since_prereg":  true,
+                   "fresh_ex5_sha256":  null,
+                   "fresh_build_receipt":  null
+               },
+    "tester":  {
+                   "runtime_lane":  null,
+                   "install":  null,
+                   "terminal_build":  null,
+                   "account_identity":  null,
+                   "model":  "Model1_1_MINUTE_OHLC",
+                   "deposit":  10000,
+                   "currency":  "USD",
+                   "leverage":  "1:100",
+                   "reservation_state":  "NOT_RESERVED_WAITING_FOR_FB_G01",
+                   "one_job_at_a_time":  true
+               },
+    "windows":  {
+                    "MAIN":  {
+                                 "start_utc":  "2023-01-01T00:00:00Z",
+                                 "end_utc":  "2026-01-01T00:00:00Z",
+                                 "role":  "MAIN"
+                             },
+                    "BWD":  {
+                                "start_utc":  "2020-01-01T00:00:00Z",
+                                "end_utc":  "2023-01-01T00:00:00Z",
+                                "role":  "VALIDATION_ONLY_NO_RETUNING"
+                            }
+                },
+    "holdout":  {
+                    "status":  "LOCKED_UNSPENT",
+                    "used":  false,
+                    "selection_surface":  false
+                },
+    "evaluation_unit":  "BASKET_EPISODE",
+    "primary_metric":  "NATIVE_MAXIMAL_EQUITY_DRAWDOWN_PERCENT",
+    "parent_viability_gate":  {
+                                  "sequence":  "BASE_MAIN_AND_BWD_BEFORE_ANY_REAL_GUARD_OR_PLACEBO",
+                                  "mechanically_full_window_eligible_required":  true,
+                                  "each_window_pf_gt":  1.0,
+                                  "each_window_net_gt":  0.0,
+                                  "failure_label":  "PARENT_NOT_POSITIVE_EXPECTANCY",
+                                  "trade_count_floor_invented":  false
+                              },
+    "arms":  {
+                 "BASE_OFF":  {
+                                  "_MG_SelfGate":  false
+                              },
+                 "REAL_GUARD":  {
+                                    "_MG_SelfGate":  true,
+                                    "_MG_OffsetHours":  0,
+                                    "_MG_LotMult":  0.5,
+                                    "_MG_BlockNew":  true,
+                                    "_MG_TriggerRiskOff":  true,
+                                    "trigger_states":  [
+                                                           "RISK_OFF",
+                                                           "STRESS"
+                                                       ]
+                                },
+                 "PLACEBO":  {
+                                 "_MG_SelfGate":  true,
+                                 "_MG_OffsetHours":  0,
+                                 "_MG_LotMult":  0.5,
+                                 "_MG_BlockNew":  true,
+                                 "_MG_TriggerRiskOff":  true,
+                                 "trigger_states":  [
+                                                        "RISK_OFF",
+                                                        "STRESS"
+                                                    ]
+                             }
+             },
+    "feed_harness":  {
+                         "location_policy":  "TESTER_LOCAL_MQL5_FILES_ONLY_NO_COMMON_LIVE_OVERWRITE",
+                         "_MG_InCommon":  false,
+                         "BASE_OFF":  {
+                                          "feed_consumed":  false
+                                      },
+                         "REAL_GUARD":  {
+                                            "source_path":  "D:\\EA_LAB_CONTROL\\evidence\\news-macro-mg-native-exporter-quarantine-v1-20260924\\author\\regeneration_a\\macrogate_native_candidate.csv",
+                                            "feed_sha256":  "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+                                            "export_manifest_sha256":  "93a182e68ac0a0cd358626bf2296bee04fb6d9530022675cdf9cd80a5479e14f",
+                                            "quarantine_sha256":  "545c4e5f684ea8a5c4b231bf57360e65551f2acb8ef4bf3fd685dd211faa59d9",
+                                            "tester_filename":  "EA_LAB_MGAB_REAL.csv"
+                                        },
+                         "PLACEBO":  {
+                                         "accepted_generation_root":  "D:\\EA_LAB_CONTROL\\evidence\\news-macro-mg-ab-prereg-v1-20260925\\author\\generation_r1_c",
+                                         "accepted_manifest_sha256":  "95caa20a890e2ad0561a5ccf41b0ac83bce7795f9cf22c3577e3e547197e4dea",
+                                         "artifact_hashes":  {
+                                                                 "BWD_seed_2026092501_macrogate_native.csv":  "951bff972d0bcc9ef6edb556782cc4e11eafac3194ce0259ee87d6b5364d5320",
+                                                                 "BWD_seed_2026092501_provenance.csv":  "35f3f70e81e1b61de777fd75158f8835062372740ae963cc9868513b13273331",
+                                                                 "BWD_seed_2026092502_macrogate_native.csv":  "fa9efdd623dfd2d35cd2bfdda457e505de4cebc1ef990f13c9fb582b9cd248b5",
+                                                                 "BWD_seed_2026092502_provenance.csv":  "40fbefe70a7da8e2c49f591ad6cb7f037036dc92e3f403b13cea3b8215272083",
+                                                                 "BWD_seed_2026092503_macrogate_native.csv":  "7f8f2aad388b9dca7d8e2c53808233987724569db014852bbd7c62c074d3fe98",
+                                                                 "BWD_seed_2026092503_provenance.csv":  "e551ced836744fde842897745326405995011fdc2a0d8cbbf2788a0e820cf5f4",
+                                                                 "BWD_seed_2026092504_macrogate_native.csv":  "8bbe8cf5632685c4b3e3c7a1fd659f35ea96d2297b1e74057609e8b435c5daa8",
+                                                                 "BWD_seed_2026092504_provenance.csv":  "cae1244ab6500f2e36c9b3898a32b6c786c5c4c8be86393d9f5110447f53d96f",
+                                                                 "BWD_seed_2026092505_macrogate_native.csv":  "ab2f6c7818c41ef3502a6a67c2bfa1ae0a707259ad72b6bfb9fd463b7787b3c5",
+                                                                 "BWD_seed_2026092505_provenance.csv":  "8c77c6e797bdfb6feadfb57c5d1847a95ed65701d789f366d8d47c9f8c7de990",
+                                                                 "MAIN_seed_2026092501_macrogate_native.csv":  "dc5b31de1e0d5809c52c388302533b7228a52a389eb37873be50609ba6d30198",
+                                                                 "MAIN_seed_2026092501_provenance.csv":  "a91a0e835eb02f07bd703525ffa483b8dc544d6ba0d0d3e7897d47723b103a1f",
+                                                                 "MAIN_seed_2026092502_macrogate_native.csv":  "f6ce2f5cf0be072e54641bad333871c70fd11ea7b8c4858dd7d600ea187e93a2",
+                                                                 "MAIN_seed_2026092502_provenance.csv":  "5e394e117d455036a83ddd560aab60be6f48e894a388f33d3665c63a5afeb726",
+                                                                 "MAIN_seed_2026092503_macrogate_native.csv":  "e437e631cd5c158c1b34a3158753bbab767db6de8964457cebff73bc76504344",
+                                                                 "MAIN_seed_2026092503_provenance.csv":  "07b3809fb129071b64d80e43e7eef5c8799ecd382d4c4192335eda98c5cd5b5f",
+                                                                 "MAIN_seed_2026092504_macrogate_native.csv":  "1eacab594ebd5a73b1291965d78231611d58912b385910e82a3beae07132ddfd",
+                                                                 "MAIN_seed_2026092504_provenance.csv":  "fdd27e9bab4cc2387996766605808367c69f359abc2400c3dbd00902d4d62203",
+                                                                 "MAIN_seed_2026092505_macrogate_native.csv":  "1ffcfa71ade5256671196fd7530ecacef60e1e227b7aa7d1e6566d5e35f06c5e",
+                                                                 "MAIN_seed_2026092505_provenance.csv":  "9167ecaab8b4b8d10a8613042f7460972ce6a0f00fe9ab9e63e3b3952ad9c552",
+                                                                 "macrogate_ab_placebo_manifest.json":  "95caa20a890e2ad0561a5ccf41b0ac83bce7795f9cf22c3577e3e547197e4dea"
+                                                             },
+                                         "seed_shift_mapping":  [
+                                                                    {
+                                                                        "seed":  2026092501,
+                                                                        "shift_weeks":  38
+                                                                    },
+                                                                    {
+                                                                        "seed":  2026092502,
+                                                                        "shift_weeks":  -23
+                                                                    },
+                                                                    {
+                                                                        "seed":  2026092503,
+                                                                        "shift_weeks":  -8
+                                                                    },
+                                                                    {
+                                                                        "seed":  2026092504,
+                                                                        "shift_weeks":  -32
+                                                                    },
+                                                                    {
+                                                                        "seed":  2026092505,
+                                                                        "shift_weeks":  36
+                                                                    }
+                                                                ],
+                                         "tester_filename_pattern":  "EA_LAB_MGAB_\u003cWINDOW\u003e_P\u003cSEED\u003e.csv",
+                                         "rehash_mismatch_count":  0
+                                     }
+                     },
+    "mechanism_prerequisites":  {
+                                    "real_guard_firing_min":  1,
+                                    "real_guard_affected_new_entry_attempt_min":  1,
+                                    "each_placebo_firing_min":  1,
+                                    "each_placebo_reports_affected_new_entry_attempts":  true,
+                                    "full_engine_rerun_required":  true,
+                                    "truncation_or_harness_or_hash_or_feed_mismatch_allowed":  false
+                                },
+    "blocked_entry_share":  {
+                                "definition":  "affected_new_entry_attempts / BASE_new_entry_attempts",
+                                "role":  "CONFOUND_DIAGNOSTIC_NOT_OPTIMIZATION_TARGET",
+                                "same_frozen_attempt_definition_across_arms":  true
+                            },
+    "decision_labels":  {
+                            "MECHANISM_UNTESTED":  "REAL_GUARD zero firing or zero affected new-entry attempts",
+                            "EXPOSURE_CONFOUND":  "REAL_GUARD blocked-entry share outside the five-placebo min-max envelope in either MAIN or BWD",
+                            "TIMING_VALUE_NOT_SEPARATED_FROM_PLACEBO":  "after mechanism and exposure gates, REAL_GUARD DD reduction is \u003c= best placebo in either MAIN or BWD",
+                            "TIMING_VALUE_NOT_FALSIFIED":  "mechanism and exposure gates pass and REAL_GUARD DD reduction is strictly greater than every frozen placebo in both MAIN and BWD"
+                        },
+    "execution_order":  [
+                            "WAIT_FOR_FB_G01_TESTER_OWNER_TO_RELEASE",
+                            "RESERVE_ONE_MODEL1_TESTER_LANE",
+                            "FRESH_COMPILE_CURRENT_CANONICAL_BOSS_15_ST03",
+                            "BIND_EX5_BUILD_RECEIPT_INSTALL_BUILD_ACCOUNT_LEVERAGE_DEPOSIT",
+                            "VERIFY_FULL_SURFACE_EFFECTIVE_SET",
+                            "FREEZE_EXECUTION_IDENTITY_CAN_EXECUTE_TRUE_BEFORE_ANY_TESTER_OUTCOME",
+                            "RUN_BASE_MAIN",
+                            "RUN_BASE_BWD",
+                            "IF_EITHER_BASE_FAIL_STOP_PARENT_NOT_POSITIVE_EXPECTANCY",
+                            "IF_BASE_BOTH_PASS_FREEZE_EXACT_ARM_MANIFEST",
+                            "RUN_REAL_GUARD_MAIN_BWD",
+                            "RUN_ALL_FIVE_PLACEBO_MAIN_BWD_SERIAL",
+                            "PACKAGE_RESULTS",
+                            "FREEZE_EXACT_RESULT_HEAD_EVIDENCE",
+                            "INDEPENDENT_EXACT_HEAD_GPT_SCRUTINY"
+                        ],
+    "mandatory_cell_fields":  [
+                                  "source_wrapper_sha256",
+                                  "ex5_sha256",
+                                  "build_receipt",
+                                  "effective_set_sha256",
+                                  "macrogate_feed_delta",
+                                  "symbol",
+                                  "timeframe",
+                                  "tester_install",
+                                  "tester_build",
+                                  "tester_account",
+                                  "leverage",
+                                  "deposit",
+                                  "model",
+                                  "window",
+                                  "clock_receipt",
+                                  "feed_schedule_sha256",
+                                  "placebo_seed_shift",
+                                  "report_sha256",
+                                  "native_receipt_sha256",
+                                  "full_window_truncation_status",
+                                  "net",
+                                  "pf_with_undefined_state",
+                                  "native_eqdd_amount_percent",
+                                  "trades",
+                                  "basket_episode_count",
+                                  "guard_firings",
+                                  "affected_new_entry_attempts",
+                                  "blocked_entry_share",
+                                  "contact_gated_time",
+                                  "time_in_market",
+                                  "max_positions_depth_lots_exposure",
+                                  "hard_kills",
+                                  "tail_loss",
+                                  "year_split",
+                                  "source_state_coverage",
+                                  "spread_commission_swap",
+                                  "slippage_assumption"
+                              ],
+    "probability":  null,
+    "selection_performed":  false,
+    "optimization":  "NONE",
+    "model4":  false,
+    "bwd_retuning":  false,
+    "forbidden_live_sensor":  {
+                                  "ea":  "Boss_12_Breakout",
+                                  "symbol":  "USDJPY",
+                                  "timeframe":  "H1",
+                                  "magic":  990120,
+                                  "role":  "LIVE_DEMO_PLUMBING_SENSOR_ONLY",
+                                  "mutation_allowed":  false,
+                                  "research_host_allowed":  false,
+                                  "historical_order211_reuse_allowed":  false
+                              },
+    "active_tester_blocker":  {
+                                  "lane":  "ct-fb-g01-opt01-r1-stage-a1-20260925",
+                                  "job":  "ct-fb-g01-opt01-r1-stage-a1-run-recovery2-20260925",
+                                  "state":  "RUNNING",
+                                  "runner_pid":  3872,
+                                  "child_pid":  12488
+                              },
+    "blocker":  "FB_G01_TESTER_OWNER_RUNNING__NO_MT5_OR_METAEDITOR_FOR_MACROGATE",
+    "preparation_only_actions_complete":  [
+                                              "REGISTRY_RECONCILED",
+                                              "EXECUTION_LANE_CLAIMED_NO_RUNTIME",
+                                              "B15_SOURCE_SET_HASHES_VERIFIED",
+                                              "ACCEPTED_PREREG_ANCESTRY_AND_BYTES_VERIFIED",
+                                              "REAL_GUARD_FEED_HASH_VERIFIED",
+                                              "ALL_21_PLACEBO_ARTIFACT_HASHES_VERIFIED"
+                                          ],
+    "mt5_runs":  0,
+    "compile_runs":  0,
+    "performance":  "NOT_RUN",
+    "holdout_used":  false
+}
