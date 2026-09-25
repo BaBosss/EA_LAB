@@ -1,0 +1,1038 @@
+{
+  "all_seeds_retained": true,
+  "can_execute": false,
+  "cells": [
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "MAIN_seed_2026092501_macrogate_native.csv",
+      "native_csv_sha256": "dc5b31de1e0d5809c52c388302533b7228a52a389eb37873be50609ba6d30198",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "MAIN_seed_2026092501_provenance.csv",
+      "provenance_csv_sha256": "a91a0e835eb02f07bd703525ffa483b8dc544d6ba0d0d3e7897d47723b103a1f",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092501,
+      "shift_weeks": 38,
+      "source_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-38": 119,
+            "119": 38
+          },
+          "row_count": 157,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 119,
+            "119": 38
+          },
+          "row_count": 157,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 119,
+            "119": 38
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 118,
+            "118": 38
+          },
+          "row_count": 156,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 118,
+            "118": 38
+          },
+          "row_count": 156,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 118,
+            "118": 38
+          },
+          "row_count": 156,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 119,
+            "119": 38
+          },
+          "row_count": 157,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 38
+        }
+      ],
+      "window": "MAIN",
+      "wrap_seam_target_count": 266
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "MAIN_seed_2026092502_macrogate_native.csv",
+      "native_csv_sha256": "f6ce2f5cf0be072e54641bad333871c70fd11ea7b8c4858dd7d600ea187e93a2",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "MAIN_seed_2026092502_provenance.csv",
+      "provenance_csv_sha256": "5e394e117d455036a83ddd560aab60be6f48e894a388f33d3665c63a5afeb726",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092502,
+      "shift_weeks": -23,
+      "source_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-134": 23,
+            "23": 134
+          },
+          "row_count": 157,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-134": 23,
+            "23": 134
+          },
+          "row_count": 157,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-134": 23,
+            "23": 134
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-133": 23,
+            "23": 133
+          },
+          "row_count": 156,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-133": 23,
+            "23": 133
+          },
+          "row_count": 156,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-133": 23,
+            "23": 133
+          },
+          "row_count": 156,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-134": 23,
+            "23": 134
+          },
+          "row_count": 157,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 23
+        }
+      ],
+      "window": "MAIN",
+      "wrap_seam_target_count": 161
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "MAIN_seed_2026092503_macrogate_native.csv",
+      "native_csv_sha256": "e437e631cd5c158c1b34a3158753bbab767db6de8964457cebff73bc76504344",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "MAIN_seed_2026092503_provenance.csv",
+      "provenance_csv_sha256": "07b3809fb129071b64d80e43e7eef5c8799ecd382d4c4192335eda98c5cd5b5f",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092503,
+      "shift_weeks": -8,
+      "source_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-149": 8,
+            "8": 149
+          },
+          "row_count": 157,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-149": 8,
+            "8": 149
+          },
+          "row_count": 157,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-149": 8,
+            "8": 149
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-148": 8,
+            "8": 148
+          },
+          "row_count": 156,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-148": 8,
+            "8": 148
+          },
+          "row_count": 156,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-148": 8,
+            "8": 148
+          },
+          "row_count": 156,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-149": 8,
+            "8": 149
+          },
+          "row_count": 157,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 8
+        }
+      ],
+      "window": "MAIN",
+      "wrap_seam_target_count": 56
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "MAIN_seed_2026092504_macrogate_native.csv",
+      "native_csv_sha256": "1eacab594ebd5a73b1291965d78231611d58912b385910e82a3beae07132ddfd",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "MAIN_seed_2026092504_provenance.csv",
+      "provenance_csv_sha256": "fdd27e9bab4cc2387996766605808367c69f359abc2400c3dbd00902d4d62203",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092504,
+      "shift_weeks": -32,
+      "source_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-125": 32,
+            "32": 125
+          },
+          "row_count": 157,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-125": 32,
+            "32": 125
+          },
+          "row_count": 157,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-125": 32,
+            "32": 125
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-124": 32,
+            "32": 124
+          },
+          "row_count": 156,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-124": 32,
+            "32": 124
+          },
+          "row_count": 156,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-124": 32,
+            "32": 124
+          },
+          "row_count": 156,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-125": 32,
+            "32": 125
+          },
+          "row_count": 157,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 32
+        }
+      ],
+      "window": "MAIN",
+      "wrap_seam_target_count": 224
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "MAIN_seed_2026092505_macrogate_native.csv",
+      "native_csv_sha256": "1ffcfa71ade5256671196fd7530ecacef60e1e227b7aa7d1e6566d5e35f06c5e",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "MAIN_seed_2026092505_provenance.csv",
+      "provenance_csv_sha256": "9167ecaab8b4b8d10a8613042f7460972ce6a0f00fe9ab9e63e3b3952ad9c552",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092505,
+      "shift_weeks": 36,
+      "source_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-36": 121,
+            "121": 36
+          },
+          "row_count": 157,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 121,
+            "121": 36
+          },
+          "row_count": 157,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 121,
+            "121": 36
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 120,
+            "120": 36
+          },
+          "row_count": 156,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 120,
+            "120": 36
+          },
+          "row_count": 156,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 120,
+            "120": 36
+          },
+          "row_count": 156,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 121,
+            "121": 36
+          },
+          "row_count": 157,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 36
+        }
+      ],
+      "window": "MAIN",
+      "wrap_seam_target_count": 252
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "BWD_seed_2026092501_macrogate_native.csv",
+      "native_csv_sha256": "951bff972d0bcc9ef6edb556782cc4e11eafac3194ce0259ee87d6b5364d5320",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "BWD_seed_2026092501_provenance.csv",
+      "provenance_csv_sha256": "35f3f70e81e1b61de777fd75158f8835062372740ae963cc9868513b13273331",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092501,
+      "shift_weeks": 38,
+      "source_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-38": 118,
+            "118": 38
+          },
+          "row_count": 156,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 118,
+            "118": 38
+          },
+          "row_count": 156,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 119,
+            "119": 38
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 119,
+            "119": 38
+          },
+          "row_count": 157,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 119,
+            "119": 38
+          },
+          "row_count": 157,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 119,
+            "119": 38
+          },
+          "row_count": 157,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 38
+        },
+        {
+          "displacement_weeks_counts": {
+            "-38": 118,
+            "118": 38
+          },
+          "row_count": 156,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 38
+        }
+      ],
+      "window": "BWD",
+      "wrap_seam_target_count": 266
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "BWD_seed_2026092502_macrogate_native.csv",
+      "native_csv_sha256": "fa9efdd623dfd2d35cd2bfdda457e505de4cebc1ef990f13c9fb582b9cd248b5",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "BWD_seed_2026092502_provenance.csv",
+      "provenance_csv_sha256": "40fbefe70a7da8e2c49f591ad6cb7f037036dc92e3f403b13cea3b8215272083",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092502,
+      "shift_weeks": -23,
+      "source_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-133": 23,
+            "23": 133
+          },
+          "row_count": 156,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-133": 23,
+            "23": 133
+          },
+          "row_count": 156,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-134": 23,
+            "23": 134
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-134": 23,
+            "23": 134
+          },
+          "row_count": 157,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-134": 23,
+            "23": 134
+          },
+          "row_count": 157,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-134": 23,
+            "23": 134
+          },
+          "row_count": 157,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 23
+        },
+        {
+          "displacement_weeks_counts": {
+            "-133": 23,
+            "23": 133
+          },
+          "row_count": 156,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 23
+        }
+      ],
+      "window": "BWD",
+      "wrap_seam_target_count": 161
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "BWD_seed_2026092503_macrogate_native.csv",
+      "native_csv_sha256": "7f8f2aad388b9dca7d8e2c53808233987724569db014852bbd7c62c074d3fe98",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "BWD_seed_2026092503_provenance.csv",
+      "provenance_csv_sha256": "e551ced836744fde842897745326405995011fdc2a0d8cbbf2788a0e820cf5f4",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092503,
+      "shift_weeks": -8,
+      "source_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-148": 8,
+            "8": 148
+          },
+          "row_count": 156,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-148": 8,
+            "8": 148
+          },
+          "row_count": 156,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-149": 8,
+            "8": 149
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-149": 8,
+            "8": 149
+          },
+          "row_count": 157,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-149": 8,
+            "8": 149
+          },
+          "row_count": 157,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-149": 8,
+            "8": 149
+          },
+          "row_count": 157,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 8
+        },
+        {
+          "displacement_weeks_counts": {
+            "-148": 8,
+            "8": 148
+          },
+          "row_count": 156,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 8
+        }
+      ],
+      "window": "BWD",
+      "wrap_seam_target_count": 56
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "BWD_seed_2026092504_macrogate_native.csv",
+      "native_csv_sha256": "8bbe8cf5632685c4b3e3c7a1fd659f35ea96d2297b1e74057609e8b435c5daa8",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "BWD_seed_2026092504_provenance.csv",
+      "provenance_csv_sha256": "cae1244ab6500f2e36c9b3898a32b6c786c5c4c8be86393d9f5110447f53d96f",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092504,
+      "shift_weeks": -32,
+      "source_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-124": 32,
+            "32": 124
+          },
+          "row_count": 156,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-124": 32,
+            "32": 124
+          },
+          "row_count": 156,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-125": 32,
+            "32": 125
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-125": 32,
+            "32": 125
+          },
+          "row_count": 157,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-125": 32,
+            "32": 125
+          },
+          "row_count": 157,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-125": 32,
+            "32": 125
+          },
+          "row_count": 157,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 32
+        },
+        {
+          "displacement_weeks_counts": {
+            "-124": 32,
+            "32": 124
+          },
+          "row_count": 156,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 32
+        }
+      ],
+      "window": "BWD",
+      "wrap_seam_target_count": 224
+    },
+    {
+      "cross_window_count": 0,
+      "donor_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "exact_run_length_preservation_at_seams_claimed": false,
+      "holdout_contact_count": 0,
+      "marginal_donor_state_counts_preserved": true,
+      "native_csv": "BWD_seed_2026092505_macrogate_native.csv",
+      "native_csv_sha256": "ab2f6c7818c41ef3502a6a67c2bfa1ae0a707259ad72b6bfb9fd463b7787b3c5",
+      "native_rows_strictly_ascending_unique": true,
+      "provenance_csv": "BWD_seed_2026092505_provenance.csv",
+      "provenance_csv_sha256": "8c77c6e797bdfb6feadfb57c5d1847a95ed65701d789f366d8d47c9f8c7de990",
+      "seam_disclosure": "Circular wrap is applied independently inside each UTC-weekday stratum; wrapped rows have a different whole-week displacement, so no uniform calendar shift or exact run-length preservation is claimed at synthetic seams.",
+      "seed": 2026092505,
+      "shift_weeks": 36,
+      "source_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "target_row_count": 1096,
+      "transition_quarantine_count": 6,
+      "uniform_calendar_shift_claimed": false,
+      "unique_donor_count": 1096,
+      "unique_target_count": 1096,
+      "weekday_mismatch_count": 0,
+      "weekday_strata": [
+        {
+          "displacement_weeks_counts": {
+            "-36": 120,
+            "120": 36
+          },
+          "row_count": 156,
+          "utc_weekday": 0,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 120,
+            "120": 36
+          },
+          "row_count": 156,
+          "utc_weekday": 1,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 121,
+            "121": 36
+          },
+          "row_count": 157,
+          "utc_weekday": 2,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 121,
+            "121": 36
+          },
+          "row_count": 157,
+          "utc_weekday": 3,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 121,
+            "121": 36
+          },
+          "row_count": 157,
+          "utc_weekday": 4,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 121,
+            "121": 36
+          },
+          "row_count": 157,
+          "utc_weekday": 5,
+          "wrap_seam_target_count": 36
+        },
+        {
+          "displacement_weeks_counts": {
+            "-36": 120,
+            "120": 36
+          },
+          "row_count": 156,
+          "utc_weekday": 6,
+          "wrap_seam_target_count": 36
+        }
+      ],
+      "window": "BWD",
+      "wrap_seam_target_count": 252
+    }
+  ],
+  "classification": "MACROGATE_AB_PREREGISTRATION_TOOLING_ONLY",
+  "frozen_contract_head": "d6547994b5277a3fa940856f9132604e9c7c9cd4",
+  "holdout_used": false,
+  "implementation": {
+    "expected_prereg_sha256": "57594c5c21b5f7330490740d0a746afd86a6c39a54c1f54477ce2fea020b1042",
+    "macro_placebo_path": "tools/news_macro_lab/macro_placebo.py",
+    "macro_placebo_sha256": "f045f59f2032d2e65a4b2d0e8d376ce5b73ef083bff44554af7d0053f6cfa5ca",
+    "native_exporter_path": "tools/news_macro_lab/macrogate_native.py",
+    "native_exporter_sha256": "ec22220fb7995518fd71c694dca43008638bd8692386cba54283002c9a9163d1",
+    "prereg_path": "tools/news_macro_lab/macrogate_ab_prereg_v1_20260925.json",
+    "prereg_sha256": "57594c5c21b5f7330490740d0a746afd86a6c39a54c1f54477ce2fea020b1042",
+    "tests_path": "tools/news_macro_lab/tests/test_macro_placebo.py",
+    "tests_sha256": "9d98894a2fcd5d56c5fe334da6cee86020159f4ae93aaa2e43c2801c5ed21ca1"
+  },
+  "native_exporter_sha256": "ec22220fb7995518fd71c694dca43008638bd8692386cba54283002c9a9163d1",
+  "performance": "NOT_RUN",
+  "prereg_sha256": "57594c5c21b5f7330490740d0a746afd86a6c39a54c1f54477ce2fea020b1042",
+  "probability": null,
+  "schema_version": "ea_lab_macrogate_weekday_placebo_package/1",
+  "seed_shift_weeks": {
+    "2026092501": 38,
+    "2026092502": -23,
+    "2026092503": -8,
+    "2026092504": -32,
+    "2026092505": 36
+  },
+  "selection_performed": false,
+  "source_manifest_sha256": "436baeeb45d1aba7d5176473dbc462963e43d1b31937e3fcbdf16ad76771d3e1",
+  "source_timeline_sha256": "44ed3c16451bf9d8e9066d1f552939c62d3c0bfcb1c9059613ad4150d963ed5f",
+  "windows": {
+    "BWD": {
+      "end_utc": "2023-01-01T00:00:00Z",
+      "source_row_count": 1096,
+      "source_state_counts": {
+        "NEUTRAL": 679,
+        "RISK_OFF": 228,
+        "STRESS": 189
+      },
+      "start_utc": "2020-01-01T00:00:00Z"
+    },
+    "MAIN": {
+      "end_utc": "2026-01-01T00:00:00Z",
+      "source_row_count": 1096,
+      "source_state_counts": {
+        "NEUTRAL": 769,
+        "RISK_OFF": 238,
+        "RISK_ON": 70,
+        "STRESS": 19
+      },
+      "start_utc": "2023-01-01T00:00:00Z"
+    }
+  }
+}

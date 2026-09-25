@@ -1,0 +1,304 @@
+{
+  "schema": "macrogate_ab_arm_manifest/1",
+  "frozen_utc": "2026-09-25T14:01:24.843734+00:00",
+  "status": "FROZEN_PRE_GUARDED_OUTCOME",
+  "frozen_at_head": "f06b6ddde9aacea2e5252d7bb6517362ec652643",
+  "canonical_origin_master": "ba9ca996e1f62a6ab6299610ee0c1caa33877ec2",
+  "accepted_prereg_head": "3d6941ab0f0edbacffbb60022cd84113d6a288b6",
+  "parent": {
+    "ea": "Boss_15_ST03",
+    "symbol": "GBPUSD",
+    "timeframe": "H4",
+    "source_sha256": "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+    "ex5_sha256": "35dab15a7b67873a8318697997f16b9ad4e06002a76053085d6fdf741b663b9e",
+    "build_receipt": "br-df0645c3b8814d99a8ccfa3e179d8acb",
+    "guard_set_sha256": "099f2039b430cc340d5c7eaae0c54567c155f78a05de33ec04639d18c5607cec",
+    "guard_effective_config_hash": "e95081ded3a8637ec6fd099a010d2b26dbe8da2125cf1f14ef28b9f6ecdfcf70"
+  },
+  "tester": {
+    "runtime_lane": "MT5-lane1",
+    "installation": "D:\\Meta 5",
+    "build": 6182,
+    "account": "146237",
+    "deposit": 10000,
+    "currency": "USD",
+    "leverage": "1:100",
+    "model": 1,
+    "model_name": "1 Minute OHLC",
+    "same_installation_for_all_cells": true
+  },
+  "base_qualification": {
+    "pair_result_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/BASE_PAIR_RESULT.json",
+    "pair_result_sha256": "0de4d50497cf58d3d859e5db8cd4d663af5787e977764906fd7affc33a2cf902",
+    "denominator_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/BASE_ATTEMPT_DENOMINATORS.json",
+    "denominator_sha256": "fb40d90d369d72828012bb2518afd108a1d85a8069c3e0cbe1d26a1b33ad61e0",
+    "MAIN": {
+      "pf": 1.1,
+      "net": 81.25,
+      "trades": 214,
+      "eqdd_pct": 0.97,
+      "full_window": true
+    },
+    "BWD": {
+      "pf": 1.07,
+      "net": 73.31,
+      "trades": 218,
+      "eqdd_pct": 1.83,
+      "full_window": true
+    }
+  },
+  "policy": {
+    "_MG_SelfGate": true,
+    "_MG_OffsetHours": 0,
+    "_MG_LotMult": 0.5,
+    "_MG_BlockNew": true,
+    "_MG_TriggerRiskOff": true,
+    "trigger_states": [
+      "RISK_OFF",
+      "STRESS"
+    ],
+    "_MG_InCommon": false,
+    "active_filename": "EA_LAB_MGAB_ACTIVE.csv"
+  },
+  "clock": {
+    "path": "docs/research/HISTORICAL_BROKER_CLOCK_CONTRACT_20260907.md",
+    "sha256": "ce472070a96b970ea280aa672988bc8c05207b9ded9234c86b08e49703737a37"
+  },
+  "real_feed": {
+    "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/real/REAL_FULL_2020_2025_macrogate_native.csv",
+    "sha256": "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+    "classification": "ACCEPTED_CAUSAL_NATIVE"
+  },
+  "placebo": {
+    "accepted_manifest_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/macrogate_ab_placebo_manifest.json",
+    "accepted_manifest_sha256": "95caa20a890e2ad0561a5ccf41b0ac83bce7795f9cf22c3577e3e547197e4dea",
+    "all_seeds_retained": true,
+    "regeneration_after_outcome_forbidden": true,
+    "seed_shift_mapping": [
+      {
+        "seed": 2026092501,
+        "shift_weeks": 38
+      },
+      {
+        "seed": 2026092502,
+        "shift_weeks": -23
+      },
+      {
+        "seed": 2026092503,
+        "shift_weeks": -8
+      },
+      {
+        "seed": 2026092504,
+        "shift_weeks": -32
+      },
+      {
+        "seed": 2026092505,
+        "shift_weeks": 36
+      }
+    ]
+  },
+  "cells": [
+    {
+      "seq": 1,
+      "cell": "REAL_GUARD_MAIN",
+      "arm": "REAL_GUARD",
+      "window": "MAIN",
+      "from": "2023.01.01",
+      "to": "2025.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/real/REAL_FULL_2020_2025_macrogate_native.csv",
+      "feed_sha256": "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+      "provenance_path": null,
+      "provenance_sha256": null,
+      "seed": null,
+      "shift_weeks": null,
+      "base_denominator": 214
+    },
+    {
+      "seq": 2,
+      "cell": "REAL_GUARD_BWD",
+      "arm": "REAL_GUARD",
+      "window": "BWD",
+      "from": "2020.01.01",
+      "to": "2022.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/real/REAL_FULL_2020_2025_macrogate_native.csv",
+      "feed_sha256": "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+      "provenance_path": null,
+      "provenance_sha256": null,
+      "seed": null,
+      "shift_weeks": null,
+      "base_denominator": 218
+    },
+    {
+      "seq": 3,
+      "cell": "PLACEBO_2026092501_MAIN",
+      "arm": "PLACEBO",
+      "window": "MAIN",
+      "from": "2023.01.01",
+      "to": "2025.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092501_macrogate_native.csv",
+      "feed_sha256": "dc5b31de1e0d5809c52c388302533b7228a52a389eb37873be50609ba6d30198",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092501_provenance.csv",
+      "provenance_sha256": "a91a0e835eb02f07bd703525ffa483b8dc544d6ba0d0d3e7897d47723b103a1f",
+      "seed": 2026092501,
+      "shift_weeks": 38,
+      "base_denominator": 214
+    },
+    {
+      "seq": 4,
+      "cell": "PLACEBO_2026092501_BWD",
+      "arm": "PLACEBO",
+      "window": "BWD",
+      "from": "2020.01.01",
+      "to": "2022.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092501_macrogate_native.csv",
+      "feed_sha256": "951bff972d0bcc9ef6edb556782cc4e11eafac3194ce0259ee87d6b5364d5320",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092501_provenance.csv",
+      "provenance_sha256": "35f3f70e81e1b61de777fd75158f8835062372740ae963cc9868513b13273331",
+      "seed": 2026092501,
+      "shift_weeks": 38,
+      "base_denominator": 218
+    },
+    {
+      "seq": 5,
+      "cell": "PLACEBO_2026092502_MAIN",
+      "arm": "PLACEBO",
+      "window": "MAIN",
+      "from": "2023.01.01",
+      "to": "2025.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092502_macrogate_native.csv",
+      "feed_sha256": "f6ce2f5cf0be072e54641bad333871c70fd11ea7b8c4858dd7d600ea187e93a2",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092502_provenance.csv",
+      "provenance_sha256": "5e394e117d455036a83ddd560aab60be6f48e894a388f33d3665c63a5afeb726",
+      "seed": 2026092502,
+      "shift_weeks": -23,
+      "base_denominator": 214
+    },
+    {
+      "seq": 6,
+      "cell": "PLACEBO_2026092502_BWD",
+      "arm": "PLACEBO",
+      "window": "BWD",
+      "from": "2020.01.01",
+      "to": "2022.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092502_macrogate_native.csv",
+      "feed_sha256": "fa9efdd623dfd2d35cd2bfdda457e505de4cebc1ef990f13c9fb582b9cd248b5",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092502_provenance.csv",
+      "provenance_sha256": "40fbefe70a7da8e2c49f591ad6cb7f037036dc92e3f403b13cea3b8215272083",
+      "seed": 2026092502,
+      "shift_weeks": -23,
+      "base_denominator": 218
+    },
+    {
+      "seq": 7,
+      "cell": "PLACEBO_2026092503_MAIN",
+      "arm": "PLACEBO",
+      "window": "MAIN",
+      "from": "2023.01.01",
+      "to": "2025.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092503_macrogate_native.csv",
+      "feed_sha256": "e437e631cd5c158c1b34a3158753bbab767db6de8964457cebff73bc76504344",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092503_provenance.csv",
+      "provenance_sha256": "07b3809fb129071b64d80e43e7eef5c8799ecd382d4c4192335eda98c5cd5b5f",
+      "seed": 2026092503,
+      "shift_weeks": -8,
+      "base_denominator": 214
+    },
+    {
+      "seq": 8,
+      "cell": "PLACEBO_2026092503_BWD",
+      "arm": "PLACEBO",
+      "window": "BWD",
+      "from": "2020.01.01",
+      "to": "2022.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092503_macrogate_native.csv",
+      "feed_sha256": "7f8f2aad388b9dca7d8e2c53808233987724569db014852bbd7c62c074d3fe98",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092503_provenance.csv",
+      "provenance_sha256": "e551ced836744fde842897745326405995011fdc2a0d8cbbf2788a0e820cf5f4",
+      "seed": 2026092503,
+      "shift_weeks": -8,
+      "base_denominator": 218
+    },
+    {
+      "seq": 9,
+      "cell": "PLACEBO_2026092504_MAIN",
+      "arm": "PLACEBO",
+      "window": "MAIN",
+      "from": "2023.01.01",
+      "to": "2025.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092504_macrogate_native.csv",
+      "feed_sha256": "1eacab594ebd5a73b1291965d78231611d58912b385910e82a3beae07132ddfd",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092504_provenance.csv",
+      "provenance_sha256": "fdd27e9bab4cc2387996766605808367c69f359abc2400c3dbd00902d4d62203",
+      "seed": 2026092504,
+      "shift_weeks": -32,
+      "base_denominator": 214
+    },
+    {
+      "seq": 10,
+      "cell": "PLACEBO_2026092504_BWD",
+      "arm": "PLACEBO",
+      "window": "BWD",
+      "from": "2020.01.01",
+      "to": "2022.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092504_macrogate_native.csv",
+      "feed_sha256": "8bbe8cf5632685c4b3e3c7a1fd659f35ea96d2297b1e74057609e8b435c5daa8",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092504_provenance.csv",
+      "provenance_sha256": "cae1244ab6500f2e36c9b3898a32b6c786c5c4c8be86393d9f5110447f53d96f",
+      "seed": 2026092504,
+      "shift_weeks": -32,
+      "base_denominator": 218
+    },
+    {
+      "seq": 11,
+      "cell": "PLACEBO_2026092505_MAIN",
+      "arm": "PLACEBO",
+      "window": "MAIN",
+      "from": "2023.01.01",
+      "to": "2025.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092505_macrogate_native.csv",
+      "feed_sha256": "1ffcfa71ade5256671196fd7530ecacef60e1e227b7aa7d1e6566d5e35f06c5e",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092505_provenance.csv",
+      "provenance_sha256": "9167ecaab8b4b8d10a8613042f7460972ce6a0f00fe9ab9e63e3b3952ad9c552",
+      "seed": 2026092505,
+      "shift_weeks": 36,
+      "base_denominator": 214
+    },
+    {
+      "seq": 12,
+      "cell": "PLACEBO_2026092505_BWD",
+      "arm": "PLACEBO",
+      "window": "BWD",
+      "from": "2020.01.01",
+      "to": "2022.12.31",
+      "feed_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092505_macrogate_native.csv",
+      "feed_sha256": "ab2f6c7818c41ef3502a6a67c2bfa1ae0a707259ad72b6bfb9fd463b7787b3c5",
+      "provenance_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092505_provenance.csv",
+      "provenance_sha256": "8c77c6e797bdfb6feadfb57c5d1847a95ed65701d789f366d8d47c9f8c7de990",
+      "seed": 2026092505,
+      "shift_weeks": 36,
+      "base_denominator": 218
+    }
+  ],
+  "execution_rule": "Execute cells in seq order, serially, same installation, no retuning. Preserve every attempt/failure. Verify source feed hash and staged active-feed hash before each launch.",
+  "measurement_rule": {
+    "guard_firings": "count [MACROGATE] gate ON",
+    "affected_new_entry_attempts": "count [EXEC] MACROGATE block active (...) - new order skipped",
+    "blocked_entry_share": "affected_new_entry_attempts / matching-window frozen BASE denominator",
+    "MAIN_base_denominator": 214,
+    "BWD_base_denominator": 218
+  },
+  "classification_labels": [
+    "MECHANISM_UNTESTED",
+    "EXPOSURE_CONFOUND",
+    "TIMING_VALUE_NOT_SEPARATED_FROM_PLACEBO",
+    "TIMING_VALUE_NOT_FALSIFIED"
+  ],
+  "real_guard_authorized": true,
+  "placebo_authorized": true,
+  "holdout": "LOCKED_UNSPENT",
+  "optimization": "NONE",
+  "model4": false,
+  "bwd_retuning": false,
+  "parent_switching": false,
+  "probability": null
+}
