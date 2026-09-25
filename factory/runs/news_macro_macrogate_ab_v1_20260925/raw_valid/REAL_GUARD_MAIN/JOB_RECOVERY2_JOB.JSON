@@ -1,0 +1,15 @@
+{
+    "job_id":  "ct-news-macro-mg-ab-guarded-batch-recovery2-20260925",
+    "file_path":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "arg_count":  11,
+    "arg_hash":  "PC4UBr4UPriUNxL7ZwEyfiQUXLJ1g04GlKWQZESkN4M=",
+    "timeout_sec":  7200,
+    "heartbeat_sec":  5,
+    "worktree":  "D:\\EA_LAB_CONTROL\\w\\news-macro-mg-ab-exec-v1-0925",
+    "base_sha":  "79821dfd8e2d1252370f012adf7ec7a10fb7d5a4",
+    "stage":  "MACROGATE_AB_GUARDED_BATCH_RECOVERY2_PATH_ONLY",
+    "postcondition_file_path":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "postcondition_arg_count":  5,
+    "postcondition_arg_hash":  "CpAPDItzj0onzn8F43WEtVQTBY2cd1wflCQRXK2voSc=",
+    "created_utc":  "2026-09-25T14:20:59.5366329Z"
+}

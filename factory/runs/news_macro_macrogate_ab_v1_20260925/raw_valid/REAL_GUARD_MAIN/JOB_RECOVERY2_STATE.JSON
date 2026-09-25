@@ -1,0 +1,14 @@
+{
+    "job_id":  "ct-news-macro-mg-ab-guarded-batch-recovery2-20260925",
+    "state":  "FAILED",
+    "runner_pid":  29684,
+    "runner_start_utc":  "2026-09-25T14:20:59.5658920Z",
+    "child_pid":  6132,
+    "started_utc":  "2026-09-25T14:20:59.9261310Z",
+    "timeout_sec":  7200,
+    "heartbeat_sec":  5,
+    "file_path":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "child_start_utc":  "2026-09-25T14:20:59.9924625Z",
+    "ended_utc":  "2026-09-25T14:21:24.0978318Z",
+    "exit_code":  1
+}

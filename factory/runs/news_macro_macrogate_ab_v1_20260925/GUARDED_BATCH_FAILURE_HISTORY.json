@@ -20,6 +20,21 @@
                          "mt5_result_interpretable":  false,
                          "failed_raw_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/raw/REAL_GUARD_MAIN",
                          "macro_fail_markers_sha256":  "30f9b18a15e1bca065194908269ee3da21d6260a60360393b6d28f9a5840f5bd"
+                     },
+                     {
+                         "job":  "ct-news-macro-mg-ab-guarded-batch-recovery2-20260925",
+                         "state":  "FAILED",
+                         "exit_code":  1,
+                         "classification":  "HARNESS_FEED_AGENT_SANDBOX_CLEANUP_PERSISTS_AFTER_DUAL_STAGE",
+                         "exact_failure":  "MACRO_FEED_RUNTIME_FAILURE REAL_GUARD_MAIN",
+                         "mt5_execution_completed":  true,
+                         "mt5_result_interpretable":  false,
+                         "raw_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/raw_valid/REAL_GUARD_MAIN",
+                         "macro_fail_markers_sha256":  "a8345a13c7568bc992ac8efe18b38cefac4a449aaca3d13dbf00526891d63e36",
+                         "terminal_feed_present_after_run":  true,
+                         "terminal_feed_sha256":  "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+                         "tester_agent_feed_present_after_run":  false,
+                         "recovery2_consumed":  true
                      }
                  ],
     "root_cause":  "Helper staged EA_LAB_MGAB_ACTIVE.csv under terminal data MQL5/Files while Strategy Tester non-common FileOpen reads the local agent sandbox MQL5/Files.",
@@ -31,5 +46,8 @@
     "feeds_changed":  false,
     "semantics_changed":  false,
     "recovery2_authority":  "ONE_BOUNDED_HARNESS_PATH_REPAIR",
-    "holdout":  "LOCKED_UNSPENT"
+    "holdout":  "LOCKED_UNSPENT",
+    "recovery2_consumed":  true,
+    "recovery3_authorized":  false,
+    "current_blocker":  "TESTER_NONCOMMON_INPUT_FILE_NOT_MATERIALIZED_TO_AGENT_SANDBOX__SOURCE_OR_CONFIG_CHANGE_REQUIRED"
 }
