@@ -17,12 +17,15 @@ from unittest.mock import patch
 from . import BuildRequest, build_observations
 from .__main__ import main
 from .coverage import deployment_coverage, guard_observations, read_control
-from .readers import DEAL_FIELDS, SNAP_FIELDS, Metadata, read_ledgers, read_snapshots
+from .builder import PARSER_CONTRACTS
+from .readers import (DEAL_FIELDS, MT4_ORDER_FIELDS, SNAP_FIELDS, Metadata,
+                      read_ledgers, read_mt4_orders, read_snapshots)
 from .safe import Limits, Refused, Sources, checked_path, decimal, digest, opaque, utc_time
 
 REPO = Path(__file__).resolve().parents[3]
 RUN = REPO / "build/ea_observation_adapters_v1/continuation-20260924"
 BASE = "1df924b1ac7e112148dd8a70773c8c63b0b9a893"
+START_BASE = "3d6941ab0f0edbacffbb60022cd84113d6a288b6"
 LOGIN = "731245689"
 TICKET = "918273645"
 NOW = "2026-09-24T06:30:00Z"
@@ -40,6 +43,14 @@ def csv_bytes(fields, rows):
 def deal(**changes):
     value = dict(ticket=TICKET, time="2026.09.20 09:00:00", symbol="EURUSD", magic="41", type="0", entry="1",
                  volume="0.10", price="1.12000", profit="0.10", swap="-0.01", commission="-0.02", comment="private fixture")
+    return value | changes
+
+
+def mt4_order(**changes):
+    value = dict(ticket=TICKET, open_time="2026.09.20 08:00:00", close_time="2026.09.20 09:00:00",
+                 symbol="EURUSD", magic="0", type="0", lots="0.10", open_price="1.12000",
+                 close_price="1.12100", profit="10.00", swap="-0.01", commission="-0.02",
+                 comment="private fixture")
     return value | changes
 
 
@@ -88,6 +99,14 @@ class Fixture(unittest.TestCase):
 
     def snapshots(self):
         return read_snapshots(self.sources, self.root, self.meta)["accounts"][0]
+
+    def mt4_file(self, rows, date="20260920", fields=None, login=LOGIN):
+        path = self.root / f"EA_LAB_mt4_orders_{login}_{date}.csv"
+        path.write_bytes(csv_bytes(fields or MT4_ORDER_FIELDS, rows))
+        return path
+
+    def mt4_orders(self):
+        return read_mt4_orders(self.sources, self.root, self.meta)
 
     def control(self, **changes):
         data = {"entity": "ControlRoomSnapshotV5", "meta": {"schema": "ControlRoomSnapshot", "version": 5,
@@ -217,6 +236,228 @@ class LedgerTests(Fixture):
         self.ledger([deal(ticket="1", profit="99999999999999999999.1234567890", swap="0", commission="0"),
                      deal(ticket="2", profit="0.0000000001", swap="0", commission="0")])
         self.assertEqual(self.ledgers()["components"][0]["reported_components_subtotal"], "99999999999999999999.1234567891")
+
+
+class MT4OrderTests(Fixture):
+    def setUp(self):
+        super().setUp()
+        self.meta.accounts[LOGIN][0]["platform"] = "MT4"
+
+    def test_exact_producer_hash_pin_and_valid_closed_order(self):
+        path = "tools/DealsExporter/OrdersExporterMT4.mq4"
+        raw, _ = Sources().git_blob(REPO, START_BASE, path)
+        self.assertEqual(PARSER_CONTRACTS[path], "4caee0ebe8440cb13c28c79354904d1cd992163f2864936b22ae68ca1e678593")
+        self.assertEqual(digest(raw), PARSER_CONTRACTS[path])
+        self.mt4_file([mt4_order()])
+        result = self.mt4_orders()
+        account = result["accounts"][0]
+        self.assertEqual(account["closed_trade_orders"], 1)
+        self.assertEqual(account["excluded_non_market_orders"], 0)
+        self.assertEqual(account["clock_basis"], "BROKER_TIME_UNQUALIFIED")
+        self.assertEqual(result["unit"], "MT4_CLOSED_ORDER_RECORDS_NOT_MT5_DEALS")
+        self.assertIsNone(result["account_totals_across_currencies"])
+
+    def test_non_market_excluded_and_identical_daily_history_deduped(self):
+        self.mt4_file([mt4_order(), mt4_order(ticket="2", type="6", symbol=""),
+                       mt4_order(ticket="3", type="-1", symbol="", magic="-7")])
+        self.mt4_file([mt4_order(profit="010.000"), mt4_order(ticket="2", type="6", symbol=""),
+                       mt4_order(ticket="3", type="-1", symbol="", magic="-7")], "20260921")
+        account = self.mt4_orders()["accounts"][0]
+        self.assertEqual(account["closed_trade_orders"], 1)
+        self.assertEqual(account["excluded_non_market_orders"], 2)
+        self.assertEqual(account["file_count"], 2)
+        self.assertEqual(account["quarantined_count"], 0)
+
+    def test_conflicting_repeated_ticket_is_quarantined(self):
+        self.mt4_file([mt4_order()])
+        self.mt4_file([mt4_order(close_price="9.99999")], "20260921")
+        account = self.mt4_orders()["accounts"][0]
+        self.assertEqual(account["closed_trade_orders"], 0)
+        self.assertEqual(account["quarantined_count"], 1)
+        self.assertEqual(account["quarantined"][0]["reasons"], ["SHARED_FIELD_CONFLICT"])
+        self.assertNotIn(TICKET, json.dumps(account))
+
+    def test_market_order_lots_must_be_positive(self):
+        cases = (("0", "0"), ("1", "-0.10"))
+        for order_type, lots in cases:
+            with self.subTest(order_type=order_type, lots=lots):
+                self.mt4_file([mt4_order(type=order_type, lots=lots)])
+                self.sources = Sources()
+                account = self.mt4_orders()["accounts"][0]
+                self.assertEqual(account["closed_trade_orders"], 0)
+                self.assertEqual(account["quarantined"][0]["reasons"],
+                                 ["MT4_MARKET_LOTS_NOT_POSITIVE"])
+
+    def test_market_order_open_price_must_be_positive(self):
+        cases = (("0", "0"), ("1", "-1.12000"))
+        for order_type, open_price in cases:
+            with self.subTest(order_type=order_type, open_price=open_price):
+                self.mt4_file([mt4_order(type=order_type, open_price=open_price)])
+                self.sources = Sources()
+                account = self.mt4_orders()["accounts"][0]
+                self.assertEqual(account["closed_trade_orders"], 0)
+                self.assertEqual(account["quarantined"][0]["reasons"],
+                                 ["MT4_MARKET_OPEN_PRICE_NOT_POSITIVE"])
+
+    def test_market_order_close_price_must_be_positive(self):
+        cases = (("0", "0"), ("1", "-1.12100"))
+        for order_type, close_price in cases:
+            with self.subTest(order_type=order_type, close_price=close_price):
+                self.mt4_file([mt4_order(type=order_type, close_price=close_price)])
+                self.sources = Sources()
+                account = self.mt4_orders()["accounts"][0]
+                self.assertEqual(account["closed_trade_orders"], 0)
+                self.assertEqual(account["quarantined"][0]["reasons"],
+                                 ["MT4_MARKET_CLOSE_PRICE_NOT_POSITIVE"])
+
+    def test_market_order_open_time_cannot_follow_close_time(self):
+        self.mt4_file([mt4_order(open_time="2026.09.20 09:00:01")])
+        account = self.mt4_orders()["accounts"][0]
+        self.assertEqual(account["closed_trade_orders"], 0)
+        self.assertEqual(account["quarantined"][0]["reasons"],
+                         ["MT4_MARKET_TIME_ORDER_INVALID"])
+
+    def test_market_order_equal_open_and_close_time_is_accepted(self):
+        self.mt4_file([mt4_order(open_time="2026.09.20 09:00:00")])
+        account = self.mt4_orders()["accounts"][0]
+        self.assertEqual(account["closed_trade_orders"], 1)
+        self.assertEqual(account["quarantined"], [])
+
+    def test_impossible_duplicate_poison_is_order_independent(self):
+        orders = (
+            (mt4_order(), mt4_order(lots="0")),
+            (mt4_order(lots="0"), mt4_order()),
+        )
+        for first, second in orders:
+            with self.subTest(first_lots=first["lots"]):
+                first_path = self.mt4_file([first])
+                second_path = self.mt4_file([second], "20260921")
+                self.sources = Sources()
+                account = self.mt4_orders()["accounts"][0]
+                self.assertEqual(account["closed_trade_orders"], 0)
+                self.assertEqual(account["quarantined"][0]["reasons"],
+                                 ["MT4_MARKET_LOTS_NOT_POSITIVE"])
+                first_path.unlink()
+                second_path.unlink()
+
+    def test_non_market_domain_impossibilities_remain_excluded(self):
+        self.mt4_file([mt4_order(type="6", lots="0", open_price="-1.12000",
+                                 close_price="0", open_time="2026.09.20 10:00:00")])
+        account = self.mt4_orders()["accounts"][0]
+        self.assertEqual(account["closed_trade_orders"], 0)
+        self.assertEqual(account["excluded_non_market_orders"], 1)
+        self.assertEqual(account["quarantined"], [])
+
+    def test_valid_header_only_observes_zero_not_lifetime_proof(self):
+        self.mt4_file([])
+        account = self.mt4_orders()["accounts"][0]
+        self.assertEqual(account["availability"], "PARTIAL")
+        self.assertEqual(account["closed_trade_orders"], 0)
+        self.assertEqual(account["excluded_non_market_orders"], 0)
+        self.assertEqual(account["history_completeness"], "EXPORT_WINDOW_NOT_LIFETIME_PROOF")
+        self.assertIsNone(account["window_first_close"])
+
+    def test_malformed_filename_or_date_withholds_current_account(self):
+        for suffix in ("20260931", "bad-date", "2026093", "00000000"):
+            with self.subTest(suffix=suffix):
+                path = self.root / f"EA_LAB_mt4_orders_{LOGIN}_{suffix}.csv"
+                path.write_bytes(csv_bytes(MT4_ORDER_FIELDS, [mt4_order()]))
+                self.sources = Sources()
+                account = self.mt4_orders()["accounts"][0]
+                self.assertEqual(account["availability"], "UNAVAILABLE")
+                self.assertIsNone(account["closed_trade_orders"])
+                self.assertIn("SOURCE_FILENAME_INVALID", {e["code"] for e in self.sources.errors})
+                path.unlink()
+
+    def test_metadata_missing_ambiguous_and_non_mt4_fail_closed(self):
+        self.mt4_file([mt4_order()])
+        cases = (
+            Metadata([], [], [], []),
+            Metadata([dict(account=LOGIN, platform="MT4"), dict(account=LOGIN, platform="MT4")], [], [], []),
+            Metadata([dict(account=LOGIN, platform="MT5")], [], [], []),
+        )
+        expected = ("ACCOUNT_METADATA_MISSING_OR_AMBIGUOUS", "ACCOUNT_METADATA_MISSING_OR_AMBIGUOUS",
+                    "ACCOUNT_PLATFORM_NOT_MT4")
+        for meta, code in zip(cases, expected):
+            with self.subTest(code=code):
+                sources = Sources()
+                result = read_mt4_orders(sources, self.root, meta)
+                self.assertEqual(result["accounts"], [])
+                self.assertIn(code, {e["code"] for e in sources.errors})
+
+    def test_unknown_missing_and_duplicate_columns_withhold(self):
+        cases = (
+            csv_bytes(MT4_ORDER_FIELDS | {"fee"}, [mt4_order(fee="1")]),
+            csv_bytes(MT4_ORDER_FIELDS - {"comment"}, [{k: v for k, v in mt4_order().items() if k != "comment"}]),
+            b"ticket,ticket\n1,1\n",
+        )
+        for raw in cases:
+            with self.subTest(size=len(raw)):
+                self.mt4_file([]).write_bytes(raw)
+                self.sources = Sources()
+                account = self.mt4_orders()["accounts"][0]
+                self.assertEqual(account["availability"], "UNAVAILABLE")
+                self.assertIsNone(account["closed_trade_orders"])
+                self.assertIn("CSV_SCHEMA_INVALID", {e["code"] for e in self.sources.errors})
+
+    def test_malformed_row_fields_are_quarantined_or_withhold_when_unkeyed(self):
+        cases = (
+            ("ticket", "0", True), ("magic", "1.0", False), ("type", "1.0", False),
+            ("open_time", "2026-09-20T08:00:00", False), ("close_time", "", False),
+            ("lots", "NaN", False), ("open_price", "Infinity", False),
+            ("close_price", "1e2", False), ("profit", "", False),
+            ("swap", "--1", False), ("commission", "1,000", False),
+            ("symbol", "../EURUSD", False),
+        )
+        for field, value, unkeyed in cases:
+            with self.subTest(field=field):
+                self.mt4_file([mt4_order(**{field: value})])
+                self.sources = Sources()
+                account = self.mt4_orders()["accounts"][0]
+                if unkeyed:
+                    self.assertEqual(account["availability"], "UNAVAILABLE")
+                    self.assertIsNone(account["closed_trade_orders"])
+                else:
+                    self.assertEqual(account["availability"], "PARTIAL")
+                    self.assertEqual(account["closed_trade_orders"], 0)
+                    self.assertEqual(account["quarantined_count"], 1)
+
+    def test_newer_malformed_file_withholds_instead_of_falling_back(self):
+        self.mt4_file([mt4_order()])
+        fields = MT4_ORDER_FIELDS - {"close_time"}
+        row = {k: v for k, v in mt4_order(ticket="2").items() if k in fields}
+        self.mt4_file([row], "20260921", fields)
+        account = self.mt4_orders()["accounts"][0]
+        self.assertEqual(account["availability"], "UNAVAILABLE")
+        self.assertIsNone(account["closed_trade_orders"])
+        self.assertEqual(account["file_count"], 2)
+
+    def test_output_has_no_money_aggregates_or_private_source_values(self):
+        self.mt4_file([mt4_order(comment="private C:\\secret")])
+        result = self.mt4_orders()
+        payload = json.dumps(result)
+        for secret in (LOGIN, TICKET, "private C:\\secret", str(self.root)):
+            self.assertNotIn(secret, payload)
+        def keys(value):
+            if isinstance(value, dict):
+                return set(value) | set().union(*(keys(v) for v in value.values()))
+            if isinstance(value, list):
+                return set().union(*(keys(v) for v in value)) if value else set()
+            return set()
+        self.assertTrue({"profit", "swap", "commission", "lots", "portfolio_money"}.isdisjoint(keys(result)))
+
+    def test_builder_exposes_separate_partial_section_with_fixed_reasons(self):
+        self.mt4_file([mt4_order()])
+        with patch("tools.mobile_report_hub.source_adapters.builder.Metadata", return_value=self.meta):
+            result = build_observations(BuildRequest(REPO, START_BASE, self.root, self.root, self.root, NOW)).to_dict()
+        section = result["sections"]["mt4_orders"]
+        self.assertEqual(section["availability"], "PARTIAL")
+        self.assertEqual(section["data"]["accounts"][0]["closed_trade_orders"], 1)
+        self.assertEqual(set(section["reasons"]), {
+            "BROKER_TIME_UNQUALIFIED", "EXPORT_WINDOW_NOT_LIFETIME_PROOF",
+            "MT4_CLOSED_ORDER_HISTORY_DISTINCT_FROM_MT5_DEALS"})
+        self.assertFalse(result["integration"]["real_data_qualified"])
+        self.assertIn("ledger", result["sections"])
 
 
 class SnapshotTests(Fixture):

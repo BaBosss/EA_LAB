@@ -6,11 +6,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 from .safe import Limits, Sources, Refused, utc_time, digest
-from .readers import Metadata, read_ledgers, read_snapshots
+from .readers import Metadata, read_ledgers, read_mt4_orders, read_snapshots
 from .coverage import read_control, deployment_coverage, guard_observations, access_provenance
 
 PARSER_CONTRACTS = {
     "tools/DealsExporter/DealsExporter.mq5": "ccfed20042561f72c87e6b1a43c3ddca21aece18cd9d7dc22699c0cd5d992306",
+    "tools/DealsExporter/OrdersExporterMT4.mq4": "4caee0ebe8440cb13c28c79354904d1cd992163f2864936b22ae68ca1e678593",
     "tools/AccountSnapshot/AccountSnapshot_Core.mqh": "0152171de43a71773c9dfa98e3cc3426f53030c39a1822237fabf1e215ed3a8b",
     "tools/AccountSnapshot/AccountSnapshotExporter.mq4": "6b1ed64e7e727c326be6fb3957d7e94af1020210f3394641ce30dc4abce4529e",
     "_triage/factory_os/runtime_identity.py": "aa88dad3fc2b52ff072bc123794ede7f0ed19da2208af8eef55a818b58627756",
@@ -97,6 +98,9 @@ def build_observations(request: BuildRequest) -> Observations:
             ["BROKER_SERVER_NOT_EXPORTED", "BROKER_TIME_UNQUALIFIED", "NO_INTERPOLATION"])
     section("ledger", lambda: read_ledgers(sources, request.ledgers, meta),
             ["FEE_CYCLE_IDS_NOT_EXPORTED", "BROKER_TIME_UNQUALIFIED", "DECLARATIVE_ATTRIBUTION_ONLY"])
+    section("mt4_orders", lambda: read_mt4_orders(sources, request.ledgers, meta),
+            ["BROKER_TIME_UNQUALIFIED", "EXPORT_WINDOW_NOT_LIFETIME_PROOF",
+             "MT4_CLOSED_ORDER_HISTORY_DISTINCT_FROM_MT5_DEALS"])
     try:
         control = read_control(sources, request.runtime, request.ref, as_of)
     except Refused as exc:
