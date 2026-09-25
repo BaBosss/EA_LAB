@@ -1,0 +1,8 @@
+﻿{
+    "schema_version":  2,
+    "report_name":  "FB_G01_OPT01_R1_A1_GP050_ATR125_MAIN",
+    "check_status":  "TRUNCATED",
+    "checker_exit_code":  2,
+    "truncated":  true,
+    "detail":  "last deal 2025.03.31 06:06:40 | window ends 2025.12.31 | idle tail 274.7 days (25.1% of window) | entry deals 96 | \r\neqDD 25%\r\n[SUSPECT] stopped trading well before the window ended, AND the drawdown reached kill territory. Re-run with \r\n-TesterLog to confirm whether the cage killed it; do not use these metrics until you know."
+}

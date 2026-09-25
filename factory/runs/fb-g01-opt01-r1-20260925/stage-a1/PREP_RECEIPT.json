@@ -1,0 +1,11 @@
+﻿{
+    "schema":  "fb_g01_opt01_r1_a1_prepare/1",
+    "head":  "f043a8a430d17288be80be5ff084730b89432f83",
+    "accepted_source":  "8da04fc789ca55e6c673d41899e9136cfa72a75e",
+    "source_drift":  false,
+    "build_receipt":  "br-5427f03ea8684ea7a842c0efa6a5ca95",
+    "ex5_sha256":  "80f0356b13c522730e746ac97693aea491df55acaee42b61d681943a3cdd2b8a",
+    "base_set_sha256":  "a9d434bf37ddc3a4ed8a906a6b1e640ef71e7abde286fcd9f9b194eb95bc5a57",
+    "cells":  9,
+    "surface_keys":  160
+}

@@ -1,0 +1,29 @@
+﻿{
+    "cell":  "GP010_ATR025",
+    "grid_pct":  0.1,
+    "grid_atr_mult":  0.25,
+    "set_sha256":  "1aec21d6f195023b1f88ce8b780d6bfe7af8f175260a545e67dd8d316f5b8204",
+    "rc":  0,
+    "started_utc":  "2026-09-25T02:41:34.9811912Z",
+    "ended_utc":  "2026-09-25T02:49:03.8064917Z",
+    "profit_factor":  0.57,
+    "net_profit":  -1653.66,
+    "trades":  41,
+    "eqdd_pct":  22.09,
+    "history_quality":  "98%",
+    "report_build":  6182,
+    "hard_kill_count":  0,
+    "hard_kill_complete_count":  0,
+    "end_test_forced_close_count":  3,
+    "truncation":  {
+                       "schema_version":  2,
+                       "report_name":  "FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN",
+                       "check_status":  "CHECK_PASS",
+                       "checker_exit_code":  0,
+                       "truncated":  false,
+                       "detail":  "last deal 2025.12.30 23:59:59 | window ends 2025.12.31 | idle tail 0 days (0% of window) | entry deals 41 | eqDD 22.09%\r\n[OK] traded through to the end of the window"
+                   },
+    "report_sha256":  "57465b4e053ccb27584711b28c899302a244edb9c7132219127ed9acde7b3699",
+    "agent_segment_sha256":  "a055e5fc96539b1c50a623f8128505e81caa637d4d8877a3a2690e0d3f334877",
+    "strategy_qualified":  false
+}

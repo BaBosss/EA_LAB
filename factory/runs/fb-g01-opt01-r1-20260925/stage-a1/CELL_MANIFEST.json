@@ -1,0 +1,74 @@
+﻿[
+    {
+        "cell":  "GP010_ATR025",
+        "grid_pct":  0.1,
+        "grid_atr_mult":  0.25,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP010_ATR025.set",
+        "set_sha256":  "1aec21d6f195023b1f88ce8b780d6bfe7af8f175260a545e67dd8d316f5b8204",
+        "surface_keys":  160
+    },
+    {
+        "cell":  "GP010_ATR075",
+        "grid_pct":  0.1,
+        "grid_atr_mult":  0.75,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP010_ATR075.set",
+        "set_sha256":  "dd378960d66f3f7761e505ddfda3835f80cee59cd6c4f3b0a5db64c2bb3a283a",
+        "surface_keys":  160
+    },
+    {
+        "cell":  "GP010_ATR125",
+        "grid_pct":  0.1,
+        "grid_atr_mult":  1.25,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP010_ATR125.set",
+        "set_sha256":  "ab7ab7150b909e390c263ddc9df673d336432d4fe8ead1c32bb9ea0926b4a088",
+        "surface_keys":  160
+    },
+    {
+        "cell":  "GP030_ATR025",
+        "grid_pct":  0.3,
+        "grid_atr_mult":  0.25,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP030_ATR025.set",
+        "set_sha256":  "b061f4fc834015d89a95cf70d878611b3efe9fb305d1df83a661b5488c615c3c",
+        "surface_keys":  160
+    },
+    {
+        "cell":  "GP030_ATR075",
+        "grid_pct":  0.3,
+        "grid_atr_mult":  0.75,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP030_ATR075.set",
+        "set_sha256":  "e1d708c07593d857977d6c96b55b25543d28a8f70286f1e42af66c30d70afe91",
+        "surface_keys":  160
+    },
+    {
+        "cell":  "GP030_ATR125",
+        "grid_pct":  0.3,
+        "grid_atr_mult":  1.25,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP030_ATR125.set",
+        "set_sha256":  "1fb9e8ac40c0f8285895eb08f252c3528c0fe544035c0615b890933dc9e9eb43",
+        "surface_keys":  160
+    },
+    {
+        "cell":  "GP050_ATR025",
+        "grid_pct":  0.5,
+        "grid_atr_mult":  0.25,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP050_ATR025.set",
+        "set_sha256":  "5f33ac024ab85f9ed89bd54c789f55247cd406bbdc11cf27e29f97af1b936434",
+        "surface_keys":  160
+    },
+    {
+        "cell":  "GP050_ATR075",
+        "grid_pct":  0.5,
+        "grid_atr_mult":  0.75,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP050_ATR075.set",
+        "set_sha256":  "25a47eadc5e1a91296f554c4ddf15445f56f6f2c338c8c1f50ea938879164500",
+        "surface_keys":  160
+    },
+    {
+        "cell":  "GP050_ATR125",
+        "grid_pct":  0.5,
+        "grid_atr_mult":  1.25,
+        "set_path":  "D:\\EA_LAB_CONTROL\\evidence\\ct-fb-g01-opt01-r1-stage-a1-20260925\\sets\\GP050_ATR125.set",
+        "set_sha256":  "e70e40f703cb744e47b8e1f4a39165439da5b5f4c8d89f9d13ba571a4f2e4a7e",
+        "surface_keys":  160
+    }
+]

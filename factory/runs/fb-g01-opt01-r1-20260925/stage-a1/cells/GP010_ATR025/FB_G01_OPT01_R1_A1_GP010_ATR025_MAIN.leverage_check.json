@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}

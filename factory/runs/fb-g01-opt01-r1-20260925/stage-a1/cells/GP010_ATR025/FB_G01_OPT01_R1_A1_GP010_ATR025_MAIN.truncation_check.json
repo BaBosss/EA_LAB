@@ -1,0 +1,8 @@
+﻿{
+    "schema_version":  2,
+    "report_name":  "FB_G01_OPT01_R1_A1_GP010_ATR025_MAIN",
+    "check_status":  "CHECK_PASS",
+    "checker_exit_code":  0,
+    "truncated":  false,
+    "detail":  "last deal 2025.12.30 23:59:59 | window ends 2025.12.31 | idle tail 0 days (0% of window) | entry deals 41 | eqDD 22.09%\r\n[OK] traded through to the end of the window"
+}

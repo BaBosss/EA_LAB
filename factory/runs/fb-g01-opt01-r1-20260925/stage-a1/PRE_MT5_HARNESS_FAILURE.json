@@ -1,0 +1,16 @@
+{
+  "schema":"fb_g01_opt01_r1_stage_a1_harness_incident/1",
+  "failed_job":"ct-fb-g01-opt01-r1-stage-a1-run-20260925",
+  "classification":"B_HARNESS_TEST_PRE_MT5",
+  "worker_exit_code":1,
+  "mt5_cell_started":false,
+  "batch_progress_exists":false,
+  "batch_result_exists":false,
+  "mt5_process_after_failure":false,
+  "root_cause":"PowerShell assignment/pipeline precedence left $m bound to the full manifest array before Where-Object filtering, so mt5_run received array-valued SetFile metadata.",
+  "strategy_evidence_created":false,
+  "source_changed":false,
+  "set_changed":false,
+  "range_changed":false,
+  "retry_authority":"SAME_STAGE_A1_HARNESS_RECOVERY_ONLY"
+}
