@@ -1,0 +1,30 @@
+﻿{
+    "schema":  "macrogate_ab_effective_set_freeze/1",
+    "created_utc":  "2026-09-25T03:32:30.1583804Z",
+    "parent_set_sha256":  "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+    "guard_set_sha256":  "099f2039b430cc340d5c7eaae0c54567c155f78a05de33ec04639d18c5607cec",
+    "guard_effective_config_hash":  "e95081ded3a8637ec6fd099a010d2b26dbe8da2125cf1f14ef28b9f6ecdfcf70",
+    "surface_count":  157,
+    "delta_count":  3,
+    "delta":  [
+                  {
+                      "key":  "_MG_InCommon",
+                      "base":  "true",
+                      "guard":  "false"
+                  },
+                  {
+                      "key":  "_MG_RegimeFile",
+                      "base":  "EA_LAB_mris_regime.csv",
+                      "guard":  "EA_LAB_MGAB_ACTIVE.csv"
+                  },
+                  {
+                      "key":  "_MG_SelfGate",
+                      "base":  "false",
+                      "guard":  "true"
+                  }
+              ],
+    "semantics":  "Only accepted MacroGate enable plus tester-local feed location/name; all strategy/risk parameters unchanged",
+    "performance":  "NOT_RUN",
+    "mt5_runs":  0,
+    "holdout":  "LOCKED_UNSPENT"
+}

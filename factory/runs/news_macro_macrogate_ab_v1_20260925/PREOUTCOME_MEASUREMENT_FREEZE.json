@@ -1,0 +1,51 @@
+{
+  "schema": "macrogate_ab_preoutcome_measurement_freeze/1",
+  "status": "FROZEN_PRE_OUTCOME_WAITING_TESTER",
+  "base_execution_contract_sha256": "ff0ff63ba7618e9126f3de8465b1c7abf613dd824ae11ae2711bbbfb694caf59",
+  "accepted_prereg_head": "3d6941ab0f0edbacffbb60022cd84113d6a288b6",
+  "parent": {
+    "ea": "Boss_15_ST03",
+    "symbol": "GBPUSD",
+    "timeframe": "H4",
+    "wrapper_sha256": "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
+    "base_set_sha256": "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+    "guard_set_sha256": "099f2039b430cc340d5c7eaae0c54567c155f78a05de33ec04639d18c5607cec",
+    "guard_effective_config_hash": "e95081ded3a8637ec6fd099a010d2b26dbe8da2125cf1f14ef28b9f6ecdfcf70",
+    "surface_count": 157,
+    "guard_delta_count": 3
+  },
+  "guard_delta": {
+    "_MG_SelfGate": {"base": "false", "guard": "true"},
+    "_MG_InCommon": {"base": "true", "guard": "false"},
+    "_MG_RegimeFile": {"base": "EA_LAB_mris_regime.csv", "guard": "EA_LAB_MGAB_ACTIVE.csv"}
+  },
+  "measurement_definitions": {
+    "guard_firings": "Count [MACROGATE] gate ON transitions for the experiment magic in the cell-owned tester/agent log. gate CLEARED is reconciled separately and is not a firing.",
+    "affected_new_entry_attempts": "Count [EXEC] MACROGATE block active (...) - new order skipped lines for the experiment magic during the exact cell window. B15 parent is STACK_SINGLE and pending mode is off.",
+    "BASE_new_entry_attempts": "Count BASE market new-entry transport request lines in the cell-owned tester agent segment, excluding closes. Require 1:1 reconciliation to BASE entry deals and zero transport/order failure markers. If this cannot be proven, denominator is UNAVAILABLE and interpretation stops.",
+    "blocked_entry_share": "affected_new_entry_attempts / BASE_new_entry_attempts using the same window-specific BASE denominator for REAL_GUARD and all five placebos; null if denominator is zero or unavailable.",
+    "gated_time": "Duration inside the exact cell window for feed rows whose effective native state is RISK_OFF or STRESS. UNKNOWN quarantine is excluded.",
+    "time_in_market": "Union duration of EA-owned open directional-position intervals divided by exact tester-window duration. Unavailable if ownership/open-close linkage is ambiguous.",
+    "basket_episode": "One flat-to-flat EA-owned directional exposure interval. For frozen B15 STACK_SINGLE this should be one position at a time; any overlap/ownership ambiguity refuses rather than being split heuristically.",
+    "concentration": "Calendar-year net distribution plus maximum absolute year-net share of sum(abs(year_net)); null when yearly ledger does not reconcile."
+  },
+  "fail_closed_measurement_rules": [
+    "BASE request/deal reconciliation mismatch => BASE_new_entry_attempts UNAVAILABLE",
+    "transport/order failure marker in BASE => denominator not certified",
+    "ambiguous basket ownership => episode/time-in-market UNAVAILABLE",
+    "unknown metric remains null/unavailable, never zero-filled"
+  ],
+  "tester_feed_policy": {
+    "location": "reserved tester terminal MQL5/Files only",
+    "_MG_InCommon": false,
+    "active_filename": "EA_LAB_MGAB_ACTIVE.csv",
+    "live_Common_Files_overwrite": false,
+    "feed_hash_verified_before_each_guarded_cell": true
+  },
+  "can_execute": false,
+  "compile_runs": 0,
+  "mt5_runs": 0,
+  "performance": "NOT_RUN",
+  "holdout": "LOCKED_UNSPENT",
+  "probability": null
+}
