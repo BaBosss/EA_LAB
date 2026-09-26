@@ -1,0 +1,82 @@
+﻿{
+    "schema":  "zabgoldpending_host_direct_semantic_result/1",
+    "status":  "A_OWNER_VALID_FIRST_ENTRY_CAPTURED__FIXED_LOT_BRANCH_OBSERVED__GLOBAL_PRECEDENCE_UNRESOLVED",
+    "authority":  "SEMANTIC_DIAGNOSTIC_ONLY_NO_PERFORMANCE_VERDICT",
+    "canonical_base_sha":  "a454491ee069c0a4e009a11508e25cc0445cd9b4",
+    "family":  "ZABgoldpending",
+    "artifact":  {
+                     "ex5_sha256":  "f75e6d11f298765521d0bbcb7ce37c0e2fdacec3136315dd48047ee2249c9c90",
+                     "set_sha256":  "4de80df7352a0857bb8e760799582807fbf208271a1762aa34e82c1c166067b9"
+                 },
+    "home":  {
+                 "symbol":  "XAUUSD",
+                 "timeframe":  "M5",
+                 "model":  "M1_M1_OHLC_RESEARCH",
+                 "window":  "2023-01-01..2023-03-31",
+                 "deposit":  10000,
+                 "currency":  "USD",
+                 "leverage":  "1:100"
+             },
+    "A_OWNER":  {
+                    "Risk_Percent":  1,
+                    "Fixed_Lot_Size":  0.1
+                },
+    "execution":  {
+                      "valid_zab_start":  true,
+                      "init_or_dependency_errors":  [
+
+                                                    ],
+                      "first_fixed_lot_branch_line":  "CS\t0\t17:59:14.441\tZABgoldpending (XAUUSD,M5)\t2023.01.03 08:00:00   📏 Using Fixed Lot Size: 0.1",
+                      "first_pending_entry":  {
+                                                  "timestamp":  "2023-01-03 08:00:00",
+                                                  "side":  "BUY_STOP",
+                                                  "requested_volume":  0.1
+                                              },
+                      "first_executed_entry":  {
+                                                   "timestamp":  "2023-01-03 08:16:40",
+                                                   "side":  "BUY",
+                                                   "executed_volume":  0.1
+                                               },
+                      "false_start_preserved":  true,
+                      "false_start_classification":  "INADMISSIBLE_WRONG_EXPERT__NOT_ZAB_EVIDENCE"
+                  },
+    "measured_observation":  "A_OWNER_FIXED_LOT_BRANCH_OBSERVED",
+    "contract_decision":  "GLOBAL_PRECEDENCE_UNRESOLVED__A_OWNER_VALID",
+    "reason":  "Original A/B/C decision rule requires same-signal B_FIXED_ONLY and C_RISK_ONLY comparison; B/C were not run.",
+    "downstream":  {
+                       "B_FIXED_ONLY":  {
+                                            "Risk_Percent":  1,
+                                            "Fixed_Lot_Size":  0.2,
+                                            "status":  "NOT_RUN",
+                                            "authorized":  false
+                                        },
+                       "C_RISK_ONLY":  {
+                                           "Risk_Percent":  2,
+                                           "Fixed_Lot_Size":  0.1,
+                                           "status":  "NOT_RUN",
+                                           "authorized":  false
+                                       },
+                       "explicit_owner_continuation_required":  true
+                   },
+    "evidence":  {
+                     "semantic_result_path":  "D:\\EA_LAB_CONTROL\\evidence\\zabgoldpending-hostdirect-20260924\\ZAB_A_OWNER_SEMANTIC_RESULT_20260926T180255.json",
+                     "semantic_result_sha256":  "17ceb9dfd96d541697571262b3a6e20979a0978ea2dd9d98e91a88f2c3091c08",
+                     "agent_log_path":  "D:\\EA_LAB_CONTROL\\evidence\\zabgoldpending-hostdirect-20260924\\ZAB_A_OWNER_AGENT_LOG_20260926T180255.log",
+                     "agent_log_sha256":  "6346f7fcc5687376873cbf87a5170cae77818e5bd031c1be8d8b627a3b8816fc",
+                     "false_start_path":  "D:\\EA_LAB_CONTROL\\evidence\\zabgoldpending-hostdirect-20260924\\ZAB_A_OWNER_FALSE_START_20260926T004635.json",
+                     "false_start_sha256":  "a36ceb9aad16a13aafa0fbcb6ea282c6fe27e44474d2cae093181b88e03af490",
+                     "exact_profile_receipt_path":  "D:\\EA_LAB_CONTROL\\evidence\\zabgoldpending-hostdirect-20260924\\ZAB_NORMAL_MT5_EXACT_PROFILE_20260926T004742.json",
+                     "exact_profile_receipt_sha256":  "386f31f7e6e9f28ceab81d3b6ff61b3ead4c098e5e54542a5c468b71536713f3",
+                     "prestart_receipt_path":  "D:\\EA_LAB_CONTROL\\evidence\\zabgoldpending-hostdirect-20260924\\ZAB_NORMAL_MT5_PRESTART_20260926T002421.json",
+                     "prestart_receipt_sha256":  "d40f58c26a807425218ced81fefd52fe498511ff59c3230e853d33da9771e032",
+                     "private_account_material_in_git":  false
+                 },
+    "forbidden_observables_used":  [
+
+                                   ],
+    "performance":  "NOT_READ_AS_EVIDENCE",
+    "optimization":  "NOT_AUTHORIZED",
+    "holdout":  "UNSPENT_DO_NOT_DISCOVER",
+    "B_C_execution_authorized":  false,
+    "next":  "Explicit owner continuation is required before B_FIXED_ONLY/C_RISK_ONLY same-signal comparison."
+}
