@@ -1,185 +1,188 @@
-{
-  "schema": "macrogate_tester_transfer_qual_phase1/1",
-  "lane_id": "ct-news-macro-mg-tester-transfer-qual-v1-20260926",
-  "canonical_sha": "152b2849d6bb8759b65aa91273248cd068343ddf",
-  "recovery": {
-    "registry_state": "RUNNING",
-    "process_state": "NO_LANE_PROCESS",
-    "durable_job": "NONE",
-    "worktree_clean": true,
-    "classification": "LOST_PROCESS_RECOVERY_REQUIRED",
-    "same_lane_reused": true
-  },
-  "consumed_blocker": {
-    "lane": "ct-news-macro-mg-ab-exec-v1-20260925",
-    "reviewed_head": "73a46848937e637bb4e025b8e8985a7d714462dc",
-    "status": "BLOCKED_C_ENVIRONMENT_DEPENDENCY",
-    "valid_guarded_outcomes": 0,
-    "base_main": {
-      "pf": 1.1,
-      "net": 81.25,
-      "trades": 214,
-      "eqdd_pct": 0.97,
-      "full_window": true
-    },
-    "base_bwd": {
-      "pf": 1.07,
-      "net": 73.31,
-      "trades": 218,
-      "eqdd_pct": 1.83,
-      "full_window": true
-    },
-    "bwd_attempt_denominator": null,
-    "bwd_denominator_status": "UNAVAILABLE_NOT_CERTIFIED",
-    "failed_new_entry_attempts": 2,
-    "recovery3_authorized": false,
-    "holdout": "LOCKED_UNSPENT"
-  },
-  "current_loader": {
-    "regime_file_kind": "runtime_input_string",
-    "in_common_kind": "runtime_input_bool",
-    "when_in_common_false": "FileIsExist/FileOpen use tester-local non-FILE_COMMON MQL5/Files sandbox",
-    "load_failure_current_behavior": "MG_LoadRegime returns false and logs guard INACTIVE; LabCore currently ignores return and continues init",
-    "tester_fail_closed_current": false
-  },
-  "transfer_options": [
-    {
-      "mechanism": "COMPILE_BOUND_TESTER_FILE_BUNDLE",
-      "technically_viable": true,
-      "selected": true,
-      "basis": [
-        "MetaQuotes tester_file accepts a constant-string filename and transfers the file to tester",
-        "Multiple tester_file directives are supported",
-        "Tester agent uses isolated MQL5/Files sandbox",
-        "Input file must exist at compile time; compiler may not warn when missing"
-      ],
-      "properties": [
-        "Bundle all 11 already-frozen feed CSVs into one Boss_15_ST03 test build",
-        "Keep _MG_InCommon=false",
-        "Select one bundled basename per cell via _MG_RegimeFile",
-        "No mutable manual injection into Agent sandbox"
-      ]
-    },
-    {
-      "mechanism": "FILE_COMMON",
-      "technically_viable_for_reading": true,
-      "selected": false,
-      "rejection_reason": "Machine-wide shared mutable Common/Files is not isolated between terminal instances; historical ORDER171 showed portable mode did not isolate FILE_COMMON. It would also change _MG_InCommon and expand shared-state risk."
-    },
-    {
-      "mechanism": "MANUAL_PRESTAGE_AGENT_MQL5_FILES",
-      "technically_viable_as_ad_hoc_copy": false,
-      "selected": false,
-      "rejection_reason": "Old recovery attempts did not establish deterministic materialization; agent sandbox lifecycle/cleanup makes mutable pre-stage unsuitable as acceptance proof."
-    }
-  ],
-  "selected_design": {
-    "mechanism": "COMPILE_BOUND_MULTI_TESTER_FILE_BUNDLE",
-    "source_change_required": true,
-    "config_change_required": true,
-    "source_paths_prospective": [
-      "ea_template/Boss_15_ST03.mq5",
-      "ea_template/core/LabCore.mqh",
-      "ea_template/core/MacroGate_Core.mqh",
-      "ea_template/core/Execution.mqh"
-    ],
-    "source_paths_unchanged": [
-      "ea_template/core/Inputs.mqh",
-      "ea_template/core/ConfigFingerprint.mqh"
-    ],
-    "config_changes": [
-      "_MG_RegimeFile changes per cell to an accepted compile-bundled basename",
-      "_MG_InCommon remains false",
-      "all other MacroGate/trading/risk inputs remain frozen"
-    ],
-    "identities_that_change": [
-      "Boss_15_ST03 source identity",
-      "EX5 SHA256",
-      "build receipt",
-      "effective config fingerprint per cell because _MG_RegimeFile differs"
-    ],
-    "identities_that_remain": [
-      "accepted feed bytes/hashes",
-      "B15 parent semantics",
-      "_MG_InCommon=false",
-      "MacroGate states/lot multiplier/block-new semantics",
-      "symbol GBPUSD",
-      "timeframe H4",
-      "MAIN/BWD windows",
-      "risk/default inputs other than per-cell feed filename"
-    ]
-  },
-  "file_identity": {
-    "prelaunch_host_hash": "REQUIRED",
-    "compiler_input_hash_receipt": "REQUIRED",
-    "in_ea_runtime_sha256": "UNAVAILABLE_IN_CURRENT_SOURCE",
-    "runtime_identity_basis": [
-      "requested filename",
-      "source class TESTER_SANDBOX_NONCOMMON",
-      "File size",
-      "valid row count",
-      "skipped row count",
-      "first accepted timestamp",
-      "last accepted timestamp",
-      "load PASS/FAIL"
-    ],
-    "exact_byte_claim_rule": "Exact-byte identity is established prospectively by accepted host feed SHA256 + compiler-input receipt + exact source/EX5/build receipt + tester_file transfer contract. Current source does not independently SHA256 arbitrary file bytes at runtime; do not claim otherwise."
-  },
-  "fail_closed": {
-    "precompile": [
-      "Every tester_file input must exist in compiler terminal MQL5/Files",
-      "Every compiler input file SHA256 must match the accepted frozen feed hash before compile",
-      "Missing/wrong hash aborts build qualification"
-    ],
-    "tester_init": [
-      "When MQL_TESTER && _MG_SelfGate, MG_LoadRegime failure must cause INIT_FAILED",
-      "Missing/open-failed/zero-valid/unsorted feed produces no interpretable strategy outcome"
-    ],
-    "runtime_acceptance": [
-      "requested filename must equal frozen cell filename",
-      "runtime file size/row count/first-last timestamps must match frozen cell expectations",
-      "mismatch => MECHANICAL_INVALID / no performance interpretation"
-    ]
-  },
-  "denominator_design": {
-    "historical_bwd_denominator": null,
-    "historical_status": "UNAVAILABLE_NOT_CERTIFIED",
-    "prospective_definition": "Count unique new-entry execution attempts at the beginning of each applicable execution choke point before MacroGate/news/spread/volume checks and before broker request.",
-    "paths": [
-      "Exec_Open",
-      "Exec_PlacePending"
-    ],
-    "prepared_open_scope": "Boss_15_ST03 current standard path uses Lab_OpenOrder -> Exec_Open. Exec_SubmitPreparedOpen is outside the B15 call path and remains unchanged unless future exact call-graph evidence proves reachability for this build.",
-    "event_schema": [
-      "ATTEMPT_BEGIN(attempt_id,path,direction,requested_lot)",
-      "TERMINAL_PRE_SUBMIT(attempt_id,status=BLOCK_NEWS|BLOCK_MACRO|BLOCK_SPREAD|REFUSE_VOLUME|REFUSE_INVALID_DIRECTION)",
-      "SUBMIT(attempt_id,normalized_lot)",
-      "RESULT(attempt_id,transport_ok,retcode,deal_or_order_id,status=SUCCESS|FAILURE)"
-    ],
-    "counters": [
-      "attempt_total",
-      "block_news",
-      "block_macro",
-      "block_spread",
-      "refuse_volume",
-      "refuse_invalid_direction",
-      "submit_total",
-      "success_total",
-      "failure_total"
-    ],
-    "invariants": [
-      "Each ATTEMPT_BEGIN has exactly one terminal disposition",
-      "attempt_total = all pre-submit terminal statuses + submit_total",
-      "submit_total = success_total + failure_total",
-      "blocked_by_macrogate = count status BLOCK_MACRO",
-      "final trade/deal count is never used as the attempt denominator"
-    ],
-    "logging_rule": "Attempt telemetry must be unthrottled in tester qualification. Existing once-per-minute MacroGate block log is insufficient for numerator/denominator evidence."
-  },
-  "disposition": "READY_FOR_PROSPECTIVE_IMPLEMENTATION",
-  "implementation_ready": true,
-  "performance_execution_authorized": false,
-  "holdout": "LOCKED_UNSPENT",
-  "direct_consumer": "One separately reviewed prospective implementation milestone; no MacroGate A/B performance execution.",
-  "reason": "MetaQuotes provides a deterministic compile-bound tester_file transfer mechanism compatible with non-common sandbox reads, while current source lacks both a source-bound transfer declaration and a certified all-attempt denominator. Both can be addressed prospectively without changing trading semantics, but source/build/config identities must be refrozen."
+﻿{
+    "schema":  "macrogate_tester_transfer_qual_phase1/1",
+    "lane_id":  "ct-news-macro-mg-tester-transfer-qual-v1-20260926",
+    "canonical_sha":  "152b2849d6bb8759b65aa91273248cd068343ddf",
+    "recovery":  {
+                     "registry_state":  "RUNNING",
+                     "process_state":  "NO_LANE_PROCESS",
+                     "durable_job":  "NONE",
+                     "worktree_clean":  true,
+                     "classification":  "LOST_PROCESS_RECOVERY_REQUIRED",
+                     "same_lane_reused":  true
+                 },
+    "consumed_blocker":  {
+                             "lane":  "ct-news-macro-mg-ab-exec-v1-20260925",
+                             "reviewed_head":  "73a46848937e637bb4e025b8e8985a7d714462dc",
+                             "status":  "BLOCKED_C_ENVIRONMENT_DEPENDENCY",
+                             "valid_guarded_outcomes":  0,
+                             "base_main":  {
+                                               "pf":  1.1,
+                                               "net":  81.25,
+                                               "trades":  214,
+                                               "eqdd_pct":  0.97,
+                                               "full_window":  true
+                                           },
+                             "base_bwd":  {
+                                              "pf":  1.07,
+                                              "net":  73.31,
+                                              "trades":  218,
+                                              "eqdd_pct":  1.83,
+                                              "full_window":  true
+                                          },
+                             "bwd_attempt_denominator":  null,
+                             "bwd_denominator_status":  "UNAVAILABLE_NOT_CERTIFIED",
+                             "failed_new_entry_attempts":  2,
+                             "recovery3_authorized":  false,
+                             "holdout":  "LOCKED_UNSPENT"
+                         },
+    "current_loader":  {
+                           "regime_file_kind":  "runtime_input_string",
+                           "in_common_kind":  "runtime_input_bool",
+                           "when_in_common_false":  "FileIsExist/FileOpen use tester-local non-FILE_COMMON MQL5/Files sandbox",
+                           "load_failure_current_behavior":  "MG_LoadRegime returns false and logs guard INACTIVE; LabCore currently ignores return and continues init",
+                           "tester_fail_closed_current":  false
+                       },
+    "transfer_options":  [
+                             {
+                                 "mechanism":  "COMPILE_BOUND_TESTER_FILE_BUNDLE",
+                                 "technically_viable":  true,
+                                 "selected":  true,
+                                 "basis":  [
+                                               "MetaQuotes tester_file accepts a constant-string filename and transfers the file to tester",
+                                               "Multiple tester_file directives are supported",
+                                               "Tester agent uses isolated MQL5/Files sandbox",
+                                               "Input file must exist at compile time; compiler may not warn when missing"
+                                           ],
+                                 "properties":  [
+                                                    "Bundle all 11 already-frozen feed CSVs into one Boss_15_ST03 test build",
+                                                    "Keep _MG_InCommon=false",
+                                                    "Select one bundled basename per cell via _MG_RegimeFile",
+                                                    "No mutable manual injection into Agent sandbox"
+                                                ]
+                             },
+                             {
+                                 "mechanism":  "FILE_COMMON",
+                                 "technically_viable_for_reading":  true,
+                                 "selected":  false,
+                                 "rejection_reason":  "Machine-wide shared mutable Common/Files is not isolated between terminal instances; historical ORDER171 showed portable mode did not isolate FILE_COMMON. It would also change _MG_InCommon and expand shared-state risk."
+                             },
+                             {
+                                 "mechanism":  "MANUAL_PRESTAGE_AGENT_MQL5_FILES",
+                                 "technically_viable_as_ad_hoc_copy":  false,
+                                 "selected":  false,
+                                 "rejection_reason":  "Old recovery attempts did not establish deterministic materialization; agent sandbox lifecycle/cleanup makes mutable pre-stage unsuitable as acceptance proof."
+                             }
+                         ],
+    "selected_design":  {
+                            "mechanism":  "COMPILE_BOUND_MULTI_TESTER_FILE_BUNDLE",
+                            "source_change_required":  true,
+                            "config_change_required":  true,
+                            "source_paths_prospective":  [
+                                                             "ea_template/Boss_15_ST03.mq5",
+                                                             "ea_template/core/LabCore.mqh",
+                                                             "ea_template/core/MacroGate_Core.mqh",
+                                                             "ea_template/core/Execution.mqh"
+                                                         ],
+                            "source_paths_unchanged":  [
+                                                           "ea_template/core/Inputs.mqh",
+                                                           "ea_template/core/ConfigFingerprint.mqh"
+                                                       ],
+                            "config_changes":  [
+                                                   "_MG_RegimeFile changes per cell to an accepted compile-bundled basename",
+                                                   "_MG_InCommon remains false",
+                                                   "all other MacroGate/trading/risk inputs remain frozen"
+                                               ],
+                            "identities_that_change":  [
+                                                           "Boss_15_ST03 source identity",
+                                                           "EX5 SHA256",
+                                                           "build receipt",
+                                                           "effective config fingerprint per cell because _MG_RegimeFile differs"
+                                                       ],
+                            "identities_that_remain":  [
+                                                           "accepted feed bytes/hashes",
+                                                           "B15 parent semantics",
+                                                           "_MG_InCommon=false",
+                                                           "MacroGate states/lot multiplier/block-new semantics",
+                                                           "symbol GBPUSD",
+                                                           "timeframe H4",
+                                                           "MAIN/BWD windows",
+                                                           "risk/default inputs other than per-cell feed filename"
+                                                       ]
+                        },
+    "file_identity":  {
+                          "prelaunch_host_hash":  "REQUIRED",
+                          "compiler_input_hash_receipt":  "REQUIRED",
+                          "in_ea_runtime_sha256":  "UNAVAILABLE_IN_CURRENT_SOURCE",
+                          "runtime_identity_basis":  [
+                                                         "requested filename",
+                                                         "source class TESTER_SANDBOX_NONCOMMON",
+                                                         "File size",
+                                                         "valid row count",
+                                                         "skipped row count",
+                                                         "first accepted timestamp",
+                                                         "last accepted timestamp",
+                                                         "load PASS/FAIL"
+                                                     ],
+                          "exact_byte_claim_rule":  "Exact-byte identity is established prospectively by accepted host feed SHA256 + compiler-input receipt + exact source/EX5/build receipt + tester_file transfer contract. Current source does not independently SHA256 arbitrary file bytes at runtime; do not claim otherwise."
+                      },
+    "fail_closed":  {
+                        "precompile":  [
+                                           "Every tester_file input must exist in compiler terminal MQL5/Files",
+                                           "Every compiler input file SHA256 must match the accepted frozen feed hash before compile",
+                                           "Missing/wrong hash aborts build qualification"
+                                       ],
+                        "tester_init":  [
+                                            "When MQL_TESTER \u0026\u0026 _MG_SelfGate, MG_LoadRegime failure must cause INIT_FAILED",
+                                            "Missing/open-failed/zero-valid/unsorted feed produces no interpretable strategy outcome"
+                                        ],
+                        "runtime_acceptance":  [
+                                                   "requested filename must equal frozen cell filename",
+                                                   "runtime file size/row count/first-last timestamps must match frozen cell expectations",
+                                                   "mismatch =\u003e MECHANICAL_INVALID / no performance interpretation"
+                                               ]
+                    },
+    "denominator_design":  {
+                               "historical_bwd_denominator":  null,
+                               "historical_status":  "UNAVAILABLE_NOT_CERTIFIED",
+                               "prospective_definition":  "Count unique new-entry execution attempts at the beginning of each applicable execution choke point before MacroGate/news/spread/volume checks and before broker request.",
+                               "paths":  [
+                                             "Exec_Open",
+                                             "Exec_PlacePending"
+                                         ],
+                               "prepared_open_scope":  "Boss_15_ST03 current standard path uses Lab_OpenOrder -\u003e Exec_Open. Exec_SubmitPreparedOpen is outside the B15 call path and remains unchanged unless future exact call-graph evidence proves reachability for this build.",
+                               "event_schema":  [
+                                                    "ATTEMPT_BEGIN(attempt_id,path,direction,requested_lot)",
+                                                    "TERMINAL_PRE_SUBMIT(attempt_id,status=BLOCK_NEWS|BLOCK_MACRO|BLOCK_SPREAD|REFUSE_VOLUME|DRYRUN_ONLY|NO_SUBMIT_EXISTING_PATH)",
+                                                    "SUBMIT(attempt_id,normalized_lot)",
+                                                    "RESULT(attempt_id,transport_ok,retcode,deal_or_order_id,status=SUCCESS|FAILURE)"
+                                                ],
+                               "counters":  [
+                                                "attempt_total",
+                                                "block_news",
+                                                "block_macro",
+                                                "block_spread",
+                                                "refuse_volume",
+                                                "dryrun_only",
+                                                "no_submit_existing_path",
+                                                "submit_total",
+                                                "success_total",
+                                                "failure_total"
+                                            ],
+                               "invariants":  [
+                                                  "Each ATTEMPT_BEGIN has exactly one terminal disposition",
+                                                  "attempt_total = all pre-submit terminal dispositions + submit_total",
+                                                  "submit_total = success_total + failure_total",
+                                                  "blocked_by_macrogate = count status BLOCK_MACRO",
+                                                  "final trade/deal count is never used as the attempt denominator"
+                                              ],
+                               "logging_rule":  "Attempt telemetry must be unthrottled in tester qualification. Existing once-per-minute MacroGate block log is insufficient for numerator/denominator evidence.",
+                               "instrumentation_gate":  "MQL_TESTER \u0026\u0026 _MG_SelfGate only",
+                               "semantic_preservation":  "Observe existing branches/results only; do not add new rejection behavior."
+                           },
+    "disposition":  "READY_FOR_PROSPECTIVE_IMPLEMENTATION",
+    "implementation_ready":  true,
+    "performance_execution_authorized":  false,
+    "holdout":  "LOCKED_UNSPENT",
+    "direct_consumer":  "One separately reviewed prospective implementation milestone; no MacroGate A/B performance execution.",
+    "reason":  "MetaQuotes provides a deterministic compile-bound tester_file transfer mechanism compatible with non-common sandbox reads, while current source lacks both a source-bound transfer declaration and a certified all-attempt denominator. Both can be addressed prospectively without changing trading semantics, but source/build/config identities must be refrozen."
 }

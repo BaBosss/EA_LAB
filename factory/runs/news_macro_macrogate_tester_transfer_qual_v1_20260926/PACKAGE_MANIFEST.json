@@ -7,13 +7,13 @@
     "files":  [
                   {
                       "path":  "docs/research/NEWS_MACRO_MACROGATE_TESTER_TRANSFER_QUAL_V1_20260926.md",
-                      "sha256":  "8b2b0aa85a75611800a133d1cb2dbc1002db1281af36f093f2a7a2ffbfe18c71",
-                      "bytes":  10492
+                      "sha256":  "fac5d559034e18a093d1ffca3c720d902198a8926e3c71f4000abfb89bb6b395",
+                      "bytes":  11025
                   },
                   {
                       "path":  "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/PHASE1_QUALIFICATION.json",
-                      "sha256":  "599b4ff115123759871482b0475a46436ec82d7720c623ab4f891e869a93bdc4",
-                      "bytes":  8107
+                      "sha256":  "675576e9fe234bd5389a7c88f958e0380ba769e1f9b2f79c78cdfa704fbadc71",
+                      "bytes":  14672
                   },
                   {
                       "path":  "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/SOURCE_BINDING.json",
@@ -27,8 +27,8 @@
                   },
                   {
                       "path":  "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/PROSPECTIVE_IMPLEMENTATION_CONTRACT.json",
-                      "sha256":  "f0dedcaba85d810e9495051eeb67edad35044ee922bcab71112914b084252049",
-                      "bytes":  7783
+                      "sha256":  "0b054ee13777522093e9e897f4173829a4423e063ef4f68dfa5e2432ec086bd1",
+                      "bytes":  16520
                   }
               ],
     "accepted_feed_count":  11,

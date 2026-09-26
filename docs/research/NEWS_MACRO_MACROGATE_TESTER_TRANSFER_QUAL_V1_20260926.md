@@ -121,7 +121,7 @@ For `Exec_Open` and `Exec_PlacePending`, emit a unique `ATTEMPT_BEGIN` before Ne
 - `BLOCK_MACRO`
 - `BLOCK_SPREAD`
 - `REFUSE_VOLUME`
-- `REFUSE_INVALID_DIRECTION`
+- `DRYRUN_ONLY` / `NO_SUBMIT_EXISTING_PATH` only where the current path already terminates without a broker request
 - or `SUBMIT`, followed by `SUCCESS` / `FAILURE` with transport flag and retcode.
 
 Required invariants:
@@ -135,6 +135,8 @@ Required invariants:
 Trade/deal count is never substituted for `attempt_total`.
 
 The existing once-per-minute MacroGate block log is throttled and cannot be used as a numerator.
+
+Attempt telemetry is prospective evidence-only and must be emitted only under `MQL_TESTER && _MG_SelfGate`. It records existing branches/results and must not introduce any new order rejection or direction-validation behavior. Because `LabCore.mqh`, `MacroGate_Core.mqh` and `Execution.mqh` are shared core, the implementation milestone must run impacted deterministic/adversarial core regressions and prove non-tester/live behavior unchanged.
 
 Boss_15 current standard order path is `Lab_OpenOrder -> Exec_Open`. Pending execution is included because `Exec_PlacePending` is also a shared new-order gate. The unrelated prepared-open seam is not added to the Boss15 denominator unless a future exact call-graph proof shows Boss15 reaches it.
 

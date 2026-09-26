@@ -1,172 +1,185 @@
-{
-  "schema": "macrogate_tester_transfer_prospective_implementation_contract/1",
-  "status": "READY_FOR_PROSPECTIVE_IMPLEMENTATION",
-  "control_canonical": "152b2849d6bb8759b65aa91273248cd068343ddf",
-  "one_change_objective": "Make MacroGate Strategy Tester input transfer and new-entry attempt accounting deterministic for prospective qualification, without changing MacroGate trading semantics or historical evidence.",
-  "implementation_authorized_now": false,
-  "performance_authorized": false,
-  "exact_source_paths_if_owner_later_authorizes": [
-    "ea_template/Boss_15_ST03.mq5",
-    "ea_template/core/LabCore.mqh",
-    "ea_template/core/MacroGate_Core.mqh",
-    "ea_template/core/Execution.mqh"
-  ],
-  "exact_source_paths_to_remain_unchanged": [
-    "ea_template/core/Inputs.mqh",
-    "ea_template/core/ConfigFingerprint.mqh"
-  ],
-  "transfer_change": {
-    "wrapper": "Add 11 constant-string #property tester_file directives in the main Boss_15_ST03.mq5 wrapper, one for each already-frozen accepted feed basename.",
-    "compile_input": "Before compile, place exact accepted feed bytes in the compiler terminal MQL5/Files and verify SHA256 for every file against SOURCE_BINDING.json.",
-    "bundle": "Compile one Boss_15_ST03 EX5 containing all frozen feed dependencies; do not recompile per arm.",
-    "runtime_selection": "Each prospective cell sets _MG_RegimeFile to one compile-bundled basename. _MG_InCommon remains false.",
-    "live_common_files": false,
-    "manual_agent_injection": false
-  },
-  "init_fail_closed_change": {
-    "path": "ea_template/core/LabCore.mqh",
-    "rule": "When MQL_TESTER && _MG_SelfGate, failure of MG_LoadRegime must return INIT_FAILED before any strategy execution. Live/non-tester behavior remains unchanged.",
-    "current_problem": "Current OnInit ignores MG_LoadRegime return and continues after guard INACTIVE."
-  },
-  "runtime_transfer_markers": {
-    "path": "ea_template/core/MacroGate_Core.mqh",
-    "required_success_fields": [
-      "requested_filename",
-      "source_class=TESTER_SANDBOX_NONCOMMON",
-      "file_size_bytes",
-      "valid_row_count",
-      "skipped_row_count",
-      "first_accepted_timestamp",
-      "last_accepted_timestamp",
-      "load_status=PASS"
-    ],
-    "required_failure_classes": [
-      "MISSING",
-      "OPEN_FAILED",
-      "ZERO_VALID_ROWS",
-      "UNSORTED",
-      "IDENTITY_MARKER_MISMATCH"
-    ],
-    "runtime_sha256": "UNAVAILABLE_IN_CURRENT_SOURCE",
-    "runtime_sha_policy": "Do not add or claim arbitrary file-byte SHA256 unless separately implemented and reviewed. Exact-byte acceptance relies on host precompile hashes + compiler bundle receipt + exact EX5/build identity."
-  },
-  "denominator_instrumentation": {
-    "path": "ea_template/core/Execution.mqh",
-    "current_defect": "g_exec_open_intents increments only after MacroGate/news/spread/lot checks, and final trades omit failed requests; neither is an all-attempt denominator.",
-    "applicable_b15_paths": [
-      "Exec_Open",
-      "Exec_PlacePending"
-    ],
-    "attempt_begin_position": "First executable statement after basic function-entry capture, before NewsGuard, MacroGate, spread, volume normalization/refusal, DryRun branch, or broker submission.",
-    "event_contract": [
-      {
-        "event": "ATTEMPT_BEGIN",
-        "fields": [
-          "attempt_id",
-          "path",
-          "direction",
-          "requested_lot"
-        ]
-      },
-      {
-        "event": "TERMINAL_PRE_SUBMIT",
-        "fields": [
-          "attempt_id",
-          "status"
-        ],
-        "statuses": [
-          "BLOCK_NEWS",
-          "BLOCK_MACRO",
-          "BLOCK_SPREAD",
-          "REFUSE_VOLUME",
-          "REFUSE_INVALID_DIRECTION"
-        ]
-      },
-      {
-        "event": "SUBMIT",
-        "fields": [
-          "attempt_id",
-          "normalized_lot"
-        ]
-      },
-      {
-        "event": "RESULT",
-        "fields": [
-          "attempt_id",
-          "transport_ok",
-          "retcode",
-          "deal_or_order_id",
-          "status"
-        ],
-        "statuses": [
-          "SUCCESS",
-          "FAILURE"
-        ]
-      }
-    ],
-    "summary_invariants": [
-      "Every ATTEMPT_BEGIN has exactly one terminal disposition",
-      "attempt_total = block_news + block_macro + block_spread + refuse_volume + refuse_invalid_direction + submit_total",
-      "submit_total = success_total + failure_total",
-      "blocked_by_macrogate = count TERMINAL_PRE_SUBMIT status BLOCK_MACRO",
-      "trade/deal count is never substituted for attempt_total"
-    ],
-    "telemetry_scope": "Unthrottled deterministic tester qualification telemetry. Existing once-per-minute MacroGate block log is not sufficient evidence.",
-    "historical_rewrite_forbidden": true
-  },
-  "refreeze_requirements": {
-    "source_sha": true,
-    "ex5_sha256": true,
-    "build_receipt": true,
-    "compiler_input_bundle_receipt": true,
-    "guard_set_sha256": true,
-    "effective_config_fingerprint_per_cell": true,
-    "feed_hashes_unchanged": true,
-    "exact_tester_install": "D:\\Meta 5",
-    "tester_model": "Model1 / 1 Minute OHLC for later performance only; implementation transfer probe itself is non-performance qualification",
-    "symbol": "GBPUSD",
-    "timeframe": "H4",
-    "main_window": "2023-01-01..2025-12-31",
-    "bwd_window": "2020-01-01..2022-12-31"
-  },
-  "deterministic_tests_required": [
-    "Static check: exactly 11 expected tester_file directives and no unknown/missing feed basename",
-    "Precompile host hash check: every compiler MQL5/Files feed equals accepted SHA256",
-    "Clean Boss_15_ST03 compile with zero errors and existing warning policy",
-    "Build receipt and EX5 SHA freeze",
-    "Config fingerprint regeneration for every frozen cell filename",
-    "Unit/static checks for tester-only load failure => INIT_FAILED while non-tester live semantics remain unchanged",
-    "Denominator instrumentation tests: one ATTEMPT_BEGIN per Exec_Open/Exec_PlacePending invocation and exactly one terminal disposition",
-    "Negative tests for MacroGate block, market-closed/broker rejection, spread block and volume refusal",
-    "Non-performance tester-transfer probe using a tiny known fixture: transferred file is visible in tester sandbox, success markers exact, missing fixture fails init closed",
-    "No performance metrics interpreted during implementation qualification"
-  ],
-  "pre_outcome_acceptance_checks": [
-    "All source/config/build identities frozen before any guarded performance outcome",
-    "All 11 feed hashes match accepted frozen artifacts; no regeneration",
-    "tester_file bundle receipt is immutable and reviewed",
-    "runtime transfer markers match expected selected feed metadata",
-    "attempt instrumentation invariants pass",
-    "independent exact-head GPT Scrutiny returns SCRUTINY_PASS/ALLOW_INTEGRATION",
-    "separate execution lane required before any REAL_GUARD or PLACEBO performance cell"
-  ],
-  "repair_budget": "Maximum one bounded Repair1 after independent review if current governance permits, followed by one targeted exact-head recheck.",
-  "forbidden": [
-    "MT5 performance execution in this planning lane",
-    "REAL_GUARD performance",
-    "PLACEBO performance",
-    "BASE rerun",
-    "HOLDOUT use",
-    "Model4",
-    "optimization",
-    "BWD retuning",
-    "parent switch",
-    "deployment or LIVE",
-    "_MG_InCommon=true workaround",
-    "manual mutable Agent sandbox injection as acceptance proof",
-    "historical denominator rewrite",
-    "new file-byte hash claim without implementation/review"
-  ],
-  "direct_consumer": "A separately authorized prospective implementation milestone. After implementation qualification and review, a separately frozen performance execution contract may be considered.",
-  "holdout": "LOCKED_UNSPENT"
+﻿{
+    "schema":  "macrogate_tester_transfer_prospective_implementation_contract/1",
+    "status":  "READY_FOR_PROSPECTIVE_IMPLEMENTATION",
+    "control_canonical":  "152b2849d6bb8759b65aa91273248cd068343ddf",
+    "one_change_objective":  "Make MacroGate Strategy Tester input transfer and new-entry attempt accounting deterministic for prospective qualification, without changing MacroGate trading semantics or historical evidence.",
+    "implementation_authorized_now":  false,
+    "performance_authorized":  false,
+    "exact_source_paths_if_owner_later_authorizes":  [
+                                                         "ea_template/Boss_15_ST03.mq5",
+                                                         "ea_template/core/LabCore.mqh",
+                                                         "ea_template/core/MacroGate_Core.mqh",
+                                                         "ea_template/core/Execution.mqh"
+                                                     ],
+    "exact_source_paths_to_remain_unchanged":  [
+                                                   "ea_template/core/Inputs.mqh",
+                                                   "ea_template/core/ConfigFingerprint.mqh"
+                                               ],
+    "transfer_change":  {
+                            "wrapper":  "Add 11 constant-string #property tester_file directives in the main Boss_15_ST03.mq5 wrapper, one for each already-frozen accepted feed basename.",
+                            "compile_input":  "Before compile, place exact accepted feed bytes in the compiler terminal MQL5/Files and verify SHA256 for every file against SOURCE_BINDING.json.",
+                            "bundle":  "Compile one Boss_15_ST03 EX5 containing all frozen feed dependencies; do not recompile per arm.",
+                            "runtime_selection":  "Each prospective cell sets _MG_RegimeFile to one compile-bundled basename. _MG_InCommon remains false.",
+                            "live_common_files":  false,
+                            "manual_agent_injection":  false
+                        },
+    "init_fail_closed_change":  {
+                                    "path":  "ea_template/core/LabCore.mqh",
+                                    "rule":  "When MQL_TESTER \u0026\u0026 _MG_SelfGate, failure of MG_LoadRegime must return INIT_FAILED before any strategy execution. Live/non-tester behavior remains unchanged.",
+                                    "current_problem":  "Current OnInit ignores MG_LoadRegime return and continues after guard INACTIVE."
+                                },
+    "runtime_transfer_markers":  {
+                                     "path":  "ea_template/core/MacroGate_Core.mqh",
+                                     "required_success_fields":  [
+                                                                     "requested_filename",
+                                                                     "source_class=TESTER_SANDBOX_NONCOMMON",
+                                                                     "file_size_bytes",
+                                                                     "valid_row_count",
+                                                                     "skipped_row_count",
+                                                                     "first_accepted_timestamp",
+                                                                     "last_accepted_timestamp",
+                                                                     "load_status=PASS"
+                                                                 ],
+                                     "required_failure_classes":  [
+                                                                      "MISSING",
+                                                                      "OPEN_FAILED",
+                                                                      "ZERO_VALID_ROWS",
+                                                                      "UNSORTED",
+                                                                      "IDENTITY_MARKER_MISMATCH"
+                                                                  ],
+                                     "runtime_sha256":  "UNAVAILABLE_IN_CURRENT_SOURCE",
+                                     "runtime_sha_policy":  "Do not add or claim arbitrary file-byte SHA256 unless separately implemented and reviewed. Exact-byte acceptance relies on host precompile hashes + compiler bundle receipt + exact EX5/build identity."
+                                 },
+    "denominator_instrumentation":  {
+                                        "path":  "ea_template/core/Execution.mqh",
+                                        "current_defect":  "g_exec_open_intents increments only after MacroGate/news/spread/lot checks, and final trades omit failed requests; neither is an all-attempt denominator.",
+                                        "applicable_b15_paths":  [
+                                                                     "Exec_Open",
+                                                                     "Exec_PlacePending"
+                                                                 ],
+                                        "attempt_begin_position":  "First executable statement after basic function-entry capture, before NewsGuard, MacroGate, spread, volume normalization/refusal, DryRun branch, or broker submission.",
+                                        "event_contract":  [
+                                                               {
+                                                                   "event":  "ATTEMPT_BEGIN",
+                                                                   "fields":  [
+                                                                                  "attempt_id",
+                                                                                  "path",
+                                                                                  "direction",
+                                                                                  "requested_lot"
+                                                                              ]
+                                                               },
+                                                               {
+                                                                   "event":  "TERMINAL_PRE_SUBMIT",
+                                                                   "fields":  [
+                                                                                  "attempt_id",
+                                                                                  "status"
+                                                                              ],
+                                                                   "statuses":  [
+                                                                                    "BLOCK_NEWS",
+                                                                                    "BLOCK_MACRO",
+                                                                                    "BLOCK_SPREAD",
+                                                                                    "REFUSE_VOLUME",
+                                                                                    "DRYRUN_ONLY",
+                                                                                    "NO_SUBMIT_EXISTING_PATH"
+                                                                                ]
+                                                               },
+                                                               {
+                                                                   "event":  "SUBMIT",
+                                                                   "fields":  [
+                                                                                  "attempt_id",
+                                                                                  "normalized_lot"
+                                                                              ]
+                                                               },
+                                                               {
+                                                                   "event":  "RESULT",
+                                                                   "fields":  [
+                                                                                  "attempt_id",
+                                                                                  "transport_ok",
+                                                                                  "retcode",
+                                                                                  "deal_or_order_id",
+                                                                                  "status"
+                                                                              ],
+                                                                   "statuses":  [
+                                                                                    "SUCCESS",
+                                                                                    "FAILURE"
+                                                                                ]
+                                                               }
+                                                           ],
+                                        "summary_invariants":  [
+                                                                   "Every ATTEMPT_BEGIN has exactly one terminal disposition",
+                                                                   "attempt_total = all pre-submit terminal dispositions + submit_total",
+                                                                   "submit_total = success_total + failure_total",
+                                                                   "blocked_by_macrogate = count TERMINAL_PRE_SUBMIT status BLOCK_MACRO",
+                                                                   "trade/deal count is never substituted for attempt_total"
+                                                               ],
+                                        "telemetry_scope":  "Unthrottled deterministic tester qualification telemetry. Existing once-per-minute MacroGate block log is not sufficient evidence.",
+                                        "historical_rewrite_forbidden":  true,
+                                        "instrumentation_gate":  "Emit qualification attempt telemetry only when MQL_TESTER \u0026\u0026 _MG_SelfGate; telemetry must not influence trading decisions.",
+                                        "semantic_preservation":  "Instrumentation records existing branches/results only. It must not add new order rejection or direction validation behavior."
+                                    },
+    "refreeze_requirements":  {
+                                  "source_sha":  true,
+                                  "ex5_sha256":  true,
+                                  "build_receipt":  true,
+                                  "compiler_input_bundle_receipt":  true,
+                                  "guard_set_sha256":  true,
+                                  "effective_config_fingerprint_per_cell":  true,
+                                  "feed_hashes_unchanged":  true,
+                                  "exact_tester_install":  "D:\\Meta 5",
+                                  "tester_model":  "Model1 / 1 Minute OHLC for later performance only; implementation transfer probe itself is non-performance qualification",
+                                  "symbol":  "GBPUSD",
+                                  "timeframe":  "H4",
+                                  "main_window":  "2023-01-01..2025-12-31",
+                                  "bwd_window":  "2020-01-01..2022-12-31"
+                              },
+    "deterministic_tests_required":  [
+                                         "Static check: exactly 11 expected tester_file directives and no unknown/missing feed basename",
+                                         "Precompile host hash check: every compiler MQL5/Files feed equals accepted SHA256",
+                                         "Clean Boss_15_ST03 compile with zero errors and existing warning policy",
+                                         "Build receipt and EX5 SHA freeze",
+                                         "Config fingerprint regeneration for every frozen cell filename",
+                                         "Unit/static checks for tester-only load failure =\u003e INIT_FAILED while non-tester live semantics remain unchanged",
+                                         "Denominator instrumentation tests: one ATTEMPT_BEGIN per Exec_Open/Exec_PlacePending invocation and exactly one terminal disposition",
+                                         "Negative tests for MacroGate block, market-closed/broker rejection, spread block and volume refusal",
+                                         "Non-performance tester-transfer probe using a tiny known fixture: transferred file is visible in tester sandbox, success markers exact, missing fixture fails init closed",
+                                         "No performance metrics interpreted during implementation qualification",
+                                         "Impacted shared-core regression/adversarial suites for LabCore, MacroGate_Core and Execution; prove non-tester/live behavior unchanged"
+                                     ],
+    "pre_outcome_acceptance_checks":  [
+                                          "All source/config/build identities frozen before any guarded performance outcome",
+                                          "All 11 feed hashes match accepted frozen artifacts; no regeneration",
+                                          "tester_file bundle receipt is immutable and reviewed",
+                                          "runtime transfer markers match expected selected feed metadata",
+                                          "attempt instrumentation invariants pass",
+                                          "independent exact-head GPT Scrutiny returns SCRUTINY_PASS/ALLOW_INTEGRATION",
+                                          "separate execution lane required before any REAL_GUARD or PLACEBO performance cell"
+                                      ],
+    "repair_budget":  "Maximum one bounded Repair1 after independent review if current governance permits, followed by one targeted exact-head recheck.",
+    "forbidden":  [
+                      "MT5 performance execution in this planning lane",
+                      "REAL_GUARD performance",
+                      "PLACEBO performance",
+                      "BASE rerun",
+                      "HOLDOUT use",
+                      "Model4",
+                      "optimization",
+                      "BWD retuning",
+                      "parent switch",
+                      "deployment or LIVE",
+                      "_MG_InCommon=true workaround",
+                      "manual mutable Agent sandbox injection as acceptance proof",
+                      "historical denominator rewrite",
+                      "new file-byte hash claim without implementation/review"
+                  ],
+    "direct_consumer":  "A separately authorized prospective implementation milestone. After implementation qualification and review, a separately frozen performance execution contract may be considered.",
+    "holdout":  "LOCKED_UNSPENT",
+    "shared_core_impact":  {
+                               "paths":  [
+                                             "ea_template/core/LabCore.mqh",
+                                             "ea_template/core/MacroGate_Core.mqh",
+                                             "ea_template/core/Execution.mqh"
+                                         ],
+                               "consequence":  "Repository shared-core source identities change even though prospective runtime qualification targets Boss_15_ST03.",
+                               "required_regression":  "Run impacted deterministic/adversarial core suites and prove non-tester/live behavior unchanged before acceptance."
+                           }
 }
