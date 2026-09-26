@@ -63,7 +63,7 @@ BT9 AUDUSD/H4 edge-latch portability is accepted/reviewed at `ede238fa`: disabli
 ### MacroGate A/B - blocked evidence accepted; no execution
 - Accepted closeout: `73a46848937e637bb4e025b8e8985a7d714462dc`; source of truth: `factory/runs/news_macro_macrogate_ab_v1_20260925/BLOCKER_CLOSEOUT.json` and `PROJECT_STATE.md`.
 - BASE MAIN+BWD passes the parent host gate only. Guarded valid outcomes = 0; full A/B is NOT COMPLETE. BWD blocked-entry denominator/share remain `null / UNAVAILABLE_NOT_CERTIFIED`; tester input transfer is unqualified. No timing/performance conclusion, recovery3 or new repair authority.
-- Existing MacroGate runtime lease is DONE/released. ZAB preparation is DONE but A_OWNER remains owner-manual-start only after immediate exact portable/tester/account/resource revalidation; `can_execute=false`, B/C not authorized, DLL trust unchanged. Do not reopen FB or alter its owner.
+- ZAB A_OWNER host-direct semantic result is DONE/canonical at `621bc5f7fa71f90d40143e7d7bc286c4812c3c66`: valid first-entry evidence observed the fixed-lot branch (`Using Fixed Lot Size: 0.1`; first pending/fill both 0.10). Global precedence remains UNRESOLVED under the original A/B/C rule because B_FIXED_ONLY/C_RISK_ONLY are NOT RUN; explicit owner continuation is required before either. False start was excluded; no performance/HOLDOUT/optimization/deployment authority follows.
 - Future MacroGate tester-transfer and denominator qualification requires a separate prospective contract with refrozen affected identities; none is opened by this state update. HOLDOUT `LOCKED_UNSPENT`, Model4/optimizer/deployment/trading not authorized.
 
 ## Hermes
