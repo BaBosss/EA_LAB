@@ -1,0 +1,95 @@
+﻿{
+    "schema":  "macrogate_tester_transfer_qual_package_manifest/1",
+    "canonical_sha":  "152b2849d6bb8759b65aa91273248cd068343ddf",
+    "disposition":  "READY_FOR_PROSPECTIVE_IMPLEMENTATION",
+    "implementation_ready":  true,
+    "performance_authorized":  false,
+    "files":  [
+                  {
+                      "path":  "docs/research/NEWS_MACRO_MACROGATE_TESTER_TRANSFER_QUAL_V1_20260926.md",
+                      "sha256":  "8b2b0aa85a75611800a133d1cb2dbc1002db1281af36f093f2a7a2ffbfe18c71",
+                      "bytes":  10492
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/PHASE1_QUALIFICATION.json",
+                      "sha256":  "599b4ff115123759871482b0475a46436ec82d7720c623ab4f891e869a93bdc4",
+                      "bytes":  8107
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/SOURCE_BINDING.json",
+                      "sha256":  "88a213651afed0070a7b6255ce24d5704d7b020be0a7f5ef45429e1783662269",
+                      "bytes":  4017
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/MQL5_REFERENCE_BINDING.json",
+                      "sha256":  "0305a26b4a2ef58c64ea8edc4f3d171cae631437a09cfcbad17bdb8d152e084a",
+                      "bytes":  1810
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/PROSPECTIVE_IMPLEMENTATION_CONTRACT.json",
+                      "sha256":  "f0dedcaba85d810e9495051eeb67edad35044ee922bcab71112914b084252049",
+                      "bytes":  7783
+                  }
+              ],
+    "accepted_feed_count":  11,
+    "accepted_feeds":  [
+                           {
+                               "filename":  "REAL_FULL_2020_2025_macrogate_native.csv",
+                               "sha256":  "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/real/REAL_FULL_2020_2025_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "MAIN_seed_2026092501_macrogate_native.csv",
+                               "sha256":  "dc5b31de1e0d5809c52c388302533b7228a52a389eb37873be50609ba6d30198",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092501_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "BWD_seed_2026092501_macrogate_native.csv",
+                               "sha256":  "951bff972d0bcc9ef6edb556782cc4e11eafac3194ce0259ee87d6b5364d5320",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092501_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "MAIN_seed_2026092502_macrogate_native.csv",
+                               "sha256":  "f6ce2f5cf0be072e54641bad333871c70fd11ea7b8c4858dd7d600ea187e93a2",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092502_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "BWD_seed_2026092502_macrogate_native.csv",
+                               "sha256":  "fa9efdd623dfd2d35cd2bfdda457e505de4cebc1ef990f13c9fb582b9cd248b5",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092502_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "MAIN_seed_2026092503_macrogate_native.csv",
+                               "sha256":  "e437e631cd5c158c1b34a3158753bbab767db6de8964457cebff73bc76504344",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092503_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "BWD_seed_2026092503_macrogate_native.csv",
+                               "sha256":  "7f8f2aad388b9dca7d8e2c53808233987724569db014852bbd7c62c074d3fe98",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092503_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "MAIN_seed_2026092504_macrogate_native.csv",
+                               "sha256":  "1eacab594ebd5a73b1291965d78231611d58912b385910e82a3beae07132ddfd",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092504_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "BWD_seed_2026092504_macrogate_native.csv",
+                               "sha256":  "8bbe8cf5632685c4b3e3c7a1fd659f35ea96d2297b1e74057609e8b435c5daa8",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092504_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "MAIN_seed_2026092505_macrogate_native.csv",
+                               "sha256":  "1ffcfa71ade5256671196fd7530ecacef60e1e227b7aa7d1e6566d5e35f06c5e",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/MAIN_seed_2026092505_macrogate_native.csv"
+                           },
+                           {
+                               "filename":  "BWD_seed_2026092505_macrogate_native.csv",
+                               "sha256":  "ab2f6c7818c41ef3502a6a67c2bfa1ae0a707259ad72b6bfb9fd463b7787b3c5",
+                               "source_path":  "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/placebo/BWD_seed_2026092505_macrogate_native.csv"
+                           }
+                       ],
+    "source_change_in_phase1":  false,
+    "mt5_run_in_phase1":  false,
+    "holdout":  "LOCKED_UNSPENT"
+}

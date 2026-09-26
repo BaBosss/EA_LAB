@@ -1,0 +1,105 @@
+{
+  "schema": "macrogate_tester_transfer_qual_source_binding/1",
+  "canonical_sha": "152b2849d6bb8759b65aa91273248cd068343ddf",
+  "source_files": [
+    {
+      "path": "ea_template/Boss_15_ST03.mq5",
+      "sha256": "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f"
+    },
+    {
+      "path": "ea_template/core/LabCore.mqh",
+      "sha256": "92625d564f3eb461bd7d603c33633b0932e873d15267fb01cb94a98f4377039d"
+    },
+    {
+      "path": "ea_template/core/MacroGate_Core.mqh",
+      "sha256": "afb74e22f75af3053d56ef6e8a485987fdc951f0995e44e91af91e6142778a0a"
+    },
+    {
+      "path": "ea_template/core/Inputs.mqh",
+      "sha256": "a7f98b2e604432938a59b1644e989ea1568b866c18635b6f28dcca371fc88613"
+    },
+    {
+      "path": "ea_template/core/Execution.mqh",
+      "sha256": "e0dddc9f58948adca2afa24a3fe4651461ee3ca3d34206a7d6224a394acc4391"
+    },
+    {
+      "path": "ea_template/core/ConfigFingerprint.mqh",
+      "sha256": "c4a722bc48c3b8dc5fbc6245f47da969749f029f24993ca0121a94447ba17b4c"
+    }
+  ],
+  "blocker_files": [
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/BLOCKER_CLOSEOUT.json",
+      "sha256": "0990cf2eb16536bcc3f226615ebe379d7a93783cceb93097821f37d3bbc01407"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/GUARDED_EXECUTION_BLOCKER.json",
+      "sha256": "1dd1539eeb0102394d9ab84f738f95d53882bfb24f1d036a951a17e0db564b05"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/GUARDED_BATCH_FAILURE_HISTORY.json",
+      "sha256": "50c43d2685d27ba1f7e6f588552996f5b234d475c5db3ff5f9e17598d0e627f3"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/BASE_ATTEMPT_DENOMINATORS.json",
+      "sha256": "cfc9d1b66f44bcd95741f35d579a59c2da0debffd54215476ca25fce264aa23c"
+    },
+    {
+      "path": "factory/runs/news_macro_macrogate_ab_v1_20260925/ARM_MANIFEST_CORRECTED.json",
+      "sha256": "d5cd18d8b59b84c6aadf82e16f5e77db03209bc4af34d7048a6d92e4bdb02201"
+    }
+  ],
+  "accepted_feeds": [
+    {
+      "filename": "REAL_FULL_2020_2025_macrogate_native.csv",
+      "sha256": "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a"
+    },
+    {
+      "filename": "MAIN_seed_2026092501_macrogate_native.csv",
+      "sha256": "dc5b31de1e0d5809c52c388302533b7228a52a389eb37873be50609ba6d30198"
+    },
+    {
+      "filename": "BWD_seed_2026092501_macrogate_native.csv",
+      "sha256": "951bff972d0bcc9ef6edb556782cc4e11eafac3194ce0259ee87d6b5364d5320"
+    },
+    {
+      "filename": "MAIN_seed_2026092502_macrogate_native.csv",
+      "sha256": "f6ce2f5cf0be072e54641bad333871c70fd11ea7b8c4858dd7d600ea187e93a2"
+    },
+    {
+      "filename": "BWD_seed_2026092502_macrogate_native.csv",
+      "sha256": "fa9efdd623dfd2d35cd2bfdda457e505de4cebc1ef990f13c9fb582b9cd248b5"
+    },
+    {
+      "filename": "MAIN_seed_2026092503_macrogate_native.csv",
+      "sha256": "e437e631cd5c158c1b34a3158753bbab767db6de8964457cebff73bc76504344"
+    },
+    {
+      "filename": "BWD_seed_2026092503_macrogate_native.csv",
+      "sha256": "7f8f2aad388b9dca7d8e2c53808233987724569db014852bbd7c62c074d3fe98"
+    },
+    {
+      "filename": "MAIN_seed_2026092504_macrogate_native.csv",
+      "sha256": "1eacab594ebd5a73b1291965d78231611d58912b385910e82a3beae07132ddfd"
+    },
+    {
+      "filename": "BWD_seed_2026092504_macrogate_native.csv",
+      "sha256": "8bbe8cf5632685c4b3e3c7a1fd659f35ea96d2297b1e74057609e8b435c5daa8"
+    },
+    {
+      "filename": "MAIN_seed_2026092505_macrogate_native.csv",
+      "sha256": "1ffcfa71ade5256671196fd7530ecacef60e1e227b7aa7d1e6566d5e35f06c5e"
+    },
+    {
+      "filename": "BWD_seed_2026092505_macrogate_native.csv",
+      "sha256": "ab2f6c7818c41ef3502a6a67c2bfa1ae0a707259ad72b6bfb9fd463b7787b3c5"
+    }
+  ],
+  "identity_rules": {
+    "feed_regeneration_forbidden": true,
+    "holdout": "LOCKED_UNSPENT",
+    "historical_bwd_denominator": null,
+    "historical_bwd_denominator_status": "UNAVAILABLE_NOT_CERTIFIED",
+    "valid_guarded_outcomes": 0
+  }
+}
