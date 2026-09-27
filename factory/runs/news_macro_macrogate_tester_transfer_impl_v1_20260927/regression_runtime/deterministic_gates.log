@@ -1,0 +1,16 @@
+2026-09-27 author deterministic gate summary
+PowerShell parser: PASS (3/3 changed scripts)
+Focused real-path declared-wrapper cage: PASS (12/12)
+  includes exact 94f/b586 positive, default refusal, wrong control, undeclared wrapper,
+  duplicate/malformed/case/traversal, SourceRoot mismatch/different-repo/dirty,
+  exact-Git-byte expected-hash tamper, and existing control-fixture suite
+Existing TPL baseline guard: PASS (5/5)
+Existing TPL set-byte preservation: PASS (6/6)
+Existing TPL set checkout contract: PASS (5/5)
+Existing baseline negative/declared-delta suite on byte-pinned b586 control: PASS
+Portable Python provision: PASS (tools/python312/python.exe)
+check_state.ps1: PASS
+git diff --check: PASS
+MT5 / MetaEditor / native execution: NOT RUN (contract prohibition)
+Commit attempt: BLOCKED by sandbox permission creating
+  D:/EA_LAB/.git/worktrees/mgtt-regression-runtime-0927/index.lock

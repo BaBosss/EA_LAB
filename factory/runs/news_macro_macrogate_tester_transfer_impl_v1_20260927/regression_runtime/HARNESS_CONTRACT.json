@@ -1,0 +1,19 @@
+{
+  "schema": "mgtt_tpl_regression_harness_contract/1",
+  "authority_path": "D:/EA_LAB_CONTROL/evidence/mg-tester-transfer-impl-v1-20260927/TPL_EXTENSION_OWNER_AUTH_20260927.json",
+  "authority_sha256": "71e0dc3dbb6cdf8248091816ba396c694598f158305b760c5735fce2018232e3",
+  "lane": "ct-news-macro-mg-tester-transfer-regression-runtime-v1-20260927",
+  "source_commit": "94f20ad4191b066253daaf101f28b0078f2a6805",
+  "control_commit": "b586d4d32c04fa33a30517ab3a1a8469b238d2ac",
+  "source_root": "D:/EA_LAB_CONTROL/worktrees/mgtt-tplreg-94f-20260927",
+  "declared_behavioral_paths": [
+    "ea_template/Boss_15_ST03.mq5",
+    "ea_template/core/Execution.mqh",
+    "ea_template/core/LabCore.mqh",
+    "ea_template/core/MacroGate_Core.mqh"
+  ],
+  "runtime": "D:/Meta 5b/terminal64.exe portable Build6090",
+  "required_cases": { "control": 8, "candidate": 8, "exact_metric_parity": true },
+  "author_native_execution": false,
+  "control_worktree_cleanup": "PRESERVE"
+}

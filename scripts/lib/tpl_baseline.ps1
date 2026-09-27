@@ -12,6 +12,16 @@ function Get-TplSha256([string]$Path) {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
+function Get-TplGitBlobSha256([string]$Root, [string]$Commit, [string]$Path) {
+    Assert-TplLiteralPath $Path
+    if (-not (Get-Command Invoke-EvidenceGitBytes -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'evidence.ps1') }
+    $result = Invoke-EvidenceGitBytes -RepoRoot $Root -Arguments ('show "{0}:{1}"' -f $Commit,$Path)
+    if ($result.ExitCode -ne 0) { throw "REFUSE: cannot read exact Git blob $Commit`:$Path" }
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { return ([BitConverter]::ToString($sha.ComputeHash($result.Bytes))).Replace('-','').ToLowerInvariant() }
+    finally { $sha.Dispose() }
+}
+
 function Get-TplJson([string]$Path, [string]$Label) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "REFUSE: $Label missing: $Path" }
     try { return (Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -ErrorAction Stop) }
@@ -146,7 +156,11 @@ function Get-TplActiveBaseline {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$Root,
-        [string]$ActiveSelectorPath = ''
+        [string]$ActiveSelectorPath = '',
+        [switch]$DeclaredCoreDelta,
+        [string]$ControlCommit = '',
+        [string]$SourceCommit = '',
+        [string[]]$BehavioralDeltaPaths = @()
     )
     if (-not $ActiveSelectorPath) { $ActiveSelectorPath = Join-Path $Root 'ea_template\regression_baseline.active.json' }
     $selector = Get-TplJson $ActiveSelectorPath 'active baseline selector'
@@ -190,7 +204,23 @@ function Get-TplActiveBaseline {
         Assert-TplRequired $case @('ea','source_path','source_sha256','source_commit','build_receipt','compiled_artifact_path','compiled_artifact_sha256','declared_set_path','declared_set_sha256','set_surface','report_path','report_sha256','report_build','report_fresh','symbol','timeframe','date_from','date_to','model','deposit','currency','leverage','history_quality','bars','ticks','metrics') ("case $($ea.Name)")
         if ($case.source_commit -ne $manifest.baseline_source_commit) { throw "REFUSE: $($ea.Name) source identity does not match baseline commit" }
         $sourcePath = Resolve-TplRepoPath $Root ([string]$case.source_path) "$($ea.Name).source_path"
-        if ((Get-TplSha256 $sourcePath) -ne ([string]$case.source_sha256).ToLowerInvariant()) { throw "REFUSE: $($ea.Name) source hash mismatch" }
+        $sourceRel = [string]$case.source_path
+        $declaredWrapper = $DeclaredCoreDelta -and (@($BehavioralDeltaPaths) -ccontains $sourceRel)
+        if ($declaredWrapper) {
+            $control = Assert-TplCommitIdentity $Root $ControlCommit 'ControlCommit'
+            $source = Assert-TplCommitIdentity $Root $SourceCommit 'SourceCommit'
+            $expectedHash = ([string]$case.source_sha256).ToLowerInvariant()
+            $baselineHash = Get-TplGitBlobSha256 $Root ([string]$manifest.baseline_source_commit) $sourceRel
+            $controlHash = Get-TplGitBlobSha256 $Root $control $sourceRel
+            if ($baselineHash -cne $expectedHash -or $controlHash -cne $expectedHash) {
+                throw "REFUSE: $($ea.Name) expected wrapper identity does not match exact baseline/control Git bytes"
+            }
+            $sourceTree = Get-TplTree $Root $source
+            if (-not $sourceTree.ContainsKey($sourceRel)) { throw "REFUSE: $($ea.Name) declared wrapper missing from SourceCommit" }
+            Assert-TplDiskIdentity $Root $sourceRel $sourceTree[$sourceRel]
+        } elseif ((Get-TplSha256 $sourcePath) -ne ([string]$case.source_sha256).ToLowerInvariant()) {
+            throw "REFUSE: $($ea.Name) source hash mismatch"
+        }
         $setPath = Resolve-TplRepoPath $Root ([string]$case.declared_set_path) "$($ea.Name).declared_set_path"
         if ((Get-TplSha256 $setPath) -ne ([string]$case.declared_set_sha256).ToLowerInvariant()) { throw "REFUSE: $($ea.Name) set hash differs" }
         if (-not (Get-Command Get-SetSurfaceState -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'setfile_surface.ps1') }
@@ -364,7 +394,7 @@ function Assert-TplDeclaredCoreDeltaContract {
     }
     $currentTree = Get-TplTree $Root $source
     $controlTree = Get-TplTree $Root $control
-    $canonical = Get-TplActiveBaseline -Root $Root
+    $canonical = Get-TplActiveBaseline -Root $Root -DeclaredCoreDelta -ControlCommit $control -SourceCommit $source -BehavioralDeltaPaths $BehavioralDeltaPaths
     if (($Baseline.Manifest | ConvertTo-Json -Depth 20 -Compress) -cne ($canonical.Manifest | ConvertTo-Json -Depth 20 -Compress) -or
         ($Baseline.Selector | ConvertTo-Json -Depth 20 -Compress) -cne ($canonical.Selector | ConvertTo-Json -Depth 20 -Compress)) {
         throw 'REFUSE: baseline is not the canonical selector/source identity'
@@ -388,10 +418,16 @@ function Assert-TplDeclaredCoreDeltaContract {
         }
         $pinned += @($path, [string]$case.declared_set_path, [string]$case.report_path)
     }
+    $declaredWrappers = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    foreach ($case in $canonical.Manifest.cases) {
+        $casePath = [string]$case.source_path
+        if (@($BehavioralDeltaPaths) -ccontains $casePath) { [void]$declaredWrappers.Add($casePath) }
+    }
     foreach ($path in @($pinned | Select-Object -Unique)) {
         Assert-TplLiteralPath $path
+        $allowDeclaredWrapper = $declaredWrappers.Contains($path)
         if (-not $currentTree.ContainsKey($path) -or -not $controlTree.ContainsKey($path) -or
-            $currentTree[$path].Blob -cne $controlTree[$path].Blob -or $currentTree[$path].Mode -cne $controlTree[$path].Mode) {
+            ((-not $allowDeclaredWrapper) -and ($currentTree[$path].Blob -cne $controlTree[$path].Blob -or $currentTree[$path].Mode -cne $controlTree[$path].Mode))) {
             throw "REFUSE: canonical baseline provenance changed: $path"
         }
         Assert-TplDiskIdentity $Root $path $currentTree[$path]

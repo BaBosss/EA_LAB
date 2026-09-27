@@ -1,0 +1,18 @@
+{
+  "schema": "mgtt_tpl_regression_harness_author_result/1",
+  "status": "AUTHOR_IMPLEMENTED_DETERMINISTIC_PASS_COMMIT_BLOCKED_BY_SANDBOX_GIT_METADATA_PERMISSION",
+  "starting_head": "94f20ad4191b066253daaf101f28b0078f2a6805",
+  "source_commit": "94f20ad4191b066253daaf101f28b0078f2a6805",
+  "control_commit": "b586d4d32c04fa33a30517ab3a1a8469b238d2ac",
+  "focused_tests": "12/12 PASS",
+  "existing_tpl_tests": {
+    "baseline_guard": "5/5 PASS",
+    "set_byte_preservation": "6/6 PASS",
+    "set_checkout_contract": "5/5 PASS",
+    "baseline_negative": "PASS on byte-pinned b586 control fixture with patched harness; direct 94f default invocation separately refuses the changed wrapper as required"
+  },
+  "native_mt5_run": false,
+  "commit": "BLOCKED: unable to create D:/EA_LAB/.git/worktrees/mgtt-regression-runtime-0927/index.lock (Permission denied)",
+  "push": false,
+  "source_acceptance_claim": false
+}

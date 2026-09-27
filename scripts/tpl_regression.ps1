@@ -21,11 +21,13 @@ param(
     [switch]$DeclaredCoreDelta,
     [string]$ControlCommit = '',
     [string]$SourceCommit = '',
-    [string[]]$BehavioralDeltaPaths = @()
+    [string[]]$BehavioralDeltaPaths = @(),
+    [string]$SourceRoot = ''
 )
 
 $ErrorActionPreference = 'Stop'
-$root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$harnessRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$root = $harnessRoot
 . (Join-Path $PSScriptRoot 'lib\tpl_baseline.ps1')
 
 function Invoke-TplCompile([string]$SourceRoot, [string]$Label) {
@@ -55,7 +57,7 @@ function Invoke-TplRegressionCase([object]$Case, [string]$SetPath, [string]$RunL
     $runnerOutput = & (Join-Path $PSScriptRoot 'mt5_run.ps1') @runArgs 2>&1
     $runnerExit = $LASTEXITCODE
     $runnerOutput | ForEach-Object { Write-Host $_ }
-    $reportPath = Join-Path $root ('_mt5_auto\reports\' + $reportName + '.htm')
+    $reportPath = Join-Path $harnessRoot ('_mt5_auto\reports\' + $reportName + '.htm')
     if (-not (Test-ReportIsFresh -Htm $reportPath -RunStart $runStart -RunnerExit $runnerExit -Label $Case.ea)) { throw "REFUSE: $($Case.ea) stale report" }
     $json = & $py $parser $reportPath --json
     if ($LASTEXITCODE -ne 0) { throw "REFUSE: $($Case.ea) report parse failed" }
@@ -82,13 +84,33 @@ function Assert-TplMetricMatch([object]$Expected, [object]$Actual, [string]$Expe
 try {
     $explicitDelta = @('DeclaredCoreDelta','ControlCommit','SourceCommit','BehavioralDeltaPaths') | Where-Object { $PSBoundParameters.ContainsKey($_) }
     $useDeclaredDelta = @($explicitDelta).Count -gt 0
+    if ($PSBoundParameters.ContainsKey('SourceRoot') -and -not $useDeclaredDelta) { throw 'REFUSE: SourceRoot is usable only with explicit DeclaredCoreDelta' }
     if ($useDeclaredDelta) {
         if (-not $DeclaredCoreDelta -or $PSBoundParameters.ContainsKey('AdjacentControlRef')) { throw 'REFUSE: declared delta requires explicit mode and cannot mix with legacy AdjacentControlRef' }
+        if ($SourceRoot) {
+            $root = (Resolve-Path -LiteralPath $SourceRoot).Path
+            $sourceTop = (& git -C $root rev-parse --show-toplevel 2>$null)
+            if ($LASTEXITCODE -ne 0 -or [IO.Path]::GetFullPath(([string]$sourceTop).Trim()) -ine $root) { throw 'REFUSE: SourceRoot must be an exact repository root' }
+            $sourceHead = (& git -C $root rev-parse HEAD 2>$null)
+            if ($LASTEXITCODE -ne 0 -or ([string]$sourceHead).Trim() -cne $SourceCommit) { throw 'REFUSE: SourceRoot HEAD must equal exact SourceCommit' }
+            function Get-CommonGitDirectory([string]$Repo) {
+                $value = (& git -C $Repo rev-parse --git-common-dir 2>$null)
+                if ($LASTEXITCODE -ne 0 -or -not $value) { throw 'REFUSE: repository common directory unavailable' }
+                $path = ([string]$value).Trim()
+                if (-not [IO.Path]::IsPathRooted($path)) { $path = Join-Path $Repo $path }
+                return [IO.Path]::GetFullPath($path).TrimEnd('\')
+            }
+            if ((Get-CommonGitDirectory $root) -ine (Get-CommonGitDirectory $harnessRoot)) { throw 'REFUSE: SourceRoot must be a same-repository checkout' }
+            $dirty = @(& git -C $root status --porcelain --untracked-files=all 2>$null)
+            if ($LASTEXITCODE -ne 0 -or $dirty.Count -gt 0) { throw 'REFUSE: SourceRoot must be completely clean' }
+        }
         if ($ActiveSelectorPath -and $ActiveSelectorPath -cne (Join-Path $root 'ea_template\regression_baseline.active.json')) {
             throw 'REFUSE: declared delta requires the canonical baseline selector path'
         }
     }
-    $baseline = Get-TplActiveBaseline -Root $root -ActiveSelectorPath $ActiveSelectorPath
+    $baselineArgs = @{ Root=$root; ActiveSelectorPath=$ActiveSelectorPath }
+    if ($useDeclaredDelta) { $baselineArgs.DeclaredCoreDelta=$true; $baselineArgs.ControlCommit=$ControlCommit; $baselineArgs.SourceCommit=$SourceCommit; $baselineArgs.BehavioralDeltaPaths=$BehavioralDeltaPaths }
+    $baseline = Get-TplActiveBaseline @baselineArgs
     if ($useDeclaredDelta) {
         $sourceCommit = Assert-TplSourceContract -Root $root -Baseline $baseline -DeclaredCoreDelta -ControlCommit $ControlCommit -SourceCommit $SourceCommit -BehavioralDeltaPaths $BehavioralDeltaPaths
         $controlCommit = $ControlCommit
@@ -98,6 +120,10 @@ try {
     } else {
         $sourceCommit = Assert-TplSourceContract -Root $root -Baseline $baseline
     }
+    $harnessCommit = (& git -C $harnessRoot rev-parse HEAD 2>$null)
+    $harnessTree = (& git -C $harnessRoot rev-parse 'HEAD^{tree}' 2>$null)
+    if ($LASTEXITCODE -ne 0 -or -not $harnessCommit -or -not $harnessTree) { throw 'REFUSE: harness identity unavailable' }
+    Write-Host ("[IDENTITY] harness={0} harness_tree={1} source_root={2} source={3} control={4}" -f ([string]$harnessCommit).Trim(),([string]$harnessTree).Trim(),$root,$sourceCommit,$controlCommit) -ForegroundColor Cyan
     $contract = $baseline.Manifest.tester_contract
     if ($Symbol -ne $contract.symbol -or $Period -ne $contract.timeframe -or $FromDate -ne $contract.date_from -or $ToDate -ne $contract.date_to -or $Model -ne [int]$contract.model) {
         throw 'REFUSE: requested tester contract does not match the active Build-6090 baseline'
@@ -114,9 +140,9 @@ try {
     if (-not (Test-Path -LiteralPath $Terminal -PathType Leaf)) { throw "REFUSE: terminal not found: $Terminal" }
     . (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
     . (Join-Path $PSScriptRoot 'lib\setfile_surface.ps1')
-    . (Join-Path $root 'scripts\use_python.ps1')
-    $py = Assert-PortablePython -Root $root -Provision
-    $parser = Join-Path $root 'scripts\parse_mt5_report.py'
+    . (Join-Path $harnessRoot 'scripts\use_python.ps1')
+    $py = Assert-PortablePython -Root $harnessRoot -Provision
+    $parser = Join-Path $harnessRoot 'scripts\parse_mt5_report.py'
     $cases = @($baseline.Manifest.cases | Sort-Object ea)
     $sets = @{}
     foreach ($case in $cases) {
@@ -142,8 +168,8 @@ try {
         $controlWorktree = Join-Path $tmpParent ('tpl_adjacent_control_' + [guid]::NewGuid().ToString('N'))
         if (-not $controlWorktree.StartsWith('C:\ea_lab_tmp\tpl_adjacent_control_', [StringComparison]::OrdinalIgnoreCase)) { throw 'REFUSE: unsafe adjacent control worktree path' }
         New-Item -ItemType Directory -Force $tmpParent | Out-Null
+        if (Test-Path -LiteralPath $controlWorktree) { throw "REFUSE: adjacent control worktree already exists: $controlWorktree" }
         try {
-            if (Test-Path -LiteralPath $controlWorktree) { throw "REFUSE: adjacent control worktree already exists: $controlWorktree" }
             & git -C $root worktree add --detach $controlWorktree $controlCommit | ForEach-Object { Write-Host $_ }
             if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $controlWorktree -PathType Container)) { throw 'REFUSE: could not create detached adjacent control worktree' }
 
@@ -164,9 +190,7 @@ try {
             Write-Host "=== ADJACENT REGRESSION CLEAN ($($cases.Count)/$($cases.Count), Build 6090, lane $Terminal, control $controlCommit, source $sourceCommit) ===" -ForegroundColor Green
         } finally {
             if ($controlWorktree -and (Test-Path -LiteralPath $controlWorktree)) {
-                if (-not $controlWorktree.StartsWith('C:\ea_lab_tmp\tpl_adjacent_control_', [StringComparison]::OrdinalIgnoreCase)) { throw 'REFUSE: unsafe adjacent control cleanup path' }
-                & git -C $root worktree remove --force $controlWorktree 2>$null
-                if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath $controlWorktree)) { throw "REFUSE: adjacent control worktree cleanup failed: $controlWorktree" }
+                Write-Host "[PRESERVED] detached control worktree: $controlWorktree" -ForegroundColor Yellow
             }
         }
     }
