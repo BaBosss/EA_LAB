@@ -1,7 +1,7 @@
-"""Passive deterministic routing/decision helpers for EA_LAB Control Tower.
+"""Bounded routing/decision helpers for the EA_LAB Control Tower.
 
-V1 is source-only. It does not launch models, mutate the Lane Registry,
-activate runtime, or call TypeSafe/Jev over the network.
+Deterministic routing remains authoritative. Jev live calls are explicit, bounded,
+advisory-only requests and never mutate Registry state or activate persistent runtime.
 """
 
-__all__ = ["routing", "decision", "integrity", "jev_shadow"]
+__all__ = ["routing", "decision", "integrity", "jev_shadow", "jev_live"]

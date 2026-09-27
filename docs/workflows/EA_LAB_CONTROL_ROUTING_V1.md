@@ -85,18 +85,20 @@ merge, push, deployment, runtime health, research validity, or trading authority
 
 ## Jev boundary
 
-V1 contains only a shadow envelope. It performs no HTTP request and has no live
-TypeSafe/Jev adapter. TYPESAFE_API_KEY is referenced only by environment-variable
-name; the module exposes at most a boolean auth_present and never emits the value.
+The accepted V1 baseline retains its shadow envelope and its disabled-by-default
+semantics. Jev Live Adapter V1 is a separate 2026-09-27 contract that adds only an
+explicit bounded provider call; it does not turn route/decide into automatic model
+dispatch and does not create a background service or scheduler.
 
-Shadow output always reports transport_status=DISABLED_NO_LIVE_ADAPTER,
-authority_ceiling=SHADOW_ONLY_NO_CONTROL_AUTHORITY, activation=false, and
-canonical=false.
+The live call uses the same closed shadow input vocabulary, reads
+TYPESAFE_API_KEY only from process environment, validates the exact typed choice
+response, and emits ADVISORY_ONLY_NO_CONTROL_AUTHORITY. Missing credentials or any
+transport/schema/probability defect refuse. The credential is never emitted.
 
-A future live Jev adapter requires a separate frozen contract, exact API/schema
-binding, credential handling, calibration/evaluation, deterministic fallbacks, and
-acceptance review. Jev confidence may never override compiler/tests, owner hard stops,
-repair budgets, review requirements, or other canonical evidence.
+Jev confidence may never override compiler/tests, owner hard stops, repair budgets,
+review requirements, dependency truth, Registry state, or other canonical evidence.
+Source acceptance and live-provider acceptance are separate gates; the exact contract
+is docs/workflows/EA_LAB_JEV_LIVE_ADAPTER_V1_20260927.md.
 
 ## Integrity binding
 
@@ -118,6 +120,7 @@ are:
 - python tools/control_routing_v1/cli.py route --input task.json
 - python tools/control_routing_v1/cli.py decide --input decision.json
 - python tools/control_routing_v1/cli.py jev-shadow --input shadow.json
+- python tools/control_routing_v1/cli.py jev-live --input shadow.json
 
 Every non-integrity command verifies the implementation manifest first and refuses on
 mismatch. Inputs are closed objects; unknown fields refuse. Output is stdout-only.

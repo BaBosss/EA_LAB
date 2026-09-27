@@ -12,6 +12,7 @@ if str(PACKAGE_ROOT) not in sys.path:
 
 from decision import decide
 from integrity import IntegrityError, verify_manifest
+from jev_live import invoke_jev
 from jev_shadow import build_shadow_envelope
 from routing import route_task
 
@@ -45,7 +46,7 @@ def _emit(value: dict[str, Any]) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="EA_LAB passive Control Routing V1")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("route", "decide", "jev-shadow"):
+    for name in ("route", "decide", "jev-shadow", "jev-live"):
         child = sub.add_parser(name)
         child.add_argument("--input", required=True)
     sub.add_parser("verify-integrity")
@@ -62,8 +63,10 @@ def main(argv: list[str] | None = None) -> int:
             result = route_task(value)
         elif args.command == "decide":
             result = decide(value)
-        else:
+        elif args.command == "jev-shadow":
             result = build_shadow_envelope(value)
+        else:
+            result = invoke_jev(value)
         result["implementation_manifest_sha256"] = integrity["manifest_sha256"]
         _emit(result)
         return 0

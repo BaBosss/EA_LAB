@@ -13,6 +13,7 @@ RUNTIME_FILES = (
     "tools/control_routing_v1/routing.py",
     "tools/control_routing_v1/decision.py",
     "tools/control_routing_v1/jev_shadow.py",
+    "tools/control_routing_v1/jev_live.py",
     "tools/control_routing_v1/cli.py",
     "tools/control_routing_v1/build_manifest.py",
 )
