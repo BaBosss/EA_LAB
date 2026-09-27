@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import socket
+from http.client import HTTPException
 from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -23,6 +25,7 @@ ANSWER_KEY = "decision"
 MAX_RESPONSE_BYTES = 256 * 1024
 DEFAULT_TIMEOUT_SECONDS = 10.0
 PROBABILITY_SUM_TOLERANCE = 0.02
+REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 
 
 class JevLiveError(ValueError):
@@ -49,17 +52,42 @@ def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 def _decode_json(raw: bytes) -> Any:
     try:
         return json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise JevLiveError("provider response is not valid unique-key UTF-8 JSON") from exc
+    except JevLiveError:
+        raise
+    except (UnicodeDecodeError, ValueError, RecursionError):
+        raise JevLiveError("provider response is not valid unique-key UTF-8 JSON") from None
 
 
 def _probability(value: Any, name: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise JevLiveError(f"{name} must be numeric")
-    number = float(value)
+    try:
+        number = float(value)
+    except (OverflowError, ValueError):
+        raise JevLiveError(f"{name} must be safely convertible to a finite number") from None
     if not math.isfinite(number) or not 0.0 <= number <= 1.0:
         raise JevLiveError(f"{name} must be finite and within 0..1")
     return number
+
+
+def _safe_request_id(value: Any) -> str | None:
+    if isinstance(value, str) and REQUEST_ID_RE.fullmatch(value):
+        return value
+    return None
+
+
+def _close_response(response: Any, *, suppress_error: bool) -> None:
+    close = getattr(response, "close", None)
+    if not callable(close):
+        return
+    try:
+        close()
+    except (OSError, HTTPException) as exc:
+        if suppress_error:
+            return
+        raise JevLiveError(
+            f"TypeSafe transport failure during close: {type(exc).__name__}"
+        ) from None
 
 
 def _nonnegative_int(value: Any, name: str) -> int:
@@ -158,11 +186,7 @@ def _read_provider_response(response: Any) -> tuple[bytes, str | None]:
     request_id = None
     headers = getattr(response, "headers", None)
     if headers is not None:
-        request_id = headers.get("x-typesafe-request-id")
-        if request_id is not None and (
-            not isinstance(request_id, str) or len(request_id) > 128
-        ):
-            request_id = None
+        request_id = _safe_request_id(headers.get("x-typesafe-request-id"))
     return bytes(raw), request_id
 
 
@@ -208,16 +232,17 @@ def invoke_jev(
         response = call(request, timeout=timeout)
         raw, request_id = _read_provider_response(response)
     except HTTPError as exc:
-        safe_id = exc.headers.get("x-typesafe-request-id") if exc.headers else None
-        suffix = f" request_id={safe_id}" if safe_id and len(safe_id) <= 128 else ""
+        safe_id = _safe_request_id(
+            exc.headers.get("x-typesafe-request-id") if exc.headers else None
+        )
+        _close_response(exc, suppress_error=True)
+        suffix = f" request_id={safe_id}" if safe_id else ""
         raise JevLiveError(f"TypeSafe HTTP {exc.code}{suffix}") from None
-    except (URLError, TimeoutError, socket.timeout) as exc:
+    except (URLError, TimeoutError, socket.timeout, OSError, HTTPException) as exc:
         raise JevLiveError(f"TypeSafe transport failure: {type(exc).__name__}") from None
     finally:
         if response is not None:
-            close = getattr(response, "close", None)
-            if callable(close):
-                close()
+            _close_response(response, suppress_error=False)
 
     validated = validate_live_response(_decode_json(raw), list(shadow["options"]))
     return {

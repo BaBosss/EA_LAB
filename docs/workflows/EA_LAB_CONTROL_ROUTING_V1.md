@@ -135,8 +135,10 @@ git diff --check, a clean committed exact HEAD, and a handoff. This source must 
 receive a separate read-only exact-head GPT Scrutiny before Main Control Tower
 integration. No source mutation is permitted by the reviewer.
 
-This milestone deliberately stops before runtime activation, Monitor wiring, live Jev
-transport, model dispatch, scheduler/service installation, or canonical push.
+This source milestone deliberately stops before live-provider qualification,
+persistent runtime activation, automatic model dispatch, Monitor wiring,
+scheduler/service installation, deployment/trading authority, or canonical push.
+The explicit `jev-live` CLI remains an on-demand advisory call only.
 
 ### Prospective Repair1 (2026-09-24)
 
