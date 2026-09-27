@@ -1,0 +1,22 @@
+{
+  "schema": "mgtt_planning_repair/1",
+  "original_head": "8552a2dd078316323c2a6e83632ff9fd8b0ae4c7",
+  "original_review_path": "D:\\EA_LAB_CONTROL\\evidence\\mg-tester-transfer-qual-v1-20260926\\review-8552\\SCRUTINY_RESULT.json",
+  "original_review_sha256": "7d52385044cfa39662566370d19cedd59d9f9aed8012f5398d37ad53164e93f4",
+  "findings": [
+    "MGTT-P1-001",
+    "MGTT-P1-002",
+    "MGTT-P1-003",
+    "MGTT-P1-004",
+    "MGTT-P1-005"
+  ],
+  "scope": "Planning/document/evidence correction only",
+  "source_code_changed": false,
+  "mt5_runs": 0,
+  "repair1_spent": true,
+  "targeted_recheck_required": true,
+  "new_repair_budget": 0,
+  "old_execution_budget_reset": false,
+  "counterexample_path": "D:\\EA_LAB_CONTROL\\evidence\\mg-tester-transfer-qual-v1-20260926\\technical-inspection-20260927\\METADATA_COUNTEREXAMPLE.json",
+  "counterexample_sha256": "c0688d966a3c9780a9b0feb3cb033943cebe5d16b75ed50407cbba8f28ebb474"
+}

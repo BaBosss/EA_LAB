@@ -1,57 +1,10 @@
 {
-  "schema": "mgtt_phase1_repaired_manifest/2",
-  "canonical_sha": "152b2849d6bb8759b65aa91273248cd068343ddf",
-  "disposition": "READY_FOR_PROSPECTIVE_IMPLEMENTATION",
-  "implementation_ready": true,
-  "implementation_authorized": false,
-  "performance_authorized": false,
-  "source_change_in_phase1": false,
-  "mt5_run_in_phase1": false,
-  "holdout": "LOCKED_UNSPENT",
-  "files": [
-    {
-      "path": "docs/research/NEWS_MACRO_MACROGATE_TESTER_TRANSFER_QUAL_V1_20260926.md",
-      "sha256": "5ba5aa75ca50b7687c472c74081581d65c83e0780407194c18736149279816a0",
-      "bytes": 14001
-    },
-    {
-      "path": "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/FEED_RUNTIME_EXPECTATIONS.json",
-      "sha256": "3f3c04d827b1a188f04ed9ddc54b87ddc15a7f60b67fd45b8f80361b6d9262e6",
-      "bytes": 4708
-    },
-    {
-      "path": "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/MQL5_REFERENCE_BINDING.json",
-      "sha256": "9a20dbd548360364389d428ad3ce557e74221c38dacb409db1a38f6eb6100126",
-      "bytes": 4653
-    },
-    {
-      "path": "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/PHASE1_QUALIFICATION.json",
-      "sha256": "9e2708f7390c25e4376b4b0cebb1e2201eb6c411e430c8779b662b761945f489",
-      "bytes": 16160
-    },
-    {
-      "path": "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/PROSPECTIVE_IMPLEMENTATION_CONTRACT.json",
-      "sha256": "a186b8faa3f104427ecca1960bc4e971c8b917c872747255d407f78b35887b1f",
-      "bytes": 21859
-    },
-    {
-      "path": "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/REPAIR1.json",
-      "sha256": "40b41c2f374f62952a3956d27fec4a4f92219d80448d6582fa2eaac9e1af5c35",
-      "bytes": 928
-    },
-    {
-      "path": "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/SOURCE_BINDING.json",
-      "sha256": "88a213651afed0070a7b6255ce24d5704d7b020be0a7f5ef45429e1783662269",
-      "bytes": 4017
-    },
-    {
-      "path": "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926/validate_phase1.py",
-      "sha256": "2613ce2867c5293684a7eca0f568e99e4bb08631269a1f2ec1a0b77299be35b8",
-      "bytes": 6824
-    }
-  ],
-  "accepted_feed_count": 11,
-  "accepted_feeds": [
+  "schema": "mgtt_expected_bytes/1",
+  "control_canonical": "152b2849d6bb8759b65aa91273248cd068343ddf",
+  "golden_inputs_unchanged": true,
+  "current_in_ea_hash_adapter": "NOT_IMPLEMENTED_NOT_QUALIFIED",
+  "future_source_bound_map_owner": "ea_template/core/MacroGate_Core.mqh under LAB_MG_TESTER_EVIDENCE_QUAL",
+  "entries": [
     {
       "filename": "REAL_FULL_2020_2025_macrogate_native.csv",
       "source_path": "factory/runs/news_macro_macrogate_ab_v1_20260925/feeds/real/REAL_FULL_2020_2025_macrogate_native.csv",
@@ -151,6 +104,5 @@
       "first": "2020.01.01 02:00",
       "last": "2022.12.31 02:00"
     }
-  ],
-  "repair1_spent": true
+  ]
 }
