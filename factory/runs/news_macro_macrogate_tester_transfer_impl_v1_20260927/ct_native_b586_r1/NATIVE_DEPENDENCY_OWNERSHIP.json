@@ -1,0 +1,50 @@
+﻿{
+    "schema":  "mgtt_dependency_ownership/1",
+    "lane_id":  "ct-news-macro-mg-tester-transfer-impl-v1-20260927",
+    "entries":  [
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\REAL_FULL_2020_2025_macrogate_native.csv",
+                        "sha256":  "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092501_macrogate_native.csv",
+                        "sha256":  "dc5b31de1e0d5809c52c388302533b7228a52a389eb37873be50609ba6d30198"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092501_macrogate_native.csv",
+                        "sha256":  "951bff972d0bcc9ef6edb556782cc4e11eafac3194ce0259ee87d6b5364d5320"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092502_macrogate_native.csv",
+                        "sha256":  "f6ce2f5cf0be072e54641bad333871c70fd11ea7b8c4858dd7d600ea187e93a2"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092502_macrogate_native.csv",
+                        "sha256":  "fa9efdd623dfd2d35cd2bfdda457e505de4cebc1ef990f13c9fb582b9cd248b5"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092503_macrogate_native.csv",
+                        "sha256":  "e437e631cd5c158c1b34a3158753bbab767db6de8964457cebff73bc76504344"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092503_macrogate_native.csv",
+                        "sha256":  "7f8f2aad388b9dca7d8e2c53808233987724569db014852bbd7c62c074d3fe98"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092504_macrogate_native.csv",
+                        "sha256":  "1eacab594ebd5a73b1291965d78231611d58912b385910e82a3beae07132ddfd"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092504_macrogate_native.csv",
+                        "sha256":  "8bbe8cf5632685c4b3e3c7a1fd659f35ea96d2297b1e74057609e8b435c5daa8"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092505_macrogate_native.csv",
+                        "sha256":  "1ffcfa71ade5256671196fd7530ecacef60e1e227b7aa7d1e6566d5e35f06c5e"
+                    },
+                    {
+                        "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092505_macrogate_native.csv",
+                        "sha256":  "ab2f6c7818c41ef3502a6a67c2bfa1ae0a707259ad72b6bfb9fd463b7787b3c5"
+                    }
+                ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "macrogate_tester_transfer_author_checkpoint/1",
+  "lane": "ct-news-macro-mg-tester-transfer-impl-v1-20260927",
+  "base_head": "4aa459566c4e5eedc2477938fa5d3f4f86d00e8e",
+  "stage": "AUTHOR_SOURCE_AND_LOCAL_DETERMINISTIC_GATES_COMPLETE",
+  "status": "SOURCE_WIP_HOST_GATES_PASS_AWAITING_CT_NATIVE_GATES",
+  "completed": [
+    "read_required_authority_and_research_context",
+    "read_prospective_implementation_contract_schema_2_and_all_bindings",
+    "verified_owner_authorization_for_bounded_implementation_only",
+    "verified_initial_head_and_clean_worktree",
+    "verified_installed_trade_mqh_sha256_and_virtual_ordersend_forwarder",
+    "implemented_opt_in_boss15_tester_dependencies",
+    "implemented_source_bound_single_buffer_raw_sha256_loader",
+    "implemented_passive_request_and_transaction_ledger",
+    "implemented_no_order_native_probe_source",
+    "implemented_fail_closed_offline_preflight_native_orchestrator",
+    "implemented_host_deterministic_and_adversarial_contract_tests",
+    "host_contract_tests_18_of_18_pass",
+    "portable_python_py_compile_pass",
+    "powershell_parser_pass",
+    "offline_orchestrator_pass_host_only",
+    "git_diff_check_pass",
+    "confirmed_head_remains_initial_base_and_source_is_unstaged_uncommitted"
+  ],
+  "contract_sha256": "a186b8faa3f104427ecca1960bc4e971c8b917c872747255d407f78b35887b1f",
+  "owner_authorization_sha256": "6b7057b94d5720daec7f39d800fe589d888fe3df1d44111e2ace11213cd8eea7",
+  "installed_trade_mqh_sha256": "96e6781624534377fe7971cba52cca3d62d1b030bc10d5e4ebf3ed8c541399ed",
+  "native_process_action": "NONE",
+  "native_gates": "NOT_RUN_BY_AUTHOR_CONTRACT",
+  "performance_execution": "NOT_RUN_NOT_AUTHORIZED",
+  "next_stage": "MAIN_CT_RESOLVES_RUNTIME_OWNERSHIP_THEN_RUNS_TPL_COMPILE_AND_NATIVE_PROBE_GATES",
+  "blockers": [
+    "OWNER_REPORTED_UNRESOLVED_EXISTING_D_META5_TERMINAL_PROCESS",
+    "TPL_REGRESSION_CLEAN_NOT_RUN_BY_AUTHOR_CONTRACT",
+    "MQL_COMPILE_AND_NATIVE_PROBES_NOT_RUN_BY_AUTHOR_CONTRACT",
+    "NATIVE_PASSIVE_LEDGER_CAGES_NOT_RUN_BY_AUTHOR_CONTRACT"
+  ]
+}

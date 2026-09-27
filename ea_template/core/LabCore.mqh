@@ -273,6 +273,27 @@ void Lab_LogEffectiveConfig()
 //+------------------------------------------------------------------+
 int OnInit()
 {
+#ifdef LAB_MG_TESTER_EVIDENCE_QUAL
+   if(MGTT_IsActive())
+   {
+      string mgtt_config_fingerprint=CFG_Fingerprint();
+      MGTT_RunBegin(LAB_BUILD_RECEIPT,mgtt_config_fingerprint,_MG_SelfGate);
+      // Qualified tester self-gates validate the source-compiled byte identity
+      // and parse that same buffer before indicator, regime, risk, strategy or
+      // order initialization. BASE (_MG_SelfGate=false) consumes no feed while
+      // retaining the passive all-attempt ledger.
+      if(_MG_SelfGate)
+      {
+         MG_Setup(_MG_LotMult,_MG_BlockNew,_MG_TriggerRiskOff,
+                  _MG_OffsetHours,8760,168);
+         MG_ParseMagics(IntegerToString(_0_Magic));
+         if(!MGTT_LoadQualifiedRegime(_MG_RegimeFile,_MG_InCommon,
+                                      LAB_BUILD_RECEIPT,
+                                      mgtt_config_fingerprint))
+            return INIT_FAILED;
+      }
+   }
+#endif
    // ORDER-129 magic-collision guard (Codex system review SEV-1): every Boss wrapper
    // compiles with the same default magic (990001). Ownership is symbol+magic only, so
    // two Boss EAs attached with compiled defaults would count, stack, partially close
@@ -358,10 +379,22 @@ int OnInit()
    Exec_Init();
    if(_MG_SelfGate)
    {
+#ifdef LAB_MG_TESTER_EVIDENCE_QUAL
+      // The active qualification tester already setup, byte-verified and
+      // parsed the immutable buffer at the first line of OnInit. Feature-built
+      // non-tester runs retain the legacy path unchanged.
+      if(!MGTT_IsActive())
+      {
+         MG_Setup(_MG_LotMult, _MG_BlockNew, _MG_TriggerRiskOff, _MG_OffsetHours, 8760, 168);
+         MG_ParseMagics(IntegerToString(_0_Magic));
+         MG_LoadRegime(_MG_RegimeFile, _MG_InCommon);
+      }
+#else
       // self-gate this EA on its own magic (RowStaleMaxHours huge: tester rows are dense daily)
       MG_Setup(_MG_LotMult, _MG_BlockNew, _MG_TriggerRiskOff, _MG_OffsetHours, 8760, 168);
       MG_ParseMagics(IntegerToString(_0_Magic));
       MG_LoadRegime(_MG_RegimeFile, _MG_InCommon);
+#endif
       MG_Tick(TimeCurrent());
    }
    // ORDER-138 #1: an identity-less ACTIVE legacy kill/halt without explicit
@@ -518,11 +551,51 @@ void OnDeinit(const int reason)
 #endif // LAB_ENTRY_21
 #endif // LAB_ENTRY_24
 #endif // LAB_ENTRY_25
+#ifdef LAB_MG_TESTER_EVIDENCE_QUAL
+   if(MGTT_IsActive()) MGTT_RunEnd(reason);
+#endif
 }
 
 //+------------------------------------------------------------------+
+#ifdef LAB_MG_TESTER_EVIDENCE_QUAL
+void Lab_OpenOrderObserved(const int dir,const int level)
+{
+   long intent_id=MGTT_StrategyIntentBegin(dir);
+   MqlTick t;
+   if(!SymbolInfoTick(_Symbol,t))
+   {
+      MGTT_StrategyIntentRefusal(intent_id,"QUOTE");
+      return;
+   }
+   double entry=(dir==1 ? t.ask : t.bid);
+   double sl=Exit_InitialSL(dir,entry);
+   if(Exit_StructSLMissing(sl))
+   {
+      MGTT_StrategyIntentRefusal(intent_id,"STRUCTURAL_SL");
+      return;
+   }
+   double tp=Exit_InitialTP(dir,entry);
+   double firstLot=MM_FirstLot(Exit_SLDistancePoints());
+   double lot=MM_NextLot(firstLot,level);
+   if(!Basket_HeatCheckPass(_Symbol,lot))
+   {
+      MGTT_StrategyIntentRefusal(intent_id,"HEAT");
+      return;
+   }
+   Exec_Open(dir,lot,sl,tp,LAB_ENTRY_TAG+" L"+IntegerToString(level));
+   MGTT_StrategyIntentEnd(intent_id);
+}
+#endif
+
 void Lab_OpenOrder(const int dir, const int level)
 {
+#ifdef LAB_MG_TESTER_EVIDENCE_QUAL
+   if(MGTT_IsActive())
+   {
+      Lab_OpenOrderObserved(dir,level);
+      return;
+   }
+#endif
    MqlTick t;
    if(!SymbolInfoTick(_Symbol, t)) return;
    double entry    = (dir == 1 ? t.ask : t.bid);
@@ -541,6 +614,18 @@ void Lab_OpenOrder(const int dir, const int level)
 }
 
 //+------------------------------------------------------------------+
+#ifdef LAB_MG_TESTER_EVIDENCE_QUAL
+// Boss15 had no prior OnTradeTransaction body. This qualification-only
+// composition is passive: it observes transaction identities and performs no
+// order, position or history mutation.
+void OnTradeTransaction(const MqlTradeTransaction &trans,
+                        const MqlTradeRequest &request,
+                        const MqlTradeResult &result)
+{
+   MGTT_OnTradeTransaction(trans,request,result);
+}
+#endif
+
 void OnTick()
 {
    RuntimeIdentity_Update();  // binds the first observed entry to this attach epoch

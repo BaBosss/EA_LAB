@@ -157,6 +157,259 @@ bool MG_IsStaleAge(const double ageHours)
    return (mg_staleMaxHours > 0 && ageHours > (double)mg_staleMaxHours);
 }
 
+// One parser owns both the legacy text-file loader and the qualification
+// same-buffer loader. This preserves the accepted timestamp/state/UNKNOWN and
+// ascending-row semantics while allowing qualified tester bytes to be hashed
+// and parsed without reopening a mutable path.
+void MG_ParseRegimeDataLine(const string line, int &skipped,
+                            datetime &prevT, bool &ascending)
+{
+   if(StringLen(line) < 8) return;
+   string f[6];
+   if(MG_SplitCsv(line, f) < 2) { skipped++; return; }
+   string ts = f[0]; StringTrimLeft(ts); StringTrimRight(ts);
+   // Require a real yyyy.MM.dd HH:mm shape so StringToTime cannot silently
+   // coerce a malformed token.
+   int sp = StringFind(ts, " ");
+   if(sp < 0 || StringFind(StringSubstr(ts, 0, sp), ".") < 0)
+   {
+      skipped++;
+      return;
+   }
+   datetime t = StringToTime(ts);
+   if(t <= 0) { skipped++; return; }
+   t += (datetime)(mg_offsetHours * 3600);
+   int st = MG_StateFromString(f[1]);
+   if(st == MG_ST_INVALID) { skipped++; return; }
+   // Explicit UNKNOWN remains selectable only in the tester. Non-tester
+   // loading retains the historical skip behavior.
+   if(st == MG_ST_UNKNOWN && !MQLInfoInteger(MQL_TESTER))
+   {
+      skipped++;
+      return;
+   }
+   // Deliberately preserve the accepted rule: equal timestamps are accepted;
+   // only a backwards timestamp marks the file unsorted.
+   if(mg_rowCount > 0 && t < prevT) ascending = false;
+   mg_rowTime[mg_rowCount]  = t;
+   mg_rowState[mg_rowCount] = st;
+   prevT = t;
+   mg_rowCount++;
+}
+
+#ifdef LAB_MG_TESTER_EVIDENCE_QUAL
+// Source-compiled byte identities. No runtime sidecar may supply or replace an
+// expected digest. Test-only probe overrides are compile-time literals and are
+// never accepted by the production Boss15 map.
+bool MGTT_ExpectedFeed(const string fname, string &sha256, long &bytes,
+                       int &rows, string &first, string &last)
+{
+#ifdef MGTT_PROBE_EXPECTED_FILENAME
+   if(fname == MGTT_PROBE_EXPECTED_FILENAME)
+   {
+      sha256 = MGTT_PROBE_EXPECTED_SHA256;
+      bytes  = MGTT_PROBE_EXPECTED_BYTES;
+      rows   = MGTT_PROBE_EXPECTED_ROWS;
+      first  = MGTT_PROBE_EXPECTED_FIRST;
+      last   = MGTT_PROBE_EXPECTED_LAST;
+      return true;
+   }
+#endif
+   if(fname == "REAL_FULL_2020_2025_macrogate_native.csv")
+   { sha256="6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a"; bytes=73544; rows=2192; first="2020.01.01 02:00"; last="2025.12.31 02:00"; return true; }
+   if(fname == "MAIN_seed_2026092501_macrogate_native.csv")
+   { sha256="dc5b31de1e0d5809c52c388302533b7228a52a389eb37873be50609ba6d30198"; bytes=36118; rows=1096; first="2023.01.01 02:00"; last="2025.12.31 02:00"; return true; }
+   if(fname == "BWD_seed_2026092501_macrogate_native.csv")
+   { sha256="951bff972d0bcc9ef6edb556782cc4e11eafac3194ce0259ee87d6b5364d5320"; bytes=37446; rows=1096; first="2020.01.01 02:00"; last="2022.12.31 02:00"; return true; }
+   if(fname == "MAIN_seed_2026092502_macrogate_native.csv")
+   { sha256="f6ce2f5cf0be072e54641bad333871c70fd11ea7b8c4858dd7d600ea187e93a2"; bytes=36121; rows=1096; first="2023.01.01 02:00"; last="2025.12.31 02:00"; return true; }
+   if(fname == "BWD_seed_2026092502_macrogate_native.csv")
+   { sha256="fa9efdd623dfd2d35cd2bfdda457e505de4cebc1ef990f13c9fb582b9cd248b5"; bytes=37446; rows=1096; first="2020.01.01 02:00"; last="2022.12.31 02:00"; return true; }
+   if(fname == "MAIN_seed_2026092503_macrogate_native.csv")
+   { sha256="e437e631cd5c158c1b34a3158753bbab767db6de8964457cebff73bc76504344"; bytes=36120; rows=1096; first="2023.01.01 02:00"; last="2025.12.31 02:00"; return true; }
+   if(fname == "BWD_seed_2026092503_macrogate_native.csv")
+   { sha256="7f8f2aad388b9dca7d8e2c53808233987724569db014852bbd7c62c074d3fe98"; bytes=37449; rows=1096; first="2020.01.01 02:00"; last="2022.12.31 02:00"; return true; }
+   if(fname == "MAIN_seed_2026092504_macrogate_native.csv")
+   { sha256="1eacab594ebd5a73b1291965d78231611d58912b385910e82a3beae07132ddfd"; bytes=36120; rows=1096; first="2023.01.01 02:00"; last="2025.12.31 02:00"; return true; }
+   if(fname == "BWD_seed_2026092504_macrogate_native.csv")
+   { sha256="8bbe8cf5632685c4b3e3c7a1fd659f35ea96d2297b1e74057609e8b435c5daa8"; bytes=37449; rows=1096; first="2020.01.01 02:00"; last="2022.12.31 02:00"; return true; }
+   if(fname == "MAIN_seed_2026092505_macrogate_native.csv")
+   { sha256="1ffcfa71ade5256671196fd7530ecacef60e1e227b7aa7d1e6566d5e35f06c5e"; bytes=36119; rows=1096; first="2023.01.01 02:00"; last="2025.12.31 02:00"; return true; }
+   if(fname == "BWD_seed_2026092505_macrogate_native.csv")
+   { sha256="ab2f6c7818c41ef3502a6a67c2bfa1ae0a707259ad72b6bfb9fd463b7787b3c5"; bytes=37445; rows=1096; first="2020.01.01 02:00"; last="2022.12.31 02:00"; return true; }
+   return false;
+}
+
+bool MGTT_Sha256Hex(uchar &raw[], string &hex)
+{
+   uchar empty_key[];
+   uchar digest[];
+   ArrayResize(empty_key, 0);
+   ArrayResize(digest, 0);
+   int n = CryptEncode(CRYPT_HASH_SHA256, raw, empty_key, digest);
+   if(n != 32 || ArraySize(digest) != 32)
+   {
+      hex = "";
+      return false;
+   }
+   hex = "";
+   for(int i=0; i<32; i++) hex += StringFormat("%02x", (int)digest[i]);
+   return (StringLen(hex) == 64);
+}
+
+void MGTT_FeedFailure(const string fname, const string reason,
+                      const string expected_sha, const string observed_sha,
+                      const long expected_bytes, const long observed_bytes,
+                      const long bytes_read)
+{
+   PrintFormat("[MGTT_FEED] requested_filename=%s source_class=TESTER_SANDBOX_NONCOMMON expected_sha256=%s observed_sha256=%s expected_size_bytes=%I64d file_size_bytes=%I64d bytes_read=%I64d load_status=FAIL failure=%s",
+               fname, expected_sha, observed_sha, expected_bytes,
+               observed_bytes, bytes_read, reason);
+}
+
+// Qualification-only loader: one binary open, one full read, hash and parse of
+// the same immutable uchar buffer. It is called only under tester+self-gate and
+// its false return is an OnInit INIT_FAILED decision owned by LabCore.
+bool MGTT_LoadQualifiedRegime(const string fname, const bool common,
+                              const string build_receipt,
+                              const string config_fingerprint)
+{
+   mg_rowCount=0; mg_ok=false; mg_fileAgeHours=-1.0;
+   mg_fname=fname; mg_common=common;
+
+   string expected_sha="", expected_first="", expected_last="";
+   long expected_bytes=-1;
+   int expected_rows=-1;
+   if(!MGTT_ExpectedFeed(fname, expected_sha, expected_bytes,
+                         expected_rows, expected_first, expected_last))
+   {
+      MGTT_FeedFailure(fname,"UNKNOWN_FILENAME","","",-1,-1,0);
+      return false;
+   }
+   if(common)
+   {
+      MGTT_FeedFailure(fname,"COMMON_FORBIDDEN",expected_sha,"",
+                       expected_bytes,-1,0);
+      return false;
+   }
+   if(!FileIsExist(fname,0))
+   {
+      MGTT_FeedFailure(fname,"MISSING",expected_sha,"",
+                       expected_bytes,-1,0);
+      return false;
+   }
+   long mod=FileGetInteger(fname,FILE_MODIFY_DATE,false);
+   if(mod > 0) mg_fileAgeHours=(double)(TimeLocal()-(datetime)mod)/3600.0;
+   if(MG_IsStaleAge(mg_fileAgeHours))
+   {
+      MGTT_FeedFailure(fname,"STALE_REJECTED_BY_EXISTING_LOADER",
+                       expected_sha,"",expected_bytes,-1,0);
+      return false;
+   }
+
+   int h=FileOpen(fname,FILE_READ|FILE_BIN);
+   if(h == INVALID_HANDLE)
+   {
+      MGTT_FeedFailure(fname,"OPEN_FAILED",expected_sha,"",
+                       expected_bytes,-1,0);
+      return false;
+   }
+   ulong observed_size=FileSize(h);
+   long observed_bytes=-1;
+   if(observed_size <= 2147483647)
+      observed_bytes=(long)observed_size;
+   if(expected_bytes < 0 || observed_size != (ulong)expected_bytes)
+   {
+      FileClose(h);
+      MGTT_FeedFailure(fname,"SIZE_MISMATCH",expected_sha,"",
+                       expected_bytes,observed_bytes,0);
+      return false;
+   }
+   uchar raw[];
+   if(ArrayResize(raw,(int)expected_bytes) != (int)expected_bytes)
+   {
+      FileClose(h);
+      MGTT_FeedFailure(fname,"READ_INCOMPLETE",expected_sha,"",
+                       expected_bytes,observed_bytes,0);
+      return false;
+   }
+   uint read_count=FileReadArray(h,raw,0,(uint)expected_bytes);
+   FileClose(h);
+   if((long)read_count != expected_bytes)
+   {
+      MGTT_FeedFailure(fname,"READ_INCOMPLETE",expected_sha,"",
+                       expected_bytes,observed_bytes,(long)read_count);
+      return false;
+   }
+
+   string observed_sha="";
+   if(!MGTT_Sha256Hex(raw,observed_sha))
+   {
+      MGTT_FeedFailure(fname,"HASH_ERROR",expected_sha,"",
+                       expected_bytes,observed_bytes,(long)read_count);
+      return false;
+   }
+   if(observed_sha != expected_sha)
+   {
+      MGTT_FeedFailure(fname,"HASH_MISMATCH",expected_sha,observed_sha,
+                       expected_bytes,observed_bytes,(long)read_count);
+      return false;
+   }
+
+   string text=CharArrayToString(raw,0,WHOLE_ARRAY,CP_UTF8);
+   if(StringLen(text)>0 && StringGetCharacter(text,0)==0xFEFF)
+      text=StringSubstr(text,1);
+   string lines[];
+   ushort newline=StringGetCharacter("\n",0);
+   int line_count=StringSplit(text,newline,lines);
+   int skipped=0;
+   datetime prevT=0;
+   bool ascending=true;
+   for(int i=0; i<line_count && mg_rowCount<MG_MAX_ROWS; i++)
+   {
+      string line=lines[i];
+      int len=StringLen(line);
+      if(len>0 && StringGetCharacter(line,len-1)==13)
+         line=StringSubstr(line,0,len-1);
+      if(i==0) continue; // same unconditional header skip as the legacy loader
+      MG_ParseRegimeDataLine(line,skipped,prevT,ascending);
+   }
+   if(mg_rowCount==0)
+   {
+      MGTT_FeedFailure(fname,"ZERO_VALID_ROWS",expected_sha,observed_sha,
+                       expected_bytes,observed_bytes,(long)read_count);
+      return false;
+   }
+   if(!ascending)
+   {
+      mg_rowCount=0;
+      MGTT_FeedFailure(fname,"UNSORTED",expected_sha,observed_sha,
+                       expected_bytes,observed_bytes,(long)read_count);
+      return false;
+   }
+
+   datetime expected_first_time=StringToTime(expected_first)+(datetime)(mg_offsetHours*3600);
+   datetime expected_last_time =StringToTime(expected_last) +(datetime)(mg_offsetHours*3600);
+   if(mg_rowCount!=expected_rows || mg_rowTime[0]!=expected_first_time ||
+      mg_rowTime[mg_rowCount-1]!=expected_last_time)
+   {
+      mg_rowCount=0;
+      MGTT_FeedFailure(fname,"PARSE_OR_METADATA_MISMATCH",expected_sha,
+                       observed_sha,expected_bytes,observed_bytes,
+                       (long)read_count);
+      return false;
+   }
+
+   mg_ok=true;
+   PrintFormat("[MGTT_FEED] build_receipt=%s effective_config_fingerprint=%s requested_filename=%s source_class=TESTER_SANDBOX_NONCOMMON expected_sha256=%s observed_sha256=%s file_size_bytes=%I64d bytes_read=%I64d valid_row_count=%d skipped_row_count=%d first_accepted_timestamp=%s last_accepted_timestamp=%s load_status=PASS",
+               build_receipt,config_fingerprint,fname,expected_sha,observed_sha,
+               observed_bytes,(long)read_count,mg_rowCount,skipped,
+               TimeToString(mg_rowTime[0],TIME_DATE|TIME_MINUTES),
+               TimeToString(mg_rowTime[mg_rowCount-1],TIME_DATE|TIME_MINUTES));
+   return true;
+}
+#endif // LAB_MG_TESTER_EVIDENCE_QUAL
+
 //+------------------------------------------------------------------+
 //| Load + validate the regime timeline CSV. Columns:                |
 //|   datetime,state,ri[,flags]   header skipped. Rows kept ascending.|
@@ -194,27 +447,7 @@ bool MG_LoadRegime(const string fname, const bool common)
    {
       string l = FileReadString(h); line++;
       if(line == 1) continue;               // header
-      if(StringLen(l) < 8) continue;
-      string f[6];
-      if(MG_SplitCsv(l, f) < 2) { skipped++; continue; }
-      string ts = f[0]; StringTrimLeft(ts); StringTrimRight(ts);
-      // require a real "yyyy.MM.dd HH:mm" shape (a '.' inside the date part before the
-      // space) so StringToTime cannot silently coerce a malformed token (Codex QA 2026-07-18)
-      int sp = StringFind(ts, " ");
-      if(sp < 0 || StringFind(StringSubstr(ts, 0, sp), ".") < 0) { skipped++; continue; }
-      datetime t = StringToTime(ts);
-      if(t <= 0) { skipped++; continue; }
-      t += (datetime)(mg_offsetHours * 3600);
-      int st = MG_StateFromString(f[1]);
-      if(st == MG_ST_INVALID) { skipped++; continue; }
-      // Explicit UNKNOWN is a selectable quarantine marker only in the tester.
-      // Live/non-tester loading keeps the historical skip behavior.
-      if(st == MG_ST_UNKNOWN && !MQLInfoInteger(MQL_TESTER)) { skipped++; continue; }
-      if(mg_rowCount > 0 && t < prevT) ascending = false;
-      mg_rowTime[mg_rowCount]  = t;
-      mg_rowState[mg_rowCount] = st;
-      prevT = t;
-      mg_rowCount++;
+      MG_ParseRegimeDataLine(l,skipped,prevT,ascending);
    }
    FileClose(h);
    if(mg_rowCount == 0)

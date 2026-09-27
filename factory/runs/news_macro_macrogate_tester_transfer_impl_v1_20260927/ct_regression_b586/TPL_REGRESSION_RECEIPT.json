@@ -1,0 +1,10 @@
+﻿{
+    "schema":  "mgtt_tpl_regression_receipt/1",
+    "head":  "b586d4d32c04fa33a30517ab3a1a8469b238d2ac",
+    "started_utc":  "2026-09-27T08:53:30.3732349+00:00",
+    "ended_utc":  "2026-09-27T08:53:31.0132721+00:00",
+    "exit_code":  1,
+    "log":  "D:\\EA_LAB_CONTROL\\w\\mg-tester-transfer-impl-0927\\factory\\runs\\news_macro_macrogate_tester_transfer_impl_v1_20260927\\ct_regression_b586\\tpl_regression.log",
+    "log_sha256":  "78083c8dab17fc3011970c674fb2762585a7dd67caf445f8484e385448db6314",
+    "performance":  "NOT_RUN"
+}

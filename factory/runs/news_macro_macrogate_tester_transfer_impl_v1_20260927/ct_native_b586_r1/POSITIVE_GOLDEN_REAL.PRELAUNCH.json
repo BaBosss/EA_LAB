@@ -1,0 +1,15 @@
+﻿{
+    "case":  "POSITIVE_GOLDEN_REAL",
+    "source":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-155747\\scripts\\_test\\MGTT_POSITIVE_GOLDEN_REAL.mq5",
+    "source_sha256":  "fc1fa22b69d7637d80c300bc2664d8b1d840b864b9f539aa2f74cc171119e814",
+    "ex5":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-155747\\scripts\\_test\\MGTT_POSITIVE_GOLDEN_REAL.ex5",
+    "ex5_sha256":  "0aee72495f66a14c885faa64c366cc1eaa7c3bdf8aec589c5d5e971ac359f9e9",
+    "dependency":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\REAL_FULL_2020_2025_macrogate_native.csv",
+    "dependency_sha256":  "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a",
+    "expected_failure":  "",
+    "model":  "M1_M1_OHLC_ENGINEERING_NO_PERFORMANCE",
+    "symbol":  "GBPUSD",
+    "timeframe":  "H4",
+    "from":  "2020.01.02",
+    "to":  "2020.01.03"
+}

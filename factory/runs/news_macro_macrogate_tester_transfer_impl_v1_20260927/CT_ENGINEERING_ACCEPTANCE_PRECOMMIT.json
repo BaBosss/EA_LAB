@@ -1,0 +1,43 @@
+﻿{
+    "schema":  "mgtt_ct_engineering_acceptance_precommit/1",
+    "canonical_parent":  "b586d4d32c04fa33a30517ab3a1a8469b238d2ac",
+    "native_result_path":  "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/ct_native_b586_r5/NATIVE_RESULT.json",
+    "native_result_sha256":  "76c2f5cfaedda01230837a859a4fa3beddaa3d98840050f6f698a02bfa95cbda",
+    "compile_receipt_sha256":  "786ee8ac9ff3a7c65af214432e915db22b08950ca36c588e64a11c06ec4b927c",
+    "preflight_receipt_sha256":  "fdbfe36277422859a8e3d108ee16f30047742f2fcf7806f1103a9f53a32cc50b",
+    "native_cases":  [
+                         "POSITIVE_GOLDEN_REAL:PASS_ENGINEERING",
+                         "MISSING:PASS_ENGINEERING",
+                         "WRONG_SAME_METADATA:PASS_ENGINEERING",
+                         "STALE_TRUNCATED_COPY:PASS_ENGINEERING"
+                     ],
+    "ledger_native":  {
+                          "base_self_gate_off_telemetry":  true,
+                          "certified_counts_before_fault":  true,
+                          "synthetic_order_send_invoked":  false,
+                          "unmatched_fill_fails_certification":  true,
+                          "duplicate_transaction_fails_certification":  true,
+                          "unresolved_bool_retcode_classification_checked":  true,
+                          "partial_classification_checked":  true,
+                          "marker_lines":  [
+                                               "CS\t0\t16:14:58.651\tMGTT_POSITIVE_GOLDEN_REAL (GBPUSD,H4)\t2020.01.02 00:00:00   [MGTT] event=RUN_BEGIN session=MGTT-1577923200-81720343 seq=1 build=MGTT_LEDGER_PROBE config=MGTT_LEDGER_CFG feature=LAB_MG_TESTER_EVIDENCE_QUAL MG_SelfGate=0 volume_tolerance=step_x_1e-8",
+                                               "CS\t0\t16:14:58.651\tMGTT_POSITIVE_GOLDEN_REAL (GBPUSD,H4)\t2020.01.02 00:00:00   [MGTT_LEDGER_PROBE] CERTIFIED_COUNTS_PASS self_gate=0 no_order_send=1",
+                                               "CS\t0\t16:14:58.651\tMGTT_POSITIVE_GOLDEN_REAL (GBPUSD,H4)\t2020.01.02 00:00:00   [MGTT_LEDGER_PROBE] ADVERSARIAL_FAIL_CLOSED_PASS",
+                                               "CS\t0\t16:14:58.651\tMGTT_POSITIVE_GOLDEN_REAL (GBPUSD,H4)\t2020.01.02 00:00:00   [MGTT] event=RUN_END session=MGTT-1577923200-81720343 seq=21 last_sequence=21 strategy_intent_total=1 execution_entry_total=3 pre_submit_terminal_total=1 submit_total=2 native_request_total=2 accepted_request_total=1 rejected_request_total=1 unresolved_request_total=0 unresolved_ids=NONE entry_fill_total=1 entry_inout_fill_total=0 macro_block_total=1 evidence_error_count=1 blocked_execution_entry_share_v1=null availability=UNAVAILABLE_NOT_CERTIFIED deinit_reason=0 normal_completion=HOST_MUST_CERTIFY"
+                                           ]
+                      },
+    "failed_attempts_preserved":  [
+                                      "ct_native_b586",
+                                      "ct_native_b586_r1",
+                                      "ct_native_b586_r2",
+                                      "ct_native_b586_r3",
+                                      "ct_native_b586_r4"
+                                  ],
+    "performance":  "NOT_RUN_NOT_INTERPRETED",
+    "holdout":  "LOCKED_UNSPENT",
+    "runtime_processes_after":  [
+
+                                ],
+    "tpl_regression_status":  "PENDING_COMMITTED_DECLARED_CORE_DELTA",
+    "created_utc":  "2026-09-27T09:19:45.4497317+00:00"
+}

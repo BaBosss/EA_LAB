@@ -1,0 +1,8 @@
+﻿{
+    "schema":  "mgtt_orchestrator_failure/1",
+    "mode":  "Native",
+    "status":  "REFUSE",
+    "error":  "The term \u0027//\u0027 is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.",
+    "native_process_action":  "NO_KILL_NO_FORCE",
+    "performance":  "NOT_RUN"
+}

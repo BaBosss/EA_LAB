@@ -1,0 +1,103 @@
+﻿{
+    "schema":  "mgtt_native_qualification/1",
+    "status":  "PASS_NO_PERFORMANCE",
+    "compile_receipt":  {
+                            "schema":  "mgtt_compile_receipt/1",
+                            "control_source":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\ea_template\\Boss_15_ST03.mq5",
+                            "control_source_sha256":  "d1821126fcc3a69605627086cf319336c0101c7f287cce90cc47c8fb7a1a6975",
+                            "control_ex5":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\ea_template\\Boss_15_ST03.ex5",
+                            "control_ex5_sha256":  "cebd96bf1457f373eb55f2e11006bd6fceb2039305d2796ac48437da487aa671",
+                            "qualification_source":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\ea_template\\Boss_15_ST03_QUAL.mq5",
+                            "qualification_source_sha256":  "2381da4f03a581d097f4a80444745b7379d95eef087f11e36d3e8a812afa2103",
+                            "qualification_ex5":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\ea_template\\Boss_15_ST03_QUAL.ex5",
+                            "qualification_ex5_sha256":  "37a1122e59ce8b2d7784d1c0c6030675d017d4d24d2844e3630e61e00e7253d3",
+                            "trade_mqh_sha256":  "96e6781624534377fe7971cba52cca3d62d1b030bc10d5e4ebf3ed8c541399ed",
+                            "terminal_sha256":  "f163b8069e3f34f5cb4556e02e06ba69b65816d6990e7dc360b01a9501616072",
+                            "metaeditor_sha256":  "cf2750bde55d98a1f3b4e56bcdd4f59300d0cff5caa6760985f7ef2c2cc12229",
+                            "dependencies":  [
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\REAL_FULL_2020_2025_macrogate_native.csv",
+                                                     "sha256":  "6aba7e1e7bd01e82469db580ae666c9903803c4fb8d206f4cc44f8aab8afbb2a"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092501_macrogate_native.csv",
+                                                     "sha256":  "dc5b31de1e0d5809c52c388302533b7228a52a389eb37873be50609ba6d30198"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092501_macrogate_native.csv",
+                                                     "sha256":  "951bff972d0bcc9ef6edb556782cc4e11eafac3194ce0259ee87d6b5364d5320"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092502_macrogate_native.csv",
+                                                     "sha256":  "f6ce2f5cf0be072e54641bad333871c70fd11ea7b8c4858dd7d600ea187e93a2"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092502_macrogate_native.csv",
+                                                     "sha256":  "fa9efdd623dfd2d35cd2bfdda457e505de4cebc1ef990f13c9fb582b9cd248b5"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092503_macrogate_native.csv",
+                                                     "sha256":  "e437e631cd5c158c1b34a3158753bbab767db6de8964457cebff73bc76504344"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092503_macrogate_native.csv",
+                                                     "sha256":  "7f8f2aad388b9dca7d8e2c53808233987724569db014852bbd7c62c074d3fe98"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092504_macrogate_native.csv",
+                                                     "sha256":  "1eacab594ebd5a73b1291965d78231611d58912b385910e82a3beae07132ddfd"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092504_macrogate_native.csv",
+                                                     "sha256":  "8bbe8cf5632685c4b3e3c7a1fd659f35ea96d2297b1e74057609e8b435c5daa8"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\MAIN_seed_2026092505_macrogate_native.csv",
+                                                     "sha256":  "1ffcfa71ade5256671196fd7530ecacef60e1e227b7aa7d1e6566d5e35f06c5e"
+                                                 },
+                                                 {
+                                                     "path":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\BWD_seed_2026092505_macrogate_native.csv",
+                                                     "sha256":  "ab2f6c7818c41ef3502a6a67c2bfa1ae0a707259ad72b6bfb9fd463b7787b3c5"
+                                                 }
+                                             ]
+                        },
+    "probe_results":  [
+                          {
+                              "case":  "POSITIVE_GOLDEN_REAL",
+                              "status":  "PASS_ENGINEERING",
+                              "exit_code":  0,
+                              "output":  "symbol preflight: logical=GBPUSD tester=GBPUSD status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\bases\\ThinkMarkets-Live\\symbols\\selected-146237.dat; history/ticks metadata under \u0027D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\bases\\ThinkMarkets-Live\u0027\r\nsurface: NOSETFILE -- no -SetFile: EVERY input comes from this terminal\u0027s tester cache (MQL5\\Profiles\\Tester), rewritten by any session that touches this EA here. NON-REPRODUCIBLE -- pass a FULL .set for any number you intend to keep (ORDER-165).\r\nidentity: LEGACY_ALLOWED -- build=MISMATCH (EX5 SHA256 42c02970837efc15cbc47be1c9d7945c283e59c33d47cce3bccb8964af1b8f0c is not bound to a stamped build receipt); config=MISSING (no -SetFile supplied)\r\nstale-check: HASH_DIFFERS -- D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_POSITIVE_GOLDEN_REAL.ex5 mtime=2026-09-27T16:14:53 :: SHA256 differs from other copy(ies) of \u0027MGTT_POSITIVE_GOLDEN_REAL\u0027: D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-155747\\scripts\\_test\\MGTT_POSITIVE_GOLDEN_REAL.ex5 [0AEE72495F66A14C885FAA64C366CC1EAA7C3BDF8AEC589C5D5 ...\r\nlaunch: EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_POSITIVE_GOLDEN_REAL | logical=GBPUSD tester=GBPUSD H4 | 2020.01.02..2020.01.03 | set=\r\nOK REPORT: D:\\EA_LAB_CONTROL\\w\\mg-tester-transfer-impl-0927\\_mt5_auto\\reports\\MGTT_POSITIVE_GOLDEN_REAL.htm (leverage verified 1:100)",
+                              "logs":  [
+                                           "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Tester\\9CA16B8382AE4CF692710FB36B9DA355\\Agent-127.0.0.1-3000\\logs\\20260927.log"
+                                       ]
+                          },
+                          {
+                              "case":  "MISSING",
+                              "status":  "PASS_ENGINEERING",
+                              "exit_code":  0,
+                              "output":  "symbol preflight: logical=GBPUSD tester=GBPUSD status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\bases\\ThinkMarkets-Live\\symbols\\selected-146237.dat; history/ticks metadata under \u0027D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\bases\\ThinkMarkets-Live\u0027\r\nsurface: NOSETFILE -- no -SetFile: EVERY input comes from this terminal\u0027s tester cache (MQL5\\Profiles\\Tester), rewritten by any session that touches this EA here. NON-REPRODUCIBLE -- pass a FULL .set for any number you intend to keep (ORDER-165).\r\nidentity: LEGACY_ALLOWED -- build=MISMATCH (EX5 SHA256 aed63d56e3a844375fc8f0d2676027d7b4fff2a8f7b6bd571c885cb1e0fa2ec8 is not bound to a stamped build receipt); config=MISSING (no -SetFile supplied)\r\nstale-check: HASH_DIFFERS -- D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_MISSING.ex5 mtime=2026-09-27T16:15:06 :: SHA256 differs from other copy(ies) of \u0027MGTT_MISSING\u0027: D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-160333\\scripts\\_test\\MGTT_MISSING.ex5 [BA5198A1531A453FCFEFF3E1B886049C469D2739A560AA419EDA0BA937E233CC]; D:\\MetaTra ...\r\nlaunch: EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_MISSING | logical=GBPUSD tester=GBPUSD H4 | 2020.01.02..2020.01.03 | set=\r\nOK REPORT: D:\\EA_LAB_CONTROL\\w\\mg-tester-transfer-impl-0927\\_mt5_auto\\reports\\MGTT_MISSING.htm (leverage verified 1:100)",
+                              "logs":  [
+                                           "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Tester\\9CA16B8382AE4CF692710FB36B9DA355\\Agent-127.0.0.1-3000\\logs\\20260927.log"
+                                       ]
+                          },
+                          {
+                              "case":  "WRONG_SAME_METADATA",
+                              "status":  "PASS_ENGINEERING",
+                              "exit_code":  0,
+                              "output":  "symbol preflight: logical=GBPUSD tester=GBPUSD status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\bases\\ThinkMarkets-Live\\symbols\\selected-146237.dat; history/ticks metadata under \u0027D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\bases\\ThinkMarkets-Live\u0027\r\nsurface: NOSETFILE -- no -SetFile: EVERY input comes from this terminal\u0027s tester cache (MQL5\\Profiles\\Tester), rewritten by any session that touches this EA here. NON-REPRODUCIBLE -- pass a FULL .set for any number you intend to keep (ORDER-165).\r\nidentity: LEGACY_ALLOWED -- build=MISMATCH (EX5 SHA256 adfa33dc69afa75dcfa4ba1fbbd3946588037fb38f412794a08cd4792bfb83cb is not bound to a stamped build receipt); config=MISSING (no -SetFile supplied)\r\nstale-check: HASH_DIFFERS -- D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_WRONG_SAME_METADATA.ex5 mtime=2026-09-27T16:15:18 :: SHA256 differs from other copy(ies) of \u0027MGTT_WRONG_SAME_METADATA\u0027: D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-160601\\scripts\\_test\\MGTT_WRONG_SAME_METADATA.ex5 [5355E0406540C993B6CA7C08E2F34E9E53A96ED09F0C48A4F6BBA ...\r\nlaunch: EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_WRONG_SAME_METADATA | logical=GBPUSD tester=GBPUSD H4 | 2020.01.02..2020.01.03 | set=\r\nOK REPORT: D:\\EA_LAB_CONTROL\\w\\mg-tester-transfer-impl-0927\\_mt5_auto\\reports\\MGTT_WRONG_SAME_METADATA.htm (leverage verified 1:100)",
+                              "logs":  [
+                                           "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Tester\\9CA16B8382AE4CF692710FB36B9DA355\\Agent-127.0.0.1-3000\\logs\\20260927.log"
+                                       ]
+                          },
+                          {
+                              "case":  "STALE_TRUNCATED_COPY",
+                              "status":  "PASS_ENGINEERING",
+                              "exit_code":  0,
+                              "output":  "symbol preflight: logical=GBPUSD tester=GBPUSD status=COMPARABLE_EXACT_SYMBOL economics=EXACT_SYMBOL_IDENTITY source=D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\bases\\ThinkMarkets-Live\\symbols\\selected-146237.dat; history/ticks metadata under \u0027D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\bases\\ThinkMarkets-Live\u0027\r\nsurface: NOSETFILE -- no -SetFile: EVERY input comes from this terminal\u0027s tester cache (MQL5\\Profiles\\Tester), rewritten by any session that touches this EA here. NON-REPRODUCIBLE -- pass a FULL .set for any number you intend to keep (ORDER-165).\r\nidentity: LEGACY_ALLOWED -- build=MISMATCH (EX5 SHA256 8150b00c3a78a715941db1042b81706f64c6994ce1f926aa200fdbed54332627 is not bound to a stamped build receipt); config=MISSING (no -SetFile supplied)\r\nstale-check: HASH_DIFFERS -- D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_STALE_TRUNCATED_COPY.ex5 mtime=2026-09-27T16:15:31 :: SHA256 differs from other copy(ies) of \u0027MGTT_STALE_TRUNCATED_COPY\u0027: D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-160601\\scripts\\_test\\MGTT_STALE_TRUNCATED_COPY.ex5 [22B537A59CB8A55853581ED29C71491D5F9013B91592B47378E ...\r\nlaunch: EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_STALE_TRUNCATED_COPY | logical=GBPUSD tester=GBPUSD H4 | 2020.01.02..2020.01.03 | set=\r\nOK REPORT: D:\\EA_LAB_CONTROL\\w\\mg-tester-transfer-impl-0927\\_mt5_auto\\reports\\MGTT_STALE_TRUNCATED_COPY.htm (leverage verified 1:100)",
+                              "logs":  [
+                                           "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Tester\\9CA16B8382AE4CF692710FB36B9DA355\\Agent-127.0.0.1-3000\\logs\\20260927.log"
+                                       ]
+                          }
+                      ],
+    "native_root":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445"
+}

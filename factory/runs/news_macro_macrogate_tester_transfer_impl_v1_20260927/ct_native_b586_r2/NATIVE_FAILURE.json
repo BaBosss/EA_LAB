@@ -1,0 +1,8 @@
+﻿{
+    "schema":  "mgtt_orchestrator_failure/1",
+    "mode":  "Native",
+    "status":  "REFUSE",
+    "error":  "PROBE_FAIL POSITIVE_GOLDEN_REAL",
+    "native_process_action":  "NO_KILL_NO_FORCE",
+    "performance":  "NOT_RUN"
+}

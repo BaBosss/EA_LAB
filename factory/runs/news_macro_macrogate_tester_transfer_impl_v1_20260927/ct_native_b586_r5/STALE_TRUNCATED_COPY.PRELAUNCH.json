@@ -1,0 +1,15 @@
+﻿{
+    "case":  "STALE_TRUNCATED_COPY",
+    "source":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_STALE_TRUNCATED_COPY.mq5",
+    "source_sha256":  "c00c7e5219aa9343de5e2ff058aef2fa2171f46f62aeaeb7f4c71b8b431d8320",
+    "ex5":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_STALE_TRUNCATED_COPY.ex5",
+    "ex5_sha256":  "8150b00c3a78a715941db1042b81706f64c6994ce1f926aa200fdbed54332627",
+    "dependency":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\REAL_FULL_2020_2025_macrogate_native.csv",
+    "dependency_sha256":  "70271717ee95f618a2d76b2b0a8d1ca2d8da9edf2cc9a079b74d4ea90e484e19",
+    "expected_failure":  "SIZE_MISMATCH",
+    "model":  "M1_M1_OHLC_ENGINEERING_NO_PERFORMANCE",
+    "symbol":  "GBPUSD",
+    "timeframe":  "H4",
+    "from":  "2020.01.02",
+    "to":  "2020.01.03"
+}

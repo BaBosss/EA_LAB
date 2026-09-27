@@ -1,0 +1,15 @@
+﻿{
+    "schema":  "mgtt_orchestrator_preflight/1",
+    "mode":  "Preflight",
+    "status":  "PASS_NATIVE_READY_NO_PROCESS_STARTED",
+    "lane_id":  "ct-news-macro-mg-tester-transfer-impl-v1-20260927",
+    "owner_chat":  "EA_LAB-MAIN-CT-20260927",
+    "runtime_lane":  "MT5-lane1",
+    "process_inventory":  [
+
+                          ],
+    "terminal_sha256":  "f163b8069e3f34f5cb4556e02e06ba69b65816d6990e7dc360b01a9501616072",
+    "metaeditor_sha256":  "cf2750bde55d98a1f3b4e56bcdd4f59300d0cff5caa6760985f7ef2c2cc12229",
+    "dependency_ownership_receipt":  "D:\\EA_LAB_CONTROL\\w\\mg-tester-transfer-impl-0927\\factory\\runs\\news_macro_macrogate_tester_transfer_impl_v1_20260927\\ct_native_b586\\NATIVE_DEPENDENCY_OWNERSHIP.json",
+    "timestamp_utc":  "2026-09-27T08:57:47.6449553Z"
+}

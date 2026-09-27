@@ -1,0 +1,125 @@
+{
+  "schema": "macrogate_tester_transfer_author_handoff/1",
+  "implementation_status": "SOURCE_WIP_HOST_GATES_PASS_AWAITING_CT_NATIVE_GATES",
+  "lane": "ct-news-macro-mg-tester-transfer-impl-v1-20260927",
+  "base_head": "4aa459566c4e5eedc2477938fa5d3f4f86d00e8e",
+  "observed_head_at_handoff": "4aa459566c4e5eedc2477938fa5d3f4f86d00e8e",
+  "source_staged": false,
+  "source_committed": false,
+  "author_acceptance_claimed": false,
+  "contract": {
+    "schema": "macrogate_tester_transfer_prospective_implementation_contract/2",
+    "sha256": "a186b8faa3f104427ecca1960bc4e971c8b917c872747255d407f78b35887b1f",
+    "owner_authorization_sha256": "6b7057b94d5720daec7f39d800fe589d888fe3df1d44111e2ace11213cd8eea7",
+    "installed_trade_mqh_sha256": "96e6781624534377fe7971cba52cca3d62d1b030bc10d5e4ebf3ed8c541399ed"
+  },
+  "modified_paths": [
+    {"path": "ea_template/Boss_15_ST03.mq5", "bytes": 1854, "sha256": "d1821126fcc3a69605627086cf319336c0101c7f287cce90cc47c8fb7a1a6975"},
+    {"path": "ea_template/core/LabCore.mqh", "bytes": 39092, "sha256": "baa0bc64d5136bbd6966fdfb2667fcafe82b5fb663a3d3464272e2e5e84931c9"},
+    {"path": "ea_template/core/MacroGate_Core.mqh", "bytes": 24724, "sha256": "17e3dcfaca0e63fbbd2da7d5419cc78b6986c5f2fe0304bf44233855aea38f13"},
+    {"path": "ea_template/core/Execution.mqh", "bytes": 56717, "sha256": "7d1332813afb3d571541f1e793a579b45709ae6d42bb39b9377d4f3faae9e171"},
+    {"path": "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1", "bytes": 23737, "sha256": "7d82cb5336176046c8b9dccd2e73805d022cb1ec25c31acccb36bc729216136f"},
+    {"path": "scripts/_test/macrogate_tester_transfer_probe.mq5", "bytes": 3991, "sha256": "c602d074738f430a3ef78cb307e6be414f32bef9443b7cee47936ca8d69e32a1"},
+    {"path": "scripts/_test/test_macrogate_tester_transfer_contract.py", "bytes": 20811, "sha256": "e14e1ad0dbdf654290ef501ad6da7d24e6acfceed08e128f0a35ba3ba0aee4f6"},
+    {"path": "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/AUTHOR_CHECKPOINT.json", "bytes": 2069, "sha256": "c76df2cd5deee357f3d1c1d95b18faecf5766151d4dda7b0e31d3b3a33e50fb9"},
+    {"path": "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/host_tests.log", "bytes": 5146, "sha256": "327b7b86d900c51fb0381d83e371bbd9ad36ad24f552a0480414819f56269f91"},
+    {"path": "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/offline_author/OFFLINE_RECEIPT.json", "bytes": 8991, "sha256": "c10fa6b53548b0e500f9e6cad8f0d5859b1be4dfd25ac8dbc3ece7cd4acdcb4f"},
+    {"path": "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/tmp/pycompile/test_macrogate_tester_transfer_contract.pyc", "bytes": 28846, "sha256": "39057eec152a59c1eac3e3bd5743c0d599c75c6be8f5a50f39e197232755b5fb"},
+    {"path": "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/AUTHOR_HANDOFF.json", "sha256": null, "hash_status": "SELF_HASH_CANNOT_BE_EMBEDDED_WITHOUT_CHANGING_THE_HASH;_DOWNSTREAM_MUST_HASH_FINAL_BYTES"}
+  ],
+  "implementation_summary": [
+    "Boss15 qualification wrapper declares exactly eleven constant tester_file basenames only under LAB_MG_TESTER_EVIDENCE_QUAL; the canonical control remains compilable without the flag.",
+    "Qualified tester self-gate validates source-compiled filename, size and raw-byte SHA256 before strategy initialization, then parses the same single-read uchar buffer with shared accepted parser semantics.",
+    "Qualified tester failures return INIT_FAILED for unknown/Common/missing/open/size/read/hash/stale/parser/metadata failures; BASE self-gate false consumes no feed.",
+    "Passive all-attempt evidence is enabled by feature plus MQL_TESTER independently of _MG_SelfGate and keeps strategy intent, execution entry, submit, native request classification and entry-fill units separate.",
+    "The qualification-only CTrade subclass observes the protected virtual OrderSend seam and forwards each selected branch exactly once without request/result/return/retry mutation.",
+    "OnTradeTransaction evidence queues out-of-order deals, correlates order/deal identities, deduplicates deal IDs, separates INOUT observations and fails certification on unresolved or incomplete evidence.",
+    "The no-order diagnostic probe imports the actual MacroGate loader/hash/parser helpers and contains raw SHA vectors plus UNKNOWN/equal/backwards/malformed parser self-tests.",
+    "The PowerShell orchestrator implements Offline, Preflight and Native fail-closed modes; Native code exists for CT but was not executed by this author."
+  ],
+  "completed_test_commands": [
+    {
+      "command": ". scripts/use_python.ps1; Assert-PortablePython -Provision; python scripts/_test/test_macrogate_tester_transfer_contract.py -v",
+      "result": "PASS",
+      "counts": {"tests": 18, "passed": 18, "failed": 0, "errors": 0},
+      "coverage_label": "HOST_ACTUAL_BYTES HOST_SOURCE_BINDING PYTHON_CONTRACT_MODEL",
+      "native_coverage_label": "NOT_RUN_BY_AUTHOR_CONTRACT",
+      "log_path": "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/host_tests.log",
+      "log_sha256": "327b7b86d900c51fb0381d83e371bbd9ad36ad24f552a0480414819f56269f91"
+    },
+    {
+      "command": "portable python py_compile with cfile under implementation evidence prefix",
+      "result": "PASS",
+      "artifact_path": "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/tmp/pycompile/test_macrogate_tester_transfer_contract.pyc",
+      "artifact_sha256": "39057eec152a59c1eac3e3bd5743c0d599c75c6be8f5a50f39e197232755b5fb"
+    },
+    {
+      "command": "System.Management.Automation.Language.Parser.ParseFile scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1",
+      "result": "PASS_ZERO_PARSE_ERRORS",
+      "log_path": null,
+      "log_sha256": null
+    },
+    {
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1 -Mode Offline -EvidenceRoot factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/offline_author",
+      "result": "PASS_HOST_ONLY",
+      "counts": {"golden_feeds": 11, "identity_mismatches": 0},
+      "receipt_path": "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/offline_author/OFFLINE_RECEIPT.json",
+      "receipt_sha256": "c10fa6b53548b0e500f9e6cad8f0d5859b1be4dfd25ac8dbc3ece7cd4acdcb4f"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS_NO_OUTPUT",
+      "log_path": null,
+      "log_sha256": null
+    }
+  ],
+  "coverage": {
+    "static_and_host": [
+      "owner authority, base HEAD and immutable source identity",
+      "all eleven golden feed raw bytes, sizes, rows and endpoints",
+      "raw SHA256 known vectors including LF, CRLF, BOM and explicit byte count",
+      "exact wrong-same-metadata and truncated fixture derivations",
+      "compiled expected map, single-open/single-read/same-buffer source binding and required markers",
+      "control-path source retention and qualification-only OrderSend seam binding",
+      "Python contract model for result classification and fail-closed gap/footer/duplicate/session cases",
+      "PowerShell syntax and fail-closed offline orchestrator execution"
+    ],
+    "native": "NOT_RUN_BY_AUTHOR_CONTRACT",
+    "coverage_caveat": "Python classification/ledger cages are explicitly host contract models, not native MQL execution. Actual MQL compile, loader execution, CTrade seam, transaction ordering and footer certification remain CT gates."
+  },
+  "remaining_gates": {
+    "registry_and_runtime_preflight": "NOT_RUN",
+    "boss15_control_compile_zero_errors_zero_warnings": "NOT_RUN",
+    "boss15_qualification_compile_zero_errors_zero_warnings": "NOT_RUN",
+    "diagnostic_probe_compile_zero_errors_zero_warnings": "NOT_RUN",
+    "native_positive_golden_real": "NOT_RUN",
+    "native_missing": "NOT_RUN",
+    "native_wrong_same_metadata": "NOT_RUN",
+    "native_stale_truncated_copy": "NOT_RUN",
+    "native_passive_ledger_adversarial_cages": "NOT_RUN",
+    "tpl_regression_clean": "NOT_RUN",
+    "tpl_validate_only": "NOT_RUN_AND_NOT_A_SUBSTITUTE_FOR_REGRESSION_CLEAN",
+    "shared_core_non_tester_behavior_regression": "NOT_RUN",
+    "independent_exact_head_gpt_scrutiny": "NOT_DISPATCHED_BY_AUTHOR_CONTRACT"
+  },
+  "prohibited_work_confirmation": {
+    "mt5_metaeditor_tester_process_started_stopped_or_attached": false,
+    "deploy_ps1_run": false,
+    "tpl_runtime_run": false,
+    "order_or_performance_run": false,
+    "base_real_guard_placebo_outcome_read": false,
+    "model4_or_optimizer_or_holdout_run": false,
+    "stage_or_commit_or_push": false,
+    "author_review_dispatch": false
+  },
+  "blockers": [
+    "Owner contract reports an existing D:\\Meta 5 terminal process with unresolved ownership; CT must resolve ownership and reserve MT5-lane1 before any preflight/native action.",
+    "Core-source acceptance is blocked until CT obtains mandatory full tpl_regression CLEAN evidence.",
+    "MQL compilation and the four native no-order probe cases remain unexecuted.",
+    "Actual native passive-ledger/CTrade/OnTradeTransaction cages remain unexecuted."
+  ],
+  "next_ct_command_prerequisite": "Resolve the existing D:\\Meta 5 process ownership and establish the canonical Registry MT5-lane1 reservation without killing or attaching to an unowned process.",
+  "next_ct_command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\macrogate_tester_transfer_qual\\qualify_transfer.ps1 -Mode Preflight -EvidenceRoot factory\\runs\\news_macro_macrogate_tester_transfer_impl_v1_20260927\\ct_preflight",
+  "subsequent_ct_native_command_after_preflight_and_dependency_ownership": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\macrogate_tester_transfer_qual\\qualify_transfer.ps1 -Mode Native -ConfirmNativeNoPerformance -EvidenceRoot factory\\runs\\news_macro_macrogate_tester_transfer_impl_v1_20260927\\ct_native",
+  "direct_consumer": "Main CT verification, mandatory TPL/compile/native engineering gates, then separate acceptance scrutiny; not another author rerun"
+}

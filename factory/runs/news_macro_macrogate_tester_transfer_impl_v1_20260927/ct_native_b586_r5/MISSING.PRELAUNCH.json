@@ -1,0 +1,15 @@
+﻿{
+    "case":  "MISSING",
+    "source":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_MISSING.mq5",
+    "source_sha256":  "13a306f21759d50adad33c7c96917d6f2e53c83962c3adad7f67d810556afe68",
+    "ex5":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EA_LAB_TEST\\ORDER-MGTT-QUAL-20260927-161445\\scripts\\_test\\MGTT_MISSING.ex5",
+    "ex5_sha256":  "aed63d56e3a844375fc8f0d2676027d7b4fff2a8f7b6bd571c885cb1e0fa2ec8",
+    "dependency":  "D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Files\\EA_LAB_MGTT_Q1_missing.csv",
+    "dependency_sha256":  null,
+    "expected_failure":  "MISSING",
+    "model":  "M1_M1_OHLC_ENGINEERING_NO_PERFORMANCE",
+    "symbol":  "GBPUSD",
+    "timeframe":  "H4",
+    "from":  "2020.01.02",
+    "to":  "2020.01.03"
+}

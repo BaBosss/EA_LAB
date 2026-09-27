@@ -1,0 +1,8 @@
+﻿{
+    "schema":  "mgtt_orchestrator_failure/1",
+    "mode":  "Native",
+    "status":  "REFUSE",
+    "error":  "COMPILE_FAIL D:\\EA_LAB_CONTROL\\w\\mg-tester-transfer-impl-0927\\factory\\runs\\news_macro_macrogate_tester_transfer_impl_v1_20260927\\ct_native_b586\\Boss15_QUAL.compile.log",
+    "native_process_action":  "NO_KILL_NO_FORCE",
+    "performance":  "NOT_RUN"
+}
