@@ -17,33 +17,44 @@
 struct MGTT_AttemptRecord
 {
    long id;
-   bool ended;
+   int  end_count;
    int  submit_count;
 };
 struct MGTT_SubmitRecord
 {
    long id;
    long attempt_id;
-   bool returned;
+   int  return_count;
    int  native_count;
 };
 struct MGTT_NativeRecord
 {
    long  id;
    long  submit_id;
+   string path;
+   double requested_volume;
+   double volume_step;
    ulong order_id;
    ulong result_deal_id;
-   bool  market_fill_required;
-   bool  fill_seen;
+   int   result_count;
+   string category;
+   bool  accepted_request;
+   bool  fill_finalized;
+   bool  fill_complete;
+   double complete_entry_volume;
 };
 struct MGTT_DealRecord
 {
    ulong  deal_id;
    ulong  order_id;
+   string symbol;
+   long   deal_type;
    long   entry_type;
    double volume;
    bool   entry_known;
    bool   emitted;
+   bool   history_verified;
+   int    callback_count;
 };
 
 bool   g_mgtt_run_started=false;
@@ -76,6 +87,7 @@ long g_mgtt_entry_fill_total=0;
 long g_mgtt_entry_inout_fill_total=0;
 long g_mgtt_evidence_error_count=0;
 string g_mgtt_unresolved_ids="NONE";
+bool   g_mgtt_fill_coverage_finalized=false;
 
 MGTT_AttemptRecord g_mgtt_attempts[];
 MGTT_SubmitRecord  g_mgtt_submits[];
@@ -95,13 +107,25 @@ void MGTT_Emit(const string event_name,const string fields)
                event_name,g_mgtt_session,g_mgtt_sequence,fields);
 }
 
-void MGTT_RunBegin(const string build_receipt,const string config_fingerprint,
-                   const bool self_gate)
+void MGTT_EvidenceError(const string event_name,const string fields)
 {
-   if(!MGTT_IsActive() || g_mgtt_run_started) return;
+   g_mgtt_evidence_error_count++;
+   MGTT_Emit(event_name,fields);
+}
+
+void MGTT_RunBegin(const string build_receipt,const string config_fingerprint,
+                   const bool self_gate,const string frozen_session="")
+{
+   if(!MGTT_IsActive()) return;
+   if(g_mgtt_run_started && !g_mgtt_run_ended)
+   {
+      MGTT_EvidenceError("DUPLICATE_RUN_BEGIN","reason=ACTIVE_SESSION");
+      return;
+   }
    g_mgtt_run_started=true;
    g_mgtt_run_ended=false;
-   g_mgtt_session=StringFormat("MGTT-%I64d-%u",(long)TimeLocal(),GetTickCount());
+   g_mgtt_session=(frozen_session!="" ? frozen_session :
+                   StringFormat("MGTT-%I64d-%u",(long)TimeLocal(),GetTickCount()));
    g_mgtt_sequence=0;
    g_mgtt_next_intent=0;
    g_mgtt_active_intent=0;
@@ -109,6 +133,12 @@ void MGTT_RunBegin(const string build_receipt,const string config_fingerprint,
    g_mgtt_next_submit=0;
    g_mgtt_next_native=0;
    g_mgtt_open_context=false;
+   g_mgtt_context_attempt=0;
+   g_mgtt_context_submit=0;
+   g_mgtt_context_path="";
+   g_mgtt_context_volume=0.0;
+   g_mgtt_context_step=0.0;
+   g_mgtt_context_native_count=0;
    g_mgtt_strategy_intent_total=0;
    g_mgtt_execution_entry_total=0;
    g_mgtt_pre_submit_terminal_total=0;
@@ -122,6 +152,7 @@ void MGTT_RunBegin(const string build_receipt,const string config_fingerprint,
    g_mgtt_entry_inout_fill_total=0;
    g_mgtt_evidence_error_count=0;
    g_mgtt_unresolved_ids="NONE";
+   g_mgtt_fill_coverage_finalized=false;
    ArrayResize(g_mgtt_attempts,0);
    ArrayResize(g_mgtt_submits,0);
    ArrayResize(g_mgtt_natives,0);
@@ -159,7 +190,7 @@ long MGTT_ExecutionBegin(const string path,const int direction,
    int n=ArraySize(g_mgtt_attempts);
    ArrayResize(g_mgtt_attempts,n+1);
    g_mgtt_attempts[n].id=id;
-   g_mgtt_attempts[n].ended=false;
+   g_mgtt_attempts[n].end_count=0;
    g_mgtt_attempts[n].submit_count=0;
    g_mgtt_execution_entry_total++;
    long parent=g_mgtt_active_intent;
@@ -180,9 +211,16 @@ int MGTT_AttemptIndex(const long id)
 void MGTT_ExecutionEnd(const long attempt_id,const string terminal_status)
 {
    int i=MGTT_AttemptIndex(attempt_id);
-   if(i>=0) g_mgtt_attempts[i].ended=true;
+   if(i<0)
+      MGTT_EvidenceError("UNKNOWN_EXECUTION_END",StringFormat("attempt_id=%I64d",attempt_id));
+   else
+   {
+      g_mgtt_attempts[i].end_count++;
+      if(g_mgtt_attempts[i].end_count!=1)
+         MGTT_EvidenceError("DUPLICATE_EXECUTION_END",StringFormat("attempt_id=%I64d count=%d",attempt_id,g_mgtt_attempts[i].end_count));
+   }
    MGTT_Emit("EXECUTION_END",StringFormat("attempt_id=%I64d terminal_status=%s",
-             attempt_id,terminal_status));
+              attempt_id,terminal_status));
 }
 
 void MGTT_PreSubmitTerminal(const long attempt_id,const string reason)
@@ -202,7 +240,7 @@ long MGTT_SubmitBegin(const long attempt_id,const string path,
    ArrayResize(g_mgtt_submits,n+1);
    g_mgtt_submits[n].id=id;
    g_mgtt_submits[n].attempt_id=attempt_id;
-   g_mgtt_submits[n].returned=false;
+   g_mgtt_submits[n].return_count=0;
    g_mgtt_submits[n].native_count=0;
    int ai=MGTT_AttemptIndex(attempt_id);
    if(ai>=0) g_mgtt_attempts[ai].submit_count++;
@@ -275,6 +313,16 @@ bool MGTT_IsKnownNonAcceptanceRetcode(const uint retcode)
    return false;
 }
 
+bool MGTT_IsAmbiguousNonAcceptanceRetcode(const uint retcode)
+{
+   // Processing/state observations are not proof of a terminal rejection.
+   // Keep them unresolved even when the transport boolean is false.
+   return (retcode==TRADE_RETCODE_TIMEOUT || retcode==TRADE_RETCODE_CONNECTION ||
+           retcode==TRADE_RETCODE_ERROR || retcode==TRADE_RETCODE_ORDER_CHANGED ||
+           retcode==TRADE_RETCODE_NO_CHANGES || retcode==TRADE_RETCODE_LOCKED ||
+           retcode==TRADE_RETCODE_POSITION_CLOSED);
+}
+
 string MGTT_ClassifyNative(const bool transport_ok,const uint retcode,
                            const ulong order_id,const ulong deal_id,
                            const double result_volume,const string path,
@@ -290,10 +338,18 @@ string MGTT_ClassifyNative(const bool transport_ok,const uint retcode,
    bool positive_volume=(MathIsValidNumber(result_volume) && result_volume>0.0);
    if(!transport_ok)
    {
-      if(accepted_code || positive_identity || positive_volume)
+      if(accepted_code || positive_identity || positive_volume ||
+         MGTT_IsAmbiguousNonAcceptanceRetcode(retcode) ||
+         !MGTT_IsKnownNonAcceptanceRetcode(retcode))
          return "UNRESOLVED_RESULT";
       return "REQUEST_REJECTED";
    }
+
+   // A true transport boolean paired with any documented non-acceptance
+   // retcode is contradictory. Timeout/connection remain ambiguous under
+   // either boolean. Neither combination can prove a clean rejection.
+   if(MGTT_IsKnownNonAcceptanceRetcode(retcode))
+      return "UNRESOLVED_RESULT";
 
    double tolerance=MathMax(1.0e-12,volume_step*MGTT_VOLUME_TOLERANCE_STEP_MULT);
    if(path=="MARKET")
@@ -333,19 +389,14 @@ string MGTT_ClassifyNative(const bool transport_ok,const uint retcode,
       }
       if(accepted_code) return "UNRESOLVED_RESULT";
    }
-   if(MGTT_IsKnownNonAcceptanceRetcode(retcode))
-   {
-      if(positive_identity || positive_volume) return "UNRESOLVED_RESULT";
-      return "REQUEST_REJECTED";
-   }
    return "UNRESOLVED_RESULT";
 }
 
-bool MGTT_DealAlreadyKnown(const ulong deal_id)
+int MGTT_DealIndex(const ulong deal_id)
 {
    for(int i=0;i<ArraySize(g_mgtt_deals);i++)
-      if(g_mgtt_deals[i].deal_id==deal_id) return true;
-   return false;
+      if(g_mgtt_deals[i].deal_id==deal_id) return i;
+   return -1;
 }
 
 void MGTT_ReconcileDeals()
@@ -383,14 +434,20 @@ void MGTT_ReconcileDeals()
             entry_name="INOUT";
             g_mgtt_entry_inout_fill_total++;
          }
-         g_mgtt_natives[n].fill_seen=true;
-         g_mgtt_deals[d].emitted=true;
+          g_mgtt_deals[d].emitted=true;
          MGTT_Emit("FILL_OBSERVED",StringFormat("order_id=%I64u deal_id=%I64u entry_type=%s volume=%.8f net_new_exposure=UNAVAILABLE",
                    g_mgtt_deals[d].order_id,g_mgtt_deals[d].deal_id,
                    entry_name,g_mgtt_deals[d].volume));
          break;
       }
    }
+}
+
+int MGTT_NativeIndex(const long id)
+{
+   for(int i=ArraySize(g_mgtt_natives)-1;i>=0;i--)
+      if(g_mgtt_natives[i].id==id) return i;
+   return -1;
 }
 
 long MGTT_NativeBegin(const MqlTradeRequest &request)
@@ -400,6 +457,21 @@ long MGTT_NativeBegin(const MqlTradeRequest &request)
    g_mgtt_context_native_count++;
    int si=MGTT_SubmitIndex(g_mgtt_context_submit);
    if(si>=0) g_mgtt_submits[si].native_count++;
+   int n=ArraySize(g_mgtt_natives);
+   ArrayResize(g_mgtt_natives,n+1);
+   g_mgtt_natives[n].id=id;
+   g_mgtt_natives[n].submit_id=g_mgtt_context_submit;
+   g_mgtt_natives[n].path=g_mgtt_context_path;
+   g_mgtt_natives[n].requested_volume=g_mgtt_context_volume;
+   g_mgtt_natives[n].volume_step=g_mgtt_context_step;
+   g_mgtt_natives[n].order_id=0;
+   g_mgtt_natives[n].result_deal_id=0;
+   g_mgtt_natives[n].result_count=0;
+   g_mgtt_natives[n].category="UNRESOLVED_RESULT";
+   g_mgtt_natives[n].accepted_request=false;
+   g_mgtt_natives[n].fill_finalized=false;
+   g_mgtt_natives[n].fill_complete=false;
+   g_mgtt_natives[n].complete_entry_volume=0.0;
    MGTT_Emit("NATIVE_SEND_BEGIN",StringFormat("submit_id=%I64d native_id=%I64d action=%d",
              g_mgtt_context_submit,id,(int)request.action));
    return id;
@@ -408,11 +480,23 @@ long MGTT_NativeBegin(const MqlTradeRequest &request)
 void MGTT_NativeResult(const long native_id,const bool transport_ok,
                        const MqlTradeResult &result,const int last_error)
 {
+   int ni=MGTT_NativeIndex(native_id);
+   if(ni<0)
+   {
+      MGTT_EvidenceError("UNKNOWN_NATIVE_SEND_RESULT",StringFormat("native_id=%I64d",native_id));
+      return;
+   }
+   g_mgtt_natives[ni].result_count++;
+   if(g_mgtt_natives[ni].result_count!=1)
+   {
+      MGTT_EvidenceError("DUPLICATE_NATIVE_SEND_RESULT",StringFormat("native_id=%I64d count=%d",native_id,g_mgtt_natives[ni].result_count));
+      return;
+   }
    bool accepted_market=false,accepted_pending=false;
    string category=MGTT_ClassifyNative(transport_ok,result.retcode,
-      result.order,result.deal,result.volume,g_mgtt_context_path,
-      g_mgtt_context_volume,g_mgtt_context_step,
-      accepted_market,accepted_pending);
+       result.order,result.deal,result.volume,g_mgtt_natives[ni].path,
+       g_mgtt_natives[ni].requested_volume,g_mgtt_natives[ni].volume_step,
+       accepted_market,accepted_pending);
    if(category=="REQUEST_REJECTED") g_mgtt_rejected_request_total++;
    else if(category=="UNRESOLVED_RESULT")
    {
@@ -424,18 +508,14 @@ void MGTT_NativeResult(const long native_id,const bool transport_ok,
    }
    else g_mgtt_accepted_request_total++;
 
-   int n=ArraySize(g_mgtt_natives);
-   ArrayResize(g_mgtt_natives,n+1);
-   g_mgtt_natives[n].id=native_id;
-   g_mgtt_natives[n].submit_id=g_mgtt_context_submit;
-   g_mgtt_natives[n].order_id=result.order;
-   g_mgtt_natives[n].result_deal_id=result.deal;
-   g_mgtt_natives[n].market_fill_required=accepted_market;
-   g_mgtt_natives[n].fill_seen=false;
-   MGTT_Emit("NATIVE_SEND_RESULT",StringFormat("native_id=%I64d transport_bool=%d retcode=%u last_error=%d order_id=%I64u deal_id=%I64u result_volume=%.8f normalized_requested_volume=%.8f volume_step=%.8f category=%s rejected_timeout_does_not_prove_no_later_fill=1",
-             native_id,(transport_ok?1:0),result.retcode,last_error,
-             result.order,result.deal,result.volume,g_mgtt_context_volume,
-             g_mgtt_context_step,category));
+   g_mgtt_natives[ni].order_id=result.order;
+   g_mgtt_natives[ni].result_deal_id=result.deal;
+   g_mgtt_natives[ni].category=category;
+   g_mgtt_natives[ni].accepted_request=(accepted_market || accepted_pending);
+   MGTT_Emit("NATIVE_SEND_RESULT",StringFormat("native_id=%I64d transport_bool=%d retcode=%u last_error=%d order_id=%I64u deal_id=%I64u result_volume=%.8f normalized_requested_volume=%.8f volume_step=%.8f category=%s rejected_timeout_does_not_prove_no_later_fill=1 caller_error_preservation=NOT_CLAIMED",
+              native_id,(transport_ok?1:0),result.retcode,last_error,
+              result.order,result.deal,result.volume,g_mgtt_natives[ni].requested_volume,
+              g_mgtt_natives[ni].volume_step,category));
    MGTT_ReconcileDeals();
 }
 
@@ -443,7 +523,14 @@ void MGTT_SubmitReturn(const long submit_id,const bool library_bool,
                        const uint retcode,const double result_volume)
 {
    int si=MGTT_SubmitIndex(submit_id);
-   if(si>=0) g_mgtt_submits[si].returned=true;
+   if(si<0)
+      MGTT_EvidenceError("UNKNOWN_SUBMIT_RETURN",StringFormat("submit_id=%I64d",submit_id));
+   else
+   {
+      g_mgtt_submits[si].return_count++;
+      if(g_mgtt_submits[si].return_count!=1)
+         MGTT_EvidenceError("DUPLICATE_SUBMIT_RETURN",StringFormat("submit_id=%I64d count=%d",submit_id,g_mgtt_submits[si].return_count));
+   }
    MGTT_Emit("SUBMIT_RETURN",StringFormat("submit_id=%I64d library_bool=%d retcode=%u volume=%.8f native_call_count=%d",
              submit_id,(library_bool?1:0),retcode,result_volume,
              g_mgtt_context_native_count));
@@ -458,24 +545,145 @@ void MGTT_OnTradeTransaction(const MqlTradeTransaction &trans,
    if(trans.type!=TRADE_TRANSACTION_DEAL_ADD || trans.deal==0) return;
    if(trans.symbol!=_Symbol) return;
    if(trans.deal_type!=DEAL_TYPE_BUY && trans.deal_type!=DEAL_TYPE_SELL) return;
-   if(MGTT_DealAlreadyKnown(trans.deal))
+   int existing=MGTT_DealIndex(trans.deal);
+   if(existing>=0)
    {
-      // A repeated DEAL_ADD identity makes transaction completeness uncertifiable.
-      g_mgtt_evidence_error_count++;
-      MGTT_Emit("DUPLICATE_DEAL",StringFormat("order_id=%I64u deal_id=%I64u",
-                trans.order,trans.deal));
+      double tolerance=MathMax(1.0e-12,SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_STEP)*MGTT_VOLUME_TOLERANCE_STEP_MULT);
+      bool identical=(g_mgtt_deals[existing].order_id==trans.order &&
+                      g_mgtt_deals[existing].symbol==trans.symbol &&
+                      g_mgtt_deals[existing].deal_type==(long)trans.deal_type &&
+                      MathAbs(g_mgtt_deals[existing].volume-trans.volume)<=tolerance);
+      g_mgtt_deals[existing].callback_count++;
+      if(identical)
+         MGTT_Emit("DUPLICATE_DEAL_IDEMPOTENT",StringFormat("order_id=%I64u deal_id=%I64u callback_count=%d",trans.order,trans.deal,g_mgtt_deals[existing].callback_count));
+      else
+         MGTT_EvidenceError("CONTRADICTORY_DEAL",StringFormat("order_id=%I64u deal_id=%I64u",trans.order,trans.deal));
       return;
    }
    int n=ArraySize(g_mgtt_deals);
    ArrayResize(g_mgtt_deals,n+1);
    g_mgtt_deals[n].deal_id=trans.deal;
    g_mgtt_deals[n].order_id=trans.order;
+   g_mgtt_deals[n].symbol=trans.symbol;
+   g_mgtt_deals[n].deal_type=(long)trans.deal_type;
    g_mgtt_deals[n].entry_type=-1;
    g_mgtt_deals[n].volume=trans.volume;
    g_mgtt_deals[n].entry_known=false;
    g_mgtt_deals[n].emitted=false;
+   g_mgtt_deals[n].history_verified=false;
+   g_mgtt_deals[n].callback_count=1;
    MGTT_ReconcileDeals();
 }
+
+bool MGTT_OrderStateIsActive(const long state)
+{
+   return (state==ORDER_STATE_STARTED || state==ORDER_STATE_PLACED ||
+           state==ORDER_STATE_PARTIAL || state==ORDER_STATE_REQUEST_ADD ||
+           state==ORDER_STATE_REQUEST_MODIFY || state==ORDER_STATE_REQUEST_CANCEL);
+}
+
+bool MGTT_FinalizeOneNativeFill(const int ni)
+{
+   if(!g_mgtt_natives[ni].accepted_request) return true;
+   if(g_mgtt_natives[ni].fill_finalized) return g_mgtt_natives[ni].fill_complete;
+   ulong order_id=g_mgtt_natives[ni].order_id;
+   if(order_id==0 && g_mgtt_natives[ni].result_deal_id>0)
+   {
+      long linked_order=0;
+      if(!HistoryDealGetInteger(g_mgtt_natives[ni].result_deal_id,DEAL_ORDER,linked_order) || linked_order<=0)
+         return false;
+      order_id=(ulong)linked_order;
+      g_mgtt_natives[ni].order_id=order_id;
+   }
+   if(order_id==0 || OrderSelect(order_id) || !HistoryOrderSelect(order_id)) return false;
+   for(int other=0;other<ArraySize(g_mgtt_natives);other++)
+      if(other!=ni && g_mgtt_natives[other].accepted_request &&
+         g_mgtt_natives[other].order_id==order_id) return false;
+   long order_state=HistoryOrderGetInteger(order_id,ORDER_STATE);
+   if(MGTT_OrderStateIsActive(order_state)) return false;
+   double initial=HistoryOrderGetDouble(order_id,ORDER_VOLUME_INITIAL);
+   double remaining=HistoryOrderGetDouble(order_id,ORDER_VOLUME_CURRENT);
+   double step=g_mgtt_natives[ni].volume_step;
+   double tolerance=MathMax(1.0e-12,step*MGTT_VOLUME_TOLERANCE_STEP_MULT);
+   if(!MathIsValidNumber(initial) || !MathIsValidNumber(remaining) ||
+      !MathIsValidNumber(step) || step<=0.0 || initial<=0.0 || remaining<0.0 || remaining>initial+tolerance)
+      return false;
+   double final_filled=initial-remaining;
+   if(final_filled<=tolerance) return false;
+
+   int history_count=0;
+   double history_volume=0.0;
+   int deals_total=HistoryDealsTotal();
+   for(int i=0;i<deals_total;i++)
+   {
+      ulong deal_id=HistoryDealGetTicket(i);
+      if(deal_id==0 || (ulong)HistoryDealGetInteger(deal_id,DEAL_ORDER)!=order_id) continue;
+      long entry=HistoryDealGetInteger(deal_id,DEAL_ENTRY);
+      if(entry!=DEAL_ENTRY_IN && entry!=DEAL_ENTRY_INOUT) continue;
+      long deal_type=HistoryDealGetInteger(deal_id,DEAL_TYPE);
+      string symbol=HistoryDealGetString(deal_id,DEAL_SYMBOL);
+      double volume=HistoryDealGetDouble(deal_id,DEAL_VOLUME);
+      if(symbol!=_Symbol || (deal_type!=DEAL_TYPE_BUY && deal_type!=DEAL_TYPE_SELL) ||
+         !MathIsValidNumber(volume) || volume<=0.0) return false;
+      int di=MGTT_DealIndex(deal_id);
+      if(di<0 || g_mgtt_deals[di].order_id!=order_id ||
+         g_mgtt_deals[di].symbol!=symbol || g_mgtt_deals[di].deal_type!=deal_type ||
+         !g_mgtt_deals[di].entry_known || g_mgtt_deals[di].entry_type!=entry ||
+         MathAbs(g_mgtt_deals[di].volume-volume)>tolerance || !g_mgtt_deals[di].emitted)
+         return false;
+      g_mgtt_deals[di].history_verified=true;
+      history_count++;
+      history_volume+=volume;
+   }
+   if(history_count<=0 || MathAbs(history_volume-final_filled)>tolerance) return false;
+   for(int d=0;d<ArraySize(g_mgtt_deals);d++)
+   {
+      if(g_mgtt_deals[d].order_id==order_id &&
+         (g_mgtt_deals[d].entry_type==DEAL_ENTRY_IN || g_mgtt_deals[d].entry_type==DEAL_ENTRY_INOUT) &&
+         !g_mgtt_deals[d].history_verified) return false;
+   }
+   g_mgtt_natives[ni].fill_finalized=true;
+   g_mgtt_natives[ni].fill_complete=true;
+   g_mgtt_natives[ni].complete_entry_volume=history_volume;
+   MGTT_Emit("FILL_COVERAGE_FINAL",StringFormat("native_id=%I64d order_id=%I64u history_deal_count=%d cumulative_entry_volume=%.8f order_state=%d",
+             g_mgtt_natives[ni].id,order_id,history_count,history_volume,(int)order_state));
+   return true;
+}
+
+bool MGTT_FinalizeFillCoverage()
+{
+   bool needs_history=false;
+   for(int i=0;i<ArraySize(g_mgtt_natives);i++)
+      if(g_mgtt_natives[i].accepted_request && !g_mgtt_natives[i].fill_finalized)
+         needs_history=true;
+   if(needs_history && !HistorySelect(0,TimeCurrent()+86400)) return false;
+   MGTT_ReconcileDeals();
+   bool complete=true;
+   for(int i=0;i<ArraySize(g_mgtt_natives);i++)
+   {
+      if(g_mgtt_natives[i].result_count!=1) { complete=false; continue; }
+      if(g_mgtt_natives[i].accepted_request && !MGTT_FinalizeOneNativeFill(i))
+      {
+         complete=false;
+         MGTT_Emit("FILL_COVERAGE_UNAVAILABLE",StringFormat("native_id=%I64d order_id=%I64u category=%s",
+                   g_mgtt_natives[i].id,g_mgtt_natives[i].order_id,g_mgtt_natives[i].category));
+      }
+   }
+   g_mgtt_fill_coverage_finalized=complete;
+   return complete;
+}
+
+#ifdef MGTT_LEDGER_PROBE_SYNTHETIC
+bool MGTT_ProbeCertifyNativeFill(const long native_id,const double volume)
+{
+   int ni=MGTT_NativeIndex(native_id);
+   if(ni<0 || !g_mgtt_natives[ni].accepted_request || volume<=0.0) return false;
+   g_mgtt_natives[ni].fill_finalized=true;
+   g_mgtt_natives[ni].fill_complete=true;
+   g_mgtt_natives[ni].complete_entry_volume=volume;
+   return true;
+}
+#endif
 
 bool MGTT_CompletenessCertified()
 {
@@ -487,11 +695,13 @@ bool MGTT_CompletenessCertified()
       g_mgtt_rejected_request_total+g_mgtt_unresolved_request_total)
       return false;
    for(int i=0;i<ArraySize(g_mgtt_attempts);i++)
-      if(!g_mgtt_attempts[i].ended || g_mgtt_attempts[i].submit_count>1) return false;
+      if(g_mgtt_attempts[i].end_count!=1 || g_mgtt_attempts[i].submit_count>1) return false;
    for(int i=0;i<ArraySize(g_mgtt_submits);i++)
-      if(!g_mgtt_submits[i].returned) return false;
+      if(g_mgtt_submits[i].return_count!=1) return false;
    for(int i=0;i<ArraySize(g_mgtt_natives);i++)
-      if(g_mgtt_natives[i].market_fill_required && !g_mgtt_natives[i].fill_seen)
+      if(g_mgtt_natives[i].result_count!=1 ||
+         (g_mgtt_natives[i].accepted_request &&
+          (!g_mgtt_natives[i].fill_finalized || !g_mgtt_natives[i].fill_complete)))
          return false;
    for(int i=0;i<ArraySize(g_mgtt_deals);i++)
       if(!g_mgtt_deals[i].emitted) return false;
@@ -501,7 +711,7 @@ bool MGTT_CompletenessCertified()
 void MGTT_RunEnd(const int deinit_reason)
 {
    if(!MGTT_IsActive() || !g_mgtt_run_started || g_mgtt_run_ended) return;
-   MGTT_ReconcileDeals();
+   MGTT_FinalizeFillCoverage();
    bool certified=MGTT_CompletenessCertified();
    string ratio="null";
    string availability="UNAVAILABLE_NOT_CERTIFIED";
@@ -511,14 +721,14 @@ void MGTT_RunEnd(const int deinit_reason)
                            (double)g_mgtt_execution_entry_total,12);
       availability="CERTIFIED";
    }
-   MGTT_Emit("RUN_END",StringFormat("last_sequence=%I64d strategy_intent_total=%I64d execution_entry_total=%I64d pre_submit_terminal_total=%I64d submit_total=%I64d native_request_total=%I64d accepted_request_total=%I64d rejected_request_total=%I64d unresolved_request_total=%I64d unresolved_ids=%s entry_fill_total=%I64d entry_inout_fill_total=%I64d macro_block_total=%I64d evidence_error_count=%I64d blocked_execution_entry_share_v1=%s availability=%s deinit_reason=%d normal_completion=HOST_MUST_CERTIFY",
+   MGTT_Emit("RUN_END",StringFormat("last_sequence=%I64d strategy_intent_total=%I64d execution_entry_total=%I64d pre_submit_terminal_total=%I64d submit_total=%I64d native_request_total=%I64d accepted_request_total=%I64d rejected_request_total=%I64d unresolved_request_total=%I64d unresolved_ids=%s entry_fill_total=%I64d entry_inout_fill_total=%I64d fill_coverage_finalized=%d macro_block_total=%I64d evidence_error_count=%I64d blocked_execution_entry_share_v1=%s availability=%s deinit_reason=%d normal_completion=HOST_MUST_CERTIFY",
              g_mgtt_sequence+1,g_mgtt_strategy_intent_total,
              g_mgtt_execution_entry_total,g_mgtt_pre_submit_terminal_total,
              g_mgtt_submit_total,g_mgtt_native_request_total,
              g_mgtt_accepted_request_total,g_mgtt_rejected_request_total,
-             g_mgtt_unresolved_request_total,g_mgtt_unresolved_ids,
-             g_mgtt_entry_fill_total,
-             g_mgtt_entry_inout_fill_total,g_mgtt_macro_block_total,
+              g_mgtt_unresolved_request_total,g_mgtt_unresolved_ids,
+              g_mgtt_entry_fill_total,
+              g_mgtt_entry_inout_fill_total,(g_mgtt_fill_coverage_finalized?1:0),g_mgtt_macro_block_total,
              g_mgtt_evidence_error_count,
              ratio,availability,deinit_reason));
    g_mgtt_run_ended=true;

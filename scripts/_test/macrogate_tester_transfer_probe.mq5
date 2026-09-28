@@ -16,11 +16,39 @@
 #define MGTT_PROBE_EXPECTED_ROWS 2192
 #define MGTT_PROBE_EXPECTED_FIRST "2020.01.01 02:00"
 #define MGTT_PROBE_EXPECTED_LAST "2025.12.31 02:00"
+#define MGTT_PROBE_BUILD_RECEIPT "br-00000000000000000000000000000000"
+#define MGTT_PROBE_CONFIG_FINGERPRINT "d3d548b77d96037fbee8a483bd25206f2d323600f2e00cf8ad012c7f566c2456"
+#define MGTT_PROBE_SESSION_ID "MGTT-CANONICAL-TEMPLATE-NOT-A-RUN"
 // MGTT_PROBE_CASE_END
 
 #define LAB_MG_TESTER_EVIDENCE_QUAL
+#define MGTT_LEDGER_PROBE_SYNTHETIC
+#define LAB_ENTRY_15
+#define LAB_ENTRY_TAG "15_ST03"
+#include "../../ea_template/core/Inputs.mqh"
+#include "../../ea_template/core/HedgeSafety.mqh"
+#include "../../ea_template/core/InputSurface_gen.mqh"
+#include "../../ea_template/core/Indicators.mqh"
+#include "../../ea_template/core/Regime.mqh"
 #include "../../ea_template/core/MacroGate_Core.mqh"
 #include "../../ea_template/core/Execution.mqh"
+#include "../../ea_template/core/RiskControl.mqh"
+#include "../../ea_template/core/MoneyManagement.mqh"
+#include "../../ea_template/core/ExitManager.mqh"
+#include "../../ea_template/core/Stack.mqh"
+#include "../../ea_template/core/Recovery.mqh"
+#include "../../ea_template/core/Hedge.mqh"
+#include "../../ea_template/core/Basket.mqh"
+#include "../../ea_template/core/MiddlePath.mqh"
+#include "../../ea_template/core/entries/Entry_ST03.mqh"
+// Enumerate the same locked constants as Boss15 after all defining headers.
+// No LabCore event handler or strategy initialization is imported or called.
+#include "../../ea_template/core/LockedConstants_gen.mqh"
+
+void ProbeLog(const string message)
+{
+   PrintFormat("[MGTT_PROBE] runtime_session=%s %s",g_mgtt_session,message);
+}
 
 bool ProbeHash(const string name,uchar &raw[],const string expected)
 {
@@ -73,9 +101,8 @@ bool ProbeParserSemantics()
    return true;
 }
 
-bool ProbeLedgerEvidence()
+bool ProbeLedgerPrimary()
 {
-   MGTT_RunBegin("MGTT_LEDGER_PROBE","MGTT_LEDGER_CFG",false);
    if(!g_mgtt_run_started) return false;
 
    // BASE/self-gate-off evidence must still be active.
@@ -113,11 +140,17 @@ bool ProbeLedgerEvidence()
    ArrayResize(g_mgtt_deals,deals+1);
    g_mgtt_deals[deals].deal_id=654321;
    g_mgtt_deals[deals].order_id=123456;
+   g_mgtt_deals[deals].symbol=_Symbol;
+   g_mgtt_deals[deals].deal_type=DEAL_TYPE_BUY;
    g_mgtt_deals[deals].entry_type=DEAL_ENTRY_IN;
    g_mgtt_deals[deals].volume=0.10;
    g_mgtt_deals[deals].entry_known=true;
    g_mgtt_deals[deals].emitted=false;
+   g_mgtt_deals[deals].history_verified=true;
+   g_mgtt_deals[deals].callback_count=1;
    MGTT_ReconcileDeals();
+   if(!MGTT_ProbeCertifyNativeFill(pending_native,0.10) || !MGTT_FinalizeFillCoverage())
+      return false;
 
    if(g_mgtt_strategy_intent_total!=1 ||
       g_mgtt_execution_entry_total!=3 ||
@@ -131,34 +164,12 @@ bool ProbeLedgerEvidence()
       g_mgtt_entry_fill_total!=1 ||
       !MGTT_CompletenessCertified())
    {
-      Print("[MGTT_LEDGER_PROBE] CERTIFIED_CAGE_FAIL");
+      ProbeLog("CERTIFIED_CAGE_FAIL");
       return false;
    }
-   Print("[MGTT_LEDGER_PROBE] CERTIFIED_COUNTS_PASS self_gate=0 no_order_send=1");
+   ProbeLog("CERTIFIED_COUNTS_PASS self_gate=0 no_order_send=1 history_proof=SYNTHETIC_PASSIVE_CAGE");
 
-   // An unmatched synthetic fill must make completeness unavailable.
-   int unmatched=ArraySize(g_mgtt_deals);
-   ArrayResize(g_mgtt_deals,unmatched+1);
-   g_mgtt_deals[unmatched].deal_id=777777;
-   g_mgtt_deals[unmatched].order_id=888888;
-   g_mgtt_deals[unmatched].entry_type=DEAL_ENTRY_IN;
-   g_mgtt_deals[unmatched].volume=0.10;
-   g_mgtt_deals[unmatched].entry_known=true;
-   g_mgtt_deals[unmatched].emitted=false;
-   MGTT_ReconcileDeals();
-   if(MGTT_CompletenessCertified())
-   {
-      Print("[MGTT_LEDGER_PROBE] UNMATCHED_FAIL_CLOSED_FAIL");
-      return false;
-   }
-   ArrayResize(g_mgtt_deals,unmatched);
-   if(!MGTT_CompletenessCertified())
-   {
-      Print("[MGTT_LEDGER_PROBE] UNMATCHED_RESTORE_FAIL");
-      return false;
-   }
-
-   // Duplicate OnTradeTransaction identity must also fail certification.
+   // Identical repeated callbacks are idempotent and never double-count fills.
    MqlTradeTransaction trans={};
    MqlTradeRequest request={};
    MqlTradeResult result={};
@@ -169,13 +180,99 @@ bool ProbeLedgerEvidence()
    trans.deal_type=DEAL_TYPE_BUY;
    trans.volume=0.10;
    MGTT_OnTradeTransaction(trans,request,result);
-   if(g_mgtt_evidence_error_count!=1 || MGTT_CompletenessCertified())
+   if(g_mgtt_evidence_error_count!=0 || g_mgtt_entry_fill_total!=1 ||
+      !MGTT_CompletenessCertified())
    {
-      Print("[MGTT_LEDGER_PROBE] DUPLICATE_FAIL_CLOSED_FAIL");
+      ProbeLog("IDEMPOTENT_DEAL_FAIL");
       return false;
    }
+   ProbeLog("IDEMPOTENT_DEAL_PASS count_once=1");
 
+   MGTT_RunEnd(0);
+   return true;
+}
+
+bool ProbeDuplicateTerminals()
+{
+   MGTT_RunBegin(MGTT_PROBE_BUILD_RECEIPT,MGTT_PROBE_CONFIG_FINGERPRINT,false,
+                 MGTT_PROBE_SESSION_ID+"-DUPTERM");
+   long attempt=MGTT_ExecutionBegin("MARKET",1,0.10);
+   long submit=MGTT_SubmitBegin(attempt,"MARKET",0.10);
+   MqlTradeRequest request={}; request.action=TRADE_ACTION_DEAL;
+   long native_id=MGTT_NativeBegin(request);
+   MqlTradeResult result={}; result.retcode=TRADE_RETCODE_REJECT;
+   MGTT_NativeResult(native_id,false,result,1);
+   MGTT_NativeResult(native_id,false,result,1);
+   MGTT_SubmitReturn(submit,false,result.retcode,0.0);
+   MGTT_SubmitReturn(submit,false,result.retcode,0.0);
+   MGTT_ExecutionEnd(attempt,"FIRST");
+   MGTT_ExecutionEnd(attempt,"SECOND");
+   if(g_mgtt_evidence_error_count!=3 || MGTT_CompletenessCertified()) return false;
+   ProbeLog("DUPLICATE_TERMINALS_FAIL_CLOSED_PASS execution_end=2 submit_return=2 native_result=2");
+   MGTT_RunEnd(0);
+   return true;
+}
+
+bool ProbeMissingFillCoverage()
+{
+   MGTT_RunBegin(MGTT_PROBE_BUILD_RECEIPT,MGTT_PROBE_CONFIG_FINGERPRINT,false,
+                 MGTT_PROBE_SESSION_ID+"-MISSINGFILL");
+   long attempt=MGTT_ExecutionBegin("PENDING",1,0.10);
+   long submit=MGTT_SubmitBegin(attempt,"PENDING",0.10);
+   MqlTradeRequest request={}; request.action=TRADE_ACTION_PENDING;
+   long native_id=MGTT_NativeBegin(request);
+   MqlTradeResult result={}; result.retcode=TRADE_RETCODE_PLACED; result.order=987654;
+   MGTT_NativeResult(native_id,true,result,0);
+   MGTT_SubmitReturn(submit,true,result.retcode,0.0);
+   MGTT_ExecutionEnd(attempt,"PENDING_RETURN_TRUE");
+   if(MGTT_CompletenessCertified()) return false;
+   ProbeLog("MISSING_PARTIAL_PENDING_FILL_FAIL_CLOSED_PASS");
+   MGTT_RunEnd(0);
+   return true;
+}
+
+bool ProbeRepeatedDealContent()
+{
+   MGTT_RunBegin(MGTT_PROBE_BUILD_RECEIPT,MGTT_PROBE_CONFIG_FINGERPRINT,false,
+                 MGTT_PROBE_SESSION_ID+"-DEALCONTENT");
+   MqlTradeTransaction trans={}; MqlTradeRequest request={}; MqlTradeResult result={};
+   trans.type=TRADE_TRANSACTION_DEAL_ADD; trans.deal=4444; trans.order=3333;
+   trans.symbol=_Symbol; trans.deal_type=DEAL_TYPE_BUY; trans.volume=0.10;
+   MGTT_OnTradeTransaction(trans,request,result);
+   MGTT_OnTradeTransaction(trans,request,result);
+   if(g_mgtt_evidence_error_count!=0 || ArraySize(g_mgtt_deals)!=1) return false;
+   trans.volume=0.20;
+   MGTT_OnTradeTransaction(trans,request,result);
+   if(g_mgtt_evidence_error_count!=1 || MGTT_CompletenessCertified()) return false;
+   ProbeLog("CONTRADICTORY_DEAL_FAIL_CLOSED_PASS identical_counted_once=1");
+   MGTT_RunEnd(0);
+   return true;
+}
+
+bool ProbeClassification()
+{
    bool am=false,ap=false;
+   uint ambiguous[]={TRADE_RETCODE_ERROR,TRADE_RETCODE_ORDER_CHANGED,
+                     TRADE_RETCODE_NO_CHANGES,TRADE_RETCODE_LOCKED,
+                     TRADE_RETCODE_POSITION_CLOSED};
+   for(int i=0;i<ArraySize(ambiguous);i++)
+   {
+      if(MGTT_ClassifyNative(false,ambiguous[i],0,0,0.0,
+                            "MARKET",0.10,0.01,am,ap)!="UNRESOLVED_RESULT") return false;
+      if(MGTT_ClassifyNative(true,ambiguous[i],0,0,0.0,
+                            "PENDING",0.10,0.01,am,ap)!="UNRESOLVED_RESULT") return false;
+   }
+   if(MGTT_ClassifyNative(false,99999,0,0,0.0,
+                          "MARKET",0.10,0.01,am,ap)!="UNRESOLVED_RESULT") return false;
+   if(MGTT_ClassifyNative(false,TRADE_RETCODE_TIMEOUT,0,0,0.0,
+                          "MARKET",0.10,0.01,am,ap)!="UNRESOLVED_RESULT") return false;
+   if(MGTT_ClassifyNative(false,TRADE_RETCODE_CONNECTION,0,0,0.0,
+                          "MARKET",0.10,0.01,am,ap)!="UNRESOLVED_RESULT") return false;
+   if(MGTT_ClassifyNative(false,TRADE_RETCODE_REJECT,0,0,0.0,
+                          "MARKET",0.10,0.01,am,ap)!="REQUEST_REJECTED") return false;
+   if(MGTT_ClassifyNative(true,TRADE_RETCODE_REJECT,0,0,0.0,
+                          "MARKET",0.10,0.01,am,ap)!="UNRESOLVED_RESULT") return false;
+
    if(MGTT_ClassifyNative(false,TRADE_RETCODE_DONE,1,1,0.10,
                           "MARKET",0.10,0.01,am,ap)!="UNRESOLVED_RESULT")
       return false;
@@ -183,8 +280,7 @@ bool ProbeLedgerEvidence()
                           "MARKET",0.10,0.01,am,ap)!="MARKET_ACCEPTED_PARTIAL")
       return false;
 
-   Print("[MGTT_LEDGER_PROBE] ADVERSARIAL_FAIL_CLOSED_PASS");
-   MGTT_RunEnd(0);
+   ProbeLog("CLASSIFICATION_FAIL_CLOSED_PASS unknown_false=UNRESOLVED known_reject=REQUEST_REJECTED");
    return true;
 }
 
@@ -195,27 +291,45 @@ int OnInit()
       Print("[MGTT_PROBE] REFUSE non-tester execution");
       return INIT_FAILED;
    }
+   string actual_config=CFG_Fingerprint();
+   if(CFG_BuildTag()!="LAB_ENTRY_15" || actual_config=="" ||
+      actual_config!=MGTT_PROBE_CONFIG_FINGERPRINT)
+   {
+      PrintFormat("[MGTT_PROBE] CONFIG_MISMATCH expected=%s actual=%s build=%s",
+                  MGTT_PROBE_CONFIG_FINGERPRINT,actual_config,CFG_BuildTag());
+      return INIT_FAILED;
+   }
+   PrintFormat("[CFG] input surface: build=%s keys=%d scope=%s effective_config_hash=%s",
+               CFG_BuildTag(),CFG_SurfaceKeys(),CFG_FP_SCOPE,actual_config);
    if(!ProbeHashVectors() || !ProbeParserSemantics())
    {
       Print("[MGTT_PROBE] SELFTEST_FAIL before loader");
       return INIT_FAILED;
    }
+   MGTT_RunBegin(MGTT_PROBE_BUILD_RECEIPT,actual_config,false,
+                 MGTT_PROBE_SESSION_ID);
    MG_Setup(0.5,true,true,0,8760,168);
    if(!MGTT_LoadQualifiedRegime(MGTT_PROBE_FILENAME,false,
-                                "MGTT_PROBE_BUILD",
-                                "MGTT_PROBE_CONFIG"))
+                                MGTT_PROBE_BUILD_RECEIPT,
+                                actual_config,
+                                MGTT_PROBE_SESSION_ID))
    {
       Print("[MGTT_PROBE] LOAD_FAIL_NO_TRADES");
       return INIT_FAILED;
    }
-   if(!ProbeLedgerEvidence())
+   if(!ProbeLedgerPrimary() || !ProbeDuplicateTerminals() ||
+      !ProbeMissingFillCoverage() || !ProbeRepeatedDealContent() ||
+      !ProbeClassification())
    {
       Print("[MGTT_PROBE] LEDGER_CAGE_FAIL_NO_TRADES");
       return INIT_FAILED;
    }
-   Print("[MGTT_PROBE] LOAD_PASS_NO_TRADES");
+   ProbeLog("LOAD_PASS_NO_TRADES ADVERSARIAL_FAIL_CLOSED_PASS");
    return INIT_SUCCEEDED;
 }
 
 void OnTick() {}
-void OnDeinit(const int reason) {}
+void OnDeinit(const int reason)
+{
+   if(g_mgtt_run_started && !g_mgtt_run_ended) MGTT_RunEnd(reason);
+}

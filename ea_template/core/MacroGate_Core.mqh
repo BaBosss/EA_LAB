@@ -257,13 +257,17 @@ bool MGTT_Sha256Hex(uchar &raw[], string &hex)
    return (StringLen(hex) == 64);
 }
 
+string g_mgtt_feed_session="UNBOUND";
+string g_mgtt_feed_build="UNBOUND";
+string g_mgtt_feed_config="UNBOUND";
+
 void MGTT_FeedFailure(const string fname, const string reason,
                       const string expected_sha, const string observed_sha,
                       const long expected_bytes, const long observed_bytes,
                       const long bytes_read)
 {
-   PrintFormat("[MGTT_FEED] requested_filename=%s source_class=TESTER_SANDBOX_NONCOMMON expected_sha256=%s observed_sha256=%s expected_size_bytes=%I64d file_size_bytes=%I64d bytes_read=%I64d load_status=FAIL failure=%s",
-               fname, expected_sha, observed_sha, expected_bytes,
+   PrintFormat("[MGTT_FEED] runtime_session=%s build_receipt=%s effective_config_fingerprint=%s requested_filename=%s source_class=TESTER_SANDBOX_NONCOMMON expected_sha256=%s observed_sha256=%s expected_size_bytes=%I64d file_size_bytes=%I64d bytes_read=%I64d load_status=FAIL failure=%s",
+               g_mgtt_feed_session,g_mgtt_feed_build,g_mgtt_feed_config,fname, expected_sha, observed_sha, expected_bytes,
                observed_bytes, bytes_read, reason);
 }
 
@@ -271,9 +275,13 @@ void MGTT_FeedFailure(const string fname, const string reason,
 // the same immutable uchar buffer. It is called only under tester+self-gate and
 // its false return is an OnInit INIT_FAILED decision owned by LabCore.
 bool MGTT_LoadQualifiedRegime(const string fname, const bool common,
-                              const string build_receipt,
-                              const string config_fingerprint)
+                               const string build_receipt,
+                               const string config_fingerprint,
+                               const string runtime_session="")
 {
+   g_mgtt_feed_session=(runtime_session!="" ? runtime_session : "UNBOUND");
+   g_mgtt_feed_build=build_receipt;
+   g_mgtt_feed_config=config_fingerprint;
    mg_rowCount=0; mg_ok=false; mg_fileAgeHours=-1.0;
    mg_fname=fname; mg_common=common;
 
@@ -401,8 +409,8 @@ bool MGTT_LoadQualifiedRegime(const string fname, const bool common,
    }
 
    mg_ok=true;
-   PrintFormat("[MGTT_FEED] build_receipt=%s effective_config_fingerprint=%s requested_filename=%s source_class=TESTER_SANDBOX_NONCOMMON expected_sha256=%s observed_sha256=%s file_size_bytes=%I64d bytes_read=%I64d valid_row_count=%d skipped_row_count=%d first_accepted_timestamp=%s last_accepted_timestamp=%s load_status=PASS",
-               build_receipt,config_fingerprint,fname,expected_sha,observed_sha,
+   PrintFormat("[MGTT_FEED] runtime_session=%s build_receipt=%s effective_config_fingerprint=%s requested_filename=%s source_class=TESTER_SANDBOX_NONCOMMON expected_sha256=%s observed_sha256=%s file_size_bytes=%I64d bytes_read=%I64d valid_row_count=%d skipped_row_count=%d first_accepted_timestamp=%s last_accepted_timestamp=%s load_status=PASS",
+                g_mgtt_feed_session,build_receipt,config_fingerprint,fname,expected_sha,observed_sha,
                observed_bytes,(long)read_count,mg_rowCount,skipped,
                TimeToString(mg_rowTime[0],TIME_DATE|TIME_MINUTES),
                TimeToString(mg_rowTime[mg_rowCount-1],TIME_DATE|TIME_MINUTES));

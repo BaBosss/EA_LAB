@@ -289,7 +289,7 @@ int OnInit()
          MG_ParseMagics(IntegerToString(_0_Magic));
          if(!MGTT_LoadQualifiedRegime(_MG_RegimeFile,_MG_InCommon,
                                       LAB_BUILD_RECEIPT,
-                                      mgtt_config_fingerprint))
+                                      mgtt_config_fingerprint,g_mgtt_session))
             return INIT_FAILED;
       }
    }

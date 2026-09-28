@@ -157,11 +157,15 @@ function Get-TplActiveBaseline {
     param(
         [Parameter(Mandatory)][string]$Root,
         [string]$ActiveSelectorPath = '',
+        [string]$GitRoot = '',
         [switch]$DeclaredCoreDelta,
+        [switch]$PrecommitExactTree,
         [string]$ControlCommit = '',
         [string]$SourceCommit = '',
+        [string]$SourceTree = '',
         [string[]]$BehavioralDeltaPaths = @()
     )
+    if (-not $GitRoot) { $GitRoot = $Root }
     if (-not $ActiveSelectorPath) { $ActiveSelectorPath = Join-Path $Root 'ea_template\regression_baseline.active.json' }
     $selector = Get-TplJson $ActiveSelectorPath 'active baseline selector'
     Assert-TplRequired $selector @('schema','active_manifest','active_build','historical_manifest') 'selector'
@@ -205,19 +209,23 @@ function Get-TplActiveBaseline {
         if ($case.source_commit -ne $manifest.baseline_source_commit) { throw "REFUSE: $($ea.Name) source identity does not match baseline commit" }
         $sourcePath = Resolve-TplRepoPath $Root ([string]$case.source_path) "$($ea.Name).source_path"
         $sourceRel = [string]$case.source_path
-        $declaredWrapper = $DeclaredCoreDelta -and (@($BehavioralDeltaPaths) -ccontains $sourceRel)
+        $declaredWrapper = ($DeclaredCoreDelta -or $PrecommitExactTree) -and (@($BehavioralDeltaPaths) -ccontains $sourceRel)
         if ($declaredWrapper) {
-            $control = Assert-TplCommitIdentity $Root $ControlCommit 'ControlCommit'
-            $source = Assert-TplCommitIdentity $Root $SourceCommit 'SourceCommit'
+            $control = Assert-TplCommitIdentity $GitRoot $ControlCommit 'ControlCommit'
+            $source = if ($PrecommitExactTree) {
+                Assert-TplTreeIdentity $GitRoot $SourceTree 'SourceTree'
+            } else {
+                Assert-TplCommitIdentity $GitRoot $SourceCommit 'SourceCommit'
+            }
             $expectedHash = ([string]$case.source_sha256).ToLowerInvariant()
-            $baselineHash = Get-TplGitBlobSha256 $Root ([string]$manifest.baseline_source_commit) $sourceRel
-            $controlHash = Get-TplGitBlobSha256 $Root $control $sourceRel
+            $baselineHash = Get-TplGitBlobSha256 $GitRoot ([string]$manifest.baseline_source_commit) $sourceRel
+            $controlHash = Get-TplGitBlobSha256 $GitRoot $control $sourceRel
             if ($baselineHash -cne $expectedHash -or $controlHash -cne $expectedHash) {
                 throw "REFUSE: $($ea.Name) expected wrapper identity does not match exact baseline/control Git bytes"
             }
-            $sourceTree = Get-TplTree $Root $source
-            if (-not $sourceTree.ContainsKey($sourceRel)) { throw "REFUSE: $($ea.Name) declared wrapper missing from SourceCommit" }
-            Assert-TplDiskIdentity $Root $sourceRel $sourceTree[$sourceRel]
+            $sourceEntries = Get-TplTree $GitRoot $source
+            if (-not $sourceEntries.ContainsKey($sourceRel)) { throw "REFUSE: $($ea.Name) declared wrapper missing from source object" }
+            Assert-TplDiskIdentity $Root $sourceRel $sourceEntries[$sourceRel] -GitRoot $GitRoot
         } elseif ((Get-TplSha256 $sourcePath) -ne ([string]$case.source_sha256).ToLowerInvariant()) {
             throw "REFUSE: $($ea.Name) source hash mismatch"
         }
@@ -257,6 +265,21 @@ function Assert-TplCommitIdentity {
         throw "REFUSE: $Label is not a resolvable commit object: $value"
     }
     return $value.ToLowerInvariant()
+}
+
+function Assert-TplTreeIdentity {
+    param([Parameter(Mandatory)][string]$Root, [string]$Sha, [Parameter(Mandatory)][string]$Label)
+    $value = $Sha.Trim()
+    if ($value -cnotmatch '^[0-9a-f]{40}$') {
+        throw "REFUSE: $Label must be a full lowercase 40-hex tree SHA"
+    }
+    if (-not (Get-Command Invoke-EvidenceGitBytes -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'evidence.ps1') }
+    $probe = Invoke-EvidenceGitBytes -RepoRoot $Root -Arguments "cat-file -t $value"
+    $type = if ($probe.ExitCode -eq 0) { [Text.Encoding]::UTF8.GetString($probe.Bytes).Trim() } else { '' }
+    if ($probe.ExitCode -ne 0 -or $type -cne 'tree') {
+        throw "REFUSE: $Label is not a resolvable tree object: $value"
+    }
+    return $value
 }
 
 function Assert-TplAdjacentControlContract {
@@ -345,7 +368,9 @@ function Get-TplTree([string]$Root, [string]$Commit) {
     return ,$tree
 }
 
-function Assert-TplDiskIdentity([string]$Root, [string]$Path, [object]$Entry) {
+function Assert-TplDiskIdentity {
+    param([string]$Root, [string]$Path, [object]$Entry, [string]$GitRoot = '')
+    if (-not $GitRoot) { $GitRoot = $Root }
     Assert-TplLiteralPath $Path
     if ($null -eq $Entry -or $Entry.Type -ne 'blob' -or $Entry.Mode -notin @('100644','100755')) {
         throw "REFUSE: missing/nonregular source identity: $Path"
@@ -360,8 +385,157 @@ function Assert-TplDiskIdentity([string]$Root, [string]$Path, [object]$Entry) {
         }
     }
     # Raw bytes: no clean filters, ignore flags, assume-unchanged or skip-worktree trust.
-    $hash = & git -C $Root hash-object --no-filters -- $cursor
+    $hash = & git -C $GitRoot hash-object --no-filters -- $cursor
     if ($LASTEXITCODE -ne 0 -or $hash -cne $Entry.Blob) { throw "REFUSE: working source bytes differ from HEAD: $Path" }
+}
+
+function Assert-TplSafeTreePath([string]$Path) {
+    if ([string]::IsNullOrWhiteSpace($Path) -or [IO.Path]::IsPathRooted($Path) -or
+        $Path.Contains('\') -or $Path.Contains(':') -or $Path.Contains('//') -or
+        $Path.IndexOf([char]0) -ge 0) {
+        throw "REFUSE: unsafe source-tree path: $Path"
+    }
+    foreach ($part in $Path.Split('/')) {
+        if (-not $part -or $part -in @('.', '..') -or $part -ne $part.Trim() -or
+            $part.EndsWith('.') -or $part -match '^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)') {
+            throw "REFUSE: unsafe source-tree path: $Path"
+        }
+    }
+}
+
+function Get-TplGitBlobIdForFile([object]$InputFile) {
+    $item = if ($InputFile -is [IO.FileInfo]) { $InputFile } else { Get-Item -LiteralPath ([string]$InputFile) -Force }
+    if ($item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw "REFUSE: materialized path is not a regular file: $($item.FullName)"
+    }
+    $sha = [Security.Cryptography.SHA1]::Create()
+    $openPath = $item.FullName
+    if (-not $openPath.StartsWith('\\?\')) { $openPath = '\\?\' + $openPath }
+    $stream = [IO.File]::Open($openPath,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+    try {
+        $header = [Text.Encoding]::ASCII.GetBytes(('blob {0}' -f $item.Length) + [char]0)
+        [void]$sha.TransformBlock($header,0,$header.Length,$header,0)
+        $buffer = New-Object byte[] 1048576
+        while (($read = $stream.Read($buffer,0,$buffer.Length)) -gt 0) {
+            [void]$sha.TransformBlock($buffer,0,$read,$buffer,0)
+        }
+        [void]$sha.TransformFinalBlock((New-Object byte[] 0),0,0)
+        return ([BitConverter]::ToString($sha.Hash)).Replace('-','').ToLowerInvariant()
+    } finally {
+        $stream.Dispose()
+        $sha.Dispose()
+    }
+}
+
+function Assert-TplMaterializedTree {
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][object]$Tree)
+    $rootFull = (Resolve-Path -LiteralPath $Root).Path
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    $queue = New-Object 'System.Collections.Generic.Queue[string]'
+    $queue.Enqueue($rootFull)
+    while ($queue.Count -gt 0) {
+        foreach ($item in Get-ChildItem -LiteralPath $queue.Dequeue() -Force) {
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw "REFUSE: reparse path in materialized source tree: $($item.FullName)"
+            }
+            if ($item.PSIsContainer) { $queue.Enqueue($item.FullName); continue }
+            $path = Get-TplRelativePath $rootFull $item.FullName
+            Assert-TplSafeTreePath $path
+            if (-not $Tree.ContainsKey($path)) { throw "REFUSE: extra file in materialized source tree: $path" }
+            $entry = $Tree[$path]
+            if ($entry.Type -ne 'blob' -or $entry.Mode -notin @('100644','100755')) {
+                throw "REFUSE: nonregular source-tree entry: $path"
+            }
+            if ((Get-TplGitBlobIdForFile $item) -cne $entry.Blob) {
+                throw "REFUSE: materialized bytes differ from SourceTree: $path"
+            }
+            [void]$seen.Add($path)
+        }
+    }
+    if ($seen.Count -ne $Tree.Count) {
+        $missing = @($Tree.Keys | Where-Object { -not $seen.Contains($_) } | Select-Object -First 5)
+        throw "REFUSE: materialized source tree is incomplete: $($missing -join ', ')"
+    }
+}
+
+function Assert-TplPrecommitExactTreeContract {
+    param(
+        [Parameter(Mandatory)][string]$GitRoot,
+        [Parameter(Mandatory)][string]$SourceRoot,
+        [Parameter(Mandatory)][object]$Baseline,
+        [Parameter(Mandatory)][string]$ControlCommit,
+        [Parameter(Mandatory)][string]$RepairParent,
+        [Parameter(Mandatory)][string]$SourceTree,
+        [Parameter(Mandatory)][string[]]$BehavioralDeltaPaths,
+        [Parameter(Mandatory)][string[]]$AllowedRepairPaths
+    )
+    $control = Assert-TplCommitIdentity $GitRoot $ControlCommit 'ControlCommit'
+    $parent = Assert-TplCommitIdentity $GitRoot $RepairParent 'RepairParent'
+    $treeId = Assert-TplTreeIdentity $GitRoot $SourceTree 'SourceTree'
+    $head = (& git -C $GitRoot rev-parse HEAD 2>$null).Trim()
+    if ($LASTEXITCODE -ne 0 -or $head -cne $parent) { throw 'REFUSE: RepairParent must equal exact current HEAD' }
+    & git -C $GitRoot merge-base --is-ancestor $control $parent 2>$null
+    if ($LASTEXITCODE -ne 0) { throw 'REFUSE: frozen control is not an ancestor of RepairParent' }
+    $parentTree = (& git -C $GitRoot rev-parse ($parent + '^{tree}') 2>$null).Trim()
+    if ($LASTEXITCODE -ne 0 -or $parentTree -cnotmatch '^[0-9a-f]{40}$') { throw 'REFUSE: RepairParent tree is unavailable' }
+    if ($treeId -ceq $parentTree) { throw 'REFUSE: SourceTree contains no Repair1 change' }
+    $indexTree = (& git -C $GitRoot write-tree 2>$null).Trim()
+    if ($LASTEXITCODE -ne 0 -or $indexTree -cne $treeId) { throw 'REFUSE: stale staged tree; git write-tree differs from SourceTree' }
+
+    $allowed = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    foreach ($path in $AllowedRepairPaths) {
+        Assert-TplLiteralPath $path
+        if (-not $allowed.Add($path)) { throw "REFUSE: duplicate repair allowlist path: $path" }
+    }
+    $changed = @(& git -C $GitRoot diff-tree --no-commit-id --no-renames --name-only -r $parent $treeId 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $changed.Count -eq 0) { throw 'REFUSE: cannot establish RepairParent-to-SourceTree delta' }
+    foreach ($path in $changed) {
+        if (-not $allowed.Contains($path)) { throw "REFUSE: SourceTree changes an undeclared repair path: $path" }
+    }
+
+    $declared = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    foreach ($path in $BehavioralDeltaPaths) {
+        Assert-TplLiteralPath $path
+        if (-not (Test-TplBehavioralPath $path) -or -not $declared.Add($path)) {
+            throw "REFUSE: invalid or duplicate behavioral declaration: $path"
+        }
+    }
+    if ($declared.Count -ne 4) { throw 'REFUSE: precommit admission requires exactly four behavioral delta paths' }
+    $currentTree = Get-TplTree $GitRoot $treeId
+    $controlTree = Get-TplTree $GitRoot $control
+    $observed = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    foreach ($path in @(@($currentTree.Keys) + @($controlTree.Keys) | Select-Object -Unique)) {
+        if (-not (Test-TplBehavioralPath $path)) { continue }
+        $before=$controlTree[$path]; $after=$currentTree[$path]
+        if ($null -eq $before -or $null -eq $after -or $before.Blob -cne $after.Blob -or $before.Mode -cne $after.Mode) {
+            [void]$observed.Add($path)
+        }
+    }
+    if ($observed.Count -ne $declared.Count) { throw 'REFUSE: SourceTree behavioral delta count differs from the exact declaration' }
+    foreach ($path in $declared) {
+        if (-not $observed.Contains($path)) { throw "REFUSE: declared behavioral delta absent or case-aliased: $path" }
+    }
+
+    foreach ($path in $currentTree.Keys) {
+        Assert-TplSafeTreePath $path
+        $entry=$currentTree[$path]
+        if ($entry.Type -ne 'blob' -or $entry.Mode -notin @('100644','100755')) {
+            throw "REFUSE: symlink/submodule/nonregular entry in SourceTree: $path"
+        }
+    }
+    Assert-TplMaterializedTree -Root $SourceRoot -Tree $currentTree
+    foreach ($path in $changed) {
+        if (-not $currentTree.ContainsKey($path)) { throw "REFUSE: Repair1 deletion is not admitted: $path" }
+        Assert-TplDiskIdentity -Root $GitRoot -Path $path -Entry $currentTree[$path] -GitRoot $GitRoot
+    }
+
+    $base = Assert-TplCommitIdentity $GitRoot ([string]$Baseline.Manifest.baseline_source_commit) 'baseline_source_commit'
+    $runtime = Assert-TplCommitIdentity $GitRoot ([string]$Baseline.Manifest.accepted_runtime_lineage_tip) 'accepted_runtime_lineage_tip'
+    & git -C $GitRoot merge-base --is-ancestor $runtime $base 2>$null
+    if ($LASTEXITCODE -ne 0) { throw 'REFUSE: runtime lineage is not ancestor of baseline source' }
+    & git -C $GitRoot merge-base --is-ancestor $base $control 2>$null
+    if ($LASTEXITCODE -ne 0) { throw 'REFUSE: baseline source is not ancestor of frozen control' }
+    return [pscustomobject]@{ SourceTree=$treeId; RepairParent=$parent; ControlCommit=$control; ChangedPaths=$changed; EntryCount=$currentTree.Count }
 }
 
 function Assert-TplDeclaredCoreDeltaContract {

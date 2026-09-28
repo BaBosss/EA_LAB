@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""Host-only deterministic cages for MacroGate tester-transfer implementation.
+"""Deterministic host/adversarial cages for MGTT Repair1.
 
-Coverage labels are intentional:
-- HOST_ACTUAL_BYTES validates immutable repository feeds and exact derivations.
-- HOST_SOURCE_BINDING validates compiled literals and control gating.
-- PYTHON_CONTRACT_MODEL exercises adversarial ledger rules but is not native MQL.
-Native compile/tester/probe coverage remains a separate Control Tower gate.
+These tests bind the actual MQL and PowerShell sources and prepare native MQL
+probe cages. They do not claim compile, MT5, TPL, or reviewer acceptance.
 """
 
 from __future__ import annotations
@@ -14,27 +11,27 @@ import csv
 import hashlib
 import json
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
+import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-BASE_HEAD = "4aa459566c4e5eedc2477938fa5d3f4f86d00e8e"
-CONTRACT_ROOT = (
-    ROOT / "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926"
-)
+ORIGINAL_BASE = "4aa459566c4e5eedc2477938fa5d3f4f86d00e8e"
+REPAIR_PARENT = "5845c4e039a3d9ef57e6997af42655a3d854d34e"
+CONTROL = "b586d4d32c04fa33a30517ab3a1a8469b238d2ac"
+CONTRACT_ROOT = ROOT / "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926"
 CONTRACT = json.loads((CONTRACT_ROOT / "PROSPECTIVE_IMPLEMENTATION_CONTRACT.json").read_text())
 EXPECTATIONS = json.loads((CONTRACT_ROOT / "FEED_RUNTIME_EXPECTATIONS.json").read_text())
 SOURCE_BINDING = json.loads((CONTRACT_ROOT / "SOURCE_BINDING.json").read_text())
-OWNER_AUTH = json.loads(
-    Path(
-        r"D:\EA_LAB_CONTROL\evidence\mg-tester-transfer-impl-v1-20260927\OWNER_AUTHORIZATION.json"
-    ).read_text(encoding="utf-8-sig")
-)
+OWNER_AUTH = json.loads(Path(r"D:\EA_LAB_CONTROL\evidence\mg-tester-transfer-impl-v1-20260927\OWNER_AUTHORIZATION.json").read_text(encoding="utf-8-sig"))
+REPAIR_AUTH = json.loads(Path(r"D:\EA_LAB_CONTROL\evidence\mg-tester-transfer-impl-v1-20260927\PRECOMMIT_EXACT_TREE_OWNER_AUTH_20260927.json").read_text(encoding="utf-8-sig"))
 
 ALLOWED = {
     "ea_template/Boss_15_ST03.mq5",
@@ -44,6 +41,9 @@ ALLOWED = {
     "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1",
     "scripts/_test/macrogate_tester_transfer_probe.mq5",
     "scripts/_test/test_macrogate_tester_transfer_contract.py",
+    "scripts/tpl_regression.ps1",
+    "scripts/lib/tpl_baseline.ps1",
+    "scripts/_test/run_tpl_declared_wrapper_tests.ps1",
 }
 EVIDENCE_PREFIX = "factory/runs/news_macro_macrogate_tester_transfer_impl_v1_20260927/"
 
@@ -52,63 +52,14 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def git(*args: str) -> str:
-    proc = subprocess.run(
-        ["git", "-C", str(ROOT), *args],
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    return proc.stdout
+def git_bytes(*args: str) -> bytes:
+    return subprocess.run(
+        ["git", "-C", str(ROOT), *args], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    ).stdout
 
 
-def parse_tester_feed(raw: bytes) -> dict[str, object]:
-    """Host model of the shared MG_ParseRegimeDataLine accepted semantics."""
-    text = raw.decode("utf-8-sig")
-    lines = text.splitlines()
-    valid: list[tuple[datetime, str]] = []
-    skipped = 0
-    ascending = True
-    previous: datetime | None = None
-    for index, line in enumerate(lines):
-        if index == 0:
-            continue
-        if len(line) < 8:
-            continue
-        try:
-            fields = next(csv.reader([line]))
-        except csv.Error:
-            skipped += 1
-            continue
-        if len(fields) < 2:
-            skipped += 1
-            continue
-        stamp = fields[0].strip()
-        if " " not in stamp or "." not in stamp.split(" ", 1)[0]:
-            skipped += 1
-            continue
-        try:
-            when = datetime.strptime(stamp, "%Y.%m.%d %H:%M")
-        except ValueError:
-            skipped += 1
-            continue
-        state = fields[1].strip().upper()
-        if state not in {"RISK_ON", "NEUTRAL", "RISK_OFF", "STRESS", "UNKNOWN"}:
-            skipped += 1
-            continue
-        if previous is not None and when < previous:
-            ascending = False
-        previous = when
-        valid.append((when, state))
-    return {
-        "rows": len(valid),
-        "skipped": skipped,
-        "ascending": ascending,
-        "first": valid[0][0].strftime("%Y.%m.%d %H:%M") if valid else None,
-        "last": valid[-1][0].strftime("%Y.%m.%d %H:%M") if valid else None,
-        "states": [state for _, state in valid],
-    }
+def git_text(*args: str) -> str:
+    return git_bytes(*args).decode()
 
 
 def extract_balanced(text: str, signature: str) -> str:
@@ -125,252 +76,70 @@ def extract_balanced(text: str, signature: str) -> str:
     raise AssertionError(f"unterminated function {signature}")
 
 
-def derive_wrong_same_metadata(raw: bytes) -> bytes:
+def parse_tester_feed(raw: bytes) -> dict[str, object]:
+    lines = raw.decode("utf-8-sig").splitlines()
+    valid: list[tuple[datetime, str]] = []
+    skipped = 0
+    ascending = True
+    previous: datetime | None = None
+    for index, line in enumerate(lines):
+        if index == 0 or len(line) < 8:
+            continue
+        try:
+            fields = next(csv.reader([line]))
+            when = datetime.strptime(fields[0].strip(), "%Y.%m.%d %H:%M")
+        except (csv.Error, ValueError, IndexError):
+            skipped += 1
+            continue
+        state = fields[1].strip().upper()
+        if state not in {"RISK_ON", "NEUTRAL", "RISK_OFF", "STRESS", "UNKNOWN"}:
+            skipped += 1
+            continue
+        if previous is not None and when < previous:
+            ascending = False
+        previous = when
+        valid.append((when, state))
+    return {
+        "rows": len(valid),
+        "skipped": skipped,
+        "ascending": ascending,
+        "first": valid[0][0].strftime("%Y.%m.%d %H:%M") if valid else None,
+        "last": valid[-1][0].strftime("%Y.%m.%d %H:%M") if valid else None,
+    }
+
+
+def derive_wrong(raw: bytes) -> bytes:
     lines = raw.splitlines(keepends=True)
-    if len(lines) < 3:
-        raise AssertionError("REAL feed has no second data row")
-    original = lines[2]
-    changed = original.replace(b" 02:", b" 03:", 1)
-    if changed == original or len(changed) != len(original):
-        raise AssertionError("same-metadata mutation was not size preserving")
+    changed = lines[2].replace(b" 02:", b" 03:", 1)
+    if changed == lines[2] or len(changed) != len(lines[2]):
+        raise AssertionError("wrong fixture derivation failed")
     lines[2] = changed
     return b"".join(lines)
 
 
-def derive_stale_truncated(raw: bytes) -> bytes:
-    lines = raw.splitlines(keepends=True)
-    if len(lines) < 2:
-        raise AssertionError("REAL feed cannot be truncated")
-    return b"".join(lines[:-1])
-
-
-class ContractAndIdentityTests(unittest.TestCase):
-    def test_contract_and_owner_authority(self) -> None:
-        self.assertEqual(
-            CONTRACT["schema"],
-            "macrogate_tester_transfer_prospective_implementation_contract/2",
-        )
-        self.assertTrue(OWNER_AUTH["authorized_implementation"])
-        self.assertFalse(OWNER_AUTH["authorized_performance"])
-        self.assertEqual(OWNER_AUTH["base"], BASE_HEAD)
-        self.assertEqual(OWNER_AUTH["holdout"], "LOCKED_UNSPENT")
-
-    def test_base_source_binding_is_exact(self) -> None:
-        for item in SOURCE_BINDING["source_files"]:
-            raw = subprocess.run(
-                ["git", "-C", str(ROOT), "show", f"{BASE_HEAD}:{item['path']}"],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            ).stdout
-            self.assertEqual(sha256(raw), item["sha256"], item["path"])
-
-    def test_immutable_current_paths_unchanged(self) -> None:
-        expected = {item["path"]: item["sha256"] for item in SOURCE_BINDING["source_files"]}
-        for path in ("ea_template/core/Inputs.mqh", "ea_template/core/ConfigFingerprint.mqh"):
-            self.assertEqual(sha256((ROOT / path).read_bytes()), expected[path], path)
-
-    def test_changed_paths_stay_in_allowlist(self) -> None:
-        lines = git("status", "--porcelain=v1", "--untracked-files=all").splitlines()
-        for line in lines:
-            path = line[3:].replace("\\", "/")
-            if " -> " in path:
-                path = path.split(" -> ", 1)[1]
-            self.assertTrue(path in ALLOWED or path.startswith(EVIDENCE_PREFIX), path)
-
-    def test_vendor_trade_binding(self) -> None:
-        path = Path(
-            r"D:\MetaTraderData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\MQL5\Include\Trade\Trade.mqh"
-        )
-        self.assertEqual(
-            sha256(path.read_bytes()),
-            "96e6781624534377fe7971cba52cca3d62d1b030bc10d5e4ebf3ed8c541399ed",
-        )
-
-
-class FeedByteTests(unittest.TestCase):
-    def test_all_eleven_golden_feeds(self) -> None:
-        self.assertEqual(len(EXPECTATIONS["entries"]), 11)
-        for item in EXPECTATIONS["entries"]:
-            raw = (ROOT / item["source_path"]).read_bytes()
-            parsed = parse_tester_feed(raw)
-            self.assertEqual(len(raw), item["bytes"], item["filename"])
-            self.assertEqual(sha256(raw), item["sha256"], item["filename"])
-            self.assertEqual(parsed["rows"], item["rows"], item["filename"])
-            self.assertEqual(parsed["first"], item["first"], item["filename"])
-            self.assertEqual(parsed["last"], item["last"], item["filename"])
-            self.assertTrue(parsed["ascending"], item["filename"])
-
-    def test_raw_hash_vectors_distinguish_lf_crlf_bom_and_count(self) -> None:
-        vectors = {
-            b"abc": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-            b"a\n": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
-            b"a\r\n": "8e4621379786ef42a4fec155cd525c291dd7db3c1fde3478522f4f61c03fd1bd",
-            b"\xef\xbb\xbfa\n": "be4fccb045869c7ad387b9081a44cfd495b37efc020da4b44542de0d980c747f",
-            bytes((0, 1, 2, 3)): "054edec1d0211f624fed0cbca9d4f9400b0e491c43742af2c5b0abebf0c990d8",
-        }
-        for raw, expected in vectors.items():
-            self.assertEqual(sha256(raw), expected)
-        self.assertEqual(len({sha256(raw) for raw in vectors}), len(vectors))
-
-    def test_negative_fixture_derivations_are_exact(self) -> None:
-        item = EXPECTATIONS["entries"][0]
-        raw = (ROOT / item["source_path"]).read_bytes()
-        wrong = derive_wrong_same_metadata(raw)
-        self.assertEqual(len(wrong), len(raw))
-        self.assertEqual(
-            sha256(wrong),
-            "7e1dbd8e3850c5d14858c7183d9f842767bbe0e33d16ed148be4fbd9dc84f5e4",
-        )
-        self.assertEqual(parse_tester_feed(wrong)["rows"], item["rows"])
-        self.assertEqual(parse_tester_feed(wrong)["first"], item["first"])
-        self.assertEqual(parse_tester_feed(wrong)["last"], item["last"])
-        stale = derive_stale_truncated(raw)
-        self.assertEqual(
-            sha256(stale),
-            "70271717ee95f618a2d76b2b0a8d1ca2d8da9edf2cc9a079b74d4ea90e484e19",
-        )
-
-    def test_unknown_equal_and_unsorted_parser_semantics(self) -> None:
-        raw = (
-            b"datetime,state,ri\n"
-            b"2020.01.01 02:00,UNKNOWN,0\n"
-            b"2020.01.01 02:00,NEUTRAL,0\n"
-        )
-        parsed = parse_tester_feed(raw)
-        self.assertEqual(parsed["states"], ["UNKNOWN", "NEUTRAL"])
-        self.assertTrue(parsed["ascending"])
-        backwards = raw + b"2019.12.31 02:00,STRESS,0\n"
-        self.assertFalse(parse_tester_feed(backwards)["ascending"])
-
-
-class SourceBindingTests(unittest.TestCase):
-    def test_boss_wrapper_has_exact_opt_in_dependencies(self) -> None:
-        text = (ROOT / "ea_template/Boss_15_ST03.mq5").read_text()
-        names = re.findall(r'^#property tester_file "([^"]+)"$', text, re.MULTILINE)
-        self.assertEqual(names, CONTRACT["transfer"]["production_filenames"])
-        self.assertEqual(len(names), 11)
-        self.assertNotRegex(text, r"^#define LAB_MG_TESTER_EVIDENCE_QUAL$", msg="control must remain compilable")
-
-    def test_compiled_expected_map_matches_json(self) -> None:
-        text = (ROOT / "ea_template/core/MacroGate_Core.mqh").read_text()
-        pattern = re.compile(
-            r'if\(fname == "(?P<name>[^"]+)"\)\s*\n\s*'
-            r'\{ sha256="(?P<sha>[0-9a-f]{64})"; bytes=(?P<bytes>\d+); rows=(?P<rows>\d+); '
-            r'first="(?P<first>[^"]+)"; last="(?P<last>[^"]+)"; return true; \}'
-        )
-        actual = {
-            match["name"]: {
-                "sha256": match["sha"],
-                "bytes": int(match["bytes"]),
-                "rows": int(match["rows"]),
-                "first": match["first"],
-                "last": match["last"],
-            }
-            for match in pattern.finditer(text)
-        }
-        expected = {
-            item["filename"]: {key: item[key] for key in ("sha256", "bytes", "rows", "first", "last")}
-            for item in EXPECTATIONS["entries"]
-        }
-        self.assertEqual(actual, expected)
-
-    def test_qualified_loader_has_one_binary_open_and_same_buffer_parse(self) -> None:
-        text = (ROOT / "ea_template/core/MacroGate_Core.mqh").read_text()
-        body = extract_balanced(text, "bool MGTT_LoadQualifiedRegime(")
-        self.assertEqual(body.count("FileOpen("), 1)
-        self.assertIn("FILE_READ|FILE_BIN", body)
-        self.assertNotIn("FILE_COMMON", body)
-        self.assertNotIn("FILE_SHARE_WRITE", body)
-        self.assertEqual(body.count("FileReadArray("), 1)
-        self.assertIn("MGTT_Sha256Hex(raw", body)
-        self.assertIn("CharArrayToString(raw", body)
-        self.assertNotIn("MG_LoadRegime(", body)
-        for field in CONTRACT["transfer"]["success_marker_fields"]:
-            self.assertIn(field, body)
-        for marker in CONTRACT["transfer"]["failure_markers"]:
-            self.assertIn(marker, text)
-
-    def test_native_observer_is_feature_gated_and_forwards_once_per_path(self) -> None:
-        text = (ROOT / "ea_template/core/Execution.mqh").read_text()
-        feature = text.split("#ifdef LAB_MG_TESTER_EVIDENCE_QUAL", 1)[1].split("#else", 1)[0]
-        observer = extract_balanced(feature, "virtual bool OrderSend(")
-        self.assertEqual(observer.count("CTrade::OrderSend(request,result)"), 2)
-        self.assertEqual(observer.count("bool transport_ok=CTrade::OrderSend(request,result)"), 1)
-        self.assertIn("if(!MGTT_IsActive() || !g_mgtt_open_context)", observer)
-        self.assertNotIn("_MG_SelfGate", feature)
-        init = extract_balanced(text, "void Exec_Init()")
-        self.assertIn("g_trade.SetAsyncMode(false)", init)
-
-    def test_probe_has_no_trade_api_and_imports_actual_loader(self) -> None:
-        text = (ROOT / "scripts/_test/macrogate_tester_transfer_probe.mq5").read_text()
-        self.assertIn('../../ea_template/core/MacroGate_Core.mqh', text)
-        self.assertIn('../../ea_template/core/Execution.mqh', text)
-        self.assertIn("MGTT_LoadQualifiedRegime", text)
-        self.assertIn("ProbeLedgerEvidence", text)
-        self.assertIn("CERTIFIED_COUNTS_PASS self_gate=0 no_order_send=1", text)
-        self.assertIn("ADVERSARIAL_FAIL_CLOSED_PASS", text)
-        self.assertEqual(len(re.findall(r"^#property tester_file", text, re.MULTILINE)), 1)
-        self.assertNotRegex(
-            text,
-            r"\b(?:CTrade|OrderSend|PositionOpen|Buy|Sell|BuyLimit|SellLimit|BuyStop|SellStop)\s*\(",
-        )
-
-    def test_control_source_retains_original_execution_path(self) -> None:
-        current = (ROOT / "ea_template/core/Execution.mqh").read_text()
-        base = git("show", f"{BASE_HEAD}:ea_template/core/Execution.mqh")
-        for signature in (
-            "bool Exec_Open(const int direction, double lot, const double sl, const double tp, const string comment)",
-            "bool Exec_PlacePending(const int direction, const bool isStop, double lot,",
-        ):
-            base_body = extract_balanced(base, signature)
-            current_body = extract_balanced(current, signature)
-            # The original body must remain a literal suffix after the opt-in branch.
-            base_inner = base_body[base_body.index("{") + 1 : -1].strip()
-            self.assertIn(base_inner, current_body)
-
-    def test_orchestrator_is_bounded_and_fail_closed(self) -> None:
-        text = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text()
-        case_ids = re.findall(r"@\{ id='([^']+)'", text)
-        self.assertEqual(
-            case_ids,
-            ["POSITIVE_GOLDEN_REAL", "MISSING", "WRONG_SAME_METADATA", "STALE_TRUNCATED_COPY"],
-        )
-        self.assertIn("REFUSE: competing or unresolved terminal/tester/editor process exists", text)
-        self.assertIn("RuntimeLeaseLaneId", text)
-        self.assertIn("runtime lease owner/state mismatch", text)
-        self.assertIn("requiredWorktreeHead = 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac'", text)
-        self.assertIn("$relative.Substring(0,$relative.Length-4)", text)
-        self.assertNotIn("ChangeExtension($relative,$null)", text)
-        self.assertIn("$caseLogText", text)
-        self.assertIn("$caseTag='MGTT_' + $case.id", text)
-        self.assertIn("[IO.FileShare]::Read", text)
-        self.assertNotIn("[IO.FileShare]::ReadWrite", text)
-        self.assertIn("performance='NOT_RUN'", text)
-        self.assertIn("-Symbol GBPUSD -Period H4 -FromDate 2020.01.02 -ToDate 2020.01.03 -Model 1", text)
-
-
-def classify_native(
-    *, transport: bool, retcode: int, order: int, deal: int, result_volume: float,
-    path: str, requested: float, step: float
-) -> str:
-    accepted = {10008, 10009, 10010}  # PLACED, DONE, DONE_PARTIAL
-    documented_non_acceptance = {
-        10004, 10006, 10007, 10011, 10012, 10013, 10014, 10015, 10016,
-        10017, 10018, 10019, 10020, 10021, 10022, 10023, 10024, 10025,
-        10026, 10027, 10028, 10029, 10030, 10031, 10032, 10033, 10034,
-        10035, 10036, 10038, 10039, 10040, 10041, 10042, 10043, 10044,
-        10045, 10046,
+def classify_native(*, transport: bool, retcode: int, order: int, deal: int, volume: float,
+                    path: str, requested: float, step: float) -> str:
+    accepted = {10008, 10009, 10010}
+    ambiguous = {10011, 10012, 10023, 10025, 10028, 10031, 10036}
+    rejected = {
+        10004, 10006, 10007, 10011, 10013, 10014, 10015, 10016, 10017,
+        10018, 10019, 10020, 10021, 10022, 10023, 10024, 10025, 10026,
+        10027, 10028, 10029, 10030, 10032, 10033, 10034, 10035, 10036,
+        10038, 10039, 10040, 10041, 10042, 10043, 10044, 10045, 10046,
     }
-    positive_identity = order > 0 or deal > 0
-    positive_volume = result_volume > 0
+    identity = order > 0 or deal > 0
+    positive_volume = volume > 0
     if not transport:
-        return "UNRESOLVED_RESULT" if retcode in accepted or positive_identity or positive_volume else "REQUEST_REJECTED"
+        if retcode in accepted or retcode in ambiguous or retcode not in rejected or identity or positive_volume:
+            return "UNRESOLVED_RESULT"
+        return "REQUEST_REJECTED"
+    if retcode in ambiguous or retcode in rejected:
+        return "UNRESOLVED_RESULT"
     tolerance = max(1e-12, step * 1e-8)
     if path == "MARKET":
-        if retcode == 10009 and positive_identity and result_volume > 0 and step > 0 and abs(result_volume - requested) <= tolerance:
+        if retcode == 10009 and identity and volume > 0 and step > 0 and abs(volume - requested) <= tolerance:
             return "MARKET_ACCEPTED_DONE"
-        if retcode == 10010 and positive_identity and 0 < result_volume <= requested + tolerance and step > 0:
+        if retcode == 10010 and identity and 0 < volume <= requested + tolerance and step > 0:
             return "MARKET_ACCEPTED_PARTIAL"
         if retcode == 10008 and order > 0:
             return "MARKET_ACCEPTED_PENDING"
@@ -381,82 +150,322 @@ def classify_native(
             return "PENDING_PLACED"
         if retcode in accepted:
             return "UNRESOLVED_RESULT"
-    if retcode in documented_non_acceptance:
-        if positive_identity or positive_volume:
-            return "UNRESOLVED_RESULT"
-        return "REQUEST_REJECTED"
     return "UNRESOLVED_RESULT"
 
 
 @dataclass
 class LedgerModel:
-    session: str = "A"
-    began: bool = False
-    ended: bool = False
-    sequences: list[int] = field(default_factory=list)
-    attempts: dict[int, bool] = field(default_factory=dict)
-    submits: dict[int, bool] = field(default_factory=dict)
+    sessions: list[str] = field(default_factory=list)
+    sequences: dict[str, list[int]] = field(default_factory=dict)
+    attempt_ends: dict[int, int] = field(default_factory=dict)
+    submit_returns: dict[int, int] = field(default_factory=dict)
+    native_results: dict[int, int] = field(default_factory=dict)
     native_categories: list[str] = field(default_factory=list)
-    deal_ids: set[int] = field(default_factory=set)
-    duplicate_deal: bool = False
-    mixed_session: bool = False
+    fills_complete: dict[int, bool] = field(default_factory=dict)
+    deals: dict[int, tuple[int, str, int, float]] = field(default_factory=dict)
+    errors: int = 0
 
-    def event(self, sequence: int, session: str) -> None:
-        self.sequences.append(sequence)
-        if session != self.session:
-            self.mixed_session = True
+    def event(self, session: str, sequence: int) -> None:
+        self.sequences.setdefault(session, []).append(sequence)
+
+    def deal(self, deal_id: int, content: tuple[int, str, int, float]) -> None:
+        if deal_id not in self.deals:
+            self.deals[deal_id] = content
+        elif self.deals[deal_id] != content:
+            self.errors += 1
 
     def certified(self) -> bool:
+        gap_free = all(values == list(range(1, len(values) + 1)) for values in self.sequences.values())
         return (
-            self.began
-            and self.ended
-            and self.sequences == list(range(1, len(self.sequences) + 1))
-            and all(self.attempts.values())
-            and all(self.submits.values())
+            gap_free
+            and all(count == 1 for count in self.attempt_ends.values())
+            and all(count == 1 for count in self.submit_returns.values())
+            and all(count == 1 for count in self.native_results.values())
             and "UNRESOLVED_RESULT" not in self.native_categories
-            and not self.duplicate_deal
-            and not self.mixed_session
+            and all(self.fills_complete.values())
+            and self.errors == 0
         )
 
 
-class PythonContractModelTests(unittest.TestCase):
-    def test_path_specific_result_classification(self) -> None:
-        cases = [
-            (dict(transport=True, retcode=10009, order=1, deal=2, result_volume=0.10, path="MARKET", requested=0.10, step=0.01), "MARKET_ACCEPTED_DONE"),
-            (dict(transport=True, retcode=10010, order=1, deal=2, result_volume=0.05, path="MARKET", requested=0.10, step=0.01), "MARKET_ACCEPTED_PARTIAL"),
-            (dict(transport=True, retcode=10008, order=1, deal=0, result_volume=0.0, path="PENDING", requested=0.10, step=0.01), "PENDING_PLACED"),
-            (dict(transport=True, retcode=10006, order=0, deal=0, result_volume=0.0, path="MARKET", requested=0.10, step=0.01), "REQUEST_REJECTED"),
-            (dict(transport=False, retcode=10009, order=0, deal=0, result_volume=0.10, path="MARKET", requested=0.10, step=0.01), "UNRESOLVED_RESULT"),
-            (dict(transport=False, retcode=10012, order=0, deal=0, result_volume=0.0, path="MARKET", requested=0.10, step=0.01), "REQUEST_REJECTED"),
-            (dict(transport=False, retcode=10012, order=0, deal=0, result_volume=0.01, path="MARKET", requested=0.10, step=0.01), "UNRESOLVED_RESULT"),
-            (dict(transport=True, retcode=10006, order=7, deal=0, result_volume=0.0, path="MARKET", requested=0.10, step=0.01), "UNRESOLVED_RESULT"),
-            (dict(transport=True, retcode=10005, order=0, deal=0, result_volume=0.0, path="MARKET", requested=0.10, step=0.01), "UNRESOLVED_RESULT"),
-            (dict(transport=True, retcode=10037, order=0, deal=0, result_volume=0.0, path="MARKET", requested=0.10, step=0.01), "UNRESOLVED_RESULT"),
-            (dict(transport=True, retcode=99999, order=0, deal=0, result_volume=0.0, path="MARKET", requested=0.10, step=0.01), "UNRESOLVED_RESULT"),
-        ]
-        for values, expected in cases:
-            self.assertEqual(classify_native(**values), expected)
+class AuthorityAndByteTests(unittest.TestCase):
+    def test_authorities_are_narrow_and_exact(self) -> None:
+        self.assertTrue(OWNER_AUTH["authorized_implementation"])
+        self.assertFalse(OWNER_AUTH["authorized_performance"])
+        self.assertEqual(REPAIR_AUTH["repair_parent"], REPAIR_PARENT)
+        self.assertEqual(REPAIR_AUTH["current_control"], CONTROL)
+        self.assertEqual(REPAIR_AUTH["repair_findings"], [f"MGTT-00{i}" for i in range(1, 8)])
+        self.assertFalse(REPAIR_AUTH["performance_authorized"])
 
-    def test_adversarial_sequence_footer_duplicate_and_session_fail_closed(self) -> None:
-        good = LedgerModel(began=True, ended=True, attempts={1: True}, submits={1: True}, native_categories=["REQUEST_REJECTED"])
-        good.event(1, "A")
-        good.event(2, "A")
+    def test_original_source_binding_remains_exact(self) -> None:
+        for item in SOURCE_BINDING["source_files"]:
+            self.assertEqual(sha256(git_bytes("show", f"{ORIGINAL_BASE}:{item['path']}")), item["sha256"])
+
+    def test_worktree_changes_stay_in_repair_allowlist(self) -> None:
+        for line in git_text("status", "--porcelain=v1", "--untracked-files=all").splitlines():
+            path = line[3:].replace("\\", "/").split(" -> ")[-1]
+            self.assertTrue(path in ALLOWED or path.startswith(EVIDENCE_PREFIX), path)
+
+    def test_all_feed_bytes_and_negative_derivations(self) -> None:
+        self.assertEqual(len(EXPECTATIONS["entries"]), 11)
+        for item in EXPECTATIONS["entries"]:
+            raw = (ROOT / item["source_path"]).read_bytes()
+            parsed = parse_tester_feed(raw)
+            self.assertEqual(sha256(raw), item["sha256"])
+            self.assertEqual(len(raw), item["bytes"])
+            self.assertEqual(parsed["rows"], item["rows"])
+            self.assertEqual(parsed["first"], item["first"])
+            self.assertEqual(parsed["last"], item["last"])
+            self.assertTrue(parsed["ascending"])
+        raw = (ROOT / EXPECTATIONS["entries"][0]["source_path"]).read_bytes()
+        wrong = derive_wrong(raw)
+        self.assertEqual(len(wrong), len(raw))
+        self.assertEqual(sha256(wrong), "7e1dbd8e3850c5d14858c7183d9f842767bbe0e33d16ed148be4fbd9dc84f5e4")
+        self.assertEqual(sha256(b"".join(raw.splitlines(keepends=True)[:-1])), "70271717ee95f618a2d76b2b0a8d1ca2d8da9edf2cc9a079b74d4ea90e484e19")
+
+
+class ActualSourceContractTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.execution = (ROOT / "ea_template/core/Execution.mqh").read_text()
+        cls.macro = (ROOT / "ea_template/core/MacroGate_Core.mqh").read_text()
+        cls.probe = (ROOT / "scripts/_test/macrogate_tester_transfer_probe.mq5").read_text()
+        cls.qualifier = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text()
+        cls.tpl = (ROOT / "scripts/tpl_regression.ps1").read_text()
+        cls.tpl_lib = (ROOT / "scripts/lib/tpl_baseline.ps1").read_text()
+
+    def test_loader_is_same_buffer_and_runtime_identity_bound(self) -> None:
+        body = extract_balanced(self.macro, "bool MGTT_LoadQualifiedRegime(")
+        self.assertEqual(body.count("FileOpen("), 1)
+        self.assertEqual(body.count("FileReadArray("), 1)
+        self.assertIn("MGTT_Sha256Hex(raw", body)
+        self.assertIn("CharArrayToString(raw", body)
+        self.assertIn("runtime_session", body)
+        self.assertIn("g_mgtt_feed_build=build_receipt", body)
+        self.assertIn("g_mgtt_feed_config=config_fingerprint", body)
+
+    def test_terminal_records_are_counted_not_overwritten(self) -> None:
+        self.assertIn("int  end_count;", self.execution)
+        self.assertIn("int  return_count;", self.execution)
+        self.assertIn("int   result_count;", self.execution)
+        for marker in ("DUPLICATE_EXECUTION_END", "DUPLICATE_SUBMIT_RETURN", "DUPLICATE_NATIVE_SEND_RESULT"):
+            self.assertIn(marker, self.execution)
+        completeness = extract_balanced(self.execution, "bool MGTT_CompletenessCertified()")
+        self.assertIn("end_count!=1", completeness)
+        self.assertIn("return_count!=1", completeness)
+        self.assertIn("result_count!=1", completeness)
+
+    def test_deals_are_idempotent_by_content_and_conflicts_fail(self) -> None:
+        callback = extract_balanced(self.execution, "void MGTT_OnTradeTransaction(")
+        self.assertIn("DUPLICATE_DEAL_IDEMPOTENT", callback)
+        self.assertIn("CONTRADICTORY_DEAL", callback)
+        self.assertIn("callback_count", callback)
+        self.assertNotIn("MGTT_DealAlreadyKnown", self.execution)
+
+    def test_fill_coverage_uses_final_history_and_rejects_active_or_missing(self) -> None:
+        finalizer = extract_balanced(self.execution, "bool MGTT_FinalizeOneNativeFill(")
+        for token in ("OrderSelect(order_id)", "HistoryOrderSelect(order_id)", "HistoryDealsTotal()", "ORDER_VOLUME_INITIAL", "ORDER_VOLUME_CURRENT", "history_verified"):
+            self.assertIn(token, finalizer)
+        self.assertIn("MGTT_OrderStateIsActive", finalizer)
+        self.assertIn("if(final_filled<=tolerance) return false", finalizer)
+        self.assertIn("FILL_COVERAGE_UNAVAILABLE", self.execution)
+        self.assertIn("fill_coverage_finalized=%d", self.execution)
+
+    def test_transport_classification_is_fail_closed(self) -> None:
+        classify = extract_balanced(self.execution, "string MGTT_ClassifyNative(")
+        self.assertIn("MGTT_IsAmbiguousNonAcceptanceRetcode", classify)
+        ambiguous = extract_balanced(self.execution, "bool MGTT_IsAmbiguousNonAcceptanceRetcode(")
+        for token in ("TRADE_RETCODE_ERROR", "TRADE_RETCODE_ORDER_CHANGED", "TRADE_RETCODE_NO_CHANGES", "TRADE_RETCODE_LOCKED", "TRADE_RETCODE_POSITION_CLOSED"):
+            self.assertIn(token, ambiguous)
+            self.assertIn(token, self.probe)
+        self.assertIn("!MGTT_IsKnownNonAcceptanceRetcode(retcode)", classify)
+        observer = extract_balanced(self.execution, "virtual bool OrderSend(")
+        self.assertEqual(observer.count("bool transport_ok=CTrade::OrderSend(request,result)"), 1)
+        self.assertRegex(observer, r"CTrade::OrderSend\(request,result\);\s*// exactly one forward\s*int raw_last_error=GetLastError\(\);")
+        self.assertIn("caller_error_preservation=NOT_CLAIMED", self.execution)
+
+    def test_probe_executes_actual_mql_cages_without_orders(self) -> None:
+        for marker in (
+            "CERTIFIED_COUNTS_PASS", "IDEMPOTENT_DEAL_PASS", "DUPLICATE_TERMINALS_FAIL_CLOSED_PASS",
+            "MISSING_PARTIAL_PENDING_FILL_FAIL_CLOSED_PASS", "CONTRADICTORY_DEAL_FAIL_CLOSED_PASS",
+            "CLASSIFICATION_FAIL_CLOSED_PASS", "ADVERSARIAL_FAIL_CLOSED_PASS",
+        ):
+            self.assertIn(marker, self.probe)
+        self.assertIn("MGTT_LEDGER_PROBE_SYNTHETIC", self.probe)
+        self.assertNotRegex(self.probe, r"\b(?:CTrade|OrderSend|PositionOpen|Buy|Sell|BuyLimit|SellLimit|BuyStop|SellStop)\s*\(")
+        self.assertIn('#define LAB_ENTRY_15', self.probe)
+        self.assertIn('string actual_config=CFG_Fingerprint();', self.probe)
+        self.assertIn('actual_config!=MGTT_PROBE_CONFIG_FINGERPRINT', self.probe)
+        self.assertIn('MGTT_RunBegin(MGTT_PROBE_BUILD_RECEIPT,actual_config,false,', self.probe)
+
+    def test_qualifier_binds_complete_closure_build_config_session_and_logs(self) -> None:
+        for token in (
+            "Get-CompileClosure", "Copy-ExactClosure", "Assert-StagedClosure", "Resolve-VendorInclude",
+            "creation-time staging mismatch", "Write-BuildReceiptRecord", "Get-FullSetIdentity",
+            "runtime_session", "Get-ChangedLogSlices", "Get-PrefixSha256", "metatester_processes",
+            "SourceCommit", "ExpectedParent", "New-RunnerTree", "PASS_NO_PERFORMANCE",
+        ):
+            self.assertIn(token, self.qualifier)
+        self.assertIn("PROBE_FAIL conflicting mirrored event", self.qualifier)
+        self.assertIn("PROBE_FAIL incomplete session terminals", self.qualifier)
+        self.assertNotIn("AllowLegacyIdentity", self.qualifier)
+        self.assertIn("-Symbol", (ROOT / "scripts/mt5_run.ps1").read_text(encoding="utf-8"))
+        self.assertIn("'GBPUSD'", self.qualifier)
+        self.assertIn("Period='H4'", self.qualifier)
+        self.assertIn("Model=1", self.qualifier)
+
+    def test_precommit_api_is_tree_typed_and_legacy_mode_remains(self) -> None:
+        for token in (
+            "[switch]$PrecommitExactTree", "[string]$SourceTree", "[string]$RepairParent",
+            "Assert-TplTreeIdentity", "write-tree", "New-TplPrecommitMaterialization",
+            "Assert-TplMaterializedTree", "SourceTree changes an undeclared repair path",
+            "precommit exact-tree mode cannot mix", "FULL_TPL_CLEAN",
+        ):
+            self.assertIn(token, self.tpl + self.tpl_lib)
+        self.assertIn('$pythonRoot = if ($PrecommitExactTree) { $invocationRoot } else { $harnessRoot }', self.tpl)
+        self.assertIn("SourceRoot is usable only with explicit DeclaredCoreDelta", self.tpl)
+        self.assertIn("default", (ROOT / "scripts/_test/run_tpl_declared_wrapper_tests.ps1").read_text().lower())
+
+
+class NativeHarnessExecutionTests(unittest.TestCase):
+    """Execute the actual PowerShell helpers without launching a trading process."""
+
+    @staticmethod
+    def ps_quote(value: object) -> str:
+        return "'" + str(value).replace("'", "''") + "'"
+
+    def run_helper(self, name: str, body: str, directory: Path) -> subprocess.CompletedProcess:
+        source = ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1"
+        script = directory / (name + ".ps1")
+        script.write_text(
+            "$ErrorActionPreference='Stop'\n"
+            "$tokens=$null;$parseErrors=$null\n"
+            f"$ast=[Management.Automation.Language.Parser]::ParseFile({self.ps_quote(source)},[ref]$tokens,[ref]$parseErrors)\n"
+            "if($parseErrors.Count){throw 'source parse failure'}\n"
+            "$defs=$ast.FindAll({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst]},$false)\n"
+            f"$definition=@($defs | Where-Object Name -eq '{name}')\n"
+            "if($definition.Count -ne 1){throw 'helper identity ambiguous'}\n"
+            "foreach($def in $defs){. ([scriptblock]::Create($def.Extent.Text))}\n" + body,
+            encoding="utf-8-sig",
+        )
+        return subprocess.run(
+            ["powershell.exe", "-NoProfile", "-File", str(script)],
+            capture_output=True, text=True, timeout=90,
+        )
+
+    def test_named_runner_arguments_reach_actual_script_parameters(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_bind_") as temp:
+            directory = Path(temp)
+            (directory / "scripts").mkdir()
+            (directory / "scripts/mt5_run.ps1").write_text(
+                "param([string]$Expert,[string]$Symbol,[int]$Model,[string]$SetFile)\n"
+                "@{Expert=$Expert;Symbol=$Symbol;Model=$Model;SetFile=$SetFile}|ConvertTo-Json -Compress\nexit 0\n",
+                encoding="utf-8-sig",
+            )
+            expert = "EA_LAB_TEST\\literal $name's value"
+            set_file = "C:\\fixture space\\literal $() and apostrophe's.set"
+            result = self.run_helper(
+                "Write-RunnerInvocation",
+                f"$command=Write-RunnerInvocation {self.ps_quote(directory)} "
+                f"@{{Expert={self.ps_quote(expert)};Symbol='GBPUSD';Model=1;SetFile={self.ps_quote(set_file)}}} "
+                f"{self.ps_quote(directory)}\n& $command\n",
+                directory,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(json.loads(result.stdout), dict(Expert=expert, Symbol="GBPUSD", Model=1, SetFile=set_file))
+
+    def test_actual_transitive_compile_closure_materializes_typed_arrays(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_closure_") as temp:
+            result = self.run_helper(
+                "Get-CompileClosure",
+                f"$RepoRoot={self.ps_quote(ROOT)}\n"
+                "$SourceCommit=(git -C $RepoRoot write-tree).Trim()\n"
+                "$bossRelative='ea_template/Boss_15_ST03.mq5'\n"
+                "$probeRelative='scripts/_test/macrogate_tester_transfer_probe.mq5'\n"
+                "$vendorRoot='D:\\MetaTraderData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Include'\n"
+                ". (Join-Path $RepoRoot 'scripts\\lib\\evidence.ps1')\n"
+                "$closure=Get-CompileClosure\n"
+                "@{repo_count=$closure.repo.Count;vendor_count=$closure.vendor.Count;"
+                "trade_count=@($closure.vendor|Where-Object path -Like '*\\Trade\\Trade.mqh').Count} | ConvertTo-Json -Compress\n",
+                Path(temp),
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            facts = json.loads(result.stdout)
+            self.assertGreater(facts['repo_count'], 20)
+            self.assertGreaterEqual(facts['vendor_count'], 6)
+            self.assertEqual(facts['trade_count'], 1)
+
+    def test_runner_archive_preserves_long_path_bytes_and_refuses_traversal(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_archive_") as temp:
+            directory = Path(temp)
+            archive = directory / "valid.zip"
+            relative = "/".join(["long_component_" + "x" * 35] * 5) + "/source.txt"
+            payload = b"exact\r\nsource\n\x00bytes"
+            with zipfile.ZipFile(archive, "w") as writer:
+                writer.writestr(relative, payload)
+            destination = directory / "materialized"
+            result = self.run_helper(
+                "Expand-MgttGitArchive",
+                f"Expand-MgttGitArchive {self.ps_quote(archive)} {self.ps_quote(destination)} {self.ps_quote(sys.executable)}\n",
+                directory,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            # The portable runtime also needs the extended prefix when reading
+            # and removing the deliberately over-MAX_PATH fixture.
+            extended_destination = Path("\\\\?\\" + str(destination.resolve()))
+            try:
+                self.assertEqual((extended_destination / relative).read_bytes(), payload)
+            finally:
+                self.assertEqual(destination.resolve().parent, directory.resolve())
+                shutil.rmtree(extended_destination)
+            bad_archive = directory / "bad.zip"
+            with zipfile.ZipFile(bad_archive, "w") as writer:
+                writer.writestr("../escaped.txt", b"must not escape")
+            result = self.run_helper(
+                "Expand-MgttGitArchive",
+                f"Expand-MgttGitArchive {self.ps_quote(bad_archive)} {self.ps_quote(directory / 'rejected')} {self.ps_quote(sys.executable)}\n",
+                directory,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((directory / "escaped.txt").exists())
+
+
+class AdversarialLedgerTests(unittest.TestCase):
+    def test_known_rejection_vs_unknown_and_ambiguous_false_transport(self) -> None:
+        base = dict(order=0, deal=0, volume=0.0, path="MARKET", requested=0.1, step=0.01)
+        self.assertEqual(classify_native(transport=False, retcode=10006, **base), "REQUEST_REJECTED")
+        for code in (0, 10005, 10011, 10012, 10023, 10025, 10028, 10031, 10036, 10037, 99999):
+            self.assertEqual(classify_native(transport=False, retcode=code, **base), "UNRESOLVED_RESULT")
+        self.assertEqual(classify_native(transport=False, retcode=10009, order=1, deal=0, volume=0.1, path="MARKET", requested=0.1, step=0.01), "UNRESOLVED_RESULT")
+        self.assertEqual(classify_native(transport=True, retcode=10006, **base), "UNRESOLVED_RESULT")
+        self.assertEqual(classify_native(transport=True, retcode=10006, order=1, deal=0, volume=0.0, path="MARKET", requested=0.1, step=0.01), "UNRESOLVED_RESULT")
+
+    def test_duplicate_terminals_and_incomplete_fills_fail(self) -> None:
+        good = LedgerModel(attempt_ends={1: 1}, submit_returns={1: 1}, native_results={1: 1}, native_categories=["REQUEST_REJECTED"], fills_complete={})
+        good.event("A", 1); good.event("A", 2)
         self.assertTrue(good.certified())
-        for mutate in ("gap", "footer", "attempt", "submit", "unresolved", "duplicate", "session"):
-            model = LedgerModel(began=True, ended=True, attempts={1: True}, submits={1: True}, native_categories=["REQUEST_REJECTED"])
-            model.event(1, "A")
-            model.event(2, "A")
-            if mutate == "gap": model.sequences = [1, 3]
-            if mutate == "footer": model.ended = False
-            if mutate == "attempt": model.attempts[1] = False
-            if mutate == "submit": model.submits[1] = False
-            if mutate == "unresolved": model.native_categories.append("UNRESOLVED_RESULT")
-            if mutate == "duplicate": model.duplicate_deal = True
-            if mutate == "session": model.mixed_session = True
-            self.assertFalse(model.certified(), mutate)
+        for field_name in ("attempt_ends", "submit_returns", "native_results"):
+            bad = LedgerModel(attempt_ends={1: 1}, submit_returns={1: 1}, native_results={1: 1}, native_categories=["REQUEST_REJECTED"])
+            getattr(bad, field_name)[1] = 2
+            self.assertFalse(bad.certified(), field_name)
+        missing = LedgerModel(attempt_ends={1: 1}, submit_returns={1: 1}, native_results={1: 1}, native_categories=["PENDING_PLACED"], fills_complete={1: False})
+        self.assertFalse(missing.certified())
+
+    def test_identical_deal_is_idempotent_but_conflict_fails(self) -> None:
+        model = LedgerModel()
+        content = (123, "EURUSD", 0, 0.1)
+        model.deal(7, content); model.deal(7, content)
+        self.assertEqual(len(model.deals), 1); self.assertEqual(model.errors, 0)
+        model.deal(7, (123, "EURUSD", 0, 0.2))
+        self.assertEqual(model.errors, 1); self.assertFalse(model.certified())
+
+    def test_sequence_gap_and_mixed_session_are_detectable(self) -> None:
+        model = LedgerModel()
+        model.event("A", 1); model.event("A", 3); model.event("B", 1)
+        self.assertFalse(model.certified())
+        self.assertEqual(set(model.sequences), {"A", "B"})
 
 
 if __name__ == "__main__":
-    print("COVERAGE HOST_ACTUAL_BYTES HOST_SOURCE_BINDING PYTHON_CONTRACT_MODEL")
-    print("NATIVE_COVERAGE NOT_RUN_BY_AUTHOR_CONTRACT")
+    print("COVERAGE HOST_ACTUAL_BYTES ACTUAL_MQL_SOURCE ACTUAL_POWERSHELL_SOURCE ADVERSARIAL_MODEL")
+    print("NATIVE_MQL_CAGES PREPARED_NOT_RUN_BY_AUTHOR_CONTRACT")
     unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))
