@@ -27,6 +27,15 @@ ROOT = Path(__file__).resolve().parents[2]
 ORIGINAL_BASE = "4aa459566c4e5eedc2477938fa5d3f4f86d00e8e"
 REPAIR_PARENT = "5845c4e039a3d9ef57e6997af42655a3d854d34e"
 CONTROL = "b586d4d32c04fa33a30517ab3a1a8469b238d2ac"
+A1_ADMISSION_BASE = "8268774667b2114bbd5307b8bbc5edcff07e5b8d"
+A1_ADMISSION_BASE_TREE = "a381f484951117d650127f6fb82fd4f87c58eef9"
+A1_CORRECTIVE_PARENT = "5e390cc90a6f0557d9b5f4f6ff01ce28bd9b7a96"
+A1_CORRECTIVE_PARENT_TREE = "53f8e9e19557b5ebffbc3f68db5eeadc5e923553"
+A1_SOURCE_LANE = "ct-news-macro-mgtt-shortlived-tester-identity-v1-20260928"
+A1_RUNTIME_LOGICAL_LANE = "ct-mgtt-shortlived-tester-identity-native-runtime-20260928"
+A1_RUNTIME_CHILD_LANE = "ct-mgtt-shortlived-tester-identity-native-runtime-a1-20260928"
+A1_PREDECESSOR_EVIDENCE = r"D:\EA_LAB_CONTROL\evidence\mgtt-runner-exit-provenance-v1-20260928"
+A1_CURRENT_EVIDENCE = r"D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928"
 CONTRACT_ROOT = ROOT / "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926"
 CONTRACT = json.loads((CONTRACT_ROOT / "PROSPECTIVE_IMPLEMENTATION_CONTRACT.json").read_text())
 EXPECTATIONS = json.loads((CONTRACT_ROOT / "FEED_RUNTIME_EXPECTATIONS.json").read_text())
@@ -429,6 +438,91 @@ class NativeHarnessExecutionTests(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse((directory / "escaped.txt").exists())
+
+
+class AuthorRebindIdentityTests(NativeHarnessExecutionTests):
+    """Pin the A1 admission identity independently of native execution."""
+
+    STALE_BASE = "6503ed949b70caad379d0d11842c9aa7c6b2f1ef"
+    STALE_SOURCE_LANE = "ct-news-macro-mgtt-runner-exit-provenance-v1-20260928"
+    STALE_RUNTIME_LANE = "ct-mgtt-runner-exit-provenance-native-runtime-20260928"
+    STALE_PREDECESSOR_EVIDENCE = r"D:\EA_LAB_CONTROL\evidence\mgtt-successor-qual-v1-20260928"
+
+    def run_identity(self, directory: Path, **overrides: str) -> subprocess.CompletedProcess:
+        values = {
+            "AdmissionBase": A1_ADMISSION_BASE,
+            "SourceLane": A1_SOURCE_LANE,
+            "RuntimeLogicalLane": A1_RUNTIME_LOGICAL_LANE,
+            "RuntimeRecordLane": A1_RUNTIME_CHILD_LANE,
+            "PredecessorEvidenceRoot": A1_PREDECESSOR_EVIDENCE,
+            "CurrentEvidenceRoot": A1_CURRENT_EVIDENCE,
+        }
+        values.update(overrides)
+        arguments = " ".join(
+            f"-{name} {self.ps_quote(value)}" for name, value in values.items()
+        )
+        return self.run_helper(
+            "Assert-CurrentContractIdentity",
+            f"Assert-CurrentContractIdentity {arguments} | ConvertTo-Json -Compress\n",
+            directory,
+        )
+
+    def assert_identity_rejected(self, **overrides: str) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_a1_identity_reject_") as temp:
+            result = self.run_identity(Path(temp), **overrides)
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("REFUSE: current frozen contract identity mismatch", result.stdout + result.stderr)
+
+    def test_current_base_lane_runtime_and_evidence_lineage_are_accepted(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_a1_identity_accept_") as temp:
+            result = self.run_identity(Path(temp))
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertEqual(observed["admission_base"], A1_ADMISSION_BASE)
+            self.assertEqual(observed["source_lane"], A1_SOURCE_LANE)
+            self.assertEqual(observed["runtime_logical_lane"], A1_RUNTIME_LOGICAL_LANE)
+            self.assertEqual(observed["runtime_record_lane"], A1_RUNTIME_CHILD_LANE)
+            self.assertEqual(observed["predecessor_evidence_root"], A1_PREDECESSOR_EVIDENCE)
+            self.assertEqual(observed["current_evidence_root"], A1_CURRENT_EVIDENCE)
+
+    def test_stale_expected_parent_is_rejected(self) -> None:
+        self.assert_identity_rejected(AdmissionBase=self.STALE_BASE)
+
+    def test_stale_predecessor_source_lane_is_rejected(self) -> None:
+        self.assert_identity_rejected(SourceLane=self.STALE_SOURCE_LANE)
+
+    def test_stale_predecessor_runtime_identity_is_rejected(self) -> None:
+        self.assert_identity_rejected(RuntimeLogicalLane=self.STALE_RUNTIME_LANE)
+
+    def test_predecessor_and_current_evidence_roots_cannot_swap(self) -> None:
+        self.assert_identity_rejected(
+            PredecessorEvidenceRoot=A1_CURRENT_EVIDENCE,
+            CurrentEvidenceRoot=A1_PREDECESSOR_EVIDENCE,
+        )
+        self.assert_identity_rejected(PredecessorEvidenceRoot=self.STALE_PREDECESSOR_EVIDENCE)
+
+    def test_hard_admission_is_wired_and_all_a1_lineage_pins_are_exact(self) -> None:
+        source = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text(encoding="utf-8-sig")
+        offline = extract_balanced(source, "function Invoke-OfflineValidation")
+        preflight = extract_balanced(source, "function Invoke-PreflightValidation")
+        exact_tokens = (
+            A1_ADMISSION_BASE,
+            A1_ADMISSION_BASE_TREE,
+            A1_CORRECTIVE_PARENT,
+            A1_CORRECTIVE_PARENT_TREE,
+            A1_SOURCE_LANE,
+            A1_RUNTIME_LOGICAL_LANE,
+            A1_RUNTIME_CHILD_LANE,
+            A1_PREDECESSOR_EVIDENCE,
+            A1_CURRENT_EVIDENCE,
+            "67e9602e59ecc3de79800ea812e02ae502c7432947f749abb27540c47f453e4e",
+            "235e090825bc8d420fdf58a92133d8b228991e79eb94324c2e92873a0dafbc2e",
+            "3bc51169a4efa980234bb752948836197c1f629e30bb79e94f32de33a0732a45",
+        )
+        for token in exact_tokens:
+            self.assertIn(token, source)
+        self.assertIn("Assert-CurrentContractIdentity", offline)
+        self.assertIn("RuntimeLeaseRecordId", preflight)
 
 
 class SuccessorConfigTests(unittest.TestCase):
