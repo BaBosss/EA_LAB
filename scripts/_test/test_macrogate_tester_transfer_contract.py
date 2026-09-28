@@ -36,6 +36,12 @@ A1_RUNTIME_LOGICAL_LANE = "ct-mgtt-shortlived-tester-identity-native-runtime-202
 A1_RUNTIME_CHILD_LANE = "ct-mgtt-shortlived-tester-identity-native-runtime-a1-20260928"
 A1_PREDECESSOR_EVIDENCE = r"D:\EA_LAB_CONTROL\evidence\mgtt-runner-exit-provenance-v1-20260928"
 A1_CURRENT_EVIDENCE = r"D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928"
+V2_BASE = "b9531886c5d2a4e5194684462cf66bd30035e588"
+V2_BASE_TREE = "7e817204ed82dc0f35c1d33a2600f84248b2e9d6"
+V2_SOURCE_LANE = "ct-news-macro-mgtt-capture-normalization-v2-20260928"
+V2_RUNTIME_LANE = "ct-mgtt-capture-normalization-v2-native-runtime-20260928"
+V2_PREDECESSOR_EVIDENCE = r"D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928"
+V2_CURRENT_EVIDENCE = r"D:\EA_LAB_CONTROL\evidence\mgtt-capture-normalization-v2-20260928"
 CONTRACT_ROOT = ROOT / "factory/runs/news_macro_macrogate_tester_transfer_qual_v1_20260926"
 CONTRACT = json.loads((CONTRACT_ROOT / "PROSPECTIVE_IMPLEMENTATION_CONTRACT.json").read_text())
 EXPECTATIONS = json.loads((CONTRACT_ROOT / "FEED_RUNTIME_EXPECTATIONS.json").read_text())
@@ -440,22 +446,40 @@ class NativeHarnessExecutionTests(unittest.TestCase):
             self.assertFalse((directory / "escaped.txt").exists())
 
 
-class AuthorRebindIdentityTests(NativeHarnessExecutionTests):
-    """Pin the A1 admission identity independently of native execution."""
+class AuthorRebindPredecessorPinTests(unittest.TestCase):
+    """Keep the four mandatory A1 predecessor artifacts byte-pinned in V2."""
 
-    STALE_BASE = "6503ed949b70caad379d0d11842c9aa7c6b2f1ef"
-    STALE_SOURCE_LANE = "ct-news-macro-mgtt-runner-exit-provenance-v1-20260928"
-    STALE_RUNTIME_LANE = "ct-mgtt-runner-exit-provenance-native-runtime-20260928"
-    STALE_PREDECESSOR_EVIDENCE = r"D:\EA_LAB_CONTROL\evidence\mgtt-successor-qual-v1-20260928"
+    def test_hard_admission_retains_exact_a1_predecessor_evidence_pins(self) -> None:
+        source = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text(encoding="utf-8-sig")
+        offline = extract_balanced(source, "function Invoke-OfflineValidation")
+        preflight = extract_balanced(source, "function Invoke-PreflightValidation")
+        exact_tokens = (
+            r"a1-closeout\A1_DURABLE_CHECKPOINT.json",
+            "c75d153511a529884141a542a5ba433ad90128065719d4e24b6439a29c94ed19",
+            r"a1-closeout\A1_FINAL_RECONCILIATION.json",
+            "5e8e4e55614bf642aca3fc8312b8df07dfe5122a616e19ab90f732ee41b00268",
+            r"a1-native-campaign\POSITIVE_GOLDEN_REAL.PROCESS_OBSERVATIONS.json",
+            "e9b0cec4c20bf8064cc8905f64ea62bf2b4c5968275d37cf66eef3ea7baf5ffe",
+            r"a1-native-campaign\POSITIVE_GOLDEN_REAL\POSITIVE_GOLDEN_REAL.RUNNER_EXIT.json",
+            "e7b0ed1c89b688e3c45750540b0c3c43d820c79a600eb48709958c8fe4ad58c6",
+        )
+        for token in exact_tokens:
+            self.assertIn(token, offline)
+        self.assertIn("Assert-CurrentContractIdentity", offline)
+        self.assertIn("RuntimeLeaseRecordId", preflight)
+
+
+class CaptureNormalizationV2IdentityTests(NativeHarnessExecutionTests):
+    """Pin the prospective V2 source/runtime/evidence identity."""
 
     def run_identity(self, directory: Path, **overrides: str) -> subprocess.CompletedProcess:
         values = {
-            "AdmissionBase": A1_ADMISSION_BASE,
-            "SourceLane": A1_SOURCE_LANE,
-            "RuntimeLogicalLane": A1_RUNTIME_LOGICAL_LANE,
-            "RuntimeRecordLane": A1_RUNTIME_CHILD_LANE,
-            "PredecessorEvidenceRoot": A1_PREDECESSOR_EVIDENCE,
-            "CurrentEvidenceRoot": A1_CURRENT_EVIDENCE,
+            "AdmissionBase": V2_BASE,
+            "SourceLane": V2_SOURCE_LANE,
+            "RuntimeLogicalLane": V2_RUNTIME_LANE,
+            "RuntimeRecordLane": V2_RUNTIME_LANE,
+            "PredecessorEvidenceRoot": V2_PREDECESSOR_EVIDENCE,
+            "CurrentEvidenceRoot": V2_CURRENT_EVIDENCE,
         }
         values.update(overrides)
         arguments = " ".join(
@@ -467,62 +491,38 @@ class AuthorRebindIdentityTests(NativeHarnessExecutionTests):
             directory,
         )
 
-    def assert_identity_rejected(self, **overrides: str) -> None:
-        with tempfile.TemporaryDirectory(prefix="mgtt_a1_identity_reject_") as temp:
-            result = self.run_identity(Path(temp), **overrides)
-            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("REFUSE: current frozen contract identity mismatch", result.stdout + result.stderr)
-
-    def test_current_base_lane_runtime_and_evidence_lineage_are_accepted(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mgtt_a1_identity_accept_") as temp:
+    def test_v2_contract_identity_is_accepted_and_predecessor_identity_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_v2_identity_") as temp:
             result = self.run_identity(Path(temp))
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             observed = json.loads(result.stdout)
-            self.assertEqual(observed["admission_base"], A1_ADMISSION_BASE)
-            self.assertEqual(observed["source_lane"], A1_SOURCE_LANE)
-            self.assertEqual(observed["runtime_logical_lane"], A1_RUNTIME_LOGICAL_LANE)
-            self.assertEqual(observed["runtime_record_lane"], A1_RUNTIME_CHILD_LANE)
-            self.assertEqual(observed["predecessor_evidence_root"], A1_PREDECESSOR_EVIDENCE)
-            self.assertEqual(observed["current_evidence_root"], A1_CURRENT_EVIDENCE)
+            self.assertEqual(observed["admission_base"], V2_BASE)
+            self.assertEqual(observed["source_lane"], V2_SOURCE_LANE)
+            self.assertEqual(observed["runtime_logical_lane"], V2_RUNTIME_LANE)
+        for field, stale in (
+            ("AdmissionBase", A1_ADMISSION_BASE),
+            ("SourceLane", A1_SOURCE_LANE),
+            ("RuntimeLogicalLane", A1_RUNTIME_LOGICAL_LANE),
+            ("PredecessorEvidenceRoot", A1_PREDECESSOR_EVIDENCE),
+            ("CurrentEvidenceRoot", A1_CURRENT_EVIDENCE),
+        ):
+            with self.subTest(field=field), tempfile.TemporaryDirectory(prefix="mgtt_v2_stale_") as temp:
+                result = self.run_identity(Path(temp), **{field: stale})
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_stale_expected_parent_is_rejected(self) -> None:
-        self.assert_identity_rejected(AdmissionBase=self.STALE_BASE)
-
-    def test_stale_predecessor_source_lane_is_rejected(self) -> None:
-        self.assert_identity_rejected(SourceLane=self.STALE_SOURCE_LANE)
-
-    def test_stale_predecessor_runtime_identity_is_rejected(self) -> None:
-        self.assert_identity_rejected(RuntimeLogicalLane=self.STALE_RUNTIME_LANE)
-
-    def test_predecessor_and_current_evidence_roots_cannot_swap(self) -> None:
-        self.assert_identity_rejected(
-            PredecessorEvidenceRoot=A1_CURRENT_EVIDENCE,
-            CurrentEvidenceRoot=A1_PREDECESSOR_EVIDENCE,
-        )
-        self.assert_identity_rejected(PredecessorEvidenceRoot=self.STALE_PREDECESSOR_EVIDENCE)
-
-    def test_hard_admission_is_wired_and_all_a1_lineage_pins_are_exact(self) -> None:
+    def test_v2_hard_admission_tokens_are_exact(self) -> None:
         source = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text(encoding="utf-8-sig")
-        offline = extract_balanced(source, "function Invoke-OfflineValidation")
-        preflight = extract_balanced(source, "function Invoke-PreflightValidation")
-        exact_tokens = (
-            A1_ADMISSION_BASE,
-            A1_ADMISSION_BASE_TREE,
-            A1_CORRECTIVE_PARENT,
-            A1_CORRECTIVE_PARENT_TREE,
-            A1_SOURCE_LANE,
-            A1_RUNTIME_LOGICAL_LANE,
-            A1_RUNTIME_CHILD_LANE,
-            A1_PREDECESSOR_EVIDENCE,
-            A1_CURRENT_EVIDENCE,
-            "67e9602e59ecc3de79800ea812e02ae502c7432947f749abb27540c47f453e4e",
-            "235e090825bc8d420fdf58a92133d8b228991e79eb94324c2e92873a0dafbc2e",
-            "3bc51169a4efa980234bb752948836197c1f629e30bb79e94f32de33a0732a45",
-        )
-        for token in exact_tokens:
-            self.assertIn(token, source)
-        self.assertIn("Assert-CurrentContractIdentity", offline)
-        self.assertIn("RuntimeLeaseRecordId", preflight)
+        for token in (
+            V2_BASE,
+            V2_BASE_TREE,
+            V2_SOURCE_LANE,
+            V2_RUNTIME_LANE,
+            V2_PREDECESSOR_EVIDENCE,
+            V2_CURRENT_EVIDENCE,
+            "7b49bbb22cfa85691212532cf3cc8ed125576fad815c8ed7b507a5f8585522cd",
+            "e39a5c5de3ad2e2137049cd807a573ceb3bef799fe5e12192ff9866d8a382289",
+        ):
+            self.assertIn(token, source.lower() if token == token.lower() else source)
 
 
 class SuccessorConfigTests(unittest.TestCase):
@@ -745,6 +745,161 @@ class SuccessorProcessTests(NativeHarnessExecutionTests):
             self.assertEqual(receipt["runner"]["exit_code_source"], "OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT")
             self.assertFalse(receipt["evidence_policy"]["stdout_text_used_for_exit_code"])
             self.assertFalse(receipt["evidence_policy"]["report_presence_used_for_exit_code"])
+
+
+class CaptureNormalizationV2Tests(NativeHarnessExecutionTests):
+    """Exercise the exact host seams changed by Capture Normalization V2."""
+
+    def test_ordered_dictionary_single_match_is_one_real_identity_object(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_v2_scalar_") as temp:
+            directory = Path(temp)
+            terminal = directory / "terminal64.exe"
+            tester = directory / "metatester64.exe"
+            result = self.run_helper(
+                "Get-EarlyProcessSnapshot",
+                f"$journal={self.ps_quote(directory / 'PROCESS_OBSERVATIONS.jsonl')}\n"
+                "$start=[datetime]'2026-09-28T05:00:00Z'\n"
+                f"$t=[ordered]@{{path={self.ps_quote(terminal)};sha256=('a'*64);file_version='T-1'}}\n"
+                f"$m=[ordered]@{{path={self.ps_quote(tester)};sha256=('b'*64);file_version='M-1'}}\n"
+                "function Get-CimInstance { return @(\n"
+                "  [pscustomobject]@{Name='powershell.exe';ProcessId=9;ParentProcessId=1;CreationDate=[datetime]'2026-09-28T04:59:59Z';ExecutablePath='C:\\Windows\\powershell.exe';CommandLine='runner'},\n"
+                f"  [pscustomobject]@{{Name='terminal64.exe';ProcessId=11;ParentProcessId=9;CreationDate=[datetime]'2026-09-28T05:00:01Z';ExecutablePath={self.ps_quote(terminal)};CommandLine='terminal'}}\n"
+                ")}\n"
+                "$row=@(Get-EarlyProcessSnapshot $t $m $start $journal)[0]\n"
+                "$row|ConvertTo-Json -Depth 20 -Compress\n",
+                directory,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertEqual(observed["observation_status"], "COMPLETE")
+            self.assertEqual(observed["path"], str(terminal))
+            self.assertEqual(observed["sha256"], "a" * 64)
+            self.assertEqual(observed["file_version"], "T-1")
+
+    def test_zero_and_multiple_expected_matches_fail_closed(self) -> None:
+        for case in ("zero", "multiple"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory(prefix="mgtt_v2_match_count_") as temp:
+                directory = Path(temp)
+                terminal = directory / "terminal64.exe"
+                other = directory / "other.exe"
+                terminal_expected = other if case == "zero" else terminal
+                tester_expected = directory / "tester.exe" if case == "zero" else terminal
+                result = self.run_helper(
+                    "Get-EarlyProcessSnapshot",
+                    f"$journal={self.ps_quote(directory / 'PROCESS_OBSERVATIONS.jsonl')}\n"
+                    "$start=[datetime]'2026-09-28T05:00:00Z'\n"
+                    f"$t=[ordered]@{{path={self.ps_quote(terminal_expected)};sha256=('a'*64);file_version='T'}}\n"
+                    f"$m=[ordered]@{{path={self.ps_quote(tester_expected)};sha256=('b'*64);file_version='M'}}\n"
+                    "function Get-CimInstance { return @(\n"
+                    "  [pscustomobject]@{Name='powershell.exe';ProcessId=9;ParentProcessId=1;CreationDate=[datetime]'2026-09-28T04:59:59Z';ExecutablePath='C:\\Windows\\powershell.exe';CommandLine='runner'},\n"
+                    f"  [pscustomobject]@{{Name='terminal64.exe';ProcessId=11;ParentProcessId=9;CreationDate=[datetime]'2026-09-28T05:00:01Z';ExecutablePath={self.ps_quote(terminal)};CommandLine='terminal'}}\n"
+                    ")}\n"
+                    "$row=@(Get-EarlyProcessSnapshot $t $m $start $journal)[0]\n"
+                    "$row|ConvertTo-Json -Depth 20 -Compress\n",
+                    directory,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                observed = json.loads(result.stdout)
+                self.assertEqual(observed["observation_status"], "INCOMPLETE")
+                self.assertIn("extra or unselected process executable identity", observed["error"])
+
+    def test_unkeyed_raw_row_is_journaled_but_not_promoted_before_valid_rows(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_v2_unkeyed_") as temp:
+            directory = Path(temp)
+            (directory / "scripts").mkdir()
+            (directory / "scripts/mt5_run.ps1").write_text("exit 0\n", encoding="utf-8-sig")
+            for filename in ("terminal64.exe", "metatester64.exe", "runner.stdout.log", "runner.stderr.log"):
+                (directory / filename).write_bytes(b"fixture")
+            body = (
+                f"$evidenceFull={self.ps_quote(directory)}\n"
+                f"$Terminal={self.ps_quote(directory / 'terminal64.exe')}\n"
+                "function Start-Process { $p=[pscustomobject]@{Id=900;StartTime=[datetime]::UtcNow;HasExited=$true;ExitCode=0};$p|Add-Member ScriptMethod WaitForExit {};return $p }\n"
+                "function Get-EarlyProcessSnapshot($ExpectedTerminal,$ExpectedTester,$LaunchUtc,$JournalPath) {\n"
+                "  $raw=[ordered]@{kind='SELECTED_CANDIDATE';pid=101;creation_time_utc=$null;identity_key=$null;path=$null;sha256=$null;parent_pid=$null;ancestry=@();observation_status='INCOMPLETE';error='snapshot missing PID, creation time, or executable path'}\n"
+                "  Add-ProcessObservation $JournalPath $raw\n"
+                "  $tc=[datetime]::UtcNow.AddSeconds(1);$mc=$tc.AddMilliseconds(1)\n"
+                "  $t=[ordered]@{kind='SELECTED_CANDIDATE';pid=101;creation_time_utc=$tc.ToString('o');identity_key=('101|'+$tc.ToString('o'));path=$ExpectedTerminal.path;sha256=$ExpectedTerminal.sha256;file_version=$ExpectedTerminal.file_version;parent_pid=900;ancestry=@(@{pid=900;status='OBSERVED'});observation_status='COMPLETE'}\n"
+                "  $m=[ordered]@{kind='SELECTED_CANDIDATE';pid=102;creation_time_utc=$mc.ToString('o');identity_key=('102|'+$mc.ToString('o'));path=$ExpectedTester.path;sha256=$ExpectedTester.sha256;file_version=$ExpectedTester.file_version;parent_pid=101;ancestry=@(@{pid=101;status='OBSERVED'});observation_status='COMPLETE'}\n"
+                "  return @($raw,$t,$m)\n"
+                "}\n"
+                "$run=Invoke-RunnerCaptured $evidenceFull @{} $evidenceFull\n"
+                "$journal=@(Get-Content -LiteralPath (Join-Path $evidenceFull 'PROCESS_OBSERVATIONS.jsonl')|ForEach-Object{$_|ConvertFrom-Json})\n"
+                "$accepted=Get-Content -Raw (Join-Path $evidenceFull ((Split-Path $evidenceFull -Leaf)+'.PROCESS_VALIDATION.json'))|ConvertFrom-Json\n"
+                "@{run=$run;raw_unkeyed=@($journal|Where-Object{$_.kind -eq 'SELECTED_CANDIDATE' -and [string]::IsNullOrWhiteSpace([string]$_.identity_key)}).Count;accepted_count=@($accepted.observations).Count}|ConvertTo-Json -Depth 20 -Compress\n"
+            )
+            result = self.run_helper("Invoke-RunnerCaptured", body, directory)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertEqual(observed["raw_unkeyed"], 1)
+            self.assertEqual(observed["accepted_count"], 2)
+            self.assertEqual(len(observed["run"]["terminal_processes"]), 1)
+            self.assertEqual(len(observed["run"]["metatester_processes"]), 1)
+
+    def test_ambiguous_reused_or_wrong_valid_identities_remain_fail_closed(self) -> None:
+        mutations = {
+            "duplicate": "$rows+=$rows[1].Clone()\n",
+            "extra": "$rows+=@{pid=13;creation_time_utc='2026-09-28T05:00:03Z';identity_key='13|2026-09-28T05:00:03.0000000Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@(@{pid=11;status='OBSERVED'});observation_status='COMPLETE'}\n",
+            "pid_reuse": "$rows+=@{pid=12;creation_time_utc='2026-09-28T05:00:03Z';identity_key='12|2026-09-28T05:00:03.0000000Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@(@{pid=11;status='OBSERVED'});observation_status='COMPLETE'}\n",
+            "wrong_path": "$rows[1].path='D:\\Other\\metatester64.exe'\n",
+            "wrong_hash": "$rows[1].sha256=('c'*64)\n",
+        }
+        for case, mutation in mutations.items():
+            with self.subTest(case=case), tempfile.TemporaryDirectory(prefix="mgtt_v2_fail_closed_") as temp:
+                directory = Path(temp)
+                result = self.run_helper(
+                    "Complete-ProcessCapture",
+                    f"$evidenceFull={self.ps_quote(directory)}\n"
+                    "$start=[datetime]'2026-09-28T05:00:00Z'\n"
+                    "$t=@{path='D:\\Meta 5\\terminal64.exe';sha256=('a'*64)}\n"
+                    "$m=@{path='D:\\Meta 5\\metatester64.exe';sha256=('b'*64)}\n"
+                    "$rows=@(@{pid=11;creation_time_utc='2026-09-28T05:00:01Z';identity_key='11|2026-09-28T05:00:01.0000000Z';path=$t.path;sha256=$t.sha256;parent_pid=9;ancestry=@(@{pid=9;status='OBSERVED'});observation_status='COMPLETE'},"
+                    "@{pid=12;creation_time_utc='2026-09-28T05:00:02Z';identity_key='12|2026-09-28T05:00:02.0000000Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@(@{pid=11;status='OBSERVED'});observation_status='COMPLETE'})\n"
+                    + mutation
+                    + "Complete-ProcessCapture $rows $t $m $start 'CASE'|ConvertTo-Json -Depth 20 -Compress\n",
+                    directory,
+                )
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def run_owned_child(self, directory: Path, exit_code: int) -> subprocess.CompletedProcess:
+        stdout = directory / "runner.stdout.log"
+        stderr = directory / "runner.stderr.log"
+        report = directory / "report.htm"
+        stdout.write_bytes(b"OK REPORT must not substitute\n")
+        stderr.write_bytes(b"")
+        report.write_bytes(b"<html>report</html>\n")
+        body = (
+            f"$evidenceFull={self.ps_quote(directory)}\n"
+            f"$stdout={self.ps_quote(stdout)};$stderr={self.ps_quote(stderr)};$report={self.ps_quote(report)}\n"
+            f"$p=Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-Command','exit {exit_code}') -PassThru -WindowStyle Hidden\n"
+            "$pidValue=$p.Id;$created=$p.StartTime.ToUniversalTime().ToString('o');$p.WaitForExit();$code=[int]$p.ExitCode\n"
+            "$exitReceipt=Write-RunnerExitReceipt $evidenceFull 'HOST_CHILD' $pidValue $created $code $stdout $stderr\n"
+            "$runner=[pscustomobject]@{runner_pid=$pidValue;runner_creation_time_utc=$created;exit_code=$code;exit_code_source='OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT';stdout=$stdout;stderr=$stderr}\n"
+            f"$gate=Write-RunnerGateReceipt $evidenceFull '{V2_BASE}' '{V2_BASE_TREE}' 'POSITIVE_GOLDEN_REAL' $runner $report $true\n"
+            "$passed=$false;try{Assert-PositiveRunnerReportGate $gate;$passed=$true}catch{}\n"
+            "@{exit_receipt=$exitReceipt;gate=$gate;passed=$passed}|ConvertTo-Json -Depth 20 -Compress\n"
+        )
+        return self.run_helper("Write-RunnerExitReceipt", body, directory)
+
+    def test_owned_host_child_exit_zero_is_durable_numeric_zero(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_v2_exit_zero_") as temp:
+            result = self.run_owned_child(Path(temp), 0)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertEqual(observed["exit_receipt"]["runner"]["exit_code"], 0)
+            self.assertTrue(observed["exit_receipt"]["runner"]["exit_code_available"])
+            self.assertEqual(observed["exit_receipt"]["runner"]["exit_code_source"], "OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT")
+            self.assertTrue(observed["passed"])
+
+    def test_owned_host_child_nonzero_is_exact_and_positive_gate_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_v2_exit_nonzero_") as temp:
+            result = self.run_owned_child(Path(temp), 17)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertEqual(observed["exit_receipt"]["runner"]["exit_code"], 17)
+            self.assertFalse(observed["passed"])
+            self.assertEqual(observed["gate"]["guard_outcome"], "FAIL_CLOSED")
+            self.assertFalse(observed["gate"]["evidence_policy"]["stdout_text_used_for_exit_code"])
+            self.assertFalse(observed["gate"]["evidence_policy"]["report_presence_substituted_for_exit_zero"])
 
 
 class RunnerExitProvenanceTests(NativeHarnessExecutionTests):

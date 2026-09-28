@@ -13,9 +13,9 @@ param(
   [string]$RepoRoot = '',
   [string]$EvidenceRoot = '',
   [Parameter(Mandatory)][string]$SourceCommit,
-  [string]$ExpectedParent = '8268774667b2114bbd5307b8bbc5edcff07e5b8d',
-  [string]$LaneId = 'ct-news-macro-mgtt-shortlived-tester-identity-v1-20260928',
-  [string]$RuntimeLeaseLaneId = 'ct-mgtt-shortlived-tester-identity-native-runtime-20260928',
+  [string]$ExpectedParent = 'b9531886c5d2a4e5194684462cf66bd30035e588',
+  [string]$LaneId = 'ct-news-macro-mgtt-capture-normalization-v2-20260928',
+  [string]$RuntimeLeaseLaneId = 'ct-mgtt-capture-normalization-v2-native-runtime-20260928',
   [string]$RuntimeLeaseRecordId = '',
   [string]$RegistryRoot = 'D:\EA_LAB_CONTROL\lanes\registry-v1',
   [string]$Terminal = 'D:\Meta 5\terminal64.exe',
@@ -36,12 +36,10 @@ if (!$RuntimeLeaseRecordId) { $RuntimeLeaseRecordId = $RuntimeLeaseLaneId }
 . (Join-Path $RepoRoot 'scripts\lib\report_freshness.ps1')
 
 $frozenControl = 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac'
-$correctiveParent = '5e390cc90a6f0557d9b5f4f6ff01ce28bd9b7a96'
-$correctiveParentTree = '53f8e9e19557b5ebffbc3f68db5eeadc5e923553'
-$admissionBaseTree = 'a381f484951117d650127f6fb82fd4f87c58eef9'
+$admissionBaseTree = '7e817204ed82dc0f35c1d33a2600f84248b2e9d6'
 $historicalPrefix = 'D:\EA_LAB_CONTROL\evidence\mg-tester-transfer-impl-v1-20260927'
-$predecessorEvidencePrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-runner-exit-provenance-v1-20260928'
-$externalPrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928'
+$predecessorEvidencePrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928'
+$externalPrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-capture-normalization-v2-20260928'
 if (!$EvidenceRoot) { $EvidenceRoot = Join-Path $externalPrefix ('requal-' + $SourceCommit.Substring(0,12) + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss')) }
 $evidenceFull = [IO.Path]::GetFullPath($EvidenceRoot)
 $externalFull = [IO.Path]::GetFullPath($externalPrefix).TrimEnd('\') + '\'
@@ -101,18 +99,16 @@ function Assert-CurrentContractIdentity(
   [string]$PredecessorEvidenceRoot,
   [string]$CurrentEvidenceRoot
 ) {
-  $requiredBase='8268774667b2114bbd5307b8bbc5edcff07e5b8d'
-  $requiredLane='ct-news-macro-mgtt-shortlived-tester-identity-v1-20260928'
-  $requiredRuntime='ct-mgtt-shortlived-tester-identity-native-runtime-20260928'
-  $authorizedRuntimeChild='ct-mgtt-shortlived-tester-identity-native-runtime-a1-20260928'
-  $requiredPredecessor='D:\EA_LAB_CONTROL\evidence\mgtt-runner-exit-provenance-v1-20260928'
-  $requiredCurrent='D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928'
-  $runtimeRecordAllowed=($RuntimeRecordLane -ceq $requiredRuntime -or $RuntimeRecordLane -ceq $authorizedRuntimeChild)
+  $requiredBase='b9531886c5d2a4e5194684462cf66bd30035e588'
+  $requiredLane='ct-news-macro-mgtt-capture-normalization-v2-20260928'
+  $requiredRuntime='ct-mgtt-capture-normalization-v2-native-runtime-20260928'
+  $requiredPredecessor='D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928'
+  $requiredCurrent='D:\EA_LAB_CONTROL\evidence\mgtt-capture-normalization-v2-20260928'
   if(
     $AdmissionBase -cne $requiredBase -or
     $SourceLane -cne $requiredLane -or
     $RuntimeLogicalLane -cne $requiredRuntime -or
-    !$runtimeRecordAllowed -or
+    $RuntimeRecordLane -cne $requiredRuntime -or
     [IO.Path]::GetFullPath($PredecessorEvidenceRoot) -ine [IO.Path]::GetFullPath($requiredPredecessor) -or
     [IO.Path]::GetFullPath($CurrentEvidenceRoot) -ine [IO.Path]::GetFullPath($requiredCurrent)
   ) { throw 'REFUSE: current frozen contract identity mismatch' }
@@ -132,23 +128,21 @@ function Assert-ExactSourceCommit {
   $head=(& git -C $RepoRoot rev-parse HEAD 2>$null).Trim()
   if ($LASTEXITCODE -ne 0 -or $head -cne $SourceCommit) { throw "REFUSE: HEAD must equal SourceCommit $SourceCommit" }
   $parents=@((& git -C $RepoRoot rev-list --parents -n 1 $SourceCommit 2>$null) -split ' ')
-  if ($LASTEXITCODE -ne 0 -or $parents.Count -ne 2 -or $parents[1] -cne $correctiveParent) { throw 'REFUSE: SourceCommit must be the single immediate child of the A1 corrective parent' }
-  if ($ExpectedParent -cne '8268774667b2114bbd5307b8bbc5edcff07e5b8d') { throw 'REFUSE: wrong owner-frozen admission base' }
+  if ($LASTEXITCODE -ne 0 -or $parents.Count -ne 2 -or $parents[1] -cne $ExpectedParent) { throw 'REFUSE: SourceCommit must be the single immediate child of the owner-frozen admission base' }
+  if ($ExpectedParent -cne 'b9531886c5d2a4e5194684462cf66bd30035e588') { throw 'REFUSE: wrong owner-frozen admission base' }
   if ((& git -C $RepoRoot rev-parse ($ExpectedParent+'^{tree}')).Trim() -cne $admissionBaseTree) { throw 'REFUSE: admission base tree mismatch' }
-  if ((& git -C $RepoRoot rev-parse ($correctiveParent+'^{tree}')).Trim() -cne $correctiveParentTree) { throw 'REFUSE: corrective parent tree mismatch' }
-  $correctiveParents=@((& git -C $RepoRoot rev-list --parents -n 1 $correctiveParent 2>$null) -split ' ')
-  if ($LASTEXITCODE -ne 0 -or $correctiveParents.Count -ne 2 -or $correctiveParents[1] -cne $ExpectedParent) { throw 'REFUSE: corrective parent is not the single immediate child of the admission base' }
   & git -C $RepoRoot merge-base --is-ancestor $frozenControl $ExpectedParent 2>$null
   if ($LASTEXITCODE -ne 0) { throw 'REFUSE: frozen control is not an ancestor of the admission base' }
   $dirty=@(& git -C $RepoRoot status --porcelain=v1 --untracked-files=all 2>$null)
   if ($LASTEXITCODE -ne 0 -or $dirty.Count -ne 0) { throw 'REFUSE: exact-source qualification requires a completely clean SourceCommit worktree' }
   $changed=@(& git -C $RepoRoot diff --name-only ($ExpectedParent+'..'+$SourceCommit) 2>$null)
-  if ($LASTEXITCODE -ne 0 -or $changed.Count -eq 0) { throw 'REFUSE: A1 lineage delta is unavailable or empty' }
+  if ($LASTEXITCODE -ne 0 -or $changed.Count -ne $allowedRepairPaths.Count) { throw 'REFUSE: V2 lineage delta must contain exactly the two declared paths' }
   foreach($path in $changed) { if ($allowedRepairPaths -cnotcontains $path) { throw "REFUSE: final commit changes an undeclared path $path" } }
+  foreach($path in $allowedRepairPaths) { if ($changed -cnotcontains $path) { throw "REFUSE: final commit is missing declared path $path" } }
   $behavioral=@(& git -C $RepoRoot diff --name-only ($frozenControl+'..'+$SourceCommit) -- ea_template 2>$null | Where-Object { $_ -match '^(ea_template/(core|modules|generated)/|ea_template/Boss_.*\.mq5$|ea_template/EA_LabTemplate\.mq5$)' })
   if ($behavioral.Count -ne 4) { throw 'REFUSE: final source has other than four behavioral deltas from frozen control' }
   foreach($path in $behavioralPaths) { if ($behavioral -cnotcontains $path) { throw "REFUSE: missing owner-frozen behavioral delta $path" } }
-  return [ordered]@{head=$head;admission_base=$ExpectedParent;corrective_parent=$correctiveParent;control=$frozenControl;changed_paths=$changed;behavioral_paths=$behavioral}
+  return [ordered]@{head=$head;admission_base=$ExpectedParent;admission_base_tree=$admissionBaseTree;control=$frozenControl;changed_paths=$changed;behavioral_paths=$behavioral}
 }
 function Get-RepoTree {
   $raw=Invoke-EvidenceGitBytes -RepoRoot $RepoRoot -Arguments "ls-tree -r -z $SourceCommit"
@@ -267,25 +261,33 @@ if __name__ == '__main__':
 }
 function Invoke-OfflineValidation {
   $contractIdentity=Assert-CurrentContractIdentity -AdmissionBase $ExpectedParent -SourceLane $LaneId -RuntimeLogicalLane $RuntimeLeaseLaneId -RuntimeRecordLane $RuntimeLeaseRecordId -PredecessorEvidenceRoot $predecessorEvidencePrefix -CurrentEvidenceRoot $externalPrefix
-  foreach($path in @($contractPath,$expectationPath,$sourceBindingPath,$originalAuthPath,$repairAuthPath,$tradeHeader)){if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "REFUSE: required input missing $path"}}
+  $currentOwnerAuthorityPath=Join-Path $externalPrefix 'OWNER_AUTHORITY_20260928.json'
+  $currentContractPath=Join-Path $externalPrefix 'CONTRACT_FROZEN_20260928.json'
+  $predecessorPins=@(
+    @('a1-closeout\A1_DURABLE_CHECKPOINT.json','c75d153511a529884141a542a5ba433ad90128065719d4e24b6439a29c94ed19'),
+    @('a1-closeout\A1_FINAL_RECONCILIATION.json','5e8e4e55614bf642aca3fc8312b8df07dfe5122a616e19ab90f732ee41b00268'),
+    @('a1-native-campaign\POSITIVE_GOLDEN_REAL.PROCESS_OBSERVATIONS.json','e9b0cec4c20bf8064cc8905f64ea62bf2b4c5968275d37cf66eef3ea7baf5ffe'),
+    @('a1-native-campaign\POSITIVE_GOLDEN_REAL\POSITIVE_GOLDEN_REAL.RUNNER_EXIT.json','e7b0ed1c89b688e3c45750540b0c3c43d820c79a600eb48709958c8fe4ad58c6')
+  )
+  foreach($path in @($contractPath,$expectationPath,$sourceBindingPath,$originalAuthPath,$repairAuthPath,$tradeHeader,$currentOwnerAuthorityPath,$currentContractPath)){if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "REFUSE: required input missing $path"}}
   if((Get-Sha256 $originalAuthPath) -cne $originalAuthSha256 -or (Get-Sha256 $repairAuthPath) -cne $repairAuthSha256){throw 'REFUSE: owner authority bytes changed'}
   $source=Assert-ExactSourceCommit; $contract=Get-Content -Raw $contractPath|ConvertFrom-Json; $expectations=Get-Content -Raw $expectationPath|ConvertFrom-Json; $binding=Get-Content -Raw $sourceBindingPath|ConvertFrom-Json; $auth=Get-Content -Raw $originalAuthPath|ConvertFrom-Json; $repair=Get-Content -Raw $repairAuthPath|ConvertFrom-Json
   if($contract.schema -ne 'macrogate_tester_transfer_prospective_implementation_contract/2' -or !$auth.authorized_implementation -or $auth.authorized_performance){throw 'REFUSE: original implementation authority mismatch'}
   if($repair.schema -ne 'mgtt_precommit_exact_tree_owner_authority/1' -or $repair.repair_parent -ne '5845c4e039a3d9ef57e6997af42655a3d854d34e' -or $repair.current_control -ne $frozenControl -or $repair.performance_authorized){throw 'REFUSE: historical Repair1 owner authority mismatch'}
-  foreach($pin in @(@('DURABLE_CHECKPOINT.json','3bc51169a4efa980234bb752948836197c1f629e30bb79e94f32de33a0732a45'),@('NATIVE_STOP_RECEIPT.json','c0a6128d9316ead38773bcf209a3bc6d63736fcc7a176daa8f64e8bcffe98e5e'),@('FINAL_RECONCILIATION.json','2f9fbcf6caf6f6d1e1d25c5003df736dc77f55073b34c4c6975f3554301a6fa7'),@('EVIDENCE_MANIFEST.json','53fc41417500fcf0784e03da0ccc516b13ee8ec431da37742244ddfbd09df140'))) {
-    if((Get-Sha256 (Join-Path $predecessorEvidencePrefix $pin[0])) -cne $pin[1]){throw 'REFUSE: predecessor runner-exit evidence drift'}
+  foreach($pin in $predecessorPins) {
+    if((Get-Sha256 (Join-Path $predecessorEvidencePrefix $pin[0])) -cne $pin[1]){throw "REFUSE: predecessor A1 evidence drift $($pin[0])"}
   }
-  foreach($pin in @(@('OWNER_AUTHORITY_20260928.json','07d7fe50451a0e114afb12ab9146a0e5492bbba0a508840e0c8f951cfc9f62e9'),@('CONTRACT_FROZEN_20260928.json','e89589933bd69a06b22f3586dab4e45232fc0af7d07831161600b9a2538d09fd'),@('OWNER_AUTHORITY_AUTHOR_REBIND_A1_20260928.json','67e9602e59ecc3de79800ea812e02ae502c7432947f749abb27540c47f453e4e'),@('CONTRACT_AMENDMENT_AUTHOR_REBIND_A1_20260928.json','235e090825bc8d420fdf58a92133d8b228991e79eb94324c2e92873a0dafbc2e'))) {
-    if((Get-Sha256 (Join-Path $externalPrefix $pin[0])) -cne $pin[1]){throw 'REFUSE: current short-lived contract evidence drift'}
-  }
-  $currentContract=Get-Content -Raw (Join-Path $externalPrefix 'CONTRACT_FROZEN_20260928.json')|ConvertFrom-Json
-  $amendment=Get-Content -Raw (Join-Path $externalPrefix 'CONTRACT_AMENDMENT_AUTHOR_REBIND_A1_20260928.json')|ConvertFrom-Json
-  if($currentContract.contract_id -cne 'MGTT-SHORTLIVED-TESTER-IDENTITY-V1-20260928' -or $currentContract.lane_id -cne $LaneId -or $currentContract.base_commit -cne $ExpectedParent -or $currentContract.external_evidence_root -ine $externalPrefix){throw 'REFUSE: current frozen contract lineage mismatch'}
-  if($amendment.amendment_id -cne 'MGTT-SHORTLIVED-IDENTITY-AUTHOR-REBIND-A1-20260928' -or $amendment.parent_contract_id -cne $currentContract.contract_id -or $amendment.lane_id -cne $LaneId -or $amendment.corrective_parent_commit -cne $correctiveParent -or $amendment.corrective_parent_tree -cne $correctiveParentTree -or $amendment.original_contract_base -cne $ExpectedParent){throw 'REFUSE: A1 amendment lineage mismatch'}
+  if((Get-Sha256 $currentOwnerAuthorityPath) -cne '7b49bbb22cfa85691212532cf3cc8ed125576fad815c8ed7b507a5f8585522cd' -or (Get-Sha256 $currentContractPath) -cne 'e39a5c5de3ad2e2137049cd807a573ceb3bef799fe5e12192ff9866d8a382289'){throw 'REFUSE: current V2 authority/contract bytes changed'}
+  $currentAuthority=Get-Content -Raw $currentOwnerAuthorityPath|ConvertFrom-Json
+  $currentContract=Get-Content -Raw $currentContractPath|ConvertFrom-Json
+  $allowedMutations=@($currentContract.allowed_repo_mutations)
+  if($currentAuthority.schema -cne 'mgtt_capture_normalization_v2_owner_authority/1' -or $currentAuthority.owner_decision -cne 'APPROVED' -or $currentAuthority.predecessor_lane -cne 'ct-news-macro-mgtt-shortlived-tester-identity-v1-20260928' -or $currentAuthority.predecessor_head -cne $ExpectedParent -or $currentAuthority.predecessor_tree -cne $admissionBaseTree -or $currentAuthority.predecessor_native_budget -cne 'SPENT_NO_RETRY'){throw 'REFUSE: current V2 owner authority mismatch'}
+  if($currentContract.schema -cne 'mgtt_capture_normalization_v2_contract/1' -or $currentContract.contract_id -cne 'MGTT-CAPTURE-NORMALIZATION-V2-20260928' -or $currentContract.lane_id -cne $LaneId -or $currentContract.base_commit -cne $ExpectedParent -or $currentContract.base_tree -cne $admissionBaseTree -or $currentContract.canonical_control_at_freeze -cne $frozenControl -or $currentContract.owner_authority_sha256.ToLowerInvariant() -cne '7b49bbb22cfa85691212532cf3cc8ed125576fad815c8ed7b507a5f8585522cd' -or $currentContract.runtime_lane -cne 'MT5-lane1' -or $currentContract.evidence_root -ine $externalPrefix -or $allowedMutations.Count -ne $allowedRepairPaths.Count){throw 'REFUSE: current V2 frozen contract lineage mismatch'}
+  foreach($path in $allowedRepairPaths){if($allowedMutations -cnotcontains $path){throw "REFUSE: V2 frozen contract missing allowed path $path"}}
   foreach($immutable in @('ea_template/core/Inputs.mqh','ea_template/core/ConfigFingerprint.mqh')) { $expected=@($binding.source_files|Where-Object path -eq $immutable); $bytes=Get-GitBytes $SourceCommit $immutable; if($expected.Count -ne 1 -or (Get-BytesSha256 $bytes) -ne $expected[0].sha256){throw "REFUSE: immutable source drift $immutable"} }
   $feeds=@(); foreach($entry in $expectations.entries){$facts=Get-FeedFacts (Join-Path $RepoRoot $entry.source_path);if($facts.sha256 -ne $entry.sha256 -or $facts.bytes -ne [int64]$entry.bytes -or $facts.rows -ne [int]$entry.rows -or $facts.first -ne $entry.first -or $facts.last -ne $entry.last){throw "REFUSE: feed identity mismatch $($entry.filename)"};$feeds+=[ordered]@{filename=$entry.filename;facts=$facts}}
   $closure=Get-CompileClosure; if(@($closure.vendor|Where-Object path -eq $tradeHeader).Count -ne 1 -or (Get-Sha256 $tradeHeader) -ne '96e6781624534377fe7971cba52cca3d62d1b030bc10d5e4ebf3ed8c541399ed'){throw 'REFUSE: vendor Trade.mqh identity changed'}; $set=Get-FullSetIdentity
-  $result=[ordered]@{schema='mgtt_orchestrator_offline/3';mode='Offline';status='PASS_HOST_ONLY';contract_identity=$contractIdentity;source=$source;source_commit=$SourceCommit;source_tree=(& git -C $RepoRoot rev-parse ($SourceCommit+'^{tree}')).Trim();closure=[ordered]@{repo=$closure.repo;vendor=$closure.vendor};full_set=$set;feeds=$feeds;native_coverage='NOT_RUN';performance='NOT_RUN_NOT_AUTHORIZED';holdout='LOCKED_UNSPENT';timestamp_utc=(Get-Date).ToUniversalTime().ToString('o')}
+  $result=[ordered]@{schema='mgtt_orchestrator_offline/4';mode='Offline';status='PASS_HOST_ONLY';contract_identity=$contractIdentity;source=$source;source_commit=$SourceCommit;source_tree=(& git -C $RepoRoot rev-parse ($SourceCommit+'^{tree}')).Trim();closure=[ordered]@{repo=$closure.repo;vendor=$closure.vendor};full_set=$set;feeds=$feeds;native_coverage='NOT_RUN';performance='NOT_RUN_NOT_AUTHORIZED';holdout='LOCKED_UNSPENT';timestamp_utc=(Get-Date).ToUniversalTime().ToString('o')}
   Write-Receipt 'OFFLINE_RECEIPT.json' $result|Out-Null; return $result
 }
 function Get-ProcessInventory { $rows=@(); foreach($name in @('terminal64','metatester64','metaeditor64')){foreach($process in @(Get-Process -Name $name -ErrorAction SilentlyContinue)){try{$path=$process.Path}catch{$path='UNRESOLVED'};$rows+=[ordered]@{name=$name;process_id=$process.Id;path=$path}}}; return $rows }
@@ -404,6 +406,32 @@ function Add-ProcessObservation([string]$Path,[object]$Observation) {
   $stream=[IO.File]::Open($Path,[IO.FileMode]::Append,[IO.FileAccess]::Write,[IO.FileShare]::Read)
   try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
 }
+function Get-IdentityField([object]$Identity,[string]$Name) {
+  if($null -eq $Identity){throw "expected identity is null ($Name)"}
+  if($Identity -is [Collections.IDictionary]) {
+    if(!$Identity.Contains($Name)){throw "expected identity field is missing ($Name)"}
+    return $Identity[$Name]
+  }
+  $property=$Identity.PSObject.Properties[$Name]
+  if($null -eq $property){throw "expected identity field is missing ($Name)"}
+  return $property.Value
+}
+function Resolve-ExpectedProcessIdentity([object]$ExpectedTerminal,[object]$ExpectedTester,[string]$ObservedPath) {
+  # Do not let PowerShell's pipeline enumerate an OrderedDictionary into scalar
+  # values. Retain each candidate as one identity object and index the List.
+  $matches=New-Object Collections.Generic.List[object]
+  foreach($candidate in @($ExpectedTerminal,$ExpectedTester)) {
+    $candidatePath=[string](Get-IdentityField $candidate 'path')
+    if($candidatePath -ieq $ObservedPath){$matches.Add($candidate)}
+  }
+  if($matches.Count -ne 1){throw 'extra or unselected process executable identity'}
+  $match=$matches[0]
+  return [pscustomobject]@{
+    path=[string](Get-IdentityField $match 'path')
+    sha256=[string](Get-IdentityField $match 'sha256')
+    file_version=[string](Get-IdentityField $match 'file_version')
+  }
+}
 function Get-EarlyProcessSnapshot([object]$ExpectedTerminal,[object]$ExpectedTester,[datetime]$LaunchUtc,[string]$JournalPath) {
   # Win32_Process supplies PID, creation time, executable path and parent in one
   # provider snapshot. Preserve those fields before doing any validation: the
@@ -430,8 +458,7 @@ function Get-EarlyProcessSnapshot([object]$ExpectedTerminal,[object]$ExpectedTes
       # The raw, already self-contained selected-process identity is durable at
       # the earliest observation boundary, before exact-path/ancestry checks.
       Add-ProcessObservation $JournalPath $row
-      $expected=@($ExpectedTerminal,$ExpectedTester)|Where-Object path -ieq $row.path
-      if(@($expected).Count -ne 1){throw 'extra or unselected process executable identity'}
+      $expected=Resolve-ExpectedProcessIdentity $ExpectedTerminal $ExpectedTester $row.path
       if($created -lt $LaunchUtc.ToUniversalTime()){throw 'historical selected process identity'}
       $parentId=$row.parent_pid;$descendantCreated=$created;$observedAncestors=0
       for($depth=0;$depth -lt 12 -and $parentId;$depth++){
@@ -444,7 +471,7 @@ function Get-EarlyProcessSnapshot([object]$ExpectedTerminal,[object]$ExpectedTes
         $observedAncestors++;$parentId=[int64]$parent.ParentProcessId;$descendantCreated=$parentCreated
       }
       if($row.parent_pid -le 0 -or $observedAncestors -lt 1){throw 'selected parent/ancestry was not observable in the early snapshot'}
-      $row.sha256=$expected[0].sha256;$row.file_version=$expected[0].file_version;$row.hash_basis='PRELAUNCH_READ_LOCK_HELD';$row.observation_status='COMPLETE'
+      $row.sha256=$expected.sha256;$row.file_version=$expected.file_version;$row.hash_basis='PRELAUNCH_READ_LOCK_HELD';$row.observation_status='COMPLETE'
     }catch{$row.observation_status='INCOMPLETE';$row.error=$_.Exception.Message}
     Add-ProcessObservation $JournalPath $row
     $rows+=$row
@@ -530,6 +557,9 @@ function Invoke-RunnerCaptured([string]$RunnerRoot,[hashtable]$Arguments,[string
     do {
       foreach($row in @(Get-EarlyProcessSnapshot $expectedTerminal $expectedTester $launchUtc $journal)){
         $key=[string]$row.identity_key
+        # Raw/incomplete observations remain durably journaled, but a missing
+        # identity key can never participate in exact-once selected identity.
+        if([string]::IsNullOrWhiteSpace($key)){continue}
         if(!$seen.ContainsKey($key)){$seen[$key]=$row}
       }
       if(!$process.HasExited){Start-Sleep -Milliseconds 5}
