@@ -566,6 +566,129 @@ class SuccessorProcessTests(NativeHarnessExecutionTests):
         self.assertNotIn("Get-CimInstance", validate)
 
 
+class RunnerExitProvenanceTests(NativeHarnessExecutionTests):
+    """Exercise the exact durable gate seam added by the amendment."""
+
+    BASE = "6503ed949b70caad379d0d11842c9aa7c6b2f1ef"
+    BASE_TREE = "d3e8c181e505628a3329bfeb459cce671f46a6a1"
+
+    def run_gate(self, directory: Path, *, exit_code: int | None, report_present: bool,
+                 report_fresh: bool = True, stdout: bytes = b"runner output\n") -> subprocess.CompletedProcess:
+        stdout_path = directory / "runner.stdout.log"
+        stderr_path = directory / "runner.stderr.log"
+        report_path = directory / "report.htm"
+        stdout_path.write_bytes(stdout)
+        stderr_path.write_bytes(b"runner error stream\n")
+        if report_present:
+            report_path.write_bytes(b"<html>exact report</html>\n")
+        exit_literal = "$null" if exit_code is None else str(exit_code)
+        body = (
+            f"$evidenceFull={self.ps_quote(directory)}\n"
+            f"$stdout={self.ps_quote(stdout_path)}\n"
+            f"$stderr={self.ps_quote(stderr_path)}\n"
+            f"$report={self.ps_quote(report_path)}\n"
+            "$runner=[pscustomobject]@{runner_pid=4242;runner_creation_time_utc='2026-09-28T07:00:00.0000000Z';"
+            f"exit_code={exit_literal};exit_code_source='OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT';"
+            "stdout=$stdout;stderr=$stderr;stdout_sha256=(Get-Sha256 $stdout);stderr_sha256=(Get-Sha256 $stderr)}\n"
+            f"$receipt=Write-RunnerGateReceipt -CaseRoot $evidenceFull -SourceCommit '{self.BASE}' "
+            f"-SourceTree '{self.BASE_TREE}' -CaseId 'POSITIVE_GOLDEN_REAL' -Runner $runner "
+            f"-ReportPath $report -ReportFresh:${str(report_fresh).lower()}\n"
+            "$passed=$false;$errorText=$null\n"
+            "try{Assert-PositiveRunnerReportGate -Receipt $receipt;$passed=$true}catch{$errorText=$_.Exception.Message}\n"
+            "@{passed=$passed;error=$errorText;receipt=$receipt}|ConvertTo-Json -Depth 20 -Compress\n"
+        )
+        return self.run_helper("Write-RunnerGateReceipt", body, directory)
+
+    def test_report_present_and_exit_zero_can_pass(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_gate_zero_") as temp:
+            result = self.run_gate(Path(temp), exit_code=0, report_present=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertTrue(observed["passed"])
+            self.assertEqual(observed["receipt"]["guard_outcome"], "PASS")
+
+    def test_report_present_and_nonzero_exit_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_gate_nonzero_") as temp:
+            result = self.run_gate(Path(temp), exit_code=1, report_present=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertFalse(observed["passed"])
+            self.assertEqual(observed["error"], "PROBE_FAIL positive runner/report")
+            self.assertEqual(observed["receipt"]["guard_outcome"], "FAIL_CLOSED")
+
+    def test_report_present_and_null_exit_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_gate_null_") as temp:
+            result = self.run_gate(Path(temp), exit_code=None, report_present=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertFalse(observed["passed"])
+            self.assertIsNone(observed["receipt"]["runner"]["exit_code"])
+            self.assertFalse(observed["receipt"]["predicate"]["runner_exit_available"])
+
+    def test_report_absent_and_exit_zero_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_gate_absent_") as temp:
+            result = self.run_gate(Path(temp), exit_code=0, report_present=False, report_fresh=False)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertFalse(observed["passed"])
+            self.assertFalse(observed["receipt"]["predicate"]["report_present"])
+
+    def test_failure_receipt_is_durable_before_guard_and_complete(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_gate_receipt_") as temp:
+            directory = Path(temp)
+            result = self.run_gate(directory, exit_code=9, report_present=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            receipt_path = directory / "POSITIVE_GOLDEN_REAL.RUNNER_GATE.json"
+            self.assertTrue(receipt_path.exists())
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
+            self.assertEqual(receipt["schema"], "mgtt_runner_gate/1")
+            self.assertEqual(receipt["source_commit"], self.BASE)
+            self.assertEqual(receipt["source_tree"], self.BASE_TREE)
+            self.assertEqual(receipt["case"], "POSITIVE_GOLDEN_REAL")
+            self.assertEqual(receipt["runner"]["exit_code"], 9)
+            self.assertEqual(receipt["runner"]["pid"], 4242)
+            self.assertTrue(receipt["runner"]["creation_time_utc"])
+            self.assertEqual(receipt["stdout"]["sha256"], sha256((directory / "runner.stdout.log").read_bytes()))
+            self.assertEqual(receipt["stderr"]["sha256"], sha256((directory / "runner.stderr.log").read_bytes()))
+            self.assertEqual(receipt["report"]["expected_path"], str(directory / "report.htm"))
+            self.assertTrue(receipt["report"]["present"])
+            self.assertEqual(receipt["report"]["sha256"], sha256((directory / "report.htm").read_bytes()))
+            self.assertFalse(receipt["predicate"]["pass"])
+            self.assertEqual(receipt["guard_outcome"], "FAIL_CLOSED")
+            self.assertTrue(receipt["recorded_utc"])
+
+    def test_ok_report_stdout_never_substitutes_for_exit_code(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mgtt_gate_stdout_") as temp:
+            result = self.run_gate(Path(temp), exit_code=None, report_present=True, stdout=b"OK REPORT\n")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertFalse(observed["passed"])
+            self.assertFalse(observed["receipt"]["evidence_policy"]["stdout_text_used_for_exit_code"])
+
+    def test_no_current_process_snapshot_manufactures_exit_code(self) -> None:
+        source = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text(encoding="utf-8-sig")
+        writer = extract_balanced(source, "function Write-RunnerGateReceipt")
+        gate = extract_balanced(source, "function Assert-PositiveRunnerReportGate")
+        self.assertNotIn("Get-Process", writer + gate)
+        self.assertNotIn("Get-CimInstance", writer + gate)
+        self.assertNotIn("OK REPORT", writer + gate)
+        with tempfile.TemporaryDirectory(prefix="mgtt_gate_snapshot_") as temp:
+            result = self.run_gate(Path(temp), exit_code=None, report_present=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            receipt = json.loads(result.stdout)["receipt"]
+            self.assertIsNone(receipt["runner"]["exit_code"])
+            self.assertFalse(receipt["evidence_policy"]["current_process_snapshot_used_for_exit_code"])
+
+    def test_native_gate_writes_receipt_before_positive_decision(self) -> None:
+        source = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text(encoding="utf-8-sig")
+        native = extract_balanced(source, "function Invoke-NativeQualification")
+        self.assertLess(native.index("Write-RunnerGateReceipt"), native.index("Assert-PositiveRunnerReportGate"))
+        self.assertNotIn("$run.exit_code -ne 0 -or !(Test-Path $reportPath)", native)
+        capture = extract_balanced(source, "function Invoke-RunnerCaptured")
+        for token in ("runner_pid", "runner_creation_time_utc", "OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT"):
+            self.assertIn(token, capture)
+
+
 class AdversarialLedgerTests(unittest.TestCase):
     def test_known_rejection_vs_unknown_and_ambiguous_false_transport(self) -> None:
         base = dict(order=0, deal=0, volume=0.0, path="MARKET", requested=0.1, step=0.01)
