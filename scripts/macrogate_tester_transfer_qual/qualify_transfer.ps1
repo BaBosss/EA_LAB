@@ -357,6 +357,53 @@ function Add-ProcessObservation([string]$Path,[object]$Observation) {
   $stream=[IO.File]::Open($Path,[IO.FileMode]::Append,[IO.FileAccess]::Write,[IO.FileShare]::Read)
   try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
 }
+function Get-EarlyProcessSnapshot([object]$ExpectedTerminal,[object]$ExpectedTester,[datetime]$LaunchUtc,[string]$JournalPath) {
+  # Win32_Process supplies PID, creation time, executable path and parent in one
+  # provider snapshot. Preserve those fields before doing any validation: the
+  # selected metatester may have exited by the time a second lookup could run.
+  $snapshot=@(Get-CimInstance Win32_Process -ErrorAction Stop)
+  $byPid=@{}
+  foreach($entry in $snapshot){
+    $pidProperty=$entry.PSObject.Properties['ProcessId']
+    if($null -ne $pidProperty -and $null -ne $pidProperty.Value){$byPid[[string][int64]$pidProperty.Value]=$entry}
+  }
+  $rows=@()
+  foreach($entry in $snapshot){
+    $nameProperty=$entry.PSObject.Properties['Name']
+    $name=if($null -ne $nameProperty){[string]$nameProperty.Value}else{''}
+    if($name -ine 'terminal64.exe' -and $name -ine 'metatester64.exe'){continue}
+    $row=[ordered]@{kind='SELECTED_CANDIDATE';observed_utc=[datetime]::UtcNow.ToString('o');process_name=$name;pid=$null;creation_time_utc=$null;identity_key=$null;path=$null;sha256=$null;parent_pid=$null;ancestry=@();observation_status='RAW'}
+    try {
+      $row.pid=[int64]$entry.ProcessId
+      if($row.pid -le 0 -or $null -eq $entry.CreationDate -or [string]::IsNullOrWhiteSpace([string]$entry.ExecutablePath)){throw 'snapshot missing PID, creation time, or executable path'}
+      $created=([datetime]$entry.CreationDate).ToUniversalTime();$row.creation_time_utc=$created.ToString('o')
+      $row.identity_key=[string]$row.pid+'|'+$row.creation_time_utc
+      $row.path=[IO.Path]::GetFullPath([string]$entry.ExecutablePath)
+      $row.parent_pid=[int64]$entry.ParentProcessId;$row.command_line=[string]$entry.CommandLine
+      # The raw, already self-contained selected-process identity is durable at
+      # the earliest observation boundary, before exact-path/ancestry checks.
+      Add-ProcessObservation $JournalPath $row
+      $expected=@($ExpectedTerminal,$ExpectedTester)|Where-Object path -ieq $row.path
+      if(@($expected).Count -ne 1){throw 'extra or unselected process executable identity'}
+      if($created -lt $LaunchUtc.ToUniversalTime()){throw 'historical selected process identity'}
+      $parentId=$row.parent_pid;$descendantCreated=$created;$observedAncestors=0
+      for($depth=0;$depth -lt 12 -and $parentId;$depth++){
+        $parent=$byPid[[string]$parentId]
+        if($null -eq $parent){$row.ancestry+=@{pid=$parentId;status='UNOBSERVABLE'};break}
+        if($null -eq $parent.CreationDate){throw 'ancestor creation time unavailable'}
+        $parentCreated=([datetime]$parent.CreationDate).ToUniversalTime()
+        if($parentCreated -gt $descendantCreated){throw 'ancestor PID reuse or creation-time mismatch'}
+        $row.ancestry+=@{pid=[int64]$parent.ProcessId;parent_pid=[int64]$parent.ParentProcessId;creation_time_utc=$parentCreated.ToString('o');path=[string]$parent.ExecutablePath;status='OBSERVED'}
+        $observedAncestors++;$parentId=[int64]$parent.ParentProcessId;$descendantCreated=$parentCreated
+      }
+      if($row.parent_pid -le 0 -or $observedAncestors -lt 1){throw 'selected parent/ancestry was not observable in the early snapshot'}
+      $row.sha256=$expected[0].sha256;$row.file_version=$expected[0].file_version;$row.hash_basis='PRELAUNCH_READ_LOCK_HELD';$row.observation_status='COMPLETE'
+    }catch{$row.observation_status='INCOMPLETE';$row.error=$_.Exception.Message}
+    Add-ProcessObservation $JournalPath $row
+    $rows+=$row
+  }
+  return $rows
+}
 function Complete-ProcessCapture([object[]]$Rows,[object]$ExpectedTerminal,[object]$ExpectedTester,[datetime]$LaunchUtc,[string]$CaseId) {
   $receipt=[ordered]@{schema='mgtt_process_observations/1';launch_utc=$LaunchUtc.ToUniversalTime().ToString('o');observations=@($Rows);historical_identity='NOT_RECONSTRUCTED';status='UNVALIDATED'}
   Write-Receipt ($CaseId+'.PROCESS_OBSERVATIONS.json') $receipt | Out-Null
@@ -365,7 +412,8 @@ function Complete-ProcessCapture([object[]]$Rows,[object]$ExpectedTerminal,[obje
   if($terminalRows.Count -ne 1 -or $testerRows.Count -ne 1 -or $Rows.Count -ne 2){throw 'REFUSE: selected terminal/metatester process identity was not captured exactly once'}
   foreach($pair in @(@($terminalRows[0],$ExpectedTerminal),@($testerRows[0],$ExpectedTester))) {
     $row=$pair[0];$expected=$pair[1]
-    if($row.observation_status -ne 'COMPLETE' -or !$row.pid -or !$row.creation_time_utc -or !$row.parent_pid -or $row.sha256 -cne $expected.sha256 -or ([datetime]$row.creation_time_utc).ToUniversalTime() -lt $LaunchUtc.ToUniversalTime()){throw 'REFUSE: incomplete, historical, or mismatched selected process observation'}
+    $created=if($row.creation_time_utc){([datetime]$row.creation_time_utc).ToUniversalTime()}else{$null};$identityKey=if($null -ne $created){[string]$row.pid+'|'+$created.ToString('o')}else{$null};$ancestry=@($row.ancestry)
+    if($row.observation_status -ne 'COMPLETE' -or !$row.pid -or $null -eq $created -or $row.identity_key -cne $identityKey -or !$row.parent_pid -or $ancestry.Count -lt 1 -or $ancestry[0].pid -ne $row.parent_pid -or $ancestry[0].status -cne 'OBSERVED' -or $row.sha256 -cne $expected.sha256 -or $created -lt $LaunchUtc.ToUniversalTime()){throw 'REFUSE: incomplete, historical, reused, or mismatched selected process observation'}
   }
   $receipt.status='PASS_CURRENT_INVOCATION_ONLY'
   Write-Receipt ($CaseId+'.PROCESS_VALIDATION.json') $receipt | Out-Null
@@ -377,6 +425,18 @@ function Write-DurableRunnerGateJson([string]$Path,[object]$Value) {
   $stream=[IO.File]::Open($Path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::Read)
   try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
   return (Get-Content -Raw -LiteralPath $Path|ConvertFrom-Json)
+}
+function Write-RunnerExitReceipt([string]$CaseRoot,[string]$CaseId,[object]$RunnerPid,[object]$RunnerCreation,[object]$ExitCode,[string]$StdoutPath,[string]$StderrPath) {
+  $exitAvailable=[bool]($ExitCode -is [int]);$source=if($exitAvailable){'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT'}else{'UNAVAILABLE_FAIL_CLOSED'}
+  $stdoutPresent=[bool]($StdoutPath -and (Test-Path -LiteralPath $StdoutPath -PathType Leaf));$stderrPresent=[bool]($StderrPath -and (Test-Path -LiteralPath $StderrPath -PathType Leaf))
+  $receipt=[ordered]@{
+    schema='mgtt_runner_exit/1';case=$CaseId;recorded_utc=[datetime]::UtcNow.ToString('o')
+    runner=[ordered]@{pid=$RunnerPid;creation_time_utc=$RunnerCreation;exit_code=$ExitCode;exit_code_available=$exitAvailable;exit_code_source=$source}
+    stdout=[ordered]@{path=$StdoutPath;present=$stdoutPresent;sha256=if($stdoutPresent){Get-Sha256 $StdoutPath}else{$null}}
+    stderr=[ordered]@{path=$StderrPath;present=$stderrPresent;sha256=if($stderrPresent){Get-Sha256 $StderrPath}else{$null}}
+    evidence_policy=[ordered]@{stdout_text_used_for_exit_code=$false;report_presence_used_for_exit_code=$false;current_process_snapshot_used_for_exit_code=$false}
+  }
+  return Write-DurableRunnerGateJson (Join-Path $CaseRoot ($CaseId+'.RUNNER_EXIT.json')) $receipt
 }
 function Write-RunnerGateReceipt([string]$CaseRoot,[string]$SourceCommit,[string]$SourceTree,[string]$CaseId,[object]$Runner,[string]$ReportPath,[bool]$ReportFresh) {
   $exitProperty=$Runner.PSObject.Properties['exit_code'];$exitCode=if($null -ne $exitProperty){$exitProperty.Value}else{$null}
@@ -411,7 +471,7 @@ function Invoke-RunnerCaptured([string]$RunnerRoot,[hashtable]$Arguments,[string
   $expectedTerminal=Get-ExecutableIdentity $Terminal
   $expectedTester=Get-ExecutableIdentity (Join-Path (Split-Path $Terminal -Parent) 'metatester64.exe')
   Write-Receipt ((Split-Path $CaseRoot -Leaf)+'.PROCESS_EXPECTATIONS.json') ([ordered]@{terminal=$expectedTerminal;metatester=$expectedTester;command_sha256=(Get-Sha256 $commandPath);arguments_sha256=(Get-Sha256 (Join-Path $CaseRoot 'runner_arguments.clixml'))})|Out-Null
-  $journal=Join-Path $CaseRoot 'PROCESS_OBSERVATIONS.jsonl';$seen=@{};$launchUtc=[datetime]::UtcNow;$process=$null;$captureError=$null;$runnerPid=$null;$runnerCreation=$null;$runnerExitCode=$null
+  $journal=Join-Path $CaseRoot 'PROCESS_OBSERVATIONS.jsonl';$seen=@{};$launchUtc=[datetime]::UtcNow;$process=$null;$captureError=$null;$runnerPid=$null;$runnerCreation=$null;$runnerExitCode=$null;$runnerExitReceipt=$null;$captured=$null
   # Lock the selected executables for the entire observation interval. Hash once
   # before launch; never spend a short tester lifetime hashing its executable.
   $binaryLocks=Open-ReadShareOnly @($expectedTerminal.path,$expectedTester.path)
@@ -421,43 +481,23 @@ function Invoke-RunnerCaptured([string]$RunnerRoot,[hashtable]$Arguments,[string
     $runnerPid=$process.Id;$runnerCreation=$process.StartTime.ToUniversalTime().ToString('o')
     Add-ProcessObservation $journal ([ordered]@{kind='RUNNER';pid=$runnerPid;creation_time_utc=$runnerCreation;launch_utc=$launchUtc.ToString('o')})
     do {
-      foreach($child in @(Get-Process -Name terminal64,metatester64 -ErrorAction SilentlyContinue)) {
-        $row=[ordered]@{kind='SELECTED_CANDIDATE';observed_utc=[datetime]::UtcNow.ToString('o');pid=$child.Id;creation_time_utc=$null;path=$null;sha256=$null;parent_pid=$null;ancestry=@();observation_status='RAW'}
-        try{$row.creation_time_utc=$child.StartTime.ToUniversalTime().ToString('o');$row.path=$child.Path}catch{$row.observation_status='EXITED_BEFORE_ENRICHMENT'}
-        $key=[string]$row.pid+'|'+[string]$row.creation_time_utc
-        if($seen.ContainsKey($key)){continue}
-        Add-ProcessObservation $journal $row
-        $seen[$key]=$row
-        try {
-          $snapshot=@(Get-CimInstance Win32_Process -Filter ('ProcessId='+$row.pid) -ErrorAction Stop)
-          if($snapshot.Count -ne 1 -or !$row.creation_time_utc -or [Math]::Abs(($snapshot[0].CreationDate.ToUniversalTime()-([datetime]$row.creation_time_utc).ToUniversalTime()).TotalMilliseconds) -gt 1 -or $snapshot[0].ExecutablePath -ine $row.path){throw 'process exited or identity changed during observation'}
-          $row.parent_pid=$snapshot[0].ParentProcessId;$row.command_line=$snapshot[0].CommandLine
-          # Persist observed parent identity before querying any ancestors, which
-          # may already have exited. Get-Process retains the creation-time key.
-          Add-ProcessObservation $journal $row
-          $parentId=$row.parent_pid;$descendantCreated=[datetime]$row.creation_time_utc
-          for($depth=0;$depth -lt 12 -and $parentId;$depth++) {
-            $parents=@(Get-CimInstance Win32_Process -Filter ('ProcessId='+$parentId) -ErrorAction Stop)
-            if($parents.Count -ne 1 -or $parents[0].CreationDate -gt $descendantCreated){$row.ancestry+=@{pid=$parentId;status='UNOBSERVABLE_OR_PID_REUSED'};break}
-            $parent=$parents[0];$row.ancestry+=@{pid=$parent.ProcessId;parent_pid=$parent.ParentProcessId;creation_time_utc=$parent.CreationDate.ToUniversalTime().ToString('o');path=$parent.ExecutablePath;status='OBSERVED'}
-            $parentId=$parent.ParentProcessId;$descendantCreated=$parent.CreationDate
-          }
-          $expected=@($expectedTerminal,$expectedTester)|Where-Object path -ieq $row.path
-          if(@($expected).Count -ne 1){throw 'extra or unselected process'}
-          $row.sha256=$expected.sha256;$row.file_version=$expected.file_version;$row.hash_basis='PRELAUNCH_READ_LOCK_HELD';$row.observation_status='COMPLETE'
-        }catch{$row.observation_status='INCOMPLETE';$row.error=$_.Exception.Message}
-        Add-ProcessObservation $journal $row
+      foreach($row in @(Get-EarlyProcessSnapshot $expectedTerminal $expectedTester $launchUtc $journal)){
+        $key=[string]$row.identity_key
+        if(!$seen.ContainsKey($key)){$seen[$key]=$row}
       }
-      if(!$process.HasExited){Start-Sleep -Milliseconds 20}
+      if(!$process.HasExited){Start-Sleep -Milliseconds 5}
     }while(!$process.HasExited)
     $process.WaitForExit();$runnerExitCode=$process.ExitCode
-  }catch{$captureError=$_.Exception.Message}finally {
+  }catch{$captureError=$_.Exception.Message;if($null -ne $process){try{$process.WaitForExit();$runnerExitCode=$process.ExitCode}catch{}}}finally {
     foreach($handle in $binaryLocks){$handle.Dispose()}
-    # Always writes all observations before it can refuse, even on wrapper error.
-    $captured=Complete-ProcessCapture @($seen.Values) $expectedTerminal $expectedTester $launchUtc (Split-Path $CaseRoot -Leaf)
   }
+  $caseId=Split-Path $CaseRoot -Leaf
+  # Exit provenance is independent of selected-process acceptance. Flush it
+  # before Complete-ProcessCapture can refuse a missing/ambiguous identity.
+  $runnerExitReceipt=Write-RunnerExitReceipt $CaseRoot $caseId $runnerPid $runnerCreation $runnerExitCode $stdout $stderr
+  try{$captured=Complete-ProcessCapture @($seen.Values) $expectedTerminal $expectedTester $launchUtc $caseId}catch{if(!$captureError){$captureError=$_.Exception.Message}}
   if($captureError){throw ('REFUSE: capture failed '+$captureError)}
-  return [pscustomobject]@{runner_pid=$runnerPid;runner_creation_time_utc=$runnerCreation;exit_code=$runnerExitCode;exit_code_source=if($null -ne $runnerExitCode){'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT'}else{'UNAVAILABLE_FAIL_CLOSED'};stdout=$stdout;stderr=$stderr;stdout_sha256=(Get-Sha256 $stdout);stderr_sha256=(Get-Sha256 $stderr);command_path=$commandPath;command_sha256=(Get-Sha256 $commandPath);terminal_processes=$captured.terminal_processes;metatester_processes=$captured.metatester_processes}
+  return [pscustomobject]@{runner_pid=$runnerPid;runner_creation_time_utc=$runnerCreation;exit_code=$runnerExitCode;exit_code_source=if($runnerExitCode -is [int]){'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT'}else{'UNAVAILABLE_FAIL_CLOSED'};runner_exit_receipt=$runnerExitReceipt;stdout=$stdout;stderr=$stderr;stdout_sha256=(Get-Sha256 $stdout);stderr_sha256=(Get-Sha256 $stderr);command_path=$commandPath;command_sha256=(Get-Sha256 $commandPath);terminal_processes=$captured.terminal_processes;metatester_processes=$captured.metatester_processes}
 }
 function Assert-EventStream([string]$Text,[string]$Session,[bool]$Positive) {
   $events=@();$seen=@{};foreach($line in $Text -split "`r?`n"){if($line -match '\[MGTT\] event=(\S+) session=(\S+) seq=(\d+) (.*)$'){$event=[pscustomobject]@{event=$Matches[1];session=$Matches[2];seq=[int64]$Matches[3];fields=$Matches[4]};$key=$event.session+'|'+$event.seq;$signature=$event.event+'|'+$event.fields;if($seen.ContainsKey($key)){if($seen[$key] -cne $signature){throw "PROBE_FAIL conflicting mirrored event $key"};continue};$seen[$key]=$signature;$events+=$event}};if($events.Count -eq 0){throw 'PROBE_FAIL no MGTT event stream in exact log slices'}

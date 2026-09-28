@@ -483,7 +483,70 @@ class SuccessorConfigTests(unittest.TestCase):
 
 
 class SuccessorProcessTests(NativeHarnessExecutionTests):
-    def test_actual_capture_persists_observed_short_lived_tester_on_refusal(self):
+    def test_old_two_step_observation_reproduces_short_lived_enrichment_race(self):
+        """The predecessor saw PID/start time, then lost the process before enrichment."""
+        with tempfile.TemporaryDirectory(prefix="mgtt_old_race_") as temp:
+            directory = Path(temp)
+            result = self.run_helper(
+                "Add-ProcessObservation",
+                "$row=[ordered]@{kind='SELECTED_CANDIDATE';pid=25952;"
+                "creation_time_utc='2026-09-28T05:45:41.3552037Z';path=$null;sha256=$null;"
+                "parent_pid=$null;ancestry=@();observation_status='RAW'}\n"
+                "$initiallyObserved=$true\n"
+                "$enrichmentLookup=@()\n"
+                "if($initiallyObserved -and $enrichmentLookup.Count -ne 1){"
+                "$row.observation_status='INCOMPLETE';"
+                "$row.error='process exited or identity changed during observation'}\n"
+                "$row|ConvertTo-Json -Depth 10 -Compress\n",
+                directory,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            row = json.loads(result.stdout)
+            self.assertEqual(row["pid"], 25952)
+            self.assertTrue(row["creation_time_utc"])
+            self.assertIsNone(row["path"])
+            self.assertEqual(row["observation_status"], "INCOMPLETE")
+
+    def test_single_early_snapshot_survives_selected_process_exit_before_enrichment(self):
+        """One snapshot must contain everything needed after the tester disappears."""
+        with tempfile.TemporaryDirectory(prefix="mgtt_single_snapshot_") as temp:
+            directory = Path(temp)
+            terminal = directory / "terminal64.exe"
+            tester = directory / "metatester64.exe"
+            body = (
+                f"$evidenceFull={self.ps_quote(directory)}\n"
+                f"$journal={self.ps_quote(directory / 'PROCESS_OBSERVATIONS.jsonl')}\n"
+                "$start=[datetime]'2026-09-28T05:00:00Z'\n"
+                f"$t=[pscustomobject]@{{path={self.ps_quote(terminal)};sha256=('a'*64);file_version='T'}}\n"
+                f"$m=[pscustomobject]@{{path={self.ps_quote(tester)};sha256=('b'*64);file_version='M'}}\n"
+                "$script:snapshotCalls=0\n"
+                "function Get-CimInstance {\n"
+                "  $script:snapshotCalls++\n"
+                "  if($script:snapshotCalls -gt 1){throw 'selected process already exited'}\n"
+                "  return @(\n"
+                "    [pscustomobject]@{Name='powershell.exe';ProcessId=9;ParentProcessId=1;CreationDate=[datetime]'2026-09-28T04:59:59Z';ExecutablePath='C:\\Windows\\powershell.exe';CommandLine='runner'},\n"
+                f"    [pscustomobject]@{{Name='terminal64.exe';ProcessId=11;ParentProcessId=9;CreationDate=[datetime]'2026-09-28T05:00:01Z';ExecutablePath={self.ps_quote(terminal)};CommandLine='terminal'}},\n"
+                f"    [pscustomobject]@{{Name='metatester64.exe';ProcessId=12;ParentProcessId=11;CreationDate=[datetime]'2026-09-28T05:00:02Z';ExecutablePath={self.ps_quote(tester)};CommandLine='tester'}},\n"
+                "    [pscustomobject]@{Name='explorer.exe';ProcessId=1;ParentProcessId=0;CreationDate=[datetime]'2026-09-28T04:00:00Z';ExecutablePath='C:\\Windows\\explorer.exe';CommandLine='shell'}\n"
+                "  )\n"
+                "}\n"
+                "$rows=@(Get-EarlyProcessSnapshot $t $m $start $journal)\n"
+                "$captured=Complete-ProcessCapture $rows $t $m $start 'CASE'\n"
+                "@{calls=$script:snapshotCalls;rows=$rows;captured=$captured}|ConvertTo-Json -Depth 20 -Compress\n"
+            )
+            result = self.run_helper("Get-EarlyProcessSnapshot", body, directory)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            observed = json.loads(result.stdout)
+            self.assertEqual(observed["calls"], 1)
+            self.assertEqual(len(observed["rows"]), 2)
+            for row in observed["rows"]:
+                self.assertEqual(row["observation_status"], "COMPLETE")
+                self.assertTrue(row["path"])
+                self.assertTrue(row["sha256"])
+                self.assertTrue(row["parent_pid"])
+                self.assertTrue(row["ancestry"])
+
+    def test_actual_capture_persists_missing_snapshot_refusal(self):
         with tempfile.TemporaryDirectory(prefix="mgtt_capture_") as temp:
             directory = Path(temp)
             for filename in ('terminal64.exe', 'metatester64.exe', 'runner.stdout.log', 'runner.stderr.log'):
@@ -491,19 +554,15 @@ class SuccessorProcessTests(NativeHarnessExecutionTests):
             body = (
                 f"$evidenceFull={self.ps_quote(directory)}\n$Terminal=Join-Path $evidenceFull 'terminal64.exe'\n"
                 "function Start-Process { $p=[pscustomobject]@{Id=9;StartTime=[datetime]::Now;HasExited=$true;ExitCode=1};$p|Add-Member ScriptMethod WaitForExit {};return $p }\n"
-                "function Get-Process { @([pscustomobject]@{Id=11;StartTime=[datetime]::Now;Path=$Terminal},[pscustomobject]@{Id=12;StartTime=[datetime]::Now;Path=(Join-Path $evidenceFull 'metatester64.exe')}) }\n"
                 "function Get-CimInstance { return @() }\n"
                 "Invoke-RunnerCaptured $evidenceFull @{} $evidenceFull\n"
             )
             result = self.run_helper('Invoke-RunnerCaptured', body, directory)
             self.assertNotEqual(result.returncode, 0)
             journal = [json.loads(x) for x in (directory / 'PROCESS_OBSERVATIONS.jsonl').read_text().splitlines()]
-            observed = [x for x in journal if x.get('pid') == 12]
-            self.assertGreaterEqual(len(observed), 2)
-            self.assertTrue(observed[0]['creation_time_utc'])
-            self.assertEqual(observed[-1]['observation_status'], 'INCOMPLETE')
+            self.assertEqual([x["kind"] for x in journal], ["RUNNER"])
             receipt = json.loads((directory / (directory.name + '.PROCESS_OBSERVATIONS.json')).read_text(encoding='utf-8-sig'))
-            self.assertEqual(len(receipt['observations']), 2)
+            self.assertEqual(len(receipt['observations']), 0)
 
     def test_full_set_preparation_preserves_frozen_assignments_and_binds_current_git(self):
         with tempfile.TemporaryDirectory(prefix="mgtt_set_") as temp:
@@ -525,8 +584,8 @@ class SuccessorProcessTests(NativeHarnessExecutionTests):
             rows = lambda data: [x for x in data.decode('utf-8-sig').splitlines() if x and not x.startswith(';')]
             self.assertEqual(rows(frozen), rows(Path(info['path']).read_bytes()))
 
-    def test_durable_failure_missing_extra_and_short_lived_identity(self):
-        for case in ("valid", "missing", "extra", "short_lived", "historical"):
+    def test_durable_failure_missing_extra_short_lived_pid_reuse_and_wrong_identity(self):
+        for case in ("valid", "missing", "extra", "short_lived", "historical", "pid_reuse", "wrong_identity"):
             with self.subTest(case=case), tempfile.TemporaryDirectory(prefix="mgtt_process_") as temp:
                 directory = Path(temp)
                 result = self.run_helper(
@@ -535,18 +594,20 @@ class SuccessorProcessTests(NativeHarnessExecutionTests):
                     "$start=[datetime]'2026-09-28T05:00:00Z'\n"
                     "$t=@{path='D:\\Meta 5\\terminal64.exe';sha256=('a'*64)}\n"
                     "$m=@{path='D:\\Meta 5\\metatester64.exe';sha256=('b'*64)}\n"
-                    "$rows=@(@{pid=11;creation_time_utc='2026-09-28T05:00:01Z';path=$t.path;sha256=$t.sha256;parent_pid=9;ancestry=@();observation_status='COMPLETE'},"
-                    "@{pid=12;creation_time_utc='2026-09-28T05:00:02Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@();observation_status='COMPLETE'})\n"
+                    "$rows=@(@{pid=11;creation_time_utc='2026-09-28T05:00:01Z';identity_key='11|2026-09-28T05:00:01.0000000Z';path=$t.path;sha256=$t.sha256;parent_pid=9;ancestry=@(@{pid=9;status='OBSERVED'});observation_status='COMPLETE'},"
+                    "@{pid=12;creation_time_utc='2026-09-28T05:00:02Z';identity_key='12|2026-09-28T05:00:02.0000000Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@(@{pid=11;status='OBSERVED'});observation_status='COMPLETE'})\n"
                     + {"valid": "", "missing": "$rows=@($rows[0])\n", "extra": "$rows+=@{pid=13;creation_time_utc='2026-09-28T05:00:03Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@();observation_status='COMPLETE'}\n",
                        "short_lived": "$rows[1].observation_status='EXITED_BEFORE_ENRICHMENT';$rows[1].sha256=$null\n",
-                       "historical": "$rows[1].creation_time_utc='2026-09-27T05:00:02Z'\n"}[case]
+                       "historical": "$rows[1].creation_time_utc='2026-09-27T05:00:02Z'\n",
+                       "pid_reuse": "$rows+=@{pid=12;creation_time_utc='2026-09-28T05:00:03Z';identity_key='12|2026-09-28T05:00:03.0000000Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@(@{pid=11;status='OBSERVED'});observation_status='COMPLETE'}\n",
+                       "wrong_identity": "$rows[1].path='D:\\Other\\metatester64.exe'\n"}[case]
                     + "Complete-ProcessCapture $rows $t $m $start 'CASE' | ConvertTo-Json -Depth 10\n",
                     directory,
                 )
                 receipt = directory / "CASE.PROCESS_OBSERVATIONS.json"
                 self.assertTrue(receipt.exists(), result.stdout + result.stderr)
                 evidence = json.loads(receipt.read_text(encoding="utf-8-sig"))
-                self.assertEqual(len(evidence["observations"]), 1 if case == "missing" else 3 if case == "extra" else 2)
+                self.assertEqual(len(evidence["observations"]), 1 if case == "missing" else 3 if case in {"extra", "pid_reuse"} else 2)
                 self.assertEqual(result.returncode == 0, case == "valid", result.stdout + result.stderr)
                 if case == "short_lived":
                     row = evidence["observations"][1]
@@ -558,12 +619,38 @@ class SuccessorProcessTests(NativeHarnessExecutionTests):
         self.assertIn("Add-ProcessObservation", capture)
         self.assertIn("finally", capture)
         self.assertIn("Complete-ProcessCapture", capture)
+        self.assertIn("Get-EarlyProcessSnapshot", capture)
+        self.assertNotIn("Get-Process", capture)
         helper = extract_balanced(source, "function Add-ProcessObservation")
         self.assertIn("Flush($true)", helper)
         validate = extract_balanced(source, "function Complete-ProcessCapture")
         self.assertLess(validate.index("Write-Receipt"), validate.index("throw"))
         self.assertNotIn("Get-Process", validate)
         self.assertNotIn("Get-CimInstance", validate)
+
+    def test_runner_exit_is_durable_before_selected_process_validation_refuses(self):
+        with tempfile.TemporaryDirectory(prefix="mgtt_exit_before_validation_") as temp:
+            directory = Path(temp)
+            for filename in ("terminal64.exe", "metatester64.exe", "runner.stdout.log", "runner.stderr.log"):
+                (directory / filename).write_bytes(b"fixture")
+            body = (
+                f"$evidenceFull={self.ps_quote(directory)}\n$Terminal=Join-Path $evidenceFull 'terminal64.exe'\n"
+                "function Start-Process { $p=[pscustomobject]@{Id=91;StartTime=[datetime]'2026-09-28T05:00:00Z';HasExited=$true;ExitCode=23};$p|Add-Member ScriptMethod WaitForExit {};return $p }\n"
+                "function Get-CimInstance { return @() }\n"
+                "$failed=$false;try{Invoke-RunnerCaptured $evidenceFull @{} $evidenceFull}catch{$failed=$true}\n"
+                "if(!$failed){throw 'expected selected-process validation refusal'}\n"
+            )
+            result = self.run_helper("Invoke-RunnerCaptured", body, directory)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            receipt_path = directory / (directory.name + ".RUNNER_EXIT.json")
+            self.assertTrue(receipt_path.exists())
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
+            self.assertEqual(receipt["schema"], "mgtt_runner_exit/1")
+            self.assertEqual(receipt["runner"]["pid"], 91)
+            self.assertEqual(receipt["runner"]["exit_code"], 23)
+            self.assertEqual(receipt["runner"]["exit_code_source"], "OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT")
+            self.assertFalse(receipt["evidence_policy"]["stdout_text_used_for_exit_code"])
+            self.assertFalse(receipt["evidence_policy"]["report_presence_used_for_exit_code"])
 
 
 class RunnerExitProvenanceTests(NativeHarnessExecutionTests):
