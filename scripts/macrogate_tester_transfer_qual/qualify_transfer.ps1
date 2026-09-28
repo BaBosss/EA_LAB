@@ -13,9 +13,9 @@ param(
   [string]$RepoRoot = '',
   [string]$EvidenceRoot = '',
   [Parameter(Mandatory)][string]$SourceCommit,
-  [string]$ExpectedParent = '5845c4e039a3d9ef57e6997af42655a3d854d34e',
-  [string]$LaneId = 'ct-news-macro-mg-tester-transfer-impl-v1-20260927',
-  [string]$RuntimeLeaseLaneId = 'ct-news-macro-mg-tester-transfer-runtime-lease-v1-20260927',
+  [string]$ExpectedParent = '7f9d0db07eece9596f4b5d5a76cb2d5a95bd0fbc',
+  [string]$LaneId = 'ct-news-macro-mgtt-successor-qual-v1-20260928',
+  [string]$RuntimeLeaseLaneId = 'ct-mgtt-successor-native-runtime-20260928',
   [string]$RegistryRoot = 'D:\EA_LAB_CONTROL\lanes\registry-v1',
   [string]$Terminal = 'D:\Meta 5\terminal64.exe',
   [string]$MetaEditor = 'D:\Meta 5\metaeditor64.exe',
@@ -34,7 +34,8 @@ $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 . (Join-Path $RepoRoot 'scripts\lib\report_freshness.ps1')
 
 $frozenControl = 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac'
-$externalPrefix = 'D:\EA_LAB_CONTROL\evidence\mg-tester-transfer-impl-v1-20260927'
+$historicalPrefix = 'D:\EA_LAB_CONTROL\evidence\mg-tester-transfer-impl-v1-20260927'
+$externalPrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-successor-qual-v1-20260928'
 if (!$EvidenceRoot) { $EvidenceRoot = Join-Path $externalPrefix ('requal-' + $SourceCommit.Substring(0,12) + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss')) }
 $evidenceFull = [IO.Path]::GetFullPath($EvidenceRoot)
 $externalFull = [IO.Path]::GetFullPath($externalPrefix).TrimEnd('\') + '\'
@@ -45,8 +46,8 @@ $contractRoot = Join-Path $RepoRoot 'factory\runs\news_macro_macrogate_tester_tr
 $contractPath = Join-Path $contractRoot 'PROSPECTIVE_IMPLEMENTATION_CONTRACT.json'
 $expectationPath = Join-Path $contractRoot 'FEED_RUNTIME_EXPECTATIONS.json'
 $sourceBindingPath = Join-Path $contractRoot 'SOURCE_BINDING.json'
-$originalAuthPath = Join-Path $externalPrefix 'OWNER_AUTHORIZATION.json'
-$repairAuthPath = Join-Path $externalPrefix 'PRECOMMIT_EXACT_TREE_OWNER_AUTH_20260927.json'
+$originalAuthPath = Join-Path $historicalPrefix 'OWNER_AUTHORIZATION.json'
+$repairAuthPath = Join-Path $historicalPrefix 'PRECOMMIT_EXACT_TREE_OWNER_AUTH_20260927.json'
 $originalAuthSha256 = '6b7057b94d5720daec7f39d800fe589d888fe3df1d44111e2ace11213cd8eea7'
 $repairAuthSha256 = '6eb92e95f51f74e4827640b9d0946e62d30bc77c07e23519d075293b5c02146a'
 $setRelative = 'ea_template/sets/regression/Boss_15_ST03_defaults.set'
@@ -55,10 +56,8 @@ $bossRelative = 'ea_template/Boss_15_ST03.mq5'
 $vendorRoot = Join-Path $DataDir 'MQL5\Include'
 $tradeHeader = Join-Path $vendorRoot 'Trade\Trade.mqh'
 $allowedRepairPaths = @(
-  'ea_template/Boss_15_ST03.mq5','ea_template/core/LabCore.mqh','ea_template/core/MacroGate_Core.mqh','ea_template/core/Execution.mqh',
-  'scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1','scripts/_test/macrogate_tester_transfer_probe.mq5',
-  'scripts/_test/test_macrogate_tester_transfer_contract.py','scripts/tpl_regression.ps1','scripts/lib/tpl_baseline.ps1',
-  'scripts/_test/run_tpl_declared_wrapper_tests.ps1'
+  'scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1',
+  'scripts/_test/test_macrogate_tester_transfer_contract.py'
 )
 $behavioralPaths = @('ea_template/Boss_15_ST03.mq5','ea_template/core/LabCore.mqh','ea_template/core/MacroGate_Core.mqh','ea_template/core/Execution.mqh')
 
@@ -96,7 +95,8 @@ function Assert-ExactSourceCommit {
   if ($LASTEXITCODE -ne 0 -or $head -cne $SourceCommit) { throw "REFUSE: HEAD must equal SourceCommit $SourceCommit" }
   $parents=@((& git -C $RepoRoot rev-list --parents -n 1 $SourceCommit 2>$null) -split ' ')
   if ($LASTEXITCODE -ne 0 -or $parents.Count -ne 2 -or $parents[1] -cne $ExpectedParent) { throw 'REFUSE: SourceCommit must be the single immediate child of the frozen RepairParent' }
-  if ($ExpectedParent -cne '5845c4e039a3d9ef57e6997af42655a3d854d34e') { throw 'REFUSE: wrong owner-frozen RepairParent' }
+  if ($ExpectedParent -cne '7f9d0db07eece9596f4b5d5a76cb2d5a95bd0fbc') { throw 'REFUSE: wrong owner-frozen successor base' }
+  if ((& git -C $RepoRoot rev-parse ($ExpectedParent+'^{tree}')).Trim() -cne '9017b85a71166394bb7abb3938b246845681618f') { throw 'REFUSE: successor base tree mismatch' }
   & git -C $RepoRoot merge-base --is-ancestor $frozenControl $ExpectedParent 2>$null
   if ($LASTEXITCODE -ne 0) { throw 'REFUSE: frozen control is not an ancestor of RepairParent' }
   $dirty=@(& git -C $RepoRoot status --porcelain=v1 --untracked-files=all 2>$null)
@@ -164,14 +164,76 @@ function Get-FullSetIdentity {
   $bytes=Get-GitBytes $SourceCommit $setRelative; $stage=Join-Path $evidenceFull 'FROZEN_Boss_15_ST03_defaults.set'; [IO.File]::WriteAllBytes($stage,$bytes)
   if((Get-Sha256 $stage) -ne (Get-BytesSha256 $bytes)){throw 'REFUSE: staged full set mismatch'}; $surface=Get-SetSurfaceState -Path $stage; $identity=Get-SetConfigIdentity -Path $stage -Surface $surface
   if($surface.State -ne 'FULL' -or !$identity.Valid -or $surface.BuildTag -ne 'LAB_ENTRY_15' -or [int]$surface.Declared -ne [int]$surface.Assignments){throw 'REFUSE: Boss15 qualification set is not a full declared surface'}
-  return [pscustomobject]@{path=$stage;sha256=(Get-Sha256 $stage);fingerprint=$identity.ConfigFingerprint;scope=$identity.ConfigScope;build=$identity.BuildTag;keys=[int]$surface.Declared}
+  # The historical header is evidence only. Generate a successor-only set with
+  # the same physical assignments and a prospectively computed current closure.
+  $computed=Get-ProspectiveConfigIdentity $stage
+  $diagnostic=Join-Path $evidenceFull 'SUCCESSOR_Boss_15_ST03_diagnostic.set'
+  $text=[Text.Encoding]::UTF8.GetString($bytes)
+  $text=[regex]::Replace($text,'effective_config_hash=[0-9a-f]{64}',('effective_config_hash='+$computed.fingerprint))
+  [IO.File]::WriteAllText($diagnostic,$text,[Text.UTF8Encoding]::new($false))
+  $verified=Get-ProspectiveConfigIdentity $diagnostic $computed.fingerprint
+  $proof=[ordered]@{source_commit=$SourceCommit;historical_path=$stage;historical_sha256=(Get-Sha256 $stage);historical_header=$identity.ConfigFingerprint;historical_header_matches_current=($identity.ConfigFingerprint -ceq $computed.fingerprint);computed=$computed;diagnostic_path=$diagnostic;diagnostic_sha256=(Get-Sha256 $diagnostic);timestamp_utc=[DateTime]::UtcNow.ToString('o')}
+  Write-Receipt 'PROSPECTIVE_CONFIG.json' $proof | Out-Null
+  return [pscustomobject]@{path=$diagnostic;sha256=(Get-Sha256 $diagnostic);fingerprint=$verified.fingerprint;scope='surface+constants';build='LAB_ENTRY_15';keys=$verified.keys}
+}
+function Get-ProspectiveConfigIdentity([string]$SetPath,[string]$Expected='') {
+  $configCalculator = @'
+import sys, json, subprocess, hashlib, re
+from collections import OrderedDict
+from pathlib import Path
+
+def mgtt_identity(read, set_text, expected=None):
+    import preset, gen_locked_constants
+    surface = preset.parse_surface(read('ea_template/core/Inputs.mqh'), 'LAB_ENTRY_15')
+    values = {}
+    for line in set_text.splitlines():
+        if not line or line.startswith(';'):
+            continue
+        if '=' not in line or '||' in line:
+            raise ValueError('REFUSE: non-literal full set')
+        key, value = line.split('=', 1)
+        if key in values:
+            raise ValueError('REFUSE: duplicate input')
+        values[key] = value
+    if len(surface.inputs) != 157 or set(values) != set(surface.by_name):
+        raise ValueError('REFUSE: expected exact current 157 input surface')
+    ordered = OrderedDict((d.name, values[d.name]) for d in surface.inputs)
+    constants = gen_locked_constants.constants_for(read, 'LAB_ENTRY_15', 'ea_template/Boss_15_ST03.mq5')
+    if constants.get('CFG_FP_SCOPE') != 'surface+constants' or 'MG_ST_INVALID' not in constants:
+        raise ValueError('REFUSE: incomplete locked constant closure')
+    fingerprint = preset._fingerprint(surface, ordered, constants, 'surface+constants')
+    if expected and fingerprint != expected:
+        raise ValueError('CONFIG_MISMATCH expected=' + expected + ' computed=' + fingerprint)
+    return dict(keys=len(ordered), inputs=ordered, constants=constants, fingerprint=fingerprint)
+
+if __name__ == '__main__':
+    root, commit, set_path, expected = sys.argv[1:5]
+    sys.path.insert(0, str(Path(root) / '_triage/factory_os'))
+    read = lambda path: subprocess.check_output(['git', '-C', root, 'show', commit + ':' + path]).decode('utf-8-sig')
+    # No runtime marker, historical log or header supplies the computed digest.
+    print(json.dumps(mgtt_identity(read, Path(set_path).read_text(encoding='utf-8-sig'), None if expected == '-' else expected)))
+'@
+  $calculatorPath=Join-Path $evidenceFull 'prospective_config.py'
+  [IO.File]::WriteAllText($calculatorPath,$configCalculator,[Text.UTF8Encoding]::new($false))
+  . (Join-Path $RepoRoot 'scripts\use_python.ps1')
+  # Use the already-installed portable runtime without altering the source tree.
+  $common=(& git -C $RepoRoot rev-parse --path-format=absolute --git-common-dir).Trim()
+  $python=Assert-PortablePython -Root (Split-Path $common -Parent)
+  $expectedArgument=if($Expected){$Expected}else{'-'}
+  $json=& $python -B $calculatorPath $RepoRoot $SourceCommit $SetPath $expectedArgument
+  if($LASTEXITCODE -ne 0){throw 'REFUSE: prospective config calculation failed'}
+  return ($json | ConvertFrom-Json)
 }
 function Invoke-OfflineValidation {
   foreach($path in @($contractPath,$expectationPath,$sourceBindingPath,$originalAuthPath,$repairAuthPath,$tradeHeader)){if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "REFUSE: required input missing $path"}}
   if((Get-Sha256 $originalAuthPath) -cne $originalAuthSha256 -or (Get-Sha256 $repairAuthPath) -cne $repairAuthSha256){throw 'REFUSE: owner authority bytes changed'}
   $source=Assert-ExactSourceCommit; $contract=Get-Content -Raw $contractPath|ConvertFrom-Json; $expectations=Get-Content -Raw $expectationPath|ConvertFrom-Json; $binding=Get-Content -Raw $sourceBindingPath|ConvertFrom-Json; $auth=Get-Content -Raw $originalAuthPath|ConvertFrom-Json; $repair=Get-Content -Raw $repairAuthPath|ConvertFrom-Json
   if($contract.schema -ne 'macrogate_tester_transfer_prospective_implementation_contract/2' -or !$auth.authorized_implementation -or $auth.authorized_performance){throw 'REFUSE: original implementation authority mismatch'}
-  if($repair.schema -ne 'mgtt_precommit_exact_tree_owner_authority/1' -or $repair.repair_parent -ne $ExpectedParent -or $repair.current_control -ne $frozenControl -or $repair.performance_authorized){throw 'REFUSE: Repair1 owner authority mismatch'}
+  if($repair.schema -ne 'mgtt_precommit_exact_tree_owner_authority/1' -or $repair.repair_parent -ne '5845c4e039a3d9ef57e6997af42655a3d854d34e' -or $repair.current_control -ne $frozenControl -or $repair.performance_authorized){throw 'REFUSE: historical Repair1 owner authority mismatch'}
+  foreach($pin in @(@('OWNER_AUTHORITY_20260928.json','fa18467955e1bada748a117d58ab9cc8be3ecb0dc1462eeec3a242384664e89a'),@('CONTRACT_FROZEN_20260928.json','07152c1e9fb3a561018ba28fc52979f0ae0a0f007835807cddd610c0a87fad70'))) {
+    if((Get-Sha256 (Join-Path $externalPrefix $pin[0])) -cne $pin[1]){throw 'REFUSE: successor authority/contract drift'}
+  }
+  if($LaneId -cne 'ct-news-macro-mgtt-successor-qual-v1-20260928'){throw 'REFUSE: wrong successor lane'}
   foreach($immutable in @('ea_template/core/Inputs.mqh','ea_template/core/ConfigFingerprint.mqh')) { $expected=@($binding.source_files|Where-Object path -eq $immutable); $bytes=Get-GitBytes $SourceCommit $immutable; if($expected.Count -ne 1 -or (Get-BytesSha256 $bytes) -ne $expected[0].sha256){throw "REFUSE: immutable source drift $immutable"} }
   $feeds=@(); foreach($entry in $expectations.entries){$facts=Get-FeedFacts (Join-Path $RepoRoot $entry.source_path);if($facts.sha256 -ne $entry.sha256 -or $facts.bytes -ne [int64]$entry.bytes -or $facts.rows -ne [int]$entry.rows -or $facts.first -ne $entry.first -or $facts.last -ne $entry.last){throw "REFUSE: feed identity mismatch $($entry.filename)"};$feeds+=[ordered]@{filename=$entry.filename;facts=$facts}}
   $closure=Get-CompileClosure; if(@($closure.vendor|Where-Object path -eq $tradeHeader).Count -ne 1 -or (Get-Sha256 $tradeHeader) -ne '96e6781624534377fe7971cba52cca3d62d1b030bc10d5e4ebf3ed8c541399ed'){throw 'REFUSE: vendor Trade.mqh identity changed'}; $set=Get-FullSetIdentity
@@ -184,6 +246,7 @@ function Get-OwnershipMap {
   $receipt=Get-Content -Raw $DependencyOwnershipReceipt|ConvertFrom-Json; if($receipt.lane_id -ne $LaneId){throw 'REFUSE: dependency ownership receipt lane identity mismatch'}; foreach($entry in $receipt.entries){$map[[IO.Path]::GetFullPath($entry.path)]=$entry.sha256}; return $map
 }
 function Invoke-PreflightValidation {
+  if($Terminal -ine 'D:\Meta 5\terminal64.exe' -or $MetaEditor -ine 'D:\Meta 5\metaeditor64.exe' -or $DataDir -ine 'D:\MetaTraderData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355'){throw 'REFUSE: successor is restricted to the frozen MT5-lane1 installation'}
   $offline=Invoke-OfflineValidation; $lanePath=Join-Path $RegistryRoot ($LaneId+'.json'); $runtimePath=Join-Path $RegistryRoot ($RuntimeLeaseLaneId+'.json')
   if(!(Test-Path $lanePath) -or !(Test-Path $runtimePath)){throw 'REFUSE: Registry source/runtime lane missing'}; $lane=Get-Content -Raw $lanePath|ConvertFrom-Json; $runtime=Get-Content -Raw $runtimePath|ConvertFrom-Json
   if($lane.lane_id -ne $LaneId -or !$lane.writer -or $lane.state -notin @('BLOCKED','RUNNING') -or [IO.Path]::GetFullPath($lane.worktree) -ne [IO.Path]::GetFullPath($RepoRoot)){throw 'REFUSE: Registry source owner/state/worktree mismatch'}
@@ -287,25 +350,91 @@ function Write-RunnerInvocation([string]$RunnerRoot,[hashtable]$Arguments,[strin
   [IO.File]::WriteAllText($commandPath,$body,[Text.UTF8Encoding]::new($false))
   return $commandPath
 }
+function Add-ProcessObservation([string]$Path,[object]$Observation) {
+  # Append and physically flush the raw observation BEFORE enrichment can fail.
+  $bytes=[Text.UTF8Encoding]::new($false).GetBytes(($Observation|ConvertTo-Json -Depth 20 -Compress)+"`n")
+  $stream=[IO.File]::Open($Path,[IO.FileMode]::Append,[IO.FileAccess]::Write,[IO.FileShare]::Read)
+  try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
+}
+function Complete-ProcessCapture([object[]]$Rows,[object]$ExpectedTerminal,[object]$ExpectedTester,[datetime]$LaunchUtc,[string]$CaseId) {
+  $receipt=[ordered]@{schema='mgtt_process_observations/1';launch_utc=$LaunchUtc.ToUniversalTime().ToString('o');observations=@($Rows);historical_identity='NOT_RECONSTRUCTED';status='UNVALIDATED'}
+  Write-Receipt ($CaseId+'.PROCESS_OBSERVATIONS.json') $receipt | Out-Null
+  $terminalRows=@($Rows|Where-Object path -ieq $ExpectedTerminal.path)
+  $testerRows=@($Rows|Where-Object path -ieq $ExpectedTester.path)
+  if($terminalRows.Count -ne 1 -or $testerRows.Count -ne 1 -or $Rows.Count -ne 2){throw 'REFUSE: selected terminal/metatester process identity was not captured exactly once'}
+  foreach($pair in @(@($terminalRows[0],$ExpectedTerminal),@($testerRows[0],$ExpectedTester))) {
+    $row=$pair[0];$expected=$pair[1]
+    if($row.observation_status -ne 'COMPLETE' -or !$row.pid -or !$row.creation_time_utc -or !$row.parent_pid -or $row.sha256 -cne $expected.sha256 -or ([datetime]$row.creation_time_utc).ToUniversalTime() -lt $LaunchUtc.ToUniversalTime()){throw 'REFUSE: incomplete, historical, or mismatched selected process observation'}
+  }
+  $receipt.status='PASS_CURRENT_INVOCATION_ONLY'
+  Write-Receipt ($CaseId+'.PROCESS_VALIDATION.json') $receipt | Out-Null
+  return [pscustomobject]@{terminal_processes=$terminalRows;metatester_processes=$testerRows}
+}
 function Invoke-RunnerCaptured([string]$RunnerRoot,[hashtable]$Arguments,[string]$CaseRoot) {
   $commandPath=Write-RunnerInvocation $RunnerRoot $Arguments $CaseRoot;$stdout=Join-Path $CaseRoot 'runner.stdout.log';$stderr=Join-Path $CaseRoot 'runner.stderr.log'
   $expectedTerminal=Get-ExecutableIdentity $Terminal
   $expectedTester=Get-ExecutableIdentity (Join-Path (Split-Path $Terminal -Parent) 'metatester64.exe')
   Write-Receipt ((Split-Path $CaseRoot -Leaf)+'.PROCESS_EXPECTATIONS.json') ([ordered]@{terminal=$expectedTerminal;metatester=$expectedTester;command_sha256=(Get-Sha256 $commandPath);arguments_sha256=(Get-Sha256 (Join-Path $CaseRoot 'runner_arguments.clixml'))})|Out-Null
-  $process=Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoLogo','-NoProfile','-File',$commandPath) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -WindowStyle Hidden -PassThru;$seen=@{}
-  while(!$process.HasExited){foreach($name in @('terminal64','metatester64')){foreach($child in @(Get-Process -Name $name -ErrorAction SilentlyContinue)){if(!$seen.ContainsKey($child.Id)){try{$seen[$child.Id]=Get-ExecutableIdentity $child.Path $child}catch{}}}};Start-Sleep -Milliseconds 50};$process.WaitForExit();$terminalRows=@($seen.Values|Where-Object path -ieq ([IO.Path]::GetFullPath($Terminal)));$testerRows=@($seen.Values|Where-Object path -match '(?i)metatester64\.exe$')
-  if($terminalRows.Count -ne 1 -or $testerRows.Count -ne 1 -or $seen.Count -ne 2){throw 'REFUSE: selected terminal/metatester process identity was not captured exactly once'}
-  foreach($pair in @(@($terminalRows[0],$expectedTerminal),@($testerRows[0],$expectedTester))){
-    if($pair[0].path -ine $pair[1].path -or $pair[0].sha256 -cne $pair[1].sha256 -or $pair[0].creation_time_utc -eq 'UNAVAILABLE'){throw 'REFUSE: runtime executable/process identity mismatch'}
-    if((Get-Sha256 $pair[1].path) -cne $pair[1].sha256){throw 'REFUSE: runtime executable changed during the run'}
+  $journal=Join-Path $CaseRoot 'PROCESS_OBSERVATIONS.jsonl';$seen=@{};$launchUtc=[datetime]::UtcNow;$process=$null;$captureError=$null
+  # Lock the selected executables for the entire observation interval. Hash once
+  # before launch; never spend a short tester lifetime hashing its executable.
+  $binaryLocks=Open-ReadShareOnly @($expectedTerminal.path,$expectedTester.path)
+  try {
+    foreach($expected in @($expectedTerminal,$expectedTester)){if((Get-Sha256 $expected.path) -cne $expected.sha256){throw 'REFUSE: executable changed before launch'}}
+    $process=Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoLogo','-NoProfile','-File',$commandPath) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -WindowStyle Hidden -PassThru
+    Add-ProcessObservation $journal ([ordered]@{kind='RUNNER';pid=$process.Id;creation_time_utc=$process.StartTime.ToUniversalTime().ToString('o');launch_utc=$launchUtc.ToString('o')})
+    do {
+      foreach($child in @(Get-Process -Name terminal64,metatester64 -ErrorAction SilentlyContinue)) {
+        $row=[ordered]@{kind='SELECTED_CANDIDATE';observed_utc=[datetime]::UtcNow.ToString('o');pid=$child.Id;creation_time_utc=$null;path=$null;sha256=$null;parent_pid=$null;ancestry=@();observation_status='RAW'}
+        try{$row.creation_time_utc=$child.StartTime.ToUniversalTime().ToString('o');$row.path=$child.Path}catch{$row.observation_status='EXITED_BEFORE_ENRICHMENT'}
+        $key=[string]$row.pid+'|'+[string]$row.creation_time_utc
+        if($seen.ContainsKey($key)){continue}
+        Add-ProcessObservation $journal $row
+        $seen[$key]=$row
+        try {
+          $snapshot=@(Get-CimInstance Win32_Process -Filter ('ProcessId='+$row.pid) -ErrorAction Stop)
+          if($snapshot.Count -ne 1 -or !$row.creation_time_utc -or [Math]::Abs(($snapshot[0].CreationDate.ToUniversalTime()-([datetime]$row.creation_time_utc).ToUniversalTime()).TotalMilliseconds) -gt 1 -or $snapshot[0].ExecutablePath -ine $row.path){throw 'process exited or identity changed during observation'}
+          $row.parent_pid=$snapshot[0].ParentProcessId;$row.command_line=$snapshot[0].CommandLine
+          # Persist observed parent identity before querying any ancestors, which
+          # may already have exited. Get-Process retains the creation-time key.
+          Add-ProcessObservation $journal $row
+          $parentId=$row.parent_pid;$descendantCreated=[datetime]$row.creation_time_utc
+          for($depth=0;$depth -lt 12 -and $parentId;$depth++) {
+            $parents=@(Get-CimInstance Win32_Process -Filter ('ProcessId='+$parentId) -ErrorAction Stop)
+            if($parents.Count -ne 1 -or $parents[0].CreationDate -gt $descendantCreated){$row.ancestry+=@{pid=$parentId;status='UNOBSERVABLE_OR_PID_REUSED'};break}
+            $parent=$parents[0];$row.ancestry+=@{pid=$parent.ProcessId;parent_pid=$parent.ParentProcessId;creation_time_utc=$parent.CreationDate.ToUniversalTime().ToString('o');path=$parent.ExecutablePath;status='OBSERVED'}
+            $parentId=$parent.ParentProcessId;$descendantCreated=$parent.CreationDate
+          }
+          $expected=@($expectedTerminal,$expectedTester)|Where-Object path -ieq $row.path
+          if(@($expected).Count -ne 1){throw 'extra or unselected process'}
+          $row.sha256=$expected.sha256;$row.file_version=$expected.file_version;$row.hash_basis='PRELAUNCH_READ_LOCK_HELD';$row.observation_status='COMPLETE'
+        }catch{$row.observation_status='INCOMPLETE';$row.error=$_.Exception.Message}
+        Add-ProcessObservation $journal $row
+      }
+      if(!$process.HasExited){Start-Sleep -Milliseconds 20}
+    }while(!$process.HasExited)
+    $process.WaitForExit()
+  }catch{$captureError=$_.Exception.Message}finally {
+    foreach($handle in $binaryLocks){$handle.Dispose()}
+    # Always writes all observations before it can refuse, even on wrapper error.
+    $captured=Complete-ProcessCapture @($seen.Values) $expectedTerminal $expectedTester $launchUtc (Split-Path $CaseRoot -Leaf)
   }
-  return [pscustomobject]@{exit_code=$process.ExitCode;stdout=$stdout;stderr=$stderr;stdout_sha256=(Get-Sha256 $stdout);stderr_sha256=(Get-Sha256 $stderr);command_path=$commandPath;command_sha256=(Get-Sha256 $commandPath);terminal_processes=$terminalRows;metatester_processes=$testerRows}
+  if($captureError){throw ('REFUSE: capture failed '+$captureError)}
+  return [pscustomobject]@{exit_code=$process.ExitCode;stdout=$stdout;stderr=$stderr;stdout_sha256=(Get-Sha256 $stdout);stderr_sha256=(Get-Sha256 $stderr);command_path=$commandPath;command_sha256=(Get-Sha256 $commandPath);terminal_processes=$captured.terminal_processes;metatester_processes=$captured.metatester_processes}
 }
 function Assert-EventStream([string]$Text,[string]$Session,[bool]$Positive) {
   $events=@();$seen=@{};foreach($line in $Text -split "`r?`n"){if($line -match '\[MGTT\] event=(\S+) session=(\S+) seq=(\d+) (.*)$'){$event=[pscustomobject]@{event=$Matches[1];session=$Matches[2];seq=[int64]$Matches[3];fields=$Matches[4]};$key=$event.session+'|'+$event.seq;$signature=$event.event+'|'+$event.fields;if($seen.ContainsKey($key)){if($seen[$key] -cne $signature){throw "PROBE_FAIL conflicting mirrored event $key"};continue};$seen[$key]=$signature;$events+=$event}};if($events.Count -eq 0){throw 'PROBE_FAIL no MGTT event stream in exact log slices'}
   foreach($event in $events){if(!$event.session.StartsWith($Session,[StringComparison]::Ordinal)){throw "PROBE_FAIL mixed session $($event.session)"}};foreach($group in @($events|Group-Object session)){$ordered=@($group.Group|Sort-Object seq);for($i=0;$i -lt $ordered.Count;$i++){if($ordered[$i].seq -ne $i+1){throw "PROBE_FAIL sequence gap/duplicate session $($group.Name)"}};if(@($ordered|Where-Object event -eq 'RUN_BEGIN').Count -ne 1 -or @($ordered|Where-Object event -eq 'RUN_END').Count -ne 1){throw "PROBE_FAIL incomplete session terminals $($group.Name)"}}
   $primary=@($events|Where-Object session -eq $Session);if(@($primary|Where-Object event -eq 'RUN_BEGIN').Count -ne 1){throw 'PROBE_FAIL primary RUN_BEGIN count'}
   if($Positive){$footer=@($primary|Where-Object event -eq 'RUN_END');if($footer.Count -ne 1 -or $footer[0].fields -notmatch 'fill_coverage_finalized=1.*availability=CERTIFIED' -or $footer[0].fields -notmatch 'evidence_error_count=0'){throw 'PROBE_FAIL primary certified footer'};foreach($name in @('DUPLICATE_EXECUTION_END','DUPLICATE_SUBMIT_RETURN','DUPLICATE_NATIVE_SEND_RESULT','CONTRADICTORY_DEAL')){if($Text -notmatch $name){throw "PROBE_FAIL missing adversarial marker $name"}}}
+}
+function Save-CaseEvidence([string]$CaseRoot,[object]$Before,[string]$RunnerRoot,[string]$ReportName,[string]$Outcome) {
+  $saved=[ordered]@{case=(Split-Path $CaseRoot -Leaf);outcome=$Outcome;observed_utc=[datetime]::UtcNow.ToString('o');process_cleanup_action='NO_KILL';processes=@(Get-ProcessInventory);logs=@();errors=@();ini=$null}
+  if($null -ne $Before){try{$saved.logs=@(Get-ChangedLogSlices $Before $CaseRoot | ForEach-Object{[ordered]@{source_path=$_.source_path;offset=$_.offset;bytes=$_.bytes;sha256=$_.sha256;evidence_path=$_.evidence_path}})}catch{$saved.errors+=$_.Exception.Message}}
+  if($ReportName){$ini=Join-Path $RunnerRoot ('_mt5_auto\ini\'+$ReportName+'.ini');if(Test-Path -LiteralPath $ini){$target=Join-Path $CaseRoot 'EXACT_TESTER.ini';[IO.File]::WriteAllBytes($target,[IO.File]::ReadAllBytes($ini));$saved.ini=[ordered]@{source=$ini;evidence=$target;sha256=(Get-Sha256 $target)}}}
+  $saved.files=@(Get-ChildItem -LiteralPath $CaseRoot -File | ForEach-Object{[ordered]@{path=$_.FullName;sha256=(Get-Sha256 $_.FullName);bytes=$_.Length}})
+  Write-Receipt ($saved.case+'.FINAL_EVIDENCE.json') $saved | Out-Null
+  if($saved.errors.Count){throw ('REFUSE: case evidence capture failed '+($saved.errors -join '; '))}
 }
 function Invoke-NativeQualification {
   if(!$ConfirmNativeNoPerformance){throw 'REFUSE: Native requires -ConfirmNativeNoPerformance'};$preflight=Invoke-PreflightValidation;$closure=Get-CompileClosure;$set=Get-FullSetIdentity;$runId='ORDER-MGTT-QUAL-'+$SourceCommit.Substring(0,12)+'-'+(Get-Date -Format 'yyyyMMdd-HHmmss');$nativeRoot=Join-Path $DataDir ('MQL5\Experts\EA_LAB_TEST\'+$runId)
@@ -316,7 +445,7 @@ function Invoke-NativeQualification {
   $runnerRoot=New-RunnerTree;$expectations=Get-Content -Raw $expectationPath|ConvertFrom-Json;$terminalFiles=Join-Path $DataDir 'MQL5\Files';New-Item -ItemType Directory -Force $terminalFiles|Out-Null;$owned=@();foreach($entry in $expectations.entries){$source=Join-Path $RepoRoot $entry.source_path;$target=Join-Path $terminalFiles $entry.filename;if(!(Test-Path $target)){Copy-Item -LiteralPath $source -Destination $target};if((Get-Sha256 $target)-ne $entry.sha256){throw "REFUSE: dependency staging mismatch $target"};$owned+=[ordered]@{path=$target;sha256=$entry.sha256}};$ownershipPath=Write-Receipt 'NATIVE_DEPENDENCY_OWNERSHIP.json' ([ordered]@{schema='mgtt_dependency_ownership/2';lane_id=$LaneId;source_commit=$SourceCommit;entries=$owned})
   $real=$expectations.entries[0];$cases=@(@{id='POSITIVE_GOLDEN_REAL';filename=$real.filename;expected_sha256=$real.sha256;expected_bytes=$real.bytes;expected_rows=$real.rows;expected_first=$real.first;expected_last=$real.last;failure='';fixture='GOLDEN'},@{id='MISSING';filename='EA_LAB_MGTT_Q1_missing.csv';expected_sha256=$real.sha256;expected_bytes=$real.bytes;expected_rows=$real.rows;expected_first=$real.first;expected_last=$real.last;failure='MISSING';fixture='MISSING'},@{id='WRONG_SAME_METADATA';filename=$real.filename;expected_sha256=$real.sha256;expected_bytes=$real.bytes;expected_rows=$real.rows;expected_first=$real.first;expected_last=$real.last;failure='HASH_MISMATCH';fixture='WRONG'},@{id='STALE_TRUNCATED_COPY';filename=$real.filename;expected_sha256=$real.sha256;expected_bytes=$real.bytes;expected_rows=$real.rows;expected_first=$real.first;expected_last=$real.last;failure='SIZE_MISMATCH';fixture='TRUNCATED'})
   $template=[Text.Encoding]::UTF8.GetString((Get-GitBytes $SourceCommit $probeRelative));$realBytes=[IO.File]::ReadAllBytes((Join-Path $RepoRoot $real.source_path));$results=@()
-  foreach($case in $cases){$caseRoot=Join-Path $evidenceFull $case.id;New-Item -ItemType Directory -Path $caseRoot|Out-Null;$dependency=Join-Path $terminalFiles $case.filename;$restore=($case.filename -eq $real.filename);try{
+  foreach($case in $cases){$caseRoot=Join-Path $evidenceFull $case.id;New-Item -ItemType Directory -Path $caseRoot|Out-Null;$dependency=Join-Path $terminalFiles $case.filename;$restore=($case.filename -eq $real.filename);$before=$null;$reportName=$null;$caseOutcome='FAILED_BEFORE_POSTCONDITION';try{
     if($case.fixture -eq 'MISSING'){if(Test-Path $dependency){throw 'REFUSE: missing alias exists'}}elseif($case.fixture -eq 'GOLDEN'){[IO.File]::WriteAllBytes($dependency,$realBytes)}elseif($case.fixture -eq 'WRONG'){$fixture=[byte[]]$realBytes.Clone();$needle=[Text.Encoding]::ASCII.GetBytes(' 02:');$hits=0;for($i=0;$i -le $fixture.Length-$needle.Length;$i++){$match=$true;for($j=0;$j -lt $needle.Length;$j++){if($fixture[$i+$j]-ne $needle[$j]){$match=$false;break}};if($match){$hits++;if($hits -eq 2){$fixture[$i+1]=[byte][char]'0';$fixture[$i+2]=[byte][char]'3';break}}};if((Get-BytesSha256 $fixture)-ne '7e1dbd8e3850c5d14858c7183d9f842767bbe0e33d16ed148be4fbd9dc84f5e4'){throw 'REFUSE: WRONG derivation mismatch'};[IO.File]::WriteAllBytes($dependency,$fixture)}else{$lastLf=[Array]::LastIndexOf($realBytes,[byte]10,$realBytes.Length-2);$fixture=New-Object byte[] ($lastLf+1);[Array]::Copy($realBytes,$fixture,$fixture.Length);if((Get-BytesSha256 $fixture)-ne '70271717ee95f618a2d76b2b0a8d1ca2d8da9edf2cc9a079b74d4ea90e484e19'){throw 'REFUSE: TRUNCATED derivation mismatch'};[IO.File]::WriteAllBytes($dependency,$fixture)}
     $build=New-BuildReceiptToken;$session='MGTT-'+$case.id+'-'+([guid]::NewGuid().ToString('N'));$caseSource=Join-Path $nativeRoot ('scripts\_test\MGTT_'+$case.id+'.mq5');[IO.File]::WriteAllText($caseSource,(New-ProbeCaseSource $template $case $build $set.fingerprint $session),[Text.UTF8Encoding]::new($false));$sourceSha=Get-Sha256 $caseSource;Assert-StagedClosure $staged $overrides $closure.vendor;$caseCompile=Assert-CompileResult $caseSource (Join-Path $caseRoot 'compile.log');$registry=Join-Path $caseRoot 'build_receipts.jsonl';Write-BuildReceiptRecord -RegistryPath $registry -Receipt $build -ArtifactPath $caseCompile.ex5 -SourcePath $caseSource -EaLogicalIdentity ('MGTT_'+$case.id)
     $reportName='MGTT_'+$case.id+'_'+$session.Substring($session.Length-12);$reportPath=Join-Path $runnerRoot ('_mt5_auto\reports\'+$reportName+'.htm');if(Test-Path $reportPath){throw 'REFUSE: unique report path already exists'};$prelaunch=[ordered]@{schema='mgtt_prelaunch_identity/2';source_commit=$SourceCommit;case=$case.id;runtime_session=$session;build_receipt=$build;probe_source=$caseSource;probe_source_sha256=$sourceSha;ex5=$caseCompile.ex5;ex5_sha256=(Get-Sha256 $caseCompile.ex5);full_set=$set;dependency=$dependency;dependency_sha256=if(Test-Path $dependency){Get-Sha256 $dependency}else{$null};report_name=$reportName;report_path=$reportPath;terminal=(Get-ExecutableIdentity $Terminal);metaeditor=(Get-ExecutableIdentity $MetaEditor);model='M1_M1_OHLC_ENGINEERING_NO_PERFORMANCE';symbol='GBPUSD';timeframe='H4';from='2020.01.02';to='2020.01.03'};Write-Receipt ($case.id+'.PRELAUNCH.json') $prelaunch|Out-Null
@@ -328,7 +457,8 @@ function Invoke-NativeQualification {
     if($text -notmatch ('runtime_session='+[regex]::Escape($session)+'.*build_receipt='+[regex]::Escape($build)+'.*effective_config_fingerprint='+$set.fingerprint)){throw 'PROBE_FAIL runtime build/config/session marker mismatch'}
     if($case.failure){if($text -notmatch ('failure='+$case.failure) -or $text -match 'LOAD_PASS_NO_TRADES'){throw "PROBE_FAIL $($case.id)"}}else{foreach($marker in @('load_status=PASS','LOAD_PASS_NO_TRADES','CERTIFIED_COUNTS_PASS','IDEMPOTENT_DEAL_PASS','DUPLICATE_TERMINALS_FAIL_CLOSED_PASS','MISSING_PARTIAL_PENDING_FILL_FAIL_CLOSED_PASS','CONTRADICTORY_DEAL_FAIL_CLOSED_PASS','CLASSIFICATION_FAIL_CLOSED_PASS','ADVERSARIAL_FAIL_CLOSED_PASS')){if($text -notmatch $marker){throw "PROBE_FAIL missing $marker"}};if($run.exit_code -ne 0 -or !(Test-Path $reportPath)){throw 'PROBE_FAIL positive runner/report'}}
     $report=[ordered]@{status=if(Test-Path $reportPath){'PRESENT'}else{'ABSENT_EXPECTED_INIT_FAILED'};path=$reportPath;sha256=if(Test-Path $reportPath){Get-Sha256 $reportPath}else{$null}};$logManifest=[ordered]@{schema='mgtt_log_slice_manifest/1';runtime_session=$session;slices=@($slices|ForEach-Object{[ordered]@{source_path=$_.source_path;offset=$_.offset;bytes=$_.bytes;sha256=$_.sha256;evidence_path=$_.evidence_path}})};Write-Receipt ($case.id+'.LOG_MANIFEST.json') $logManifest|Out-Null;$results+=[ordered]@{case=$case.id;status='PASS_ENGINEERING';runtime_session=$session;build_receipt=$build;config_fingerprint=$set.fingerprint;runner=$run;report=$report;relevant_log_slices=$relevant.Count}
-  }finally{if($restore -and (Test-Path $dependency)){if(@($real.sha256,'7e1dbd8e3850c5d14858c7183d9f842767bbe0e33d16ed148be4fbd9dc84f5e4','70271717ee95f618a2d76b2b0a8d1ca2d8da9edf2cc9a079b74d4ea90e484e19') -notcontains (Get-Sha256 $dependency)){throw 'REFUSE: dependency ownership changed; not restoring'};[IO.File]::WriteAllBytes($dependency,$realBytes)}}}
+    $caseOutcome='PASS_ENGINEERING';Write-Receipt 'CAMPAIGN_PROGRESS.json' ([ordered]@{source_commit=$SourceCommit;completed=$results;next_case_not_authorized_on_failure=$true})|Out-Null
+  }catch{$caseOutcome=$_.Exception.Message;throw}finally{try{Save-CaseEvidence $caseRoot $before $runnerRoot $reportName $caseOutcome}finally{if($restore -and (Test-Path $dependency)){if(@($real.sha256,'7e1dbd8e3850c5d14858c7183d9f842767bbe0e33d16ed148be4fbd9dc84f5e4','70271717ee95f618a2d76b2b0a8d1ca2d8da9edf2cc9a079b74d4ea90e484e19') -notcontains (Get-Sha256 $dependency)){throw 'REFUSE: dependency ownership changed; not restoring'};[IO.File]::WriteAllBytes($dependency,$realBytes)}}}}
   $result=[ordered]@{schema='mgtt_native_qualification/2';status='PASS_NO_PERFORMANCE';source_commit=$SourceCommit;source_tree=(& git -C $RepoRoot rev-parse ($SourceCommit+'^{tree}')).Trim();compile_receipt=$compileReceipt;probe_results=$results;native_root=$nativeRoot;runner_root=$runnerRoot;dependency_ownership_receipt=$ownershipPath;performance='NOT_RUN';holdout='LOCKED_UNSPENT'};Write-Receipt 'NATIVE_RESULT.json' $result|Out-Null;return $result
 }
 

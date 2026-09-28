@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -350,6 +351,7 @@ class NativeHarnessExecutionTests(unittest.TestCase):
         return subprocess.run(
             ["powershell.exe", "-NoProfile", "-File", str(script)],
             capture_output=True, text=True, timeout=90,
+            env={k: v for k, v in os.environ.items() if k.upper() != "PSMODULEPATH"},
         )
 
     def test_named_runner_arguments_reach_actual_script_parameters(self) -> None:
@@ -427,6 +429,141 @@ class NativeHarnessExecutionTests(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse((directory / "escaped.txt").exists())
+
+
+class SuccessorConfigTests(unittest.TestCase):
+    """Execute the prospective calculator embedded in the production harness."""
+
+    def calculator(self):
+        source = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text(encoding="utf-8-sig")
+        match = re.search(r"\$configCalculator = @'\n(.*?)\n'@", source, re.S)
+        self.assertIsNotNone(match, "production prospective calculator missing")
+        sys.path.insert(0, str(ROOT / "_triage/factory_os"))
+        namespace = {"__name__": "mgtt_fixture"}
+        exec(compile(match[1], "production_config_calculator", "exec"), namespace)
+        return namespace["mgtt_identity"]
+
+    def test_current_closure_and_stale_expected_rejection(self):
+        calculate = self.calculator()
+        read = lambda path: git_bytes("show", f"HEAD:{path}").decode("utf-8-sig")
+        frozen = read("ea_template/sets/regression/Boss_15_ST03_defaults.set")
+        result = calculate(read, frozen)
+        self.assertEqual(result["keys"], 157)
+        self.assertEqual(result["constants"]["MG_ST_INVALID"], "-100")
+        self.assertEqual(result["fingerprint"], "7dfd909aa23a659dbf41b3bf4004e764b96fd62a4f106d53fb8290ac8efe92cc")
+        stale = "d3d548b77d96037fbee8a483bd25206f2d323600f2e00cf8ad012c7f566c2456"
+        with self.assertRaisesRegex(ValueError, "CONFIG_MISMATCH"):
+            calculate(read, frozen, stale)
+        self.assertEqual(calculate(read, frozen, result["fingerprint"]), result)
+
+    def test_changed_and_added_constants_with_identical_inputs_change_identity(self):
+        calculate = self.calculator()
+        read = lambda path: git_bytes("show", f"HEAD:{path}").decode("utf-8-sig")
+        frozen = read("ea_template/sets/regression/Boss_15_ST03_defaults.set")
+        original = calculate(read, frozen)
+        for replacement in ("#define MG_ST_INVALID -101", "#define MG_ST_INVALID -100\n#define MGTT_FIXTURE_CONSTANT 17"):
+            def changed(path):
+                text = read(path)
+                return re.sub(r"#define\s+MG_ST_INVALID\s+\(-100\)", replacement, text)
+            revised = calculate(changed, frozen)
+            self.assertEqual(original["inputs"], revised["inputs"])
+            self.assertNotEqual(original["fingerprint"], revised["fingerprint"])
+
+    def test_header_is_not_the_computation_and_missing_extra_duplicate_inputs_refuse(self):
+        calculate = self.calculator()
+        read = lambda path: git_bytes("show", f"HEAD:{path}").decode("utf-8-sig")
+        frozen = read("ea_template/sets/regression/Boss_15_ST03_defaults.set")
+        original = calculate(read, frozen)
+        self.assertEqual(original, calculate(read, re.sub(r"[0-9a-f]{64}", "0" * 64, frozen)))
+        lines = frozen.splitlines()
+        assignment = next(line for line in lines if line and not line.startswith(";") and "=" in line)
+        for invalid in (frozen.replace(assignment + "\n", ""), frozen + "\nextra=1\n", frozen + "\n" + assignment):
+            with self.assertRaises(ValueError):
+                calculate(read, invalid)
+
+
+class SuccessorProcessTests(NativeHarnessExecutionTests):
+    def test_actual_capture_persists_observed_short_lived_tester_on_refusal(self):
+        with tempfile.TemporaryDirectory(prefix="mgtt_capture_") as temp:
+            directory = Path(temp)
+            for filename in ('terminal64.exe', 'metatester64.exe', 'runner.stdout.log', 'runner.stderr.log'):
+                (directory / filename).write_bytes(b'fixture')
+            body = (
+                f"$evidenceFull={self.ps_quote(directory)}\n$Terminal=Join-Path $evidenceFull 'terminal64.exe'\n"
+                "function Start-Process { $p=[pscustomobject]@{Id=9;StartTime=[datetime]::Now;HasExited=$true;ExitCode=1};$p|Add-Member ScriptMethod WaitForExit {};return $p }\n"
+                "function Get-Process { @([pscustomobject]@{Id=11;StartTime=[datetime]::Now;Path=$Terminal},[pscustomobject]@{Id=12;StartTime=[datetime]::Now;Path=(Join-Path $evidenceFull 'metatester64.exe')}) }\n"
+                "function Get-CimInstance { return @() }\n"
+                "Invoke-RunnerCaptured $evidenceFull @{} $evidenceFull\n"
+            )
+            result = self.run_helper('Invoke-RunnerCaptured', body, directory)
+            self.assertNotEqual(result.returncode, 0)
+            journal = [json.loads(x) for x in (directory / 'PROCESS_OBSERVATIONS.jsonl').read_text().splitlines()]
+            observed = [x for x in journal if x.get('pid') == 12]
+            self.assertGreaterEqual(len(observed), 2)
+            self.assertTrue(observed[0]['creation_time_utc'])
+            self.assertEqual(observed[-1]['observation_status'], 'INCOMPLETE')
+            receipt = json.loads((directory / (directory.name + '.PROCESS_OBSERVATIONS.json')).read_text(encoding='utf-8-sig'))
+            self.assertEqual(len(receipt['observations']), 2)
+
+    def test_full_set_preparation_preserves_frozen_assignments_and_binds_current_git(self):
+        with tempfile.TemporaryDirectory(prefix="mgtt_set_") as temp:
+            directory = Path(temp)
+            result = self.run_helper(
+                "Get-FullSetIdentity",
+                f"$RepoRoot={self.ps_quote(ROOT)}\n$evidenceFull={self.ps_quote(directory)}\n"
+                "$SourceCommit=(git -C $RepoRoot rev-parse HEAD).Trim()\n"
+                "$setRelative='ea_template/sets/regression/Boss_15_ST03_defaults.set'\n"
+                ". (Join-Path $RepoRoot 'scripts/lib/evidence.ps1')\n"
+                ". (Join-Path $RepoRoot 'scripts/lib/setfile_surface.ps1')\n"
+                ". (Join-Path $RepoRoot 'scripts/lib/build_receipt.ps1')\n"
+                "Get-FullSetIdentity | ConvertTo-Json -Depth 5\n", directory)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            info = json.loads(result.stdout)
+            self.assertEqual(info['fingerprint'], '7dfd909aa23a659dbf41b3bf4004e764b96fd62a4f106d53fb8290ac8efe92cc')
+            frozen = (directory / 'FROZEN_Boss_15_ST03_defaults.set').read_bytes()
+            self.assertEqual(frozen, git_bytes('show', 'HEAD:ea_template/sets/regression/Boss_15_ST03_defaults.set'))
+            rows = lambda data: [x for x in data.decode('utf-8-sig').splitlines() if x and not x.startswith(';')]
+            self.assertEqual(rows(frozen), rows(Path(info['path']).read_bytes()))
+
+    def test_durable_failure_missing_extra_and_short_lived_identity(self):
+        for case in ("valid", "missing", "extra", "short_lived", "historical"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory(prefix="mgtt_process_") as temp:
+                directory = Path(temp)
+                result = self.run_helper(
+                    "Complete-ProcessCapture",
+                    "$evidenceFull=" + self.ps_quote(directory) + "\n"
+                    "$start=[datetime]'2026-09-28T05:00:00Z'\n"
+                    "$t=@{path='D:\\Meta 5\\terminal64.exe';sha256=('a'*64)}\n"
+                    "$m=@{path='D:\\Meta 5\\metatester64.exe';sha256=('b'*64)}\n"
+                    "$rows=@(@{pid=11;creation_time_utc='2026-09-28T05:00:01Z';path=$t.path;sha256=$t.sha256;parent_pid=9;ancestry=@();observation_status='COMPLETE'},"
+                    "@{pid=12;creation_time_utc='2026-09-28T05:00:02Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@();observation_status='COMPLETE'})\n"
+                    + {"valid": "", "missing": "$rows=@($rows[0])\n", "extra": "$rows+=@{pid=13;creation_time_utc='2026-09-28T05:00:03Z';path=$m.path;sha256=$m.sha256;parent_pid=11;ancestry=@();observation_status='COMPLETE'}\n",
+                       "short_lived": "$rows[1].observation_status='EXITED_BEFORE_ENRICHMENT';$rows[1].sha256=$null\n",
+                       "historical": "$rows[1].creation_time_utc='2026-09-27T05:00:02Z'\n"}[case]
+                    + "Complete-ProcessCapture $rows $t $m $start 'CASE' | ConvertTo-Json -Depth 10\n",
+                    directory,
+                )
+                receipt = directory / "CASE.PROCESS_OBSERVATIONS.json"
+                self.assertTrue(receipt.exists(), result.stdout + result.stderr)
+                evidence = json.loads(receipt.read_text(encoding="utf-8-sig"))
+                self.assertEqual(len(evidence["observations"]), 1 if case == "missing" else 3 if case == "extra" else 2)
+                self.assertEqual(result.returncode == 0, case == "valid", result.stdout + result.stderr)
+                if case == "short_lived":
+                    row = evidence["observations"][1]
+                    self.assertEqual((row["pid"], row["creation_time_utc"], row["parent_pid"]), (12, "2026-09-28T05:00:02Z", 11))
+
+    def test_capture_flushes_before_validation_and_uses_no_historical_reconstruction(self):
+        source = (ROOT / "scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1").read_text(encoding="utf-8-sig")
+        capture = extract_balanced(source, "function Invoke-RunnerCaptured")
+        self.assertIn("Add-ProcessObservation", capture)
+        self.assertIn("finally", capture)
+        self.assertIn("Complete-ProcessCapture", capture)
+        helper = extract_balanced(source, "function Add-ProcessObservation")
+        self.assertIn("Flush($true)", helper)
+        validate = extract_balanced(source, "function Complete-ProcessCapture")
+        self.assertLess(validate.index("Write-Receipt"), validate.index("throw"))
+        self.assertNotIn("Get-Process", validate)
+        self.assertNotIn("Get-CimInstance", validate)
 
 
 class AdversarialLedgerTests(unittest.TestCase):
