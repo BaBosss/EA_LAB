@@ -79,20 +79,73 @@ function Trunc([string]$s, [int]$n) {
   return $cut + '...'
 }
 function Get-TaskboardHeaderStatus([string]$line) {
-  # Titles may contain backtick groups before the status. A group is a status only when its
-  # leading token is recognized; later prose (for example DONE blocked with reasons) cannot
-  # override that leading token.
-  foreach ($m in [regex]::Matches($line, '`([^`]+)`')) {
-    if ($m.Groups[1].Value -notmatch '^(OPEN-STANDING|RE-OPENED(?:=>OPEN)?|OPEN|BLOCKED(?:_[A-Z0-9][A-Z0-9_-]*)?|HOLD|CLAIMED|PARTIAL|DONE(?:_[A-Z0-9][A-Z0-9_-]*)?|CLOSED(?:_[A-Z0-9][A-Z0-9_-]*)?|REVIEWED(?:_[A-Z0-9][A-Z0-9_-]*)?|SKIPPED(?:_[A-Z0-9][A-Z0-9_-]*)?)(?=$|[\s(/:])') {
-      continue
-    }
-    $token = $Matches[1].ToUpperInvariant()
-    if ($token -in @('OPEN', 'OPEN-STANDING', 'RE-OPENED', 'RE-OPENED=>OPEN')) { return 'OPEN' }
-    foreach ($family in @('BLOCKED','HOLD','CLAIMED','PARTIAL','DONE','CLOSED','REVIEWED','SKIPPED')) {
-      if ($token -eq $family -or $token.StartsWith($family + '_')) { return $family }
+  # Match the canonical board vocabulary, with the same conservative precedence as
+  # check_taskboard_archive.ps1 and snapshot_build.py: any known nonterminal status wins over
+  # terminal status spans. Backtick spans are status-bearing only when the verb starts the span
+  # after punctuation/whitespace/emoji; digits are deliberately not skipped (for example the
+  # real `#1 + #3 DONE ...` ORDER-1269 span is progress prose, not a DONE status).
+  $nonterminal = @(
+    [pscustomobject]@{ Pattern = 'WAITING-USER'; Label = 'WAITING-USER' },
+    [pscustomobject]@{ Pattern = 'OPEN-STANDING'; Label = 'OPEN' },
+    [pscustomobject]@{ Pattern = 'RE-OPENED(?:=>OPEN)?'; Label = 'OPEN' },
+    [pscustomobject]@{ Pattern = 'IN-PROGRESS'; Label = 'IN-PROGRESS' },
+    [pscustomobject]@{ Pattern = 'BLOCKED(?:_[A-Z0-9][A-Z0-9_-]*)?'; Label = 'BLOCKED' },
+    [pscustomobject]@{ Pattern = 'WAITING'; Label = 'WAITING' },
+    [pscustomobject]@{ Pattern = 'CLAIMED'; Label = 'CLAIMED' },
+    [pscustomobject]@{ Pattern = 'RUNNING'; Label = 'RUNNING' },
+    [pscustomobject]@{ Pattern = 'PARKED'; Label = 'PARKED' },
+    [pscustomobject]@{ Pattern = 'PENDING'; Label = 'PENDING' },
+    [pscustomobject]@{ Pattern = 'PARTIAL'; Label = 'PARTIAL' },
+    [pscustomobject]@{ Pattern = 'HOLD'; Label = 'HOLD' },
+    [pscustomobject]@{ Pattern = 'OPEN'; Label = 'OPEN' }
+  )
+  $terminal = @(
+    'DONE-STOPPED-AT-STAGE-\d+',
+    'DONE-PHASE1',
+    'REVIEWED/CLOSED',
+    'BUILT\+FUNNELED',
+    'BUILT\+CLOSED',
+    'STAGE2-DONE',
+    'REVIEWED(?:_[A-Z0-9][A-Z0-9_-]*)?',
+    'DONE(?:_[A-Z0-9][A-Z0-9_-]*)?',
+    'CLOSED(?:_[A-Z0-9][A-Z0-9_-]*)?',
+    'SKIPPED(?:_[A-Z0-9][A-Z0-9_-]*)?',
+    'BUILT',
+    'FUNNELED'
+  )
+
+  $backtickMatches = [regex]::Matches($line, '`([^`]+)`')
+  $searchSpaces = if ($backtickMatches.Count -gt 0) {
+    @($backtickMatches | ForEach-Object { $_.Groups[1].Value })
+  } else {
+    @($line)
+  }
+  $patternPrefix = if ($backtickMatches.Count -gt 0) {
+    '^[^A-Za-z0-9]*(?:'
+  } else {
+    '(?<![A-Za-z0-9_-])(?:'
+  }
+  $patternSuffix = ')(?![A-Za-z0-9_-])'
+
+  foreach ($statusText in $searchSpaces) {
+    foreach ($status in $nonterminal) {
+      $pattern = $patternPrefix + $status.Pattern + $patternSuffix
+      if ($statusText -cmatch $pattern) { return $status.Label }
     }
   }
-  return $null
+
+  # Inline code can split one logical terminal status across spans. Preserve the established
+  # narrow attributed-REVIEWED exception, but only after the nonterminal scan above.
+  foreach ($statusText in $searchSpaces) {
+    if ($statusText -cmatch '^[^A-Za-z0-9]*REVIEWED\s*[(/]') { return 'TERMINAL' }
+  }
+  foreach ($statusText in $searchSpaces) {
+    foreach ($status in $terminal) {
+      $pattern = $patternPrefix + $status + $patternSuffix
+      if ($statusText -cmatch $pattern) { return 'TERMINAL' }
+    }
+  }
+  return 'UNPARSEABLE'
 }
 
 $now    = Get-Date -Format "yyyy-MM-dd HH:mm"
@@ -185,20 +238,19 @@ try {
 # ---- order queues from the logical active board plus the legacy merge board ---
 $openRows = @(); $reviewedCount = 0
 foreach ($l in $boardLines) {
-  if ($l -notmatch '^## ((ORDER|MERGE)-[A-Za-z0-9\-]+)') { continue }
+  if ($l -notmatch '^## ((ORDER|MERGE)-[A-Za-z0-9_-]+)') { continue }
   $id = $Matches[1]
   $status = Get-TaskboardHeaderStatus $l
-  if (-not $status) { continue }
-  if ($status -in @('DONE','CLOSED','REVIEWED','SKIPPED')) { $reviewedCount++; continue }
+  if ($status -eq 'TERMINAL') { $reviewedCount++; continue }
   # title = text between the first and second em-dash separators
   $title = $l -replace '^## \S+\s+', ''
   $parts = $title -split ([char]0x2014)   # em dash
   if ($parts.Count -ge 2) { $title = $parts[1] } else { $title = $parts[0] }
   $title = StripMd ($title -replace '`[^`]*`$','')
   $cls = 't-open'
-  if ($status -eq 'CLAIMED') { $cls = 't-claim' }
-  if ($status -eq 'PARTIAL') { $cls = 't-done' }
-  if ($status -in @('BLOCKED','HOLD')) { $cls = 't-user' }
+  if ($status -in @('CLAIMED','RUNNING','IN-PROGRESS')) { $cls = 't-claim' }
+  if ($status -in @('PARTIAL','PARKED')) { $cls = 't-done' }
+  if ($status -in @('BLOCKED','HOLD','WAITING-USER','WAITING','PENDING','UNPARSEABLE')) { $cls = 't-user' }
   $openRows += ("<tr><td class='mono'>" + (HtmlEnc $id) + "</td><td><span class='tag " + $cls + "'>" +
                 $status + "</span></td><td>" + (HtmlEnc (Trunc $title 100)) + "</td></tr>")
 }

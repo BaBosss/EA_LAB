@@ -2,7 +2,7 @@ param([string]$RepoRoot = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $ErrorActionPreference = 'Stop'
 $fixture = Join-Path ([IO.Path]::GetTempPath()) ('status-authority-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path "$fixture/scripts/lib","$fixture/portfolio","$fixture/.git" | Out-Null
-foreach ($name in @('make_status_html.ps1','status_template.html','lib/repo_paths.ps1')) {
+foreach ($name in @('make_status_html.ps1','status_template.html','lib/repo_paths.ps1','lib/taskboard_source.ps1')) {
   Copy-Item -LiteralPath (Join-Path "$RepoRoot/scripts" $name) -Destination (Join-Path "$fixture/scripts" $name)
 }
 # Stub only unrelated monitoring readers; the deployment generator and template are real.

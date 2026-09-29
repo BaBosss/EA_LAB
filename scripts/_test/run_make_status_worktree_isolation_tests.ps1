@@ -33,7 +33,8 @@ WHY THIS EXISTS
   G. an anchor with no .git anywhere above it FAILS EXPLICITLY (non-zero exit, thrown error text
      naming the failure) -- not a silent "D:\EA_LAB" fallback.
   H. STATUS.html consumes a split active-taskboard manifest plus the separate merge board, counts
-     only nonterminal status rows, sees USER-ACTION in an active part, and remains isolated.
+     known nonterminal and fail-visible UNPARSEABLE rows in the open queue, sees USER-ACTION in an
+     active part, and remains isolated.
 
 ASCII-only on purpose (Windows PowerShell 5.1 reads a BOM-less .ps1 as ANSI).
 USAGE  powershell -NoProfile -File scripts\_test\run_make_status_worktree_isolation_tests.ps1
@@ -250,6 +251,14 @@ Assert-True  'G no D:\EA_LAB fallback file was created next to the no-git fixtur
 Write-Host ''
 Write-Host '=== H: split active taskboard + merge board feed STATUS.html without weakening isolation ==='
 $split = New-Fixture 'split' '## ORDER-FIXTURE-LEGACY-0004 -- `OPEN` -- overwritten by split manifest'
+$constructionEmoji = [char]::ConvertFromUtf32(0x1F6A7)
+# Exact UTF-8 active-board headers, Base64-encoded so this deliberately ASCII-only PowerShell
+# source remains safe under Windows PowerShell 5.1's ANSI reading of BOM-less .ps1 files.
+$realOrder045 = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('IyMgT1JERVItMDQ1IOKAlCBNVDQgZGVtbyBleHBlcmltZW50ICMyOiBVbk5vbUd1YWkgKyBSU0kgZnJvbSBwaXBzICjguITguLnguYgsIOC4muC4seC4jeC4iuC4teC5g+C4q+C4oeC5iCkg4oCUIGBXQUlUSU5HLVVTRVIgKGF0dGFjaCkg4oaSIOC5geC4peC5ieC4p+C4hOC5iOC4reC4ouC5gOC4m+C5h+C4mSBtb25pdG9yaW5nIGxvb3BgIMK3ICoq4LmA4LiI4LmJ4Liy4LiC4Lit4LiHOiB1c2VyIChhdHRhY2gpICsgQ2xhdWRlIChqdWRnZSkqKiBfKOC4reC4reC4gSAyMDI2LTA3LTA3IOC4q+C4peC4seC4hyB1c2VyIOC4reC4meC4uOC4oeC4seC4leC4tClf'))
+$realOrder1269 = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('IyMgT1JERVItMTI2OSDigJQgW2ZhY3RvcnkvUzJdIFRoZSBhcHByb3ZhbCB0aGF0IGF1dGhvcmlzZXMgdGhlIENvdmVyYWdlIHRyYW5zZmVyIGJpbmRzIGFuIGV2b2x2aW5nIHdob2xlIHN0b3JlLCBhbmQgdGhlIG93bmVyJ3Mgb3duIGhhbmRvdXQgdGVsbHMgdGhlbSB0byB3ZWFrZW4gaXRzIGNoZWNrZXIg4oCUIGAjMSArICMzIERPTkUgMjAyNi0wOC0wNGAgKGxhbmUgYFMtMjAyNi0wOC0wNC1DT1JSRUNUM2A6IGBlMjcyYTM0YmAgIzMgZmlyc3QgZm9ybSDCtyBgZGRmMzE1M2ZgICMxICsgIzMgcmV3b3JrZWQgwrcgYDkyOWYzYjE4YCB0aGUgdGllciB3aXJpbmcpIMK3ICoqIzIgYW5kICM0IHN0aWxsIE9QRU4qKiDCtyDguJfguLPguYTguJTguYk6IENsYXVkZS9PcHVzIChjb3JyZWN0aW9ucyBsYW5lKSDCtyDwn5GJIOC5geC4meC4sDogQ2xhdWRl'))
+$realOrder162 = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('IyMgT1JERVItMTYyIOKAlCBbaW52ZXN0aWdhdGlvbl0gfn5NVDUgdGVzdGVyIGVuZ2luZSBkcmlmdH5+IOKGkiAqKlJPT1QgQ0FVU0UgPSBsZXZlcmFnZSB1bnBpbm5hYmxlICsgbWFyZ2luLWdhdGUqKiAo4LmE4Lih4LmI4LmD4LiK4LmIIGVuZ2luZSBkcmlmdCkg4oCUIGBSRVNPTFZFRChDbGF1ZGUgMjAyNi0wNy0yMyDguKPguK3guJogMykg4oCUIOC5gOC4q+C4peC4t+C4reC5gOC4qOC4qeC5gOC4peC5h+C4gSAxIOC4reC4ouC5iOC4suC4h+C4ouC4seC4h+C4hOC5ieC4suC4hyDCtyDguYHguJXguIHguYDguJvguYfguJkgT1JERVItMTY1IChUMCBibG9ja2VyKWA='))
+$realOrder215 = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('IyMgT1JERVItMjE1IOKAlCBb8J+UtCDguYDguIfguLTguJnguIjguKPguLTguIcgwrcgaW50ZWdyaXR5XSBNYXRjaGFHcmlkIENIRkpQWTogdmVyZGljdCBDT1JFIOC4reC5ieC4suC4hyBnZW5ldGljIHJ1biDguJfguLXguYjguYTguKHguYjguKHguLUgZmluZS1zdGFnZSDigJQgYFBBUlQgMSBET05FKENsYXVkZS9PcHVzIDIwMjYtMDctMjUpIMK3IFBBUlQgMiBDVVRMT1NTLVFVRVNUSU9OIERPTkUoQ2xhdWRlL1Nvbm5ldCAyMDI2LTA3LTI2KTogImJvdW5kZWQrU0wiIOC4luC4reC4meC5geC4peC5ieC4pyDigJQgc2FmZXR5IHN3aXRjaCDguYTguKHguYjguJXguK3guJrguKrguJnguK3guIcgwrcgcmUtbWVhc3VyZSBmdW5uZWwg4Lii4Lix4LiHIE9QRU5g'))
+$realOrderDemoReplay = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('IyMgT1JERVItREVNTy1TQU1FUEVSSU9ELVJFUExBWS0yMDI2MDkxNSDigJQgW3Jlc2VhcmNoL2RpYWdub3N0aWNdIERlbW8gdnMgc2FtZS1wZXJpb2QgZnJvemVuLWJ1bmRsZSByZXBsYXkg4oCUIGBFWEVDVVRFRCAvIERPQ1VNRU5URURfV0lUSF9CTE9DS0VSUyAvIEVYQUNUX1BBUklUWV9OT1RfQ0VSVElGSUFCTEVg'))
 New-Item -ItemType Directory -Path (Join-Path $split 'taskboards\active') -Force | Out-Null
 [System.IO.File]::WriteAllLines((Join-Path $split 'AGENT_TASKBOARD.md'), [string[]]@(
     '# Split fixture manifest',
@@ -263,6 +272,20 @@ New-Item -ItemType Directory -Path (Join-Path $split 'taskboards\active') -Force
     '## ORDER-SPLIT-BLOCKED-1002 -- `BLOCKED_C_ENVIRONMENT_DEPENDENCY` -- rendered blocked row',
     '## ORDER-SPLIT-PARTIAL-1003 -- `PARTIAL` -- rendered partial row',
     '## ORDER-SPLIT-DONE-1004 -- `DONE blocked with reasons retained for history` -- terminal row',
+    $realOrder045,
+    '## ORDER-SPLIT-WAITING-1006 -- `WAITING` -- rendered waiting row',
+    '## ORDER-SPLIT-INPROGRESS-1007 -- `IN-PROGRESS(worker)` -- rendered in-progress row',
+    '## ORDER-SPLIT-RUNNING-1008 -- `RUNNING` -- rendered running row',
+    '## ORDER-SPLIT-PARKED-1009 -- `PARKED` -- rendered parked row',
+    '## ORDER-SPLIT-PENDING-1010 -- `PENDING` -- rendered pending row',
+    ("## ORDER-SPLIT-EMOJI-OPEN-1011 -- ``$constructionEmoji OPEN`` -- leading-symbol OPEN row"),
+    '## ORDER-SPLIT-BLOCKEDREVIEW-1012 -- `BLOCKED_REVIEW` -- rendered as BLOCKED',
+    '## ORDER-SPLIT-NOBT-OPEN-1013 -- legacy header OPEN pending owner response',
+    '## ORDER-SPLIT-NOBT-DONE-1014 -- legacy header DONE(2026-09-29)',
+    '## ORDER-SPLIT-REVIEWED-HOLDOUT-1015 -- `REVIEWED(2026-09-29) -- holdout remains unspent` -- terminal row',
+    '## ORDER-SPLIT-REVIEWED-QUESTION-1016 -- `REVIEWED(2026-09-29) -- open question retained` -- terminal row',
+    '## ORDER-SPLIT-DONE-REVIEWED-1017 -- `DONE(2026-09-29, `abc123`) + REVIEWED(2026-09-29)` -- terminal split-code row',
+    '## ORDER-SPLIT-DONE-THEN-OPEN-1018 -- `DONE` -- `OPEN` -- nonterminal span wins',
     'USER-ACTION: split active part requires owner input'
 ), (New-Object System.Text.UTF8Encoding($false)))
 [System.IO.File]::WriteAllLines((Join-Path $split 'taskboards\active\Z-mixed.md'), [string[]]@(
@@ -276,7 +299,22 @@ New-Item -ItemType Directory -Path (Join-Path $split 'taskboards\active') -Force
     '## ORDER-SPLIT-REVIEWEDVAR-1012 -- `REVIEWED_FINAL` -- terminal reviewed variant',
     '## ORDER-SPLIT-SKIPPED-1013 -- `SKIPPED` -- terminal skipped row',
     '## ORDER-SPLIT-SKIPPEDVAR-1014 -- `SKIPPED_FINAL` -- terminal skipped variant',
-    '## ORDER-SPLIT-NONSTATUS-1015 -- `implementation blocked with reasons` -- not a status group'
+    '## ORDER-SPLIT-DONESTAGE-1015 -- `DONE-STOPPED-AT-STAGE-2` -- terminal canonical composite',
+    '## ORDER-SPLIT-DONEPHASE-1016 -- `DONE-PHASE1` -- terminal canonical composite',
+    '## ORDER-SPLIT-REVIEWEDCLOSED-1017 -- `REVIEWED/CLOSED` -- terminal canonical composite',
+    '## ORDER-SPLIT-BUILTFUNNELED-1018 -- `BUILT+FUNNELED` -- terminal canonical composite',
+    '## ORDER-SPLIT-BUILTCLOSED-1019 -- `BUILT+CLOSED` -- terminal canonical composite',
+    '## ORDER-SPLIT-STAGE2DONE-1020 -- `STAGE2-DONE` -- terminal canonical composite',
+    '## ORDER-SPLIT-BUILT-1021 -- `BUILT` -- terminal canonical row',
+    '## ORDER-SPLIT-FUNNELED-1022 -- `FUNNELED` -- terminal canonical row',
+    '## ORDER-SPLIT-NONSTATUS-1023 -- `implementation blocked with reasons` -- unknown span is fail-visible',
+    $realOrder1269,
+    $realOrder215,
+    $realOrderDemoReplay,
+    '## ORDER-SPLIT-STATUSLESS-1024 -- active order with no classifiable status',
+    '## ORDER-SPLIT_STATUSLESS-1025 -- underscore-bearing active id with no classifiable status',
+    '## ORDER-SPLIT-PROSE-REVIEWED-1026 -- `prose REVIEWED(Claude)` -- not a status at span start',
+    $realOrder162
 ), (New-Object System.Text.UTF8Encoding($false)))
 Set-Content -LiteralPath (Join-Path $split 'AGENT_TASKBOARD_MERGE.md') -Encoding UTF8 -Value @(
     '# Separate legacy merge board',
@@ -295,25 +333,77 @@ $splitHtml = if (Test-Path (Join-Path $split 'STATUS.html')) {
 } else { '' }
 
 Assert-Equal 'H split-manifest STATUS.html generation exits 0' 0 $r.ExitCode
-foreach ($id in @(
+$expectedOpenIds = @(
     'ORDER-SPLIT-OPEN-1001', 'ORDER-SPLIT-BLOCKED-1002', 'ORDER-SPLIT-PARTIAL-1003',
+    'ORDER-045', 'ORDER-SPLIT-WAITING-1006',
+    'ORDER-SPLIT-INPROGRESS-1007', 'ORDER-SPLIT-RUNNING-1008',
+    'ORDER-SPLIT-PARKED-1009', 'ORDER-SPLIT-PENDING-1010',
+    'ORDER-SPLIT-EMOJI-OPEN-1011', 'ORDER-SPLIT-BLOCKEDREVIEW-1012',
+    'ORDER-SPLIT-NOBT-OPEN-1013', 'ORDER-SPLIT-DONE-THEN-OPEN-1018',
     'ORDER-SPLIT-REOPENED-1005', 'ORDER-SPLIT-OPENSTANDING-1006',
-    'ORDER-SPLIT-CLAIMED-1007', 'MERGE-SPLIT-HOLD-2001'
-)) {
-    Assert-True "H nonterminal row $id is rendered" ($splitHtml -match [regex]::Escape($id))
+    'ORDER-SPLIT-CLAIMED-1007', 'MERGE-SPLIT-HOLD-2001',
+    'ORDER-SPLIT-NONSTATUS-1023', 'ORDER-1269', 'ORDER-215',
+    'ORDER-DEMO-SAMEPERIOD-REPLAY-20260915', 'ORDER-SPLIT-STATUSLESS-1024',
+    'ORDER-SPLIT_STATUSLESS-1025', 'ORDER-SPLIT-PROSE-REVIEWED-1026', 'ORDER-162'
+)
+foreach ($id in $expectedOpenIds) {
+    Assert-True "H nonterminal/unparseable row $id is rendered" ($splitHtml -match [regex]::Escape($id))
 }
-foreach ($id in @(
+$expectedKnownStatuses = [ordered]@{
+    'ORDER-SPLIT-OPEN-1001'           = 'OPEN'
+    'ORDER-SPLIT-BLOCKED-1002'        = 'BLOCKED'
+    'ORDER-SPLIT-PARTIAL-1003'        = 'PARTIAL'
+    'ORDER-045'                       = 'WAITING-USER'
+    'ORDER-SPLIT-WAITING-1006'        = 'WAITING'
+    'ORDER-SPLIT-INPROGRESS-1007'     = 'IN-PROGRESS'
+    'ORDER-SPLIT-RUNNING-1008'        = 'RUNNING'
+    'ORDER-SPLIT-PARKED-1009'         = 'PARKED'
+    'ORDER-SPLIT-PENDING-1010'        = 'PENDING'
+    'ORDER-SPLIT-EMOJI-OPEN-1011'     = 'OPEN'
+    'ORDER-SPLIT-BLOCKEDREVIEW-1012'  = 'BLOCKED'
+    'ORDER-SPLIT-NOBT-OPEN-1013'      = 'OPEN'
+    'ORDER-SPLIT-DONE-THEN-OPEN-1018' = 'OPEN'
+    'ORDER-SPLIT-REOPENED-1005'       = 'OPEN'
+    'ORDER-SPLIT-OPENSTANDING-1006'   = 'OPEN'
+    'ORDER-SPLIT-CLAIMED-1007'        = 'CLAIMED'
+    'MERGE-SPLIT-HOLD-2001'           = 'HOLD'
+}
+foreach ($id in $expectedKnownStatuses.Keys) {
+    $encodedId = [regex]::Escape($id)
+    $encodedStatus = [regex]::Escape($expectedKnownStatuses[$id])
+    Assert-True "H known status $id is classified $($expectedKnownStatuses[$id])" (
+        $splitHtml -match "<td class='mono'>$encodedId</td><td><span class='tag [^']+'>$encodedStatus</span>"
+    )
+}
+$expectedTerminalIds = @(
     'ORDER-SPLIT-DONE-1004', 'ORDER-SPLIT-DONEVAR-1008',
+    'ORDER-SPLIT-NOBT-DONE-1014', 'ORDER-SPLIT-REVIEWED-HOLDOUT-1015',
+    'ORDER-SPLIT-REVIEWED-QUESTION-1016', 'ORDER-SPLIT-DONE-REVIEWED-1017',
     'ORDER-SPLIT-CLOSED-1009', 'ORDER-SPLIT-CLOSEDVAR-1010',
     'ORDER-SPLIT-REVIEWED-1011', 'ORDER-SPLIT-REVIEWEDVAR-1012',
     'ORDER-SPLIT-SKIPPED-1013', 'ORDER-SPLIT-SKIPPEDVAR-1014',
-    'ORDER-SPLIT-NONSTATUS-1015'
-)) {
-    Assert-True "H terminal/nonstatus row $id is absent from the open queue" ($splitHtml -notmatch [regex]::Escape($id))
+    'ORDER-SPLIT-DONESTAGE-1015', 'ORDER-SPLIT-DONEPHASE-1016',
+    'ORDER-SPLIT-REVIEWEDCLOSED-1017', 'ORDER-SPLIT-BUILTFUNNELED-1018',
+    'ORDER-SPLIT-BUILTCLOSED-1019', 'ORDER-SPLIT-STAGE2DONE-1020',
+    'ORDER-SPLIT-BUILT-1021', 'ORDER-SPLIT-FUNNELED-1022'
+)
+foreach ($id in $expectedTerminalIds) {
+    Assert-True "H terminal row $id is absent from the open queue" ($splitHtml -notmatch [regex]::Escape($id))
 }
-$splitRenderedRows = [regex]::Matches($splitHtml, '<td class=''mono''>(?:ORDER|MERGE)-SPLIT-[A-Z0-9-]+</td>').Count
-Assert-Equal 'H rendered open-row count equals the seven nonterminal rows' 7 $splitRenderedRows
-Assert-True  'H OPEN_COUNT is exactly seven' ($splitHtml -match '<div class="n" style="color:var\(--blue\)">7</div>')
+foreach ($id in @(
+    'ORDER-SPLIT-NONSTATUS-1023', 'ORDER-1269', 'ORDER-215',
+    'ORDER-DEMO-SAMEPERIOD-REPLAY-20260915', 'ORDER-SPLIT-STATUSLESS-1024',
+    'ORDER-SPLIT_STATUSLESS-1025', 'ORDER-SPLIT-PROSE-REVIEWED-1026', 'ORDER-162'
+)) {
+    $encodedId = [regex]::Escape($id)
+    Assert-True "H unparseable row $id has warning/red status" (
+        $splitHtml -match "<td class='mono'>$encodedId</td><td><span class='tag t-user'>UNPARSEABLE</span>"
+    )
+}
+$splitRenderedRows = [regex]::Matches($splitHtml, '<td class=''mono''>(?:ORDER|MERGE)-[A-Z0-9_-]+</td>').Count
+Assert-Equal 'H rendered open-row count equals every known nonterminal plus UNPARSEABLE row' $expectedOpenIds.Count $splitRenderedRows
+$expectedOpenCountMarkup = '<div class="n" style="color:var(--blue)">' + $expectedOpenIds.Count + '</div>'
+Assert-True  'H OPEN_COUNT includes every known nonterminal plus UNPARSEABLE row' ($splitHtml.Contains($expectedOpenCountMarkup))
 Assert-True  'H USER-ACTION text from an active part is rendered' ($splitHtml -match 'split active part requires owner input')
 Assert-True  'H USER_ACTION_COUNT is exactly one' ($splitHtml -match '<div class="n" style="color:var\(--red\)">1</div>')
 Assert-Equal 'H isolated split run leaves fake OneDrive BYTE-IDENTICAL' $splitOneDriveHashBefore (Hash $splitOneDrive)
