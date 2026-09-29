@@ -13,9 +13,9 @@ param(
   [string]$RepoRoot = '',
   [string]$EvidenceRoot = '',
   [Parameter(Mandatory)][string]$SourceCommit,
-  [string]$ExpectedParent = 'b9531886c5d2a4e5194684462cf66bd30035e588',
-  [string]$LaneId = 'ct-news-macro-mgtt-capture-normalization-v2-20260928',
-  [string]$RuntimeLeaseLaneId = 'ct-mgtt-capture-normalization-v2-native-runtime-20260928',
+  [string]$ExpectedParent = '9147e4545ff6d4568a5d9d3d4b883ed832fc2cdd',
+  [string]$LaneId = 'ct-news-macro-mgtt-runner-handle-retention-v3-20260928',
+  [string]$RuntimeLeaseLaneId = 'ct-mgtt-runner-handle-retention-v3-native-runtime-20260928',
   [string]$RuntimeLeaseRecordId = '',
   [string]$RegistryRoot = 'D:\EA_LAB_CONTROL\lanes\registry-v1',
   [string]$Terminal = 'D:\Meta 5\terminal64.exe',
@@ -36,10 +36,13 @@ if (!$RuntimeLeaseRecordId) { $RuntimeLeaseRecordId = $RuntimeLeaseLaneId }
 . (Join-Path $RepoRoot 'scripts\lib\report_freshness.ps1')
 
 $frozenControl = 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac'
-$admissionBaseTree = '7e817204ed82dc0f35c1d33a2600f84248b2e9d6'
+$admissionBaseTree = '1b0a45c014a25969679dd59c0c88218e47a7ac33'
 $historicalPrefix = 'D:\EA_LAB_CONTROL\evidence\mg-tester-transfer-impl-v1-20260927'
-$predecessorEvidencePrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928'
-$externalPrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-capture-normalization-v2-20260928'
+$a1EvidencePrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928'
+$predecessorEvidencePrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-capture-normalization-v2-20260928'
+$externalPrefix = 'D:\EA_LAB_CONTROL\evidence\mgtt-runner-handle-retention-v3-20260928'
+$handleRcaPath = 'D:\EA_LAB_CONTROL\evidence\mgtt-runner-exit-handle-rca-20260928\CT_RUNNER_EXIT_HANDLE_RCA.json'
+$currentOwnerAuthoritySha256 = 'f7f556d073d0d8aceaea6f4e2ee15d71c6670e839541c48226aa6f5a131168e4'
 if (!$EvidenceRoot) { $EvidenceRoot = Join-Path $externalPrefix ('requal-' + $SourceCommit.Substring(0,12) + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss')) }
 $evidenceFull = [IO.Path]::GetFullPath($EvidenceRoot)
 $externalFull = [IO.Path]::GetFullPath($externalPrefix).TrimEnd('\') + '\'
@@ -99,11 +102,11 @@ function Assert-CurrentContractIdentity(
   [string]$PredecessorEvidenceRoot,
   [string]$CurrentEvidenceRoot
 ) {
-  $requiredBase='b9531886c5d2a4e5194684462cf66bd30035e588'
-  $requiredLane='ct-news-macro-mgtt-capture-normalization-v2-20260928'
-  $requiredRuntime='ct-mgtt-capture-normalization-v2-native-runtime-20260928'
-  $requiredPredecessor='D:\EA_LAB_CONTROL\evidence\mgtt-shortlived-tester-identity-v1-20260928'
-  $requiredCurrent='D:\EA_LAB_CONTROL\evidence\mgtt-capture-normalization-v2-20260928'
+  $requiredBase='9147e4545ff6d4568a5d9d3d4b883ed832fc2cdd'
+  $requiredLane='ct-news-macro-mgtt-runner-handle-retention-v3-20260928'
+  $requiredRuntime='ct-mgtt-runner-handle-retention-v3-native-runtime-20260928'
+  $requiredPredecessor='D:\EA_LAB_CONTROL\evidence\mgtt-capture-normalization-v2-20260928'
+  $requiredCurrent='D:\EA_LAB_CONTROL\evidence\mgtt-runner-handle-retention-v3-20260928'
   if(
     $AdmissionBase -cne $requiredBase -or
     $SourceLane -cne $requiredLane -or
@@ -129,14 +132,14 @@ function Assert-ExactSourceCommit {
   if ($LASTEXITCODE -ne 0 -or $head -cne $SourceCommit) { throw "REFUSE: HEAD must equal SourceCommit $SourceCommit" }
   $parents=@((& git -C $RepoRoot rev-list --parents -n 1 $SourceCommit 2>$null) -split ' ')
   if ($LASTEXITCODE -ne 0 -or $parents.Count -ne 2 -or $parents[1] -cne $ExpectedParent) { throw 'REFUSE: SourceCommit must be the single immediate child of the owner-frozen admission base' }
-  if ($ExpectedParent -cne 'b9531886c5d2a4e5194684462cf66bd30035e588') { throw 'REFUSE: wrong owner-frozen admission base' }
+  if ($ExpectedParent -cne '9147e4545ff6d4568a5d9d3d4b883ed832fc2cdd') { throw 'REFUSE: wrong owner-frozen admission base' }
   if ((& git -C $RepoRoot rev-parse ($ExpectedParent+'^{tree}')).Trim() -cne $admissionBaseTree) { throw 'REFUSE: admission base tree mismatch' }
   & git -C $RepoRoot merge-base --is-ancestor $frozenControl $ExpectedParent 2>$null
   if ($LASTEXITCODE -ne 0) { throw 'REFUSE: frozen control is not an ancestor of the admission base' }
   $dirty=@(& git -C $RepoRoot status --porcelain=v1 --untracked-files=all 2>$null)
   if ($LASTEXITCODE -ne 0 -or $dirty.Count -ne 0) { throw 'REFUSE: exact-source qualification requires a completely clean SourceCommit worktree' }
   $changed=@(& git -C $RepoRoot diff --name-only ($ExpectedParent+'..'+$SourceCommit) 2>$null)
-  if ($LASTEXITCODE -ne 0 -or $changed.Count -ne $allowedRepairPaths.Count) { throw 'REFUSE: V2 lineage delta must contain exactly the two declared paths' }
+  if ($LASTEXITCODE -ne 0 -or $changed.Count -ne $allowedRepairPaths.Count) { throw 'REFUSE: V3 lineage delta must contain exactly the two declared paths' }
   foreach($path in $changed) { if ($allowedRepairPaths -cnotcontains $path) { throw "REFUSE: final commit changes an undeclared path $path" } }
   foreach($path in $allowedRepairPaths) { if ($changed -cnotcontains $path) { throw "REFUSE: final commit is missing declared path $path" } }
   $behavioral=@(& git -C $RepoRoot diff --name-only ($frozenControl+'..'+$SourceCommit) -- ea_template 2>$null | Where-Object { $_ -match '^(ea_template/(core|modules|generated)/|ea_template/Boss_.*\.mq5$|ea_template/EA_LabTemplate\.mq5$)' })
@@ -262,28 +265,59 @@ if __name__ == '__main__':
 function Invoke-OfflineValidation {
   $contractIdentity=Assert-CurrentContractIdentity -AdmissionBase $ExpectedParent -SourceLane $LaneId -RuntimeLogicalLane $RuntimeLeaseLaneId -RuntimeRecordLane $RuntimeLeaseRecordId -PredecessorEvidenceRoot $predecessorEvidencePrefix -CurrentEvidenceRoot $externalPrefix
   $currentOwnerAuthorityPath=Join-Path $externalPrefix 'OWNER_AUTHORITY_20260928.json'
-  $currentContractPath=Join-Path $externalPrefix 'CONTRACT_FROZEN_20260928.json'
-  $predecessorPins=@(
+  $a1Pins=@(
     @('a1-closeout\A1_DURABLE_CHECKPOINT.json','c75d153511a529884141a542a5ba433ad90128065719d4e24b6439a29c94ed19'),
     @('a1-closeout\A1_FINAL_RECONCILIATION.json','5e8e4e55614bf642aca3fc8312b8df07dfe5122a616e19ab90f732ee41b00268'),
     @('a1-native-campaign\POSITIVE_GOLDEN_REAL.PROCESS_OBSERVATIONS.json','e9b0cec4c20bf8064cc8905f64ea62bf2b4c5968275d37cf66eef3ea7baf5ffe'),
     @('a1-native-campaign\POSITIVE_GOLDEN_REAL\POSITIVE_GOLDEN_REAL.RUNNER_EXIT.json','e7b0ed1c89b688e3c45750540b0c3c43d820c79a600eb48709958c8fe4ad58c6')
   )
-  foreach($path in @($contractPath,$expectationPath,$sourceBindingPath,$originalAuthPath,$repairAuthPath,$tradeHeader,$currentOwnerAuthorityPath,$currentContractPath)){if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "REFUSE: required input missing $path"}}
+  $v2Pins=@(
+    @('CNV2_DURABLE_CHECKPOINT.json','52dffb679a96c7a7a61d132cadef716f6b2025946e1d40ecc79777b2a8d77d7f'),
+    @('CNV2_FINAL_RECONCILIATION.json','a00fa655a3b2864352fc849f9c7b2b9b8dba1e1342795ed30fe4a65e6a0ea736'),
+    @('CNV2_EVIDENCE_MANIFEST.json','30bf20119b4a258cae90903b09837e271f49e98a0429d1ffb2a9aed4a6d55f7f')
+  )
+  foreach($path in @($contractPath,$expectationPath,$sourceBindingPath,$originalAuthPath,$repairAuthPath,$tradeHeader,$currentOwnerAuthorityPath,$handleRcaPath)){if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "REFUSE: required input missing $path"}}
   if((Get-Sha256 $originalAuthPath) -cne $originalAuthSha256 -or (Get-Sha256 $repairAuthPath) -cne $repairAuthSha256){throw 'REFUSE: owner authority bytes changed'}
   $source=Assert-ExactSourceCommit; $contract=Get-Content -Raw $contractPath|ConvertFrom-Json; $expectations=Get-Content -Raw $expectationPath|ConvertFrom-Json; $binding=Get-Content -Raw $sourceBindingPath|ConvertFrom-Json; $auth=Get-Content -Raw $originalAuthPath|ConvertFrom-Json; $repair=Get-Content -Raw $repairAuthPath|ConvertFrom-Json
   if($contract.schema -ne 'macrogate_tester_transfer_prospective_implementation_contract/2' -or !$auth.authorized_implementation -or $auth.authorized_performance){throw 'REFUSE: original implementation authority mismatch'}
   if($repair.schema -ne 'mgtt_precommit_exact_tree_owner_authority/1' -or $repair.repair_parent -ne '5845c4e039a3d9ef57e6997af42655a3d854d34e' -or $repair.current_control -ne $frozenControl -or $repair.performance_authorized){throw 'REFUSE: historical Repair1 owner authority mismatch'}
-  foreach($pin in $predecessorPins) {
-    if((Get-Sha256 (Join-Path $predecessorEvidencePrefix $pin[0])) -cne $pin[1]){throw "REFUSE: predecessor A1 evidence drift $($pin[0])"}
+  foreach($pin in $a1Pins) {
+    if((Get-Sha256 (Join-Path $a1EvidencePrefix $pin[0])) -cne $pin[1]){throw "REFUSE: predecessor A1 evidence drift $($pin[0])"}
   }
-  if((Get-Sha256 $currentOwnerAuthorityPath) -cne '7b49bbb22cfa85691212532cf3cc8ed125576fad815c8ed7b507a5f8585522cd' -or (Get-Sha256 $currentContractPath) -cne 'e39a5c5de3ad2e2137049cd807a573ceb3bef799fe5e12192ff9866d8a382289'){throw 'REFUSE: current V2 authority/contract bytes changed'}
+  foreach($pin in $v2Pins) {
+    $path=Join-Path $predecessorEvidencePrefix $pin[0]
+    if(!(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Sha256 $path) -cne $pin[1]){throw "REFUSE: predecessor V2 evidence drift $($pin[0])"}
+  }
+  if((Get-Sha256 $handleRcaPath) -cne 'c4c26ac8b37ac30e69b7957f80baaf016efca5355ddac23ae826024fc739abe7'){throw 'REFUSE: accepted Process.Handle RCA bytes changed'}
+  if((Get-Sha256 $currentOwnerAuthorityPath) -cne $currentOwnerAuthoritySha256){throw 'REFUSE: current V3 authority bytes changed'}
   $currentAuthority=Get-Content -Raw $currentOwnerAuthorityPath|ConvertFrom-Json
-  $currentContract=Get-Content -Raw $currentContractPath|ConvertFrom-Json
-  $allowedMutations=@($currentContract.allowed_repo_mutations)
-  if($currentAuthority.schema -cne 'mgtt_capture_normalization_v2_owner_authority/1' -or $currentAuthority.owner_decision -cne 'APPROVED' -or $currentAuthority.predecessor_lane -cne 'ct-news-macro-mgtt-shortlived-tester-identity-v1-20260928' -or $currentAuthority.predecessor_head -cne $ExpectedParent -or $currentAuthority.predecessor_tree -cne $admissionBaseTree -or $currentAuthority.predecessor_native_budget -cne 'SPENT_NO_RETRY'){throw 'REFUSE: current V2 owner authority mismatch'}
-  if($currentContract.schema -cne 'mgtt_capture_normalization_v2_contract/1' -or $currentContract.contract_id -cne 'MGTT-CAPTURE-NORMALIZATION-V2-20260928' -or $currentContract.lane_id -cne $LaneId -or $currentContract.base_commit -cne $ExpectedParent -or $currentContract.base_tree -cne $admissionBaseTree -or $currentContract.canonical_control_at_freeze -cne $frozenControl -or $currentContract.owner_authority_sha256.ToLowerInvariant() -cne '7b49bbb22cfa85691212532cf3cc8ed125576fad815c8ed7b507a5f8585522cd' -or $currentContract.runtime_lane -cne 'MT5-lane1' -or $currentContract.evidence_root -ine $externalPrefix -or $allowedMutations.Count -ne $allowedRepairPaths.Count){throw 'REFUSE: current V2 frozen contract lineage mismatch'}
-  foreach($path in $allowedRepairPaths){if($allowedMutations -cnotcontains $path){throw "REFUSE: V2 frozen contract missing allowed path $path"}}
+  $v2Checkpoint=Get-Content -Raw (Join-Path $predecessorEvidencePrefix 'CNV2_DURABLE_CHECKPOINT.json')|ConvertFrom-Json
+  $allowedMutations=@($currentAuthority.allowlisted_source_paths)
+  $authorizedCases=@($currentAuthority.native_budget.cases)
+  if(
+    $currentAuthority.schema -cne 'mgtt_runner_process_handle_retention_v3_owner_authority/1' -or
+    $currentAuthority.contract_id -cne 'MGTT-RUNNER-PROCESS-HANDLE-RETENTION-V3-20260928' -or
+    $currentAuthority.fresh_canonical_at_receipt -cne $frozenControl -or
+    $currentAuthority.exact_base_commit -cne $ExpectedParent -or
+    $currentAuthority.exact_base_tree -cne $admissionBaseTree -or
+    $currentAuthority.predecessor_lane -cne 'ct-news-macro-mgtt-capture-normalization-v2-20260928' -or
+    $currentAuthority.predecessor_native_budget -cne 'SPENT_NO_RETRY' -or
+    [int]$currentAuthority.author_budget.final_author_commits -ne 1 -or
+    [int]$currentAuthority.native_budget.campaigns -ne 1 -or
+    [int]$currentAuthority.native_budget.retry_campaigns -ne 0 -or
+    $currentAuthority.native_budget.runtime_lane -cne 'MT5-lane1' -or
+    $currentAuthority.authority_ceiling.self_review -ne $false -or
+    $currentAuthority.authority_ceiling.worker_push -ne $false -or
+    $currentAuthority.authority_ceiling.performance -cne 'NOT_AUTHORIZED' -or
+    $currentAuthority.authority_ceiling.bwd -cne 'NOT_AUTHORIZED' -or
+    $currentAuthority.authority_ceiling.holdout -cne 'LOCKED_UNSPENT' -or
+    $currentAuthority.authority_ceiling.live_or_trading -cne 'NOT_AUTHORIZED' -or
+    $allowedMutations.Count -ne $allowedRepairPaths.Count -or
+    $authorizedCases.Count -ne 4
+  ){throw 'REFUSE: current V3 owner authority mismatch'}
+  foreach($path in $allowedRepairPaths){if($allowedMutations -cnotcontains $path){throw "REFUSE: V3 authority missing allowed path $path"}}
+  foreach($case in @('POSITIVE_GOLDEN_REAL','MISSING','WRONG_SAME_METADATA','STALE_TRUNCATED_COPY')){if($authorizedCases -cnotcontains $case){throw "REFUSE: V3 authority missing native case $case"}}
+  if($v2Checkpoint.contract_id -cne 'MGTT-CAPTURE-NORMALIZATION-V2-20260928' -or $v2Checkpoint.lane_id -cne $currentAuthority.predecessor_lane -or $v2Checkpoint.author_head -cne $ExpectedParent -or $v2Checkpoint.author_tree -cne $admissionBaseTree -or $v2Checkpoint.native_budget_state -cne 'SPENT_NO_RETRY'){throw 'REFUSE: predecessor V2 checkpoint identity mismatch'}
   foreach($immutable in @('ea_template/core/Inputs.mqh','ea_template/core/ConfigFingerprint.mqh')) { $expected=@($binding.source_files|Where-Object path -eq $immutable); $bytes=Get-GitBytes $SourceCommit $immutable; if($expected.Count -ne 1 -or (Get-BytesSha256 $bytes) -ne $expected[0].sha256){throw "REFUSE: immutable source drift $immutable"} }
   $feeds=@(); foreach($entry in $expectations.entries){$facts=Get-FeedFacts (Join-Path $RepoRoot $entry.source_path);if($facts.sha256 -ne $entry.sha256 -or $facts.bytes -ne [int64]$entry.bytes -or $facts.rows -ne [int]$entry.rows -or $facts.first -ne $entry.first -or $facts.last -ne $entry.last){throw "REFUSE: feed identity mismatch $($entry.filename)"};$feeds+=[ordered]@{filename=$entry.filename;facts=$facts}}
   $closure=Get-CompileClosure; if(@($closure.vendor|Where-Object path -eq $tradeHeader).Count -ne 1 -or (Get-Sha256 $tradeHeader) -ne '96e6781624534377fe7971cba52cca3d62d1b030bc10d5e4ebf3ed8c541399ed'){throw 'REFUSE: vendor Trade.mqh identity changed'}; $set=Get-FullSetIdentity
@@ -500,15 +534,27 @@ function Write-DurableRunnerGateJson([string]$Path,[object]$Value) {
   try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
   return (Get-Content -Raw -LiteralPath $Path|ConvertFrom-Json)
 }
-function Write-RunnerExitReceipt([string]$CaseRoot,[string]$CaseId,[object]$RunnerPid,[object]$RunnerCreation,[object]$ExitCode,[string]$StdoutPath,[string]$StderrPath) {
-  $exitAvailable=[bool]($ExitCode -is [int]);$source=if($exitAvailable){'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT'}else{'UNAVAILABLE_FAIL_CLOSED'}
+function Write-RunnerExitReceipt([string]$CaseRoot,[string]$CaseId,[object]$RunnerPid,[object]$RunnerCreation,[object]$ExitCode,[string]$StdoutPath,[string]$StderrPath,[object]$HandleState=$null) {
+  $handleStatus=if($null -ne $HandleState){[string]$HandleState.status}else{'UNAVAILABLE'}
+  $handleBasis=if($null -ne $HandleState){[string]$HandleState.evidence_basis}else{'UNAVAILABLE'}
+  $handleType=if($null -ne $HandleState){[string]$HandleState.value_type}else{$null}
+  $handleNonzero=[bool]($null -ne $HandleState -and $HandleState.nonzero)
+  $handleError=if($null -ne $HandleState){$HandleState.error}else{'handle state was not supplied'}
+  $handleAcquired=[bool]($handleStatus -ceq 'ACQUIRED' -and $handleBasis -ceq 'PROCESS_HANDLE_PROPERTY_IMMEDIATE_AFTER_START_PROCESS' -and $handleType -ceq 'System.IntPtr' -and $handleNonzero)
+  $exitAvailable=[bool]($handleAcquired -and ($ExitCode -is [int]));$source=if($exitAvailable){'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT'}else{'UNAVAILABLE_FAIL_CLOSED'}
   $stdoutPresent=[bool]($StdoutPath -and (Test-Path -LiteralPath $StdoutPath -PathType Leaf));$stderrPresent=[bool]($StderrPath -and (Test-Path -LiteralPath $StderrPath -PathType Leaf))
   $receipt=[ordered]@{
-    schema='mgtt_runner_exit/1';case=$CaseId;recorded_utc=[datetime]::UtcNow.ToString('o')
-    runner=[ordered]@{pid=$RunnerPid;creation_time_utc=$RunnerCreation;exit_code=$ExitCode;exit_code_available=$exitAvailable;exit_code_source=$source}
+    schema='mgtt_runner_exit/2';case=$CaseId;recorded_utc=[datetime]::UtcNow.ToString('o')
+    runner=[ordered]@{
+      pid=$RunnerPid;creation_time_utc=$RunnerCreation
+      owned_process_identity='SAME_START_PROCESS_OBJECT_PID_CREATION_HANDLE_EXIT'
+      handle_acquisition_status=$handleStatus;handle_acquired=$handleAcquired;handle_evidence_basis=$handleBasis
+      handle_value_type=$handleType;handle_nonzero=$handleNonzero;handle_value_persisted=$false;handle_acquisition_error=$handleError
+      exit_code=$ExitCode;exit_code_available=$exitAvailable;exit_code_type=if($exitAvailable){$ExitCode.GetType().FullName}else{$null};exit_code_source=$source
+    }
     stdout=[ordered]@{path=$StdoutPath;present=$stdoutPresent;sha256=if($stdoutPresent){Get-Sha256 $StdoutPath}else{$null}}
     stderr=[ordered]@{path=$StderrPath;present=$stderrPresent;sha256=if($stderrPresent){Get-Sha256 $StderrPath}else{$null}}
-    evidence_policy=[ordered]@{stdout_text_used_for_exit_code=$false;report_presence_used_for_exit_code=$false;current_process_snapshot_used_for_exit_code=$false}
+    evidence_policy=[ordered]@{stdout_text_used_for_exit_code=$false;report_presence_used_for_exit_code=$false;current_process_snapshot_used_for_exit_code=$false;unrelated_last_exit_code_used=$false}
   }
   return Write-DurableRunnerGateJson (Join-Path $CaseRoot ($CaseId+'.RUNNER_EXIT.json')) $receipt
 }
@@ -519,41 +565,58 @@ function Write-RunnerGateReceipt([string]$CaseRoot,[string]$SourceCommit,[string
   $creationProperty=$Runner.PSObject.Properties['runner_creation_time_utc'];$runnerCreation=if($null -ne $creationProperty){$creationProperty.Value}else{$null}
   $stdoutProperty=$Runner.PSObject.Properties['stdout'];$stdoutPath=if($null -ne $stdoutProperty){[string]$stdoutProperty.Value}else{$null}
   $stderrProperty=$Runner.PSObject.Properties['stderr'];$stderrPath=if($null -ne $stderrProperty){[string]$stderrProperty.Value}else{$null}
+  $handleStatusProperty=$Runner.PSObject.Properties['handle_acquisition_status'];$handleStatus=if($null -ne $handleStatusProperty){[string]$handleStatusProperty.Value}else{'UNAVAILABLE'}
+  $handleBasisProperty=$Runner.PSObject.Properties['handle_evidence_basis'];$handleBasis=if($null -ne $handleBasisProperty){[string]$handleBasisProperty.Value}else{'UNAVAILABLE'}
+  $handleTypeProperty=$Runner.PSObject.Properties['handle_value_type'];$handleType=if($null -ne $handleTypeProperty){[string]$handleTypeProperty.Value}else{$null}
+  $handleNonzeroProperty=$Runner.PSObject.Properties['handle_nonzero'];$handleNonzero=[bool]($null -ne $handleNonzeroProperty -and $handleNonzeroProperty.Value)
   $stdoutPresent=[bool]($stdoutPath -and (Test-Path -LiteralPath $stdoutPath -PathType Leaf));$stderrPresent=[bool]($stderrPath -and (Test-Path -LiteralPath $stderrPath -PathType Leaf));$reportPresent=[bool](Test-Path -LiteralPath $ReportPath -PathType Leaf)
-  $exitAvailable=[bool](($exitCode -is [int]) -and $exitSource -ceq 'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT')
+  $handleRetained=[bool]($handleStatus -ceq 'ACQUIRED' -and $handleBasis -ceq 'PROCESS_HANDLE_PROPERTY_IMMEDIATE_AFTER_START_PROCESS' -and $handleType -ceq 'System.IntPtr' -and $handleNonzero)
+  $exitAvailable=[bool]($handleRetained -and ($exitCode -is [int]) -and $exitSource -ceq 'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT')
   $exitZero=[bool]($exitAvailable -and $exitCode -eq 0);$predicatePass=[bool]($exitZero -and $reportPresent -and $ReportFresh)
   $receiptPath=Join-Path $CaseRoot ($CaseId+'.RUNNER_GATE.json')
   $receipt=[ordered]@{
-    schema='mgtt_runner_gate/1';source_commit=$SourceCommit;source_tree=$SourceTree;case=$CaseId;recorded_utc=[datetime]::UtcNow.ToString('o');receipt_path=$receiptPath
-    runner=[ordered]@{pid=$runnerPid;creation_time_utc=$runnerCreation;exit_code=$exitCode;exit_code_available=$exitAvailable;exit_code_source=$exitSource}
+    schema='mgtt_runner_gate/2';source_commit=$SourceCommit;source_tree=$SourceTree;case=$CaseId;recorded_utc=[datetime]::UtcNow.ToString('o');receipt_path=$receiptPath
+    runner=[ordered]@{pid=$runnerPid;creation_time_utc=$runnerCreation;handle_acquisition_status=$handleStatus;handle_evidence_basis=$handleBasis;handle_value_type=$handleType;handle_nonzero=$handleNonzero;exit_code=$exitCode;exit_code_available=$exitAvailable;exit_code_type=if($exitAvailable){$exitCode.GetType().FullName}else{$null};exit_code_source=$exitSource}
     stdout=[ordered]@{path=$stdoutPath;present=$stdoutPresent;sha256=if($stdoutPresent){Get-Sha256 $stdoutPath}else{$null}}
     stderr=[ordered]@{path=$stderrPath;present=$stderrPresent;sha256=if($stderrPresent){Get-Sha256 $stderrPath}else{$null}}
     report=[ordered]@{expected_path=$ReportPath;present=$reportPresent;sha256=if($reportPresent){Get-Sha256 $ReportPath}else{$null};fresh_for_exact_runner_exit=[bool]$ReportFresh}
-    predicate=[ordered]@{runner_exit_available=$exitAvailable;runner_exit_zero=$exitZero;report_present=$reportPresent;report_fresh=[bool]$ReportFresh;pass=$predicatePass}
+    predicate=[ordered]@{runner_handle_retained=$handleRetained;runner_exit_available=$exitAvailable;runner_exit_zero=$exitZero;report_present=$reportPresent;report_fresh=[bool]$ReportFresh;pass=$predicatePass}
     guard_outcome=if($predicatePass){'PASS'}else{'FAIL_CLOSED'}
-    evidence_policy=[ordered]@{stdout_text_used_for_exit_code=$false;current_process_snapshot_used_for_exit_code=$false;report_presence_substituted_for_exit_zero=$false}
+    evidence_policy=[ordered]@{stdout_text_used_for_exit_code=$false;current_process_snapshot_used_for_exit_code=$false;report_presence_substituted_for_exit_zero=$false;unrelated_last_exit_code_used=$false}
   }
   $readback=Write-DurableRunnerGateJson $receiptPath $receipt
-  if($readback.schema -cne 'mgtt_runner_gate/1' -or $readback.source_commit -cne $SourceCommit -or $readback.source_tree -cne $SourceTree -or $readback.case -cne $CaseId){throw 'REFUSE: runner gate receipt durable read-back mismatch'}
+  if($readback.schema -cne 'mgtt_runner_gate/2' -or $readback.source_commit -cne $SourceCommit -or $readback.source_tree -cne $SourceTree -or $readback.case -cne $CaseId){throw 'REFUSE: runner gate receipt durable read-back mismatch'}
   return $readback
 }
 function Assert-PositiveRunnerReportGate([object]$Receipt) {
-  if($Receipt.schema -cne 'mgtt_runner_gate/1' -or !$Receipt.predicate.runner_exit_available -or !$Receipt.predicate.runner_exit_zero -or !$Receipt.predicate.report_present -or !$Receipt.predicate.report_fresh -or !$Receipt.predicate.pass -or $Receipt.guard_outcome -cne 'PASS'){throw 'PROBE_FAIL positive runner/report'}
+  if($Receipt.schema -cne 'mgtt_runner_gate/2' -or !$Receipt.predicate.runner_handle_retained -or !$Receipt.predicate.runner_exit_available -or !$Receipt.predicate.runner_exit_zero -or !$Receipt.predicate.report_present -or !$Receipt.predicate.report_fresh -or !$Receipt.predicate.pass -or $Receipt.guard_outcome -cne 'PASS'){throw 'PROBE_FAIL positive runner/report'}
 }
 function Invoke-RunnerCaptured([string]$RunnerRoot,[hashtable]$Arguments,[string]$CaseRoot) {
   $commandPath=Write-RunnerInvocation $RunnerRoot $Arguments $CaseRoot;$stdout=Join-Path $CaseRoot 'runner.stdout.log';$stderr=Join-Path $CaseRoot 'runner.stderr.log'
   $expectedTerminal=Get-ExecutableIdentity $Terminal
   $expectedTester=Get-ExecutableIdentity (Join-Path (Split-Path $Terminal -Parent) 'metatester64.exe')
   Write-Receipt ((Split-Path $CaseRoot -Leaf)+'.PROCESS_EXPECTATIONS.json') ([ordered]@{terminal=$expectedTerminal;metatester=$expectedTester;command_sha256=(Get-Sha256 $commandPath);arguments_sha256=(Get-Sha256 (Join-Path $CaseRoot 'runner_arguments.clixml'))})|Out-Null
-  $journal=Join-Path $CaseRoot 'PROCESS_OBSERVATIONS.jsonl';$seen=@{};$launchUtc=[datetime]::UtcNow;$process=$null;$captureError=$null;$runnerPid=$null;$runnerCreation=$null;$runnerExitCode=$null;$runnerExitReceipt=$null;$captured=$null
+  $journal=Join-Path $CaseRoot 'PROCESS_OBSERVATIONS.jsonl';$seen=@{};$launchUtc=[datetime]::UtcNow;$process=$null;$runnerHandle=$null;$captureError=$null;$runnerPid=$null;$runnerCreation=$null;$runnerExitCode=$null;$runnerExitReceipt=$null;$runnerHandleReleaseReceipt=$null;$captured=$null;$runnerResult=$null
+  $handleState=[pscustomobject][ordered]@{status='NOT_ATTEMPTED';evidence_basis='PROCESS_HANDLE_PROPERTY_IMMEDIATE_AFTER_START_PROCESS';value_type=$null;nonzero=$false;error=$null}
   # Lock the selected executables for the entire observation interval. Hash once
   # before launch; never spend a short tester lifetime hashing its executable.
   $binaryLocks=Open-ReadShareOnly @($expectedTerminal.path,$expectedTester.path)
   try {
     foreach($expected in @($expectedTerminal,$expectedTester)){if((Get-Sha256 $expected.path) -cne $expected.sha256){throw 'REFUSE: executable changed before launch'}}
     $process=Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoLogo','-NoProfile','-File',$commandPath) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -WindowStyle Hidden -PassThru
+    # Windows PowerShell 5.1 can lose ExitCode after a redirected, non-Wait
+    # Start-Process unless the exact owned Process opens and retains its Handle.
+    # Acquire it before any polling while keeping the same Process object alive.
+    try {
+      $runnerHandle=$process.Handle
+      if($null -eq $runnerHandle -or !($runnerHandle -is [IntPtr]) -or $runnerHandle -eq [IntPtr]::Zero){throw 'Process.Handle was null, non-IntPtr, or zero'}
+      $handleState.status='ACQUIRED';$handleState.value_type=$runnerHandle.GetType().FullName;$handleState.nonzero=$true
+    } catch {
+      $handleState.status='FAILED';$handleState.error=$_.Exception.Message
+      $captureError='runner handle acquisition failed: '+$handleState.error
+    }
     $runnerPid=$process.Id;$runnerCreation=$process.StartTime.ToUniversalTime().ToString('o')
-    Add-ProcessObservation $journal ([ordered]@{kind='RUNNER';pid=$runnerPid;creation_time_utc=$runnerCreation;launch_utc=$launchUtc.ToString('o')})
+    Add-ProcessObservation $journal ([ordered]@{kind='RUNNER';pid=$runnerPid;creation_time_utc=$runnerCreation;launch_utc=$launchUtc.ToString('o');handle_acquisition_status=$handleState.status;handle_evidence_basis=$handleState.evidence_basis})
     do {
       foreach($row in @(Get-EarlyProcessSnapshot $expectedTerminal $expectedTester $launchUtc $journal)){
         $key=[string]$row.identity_key
@@ -564,17 +627,50 @@ function Invoke-RunnerCaptured([string]$RunnerRoot,[hashtable]$Arguments,[string
       }
       if(!$process.HasExited){Start-Sleep -Milliseconds 5}
     }while(!$process.HasExited)
-    $process.WaitForExit();$runnerExitCode=$process.ExitCode
-  }catch{$captureError=$_.Exception.Message;if($null -ne $process){try{$process.WaitForExit();$runnerExitCode=$process.ExitCode}catch{}}}finally {
+    $process.WaitForExit()
+    if($handleState.status -ceq 'ACQUIRED'){
+      $candidateExitCode=$process.ExitCode
+      if($candidateExitCode -is [int]){$runnerExitCode=$candidateExitCode}else{
+        $message='runner ExitCode unavailable or non-numeric after retained owned handle'
+        $captureError=if($captureError){$captureError+'; '+$message}else{$message}
+      }
+    }
+  }catch{
+    $message=$_.Exception.Message;$captureError=if($captureError){$captureError+'; '+$message}else{$message}
+    if($null -ne $process){try{$process.WaitForExit()}catch{$captureError+='; WaitForExit failed: '+$_.Exception.Message}}
+  }finally {
     foreach($handle in $binaryLocks){$handle.Dispose()}
   }
   $caseId=Split-Path $CaseRoot -Leaf
   # Exit provenance is independent of selected-process acceptance. Flush it
   # before Complete-ProcessCapture can refuse a missing/ambiguous identity.
-  $runnerExitReceipt=Write-RunnerExitReceipt $CaseRoot $caseId $runnerPid $runnerCreation $runnerExitCode $stdout $stderr
-  try{$captured=Complete-ProcessCapture @($seen.Values) $expectedTerminal $expectedTester $launchUtc $caseId}catch{if(!$captureError){$captureError=$_.Exception.Message}}
-  if($captureError){throw ('REFUSE: capture failed '+$captureError)}
-  return [pscustomobject]@{runner_pid=$runnerPid;runner_creation_time_utc=$runnerCreation;exit_code=$runnerExitCode;exit_code_source=if($runnerExitCode -is [int]){'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT'}else{'UNAVAILABLE_FAIL_CLOSED'};runner_exit_receipt=$runnerExitReceipt;stdout=$stdout;stderr=$stderr;stdout_sha256=(Get-Sha256 $stdout);stderr_sha256=(Get-Sha256 $stderr);command_path=$commandPath;command_sha256=(Get-Sha256 $commandPath);terminal_processes=$captured.terminal_processes;metatester_processes=$captured.metatester_processes}
+  try {
+    $runnerExitReceipt=Write-RunnerExitReceipt $CaseRoot $caseId $runnerPid $runnerCreation $runnerExitCode $stdout $stderr $handleState
+    try{$captured=Complete-ProcessCapture @($seen.Values) $expectedTerminal $expectedTester $launchUtc $caseId}catch{$message=$_.Exception.Message;$captureError=if($captureError){$captureError+'; '+$message}else{$message}}
+    if($captureError){throw ('REFUSE: capture failed '+$captureError)}
+    $runnerResult=[pscustomobject][ordered]@{
+      runner_pid=$runnerPid;runner_creation_time_utc=$runnerCreation
+      handle_acquisition_status=$handleState.status;handle_evidence_basis=$handleState.evidence_basis;handle_value_type=$handleState.value_type;handle_nonzero=$handleState.nonzero
+      exit_code=$runnerExitCode;exit_code_source=if($runnerExitCode -is [int]){'OWNED_RUNNER_PROCESS_AFTER_WAITFOREXIT'}else{'UNAVAILABLE_FAIL_CLOSED'}
+      runner_exit_receipt=$runnerExitReceipt;runner_handle_release_receipt=$null
+      stdout=$stdout;stderr=$stderr;stdout_sha256=(Get-Sha256 $stdout);stderr_sha256=(Get-Sha256 $stderr);command_path=$commandPath;command_sha256=(Get-Sha256 $commandPath)
+      terminal_processes=$captured.terminal_processes;metatester_processes=$captured.metatester_processes
+    }
+  } finally {
+    if($null -ne $process){
+      $releaseStatus='NOT_DISPOSABLE_TEST_DOUBLE';$releaseError=$null
+      try {
+        if($process -is [IDisposable]){$process.Dispose();$releaseStatus='DISPOSED_AFTER_DURABLE_EXIT_EVIDENCE'}
+        elseif($null -ne $process.PSObject.Methods['Dispose']){$process.Dispose();$releaseStatus='DISPOSED_AFTER_DURABLE_EXIT_EVIDENCE'}
+      } catch {$releaseStatus='DISPOSE_FAILED';$releaseError=$_.Exception.Message}
+      $runnerHandle=$null
+      $release=[ordered]@{schema='mgtt_runner_handle_release/1';case=$caseId;runner_pid=$runnerPid;runner_creation_time_utc=$runnerCreation;status=$releaseStatus;error=$releaseError;exit_receipt_path=(Join-Path $CaseRoot ($caseId+'.RUNNER_EXIT.json'));recorded_utc=[datetime]::UtcNow.ToString('o')}
+      $runnerHandleReleaseReceipt=Write-DurableRunnerGateJson (Join-Path $CaseRoot ($caseId+'.RUNNER_HANDLE_RELEASE.json')) $release
+      if($releaseStatus -eq 'DISPOSE_FAILED' -and $null -ne $runnerResult){throw ('REFUSE: owned runner Process disposal failed '+$releaseError)}
+    }
+  }
+  $runnerResult.runner_handle_release_receipt=$runnerHandleReleaseReceipt
+  return $runnerResult
 }
 function Assert-EventStream([string]$Text,[string]$Session,[bool]$Positive) {
   $events=@();$seen=@{};foreach($line in $Text -split "`r?`n"){if($line -match '\[MGTT\] event=(\S+) session=(\S+) seq=(\d+) (.*)$'){$event=[pscustomobject]@{event=$Matches[1];session=$Matches[2];seq=[int64]$Matches[3];fields=$Matches[4]};$key=$event.session+'|'+$event.seq;$signature=$event.event+'|'+$event.fields;if($seen.ContainsKey($key)){if($seen[$key] -cne $signature){throw "PROBE_FAIL conflicting mirrored event $key"};continue};$seen[$key]=$signature;$events+=$event}};if($events.Count -eq 0){throw 'PROBE_FAIL no MGTT event stream in exact log slices'}
