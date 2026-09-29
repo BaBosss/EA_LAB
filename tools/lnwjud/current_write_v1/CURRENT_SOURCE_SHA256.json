@@ -1,0 +1,66 @@
+{
+  "schema": "lnwjud_write_v1_current_source_hashes/1",
+  "contract_id": "LNWJUD-WRITE-V1-SAFETY-CLOSURE-S1-20260929",
+  "base": "b06320999f98aeefb33329971eee03405524e5af",
+  "predecessor_head": "77ff2529e3e43dd4a502d0b00afcf44bfd58d571",
+  "algorithm": "SHA256",
+  "scope": "Exact final UTF-8 source/doc bytes for the S1 author commit",
+  "self_hash_excluded": "tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json",
+  "files": [
+    {
+      "path": "docs/handoffs/LNWJUD_WRITE_V1_20260928.md",
+      "sha256": "4260de4c79345ed3cefe684d7c969ba8bffcfd0cdd245e768bb5746b69a09b2b",
+      "bytes": 7065
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs",
+      "sha256": "0ee04a04ba1a2ee5482363fa0a7aac86ba0b8cb4a7decd7bee5a2cbb90abddb1",
+      "bytes": 43447
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/README.md",
+      "sha256": "8d955d15f68aa7e67bfc5ae24fdec40d5686207c90169ff0684e9ba7c1e83bd5",
+      "bytes": 5454
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/build_snapshot.py",
+      "sha256": "8ff87aa743498754745c8e59807a8e00618164458ae25d25dc32abe7cb0d75ff",
+      "bytes": 13608
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/install_tasks.ps1",
+      "sha256": "431df2a8643c9ddeb18bbd902b69cc6273c8577c76a4bc8d29567fa220735950",
+      "bytes": 4269
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/refresh_write_v1_snapshot.ps1",
+      "sha256": "38a8bcd58b38be1c007c5b178fa594e83769171b0fb1b3e666720a05b6d59b36",
+      "bytes": 3261
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/start_write_v1.ps1",
+      "sha256": "5c243e2ad465237107837e7ae8abfe234cd9c740201f2a3592437e2b336cf07b",
+      "bytes": 18806
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/test_write_v1.cjs",
+      "sha256": "13612443fbf401bf6b168e54a992a0a0f4fbbce3a08046da722a444c79c068cb",
+      "bytes": 3975
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/test_write_v1_repair1.cjs",
+      "sha256": "e9a8e846cff8b87612ee6fb6b5463e10a73e462a320e4cd28662b50b6433a779",
+      "bytes": 3962
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/test_write_v1_safety_s1.ps1",
+      "sha256": "33be3220c42171d95a7ff39937019a51482be9e3a5522fc20bfd0969c0f7e6ee",
+      "bytes": 14937
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs",
+      "sha256": "754776f4a5e06c5589996258444005bd8b298b96747e9bd29fc8cc524ed7e739",
+      "bytes": 2895
+    }
+  ]
+}
