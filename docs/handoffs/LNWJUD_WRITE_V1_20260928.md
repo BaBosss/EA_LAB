@@ -77,3 +77,28 @@ S1 adds behavioral fixtures for owned, foreign, spoofed-extra-argument, PID/crea
 An already-open ChatGPT conversation may retain the connector tool catalog loaded at chat start. The tunnel route is already on Write V1, but fresh-chat/reload acceptance is required to prove the five new tool names are surfaced to the owner-facing client.
 
 Scope closure does not grant commit/push, process, Registry, MT5, deployment, trading, risk/default, HOLDOUT, Candidate, or LIVE authority.
+
+## Owner-approved Amendment A1 — source prepared, runtime not activated
+
+Amendment A1 closes the five findings from the S1 independent review without changing the accepted Current Read V2 bundle or any historical receipt:
+
+- process/listener discovery now completes a supported full inventory before filtering and distinguishes confirmed-empty from unavailable/denied;
+- termination pins and retains the actual `System.Diagnostics.Process` OS handle across creation/executable/argv validation and terminates only through that object, so an exited process cannot retarget a reused PID;
+- `source_bound_gateway_loader.cjs` validates and evaluates the same gateway buffer and exposes its startup-bound identity; route adoption checks that identity before and after readiness for both Write V1 and the unchanged V2 fallback;
+- task creation/readback/rollback is bound to one invocation UUID plus exact action, trigger, principal, description and exported task-definition SHA256; a visible replacement is not deleted;
+- application variables no longer collide with automatic `$PROFILE` or `$Matches`.
+
+Task rollback uses immediate exact-identity readback followed by the Windows Task Scheduler delete-by-name API. This prevents deletion of replacements visible at readback under the authorized one-writer model, but it is not represented as an OS-atomic compare-and-delete: a non-cooperating replacement in the final readback/delete interval cannot be excluded by that API.
+
+Runtime preparation after integration and targeted independent PASS is mechanical only: deploy `start_write_v1.ps1`, `source_bound_gateway_loader.cjs`, `refresh_write_v1_snapshot.ps1`, and `install_tasks.ps1` to `D:\EA_LAB_CONTROL\lnwjud-write-v1-20260928`; deploy the Write gateway as `EA_LAB_CurrentWrite_V1_HTTP_Gateway.bundle.cjs`; retain the accepted V2 mapping `D:\EA_LAB_CONTROL\lnwjud-current-read-v2-20260922\EA_LAB_CurrentRead_V2_HTTP_Gateway.bundle.cjs`. The loader invocations are `<node> <loader> <V2 bundle> <V2 SHA256>` on port 18767 and `<node> <loader> <Write bundle> <Write SHA256>` on port 18768. The only intended task identities remain `EA_LAB_LNWJUD_WriteV1` (logon supervisor) and `EA_LAB_LNWJUD_WriteV1_Refresh` (10-minute refresh), created together by one invocation UUID. Do not install or start them before integration and independent PASS.
+
+Current A1 runtime-source hashes (final UTF-8 bytes before CT intake) are:
+
+- supervisor `start_write_v1.ps1`: `89f4c40ebde4afa3679bcf17eb3184b960f1fd902b04b99822b7d99ef9db399b`;
+- source-bound loader `source_bound_gateway_loader.cjs`: `06593b76abd45e53ec691455c70b9e7486d34b487eb846510d8dd0a2cfaca505`;
+- task installer `install_tasks.ps1`: `af718e9860912731e6eb7f9463b7db63d1fb14d5ca40bf02bf405b8689344426`;
+- refresh writer `refresh_write_v1_snapshot.ps1`: `38a8bcd58b38be1c007c5b178fa594e83769171b0fb1b3e666720a05b6d59b36`;
+- unchanged Write gateway source: `0ee04a04ba1a2ee5482363fa0a7aac86ba0b8cb4a7decd7bee5a2cbb90abddb1`;
+- unchanged accepted external V2 fallback bundle pin: `c8dd4c130398c7dd192c48edeef53d836a739583df569b492a5b4b170a6958b1`.
+
+`CURRENT_SOURCE_SHA256.json` is the complete A1 source/doc byte manifest and remains authoritative for every allowed repository file covered by this amendment.

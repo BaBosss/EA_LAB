@@ -41,6 +41,7 @@ try {
   const here = __dirname;
   const supervisor = fs.readFileSync(path.join(here, 'start_write_v1.ps1'), 'utf8');
   assert.match(supervisor, /function Get-ExactProcessIdentity/);
+  assert.match(supervisor, /function Open-ExactOwnedProcess/);
   assert.match(supervisor, /function Stop-ExactOwnedProcess/);
   assert.match(supervisor, /function Get-ExactTunnelProcesses/);
   assert.match(supervisor, /function Get-ExactOwnedListenerIdentity/);
@@ -50,15 +51,18 @@ try {
   assert.doesNotMatch(supervisor, /ExpectedCommandToken/);
   assert.match(supervisor, /ExpectedTunnelSha/);
   assert.match(supervisor, /ExpectedNodeSha/);
+  assert.match(supervisor, /ExpectedGatewayLoaderSha/);
+  assert.doesNotMatch(supervisor, /Get-(?:CimInstance|NetTCPConnection)[^\r\n]*SilentlyContinue/i);
 
   const installer = fs.readFileSync(path.join(here, 'install_tasks.ps1'), 'utf8');
-  assert.doesNotMatch(installer, /\/Create[^\r\n]*\/F/i);
+  assert.doesNotMatch(installer, /Register-ScheduledTask[^\r\n]*-Force/i);
   assert.match(installer, /existing WriteV1 Scheduled Task requires explicit ownership reconciliation/);
   assert.match(installer, /Remove-CreatedTask/);
   assert.match(installer, /rollback absence verification failed/);
   assert.match(installer, /task installation failed:.*rollback failed:/);
-  assert.match(installer, /createdRefresh/);
-  assert.match(installer, /createdStart/);
+  assert.match(installer, /DefinitionSha256/);
+  assert.match(installer, /InvocationId/);
+  assert.doesNotMatch(installer, /\$matches\b/i);
 
   const refresh = fs.readFileSync(path.join(here, 'refresh_write_v1_snapshot.ps1'), 'utf8');
   assert.match(refresh, /\.write-mutation\.lock/);
@@ -78,12 +82,33 @@ try {
   const safetyReceipt = JSON.parse(safety.stdout.trim().split(/\r?\n/).at(-1));
   assert.equal(safetyReceipt.result, 'PASS');
   assert.equal(safetyReceipt.runtime_activation, 'NOT_RUN');
-  assert.equal(safetyReceipt.checks, 37);
+  assert.equal(safetyReceipt.checks, 54);
+
+  const a1 = childProcess.spawnSync(
+    'powershell.exe',
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(here, 'test_write_v1_a1.ps1')],
+    {encoding: 'utf8', windowsHide: true}
+  );
+  assert.equal(a1.status, 0, `A1 behavioral test failed rc=${a1.status}: ${a1.stderr || a1.stdout}`);
+  const a1Receipt = JSON.parse(a1.stdout.trim().split(/\r?\n/).at(-1));
+  assert.equal(a1Receipt.result, 'PASS');
+  assert.equal(a1Receipt.runtime_activation, 'NOT_RUN');
+
+  const loader = childProcess.spawnSync(
+    process.execPath,
+    [path.join(here, 'test_source_bound_gateway_loader.cjs')],
+    {encoding:'utf8', windowsHide:true}
+  );
+  assert.equal(loader.status, 0, `Loader behavioral test failed rc=${loader.status}: ${loader.stderr || loader.stdout}`);
+  const loaderReceipt = JSON.parse(loader.stdout.trim().split(/\r?\n/).at(-1));
+  assert.equal(loaderReceipt.stale_script_still_listening_refused, true);
+  assert.equal(loaderReceipt.exact_byte_hash_drift_refused, true);
 
   console.log(JSON.stringify({
     result:'PASS',
     checks:'repair1-cas-plus-s1-process-listener-task-rollback',
-    behavioral_checks:safetyReceipt.checks,
+    behavioral_checks:safetyReceipt.checks + a1Receipt.checks,
+    source_bound_loader:'PASS',
     runtime_activation:'NOT_RUN'
   }, null, 2));
 } finally {

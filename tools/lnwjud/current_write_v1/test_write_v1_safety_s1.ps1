@@ -33,6 +33,7 @@ $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $nodePath = 'C:\Program Files\nodejs\node.exe'
 $nodeHash = '3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237'
 $gatewayPath = 'D:\EA_LAB_CONTROL\lnwjud-write-v1-20260928\EA_LAB_CurrentWrite_V1_HTTP_Gateway.bundle.cjs'
+$gatewayHash = '0ee04a04ba1a2ee5482363fa0a7aac86ba0b8cb4a7decd7bee5a2cbb90abddb1'
 $created = [datetime]'2026-09-29T01:02:03.456Z'
 
 function New-ProcessFixture(
@@ -109,8 +110,8 @@ Assert-Throws {
     -ProcessLookup $wrongPidLookup -HashLookup $hashLookup
 } 'process id mismatch' 'PID mismatch must fail closed'
 
-$stopCalls = [System.Collections.Generic.List[int]]::new()
-$stopAction = { param([int]$ExactProcessId) $stopCalls.Add($ExactProcessId) }.GetNewClosure()
+$stopCalls = [System.Collections.Generic.List[object]]::new()
+$stopAction = { param([Diagnostics.Process]$ExactProcess) $stopCalls.Add($ExactProcess) }.GetNewClosure()
 Assert-Throws {
   Stop-ExactOwnedProcess -ProcessId 4101 -CreationUtc $created `
     -ExpectedExe $nodePath -ExpectedSha $nodeHash -ExpectedArguments @($gatewayPath) `
@@ -126,30 +127,33 @@ Assert-Throws {
 } 'creation identity changed' 'creation mismatch must refuse force-stop'
 Assert-Equal $stopCalls.Count 0 'creation mismatch must not invoke force-stop'
 
-Stop-ExactOwnedProcess -ProcessId 4101 -CreationUtc $created `
-  -ExpectedExe $nodePath -ExpectedSha $nodeHash -ExpectedArguments @($gatewayPath) `
-  -PathArgumentIndexes @(0) -ProcessLookup $ownedLookup -HashLookup $hashLookup `
-  -StopAction $stopAction
-Assert-Equal $stopCalls.Count 1 'exact owned identity should invoke force-stop once'
-Assert-Equal $stopCalls[0] 4101 'force-stop should target the exact owned PID'
-
 $connectionLookup = {
   param([int]$Port)
   @([pscustomobject]@{ LocalPort = $Port; OwningProcess = 4101 })
 }
+$listenerRow = New-ProcessFixture -ProcessId 4101 `
+  -CommandLine ('"{0}" "{1}" "{2}" {3}' -f $nodePath, $GatewayLoader, $gatewayPath, $gatewayHash)
+$listenerProcessLookup = { param([int]$RequestedProcessId) @($listenerRow) }.GetNewClosure()
+$sourceIdentityLookup = {
+  param([int]$Port)
+  [pscustomobject]@{schema='ea_lab_loaded_source_identity_v1';source_path=$gatewayPath;source_sha256=$gatewayHash;source_bytes=1234}
+}.GetNewClosure()
 $listener = Get-ExactOwnedListenerIdentity -Port 18768 -ExpectedScript $gatewayPath `
-  -ConnectionLookup $connectionLookup -ProcessLookup $ownedLookup -HashLookup $hashLookup
+  -ExpectedSourceSha $gatewayHash -ConnectionLookup $connectionLookup -ProcessLookup $listenerProcessLookup `
+  -HashLookup $hashLookup -SourceIdentityLookup $sourceIdentityLookup
 Assert-Equal $listener.ProcessId 4101 'listener should bind to exact owned PID'
 Assert-Equal $listener.CreationUtc.ToUniversalTime() $created.ToUniversalTime() 'listener should bind creation time'
 Assert-Equal $listener.ExecutableSha256 $nodeHash 'listener should bind executable SHA256'
 
 Assert-Throws {
   Get-ExactOwnedListenerIdentity -Port 18768 -ExpectedScript $gatewayPath `
-    -ConnectionLookup $connectionLookup -ProcessLookup $foreignLookup -HashLookup $hashLookup
+    -ExpectedSourceSha $gatewayHash -ConnectionLookup $connectionLookup -ProcessLookup $foreignLookup `
+    -HashLookup $hashLookup -SourceIdentityLookup $sourceIdentityLookup
 } 'foreign executable' 'foreign listener owner must fail closed'
 Assert-Throws {
   Get-ExactOwnedListenerIdentity -Port 18768 -ExpectedScript $gatewayPath `
-    -ConnectionLookup $connectionLookup -ProcessLookup $spoofedLookup -HashLookup $hashLookup
+    -ExpectedSourceSha $gatewayHash -ConnectionLookup $connectionLookup -ProcessLookup $spoofedLookup `
+    -HashLookup $hashLookup -SourceIdentityLookup $sourceIdentityLookup
 } 'command identity mismatch' 'listener with expected script as unused extra argument must fail closed'
 
 $ambiguousConnections = {
@@ -161,12 +165,13 @@ $ambiguousConnections = {
 }
 Assert-Throws {
   Get-ExactOwnedListenerIdentity -Port 18768 -ExpectedScript $gatewayPath `
-    -ConnectionLookup $ambiguousConnections -ProcessLookup $ownedLookup -HashLookup $hashLookup
+    -ExpectedSourceSha $gatewayHash -ConnectionLookup $ambiguousConnections -ProcessLookup $listenerProcessLookup `
+    -HashLookup $hashLookup -SourceIdentityLookup $sourceIdentityLookup
 } 'ambiguous listener ownership' 'multiple listener rows must fail closed'
 
 $routeListenerState = [pscustomobject]@{ Calls = 0 }
 $routeListenerLookup = {
-  param([int]$Port, [string]$ExpectedScript)
+  param([int]$Port, [string]$ExpectedScript, [string]$ExpectedSourceSha)
   $routeListenerState.Calls++
   [pscustomobject]@{
     Port = $Port
@@ -176,6 +181,9 @@ $routeListenerLookup = {
     ExecutableSha256 = $nodeHash
     CommandLine = ('"{0}" "{1}"' -f $nodePath, $ExpectedScript)
     ScriptPath = $ExpectedScript
+    LoadedSourcePath = $ExpectedScript
+    LoadedSourceSha256 = $ExpectedSourceSha
+    LoadedSourceBytes = 1234
   }
 }.GetNewClosure()
 $statusLookup = {
@@ -192,7 +200,7 @@ Assert-Equal $routeListenerState.Calls 4 'ready route must bind both listeners b
 
 $mismatchState = [pscustomobject]@{ Calls = 0 }
 $mismatchListenerLookup = {
-  param([int]$Port, [string]$ExpectedScript)
+  param([int]$Port, [string]$ExpectedScript, [string]$ExpectedSourceSha)
   $mismatchState.Calls++
   $afterHealth = $mismatchState.Calls -gt 2
   [pscustomobject]@{
@@ -203,6 +211,9 @@ $mismatchListenerLookup = {
     ExecutableSha256 = $nodeHash
     CommandLine = ('"{0}" "{1}"' -f $nodePath, $ExpectedScript)
     ScriptPath = $ExpectedScript
+    LoadedSourcePath = $ExpectedScript
+    LoadedSourceSha256 = $ExpectedSourceSha
+    LoadedSourceBytes = 1234
   }
 }.GetNewClosure()
 Assert-Throws {
@@ -212,6 +223,27 @@ Assert-Throws {
 
 . (Join-Path $Here 'install_tasks.ps1') -LibraryOnly
 
+$taskXml=@'
+<?xml version="1.0" encoding="UTF-16"?>
+<Task xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><Description>EA_LAB_LNWJUD_WRITE_V1_TASK_V1|invocation=00000000-0000-0000-0000-000000000001|role=REFRESH</Description></RegistrationInfo>
+  <Triggers><TimeTrigger><Repetition><Interval>PT10M</Interval></Repetition></TimeTrigger></Triggers>
+  <Principals><Principal><UserId>S-1-5-21-fixture</UserId><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>
+  <Actions><Exec><Command>powershell.exe</Command><Arguments>-NoProfile -File "D:\path with space\refresh.ps1"</Arguments></Exec></Actions>
+</Task>
+'@
+[void]('seed-42' -match 'seed-(\d+)')
+$automaticMatchesBefore=$Matches[1]
+$parsedTask=Get-TaskDefinitionIdentity -Name 'fixture' `
+  -TaskInventoryAction {@([pscustomobject]@{TaskPath='\';TaskName='fixture'})} `
+  -ExportTaskAction {param([string]$name) $taskXml}.GetNewClosure()
+Assert-Equal $parsedTask.InvocationId '00000000-0000-0000-0000-000000000001' 'task definition parser must bind invocation UUID'
+Assert-Equal $parsedTask.ActionArguments '-NoProfile -File "D:\path with space\refresh.ps1"' 'task definition parser must preserve quoted action'
+Assert-Equal $parsedTask.TriggerKind 'TimeTrigger' 'task definition parser must bind trigger kind'
+Assert-Equal $parsedTask.RepetitionInterval 'PT10M' 'task definition parser must bind repetition interval'
+Assert-Equal $parsedTask.PrincipalUserId 'S-1-5-21-fixture' 'task definition parser must bind principal'
+Assert-Equal $Matches[1] $automaticMatchesBefore 'task definition parser must not collide with automatic $Matches'
+
 function New-TaskHarness {
   $state = [pscustomobject]@{
     Tasks = @{}
@@ -220,18 +252,38 @@ function New-TaskHarness {
     FailCreateName = ''
     CreateThenFailName = ''
     FailDeleteName = ''
+    ReplaceStartBeforeFailure = $false
+    FailQueryName = ''
     KeepAfterDelete = $false
   }
-  $existsAction = {
+  $queryAction = {
     param([string]$Name)
-    $state.Tasks.ContainsKey($Name)
+    if($state.FailQueryName -eq $Name){throw "fixture query failure: $Name"}
+    if($state.Tasks.ContainsKey($Name)){$state.Tasks[$Name]}else{$null}
   }.GetNewClosure()
   $createAction = {
-    param([string]$Name, [string]$Action, [string]$Schedule, [int]$Modifier)
-    $state.CreateCalls.Add($Name)
-    if($state.FailCreateName -eq $Name){throw "fixture create failure: $Name"}
-    $state.Tasks[$Name] = [pscustomobject]@{Action=$Action;Schedule=$Schedule;Modifier=$Modifier}
-    if($state.CreateThenFailName -eq $Name){throw "fixture post-create failure: $Name"}
+    param($Spec)
+    $state.CreateCalls.Add($Spec.Name)
+    if($state.FailCreateName -eq $Spec.Name){
+      if($state.ReplaceStartBeforeFailure){
+        $state.Tasks[$StartTask]=[pscustomobject]@{
+          Name=$StartTask;InvocationId='00000000-0000-0000-0000-000000000099';Description='foreign'
+          ActionCommand='foreign.exe';ActionArguments='';WorkingDirectory='';TriggerKind='LogonTrigger'
+          TriggerUserId='foreign';RepetitionInterval='';PrincipalUserId='foreign'
+          PrincipalLogonType='InteractiveToken';PrincipalRunLevel='LeastPrivilege';DefinitionSha256=[string]::new([char]'f',64)
+        }
+      }
+      throw "fixture create failure: $($Spec.Name)"
+    }
+    $state.Tasks[$Spec.Name] = [pscustomobject]@{
+      Name=$Spec.Name;InvocationId=$Spec.InvocationId;Description=$Spec.Description
+      ActionCommand=$Spec.ActionCommand;ActionArguments=$Spec.ActionArguments;WorkingDirectory=$Spec.WorkingDirectory
+      TriggerKind=$Spec.TriggerKind;TriggerUserId=$Spec.TriggerUserId;RepetitionInterval=$Spec.RepetitionInterval
+      PrincipalUserId=$Spec.PrincipalUserId;PrincipalLogonType=$Spec.PrincipalLogonType
+      PrincipalRunLevel=$Spec.PrincipalRunLevel
+      DefinitionSha256=[string]::new([char]'a',64)
+    }
+    if($state.CreateThenFailName -eq $Spec.Name){throw "fixture post-create failure: $($Spec.Name)"}
   }.GetNewClosure()
   $deleteAction = {
     param([string]$Name)
@@ -241,49 +293,58 @@ function New-TaskHarness {
   }.GetNewClosure()
   [pscustomobject]@{
     State = $state
-    ExistsAction = $existsAction
+    QueryAction = $queryAction
     CreateAction = $createAction
     DeleteAction = $deleteAction
   }
 }
 
+$fixtureInvocation='00000000-0000-0000-0000-000000000001'
+$fixturePrincipal='S-1-5-21-fixture'
 $successfulTasks = New-TaskHarness
-$installResult = Invoke-WriteV1TaskInstall -TaskExistsAction $successfulTasks.ExistsAction `
-  -CreateTaskAction $successfulTasks.CreateAction -DeleteTaskAction $successfulTasks.DeleteAction
+$installResult = Invoke-WriteV1TaskInstall -TaskQueryAction $successfulTasks.QueryAction `
+  -CreateTaskAction $successfulTasks.CreateAction -DeleteTaskAction $successfulTasks.DeleteAction `
+  -InvocationId $fixtureInvocation -PrincipalUserId $fixturePrincipal
 Assert-Equal $installResult.result 'PASS' 'fixture task transaction should complete'
 Assert-Equal $successfulTasks.State.Tasks.Count 2 'successful transaction should retain both tasks'
+Assert-Equal $installResult.invocation_id $fixtureInvocation 'successful transaction must retain invocation UUID'
 
 $preexistingTasks = New-TaskHarness
-$preexistingTasks.State.Tasks[$StartTask] = [pscustomobject]@{Action='foreign'}
+$preexistingTasks.State.Tasks[$StartTask] = [pscustomobject]@{Name=$StartTask;InvocationId='foreign';DefinitionSha256=[string]::new([char]'f',64)}
 Assert-Throws {
-  Invoke-WriteV1TaskInstall -TaskExistsAction $preexistingTasks.ExistsAction `
-    -CreateTaskAction $preexistingTasks.CreateAction -DeleteTaskAction $preexistingTasks.DeleteAction
+  Invoke-WriteV1TaskInstall -TaskQueryAction $preexistingTasks.QueryAction `
+    -CreateTaskAction $preexistingTasks.CreateAction -DeleteTaskAction $preexistingTasks.DeleteAction `
+    -InvocationId $fixtureInvocation -PrincipalUserId $fixturePrincipal
 } 'existing WriteV1 Scheduled Task requires explicit ownership reconciliation' 'pre-existing same-name task must be refused'
 Assert-Equal $preexistingTasks.State.CreateCalls.Count 0 'pre-existing refusal must happen before creation'
 
 $cleanRollback = New-TaskHarness
 $cleanRollback.State.FailCreateName = $RefreshTask
 Assert-Throws {
-  Invoke-WriteV1TaskInstall -TaskExistsAction $cleanRollback.ExistsAction `
-    -CreateTaskAction $cleanRollback.CreateAction -DeleteTaskAction $cleanRollback.DeleteAction
+  Invoke-WriteV1TaskInstall -TaskQueryAction $cleanRollback.QueryAction `
+    -CreateTaskAction $cleanRollback.CreateAction -DeleteTaskAction $cleanRollback.DeleteAction `
+    -InvocationId $fixtureInvocation -PrincipalUserId $fixturePrincipal
 } 'fixture create failure' 'original creation failure should remain visible after verified rollback'
 Assert-Equal $cleanRollback.State.Tasks.Count 0 'verified rollback should leave no partial task'
 Assert-Equal $cleanRollback.State.DeleteCalls.Count 1 'verified rollback should delete the created start task once'
 
 $postCreateFailure = New-TaskHarness
-$postCreateFailure.State.CreateThenFailName = $StartTask
+$postCreateFailure.State.CreateThenFailName = $RefreshTask
 Assert-Throws {
-  Invoke-WriteV1TaskInstall -TaskExistsAction $postCreateFailure.ExistsAction `
-    -CreateTaskAction $postCreateFailure.CreateAction -DeleteTaskAction $postCreateFailure.DeleteAction
-} 'task installation failed:.*fixture post-create failure.*partial activation remains' 'create-then-fail must surface remaining partial activation'
-Assert-True $postCreateFailure.State.Tasks.ContainsKey($StartTask) 'unowned post-create failure must remain fail-visible rather than be silently deleted'
+  Invoke-WriteV1TaskInstall -TaskQueryAction $postCreateFailure.QueryAction `
+    -CreateTaskAction $postCreateFailure.CreateAction -DeleteTaskAction $postCreateFailure.DeleteAction `
+    -InvocationId $fixtureInvocation -PrincipalUserId $fixturePrincipal
+} 'fixture post-create failure' 'create-then-fail should preserve original error after successful owned rollback'
+Assert-Equal $postCreateFailure.State.Tasks.Count 0 'matching invocation tasks must roll back after create-then-fail'
+Assert-Equal $postCreateFailure.State.DeleteCalls.Count 2 'both exact owned tasks should be deleted in reverse rollback'
 
 $deleteFailure = New-TaskHarness
 $deleteFailure.State.FailCreateName = $RefreshTask
 $deleteFailure.State.FailDeleteName = $StartTask
 Assert-Throws {
-  Invoke-WriteV1TaskInstall -TaskExistsAction $deleteFailure.ExistsAction `
-    -CreateTaskAction $deleteFailure.CreateAction -DeleteTaskAction $deleteFailure.DeleteAction
+  Invoke-WriteV1TaskInstall -TaskQueryAction $deleteFailure.QueryAction `
+    -CreateTaskAction $deleteFailure.CreateAction -DeleteTaskAction $deleteFailure.DeleteAction `
+    -InvocationId $fixtureInvocation -PrincipalUserId $fixturePrincipal
 } 'task installation failed:.*fixture create failure.*rollback failed:.*fixture delete failure' 'rollback delete failure must be aggregated with original failure'
 Assert-True $deleteFailure.State.Tasks.ContainsKey($StartTask) 'failed delete fixture should preserve fail-visible partial task'
 
@@ -291,14 +352,36 @@ $absenceFailure = New-TaskHarness
 $absenceFailure.State.FailCreateName = $RefreshTask
 $absenceFailure.State.KeepAfterDelete = $true
 Assert-Throws {
-  Invoke-WriteV1TaskInstall -TaskExistsAction $absenceFailure.ExistsAction `
-    -CreateTaskAction $absenceFailure.CreateAction -DeleteTaskAction $absenceFailure.DeleteAction
+  Invoke-WriteV1TaskInstall -TaskQueryAction $absenceFailure.QueryAction `
+    -CreateTaskAction $absenceFailure.CreateAction -DeleteTaskAction $absenceFailure.DeleteAction `
+    -InvocationId $fixtureInvocation -PrincipalUserId $fixturePrincipal
 } 'rollback absence verification failed' 'rollback must read back and reject a task that remains present'
 Assert-True $absenceFailure.State.Tasks.ContainsKey($StartTask) 'absence failure fixture should remain visible'
+
+$foreignReplacement = New-TaskHarness
+$foreignReplacement.State.FailCreateName = $RefreshTask
+$foreignReplacement.State.ReplaceStartBeforeFailure = $true
+Assert-Throws {
+  Invoke-WriteV1TaskInstall -TaskQueryAction $foreignReplacement.QueryAction `
+    -CreateTaskAction $foreignReplacement.CreateAction -DeleteTaskAction $foreignReplacement.DeleteAction `
+    -InvocationId $fixtureInvocation -PrincipalUserId $fixturePrincipal
+} 'task ownership changed before rollback.*partial activation remains' 'foreign replacement must remain and be reported as partial activation'
+Assert-Equal $foreignReplacement.State.DeleteCalls.Count 0 'foreign replacement must not be deleted'
+Assert-True $foreignReplacement.State.Tasks.ContainsKey($StartTask) 'foreign replacement must remain fail-visible'
+
+$queryFailure = New-TaskHarness
+$queryFailure.State.FailCreateName = $RefreshTask
+$queryFailure.State.FailQueryName = $StartTask
+Assert-Throws {
+  Invoke-WriteV1TaskInstall -TaskQueryAction $queryFailure.QueryAction `
+    -CreateTaskAction $queryFailure.CreateAction -DeleteTaskAction $queryFailure.DeleteAction `
+    -InvocationId $fixtureInvocation -PrincipalUserId $fixturePrincipal
+} 'query failure' 'rollback query failure must fail closed and remain visible'
+Assert-Equal $queryFailure.State.DeleteCalls.Count 0 'query failure must not authorize task deletion'
 
 [pscustomobject]@{
   result = 'PASS'
   suite = 'write-v1-safety-s1'
-  checks = 37
+  checks = 54
   runtime_activation = 'NOT_RUN'
 } | ConvertTo-Json -Compress

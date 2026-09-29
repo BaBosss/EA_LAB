@@ -1,16 +1,19 @@
 {
   "schema": "lnwjud_write_v1_current_source_hashes/1",
-  "contract_id": "LNWJUD-WRITE-V1-SAFETY-CLOSURE-S1-20260929",
-  "base": "b06320999f98aeefb33329971eee03405524e5af",
+  "contract_id": "LNWJUD-S1-AMENDMENT-A1-20260929",
+  "parent_contract": "LNWJUD-WRITE-V1-SAFETY-CLOSURE-S1-20260929",
+  "base_head": "d63188faa941ca77cc9626b6d389e11a7a08a267",
+  "base_tree": "55231a9afa10cc70d29984cec6709028faafaa32",
+  "canonical_at_dispatch": "b06320999f98aeefb33329971eee03405524e5af",
   "predecessor_head": "77ff2529e3e43dd4a502d0b00afcf44bfd58d571",
   "algorithm": "SHA256",
-  "scope": "Exact final UTF-8 source/doc bytes for the S1 author commit",
+  "scope": "Exact final UTF-8 source/doc bytes for owner-approved Amendment A1 before CT commit",
   "self_hash_excluded": "tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json",
   "files": [
     {
       "path": "docs/handoffs/LNWJUD_WRITE_V1_20260928.md",
-      "sha256": "4260de4c79345ed3cefe684d7c969ba8bffcfd0cdd245e768bb5746b69a09b2b",
-      "bytes": 7065
+      "sha256": "1bc1836d21b165045cd6ae77f9b3be7b972fb7c9f12d04796957014917101dc4",
+      "bytes": 10320
     },
     {
       "path": "tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs",
@@ -19,8 +22,8 @@
     },
     {
       "path": "tools/lnwjud/current_write_v1/README.md",
-      "sha256": "8d955d15f68aa7e67bfc5ae24fdec40d5686207c90169ff0684e9ba7c1e83bd5",
-      "bytes": 5454
+      "sha256": "562619c2a90a87e0f6a77152de176cc9a4ef95ea9dbefe3c1b416ce845e005fe",
+      "bytes": 7105
     },
     {
       "path": "tools/lnwjud/current_write_v1/build_snapshot.py",
@@ -29,8 +32,8 @@
     },
     {
       "path": "tools/lnwjud/current_write_v1/install_tasks.ps1",
-      "sha256": "431df2a8643c9ddeb18bbd902b69cc6273c8577c76a4bc8d29567fa220735950",
-      "bytes": 4269
+      "sha256": "af718e9860912731e6eb7f9463b7db63d1fb14d5ca40bf02bf405b8689344426",
+      "bytes": 10638
     },
     {
       "path": "tools/lnwjud/current_write_v1/refresh_write_v1_snapshot.ps1",
@@ -38,9 +41,19 @@
       "bytes": 3261
     },
     {
+      "path": "tools/lnwjud/current_write_v1/source_bound_gateway_loader.cjs",
+      "sha256": "06593b76abd45e53ec691455c70b9e7486d34b487eb846510d8dd0a2cfaca505",
+      "bytes": 2428
+    },
+    {
       "path": "tools/lnwjud/current_write_v1/start_write_v1.ps1",
-      "sha256": "5c243e2ad465237107837e7ae8abfe234cd9c740201f2a3592437e2b336cf07b",
-      "bytes": 18806
+      "sha256": "89f4c40ebde4afa3679bcf17eb3184b960f1fd902b04b99822b7d99ef9db399b",
+      "bytes": 25881
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/test_source_bound_gateway_loader.cjs",
+      "sha256": "0d900161fff0fab9e86206ba10348d898dccba00a4663e01ffb5a4d8529c094e",
+      "bytes": 3680
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_write_v1.cjs",
@@ -48,19 +61,24 @@
       "bytes": 3975
     },
     {
+      "path": "tools/lnwjud/current_write_v1/test_write_v1_a1.ps1",
+      "sha256": "8d70742ddbc7d6ac0ad38d726079f812f05858686f8072c831f56ee8b7d0e747",
+      "bytes": 8086
+    },
+    {
       "path": "tools/lnwjud/current_write_v1/test_write_v1_repair1.cjs",
-      "sha256": "e9a8e846cff8b87612ee6fb6b5463e10a73e462a320e4cd28662b50b6433a779",
-      "bytes": 3962
+      "sha256": "640a519eeb76dfa5b4529e9fbcc1c76b0bf2a3a7c2ce5c6dba7d25a028076fa9",
+      "bytes": 5296
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_write_v1_safety_s1.ps1",
-      "sha256": "33be3220c42171d95a7ff39937019a51482be9e3a5522fc20bfd0969c0f7e6ee",
-      "bytes": 14937
+      "sha256": "b4c56d3bfed1843ef42957e8e0f2e300cab7e1fc81361e1f905805b52d1d4f42",
+      "bytes": 20610
     },
     {
       "path": "tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs",
-      "sha256": "754776f4a5e06c5589996258444005bd8b298b96747e9bd29fc8cc524ed7e739",
-      "bytes": 2895
+      "sha256": "59ac9370c66f80817334d1cdda1e058acd27ec250b22dda183353d5644b2b3d0",
+      "bytes": 3123
     }
   ]
 }
