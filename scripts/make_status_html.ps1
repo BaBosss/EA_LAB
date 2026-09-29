@@ -78,14 +78,46 @@ function Trunc([string]$s, [int]$n) {
   if ([char]::IsHighSurrogate($cut[$cut.Length-1])) { $cut = $cut.Substring(0, $cut.Length-1) }
   return $cut + '...'
 }
+function Get-TaskboardHeaderStatus([string]$line) {
+  # Titles may contain backtick groups before the status. A group is a status only when its
+  # leading token is recognized; later prose (for example DONE blocked with reasons) cannot
+  # override that leading token.
+  foreach ($m in [regex]::Matches($line, '`([^`]+)`')) {
+    if ($m.Groups[1].Value -notmatch '^(OPEN-STANDING|RE-OPENED(?:=>OPEN)?|OPEN|BLOCKED(?:_[A-Z0-9][A-Z0-9_-]*)?|HOLD|CLAIMED|PARTIAL|DONE(?:_[A-Z0-9][A-Z0-9_-]*)?|CLOSED(?:_[A-Z0-9][A-Z0-9_-]*)?|REVIEWED(?:_[A-Z0-9][A-Z0-9_-]*)?|SKIPPED(?:_[A-Z0-9][A-Z0-9_-]*)?)(?=$|[\s(/:])') {
+      continue
+    }
+    $token = $Matches[1].ToUpperInvariant()
+    if ($token -in @('OPEN', 'OPEN-STANDING', 'RE-OPENED', 'RE-OPENED=>OPEN')) { return 'OPEN' }
+    foreach ($family in @('BLOCKED','HOLD','CLAIMED','PARTIAL','DONE','CLOSED','REVIEWED','SKIPPED')) {
+      if ($token -eq $family -or $token.StartsWith($family + '_')) { return $family }
+    }
+  }
+  return $null
+}
 
 $now    = Get-Date -Format "yyyy-MM-dd HH:mm"
 $branch = git -C $repo rev-parse --abbrev-ref HEAD
 $commit = git -C $repo rev-parse --short HEAD
 
 $psLines   = Get-Content (Join-Path $repo "PROJECT_STATE.md") -Encoding UTF8
-$boardFiles = @("AGENT_TASKBOARD.md","AGENT_TASKBOARD_MERGE.md") |
-  ForEach-Object { Join-Path $repo $_ } | Where-Object { Test-Path $_ }
+
+# AGENT_TASKBOARD.md may be a split-board manifest. The shared resolver owns its declared-part
+# parsing, ordering, fail-closed behavior, and legacy no-marker fallback; do not duplicate or
+# hardcode part names here. AGENT_TASKBOARD_MERGE.md remains a separate legacy source.
+. (Join-Path $repo 'scripts\lib\taskboard_source.ps1')
+$savedEapTb = $ErrorActionPreference
+$ErrorActionPreference = 'Stop'
+try {
+  $activeBoardLines = @(Get-TaskboardActiveLogicalLines -RepoRoot $repo -Mode Working)
+} finally {
+  $ErrorActionPreference = $savedEapTb
+}
+$mergeBoardLines = @()
+$mergeBoardPath = Join-Path $repo 'AGENT_TASKBOARD_MERGE.md'
+if (Test-Path -LiteralPath $mergeBoardPath) {
+  $mergeBoardLines = @(Get-Content -LiteralPath $mergeBoardPath -Encoding UTF8)
+}
+$boardLines = @($activeBoardLines) + @($mergeBoardLines)
 
 # ---- judge date + countdown -------------------------------------------------
 # Source 1: the strict declaration form in PROJECT_STATE.md -- the current
@@ -150,47 +182,35 @@ try {
   $demoRows = @('<tr><td colspan="6">UNKNOWN - no historical status asserted</td></tr>')
 } finally { $ErrorActionPreference = $savedDeploymentEap }
 
-# ---- order queues from both boards -------------------------------------------
+# ---- order queues from the logical active board plus the legacy merge board ---
 $openRows = @(); $reviewedCount = 0
-foreach ($bf in $boardFiles) {
-  foreach ($l in (Get-Content $bf -Encoding UTF8)) {
-    if ($l -notmatch '^## ((ORDER|MERGE)-[A-Za-z0-9\-]+)') { continue }
-    $id = $Matches[1]
-    # status lives in SOME backtick group (titles may contain `code` first) -
-    # scan all groups; rows without a recognized status are section notes -> skip
-    $status = $null
-    foreach ($m in [regex]::Matches($l, '`([^`]+)`')) {
-      foreach ($k in @('REVIEWED','SKIPPED','CLOSED','CLAIMED','BLOCKED','PARTIAL','DONE','HOLD','OPEN')) {
-        if ($m.Groups[1].Value -match $k) { $status = $k; break }
-      }
-      if ($status) { break }
-    }
-    if (-not $status) { continue }
-    if ($status -in @('REVIEWED','SKIPPED','CLOSED')) { $reviewedCount++; continue }
-    # title = text between the first and second em-dash separators
-    $title = $l -replace '^## \S+\s+', ''
-    $parts = $title -split ([char]0x2014)   # em dash
-    if ($parts.Count -ge 2) { $title = $parts[1] } else { $title = $parts[0] }
-    $title = StripMd ($title -replace '`[^`]*`$','')
-    $cls = 't-open'
-    if ($status -eq 'CLAIMED') { $cls = 't-claim' }
-    if ($status -in @('DONE','PARTIAL')) { $cls = 't-done' }
-    if ($status -in @('BLOCKED','HOLD')) { $cls = 't-user' }
-    $openRows += ("<tr><td class='mono'>" + (HtmlEnc $id) + "</td><td><span class='tag " + $cls + "'>" +
-                  $status + "</span></td><td>" + (HtmlEnc (Trunc $title 100)) + "</td></tr>")
-  }
+foreach ($l in $boardLines) {
+  if ($l -notmatch '^## ((ORDER|MERGE)-[A-Za-z0-9\-]+)') { continue }
+  $id = $Matches[1]
+  $status = Get-TaskboardHeaderStatus $l
+  if (-not $status) { continue }
+  if ($status -in @('DONE','CLOSED','REVIEWED','SKIPPED')) { $reviewedCount++; continue }
+  # title = text between the first and second em-dash separators
+  $title = $l -replace '^## \S+\s+', ''
+  $parts = $title -split ([char]0x2014)   # em dash
+  if ($parts.Count -ge 2) { $title = $parts[1] } else { $title = $parts[0] }
+  $title = StripMd ($title -replace '`[^`]*`$','')
+  $cls = 't-open'
+  if ($status -eq 'CLAIMED') { $cls = 't-claim' }
+  if ($status -eq 'PARTIAL') { $cls = 't-done' }
+  if ($status -in @('BLOCKED','HOLD')) { $cls = 't-user' }
+  $openRows += ("<tr><td class='mono'>" + (HtmlEnc $id) + "</td><td><span class='tag " + $cls + "'>" +
+                $status + "</span></td><td>" + (HtmlEnc (Trunc $title 100)) + "</td></tr>")
 }
+$openCount = $openRows.Count
 if ($openRows.Count -eq 0) { $openRows = @("<tr><td colspan='3' class='empty'>none</td></tr>") }
 
 # ---- USER-ACTION markers ------------------------------------------------------
 $userActions = @()
-$scanFiles = $boardFiles + @(Join-Path $repo "PROJECT_STATE.md")
-foreach ($sf in $scanFiles) {
-  foreach ($l in (Get-Content $sf -Encoding UTF8)) {
-    if ($l -match 'USER-ACTION:\s*(.+)$') {
-      $userActions += ("<div class='todo'><span class='dot'>&#9679;</span><div>" +
-                       (HtmlEnc (StripMd $Matches[1])) + "</div></div>")
-    }
+foreach ($l in (@($boardLines) + @($psLines))) {
+  if ($l -match 'USER-ACTION:\s*(.+)$') {
+    $userActions += ("<div class='todo'><span class='dot'>&#9679;</span><div>" +
+                     (HtmlEnc (StripMd $Matches[1])) + "</div></div>")
   }
 }
 $userActionCount = $userActions.Count
@@ -212,7 +232,7 @@ $map = @{
   '{{JUDGE_DATE}}'        = $judge
   '{{DAYS_TO_JUDGE}}'     = "$daysToJudge"
   '{{USER_ACTION_COUNT}}' = "$userActionCount"
-  '{{OPEN_COUNT}}'        = "$($openRows.Count)"
+  '{{OPEN_COUNT}}'        = "$openCount"
   '{{REVIEWED_COUNT}}'    = "$reviewedCount"
   '{{LIVE_COUNT}}'        = $deploymentCount
   '{{DEMO_COUNT}}'        = $removedCount

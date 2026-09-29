@@ -32,6 +32,8 @@ WHY THIS EXISTS
      proven by asserting both processes agree on the same resolved $repo (echoed by each script).
   G. an anchor with no .git anywhere above it FAILS EXPLICITLY (non-zero exit, thrown error text
      naming the failure) -- not a silent "D:\EA_LAB" fallback.
+  H. STATUS.html consumes a split active-taskboard manifest plus the separate merge board, counts
+     only nonterminal status rows, sees USER-ACTION in an active part, and remains isolated.
 
 ASCII-only on purpose (Windows PowerShell 5.1 reads a BOM-less .ps1 as ANSI).
 USAGE  powershell -NoProfile -File scripts\_test\run_make_status_worktree_isolation_tests.ps1
@@ -98,6 +100,7 @@ function New-Fixture([string]$tag, [string]$sentinelOrderLine) {
     Copy-Item (Join-Path $RepoRoot 'scripts\status_template.html') (Join-Path $root 'scripts\status_template.html') -Force
     Copy-Item (Join-Path $RepoRoot 'scripts\lib\repo_paths.ps1') (Join-Path $root 'scripts\lib\repo_paths.ps1') -Force
     Copy-Item (Join-Path $RepoRoot 'scripts\lib\snapshot_reader.ps1') (Join-Path $root 'scripts\lib\snapshot_reader.ps1') -Force
+    Copy-Item (Join-Path $RepoRoot 'scripts\lib\taskboard_source.ps1') (Join-Path $root 'scripts\lib\taskboard_source.ps1') -Force
 
     Set-Content -LiteralPath (Join-Path $root 'AGENT_TASKBOARD.md') -Encoding UTF8 -Value @(
         '# Fixture taskboard',
@@ -243,6 +246,78 @@ $gOutText = ($r.Output -join "`n")
 Assert-True  'G a root with no .git FAILS (non-zero exit)' ($gExit -ne 0)
 Assert-True  'G the failure names the resolution problem, not a generic crash' ($gOutText -match 'could not resolve an EA_LAB repository root')
 Assert-True  'G no D:\EA_LAB fallback file was created next to the no-git fixture' (-not (Test-Path (Join-Path $noGitRoot 'STATUS.md')))
+
+Write-Host ''
+Write-Host '=== H: split active taskboard + merge board feed STATUS.html without weakening isolation ==='
+$split = New-Fixture 'split' '## ORDER-FIXTURE-LEGACY-0004 -- `OPEN` -- overwritten by split manifest'
+New-Item -ItemType Directory -Path (Join-Path $split 'taskboards\active') -Force | Out-Null
+[System.IO.File]::WriteAllLines((Join-Path $split 'AGENT_TASKBOARD.md'), [string[]]@(
+    '# Split fixture manifest',
+    '<!-- TASKBOARD-ACTIVE-PARTS',
+    'taskboards/active/A-open.md',
+    'taskboards/active/Z-mixed.md',
+    '-->'
+), (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllLines((Join-Path $split 'taskboards\active\A-open.md'), [string[]]@(
+    '## ORDER-SPLIT-OPEN-1001 -- `OPEN` -- rendered open row',
+    '## ORDER-SPLIT-BLOCKED-1002 -- `BLOCKED_C_ENVIRONMENT_DEPENDENCY` -- rendered blocked row',
+    '## ORDER-SPLIT-PARTIAL-1003 -- `PARTIAL` -- rendered partial row',
+    '## ORDER-SPLIT-DONE-1004 -- `DONE blocked with reasons retained for history` -- terminal row',
+    'USER-ACTION: split active part requires owner input'
+), (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllLines((Join-Path $split 'taskboards\active\Z-mixed.md'), [string[]]@(
+    '## ORDER-SPLIT-REOPENED-1005 -- `RE-OPENED` -- rendered reopened row',
+    '## ORDER-SPLIT-OPENSTANDING-1006 -- `OPEN-STANDING` -- rendered standing row',
+    '## ORDER-SPLIT-CLAIMED-1007 -- `CLAIMED(worker)` -- rendered claimed row',
+    '## ORDER-SPLIT-DONEVAR-1008 -- `DONE_FINAL` -- terminal done variant',
+    '## ORDER-SPLIT-CLOSED-1009 -- `CLOSED` -- terminal closed row',
+    '## ORDER-SPLIT-CLOSEDVAR-1010 -- `CLOSED_FINAL` -- terminal closed variant',
+    '## ORDER-SPLIT-REVIEWED-1011 -- `REVIEWED` -- terminal reviewed row',
+    '## ORDER-SPLIT-REVIEWEDVAR-1012 -- `REVIEWED_FINAL` -- terminal reviewed variant',
+    '## ORDER-SPLIT-SKIPPED-1013 -- `SKIPPED` -- terminal skipped row',
+    '## ORDER-SPLIT-SKIPPEDVAR-1014 -- `SKIPPED_FINAL` -- terminal skipped variant',
+    '## ORDER-SPLIT-NONSTATUS-1015 -- `implementation blocked with reasons` -- not a status group'
+), (New-Object System.Text.UTF8Encoding($false)))
+Set-Content -LiteralPath (Join-Path $split 'AGENT_TASKBOARD_MERGE.md') -Encoding UTF8 -Value @(
+    '# Separate legacy merge board',
+    '## MERGE-SPLIT-HOLD-2001 -- `HOLD` -- rendered merge hold row'
+)
+
+$splitOneDrive = Join-Path $work 'fake_onedrive_h\EA_LAB_STATUS.html'
+New-Item -ItemType Directory -Path (Split-Path $splitOneDrive) -Force | Out-Null
+Set-Content -LiteralPath $splitOneDrive -Encoding UTF8 -Value 'SENTINEL: split fixture must not publish here'
+$splitOneDriveHashBefore = Hash $splitOneDrive
+$r = Invoke-Child @('-NoProfile', '-File', (Join-Path $split 'scripts\make_status_html.ps1'),
+    '-RepoRoot', $split, '-PrimaryRepoRoot', $primary, '-OneDrivePath', $splitOneDrive)
+$splitOutText = ($r.Output -join "`n")
+$splitHtml = if (Test-Path (Join-Path $split 'STATUS.html')) {
+    Get-Content -LiteralPath (Join-Path $split 'STATUS.html') -Raw
+} else { '' }
+
+Assert-Equal 'H split-manifest STATUS.html generation exits 0' 0 $r.ExitCode
+foreach ($id in @(
+    'ORDER-SPLIT-OPEN-1001', 'ORDER-SPLIT-BLOCKED-1002', 'ORDER-SPLIT-PARTIAL-1003',
+    'ORDER-SPLIT-REOPENED-1005', 'ORDER-SPLIT-OPENSTANDING-1006',
+    'ORDER-SPLIT-CLAIMED-1007', 'MERGE-SPLIT-HOLD-2001'
+)) {
+    Assert-True "H nonterminal row $id is rendered" ($splitHtml -match [regex]::Escape($id))
+}
+foreach ($id in @(
+    'ORDER-SPLIT-DONE-1004', 'ORDER-SPLIT-DONEVAR-1008',
+    'ORDER-SPLIT-CLOSED-1009', 'ORDER-SPLIT-CLOSEDVAR-1010',
+    'ORDER-SPLIT-REVIEWED-1011', 'ORDER-SPLIT-REVIEWEDVAR-1012',
+    'ORDER-SPLIT-SKIPPED-1013', 'ORDER-SPLIT-SKIPPEDVAR-1014',
+    'ORDER-SPLIT-NONSTATUS-1015'
+)) {
+    Assert-True "H terminal/nonstatus row $id is absent from the open queue" ($splitHtml -notmatch [regex]::Escape($id))
+}
+$splitRenderedRows = [regex]::Matches($splitHtml, '<td class=''mono''>(?:ORDER|MERGE)-SPLIT-[A-Z0-9-]+</td>').Count
+Assert-Equal 'H rendered open-row count equals the seven nonterminal rows' 7 $splitRenderedRows
+Assert-True  'H OPEN_COUNT is exactly seven' ($splitHtml -match '<div class="n" style="color:var\(--blue\)">7</div>')
+Assert-True  'H USER-ACTION text from an active part is rendered' ($splitHtml -match 'split active part requires owner input')
+Assert-True  'H USER_ACTION_COUNT is exactly one' ($splitHtml -match '<div class="n" style="color:var\(--red\)">1</div>')
+Assert-Equal 'H isolated split run leaves fake OneDrive BYTE-IDENTICAL' $splitOneDriveHashBefore (Hash $splitOneDrive)
+Assert-True  'H isolated split run explicitly skips OneDrive publication' ($splitOutText -match 'OneDrive publish SKIPPED')
 
 Write-Host ''
 if ($script:fail -gt 0) { Write-Host ("FAIL  {0}/{1} passed, {2} failed" -f $script:pass, ($script:pass + $script:fail), $script:fail); exit 1 }
