@@ -36,10 +36,11 @@ function relative(file) {
 const receiptBytes = fs.readFileSync(receiptPath);
 const receipt = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(receiptBytes));
 assert.equal(receipt.schema, 'lnwjud_write_v1_current_source_hashes/1');
-assert.equal(receipt.contract_id, 'LNWJUD-S1-AMENDMENT-A1-20260929');
+assert.equal(receipt.contract_id, 'LNWJUD-S1-AMENDMENT-A2-20260930');
 assert.equal(receipt.parent_contract, 'LNWJUD-WRITE-V1-SAFETY-CLOSURE-S1-20260929');
-assert.equal(receipt.base_head, 'd63188faa941ca77cc9626b6d389e11a7a08a267');
-assert.equal(receipt.base_tree, '55231a9afa10cc70d29984cec6709028faafaa32');
+assert.equal(receipt.parent_amendment, 'LNWJUD-S1-AMENDMENT-A1-20260929');
+assert.equal(receipt.base_head, '88d6767178e1230e370372ddb8a8ed7974aff6e4');
+assert.equal(receipt.base_tree, 'fcb406f4ca53c0094868c4054d84a7d22e2a95ce');
 assert.equal(receipt.algorithm, 'SHA256');
 assert.equal(receipt.self_hash_excluded, receiptRelative);
 assert.ok(Array.isArray(receipt.files));

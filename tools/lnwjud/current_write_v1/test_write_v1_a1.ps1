@@ -128,6 +128,103 @@ Invoke-A1Case 'stale-loaded-gateway-refused' {
   Assert-A1 ($calls.Count -eq 1) 'stale source must fail during first listener proof before health/adoption'
 }
 
+Invoke-A1Case 'a2-default-route-listener-binding-forwards-source-sha' {
+  $created = [datetime]'2026-09-30T01:02:03.456Z'
+  $routeCalls = [System.Collections.Generic.List[object]]::new()
+  $originalListenerIdentity = ${function:Get-ExactOwnedListenerIdentity}
+  $listenerIdentitySpy = {
+    param([int]$port,[string]$scriptPath,[string]$expectedSourceSha)
+    $routeCalls.Add([pscustomobject]@{Port=$port;ScriptPath=$scriptPath;ExpectedSourceSha=$expectedSourceSha})
+    $loadedSha = if($port-eq18768){$ExpectedWriteSha}else{$ExpectedV2Sha}
+    [pscustomobject]@{
+      Port=$port;ProcessId=if($port-eq18768){8101}else{8102};CreationUtc=$created
+      ExecutablePath=$Node;ExecutableSha256=$ExpectedNodeSha;CommandLine='a2-fixture'
+      ScriptPath=$scriptPath;LoadedSourcePath=$scriptPath;LoadedSourceSha256=$loadedSha;LoadedSourceBytes=1234
+    }
+  }.GetNewClosure()
+  $statusLookup = {param([string]$base) [pscustomobject]@{mcp_routes=@(
+    [pscustomobject]@{name='main';target='127.0.0.1:18768'},
+    [pscustomobject]@{name='frozen_v1';target='127.0.0.1:18767'})}}
+  $healthLookup = {param([string]$url) $true}
+  try {
+    Set-Item -Path Function:\script:Get-ExactOwnedListenerIdentity -Value $listenerIdentitySpy
+    Assert-A1 (Route-IsReady -HealthBaseOverride 'http://fixture' `
+      -StatusLookup $statusLookup -HealthLookup $healthLookup) 'default production route binding should be ready'
+  }
+  finally {
+    Set-Item -Path Function:\script:Get-ExactOwnedListenerIdentity -Value $originalListenerIdentity
+  }
+  Assert-A1 ($routeCalls.Count -eq 4) 'default route binding must check both listeners before and after health'
+  foreach($call in $routeCalls){
+    $expectedScript = if($call.Port-eq18768){$WriteBundle}else{$V2Bundle}
+    $expectedSha = if($call.Port-eq18768){$ExpectedWriteSha}else{$ExpectedV2Sha}
+    Assert-A1 ([string]$call.ScriptPath -ceq $expectedScript) "default route script mismatch port=$($call.Port)"
+    Assert-A1 ([string]$call.ExpectedSourceSha -ceq $expectedSha) `
+      "default route expected SHA not forwarded port=$($call.Port) observed='$($call.ExpectedSourceSha)'"
+  }
+}
+
+Invoke-A1Case 'a2-listener-source-sha-fails-closed-and-reaches-loaded-identity' {
+  $created = [datetime]'2026-09-30T01:02:03.456Z'
+  $connectionLookup = {param([int]$port) @([pscustomobject]@{LocalPort=$port;OwningProcess=8201})}
+  $hashLookup = {param([string]$path) $ExpectedNodeSha}.GetNewClosure()
+
+  $missingBoundaryCalls = [pscustomobject]@{Count=0}
+  try {
+    [void](Get-ExactOwnedListenerIdentity -Port 18768 -ExpectedScript $WriteBundle `
+      -ConnectionLookup {param([int]$port) $missingBoundaryCalls.Count++;@()}.GetNewClosure())
+    throw 'missing expected source SHA was accepted'
+  } catch {
+    Assert-A1 ($_.Exception.Message -match 'expected source SHA256 required') 'missing expected source SHA did not fail closed'
+  }
+  Assert-A1 ($missingBoundaryCalls.Count -eq 0) 'missing expected source SHA reached listener discovery'
+
+  $emptyRow = [pscustomobject]@{
+    ProcessId=8201;ExecutablePath=$Node;CreationDate=$created
+    CommandLine=('"{0}" "{1}" "{2}" ""' -f $Node,$GatewayLoader,$WriteBundle)
+  }
+  try {
+    [void](Get-ExactOwnedListenerIdentity -Port 18768 -ExpectedScript $WriteBundle -ExpectedSourceSha '' `
+      -ConnectionLookup $connectionLookup -ProcessLookup {param([int]$pid) @($emptyRow)}.GetNewClosure() `
+      -HashLookup $hashLookup -SourceIdentityLookup {param([int]$port) [pscustomobject]@{
+        schema='ea_lab_loaded_source_identity_v1';source_path=$WriteBundle;source_sha256='';source_bytes=1234
+      }}.GetNewClosure())
+    throw 'empty expected source SHA was accepted'
+  } catch {
+    Assert-A1 ($_.Exception.Message -match 'expected source SHA256 required') 'empty expected source SHA did not fail closed'
+  }
+
+  $wrongSha = ('f' * 64)
+  $wrongRow = [pscustomobject]@{
+    ProcessId=8201;ExecutablePath=$Node;CreationDate=$created
+    CommandLine=('"{0}" "{1}" "{2}" {3}' -f $Node,$GatewayLoader,$WriteBundle,$wrongSha)
+  }
+  try {
+    [void](Get-ExactOwnedListenerIdentity -Port 18768 -ExpectedScript $WriteBundle -ExpectedSourceSha $wrongSha `
+      -ConnectionLookup $connectionLookup -ProcessLookup {param([int]$pid) @($wrongRow)}.GetNewClosure() `
+      -HashLookup $hashLookup -SourceIdentityLookup {param([int]$port) [pscustomobject]@{
+        schema='ea_lab_loaded_source_identity_v1';source_path=$WriteBundle;source_sha256=$ExpectedWriteSha;source_bytes=1234
+      }}.GetNewClosure())
+    throw 'wrong expected source SHA was accepted'
+  } catch {
+    Assert-A1 ($_.Exception.Message -match 'loaded source SHA256 mismatch') 'wrong expected source SHA did not fail closed'
+  }
+
+  $identityCalls = [pscustomobject]@{Count=0}
+  $correctRow = [pscustomobject]@{
+    ProcessId=8201;ExecutablePath=$Node;CreationDate=$created
+    CommandLine=('"{0}" "{1}" "{2}" {3}' -f $Node,$GatewayLoader,$WriteBundle,$ExpectedWriteSha)
+  }
+  $correct = Get-ExactOwnedListenerIdentity -Port 18768 -ExpectedScript $WriteBundle `
+    -ExpectedSourceSha $ExpectedWriteSha -ConnectionLookup $connectionLookup `
+    -ProcessLookup {param([int]$pid) @($correctRow)}.GetNewClosure() -HashLookup $hashLookup `
+    -SourceIdentityLookup {param([int]$port) $identityCalls.Count++;[pscustomobject]@{
+      schema='ea_lab_loaded_source_identity_v1';source_path=$WriteBundle;source_sha256=$ExpectedWriteSha;source_bytes=1234
+    }}.GetNewClosure()
+  Assert-A1 ($identityCalls.Count -eq 1) 'correct expected source SHA did not reach loaded-source identity check'
+  Assert-A1 ($correct.LoadedSourceSha256 -ceq $ExpectedWriteSha) 'correct loaded-source identity was not retained'
+}
+
 Invoke-A1Case 'foreign-task-replacement-not-deleted' {
   $owned = [pscustomobject]@{Name='fixture';InvocationId='owned';DefinitionSha256=[string]::new([char]'a',64)}
   $foreign = [pscustomobject]@{Name='fixture';InvocationId='foreign';DefinitionSha256=[string]::new([char]'b',64)}

@@ -1,19 +1,20 @@
 {
   "schema": "lnwjud_write_v1_current_source_hashes/1",
-  "contract_id": "LNWJUD-S1-AMENDMENT-A1-20260929",
+  "contract_id": "LNWJUD-S1-AMENDMENT-A2-20260930",
   "parent_contract": "LNWJUD-WRITE-V1-SAFETY-CLOSURE-S1-20260929",
-  "base_head": "d63188faa941ca77cc9626b6d389e11a7a08a267",
-  "base_tree": "55231a9afa10cc70d29984cec6709028faafaa32",
+  "parent_amendment": "LNWJUD-S1-AMENDMENT-A1-20260929",
+  "base_head": "88d6767178e1230e370372ddb8a8ed7974aff6e4",
+  "base_tree": "fcb406f4ca53c0094868c4054d84a7d22e2a95ce",
   "canonical_at_dispatch": "b06320999f98aeefb33329971eee03405524e5af",
   "predecessor_head": "77ff2529e3e43dd4a502d0b00afcf44bfd58d571",
   "algorithm": "SHA256",
-  "scope": "Exact final UTF-8 source/doc bytes for owner-approved Amendment A1 before CT commit",
+  "scope": "Exact final UTF-8 source/doc bytes for owner-approved Amendment A2 before CT commit",
   "self_hash_excluded": "tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json",
   "files": [
     {
       "path": "docs/handoffs/LNWJUD_WRITE_V1_20260928.md",
-      "sha256": "1bc1836d21b165045cd6ae77f9b3be7b972fb7c9f12d04796957014917101dc4",
-      "bytes": 10320
+      "sha256": "4e260502313322c9f87d8bfc88f4ea4ef6f9d6d1ac3156c7f1915dcd9062093c",
+      "bytes": 11587
     },
     {
       "path": "tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs",
@@ -22,8 +23,8 @@
     },
     {
       "path": "tools/lnwjud/current_write_v1/README.md",
-      "sha256": "562619c2a90a87e0f6a77152de176cc9a4ef95ea9dbefe3c1b416ce845e005fe",
-      "bytes": 7105
+      "sha256": "da842dd75203672e9b756e67f15a3dc0593b1fa78cf629c5b6dbdbaec9996c1f",
+      "bytes": 7320
     },
     {
       "path": "tools/lnwjud/current_write_v1/build_snapshot.py",
@@ -47,8 +48,8 @@
     },
     {
       "path": "tools/lnwjud/current_write_v1/start_write_v1.ps1",
-      "sha256": "89f4c40ebde4afa3679bcf17eb3184b960f1fd902b04b99822b7d99ef9db399b",
-      "bytes": 25881
+      "sha256": "d1c7a4dafad18296e9c8ec538749bf7c63599d5e1fb8ae1a1498f1ba63433eea",
+      "bytes": 26035
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_source_bound_gateway_loader.cjs",
@@ -62,8 +63,8 @@
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_write_v1_a1.ps1",
-      "sha256": "8d70742ddbc7d6ac0ad38d726079f812f05858686f8072c831f56ee8b7d0e747",
-      "bytes": 8086
+      "sha256": "6867470b7e9215b9648de45b04d8633e69bf3fff7c1d40f6723c0e2aaead29fe",
+      "bytes": 13713
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_write_v1_repair1.cjs",
@@ -77,8 +78,8 @@
     },
     {
       "path": "tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs",
-      "sha256": "59ac9370c66f80817334d1cdda1e058acd27ec250b22dda183353d5644b2b3d0",
-      "bytes": 3123
+      "sha256": "6a662f9b2a188f169f1b543bae15ed682fe2da3e518dbc740b30717128440cf1",
+      "bytes": 3198
     }
   ]
 }

@@ -252,6 +252,7 @@ function Get-ExactOwnedListenerIdentity(
   [scriptblock]$HashLookup={param([string]$ExecutablePath) Sha $ExecutablePath},
   [scriptblock]$SourceIdentityLookup={param([int]$LookupPort) Invoke-RestMethod -Uri ("http://127.0.0.1:$LookupPort/__ea_lab_loaded_source_identity_v1") -TimeoutSec 3}
 ){
+  if([string]::IsNullOrWhiteSpace($ExpectedSourceSha)){throw 'expected source SHA256 required'}
   $connections=@(& $ConnectionLookup $Port)
   if($connections.Count-eq0){return $null}
   if($connections.Count-ne1){throw "ambiguous listener ownership port=$Port count=$($connections.Count)"}
@@ -300,7 +301,10 @@ function Stop-KnownListener([int]$Port,[string]$ExpectedScript,[string]$Expected
 }
 function Route-IsReady(
   [string]$HealthBaseOverride='',
-  [scriptblock]$ListenerLookup={param([int]$LookupPort,[string]$ExpectedScript) Get-ExactOwnedListenerIdentity $LookupPort $ExpectedScript},
+  [scriptblock]$ListenerLookup={
+    param([int]$LookupPort,[string]$ExpectedScript,[string]$ExpectedSourceSha)
+    Get-ExactOwnedListenerIdentity $LookupPort $ExpectedScript $ExpectedSourceSha
+  },
   [scriptblock]$StatusLookup={param([string]$BaseUrl) Invoke-RestMethod -Uri ($BaseUrl+'/api/status') -TimeoutSec 3},
   [scriptblock]$HealthLookup={param([string]$Url) Wait-Ready $Url 2}
 ){

@@ -92,7 +92,7 @@ Task rollback uses immediate exact-identity readback followed by the Windows Tas
 
 Runtime preparation after integration and targeted independent PASS is mechanical only: deploy `start_write_v1.ps1`, `source_bound_gateway_loader.cjs`, `refresh_write_v1_snapshot.ps1`, and `install_tasks.ps1` to `D:\EA_LAB_CONTROL\lnwjud-write-v1-20260928`; deploy the Write gateway as `EA_LAB_CurrentWrite_V1_HTTP_Gateway.bundle.cjs`; retain the accepted V2 mapping `D:\EA_LAB_CONTROL\lnwjud-current-read-v2-20260922\EA_LAB_CurrentRead_V2_HTTP_Gateway.bundle.cjs`. The loader invocations are `<node> <loader> <V2 bundle> <V2 SHA256>` on port 18767 and `<node> <loader> <Write bundle> <Write SHA256>` on port 18768. The only intended task identities remain `EA_LAB_LNWJUD_WriteV1` (logon supervisor) and `EA_LAB_LNWJUD_WriteV1_Refresh` (10-minute refresh), created together by one invocation UUID. Do not install or start them before integration and independent PASS.
 
-Current A1 runtime-source hashes (final UTF-8 bytes before CT intake) are:
+Historical A1 runtime-source hashes (final UTF-8 bytes before A1 CT intake) are:
 
 - supervisor `start_write_v1.ps1`: `89f4c40ebde4afa3679bcf17eb3184b960f1fd902b04b99822b7d99ef9db399b`;
 - source-bound loader `source_bound_gateway_loader.cjs`: `06593b76abd45e53ec691455c70b9e7486d34b487eb846510d8dd0a2cfaca505`;
@@ -101,4 +101,10 @@ Current A1 runtime-source hashes (final UTF-8 bytes before CT intake) are:
 - unchanged Write gateway source: `0ee04a04ba1a2ee5482363fa0a7aac86ba0b8cb4a7decd7bee5a2cbb90abddb1`;
 - unchanged accepted external V2 fallback bundle pin: `c8dd4c130398c7dd192c48edeef53d836a739583df569b492a5b4b170a6958b1`.
 
-`CURRENT_SOURCE_SHA256.json` is the complete A1 source/doc byte manifest and remains authoritative for every allowed repository file covered by this amendment.
+## Owner-approved Amendment A2 — source prepared, runtime not activated
+
+Amendment A2 fixes the production default `Route-IsReady` listener binding at exact base `88d6767178e1230e370372ddb8a8ed7974aff6e4`. Its default `ListenerLookup` now accepts and forwards `LookupPort`, `ExpectedScript`, and `ExpectedSourceSha` to `Get-ExactOwnedListenerIdentity` for both the Write route on port 18768 and the Current Read V2 route on port 18767. Missing or empty expected source SHA identity fails closed before listener discovery. Wrong expected SHA identity fails closed, while the correct expected SHA reaches the loaded-source identity check.
+
+The deterministic A2 fixture calls `Route-IsReady` without overriding `ListenerLookup`; it replaces only the in-memory listener identity boundary and performs no network, process, credential, Scheduled Task, or runtime activation. All inherited A1, S1, Repair1, and source-bound loader fixtures remain required. The current A2 supervisor SHA256 is `d1c7a4dafad18296e9c8ec538749bf7c63599d5e1fb8ae1a1498f1ba63433eea`; the accepted external Write and V2 bundle pins are unchanged.
+
+`CURRENT_SOURCE_SHA256.json` is the complete A2 source/doc byte manifest and remains authoritative for every file in its exact listed scope. Integration and runtime activation still require the separate Control Tower commit and targeted exact-head independent review; this author phase grants neither.
