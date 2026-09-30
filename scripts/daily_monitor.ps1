@@ -145,8 +145,8 @@ if ($projExit -ne 0) {
 # That split is the actual ORDER-218 finding: the Boss_16 truncation flag was ONE DAY old and
 # still invisible, while 180-odd historical sidecars were never the problem.
 "--- detector digest ---" | Add-Content $log
-powershell -NoProfile -File $detectorDigest *>> $log
-powershell -NoProfile -File $detectorDigest -SinceDays 2 -Quiet *>> $log
+powershell -NoProfile -File $detectorDigest -Root $RepoRoot *>> $log
+powershell -NoProfile -File $detectorDigest -Root $RepoRoot -SinceDays 2 -Quiet *>> $log
 if ($LASTEXITCODE -eq 2) {
     $failed += 'detector-flags'
     "ALERT: a detector flagged something in the last 2 days - see the digest above before trusting any recent run or building a bundle" | Add-Content $log

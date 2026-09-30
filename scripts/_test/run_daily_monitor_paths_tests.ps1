@@ -37,6 +37,13 @@ function Assert-True {
     param([string]$What, [bool]$Condition)
     Assert-Equal $What $true $Condition
 }
+function Test-DetectorInvocationRoot {
+    param([object[]]$Invocation, [string]$ExpectedRoot)
+    $rootIndex = [Array]::IndexOf($Invocation, '-Root')
+    return ($rootIndex -ge 0 -and
+            ($rootIndex + 1) -lt $Invocation.Count -and
+            "$($Invocation[$rootIndex + 1])" -eq $ExpectedRoot)
+}
 
 $legacyScript = 'D:\EA_LAB\scripts\daily_monitor.ps1'
 $repairScript = Join-Path $RepoRoot 'scripts\daily_monitor.ps1'
@@ -136,6 +143,63 @@ Assert-True 'DailyMonitor still owns its generated audit commit surface' ($allSo
 Assert-True 'DailyMonitor invokes VPS return ingest before snapshot build' `
     ($allSource['scripts\daily_monitor.ps1'].IndexOf("Step 'vps-return'") -ge 0 -and
      $allSource['scripts\daily_monitor.ps1'].IndexOf("Step 'vps-return'") -lt $allSource['scripts\daily_monitor.ps1'].IndexOf("Step 'snapshot'"))
+
+# Execute only the two shipped detector call-site statements with a bounded stub. This
+# proves their argument binding from a caller cwd unrelated to the repository without
+# invoking DailyMonitor, detector_digest, or any other monitor-chain component.
+$dailyMonitorPath = Join-Path $RepoRoot 'scripts\daily_monitor.ps1'
+$dailyTokens = $null
+$dailyParseErrors = $null
+$dailyAst = [System.Management.Automation.Language.Parser]::ParseFile(
+    $dailyMonitorPath,
+    [ref]$dailyTokens,
+    [ref]$dailyParseErrors
+)
+$detectorCalls = @($dailyAst.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.PipelineAst] -and
+    $node.Extent.Text -match '^\s*powershell\s+-NoProfile\s+-File\s+\$detectorDigest(?:\s|$)'
+}, $true))
+Assert-Equal 'exactly two shipped detector call sites are present' 2 $detectorCalls.Count
+
+$fixtureCwd = Join-Path ([System.IO.Path]::GetTempPath()) ("daily-monitor-root-cage-{0}" -f [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $fixtureCwd | Out-Null
+$originalLocation = Get-Location
+try {
+    Set-Location -LiteralPath $fixtureCwd
+    $script:detectorInvocations = @()
+    function powershell {
+        $script:detectorInvocations += ,@($args)
+        $global:LASTEXITCODE = 0
+    }
+    $detectorDigest = Join-Path $RepoRoot 'scripts\detector_digest.ps1'
+    $log = Join-Path $fixtureCwd 'detector-cage.log'
+    foreach ($call in $detectorCalls) {
+        & ([scriptblock]::Create($call.Extent.Text))
+    }
+} finally {
+    Set-Location -LiteralPath $originalLocation
+    Remove-Item -LiteralPath function:\powershell -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $fixtureCwd -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+Assert-Equal 'bounded fixture captured both detector invocations' 2 $script:detectorInvocations.Count
+Assert-True 'negative control: missing root cannot satisfy detector root binding' `
+    (-not (Test-DetectorInvocationRoot -Invocation @('-NoProfile','-File',$detectorDigest) -ExpectedRoot $RepoRoot))
+Assert-True 'negative control: wrong root cannot satisfy detector root binding' `
+    (-not (Test-DetectorInvocationRoot -Invocation @('-NoProfile','-File',$detectorDigest,'-Root','C:\Windows\System32') -ExpectedRoot $RepoRoot))
+if ($script:detectorInvocations.Count -eq 2) {
+    Assert-True 'full detector call passes the resolved repository root from unrelated cwd' `
+        (Test-DetectorInvocationRoot -Invocation $script:detectorInvocations[0] -ExpectedRoot $RepoRoot)
+    Assert-True 'full detector call remains the unfiltered digest' `
+        ([Array]::IndexOf($script:detectorInvocations[0], '-SinceDays') -lt 0 -and
+         [Array]::IndexOf($script:detectorInvocations[0], '-Quiet') -lt 0)
+    Assert-True 'recent/quiet detector call passes the resolved repository root from unrelated cwd' `
+        (Test-DetectorInvocationRoot -Invocation $script:detectorInvocations[1] -ExpectedRoot $RepoRoot)
+    Assert-True 'recent/quiet detector call preserves its existing filters' `
+        ([Array]::IndexOf($script:detectorInvocations[1], '-SinceDays') -ge 0 -and
+         [Array]::IndexOf($script:detectorInvocations[1], '-Quiet') -ge 0)
+}
 
 Write-Host "RESULT: $script:pass passed, $script:fail failed"
 if ($script:fail -gt 0) { exit 1 }
