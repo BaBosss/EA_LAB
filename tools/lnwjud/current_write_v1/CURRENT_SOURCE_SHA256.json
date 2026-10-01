@@ -48,7 +48,7 @@
     },
     {
       "path": "tools/lnwjud/current_write_v1/start_write_v1.ps1",
-      "sha256": "d1c7a4dafad18296e9c8ec538749bf7c63599d5e1fb8ae1a1498f1ba63433eea",
+      "sha256": "89241271415a202ccb3199ee583bbcf305d724bda34e579edb2d19fac3bad054",
       "bytes": 26035
     },
     {
@@ -82,5 +82,5 @@
       "bytes": 3198
     }
   ],
-  "owner_approved_git_repin": {"date":"2026-10-01","base_head":"20a066f4ff77c2fe9bd867814f53eda326711b43","approval":"อนุมัติ re-pin Git hash","git_path":"C:\\Program Files\\Git\\cmd\\git.exe","git_version":"2.56.0.windows.1","previous_sha256":"78211c7ed73988da93a6d8a33d47ec6187f464d7ea2a9a00c182bbd7a1ecf30f","current_sha256":"7cd588850959546663c81077af076835558c6a6af33506a64a65784743df92a1","scope":"Git executable identity pin only; inherited A2 contract and safety behavior unchanged"}
+  "owner_approved_git_repin": {"date":"2026-10-01","base_head":"20a066f4ff77c2fe9bd867814f53eda326711b43","approval":"อนุมัติ re-pin Git hash","git_path":"C:\\Program Files\\Git\\cmd\\git.exe","git_version":"2.56.0.windows.1","previous_sha256":"78211c7ed73988da93a6d8a33d47ec6187f464d7ea2a9a00c182bbd7a1ecf30f","current_sha256":"7cd588850959546663c81077af076835558c6a6af33506a64a65784743df92a1","scope":"Git executable identity pin and dependent gateway source/supervisor hashes only; inherited A2 safety behavior unchanged"}
 }
