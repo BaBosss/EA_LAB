@@ -3,6 +3,12 @@ from __future__ import annotations
 import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess, sys, uuid
 from html.parser import HTMLParser
 UTC = dt.timezone.utc
+WORK_BUCKETS = (
+    'CURRENT ACTIONABLE', 'READY', 'WAITING / BLOCKED', 'OWNER DECISION NEEDED',
+    'PARKED', 'HISTORICAL UNRESOLVED / UNKNOWN', 'ACTUAL LIVE JOBS', 'RECENTLY DONE',
+)
+CANONICAL_WORK_SOURCES = ('PROJECT_STATE.md', 'taskboards/active/P01.md',
+                          'taskboards/active/P02.md', 'taskboards/active/P03.md')
 LOADED_SOURCE_SHA256 = hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest()
 SOURCE_ADAPTER_IMPORT_ALLOWLIST = (
     'tools/mobile_report_hub/source_adapters/__init__.py',
@@ -34,7 +40,7 @@ def number(value):
     except (ValueError, TypeError): return None
     return n if math.isfinite(n) else None
 def stamp(value):
-    if not isinstance(value,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})',value): return None
+    if not isinstance(value,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?(?:Z|[+-]\d{2}:\d{2})',value): return None
     try:
         if value[-1]!='Z' and (int(value[-5:-3])>23 or int(value[-2:])>59): return None
         t = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
@@ -115,8 +121,23 @@ def work_presentation(row):
         notes.append('ผลจบ job ไม่ลบ gate ที่ระบุไว้')
     if state=='DONE' and terminal and job_state!='COMPLETE':
         notes.append('DONE ปิดเฉพาะขอบเขต Registry; ผล job เดิมยังคงถูกแสดง')
-    return {'display_state':display,'category':category,'reason_th':reason,'next_action_th':action,
-            'reconciliation':notes,'unresolved':state!='DONE'}
+    terminal_states={'DONE','CLOSED','COMPLETE','REVIEWED','RESOLVED','ACCEPTED'}
+    alive=any(row.get(k) is True for k in ('runner_alive','child_alive','postcondition_alive'))
+    actual_live=(health=='ACTIVE' and row.get('process_state') in ('STARTING','RUNNING','POSTCONDITION_RUNNING','CANCEL_REQUESTED')
+                 and alive and row.get('process_freshness')=='CURRENT')
+    upper=(state+' '+blocker).upper(); source=row.get('source_class') or 'UNKNOWN'
+    historical=(source=='LANE_REGISTRY' and row.get('freshness')!='CURRENT')
+    if actual_live: bucket='ACTUAL LIVE JOBS'
+    elif historical: bucket='HISTORICAL UNRESOLVED / UNKNOWN'
+    elif state in terminal_states: bucket='RECENTLY DONE'
+    elif any(token in upper for token in ('OWNER_DECISION','OWNER DECISION','OWNER_APPROVAL','PENDING_OWNER','E_OWNER')): bucket='OWNER DECISION NEEDED'
+    elif 'PARKED' in upper or state=='HOLD': bucket='PARKED'
+    elif state in ('READY','OPEN') and not blocker: bucket='READY'
+    elif state in ('WAITING','BLOCKED') or blocker: bucket='WAITING / BLOCKED'
+    elif state in ('RUNNING','REVIEW','FROZEN','INTEGRATING','CLAIMED'): bucket='CURRENT ACTIONABLE'
+    else: bucket='HISTORICAL UNRESOLVED / UNKNOWN'
+    return {'display_state':display,'category':category,'reason_th':reason,'next_action_th':action,'next':action,
+            'bucket':bucket,'actual_live':actual_live,'reconciliation':notes,'unresolved':state not in terminal_states}
 
 def safe_bytes(path, root, limit=6_000_000):
     p=pathlib.Path(path).absolute(); root=pathlib.Path(root).absolute()
@@ -485,8 +506,80 @@ class Model:
                 'heartbeat_age_sec':number(heartbeat),'retry_decision':x['retry_decision'],
                 'checked_utc':clean(x.get('checked_utc'),60),'status_source':'ACCEPTED_CHAT_STALL_LANE_STATUS'}
 
+    def _canonical_work_documents(self):
+        if not getattr(self,'sha',None): return {}
+        docs={}
+        for path in CANONICAL_WORK_SOURCES:
+            try: docs[path]=self.blob(path).decode('utf-8-sig',errors='strict')
+            except (OSError,ValueError,KeyError,TypeError,subprocess.SubprocessError,UnicodeError): pass
+        return docs
+
+    @staticmethod
+    def _taskboard_state(heading):
+        aliases=(
+            ('OWNER_DECISION_REQUIRED',r'OWNER[ _-]DECISION(?:[ _-]REQUIRED)?|PENDING[ _-]OWNER|OWNER[ _-]EXTERNAL'),
+            ('PARKED',r'PARKED|HOLD[ _-]FOR[ _-]LATER'),
+            ('BLOCKED',r'BLOCKED|PENDING[ _-]ATTACH'),
+            ('WAITING',r'WAITING'),
+            ('READY',r'READY|OPEN'),
+            ('DONE',r'DONE|CLOSED|COMPLETE|REVIEWED|RESOLVED|ACCEPTED'),
+            ('RUNNING',r'RUNNING|CLAIMED|INTEGRATING|REVIEW|FROZEN'),
+        )
+        terms='|'.join(pattern for _,pattern in aliases)
+        spans=[span.strip().upper() for span in re.findall(r'`([^`\r\n]+)`',heading)]
+        declared=[span for span in spans if re.match(r'^(?:'+terms+r')(?=$|[^A-Z0-9])',span)]
+        evidence=set()
+        for span in declared:
+            for state,pattern in aliases:
+                if re.search(r'(?<![A-Z0-9])(?:'+pattern+r')(?![A-Z0-9])',span): evidence.add(state)
+        return next(iter(evidence)) if len(evidence)==1 else 'UNKNOWN'
+
+    def _taskboard_rows(self,docs):
+        rows={}
+        for path in CANONICAL_WORK_SOURCES[1:]:
+            text=docs.get(path)
+            if text is None: continue
+            for line_number,line in enumerate(text.splitlines(),1):
+                match=re.match(r'^\s*#{2,4}\s+.*?\b((?:ORDER|MERGE)-[A-Za-z0-9_.-]+)\b',line)
+                if not match: continue
+                work_id=match.group(1); locator=f'{path}:{line_number}'
+                if work_id in rows:
+                    rows[work_id]['source_locator']+='; '+locator
+                    continue
+                state=self._taskboard_state(line)
+                tag=re.search(r'\[([^\]]{1,60})\]',line)
+                title=clean(re.sub(r'[`*_~]+','',re.sub(r'^\s*#{2,4}\s+','',line)),600)
+                row={'id':work_id,'work_id':work_id,'lane_id':'UNKNOWN','title':title,'objective':title,
+                     'state':state,'raw_state':state,'owner':'UNKNOWN','worker':'UNKNOWN','lane_owner':'UNKNOWN',
+                     'updated_at':None,'last_seen':None,'freshness':'UNKNOWN','job_id':None,'job_state':'UNKNOWN',
+                     'ended_at':None,'process_state':'UNKNOWN','process_health':'UNKNOWN','process_freshness':'UNKNOWN',
+                     'runner_alive':None,'child_alive':None,'postcondition_alive':None,'heartbeat_age_sec':None,
+                     'retry_decision':'UNKNOWN','process_checked_utc':None,'progress':'UNKNOWN',
+                     'blocker':state if state in ('BLOCKED','OWNER_DECISION_REQUIRED','PARKED') else '',
+                     'head':self.sha,'reviewed_head':None,'reviewer':'UNKNOWN','dependencies':[],
+                     'track':clean(tag.group(1),60).upper() if tag else 'UNKNOWN','ea_family':'UNKNOWN',
+                     'acceptance':'UNKNOWN','canonical':'EXACT_CANONICAL_SOURCE','canonical_relation':'EXACT_CANONICAL_SOURCE',
+                     'consumption':'UNKNOWN','direct_consumer':'UNKNOWN','known_aliases':[],
+                     'superseded_by_claim':None,'source_class':'CANONICAL_TASKBOARD','source_locator':locator,
+                     'evidence_locator':locator,'source_status':'CANONICAL_TASK_BLOCK_AVAILABLE',
+                     'plan_status':state,'plan_source_locator':locator,'ownership_state':'UNKNOWN',
+                     'execution_state':'UNKNOWN','prohibited_actions':'NO MUTATION FROM MONITOR; FOLLOW THE EXACT TASK CONTRACT',
+                     'acceptance_boundary':'UNKNOWN UNTIL ACCEPTED EVIDENCE/REVIEW IS SOURCE-BOUND',
+                     'evidence_basis':'Canonical taskboard heading at the exact origin/master blob; ownership, execution and acceptance remain separate.'}
+                row.update(work_presentation(row)); rows[work_id]=row
+        return list(rows.values())
+
+    @staticmethod
+    def _work_search_text(row):
+        values=[row.get(k) for k in ('id','work_id','lane_id','title','objective','blocker','direct_consumer',
+                                      'source_locator','evidence_locator','track','state','bucket','freshness',
+                                      'owner','worker','lane_owner','ea_family')]
+        values.extend(row.get('known_aliases') or [])
+        return ' '.join(str(v) for v in values if v not in (None,''))[:12000]
+
     def work(self):
-        root=pathlib.Path(self.c['registry']); lease_root=pathlib.Path(self.c['leases']); jobs_root=pathlib.Path(self.c['jobs']); result=[]; totals={}
+        root=pathlib.Path(self.c['registry']); lease_root=pathlib.Path(self.c['leases']); jobs_root=pathlib.Path(self.c['jobs']); registry_rows=[]; totals={}
+        docs=self._canonical_work_documents()
         for p in sorted(root.glob('*.json')):
             try:
                 x=read_json(p,root); lane=x['lane_id']; state=x['state']; updated=x.get('updated_at')
@@ -510,23 +603,65 @@ class Model:
                 process_state='NOT_PROBED'; process_health='NOT_PROBED'
                 if state=='RUNNING' and not jobid:
                     process_state='NOT_OBSERVED'; process_health='NO_DURABLE_JOB'
-                result.append({'id':lane,'title':lane.removeprefix('ct-').replace('-',' '),'state':state,'owner':clean(x.get('owner_chat'),100),'worker':clean(x.get('worker'),140),'updated_at':updated,'freshness':age_state(updated,24),'job_id':jobid,'job_state':js,'ended_at':end,'process_state':process_state,'process_health':process_health,'runner_alive':None,'child_alive':None,'postcondition_alive':None,'heartbeat_age_sec':None,'retry_decision':'UNKNOWN','process_checked_utc':None,'progress':'UNKNOWN','blocker':clean(x.get('blocker_class'),1400),'head':x.get('head_sha'),'reviewed_head':x.get('reviewed_head'),'reviewer':clean(x.get('reviewer'),140),'dependencies':[clean(d,128) for d in x.get('dependencies',[]) if isinstance(d,str)],'acceptance':'UNKNOWN','canonical':'NOT_ASSESSED','consumption':'UNKNOWN','superseded_by_claim':clean(x.get('superseded_by'),180) or None,'source_status':'REGISTRY_RECORD_AVAILABLE','evidence_basis':'Registry declaration + available lease/job/process observations; each remains a separate source.'})
+                references=[path for path,text in docs.items() if lane in text]
+                head=x.get('head_sha'); canonical_relation=('EXACT_CANONICAL_HEAD' if head and head==getattr(self,'sha',None)
+                    else 'DIFFERENT_HEAD' if head and getattr(self,'sha',None) else 'UNKNOWN')
+                objective=clean(x.get('objective'),1000); owner=clean(x.get('owner_chat'),100); worker=clean(x.get('worker'),140)
+                locator='registry-v1/'+p.name
+                registry_rows.append({'id':lane,'work_id':lane,'lane_id':lane,'title':objective or lane.removeprefix('ct-').replace('-',' '),
+                    'objective':objective or 'UNKNOWN','state':state,'raw_state':state,'owner':owner,'worker':worker,
+                    'lane_owner':owner or worker or 'UNKNOWN','updated_at':updated,'last_seen':updated,'freshness':age_state(updated,24),
+                    'job_id':jobid,'job_state':js,'ended_at':end,'process_state':process_state,'process_health':process_health,
+                    'process_freshness':'UNKNOWN','runner_alive':None,'child_alive':None,'postcondition_alive':None,
+                    'heartbeat_age_sec':None,'retry_decision':'UNKNOWN','process_checked_utc':None,'progress':'UNKNOWN',
+                    'blocker':clean(x.get('blocker_class'),1400),'head':head,'reviewed_head':x.get('reviewed_head'),
+                    'reviewer':clean(x.get('reviewer'),140),'dependencies':[clean(d,128) for d in x.get('dependencies',[]) if isinstance(d,str)],
+                    'track':clean(x.get('track'),60) or 'UNKNOWN','ea_family':clean(x.get('ea_family') or x.get('family'),100) or 'UNKNOWN',
+                    'acceptance':'UNKNOWN','canonical':'NOT_ASSESSED','canonical_relation':canonical_relation,
+                    'consumption':'UNKNOWN','direct_consumer':clean(x.get('direct_consumer'),1000) or 'UNKNOWN',
+                    'known_aliases':[lane.removeprefix('ct-')] if lane.startswith('ct-') else [],
+                    'superseded_by_claim':clean(x.get('superseded_by'),180) or None,'source_class':'LANE_REGISTRY',
+                    'source_locator':locator,'evidence_locator':('durable-jobs/'+jobid if jobid else locator),
+                    'source_status':'REGISTRY_RECORD_AVAILABLE','plan_status':'REFERENCED' if references else 'NOT_FOUND_IN_CANONICAL_PLAN_SOURCES' if docs else 'UNAVAILABLE',
+                    'plan_source_locator':'; '.join(references) or 'UNKNOWN','ownership_state':state,'execution_state':js,
+                    'prohibited_actions':'NO MUTATION, RETRY, KILL, LAUNCH, PUSH OR STATE CHANGE FROM MONITOR',
+                    'acceptance_boundary':'UNKNOWN UNTIL ACCEPTED EVIDENCE/REVIEW IS SOURCE-BOUND',
+                    'evidence_basis':'Registry declaration + available lease/job/process observations; plan/status, ownership, execution and acceptance remain separate.'})
             except (OSError,ValueError,KeyError,TypeError) as e: self.issue('lane_observation',e)
-        result.sort(key=lambda r:(r['freshness']=='CURRENT',r['updated_at'] or ''),reverse=True)
+        registry_rows.sort(key=lambda r:(r['freshness']=='CURRENT',r['updated_at'] or ''),reverse=True)
         probe_states={'RUNNING','REVIEW','FROZEN','INTEGRATING','WAITING','BLOCKED'}
-        candidates=[r for r in result if r['freshness']=='CURRENT' and r['job_id'] and r['state'] in probe_states][:12]
+        candidates=[r for r in registry_rows if r['freshness']=='CURRENT' and r['job_id'] and r['state'] in probe_states]
         for row in candidates:
             try:
                 live=self.lane_status(row['id'],row['job_id'])
                 row['process_state']=live['observed_state']; row['process_health']=live['health']
                 row['runner_alive']=live['runner_alive']; row['child_alive']=live['child_alive']; row['postcondition_alive']=live['postcondition_alive']
-                row['heartbeat_age_sec']=live['heartbeat_age_sec']; row['retry_decision']=live['retry_decision']; row['process_checked_utc']=live['checked_utc']
+                row['heartbeat_age_sec']=live['heartbeat_age_sec']; row['retry_decision']=live['retry_decision']; row['process_checked_utc']=live['checked_utc']; row['process_freshness']=age_state(live['checked_utc'],1)
             except (OSError,ValueError,KeyError,TypeError,subprocess.SubprocessError,UnicodeError) as e:
                 row['process_state']='UNKNOWN'; row['process_health']='UNAVAILABLE'
                 self.issue('lane_status:'+row['id'],e)
-        for row in result: row.update(work_presentation(row))
-        return {'status':'INVALID' if any(e['source']=='lane_observation' for e in self.errors) else 'AVAILABLE' if root.is_dir() else 'MISSING','rows':result,'totals':totals,'observed_at':utcnow(),'process_probed_count':len(candidates),
-                'basis':'Registry declarations + existing lease/result bytes. Fresh leased lanes additionally consume accepted chat-stall lane_status process identity; heartbeat is liveness evidence, not work-progress proof.'}
+        for row in registry_rows: row.update(work_presentation(row))
+        known={r['id'] for r in registry_rows}; plan_rows=[r for r in self._taskboard_rows(docs) if r['id'] not in known]
+        result=registry_rows+plan_rows
+        for row in result: row['search_text']=self._work_search_text(row)
+        process_proven_count=sum(r['process_health'] not in ('NOT_PROBED','UNKNOWN','UNAVAILABLE')
+                                 and r['process_state'] not in ('NOT_PROBED','UNKNOWN')
+                                 and r['process_freshness']=='CURRENT' for r in candidates)
+        process_probe_complete=process_proven_count==len(candidates)
+        bucket_counts={bucket:sum(r['bucket']==bucket for r in result) for bucket in WORK_BUCKETS}
+        if not process_probe_complete: bucket_counts['ACTUAL LIVE JOBS']=None
+        counts={'active_workers':sum(r['source_class']=='LANE_REGISTRY' and r['freshness']=='CURRENT' and r['unresolved'] and r['state'] in {'RUNNING','REVIEW','FROZEN','INTEGRATING','CLAIMED'} for r in result),
+                'actual_live_jobs':sum(r['actual_live'] for r in result) if process_probe_complete else None,
+                'historical_unresolved_unknown':bucket_counts['HISTORICAL UNRESOLVED / UNKNOWN'],
+                'recently_done':bucket_counts['RECENTLY DONE'],'total':len(result),'by_bucket':bucket_counts}
+        status='INVALID' if any(e['source']=='lane_observation' for e in self.errors) else 'AVAILABLE' if root.is_dir() or plan_rows else 'MISSING'
+        return {'status':status,'rows':result,'totals':totals,'counts':counts,'observed_at':utcnow(),'process_probed_count':len(candidates),
+                'process_proven_count':process_proven_count,'process_eligible_count':len(candidates),'process_probe_complete':process_probe_complete,
+                'sources':{'plan_status':{'class':'CANONICAL_PROJECT_STATE_AND_ACTIVE_TASKBOARDS','availability':'AVAILABLE' if docs else 'UNAVAILABLE','locators':list(docs)},
+                           'ownership':{'class':'LANE_REGISTRY','availability':'AVAILABLE' if root.is_dir() else 'UNAVAILABLE'},
+                           'execution':{'class':'DURABLE_JOB_AND_PROCESS_IDENTITY','availability':'PARTIAL' if root.is_dir() else 'UNAVAILABLE'},
+                           'acceptance':{'class':'ACCEPTED_EVIDENCE_REVIEW','availability':'UNKNOWN'}},
+                'basis':'Canonical PROJECT_STATE/taskboards own plan/status; Registry owns reservations; durable jobs plus exact process identity own execution; accepted evidence/review owns acceptance. Disagreement remains visible.'}
     def knowledge(self):
         root=pathlib.Path(self.c['knowledge']); manifest=read_json(root/'MANIFEST_SHA256.json',root)
         entry=next((r for r in manifest['files'] if r['path']=='knowledge_index.json'),None)

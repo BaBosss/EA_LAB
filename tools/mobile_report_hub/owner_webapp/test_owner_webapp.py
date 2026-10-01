@@ -2,7 +2,7 @@ import json, os, pathlib, subprocess, sys, tempfile, unittest
 from types import SimpleNamespace
 from unittest import mock
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
-from model import Model, Refused, SOURCE_ADAPTER_IMPORT_ALLOWLIST, _DashboardParser, clean, safe_bytes, digest, number, age_state, utcnow, stamp, projection_view
+from model import Model, Refused, SOURCE_ADAPTER_IMPORT_ALLOWLIST, WORK_BUCKETS, _DashboardParser, clean, safe_bytes, digest, number, age_state, utcnow, stamp, projection_view, work_presentation
 from server import Application, Handler, config_from_args, parser, render, serialize, reusable, identity
 import datetime as dt
 import shutil
@@ -256,6 +256,7 @@ class SourceAdapterIntegrationTests(unittest.TestCase):
 class ConvergenceTests(unittest.TestCase):
     def test_strict_z_offsets_and_calendar(self):
         self.assertEqual(stamp('2026-09-24T07:00:00+07:00'),stamp('2026-09-24T00:00:00Z'))
+        self.assertIsNotNone(stamp('2026-09-24T00:00:00.1234567Z'))
         for value in (None,[],{},True,'','2026-09-24','2026-09-24T00:00:00','2026-02-30T00:00:00Z','2026-09-24T24:00:00Z','2026-09-24T00:00:00+07:99','2026-09-24T00:00:00+24:00','2026-09-24X00:00:00Z'):
             with self.subTest(value=value): self.assertIsNone(stamp(value)); self.assertEqual(age_state(value),'UNKNOWN')
     def test_future_is_never_current(self):
@@ -440,7 +441,9 @@ class OwnerWebAppUnitTests(unittest.TestCase):
         cfg={'repo':'.','registry':str(registry),'leases':str(leases),'jobs':str(jobs),'lane_status':str(base/'missing_lane_status.ps1')}
         return Model(cfg)
     def _update_work_record(self,model,**changes):
-        path=pathlib.Path(model.c['registry'])/'ct-test-lane.json'
+        paths=list(pathlib.Path(model.c['registry']).glob('*.json'))
+        self.assertEqual(len(paths),1)
+        path=paths[0]
         record=json.loads(path.read_text(encoding='utf-8'))
         record.update(changes)
         path.write_text(json.dumps(record),encoding='utf-8')
@@ -449,20 +452,54 @@ class OwnerWebAppUnitTests(unittest.TestCase):
         path.write_text(json.dumps({'job_id':'job-one','state':state}),encoding='utf-8')
     def test_running_registry_without_durable_job_is_stale_not_chat_liveness(self):
         with tempfile.TemporaryDirectory() as td:
-            rows=self._make_work_roots(td,with_job=False).work()['rows']
+            work=self._make_work_roots(td,with_job=False).work(); rows=work['rows']
         self.assertEqual(len(rows),1); row=rows[0]
         self.assertEqual(row['display_state'],'STALE_REGISTRY')
         self.assertEqual(row['process_health'],'NO_DURABLE_JOB')
         self.assertIsNone(row['runner_alive']); self.assertEqual(row['progress'],'UNKNOWN')
+        self.assertFalse(row['actual_live']); self.assertEqual(work['counts']['actual_live_jobs'],0)
     def test_pid_fields_alone_never_establish_liveness(self):
         with tempfile.TemporaryDirectory() as td:
             model=self._make_work_roots(td,with_job=True)
-            rows=model.work()['rows']
+            work=model.work(); rows=work['rows']
         self.assertEqual(len(rows),1); row=rows[0]
         self.assertEqual(row['process_health'],'UNAVAILABLE')
         self.assertEqual(row['display_state'],'LIVENESS_UNAVAILABLE')
         self.assertNotEqual(row['display_state'],'ACTIVE_PROCESS')
         self.assertIsNone(row['runner_alive']); self.assertEqual(row['progress'],'UNKNOWN')
+        self.assertIsNone(work['counts']['actual_live_jobs'])
+        self.assertIsNone(work['counts']['by_bucket']['ACTUAL LIVE JOBS'])
+        self.assertEqual(work['process_proven_count'],0)
+        self.assertFalse(work['process_probe_complete'])
+    def test_thirteenth_unknown_process_probe_makes_live_counts_unknown(self):
+        with tempfile.TemporaryDirectory() as td:
+            model=self._make_work_roots(td,lane='ct-test-lane-00',with_job=True)
+            registry=pathlib.Path(model.c['registry']); leases=pathlib.Path(model.c['leases']); jobs=pathlib.Path(model.c['jobs'])
+            for index in range(1,13):
+                lane=f'ct-test-lane-{index:02d}'; job_id=f'job-{index:02d}'
+                record={'lane_id':lane,'state':'RUNNING','updated_at':utcnow(),'owner_chat':'fixture',
+                        'worker':'fixture','blocker_class':'','head_sha':'a'*40,'reviewed_head':None,
+                        'reviewer':None,'dependencies':[]}
+                (registry/(lane+'.json')).write_text(json.dumps(record),encoding='utf-8')
+                (leases/(lane+'.json')).write_text(json.dumps({'lane_id':lane,'job_id':job_id}),encoding='utf-8')
+                job=jobs/job_id; job.mkdir()
+                (job/'state.json').write_text(json.dumps({'job_id':job_id,'state':'RUNNING'}),encoding='utf-8')
+            def observation(lane_id,job_id):
+                unknown=lane_id.endswith('-12')
+                return {'health':'UNKNOWN' if unknown else 'ACTIVE','observed_state':'UNKNOWN' if unknown else 'RUNNING',
+                        'durable_state':'RUNNING','runner_alive':not unknown,
+                        'child_alive':False,'postcondition_alive':False,'heartbeat_age_sec':5.0,
+                        'retry_decision':'REFUSE_RETRY','checked_utc':utcnow(),
+                        'status_source':'ACCEPTED_CHAT_STALL_LANE_STATUS'}
+            with mock.patch.object(model,'lane_status',side_effect=observation) as probe:
+                work=model.work()
+        self.assertEqual(probe.call_count,13)
+        self.assertEqual(work['process_probed_count'],13)
+        self.assertEqual(work['process_proven_count'],12)
+        self.assertEqual(work['process_eligible_count'],13)
+        self.assertFalse(work['process_probe_complete'])
+        self.assertIsNone(work['counts']['actual_live_jobs'])
+        self.assertIsNone(work['counts']['by_bucket']['ACTUAL LIVE JOBS'])
     def test_work_maps_only_accepted_lane_status_health(self):
         mapping={'ACTIVE':'ACTIVE_PROCESS','STALLED':'STALLED','RECOVERY_REQUIRED':'RECOVERY_REQUIRED','COMPLETE':'TERMINAL_RECONCILE'}
         with tempfile.TemporaryDirectory() as td:
@@ -477,6 +514,98 @@ class OwnerWebAppUnitTests(unittest.TestCase):
                 self.assertEqual(row['display_state'],expected,health)
                 self.assertEqual(row['process_health'],health,health)
                 self.assertEqual(row['progress'],'UNKNOWN',health)
+    def test_work_locator_fixture_covers_every_bucket_and_unknown_truth(self):
+        base={'state':'UNKNOWN','blocker':'','freshness':'CURRENT','process_health':'UNKNOWN','process_state':'UNKNOWN',
+              'runner_alive':None,'child_alive':None,'postcondition_alive':None,'process_freshness':'UNKNOWN',
+              'source_class':'LANE_REGISTRY','track':'UNKNOWN','ea_family':'UNKNOWN','acceptance':'UNKNOWN',
+              'canonical_relation':'UNKNOWN'}
+        fixtures={
+            'CURRENT ACTIONABLE':base|{'state':'RUNNING'},
+            'READY':base|{'state':'READY'},
+            'WAITING / BLOCKED':base|{'state':'WAITING','blocker':'DEPENDENCY'},
+            'OWNER DECISION NEEDED':base|{'state':'BLOCKED','blocker':'E_OWNER_DECISION_REQUIRED'},
+            'PARKED':base|{'state':'PARKED'},
+            'HISTORICAL UNRESOLVED / UNKNOWN':base|{'state':'RUNNING','freshness':'STALE'},
+            'ACTUAL LIVE JOBS':base|{'state':'RUNNING','process_health':'ACTIVE','process_state':'RUNNING',
+                                      'runner_alive':True,'process_freshness':'CURRENT'},
+            'RECENTLY DONE':base|{'state':'DONE'},
+        }
+        self.assertEqual(tuple(fixtures),WORK_BUCKETS)
+        for expected,row in fixtures.items():
+            with self.subTest(bucket=expected):
+                got=work_presentation(row)
+                self.assertEqual(got['bucket'],expected)
+                self.assertIsInstance(got['next'],str); self.assertTrue(got['next'])
+        unknown=work_presentation(base)
+        self.assertEqual(unknown['bucket'],'HISTORICAL UNRESOLVED / UNKNOWN')
+        self.assertEqual(base['track'],'UNKNOWN'); self.assertEqual(base['ea_family'],'UNKNOWN')
+        self.assertEqual(base['acceptance'],'UNKNOWN'); self.assertEqual(base['canonical_relation'],'UNKNOWN')
+    def test_canonical_taskboard_row_keeps_plan_status_separate_from_acceptance(self):
+        model=Model({'repo':'.','registry':'.','leases':'.','jobs':'.'}); model.sha='a'*40
+        docs={'taskboards/active/P01.md':'## ORDER-LOCATOR-1 — [system] locator slice — `READY`\n'}
+        rows=model._taskboard_rows(docs)
+        self.assertEqual(len(rows),1); row=rows[0]
+        self.assertEqual(row['id'],'ORDER-LOCATOR-1')
+        self.assertEqual(row['plan_status'],'READY')
+        self.assertEqual(row['bucket'],'READY')
+        self.assertEqual(row['track'],'SYSTEM')
+        self.assertEqual(row['acceptance'],'UNKNOWN')
+        self.assertEqual(row['ownership_state'],'UNKNOWN')
+        self.assertEqual(row['execution_state'],'UNKNOWN')
+        self.assertEqual(row['canonical_relation'],'EXACT_CANONICAL_SOURCE')
+    def test_current_taskboard_headings_are_explicit_and_ambiguity_safe(self):
+        model=Model({'repo':'.','registry':'.','leases':'.','jobs':'.'}); model.sha='a'*40
+        docs={'taskboards/active/P01.md':'\n'.join((
+            '## ORDER-1461 — [tooling/integrity] stale detector — `OPEN — item 1 DONE; item 2 still owed`',
+            '## ORDER-731 — [factory/S2a] attested blob pin — `DONE (item 1); item 2 still OPEN`',
+            '## ORDER-MT5-REPORT-PARSER-HARDENING-R4-20260920 — [tooling/reporting] repair — `DONE_REVIEWED / CANONICAL / SCRUTINY_PASS_HIGH / SOURCE_ACCEPTED`',
+            '## ORDER-PROSE-OPEN — OPEN questions are preserved in this completed title — `DONE`',
+            '## ORDER-EXPLICIT-CONFLICT — conflicting declaration — `DONE / BLOCKED`',
+            '## ORDER-OPEN-ONLY — legacy open declaration — `OPEN`',
+        ))}
+        rows={row['id']:row for row in model._taskboard_rows(docs)}
+        self.assertEqual(rows['ORDER-1461']['plan_status'],'UNKNOWN')
+        self.assertEqual(rows['ORDER-731']['plan_status'],'UNKNOWN')
+        self.assertEqual(rows['ORDER-MT5-REPORT-PARSER-HARDENING-R4-20260920']['plan_status'],'DONE')
+        self.assertEqual(rows['ORDER-PROSE-OPEN']['plan_status'],'DONE')
+        self.assertEqual(rows['ORDER-EXPLICIT-CONFLICT']['plan_status'],'UNKNOWN')
+        self.assertEqual(rows['ORDER-OPEN-ONLY']['plan_status'],'READY')
+    def test_accepted_exact_lane_job_active_observation_is_actual_live(self):
+        with tempfile.TemporaryDirectory() as td:
+            model=self._make_work_roots(td,with_job=True)
+            live={'health':'ACTIVE','observed_state':'RUNNING','durable_state':'RUNNING','runner_alive':True,
+                  'child_alive':False,'postcondition_alive':False,'heartbeat_age_sec':5.0,
+                  'retry_decision':'REFUSE_RETRY','checked_utc':utcnow(),'status_source':'ACCEPTED_CHAT_STALL_LANE_STATUS'}
+            with mock.patch.object(model,'lane_status',return_value=live):
+                work=model.work(); row=work['rows'][0]
+        self.assertTrue(row['actual_live'])
+        self.assertEqual(row['bucket'],'ACTUAL LIVE JOBS')
+        self.assertEqual(work['counts']['actual_live_jobs'],1)
+    def test_historical_unknown_rows_searchable_but_excluded_from_active_counts(self):
+        with tempfile.TemporaryDirectory() as td:
+            model=self._make_work_roots(td,lane='historical-family-alias',with_job=False)
+            self._update_work_record(model,state='RUNNING',updated_at='2000-01-01T00:00:00Z',
+                                     objective='historic objective',direct_consumer='future consumer')
+            work=model.work(); row=work['rows'][0]
+        self.assertEqual(row['bucket'],'HISTORICAL UNRESOLVED / UNKNOWN')
+        self.assertIn('historical-family-alias',row['search_text'])
+        self.assertIn('future consumer',row['search_text'])
+        self.assertEqual(work['counts']['active_workers'],0)
+        self.assertEqual(work['counts']['actual_live_jobs'],0)
+    def test_fresh_normal_registry_lane_is_discoverable_without_special_case(self):
+        lane='ct-fb-ai-trading-thread-intake-ro-20260929'
+        with tempfile.TemporaryDirectory() as td:
+            model=self._make_work_roots(td,lane=lane,with_job=False)
+            path=pathlib.Path(model.c['registry'])/(lane+'.json')
+            record=json.loads(path.read_text(encoding='utf-8'))
+            record.update(state='WAITING',objective='Facebook AI trading thread planning intake',
+                          direct_consumer='Main CT planning stream',blocker_class='MAIN_CT_PLANNING_INTAKE_REQUIRED')
+            path.write_text(json.dumps(record),encoding='utf-8')
+            row=model.work()['rows'][0]
+        self.assertEqual(row['id'],lane)
+        self.assertIn(lane,row['search_text'])
+        self.assertIn('Facebook AI trading thread planning intake',row['search_text'])
+        self.assertNotIn(lane,pathlib.Path(__file__).with_name('model.py').read_text(encoding='utf-8'))
     def test_work_refuses_internal_lease_lane_identity_mismatch(self):
         with tempfile.TemporaryDirectory() as td:
             model=self._make_work_roots(td,with_job=True)
