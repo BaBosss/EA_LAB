@@ -18,7 +18,7 @@ def identity(config):
     hashes={name:digest(safe_bytes(root/name,root)) for name in ASSETS}
     hashes.update({'model.py':LOADED_SOURCE_SHA256,'server.py':SERVER_SOURCE_SHA256})
     return {'build_sha256':digest(serialize(hashes)), 'files':hashes,
-            'sources_sha256':digest(serialize({k:str(pathlib.Path(v).absolute()) for k,v in sorted(config.items())}))}
+            'sources_sha256':digest(serialize({k:v if isinstance(v,dict) else str(pathlib.Path(v).absolute()) for k,v in sorted(config.items())}))}
 
 def reusable(health, expected):
     return isinstance(health,dict) and health.get('app')==APP_ID and health.get('status')=='OK' and health.get('read_only') is True and health.get('identity')==expected
@@ -100,9 +100,50 @@ class Server(http.server.ThreadingHTTPServer):
     daemon_threads=True
     allow_reuse_address=False
 def config_from_args(args):
-    return {'repo':args.repo,'adapter_root':args.adapter_root or args.repo,'assets':args.assets,'monitor':args.monitor,'registry':args.registry,
+    config={'repo':args.repo,'adapter_root':args.adapter_root or args.repo,'assets':args.assets,'monitor':args.monitor,'registry':args.registry,
             'jobs':args.jobs,'leases':args.leases,'lane_status':args.lane_status,'runtime':args.runtime,'snapshots':args.snapshots,
             'knowledge':args.knowledge}
+    location=getattr(args,'work_acceptance_config',None)
+    pin=getattr(args,'work_acceptance_config_sha256',None)
+    if location is None and pin is None: return checkpoint_config(args,config)
+    import re
+    if not isinstance(location,str) or not pathlib.Path(location).is_absolute() or not isinstance(pin,str) or re.fullmatch('[0-9a-f]{64}',pin) is None:
+        raise Refused('ACCEPTANCE_CALLER_CONFIG_PIN_REQUIRED')
+    path=pathlib.Path(location);raw=safe_bytes(path,path.parent,1_000_000)
+    if digest(raw)!=pin: raise Refused('ACCEPTANCE_CALLER_CONFIG_HASH_MISMATCH')
+    def pairs(items):
+        result={}
+        for key,value in items:
+            if key in result: raise Refused('ACCEPTANCE_CALLER_CONFIG_DUPLICATE_KEY')
+            result[key]=value
+        return result
+    try:
+        value=json.loads(raw.decode('utf-8-sig'),object_pairs_hook=pairs,
+                         parse_constant=lambda x: (_ for _ in ()).throw(Refused('ACCEPTANCE_CALLER_CONFIG_NONFINITE')))
+    except (UnicodeError,json.JSONDecodeError,RecursionError) as e: raise Refused('ACCEPTANCE_CALLER_CONFIG_INVALID') from e
+    if not isinstance(value,dict) or set(value)!={'manifest','sha256','expected'}:
+        raise Refused('ACCEPTANCE_CALLER_CONFIG_SCHEMA')
+    config['work_acceptance']=value
+    return checkpoint_config(args,config)
+
+def checkpoint_config(args,config):
+    location=getattr(args,'work_checkpoint_config',None);pin=getattr(args,'work_checkpoint_config_sha256',None)
+    if location is None and pin is None:return config
+    import re
+    if not isinstance(location,str) or not pathlib.Path(location).is_absolute() or not isinstance(pin,str) or re.fullmatch('[0-9a-f]{64}',pin) is None:raise Refused('CHECKPOINT_CALLER_PIN_REQUIRED')
+    path=pathlib.Path(location);raw=safe_bytes(path,path.parent,1_000_000)
+    if digest(raw)!=pin:raise Refused('CHECKPOINT_CALLER_HASH_MISMATCH')
+    def pairs(items):
+        result={}
+        for key,value in items:
+            if key in result:raise Refused('CHECKPOINT_CALLER_DUPLICATE_KEY')
+            result[key]=value
+        return result
+    try:value=json.loads(raw.decode('utf-8-sig'),object_pairs_hook=pairs,parse_constant=lambda x: (_ for _ in ()).throw(Refused('CHECKPOINT_CALLER_NONFINITE')))
+    except (UnicodeError,json.JSONDecodeError,RecursionError) as e:raise Refused('CHECKPOINT_CALLER_INVALID') from e
+    if not isinstance(value,dict) or set(value)!={'index','index_sha256','checkpoint','checkpoint_sha256'}:raise Refused('CHECKPOINT_CALLER_SCHEMA')
+    config['work_checkpoint']=value;return config
+
 def parser():
     here=pathlib.Path(__file__).resolve().parent
     p=argparse.ArgumentParser(description='EA_LAB read-only owner Monitor web app')
@@ -115,6 +156,10 @@ def parser():
     p.add_argument('--runtime',default='D:/EA_LAB_WORKSPACE/runtime/daily-monitor-aec3dd24-20260914')
     p.add_argument('--snapshots',default='D:/EA_LAB_WORKSPACE/runtime/daily-monitor-aec3dd24-20260914/portfolio/live_deals')
     p.add_argument('--knowledge',default='D:/EA_LAB_CONTROL/readers/second-brain/versions/8298da26f570ba30654fd31bb9bf66e53dd4051f')
+    p.add_argument('--work-acceptance-config',help='Explicit authorized read-only acceptance config; disabled by default')
+    p.add_argument('--work-acceptance-config-sha256',help='Required exact SHA256 of caller config')
+    p.add_argument('--work-checkpoint-config',help='Explicit authorized passive checkpoint config; disabled by default')
+    p.add_argument('--work-checkpoint-config-sha256',help='Required SHA256 of caller checkpoint config')
     p.add_argument('--port',type=int,default=8768); p.add_argument('--no-open',action='store_true')
     p.add_argument('--offline-out'); p.add_argument('--self-test',action='store_true')
     return p

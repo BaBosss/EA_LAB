@@ -9,6 +9,24 @@ WORK_BUCKETS = (
 )
 CANONICAL_WORK_SOURCES = ('PROJECT_STATE.md', 'taskboards/active/P01.md',
                           'taskboards/active/P02.md', 'taskboards/active/P03.md')
+OWNER_TRACKS = ('SYSTEM', 'EA BUILD / IMPLEMENTATION', 'EA RESEARCH / PLANNING', 'EA TESTING', 'OWNER DECISION')
+OWNER_GROUPS = ('CURRENT ACTIONABLE', 'READY', 'RUNNING', 'WAITING/BLOCKED', 'OWNER DECISION NEEDED', 'PARKED', 'RECENTLY DONE')
+# Only explicit track fields are classified. Unmapped records remain UNKNOWN;
+# SYSTEM is their navigation location, never an assertion of classification.
+OWNER_TRACK_ALIASES = {**{t:t for t in OWNER_TRACKS}, 'EA BUILD':'EA BUILD / IMPLEMENTATION',
+                       'EA PLANNING':'EA RESEARCH / PLANNING', 'EA RESEARCH':'EA RESEARCH / PLANNING'}
+def owner_projection(row):
+    declared=row.get('track')
+    mapped=OWNER_TRACK_ALIASES.get(declared) if isinstance(declared,str) else None
+    bucket=row.get('bucket')
+    groups={'ACTUAL LIVE JOBS':'RUNNING','WAITING / BLOCKED':'WAITING/BLOCKED'}
+    group=groups.get(bucket,bucket if bucket in OWNER_GROUPS else 'CURRENT ACTIONABLE')
+    return {'owner_track':mapped or 'SYSTEM', 'track_qualification':'EXPLICIT_SOURCE_TRACK' if mapped else 'UNKNOWN',
+            'track_basis':('Explicit track field at '+str(row.get('source_locator') or 'UNKNOWN')) if mapped else 'UNKNOWN classification; displayed under SYSTEM for navigation only',
+            'owner_group':group, 'historical':bucket=='HISTORICAL UNRESOLVED / UNKNOWN',
+            'checkpoint_state':'UNKNOWN', 'decision_state':'UNKNOWN',
+            'checkpoint_basis':'Read exact canonical queue/contract and durable job/result; no checkpoint is inferred from reservation state',
+            'decision_basis':'An owner decision requires its exact canonical record; blocker text alone is not approval'}
 LOADED_SOURCE_SHA256 = hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest()
 SOURCE_ADAPTER_IMPORT_ALLOWLIST = (
     'tools/mobile_report_hub/source_adapters/__init__.py',
@@ -581,7 +599,7 @@ class Model:
         """Optional DOT-pinned review projection, never execution/integration truth.
 
         Caller config is the authority boundary. No discovery, receipt guessing,
-        producer mutation or server/CLI hookup is performed by this reader.
+        producer mutation is performed by this reader. Server hookup requires explicit hash-pinned caller configuration.
         """
         unknown=lambda reason: {'availability':'UNKNOWN','reason':reason,'proofs':{}}
         configured=self.c.get('work_acceptance')
@@ -676,6 +694,94 @@ class Model:
             reason=str(error) if isinstance(error,Refused) else 'ACCEPTANCE_SOURCE_UNAVAILABLE_OR_INVALID'
             self.issue('work_acceptance',Refused(reason)); return unknown(reason)
 
+    def work_checkpoint(self):
+        """Optional exact-pinned existing F0 passive index; no queue/state writer."""
+        configured=self.c.get('work_checkpoint')
+        if configured is None: return []
+        def require(ok,reason):
+            if not ok: raise Refused(reason)
+        def strict(raw):
+            def pairs(items):
+                result={}
+                for key,value in items:
+                    require(key not in result,'CHECKPOINT_DUPLICATE_KEY');result[key]=value
+                return result
+            return json.loads(raw.decode('utf-8-sig'),object_pairs_hook=pairs,
+                              parse_constant=lambda x: (_ for _ in ()).throw(Refused('CHECKPOINT_NONFINITE')))
+        try:
+            require(isinstance(configured,dict) and set(configured)=={'index','index_sha256','checkpoint','checkpoint_sha256'},'CHECKPOINT_CONFIG_SCHEMA')
+            paths={}
+            for key in ('index','checkpoint'):
+                require(isinstance(configured[key],str) and pathlib.Path(configured[key]).is_absolute(),'CHECKPOINT_PATH')
+                require(isinstance(configured[key+'_sha256'],str) and re.fullmatch('[0-9a-f]{64}',configured[key+'_sha256']),'CHECKPOINT_PIN')
+                paths[key]=pathlib.Path(configured[key])
+            root=paths['index'].parent
+            require(paths['checkpoint'].parent==root,'CHECKPOINT_INPUT_ROOT')
+            values={}
+            for key,path in paths.items():
+                raw=safe_bytes(path,root,1_000_000);require(digest(raw)==configured[key+'_sha256'],'CHECKPOINT_HASH_MISMATCH');values[key]=strict(raw)
+            index=values['index'];checkpoint=values['checkpoint']
+            require(isinstance(index,dict) and isinstance(checkpoint,dict),'CHECKPOINT_OBJECT')
+            linkage=None
+            if index.get('schema')=='dot_f0_passive_queue_linkage/2':
+                require(checkpoint.get('schema')=='dot_f0_current_linkage_checkpoint/2','CHECKPOINT_V2_SCHEMA')
+                for key in ('task_id','lane_id','owner','objective','exact_source_head','contract_identity','current_stage','last_completed_stage','current_durable_job_identity','process_identity_when_proven','result_evidence_identity','blocker','repair_budget','review_state','direct_consumer','one_NEXT','owner_decision_required','updated_at','logical_slot_task_job_mapping','source_status','fixture_status','integration_state','native_runtime_status','queue_state'):
+                    require(key in index and index[key]==checkpoint.get(key),'CHECKPOINT_V2_CROSS_BINDING')
+                require(index['task_id']=='DOT-RO16-F0-MECHANICS-20261002' and index['owner']=='DOT' and index['lane_id'] is None,'CHECKPOINT_V2_IDENTITY')
+                require(index['logical_slot_task_job_mapping'].get('LaneRegistry_lane_id') is None and index['logical_slot_task_job_mapping'].get('LongJobRunner_job_id') is None,'CHECKPOINT_V2_NO_EXECUTION_BINDING')
+                require(index['process_identity_when_proven'].get('historical_OS_identity')=='UNKNOWN_NOT_INDEPENDENTLY_CAPTURED','CHECKPOINT_V2_OS_UNKNOWN')
+                require(index['review_state'].get('status')=='NOT_RUN_BY_THIS_SCOPE' and index['integration_state'].get('status')=='PROPOSAL_ONLY_NOT_ADMITTED' and index['native_runtime_status']=='NOT_RUN_NOT_QUALIFIED','CHECKPOINT_V2_UNREVIEWED')
+                require(index['queue_state']=={'value':'DONE','scope':'LOCAL_F0_SYNCHRONOUS_FIXTURE_OBJECTIVE_ONLY','does_not_imply':'review accepted, integrated, deployed, native execution, active liveness or Phase0 PASS'},'CHECKPOINT_V2_DONE_SCOPE')
+                current=index['current_checkpoint'];require(current.get('path')==str(paths['checkpoint']) and current.get('sha256')==configured['checkpoint_sha256'],'CHECKPOINT_V2_CURRENT_PIN')
+                previous=index['previous_queue'];require(isinstance(previous,dict) and isinstance(previous.get('path'),str) and pathlib.Path(previous['path']).is_absolute() and isinstance(previous.get('sha256'),str) and re.fullmatch('[0-9a-f]{64}',previous['sha256']),'CHECKPOINT_V2_PREVIOUS_PIN')
+                raw=safe_bytes(pathlib.Path(previous['path']),root,1_000_000);require(digest(raw)==previous['sha256'],'CHECKPOINT_V2_PREVIOUS_HASH');old=strict(raw)
+                require(isinstance(old,dict) and old.get('schema')=='dot_f0_queue_ready_evidence/1','CHECKPOINT_V2_PREVIOUS_SCHEMA')
+                require(old.get('job_identity')==index['task_id'] and old.get('owner')==index['owner'] and old.get('source_status')==index['source_status'] and old.get('fixture_status')==index['fixture_status'] and old.get('native_runtime_status')==index['native_runtime_status'],'CHECKPOINT_V2_PREVIOUS_BINDING')
+                require(old.get('exact_source',{}).get('module')==index['exact_source_head'].get('isolated_module'),'CHECKPOINT_V2_SOURCE_BINDING')
+                linkage=index;index=old;checkpoint={**old,'schema':'dot_f0_continuity_checkpoint/1'}
+            require(index.get('schema')=='dot_f0_queue_ready_evidence/1' and checkpoint.get('schema')=='dot_f0_continuity_checkpoint/1','CHECKPOINT_SCHEMA')
+            for key in ('job_identity','owner','task','stage','source_status','fixture_status','review','integration','native_runtime_status','result','contract','exact_source','updated_at'):
+                require(index.get(key)==checkpoint.get(key) and index.get(key) is not None,'CHECKPOINT_CROSS_BINDING')
+            require(index['job_identity']=='DOT-RO16-F0-MECHANICS-20261002' and index['owner']=='DOT','CHECKPOINT_IDENTITY')
+            require(index.get('consumer_mode')=='PASSIVE_FILE_READ_ONLY_NO_STATE_WRITER','CHECKPOINT_AUTHORITY')
+            require(index['review'].get('status')=='NOT_RUN' and index['integration'].get('status')=='PROPOSAL_ONLY_NOT_ADMITTED' and index['native_runtime_status']=='NOT_RUN_NOT_QUALIFIED','CHECKPOINT_UNREVIEWED_BOUNDARY')
+            require(index['result'].get('status')=='PASS' and type(index['result'].get('fixture_cases')) is int and type(index['result'].get('assertions')) is int and type(index['result'].get('failed')) is int and index['result'].get('failed')==0,'CHECKPOINT_FIXTURE_RESULT')
+            for pin in (index['contract'],index['exact_source']['module'],index['result']['test_result']):
+                require(isinstance(pin,dict) and isinstance(pin.get('path'),str) and pathlib.Path(pin['path']).is_absolute(),'CHECKPOINT_SOURCE_PATH')
+                require(isinstance(pin.get('sha256'),str) and re.fullmatch('[0-9a-f]{64}',pin['sha256']),'CHECKPOINT_SOURCE_PIN')
+                require(digest(safe_bytes(pathlib.Path(pin['path']),root,1_000_000))==pin['sha256'],'CHECKPOINT_SOURCE_HASH')
+            require(stamp(index['updated_at']) is not None,'CHECKPOINT_TIME')
+            row={'id':index['job_identity'],'work_id':index['job_identity'],'lane_id':'UNKNOWN',
+                 'title':'F0 mechanics: H011 / H047 / H048 / H086','objective':clean(index['objective']),
+                 'state':'BLOCKED','raw_state':'PASSIVE_EVIDENCE_COMPLETE_REVIEW_NOT_RUN','display_state':'WAITING_REVIEW',
+                 'owner':'DOT','worker':'UNKNOWN','lane_owner':'DOT','track':'EA BUILD / IMPLEMENTATION','ea_family':'H011 / H047 / H048 / H086',
+                 'blocker':clean(index['blocker']),'next':clean(index['oneNEXT']),
+                 'freshness':'UNKNOWN','updated_at':index['updated_at'],'last_seen':index['updated_at'],
+                 'bucket':'WAITING / BLOCKED','unresolved':True,'actual_live':False,'process_health':'NOT_PROBED',
+                 'process_state':'UNKNOWN','process_freshness':'UNKNOWN','job_state':'NOT_OBSERVED',
+                 'source_class':'PINNED_PASSIVE_CHECKPOINT','source_locator':paths['index'].name+' + '+paths['checkpoint'].name,
+                 'head':'UNKNOWN','reviewed_head':None,'reviewer':'NOT_RUN','dependencies':['PHASE0_RECONSTRUCTION_GATE'],
+                 'acceptance':'UNKNOWN','canonical_relation':'PINNED_ISOLATED_EVIDENCE_NOT_INTEGRATED',
+                 'evidence_basis':'Exact hashed existing F0 checkpoint/index plus source/contract/result hashes; fixture PASS only, no independent review, native run or integration.',
+                 'prohibited_actions':'NO F1-F4 ACTIVATION; NO PROMOTION OR RUNTIME FROM THIS PASSIVE INDEX',
+                 'acceptance_boundary':'Independent review NOT_RUN; integration PROPOSED; native NOT_RUN',
+                 'checkpoint_proof':dict(configured),'fixture_state':index['fixture_status'],'source_state':index['source_status'],
+                 'native_state':index['native_runtime_status'],'passive_checkpoint_state':index['stage'],
+                 'passive_integration_state':index['integration']['status'],'passive_review_state':index['review']['status']}
+            if linkage is not None:
+                row.update(state='DONE',raw_state='DONE: LOCAL_F0_SYNCHRONOUS_FIXTURE_OBJECTIVE_ONLY',
+                           display_state='LOCAL_FIXTURE_SCOPE_DONE',bucket='RECENTLY DONE',unresolved=False,
+                           checkpoint_state=linkage['current_stage'],passive_checkpoint_state=linkage['current_stage'],
+                           updated_at=linkage['updated_at'],last_seen=linkage['updated_at'],
+                           blocker=clean(json.dumps(linkage['blocker'],ensure_ascii=False)),next=clean(linkage['one_NEXT']),
+                           passive_review_state=linkage['review_state']['status'],
+                           historical_os_identity=linkage['process_identity_when_proven']['historical_OS_identity'],
+                           registry_binding='UNKNOWN_NOT_ESTABLISHED',
+                           evidence_basis=row['evidence_basis']+' V2 DONE is local fixture scope only; historical OS and Registry identity remain UNKNOWN; no live execution inferred.')
+            return [row]
+        except (Refused,OSError,ValueError,TypeError,KeyError,AttributeError,RecursionError) as e:
+            self.issue('work_checkpoint',e);return []
+
     def work(self):
         root=pathlib.Path(self.c['registry']); lease_root=pathlib.Path(self.c['leases']); jobs_root=pathlib.Path(self.c['jobs']); registry_rows=[]; totals={}
         docs=self._canonical_work_documents()
@@ -769,7 +875,7 @@ class Model:
                 self.issue('lane_status:'+row['id'],e)
         for row in registry_rows: row.update(work_presentation(row))
         known={r['id'] for r in registry_rows}; plan_rows=[r for r in self._taskboard_rows(docs) if r['id'] not in known]
-        result=registry_rows+plan_rows
+        result=registry_rows+plan_rows+self.work_checkpoint()
         acceptance=self.work_acceptance()
         if population_unknown and acceptance['availability']=='AVAILABLE':
             acceptance={'availability':'UNKNOWN','reason':'ACCEPTANCE_REGISTRY_POPULATION_UNKNOWN','proofs':{}}
@@ -789,6 +895,9 @@ class Model:
             row['integration_state']='UNKNOWN'; row['deployment_state']='UNKNOWN'
             if self.c.get('work_acceptance') is not None:
                 row['evidence_basis']+=' Acceptance: '+reason+'; review only, no integration/deployment/liveness claim.'
+            row.update(owner_projection(row))
+            if row['source_class']=='PINNED_PASSIVE_CHECKPOINT':
+                row['checkpoint_state']=row['passive_checkpoint_state'];row['checkpoint_basis']='Exact existing checkpoint/index hash binding; fixture-only stage'
             row['search_text']=self._work_search_text(row)
         process_proven_count=sum(r['process_health'] not in ('NOT_PROBED','UNKNOWN','UNAVAILABLE')
                                  and r['process_state'] not in ('NOT_PROBED','UNKNOWN')

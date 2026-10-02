@@ -14,6 +14,7 @@ window.workFixture={
  age(){DATA=truth.view(RAW,Date.now());return this.render()},
  raw(){return JSON.stringify(RAW)},
  setSource(value){RAW.source_observations=value;DATA=truth.view(RAW,Date.now());return this.renderRuntime()},
+ setOwnerTrack(value){ownerTrack=value;return this.render()},
  setFilter(value){workFilter=value;return this.render()},
  setQuery(value){workQuery=value;return this.render()},
  setDimension(name,value){if(name==='track')workTrack=value;else if(name==='freshness')workFreshness=value;else if(name==='owner')workOwner=value;else if(name==='family')workFamily=value;return this.render()},
@@ -60,7 +61,7 @@ const context={document,window,Date:FixtureDate,navigator:{clipboard:{writeText(
 vm.createContext(context);vm.runInContext(source,context);
 const api=context.window.workFixture;
 let html=api.render();
-assert.equal((html.match(/<tr data-work=/g)||[]).length,63,'UNRESOLVED default');
+assert.equal((html.match(/<tr data-work=/g)||[]).length,126,'ALL default retains collapsed history');
 html=api.setFilter('ALL');assert.equal((html.match(/<tr data-work=/g)||[]).length,126,'ALL has no 100-row cutoff');
 assert.match(html,/Showing 126 of 126/);
 for(const bucket of ['CURRENT ACTIONABLE','READY','WAITING / BLOCKED','OWNER DECISION NEEDED','PARKED','HISTORICAL UNRESOLVED / UNKNOWN','ACTUAL LIVE JOBS','RECENTLY DONE'])assert.match(html,new RegExp(bucket.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
@@ -86,7 +87,7 @@ for(const field of ['work ID:','source class/locator:','displayed/raw state:','l
 assert.doesNotMatch(handoff,/<img|<svg/,'handoff hostile text is escaped');
 assert.equal(fetches,0,'handoff generation must not fetch');assert.equal(clipboardWrites,0,'handoff generation must not copy');
 api.copy('lane-124');assert.equal(clipboardWrites,1,'clipboard is touched only by the copy control');assert.equal(fetches,0,'copy must not fetch');
-html=api.setQuery('no-such-work-row');assert.match(html,/ไม่พบงานที่ตรงกับตัวกรองหรือคำค้นนี้/);assert.match(html,/ALL \/ HISTORY/);
+html=api.setQuery('no-such-work-row');assert.match(html,/No rows match|No qualified rows/);assert.match(html,/Show all tracks/);
 api.refreshData();assert.equal(fetches,0,'offline snapshot must not fetch');
 html=api.renderRuntime();
 assert.match(html,/Source observations \/ data coverage/);
@@ -227,3 +228,21 @@ if(process.argv.includes('--browser-aging'))(async()=>{
   }
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
+
+// Phase0 owner layout preserves all source rows, including UNKNOWN track metadata.
+fixtureNow=Date.parse(capturedAt);api.setQuery('');api.resetDimensions();api.setFilter('ALL');api.setOwnerTrack('ALL');
+const ownerTracks=['SYSTEM','EA BUILD / IMPLEMENTATION','EA RESEARCH / PLANNING','EA TESTING','OWNER DECISION'];
+const phaseRows=ownerTracks.map((track,i)=>({...rows[0],id:'phase-'+i,work_id:'RO'+i,track,objective:'Plain objective '+i,bucket:['CURRENT ACTIONABLE','READY','WAITING / BLOCKED','OWNER DECISION NEEDED','PARKED'][i]}));
+phaseRows.push({...rows[1],id:'phase-history',track:'not-qualified',bucket:'HISTORICAL UNRESOLVED / UNKNOWN',historical:true,unresolved:true});
+phaseRows.push({...rows[0],id:'phase-done',track:'SYSTEM',bucket:'RECENTLY DONE',state:'DONE',unresolved:false});
+api.setWork(workProof(true,0,'AVAILABLE',phaseRows));html=api.render();
+assert.equal((html.match(/data-owner-track-section=/g)||[]).length,5);
+for(const track of ownerTracks){assert.ok(html.includes('data-owner-track-section="'+track+'"'));const selected=api.setOwnerTrack(track);assert.equal((selected.match(/data-owner-track-section=/g)||[]).length,1)}
+api.setOwnerTrack('ALL');html=api.render();
+for(const group of ['CURRENT ACTIONABLE','READY','RUNNING','WAITING/BLOCKED','OWNER DECISION NEEDED','PARKED','RECENTLY DONE'])assert.ok(html.includes(group));
+assert.match(html,/<details class="work-history"><summary>History/,'history collapsed by default');
+assert.match(html,/Track: UNKNOWN/,'unknown track remains visible within SYSTEM');
+html=api.setQuery('phase-history');assert.match(html,/<details class="work-history" open>/);assert.match(html,/data-work="phase-history"/,'search exposes historical match');
+api.setQuery('');html=api.setFilter('HISTORY');assert.match(html,/phase-done/);api.setFilter('ALL');
+const unknownDrawer=api.open('phase-history');assert.match(unknownDrawer,/Track qualification<\/dt><dd>UNKNOWN/);assert.match(unknownDrawer,/Reservation \/ declared state/);assert.match(unknownDrawer,/Checkpoint<\/dt><dd>UNKNOWN/);
+console.log('PASS Phase0 five tracks, seven groups, minimal rows, UNKNOWN routing, collapsed searchable history');

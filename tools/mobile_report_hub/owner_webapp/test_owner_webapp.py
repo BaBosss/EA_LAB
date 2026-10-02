@@ -925,6 +925,137 @@ class WorkAcceptanceTests(unittest.TestCase):
                 self.assertEqual(before[key],after[key],key)
             self.assertEqual(after['acceptance'],'UNKNOWN')
 
+class OwnerLightPhase0Tests(unittest.TestCase):
+    def test_explicit_tracks_and_unknown_navigation(self):
+        from model import OWNER_TRACKS,OWNER_GROUPS,owner_projection
+        self.assertEqual(len(OWNER_TRACKS),5);self.assertEqual(len(OWNER_GROUPS),7)
+        for track in OWNER_TRACKS:
+            row=owner_projection({'track':track,'bucket':'READY','source_locator':'fixture.json'})
+            self.assertEqual(row['owner_track'],track);self.assertEqual(row['track_qualification'],'EXPLICIT_SOURCE_TRACK')
+            self.assertEqual(row['owner_group'],'READY');self.assertIn('fixture.json',row['track_basis'])
+        for value in ('RESEARCH','CORE',None,[],{'track':'SYSTEM'},'<img>', 'system'):
+            row=owner_projection({'track':value,'objective':'SYSTEM EA TESTING','state':'RUNNING'})
+            self.assertEqual(row['owner_track'],'SYSTEM');self.assertEqual(row['track_qualification'],'UNKNOWN')
+            self.assertEqual(row['checkpoint_state'],'UNKNOWN');self.assertEqual(row['decision_state'],'UNKNOWN')
+        for declared,expected in [('EA BUILD','EA BUILD / IMPLEMENTATION'),('EA PLANNING','EA RESEARCH / PLANNING'),('EA RESEARCH','EA RESEARCH / PLANNING')]:
+            self.assertEqual(owner_projection({'track':declared})['owner_track'],expected)
+
+    def test_owner_groups_preserve_reservation_and_history(self):
+        from model import owner_projection
+        for bucket,group in [('ACTUAL LIVE JOBS','RUNNING'),('WAITING / BLOCKED','WAITING/BLOCKED'),('PARKED','PARKED'),('READY','READY'),('RECENTLY DONE','RECENTLY DONE'),('OWNER DECISION NEEDED','OWNER DECISION NEEDED'),('CURRENT ACTIONABLE','CURRENT ACTIONABLE')]:
+            row={'bucket':bucket,'state':'RUNNING','track':'EA TESTING'};before=dict(row)
+            self.assertEqual(owner_projection(row)['owner_group'],group);self.assertEqual(row,before)
+        self.assertTrue(owner_projection({'bucket':'HISTORICAL UNRESOLVED / UNKNOWN'})['historical'])
+        self.assertEqual(owner_projection({'state':'RUNNING'})['owner_group'],'CURRENT ACTIONABLE')
+
+    def test_acceptance_cli_disabled_and_requires_both_pins(self):
+        args=parser().parse_args([]);self.assertNotIn('work_acceptance',config_from_args(args))
+        for extra in (['--work-acceptance-config','D:/absent.json'],['--work-acceptance-config-sha256','a'*64],['--work-acceptance-config','relative.json','--work-acceptance-config-sha256','a'*64]):
+            with self.assertRaises(Refused): config_from_args(parser().parse_args(extra))
+
+    def test_pinned_read_only_acceptance_cli_and_identity(self):
+        with tempfile.TemporaryDirectory() as td:
+            path=pathlib.Path(td)/'config.json'
+            value={'manifest':str(pathlib.Path(td)/'manifest.json'),'sha256':'a'*64,'expected':[]}
+            raw=json.dumps(value).encode();path.write_bytes(raw)
+            args=parser().parse_args(['--work-acceptance-config',str(path),'--work-acceptance-config-sha256',digest(raw)])
+            config=config_from_args(args);self.assertEqual(config['work_acceptance'],value)
+            self.assertEqual(path.read_bytes(),raw);identity(config)
+            changed=dict(config);changed['work_acceptance']={**value,'sha256':'b'*64}
+            self.assertNotEqual(identity(config)['sources_sha256'],identity(changed)['sources_sha256'])
+            args.work_acceptance_config_sha256='b'*64
+            with self.assertRaises(Refused):config_from_args(args)
+            for raw in (b'{"manifest":"x","manifest":"y","sha256":"a","expected":[]}',b'{"manifest":"x","sha256":NaN,"expected":[]}',b'[]',b'{',b'{"manifest":"x","sha256":"a","expected":[],"extra":1}'):
+                path.write_bytes(raw);args.work_acceptance_config_sha256=digest(raw)
+                with self.assertRaises(Refused):config_from_args(args)
+
+class PassiveCheckpointTests(unittest.TestCase):
+    def fixture(self,td):
+        root=pathlib.Path(td);module=root/'module.py';module.write_bytes(b'# SYNTHETIC fixture only')
+        contract=root/'contract.json';contract.write_bytes(b'{}');result=root/'result.json';result.write_bytes(b'{}')
+        pin=lambda path:{'path':str(path),'sha256':digest(path.read_bytes())}
+        value={'job_identity':'DOT-RO16-F0-MECHANICS-20261002','owner':'DOT','task':'F0 fixture',
+               'stage':'F0_COMPLETE_PHASE0_GATE','source_status':'ISOLATED','fixture_status':'PASS_32_CASES_286_ASSERTIONS',
+               'review':{'status':'NOT_RUN'},'integration':{'status':'PROPOSAL_ONLY_NOT_ADMITTED'},
+               'native_runtime_status':'NOT_RUN_NOT_QUALIFIED','result':{'status':'PASS','fixture_cases':32,'assertions':286,'failed':0,'test_result':pin(result)},
+               'contract':pin(contract),'exact_source':{'module':pin(module)},'updated_at':'2026-10-02T08:24:54Z',
+               'consumer_mode':'PASSIVE_FILE_READ_ONLY_NO_STATE_WRITER','objective':'H011 H047 H048 H086 fixture','blocker':'Review not run','oneNEXT':'DOT bounded review only'}
+        index=root/'index.json';checkpoint=root/'checkpoint.json'
+        index.write_text(json.dumps({**value,'schema':'dot_f0_queue_ready_evidence/1'}));checkpoint.write_text(json.dumps({**value,'schema':'dot_f0_continuity_checkpoint/1'}))
+        config={'index':str(index),'index_sha256':digest(index.read_bytes()),'checkpoint':str(checkpoint),'checkpoint_sha256':digest(checkpoint.read_bytes())}
+        return Model({'repo':str(root),'work_checkpoint':config}),index,checkpoint
+
+    def test_passive_checkpoint_fixture_only_not_overall_acceptance(self):
+        with tempfile.TemporaryDirectory() as td:
+            model,index,checkpoint=self.fixture(td);before=(index.read_bytes(),checkpoint.read_bytes())
+            row=model.work_checkpoint()[0];self.assertFalse(row['actual_live']);self.assertEqual(row['acceptance'],'UNKNOWN')
+            self.assertEqual(row['freshness'],'UNKNOWN');self.assertEqual(row['passive_review_state'],'NOT_RUN')
+            self.assertEqual(row['native_state'],'NOT_RUN_NOT_QUALIFIED');self.assertEqual(row['passive_integration_state'],'PROPOSAL_ONLY_NOT_ADMITTED')
+            self.assertEqual(before,(index.read_bytes(),checkpoint.read_bytes()));self.assertEqual(Model({'repo':td}).work_checkpoint(),[])
+
+    def test_passive_checkpoint_hash_crossbinding_and_source_guards(self):
+        with tempfile.TemporaryDirectory() as td:
+            model,index,checkpoint=self.fixture(td);raw=index.read_bytes()
+            index.write_bytes(raw+b' ');self.assertEqual(model.work_checkpoint(),[])
+            index.write_bytes(raw);checkpoint.write_text('{}');self.assertEqual(model.work_checkpoint(),[])
+        for field,value in [('review',{'status':'PASS'}),('integration',{'status':'INTEGRATED'}),('native_runtime_status','LIVE'),('owner','somebody'),('job_identity','different'),('consumer_mode','STATE_WRITER')]:
+            with tempfile.TemporaryDirectory() as td:
+                model,index,checkpoint=self.fixture(td)
+                for path in (index,checkpoint):
+                    obj=json.loads(path.read_bytes());obj[field]=value;path.write_text(json.dumps(obj))
+                config=model.c['work_checkpoint'];config['index_sha256']=digest(index.read_bytes());config['checkpoint_sha256']=digest(checkpoint.read_bytes())
+                self.assertEqual(model.work_checkpoint(),[],field)
+        with tempfile.TemporaryDirectory() as td:
+            model,index,checkpoint=self.fixture(td);(pathlib.Path(td)/'module.py').write_bytes(b'changed')
+            self.assertEqual(model.work_checkpoint(),[])
+
+    def test_passive_checkpoint_cli_explicit_pinned_disabled(self):
+        self.assertNotIn('work_checkpoint',config_from_args(parser().parse_args([])))
+        with tempfile.TemporaryDirectory() as td:
+            model,index,checkpoint=self.fixture(td);path=pathlib.Path(td)/'caller.json';raw=json.dumps(model.c['work_checkpoint']).encode();path.write_bytes(raw)
+            args=parser().parse_args(['--work-checkpoint-config',str(path),'--work-checkpoint-config-sha256',digest(raw)])
+            config=config_from_args(args);self.assertEqual(config['work_checkpoint'],model.c['work_checkpoint']);identity(config)
+            args.work_checkpoint_config_sha256='b'*64
+            with self.assertRaises(Refused):config_from_args(args)
+            args.work_checkpoint_config_sha256=None
+            with self.assertRaises(Refused):config_from_args(args)
+
+class PassiveCheckpointV2Tests(unittest.TestCase):
+    fixture=PassiveCheckpointTests.fixture
+    def v2(self,td):
+        model,old,unused=self.fixture(td);previous=json.loads(old.read_bytes());root=pathlib.Path(td)
+        value={'task_id':previous['job_identity'],'lane_id':None,'owner':'DOT','objective':'F0 fixture','exact_source_head':{'isolated_module':previous['exact_source']['module']},
+               'contract_identity':[],'current_stage':'TERMINAL_F0_FIXTURE_VALIDATION_COMPLETE_PHASE0_HOLD','last_completed_stage':'fixture-only completion',
+               'current_durable_job_identity':{'logical_job_id':previous['job_identity']},'process_identity_when_proven':{'historical_OS_identity':'UNKNOWN_NOT_INDEPENDENTLY_CAPTURED'},
+               'result_evidence_identity':{},'blocker':'Review not run','repair_budget':{},'review_state':{'status':'NOT_RUN_BY_THIS_SCOPE'},
+               'direct_consumer':'DOT','one_NEXT':'DOT review gate','owner_decision_required':False,'updated_at':previous['updated_at'],
+               'logical_slot_task_job_mapping':{'LaneRegistry_lane_id':None,'LongJobRunner_job_id':None},'source_status':previous['source_status'],
+               'fixture_status':previous['fixture_status'],'integration_state':{'status':'PROPOSAL_ONLY_NOT_ADMITTED'},'native_runtime_status':'NOT_RUN_NOT_QUALIFIED',
+               'queue_state':{'value':'DONE','scope':'LOCAL_F0_SYNCHRONOUS_FIXTURE_OBJECTIVE_ONLY','does_not_imply':'review accepted, integrated, deployed, native execution, active liveness or Phase0 PASS'}}
+        checkpoint=root/'v2_checkpoint.json';checkpoint.write_text(json.dumps({**value,'schema':'dot_f0_current_linkage_checkpoint/2'}))
+        index=root/'v2_index.json';index.write_text(json.dumps({**value,'schema':'dot_f0_passive_queue_linkage/2','current_checkpoint':{'path':str(checkpoint),'sha256':digest(checkpoint.read_bytes())},'previous_queue':{'path':str(old),'sha256':digest(old.read_bytes())}}))
+        model.c['work_checkpoint']={'index':str(index),'index_sha256':digest(index.read_bytes()),'checkpoint':str(checkpoint),'checkpoint_sha256':digest(checkpoint.read_bytes())}
+        return model,index,checkpoint
+
+    def test_v2_local_done_separate_from_acceptance_and_liveness(self):
+        with tempfile.TemporaryDirectory() as td:
+            model,index,checkpoint=self.v2(td);rows=model.work_checkpoint();self.assertEqual(len(rows),1,model.errors);row=rows[0]
+            self.assertEqual(row['bucket'],'RECENTLY DONE');self.assertEqual(row['state'],'DONE');self.assertIn('LOCAL_F0',row['raw_state'])
+            self.assertEqual(row['acceptance'],'UNKNOWN');self.assertFalse(row['actual_live']);self.assertEqual(row['historical_os_identity'],'UNKNOWN_NOT_INDEPENDENTLY_CAPTURED')
+            self.assertEqual(row['registry_binding'],'UNKNOWN_NOT_ESTABLISHED');self.assertEqual(row['passive_review_state'],'NOT_RUN_BY_THIS_SCOPE')
+
+    def test_v2_wrong_scope_lane_process_review_or_previous_input_refused(self):
+        for key,value in [('lane_id','invented-lane'),('queue_state',{'value':'DONE','scope':'ALL_READY'}),('review_state',{'status':'PASS'}),('process_identity_when_proven',{'historical_OS_identity':'PROVEN'}),('logical_slot_task_job_mapping',{'LaneRegistry_lane_id':'invented','LongJobRunner_job_id':None})]:
+            with tempfile.TemporaryDirectory() as td:
+                model,index,checkpoint=self.v2(td)
+                for path in (index,checkpoint):
+                    obj=json.loads(path.read_bytes());obj[key]=value;path.write_text(json.dumps(obj))
+                obj=json.loads(index.read_bytes());obj['current_checkpoint']['sha256']=digest(checkpoint.read_bytes());index.write_text(json.dumps(obj))
+                config=model.c['work_checkpoint'];config['index_sha256']=digest(index.read_bytes());config['checkpoint_sha256']=digest(checkpoint.read_bytes())
+                self.assertEqual(model.work_checkpoint(),[],key)
+        with tempfile.TemporaryDirectory() as td:
+            model,index,checkpoint=self.v2(td);(pathlib.Path(td)/'index.json').write_bytes(b'{}');self.assertEqual(model.work_checkpoint(),[])
+
 if __name__=="__main__":
     if '--browser-fixtures' in sys.argv: print(json.dumps(browser_fixtures(),ensure_ascii=True))
     else: unittest.main()
