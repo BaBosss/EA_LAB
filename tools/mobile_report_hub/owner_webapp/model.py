@@ -577,6 +577,105 @@ class Model:
         values.extend(row.get('known_aliases') or [])
         return ' '.join(str(v) for v in values if v not in (None,''))[:12000]
 
+    def work_acceptance(self):
+        """Optional DOT-pinned review projection, never execution/integration truth.
+
+        Caller config is the authority boundary. No discovery, receipt guessing,
+        producer mutation or server/CLI hookup is performed by this reader.
+        """
+        unknown=lambda reason: {'availability':'UNKNOWN','reason':reason,'proofs':{}}
+        configured=self.c.get('work_acceptance')
+        if configured is None: return unknown('ACCEPTANCE_NOT_PROVIDED')
+        def require(condition, reason):
+            if not condition: raise Refused(reason)
+        def sha(value): return isinstance(value,str) and re.fullmatch('[0-9a-f]{64}',value) is not None
+        def head(value): return isinstance(value,str) and re.fullmatch('[0-9a-f]{40}',value) is not None
+        def lane(value): return isinstance(value,str) and re.fullmatch('[A-Za-z0-9_.-]{1,128}',value) is not None
+        def exact(value,keys,reason): require(isinstance(value,dict) and set(value)==set(keys),reason)
+        def strict(raw):
+            def pairs(items):
+                result={}
+                for key,value in items:
+                    require(key not in result,'ACCEPTANCE_DUPLICATE_JSON_KEY'); result[key]=value
+                return result
+            return json.loads(raw.decode('utf-8-sig'),object_pairs_hook=pairs,
+                              parse_constant=lambda value: (_ for _ in ()).throw(Refused('ACCEPTANCE_NONFINITE_JSON')))
+        try:
+            exact(configured,('manifest','sha256','expected'),'ACCEPTANCE_CONFIG_SCHEMA')
+            require(isinstance(configured['manifest'],str) and pathlib.Path(configured['manifest']).is_absolute(), 'ACCEPTANCE_MANIFEST_PATH')
+            require(sha(configured['sha256']),'ACCEPTANCE_MANIFEST_PIN')
+            manifest=pathlib.Path(configured['manifest']); root=manifest.parent
+            budget={'files':0,'bytes':0}
+            def read(path):
+                require(budget['files']<64,'ACCEPTANCE_READ_BUDGET')
+                raw=safe_bytes(path,root,1_000_000)
+                budget['files']+=1; budget['bytes']+=len(raw)
+                require(budget['bytes']<=8_000_000,'ACCEPTANCE_READ_BUDGET')
+                require(path.stat().st_nlink==1,'ACCEPTANCE_HARDLINK_REFUSED')
+                return raw
+            raw=read(manifest); require(digest(raw)==configured['sha256'],'ACCEPTANCE_MANIFEST_HASH')
+            binding=strict(raw)
+            exact(binding,('schema_version','authority','owner','observed_at_utc','entries'),'ACCEPTANCE_BINDING_SCHEMA')
+            require(binding['schema_version']=='EA_LAB_DOT_ACCEPTANCE_BINDING_V1' and
+                    binding['authority']=='DOT_DERIVED_REVIEW_PROJECTION' and
+                    binding['owner']=='EA_LAB-MAIN-CT-20260930','ACCEPTANCE_BINDING_AUTHORITY')
+            require(age_state(binding['observed_at_utc'],24)=='CURRENT','ACCEPTANCE_BINDING_STALE_OR_UNQUALIFIED')
+            expected=configured['expected']; entries=binding['entries']
+            require(isinstance(expected,list) and 0<len(expected)<=32 and isinstance(entries,list) and 0<len(entries)<=32,'ACCEPTANCE_BINDING_POPULATION')
+            identities={}
+            for item in expected:
+                exact(item,('lane_id','reviewed_head','task_contract_sha256'),'ACCEPTANCE_EXPECTED_SCHEMA')
+                require(lane(item['lane_id']) and head(item['reviewed_head']) and sha(item['task_contract_sha256']),'ACCEPTANCE_EXPECTED_IDENTITY')
+                require(item['lane_id'] not in identities,'ACCEPTANCE_DUPLICATE_EXPECTED_LANE')
+                identities[item['lane_id']]=item
+            proofs={}; file_bindings={}
+            def pinned_file(item,name):
+                filename=item[name+'_file']; fingerprint=item[name+'_sha256']
+                require(isinstance(filename,str) and re.fullmatch('[A-Za-z0-9][A-Za-z0-9_.-]{0,127}',filename) is not None and filename not in ('.','..'), 'ACCEPTANCE_SOURCE_PATH')
+                require(sha(fingerprint),'ACCEPTANCE_SOURCE_PIN')
+                identity=filename.casefold()
+                require(identity not in file_bindings,'ACCEPTANCE_DUPLICATE_SOURCE')
+                file_bindings[identity]=fingerprint
+                data=read(root/filename); require(digest(data)==fingerprint,'ACCEPTANCE_SOURCE_HASH')
+                return data
+            for item in entries:
+                exact(item,('lane_id','reviewed_head','task_contract_sha256','task_contract_file',
+                            'raw_review_file','raw_review_sha256','normalized_review_file','normalized_review_sha256',
+                            'material_unresolved_findings'),'ACCEPTANCE_ENTRY_SCHEMA')
+                key=item['lane_id']
+                require(lane(key) and head(item['reviewed_head']) and sha(item['task_contract_sha256']),'ACCEPTANCE_ENTRY_IDENTITY')
+                require(key not in proofs,'ACCEPTANCE_DUPLICATE_OR_CONFLICTING_LANE')
+                require(key in identities and all(item[k]==identities[key][k] for k in identities[key]),'ACCEPTANCE_EXPECTED_MISMATCH')
+                require(type(item['material_unresolved_findings']) is int and item['material_unresolved_findings']==0,'ACCEPTANCE_MATERIAL_FINDING')
+                strict(pinned_file(item,'task_contract'))
+                original=strict(pinned_file(item,'raw_review'))
+                receipt=strict(pinned_file(item,'normalized_review'))
+                # Match the actual existing Collector's supported strict envelope.
+                exact(receipt,('schema_version','verdict','confidence','decision','findings','reviewed_head'),'ACCEPTANCE_REVIEW_SCHEMA')
+                require(receipt['schema_version'] in ('EA_LAB_REVIEW_RESULT_V1','EA_LAB_SCRUTINY_RESULT_V1'), 'ACCEPTANCE_REVIEW_SCHEMA')
+                require(isinstance(receipt['findings'],list) and not receipt['findings'],'ACCEPTANCE_REVIEW_FINDINGS')
+                require(receipt['reviewed_head']==item['reviewed_head'] and receipt['verdict']=='SCRUTINY_PASS' and
+                        receipt['confidence']=='HIGH' and receipt['decision']=='ALLOW_INTEGRATION','ACCEPTANCE_REVIEW_CRITERIA')
+                # This admitted derived projection supports the preserved B receipt
+                # only. Other raw producer contracts require a separate admission.
+                require(isinstance(original,dict) and original.get('schema')=='mainct_lane_b_stale_proof_scrutiny/1','ACCEPTANCE_RAW_SCHEMA')
+                require(original.get('reviewed_head')==item['reviewed_head'] and original.get('contract_sha256')==item['task_contract_sha256'] and
+                        original.get('review_metadata',{}).get('author_lane')==key,'ACCEPTANCE_RAW_IDENTITY')
+                require(original.get('verdict')==receipt['verdict'] and original.get('confidence')==receipt['confidence'] and
+                        original.get('integration_disposition')==receipt['decision'],'ACCEPTANCE_DERIVATION_MISMATCH')
+                require(original.get('material_unresolved_findings')==[] and isinstance(original.get('findings'),list) and
+                        all(isinstance(f,dict) and (f.get('severity') not in ('MEDIUM','HIGH','CRITICAL') or
+                            str(f.get('status','')).startswith('CLOSED')) for f in original['findings']), 'ACCEPTANCE_RAW_MATERIAL_FINDING')
+                proofs[key]={'reviewed_head':item['reviewed_head'],'task_contract_sha256':item['task_contract_sha256'],
+                             'raw_review_sha256':item['raw_review_sha256'],'normalized_review_sha256':item['normalized_review_sha256'],
+                             'manifest_sha256':configured['sha256'],'observed_at_utc':binding['observed_at_utc'],
+                             'authority':'DOT_DERIVED_REVIEW_PROJECTION_NOT_NEW_REVIEW'}
+            require(set(proofs)==set(identities),'ACCEPTANCE_BINDING_POPULATION_MISMATCH')
+            return {'availability':'AVAILABLE','reason':'EXACT_DOT_BINDING_VERIFIED','proofs':proofs}
+        except (OSError,ValueError,KeyError,TypeError,AttributeError,RecursionError) as error:
+            reason=str(error) if isinstance(error,Refused) else 'ACCEPTANCE_SOURCE_UNAVAILABLE_OR_INVALID'
+            self.issue('work_acceptance',Refused(reason)); return unknown(reason)
+
     def work(self):
         root=pathlib.Path(self.c['registry']); lease_root=pathlib.Path(self.c['leases']); jobs_root=pathlib.Path(self.c['jobs']); registry_rows=[]; totals={}
         docs=self._canonical_work_documents()
@@ -643,7 +742,24 @@ class Model:
         for row in registry_rows: row.update(work_presentation(row))
         known={r['id'] for r in registry_rows}; plan_rows=[r for r in self._taskboard_rows(docs) if r['id'] not in known]
         result=registry_rows+plan_rows
-        for row in result: row['search_text']=self._work_search_text(row)
+        acceptance=self.work_acceptance()
+        lane_counts={}
+        for row in registry_rows: lane_counts[row['lane_id']]=lane_counts.get(row['lane_id'],0)+1
+        for row in result:
+            proof=acceptance['proofs'].get(row['lane_id']) if row['source_class']=='LANE_REGISTRY' else None
+            reason=acceptance['reason'] if acceptance['availability']!='AVAILABLE' else 'ACCEPTANCE_NOT_BOUND'
+            if proof is not None:
+                if lane_counts[row['lane_id']]!=1: reason='ACCEPTANCE_DUPLICATE_ROW_IDENTITY'
+                elif row['head']!=proof['reviewed_head']: reason='ACCEPTANCE_ROW_HEAD_MISMATCH'
+                elif row['reviewed_head'] not in (None,'',proof['reviewed_head']): reason='ACCEPTANCE_ROW_REVIEW_MISMATCH'
+                else:
+                    row['acceptance']='SCRUTINY_PASS / HIGH / ALLOW_INTEGRATION (review only)'
+                    row['acceptance_proof']=dict(proof); reason='EXACT_DOT_BINDING_VERIFIED'
+            row['acceptance_reason']=reason
+            row['integration_state']='UNKNOWN'; row['deployment_state']='UNKNOWN'
+            if self.c.get('work_acceptance') is not None:
+                row['evidence_basis']+=' Acceptance: '+reason+'; review only, no integration/deployment/liveness claim.'
+            row['search_text']=self._work_search_text(row)
         process_proven_count=sum(r['process_health'] not in ('NOT_PROBED','UNKNOWN','UNAVAILABLE')
                                  and r['process_state'] not in ('NOT_PROBED','UNKNOWN')
                                  and r['process_freshness']=='CURRENT' for r in candidates)
@@ -660,7 +776,7 @@ class Model:
                 'sources':{'plan_status':{'class':'CANONICAL_PROJECT_STATE_AND_ACTIVE_TASKBOARDS','availability':'AVAILABLE' if docs else 'UNAVAILABLE','locators':list(docs)},
                            'ownership':{'class':'LANE_REGISTRY','availability':'AVAILABLE' if root.is_dir() else 'UNAVAILABLE'},
                            'execution':{'class':'DURABLE_JOB_AND_PROCESS_IDENTITY','availability':'PARTIAL' if root.is_dir() else 'UNAVAILABLE'},
-                           'acceptance':{'class':'ACCEPTED_EVIDENCE_REVIEW','availability':'UNKNOWN'}},
+                           'acceptance':{'class':'ACCEPTED_EVIDENCE_REVIEW','availability':acceptance['availability'],'reason':acceptance['reason']}},
                 'basis':'Canonical PROJECT_STATE/taskboards own plan/status; Registry owns reservations; durable jobs plus exact process identity own execution; accepted evidence/review owns acceptance. Disagreement remains visible.'}
     def knowledge(self):
         root=pathlib.Path(self.c['knowledge']); manifest=read_json(root/'MANIFEST_SHA256.json',root)

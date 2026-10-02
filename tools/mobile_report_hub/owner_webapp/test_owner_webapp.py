@@ -675,6 +675,205 @@ class OwnerWebAppUnitTests(unittest.TestCase):
         self.assertEqual(row['acceptance'],'UNKNOWN')
         self.assertEqual(row['canonical'],'NOT_ASSESSED')
         self.assertFalse(row['unresolved'])
+
+class WorkAcceptanceTests(unittest.TestCase):
+    def fixture(self, td):
+        model=OwnerWebAppUnitTests()._make_work_roots(td,with_job=False)
+        model.sha='a'*40
+        model._canonical_work_documents=lambda: {}
+        root=pathlib.Path(td)/'acceptance'; root.mkdir()
+        contract={'task':'fixture exact bytes'}
+        contract_hash=digest(json.dumps(contract).encode())
+        receipt={'schema_version':'EA_LAB_SCRUTINY_RESULT_V1','verdict':'SCRUTINY_PASS','confidence':'HIGH',
+                 'decision':'ALLOW_INTEGRATION','findings':[],'reviewed_head':'a'*40}
+        original={'schema':'mainct_lane_b_stale_proof_scrutiny/1','verdict':'SCRUTINY_PASS','confidence':'HIGH',
+                  'integration_disposition':'ALLOW_INTEGRATION','reviewed_head':'a'*40,'contract_sha256':contract_hash,
+                  'review_metadata':{'author_lane':'ct-test-lane'},'material_unresolved_findings':[],
+                  'findings':[{'severity':'HIGH','status':'CLOSED_IN_THIS_OWNER_APPROVED_ROUND'}],
+                  'historical_failures_preserved':{'old':'SCRUTINY_FAIL'}}
+        entry={'lane_id':'ct-test-lane','reviewed_head':'a'*40,'task_contract_sha256':contract_hash,
+               'task_contract_file':'contract.json','raw_review_file':'original.json','raw_review_sha256':'0'*64,
+               'normalized_review_file':'normalized.json','normalized_review_sha256':'0'*64,'material_unresolved_findings':0}
+        binding={'schema_version':'EA_LAB_DOT_ACCEPTANCE_BINDING_V1','authority':'DOT_DERIVED_REVIEW_PROJECTION',
+                 'owner':'EA_LAB-MAIN-CT-20260930','observed_at_utc':utcnow(),'entries':[entry]}
+        config={'manifest':str(root/'manifest.json'),'sha256':'0'*64,
+                'expected':[{'lane_id':'ct-test-lane','reviewed_head':'a'*40,'task_contract_sha256':contract_hash}]}
+        model.c['work_acceptance']=config
+        def sync():
+            for name,obj in (('contract.json',contract),('original.json',original),('normalized.json',receipt)):
+                (root/name).write_bytes(json.dumps(obj).encode())
+            entry['raw_review_sha256']=digest((root/'original.json').read_bytes())
+            entry['normalized_review_sha256']=digest((root/'normalized.json').read_bytes())
+            (root/'manifest.json').write_bytes(json.dumps(binding).encode())
+            config['sha256']=digest((root/'manifest.json').read_bytes())
+        sync()
+        return SimpleNamespace(model=model,root=root,contract=contract,receipt=receipt,original=original,
+                               entry=entry,binding=binding,config=config,sync=sync)
+
+    def unknown(self,f,reason):
+        work=f.model.work();row=work['rows'][0]
+        self.assertEqual(row['acceptance'],'UNKNOWN')
+        self.assertEqual(row['acceptance_reason'],reason)
+        self.assertNotIn('acceptance_proof',row)
+        self.assertEqual(row['integration_state'],'UNKNOWN')
+        self.assertEqual(row['deployment_state'],'UNKNOWN')
+        self.assertIn(reason,row['evidence_basis'])
+        return work
+
+    def test_exact_acceptance_preserves_raw_history_and_never_proves_runtime(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td); raw=(f.root/'original.json').read_bytes()
+            before={p.name:p.read_bytes() for p in f.root.iterdir()}
+            work=f.model.work();row=work['rows'][0]
+            self.assertEqual(row['acceptance'],'SCRUTINY_PASS / HIGH / ALLOW_INTEGRATION (review only)')
+            self.assertEqual(row['acceptance_proof']['raw_review_sha256'],digest(raw))
+            self.assertFalse(row['actual_live']);self.assertEqual(row['job_state'],'NOT_OBSERVED')
+            self.assertEqual(row['integration_state'],'UNKNOWN');self.assertEqual(row['deployment_state'],'UNKNOWN')
+            self.assertEqual(row['canonical_relation'],'EXACT_CANONICAL_HEAD')
+            self.assertEqual(work['sources']['acceptance']['availability'],'AVAILABLE')
+            self.assertEqual(before,{p.name:p.read_bytes() for p in f.root.iterdir()})
+            self.assertEqual(f.original['historical_failures_preserved']['old'],'SCRUTINY_FAIL')
+
+    def test_default_absence_remains_unknown(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);del f.model.c['work_acceptance']
+            row=f.model.work()['rows'][0]
+            self.assertEqual(row['acceptance'],'UNKNOWN');self.assertEqual(row['acceptance_reason'],'ACCEPTANCE_NOT_PROVIDED')
+
+    def test_wrong_row_head_does_not_transfer_review(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);OwnerWebAppUnitTests()._update_work_record(f.model,head_sha='b'*40)
+            self.unknown(f,'ACCEPTANCE_ROW_HEAD_MISMATCH')
+
+    def test_lane_and_contract_expected_mismatches(self):
+        for key,value in (('lane_id','ct-other'),('reviewed_head','b'*40),('task_contract_sha256','b'*64)):
+            with self.subTest(key=key),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);f.entry[key]=value;f.sync();self.unknown(f,'ACCEPTANCE_EXPECTED_MISMATCH')
+
+    def test_each_pinned_input_hash_is_required(self):
+        for name in ('manifest.json','contract.json','original.json','normalized.json'):
+            with self.subTest(name=name),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);(f.root/name).write_bytes((f.root/name).read_bytes()+b' ')
+                self.unknown(f,'ACCEPTANCE_MANIFEST_HASH' if name=='manifest.json' else 'ACCEPTANCE_SOURCE_HASH')
+
+    def test_missing_source_is_explicit_unknown(self):
+        for name in ('manifest.json','contract.json','original.json','normalized.json'):
+            with self.subTest(name=name),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);(f.root/name).unlink();self.unknown(f,'ACCEPTANCE_SOURCE_UNAVAILABLE_OR_INVALID')
+
+    def test_duplicate_and_conflicting_bindings_fail_entire_population(self):
+        for conflict in (False,True):
+            with self.subTest(conflict=conflict),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);other=dict(f.entry)
+                if conflict: other['reviewed_head']='b'*40
+                f.binding['entries'].append(other);f.sync();self.unknown(f,'ACCEPTANCE_DUPLICATE_OR_CONFLICTING_LANE')
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);f.config['expected'].append(dict(f.config['expected'][0]));self.unknown(f,'ACCEPTANCE_DUPLICATE_EXPECTED_LANE')
+
+    def test_binding_age_is_distinct_from_historical_review_validity(self):
+        for when in ((dt.datetime.now(dt.timezone.utc)-dt.timedelta(hours=25)).isoformat(),
+                     (dt.datetime.now(dt.timezone.utc)+dt.timedelta(hours=1)).isoformat(),'2026-10-02T05:00:00','BAD'):
+            with self.subTest(when=when),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);f.binding['observed_at_utc']=when;f.sync();self.unknown(f,'ACCEPTANCE_BINDING_STALE_OR_UNQUALIFIED')
+
+    def test_review_strict_schema_and_criteria(self):
+        cases=[({'schema_version':'mainct_lane_b_stale_proof_scrutiny/1'},'ACCEPTANCE_REVIEW_SCHEMA'),
+               ({'extra':'forged'},'ACCEPTANCE_REVIEW_SCHEMA'),({'findings':['OPEN HIGH']},'ACCEPTANCE_REVIEW_FINDINGS'),
+               ({'findings':False},'ACCEPTANCE_REVIEW_FINDINGS'),({'verdict':'PASS'},'ACCEPTANCE_REVIEW_CRITERIA'),
+               ({'confidence':'MEDIUM'},'ACCEPTANCE_REVIEW_CRITERIA'),({'decision':'DEPLOY'},'ACCEPTANCE_REVIEW_CRITERIA'),
+               ({'reviewed_head':'b'*40},'ACCEPTANCE_REVIEW_CRITERIA')]
+        for changes,reason in cases:
+            with self.subTest(changes=changes),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);f.receipt.update(changes);f.sync();self.unknown(f,reason)
+
+    def test_raw_derived_fidelity_and_material_findings(self):
+        cases=[({'schema':'UNSUPPORTED'},'ACCEPTANCE_RAW_SCHEMA'),({'reviewed_head':'b'*40},'ACCEPTANCE_RAW_IDENTITY'),
+               ({'contract_sha256':'b'*64},'ACCEPTANCE_RAW_IDENTITY'),({'review_metadata':{'author_lane':'ct-other'}},'ACCEPTANCE_RAW_IDENTITY'),
+               ({'verdict':'SCRUTINY_FAIL'},'ACCEPTANCE_DERIVATION_MISMATCH'),
+               ({'material_unresolved_findings':[{'severity':'HIGH'}]},'ACCEPTANCE_RAW_MATERIAL_FINDING'),
+               ({'findings':[{'severity':'HIGH','status':'OPEN'}]},'ACCEPTANCE_RAW_MATERIAL_FINDING')]
+        for changes,reason in cases:
+            with self.subTest(changes=changes),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);f.original.update(changes);f.sync();self.unknown(f,reason)
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);f.entry['material_unresolved_findings']=False;f.sync();self.unknown(f,'ACCEPTANCE_MATERIAL_FINDING')
+
+    def test_duplicate_json_keys_and_nonfinite_values_refused(self):
+        for tail,reason in ((',"owner":"EA_LAB-MAIN-CT-20260930"','ACCEPTANCE_DUPLICATE_JSON_KEY'),
+                            (',"forged":NaN','ACCEPTANCE_NONFINITE_JSON')):
+            with self.subTest(reason=reason),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);raw=(f.root/'manifest.json').read_text();raw=raw[:-1]+tail+'}'
+                (f.root/'manifest.json').write_text(raw);f.config['sha256']=digest((f.root/'manifest.json').read_bytes());self.unknown(f,reason)
+
+    def test_unsafe_paths_and_unpinned_config_refused(self):
+        for filename in ('../outside.json','C:/outside.json','original.json/child','original.json:stream'):
+            with self.subTest(filename=filename),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);f.entry['raw_review_file']=filename;f.sync();self.unknown(f,'ACCEPTANCE_SOURCE_PATH')
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);f.config['sha256']='BAD';self.unknown(f,'ACCEPTANCE_MANIFEST_PIN')
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);f.config['manifest']='manifest.json';self.unknown(f,'ACCEPTANCE_MANIFEST_PATH')
+
+    def test_hardlink_alias_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);os.link(f.root/'original.json',f.root/'alias.json');self.unknown(f,'ACCEPTANCE_HARDLINK_REFUSED')
+
+    def test_empty_missing_population_and_untrusted_authority_refused(self):
+        for changes,reason in (({'entries':[]},'ACCEPTANCE_BINDING_POPULATION'),
+                               ({'entries':[{}]*33},'ACCEPTANCE_BINDING_POPULATION'),
+                               ({'owner':'another-owner'},'ACCEPTANCE_BINDING_AUTHORITY'),
+                               ({'authority':'REVIEWER'},'ACCEPTANCE_BINDING_AUTHORITY')):
+            with self.subTest(changes=changes),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);f.binding.update(changes);f.sync();self.unknown(f,reason)
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);f.config['expected'].append({'lane_id':'ct-extra','reviewed_head':'a'*40,'task_contract_sha256':'b'*64})
+            self.unknown(f,'ACCEPTANCE_BINDING_POPULATION_MISMATCH')
+
+    def test_total_reader_budget_fails_closed_without_partial_acceptance(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td)
+            for i in range(2,23):
+                lane='ct-extra-'+str(i);entry=dict(f.entry);entry['lane_id']=lane
+                objects={'task_contract':f.contract,'raw_review':{**f.original,'review_metadata':{'author_lane':lane}},'normalized_review':f.receipt}
+                for kind,obj in objects.items():
+                    name=kind+str(i)+'.json';raw=json.dumps(obj).encode();(f.root/name).write_bytes(raw)
+                    entry[kind+'_file']=name;entry[kind+'_sha256']=digest(raw)
+                f.binding['entries'].append(entry)
+                f.config['expected'].append({k:entry[k] for k in ('lane_id','reviewed_head','task_contract_sha256')})
+            f.sync();self.unknown(f,'ACCEPTANCE_READ_BUDGET')
+
+    def test_done_frozen_success_and_plan_row_never_infer_acceptance(self):
+        for state in ('DONE','FROZEN','RUNNING'):
+            with self.subTest(state=state),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);OwnerWebAppUnitTests()._update_work_record(f.model,state=state,reviewed_head='a'*40)
+                del f.model.c['work_acceptance'];row=f.model.work()['rows'][0]
+                self.assertEqual(row['acceptance'],'UNKNOWN');self.assertEqual(row['integration_state'],'UNKNOWN')
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);f.model._canonical_work_documents=lambda: {'taskboards/active/P01.md':'## ORDER-X `ACCEPTED`'}
+            rows=f.model.work()['rows'];plan=next(r for r in rows if r['source_class']=='CANONICAL_TASKBOARD')
+            self.assertEqual(plan['acceptance'],'UNKNOWN');self.assertEqual(plan['acceptance_reason'],'ACCEPTANCE_NOT_BOUND')
+
+    def test_duplicate_registry_identity_does_not_receive_acceptance(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);root=pathlib.Path(f.model.c['registry'])
+            (root/'duplicate.json').write_bytes((root/'ct-test-lane.json').read_bytes())
+            rows=self.unknown(f,'ACCEPTANCE_DUPLICATE_ROW_IDENTITY')['rows']
+            self.assertEqual(len(rows),2)
+            self.assertTrue(all(r['acceptance']=='UNKNOWN' and r['acceptance_reason']=='ACCEPTANCE_DUPLICATE_ROW_IDENTITY' for r in rows))
+
+    def test_conflicting_registry_reviewed_head_is_unknown(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);OwnerWebAppUnitTests()._update_work_record(f.model,reviewed_head='b'*40)
+            self.unknown(f,'ACCEPTANCE_ROW_REVIEW_MISMATCH')
+
+    def test_row_failure_does_not_change_locator_or_execution(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);before=f.model.work()['rows'][0]
+            f.receipt['verdict']='SCRUTINY_FAIL';f.sync();after=f.model.work()['rows'][0]
+            for key in ('work_id','lane_id','state','owner','head','blocker','next','bucket','actual_live','search_text','source_locator','canonical_relation','process_health'):
+                self.assertEqual(before[key],after[key],key)
+            self.assertEqual(after['acceptance'],'UNKNOWN')
+
 if __name__=="__main__":
     if '--browser-fixtures' in sys.argv: print(json.dumps(browser_fixtures(),ensure_ascii=True))
     else: unittest.main()
