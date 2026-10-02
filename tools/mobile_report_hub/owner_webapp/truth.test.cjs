@@ -47,4 +47,78 @@ test('malformed monitoring source collections fail visible',()=>{
    assert.equal(v.monitoring.status,'UNAVAILABLE');assert.equal(v.source_freshness.state,'UNKNOWN');
  }
 });
+const captured='2026-09-24T00:00:00Z';
+const processRow=(id='proof-live')=>({id,source_class:'LANE_REGISTRY',job_id:id+'-job',state:'RUNNING',
+ freshness:'CURRENT',updated_at:captured,process_checked_utc:captured,process_freshness:'CURRENT',
+ process_health:'ACTIVE',process_state:'RUNNING',runner_alive:true,child_alive:false,postcondition_alive:false,
+ actual_live:true,bucket:'ACTUAL LIVE JOBS',display_state:'ACTIVE_PROCESS',progress:'UNKNOWN'});
+const proofSnapshot=(rows=[processRow()],count=1)=>({schema:'ea-lab-owner-view/1',work:{status:'AVAILABLE',
+ observed_at:captured,rows,process_probe_complete:true,process_eligible_count:rows.length,process_proven_count:rows.length,
+ counts:{actual_live_jobs:count,by_bucket:{'ACTUAL LIVE JOBS':count}}}});
+test('complete capture becomes unknown at display-time expiration without mutating RAW',()=>{
+ const raw=proofSnapshot(),frozen=JSON.stringify(raw),fresh=T.view(raw,now+30000).work;
+ assert.equal(fresh.process_probe_complete,true);assert.equal(fresh.counts.actual_live_jobs,1);
+ for(const time of [now+30001,now+60000,now+25*36e5]){
+  const aged=T.view(raw,time).work;assert.equal(aged.process_probe_complete,false);
+  assert.equal(aged.counts.actual_live_jobs,null);assert.equal(aged.counts.by_bucket['ACTUAL LIVE JOBS'],null);
+  assert.equal(aged.rows[0].actual_live,false);assert.equal(aged.rows[0].bucket,'HISTORICAL UNRESOLVED / UNKNOWN');
+  assert.equal(aged.rows[0].runner_alive,null);assert.equal(aged.rows[0].progress,'UNKNOWN');
+  assert.equal(JSON.stringify(raw),frozen);
+ }
+});
+test('expired non-live eligible job invalidates zero and fresh-live partial totals',()=>{
+ const terminal={...processRow('proof-terminal'),actual_live:false,bucket:'WAITING / BLOCKED',
+  process_health:'COMPLETE',process_state:'COMPLETE',runner_alive:false};
+ const zero=proofSnapshot([terminal],0);assert.equal(T.view(zero,now).work.counts.actual_live_jobs,0);
+ assert.equal(T.view(zero,now+31000).work.counts.actual_live_jobs,null);
+ const mixed=proofSnapshot([processRow(),{...terminal,process_checked_utc:'2026-09-23T23:59:00Z'}],1);
+ const got=T.view(mixed,now).work;assert.equal(got.process_probe_complete,false);
+ assert.equal(got.counts.actual_live_jobs,null);assert.equal(got.rows[0].actual_live,true);
+ assert.equal(got.process_proven_count,1);assert.equal(got.process_eligible_count,2);
+});
+test('13-lane population requires the unknown or expired thirteenth proof',()=>{
+ const rows=Array.from({length:13},(_,i)=>processRow('proof-'+i)),raw=proofSnapshot(rows,13);
+ assert.equal(T.view(raw,now).work.counts.actual_live_jobs,13);
+ for(const changes of [{process_health:'UNKNOWN'}, {process_health:'UNAVAILABLE'},
+  {process_checked_utc:'2026-09-23T23:59:00Z'}, {process_checked_utc:null}]){
+  const input=structuredClone(raw);Object.assign(input.work.rows[12],changes);
+  const got=T.view(input,now).work;assert.equal(got.process_probe_complete,false);
+  assert.equal(got.counts.actual_live_jobs,null);assert.equal(got.process_proven_count,12);
+ }
+});
+test('unqualified and future process proof and incoherent ACTIVE never qualify membership',()=>{
+ for(const changes of [{process_checked_utc:null}, {process_checked_utc:'2026-09-24T00:00:00'},
+  {process_checked_utc:'2026-02-30T00:00:00Z'}, {process_checked_utc:'2026-09-24T00:00:01Z'},
+  {process_health:'UNKNOWN'}, {process_state:'UNKNOWN'}, {runner_alive:false}, {runner_alive:'true'},
+  {process_health:'COMPLETE'}, {process_state:'COMPLETE'}]){
+  const raw=proofSnapshot([Object.assign(processRow(),changes)]),got=T.view(raw,now).work;
+  assert.equal(got.counts.actual_live_jobs,null,JSON.stringify(changes));
+  assert.equal(got.rows[0].actual_live,false,JSON.stringify(changes));
+ }
+});
+test('population and numeric metadata ambiguity cannot fabricate complete zero or total',()=>{
+ for(const changes of [{process_eligible_count:0},{process_eligible_count:null},
+  {process_probe_complete:false},{process_probe_complete:'true'},{status:'UNAVAILABLE'}]){
+  const raw=proofSnapshot();Object.assign(raw.work,changes);assert.equal(T.view(raw,now).work.counts.actual_live_jobs,null);
+ }
+ for(const count of [null,undefined,'1',false,-1,0,2,1.5]){
+  const raw=proofSnapshot();raw.work.counts.actual_live_jobs=count;
+  assert.equal(T.view(raw,now).work.counts.actual_live_jobs,null,String(count));
+ }
+});
+test('zero eligible lanes requires a fresh population observation; unavailable is not zero',()=>{
+ const raw=proofSnapshot([],0);assert.equal(T.view(raw,now).work.counts.actual_live_jobs,0);
+ assert.equal(T.view(raw,now+31000).work.counts.actual_live_jobs,null);
+ for(const value of [null,'2026-09-24T00:00:00','2026-09-24T00:00:01Z']){
+  const input=structuredClone(raw);input.work.observed_at=value;
+  assert.equal(T.view(input,now).work.counts.actual_live_jobs,null);
+ }
+});
+test('repeated views cannot refresh proof or infer a new live identity',()=>{
+ const raw=proofSnapshot(),aged=T.view(raw,now+31000);
+ assert.equal(T.view(aged,now+60000).work.counts.actual_live_jobs,null);
+ const noLive=proofSnapshot([{...processRow(),actual_live:false,bucket:'WAITING / BLOCKED'}],0);
+ const got=T.view(noLive,now).work;assert.equal(got.rows[0].actual_live,false);
+ assert.equal(got.counts.actual_live_jobs,0);assert.equal(noLive.work.rows[0].actual_live,false);
+});
 console.log(`${passed} truth tests passed`);
