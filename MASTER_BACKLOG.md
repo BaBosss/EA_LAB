@@ -361,6 +361,8 @@ utf-8 ปกติ · UTF-16 มี BOM (BOT MOGUL html) · **UTF-16 ไม่�
 
 ## 9. DORMANT BACKLOG — งานที่มีเงื่อนไขปลุก (เก็บกู้จาก handoff 2026-07-26)
 
+**2026-10-02 conditional dormant intake:** [RO17–RO48 existing queue intake](D:/EA_LAB/evidence/monitor_owner_light_phase0_20261002/WAVE3_BACKLOG_INTAKE.json) (SHA256 `5fd72da57a7c1ad8e1d3f53ffbbd0eec27d1df48b17b0fc40d96b2fac3372315`); all RO17–RO48 are BACKLOG (32), READY (0), with no active claims/launches from this intake. Exact scopes/dependencies/consumer/NEXT remain in that existing evidence item; this section is a bootstrap pointer, not a second queue. Wake requires resolved Phase0 acceptance/reconstruction and a source-bound direct consumer plus isolated admission. Pending owner choices stay in the single MainCT A80/B Phase0 batch; see [current routing](PROJECT_STATE.md#23-parked--future--decision-ready). No automatic expiry/stop or broad H301+ launch.
+
 > **ที่มา:** 2026-07-26 กวาด `_triage/HANDOFF_*` 17 ใบ เจอ **27 รายการที่ไม่เคยเข้า `AGENT_TASKBOARD.md` เลย**
 > 6 ใบเร่ง → ORDER-230..235 · 4 ใบพร้อมทำ → ORDER-236..239 · **ที่เหลือ 16 ใบอยู่ตารางนี้**
 >
