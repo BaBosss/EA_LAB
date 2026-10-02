@@ -866,6 +866,57 @@ class WorkAcceptanceTests(unittest.TestCase):
             f=self.fixture(td);OwnerWebAppUnitTests()._update_work_record(f.model,reviewed_head='b'*40)
             self.unknown(f,'ACCEPTANCE_ROW_REVIEW_MISMATCH')
 
+    def test_conflicting_malformed_same_lane_cannot_disappear_from_uniqueness(self):
+        for changes in ({'state':[]},{'dependencies':None},{'owner_chat':{}},{'state':{}}, {'lane_id':'CT-TEST-LANE','dependencies':None}):
+            with self.subTest(changes=changes),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);root=pathlib.Path(f.model.c['registry'])
+                bad=json.loads((root/'ct-test-lane.json').read_bytes());bad.update(head_sha='b'*40);bad.update(changes)
+                (root/'conflicting.json').write_bytes(json.dumps(bad).encode())
+                self.unknown(f,'ACCEPTANCE_DUPLICATE_ROW_IDENTITY')
+
+    def test_unattributable_registry_input_makes_identity_population_unknown(self):
+        values=['{', '[]', 'null', '{}', '{"lane_id":null}', '{"lane_id":"../escape"}', '{"lane_id":".."}',
+                '{"lane_id":"ct-other","lane_id":"ct-test-lane"}',
+                '{"lane_id":"ct-other","nested":{"k":1,"k":2}}',
+                '{"lane_id":"ct-other","forged":NaN}']
+        for raw in values:
+            with self.subTest(raw=raw),tempfile.TemporaryDirectory() as td:
+                f=self.fixture(td);(pathlib.Path(f.model.c['registry'])/'unattributable.json').write_bytes(raw.encode())
+                work=self.unknown(f,'ACCEPTANCE_REGISTRY_POPULATION_UNKNOWN')
+                self.assertEqual(work['sources']['acceptance']['availability'],'UNKNOWN')
+                self.assertEqual(work['sources']['acceptance']['reason'],'ACCEPTANCE_REGISTRY_POPULATION_UNKNOWN')
+
+    def test_safe_other_rejected_lane_is_tainted_without_inventing_target_conflict(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);(pathlib.Path(f.model.c['registry'])/'other.json').write_bytes(json.dumps({'lane_id':'ct-other','state':[]}).encode())
+            row=f.model.work()['rows'][0]
+            self.assertEqual(row['acceptance'],'SCRUTINY_PASS / HIGH / ALLOW_INTEGRATION (review only)')
+            self.assertEqual(row['integration_state'],'UNKNOWN')
+
+    def test_same_byte_identity_capture_precedes_presentation_without_reread(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);root=pathlib.Path(f.model.c['registry']);source=root/'ct-test-lane.json'
+            before=source.read_bytes();registry_reads=[]
+            import model as module
+            original=module.safe_bytes
+            def observe(path,base,*args):
+                if pathlib.Path(path).parent==root: registry_reads.append(pathlib.Path(path).name)
+                return original(path,base,*args)
+            with mock.patch.object(module,'safe_bytes',side_effect=observe):row=f.model.work()['rows'][0]
+            self.assertEqual(registry_reads,['ct-test-lane.json'])
+            self.assertEqual(source.read_bytes(),before)
+            self.assertEqual(row['acceptance_reason'],'EXACT_DOT_BINDING_VERIFIED')
+
+    def test_unreadable_registry_record_is_unknown_population(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=self.fixture(td);root=pathlib.Path(f.model.c['registry']);bad=root/'unreadable.json';bad.write_bytes(b'{}')
+            import model as module
+            original=module.safe_bytes
+            def observe(path,base,*args):
+                if pathlib.Path(path)==bad:raise OSError('fixture unreadable record')
+                return original(path,base,*args)
+            with mock.patch.object(module,'safe_bytes',side_effect=observe):self.unknown(f,'ACCEPTANCE_REGISTRY_POPULATION_UNKNOWN')
+
     def test_row_failure_does_not_change_locator_or_execution(self):
         with tempfile.TemporaryDirectory() as td:
             f=self.fixture(td);before=f.model.work()['rows'][0]

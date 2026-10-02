@@ -679,9 +679,33 @@ class Model:
     def work(self):
         root=pathlib.Path(self.c['registry']); lease_root=pathlib.Path(self.c['leases']); jobs_root=pathlib.Path(self.c['jobs']); registry_rows=[]; totals={}
         docs=self._canonical_work_documents()
+        qualify_acceptance=self.c.get('work_acceptance') is not None
+        lane_counts={}; tainted_lanes=set(); population_unknown=False
+        def identity_pairs(items):
+            value={}
+            for key,item in items:
+                if key in value: raise Refused('ACCEPTANCE_REGISTRY_DUPLICATE_JSON_KEY')
+                value[key]=item
+            return value
+        def invalid_constant(value): raise Refused('ACCEPTANCE_REGISTRY_NONFINITE_JSON')
         for p in sorted(root.glob('*.json')):
+            attributed=None
             try:
-                x=read_json(p,root); lane=x['lane_id']; state=x['state']; updated=x.get('updated_at')
+                # Identity qualification and presentation use the SAME observed
+                # bytes. Rejected presentation records cannot vanish from proof.
+                raw=safe_bytes(p,root)
+                if qualify_acceptance:
+                    try:
+                        identity=json.loads(raw.decode('utf-8-sig'),object_pairs_hook=identity_pairs,
+                                            parse_constant=invalid_constant)
+                        candidate=identity.get('lane_id') if isinstance(identity,dict) else None
+                        if not isinstance(candidate,str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,128}',candidate) or candidate in ('.','..'):
+                            raise Refused('ACCEPTANCE_REGISTRY_UNQUALIFIED_IDENTITY')
+                        attributed=candidate.lower()  # Windows identity aliases conflict; joins stay exact.
+                        lane_counts[attributed]=lane_counts.get(attributed,0)+1
+                    except (ValueError,TypeError,UnicodeError,RecursionError) as error:
+                        population_unknown=True; self.issue('acceptance_registry_identity',error)
+                x=json.loads(raw.decode('utf-8-sig')); lane=x['lane_id']; state=x['state']; updated=x.get('updated_at')
                 if not re.fullmatch(r'[A-Za-z0-9_.-]{1,128}',lane): raise Refused('LANE_ID')
                 totals[state]=totals.get(state,0)+1
                 lease=lease_root/(lane+'.json'); job={}; terminal=None; jobid=None
@@ -726,7 +750,11 @@ class Model:
                     'prohibited_actions':'NO MUTATION, RETRY, KILL, LAUNCH, PUSH OR STATE CHANGE FROM MONITOR',
                     'acceptance_boundary':'UNKNOWN UNTIL ACCEPTED EVIDENCE/REVIEW IS SOURCE-BOUND',
                     'evidence_basis':'Registry declaration + available lease/job/process observations; plan/status, ownership, execution and acceptance remain separate.'})
-            except (OSError,ValueError,KeyError,TypeError) as e: self.issue('lane_observation',e)
+            except (OSError,ValueError,KeyError,TypeError,AttributeError,RecursionError) as e:
+                if qualify_acceptance:
+                    if attributed is None: population_unknown=True
+                    else: tainted_lanes.add(attributed)
+                self.issue('lane_observation',e)
         registry_rows.sort(key=lambda r:(r['freshness']=='CURRENT',r['updated_at'] or ''),reverse=True)
         probe_states={'RUNNING','REVIEW','FROZEN','INTEGRATING','WAITING','BLOCKED'}
         candidates=[r for r in registry_rows if r['freshness']=='CURRENT' and r['job_id'] and r['state'] in probe_states]
@@ -743,13 +771,15 @@ class Model:
         known={r['id'] for r in registry_rows}; plan_rows=[r for r in self._taskboard_rows(docs) if r['id'] not in known]
         result=registry_rows+plan_rows
         acceptance=self.work_acceptance()
-        lane_counts={}
-        for row in registry_rows: lane_counts[row['lane_id']]=lane_counts.get(row['lane_id'],0)+1
+        if population_unknown and acceptance['availability']=='AVAILABLE':
+            acceptance={'availability':'UNKNOWN','reason':'ACCEPTANCE_REGISTRY_POPULATION_UNKNOWN','proofs':{}}
         for row in result:
             proof=acceptance['proofs'].get(row['lane_id']) if row['source_class']=='LANE_REGISTRY' else None
             reason=acceptance['reason'] if acceptance['availability']!='AVAILABLE' else 'ACCEPTANCE_NOT_BOUND'
             if proof is not None:
-                if lane_counts[row['lane_id']]!=1: reason='ACCEPTANCE_DUPLICATE_ROW_IDENTITY'
+                if population_unknown: reason='ACCEPTANCE_REGISTRY_POPULATION_UNKNOWN'
+                elif lane_counts.get(row['lane_id'].lower(),0)!=1: reason='ACCEPTANCE_DUPLICATE_ROW_IDENTITY'
+                elif row['lane_id'].lower() in tainted_lanes: reason='ACCEPTANCE_REJECTED_REGISTRY_IDENTITY'
                 elif row['head']!=proof['reviewed_head']: reason='ACCEPTANCE_ROW_HEAD_MISMATCH'
                 elif row['reviewed_head'] not in (None,'',proof['reviewed_head']): reason='ACCEPTANCE_ROW_REVIEW_MISMATCH'
                 else:
