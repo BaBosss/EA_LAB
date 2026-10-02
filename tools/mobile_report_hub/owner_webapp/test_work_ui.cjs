@@ -246,3 +246,89 @@ html=api.setQuery('phase-history');assert.match(html,/<details class="work-histo
 api.setQuery('');html=api.setFilter('HISTORY');assert.match(html,/phase-done/);api.setFilter('ALL');
 const unknownDrawer=api.open('phase-history');assert.match(unknownDrawer,/Track qualification<\/dt><dd>UNKNOWN/);assert.match(unknownDrawer,/Reservation \/ declared state/);assert.match(unknownDrawer,/Checkpoint<\/dt><dd>UNKNOWN/);
 console.log('PASS Phase0 five tracks, seven groups, minimal rows, UNKNOWN routing, collapsed searchable history');
+
+// Actual Model.snapshot -> serialization -> production Work DOM. No installed inputs or host.
+if(process.argv.includes('--browser-tracks'))(async()=>{
+ const {spawnSync}=require('node:child_process'),{chromium}=require('playwright-core');
+ const fixtureScript=String.raw`
+import pathlib,sys,tempfile,json,datetime
+sys.path.insert(0,sys.argv[1])
+from test_owner_webapp import model_fixture
+from unittest import mock
+from model import Model
+from server import Application,render,serialize
+unknown=['constructor','toString','__proto__','prototype','hasOwnProperty','valueOf','isPrototypeOf','propertyIsEnumerable','toLocaleString','__defineGetter__','__lookupGetter__','__defineSetter__','__lookupSetter__','unmapped','<img src=x onerror=alert(1)>']
+known=['SYSTEM','EA BUILD / IMPLEMENTATION','EA RESEARCH / PLANNING','EA TESTING','OWNER DECISION','EA BUILD','EA PLANNING','EA RESEARCH']
+with tempfile.TemporaryDirectory() as td:
+ root=pathlib.Path(td);fixture=model_fixture(root/'reader');registry=pathlib.Path(fixture['config']['registry'])
+ now=datetime.datetime.now(datetime.timezone.utc).isoformat()
+ cases=[{'track':t,'kind':'unknown'} for t in unknown]+[{'track':t,'kind':'known'} for t in known]+[{'kind':'missing'},{'track':'','kind':'empty'},{'track':'constructor','kind':'history'},{'track':'toString','kind':'done'}]
+ cases += [{'track':'SYSTEM','kind':'filler'} for _ in range(130-len(cases))]
+ expected=[]
+ for i,case in enumerate(cases):
+  ident=f'prototype-{i:03d}-end'
+  record={'lane_id':ident,'state':'DONE' if case['kind']=='done' else 'BLOCKED','updated_at':'2000-01-01T00:00:00Z' if case['kind']=='history' else now,'owner_chat':'fixture-owner','worker':'fixture-reader','head_sha':'a'*40,'reviewed_head':None,'reviewer':None,'dependencies':[],'objective':'<img src=x onerror=alert(1)> '+ident,'blocker_class':'prototype regression only','ea_family':'Family-unknown' if case['kind'] in ('unknown','missing','empty','history','done') else 'Family-known'}
+  if 'track' in case:record['track']=case['track']
+  (registry/(ident+'.json')).write_text(json.dumps(record),encoding='utf-8')
+  expected.append({'id':ident,**case})
+ blobs={'PROJECT_STATE.md':b'Global state: DEGRADED_MONITORING','portfolio/ACCOUNTS.csv':b'account,currency,environment\n123456789,USD,DEMO\n','portfolio/DEPLOYMENTS.csv':b'account,magic,ea_name,status\n','ea_projects/(Boss)_NewsGuard/GUARDCONFIG_2026-07-17.md':b''}
+ def git(_self,*args):
+  if args[0]=='rev-parse':return b'a'*40
+  if args[0]=='ls-tree':return b''
+  if args[0]=='show':return blobs[args[1].split(':',1)[1]]
+  raise AssertionError(args)
+ with mock.patch.object(Model,'git',git):
+  snapshot=Application(fixture['config']).snapshot()
+  assert len(snapshot['work']['rows'])==130
+  rows={r['id']:r for r in snapshot['work']['rows']}
+  for case in expected:
+   if case['kind']!='known' and case['kind']!='filler':
+    assert rows[case['id']]['owner_track']=='SYSTEM' and rows[case['id']]['track_qualification']=='UNKNOWN'
+  print(json.dumps({'snapshot':json.loads(serialize(snapshot)),'html':render(fixture['config'],snapshot).decode('utf-8'),'expected':expected}))
+`;
+ const generated=spawnSync('python',['-c',fixtureScript,__dirname],{encoding:'utf8',maxBuffer:16*1024*1024});
+ assert.equal(generated.status,0,'actual Model fixture failed: '+generated.stderr);
+ const f=JSON.parse(generated.stdout),byId=new Map(f.snapshot.work.rows.map(r=>[r.id,r]));
+ const browser=await chromium.launch({headless:true,channel:'msedge'});
+ try{
+  const ctx=await browser.newContext({serviceWorkers:'block'}),page=await ctx.newPage(),errors=[];
+  page.on('pageerror',e=>errors.push(String(e)));
+  await page.clock.install({time:new Date(f.snapshot.observed_at)});
+  await page.route('http://track.fixture/**',route=>new URL(route.request().url()).pathname==='/api/snapshot'?route.fulfill({contentType:'application/json',body:JSON.stringify(f.snapshot)}):route.fulfill({contentType:'text/html',body:f.html}));
+  await page.goto('http://track.fixture/');await page.evaluate(()=>{location.hash='work'});
+  await page.getByRole('heading',{name:'Work',exact:true}).waitFor();
+  const rendered=await page.locator('tr[data-work]').evaluateAll(ns=>ns.map(n=>n.dataset.work));
+  console.log(JSON.stringify({case:'Model.snapshot prototype-name production DOM',source_rows:130,rendered_rows:rendered.length,missing:f.expected.filter(c=>!rendered.includes(c.id)).map(c=>({id:c.id,track:c.track,kind:c.kind})),reported:(await page.locator('#main').innerText()).match(/Showing .* work rows/)?.[0]}));
+  assert.equal(rendered.length,130,'every actual Model source row retained without cutoff');assert.equal(new Set(rendered).size,130,'retained exactly once');
+  assert.match(await page.locator('#main').innerText(),/Showing 130 of 130 work rows/);
+  assert.equal(await page.locator('[data-owner-track-section]').count(),5);
+  assert.equal(await page.locator('.work-history[open]').count(),0,'history initially collapsed');
+  const rowSelector=c=>'tr[data-work="'+c.id+'"]';
+  for(const c of f.expected.filter(c=>c.kind!=='filler')){
+   const row=page.locator(rowSelector(c));assert.equal(await row.count(),1,c.id);
+   assert.equal(await row.locator('xpath=ancestor::section[@data-owner-track-section][1]').getAttribute('data-owner-track-section'),byId.get(c.id).owner_track,c.id+' mapped track');
+   if(!['known','filler'].includes(c.kind))assert.match(await row.textContent(),/Track: UNKNOWN/,'collapsed history still retains qualification');
+   await page.locator('[data-work-search]').fill(c.id);await page.clock.runFor(200);
+   assert.equal(await page.locator('tr[data-work]').count(),1,c.id+' search population');assert.equal(await row.isVisible(),true,c.id+' visible search match');
+   assert.match(await page.locator('#main').innerText(),/Showing 1 of 130 work rows/);
+   await page.locator('[data-open-work="'+c.id+'"]').click();
+   const values=await page.locator('.drawer dt').evaluateAll(ns=>Object.fromEntries(ns.map(n=>[n.textContent,n.nextElementSibling.textContent])));
+   assert.equal(values.Track,byId.get(c.id).track,'raw track preserved');assert.equal(values['Track qualification'],byId.get(c.id).track_qualification);
+   assert.match(await page.locator('.drawer').innerText(),/<img src=x onerror=alert\(1\)>/);assert.equal(await page.locator('.drawer img').count(),0,'escaped drawer');
+   await page.locator('.drawer .close').click();await page.locator('[data-work-search]').fill('');await page.clock.runFor(200);
+  }
+  await page.locator('[data-owner-track="SYSTEM"]').click();const systemCount=f.snapshot.work.rows.filter(r=>r.owner_track==='SYSTEM').length;
+  assert.equal(await page.locator('tr[data-work]').count(),systemCount,'unknown SYSTEM navigation');
+  await page.locator('[data-owner-track="ALL"]').click();
+  for(const [attr,value,key] of [['track','constructor','track'],['owner','fixture-owner','lane_owner'],['family','Family-unknown','ea_family'],['freshness','STALE','freshness']]){
+   await page.locator('[data-work-'+attr+']').selectOption(value);
+   assert.equal(await page.locator('tr[data-work]').count(),f.snapshot.work.rows.filter(r=>r[key]===value).length,attr+' filter');
+   await page.locator('[data-work-'+attr+']').selectOption('ALL');
+  }
+  await page.locator('[data-work-filter="HISTORY"]').click();const history=f.expected.find(c=>c.kind==='history');
+  await page.locator('[data-work-search]').fill(history.id);await page.clock.runFor(200);assert.equal(await page.locator(rowSelector(history)).isVisible(),true,'unknown history filter/search');
+  await page.locator('[data-work-search]').fill('');await page.clock.runFor(200);await page.locator('[data-work-filter="ALL"]').click();
+  assert.equal(await page.locator('#main img').count(),0,'escaped row objective and hostile raw track');assert.deepEqual(errors,[]);
+  await ctx.close();console.log('PASS model-backed production track DOM: prototype/missing/empty/known/aliases,130 retained once,search,SYSTEM/dimension filters,history,raw qualification,escaping');
+ }finally{await browser.close()}
+})().catch(e=>{console.error(e);process.exitCode=1});

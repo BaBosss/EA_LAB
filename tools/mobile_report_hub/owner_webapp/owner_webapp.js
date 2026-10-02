@@ -23,7 +23,7 @@ const icon=name=>'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor
 const workBuckets=['CURRENT ACTIONABLE','READY','WAITING / BLOCKED','OWNER DECISION NEEDED','PARKED','HISTORICAL UNRESOLVED / UNKNOWN','ACTUAL LIVE JOBS','RECENTLY DONE'];
 const ownerTracks=['SYSTEM','EA BUILD / IMPLEMENTATION','EA RESEARCH / PLANNING','EA TESTING','OWNER DECISION'];
 const ownerGroups=['CURRENT ACTIONABLE','READY','RUNNING','WAITING/BLOCKED','OWNER DECISION NEEDED','PARKED','RECENTLY DONE'];
-function ownerTrackInfo(r){const aliases={'EA BUILD':'EA BUILD / IMPLEMENTATION','EA PLANNING':'EA RESEARCH / PLANNING','EA RESEARCH':'EA RESEARCH / PLANNING'},mapped=ownerTracks.includes(r.track)?r.track:aliases[r.track];return {track:mapped||'SYSTEM',qualification:mapped?'EXPLICIT_SOURCE_TRACK':'UNKNOWN'}}
+function ownerTrackInfo(r){const aliases={'EA BUILD':'EA BUILD / IMPLEMENTATION','EA PLANNING':'EA RESEARCH / PLANNING','EA RESEARCH':'EA RESEARCH / PLANNING'},mapped=ownerTracks.includes(r.track)?r.track:Object.prototype.hasOwnProperty.call(aliases,r.track)?aliases[r.track]:null;return {track:mapped||'SYSTEM',qualification:mapped?'EXPLICIT_SOURCE_TRACK':'UNKNOWN'}}
 function ownerGroup(r){if(r.actual_live===true&&truth.currentLiveProof(r))return 'RUNNING';if(r.bucket==='ACTUAL LIVE JOBS')return 'CURRENT ACTIONABLE';if(r.bucket==='WAITING / BLOCKED')return 'WAITING/BLOCKED';return ownerGroups.includes(r.bucket)?r.bucket:'CURRENT ACTIONABLE'}
 function historicalWork(r){return r.historical===true||r.bucket==='HISTORICAL UNRESOLVED / UNKNOWN'}
 function route(){const r=(location.hash.slice(1).split('?')[0]||'overview');return ['overview','work','runtime','performance','news','knowledge','templates'].includes(r)?r:'overview'}
