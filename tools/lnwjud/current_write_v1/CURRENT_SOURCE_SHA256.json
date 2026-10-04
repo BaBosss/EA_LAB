@@ -1,86 +1,99 @@
 {
   "schema": "lnwjud_write_v1_current_source_hashes/1",
-  "contract_id": "LNWJUD-S1-AMENDMENT-A2-20260930",
-  "parent_contract": "LNWJUD-WRITE-V1-SAFETY-CLOSURE-S1-20260929",
-  "parent_amendment": "LNWJUD-S1-AMENDMENT-A1-20260929",
-  "base_head": "88d6767178e1230e370372ddb8a8ed7974aff6e4",
-  "base_tree": "fcb406f4ca53c0094868c4054d84a7d22e2a95ce",
-  "canonical_at_dispatch": "b06320999f98aeefb33329971eee03405524e5af",
-  "predecessor_head": "77ff2529e3e43dd4a502d0b00afcf44bfd58d571",
+  "contract_id": "LNWJUD-EXECUTION-IDENTITY-READ-V2-20261004",
+  "parent_contract": "LNWJUD-EXECUTION-IDENTITY-READ-V1-20261004",
+  "parent_candidate": "1c66f77f96a88816c21f957cadd7569778e48feb",
+  "predecessor_manifest_sha256": "022bb2a734b643cff3391299e493506ca825541ff1b295d827c42e4f6a6310d8",
+  "base_head": "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+  "base_tree": "bb1dbea90d1de8097db9e1b50736722b13211257",
+  "scope_amendment_authority_sha256": "f4084d2583090020c2ef4efadb1d2472005a2a5a6f962514c10fad268e943fca",
   "algorithm": "SHA256",
-  "scope": "Exact final UTF-8 source/doc bytes for owner-approved Amendment A2 before CT commit",
   "self_hash_excluded": "tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json",
   "files": [
     {
       "path": "docs/handoffs/LNWJUD_WRITE_V1_20260928.md",
-      "sha256": "4e260502313322c9f87d8bfc88f4ea4ef6f9d6d1ac3156c7f1915dcd9062093c",
-      "bytes": 11587
+      "bytes": 11587,
+      "sha256": "4e260502313322c9f87d8bfc88f4ea4ef6f9d6d1ac3156c7f1915dcd9062093c"
     },
     {
       "path": "tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs",
-      "sha256": "751446b59abe9b54a967f2cb6e2e38ce2f2bd84128d380457aaa647d8c72e216",
-      "bytes": 43447
+      "bytes": 43563,
+      "sha256": "22dd4cdc17c7b95d793bfc8249fcbf936576bb7124c810759b6fc7334c79cff9"
     },
     {
       "path": "tools/lnwjud/current_write_v1/README.md",
-      "sha256": "da842dd75203672e9b756e67f15a3dc0593b1fa78cf629c5b6dbdbaec9996c1f",
-      "bytes": 7320
+      "bytes": 7320,
+      "sha256": "da842dd75203672e9b756e67f15a3dc0593b1fa78cf629c5b6dbdbaec9996c1f"
     },
     {
       "path": "tools/lnwjud/current_write_v1/build_snapshot.py",
-      "sha256": "8ff87aa743498754745c8e59807a8e00618164458ae25d25dc32abe7cb0d75ff",
-      "bytes": 13608
+      "bytes": 13608,
+      "sha256": "8ff87aa743498754745c8e59807a8e00618164458ae25d25dc32abe7cb0d75ff"
     },
     {
       "path": "tools/lnwjud/current_write_v1/install_tasks.ps1",
-      "sha256": "af718e9860912731e6eb7f9463b7db63d1fb14d5ca40bf02bf405b8689344426",
-      "bytes": 10638
+      "bytes": 10638,
+      "sha256": "af718e9860912731e6eb7f9463b7db63d1fb14d5ca40bf02bf405b8689344426"
     },
     {
       "path": "tools/lnwjud/current_write_v1/refresh_write_v1_snapshot.ps1",
-      "sha256": "38a8bcd58b38be1c007c5b178fa594e83769171b0fb1b3e666720a05b6d59b36",
-      "bytes": 3261
+      "bytes": 3261,
+      "sha256": "38a8bcd58b38be1c007c5b178fa594e83769171b0fb1b3e666720a05b6d59b36"
     },
     {
       "path": "tools/lnwjud/current_write_v1/source_bound_gateway_loader.cjs",
-      "sha256": "06593b76abd45e53ec691455c70b9e7486d34b487eb846510d8dd0a2cfaca505",
-      "bytes": 2428
+      "bytes": 2428,
+      "sha256": "06593b76abd45e53ec691455c70b9e7486d34b487eb846510d8dd0a2cfaca505"
     },
     {
       "path": "tools/lnwjud/current_write_v1/start_write_v1.ps1",
-      "sha256": "89241271415a202ccb3199ee583bbcf305d724bda34e579edb2d19fac3bad054",
-      "bytes": 26035
+      "bytes": 26035,
+      "sha256": "89241271415a202ccb3199ee583bbcf305d724bda34e579edb2d19fac3bad054"
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_source_bound_gateway_loader.cjs",
-      "sha256": "0d900161fff0fab9e86206ba10348d898dccba00a4663e01ffb5a4d8529c094e",
-      "bytes": 3680
+      "bytes": 3680,
+      "sha256": "0d900161fff0fab9e86206ba10348d898dccba00a4663e01ffb5a4d8529c094e"
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_write_v1.cjs",
-      "sha256": "13612443fbf401bf6b168e54a992a0a0f4fbbce3a08046da722a444c79c068cb",
-      "bytes": 3975
+      "bytes": 3975,
+      "sha256": "13612443fbf401bf6b168e54a992a0a0f4fbbce3a08046da722a444c79c068cb"
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_write_v1_a1.ps1",
-      "sha256": "6867470b7e9215b9648de45b04d8633e69bf3fff7c1d40f6723c0e2aaead29fe",
-      "bytes": 13713
+      "bytes": 13713,
+      "sha256": "6867470b7e9215b9648de45b04d8633e69bf3fff7c1d40f6723c0e2aaead29fe"
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_write_v1_repair1.cjs",
-      "sha256": "640a519eeb76dfa5b4529e9fbcc1c76b0bf2a3a7c2ce5c6dba7d25a028076fa9",
-      "bytes": 5296
+      "bytes": 5296,
+      "sha256": "640a519eeb76dfa5b4529e9fbcc1c76b0bf2a3a7c2ce5c6dba7d25a028076fa9"
     },
     {
       "path": "tools/lnwjud/current_write_v1/test_write_v1_safety_s1.ps1",
-      "sha256": "b4c56d3bfed1843ef42957e8e0f2e300cab7e1fc81361e1f905805b52d1d4f42",
-      "bytes": 20610
+      "bytes": 20610,
+      "sha256": "b4c56d3bfed1843ef42957e8e0f2e300cab7e1fc81361e1f905805b52d1d4f42"
     },
     {
       "path": "tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs",
-      "sha256": "6a662f9b2a188f169f1b543bae15ed682fe2da3e518dbc740b30717128440cf1",
-      "bytes": 3198
+      "bytes": 6156,
+      "sha256": "5c1621350c0e0cb60872f1b545f847b7d9426bf39e211f8d1a35705e359cb9ae"
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/execution_identity.cjs",
+      "bytes": 17314,
+      "sha256": "a02e4db699ed7f036d5d39f05e90d42c1e924afc2b979b68f4e87bd4066bf231"
+    },
+    {
+      "path": "tools/lnwjud/current_write_v1/test_execution_identity.cjs",
+      "bytes": 33400,
+      "sha256": "64ee174017ebbc593046cbfa2dfb649fe053ed3f979005ff97d71947271ab593"
+    },
+    {
+      "path": "docs/workflows/LNWJUD_EXECUTION_IDENTITY_SOURCE_V1.md",
+      "bytes": 5623,
+      "sha256": "afa2b9e4ec2d8d640d38eb79daaef48c48b55d0fb52f4d4f8e1528168570ca01"
     }
-  ],
-  "owner_approved_git_repin": {"date":"2026-10-01","base_head":"20a066f4ff77c2fe9bd867814f53eda326711b43","approval":"อนุมัติ re-pin Git hash","git_path":"C:\\Program Files\\Git\\cmd\\git.exe","git_version":"2.56.0.windows.1","previous_sha256":"78211c7ed73988da93a6d8a33d47ec6187f464d7ea2a9a00c182bbd7a1ecf30f","current_sha256":"7cd588850959546663c81077af076835558c6a6af33506a64a65784743df92a1","scope":"Git executable identity pin and dependent gateway source/supervisor hashes only; inherited A2 safety behavior unchanged"}
+  ]
 }

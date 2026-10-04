@@ -465,12 +465,16 @@ function writeWorkspaceStatus(writeRootReal) {
   };
 }
 
+const executionIdentity = require('./execution_identity.cjs');
+
 function buildServer(ctx) {
   const { seal, canonical, lanes, jobs, evidence, monitor, canonicalRootReal, evidenceRootReal, writeRootReal, canonicalMap, evidenceMap } = ctx;
   const server = new McpServer(
     { name: 'ea-lab-current-write-v1', version: '0.1.0-preview' },
     { capabilities: { tools: {} } }
   );
+
+  executionIdentity.registerTools(server, z, ctx);
 
   server.registerTool('ea_lab_current_status', {
     description: 'Return the exact point-in-time CURRENT READ V2 snapshot identity, canonical binding at capture, freshness age, counts, authority, and limitations.',
