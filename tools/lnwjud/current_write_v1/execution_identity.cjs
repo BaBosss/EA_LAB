@@ -20,8 +20,22 @@ function precise(value){
   if(!Number.isFinite(base)||!Number.isFinite(local)||new Date(local).toISOString().slice(0,19)!==m[1]+'T'+m[2])return null;
   return BigInt(base)*10000n+BigInt((m[3]||'').padEnd(7,'0')||'0');
 }
-const validPath=v=>typeof v==='string'&&v.trim()===v&&v.length>0&&
-  !/[\x00-\x1f*?"<>|]/.test(v)&&(/^[A-Za-z]:[\\/]/.test(v)||/^\\\\[^\\/]+\\[^\\/]+(?:\\|$)/.test(v));
+function validPath(v){
+  if(typeof v!=='string'||v.trim()!==v||!v||/[\x00-\x1f*?"<>|]/.test(v))return false;
+  const normalized=v.replaceAll('/','\\');
+  const component=c=>c!==''&&!c.includes(':')&&
+    (c==='.'||c==='..'||(!/[. ]$/.test(c)&&!/^(?:CON|PRN|AUX|NUL|COM[1-9\u00b9\u00b2\u00b3]|LPT[1-9\u00b9\u00b2\u00b3])(?:\.|$)/i.test(c)));
+  let parts;
+  if(/^[A-Za-z]:\\/.test(normalized))parts=normalized.slice(3).split('\\');
+  else if(normalized.startsWith('\\\\')){
+    parts=normalized.slice(2).split('\\');
+    if(parts.length<2||!component(parts[0])||!component(parts[1])||
+      ['.','..'].includes(parts[0])||['.','..'].includes(parts[1]))return false;
+    parts=parts.slice(2);
+  }else return false;
+  if(parts.at(-1)==='')parts.pop(); // A root or one trailing separator is valid.
+  return parts.every(component);
+}
 function project(binding,raw,requestUtc,nowUtc){
   const row={job_id:binding?.job_id??null,lane_id:binding?.lane_id??null,execution_type:null,state:'UNKNOWN',
     reason:'OBSERVATION_UNAVAILABLE',pid:null,process_creation_utc:null,executable_path:null,
@@ -108,6 +122,23 @@ function project(binding,raw,requestUtc,nowUtc){
     if(!object(result)||result.state!==state.state||!Number.isInteger(result.exit_code)||
        !stamp(result.ended_utc,observed)||precise(result.ended_utc)<precise(state.started_utc))
       return unknown('TERMINAL_RESULT_UNPROVEN');
+    // Terminal proof requires one coherent durable interval, not merely a result
+    // timestamp that precedes observation. Invalid evidence wins over differences.
+    const ended=precise(result.ended_utc),started=precise(state.started_utc),created=precise(job.created_utc);
+    if(!stamp(state.ended_utc,observed)||precise(state.ended_utc)!==ended||created>started)
+      return unknown('TERMINAL_CHRONOLOGY_UNPROVEN');
+    for(const stage of roles){
+      const creation=precise(state[stage+'_start_utc']),expected=precise(raw.checks[stage].expected_creation_utc);
+      if(creation<started||creation>ended||expected<started||expected>ended)
+        return unknown('TERMINAL_CHRONOLOGY_UNPROVEN');
+    }
+    if(configured&&precise(state.postcondition_start_utc)<precise(state.child_start_utc))
+      return unknown('TERMINAL_CHRONOLOGY_UNPROVEN');
+    if('runner_start_utc' in state){
+      const runner=precise(state.runner_start_utc);
+      if(runner===null||runner<created||runner>started||runner>ended)
+        return unknown('TERMINAL_CHRONOLOGY_UNPROVEN');
+    }
     if(configured&&!Number.isInteger(result.postcondition_exit_code))return unknown('TERMINAL_POSTCONDITION_UNPROVEN');
     if(('exit_code' in state&&state.exit_code!==result.exit_code)||
        ('postcondition_exit_code' in state&&state.postcondition_exit_code!==result.postcondition_exit_code)||

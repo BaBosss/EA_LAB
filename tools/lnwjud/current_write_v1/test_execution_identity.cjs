@@ -23,7 +23,7 @@ function fixture(){
 }
 const project=f=>api.project(B,f,START,END);
 test('synthetic bound live -> PROVEN_RUNNING',()=>{const r=project(fixture());assert.equal(r.state,'PROVEN_RUNNING');assert.equal(r.pid,456);assert.equal(r.progress,'UNKNOWN');});
-test('terminal durable result and absent process',()=>{const f=fixture();f.state.state='COMPLETE';f.result={job_id:B.job_id,state:'COMPLETE',exit_code:0,ended_utc:START,postcondition_exit_code:null};Object.assign(f.checks.child,{identity:'RECORDED_PROCESS_NOT_PRESENT',query_status:'NOT_PRESENT',current_creation_utc:null});assert.equal(project(f).state,'PROVEN_TERMINAL');});
+test('terminal durable result and absent process',()=>{const f=fixture();f.state.state='COMPLETE';f.state.ended_utc=START;f.result={job_id:B.job_id,state:'COMPLETE',exit_code:0,ended_utc:START,postcondition_exit_code:null};Object.assign(f.checks.child,{identity:'RECORDED_PROCESS_NOT_PRESENT',query_status:'NOT_PRESENT',current_creation_utc:null});assert.equal(project(f).state,'PROVEN_TERMINAL');});
 test('stale Registry RUNNING no process',()=>{const f=fixture();Object.assign(f.checks.child,{identity:'RECORDED_PROCESS_NOT_PRESENT',query_status:'NOT_PRESENT',current_creation_utc:null});assert.equal(project(f).state,'UNKNOWN');});
 test('PID reused',()=>{const f=fixture();f.checks.child.identity='DIFFERENT_CREATION_IDENTITY';f.checks.child.current_creation_utc=START;assert.equal(project(f).state,'IDENTITY_MISMATCH');});
 test('100ns creation mismatch preserved',()=>{const f=fixture();f.checks.child.current_creation_utc='2026-10-04T01:00:00.1234568Z';assert.equal(project(f).state,'IDENTITY_MISMATCH');});
@@ -42,7 +42,7 @@ test('future observation refused',()=>{const f=fixture();f.observation_utc='2026
 test('unknown host refused',()=>{const f=fixture();f.host_id='other-host';assert.equal(project(f).state,'UNKNOWN');});
 test('source changed while observing',()=>{const f=fixture();f.stable=false;assert.equal(project(f).state,'UNKNOWN');});
 test('missing process data',()=>{const f=fixture();f.checks={};assert.equal(project(f).state,'UNKNOWN');});
-test('terminal null exit is not zero',()=>{const f=fixture();f.state.state='COMPLETE';f.result={job_id:B.job_id,state:'COMPLETE',exit_code:null,ended_utc:START};Object.assign(f.checks.child,{identity:'RECORDED_PROCESS_NOT_PRESENT',query_status:'NOT_PRESENT',current_creation_utc:null});assert.equal(project(f).state,'UNKNOWN');});
+test('terminal null exit is not zero',()=>{const f=fixture();f.state.state='COMPLETE';f.state.ended_utc=START;f.result={job_id:B.job_id,state:'COMPLETE',exit_code:null,ended_utc:START};Object.assign(f.checks.child,{identity:'RECORDED_PROCESS_NOT_PRESENT',query_status:'NOT_PRESENT',current_creation_utc:null});assert.equal(project(f).state,'UNKNOWN');});
 for(const state of ['QUEUED','WAITING_RESOURCE','BLOCKED'])test('explicit durable '+state,()=>{const f=fixture();f.state.state=state;f.state.child_pid=null;assert.equal(project(f).state,state);});
 test('invalid calendar date',()=>assert.equal(api.precise('2026-02-30T00:00:00Z'),null));
 test('precise timezone equivalence',()=>assert.equal(api.precise(CREATED),api.precise('2026-10-04T08:00:00.1234567+07:00')));
@@ -100,7 +100,7 @@ test('missing observed creation takes precedence over differing expected pid',()
 
 // V2 contract: unknown evidence dominates all comparisons and every applicable stage.
 function terminalFixture(){
- const f=fixture();f.state.state='COMPLETE';
+ const f=fixture();f.state.state='COMPLETE';f.state.ended_utc=START;
  f.job.postcondition_file_path='C:\\fixture\\verify.exe';
  f.state.postcondition_pid=789;f.state.postcondition_start_utc=CREATED;
  f.result={job_id:B.job_id,state:'COMPLETE',exit_code:0,postcondition_exit_code:0,ended_utc:START};
@@ -145,13 +145,13 @@ test('V2 missing image wins over valid job disagreement',()=>{const f=fixture();
 test('V2 relative expected executable is unknown',()=>{const f=fixture();f.job.file_path='node.exe';assert.equal(project(f).state,'UNKNOWN');});
 test('V2 relative observed executable is unknown',()=>{const f=fixture();f.images.child.executable_path='node.exe';assert.equal(project(f).state,'UNKNOWN');});
 test('V2 valid postcondition running',()=>{
- const f=terminalFixture();f.state.state='POSTCONDITION_RUNNING';f.result=null;
+ const f=terminalFixture();f.state.state='POSTCONDITION_RUNNING';delete f.state.ended_utc;f.result=null;
  Object.assign(f.checks.postcondition,{identity:'MATCHING_RECORDED_PROCESS',query_status:'PRESENT',current_creation_utc:CREATED});
  f.images.postcondition={pid:789,creation_utc:CREATED,executable_path:f.job.postcondition_file_path,checked_utc:OBS};
  assert.equal(project(f).state,'PROVEN_RUNNING');
 });
 test('V2 postcondition running missing child evidence',()=>{
- const f=terminalFixture();f.state.state='POSTCONDITION_RUNNING';f.result=null;delete f.checks.child;
+ const f=terminalFixture();f.state.state='POSTCONDITION_RUNNING';delete f.state.ended_utc;f.result=null;delete f.checks.child;
  assert.equal(project(f).state,'UNKNOWN');
 });
 test('V2 unknown and mismatch remain active; only proven terminal excluded',()=>{
@@ -167,6 +167,86 @@ test('V2 unknown and mismatch remain active; only proven terminal excluded',()=>
 test('V2 malformed server source binding remains inventory UNKNOWN without observation',()=>{
  let calls=0;const service=api.createService({...ctx,jobs:[{...ctx.jobs[0],base_sha:null}]},()=>calls++);
  const r=service.list().executions;assert.equal(r.length,1);assert.equal(r[0].state,'UNKNOWN');assert.equal(calls,0);
+});
+
+
+// V2 bounded repair: temporal coherence and lexical Windows path qualification.
+function retainedUnknown(f){
+ assert.equal(project(f).state,'UNKNOWN');
+ let tick=0;const rows=api.createService(ctx,()=>f,()=>tick++%2===0?START:END).list().executions;
+ assert.equal(rows.length,1);assert.equal(rows[0].state,'UNKNOWN');
+}
+for(const record of ['state','result'])for(const value of [undefined,null,'','garbage',false,END,'2026-02-30T00:00:00Z'])
+ test('V2 repair invalid terminal '+record+'.ended_utc '+String(value),()=>{
+ const f=terminalFixture();f[record].ended_utc=value;retainedUnknown(f);
+});
+test('V2 repair valid but conflicting terminal ends remain UNKNOWN',()=>{
+ const f=terminalFixture();f.state.ended_utc=OBS;retainedUnknown(f);
+});
+test('V2 repair terminal end before state start UNKNOWN',()=>{
+ const f=terminalFixture();f.state.ended_utc=f.result.ended_utc='2026-10-04T00:59:59Z';retainedUnknown(f);
+});
+for(const role of ['child','postcondition'])test('V2 repair '+role+' creation after result end UNKNOWN',()=>{
+ const f=terminalFixture();f.state[role+'_start_utc']=OBS;f.checks[role].expected_creation_utc=OBS;retainedUnknown(f);
+});
+for(const role of ['child','postcondition'])test('V2 repair '+role+' creation before job start UNKNOWN',()=>{
+ const f=terminalFixture();const t='2026-10-04T00:59:59Z';f.state[role+'_start_utc']=t;f.checks[role].expected_creation_utc=t;retainedUnknown(f);
+});
+test('V2 repair postcondition creation precedes child UNKNOWN',()=>{
+ const f=terminalFixture();f.state.child_start_utc=START;f.checks.child.expected_creation_utc=START;retainedUnknown(f);
+});
+test('V2 repair job creation after started UNKNOWN',()=>{
+ const f=terminalFixture();f.job.created_utc=START;retainedUnknown(f);
+});
+for(const value of [null,'garbage',END])test('V2 repair provided runner creation invalid '+String(value),()=>{
+ const f=terminalFixture();f.state.runner_start_utc=value;retainedUnknown(f);
+});
+test('V2 repair runner creation after terminal end UNKNOWN',()=>{
+ const f=terminalFixture();f.state.runner_start_utc=OBS;retainedUnknown(f);
+});
+test('V2 repair invalid chronology dominates valid source disagreement',()=>{
+ const f=terminalFixture();f.job.base_sha='b'.repeat(40);f.state.ended_utc=END;retainedUnknown(f);
+});
+test('V2 repair equivalent terminal timestamp offsets remain terminal',()=>{
+ const f=terminalFixture();f.state.ended_utc='2026-10-04T09:00:00+07:00';assert.equal(project(f).state,'PROVEN_TERMINAL');
+});
+test('V2 repair coherent distinct process chronology terminal',()=>{
+ const f=terminalFixture();f.job.created_utc='2026-10-04T00:00:00Z';f.state.runner_start_utc='2026-10-04T00:10:00Z';
+ f.state.started_utc='2026-10-04T00:20:00Z';f.state.child_start_utc='2026-10-04T00:30:00Z';
+ f.state.postcondition_start_utc='2026-10-04T01:30:00Z';
+ for(const role of ['child','postcondition'])f.checks[role].expected_creation_utc=f.state[role+'_start_utc'];
+ assert.equal(project(f).state,'PROVEN_TERMINAL');
+});
+test('V2 repair valid terminal binding disagreement remains mismatch',()=>{
+ const f=terminalFixture();f.job.base_sha='b'.repeat(40);assert.equal(project(f).state,'IDENTITY_MISMATCH');
+});
+const invalidWindowsPaths=['D:\\C:\\worktree','C:\\D:\\node.exe','D:\\dir\\file:stream','D::\\worktree',
+ '\\\\host:bad\\share\\file','\\\\host\\share:bad\\file','\\\\host\\share\\C:\\file',
+ 'C:\\bad.\\file','C:\\bad \\file','C:\\NUL\\file','C:\\COM1.txt','\\\\host\\share\\AUX',
+ '\\\\?\\C:\\file','\\\\.\\pipe\\name','\\\\host','C:relative','/rooted'];
+for(const value of invalidWindowsPaths)for(const target of ['lane','job','image','postcondition'])
+ test('V2 repair malformed Windows '+target+' '+value,()=>{
+ const f=target==='postcondition'?terminalFixture():fixture();
+ if(target==='lane')f.lane.worktree=value;
+ if(target==='job')f.job.file_path=value;
+ if(target==='image')f.images.child.executable_path=value;
+ if(target==='postcondition')f.job.postcondition_file_path=value;
+ retainedUnknown(f);
+});
+test('V2 repair malformed path dominates valid source disagreement',()=>{
+ const f=fixture();f.job.base_sha='b'.repeat(40);f.images.child.executable_path='C:\\D:\\node.exe';retainedUnknown(f);
+});
+for(const worktree of ['d:/fixture/worktree','D:\\fixture\\.\\worktree','D:\\fixture\\other\\..\\worktree'])
+ test('V2 repair valid equivalent worktree '+worktree,()=>{
+ const f=fixture();f.lane.worktree=worktree;assert.equal(project(f).state,'PROVEN_RUNNING');
+});
+test('V2 repair valid UNC executable equivalent case/slash',()=>{
+ const f=fixture();f.job.file_path='\\\\host\\share\\node.exe';f.images.child.executable_path='//HOST/share/NODE.exe';
+ assert.equal(project(f).state,'PROVEN_RUNNING');
+});
+test('V2 repair different valid UNC executable remains mismatch',()=>{
+ const f=fixture();f.job.file_path='\\\\host\\share\\node.exe';f.images.child.executable_path='\\\\host\\share\\other.exe';
+ assert.equal(project(f).state,'IDENTITY_MISMATCH');
 });
 
 // Verifier contract fixtures: original A2 bytes copied into isolated temporary roots.
