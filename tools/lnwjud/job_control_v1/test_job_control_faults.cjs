@@ -31,6 +31,15 @@ function faultCases() {
     if (style === 'timestamp') raw = bytes({ ...s.request, created_utc: '2026-10-05T12:00:00.0000001Z' });
     unchanged(f, () => f.api.submit_existing_contract_job(raw), 'IDEMPOTENCY_DRIFT'); assert.equal(f.count(), 1);
   });
+  for (const key of ['toString', 'constructor', 'hasOwnProperty', 'valueOf', 'prototype']) add('OPAQUE_KEY_SAFETY', key + ' submit/replay/restart/lookup', f => {
+    const r = f.request(); r.idempotency_key = key; const raw = bytes(r);
+    unchanged(f, () => f.api.submit_existing_contract_job(raw), 'INVALID_MAP_KEY');
+    unchanged(f, () => f.api.submit_existing_contract_job(raw), 'INVALID_MAP_KEY');
+    f.restart();
+    unchanged(f, () => f.api.submit_existing_contract_job(raw), 'INVALID_MAP_KEY');
+    unchanged(f, () => f.api.get_job_current(key), 'INVALID_MAP_KEY');
+    assert.equal(f.count(), 0);
+  });
   invalidRequest('NEG07_LEASED_RESOURCE', 'other owner', (_, f) => { f.env.resource_owner = 'other-owner'; }, 'LEASED_RESOURCE');
   for (const value of [false, null, undefined, 1, 'true']) invalidRequest('NEG07_LEASED_RESOURCE', 'available=' + value,
     (_, f) => { f.env.resource_available = value; }, 'LEASED_RESOURCE');
@@ -185,6 +194,16 @@ function faultCases() {
   add('PAUSE_RESUME_NEGATIVE', 'checkpoint drift', f => {
     const p = f.completePause(f.pause(f.submit().result)), r = f.request('resume_existing_job', p); r.checkpoint.sha256 = 'c'.repeat(64);
     unchanged(f, () => f.api.resume_existing_job(bytes(r)), 'CHECKPOINT_MISMATCH');
+  });
+  add('PAUSE_RESUME_NEGATIVE', 'changing observer cannot combine running checkpoint with later pause ACK', f => {
+    const p = f.pause(f.submit().result);
+    const running = clone(f.consumerState().observations[p.receipt.job_id]);
+    f.completePause(p);
+    const completed = clone(f.consumerState().observations[p.receipt.job_id]);
+    const r = f.request('resume_existing_job', p);
+    f.observationSequence = [running, completed];
+    unchanged(f, () => f.api.resume_existing_job(bytes(r)), 'RESUME_REFUSED');
+    assert.equal(f.count(), 1);
   });
   add('PAUSE_RESUME_NEGATIVE', 'no receipt adoption cannot create job', f => {
     const r = f.request('adopt_existing_job'); r.checkpoint = { stage: 'stage-alpha', index: 0,

@@ -10,6 +10,8 @@ const stable = value => JSON.stringify(value, (_, x) => x && typeof x === 'objec
 const clone = value => JSON.parse(JSON.stringify(value));
 const object = x => x !== null && typeof x === 'object' && !Array.isArray(x);
 const id = x => typeof x === 'string' && /^[A-Za-z][A-Za-z0-9._-]{2,127}$/.test(x);
+const UNSAFE_JSON_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const mapKey = x => id(x) && !UNSAFE_JSON_KEYS.has(x) && !(x in Object.prototype);
 const digest = x => typeof x === 'string' && /^[a-f0-9]{64}$/.test(x);
 const head = x => typeof x === 'string' && /^[a-f0-9]{40}$/.test(x);
 function freeze(x) {
@@ -58,7 +60,7 @@ function parse(bytes, max = 65536) {
       while (i < s.length) {
         ws(); if (s[i] !== '"') refuse('MALFORMED_JSON');
         const key = string();
-        if (seen.has(key) || ['__proto__', 'constructor', 'prototype'].includes(key)) refuse('DUPLICATE_OR_UNSAFE_KEY');
+        if (seen.has(key) || UNSAFE_JSON_KEYS.has(key)) refuse('DUPLICATE_OR_UNSAFE_KEY');
         seen.add(key); ws(); if (s[i++] !== ':') refuse('MALFORMED_JSON');
         out[key] = value(depth + 1); ws();
         const next = s[i++]; if (next === '}') return out; if (next !== ',') refuse('MALFORMED_JSON');
@@ -106,6 +108,7 @@ function validate(bytes, env, operation) {
   keys(r, ['schema', 'request_id', 'idempotency_key', 'operation', ...BOUND, 'checkpoint', 'created_utc']);
   if (r.schema !== 'LNWJUD_JOB_CONTROL_REQUEST_V1' || !OPS.includes(r.operation) || r.operation !== operation) refuse('UNSUPPORTED_OPERATION');
   if (![r.request_id, r.idempotency_key, r.lane_id, r.contract_id].every(id)) refuse('INVALID_ID');
+  if (!mapKey(r.idempotency_key)) refuse('INVALID_MAP_KEY');
   if (!object(env)) refuse('MALFORMED_ENVIRONMENT');
   const now = time(env.now_utc), created = time(r.created_utc), observed = time(env.observed_utc);
   if (now === null || created === null || observed === null || created > now || observed < created || observed > now) refuse('INVALID_OR_FUTURE_TIME');
@@ -144,5 +147,5 @@ function validate(bytes, env, operation) {
   } else if (!digest(q.sha256) || !digest(q.parent_receipt_sha256) || !id(q.target_job_id)) refuse('INVALID_CHECKPOINT');
   return freeze(clone(r));
 }
-module.exports = { Refusal, refuse, hash, stable, clone, freeze, object, id, digest, time, parse, keys,
+module.exports = { Refusal, refuse, hash, stable, clone, freeze, object, id, mapKey, digest, time, parse, keys,
   abs, relative, OPS, BOUND, identity, bindingHash, validate };

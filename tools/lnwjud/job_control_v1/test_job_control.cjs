@@ -103,7 +103,10 @@ function fixture() {
   f.count = () => f.consumerState().calls.length;
   f.observer = {
     kind: 'SYNTHETIC_FIXTURE',
-    observe: jobId => Object.hasOwn(f, 'observationOverride') ? f.observationOverride : clone(f.consumerState().observations[jobId] || null),
+    observe: jobId => {
+      if (Array.isArray(f.observationSequence) && f.observationSequence.length) return clone(f.observationSequence.shift());
+      return Object.hasOwn(f, 'observationOverride') ? f.observationOverride : clone(f.consumerState().observations[jobId] || null);
+    },
     findExisting: () => Object.hasOwn(f, 'externalExisting') ? f.externalExisting : (f.consumerState().calls[0] || null)
   };
   f.consumer = { kind: 'SYNTHETIC_FIXTURE', qualified: true, id: binding.direct_consumer,
@@ -301,6 +304,15 @@ function positiveCases() {
     f.restart(); const replay = f.api.resume_existing_job(raw); assert.deepEqual(replay.receipt, resumed.receipt); assert.equal(f.count(), 2);
     const wrong = f.request('resume_existing_job', resumed); wrong.checkpoint.index = 0; wrong.checkpoint.stage = 'stage-alpha';
     unchanged(f, () => f.api.resume_existing_job(bytes(wrong)), 'RESUME_REFUSED');
+  });
+  add('resume receipt binds the single acknowledged completion observation', f => {
+    const p = f.completePause(f.pause(f.submit().result));
+    const completed = clone(f.consumerState().observations[p.receipt.job_id]);
+    f.observationSequence = [completed];
+    const r = f.request('resume_existing_job', p), resumed = f.api.resume_existing_job(bytes(r));
+    assert.equal(resumed.receipt.observed_evidence_sha256, completed.evidence_sha256);
+    assert.equal(resumed.receipt.checkpoint.sha256, completed.checkpoint_sha256);
+    assert.equal(resumed.current.index, 1); assert.equal(f.count(), 2);
   });
   add('adoption during pause preserves the original pause ACK identity', f => {
     const p = f.pause(f.submit().result); const a = f.api.adopt_existing_job(bytes(f.request('adopt_existing_job', p)));

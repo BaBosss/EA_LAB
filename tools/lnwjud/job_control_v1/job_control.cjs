@@ -1,7 +1,7 @@
 'use strict';
 // SOURCE/OFFLINE ONLY. No fs, subprocess, timer, network, Registry or runtime adapter.
 const C = require('./request_contract.cjs');
-const { refuse, hash, stable, clone, freeze, object, id, digest, time, parse, keys, validate, bindingHash } = C;
+const { refuse, hash, stable, clone, freeze, object, id, mapKey, digest, time, parse, keys, validate, bindingHash } = C;
 const PHASES = ['PREPARED', 'DISPATCH_INTENT', 'BOUND', 'PAUSE_REQUESTED', 'RESUME_INTENT'];
 const RECEIPT_KEYS = ['schema', 'evidence_kind', 'request_id', 'idempotency_key', 'request_sha256',
   'request_bytes', 'request_location', 'job_id', 'binding_sha256', 'identity', 'checkpoint', 'operation',
@@ -12,6 +12,7 @@ const OBSERVATION_KEYS = ['job_id', 'binding_sha256', 'request_sha256', 'stage',
   'pause_ack_request_sha256', 'consumer_id', 'evidence_sha256'];
 const jobIdentity = r => 'jc-' + hash(r.lane_id + '\0' + r.idempotency_key).slice(0, 40);
 const requestLocation = key => 'fixture-state://requests/' + key + '/bytes_base64';
+const own = (value, key) => object(value) && typeof key === 'string' && Object.prototype.hasOwnProperty.call(value, key) ? value[key] : undefined;
 function createJobControl({ store, environment, observer, stageConsumer, mode } = {}) {
   if (mode !== 'SYNTHETIC_FIXTURE' || store?.kind !== 'SYNTHETIC_FIXTURE' ||
       store.serialization !== 'EXCLUSIVE_LOCK_CAS_DURABLE_READBACK' || observer?.kind !== 'SYNTHETIC_FIXTURE' ||
@@ -47,7 +48,7 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
     const ids = new Set(), revisions = new Set(), receipts = new Map(), decoded = new Map();
     for (const [key, record] of Object.entries(data.requests)) {
       keys(record, ['bytes_base64', 'receipt', 'receipt_sha256']);
-      if (!id(key) || typeof record.bytes_base64 !== 'string' ||
+      if (!mapKey(key) || typeof record.bytes_base64 !== 'string' ||
           !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(record.bytes_base64)) refuse('MALFORMED_STATE');
       const b = Buffer.from(record.bytes_base64, 'base64');
       if (b.toString('base64') !== record.bytes_base64) refuse('MALFORMED_STATE');
@@ -84,13 +85,13 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
             p.budget_observation.remaining_repair > parent.receipt.budget_observation.remaining_repair ||
             p.budget_observation.remaining_retry > parent.receipt.budget_observation.remaining_retry) refuse('MALFORMED_STATE');
       }
-      if (!data.jobs[p.job_id]) refuse('MALFORMED_STATE');
+      if (!own(data.jobs, p.job_id)) refuse('MALFORMED_STATE');
     }
     const executions = new Set();
     for (const [jobId, j] of Object.entries(data.jobs)) {
       keys(j, ['job_id', 'binding_sha256', 'submission_key', 'latest_key', 'stage', 'index', 'phase',
         'intent_key', 'pause_key', 'checkpoint_sha256']);
-      const origin = data.requests[j.submission_key], latest = data.requests[j.latest_key];
+      const origin = own(data.requests, j.submission_key), latest = own(data.requests, j.latest_key);
       if (jobId !== j.job_id || !id(jobId) || !PHASES.includes(j.phase) || !Number.isSafeInteger(j.index) || j.index < 0 ||
           e.stages[j.index] !== j.stage || !digest(j.binding_sha256) || !origin || !latest || origin.receipt.job_id !== jobId ||
           latest.receipt.job_id !== jobId || origin.receipt.operation !== C.OPS[0] || origin.receipt.binding_sha256 !== j.binding_sha256 ||
@@ -107,7 +108,7 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
       if (['PREPARED', 'DISPATCH_INTENT'].includes(j.phase) && (j.latest_key !== j.submission_key || j.index !== 0)) refuse('MALFORMED_STATE');
       if (j.phase === 'RESUME_INTENT' && r.operation !== 'resume_existing_job') refuse('MALFORMED_STATE');
       if (j.phase === 'PAUSE_REQUESTED') {
-        const pause = data.requests[j.pause_key];
+        const pause = own(data.requests, j.pause_key);
         if (!pause || pause.receipt.job_id !== jobId || pause.receipt.operation !== 'request_pause_after_stage' ||
             pause.receipt.checkpoint.index !== j.index || pause.receipt.checkpoint.stage !== j.stage ||
             !['request_pause_after_stage', 'adopt_existing_job'].includes(r.operation)) refuse('MALFORMED_STATE');
@@ -131,10 +132,11 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
     if (!object(o) || stable(Object.keys(o).sort()) !== stable([...OBSERVATION_KEYS].sort())) return null;
     const unsigned = { ...o }; delete unsigned.evidence_sha256;
     const observed = time(o.observation_utc), now = time(e.now_utc), floor = time(e.observed_utc);
-    const origin = frame.data.requests[j.submission_key].receipt;
+    const origin = own(frame.data.requests, j.submission_key)?.receipt;
+    const latest = own(frame.data.requests, j.latest_key)?.receipt;
     const terminal = ['SUCCEEDED', 'FAILED', 'CANCELLED', 'TIMED_OUT', 'POSTCONDITION_FAILED'];
-    if (observed === null || now === null || floor === null || observed < floor || observed > now ||
-        observed < time(frame.data.requests[j.latest_key].receipt.observed_utc) ||
+    if (!origin || !latest || observed === null || now === null || floor === null || observed < floor || observed > now ||
+        observed < time(latest.observed_utc) ||
         o.job_id !== j.job_id || o.binding_sha256 !== j.binding_sha256 || o.request_sha256 !== origin.request_sha256 ||
         o.stage !== j.stage || o.index !== j.index || o.current !== true || !digest(o.checkpoint_sha256) ||
         o.consumer_id !== origin.identity.direct_consumer || !digest(o.evidence_sha256) || o.evidence_sha256 !== hash(stable(unsigned)) ||
@@ -148,11 +150,11 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
       stageConsumer.id === e.binding?.direct_consumer && typeof stageConsumer.dispatch === 'function';
   }
   function requireConsumer(e) { if (!qualifiedConsumer(e)) refuse('UNSUPPORTED_STAGE_CONSUMER'); }
-  function current(j, frame, e) {
-    const o = evidence(j, frame, e);
+  function current(j, frame, e, observation = undefined) {
+    const o = observation === undefined ? evidence(j, frame, e) : observation;
     let protocol = j.phase;
     if (['DISPATCH_INTENT', 'RESUME_INTENT'].includes(j.phase)) protocol = 'RECONCILE_REQUIRED';
-    const pause = frame.data.requests[j.pause_key];
+    const pause = own(frame.data.requests, j.pause_key);
     if (j.phase === 'PAUSE_REQUESTED' && qualifiedConsumer(e) && o?.identity === 'PROVEN_TERMINAL' &&
         o.runner_state === 'SUCCEEDED' && o.stage_complete === true && o.pause_ack_request_sha256 === pause?.receipt.request_sha256) protocol = 'PAUSED_AFTER_STAGE';
     return { protocol_state: protocol, execution_state: o?.identity || 'UNKNOWN', durable_runner_state: o?.runner_state || 'UNKNOWN',
@@ -178,7 +180,7 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
     store.checkpoint('before_dispatch');
     // A labelled in-process fixture counter only; never call any existing real runner.
     stageConsumer.dispatch(freeze({ job_id: j.job_id, stage: j.stage, index: j.index, binding_sha256: j.binding_sha256,
-      request_sha256: frame.data.requests[j.submission_key].receipt.request_sha256 }));
+      request_sha256: own(frame.data.requests, j.submission_key).receipt.request_sha256 }));
     store.checkpoint('after_dispatch');
   }
   function run(operation, input) {
@@ -186,10 +188,10 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
     const bytes = Buffer.from(input);
     return store.withLock(() => {
       const e = snapshotEnvironment(), r = validate(bytes, e, operation), frame = load(e);
-      const existing = frame.data.requests[r.idempotency_key];
+      const existing = own(frame.data.requests, r.idempotency_key);
       if (existing) {
         if (!Buffer.from(existing.bytes_base64, 'base64').equals(bytes)) refuse('IDEMPOTENCY_DRIFT');
-        const j = frame.data.jobs[existing.receipt.job_id];
+        const j = own(frame.data.jobs, existing.receipt.job_id);
         if (j.phase === 'PREPARED' && j.submission_key === r.idempotency_key) {
           if (observer.observe(j.job_id) !== null || observer.findExisting(C.identity(r)) !== null) refuse('DUPLICATE_EXECUTION');
           dispatch(j, frame, r.idempotency_key, e);
@@ -206,16 +208,16 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
         j = { job_id: jobIdentity(r), binding_sha256: bind, submission_key: r.idempotency_key, latest_key: r.idempotency_key,
           stage: r.checkpoint.stage, index: 0, phase: 'PREPARED', intent_key: null, pause_key: null, checkpoint_sha256: null };
       } else {
-        j = frame.data.jobs[r.checkpoint.target_job_id];
+        j = own(frame.data.jobs, r.checkpoint.target_job_id);
         if (!j || j.binding_sha256 !== bind) refuse('UNKNOWN_JOB');
-        const latest = frame.data.requests[j.latest_key];
+        const latest = own(frame.data.requests, j.latest_key);
         if (latest.receipt_sha256 !== r.checkpoint.parent_receipt_sha256 ||
             time(e.observed_utc) < time(latest.receipt.observed_utc)) refuse('STALE_RECEIPT');
         observed = evidence(j, frame, e); if (!observed) refuse('CURRENT_IDENTITY_UNPROVEN');
         if (observed.checkpoint_sha256 !== r.checkpoint.sha256) refuse('CHECKPOINT_MISMATCH');
         if (operation === 'resume_existing_job') {
           requireConsumer(e);
-          if (current(j, frame, e).protocol_state !== 'PAUSED_AFTER_STAGE' || r.checkpoint.index !== j.index + 1) refuse('RESUME_REFUSED');
+          if (current(j, frame, e, observed).protocol_state !== 'PAUSED_AFTER_STAGE' || r.checkpoint.index !== j.index + 1) refuse('RESUME_REFUSED');
         } else {
           if (r.checkpoint.stage !== j.stage || r.checkpoint.index !== j.index) refuse('CHECKPOINT_MISMATCH');
           if (operation === 'request_pause_after_stage') {
@@ -255,9 +257,12 @@ function createJobControl({ store, environment, observer, stageConsumer, mode } 
   const api = Object.fromEntries(C.OPS.map(operation => [operation, bytes => run(operation, bytes)]));
   api.get_job_current = key => store.withLock(() => {
     if (!id(key)) refuse('INVALID_ID');
-    const e = snapshotEnvironment(), frame = load(e), record = frame.data.requests[key];
+    if (!mapKey(key)) refuse('INVALID_MAP_KEY');
+    const e = snapshotEnvironment(), frame = load(e), record = own(frame.data.requests, key);
     if (!record) refuse('UNKNOWN_RECEIPT');
-    return result(record, frame.data.jobs[record.receipt.job_id], frame, e);
+    const job = own(frame.data.jobs, record.receipt.job_id);
+    if (!job) refuse('MALFORMED_STATE');
+    return result(record, job, frame, e);
   });
   return Object.freeze(api);
 }
