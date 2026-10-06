@@ -33,6 +33,7 @@
 
 #define NG_MAX_MAGICS          32
 #define NG_MAX_EVENTS          512
+#define NG_MAX_SCOPE_SYMBOLS    16
 #define NG_GV_PREFIX           "NEWSGUARD_BLOCK_"
 #define NG_ALERT_THROTTLE_SEC  (4 * 3600)   // non-health warning throttle
 #define NG_HEALTH_REMINDER_SEC (12 * 3600)  // while still INACTIVE, remind at most every 12h
@@ -55,6 +56,7 @@ bool ng_blockSet[NG_MAX_MAGICS];    // we currently own a BLOCK GV for this magi
 int  ng_recloseCount[NG_MAX_MAGICS]; // positions closed during the current window
 bool ng_churnAlerted[NG_MAX_MAGICS];
 bool ng_seenFlat[NG_MAX_MAGICS];      // initial basket flattened; later actions are true re-entry
+string ng_scopeSymbols[NG_MAX_MAGICS];   // optional declared symbols for flat/first-entry relevance
 int  ng_count = 0;
 
 // ---- loaded news events (server time) --------------------------------------
@@ -184,6 +186,7 @@ int NG_ParseConfig(const string cfg)
       ng_recloseCount[ng_count] = 0;
       ng_churnAlerted[ng_count] = false;
       ng_seenFlat[ng_count] = false;
+      ng_scopeSymbols[ng_count] = "";
       PrintFormat("[NEWSGUARD] guard magic=%I64d policy=%s", m, NG_PolicyName(pol));
       if(pol == NG_POLICY_BLOCK)
          PrintFormat("[NEWSGUARD] NOTE magic=%I64d: BLOCK_NEW only works for Boss V2 chassis EAs "
@@ -193,6 +196,89 @@ int NG_ParseConfig(const string cfg)
    }
    if(ng_count == 0) Print("[NEWSGUARD] config empty/invalid - nothing to guard");
    return ng_count;
+}
+
+int NG_MagicIndex(const long magic)
+{
+   for(int i = 0; i < ng_count; i++)
+      if(ng_magic[i] == magic) return i;
+   return -1;
+}
+
+// Optional flat/first-entry scope map. Backward compatible: empty map keeps
+// legacy position-based relevance exactly. Format:
+//   magic=EURUSD|GBPUSD;magic=XAUUSD
+// Tokens for unknown magics or empty symbol lists are refused/skipped.
+int NG_ParseScopeConfig(const string cfg)
+{
+   for(int i = 0; i < ng_count; i++) ng_scopeSymbols[i] = "";
+   string raw = cfg;
+   StringTrimLeft(raw); StringTrimRight(raw);
+   if(raw == "") return 0;
+
+   int accepted = 0;
+   string items[];
+   int n = StringSplit(raw, ';', items);
+   for(int i = 0; i < n; i++)
+   {
+      string it = items[i];
+      StringTrimLeft(it); StringTrimRight(it);
+      if(it == "") continue;
+      int eq = StringFind(it, "=");
+      if(eq <= 0 || eq >= StringLen(it) - 1)
+      {
+         PrintFormat("[NEWSGUARD] scope token '%s' invalid (want magic=SYM|SYM) - SKIPPED", it);
+         continue;
+      }
+      long magic = StringToInteger(StringSubstr(it, 0, eq));
+      int idx = NG_MagicIndex(magic);
+      if(magic <= 0 || idx < 0)
+      {
+         PrintFormat("[NEWSGUARD] scope token '%s' references unknown/invalid magic - SKIPPED", it);
+         continue;
+      }
+      string rhs = StringSubstr(it, eq + 1);
+      StringTrimLeft(rhs); StringTrimRight(rhs);
+      string syms[];
+      int ns = StringSplit(rhs, '|', syms);
+      string normalized = "";
+      int valid = 0;
+      for(int s = 0; s < ns && valid < NG_MAX_SCOPE_SYMBOLS; s++)
+      {
+         string sym = syms[s];
+         StringTrimLeft(sym); StringTrimRight(sym);
+         if(sym == "") continue;
+         if(normalized != "") normalized += "|";
+         normalized += sym;
+         valid++;
+      }
+      if(valid == 0)
+      {
+         PrintFormat("[NEWSGUARD] scope token '%s' has no declared symbols - SKIPPED", it);
+         continue;
+      }
+      ng_scopeSymbols[idx] = normalized; // duplicate magic: deterministic last valid token wins
+      accepted++;
+      PrintFormat("[NEWSGUARD] scope magic=%I64d symbols=%s", magic, normalized);
+   }
+   return accepted;
+}
+
+bool NG_CcyMatchesDeclaredScope(const string ccy, const string scope)
+{
+   if(scope == "") return false;
+   string syms[];
+   int n = StringSplit(scope, '|', syms);
+   for(int i = 0; i < n; i++)
+   {
+      string sym = syms[i];
+      StringTrimLeft(sym); StringTrimRight(sym);
+      if(sym == "") continue;
+      if(NG_CcyMatchesSymbol(ccy, sym)) return true;
+      string up = sym; StringToUpper(up);
+      if(StringFind(up, ccy) >= 0) return true;
+   }
+   return false;
 }
 
 //+------------------------------------------------------------------+
@@ -359,6 +445,8 @@ bool NG_CcyMatchesSymbol(const string ccy, const string sym)
 bool NG_EventRelevant(const string ccy, const long magic)
 {
    if(ccy == "USD") return true;
+   int idx = NG_MagicIndex(magic);
+   if(idx >= 0 && NG_CcyMatchesDeclaredScope(ccy, ng_scopeSymbols[idx])) return true;
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
       ulong tk = PositionGetTicket(i);

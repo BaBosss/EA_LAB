@@ -23,6 +23,7 @@
 #define MAGIC_C   917101
 #define MAGIC_B   917102
 #define MAGIC_N   917103
+#define MAGIC_SCOPE 917104  // configured but deliberately has no position
 #define NEWS_FILE "NG_TEST_news.csv"
 
 int      g_fail  = 0;
@@ -126,7 +127,7 @@ void OnTick()
       g_winB = g_ev + 15 * 60;
 
       // ---- unit asserts: config parse ---------------------------------
-      if(NG_ParseConfig("917101:C; 917102:B ;917103:N;junk;0:C;1:X") != 3)
+      if(NG_ParseConfig("917101:C; 917102:B ;917103:N;917104:N;junk;0:C;1:X") != 4)
          TFail("ParseConfig: expected exactly 3 accepted entries");
 
       // ---- unit asserts: time parsing (both formats) -------------------
@@ -194,24 +195,77 @@ void OnTick()
       if(!t_trade.BuyLimit(0.01, pendingPrice, _Symbol, 0.0, 0.0, ORDER_TIME_GTC, 0, "NGpending"))
          TFail("could not place CLOSE_ALL pending fixture");
 
-      // ---- unit asserts: relevance (needs open positions) ---------------
+      // ---- unit asserts: relevance -----------------------------------------
       if(!NG_EventRelevant("USD", MAGIC_C)) TFail("USD must always be relevant");
       if(NG_EventRelevant("NZD", MAGIC_C))  TFail("NZD must be irrelevant while holding XAUUSD only");
 
-      // ---- chassis bridge asserts (core Execution.mqh, _0_Magic=990001) --
+      if(CountMagic(MAGIC_SCOPE) != 0 || CountPendingMagic(MAGIC_SCOPE) != 0)
+         TFail("scope fixture: MAGIC_SCOPE must be flat with no pending order");
+
+      // Optional declared scope closes the flat/first-entry non-USD seam.
+      // It is additive: empty mapping keeps the legacy open-position fallback.
+      if(NG_ParseScopeConfig(IntegerToString(MAGIC_SCOPE) + "=EURUSD|GBPUSD") != 1)
+         TFail("scope config: valid mapping not accepted");
+      if(!NG_EventRelevant("EUR", MAGIC_SCOPE))
+         TFail("scope config: EUR must be relevant from declared EURUSD before relying on a position");
+      if(!NG_EventRelevant("GBP", MAGIC_SCOPE))
+         TFail("scope config: GBP must be relevant from declared GBPUSD");
+      if(NG_EventRelevant("JPY", MAGIC_SCOPE))
+         TFail("scope config: JPY must stay irrelevant for EURUSD|GBPUSD");
+      if(NG_ParseScopeConfig("999999=EURUSD;bad;" + IntegerToString(MAGIC_SCOPE) + "=") != 0)
+         TFail("scope config: malformed/unknown mappings must not be accepted");
+      if(ng_scopeSymbols[NG_MagicIndex(MAGIC_SCOPE)] != "")
+         TFail("scope config: invalid-only reload must leave mapping empty, not stale");
+
+      // ---- chassis bridge + cross-guard composition asserts ---------------
       Exec_Init();
       string bgv = "NEWSGUARD_BLOCK_" + IntegerToString(_0_Magic);
+      string mgv = "MACROGATE_BLOCK_" + IntegerToString(_0_Magic);
+      string mlv = "MACROGATE_LOTMULT_" + IntegerToString(_0_Magic);
+      GlobalVariableDel(bgv); GlobalVariableDel(mgv); GlobalVariableDel(mlv);
+      if(Exec_NewsBlocked() || Exec_MacroBlocked())
+         TFail("composition: no guard must be inert");
       GlobalVariableSet(bgv, 1.0);
+      if(!Exec_NewsBlocked() || Exec_MacroBlocked())
+         TFail("composition: News-only state wrong");
+      GlobalVariableSet(mgv, 1.0);
+      if(!Exec_NewsBlocked() || !Exec_MacroBlocked())
+         TFail("composition: both guards must remain independently active");
+      GlobalVariableSet(bgv, 0.0);
+      if(Exec_NewsBlocked() || !Exec_MacroBlocked())
+         TFail("composition: clearing News must not clear Macro veto");
+      if(Exec_Open(1, 0.01, 0.0, 0.0, "macro-only"))
+         TFail("composition: Macro-only veto must block market open");
+      GlobalVariableSet(bgv, 1.0);
+      GlobalVariableSet(mgv, 0.0);
+      if(!Exec_NewsBlocked() || Exec_MacroBlocked())
+         TFail("composition: clearing Macro must not clear News veto");
+      if(Exec_PlacePending(1, false, 0.01, SymbolInfoDouble(_Symbol, SYMBOL_BID) * 0.5, 0.0, "news-only"))
+         TFail("composition: News-only veto must block pending placement");
+      GlobalVariableSet(mgv, 1.0);
+      if(Exec_PlacePending(1, false, 0.01, SymbolInfoDouble(_Symbol, SYMBOL_BID) * 0.5, 0.0, "both"))
+         TFail("composition: combined veto must block pending placement");
+      GlobalVariableSet(mlv, 0.5);
+      if(MathAbs(Exec_MacroLotMult() - 0.5) > 0.0000001)
+         TFail("composition: Macro lot multiplier 0.5 not observed");
+      GlobalVariableSet(mlv, 1.5);
+      if(MathAbs(Exec_MacroLotMult() - 1.0) > 0.0000001)
+         TFail("composition: invalid Macro lot multiplier must be inert");
+      GlobalVariableDel(bgv); GlobalVariableDel(mgv); GlobalVariableDel(mlv);
+
+      // Existing NewsGuard bridge assertions.
+      string bgv2 = "NEWSGUARD_BLOCK_" + IntegerToString(_0_Magic);
+      GlobalVariableSet(bgv2, 1.0);
       if(Exec_Open(1, 0.01, 0.0, 0.0, "bridge"))
          TFail("bridge: Exec_Open must be vetoed while GV=1");
       if(CountMagic(_0_Magic) != 0)
          TFail("bridge: position opened despite GV=1");
       if(Exec_PlacePending(1, false, 0.01, SymbolInfoDouble(_Symbol, SYMBOL_BID) * 0.5, 0.0, "bridge"))
          TFail("bridge: Exec_PlacePending must be vetoed while GV=1");
-      GlobalVariableSet(bgv, 0.0);
+      GlobalVariableSet(bgv2, 0.0);
       if(!Exec_Open(1, 0.01, 0.0, 0.0, "bridge"))
          TFail("bridge: Exec_Open must pass with GV=0 (inert)");
-      GlobalVariableDel(bgv);
+      GlobalVariableDel(bgv2);
       if(!Exec_Open(1, 0.01, 0.0, 0.0, "bridge"))
          TFail("bridge: Exec_Open must pass with GV absent");
       if(CountMagic(_0_Magic) != 2)
