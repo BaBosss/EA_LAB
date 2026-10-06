@@ -8,15 +8,15 @@ This document owns provider-transition routing and its qualification checklist. 
 
 ## Current owner policy — 2026-10-06
 
-ChatGPT Plus current chat is the one Main Control Tower. Gemini 3.1 Pro High is the default implementation author, with Claude Sonnet 5.5 High for secondary/repair. Qwen and GPT-OSS 120B are for support/batch/advisory. Codex is a scarce specialist reserve.
+ChatGPT Plus current chat is the one Main Control Tower. The preferred control path is ChatGPT + lnwjud for currently qualified read/control/write surfaces, with RDC remaining the explicit machine actuator. Gemini 3.1 Pro High is the default implementation author and normal acceptance-grade reviewer through a fresh separate read-only reviewer job/lane/contract; Gemini 3.8 Flash High handles cheap triage/precheck/docs. Claude Sonnet 5.5 High and Claude Opus 5.5 High are scarce reserve routes used only when concretely necessary. Qwen and GPT-OSS 120B are support/batch/advisory; Codex is a scarce specialist reserve.
 
-For core/high-risk acceptance, the canonical final path is Acceptance-Grade Independent Exact-Head Scrutiny. The current default final reviewer is Claude Opus 5.5 High via Antigravity. An acceptance-grade GPT reviewer remains an alternate when available, but GPT quota absence must not block when an authorized independent acceptance route exists. The author job cannot self-approve. The reviewer may not mutate source and must fail closed on ambiguous or conflicting provenance. One bounded repair remains available only where the underlying contract grants it, followed by one targeted exact-head recheck; no duplicate reviewers or PASS-shopping.
+For core/high-risk acceptance, the canonical final path is Acceptance-Grade Independent Exact-Head Scrutiny. The normal default reviewer is Gemini 3.1 Pro High via a fresh independent read-only reviewer job/lane/contract; acceptance-grade GPT remains an alternate when available. Claude Opus 5.5 High is a scarce escalation reviewer and Claude Sonnet 5.5 High is a scarce specialist, neither a routine dependency. If Gemini authored the candidate, a Gemini reviewer is admissible only as a separate fresh trajectory with isolated frozen evidence; same-job/self-review is forbidden. The reviewer may not mutate source and must fail closed on ambiguous or conflicting provenance. One bounded repair remains available only where the underlying contract grants it, followed by one targeted exact-head recheck; no duplicate reviewers or PASS-shopping.
 
 All historical qualification attempts, timeouts, cancellations, grades, and completed reviews below remain preserved historical facts. They may support later analysis but do not gate the current canonical review path.
 
 ### Owner review-cost reduction addendum - 2026-10-06
 
-The Acceptance-Grade Independent Exact-Head Scrutiny governance applies, with an efficiency overlay for **new** dispatches. Deterministic/local evidence is completed first; packages already failing deterministically are not sent for acceptance review. Normal acceptance uses one exact-head Scrutiny. For the current default route, Claude Opus 5.5 High is required; alternate acceptance-grade routes must use their approved acceptance reasoning level and remain procedurally independent. If one authorized bounded repair is used, the only follow-up review is one targeted exact-head recheck focused on the original findings, changed hunks/files, affected requirements and impacted deterministic evidence.
+The Acceptance-Grade Independent Exact-Head Scrutiny governance applies, with an efficiency overlay for **new** dispatches. Deterministic/local evidence is completed first; packages already failing deterministically are not sent for acceptance review. Normal acceptance uses one exact-head Scrutiny. The current default route is Gemini 3.1 Pro High in a fresh separate independent read-only reviewer job/lane/contract. Acceptance-grade GPT is an alternate. Sonnet/Opus are scarce reserve routes and must not be consumed merely for model-family diversity; record the concrete reason whenever either is dispatched. If one authorized bounded repair is used, the only follow-up review is one targeted exact-head recheck focused on the original findings, changed hunks/files, affected requirements and impacted deterministic evidence.
 
 An already accepted independent review receipt is reused when exact reviewed commit/tree or frozen bytes, acceptance-relevant evidence hashes, review contract and impacted deterministic results are unchanged. Chat rotation, state rereads, lane-label changes, wrapper ambiguity and unchanged evidence copying/repackaging do not themselves trigger a new review. Any acceptance-relevant change requires exact-delta analysis first.
 
@@ -27,7 +27,7 @@ This addendum grants no reopening of rejected/exhausted work, no repair-budget r
 ### OWNER_REPORTED
 
 - Current 2026-10-06 operating tier: ChatGPT Plus; Codex quota is treated as scarce, so Codex is not a default critical-path dependency. Do not encode transient quota percentages/reset dates.
-- Current 2026-10-06 Google AI Pro / Antigravity access is owner-authorized for bounded EA_LAB workers and Claude Opus 5.5 High acceptance review under the current policy.
+- Current 2026-10-06 Google AI Pro / Antigravity access is owner-authorized for Gemini-first bounded EA_LAB author/reviewer work. Claude Sonnet/Opus remain owner-authorized scarce reserve routes only when a concrete need justifies them.
 - The previously cancelled direct Claude subscription/service remains historical context; current Antigravity Claude access is a separate route.
 - Historical 2026-09-06 owner facts are preserved by this note: ChatGPT Pro was active at that time, the direct Claude service was cancelled, and Gemini had not yet qualified under the then-current policy.
 
@@ -60,10 +60,10 @@ The transition intake records these local observations from Control Tower withou
 ## Current routing
 
 1. One active ChatGPT Control Tower manages one project truth, task contracts, interpretation, and integration decisions inside existing authority. Architecture: Boss -> ChatGPT Main CT -> RDC/lnwjud -> BaBoss -> bounded AI/deterministic workers -> Main CT intake/integration.
-2. Gemini 3.1 Pro High is the default local implementation/test author. A bounded session is a worker, not another Control Tower, integration owner, or its own reviewer; Main CT alone integrates/pushes shared master.
+2. Gemini 3.1 Pro High is the default local implementation/test author and, through a separate fresh read-only reviewer job/lane/contract, the normal default acceptance reviewer. A bounded session is a worker, not another Control Tower or integration owner; the author session cannot self-review. Main CT alone integrates/pushes shared master.
 3. Use deterministic local tooling first. Do not keep an LLM waiting for every tester cell. Reuse accepted mechanical evidence and deterministic executors when the direct consumer does not require a new observation.
 4. GPT-backed Hermes remains a mechanical EA R&D evidence factory. Provider changes grant no strategy, risk, HOLDOUT, deployment, trading, promotion, or review authority.
-5. Core/high-risk final review uses the Acceptance-Grade Independent Exact-Head Scrutiny path (default Claude Opus 5.5 High). Independence is established by separate author/reviewer jobs and lanes, read-only evidence isolation, exact-head identity, deterministic/adversarial gates, and fail-closed authority handling—not provider family.
+5. Core/high-risk final review uses the Acceptance-Grade Independent Exact-Head Scrutiny path, normally with a fresh independent Gemini 3.1 Pro High reviewer. Acceptance-grade GPT is an alternate; Claude Opus 5.5 High is scarce escalation only. Independence is established by separate author/reviewer jobs and lanes, read-only evidence isolation, exact-head identity, deterministic/adversarial gates, and fail-closed authority handling—not provider family.
 6. Explicit route/model per dispatch; no silent fallback. No surprise separately billed API fallback. Google AI Pro consumer OAuth != Gemini API key billing; ChatGPT subscription != OpenAI API billing.
 7. Legacy Claude-specific launchers that target the previously cancelled direct Claude service remain historical/unavailable routes. Antigravity Claude models are a current, separate Google AI Pro route. Preserve historical launcher evidence and do not relabel it as Antigravity execution. Codex remains available only as an explicitly selected specialist route, not a default critical-path dependency.
 
@@ -112,7 +112,7 @@ The checklist above records the former qualification objective and remains usefu
 
 ## Exact-head and device rules
 
-Keep one writer. Freeze a clean exact commit before one separate read-only Acceptance-Grade Independent Exact-Head Scrutiny job; default reviewer is Claude Opus 5.5 High when independent. If HEAD moves, rerun impacted checks and bind review to the new exact head. The author job cannot self-approve.
+Keep one writer. Freeze a clean exact commit before one separate read-only Acceptance-Grade Independent Exact-Head Scrutiny job; the normal default reviewer is Gemini 3.1 Pro High in a fresh independent reviewer trajectory. Acceptance-grade GPT is an alternate; Claude Opus 5.5 High is reserved for necessary escalation. If HEAD moves, rerun impacted checks and bind review to the new exact head. The author job cannot self-approve.
 
 For device execution, select BaBoss deviceId `bbb88aa0-1598-43f6-b56c-a7db22af086a`, then verify hostname and repository origin. `MOC-NB-4432NKM` deviceId `fa2a5704-038f-4aba-b539-c1d5d7adde70` is not an EA_LAB execution target without explicit mapping. Never select the first online device implicitly.
 
