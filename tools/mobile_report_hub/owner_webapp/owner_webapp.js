@@ -26,7 +26,7 @@ const ownerGroups=['CURRENT ACTIONABLE','READY','RUNNING','WAITING/BLOCKED','OWN
 function ownerTrackInfo(r){const aliases={'EA BUILD':'EA BUILD / IMPLEMENTATION','EA PLANNING':'EA RESEARCH / PLANNING','EA RESEARCH':'EA RESEARCH / PLANNING'},mapped=ownerTracks.includes(r.track)?r.track:Object.prototype.hasOwnProperty.call(aliases,r.track)?aliases[r.track]:null;return {track:mapped||'SYSTEM',qualification:mapped?'EXPLICIT_SOURCE_TRACK':'UNKNOWN'}}
 function ownerGroup(r){if(r.actual_live===true&&truth.currentLiveProof(r))return 'RUNNING';if(r.bucket==='ACTUAL LIVE JOBS')return 'CURRENT ACTIONABLE';if(r.bucket==='WAITING / BLOCKED')return 'WAITING/BLOCKED';return ownerGroups.includes(r.bucket)?r.bucket:'CURRENT ACTIONABLE'}
 function historicalWork(r){return r.historical===true||r.bucket==='HISTORICAL UNRESOLVED / UNKNOWN'}
-function route(){const r=(location.hash.slice(1).split('?')[0]||'overview');return ['overview','work','runtime','performance','news','knowledge','templates'].includes(r)?r:'overview'}
+function route(){const r=(location.hash.slice(1).split('?')[0]||'overview');return ['overview','work','runtime','performance','news','knowledge','templates','builder'].includes(r)?r:'overview'}
 function setActiveNav(r){document.querySelectorAll('[data-route]').forEach(a=>a.classList.toggle('active',a.dataset.route===r))}
 function shellHead(title,subtitle,ico='home',back=false){
  const mon=DATA.monitoring||{},stamp=mon.generated_at_utc;
@@ -199,7 +199,7 @@ function bindCommon(){
  const wq=document.querySelector('[data-work-search]');if(wq)wq.oninput=()=>{workQuery=wq.value;clearTimeout(wq._t);wq._t=setTimeout(()=>{workPage();const n=document.querySelector('[data-work-search]');if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},180)};
  document.querySelectorAll('[data-width]').forEach(x=>x.style.width=Math.max(2,Math.min(100,Number(x.dataset.width)||0))+'%');
 }
-function renderPage(r){if(r==='overview')overview();else if(r==='work')workPage();else if(r==='runtime')runtimePage();else if(r==='performance')performancePageV2();else if(r==='news')newsPage();else if(r==='knowledge')knowledgePage();else if(r==='templates')templatesPage();}
+function renderPage(r){if(r==='builder')window.EALabBuilder.mount(main,RAW.builder_catalog,RAW.builder_profile_decisions);else if(r==='overview')overview();else if(r==='work')workPage();else if(r==='runtime')runtimePage();else if(r==='performance')performancePageV2();else if(r==='news')newsPage();else if(r==='knowledge')knowledgePage();else if(r==='templates')templatesPage();}
 function renderRoute(){DATA=truth.view(RAW,Date.now());const r=route();setActiveNav(r);document.getElementById('topnav').classList.remove('open');document.getElementById('navToggle').setAttribute('aria-expanded','false');drawerRoot.innerHTML='';renderPage(r);window.scrollTo({top:0,behavior:'instant'})}
 // Aging uses detached markup as a display description, never as a replacement
 // route. Keep matching live nodes (and their focus, selection and details state).
@@ -222,6 +222,7 @@ function patchDisplay(live,next){
  while(cursor){const nextSibling=cursor.nextSibling;cursor.remove();cursor=nextSibling}
 }
 function ageDisplay(){
+ if(route()==='builder')return;
  DATA=truth.view(RAW,Date.now());
  const scrolls=[liveMain,...liveMain.querySelectorAll('*'),...drawerRoot.querySelectorAll('*')]
   .filter(e=>e.scrollTop||e.scrollLeft).map(e=>[e,e.scrollLeft,e.scrollTop]);

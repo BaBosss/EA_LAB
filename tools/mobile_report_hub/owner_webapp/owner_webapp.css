@@ -22,3 +22,74 @@ button,input,select{font:inherit}button,a{touch-action:manipulation}.skip{positi
 .owner-track-nav{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem}.owner-track{margin-top:1.5rem}.owner-track>h2{border-bottom:1px solid var(--border,#28404b);padding-bottom:.5rem}.owner-work-table td{vertical-align:top;white-space:normal;overflow-wrap:anywhere}.owner-work-table .row-sub{display:block;margin-top:.25rem}.work-group{margin:.75rem 0}.work-history{margin-top:1rem}.work-history>summary,.work-group>summary{cursor:pointer;padding:.5rem 0}
 @media(max-width:760px){.owner-work-table table{min-width:0;width:100%}.owner-work-table thead{display:none}.owner-work-table tr{display:block;padding:.75rem 0;border-bottom:1px solid var(--border,#28404b)}.owner-work-table td{display:block;width:auto;padding:.3rem .5rem}.owner-work-table td::before{display:block;font-size:.75rem;opacity:.7;margin-bottom:.2rem}.owner-work-table td:nth-child(1)::before{content:'ID / EA / family'}.owner-work-table td:nth-child(2)::before{content:'Objective'}.owner-work-table td:nth-child(3)::before{content:'State / owner'}.owner-work-table td:nth-child(4)::before{content:'Blocker / NEXT'}.owner-work-table td:nth-child(5)::before{content:'Freshness'}}
 #main:has(.owner-track-nav) .head-actions .btn svg{width:18px;height:18px;flex:none}
+
+/* Browser-local Builder draft form */
+.builder-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.builder-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.builder-field{display:flex;flex-direction:column;gap:6px;margin:12px 0}.builder input,.builder textarea,.builder select{width:100%;min-width:0;box-sizing:border-box;padding:10px;border:1px solid #35506a;border-radius:8px;background:#0a1d2d;color:#e4eef7;font:inherit}.builder textarea{min-height:88px;resize:vertical}.builder fieldset{min-width:0;border:1px solid #35506a;border-radius:8px}.builder code,.builder p{overflow-wrap:anywhere}.builder-plan{padding:14px 0;border-top:1px solid #35506a}.builder-plan .btn{margin:4px}.builder input[type=file]{max-width:220px}.builder .btn:disabled{opacity:.5;cursor:not-allowed}.builder .panel{min-width:0}.builder #builderDiagnostic{white-space:pre-wrap}@media(max-width:700px){.builder-grid{grid-template-columns:minmax(0,1fr)}.builder-toolbar>*{max-width:100%;white-space:normal}.builder .shell-head{display:block}}
+
+.builder #builderCatalog{margin-top:20px}.catalog-field{border-bottom:1px solid #35506a;padding:12px 0}.catalog-field summary{cursor:pointer;overflow-wrap:anywhere}.catalog-field dl{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,2fr);gap:8px}.catalog-field dd{margin:0;overflow-wrap:anywhere}.builder pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}@media(max-width:700px){.catalog-field dl{display:block}.catalog-field dt{margin-top:10px}}
+
+/* Existing Builder: proposed DefaultProfile workflow, no runtime activation. */
+#profileWorkflow { margin-top:1.5rem; border-top:1px solid var(--border,#ddd); padding-top:1rem; }
+#profileWorkflow label { display:block; margin:.6rem 0; font-size:.92rem; }
+#profileWorkflow input:not([type=checkbox]),#profileWorkflow select,#profileWorkflow textarea { display:block; width:100%; min-width:0; max-width:100%; padding:.65rem; border:1px solid #c4ccd6; border-radius:8px; background:#fff; color:#192638; font:inherit; }
+#profileWorkflow select { white-space:normal; text-overflow:ellipsis; }
+#profileWorkflow input[type=checkbox] { width:18px; height:18px; vertical-align:middle; margin-right:.5rem; }
+.profile-group { border-top:1px solid #dae1eb; margin-top:1.2rem; padding-top:.7rem; }
+.profile-group h4 { margin:.6rem 0; font-size:1rem; }
+.profile-row { margin:.8rem 0; padding:.8rem; background:#f5f8fc; color:#192638; border-left:3px solid #738cab; border-radius:6px; overflow-wrap:anywhere; }
+.profile-row small { display:block; color:#516075; font-size:.78rem; }
+.profile-row p { font-size:.8rem; line-height:1.5; margin:.35rem 0; }
+.profile-row details { font-size:.85rem; color:var(--text); background:#0a2031; }
+#profileWorkflow pre { white-space:pre-wrap; word-break:break-word; max-width:100%; font-size:.76rem; max-height:24rem; overflow:auto; padding:.6rem; background:#eef3f8; color:#192638; }
+.profile-bindings { margin:.8rem 0; }
+#profileSend { width:100%; white-space:normal; min-height:44px; }
+
+/* Mobile Builder: presentation only, scoped to the existing form. */
+.builder [hidden] { display:none !important; }
+#mobileChrome {padding:16px;margin-bottom:16px;border:1px solid #64748b;border-radius:12px;background:#142337;color:#f1f5f9;overflow-wrap:anywhere;}
+#mobileChrome h2,#mobileChrome h3 {margin:8px 0;}
+#mobileChrome nav {display:flex;flex-wrap:wrap;gap:8px;}
+.builder .btn,.builder input:not([type=checkbox]),.builder select,.builder textarea,.builder summary {min-height:44px;}
+.builder .btn {min-width:44px;white-space:normal;overflow-wrap:anywhere;}
+.builder label:has(input[type=checkbox]) {display:flex;align-items:center;min-height:44px;gap:10px;}
+.builder input,.builder select,.builder textarea {font-size:16px;max-width:100%;}
+.builder [aria-invalid=true] {outline:3px solid #fb7185;}
+.builder [aria-current=step] {outline:2px solid #67e8f9;}
+.builder :focus-visible {outline:3px solid #67e8f9;outline-offset:3px;}
+.builder p,.builder label,.builder pre,.builder code {overflow-wrap:anywhere;}
+.builder pre {white-space:pre-wrap;}
+.mobile-guided {padding-bottom:16px;}
+.mobile-guided .builder-grid {display:block;}
+.mobile-guided .profile-group {margin-top:0;}
+#mobileBar {position:sticky;bottom:0;z-index:5;display:flex;justify-content:space-between;gap:8px;background:#122033;border:1px solid #64748b;padding:10px 10px calc(10px + env(safe-area-inset-bottom));color:#f1f5f9;}
+.mobile-guided input,.mobile-guided select,.mobile-guided textarea {scroll-margin-block:100px;}
+@media(max-height:450px) {#mobileBar {position:static;} .mobile-guided {padding-bottom:16px;} #mobileChrome {padding:8px;} }
+
+/* Builder-only header reflow: intrinsic nowrap widths must not exceed zoomed viewport. */
+body:has(#builderForm) .topbar {display:flex;flex-wrap:wrap;height:auto;min-height:62px;gap:12px;padding-block:10px;}
+body:has(#builderForm) .brand {flex:1 1 200px;min-width:0;flex-wrap:wrap;white-space:normal;}
+body:has(#builderForm) .topnav {flex:1 1 520px;min-width:0;flex-wrap:wrap;}
+body:has(#builderForm) .topnav a {max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+body:has(#builderForm) .nav-toggle {flex:0 0 auto;}
+
+/* Measured focus fallback keeps all chrome in document flow when it cannot fit. */
+#mobileBar {flex-wrap:wrap;}
+#mobileBar .btn {flex:1 1 8rem;overflow-wrap:normal;word-break:normal;max-width:100%;}
+body.mobile-chrome-flow:has(#builderForm) .topbar,
+body.mobile-chrome-flow #mobileBar {position:static;}
+
+#mobileHumanReview {overflow-wrap:anywhere;}
+#mobileHumanReview ul {padding-inline-start:1.25rem;}
+#mobileHumanReview .btn {max-width:100%;text-align:start;}
+#mobileStatus:focus {outline:3px solid #67e8f9;outline-offset:3px;}
+
+/* One current EA at every viewport; full tools are an explicitly opened secondary surface. */
+#builderForm[data-current-workspace] .builder-grid {display:block;max-width:1040px;margin-inline:auto;}
+#builderForm[data-current-workspace] .builder-grid>.panel {margin-block:12px;}
+#builderForm[data-current-workspace] .builder-grid>.panel>.panel-head>h2 {display:none;}
+#builderForm[data-current-workspace] .builder-grid>.panel>.panel-head:not(:has(button,input,select,textarea,a,[tabindex])) {display:none;}
+#mobileCurrentName {font-size:1.15rem;font-weight:700;overflow-wrap:anywhere;}
+#mobileWorkspaceActions,#mobileDetails,#mobileIdentityDetails,#mobileIdeaDetails {border:1px solid #64748b;border-radius:8px;padding:8px;margin-block:10px;}
+#mobileWorkspaceActions summary,#mobileDetails summary,#mobileIdentityDetails summary,#mobileIdeaDetails summary {cursor:pointer;display:list-item;padding:10px 8px;box-sizing:border-box;}
+#mobileWorkspaceActions .btn {margin:4px;}
+#builderForm:not(.mobile-guided)[data-current-workspace] .builder-grid {border-inline-start:3px solid #64748b;padding-inline-start:10px;}

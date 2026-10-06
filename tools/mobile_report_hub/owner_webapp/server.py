@@ -5,7 +5,7 @@ sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
 from model import Model, Refused, safe_bytes, digest, utcnow, LOADED_SOURCE_SHA256
 APP_ID='EA_LAB_OWNER_WEBAPP_CONVERGENCE_V1'
 SERVER_SOURCE_SHA256=digest(pathlib.Path(__file__).read_bytes())
-ASSETS=('owner_webapp.html','owner_webapp.css','truth.js','owner_webapp.js')
+ASSETS=('owner_webapp.html','owner_webapp.css','truth.js','owner_webapp.js','builder_workflow.js')
 
 def serialize(data):
     return json.dumps(data,ensure_ascii=False,allow_nan=False).replace('<','\\u003c').replace('\u2028','\\u2028').replace('\u2029','\\u2029').encode('utf-8')
@@ -24,7 +24,7 @@ def reusable(health, expected):
     return isinstance(health,dict) and health.get('app')==APP_ID and health.get('status')=='OK' and health.get('read_only') is True and health.get('identity')==expected
 def render(config,data):
     root=pathlib.Path(config['assets']); html=safe_bytes(root/'owner_webapp.html',root).decode('utf-8')
-    css=safe_bytes(root/'owner_webapp.css',root).decode('utf-8'); js=safe_bytes(root/'truth.js',root).decode('utf-8')+'\n'+safe_bytes(root/'owner_webapp.js',root).decode('utf-8')
+    css=safe_bytes(root/'owner_webapp.css',root).decode('utf-8'); js=safe_bytes(root/'truth.js',root).decode('utf-8')+'\n'+safe_bytes(root/'builder_workflow.js',root).decode('utf-8')+'\n'+safe_bytes(root/'owner_webapp.js',root).decode('utf-8')
     payload=serialize(data).decode('utf-8')
     return html.replace('/* APP_CSS */',css).replace('/* APP_JS */',js).replace('null/* APP_DATA */',payload).encode('utf-8')
 class Application:
@@ -69,7 +69,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
     def _send(self,data,mime='application/json; charset=utf-8',code=200,body=True):
         self._headers(code,mime,len(data))
-        if body: self.wfile.write(data)
+        if body:
+            # Bound individual writes: one multi-megabyte write truncated the
+            # final socket buffer on the measured Windows loopback transport.
+            for offset in range(0,len(data),64*1024):
+                self.wfile.write(data[offset:offset+64*1024])
+            self.wfile.flush()
     def do_GET(self):
         path=urllib.parse.urlsplit(self.path).path
         try:
@@ -103,6 +108,16 @@ def config_from_args(args):
     config={'repo':args.repo,'adapter_root':args.adapter_root or args.repo,'assets':args.assets,'monitor':args.monitor,'registry':args.registry,
             'jobs':args.jobs,'leases':args.leases,'lane_status':args.lane_status,'runtime':args.runtime,'snapshots':args.snapshots,
             'knowledge':args.knowledge}
+    catalog_location=getattr(args,'builder_catalog_config',None);catalog_pin=getattr(args,'builder_catalog_config_sha256',None)
+    if catalog_location is not None or catalog_pin is not None:
+        import re
+        if not isinstance(catalog_location,str) or not pathlib.Path(catalog_location).is_absolute() or not isinstance(catalog_pin,str) or re.fullmatch('[0-9a-f]{64}',catalog_pin) is None: raise Refused('CATALOG_CALLER_PIN_REQUIRED')
+        config['builder_catalog']={'config_path':catalog_location,'config_sha256':catalog_pin}
+    decision_location=getattr(args,'builder_profile_decision_config',None);decision_pin=getattr(args,'builder_profile_decision_config_sha256',None)
+    if decision_location is not None or decision_pin is not None:
+        import re
+        if not isinstance(decision_location,str) or not pathlib.Path(decision_location).is_absolute() or not isinstance(decision_pin,str) or re.fullmatch('[0-9a-f]{64}',decision_pin) is None: raise Refused('PROFILE_CALLER_PIN_REQUIRED')
+        config['builder_profile_decisions']={'config_path':decision_location,'config_sha256':decision_pin}
     location=getattr(args,'work_acceptance_config',None)
     pin=getattr(args,'work_acceptance_config_sha256',None)
     if location is None and pin is None: return checkpoint_config(args,config)
@@ -157,10 +172,14 @@ def parser():
     p.add_argument('--snapshots',default='D:/EA_LAB_WORKSPACE/runtime/daily-monitor-aec3dd24-20260914/portfolio/live_deals')
     p.add_argument('--knowledge',default='D:/EA_LAB_CONTROL/readers/second-brain/versions/8298da26f570ba30654fd31bb9bf66e53dd4051f')
     p.add_argument('--work-acceptance-config',help='Explicit authorized read-only acceptance config; disabled by default')
+    p.add_argument('--builder-catalog-config',help='Optional explicit immutable audit config; read-only metadata, no approval')
+    p.add_argument('--builder-catalog-config-sha256',help='Required exact caller config SHA256')
     p.add_argument('--work-acceptance-config-sha256',help='Required exact SHA256 of caller config')
     p.add_argument('--work-checkpoint-config',help='Explicit authorized passive checkpoint config; disabled by default')
     p.add_argument('--work-checkpoint-config-sha256',help='Required SHA256 of caller checkpoint config')
     p.add_argument('--port',type=int,default=8768); p.add_argument('--no-open',action='store_true')
+    p.add_argument('--builder-profile-decision-config',help='Optional immutable proposed decision pack config; no approval/intake')
+    p.add_argument('--builder-profile-decision-config-sha256',help='Required exact decision config SHA256')
     p.add_argument('--offline-out'); p.add_argument('--self-test',action='store_true')
     return p
 def self_test(config):

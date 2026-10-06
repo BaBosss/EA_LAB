@@ -318,7 +318,7 @@ class ConvergenceTests(unittest.TestCase):
             self.assertFalse(reusable({'app':f['health']['app'],'status':'OK','read_only':True},expected))
             config={**f['config'],'monitor':str(pathlib.Path(td)/'other')}
             self.assertFalse(reusable(f['health'],identity(config)))
-            self.assertEqual(set(expected['files']),{'model.py','server.py','truth.js','owner_webapp.js','owner_webapp.html','owner_webapp.css'})
+            self.assertEqual(set(expected['files']),{'model.py','server.py','truth.js','owner_webapp.js','owner_webapp.html','owner_webapp.css','builder_workflow.js'})
     def test_health_route_serializes_actual_startup_identity(self):
         app=Application({'assets':str(HERE)})
         handler=Handler.__new__(Handler); handler.app=app; handler.path='/health'; handler._send=mock.Mock()
@@ -332,7 +332,7 @@ class ConvergenceTests(unittest.TestCase):
     def test_startup_asset_change_refused_not_relabelled(self):
         with tempfile.TemporaryDirectory() as td:
             root=pathlib.Path(td); assets=root/'assets'; assets.mkdir()
-            for name in ('owner_webapp.html','owner_webapp.css','owner_webapp.js','truth.js'): shutil.copyfile(HERE/name,assets/name)
+            for name in ('owner_webapp.html','owner_webapp.css','owner_webapp.js','truth.js','builder_workflow.js'): shutil.copyfile(HERE/name,assets/name)
             config={'assets':str(assets)}; app=Application(config); before=app.startup_identity
             (assets/'truth.js').write_text('// changed',encoding='utf-8')
             self.assertEqual(before,app.startup_identity)
@@ -1056,6 +1056,245 @@ class PassiveCheckpointV2Tests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             model,index,checkpoint=self.v2(td);(pathlib.Path(td)/'index.json').write_bytes(b'{}');self.assertEqual(model.work_checkpoint(),[])
 
+class BuilderBoundaryTests(unittest.TestCase):
+    def test_all_write_methods_still_405(self):
+        handler=object.__new__(Handler)
+        handler._send=mock.Mock()
+        for name in ('do_POST','do_PUT','do_DELETE','do_PATCH'):
+            getattr(handler,name)()
+            handler._send.assert_called_with(b'read only','text/plain; charset=utf-8',405)
+
+    def test_offline_renderer_bundles_builder_with_escaped_snapshot(self):
+        html=render({'assets':str(HERE)},{'text':'</script><img src=x>'}).decode('utf-8')
+        self.assertIn('EA_LAB_BUILDER_DRAFT_V1',html)
+        self.assertIn('href="#builder"',html)
+        self.assertNotIn('</script><img src=x>',html)
+        self.assertIn('\\u003c/script>',html)
+
+class BuilderCatalogTests(unittest.TestCase):
+    git_fixture_cache={}
+    def config(self):
+        path=os.environ.get('BUILDER_CATALOG_TEST_CONFIG')
+        repo=os.environ.get('BUILDER_CATALOG_TEST_REPO')
+        if not path or not repo: self.skipTest('Explicit frozen audit fixture required')
+        self.path=pathlib.Path(path);self.repo=repo
+        return json.loads(self.path.read_bytes())
+
+    def project(self,config):
+        with tempfile.TemporaryDirectory() as td:
+            path=pathlib.Path(td)/'caller.json';path.write_text(json.dumps(config),encoding='utf-8')
+            model=Model({'repo':self.repo,'builder_catalog':{'config_path':str(path),'config_sha256':digest(path.read_bytes())}})
+            # Rehashed metadata cases share immutable source bytes. Read HEAD freshly for each
+            # projection; cache only successful Git responses under that exact repository/head.
+            head=model.git('rev-parse','HEAD');reader=model.git
+            def frozen_git(*args):
+                key=(str(model.repo),head,args)
+                if key not in self.git_fixture_cache:self.git_fixture_cache[key]=reader(*args)
+                return self.git_fixture_cache[key]
+            model.git=frozen_git
+            return model.builder_catalog()
+
+    def test_exact_audit_population_order_and_default_authority(self):
+        value=self.project(self.config());self.assertEqual(value['status'],'AUDIT_METADATA_VERIFIED',value)
+        self.assertEqual([(w['build'],w['population']) for w in value['wrappers']],[('B17',159),('B22',153)])
+        for w in value['wrappers']:
+            self.assertEqual(len({(f['build'],f['name']) for f in w['fields']}),w['population'])
+            self.assertTrue(all(not f['editable'] and f['binding_state']=='UNRESOLVED_BINDING' and f['default_authority']=='SOURCE_REFERENCE_NOT_OWNER_APPROVED' for f in w['fields']))
+        self.assertFalse(value['can_submit']);self.assertFalse(value['can_execute']);self.assertEqual(value['profile_approval'],'UNRESOLVED')
+
+    def test_existing_resolver_result_and_refusal_propagate(self):
+        config=self.config();config['hypothesis_revisions']={'B17':'B17-H01-r1','B22':'not-admitted-binding'}
+        value=self.project(config);self.assertEqual(value['status'],'AUDIT_METADATA_VERIFIED',value)
+        first=next(f for w in value['wrappers'] if w['build']=='B17' for f in w['fields'] if f['name']=='ExitMode')
+        self.assertEqual(first['binding_state'],'RESOLVER_RESULT_READ_ONLY')
+        import importlib.util
+        sys.path.insert(0,str(pathlib.Path(self.repo)/'_triage/factory_os'))
+        import registry
+        class Source:
+            mode='test_exact_git'
+            root=self.repo
+            def read_committed(_,path):return subprocess.check_output(['git','-C',self.repo,'show',config['source_head']+':'+path]).decode('utf-8-sig')
+            def exists_committed(_,path):return bool(subprocess.check_output(['git','-C',self.repo,'ls-tree',config['source_head'],'--',path]).strip())
+        expected=registry.resolve('B17-H01-r1',parameter='ExitMode',source=Source(),build_tag='LAB_ENTRY_17')
+        self.assertEqual(first['resolver_result'],expected)
+        self.assertTrue(all(f['binding_state']=='UNRESOLVED_BINDING' for w in value['wrappers'] if w['build']=='B22' for f in w['fields']))
+
+    def test_bad_artifact_config_source_and_wrapper_refused(self):
+        original=self.config()
+        changes=[lambda c:c.update(schema='fake'),lambda c:c['handoff'].update(sha256='0'*64),lambda c:c['artifacts'][0].update(sha256='0'*64),lambda c:c['handoff'].update(name='../outside.json'),lambda c:c['source_pins'][0].update(sha256='0'*64),lambda c:c['hypothesis_revisions'].update(RESEARCH154='unknown')]
+        for mutate in changes:
+            c=json.loads(json.dumps(original));mutate(c);value=self.project(c);self.assertEqual(value['status'],'UNRESOLVED');self.assertIsNone(value['population']);self.assertEqual(value['wrappers'],[])
+
+    def test_config_duplicate_nonfinite_unknown_and_missing_pins_refused(self):
+        self.config()
+        for raw in ('{"schema":1,"schema":2}','{"__proto__":{}}','{"number":NaN}','{"unknown":1}'):
+            with tempfile.TemporaryDirectory() as td:
+                p=pathlib.Path(td)/'config.json';p.write_text(raw)
+                c=Model({'repo':self.repo,'builder_catalog':{'config_path':str(p),'config_sha256':digest(p.read_bytes())}}).builder_catalog()
+                self.assertEqual(c['status'],'UNRESOLVED');self.assertIsNone(c['population'])
+        with self.assertRaises(Refused):config_from_args(parser().parse_args(['--builder-catalog-config',str(self.path)]))
+
+    def test_unbound_and_hashchanged_catalog_keep_fallback(self):
+        self.config();m=Model({'repo':self.repo});self.assertEqual(m.builder_catalog()['status'],'UNRESOLVED')
+        m.c['builder_catalog']={'config_path':str(self.path),'config_sha256':'0'*64};self.assertEqual(m.builder_catalog()['status'],'UNRESOLVED')
+
+    def test_rehashed_semantic_mutations_still_refuse_source_inconsistency(self):
+        original=self.config()
+        mutations=[lambda j:j['rows'][1].update(name=j['rows'][0]['name']),lambda j:j['rows'][0].update(type='fake_type'),lambda j:j['rows'][0].update(default_expression='FAKE_ENUM'),lambda j:j['rows'][0].update(default_numeric_code=999),lambda j:j['rows'][0]['source'].update(line=9999),lambda j:j['rows'].append({**j['rows'][0],'build':'RESEARCH154'})]
+        for mutate in mutations:
+            with tempfile.TemporaryDirectory() as td:
+                c=json.loads(json.dumps(original));root=pathlib.Path(td)/'audit';root.mkdir();c['root']=str(root)
+                for pin in c['artifacts']:shutil.copyfile(pathlib.Path(original['root'])/pin['name'],root/pin['name'])
+                handoff=json.loads((pathlib.Path(original['root'])/c['handoff']['name']).read_bytes())
+                pin=next(p for p in c['artifacts'] if p['name']=='EA_TEMPLATE_PARAMETER_SEMANTICS_MATRIX.json')
+                path=root/pin['name'];value=json.loads(path.read_bytes());mutate(value);path.write_text(json.dumps(value));pin['sha256']=digest(path.read_bytes())
+                next(p for p in handoff['primary_artifacts'] if p['name']==pin['name'])['sha256']=pin['sha256']
+                handpath=root/c['handoff']['name'];handpath.parent.mkdir();handpath.write_text(json.dumps(handoff));c['handoff']['sha256']=digest(handpath.read_bytes())
+                result=self.project(c);self.assertEqual(result['status'],'UNRESOLVED',result);self.assertIsNone(result['population'])
+
+    def rehashed_mode_map(self, mutate):
+        original=self.config()
+        with tempfile.TemporaryDirectory() as td:
+            c=json.loads(json.dumps(original));root=pathlib.Path(td)/'audit';root.mkdir();c['root']=str(root)
+            for pin in c['artifacts']:shutil.copyfile(pathlib.Path(original['root'])/pin['name'],root/pin['name'])
+            handoff=json.loads((pathlib.Path(original['root'])/c['handoff']['name']).read_bytes())
+            pin=next(p for p in c['artifacts'] if p['name']=='EA_TEMPLATE_MODE_CODE_MAP.json')
+            path=root/pin['name'];value=json.loads(path.read_bytes());mutate(value)
+            path.write_text(json.dumps(value));pin['sha256']=digest(path.read_bytes())
+            next(p for p in handoff['primary_artifacts'] if p['name']==pin['name'])['sha256']=pin['sha256']
+            handpath=root/c['handoff']['name'];handpath.parent.mkdir();handpath.write_text(json.dumps(handoff));c['handoff']['sha256']=digest(handpath.read_bytes())
+            return self.project(c)
+
+    def assert_catalog_refused(self, result, reason):
+        self.assertEqual(result['status'],'UNRESOLVED',result)
+        self.assertEqual(result['blockers'],[reason]);self.assertIsNone(result['population'])
+        self.assertEqual(result['wrappers'],[]);self.assertEqual(result['profile_approval'],'UNRESOLVED')
+        self.assertEqual(result['compatibility'],'UNKNOWN');self.assertFalse(result['can_submit']);self.assertFalse(result['can_execute'])
+
+    def test_rehashed_enum_catalog_boundary_refuses_every_invalid_entry(self):
+        def cross_type(j):
+            row=next(r for r in j['enum_codes'] if r['selector']=='HedgeMode')
+            other=next(r for r in j['enum_codes'] if r['symbol']=='CONF_DISTANCE')
+            row.update(symbol=other['symbol'],code=other['code'],source=json.loads(json.dumps(other['source'])))
+        cases=[
+            ('unknown_symbol',lambda j:j['enum_codes'][0].update(symbol='SCRUTINY_FAKE_ENUM_SYMBOL'),'CATALOG_ENUM_UNKNOWN_SYMBOL'),
+            ('unknown_type',lambda j:j['enum_codes'][0].update(enum='SCRUTINY_FAKE_ENUM_TYPE'),'CATALOG_ENUM_TYPE_MISMATCH'),
+            ('known_wrong_type',lambda j:j['enum_codes'][0].update(enum='ENUM_SL_MODE'),'CATALOG_ENUM_TYPE_MISMATCH'),
+            ('unknown_selector',lambda j:j['enum_codes'][0].update(selector='SCRUTINY_FAKE_SELECTOR'),'CATALOG_ENUM_UNKNOWN_SELECTOR'),
+            ('cross_type_same_code',cross_type,'CATALOG_ENUM_TYPE_MISMATCH'),
+            ('builtin_in_custom_type',lambda j:j['enum_codes'][0].update(symbol='MODE_SMA',code=0),'CATALOG_ENUM_TYPE_MISMATCH'),
+            ('wrong_code',lambda j:j['enum_codes'][0].update(code=999),'CATALOG_ENUM_CODE_MISMATCH'),
+            ('missing_codes',lambda j:j.pop('enum_codes'),'CATALOG_ENUM_CATALOG_INCOMPLETE'),
+            ('empty_codes',lambda j:j.update(enum_codes=[]),'CATALOG_ENUM_CATALOG_INCOMPLETE'),
+            ('missing_member',lambda j:j['enum_codes'].pop(0),'CATALOG_ENUM_CATALOG_INCOMPLETE'),
+            ('missing_selector',lambda j:j.update(enum_codes=[r for r in j['enum_codes'] if r['selector']!='HedgeMode']),'CATALOG_ENUM_CATALOG_INCOMPLETE'),
+            ('duplicate_identical',lambda j:j['enum_codes'].append(json.loads(json.dumps(j['enum_codes'][0]))),'CATALOG_ENUM_DUPLICATE_OR_ALIAS_CONFLICT'),
+            ('duplicate_conflicting',lambda j:j['enum_codes'].append({**j['enum_codes'][0],'plain_meaning':'conflicting alias'}),'CATALOG_ENUM_DUPLICATE_OR_ALIAS_CONFLICT'),
+            ('invented_alias',lambda j:j['enum_codes'].append({**j['enum_codes'][0],'symbol':'SCRUTINY_ALIAS'}),'CATALOG_ENUM_UNKNOWN_SYMBOL'),
+            ('wrong_source_line',lambda j:j['enum_codes'][0]['source'].update(line=j['enum_codes'][1]['source']['line']),'CATALOG_ENUM_SOURCE_MISMATCH'),
+            ('wrong_source_excerpt',lambda j:j['enum_codes'][0]['source'].update(excerpt='FAKE = 21'),'CATALOG_ENUM_SOURCE_MISMATCH'),
+            ('wrong_source_pin',lambda j:j['enum_codes'][0]['source'].update(sha256='0'*64),'CATALOG_ENUM_SOURCE_MISMATCH'),
+            ('missing_default_build',lambda j:j['enum_codes'][0]['defaults'].pop('22'),'CATALOG_ENUM_CATALOG_INCOMPLETE'),
+            ('wrong_default_expression',lambda j:j['enum_codes'][0]['defaults']['17'].update(expression='EXIT_FIXED_TP'),'CATALOG_ENUM_DEFAULT_MISMATCH'),
+            ('wrong_default_code',lambda j:j['enum_codes'][0]['defaults']['17'].update(code=999),'CATALOG_ENUM_CODE_MISMATCH'),
+        ]
+        for name,mutate,reason in cases:
+            with self.subTest(case=name):self.assert_catalog_refused(self.rehashed_mode_map(mutate),reason)
+
+    def test_enum_row_schema_and_integer_codes_are_exact(self):
+        mutations=[lambda j:j.update(enum_codes={}),lambda j:j['enum_codes'].__setitem__(0,None),lambda j:j['enum_codes'][0].pop('enum'),lambda j:j['enum_codes'][0].update(extra='unadmitted')]
+        mutations += [lambda j,v=v:j['enum_codes'][0].update(code=v) for v in (True,21.0,'21',None)]
+        mutations += [lambda j,k=k:j['enum_codes'][0].update({k:''}) for k in ('selector','enum','symbol','plain_meaning')]
+        mutations += [lambda j:j['enum_codes'][0]['defaults']['17'].update(code=True)]
+        for i,mutate in enumerate(mutations):
+            with self.subTest(case=i):self.assert_catalog_refused(self.rehashed_mode_map(mutate),'CATALOG_ENUM_SCHEMA')
+
+    def test_missing_catalog_and_missing_registry_dependency_fail_closed(self):
+        c=self.config();c['artifacts']=[p for p in c['artifacts'] if p['name']!='EA_TEMPLATE_MODE_CODE_MAP.json']
+        self.assert_catalog_refused(self.project(c),'CATALOG_REQUIRED_ARTIFACT')
+        self.assert_catalog_refused(Model({'repo':self.repo}).builder_catalog(),'AUDITED_CATALOG_NOT_BOUND')
+        original_git=Model.git
+        def missing_registry(model,*args):
+            if any(str(a).endswith(':_triage/factory_os/registry.py') for a in args):raise Refused('GIT_READ_UNAVAILABLE')
+            return original_git(model,*args)
+        self.git_fixture_cache.clear()
+        with mock.patch.object(Model,'git',missing_registry):self.assert_catalog_refused(self.project(self.config()),'GIT_READ_UNAVAILABLE')
+
+    def test_valid_enum_catalog_keeps_typed_members_and_shared_codes(self):
+        value=self.project(self.config());self.assertEqual(value['status'],'AUDIT_METADATA_VERIFIED',value)
+        mode=json.loads((pathlib.Path(self.config()['root'])/'EA_TEMPLATE_MODE_CODE_MAP.json').read_bytes())
+        for w in value['wrappers']:
+            for f in w['fields']:
+                expected=[r for r in mode['enum_codes'] if r['selector']==f['name']]
+                self.assertEqual({e['symbol'] for e in f['enum_explanations']},{r['symbol'] for r in expected})
+                self.assertTrue(all(r['enum']==f['type'] for r in expected))
+            fields={f['name']:f for f in w['fields']}
+            self.assertEqual(next(e['code'] for e in fields['HedgeMode']['enum_explanations'] if e['symbol']=='HEDGE_OFF'),0)
+            self.assertEqual(next(e['code'] for e in fields['StackConfirm']['enum_explanations'] if e['symbol']=='CONF_DISTANCE'),0)
+        self.assertFalse(value['can_submit']);self.assertFalse(value['can_execute']);self.assertEqual(value['profile_approval'],'UNRESOLVED')
+
+    def test_catalog_json_deep_and_overflow_numbers_refuse(self):
+        from model import catalog_json
+        for raw in (b'{"overflow":1e999}',b'['*70+b'0'+b']'*70):
+            with self.assertRaises(Refused):catalog_json(raw)
+
+class ProfileDecisionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cfg=os.environ.get('BUILDER_PROFILE_TEST_CONFIG');projection=os.environ.get('BUILDER_PROFILE_PROJECTION');catalog=os.environ.get('BUILDER_CATALOG_PROJECTION');repo=os.environ.get('BUILDER_CATALOG_TEST_REPO')
+        if not all((cfg,projection,catalog,repo)):raise unittest.SkipTest('Explicit pinned profile fixtures absent')
+        cls.config=json.loads(pathlib.Path(cfg).read_bytes());cls.catalog=json.loads(pathlib.Path(catalog).read_bytes());cls.projection=json.loads(pathlib.Path(projection).read_bytes());cls.model=Model({'repo':repo});cls.blobs={}
+        original=cls.model.git
+        def cached(*args):
+            if args not in cls.blobs:cls.blobs[args]=original(*args)
+            return cls.blobs[args]
+        cls.model.git=cached
+    def project(self,change=None,catalog=None):
+        from model import load_profile_decisions
+        with tempfile.TemporaryDirectory() as directory:
+            p=pathlib.Path(directory)/'config.json';config=json.loads(json.dumps(self.config))
+            if change:change(config)
+            p.write_text(json.dumps(config),encoding='utf-8');self.model.c['builder_profile_decisions']={'config_path':str(p),'config_sha256':digest(p.read_bytes())}
+            return load_profile_decisions(self.model,self.catalog if catalog is None else catalog)
+    def test_positive_counts_scope_source_and_no_defaults_adopted(self):
+        v=self.project();self.assertEqual(v['status'],'PINNED_PROPOSAL_METADATA');self.assertEqual(len(v['rows']),153)
+        self.assertEqual({s:sum(r['scope']==s for r in v['rows']) for s in ('SHARED','ENTRY','INSTANCE')},{'SHARED':150,'ENTRY':2,'INSTANCE':1})
+        self.assertEqual([g['id'] for g in v['groups']],list(__import__('model').PROFILE_GROUPS));self.assertFalse(v['can_submit']);self.assertFalse(v['can_execute']);self.assertEqual(v['profile_approval'],'UNRESOLVED');self.assertEqual(v['historical_sidecar_ui_head'],'9b66722912693810b8b50fb3acfd023044ecca2c')
+        self.assertTrue(all(r['source_head']==v['source_head'] for r in v['rows']))
+    def test_source_pin_hash_schema_and_path_negative(self):
+        changes=[lambda c:c.update(source_head='0'*40),lambda c:c.update(accepted_ui_head='0'*40),lambda c:c.update(catalog_handoff_sha256='0'*64),lambda c:c.update(unknown=True),lambda c:c['decision'].update(sha256='0'*64),lambda c:c['decision'].update(name='../EA_TEMPLATE_MODE_CODE_MAP.json'),lambda c:c['source_refs'].update(sha256='0'*64)]
+        for change in changes:
+            with self.subTest(change=change),self.assertRaises(Refused):self.project(change)
+    def test_catalog_unresolved_never_enables_profile(self):
+        with self.assertRaises(Refused):self.project(catalog={'status':'UNRESOLVED'})
+    def test_branch_descriptors_and_entry_bounds(self):
+        v=self.project();rows={r['name']:r for r in v['rows']}
+        self.assertEqual(rows['_42_RiskPct']['dependencies']['tests'][0],{'selector':'FirstLotMode','op':'=','values':['FIRSTLOT_RISK']})
+        self.assertEqual(rows['_53_PlusLot']['dependencies']['tests'][0]['values'],['PROG_PLUS'])
+        self.assertEqual(rows['_22_DisplacementBodyFraction']['constraints']['maximum'],'1');self.assertTrue(rows['_22_WickBodyRatio']['constraints']['positive'])
+        self.assertTrue(all(r['intent_approval']!='OWNER_APPROVED_PROFILE' for r in v['rows']))
+    def test_wrong_caller_pin_and_absent_binding_fail_closed(self):
+        self.model.c.pop('builder_profile_decisions',None);self.assertEqual(self.model.builder_profile_decisions(self.catalog)['status'],'UNRESOLVED')
+        self.model.c['builder_profile_decisions']={'config_path':str(pathlib.Path(os.environ['BUILDER_PROFILE_TEST_CONFIG'])),'config_sha256':'0'*64};self.assertEqual(self.model.builder_profile_decisions(self.catalog)['blockers'],['PROFILE_CONFIG_HASH_MISMATCH'])
+
+
+def catalog_browser_fixtures():
+    fixtures=browser_fixtures();path=os.environ.get('BUILDER_CATALOG_TEST_CONFIG');repo=os.environ.get('BUILDER_CATALOG_TEST_REPO')
+    if path and repo:
+        p=pathlib.Path(path);config={'repo':repo,'builder_catalog':{'config_path':str(p),'config_sha256':digest(p.read_bytes())}}
+        profile_path=os.environ.get('BUILDER_PROFILE_TEST_CONFIG')
+        if profile_path:
+            q=pathlib.Path(profile_path);config['builder_profile_decisions']={'config_path':str(q),'config_sha256':digest(q.read_bytes())}
+        model=Model(config);catalog=model.builder_catalog()
+        if catalog['status']!='AUDIT_METADATA_VERIFIED': raise AssertionError(catalog)
+        snap=json.loads(json.dumps(fixtures['missing']['snapshot']));snap['builder_catalog']=catalog
+        if profile_path:
+            projection=model.builder_profile_decisions(catalog)
+            if projection['status']!='PINNED_PROPOSAL_METADATA':raise AssertionError(projection)
+            snap['builder_profile_decisions']=projection
+        fixtures['catalog']={'snapshot':snap,'html':render({'assets':str(HERE)},snap).decode('utf-8')}
+    return fixtures
+
 if __name__=="__main__":
-    if '--browser-fixtures' in sys.argv: print(json.dumps(browser_fixtures(),ensure_ascii=True))
+    if '--browser-fixtures' in sys.argv: print(json.dumps(catalog_browser_fixtures(),ensure_ascii=True))
     else: unittest.main()

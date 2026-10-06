@@ -3,6 +3,339 @@ from __future__ import annotations
 import csv, datetime as dt, hashlib, io, json, math, os, pathlib, re, subprocess, sys, uuid
 from html.parser import HTMLParser
 UTC = dt.timezone.utc
+
+def catalog_json(raw):
+    def pairs(items):
+        result={}
+        for key,value in items:
+            if key in result or key in ('__proto__','prototype','constructor'): raise Refused('CATALOG_DUPLICATE_OR_UNSAFE_KEY')
+            result[key]=value
+        return result
+    try:
+        value=json.loads(raw.decode('utf-8-sig'),object_pairs_hook=pairs,parse_constant=lambda _: (_ for _ in ()).throw(Refused('CATALOG_NONFINITE')))
+        pending=[(value,0)];nodes=0
+        while pending:
+            item,depth=pending.pop();nodes+=1
+            if depth>64 or nodes>200_000: raise Refused('CATALOG_STRUCTURE_LIMIT')
+            if isinstance(item,float) and not math.isfinite(item): raise Refused('CATALOG_NONFINITE')
+            if isinstance(item,dict):pending.extend((v,depth+1) for v in item.values())
+            elif isinstance(item,list):pending.extend((v,depth+1) for v in item)
+        return value
+    except (UnicodeError,ValueError,RecursionError) as e: raise Refused('CATALOG_INVALID_JSON') from e
+
+def unresolved_catalog(reason='AUDITED_CATALOG_NOT_BOUND'):
+    return {'schema':'EA_LAB_BUILDER_CATALOG_V1','status':'UNRESOLVED','source_head':None,'config_sha256':None,'handoff_sha256':None,'wrappers':[],
+            'population':None,'profile_approval':'UNRESOLVED','compatibility':'UNKNOWN','can_submit':False,'can_execute':False,'blockers':[reason]}
+
+def catalog_enum_provenance(preset, text):
+    """Index declaration locations using the existing parser grammar; do not resolve codes here."""
+    lines=text.split('\n');scopes={};symbols=set()
+    for start,line in enumerate(lines):
+        opening=preset._ENUM_OPEN_RE.match(line)
+        if not opening: continue
+        name=opening.group(1)
+        if name in scopes: raise Refused('CATALOG_ENUM_TYPE_UNPROVEN')
+        end=next((i for i in range(start+1,len(lines)) if '}' in lines[i]),None)
+        if end is None: raise Refused('CATALOG_ENUM_TYPE_UNPROVEN')
+        members={}
+        for i in range(start+1,end):
+            if preset._ENUM_OPEN_RE.match(lines[i]): raise Refused('CATALOG_ENUM_TYPE_UNPROVEN')
+            member=preset._ENUM_MEMBER_RE.match(preset._strip_comment(lines[i]))
+            if not member: continue
+            symbol=member.group(1)
+            if symbol in symbols: raise Refused('CATALOG_ENUM_DUPLICATE_OR_ALIAS_CONFLICT')
+            symbols.add(symbol);members[symbol]=i+1
+        scopes[name]=members
+    return lines,scopes
+
+
+def validate_catalog_enums(codes, preset, registry, input_text, enums, surfaces, source_pin):
+    """Require complete typed source identities before any explanatory row can be displayed."""
+    if codes is None or codes==[]: raise Refused('CATALOG_ENUM_CATALOG_INCOMPLETE')
+    if not isinstance(codes,list) or len(codes)>1000: raise Refused('CATALOG_ENUM_SCHEMA')
+    lines,scopes=catalog_enum_provenance(preset,input_text)
+    expected={};declarations={}
+    for tag,surface in surfaces.values():
+        for decl in surface.inputs:
+            if decl.mql_type in scopes:
+                identity=(decl.name,decl.mql_type)
+                expected[identity]=set(scopes[decl.mql_type])
+                declarations.setdefault(decl.name,{})[tag]=decl
+    identities=set();observed={};by_selector={}
+    keys={'selector','enum','symbol','code','plain_meaning','source','defaults','direct_consumer'}
+    optional={'selected_build_note','inspected_no_consumer_sources','selected_build_direct_consumers'}
+    for item in codes:
+        if not isinstance(item,dict) or not keys.issubset(item) or set(item)-keys-optional or any(not isinstance(item[k],str) or not item[k].strip() for k in ('selector','enum','symbol','plain_meaning')) or type(item['code']) is not int:
+            raise Refused('CATALOG_ENUM_SCHEMA')
+        selector,typename,symbol=item['selector'],item['enum'],item['symbol']
+        identity=(selector,typename,symbol)
+        if identity in identities: raise Refused('CATALOG_ENUM_DUPLICATE_OR_ALIAS_CONFLICT')
+        identities.add(identity)
+        if selector not in declarations: raise Refused('CATALOG_ENUM_UNKNOWN_SELECTOR')
+        if typename not in scopes or any(d.mql_type!=typename for d in declarations[selector].values()): raise Refused('CATALOG_ENUM_TYPE_MISMATCH')
+        if symbol not in enums: raise Refused('CATALOG_ENUM_UNKNOWN_SYMBOL')
+        if symbol not in scopes[typename]: raise Refused('CATALOG_ENUM_TYPE_MISMATCH')
+        if enums[symbol]!=item['code']: raise Refused('CATALOG_ENUM_CODE_MISMATCH')
+        origin=item['source'];line=scopes[typename][symbol]
+        if not isinstance(origin,dict) or type(origin.get('line')) is not int or any(origin.get(k)!=v for k,v in source_pin.items()) or origin['line']!=line or origin.get('excerpt')!=lines[line-1].strip():
+            raise Refused('CATALOG_ENUM_SOURCE_MISMATCH')
+        defaults=item['defaults']
+        if not isinstance(defaults,dict): raise Refused('CATALOG_ENUM_SCHEMA')
+        defaults_by_tag={}
+        for build,value in defaults.items():
+            try: tag=registry.canonical_build_tag(build)
+            except registry.RegistryRefusal as e: raise Refused('CATALOG_ENUM_DEFAULT_MISMATCH') from e
+            if tag in defaults_by_tag: raise Refused('CATALOG_ENUM_DUPLICATE_OR_ALIAS_CONFLICT')
+            if not isinstance(value,dict) or set(value)!={'expression','code'} or not isinstance(value['expression'],str) or type(value['code']) is not int: raise Refused('CATALOG_ENUM_SCHEMA')
+            defaults_by_tag[tag]=value
+        if set(defaults_by_tag)!=set(declarations[selector]): raise Refused('CATALOG_ENUM_CATALOG_INCOMPLETE')
+        for tag,decl in declarations[selector].items():
+            value=defaults_by_tag[tag]
+            if value['expression']!=decl.default_expr or decl.default_expr not in scopes[typename]: raise Refused('CATALOG_ENUM_DEFAULT_MISMATCH')
+            if value['code']!=enums[decl.default_expr]: raise Refused('CATALOG_ENUM_CODE_MISMATCH')
+        observed.setdefault((selector,typename),set()).add(symbol)
+        by_selector.setdefault(selector,[]).append(item)
+    if observed!=expected: raise Refused('CATALOG_ENUM_CATALOG_INCOMPLETE')
+    return by_selector
+
+
+def load_catalog(model):
+    """Read one explicitly caller-pinned audit; use exact Git parser/resolver bytes, never browser config."""
+    caller=model.c.get('builder_catalog')
+    if caller is None: return unresolved_catalog()
+    if not isinstance(caller,dict) or set(caller)!={'config_path','config_sha256'}: raise Refused('CATALOG_CALLER_SCHEMA')
+    location=pathlib.Path(caller['config_path'])
+    if not location.is_absolute() or not isinstance(caller['config_sha256'],str) or not re.fullmatch('[0-9a-f]{64}',caller['config_sha256']): raise Refused('CATALOG_CALLER_PIN_REQUIRED')
+    raw=safe_bytes(location,location.parent,1_000_000)
+    if digest(raw)!=caller['config_sha256']: raise Refused('CATALOG_CONFIG_HASH_MISMATCH')
+    config=catalog_json(raw)
+    if not isinstance(config,dict) or set(config)!={'schema','root','source_head','handoff','artifacts','source_pins','hypothesis_revisions'} or config['schema']!='EA_LAB_BUILDER_CATALOG_CONFIG_V1': raise Refused('CATALOG_CONFIG_SCHEMA')
+    head=config['source_head']
+    if not isinstance(head,str) or not re.fullmatch('[0-9a-f]{40}',head): raise Refused('CATALOG_SOURCE_HEAD')
+    root=pathlib.Path(config['root'])
+    if not root.is_absolute(): raise Refused('CATALOG_ROOT_REQUIRED')
+    def pinned_file(pin):
+        if not isinstance(pin,dict) or set(pin)!={'name','sha256'} or not isinstance(pin['name'],str) or not isinstance(pin['sha256'],str) or not re.fullmatch('[0-9a-f]{64}',pin['sha256']): raise Refused('CATALOG_FILE_PIN')
+        path=root/pin['name'];data=safe_bytes(path,root,4_000_000)
+        if digest(data)!=pin['sha256']: raise Refused('CATALOG_ARTIFACT_HASH_MISMATCH')
+        return catalog_json(data)
+    handoff=pinned_file(config['handoff'])
+    if handoff.get('artifact')!='M1_AUDIT_CATALOG_IMPORT_HANDOFF' or handoff.get('source_head')!=head: raise Refused('CATALOG_HANDOFF_SCHEMA')
+    if not isinstance(config['artifacts'],list) or not 1<=len(config['artifacts'])<=20: raise Refused('CATALOG_ARTIFACT_LIST')
+    artifacts={};authorized={p['name']:p['sha256'] for p in handoff['primary_artifacts']}
+    for pin in config['artifacts']:
+        if pin['name'] in artifacts or authorized.get(pin['name'])!=pin['sha256']: raise Refused('CATALOG_HANDOFF_ARTIFACT_PIN')
+        value=pinned_file(pin)
+        if value.get('source_head')!=head: raise Refused('CATALOG_ARTIFACT_SOURCE_HEAD')
+        artifacts[pin['name']]=value
+    required=('EA_TEMPLATE_MODE_CODE_MAP.json','EA_TEMPLATE_PARAMETER_SEMANTICS_MATRIX.json','EA_TEMPLATE_PRECEDENCE_GRAPH.json')
+    if any(name not in artifacts for name in required): raise Refused('CATALOG_REQUIRED_ARTIFACT')
+    blobs={}
+    def blob(path):
+        if not isinstance(path,str) or not path or path.startswith(('/','\\')) or '..' in pathlib.PurePosixPath(path).parts or ':' in path or '\\' in path: raise Refused('CATALOG_GIT_PATH')
+        if path not in blobs:
+            mode=model.git('ls-tree',head,'--',path).decode().split()[0]
+            if mode!='100644': raise Refused('CATALOG_GIT_NONREGULAR')
+            data=model.git('show',head+':'+path)
+            if len(data)>4_000_000: raise Refused('CATALOG_GIT_LIMIT')
+            if model.git('rev-parse','HEAD:'+path)!=model.git('rev-parse',head+':'+path): raise Refused('CATALOG_SOURCE_DRIFT')
+            blobs[path]=data
+        return blobs[path]
+    if not isinstance(config['source_pins'],list) or not 1<=len(config['source_pins'])<=200: raise Refused('CATALOG_SOURCE_PINS')
+    seen=set()
+    for pin in config['source_pins']:
+        path=pin['path']
+        if path in seen: raise Refused('CATALOG_DUPLICATE_SOURCE_PIN')
+        seen.add(path)
+        if digest(blob(path))!=pin['sha256'] or model.git('rev-parse',head+':'+path).decode().strip()!=pin['git_blob']: raise Refused('CATALOG_SOURCE_PIN_MISMATCH')
+    # Load trusted existing modules from immutable Git bytes, without sys.path/sys.modules pollution.
+    import builtins, types
+    modules={}
+    def importer(name,*args,**kwargs): return modules[name] if name in modules else builtins.__import__(name,*args,**kwargs)
+    for name in ('evidence','registry','preset'):
+        path='_triage/factory_os/'+name+'.py';data=blob(path)
+        module=types.ModuleType(name);module.__file__=str(model.repo/path)
+        module.__dict__['__builtins__']={**vars(builtins),'__import__':importer}
+        exec(compile(data,module.__file__,'exec'),module.__dict__);modules[name]=module
+    preset=modules['preset'];registry=modules['registry']
+    class Source:
+        mode='immutable_catalog_git'
+        root=str(model.repo)
+        def read_committed(self,path): return blob(path).decode('utf-8-sig')
+        def exists_committed(self,path):
+            if path not in exists: exists[path]=bool(model.git('ls-tree',head,'--',path).strip())
+            return exists[path]
+    exists={}
+    source=Source();input_text=source.read_committed('ea_template/core/Inputs.mqh');enums=preset.parse_enum_table(input_text)
+    partition=handoff['population_partition'];surfaces={}
+    for build,info in partition.items():
+        if not isinstance(info,dict) or 'exact_wrapper' not in info: continue
+        tag=registry.canonical_build_tag(info['compile_macro'])
+        surfaces[build]=(tag,preset.parse_surface(input_text,tag))
+    input_path='ea_template/core/Inputs.mqh'
+    source_pin={'source_head':head,'path':input_path,'sha256':digest(blob(input_path)),'git_blob':model.git('rev-parse',head+':'+input_path).decode().strip(),'bytes':len(blob(input_path))}
+    codes_by_selector=validate_catalog_enums(artifacts['EA_TEMPLATE_MODE_CODE_MAP.json'].get('enum_codes'),preset,registry,input_text,enums,surfaces,source_pin)
+    rows=artifacts['EA_TEMPLATE_PARAMETER_SEMANTICS_MATRIX.json']['rows']
+    if not isinstance(rows,list) or len(rows)>1000: raise Refused('CATALOG_ROW_LIMIT')
+    row_keys=[(r['build'],r['name']) for r in rows]
+    if len(set(row_keys))!=len(row_keys): raise Refused('CATALOG_DUPLICATE_BUILD_NAME')
+    revisions=config['hypothesis_revisions']
+    if not isinstance(revisions,dict) or any(not isinstance(v,str) or not v or len(v)>200 for v in revisions.values()): raise Refused('CATALOG_REVISION_MAP')
+    stores=registry.load_all(source=source) if revisions else None
+    wrappers=[];valid_builds=[]
+    for build,info in partition.items():
+        if not isinstance(info,dict) or 'exact_wrapper' not in info: continue
+        valid_builds.append(build);wrapper=info['exact_wrapper']
+        if digest(blob(wrapper['path']))!=wrapper['sha256']: raise Refused('CATALOG_WRAPPER_PIN')
+        tag,surface=surfaces[build]
+        if ('#define '+tag) not in source.read_committed(wrapper['path']): raise Refused('CATALOG_WRAPPER_TAG')
+        selected=[r for r in rows if r['build']==build]
+        if len(surface)!=info['physical_input_rows'] or [d.name for d in surface.inputs]!=[r['name'] for r in selected]: raise Refused('CATALOG_SURFACE_POPULATION_OR_ORDER')
+        fields=[]
+        for decl,row in zip(surface.inputs,selected):
+            if row['type']!=decl.mql_type or row['default_expression']!=decl.default_expr: raise Refused('CATALOG_SURFACE_DECLARATION')
+            origin=row['source']
+            if origin['source_head']!=head or origin['path']!='ea_template/core/Inputs.mqh' or digest(blob(origin['path']))!=origin['sha256'] or origin['git_blob']!=model.git('rev-parse',head+':'+origin['path']).decode().strip() or origin['line']!=decl.line: raise Refused('CATALOG_ROW_SOURCE')
+            if row['status'] not in artifacts['EA_TEMPLATE_PARAMETER_SEMANTICS_MATRIX.json']['classification_vocabulary']: raise Refused('CATALOG_APPLICABILITY_STATUS')
+            code=enums.get(decl.default_expr)
+            if row.get('default_numeric_code') is not None and row['default_numeric_code']!=code: raise Refused('CATALOG_ENUM_CODE_MISMATCH')
+            resolution=None;binding='UNRESOLVED_BINDING';reason='No admitted hypothesis revision'
+            if build in revisions:
+                try:
+                    resolution=registry.resolve(revisions[build],parameter=decl.name,source=source,stores=stores,build_tag=tag)
+                    binding='RESOLVER_RESULT_READ_ONLY';reason=None
+                except registry.RegistryRefusal:
+                    reason='Existing registry resolver refused binding; UNKNOWN'
+            fields.append({'build':build,'name':decl.name,'type':decl.mql_type,'label':row.get('owner_label',decl.name),'unit':row.get('unit_true','UNKNOWN'),
+                'source_default':decl.default_expr,'source_default_code':code,'default_authority':'SOURCE_REFERENCE_NOT_OWNER_APPROVED',
+                'enum_explanations':[{'symbol':item['symbol'],'code':enums[item['symbol']],'meaning':item['plain_meaning']} for item in codes_by_selector.get(decl.name,[])],
+                'audit_status':row['status'],'activation_predicate':row['exact_activation_predicate'],'effective_state':'UNKNOWN_NO_EFFECTIVE_CONFIG',
+                'source':{'path':origin['path'],'sha256':origin['sha256'],'git_blob':origin['git_blob'],'line':origin['line']},
+                'binding_state':binding,'binding_reason':reason,'resolver_result':resolution,'editable':False})
+        wrappers.append({'build':build,'wrapper':wrapper,'build_tag':tag,'population':len(surface),'fields':fields})
+    if not wrappers or any(build not in valid_builds for build,_ in row_keys) or any(build not in valid_builds for build in revisions): raise Refused('CATALOG_UNSUPPORTED_BUILD')
+    return {'schema':'EA_LAB_BUILDER_CATALOG_V1','status':'AUDIT_METADATA_VERIFIED','source_head':head,'config_sha256':caller['config_sha256'],
+        'handoff_sha256':config['handoff']['sha256'],'artifact_pins':config['artifacts'],'dependency_pins':config['source_pins'],'wrappers':wrappers,
+        'profile_source_references':handoff['exact_profile_caps'],'profile_approval':'UNRESOLVED','compatibility':'UNKNOWN','can_submit':False,'can_execute':False,
+        'blockers':['PROFILE_APPROVAL_UNRESOLVED','NO_EFFECTIVE_CONFIG','M1_READ_ONLY_METADATA_NO_INTAKE']}
+PROFILE_GROUPS = ('PROFILE_IDENTITY','SIZING','STACK','EXIT_SL','BASKET','RISK','RECOVERY_HEDGE','OPTIONAL_GATES','NEWS_EXECUTION','CADENCE_CONTEXT')
+PROFILE_UI_BASE = '5ec2f995e11988362ba404708003082c358af91c'
+
+def unresolved_profile(reason='PROFILE_DECISION_PACK_NOT_BOUND'):
+    return {'schema':'EA_LAB_PROFILE_DECISIONS_V1','status':'UNRESOLVED','blockers':[reason],
+            'profile_approval':'UNRESOLVED','compatibility':'UNKNOWN','can_submit':False,'can_execute':False}
+
+def load_profile_decisions(model, catalog):
+    caller=model.c.get('builder_profile_decisions')
+    if caller is None: return unresolved_profile()
+    if catalog.get('status')!='AUDIT_METADATA_VERIFIED': raise Refused('PROFILE_CATALOG_UNRESOLVED')
+    if not isinstance(caller,dict) or set(caller)!={'config_path','config_sha256'}: raise Refused('PROFILE_CALLER_SCHEMA')
+    p=pathlib.Path(caller['config_path'])
+    if not p.is_absolute() or not isinstance(caller['config_sha256'],str) or not re.fullmatch('[0-9a-f]{64}',caller['config_sha256']): raise Refused('PROFILE_CALLER_PIN_REQUIRED')
+    raw=safe_bytes(p,p.parent,1_048_576)
+    if digest(raw)!=caller['config_sha256']: raise Refused('PROFILE_CONFIG_HASH_MISMATCH')
+    config=catalog_json(raw)
+    if not isinstance(config,dict) or set(config)!={'schema','root','source_head','accepted_ui_head','decision','source_refs','catalog_handoff_sha256'} or config['schema']!='EA_LAB_PROFILE_DECISION_CONFIG_V1': raise Refused('PROFILE_CONFIG_SCHEMA')
+    if config['source_head']!=catalog['source_head'] or config['accepted_ui_head']!=PROFILE_UI_BASE or config['catalog_handoff_sha256']!=catalog['handoff_sha256']: raise Refused('PROFILE_INTERFACE_PIN_MISMATCH')
+    root=pathlib.Path(config['root'])
+    if not root.is_absolute(): raise Refused('PROFILE_ROOT_REQUIRED')
+    def read(pin):
+        if not isinstance(pin,dict) or set(pin)!={'name','sha256'} or not isinstance(pin['name'],str) or not isinstance(pin['sha256'],str) or not re.fullmatch('[0-9a-f]{64}',pin['sha256']): raise Refused('PROFILE_ARTIFACT_PIN')
+        data=safe_bytes(root/pin['name'],root,1_048_576)
+        if digest(data)!=pin['sha256']: raise Refused('PROFILE_ARTIFACT_HASH_MISMATCH')
+        return catalog_json(data)
+    decision=read(config['decision']);refs=read(config['source_refs'])
+    decision_keys={'B17_specific_excluded','B22_hold','accepted_M1_interface_head','artifact','audit_source_head','batched_owner_response','binding_requirements','can_submit','capability_matrix_by_exact_release','created_utc','decision_groups','entry_mode','entry_specific_rows','existing_builder_link','external_context_requirements','mode_dictionary_reference','no_actions','normal_vs_advanced','owner_approved_semantic_intent','pilot_selection_policy','proposed_profile_reference','read_only_generic_pilot_options','requested_resolved_effective','risk_profile_reference_not_approval','schema_status','scope_boundary','shared_engine_intent','shared_parameter_rows','source_refs_file','state','unresolved_counts'}
+    refs_keys={'M1_accepted_interface_head','M1_catalog_import_interface','accepted_M1_interface','audit_head','authority','existing_pilot_contract_refs','no_new_audit','original_audit_artifacts','owner_choice_record','owner_choice_semantics','source_pins'}
+    if not isinstance(decision,dict) or set(decision)!=decision_keys or not isinstance(refs,dict) or set(refs)!=refs_keys: raise Refused('PROFILE_ARTIFACT_SCHEMA')
+    if decision.get('artifact')!='PROPOSED_DEFAULTPROFILE_DECISION_DRAFT' or decision.get('state')!='PROPOSED_NOT_APPROVED_NOT_ACTIVATED' or decision.get('audit_source_head')!=catalog['source_head'] or refs.get('audit_head')!=catalog['source_head'] or decision.get('can_submit') is not False: raise Refused('PROFILE_PROPOSAL_IDENTITY')
+    groups=decision['decision_groups'];rows=decision['shared_parameter_rows'];entry=decision['entry_specific_rows']
+    if [g.get('group_id') for g in groups]!=list(PROFILE_GROUPS) or len(rows)!=151 or len(entry)!=2: raise Refused('PROFILE_POPULATION')
+    if any(g.get('decision_state')!='UNRESOLVED' for g in groups) or decision['entry_mode']!='ENTRY_ONLY' or decision['proposed_profile_reference'].get('id') is not None or decision['proposed_profile_reference'].get('revision') is not None or decision['batched_owner_response'].get('current_owner_response_received') is not False: raise Refused('PROFILE_PROPOSAL_AUTHORITY')
+    expected_counts={'NORMAL_REQUIRED_DECISION':28,'CONDITIONAL_BRANCH_OR_ADVANCED_FULL_SURFACE':86,'NOT_A_CURRENT_SHARED_PROFILE_QUESTION':32,'RESOLVED_OWNER_INTENT_WITH_UNPROVEN_EFFECTIVE_CONFIG':5}
+    from collections import Counter
+    if dict(Counter(r.get('presentation_tier') for r in rows))!=expected_counts: raise Refused('PROFILE_TIER_COUNTS')
+    if len(decision['external_context_requirements'])!=3: raise Refused('PROFILE_CONTEXT_COUNTS')
+    fields={f['name']:f for w in catalog['wrappers'] if w['build']=='B22' for f in w['fields']}
+    if len(fields)!=153: raise Refused('PROFILE_WRAPPER_POPULATION')
+    # Numeric/type descriptors come from the same pinned compiler, not a second type/default table.
+    import builtins,types
+    modules={}
+    def importer(name,*args,**kwargs): return modules[name] if name in modules else builtins.__import__(name,*args,**kwargs)
+    for name in ('evidence','registry','preset'):
+        pin=next(x for x in catalog['dependency_pins'] if x['path']=='_triage/factory_os/'+name+'.py')
+        data=model.git('show',catalog['source_head']+':'+pin['path'])
+        if digest(data)!=pin['sha256']: raise Refused('PROFILE_PARSER_PIN')
+        module=types.ModuleType(name);module.__file__=str(model.repo/pin['path']);module.__dict__['__builtins__']={**vars(builtins),'__import__':importer}
+        exec(compile(data,module.__file__,'exec'),module.__dict__);modules[name]=module
+    preset=modules['preset']
+    input_text=model.git('show',catalog['source_head']+':ea_template/core/Inputs.mqh').decode('utf-8-sig')
+    enums=preset.parse_enum_table(input_text);surface=preset.parse_surface(input_text,'LAB_ENTRY_22')
+    declarations={d.name:d for d in surface.inputs}
+    if set(declarations)!=set(fields): raise Refused('PROFILE_PARSER_SURFACE')
+    def constraints(field):
+        t=field['type'];bounds=preset._INT_RANGES.get(t)
+        return {'type':t,'integer_bounds':[str(v) for v in bounds] if bounds else None,
+                'enum_symbols':[v['symbol'] for v in field['enum_explanations']]}
+    # Read-only form dependency descriptors, never arbitrary predicate evaluation or runtime state.
+    def dependencies(predicate):
+        tests=[]
+        if re.search(r'\bor\b',predicate,re.I): return {'tests':[],'qualification':'UNKNOWN_COMPOUND_PREDICATE'}
+        pattern=r'\b([A-Za-z_][A-Za-z_0-9]*)\s*(!=|=|in)\s*(\{[^}]+\}|[A-Za-z_0-9]+)'
+        for selector,op,raw in re.findall(pattern,predicate):
+            f=fields.get(selector)
+            if not f: continue
+            values=[]
+            for token in raw.strip('{}').split(','):
+                token=token.strip();matches=[e['symbol'] for e in f['enum_explanations'] if e['symbol']==token or e['symbol'].endswith('_'+token)]
+                if f['type']=='bool' and token in ('true','false'): values.append(token)
+                elif len(matches)==1: values.append(matches[0])
+                elif f['type'] in preset._INT_RANGES and re.fullmatch('[0-9]+',token): values.append(token)
+                else: return {'tests':[],'qualification':'UNKNOWN_SELECTOR_MEANING'}
+            tests.append({'selector':selector,'op':op,'values':values})
+        # Audited bare boolean gates have exact typed source names.
+        for name in fields:
+            if fields[name]['type']=='bool' and re.search(r'(?<![A-Za-z_0-9])'+re.escape(name)+r'(?![A-Za-z_0-9])',predicate) and not any(t['selector']==name for t in tests):
+                tests.append({'selector':name,'op':'=','values':['false' if re.search('!'+re.escape(name),predicate) else 'true']})
+        return {'tests':tests,'qualification':'SOURCE_BOUND_FORM_BRANCH_ONLY' if tests else 'UNKNOWN_RUNTIME_OR_VALUE_PREDICATE'}
+    result=[];seen=set()
+    for row in rows+entry:
+        name=row['parameter'];f=fields.get(name);binding=row['existing_catalog_binding']
+        if not f or name in seen or binding.get('row_key')!={'build':'B22','name':name} or binding.get('interface_sha256')!=catalog['handoff_sha256'] or row['MQL_type']!=f['type'] or row['source'].get('sha256')!=f['source']['sha256'] or row['source'].get('line')!=f['source']['line'] or row['source'].get('source_head')!=catalog['source_head']: raise Refused('PROFILE_EXACT_CATALOG_JOIN')
+        seen.add(name)
+        scope='ENTRY' if row in entry else ('INSTANCE' if row['requirement_scope']=='INSTANCE_ONLY_NOT_SHARED_PROFILE' else 'SHARED')
+        reference=row.get('reference_default_expression',row.get('source_reference_default'))
+        if reference!=f['source_default']: raise Refused('PROFILE_SOURCE_DEFAULT_MISMATCH')
+        decl=declarations[name]
+        if decl.mql_type!=f['type'] or decl.default_expr!=reference: raise Refused('PROFILE_PARSER_DECLARATION')
+        predicate=row['required_if'];intent=row.get('proposed_value')
+        if predicate!=f['activation_predicate'] or row['audited_runtime_applicability']!=f['audit_status']: raise Refused('PROFILE_PREDICATE_MISMATCH')
+        if scope=='SHARED' and row.get('group_id') not in PROFILE_GROUPS: raise Refused('PROFILE_GROUP_IDENTITY')
+        if row.get('owner_approval_of_profile_value',False) is not False: raise Refused('PROFILE_APPROVAL_FORBIDDEN')
+        if intent is not None:
+            literal=intent['symbol'] if isinstance(intent,dict) else str(intent)
+            if isinstance(intent,dict) and literal not in constraints(f)['enum_symbols']: raise Refused('PROFILE_INTENT_ENUM_TYPE')
+            preset.render_value(decl,literal,enums)
+        try: source_literal=decl.default_expr if constraints(f)['enum_symbols'] else preset.render_value(decl,decl.default_expr,enums)
+        except preset.PresetRefusal: source_literal=None
+        result.append({'name':name,'scope':scope,'group':row.get('group_id','ENTRY_CONTRACT' if scope=='ENTRY' else 'PROFILE_IDENTITY'),
+                       'label':row['owner_label'],'tier':row.get('presentation_tier','ENTRY_REQUIRED_DECISION'),
+                       'audit_status':f['audit_status'],'type':f['type'],'unit':f['unit'],'source_value':reference,
+                       'source':f['source'],'source_head':catalog['source_head'],'predicate':predicate,'source_proposal_literal':source_literal,
+                       'intent':intent,'intent_approval':'SEMANTIC_INTENT_ONLY_NOT_PROFILE_APPROVAL' if intent is not None else None,
+                       'constraints':{**constraints(f),'positive':scope=='ENTRY','maximum':'1' if scope=='ENTRY' and 'fraction in (0,1]' in row.get('meaning','') and name=='_22_DisplacementBodyFraction' else None},
+                       'dependencies':dependencies(predicate),'meaning':row.get('meaning_and_exact_predicate',row.get('meaning',predicate))})
+    if seen!=set(fields) or sum(r['scope']=='SHARED' for r in result)!=150: raise Refused('PROFILE_SCOPE_PARTITION')
+    return {'schema':'EA_LAB_PROFILE_DECISIONS_V1','status':'PINNED_PROPOSAL_METADATA','scope':'B22_CANONICAL_SHARED_TEMPLATE_A_OWNER_PROPOSAL',
+            'source_head':catalog['source_head'],'accepted_ui_head':PROFILE_UI_BASE,'historical_sidecar_ui_head':decision['accepted_M1_interface_head'],
+            'catalog_handoff_sha256':catalog['handoff_sha256'],'config_sha256':caller['config_sha256'],
+            'decision_sha256':config['decision']['sha256'],'source_refs_sha256':config['source_refs']['sha256'],
+            'groups':[{'id':g['group_id'],'label':g['owner_label_th'],'question':g['decision_needed_th'],'higher_cap':g['meaning_and_higher_override_th']} for g in groups],
+            'rows':result,'counts':decision['unresolved_counts'],'intent':decision['owner_approved_semantic_intent'],
+            'requested_resolved_effective':decision['requested_resolved_effective'],
+            'contexts':[{'id':r['requirement'],'meaning':r} for r in decision['external_context_requirements']],
+            'profile_approval':'UNRESOLVED','compatibility':'UNKNOWN','can_submit':False,'can_execute':False,'blockers':['NOT_REGISTERED_PROFILE','NO_INTAKE','NO_EFFECTIVE_CONFIG']}
+
 WORK_BUCKETS = (
     'CURRENT ACTIONABLE', 'READY', 'WAITING / BLOCKED', 'OWNER DECISION NEEDED',
     'PARKED', 'HISTORICAL UNRESOLVED / UNKNOWN', 'ACTUAL LIVE JOBS', 'RECENTLY DONE',
@@ -227,6 +560,14 @@ class Model:
         if p.returncode: raise Refused('GIT_READ_UNAVAILABLE')
         return p.stdout
     def blob(self,path): return self.git('show',self.sha+':'+path)
+    def builder_catalog(self):
+        try: return load_catalog(self)
+        except (OSError,ValueError,KeyError,TypeError,IndexError,AttributeError,RecursionError,subprocess.SubprocessError) as e:
+            return unresolved_catalog(str(e) if isinstance(e,Refused) else 'CATALOG_INVALID_OR_UNAVAILABLE')
+    def builder_profile_decisions(self,catalog=None):
+        try: return load_profile_decisions(self,catalog if catalog is not None else self.builder_catalog())
+        except (OSError,ValueError,KeyError,TypeError,IndexError,AttributeError,RecursionError,subprocess.SubprocessError) as e:
+            return unresolved_profile(str(e) if isinstance(e,Refused) else 'PROFILE_INVALID_OR_UNAVAILABLE')
     def issue(self,source,error): self.errors.append({'source':source,'reason':type(error).__name__ if not isinstance(error,Refused) else str(error)})
     def section(self,name,fn,default):
         try: return fn()
@@ -1043,6 +1384,7 @@ class Model:
         if index.get('schema_version')!=1 or not isinstance(index.get('eas'),list) or not isinstance(index.get('project'),dict): raise Refused('REPORT_SCHEMA_INVALID')
         published=index['project']; declared=self.blob('PROJECT_STATE.md').decode('utf-8-sig')
         global_match=re.search(r'Global state:\s*`([A-Z_]+)`',declared)
+        catalog=self.builder_catalog()
         eas=[]
         for ea in index['eas']:
             ev=ea.get('evidence',{}); eas.append({'id':clean(ea.get('id'),180),'name':clean(ea.get('display_name'),220),'family':clean(ea.get('family_id'),60),'status':clean(ea.get('status'),100),'strategy':clean(ea.get('strategy'),1000),'home':{k:clean(v,80) for k,v in ea.get('home',{}).items()},'evidence':ev,'native_graphs':ea.get('native_graphs',{}),'verdict':clean(ea.get('verdict'),500),'links':ea.get('links',{}),'provenance':ea.get('provenance',[])})
@@ -1063,4 +1405,4 @@ class Model:
         for drive in ['C:/','D:/']:
             if pathlib.Path(drive).exists():
                 v=shutil.disk_usage(drive); disks.append({'drive':drive[:2],'free_gb':round(v.free/1073741824,1),'total_gb':round(v.total/1073741824,1)})
-        return {'schema':'ea-lab-owner-view/1','app':{'version':'1.2.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'live_performance':live_performance,'source_observations':source_observations,'templates':templates,'research':eas,'safe_projection':safe,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA good/bad score is inferred. Live P/L/PF/DD preserve the existing dashboard producer semantics and source binding.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}
+        return {'schema':'ea-lab-owner-view/1','builder_catalog':catalog,'builder_profile_decisions':self.builder_profile_decisions(catalog),'app':{'version':'1.2.0','read_only':True,'source_acceptance':'LOCAL_TOOLING_CANDIDATE_REVIEW_PENDING'},'observed_at':utcnow(),'canonical_sha':self.sha,'canonical_basis':'Local origin/master tracking ref; independent remote observation is not repeated on each browser poll','published':published,'published_binding':'MATCH' if published.get('canonical_sha')==self.sha else 'CANONICAL_DRIFT','published_hash':digest(raw),'global_state':global_match.group(1) if global_match else 'UNKNOWN','accounts':account_data,'work':work_data,'knowledge':knowledge,'news':news,'news_policy':news_policy,'macro':macro,'control_room':control_room,'live_performance':live_performance,'source_observations':source_observations,'templates':templates,'research':eas,'safe_projection':safe,'alerts':findings,'monitoring':monitoring,'disks':disks,'errors':self.errors,'refresh':{'browser_poll_seconds':30,'meaning':'Reread existing local evidence; does not collect broker quotes, run jobs, or update news upstream.'},'limits':['Broker sample clocks are not UTC-qualified; freshness is UNKNOWN.','No universal EA good/bad score is inferred. Live P/L/PF/DD preserve the existing dashboard producer semantics and source binding.','Control Room readiness/floating values retain their own source binding and verification state.','Blocked Budget Mode and Forward Alpha are not activated.','Only chats represented by existing lane/job records are observable.']}
