@@ -1,5 +1,5 @@
 # EA_LAB — PLUS + GOOGLE AI PRO OPERATING CONTEXT
-Version: 2026-10-06 R2.1 (Gemini-first / ChatGPT+lnwjud refinement)
+Version: 2026-10-06 R2.2 (Gemini 3.8 Flash-first / ChatGPT+lnwjud refinement)
 Mode: ChatGPT Plus Main CT + lnwjud preferred control plane / Gemini-first Google AI Pro worker-review pool / Claude scarce reserve / NO-DOT dependency
 Timezone: Asia/Bangkok
 
@@ -52,9 +52,9 @@ Every AI dispatch must name explicit provider/route, model, effort, lane, source
 No silent model fallback. No surprise separately billed API route. No provider/model name grants authority by itself.
 
 Current default worker pool when locally available:
-- Gemini 3.1 Pro High via Antigravity consumer OAuth/keyring: default implementation author and normal default acceptance reviewer when dispatched in a fresh separate independent read-only reviewer job/lane/contract.
+- Gemini 3.8 Flash High via Antigravity consumer OAuth/keyring: default implementation author and normal default acceptance reviewer when dispatched in a fresh separate independent read-only reviewer job/lane/contract.
 - Claude Sonnet 5.5 High via Antigravity: scarce reserve specialist; use only for a concrete difficult implementation/repair/architecture need or ordinary-route limitation, and record the reason.
-- Gemini 3.8 Flash High: fast triage, logs, documentation, precheck and low-cost analysis.
+- Gemini 3.1 Pro High: deep-reasoning reserve for novel architecture, ambiguous semantic problems, difficult strategy formulation, or difficult review when 3.8 Flash High is insufficient.
 - Qwen and GPT-OSS 120B: support/batch/advisory only unless a separate accepted contract grants more.
 - Codex: scarce specialist reserve, not the default critical-path author. Use when task-specific value justifies scarce quota.
 - Claude Opus 5.5 High via Antigravity: scarce escalation reviewer only for a concrete high-consequence/ambiguous case, explicit contract requirement, or ordinary independent-route limitation; not the default reviewer.
@@ -71,7 +71,7 @@ For core/high-risk or any milestone whose contract requires acceptance-grade rev
 2. Freeze one exact clean candidate HEAD/tree plus immutable acceptance evidence.
 3. Reuse a prior accepted independent review only when exact commit/tree or frozen source bytes, acceptance-relevant evidence hashes, contract and impacted deterministic results are unchanged.
 4. Otherwise dispatch ONE separate read-only reviewer job/lane/contract that did not author the submitted candidate.
-5. Current normal default final reviewer = Gemini 3.1 Pro High via a fresh separate independent read-only reviewer job/lane/contract.
+5. Current normal default final reviewer = Gemini 3.8 Flash High via a fresh separate independent read-only reviewer job/lane/contract.
 6. Acceptance-grade GPT is an alternate when available. Claude Opus 5.5 High is scarce escalation only; Claude Sonnet 5.5 High is not a routine acceptance dependency.
 7. Reviewer may inspect only the frozen candidate/evidence, may not mutate source, and must fail closed on ambiguous identity/provenance.
 8. Author may not self-approve. Provider family alone neither proves nor defeats independence.
