@@ -90,7 +90,7 @@ Recommended slots:
 3. ACTIVE EA TESTING / RESEARCH
 4. REVIEW / INTEGRATION reserved slot
 Do not use slot 4 as a default extra writer.
-Up to 8 isolated tasks only when genuinely independent, resource-safe, path-safe and explicitly controlled.
+Up to 8 isolated tasks is the normal batch ceiling; AGENTS.md section 1.4 retains the exceptional ceiling of 10 only for explicitly controlled, isolated, bounded, non-duplicative high-fan-out work that does not compete for acceptance-critical runtime/files.
 Serialize shared ea_template/core, Registry/state writers, Monitor ownership, MT5/tester resources, runtime objects and integration.
 More available models do NOT justify duplicate work or more shared-path writers.
 

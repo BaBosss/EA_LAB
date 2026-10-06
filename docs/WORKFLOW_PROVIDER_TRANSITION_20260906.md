@@ -40,6 +40,8 @@ The transition intake records these local observations from Control Tower withou
 - Current 2026-10-06 Antigravity CLI agy 1.3.0 is locally observed with consumer OAuth/keyring and model labels including gemini-3.1-pro-high, gemini-3.8-flash-high, claude-sonnet-5-5-high, claude-opus-5-5-high, and gpt-oss-120b-medium. Availability is dynamic and must be resolved fresh.
 - The legacy standalone Gemini CLI API-key route remains separate from the preferred Antigravity consumer-OAuth route; do not silently substitute one for the other.
 
+**Historical 2026-09-06 locally verified intake (preserved, not current routing):**
+
 - Codex CLI `0.144.2`; login status: `Logged in using ChatGPT`. The current Codex execution uses ChatGPT authentication.
 - Gemini CLI `0.58.0` is installed. `security.auth.selectedType=gemini-api-key`; the key is not recorded.
 - Gemini/Google/OpenAI API environment variables were absent in the Desktop Commander process. This does not prove that stored keys are absent.

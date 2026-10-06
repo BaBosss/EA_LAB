@@ -146,7 +146,7 @@ Do not rebuild orchestration helpers ad hoc when the canonical reliability pack 
 - exact clean worktree verification: `scripts/execution_reliability/bootstrap_worktree.ps1`;
 - linked-worktree portable Python: dot-source `scripts/use_python.ps1`, then `Assert-PortablePython -Root <worktree> -Provision`;
 - bounded Codex worker: `scripts/execution_reliability/launch_worker.ps1`; verify its arguments against the installed client before relying on it (`exec-local --ask-for-approval` was absent from observed current help);
-- detached exact-head Claude review: `scripts/execution_reliability/launch_reviewer.ps1` is an unavailable legacy route while Claude is cancelled; preserve it and its historical evidence, and do not pretend it launches Gemini or Codex;
+- detached exact-head legacy Claude review: `scripts/execution_reliability/launch_reviewer.ps1` targets the previously cancelled direct-Claude service and remains a historical/unavailable launcher; it does **not** invoke current Antigravity Claude, must not be relabelled as Antigravity execution, and its historical evidence remains preserved;
 - long-job status/recovery: `docs/LONG_JOB_RUNNER.md` + `scripts/long_jobs/`;
 - report authoring: `docs/research/EA_REPORT_AUTHORING_FASTPATH.md`;
 - owner-authorized Facebook research session reuse: `docs/workflows/FACEBOOK_RESEARCH_SESSION_V1_20260922.md` + `scripts/facebook_research/open_facebook_research.ps1`; reuse the dedicated profile before requesting another login;
