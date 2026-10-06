@@ -26,6 +26,7 @@
 #include "NewsGuard_Core.mqh"
 
 input string GuardConfig            = "";                      // "magic:C;magic:B;magic:N"  C=CLOSE_ALL B=BLOCK_NEW N=NONE
+input string GuardSymbols           = "";                      // optional "magic=EURUSD|GBPUSD;magic=XAUUSD" for flat/first-entry relevance
 input int    PreNewsMin             = 30;                      // window opens N min before the event
 input int    PostNewsMin            = 15;                      // window closes N min after the event
 input string NewsFile               = "EA_LAB_news_week.csv";  // CSV name (see header)
@@ -96,6 +97,7 @@ int OnInit()
       Print("[NEWSGUARD] INIT FAILED: GuardConfig is empty/invalid. Format: \"12345:C;23456:B;34567:N\"");
       return INIT_PARAMETERS_INCORRECT;
    }
+   NG_ParseScopeConfig(GuardSymbols);
    bool loaded = NG_LoadNews(NewsFile, UseCommonFiles);   // fail-safe handles a missing file
    g_ng_last_load = TimeLocal();
    EventSetTimer(MathMax(1, TimerSeconds));
