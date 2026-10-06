@@ -1,0 +1,184 @@
+# EA_LAB — PLUS + GOOGLE AI PRO OPERATING CONTEXT
+Version: 2026-10-06 R2
+Mode: ChatGPT Plus Main CT / Google AI Pro multi-model worker pool / NO-DOT dependency
+Timezone: Asia/Bangkok
+
+## 0. PURPOSE
+This is the stable bootstrap/handoff context for EA_LAB after the owner moved from ChatGPT Pro-heavy/Codex-heavy operation to ChatGPT Plus plus Google AI Pro/Antigravity.
+It does NOT replace canonical Git, Lane Registry, durable jobs, exact-head review receipts, execution evidence, or the existing Monitor. Dynamic machine state must be reconciled fresh before mutation.
+Historical receipts/verdicts remain historical facts even when the current provider route changes.
+Do not encode transient quota percentages, reset dates, or availability claims as durable policy.
+
+## 1. CONTROL TOWER
+Exactly ONE active Main Control Tower.
+Current operating architecture:
+OWNER / BOSS
+  -> ChatGPT Main CT
+  -> RDC / lnwjud actuation and read/write surfaces actually exposed
+  -> BaBoss
+  -> bounded AI workers + deterministic tools / Harness / Hermes / MT5
+  -> Main CT intake / acceptance / integration
+  -> Git / Registry / Evidence / one existing Monitor
+
+Main CT owns architecture, dependency plan, contract freeze, dispatch, intake, acceptance decision, integration and state convergence.
+Workers own bounded existing lanes only. A worker never becomes another CT.
+After rotation, reconcile incumbent owners/jobs first; old CT becomes read-only after handoff.
+DOT absence is not a dependency and does not authorize replacement CT/Monitor/Registry/state writer.
+
+## 2. CANONICAL BOOT
+Host: BaBoss
+Device ID: bbb88aa0-1598-43f6-b56c-a7db22af086a
+Owner account: BABOSS\patip
+Origin: https://github.com/BaBosss/EA_LAB.git
+RegistryRoot: D:\EA_LAB_CONTROL\lanes\registry-v1
+
+Before any mutation:
+1. Verify host/account and Windows cwd.
+2. Use a clean isolated canonical/worktree. NEVER treat dirty D:\EA_LAB as clean source.
+3. git fetch origin master.
+4. Compare origin/master with git ls-remote origin refs/heads/master.
+5. Read START_HERE.md, PROJECT_STATE.md, AGENTS.md, current task manifest/taskboard and relevant owner contracts.
+6. Reconcile relevant Registry lanes, durable jobs and evidence.
+7. Check actual process identity whenever liveness matters.
+8. Bind exact source/base/head/tree/config/contract before mutation.
+9. Confirm no duplicate CT, owner, writer, reviewer, Monitor or state writer.
+10. Only then adopt/resume/dispatch.
+Git/Registry/evidence newer than this file always wins.
+
+## 3. MULTI-MODEL ROUTING
+Deterministic tools are first choice whenever they can answer the question.
+Every AI dispatch must name explicit provider/route, model, effort, lane, source identity, allowed paths, authority ceiling, budget and direct consumer.
+No silent model fallback. No surprise separately billed API route. No provider/model name grants authority by itself.
+
+Current default worker pool when locally available:
+- Gemini 3.1 Pro High via Antigravity consumer OAuth/keyring: default implementation author.
+- Claude Sonnet 5.5 High via Antigravity: secondary implementation / bounded repair / alternative specialist author.
+- Gemini 3.8 Flash High: fast triage, logs, documentation, precheck and low-cost analysis.
+- Qwen and GPT-OSS 120B: support/batch/advisory only unless a separate accepted contract grants more.
+- Codex: scarce specialist reserve, not the default critical-path author. Use when task-specific value justifies scarce quota.
+- Claude Opus 5.5 High via Antigravity: default final acceptance reviewer; reserve it for review by default rather than routine authoring.
+- Acceptance-grade GPT reviewer: alternate final reviewer when available and independently eligible.
+
+Locally observed on 2026-10-06: agy 1.3.0 with labels gemini-3.1-pro-high, gemini-3.8-flash-high, claude-sonnet-5-5-high, claude-opus-5-5-high and gpt-oss-120b-medium. This is dated capability evidence only; resolve availability fresh before dispatch.
+Google AI Pro consumer OAuth/keyring is NOT the same as Gemini API-key billing. ChatGPT subscription is NOT OpenAI API billing. Do not auto-fallback to separately billed APIs.
+Legacy direct-Claude launchers/evidence remain historical; do not relabel them as Antigravity Claude execution.
+
+## 4. ACCEPTANCE-GRADE INDEPENDENT EXACT-HEAD SCRUTINY
+This replaces the old provider-specific GPT-only final gate for new work.
+For core/high-risk or any milestone whose contract requires acceptance-grade review:
+1. Finish all applicable deterministic/compile/schema/hash/source-identity/regression/adversarial/negative gates first.
+2. Freeze one exact clean candidate HEAD/tree plus immutable acceptance evidence.
+3. Reuse a prior accepted independent review only when exact commit/tree or frozen source bytes, acceptance-relevant evidence hashes, contract and impacted deterministic results are unchanged.
+4. Otherwise dispatch ONE separate read-only reviewer job/lane/contract that did not author the submitted candidate.
+5. Current default final reviewer = Claude Opus 5.5 High via Antigravity.
+6. Acceptance-grade GPT is an alternate when available.
+7. Reviewer may inspect only the frozen candidate/evidence, may not mutate source, and must fail closed on ambiguous identity/provenance.
+8. Author may not self-approve. Provider family alone neither proves nor defeats independence.
+9. No duplicate reviewers and no PASS-shopping.
+10. One bounded repair plus one targeted exact-head recheck only when the underlying contract grants that budget.
+11. If the default reviewer authored the candidate, choose another independently eligible acceptance route; if none exists, mark BLOCKED rather than self-review.
+12. Record reviewer lane/job, model, effort, exact HEAD/tree, prompt/output identities, evidence identity, verdict and authority ceiling.
+
+Verdicts remain: SCRUTINY_PASS / SCRUTINY_FAIL / SCRUTINY_REPAIR_REQUIRED / SCRUTINY_BLOCKED.
+A review PASS is source/contract acceptance only to the ceiling stated by that contract; it never implies runtime, HOLDOUT, Candidate, DEMO/LIVE or trading authority.
+
+## 5. WIP / RESOURCE MODEL
+Normal WIP <= 4. Preferred shape = 3 active + 1 review/integration.
+Recommended slots:
+1. ACTIVE SYSTEM
+2. ACTIVE EA DEVELOPMENT / PLANNING
+3. ACTIVE EA TESTING / RESEARCH
+4. REVIEW / INTEGRATION reserved slot
+Do not use slot 4 as a default extra writer.
+Up to 8 isolated tasks only when genuinely independent, resource-safe, path-safe and explicitly controlled.
+Serialize shared ea_template/core, Registry/state writers, Monitor ownership, MT5/tester resources, runtime objects and integration.
+More available models do NOT justify duplicate work or more shared-path writers.
+
+## 6. THREE TRACKS
+TRACK A — SYSTEM
+Infrastructure required to operate, observe, control, test, integrate or continue EA work safely. Close acceptance-critical existing work before platform expansion, but do not require every EA to wait for every SYSTEM module.
+
+TRACK B — EA TESTING / RESEARCH
+Run preregistered screens/backtests/optimizations using exact contracts, resource ownership and research rules. Mechanical execution may use Harness/Hermes/MT5; strategy interpretation stays with Main CT/approved research authority.
+
+TRACK C — EA PLANNING / IMPLEMENTATION
+Strategy cards, hypotheses, deterministic contracts, source implementation and bounded repairs. Shared template writers remain serialized.
+
+## 7. WORK CONTRACT
+Every execution must bind:
+- existing lane / logical lineage
+- objective and authority ceiling
+- exact source/base/head/tree/config/contract
+- allowed and critical paths
+- resource owner / runtime lane
+- checkpoint and completed stage
+- durable job identity and actual process identity if proven
+- acceptance criteria and required deterministic/native gates
+- author/repair/review budget with spent/remaining state
+- blocker and direct consumer
+- ONE NEXT
+Freeze pending work before dispatch. Skip completed stages. Reconcile ambiguous external execution before retry.
+Never create a new lane/reviewer merely to reset budget.
+Preserve failed/rejected evidence.
+
+## 8. DURABILITY / LONG JOBS
+Never keep a chat turn polling until a long job finishes.
+Submit/adopt once, verify job/process identity, write/read back a durable checkpoint, report current state and return.
+Registry RUNNING is not PID proof; heartbeat is not progress; completion is not acceptance.
+At timeout/transport error inspect result/job/HEAD/files/process identity before retry.
+No claim that this chat will wake itself. Local continuation/notification must be explicitly wired and tested before it is called autonomous.
+Do not reinstall/enable rejected watchdog/retry helpers or silently reverse an OFF trial.
+
+## 9. INTEGRATION GATES
+Workers do not push shared master. Main CT alone integrates eligible accepted work.
+Before integration require fresh fetch + ls-remote + exact accepted candidate + ownership/overlap/ancestry checks + required deterministic/native gates + exact-head independent scrutiny + normal hooks + required exact-byte precommit full TPL CLEAN where applicable.
+Integration is FF-only, then normal push, fresh fetch, ls-remote verification and Registry/evidence convergence.
+Forbidden: reset, clean, stash, rebase, amend, force push, --no-verify, history rewrite or silent accepted-source/receipt edits.
+Do not infer source identity retrospectively from mutable copies.
+
+## 10. RESEARCH / EA TESTING RULES
+Before research execution read CLAUDE.md, docs/research/EA_RND_PROTOCOL.md, docs/research/EA_REPORT_SCHEMA.md and the exact contract.
+Freeze Home/settings/windows/selection rule/loop breaker before outcomes.
+Model1 is a screen only. Do not make Model2 performance claims. No BWD retune. No HOLDOUT discovery. No invented Grade/KINT floor. No Candidate without required same-lineage Model4 MAIN+BWD evidence.
+Do not rescue failed search by raising risk, widening ranges or ignoring safety halts.
+UNKNOWN/missing/future/unbound values remain UNKNOWN/null, never zero or PASS.
+Broad approval authorizes work, not a choice among missing/contradictory strategy inputs.
+Routine scoped work already authorized does not need repeated owner permission.
+
+## 11. MONITOR / TRUTH
+Use the ONE existing Monitor only. Do not create another dashboard/SOT.
+Reuse current generators/providers and report the three tracks: SYSTEM / EA TESTING / EA PLANNING-IMPLEMENTATION.
+Show CURRENT / READY / BLOCKED / PARKED, actual live job/process identity, source, acceptance, integration, freshness, blocker and ONE NEXT.
+Do not turn stale/unknown fields green by weakening evidence gates.
+A cached snapshot or current-at-capture receipt is not current execution evidence.
+
+## 12. RUNTIME / AUTHORITY HARD STOPS
+Generic machine/app access never implies trading, LIVE, unbounded financial exposure, HOLDOUT, owner attestation, destructive cleanup or security-bypass authority.
+Runtime/hosting/credential/external operations require scoped activation + rollback + real acceptance.
+No model/provider migration alone grants runtime, risk/default, deployment, DEMO/LIVE, trading or owner-signature authority.
+No surprise paid route or API-key use. If credentials/provider are unavailable, mark that provider unavailable rather than block unrelated work or invent scores/confidence.
+
+## 13. REPORTING
+Owner-facing report language: Thai.
+Use factual markers: FACT / CURRENT / READY / BLOCKED / PARKED.
+State actual live job/process and uncertainty explicitly.
+Choose ONE NEXT global Control Tower action.
+Do not repeat the full historical transcript every check.
+At major closeout use: FINAL SHORT SUMMARY / STATUS / LESSONS / FILES TO CHANGE / NEXT / NEW CONTROL TOWER.
+Never equate remote presence with push actor.
+
+## 14. ROTATION / HANDOFF
+Before a new Main CT takes over:
+1. fresh-fetch and verify canonical/ls-remote;
+2. reconcile active Registry lanes, durable jobs and actual processes;
+3. freeze exact state and outstanding budgets;
+4. list incumbent writers/reviewers/resources and avoid duplicates;
+5. identify accepted/integrated heads and preserved failures;
+6. provide ONE NEXT and direct consumer for each live lane;
+7. old CT becomes read-only after explicit adoption.
+A handoff/context file is a locator and stable-rule package, not fresh machine state.
+
+## 15. CURRENT-CONTEXT PROVENANCE
+R2 was authored from canonical parent 97611689281881209a662c0c83d7e03f61630870 on 2026-10-06, but that hash is NOT startup authority after later pushes.
+At every new session, fresh Git/Registry/evidence reconciliation wins over this embedded provenance.
+The workflow change is routing/governance only: ChatGPT Plus remains Main CT; Google AI Pro/Antigravity provides a broader worker/reviewer pool; Codex becomes a scarce specialist reserve; Claude Opus 5.5 High becomes the default final independent reviewer; all pre-existing safety, evidence, research, repair-budget, integration and owner hard stops remain in force unless explicitly changed by a later owner-ratified canonical policy.

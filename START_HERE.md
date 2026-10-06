@@ -3,8 +3,7 @@
 Purpose: deterministic startup router for every new EA_LAB Control Tower or worker session.
 
 > This file is a router, not a second source of truth. Pushed GitHub `origin/master` is canonical. Chat history, copied handoffs, Project Operating Context, local dirty worktrees, and old lane records are context only until reconciled to the current pushed canonical bytes.
->
-> **Current provider/scrutiny route (owner-ratified 2026-09-18):** read `AGENTS.md` and `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md` for current routing. ChatGPT is the one active Control Tower; Codex Primary is the default local author; deterministic tooling comes first. Claude remains unavailable and GPT-backed Hermes remains mechanical. Core/high-risk acceptance requires a separate read-only exact-head GPT Scrutiny job/lane/contract after every contract-required deterministic, compile, regression, adversarial and negative gate. The author cannot self-approve; independence is procedural and evidentiary, not model-family based. Gemini/Qwen are optional, not mandatory reviewer dependencies. Existing repair budgets and owner hard stops remain unchanged.
+> **Current provider/scrutiny route (owner-ratified 2026-10-06):** read `AGENTS.md` and `docs/WORKFLOW_PROVIDER_TRANSITION_20260906.md` for current routing. ChatGPT Plus current chat is the one Main Control Tower; Gemini 3.1 Pro High is the default local author; deterministic tooling comes first. Core/high-risk acceptance requires a separate read-only Acceptance-Grade Independent Exact-Head Scrutiny job/lane/contract (default Claude Opus 5.5 High) after every contract-required deterministic, compile, regression, adversarial and negative gate. The author cannot self-approve; independence is procedural and evidentiary, not model-family based. Gemini/Qwen are optional, not mandatory reviewer dependencies. Existing repair budgets and owner hard stops remain unchanged.
 
 ## 1. Boot sequence — always do this first
 
