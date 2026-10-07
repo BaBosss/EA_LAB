@@ -1,0 +1,62 @@
+{
+  "author_candidates_used": 1,
+  "authority": "DOT Oct5 delegation source_thread_id 01a0f263-6688-7250-8ff0-280906c2d000 explicitly permits separately labelled normalized display or hash-bound committed reference while raw exact bytes/hash remain external and original manifest immutable",
+  "budget_reset": false,
+  "contract_interpretation": "Original allowed_paths includes complete run evidence directory; checks require normal diff and hooks; no clause requires this raw transcript to be committed. CONTRACT.json and CASES_FROZEN.json stay immutable. Source/economic/runtime acceptance unchanged.",
+  "execution_base_sha": "872524af2444e27a343bce76afbf81770147290b",
+  "external_preservation_receipt_sha256": "355b719eb55412963778e8346a3fb23be5b536469a4dfc306fb8f4594b8ee053",
+  "forbidden": [
+    "raw overwrite",
+    "failure meaning alteration",
+    "failed history removal",
+    "diffcheck modification",
+    "hook bypass",
+    "native",
+    "shared core",
+    "Monitor",
+    "push",
+    "review dispatch"
+  ],
+  "historical_admission_base_sha": "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+  "jobs_observation_counts": {
+    "COMPLETE": 30,
+    "FAILED": 34,
+    "POSTCONDITION_FAILED": 2,
+    "TIMED_OUT": 3
+  },
+  "lane_id": "ct-news-macro-stage-ledger-v1-20261004",
+  "mapping": {
+    "committed_reference_path": "factory/runs/news_macro_stage_ledger_v1_20261004/NORMAL_HOOK_REFUSAL_RAW_REFERENCE_20261005.json",
+    "external_raw_path": "D:\\EA_LAB_CONTROL\\evidence\\news-macro-stage-ledger-v1-20261004\\evidence-format-repair1-20261005\\raw\\NORMAL_HOOK_REFUSAL_TRANSCRIPT_20261004.txt",
+    "historical_repo_path": "factory/runs/news_macro_stage_ledger_v1_20261004/NORMAL_HOOK_REFUSAL_TRANSCRIPT_20261004.txt",
+    "historical_worktree_path": "D:\\EA_LAB_CONTROL\\w\\news-macro-stage-ledger-v1-1004\\factory\\runs\\news_macro_stage_ledger_v1_20261004\\NORMAL_HOOK_REFUSAL_TRANSCRIPT_20261004.txt",
+    "operation": "Non-overwriting same-volume relocation of immutable untracked raw file; remove only that entry from replayed index; commit a separately labelled hash-bound JSON reference. Original bytes, hashes, historical failures and preservation manifests unchanged.",
+    "raw_bytes": 4476,
+    "raw_sha256": "91ea70d4673d19ea257edfc7a07fafe29bfcb541a9748cef0eb87f0b1bccb5cb"
+  },
+  "original_contract_sha256": "6a9590804bc2a02b072c48d455d318823edff4d16a5dcf66bf9d908014a42b13",
+  "owner": "EA_LAB-NEWS-MACRO-20260921",
+  "preflight_active_registry_records": [],
+  "repair_deadline_utc": "2026-10-05T04:46:51Z",
+  "repair_max": 1,
+  "repair_minutes_cap": 30,
+  "repair_started_utc": "2026-10-05T04:16:51Z",
+  "repair_used": 1,
+  "review_jobs_used": 0,
+  "schema_version": "news_macro_evidence_format_repair1_contract/1",
+  "sequence": [
+    "supported BLOCKED->READY->RUNNING while tracked clean",
+    "exact shutdown cached-patch replay and byte equality check",
+    "move raw to exact new external path without overwrite and verify original hash; unstage only raw added path",
+    "create committed JSON reference with exact historical raw identity and unchanged refusal",
+    "targeted packaging preservation and existing ledger/schema/hash/diff gates; normal hooks",
+    "one clean frozen commit; no review until DOT admits slot"
+  ],
+  "shutdown_patch_sha256": "0884a9faf5199f3f4eee4c049eb74b770dc6f959433f32dc1506aef6be79dfd0",
+  "source_paths_unchanged": [
+    "tools/knowledge_validation/news_macro_stage_ledger.py",
+    "tools/knowledge_validation/test_news_macro_stage_ledger.py",
+    "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md"
+  ],
+  "targeted_review_rechecks_used": 0
+}

@@ -1,0 +1,19 @@
+﻿{
+    "schema":  "dailymonitor_runtime_v2_final_acceptance/1",
+    "utc":  "2026-10-01T06:10:14.8912331+00:00",
+    "source_canonical":  "20a066f4ff77c2fe9bd867814f53eda326711b43",
+    "current_origin_master":  "07dfcc597d5f64c24d1f97bbd446e0b08eeb2de0",
+    "runtime_head":  "fd8e60ba13e378978645cd9563920c56c391c8d3",
+    "task_state":  "Ready",
+    "last_result":  1,
+    "last_run":  "2026-10-01T03:35:56.0000000Z",
+    "action":  "-NoProfile -ExecutionPolicy Bypass -File \"D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-20a066f4-20260930-v2\\scripts\\daily_monitor.ps1\"",
+    "latest_failure_line":  "\u0000done WITH FAILURES: runtime-identity-unverified, runtime-identity-coverage-gap, deployment-unverified-69424711|, deployment-verification-underived-x58",
+    "unexpected_failures":  [
+
+                            ],
+    "classification":  "ACCEPTED_RUNTIME_WITH_KNOWN_FAIL_VISIBLE_EVIDENCE_GAPS",
+    "global_monitoring":  "DEGRADED_MONITORING",
+    "watchdog":  "DISABLED",
+    "runtime_switch":  "ACTIVE"
+}

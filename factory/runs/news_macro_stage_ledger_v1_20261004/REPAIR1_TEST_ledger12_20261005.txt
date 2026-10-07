@@ -1,0 +1,17 @@
+test_clock_distinction (__main__.FrozenCases.test_clock_distinction) ... ok
+test_deterministic_bytes_and_schema (__main__.FrozenCases.test_deterministic_bytes_and_schema) ... ok
+test_known_failures (__main__.FrozenCases.test_known_failures) ... ok
+test_last_good (__main__.FrozenCases.test_last_good) ... ok
+test_malformed_or_future_time (__main__.FrozenCases.test_malformed_or_future_time) ... ok
+test_missing_classification (__main__.FrozenCases.test_missing_classification) ... ok
+test_no_stages (__main__.FrozenCases.test_no_stages) ... ok
+test_observed_without_effect (__main__.FrozenCases.test_observed_without_effect) ... ok
+test_positive_chain (__main__.FrozenCases.test_positive_chain) ... ok
+test_transfer_without_receipt (__main__.FrozenCases.test_transfer_without_receipt) ... ok
+test_wrong_hash (__main__.FrozenCases.test_wrong_hash) ... ok
+test_wrong_run (__main__.FrozenCases.test_wrong_run) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.260s
+
+OK

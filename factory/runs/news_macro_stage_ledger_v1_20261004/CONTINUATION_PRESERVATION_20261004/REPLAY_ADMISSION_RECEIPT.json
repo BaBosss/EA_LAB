@@ -1,0 +1,12 @@
+{
+  "all38_working_bytes": "IDENTICAL",
+  "authority_ceiling": "EXISTING_OFFLINE_A_SCOPE_ONLY",
+  "budget_reset": false,
+  "final_owner_objective": "NEWS_MACRO_TEMPLATE_INTEGRATED_ACCEPTED",
+  "head": "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+  "result": "SAME_LANE_ADMITTED_EXACT_INDEX_REPLAY_PASS",
+  "review_launches": 0,
+  "source_candidates_used": 1,
+  "staged_patch_sha256": "06ddd341925844b33ce888f3cbe91d86e7be4b9a7594f608abde7079e75282f4",
+  "this_item": "OFFLINE_STAGE_LEDGER_INTERMEDIATE_NOT_TEMPLATE_ACCEPTANCE"
+}

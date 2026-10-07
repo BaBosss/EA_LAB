@@ -1,0 +1,19 @@
+{
+  "all_other_bytes_unchanged": true,
+  "budget_reset": false,
+  "committed_reference": "factory/runs/news_macro_stage_ledger_v1_20261004/NORMAL_HOOK_REFUSAL_RAW_REFERENCE_20261005.json",
+  "exact_shutdown_patch_replay": true,
+  "lossless_decode_verification": "PASS",
+  "only_relocated_path": "factory/runs/news_macro_stage_ledger_v1_20261004/NORMAL_HOOK_REFUSAL_TRANSCRIPT_20261004.txt",
+  "preserved_files": 90,
+  "raw_bytes_unchanged": true,
+  "raw_external_path": "D:\\EA_LAB_CONTROL\\evidence\\news-macro-stage-ledger-v1-20261004\\evidence-format-repair1-20261005\\raw\\NORMAL_HOOK_REFUSAL_TRANSCRIPT_20261004.txt",
+  "raw_sha256": "91ea70d4673d19ea257edfc7a07fafe29bfcb541a9748cef0eb87f0b1bccb5cb",
+  "reference_sha256": "60d42a9b33c4889aad2ebcb74b9830aaafdef9496d7c5e42658bee2c8d728e7b",
+  "repair_remaining": 0,
+  "repair_used": 1,
+  "result": "PASS",
+  "review_used": 0,
+  "schema_version": "news_macro_evidence_format_repair1_packaging/1",
+  "source_semantic_changes": 0
+}

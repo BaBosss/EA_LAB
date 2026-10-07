@@ -1,0 +1,19 @@
+{
+  "authority": "Same DOT evidence-format disposition; a raw derived failure transcript echoes the whitespace-bearing line. Same hash-bound-reference representation, existing evidence paths and one repair allocation.",
+  "committed_reference_path": "factory/runs/news_macro_stage_ledger_v1_20261004/CANONICAL_SYNC_DIFF_REFUSAL_RAW_REFERENCE_20261005.json",
+  "external_raw_path": "D:\\EA_LAB_CONTROL\\evidence\\news-macro-stage-ledger-v1-20261004\\evidence-format-repair1-20261005\\raw\\CANONICAL_SYNC_DIFF_REFUSAL_20261004.txt",
+  "failure_meaning": "OLD_DIFF_GATE_REFUSAL_RETAINED_IMMUTABLY; no product semantics or acceptance alteration",
+  "frozen_before_mutation_utc": "2026-10-05T04:21:17Z",
+  "historical_repo_path": "factory/runs/news_macro_stage_ledger_v1_20261004/CANONICAL_SYNC_DIFF_REFUSAL_20261004.txt",
+  "observed_diff_refusal_base64": "ZmFjdG9yeS9ydW5zL25ld3NfbWFjcm9fc3RhZ2VfbGVkZ2VyX3YxXzIwMjYxMDA0L0NBTk9OSUNBTF9TWU5DX0RJRkZfUkVGVVNBTF8yMDI2MTAwNC50eHQ6MjogdHJhaWxpbmcgd2hpdGVzcGFjZS4KKysgDQo=",
+  "operation": "Non-overwriting relocation; same raw bytes/hash, separately labelled reference with lossless base64; unstage only original raw path",
+  "parent_frozen_contract_sha256": "3adce3f745b8c10030810da384c2e55bb8f1cc688f8dc9828529bb878bf6a6c6",
+  "raw_original_backup_blob": "D:\\EA_LAB_CONTROL\\evidence\\news-macro-stage-ledger-v1-20261004\\evidence-format-repair1-20261005\\blobs\\cb2100839b3fa9afb14ebea86b9d37d0def405e297c0e3c3109484b7636d9f50",
+  "raw_sha256": "cb2100839b3fa9afb14ebea86b9d37d0def405e297c0e3c3109484b7636d9f50",
+  "raw_size_bytes": 122,
+  "repair_max": 1,
+  "same_deadline": "2026-10-05T04:46:51Z",
+  "same_repair": 1,
+  "schema_version": "news_macro_evidence_format_repair1_mapping_addendum/1",
+  "source_changes": 0
+}

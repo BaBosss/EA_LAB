@@ -1,0 +1,183 @@
+{
+  "schema_version": "ea_lab_news_macro_stage_fixture_plan/1",
+  "label": "FIXTURE_ONLY",
+  "cases": [
+    {
+      "case_id": "positive_chain",
+      "label": "FIXTURE_ONLY",
+      "scenario": "all explicit matching attestations",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "no_stages",
+      "label": "FIXTURE_ONLY",
+      "scenario": "empty stages/evidence",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN"
+      ],
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "missing_classification",
+      "label": "FIXTURE_ONLY",
+      "scenario": "remove CLASSIFIED record+evidence",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "PASS",
+        "PASS",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN"
+      ],
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "wrong_hash",
+      "label": "FIXTURE_ONLY",
+      "scenario": "VALIDATED binds different artifact hash",
+      "expected_validation": "REFUSED",
+      "expected_stages": null,
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "wrong_run",
+      "label": "FIXTURE_ONLY",
+      "scenario": "TRANSFERRED evidence binds different run",
+      "expected_validation": "REFUSED",
+      "expected_stages": null,
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "malformed_or_future_time",
+      "label": "FIXTURE_ONLY",
+      "scenario": "subcases malformed stage time and future recorded time",
+      "expected_validation": "REFUSED",
+      "expected_stages": null,
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "last_good",
+      "label": "FIXTURE_ONLY",
+      "scenario": "empty current stages plus separate prior run",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN"
+      ],
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "transfer_without_receipt",
+      "label": "FIXTURE_ONLY",
+      "scenario": "TRANSFERRED claim without evidence; weak rclone/mtime bases separately refused",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN"
+      ],
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "observed_without_effect",
+      "label": "FIXTURE_ONLY",
+      "scenario": "remove EFFECTIVE evidence/record",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "UNKNOWN"
+      ],
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "known_failures",
+      "label": "FIXTURE_ONLY",
+      "scenario": "explicit VALIDATED FAIL with evidence and four supplied acceptance tokens",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "PASS",
+        "FAIL",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN"
+      ],
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "clock_distinction",
+      "label": "FIXTURE_ONLY",
+      "scenario": "different four clocks, nullable release subcase, stage chronology reversed subcase refused",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "actual_run_green": "UNKNOWN"
+    },
+    {
+      "case_id": "deterministic_bytes_and_schema",
+      "label": "FIXTURE_ONLY",
+      "scenario": "repeat/reorder object keys same bytes; malformed types/schema/duplicate/evidence hash/receipt identities reject",
+      "expected_validation": "PASS",
+      "expected_stages": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "actual_run_green": "UNKNOWN"
+    }
+  ]
+}

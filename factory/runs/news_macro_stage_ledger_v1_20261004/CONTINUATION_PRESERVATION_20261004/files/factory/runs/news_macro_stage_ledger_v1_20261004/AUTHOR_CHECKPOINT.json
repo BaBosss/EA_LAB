@@ -1,0 +1,140 @@
+{
+    "schema_version":  "news_macro_stage_ledger_author_checkpoint/1",
+    "status":  "BLOCKED_SUPPORTED_RESUME_ADMISSION_DENIED_EXACT_ERROR_STOP",
+    "owner_chat":  "EA_LAB-NEWS-MACRO-20260921",
+    "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
+    "base_sha":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+    "head_sha":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+    "source_commit":  null,
+    "worktree":  "D:\\EA_LAB_CONTROL\\w\\news-macro-stage-ledger-v1-1004",
+    "branch":  "ct/news-macro-stage-ledger-v1-20261004",
+    "contract_sha256":  "6a9590804bc2a02b072c48d455d318823edff4d16a5dcf66bf9d908014a42b13",
+    "cases_sha256":  "d628b95f7c46e7e7e71707c1124f896d91ce3b9d16ebb3cb5df4511a761fbde0",
+    "admission":  "CLAIMED_SAME_OWNER_NO_SUPERSEDE_NO_CONFLICT",
+    "registry_readback":  {
+                              "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
+                              "owner_chat":  "EA_LAB-NEWS-MACRO-20260921",
+                              "worker":  "Codex-Bounded-Author-A",
+                              "objective":  "DOT offline stage provenance ledger; author1/60m/onecandidate; no native runtime producer Monitor shared core or push",
+                              "state":  "PAUSED",
+                              "base_sha":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+                              "head_sha":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+                              "worktree":  "D:\\EA_LAB_CONTROL\\w\\news-macro-stage-ledger-v1-1004",
+                              "branch":  "ct/news-macro-stage-ledger-v1-20261004",
+                              "allowed_paths":  [
+                                                    "tools/knowledge_validation/news_macro_stage_ledger.py",
+                                                    "tools/knowledge_validation/test_news_macro_stage_ledger.py",
+                                                    "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md",
+                                                    "factory/runs/news_macro_stage_ledger_v1_20261004"
+                                                ],
+                              "critical_paths":  [
+                                                     "tools/knowledge_validation/news_macro_stage_ledger.py",
+                                                     "tools/knowledge_validation/test_news_macro_stage_ledger.py",
+                                                     "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md",
+                                                     "factory/runs/news_macro_stage_ledger_v1_20261004"
+                                                 ],
+                              "runtime_lane":  "",
+                              "writer":  true,
+                              "dependencies":  [
+                                                   "ct-news-macro-lab-v1-20260921"
+                                               ],
+                              "reviewer":  "",
+                              "reviewed_head":  "",
+                              "direct_consumer":  "Existing NewsMacro owner EA_LAB-NEWS-MACRO-20260921 and future handoff validator; DOT review admission",
+                              "blocker_class":  "WIP_ACTIVE_RECORDS_5_LIMIT_4__SOURCE_GREEN__NORMAL_COMMIT_WAITING_CAPACITY__NO_REVIEW_SLOT",
+                              "updated_at":  "2026-10-04T09:59:01.6606984+00:00"
+                          },
+    "active_records_after_pause":  [
+                                       {
+                                           "lane_id":  "ct-ea-builder-m1-mobile-tr001-recheck-ro-20261004",
+                                           "owner_chat":  "EA_LAB-MAIN-CT-20260930",
+                                           "state":  "RUNNING",
+                                           "writer":  false
+                                       },
+                                       {
+                                           "lane_id":  "ct-ea-builder-m1-mobile-usability-20261003",
+                                           "owner_chat":  "EA_LAB-MAIN-CT-20260930",
+                                           "state":  "FROZEN",
+                                           "writer":  true
+                                       },
+                                       {
+                                           "lane_id":  "ct-lnwjud-execution-identity-read-v2-20261004",
+                                           "owner_chat":  "EA_LAB-MAIN-CT-20260928",
+                                           "state":  "RUNNING",
+                                           "writer":  true
+                                       }
+                                   ],
+    "active_record_count_after_pause":  3,
+    "budget":  {
+                   "author_candidates_used":  1,
+                   "author_candidates_cap":  1,
+                   "author_time_cap_minutes":  60,
+                   "review_used":  0,
+                   "review_cap":  1,
+                   "post_candidate_repair_used":  0,
+                   "post_candidate_repair_cap":  1,
+                   "targeted_review_recheck_used":  0,
+                   "native_used":  0,
+                   "mt5_used":  0,
+                   "production_mutations_used":  0,
+                   "push_used":  0,
+                   "old_budgets_preserved":  true
+               },
+    "initial_author_corrections":  [
+                                       "portable isolated Python import fixed using explicit module path",
+                                       "test rehash skipped for malformed evidence-list type",
+                                       "duplicate-key fixture uses string values after numeric parser refusal added",
+                                       "PowerShell native argument quoting corrected for AST check"
+                                   ],
+    "gates":  {
+                  "frozen_12_cases":  "PASS_12_OF_12",
+                  "existing_knowledge_validation":  "PASS_11_OF_11",
+                  "parse":  "PASS_AST_2",
+                  "types":  "PASS_RUNTIME_TYPE_SCHEMA_NEGATIVES_AND_ANNOTATION_RESOLUTION_NO_STATIC_TYPECHECKER_CLAIM",
+                  "deterministic_cli":  "PASS_IDENTICAL_BYTES_TWO_EXECUTIONS",
+                  "staged_diff_check":  "PASS",
+                  "staged_allowlist":  "PASS",
+                  "acceptance_hash":  "PASS_EXACT_B1568F6F",
+                  "normal_hooks":  "NOT_RUN_SUPPORTED_RESUME_ADMISSION_DENIED",
+                  "source_commit":  "NOT_CREATED",
+                  "independent_review":  "NOT_RUN_DOT_SLOT_NOT_CONFIRMED",
+                  "integration":  "NOT_AUTHORIZED",
+                  "push":  "NOT_RUN_WORKER_FORBIDDEN"
+              },
+    "existing_jobs_inspected":  62,
+    "existing_job_states":  [
+                                {
+                                    "Name":  "COMPLETE",
+                                    "Count":  25
+                                },
+                                {
+                                    "Name":  "FAILED",
+                                    "Count":  32
+                                },
+                                {
+                                    "Name":  "TIMED_OUT",
+                                    "Count":  3
+                                },
+                                {
+                                    "Name":  "POSTCONDITION_FAILED",
+                                    "Count":  2
+                                }
+                            ],
+    "actual_result":  {
+                          "ledger_validation":  "PASS",
+                          "stage_statuses":  "8_UNKNOWN",
+                          "actual_run_green":  "UNKNOWN",
+                          "runtime_effectiveness_certified":  false,
+                          "acceptance_last_result":  1,
+                          "global_monitoring":  "DEGRADED_MONITORING",
+                          "four_failure_tokens_preserved":  true
+                      },
+    "blocker":  "LANE_REGISTRY[worktree_dirty] tracked worktree is dirty: D:\\EA_LAB_CONTROL\\w\\news-macro-stage-ledger-v1-1004",
+    "one_next":  "Return preserved same-candidate evidence to DOT/Main CT for supported contract admission resolution. Worker stopped; no alternate path, commit, reset, rename, review launch or trust weakening.",
+    "authority_ceiling":  "OFFLINE_ONLY_NO_TEMPLATE_MT5_NATIVE_RUNTIME_RISK_DEPLOYMENT_TRADING",
+    "observed_utc":  "2026-10-04T10:03:41Z",
+    "denied_action":  "scripts/lane_registry.ps1 -Command Transition -LaneId ct-news-macro-stage-ledger-v1-20261004 -ExpectedState PAUSED -ExpectedHead 471a94d6d65fc86882ac7a4bbb882e280edbe98d -NewState RUNNING",
+    "denied_target":  "D:\\EA_LAB_CONTROL\\w\\news-macro-stage-ledger-v1-1004",
+    "denied_gate":  "Assert-WorktreeIdentity RequireClean=true for active writer transition; current candidate additions are staged",
+    "denied_exit_observation":  "BaBoss RDC PID17864; active_records_before_resume=3; PowerShell LANE_REGISTRY[worktree_dirty] RuntimeException"
+}

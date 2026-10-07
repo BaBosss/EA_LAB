@@ -1,0 +1,161 @@
+{
+    "schema_version":  "ea_lab_news_macro_admission_receipt/1",
+    "observed_utc":  "2026-10-04T09:56:39Z",
+    "device":  "BaBoss",
+    "device_id":  "bbb88aa0-1598-43f6-b56c-a7db22af086a",
+    "actor":  "baboss\\patip",
+    "real_windows_cwd_at_probe":  "C:\\Users\\patip\\AppData\\Local\\npm-cache\\_npx\\210338ee94cf9539\\node_modules\\@wonderwhy-er\\desktop-commander\\dist",
+    "source_base":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+    "supported_refresh":  "REFRESHED_FF_ONLY_HEAD_ORIGIN_REMOTE_MATCH",
+    "bootstrap":  "READY_NORMAL_GITHOOKS",
+    "admission":  "CLAIMED",
+    "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
+    "owner_chat":  "EA_LAB-NEWS-MACRO-20260921",
+    "superseded_lane":  "",
+    "old_owner_lanes":  [
+                            {
+                                "lane_id":  "ct-news-macro-lab-v1-20260921",
+                                "state":  "DONE",
+                                "head_sha":  "10956fe1a6f3d50d38b87c8acfa222c5e9bffbc2",
+                                "blocker_class":  ""
+                            },
+                            {
+                                "lane_id":  "ct-news-macro-lab-v1-gemini-support-review-20260922",
+                                "state":  "DONE",
+                                "head_sha":  "1acb0735d507d43a713dc97d6d6c8b0257301811",
+                                "blocker_class":  "OPTIONAL_SUPPORT_NO_CONCLUSION_PREMODEL_CLI"
+                            },
+                            {
+                                "lane_id":  "ct-news-macro-lab-v1-qwen-delta-support-20260922",
+                                "state":  "DONE",
+                                "head_sha":  "1acb0735d507d43a713dc97d6d6c8b0257301811",
+                                "blocker_class":  ""
+                            },
+                            {
+                                "lane_id":  "ct-news-macro-lab-v1-qwen-support-review-20260922",
+                                "state":  "DONE",
+                                "head_sha":  "5387cde0b11c84320835fb5a82414b97708b1004",
+                                "blocker_class":  ""
+                            },
+                            {
+                                "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
+                                "state":  "RUNNING",
+                                "head_sha":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+                                "blocker_class":  ""
+                            }
+                        ],
+    "mgtt_predecessors":  [
+                              {
+                                  "lane_id":  "ct-news-macro-mg-tester-transfer-impl-review-ro-5845-20260927",
+                                  "state":  "DONE",
+                                  "head_sha":  "5845c4e039a3d9ef57e6997af42655a3d854d34e",
+                                  "blocker_class":  "SCRUTINY_REPAIR_REQUIRED_HIGH__MGTT001_007_OPEN__BLOCK_INTEGRATION__TERMINAL_REVIEW_CONSUMED_NO_RERUN"
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mg-tester-transfer-impl-v1-20260927",
+                                  "state":  "BLOCKED",
+                                  "head_sha":  "7f9d0db07eece9596f4b5d5a76cb2d5a95bd0fbc",
+                                  "blocker_class":  "REPAIR1_1_OF_1_CONSUMED__NATIVE_CONFIG_MISMATCH_AND_PROCESS_IDENTITY_UNPROVEN__NO_REPAIR2_NO_PUSH"
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mg-tester-transfer-qual-v1-20260926",
+                                  "state":  "DONE",
+                                  "head_sha":  "4aa459566c4e5eedc2477938fa5d3f4f86d00e8e",
+                                  "blocker_class":  "PHASE1_REVIEWED_CANONICAL__READY_FOR_PROSPECTIVE_IMPLEMENTATION__IMPLEMENTATION_NOT_AUTHORIZED"
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mg-tester-transfer-regression-runtime-v1-20260927",
+                                  "state":  "DONE",
+                                  "head_sha":  "5845c4e039a3d9ef57e6997af42655a3d854d34e",
+                                  "blocker_class":  "FULL_TPL_CLEAN_8_OF_8_BUILD6090__WRAPPER_POSTCHECK_RECONCILED__MT5_LANE2_RELEASED"
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mg-tester-transfer-runtime-lease-v1-20260927",
+                                  "state":  "DONE",
+                                  "head_sha":  "b586d4d32c04fa33a30517ab3a1a8469b238d2ac",
+                                  "blocker_class":  "MT5_LANE1_RELEASED__NATIVE_TRANSFER_LEDGER_QUAL_PASS_NO_PERFORMANCE"
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mgtt-capture-normalization-v2-20260928",
+                                  "state":  "BLOCKED",
+                                  "head_sha":  "9147e4545ff6d4568a5d9d3d4b883ed832fc2cdd",
+                                  "blocker_class":  "POSITIVE_RUNNER_EXIT_UNAVAILABLE_FAIL_CLOSED_NO_RETRY"
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mgtt-runner-exit-provenance-v1-20260928",
+                                  "state":  "BLOCKED",
+                                  "head_sha":  "8268774667b2114bbd5307b8bbc5edcff07e5b8d",
+                                  "blocker_class":  "POSITIVE_PROCESS_CAPTURE_REFUSAL_CAMPAIGN_CONSUMED"
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mgtt-runner-handle-retention-v3-20260928",
+                                  "state":  "DONE",
+                                  "head_sha":  "b06320999f98aeefb33329971eee03405524e5af",
+                                  "blocker_class":  ""
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mgtt-shortlived-tester-identity-v1-20260928",
+                                  "state":  "BLOCKED",
+                                  "head_sha":  "b9531886c5d2a4e5194684462cf66bd30035e588",
+                                  "blocker_class":  "POSITIVE_IDENTITY_INCOMPLETE_SHA256_PROPERTY_MISSING_RUNNER_EXIT_UNKNOWN"
+                              },
+                              {
+                                  "lane_id":  "ct-news-macro-mgtt-successor-qual-v1-20260928",
+                                  "state":  "BLOCKED",
+                                  "head_sha":  "6503ed949b70caad379d0d11842c9aa7c6b2f1ef",
+                                  "blocker_class":  "NATIVE_POSITIVE_RUNNER_REPORT_GATE_FAILED_NO_RETRY_NO_MUTATION"
+                              }
+                          ],
+    "active_writers":  [
+                           {
+                               "lane_id":  "ct-ea-builder-m1-mobile-usability-20261003",
+                               "owner_chat":  "EA_LAB-MAIN-CT-20260930",
+                               "state":  "FROZEN",
+                               "critical_paths":  [
+                                                      "tools/mobile_report_hub/owner_webapp/builder_workflow.js",
+                                                      "tools/mobile_report_hub/owner_webapp/owner_webapp.css",
+                                                      "tools/mobile_report_hub/owner_webapp/test_builder_workflow.cjs",
+                                                      "tools/mobile_report_hub/owner_webapp/browser_builder_workflow.cjs",
+                                                      "docs/workflows/EA_BUILDER_M1_DEFAULTPROFILE_INTERACTIVE_DELTA.md"
+                                                  ]
+                           },
+                           {
+                               "lane_id":  "ct-lnwjud-execution-identity-read-v2-20261004",
+                               "owner_chat":  "EA_LAB-MAIN-CT-20260928",
+                               "state":  "REVIEW",
+                               "critical_paths":  [
+                                                      "tools/lnwjud/current_write_v1/execution_identity.cjs",
+                                                      "tools/lnwjud/current_write_v1/test_execution_identity.cjs",
+                                                      "tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs",
+                                                      "tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json",
+                                                      "docs/workflows/LNWJUD_EXECUTION_IDENTITY_SOURCE_V1.md",
+                                                      "tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs"
+                                                  ]
+                           },
+                           {
+                               "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
+                               "owner_chat":  "EA_LAB-NEWS-MACRO-20260921",
+                               "state":  "RUNNING",
+                               "critical_paths":  [
+                                                      "tools/knowledge_validation/news_macro_stage_ledger.py",
+                                                      "tools/knowledge_validation/test_news_macro_stage_ledger.py",
+                                                      "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md",
+                                                      "factory/runs/news_macro_stage_ledger_v1_20261004"
+                                                  ]
+                           }
+                       ],
+    "active_writer_count":  3,
+    "wip_limit":  4,
+    "review_slot_confirmation":  "NOT_RECEIVED_NO_REVIEW_SPAWN",
+    "old_durable_jobs":  "Historical owner jobs reconciled from COMPLETE result/state; no dispatch or rerun",
+    "governing_documents":  [
+                                "START_HERE.md",
+                                "PROJECT_STATE.md",
+                                "AGENTS.md",
+                                "AGENT_TASKBOARD.md",
+                                "taskboards/active/P01.md",
+                                "taskboards/active/P02.md",
+                                "taskboards/active/P03.md"
+                            ],
+    "authority":  "OBSERVATION_ONLY_NOT_SECOND_CONTROL_PLANE"
+}

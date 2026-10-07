@@ -1,0 +1,66 @@
+{
+  "actual_failure_tokens": "ALL4_UNCHANGED",
+  "actual_stages": "ALL8_UNKNOWN_UNCHANGED",
+  "author_candidate": 1,
+  "checks": [
+    {
+      "exit_code": 0,
+      "gate": "ledger12",
+      "log_sha256": "b628f0cfca8bc3ffe7832941b02255ba7724a4d60166a83fe1d35f9be2d00421"
+    },
+    {
+      "exit_code": 0,
+      "gate": "existing11",
+      "log_sha256": "e4fe5ac70bc175ba415c7361354537e1c0789317abadfd2bbf85bd808bdba10e"
+    },
+    {
+      "detail": [
+        {
+          "annotated_return_count": 10,
+          "function_count": 10,
+          "parsed": true,
+          "path": "tools/knowledge_validation/news_macro_stage_ledger.py",
+          "sha256": "f0e3dfe06051d33e8915221626a35523156e6349f2acba0a4dad75dcefc2359e"
+        },
+        {
+          "annotated_return_count": 5,
+          "function_count": 17,
+          "parsed": true,
+          "path": "tools/knowledge_validation/test_news_macro_stage_ledger.py",
+          "sha256": "97738a8b7f7f1508d7d16fbb6926c57b3aaeed67e919583d9fd70e09a2f7d388"
+        }
+      ],
+      "gate": "AST_ANNOTATION_INSPECTION",
+      "result": "PASS"
+    },
+    {
+      "files": 75,
+      "gate": "JSON_PARSE",
+      "result": "PASS"
+    },
+    {
+      "gate": "ADVERSARIAL_TYPE_SCHEMA_DETERMINISTIC_BYTES",
+      "result": "PASS_IN_LEDGER12; no static typechecker claim"
+    },
+    {
+      "gate": "ALL83_ORIGINAL_FILE_HASHES_AND_EXTERNAL_READBACK",
+      "result": "PASS"
+    },
+    {
+      "gate": "FOUR_READONLY_BINDINGS_OLD_NEW_WORKTREE_BYTE_EQUAL",
+      "result": "PASS"
+    }
+  ],
+  "execution_base": "872524af2444e27a343bce76afbf81770147290b",
+  "historical_base": "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+  "observed_utc": "2026-10-04T15:45:37Z",
+  "prerequisite_harness_events": [
+    "Initial nested external-copy path exceeded Windows legacy path length; retained partial copies and verified flat hash-addressed backup before mutation",
+    "Initial inline PowerShell Python command quoting refused before test execution; switched to file-backed gate runner; no product edits"
+  ],
+  "reviews_used": 0,
+  "schema_version": "news_macro_stage_ledger_canonical_sync_gates/1",
+  "source_repairs_used": 0,
+  "static_typechecker": "NOT_CLAIMED",
+  "unchanged_candidate": true
+}

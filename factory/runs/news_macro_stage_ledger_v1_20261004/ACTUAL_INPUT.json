@@ -1,0 +1,30 @@
+{
+    "schema_version":  "ea_lab_news_macro_stage_manifest/1",
+    "authority":  "OFFLINE_ONLY",
+    "label":  "ACTUAL_UNQUALIFIED",
+    "run_id":  "DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z",
+    "source":  {
+                   "source_id":  "DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED",
+                   "artifact_sha256":  "b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29"
+               },
+    "as_of_utc":  "2026-10-04T09:55:37Z",
+    "clocks":  {
+                   "observation_time_utc":  null,
+                   "release_time_utc":  null,
+                   "available_at_utc":  null,
+                   "fetch_time_utc":  null
+               },
+    "stages":  [
+
+               ],
+    "evidence":  [
+
+                 ],
+    "last_good":  null,
+    "known_failures":  [
+                           "runtime-identity-unverified",
+                           "runtime-identity-coverage-gap",
+                           "deployment-unverified-69424711|",
+                           "deployment-verification-underived-x58"
+                       ]
+}

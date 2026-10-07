@@ -1,0 +1,474 @@
+{
+    "schema_version":  "news_macro_existing_jobs_reconciliation/1",
+    "active_registry_records":  [
+                                    {
+                                        "lane_id":  "ct-ea-builder-m1-mobile-tr001-recheck-ro-20261004",
+                                        "owner_chat":  "EA_LAB-MAIN-CT-20260930",
+                                        "writer":  false,
+                                        "state":  "RUNNING"
+                                    },
+                                    {
+                                        "lane_id":  "ct-ea-builder-m1-mobile-usability-20261003",
+                                        "owner_chat":  "EA_LAB-MAIN-CT-20260930",
+                                        "writer":  true,
+                                        "state":  "FROZEN"
+                                    },
+                                    {
+                                        "lane_id":  "ct-lnwjud-execution-identity-read-v2-20261004",
+                                        "owner_chat":  "EA_LAB-MAIN-CT-20260928",
+                                        "writer":  true,
+                                        "state":  "REVIEW"
+                                    },
+                                    {
+                                        "lane_id":  "ct-lnwjud-execution-identity-v2-review-ro-20261004",
+                                        "owner_chat":  "EA_LAB-MAIN-CT-20260928",
+                                        "writer":  false,
+                                        "state":  "RUNNING"
+                                    },
+                                    {
+                                        "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
+                                        "owner_chat":  "EA_LAB-NEWS-MACRO-20260921",
+                                        "writer":  true,
+                                        "state":  "RUNNING"
+                                    }
+                                ],
+    "existing_jobs":  [
+                          {
+                              "job_id":  "ct-macro-base-main-recovery-review-5c2b-20260925",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-25T06:02:02.1751683Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-mgtt-ct-reanchor-offline-b586-20260927",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-27T08:34:20.7298482Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-mgtt-impl-review-5845-20260927",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-27T13:32:36.1666979Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-mgtt-implementation-repair1-author-20260927",
+                              "state":  "TIMED_OUT",
+                              "exit_code":  null,
+                              "ended_utc":  "2026-09-27T15:26:26.8410910Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-mgtt-tpl-harness-extension-author-20260927",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-27T11:20:01.2809498Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-mgtt-tpl-regression-5845-20260927",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-27T13:11:14.9715075Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-mgtt-tpl-regression-94f-20260927",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-27T10:13:35.0465382Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-mgtt-tpl-regression-94f-wrapper-recovery-20260927",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-27T10:16:13.9950954Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-20260921-20260921T144941Z-f8a5b272",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-21T14:49:42.9490498Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-20260921-20260921T145048Z-f35d7ced",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-21T14:50:53.6103136Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-20260921-20260921T145245Z-abf443e4",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-21T14:52:53.8002593Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-20260921-20260921T173552Z-2976a38b",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-21T17:35:53.4918821Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-20260921-20260921T173737Z-c0b1b47e",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-21T17:37:38.8485516Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-20260921-20260921T173925Z-04a83c42",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-21T17:39:27.4784525Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-20260921-20260922T050208Z-5373a7b5",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T05:14:36.5121466Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-20260921-20260922T052615Z-befad5c7",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T05:32:32.7800864Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-gemini-support-revi-20260921T174657Z-27e12b85",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-21T17:47:00.1495781Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-gemini-support-revi-20260921T174915Z-482c7551",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-21T17:49:17.5943522Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-gemini-support-revi-20260921T175337Z-e6b5af9a",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-21T17:53:40.0508158Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-qwen-delta-support--20260921T175546Z-17f1a298",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-21T17:59:20.9567677Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-qwen-support-review-20260921T170337Z-0fecbf6a",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-21T17:03:45.9193504Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-lab-v1-qwen-support-review-20260921T170732Z-edd14e7d",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-21T17:13:46.4637373Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-ab-base-bwd-20260925",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-25T13:51:39.8709559Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-ab-base-main-20260925",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-25T03:56:34.8955005Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-ab-guarded-batch-20260925",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-25T14:06:54.3767496Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-ab-guarded-batch-recovery1-20260925",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-25T14:09:53.4533365Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-ab-guarded-batch-recovery2-20260925",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-25T14:21:24.0978318Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-ab-prereg-author-20260925",
+                              "state":  "POSTCONDITION_FAILED",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-25T00:33:11.6563305Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-ab-prereg-author-r1-20260925",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-25T01:03:30.2812659Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260922T133534Z-fd15bbeb",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T13:40:20.6216475Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260922T134216Z-7527df8b",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T13:46:15.0587936Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260922T134847Z-d64dc6cf",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T14:10:11.9855791Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260922T145819Z-844e6167",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-22T14:58:20.6404947Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260922T150207Z-5bda31aa",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-22T15:02:09.3077252Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260922T153226Z-cae43d25",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-22T15:32:28.5042580Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260922T153500Z-2709e7aa",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-22T15:35:03.1284467Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260924T063600Z-612db8eb",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-24T06:37:12.6839910Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-core-seam-v1-20260922-20260924T064525Z-f85e1fa1",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-24T06:46:34.5589867Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-native-exporter-quarantine-author-20260924",
+                              "state":  "FAILED",
+                              "exit_code":  2,
+                              "ended_utc":  "2026-09-24T16:35:06.1364842Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-native-exporter-quarantine-author-r2-20260924",
+                              "state":  "FAILED",
+                              "exit_code":  2,
+                              "ended_utc":  "2026-09-24T16:37:11.6989882Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-native-exporter-quarantine-author-r3-20260924",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-24T16:38:48.0857205Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-native-exporter-quarantine-author-r4-20260924",
+                              "state":  "TIMED_OUT",
+                              "exit_code":  null,
+                              "ended_utc":  "2026-09-24T23:17:43.5166578Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-native-parity-v1-202609-20260922T082857Z-f03e4bbb",
+                              "state":  "FAILED",
+                              "exit_code":  -196608,
+                              "ended_utc":  "2026-09-22T08:28:58.6836092Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-native-parity-v1-202609-20260922T083148Z-ef6c6515",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T08:31:52.3936789Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-native-parity-v1-202609-20260922T083539Z-5db54f25",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T08:48:16.6797406Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-replay-v1-20260922-20260922T062337Z-52d97c95",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T06:23:47.3102798Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-replay-v1-20260922-20260922T063531Z-5a378384",
+                              "state":  "TIMED_OUT",
+                              "exit_code":  null,
+                              "ended_utc":  "2026-09-22T06:55:31.9197166Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-replay-v1-20260922-20260922T073454Z-962f276e",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T07:35:11.0009537Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "ct-news-macro-mg-replay-v1-20260922-20260922T073836Z-aa53aa84",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T07:47:28.6675673Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "d002-news-macro-handoff-r1-repair1-20260922",
+                              "state":  "POSTCONDITION_FAILED",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-22T11:31:44.2049839Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-cages-resume1-20260928",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-28T01:59:43.6747407Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-cages-resume2-20260928",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-28T02:05:15.2117549Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-diagnostic-compile-20260928",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-28T02:09:55.0588918Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-final-verification-20260928",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-28T02:13:08.9529138Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-final-verification-r2-20260928",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-28T02:16:58.2176240Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-final-verification-r3-20260928",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-28T02:26:23.3850006Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-freshness-final-gates-20260928",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-28T02:45:41.8990215Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-full-native-retry1-20260928",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-28T02:34:06.8361740Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-full-precommit-tpl-20260928",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-28T02:07:01.2882349Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-native-requal-20260928",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-28T02:48:08.2188741Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-normal-commit-20260928",
+                              "state":  "FAILED",
+                              "exit_code":  1,
+                              "ended_utc":  "2026-09-28T02:35:29.1044862Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          },
+                          {
+                              "job_id":  "mgtt-repair1-normal-commit2-20260928",
+                              "state":  "COMPLETE",
+                              "exit_code":  0,
+                              "ended_utc":  "2026-09-28T02:46:51.0763272Z",
+                              "authority":  "METADATA_ONLY_NO_NEW_LIVENESS_OR_RUNTIME_CERTIFICATION"
+                          }
+                      ],
+    "new_jobs_launched":  0,
+    "native_retry_count":  0,
+    "observation_utc":  "2026-10-04T09:58:05Z"
+}

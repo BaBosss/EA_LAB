@@ -1,0 +1,20 @@
+{
+  "all_working_bytes_identical": true,
+  "candidate_count": 1,
+  "execution_base": "872524af2444e27a343bce76afbf81770147290b",
+  "external_backup": "D:\\EA_LAB_CONTROL\\evidence\\news-macro-stage-ledger-v1-20261004\\canonical-sync-20261004-01",
+  "historical_admission_base": "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+  "no_native_runtime_or_push": true,
+  "no_reset": true,
+  "original_staged_patch_exact": true,
+  "patch_sha256": "1a1591cfff3a8bc5d57671f3bea0bc888e0667e6793db2064b1337629312f9d8",
+  "post_candidate_repairs_used": 0,
+  "preservation_receipt_sha256": "7b3aac7f153251737057d6d7794186eb88c84b2fa605b40148e25ce224f745bb",
+  "preserved_files": 83,
+  "registry_base_preserved": true,
+  "registry_head": "872524af2444e27a343bce76afbf81770147290b",
+  "registry_state": "RUNNING",
+  "result": "SAME_LANE_SUPPORTED_FF_AND_EXACT_REPLAY_PASS",
+  "review_jobs_used": 0,
+  "schema_version": "news_macro_stage_ledger_canonical_sync_receipt/1"
+}

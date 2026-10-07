@@ -1,0 +1,35 @@
+{
+    "schema_version":  "ea_lab_news_macro_actual_bindings/1",
+    "acceptance_path":  "D:\\EA_LAB_CONTROL\\evidence\\dailymonitor-runtime-reanchor-v2-20260930\\FINAL_ACCEPTANCE_20261001.json",
+    "acceptance_sha256":  "b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29",
+    "acceptance_verification":  "EXACT_BYTES_REHASHED",
+    "source_bindings":  [
+                            {
+                                "path":  "scripts/daily_monitor.ps1",
+                                "source_commit":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+                                "sha256":  "d6a1f9f560b9044414fb60e54f1f3fac628f36b9a7c0cf92012ae4d2af075214",
+                                "access":  "READ_ONLY_NO_EXECUTION"
+                            },
+                            {
+                                "path":  "scripts/mris/mris_run.ps1",
+                                "source_commit":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+                                "sha256":  "dc23d1f3c58083fe15bfc79e2f5803481c3d4234ea6ea2f640746f8d062d517e",
+                                "access":  "READ_ONLY_NO_EXECUTION"
+                            },
+                            {
+                                "path":  "scripts/publish_guard_feeds_to_vps.ps1",
+                                "source_commit":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+                                "sha256":  "86caf580c96ac9c3077d7095bcfb190f7e6308e62734bf76f93ba9542c47ccbe",
+                                "access":  "READ_ONLY_NO_EXECUTION"
+                            },
+                            {
+                                "path":  "ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1",
+                                "source_commit":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+                                "sha256":  "68772daf005ceb6124a7dbf4ef494b8686454e3ec86379d775f17d9d6c83a9c2",
+                                "access":  "READ_ONLY_NO_EXECUTION"
+                            }
+                        ],
+    "actual_stages":  "UNKNOWN_NO_RUN_SOURCE_HASH_BOUND_STAGE_RECEIPTS",
+    "actual_nonzero":  "last_result=1; four coverage/runtime/deployment evidence-gap tokens retained; no News/Macro stage failure attributed without receipt",
+    "source_path_resolution":  "publish_guard_feeds_to_vps.ps1 binds canonical scripts/publish_guard_feeds_to_vps.ps1"
+}

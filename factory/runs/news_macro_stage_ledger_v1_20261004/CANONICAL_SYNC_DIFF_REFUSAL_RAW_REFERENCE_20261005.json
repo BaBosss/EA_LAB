@@ -1,0 +1,15 @@
+{
+  "external_raw_path": "D:\\EA_LAB_CONTROL\\evidence\\news-macro-stage-ledger-v1-20261004\\evidence-format-repair1-20261005\\raw\\CANONICAL_SYNC_DIFF_REFUSAL_20261004.txt",
+  "failure_history": "The Oct4 diff-check refused the hook transcript for line73 trailing whitespace; this derived transcript retained that whitespace. Both historical refusals remain failed, not retroactively green.",
+  "historical_repo_path": "factory/runs/news_macro_stage_ledger_v1_20261004/CANONICAL_SYNC_DIFF_REFUSAL_20261004.txt",
+  "label": "IMMUTABLE_DERIVED_DIFF_FAILURE_REFERENCE; LOSSLESS_BASE64; NOT_DISPLAY_NORMALIZATION",
+  "original_preservation_manifest": "D:\\EA_LAB_CONTROL\\evidence\\news-macro-stage-ledger-v1-20261004\\evidence-format-repair1-20261005\\PRESERVATION_RECEIPT.json",
+  "original_preservation_manifest_sha256": "355b719eb55412963778e8346a3fb23be5b536469a4dfc306fb8f4594b8ee053",
+  "pre_edit_mapping": "EVIDENCE_FORMAT_REPAIR1_MAPPING_ADDENDUM_20261005.json",
+  "pre_edit_mapping_sha256": "88c8e05bf84801e0de68d2623b13299404b3781593ed58e3632157200129c607",
+  "raw_bytes_base64": "ZmFjdG9yeS9ydW5zL25ld3NfbWFjcm9fc3RhZ2VfbGVkZ2VyX3YxXzIwMjYxMDA0L05PUk1BTF9IT09LX1JFRlVTQUxfVFJBTlNDUklQVF8yMDI2MTAwNC50eHQ6NzM6IHRyYWlsaW5nIHdoaXRlc3BhY2UuCisgDQo=",
+  "raw_encoding": "BASE64_OF_EXACT_ORIGINAL_BYTES",
+  "raw_sha256": "cb2100839b3fa9afb14ebea86b9d37d0def405e297c0e3c3109484b7636d9f50",
+  "raw_size_bytes": 122,
+  "schema_version": "news_macro_raw_refusal_hash_bound_reference/1"
+}

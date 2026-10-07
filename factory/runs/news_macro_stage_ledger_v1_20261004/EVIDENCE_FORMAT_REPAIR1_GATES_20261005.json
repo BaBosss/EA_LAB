@@ -1,0 +1,31 @@
+{
+  "actual_four_failure_tokens": "ALL4_UNCHANGED",
+  "actual_stage_outcomes": "ALL8_UNKNOWN_UNCHANGED",
+  "author_candidates_used": 1,
+  "diff_check_allowlist": "PASS",
+  "execution_base": "872524af2444e27a343bce76afbf81770147290b",
+  "existing_tests": "11/11 PASS",
+  "four_readonly_binding_hashes": "PASS",
+  "json_files_parsed": 84,
+  "ledger_tests": "12/12 PASS",
+  "log_sha256": {
+    "existing11": "f279b0fe02076c7ebb58ece97776dc55fb1f7b69d3319af589b9362c3d21a8df",
+    "ledger12": "e0fcff38753a8b4ff0679376e63b52e16c028657205c96dea18b6f451d6dcf35"
+  },
+  "observed_utc": "2026-10-05T04:21:18Z",
+  "original_contract_and_cases": "UNCHANGED",
+  "packaging_targeted_recheck": "BOTH_RAW_REFERENCE_LOSSLESS_DECODE_HASH_EXTERNAL_AND_PRIOR_MANIFEST_IDENTITY_PASS",
+  "parse_type_schema": "AST+JSON PASS; adversarial type/schema cases PASS; no static typechecker claim",
+  "prior_file_preservation": "90/90 EXACT; two raw paths relocated, all others unchanged",
+  "repair_remaining": 0,
+  "repair_used": 1,
+  "result": "DETERMINISTIC_GREEN",
+  "review_used": 0,
+  "schema_version": "news_macro_stage_ledger_repair1_gates/1",
+  "source_hashes": {
+    "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md": "8ac97c8f2d62131520c81425a879dc170749dac1495448940411acbe9b612056",
+    "tools/knowledge_validation/news_macro_stage_ledger.py": "f0e3dfe06051d33e8915221626a35523156e6349f2acba0a4dad75dcefc2359e",
+    "tools/knowledge_validation/test_news_macro_stage_ledger.py": "97738a8b7f7f1508d7d16fbb6926c57b3aaeed67e919583d9fd70e09a2f7d388"
+  },
+  "targeted_review_rechecks_used": 0
+}

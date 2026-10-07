@@ -1,0 +1,58 @@
+{
+  "authority_source": "DOT delegation source_thread_id 01a0f263-6688-7250-8ff0-280906c2d000; owner explicitly instructs normal canonical re-anchor without discarding current work",
+  "budgets": "ONE_EXISTING_AUTHOR_CANDIDATE; author60m unchanged; source repair0 review0 targeted review0; no reset",
+  "canonical_changed_paths": [
+    "docs/workflows/LNWJUD_EXECUTION_IDENTITY_SOURCE_V1.md",
+    "tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json",
+    "tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs",
+    "tools/lnwjud/current_write_v1/execution_identity.cjs",
+    "tools/lnwjud/current_write_v1/test_execution_identity.cjs",
+    "tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs"
+  ],
+  "canonical_commits": [
+    "a61db2ebe732e240377f2ba23ce35377681cc723",
+    "872524af2444e27a343bce76afbf81770147290b"
+  ],
+  "external_preservation_root": "D:\\EA_LAB_CONTROL\\evidence\\news-macro-stage-ledger-v1-20261004\\canonical-sync-20261004-01",
+  "forbidden": [
+    "rebase",
+    "amend",
+    "reset",
+    "stash",
+    "clean",
+    "alternate lane/worktree",
+    "push",
+    "native",
+    "MT5",
+    "runtime producer",
+    "market fetch",
+    "review dispatch"
+  ],
+  "frozen_utc": "2026-10-04T15:40:40Z",
+  "governing_clauses": [
+    "AGENTS.md section1.4 bounded non-destructive continuation and origin reconciliation",
+    "START_HERE.md lines5,20 current canonical and preserved historical artifacts",
+    "scripts/lane_registry.ps1 lines39-48 BLOCKED->READY->RUNNING and lines550-555 supplied nextHead",
+    "scripts/lane_registry.ps1 lines573-581 activation conflict, clean actual HEAD, atomic transition",
+    "LANE_REGISTRY_AMENDSCOPE_V1.md no non-scope mutation; AmendScope NOT USED"
+  ],
+  "historical_admission_base_sha": "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+  "lane_id": "ct-news-macro-stage-ledger-v1-20261004",
+  "new_execution_base_sha": "872524af2444e27a343bce76afbf81770147290b",
+  "original_contract_and_evidence": "IMMUTABLE_BYTES; no replacement or relabeling of old base identity",
+  "original_contract_sha256": "6a9590804bc2a02b072c48d455d318823edff4d16a5dcf66bf9d908014a42b13",
+  "overlap": "NONE",
+  "owner": "EA_LAB-NEWS-MACRO-20260921",
+  "registry_base_policy": "base_sha stays original admission identity; supported Transition HeadSha advances current execution identity",
+  "schema_version": "news_macro_stage_ledger_canonical_sync_prerequisite/1",
+  "scope": "SOURCE_INDEPENDENT_SAME_LANE_NORMAL_CANONICAL_SYNCHRONIZATION_ONLY",
+  "sequence": [
+    "create-only external backup of all candidate files and exact staged/unstaged binary patches",
+    "index-only unstage exact added paths, preserve working files",
+    "supported BLOCKED->READY at original head",
+    "normal git merge --ff-only exact new execution base in same branch/worktree",
+    "supported READY->RUNNING HeadSha=new execution base with clean tracked files and conflict gate",
+    "git apply --cached exact saved patch and verify all file hashes unchanged",
+    "same source tests, impacted parse/type/schema/hash/diff gates; normal precommit/commit-msg; no bypass"
+  ]
+}

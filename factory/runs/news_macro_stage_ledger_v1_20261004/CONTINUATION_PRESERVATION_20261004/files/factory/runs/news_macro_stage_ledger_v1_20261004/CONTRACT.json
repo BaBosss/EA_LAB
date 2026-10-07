@@ -1,0 +1,71 @@
+{
+  "schema_version": "ea_lab_news_macro_stage_ledger_contract/1",
+  "authority": "OFFLINE_ONLY",
+  "owner": "EA_LAB-NEWS-MACRO-20260921",
+  "lane_id": "ct-news-macro-stage-ledger-v1-20261004",
+  "base_sha": "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+  "worktree": "D:\\EA_LAB_CONTROL\\w\\news-macro-stage-ledger-v1-1004",
+  "allowed_paths": [
+    "tools/knowledge_validation/news_macro_stage_ledger.py",
+    "tools/knowledge_validation/test_news_macro_stage_ledger.py",
+    "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md",
+    "factory/runs/news_macro_stage_ledger_v1_20261004"
+  ],
+  "consumer": [
+    "Existing NewsMacro owner",
+    "Future handoff validator"
+  ],
+  "monitor_wiring": "OUTSIDE_CONTRACT",
+  "budget": {
+    "author_candidates": 1,
+    "author_minutes": 60,
+    "review_jobs": 1,
+    "review_minutes": 30,
+    "review_requires": "GREEN exact head and DOT free review-slot confirmation",
+    "repairs_max": 1,
+    "repair_minutes": 30,
+    "targeted_recheck_if_repair": 1,
+    "native": 0,
+    "mt5": 0,
+    "market_fetch": 0,
+    "production_mutations": 0,
+    "push": 0
+  },
+  "stages": [
+    "FETCHED",
+    "VALIDATED",
+    "CLASSIFIED",
+    "PUBLISHED_LOCAL",
+    "TRANSFER_REQUESTED",
+    "TRANSFERRED",
+    "CONSUMER_OBSERVED",
+    "EFFECTIVE"
+  ],
+  "rules": [
+    "Only explicit frozen UTF-8 JSON input; stdout deterministic canonical JSON; no producer execution, network, runtime discovery or fallback.",
+    "Every stage binds stage/run/source/artifact hash/UTC event time/status/reason/hashed inline evidence.",
+    "PASS requires matching explicit stage attestation and all preceding PASS stages. Receipt kind is stage-specific. Transfer receiver+destination and matching request, observation consumer identity, effect matching observation are mandatory.",
+    "Missing stage/receipt is UNKNOWN. FAIL is retained. Last-good is separately recorded and never fills current-run gaps.",
+    "Ledger PASS means manifest structure/binding validation only; actual_run_green is always UNKNOWN. Fixture stage outcomes never imply runtime effectiveness.",
+    "Observation, release, availability and fetch clocks remain distinct and nullable. No freshness threshold invented. Malformed/future recorded actual timestamps or nonmonotone stages refuse manifest.",
+    "No file existence/mtime/rclone exit0/absence of tokens is proof. Weak evidence bases are refused.",
+    "Known failures survive unchanged and do not make a structurally valid ledger REFUSED."
+  ],
+  "acceptance_sha256": "b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29",
+  "acceptance_tokens": [
+    "runtime-identity-unverified",
+    "runtime-identity-coverage-gap",
+    "deployment-unverified-69424711|",
+    "deployment-verification-underived-x58"
+  ],
+  "acceptance_verification": "USER_SUPPLIED_REFERENCE_NOT_YET_REHASHED",
+  "checks": [
+    "12 pre-outcome cases pass",
+    "Python AST parse + annotation/schema checks",
+    "Existing focused knowledge validation cage",
+    "diff --check + allowlist + source/evidence SHA256",
+    "normal pre-commit and commit-msg hooks; no bypass",
+    "frozen clean source commit; review NOT_RUN until DOT slot"
+  ],
+  "stop": "Denied actor/admission exact error STOP; no bypass. Exhausted cap checkpoint BLOCKED. Old lane/budgets immutable."
+}

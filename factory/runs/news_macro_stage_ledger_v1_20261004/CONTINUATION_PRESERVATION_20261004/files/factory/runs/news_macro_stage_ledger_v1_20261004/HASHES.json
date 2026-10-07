@@ -1,0 +1,154 @@
+{
+    "schema_version":  "news_macro_stage_ledger_artifact_hashes/1",
+    "base_sha":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
+    "exclusions":  [
+                       "HASHES.json self",
+                       "AUTHOR_CHECKPOINT.json mutable checkpoint"
+                   ],
+    "files":  [
+                  {
+                      "path":  "tools/knowledge_validation/news_macro_stage_ledger.py",
+                      "sha256":  "f0e3dfe06051d33e8915221626a35523156e6349f2acba0a4dad75dcefc2359e"
+                  },
+                  {
+                      "path":  "tools/knowledge_validation/test_news_macro_stage_ledger.py",
+                      "sha256":  "97738a8b7f7f1508d7d16fbb6926c57b3aaeed67e919583d9fd70e09a2f7d388"
+                  },
+                  {
+                      "path":  "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md",
+                      "sha256":  "8ac97c8f2d62131520c81425a879dc170749dac1495448940411acbe9b612056"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_ACCEPTANCE_20261001.json",
+                      "sha256":  "b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_INPUT.json",
+                      "sha256":  "ab01bdd888e28db5bf4c2374e38f90e55edd67323c53b43c803dd955fdd6a27e"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_LEDGER.json",
+                      "sha256":  "c359bb6a8d27def62658ac8e950925e8c7d2eec7c25c8def56980e9db9958fff"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/ADMISSION_READBACK.json",
+                      "sha256":  "6c30efc09c9a4de8a4802454d5e44eacaf4cd03de057af7d41b57db61ca0fffe"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/CASES_FROZEN.json",
+                      "sha256":  "d628b95f7c46e7e7e71707c1124f896d91ce3b9d16ebb3cb5df4511a761fbde0"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/CONTRACT.json",
+                      "sha256":  "6a9590804bc2a02b072c48d455d318823edff4d16a5dcf66bf9d908014a42b13"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/DURABLE_JOBS_READBACK.json",
+                      "sha256":  "1c94a413ff9f428ae27c879a70a81f19077735a9a5fc405d40a6f30db9937567"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_clock_distinction.json",
+                      "sha256":  "cc6bf7a99f2ceb2ff846ab8cbeff9d6c776533af7d5a1ef173469739318ea076"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_deterministic_bytes_and_schema.json",
+                      "sha256":  "cc6bf7a99f2ceb2ff846ab8cbeff9d6c776533af7d5a1ef173469739318ea076"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_known_failures.json",
+                      "sha256":  "e4f8e5f7442169a921817f560a701ab5af9ff66ab3733cdba5fdebd0683be926"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_last_good.json",
+                      "sha256":  "9ea09ab43d61d9b35a9b86b22831afdb796a49be5e5d643dc58484f8a5c857a2"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_malformed_or_future_time.json",
+                      "sha256":  "2f5843899b9a24f8beb8479b1a795e3eed68770aa23118e2ffe5a09ede88709e"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_missing_classification.json",
+                      "sha256":  "7ba4531e008383817f7e04920941e98c7fe676962909f55fc83f61bf7ad20acb"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_no_stages.json",
+                      "sha256":  "8bc1ecbe1f20771c952b62b50ee8a1d0f9370df7f45c32a5e02195814835341e"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_observed_without_effect.json",
+                      "sha256":  "3839de31681dd961735f73549702779e95c0428bf1f97d549384bf549c0dac94"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_positive_chain.json",
+                      "sha256":  "cc6bf7a99f2ceb2ff846ab8cbeff9d6c776533af7d5a1ef173469739318ea076"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_transfer_without_receipt.json",
+                      "sha256":  "fd7bebdc093b7195ae73d63c16f6411fb06f48a0ef2629595db95e7f7cb214ee"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_wrong_hash.json",
+                      "sha256":  "7a88a6b3872ac57d2caf012cb8be4677da179f49aa41254c16912827f9a0351f"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_wrong_run.json",
+                      "sha256":  "2515d46073befc345ef71ec00caac35f213fde072b897954c960ecc1ab42e64f"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_clock_distinction.json",
+                      "sha256":  "27c698d7a997d84ba9e935b4e5ddf8dde6e4ad837668c0deedb7fa040bb0b1c4"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_deterministic_bytes_and_schema.json",
+                      "sha256":  "27c698d7a997d84ba9e935b4e5ddf8dde6e4ad837668c0deedb7fa040bb0b1c4"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_known_failures.json",
+                      "sha256":  "902d812bc8e3e93dc5b6ac7a216e9cd87bad861e5cea711cdaf915e7def646ef"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_last_good.json",
+                      "sha256":  "0e9967765a3aadff037b42c4ba38bc32b0144f87dfb638f57162e2b75f39de80"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_malformed_or_future_time.json",
+                      "sha256":  "da6ac3ffe553e309eb0941c9a893a966a4fc284d4eda6334c088161b75d562d8"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_missing_classification.json",
+                      "sha256":  "1fe3bb8f66e31f23aab3038fa40fca945fc64e089d53847f3861bf69d04995b6"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_no_stages.json",
+                      "sha256":  "e459c122c243be345a86bca396972fff4e5f5f638099ef4363f43e1906c345e0"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_observed_without_effect.json",
+                      "sha256":  "ef136c839e3d337a4fe9bdb889f2b23b00056c9dc725a1daab097b1aec26156d"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_positive_chain.json",
+                      "sha256":  "27c698d7a997d84ba9e935b4e5ddf8dde6e4ad837668c0deedb7fa040bb0b1c4"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_transfer_without_receipt.json",
+                      "sha256":  "784a6b4de3862b996fccab922460e2e186df0bad61c0b831d137f2f5d08cbb75"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_wrong_hash.json",
+                      "sha256":  "aa2bba8346649ed9ab9c7bdc2744749321e189eb1bff89ada56d1f07a50c8f77"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_wrong_run.json",
+                      "sha256":  "95fef1efe42dbad4a148b889a5849632ace8cca23fc828ccbee6603d31e822f7"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/READONLY_BINDINGS.json",
+                      "sha256":  "064a52c867bdce9778fc80e96517fc47009e0b94112ed7ee0e784a4db9034625"
+                  },
+                  {
+                      "path":  "factory/runs/news_macro_stage_ledger_v1_20261004/RESULTS.json",
+                      "sha256":  "e905051c9950054df220aad5ff3cc01aa27f444fe0e2fc8af3efa3d7af76ce61"
+                  }
+              ]
+}

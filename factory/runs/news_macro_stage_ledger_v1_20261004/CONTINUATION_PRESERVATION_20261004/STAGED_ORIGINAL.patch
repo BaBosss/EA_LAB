@@ -1,0 +1,1368 @@
+diff --git a/docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md b/docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1ed77cdd31ba0aabc19adb2baadc1e6eb9dd6295
+--- /dev/null
++++ b/docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md
+@@ -0,0 +1,134 @@
++# News/Macro offline stage ledger V1 — 2026-10-04
++
++Owner: EA_LAB-NEWS-MACRO-20260921. Lane: ct-news-macro-stage-ledger-v1-20261004.
++Exact base: 471a94d6d65fc86882ac7a4bbb882e280edbe98d.
++Direct consumers: the existing NewsMacro owner and a future handoff validator.
++Monitor wiring and Template integration are outside this contract.
++
++## Contract and admission
++
++The existing BaBoss owner-side RDC actuator created a clean isolated worktree and
++the canonical bootstrap returned READY with normal .githooks. Registry Check returned
++READY with no conflicts; Claim returned CLAIMED/RUNNING under the existing owner,
++without superseding any lane. Mobile and lnwjud V2 were disjoint active writers.
++The old News/Macro DONE lane is immutable. Exhausted MGTT predecessors remain BLOCKED;
++MGTTV3 b06320999f98aeefb33329971eee03405524e5af is reused as historical runner
++engineering qualification only, with no native rerun or performance inference.
++
++The pre-source contract is factory/runs/news_macro_stage_ledger_v1_20261004/CONTRACT.json
++(SHA256 6a9590804bc2a02b072c48d455d318823edff4d16a5dcf66bf9d908014a42b13).
++The 12-case pre-outcome plan is CASES_FROZEN.json
++(SHA256 d628b95f7c46e7e7e71707c1124f896d91ce3b9d16ebb3cb5df4511a761fbde0).
++Neither frozen document is rewritten after outcomes.
++
++One author, 60 minutes, one candidate; one independent exact-head review, 30 minutes,
++only after green gates and DOT confirmation of a free review slot. At most one
++post-candidate repair, 30 minutes, and one targeted recheck if used. Native/MT5,
++current-market fetch, production mutations and worker push budgets are zero.
++Initial author harness corrections before source freeze are recorded in the checkpoint.
++Prior lane budgets are never reset. Denied actor/admission requires exact-error STOP.
++
++## Input and interpretation
++
++news_macro_stage_ledger.py reads only --input, an explicit frozen UTF-8 JSON manifest.
++It performs no network access, producer execution, Git lookup, environment/runtime
++discovery, consumer lookup or fallback. CLI stdout is sorted, compact ASCII JSON,
++UTF-8 encoded, with one LF. Exit 0 means a structurally valid ledger, 1 a refused
++manifest, and 2 unreadable/malformed JSON; none means a real run is GREEN.
++
++Schema: ea_lab_news_macro_stage_manifest/1, authority OFFLINE_ONLY, label FIXTURE_ONLY
++or ACTUAL_UNQUALIFIED. Top-level fields are exactly schema_version, authority, label,
++run_id, source, as_of_utc, clocks, stages, evidence, last_good, known_failures.
++source contains source_id and artifact_sha256. Recorded UTC times use
++YYYY-MM-DDTHH:MM:SSZ and cannot be later than the explicit as_of_utc.
++
++The eight ordered stages are FETCHED, VALIDATED, CLASSIFIED, PUBLISHED_LOCAL,
++TRANSFER_REQUESTED, TRANSFERRED, CONSUMER_OBSERVED and EFFECTIVE.
++TRANSFERRED denotes receipt-backed transfer, not an exit-code inference.
++Every stage declaration binds stage, run_id, source_id, artifact_sha256, at_utc,
++status, reason and evidence_id. Status is PASS, FAIL or UNKNOWN. Inline evidence
++has evidence_id, sha256 and payload. Its hash covers the same canonical serialization
++as stdout. A payload repeats the exact stage binding and must use the stage-specific
++kind and basis EXPLICIT_STAGE_ATTESTATION. These are declarations, not authenticated
++remote witnesses; structural PASS does not certify the truth of the declaration.
++
++Transfer requests bind receiver_id and destination; receipts additionally bind
++request_evidence_id and received_sha256. Observations bind consumer_id and
++observed_sha256. Effect receipts bind consumer_id, observation_evidence_id and
++effective_sha256. Binding mismatches, hash mismatches, duplicate/orphan receipts,
++malformed types, unknown fields, future recorded times and reversed stage chronology
++refuse the manifest. Missing stages/receipts remain UNKNOWN. A declared failure
++remains FAIL even when other stages are absent; its declared reason is retained.
++A positive stage needs explicit matching evidence and all predecessor stages PASS.
++Last-good metadata is separately reported and never substitutes for the current run.
++
++clocks retains observation_time_utc, release_time_utc, available_at_utc and
++fetch_time_utc as separate nullable fields. Economic observation, release, information
++availability and transport fetch are not interchangeable. No age threshold or new
++clock conversion is defined. A FETCHED attestation must match the explicit fetch clock.
++
++File existence, mtime, rclone exit 0 and absent failure tokens cannot establish PASS.
++The ledger always emits actual_run_green=UNKNOWN and runtime_effectiveness_certified=false.
++A FIXTURE_ONLY EFFECTIVE/PASS is a synthetic declaration chain, never a VPS or EA verdict.
++ACTUAL_UNQUALIFIED is also an evidence description, never runtime qualification.
++
++## Read-only bindings and actual evidence
++
++READONLY_BINDINGS.json pins hashes at the exact base for:
++
++- scripts/daily_monitor.ps1
++- scripts/mris/mris_run.ps1
++- scripts/publish_guard_feeds_to_vps.ps1
++- ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1
++
++The abbreviated publisher locator in the dispatch resolves to the canonical scripts/
++path. None of these producers is edited, imported or executed.
++
++DailyMonitor records nonzero child exits and separately appends coverage failures;
++its final nonempty failure list yields exit 1. MRIS aggregates caught stage exceptions,
++and a partial brief path does not prove every stage. The publisher validates feeds
++independently and preserves last-good destinations on failure; local staging is not
++remote receipt or consumer-effect evidence. The VPS pull distinguishes rclone copy
++from validation/local atomic publication; neither proves consumer observation/effect.
++
++The immutable October 1 acceptance is copied as ACTUAL_ACCEPTANCE_20261001.json and
++rehashes to b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29.
++It records last_result=1, DEGRADED_MONITORING and exactly:
++
++- runtime-identity-unverified
++- runtime-identity-coverage-gap
++- deployment-unverified-69424711|
++- deployment-verification-underived-x58
++
++This locates the final nonzero evidence-gap result. It does not establish a new
++News/Macro producer-stage failure or a current remote/runtime result.
++ACTUAL_INPUT.json binds the acceptance snapshot as its source artifact, not a feed.
++It deliberately supplies no feed-stage receipts and no economic/fetch clocks.
++ACTUAL_LEDGER.json preserves all eight stages UNKNOWN and all four failure tokens.
++Its structural PASS does not override the accepted degraded-monitoring evidence.
++
++## Validation and handoff
++
++Twelve frozen FIXTURE_ONLY cases cover positive chain, empty stages, missing
++classification, wrong artifact hash, wrong run, malformed/future recorded times,
++separate last-good, transfer without receipt, observation without effect, explicit
++known failures, clock distinction and deterministic bytes/schema rejection.
++The final test runner produces one input/outcome pair per case and RESULTS.json.
++Adversarial subcases test weak evidence bases, receipt/consumer identity mismatch,
++schema/types, duplicate JSON keys and numeric/nonfinite inputs.
++
++Run from the isolated worktree using its existing portable Python:
++
++    . scripts\use_python.ps1
++    $python = Assert-PortablePython -Root $PWD
++    & $python -B tools\knowledge_validation\test_news_macro_stage_ledger.py --write-evidence
++    & $python -B tools\knowledge_validation\news_macro_stage_ledger.py --input <frozen-manifest.json>
++
++The 12 cases pass; the existing focused knowledge-validation cage passes 11 tests.
++Source parse, annotation/schema checks, exact allowlist, diff-check and hashes are
++recorded before the normal-hook commit attempt. HASHES.json pins evidence/source bytes.
++AUTHOR_CHECKPOINT.json supplies exact commit/gate/Registry readback and the one NEXT.
++
++Independent review is NOT_RUN until DOT confirms the free review slot and admits
++the separate exact-head read-only review. Author results grant no integration/push,
++Template/MT5/native/performance, deployment, trading or risk-policy authority.
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_ACCEPTANCE_20261001.json b/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_ACCEPTANCE_20261001.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..044d83c1b99df6583cdd6448b03f637bccfefbd3
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_ACCEPTANCE_20261001.json
+@@ -0,0 +1,19 @@
++﻿{
++    "schema":  "dailymonitor_runtime_v2_final_acceptance/1",
++    "utc":  "2026-10-01T06:10:14.8912331+00:00",
++    "source_canonical":  "20a066f4ff77c2fe9bd867814f53eda326711b43",
++    "current_origin_master":  "07dfcc597d5f64c24d1f97bbd446e0b08eeb2de0",
++    "runtime_head":  "fd8e60ba13e378978645cd9563920c56c391c8d3",
++    "task_state":  "Ready",
++    "last_result":  1,
++    "last_run":  "2026-10-01T03:35:56.0000000Z",
++    "action":  "-NoProfile -ExecutionPolicy Bypass -File \"D:\\EA_LAB_WORKSPACE\\runtime\\daily-monitor-20a066f4-20260930-v2\\scripts\\daily_monitor.ps1\"",
++    "latest_failure_line":  "\u0000done WITH FAILURES: runtime-identity-unverified, runtime-identity-coverage-gap, deployment-unverified-69424711|, deployment-verification-underived-x58",
++    "unexpected_failures":  [
++
++                            ],
++    "classification":  "ACCEPTED_RUNTIME_WITH_KNOWN_FAIL_VISIBLE_EVIDENCE_GAPS",
++    "global_monitoring":  "DEGRADED_MONITORING",
++    "watchdog":  "DISABLED",
++    "runtime_switch":  "ACTIVE"
++}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_INPUT.json b/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_INPUT.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..f09e9ae3b36af84dbad0ec648853ee5187cd8532
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_INPUT.json
+@@ -0,0 +1,30 @@
++{
++    "schema_version":  "ea_lab_news_macro_stage_manifest/1",
++    "authority":  "OFFLINE_ONLY",
++    "label":  "ACTUAL_UNQUALIFIED",
++    "run_id":  "DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z",
++    "source":  {
++                   "source_id":  "DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED",
++                   "artifact_sha256":  "b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29"
++               },
++    "as_of_utc":  "2026-10-04T09:55:37Z",
++    "clocks":  {
++                   "observation_time_utc":  null,
++                   "release_time_utc":  null,
++                   "available_at_utc":  null,
++                   "fetch_time_utc":  null
++               },
++    "stages":  [
++
++               ],
++    "evidence":  [
++
++                 ],
++    "last_good":  null,
++    "known_failures":  [
++                           "runtime-identity-unverified",
++                           "runtime-identity-coverage-gap",
++                           "deployment-unverified-69424711|",
++                           "deployment-verification-underived-x58"
++                       ]
++}
+\ No newline at end of file
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_LEDGER.json b/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_LEDGER.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..c1c42082991d14c3311f3e3f2a770394ec57dbf7
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/ACTUAL_LEDGER.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T09:55:37Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":null,"fetch_time_utc":null,"observation_time_utc":null,"release_time_utc":null},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":["runtime-identity-unverified","runtime-identity-coverage-gap","deployment-unverified-69424711|","deployment-verification-underived-x58"],"label":"ACTUAL_UNQUALIFIED","last_good":null,"last_good_used_for_current_run":false,"run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED"},"stages":[{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED","stage":"FETCHED","status":"UNKNOWN"},{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED","stage":"VALIDATED","status":"UNKNOWN"},{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED","stage":"CLASSIFIED","status":"UNKNOWN"},{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED","stage":"PUBLISHED_LOCAL","status":"UNKNOWN"},{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED","stage":"TRANSFER_REQUESTED","status":"UNKNOWN"},{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"DAILYMONITOR_ACCEPTANCE_RUN_2026-10-01T03:35:56.0000000Z","source_id":"DailyMonitor_ACCEPTANCE_20261001_NOT_A_FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/ADMISSION_READBACK.json b/factory/runs/news_macro_stage_ledger_v1_20261004/ADMISSION_READBACK.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..aee05e239872142c1dd8d6e7f3778c3b4d30fddd
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/ADMISSION_READBACK.json
+@@ -0,0 +1,161 @@
++{
++    "schema_version":  "ea_lab_news_macro_admission_receipt/1",
++    "observed_utc":  "2026-10-04T09:56:39Z",
++    "device":  "BaBoss",
++    "device_id":  "bbb88aa0-1598-43f6-b56c-a7db22af086a",
++    "actor":  "baboss\\patip",
++    "real_windows_cwd_at_probe":  "C:\\Users\\patip\\AppData\\Local\\npm-cache\\_npx\\210338ee94cf9539\\node_modules\\@wonderwhy-er\\desktop-commander\\dist",
++    "source_base":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
++    "supported_refresh":  "REFRESHED_FF_ONLY_HEAD_ORIGIN_REMOTE_MATCH",
++    "bootstrap":  "READY_NORMAL_GITHOOKS",
++    "admission":  "CLAIMED",
++    "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
++    "owner_chat":  "EA_LAB-NEWS-MACRO-20260921",
++    "superseded_lane":  "",
++    "old_owner_lanes":  [
++                            {
++                                "lane_id":  "ct-news-macro-lab-v1-20260921",
++                                "state":  "DONE",
++                                "head_sha":  "10956fe1a6f3d50d38b87c8acfa222c5e9bffbc2",
++                                "blocker_class":  ""
++                            },
++                            {
++                                "lane_id":  "ct-news-macro-lab-v1-gemini-support-review-20260922",
++                                "state":  "DONE",
++                                "head_sha":  "1acb0735d507d43a713dc97d6d6c8b0257301811",
++                                "blocker_class":  "OPTIONAL_SUPPORT_NO_CONCLUSION_PREMODEL_CLI"
++                            },
++                            {
++                                "lane_id":  "ct-news-macro-lab-v1-qwen-delta-support-20260922",
++                                "state":  "DONE",
++                                "head_sha":  "1acb0735d507d43a713dc97d6d6c8b0257301811",
++                                "blocker_class":  ""
++                            },
++                            {
++                                "lane_id":  "ct-news-macro-lab-v1-qwen-support-review-20260922",
++                                "state":  "DONE",
++                                "head_sha":  "5387cde0b11c84320835fb5a82414b97708b1004",
++                                "blocker_class":  ""
++                            },
++                            {
++                                "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
++                                "state":  "RUNNING",
++                                "head_sha":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
++                                "blocker_class":  ""
++                            }
++                        ],
++    "mgtt_predecessors":  [
++                              {
++                                  "lane_id":  "ct-news-macro-mg-tester-transfer-impl-review-ro-5845-20260927",
++                                  "state":  "DONE",
++                                  "head_sha":  "5845c4e039a3d9ef57e6997af42655a3d854d34e",
++                                  "blocker_class":  "SCRUTINY_REPAIR_REQUIRED_HIGH__MGTT001_007_OPEN__BLOCK_INTEGRATION__TERMINAL_REVIEW_CONSUMED_NO_RERUN"
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mg-tester-transfer-impl-v1-20260927",
++                                  "state":  "BLOCKED",
++                                  "head_sha":  "7f9d0db07eece9596f4b5d5a76cb2d5a95bd0fbc",
++                                  "blocker_class":  "REPAIR1_1_OF_1_CONSUMED__NATIVE_CONFIG_MISMATCH_AND_PROCESS_IDENTITY_UNPROVEN__NO_REPAIR2_NO_PUSH"
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mg-tester-transfer-qual-v1-20260926",
++                                  "state":  "DONE",
++                                  "head_sha":  "4aa459566c4e5eedc2477938fa5d3f4f86d00e8e",
++                                  "blocker_class":  "PHASE1_REVIEWED_CANONICAL__READY_FOR_PROSPECTIVE_IMPLEMENTATION__IMPLEMENTATION_NOT_AUTHORIZED"
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mg-tester-transfer-regression-runtime-v1-20260927",
++                                  "state":  "DONE",
++                                  "head_sha":  "5845c4e039a3d9ef57e6997af42655a3d854d34e",
++                                  "blocker_class":  "FULL_TPL_CLEAN_8_OF_8_BUILD6090__WRAPPER_POSTCHECK_RECONCILED__MT5_LANE2_RELEASED"
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mg-tester-transfer-runtime-lease-v1-20260927",
++                                  "state":  "DONE",
++                                  "head_sha":  "b586d4d32c04fa33a30517ab3a1a8469b238d2ac",
++                                  "blocker_class":  "MT5_LANE1_RELEASED__NATIVE_TRANSFER_LEDGER_QUAL_PASS_NO_PERFORMANCE"
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mgtt-capture-normalization-v2-20260928",
++                                  "state":  "BLOCKED",
++                                  "head_sha":  "9147e4545ff6d4568a5d9d3d4b883ed832fc2cdd",
++                                  "blocker_class":  "POSITIVE_RUNNER_EXIT_UNAVAILABLE_FAIL_CLOSED_NO_RETRY"
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mgtt-runner-exit-provenance-v1-20260928",
++                                  "state":  "BLOCKED",
++                                  "head_sha":  "8268774667b2114bbd5307b8bbc5edcff07e5b8d",
++                                  "blocker_class":  "POSITIVE_PROCESS_CAPTURE_REFUSAL_CAMPAIGN_CONSUMED"
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mgtt-runner-handle-retention-v3-20260928",
++                                  "state":  "DONE",
++                                  "head_sha":  "b06320999f98aeefb33329971eee03405524e5af",
++                                  "blocker_class":  ""
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mgtt-shortlived-tester-identity-v1-20260928",
++                                  "state":  "BLOCKED",
++                                  "head_sha":  "b9531886c5d2a4e5194684462cf66bd30035e588",
++                                  "blocker_class":  "POSITIVE_IDENTITY_INCOMPLETE_SHA256_PROPERTY_MISSING_RUNNER_EXIT_UNKNOWN"
++                              },
++                              {
++                                  "lane_id":  "ct-news-macro-mgtt-successor-qual-v1-20260928",
++                                  "state":  "BLOCKED",
++                                  "head_sha":  "6503ed949b70caad379d0d11842c9aa7c6b2f1ef",
++                                  "blocker_class":  "NATIVE_POSITIVE_RUNNER_REPORT_GATE_FAILED_NO_RETRY_NO_MUTATION"
++                              }
++                          ],
++    "active_writers":  [
++                           {
++                               "lane_id":  "ct-ea-builder-m1-mobile-usability-20261003",
++                               "owner_chat":  "EA_LAB-MAIN-CT-20260930",
++                               "state":  "FROZEN",
++                               "critical_paths":  [
++                                                      "tools/mobile_report_hub/owner_webapp/builder_workflow.js",
++                                                      "tools/mobile_report_hub/owner_webapp/owner_webapp.css",
++                                                      "tools/mobile_report_hub/owner_webapp/test_builder_workflow.cjs",
++                                                      "tools/mobile_report_hub/owner_webapp/browser_builder_workflow.cjs",
++                                                      "docs/workflows/EA_BUILDER_M1_DEFAULTPROFILE_INTERACTIVE_DELTA.md"
++                                                  ]
++                           },
++                           {
++                               "lane_id":  "ct-lnwjud-execution-identity-read-v2-20261004",
++                               "owner_chat":  "EA_LAB-MAIN-CT-20260928",
++                               "state":  "REVIEW",
++                               "critical_paths":  [
++                                                      "tools/lnwjud/current_write_v1/execution_identity.cjs",
++                                                      "tools/lnwjud/current_write_v1/test_execution_identity.cjs",
++                                                      "tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs",
++                                                      "tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json",
++                                                      "docs/workflows/LNWJUD_EXECUTION_IDENTITY_SOURCE_V1.md",
++                                                      "tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs"
++                                                  ]
++                           },
++                           {
++                               "lane_id":  "ct-news-macro-stage-ledger-v1-20261004",
++                               "owner_chat":  "EA_LAB-NEWS-MACRO-20260921",
++                               "state":  "RUNNING",
++                               "critical_paths":  [
++                                                      "tools/knowledge_validation/news_macro_stage_ledger.py",
++                                                      "tools/knowledge_validation/test_news_macro_stage_ledger.py",
++                                                      "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md",
++                                                      "factory/runs/news_macro_stage_ledger_v1_20261004"
++                                                  ]
++                           }
++                       ],
++    "active_writer_count":  3,
++    "wip_limit":  4,
++    "review_slot_confirmation":  "NOT_RECEIVED_NO_REVIEW_SPAWN",
++    "old_durable_jobs":  "Historical owner jobs reconciled from COMPLETE result/state; no dispatch or rerun",
++    "governing_documents":  [
++                                "START_HERE.md",
++                                "PROJECT_STATE.md",
++                                "AGENTS.md",
++                                "AGENT_TASKBOARD.md",
++                                "taskboards/active/P01.md",
++                                "taskboards/active/P02.md",
++                                "taskboards/active/P03.md"
++                            ],
++    "authority":  "OBSERVATION_ONLY_NOT_SECOND_CONTROL_PLANE"
++}
+\ No newline at end of file
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/CASES_FROZEN.json b/factory/runs/news_macro_stage_ledger_v1_20261004/CASES_FROZEN.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..095c87a063f4c1c341bfb5878fafacf95a500fde
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/CASES_FROZEN.json
+@@ -0,0 +1,183 @@
++{
++  "schema_version": "ea_lab_news_macro_stage_fixture_plan/1",
++  "label": "FIXTURE_ONLY",
++  "cases": [
++    {
++      "case_id": "positive_chain",
++      "label": "FIXTURE_ONLY",
++      "scenario": "all explicit matching attestations",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS"
++      ],
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "no_stages",
++      "label": "FIXTURE_ONLY",
++      "scenario": "empty stages/evidence",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN"
++      ],
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "missing_classification",
++      "label": "FIXTURE_ONLY",
++      "scenario": "remove CLASSIFIED record+evidence",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "PASS",
++        "PASS",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN"
++      ],
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "wrong_hash",
++      "label": "FIXTURE_ONLY",
++      "scenario": "VALIDATED binds different artifact hash",
++      "expected_validation": "REFUSED",
++      "expected_stages": null,
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "wrong_run",
++      "label": "FIXTURE_ONLY",
++      "scenario": "TRANSFERRED evidence binds different run",
++      "expected_validation": "REFUSED",
++      "expected_stages": null,
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "malformed_or_future_time",
++      "label": "FIXTURE_ONLY",
++      "scenario": "subcases malformed stage time and future recorded time",
++      "expected_validation": "REFUSED",
++      "expected_stages": null,
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "last_good",
++      "label": "FIXTURE_ONLY",
++      "scenario": "empty current stages plus separate prior run",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN"
++      ],
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "transfer_without_receipt",
++      "label": "FIXTURE_ONLY",
++      "scenario": "TRANSFERRED claim without evidence; weak rclone/mtime bases separately refused",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN"
++      ],
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "observed_without_effect",
++      "label": "FIXTURE_ONLY",
++      "scenario": "remove EFFECTIVE evidence/record",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "UNKNOWN"
++      ],
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "known_failures",
++      "label": "FIXTURE_ONLY",
++      "scenario": "explicit VALIDATED FAIL with evidence and four supplied acceptance tokens",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "PASS",
++        "FAIL",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN",
++        "UNKNOWN"
++      ],
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "clock_distinction",
++      "label": "FIXTURE_ONLY",
++      "scenario": "different four clocks, nullable release subcase, stage chronology reversed subcase refused",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS"
++      ],
++      "actual_run_green": "UNKNOWN"
++    },
++    {
++      "case_id": "deterministic_bytes_and_schema",
++      "label": "FIXTURE_ONLY",
++      "scenario": "repeat/reorder object keys same bytes; malformed types/schema/duplicate/evidence hash/receipt identities reject",
++      "expected_validation": "PASS",
++      "expected_stages": [
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS",
++        "PASS"
++      ],
++      "actual_run_green": "UNKNOWN"
++    }
++  ]
++}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/CONTRACT.json b/factory/runs/news_macro_stage_ledger_v1_20261004/CONTRACT.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..333ac1f13cb8abb57e999c2ee7e1e5b71cc830eb
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/CONTRACT.json
+@@ -0,0 +1,71 @@
++{
++  "schema_version": "ea_lab_news_macro_stage_ledger_contract/1",
++  "authority": "OFFLINE_ONLY",
++  "owner": "EA_LAB-NEWS-MACRO-20260921",
++  "lane_id": "ct-news-macro-stage-ledger-v1-20261004",
++  "base_sha": "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
++  "worktree": "D:\\EA_LAB_CONTROL\\w\\news-macro-stage-ledger-v1-1004",
++  "allowed_paths": [
++    "tools/knowledge_validation/news_macro_stage_ledger.py",
++    "tools/knowledge_validation/test_news_macro_stage_ledger.py",
++    "docs/research/NEWS_MACRO_STAGE_LEDGER_V1_20261004.md",
++    "factory/runs/news_macro_stage_ledger_v1_20261004"
++  ],
++  "consumer": [
++    "Existing NewsMacro owner",
++    "Future handoff validator"
++  ],
++  "monitor_wiring": "OUTSIDE_CONTRACT",
++  "budget": {
++    "author_candidates": 1,
++    "author_minutes": 60,
++    "review_jobs": 1,
++    "review_minutes": 30,
++    "review_requires": "GREEN exact head and DOT free review-slot confirmation",
++    "repairs_max": 1,
++    "repair_minutes": 30,
++    "targeted_recheck_if_repair": 1,
++    "native": 0,
++    "mt5": 0,
++    "market_fetch": 0,
++    "production_mutations": 0,
++    "push": 0
++  },
++  "stages": [
++    "FETCHED",
++    "VALIDATED",
++    "CLASSIFIED",
++    "PUBLISHED_LOCAL",
++    "TRANSFER_REQUESTED",
++    "TRANSFERRED",
++    "CONSUMER_OBSERVED",
++    "EFFECTIVE"
++  ],
++  "rules": [
++    "Only explicit frozen UTF-8 JSON input; stdout deterministic canonical JSON; no producer execution, network, runtime discovery or fallback.",
++    "Every stage binds stage/run/source/artifact hash/UTC event time/status/reason/hashed inline evidence.",
++    "PASS requires matching explicit stage attestation and all preceding PASS stages. Receipt kind is stage-specific. Transfer receiver+destination and matching request, observation consumer identity, effect matching observation are mandatory.",
++    "Missing stage/receipt is UNKNOWN. FAIL is retained. Last-good is separately recorded and never fills current-run gaps.",
++    "Ledger PASS means manifest structure/binding validation only; actual_run_green is always UNKNOWN. Fixture stage outcomes never imply runtime effectiveness.",
++    "Observation, release, availability and fetch clocks remain distinct and nullable. No freshness threshold invented. Malformed/future recorded actual timestamps or nonmonotone stages refuse manifest.",
++    "No file existence/mtime/rclone exit0/absence of tokens is proof. Weak evidence bases are refused.",
++    "Known failures survive unchanged and do not make a structurally valid ledger REFUSED."
++  ],
++  "acceptance_sha256": "b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29",
++  "acceptance_tokens": [
++    "runtime-identity-unverified",
++    "runtime-identity-coverage-gap",
++    "deployment-unverified-69424711|",
++    "deployment-verification-underived-x58"
++  ],
++  "acceptance_verification": "USER_SUPPLIED_REFERENCE_NOT_YET_REHASHED",
++  "checks": [
++    "12 pre-outcome cases pass",
++    "Python AST parse + annotation/schema checks",
++    "Existing focused knowledge validation cage",
++    "diff --check + allowlist + source/evidence SHA256",
++    "normal pre-commit and commit-msg hooks; no bypass",
++    "frozen clean source commit; review NOT_RUN until DOT slot"
++  ],
++  "stop": "Denied actor/admission exact error STOP; no bypass. Exhausted cap checkpoint BLOCKED. Old lane/budgets immutable."
++}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_clock_distinction.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_clock_distinction.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..7d858c03ae61eaec1ff5fa33b2a83afc8f321e6f
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_clock_distinction.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_deterministic_bytes_and_schema.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_deterministic_bytes_and_schema.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..7d858c03ae61eaec1ff5fa33b2a83afc8f321e6f
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_deterministic_bytes_and_schema.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_known_failures.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_known_failures.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..f6c5b1c6cefcfe5a78359a859b504a953095b550
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_known_failures.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_VALIDATION_FAILURE_LAST_GOOD_RETAINED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"FAIL"},"sha256":"ee0c10aab06816fd60fb8da69874cd1bbd2a5d504e40553278e5cdc66f814823"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":["runtime-identity-unverified","runtime-identity-coverage-gap","deployment-unverified-69424711|","deployment-verification-underived-x58"],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_VALIDATION_FAILURE_LAST_GOOD_RETAINED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"FAIL"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_last_good.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_last_good.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..182f580e07c48fcfdb051b906080b4197de5e70b
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_last_good.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[],"known_failures":[],"label":"FIXTURE_ONLY","last_good":{"artifact_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","at_utc":"2026-10-03T10:00:00Z","run_id":"FIXTURE-PRIOR-RUN","source_id":"FIXTURE-FEED"},"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_malformed_or_future_time.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_malformed_or_future_time.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f1b897d5bee02d486a9c2ea772a1b63002a87a1
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_malformed_or_future_time.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"yesterday","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_missing_classification.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_missing_classification.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..5c2c7ba8b1b0d07cc6d607c36a18ae174f5e22bc
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_missing_classification.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_no_stages.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_no_stages.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..aa14700a9b3f194b28762ae10b062f5aefa4c1ae
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_no_stages.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_observed_without_effect.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_observed_without_effect.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..6be2310426facbd644fb3d0b79cd6497b4b39949
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_observed_without_effect.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_positive_chain.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_positive_chain.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..7d858c03ae61eaec1ff5fa33b2a83afc8f321e6f
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_positive_chain.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_transfer_without_receipt.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_transfer_without_receipt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..925e121072f0feff938959b13b55c72cb1e5a285
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_transfer_without_receipt.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_wrong_hash.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_wrong_hash.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..5a38968751b168777243669a5fab7101ee00f747
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_wrong_hash.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_wrong_run.json b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_wrong_run.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..6b397326063758df1c77ff592554ba8982f69b31
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/FIXTURE_wrong_run.json
+@@ -0,0 +1 @@
++{"as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"evidence":[{"evidence_id":"fetched","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"fetch_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab"},{"evidence_id":"validated","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"validation_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04"},{"evidence_id":"classified","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"classification_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a"},{"evidence_id":"published_local","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","kind":"local_publication_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b"},{"evidence_id":"transfer_requested","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_request","reason":"FIXTURE_EXPLICIT_ATTESTATION","receiver_id":"FIXTURE-VPS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0"},{"evidence_id":"transferred","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","destination":"FIXTURE-Common/Files/feed.csv","kind":"transfer_receipt","reason":"FIXTURE_EXPLICIT_ATTESTATION","received_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","receiver_id":"FIXTURE-VPS","request_evidence_id":"transfer_requested","run_id":"FIXTURE-OTHER-RUN","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"7842efcc94a180f2ceeddffeb6dd26495425eac4f32e5e7e9094623d426d6425"},{"evidence_id":"consumer_observed","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","kind":"consumer_observation","observed_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e"},{"evidence_id":"effective","payload":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","basis":"EXPLICIT_STAGE_ATTESTATION","consumer_id":"FIXTURE-EA","effective_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","kind":"effect_receipt","observation_evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","status":"PASS"},"sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522"}],"known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"run_id":"FIXTURE-RUN-001","schema_version":"ea_lab_news_macro_stage_manifest/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","evidence_id":"fetched","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","evidence_id":"validated","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","evidence_id":"classified","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","evidence_id":"published_local","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","evidence_id":"transfer_requested","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","evidence_id":"transferred","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","evidence_id":"consumer_observed","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","evidence_id":"effective","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}]}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_clock_distinction.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_clock_distinction.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..915c89bcd9994a9d381d0473811e609bd6306eaf
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_clock_distinction.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","declared_status":"PASS","evidence_id":"validated","evidence_sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","declared_status":"PASS","evidence_id":"classified","evidence_sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","declared_status":"PASS","evidence_id":"published_local","evidence_sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","declared_status":"PASS","evidence_id":"transfer_requested","evidence_sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","declared_status":"PASS","evidence_id":"transferred","evidence_sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","declared_status":"PASS","evidence_id":"consumer_observed","evidence_sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","declared_status":"PASS","evidence_id":"effective","evidence_sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_deterministic_bytes_and_schema.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_deterministic_bytes_and_schema.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..915c89bcd9994a9d381d0473811e609bd6306eaf
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_deterministic_bytes_and_schema.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","declared_status":"PASS","evidence_id":"validated","evidence_sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","declared_status":"PASS","evidence_id":"classified","evidence_sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","declared_status":"PASS","evidence_id":"published_local","evidence_sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","declared_status":"PASS","evidence_id":"transfer_requested","evidence_sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","declared_status":"PASS","evidence_id":"transferred","evidence_sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","declared_status":"PASS","evidence_id":"consumer_observed","evidence_sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","declared_status":"PASS","evidence_id":"effective","evidence_sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_known_failures.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_known_failures.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..bb7e76baca8f963774f95bfeabcaff085d277801
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_known_failures.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":["runtime-identity-unverified","runtime-identity-coverage-gap","deployment-unverified-69424711|","deployment-verification-underived-x58"],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","declared_status":"FAIL","evidence_id":"validated","evidence_sha256":"ee0c10aab06816fd60fb8da69874cd1bbd2a5d504e40553278e5cdc66f814823","reason":"FIXTURE_VALIDATION_FAILURE_LAST_GOOD_RETAINED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"FAIL"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","declared_status":"PASS","evidence_id":"classified","evidence_sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","declared_status":"PASS","evidence_id":"published_local","evidence_sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","declared_status":"PASS","evidence_id":"transfer_requested","evidence_sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","declared_status":"PASS","evidence_id":"transferred","evidence_sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","declared_status":"PASS","evidence_id":"consumer_observed","evidence_sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","declared_status":"PASS","evidence_id":"effective","evidence_sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_last_good.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_last_good.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..f38e28893e0c72de1f214ec1a00be4f9d3eedd81
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_last_good.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":{"artifact_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","at_utc":"2026-10-03T10:00:00Z","run_id":"FIXTURE-PRIOR-RUN","source_id":"FIXTURE-FEED"},"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_malformed_or_future_time.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_malformed_or_future_time.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..666b364f7d3a49d37d9c283ca5c5082cedcd2518
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_malformed_or_future_time.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":["VALIDATED.at_utc: UTC YYYY-MM-DDTHH:MM:SSZ required"],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"REFUSED"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_missing_classification.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_missing_classification.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9aec491dde5c53307f5e23435a99b48c329e3281
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_missing_classification.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","declared_status":"PASS","evidence_id":"validated","evidence_sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","declared_status":"PASS","evidence_id":"published_local","evidence_sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","declared_status":"PASS","evidence_id":"transfer_requested","evidence_sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","declared_status":"PASS","evidence_id":"transferred","evidence_sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","declared_status":"PASS","evidence_id":"consumer_observed","evidence_sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","declared_status":"PASS","evidence_id":"effective","evidence_sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_no_stages.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_no_stages.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..5d8a34a266614b56a10e3f0cb15aaf74b7a4f7c6
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_no_stages.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_observed_without_effect.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_observed_without_effect.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..a6002f4088f8241271aa2936f8e93efae24c5410
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_observed_without_effect.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","declared_status":"PASS","evidence_id":"validated","evidence_sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","declared_status":"PASS","evidence_id":"classified","evidence_sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","declared_status":"PASS","evidence_id":"published_local","evidence_sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","declared_status":"PASS","evidence_id":"transfer_requested","evidence_sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","declared_status":"PASS","evidence_id":"transferred","evidence_sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","declared_status":"PASS","evidence_id":"consumer_observed","evidence_sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MISSING_STAGE","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_positive_chain.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_positive_chain.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..915c89bcd9994a9d381d0473811e609bd6306eaf
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_positive_chain.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","declared_status":"PASS","evidence_id":"validated","evidence_sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","declared_status":"PASS","evidence_id":"classified","evidence_sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","declared_status":"PASS","evidence_id":"published_local","evidence_sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","declared_status":"PASS","evidence_id":"transfer_requested","evidence_sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","declared_status":"PASS","evidence_id":"transferred","evidence_sha256":"c524d33302c8278fb7471e47309ddf0d727e9938ab18cfea8585680b4e5d1cb3","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","declared_status":"PASS","evidence_id":"consumer_observed","evidence_sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","declared_status":"PASS","evidence_id":"effective","evidence_sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"PASS"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_transfer_without_receipt.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_transfer_without_receipt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..96fdc1ae90612f263286181ac7b016d7d6498d5b
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_transfer_without_receipt.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":[],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","declared_status":"PASS","evidence_id":"validated","evidence_sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","declared_status":"PASS","evidence_id":"classified","evidence_sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","declared_status":"PASS","evidence_id":"published_local","evidence_sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","declared_status":"PASS","evidence_id":"transfer_requested","evidence_sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0","reason":"FIXTURE_EXPLICIT_ATTESTATION","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"PASS"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","declared_status":"PASS","evidence_id":"transferred","evidence_sha256":null,"reason":"MISSING_EXPLICIT_RECEIPT","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","declared_status":"PASS","evidence_id":"consumer_observed","evidence_sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","declared_status":"PASS","evidence_id":"effective","evidence_sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522","reason":"PREDECESSOR_NOT_PASS","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"PASS"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_wrong_hash.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_wrong_hash.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..2a1218948d96395b17e75d6da712192dd28422cf
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_wrong_hash.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":["VALIDATED: run/source/artifact binding mismatch"],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":null,"declared_status":null,"evidence_id":null,"evidence_sha256":null,"reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"REFUSED"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_wrong_run.json b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_wrong_run.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9b1bc43b010f39df3c2cb8c16fdbeae07d644454
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/OUTCOME_wrong_run.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","as_of_utc":"2026-10-04T12:00:00Z","authority":"OFFLINE_ONLY","clocks":{"available_at_utc":"2026-10-04T09:00:00Z","fetch_time_utc":"2026-10-04T10:01:00Z","observation_time_utc":"2026-10-03T16:00:00Z","release_time_utc":"2026-10-03T17:00:00Z"},"errors":["TRANSFERRED: evidence binding mismatch"],"interpretation":"Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.","known_failures":[],"label":"FIXTURE_ONLY","last_good":null,"last_good_used_for_current_run":false,"run_id":"FIXTURE-RUN-001","runtime_effectiveness_certified":false,"schema_version":"ea_lab_news_macro_stage_ledger/1","source":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_id":"FIXTURE-FEED"},"stages":[{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:01:00Z","declared_status":"PASS","evidence_id":"fetched","evidence_sha256":"51e63984ac629610b0108a8489802dd243615c2c98f72ec1a2739ab073812dab","reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"FETCHED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:02:00Z","declared_status":"PASS","evidence_id":"validated","evidence_sha256":"bb264ee8ddf1617dd8f1a154bd0628e01f40cef298a2810f2009a1058ae7dc04","reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"VALIDATED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:03:00Z","declared_status":"PASS","evidence_id":"classified","evidence_sha256":"ccac9d98abfd8ba0682ca8952463184e9542e4e0dab4c07b8ae7249f5e76527a","reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CLASSIFIED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:04:00Z","declared_status":"PASS","evidence_id":"published_local","evidence_sha256":"b076b1d92c9f84fecc5a4fe1d790277c3c5afbfeaea9f3cc25d1624031070b2b","reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"PUBLISHED_LOCAL","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:05:00Z","declared_status":"PASS","evidence_id":"transfer_requested","evidence_sha256":"80fd01a41db9f0577cb8629576d87f6707b47a495b376a1b5759d9796bed29e0","reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFER_REQUESTED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:06:00Z","declared_status":"PASS","evidence_id":"transferred","evidence_sha256":"7842efcc94a180f2ceeddffeb6dd26495425eac4f32e5e7e9094623d426d6425","reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"TRANSFERRED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:07:00Z","declared_status":"PASS","evidence_id":"consumer_observed","evidence_sha256":"531bf622538d6e0669aa0ab3ec9402592317046ffd77778b7b0419f2c584ba3e","reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"CONSUMER_OBSERVED","status":"UNKNOWN"},{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at_utc":"2026-10-04T10:08:00Z","declared_status":"PASS","evidence_id":"effective","evidence_sha256":"f60a6c58230eecedc21af081ee315806499b9daf99af5eda5ddb3410b59e9522","reason":"MANIFEST_REFUSED","run_id":"FIXTURE-RUN-001","source_id":"FIXTURE-FEED","stage":"EFFECTIVE","status":"UNKNOWN"}],"validation_status":"REFUSED"}
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/READONLY_BINDINGS.json b/factory/runs/news_macro_stage_ledger_v1_20261004/READONLY_BINDINGS.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..4d5c37187688b4a318d1ac53099bb8024a9eb3f4
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/READONLY_BINDINGS.json
+@@ -0,0 +1,35 @@
++{
++    "schema_version":  "ea_lab_news_macro_actual_bindings/1",
++    "acceptance_path":  "D:\\EA_LAB_CONTROL\\evidence\\dailymonitor-runtime-reanchor-v2-20260930\\FINAL_ACCEPTANCE_20261001.json",
++    "acceptance_sha256":  "b1568f6fba0bd0067df208c966728fa28a1f36da345104d1b444453e42d50c29",
++    "acceptance_verification":  "EXACT_BYTES_REHASHED",
++    "source_bindings":  [
++                            {
++                                "path":  "scripts/daily_monitor.ps1",
++                                "source_commit":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
++                                "sha256":  "d6a1f9f560b9044414fb60e54f1f3fac628f36b9a7c0cf92012ae4d2af075214",
++                                "access":  "READ_ONLY_NO_EXECUTION"
++                            },
++                            {
++                                "path":  "scripts/mris/mris_run.ps1",
++                                "source_commit":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
++                                "sha256":  "dc23d1f3c58083fe15bfc79e2f5803481c3d4234ea6ea2f640746f8d062d517e",
++                                "access":  "READ_ONLY_NO_EXECUTION"
++                            },
++                            {
++                                "path":  "scripts/publish_guard_feeds_to_vps.ps1",
++                                "source_commit":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
++                                "sha256":  "86caf580c96ac9c3077d7095bcfb190f7e6308e62734bf76f93ba9542c47ccbe",
++                                "access":  "READ_ONLY_NO_EXECUTION"
++                            },
++                            {
++                                "path":  "ea_projects/(Boss)_NewsGuard/vps_rclone/pull_guard_feeds.ps1",
++                                "source_commit":  "471a94d6d65fc86882ac7a4bbb882e280edbe98d",
++                                "sha256":  "68772daf005ceb6124a7dbf4ef494b8686454e3ec86379d775f17d9d6c83a9c2",
++                                "access":  "READ_ONLY_NO_EXECUTION"
++                            }
++                        ],
++    "actual_stages":  "UNKNOWN_NO_RUN_SOURCE_HASH_BOUND_STAGE_RECEIPTS",
++    "actual_nonzero":  "last_result=1; four coverage/runtime/deployment evidence-gap tokens retained; no News/Macro stage failure attributed without receipt",
++    "source_path_resolution":  "publish_guard_feeds_to_vps.ps1 binds canonical scripts/publish_guard_feeds_to_vps.ps1"
++}
+\ No newline at end of file
+diff --git a/factory/runs/news_macro_stage_ledger_v1_20261004/RESULTS.json b/factory/runs/news_macro_stage_ledger_v1_20261004/RESULTS.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..b4e9ffdadac9dc0dca32e8d7189d09282157c06e
+--- /dev/null
++++ b/factory/runs/news_macro_stage_ledger_v1_20261004/RESULTS.json
+@@ -0,0 +1 @@
++{"actual_run_green":"UNKNOWN","case_ids":["clock_distinction","deterministic_bytes_and_schema","known_failures","last_good","malformed_or_future_time","missing_classification","no_stages","observed_without_effect","positive_chain","transfer_without_receipt","wrong_hash","wrong_run"],"cases_frozen":12,"error_count":0,"failure_count":0,"label":"FIXTURE_ONLY","passed":true,"plan_sha256":"d628b95f7c46e7e7e71707c1124f896d91ce3b9d16ebb3cb5df4511a761fbde0","tests_run":12}
+diff --git a/tools/knowledge_validation/news_macro_stage_ledger.py b/tools/knowledge_validation/news_macro_stage_ledger.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..846b39d84d54eadbfa5e1902dae99a57a358c818
+--- /dev/null
++++ b/tools/knowledge_validation/news_macro_stage_ledger.py
+@@ -0,0 +1,253 @@
++"""Offline, explicit-manifest News/Macro provenance; no runtime discovery."""
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import re
++import sys
++from datetime import datetime
++from pathlib import Path
++from typing import Any
++
++SCHEMA = "ea_lab_news_macro_stage_manifest/1"
++STAGES = (
++    "FETCHED", "VALIDATED", "CLASSIFIED", "PUBLISHED_LOCAL",
++    "TRANSFER_REQUESTED", "TRANSFERRED", "CONSUMER_OBSERVED", "EFFECTIVE",
++)
++KINDS = dict(zip(STAGES, (
++    "fetch_receipt", "validation_receipt", "classification_receipt",
++    "local_publication_receipt", "transfer_request", "transfer_receipt",
++    "consumer_observation", "effect_receipt",
++)))
++CLOCKS = ("observation_time_utc", "release_time_utc", "available_at_utc", "fetch_time_utc")
++STATUSES = {"PASS", "FAIL", "UNKNOWN"}
++BINDING = ("run_id", "source_id", "artifact_sha256", "at_utc", "status", "reason")
++RECORD_KEYS = {"stage", "evidence_id", *BINDING}
++EXTRA_KEYS = {
++    "TRANSFER_REQUESTED": {"receiver_id", "destination"},
++    "TRANSFERRED": {"receiver_id", "destination", "request_evidence_id", "received_sha256"},
++    "CONSUMER_OBSERVED": {"consumer_id", "observed_sha256"},
++    "EFFECTIVE": {"consumer_id", "observation_evidence_id", "effective_sha256"},
++}
++
++
++def canonical_bytes(value: Any) -> bytes:
++    return (json.dumps(value, sort_keys=True, ensure_ascii=True, separators=(",", ":"),
++                       allow_nan=False) + "\n").encode("utf-8")
++
++
++def payload_sha256(payload: dict[str, Any]) -> str:
++    return hashlib.sha256(canonical_bytes(payload)).hexdigest()
++
++
++def text(value: Any, field: str) -> str:
++    if not isinstance(value, str) or not value.strip():
++        raise ValueError(f"{field}: nonempty string required")
++    return value
++
++
++def sha(value: Any, field: str) -> str:
++    if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
++        raise ValueError(f"{field}: lowercase SHA256 required")
++    return value
++
++
++def obj(value: Any, keys: set[str], field: str) -> dict[str, Any]:
++    if not isinstance(value, dict) or set(value) != keys:
++        raise ValueError(f"{field}: exact keys required {sorted(keys)}")
++    return value
++
++
++def utc(value: Any, field: str, as_of: datetime | None = None) -> datetime:
++    if not isinstance(value, str) or re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", value) is None:
++        raise ValueError(f"{field}: UTC YYYY-MM-DDTHH:MM:SSZ required")
++    try:
++        result = datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
++    except ValueError as exc:
++        raise ValueError(f"{field}: invalid recorded timestamp") from exc
++    if as_of is not None and result > as_of:
++        raise ValueError(f"{field}: recorded timestamp is future to as_of_utc")
++    return result
++
++
++def validate_manifest(manifest: Any) -> dict[str, Any]:
++    """PASS validates declarations/bindings; it never certifies a real run GREEN."""
++    rows: dict[str, dict[str, Any]] = {}
++    evidence: dict[str, dict[str, Any]] = {}
++    errors: list[str] = []
++    try:
++        m = obj(manifest, {
++            "schema_version", "authority", "label", "run_id", "source", "as_of_utc",
++            "clocks", "stages", "evidence", "last_good", "known_failures",
++        }, "manifest")
++        if m["schema_version"] != SCHEMA or m["authority"] != "OFFLINE_ONLY":
++            raise ValueError("manifest: unsupported schema or authority")
++        if m["label"] not in {"FIXTURE_ONLY", "ACTUAL_UNQUALIFIED"}:
++            raise ValueError("label: FIXTURE_ONLY or ACTUAL_UNQUALIFIED required")
++        run = text(m["run_id"], "run_id")
++        source = obj(m["source"], {"source_id", "artifact_sha256"}, "source")
++        source_id = text(source["source_id"], "source_id")
++        artifact = sha(source["artifact_sha256"], "artifact_sha256")
++        as_of = utc(m["as_of_utc"], "as_of_utc")
++        clocks = obj(m["clocks"], set(CLOCKS), "clocks")
++        for name, value in clocks.items():
++            if value is not None:
++                utc(value, name, as_of)
++        for name in ("stages", "evidence", "known_failures"):
++            if not isinstance(m[name], list):
++                raise ValueError(f"{name}: list required")
++        for token in m["known_failures"]:
++            text(token, "known_failure")
++        if m["last_good"] is not None:
++            prior = obj(m["last_good"], {"run_id", "source_id", "artifact_sha256", "at_utc"}, "last_good")
++            for name in ("run_id", "source_id"):
++                text(prior[name], f"last_good.{name}")
++            sha(prior["artifact_sha256"], "last_good.artifact_sha256")
++            utc(prior["at_utc"], "last_good.at_utc", as_of)
++            if prior["run_id"] == run:
++                raise ValueError("last_good: must identify a separate previous run")
++        for record in m["stages"]:
++            r = obj(record, RECORD_KEYS, "stage")
++            stage = r["stage"]
++            if not isinstance(stage, str) or stage not in STAGES or stage in rows:
++                raise ValueError("stage: unknown or duplicate stage")
++            if (r["run_id"], r["source_id"], r["artifact_sha256"]) != (run, source_id, artifact):
++                raise ValueError(f"{stage}: run/source/artifact binding mismatch")
++            if r["status"] not in STATUSES:
++                raise ValueError(f"{stage}: invalid status")
++            text(r["reason"], f"{stage}.reason")
++            utc(r["at_utc"], f"{stage}.at_utc", as_of)
++            if r["evidence_id"] is not None:
++                text(r["evidence_id"], f"{stage}.evidence_id")
++            rows[stage] = r
++        previous = None
++        for stage in STAGES:
++            if stage in rows:
++                current = utc(rows[stage]["at_utc"], f"{stage}.at_utc")
++                if previous is not None and current < previous:
++                    raise ValueError(f"{stage}: stage chronology reversed")
++                previous = current
++        for item in m["evidence"]:
++            e = obj(item, {"evidence_id", "sha256", "payload"}, "evidence")
++            eid = text(e["evidence_id"], "evidence_id")
++            if eid in evidence:
++                raise ValueError("evidence: duplicate evidence_id")
++            sha(e["sha256"], f"{eid}.sha256")
++            if not isinstance(e["payload"], dict) or payload_sha256(e["payload"]) != e["sha256"]:
++                raise ValueError(f"{eid}: evidence payload hash mismatch")
++            evidence[eid] = e
++        used: set[str] = set()
++        for stage, r in rows.items():
++            eid = r["evidence_id"]
++            if eid is None or eid not in evidence:
++                continue  # A claim without its receipt remains UNKNOWN.
++            if eid in used:
++                raise ValueError(f"{stage}: evidence reuse")
++            used.add(eid)
++            p = obj(evidence[eid]["payload"],
++                    {"kind", "basis", *BINDING, *EXTRA_KEYS.get(stage, set())}, f"{stage}.payload")
++            if p["kind"] != KINDS[stage] or p["basis"] != "EXPLICIT_STAGE_ATTESTATION":
++                raise ValueError(f"{stage}: explicit stage-specific attestation required")
++            if any(p[name] != r[name] for name in BINDING):
++                raise ValueError(f"{stage}: evidence binding mismatch")
++            for name in EXTRA_KEYS.get(stage, set()):
++                text(p[name], f"{stage}.{name}")
++            if stage == "FETCHED" and clocks["fetch_time_utc"] != r["at_utc"]:
++                raise ValueError("FETCHED: fetch clock must match fetch receipt time")
++            if stage == "TRANSFERRED":
++                if p["received_sha256"] != artifact:
++                    raise ValueError("TRANSFERRED: received artifact hash mismatch")
++                request = rows.get("TRANSFER_REQUESTED")
++                if request and request["evidence_id"] in evidence:
++                    req = evidence[request["evidence_id"]]["payload"]
++                    if (p["request_evidence_id"] != request["evidence_id"]
++                            or (p["receiver_id"], p["destination"]) != (req["receiver_id"], req["destination"])):
++                        raise ValueError("TRANSFERRED: request/receiver/destination mismatch")
++            if stage == "CONSUMER_OBSERVED" and p["observed_sha256"] != artifact:
++                raise ValueError("CONSUMER_OBSERVED: observed artifact hash mismatch")
++            if stage == "EFFECTIVE":
++                if p["effective_sha256"] != artifact:
++                    raise ValueError("EFFECTIVE: effective artifact hash mismatch")
++                observation = rows.get("CONSUMER_OBSERVED")
++                if observation and observation["evidence_id"] in evidence:
++                    observed = evidence[observation["evidence_id"]]["payload"]
++                    if (p["observation_evidence_id"] != observation["evidence_id"]
++                            or p["consumer_id"] != observed["consumer_id"]):
++                        raise ValueError("EFFECTIVE: consumer/observation mismatch")
++        if set(evidence) - used:
++            raise ValueError("evidence: orphan receipt not bound to a stage")
++    except (ValueError, TypeError, KeyError, OverflowError) as exc:
++        errors.append(str(exc))
++    m = manifest if isinstance(manifest, dict) else {}
++    source = m.get("source") if isinstance(m.get("source"), dict) else {}
++    output_rows = []
++    predecessor_pass = True
++    for stage in STAGES:
++        r = rows.get(stage)
++        status, reason = "UNKNOWN", "MISSING_STAGE"
++        eid = r["evidence_id"] if r else None
++        if errors:
++            reason = "MANIFEST_REFUSED"
++        elif r is not None:
++            if r["status"] == "FAIL":
++                status, reason = "FAIL", r["reason"]  # Explicit failure is never erased.
++            elif eid is None or eid not in evidence:
++                reason = "MISSING_EXPLICIT_RECEIPT"
++            elif r["status"] == "UNKNOWN":
++                reason = r["reason"]
++            elif not predecessor_pass:
++                reason = "PREDECESSOR_NOT_PASS"
++            else:
++                status, reason = "PASS", r["reason"]
++        predecessor_pass = predecessor_pass and status == "PASS"
++        output_rows.append({
++            "stage": stage, "run_id": m.get("run_id"), "source_id": source.get("source_id"),
++            "artifact_sha256": source.get("artifact_sha256"), "at_utc": r["at_utc"] if r else None,
++            "status": status, "reason": reason, "declared_status": r["status"] if r else None,
++            "evidence_id": eid, "evidence_sha256": evidence[eid]["sha256"] if eid in evidence else None,
++        })
++    return {
++        "schema_version": "ea_lab_news_macro_stage_ledger/1",
++        "authority": "OFFLINE_ONLY", "label": m.get("label"),
++        "validation_status": "REFUSED" if errors else "PASS", "errors": errors,
++        "run_id": m.get("run_id"), "source": source, "as_of_utc": m.get("as_of_utc"),
++        "clocks": m.get("clocks"), "stages": output_rows,
++        "last_good": m.get("last_good"), "last_good_used_for_current_run": False,
++        "known_failures": m.get("known_failures", []),
++        "actual_run_green": "UNKNOWN", "runtime_effectiveness_certified": False,
++        "interpretation": "Explicit declarations only; no runtime/EA/Monitor acceptance or routing authority.",
++    }
++
++
++def no_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
++    value: dict[str, Any] = {}
++    for key, item in pairs:
++        if key in value:
++            raise ValueError(f"duplicate JSON key: {key}")
++        value[key] = item
++    return value
++
++
++def reject_number(value: str) -> Any:
++    raise ValueError(f"numeric field outside manifest schema: {value}")
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--input", type=Path, required=True, help="Explicit frozen UTF-8 JSON manifest")
++    args = parser.parse_args()
++    try:
++        manifest = json.loads(args.input.read_text(encoding="utf-8"),
++                              object_pairs_hook=no_duplicate_keys, parse_int=reject_number, parse_float=reject_number,
++                              parse_constant=lambda value: (_ for _ in ()).throw(ValueError(f"invalid JSON: {value}")))
++    except (OSError, UnicodeError, ValueError) as exc:
++        sys.stdout.buffer.write(canonical_bytes({"validation_status": "REFUSED", "errors": [str(exc)]}))
++        return 2
++    result = validate_manifest(manifest)
++    sys.stdout.buffer.write(canonical_bytes(result))
++    return 0 if result["validation_status"] == "PASS" else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tools/knowledge_validation/test_news_macro_stage_ledger.py b/tools/knowledge_validation/test_news_macro_stage_ledger.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..a7801d2163c02ad09527829c2d3505d9e1afb54c
+--- /dev/null
++++ b/tools/knowledge_validation/test_news_macro_stage_ledger.py
+@@ -0,0 +1,243 @@
++"""Twelve preregistered FIXTURE_ONLY cases; no producer or runtime invocation."""
++from __future__ import annotations
++
++import argparse
++import ast
++import copy
++import hashlib
++import importlib.util
++import json
++import subprocess
++import sys
++import tempfile
++import typing
++import unittest
++from pathlib import Path
++
++SPEC = importlib.util.spec_from_file_location("news_macro_stage_ledger", Path(__file__).with_name("news_macro_stage_ledger.py"))
++ledger = importlib.util.module_from_spec(SPEC)
++SPEC.loader.exec_module(ledger)
++
++RUN_DIR = Path(__file__).resolve().parents[2] / "factory/runs/news_macro_stage_ledger_v1_20261004"
++PLAN = json.loads((RUN_DIR / "CASES_FROZEN.json").read_text(encoding="utf-8"))
++EXPECTED = {case["case_id"]: case for case in PLAN["cases"]}
++CAPTURED = {}
++
++
++def fixture() -> dict:
++    manifest = {
++        "schema_version": ledger.SCHEMA, "authority": "OFFLINE_ONLY", "label": "FIXTURE_ONLY",
++        "run_id": "FIXTURE-RUN-001", "source": {"source_id": "FIXTURE-FEED", "artifact_sha256": "a" * 64},
++        "as_of_utc": "2026-10-04T12:00:00Z",
++        "clocks": {"observation_time_utc": "2026-10-03T16:00:00Z", "release_time_utc": "2026-10-03T17:00:00Z",
++                   "available_at_utc": "2026-10-04T09:00:00Z", "fetch_time_utc": "2026-10-04T10:01:00Z"},
++        "stages": [], "evidence": [], "last_good": None, "known_failures": [],
++    }
++    for index, stage in enumerate(ledger.STAGES, 1):
++        record = {"stage": stage, "run_id": manifest["run_id"], **manifest["source"],
++                  "at_utc": f"2026-10-04T10:{index:02d}:00Z", "status": "PASS",
++                  "reason": "FIXTURE_EXPLICIT_ATTESTATION", "evidence_id": stage.lower()}
++        payload = {key: record[key] for key in ledger.BINDING}
++        payload.update(kind=ledger.KINDS[stage], basis="EXPLICIT_STAGE_ATTESTATION")
++        if stage == "TRANSFER_REQUESTED":
++            payload.update(receiver_id="FIXTURE-VPS", destination="FIXTURE-Common/Files/feed.csv")
++        if stage == "TRANSFERRED":
++            payload.update(receiver_id="FIXTURE-VPS", destination="FIXTURE-Common/Files/feed.csv",
++                           request_evidence_id="transfer_requested", received_sha256="a" * 64)
++        if stage == "CONSUMER_OBSERVED":
++            payload.update(consumer_id="FIXTURE-EA", observed_sha256="a" * 64)
++        if stage == "EFFECTIVE":
++            payload.update(consumer_id="FIXTURE-EA", observation_evidence_id="consumer_observed",
++                           effective_sha256="a" * 64)
++        manifest["stages"].append(record)
++        manifest["evidence"].append({"evidence_id": stage.lower(), "payload": payload,
++                                    "sha256": ledger.payload_sha256(payload)})
++    return manifest
++
++
++def rehash(manifest: dict) -> None:
++    for evidence in manifest["evidence"]:
++        evidence["sha256"] = ledger.payload_sha256(evidence["payload"])
++
++
++def remove_stage(manifest: dict, stage: str) -> None:
++    manifest["stages"] = [row for row in manifest["stages"] if row["stage"] != stage]
++    manifest["evidence"] = [row for row in manifest["evidence"] if row["evidence_id"] != stage.lower()]
++
++
++class FrozenCases(unittest.TestCase):
++    def check_case(self, case_id: str, manifest: dict) -> dict:
++        result = ledger.validate_manifest(manifest)
++        expected = EXPECTED[case_id]
++        self.assertEqual(result["validation_status"], expected["expected_validation"], result["errors"])
++        if expected["expected_stages"] is not None:
++            self.assertEqual([row["status"] for row in result["stages"]], expected["expected_stages"])
++        self.assertEqual(result["actual_run_green"], "UNKNOWN")
++        self.assertFalse(result["runtime_effectiveness_certified"])
++        CAPTURED[case_id] = (copy.deepcopy(manifest), copy.deepcopy(result))
++        return result
++
++    def test_positive_chain(self):
++        result = self.check_case("positive_chain", fixture())
++        self.assertEqual([row["stage"] for row in result["stages"]], list(ledger.STAGES))
++        for row in result["stages"]:
++            self.assertEqual(row["artifact_sha256"], "a" * 64)
++            self.assertEqual(len(row["evidence_sha256"]), 64)
++
++    def test_no_stages(self):
++        manifest = fixture()
++        manifest.update(stages=[], evidence=[])
++        self.check_case("no_stages", manifest)
++
++    def test_missing_classification(self):
++        manifest = fixture()
++        remove_stage(manifest, "CLASSIFIED")
++        self.check_case("missing_classification", manifest)
++
++    def test_wrong_hash(self):
++        manifest = fixture()
++        manifest["stages"][1]["artifact_sha256"] = "b" * 64
++        self.check_case("wrong_hash", manifest)
++
++    def test_wrong_run(self):
++        manifest = fixture()
++        manifest["evidence"][5]["payload"]["run_id"] = "FIXTURE-OTHER-RUN"
++        rehash(manifest)
++        self.check_case("wrong_run", manifest)
++
++    def test_malformed_or_future_time(self):
++        manifest = fixture()
++        manifest["stages"][1]["at_utc"] = "yesterday"
++        self.check_case("malformed_or_future_time", manifest)
++        for future in ("2026-10-05T10:02:00Z", "2026-13-04T10:02:00Z"):
++            with self.subTest(time=future):
++                changed = fixture()
++                changed["stages"][1]["at_utc"] = future
++                self.assertEqual(ledger.validate_manifest(changed)["validation_status"], "REFUSED")
++
++    def test_last_good(self):
++        manifest = fixture()
++        manifest.update(stages=[], evidence=[], last_good={
++            "run_id": "FIXTURE-PRIOR-RUN", "source_id": "FIXTURE-FEED",
++            "artifact_sha256": "b" * 64, "at_utc": "2026-10-03T10:00:00Z",
++        })
++        result = self.check_case("last_good", manifest)
++        self.assertEqual(result["last_good"], manifest["last_good"])
++        self.assertFalse(result["last_good_used_for_current_run"])
++
++    def test_transfer_without_receipt(self):
++        manifest = fixture()
++        manifest["evidence"] = [row for row in manifest["evidence"] if row["evidence_id"] != "transferred"]
++        result = self.check_case("transfer_without_receipt", manifest)
++        self.assertEqual(result["stages"][5]["reason"], "MISSING_EXPLICIT_RECEIPT")
++        for basis in ("RCLONE_EXIT_0", "FILE_EXISTS", "MTIME_FRESH", "ABSENT_FAILURE_TOKEN"):
++            with self.subTest(basis=basis):
++                changed = fixture()
++                changed["evidence"][5]["payload"]["basis"] = basis
++                rehash(changed)
++                self.assertEqual(ledger.validate_manifest(changed)["validation_status"], "REFUSED")
++
++    def test_observed_without_effect(self):
++        manifest = fixture()
++        remove_stage(manifest, "EFFECTIVE")
++        self.check_case("observed_without_effect", manifest)
++
++    def test_known_failures(self):
++        manifest = fixture()
++        contract = json.loads((RUN_DIR / "CONTRACT.json").read_text(encoding="utf-8"))
++        manifest["known_failures"] = contract["acceptance_tokens"]
++        for row in (manifest["stages"][1], manifest["evidence"][1]["payload"]):
++            row.update(status="FAIL", reason="FIXTURE_VALIDATION_FAILURE_LAST_GOOD_RETAINED")
++        rehash(manifest)
++        result = self.check_case("known_failures", manifest)
++        self.assertEqual(result["known_failures"], contract["acceptance_tokens"])
++        self.assertEqual(result["stages"][1]["reason"], manifest["stages"][1]["reason"])
++
++    def test_clock_distinction(self):
++        manifest = fixture()
++        result = self.check_case("clock_distinction", manifest)
++        self.assertEqual(result["clocks"], manifest["clocks"])
++        self.assertEqual(len(set(result["clocks"].values())), 4)
++        manifest["clocks"]["release_time_utc"] = None
++        result = ledger.validate_manifest(manifest)
++        self.assertEqual(result["validation_status"], "PASS")
++        self.assertIsNone(result["clocks"]["release_time_utc"])
++        manifest["stages"][2]["at_utc"] = "2026-10-04T09:00:00Z"
++        self.assertEqual(ledger.validate_manifest(manifest)["validation_status"], "REFUSED")
++
++    def test_deterministic_bytes_and_schema(self):
++        manifest = fixture()
++        result = self.check_case("deterministic_bytes_and_schema", manifest)
++        encoded = ledger.canonical_bytes(result)
++        self.assertEqual(encoded, ledger.canonical_bytes(ledger.validate_manifest(copy.deepcopy(manifest))))
++        reordered = dict(reversed(list(manifest.items())))
++        self.assertEqual(encoded, ledger.canonical_bytes(ledger.validate_manifest(reordered)))
++        mutations = [
++            lambda m: m.update(schema_version="unknown"),
++            lambda m: m.update(authority="LIVE"),
++            lambda m: m.update(stages={}),
++            lambda m: m.update(evidence="not-a-list"),
++            lambda m: m.update(known_failures=[False]),
++            lambda m: m["stages"].append(copy.deepcopy(m["stages"][0])),
++            lambda m: m["evidence"][0].update(sha256="b" * 64),
++            lambda m: m["stages"][0].update(status=[]),
++            lambda m: m["clocks"].update(fetch_time_utc="2026-10-05T00:00:00Z"),
++            lambda m: m["evidence"][5]["payload"].update(receiver_id="OTHER"),
++            lambda m: m["evidence"][5]["payload"].update(request_evidence_id="OTHER"),
++            lambda m: m["evidence"][5]["payload"].update(received_sha256="b" * 64),
++            lambda m: m["evidence"][7]["payload"].update(consumer_id="OTHER"),
++            lambda m: m["evidence"][7]["payload"].update(observation_evidence_id="OTHER"),
++        ]
++        for index, mutate in enumerate(mutations):
++            with self.subTest(schema_mutation=index):
++                changed = fixture()
++                mutate(changed)
++                if index != 6 and isinstance(changed["evidence"], list):
++                    rehash(changed)
++                self.assertEqual(ledger.validate_manifest(changed)["validation_status"], "REFUSED")
++        self.assertEqual(ledger.validate_manifest(None)["validation_status"], "REFUSED")
++        tree = ast.parse(Path(ledger.__file__).read_text(encoding="utf-8"))
++        imported = {item.name.split(".")[0] for node in ast.walk(tree)
++                    if isinstance(node, ast.Import) for item in node.names}
++        self.assertFalse(imported & {"socket", "urllib", "requests", "subprocess", "os"})
++        for name in ("canonical_bytes", "payload_sha256", "validate_manifest", "main"):
++            self.assertTrue(typing.get_type_hints(getattr(ledger, name)))
++        with tempfile.TemporaryDirectory(dir=RUN_DIR) as directory:
++            path = Path(directory) / "fixture.json"
++            path.write_bytes(ledger.canonical_bytes(manifest))
++            command = [sys.executable, "-B", str(Path(ledger.__file__)), "--input", str(path)]
++            one = subprocess.run(command, capture_output=True, check=False)
++            two = subprocess.run(command, capture_output=True, check=False)
++            self.assertEqual((one.returncode, two.returncode), (0, 0))
++            self.assertEqual(one.stdout, two.stdout)
++            self.assertEqual(one.stdout, encoded)
++            path.write_text('{"schema_version":"one","schema_version":"two"}', encoding="utf-8")
++            duplicate = subprocess.run(command, capture_output=True, check=False)
++            self.assertEqual(duplicate.returncode, 2)
++            self.assertIn(b"duplicate JSON key", duplicate.stdout)
++            path.write_text('{"run_id":1e999}', encoding="utf-8")
++            numeric = subprocess.run(command, capture_output=True, check=False)
++            self.assertEqual(numeric.returncode, 2)
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--write-evidence", action="store_true")
++    args = parser.parse_args()
++    suite = unittest.defaultTestLoader.loadTestsFromTestCase(FrozenCases)
++    result = unittest.TextTestRunner(verbosity=2).run(suite)
++    if args.write_evidence:
++        for case_id, (manifest, outcome) in sorted(CAPTURED.items()):
++            (RUN_DIR / f"FIXTURE_{case_id}.json").write_bytes(ledger.canonical_bytes(manifest))
++            (RUN_DIR / f"OUTCOME_{case_id}.json").write_bytes(ledger.canonical_bytes(outcome))
++        summary = {"label": "FIXTURE_ONLY", "cases_frozen": len(EXPECTED), "tests_run": result.testsRun,
++                   "failure_count": len(result.failures), "error_count": len(result.errors),
++                   "passed": result.wasSuccessful(), "case_ids": sorted(CAPTURED),
++                   "actual_run_green": "UNKNOWN",
++                   "plan_sha256": hashlib.sha256((RUN_DIR / "CASES_FROZEN.json").read_bytes()).hexdigest()}
++        (RUN_DIR / "RESULTS.json").write_bytes(ledger.canonical_bytes(summary))
++    return 0 if result.wasSuccessful() and result.testsRun == len(EXPECTED) == 12 else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
