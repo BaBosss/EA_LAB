@@ -1,0 +1,9 @@
+{
+  "command": "python -m tools.knowledge_validation.news_macro_context --input CLI_REQUEST.json --raw-source CLI_RAW_FIXTURE.txt",
+  "exit_code": 1,
+  "finding": "CLI_IMPORT001",
+  "repair_budget_consumed": 1,
+  "shared_runtime_changed": false,
+  "stderr": "Error while finding module specification for 'tools.knowledge_validation.news_macro_context' (ModuleNotFoundError: No module named 'tools')",
+  "tool_chunk": "306ade"
+}

@@ -1,0 +1,167 @@
+{
+  "allowlist": [
+    "tools/knowledge_validation/news_macro_context.py",
+    "tools/knowledge_validation/test_news_macro_context.py",
+    "docs/research/NEWS_MACRO_CONTEXT_V1_20261004.md",
+    "factory/runs/news_macro_context_v1_20261004/**"
+  ],
+  "author_lane": "ct-news-macro-context-v1-20261005",
+  "authority_locator": "ownerlongrun directive 5e8a2c9823ec819188fa5c28aca1d4ce; latest 0c11af... supplied by DOT",
+  "availability": "Never substitute observed period, fetch time, generated time or vintage date for available_at_utc",
+  "base": "872524af2444e27a343bce76afbf81770147290b",
+  "budgets": {
+    "author": {
+      "candidates": 1,
+      "count": 1,
+      "minutes": 90
+    },
+    "conditional_targeted_recheck": {
+      "count": 1,
+      "minutes": 20
+    },
+    "core": 0,
+    "external_fetch": 0,
+    "independent_review": {
+      "count": 1,
+      "minutes": 30
+    },
+    "monitor": 0,
+    "native": 0,
+    "repair": {
+      "count": 1,
+      "minutes": 30
+    },
+    "runtime": 0
+  },
+  "capabilities": "PARTIAL",
+  "carry_proxy": {
+    "identity": "US10Y_JP10Y",
+    "observed_leg": "US",
+    "qualified_japan_series": false,
+    "source_symbol": "^TNX"
+  },
+  "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+  "contract_id": "NEWS_MACRO_CONTEXT_V1_20261004",
+  "control_tower": "DOT sole MainCT",
+  "direct_consumers": [
+    "E handoff validator (proposed interface only)",
+    "existing NewsMacro owner"
+  ],
+  "ea_replay_qualified": false,
+  "factor_axes": [
+    "employment",
+    "inflation",
+    "policy_rate",
+    "yield_10y"
+  ],
+  "fixture_ids": [
+    "01_available_at_selection",
+    "02_future_revision_exclusion",
+    "03_missing_source_clock_hash",
+    "04_conflicting_revisions",
+    "05_unknown_freshness",
+    "06_unknown_coverage",
+    "07_current_only_refusal",
+    "08_japan_unknown_preservation",
+    "09_explicit_symbol_mapping",
+    "10_proxy_country_separation",
+    "11_deterministic_repeat_hash",
+    "12_clock_global_authority_boundaries"
+  ],
+  "fixtures_sha256": "81c7ef33341cba85829e4ddf7a007738c89c08524930c2face5e19cc860e347b",
+  "forbidden": [
+    "aggregate_country_score",
+    "factor_weights",
+    "trade_signal",
+    "BUY",
+    "SELL",
+    "policy_choice",
+    "source_default",
+    "runtime_activation",
+    "author_push",
+    "reviewer_launch",
+    "E_path_edits"
+  ],
+  "freshness": "explicit available_at_utc basis and positive integer max_age_seconds; no default",
+  "global_mris_labels": [
+    "RISK_ON",
+    "NEUTRAL",
+    "RISK_OFF",
+    "STRESS"
+  ],
+  "historical_broker": {
+    "lineage": "ThinkMarkets-Live",
+    "mapping_version": "THINKMARKETS_LIVE_US_DST_QUARANTINE_V1",
+    "server_interval": [
+      "2019-03-01",
+      "2025-12-31"
+    ],
+    "transition_dates": "UNKNOWN"
+  },
+  "inventory": {
+    "JP/JPY": "all factor/source packages UNQUALIFIED",
+    "US/USD": "employment has prior PAYEMS selector receipt only; remaining source slots UNKNOWN"
+  },
+  "owner": "EA_LAB-NEWS-MACRO-20260921",
+  "real_historical_dataset_qualified": false,
+  "source_pins": {
+    "docs/research/HISTORICAL_BROKER_CLOCK_CONTRACT_20260907.md": "ce472070a96b970ea280aa672988bc8c05207b9ded9234c86b08e49703737a37",
+    "docs/research/HISTORICAL_MACRO_REPLAY_SOURCE_CONTRACT_20260907.md": "21fc68f03954eb11cd2d6b92e040f70e8671f5a700a15c12f86cdfe237922850",
+    "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json": "84dff5e92025c5ffb491c7d7507e96b60bfe3ce6db820b25e0519a20c06ca455",
+    "scripts/mris/README.md": "3290973419b7037e0f369e38a8ea7422b084ca923212b7a1612c5cc1ebac0f34",
+    "tools/P4BMarketDataExporter/normalize_ohlc.py": "cad32322e70fed379dc1ee8e19755d8256b29828fd4ccc3ea022fde19b1a34dd",
+    "tools/knowledge_validation/offline_replay_validator.py": "f0c502b437b77c381e76f8c0c0c6e933b488234250b7482b6b3db60badce62bb",
+    "tools/news_macro_lab/core.py": "9f6a361a9945bd3f82bec9c1937236c8e4c707477a2c55e8313795f3d678b18c"
+  },
+  "symbol_metadata": {
+    "BTCUSD": {
+      "base": "BTC",
+      "countries": [],
+      "kind": "CRYPTO_QUOTED_IN_CURRENCY",
+      "quote": "USD",
+      "support": "NOTSUPPORTED"
+    },
+    "EURGBP": {
+      "base": "EUR",
+      "countries": [],
+      "kind": "FX_PAIR",
+      "quote": "GBP",
+      "support": "NOTSUPPORTED"
+    },
+    "JPY": {
+      "base": "JPY",
+      "countries": [
+        "JP"
+      ],
+      "kind": "CURRENCY",
+      "quote": null,
+      "support": "TYPED_INVENTORY"
+    },
+    "USD": {
+      "base": "USD",
+      "countries": [
+        "US"
+      ],
+      "kind": "CURRENCY",
+      "quote": null,
+      "support": "TYPED_INVENTORY"
+    },
+    "USDJPY": {
+      "base": "USD",
+      "countries": [
+        "US",
+        "JP"
+      ],
+      "kind": "FX_PAIR",
+      "quote": "JPY",
+      "support": "TYPED_INVENTORY"
+    },
+    "XAUUSD": {
+      "base": "XAU",
+      "countries": [],
+      "kind": "METAL_QUOTED_IN_CURRENCY",
+      "quote": "USD",
+      "support": "NOTSUPPORTED"
+    }
+  }
+}

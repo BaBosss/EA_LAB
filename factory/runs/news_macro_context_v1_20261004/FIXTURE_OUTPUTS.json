@@ -1,0 +1,4796 @@
+{
+  "capabilities": "PARTIAL",
+  "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+  "outputs": [
+    {
+      "case_id": "01_available_at_selection",
+      "input_sha256": "44dd7d69aca700dc555277ef349fbb0743e5195e987fc72f78adbc0a118c7fbd",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": "2025-02-07T13:30:00Z",
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": "2025-03-01T00:00:00Z",
+            "freshness_basis": "available_at_utc",
+            "freshness_state": "FRESH_FIXTURE_ONLY",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [],
+            "observed_period": {
+              "end": "2025-01-31",
+              "start": "2025-01-01"
+            },
+            "reason_codes": [
+              "SYNTHETIC_VISIBLE_REVISION_ONLY"
+            ],
+            "release_clock": {
+              "evidence_id": "SYN-RELEASE-r1",
+              "mapping_version": "SYN-UTC-V1",
+              "released_at_utc": "2025-02-07T13:30:00Z",
+              "source_timezone": "SYN-UTC"
+            },
+            "revision": {
+              "revision_id": "SYN-r1",
+              "source_revision_id": "SYN-native-r1",
+              "vintage_id": "SYN-vintage-r1"
+            },
+            "source": {
+              "qualification": "SYNTHETIC/FIXTURE_ONLY",
+              "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+              "series_id": "SYN-EMPLOYMENT",
+              "source_id": "SYNTHETIC-US-EMPLOYMENT"
+            },
+            "source_qualification": "SYNTHETIC/FIXTURE_ONLY",
+            "state": "FIXTURE_SELECTED",
+            "unit": "SYNTHETIC_UNITS",
+            "value": 123
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 0,
+          "historical_dataset_qualified": false,
+          "input_sha256": "5b9df493336680585aa8b8a1b2bfc4ef1de8ff1b3cd788f3a10560d0486aa2ec",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "19dc613dc9e62f256d67dbfbf7f44b18237811fa9da59b2cf7973a88e7af9c01",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "02_future_revision_exclusion",
+      "input_sha256": "d59eb0b7fc15bd6d6f48771cf0c60abeac296e063b723a248c487db839d1da72",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": "2025-02-07T13:30:00Z",
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": "2025-03-01T00:00:00Z",
+            "freshness_basis": "available_at_utc",
+            "freshness_state": "FRESH_FIXTURE_ONLY",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [],
+            "observed_period": {
+              "end": "2025-01-31",
+              "start": "2025-01-01"
+            },
+            "reason_codes": [
+              "SYNTHETIC_VISIBLE_REVISION_ONLY"
+            ],
+            "release_clock": {
+              "evidence_id": "SYN-RELEASE-r1",
+              "mapping_version": "SYN-UTC-V1",
+              "released_at_utc": "2025-02-07T13:30:00Z",
+              "source_timezone": "SYN-UTC"
+            },
+            "revision": {
+              "revision_id": "SYN-r1",
+              "source_revision_id": "SYN-native-r1",
+              "vintage_id": "SYN-vintage-r1"
+            },
+            "source": {
+              "qualification": "SYNTHETIC/FIXTURE_ONLY",
+              "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+              "series_id": "SYN-EMPLOYMENT",
+              "source_id": "SYNTHETIC-US-EMPLOYMENT"
+            },
+            "source_qualification": "SYNTHETIC/FIXTURE_ONLY",
+            "state": "FIXTURE_SELECTED",
+            "unit": "SYNTHETIC_UNITS",
+            "value": 123
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 1,
+          "historical_dataset_qualified": false,
+          "input_sha256": "460f6c5187d9a26c36abd6272c9bcff168a986d942dc38ec8b0617becf6e3247",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "657f5a75338d6a4410c94e3babbff596e8f104fdbb96ebd725db8707b377f420",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "03_missing_source_clock_hash",
+      "input_sha256": "44dd7d69aca700dc555277ef349fbb0743e5195e987fc72f78adbc0a118c7fbd",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": "2025-02-07T13:30:00Z",
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": "2025-03-01T00:00:00Z",
+            "freshness_basis": "available_at_utc",
+            "freshness_state": "FRESH_FIXTURE_ONLY",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [],
+            "observed_period": {
+              "end": "2025-01-31",
+              "start": "2025-01-01"
+            },
+            "reason_codes": [
+              "SYNTHETIC_VISIBLE_REVISION_ONLY"
+            ],
+            "release_clock": {
+              "evidence_id": "SYN-RELEASE-r1",
+              "mapping_version": "SYN-UTC-V1",
+              "released_at_utc": "2025-02-07T13:30:00Z",
+              "source_timezone": "SYN-UTC"
+            },
+            "revision": {
+              "revision_id": "SYN-r1",
+              "source_revision_id": "SYN-native-r1",
+              "vintage_id": "SYN-vintage-r1"
+            },
+            "source": {
+              "qualification": "SYNTHETIC/FIXTURE_ONLY",
+              "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+              "series_id": "SYN-EMPLOYMENT",
+              "source_id": "SYNTHETIC-US-EMPLOYMENT"
+            },
+            "source_qualification": "SYNTHETIC/FIXTURE_ONLY",
+            "state": "FIXTURE_SELECTED",
+            "unit": "SYNTHETIC_UNITS",
+            "value": 123
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 0,
+          "historical_dataset_qualified": false,
+          "input_sha256": "5b9df493336680585aa8b8a1b2bfc4ef1de8ff1b3cd788f3a10560d0486aa2ec",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "19dc613dc9e62f256d67dbfbf7f44b18237811fa9da59b2cf7973a88e7af9c01",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "04_conflicting_revisions",
+      "input_sha256": "4ae472d1110ea6561a0cb00c3bef8828ef09a9fd6386c537b089d5fdeaeb3be4",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "REFUSE_CONFLICTING_DUPLICATE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [
+          "REFUSE_CONFLICTING_DUPLICATE"
+        ],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "details": {
+            "identity": [
+              "SYN-US-EMPLOYMENT:2025-01",
+              "SYN-r1"
+            ]
+          },
+          "ea_replay_qualified": false,
+          "historical_dataset_qualified": false,
+          "input_sha256": "2b29079f3512182596851eabb4c884f66d4c2b21d5861b8f87884a0e5322f1bc",
+          "policy_changed": false,
+          "reason_codes": [
+            "REFUSE_CONFLICTING_DUPLICATE"
+          ],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_records": [],
+          "status": "REFUSED",
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "777b99d2a9271d4a335152e0cff1f4911e50c7a4f9e56be0ce4b75b968ef241e",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "05_unknown_freshness",
+      "input_sha256": "b5fae848558e6de68a2029114fc1acd1b9a8446aed486739b2165bb8fc7b4564",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [
+              "explicit_freshness_basis_and_max_age_seconds"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "UNKNOWN_FRESHNESS"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 0,
+          "historical_dataset_qualified": false,
+          "input_sha256": "5b9df493336680585aa8b8a1b2bfc4ef1de8ff1b3cd788f3a10560d0486aa2ec",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "f096f9a36cd5465238c196ff60e99cd08a82e5d046d0124688c6b1deaebcd939",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "06_unknown_coverage",
+      "input_sha256": "7cd22b37d3b97033d098f603fa921f91328e56a489d17d63d0af928fc90e7218",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "REFUSE_UNKNOWN_COVERAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [
+          "REFUSE_UNKNOWN_COVERAGE"
+        ],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "details": {},
+          "ea_replay_qualified": false,
+          "historical_dataset_qualified": false,
+          "input_sha256": "eea85ce1810ae7445e9fbbb48dfff01cbd87fe3fec04e1fbade5b09e9a95e973",
+          "policy_changed": false,
+          "reason_codes": [
+            "REFUSE_UNKNOWN_COVERAGE"
+          ],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_records": [],
+          "status": "REFUSED",
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "d97a47b2d46a232b04ddb6ac41def9aef0bfd70e2f4cadfcfa1be6592de0fa84",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "07_current_only_refusal",
+      "input_sha256": "26879e6839477c7e2f404b7a58e65b2f16cad730f5eb927fabdb52926b7aee2a",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "CURRENT_ONLY_NOT_REPLAYABLE",
+              "MISSING_VINTAGE_REVISION_PROOF"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [
+          "CURRENT_ONLY_NOT_REPLAYABLE",
+          "MISSING_VINTAGE_REVISION_PROOF"
+        ],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "reason_codes": [
+            "CURRENT_ONLY_NOT_REPLAYABLE",
+            "MISSING_VINTAGE_REVISION_PROOF"
+          ],
+          "selected_records": [],
+          "status": "REFUSED"
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "6e9caf823f2db07fcddb47b775f4afe2ba858c0ecfc079f343f8fa693833faff",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "08_japan_unknown_preservation",
+      "input_sha256": "d6dfd4b21edf34c9c9c8b2b62dc0c6697c82579aa2d89c377cdbdd76c57098ad",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": "2025-02-07T13:30:00Z",
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": "2025-03-01T00:00:00Z",
+            "freshness_basis": "available_at_utc",
+            "freshness_state": "FRESH_FIXTURE_ONLY",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [],
+            "observed_period": {
+              "end": "2025-01-31",
+              "start": "2025-01-01"
+            },
+            "reason_codes": [
+              "SYNTHETIC_VISIBLE_REVISION_ONLY"
+            ],
+            "release_clock": {
+              "evidence_id": "SYN-RELEASE-r1",
+              "mapping_version": "SYN-UTC-V1",
+              "released_at_utc": "2025-02-07T13:30:00Z",
+              "source_timezone": "SYN-UTC"
+            },
+            "revision": {
+              "revision_id": "SYN-r1",
+              "source_revision_id": "SYN-native-r1",
+              "vintage_id": "SYN-vintage-r1"
+            },
+            "source": {
+              "qualification": "SYNTHETIC/FIXTURE_ONLY",
+              "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+              "series_id": "SYN-EMPLOYMENT",
+              "source_id": "SYNTHETIC-US-EMPLOYMENT"
+            },
+            "source_qualification": "SYNTHETIC/FIXTURE_ONLY",
+            "state": "FIXTURE_SELECTED",
+            "unit": "SYNTHETIC_UNITS",
+            "value": 123
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 0,
+          "historical_dataset_qualified": false,
+          "input_sha256": "5b9df493336680585aa8b8a1b2bfc4ef1de8ff1b3cd788f3a10560d0486aa2ec",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "JPY",
+          "countries": [
+            "JP"
+          ],
+          "kind": "CURRENCY",
+          "quote": null,
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "a16017b0492e9b893e317106c49f48f756f4cead141d5e4c420b6642a2a3f004",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "09_explicit_symbol_mapping",
+      "input_sha256": "44dd7d69aca700dc555277ef349fbb0743e5195e987fc72f78adbc0a118c7fbd",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": "2025-02-07T13:30:00Z",
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": "2025-03-01T00:00:00Z",
+            "freshness_basis": "available_at_utc",
+            "freshness_state": "FRESH_FIXTURE_ONLY",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [],
+            "observed_period": {
+              "end": "2025-01-31",
+              "start": "2025-01-01"
+            },
+            "reason_codes": [
+              "SYNTHETIC_VISIBLE_REVISION_ONLY"
+            ],
+            "release_clock": {
+              "evidence_id": "SYN-RELEASE-r1",
+              "mapping_version": "SYN-UTC-V1",
+              "released_at_utc": "2025-02-07T13:30:00Z",
+              "source_timezone": "SYN-UTC"
+            },
+            "revision": {
+              "revision_id": "SYN-r1",
+              "source_revision_id": "SYN-native-r1",
+              "vintage_id": "SYN-vintage-r1"
+            },
+            "source": {
+              "qualification": "SYNTHETIC/FIXTURE_ONLY",
+              "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+              "series_id": "SYN-EMPLOYMENT",
+              "source_id": "SYNTHETIC-US-EMPLOYMENT"
+            },
+            "source_qualification": "SYNTHETIC/FIXTURE_ONLY",
+            "state": "FIXTURE_SELECTED",
+            "unit": "SYNTHETIC_UNITS",
+            "value": 123
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 0,
+          "historical_dataset_qualified": false,
+          "input_sha256": "5b9df493336680585aa8b8a1b2bfc4ef1de8ff1b3cd788f3a10560d0486aa2ec",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "19dc613dc9e62f256d67dbfbf7f44b18237811fa9da59b2cf7973a88e7af9c01",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "10_proxy_country_separation",
+      "input_sha256": "44dd7d69aca700dc555277ef349fbb0743e5195e987fc72f78adbc0a118c7fbd",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": "2025-02-07T13:30:00Z",
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": "2025-03-01T00:00:00Z",
+            "freshness_basis": "available_at_utc",
+            "freshness_state": "FRESH_FIXTURE_ONLY",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [],
+            "observed_period": {
+              "end": "2025-01-31",
+              "start": "2025-01-01"
+            },
+            "reason_codes": [
+              "SYNTHETIC_VISIBLE_REVISION_ONLY"
+            ],
+            "release_clock": {
+              "evidence_id": "SYN-RELEASE-r1",
+              "mapping_version": "SYN-UTC-V1",
+              "released_at_utc": "2025-02-07T13:30:00Z",
+              "source_timezone": "SYN-UTC"
+            },
+            "revision": {
+              "revision_id": "SYN-r1",
+              "source_revision_id": "SYN-native-r1",
+              "vintage_id": "SYN-vintage-r1"
+            },
+            "source": {
+              "qualification": "SYNTHETIC/FIXTURE_ONLY",
+              "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+              "series_id": "SYN-EMPLOYMENT",
+              "source_id": "SYNTHETIC-US-EMPLOYMENT"
+            },
+            "source_qualification": "SYNTHETIC/FIXTURE_ONLY",
+            "state": "FIXTURE_SELECTED",
+            "unit": "SYNTHETIC_UNITS",
+            "value": 123
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 0,
+          "historical_dataset_qualified": false,
+          "input_sha256": "5b9df493336680585aa8b8a1b2bfc4ef1de8ff1b3cd788f3a10560d0486aa2ec",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "19dc613dc9e62f256d67dbfbf7f44b18237811fa9da59b2cf7973a88e7af9c01",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "11_deterministic_repeat_hash",
+      "input_sha256": "44dd7d69aca700dc555277ef349fbb0743e5195e987fc72f78adbc0a118c7fbd",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": "2025-02-07T13:30:00Z",
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": "2025-03-01T00:00:00Z",
+            "freshness_basis": "available_at_utc",
+            "freshness_state": "FRESH_FIXTURE_ONLY",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [],
+            "observed_period": {
+              "end": "2025-01-31",
+              "start": "2025-01-01"
+            },
+            "reason_codes": [
+              "SYNTHETIC_VISIBLE_REVISION_ONLY"
+            ],
+            "release_clock": {
+              "evidence_id": "SYN-RELEASE-r1",
+              "mapping_version": "SYN-UTC-V1",
+              "released_at_utc": "2025-02-07T13:30:00Z",
+              "source_timezone": "SYN-UTC"
+            },
+            "revision": {
+              "revision_id": "SYN-r1",
+              "source_revision_id": "SYN-native-r1",
+              "vintage_id": "SYN-vintage-r1"
+            },
+            "source": {
+              "qualification": "SYNTHETIC/FIXTURE_ONLY",
+              "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+              "series_id": "SYN-EMPLOYMENT",
+              "source_id": "SYNTHETIC-US-EMPLOYMENT"
+            },
+            "source_qualification": "SYNTHETIC/FIXTURE_ONLY",
+            "state": "FIXTURE_SELECTED",
+            "unit": "SYNTHETIC_UNITS",
+            "value": 123
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 0,
+          "historical_dataset_qualified": false,
+          "input_sha256": "5b9df493336680585aa8b8a1b2bfc4ef1de8ff1b3cd788f3a10560d0486aa2ec",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "19dc613dc9e62f256d67dbfbf7f44b18237811fa9da59b2cf7973a88e7af9c01",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    },
+    {
+      "case_id": "12_clock_global_authority_boundaries",
+      "input_sha256": "44dd7d69aca700dc555277ef349fbb0743e5195e987fc72f78adbc0a118c7fbd",
+      "output": {
+        "automatic_policy_output": null,
+        "broker_clock": {
+          "accepted_server_interval": [
+            "2019-03-01",
+            "2025-12-31"
+          ],
+          "normalized_utc": null,
+          "reason": "MISSING_BROKER_LINEAGE",
+          "state": "UNKNOWN"
+        },
+        "capabilities": "PARTIAL",
+        "classification": "SOURCE/OFFLINE_TYPED_INVENTORY",
+        "context_status": "PARTIAL",
+        "ea_replay_qualified": false,
+        "evidence_label": "SYNTHETIC/FIXTURE_ONLY",
+        "factors": [
+          {
+            "available_at_utc": "2025-02-07T13:30:00Z",
+            "country": "US",
+            "coverage": {
+              "end_utc": "2025-04-01T00:00:00Z",
+              "start_utc": "2025-02-01T00:00:00Z",
+              "state": "COMPLETE"
+            },
+            "currency": "USD",
+            "factor_id": "employment",
+            "fetched_at_utc": "2025-03-01T00:00:00Z",
+            "freshness_basis": "available_at_utc",
+            "freshness_state": "FRESH_FIXTURE_ONLY",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": "portfolio/HISTORICAL_MACRO_REPLAY_PAYEMS_V1_20260907.json",
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "source_series_locator": "PAYEMS"
+            },
+            "missing_inputs": [],
+            "observed_period": {
+              "end": "2025-01-31",
+              "start": "2025-01-01"
+            },
+            "reason_codes": [
+              "SYNTHETIC_VISIBLE_REVISION_ONLY"
+            ],
+            "release_clock": {
+              "evidence_id": "SYN-RELEASE-r1",
+              "mapping_version": "SYN-UTC-V1",
+              "released_at_utc": "2025-02-07T13:30:00Z",
+              "source_timezone": "SYN-UTC"
+            },
+            "revision": {
+              "revision_id": "SYN-r1",
+              "source_revision_id": "SYN-native-r1",
+              "vintage_id": "SYN-vintage-r1"
+            },
+            "source": {
+              "qualification": "SYNTHETIC/FIXTURE_ONLY",
+              "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+              "series_id": "SYN-EMPLOYMENT",
+              "source_id": "SYNTHETIC-US-EMPLOYMENT"
+            },
+            "source_qualification": "SYNTHETIC/FIXTURE_ONLY",
+            "state": "FIXTURE_SELECTED",
+            "unit": "SYNTHETIC_UNITS",
+            "value": 123
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "US",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "USD",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "NO_QUALIFIED_SOURCE_PACKAGE"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "employment",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "employment",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "inflation",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "inflation",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "policy_rate",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "policy_rate",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          },
+          {
+            "available_at_utc": null,
+            "country": "JP",
+            "coverage": {
+              "state": "UNKNOWN"
+            },
+            "currency": "JPY",
+            "factor_id": "yield_10y",
+            "fetched_at_utc": null,
+            "freshness_basis": "UNKNOWN",
+            "freshness_state": "UNKNOWN",
+            "identity": {
+              "factor_id": "yield_10y",
+              "prior_selector_receipt": null,
+              "source_series_locator": null
+            },
+            "missing_inputs": [
+              "qualified_source_package",
+              "revision_lineage",
+              "release_clock",
+              "availability",
+              "coverage",
+              "freshness"
+            ],
+            "observed_period": null,
+            "reason_codes": [
+              "JAPAN_SOURCE_PACKAGE_UNQUALIFIED"
+            ],
+            "release_clock": null,
+            "revision": null,
+            "source": null,
+            "source_qualification": "UNQUALIFIED",
+            "state": "UNKNOWN",
+            "unit": null,
+            "value": null
+          }
+        ],
+        "global_mris_reference": {
+          "country_aggregation": false,
+          "labels": [
+            "RISK_ON",
+            "NEUTRAL",
+            "RISK_OFF",
+            "STRESS"
+          ],
+          "owner": "portfolio/mris/regime_state.json",
+          "state_computed": false
+        },
+        "historical_dataset_qualified": false,
+        "populated_country_intelligence_qualified": false,
+        "proxy_references": [
+          {
+            "country_factor_input": false,
+            "identity": "US10Y_JP10Y",
+            "observed_leg": "US",
+            "qualified_japan_series": false,
+            "reason": "EXISTING_US_LEG_CARRY_PROXY_REFERENCE_ONLY",
+            "source_symbol": "^TNX"
+          }
+        ],
+        "reason_codes": [],
+        "schema_version": "ea_lab_news_macro_context/1",
+        "selection": {
+          "cancelled_record_count": 0,
+          "classification": "OFFLINE_DATA_SELECTOR_ONLY",
+          "clock_mapping_version": "SYN-UTC-V1",
+          "coverage_state": "COMPLETE",
+          "ea_replay_qualified": false,
+          "exact_duplicate_count": 0,
+          "future_record_count": 0,
+          "historical_dataset_qualified": false,
+          "input_sha256": "5b9df493336680585aa8b8a1b2bfc4ef1de8ff1b3cd788f3a10560d0486aa2ec",
+          "policy_changed": false,
+          "reason_codes": [],
+          "schema_version": "ea_lab_offline_replay_qualification/1",
+          "selected_record_count": 1,
+          "selected_records": [
+            {
+              "available_at_utc": "2025-02-07T13:30:00Z",
+              "country": "US",
+              "currency": "USD",
+              "factor_id": "employment",
+              "fetched_at_utc": "2025-03-01T00:00:00Z",
+              "observed_period": {
+                "end": "2025-01-31",
+                "start": "2025-01-01"
+              },
+              "record_id": "SYN-US-EMPLOYMENT:2025-01",
+              "record_type": "MACRO_OBSERVATION",
+              "release_clock": {
+                "evidence_id": "SYN-RELEASE-r1",
+                "mapping_version": "SYN-UTC-V1",
+                "released_at_utc": "2025-02-07T13:30:00Z",
+                "source_timezone": "SYN-UTC"
+              },
+              "revision_id": "SYN-r1",
+              "source": {
+                "qualification": "SYNTHETIC/FIXTURE_ONLY",
+                "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+                "series_id": "SYN-EMPLOYMENT",
+                "source_id": "SYNTHETIC-US-EMPLOYMENT"
+              },
+              "source_revision_id": "SYN-native-r1",
+              "state": "PUBLISHED",
+              "unit": "SYNTHETIC_UNITS",
+              "value": 123,
+              "vintage_id": "SYN-vintage-r1"
+            }
+          ],
+          "status": "QUALIFIED_AS_OF_DECISION",
+          "tentative_record_count": 0,
+          "trade_policy_output": null
+        },
+        "symbol_metadata": {
+          "base": "USD",
+          "countries": [
+            "US",
+            "JP"
+          ],
+          "kind": "FX_PAIR",
+          "quote": "JPY",
+          "support": "TYPED_INVENTORY"
+        }
+      },
+      "output_sha256": "19dc613dc9e62f256d67dbfbf7f44b18237811fa9da59b2cf7973a88e7af9c01",
+      "raw_source_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+    }
+  ]
+}

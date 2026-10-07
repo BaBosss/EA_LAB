@@ -1,0 +1,64 @@
+{
+  "author_lane": "ct-news-macro-context-v1-20261005",
+  "base_sha": "872524af2444e27a343bce76afbf81770147290b",
+  "bounded_repair": {
+    "change": "Bind standalone entry point to own source root; explicit script CLI",
+    "finding": "CLI_IMPORT001",
+    "original_error": "ModuleNotFoundError: No module named 'tools'",
+    "state": "REPAIRED_TARGETED_GATE_PASS"
+  },
+  "budgets_consumed": {
+    "author": 1,
+    "core": 0,
+    "external_feed_fetch": 0,
+    "monitor": 0,
+    "native": 0,
+    "recheck": 0,
+    "repair": 1,
+    "review": 0,
+    "runtime": 0
+  },
+  "capabilities": "PARTIAL",
+  "classification": "SYNTHETIC/FIXTURE_ONLY",
+  "direct_consumer": [
+    "E handoff validator proposed interface",
+    "Existing NewsMacro owner EA_LAB-NEWS-MACRO-20260921"
+  ],
+  "ea_replay_qualified": false,
+  "files_sha256": {
+    "docs/research/NEWS_MACRO_CONTEXT_V1_20261004.md": "45c087434e985e1a6b38bfdad27478ca2c84fcf167feadc74c000c2aaaf56e7c",
+    "factory/runs/news_macro_context_v1_20261004/CLI_FAILURE.json": "56844b07a80576b428db2a81fe6faaeb731ebf6da818f1dd745ffddc7d497a0e",
+    "factory/runs/news_macro_context_v1_20261004/CLI_OUTPUT.json": "40159d3d134cf38ee5124eaadb94db7a62a7b1d60c0077e4a983abc4b77419be",
+    "factory/runs/news_macro_context_v1_20261004/CLI_RAW_FIXTURE.txt": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+    "factory/runs/news_macro_context_v1_20261004/CLI_REQUEST.json": "dfae19d435059b25144e40fba4048a05e237557686f3b970cb13c91c74b9aeb4",
+    "factory/runs/news_macro_context_v1_20261004/FIXTURE_OUTPUTS.json": "e25d47028d05217b5854ac5ea58b6b559a65515843a1db1d202427804f8eb1c7",
+    "factory/runs/news_macro_context_v1_20261004/FROZEN_12_FIXTURES.json": "81c7ef33341cba85829e4ddf7a007738c89c08524930c2face5e19cc860e347b",
+    "factory/runs/news_macro_context_v1_20261004/FROZEN_CONTRACT.json": "6f1c45f5d6d0b3d61dbeb7abb650191de6c94b6840b0ad567368a3241ad9e15b",
+    "factory/runs/news_macro_context_v1_20261004/GATE_RESULT.json": "01c3e038c8f0b6d72d20d2ac780c41a21ba6d6cf94f92b166063a3218c0b5484",
+    "tools/knowledge_validation/news_macro_context.py": "7c526795acb6c95d08600adea82f83b0cebfa075470028e7abce77a0a2bd83ae",
+    "tools/knowledge_validation/test_news_macro_context.py": "2eb1d8b1e46067fca611bb72351d2f7fc42dab8bf246629167a224c6a4476162"
+  },
+  "gate_observations": {
+    "cli_targeted_repair_gate": "PASS_EXIT0_EXACT_FIXTURE_OUTPUT",
+    "diff_check": "PASS",
+    "evidence_repeat_hash": "PASS_12_OF_12",
+    "frozen_context_cases": {
+      "failed": 0,
+      "passed": 12
+    },
+    "py_compile": "PASS",
+    "unchanged_canonical_selector_tests": {
+      "failed": 0,
+      "passed": 8
+    }
+  },
+  "gate_tool_chunk": "4d3a1a",
+  "historical_dataset_qualified": false,
+  "reproduce": [
+    "python tools/knowledge_validation/test_news_macro_context.py",
+    "python -m unittest discover -s tools/knowledge_validation/tests -p test_offline_replay_validator.py -v"
+  ],
+  "review_admission": "Parent DOT schedules qualified independent route; no author reviewer launch",
+  "scope": "Four declared B prefixes only; A/reviewer/capture/shared runner untouched",
+  "state": "DETERMINISTIC_GREEN_PENDING_INDEPENDENT_REVIEW"
+}

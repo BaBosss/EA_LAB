@@ -1,0 +1,62 @@
+{
+  "broker_binding": null,
+  "fixture_only": true,
+  "freshness": {
+    "basis": "available_at_utc",
+    "max_age_seconds": 3600
+  },
+  "package": {
+    "clock_mapping": {
+      "broker_timezone": "NOT_BOUND_FIXTURE_UTC_ONLY",
+      "mapping_basis": "SYNTHETIC clock fixture; no historical proof",
+      "source_timezone": "SYN-UTC",
+      "version": "SYN-UTC-V1"
+    },
+    "coverage": {
+      "end_utc": "2025-04-01T00:00:00Z",
+      "start_utc": "2025-02-01T00:00:00Z",
+      "state": "COMPLETE"
+    },
+    "dataset_id": "SYN-B-EMPLOYMENT",
+    "dataset_version": "SYN-v1",
+    "decision_at_utc": "2025-02-07T13:31:00Z",
+    "records": [
+      {
+        "available_at_utc": "2025-02-07T13:30:00Z",
+        "country": "US",
+        "currency": "USD",
+        "factor_id": "employment",
+        "fetched_at_utc": "2025-03-01T00:00:00Z",
+        "observed_period": {
+          "end": "2025-01-31",
+          "start": "2025-01-01"
+        },
+        "record_id": "SYN-US-EMPLOYMENT:2025-01",
+        "record_type": "MACRO_OBSERVATION",
+        "release_clock": {
+          "evidence_id": "SYN-RELEASE-r1",
+          "mapping_version": "SYN-UTC-V1",
+          "released_at_utc": "2025-02-07T13:30:00Z",
+          "source_timezone": "SYN-UTC"
+        },
+        "revision_id": "SYN-r1",
+        "source": {
+          "qualification": "SYNTHETIC/FIXTURE_ONLY",
+          "raw_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd",
+          "series_id": "SYN-EMPLOYMENT",
+          "source_id": "SYNTHETIC-US-EMPLOYMENT"
+        },
+        "source_revision_id": "SYN-native-r1",
+        "state": "PUBLISHED",
+        "unit": "SYNTHETIC_UNITS",
+        "value": 123,
+        "vintage_id": "SYN-vintage-r1"
+      }
+    ],
+    "schema_version": "ea_lab_offline_replay_package/1",
+    "source_snapshot_sha256": "4ca35a131553eb4a878354ebc6895ab4eb61fc2639101a3701f038dbcef91ccd"
+  },
+  "schema_version": "ea_lab_news_macro_context_request/1",
+  "source_mode": "VINTAGE_WITH_RELEASE_CLOCK",
+  "symbol": "USDJPY"
+}
