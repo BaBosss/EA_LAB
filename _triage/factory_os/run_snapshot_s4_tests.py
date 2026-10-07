@@ -702,6 +702,169 @@ def main():
               not any(f.startswith('.snap.json') for f in os.listdir(root)),
               str([f for f in os.listdir(root) if f.startswith('.')]))
 
+        print('\n--- C5 Windows transient replacement retry ---')
+        # S4 Windows transient PermissionError retry on final publication step.
+        # Requirements:
+        # a) first replace PermissionError then success publishes candidate.
+        # b) persistent PermissionError still raises, previous destination bytes remain unchanged, temp is cleaned.
+        # c) no validation semantics weakened.
+        with io.open(os.path.join(root, 'srcB.txt'), 'w') as fh:
+            fh.write('B')
+        good_retry_in = _write(root, 'good_retry.json',
+                               scaffold(root, [row('srcA', 'srcA.txt'), row('srcB', 'srcB.txt')]))
+        _real_replace = sb.os.replace
+        _real_sleep = sb.time.sleep
+        _replace_calls = [0]
+        _sleep_calls = []
+
+        def _transient_replace(src, dst):
+            _replace_calls[0] += 1
+            if _replace_calls[0] == 1:
+                raise PermissionError(13, 'Access is denied (transient simulated lock)', dst)
+            return _real_replace(src, dst)
+
+        sb.os.replace = _transient_replace
+        sb.time.sleep = lambda s: _sleep_calls.append(s)
+        try:
+            doc_retry = sb.build_file(good_retry_in, out, root=root,
+                                      schema_validator=gate, reconciler=NO_DERIVE)
+        finally:
+            sb.os.replace = _real_replace
+            sb.time.sleep = _real_sleep
+
+        check('C5 RETRY (a) first replace PermissionError then success publishes candidate',
+              _replace_calls[0] == 2 and doc_retry is not None
+              and _sleep_calls == [sb.REPLACE_RETRY_DELAY_SEC],
+              'calls=%d sleeps=%s' % (_replace_calls[0], _sleep_calls))
+        with io.open(out, encoding='utf-8') as fh:
+            published_doc = json.load(fh)
+        after_retry_bytes = io.open(out, 'rb').read()
+        check('C5 RETRY (a) published canonical file matches validated candidate exactly',
+              published_doc == doc_retry
+              and published_doc['meta']['build_id'] == doc_retry['meta']['build_id']
+              and hashlib.sha256(after_retry_bytes).hexdigest() != hashlib.sha256(before).hexdigest())
+        check('C5 RETRY (a) no temp file left behind after successful retry',
+              not any(f.startswith('.snap.json') for f in os.listdir(root)),
+              str([f for f in os.listdir(root) if f.startswith('.')]))
+
+        before_persist_bytes = io.open(out, 'rb').read()
+        before_persist_sha = hashlib.sha256(before_persist_bytes).hexdigest()
+        with io.open(os.path.join(root, 'srcC.txt'), 'w') as fh:
+            fh.write('C')
+        good_persist_in = _write(root, 'good_persist.json',
+                                 scaffold(root, [row('srcA', 'srcA.txt'), row('srcC', 'srcC.txt')]))
+        _persist_calls = [0]
+        _persist_sleeps = []
+
+        def _persistent_replace(src, dst):
+            _persist_calls[0] += 1
+            raise PermissionError(13, 'Access is denied (persistent simulated lock)', dst)
+
+        sb.os.replace = _persistent_replace
+        sb.time.sleep = lambda s: _persist_sleeps.append(s)
+        raised_perm = False
+        perm_exc = None
+        try:
+            try:
+                sb.build_file(good_persist_in, out, root=root,
+                              schema_validator=gate, reconciler=NO_DERIVE)
+            except PermissionError as exc:
+                raised_perm = True
+                perm_exc = exc
+        finally:
+            sb.os.replace = _real_replace
+            sb.time.sleep = _real_sleep
+
+        check('C5 RETRY (b) persistent PermissionError still raises visible after finite attempts',
+              raised_perm and _persist_calls[0] == sb.REPLACE_MAX_ATTEMPTS
+              and 'persistent simulated lock' in str(perm_exc)
+              and _persist_sleeps == [sb.REPLACE_RETRY_DELAY_SEC] * (sb.REPLACE_MAX_ATTEMPTS - 1),
+              'calls=%d raised=%s exc=%s sleeps=%d'
+              % (_persist_calls[0], raised_perm, perm_exc, len(_persist_sleeps)))
+        after_persist_bytes = io.open(out, 'rb').read()
+        check('C5 RETRY (b) previous destination bytes remain byte-unchanged on persistent failure',
+              hashlib.sha256(after_persist_bytes).hexdigest() == before_persist_sha)
+        check('C5 RETRY (b) temp file is cleaned on persistent failure',
+              not any(f.startswith('.snap.json') for f in os.listdir(root)),
+              str([f for f in os.listdir(root) if f.startswith('.')]))
+
+        # c.1: Validation / SnapshotRefusal errors must fail before os.replace is ever called.
+        _replace_val_calls = [0]
+
+        def _val_tracking_replace(src, dst):
+            _replace_val_calls[0] += 1
+            return _real_replace(src, dst)
+
+        sb.os.replace = _val_tracking_replace
+        refused_val = False
+        try:
+            try:
+                sb.build_file(bad_in, out, root=root, schema_validator=gate, reconciler=NO_DERIVE)
+            except sv.SnapshotRefusal:
+                refused_val = True
+        finally:
+            sb.os.replace = _real_replace
+
+        check('C5 RETRY (c) validation failure raises SnapshotRefusal without reaching replace',
+              refused_val and _replace_val_calls[0] == 0,
+              'refused=%s replace_calls=%d' % (refused_val, _replace_val_calls[0]))
+
+        # c.2: Non-PermissionError replacement failure (e.g. FileNotFoundError) must not be retried.
+        _fnf_calls = [0]
+
+        def _fnf_replace(src, dst):
+            _fnf_calls[0] += 1
+            raise FileNotFoundError(2, 'No such file or directory (simulated)', dst)
+
+        sb.os.replace = _fnf_replace
+        raised_fnf = False
+        try:
+            try:
+                sb.build_file(good_retry_in, out, root=root,
+                              schema_validator=gate, reconciler=NO_DERIVE)
+            except FileNotFoundError:
+                raised_fnf = True
+        finally:
+            sb.os.replace = _real_replace
+
+        check('C5 RETRY (c) non-PermissionError destination failure raises immediately without retry',
+              raised_fnf and _fnf_calls[0] == 1,
+              'raised_fnf=%s calls=%d' % (raised_fnf, _fnf_calls[0]))
+
+        # c.3: Temp reread mismatch must refuse and not reach replace.
+        _reread_val_calls = [0]
+
+        def _reread_tracking_replace(src, dst):
+            _reread_val_calls[0] += 1
+            return _real_replace(src, dst)
+
+        sb.os.replace = _reread_tracking_replace
+        _real_json_load = json.load
+
+        def _corrupting_load(fh, *a, **k):
+            loaded = _real_json_load(fh, *a, **k)
+            if isinstance(loaded, dict) and loaded.get('entity') == 'ControlRoomSnapshotV5':
+                loaded = copy.deepcopy(loaded)
+                loaded['meta']['version'] = 999  # deliberate mismatch with verified doc
+            return loaded
+
+        json.load = _corrupting_load
+        refused_reread = False
+        try:
+            try:
+                sb.build_file(good_retry_in, out, root=root,
+                              schema_validator=gate, reconciler=NO_DERIVE)
+            except sv.SnapshotRefusal as exc:
+                if 'not the document that was validated' in str(exc):
+                    refused_reread = True
+        finally:
+            json.load = _real_json_load
+            sb.os.replace = _real_replace
+
+        check('C5 RETRY (c) temp reread mismatch raises SnapshotRefusal without reaching replace',
+              refused_reread and _reread_val_calls[0] == 0,
+              'refused_reread=%s replace_calls=%d' % (refused_reread, _reread_val_calls[0]))
+
         print('\n--- the supplied-answer scan still holds at the new entry point ---')
         refuses('a builder input carrying a nested `reconciliation_clear` is REFUSED',
                 lambda: sb.build_document(

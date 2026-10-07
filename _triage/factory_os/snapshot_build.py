@@ -62,6 +62,7 @@ import json
 import os
 import re
 import sys
+import time
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -795,6 +796,29 @@ def _sha256_file(path):
         return hashlib.sha256(fh.read()).hexdigest()
 
 
+REPLACE_MAX_ATTEMPTS = 5
+REPLACE_RETRY_DELAY_SEC = 0.05
+
+
+def _replace_with_retry(src, dst, max_attempts=REPLACE_MAX_ATTEMPTS,
+                        delay_sec=REPLACE_RETRY_DELAY_SEC):
+    """Atomically replace `dst` with `src`, retrying transient PermissionError.
+
+    On Windows, concurrent readers (antivirus, search indexer, status probes) can
+    transiently hold sharing locks that cause os.replace() to fail with PermissionError
+    (WinError 5 / WinError 32). A finite retry with constant delay clears transient locks
+    while preserving atomic publication and failing visible if persistent.
+    """
+    for attempt in range(1, max_attempts + 1):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if attempt >= max_attempts:
+                raise
+            time.sleep(delay_sec)
+
+
 def build_file(input_path, out_path, root=None, now=None, schema_validator=None,
                reconciler=_UNSET):
     """Read a builder input, build+validate, and atomically replace `out_path`.
@@ -839,7 +863,7 @@ def build_file(input_path, out_path, root=None, now=None, schema_validator=None,
                        'canonical file has NOT been replaced. This is an encoding or truncation '
                        'fault in the write itself, which no amount of validating the in-memory '
                        'object can see.')
-        os.replace(tmp, out_path)
+        _replace_with_retry(tmp, out_path)
     except BaseException:
         try:
             os.unlink(tmp)
