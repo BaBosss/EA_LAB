@@ -233,10 +233,12 @@ string CFG_ConstPreimage()
 
 #ifdef LAB_ENTRY_17
 #define CFG_CONSTANTS_ENUMERATED
-int    CFG_ConstKeys() { return(26); }
+int    CFG_ConstKeys() { return(28); }
 string CFG_ConstPreimage()
   {
    string s = "";
+   s += "\nconst:B17_ATR_PERIOD=" + CFG_CanonLong((long)B17_ATR_PERIOD);
+   s += "\nconst:B17_LEVEL_CAP=" + CFG_CanonLong((long)B17_LEVEL_CAP);
    s += "\nconst:CFG_FP_SCOPE=" + CFG_CanonString(CFG_FP_SCOPE);
    s += "\nconst:EVTBUS_PREFIX=" + CFG_CanonString(EVTBUS_PREFIX);
    s += "\nconst:HEDGE_TAG=" + CFG_CanonString(HEDGE_TAG);

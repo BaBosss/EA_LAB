@@ -1032,7 +1032,7 @@ string CFG_SurfacePreimage()
 #ifdef LAB_ENTRY_17
 #define CFG_SURFACE_ENUMERATED
 string CFG_BuildTag()    { return("LAB_ENTRY_17"); }
-int    CFG_SurfaceKeys() { return(159); }
+int    CFG_SurfaceKeys() { return(173); }
 string CFG_SurfacePreimage()
   {
    string s = "scope=" + CFG_FP_SCOPE + "\nbuild=LAB_ENTRY_17";
@@ -1066,6 +1066,20 @@ string CFG_SurfacePreimage()
    s += "\n_17_DivergTrail=" + CFG_CanonBool(_17_DivergTrail);
    s += "\n_17_MaxSwings=" + CFG_CanonLong((long)_17_MaxSwings);
    s += "\n_17_RSI_Period=" + CFG_CanonLong((long)_17_RSI_Period);
+   s += "\n_17_ConcurrencyMode=" + CFG_CanonLong((long)_17_ConcurrencyMode);
+   s += "\n_17_RiskAllocation=" + CFG_CanonLong((long)_17_RiskAllocation);
+   s += "\n_17_LadderExitMode=" + CFG_CanonLong((long)_17_LadderExitMode);
+   s += "\n_17_PerLegTargetMode=" + CFG_CanonLong((long)_17_PerLegTargetMode);
+   s += "\n_17_StructTargetMode=" + CFG_CanonLong((long)_17_StructTargetMode);
+   s += "\n_17_BasketTargetMode=" + CFG_CanonLong((long)_17_BasketTargetMode);
+   s += "\n_17_BasketMoneyBase=" + CFG_CanonLong((long)_17_BasketMoneyBase);
+   s += "\n_17_RiskATRContext=" + CFG_CanonLong((long)_17_RiskATRContext);
+   s += "\n_17_BasketATR_TF=" + CFG_CanonLong((long)_17_BasketATR_TF);
+   s += "\n_17_LadderLevelCount=" + CFG_CanonLong((long)_17_LadderLevelCount);
+   s += "\n_17_FibLevel1=" + CFG_CanonDouble(_17_FibLevel1);
+   s += "\n_17_FibLevel2=" + CFG_CanonDouble(_17_FibLevel2);
+   s += "\n_17_FibLevel3=" + CFG_CanonDouble(_17_FibLevel3);
+   s += "\n_17_FibLevel4=" + CFG_CanonDouble(_17_FibLevel4);
    s += "\n_0_FastMA=" + CFG_CanonLong((long)_0_FastMA);
    s += "\n_0_SlowMA=" + CFG_CanonLong((long)_0_SlowMA);
    s += "\n_0_MAMethod=" + CFG_CanonLong((long)_0_MAMethod);

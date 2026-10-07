@@ -72,6 +72,158 @@ void Persist_Del(const string name)
    if(GlobalVariableCheck(key)) GlobalVariableDel(key);
 }
 
+// ---- B17 explicit per-structure scope -----------------------------------
+// Legacy callers above remain scoped by static _0_Magic exactly as before.
+// B17 uses a second, explicit seam whose key includes account/server/symbol,
+// the base EA namespace, immutable structure identity, and the structure's own
+// positive Magic. The compact hashes keep every GlobalVariable name <=63
+// characters; persisted identity components are independently validated by the
+// B17 restore path before the hash is trusted.
+uint Persist_Hash32(const string value)
+{
+   uint h=2166136261;
+   for(int i=0;i<StringLen(value);i++)
+   {
+      h^=(uint)StringGetCharacter(value,i);
+      h*=16777619;
+   }
+   return h;
+}
+
+string Persist_StructContext()
+{
+   string raw=AccountInfoString(ACCOUNT_SERVER)+"|"+
+              IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN))+"|"+
+              _Symbol+"|"+IntegerToString(_0_Magic);
+   return StringFormat("%08x",Persist_Hash32(raw));
+}
+
+uint Persist_StructHash(const string structure_id)
+{
+   return Persist_Hash32(structure_id);
+}
+
+string Persist_StructIndexPrefix()
+{
+   return "B17I_"+Persist_StructContext()+"_";
+}
+
+string Persist_StructIndexKey(const long structure_magic)
+{
+   return Persist_StructIndexPrefix()+IntegerToString(structure_magic);
+}
+
+string Persist_StructKeyFromHash(const uint structure_hash,
+                                 const long structure_magic,
+                                 const string name)
+{
+   return StringFormat("B17S_%s_%I64d_%08x_%s",Persist_StructContext(),
+                       structure_magic,structure_hash,name);
+}
+
+string Persist_StructKey(const string structure_id,
+                         const long structure_magic,
+                         const string name)
+{
+   return Persist_StructKeyFromHash(Persist_StructHash(structure_id),
+                                    structure_magic,name);
+}
+
+bool Persist_StructSet(const string structure_id,const long structure_magic,
+                       const string name,const double value)
+{
+   if(structure_magic <= 0 || StringLen(structure_id)==0) return false;
+   string key=Persist_StructKey(structure_id,structure_magic,name);
+   if(StringLen(key)>63)
+   {
+      PrintFormat("[PERSIST][B17] ERROR over-length structure key (%d): %s",
+                  StringLen(key),key);
+      return false;
+   }
+   ResetLastError();
+   if(GlobalVariableSet(key,value)==0)
+   {
+      PrintFormat("[PERSIST][B17] ERROR write failed %s err=%d",key,GetLastError());
+      return false;
+   }
+   return true;
+}
+
+bool Persist_StructHas(const string structure_id,const long structure_magic,
+                       const string name)
+{
+   return GlobalVariableCheck(Persist_StructKey(structure_id,structure_magic,name));
+}
+
+double Persist_StructGet(const string structure_id,const long structure_magic,
+                         const string name,const double fallback)
+{
+   string key=Persist_StructKey(structure_id,structure_magic,name);
+   if(!GlobalVariableCheck(key)) return fallback;
+   return GlobalVariableGet(key);
+}
+
+bool Persist_StructHasFromHash(const uint structure_hash,
+                               const long structure_magic,
+                               const string name)
+{
+   return GlobalVariableCheck(Persist_StructKeyFromHash(structure_hash,
+                                                        structure_magic,name));
+}
+
+double Persist_StructGetFromHash(const uint structure_hash,
+                                 const long structure_magic,
+                                 const string name,const double fallback)
+{
+   string key=Persist_StructKeyFromHash(structure_hash,structure_magic,name);
+   if(!GlobalVariableCheck(key)) return fallback;
+   return GlobalVariableGet(key);
+}
+
+bool Persist_StructCommitIndex(const string structure_id,const long structure_magic)
+{
+   if(structure_magic<=0 || StringLen(structure_id)==0) return false;
+   string key=Persist_StructIndexKey(structure_magic);
+   double expected=(double)Persist_StructHash(structure_id);
+   if(GlobalVariableCheck(key) && GlobalVariableGet(key)!=expected)
+   {
+      PrintFormat("[PERSIST][B17] COLLISION magic=%I64d index identity differs",
+                  structure_magic);
+      return false;
+   }
+   ResetLastError();
+   if(GlobalVariableSet(key,expected)==0)
+   {
+      PrintFormat("[PERSIST][B17] ERROR index write failed %s err=%d",key,GetLastError());
+      return false;
+   }
+   return true;
+}
+
+int Persist_StructList(long &magics[],uint &hashes[])
+{
+   ArrayResize(magics,0);
+   ArrayResize(hashes,0);
+   string prefix=Persist_StructIndexPrefix();
+   int total=GlobalVariablesTotal();
+   for(int i=0;i<total;i++)
+   {
+      string key=GlobalVariableName(i);
+      if(StringFind(key,prefix)!=0) continue;
+      string tail=StringSubstr(key,StringLen(prefix));
+      long magic=(long)StringToInteger(tail);
+      double raw=GlobalVariableGet(key);
+      if(magic<=0 || !MathIsValidNumber(raw) || raw<0.0 || raw>4294967295.0)
+         continue;
+      int n=ArraySize(magics);
+      ArrayResize(magics,n+1);
+      ArrayResize(hashes,n+1);
+      magics[n]=magic;
+      hashes[n]=(uint)raw;
+   }
+   return ArraySize(magics);
+}
+
 // ORDER-138b (Codex F4): checked delete for keys whose stale survival is
 // DANGEROUS - a leftover close-all intent=1 that outlives its basket would
 // liquidate a FUTURE unrelated basket after a restart. Missing key = success.

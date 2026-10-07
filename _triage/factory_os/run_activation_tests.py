@@ -391,12 +391,14 @@ B18_ENTRY_ROWS = ('_18_Direction', '_18_DirMode', '_18_MaPeriod', '_18_KPeriod',
 
 
 def b17_b18_surface_completeness(mod):
-    """Both extensions must classify and project exactly their 159-key physical surfaces."""
+    """B17/B18 must classify and project their exact 173/159-key physical surfaces."""
+    expected_counts = {'LAB_ENTRY_17': 173, 'LAB_ENTRY_18': 159}
     for build, surface in (('LAB_ENTRY_17', S17), ('LAB_ENTRY_18', S18)):
         names = set(d.name for d in surface.inputs)
         table_names = set(mod.TABLE[build])
-        if len(names) != 159:
-            return '%s fixture has %d physical inputs, expected 159' % (build, len(names))
+        if len(names) != expected_counts[build]:
+            return '%s fixture has %d physical inputs, expected %d' % (
+                build, len(names), expected_counts[build])
         if table_names != names:
             return '%s table differs from its surface: missing=%s extra=%s' % (
                 build, sorted(names - table_names), sorted(table_names - names))

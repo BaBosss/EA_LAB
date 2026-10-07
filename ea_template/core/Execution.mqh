@@ -770,7 +770,14 @@ bool Exec_IdentityIsMine(const string symbol, const long magic)
    // Cast before arithmetic: source groups occupy base+1 through base+5.
    return magic > (long)_21_DF03_MagicStart && magic <= (long)_21_DF03_MagicStart + 5;
 #else
+#ifdef LAB_ENTRY_17
+   if(magic == _0_Magic) return true;
+   for(int i=0;i<ArraySize(g_b17_owned_magics);i++)
+      if(g_b17_owned_magics[i] == magic) return true;
+   return false;
+#else
    return magic == _0_Magic;
+#endif
 #endif
 }
 
@@ -1202,6 +1209,127 @@ bool Exec_SubmitPreparedOpen(const Exec_PreparedOpen &prepared,
    return (outcome == EXEC_PREPARED_MARKET_DONE);
 }
 
+#ifdef LAB_ENTRY_17
+// B17's structure-specific submit result. Unlike the legacy bool return, this
+// preserves partial and ambiguous outcomes so the ladder can consume the Fib
+// right without ever issuing a duplicate retry.
+enum Exec_MagicOpenOutcome
+{
+   EXEC_MAGIC_REFUSED=0,
+   EXEC_MAGIC_INTENT_ONLY=1,
+   EXEC_MAGIC_FULL_FILL=2,
+   EXEC_MAGIC_PARTIAL_FILL=3,
+   EXEC_MAGIC_AMBIGUOUS=4
+};
+
+struct Exec_MagicOpenResult
+{
+   Exec_MagicOpenOutcome outcome;
+   bool      transport_ok;
+   uint      retcode;
+   ulong     deal;
+   double    requested_volume;
+   double    filled_volume;
+   double    fill_price;
+   datetime  fill_time;
+};
+
+bool Exec_MagicRetcodeAmbiguous(const uint retcode)
+{
+   return (retcode==TRADE_RETCODE_TIMEOUT ||
+           retcode==TRADE_RETCODE_CONNECTION ||
+           retcode==TRADE_RETCODE_PLACED ||
+           retcode==TRADE_RETCODE_LOCKED ||
+           retcode==TRADE_RETCODE_TOO_MANY_REQUESTS);
+}
+
+Exec_MagicOpenOutcome Exec_AssessMagicOpenResult(
+   const bool dry_run,const bool transport_ok,const uint retcode,
+   const ulong deal,const double result_volume,
+   const double requested_volume,const double volume_step)
+{
+   if(dry_run) return EXEC_MAGIC_INTENT_ONLY;
+   if(!MathIsValidNumber(requested_volume) || requested_volume<=0.0 ||
+      !MathIsValidNumber(volume_step) || volume_step<=0.0)
+      return EXEC_MAGIC_REFUSED;
+   double tolerance=MathMax(1.0e-12,volume_step*1.0e-8);
+   bool positive_fill=(deal>0 && MathIsValidNumber(result_volume) &&
+                       result_volume>0.0);
+   if(transport_ok && retcode==TRADE_RETCODE_DONE && positive_fill)
+   {
+      if(MathAbs(result_volume-requested_volume)<=tolerance)
+         return EXEC_MAGIC_FULL_FILL;
+      if(result_volume<requested_volume-tolerance)
+         return EXEC_MAGIC_PARTIAL_FILL;
+      return EXEC_MAGIC_AMBIGUOUS;
+   }
+   if(transport_ok && retcode==TRADE_RETCODE_DONE_PARTIAL && positive_fill &&
+      result_volume<=requested_volume+tolerance)
+      return EXEC_MAGIC_PARTIAL_FILL;
+   if(positive_fill || Exec_MagicRetcodeAmbiguous(retcode))
+      return EXEC_MAGIC_AMBIGUOUS;
+   return EXEC_MAGIC_REFUSED;
+}
+
+// Exactly one market submit under an explicit positive structure Magic. The
+// base CTrade Magic is restored on every return path. Existing Exec_Open callers
+// and their static _0_Magic behavior are unchanged.
+Exec_MagicOpenResult Exec_OpenForMagic(const long structure_magic,
+                                       const int direction,double lot,
+                                       const double sl,const double tp,
+                                       const string comment)
+{
+   Exec_MagicOpenResult result;
+   result.outcome=EXEC_MAGIC_REFUSED;
+   result.transport_ok=false;
+   result.retcode=0;
+   result.deal=0;
+   result.requested_volume=0.0;
+   result.filled_volume=0.0;
+   result.fill_price=0.0;
+   result.fill_time=0;
+   if(structure_magic<=0 || (direction!=1 && direction!=2)) return result;
+   if(Exec_NewsBlocked() || Exec_MacroBlocked() || !Exec_SpreadOK()) return result;
+   lot=Exec_NormalizeLot(lot*Exec_MacroLotMult());
+   if(lot<=0.0) return result;
+   result.requested_volume=lot;
+   g_exec_open_intents++;
+   if(DryRun)
+   {
+      PrintFormat("[DRYRUN][B17] magic=%I64d dir=%d lot=%.4f sl=%.5f tp=%.5f %s",
+                  structure_magic,direction,lot,sl,tp,comment);
+      result.outcome=EXEC_MAGIC_INTENT_ONLY;
+      return result;
+   }
+
+   g_trade.SetExpertMagicNumber((ulong)structure_magic);
+   bool sent=(direction==1 ?
+      g_trade.Buy(lot,_Symbol,0.0,sl,tp,comment) :
+      g_trade.Sell(lot,_Symbol,0.0,sl,tp,comment));
+   result.transport_ok=sent;
+   result.retcode=g_trade.ResultRetcode();
+   result.deal=g_trade.ResultDeal();
+   result.filled_volume=g_trade.ResultVolume();
+   result.fill_price=g_trade.ResultPrice();
+   result.fill_time=TimeCurrent();
+   double step=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_STEP);
+   result.outcome=Exec_AssessMagicOpenResult(false,sent,result.retcode,
+                                             result.deal,result.filled_volume,
+                                             lot,step);
+   if(result.deal>0 && HistoryDealSelect(result.deal))
+   {
+      double hv=HistoryDealGetDouble(result.deal,DEAL_VOLUME);
+      double hp=HistoryDealGetDouble(result.deal,DEAL_PRICE);
+      datetime ht=(datetime)HistoryDealGetInteger(result.deal,DEAL_TIME);
+      if(hv>0.0) result.filled_volume=hv;
+      if(hp>0.0) result.fill_price=hp;
+      if(ht>0) result.fill_time=ht;
+   }
+   g_trade.SetExpertMagicNumber((ulong)_0_Magic);
+   return result;
+}
+#endif
+
 #ifdef LAB_MG_TESTER_EVIDENCE_QUAL
 // Qualification branch for the legacy market-open choke point. The order of
 // guards, normalization, g_exec_open_intents increment, DryRun behavior,
@@ -1324,6 +1452,134 @@ double Exec_BasketProfit()
    }
    return p;
 }
+
+#ifdef LAB_ENTRY_17
+bool Exec_MagicPositionIsMine(const int index,const long magic)
+{
+   ulong ticket=PositionGetTicket(index);
+   if(ticket==0) return false;
+   return (PositionGetString(POSITION_SYMBOL)==_Symbol &&
+           (long)PositionGetInteger(POSITION_MAGIC)==magic);
+}
+
+bool Exec_MagicOrderIsMine(const int index,const long magic)
+{
+   ulong ticket=OrderGetTicket(index);
+   if(ticket==0) return false;
+   return (OrderGetString(ORDER_SYMBOL)==_Symbol &&
+           (long)OrderGetInteger(ORDER_MAGIC)==magic);
+}
+
+int Exec_CountMagic(const long magic)
+{
+   int count=0;
+   for(int i=PositionsTotal()-1;i>=0;i--)
+      if(Exec_MagicPositionIsMine(i,magic)) count++;
+   return count;
+}
+
+double Exec_TotalLotsMagic(const long magic)
+{
+   double lots=0.0;
+   for(int i=PositionsTotal()-1;i>=0;i--)
+      if(Exec_MagicPositionIsMine(i,magic))
+         lots+=PositionGetDouble(POSITION_VOLUME);
+   return lots;
+}
+
+double Exec_BasketProfitMagic(const long magic)
+{
+   double profit=0.0;
+   for(int i=PositionsTotal()-1;i>=0;i--)
+      if(Exec_MagicPositionIsMine(i,magic))
+         profit+=PositionGetDouble(POSITION_PROFIT)+PositionGetDouble(POSITION_SWAP);
+   return profit;
+}
+
+bool Exec_MagicHasBrokerExposure(const long magic)
+{
+   if(Exec_CountMagic(magic)>0) return true;
+   for(int i=OrdersTotal()-1;i>=0;i--)
+      if(Exec_MagicOrderIsMine(i,magic)) return true;
+   return false;
+}
+
+bool Exec_AnyBrokerMagic(const long magic)
+{
+   for(int i=PositionsTotal()-1;i>=0;i--)
+   {
+      ulong ticket=PositionGetTicket(i);
+      if(ticket>0 && (long)PositionGetInteger(POSITION_MAGIC)==magic) return true;
+   }
+   for(int i=OrdersTotal()-1;i>=0;i--)
+   {
+      ulong ticket=OrderGetTicket(i);
+      if(ticket>0 && (long)OrderGetInteger(ORDER_MAGIC)==magic) return true;
+   }
+   return false;
+}
+
+bool Exec_FindMagicLevelPosition(const long magic,const int level,
+                                 ulong &ticket,double &volume,
+                                 double &price,datetime &opened)
+{
+   ticket=0; volume=0.0; price=0.0; opened=0;
+   string marker=":L"+IntegerToString(level);
+   for(int i=PositionsTotal()-1;i>=0;i--)
+   {
+      if(!Exec_MagicPositionIsMine(i,magic)) continue;
+      if(StringFind(PositionGetString(POSITION_COMMENT),marker)<0) continue;
+      ticket=PositionGetInteger(POSITION_TICKET);
+      volume=PositionGetDouble(POSITION_VOLUME);
+      price=PositionGetDouble(POSITION_PRICE_OPEN);
+      opened=(datetime)PositionGetInteger(POSITION_TIME);
+      return (ticket>0 && volume>0.0 && price>0.0);
+   }
+   return false;
+}
+
+bool Exec_ModifyMagicLevelTarget(const long magic,const int level,
+                                 const double sl,const double tp)
+{
+   bool found=false,all_ok=true;
+   string marker=":L"+IntegerToString(level);
+   for(int i=PositionsTotal()-1;i>=0;i--)
+   {
+      if(!Exec_MagicPositionIsMine(i,magic)) continue;
+      if(StringFind(PositionGetString(POSITION_COMMENT),marker)<0) continue;
+      found=true;
+      ulong ticket=PositionGetInteger(POSITION_TICKET);
+      if(DryRun) continue;
+      if(!g_trade.PositionModify(ticket,sl,tp)) all_ok=false;
+   }
+   return found && all_ok;
+}
+
+// Close/reconcile one structure only. It can never count, cancel or close a
+// sibling Magic; completion is proved by an exact-Magic rescan.
+bool Exec_CloseMagic(const long magic)
+{
+   for(int i=PositionsTotal()-1;i>=0;i--)
+   {
+      if(!Exec_MagicPositionIsMine(i,magic)) continue;
+      ulong ticket=PositionGetInteger(POSITION_TICKET);
+      if(DryRun) continue;
+      if(!g_trade.PositionClose(ticket))
+         PrintFormat("[EXEC][B17] close FAILED magic=%I64d ticket=%I64u retcode=%d",
+                     magic,ticket,(int)g_trade.ResultRetcode());
+   }
+   for(int i=OrdersTotal()-1;i>=0;i--)
+   {
+      if(!Exec_MagicOrderIsMine(i,magic)) continue;
+      ulong ticket=OrderGetTicket(i);
+      if(DryRun) continue;
+      if(!g_trade.OrderDelete(ticket))
+         PrintFormat("[EXEC][B17] cancel FAILED magic=%I64d ticket=%I64u retcode=%d",
+                     magic,ticket,(int)g_trade.ResultRetcode());
+   }
+   return (DryRun || !Exec_MagicHasBrokerExposure(magic));
+}
+#endif
 
 double Exec_LastPriceDir(const int direction)
 {

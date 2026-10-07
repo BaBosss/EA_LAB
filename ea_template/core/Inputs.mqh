@@ -173,6 +173,56 @@ enum ENUM_HEDGE_MODE
    HEDGE_LOCK = 1   // 1 opposite-direction lock on basket DD breach
 };
 
+// B17 Stage-0 owner-frozen ladder selectors. Values are deliberately isolated
+// from the shared chassis enums: only LAB_ENTRY_17 compiles or consumes them.
+enum ENUM_B17_CONCURRENCY_MODE
+{
+   B17_SINGLE_ACTIVE_STRUCTURE = 0,
+   B17_OVERLAPPING_STRUCTURES  = 1
+};
+
+enum ENUM_B17_RISK_ALLOCATION
+{
+   B17_RISK_EQUAL_PER_LEVEL       = 0,
+   B17_RISK_LINEAR_DEPTH_WEIGHTED = 1
+};
+
+enum ENUM_B17_LADDER_EXIT_MODE
+{
+   B17_PER_LEG_EXIT = 0,
+   B17_BASKET_EXIT  = 1
+};
+
+enum ENUM_B17_PER_LEG_TARGET_MODE
+{
+   B17_WAVE5_STRUCTURAL_TARGET = 0,
+   B17_ATR_TARGET              = 1
+};
+
+enum ENUM_B17_STRUCT_TARGET_MODE
+{
+   B17_SHARED_STRUCTURE_TARGET   = 0,
+   B17_PER_ENTRY_STRUCTURAL_TARGET = 1
+};
+
+enum ENUM_B17_BASKET_TARGET_MODE
+{
+   B17_BASKET_MONEY_TARGET = 0,
+   B17_BASKET_ATR_TARGET   = 1
+};
+
+enum ENUM_B17_BASKET_MONEY_BASE
+{
+   B17_BALANCE_PCT = 0,
+   B17_EQUITY_PCT  = 1
+};
+
+enum ENUM_B17_ATR_CONTEXT
+{
+   B17_ATR_PRIMARY_CONTEXT   = 0,
+   B17_ATR_SECONDARY_CONTEXT = 1
+};
+
 //==================== Mode selectors ===============================
 input group "=== Mode selectors (code = value) ==="
 #ifndef LAB_CONST_ExitMode
@@ -830,6 +880,90 @@ input int    _17_RSI_Period     = 14;   // [P11707] RSI Period | with P11705
 #endif
 #ifdef LAB_CONST__17_RSI_Period
 const int _17_RSI_Period = LAB_CONSTVAL__17_RSI_Period;
+#endif
+#ifndef LAB_CONST__17_ConcurrencyMode
+input ENUM_B17_CONCURRENCY_MODE _17_ConcurrencyMode = B17_SINGLE_ACTIVE_STRUCTURE; // [P11708] Concurrency Mode
+#endif
+#ifdef LAB_CONST__17_ConcurrencyMode
+const ENUM_B17_CONCURRENCY_MODE _17_ConcurrencyMode = LAB_CONSTVAL__17_ConcurrencyMode;
+#endif
+#ifndef LAB_CONST__17_RiskAllocation
+input ENUM_B17_RISK_ALLOCATION _17_RiskAllocation = B17_RISK_EQUAL_PER_LEVEL; // [P11709] Risk Allocation
+#endif
+#ifdef LAB_CONST__17_RiskAllocation
+const ENUM_B17_RISK_ALLOCATION _17_RiskAllocation = LAB_CONSTVAL__17_RiskAllocation;
+#endif
+#ifndef LAB_CONST__17_LadderExitMode
+input ENUM_B17_LADDER_EXIT_MODE _17_LadderExitMode = B17_PER_LEG_EXIT; // [P11710] Ladder Exit Mode
+#endif
+#ifdef LAB_CONST__17_LadderExitMode
+const ENUM_B17_LADDER_EXIT_MODE _17_LadderExitMode = LAB_CONSTVAL__17_LadderExitMode;
+#endif
+#ifndef LAB_CONST__17_PerLegTargetMode
+input ENUM_B17_PER_LEG_TARGET_MODE _17_PerLegTargetMode = B17_WAVE5_STRUCTURAL_TARGET; // [P11711] Per Leg Target Mode
+#endif
+#ifdef LAB_CONST__17_PerLegTargetMode
+const ENUM_B17_PER_LEG_TARGET_MODE _17_PerLegTargetMode = LAB_CONSTVAL__17_PerLegTargetMode;
+#endif
+#ifndef LAB_CONST__17_StructTargetMode
+input ENUM_B17_STRUCT_TARGET_MODE _17_StructTargetMode = B17_SHARED_STRUCTURE_TARGET; // [P11712] Struct Target Mode
+#endif
+#ifdef LAB_CONST__17_StructTargetMode
+const ENUM_B17_STRUCT_TARGET_MODE _17_StructTargetMode = LAB_CONSTVAL__17_StructTargetMode;
+#endif
+#ifndef LAB_CONST__17_BasketTargetMode
+input ENUM_B17_BASKET_TARGET_MODE _17_BasketTargetMode = B17_BASKET_MONEY_TARGET; // [P11713] Basket Target Mode
+#endif
+#ifdef LAB_CONST__17_BasketTargetMode
+const ENUM_B17_BASKET_TARGET_MODE _17_BasketTargetMode = LAB_CONSTVAL__17_BasketTargetMode;
+#endif
+#ifndef LAB_CONST__17_BasketMoneyBase
+input ENUM_B17_BASKET_MONEY_BASE _17_BasketMoneyBase = B17_BALANCE_PCT; // [P11714] Basket Money Base
+#endif
+#ifdef LAB_CONST__17_BasketMoneyBase
+const ENUM_B17_BASKET_MONEY_BASE _17_BasketMoneyBase = LAB_CONSTVAL__17_BasketMoneyBase;
+#endif
+#ifndef LAB_CONST__17_RiskATRContext
+input ENUM_B17_ATR_CONTEXT _17_RiskATRContext = B17_ATR_PRIMARY_CONTEXT; // [P11715] Risk ATR Context
+#endif
+#ifdef LAB_CONST__17_RiskATRContext
+const ENUM_B17_ATR_CONTEXT _17_RiskATRContext = LAB_CONSTVAL__17_RiskATRContext;
+#endif
+#ifndef LAB_CONST__17_BasketATR_TF
+input ENUM_TIMEFRAMES _17_BasketATR_TF = PERIOD_H1; // [P11716] Basket ATR TF
+#endif
+#ifdef LAB_CONST__17_BasketATR_TF
+const ENUM_TIMEFRAMES _17_BasketATR_TF = LAB_CONSTVAL__17_BasketATR_TF;
+#endif
+#ifndef LAB_CONST__17_LadderLevelCount
+input int _17_LadderLevelCount = 4; // [P11717] Ladder Level Count | with P11718 P11719 P11720 P11721
+#endif
+#ifdef LAB_CONST__17_LadderLevelCount
+const int _17_LadderLevelCount = LAB_CONSTVAL__17_LadderLevelCount;
+#endif
+#ifndef LAB_CONST__17_FibLevel1
+input double _17_FibLevel1 = 23.6; // [P11718] Fib Level 1 | with P11717
+#endif
+#ifdef LAB_CONST__17_FibLevel1
+const double _17_FibLevel1 = LAB_CONSTVAL__17_FibLevel1;
+#endif
+#ifndef LAB_CONST__17_FibLevel2
+input double _17_FibLevel2 = 38.2; // [P11719] Fib Level 2 | with P11717
+#endif
+#ifdef LAB_CONST__17_FibLevel2
+const double _17_FibLevel2 = LAB_CONSTVAL__17_FibLevel2;
+#endif
+#ifndef LAB_CONST__17_FibLevel3
+input double _17_FibLevel3 = 50.0; // [P11720] Fib Level 3 | with P11717
+#endif
+#ifdef LAB_CONST__17_FibLevel3
+const double _17_FibLevel3 = LAB_CONSTVAL__17_FibLevel3;
+#endif
+#ifndef LAB_CONST__17_FibLevel4
+input double _17_FibLevel4 = 61.8; // [P11721] Fib Level 4 | with P11717
+#endif
+#ifdef LAB_CONST__17_FibLevel4
+const double _17_FibLevel4 = LAB_CONSTVAL__17_FibLevel4;
 #endif
 #endif
 
@@ -1853,6 +1987,10 @@ const int _0_MaxSpread = LAB_CONSTVAL__0_MaxSpread;
 double g_wave5_sl_price = 0.0;   // structural SL price (wave-1 top/bottom +/- ATR buffer)
 double g_wave5_tp_price = 0.0;   // 100% expansion target (entry_ref +/- |wave1|) - reference zone, not a hard broker TP
 double g_wave5_entry_ref = 0.0;  // price at signal time (0 = unset)
+// Explicit per-structure Magic ownership. Execution reads this array only in
+// LAB_ENTRY_17; legacy builds continue to own exactly _0_Magic.
+long g_b17_owned_magics[];
+bool g_b17_orphaned_exposure = false;
 #endif
 
 // DF02 frozen source defaults; current chart symbol and timeframe remain unbound.

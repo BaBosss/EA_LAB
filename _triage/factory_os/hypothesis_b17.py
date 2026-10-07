@@ -34,6 +34,17 @@ CONFIG = {
     '_17_RSI_Period': '14', '_2_BasketTP_Money': '0', '_2_SuppressLegTP': 'false',
     '_33_SL_ATRmult': '2.0', '_0_ATR_Period': '14', '_0_ATR_TF': 'PERIOD_CURRENT',
     '_3_RiskATR_Period': '14', '_3_RiskATR_TF': 'PERIOD_CURRENT',
+    '_17_ConcurrencyMode': 'B17_SINGLE_ACTIVE_STRUCTURE',
+    '_17_RiskAllocation': 'B17_RISK_EQUAL_PER_LEVEL',
+    '_17_LadderExitMode': 'B17_PER_LEG_EXIT',
+    '_17_PerLegTargetMode': 'B17_WAVE5_STRUCTURAL_TARGET',
+    '_17_StructTargetMode': 'B17_SHARED_STRUCTURE_TARGET',
+    '_17_BasketTargetMode': 'B17_BASKET_MONEY_TARGET',
+    '_17_BasketMoneyBase': 'B17_BALANCE_PCT',
+    '_17_RiskATRContext': 'B17_ATR_PRIMARY_CONTEXT',
+    '_17_BasketATR_TF': 'PERIOD_H1', '_17_LadderLevelCount': '4',
+    '_17_FibLevel1': '23.6', '_17_FibLevel2': '38.2',
+    '_17_FibLevel3': '50.0', '_17_FibLevel4': '61.8',
     'UseMiddlePathVeto': 'false',
 }
 
@@ -64,7 +75,12 @@ LOCKED_SELECTORS = (
     '_17_SLbufferATR', '_17_MaxSwings', '_17_RSI_Period',
     '_2_BasketTP_Money', '_23_TrailStart', '_23_TrailStep',
     '_2_SuppressLegTP', '_33_SL_ATRmult', '_0_ATR_Period', '_0_ATR_TF',
-    '_3_RiskATR_Period', '_3_RiskATR_TF', 'UseMiddlePathVeto',
+    '_3_RiskATR_Period', '_3_RiskATR_TF', '_17_ConcurrencyMode',
+    '_17_RiskAllocation', '_17_LadderExitMode', '_17_PerLegTargetMode',
+    '_17_StructTargetMode', '_17_BasketTargetMode', '_17_BasketMoneyBase',
+    '_17_RiskATRContext', '_17_BasketATR_TF', '_17_LadderLevelCount',
+    '_17_FibLevel1', '_17_FibLevel2', '_17_FibLevel3', '_17_FibLevel4',
+    'UseMiddlePathVeto',
 )
 
 DECISIONS = {

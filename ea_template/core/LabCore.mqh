@@ -377,6 +377,12 @@ int OnInit()
       return INIT_FAILED;
    }
    Exec_Init();
+#ifdef LAB_ENTRY_17
+   // Restore/register structure Magics before RiskControl_Init so a persisted
+   // hard-kill can see and reconcile every B17-owned position on its first pass.
+   Entry_Wave5_Init();
+   if(!B17_Init()) return INIT_FAILED;
+#endif
    if(_MG_SelfGate)
    {
 #ifdef LAB_MG_TESTER_EVIDENCE_QUAL
@@ -422,7 +428,6 @@ int OnInit()
       Print("[INIT] WARN: _57_DynCloseOn has NO EFFECT on Boss_16/Kangaroo (Kangaroo owns its exits) - input ignored");
 #endif
 #ifdef LAB_ENTRY_17
-   Entry_Wave5_Init();
    // MM-SAFETY-001: ORDER-082 guard G4 documented "structural mode is banned with
    // stacking - naked probe only", but nothing enforced it. Unenforced, a .set with
    // StackMode 91/92/93 put grid adds and resting pendings on Wave5's published
@@ -541,6 +546,7 @@ void OnDeinit(const int reason)
    // count before any guard may be written up as passed. Diagnostic only; nothing
    // branches on it, and no other build compiles this line.
    Entry_Wave5_LogCounters();
+   B17_Deinit();
 #endif
 #ifdef LAB_ENTRY_19
    Entry_AdaptiveTrendGrid_Deinit();
@@ -662,6 +668,10 @@ void OnTick()
       datetime mg_cb = iTime(_Symbol, PERIOD_M1, 0);
       if(mg_cb != mg_lastbar) { mg_lastbar = mg_cb; MG_Tick(TimeCurrent()); }
    }
+#ifdef LAB_ENTRY_17
+   B17_OnTick();
+   return;
+#endif
 #ifdef LAB_ENTRY_16
    // entry 16 (KangarooGrid, ORDER-072): Kangaroo.mqh owns the ENTIRE pipeline
    // (first entry, adverse grid adds, every exit, emergency DD) - one exit

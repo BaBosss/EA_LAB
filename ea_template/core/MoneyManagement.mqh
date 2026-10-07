@@ -195,6 +195,29 @@ double MM_SizingUnavailable(const int reasonId, const string why)
    return 0.0;
 }
 
+// B17 Stage-0 pure sizing seam. The caller supplies the frozen per-level risk
+// money and executable-price-to-buffered-SL distance. Broker normalization and
+// the chassis hard cap remain owned by Execution.mqh; this function never
+// raises a lot to the broker minimum and never treats a risk weight as a lot
+// multiplier.
+bool MM_RawLotForRiskMoney(const double allocated_risk_money,
+                           const double price_risk,
+                           const double tick_value,
+                           const double tick_size,
+                           double &raw_lot)
+{
+   raw_lot=0.0;
+   if(!MathIsValidNumber(allocated_risk_money) || allocated_risk_money <= 0.0 ||
+      !MathIsValidNumber(price_risk) || price_risk <= 0.0 ||
+      !MathIsValidNumber(tick_value) || tick_value <= 0.0 ||
+      !MathIsValidNumber(tick_size) || tick_size <= 0.0)
+      return false;
+   double risk_per_lot=(price_risk/tick_size)*tick_value;
+   if(!MathIsValidNumber(risk_per_lot) || risk_per_lot <= 0.0) return false;
+   raw_lot=allocated_risk_money/risk_per_lot;
+   return (MathIsValidNumber(raw_lot) && raw_lot > 0.0);
+}
+
 // first-order lot. Returns 0.0 = "could not size this order" -> caller skips.
 // Config errors are already dead at OnInit (MM_ConfigValid); what remains here is
 // runtime data failure (unreadable balance / tick value, or an SL distance the exit

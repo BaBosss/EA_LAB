@@ -274,18 +274,55 @@ def _registration_specificity():
             problems.append('B17 prereg anchor drifted')
         if h.get('status') != 'REGISTERED':
             problems.append('B17 lifecycle status is not REGISTERED')
-    if len(b17) != 147:
-        problems.append('B17 binding count is %d, expected 147 logical rows' % len(b17))
+    if len(b17) != 161:
+        problems.append('B17 binding count is %d, expected 161 logical rows (147 legacy + 14 owner-frozen Stage0)' % len(b17))
     counts = {}
     for row in b17:
         counts[row.get('role')] = counts.get(row.get('role'), 0) + 1
-    expected = {'INACTIVE':106,'LOCKED':31,'SAFETY':7,'SIZING':1,'RUNTIME':2}
+    expected = {'INACTIVE':108,'LOCKED':43,'SAFETY':7,'SIZING':1,'RUNTIME':2}
     if counts != expected:
         problems.append('B17 role counts %r != %r' % (counts, expected))
+    expected_added = {
+        '_17_ConcurrencyMode': (11708, 'LOCKED', 'B17_SINGLE_ACTIVE_STRUCTURE'),
+        '_17_RiskAllocation': (11709, 'LOCKED', 'B17_RISK_EQUAL_PER_LEVEL'),
+        '_17_LadderExitMode': (11710, 'LOCKED', 'B17_PER_LEG_EXIT'),
+        '_17_PerLegTargetMode': (11711, 'LOCKED', 'B17_WAVE5_STRUCTURAL_TARGET'),
+        '_17_StructTargetMode': (11712, 'LOCKED', 'B17_SHARED_STRUCTURE_TARGET'),
+        '_17_BasketTargetMode': (11713, 'INACTIVE', None),
+        '_17_BasketMoneyBase': (11714, 'INACTIVE', None),
+        '_17_RiskATRContext': (11715, 'LOCKED', 'B17_ATR_PRIMARY_CONTEXT'),
+        '_17_BasketATR_TF': (11716, 'LOCKED', 'PERIOD_H1'),
+        '_17_LadderLevelCount': (11717, 'LOCKED', '4'),
+        '_17_FibLevel1': (11718, 'LOCKED', '23.6'),
+        '_17_FibLevel2': (11719, 'LOCKED', '38.2'),
+        '_17_FibLevel3': (11720, 'LOCKED', '50.0'),
+        '_17_FibLevel4': (11721, 'LOCKED', '61.8'),
+    }
+    for name, (pid, role, locked_value) in sorted(expected_added.items()):
+        rows17 = [r for r in b17 if r.get('parameter') == name]
+        if len(rows17) != 1:
+            problems.append('B17 %s binding count is %d, expected exactly 1' % (name, len(rows17)))
+            continue
+        row = rows17[0]
+        if row.get('parameter_pid') != pid:
+            problems.append('B17 %s pid %r != %r' % (name, row.get('parameter_pid'), pid))
+        if row.get('role') != role:
+            problems.append('B17 %s role %r != %r' % (name, row.get('role'), role))
+        if row.get('optimize_stage') != 'FREEZE':
+            problems.append('B17 %s optimize_stage is not FREEZE' % name)
+        if row.get('safe_range') is not None:
+            problems.append('B17 %s unexpectedly exposes safe_range' % name)
+        if row.get('surface') != 'HIDDEN':
+            problems.append('B17 %s surface %r != HIDDEN' % (name, row.get('surface')))
+        if locked_value is None:
+            if row.get('locked_value') is not None:
+                problems.append('B17 %s inactive binding unexpectedly exposes locked_value %r' % (name, row.get('locked_value')))
+        elif str(row.get('locked_value')) != locked_value:
+            problems.append('B17 %s locked_value %r != %r' % (name, row.get('locked_value'), locked_value))
     if sum(1 for r in b17 if r.get('surface') == 'OPERATOR') != 7:
         problems.append('B17 Operator surface is not exactly 7 rows')
     if any(r.get('role') == 'TUNABLE' for r in b17):
-        problems.append('B17 historical frozen registration exposes a TUNABLE row')
+        problems.append('B17 frozen Stage0 registration exposes a TUNABLE row')
     b18h = [h for h in hyps if h.get('revision_id') == 'B18-H01-r1']
     b18 = [r for r in binds if r.get('hypothesis_revision') == 'B18-H01-r1']
     if len(b18h) != 1:
