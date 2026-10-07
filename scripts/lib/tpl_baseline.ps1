@@ -467,7 +467,8 @@ function Assert-TplPrecommitExactTreeContract {
         [Parameter(Mandatory)][string]$RepairParent,
         [Parameter(Mandatory)][string]$SourceTree,
         [Parameter(Mandatory)][string[]]$BehavioralDeltaPaths,
-        [Parameter(Mandatory)][string[]]$AllowedRepairPaths
+        [Parameter(Mandatory)][string[]]$AllowedRepairPaths,
+        [Parameter(Mandatory)][string[]]$ExpectedBehavioralPaths
     )
     $control = Assert-TplCommitIdentity $GitRoot $ControlCommit 'ControlCommit'
     $parent = Assert-TplCommitIdentity $GitRoot $RepairParent 'RepairParent'
@@ -500,7 +501,19 @@ function Assert-TplPrecommitExactTreeContract {
             throw "REFUSE: invalid or duplicate behavioral declaration: $path"
         }
     }
-    if ($declared.Count -ne 4) { throw 'REFUSE: precommit admission requires exactly four behavioral delta paths' }
+    $expected = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    foreach ($path in $ExpectedBehavioralPaths) {
+        Assert-TplLiteralPath $path
+        if (-not (Test-TplBehavioralPath $path) -or -not $expected.Add($path)) {
+            throw "REFUSE: invalid or duplicate expected behavioral path: $path"
+        }
+    }
+    if ($expected.Count -eq 0 -or $declared.Count -ne $expected.Count) {
+        throw "REFUSE: precommit behavioral declaration count differs from profile: declared=$($declared.Count) expected=$($expected.Count)"
+    }
+    foreach ($path in $expected) {
+        if (-not $declared.Contains($path)) { throw "REFUSE: profile behavioral path missing from declaration: $path" }
+    }
     $currentTree = Get-TplTree $GitRoot $treeId
     $controlTree = Get-TplTree $GitRoot $control
     $observed = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)

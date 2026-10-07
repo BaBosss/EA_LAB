@@ -26,7 +26,8 @@ param(
     [string]$RepairParent = '',
     [string[]]$BehavioralDeltaPaths = @(),
     [string]$SourceRoot = '',
-    [string]$PrecommitEvidenceRoot = ''
+    [string]$PrecommitEvidenceRoot = '',
+    [ValidateSet('LEGACY_REPAIR1','B17_FINALCLOSURE')][string]$PrecommitProfile = 'LEGACY_REPAIR1'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -159,7 +160,7 @@ function Assert-TplMetricMatch([object]$Expected, [object]$Actual, [string]$Expe
 }
 
 try {
-    $precommitNames = @('PrecommitExactTree','SourceTree','RepairParent','PrecommitEvidenceRoot')
+    $precommitNames = @('PrecommitExactTree','SourceTree','RepairParent','PrecommitEvidenceRoot','PrecommitProfile')
     $precommitExplicit = @($precommitNames | Where-Object { $PSBoundParameters.ContainsKey($_) }).Count -gt 0
     $explicitDelta = @('DeclaredCoreDelta','ControlCommit','SourceCommit','BehavioralDeltaPaths') | Where-Object { $PSBoundParameters.ContainsKey($_) }
     $useDeclaredDelta = (@($explicitDelta).Count -gt 0) -and -not $PrecommitExactTree
@@ -173,9 +174,70 @@ try {
         if ($SourceTree -cnotmatch '^[0-9a-f]{40}$' -or $RepairParent -cnotmatch '^[0-9a-f]{40}$' -or $ControlCommit -cnotmatch '^[0-9a-f]{40}$') {
             throw 'REFUSE: precommit identities must be exact lowercase 40-hex object IDs'
         }
-        if ($RepairParent -cne '5845c4e039a3d9ef57e6997af42655a3d854d34e' -or
-            $ControlCommit -cne 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac') {
-            throw 'REFUSE: precommit exact-tree parent/control do not match the owner-frozen Repair1 lineage'
+        $legacyBehavioral = @(
+            'ea_template/Boss_15_ST03.mq5',
+            'ea_template/core/LabCore.mqh',
+            'ea_template/core/MacroGate_Core.mqh',
+            'ea_template/core/Execution.mqh'
+        )
+        $legacyAllowed = @($legacyBehavioral + @(
+            'scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1',
+            'scripts/_test/macrogate_tester_transfer_probe.mq5',
+            'scripts/_test/test_macrogate_tester_transfer_contract.py',
+            'scripts/tpl_regression.ps1',
+            'scripts/lib/tpl_baseline.ps1',
+            'scripts/_test/run_tpl_declared_wrapper_tests.ps1'
+        ))
+        $b17Behavioral = @(
+            'ea_template/Boss_15_ST03.mq5',
+            'ea_template/core/entries/Entry_Wave5.mqh',
+            'ea_template/core/Execution.mqh',
+            'ea_template/core/Inputs.mqh',
+            'ea_template/core/InputSurface_gen.mqh',
+            'ea_template/core/LabCore.mqh',
+            'ea_template/core/LockedConstants_gen.mqh',
+            'ea_template/core/MacroGate_Core.mqh',
+            'ea_template/core/MoneyManagement.mqh',
+            'ea_template/core/Persist.mqh'
+        )
+        $b17Allowed = @(
+            'ea_template/core/entries/Entry_Wave5.mqh',
+            'ea_template/core/entries/Wave5Swings.mqh',
+            'ea_template/core/Inputs.mqh',
+            'ea_template/core/LabCore.mqh',
+            'ea_template/core/ExitManager.mqh',
+            'ea_template/core/MoneyManagement.mqh',
+            'ea_template/core/Execution.mqh',
+            'ea_template/core/Persist.mqh',
+            'ea_template/core/Basket.mqh',
+            'ea_template/core/RuntimeIdentity.mqh',
+            'ea_template/core/InputSurface_gen.mqh',
+            'ea_template/core/LockedConstants_gen.mqh',
+            'docs/PARAM_REGISTRY.csv',
+            'ea_template/tests/B17_LadderStage0_Test.mq5',
+            'scripts/_test/run_b17_ladder_stage0_tests.ps1',
+            '_triage/factory_os/activation.py',
+            '_triage/factory_os/hypothesis_b17.py',
+            'factory/hypotheses.jsonl',
+            'factory/parameter_bindings.jsonl',
+            '_triage/factory_os/run_activation_tests.py',
+            '_triage/factory_os/run_param_surface_tests.py'
+        )
+        if ($PrecommitProfile -ceq 'LEGACY_REPAIR1') {
+            if ($RepairParent -cne '5845c4e039a3d9ef57e6997af42655a3d854d34e' -or
+                $ControlCommit -cne 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac') {
+                throw 'REFUSE: precommit exact-tree parent/control do not match the owner-frozen Repair1 lineage'
+            }
+            $expectedBehavioral = $legacyBehavioral
+            $earlyAllowed = $legacyAllowed
+        } elseif ($PrecommitProfile -ceq 'B17_FINALCLOSURE') {
+            if ($ControlCommit -cne 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac') {
+                throw 'REFUSE: B17 precommit profile requires the frozen Build-6090-compatible control'
+            }
+            $expectedBehavioral = $b17Behavioral
+            $earlyAllowed = $b17Allowed
+        } else {
+            throw 'REFUSE: unsupported precommit profile'
         }
         $evidenceFull = [IO.Path]::GetFullPath($PrecommitEvidenceRoot).TrimEnd('\')
         $repoFull = [IO.Path]::GetFullPath($invocationRoot).TrimEnd('\')
@@ -186,28 +248,23 @@ try {
         }
         $sourceObject = Assert-TplTreeIdentity $gitRoot $SourceTree 'SourceTree'
         $sourceEntries = Get-TplTree $gitRoot $sourceObject
-        $expectedBehavioral = @(
-            'ea_template/Boss_15_ST03.mq5',
-            'ea_template/core/LabCore.mqh',
-            'ea_template/core/MacroGate_Core.mqh',
-            'ea_template/core/Execution.mqh'
-        )
-        if (@($BehavioralDeltaPaths).Count -ne 4) { throw 'REFUSE: precommit admission requires exactly four behavioral delta paths' }
+        if (@($BehavioralDeltaPaths).Count -ne @($expectedBehavioral).Count) {
+            if ($PrecommitProfile -ceq 'LEGACY_REPAIR1') { throw 'REFUSE: precommit admission requires exactly four behavioral delta paths' }
+            throw "REFUSE: B17 precommit profile requires exactly $(@($expectedBehavioral).Count) behavioral delta paths"
+        }
         foreach ($path in $BehavioralDeltaPaths) {
             Assert-TplLiteralPath $path
-            if ($expectedBehavioral -cnotcontains $path) { throw "REFUSE: precommit behavioral declaration is not owner-frozen: $path" }
+            if ($expectedBehavioral -cnotcontains $path) {
+                if ($PrecommitProfile -ceq 'LEGACY_REPAIR1') { throw "REFUSE: precommit behavioral declaration is not owner-frozen: $path" }
+                throw "REFUSE: precommit behavioral declaration is not profile-frozen: $path"
+            }
         }
         foreach ($path in $expectedBehavioral) {
-            if (@($BehavioralDeltaPaths | Where-Object { $_ -ceq $path }).Count -ne 1) { throw "REFUSE: missing or duplicate owner-frozen behavioral declaration: $path" }
+            if (@($BehavioralDeltaPaths | Where-Object { $_ -ceq $path }).Count -ne 1) {
+                if ($PrecommitProfile -ceq 'LEGACY_REPAIR1') { throw "REFUSE: missing or duplicate owner-frozen behavioral declaration: $path" }
+                throw "REFUSE: missing or duplicate profile-frozen behavioral declaration: $path"
+            }
         }
-        $earlyAllowed = @($expectedBehavioral + @(
-            'scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1',
-            'scripts/_test/macrogate_tester_transfer_probe.mq5',
-            'scripts/_test/test_macrogate_tester_transfer_contract.py',
-            'scripts/tpl_regression.ps1',
-            'scripts/lib/tpl_baseline.ps1',
-            'scripts/_test/run_tpl_declared_wrapper_tests.ps1'
-        ))
         $earlyIndexTree = (& git -C $gitRoot write-tree 2>$null).Trim()
         if ($LASTEXITCODE -ne 0 -or $earlyIndexTree -cne $sourceObject) { throw 'REFUSE: stale staged tree; git write-tree differs from SourceTree' }
         & git -C $gitRoot diff --quiet -- 2>$null
@@ -278,19 +335,8 @@ try {
     if ($PrecommitExactTree) { $baselineArgs.GitRoot=$gitRoot; $baselineArgs.PrecommitExactTree=$true; $baselineArgs.ControlCommit=$ControlCommit; $baselineArgs.SourceTree=$SourceTree; $baselineArgs.BehavioralDeltaPaths=$BehavioralDeltaPaths }
     $baseline = Get-TplActiveBaseline @baselineArgs
     if ($PrecommitExactTree) {
-        $allowedRepairPaths = @(
-            'ea_template/Boss_15_ST03.mq5',
-            'ea_template/core/LabCore.mqh',
-            'ea_template/core/MacroGate_Core.mqh',
-            'ea_template/core/Execution.mqh',
-            'scripts/macrogate_tester_transfer_qual/qualify_transfer.ps1',
-            'scripts/_test/macrogate_tester_transfer_probe.mq5',
-            'scripts/_test/test_macrogate_tester_transfer_contract.py',
-            'scripts/tpl_regression.ps1',
-            'scripts/lib/tpl_baseline.ps1',
-            'scripts/_test/run_tpl_declared_wrapper_tests.ps1'
-        )
-        $precommitContract = Assert-TplPrecommitExactTreeContract -GitRoot $gitRoot -SourceRoot $root -Baseline $baseline -ControlCommit $ControlCommit -RepairParent $RepairParent -SourceTree $SourceTree -BehavioralDeltaPaths $BehavioralDeltaPaths -AllowedRepairPaths $allowedRepairPaths
+        $allowedRepairPaths = if ($PrecommitProfile -ceq 'B17_FINALCLOSURE') { @($b17Allowed) } else { @($legacyAllowed) }
+        $precommitContract = Assert-TplPrecommitExactTreeContract -GitRoot $gitRoot -SourceRoot $root -Baseline $baseline -ControlCommit $ControlCommit -RepairParent $RepairParent -SourceTree $SourceTree -BehavioralDeltaPaths $BehavioralDeltaPaths -AllowedRepairPaths $allowedRepairPaths -ExpectedBehavioralPaths $expectedBehavioral
         $sourceCommit = $SourceTree
         $controlCommit = $ControlCommit
         $harnessCommit = (& git -C $gitRoot rev-parse HEAD 2>$null).Trim()
@@ -361,6 +407,10 @@ try {
     $py = Assert-PortablePython -Root $pythonRoot -Provision
     $parser = Join-Path $harnessRoot 'scripts\parse_mt5_report.py'
     $cases = @($baseline.Manifest.cases | Sort-Object ea)
+    if ($PrecommitExactTree -and $PrecommitProfile -ceq 'B17_FINALCLOSURE') {
+        $cases = @($cases | Where-Object { $_.ea -cne 'Boss_17_Wave5' })
+        if ($cases.Count -ne 7) { throw "REFUSE: B17 precommit profile requires exactly seven unaffected Build-6090 cases, observed $($cases.Count)" }
+    }
     $sets = @{}
     foreach ($case in $cases) {
         $setPath = Resolve-TplRepoPath $root ([string]$case.declared_set_path) "$($case.ea).declared_set_path"

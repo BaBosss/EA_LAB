@@ -13,6 +13,18 @@ $paths = @(
     'ea_template/core/LabCore.mqh',
     'ea_template/core/MacroGate_Core.mqh'
 )
+$b17Paths = @(
+    'ea_template/Boss_15_ST03.mq5',
+    'ea_template/core/entries/Entry_Wave5.mqh',
+    'ea_template/core/Execution.mqh',
+    'ea_template/core/Inputs.mqh',
+    'ea_template/core/InputSurface_gen.mqh',
+    'ea_template/core/LabCore.mqh',
+    'ea_template/core/LockedConstants_gen.mqh',
+    'ea_template/core/MacroGate_Core.mqh',
+    'ea_template/core/MoneyManagement.mqh',
+    'ea_template/core/Persist.mqh'
+)
 $fixture = Join-Path ([IO.Path]::GetTempPath()) ('tpl_declared_wrapper_' + [guid]::NewGuid().ToString('N'))
 $harness = Join-Path $fixture 'harness'
 $source = Join-Path $fixture 'source'
@@ -43,14 +55,15 @@ function Invoke-Harness([string]$SourceRoot, [string]$Control = $controlCommit, 
 }
 function Invoke-PrecommitHarness([string]$Tree, [string]$IndexPath, [string]$Control = $controlCommit,
                                  [string]$Parent = '5845c4e039a3d9ef57e6997af42655a3d854d34e',
-                                 [string[]]$Declared = $paths, [string]$EvidenceName = '') {
+                                 [string[]]$Declared = $paths, [string]$EvidenceName = '',
+                                 [string]$Profile = 'LEGACY_REPAIR1') {
     if (-not $EvidenceName) { $EvidenceName = [guid]::NewGuid().ToString('N') }
     $quote = { param($v) "'" + ([string]$v).Replace("'","''") + "'" }
     $items = @($Declared | ForEach-Object { & $quote $_ }) -join ','
     $evidence = Join-Path $precommitEvidence $EvidenceName
     $command = '$env:GIT_INDEX_FILE=' + (& $quote $IndexPath) + ';' +
         '$env:GIT_CONFIG_COUNT=''1'';$env:GIT_CONFIG_KEY_0=''core.excludesfile'';$env:GIT_CONFIG_VALUE_0=' + (& $quote $emptyExclude) + ';' +
-        '$p=@{ValidateOnly=$true;PrecommitExactTree=$true;ControlCommit=' + (& $quote $Control) +
+        '$p=@{ValidateOnly=$true;PrecommitExactTree=$true;PrecommitProfile=' + (& $quote $Profile) + ';ControlCommit=' + (& $quote $Control) +
         ';RepairParent=' + (& $quote $Parent) + ';SourceTree=' + (& $quote $Tree) +
         ';BehavioralDeltaPaths=@(' + $items + ');PrecommitEvidenceRoot=' + (& $quote $evidence) + '};& ' +
         (& $quote (Join-Path $precommitRepo 'scripts\tpl_regression.ps1')) + ' @p'
@@ -186,6 +199,9 @@ try {
     Expect-Refusal 'precommit rejects missing behavioral declaration' { Invoke-PrecommitHarness $precommitTree $baseIndex $controlCommit '5845c4e039a3d9ef57e6997af42655a3d854d34e' @($paths | Select-Object -First 3) } 'exactly four'
     Expect-Refusal 'precommit rejects case alias declaration' { Invoke-PrecommitHarness $precommitTree $baseIndex $controlCommit '5845c4e039a3d9ef57e6997af42655a3d854d34e' @('EA_TEMPLATE/Boss_15_ST03.mq5',$paths[1],$paths[2],$paths[3]) } 'not owner-frozen'
     Expect-Refusal 'precommit rejects traversal declaration' { Invoke-PrecommitHarness $precommitTree $baseIndex $controlCommit '5845c4e039a3d9ef57e6997af42655a3d854d34e' @('ea_template/core/../Boss_15_ST03.mq5',$paths[1],$paths[2],$paths[3]) } 'noncanonical literal'
+    Expect-Refusal 'B17 profile rejects legacy four-path declaration' { Invoke-PrecommitHarness $precommitTree $baseIndex $controlCommit '5845c4e039a3d9ef57e6997af42655a3d854d34e' $paths 'b17_legacy_decl' 'B17_FINALCLOSURE' } 'requires exactly 10'
+    Expect-Refusal 'B17 profile rejects wrong frozen control' { Invoke-PrecommitHarness $precommitTree $baseIndex '94f20ad4191b066253daaf101f28b0078f2a6805' '5845c4e039a3d9ef57e6997af42655a3d854d34e' $b17Paths 'b17_wrong_control' 'B17_FINALCLOSURE' } 'requires the frozen Build-6090-compatible control'
+    Expect-Refusal 'B17 profile rejects legacy repair tree as out of B17 candidate scope' { Invoke-PrecommitHarness $precommitTree $baseIndex $controlCommit '5845c4e039a3d9ef57e6997af42655a3d854d34e' $b17Paths 'b17_wrong_tree' 'B17_FINALCLOSURE' } 'undeclared repair path'
 
     $stalePath = Join-Path $precommitRepo 'scripts\tpl_regression.ps1'
     [IO.File]::AppendAllText($stalePath,"`r`n# stale-after-write-tree")
