@@ -15,6 +15,42 @@ try{for(const viewport of viewports)for(const mode of ['online_failure','offline
 const context=await browser.newContext({viewport,acceptDownloads:true,serviceWorkers:'block'});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));const writes=[];page.on('request',r=>{if(!['GET','HEAD'].includes(r.method()))writes.push(r.method()+' '+r.url());});await page.clock.install({time:new Date('2026-09-24T00:01:00Z')});
 await page.route('http://builder.fixture/**',r=>new URL(r.request().url()).pathname==='/api/snapshot'?r.fulfill({status:503,body:'unavailable'}):r.fulfill({contentType:'text/html',body:fixture.html}));
 const url=mode==='offline'?pathToFileURL(offline).href:'http://builder.fixture/';if(mode==='offline')await context.setOffline(true);await page.goto(url+'#builder');
+
+if(process.env.BUILDER_MT5_UX_ONLY==='1'){
+ if(!fixture.snapshot.builder_profile_decisions)throw Error('MT5 UX requires profile fixture');
+ await page.locator('#mt5UxRoot').waitFor();
+ assert.equal(await page.locator('#builderForm').getAttribute('data-current-workspace'),'mt5-like');
+ assert.equal(await page.locator('[data-mt5-tab]').count(),3);
+ assert.equal(await page.locator('[data-mt5-mode="simple"]').evaluate(e=>e.classList.contains('active')),true);
+ let visible=await page.locator('#mt5Rows .mt5-param-row').count();assert.ok(visible>=15&&visible<=25,'simple count '+visible);
+ const fixed=page.locator('[data-mt5-row="_41_FixedLot"] [data-mt5-value="_41_FixedLot"]');assert.equal(await fixed.inputValue(),'0.01');
+ const before=await page.evaluate(()=>{const raw=localStorage.getItem(window.EALabBuilder.PROFILE_KEY);if(!raw)return null;const p=JSON.parse(raw).working;return [...p.shared_values,...p.entry_values,...p.instance_values].find(x=>x.name==='_41_FixedLot');});
+ if(before)assert.equal(before.value,null);
+ await page.locator('[data-mt5-mode="all"]').click();assert.equal(await page.locator('#mt5Rows .mt5-param-row').count(),153);
+ await page.locator('#mt5Search').fill('Risk');const filtered=await page.locator('#mt5Rows .mt5-param-row').count();assert.ok(filtered>0&&filtered<153,'filtered '+filtered);
+ await page.locator('#mt5Search').fill('');await page.locator('[data-mt5-mode="simple"]').click();
+ await page.locator('[data-mt5-row="_41_FixedLot"] [data-mt5-value="_41_FixedLot"]').fill('0.02');await page.keyboard.press('Tab');
+ await page.waitForFunction(()=>{const raw=localStorage.getItem(window.EALabBuilder.PROFILE_KEY);if(!raw)return false;const p=JSON.parse(raw).working,s=[...p.shared_values,...p.entry_values,...p.instance_values].find(x=>x.name==='_41_FixedLot');return s&&s.value==='0.02'&&s.response==='VALUE_PROPOSED';});
+ assert.equal(await page.locator('[data-mt5-row="_41_FixedLot"] [data-mt5-value="_41_FixedLot"]').inputValue(),'0.02');
+ await page.locator('[data-mt5-tab="optimization"]').click();
+ assert.deepEqual(await page.locator('.mt5-opt-table th').allTextContents(),['Optimize','Parameter','Value','Start','Step','Stop']);
+ const optBox=page.locator('[data-mt5-opt="_41_FixedLot"][data-k="enabled"]');await optBox.check();
+ const optRow=page.locator('tr').filter({has:optBox});await optRow.locator('[data-k="start"]').fill('0.01');await optRow.locator('[data-k="step"]').fill('0.01');await optRow.locator('[data-k="stop"]').fill('0.03');
+ await page.locator('[data-mt5-tab="review"]').click();assert.match(await page.locator('#mt5TabReview').innerText(),/NOT_SUBMITTED/);assert.match(await page.locator('#mt5TabReview').innerText(),/Fixed Lot/);
+ assert.equal(await page.locator('#mt5Download').isDisabled(),true);
+ await page.locator('#mt5ReviewExact').click();await page.locator('#mt5Pending').check();await page.locator('#mt5Confirm').check();
+ assert.equal(await page.locator('#mt5Download').isDisabled(),false);
+ const dl=page.waitForEvent('download');await page.locator('#mt5Download').click();const dlf=path.join(out,`mt5-ux-request-${viewport.width}-${mode}.json`);await(await dl).saveAs(dlf);const req=JSON.parse(fs.readFileSync(dlf,'utf8'));
+ assert.equal(req.status,'NOT_SUBMITTED');assert.equal(req.can_submit,false);assert.equal(req.can_execute,false);assert.equal(req.owner_attestation,false);
+ const fixedReq=[...req.profile.shared_values,...req.profile.entry_values,...req.profile.instance_values].find(x=>x.name==='_41_FixedLot');assert.equal(fixedReq.value,'0.02');assert.equal(fixedReq.response,'VALUE_PROPOSED');
+ assert.equal('symbol' in req,false);assert.equal('timeframe' in req,false);
+ const geometry=await page.evaluate(()=>({scrollWidth:document.documentElement.scrollWidth,innerWidth,root:document.querySelector('#mt5UxRoot').getBoundingClientRect().toJSON()}));assert.ok(geometry.scrollWidth<=geometry.innerWidth+1,JSON.stringify(geometry));
+ assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
+ await page.screenshot({path:path.join(out,`mt5-ux-${viewport.width}-${mode}.png`),fullPage:true});
+ fs.writeFileSync(path.join(out,`MT5_UX_RECEIPT-${viewport.width}-${mode}.json`),JSON.stringify({result:'PASS',viewport,mode,simple_count:visible,all_inputs:153,search_count:filtered,source_reference_not_auto_approved:before===null||before.value===null,edited_existing_profile_slot:true,optimization_ui_local:true,request_status:req.status,can_submit:req.can_submit,can_execute:req.can_execute,horizontal_overflow:false,writes},null,2));
+ cases++;await context.close();continue;
+}
+
 if(fixture.snapshot.builder_profile_decisions){
  assert.equal(await page.locator('[data-current-workspace="one-ea"]').count(),1);assert.equal(await page.locator('#builderForm').evaluate(e=>e.classList.contains('mobile-guided')),true);
  assert.equal(await page.locator('#mobileChrome h2').innerText(),'EA ที่กำลังตั้งค่า');assert.equal(await page.locator('.builder-grid>.panel:visible').count(),0);assert.equal(await page.locator('#mobileDetails').evaluate(e=>e.open),false);

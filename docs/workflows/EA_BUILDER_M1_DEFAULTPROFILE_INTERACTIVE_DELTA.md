@@ -149,3 +149,14 @@ All widths now start with one current EA guided workspace. New/Open live in an e
 ### Single-workspace header action correction
 
 Secondary full-field mode hides section headings while preserving header controls. The existing Add OFF draft action remains visible, keyboard-focusable, and operable; it creates an OFF plan and the existing duplicate action remains available. Browser coverage inventories every panel header and exercises keyboard Add plus duplicate in all four viewport sizes and both connectivity modes. No draft, export, revision, catalog, or execution semantics change.
+
+
+## MT5-like owner presentation successor (2026-10-07)
+
+Owner-approved presentation successor keeps the accepted Builder/Profile request schemas and authority boundaries unchanged while making the default owner surface resemble MT5 Inputs / Strategy Tester setup. The normal Builder route now presents one EA workspace with EA/Strategy, Symbol, Timeframe and Preset selectors, then exactly three primary tabs: Inputs, Optimization and Review. Simple is the default input view and exposes a bounded owner-oriented subset; All Inputs exposes the full audited B22 153-row decision surface. Search and group labels are derived from the existing catalog/decision metadata. A small parameter-name allowlist is presentation metadata only; it carries no values, defaults, enum meanings, approval or runtime authority.
+
+Unedited controls display the existing source-reference literal and explicitly label it as unapproved. The stored profile slot remains null/UNANSWERED until the owner changes the control. An edit writes through the existing profile slot/type validator and invalidates review through the existing profile workflow. Reset returns the slot to null rather than silently adopting a source value. Existing immutable revision, import/fork, review confirmation and request-export semantics remain underneath the simplified surface.
+
+Optimization is an MT5-shaped presentation-only planning surface with Optimize / Parameter / Value / Start / Step / Stop. Its state is local presentation state and remains OFF/unqualified; it is not inserted into the accepted request schema and cannot execute an optimizer. Symbol, Timeframe and Preset are likewise presentation context only until a separately accepted contract defines a schema binding. Review is human-first and shows proposed input deltas and local optimization intent; profile IDs, revisions and provenance remain available behind Technical details.
+
+The authority ceiling is unchanged: downloaded requests remain NOT_SUBMITTED, owner_attestation=false, can_submit=false, can_execute=false; real Submit, M2 intake, Factory consumer, MT5, optimization execution, deployment and trading remain disabled. Mobile is one-column/touch-oriented with the same three tabs and no horizontal page overflow; the full 153-row input surface remains reachable through All Inputs.

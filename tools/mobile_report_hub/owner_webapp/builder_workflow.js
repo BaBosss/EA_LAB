@@ -234,7 +234,7 @@ function updateProfile(main){
  box.querySelector('#profileConfirm').onchange=()=>profileDiagnostics(main);
  box.querySelector('#profileSend').onclick=()=>attempt(()=>{assertProfileBoundary();if(reviewToken!==JSON.stringify({profile,builder:draft}))throw Error('Snapshot changed; Review Summary again');const request=makeRequest(profile,draft,decisions,box.querySelector('#profilePending').checked,box.querySelector('#profileConfirm').checked,profileHistory);profileDownload('ea-defaultprofile-request-NOT_SUBMITTED.json',JSON.stringify(request,null,2));profileNotice='เตรียมไฟล์คำขอแล้ว; ตรวจสอบไฟล์ที่เบราว์เซอร์บันทึก — NOT_SUBMITTED. No intake or activation.';profileDiagnostics(main);});
  if(reviewToken===JSON.stringify({profile,builder:draft})){box.querySelector('#profileReviewSummary').innerHTML=mobileReviewHTML(mobileReviewModel(profile,draft,decisions,profileHistory));box.querySelector('#profileConfirm').disabled=false;}
- mobileLayout(main);profileDiagnostics(main);mobileImportControls(main);if(focus){const el=box.querySelector('[data-profile-value="'+focus+'"]');if(el){el.focus();if(typeof selection==='number'&&el.tagName==='INPUT')el.setSelectionRange(selection,selection);}}
+ mt5UxLayout(main);profileDiagnostics(main);mobileImportControls(main);if(focus){const el=box.querySelector('[data-profile-value="'+focus+'"]');if(el){el.focus();if(typeof selection==='number'&&el.tagName==='INPUT')el.setSelectionRange(selection,selection);}}
 }
 
 // Presentation state deliberately never enters the accepted draft/request schemas.
@@ -349,6 +349,127 @@ function mobileLayout(main){
  show();
 }
 
+
+// MT5-like owner presentation. This state is presentation-only and never enters
+// the accepted Builder/Profile request schemas.
+const MT5UX_KEY='ea_lab.builder.mt5ux.presentation.v1';
+const MT5UX_SIMPLE_NAMES=Object.freeze([
+ '_41_FixedLot','_42_RiskPct','FirstLotMode','LotProg','_53_PlusLot',
+ '_9_MaxLevels','_9_StepUseATR','_9_StepATRmult','_0_ATR_Period',
+ 'ExitMode','_21_TP_Pip','_22_TP_ATRmult','SLMode','_33_SL_ATRmult',
+ '_0_MaxSpread','_0_Slippage','ProtectLevel','RC_AcctDDLimitPct','RC_MaxLot',
+ 'HedgeMode','_MG_SelfGate','_22_DisplacementBodyFraction','_22_WickBodyRatio'
+]);
+let mt5UxState=null;
+function mt5UxLoad(){
+ if(mt5UxState)return mt5UxState;
+ mt5UxState={tab:'inputs',mode:'simple',query:'',symbol:'XAUUSD',timeframe:'M15',preset:'Current draft',optimization:{}};
+ try{
+  const raw=localStorage.getItem(MT5UX_KEY),parsed=raw?JSON.parse(raw):null;
+  if(parsed&&typeof parsed==='object'){
+   for(const k of ['tab','mode','query','symbol','timeframe','preset'])if(typeof parsed[k]==='string')mt5UxState[k]=parsed[k];
+   if(parsed.optimization&&typeof parsed.optimization==='object'&&!Array.isArray(parsed.optimization))mt5UxState.optimization=parsed.optimization;
+  }
+ }catch(e){}
+ if(!['inputs','optimization','review'].includes(mt5UxState.tab))mt5UxState.tab='inputs';
+ if(!['simple','all'].includes(mt5UxState.mode))mt5UxState.mode='simple';
+ return mt5UxState;
+}
+function mt5UxSave(){try{localStorage.setItem(MT5UX_KEY,JSON.stringify(mt5UxState));}catch(e){}}
+function mt5UxGroupLabel(id){return decisions?.groups?.find(g=>g.id===id)?.label||({ENTRY_CONTRACT:'Entry',PROFILE_IDENTITY:'Execution'}[id]||id||'Other');}
+function mt5UxSlot(name){return profile?allSlots(profile).find(s=>s.name===name):null;}
+function mt5UxReference(row){return row.source_proposal_literal!==null&&row.source_proposal_literal!==undefined?row.source_proposal_literal:(row.source_value??'');}
+function mt5UxValue(row){const slot=mt5UxSlot(row.name);return slot?.value===null||slot?.value===undefined?String(mt5UxReference(row)):String(slot.value);}
+function mt5UxEnumOptions(row){
+ const field=catalogState?.wrappers?.find(w=>w.build==='B22')?.fields?.find(f=>f.name===row.name);
+ if(row.type==='bool')return [['true','ON'],['false','OFF']];
+ return (field?.enum_explanations||[]).map(e=>[e.symbol,e.meaning+' — '+e.symbol]);
+}
+function mt5UxControl(row){
+ const value=mt5UxValue(row),opts=mt5UxEnumOptions(row),slot=mt5UxSlot(row.name),refOnly=slot?.value===null||slot?.value===undefined;
+ const title=refOnly?'ค่าอ้างอิงต้นทาง — ยังไม่ใช่ owner-approved/effective value':'ค่าที่เสนอโดยเจ้าของ';
+ if(opts.length)return '<select class="mt5-param-input" data-mt5-value="'+esc(row.name)+'" title="'+esc(title)+'">'+opts.map(([v,l])=>'<option value="'+esc(v)+'" '+(v===value?'selected':'')+'>'+esc(l)+'</option>').join('')+'</select>';
+ return '<input class="mt5-param-input" data-mt5-value="'+esc(row.name)+'" value="'+esc(value)+'" inputmode="'+(row.type==='double'?'decimal':row.type==='int'?'numeric':'text')+'" title="'+esc(title)+'">';
+}
+function mt5UxVisibleRows(){
+ const s=mt5UxLoad(),q=s.query.trim().toLowerCase(),simple=new Set(MT5UX_SIMPLE_NAMES);
+ return (decisions?.rows||[]).filter(r=>(s.mode==='all'||simple.has(r.name))&&(!q||[r.label,r.name,mt5UxGroupLabel(r.group)].join(' ').toLowerCase().includes(q)));
+}
+function mt5UxEdit(main,row,value){
+ try{
+  if(profileReadOnly)throw Error('ฉบับที่บันทึกแล้วแก้ไขไม่ได้ — สร้างฉบับแก้ไขก่อน');
+  valueCheck(row,value);
+  const slot=mt5UxSlot(row.name);if(!slot)throw Error('ไม่พบ parameter '+row.name);
+  slot.value=value;slot.response='VALUE_PROPOSED';slot.reason='';
+  editProfile();profileNotice='แก้ไข '+row.label+' แล้ว · ยังไม่ส่ง / NOT_SUBMITTED';updateProfile(main);
+ }catch(e){mobileGlobalError(main,e.message);}
+}
+function mt5UxResetRow(main,row){
+ try{
+  if(profileReadOnly)throw Error('ฉบับที่บันทึกแล้วแก้ไขไม่ได้ — สร้างฉบับแก้ไขก่อน');
+  const slot=mt5UxSlot(row.name);if(!slot)throw Error('ไม่พบ parameter '+row.name);
+  slot.value=null;slot.response='UNANSWERED';slot.reason='';
+  editProfile();profileNotice='กลับไปใช้ค่าอ้างอิงสำหรับ '+row.label+' · ยังไม่อนุมัติ';updateProfile(main);
+ }catch(e){mobileGlobalError(main,e.message);}
+}
+function mt5UxInputHTML(){
+ const rows=mt5UxVisibleRows(),by=new Map();
+ for(const r of rows){const k=mt5UxGroupLabel(r.group);if(!by.has(k))by.set(k,[]);by.get(k).push(r);}
+ if(!rows.length)return '<div class="mt5-empty">ไม่พบ parameter ที่ค้นหา</div>';
+ return [...by.entries()].map(([g,rs])=>'<details class="mt5-param-group" open><summary><span>'+esc(g)+'</span><small>'+rs.length+' inputs</small></summary>'+rs.map(r=>{
+  const slot=mt5UxSlot(r.name),refOnly=slot?.value===null||slot?.value===undefined;
+  return '<div class="mt5-param-row" data-mt5-row="'+esc(r.name)+'"><div class="mt5-param-name"><strong>'+esc(r.label)+'</strong><small>'+(refOnly?'ค่าอ้างอิง · ยังไม่อนุมัติ':'Owner proposal')+'</small></div><div class="mt5-param-control">'+mt5UxControl(r)+'</div><div class="mt5-param-unit">'+esc(r.unit||'')+'</div><button class="mt5-reset-one" data-mt5-reset="'+esc(r.name)+'" title="กลับเป็นค่าอ้างอิง" '+(refOnly?'disabled':'')+'>↺</button></div>';
+ }).join('')+'</details>').join('');
+}
+function mt5UxOptimizationHTML(){
+ const s=mt5UxLoad(),simple=new Set(MT5UX_SIMPLE_NAMES),rows=(decisions?.rows||[]).filter(r=>s.mode==='all'||simple.has(r.name)).slice(0,25);
+ if(!rows.length)return '<div class="mt5-empty">เลือก Simple หรือค้นหา parameter ก่อน</div>';
+ return '<div class="mt5-opt-note">แผน Optimization หน้านี้เป็น UI-local / OFF_DRAFT_UNVERIFIED เท่านั้น ยังไม่ส่งให้ optimizer และไม่เปิด execution</div><div class="mt5-opt-wrap"><table class="mt5-opt-table"><thead><tr><th>Optimize</th><th>Parameter</th><th>Value</th><th>Start</th><th>Step</th><th>Stop</th></tr></thead><tbody>'+rows.map(r=>{
+  const o=s.optimization[r.name]||{},checked=!!o.enabled;
+  return '<tr><td><input type="checkbox" data-mt5-opt="'+esc(r.name)+'" data-k="enabled" '+(checked?'checked':'')+'></td><td><strong>'+esc(r.label)+'</strong><small>'+esc(r.name)+'</small></td><td>'+esc(mt5UxValue(r))+'</td>'+['start','step','stop'].map(k=>'<td><input data-mt5-opt="'+esc(r.name)+'" data-k="'+k+'" value="'+esc(o[k]||'')+'" placeholder="—"></td>').join('')+'</tr>';
+ }).join('')+'</tbody></table></div>';
+}
+function mt5UxReviewHTML(main){
+ let validation;try{validation=validateProfile(profile,decisions);}catch(e){validation={type_valid:false,decision_complete:false,errors:[e.message],missing:[]};}
+ const proposed=(decisions?.rows||[]).filter(r=>mt5UxSlot(r.name)?.value!==null),opt=Object.entries(mt5UxLoad().optimization).filter(([,v])=>v?.enabled);
+ const proposedHTML=proposed.length?proposed.map(r=>'<div class="mt5-review-line"><span>'+esc(r.label)+'</span><strong>'+esc(mt5UxSlot(r.name).value)+'</strong></div>').join(''):'<p class="mt5-muted">ยังไม่มีค่าที่แก้ไขจาก reference</p>';
+ const optHTML=opt.length?opt.map(([name,o])=>{const r=decisions.rows.find(x=>x.name===name);return '<div class="mt5-review-line"><span>'+esc(r?.label||name)+'</span><strong>'+esc(o.start||'—')+' → '+esc(o.stop||'—')+' / step '+esc(o.step||'—')+'</strong></div>';}).join(''):'<p class="mt5-muted">Optimization OFF</p>';
+ const confirm=main.querySelector('#profileConfirm'),pending=main.querySelector('#profilePending'),send=main.querySelector('#profileSend');
+ return '<div class="mt5-review-hero"><h2>ตรวจทาน EA</h2><strong>B22</strong> · '+esc(mt5UxState.symbol)+' / '+esc(mt5UxState.timeframe)+'<p>สถานะ <b>NOT_SUBMITTED</b> · Real Submit / Factory / MT5 ยังปิด</p></div><div class="mt5-review-grid"><section><h3>Inputs ที่เสนอ</h3>'+proposedHTML+'</section><section><h3>Optimization</h3>'+optHTML+'</section></div><div class="mt5-review-status"><b>ตรวจข้อมูล:</b> '+(validation.type_valid?'ชนิดข้อมูลผ่าน':'มีค่าที่ไม่ถูกต้อง')+' · unresolved '+(validation.missing?.length||0)+' รายการ'+(profileReadOnly?' · Saved immutable revision':' · Working draft')+'</div><div class="mt5-review-actions"><button class="btn" id="mt5ReviewExact">ตรวจทาน snapshot นี้</button><label><input type="checkbox" id="mt5Pending" '+(pending?.checked?'checked':'')+'> ยังมีรายการที่ต้องช่วยตัดสินใจ / ส่งแบบ PENDING_DECISIONS</label><label><input type="checkbox" id="mt5Confirm" '+(confirm?.checked?'checked':'')+' '+(confirm?.disabled?'disabled':'')+'> ยืนยัน snapshot ที่ตรวจทานแล้ว</label><button class="btn primary" id="mt5Download" '+(send?.disabled?'disabled':'')+'>ดาวน์โหลดคำขอ — NOT_SUBMITTED</button></div>';
+}
+function mt5UxLayout(main){
+ const form=main.querySelector('#builderForm'),box=main.querySelector('#profileWorkflow');if(!form||!box||!decisions||!profile)return;
+ const s=mt5UxLoad();form.classList.add('mt5-ux-active');form.dataset.currentWorkspace='mt5-like';
+ form.querySelector('#mt5UxRoot')?.remove();
+ const root=document.createElement('section');root.id='mt5UxRoot';root.className='mt5-ux';
+ root.innerHTML='<header class="mt5-ux-head"><div><h1>EA Builder</h1><p>ตั้งค่า EA แบบเดียวกับ MT5 · ข้อมูลเทคนิคซ่อนไว้ด้านหลัง</p></div><div class="mt5-head-actions"><span class="mt5-status">NOT_SUBMITTED</span><button class="btn" id="mt5SaveRevision">บันทึก Revision</button></div></header><section class="mt5-selector"><label>EA / Strategy<select id="mt5Strategy"><option>B22</option></select></label><label>Symbol<select id="mt5Symbol">'+['XAUUSD','EURUSD','GBPUSD','EURGBP','USDJPY','EURJPY','BTCUSD','ETHUSD'].map(v=>'<option '+(v===s.symbol?'selected':'')+'>'+v+'</option>').join('')+'</select></label><label>Timeframe<select id="mt5Timeframe">'+['M5','M15','H1','H4','D1'].map(v=>'<option '+(v===s.timeframe?'selected':'')+'>'+v+'</option>').join('')+'</select></label><label>Preset<select id="mt5Preset">'+['Current draft','Source references'].map(v=>'<option '+(v===s.preset?'selected':'')+'>'+v+'</option>').join('')+'</select></label></section><p class="mt5-context-note">Symbol/Timeframe/Preset ในรุ่นนี้เป็น presentation context เท่านั้น จนกว่าจะมี contract ผูกเข้ากับ request schema; ไม่มี execution เกิดขึ้น</p><div class="mt5-tabs-row"><nav class="mt5-tabs">'+[['inputs','Inputs'],['optimization','Optimization'],['review','Review']].map(([k,l])=>'<button class="mt5-tab '+(s.tab===k?'active':'')+'" data-mt5-tab="'+k+'">'+l+'</button>').join('')+'</nav><div class="mt5-modes"><button class="mt5-mode '+(s.mode==='simple'?'active':'')+'" data-mt5-mode="simple">Simple (แนะนำ)</button><button class="mt5-mode '+(s.mode==='all'?'active':'')+'" data-mt5-mode="all">All Inputs ('+(decisions.rows?.length||'UNKNOWN')+')</button></div></div><section class="mt5-workspace"><div class="mt5-main"><div id="mt5TabInputs" '+(s.tab==='inputs'?'':'hidden')+'><div class="mt5-toolbar"><input id="mt5Search" value="'+esc(s.query)+'" placeholder="ค้นหา parameter... Risk, Grid, TP, ATR"><span>'+(s.mode==='simple'?mt5UxVisibleRows().length:'153')+' แสดงอยู่</span></div><div id="mt5Rows">'+mt5UxInputHTML()+'</div></div><div id="mt5TabOptimization" '+(s.tab==='optimization'?'':'hidden')+'>'+mt5UxOptimizationHTML()+'</div><div id="mt5TabReview" '+(s.tab==='review'?'':'hidden')+'>'+mt5UxReviewHTML(main)+'</div></div><aside class="mt5-side"><section><h3>EA ปัจจุบัน</h3><div><span>EA</span><strong>B22</strong></div><div><span>Symbol</span><strong>'+esc(s.symbol)+'</strong></div><div><span>Timeframe</span><strong>'+esc(s.timeframe)+'</strong></div><div><span>Preset</span><strong>'+esc(s.preset)+'</strong></div></section><section class="mt5-good"><h3>Input Catalog</h3><p>B22 · '+esc(decisions.rows.length)+' inputs ถูกโหลดจาก catalog/decision metadata เดิม</p><p>ค่าที่ไม่ได้แก้ไขยังเป็น source reference ไม่ใช่ owner approval</p></section><section class="mt5-warn"><h3>Real Submit ยังไม่เปิด</h3><p>ไฟล์ยังเป็น NOT_SUBMITTED และไม่เปิด Factory / MT5</p></section><details id="mt5Technical"><summary>รายละเอียดทางเทคนิค / ประวัติ</summary><p>Profile '+esc(profile.profile_id)+' / '+esc(profile.revision)+'</p><p>Builder '+esc(draft.revision)+'</p><button class="btn" id="mt5ToggleLegacy">เปิดเครื่องมือเทคนิคเดิม</button></details></aside></section><div class="mt5-bottom"><button class="btn" id="mt5Fork">'+(profileReadOnly?'สร้างฉบับแก้ไข':'ฉบับนี้กำลังแก้ไข')+'</button><button class="btn primary" id="mt5GoReview">ตรวจทาน EA →</button></div>';
+ form.insertBefore(root,form.firstChild);
+ const rerender=()=>{mt5UxSave();mt5UxLayout(main);};
+ root.querySelectorAll('[data-mt5-tab]').forEach(b=>b.onclick=()=>{s.tab=b.dataset.mt5Tab;rerender();});
+ root.querySelectorAll('[data-mt5-mode]').forEach(b=>b.onclick=()=>{s.mode=b.dataset.mt5Mode;rerender();});
+ root.querySelector('#mt5Search').oninput=e=>{s.query=e.target.value;mt5UxSave();const rows=root.querySelector('#mt5Rows');if(rows)rows.innerHTML=mt5UxInputHTML();mt5UxBindRows(main,root);};
+ root.querySelector('#mt5Symbol').onchange=e=>{s.symbol=e.target.value;rerender();};
+ root.querySelector('#mt5Timeframe').onchange=e=>{s.timeframe=e.target.value;rerender();};
+ root.querySelector('#mt5Preset').onchange=e=>{s.preset=e.target.value;rerender();};
+ root.querySelector('#mt5SaveRevision').onclick=()=>box.querySelector('#profileSave')?.click();
+ root.querySelector('#mt5Fork').onclick=()=>{if(profileReadOnly)box.querySelector('#profileFork')?.click();};
+ root.querySelector('#mt5GoReview').onclick=()=>{s.tab='review';rerender();};
+ root.querySelector('#mt5ToggleLegacy').onclick=()=>{form.classList.toggle('mt5-tech-open');root.querySelector('#mt5ToggleLegacy').textContent=form.classList.contains('mt5-tech-open')?'ซ่อนเครื่องมือเทคนิคเดิม':'เปิดเครื่องมือเทคนิคเดิม';};
+ mt5UxBindRows(main,root);mt5UxBindOptimization(root);
+ const review=root.querySelector('#mt5ReviewExact');if(review)review.onclick=()=>{box.querySelector('#profileReview')?.click();s.tab='review';rerender();};
+ const pending=root.querySelector('#mt5Pending');if(pending)pending.onchange=()=>{const old=box.querySelector('#profilePending');if(old){old.checked=pending.checked;profileDiagnostics(main);}rerender();};
+ const confirm=root.querySelector('#mt5Confirm');if(confirm)confirm.onchange=()=>{const old=box.querySelector('#profileConfirm');if(old){old.checked=confirm.checked;profileDiagnostics(main);}rerender();};
+ const download=root.querySelector('#mt5Download');if(download)download.onclick=()=>box.querySelector('#profileSend')?.click();
+}
+function mt5UxBindRows(main,root){
+ root.querySelectorAll('[data-mt5-value]').forEach(el=>el.onchange=()=>{const row=decisions.rows.find(r=>r.name===el.dataset.mt5Value);if(row)mt5UxEdit(main,row,el.value);});
+ root.querySelectorAll('[data-mt5-reset]').forEach(el=>el.onclick=()=>{const row=decisions.rows.find(r=>r.name===el.dataset.mt5Reset);if(row)mt5UxResetRow(main,row);});
+}
+function mt5UxBindOptimization(root){
+ const s=mt5UxLoad();
+ root.querySelectorAll('[data-mt5-opt]').forEach(el=>el.oninput=()=>{const name=el.dataset.mt5Opt,k=el.dataset.k,o=s.optimization[name]||(s.optimization[name]={enabled:false,start:'',step:'',stop:''});o[k]=k==='enabled'?el.checked:el.value;mt5UxSave();});
+}
+
 function mount(main,catalog,decision){
  if(!main.__mobileReviewHandlers){main.__mobileReviewHandlers=true;main.addEventListener('click',e=>{const link=e.target.closest('[data-review-step]');if(link){e.preventDefault();mobileReviewJump(main,{step:link.dataset.reviewStep,selector:link.dataset.reviewSelector});}});
   for(const type of ['input','change','click'])main.addEventListener(type,e=>{if(importLocked()&&e.target.closest('[data-builder-field],#builderAdd,[data-duplicate],#builderImport')){e.preventDefault();e.stopImmediatePropagation();mobileGlobalError(main,'ต้นฉบับที่นำเข้ายังแก้ไขไม่ได้ — เปิดสำเนาเพื่อแก้ไขก่อน',type==='click');}},true);
@@ -370,9 +491,9 @@ const priorDecision=decisions;catalogState=catalogView(catalog);decisions=decisi
  main.querySelector('#builderExport').onclick=()=>download('ea-builder-draft.json',encode(draft));
  main.querySelector('#builderReview').onclick=()=>download('ea-builder-review-NOT_SUBMITTED.json',JSON.stringify({schema:'EA_LAB_BUILDER_REVIEW_PROPOSAL_V1',status:'NOT_SUBMITTED',authority:'UNVERIFIED_PROPOSAL_ONLY',draft:JSON.parse(encode(draft)),validation:validate(draft)},null,2));
  main.querySelector('#builderImport').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>MAX)throw Error('Import too large');const candidate=parse(await f.text());draft=candidate;error='Imported UNVERIFIED draft; NOT_SUBMITTED';save();draw();}catch(err){main.querySelector('#builderDiagnostic').textContent='Import refused; current draft preserved: '+err.message;}};
- mobileLayout(main);
+ mt5UxLayout(main);
  }
  draw();
 }
-return {SCHEMA,KEY,MAX,INTENTS,CATALOG,PROFILE,REQUEST,PROFILE_KEY,newDraft,newPlan,validate,parse,encode,duplicate,catalogView,mount,decisionView,newProfile,valueCheck,requiredness,validateProfile,encodeProfile,parseProfile,revisionStore,reviewSummary,makeRequest,resetProfileState,savedRevision,restoreProfileCache,mobileSteps,reviseMobile,IMPORT_KEY,prepareMobileImport,reviewTarget,mobileReviewModel};
+return {SCHEMA,KEY,MAX,INTENTS,CATALOG,PROFILE,REQUEST,PROFILE_KEY,newDraft,newPlan,validate,parse,encode,duplicate,catalogView,mount,decisionView,newProfile,valueCheck,requiredness,validateProfile,encodeProfile,parseProfile,revisionStore,reviewSummary,makeRequest,resetProfileState,savedRevision,restoreProfileCache,mobileSteps,reviseMobile,IMPORT_KEY,prepareMobileImport,reviewTarget,mobileReviewModel,MT5UX_KEY,MT5UX_SIMPLE_NAMES};
 });
