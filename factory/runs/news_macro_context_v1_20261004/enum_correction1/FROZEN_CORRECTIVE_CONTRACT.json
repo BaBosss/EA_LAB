@@ -1,0 +1,104 @@
+{
+    "schema":  "DOT_B_ENUM_SPECIFIC_CORRECTIVE_ALLOCATION/1",
+    "allocation_id":  "B-ENUM-CORRECTION1-20261005",
+    "finding":  "B-SOURCE-ENUM001",
+    "owner":  "EA_LAB-NEWS-MACRO-20260921",
+    "control_tower":  "DOT sole MainCT",
+    "authority":  {
+                      "consolidated_request":  "Sentinel_261107258c608191971980ec2c655410",
+                      "reminder":  "Sentinel_0a2ec77b45cc819197d505eafd5c912f",
+                      "human_approval":  "Sentinel_710d0464c2a081919c1edafe28620c0f",
+                      "approved_utc":  "2026-10-05T13:42:24Z",
+                      "response":  "Approved: correct immediately",
+                      "delegation":  "Current user explicitly approves reproduction + enum-only correction and carries unused recheck"
+                  },
+    "started_utc":  "2026-10-05T13:48:24.3843889Z",
+    "deadline_utc":  "2026-10-05T14:18:24.3843889Z",
+    "delivery_count":  1,
+    "max_deliveries":  1,
+    "max_minutes":  30,
+    "candidates":  1,
+    "original_head":  "42ad431e1b0ab68dd4d512155ea38550c79fbb2b",
+    "original_tree":  "d6667084c9aba8c8dbca968191bb44e344767401",
+    "canonical":  "872524af2444e27a343bce76afbf81770147290b\trefs/heads/master",
+    "host":  "BaBoss",
+    "actor":  "BABOSS\\patip",
+    "device":  "bbb88aa0-1598-43f6-b56c-a7db22af086a",
+    "worktree":  "D:\\EA_LAB_CONTROL\\w\\news-macro-context-v1-1005",
+    "source_lane":  "ct-news-macro-context-v1-20261005",
+    "allowlist":  [
+                      "tools/knowledge_validation/news_macro_context.py",
+                      "tools/knowledge_validation/test_news_macro_context.py",
+                      "docs/research/NEWS_MACRO_CONTEXT_V1_20261004.md",
+                      "factory/runs/news_macro_context_v1_20261004/**"
+                  ],
+    "type_contract":  [
+                          "coverage.state and each B record.state must be scalar strings before selector delegation",
+                          "invalid type retains full eight-slot UNKNOWN/null refusal",
+                          "new reasons INVALID_COVERAGE_STATE_TYPE and INVALID_RECORD_STATE_TYPE",
+                          "CLI exit2 only for these invalid-type inputs; existing valid-input exit0/1 preserved",
+                          "all B record rows type checked; malformed future row invalid input; valid future revision still excluded",
+                          "no coercion/default/enum normalization; canonical selector unchanged"
+                      ],
+    "negative_plan":  "case01 one-variable edits at two enum fields: []/[FINAL]/{}/{state:FINAL}; API+CLI; null/missing/bool/number controls; valid-string semantics; combined/future malformed; deterministic repeat/no input alias",
+    "original_budgets":  {
+                             "author_spent":  1,
+                             "repair_spent":  1,
+                             "review_spent":  1,
+                             "conditional_recheck_spent":  0,
+                             "no_reset":  true
+                         },
+    "corrective_allocation":  {
+                                  "used":  1,
+                                  "max":  1,
+                                  "minutes":  30,
+                                  "further_automatic_repair":  0
+                              },
+    "targeted_recheck":  {
+                             "count":  1,
+                             "minutes":  20,
+                             "carried_from_original_unused":  true,
+                             "extra_second_review":  0,
+                             "used_before_dispatch":  0,
+                             "gate":  "deterministic green + exact clean freeze + qualified independent route + WIP\u003c=4"
+                         },
+    "zero_budgets":  [
+                         "external_feed",
+                         "native",
+                         "runtime",
+                         "Monitor",
+                         "core"
+                     ],
+    "scope":  "PARTIAL/SYNTHETIC/FIXTURE_ONLY/SOURCE_OFFLINE; no broad repair or new country/source/macro/risk semantics",
+    "preservation":  "Original frozen12 fixtures/results,failed receipts,original review e0199 and owner packet immutable",
+    "source_acceptance":  false,
+    "integration":  false,
+    "push":  false,
+    "runtime":  false,
+    "SYSTEM_serialization":  "Normal Registry locking; distinct critical paths and isolated local status outputs only; no SYSTEM source/artifact mutation",
+    "WIP_before":  2,
+    "active_before":  [
+                          {
+                              "lane_id":  "ct-lnwjud-job-control-v1-20261004",
+                              "state":  "REVIEW",
+                              "writer":  true,
+                              "head_sha":  "1d0b149cad9f55039659b7372fd861464857b300",
+                              "critical_paths":  [
+                                                     "tools/lnwjud/job_control_v1/job_control.cjs",
+                                                     "tools/lnwjud/job_control_v1/request_contract.cjs",
+                                                     "tools/lnwjud/job_control_v1/test_job_control.cjs",
+                                                     "tools/lnwjud/job_control_v1/test_job_control_faults.cjs",
+                                                     "docs/workflows/LNWJUD_JOB_CONTROL_V1_SOURCE_OFFLINE.md"
+                                                 ]
+                          },
+                          {
+                              "lane_id":  "ct-lnwjud-job-control-v1-review-ro-20261005",
+                              "state":  "RUNNING",
+                              "writer":  false,
+                              "head_sha":  "1d0b149cad9f55039659b7372fd861464857b300",
+                              "critical_paths":  [
+
+                                                 ]
+                          }
+                      ]
+}
