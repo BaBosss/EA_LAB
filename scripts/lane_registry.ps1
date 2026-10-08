@@ -36,6 +36,17 @@ $ErrorActionPreference = 'Stop'
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $ValidStates = @('READY','RUNNING','WAITING','PAUSED','REVIEW','FROZEN','INTEGRATING','DONE','BLOCKED')
 $ActiveWriterStates = @('RUNNING','REVIEW','FROZEN','INTEGRATING')
+# Owner-confirmed historical migration, not a general non-Git execution grant.
+# A new administrative lane requires a separately reviewed policy binding.
+$NonGitAdministrativePolicy = [ordered]@{
+    lane_id='storage-temp-cleanup-s21-20261007'
+    authority_ref='D:\EA_LAB_CONTROL\evidence\current-read-monitor-state-convergence-20261007\registry-audit-repair-20261008-codex\authorized-repair-v1\OWNER_CONTINUATION_AUTHORITY.txt'
+    authority_sha256='9b1f912b6da21bdb04a6c2bbf6e163ea055675cd74234d1b3676e88752021a13'
+    preimage_ref='D:\EA_LAB_CONTROL\evidence\current-read-monitor-state-convergence-20261007\registry-audit-repair-20261008-codex\preimages\storage-temp-cleanup-s21-20261007.json'
+    preimage_sha256='c8fcb8fcbb9a2c9310df7efb9bc9bde442ad5cd8b6c6eebce14690b34bf78d71'
+    evidence_ref='D:\EA_LAB_CONTROL\evidence\drive-d-space-audit-20260929T201605\safe-temp-cleanup-s21-20261007\STALLED_TERMINATION_RECONCILIATION.json'
+    evidence_sha256='f6c0e4f759fb25d32c7b123b0a98a101dedfb22dcc363847d6f467f9733bb074'
+}
 $Transitions = @{
     READY       = @('RUNNING','WAITING','BLOCKED')
     RUNNING     = @('PAUSED','WAITING','FROZEN','REVIEW','BLOCKED','DONE')
@@ -98,6 +109,51 @@ function Get-LaneFiles {
     if (-not (Test-Path -LiteralPath $RegistryRoot)) { return @() }
     return @(Get-ChildItem -LiteralPath $RegistryRoot -File -Filter '*.json' | Sort-Object Name)
 }
+function Test-NonGitAdministrativeRecord {
+    param($Record,[string]$Source)
+    $identity=$Record.source_identity
+    if($identity -isnot [pscustomobject] -or $identity.kind -cne 'NON_GIT_ADMINISTRATIVE_V1' -or
+       $identity.operation -cne 'STALE_TEMP_CLEANUP' -or $Record.lane_id -cne $NonGitAdministrativePolicy.lane_id -or
+       $Record.state -cne 'BLOCKED' -or $null -ne $Record.base_sha -or $null -ne $Record.head_sha -or
+       $Record.branch -isnot [string] -or $Record.branch -cne ''){
+        Throw-LaneError 'registry_malformed' "$Source has unqualified non-Git administrative identity"
+    }
+    $identityFields=@('kind','operation','authority_ref','authority_sha256','preimage_ref','preimage_sha256','evidence_ref','evidence_sha256','legacy_base_sha','legacy_head_sha')
+    if(@($identity.PSObject.Properties).Count -ne $identityFields.Count){Throw-LaneError 'registry_malformed' "$Source has unexpected administrative identity fields"}
+    foreach($name in $identityFields){
+        if($identity.PSObject.Properties.Name -notcontains $name -or $identity.$name -isnot [string]){Throw-LaneError 'registry_malformed' "$Source has malformed administrative field $name"}
+    }
+    foreach($prefix in @('authority','preimage','evidence')){
+        $refField=$prefix+'_ref';$hashField=$prefix+'_sha256'
+        if($identity.$refField -cne $NonGitAdministrativePolicy[$refField] -or
+           $identity.$hashField -cne $NonGitAdministrativePolicy[$hashField] -or
+           $identity.$hashField -cnotmatch '^[0-9a-f]{64}$' -or
+           -not (Test-Path -LiteralPath $identity.$refField -PathType Leaf)){
+            Throw-LaneError 'registry_malformed' "$Source administrative $prefix binding is not approved"
+        }
+        if((Get-FileHash -LiteralPath $identity.$refField -Algorithm SHA256).Hash.ToLowerInvariant() -cne $identity.$hashField){
+            Throw-LaneError 'registry_malformed' "$Source administrative $prefix bytes changed"
+        }
+    }
+    $parseArgs=@{}
+    if((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')){$parseArgs.DateKind='String'}
+    $original=Get-Content -LiteralPath $identity.preimage_ref -Raw -Encoding UTF8 | ConvertFrom-Json @parseArgs
+    if($identity.legacy_base_sha -cne $original.base_sha -or $identity.legacy_head_sha -cne $original.head_sha){
+        Throw-LaneError 'registry_malformed' "$Source administrative legacy identity changed"
+    }
+    # Nothing except the explicit identity migration may change historical meaning.
+    if(@($Record.PSObject.Properties).Count -ne (@($original.PSObject.Properties).Count+1)){
+        Throw-LaneError 'preservation_failed' "$Source administrative history fields changed"
+    }
+    foreach($property in $original.PSObject.Properties){
+        if($property.Name -in @('base_sha','head_sha')){continue}
+        if($Record.PSObject.Properties.Name -notcontains $property.Name -or
+           (ConvertTo-Json -InputObject $Record.($property.Name) -Depth 100 -Compress -WarningAction Stop) -cne
+           (ConvertTo-Json -InputObject $property.Value -Depth 100 -Compress -WarningAction Stop)){
+            Throw-LaneError 'preservation_failed' "$Source administrative history changed: $($property.Name)"
+        }
+    }
+}
 function Test-LaneRecord {
     param($Record,[string]$Source)
     $required=@('lane_id','owner_chat','worker','objective','state','base_sha','head_sha','worktree','branch','allowed_paths','critical_paths','writer','dependencies','direct_consumer','updated_at')
@@ -106,8 +162,12 @@ function Test-LaneRecord {
     }
     if([string]$Record.lane_id -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'){ Throw-LaneError 'registry_malformed' "$Source has invalid lane_id" }
     if($ValidStates -notcontains [string]$Record.state){ Throw-LaneError 'registry_malformed' "$Source has invalid state '$($Record.state)'" }
-    if(-not (Test-Sha ([string]$Record.base_sha))){ Throw-LaneError 'registry_malformed' "$Source has invalid base_sha" }
-    if(-not (Test-Sha ([string]$Record.head_sha))){ Throw-LaneError 'registry_malformed' "$Source has invalid head_sha" }
+    if($Record.PSObject.Properties.Name -contains 'source_identity'){
+        Test-NonGitAdministrativeRecord $Record $Source
+    }else{
+        if(-not (Test-Sha ([string]$Record.base_sha))){ Throw-LaneError 'registry_malformed' "$Source has invalid base_sha" }
+        if(-not (Test-Sha ([string]$Record.head_sha))){ Throw-LaneError 'registry_malformed' "$Source has invalid head_sha" }
+    }
     if(-not [IO.Path]::IsPathRooted([string]$Record.worktree)){ Throw-LaneError 'registry_malformed' "$Source worktree must be absolute" }
     if($Record.writer -isnot [bool]){ Throw-LaneError 'registry_malformed' "$Source writer must be boolean" }
     foreach($p in @($Record.critical_paths)){ [void](Normalize-CriticalPath ([string]$p)) }
@@ -115,8 +175,10 @@ function Test-LaneRecord {
 }
 function Read-LaneRecords {
     $records=New-Object Collections.Generic.List[object]
+    $parseArgs=@{}
+    if((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')){$parseArgs.DateKind='String'}
     foreach($file in @(Get-LaneFiles)){
-        try { $obj=Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json }
+        try { $obj=Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json @parseArgs }
         catch { Throw-LaneError 'registry_malformed' "cannot parse $($file.FullName): $($_.Exception.Message)" }
         Test-LaneRecord $obj $file.FullName
         $records.Add($obj)
@@ -209,14 +271,15 @@ function Get-LaneAuditRecord {
     try { $updated=[DateTimeOffset]::Parse([string]$Record.updated_at); $ageHours=[math]::Round(($now-$updated).TotalHours,2) } catch {}
     $wtExists=Test-Path -LiteralPath ([string]$Record.worktree)
     $headMatch=$null; $branchMatch=$null
-    if($wtExists){
+    $nonGit=($Record.PSObject.Properties.Name -contains 'source_identity')
+    if($wtExists -and -not $nonGit){
         try {
             $headMatch=((Invoke-GitText -Root ([string]$Record.worktree) -GitArgs @('rev-parse','HEAD')) -ceq [string]$Record.head_sha)
             $branchMatch=((Invoke-GitText -Root ([string]$Record.worktree) -GitArgs @('rev-parse','--abbrev-ref','HEAD')) -ceq [string]$Record.branch)
         } catch { $headMatch=$false; $branchMatch=$false }
     }
-    $canonicalRelation='UNKNOWN'
-    if(Test-Path -LiteralPath $CanonicalRepo){
+    $canonicalRelation=if($nonGit){'NOT_APPLICABLE_NON_GIT_ADMINISTRATIVE'}else{'UNKNOWN'}
+    if(-not $nonGit -and (Test-Path -LiteralPath $CanonicalRepo)){
         $head=[string]$Record.head_sha
         if((Invoke-GitExitCode -Root $CanonicalRepo -GitArgs @('cat-file','-e',("$head^{commit}"))) -eq 0){
             if((Invoke-GitExitCode -Root $CanonicalRepo -GitArgs @('merge-base','--is-ancestor',$head,'origin/master')) -eq 0){$canonicalRelation='ANCESTOR_OF_ORIGIN_MASTER'}
@@ -235,7 +298,8 @@ function Get-LaneAuditRecord {
         lane_id=[string]$Record.lane_id; state=[string]$Record.state; writer=[bool]$Record.writer
         owner_chat=[string]$Record.owner_chat; classification=$class; attention_required=$attention
         age_hours=$ageHours; worktree_exists=$wtExists; head_matches_record=$headMatch; branch_matches_record=$branchMatch
-        canonical_relation=$canonicalRelation; head_sha=[string]$Record.head_sha; runtime_lane=[string]$Record.runtime_lane
+        canonical_relation=$canonicalRelation; head_sha=$Record.head_sha; runtime_lane=[string]$Record.runtime_lane
+        source_identity_kind=if($nonGit){'NON_GIT_ADMINISTRATIVE_V1'}else{'GIT'}
         worker=[string]$Record.worker; branch=[string]$Record.branch; worktree=[string]$Record.worktree
         reviewer=[string]$Record.reviewer; reviewed_head=[string]$Record.reviewed_head
         dependencies=$Record.dependencies
