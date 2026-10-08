@@ -210,7 +210,7 @@ class ControlTowerTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[3]
         head = subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip()
         old_head = subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD^'], text=True).strip()
-        branch = subprocess.check_output(['git', '-C', str(root), 'branch', '--show-current'], text=True).strip()
+        branch = subprocess.check_output(['git', '-C', str(root), 'rev-parse', '--abbrev-ref', 'HEAD'], text=True).strip()
         self.assertNotEqual(head, old_head)
         now = datetime.now(timezone.utc).isoformat()
         with tempfile.TemporaryDirectory() as directory:
