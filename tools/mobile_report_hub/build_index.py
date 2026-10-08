@@ -494,6 +494,46 @@ def _monitor_count(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
 
 
+def _current_file_coverage(raw: object, generated: object, repo_resolved: bool) -> dict:
+    fields = tuple(f"{sensor}_sensors_{kind}" for sensor in ("deal", "floating")
+                   for kind in ("total", "fresh", "stale", "unknown", "missing"))
+    result = {"state": "UNAVAILABLE", "observed_at_utc": "UNKNOWN",
+              "authority": "LOCAL_FILE_OBSERVATION_ONLY",
+              "timestamp_basis": "FILE_LAST_WRITE_UTC_NOT_BROKER_CLOCK",
+              "scope_basis": "ACCOUNTS_CSV_LAB_MANAGED",
+              "deal_stale_after_hours": 30, "floating_stale_after_hours": 26,
+              **{name: "UNKNOWN" for name in fields}}
+    if not isinstance(raw, dict):
+        return result
+    observed = raw.get("observed_at_utc")
+    provenance_valid = (repo_resolved and _valid_utc_second(generated) and observed == generated and
+                        raw.get("authority") == result["authority"] and
+                        raw.get("timestamp_basis") == result["timestamp_basis"] and
+                        raw.get("scope_basis") == result["scope_basis"] and
+                        raw.get("deal_stale_after_hours") == 30 and
+                        raw.get("floating_stale_after_hours") == 26)
+    if not provenance_valid:
+        return result
+    if raw.get("state") == "UNKNOWN_SCOPE" and all(raw.get(name) is None for name in fields):
+        result.update(state="UNKNOWN_SCOPE", observed_at_utc=observed)
+        return result
+    counts = {name: _monitor_count(raw.get(name)) for name in fields}
+    if any(value is None for value in counts.values()):
+        return result
+    total = counts["deal_sensors_total"]
+    if total == 0 or counts["floating_sensors_total"] != total:
+        return result
+    for sensor in ("deal", "floating"):
+        if sum(counts[f"{sensor}_sensors_{kind}"] for kind in ("fresh", "stale", "unknown", "missing")) != total:
+            return result
+    complete = counts["deal_sensors_fresh"] == total and counts["floating_sensors_fresh"] == total
+    expected_state = "COMPLETE_CURRENT_FILE_OBSERVATION" if complete else "PARTIAL_CURRENT_FILE_OBSERVATION"
+    if raw.get("state") != expected_state:
+        return result
+    result.update(state=expected_state, observed_at_utc=observed, **counts)
+    return result
+
+
 def monitor_health(path: Path | None, canonical_sha: str) -> dict:
     if path is None:
         return unavailable_monitoring()
@@ -571,17 +611,43 @@ def monitor_health(path: Path | None, canonical_sha: str) -> dict:
     counts_valid = all(value is not None for value in counts.values())
     counts_consistent = counts_valid and counts["deal_sensors_fresh"] <= counts["deal_sensors_total"] and counts["floating_sensors_fresh"] <= counts["floating_sensors_total"]
     control_room_current = source_by_name.get("control_room_snapshot", {}).get("state") == "CURRENT"
-    coverage_current = requested_coverage == "AVAILABLE_CURRENT_SNAPSHOT" and control_room_current and counts_consistent and snapshot_qualified
-    coverage = {"state": "AVAILABLE_CURRENT_SNAPSHOT" if coverage_current else "UNAVAILABLE_STALE_OR_INVALID"}
+    snapshot_source = source_by_name.get("control_room_snapshot", {})
+    snapshot_time = snapshot_source.get("observed_at_utc")
+    snapshot_time_valid = (generated_valid and _valid_utc_second(snapshot_time) and snapshot_time <= generated_raw)
+    legacy_coverage = requested_coverage == "AVAILABLE_CURRENT_SNAPSHOT"
+    new_coverage = requested_coverage in {"AVAILABLE_SNAPSHOT_OBSERVATION", "PARTIAL_SNAPSHOT_OBSERVATION"}
+    coverage_provenance = (coverage_raw.get("authority") == "SNAPSHOT_OBSERVATION_ONLY" and
+                           coverage_raw.get("timestamp_basis") == "SNAPSHOT_META_GENERATED_AT" and
+                           coverage_raw.get("observed_at_utc") == snapshot_time)
+    expected_accounts = _monitor_count(coverage_raw.get("expected_lab_accounts"))
+    missing_floating = _monitor_count(coverage_raw.get("missing_floating_observations"))
+    new_counts_consistent = (counts_consistent and expected_accounts is not None and expected_accounts > 0 and
+                             counts["deal_sensors_total"] == expected_accounts and missing_floating is not None and
+                             counts["floating_sensors_total"] + missing_floating == expected_accounts and
+                             ((requested_coverage == "AVAILABLE_SNAPSHOT_OBSERVATION" and missing_floating == 0) or
+                              (requested_coverage == "PARTIAL_SNAPSHOT_OBSERVATION" and missing_floating > 0)))
+    coverage_available = (control_room_current and counts_consistent and snapshot_qualified and snapshot_time_valid and
+                          (legacy_coverage or (new_coverage and coverage_provenance and new_counts_consistent)))
+    coverage = {"state": requested_coverage if coverage_available else "UNAVAILABLE_STALE_OR_INVALID",
+                "authority": "SNAPSHOT_OBSERVATION_ONLY", "timestamp_basis": "SNAPSHOT_META_GENERATED_AT",
+                "observed_at_utc": snapshot_time if coverage_available else "UNKNOWN"}
     for name in _MONITOR_COUNT_FIELDS:
-        coverage[name] = counts[name] if coverage_current else "UNKNOWN"
+        coverage[name] = counts[name] if coverage_available else "UNKNOWN"
+    if new_coverage:
+        coverage.update(expected_lab_accounts=expected_accounts if coverage_available else "UNKNOWN",
+                        missing_floating_observations=missing_floating if coverage_available else "UNKNOWN")
+    current_coverage = _current_file_coverage(raw.get("current_file_coverage"), generated_raw, repo_head != "UNKNOWN")
+    # New producers require independent current-file observations; legacy input remains readable.
+    if new_coverage or "current_file_coverage" in raw:
+        if not coverage_available or requested_coverage == "PARTIAL_SNAPSHOT_OBSERVATION" or current_coverage["state"] != "COMPLETE_CURRENT_FILE_OBSERVATION":
+            effective_status = "DEGRADED"
     generated = generated_raw if generated_valid else "UNKNOWN"
     return {"status": effective_status, "reported_status": reported_status,
             "repo_head": repo_head, "snapshot_revision": {"git_head": snapshot_head, "binding_state": snapshot_binding},
             "source_kind": "LOCAL_MONITORING_NONCANONICAL",
             "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "binding_state": binding,
             "generated_at_utc": generated, "alert_present": alert_present,
-            "sources": sources, "coverage": coverage, "reason": "AVAILABLE"}
+            "sources": sources, "coverage": coverage, "current_file_coverage": current_coverage, "reason": "AVAILABLE"}
 
 
 def build(repo: Path, ref: str, out: Path, as_of: str, expected_sha: str | None, registry: Path | None,

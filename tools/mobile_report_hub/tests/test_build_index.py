@@ -461,5 +461,137 @@ class MobileReportHubDataTests(unittest.TestCase):
             build_index.text_source(ROOT, SHA, "docs/factory/NOT_PRESENT.md")
 
 
+class MonitorCoverageAdapterTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.path = Path(self.temp.name) / "health.json"
+        self.payload = {
+            "schema_version": "EA_LAB_MONITOR_HEALTH_V1",
+            "source_kind": "LOCAL_MONITORING_NONCANONICAL",
+            "authority": "READ_ONLY_NO_RUNTIME_AUTHORITY", "repo_head": SHA,
+            "snapshot_revision": {"git_head": SHA}, "status": "CURRENT",
+            "generated_at_utc": "2026-10-08T14:26:41Z", "alert_present": False,
+            "sources": [{"name": name, "state": "CURRENT", "age_hours": 12,
+                         "observed_at_utc": "2026-10-08T02:50:24Z", "timestamp_basis": basis}
+                        for name, basis in (("live_evidence", "latest_filename_date_upper_bound"),
+                                            ("control_room_snapshot", "snapshot_meta_generated_at"),
+                                            ("daily_monitor_success", "success_marker_content"))],
+            "coverage": {"state": "AVAILABLE_SNAPSHOT_OBSERVATION",
+                         "authority": "SNAPSHOT_OBSERVATION_ONLY",
+                         "timestamp_basis": "SNAPSHOT_META_GENERATED_AT",
+                         "observed_at_utc": "2026-10-08T02:50:24Z",
+                         "deal_sensors_total": 6, "deal_sensors_fresh": 6,
+                         "floating_sensors_total": 6, "floating_sensors_fresh": 6,
+                         "expected_lab_accounts": 6, "missing_floating_observations": 0},
+            "current_file_coverage": {"state": "PARTIAL_CURRENT_FILE_OBSERVATION",
+                                      "authority": "LOCAL_FILE_OBSERVATION_ONLY",
+                                      "timestamp_basis": "FILE_LAST_WRITE_UTC_NOT_BROKER_CLOCK",
+                                      "scope_basis": "ACCOUNTS_CSV_LAB_MANAGED",
+                                      "observed_at_utc": "2026-10-08T14:26:41Z",
+                                      "deal_stale_after_hours": 30, "floating_stale_after_hours": 26,
+                                      "deal_sensors_total": 6, "deal_sensors_fresh": 5,
+                                      "deal_sensors_stale": 1, "deal_sensors_unknown": 0,
+                                      "deal_sensors_missing": 0, "floating_sensors_total": 6,
+                                      "floating_sensors_fresh": 6, "floating_sensors_stale": 0,
+                                      "floating_sensors_unknown": 0, "floating_sensors_missing": 0}}
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def read(self):
+        self.path.write_text(json.dumps(self.payload), encoding="utf-8")
+        return build_index.monitor_health(self.path, SHA)
+
+    def test_snapshot_and_current_file_observations_keep_distinct_times_and_counts(self):
+        result = self.read()
+        self.assertEqual(result["coverage"], self.payload["coverage"])
+        self.assertEqual(result["current_file_coverage"], self.payload["current_file_coverage"])
+        self.assertEqual(result["status"], "DEGRADED")
+
+    def test_complete_current_files_may_qualify_but_do_not_bypass_other_gates(self):
+        current = self.payload["current_file_coverage"]
+        current.update(state="COMPLETE_CURRENT_FILE_OBSERVATION", deal_sensors_fresh=6, deal_sensors_stale=0)
+        self.assertEqual(self.read()["status"], "CURRENT")
+        for field, value in (("alert_present", True), ("repo_head", "0" * 40), ("status", "DEGRADED")):
+            original = self.payload[field]
+            self.payload[field] = value
+            self.assertEqual(self.read()["status"], "DEGRADED")
+            self.payload[field] = original
+
+    def test_partial_snapshot_keeps_counts_and_remains_degraded(self):
+        snapshot = self.payload["coverage"]
+        snapshot.update(state="PARTIAL_SNAPSHOT_OBSERVATION", floating_sensors_total=5,
+                        floating_sensors_fresh=5, missing_floating_observations=1)
+        self.assertEqual(self.read()["coverage"], snapshot)
+        self.assertEqual(self.read()["status"], "DEGRADED")
+
+    def test_snapshot_rejects_false_authority_bad_time_counts_and_hashes(self):
+        snapshot = self.payload["coverage"]
+        for field, value in (("authority", "LIVE"), ("observed_at_utc", "2026-10-08T02:50:25Z"),
+                             ("observed_at_utc", "2026-99-99T00:00:00Z"),
+                             ("deal_sensors_total", True), ("deal_sensors_fresh", None),
+                             ("missing_floating_observations", 1), ("expected_lab_accounts", "6")):
+            with self.subTest(field=field, value=value):
+                original = snapshot[field]
+                snapshot[field] = value
+                self.assertEqual(self.read()["coverage"]["deal_sensors_fresh"], "UNKNOWN")
+                snapshot[field] = original
+        self.payload["snapshot_revision"]["git_head"] = "0" * 40
+        self.assertEqual(self.read()["coverage"]["deal_sensors_fresh"], "UNKNOWN")
+
+    def test_current_files_reject_malformed_counts_time_authority_and_relaxed_thresholds(self):
+        current = self.payload["current_file_coverage"]
+        cases = (("deal_sensors_fresh", True), ("deal_sensors_total", None),
+                 ("deal_sensors_fresh", "5"), ("deal_sensors_stale", -1),
+                 ("deal_sensors_stale", 0), ("floating_sensors_total", 5),
+                 ("deal_sensors_fresh", float("nan")), ("deal_sensors_fresh", float("inf")),
+                 ("observed_at_utc", "2026-10-08T14:26:42Z"),
+                 ("observed_at_utc", "2026-10-08T02:50:24Z"),
+                 ("observed_at_utc", "invalid"), ("authority", "LIVE"),
+                 ("timestamp_basis", "BROKER_CLOCK"), ("scope_basis", "ALL_ACCOUNTS"),
+                 ("deal_stale_after_hours", 31), ("floating_stale_after_hours", 27),
+                 ("state", "COMPLETE_CURRENT_FILE_OBSERVATION"))
+        for field, value in cases:
+            with self.subTest(field=field, value=value):
+                original = current[field]
+                current[field] = value
+                result = self.read()
+                self.assertEqual(result["current_file_coverage"]["deal_sensors_fresh"], "UNKNOWN")
+                self.assertEqual(result["status"], "DEGRADED")
+                current[field] = original
+
+    def test_missing_or_unknown_current_file_scope_is_not_zero(self):
+        current = self.payload["current_file_coverage"]
+        current["state"] = "UNKNOWN_SCOPE"
+        for name in list(current):
+            if "_sensors_" in name:
+                current[name] = None
+        result = self.read()
+        self.assertEqual(result["current_file_coverage"]["state"], "UNKNOWN_SCOPE")
+        self.assertEqual(result["current_file_coverage"]["deal_sensors_total"], "UNKNOWN")
+        self.assertEqual(result["status"], "DEGRADED")
+        del self.payload["current_file_coverage"]
+        self.assertEqual(self.read()["current_file_coverage"]["state"], "UNAVAILABLE")
+        self.assertEqual(self.read()["status"], "DEGRADED")
+
+    def test_legacy_snapshot_is_compatible_and_explicitly_historical(self):
+        self.payload["coverage"] = {"state": "AVAILABLE_CURRENT_SNAPSHOT", "deal_sensors_total": 6,
+                                    "deal_sensors_fresh": 4, "floating_sensors_total": 6,
+                                    "floating_sensors_fresh": 3}
+        del self.payload["current_file_coverage"]
+        result = self.read()
+        self.assertEqual(result["coverage"]["deal_sensors_fresh"], 4)
+        self.assertEqual(result["coverage"]["authority"], "SNAPSHOT_OBSERVATION_ONLY")
+        self.assertEqual(result["coverage"]["observed_at_utc"], "2026-10-08T02:50:24Z")
+        self.assertEqual(result["current_file_coverage"]["deal_sensors_fresh"], "UNKNOWN")
+
+    def test_stale_snapshot_does_not_hide_independent_current_file_observation(self):
+        self.payload["sources"][1]["state"] = "STALE"
+        result = self.read()
+        self.assertEqual(result["coverage"]["deal_sensors_fresh"], "UNKNOWN")
+        self.assertEqual(result["current_file_coverage"]["deal_sensors_fresh"], 5)
+        self.assertEqual(result["status"], "DEGRADED")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
