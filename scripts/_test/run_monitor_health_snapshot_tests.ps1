@@ -1,6 +1,11 @@
 $ErrorActionPreference='Stop'
 $script=Join-Path (Split-Path -Parent $PSScriptRoot) 'monitor_health_snapshot.ps1'
 function Assert-True([bool]$Value,[string]$Message){if(-not $Value){throw "ASSERT: $Message"}}
+function Read-TestJson([string]$Path){
+    $options=@{}
+    if((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')){$options.DateKind='String'}
+    Get-Content -LiteralPath $Path -Raw|ConvertFrom-Json @options
+}
 function Write-NoBom([string]$Path,[string]$Text){
     $parent=Split-Path -Parent $Path
     if($parent -and -not(Test-Path $parent)){New-Item -ItemType Directory -Force $parent|Out-Null}
@@ -9,8 +14,8 @@ function Write-NoBom([string]$Path,[string]$Text){
 function Write-Snapshot([string]$Path,[string]$Generated){
     $obj=[ordered]@{
       meta=@{generated_at=$Generated}
-      system_health=@(@{account='SECRET_ACCOUNT';collector='MT5';state='FRESH';governance_scope='LAB_MANAGED'})
-      floating_risk=@(@{account='SECRET_ACCOUNT';state='FRESH'})
+      system_health=@(@{account='123456789';collector='MT5';state='FRESH';governance_scope='LAB_MANAGED'})
+      floating_risk=@(@{account='123456789';state='FRESH'})
     }
     Write-NoBom $Path ($obj|ConvertTo-Json -Depth 5)
 }
@@ -33,7 +38,7 @@ try{
     $out=Join-Path $root 'health.json'
     $beforeHashes=@{};foreach($p in @($liveFile,$cr,$success)){$beforeHashes[$p]=(Get-FileHash $p -Algorithm SHA256).Hash}
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$raw=Get-Content $out -Raw
+    $j=Read-TestJson $out;$raw=Get-Content $out -Raw
     foreach($p in @($liveFile,$cr,$success)){Assert-True ((Get-FileHash $p -Algorithm SHA256).Hash -eq $beforeHashes[$p]) "source evidence must remain byte-identical: $p"}
     Assert-True ($j.status -eq 'DEGRADED') 'date-only live evidence must keep overall health fail-closed'
     Assert-True ($j.generated_at_utc -eq '2026-08-30T12:00:00Z') 'generation time must be explicit UTC'
@@ -42,26 +47,26 @@ try{
     Assert-True ($liveHealth.state -eq 'DATE_ONLY') 'current-day filename must not invent CURRENT freshness'
     Assert-True ($null -eq $liveHealth.observed_at_utc -and $null -eq $liveHealth.source_timestamp_utc) 'date-only filename must not invent an exact timestamp'
     Assert-True ($liveHealth.source_date_local -eq '2026-08-30' -and $liveHealth.timestamp_basis -eq 'latest_filename_date_only') 'date-only source and basis must remain explicit'
-    Assert-True ($j.coverage.state -eq 'AVAILABLE_CURRENT_SNAPSHOT') 'fresh snapshot coverage should be available'
+    Assert-True ($j.coverage.state -eq 'AVAILABLE_SNAPSHOT_OBSERVATION') 'fresh snapshot observation should be available with historical authority'
     Assert-True ($j.coverage.deal_sensors_total -eq 1 -and $j.coverage.deal_sensors_fresh -eq 1) 'deal counts'
-    Assert-True ($raw -notmatch 'SECRET_ACCOUNT') 'account identifiers must not leak'
+    Assert-True ($raw -notmatch '123456789') 'account identifiers must not leak'
     Assert-True ($raw -notmatch [regex]::Escape($root)) 'local paths must not leak'
 
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -ExpectedCanonicalSha ('0'*40)
-    $bound=Get-Content $out -Raw|ConvertFrom-Json
+    $bound=Read-TestJson $out
     Assert-True ($bound.repo_head -eq $fixtureHead -and $bound.canonical_binding -eq 'DIFFERENT_REPO_HEAD' -and $bound.status -eq 'DEGRADED') 'canonical mismatch must preserve runtime identity and degradation'
     Assert-True ($bound.snapshot_revision.binding_state -eq 'UNKNOWN') 'absent exact snapshot revision must not inherit runtime HEAD'
-    $producer=Get-Content $cr -Raw|ConvertFrom-Json
+    $producer=Read-TestJson $cr
     $producer.meta | Add-Member -NotePropertyName git_head -NotePropertyValue ('1'*40)
     Write-NoBom $cr ($producer|ConvertTo-Json -Depth 5)
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -ExpectedCanonicalSha $fixtureHead
-    $bound=Get-Content $out -Raw|ConvertFrom-Json
+    $bound=Read-TestJson $out
     Assert-True ($bound.canonical_binding -eq 'MATCHES_CANONICAL_SHA' -and $bound.snapshot_revision.binding_state -eq 'DIFFERENT_SNAPSHOT_HEAD' -and $bound.status -eq 'DEGRADED') 'snapshot mismatch must not inherit current source checkout lineage'
     Write-Snapshot $cr '2026-08-30T11:00:00Z'
 
     $futureLive=Join-Path $live 'sample_20260831.csv';Write-NoBom $futureLive "h`n1`n"
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$futureLiveHealth=@($j.sources|Where-Object name -eq 'live_evidence')[0]
+    $j=Read-TestJson $out;$futureLiveHealth=@($j.sources|Where-Object name -eq 'live_evidence')[0]
     Assert-True ($futureLiveHealth.state -eq 'FUTURE') 'future filename date must be explicit'
     Assert-True ($null -eq $futureLiveHealth.observed_at_utc -and $null -eq $futureLiveHealth.source_timestamp_utc) 'future filename must not clamp to generation time'
     Assert-True ($futureLiveHealth.source_date_local -eq '2026-08-31') 'future filename date must remain visible without a fabricated instant'
@@ -69,38 +74,38 @@ try{
 
     Write-NoBom $success '2026-08-28T00:00:00Z';(Get-Item $success).LastWriteTimeUtc=[datetime]'2026-09-01T00:00:00Z'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$successHealth=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
+    $j=Read-TestJson $out;$successHealth=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
     Assert-True ($successHealth.state -eq 'STALE') 'success marker content, not checkout mtime, must drive freshness'
     Assert-True ($successHealth.timestamp_basis -eq 'success_marker_content') 'success timestamp basis must be explicit'
     Write-NoBom $success '2026-08-30T11:00:00Z'
 
     Write-NoBom $success '2026-08-30T13:00:01Z'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26 -FutureToleranceMinutes 5
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$futureSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
+    $j=Read-TestJson $out;$futureSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
     Assert-True ($futureSuccess.state -eq 'FUTURE' -and $null -eq $futureSuccess.age_hours) 'future success marker must be explicit and cannot be age-zero current'
     Assert-True ($j.status -eq 'DEGRADED') 'future evidence must degrade overall status'
     Write-NoBom $success '2026-08-30T11:00:00Z'
 
     Write-NoBom $success '2026-08-30T18:00:00+07:00'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$offsetSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
+    $j=Read-TestJson $out;$offsetSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
     Assert-True ($offsetSuccess.state -eq 'CURRENT' -and $offsetSuccess.observed_at_utc -eq '2026-08-30T11:00:00Z') 'explicit offset timestamp must normalize to UTC'
 
     Write-NoBom $success '2026-08-30T11:00:00'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$noZoneSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
+    $j=Read-TestJson $out;$noZoneSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
     Assert-True ($noZoneSuccess.state -eq 'INVALID') 'timezone-less success timestamp must fail closed'
     Write-NoBom $success '2026-08-30T11:00:00Z'
 
     Write-Snapshot $cr '2026-08-30T11:00:00'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$noZoneCr=@($j.sources|Where-Object name -eq 'control_room_snapshot')[0]
+    $j=Read-TestJson $out;$noZoneCr=@($j.sources|Where-Object name -eq 'control_room_snapshot')[0]
     Assert-True ($noZoneCr.state -eq 'INVALID' -and $j.coverage.state -eq 'UNAVAILABLE_STALE_OR_INVALID') 'timezone-less snapshot timestamp and coverage must fail closed'
     Write-Snapshot $cr '2026-08-30T11:00:00Z'
 
     Write-Snapshot $cr '2026-08-28T00:00:00Z'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json
+    $j=Read-TestJson $out
     Assert-True ($j.status -eq 'DEGRADED') 'stale semantic snapshot timestamp must degrade overall status'
     Assert-True ($j.coverage.state -eq 'UNAVAILABLE_STALE_OR_INVALID') 'stale coverage must not be re-presented as current'
     Assert-True ($null -eq $j.coverage.deal_sensors_total) 'stale coverage counts must be unavailable'
@@ -108,7 +113,7 @@ try{
 
     Write-Snapshot $cr '2026-08-30T13:00:01Z'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26 -FutureToleranceMinutes 5
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$futureCr=@($j.sources|Where-Object name -eq 'control_room_snapshot')[0]
+    $j=Read-TestJson $out;$futureCr=@($j.sources|Where-Object name -eq 'control_room_snapshot')[0]
     Assert-True ($futureCr.state -eq 'FUTURE') 'future snapshot timestamp must be explicit'
     Assert-True ($j.coverage.state -eq 'UNAVAILABLE_STALE_OR_INVALID') 'future snapshot coverage must be unavailable'
     Write-Snapshot $cr '2026-08-30T11:00:00Z'
@@ -116,7 +121,7 @@ try{
     $oldLive=Join-Path $live 'sample_20260811.csv';Write-NoBom $oldLive "h`n1`n"
     (Get-Item $oldLive).LastWriteTimeUtc=[datetime]'2026-09-01T00:00:00Z'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json
+    $j=Read-TestJson $out
     $liveHealth=@($j.sources|Where-Object name -eq 'live_evidence')[0]
     Assert-True ($liveHealth.state -eq 'DATE_ONLY') 'old date-only filename must remain unqualified rather than fabricate hourly staleness'
     Assert-True ($null -eq $liveHealth.age_hours -and $liveHealth.timestamp_basis -eq 'latest_filename_date_only') 'date-only live evidence must expose no invented age'
@@ -124,21 +129,21 @@ try{
     Remove-Item $oldLive -Force;Write-NoBom (Join-Path $live 'sample_20260830.csv') "h`n1`n"
     Write-NoBom (Join-Path $portfolio 'MONITOR_ALERT.txt') 'contains sensitive operational prose'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$raw=Get-Content $out -Raw
+    $j=Read-TestJson $out;$raw=Get-Content $out -Raw
     Assert-True ($j.status -eq 'DEGRADED' -and $j.alert_present) 'alert marker must degrade status'
     Assert-True ($raw -notmatch 'sensitive operational prose') 'alert prose must not be copied'
     Remove-Item (Join-Path $portfolio 'MONITOR_ALERT.txt') -Force
 
     Remove-Item $success -Force
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json;$missingSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
+    $j=Read-TestJson $out;$missingSuccess=@($j.sources|Where-Object name -eq 'daily_monitor_success')[0]
     Assert-True ($missingSuccess.state -eq 'MISSING') 'missing success marker must be explicit'
     Assert-True ($j.status -eq 'DEGRADED') 'missing evidence must degrade status'
     Write-NoBom $success '2026-08-30T11:00:00Z'
 
     Write-NoBom $cr '{broken'
     & $script -RepoRoot $root -OutFile $out -AsOf $asOf -StaleHours 26
-    $j=Get-Content $out -Raw|ConvertFrom-Json
+    $j=Read-TestJson $out
     $crHealth=@($j.sources|Where-Object name -eq 'control_room_snapshot')[0]
     Assert-True ($crHealth.state -eq 'INVALID') 'invalid snapshot must be explicit'
     Assert-True ($j.status -eq 'DEGRADED') 'invalid snapshot must degrade status'
@@ -149,7 +154,7 @@ try{
     Write-Snapshot (Join-Path $noGitPortfolio 'control_room_snapshot.json') '2026-08-30T11:00:00Z'
     Write-NoBom (Join-Path $noGitPortfolio 'daily_monitor_last_success.txt') '2026-08-30T11:00:00Z'
     & $script -RepoRoot $noGit -OutFile (Join-Path $root 'nogit-health.json') -AsOf $asOf -StaleHours 26
-    $noGitHealth=Get-Content (Join-Path $root 'nogit-health.json') -Raw|ConvertFrom-Json
+    $noGitHealth=Read-TestJson (Join-Path $root 'nogit-health.json')
     Assert-True ($noGitHealth.repo_head -eq 'UNKNOWN' -and $noGitHealth.runtime_revision.state -eq 'UNKNOWN') 'missing runtime Git revision must be explicit'
     Assert-True ($noGitHealth.status -eq 'DEGRADED') 'missing runtime Git revision must not report CURRENT'
 
@@ -166,3 +171,6 @@ try{
     if(Test-Path $root){Remove-Item $root -Recurse -Force}
     if(Test-Path $noGit){Remove-Item $noGit -Recurse -Force}
 }
+
+# Run the Health repair negatives through this existing registered entry point.
+& (Join-Path $PSScriptRoot 'fixtures\monitor\health_repair_cases.ps1') -RepoRoot (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))

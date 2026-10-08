@@ -473,6 +473,8 @@ function Get-MonitorChainHealth {
 
     $lastText = ''
     $ageH = $null
+    $futureMarker = $false
+    $barValid = (-not [double]::IsNaN($BarHours) -and -not [double]::IsInfinity($BarHours) -and $BarHours -gt 0)
     $markerReadable = $false
     if (Test-Path -LiteralPath $markerPath) {
         try {
@@ -483,8 +485,19 @@ function Get-MonitorChainHealth {
         } catch { $lastText = '' }
     }
     $parsed = [datetime]::MinValue
-    if ($markerReadable -and $lastText -ne '' -and [datetime]::TryParse($lastText, [ref]$parsed)) {
-        $ageH = [math]::Round(($Now - $parsed).TotalHours, 1)
+    $parsedOk = $false
+    if ($markerReadable -and $lastText -match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?(?:Z|[+-]\d{2}:\d{2})$') {
+        $offset = [datetimeoffset]::MinValue
+        $parsedOk = [datetimeoffset]::TryParse($lastText, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$offset)
+        if ($parsedOk) { $parsed = $offset.UtcDateTime }
+    } elseif ($markerReadable) {
+        # Retain the former writer's exact local format; reject lenient partial dates.
+        $parsedOk = [datetime]::TryParseExact($lastText, 'yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AssumeLocal, [ref]$parsed)
+    }
+    if ($parsedOk) {
+        $rawAgeH = ($Now.ToUniversalTime() - $parsed.ToUniversalTime()).TotalHours
+        $futureMarker = ($rawAgeH -lt 0)
+        if (-not $futureMarker) { $ageH = [math]::Round($rawAgeH, 1) }
     }
 
     # PRECEDENCE, and it is deliberate: a standing ALERT outranks any age computation. The alert
@@ -493,7 +506,7 @@ function Get-MonitorChainHealth {
     if ($alertText -ne '') {
         return [pscustomobject]@{
             State = 'ALERT'; LastSuccess = $lastText; AgeHours = $ageH
-            BarHours = $(if ($BarHours -gt 0) { $BarHours } else { $null })
+            BarHours = $(if ($barValid) { $BarHours } else { $null })
             AlertText = $alertText
             Reason = "the monitoring chain left a standing alert: $alertText"
         }
@@ -501,18 +514,18 @@ function Get-MonitorChainHealth {
     if ($null -eq $ageH) {
         return [pscustomobject]@{
             State = 'UNKNOWN'; LastSuccess = $lastText; AgeHours = $null
-            BarHours = $(if ($BarHours -gt 0) { $BarHours } else { $null })
+            BarHours = $(if ($barValid) { $BarHours } else { $null })
             AlertText = ''
-            Reason = "no readable last-success marker at portfolio\daily_monitor_last_success.txt, so it is not known whether the chain has ever completed"
+            Reason = $(if ($futureMarker) { "last-success marker $lastText is in the future; completion freshness is UNKNOWN" } else { "no readable last-success marker at portfolio\daily_monitor_last_success.txt, so it is not known whether the chain has ever completed" })
         }
     }
-    if ($BarHours -le 0) {
+    if (-not $barValid) {
         return [pscustomobject]@{
             State = 'UNKNOWN'; LastSuccess = $lastText; AgeHours = $ageH; BarHours = $null; AlertText = ''
             Reason = "last success $lastText (${ageH}h ago), but no overdue bar was available to judge it against"
         }
     }
-    if ($ageH -gt $BarHours) {
+    if ($rawAgeH -gt $BarHours) {
         return [pscustomobject]@{
             State = 'OVERDUE'; LastSuccess = $lastText; AgeHours = $ageH; BarHours = $BarHours; AlertText = ''
             Reason = "the chain last succeeded $lastText = ${ageH}h ago, past the ${BarHours}h bar"
