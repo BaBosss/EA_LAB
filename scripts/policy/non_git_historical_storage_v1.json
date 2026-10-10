@@ -375,6 +375,34 @@
         "critical_paths",
         "direct_consumer"
       ]
+    },
+    {
+      "lane_id": "drive-d-retirement-s44-two-worktrees-20261010",
+      "sha256": "af496818a4b515e88bacbb4dd6014ec8693b08ad8012e39be692f5df1c049ef9",
+      "state": "DONE",
+      "owner_chat": "OWNER-DELEGATED-STORAGE-S44-20261010",
+      "evidence_root": "D:\\EA_LAB_CONTROL\\evidence\\drive-d-space-audit-20260929T201605\\safe-retirement-s44-two-worktrees-20261010",
+      "source_kind": "NON_GIT_HISTORICAL_STORAGE_V1",
+      "authority_state": "UNVERIFIED_HISTORICAL_RECORD",
+      "missing_original_fields": [
+        "branch",
+        "critical_paths",
+        "direct_consumer"
+      ]
+    },
+    {
+      "lane_id": "drive-d-retirement-s45a-empty-only-20261010",
+      "sha256": "8fd39dcbedf4b8aa354ec9a8b3e049c75bb0671eae87b9ddb7402fe5266bc6ed",
+      "state": "DONE",
+      "owner_chat": "OWNER-DELEGATED-S45-20261010",
+      "evidence_root": "D:\\EA_LAB_CONTROL\\evidence\\drive-d-space-audit-20260929T201605\\safe-retirement-s45a-empty-only-20261010",
+      "source_kind": "NON_GIT_HISTORICAL_STORAGE_V1",
+      "authority_state": "UNVERIFIED_HISTORICAL_RECORD",
+      "missing_original_fields": [
+        "branch",
+        "critical_paths",
+        "direct_consumer"
+      ]
     }
   ],
   "schema": "EA_LAB_NON_GIT_HISTORICAL_STORAGE_V1"

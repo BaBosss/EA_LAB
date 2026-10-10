@@ -157,7 +157,7 @@ function Test-NonGitAdministrativeRecord {
 
 # Immutable, exactly hashed historical source classification; NEVER an execution grant.
 $HistoricalStoragePolicyPath=Join-Path $PSScriptRoot 'policy/non_git_historical_storage_v1.json'
-$HistoricalStoragePolicySha256='da8c14b074a9f92265d58a0bed16f32fabd14fd96d8b82c6ab94e5e78d84ec57'
+$HistoricalStoragePolicySha256='06f971f4c8b681f92fea037e7dabdf7f603964155e187db994c8d537919884c3'
 function Initialize-HistoricalStoragePolicy {
     if(-not(Test-Path -LiteralPath $HistoricalStoragePolicyPath -PathType Leaf)){Throw-LaneError 'historical_policy_missing' 'historical policy source file missing'}
     if((Get-FileHash -LiteralPath $HistoricalStoragePolicyPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $HistoricalStoragePolicySha256){Throw-LaneError 'historical_policy_drift' 'historical policy bytes changed'}
