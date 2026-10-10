@@ -154,8 +154,58 @@ function Test-NonGitAdministrativeRecord {
         }
     }
 }
+
+# Immutable, exactly hashed historical source classification; NEVER an execution grant.
+$HistoricalStoragePolicyPath=Join-Path $PSScriptRoot 'policy/non_git_historical_storage_v1.json'
+$HistoricalStoragePolicySha256='da8c14b074a9f92265d58a0bed16f32fabd14fd96d8b82c6ab94e5e78d84ec57'
+function Initialize-HistoricalStoragePolicy {
+    if(-not(Test-Path -LiteralPath $HistoricalStoragePolicyPath -PathType Leaf)){Throw-LaneError 'historical_policy_missing' 'historical policy source file missing'}
+    if((Get-FileHash -LiteralPath $HistoricalStoragePolicyPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $HistoricalStoragePolicySha256){Throw-LaneError 'historical_policy_drift' 'historical policy bytes changed'}
+    $m=Get-Content -LiteralPath $HistoricalStoragePolicyPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($m.schema -cne 'EA_LAB_NON_GIT_HISTORICAL_STORAGE_V1' -or $m.anchor_git_sha -cne 'e3eae44350caff37f23920dd1d0205379eb7f4cc'){Throw-LaneError 'historical_policy_malformed' 'policy schema/source identity mismatch'}
+    if(@($m.PSObject.Properties).Count -ne 3){Throw-LaneError 'historical_policy_malformed' 'unexpected manifest fields'}
+    $map=@{}
+    foreach($entry in @($m.records)){
+        $fields=@('lane_id','sha256','state','owner_chat','evidence_root','source_kind','authority_state','missing_original_fields')
+        if(@($entry.PSObject.Properties).Count -ne $fields.Count){Throw-LaneError 'historical_policy_malformed' 'unrecognized history record fields'}
+        foreach($f in $fields){if($entry.PSObject.Properties.Name -cnotcontains $f){Throw-LaneError 'historical_policy_malformed' 'missing history manifest field'}}
+        if($entry.lane_id -cnotmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$' -or
+           $entry.sha256 -cnotmatch '^[0-9a-f]{64}$' -or $entry.state -cnotin @('DONE','BLOCKED') -or
+           $entry.source_kind -cne 'NON_GIT_HISTORICAL_STORAGE_V1' -or
+           $entry.authority_state -cne 'UNVERIFIED_HISTORICAL_RECORD' -or
+           $map.ContainsKey([string]$entry.lane_id)){
+            Throw-LaneError 'historical_policy_malformed' 'unqualified historical entry'
+        }
+        $map[[string]$entry.lane_id]=$entry
+    }
+    return ,$map
+}
+$HistoricalStoragePolicy=Initialize-HistoricalStoragePolicy
+function Test-HistoricalStorageRecord {
+    param($Record,[string]$Source,[string]$SourceSha='')
+    if(-not $HistoricalStoragePolicy.ContainsKey([string]$Record.lane_id)){Throw-LaneError 'historical_policy_unknown' 'non-allowlisted historical record'}
+    $p=$HistoricalStoragePolicy[[string]$Record.lane_id]
+    if($Record.state -cne $p.state -or $Record.owner_chat -cne $p.owner_chat -or
+       $Record.worktree -cne $p.evidence_root -or $Record.PSObject.Properties.Name -ccontains 'source_identity' -or
+       @($Record.PSObject.Properties.Name | Where-Object {$_ -cin @('worker','direct_consumer','branch','critical_paths')}).Count -gt 4) {
+       Throw-LaneError 'historical_policy_mismatch' 'historical state/owner/evidence/identity differs'
+    }
+    if(-not([IO.Path]::IsPathRooted([string]$Source)) -or
+       (Split-Path -Leaf $Source) -cne ([string]$Record.lane_id+'.json') -or
+       -not(Test-Path -LiteralPath $p.evidence_root -PathType Container)){
+       Throw-LaneError 'historical_policy_mismatch' 'historical record path/evidence root mismatch'
+    }
+    $sha=if($SourceSha){$SourceSha}else{(Get-FileHash -LiteralPath $Source -Algorithm SHA256).Hash.ToLowerInvariant()}
+    if($sha -cne $p.sha256){Throw-LaneError 'historical_policy_drift' 'historical Registry record bytes changed'}
+    if($Record.writer -isnot [bool]){Throw-LaneError 'historical_policy_mismatch' 'invalid historical writer type'}
+}
+
 function Test-LaneRecord {
-    param($Record,[string]$Source)
+    param($Record,[string]$Source,[string]$SourceSha='')
+    if($HistoricalStoragePolicy.ContainsKey([string]$Record.lane_id)){
+        Test-HistoricalStorageRecord $Record $Source $SourceSha
+        return
+    }
     $required=@('lane_id','owner_chat','worker','objective','state','base_sha','head_sha','worktree','branch','allowed_paths','critical_paths','writer','dependencies','direct_consumer','updated_at')
     foreach($name in $required){
         if($Record.PSObject.Properties.Name -notcontains $name){ Throw-LaneError 'registry_malformed' "$Source missing field '$name'" }
@@ -178,9 +228,17 @@ function Read-LaneRecords {
     $parseArgs=@{}
     if((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')){$parseArgs.DateKind='String'}
     foreach($file in @(Get-LaneFiles)){
-        try { $obj=Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json @parseArgs }
-        catch { Throw-LaneError 'registry_malformed' "cannot parse $($file.FullName): $($_.Exception.Message)" }
-        Test-LaneRecord $obj $file.FullName
+        try {
+            # Parse from exactly the same bytes that are hashed for historical identity.
+            # This does not modify or lock the observed record bytes.
+            $raw=[IO.File]::ReadAllBytes($file.FullName)
+            $text=(New-Object Text.UTF8Encoding($false,$true)).GetString($raw).TrimStart([char]0xFEFF)
+            $obj=$text | ConvertFrom-Json @parseArgs
+            $hashAlgorithm=[Security.Cryptography.SHA256]::Create()
+            try {$sha=([BitConverter]::ToString($hashAlgorithm.ComputeHash($raw))).Replace('-','').ToLowerInvariant()}
+            finally {$hashAlgorithm.Dispose()}
+        } catch { Throw-LaneError 'registry_malformed' "cannot parse $($file.FullName): $($_.Exception.Message)" }
+        Test-LaneRecord $obj $file.FullName $sha
         $records.Add($obj)
     }
     return $records.ToArray()
@@ -271,14 +329,15 @@ function Get-LaneAuditRecord {
     try { $updated=[DateTimeOffset]::Parse([string]$Record.updated_at); $ageHours=[math]::Round(($now-$updated).TotalHours,2) } catch {}
     $wtExists=Test-Path -LiteralPath ([string]$Record.worktree)
     $headMatch=$null; $branchMatch=$null
-    $nonGit=($Record.PSObject.Properties.Name -contains 'source_identity')
+    $historical=$HistoricalStoragePolicy.ContainsKey([string]$Record.lane_id)
+    $nonGit=($Record.PSObject.Properties.Name -contains 'source_identity') -or $historical
     if($wtExists -and -not $nonGit){
         try {
             $headMatch=((Invoke-GitText -Root ([string]$Record.worktree) -GitArgs @('rev-parse','HEAD')) -ceq [string]$Record.head_sha)
             $branchMatch=((Invoke-GitText -Root ([string]$Record.worktree) -GitArgs @('rev-parse','--abbrev-ref','HEAD')) -ceq [string]$Record.branch)
         } catch { $headMatch=$false; $branchMatch=$false }
     }
-    $canonicalRelation=if($nonGit){'NOT_APPLICABLE_NON_GIT_ADMINISTRATIVE'}else{'UNKNOWN'}
+    $canonicalRelation=if($historical){'NOT_APPLICABLE_NON_GIT_HISTORICAL_STORAGE'}elseif($nonGit){'NOT_APPLICABLE_NON_GIT_ADMINISTRATIVE'}else{'UNKNOWN'}
     if(-not $nonGit -and (Test-Path -LiteralPath $CanonicalRepo)){
         $head=[string]$Record.head_sha
         if((Invoke-GitExitCode -Root $CanonicalRepo -GitArgs @('cat-file','-e',("$head^{commit}"))) -eq 0){
@@ -287,7 +346,10 @@ function Get-LaneAuditRecord {
         }
     }
     $class='QUEUED_CURRENT'; $attention=$false
-    if([string]$Record.state -ceq 'DONE'){ $class='CLOSED' }
+    # Exact historical SHA recognition does not attest owner authority or completion.
+    # Keep these records visible but attention-required, even when state=DONE.
+    if($historical){$class='HISTORICAL_UNVERIFIED';$attention=$true}
+    elseif([string]$Record.state -ceq 'DONE'){ $class='CLOSED' }
     elseif($ActiveWriterStates -contains [string]$Record.state){
         if(-not $wtExists){$class='ACTIVE_MISSING_WORKTREE';$attention=$true}
         elseif($headMatch -eq $false -or $branchMatch -eq $false){$class='ACTIVE_IDENTITY_MISMATCH';$attention=$true}
@@ -299,7 +361,8 @@ function Get-LaneAuditRecord {
         owner_chat=[string]$Record.owner_chat; classification=$class; attention_required=$attention
         age_hours=$ageHours; worktree_exists=$wtExists; head_matches_record=$headMatch; branch_matches_record=$branchMatch
         canonical_relation=$canonicalRelation; head_sha=$Record.head_sha; runtime_lane=[string]$Record.runtime_lane
-        source_identity_kind=if($nonGit){'NON_GIT_ADMINISTRATIVE_V1'}else{'GIT'}
+        source_identity_kind=if($historical){'NON_GIT_HISTORICAL_STORAGE_V1'}elseif($nonGit){'NON_GIT_ADMINISTRATIVE_V1'}else{'GIT'}
+        source_authority_state=if($historical){'UNVERIFIED_HISTORICAL_RECORD'}else{$null}
         worker=[string]$Record.worker; branch=[string]$Record.branch; worktree=[string]$Record.worktree
         reviewer=[string]$Record.reviewer; reviewed_head=[string]$Record.reviewed_head
         dependencies=$Record.dependencies
@@ -559,6 +622,7 @@ function New-LaneRecord {
 $lock=$null
 try {
     if($Command -ieq 'AmendScope'){
+        if($HistoricalStoragePolicy.ContainsKey([string]$LaneId)){Throw-LaneError 'historical_immutable' 'historical Storage scope cannot be amended'}
         $lock=Enter-RegistryLock
         $records=@(Read-LaneRecords)
         Invoke-AmendScope $records $PSBoundParameters
@@ -576,6 +640,11 @@ try {
             $oldMatches=@($records | Where-Object { $_.lane_id -ceq $SupersedeOwnLaneId })
             if($oldMatches.Count -ne 1){ Throw-LaneError 'supersede_missing' "expected exactly one superseded lane: $SupersedeOwnLaneId" }
             $superseded=$oldMatches[0]
+            # Historical source identity is immutable; refuse within the Registry lock
+            # BEFORE writing the proposed new lane or changing any existing record.
+            if($HistoricalStoragePolicy.ContainsKey([string]$superseded.lane_id)){
+                Throw-LaneError 'historical_immutable' 'historical Storage lane cannot be superseded'
+            }
             if([string]$superseded.owner_chat -cne $OwnerChat){ Throw-LaneError 'supersede_foreign' 'superseded lane must belong to the same owner_chat' }
             if([string]$superseded.state -ceq 'DONE'){ Throw-LaneError 'supersede_done' 'superseded lane is already DONE' }
             if($ActiveWriterStates -contains [string]$superseded.state){ Throw-LaneError 'supersede_active' "refusing to supersede active lane state=$($superseded.state)" }
@@ -590,18 +659,21 @@ try {
         if($conflicts.Count -gt 0){ Throw-LaneError 'conflict' (($conflicts | ConvertTo-Json -Compress) -replace "`r|`n",'') }
         $record=New-LaneRecord
         Test-LaneRecord $record '<new claim>'
-        Write-LaneRecordAtomic $record
+        # Preflight the complete superseded record BEFORE the first write.
+        # Prevent logical partial claims when non-Git or other immutability validation fails.
         if($null -ne $superseded){
             $superseded.state='DONE'
             $superseded | Add-Member -NotePropertyName superseded_by -NotePropertyValue $LaneId -Force
             $superseded.updated_at=[DateTimeOffset]::UtcNow.ToString('o')
             Test-LaneRecord $superseded '<superseded own lane>'
-            Write-LaneRecordAtomic $superseded
         }
+        Write-LaneRecordAtomic $record
+        if($null -ne $superseded){Write-LaneRecordAtomic $superseded}
         Write-Result ([pscustomobject]@{result='CLAIMED';lane_id=$LaneId;state=$State;head_sha=$HeadSha;writer=(-not $ReadOnly);superseded_lane=$(if($null -ne $superseded){[string]$superseded.lane_id}else{''})})
         exit 0
     }
     if($Command -ceq 'Transition'){
+        if($HistoricalStoragePolicy.ContainsKey([string]$LaneId)){Throw-LaneError 'historical_immutable' 'historical Storage records cannot transition'}
         if([string]::IsNullOrWhiteSpace($LaneId) -or [string]::IsNullOrWhiteSpace($ExpectedState) -or [string]::IsNullOrWhiteSpace($NewState)){ Throw-LaneError 'missing_argument' 'Transition requires LaneId, ExpectedState, and NewState' }
         if($ValidStates -notcontains $ExpectedState -or $ValidStates -notcontains $NewState){ Throw-LaneError 'bad_state' 'Transition contains an invalid state' }
         $lock=Enter-RegistryLock
