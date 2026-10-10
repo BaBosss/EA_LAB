@@ -38,6 +38,22 @@
 
 ---
 
+
+## MAIN CT CURRENT CONTINUATION - 2026-10-11 (FACTUAL TRIAGE, NOT A NEW ORDER OR AUTHORITY)
+
+**G0 accepted; no repeat:** S44/S45A exact-two historical Registry source repair is DONE at a7641cf9; independent PASS, Live Validate/Audit EXIT0 (1,313), 29 HISTORICAL_UNVERIFIED. Wiki Feedback V1 source-only reviewed and integrated at 1a7ad877 (NOT automatic research intake). Original S44/S45A records, R3 controls, budgets and failed evidence remain untouched.
+
+**P0 Mobile Monitor existing owner, not new writer:** incumbent lane codex-owner-mobile-20260906 WAITING, old 749da682 checkout dirty with 14 preserved WIP paths. Reconcile owner and branch against fresh master before one bounded clean A1 Native Genetic *DRAFT* UI/SET Export source contract; preserve older 162/9 Python regression errors, external adapter 89/1 failure/1 skip and unpassed browser tests. Source tests and standalone core 24/24 are not iPhone/HTTPS/Real Submit acceptance. A1 Source -> independent frozen-head review -> CT-only integration; Private HTTPS+IdP/iPhone Safari owner decision later, no automatic deployment.
+
+**P0 B17 research without optimizer:** original Model1 MAIN PF0.21/DD25.58/17 trades with March 2023 Hard Kill, BWD four trades and 2021-22 activation scarcity; H0 existing ledger checked, H0B pre-activation evidence/counter RCA is the next hypothesis candidate. Do not execute example TP 7-cell or 140-combination sweep, choose BWD winner or spend 2026H1 HOLDOUT. Candidate same-lineage Model4 MAIN+BWD remains a separate existing gate.
+
+**SYSTEM reliability separately proposed:** original Admin AST 40/42 dependency failures remain negative evidence; external actual-dependency adapter 42/42 is not source repair. Treat as one prospective bounded owner/harness issue, not S44/S45A reopening. Installed Monitor pinned-ToolRoot version mismatch and DailyMonitor degraded runtime remain separate accepted blockers.
+
+**P1 report/optimization owner review (not ratified yet):** prospective deltas to docs/research/EA_REPORT_SCHEMA.md, EA_REPORT_LADDER.md, EA_WORKFLOW_DIAGRAM_STANDARD.md and DRAFT ea_template/OPTIMIZATION_PROCEDURE_V2.md require each owner, exact proof/tests and independent review before canonical policy updates. Native-vs-reconstructed graph attribution, early hard-kill/temporal participation, measured-vs-inferred exposure, first-run fresh XML and plateau/fixed-SET recheck remain proposed, not quietly mandatory.
+
+**16-row owner/target/evidence/blocker/acceptance/ONE NEXT matrix:** D:\EA_LAB_CONTROL\evidence\ct-r3-lessons-context-20261011\MAIN_CT_16_IMPROVEMENT_TRIAGE_V1.md. This heading records a triage POINTER; it does not invent a new active ORDER, owner attestation or authorization for Browser server, Scheduler, MT5, Factory, trading or risk changes.
+
+
 ## HISTORICAL PHASE SNAPSHOT — 2026-08-17 DURABLE STATE SYNC (NOT CURRENT ROUTING)
 
 > Current blockers, accepted milestones, hard stops, and forward plan are owned by `PROJECT_STATE.md`. The dated material below is retained as queue/history context and must not be used to reopen a closed blocker by itself.
