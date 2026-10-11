@@ -1,0 +1,24 @@
+# EA_LAB — T3-C-P1 Isolated SQLite Persistence & Replay Qualification
+
+**SOURCE/ISOLATED TEST ONLY — NOT OPERATIONAL AUTONOMY.** Exact parent HEAD `6159c3b76b89e91d6a4d06e9595c17e35caaccb0`. One Main CT, one writer, independent read-only reviewer, no duplicate service, scheduler, gateway, Monitor publisher or resource lease.
+
+## Actual component and narrow authority
+
+`orchestrator_sqlite_replay_store.py` exports `SQLiteReplayLedger(db_path,root_dir,source_head,source_tree,clock=...,verify_claim=...)`. Files are created only in a caller-selected *isolated absolute directory*, and stored in SQLite 3 WAL mode with `synchronous=FULL` and a single `BEGIN IMMEDIATE` transaction for both current lease state and history-wide unique idempotency/proof tombstones. The test suite runs the real Windows SQLite implementation. It rejects any path outside the selected directory and symbolic file/root at construction time; this is a test safety cage, not hardened protection against filesystem symlink races by another process. Production path permissions, ACL and actual exclusive lease ownership remain unqualified.
+
+An incoming `EA_LAB_T3C_P1_SIGNED_CLAIM_V1` includes exact source HEAD/TREE, owner, lease, resource, sequence, idempotency key and signed proof digest, expiration and false execution/submission flags. The injected `verify_claim` MUST return boolean literal `true`; tests deliberately inject a synthetic verifier. **This does not prove an authentic production signer, authorized issuer, credential custody, trust anchor or signed claim bound to the transaction.** Production ingress must authenticate producer/issuer and validate signature over the *complete exact claim*, without a blind boolean stub.
+
+Existing `current_state` records restrict foreign owners while lease active and reject non-increasing sequence. The global `replay_history` tables permanently retain proof SHA and idempotency tombstones **across all resources and across process restart**. The record insert and current-state update share one atomic transaction. After commit, one readback verifies current row; readback anomalies return UNKNOWN. All statuses remain `RECORDED_READ_ONLY`, `BLOCKED`, `WAITING_RESOURCE` or `UNKNOWN` with `can_execute=false`, `can_submit=false`, `scope=ISOLATED_EVIDENCE_ONLY`.
+
+## Test gates
+
+- Preserve original RED (including the initial Python fixture syntax error and a separate module missing import RED), all intermediary failures including Windows handle leak and fixture idempotency schema mismatch, then final GREEN with unchanged safety assertions.
+- `test_orchestrator_sqlite_replay_store.py` exercises at least 25 separate cases: real two-OS-process contention (different PIDs, exactly one accepted), global historical replay across resources and restart, active foreign lease, expired handover with higher sequence, fixed source pin, strict UTC/lease TTL, malformed source/claim, corrupted storage, explicit non-trading flags, WAL/FULL, actual process crash *before* COMMIT (rollback) and process exit *after* COMMIT (durable recovery). Write exact PID and status receipt to raw test log, and inspect before/after process exit codes. Test database lives under independent `tempfile.TemporaryDirectory` and is never the existing Registry/Monitor/job database. This is non-production fixture-only cleanup.
+- Re-run impacted Node source tests (T0–T3-C replay guard, signed verifier, JobControl and adapter), Python Harness and native hooked Git commit. Freeze exact HEAD/TREE, independent exact-head read-only scrutiny, then Main CT alone integrates accepted source via normal FF.
+- This shows stronger **empirical local Windows SQLite process/crash behavior** but does not prove power-loss consistency or filesystem/hardware fsync semantics across all deployment environments. An in-process crash is NOT a power-failure test. No claim of a real multi-machine distributed lock or production lease authority.
+
+## STILL BLOCKED for activation
+
+No actual authenticated signer/private key custody, approved real observer producer and public-key trust root, installation path or task/principal SHA manifest, permissioned durable store under exclusive owner, process identity/heartbeat/terminal postcondition, externally verified time source, production rollback before-image/readback, provider quota/cost limit, Monitor health, real consumer liveness or exact Owner approval of an installed runtime. SOURCE ACCEPTED cannot be relabeled deployed, scheduled or operational. No MT5/optimizer/HOLDOUT, Factory/Real Submit, DEMO/LIVE trading or risk changes.
+
+**ONE NEXT:** separate security/installed-consumer exact contract binding this persistence component to a real authenticated producer/lease and an isolated monitored smoke with actual rollback. No persistent activation or broker access without all required gates.
