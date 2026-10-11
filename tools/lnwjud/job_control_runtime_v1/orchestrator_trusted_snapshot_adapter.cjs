@@ -52,9 +52,10 @@ function createTrustedReadOnlyAdapter({readers,verifier,clock}={}){
     // No "VERIFIED" flags from payload are accepted as attestation; the independent
     // verifier MUST recheck proof using a privileged producer trust anchor.
     const verdict=verifier.verify(Object.freeze({
-      source_type:kind,bytes,proof:Object.freeze({...p}),now_utc:now
+      source_type:kind,bytes:Buffer.from(bytes),proof:Object.freeze({...p}),now_utc:now
     }));
     if(verdict!==true)fail('ATTESTATION_NOT_AUTHENTICATED');
+    if(digest(bytes)!==p.sha256)fail('SOURCE_MUTATED_AFTER_VERIFY');
     if(kind==='git') {
      let parsed;
      try{parsed=R.clone(R.parse(bytes))}catch{fail('STRICT_GIT_PARSE_REJECTED')}
@@ -72,6 +73,7 @@ function createTrustedReadOnlyAdapter({readers,verifier,clock}={}){
     }else{
      if(!canonical||p.source_head!==canonical.head||p.source_tree!==canonical.tree)
        fail('CROSS_SOURCE_HEAD_TREE_UNBOUND');
+     if(Math.abs(when-utc(canonical.when))>120000)fail('CROSS_SNAPSHOT_TIME_SKEW');
      let payload;
      try{payload=R.clone(R.parse(bytes))}catch{fail('STRICT_SOURCE_PARSE_REJECTED')}
      if(kind==='registry'){
