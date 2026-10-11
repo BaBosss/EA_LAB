@@ -1,0 +1,31 @@
+# EA_LAB Autonomous Orchestrator V1 — T3-A Trusted Input Boundary (SOURCE ONLY)
+
+**Status: Source-only T3-A candidate. NOT T3 runtime activation.** Existing single Main CT, accepted original Orchestrator read-only classifier and original JobControl/Registry/Harness/long-job runner remain unchanged. No cron, gateway, task, monitor publisher, job, provider or trading action is created.
+
+## Exact proposed interface
+
+`createTrustedReadOnlyAdapter({readers,verifier,clock}).assess()` exports only a synchronous, **inert and stateless** read-only assessment. All five readers are *injected* and must be individually qualified as scoped, authenticated, bounded, read-only observers. This module does NOT implement a real source, filesystem, subprocess, private key, network, provider call, scheduler or resource lease. No daemon or production runtime integration exists.
+
+Readers are named exactly `git`, `registry`, `leases`, `jobs`, `tasks`. Each yields `{bytes: Buffer, proof: {...}}`; **bytes are opaque untrusted UTF-8 JSON** until the existing `tools/lnwjud/job_control_v1/request_contract.cjs` strict parser rejects duplicate escaped keys, unsafe keys, invalid UTF-8, malformed JSON and bounds. That strict parser creates null-prototype objects; the adapter normalizes these *after parsing* using the existing safe clone facility before calling the unchanged pure Reconciler. No user-provided `verified: true` flag is used to grant authority.
+
+Every proof uses schema `EA_LAB_TRUSTED_SNAPSHOT_PROOF_V1` and exact eight keys: `schema,producer_id,source_type,source_head,source_tree,sha256,captured_utc,attestation`. Proof timestamps must be UTC `Z` with a checked calendar, not stale beyond 15 minutes or future. SHA256 must match exact raw Buffer. Proof source HEAD/TREE must match the first Git record; Git record itself must match fetched `origin_master`, independent `ls_remote`, checkout HEAD/TREE and clean worktree. The five proofs must be separately checked by the *injected* trusted `verifier.verify({source_type,bytes,proof,now_utc})`, returning boolean literal `true`. A missing/unqualified reader/verifier/clock causes immediate fail-closed. Verifier failure, evidence contradictions or producer exceptions produce one `UNKNOWN` decision, never READY.
+
+The `verifier` implementation must live behind a separately accepted, privileged producer trust anchor, with canonical issuer identity/credential/attestation policy and revocation, monotonic evidence order, tamper protection and cross-process resource lease proof. **This source does not cryptographically verify signatures itself.** An attacker controlling the injected verifier may forge a `true`: therefore neither this interface nor unit tests establish production authenticity or runtime authorization. The `proof.sha256` field is an integrity check, NOT an authentic signature. A production-grade reader and verifier must never share arbitrary caller-controlled JS capabilities.
+
+The normalized output uses existing `EA_LAB_ORCHESTRATOR_READ_ONLY_INPUT_V1` as defined in `EA_LAB_AUTONOMOUS_ORCHESTRATOR_V1_DRYRUN.md`. The unchanged classifier alone checks task/lane ownership, lease binding/expiry, process PID/creation/heartbeat, terminal postcondition, retry budget, duplicate/idempotency, author/reviewer, provider/cost, DAG and T3 action stops. It only returns advisories `READY`, `UNKNOWN`, `BLOCKED`, `WAITING_RESOURCE`, `PROVEN_TERMINAL`, `READY_FOR_REVIEW`, `READY_FOR_CT_INTEGRATION`. No decision is a permit to launch a job.
+
+## Negative fixtures / exact regression
+
+New tests `node --test tools/lnwjud/job_control_runtime_v1/test_orchestrator_trusted_snapshot_adapter.cjs` cover 40 scenarios including one positive READY, duplicate observations, missing reader, attestation refusal, SHA tampering, forged issuer, cross-source identity mismatch, stale/future/malformed UTC, duplicate JSON keys, unexpected schema keys, bad UTF-8, Git drift/dirty, Registry invalid/extra CT/foreign owner, missing/expired/foreign lease, unknown process identity, concurrent resource conflict, duplicate task, exhausted repair budget, author/reviewer conflict, provider cost unknown, forbidden runtime/MT5, isolated EA readiness despite blocked SYSTEM, failed dependency isolation, issuer exceptions, missing verifier, invalid clock, replay and stale proof.
+
+This is **source-test fixture evidence**, not production process test or producer-authentication validation. Tests must include actual initial RED and GREEN with raw logs/EXIT0, preserve failed attempts, rerun impacted `JobControl` and `production_adapter` fault tests, `tools/ea_lab_harness` unit suite, then normal hooked candidate commit and one procedurally independent exact-head reviewer verdict before existing Main CT normal FF integration. If any review is missing, classify `READY_FOR_REVIEW` or `BLOCKED`, not DONE.
+
+## Required downstream runtime qualification (outside this milestone)
+
+T3-B/T3-C separately need an actual installed consumer entrypoint SHA, task/action/principal identity, trusted signed producer/verifier implementation, unique CAS lease, terminal process/postcondition, persistent checkpoint, original repair budgets, rate limits, explicit provider auth/endpoint/model/quota/cost ceiling, end-to-end security adversarial tests, rollback preimages and rehearsal, and a **new exact Owner runtime authorization**. The current installed Monitor remains separately DEGRADED and does not become healthy because the adapter source passes. No MT5, HOLDOUT, Factory, Real Submit, LIVE, risk change, gateway, daemon, cron, scheduled task, new monitor, deployment or paid fallback can be inferred. Source READY does not imply 24/7 unattended execution.
+
+## Handoff
+
+Single CT must use `AGENTS.md §1.4`, project-local `skills/ea-lab-harness/SKILL.md` and current R3/R4.2 contracts. Preserve B17 FROZEN, Mobile/W2 owners, old dirty worktrees and original negative evidence. See task-local evidence lineage at `D:\EA_LAB_CONTROL\evidence\ct-autonomous-orchestrator-v1-t0-20261011`. Prior draft Policy Amendment V1 was not promoted to authority.
+
+**Owner hard stop:** Do not install this as a production consumer, activate Hermes/JobControl cron/gateway, execute live/trading or alter risk/Monitor/MT5 without explicit exact T3 owner approval.
