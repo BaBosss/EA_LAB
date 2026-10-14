@@ -3,6 +3,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const crypto=require('node:crypto');
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 const api=require('./execution_identity.cjs');
 let count=0;
 function test(name,fn){fn();count++;console.log('PASS '+name);}
@@ -50,11 +52,138 @@ const ctx={jobs:[{job_id:B.job_id,base_sha:B.base_sha,worktree:B.worktree}],lane
 test('service binds only server job ids',()=>{let calls=0;const service=api.createService(ctx,()=>{calls++;return fixture();},()=>END);assert.throws(()=>service.get('../evil'));assert.throws(()=>service.get('unbound-job'));assert.equal(calls,0);});
 test('ambiguous lane -> UNKNOWN no observer call',()=>{let calls=0;const c={...ctx,lanes:[...ctx.lanes,{...ctx.lanes[0],lane_id:'other-lane'}]};const service=api.createService(c,()=>calls++);assert.equal(service.get(B.job_id).state,'UNKNOWN');assert.equal(calls,0);});
 test('observer error -> UNKNOWN',()=>{const service=api.createService(ctx,()=>{throw Error('fixture');});assert.equal(service.get(B.job_id).state,'UNKNOWN');});
+// Prospective immutable-fixture maintenance; old semantic repair budgets stay closed.
+const LEGACY_REF='471a94d6d65fc86882ac7a4bbb882e280edbe98d';
+const LEGACY_TREE='bb1dbea90d1de8097db9e1b50736722b13211257';
+const GATEWAY_REL='tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs';
+const RECEIPT_REL='tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json';
+const VERIFIER_REL='tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs';
+const legacyGatewayPin=Object.freeze({ref:LEGACY_REF,tree:LEGACY_TREE,path:GATEWAY_REL,
+ oid:'d2bfeef4da5c9a89b2c4bed8a44b3f6ca026576f',bytes:43447,sha256:'751446b59abe9b54a967f2cb6e2e38ce2f2bd84128d380457aaa647d8c72e216'});
+const legacyReceiptPin=Object.freeze({ref:LEGACY_REF,tree:LEGACY_TREE,path:RECEIPT_REL,
+ oid:'c9fbf43bf2922bbb8601e99b7e1836e678b7e49c',bytes:3902,sha256:'ade1b32549b91db9c81a7a402c3e7ec7ab51cfeae6ae4b813cbe6bbeeae5558f'});
+const legacyVerifierPin=Object.freeze({ref:LEGACY_REF,tree:LEGACY_TREE,path:VERIFIER_REL,
+ oid:'cd60c5f12d369f17548a6ee13bf540ed0980eefb',bytes:3198,sha256:'6a662f9b2a188f169f1b543bae15ed682fe2da3e518dbc740b30717128440cf1'});
+const INTEGRATION_MARKERS=["const executionIdentity = require('./execution_identity.cjs');\n\n",
+ "  executionIdentity.registerTools(server, z, ctx);\n\n"];
+const acceptedGatewayPin=Object.freeze({ref:'af7739842645b7b31cfd52cd3e8c526b8be4de6c',
+ tree:'e7127db5d87eb69c6b422420c40bb528de030df4',path:GATEWAY_REL,
+ oid:'66c58371862e959d3641592bae5e82dfd8b506dd',bytes:44147,sha256:'0ca778bc54bc64e063c9e16154279795d9321ece9e5fa55afafb9089731814f3'});
+const integratedGatewayPin=Object.freeze({ref:'a61db2ebe732e240377f2ba23ce35377681cc723',
+ tree:'96cfd026ab39f63cad0e3b144c08e070a9972254',path:GATEWAY_REL,
+ oid:'d91be42946232d7c5101c24e4d41acb88e855c48',bytes:43563,sha256:'22dd4cdc17c7b95d793bfc8249fcbf936576bb7124c810759b6fc7334c79cff9'});
+const legacyBlobOids=Object.freeze({
+ 'docs/handoffs/LNWJUD_WRITE_V1_20260928.md':'dd46b0dbf4a3119301df4efd9e62ae8a724bd234',
+ ...Object.fromEntries([
+ ['EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs',legacyGatewayPin.oid],
+ ['README.md','b0064501fe973124b80d913d66e100e0358e5caa'],
+ ['build_snapshot.py','c0489ebe7572013dd11ca77884176ac0e62f3e94'],
+ ['install_tasks.ps1','97a5740a358966f35620823e95499ebaee1bc538'],
+ ['refresh_write_v1_snapshot.ps1','0c9cca68a199a346efd2cc5c52e6cb266b1b7ff7'],
+ ['source_bound_gateway_loader.cjs','aa711ae253bd2ae38203592cdcd40fac4a6bed52'],
+ ['start_write_v1.ps1','3a2fbeafb1533f9054a4f285f032887f7c2babb5'],
+ ['test_source_bound_gateway_loader.cjs','e67d87d435213e5d13aa2db65a7249f0bdfa6c84'],
+ ['test_write_v1.cjs','f4a31e226ca6d09b014630db23cdef2640b0d0bc'],
+ ['test_write_v1_a1.ps1','fa48c25f2df7988bb6ba7966510a3320a8cabaed'],
+ ['test_write_v1_repair1.cjs','87409be46f20448e75adab89975d9c34b12f4734'],
+ ['test_write_v1_safety_s1.ps1','20e11d8922e6a10631a06e3d840858b19ac785c5'],
+ ['verify_current_source_hashes.cjs',legacyVerifierPin.oid]
+ ].map(([name,oid])=>['tools/lnwjud/current_write_v1/'+name,oid]))
+});
+function immutableAssert(ok,reason){if(!ok)throw Error('IMMUTABLE_FIXTURE '+reason);}
+function historicalGit(args){
+ return require('node:child_process').spawnSync('C:\\Program Files\\Git\\cmd\\git.exe',args,
+  {cwd:path.resolve(__dirname,'../../..'),windowsHide:true,encoding:null,timeout:10000,maxBuffer:2*1024*1024});
+}
+// Fixed local fixture seam, never a client/CLI command surface; no disk fallback.
+function readHistoricalBlob(pin,run=historicalGit){
+ immutableAssert(pin&&Object.keys(pin).sort().join('|')==='bytes|oid|path|ref|sha256|tree','pin fields');
+ const trees={[LEGACY_REF]:LEGACY_TREE,[acceptedGatewayPin.ref]:acceptedGatewayPin.tree,
+  [integratedGatewayPin.ref]:integratedGatewayPin.tree};
+ immutableAssert(trees[pin.ref]===pin.tree&&typeof pin.tree==='string','ref/tree binding');
+ immutableAssert(pin.path===RECEIPT_REL||Object.hasOwn(legacyBlobOids,pin.path),'path not admitted');
+ immutableAssert(pin.ref===LEGACY_REF||pin.path===GATEWAY_REL,'nonlegacy scope');
+ immutableAssert(/^[0-9a-f]{40}$/.test(pin.oid)&&/^[0-9a-f]{64}$/.test(pin.sha256)&&
+  Number.isSafeInteger(pin.bytes)&&pin.bytes>=0&&pin.bytes<=2*1024*1024,'malformed pin');
+ const git=args=>{
+  let r;try{r=run(args);}catch{throw Error('IMMUTABLE_FIXTURE Git observation unavailable');}
+  immutableAssert(r&&r.status===0&&!r.error&&!r.signal&&Buffer.isBuffer(r.stdout),'Git object unavailable');
+  return r.stdout;
+ };
+ immutableAssert(git(['rev-parse',pin.ref+'^{tree}']).toString('utf8').trim()===pin.tree,'tree mismatch');
+ immutableAssert(git(['rev-parse',pin.ref+':'+pin.path]).toString('utf8').trim()===pin.oid,'object/path mismatch');
+ immutableAssert(git(['cat-file','-t',pin.oid]).toString('utf8').trim()==='blob','object not blob');
+ immutableAssert(git(['cat-file','-s',pin.oid]).toString('utf8').trim()===String(pin.bytes),'object length');
+ const bytes=git(['cat-file','blob',pin.oid]);
+ immutableAssert(bytes.length===pin.bytes&&sha(bytes)===pin.sha256,'blob bytes/hash');
+ const oid=crypto.createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
+ immutableAssert(oid===pin.oid,'blob object identity');
+ try{new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{throw Error('IMMUTABLE_FIXTURE invalid UTF8');}
+ return Buffer.from(bytes);
+}
+function stripIdentityIntegration(source){
+ for(const marker of INTEGRATION_MARKERS){
+  immutableAssert(source.split(marker).length===2,'integration marker count');
+  source=source.replace(marker,'');
+ }
+ return source;
+}
+function monitorBlock(source){
+ const start="  server.registerTool('monitor_summary', {",end="  server.registerTool('ea_lab_write_status', {";
+ immutableAssert(source.split(start).length===2&&source.split(end).length===2,'Monitor block markers');
+ const a=source.indexOf(start),b=source.indexOf(end);
+ immutableAssert(a>=0&&b>a,'Monitor block range');
+ return source.slice(a,b);
+}
+function composeAcceptedLegacy(legacy,accepted){
+ immutableAssert(sha(Buffer.from(legacy))===legacyGatewayPin.sha256,'legacy gateway changed');
+ const oldBlock=monitorBlock(legacy),newBlock=monitorBlock(accepted);
+ immutableAssert(sha(Buffer.from(oldBlock))==='8e9fa5792fbb8375163e0c6d4f0de9e5efd39de03492802da54cc7b822f8174f','legacy Monitor changed');
+ immutableAssert(sha(Buffer.from(newBlock))==='fe3b0f4b769758f381c2d9878eb295faa937d9c7a926535c85ac647cc571705c','unaccepted Monitor delta');
+ const composed=legacy.replace(oldBlock,newBlock);
+ immutableAssert(stripIdentityIntegration(accepted)===composed,'unrelated accepted gateway drift');
+ immutableAssert(Buffer.byteLength(composed)===44031&&sha(Buffer.from(composed))===
+  '9fcb9e25cf2079d8e885e4ed9106dbbab92f196bb026d2381dc9aab4ac7e134e','composition identity');
+ return composed;
+}
+function immutableRefusal(fn){assert.throws(fn,/IMMUTABLE_FIXTURE/);}
+test('immutable fixture missing object refuses without mutable fallback',()=>
+ immutableRefusal(()=>readHistoricalBlob(legacyGatewayPin,()=>({status:128,stderr:Buffer.from('missing object')}))));
+for(const field of ['ref','tree','oid','sha256','bytes'])test('immutable fixture wrong '+field+' refused',()=>{
+ const value=field==='bytes'?legacyGatewayPin.bytes+1:'0'.repeat(field==='sha256'?64:40);
+ immutableRefusal(()=>readHistoricalBlob({...legacyGatewayPin,[field]:value}));
+});
+test('immutable fixture mutable path fallback argument refused',()=>
+ immutableRefusal(()=>readHistoricalBlob({...legacyGatewayPin,fallbackPath:__filename})));
+for(const [name,pin] of [['gateway',legacyGatewayPin],['A2 receipt',legacyReceiptPin],['A2 verifier',legacyVerifierPin]])
+ test('immutable fixture tampered '+name+' bytes refused',()=>{
+ const bytes=readHistoricalBlob(pin),changed=Buffer.from(bytes);changed[0]^=1;
+ immutableRefusal(()=>readHistoricalBlob(pin,args=>({status:0,stdout:args[0]==='rev-parse'?Buffer.from((args[1].endsWith('^{tree}')?pin.tree:pin.oid)+'\n'):args[1]==='-t'?Buffer.from('blob\n'):args[1]==='-s'?Buffer.from(String(pin.bytes)+'\n'):changed})));
+});
+for(const [index,marker] of INTEGRATION_MARKERS.entries())for(const kind of ['missing','duplicate'])
+ test('immutable fixture integration marker '+index+' '+kind+' refused',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs'),'utf8');
+ immutableRefusal(()=>stripIdentityIntegration(kind==='missing'?source.replace(marker,''):source.replace(marker,marker+marker)));
+});
+const immutableLegacyGateway=readHistoricalBlob(legacyGatewayPin).toString('utf8');
+const immutableAcceptedGateway=readHistoricalBlob(acceptedGatewayPin).toString('utf8');
+const acceptedLegacyGateway=composeAcceptedLegacy(immutableLegacyGateway,immutableAcceptedGateway);
+test('first identity integration strips exactly to immutable historical gateway',()=>
+ assert.equal(stripIdentityIntegration(readHistoricalBlob(integratedGatewayPin).toString('utf8')),immutableLegacyGateway));
+test('immutable fixture missing accepted Monitor block refused',()=>
+ immutableRefusal(()=>composeAcceptedLegacy(immutableLegacyGateway,immutableAcceptedGateway.replace(monitorBlock(immutableAcceptedGateway),''))));
+test('immutable fixture unauthorized Monitor delta refused',()=>
+ immutableRefusal(()=>composeAcceptedLegacy(immutableLegacyGateway,immutableAcceptedGateway.replace('current_observation: monitor.current_observation','current_observation: monitor.TAMPER'))));
+test('immutable fixture unrelated accepted handler drift refused',()=>
+ immutableRefusal(()=>composeAcceptedLegacy(immutableLegacyGateway,immutableAcceptedGateway+'\n// unrelated drift\n')));
+test('immutable fixture candidate unrelated source drift refused',()=>{
+ const candidate=fs.readFileSync(path.join(__dirname,'EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs'),'utf8');
+ immutableRefusal(()=>immutableAssert(stripIdentityIntegration(candidate+'\n// unrelated drift\n')===acceptedLegacyGateway,'candidate source drift'));
+});
 test('old 14 tool implementations byte-equivalent after removing two integration lines',()=>{
  const current=fs.readFileSync(path.join(__dirname,'EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs'),'utf8');
- const baseline=fs.readFileSync('D:\\EA_LAB_CONTROL\\lnwjud-write-v1-20260928\\canonical\\tools\\lnwjud\\current_write_v1\\EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs','utf8');
- const stripped=current.replace("const executionIdentity = require('./execution_identity.cjs');\n\n",'')
- .replace("  executionIdentity.registerTools(server, z, ctx);\n\n",'');
+ const baseline=acceptedLegacyGateway;
+ const stripped=stripIdentityIntegration(current);
  assert.equal(stripped,baseline);
  assert.equal((baseline.match(/server\.registerTool\(/g)||[]).length,14);
 });
@@ -251,16 +380,22 @@ test('V2 repair different valid UNC executable remains mismatch',()=>{
 
 // Verifier contract fixtures: original A2 bytes copied into isolated temporary roots.
 const os=require('node:os');
-const crypto=require('node:crypto');
 const verifier=require('./verify_current_source_hashes.cjs');
-const canonical='D:\\EA_LAB_CONTROL\\lnwjud-write-v1-20260928\\canonical';
 const receiptRel='tools/lnwjud/current_write_v1/CURRENT_SOURCE_SHA256.json';
-const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
-const originalReceipt=fs.readFileSync(path.join(canonical,receiptRel));
+const originalReceipt=readHistoricalBlob(legacyReceiptPin);
 assert.equal(sha(originalReceipt),'ade1b32549b91db9c81a7a402c3e7ec7ab51cfeae6ae4b813cbe6bbeeae5558f');
 const legacyReceipt=JSON.parse(originalReceipt);
+assert.deepEqual(legacyReceipt.files.map(x=>x.path).sort(),Object.keys(legacyBlobOids).sort());
+const immutableLegacyFiles=new Map(legacyReceipt.files.map(entry=>[entry.path,
+ readHistoricalBlob(Object.freeze({ref:LEGACY_REF,tree:LEGACY_TREE,...entry,oid:legacyBlobOids[entry.path]}))]));
+test('immutable fixture frozen 14-file A2 scope validated',()=>assert.equal(immutableLegacyFiles.size,14));
+test('immutable fixture tampered frozen A2 file refused',()=>{
+ const entry=legacyReceipt.files.find(x=>x.path.endsWith('/README.md'));
+ immutableRefusal(()=>readHistoricalBlob({...entry,ref:LEGACY_REF,tree:LEGACY_TREE,oid:legacyBlobOids[entry.path]},args=>
+  args[0]==='cat-file'&&args[1]==='blob'?{status:0,stdout:Buffer.alloc(entry.bytes)}:historicalGit(args)));
+});
 const verifierRel='tools/lnwjud/current_write_v1/verify_current_source_hashes.cjs';
-const oldVerifier=fs.readFileSync(path.join(canonical,verifierRel),'utf8');
+const oldVerifier=readHistoricalBlob(legacyVerifierPin).toString('utf8');
 assert.equal(sha(Buffer.from(oldVerifier)),'6a662f9b2a188f169f1b543bae15ed682fe2da3e518dbc740b30717128440cf1');
 const newVerifier=fs.readFileSync(path.join(__dirname,'verify_current_source_hashes.cjs'),'utf8');
 function writeFixture(root,rel,bytes){const f=path.join(root,rel);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,bytes);}
@@ -274,7 +409,7 @@ function executeVerifier(root,old=false,fakeFs=fs){
 function withVerifierFixture(successor,action){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'lnwjud-source-contract-'));
  try{
-  for(const entry of legacyReceipt.files)writeFixture(root,entry.path,fs.readFileSync(path.join(canonical,entry.path)));
+   for(const entry of legacyReceipt.files)writeFixture(root,entry.path,Buffer.from(immutableLegacyFiles.get(entry.path)));
   writeFixture(root,receiptRel,originalReceipt);
   if(successor){
    for(const name of fs.readdirSync(__dirname)){
@@ -396,7 +531,7 @@ console.log(JSON.stringify({status:'PASS',tests:count,evidence:'SYNTHETIC_IDENTI
 
 async function existingHandlerBehaviorRegression(){
  const gatewayRel='tools/lnwjud/current_write_v1/EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs';
- const originals=fs.readFileSync(path.join(canonical,gatewayRel),'utf8');
+ const originals=acceptedLegacyGateway;
  const candidate=fs.readFileSync(path.join(__dirname,'EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs'),'utf8');
  const names=['ea_lab_current_status','read_canonical_file','list_lanes','get_lane','list_jobs','get_job',
   'list_evidence','read_evidence','monitor_summary','ea_lab_write_status','refresh_write_workspace',
