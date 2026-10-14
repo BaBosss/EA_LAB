@@ -249,7 +249,10 @@ function Write-LaneRecordAtomic {
     # first: ConvertTo-Json can otherwise silently replace deep objects by strings.
     Assert-RegistryJsonDepth $Record
     $text=(ConvertTo-Json -InputObject $Record -Depth 100 -WarningAction Stop) + "`n"
-    $roundtrip=$text | ConvertFrom-Json
+    # Preserve timestamp strings on PS7; PS5.1 lacks -DateKind and already preserves them.
+    $roundtripParseArgs=@{}
+    if((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')){$roundtripParseArgs.DateKind='String'}
+    $roundtrip=$text | ConvertFrom-Json @roundtripParseArgs
     if((ConvertTo-Json -InputObject $roundtrip -Depth 100 -WarningAction Stop) + "`n" -cne $text){
         Throw-LaneError 'preservation_failed' 'record JSON cannot round-trip losslessly'
     }
