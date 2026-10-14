@@ -683,15 +683,24 @@ function buildServer(ctx) {
   });
 
   server.registerTool('monitor_summary', {
-    description: 'Return the captured read-only Monitor delivery receipt and inventory summary. Monitor content may itself report older/stale bindings.',
+    description: 'Return current Monitor observation, 3 operating tracks, and historical presentation package artifacts with explicit freshness and provenance.',
     inputSchema: z.object({ snapshotId: z.string() }).strict(),
     annotations: { readOnlyHint: true, destructiveHint: false }
   }, async (input) => {
     if (!assertSnapshot(input, seal)) return resultError('SNAPSHOT_DENIED', 'exact snapshotId is required');
     const structured = {
       snapshot_id: seal.snapshot_id,
-      delivery_receipt: monitor.delivery_receipt ?? null,
-      inventory_summary: monitor.inventory_summary ?? null
+      captured_at_utc: seal.captured_at_utc,
+      canonical_head: seal.canonical_head,
+      current_observation: monitor.current_observation ?? null,
+      operating_tracks: monitor.operating_tracks ?? null,
+      historical_presentation_package: monitor.historical_presentation_package ?? {
+        is_historical: true,
+        delivery_receipt: monitor.delivery_receipt ?? null,
+        inventory_summary: monitor.inventory_summary ?? null
+      },
+      delivery_receipt: monitor.delivery_receipt ?? monitor.historical_presentation_package?.delivery_receipt ?? null,
+      inventory_summary: monitor.inventory_summary ?? monitor.historical_presentation_package?.inventory_summary ?? null
     };
     return {
       isError: false,

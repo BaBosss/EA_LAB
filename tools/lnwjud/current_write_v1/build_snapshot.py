@@ -15,6 +15,7 @@ REGISTRY_ROOT = Path(r"D:\EA_LAB_CONTROL\lanes\registry-v1")
 JOBS_ROOT = Path(r"D:\EA_LAB_CONTROL\jobs")
 EVIDENCE_ROOT = Path(r"D:\EA_LAB_CONTROL\evidence")
 MONITOR_ROOT = Path(r"D:\OneDrive\Monitor")
+REPORT_HUB_CURRENT_ROOT = Path(r"D:\EA_LAB_CONTROL\mobile_report_hub_current")
 DEFAULT_CANONICAL_ROOT = Path(r"D:\EA_LAB_CONTROL\lnwjud-write-v1-20260928\canonical")
 MAX_FILE_BYTES = 1024 * 1024
 EVIDENCE_HOURS = 96
@@ -262,19 +263,142 @@ def collect_evidence(now: datetime, previous: list[dict] | None = None) -> list[
     rows.sort(key=lambda x: (x["mtime_utc"], x["path_key"]), reverse=True)
     return rows
 
-def collect_monitor() -> dict:
-    out = {
-        "root": str(MONITOR_ROOT),
+def collect_monitor(canonical_head: str | None = None) -> dict:
+    """Untrusted report_index values stay advisory, never acceptance or liveness proof."""
+    historical_package = {
+        "is_historical": True,
+        "warning": "Historical static presentation package artifacts; do not treat as current runtime truth.",
         "delivery_receipt": None,
         "inventory_summary": None,
     }
     receipt = MONITOR_ROOT / "MONITOR_APP_RECEIPT.json"
     inv = MONITOR_ROOT / "inventory" / "inventory_summary.json"
     if receipt.exists():
-        out["delivery_receipt"] = read_json_if(receipt)
+        historical_package["delivery_receipt"] = read_json_if(receipt)
     if inv.exists():
-        out["inventory_summary"] = read_json_if(inv)
-    return out
+        historical_package["inventory_summary"] = read_json_if(inv)
+
+    def field(value, max_length: int = 200) -> str:
+        """A wrong type, empty string, or oversized field cannot confer any state."""
+        if not isinstance(value, str):
+            return "UNKNOWN"
+        if any(ord(c) < 32 for c in value):
+            return "UNKNOWN"
+        value = value.strip()
+        if not value or len(value) > max_length:
+            return "UNKNOWN"
+        return value
+
+    current_obs = None
+    tracks = None
+    report_index = REPORT_HUB_CURRENT_ROOT / "report_index.json"
+    if report_index.exists():
+        report_data = read_json_if(report_index)
+        if isinstance(report_data, dict):
+            # Fail closed on falsey *and* truthy non-object sections.
+            mon = report_data.get("monitoring")
+            mon = mon if isinstance(mon, dict) else {}
+            proj = report_data.get("project")
+            proj = proj if isinstance(proj, dict) else {}
+            rep_head = field(proj.get("canonical_sha") or mon.get("repo_head"))
+            if not re.fullmatch(r"[0-9a-f]{40}", rep_head):
+                rep_head = "UNKNOWN"
+            gen_utc = field(mon.get("generated_at_utc") or proj.get("generated_at"))
+            # Regex alone does not validate calendar dates, UTC offset ranges, or
+            # future-dated source claims. Never present those as trustworthy time.
+            stamp_match = None if gen_utc == "UNKNOWN" else re.fullmatch(
+                r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?"
+                r"(?:Z|[+-](?P<offset_hour>0[0-9]|1[0-4]):(?P<offset_min>[0-5][0-9]))",
+                gen_utc,
+            )
+            if stamp_match is None:
+                gen_utc = None
+            elif stamp_match.group("offset_hour") == "14" and stamp_match.group("offset_min") != "00":
+                gen_utc = None
+            else:
+                try:
+                    source_time = datetime.fromisoformat(gen_utc.replace("Z", "+00:00"))
+                    if source_time.utcoffset() is None or source_time.astimezone(timezone.utc) > datetime.now(timezone.utc):
+                        gen_utc = None
+                except (TypeError, ValueError, OverflowError):
+                    gen_utc = None
+            # Text-equality can be reported, but is NOT independent runtime provenance.
+            match = (rep_head == canonical_head) if (
+                rep_head != "UNKNOWN" and isinstance(canonical_head, str)
+                and re.fullmatch(r"[0-9a-f]{40}", canonical_head)
+            ) else None
+            reported_coverage = mon.get("coverage")
+            if not isinstance(reported_coverage, dict):
+                reported_coverage = None
+            # Never infer false/0 from missing or malformed fields.
+            alert = mon.get("alert_present")
+            if not isinstance(alert, bool):
+                alert = None
+            current_obs = {
+                "source_path": str(report_index),
+                "source_claim_class": "SOURCE_CLAIM",
+                "verified_runtime": False,
+                "freshness": "UNKNOWN",
+                "generated_at_utc": gen_utc,
+                "canonical_sha": (rep_head if rep_head != "UNKNOWN" else None),
+                "matches_snapshot_canonical": match,
+                "reported_status": field(mon.get("reported_status")),
+                "reason": field(mon.get("reason")),
+                "binding_state": field(mon.get("binding_state")),
+                "alert_present": alert,
+                "coverage": reported_coverage,
+            }
+
+            existing_tracks = report_data.get("operating_tracks")
+            existing_tracks = existing_tracks if isinstance(existing_tracks, dict) else {}
+
+            def evidence_track(track_id: str, title: str, fallback_source: str) -> dict:
+                supplied = existing_tracks.get(track_id)
+                supplied = supplied if isinstance(supplied, dict) else {}
+                claims = {
+                    key: field(supplied.get(key), 240)
+                    for key in ("source", "process_identity", "acceptance",
+                                "integration", "freshness", "blocker", "next_step")
+                }
+                return {
+                    "track_id": track_id,
+                    "title": title,
+                    "source": fallback_source,
+                    "claim_class": "SOURCE_CLAIM",
+                    "claim_verification": "UNVERIFIED_REPORT_INDEX",
+                    # Unsigned report_index values cannot self-certify:
+                    "process_identity": "UNKNOWN",
+                    "acceptance": "UNKNOWN",
+                    "integration": "UNKNOWN",
+                    "freshness": "UNKNOWN",
+                    "blocker": "UNVERIFIED_REPORT_INDEX",
+                    "next_step": "UNKNOWN",
+                    "reported_claims": claims,
+                }
+
+            tracks = {
+                "SYSTEM": evidence_track(
+                    "SYSTEM", "System Infrastructure & Control Tower", str(report_index)
+                ),
+                "EA_TESTING": evidence_track(
+                    "EA_TESTING", "EA Testing & Research", "portfolio / factory / taskboards"
+                ),
+                "EA_PLANNING_IMPLEMENTATION": evidence_track(
+                    "EA_PLANNING_IMPLEMENTATION", "EA Planning & Implementation",
+                    "taskboards/active/P03.md"
+                ),
+            }
+
+    return {
+        "root": str(MONITOR_ROOT),
+        "report_hub_root": str(REPORT_HUB_CURRENT_ROOT),
+        "current_observation": current_obs,
+        "operating_tracks": tracks,
+        "historical_presentation_package": historical_package,
+        "delivery_receipt": historical_package["delivery_receipt"],
+        "inventory_summary": historical_package["inventory_summary"],
+    }
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -289,7 +413,7 @@ def main() -> int:
     lanes = collect_lanes()
     jobs = collect_jobs()
     evidence = collect_evidence(now, previous_evidence if isinstance(previous_evidence, list) else None)
-    monitor = collect_monitor()
+    monitor = collect_monitor(canonical["head"])
 
     SNAPSHOT.mkdir(parents=True, exist_ok=True)
     canonical_path = SNAPSHOT / "canonical_manifest.json"

@@ -69,6 +69,32 @@ try {
   assert.match(refresh, /FileMode\]::CreateNew/);
   assert.match(refresh, /Remove-Item -LiteralPath \$LockPath/);
 
+  const snapshotBuilder = fs.readFileSync(path.join(here, 'build_snapshot.py'), 'utf8');
+  assert.match(snapshotBuilder, /mon = mon if isinstance\(mon, dict\) else \{\}/);
+  assert.match(snapshotBuilder, /proj = proj if isinstance\(proj, dict\) else \{\}/);
+  assert.match(snapshotBuilder, /"source_claim_class": "SOURCE_CLAIM"/);
+  assert.match(snapshotBuilder, /"claim_verification": "UNVERIFIED_REPORT_INDEX"/);
+  assert.match(snapshotBuilder, /"process_identity": "UNKNOWN"/);
+  assert.match(snapshotBuilder, /"acceptance": "UNKNOWN"/);
+  assert.match(snapshotBuilder, /"integration": "UNKNOWN"/);
+  assert.match(snapshotBuilder, /"blocker": "UNVERIFIED_REPORT_INDEX"/);
+  assert.match(snapshotBuilder, /"reported_claims": claims/);
+  assert.match(snapshotBuilder, /if not isinstance\(alert, bool\):/);
+  assert.match(snapshotBuilder, /if not isinstance\(reported_coverage, dict\):/);
+  assert.doesNotMatch(snapshotBuilder, /"acceptance": supplied\.get/);
+  assert.doesNotMatch(snapshotBuilder, /"process_identity": supplied\.get/);
+  assert.doesNotMatch(snapshotBuilder, /node:18768 \(lnwjud-write-v1\)/);
+  assert.doesNotMatch(snapshotBuilder, /"acceptance": "ACCEPTED"/);
+  assert.doesNotMatch(snapshotBuilder, /"integration": "SOURCE_INTEGRATED_REMOTE_VERIFIED"/);
+  assert.doesNotMatch(snapshotBuilder, /"blocker": "NONE"/);
+  assert.doesNotMatch(snapshotBuilder, /mon\.get\("alert_present", False\)/);
+  assert.doesNotMatch(snapshotBuilder, /mon\.get\("coverage", \{\}\)/);
+
+  const gatewaySource = fs.readFileSync(path.join(here, 'EA_LAB_CurrentWrite_V1_HTTP_Gateway.cjs'), 'utf8');
+  assert.match(gatewaySource, /current_observation: monitor\.current_observation \?\? null/);
+  assert.match(gatewaySource, /operating_tracks: monitor\.operating_tracks \?\? null/);
+  assert.match(gatewaySource, /historical_presentation_package:/);
+
   const safety = childProcess.spawnSync(
     'powershell.exe',
     ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(here, 'test_write_v1_safety_s1.ps1')],
