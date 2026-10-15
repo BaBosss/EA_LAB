@@ -36,6 +36,9 @@ A decision made in chat is transient until it is migrated into its canonical own
 - Queue/intermediate task state: `AGENT_TASKBOARD.md` + `taskboards/active/*`
 - Lane claims, one-writer/runtime ownership: `scripts/lane_registry.ps1`
 
+### Engineering / bug-fix discipline
+- For non-trivial changes, consult `docs/workflows/EA_LAB_SENIOR_ENGINEERING_DISCIPLINE_V1.md` alongside the existing `skills/diagnosing-bugs/SKILL.md`, `skills/tdd/SKILL.md`, and `skills/code-review/SKILL.md` as applicable. The discipline does not override `AGENTS.md`, existing task contracts, owners or reviewer gates.
+- Project-local skills are not auto-attached in new ChatGPT/Codex/Gemini sessions; the assigned actor must read the applicable instructions. Do not infer installation of Cursor pstack or any automatic model/tool routing.
 ### EA Template / product concept
 - Project/factory north-star intent: `VISION.md`.
 - Detailed EA Template product intent + anti-drift semantics: `ea_template/PRODUCT_CONCEPT.md`.
