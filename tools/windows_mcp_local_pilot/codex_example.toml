@@ -1,0 +1,15 @@
+# EXAMPLE ONLY. Never append to the real Codex config automatically.
+# Main CT must approve local actor/client and verify no duplicate owner.
+[mcp_servers.ea_lab_windows_display_pilot]
+command = "C:\\Users\\patip\\AppData\\Local\\hermes\\bin\\uv.exe"
+args = [
+  "tool", "run", "--python", "3.14",
+  "--from", "windows-mcp==0.8.8",
+  "windows-mcp", "serve", "--transport", "stdio",
+  "--tools", "DisplayInventory"
+]
+enabled = false
+[mcp_servers.ea_lab_windows_display_pilot.env]
+ANONYMIZED_TELEMETRY = "false"
+POSTHOG_API_KEY = ""
+WINDOWS_MCP_TOOLS = "DisplayInventory"
