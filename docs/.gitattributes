@@ -1,0 +1,4 @@
+# Exact raw archived bytes only; these three files are not POSIX execution copies.
+skills_mirror/skills/diagnosing-bugs/scripts/hitl-loop.template.sh -text
+skills_mirror/skills/git-guardrails-claude-code/scripts/block-dangerous-git.sh -text
+skills_mirror/skills/wizard/template.sh -text
