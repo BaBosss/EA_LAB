@@ -188,3 +188,22 @@ run_p4b_unit_export_tests.ps1|UNMEASURED|Boss19 P4B unit export cage; tracked bu
 run_report_package_validator_tests.ps1|UNMEASURED|Report package validator cage; tracked but not timed against the pinned full-tier budget.
 run_reviewer_launcher_tests.ps1|UNMEASURED|Reviewer launcher cage; tracked but not timed against the pinned full-tier budget.
 run_p4b_regime_join_tests.ps1|UNMEASURED|Boss19 P4B regime join cage; tracked but not timed against the pinned full-tier budget.
+
+# B17 hook prerequisite (2026-10-27): explicit visibility, no FAST wiring change.
+# UNMEASURED here concerns qualification against the pinned full-tier budget.
+run_adaptive_donchian_flip_tests.ps1|UNMEASURED|FB-A01 source/optional-compile cage; no pinned fast-tier cost qualification.
+run_b17_ladder_stage0_tests.ps1|UNMEASURED|B17 Stage-0 source/adversarial cage with optional compile; no pinned fast-tier cost qualification.
+run_b17_structural_sl_atr_exit_tests.ps1|UNMEASURED|B17 structural-SL/ATR-exit source seam cage; no pinned fast-tier cost qualification.
+run_df03_conversion_compat_tests.ps1|UNMEASURED|DF03 prepared-artifact comparison needs CT-qualified evidence; no pinned fast-tier cost qualification.
+run_execution_checked_lot_tests.ps1|UNMEASURED|Prepared-open checked-lot source/optional-compile cage; no pinned fast-tier cost qualification.
+run_gold_time_bomb_tests.ps1|UNMEASURED|DF02 kernel/source cage needs frozen external parent bytes; no pinned fast-tier cost qualification.
+run_grid_fibo_b21_tests.ps1|UNMEASURED|B21 Python compatibility cage has standalone 20.557s evidence, not a pinned full-tier cost qualification.
+run_hermes_v2b_tests.ps1|UNMEASURED|Hermes no-process adapter tests need an existing MCP-capable interpreter; no pinned fast-tier cost qualification.
+run_job_identity_capture_tests.ps1|UNMEASURED|Job-identity capture and helper fixture cage; no pinned fast-tier cost qualification.
+run_lane_registry_non_git_admin_tests.ps1|UNMEASURED|Actual Registry-function AST fixture cage; no pinned fast-tier cost qualification.
+run_macrogate_unknown_seam_tests.ps1|UNMEASURED|Native no-trade MacroGate fixture needs separate compile/tester authority; no pinned fast-tier cost qualification.
+run_parse_mt5_report_tests.ps1|UNMEASURED|MT5 report parser fixture and optional supplied-report cage; no pinned fast-tier cost qualification.
+run_persistent_adaptive_grid_tests.ps1|UNMEASURED|FB-G01 production-body source/optional-compile cage; no pinned fast-tier cost qualification.
+run_research_workbook_bridge_tests.ps1|UNMEASURED|Python/Node workbook bridge validation cage; no pinned fast-tier cost qualification.
+run_tpl_declared_wrapper_tests.ps1|UNMEASURED|Historical-wrapper real-path admission cage; no pinned fast-tier cost qualification.
+run_zone_compressed_grid_transactional_tests.ps1|UNMEASURED|ZCAG Phase-A source/optional-compile cage; no pinned fast-tier cost qualification.

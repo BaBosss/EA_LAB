@@ -171,6 +171,7 @@ scripts/config.example.yaml
 scripts/control_room_snapshot.ps1
 scripts/daily_monitor.ps1
 scripts/gen_fast_tier_pathspec.ps1
+scripts/gen_param_linkage.ps1
 scripts/lib/b1_guard.ps1
 scripts/lib/deployment_status.ps1
 scripts/lib/evidence.ps1

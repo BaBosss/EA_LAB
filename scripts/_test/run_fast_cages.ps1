@@ -679,6 +679,8 @@ $SUITE_GUARDS = @{
     # The three docs are read by the real optimize_guard, which this suite executes. None of
     # them matched any glob before 2026-07-30 (audit 5 measured it).
     'run_optimize_guard_tests.ps1'    = @('scripts/optimize_guard.ps1',
+                                          # PART 1B executes this precedence-graph generator.
+                                          'scripts/gen_param_linkage.ps1',
                                           'docs/PARAM_REGISTRY.csv',
                                           'docs/PARAM_LINKAGE.md',
                                           # ORDER-1253: PART 2 of that suite is the SEAM between
