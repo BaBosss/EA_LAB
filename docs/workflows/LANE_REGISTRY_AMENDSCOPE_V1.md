@@ -63,6 +63,25 @@ would resolve inside the repository. New suffixes require an existing verified
 directory ancestor. This policy is confined to AmendScope, not historical path
 normalization. External absolute historical entries remain stored verbatim.
 
+### Owner-approved existing hook compatibility (2026-10-28)
+
+The historical literal `.githooks/fast_tier_pathspec` may be revalidated while an
+ordinary additive scope amendment preserves that existing entry. This exception
+uses ordinal Windows case identity and separator normalization, requires an
+existing file under an enumerated linked repository worktree, and still inspects
+every ancestor for reparse/IO hazards. Existing spelling is preserved. It applies
+only to stored namespace resolution: new `AddPaths` containing a dot-prefixed
+component, including that hook path, remain refused. No arbitrary hidden path,
+external hidden namespace, traversal, ADS, device, alias, authority, state/HEAD or
+active-writer conflict restriction is relaxed. The public API has no switch to
+request this internal exception.
+
+Repair contract: `MAIN_CT_CANONICAL_REGISTRY_GITHOOKS_COMPATIBILITY_OPERATIVE_CONTRACT_20261028.json`.
+Author lane: `ct-registry-githooks-compat-20261028`, original Codex actor
+`01a178d3-6dc4-79f2-9e31-6cdd5b427155`. Source acceptance and installed canonical
+publication are separate gates; Main CT alone may publish after normal hooks and
+independent exact-HEAD review. A source fixture PASS is not live B17 admission.
+
 Admission parses the Registry under its existing global lock, verifies unique
 lane IDs and filenames, and checks the full resulting scope against active
 competitors. Existing same-owner and runtime-lane conflict rules remain. Exact,

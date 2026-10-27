@@ -435,13 +435,28 @@ function Assert-LiteralAncestor([string]$FullPath) {
         $cursor=$parent
     }
 }
-function Convert-AmendPath([string]$Value,[string]$Root) {
+function Convert-AmendPath([string]$Value,[string]$Root,[switch]$ExistingNamespace) {
     if([string]::IsNullOrWhiteSpace($Value) -or $Value -match '[\p{Cc}:*?\[\]<>|"~]' -or $Value -match '^[/\\]'){
         Throw-LaneError 'unsafe_path' "not a literal repository-relative path: $Value"
     }
     $rel=$Value.Replace('\','/')
+    # Owner-ratified compatibility for ONE already stored repository hook file.
+    # Requested AddPaths never receives ExistingNamespace. Do not turn this into
+    # a general hidden-path permission, or allow an external namespace/link alias.
+    $existingHook=$ExistingNamespace -and [string]::Equals($rel,'.githooks/fast_tier_pathspec',[StringComparison]::OrdinalIgnoreCase)
+    if($existingHook){
+        $rootKey=[IO.Path]::GetFullPath($Root).TrimEnd('\','/')
+        $existingHook=$false
+        foreach($anchor in @($script:AmendNamespaceRoots)){
+            if([string]::Equals($rootKey,[IO.Path]::GetFullPath($anchor).TrimEnd('\','/'),[StringComparison]::OrdinalIgnoreCase)){
+                $existingHook=[IO.File]::Exists((Join-Path $Root $rel))
+                break
+            }
+        }
+    }
     foreach($part in $rel.Split('/')){
-        if(-not $part -or $part -in @('.','..') -or $part -match '^[ .]|[ .]$' -or
+        $approvedComponent=$existingHook -and [string]::Equals($part,'.githooks',[StringComparison]::OrdinalIgnoreCase)
+        if(-not $part -or $part -in @('.','..') -or ($part -match '^[ .]|[ .]$' -and -not $approvedComponent) -or
             $part -match '^(?i:CON|PRN|AUX|NUL|COM[1-9\u00b9\u00b2\u00b3]|LPT[1-9\u00b9\u00b2\u00b3]|CONIN\$|CONOUT\$)(\.|$)' -or $part -ieq '.git'){
             Throw-LaneError 'unsafe_path' "ambiguous Windows component: $Value"
         }
@@ -483,14 +498,14 @@ function Get-AmendNamespace([string]$Value,[string]$Root) {
             $prefix=[IO.Path]::GetFullPath($anchor).TrimEnd('\','/')
             if($full -ieq $prefix){ return '.' }
             if($full.StartsWith($prefix+'\',[StringComparison]::OrdinalIgnoreCase)){
-                return (Convert-AmendPath $full.Substring($prefix.Length+1) $anchor)
+                return (Convert-AmendPath $full.Substring($prefix.Length+1) $anchor -ExistingNamespace)
             }
         }
         # Check Windows components even for safely disjoint external namespaces.
         [void](Convert-AmendPath $full.Substring(3) $full.Substring(0,3))
         return $full.Replace('\','/')
     }
-    return (Convert-AmendPath $Value $Root)
+    return (Convert-AmendPath $Value $Root -ExistingNamespace)
 }
 function Assert-AmendIdentity($Record) {
     Assert-LiteralAncestor ([string]$Record.worktree)

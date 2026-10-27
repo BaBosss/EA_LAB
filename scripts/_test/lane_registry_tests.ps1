@@ -518,6 +518,70 @@ $p=Import-Clixml -LiteralPath $InputFile
     }
     Write-Host "OWNER_FINDING1_MATRIX PASS=$($pass-$ownerStart) FAIL=$($fail-$ownerFailStart)"
 
+    # Owner 2026-10-28: existing .githooks/fast_tier_pathspec must not block an
+    # ordinary additive amendment. New hidden inputs and all alias/link guards
+    # remain closed. These are disposable fixture records, never the live Registry.
+    $hookStart=$pass; $hookFailStart=$fail
+    $hookRel='.githooks/fast_tier_pathspec'
+    $hookDir=Join-Path $wtB '.githooks'
+    [void](New-Item -ItemType Directory -Path $hookDir -Force)
+    $hookFile=Join-Path $hookDir 'fast_tier_pathspec'
+    [IO.File]::WriteAllText($hookFile,'fixture hook pathspec')
+    function Reset-HookAmend([string]$Existing='.githooks/fast_tier_pathspec') {
+        Reset-Amend
+        $obj=$baseline|ConvertFrom-Json
+        $obj.allowed_paths+=@($Existing); $obj.critical_paths+=@($Existing)
+        [IO.File]::WriteAllText($laneFile,($obj|ConvertTo-Json -Depth 100))
+    }
+    foreach($spelling in @($hookRel,'.GITHOOKS/FAST_TIER_PATHSPEC','.githooks\fast_tier_pathspec')){
+        Reset-HookAmend $spelling
+        $x=Invoke-Amend (Amend-Params)
+        $stored=Get-Content -Raw $laneFile|ConvertFrom-Json
+        Assert-True "hook compat preserves existing literal [$spelling] and adds ordinary scope" ($x.ExitCode -eq 0 -and $x.Text -match 'AMENDED' -and $stored.allowed_paths.Count -eq 3 -and $stored.critical_paths.Count -eq 3 -and $stored.allowed_paths[1] -ceq $spelling -and $stored.critical_paths[1] -ceq $spelling -and $stored.state -ceq 'BLOCKED' -and $stored.worker -ceq $template.worker -and $stored.repair_budget.used -eq 0) $x.Text
+    }
+    $fp=Registry-Fingerprint; $ticks=(Get-Item -LiteralPath $laneFile).LastWriteTimeUtc.Ticks
+    $x=Invoke-Amend (Amend-Params)
+    Assert-True 'hook compat ordinary replay keeps bytes mtime and one receipt' ($x.ExitCode -eq 0 -and $x.Text -match 'NO_CHANGE' -and (Registry-Fingerprint) -ceq $fp -and (Get-Item -LiteralPath $laneFile).LastWriteTimeUtc.Ticks -eq $ticks -and @((Get-Content -Raw $laneFile|ConvertFrom-Json).scope_amendments).Count -eq 1) $x.Text
+    foreach($hidden in @($hookRel,'.GITHOOKS/FAST_TIER_PATHSPEC','.githooks\fast_tier_pathspec','.githooks/unapproved','.other/file','x/.githooks/fast_tier_pathspec','.githooks/fast_tier_pathspec/child','.githooks/../seed.txt','.githooks/fast_tier_pathspec:ads','.githooks /fast_tier_pathspec','.githooks./fast_tier_pathspec','.githooks/fast_tier_pathspec.')){
+        Reset-HookAmend; $p=Amend-Params; $p.AddPaths=@($hidden)
+        Refuse-Amend "hook compat does not authorize new hidden input [$hidden]" $p 'unsafe_path'
+    }
+    foreach($badExisting in @('.githooks/unapproved','x/.githooks/fast_tier_pathspec','.githooks/fast_tier_pathspec/child','.githooks/../seed.txt','.githooks/fast_tier_pathspec:ads','.githooks /fast_tier_pathspec','.githooks/fast_tier_pathspec.')){
+        Reset-HookAmend $badExisting
+        Refuse-Amend "hook compat rejects unsafe stored lookalike [$badExisting]" (Amend-Params) 'unsafe_path'
+    }
+    Reset-HookAmend; $savedHook=Join-Path $tempRoot 'saved-hook-file'
+    [IO.File]::Move($hookFile,$savedHook)
+    try { Refuse-Amend 'hook compat refuses missing existing hook file' (Amend-Params) 'unsafe_path' }
+    finally { [IO.File]::Move($savedHook,$hookFile) }
+    $savedHookDir=Join-Path $tempRoot 'saved-hook-directory'
+    [IO.Directory]::Move($hookDir,$savedHookDir)
+    [void](New-Item -ItemType Junction -Path $hookDir -Target $savedHookDir)
+    try { Reset-HookAmend; Refuse-Amend 'hook compat still refuses reparse ancestor of exact hook' (Amend-Params) 'unsafe_path' }
+    finally { [IO.Directory]::Delete($hookDir); [IO.Directory]::Move($savedHookDir,$hookDir) }
+    foreach($overlap in @($hookRel,'.GITHOOKS/FAST_TIER_PATHSPEC','.githooks')){
+        Reset-HookAmend; Add-Competitor $overlap
+        Refuse-Amend "hook compat retains active writer overlap [$overlap]" (Amend-Params) 'conflict'
+    }
+    Reset-HookAmend; Add-Competitor (Join-Path $wtB '.githooks\fast_tier_pathspec')
+    Refuse-Amend 'hook compat retains absolute cross-worktree alias conflict' (Amend-Params) 'conflict'
+    Reset-HookAmend; Add-Competitor 'separate' 'amend-owner'
+    Refuse-Amend 'hook compat retains same-owner active writer refusal' (Amend-Params) 'owner_chat_active_writer'
+    Reset-HookAmend; $p=Amend-Params; $p.AuthoritySha256=('0'*64)
+    Refuse-Amend 'hook compat retains authority verification' $p 'authority_hash'
+    Reset-HookAmend; $p=Amend-Params; $p.ExpectedState='WAITING'
+    Refuse-Amend 'hook compat retains state CAS' $p 'stale_state'
+    Reset-HookAmend; $p=Amend-Params; $p.ExpectedHead=('0'*40)
+    Refuse-Amend 'hook compat retains HEAD CAS' $p 'stale_head'
+    Reset-HookAmend; $p=Amend-Params; $p.ExistingNamespace=$true
+    Refuse-Amend 'hook compat internal namespace flag is not a public bypass parameter' $p 'amend_parameter|NamedParameterNotFound'
+    $externalHook=Join-Path $external '.githooks'
+    [void](New-Item -ItemType Directory -Path $externalHook -Force)
+    [IO.File]::WriteAllText((Join-Path $externalHook 'fast_tier_pathspec'),'external lookalike')
+    Reset-HookAmend (Join-Path $externalHook 'fast_tier_pathspec')
+    Refuse-Amend 'hook compat does not authorize external absolute hidden namespace' (Amend-Params) 'unsafe_path'
+    Write-Host "GITHOOKS_COMPAT_MATRIX PASS=$($pass-$hookStart) FAIL=$($fail-$hookFailStart)"
+
     Write-Host "AMENDSCOPE_MATRIX PASS=$($pass-$oldPass) FAIL=$fail"
 } catch {
     Fail 'test harness' $_.Exception.Message
