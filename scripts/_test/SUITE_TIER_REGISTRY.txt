@@ -85,7 +85,7 @@ run_s2a_cages.ps1|FAST|In the fast tier; guards _triage/factory_os/s2a_migration
 run_snapshot_s4_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/registry.py, _triage/factory_os/snapshot_build.py, _triage/factory_os/snapshot_validator.py (+11 more)
 run_monitor_snapshot_schema_repair_tests.ps1|FAST|In the fast tier; guards scripts/control_room_snapshot.ps1, scripts/lib/runtime_identity.ps1, scripts/use_python.ps1 (+6 more)
 run_registry_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/evidence.py, _triage/factory_os/run_guard_shape_lint.py, _triage/factory_os/gen_coverage.py (+18 more)
-run_guard_trigger_tests.ps1|FAST|In the fast tier; guards scripts/gen_fast_tier_pathspec.ps1, .githooks/fast_tier_pathspec, scripts/_test/run_fast_cages.ps1
+run_guard_trigger_tests.ps1|FAST|Existing FAST suite; guards selector/pathspec and executes all 14 B17 First-Green historical binding positive/negative tests; module and fixture paths select this suite
 run_preset_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/preset.py, _triage/factory_os/run_preset_tests.py, ea_template/core/Inputs.mqh (+4 more)
 run_new_template_entry_tests.ps1|FAST|Ziplor ZL-EA-067 scaffold prerequisite; outer CLI pass-through + transaction/enum/refusal cage; measured 1.317/1.289/1.293s, median 1.293s.
 run_setfile_tests.ps1|FAST|In the fast tier; guards _triage/factory_os/setfile.py, _triage/factory_os/run_setfile_tests.py, _triage/factory_os/preset.py (+7 more)

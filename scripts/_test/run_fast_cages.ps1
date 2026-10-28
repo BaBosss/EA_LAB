@@ -1359,7 +1359,21 @@ $SUITE_GUARDS = @{
 #   -- end of the departed declaration --
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
                                           '.githooks/fast_tier_pathspec',
-                                          'scripts/_test/run_fast_cages.ps1')
+                                          'scripts/_test/run_fast_cages.ps1',
+                                          # PART 9 executes the complete frozen B17 fixture,
+                                          # including historical binding and refusal cases.
+                                          '_triage/factory_vnext/boss17_first_green.py',
+                                          'scripts/_test/fixtures/factory_vnext/test_factory_vnext_boss17_first_green.py',
+                                          '_triage/factory_vnext/architecture.py',
+                                          '_triage/factory_vnext/contracts.py',
+                                          '_triage/factory_vnext/mt5_set_compat.py',
+                                          '_triage/factory_vnext/parameter_surface.py',
+                                          '_triage/factory_vnext/variant_generator.py',
+                                          '_triage/factory_os/setfile.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/evidence.py',
+                                          'scripts/use_python.ps1')
     # ORDER-1131 (S11). Every entry here is READ by the suite, not merely mentioned by it --
     # the round-4 lesson from S10, where a file was declared as a trigger and nothing ran it:
     #   control_center.py / safe_projection.py  the modules under test
@@ -2425,17 +2439,16 @@ if ($tierRunLog) {
 }
 
 # ---------------------------------------------------------------------------------------------
-# ORDER-673 -- the budget is ENFORCED. It was an advisory that printed yellow and exited 0, and
-# it had been breached on every commit for days with nothing happening. A check that cannot fail
-# is shape 3, and this one sat inside the tier built to catch shape 3.
+# Owner decision 2026-10-28: elapsed-time budgets are performance warnings. Functional and
+# evidence failures still refuse the tier BEFORE this branch. Keep both measured thresholds,
+# actual timings and top spenders visible; resource-safety/process failures remain hard errors.
 #
 # The applicable budget depends on WHICH RUN THIS IS: a full run (nothing staged, or a path list
 # that matched nothing and failed open) legitimately costs more than a selected run. Comparing
 # both against one number would either fail every full run or excuse every selected one.
 #
-# A SUITE FAILURE OUTRANKS THE BUDGET and is checked first: both exit 1, but "your commit is
-# slow" printed where "your commit is broken" belongs is a message that gets the wrong thing
-# fixed.
+# A SUITE/EVIDENCE FAILURE OUTRANKS THE WARNING and is checked first; slow passing tests must
+# never excuse broken tests, missing provenance or a moved index.
 function Exit-Tier {
     param([int]$Code)
     if ($stagedSnapshotPath) {
@@ -2461,17 +2474,13 @@ if ($total -gt $budget) {
     # with its share is the sentence a reader can act on.
     $top = @($results | Sort-Object -Property Seconds -Descending | Select-Object -First 3)
     Write-Host ''
-    Write-Host ("[fast-cages] OVER BUDGET: {0:N1}s against the {1:N1}s {2} budget ({3:N1}s over)." -f `
-                $total, $budget, $budgetLabel, ($total - $budget)) -ForegroundColor Red
+    Write-Host ("[fast-cages] PERFORMANCE WARNING: OVER BUDGET: {0:N1}s against the {1:N1}s {2} budget ({3:N1}s over)." -f `
+                $total, $budget, $budgetLabel, ($total - $budget)) -ForegroundColor Yellow
     foreach ($t in $top) {
         Write-Host ("               {0,-34} {1,5:N1}s  = {2,4:N0}% of the run" -f `
-                    $t.Suite, $t.Seconds, (100.0 * $t.Seconds / [Math]::Max($total, 0.001))) -ForegroundColor Red
+                    $t.Suite, $t.Seconds, (100.0 * $t.Seconds / [Math]::Max($total, 0.001))) -ForegroundColor Yellow
     }
-    Write-Host ("               A pre-commit tier that takes this long earns --no-verify, which is") -ForegroundColor Red
-    Write-Host ("               the failure this budget exists to prevent. Displace a suite, make the") -ForegroundColor Red
-    Write-Host ("               named one faster, or raise the number DELIBERATELY in the same commit") -ForegroundColor Red
-    Write-Host ("               that says why -- but do not leave it breached and green.") -ForegroundColor Red
-    Exit-Tier 1
+    Write-Host '               All required suites and evidence checks passed; elapsed time is advisory by Owner decision.' -ForegroundColor Yellow
 }
 
 # Print the MARGIN on a green run, so the next person can see the headroom BEFORE spending it

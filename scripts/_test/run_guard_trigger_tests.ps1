@@ -539,6 +539,14 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
     }
     $unmatchedQuery = $selectionQueries.Count
     [void]$selectionQueries.Add([object[]]@('no/such/path/at/all.txt'))
+    $b17Queries = @{}
+    foreach ($b17Path in @('_triage/factory_vnext/boss17_first_green.py',
+                            'scripts/_test/fixtures/factory_vnext/test_factory_vnext_boss17_first_green.py')) {
+        $b17Queries[$b17Path] = $selectionQueries.Count
+        [void]$selectionQueries.Add([object[]]@($b17Path))
+    }
+    $notB17Query = $selectionQueries.Count
+    [void]$selectionQueries.Add([object[]]@('docs/SESSION_LEDGER.md'))
     $selectionRows = @(SelectionBatch $selectionQueries.ToArray())
 
     # 1. no staged paths -> EVERYTHING. Manual runs and any caller that cannot determine the
@@ -618,6 +626,15 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
         Bad ("staged paths matching nothing selected {0} of {1} -- this MUST fail open" -f $unmatched.Count, $table.Suites.Count)
     }
 
+    foreach ($b17Path in $b17Queries.Keys) {
+        $b17Selected = @($selectionRows[$b17Queries[$b17Path]].Selected)
+        if ($b17Selected -contains 'run_guard_trigger_tests.ps1' -and $b17Selected.Count -lt $table.Suites.Count) {
+            Good "B17 selection reaches the suite executing its actual tests via $b17Path"
+        } else { Bad "B17 selection is absent or merely a fail-open full tier via $b17Path" }
+    }
+    if (@($selectionRows[$notB17Query].Selected) -notcontains 'run_guard_trigger_tests.ps1') {
+        Good 'B17 selection negative: unrelated guarded documentation does not claim B17 coverage'
+    } else { Bad 'unrelated documentation incorrectly selects the B17 coverage suite' }
     if ($fail -eq $before) { Good 'per-path selection fails OPEN and every suite stays reachable' }
 
     Write-Host ''
@@ -662,7 +679,8 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
         # T4 ATTACK: declare the selected suite an evidence suite; it emits no marker => tier
         # fails, naming it. The suite named here MUST be one the fixture path selects, or the
         # attack would pass for the wrong reason (nothing in scope to be silent).
-        $o1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -ReuseCurrentSnapshot -StagedPathsFile $cheapStaged -EvidenceSuitesOverride @('run_order_collision_tests.ps1') 2>&1)
+        # Even a padded time overrun cannot downgrade a missing-evidence refusal to a warning.
+        $o1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -ReuseCurrentSnapshot -StagedPathsFile $cheapStaged -EvidenceSuitesOverride @('run_order_collision_tests.ps1') -BudgetSeconds 2 -DebugPadSeconds 5 2>&1)
         if ($LASTEXITCODE -eq 1 -and (($o1 -join "`n") -match 'run_order_collision_tests\.ps1 emitted NO evidence-mode marker')) {
             Good 'T4 ATTACK a declared evidence suite emitting no marker fails the hook tier, by name'
         } else {
@@ -704,14 +722,14 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
 
     # -------------------------------------------------------------------------------------
     Write-Host ''
-    Phase '[guard-trigger] PART 7 -- ORDER-673 the time budget is ENFORCED, not advisory'
-    # It printed yellow and exited 0 for days while breached. This drives the refusal so it is
-    # OBSERVED, and the control so the refusal is not simply "always fail".
+    Phase '[guard-trigger] PART 7 -- Owner-approved timing warning; functional/evidence failures still refuse'
+    # Drive the real overrun branch and the healthy control. PART 6 retains the negative
+    # evidence/index refusals, including a padded overrun that must still refuse missing evidence.
     $before = $fail
     $cheap7 = Join-Path ([System.IO.Path]::GetTempPath()) ("gt673_" + [guid]::NewGuid().ToString('N') + '.txt')
     Set-Content -LiteralPath $cheap7 -Encoding ASCII -Value 'docs/SESSION_LEDGER.md'
     try {
-        # ATTACK: pad past the per-path budget => exit 1, and the message NAMES a suite (N3).
+        # Pad past the per-path budget => explicit performance warning, exit 0, named suite.
         # THE PAD AND THE BUDGET ARE BOTH PASSED, deliberately. The first version padded 40s
         # against a hardcoded 30.0s production default; when that default was raised to 65.0 the
         # attack stopped firing and this case went GREEN WHILE PROVING NOTHING -- a test whose
@@ -719,10 +737,10 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
         # case's own, so it fires whatever the production numbers become.
         $b1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -StagedPathsFile $cheap7 -BudgetSeconds 2 -DebugPadSeconds 5 2>&1)
         $b1t = ($b1 -join "`n")
-        if ($LASTEXITCODE -eq 1 -and $b1t -match 'OVER BUDGET' -and $b1t -match 'run_order_collision_tests\.ps1\s+\S+s\s+=') {
-            Good 'N2/N3 ATTACK over budget FAILS the tier and names the suite with its share'
+        if ($LASTEXITCODE -eq 0 -and $b1t -match 'PERFORMANCE WARNING: OVER BUDGET' -and $b1t -match 'run_order_collision_tests\.ps1\s+\S+s\s+=') {
+            Good 'N2/N3 over budget warns without refusing passing tests and names the suite with its share'
         } else {
-            Bad ("N2/N3 ATTACK expected exit 1 with a named suite; got exit {0}" -f $LASTEXITCODE)
+            Bad ("N2/N3 expected advisory exit 0 with explicit warning and named suite; got exit {0}" -f $LASTEXITCODE)
         }
         # SPECIFICITY 1: the same run unpadded is green AND prints the headroom, so the next
         # person can see what is left BEFORE spending it. A budget first heard about when a
@@ -761,7 +779,7 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
     # untouched; that budget was not breached.
     if ($cagesSrc -match '\$BudgetSeconds\s*=\s*110\.0') { Good 'N1 the per-path default is the configured 110.0s' } else { Bad 'N1 the per-path default is not 110.0 -- it was changed without this case being updated' }
     if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*195\.0') { Good 'N1 the full-tier default is the measured 195.0s' } else { Bad 'N1 the full-tier default is not 195.0 -- it was changed without this case being updated' }
-    if ($fail -eq $before) { Good 'the budget can fail, and does not fail a healthy run' }
+    if ($fail -eq $before) { Good 'timing overruns warn truthfully and do not refuse a healthy run' }
 
     # -------------------------------------------------------------------------------------
     Write-Host ''
@@ -891,6 +909,30 @@ REFERENCES = ("AGENT_TASKBOARD.md", "scripts/check_state.ps1", "not-a-repo-file.
         }
     }
     if ($fail -eq $before) { Good 'every tracked run_* file is classified or explicitly exempt WITH a reason' }
+
+    Write-Host ''
+    Phase '[guard-trigger] PART 9 -- actual B17 First-Green historical binding positives and negatives'
+    . (Join-Path $RepoRoot 'scripts/use_python.ps1')
+    $b17Python = Assert-PortablePython -Root $RepoRoot
+    $b17Fixture = Join-Path $RepoRoot 'scripts/_test/fixtures/factory_vnext/test_factory_vnext_boss17_first_green.py'
+    # Count the actual loaded tests: an empty/truncated fixture must not earn B17 coverage.
+    # Full inline execution avoids a second maintained implementation of its assertions.
+    $b17Runner = @'
+import importlib.util, sys, unittest
+spec = importlib.util.spec_from_file_location('b17_fast_coverage_fixture', sys.argv[1])
+fixture = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(fixture)
+suite = unittest.defaultTestLoader.loadTestsFromModule(fixture)
+count = suite.countTestCases()
+if count != 14:
+    raise SystemExit('B17_FAST_COVERAGE expected 14 actual tests, got ' + str(count))
+result = unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
+print('B17_FAST_COVERAGE tests=%d failures=%d errors=%d' % (count, len(result.failures), len(result.errors)), flush=True)
+raise SystemExit(0 if result.wasSuccessful() else 1)
+'@
+    & $b17Python -c $b17Runner $b17Fixture
+    if ($LASTEXITCODE -eq 0) { Good 'B17 actual 14-test fixture passed, including 147 historical bindings and current-161 refusal' }
+    else { Bad ("B17 actual fixture failed exit {0}; FAST coverage cannot be claimed" -f $LASTEXITCODE) }
 
     # Reported before BOTH exits: a suite that only attributes its cost when it passes cannot
     # answer "which part got slow" on the run where that question is actually being asked.

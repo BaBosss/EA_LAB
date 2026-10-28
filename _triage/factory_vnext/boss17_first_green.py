@@ -14,6 +14,7 @@ if __package__ in (None, ""):
     __package__ = "_triage.factory_vnext"
 
 from _triage.factory_os import setfile
+from _triage.factory_os.evidence import EvidenceSource, ToolFailure
 
 from .architecture import (
     make_component,
@@ -37,18 +38,48 @@ HYPOTHESIS_REVISION = "B17-H01-r1"
 BUILD_TAG = "LAB_ENTRY_17"
 SOURCE_COMMIT = "f27f992707aa8eb3c358a2e7c45e28e3d0078491"
 PILOT_RELATIVE_PATH = "factory/vnext/pilots/boss17_h01_first_green"
+# The accepted first-green is historical, not a projection of today's Stage0.
+FROZEN_INPUT_PATHS = (
+    "factory/hypotheses.jsonl",
+    "factory/parameter_bindings.jsonl",
+    "factory/parameter_display_metadata.jsonl",
+    "docs/PARAM_REGISTRY.csv",
+    "ea_template/sets/Boss17_Wave5_XAU_990301_M2M3_full.set",
+    "ea_template/core/Inputs.mqh",
+)
 
 
 class Boss17FirstGreenError(ValueError):
     pass
 
 
-def _jsonl(path: Path) -> list[dict[str, Any]]:
+def _frozen_bytes(root: Path, relative_path: str) -> bytes:
+    """Read one input at the accepted vintage; never substitute current files."""
+    source = EvidenceSource("index", root=str(root))
+    why = "B17-H01 first-green preserves its accepted historical input snapshot"
+    try:
+        blob = source.resolve_pin(SOURCE_COMMIT, relative_path, why)
+        if blob is None:
+            raise Boss17FirstGreenError(
+                "required frozen source is unavailable: %s:%s" % (SOURCE_COMMIT, relative_path)
+            )
+        return source.read_blob(blob, why)
+    except ToolFailure as exc:
+        raise Boss17FirstGreenError(
+            "cannot read frozen source %s:%s: %s" % (SOURCE_COMMIT, relative_path, exc)
+        ) from exc
+
+
+def _jsonl(path: Path, *, raw: bytes | None = None) -> list[dict[str, Any]]:
+    text = path.read_text(encoding="utf-8") if raw is None else raw.decode("utf-8-sig")
     rows = []
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for number, line in enumerate(text.splitlines(), start=1):
         if not line.strip():
             continue
-        row = json.loads(line)
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise Boss17FirstGreenError("%s:%s is malformed JSON" % (path, number)) from exc
         if not isinstance(row, dict):
             raise Boss17FirstGreenError("%s:%s is not an object" % (path, number))
         if "_comment" not in row:
@@ -56,8 +87,9 @@ def _jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def _registry_rows(path: Path) -> list[dict[str, str]]:
-    lines = path.read_text(encoding="utf-8-sig").splitlines()
+def _registry_rows(path: Path, *, raw: bytes | None = None) -> list[dict[str, str]]:
+    text = path.read_text(encoding="utf-8-sig") if raw is None else raw.decode("utf-8-sig")
+    lines = text.splitlines()
     try:
         header = next(index for index, line in enumerate(lines) if line.startswith('"name",'))
     except StopIteration as exc:
@@ -80,8 +112,13 @@ def _sha256_bytes(data: bytes) -> str:
 
 
 def _source_ref(root: Path, relative_path: str) -> dict[str, Any]:
-    raw = (root / relative_path).read_bytes()
-    return {"path": relative_path.replace("\\", "/"), "sha256": _sha256_bytes(raw), "bytes": len(raw)}
+    pinned = relative_path in FROZEN_INPUT_PATHS
+    raw = _frozen_bytes(root, relative_path) if pinned else (root / relative_path).read_bytes()
+    ref = {"path": relative_path.replace("\\", "/"), "sha256": _sha256_bytes(raw), "bytes": len(raw)}
+    # Processor refs describe the executing code; input refs describe the frozen data.
+    if pinned:
+        ref["source_commit"] = SOURCE_COMMIT
+    return ref
 
 
 def _module_tokens(rows: Iterable[Mapping[str, Any]]) -> list[str]:
@@ -203,7 +240,7 @@ def _assert_locked_values(root: Path, baseline_text: str, bindings: Iterable[Map
     if str(factory_os) not in sys.path:
         sys.path.insert(0, str(factory_os))
     import preset as factory_preset
-    raw = factory_preset.parse_surface((root / "ea_template/core/Inputs.mqh").read_text(encoding="utf-8"), BUILD_TAG)
+    raw = factory_preset.parse_surface(_frozen_bytes(root, "ea_template/core/Inputs.mqh").decode("utf-8-sig"), BUILD_TAG)
     declarations = {decl.name: decl for decl in raw.inputs}
     baseline = {line.name: line for line in setfile.parse_set(baseline_text)[0]}
     locked = [dict(row) for row in bindings if row.get("role") == "LOCKED"]
@@ -227,15 +264,15 @@ def _assert_locked_values(root: Path, baseline_text: str, bindings: Iterable[Map
 def build_boss17_first_green(repo_root: str) -> dict[str, Any]:
     """Build all B17-H01 package records in memory; no MT5/runtime path is touched."""
     root = Path(repo_root).resolve()
-    hypotheses = _jsonl(root / "factory/hypotheses.jsonl")
-    bindings = _h01_bindings(_jsonl(root / "factory/parameter_bindings.jsonl"))
-    metadata = _jsonl(root / "factory/parameter_display_metadata.jsonl")
+    hypotheses = _jsonl(root / "factory/hypotheses.jsonl", raw=_frozen_bytes(root, "factory/hypotheses.jsonl"))
+    bindings = _h01_bindings(_jsonl(root / "factory/parameter_bindings.jsonl", raw=_frozen_bytes(root, "factory/parameter_bindings.jsonl")))
+    metadata = _jsonl(root / "factory/parameter_display_metadata.jsonl", raw=_frozen_bytes(root, "factory/parameter_display_metadata.jsonl"))
     master, family, variant = _architecture(hypotheses)
     surface, projection = _parameter_surface(variant, bindings, metadata)
-    baseline_path = root / "ea_template/sets/Boss17_Wave5_XAU_990301_M2M3_full.set"
-    baseline_text = baseline_path.read_bytes().decode("utf-8-sig")
+    baseline_text = _frozen_bytes(root, "ea_template/sets/Boss17_Wave5_XAU_990301_M2M3_full.set").decode("utf-8-sig")
     _assert_locked_values(root, baseline_text, bindings)
-    coverage, missing = _baseline_coverage(baseline_text, _registry_rows(root / "docs/PARAM_REGISTRY.csv"), bindings)
+    registry = _registry_rows(root / "docs/PARAM_REGISTRY.csv", raw=_frozen_bytes(root, "docs/PARAM_REGISTRY.csv"))
+    coverage, missing = _baseline_coverage(baseline_text, registry, bindings)
     package = make_variant_build_package(
         master=master, family=family, variant=variant, parameter_surface=surface,
         source_commit=SOURCE_COMMIT, template_id="EA_TEMPLATE_V2", baseline_coverage=coverage,
@@ -289,6 +326,7 @@ def write_boss17_first_green(repo_root: str, output_dir: str | None = None) -> d
     sources = [
         "factory/hypotheses.jsonl", "factory/parameter_bindings.jsonl", "factory/parameter_display_metadata.jsonl",
         "docs/PARAM_REGISTRY.csv", "ea_template/sets/Boss17_Wave5_XAU_990301_M2M3_full.set",
+        "ea_template/core/Inputs.mqh",
         "_triage/factory_vnext/architecture.py", "_triage/factory_vnext/parameter_surface.py",
         "_triage/factory_vnext/variant_generator.py", "_triage/factory_vnext/mt5_set_compat.py",
         "_triage/factory_vnext/boss17_first_green.py",
