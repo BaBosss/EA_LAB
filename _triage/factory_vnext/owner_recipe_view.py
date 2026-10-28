@@ -10,9 +10,13 @@ from __future__ import annotations
 import copy
 import json
 import re
+import subprocess
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, Mapping, Optional
 
+from ..factory_os.registry import (
+    PARAM_REGISTRY_REL, RegistryRefusal, parse_parameter_registry_text, registry_name,
+)
 from .contracts import canonical_json, sha256_bytes, stable_id
 from .owner_recipe import (
     AUTHORITY,
@@ -87,13 +91,124 @@ _REASON_CODE_RE = re.compile(r"^[A-Z][A-Z0-9_]{1,127}$")
 _PRESENTATION_ID_RE = re.compile(r"^ORVIEW-[0-9a-f]{24}$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
+_COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+_SOURCE_OWNER_FIELDS = {
+    "Owner", "State", "Reason", "RegistryName", "RegistryLine", "Source",
+}
+
+
+def _validate_source_owner_ref(value: Any) -> dict[str, str]:
+    if not isinstance(value, Mapping) or set(value) != {"commit", "path", "sha256"}:
+        raise OwnerRecipePresentationError("SourceOwnerSource fields do not match schema")
+    if value["path"] != PARAM_REGISTRY_REL:
+        raise OwnerRecipePresentationError("SourceOwnerSource path must be docs/PARAM_REGISTRY.csv")
+    if not isinstance(value["commit"], str) or not _COMMIT_RE.fullmatch(value["commit"]):
+        raise OwnerRecipePresentationError("SourceOwnerSource commit must be a full lowercase SHA")
+    if not isinstance(value["sha256"], str) or not _SHA256_RE.fullmatch(value["sha256"]):
+        raise OwnerRecipePresentationError("SourceOwnerSource sha256 is invalid")
+    return dict(value)
+
+
+def _source_owner_registry(
+    sources: list[Mapping[str, Any]], reference: Mapping[str, str], repo_root: Optional[str]
+) -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
+    ref = _validate_source_owner_ref(reference)
+    if repo_root is None or not Path(repo_root).is_dir():
+        raise OwnerRecipePresentationError("source owners require an existing repo_root")
+    if any(source["VariantBuildPackage"]["source_commit"] != ref["commit"] for source in sources):
+        raise OwnerRecipePresentationError("source owner commit does not match package source_commit")
+    command = ["git", "-C", str(Path(repo_root).resolve()), "cat-file"]
+    try:
+        kind = subprocess.run(
+            command + ["-t", ref["commit"]], check=True, capture_output=True, timeout=10
+        ).stdout.strip()
+        if kind != b"commit":
+            raise OwnerRecipePresentationError("source owner reference must identify a Git commit")
+        raw = subprocess.run(
+            command + ["blob", ref["commit"] + ":" + PARAM_REGISTRY_REL],
+            check=True, capture_output=True, timeout=10,
+        ).stdout
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise OwnerRecipePresentationError("source owner Git reference is unavailable") from exc
+    if sha256_bytes(raw) != ref["sha256"]:
+        raise OwnerRecipePresentationError("SourceOwnerSource sha256 mismatch")
+    try:
+        rows = parse_parameter_registry_text(raw.decode("utf-8-sig"))
+    except (UnicodeError, RegistryRefusal) as exc:
+        raise OwnerRecipePresentationError("source owner registry is invalid: %s" % exc) from exc
+    by_name: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        name = row["name"]
+        if name != name.strip() or name in by_name:
+            raise OwnerRecipePresentationError("duplicate or noncanonical source owner registry name")
+        by_name[name] = row
+    return ref, by_name
+
+
+def _control_source_owner(
+    control: Mapping[str, Any], build_tag: str,
+    reference: Mapping[str, str], registry: Mapping[str, Mapping[str, Any]],
+) -> dict[str, Any]:
+    parameter = control["Parameter"]
+    if registry_name(parameter, None) != parameter:
+        raise OwnerRecipePresentationError("source owner parameter must be a bare registry name")
+    tagged = registry_name(parameter, build_tag)
+    row = registry.get(tagged, registry.get(parameter))
+    if row is not None and row["parameter_pid"] != control["ParameterPID"]:
+        raise OwnerRecipePresentationError("source owner registry PID/name mismatch")
+    owner = row["owner"].strip() if row is not None else ""
+    known = bool(owner) and owner != "UNKNOWN"
+    return {
+        "Owner": owner if known else None,
+        "State": "DECLARED" if known else "UNKNOWN",
+        "Reason": (
+            "PARAMETER_REGISTRY_DECLARED_OWNER" if known else
+            "REGISTRY_OWNER_UNKNOWN" if row is not None else "REGISTRY_PARAMETER_MISSING"
+        ),
+        "RegistryName": row["name"] if row is not None else None,
+        "RegistryLine": row["_line"] if row is not None else None,
+        "Source": dict(reference),
+    }
+
+
+def _validate_control_source_owner(owner: Any, reference: Mapping[str, str]) -> None:
+    if not isinstance(owner, Mapping) or set(owner) != _SOURCE_OWNER_FIELDS:
+        raise OwnerRecipePresentationError("SourceOwner fields do not match schema")
+    if owner["Source"] != reference:
+        raise OwnerRecipePresentationError("SourceOwner source reference mismatch")
+    state, reason = owner["State"], owner["Reason"]
+    if (state, reason) not in {
+        ("DECLARED", "PARAMETER_REGISTRY_DECLARED_OWNER"),
+        ("UNKNOWN", "REGISTRY_OWNER_UNKNOWN"),
+        ("UNKNOWN", "REGISTRY_PARAMETER_MISSING"),
+    }:
+        raise OwnerRecipePresentationError("SourceOwner state/reason is invalid")
+    if state == "DECLARED":
+        if not isinstance(owner["Owner"], str) or not owner["Owner"].strip():
+            raise OwnerRecipePresentationError("declared SourceOwner is missing")
+    elif owner["Owner"] is not None:
+        raise OwnerRecipePresentationError("unknown SourceOwner must remain null")
+    if reason == "REGISTRY_PARAMETER_MISSING":
+        if owner["RegistryName"] is not None or owner["RegistryLine"] is not None:
+            raise OwnerRecipePresentationError("missing SourceOwner mapping cannot invent a row")
+    elif (
+        not isinstance(owner["RegistryName"], str) or not owner["RegistryName"]
+        or not isinstance(owner["RegistryLine"], int)
+        or isinstance(owner["RegistryLine"], bool) or owner["RegistryLine"] < 2
+    ):
+        raise OwnerRecipePresentationError("SourceOwner registry row reference is invalid")
+
+
 
 def _presentation_payload(record: Mapping[str, Any]) -> dict[str, Any]:
-    return {
+    payload = {
         "authority": record["authority"],
         "scope": record["scope"],
         "Recipes": record["Recipes"],
     }
+    if "SourceOwnerSource" in record:
+        payload["SourceOwnerSource"] = record["SourceOwnerSource"]
+    return payload
 
 
 def _read_json_without_duplicate_keys(path: Path) -> Any:
@@ -253,6 +368,7 @@ def make_owner_recipe_presentation(
     *,
     repo_root: Optional[str] = None,
     source_paths: Optional[Iterable[str]] = None,
+    source_owner_source: Optional[Mapping[str, str]] = None,
 ) -> dict[str, Any]:
     """Build one owner-facing projection from exact P1 source bundles."""
     source_rows = list(sources)
@@ -285,6 +401,15 @@ def make_owner_recipe_presentation(
         "scope": PRESENTATION_SCOPE,
         "Recipes": rows,
     }
+    if source_owner_source is not None:
+        reference, owners = _source_owner_registry(source_rows, source_owner_source, repo_root)
+        for row in rows:
+            source = source_by_identity[row["ExactReferences"]["IdentityProjectionID"]]
+            for control in row["Controls"]:
+                control["SourceOwner"] = _control_source_owner(
+                    control, source["VariantBuildPackage"]["build_tag"], reference, owners
+                )
+        record["SourceOwnerSource"] = reference
     payload = _presentation_payload(record)
     record["OwnerRecipePresentationSHA256"] = sha256_bytes(
         canonical_json(payload).encode("utf-8")
@@ -297,7 +422,9 @@ def make_owner_recipe_presentation(
 
 
 def _validate_presentation_structure(record: Mapping[str, Any]) -> None:
-    if not isinstance(record, Mapping) or set(record) != PRESENTATION_FIELDS:
+    if not isinstance(record, Mapping) or set(record) not in (
+        PRESENTATION_FIELDS, PRESENTATION_FIELDS | {"SourceOwnerSource"},
+    ):
         raise OwnerRecipePresentationError(
             "OwnerRecipePresentation fields do not match schema"
         )
@@ -309,6 +436,9 @@ def _validate_presentation_structure(record: Mapping[str, Any]) -> None:
         raise OwnerRecipePresentationError(
             "OwnerRecipePresentation authority/scope/schema mismatch"
         )
+    enriched = "SourceOwnerSource" in record
+    if enriched:
+        _validate_source_owner_ref(record["SourceOwnerSource"])
     rows = record.get("Recipes")
     if not isinstance(rows, list):
         raise OwnerRecipePresentationError(
@@ -340,10 +470,13 @@ def _validate_presentation_structure(record: Mapping[str, Any]) -> None:
             raise OwnerRecipePresentationError("presentation Controls must be a list")
         control_keys: list[tuple[int, str]] = []
         for control in controls:
-            if not isinstance(control, Mapping) or set(control) != CONTROL_FIELDS:
+            fields = CONTROL_FIELDS | {"SourceOwner"} if enriched else CONTROL_FIELDS
+            if not isinstance(control, Mapping) or set(control) != fields:
                 raise OwnerRecipePresentationError(
                     "presentation control fields do not match schema"
                 )
+            if enriched:
+                _validate_control_source_owner(control["SourceOwner"], record["SourceOwnerSource"])
             state = control.get("State")
             reason = control.get("Reason")
             if state not in PRESENTATION_STATES:
@@ -415,11 +548,13 @@ def validate_owner_recipe_presentation(
     sources: Iterable[Mapping[str, Any]],
     repo_root: Optional[str] = None,
     source_paths: Optional[Iterable[str]] = None,
+    source_owner_source: Optional[Mapping[str, str]] = None,
 ) -> None:
     """Validate a presentation by rebuilding it from mandatory P1 sources."""
     _validate_presentation_structure(record)
     expected = make_owner_recipe_presentation(
-        sources, repo_root=repo_root, source_paths=source_paths
+        sources, repo_root=repo_root, source_paths=source_paths,
+        source_owner_source=source_owner_source,
     )
     if dict(record) != expected:
         raise OwnerRecipePresentationError(
@@ -433,6 +568,7 @@ def serialize_owner_recipe_presentation(
     sources: Iterable[Mapping[str, Any]],
     repo_root: Optional[str] = None,
     source_paths: Optional[Iterable[str]] = None,
+    source_owner_source: Optional[Mapping[str, str]] = None,
 ) -> bytes:
     """Serialize a source-bound presentation as canonical JSON plus newline."""
     validate_owner_recipe_presentation(
@@ -440,5 +576,6 @@ def serialize_owner_recipe_presentation(
         sources=sources,
         repo_root=repo_root,
         source_paths=source_paths,
+        source_owner_source=source_owner_source,
     )
     return (canonical_json(dict(record)) + "\n").encode("utf-8")
