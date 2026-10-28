@@ -8,6 +8,8 @@
 
 **EA R&D Control Tower startup:** add `EA_RND_DIGEST.md` to that startup pack, then open only the targeted R&D Protocol / Regime Framework / Report Schema / family ledger needed by the task. Do not load all raw reports or the whole Second Brain by default.
 
+**EA_LAB CHAT ROLE ROUTER -- Owner 2026-10-28:** CHAT_ROLE and LANE_ID come from the original admitted task ticket, not shared Project text. Generic Owner "continue / finish" in a WORKER or REVIEWER chat means continue the SAME lane, never self-promote to Main CT, issue leases, dispatch workers, self-review or push. Changing CT role needs explicit Owner instruction and serialized CT handoff; missing proof means ROLE_UNVERIFIED_READ_ONLY. Registry remains the source authorization gate.
+
 ---
 
 ## 1. Roles (assigned by the owner or an approved task contract)
@@ -94,6 +96,14 @@ owner signatures/attestations, consequential new strategy/risk semantics not alr
 changes to these approval boundaries, consequential scope promotion, QI-2+, destructive/reset/cleanup
 outside explicitly authorized bounded fixtures, force push, history rewrite, and irreversible strategic
 decisions.
+
+### 1.4b Owner-directed flexible workflow (prospective after reviewed canonical acceptance)
+
+- Approve objective/module/risk envelope once; CT coordinates safe in-scope T0-T2 dependencies without repetitive permission requests. Effective write rights remain exact-path canonical conflict-checked leases, never a worker self-expansion.
+- For NEW contracts, finite time/cost/resource caps plus evidence-driven repair iterations can replace arbitrary 1/1 counters. Do not reset or widen original exhausted budgets, retry policy denial, or alter historical WIP.
+- All mandatory suites, security and evidence checks actually PASS but selected/full tier exceeds 110/195 seconds: PASS_WITH_PERFORMANCE_WARNING. Real test, missing coverage, security, provenance, index/HEAD drift and process hangs still block; do not skip suites or use --no-verify.
+- Reuse identical accepted hashes/review when relevant source/lease/evidence is unchanged. Review by risk: GREEN routine CT+deterministic, AMBER core/Registry independent exact-head, RED trading/security/installed runtime explicit Owner T3 plus rollback. Existing stricter admitted contracts still prevail.
+- One objective ledger and final/material-blocker handoff; no routine Owner relay. CT-only normal integration/push, no duplicate workers.
 
 ### 1.5 Current assignment and review rule (owner-ratified 2026-10-06)
 
