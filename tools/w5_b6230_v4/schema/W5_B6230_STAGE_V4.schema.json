@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ea-lab:w5-b6230-stage-v4:proposed",
+  "title": "W5 B6230 prospective stage receipt - proposed nonauthoritative schema",
+  "description": "Schema checks format only, not producer authenticity, Owner T3, agent consumption or native acceptance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "lineage_id", "cell", "stage", "capture", "resource_identity", "source", "broker", "agent", "data_inventory", "evidence_sha256"],
+  "properties": {
+    "version": {"const": "W5_B6230_STAGE_V4"},
+    "lineage_id": {"type": "string", "minLength": 1},
+    "cell": {"enum": ["MAIN_OFF", "MAIN_ON", "BWD_OFF", "BWD_ON"]},
+    "stage": {"enum": ["S0_BEFORE_PREPROBE", "S1_AFTER_PREPROBE_BEFORE_TESTER", "S2_AFTER_TESTER_BEFORE_POSTPROBE", "S3_AFTER_POSTPROBE"]},
+    "capture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["asof_utc", "pid", "created_utc", "exe_sha256", "collector_identity", "owner_t3_reference", "lease_id"],
+      "properties": {
+        "asof_utc": {"type": "string", "format": "date-time"},
+        "pid": {"type": "integer", "minimum": 1},
+        "created_utc": {"type": "string", "format": "date-time"},
+        "exe_sha256": {"$ref": "#/$defs/sha256"},
+        "collector_identity": {"type": "string", "minLength": 1},
+        "owner_t3_reference": {"type": "string", "minLength": 1},
+        "lease_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "resource_identity": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["head", "tree", "set_sha256", "ex5_sha256", "terminal_sha256", "model", "window_start", "window_end"],
+      "properties": {
+        "head": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "tree": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "set_sha256": {"$ref": "#/$defs/sha256"},
+        "ex5_sha256": {"$ref": "#/$defs/sha256"},
+        "terminal_sha256": {"$ref": "#/$defs/sha256"},
+        "model": {"const": 1},
+        "window_start": {"type": "string"},
+        "window_end": {"type": "string"}
+      }
+    },
+    "broker": {
+      "type": "object", "additionalProperties": false,
+      "required": ["server", "symbol", "timeframe", "account_id_redacted", "economics_receipt_sha256"],
+      "properties": {
+        "server": {"const": "ThinkMarkets-Live"},
+        "symbol": {"const": "XAUUSD"},
+        "timeframe": {"const": "H1"},
+        "account_id_redacted": {"type": "string", "minLength": 1},
+        "economics_receipt_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "agent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["executable_sha256", "identity", "history_manifest_sha256", "consumed_inputs_receipt_sha256"],
+      "properties": {
+        "executable_sha256": {"$ref": "#/$defs/sha256"},
+        "identity": {"type": "string", "minLength": 1},
+        "history_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "consumed_inputs_receipt_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "data_inventory": {
+      "type": "array", "minItems": 106, "maxItems": 106,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["path", "bytes", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "bytes": {"type": "integer", "minimum": 0},
+          "sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    },
+    "evidence_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

@@ -1,0 +1,78 @@
+{
+  "historical_postcondition": "POSTCONDITION_FAIL",
+  "checked_count": 106,
+  "drift_count": 3,
+  "executed_cells": [
+    "MAIN_OFF"
+  ],
+  "holdout_executed": false,
+  "identity": {
+    "source_head": "4f0254340d0f7610223eb8ee507bb0ed141bd323",
+    "source_tree": "c521daad1119a69fec18060ec5c46d7aa0365e8d",
+    "set_sha256": "c145f3f472c540aba9c9fd82fdd22034eba73e44f5de4d90199b1234e88ab6fd",
+    "terminal_sha256": "f163b8069e3f34f5cb4556e02e06ba69b65816d6990e7dc360b01a9501616072",
+    "ex5_off_sha256": "aa06cf4969139f13eee4c0c1c57cdc3d9f16d36b2de0e992d7f03d93b26c45ac",
+    "ex5_on_sha256": "14a792616c0117d18e2f45d4b7969c1b041f13662647f18cd5f9cf5c75de7f88",
+    "symbol": "XAUUSD",
+    "timeframe": "H1",
+    "model": 1,
+    "broker": "ThinkMarkets-Live",
+    "deposit": 10000,
+    "leverage": 100
+  },
+  "source_years": {
+    "2020": {
+      "pre_sha256": "9358537f5cb8ceec65dca87ec6022a5e7c59de8542413aaee838b65f4dcf8b68",
+      "post_sha256": "9358537f5cb8ceec65dca87ec6022a5e7c59de8542413aaee838b65f4dcf8b68"
+    },
+    "2021": {
+      "pre_sha256": "c0b73b9a160ed70d25cde86e39386c86867bfef0b5916cc563d412a62f8625ae",
+      "post_sha256": "c0b73b9a160ed70d25cde86e39386c86867bfef0b5916cc563d412a62f8625ae"
+    },
+    "2022": {
+      "pre_sha256": "d43c69c96dc687107ea1f5a01c62d16397e7974c8dd330dd7684eec5e6f5a70c",
+      "post_sha256": "d43c69c96dc687107ea1f5a01c62d16397e7974c8dd330dd7684eec5e6f5a70c"
+    },
+    "2023": {
+      "pre_sha256": "7fa5297224b4324270b685f5cf1768187d621445c4b6dd3ebacf9bb34219d7a3",
+      "post_sha256": "7fa5297224b4324270b685f5cf1768187d621445c4b6dd3ebacf9bb34219d7a3"
+    },
+    "2024": {
+      "pre_sha256": "845677192e0062183b058cd89f68481bd696b5b282664f929c5e83a0687203b0",
+      "post_sha256": "845677192e0062183b058cd89f68481bd696b5b282664f929c5e83a0687203b0"
+    },
+    "2025": {
+      "pre_sha256": "78f81d86765358555ab0947c6827f615c2114db857905175865738facb37d9fa",
+      "post_sha256": "78f81d86765358555ab0947c6827f615c2114db857905175865738facb37d9fa"
+    }
+  },
+  "drifts": [
+    {
+      "path": "history/XAUUSD/2026.hcc",
+      "pre_sha256": "13304c4dc16c4aff09cd99884a651e29ec95d9472d3cb7805361341e3cccca3c",
+      "post_sha256": "cfc4a85262e035e6d386b256b13028f170886453428ff7e545210e1428a3b74e",
+      "length": 54425187,
+      "historical_byte_diff_count": 2
+    },
+    {
+      "path": "history/XAUUSD/cache/Daily.hc",
+      "pre_sha256": "bbbc399e4d6251533d2a7d501aee45c5cea1584ee57e70b519e66c9aeb05f778",
+      "post_sha256": "6ba0e8af0ea90692823423f6c5bf7c5eeab7dea86e54cd1ed09df147467a4467",
+      "length": 236684,
+      "historical_byte_diff_count": 2
+    },
+    {
+      "path": "symbols/selected-146237.dat",
+      "pre_sha256": "59e4c98adc78902afea75ada7c256b0be4c734c67a9704f1b014c4d7b8fcd7e3",
+      "post_sha256": "ad755009ffeae18507656a378f1b7d791c42c78ffc925c45b190246ed5c796bd",
+      "length": 35992,
+      "historical_byte_diff_count": null
+    }
+  ],
+  "provenance": {
+    "manifest_sha256": "363b87cd22c8f7d68272980b04f855f4ff3efb99a01eda0d18efdb2f2086f47d",
+    "audit_sha256": "dcf6aed1fe146eba7b6cd757e45b71d0d371ffec38d2c96226de4500f61d0b36",
+    "result_sha256": "9670ea6fbce6fa1e96b2fdd066d84f4ea79732694769eed841d6f80732926bd0",
+    "historical_preimage_sources": "receipt-derived, not a newly recovered raw V2 selected.dat copy"
+  }
+}

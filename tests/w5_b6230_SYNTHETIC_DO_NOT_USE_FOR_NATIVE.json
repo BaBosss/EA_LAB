@@ -1,0 +1,172 @@
+{
+  "kind": "PROSPECTIVE_NEW_LINEAGE",
+  "independent_method_review": "ACCEPTED_EXACT_VERSION",
+  "owner_t3": "EXACT_SCOPED_APPROVAL",
+  "exclusive_resource_lease": "VERIFIED",
+  "prior_fail_preserved": true,
+  "identity": {
+    "source_head": "4f0254340d0f7610223eb8ee507bb0ed141bd323",
+    "source_tree": "c521daad1119a69fec18060ec5c46d7aa0365e8d",
+    "set_sha256": "c145f3f472c540aba9c9fd82fdd22034eba73e44f5de4d90199b1234e88ab6fd",
+    "terminal_sha256": "f163b8069e3f34f5cb4556e02e06ba69b65816d6990e7dc360b01a9501616072",
+    "ex5_off_sha256": "aa06cf4969139f13eee4c0c1c57cdc3d9f16d36b2de0e992d7f03d93b26c45ac",
+    "ex5_on_sha256": "14a792616c0117d18e2f45d4b7969c1b041f13662647f18cd5f9cf5c75de7f88",
+    "symbol": "XAUUSD",
+    "timeframe": "H1",
+    "model": 1,
+    "broker": "ThinkMarkets-Live",
+    "deposit": 10000,
+    "leverage": 100
+  },
+  "cell": "MAIN_OFF",
+  "prior_cell_accepted": false,
+  "range": [
+    "2023.01.01",
+    "2025.12.31"
+  ],
+  "basket_tf_enum": 16385,
+  "basket_tf_label": "PERIOD_H1",
+  "checkpoints": [
+    {
+      "stage": "S0_BEFORE_PREPROBE",
+      "asof_utc": "2026-11-01T00:00:00Z",
+      "resource_identity": "SYNTHETIC-NOT-REAL",
+      "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "evidence_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "capture": {
+        "pid": 1234,
+        "created_utc": "2026-10-28T14:00:00Z",
+        "exe_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "stage": "S1_AFTER_PREPROBE_BEFORE_TESTER",
+      "asof_utc": "2026-11-01T00:00:01Z",
+      "resource_identity": "SYNTHETIC-NOT-REAL",
+      "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "evidence_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "capture": {
+        "pid": 1234,
+        "created_utc": "2026-10-28T14:00:00Z",
+        "exe_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "stage": "S2_AFTER_TESTER_BEFORE_POSTPROBE",
+      "asof_utc": "2026-11-01T00:00:02Z",
+      "resource_identity": "SYNTHETIC-NOT-REAL",
+      "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "evidence_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "capture": {
+        "pid": 1234,
+        "created_utc": "2026-10-28T14:00:00Z",
+        "exe_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "stage": "S3_AFTER_POSTPROBE",
+      "asof_utc": "2026-11-01T00:00:03Z",
+      "resource_identity": "SYNTHETIC-NOT-REAL",
+      "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "evidence_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "capture": {
+        "pid": 1234,
+        "created_utc": "2026-10-28T14:00:00Z",
+        "exe_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ],
+  "agent": {
+    "baseline_mode": "EMPTY",
+    "pre_manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "post_manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "consumed_history_source_bound": true,
+    "consumption_trace_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "allowed_changes_predeclared": true
+  },
+  "effective_history": {
+    "source_years_unchanged": true,
+    "indicator_timeframes_consumed_bound": true,
+    "source_manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "agent_series_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "economics": {
+    "producer_authenticated": true,
+    "producer_proof_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "agent_effective_proven": true,
+    "agent_evidence_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "pre": {
+      "economics": {
+        "contract_size": 100.0,
+        "tick_size": 0.01,
+        "tick_value": 1.0,
+        "margin_initial": 0.0,
+        "margin_maintenance": 0.0,
+        "margin_rate": 0.01,
+        "commission_value": 0.0,
+        "commission_type": "SYNTHETIC_PER_DEAL",
+        "swap_long": -15.0,
+        "swap_short": 5.0,
+        "swap_mode": "SYNTHETIC_POINTS",
+        "spread_mode": "SYNTHETIC_FLOATING",
+        "spread_fixed_or_default": 20,
+        "lot_min": 0.01,
+        "lot_step": 0.01,
+        "lot_max": 100.0
+      },
+      "account_configuration": {
+        "currency": "USD",
+        "leverage": 100,
+        "trade_mode": "SYNTHETIC_MODE",
+        "stopout_level": 50.0,
+        "stopout_mode": "SYNTHETIC_PERCENT"
+      }
+    },
+    "post": {
+      "economics": {
+        "contract_size": 100.0,
+        "tick_size": 0.01,
+        "tick_value": 1.0,
+        "margin_initial": 0.0,
+        "margin_maintenance": 0.0,
+        "margin_rate": 0.01,
+        "commission_value": 0.0,
+        "commission_type": "SYNTHETIC_PER_DEAL",
+        "swap_long": -15.0,
+        "swap_short": 5.0,
+        "swap_mode": "SYNTHETIC_POINTS",
+        "spread_mode": "SYNTHETIC_FLOATING",
+        "spread_fixed_or_default": 20,
+        "lot_min": 0.01,
+        "lot_step": 0.01,
+        "lot_max": 100.0
+      },
+      "account_configuration": {
+        "currency": "USD",
+        "leverage": 100,
+        "trade_mode": "SYNTHETIC_MODE",
+        "stopout_level": 50.0,
+        "stopout_mode": "SYNTHETIC_PERCENT"
+      }
+    }
+  },
+  "mutable_artifacts": {
+    "history/XAUUSD/2026.hcc": {
+      "full_preimage_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "full_postimage_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "history/XAUUSD/cache/Daily.hc": {
+      "full_preimage_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "full_postimage_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "symbols/selected-146237.dat": {
+      "full_preimage_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "full_postimage_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  "native_report_and_trades_bound": true,
+  "native_report_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "tester_process_pid_creation_exe_proven": true,
+  "holdout_executed": false,
+  "fixture_notice": "ALL VALUES SIMULATED: NEVER USE AS T3 OR NATIVE ACCEPTANCE"
+}
