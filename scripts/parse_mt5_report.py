@@ -539,13 +539,357 @@ def parse_report(path):
     r["max_consecutive_losses"] = leading_number(fl_any("Maximum consecutive losses ($):", "Max consecutive losses:")) or 0
     return r
 
+
+# HTML/XML API used by the batch pipeline. Ported from the existing
+# backtest-report-analyzer parser; legacy parse_report remains compatible.
+import html as html_mod
+import math
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+def read_text_auto(path: Path) -> str:
+    raw = path.read_bytes()
+    if raw[:2] in (bytes([255, 254]), bytes([254, 255])):  # UTF-16 BOM
+        return raw.decode("utf-16")
+    for enc in ("utf-8-sig", "cp1252", "utf-16-le"):
+        try:
+            text = raw.decode(enc)
+            if text.count("\x00") < max(1, len(text) // 100):
+                return text
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    return raw.decode("utf-8", errors="replace")
+
+
+def to_number(s):
+    if s is None:
+        return None
+    s = str(s).strip().replace("\xa0", " ")
+    # MT5 uses space as thousands separator: "1 234.56"; also handle "12.34%"
+    s = s.replace(" ", "").replace("%", "")
+    s = s.replace(",", "")  # some locales
+    m = re.match(r"^-?\d+(\.\d+)?$", s)
+    if not m:
+        return None
+    f = float(s)
+    return int(f) if f.is_integer() and "." not in s else f
+
+
+HTML_FIELDS = {
+    "profit factor": "profit_factor",
+    "expected payoff": "expected_payoff",
+    "total net profit": "net_profit",
+    "gross profit": "gross_profit",
+    "gross loss": "gross_loss",
+    "sharpe ratio": "sharpe_ratio",
+    "recovery factor": "recovery_factor",
+    "balance drawdown maximal": "balance_drawdown_maximal",
+    "balance drawdown relative": "balance_drawdown_relative",
+    "equity drawdown maximal": "equity_drawdown_maximal",
+    "equity drawdown relative": "equity_drawdown_relative",
+    "total trades": "total_trades",
+    "total deals": "total_deals",
+    "profit trades": "profit_trades",
+    "loss trades": "loss_trades",
+    "largest profit trade": "largest_profit_trade",
+    "largest loss trade": "largest_loss_trade",
+    "average profit trade": "average_profit_trade",
+    "average loss trade": "average_loss_trade",
+    "initial deposit": "initial_deposit",
+    "history quality": "history_quality",
+    "bars": "bars",
+    "ticks": "ticks",
+    "symbol": "symbol",
+    "period": "period",
+    "expert": "ea_name",
+    "broker": "broker",
+    "currency": "currency",
+    "leverage": "leverage",
+}
+
+
+CONSEC_FIELDS = {
+    "maximum consecutive wins": "max_consecutive_wins",
+    "maximum consecutive losses": "max_consecutive_losses",
+    "maximal consecutive profit": "max_consecutive_profit",
+    "maximal consecutive loss": "max_consecutive_loss",
+}
+
+
+class UnsupportedReport(ValueError):
+    """An unrelated document, rather than a malformed tester report."""
+
+
+def parse_html_report(path: Path) -> dict:
+    text = read_text_auto(path)
+    # strip tags but keep cell boundaries
+    text = re.sub(r"<(td|th)[^>]*>", "\n|CELL|", text, flags=re.I)
+    text = re.sub(r"<tr[^>]*>", "\n|ROW|", text, flags=re.I)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = html_mod.unescape(text)
+
+    rows = []
+    for row_chunk in text.split("|ROW|"):
+        cells = [c.strip() for c in row_chunk.split("|CELL|")]
+        cells = [c for c in cells if c]
+        if cells:
+            rows.append(cells)
+
+    out = {"report_type": "single_backtest", "source_file": str(path)}
+    fields = {**HTML_FIELDS, **CONSEC_FIELDS}
+    for cells in rows:
+        for i, cell in enumerate(cells):
+            key = cell.rstrip(":").strip().lower()
+            if key in fields and i + 1 < len(cells):
+                canon = fields[key]
+                value = cells[i + 1]
+                if canon in ("symbol", "period", "ea_name", "broker", "currency"):
+                    if canon not in out:  # first-wins: settings block precedes deal/order tables
+                        out[canon] = value
+                    continue
+                # split off the "(xx.xx%)" companion ONLY; to_number handles the
+                # space/comma thousands separators ("7 497.37" must stay 7497.37)
+                num = to_number(value.split("(")[0])
+                out[canon] = num if num is not None else value
+                # capture "(xx.xx%)" companions
+                pct = re.search(r"\(([-\d.,\s]+)%\)", value)
+                if pct:
+                    out[canon + "_percent"] = to_number(pct.group(1))
+
+    # win rate
+    pt, tt = out.get("profit_trades"), out.get("total_trades")
+    if isinstance(out.get("profit_trades_percent"), (int, float)):
+        out["win_rate_percent"] = out["profit_trades_percent"]
+    elif isinstance(pt, (int, float)) and isinstance(tt, (int, float)) and tt:
+        out["win_rate_percent"] = round(100.0 * pt / tt, 2)
+    report_metrics = ("profit_factor", "total_trades", "net_profit", "recovery_factor")
+    if not any(key in out for key in report_metrics) and "strategy tester" not in text.lower():
+        raise UnsupportedReport("Not a recognized MT5 tester report")
+    _require_metrics(out, report_metrics)
+    drawdown_keys = ("equity_drawdown_maximal_percent", "balance_drawdown_maximal_percent")
+    present_drawdowns = [key for key in drawdown_keys if key in out]
+    if not present_drawdowns:
+        raise ValueError("Missing numeric maximal drawdown percentage")
+    _require_metrics(out, present_drawdowns)
+    return out
+
+
+def _local(tag):
+    return tag.rsplit("}", 1)[-1]
+
+
+def parse_optimizer_xml(path: Path, top: int = 0) -> dict:
+    root = ET.fromstring(path.read_bytes())  # expat honors the declared encoding
+
+    rows = []
+    for row in root.iter():
+        if _local(row.tag) != "Row":
+            continue
+        cells = []
+        for cell in row:
+            if _local(cell.tag) != "Cell":
+                continue
+            # SpreadsheetML omits empty cells and supplies an explicit 1-based index.
+            index = cell.attrib.get("{urn:schemas-microsoft-com:office:spreadsheet}Index")
+            if index is not None:
+                position = int(index) - 1
+                if position < len(cells):
+                    raise ValueError("Non-monotonic optimizer cell index")
+                cells.extend([None] * (position - len(cells)))
+            data = None
+            for d in cell:
+                if _local(d.tag) == "Data":
+                    data = d.text
+            cells.append(data)
+        if cells:
+            rows.append(cells)
+
+    if not rows:
+        raise ValueError("No rows found â€” is this an MT5 optimizer XML export?")
+    return _optimizer_records(rows, path, top)
+
+
+def _optimizer_records(rows, path: Path, top: int = 0) -> dict:
+    header = [str(h).strip() if h else f"col{i}" for i, h in enumerate(rows[0])]
+    passes = []
+    for cells in rows[1:]:
+        rec = {}
+        for h, v in zip(header, cells):
+            num = to_number(v)
+            rec[h] = num if num is not None else v
+        passes.append(rec)
+
+    # canonical aliases (MT5 EN headers)
+    alias = {
+        "Pass": "pass_id", "Result": "result", "Profit": "net_profit",
+        "Expected Payoff": "expected_payoff", "Profit Factor": "profit_factor",
+        "Recovery Factor": "recovery_factor", "Sharpe Ratio": "sharpe_ratio",
+        "Custom": "custom", "Equity DD %": "max_drawdown_percent",
+        "Trades": "total_trades",
+    }
+    param_cols = [h for h in header if h not in alias]
+    for rec in passes:
+        for src, dst in alias.items():
+            if src in rec:
+                rec[dst] = rec[src]
+
+    def sort_key(r):
+        v = r.get("net_profit")
+        return v if isinstance(v, (int, float)) else float("-inf")
+
+    if not passes:
+        raise ValueError("Optimizer report contains no passes")
+    seen_pass_ids = set()
+    for rec in passes:
+        _require_metrics(rec, ("profit_factor", "max_drawdown_percent", "recovery_factor", "total_trades", "net_profit"))
+        if "pass_id" in rec:
+            pid = rec["pass_id"]
+            if not isinstance(pid, int) or isinstance(pid, bool):
+                raise ValueError(f"Invalid non-integer pass_id: {pid!r}")
+            if pid in seen_pass_ids:
+                raise ValueError(f"Duplicate pass_id in optimizer report: {pid}")
+            seen_pass_ids.add(pid)
+    passes.sort(key=sort_key, reverse=True)
+    out = {
+        "report_type": "optimizer",
+        "source_file": str(path),
+        "total_passes": len(passes),
+        "columns": header,
+        "parameter_columns": param_cols,
+        "passes": passes[:top] if top else passes,
+    }
+    return out
+
+
+def verify_optimizer_passes(report_or_passes, expected_count=None, expected_sweep=None) -> dict:
+    """Verify optimizer pass count, unique pass_ids, finite numeric metrics (0/0.0 preserved),
+    and exact swept parameter values independent of sort order (ORDER-1709 / E-3)."""
+    if isinstance(report_or_passes, dict):
+        passes = list(report_or_passes.get("passes", []))
+        total_passes = report_or_passes.get("total_passes", len(passes))
+    else:
+        passes = list(report_or_passes)
+        total_passes = len(passes)
+
+    if not passes:
+        raise ValueError("Optimizer report contains no passes")
+    if expected_count is not None:
+        if isinstance(expected_count, bool) or not isinstance(expected_count, int) or expected_count < 1:
+            raise ValueError(f"Invalid expected_count (must be a positive integer): {expected_count!r}")
+    # R3-4: validate expected sweep expectations BEFORE any comparison.
+    canon_sweep = None
+    if expected_sweep is not None:
+        if not isinstance(expected_sweep, dict) or not expected_sweep:
+            raise ValueError("expected_sweep must be a non-empty mapping of parameter name to values")
+        canon_sweep = {}
+        for pname, vals in expected_sweep.items():
+            if not isinstance(pname, str) or not pname.strip():
+                raise ValueError(f"Invalid expected sweep parameter name: {pname!r}")
+            if isinstance(vals, (str, bytes)) or not hasattr(vals, "__iter__"):
+                raise ValueError(f"Expected sweep values for '{pname}' must be a list of numbers")
+            vals = list(vals)
+            if not vals:
+                raise ValueError(f"Expected sweep values for '{pname}' are empty")
+            clean = []
+            for v in vals:
+                if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+                    raise ValueError(f"Expected sweep value for '{pname}' is not a finite number: {v!r}")
+                clean.append(float(v))
+            if len(set(clean)) != len(clean):
+                raise ValueError(f"Expected sweep values for '{pname}' contain duplicates: {vals!r}")
+            canon_sweep[pname.strip()] = clean
+        expected_sweep = canon_sweep
+    if expected_count is not None and (len(passes) != expected_count or total_passes != expected_count):
+        raise ValueError(f"Expected {expected_count} optimizer passes, got total_passes={total_passes}, len(passes)={len(passes)}")
+
+    required_metrics = ("profit_factor", "max_drawdown_percent", "recovery_factor", "total_trades", "net_profit")
+    optional_metrics = ("expected_payoff", "sharpe_ratio", "result", "custom")
+    seen_ids = set()
+    for rec in passes:
+        if "pass_id" not in rec:
+            raise ValueError("Missing pass_id in optimizer pass record")
+        pid = rec["pass_id"]
+        if not isinstance(pid, int) or isinstance(pid, bool):
+            raise ValueError(f"Invalid pass_id: {pid!r}")
+        if pid in seen_ids:
+            raise ValueError(f"Duplicate pass_id: {pid}")
+        seen_ids.add(pid)
+        _require_metrics(rec, required_metrics)
+        for opt_key in optional_metrics:
+            if opt_key in rec and rec[opt_key] is not None:
+                _require_metrics(rec, (opt_key,))
+
+    sweep_verified = {}
+    if expected_sweep:
+        for param_name, expected_vals in expected_sweep.items():
+            norm_expected = sorted(float(v) for v in expected_vals)
+            actual_vals = []
+            for rec in passes:
+                if param_name not in rec:
+                    raise ValueError(f"Missing swept parameter column '{param_name}' in pass {rec.get('pass_id')}")
+                val = rec[param_name]
+                if not isinstance(val, (int, float)) or isinstance(val, bool) or not math.isfinite(val):
+                    raise ValueError(f"Invalid non-numeric swept value for '{param_name}': {val!r}")
+                actual_vals.append(float(val))
+            norm_actual = sorted(actual_vals)
+            if len(norm_actual) != len(norm_expected) or any(abs(a - b) > 1e-9 for a, b in zip(norm_actual, norm_expected)):
+                raise ValueError(
+                    f"Swept parameter '{param_name}' values mismatch: expected {norm_expected}, got {norm_actual}"
+                )
+            sweep_verified[param_name] = [rec[param_name] for rec in sorted(passes, key=lambda r: r["pass_id"])]
+
+    return {
+        "verified": True,
+        "pass_count": len(passes),
+        "pass_ids": sorted(seen_ids),
+        "sweep_verified": sweep_verified,
+    }
+
+
+def _require_metrics(record, keys):
+    for key in keys:
+        value = record.get(key)
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
+            raise ValueError(f"Missing or invalid numeric metric: {key}")
+
+
+def _parse_sweep_spec(spec_list):
+    if not spec_list:
+        return None
+    out = {}
+    for item in spec_list:
+        if "=" not in item:
+            raise ValueError(f"Invalid --expect-sweep spec {item!r}; expected PARAM=v1,v2,...")
+        k, raw_vals = item.split("=", 1)
+        vals = [to_number(v.strip()) for v in raw_vals.split(",") if v.strip()]
+        if not vals or any(v is None or not math.isfinite(v) for v in vals):
+            raise ValueError(f"Invalid numeric sweep values in {item!r}")
+        out[k.strip()] = vals
+    return out
+
+
 def main():
     pa = argparse.ArgumentParser()
     pa.add_argument("report")
     pa.add_argument("--json", action="store_true")
+    pa.add_argument("--top",type=int,default=0)
+    pa.add_argument("--expect-passes",type=int,default=None)
+    pa.add_argument("--expect-sweep",action="append",default=None)
     a = pa.parse_args()
     try:
-        res = parse_report(a.report)
+        report_path = Path(a.report)
+        if not report_path.exists():
+            raise FileNotFoundError(a.report)
+        if report_path.suffix.lower() == ".xml":
+            res = parse_optimizer_xml(report_path, top=a.top)
+            if a.expect_passes is not None or a.expect_sweep:
+                res["verification"] = verify_optimizer_passes(
+                    res,
+                    expected_count=a.expect_passes,
+                    expected_sweep=_parse_sweep_spec(a.expect_sweep),
+                )
+        else:
+            res = parse_report(a.report)
     except FileNotFoundError:
         print(json.dumps({"error": f"File not found: {a.report}", "status": "NO_REPORT"}))
         sys.exit(1)

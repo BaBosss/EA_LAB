@@ -92,8 +92,9 @@ param(
   [Parameter(Mandatory)][string]$StateDir,
   [int]$LaneLockTimeoutSec = 300,   # bounded poll ceiling while waiting for a busy lane
   [int]$LaneLockPollMs = 200,
-  [string]$Lane1Terminal = 'D:\Meta 5\terminal64.exe'   # physical lane-1 install; model==4 jobs that
+  [string]$Lane1Terminal = 'D:\Meta 5\terminal64.exe',  # physical lane-1 install; model==4 jobs that
                                                          # carry an explicit -Terminal arg must match this
+  [switch]$SimulateActiveNativeProcess                   # offline negative-control test hook (ORDER-1708)
 )
 
 $ErrorActionPreference = "Stop"
@@ -314,6 +315,316 @@ function Test-ExpectArtifact {
   return $false
 }
 
+function Get-StringSha256 {
+  param([string]$Text)
+  $sha = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes("$Text")
+    $hashBytes = $sha.ComputeHash($bytes)
+    return ([System.BitConverter]::ToString($hashBytes)).Replace("-", "").ToLowerInvariant()
+  } finally {
+    $sha.Dispose()
+  }
+}
+
+function Get-FileSha256OrStatus {
+  param([string]$FilePath)
+  if (-not $FilePath) { return $null }
+  if (-not (Test-Path -LiteralPath $FilePath)) { return "MISSING" }
+  return (Get-FileHash -LiteralPath $FilePath -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+function Get-ArtifactSha256 {
+  param([string]$Pattern)
+  if (-not $Pattern) { return $null }
+  $items = @(Get-Item -Path $Pattern -ErrorAction SilentlyContinue | Sort-Object FullName)
+  if ($items.Count -eq 0) { return $null }
+  if ($items.Count -eq 1) {
+    return (Get-FileHash -LiteralPath $items[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+  }
+  $parts = @()
+  foreach ($it in $items) {
+    $h = (Get-FileHash -LiteralPath $it.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    $parts += "$($it.FullName):$h"
+  }
+  return (Get-StringSha256 -Text ($parts -join "`n"))
+}
+
+function Get-RunnerParamDefault {
+  # Resolve a runner's OWN declared parameter default (e.g. mt5_run.ps1 -Terminal / -DataDir)
+  # from its AST, so native defaults are never re-typed here (R3-2).
+  param([string]$RunnerPath, [string]$ParamName)
+  try {
+    if (-not (Test-Path -LiteralPath $RunnerPath)) { return $null }
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($RunnerPath, [ref]$null, [ref]$null)
+    if (-not $ast.ParamBlock) { return $null }
+    foreach ($p in $ast.ParamBlock.Parameters) {
+      if ($p.Name.VariablePath.UserPath -ieq $ParamName -and $p.DefaultValue) {
+        $v = $p.DefaultValue
+        if ($v -is [System.Management.Automation.Language.StringConstantExpressionAst]) { return $v.Value }
+        if ($v -is [System.Management.Automation.Language.ExpandableStringExpressionAst]) { return $v.Value }
+      }
+    }
+  } catch { }
+  return $null
+}
+
+function Test-IsNativeMt5Runner {
+  param([string]$RunnerPath)
+  $leaf = [System.IO.Path]::GetFileName("$RunnerPath").ToLowerInvariant()
+  return ($leaf -eq 'mt5_run.ps1' -or $leaf -eq 'mt5_optimize.ps1')
+}
+
+function Get-RunnerDependencySha256 {
+  # Behavior-affecting helpers: every lib\*.ps1 beside/under the runner's scripts folder.
+  param([string]$RunnerPath)
+  if (-not $RunnerPath) { return $null }
+  $dir = Split-Path -Parent $RunnerPath
+  $libDirs = @((Join-Path $dir 'lib'), (Join-Path (Split-Path -Parent $dir) 'lib')) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -Unique
+  $entries = @()
+  foreach ($ld in $libDirs) {
+    foreach ($f in @(Get-ChildItem -LiteralPath $ld -Filter *.ps1 -File | Sort-Object Name)) {
+      $entries += [ordered]@{ name = $f.Name; sha256 = (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
+    }
+  }
+  if ($entries.Count -eq 0) { return $null }
+  return (Get-StringSha256 -Text (ConvertTo-Json -InputObject @($entries) -Compress -Depth 4))
+}
+
+function Get-JobExecutionIdentity {
+  # ORDER-1708 / R3-2: execution identity of a job, computed from actual bytes. Canonical
+  # serialization is JSON (unambiguous), NOT delimiter concatenation. Native defaults come
+  # from the runner's own param block and Get-TesterExpertsDir. Required identities that
+  # cannot be resolved are reported in `missing_required`, never pinned as a verified value.
+  param($Job)
+  $argsArr = @(Get-ArgsArray -JobArgs $Job.args | ForEach-Object { "$_" })
+  $runnerPath = if ($Job.runner) { "$($Job.runner)" } else { $null }
+  $runnerSha  = Get-FileSha256OrStatus -FilePath $runnerPath
+  $isNative   = Test-IsNativeMt5Runner -RunnerPath $runnerPath
+  $missing    = New-Object System.Collections.Generic.List[string]
+  if (-not $runnerSha -or $runnerSha -eq 'MISSING') { $missing.Add('runner') }
+
+  $setPath = if ($Job.set_file) { "$($Job.set_file)" } else { Get-ArgValue -ArgsArray $argsArr -Name "-SetFile" }
+  $setSha  = Get-FileSha256OrStatus -FilePath $setPath
+  if ($isNative -and (-not $setPath -or $setSha -eq 'MISSING')) { $missing.Add('set') }
+
+  $expertArg = if ($Job.expert) { "$($Job.expert)" } else { Get-ArgValue -ArgsArray $argsArr -Name "-Expert" }
+  $termArg   = Get-ArgValue -ArgsArray $argsArr -Name "-Terminal"
+  $dataDir   = Get-ArgValue -ArgsArray $argsArr -Name "-DataDir"
+  if ($isNative) {
+    if (-not $termArg) { $termArg = Get-RunnerParamDefault -RunnerPath $runnerPath -ParamName 'Terminal' }
+    if (-not $dataDir) { $dataDir = Get-RunnerParamDefault -RunnerPath $runnerPath -ParamName 'DataDir' }
+  }
+  $portable = [bool](@($argsArr | Where-Object { "$_" -ieq '-Portable' }).Count)
+
+  $binPath = if ($Job.binary_path) { "$($Job.binary_path)" } else { $null }
+  if (-not $binPath -and $isNative -and $expertArg) {
+    . (Join-Path $PSScriptRoot 'lib\binary_staleness.ps1')
+    $expDir = Get-TesterExpertsDir -TerminalPath $termArg -DataDir $dataDir -Portable:$portable
+    if ($expDir) {
+      $relExp = ($expertArg -replace '/', '\').TrimStart('\')
+      if (-not $relExp.ToLowerInvariant().EndsWith(".ex5")) { $relExp = "$relExp.ex5" }
+      $binPath = Join-Path $expDir $relExp
+    }
+  }
+  $binSha = Get-FileSha256OrStatus -FilePath $binPath
+  if ($isNative -and (-not $binPath -or $binSha -eq 'MISSING')) { $missing.Add('binary') }
+
+  $srcPath = if ($Job.source_path) { "$($Job.source_path)" } else { $null }
+  if (-not $srcPath -and $expertArg) {
+    $leaf = [System.IO.Path]::GetFileNameWithoutExtension(($expertArg -replace '/', '\'))
+    $candidateSrc = Join-Path (Split-Path -Parent $PSScriptRoot) ("ea_template\" + $leaf + ".mq5")
+    if (Test-Path -LiteralPath $candidateSrc) { $srcPath = $candidateSrc }
+  }
+  $srcSha = Get-FileSha256OrStatus -FilePath $srcPath
+  $depsSha = Get-RunnerDependencySha256 -RunnerPath $runnerPath
+  $expectArt = if ($Job.expect_artifact) { "$($Job.expect_artifact)" } else { $null }
+
+  $core = [ordered]@{
+    runner = $runnerPath; runner_sha256 = $runnerSha; runner_deps_sha256 = $depsSha
+    args = $argsArr; lane = "$($Job.lane)"; model = "$($Job.model)"
+    set_path = $setPath; set_sha256 = $setSha
+    expert = $expertArg; terminal = $termArg; data_dir = $dataDir; portable = $portable
+    binary_path = $binPath; binary_sha256 = $binSha
+    source_path = $srcPath; source_sha256 = $srcSha
+    expect_artifact = $expectArt
+  }
+  $canonicalSig = Get-StringSha256 -Text (ConvertTo-Json -InputObject $core -Compress -Depth 6)
+  $core['canonical_signature'] = $canonicalSig
+  $core['missing_required'] = @($missing)
+  return [PSCustomObject]$core
+}
+
+function Get-IdentityDiffFields {
+  param($PrevIdentity, $CurrIdentity)
+  $diffs = New-Object System.Collections.Generic.List[string]
+  foreach ($f in @('runner_sha256','runner_deps_sha256','set_sha256','binary_sha256','source_sha256','expect_artifact','terminal','data_dir')) {
+    if ("$($PrevIdentity.$f)" -ne "$($CurrIdentity.$f)") { $diffs.Add($f) }
+  }
+  $prevArgs = ConvertTo-Json -InputObject @($PrevIdentity.args | ForEach-Object { "$_" }) -Compress
+  $currArgs = ConvertTo-Json -InputObject @($CurrIdentity.args | ForEach-Object { "$_" }) -Compress
+  if ($prevArgs -ne $currArgs) { $diffs.Add('args') }
+  if ($diffs.Count -eq 0 -and ("$($PrevIdentity.canonical_signature)" -ne "$($CurrIdentity.canonical_signature)")) {
+    $diffs.Add('canonical_signature')
+  }
+  return @($diffs)
+}
+
+function Test-ResumeAdmissionRecord {
+  # R3-2 / R4-1 / R4-1B: a legacy done row (no execution_identity) is admitted ONLY when a sidecar
+  # RESUME_ADMISSION.json is bound to the CURRENT manifest bytes, exact recorded state row,
+  # expect_artifact path, artifact bytes, AND proves matching pinned hashes for all required
+  # dependencies (runner, set, and binary/expert). If a job specifies a set file, binary, or expert
+  # (or uses a native runner), but the legacy admission record lacks matching pinned hashes
+  # (or if on-disk files drifted), it FAILS CLOSED ($false -> UNVERIFIED) to prevent stale/tampered
+  # reports being admitted after same-path drift or unpinned native execution.
+  param([string]$ManifestPath, $Job, $Rec)
+  $admissionFile = Join-Path (Split-Path -Parent $ManifestPath) "RESUME_ADMISSION.json"
+  if (-not (Test-Path -LiteralPath $admissionFile)) { return $false }
+  try {
+    $adm = Get-Content -LiteralPath $admissionFile -Raw | ConvertFrom-Json
+    if (-not $adm.done_cases_frozen) { return $false }
+    $manifestSha = (Get-FileHash -LiteralPath $ManifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ("$($adm.manifest_sha256)".ToLowerInvariant() -ne $manifestSha) { return $false }
+    if (-not $Job.expect_artifact -or "$($Job.expect_artifact)" -match '[\*\?\[]') { return $false }
+    foreach ($entry in @($adm.done_cases_frozen)) {
+      if (-not $entry.state -or "$($entry.state.id)" -ne "$($Rec.id)") { continue }
+      $s = $entry.state
+      if ("$($s.state)" -ne 'done' -or "$($s.exit_code)" -ne '0') { return $false }
+      if ("$($s.runner)" -ne "$($Job.runner)" -or "$($s.lane)" -ne "$($Job.lane)" -or "$($s.model)" -ne "$($Job.model)") { return $false }
+      if ("$($s.start)" -ne "$($Rec.start)" -or "$($s.end)" -ne "$($Rec.end)" -or "$($Rec.exit_code)" -ne '0') { return $false }
+      $a = try { [System.IO.Path]::GetFullPath("$($entry.raw_path)").ToLowerInvariant() } catch { "" }
+      $b = try { [System.IO.Path]::GetFullPath("$($Job.expect_artifact)").ToLowerInvariant() } catch { "x" }
+      if (-not $a -or $a -ne $b) { return $false }
+      if (-not (Test-Path -LiteralPath "$($entry.raw_path)")) { return $false }
+      $actual = (Get-FileHash -LiteralPath "$($entry.raw_path)" -Algorithm SHA256).Hash.ToLowerInvariant()
+      if ($actual -ne "$($entry.raw_sha256)".ToLowerInvariant()) { return $false }
+
+      # R4-1 / R4-1B Fail-Closed Pinned Dependency Checks:
+      $argsArr = @(Get-ArgsArray -JobArgs $Job.args | ForEach-Object { "$_" })
+      $isNative = Test-IsNativeMt5Runner -RunnerPath "$($Job.runner)"
+
+      # 1. Runner pinned hash check (mandatory for all legacy admissions)
+      if (-not $entry.runner_sha256) { return $false }
+      if (-not (Test-Path -LiteralPath "$($Job.runner)")) { return $false }
+      $currRunnerSha = (Get-FileHash -LiteralPath "$($Job.runner)" -Algorithm SHA256).Hash.ToLowerInvariant()
+      if ($currRunnerSha -ne "$($entry.runner_sha256)".ToLowerInvariant()) { return $false }
+
+      # 2. Set file resolution & pinned hash check
+      $setPath = if ($Job.set_file) { "$($Job.set_file)" } else { Get-ArgValue -ArgsArray $argsArr -Name "-SetFile" }
+      if ($setPath) {
+        if (-not $entry.set_sha256) { return $false }
+        if (-not (Test-Path -LiteralPath $setPath)) { return $false }
+        $currSetSha = (Get-FileHash -LiteralPath $setPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($currSetSha -ne "$($entry.set_sha256)".ToLowerInvariant()) { return $false }
+      }
+
+      # 3. Binary / Expert resolution & pinned hash check (R4-1 & R4-1B)
+      $expertArg = if ($Job.expert) { "$($Job.expert)" } else { Get-ArgValue -ArgsArray $argsArr -Name "-Expert" }
+      $binPath = if ($Job.binary_path) { "$($Job.binary_path)" } else { Get-ArgValue -ArgsArray $argsArr -Name "-BinaryPath" }
+      if (-not $binPath -and $expertArg) {
+        $termArg = Get-ArgValue -ArgsArray $argsArr -Name "-Terminal"
+        if (-not $termArg) { $termArg = Get-RunnerParamDefault -RunnerPath "$($Job.runner)" -ParamName 'Terminal' }
+        $dataDir = Get-ArgValue -ArgsArray $argsArr -Name "-DataDir"
+        if (-not $dataDir) { $dataDir = Get-RunnerParamDefault -RunnerPath "$($Job.runner)" -ParamName 'DataDir' }
+        $portable = [bool](@($argsArr | Where-Object { "$_" -ieq '-Portable' }).Count)
+        # Worktree-safe (A10 C1a): resolve the staleness library only from this checkout. A missing
+        # library refuses the resume instead of loading another checkout's copy.
+        $scriptsDir = if ($PSScriptRoot) { $PSScriptRoot } elseif ($Job.runner -and (Test-Path -LiteralPath "$($Job.runner)")) { Split-Path -Parent "$($Job.runner)" } else { $null }
+        if (-not $scriptsDir) { return $false }
+        $stalenessLib = Join-Path $scriptsDir 'lib\binary_staleness.ps1'
+        if (-not (Test-Path -LiteralPath $stalenessLib)) { return $false }
+        . $stalenessLib
+        $expDir = if (Get-Command 'Get-TesterExpertsDir' -ErrorAction SilentlyContinue) {
+          Get-TesterExpertsDir -TerminalPath $termArg -DataDir $dataDir -Portable:$portable
+        } else { $null }
+
+        $relExp = ($expertArg -replace '/', '\').TrimStart('\')
+        if (-not $relExp.ToLowerInvariant().EndsWith(".ex5")) { $relExp = "$relExp.ex5" }
+
+        if ($expDir) {
+          # R4-1C: authoritative Terminal/DataDir Experts directory MUST win.
+          # NEVER fall back to a decoy beside runner/manifest when authoritative path is known.
+          $binPath = Join-Path $expDir $relExp
+        } elseif (-not $isNative) {
+          # Non-native mock runners only: allow local fallback if no terminal/data directory exists
+          $runnerDir = Split-Path -Parent "$($Job.runner)"
+          $manDir = Split-Path -Parent $ManifestPath
+          if (Test-Path -LiteralPath (Join-Path $runnerDir $relExp)) {
+            $binPath = Join-Path $runnerDir $relExp
+          } elseif (Test-Path -LiteralPath (Join-Path $manDir $relExp)) {
+            $binPath = Join-Path $manDir $relExp
+          }
+        }
+      }
+
+      # Fail closed if a native runner or expert is used, or a binary path is defined:
+      # Pinned binary_sha256 is strictly required in the admission record.
+      if ($binPath -or $expertArg -or $isNative) {
+        if (-not $entry.binary_sha256) { return $false }
+        if (-not $binPath -or -not (Test-Path -LiteralPath $binPath)) { return $false }
+        $currBinSha = (Get-FileHash -LiteralPath $binPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($currBinSha -ne "$($entry.binary_sha256)".ToLowerInvariant()) { return $false }
+      }
+
+      # 4. Runner dependency resolution & pinned hash check (R4-1D)
+      $currDepsSha = Get-RunnerDependencySha256 -RunnerPath "$($Job.runner)"
+      $entryDepsSha = if ($entry.runner_deps_sha256) { "$($entry.runner_deps_sha256)".ToLowerInvariant() } else { $null }
+      if ($currDepsSha) {
+        if (-not $entryDepsSha) { return $false }
+        if ($currDepsSha -ne $entryDepsSha) { return $false }
+      } elseif ($entryDepsSha) {
+        return $false
+      }
+
+      # 5. Source code resolution & pinned hash check (R4-1D)
+      $srcPath = if ($Job.source_path) { "$($Job.source_path)" } else { Get-ArgValue -ArgsArray $argsArr -Name "-SourcePath" }
+      if (-not $srcPath -and $expertArg) {
+        $leaf = [System.IO.Path]::GetFileNameWithoutExtension(($expertArg -replace '/', '\'))
+        $scriptsDir = if ($PSScriptRoot) { $PSScriptRoot } elseif ($Job.runner -and (Test-Path -LiteralPath "$($Job.runner)")) { Split-Path -Parent "$($Job.runner)" } else { $null }
+        if (-not $scriptsDir) { return $false }
+        $repoRoot = Split-Path -Parent $scriptsDir
+        $candidateSrc = Join-Path $repoRoot ("ea_template\" + $leaf + ".mq5")
+        if (Test-Path -LiteralPath $candidateSrc) { $srcPath = $candidateSrc }
+      }
+      $entrySrcSha = if ($entry.source_sha256) { "$($entry.source_sha256)".ToLowerInvariant() } else { $null }
+      if ($srcPath) {
+        if (-not $entrySrcSha) { return $false }
+        if (-not (Test-Path -LiteralPath $srcPath)) { return $false }
+        $currSrcSha = (Get-FileHash -LiteralPath $srcPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($currSrcSha -ne $entrySrcSha) { return $false }
+      } elseif ($entrySrcSha) {
+        return $false
+      }
+
+      return $true
+    }
+  } catch { return $false }
+  return $false
+}
+
+function Test-ActiveNativeLaneProcess {
+  param($Job, [switch]$SimulateActive)
+  if ($SimulateActive) { return $true }
+  $mockPath = try { ([System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '_test\mock_runner.ps1'))).ToLowerInvariant() } catch { "" }
+  $runnerFull = try { ([System.IO.Path]::GetFullPath("$($Job.runner)")).ToLowerInvariant() } catch { "$($Job.runner)".ToLowerInvariant() }
+  if ($runnerFull -eq $mockPath) { return $false }
+  $argsArr = Get-ArgsArray -JobArgs $Job.args
+  $termArg = Get-ArgValue -ArgsArray $argsArr -Name "-Terminal"
+  $activeProcs = @(Get-Process -Name "terminal64", "metaeditor64" -ErrorAction SilentlyContinue)
+  if ($activeProcs.Count -eq 0) { return $false }
+  if ($termArg) {
+    $termNorm = try { ([System.IO.Path]::GetFullPath($termArg)).ToLowerInvariant() } catch { $termArg.ToLowerInvariant() }
+    $termDir  = Split-Path -Parent $termNorm
+    foreach ($p in $activeProcs) {
+      $pPath = try { ([System.IO.Path]::GetFullPath("$($p.Path)")).ToLowerInvariant() } catch { "" }
+      if (-not $pPath -or $pPath.StartsWith($termDir)) { return $true }
+    }
+    return $false
+  }
+  return $true
+}
+
 # --- load manifest ------------------------------------------------------------
 
 $manifestJobs = ConvertFrom-JsonArray -Path $Manifest
@@ -370,18 +681,27 @@ foreach ($job in $manifestJobs) {
 $records = New-Object System.Collections.Generic.List[object]
 foreach ($job in $manifestJobs) {
   if ($priorById.ContainsKey($job.id)) {
-    $records.Add($priorById[$job.id])
+    $existingRec = $priorById[$job.id]
+    if (-not ($existingRec.PSObject.Properties.Name -contains "execution_identity")) {
+      $existingRec | Add-Member -MemberType NoteProperty -Name "execution_identity" -Value $null
+    }
+    if (-not ($existingRec.PSObject.Properties.Name -contains "artifact_sha256")) {
+      $existingRec | Add-Member -MemberType NoteProperty -Name "artifact_sha256" -Value $null
+    }
+    $records.Add($existingRec)
   } else {
     $records.Add([PSCustomObject]@{
-      id          = $job.id
-      runner      = $job.runner
-      lane        = $job.lane
-      model       = $job.model
-      state       = "pending"
-      start       = $null
-      end         = $null
-      exit_code   = $null
-      fail_reason = $null
+      id                 = $job.id
+      runner             = $job.runner
+      lane               = $job.lane
+      model              = $job.model
+      state              = "pending"
+      start              = $null
+      end                = $null
+      exit_code          = $null
+      fail_reason        = $null
+      execution_identity = $null
+      artifact_sha256    = $null
     })
   }
 }
@@ -392,13 +712,86 @@ Write-StateFile -Records $records -Path $stateFile
 $failed = $false
 $failReason = ""
 
+# R3-1: states that must NEVER fall through to execution on a repeated invocation. They keep
+# the original record (identity, artifact reference, fail_reason) until an operator reconciles
+# explicitly (inspect, then edit/remove that state row). Explicitly "failed" and "pending" rows
+# keep their normal retry behavior. "running" at load time is an orphan (a live run is excluded
+# by the lane lock / native-process guard) and also needs explicit reconciliation.
+$script:RefusalStates = @('IDENTITY_MISMATCH','ARTIFACT_MISMATCH','ARTIFACT_MISSING','UNVERIFIED','running')
+
 foreach ($rec in $records) {
-  if ($rec.state -eq "done") {
-    Write-Output "SKIP (already done): $($rec.id)"
-    continue
+  $job = $manifestJobs | Where-Object { $_.id -eq $rec.id } | Select-Object -First 1
+
+  if (Test-ActiveNativeLaneProcess -Job $job -SimulateActive:$SimulateActiveNativeProcess) {
+    Write-Output "ABORT: active native process detected for job '$($rec.id)' on lane '$($job.lane)' -- refusing to launch or resume while terminal64/metaeditor64 is running."
+    exit 2
   }
 
-  $job = $manifestJobs | Where-Object { $_.id -eq $rec.id } | Select-Object -First 1
+  if ($script:RefusalStates -contains "$($rec.state)") {
+    $failReason = "job '$($rec.id)' is in non-runnable state '$($rec.state)' ($($rec.fail_reason)) -- record, identity and artifact left unchanged; reconcile explicitly (inspect the evidence, then edit/remove this state row) before re-running."
+    Write-Output "REFUSED-STATE ($($rec.state)): $failReason"
+    $failed = $true
+    break
+  }
+  if ("$($rec.state)" -notin @('pending','failed','done')) {
+    $failReason = "job '$($rec.id)' has unknown state '$($rec.state)' -- refusing (fail-closed)."
+    Write-Output "REFUSED-STATE (unknown): $failReason"
+    $failed = $true
+    break
+  }
+
+  if ($rec.state -eq "done") {
+    $currIdentity = Get-JobExecutionIdentity -Job $job
+    if ($null -ne $rec.execution_identity) {
+      $diffFields = @(Get-IdentityDiffFields -PrevIdentity $rec.execution_identity -CurrIdentity $currIdentity)
+      if ($diffFields.Count -gt 0) {
+        $rec.state       = "IDENTITY_MISMATCH"
+        $rec.fail_reason = "IDENTITY_MISMATCH on resume: changed [$($diffFields -join ', ')]"
+        Write-StateFile -Records $records -Path $stateFile
+        $failReason = "job '$($rec.id)' -- $($rec.fail_reason)"
+        Write-Output "REFUSE-SKIP (IDENTITY_MISMATCH): $failReason -- stopping all remaining jobs."
+        $failed = $true
+        break
+      }
+      if ($job.expect_artifact) {
+        $artItems = @(Get-Item -Path $job.expect_artifact -ErrorAction SilentlyContinue)
+        if ($artItems.Count -eq 0) {
+          $rec.state       = "ARTIFACT_MISSING"
+          $rec.fail_reason = "ARTIFACT_MISSING on resume: $($job.expect_artifact)"
+          Write-StateFile -Records $records -Path $stateFile
+          $failReason = "job '$($rec.id)' -- $($rec.fail_reason)"
+          Write-Output "REFUSE-SKIP (ARTIFACT_MISSING): $failReason -- stopping all remaining jobs."
+          $failed = $true
+          break
+        }
+        $currArtSha = Get-ArtifactSha256 -Pattern $job.expect_artifact
+        if (-not $rec.artifact_sha256 -or ("$($rec.artifact_sha256)" -ne "$currArtSha")) {
+          $rec.state       = "ARTIFACT_MISMATCH"
+          $rec.fail_reason = "ARTIFACT_MISMATCH on resume: expected $($rec.artifact_sha256), actual $currArtSha"
+          Write-StateFile -Records $records -Path $stateFile
+          $failReason = "job '$($rec.id)' -- $($rec.fail_reason)"
+          Write-Output "REFUSE-SKIP (ARTIFACT_MISMATCH): $failReason -- stopping all remaining jobs."
+          $failed = $true
+          break
+        }
+      }
+      Write-Output "SKIP (already done): $($rec.id)"
+      continue
+    } else {
+      if (Test-ResumeAdmissionRecord -ManifestPath $Manifest -Job $job -Rec $rec) {
+        Write-Output "SKIP (already done, legacy RESUME_ADMISSION fully pinned to manifest bytes + state row + artifact bytes + dependency hashes): $($rec.id)"
+        continue
+      }
+      $rec.state       = "UNVERIFIED"
+      $rec.fail_reason = "UNVERIFIED on resume: legacy done record lacks execution_identity and no RESUME_ADMISSION.json bound to this manifest/job/state/artifact"
+      Write-StateFile -Records $records -Path $stateFile
+      $failReason = "job '$($rec.id)' -- $($rec.fail_reason)"
+      Write-Output "REFUSE-SKIP (UNVERIFIED): $failReason -- stopping all remaining jobs."
+      $failed = $true
+      break
+    }
+  }
+
   $lane = "$($job.lane)"
   # Fix #2: args must be resolved BEFORE locking, since the lock key itself
   # depends on whether the job's args carry a -Terminal value (physical
@@ -407,6 +800,19 @@ foreach ($rec in $records) {
   $lockKey  = Get-LaneLockKey -Lane $lane -ArgsArray $argsArray
   $lockPath = Get-LaneLockPath -Key $lockKey
 
+  # R3-2: capture the REAL execution identity BEFORE launch; refuse (without launching) when a
+  # required native identity (runner / set / binary) cannot be resolved.
+  $launchIdentity = Get-JobExecutionIdentity -Job $job
+  if (@($launchIdentity.missing_required).Count -gt 0) {
+    $rec.state       = "failed"
+    $rec.fail_reason = "required execution identity unresolved before launch: [$(@($launchIdentity.missing_required) -join ', ')] -- not launched"
+    Write-StateFile -Records $records -Path $stateFile
+    $failReason = "job '$($rec.id)' -- $($rec.fail_reason)"
+    Write-Output "FAIL: $failReason -- stopping all remaining jobs."
+    $failed = $true
+    break
+  }
+
   Enter-LaneLock -LockPath $lockPath -Lane $lockKey -TimeoutSec $LaneLockTimeoutSec -PollMs $LaneLockPollMs
   try {
     $startDt = Get-Date
@@ -414,6 +820,10 @@ foreach ($rec in $records) {
     $rec.start       = $startDt.ToString("o")
     $rec.exit_code   = $null
     $rec.fail_reason = $null
+    $rec.execution_identity = $null
+    $rec.artifact_sha256    = $null
+    if (-not ($rec.PSObject.Properties.Name -contains 'launch_identity')) { $rec | Add-Member -MemberType NoteProperty -Name 'launch_identity' -Value $null }
+    $rec.launch_identity = $launchIdentity
     Write-StateFile -Records $records -Path $stateFile
 
     Write-Output "RUN: id=$($rec.id) runner=$($job.runner) lane=$lane lock_key=$lockKey model=$($job.model) args=$($argsArray -join ' ')"
@@ -458,14 +868,28 @@ foreach ($rec in $records) {
       $jobReasons.Add("unreliable runner: no success evidence (no OK marker, no expect_artifact)")
     }
 
+    # R3-2: re-capture identity AFTER the run. Anything that changed while the job ran cannot be
+    # stamped as the identity of the output; the job is failed (retryable) with the changed fields.
     if ($jobReasons.Count -eq 0) {
-      $rec.state       = "done"
-      $rec.fail_reason = $null
+      $postIdentity = Get-JobExecutionIdentity -Job $job
+      $changedDuring = @(Get-IdentityDiffFields -PrevIdentity $launchIdentity -CurrIdentity $postIdentity)
+      if ($changedDuring.Count -gt 0) {
+        $jobReasons.Add("execution identity changed DURING the run [$($changedDuring -join ', ')] -- output not stamped as verified")
+      }
+    }
+
+    if ($jobReasons.Count -eq 0) {
+      $rec.state              = "done"
+      $rec.fail_reason        = $null
+      $rec.execution_identity = $launchIdentity
+      $rec.artifact_sha256    = Get-ArtifactSha256 -Pattern $job.expect_artifact
       Write-StateFile -Records $records -Path $stateFile
       Write-Output "OK: id=$($rec.id) exit=0"
     } else {
-      $rec.state       = "failed"
-      $rec.fail_reason = ($jobReasons -join "; ")
+      $rec.state              = "failed"
+      $rec.fail_reason        = ($jobReasons -join "; ")
+      $rec.execution_identity = $null
+      $rec.artifact_sha256    = $null
       Write-StateFile -Records $records -Path $stateFile
       $failReason = "job '$($rec.id)' (runner=$($job.runner)) -- $($rec.fail_reason)"
       Write-Output "FAIL: $failReason -- stopping all remaining jobs."
