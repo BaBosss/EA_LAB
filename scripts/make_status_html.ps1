@@ -21,7 +21,10 @@ param(
 . (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
 $repo = if ($RepoRoot) { Resolve-EaLabRepoRoot -AnchorPath $RepoRoot } else { Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath }
 # Standalone runs use the same publisher decision as make_status.ps1 (recorded root; see its header).
-if ($null -eq $IsPrimaryWorkspace) { $IsPrimaryWorkspace = Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $PrimaryRepoRoot }
+$realOneDrive = ([System.IO.Path]::GetFullPath($OneDrivePath) -eq [System.IO.Path]::GetFullPath('C:\Users\patip\OneDrive\EA_LAB_STATUS.html'))
+if ($null -eq $IsPrimaryWorkspace) { $IsPrimaryWorkspace = Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $PrimaryRepoRoot -RealDestination $realOneDrive }
+# A caller-supplied $true cannot publish to the real OneDrive from a non-publisher checkout.
+elseif ($IsPrimaryWorkspace -and $realOneDrive -and -not (Test-EaLabStatusPublisher -Repo $repo -RealDestination $true)) { $IsPrimaryWorkspace = $false }
 
 $ErrorActionPreference = "SilentlyContinue"
 $template = Join-Path $repo "scripts\status_template.html"

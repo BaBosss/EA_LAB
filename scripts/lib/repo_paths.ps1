@@ -384,14 +384,18 @@ function Get-EaLabStatusPublisherRoot {
 
 function Test-EaLabStatusPublisher {
     <#
-    True only when $Repo is the status publisher: an explicit -PrimaryRepoRoot (tests) wins,
-    otherwise the recorded root from Get-EaLabStatusPublisherRoot. No recorded root = never.
+    True only when $Repo is the status publisher. The recorded root from
+    Get-EaLabStatusPublisherRoot decides; no recorded root = never. An explicit -PrimaryRepoRoot
+    (tests) is honoured ONLY when -RealDestination is false, i.e. the caller writes to a fake
+    OneDrive path. Against the real OneDrive destination the override is ignored, so no argument
+    can make a non-publisher checkout publish for real.
     #>
     param(
         [Parameter(Mandatory = $true)][string]$Repo,
-        [string]$PrimaryRepoRoot = ''
+        [string]$PrimaryRepoRoot = '',
+        [bool]$RealDestination = $true
     )
-    $publisher = if ($PrimaryRepoRoot) { $PrimaryRepoRoot } else { Get-EaLabStatusPublisherRoot -RepoRoot $Repo }
+    $publisher = if ($PrimaryRepoRoot -and -not $RealDestination) { $PrimaryRepoRoot } else { Get-EaLabStatusPublisherRoot -RepoRoot $Repo }
     if (-not $publisher) { return $false }
     return ([System.IO.Path]::GetFullPath($Repo).TrimEnd('\') -eq [System.IO.Path]::GetFullPath($publisher).TrimEnd('\'))
 }

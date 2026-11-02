@@ -42,9 +42,17 @@ if ($pubTop -ne [System.IO.Path]::GetFullPath($PublisherRoot).TrimEnd('\')) { Wr
 $pubCommon = [System.IO.Path]::GetFullPath((Invoke-Git @('-C', $PublisherRoot, 'rev-parse', '--path-format=absolute', '--git-common-dir')))
 if ($pubCommon -ne $hereCommon) { Write-Output "ABORT: $PublisherRoot belongs to a different repository ($pubCommon)."; exit 2 }
 
-Invoke-Git (@('-C', $PublisherRoot, 'restore', '--') + $generated) | Out-Null
+# Every check below runs BEFORE anything in the publisher checkout is modified.
+# The publisher is a LINKED worktree (never the main checkout, e.g. D:\EA_LAB) on a DETACHED HEAD.
+$pubGitDir = [System.IO.Path]::GetFullPath((Invoke-Git @('-C', $PublisherRoot, 'rev-parse', '--path-format=absolute', '--git-dir')))
+if ($pubGitDir.TrimEnd('\') -eq $pubCommon.TrimEnd('\')) { Write-Output "ABORT: $PublisherRoot is the main checkout, not a linked publisher worktree."; exit 2 }
+& git -C $PublisherRoot symbolic-ref -q HEAD *> $null
+if ($LASTEXITCODE -eq 0) { Write-Output "ABORT: $PublisherRoot is on a branch; the publisher must be a detached worktree."; exit 2 }
+# Only the files make_status regenerates may differ; anything else is refused untouched.
 $dirty = @(Invoke-Git @('-C', $PublisherRoot, 'status', '--porcelain', '--untracked-files=no') | Where-Object { $_ })
-if ($dirty.Count) { Write-Output "ABORT: publisher worktree has edits: $($dirty -join '; ')"; exit 2 }
+$foreign = @($dirty | Where-Object { $generated -notcontains ($_.Substring(3).Trim('"') -replace '/', '\') })
+if ($foreign.Count) { Write-Output "ABORT: publisher worktree has edits: $($foreign -join '; ')"; exit 2 }
+if ($dirty.Count) { Invoke-Git (@('-C', $PublisherRoot, 'restore', '--') + $generated) | Out-Null }
 
 Invoke-Git @('-C', $PublisherRoot, 'fetch', '-q', 'origin') | Out-Null
 $current = (Invoke-Git @('-C', $PublisherRoot, 'rev-parse', 'HEAD')).Trim()

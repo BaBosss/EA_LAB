@@ -31,7 +31,8 @@ param(
 )
 . (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
 $repo = if ($RepoRoot) { Resolve-EaLabRepoRoot -AnchorPath $RepoRoot } else { Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath }
-$isPrimaryWorkspace = Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $PrimaryRepoRoot
+$realOneDrive = ([System.IO.Path]::GetFullPath($OneDrivePath) -eq [System.IO.Path]::GetFullPath('C:\Users\patip\OneDrive\EA_LAB_STATUS.md'))
+$isPrimaryWorkspace = Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $PrimaryRepoRoot -RealDestination $realOneDrive
 
 $ErrorActionPreference = "SilentlyContinue"
 $out  = Join-Path $repo "STATUS.md"

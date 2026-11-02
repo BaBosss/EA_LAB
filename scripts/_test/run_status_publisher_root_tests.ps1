@@ -28,9 +28,11 @@ try {
     Set-Content -LiteralPath $rec -Value 'D:\EA_LAB_CONTROL\w\status-publisher'
     Assert-Equal 'record naming another root -> this repo does not publish' $false (Test-EaLabStatusPublisher -Repo $repo)
     Assert-Equal 'primary checkout is not the recorded publisher' $false (Test-EaLabStatusPublisher -Repo 'D:\EA_LAB' -PrimaryRepoRoot (Get-EaLabStatusPublisherRoot -RepoRoot $repo))
-    Write-Host '=== explicit override (tests) ==='
-    Assert-Equal 'override equal to repo -> publishes' $true (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $repo)
-    Assert-Equal 'override elsewhere -> does not publish' $false (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot (Join-Path $tmp 'other'))
+    Write-Host '=== explicit override (tests, fake destination only) ==='
+    Assert-Equal 'override equal to repo + fake destination -> publishes' $true (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $repo -RealDestination $false)
+    Assert-Equal 'override elsewhere + fake destination -> does not publish' $false (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot (Join-Path $tmp 'other') -RealDestination $false)
+    Assert-Equal 'override equal to repo + REAL destination -> ignored, does not publish' $false (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $repo -RealDestination $true)
+    Assert-Equal 'override + default (real) destination -> ignored, does not publish' $false (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $repo)
     Write-Host '=== committed record ==='
     Assert-Equal 'this checkout records the canonical publisher worktree' 'D:\EA_LAB_CONTROL\w\status-publisher' (Get-EaLabStatusPublisherRoot -RepoRoot $RepoRoot)
     Write-Host '=== publish_status.ps1 refusals ==='
