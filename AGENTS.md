@@ -10,6 +10,8 @@
 
 **EA_LAB CHAT ROLE ROUTER -- Owner 2026-10-28:** CHAT_ROLE and LANE_ID come from the original admitted task ticket, not shared Project text. Generic Owner "continue / finish" in a WORKER or REVIEWER chat means continue the SAME lane, never self-promote to Main CT, issue leases, dispatch workers, self-review or push. Changing CT role needs explicit Owner instruction and serialized CT handoff; missing proof means ROLE_UNVERIFIED_READ_ONLY. Registry remains the source authorization gate.
 
+**Cross-agent operating protocol -- owner-ratified 2026-11-02:** `docs/workflows/CORE_SEAT_PROTOCOL_V8_20261102.md` governs seat rotation, author/reviewer transfers versus continuations, the admission boundary before any write, completion dimensions, evidence custody and money-safety RED scope, for every provider alike. It adds no role and changes no routing in §1.1/§1.5. Where it and a stricter task contract or `docs/PIPELINE.md` gate differ, the stricter gate applies.
+
 ---
 
 ## 1. Roles (assigned by the owner or an approved task contract)

@@ -331,6 +331,11 @@ This is the startup-sized operative set. Detailed provenance, old wording, incid
 - **Owner policy convergence - 2026-10-06 Gemini-first refinement:** high-risk/core/execution/position/accounting/money/risk work requires a separate read-only Acceptance-Grade Independent Exact-Head Scrutiny job/lane/contract against the exact frozen clean HEAD and isolated evidence after deterministic/regression/adversarial/negative gates. Gemini 3.8 Flash High is the current default bounded implementation author and normally the default final reviewer when dispatched in a fresh separate read-only reviewer job/lane/contract; an acceptance-grade GPT reviewer is an alternate when available. Claude Sonnet 5.5 High and Claude Opus 5.5 High are scarce reserve routes only: Sonnet for a concrete difficult implementation/repair need, Opus for a concrete high-consequence/ambiguous escalation or ordinary-route limitation. The author job cannot self-approve; independence is procedural/evidentiary, not provider-family based. One repair plus one targeted exact-head recheck remains the maximum only where the underlying contract permits it; no PASS-shopping, no repair-budget reset, and no provider route grants runtime/risk/HOLDOUT/deployment/trading authority.
 - Canonical bytes come from current pushed `origin/master`; use explicit refs/clean isolated worktrees for canonical mutation.
 - Never reset/clean/stash/restore/overwrite unrelated dirty/staged/untracked work as a side effect.
+- **Core Seat Protocol v8, owner-ratified 2026-11-02:** `docs/workflows/CORE_SEAT_PROTOCOL_V8_20261102.md` is the one cross-agent procedure, the same whichever provider holds a role.
+  - Its key rules: a handoff is information, not authorization; read-only discovery precedes the A4a admission proof; write admission needs an authorized assignment plus a valid lease; automatic batch resume is unavailable on canonical until R4 is integrated; an unknown magic, unknown account, stale feed or overdue judge is RED, and acknowledgement does not clear it.
+  - It does not change §4.1 routing.
+  - The different-family gates in `docs/PIPELINE.md` rows 3 and 9 stay in force until reconciled.
+  - Codex review of v8 is deferred by the owner, and any fixes will follow as an amendment.
 
 ### 4.2 Strategy / evidence / tester rules still in force
 

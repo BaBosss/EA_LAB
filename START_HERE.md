@@ -15,6 +15,7 @@ Purpose: deterministic startup router for every new EA_LAB Control Tower or work
 6. Read `AGENT_TASKBOARD.md` and the relevant `taskboards/active/*` owner for current queue state.
 7. Inspect Lane Registry before creating a writer/runtime lane: `scripts/lane_registry.ps1` + `D:\EA_LAB_CONTROL\lanes\registry-v1`.
 8. Use an isolated clean worktree/explicit ref for canonical bytes. Never treat a dirty primary worktree/index as canonical.
+9. Taking over, resuming, or reassigning interrupted work, or switching provider after quota loss: apply `docs/workflows/CORE_SEAT_PROTOCOL_V8_20261102.md` §A1/§A4/§A4a (owner-ratified 2026-11-02). Read-only discovery comes first. A handoff file is information, not authorization.
 
 If a handoff, Operating Context, or chat says a different SHA/status than pushed `origin/master`, re-anchor to Git first. Preserve the older artifact as history; do not silently promote it over canonical state.
 
@@ -35,6 +36,7 @@ A decision made in chat is transient until it is migrated into its canonical own
 - Roles, permissions, hard stops, review/preservation rules: `AGENTS.md`
 - Queue/intermediate task state: `AGENT_TASKBOARD.md` + `taskboards/active/*`
 - Lane claims, one-writer/runtime ownership: `scripts/lane_registry.ps1`
+- Cross-agent operating protocol (seat rotation, transfers vs continuations, admission boundary, completion dimensions, evidence custody, money-safety RED scope): `docs/workflows/CORE_SEAT_PROTOCOL_V8_20261102.md` (owner-ratified 2026-11-02; does not change routing or activate runtime)
 
 ### Engineering / bug-fix discipline
 - For non-trivial changes, consult `docs/workflows/EA_LAB_SENIOR_ENGINEERING_DISCIPLINE_V1.md` alongside the existing `skills/diagnosing-bugs/SKILL.md`, `skills/tdd/SKILL.md`, and `skills/code-review/SKILL.md` as applicable. The discipline does not override `AGENTS.md`, existing task contracts, owners or reviewer gates.
