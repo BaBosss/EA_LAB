@@ -384,18 +384,19 @@ function Get-EaLabStatusPublisherRoot {
 
 function Test-EaLabRealOneDrivePath {
     <#
-    True when $Path is inside a real OneDrive folder (the env OneDrive roots or the owner's
-    C:\Users\patip\OneDrive). make_status writes sibling files next to the given path, so the test
-    is on the FOLDER, never on one file name: any destination under OneDrive counts as real.
+    Fail closed: every destination counts as REAL except a plain drive path ("X:\...") inside the
+    system temp directory, which is where the test suites put their fake OneDrive folders. Device,
+    UNC and provider-prefixed aliases, relative paths and anything that fails to normalise are
+    REAL, so no path spelling can unlock the test-only -PrimaryRepoRoot override.
     #>
     param([Parameter(Mandatory = $true)][string]$Path)
-    $full = [System.IO.Path]::GetFullPath($Path).TrimEnd('\')
-    $roots = @($env:OneDrive, $env:OneDriveConsumer, $env:OneDriveCommercial, 'C:\Users\patip\OneDrive') |
-        Where-Object { $_ } | ForEach-Object { [System.IO.Path]::GetFullPath($_).TrimEnd('\') } | Select-Object -Unique
-    foreach ($r in $roots) {
-        if ($full -eq $r -or $full.StartsWith($r + '\', [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
-    }
-    return $false
+    try {
+        if ($Path -notmatch '^[A-Za-z]:\\' -or $Path -match '[\*\?]') { return $true }
+        $full = [System.IO.Path]::GetFullPath($Path).TrimEnd('\')
+        $temp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd('\')
+        if ($full.StartsWith($temp + '\', [System.StringComparison]::OrdinalIgnoreCase)) { return $false }
+        return $true
+    } catch { return $true }
 }
 
 function Test-EaLabStatusPublisher {
