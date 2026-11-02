@@ -24,8 +24,11 @@ if (-not $PublisherRoot) { Write-Output 'ABORT: no recorded publisher root (scri
 $generated = @('STATUS.html', 'EA_LAB_MAP.html')
 
 function Invoke-Git([string[]]$GitArgs) {
-    $out = & git @GitArgs 2>&1
-    if ($LASTEXITCODE -ne 0) { throw "git $($GitArgs -join ' ') failed: $out" }
+    # git writes progress to stderr; under 'Stop' PS 5.1 turns that into a terminating error.
+    # Judge success by the exit code only.
+    $prev = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try { $out = @(& git @GitArgs 2>&1 | ForEach-Object { "$_" }) } finally { $ErrorActionPreference = $prev }
+    if ($LASTEXITCODE -ne 0) { throw "git $($GitArgs -join ' ') failed: $($out -join ' ')" }
     return $out
 }
 
