@@ -59,6 +59,12 @@ only a proposal) and it does not activate any runtime.
    - an unknown magic, unknown account, stale feed, unregistered exposure or overdue judge is RED;
    - RED freezes new approvals, acknowledgement does not clear it, and nothing auto-closes.
 
+## Amendment 1 (2026-11-02) - Codex v8 review finding F1
+
+This amendment supersedes the bundled ratification wording in A10.4. The 2026-11-02 ratification covers the protocol text, the A7 interim stricter-gate rule, and the A8.7 RED scope and clearance criteria. A9 remains an unapproved proposal. Migration that preserves current routing does not require A9 approval; all applicable reconciliation, pilot, replay-scope and acceptance gates remain mandatory.
+
+Review record for v8 (Codex, GPT-6, read-only): protocol text ACCEPT WITH NAMED FIXES (F1 above); canonical commit `94badcc9` ACCEPT; local entry banners REVISE, then revised per F2-F5 and left uncommitted on local master. Review copies with SHA-256 manifest: `D:\EA_LAB_PRESERVE\20261102_protocol\` (`CODEX_V8_REVIEW_VERBATIM.md`, `CHATGPT_V7_REVIEW_VERBATIM.md`).
+
 ---
 
 ## Ratified text (verbatim)
