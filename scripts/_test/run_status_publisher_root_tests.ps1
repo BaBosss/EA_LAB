@@ -33,6 +33,12 @@ try {
     Assert-Equal 'override elsewhere + fake destination -> does not publish' $false (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot (Join-Path $tmp 'other') -RealDestination $false)
     Assert-Equal 'override equal to repo + REAL destination -> ignored, does not publish' $false (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $repo -RealDestination $true)
     Assert-Equal 'override + default (real) destination -> ignored, does not publish' $false (Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $repo)
+    Write-Host '=== real OneDrive detection (folder, not file name) ==='
+    Assert-Equal 'default STATUS.md path is real' $true (Test-EaLabRealOneDrivePath -Path 'C:\Users\patip\OneDrive\EA_LAB_STATUS.md')
+    Assert-Equal 'sibling file in real OneDrive is real' $true (Test-EaLabRealOneDrivePath -Path 'C:\Users\patip\OneDrive\EA_LAB_STATUS.html')
+    Assert-Equal 'nested path in real OneDrive is real' $true (Test-EaLabRealOneDrivePath -Path 'C:\Users\patip\OneDrive\x\y.md')
+    Assert-Equal 'look-alike folder name is not real' $false (Test-EaLabRealOneDrivePath -Path 'C:\Users\patip\OneDriveX\EA_LAB_STATUS.md')
+    Assert-Equal 'temp fake destination is not real' $false (Test-EaLabRealOneDrivePath -Path (Join-Path $tmp 'fake\EA_LAB_STATUS.md'))
     Write-Host '=== committed record ==='
     Assert-Equal 'this checkout records the canonical publisher worktree' 'D:\EA_LAB_CONTROL\w\status-publisher' (Get-EaLabStatusPublisherRoot -RepoRoot $RepoRoot)
     Write-Host '=== publish_status.ps1 refusals ==='

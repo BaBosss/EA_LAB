@@ -382,6 +382,22 @@ function Get-EaLabStatusPublisherRoot {
     return [System.IO.Path]::GetFullPath($value).TrimEnd('\')
 }
 
+function Test-EaLabRealOneDrivePath {
+    <#
+    True when $Path is inside a real OneDrive folder (the env OneDrive roots or the owner's
+    C:\Users\patip\OneDrive). make_status writes sibling files next to the given path, so the test
+    is on the FOLDER, never on one file name: any destination under OneDrive counts as real.
+    #>
+    param([Parameter(Mandatory = $true)][string]$Path)
+    $full = [System.IO.Path]::GetFullPath($Path).TrimEnd('\')
+    $roots = @($env:OneDrive, $env:OneDriveConsumer, $env:OneDriveCommercial, 'C:\Users\patip\OneDrive') |
+        Where-Object { $_ } | ForEach-Object { [System.IO.Path]::GetFullPath($_).TrimEnd('\') } | Select-Object -Unique
+    foreach ($r in $roots) {
+        if ($full -eq $r -or $full.StartsWith($r + '\', [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+    return $false
+}
+
 function Test-EaLabStatusPublisher {
     <#
     True only when $Repo is the status publisher. The recorded root from
