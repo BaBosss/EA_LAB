@@ -13,20 +13,25 @@
 # the script; there is no fallback to "D:\EA_LAB" on failure.
 #
 # PUBLICATION STAYS GATED, NOT REMOVED: the OneDrive copy below only fires when the resolved
-# root equals -PrimaryRepoRoot (default 'D:\EA_LAB', the one real owner checkout). Any other
+# root equals the publisher root (see PUBLISHER ROOT below; -PrimaryRepoRoot overrides it in tests). Any other
 # resolved root -- an isolated worktree, a CI checkout, a test fixture -- is, by construction,
 # not the primary workspace, so it can never publish to the owner's shared files by accident.
 # -PrimaryRepoRoot and -OneDrivePath are override points ONLY for tests (see
 # scripts\_test\run_make_status_worktree_isolation_tests.ps1); their defaults reproduce the
 # exact prior behavior for the real primary checkout.
+#
+# PUBLISHER ROOT (2026-11-02, A10 pilot P1 option a). The publishing checkout is no longer the
+# primary D:\EA_LAB (a diverged local lineage) but the recorded root in
+# scripts\status_publisher_root.txt -- a clean worktree tracking origin/master, refreshed by
+# scripts\publish_status.ps1. -PrimaryRepoRoot remains the test override; empty = recorded root.
 param(
     [string]$RepoRoot = '',
-    [string]$PrimaryRepoRoot = 'D:\EA_LAB',
+    [string]$PrimaryRepoRoot = '',
     [string]$OneDrivePath = 'C:\Users\patip\OneDrive\EA_LAB_STATUS.md'
 )
 . (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
 $repo = if ($RepoRoot) { Resolve-EaLabRepoRoot -AnchorPath $RepoRoot } else { Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath }
-$isPrimaryWorkspace = ($repo -eq $PrimaryRepoRoot.TrimEnd('\'))
+$isPrimaryWorkspace = Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $PrimaryRepoRoot
 
 $ErrorActionPreference = "SilentlyContinue"
 $out  = Join-Path $repo "STATUS.md"

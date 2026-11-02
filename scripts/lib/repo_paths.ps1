@@ -362,3 +362,36 @@ function Test-EaLabHooksPathOwnership {
     }
     return $res
 }
+
+function Get-EaLabStatusPublisherRoot {
+    <#
+    The ONE checkout allowed to publish the owner dashboard (STATUS.md/.html, EA_LAB_MAP.html) to
+    OneDrive. It is a recorded setting, scripts\status_publisher_root.txt in the resolved repo, not a
+    guess: since 2026-11-02 (A10 pilot P1, option a) it names a clean worktree that tracks
+    origin/master, refreshed by scripts\publish_status.ps1. The primary checkout D:\EA_LAB holds a
+    diverged local lineage and must not publish.
+    Fail closed: a missing, blank or non-absolute value returns '' and NO checkout publishes.
+    #>
+    param([Parameter(Mandatory = $true)][string]$RepoRoot)
+    $file = Join-Path $RepoRoot 'scripts\status_publisher_root.txt'
+    if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { return '' }
+    $value = (Get-Content -LiteralPath $file -TotalCount 1 -ErrorAction SilentlyContinue)
+    if ($null -eq $value) { return '' }
+    $value = "$value".Trim()
+    if (-not $value -or -not [System.IO.Path]::IsPathRooted($value) -or $value -notmatch '^[A-Za-z]:\\') { return '' }
+    return [System.IO.Path]::GetFullPath($value).TrimEnd('\')
+}
+
+function Test-EaLabStatusPublisher {
+    <#
+    True only when $Repo is the status publisher: an explicit -PrimaryRepoRoot (tests) wins,
+    otherwise the recorded root from Get-EaLabStatusPublisherRoot. No recorded root = never.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$Repo,
+        [string]$PrimaryRepoRoot = ''
+    )
+    $publisher = if ($PrimaryRepoRoot) { $PrimaryRepoRoot } else { Get-EaLabStatusPublisherRoot -RepoRoot $Repo }
+    if (-not $publisher) { return $false }
+    return ([System.IO.Path]::GetFullPath($Repo).TrimEnd('\') -eq [System.IO.Path]::GetFullPath($publisher).TrimEnd('\'))
+}

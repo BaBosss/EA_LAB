@@ -15,12 +15,13 @@
 param(
     [string]$RepoRoot = '',
     [Nullable[bool]]$IsPrimaryWorkspace = $null,
-    [string]$PrimaryRepoRoot = 'D:\EA_LAB',
+    [string]$PrimaryRepoRoot = '',
     [string]$OneDrivePath = 'C:\Users\patip\OneDrive\EA_LAB_STATUS.html'
 )
 . (Join-Path $PSScriptRoot 'lib\repo_paths.ps1')
 $repo = if ($RepoRoot) { Resolve-EaLabRepoRoot -AnchorPath $RepoRoot } else { Resolve-EaLabRepoRoot -AnchorPath $PSCommandPath }
-if ($null -eq $IsPrimaryWorkspace) { $IsPrimaryWorkspace = ($repo -eq $PrimaryRepoRoot.TrimEnd('\')) }
+# Standalone runs use the same publisher decision as make_status.ps1 (recorded root; see its header).
+if ($null -eq $IsPrimaryWorkspace) { $IsPrimaryWorkspace = Test-EaLabStatusPublisher -Repo $repo -PrimaryRepoRoot $PrimaryRepoRoot }
 
 $ErrorActionPreference = "SilentlyContinue"
 $template = Join-Path $repo "scripts\status_template.html"
