@@ -27,6 +27,57 @@
 | **Hermes** | Deterministic/mechanical EA R&D evidence factory | execute exact approved manifests/backtests/batches, normalize evidence, build smoke/year/regime/parent-child outputs, and run pre-registered optimization stages under the Hermes contract | invent hypotheses, change parent mechanics/risk/defaults, choose HOLDOUT, widen ranges outside contract, deploy/attach runtime, trade, promote a candidate, or reinterpret harness/environment failure as strategy failure |
 | **OpenClaw team (commanded from Telegram)** | Remote execution/coordination lanes mapped to the roles above | perform only the role and task contract assigned to each lane; track via STATUS.md + git log (tag `[oc-*]`) + Telegram | gain extra authority from running remotely or through a manager layer |
 
+### 1.0 Owner working mode: one hub, LIGHT and FULL paths (owner-ratified 2026-11-02)
+
+Owner (Thai, verbatim): "ผมไม่อยากไปวงเวียน step การทำงานของ Chat GPT เลย มันเยอะเกินไป … ผมแทบไม่เห็นความเสี่ยงอะไรเลยกับงานระบบ"
+("I don't want to go round the circle of ChatGPT's work steps; it's too much … I see almost no risk in system work"),
+then "ก็ตามนี้ก็ได้ทำไปก่อน" ("this is fine, go ahead"). The text also needs the owner's OK before it is pushed.
+
+**Precedence.**
+- This section prevails over §§1.1, 1.1a, 1.4b, 1.5 and 1.5a wherever they require more process for LIGHT work.
+- It relaxes nothing under FULL.
+- It leaves untouched the VERDICT GATE in `CLAUDE.md`, the §3 iron rules and the owner-only boundaries in §2.
+
+**Hub.**
+- The agent the owner is working through is the hub. Today that is Claude Code; ChatGPT Main CT can hold the role when
+  the owner works through it.
+- The hub plans, authors or dispatches, requests the review, integrates LIGHT work and reports.
+- There is one hub at a time, identified by the lane's `owner_chat`.
+
+**LIGHT path** — the default for everything not listed under FULL:
+- docs, reports, handoffs, agent entry files, workflow text (a governance change still needs the owner's OK of its text);
+- Lane Registry, hooks, `check_state`, and status/monitor/dashboard tooling;
+- backtest, optimizer and report-parsing tools, whose own tests must pass;
+- new EA source, backtests, optimisation and verdict write-ups (the VERDICT GATE governs the verdict), and demo-account
+  attach.
+
+Steps:
+1. Claim a Registry lane from `origin/master` with explicit path arrays.
+2. The author edits.
+3. The tool's own tests and the hooks are green.
+4. **One** independent review from a different model family on the frozen head, answering PASS or FAIL with findings
+   (for example `codex exec -s read-only` for GPT, or AGY read-only).
+5. The hub fast-forward pushes and checks the remote.
+6. One short report to the owner.
+
+No admission boards, preflights, pilots, dimension tables or new gates unless the owner asks for them.
+
+**FULL path** — owner approval before the action:
+- anything that changes a REAL account: attach or detach, `.set`, lot, magic or kill rule; demo→live promotion; REAL
+  rows in `DEPLOYMENTS.csv`/`ACCOUNTS.csv`;
+- the shared EA core used by live EAs (order execution, lot normalisation, risk caps, recovery/grid depth, kill
+  switches), and any guard that can close or modify positions;
+- binaries copied to a VPS or a live terminal;
+- irreversible acts: force push, history rewrite, deleting preserved data, workflow cutover.
+
+Steps: the hub prepares; an independent different-family review; explicit owner approval naming the change; execution;
+verification on the real target.
+
+**Both paths.**
+- A reviewer reviews; it does not re-plan.
+- Scope creep becomes a new task, not a new gate.
+- If the path is unclear, the hub asks the owner in one line.
+
 ### 1.1 Current provider-routing and scrutiny override (owner-ratified 2026-10-06)
 
 ChatGPT Plus current chat is the one Main Control Tower and coordinates one project truth. Preferred operating path: Boss -> ChatGPT Main CT -> lnwjud for currently qualified read/control/write surfaces -> RDC as the explicit machine actuator for filesystem/process/terminal/GUI work and any capability lnwjud does not currently expose/qualify -> BaBoss -> bounded AI/deterministic workers -> Main CT intake/integration.
