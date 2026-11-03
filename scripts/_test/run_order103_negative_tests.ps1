@@ -148,6 +148,10 @@ function Copy-HookFixtureDependencies {
         'scripts\check_handoff_contract.ps1',
         'scripts\lib\evidence.ps1',
         'scripts\lib\magic_guard.ps1',
+        # check_state.ps1 dot-sources these two as well. Without them the real guard
+        # WARNs on every deployment status and exits 1 under -Strict in the fixture.
+        'scripts\lib\deployment_status.ps1',
+        'scripts\lib\repo_paths.ps1',
         '_triage\factory_os\magic.py',
         '_triage\factory_os\scheduler.py',
         '_triage\factory_os\schemas.json',
@@ -193,6 +197,8 @@ function Copy-HookFixtureDependencies {
             'scripts\check_handoff_contract.ps1',
             'scripts\lib\evidence.ps1',
             'scripts\lib\magic_guard.ps1',
+            'scripts\lib\deployment_status.ps1',
+            'scripts\lib\repo_paths.ps1',
             '_triage\factory_os\magic.py',
             '_triage\factory_os\scheduler.py',
             '_triage\factory_os\schemas.json',
@@ -233,9 +239,11 @@ function Invoke-PowerShellFile {
     $psi.UseShellExecute = $false
     $psi.CreateNoWindow = $true
     $proc = [System.Diagnostics.Process]::Start($psi)
+    # Concurrent stderr drain: see Invoke-GitRaw in check_taskboard_archive.ps1.
+    $stderrTask = $proc.StandardError.ReadToEndAsync()
     $stdout = $proc.StandardOutput.ReadToEnd()
-    $stderr = $proc.StandardError.ReadToEnd()
     $proc.WaitForExit()
+    $stderr = $stderrTask.Result
     return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
 }
 
@@ -716,9 +724,8 @@ function New-TempHookRepo {
     # so the fixture must carry that dependency too or the hook fails on line 19
     # of check_experiment_events.ps1 (missing-dependency = fail-closed, by design).
     Copy-Item (Join-Path $RepoRoot 'scripts\experiment_event_log.ps1') (Join-Path $dir 'scripts\experiment_event_log.ps1') -Force
-    # check_state.ps1 is repo-specific (checks EA_LAB docs) -- stub a trivial pass-through
-    # so the temp-repo hook test isolates the ORDER-103 Fix 2 logic, not the unrelated
-    # anti-drift guard.
+    # Placeholder only: Copy-HookFixtureDependencies below replaces this with the REAL
+    # check_state.ps1 and its inputs (06ee4ebf), so the hook runs the production guard.
     'exit 0' | Set-Content -Path (Join-Path $dir 'scripts\check_state.ps1') -Encoding UTF8
     [System.IO.File]::WriteAllText((Join-Path $dir 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
     # ORDER-270: anything else the hook calls gets a pass-through stub. These
@@ -1153,9 +1160,10 @@ $filteredDirs = @($origPathDirs | Where-Object {
 })
 $psi.EnvironmentVariables['PATH'] = ($filteredDirs -join ';')
 $proc = [System.Diagnostics.Process]::Start($psi)
+$noPsStderrTask = $proc.StandardError.ReadToEndAsync()
 $noPsStdout = $proc.StandardOutput.ReadToEnd()
-$noPsStderr = $proc.StandardError.ReadToEnd()
 $proc.WaitForExit()
+$noPsStderr = $noPsStderrTask.Result
 $noPsBlocked = ($proc.ExitCode -ne 0)
 $noPsDiagnosticPresent = ($noPsStdout + $noPsStderr) -match 'PRECOMMIT-FAIL-CLOSED: PowerShell not found'
 Add-Result -Name 'fix2-no-powershell-fails-closed-with-exact-diagnostic' -Pass ($noPsBlocked -and $noPsDiagnosticPresent) -Detail ("exit=$($proc.ExitCode) out=$noPsStdout err=$noPsStderr")

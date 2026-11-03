@@ -176,9 +176,12 @@ function Invoke-Validator {
     $psi.RedirectStandardError = $true
     $psi.UseShellExecute = $false
     $proc = [System.Diagnostics.Process]::Start($psi)
+    # Concurrent stderr drain: stdout-then-stderr deadlocks once the child writes >~4 KB to
+    # stderr (see Invoke-GitRaw in check_taskboard_archive.ps1).
+    $stderrTask = $proc.StandardError.ReadToEndAsync()
     $stdout = $proc.StandardOutput.ReadToEnd()
-    $stderr = $proc.StandardError.ReadToEnd()
     $proc.WaitForExit()
+    $stderr = $stderrTask.Result
     return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
 }
 

@@ -400,9 +400,14 @@ function Invoke-GitRaw {
     $psi.UseShellExecute = $false
     $psi.CreateNoWindow = $true
     $proc = [System.Diagnostics.Process]::Start($psi)
+    # Drain stderr concurrently. `git commit` routes hook output to stderr; reading stdout
+    # to EOF first deadlocked as soon as a hook wrote more than the ~4 KB pipe buffer
+    # (the hook blocks on write, git waits on the hook, we wait on stdout EOF -- forever,
+    # at 0 CPU). Probe 2026-11-03: 3000 B returned in 1 s, 8000 B hung.
+    $stderrTask = $proc.StandardError.ReadToEndAsync()
     $stdout = $proc.StandardOutput.ReadToEnd()
-    $stderr = $proc.StandardError.ReadToEnd()
     $proc.WaitForExit()
+    $stderr = $stderrTask.Result
     return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
 }
 
