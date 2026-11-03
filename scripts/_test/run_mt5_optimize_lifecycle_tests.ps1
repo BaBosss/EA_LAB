@@ -241,6 +241,8 @@ try {
         @{ Tag = "TAG_C11_BLANK_TITLE";  Expect = "no DocumentProperties/Title"; Xml = ($validC11 -replace '<Title>TAG_C11</Title>', '<Title>  </Title>') }
         @{ Tag = "TAG_C11_LOOSE_ROWS";   Expect = "Incomplete SpreadsheetML structure"; Xml = '<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"><DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Title>TAG_C11_LOOSE_ROWS</Title></DocumentProperties><Worksheet/><Table/><Row/><Row/></Workbook>' }
         @{ Tag = "TAG_C11_NO_NAMESPACE"; Expect = "not in the SpreadsheetML namespace"; Xml = ($validC11 -replace 'xmlns="urn:schemas-microsoft-com:office:spreadsheet"', '') }
+        # A lookalike Title in a foreign namespace must not stand in for the Office DocumentProperties/Title.
+        @{ Tag = "TAG_C11_FOREIGN_NS_TITLE"; Expect = "no DocumentProperties/Title"; Xml = ($validC11 -replace '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">', '<DocumentProperties xmlns="urn:example:not-office">') }
     )
     foreach ($case in $c11Cases) {
         $tag  = $case.Tag
@@ -259,6 +261,19 @@ try {
         Assert-Case "C11 $tag refused with INVALID XML (exit 4)" ($code -eq 4 -and ($out -join " ") -match [regex]::Escape($case.Expect)) "exit=$code out=$($out -join ' ')"
         Assert-Case "C11 $tag is NOT published" (-not (Test-Path -LiteralPath $dest))
     }
+
+    # --- C12: -MockProcessRunner outside a temp-isolated run is refused before anything is touched ---
+    $notTempAuto = Join-Path (Split-Path -Parent $repoRoot) ("mock_isolation_probe_" + [guid]::NewGuid().ToString("N").Substring(0, 8))
+    $outC12 = & powershell -NoProfile -ExecutionPolicy Bypass -Command "
+        & '$optScript' -Expert 'TestPkg\SyntheticOptEA' -SetFile '$validSet' -Symbol 'XAUUSD' -Period 'H1' -FromDate '2023.01.01' -ToDate '2025.01.01' -TimeoutSec 5 -Terminal '$env:SystemRoot\System32\hostname.exe' -CapabilityFile '$capFile' -AllowLegacyIdentity -ReportName 'TAG_C12_MOCK_NOT_ISOLATED' -DataDir '$dataDir' -AutoDir '$notTempAuto' -DecisionLogPath '$decisionLog' -MockProcessRunner {
+            param(`$ini, `$srcXml, `$repName)
+            return [pscustomobject]@{ Id = 91012; HasExited = `$true; ExitCode = 0 }
+        }
+        exit `$LASTEXITCODE
+    " 2>&1
+    $codeC12 = $LASTEXITCODE
+    Assert-Case "C12.a mock runner with a non-temp -AutoDir is refused (exit 2)" ($codeC12 -eq 2 -and ($outC12 -join " ") -match "MockProcessRunner is a test hook") "exit=$codeC12 out=$($outC12 -join ' ')"
+    Assert-Case "C12.b the non-temp -AutoDir was never created" (-not (Test-Path -LiteralPath $notTempAuto))
 
     # --- C9: Static source checks on scripts\mt5_optimize.ps1 ---
     $srcText = Get-Content -LiteralPath $optScript -Raw

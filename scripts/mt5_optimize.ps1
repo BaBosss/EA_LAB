@@ -195,7 +195,8 @@ function Test-Mt5OptimizeXmlArtifact {
 
   # MT5 always writes DocumentProperties/Title ("<Expert> <Symbol>,<TF> <from>-<to>"); a missing or
   # blank Title cannot be bound to this invocation, so it is refused rather than skipped.
-  $titleNode = $xmlDoc.SelectSingleNode("//*[local-name()='DocumentProperties']/*[local-name()='Title']")
+  $oNs = 'urn:schemas-microsoft-com:office:office'
+  $titleNode = $xmlDoc.SelectSingleNode("/*[local-name()='Workbook' and namespace-uri()='$ssNs']/*[local-name()='DocumentProperties' and namespace-uri()='$oNs']/*[local-name()='Title' and namespace-uri()='$oNs']")
   if ($null -eq $titleNode -or [string]::IsNullOrWhiteSpace($titleNode.InnerText)) {
     return [pscustomobject]@{ ok = $false; reason = "XML has no DocumentProperties/Title; cannot bind it to ReportName '$ExpectedReportName' or Expert" }
   }
@@ -216,6 +217,20 @@ function Test-Mt5OptimizeXmlArtifact {
     sha256 = $hash2
     bytes  = $bytes2.Length
     rows   = $rows.Count
+  }
+}
+
+# -MockProcessRunner is a test hook: it replaces terminal64 and skips the running-terminal guard, so it
+# is honoured only when every path the run mutates sits under the system temp directory.
+if ($null -ne $MockProcessRunner) {
+  $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\') + '\'
+  $isolated = $AutoDir -and $DataDir -and $DecisionLogPath -and
+    (@($AutoDir, $DataDir, $DecisionLogPath) | Where-Object {
+      -not ([IO.Path]::GetFullPath($_) + '\').StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase) -or ($_ -match '\.\.')
+    }).Count -eq 0
+  if (-not $isolated) {
+    Write-Output "ABORT: -MockProcessRunner is a test hook; it requires -AutoDir, -DataDir and -DecisionLogPath under $tempRoot."
+    exit 2
   }
 }
 
@@ -284,7 +299,9 @@ $pyExe = Join-Path $repoRoot "tools\python312\python.exe"
 $expertLeaf = [System.IO.Path]::GetFileNameWithoutExtension(($Expert -replace '/', '\'))
 $templateWrapperMq5 = Join-Path $repoRoot ("ea_template\" + $expertLeaf + ".mq5")
 $templateCheckPy    = Join-Path $PSScriptRoot "check_template_presets.py"
-if (($surface.State -ne 'NOSETFILE') -and (Test-Path -LiteralPath $templateWrapperMq5)) {
+$isTemplateBuild = (Test-Path -LiteralPath $templateWrapperMq5) -and
+  (Select-String -LiteralPath $templateWrapperMq5 -Pattern '^\s*#define\s+LAB_ENTRY_\d+\b' -Quiet)
+if (($surface.State -ne 'NOSETFILE') -and $isTemplateBuild) {
   # A template run whose checker cannot execute is refused, never waved through.
   if (-not (Test-Path -LiteralPath $pyExe) -or -not (Test-Path -LiteralPath $templateCheckPy)) {
     Write-Output "ABORT: template preset check cannot run for $expertLeaf (python: $pyExe, checker: $templateCheckPy). Provision the portable python (scripts\use_python.ps1)."

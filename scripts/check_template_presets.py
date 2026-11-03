@@ -182,18 +182,24 @@ def audit(root, overrides=None, only=None):
     root = Path(root).resolve()
     overrides = overrides or {}
     source = (root / "ea_template/core/Inputs.mqh").read_text(encoding="utf-8-sig")
-    wrappers = sorted((root / "ea_template").glob("Boss_*.mq5"))
     results = []
-    names = {wrapper.stem for wrapper in wrappers}
-    # --only narrows the audit to the named builds (the launcher checks the one it optimizes);
-    # a name with no discovered wrapper is refused, never silently dropped.
     if only:
-        for unknown in sorted(set(only) - names):
-            results.append({"expert": unknown, "errors": ["--only names no discovered Boss wrapper"], "ok": False})
-        wrappers = [wrapper for wrapper in wrappers if wrapper.stem in only]
+        # --only audits exactly the named builds (the launcher checks the one it optimizes), resolved
+        # as ea_template/<name>.mq5 so non-Boss template wrappers (Probe_*) are covered too; a name
+        # with no wrapper file is refused, never silently dropped.
+        wrappers = []
+        for name in sorted(only):
+            candidate = root / "ea_template" / (name + ".mq5")
+            if re.fullmatch(r"[A-Za-z0-9_.-]+", name) and candidate.is_file():
+                wrappers.append(candidate)
+            else:
+                results.append({"expert": name, "errors": ["--only names no ea_template wrapper"], "ok": False})
+    else:
+        wrappers = sorted((root / "ea_template").glob("Boss_*.mq5"))
+    names = {wrapper.stem for wrapper in wrappers}
     for unknown in sorted(set(overrides) - names):
         results.append({"expert": unknown, "errors": ["preset override has no discovered Boss wrapper"], "ok": False})
-    if not wrappers:
+    if not wrappers and not results:
         results.append({"expert": "<discovery>", "errors": ["no Boss wrappers found"], "ok": False})
     for wrapper in wrappers:
         row = {"expert": wrapper.stem, "errors": [], "missing": [], "extra": [], "invalid": []}
