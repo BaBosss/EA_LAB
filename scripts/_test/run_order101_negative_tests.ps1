@@ -181,7 +181,7 @@ function Invoke-Validator {
     $stderrTask = $proc.StandardError.ReadToEndAsync()
     $stdout = $proc.StandardOutput.ReadToEnd()
     $proc.WaitForExit()
-    $stderr = $stderrTask.Result
+    $stderr = $stderrTask.GetAwaiter().GetResult()
     return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
 }
 

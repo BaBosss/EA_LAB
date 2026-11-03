@@ -407,7 +407,9 @@ function Invoke-GitRaw {
     $stderrTask = $proc.StandardError.ReadToEndAsync()
     $stdout = $proc.StandardOutput.ReadToEnd()
     $proc.WaitForExit()
-    $stderr = $stderrTask.Result
+    # GetAwaiter().GetResult(), not .Result: on PowerShell 5.1 the .Result getter of a
+    # faulted task silently yields $null, which would turn a read failure into "no stderr".
+    $stderr = $stderrTask.GetAwaiter().GetResult()
     return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
 }
 

@@ -243,7 +243,7 @@ function Invoke-PowerShellFile {
     $stderrTask = $proc.StandardError.ReadToEndAsync()
     $stdout = $proc.StandardOutput.ReadToEnd()
     $proc.WaitForExit()
-    $stderr = $stderrTask.Result
+    $stderr = $stderrTask.GetAwaiter().GetResult()
     return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
 }
 
@@ -279,8 +279,8 @@ function Invoke-GitRawWithTimeout {
     $proc.WaitForExit()
     return [pscustomobject]@{
         ExitCode = $proc.ExitCode
-        StdOut = $stdoutTask.Result
-        StdErr = $stderrTask.Result
+        StdOut = $stdoutTask.GetAwaiter().GetResult()
+        StdErr = $stderrTask.GetAwaiter().GetResult()
         TimedOut = $false
         CaseName = $CaseName
         TimeoutSeconds = $TimeoutSeconds
@@ -1163,7 +1163,7 @@ $proc = [System.Diagnostics.Process]::Start($psi)
 $noPsStderrTask = $proc.StandardError.ReadToEndAsync()
 $noPsStdout = $proc.StandardOutput.ReadToEnd()
 $proc.WaitForExit()
-$noPsStderr = $noPsStderrTask.Result
+$noPsStderr = $noPsStderrTask.GetAwaiter().GetResult()
 $noPsBlocked = ($proc.ExitCode -ne 0)
 $noPsDiagnosticPresent = ($noPsStdout + $noPsStderr) -match 'PRECOMMIT-FAIL-CLOSED: PowerShell not found'
 Add-Result -Name 'fix2-no-powershell-fails-closed-with-exact-diagnostic' -Pass ($noPsBlocked -and $noPsDiagnosticPresent) -Detail ("exit=$($proc.ExitCode) out=$noPsStdout err=$noPsStderr")
