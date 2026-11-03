@@ -304,12 +304,29 @@ function Get-SourceBytes {
     # `git show :<path>`.  This keeps the bytes and identity tied to the exact
     # object that a pending commit will contain instead of mixing FILE bytes
     # with HEAD:<path> identity.
+    #
+    # ACTIVE:Working | ACTIVE:Staged | ACTIVE:Committed:<ref> -- the LOGICAL active board.
+    # Since the 2026-08-22 split (74b5c574) AGENT_TASKBOARD.md is a manifest whose ORDER
+    # blocks live in taskboards/active/*; reading the manifest alone saw 2 H2 blocks instead
+    # of the whole queue, so every order that is both active and archived (ORDER-095) dropped
+    # out of the exception scan and its Source-A binding row became an integrity failure.
+    # The resolver is loaded on first use so dot-sourcing this file needs no new dependency.
+    if ($SourceSpec -match '^ACTIVE:(Working|Staged)$' -or $SourceSpec -match '^ACTIVE:(Committed):(.+)$') {
+        $activeMode = $Matches[1]
+        $activeRef = if ($activeMode -eq 'Committed') { $Matches[2] } else { '' }
+        if (-not (Get-Command Get-TaskboardActiveLogicalBytes -ErrorAction SilentlyContinue)) {
+            $resolver = Join-Path $PSScriptRoot 'lib\taskboard_source.ps1'
+            if (-not (Test-Path -LiteralPath $resolver)) { throw "active-board resolver missing: $resolver" }
+            . $resolver
+        }
+        return Get-TaskboardActiveLogicalBytes -RepoRoot $RepoRoot -Mode $activeMode -CommitSha $activeRef
+    }
     if ($SourceSpec -match '^GIT:(.*?):(.+)$') {
         return Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $Matches[1] -Path $Matches[2]
     } elseif ($SourceSpec -match '^FILE:(.+)$') {
         return [System.IO.File]::ReadAllBytes($Matches[1])
     } else {
-        throw "Unrecognized source spec (expected GIT:ref:path, GIT::path for staged content, or FILE:path): $SourceSpec"
+        throw "Unrecognized source spec (expected GIT:ref:path, GIT::path for staged content, FILE:path, or ACTIVE:Working|Staged|Committed:ref): $SourceSpec"
     }
 }
 
@@ -2499,7 +2516,8 @@ function Invoke-Main {
     $defaultArchiveSource = -not $CurrentArchiveSource
 
     if ($defaultActiveSource) {
-        $script:CurrentActiveSource = if ($isGenerate) { 'FILE:' + (Join-Path $RepoRoot 'AGENT_TASKBOARD.md') } else { 'GIT:HEAD:AGENT_TASKBOARD.md' }
+        # Logical (manifest + declared parts) board, not the bare manifest -- see Get-SourceBytes.
+        $script:CurrentActiveSource = if ($isGenerate) { 'ACTIVE:Working' } else { 'ACTIVE:Committed:HEAD' }
     }
     if ($defaultArchiveSource) {
         $script:CurrentArchiveSource = if ($isGenerate) { 'FILE:' + (Join-Path $RepoRoot 'ARCHIVE_TASKBOARD_2026-07A.md') } else { 'GIT:HEAD:ARCHIVE_TASKBOARD_2026-07A.md' }

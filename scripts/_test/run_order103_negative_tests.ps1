@@ -760,8 +760,11 @@ function Write-StagedArtifactsForHookRepo {
     param([string]$Dir)
 
     $candidateArchive = Get-Snapshot -RepoRoot $Dir -Mode Staged -RelPath 'ARCHIVE_TASKBOARD_2026-07A.md'
-    $candidateActive = Get-Snapshot -RepoRoot $Dir -Mode Staged -RelPath 'AGENT_TASKBOARD.md'
-    $candidateActiveBlocks = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $candidateActive.Bytes) -SourceTag 'current-active')
+    # Logical active board (manifest + declared parts), exactly as check_precommit_staged.ps1
+    # reads it since the 2026-08-22 split. The bare manifest alone hid ORDER-095's active copy
+    # and turned its Source-A binding row into a false integrity failure.
+    $candidateActiveBytes = Get-SourceBytes -RepoRoot $Dir -SourceSpec 'ACTIVE:Staged'
+    $candidateActiveBlocks = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $candidateActiveBytes) -SourceTag 'current-active')
     $candidateArchiveBlocks = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $candidateArchive.Bytes) -SourceTag 'current-archive')
     $candidateScan = Invoke-ExceptionScan -CurrentActiveBlocks $candidateActiveBlocks -CurrentArchiveBlocks $candidateArchiveBlocks
     $candidateClosure = Invoke-ExceptionClosure -PolicyExceptions $candidateScan.Policy -ActiveBlocks $candidateActiveBlocks -ArchiveBlocks $candidateArchiveBlocks
@@ -1179,6 +1182,9 @@ if ($cloneBinding.ExitCode -ne 0) { throw "binding fixture clone failed: $($clon
 Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments 'config user.email test@example.com' | Out-Null
 Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments 'config user.name "order103 test"' | Out-Null
 Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments 'config core.autocrlf true' | Out-Null
+# `-c core.longpaths=true` above lasts for the clone only. The checkout below must DELETE
+# HEAD's deep factory/runs/... paths (>260 chars under %TEMP%), which fails without it.
+Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments 'config core.longpaths true' | Out-Null
 
 $bindingLog = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments 'log -1 --format=%H --grep="ORDER-103 C1-ENFORCE: append Source-A exact-identity binding"'
 $bindingSha = $bindingLog.StdOut.Trim()

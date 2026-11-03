@@ -373,14 +373,16 @@ $fix2Common = [ordered]@{
     SplitArchiveSource  = 'GIT:4aebbc37:ARCHIVE_TASKBOARD_2026-07A.md'
 }
 $fix2A = [ordered]@{}; foreach ($k in $fix2Common.Keys) { $fix2A[$k] = $fix2Common[$k] }
-$fix2A['CurrentActiveSource']  = "GIT:${fix2BaseSha}:AGENT_TASKBOARD.md"
+# ACTIVE:Committed:<sha> = the logical active board (manifest + declared parts) since the
+# 2026-08-22 split; the bare manifest blob lost every active order and its Source-A binding.
+$fix2A['CurrentActiveSource']  = "ACTIVE:Committed:${fix2BaseSha}"
 $fix2A['CurrentArchiveSource'] = "GIT:${fix2BaseSha}:ARCHIVE_TASKBOARD_2026-07A.md"
 $fix2A['ManifestPath']   = Join-Path $fix2OutA 'manifest.csv'
 $fix2A['IndexPath']      = Join-Path $fix2OutA 'index.md'
 $fix2A['ExceptionsPath'] = Join-Path $fix2OutA 'exceptions.md'
 
 $fix2B = [ordered]@{}; foreach ($k in $fix2Common.Keys) { $fix2B[$k] = $fix2Common[$k] }
-$fix2B['CurrentActiveSource']  = "GIT:${fix2HeadSha}:AGENT_TASKBOARD.md"
+$fix2B['CurrentActiveSource']  = "ACTIVE:Committed:${fix2HeadSha}"
 $fix2B['CurrentArchiveSource'] = "GIT:${fix2HeadSha}:ARCHIVE_TASKBOARD_2026-07A.md"
 $fix2B['ManifestPath']   = Join-Path $fix2OutB 'manifest.csv'
 $fix2B['IndexPath']      = Join-Path $fix2OutB 'index.md'
